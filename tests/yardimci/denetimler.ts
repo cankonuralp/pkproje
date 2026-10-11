@@ -487,3 +487,16 @@ export function yuzenEzmeleri(dosyalarCss: readonly { ad: string; metin: string 
   }
   return hata;
 }
+
+/** 486: yönlendirme + tazeleme yarışı — istemcide router.push'un hemen ardından router.refresh() bekleyen yönlendirmeyi iptal edebilir (deneme
+    makinesinde telefon: standart yüklendi, sayfa listede kaldı). Tazeleme sunucu eyleminde (next/cache refresh — 377 / 381 deseni). Dönen:
+    "dosya: satır" listesi. "else router.refresh()" (ya biri ya öteki) serbest. */
+export function yonlendirmeYarislari(tsx: readonly { ad: string; metin: string }[]): string[] {
+  const hata: string[] = [];
+  for (const d of tsx) {
+    for (const m of d.metin.matchAll(/router\.push\((?:[^;()]|\([^;()]*\))*\);?[ \t]*(?:\/\/[^\n]*)?\s*router\.refresh\(\)/g)) {
+      hata.push(`${d.ad}: ${d.metin.slice(0, m.index).split("\n").length}`);
+    }
+  }
+  return hata;
+}

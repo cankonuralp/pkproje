@@ -39,8 +39,8 @@ export function StandartPenceresi({ kapat, guncel, guncelListe, oneri, brans = "
     if (!r.tamam) { const k = Object.keys(r.hatalar ?? {})[0] as keyof typeof SID | undefined; if (k && SID[k]) requestAnimationFrame(() => document.getElementById(SID[k])?.focus()); return; }
     kapat();
     bildir(`${noDuz}:${d.surum.trim().toUpperCase()} ${ayni ? "yüklendi; önceki sürüm saklandı." : "kütüphaneye eklendi."}`);
+    /* 486: liste sunucuda tazelendi (eylem refresh) — burada yalnız yönlendirme; push + refresh yan yana yarışıyordu */
     if (!oneri) router.push(`/dokumanlar/standart/${r.id}`);
-    router.refresh();
   });
   return (
     <Pencere acik baslik={guncel ? `Yeni sürüm yükle · ${guncel.no}` : oneri ? `Standart yükle · ${oneri.no}` : "Standart yükle"} onKapat={kapat}

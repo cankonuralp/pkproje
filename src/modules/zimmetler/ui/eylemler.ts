@@ -1,6 +1,7 @@
 "use server";
 /* ZİMMETLER SUNUCU EYLEMLERİ — kişi ve kiracı oturumdan; yetki, doğrulama, "kimde" ve fotoğraf denetimi modül işlevinde (zimmet.ts).
    Teslim eden istemciden alınmaz (sunucu o anki "kimde"yi yazar). */
+import { refresh } from "next/cache";
 import { depo } from "../../../server/dosya/depo";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
@@ -26,7 +27,10 @@ export async function teslimEtEylemi(form: FormData): Promise<PencereDurumu> {
   }
   const girdi = { varlik: String(form.get("varlik") ?? ""), alan: String(form.get("alan") ?? ""), zaman: String(form.get("zaman") ?? ""), notu: String(form.get("notu") ?? "") };
   try {
-    return cevir(await oturumIslemi(o, (db) => teslimEt(db, depo(), o, o.kiraci.firmaId, girdi, fotolar)));
+    const y = cevir(await oturumIslemi(o, (db) => teslimEt(db, depo(), o, o.kiraci.firmaId, girdi, fotolar)));
+    /* 486: başarıda istemci yönlendiricisi SUNUCUDA tazelenir (next/cache refresh — 377 / 381 deseni): istemcide router.push ardından router.refresh bekleyen yönlendirmeyi iptal edebiliyordu (deneme makinesinde telefon: standart yüklendi, sayfa listede kaldı) */
+    if (y.tamam) refresh();
+    return y;
   } catch (h) {
     if (h instanceof FotoHatasi) return { hatalar: { foto: h.message } };
     throw h;

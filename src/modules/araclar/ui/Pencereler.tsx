@@ -117,8 +117,7 @@ export function TutanakPenceresi({ kapat, araclar, kisiler, arac = "", surucu = 
     const alanAd = d.alan === "depo" ? "Depo" : kisiler.find((k) => k.id === d.alan)?.ad ?? "";
     kapat();
     bildir(`${v?.plaka ?? ""}: ${v ? kimdeAd(v.kimde) : ""} → ${alanAd}. Tutanak ${r.ileti ?? ""} kaydedildi, zimmet kaydı oluştu${d.alan === "depo" ? "." : r.imzaya ? `; ${alanAd} Onaylar'dan imzalar.` : `; ${alanAd} kişisinin giriş hesabı yok, tutanak imzaya gönderilmedi.`}`);
-    router.push(surucu && d.alan !== "depo" ? "/araclar" : `/araclar/${d.arac}`);
-    router.refresh();
+    router.push(surucu && d.alan !== "depo" ? "/araclar" : `/araclar/${d.arac}`);   // 486: tazeleme sunucuda (eylem refresh)
   });
   return (
     <Pencere acik baslik="Araç teslim tutanağı" onKapat={kapat} odak={surucu ? `#${TID.alan}` : `#${TID.arac}`} genis

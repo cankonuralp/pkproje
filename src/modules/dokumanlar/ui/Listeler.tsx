@@ -190,8 +190,9 @@ export function StandartTuslari({ s, yaz, guncelListe }: { s: StandartSatiri; ya
           const r = await standartKaldirEylemi(s.id, s.surum);
           bildir(r.tamam ? "Standart kaldırıldı." : r.genel ?? "Kaldırılamadı.");
           const hedef = r.guncel ?? ayniNo.find((x) => x.guncel)?.id;
+          /* 486: başarıda sayfa sunucuda tazelendi (eylem refresh) — yalnız yönlendirme; push + refresh yan yana yarışıyordu */
           if (r.tamam) router.push(hedef ? `/dokumanlar/standart/${hedef}` : s.brans === "e" ? "/dokumanlar?brans=e" : "/dokumanlar");
-          router.refresh();
+          else router.refresh();
         });
       }}>Kaldır</Tus>}
       {acik && <StandartPenceresi kapat={() => setAcik(false)} guncel={s} guncelListe={guncelListe} />}

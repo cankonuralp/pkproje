@@ -1,6 +1,7 @@
 "use server";
 /* ONAYLAR SUNUCU EYLEMLERİ — kişi ve kiracı oturumdan; yetki ve kurallar modül işlevinde (onaylar.ts), geçiş kuralları veritabanında (0026).
    İstemciden gelen kimlik ve sürüm yalnız "hangi rapor, hangi sürümü gördüm" bilgisidir; yetki vermez. */
+import { refresh } from "next/cache";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { depo } from "../../../server/dosya/depo";
@@ -78,6 +79,8 @@ export async function talepKararEylemi(tip: string, id: string, surum: number, k
   const o = await istekOturumu();
   if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
   const r: TalepYazma = await oturumIslemi(o, (db) => talepKarar(db, o, metin(tip), metin(id), Number(surum), metin(karar), girdi));
+  /* 486: başarıda istemci yönlendiricisi SUNUCUDA tazelenir (next/cache refresh — 377 / 381 deseni): istemcide router.push ardından router.refresh bekleyen yönlendirmeyi iptal edebiliyordu (deneme makinesinde telefon: standart yüklendi, sayfa listede kaldı) */
+  if (r.durum === "tamam") refresh();
   return r.durum === "tamam" ? { tamam: true, bildirim: r.bildirim, sonraki: null } : r.durum === "gecersiz" ? { hatalar: r.hatalar }
     : r.durum === "red" ? { genel: r.neden } : { genel: TALEP_SONUC[r.durum] };
 }

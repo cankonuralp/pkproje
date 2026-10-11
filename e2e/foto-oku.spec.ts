@@ -9,7 +9,8 @@
    486 (reisim 2026-10-10): tuşun adı "Fotoğraf ekle (yapay zekâ okur)" (tabloda ve alanlı bölümde aynı); tablodaki Tip listesi alanın yanında açılır,
    sayfa kaymaz ("tip seçin kısmına tıklayınca saçma sapan başa atıp"); sıra sütunu "Sıra"; "Son satırı kopyala" (No bir artar) ve "Sırala"
    (No'ya göre doğal sıra); "Sonuç neye göre çıkar?" tablonun kuralını yazar. */
-import { expect, test } from "@playwright/test";
+import { mkdirSync } from "node:fs";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { xlsxBayt, XLSX_TURU } from "../src/components/disa/xlsx";
 import { SABLONLAR } from "../src/format/sablonlar";
 import { satirlariSirala, sonrakiKod } from "../src/modules/raporlar/tablo";
@@ -17,6 +18,11 @@ import { E2E_KAPI, E2E_PAROLA, E2E_YZ } from "./hesaplar";
 import { bolumleriAc, hazir } from "./yardimci";
 
 const Y = `http://${E2E_YZ.firma.kisaAd}.localhost:${E2E_KAPI}`;
+/** 486: gözle bakılacak görüntü (deneme makinesi e2e-goz/ klasörünü her koşuda yükler) — sayfanın görünen kısmı ya da bir bölüm */
+async function goz(hedef: Page | Locator, ad: string, proje: string) {
+  mkdirSync("e2e-goz", { recursive: true });
+  await hedef.screenshot({ path: `e2e-goz/${proje}-${ad}.png` });
+}
 /* uydurma, en küçük yapısı doğru JPEG — SOI · DQT · SOS (kalanı görüntü) · EOI (içerik önemsiz: okuma yerel taklitte; tarayıcı çözemez,
    küçültme dosyayı olduğu gibi gönderir, sunucu konum bilgisini silerken parçaları okur) */
 const JPEG = Buffer.from([0xff, 0xd8, 0xff, 0xdb, 0x00, 0x03, 0x01, 0xff, 0xda, 0x00, 0x02, 0x01, 0x02, 0x03, 0xff, 0xd9]);
@@ -142,6 +148,7 @@ test("ölçüm tablosu Excel'den: başlıklar sütunlara eşlenir, satırlar tab
   const tipListe = page.getByRole("listbox", { name: /· Tip$/ });
   await expect(tipListe).toBeVisible();
   expect(await page.evaluate(() => scrollY), "sayfa kaymadı").toBe(y0);
+  await goz(page, "tablo-tip-listesi", bilgi.project.name);
   const a = (await tip.boundingBox())!, l = (await tipListe.boundingBox())!;
   expect(l.y >= a.y + a.height - 1 || l.y + l.height <= a.y + 1, `liste alanın altında ya da üstünde (alan ${a.y}, liste ${l.y})`).toBe(true);
   expect(Math.min(Math.abs(l.y - (a.y + a.height)), Math.abs(a.y - (l.y + l.height))) < 20, "liste alana bitişik").toBe(true);
@@ -163,4 +170,5 @@ test("ölçüm tablosu Excel'den: başlıklar sütunlara eşlenir, satırlar tab
   await linye.getByText("Sonuç neye göre çıkar?").click();
   await expect(linye).toContainText("Ib ≤ In ≤ Iz");
   await expect(linye).toContainText("TΔ ≤ 200 ms");
+  await goz(linye, "tablo-tuslar", bilgi.project.name);
 });

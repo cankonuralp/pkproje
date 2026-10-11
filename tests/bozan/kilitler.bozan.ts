@@ -9,7 +9,7 @@ import {
   bantDisiDaraltma, ciftIdler, ciftSeciciler, ciftTanimliDegiskenler, daralmisSerit, degiskenDegeri, dosyalar, eksikIkonlar, girdiYaziHatalari, kalipDisiEsikler,
   hamYazma, kiraciDisiErisim, kullanilanIkonlar, maketIkonlari, maketMenusu, oku, parantezHatasi, rlsEksikTablolar, tanimsizDegiskenler, testKapisiEksikleri, tokenGovdesi, pdfPaketEksikleri,
   swEksikleri, baglantiRengiEksikleri, cekmeceBoyuHatasi, vhYukseklikHatalari, cerceveIzniEksikleri, suzgecsizListeler, SUZGECSIZ_BOLUMLER, takipSeridiEksikleri,
-  yuzenEzmeleri,
+  yuzenEzmeleri, yonlendirmeYarislari,
 } from "../yardimci/denetimler.ts";
 
 const kabuk = oku("src/components/kabuk/Kabuk.module.css");
@@ -246,3 +246,17 @@ test("yüzen katman: başka CSS listeye inince ve kendi konumu fixed olmayınca 
   const akista = css.map((d) => (d.ad === kendi ? { ...d, metin: d.metin.replace(".liste, .takvim { position: fixed;", ".liste, .takvim { position: absolute;") } : d));
   assert.equal(yuzenEzmeleri(akista).length, 1);
 });
+
+/* 486: yönlendirme + tazeleme yarışı — Dökümanlar'ın yükleme penceresine eski desen ("push; refresh") geri gelince yakalanır; "else" ile serbest */
+test("yönlendirme yarışı: router.push ardından router.refresh geri gelince yakalanır", () => {
+  const tsx = dosyalar("src", [".tsx", ".ts"]).map((ad) => ({ ad, metin: oku(ad) }));
+  assert.deepEqual(yonlendirmeYarislari(tsx), []);
+  const ad = "src/modules/dokumanlar/ui/Pencereler.tsx";
+  const eski = "if (!oneri) router.push(`/dokumanlar/standart/${r.id}`);";
+  const bozuk = tsx.map((d) => (d.ad === ad ? { ...d, metin: d.metin.replace(eski, `${eski}\n    router.refresh();`) } : d));
+  assert.equal(yonlendirmeYarislari(bozuk).length, 1);
+  assert.match(yonlendirmeYarislari(bozuk)[0], /^src\/modules\/dokumanlar\/ui\/Pencereler\.tsx: \d+$/);
+  assert.deepEqual(yonlendirmeYarislari([{ ad: "x.tsx", metin: "if (a) router.push(b); else router.refresh();" }]), []);
+  assert.equal(yonlendirmeYarislari([{ ad: "x.tsx", metin: "router.push(`/a/${f(x)}`); // not\n router.refresh();" }]).length, 1);
+});
+

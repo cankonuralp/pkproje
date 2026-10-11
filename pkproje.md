@@ -2408,7 +2408,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   (kurucu.ts ALT_TURLER). Kilitler: tests/tablo-sonuc.test.ts, ekipman-bolumu.test.ts (486), alt-baslik.test.ts (486), foto-oku.test.ts (sakla +
   kayıtlı okuma), olumsuz kanıt tests/bozan/tablo-sonuc.bozan.ts (dolgu, doğal sıra, kurucu geri ekleme, numara kayması); e2e foto-oku.spec (Tip
   listesi kaymaz, Sıra, kopyala, sırala, kurallar), saha-raporu.spec (yapay zekâ kapalı firmada fotoğraf saklanır, "Oku" yok), rapor-format.spec
-  (alt başlık türü, kâğıtta tuşlar, ekipman bölümü sil / geri ekle).
+  (alt başlık türü, kâğıtta tuşlar, ekipman bölümü sil / geri ekle). (7) **Yönlendirme yarışı** (deneme makinesinde bulundu — telefon: standart
+  yüklendi, sayfa listede kaldı): istemcide router.push'un hemen ardından router.refresh() bekleyen yönlendirmeyi iptal edebiliyordu; aynı desen
+  beş yerde (Dökümanlar standart yükle / kaldır, Onaylar › Talepler kararı, zimmet teslimi, araç tutanağı) — tazeleme sunucu eyleminde (next/cache
+  refresh, 377 / 381 deseni). Kilit tests/yonlendirme-yarisi.test.ts + olumsuz kanıt.
 - 2026-10-10 (485): **479–484 YAYINDA** — main 6b32015 (göç yok; 80 göç), sağlık "tamam" (sürüm 6b32015), duman 10/10; deneme makinesi 14/14
   yeşil (6b32015; bir önceki koşuda 6a8136b iki iş bellek sıkışıklığı / çerçeve gecikmesiyle düştü, kod değişikliğiyle ilgisiz). Canlıda reisim'in
   Chrome oturumuyla (yalnız okuma) ölçüldü: Dökümanlar'da ve Eğitim türleri'nde "Yan menüdeki Dökümanlar sayısı: 1 eğitimin tekrarı yaklaşıyor"

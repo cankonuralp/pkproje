@@ -41,8 +41,7 @@ export function TeslimPenceresi({ kapat, varliklar, kisiler, bugun, varlik = "" 
     const alanAd = d.alan === "depo" ? "Depo" : kisiler.find((k) => k.id === d.alan)?.ad ?? "";
     kapat();
     bildir(`${v?.kod ?? ""}: ${v ? kimdeAd(v.kimde) : ""} → ${alanAd}${d.alan === "depo" ? "." : "; zimmet formunu imzalatıp personel kartına yükleyin."}`);
-    router.push(`/zimmetler/varlik/${d.varlik.replace(":", "/")}`);
-    router.refresh();
+    router.push(`/zimmetler/varlik/${d.varlik.replace(":", "/")}`);   // 486: tazeleme sunucuda (eylem refresh)
   });
   return (
     <Pencere acik baslik="Teslim et" onKapat={kapat} odak={`#${TID.varlik}`} genis

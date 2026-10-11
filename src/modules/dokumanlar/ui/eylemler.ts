@@ -1,5 +1,6 @@
 "use server";
 /* DÖKÜMANLAR SUNUCU EYLEMLERİ — kişi ve kiracı oturumdan; yetki, doğrulama, sürüm ve dosya denetimi modül işlevinde (dokumanlar.ts). */
+import { refresh } from "next/cache";
 import { depo } from "../../../server/dosya/depo";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
@@ -29,12 +30,17 @@ export async function standartYukleEylemi(form: FormData): Promise<PencereDurumu
   const d = await pdfOku(form.get("dosya"));
   if (d === "buyuk") return { hatalar: { dosya: "PDF en çok 25 MB." } };
   const girdi = { no: yazi(form.get("no")), surum: yazi(form.get("surum")), konu: yazi(form.get("konu")), brans: yazi(form.get("brans")) };
-  return dosyali(async () => cevir(await oturumIslemi(o, (db) => standartYukle(db, depo(), o, o.kiraci.firmaId, girdi, d))));
+  const y = await dosyali(async () => cevir(await oturumIslemi(o, (db) => standartYukle(db, depo(), o, o.kiraci.firmaId, girdi, d))));
+  /* 486: başarıda istemci yönlendiricisi SUNUCUDA tazelenir (next/cache refresh — 377 / 381 deseni): istemcide router.push ardından router.refresh bekleyen yönlendirmeyi iptal edebiliyordu (deneme makinesinde telefon: standart yüklendi, sayfa listede kaldı) */
+  if (y.tamam) refresh();
+  return y;
 }
 
 export async function standartKaldirEylemi(id: string, surum: number): Promise<PencereDurumu> {
   const o = await oturum(); if (typeof o === "string") return { genel: o };
-  return cevir(await oturumIslemi(o, (db) => standartKaldir(db, o, yazi(id), Number(surum))));
+  const y = cevir(await oturumIslemi(o, (db) => standartKaldir(db, o, yazi(id), Number(surum))));
+  if (y.tamam) refresh();   // 486: yukarıdaki not
+  return y;
 }
 
 export async function dokumanKaydetEylemi(form: FormData): Promise<PencereDurumu> {

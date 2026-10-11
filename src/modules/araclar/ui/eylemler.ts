@@ -1,6 +1,7 @@
 "use server";
 /* ARAÇLAR SUNUCU EYLEMLERİ — kişi ve kiracı oturumdan; yetki, doğrulama, kilometre ve fotoğraf denetimi modül işlevinde (araclar.ts).
    Teslim eden istemciden alınmaz (Zimmetler o anki "kimde"yi yazar). Tutanağın PDF'i sunucuda üretilir (342; teslim alanın imzasına). */
+import { refresh } from "next/cache";
 import { aracTutanagiPdf } from "../../../belge/pdf";
 import { depo } from "../../../server/dosya/depo";
 import { ayniKoken } from "../../../server/kimlik/koken";
@@ -47,6 +48,8 @@ export async function tutanakKaydetEylemi(form: FormData): Promise<PencereDurumu
   };
   try {
     const r = await oturumIslemi(o, (db) => tutanakKaydet(db, depo(), o, o.kiraci.firmaId, girdi, fotolar, aracTutanagiPdf));
+    /* 486: başarıda istemci yönlendiricisi SUNUCUDA tazelenir (next/cache refresh — 377 / 381 deseni): istemcide router.push ardından router.refresh bekleyen yönlendirmeyi iptal edebiliyordu (deneme makinesinde telefon: standart yüklendi, sayfa listede kaldı) */
+    if (r.durum === "tamam") refresh();
     return r.durum === "tamam" ? { ...cevir(r, r.no), imzaya: r.imzaya } : cevir(r);
   } catch (h) {
     if (h instanceof FotoHatasi) return { hatalar: { [`foto-${h.aci}`]: h.message } };

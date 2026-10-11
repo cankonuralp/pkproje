@@ -90,7 +90,7 @@ function TalepAyrinti({ t }: { t: OnayTalebiSatiri }) {
     const r = await talepKararEylemi(t.tip, t.id, t.surum, k, k === "onayla" ? {} : { gerekce });
     setHata(r.hatalar?.gerekce ?? null); setGenel(r.genel ?? null);
     if (!r.tamam) { if (r.hatalar?.gerekce) requestAnimationFrame(() => document.getElementById(GID)?.focus()); return; }
-    bildir(r.bildirim ?? "Karar kaydedildi."); router.push(ADRES); router.refresh();
+    bildir(r.bildirim ?? "Karar kaydedildi."); router.push(ADRES);   // 486: tazeleme sunucuda (eylem refresh) — push + refresh yarışıyordu
   });
   const ac = (k: "geri" | "red") => { setKip(k); setGerekce(""); setHata(null); setGenel(null); requestAnimationFrame(() => document.getElementById(GID)?.focus()); };
   return (
