@@ -135,12 +135,18 @@ function katmanGorunur(e: Element): string {
   return "";
 }
 
-/** 452: kökteki seçim listeleri ve takvimler (en çok 4): aç → yerinden oynayan öğe yok, katman tamamen görünür → Esc */
+/** 452: kökteki seçim listeleri ve takvimler (en çok 4): aç → yerinden oynayan öğe yok, katman tamamen görünür → Esc.
+    486 (reisim 2026-10-10: "tip seçin kısmına tıklayınca saçma sapan başa atıp"): ilk dördün yanında her TABLONUN içindeki ilk seçim listesi de
+    (en çok 3 tablo) — tablodaki eski CSS ezmesi listeyi sayfanın başına atıyordu, ilk dörde girmediği için tarama görmemişti */
 async function katmanlariDene(page: Page, kok: Locator, kokSecici: string, yer: string, nerede: string, bulgular: Bulgu[]) {
-  const tetikler = kok.locator('[role=combobox]:not([disabled]), button[aria-label="Takvimden seç"]');
-  const n = Math.min(await tetikler.count(), 4);
-  for (let i = 0; i < n; i++) {
-    const t = tetikler.nth(i);
+  const SECICI = '[role=combobox]:not([disabled]), button[aria-label="Takvimden seç"]';
+  const tetikler = kok.locator(SECICI), tablolar = kok.locator("table");
+  const denenecek = Array.from({ length: Math.min(await tetikler.count(), 4) }, (_, i) => tetikler.nth(i));
+  for (let j = 0; j < Math.min(await tablolar.count(), 3); j++) {
+    const ic = tablolar.nth(j).locator(SECICI);
+    if (await ic.count()) denenecek.push(ic.first());
+  }
+  for (const t of denenecek) {
     if (!(await t.isVisible().catch(() => false))) continue;
     await t.scrollIntoViewIfNeeded({ timeout: 2000 }).catch(() => undefined);
     const ad = ((await t.getAttribute("aria-label")) ?? (await t.innerText().catch(() => ""))).trim().replace(/\s+/g, " ").slice(0, 40);

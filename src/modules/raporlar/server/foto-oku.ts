@@ -81,7 +81,7 @@ export async function okumaFotografiSakla(db: Sorgulayici, depo: Depo, kim: Kisi
   const baslik = "bolum" in o ? o.bolum.ad : o.baslik;
   const ad = `${baslik.replace(/[^\p{L}\p{N} ()-]/gu, "").trim().slice(0, 60) || "Bölüm"} fotoğrafı.${tur === "png" ? "png" : "jpg"}`;
   const r = await okumaFotografiEkle(db, depo, kim, firmaId, raporId, bolumId, { ad, bayt: foto.bayt });
-  return r.durum === "tamam" ? { ...r, bildirim: "Fotoğraf rapora eklendi (belgede görünmez). Firmada yapay zekâ açılınca fotoğrafın “Oku”suyla okunur." } : r;
+  return r.durum === "tamam" ? { ...r, bildirim: "Fotoğraf rapora eklendi (belgede görünmez). Yapay zekâ okuması açılınca fotoğrafın “Oku”suyla okunur." } : r;
 }
 
 /** çağrı cevapsız bitti: ücretsizse ayırma bırakılır; sonucu bilinmiyorsa (zaman aşımı) ayrılan tutar harcamaya yazılır */

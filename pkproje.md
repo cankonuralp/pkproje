@@ -2393,7 +2393,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   atıyordu:** rapor tablosunun CSS'inde 452'den önce kalan ".olcumTablo [data-secim-kap] [role=listbox] { position: static }" ezmesi listeyi akışa
   alıyordu — üst katmanda akıştaki öğe sayfanın başında çizilir, odak sayfayı oraya kaydırır. Ezme silindi; yuzen.ts konumu katmanın satır içi
   biçemine yazar (hiçbir sayfa CSS'i ezemez), katmana odak sayfayı kaydırmadan (odakla — preventScroll). Kilit tests/yuzen-ezme.test.ts (yüzen
-  katmana başka CSS inemez) + olumsuz kanıt. (2) **"Fotoğraf ekle (yapay zekâ okur)" her zaman:** formatta açık bölümde (tablo, ekipman bilgileri,
+  katmana başka CSS inemez) + olumsuz kanıt; site taraması (e2e/tarama.ts) ilk dört listenin yanında her tablonun içindeki ilk listeyi de dener. (2) **"Fotoğraf ekle (yapay zekâ okur)" her zaman:** formatta açık bölümde (tablo, ekipman bilgileri,
   bilgi, test); yapay zekâ kapalıysa fotoğraf OKUNMADAN okuma fotoğrafı olarak saklanır (foto-oku.ts okumaFotografiSakla — belgede yok), açılınca
   fotoğrafın "Oku"su kayıtlı fotoğrafı okur (OkunacakFoto { dosya }; yeniden eklenmez); iş tablo ve alanlı bölümde ortak (Doldurma.tsx useFotoEkle,
   FotoEkleTusu). 484'te kapalıyken tuş yerine yalnız not vardı. (3) **Kâğıtta tuşlar görünür:** her bilgi / tablo / test bölümünün (ve ekipman

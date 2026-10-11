@@ -261,11 +261,11 @@ export function OkumaFotolari({ v, bolumId, oku, islem, okut }: {
   );
 }
 
-/** 486: firmada yapay zekâ kapalı — fotoğraf saklanır, okunmaz; nereden açılacağı */
+/** 486: yapay zekâ okuması kapalı (firmada kapalı ya da API anahtarı girilmemiş) — fotoğraf saklanır, okunmaz; nereden açılacağı */
 export function OkumaNotu() {
   return (
-    <p className={stil.ipucuMetin}><Ikon ad="info" kucuk /> Firmada yapay zekâ kapalı: fotoğraf rapora eklenir (belgede görünmez), şimdi okunmaz; açılınca
-      fotoğrafın yanındaki “Oku” ile okunur (Firma ayarları › Yapay zekâ — açık ve API anahtarı girilmiş olmalı).</p>
+    <p className={stil.ipucuMetin}><Ikon ad="info" kucuk /> Yapay zekâ okuması kapalı (Firma ayarları › Yapay zekâ: açık olmalı ve API anahtarı girilmiş
+      olmalı): fotoğraf rapora eklenir (belgede görünmez), şimdi okunmaz; açılınca fotoğrafın yanındaki “Oku” ile okunur.</p>
   );
 }
 
