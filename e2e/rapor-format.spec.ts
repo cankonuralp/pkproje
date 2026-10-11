@@ -34,6 +34,16 @@ async function basla(page: Page, secenek: RegExp) {
   await expect(page.getByRole("heading", { level: 1, name: /^Format kurucu · / })).toBeVisible();
 }
 
+/** 486: deneme makinesinin geliştirme sunucusu açık sayfayı baştan yükleyebiliyor (iz: "[Fast Refresh] rebuilding" → "[HMR] connected"; yayında
+    yok) — gezinti o yüklemeyle kesilirse ("interrupted by another navigation") bir kez daha gidilir; başka hata aynen düşer */
+async function git(page: Page, adres: string) {
+  try { await page.goto(adres); } catch (h) {
+    if (!/interrupted by another navigation/.test(String(h))) throw h;
+    await page.waitForLoadState("load");
+    await page.goto(adres);
+  }
+}
+
 async function yayinla(page: Page, notu: string, sira: number) {
   await hazir(page);
   await page.getByRole("button", { name: "Yayınla" }).click();
@@ -201,9 +211,14 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await expect(saha.getByRole("button", { name: /· yukarı$/ })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Düzenle", exact: true })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Yan yana tuşlar" })).toHaveCount(0);
-    /* saha ekranında bölümler gerçek ekran gibi kapalı gelir (463) — kâğıtta maddesi eklenen Gözle kontrol açılır */
-    await saha.getByRole("button", { name: "Gözle kontrol bölümü", exact: true }).click();
-    await expect(saha.getByRole("radiogroup", { name: "Deneme maddesi" })).toBeVisible();
+    /* saha ekranında bölümler gerçek ekran gibi kapalı gelir (463) — kâğıtta maddesi eklenen Gözle kontrol açılır; madde yan yana tuşlarla. 486:
+       geliştirme sunucusu çerçeveyi baştan yükleyebiliyor (iz: çerçevede "[HMR] connected") — bölüm kapalıysa yeniden açılır (açıkken kapatılmaz) */
+    const gozleBolum = saha.getByRole("button", { name: "Gözle kontrol bölümü", exact: true });
+    const denemeMadde = saha.getByRole("radiogroup", { name: "Deneme maddesi" });
+    await expect(async () => {
+      if ((await gozleBolum.getAttribute("aria-expanded")) !== "true") await gozleBolum.click();
+      await expect(denemeMadde).toBeVisible({ timeout: 5_000 });
+    }).toPass({ timeout: 45_000 });
     await goz(page, "kurucu-saha", bilgi.project.name);
     await expect(page.getByRole("region", { name: "Kullanım" })).toContainText("Deneme:");
     await saha.getByRole("button", { name: "Onaya gönder" }).click();
@@ -245,7 +260,7 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
   await goz(page, "surum-sayfasi", bilgi.project.name);
 
   /* tür sayfası: yüz ve sürüm satırı */
-  await page.goto(turAdresi);
+  await git(page, turAdresi);
   await hazir(page);
   await expect(page.getByRole("link", { name: /Rapor formatı\s*Sürüm 2/ })).toBeVisible();
   await expect(page.getByText("ilk sürüm")).toBeVisible();
