@@ -2405,6 +2405,16 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-12 (496): **PARÇA KİTAPLIĞI** (hata listesi 29 + 46 maketi onaylı; maketteki "Parça olarak kaydet" ve Bakanlık bölümleri). Format
+  kurucunun gelişmiş görünümünde parça kutusunun altında: **Firmanızın parçaları** (seçili bölümde "Parça olarak kaydet" — bölüm firmanın bütün
+  formatlarında kutuda çıkar; yönetici siler) ve **Hazır formatlardan bölümler** (ZPKR01–07, ZPMR01, ZYDR01, Kompresör — şablon başına katlanır;
+  ölçüm cihazları, ekipman bilgileri ve kayıttan gelen bölüm parça olmaz). Parça formata KOPYALANIR: Bakanlık işareti, üst / alt başlık kalkar,
+  kimlikler yeni (tablo sütunları tablo içinde aynı) — parça sonradan silinse de formatlar değişmez. Sunucu: göç 0080 format_parca (RLS, değişmez —
+  güncelleme tetikte düşer, uygulama rolünün DELETE'i yok, kesin silme işlevle ve izde; firma başına en çok 200); yetki modül 5 "yaz" (kaydet),
+  kayit_sil (sil); istemciden gelen bölüm şemadan geçer. Şablon bölümleri sunucuda seçilir (şablon dosyası tarayıcıya gitmez). Kilitler:
+  tests/parca.test.ts (gerçek PostgreSQL, iki firma), tests/yapboz.test.ts (+3; ilk testin grup listesi "Firmanızın parçaları" ile güncellendi — tarih
+  ve gerekçe testte), olumsuz kanıt tests/bozan/yapboz.bozan.ts (+3; kopya satırı ortak işleve taşındığından 1. bozanın satırı güncellendi), e2e
+  rapor-format (hazır bölüm ekle → parça olarak kaydet → sil).
 - 2026-10-12 (495 düzeltmesi): deneme makinesi masaüstü ve tablette düştü — format kurucuda çok sütunlu ölçüm tablosunun (linye, 15 sütun) yeni
   sütununda "ayrıntılar" açılmadı. Neden (iz kaydı ve ekran karesinden): belge tablosu sabit düzenli, sütun dar; öğe tuşları sütundan taşıp
   komşunun tuşlarının üstüne biniyor, üstüne gelince saydamlık kalktığından boyama sırası değişiyor ve basılan tuş komşununki oluyordu (gerçek

@@ -8,6 +8,8 @@ import { depo } from "../../../server/dosya/depo";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { sablondanTurEkle, taslakBaslat, taslakKaydet, taslakSil, yayinDenetle, yayinla } from "../server/formatlar";
 import { bakanlikTamamla } from "../server/kurulum";
+import { parcaKaydet, parcaSil } from "../server/parcalar";
+import type { FirmaParcasi } from "../yapboz";
 
 export interface FormatDurumuYaniti { tamam?: boolean; id?: string; sira?: number; uyarilar?: string[]; engeller?: string[]; hatalar?: Record<string, string>; genel?: string }
 
@@ -84,4 +86,21 @@ export async function sablondanTurEkleEylemi(sablon: string, girdi: unknown): Pr
   if (r.durum === "tamam") return { tamam: true, id: r.turId, formatId: r.formatId };
   if (r.durum === "gecersiz") return { hatalar: r.hatalar };
   return { genel: SONUC[r.durum] };
+}
+
+/** 496: bölümü firmanın parçası olarak kaydet — bölüm istemciden gelir, sunucuda şemadan ve parcaHazirla'dan geçer; firma ve kişi oturumdan */
+export async function parcaKaydetEylemi(ad: string, bolum: unknown): Promise<{ tamam?: boolean; parca?: FirmaParcasi; genel?: string }> {
+  const o = await oturum(); if (typeof o === "string") return { genel: o };
+  const r = await oturumIslemi(o, (db) => parcaKaydet(db, o, metin(ad), bolum));
+  if (r.durum === "tamam" && r.bolum) return { tamam: true, parca: { id: r.id, ad: r.ad, bolum: r.bolum } };
+  if (r.durum === "tamam") return { genel: SONUC.yok };
+  if (r.durum === "gecersiz") return { genel: r.neden };
+  return { genel: SONUC[r.durum] };
+}
+
+/** 496: firmanın parçasını kesin sil (yalnız yönetici) — formatlar etkilenmez */
+export async function parcaSilEylemi(id: string): Promise<{ tamam?: boolean; genel?: string }> {
+  const o = await oturum(); if (typeof o === "string") return { genel: o };
+  const r = await oturumIslemi(o, (db) => parcaSil(db, o, metin(id)));
+  return r.durum === "tamam" ? { tamam: true } : { genel: SONUC[r.durum === "gecersiz" ? "yok" : r.durum] };
 }

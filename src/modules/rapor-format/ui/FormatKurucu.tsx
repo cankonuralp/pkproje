@@ -20,7 +20,8 @@
    araç çubuğu — Geri al / Yinele (Ctrl+Z, Ctrl+Y; yazı alanındayken alanın kendi geri alması); her değişiklik bir adım (../gecmis.ts).
    494: araç çubuğunda "Gelişmiş seçenekler" — kâğıt AYNI kalır, soluna parça kutusu (sürükle-bırak ya da bas-yerini seç), sağına seçili bölüm
    gelir (Yapboz.tsx, ../yapboz.ts); bölümler tutamaktan taşınır. Aynı taslak, aynı geçmiş; "Basit görünüme dön" ile kâğıt tek başına. Seçim bu
-   sekmede taslak başına hatırlanır. Telefonda kurucu yok. */
+   sekmede taslak başına hatırlanır. Telefonda kurucu yok.
+   496: parça kitaplığı — Bakanlık formatlarının bölümleri ve firmanın parçaları (seçili bölümde "Parça olarak kaydet"; sunucuda format_parca). */
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { raporBelgesi } from "../../../belge/belge";
@@ -33,10 +34,10 @@ import { yayinDenetimi } from "../../../format/motor";
 import type { FormatTanimi } from "../../../format/tanim";
 import { bolumSil, gorunumYaz } from "../kurucu";
 import { adimEkle, bosGecmis, geriAl, kisayol, yinele, type Gecmis } from "../gecmis";
-import { alanaParcaEkle, bolumKopyala, bolumuTasi, parcaBul, parcaYerlestir } from "../yapboz";
+import { alanaParcaEkle, bolumKopyala, bolumuTasi, parcaBul, parcaYerlestir, type FirmaParcasi, type HazirParca } from "../yapboz";
 import { Parcalar, SeciliBolum } from "./Yapboz";
 import { bolumeKaydir } from "./kaydir";
-import { taslakKaydetEylemi } from "./eylemler";
+import { parcaKaydetEylemi, parcaSilEylemi, taslakKaydetEylemi } from "./eylemler";
 import { Kagit } from "./Kagit";
 import { SatirAlani } from "./KurucuDuzenleyici";
 import { SahaGorunumu } from "./SahaGorunumu";
@@ -56,9 +57,11 @@ function yer(k: string, t: FormatTanimi): string {
 }
 
 /** turStd / turCihaz (459): türün kontrol metodu standartları ve ölçüm cihazı türleri (tür sayfasında seçilir) — kâğıtta ve önizlemede */
-export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, turStd, turCihaz }: {
+export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, turStd, turCihaz, firmaParca, hazirParca, parcaSilebilir }: {
   turId: string; turAd: string; turKod: string; format: { id: string; surum: number }; tanim: FormatTanimi; kaynakAd: string | null;
   turStd: string[]; turCihaz: string[];
+  /** 496: parça kitaplığı (sunucudan) — firmanın parçaları, şablon bölümleri; parcaSilebilir: yönetici (karar yine sunucuda) */
+  firmaParca: FirmaParcasi[]; hazirParca: HazirParca[]; parcaSilebilir: boolean;
 }) {
   const router = useRouter();
   const bildir = useBildir();
@@ -172,12 +175,37 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
     return () => document.removeEventListener("keydown", bas);
   }, [tutulan]);
   const goster = (id: string) => bolumeKaydir(`kb-${id}`);
+  /* 496: parça kitaplığı — firmanın parçaları bu ekranda güncellenir (kaydet / sil), şablon bölümleri sabit */
+  const [firmaParcalari, setFirmaParcalari] = useState(firmaParca);
+  const kitaplik = useMemo(() => ({ firma: firmaParcalari, hazir: hazirParca }), [firmaParcalari, hazirParca]);
+  const parcaKaydet = (i: number) => {
+    const b = t.bolumler[i];
+    if (!b) return;
+    baslat(async () => {
+      const r = await parcaKaydetEylemi(b.ad, b);
+      if (!r.tamam || !r.parca) { bildir(r.genel ?? "Parça kaydedilemedi."); return; }
+      const p = r.parca;
+      setFirmaParcalari((l) => [...l, p]);
+      bildir(`${p.ad} firmanızın parçalarına kaydedildi; bütün formatlarınızda parça kutusunda.`);
+    });
+  };
+  const parcaSil = async (id: string, ad: string) => {
+    if (!(await onayla({ baslik: "Parça silinsin mi?", metin: `${ad} firmanızın parçalarından kesin silinir. Onu kullanan formatlar değişmez (parça formata kopyalanmıştı).`,
+      tus: "Sil", tehlike: true }))) return;
+    baslat(async () => {
+      const r = await parcaSilEylemi(id);
+      if (!r.tamam) { bildir(r.genel ?? "Parça silinemedi."); return; }
+      setFirmaParcalari((l) => l.filter((x) => x.id !== id));
+      if (tutulan === `f:${id}`) setTutulan(null);
+      bildir(`${ad} parçası silindi.`);
+    });
+  };
   const birak = (p: number, v: { parca?: string; bolum?: string }) => {
     if (v.bolum) { const y = bolumuTasi(t, v.bolum, p); if (y !== t) { degis(y); setSecili(v.bolum); bildir("Bölüm taşındı (taslak)."); } return; }
     if (!v.parca) return;
-    const x = parcaYerlestir(t, v.parca, p);
+    const x = parcaYerlestir(t, v.parca, p, kitaplik);
     if (!x) return;
-    degis(x.t); setSecili(x.bolum); setTutulan(null); bildir(`${parcaBul(t, v.parca)?.ad ?? "Parça"} eklendi (taslak).`); goster(x.bolum);
+    degis(x.t); setSecili(x.bolum); setTutulan(null); bildir(`${parcaBul(t, v.parca, kitaplik)?.ad ?? "Parça"} eklendi (taslak).`); goster(x.bolum);
   };
   const alanaBirak = (i: number, k: string) => {
     const x = alanaParcaEkle(t, i, k);
@@ -267,12 +295,12 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
       </div>
       {gelismis && gorunum === "duzen" ? (
         <div className={`${ys.yapboz} ${stil.yalnizGenis}`}>
-          <Parcalar t={t} tutulan={tutulan} tut={setTutulan} />
+          <Parcalar t={t} kitaplik={kitaplik} tutulan={tutulan} tut={setTutulan} sil={parcaSilebilir ? (id, ad) => void parcaSil(id, ad) : null} />
           <div className={ys.orta}>
             <Kagit t={t} degis={degis} tur={tur} bolumuSil={(i) => void bolumuSil(i)} bildir={bildir}
-              yapboz={{ tutulan: tutulan ? parcaBul(t, tutulan) : null, birak, alanaBirak, secili, sec: setSecili }} />
+              yapboz={{ tutulan: tutulan ? parcaBul(t, tutulan, kitaplik) : null, birak, alanaBirak, secili, sec: setSecili }} />
           </div>
-          <div className={ys.sag}><SeciliBolum t={t} secili={secili} kopyala={kopyala} sil={(i) => void bolumuSil(i)} /></div>
+          <div className={ys.sag}><SeciliBolum t={t} secili={secili} kopyala={kopyala} sil={(i) => void bolumuSil(i)} parcaKaydet={mesgul ? null : parcaKaydet} /></div>
         </div>
       ) : (
         <div className={gorunum === "duzen" ? stil.yalnizGenis : stil.gizliHer}>

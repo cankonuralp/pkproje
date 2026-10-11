@@ -27,3 +27,15 @@
 .parcaAcik { color: var(--yazi2); font-size: var(--boy-kucuk); }
 .secAd { margin: 0; font-weight: 700; overflow-wrap: anywhere; }
 .tuslar { display: flex; flex-wrap: wrap; gap: 8px; }
+/* 496: firmanın parçası + Sil; Bakanlık formatlarının bölümleri şablon başına katlanır */
+.firmaParca { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px; align-items: stretch; }
+.parcaSil {
+  display: inline-grid; place-items: center; min-width: var(--tus-y); padding: 0 8px; border: 1px solid var(--kenar-alan); border-radius: var(--r-kucuk);
+  background: var(--zemin); color: var(--yazi2); cursor: pointer;
+}
+.parcaSil:hover { border-color: var(--hata-yazi); color: var(--hata-yazi); }
+.parcaSil:focus-visible { outline: 2px solid var(--odak); outline-offset: 2px; }
+.katlanir { display: grid; gap: 6px; }
+.katlanir > summary { min-height: var(--tus-y); display: flex; align-items: center; gap: 4px; padding: 4px 2px; cursor: pointer; font-weight: 600; font-size: var(--boy-kucuk); }
+.katlanir > summary:focus-visible { outline: 2px solid var(--odak); outline-offset: 2px; }
+.katlanir[open] > summary { margin-bottom: 6px; }

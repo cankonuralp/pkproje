@@ -2,13 +2,17 @@
    koruyalım gelişmiş seçenekler tuşu olsun ve tıklayınca buraya gitsin"; 46: "tam bir yapboz gibi olmalı ve kolay kullanışlı olmalı". Saf işlevler
    (src/modules/rapor-format/yapboz.ts): parça kutusu; parça bölümler arasına (bölüm, içinde bir başlangıç öğesiyle; tek alan → içinde o alanla bilgi
    bölümü) ya da bilgi bölümüne (alan) bırakılır; bölüm taşınır, kopyalanır — kimlikler tanımda tekil, sonuç şemadan geçer. Olumsuz kanıt:
-   tests/bozan/yapboz.bozan.ts. Tarayıcıda: e2e/rapor-format.spec.ts (Gelişmiş seçenekler). */
+   tests/bozan/yapboz.bozan.ts. Tarayıcıda: e2e/rapor-format.spec.ts (Gelişmiş seçenekler).
+   496 PARÇA KİTAPLIĞI: Bakanlık formatlarının bölümleri ve firmanın parçaları kutuda; parça formata KOPYALANIR — Bakanlık işareti, üst / alt başlık
+   kalkar, kimlikler yeni; ölçüm cihazları, ekipman bilgileri ve kayıttan gelen bölüm parça olmaz. Sunucu tarafı: tests/parca.test.ts. */
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { ekipmanBolumuMu, kayittanBolumMu } from "../src/format/duzen.ts";
 import { SABLONLAR } from "../src/format/sablonlar.ts";
 import { FormatTanimi, type Bolum } from "../src/format/tanim.ts";
 import { kimlikler } from "../src/modules/rapor-format/kurucu.ts";
-import { alanaParcaEkle, bolumKopyala, bolumuTasi, parcaBul, parcaGruplari, parcaYerlestir } from "../src/modules/rapor-format/yapboz.ts";
+import { hazirParcalar } from "../src/modules/rapor-format/kitaplik.ts";
+import { alanaParcaEkle, bolumKopyala, bolumuTasi, parcaBul, parcaGruplari, parcaHazirla, parcaOlur, parcaYerlestir, type Kitaplik } from "../src/modules/rapor-format/yapboz.ts";
 
 const T = FormatTanimi.parse(SABLONLAR.KOMPRESOR.tanim);
 const gecerli = (t: FormatTanimi) => { const r = FormatTanimi.safeParse(t); assert.ok(r.success, JSON.stringify(r.error?.issues)); };
@@ -21,7 +25,9 @@ const tekil = (t: FormatTanimi) => {
 
 test("parça kutusu: bölümler (cihaz bölümü varsa yok), altı tek alan, on kayıttan gelen alan", () => {
   const g = parcaGruplari(T);
-  assert.deepEqual(g.map((x) => x.ad), ["Bölümler", "Tek alan · bir bilgi bölümüne", "Kayıttan gelen · bilgi bölümüne"]);
+  /* 2026-10-12 (496): firmanın parçaları grubu eklendi (boşken ekranda ipucu) — gerekçe: parça kitaplığı */
+  assert.deepEqual(g.map((x) => x.ad), ["Bölümler", "Tek alan · bir bilgi bölümüne", "Kayıttan gelen · bilgi bölümüne", "Firmanızın parçaları"]);
+  assert.equal(g[3].parcalar.length, 0);
   assert.ok(T.bolumler.some((b) => b.blok === "cihaz"));
   assert.ok(!g[0].parcalar.some((p) => p.k === "b:cihaz"), "ölçüm cihazları bölümü tektir");
   assert.equal(g[0].parcalar.length, 10, "495: serbest metin bölümü eklendi (2026-10-12)");
@@ -98,4 +104,67 @@ test("bölüm kopyası: hemen altına, iç kimlikler yeni (tablo sütunları tab
   assert.ok(yb.blok === "liste" && yb.gruplar.every((g) => !once.has(g.id) && g.maddeler.every((m) => !once.has(m.id) && !m.kilit)));
   gecerli(y.t); tekil(y.t);
   assert.equal(bolumKopyala(T, T.bolumler.findIndex((b) => b.blok === "cihaz")), null);
+});
+
+/* ── 496 parça kitaplığı ── */
+const KT: Kitaplik = { firma: [], hazir: hazirParcalar() };
+
+test("kitaplık: her şablonun parça olabilen bölümleri — ölçüm cihazları, ekipman bilgileri, kayıttan gelen bölüm yok; şablon başına katlanır grup", () => {
+  assert.ok(KT.hazir.length >= 9, "Bakanlık formatları + genel şablonlar");
+  for (const h of KT.hazir) {
+    assert.ok(h.bolumler.length > 0, h.anahtar);
+    for (const b of h.bolumler) {
+      assert.ok(b.blok !== "cihaz", `${h.anahtar}: ölçüm cihazları parça değil`);
+      const bagli = b.blok === "bilgi" && b.alanlar.some((a) => a.ekipman);
+      assert.ok(!bagli && !ekipmanBolumuMu(b) && !kayittanBolumMu(b), `${h.anahtar}: ${b.ad}`);
+    }
+  }
+  const z = KT.hazir.find((h) => h.anahtar === "ZPKR02")!;
+  assert.ok(z.bolumler.some((b) => b.blok === "olcum" && b.kilit), "Bakanlık ölçüm tablosu kitaplıkta");
+  const g = parcaGruplari(T, KT);
+  assert.equal(g.filter((x) => x.katlanir).length, KT.hazir.length);
+  assert.equal(parcaBul(T, `h:ZPKR02:${z.bolumler[0].id}`, KT)?.ad, z.bolumler[0].ad);
+});
+
+test("Bakanlık bölümü parça olarak: kopyası Bakanlık işaretsiz, üst / alt başlıksız, kimlikleri yeni; iki kez bırakılsa da tekil, şemadan geçer", () => {
+  const z = KT.hazir.find((h) => h.anahtar === "ZPKR02")!;
+  const ol = z.bolumler.find((b) => b.blok === "olcum" && b.kilit)!;
+  const x = parcaYerlestir(T, `h:ZPKR02:${ol.id}`, 1, KT)!;
+  const b = x.t.bolumler[1];
+  assert.equal(b.id, x.id);
+  assert.deepEqual([b.ad, b.kilit, b.ust, b.alt, b.numarasiz], [ol.ad, false, undefined, undefined, undefined]);
+  assert.ok(!kimlikler(T).has(b.id));
+  assert.ok(b.blok === "olcum" && ol.blok === "olcum");
+  assert.deepEqual([b.sutunlar.map((s) => s.id), b.hesap], [ol.sutunlar.map((s) => s.id), ol.hesap], "sütunlar tablo içinde tekil — aynı, hesabıyla");
+  const y = parcaYerlestir(x.t, `h:ZPKR02:${ol.id}`, 2, KT)!;
+  gecerli(y.t); tekil(y.t);
+  /* üst başlıklı Bakanlık bölümü (ZPKR04 "5. Tespit ve değerlendirmeler" › 5.1 / 5.2): parçada üst başlık yok */
+  const ustlu = KT.hazir.flatMap((h) => h.bolumler.map((bl) => [h.anahtar, bl] as const)).find(([, bl]) => bl.ust || bl.alt)!;
+  assert.ok(ustlu, "üst / alt başlıklı şablon bölümü var");
+  const u = parcaYerlestir(T, `h:${ustlu[0]}:${ustlu[1].id}`, 0, KT)!;
+  assert.deepEqual([u.t.bolumler[0].ust, u.t.bolumler[0].alt], [undefined, undefined]);
+  gecerli(u.t);
+  /* kontrol listesi: maddeler yeni kimlikle, Bakanlık işaretsiz */
+  const li = KT.hazir.flatMap((h) => h.bolumler.map((bl) => [h.anahtar, bl] as const)).find(([, bl]) => bl.blok === "liste" && bl.kilit)!;
+  const l = parcaYerlestir(T, `h:${li[0]}:${li[1].id}`, 0, KT)!;
+  const lb = l.t.bolumler[0];
+  assert.ok(lb.blok === "liste" && lb.gruplar.every((g) => !kimlikler(T).has(g.id) && g.maddeler.every((m) => !m.kilit)));
+  gecerli(l.t); tekil(l.t);
+  assert.equal(parcaYerlestir(T, "h:YOK:b1", 0, KT), null);
+  assert.equal(parcaYerlestir(T, `h:ZPKR02:yok`, 0, KT), null);
+});
+
+test("firmanın parçası: kutuda adıyla, formata kopyası; olmayan parça null; parça olamayan bölüm hazırlanmaz", () => {
+  const liste = T.bolumler.find((b) => b.blok === "liste")!;
+  const kt: Kitaplik = { firma: [{ id: "0b6e7d6c-0000-4000-8000-000000000001", ad: "Benim listem", bolum: { ...liste, ad: "Benim listem" } }], hazir: [] };
+  const g = parcaGruplari(T, kt).find((x) => x.firma)!;
+  assert.deepEqual(g.parcalar.map((p) => [p.k, p.ad]), [["f:0b6e7d6c-0000-4000-8000-000000000001", "Benim listem"]]);
+  const x = parcaYerlestir(T, "f:0b6e7d6c-0000-4000-8000-000000000001", 0, kt)!;
+  assert.equal(x.t.bolumler[0].ad, "Benim listem");
+  gecerli(x.t); tekil(x.t);
+  assert.equal(parcaYerlestir(T, "f:yok", 0, kt), null);
+  const cihaz = T.bolumler.find((b) => b.blok === "cihaz")!;
+  const ekipman = T.bolumler.find((b) => b.blok === "bilgi" && b.alanlar.some((a) => a.kaynak))!;
+  assert.deepEqual([parcaOlur(cihaz), parcaHazirla(cihaz), parcaOlur(ekipman), parcaHazirla(ekipman)], [false, null, false, null]);
+  assert.equal(parcaHazirla(liste)?.kilit, false);
 });

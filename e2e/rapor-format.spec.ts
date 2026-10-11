@@ -230,6 +230,26 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await arac.getByRole("button", { name: "Geri al" }).click();
     await expect(bolumler).toHaveCount(say);
     await expect(ekip.getByRole("button", { name: "Yeni sayı", exact: true })).toHaveCount(0);
+    /* 496 parça kitaplığı: hazır formatın bölümü kutudan (şablon başına katlanır) eklenir — Bakanlık işaretsiz kopya; seçili bölüm firmanın parçası
+       olarak kaydedilir, "Firmanızın parçaları"nda çıkar; yönetici siler, formattaki kopyası kalır */
+    const firmaGrubu = parcalar.getByRole("group", { name: "Firmanızın parçaları" });
+    await expect(firmaGrubu).toContainText("Henüz yok");
+    await parcalar.getByText("Kule kren (ZPKR06, Bakanlık)").click();
+    await parcalar.getByRole("button", { name: /^Muayene kriterleri ve testler/ }).click();
+    await kagit.getByRole("button", { name: "Buraya ekle: Muayene kriterleri ve testler" }).first().click();
+    await expect(bolumler).toHaveCount(say + 1);
+    const seciliBolum = page.getByRole("complementary", { name: "Seçili bölüm" });
+    await expect(seciliBolum).toContainText("Muayene kriterleri ve testler");
+    await expect(seciliBolum).not.toContainText("Bakanlık bölümü");
+    await seciliBolum.getByRole("button", { name: "Parça olarak kaydet" }).click();
+    await expect(page.getByText(/firmanızın parçalarına kaydedildi/).first()).toBeVisible();
+    await expect(firmaGrubu.getByRole("button", { name: /^Muayene kriterleri ve testler/ })).toBeVisible();
+    await firmaGrubu.getByRole("button", { name: "Muayene kriterleri ve testler parçasını sil" }).click();
+    await page.locator("dialog[open]").getByRole("button", { name: "Sil", exact: true }).click();
+    await expect(firmaGrubu).toContainText("Henüz yok");
+    await expect(bolumler).toHaveCount(say + 1);
+    await arac.getByRole("button", { name: "Geri al" }).click();
+    await expect(bolumler).toHaveCount(say);
     await arac.getByRole("button", { name: "Basit görünüme dön" }).click();
     await expect(parcalar).toHaveCount(0);
     await ekip.getByRole("combobox", { name: "Ekipman kaydından alan ekle" }).click();

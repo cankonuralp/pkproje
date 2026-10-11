@@ -130,6 +130,9 @@ PDF'e basılmaz.
   kopyasında değiştirilir; formatın **"Sahada denetçi değiştiremez"** seçimi (gorunum.kilitli; başlangıç SGK ve İSG-KATİP) kilitler — kâğıtta 1.
   bölümün altında. Kilitli bilgiyi sunucu da reddeder (src/format/kunye.ts).
 - **2026-10-12 (493; 29 + 46 maketi):** kâğıdın üstünde **Geri al / Yinele** (Ctrl+Z / Ctrl+Y); her değişiklik bir adım, en çok 100 (gecmis.ts).
+- **2026-10-12 (496):** gelişmiş görünümün parça kutusunda **hazır formatlardan bölümler** (Bakanlık ZPKR / ZPMR / ZYDR ve genel şablonlar, şablon
+  başına katlanır) ve **Firmanızın parçaları** — seçili bölümde "Parça olarak kaydet", bütün formatlarda kutuda; yönetici siler. Parça formata
+  kopyalanır (Bakanlık işareti kalkar, kimlikler yeni); parça sonradan silinse de formatlar değişmez.
 - **2026-10-12 (495):** öğenin ayrıntılarında **Formül** (ada / işarete basınca eklenir, yazarken denetlenir); **Serbest metin** bölümü.
 - **2026-10-12 (494; 29 + 46 maketi, reisim: "mevcuttaki sistemi koruyalım gelişmiş seçenekler tuşu olsun"):** **Gelişmiş seçenekler** — aynı kâğıdın
   solunda **parçalar** (bölümler, tek alanlar, kayıttan gelen alanlar; sürükle-bırak ya da bas-yerini seç), sağında **seçili bölüm** (kopyala, sil);

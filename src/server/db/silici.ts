@@ -97,6 +97,11 @@ export const SILINEBILIR = {
     kullanim: "plan_kullanim", sil: "plan_sil",
     fk: { kullanim: ["fatura_rapor.plan_id", "gider.plan_id", "rapor.plan_id"], birlikte: ["plan_ekip.plan_id", "plan_ekipman.plan_id", "plan_not.plan_id"] },
   },
+  /* 496: firmanın format parçası — formatlara kopyalanır, hiçbir yerde kullanılmaz (0080) */
+  format_parca: {
+    kullanim: "format_parca_kullanim", sil: "format_parca_sil",
+    fk: { kullanim: [], birlikte: [] },
+  },
 } as const satisfies Record<string, { kullanim: string; sil: string; fk: { kullanim: readonly string[]; birlikte: readonly string[] } }>;
 export type SilinebilirTur = keyof typeof SILINEBILIR;
 

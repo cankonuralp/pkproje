@@ -152,6 +152,9 @@ pkproje/
                             seçilir (kurucu.ts ALT_TURLER)
                             · 494 GELİŞMİŞ SEÇENEKLER (yapboz): yapboz.ts (saf: parça kutusu, bırak / bölüme ekle / taşı / kopyala) · ui/Yapboz.tsx
                             (Parçalar, Seçili bölüm) · Kagit.tsx YapbozBagi (bırakma yerleri, tutamak, "Buraya ekle") — aynı taslak, aynı geçmiş
+                            · 496 PARÇA KİTAPLIĞI: hazır formatların bölümleri (kitaplik.ts hazirParcalar — sunucuda; şablon dosyası tarayıcıya gitmez) +
+                            firmanın parçaları (server/parcalar.ts; göç 0080 format_parca — RLS, değişmez, kesin silme silici.ts); yapboz.ts parcaHazirla
+                            (Bakanlık işareti / üst-alt başlık kalkar; cihaz, ekipman, kayıttan bölüm parça olmaz), parcaKopyasi (yeni kimlik)
                             · 493 GERİ AL / YİNELE: gecmis.ts (saf; adım, geri al, yinele, kısayol — en çok 100 adım) → FormatKurucu araç çubuğu
                             "Taslak araçları" (Ctrl+Z / Ctrl+Y; yazı alanında yok)
                             · 471 SÜRÜM SAYFASI: fark.ts (önceki sürüme göre değişenler, saf) · ui/SurumOnizleme.tsx (Belge ↔ Saha) · rapor sayısı

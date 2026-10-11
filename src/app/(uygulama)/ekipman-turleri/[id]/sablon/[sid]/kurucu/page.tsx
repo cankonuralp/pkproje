@@ -2,7 +2,8 @@
    sunucuda (Ekipman türleri "değiştirir"); yayınlanmış ya da eski sürüm, başka tür / firma: önizlemeye döner ya da bulunamadı. Kayıt ve yayın
    denetimi modül işlevinde (rapor-format/server/formatlar.ts). 460: eski formatın ekipman bölümü açılışta serbest bölüme çevrilir (format/duzen.ts
    ekipmanTamYap; belgenin satırları aynı kalır); 459: ölçüm cihazları bölümü yoksa eklenir — kaydedilince taslağa yazılır. 459: türün kontrol
-   metodu standartları ve ölçüm cihazı türleri (tür sayfasında seçilir) kâğıtta ve belge önizlemesinde kendiliğinden görünür. */
+   metodu standartları ve ölçüm cihazı türleri (tür sayfasında seçilir) kâğıtta ve belge önizlemesinde kendiliğinden görünür. 496: parça kitaplığı —
+   firmanın parçaları (rapor-format/server/parcalar.ts) ve Bakanlık formatlarının bölümleri (kitaplik.ts; şablon dosyası tarayıcıya gitmez). */
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 /* 451: kâğıt ve belge önizlemesi belgenin görünümüyle (.rb- sınıfları) */
@@ -13,7 +14,9 @@ import { kurucuyaHazirla } from "../../../../../../../format/duzen";
 import { bransAd } from "../../../../../../../modules/ekipman-turleri/sema";
 import { turKarti } from "../../../../../../../modules/ekipman-turleri/server/turler";
 import { modulBul } from "../../../../../../../modules/moduller";
+import { hazirParcalar } from "../../../../../../../modules/rapor-format/kitaplik";
 import { formatAyrintisi, formatDegistirir } from "../../../../../../../modules/rapor-format/server/formatlar";
+import { firmaParcalari, parcaSilebilir } from "../../../../../../../modules/rapor-format/server/parcalar";
 import { FormatKurucu } from "../../../../../../../modules/rapor-format/ui/FormatKurucu";
 import { modulOturumu, oturumIslemi } from "../../../../../../../server/kimlik/istek";
 
@@ -24,9 +27,9 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string; 
   const o = await modulOturumu(MODUL.no);
   if (!o) return <Yetkisiz />;
   const { id, sid } = await params;
-  const [f, tur] = await oturumIslemi(o, async (db) => {
+  const [f, tur, parcalar] = await oturumIslemi(o, async (db) => {
     const f = await formatAyrintisi(db, o, sid);
-    return [f, f && f.turId === id ? await turKarti(db, o, id) : null] as const;
+    return [f, f && f.turId === id ? await turKarti(db, o, id) : null, await firmaParcalari(db, o)] as const;
   });
   if (!f || !tur) notFound();
   /* yalnız taslak ve yalnız "değiştirir": öteki durumda salt okunur önizleme */
@@ -36,7 +39,8 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string; 
       <Kirinti ogeler={[[`Ekipman türleri · ${bransAd(tur.brans)}`, tur.brans === "e" ? "/ekipman-turleri?brans=e" : "/ekipman-turleri"],
         [tur.ad, `/ekipman-turleri/${tur.id}`], ["Format kurucu"]]} />
       <FormatKurucu turId={tur.id} turAd={tur.ad} turKod={tur.kod} format={{ id: f.id, surum: f.surum }} tanim={kurucuyaHazirla(f.tanim)} kaynakAd={f.kaynakAd}
-        turStd={tur.standartlar.map((s) => s.no)} turCihaz={tur.cihazTurleri.map((c) => c.ad)} />
+        turStd={tur.standartlar.map((s) => s.no)} turCihaz={tur.cihazTurleri.map((c) => c.ad)}
+        firmaParca={parcalar} hazirParca={hazirParcalar()} parcaSilebilir={parcaSilebilir(o)} />
     </>
   );
 }

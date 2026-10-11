@@ -3,7 +3,12 @@
    buraya gitsin"; 46: "rapor tasarımcısını da kullanacak kullanıcılar tam bir yapboz gibi olmalı ve kolay kullanışlı olmalı") — saf. Parça kutusu:
    bölümler (her blok, içinde bir başlangıç öğesiyle), tek alanlar (bir bilgi bölümüne) ve kayıttan gelen alanlar. Parça kâğıda iki bölüm arasına
    bırakılır (bölüm; tek alan bırakılırsa içinde o alanla yeni bilgi bölümü) ya da bir bilgi bölümünün üstüne (alan o bölüme). Bölümler tutamaktan
-   taşınır, kopyalanır. Basit görünüm (kâğıt) ile aynı taslak — kimlikler tanımda tekil (kurucu.ts yeniKimlik). */
+   taşınır, kopyalanır. Basit görünüm (kâğıt) ile aynı taslak — kimlikler tanımda tekil (kurucu.ts yeniKimlik).
+   496 PARÇA KİTAPLIĞI: Bakanlık formatlarının (ve kompresör şablonunun) bölümleri tek tek — şablon başına katlanır grup; FİRMANIZIN PARÇALARI
+   ("Parça olarak kaydet" — sunucuda format_parca, göç 0080). Parça formata KOPYALANIR (parcaKopyasi: iç kimlikler yeni, tablo sütunları tablo içinde
+   tekil olduğundan aynı; Bakanlık işareti, üst / alt başlık ve numarasızlık kalkar) — format parçaya bağlanmaz. Şablon bölümleri sunucuda
+   seçilir (kitaplik.ts hazirParcalar — şablon dosyası tarayıcıya gitmez) ve sayfadan gelir. */
+import { ekipmanBolumuMu, kayittanBolumMu } from "../../format/duzen.ts";
 import { ALAN_TURLERI, Bolum, KAYNAKLAR, type Blok, type BolumOf, type FormatTanimi } from "../../format/tanim.ts";
 import { kimlikler, yeniBolum, yeniKimlik } from "./kurucu.ts";
 import { BLOK_ADI } from "./ui/ortak.ts";
@@ -13,7 +18,15 @@ export interface Parca {
   /** "b:<blok>" bölüm · "a:<alan türü>" tek alan · "k:<kaynak>" kayıttan gelen alan */
   k: string; ad: string; acik: string; tur: ParcaTuru;
 }
-export interface ParcaGrubu { ad: string; parcalar: Parca[] }
+/** katlanir: şablon başına grup (kapalı açılır); firma: firmanın parçaları (boşsa ipucu) */
+export interface ParcaGrubu { ad: string; parcalar: Parca[]; katlanir?: boolean; firma?: boolean }
+/** firmanın kaydettiği parça (sunucu: rapor-format/server/parcalar.ts) */
+export interface FirmaParcasi { id: string; ad: string; bolum: Bolum }
+/** şablonun parça olabilen bölümleri (kitaplik.ts hazirParcalar) */
+export interface HazirParca { anahtar: string; ad: string; bolumler: Bolum[] }
+/** parça kitaplığı: firmanın parçaları + şablon bölümleri */
+export interface Kitaplik { firma: readonly FirmaParcasi[]; hazir: readonly HazirParca[] }
+const BOS: Kitaplik = { firma: [], hazir: [] };
 
 type AlanTuru = (typeof ALAN_TURLERI)[number];
 type Kaynak = (typeof KAYNAKLAR)[number];
@@ -34,18 +47,47 @@ const BOLUM_ACIK: Record<Blok, string> = {
 };
 const BOLUM_SIRASI: readonly Blok[] = ["bilgi", "liste", "olcum", "test", "foto", "metin", "not", "kusur", "sonuc", "imza", "cihaz"];
 
-/** parça kutusu (ölçüm cihazları bölümü tektir — varsa listede yok) */
-export function parcaGruplari(t: FormatTanimi): ParcaGrubu[] {
+/** parça olabilen bölüm mü: ölçüm cihazları (tektir, türden), kayıttan gelen alanlı bilgi bölümü (1. bölümün kopyası) ve ekipman bilgileri
+    (formatta tek; şablonun "Ekipman bilgileri"si kurucuda tam bölüm olur — duzen.ts ekipmanBolumuMu; ekipman kaydına bağlı alanlar yalnız
+    orada) parça olmaz */
+export function parcaOlur(b: Bolum): boolean {
+  if (b.blok === "cihaz") return false;
+  if (b.blok === "bilgi") { const bagli = b.alanlar.some((a) => a.ekipman); return !bagli && !ekipmanBolumuMu(b) && !kayittanBolumMu(b); }
+  return true;
+}
+/** parçanın saklanacak / kopyalanacak hâli: Bakanlık işareti, üst / alt başlık ve numarasızlık kalkar (yeni yerinde ana bölüm) */
+export function parcaHazirla(b: Bolum): Bolum | null {
+  if (!parcaOlur(b)) return null;
+  const y: Record<string, unknown> = { ...b, kilit: false };
+  delete y.ust; delete y.alt; delete y.numarasiz;
+  if (b.blok === "bilgi") y.alanlar = b.alanlar.map((a) => ({ ...a, kilit: false }));
+  if (b.blok === "liste") y.gruplar = b.gruplar.map((g) => ({ ...g, maddeler: g.maddeler.map((m) => ({ ...m, kilit: false })) }));
+  if (b.blok === "test") y.degerler = b.degerler.map((d) => ({ ...d, kilit: false }));
+  const r = Bolum.safeParse(y);
+  return r.success ? r.data : null;
+}
+
+/** parça kutusu (ölçüm cihazları bölümü tektir — varsa listede yok); kitaplık: firmanın parçaları + şablon bölümleri */
+export function parcaGruplari(t: FormatTanimi, kt: Kitaplik = BOS): ParcaGrubu[] {
   const cihazVar = t.bolumler.some((b) => b.blok === "cihaz");
   return [
     { ad: "Bölümler", parcalar: BOLUM_SIRASI.filter((b) => !(b === "cihaz" && cihazVar)).map((b) => ({ k: `b:${b}`, ad: BLOK_ADI[b], acik: BOLUM_ACIK[b], tur: "bolum" })) },
     { ad: "Tek alan · bir bilgi bölümüne", parcalar: ALAN_TURLERI.map((a) => ({ k: `a:${a}`, ad: ALAN_PARCA_ADI[a][0], acik: ALAN_PARCA_ADI[a][1], tur: "alan" })) },
     { ad: "Kayıttan gelen · bilgi bölümüne", parcalar: KAYNAKLAR.map((x) => ({ k: `k:${x}`, ad: KAYNAK_ADI[x], acik: "plandan / kayıttan, sahada gösterilir", tur: "alan" })) },
+    { ad: "Firmanızın parçaları", firma: true, parcalar: kt.firma.map((f) => ({ k: `f:${f.id}`, ad: f.ad, acik: BLOK_ADI[f.bolum.blok], tur: "bolum" })) },
+    ...kt.hazir.map((h) => ({ ad: h.ad, katlanir: true, parcalar: h.bolumler.map((b) => ({ k: `h:${h.anahtar}:${b.id}`, ad: b.ad, acik: BLOK_ADI[b.blok], tur: "bolum" as const })) })),
   ];
 }
-export function parcaBul(t: FormatTanimi, k: string): Parca | null {
-  for (const g of parcaGruplari(t)) for (const p of g.parcalar) if (p.k === k) return p;
+export function parcaBul(t: FormatTanimi, k: string, kt: Kitaplik = BOS): Parca | null {
+  for (const g of parcaGruplari(t, kt)) for (const p of g.parcalar) if (p.k === k) return p;
   return null;
+}
+/** kitaplık parçasının bölümü (h:<şablon>:<bölüm> · f:<firma parçası>) */
+function kitaplikBolumu(k: string, kt: Kitaplik): Bolum | null {
+  if (k.startsWith("f:")) return kt.firma.find((f) => f.id === k.slice(2))?.bolum ?? null;
+  const m = /^h:([A-Z0-9]+):(.+)$/.exec(k);
+  if (!m) return null;
+  return kt.hazir.find((h) => h.anahtar === m[1])?.bolumler.find((b) => b.id === m[2]) ?? null;
 }
 
 /** parçanın bölümü: içinde bir başlangıç öğesiyle (boş bölüm yayında uyarı verirdi) */
@@ -86,7 +128,12 @@ const yerlestirIc = (t: FormatTanimi, b: Bolum, p: number): FormatTanimi => {
 
 /** parçayı p. yere (yeni bölümün t.bolumler'deki yeri) bırakır: bölüm parçası o bölüm; alan parçası içinde o alanla yeni bilgi bölümü. Yeni
     bölümün (alan parçasında alanın) kimliği döner; parça tanınmazsa null */
-export function parcaYerlestir(t: FormatTanimi, k: string, p: number): { t: FormatTanimi; id: string; bolum: string } | null {
+export function parcaYerlestir(t: FormatTanimi, k: string, p: number, kt: Kitaplik = BOS): { t: FormatTanimi; id: string; bolum: string } | null {
+  if (k.startsWith("h:") || k.startsWith("f:")) {
+    const kaynak = kitaplikBolumu(k, kt);
+    const b = kaynak ? parcaKopyasi(t, kaynak) : null;
+    return b ? { t: yerlestirIc(t, b, p), id: b.id, bolum: b.id } : null;
+  }
   if (k.startsWith("b:")) {
     const blok = k.slice(2) as Blok;
     if (!BOLUM_SIRASI.includes(blok) || (blok === "cihaz" && t.bolumler.some((b) => b.blok === "cihaz"))) return null;
@@ -125,9 +172,19 @@ export function bolumuTasi(t: FormatTanimi, id: string, p: number): FormatTanimi
 export function bolumKopyala(t: FormatTanimi, i: number): { t: FormatTanimi; id: string } | null {
   const b = t.bolumler[i];
   if (!b || b.blok === "cihaz" || (b.blok === "bilgi" && b.tam)) return null;
+  const kopya = kopyaIc(t, b, `${b.ad} (kopya)`.slice(0, 200));
+  return { t: yerlestirIc(t, kopya, i + 1), id: kopya.id };
+}
+
+/** 496: kitaplık parçasının (Bakanlık şablonu ya da firmanın parçası) bu formata kopyası — parcaHazirla'dan geçer, iç kimlikler yeni; olmazsa null */
+export function parcaKopyasi(t: FormatTanimi, kaynak: Bolum): Bolum | null {
+  const h = parcaHazirla(kaynak);
+  return h ? kopyaIc(t, h, h.ad) : null;
+}
+
+function kopyaIc(t: FormatTanimi, b: Bolum, ad: string): Bolum {
   const ek = new Set(kimlikler(t));
   const yeni = (onek: "b" | "a" | "g" | "m" | "s" | "d") => { const x = yeniKimlik(t, onek, ek); ek.add(x); return x; };
-  const ad = `${b.ad} (kopya)`.slice(0, 200);
   let k: Bolum;
   if (b.blok === "bilgi") k = { ...b, alanlar: b.alanlar.map((a) => ({ ...a, id: yeni("a"), kilit: false })) };
   else if (b.blok === "liste") k = { ...b, gruplar: b.gruplar.map((g) => ({ ...g, id: yeni("g"), maddeler: g.maddeler.map((m) => ({ ...m, id: yeni("m"), kilit: false })) })) };
@@ -136,8 +193,7 @@ export function bolumKopyala(t: FormatTanimi, i: number): { t: FormatTanimi; id:
   else if (b.blok === "olcum") k = { ...b };
   else if (b.blok === "test") k = { ...b, degerler: b.degerler.map((d) => ({ ...d, id: yeni("d"), kilit: false })) };
   else k = { ...b };
-  const kopya = Bolum.parse({ ...k, id: yeni("b"), ad, kilit: false });
-  return { t: yerlestirIc(t, kopya, i + 1), id: kopya.id };
+  return Bolum.parse({ ...k, id: yeni("b"), ad, kilit: false });
 }
 
 /* ── sürükle-bırak taşıyıcısı (dataTransfer): tür sürüklerken okunabilsin diye tür MIME adında ── */
