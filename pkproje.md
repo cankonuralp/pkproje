@@ -2351,6 +2351,14 @@ görünür, "+ … koy" / ×; tabloda satır "Kopyala", "Son satırı kopyala", 
 açıklaması; ekipman bilgileri bölümü bütünüyle silinir; alt başlık türü seçilir. **Açık soru:** ölçüm tablosunun Sonuç'u şimdi yalnız kurala göre
 (Bakanlık kriteri: ör. RCD testi IΔ ≤ IΔn ve TΔ ≤ 200 ms) — denetçi gerekçe yazarak elle değiştirebilsin mi? (öneri: evet, "kural sonucu" yanında
 gösterilir) → 2026-10-11 reisim önerileri kabul etti: YAPILDI (§11 488). Aynı gün reisim: satırın kopyala işareti ve "Sırala" kalksın → kalktı (488).
+**2026-10-11 akşam — hata listesi 29 + 46 + 9 maketi ONAYLANDI, bir değişiklikle** (maket https://claude.ai/artifact/TgA7oTqRojdEe7qAfjqAfJ;
+reisim: *"maketi onaylıyorum ama bu da çok karmaşık olmuş, şöyle yapalım mevcuttaki sistemi koruyalım gelişmiş seçenekler tuşu olsun ve tıklayınca
+buraya gitsin"*; karar formunda K1 = "bugünkü gibi yalnız kâğıt"): format kurucu **bugünkü gibi açılır** (Kâğıt · Saha ekranı · Belge önizlemesi,
+değişmeden); üstte **"Gelişmiş seçenekler"** tuşu makettekine götürür (parça kutusu + sürükle-bırak, formül, serbest metin, Bakanlık ve firmanın
+parçaları, yapay zekâya anlat, belgeden başlat, sağda ayarlar). Önerim (cevapta): gelişmiş ayrı bir format değil, AYNI taslağın ikinci görünümü —
+orada yapılan kâğıtta görünür, geri dönünce hiçbir şey kaybolmaz; varsayılan her zaman kâğıt; telefonda tuş yok (K9). Öteki sorular cevapsız →
+önerilerim (K2–K11): dokun-yerleştir de, formül evet, Bakanlık parçaları tek tek, firmanın parçaları, yapay zekâ önerisi onaysız yazılmaz, belgeden
+başlat sıranın sonunda, koşullu bölüm sonraki tur, madde 9 → A (sahada üstte katlanır "Kayıttan gelenler" kartı), sıra: önce madde 9.
 
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
