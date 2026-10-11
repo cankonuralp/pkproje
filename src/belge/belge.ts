@@ -139,10 +139,14 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
           h("table", null, baslikSatiri(siraBasligi(b), ...b.sutunlar.map((s) => `${s.ad}${s.birim ? ` (${s.birim})` : ""}`), "Sonuç"),
             h("tbody", null, ...(satirlar.length ? satirlar.map((s, i) => {
               const r = sonuclar[i], not = Number(s.not);
-              const sonuc = not > 0 ? `Not-${not}` : r?.uygun === true ? "Uygun" : r?.uygun === false ? "Uygun değil" : "-";
+              const ad = (u: boolean | null | undefined) => (u === true ? "Uygun" : u === false ? "Uygun değil" : "-");
+              /* 488: elle değiştirilen sonuçta kural sonucu da yazar ("Uygun değil (elle; kural: Uygun)"), gerekçe tablonun altında */
+              const sonuc = not > 0 ? `Not-${not}` : r?.elle ? `${ad(r.uygun)} (elle; kural: ${ad(r.elle.kural)})` : ad(r?.uygun);
               return h("tr", { key: i }, h("td", { className: "rb-orta" }, String(i + 1)), ...b.sutunlar.map((x) => h("td", { key: x.id }, deger(s[x.id]))), h("td", null, sonuc));
             }) : [h("tr", { key: 0 }, h("td", { colSpan: b.sutunlar.length + 2 }, "-"))]))),
-          b.notlar?.length ? h("ol", { className: "rb-notlar" }, ...b.notlar.map((n, i) => h("li", { key: i }, `Not-${i + 1}: ${n.metin}`))) : null);
+          b.notlar?.length ? h("ol", { className: "rb-notlar" }, ...b.notlar.map((n, i) => h("li", { key: i }, `Not-${i + 1}: ${n.metin}`))) : null,
+          sonuclar.some((r) => r?.elle) ? h("ul", { className: "rb-notlar" }, ...sonuclar.flatMap((r, i) => (r?.elle
+            ? [h("li", { key: i }, `${i + 1}. satırın sonucu muayene uzmanınca değiştirildi (kural: ${r.elle.kural === true ? "Uygun" : r.elle.kural === false ? "Uygun değil" : "-"}): ${r.elle.gerekce || "-"}`)] : []))) : null);
       }
       case "test": return h("table", null, baslikSatiri("Ölçüm", "Değer", "Sınır", "Sonuç"), h("tbody", null, ...b.degerler.map((x) => {
         const s = c.deger[x.id], r = d.degerler[x.id];

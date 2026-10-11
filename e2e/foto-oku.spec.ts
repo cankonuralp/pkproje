@@ -7,13 +7,13 @@
    OKUMA fotoğrafı (Fotoğraflar bölümünde değil, belgede yok); ekipman bilgilerinde "Fotoğraftan doldur" (385'in "Etiketten oku"su); tabloya
    "Excel'den yükle" (başlık satırı sütun adlarıyla) ve "Excel şablonu".
    486 (reisim 2026-10-10): tuşun adı "Fotoğraf ekle (yapay zekâ okur)" (tabloda ve alanlı bölümde aynı); tablodaki Tip listesi alanın yanında açılır,
-   sayfa kaymaz ("tip seçin kısmına tıklayınca saçma sapan başa atıp"); sıra sütunu "Sıra"; "Son satırı kopyala" (No bir artar) ve "Sırala"
-   (No'ya göre doğal sıra); "Sonuç neye göre çıkar?" tablonun kuralını yazar. */
+   sayfa kaymaz ("tip seçin kısmına tıklayınca saçma sapan başa atıp"); sıra sütunu "Sıra"; "Son satırı kopyala" (No bir artar); "Sonuç neye göre
+   çıkar?" tablonun kuralını yazar. 488: "Sırala" ve satırın Kopyala işareti kalktı (reisim); satırın sonucu gerekçeyle elle değiştirilir. */
 import { mkdirSync } from "node:fs";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { xlsxBayt, XLSX_TURU } from "../src/components/disa/xlsx";
 import { SABLONLAR } from "../src/format/sablonlar";
-import { satirlariSirala, sonrakiKod } from "../src/modules/raporlar/tablo";
+import { sonrakiKod } from "../src/modules/raporlar/tablo";
 import { E2E_KAPI, E2E_PAROLA, E2E_YZ } from "./hesaplar";
 import { bolumleriAc, hazir } from "./yardimci";
 
@@ -157,7 +157,7 @@ test("ölçüm tablosu Excel'den: başlıklar sütunlara eşlenir, satırlar tab
   expect(l.x < a.x + a.width && l.x + l.width > a.x, "liste alanın hizasında").toBe(true);
   await tipListe.getByRole("option", { name: "C", exact: true }).click();
   await expect(tip).toContainText("C");
-  /* 486: son satırı kopyala — değerler gelir, No bir artar; Sırala — No'ya göre doğal sıra */
+  /* 486: son satırı kopyala — değerler gelir, No bir artar */
   const nolar = () => linye.getByRole("textbox", { name: /· No$/ }).evaluateAll((x) => x.map((i) => (i as HTMLInputElement).value));
   const once = await nolar();
   const sonDevre = await linye.getByRole("textbox", { name: /· Devre$/ }).last().inputValue();
@@ -165,9 +165,15 @@ test("ölçüm tablosu Excel'den: başlıklar sütunlara eşlenir, satırlar tab
   await expect(linye.getByRole("textbox", { name: /· No$/ })).toHaveCount(once.length + 1);
   await expect(linye.getByRole("textbox", { name: /· No$/ }).last()).toHaveValue(sonrakiKod(once.at(-1)!));
   await expect(linye.getByRole("textbox", { name: /· Devre$/ }).last()).toHaveValue(sonDevre);
-  const kopyali = await nolar();
-  await linye.getByRole("button", { name: "Sırala (No)" }).click();
-  await expect.poll(nolar).toEqual(satirlariSirala(kopyali.map((no) => ({ no })), "no").map((s) => s.no));
+  await expect(linye.getByRole("button", { name: /satırı kopyala \(altına\)$/ })).toHaveCount(0);
+  await expect(linye.getByRole("button", { name: /^Sırala/ })).toHaveCount(0);
+  /* 488 (hata listesi 54): son satırın sonucu gerekçeyle elle "Uygun değil" — hücrede "elle · kural: …"; gerekçe kutusu */
+  const son = (await nolar()).length;
+  await linye.getByRole("button", { name: `${son}. satır: sonucu elle değiştir` }).click();
+  await linye.getByRole("combobox", { name: `${son}. satır · elle sonuç` }).click();
+  await page.getByRole("option", { name: "Uygun değil", exact: true }).click();
+  await linye.getByLabel(`${son}. satır · elle sonucun gerekçesi`).fill("Deneme gerekçesi: yeniden ölçülecek");
+  await expect(linye.getByText(/^elle · kural: /).last()).toBeVisible();
   /* 486: "Sonuç neye göre çıkar?" tablonun kuralını yazar (RCD testi dahil) */
   await linye.getByText("Sonuç neye göre çıkar?").click();
   await expect(linye).toContainText("Ib ≤ In ≤ Iz");

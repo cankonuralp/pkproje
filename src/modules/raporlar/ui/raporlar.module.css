@@ -151,14 +151,9 @@ input.oku { background: var(--zemin2); border-color: var(--kenar); color: var(--
 .olcumTablo tbody tr:last-child td { border-bottom: 0; }
 .olcumTablo td.satirNo { min-width: 0; padding-top: 14px; color: var(--yazi2); font-variant-numeric: tabular-nums; }
 .olcumTablo td.sonucHucre { min-width: 9rem; }
-.olcumTablo td.islemHucre { min-width: 0; background: var(--kart); }
-.satirTuslari { display: inline-flex; gap: 2px; }
-/* 486: satırın Kopyala / Kaldır tuşları geniş tabloda da görünür — sütun kayan kabın sağına yapışık (gözle bakıldı: 15 sütunlu linye tablosunda
-   tuşlar ekranın dışında kalıyordu). YALNIZ tablet ve masaüstünde: telefonda yapışık sütun dar kabın içinde hücrelerin (Tip) üstüne biniyordu —
-   "Kaldır" seçim alanını örtüyordu (deneme makinesi izi); telefonda tuşlar satırın sonunda, tablo yana kaydırılır */
-@media (min-width: 768px) {
-  .olcumTablo td.islemHucre, .olcumTablo th.islemBas { position: sticky; right: 0; z-index: 1; box-shadow: -1px 0 0 var(--kenar); }
-}
+.olcumTablo td.islemHucre { min-width: 0; }
+/* 488 (reisim 2026-10-11 ekran görüntüsü): 486'daki sağa yapışık işlem sütunu KALKTI — tablo tam sağa kaydırılmadığında Sonuç sütununun üstüne
+   biniyordu ("S" / "U" kesik); satırın kopyala işareti de kalktı, yalnız Kaldır (×) satırın sonunda */
 .olcumTablo td.bosHucre { padding: 14px 8px; color: var(--yazi2); text-align: center; }
 /* 486: tablodaki seçim listesi de ÜST KATMANDA yüzer (yuzen.ts) — buradaki eski "akışta açıl" ezmesi (452 öncesinden) listeyi sayfanın başına
    atıyor, odak sayfayı oraya kaydırıyordu (reisim 2026-10-10: "tip seçin kısmına tıklayınca saçma sapan başa atıp"). Yüzen katmanın biçemi
@@ -167,6 +162,14 @@ input.oku { background: var(--zemin2); border-color: var(--kenar); color: var(--
 .sinir { display: block; color: var(--yazi3); font-size: var(--boy-etiket); font-weight: 400; }
 .neden { margin: 4px 0 0; padding-left: 16px; color: var(--hata-yazi); }
 .oneri { display: block; margin-top: 4px; color: var(--yazi2); }
+/* 488: elle değiştirilen sonuç — işaret, açan bağlantı, seçim + gerekçe kutusu */
+.elleIsaret { display: block; margin-top: 2px; color: var(--yazi2); font-size: var(--boy-etiket); }
+.elleTus {
+  display: inline-flex; align-items: center; min-height: 32px; margin-top: 4px; padding: 0; border: 0; background: transparent;
+  color: var(--yazi2); font: inherit; font-size: var(--boy-etiket); text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
+}
+.elleTus:hover { color: var(--yazi); }
+.elleKutu { display: grid; gap: 6px; margin-top: 6px; min-width: 12rem; }
 .tabloAlt { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; }
 .ipucuMetin { color: var(--yazi2); font-size: var(--boy-kucuk); }
 .notlar { color: var(--yazi2); font-size: var(--boy-kucuk); }

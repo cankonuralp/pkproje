@@ -2350,7 +2350,7 @@ illa üst başlıktaki formatta olması gerekmiyor"*):** YAPILDI (§11 486) — 
 görünür, "+ … koy" / ×; tabloda satır "Kopyala", "Son satırı kopyala", "Sırala"; Tip listesinin başa atması düzeldi; "Sonuç neye göre çıkar?"
 açıklaması; ekipman bilgileri bölümü bütünüyle silinir; alt başlık türü seçilir. **Açık soru:** ölçüm tablosunun Sonuç'u şimdi yalnız kurala göre
 (Bakanlık kriteri: ör. RCD testi IΔ ≤ IΔn ve TΔ ≤ 200 ms) — denetçi gerekçe yazarak elle değiştirebilsin mi? (öneri: evet, "kural sonucu" yanında
-gösterilir; reisim kararı bekliyor).
+gösterilir) → 2026-10-11 reisim önerileri kabul etti: YAPILDI (§11 488). Aynı gün reisim: satırın kopyala işareti ve "Sırala" kalksın → kalktı (488).
 
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
@@ -2389,6 +2389,19 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-11 (488): **TABLO SONUCU ELLE + SATIR TUŞLARI SADELEŞTİ.** (1) Hata listesi 54 kararı (reisim 2026-10-11: *"karar bekleyen sorularda
+  önerilerini kabul ediyorum"* — öneri: *"denetçi gerekçe yazarak sonucu elle değiştirebilsin, belgede kural sonucu da görünsün"*): ölçüm
+  tablosunda satırın Sonuç hücresinde "Elle değiştir" → Kurala göre / Uygun / Uygun değil + gerekçe (en az 10 harf; yoksa Onaya gönder eksik der,
+  alan işaretlenir). Değer satırda ayrılmış anahtarlarla (motor.ts ELLE_SONUC "_sonuc", ELLE_GEREKCE "_gerekce" — sütun kimliği harfle başladığı
+  için çakışmaz); motor kural sonucunu hesaplar, elle seçim varsa sonuç odur, kural ayrıca saklanır (SatirDegerlendirmesi.elle). "Uygun"a çevrilen
+  satır kusur olmaz; "Uygun değil"e çevrilende kusur metni kuralın nedenleri + "Denetçi: <gerekçe>". Uygunluk notlu tabloda (ZPKR01 nokta /
+  seçicilik) yok sayılır — not zaten elle seçilir. Hücrede "elle · kural: …"; belgede "Uygun değil (elle; kural: Uygun)" ve tablonun altında
+  "n. satırın sonucu muayene uzmanınca değiştirildi (kural: …): gerekçe". Son satırın kopyasına elle sonuç geçmez. (2) Reisim (ekran görüntüleriyle):
+  *"sağdaki kopyalama işareti kalksın ne işe yaradığı belli değil, zaten aşağıda son satırı kopyala var … sırala tuşu da kalksın zaten son satırı
+  kopyala diyince sıra no değişerek iniyor … ayrıca düzgün çalışmıyor zaten"* → satırın kopyala işareti ve "Sırala" KALKTI (tablo.ts satirlariSirala
+  / siraliMi silindi); 486'daki sağa yapışık işlem sütunu da kalktı — görüntüde tablo tam sağa kaydırılmadığında Sonuç sütununun üstüne biniyordu
+  ("S" / "U" kesik). Kilitler: tests/tablo-sonuc.test.ts (elle sonuç, notlu tablo, kopya, belge), olumsuz kanıt tablo-sonuc.bozan (gerekçe
+  denetimi), e2e foto-oku.spec (kopyala işareti / Sırala yok; elle "Uygun değil" + gerekçe).
 - 2026-10-11 (487): **486 YAYINDA** — main e505f49 (göç yok; 80 göç), sağlık "tamam" (sürüm e505f49), duman 10/10, son 3 saatte çalışma hatası
   yok. Deneme makinesi e505f49'da 13/13 yeşil (telefon 3'teki "raporsuz plan silinir" giriş zaman aşımı bir yeniden koşuyla geçti — 3. parçada
   bilinen bellek gecikmesi). Gözle: deneme makinesinin görüntüleri (masaüstü: Tip listesi X2 alanının hemen altında, sayfa kaymadı; telefon:

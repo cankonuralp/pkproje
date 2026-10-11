@@ -118,6 +118,9 @@ PDF'e basılmaz.
   bilgileri bölümü silinir** (görünüm `ekipman: false`; kod ve tür 1. bölümde, numaralar kayar; geri eklenir). **Alt başlık türü** seçilir (ana
   bölümle aynı ya da kontrol listesi / ölçüm tablosu / test / bilgi / fotoğraf / not). Ölçüm tablosunun sıra sütunu formatın "No" sütunu varken
   "Sıra"; tablonun Sonuç'unun kuralı ekranda "Sonuç neye göre çıkar?" (motor.ts sonucKurallari).
+- **2026-10-11 (488; hata listesi 54 kararı):** ölçüm tablosunda satırın sonucu denetçi tarafından **gerekçeyle elle** değiştirilir (Kurala göre /
+  Uygun / Uygun değil; gerekçe en az 10 harf). Kural sonucu saklanır; belgede "(elle; kural: …)" ve tablonun altında gerekçe. Uygunluk notlu tabloda
+  yok (not zaten elle seçilir). Satırın Kopyala işareti ve "Sırala" kalktı (reisim); "Son satırı kopyala" kaldı.
 
 ## 7 · Veri
 

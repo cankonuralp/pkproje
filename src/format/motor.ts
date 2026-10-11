@@ -17,7 +17,8 @@ export interface Eksik { bolum: string; alan: string; ad: string }
 /** kriter: kusurun ölçütü (madde metni, ölçüm satırının etiketi, test değerinin adı); metin "kriter: açıklama" ya da yalnız kriter — kriter ayrı
     tutulur, metinden geri ayrıştırılmaz (kriterin kendisinde ": " olabilir; 320–323 incelemesi) */
 export interface Kusur { bolum: string; ref: string; kriter: string; metin: string; agir: boolean }
-export interface SatirDegerlendirmesi { uygun: boolean | null; neden: string[]; oneriNot: number | null; agir: boolean }
+/** elle (488): denetçi sonucu gerekçeyle değiştirdi — kural: formülün / sınırların verdiği sonuç (belgede de yazar), gerekce: denetçinin yazdığı */
+export interface SatirDegerlendirmesi { uygun: boolean | null; neden: string[]; oneriNot: number | null; agir: boolean; elle?: { kural: boolean | null; gerekce: string } }
 export interface Degerlendirme {
   eksikler: Eksik[]; kusurlar: Kusur[]; oneri: "uygun" | "uygun_degil";
   satirlar: Record<string, SatirDegerlendirmesi[]>;
@@ -29,6 +30,13 @@ const virgul = (n: number) => String(n).replace(".", ",");
 
 /** satır anahtarı: "<bölüm>#<sıra>.<sütun>" — ekranda alanı işaretlemek için */
 export const satirAnahtari = (bolum: string, i: number, sutun: string) => `${bolum}#${i}.${sutun}`;
+
+/** 488 (reisim 2026-10-11 hata listesi 54 kararı: "denetçi gerekçe yazarak sonucu elle değiştirebilsin, belgede kural sonucu da görünsün"): satırın
+    elle sonucu ve gerekçesi — format sütunlarıyla çakışmaz (sütun kimliği harfle başlar, bunlar alt çizgiyle). Uygunluk notlu tabloda yok sayılır
+    (orada not zaten elle seçilir). Gerekçe en az ELLE_GEREKCE_EN_AZ harf (yoksa Onaya gönder eksik der). */
+export const ELLE_SONUC = "_sonuc", ELLE_GEREKCE = "_gerekce";
+export const ELLE_GEREKCE_EN_AZ = 10;
+export const elleSonucu = (s: Record<string, string>): boolean | null => (s[ELLE_SONUC] === "uygun" ? true : s[ELLE_SONUC] === "uygun_degil" ? false : null);
 
 function satirDegerlendir(b: BolumOf<"olcum">, s: Record<string, string>, ik3: string): SatirDegerlendirmesi {
   const neden: string[] = [];
@@ -58,6 +66,13 @@ function satirDegerlendir(b: BolumOf<"olcum">, s: Record<string, string>, ik3: s
     if (r === null) continue;
     if (!r) { neden.push(`${c.ad} ${s[c.id]}${c.birim ? ` ${c.birim}` : ""} (sınır ${SINIR_ISARETI[c.op!]} ${virgul(c.sinir!)})`); uygun = false; agir ||= c.agir; }
     else if (uygun === null) uygun = true;
+  }
+  /* 488: denetçinin elle sonucu kural sonucunun yerine geçer; kural sonucu ve gerekçe saklanır. "Uygun"a çevrilen satır kusur değildir; "Uygun
+     değil"e çevrilende kuralın nedenleri (varsa) ve denetçinin gerekçesi yazar, ağırlık yalnız kuraldan */
+  const elle = b.notlar?.length ? null : elleSonucu(s);
+  if (elle !== null) {
+    const gerekce = (s[ELLE_GEREKCE] ?? "").trim();
+    return { uygun: elle, neden: elle ? [] : [...neden, `Denetçi: ${gerekce || "gerekçe yazılmadı"}`], oneriNot, agir: elle ? false : agir, elle: { kural: uygun, gerekce } };
   }
   return { uygun, neden, oneriNot, agir };
 }
@@ -110,6 +125,10 @@ export function degerlendir(t: FormatTanimi, c: Cevaplar): Degerlendirme {
         satirlar[b.id] = l.map((s, i) => {
           const d = satirDegerlendir(b, s, ik3);
           for (const col of b.sutunlar) if (col.zorunlu && bos(s[col.id])) eksikler.push({ bolum: b.id, alan: satirAnahtari(b.id, i, col.id), ad: `${b.ad} · ${i + 1}. satır · ${col.ad}` });
+          /* 488: elle değiştirilen sonucun gerekçesi şart */
+          if (d.elle && d.elle.gerekce.length < ELLE_GEREKCE_EN_AZ) {
+            eksikler.push({ bolum: b.id, alan: satirAnahtari(b.id, i, ELLE_GEREKCE), ad: `${b.ad} · ${i + 1}. satır · elle sonucun gerekçesi (en az ${ELLE_GEREKCE_EN_AZ} harf)` });
+          }
           const etiket = s[b.sutunlar[0]?.id ?? ""] || `${i + 1}. satır`;
           if (b.notlar?.length) {
             const n = Number(s.not);

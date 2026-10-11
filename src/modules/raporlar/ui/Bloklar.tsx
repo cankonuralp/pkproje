@@ -14,9 +14,11 @@
    472 (maket kararı k2): formatta "yan yana tuşlar" seçildiyse madde cevabı açılır liste yerine tuşlardır (tek dokunuş).
    483 (reisim 2026-10-10: "rapor düzenlemede sadece saha ekranı gözüksün o ekranda düzenleme yapılamasın … sadece sahada personelin nasıl
    göreceği gözüksün"): 473'ün saha ekranında yerinde düzenlemesi (Baglam.yerinde) KALKTI — format yalnız kâğıtta düzenlenir.
-   486 (reisim 2026-10-10): ölçüm tablosunda "Son satırı kopyala", satırın "Kopyala"sı (altına; kimlik / no bir artar) ve "Sırala" (ilk sütuna göre
-   doğal sıra) — ../tablo.ts; sıra sütunu formatın kendi "No"su varken "Sıra" (duzen.ts siraBasligi); tablonun altında "Sonuç neye göre çıkar?"
-   (motor.ts sonucKurallari — Sonuç ölçülen değerlerden kendiliğinden, elle seçilmez); "Fotoğraf ekle (yapay zekâ okur)" her zaman (okumaKipi). */
+   486 (reisim 2026-10-10): ölçüm tablosunda "Son satırı kopyala" (kimlik / no bir artar — ../tablo.ts); sıra sütunu formatın kendi "No"su varken
+   "Sıra" (duzen.ts siraBasligi); tablonun altında "Sonuç neye göre çıkar?" (motor.ts sonucKurallari); "Fotoğraf ekle (yapay zekâ okur)" her zaman
+   (okumaKipi). 488 (reisim 2026-10-11: "sağdaki kopyalama işareti kalksın … sırala tuşu da kalksın … son satırı kopyala diyince sıra no değişerek
+   iniyor"): satırın kopyala işareti ve "Sırala" KALKTI, işlem sütunu yapışık değil (Sonuç sütununun üstüne biniyordu); satır sonucu gerekçeyle elle
+   değiştirilir (ElleSonuc — hata listesi 54). */
 import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode, type TransitionStartFunction } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Alan, FormIzgara, Girdi } from "../../../components/form/Form";
@@ -28,7 +30,7 @@ import { TarihAlani } from "../../../components/secim/TarihAlani";
 import { tarihNo } from "../../../components/secim/tarih";
 import { Tus, tusSinifi } from "../../../components/tus/Tus";
 import { SINIR_ISARETI } from "../../../format/hesap";
-import { satirAnahtari, sonucKurallari, type Degerlendirme } from "../../../format/motor";
+import { ELLE_GEREKCE, ELLE_GEREKCE_EN_AZ, ELLE_SONUC, satirAnahtari, sonucKurallari, type Degerlendirme, type SatirDegerlendirmesi } from "../../../format/motor";
 import { siraBasligi } from "../../../format/duzen";
 import { doldurma, type Bolum, type BolumOf, type Cevaplar, type Sinir } from "../../../format/tanim";
 import { meslek } from "../../personel/sema";
@@ -36,7 +38,7 @@ import { SONUC_AD } from "../sema";
 import type { SahaRaporu } from "../server/raporlar";
 import { bilgiAlanlari, testAlanlari } from "../doldur";
 import { okunanHedefleri, okunanlariUygula } from "../foto-eslestir";
-import { satirKopyala, satirlariSirala, siraliMi } from "../tablo";
+import { satirKopyala } from "../tablo";
 import { AlanDoldurma, ExcelYukle, OkumaFotolari, type OkumaKipi } from "./Doldurma";
 import { FotoOkuma } from "./FotoOkuma";
 import { StandartTusu, TalimatTusu, type TalimatParcasi } from "./Kaynaklar";
@@ -409,17 +411,12 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
   const tablo = (f: (l: Record<string, string>[]) => Record<string, string>[]) => bag.yaz((c) => ({ ...c, tablo: { ...c.tablo, [b.id]: f(c.tablo[b.id] ?? []) } }));
   const hucre = (i: number, k: string, deger: string) => tablo((l) => l.map((s, j) => (j === i ? { ...s, [k]: deger } : s)));
   const azEksik = bag.gecersiz(b.id);
-  /* 486: kopya ve sıra ilk sütuna göre (kimlik / no); yazılanlar Kaydet'e kadar ekranda */
+  /* 486: son satırın kopyası — ilk sütundaki kimlik / no bir artar; yazılanlar Kaydet'e kadar ekranda */
   const ilk = b.sutunlar[0];
-  const kopyala = (i: number) => {
+  const sonuKopyala = () => {
+    const i = satirlar.length - 1;
     tablo((l) => satirKopyala(l, i, ilk?.id));
-    bildir(`${i + 1}. satır altına kopyalandı${ilk && satirlar[i]?.[ilk.id] ? ` (${ilk.ad} bir arttı)` : ""}; değişen değerleri yazın, kaydetmeyi unutmayın.`);
-  };
-  const sirala = () => {
-    if (!ilk) return;
-    if (siraliMi(satirlar, ilk.id)) { bildir(`Satırlar zaten ${ilk.ad} sırasında.`); return; }
-    tablo((l) => satirlariSirala(l, ilk.id));
-    bildir(`Satırlar ${ilk.ad} sırasına göre dizildi; kaydetmeyi unutmayın.`);
+    bildir(`Son satır kopyalandı${ilk && satirlar[i]?.[ilk.id] ? ` (${ilk.ad} bir arttı)` : ""}; değişen değerleri yazın, kaydetmeyi unutmayın.`);
   };
   const kurallar = sonucKurallari(b);
   return (
@@ -439,7 +436,7 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
                 ))}
                 {notlar.length > 0 && <th scope="col">Uygunluk notu</th>}
                 <th scope="col">Sonuç</th>
-                {!bag.oku && <th scope="col" className={stil.islemBas}><span className="gizli">İşlem</span></th>}
+                {!bag.oku && <th scope="col"><span className="gizli">İşlem</span></th>}
               </tr>
             </thead>
             <tbody>
@@ -480,21 +477,18 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
                     )}
                     <td className={stil.sonucHucre}>
                       {r?.uygun === true ? <span className={stil.onay}>Uygun</span> : r?.uygun === false ? <span className={stil.hataMetin}>Uygun değil</span> : <DegerYok />}
+                      {/* 488: elle değiştirilen sonuç — kural sonucu yanında; gerekçe salt okunurda */}
+                      {r?.elle && <span className={stil.elleIsaret}>elle · kural: {r.elle.kural === true ? "Uygun" : r.elle.kural === false ? "Uygun değil" : "—"}</span>}
                       {r && r.neden.length > 0 && <ul className={stil.neden}>{r.neden.map((n, j) => <li key={j}>{n}</li>)}</ul>}
+                      {!bag.oku && !notlar.length && <ElleSonuc b={b} i={i} s={s} r={r} bag={bag} yaz={(y) => tablo((l) => l.map((x, j) => (j === i ? y(x) : x)))} />}
                       {r?.oneriNot && notlar.length > 0 ? <span className={stil.oneri}>Öneri: Not-{r.oneriNot}</span> : null}
                     </td>
                     {!bag.oku && (
                       <td className={stil.islemHucre}>
-                        <span className={stil.satirTuslari}>
-                          <button className={stil.ikonTus} type="button" aria-label={`${i + 1}. satırı kopyala (altına)`} title="Kopyala (altına)"
-                            onClick={() => kopyala(i)}>
-                            <Ikon ad="copy" />
-                          </button>
-                          <button className={stil.ikonTus} type="button" aria-label={`${i + 1}. satırı kaldır`} title="Kaldır"
-                            onClick={() => tablo((l) => l.filter((_, j) => j !== i))}>
-                            <Ikon ad="x" />
-                          </button>
-                        </span>
+                        <button className={stil.ikonTus} type="button" aria-label={`${i + 1}. satırı kaldır`} title="Kaldır"
+                          onClick={() => tablo((l) => l.filter((_, j) => j !== i))}>
+                          <Ikon ad="x" />
+                        </button>
                       </td>
                     )}
                   </tr>
@@ -508,9 +502,11 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
       <details className={stil.notlar}>
         <summary>Sonuç neye göre çıkar?</summary>
         {kurallar.length
-          ? <><p className={stil.kuralBas}>Sonuç ölçülen değerlerden kendiliğinden çıkar, elle seçilmez — kural sağlanırsa Uygun, biri sağlanmazsa Uygun değil
-            (nedeni satırda yazar); değeri boş olan kural değerlendirilmez.</p><ul>{kurallar.map((k, j) => <li key={j}>{k}</li>)}</ul></>
-          : <p className={stil.kuralBas}>Bu tabloda sonuç kuralı yok (formatta sütun sınırı, hesap ya da olumsuz seçenek tanımlanmamış): Sonuç boş kalır.</p>}
+          ? <><p className={stil.kuralBas}>Sonuç ölçülen değerlerden kendiliğinden çıkar — kural sağlanırsa Uygun, biri sağlanmazsa Uygun değil (nedeni satırda
+            yazar); değeri boş olan kural değerlendirilmez.{!notlar.length && " Gerekirse satırın “Elle değiştir”iyle gerekçe yazarak değiştirilir; belgede kural sonucu da yazar."}</p>
+            <ul>{kurallar.map((k, j) => <li key={j}>{k}</li>)}</ul></>
+          : <p className={stil.kuralBas}>Bu tabloda sonuç kuralı yok (formatta sütun sınırı, hesap ya da olumsuz seçenek tanımlanmamış): Sonuç boş kalır
+            {!notlar.length && "; satırın “Elle değiştir”iyle gerekçe yazarak seçilir"}.</p>}
       </details>
       {notlar.length > 0 && (
         <details className={stil.notlar}>
@@ -524,8 +520,7 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
         const ayar = doldurma(b);
         const tuslar = <>
           <Tus tur="ikincil" ikon="plus" id={alanId(b.id)} onClick={() => tablo((l) => [...l, {}])}>Satır ekle</Tus>
-          {satirlar.length > 0 && <Tus tur="ikincil" ikon="copy" onClick={() => kopyala(satirlar.length - 1)}>Son satırı kopyala</Tus>}
-          {satirlar.length > 1 && ilk && <Tus tur="ikincil" ikon="arrow-up-down" title={`Satırları ${ilk.ad} sırasına göre diz`} onClick={sirala}>Sırala ({ilk.ad})</Tus>}
+          {satirlar.length > 0 && <Tus tur="ikincil" ikon="copy" onClick={sonuKopyala}>Son satırı kopyala</Tus>}
           {ayar.excel && <ExcelYukle tur="tablo" baslik={b.ad} sutunlar={b.sutunlar} mesgul={bag.islem.mesgul} uygula={(l) => tablo((m) => {
             const o = l.map((degerler) => ({ degerler })), h = okunanHedefleri(m, o);
             return okunanlariUygula(m, o.map((x, i) => ({ ...x, hedef: h[i] ?? null })));
@@ -538,6 +533,37 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
       })()}
       {bag.oku && <OkumaFotolari v={bag.v} bolumId={b.id} oku islem={bag.islem} />}
     </>
+  );
+}
+
+/** 488 (hata listesi 54 kararı): satırın sonucunu denetçi gerekçeyle elle değiştirir — "Elle değiştir" açar; "Kurala göre" geri alır. Değer satırda
+    (motor.ts ELLE_SONUC / ELLE_GEREKCE); gerekçe en az ELLE_GEREKCE_EN_AZ harf (yoksa Onaya gönder eksik der, alan işaretlenir) */
+function ElleSonuc({ b, i, s, r, bag, yaz }: {
+  b: BolumOf<"olcum">; i: number; s: Record<string, string>; r: SatirDegerlendirmesi | undefined; bag: Baglam;
+  yaz: (f: (s: Record<string, string>) => Record<string, string>) => void;
+}) {
+  const [acik, setAcik] = useState(false);
+  const secili = s[ELLE_SONUC] === "uygun" || s[ELLE_SONUC] === "uygun_degil" ? s[ELLE_SONUC] : "";
+  const sonucId = alanId(satirAnahtari(b.id, i, ELLE_SONUC)), gerekceAnahtar = satirAnahtari(b.id, i, ELLE_GEREKCE);
+  if (!acik && !secili) {
+    return <button type="button" className={stil.elleTus} aria-label={`${i + 1}. satır: sonucu elle değiştir`} onClick={() => {
+      setAcik(true); requestAnimationFrame(() => document.getElementById(sonucId)?.focus());
+    }}>Elle değiştir</button>;
+  }
+  const kural = r?.elle ? r.elle.kural : r?.uygun ?? null;
+  return (
+    <div className={stil.elleKutu}>
+      <SecimAlani id={sonucId} ad={`${i + 1}. satır · elle sonuç`} etiketsiz deger={secili} ipucu="Kurala göre"
+        secenekler={[["", "Kurala göre", kural === true ? "Uygun" : kural === false ? "Uygun değil" : ""], ["uygun", "Uygun"], ["uygun_degil", "Uygun değil"]]}
+        degistir={(x) => {
+          if (!x) { yaz((k) => { const y = { ...k }; delete y[ELLE_SONUC]; delete y[ELLE_GEREKCE]; return y; }); setAcik(false); return; }
+          yaz((k) => ({ ...k, [ELLE_SONUC]: x }));
+          requestAnimationFrame(() => document.getElementById(alanId(gerekceAnahtar))?.focus());
+        }} />
+      {secili && <Girdi id={alanId(gerekceAnahtar)} aria-label={`${i + 1}. satır · elle sonucun gerekçesi`} placeholder={`Gerekçe (en az ${ELLE_GEREKCE_EN_AZ} harf)`}
+        value={s[ELLE_GEREKCE] ?? ""} maxLength={200} aria-invalid={bag.gecersiz(gerekceAnahtar) || undefined}
+        onChange={(e) => { const v = e.target.value; yaz((k) => ({ ...k, [ELLE_GEREKCE]: v })); }} />}
+    </div>
   );
 }
 

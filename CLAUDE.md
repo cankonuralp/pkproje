@@ -166,8 +166,9 @@ pkproje/
                             bölümü açık; kâğıtta bölüm ayarı) · ui/Doldurma.tsx (AlanOkuma "Fotoğraftan doldur", ExcelYukle + şablon, OkumaFotolari, YzKapali)
                             · doldur.ts (saf: Excel eşleme, sunucu ve ekranın ortak alan listeleri) · okuma fotoğrafı (RaporFoto.okuma) belgede görünmez
                             · 486: "Fotoğraf ekle (yapay zekâ okur)" her zaman (Baglam.okumaKipi oku / sakla / deneme; Doldurma.tsx useFotoEkle, FotoEkleTusu;
-                            kapalıyken foto-oku.ts okumaFotografiSakla, açılınca kayıtlı fotoğrafın "Oku"su — OkunacakFoto) · TABLO: tablo.ts (saf: satır kopyası,
-                            doğal sıra) — Kopyala / Son satırı kopyala / Sırala; "Sonuç neye göre çıkar?" (format/motor.ts sonucKurallari)
+                            kapalıyken foto-oku.ts okumaFotografiSakla, açılınca kayıtlı fotoğrafın "Oku"su — OkunacakFoto) · TABLO: tablo.ts (saf: satır kopyası)
+                            — Son satırı kopyala; "Sonuç neye göre çıkar?" (format/motor.ts sonucKurallari) · 488: satır sonucu gerekçeyle ELLE (Bloklar
+                            ElleSonuc; motor.ts ELLE_SONUC / ELLE_GEREKCE — kural sonucu saklanır, belgede "(elle; kural: …)" + gerekçe); Sırala kalktı
                             · STANDART PENCERESİ (428): ui/Kaynaklar.tsx (önce sorar; kütüphanedeki PDF çerçevede / kriter belgesi metni) ·
                             eşleme dokumanlar/eslestir.ts (saf) · kütüphane dokumanlar raporStandartlari · formatKriterleri src/tanim/kriterler.ts
                             · SAKLAMA SÜRESİ (387, göç 0073; ENGEL 11): server/saklama.ts (gece işi saklamaIsi — süresi dolan imzalı sürümün PDF'leri

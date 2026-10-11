@@ -1,7 +1,7 @@
 /* OLUMSUZ KANIT — tests/tablo-sonuc.test.ts ve tests/ekipman-bolumu.test.ts (486) neyi koruyor. Kaynak diskte DEĞİŞTİRİLMEZ (anayasa 13.11): dosya
    bellekte bozulup geçici klasörden içe aktarılır (göreli içe aktarmalar asıl dosyalara çevrilir).
    · Kopyada sıfır dolgusu kalkınca "A007"in kopyası "A8" olur — denetçinin sigorta / nokta numaraları bozulur.
-   · Doğal sıra kalkınca "F10" "F2"nin önüne geçer — "Sırala" tabloyu karıştırır.
+   · 488: elle sonucun gerekçe denetimi kalkınca gerekçesiz (ya da "kısa") değiştirilen sonuç Onaya gönder'den geçer.
    · Ekipman bölümü bayrağı kurucu açılışında yok sayılınca silinen bölüm her açılışta geri gelir (reisim'in "silinemiyor hala" dediği hata).
    · Düzen bayrağı yok sayınca bölüm silinse de numaralar kaymaz — belgede 2. bölüm boşta kalır. */
 import assert from "node:assert/strict";
@@ -35,9 +35,13 @@ test("1. kopyada sıfır dolgusu kalkınca A007'nin kopyası A8 olur (kilidin ko
   assert.equal(m.sonrakiKod("A007"), "A8", "bozuk: dolgu kayboldu");
 });
 
-test("2. doğal sıra kalkınca F10 F2'nin önüne geçer (kilidin koruduğu açık)", async () => {
-  const m = await bozuk<Tablo>(TABLO, "sira", "{ numeric: true, sensitivity: \"base\" }", "{ sensitivity: \"base\" }");
-  assert.deepEqual(m.satirlariSirala([{ no: "F2" }, { no: "F10" }], "no").map((s) => s.no), ["F10", "F2"], "bozuk: harf sırası");
+type Motor = typeof import("../../src/format/motor.ts");
+test("2. elle sonucun gerekçe denetimi kalkınca gerekçesiz değiştirilen sonuç eksik sayılmaz (kilidin koruduğu açık)", async () => {
+  const m = await bozuk<Motor>("src/format/motor.ts", "elle", "          if (d.elle && d.elle.gerekce.length < ELLE_GEREKCE_EN_AZ) {", "          if (false) {",
+    { "./hesap.ts": "src/format/hesap.ts", "./tanim.ts": "src/format/tanim.ts" });
+  const { Cevaplar } = await import("../../src/format/tanim.ts");
+  const d = m.degerlendir(SABLONLAR.ZPKR02.tanim, Cevaplar.parse({ tablo: { linye: [{ no: "F1", akim: "16", ib: "10", iz: "20", _sonuc: "uygun_degil" }] } }));
+  assert.equal(d.eksikler.some((x) => x.alan.endsWith("_gerekce")), false, "bozuk: gerekçesiz elle sonuç geçti");
 });
 
 test("3. kurucu açılışı ekipman bölümü bayrağını yok sayınca silinen bölüm geri gelir (kilidin koruduğu açık)", async () => {
