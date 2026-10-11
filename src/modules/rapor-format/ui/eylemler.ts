@@ -9,6 +9,8 @@ import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { sablondanTurEkle, taslakBaslat, taslakKaydet, taslakSil, yayinDenetle, yayinla } from "../server/formatlar";
 import { bakanlikTamamla } from "../server/kurulum";
 import { parcaKaydet, parcaSil } from "../server/parcalar";
+import { formatYzBirak, formatYzHazirla, formatYzKapat, type FormatYzSonucu } from "../server/yz";
+import { anthropicCagir } from "../../../server/yz/okuma";
 import type { FirmaParcasi } from "../yapboz";
 
 export interface FormatDurumuYaniti { tamam?: boolean; id?: string; sira?: number; uyarilar?: string[]; engeller?: string[]; hatalar?: Record<string, string>; genel?: string }
@@ -103,4 +105,18 @@ export async function parcaSilEylemi(id: string): Promise<{ tamam?: boolean; gen
   const o = await oturum(); if (typeof o === "string") return { genel: o };
   const r = await oturumIslemi(o, (db) => parcaSil(db, o, metin(id)));
   return r.durum === "tamam" ? { tamam: true } : { genel: SONUC[r.durum === "gecersiz" ? "yok" : r.durum] };
+}
+
+/** 497 "Yapay zekâya anlat": istek + kurucudaki taslak (yalnız istemin kurulması için; şemadan geçer) → öneriler. Hiçbir şey yazılmaz — kurucuda
+    "Ekle" / "Uygula". Yetki, ayar, sınır sunucuda; çağrı veritabanı işleminin DIŞINDA (S.A.Y deseni). */
+export async function formatYzEylemi(istek: unknown, tanim: unknown, turAd: unknown): Promise<FormatYzSonucu> {
+  const o = await oturum(); if (typeof o === "string") return { durum: "red", neden: o };
+  const h = await oturumIslemi(o, (db) => formatYzHazirla(db, o, { istek, tanim, turAd }));
+  if (h.durum !== "hazir") return h;
+  const y = await anthropicCagir(h.istek, h.anahtar);
+  if (y.durum === "hata") {
+    await oturumIslemi(o, (db) => formatYzBirak(db, h, y.ucret));
+    return { durum: "red", neden: y.neden };
+  }
+  return oturumIslemi(o, (db) => formatYzKapat(db, h, y.govde));
 }

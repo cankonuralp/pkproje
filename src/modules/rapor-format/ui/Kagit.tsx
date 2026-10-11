@@ -155,6 +155,36 @@ export interface YapbozBagi {
   alanaBirak: (i: number, parca: string) => void;
   secili: string | null;
   sec: (id: string) => void;
+  /** 497: yapay zekânın "ekle" önerileri — kâğıtta yerinde, kesik çizgiyle (p: t.bolumler'deki yeri); "Ekle" demeden yazılmaz */
+  oneriler?: readonly KagitOnerisi[];
+  oneriEkle?: (id: string, p: number) => void;
+  oneriVazgec?: (id: string) => void;
+}
+export interface KagitOnerisi { id: string; p: number; aciklama: string; bolum: Bolum }
+
+/** 497: önerinin kâğıttaki önizlemesi — belgenin görünümüne yakın, salt okunur (adlar, birimler, sınırlar, formüller) */
+function OneriIcerigi({ b }: { b: Bolum }) {
+  const birimli = (ad: string, birim?: string) => (birim ? `${ad} (${birim})` : ad);
+  const sinir = (o: { op?: keyof typeof SINIR_ISARETI; sinir?: number }) => (o.op && o.sinir !== undefined ? ` · ${SINIR_ISARETI[o.op]} ${virgul(o.sinir)}` : "");
+  switch (b.blok) {
+    case "bilgi":
+      return <table><tbody>{b.alanlar.map((a) => <tr key={a.id}><td className="rb-ab">{birimli(a.ad, a.birim)}</td>
+        <td><span className={k.ornek}>{a.formul ? `= ${a.formul}` : a.tur === "secim" ? (a.secenekler ?? []).join(" / ") : a.tur}</span></td></tr>)}</tbody></table>;
+    case "liste":
+      return <table><tbody>{b.gruplar.flatMap((g) => [
+        ...(g.ad ? [<tr key={g.id}><td colSpan={2} className="rb-ab">{g.ad}</td></tr>] : []),
+        ...g.maddeler.map((m, j) => <tr key={m.id}><td className="rb-orta">{j + 1}</td><td>{m.metin}</td></tr>),
+      ])}</tbody></table>;
+    case "olcum":
+      return <table><thead><tr><th className="rb-ab">{siraBasligi(b)}</th>{b.sutunlar.map((s) => <th key={s.id} className="rb-ab">{birimli(s.ad, s.birim)}{sinir(s)}</th>)}</tr></thead>
+        <tbody><tr><td className="rb-orta">1</td>{b.sutunlar.map((s) => <td key={s.id}><span className={k.ornek}>{s.formul ? `= ${s.formul}` : s.giris === "sayi" ? "sayı" : s.giris === "secim" ? (s.secenekler ?? []).join(" / ") : s.giris === "evet" ? "evet / hayır" : "yazı"}</span></td>)}</tr></tbody></table>;
+    case "test":
+      return <table><tbody>{b.degerler.map((d) => <tr key={d.id}><td className="rb-ab">{birimli(d.ad, d.birim)}</td><td><span className={k.ornek}>{d.formul ? `= ${d.formul}` : "sayı"}{sinir(d)}</span></td></tr>)}</tbody></table>;
+    case "foto": return <p className={k.ornek}>Fotoğraflar · en az {b.enAz}</p>;
+    case "metin": return <p className={k.oneriMetin}>{b.metin || "—"}</p>;
+    case "imza": return <p className={k.ornek}>İmzalar: {b.imzalar.map((x) => (x === "uzman" ? "muayene uzmanı" : "teknik yönetici")).join(" · ")}</p>;
+    default: return <p className={k.ornek}>{BLOK_ADI[b.blok]}</p>;
+  }
 }
 
 export interface KagitOzellik {
@@ -498,9 +528,26 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
   const cihazVar = t.bolumler.some((b) => b.blok === "cihaz");
   /* ana: buraya eklenen alt başlığın ana bölümü (461; yoksa yalnız "Bölüm ekle"). 469: "+ Alt başlık ekle" DOĞRUDAN alt başlık açar (tür
      sordurmaz) ve yalnız ana bölümün grubunun sonunda görünür — yeni alt başlık var olanların ardına eklenir */
+  /* 497: önerinin yeri kâğıtta çizilen ekleme yerlerinden ilkine (p ya da sonrası) oturur — "Ekle" orada ekler */
+  const ekYerleri = [duzen.bolumler.length ? sira(duzen.bolumler[0].b.id) : t.bolumler.length, ...duzen.bolumler.slice(0, -1).map((x) => sira(x.b.id) + 1), t.bolumler.length];
+  const oneriYeri = (p: number) => ekYerleri.find((y) => y >= p) ?? t.bolumler.length;
+  const oneriKutulari = (p: number) => (yapboz?.oneriler ?? []).filter((o) => oneriYeri(o.p) === p).map((o) => (
+    <section key={o.id} className={`rb-bolum ${k.oneri}`} aria-label={`Yapay zekâ önerisi: ${o.bolum.ad}`}>
+      <div className={k.oneriBas}>
+        <span><Ikon ad="sparkles" kucuk /> Öneri · {o.aciklama}</span>
+        <span className={k.oneriTuslar}>
+          <button type="button" className={k.oneriEkle} onClick={() => yapboz?.oneriEkle?.(o.id, p)}><Ikon ad="check" kucuk />Ekle</button>
+          <button type="button" className={k.oneriVazgec} onClick={() => yapboz?.oneriVazgec?.(o.id)}>Vazgeç</button>
+        </span>
+      </div>
+      <h2>{o.bolum.ad} <span className={k.ornek}>· {BLOK_ADI[o.bolum.blok]}</span></h2>
+      <OneriIcerigi b={o.bolum} />
+    </section>
+  ));
   const araEkle = (p: number, ad: string, id: string, son = false, ana: Bolum | null = null) => {
     const secenekler = cihazVar ? BOLUM_SECENEK.filter(([b]) => b !== "cihaz") : BOLUM_SECENEK;
     return (
+      <>{oneriKutulari(p)}
       <div className={[k.araEkle, son && k.sonEkle, hedef === `y:${p}` && k.hedef].filter(Boolean).join(" ")} {...yuva(p)}>
         {yapboz?.tutulan && <button type="button" className={k.yuvaTus} onClick={() => yapboz.birak(p, { parca: yapboz.tutulan!.k })}>
           <Ikon ad="plus" kucuk />Buraya ekle: {yapboz.tutulan.ad}</button>}
@@ -509,7 +556,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
           degistir={(x) => altKoy(p, ana, x as (typeof ALT_TURLER)[number])}
           secenekler={altSecenekleri(ana)} />}
         <SecimAlani id={id} ad={ad} etiketsiz deger="" ipucu={son ? "+ Bölüm ekle" : "+ Buraya bölüm ekle"} degistir={(x) => bolumKoy(x as Blok, p)} secenekler={secenekler} />
-      </div>
+      </div></>
     );
   };
   /** v. bölümden sonra ana bölümün alt başlık grubu bitiyor mu (sonraki bölüm aynı ananın alt başlığı değil) */

@@ -176,6 +176,12 @@ export function bolumKopyala(t: FormatTanimi, i: number): { t: FormatTanimi; id:
   return { t: yerlestirIc(t, kopya, i + 1), id: kopya.id };
 }
 
+/** 497: hazır bir bölümü (yapay zekâ önerisi) p. yere — iç kimlikler şimdiki taslağa göre yeni (kopyaIc; Bakanlık işareti yok) */
+export function bolumYerlestir(t: FormatTanimi, b: Bolum, p: number): { t: FormatTanimi; id: string } {
+  const k = kopyaIc(t, b, b.ad);
+  return { t: yerlestirIc(t, k, p), id: k.id };
+}
+
 /** 496: kitaplık parçasının (Bakanlık şablonu ya da firmanın parçası) bu formata kopyası — parcaHazirla'dan geçer, iç kimlikler yeni; olmazsa null */
 export function parcaKopyasi(t: FormatTanimi, kaynak: Bolum): Bolum | null {
   const h = parcaHazirla(kaynak);

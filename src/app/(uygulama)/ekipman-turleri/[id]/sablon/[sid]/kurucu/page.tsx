@@ -3,7 +3,8 @@
    denetimi modül işlevinde (rapor-format/server/formatlar.ts). 460: eski formatın ekipman bölümü açılışta serbest bölüme çevrilir (format/duzen.ts
    ekipmanTamYap; belgenin satırları aynı kalır); 459: ölçüm cihazları bölümü yoksa eklenir — kaydedilince taslağa yazılır. 459: türün kontrol
    metodu standartları ve ölçüm cihazı türleri (tür sayfasında seçilir) kâğıtta ve belge önizlemesinde kendiliğinden görünür. 496: parça kitaplığı —
-   firmanın parçaları (rapor-format/server/parcalar.ts) ve Bakanlık formatlarının bölümleri (kitaplik.ts; şablon dosyası tarayıcıya gitmez). */
+   firmanın parçaları (rapor-format/server/parcalar.ts) ve Bakanlık formatlarının bölümleri (kitaplik.ts; şablon dosyası tarayıcıya gitmez).
+   497: yapay zekâ kutusu firmada hazır mı (server/yz.ts formatYzDurumu). */
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 /* 451: kâğıt ve belge önizlemesi belgenin görünümüyle (.rb- sınıfları) */
@@ -17,6 +18,7 @@ import { modulBul } from "../../../../../../../modules/moduller";
 import { hazirParcalar } from "../../../../../../../modules/rapor-format/kitaplik";
 import { formatAyrintisi, formatDegistirir } from "../../../../../../../modules/rapor-format/server/formatlar";
 import { firmaParcalari, parcaSilebilir } from "../../../../../../../modules/rapor-format/server/parcalar";
+import { formatYzDurumu, YZ_ANAHTARSIZ, YZ_KAPALI } from "../../../../../../../modules/rapor-format/server/yz";
 import { FormatKurucu } from "../../../../../../../modules/rapor-format/ui/FormatKurucu";
 import { modulOturumu, oturumIslemi } from "../../../../../../../server/kimlik/istek";
 
@@ -27,9 +29,9 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string; 
   const o = await modulOturumu(MODUL.no);
   if (!o) return <Yetkisiz />;
   const { id, sid } = await params;
-  const [f, tur, parcalar] = await oturumIslemi(o, async (db) => {
+  const [f, tur, parcalar, yzDurum] = await oturumIslemi(o, async (db) => {
     const f = await formatAyrintisi(db, o, sid);
-    return [f, f && f.turId === id ? await turKarti(db, o, id) : null, await firmaParcalari(db, o)] as const;
+    return [f, f && f.turId === id ? await turKarti(db, o, id) : null, await firmaParcalari(db, o), await formatYzDurumu(db)] as const;
   });
   if (!f || !tur) notFound();
   /* yalnız taslak ve yalnız "değiştirir": öteki durumda salt okunur önizleme */
@@ -40,7 +42,8 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string; 
         [tur.ad, `/ekipman-turleri/${tur.id}`], ["Format kurucu"]]} />
       <FormatKurucu turId={tur.id} turAd={tur.ad} turKod={tur.kod} format={{ id: f.id, surum: f.surum }} tanim={kurucuyaHazirla(f.tanim)} kaynakAd={f.kaynakAd}
         turStd={tur.standartlar.map((s) => s.no)} turCihaz={tur.cihazTurleri.map((c) => c.ad)}
-        firmaParca={parcalar} hazirParca={hazirParcalar()} parcaSilebilir={parcaSilebilir(o)} />
+        firmaParca={parcalar} hazirParca={hazirParcalar()} parcaSilebilir={parcaSilebilir(o)}
+        yz={{ hazir: yzDurum === "hazir", neden: yzDurum === "kapali" ? YZ_KAPALI : yzDurum === "anahtarsiz" ? YZ_ANAHTARSIZ : "" }} />
     </>
   );
 }

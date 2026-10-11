@@ -39,3 +39,25 @@
 .katlanir > summary { min-height: var(--tus-y); display: flex; align-items: center; gap: 4px; padding: 4px 2px; cursor: pointer; font-weight: 600; font-size: var(--boy-kucuk); }
 .katlanir > summary:focus-visible { outline: 2px solid var(--odak); outline-offset: 2px; }
 .katlanir[open] > summary { margin-bottom: 6px; }
+/* 497: yapay zekâya anlat — kâğıdın üstünde; "değiştir" önerileri burada, "ekle" önerileri kâğıtta kesik çizgiyle */
+.yz { display: grid; gap: 8px; padding: 10px 12px; border: 1px solid var(--kenar); border-radius: var(--r-kucuk); background: var(--kart); }
+.yzBas { display: flex; align-items: center; gap: 6px; margin: 0; font-weight: 600; }
+.yzForm { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.yzGirdi {
+  flex: 1 1 240px; min-width: 0; min-height: var(--tus-y); padding: 0 10px; border: 1px solid var(--kenar-alan); border-radius: var(--r-kucuk);
+  background: var(--kart); color: var(--yazi); font: inherit;
+}
+.yzGirdi:focus-visible { outline: 2px solid var(--odak); outline-offset: 2px; }
+.ornekler { display: flex; flex-wrap: wrap; gap: 6px; }
+.ornek {
+  min-height: 30px; padding: 2px 10px; border: 1px dashed var(--kenar-alan); border-radius: 999px; background: none; color: var(--yazi2);
+  font: inherit; font-size: var(--boy-kucuk); cursor: pointer;
+}
+.ornek:hover:not(:disabled) { border-color: var(--yazi2); color: var(--yazi); }
+.ornek:focus-visible { outline: 2px solid var(--odak); outline-offset: 2px; }
+.yzCevap { margin: 0; font-size: var(--boy-kucuk); }
+.degisiklik {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 10px; border: 2px dashed var(--onay); border-radius: var(--r-kucuk);
+  background: var(--onay-zemin); color: var(--onay-yazi); font-size: var(--boy-kucuk);
+}
+.degisiklik > span:first-child { flex: 1 1 16rem; min-width: 0; overflow-wrap: anywhere; }

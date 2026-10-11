@@ -133,3 +133,16 @@
 @media (pointer: coarse) { .yuvaTus { min-height: 40px; } }
 .tutamak { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 30px; color: #3d3d3d; cursor: grab; }
 .tutamak:active { cursor: grabbing; }
+/* 497: yapay zekâ önerisi — kâğıtta yerinde, kesik çizgiyle (maket: "öneri kâğıtta kesik çizgiyle görünür; Ekle demeden yazılmaz") */
+.oneri { display: grid; gap: 4px; margin: 6px 0 8px; padding: 6px 8px; border: 2px dashed #137050; border-radius: 4px; background: #eaf7f0; }
+.oneriBas { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; color: #0d4f38; font-weight: 700; }
+.oneriBas > span:first-child { display: inline-flex; align-items: center; gap: 4px; flex: 1 1 16rem; min-width: 0; overflow-wrap: anywhere; }
+.oneriTuslar { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.oneriEkle, .oneriVazgec {
+  display: inline-flex; align-items: center; gap: 4px; min-height: 30px; padding: 2px 10px; border-radius: 4px; font: inherit; font-weight: 700; cursor: pointer;
+}
+.oneriEkle { border: 1px solid #0d4f38; background: #137050; color: #fff; }
+.oneriVazgec { border: 1px solid #7a7a7a; background: #fff; color: #1f1f1f; }
+.oneriEkle:focus-visible, .oneriVazgec:focus-visible { outline: 2px solid #1d4ed8; outline-offset: 1px; }
+@media (pointer: coarse) { .oneriEkle, .oneriVazgec { min-height: 40px; } }
+.oneriMetin { margin: 0; white-space: pre-wrap; }

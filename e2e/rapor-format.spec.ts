@@ -210,6 +210,8 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await arac.getByRole("button", { name: "Gelişmiş seçenekler" }).click();
     const parcalar = page.getByRole("complementary", { name: "Parçalar" });
     await expect(parcalar).toBeVisible();
+    /* 497: bu firmada yapay zekâ kapalı — kutu nereden açılacağını söyler (maket) */
+    await expect(page.getByRole("region", { name: "Yapay zekâya anlat" })).toContainText("Yapay zekâ firmada kapalı");
     const bolumler = kagit.locator("section.rb-bolum[id^='kb-']");
     const say = await bolumler.count();
     const listeParca = parcalar.getByRole("button", { name: /^Kontrol listesi/ });

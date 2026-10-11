@@ -21,7 +21,9 @@
    494: araç çubuğunda "Gelişmiş seçenekler" — kâğıt AYNI kalır, soluna parça kutusu (sürükle-bırak ya da bas-yerini seç), sağına seçili bölüm
    gelir (Yapboz.tsx, ../yapboz.ts); bölümler tutamaktan taşınır. Aynı taslak, aynı geçmiş; "Basit görünüme dön" ile kâğıt tek başına. Seçim bu
    sekmede taslak başına hatırlanır. Telefonda kurucu yok.
-   496: parça kitaplığı — Bakanlık formatlarının bölümleri ve firmanın parçaları (seçili bölümde "Parça olarak kaydet"; sunucuda format_parca). */
+   496: parça kitaplığı — Bakanlık formatlarının bölümleri ve firmanın parçaları (seçili bölümde "Parça olarak kaydet"; sunucuda format_parca).
+   497: gelişmiş görünümde kâğıdın üstünde "Yapay zekâya anlat" (YzKutusu.tsx) — öneriler kâğıtta kesik çizgiyle; "Ekle" / "Uygula" taslağa
+   ekler (geçmişe bir adım; yine "Taslağı kaydet"le yazılır), "Vazgeç" atar. Öneri taslak değişse de kimliğiyle yerini bulur (../yz-oneri.ts). */
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { raporBelgesi } from "../../../belge/belge";
@@ -37,7 +39,9 @@ import { adimEkle, bosGecmis, geriAl, kisayol, yinele, type Gecmis } from "../ge
 import { alanaParcaEkle, bolumKopyala, bolumuTasi, parcaBul, parcaYerlestir, type FirmaParcasi, type HazirParca } from "../yapboz";
 import { Parcalar, SeciliBolum } from "./Yapboz";
 import { bolumeKaydir } from "./kaydir";
-import { parcaKaydetEylemi, parcaSilEylemi, taslakKaydetEylemi } from "./eylemler";
+import { formatYzEylemi, parcaKaydetEylemi, parcaSilEylemi, taslakKaydetEylemi } from "./eylemler";
+import { oneriEkle, oneriUygula, oneriYeri, type Oneri } from "../yz-oneri";
+import { YzKutusu } from "./YzKutusu";
 import { Kagit } from "./Kagit";
 import { SatirAlani } from "./KurucuDuzenleyici";
 import { SahaGorunumu } from "./SahaGorunumu";
@@ -57,11 +61,13 @@ function yer(k: string, t: FormatTanimi): string {
 }
 
 /** turStd / turCihaz (459): türün kontrol metodu standartları ve ölçüm cihazı türleri (tür sayfasında seçilir) — kâğıtta ve önizlemede */
-export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, turStd, turCihaz, firmaParca, hazirParca, parcaSilebilir }: {
+export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, turStd, turCihaz, firmaParca, hazirParca, parcaSilebilir, yz }: {
   turId: string; turAd: string; turKod: string; format: { id: string; surum: number }; tanim: FormatTanimi; kaynakAd: string | null;
   turStd: string[]; turCihaz: string[];
   /** 496: parça kitaplığı (sunucudan) — firmanın parçaları, şablon bölümleri; parcaSilebilir: yönetici (karar yine sunucuda) */
   firmaParca: FirmaParcasi[]; hazirParca: HazirParca[]; parcaSilebilir: boolean;
+  /** 497: firmada yapay zekâ hazır mı (değilse kutuda nereden açılacağı) */
+  yz: { hazir: boolean; neden: string };
 }) {
   const router = useRouter();
   const bildir = useBildir();
@@ -200,6 +206,31 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
       bildir(`${ad} parçası silindi.`);
     });
   };
+  /* 497: yapay zekâya anlat — öneriler bu ekranda; yazılmaz, "Ekle" / "Uygula" taslağa ekler */
+  const [oneriler, setOneriler] = useState<Oneri[]>([]);
+  const [yzCevap, setYzCevap] = useState("");
+  const oner = (istek: string) => baslat(async () => {
+    setYzCevap("");
+    const r = await formatYzEylemi(istek, t, turAd);
+    if (r.durum !== "tamam") { setYzCevap(r.neden); bildir(r.neden); return; }
+    setOneriler(r.oneriler); setYzCevap(r.cevap);
+    bildir(r.oneriler.length ? `${r.oneriler.length} öneri geldi; kâğıtta kesik çizgiyle.` : "Öneri gelmedi.");
+  });
+  const oneriAt = (id: string) => setOneriler((l) => l.filter((x) => x.id !== id));
+  const yzEkle = (id: string, p: number) => {
+    const o = oneriler.find((x) => x.id === id);
+    if (!o || o.tur !== "ekle") return;
+    const x = oneriEkle(t, o, p);
+    if (!x) { bildir("Öneri bu taslağa eklenemedi (biçime uymadı)."); return; }
+    degis(x.t); oneriAt(id); setSecili(x.id); bildir(`${o.bolum.ad} eklendi (taslak).`); goster(x.id);
+  };
+  const yzUygula = (id: string) => {
+    const o = oneriler.find((x) => x.id === id);
+    if (!o || o.tur !== "degistir") return;
+    const y = oneriUygula(t, o);
+    if (!y) { bildir("Öneri uygulanamadı: bölüm artık yok ya da öneri biçime uymadı."); return; }
+    degis(y); oneriAt(id); setSecili(o.hedef); bildir(`${o.bolum.ad} değişti (taslak).`); goster(o.hedef);
+  };
   const birak = (p: number, v: { parca?: string; bolum?: string }) => {
     if (v.bolum) { const y = bolumuTasi(t, v.bolum, p); if (y !== t) { degis(y); setSecili(v.bolum); bildir("Bölüm taşındı (taslak)."); } return; }
     if (!v.parca) return;
@@ -297,8 +328,11 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
         <div className={`${ys.yapboz} ${stil.yalnizGenis}`}>
           <Parcalar t={t} kitaplik={kitaplik} tutulan={tutulan} tut={setTutulan} sil={parcaSilebilir ? (id, ad) => void parcaSil(id, ad) : null} />
           <div className={ys.orta}>
+            <YzKutusu t={t} yz={yz} mesgul={mesgul} cevap={yzCevap} oneriler={oneriler} oner={oner} uygula={yzUygula} vazgec={oneriAt} />
             <Kagit t={t} degis={degis} tur={tur} bolumuSil={(i) => void bolumuSil(i)} bildir={bildir}
-              yapboz={{ tutulan: tutulan ? parcaBul(t, tutulan, kitaplik) : null, birak, alanaBirak, secili, sec: setSecili }} />
+              yapboz={{ tutulan: tutulan ? parcaBul(t, tutulan, kitaplik) : null, birak, alanaBirak, secili, sec: setSecili,
+                oneriler: oneriler.flatMap((o) => (o.tur === "ekle" ? [{ id: o.id, p: oneriYeri(t, o), aciklama: o.aciklama, bolum: o.bolum }] : [])),
+                oneriEkle: yzEkle, oneriVazgec: oneriAt }} />
           </div>
           <div className={ys.sag}><SeciliBolum t={t} secili={secili} kopyala={kopyala} sil={(i) => void bolumuSil(i)} parcaKaydet={mesgul ? null : parcaKaydet} /></div>
         </div>

@@ -2405,6 +2405,18 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-12 (497): **YAPAY ZEKÂYA ANLAT** (hata listesi 29 + 46 maketi onaylı; K6: "öneri kâğıtta kesik çizgiyle görünür; Ekle / Uygula demeden
+  yazılmaz"). Format kurucunun gelişmiş görünümünde kâğıdın üstünde kutu: istek yazılır ya da örnek seçilir → "Öner". Yeni bölüm önerisi KÂĞITTA
+  yerinde, kesik çizgiyle (belgenin görünümüne yakın: sütunlar, birimler, sınırlar, formüller) — "Ekle" taslağa ekler (geçmişe bir adım; yine
+  "Taslağı kaydet"le yazılır), "Vazgeç" atar; var olan bölümün değişikliği kutuda — "Uygula" (bölümün kimliği, Bakanlık işareti, tablo hesabı,
+  cevap seti korunur; adı aynı kalan öğe kimliğini ve işaretini korur). Firmada yapay zekâ kapalıysa / anahtar yoksa kutu nereden açılacağını
+  söyler. Yapay zekâya YALNIZ formatın adları ve sayıları + istek gider (müşteri / kişi / rapor verisi gitmez); öneri yapılandırılmış çıktıyla
+  gelir, sunucuda formatın şemasından geçer (ölçüm cihazları, ekipman bilgileri, kayıttan künye önerilmez / değiştirilmez; en çok 8). Kullanım
+  S.A.Y gibi: kişinin aylık sınırından en kötü maliyet ayrılır, çağrı veritabanı işleminin dışında, mesaj sayılır. Dosyalar: src/server/yz/format.ts
+  (saf istek / cevap), rapor-format/yz-oneri.ts (saf çeviri, yer, Ekle, Uygula), server/yz.ts, ui/YzKutusu.tsx, Kagit.tsx öneri kutusu. Kilitler:
+  tests/yz-format.test.ts (5), tests/format-yz.test.ts (gerçek PostgreSQL: kapalı / anahtarsız / yetkisiz / geçersiz istek ayırma yapmaz, ayırma
+  → kapanış / bırakma, sınır), olumsuz kanıt yz-format.bozan (3), e2e format-yz (yapay zekâsı açık uydurma firma, yerel taklit; istekte kişi
+  bilgisi olursa taklit reddeder) + rapor-format (kapalı firmada neden).
 - 2026-10-12 (495 düzeltmesi 2): sütun ayrıntıları açılınca (495 düzeltmesi) deneme makinesi bir adım ileride düştü — formülde "−"ye sonra ada
   basınca "[Iz] −[Ib]" oluyordu: saklanan formülün sonundaki boşluk kırpılıyor, imlecin yerine eklenen ad bitişik kalıyordu (gerçek kullanıcıda
   da). Ekleme artık parçaları tek boşlukla birleştirir (parantezin içine boşluk yok) — kurucu.ts formuleEkle (saf); kilit tests/formul.test.ts,

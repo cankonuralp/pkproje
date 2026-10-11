@@ -219,7 +219,7 @@ const yzTaklit = createServer((istek, yanit) => {
       return;
     }
     if (istek.url !== "/v1/messages" || istek.headers["x-api-key"] !== E2E_YZ.anahtar) { yanit.writeHead(401).end("{}"); return; }
-    let g: { system?: unknown; messages?: { content?: unknown }[]; tool_choice?: { type?: string }; output_config?: { format?: { type?: string; schema?: { properties?: { satirlar?: { items?: { properties?: { tip?: { anyOf?: { enum?: string[] }[] } } } } } } } } };
+    let g: { system?: unknown; messages?: { content?: unknown }[]; tool_choice?: { type?: string }; output_config?: { format?: { type?: string; schema?: { properties?: { satirlar?: { items?: { properties?: { tip?: { anyOf?: { enum?: string[] }[] } } } }; oneriler?: unknown } } } } };
     try { g = JSON.parse(govde); } catch { yanit.writeHead(400).end(JSON.stringify({ type: "error", error: { type: "invalid_request_error", message: "invalid json" } })); return; }
     if (g.tool_choice?.type === "tool" || g.tool_choice?.type === "any") {
       yanit.writeHead(400, { "content-type": "application/json" }).end(JSON.stringify({ type: "error", error: { type: "invalid_request_error", message: 'tool_choice: type "tool" and "any" are not supported for this model.' } }));
@@ -245,8 +245,39 @@ const yzTaklit = createServer((istek, yanit) => {
       yanit.writeHead(400, { "content-type": "application/json" }).end(JSON.stringify({ type: "error", error: { type: "invalid_request_error", message: "taklit: yapılandırılmış çıktı bekleniyor" } }));
       return;
     }
-    /* 385: etiket plakası okuması (şemada "alanlar") — uydurma künye; imal yılı emin değil (tek tek uygulanır) */
     const sema = g.output_config.format.schema?.properties;
+    /* 497 / 498: format yapıcı önerisi (şemada "oneriler") — istekte kişi / müşteri bilgisi ya da anahtar varsa reddeder (yalnız formatın adları
+       gider). İstek: zincir uzaması tablosu (ekle) + formattaki ilk fotoğraf bölümüne "en az 1" (değiştir); belgeyle: belgeden bir kontrol listesi */
+    if (sema && "oneriler" in sema) {
+      if (/sk-ant|@yzdeneme\.example|YZ Tesisi|YZ Denetçi|YZ Yönetici|YZ Planlama/.test(govde)) {
+        yanit.writeHead(400, { "content-type": "application/json" }).end(JSON.stringify({ type: "error", error: { type: "invalid_request_error", message: "taklit: format isteğinde kişisel / müşteri bilgisi" } }));
+        return;
+      }
+      const icerik = (g.messages?.[0]?.content ?? []) as { type?: string; text?: string }[];
+      const metin = icerik.map((c) => c.text ?? "").join("\n");
+      const bos = { alanlar: null, gruplar: null, sutunlar: null, degerler: null, enAz: null, metin: null, imzalar: null };
+      const sayiSutun = (ad: string, birim: string, ek: object = {}) => ({ ad, giris: "sayi", birim, secenekler: null, op: null, sinir: null, formul: null, ...ek });
+      let oneriler: unknown[], cevap: string;
+      if (icerik.some((c) => c.type === "document" || c.type === "image") || /Belgeden başlat/.test(metin)) {
+        cevap = "Belgeden 1 bölüm çıkarıldı (taklit).";
+        oneriler = [{ tur: "ekle", sonra: null, hedef: null, aciklama: "belgenin kontrol listesinden", bolum: { ...bos, ad: "Mast ve kaldırma sistemi", blok: "liste",
+          gruplar: [{ ad: "", maddeler: ["Mast kanallarında çatlak yok", "Kaldırma silindirinde sızıntı yok"] }] } }];
+      } else {
+        const foto = /^- (\S+) · ([^·\n]+?) · fotoğraflar/m.exec(metin);
+        cevap = "Deneme önerisi (taklit).";
+        oneriler = [
+          { tur: "ekle", sonra: null, hedef: null, aciklama: "uzama yüzdesi formülle; sınır %3", bolum: { ...bos, ad: "Zincir uzaması", blok: "olcum", sutunlar: [
+            { ad: "Ölçüm yeri", giris: "metin", birim: null, secenekler: null, op: null, sinir: null, formul: null }, sayiSutun("İlk boy", "mm"), sayiSutun("Ölçülen boy", "mm"),
+            sayiSutun("Uzama", "%", { op: "<=", sinir: 3, formul: "([Ölçülen boy] − [İlk boy]) / [İlk boy] × 100" })] } },
+          ...(foto ? [{ tur: "degistir", sonra: null, hedef: foto[1], aciklama: "en az fotoğraf 1", bolum: { ...bos, ad: foto[2].trim(), blok: "foto", enAz: 1 } }] : []),
+        ];
+      }
+      yanit.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({
+        content: [{ type: "text", text: JSON.stringify({ cevap, oneriler }) }], stop_reason: "end_turn", usage: { input_tokens: 3000, output_tokens: 400 },
+      }));
+      return;
+    }
+    /* 385: etiket plakası okuması (şemada "alanlar") — uydurma künye; imal yılı emin değil (tek tek uygulanır) */
     if (sema && "alanlar" in sema) {
       yanit.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({
         content: [{ type: "text", text: JSON.stringify({ alanlar: [{ alan: "marka", deger: "Deneme Marka", guven: "yuksek" }, { alan: "model", deger: "DM-100", guven: "yuksek" },
