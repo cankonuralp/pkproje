@@ -104,6 +104,13 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await doldur.getByRole("checkbox", { name: /^Fotoğraftan doldur/ }).check();
     await expect(linye.getByText("Fotoğraf · Excel")).toBeVisible();
     await page.getByRole("button", { name: "Bölüm ayarlarını kapat" }).click();
+    /* 486 ("format yapıcıda da ai için fotoğraf ekleme tuşu olsun"): sahadaki tuşlar kâğıtta GÖRÜNÜR — bölümün altında; × ile kalkar, "+ … koy" ile konur */
+    const sahaTuslari = linye.getByRole("group", { name: "Pano sigortaları (linye) · sahadaki doldurma tuşları" });
+    await expect(sahaTuslari.getByText("Fotoğraf ekle (yapay zekâ okur)")).toBeVisible();
+    await sahaTuslari.getByRole("button", { name: "Pano sigortaları (linye) · fotoğraf tuşunu kaldır" }).click();
+    await expect(linye.getByText("Excel", { exact: true })).toBeVisible();
+    await sahaTuslari.getByRole("button", { name: "Pano sigortaları (linye) · fotoğraf tuşu koy (yapay zekâ okur)" }).click();
+    await expect(sahaTuslari.getByText("Fotoğraf ekle (yapay zekâ okur)")).toBeVisible();
     await expect(linye.getByRole("columnheader", { name: /Devre/ })).toBeVisible();
     await linye.getByRole("button", { name: "Sütun", exact: true }).click();
     const sutun = page.getByRole("textbox", { name: "Sütun adı" });
@@ -121,19 +128,34 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await ad.fill("Deneme yorumu");
     await ad.press("Enter");
     await expect(kagit.getByRole("region", { name: /Deneme yorumu$/ })).toBeVisible();
-    /* 461 / 469: alt başlık ekle — sondaki bölümün altına DOĞRUDAN (tür sordurmaz), numarası N.1, adı yerinde yazılır */
-    await page.getByRole("button", { name: "Alt başlık ekle (Deneme yorumu altına)" }).click();
+    /* 461 / 469 → 486 (hata listesi 40: "alt başlık ekleyince seçenekler çıksın"): alt başlık ekle türü sorar — ana bölümün türü en başta ("ana bölümle
+       aynı"), tablo da seçilir; numarası N.1, adı yerinde yazılır */
+    await page.getByRole("combobox", { name: "Alt başlık ekle (Deneme yorumu altına)" }).click();
+    await expect(page.getByRole("option").first()).toContainText("ana bölümle aynı");
+    await page.getByRole("option", { name: /^Ölçüm tablosu/ }).click();
     const altAd = page.getByRole("textbox", { name: "Bölüm adı" });
     await expect(altAd).toBeFocused();
     await altAd.fill("Deneme alt başlık");
     await altAd.press("Enter");
-    await expect(kagit.getByRole("region", { name: /^\d+\.1 Deneme alt başlık$/ })).toBeVisible();
+    const altBolum = kagit.getByRole("region", { name: /^\d+\.1 Deneme alt başlık$/ });
+    await expect(altBolum).toBeVisible();
+    await expect(altBolum.getByRole("columnheader", { name: /Yeni sütun/ })).toBeVisible();
     /* firma bilgileri sabit: yalnız metot satırı yazılır, bölüm silinmez */
     const firma = kagit.locator("#kb-firma");
     await expect(firma.getByRole("button", { name: /bölümü sil$/ })).toHaveCount(0);
     /* 460: ekipman bilgileri serbest — kod ve tür sabit; Marka çıkar, "Ekipman kaydından alan" ile geri gelir; Model'in adı yerinde değişir */
     const ekip = kagit.locator("#kb-ekipman");
     await expect(ekip.getByText("Ekipman kodu")).toBeVisible();
+    /* 486 (hata listesi 38: "silinemiyor hala ekipman bilgileri tablosu"): bölümün tamamı silinir (sorulur) — kod ve tür 1. bölüme geçer; geri eklenir */
+    await ekip.getByRole("button", { name: /· bölümü sil$/ }).click();
+    const silSoru = page.getByRole("dialog", { name: "Ekipman bilgileri bölümü silinsin mi?" });
+    await expect(silSoru).toContainText("1. Firma bilgileri");
+    await silSoru.getByRole("button", { name: "Sil" }).click();
+    await expect(ekip).toHaveCount(0);
+    await expect(firma.getByText("Ekipman kodu")).toBeVisible();
+    await kagit.getByRole("button", { name: "Ekipman bilgileri bölümünü geri ekle" }).click();
+    await expect(ekip.getByText("Ekipman kodu")).toBeVisible();
+    await expect(firma.getByText("Ekipman kodu")).toHaveCount(0);
     await ekip.getByRole("button", { name: "Marka · çıkar" }).click();
     await expect(ekip.getByRole("button", { name: "Marka", exact: true })).toHaveCount(0);
     await ekip.getByRole("combobox", { name: "Ekipman kaydından alan ekle" }).click();

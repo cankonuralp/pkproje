@@ -13,7 +13,7 @@ import { jpegTemizle, pngTemizle, turBul } from "../../../server/dosya/tur.ts";
 import { alanEnCokMaliyet, alanIstegi, alanYanitiCoz, type AlanOkunan, type OkunacakAlan } from "../../../server/yz/alanlar.ts";
 import { yzAyi, yzAyir, yzAyirmaBirak, yzOkumaYaz } from "../../../server/yz/kullanim.ts";
 import { maliyetHesapla, type OkumaIstegi, type YzModel } from "../../../server/yz/okuma.ts";
-import { FOTO_OKU_EN_BUYUK } from "./foto-oku.ts";
+import { FOTO_OKU_EN_BUYUK, KAYITSIZ_FOTO, okunacakBaytlar, type OkunacakFoto } from "./foto-oku.ts";
 import { alanOkunabilir, okumaFotografiEkle, type Kisi, type RaporYazma } from "./raporlar.ts";
 
 const ELLE = "Bilgileri elle girebilirsiniz.";
@@ -21,12 +21,16 @@ const dolar = (n: number) => String(n).replace(".", ",");
 
 export interface AlanOkuHazir {
   durum: "hazir"; istek: OkumaIstegi; anahtar: string; model: YzModel; ay: string; ust: number; bolum: string; alanlar: OkunacakAlan[];
-  foto: { ad: string; bayt: Uint8Array };
+  /** raporda zaten duruyorsa (486 sonradan okuma) null — yeniden eklenmez */
+  foto: { ad: string; bayt: Uint8Array } | null;
 }
 
-export async function alanOkuHazirla(db: Sorgulayici, kim: Kisi, raporId: string, bolumId: string, foto: { bayt: Uint8Array }, simdi = new Date()): Promise<AlanOkuHazir | RaporYazma> {
+export async function alanOkuHazirla(db: Sorgulayici, depo: Depo, kim: Kisi, raporId: string, bolumId: string, kaynak: OkunacakFoto, simdi = new Date()): Promise<AlanOkuHazir | RaporYazma> {
   const o = await alanOkunabilir(db, kim, raporId, bolumId);
   if ("durum" in o) return o;
+  const k = await okunacakBaytlar(db, depo, kim, raporId, bolumId, kaynak);
+  if (!k) return KAYITSIZ_FOTO;
+  const foto = { bayt: k.bayt };
   const yz = (await ayarOku(db, "yapay_zeka")).deger;
   if (!yz.acik) return { durum: "red", neden: `Fotoğraftan okuma firmada kapalı (Firma ayarları › Yapay zekâ). ${ELLE}` };
   const anahtar = await sirKullan(db, "yapay_zeka_anahtari");
@@ -43,7 +47,7 @@ export async function alanOkuHazirla(db: Sorgulayici, kim: Kisi, raporId: string
   }
   const ad = `${o.baslik.replace(/[^\p{L}\p{N} ()-]/gu, "").trim().slice(0, 60) || "Bölüm"} fotoğrafı.${tur === "png" ? "png" : "jpg"}`;
   return { durum: "hazir", istek: alanIstegi({ model: yz.model, baslik: o.baslik, alanlar: o.alanlar, resim: temiz, tur }), anahtar, model: yz.model, ay, ust,
-    bolum: bolumId, alanlar: o.alanlar, foto: { ad, bayt: temiz } };
+    bolum: bolumId, alanlar: o.alanlar, foto: k.kayitli ? null : { ad, bayt: temiz } };
 }
 
 /** çağrı cevapsız bitti: ücretsizse ayırma bırakılır; sonucu bilinmiyorsa harcamaya yazılır */
@@ -72,7 +76,7 @@ export async function alanOkuSonuc(db: Sorgulayici, depo: Depo, kim: Kisi, firma
     : !k.okunan.length ? `Fotoğrafta bu bölümün bilgisi okunamadı. ${ELLE}`
     : `${k.okunan.length} bilgi okundu; uygulamadan rapora yazılmaz.${k.durum === "kesik" ? " Okuma yarım kaldı." : ""}`];
   let fotoEklendi = false;
-  if (k.okunan.length) {
+  if (k.okunan.length && h.foto) {
     const f = await okumaFotografiEkle(db, depo, kim, firmaId, raporId, h.bolum, h.foto);
     fotoEklendi = f.durum === "tamam";
     const neden = f.durum === "gecersiz" ? Object.values(f.hatalar)[0] : f.durum === "red" ? f.neden : "rapor şu an yazılamıyor";

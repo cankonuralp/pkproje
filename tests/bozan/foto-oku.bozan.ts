@@ -84,7 +84,7 @@ after(async () => { await havuz?.end(); await kume?.durdur(); rmSync(gecici, { r
 test("1. aylık sınır denetimi kalkınca sınırı dolmuş kişi okumaya devam eder (kilidin koruduğu açık)", async () => {
   const m = await bozuk("  if (!(await yzAyir(db, ay, yz.sinir, ust))) {", "  if (false) {");
   await kiraciIcinde(havuz, A, (db) => db.sorgu("INSERT INTO yz_kullanim (ay, okuma, maliyet) VALUES ($1, 9, 5000000)", [yzAyi()]), { hesapId: den1.id });
-  const h = await kiraciIcinde(havuz, A, (db) => m.fotoOkuHazirla(db, den1, rapor, "linye", { bayt: JPEG }), { hesapId: den1.id });
+  const h = await kiraciIcinde(havuz, A, (db) => m.fotoOkuHazirla(db, depo, den1, rapor, "linye", { bayt: JPEG }), { hesapId: den1.id });
   assert.equal(h.durum, "hazir", "bozuk: 5 $ harcamış kişi (sınır 1 $) yine okuyor");
 });
 

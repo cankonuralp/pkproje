@@ -13,7 +13,10 @@
      boş zorunlu alan aria-invalid + kırmızı çerçeve, doldurulunca kalkar (maket zorunluEksik / uyar).
    472 (maket kararı k2): formatta "yan yana tuşlar" seçildiyse madde cevabı açılır liste yerine tuşlardır (tek dokunuş).
    483 (reisim 2026-10-10: "rapor düzenlemede sadece saha ekranı gözüksün o ekranda düzenleme yapılamasın … sadece sahada personelin nasıl
-   göreceği gözüksün"): 473'ün saha ekranında yerinde düzenlemesi (Baglam.yerinde) KALKTI — format yalnız kâğıtta düzenlenir. */
+   göreceği gözüksün"): 473'ün saha ekranında yerinde düzenlemesi (Baglam.yerinde) KALKTI — format yalnız kâğıtta düzenlenir.
+   486 (reisim 2026-10-10): ölçüm tablosunda "Son satırı kopyala", satırın "Kopyala"sı (altına; kimlik / no bir artar) ve "Sırala" (ilk sütuna göre
+   doğal sıra) — ../tablo.ts; sıra sütunu formatın kendi "No"su varken "Sıra" (duzen.ts siraBasligi); tablonun altında "Sonuç neye göre çıkar?"
+   (motor.ts sonucKurallari — Sonuç ölçülen değerlerden kendiliğinden, elle seçilmez); "Fotoğraf ekle (yapay zekâ okur)" her zaman (okumaKipi). */
 import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode, type TransitionStartFunction } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Alan, FormIzgara, Girdi } from "../../../components/form/Form";
@@ -25,14 +28,16 @@ import { TarihAlani } from "../../../components/secim/TarihAlani";
 import { tarihNo } from "../../../components/secim/tarih";
 import { Tus, tusSinifi } from "../../../components/tus/Tus";
 import { SINIR_ISARETI } from "../../../format/hesap";
-import { satirAnahtari, type Degerlendirme } from "../../../format/motor";
+import { satirAnahtari, sonucKurallari, type Degerlendirme } from "../../../format/motor";
+import { siraBasligi } from "../../../format/duzen";
 import { doldurma, type Bolum, type BolumOf, type Cevaplar, type Sinir } from "../../../format/tanim";
 import { meslek } from "../../personel/sema";
 import { SONUC_AD } from "../sema";
 import type { SahaRaporu } from "../server/raporlar";
 import { bilgiAlanlari, testAlanlari } from "../doldur";
 import { okunanHedefleri, okunanlariUygula } from "../foto-eslestir";
-import { AlanDoldurma, ExcelYukle, OkumaFotolari, YzKapali } from "./Doldurma";
+import { satirKopyala, satirlariSirala, siraliMi } from "../tablo";
+import { AlanDoldurma, ExcelYukle, OkumaFotolari, type OkumaKipi } from "./Doldurma";
 import { FotoOkuma } from "./FotoOkuma";
 import { StandartTusu, TalimatTusu, type TalimatParcasi } from "./Kaynaklar";
 import stil from "./raporlar.module.css";
@@ -69,8 +74,9 @@ export interface Baglam {
   cihaz: (bolumId: string) => ReactNode;
   /** fotoğraf listesi: bölümün (madde null) ya da "Uygun değil" maddenin (FotoListesi; SahaRaporu verir) */
   foto: (bolumId: string, madde: string | null) => ReactNode;
-  /** ölçüm tablolarında "Fotoğraftan oku" (351): düzenleyebilene, firmada yapay zekâ açık ve anahtar girilmişse */
-  yz: boolean;
+  /** "Fotoğraf ekle (yapay zekâ okur)" (351 → 486): "oku" firmada yapay zekâ açık ve anahtar girilmiş · "sakla" kapalı (fotoğraf okunmadan saklanır,
+      açılınca "Oku") · "deneme" örnek rapor · null düzenlenemez (gönderilmiş rapor, cihazda açılmış yeni rapor) */
+  okumaKipi: OkumaKipi | null;
   /** 484: format kurucusunun saha ekranındaki örnek rapor (fotoğraf okunmaz, ne olacağı söylenir; Excel yalnız ekranda) */
   deneme: boolean;
   /** üst ekranın işlemi (354): okuma sürerken Kaydet / Onaya gönder / öteki okumalar kapalı (FotoListesi gibi); okuma rapora fotoğraf ekleyince yenile */
@@ -395,6 +401,7 @@ function CevapTuslari({ id, ad, deger, cevaplar, gecersiz, degistir }:
 
 /* ── ÖLÇÜM TABLOSU ── */
 function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
+  const bildir = useBildir();
   const satirlar = bag.c.tablo[b.id] ?? [];
   const sonuclar = bag.d.satirlar[b.id] ?? [];
   const notlar = b.notlar ?? [];
@@ -402,6 +409,19 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
   const tablo = (f: (l: Record<string, string>[]) => Record<string, string>[]) => bag.yaz((c) => ({ ...c, tablo: { ...c.tablo, [b.id]: f(c.tablo[b.id] ?? []) } }));
   const hucre = (i: number, k: string, deger: string) => tablo((l) => l.map((s, j) => (j === i ? { ...s, [k]: deger } : s)));
   const azEksik = bag.gecersiz(b.id);
+  /* 486: kopya ve sıra ilk sütuna göre (kimlik / no); yazılanlar Kaydet'e kadar ekranda */
+  const ilk = b.sutunlar[0];
+  const kopyala = (i: number) => {
+    tablo((l) => satirKopyala(l, i, ilk?.id));
+    bildir(`${i + 1}. satır altına kopyalandı${ilk && satirlar[i]?.[ilk.id] ? ` (${ilk.ad} bir arttı)` : ""}; değişen değerleri yazın, kaydetmeyi unutmayın.`);
+  };
+  const sirala = () => {
+    if (!ilk) return;
+    if (siraliMi(satirlar, ilk.id)) { bildir(`Satırlar zaten ${ilk.ad} sırasında.`); return; }
+    tablo((l) => satirlariSirala(l, ilk.id));
+    bildir(`Satırlar ${ilk.ad} sırasına göre dizildi; kaydetmeyi unutmayın.`);
+  };
+  const kurallar = sonucKurallari(b);
   return (
     <>
       {/* 447 (reisim: "satır eklemediğin sürece neyin nereye yazılacağı bile gözükmüyor tablo başlıkları gözükmüyor"): başlıklar her zaman */}
@@ -412,7 +432,7 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
             <caption className="gizli">{b.ad}</caption>
             <thead>
               <tr>
-                <th scope="col">No</th>
+                <th scope="col">{siraBasligi(b)}</th>
                 {b.sutunlar.map((s) => (
                   <th key={s.id} scope="col">{s.ad}{s.birim && <span className={stil.birim}> ({s.birim})</span>}
                     {sinirMetni(s.op, s.sinir) && <span className={stil.sinir}>sınır {sinirMetni(s.op, s.sinir, s.birim)}</span>}</th>
@@ -465,10 +485,16 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
                     </td>
                     {!bag.oku && (
                       <td className={stil.islemHucre}>
-                        <button className={stil.ikonTus} type="button" aria-label={`${i + 1}. satırı kaldır`} title="Kaldır"
-                          onClick={() => tablo((l) => l.filter((_, j) => j !== i))}>
-                          <Ikon ad="x" />
-                        </button>
+                        <span className={stil.satirTuslari}>
+                          <button className={stil.ikonTus} type="button" aria-label={`${i + 1}. satırı kopyala (altına)`} title="Kopyala (altına)"
+                            onClick={() => kopyala(i)}>
+                            <Ikon ad="copy" />
+                          </button>
+                          <button className={stil.ikonTus} type="button" aria-label={`${i + 1}. satırı kaldır`} title="Kaldır"
+                            onClick={() => tablo((l) => l.filter((_, j) => j !== i))}>
+                            <Ikon ad="x" />
+                          </button>
+                        </span>
                       </td>
                     )}
                   </tr>
@@ -478,6 +504,14 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
           </table>
         </div>
       )}
+      {/* 486 (reisim 2026-10-10: "neye göre otomatik uygun uygun değil diyor? bununda açıklamasını yap"): Sonuç sütununun kuralı */}
+      <details className={stil.notlar}>
+        <summary>Sonuç neye göre çıkar?</summary>
+        {kurallar.length
+          ? <><p className={stil.kuralBas}>Sonuç ölçülen değerlerden kendiliğinden çıkar, elle seçilmez — kural sağlanırsa Uygun, biri sağlanmazsa Uygun değil
+            (nedeni satırda yazar); değeri boş olan kural değerlendirilmez.</p><ul>{kurallar.map((k, j) => <li key={j}>{k}</li>)}</ul></>
+          : <p className={stil.kuralBas}>Bu tabloda sonuç kuralı yok (formatta sütun sınırı, hesap ya da olumsuz seçenek tanımlanmamış): Sonuç boş kalır.</p>}
+      </details>
       {notlar.length > 0 && (
         <details className={stil.notlar}>
           <summary>Uygunluk notları (Not-1 … Not-{notlar.length})</summary>
@@ -490,17 +524,19 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
         const ayar = doldurma(b);
         const tuslar = <>
           <Tus tur="ikincil" ikon="plus" id={alanId(b.id)} onClick={() => tablo((l) => [...l, {}])}>Satır ekle</Tus>
+          {satirlar.length > 0 && <Tus tur="ikincil" ikon="copy" onClick={() => kopyala(satirlar.length - 1)}>Son satırı kopyala</Tus>}
+          {satirlar.length > 1 && ilk && <Tus tur="ikincil" ikon="arrow-up-down" title={`Satırları ${ilk.ad} sırasına göre diz`} onClick={sirala}>Sırala ({ilk.ad})</Tus>}
           {ayar.excel && <ExcelYukle tur="tablo" baslik={b.ad} sutunlar={b.sutunlar} mesgul={bag.islem.mesgul} uygula={(l) => tablo((m) => {
             const o = l.map((degerler) => ({ degerler })), h = okunanHedefleri(m, o);
             return okunanlariUygula(m, o.map((x, i) => ({ ...x, hedef: h[i] ?? null })));
           })} />}
           {b.enAz > 0 && <span className={azEksik ? stil.hataMetin : stil.ipucuMetin}>En az {b.enAz} satır.</span>}
         </>;
-        return ayar.foto && (bag.yz || bag.deneme)
-          ? <FotoOkuma raporId={bag.v.id} b={b} satirlar={satirlar} tablo={tablo} islem={bag.islem} cubuk={stil.tabloAlt} tuslar={tuslar} deneme={bag.deneme} />
-          : <><div className={stil.tabloAlt}>{tuslar}</div>{ayar.foto && <YzKapali />}</>;
+        return ayar.foto && bag.okumaKipi
+          ? <FotoOkuma v={bag.v} b={b} satirlar={satirlar} tablo={tablo} islem={bag.islem} cubuk={stil.tabloAlt} tuslar={tuslar} kip={bag.okumaKipi} />
+          : <><div className={stil.tabloAlt}>{tuslar}</div><OkumaFotolari v={bag.v} bolumId={b.id} oku={bag.oku} islem={bag.islem} /></>;
       })()}
-      <OkumaFotolari v={bag.v} bolumId={b.id} oku={bag.oku} islem={bag.islem} />
+      {bag.oku && <OkumaFotolari v={bag.v} bolumId={b.id} oku islem={bag.islem} />}
     </>
   );
 }

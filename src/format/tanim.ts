@@ -114,6 +114,9 @@ export const Gorunum = z.object({
   /** 472 (reisim 2026-10-10, maket kararı k2: "format başına"): saha ekranında madde cevabının biçimi — açılır liste ya da yan yana tuşlar
       (tuşta bir dokunuş). Belgeye (PDF) etkisi yok. */
   cevap: z.enum(["acilir", "tus"]).default("acilir"),
+  /** 486 (reisim 2026-10-10, hata listesi 38: "silinemiyor hala ekipman bilgileri tablosu"): 2. bölüm (ekipman bilgileri) var mı — false: bölüm
+      belgede ve saha ekranında yok, ekipman kodu ve türü 1. bölümde (Firma bilgileri) yazar, sonraki numaralar bir kayar. Verilmemişse var. */
+  ekipman: z.boolean().optional(),
 });
 
 export const FormatTanimi = z.object({

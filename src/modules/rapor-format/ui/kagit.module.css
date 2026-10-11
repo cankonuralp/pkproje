@@ -53,6 +53,14 @@
 .ekleSecim { width: 260px; max-width: 100%; }
 .altSatir { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: -6px 0 10px; }
 .altNot { margin: -6px 0 10px; font-size: 10px; color: #3d3d3d; }
+/* 486: sahadaki doldurma tuşları — bölümün altında, sahadaki tuş gibi; belgeye basılmaz (yalnız kâğıtta) */
+.sahaTuslari { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: -4px 0 12px; padding: 6px 8px; border: 1px dashed #6d88b8; border-radius: 4px; background: #f4f7fb; }
+.sahaBas { font-weight: 700; color: #1e3a6e; }
+.sahaTus {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 2px 0 10px;
+  border: 1px solid #6d88b8; border-radius: 4px; background: #fff; color: #1e3a6e; font-weight: 700; white-space: nowrap;
+}
+@media (pointer: coarse) { .sahaTus { min-height: 40px; } }
 
 /* satır içinde yazı + tuşlar */
 .satir, .etiket, .grupSatir, .sutun { display: flex; align-items: flex-start; gap: 4px; min-width: 0; }

@@ -9,6 +9,7 @@ import {
   bantDisiDaraltma, ciftIdler, ciftSeciciler, ciftTanimliDegiskenler, daralmisSerit, degiskenDegeri, dosyalar, eksikIkonlar, girdiYaziHatalari, kalipDisiEsikler,
   hamYazma, kiraciDisiErisim, kullanilanIkonlar, maketIkonlari, maketMenusu, oku, parantezHatasi, rlsEksikTablolar, tanimsizDegiskenler, testKapisiEksikleri, tokenGovdesi, pdfPaketEksikleri,
   swEksikleri, baglantiRengiEksikleri, cekmeceBoyuHatasi, vhYukseklikHatalari, cerceveIzniEksikleri, suzgecsizListeler, SUZGECSIZ_BOLUMLER, takipSeridiEksikleri,
+  yuzenEzmeleri,
 } from "../yardimci/denetimler.ts";
 
 const kabuk = oku("src/components/kabuk/Kabuk.module.css");
@@ -232,4 +233,16 @@ test("süzgeç kapsamı: ana liste süzgeçsize dönünce, izinli bölüm artın
   assert.deepEqual(suzgecsizListeler(bozuk, SUZGECSIZ_BOLUMLER), ["modules/talepler/ui/IzinTalepleri.tsx: sayfa başlıklı bileşende süzgeçsiz <Liste> (1)"]);
   const fazla = tsx.map((d) => (d.ad === ana ? { ...d, metin: `${d.metin}\n<Liste />` } : d));
   assert.deepEqual(suzgecsizListeler(fazla, SUZGECSIZ_BOLUMLER), ["modules/anasayfa/ui/AnaSayfa.tsx: süzgeçsiz liste sayısı arttı (3 → 4)"]);
+});
+
+/* 486: yüzen katman ezmesi — tablodaki eski "akışta açıl" kuralı geri gelince, kendi dosyasında konum fixed'ten başka olunca yakalanır */
+test("yüzen katman: başka CSS listeye inince ve kendi konumu fixed olmayınca yakalanır", () => {
+  const css = dosyalar("src", [".css"]).map((ad) => ({ ad, metin: oku(ad) }));
+  assert.deepEqual(yuzenEzmeleri(css), []);
+  const tablo = "src/modules/raporlar/ui/raporlar.module.css", kendi = "src/components/secim/Secim.module.css";
+  const ezme = '.olcumTablo [data-secim-kap] [role="listbox"] { position: static; }';
+  const geri = css.map((d) => (d.ad === tablo ? { ...d, metin: `${d.metin} ${ezme}` } : d));
+  assert.deepEqual(yuzenEzmeleri(geri), [`${tablo}: .olcumTablo [data-secim-kap] [role="listbox"]`]);
+  const akista = css.map((d) => (d.ad === kendi ? { ...d, metin: d.metin.replace(".liste, .takvim { position: fixed;", ".liste, .takvim { position: absolute;") } : d));
+  assert.equal(yuzenEzmeleri(akista).length, 1);
 });

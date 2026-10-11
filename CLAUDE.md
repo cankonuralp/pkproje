@@ -122,6 +122,7 @@ pkproje/
                             · 460: "tam" ekipman bölümü + ekipman kaydına bağlı alan (tanim.ts EKIPMAN_ALANLARI; değeri raporun ekipman
                             bilgisinde) — 2. bölüm kod + tür + formatın alanları; eski format duzen.ts ekipmanTamYap ile kurucuda çevrilir
                             · 459: ölçüm cihazları bölümü sabit (cihazBolumuEkle; kurucuyaHazirla = ikisi, kurucu sayfası açılışta)
+                            · 486: ekipman bölümü kaldırılabilir (gorunum.ekipman false → 2. bölüm yok, kod / tür 1. bölümde, numaralar kayar) · siraBasligi
                             · 461: bölümün "alt" bayrağı — üstündeki ana bölümün altında N.1, N.2 (duzen.ts raporDuzeni)
   src/modules/rapor-format/ RAPOR FORMATI (2026-10-04, 308): sürümlü tanım (rapor_format, göç 0022: taslak → yayında → eski; yayınlanan değişmez) ·
                             şablondan başlat · taslak kaydet · yayınla (kilitli Bakanlık öğesi ENGEL, öteki denetim uyarı) · yayındaki format;
@@ -142,6 +143,9 @@ pkproje/
                             (cerceve)/…/saha → ui/SahaCerceve.tsx (iletiler) → raporlar SahaRaporu deneme kipi + raporlar/ornek.ts (ilkCevaplar, örnek
                             rapor); kullanım kutusu yanda, telefonda Belge · Saha · 483: saha ekranı SALT ÖNİZLEME (473'ün yerinde düzenlemesi kalktı);
                             sahaya özgü ayarlar kâğıtta — tanım gorunum.cevap (açılır / tuş) "Kurallar, saha ekranı ve genel muayene talimatı"nda
+                            · 486: kâğıtta sahadaki doldurma tuşları bölümün altında (Kagit.tsx sahaTuslari); ekipman bilgileri bölümü silinir / geri eklenir
+                            (kurucu.ts ekipmanBolumuKaldir / ekipmanBolumuGeriEkle — tanim.ts gorunum.ekipman, duzen.ts ekipmanBolumuVar); alt başlık türü
+                            seçilir (kurucu.ts ALT_TURLER)
                             · 471 SÜRÜM SAYFASI: fark.ts (önceki sürüme göre değişenler, saf) · ui/SurumOnizleme.tsx (Belge ↔ Saha) · rapor sayısı
                             raporlar/server/format-baglanti.ts formatRaporSayilari
   src/modules/planlar/      PLANLAR (2026-10-04, 309–310; modül 13): plan + plan ekibi (göç 0023; proje no sunucuda, değişmez; künye kayıttan) ·
@@ -161,6 +165,9 @@ pkproje/
                             · FOTOĞRAFTAN / EXCEL'DEN DOLDURMA (484): formatta bölüm ayarı (tanim.ts doldur / doldurma — varsayılan tablo ve ekipman
                             bölümü açık; kâğıtta bölüm ayarı) · ui/Doldurma.tsx (AlanOkuma "Fotoğraftan doldur", ExcelYukle + şablon, OkumaFotolari, YzKapali)
                             · doldur.ts (saf: Excel eşleme, sunucu ve ekranın ortak alan listeleri) · okuma fotoğrafı (RaporFoto.okuma) belgede görünmez
+                            · 486: "Fotoğraf ekle (yapay zekâ okur)" her zaman (Baglam.okumaKipi oku / sakla / deneme; Doldurma.tsx useFotoEkle, FotoEkleTusu;
+                            kapalıyken foto-oku.ts okumaFotografiSakla, açılınca kayıtlı fotoğrafın "Oku"su — OkunacakFoto) · TABLO: tablo.ts (saf: satır kopyası,
+                            doğal sıra) — Kopyala / Son satırı kopyala / Sırala; "Sonuç neye göre çıkar?" (format/motor.ts sonucKurallari)
                             · STANDART PENCERESİ (428): ui/Kaynaklar.tsx (önce sorar; kütüphanedeki PDF çerçevede / kriter belgesi metni) ·
                             eşleme dokumanlar/eslestir.ts (saf) · kütüphane dokumanlar raporStandartlari · formatKriterleri src/tanim/kriterler.ts
                             · SAKLAMA SÜRESİ (387, göç 0073; ENGEL 11): server/saklama.ts (gece işi saklamaIsi — süresi dolan imzalı sürümün PDF'leri
@@ -316,7 +323,8 @@ pkproje/
                             DecompressionStream ile, ortak dizgi, tarih biçimi, Türkçe Windows CSV; 10 MB / 50 MB açılmış / 5 000 satır sınırı) · indir.ts
   src/components/           TEK ÜRETİCİLER: sayfa/ (kırıntı, sayfa / nesne başlığı, bölüm, rozet, sekmeler) · kabuk (yan menü + üst çubuk) · ikon · boş durum · tuş · şerit · bildirim · pencere + onay ·
                             liste (tablo↔kart, süzgeç mantığı liste/suzgec.ts) · YÜZEN KATMAN secim/yuzen.ts (452: seçim listesi, süzgeç seçicisi, takvim,
-                            saat önerileri üst katmanda — sayfayı / pencereyi itmez, kesilmez; tarama açılır katman denetimi) · fotoğraf küçültme (foto/kucult.ts) · filtre satırı · sayfalayıcı · seçim alanı + tarih/saat (secim/) · bilgi yüzleri / bilgi listesi / koşullar (bilgi/) · form sayfası (form/) · uzun tuş (tus/UzunTus) · kopyala (pencere/Kopyala: sonuç pencerenin içinde) · dışa aktarma (disa/: ZIP + .xlsx yazıcı, saf; tarayıcıda indirme — 320) · kesin silme / pasif (sil/: SilTusu, PasifPenceresi — engel, metin.ts kullanimMetni, odak.ts — 357/365)
+                            saat önerileri üst katmanda — sayfayı / pencereyi itmez, kesilmez; tarama açılır katman denetimi; 486: konum satır içi biçemde,
+                            odak sayfayı kaydırmaz, başka CSS katmana inemez — tests/yuzen-ezme.test.ts) · fotoğraf küçültme (foto/kucult.ts) · filtre satırı · sayfalayıcı · seçim alanı + tarih/saat (secim/) · bilgi yüzleri / bilgi listesi / koşullar (bilgi/) · form sayfası (form/) · uzun tuş (tus/UzunTus) · kopyala (pencere/Kopyala: sonuç pencerenin içinde) · dışa aktarma (disa/: ZIP + .xlsx yazıcı, saf; tarayıcıda indirme — 320) · kesin silme / pasif (sil/: SilTusu, PasifPenceresi — engel, metin.ts kullanimMetni, odak.ts — 357/365)
                             (geliştirme vitrini /vitrin: yalnız geliştirmede, yayında 404)
   src/styles/               tokens.css (TEK KAYNAK; docs kopyası testle aynı) · yazi.css (Sora) · temel.css · kalip.ts
   public/vendor/            üçüncü parti kendi kökenimizden, adında sürüm (lucide-1.47.0 ikonları)

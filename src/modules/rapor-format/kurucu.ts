@@ -6,6 +6,7 @@
    yalnız "Bakanlık formatının parçası" işaretidir. Sabit kalanlar reisim'in kararı: ölçüm cihazları bölümü (459; firma bilgileri kâğıtta sabit). */
 import { SINIR_ISARETI } from "../../format/hesap.ts";
 import { kilitliKimlikler } from "../../format/motor.ts";
+import { ekipmanTamYap } from "../../format/duzen.ts";
 import { Bolum, EKIPMAN_ALAN_ADI, kurucudan, type Blok, type EkipmanAlani, type FormatTanimi, type Sinir } from "../../format/tanim.ts";
 
 export { kurucudan };
@@ -46,17 +47,25 @@ export function yeniBolum(t: FormatTanimi, blok: Blok, ad: string): Bolum {
 /** 469 (reisim 2026-10-10, hata listesi 40: "alt başlık ekle dediğin gibi alt başlık oluşturacak bunu anlamanın nesi zor"): ana bölümün altına
     DOĞRUDAN alt başlık — tür sordurmaz: ana bölümün türünde (kontrol listesi cevap setiyle; ölçüm tablosu sütunlarıyla, yeni kimliklerle; test
     değeri, bilgi alanı), içinde bir boş satır; ana bölüm başka türdeyse kontrol listesi. p: yeni bölümün t.bolumler'deki yeri. Bölümün kimliği de
-    döner (adı yazma kipinde açılsın). */
-export function altBaslikEkle(t: FormatTanimi, p: number, ana: Bolum, ad = "Yeni alt başlık"): { t: FormatTanimi; id: string } {
+    döner (adı yazma kipinde açılsın).
+    486 (reisim 2026-10-10, hata listesi 40: "alt başlık ekleyince seçenekler çıksın illa üst başlıktaki formatta olması gerekmiyor tabloda olabilir
+    başka bir şey de"): tur verilirse alt başlık O türde açılır (ALT_TURLER: kontrol listesi, ölçüm tablosu, test değerleri, bilgi alanları,
+    fotoğraf, not) — içinde bir boş satır / sütun / madde; tur ana bölümün türüyse ana bölümün yapısıyla (cevap seti, sütunlar). Verilmezse 469 gibi. */
+export const ALT_TURLER = ["liste", "olcum", "test", "bilgi", "foto", "not"] as const satisfies readonly Blok[];
+export function altBaslikEkle(t: FormatTanimi, p: number, ana: Bolum, ad = "Yeni alt başlık", tur?: (typeof ALT_TURLER)[number]): { t: FormatTanimi; id: string } {
   const al = new Set<string>();
   const yeni = (onek: "b" | "a" | "g" | "m" | "s" | "d") => { const k = yeniKimlik(t, onek, al); al.add(k); return k; };
   const id = yeni("b");
+  const anaTuru = ana.blok === "olcum" || ana.blok === "test" || (ana.blok === "bilgi" && !ana.tam) ? ana.blok : "liste";
+  const blok = tur ?? anaTuru;
+  const liste = () => ({ cevaplar: ana.blok === "liste" ? ana.cevaplar : ["Uygun", "Uygun değil", "Uygulanamaz"],
+    gruplar: [{ id: yeni("g"), ad: "", maddeler: [{ id: yeni("m"), metin: "Yeni madde", kilit: false }] }] });
   const govde: Record<string, unknown> =
-    ana.blok === "olcum" ? { satir: ana.satir, sutunlar: ana.sutunlar.map((c) => ({ ...c, id: yeni("s") })) }
-      : ana.blok === "test" ? { degerler: [{ id: yeni("d"), ad: "Yeni değer", metin: false, zorunlu: true, kilit: false, agir: false }] }
-        : ana.blok === "bilgi" && !ana.tam ? { alanlar: [{ id: yeni("a"), ad: "Yeni alan", tur: "metin", zorunlu: false, kilit: false }] }
-          : { cevaplar: ana.blok === "liste" ? ana.cevaplar : ["Uygun", "Uygun değil", "Uygulanamaz"], gruplar: [{ id: yeni("g"), ad: "", maddeler: [{ id: yeni("m"), metin: "Yeni madde", kilit: false }] }] };
-  const blok = ana.blok === "olcum" || ana.blok === "test" || (ana.blok === "bilgi" && !ana.tam) ? ana.blok : "liste";
+    blok === "olcum" ? (ana.blok === "olcum" ? { satir: ana.satir, sutunlar: ana.sutunlar.map((c) => ({ ...c, id: yeni("s") })) }
+      : { satir: "ekle", sutunlar: [{ id: yeni("s"), ad: "Yeni sütun", giris: "metin" }] })
+      : blok === "test" ? { degerler: [{ id: yeni("d"), ad: "Yeni değer", metin: false, zorunlu: true, kilit: false, agir: false }] }
+        : blok === "bilgi" ? { alanlar: [{ id: yeni("a"), ad: "Yeni alan", tur: "metin", zorunlu: false, kilit: false }] }
+          : blok === "foto" ? { enAz: 0, enCok: 20 } : blok === "not" ? { zorunlu: false } : liste();
   const b = Bolum.parse({ id, ad: kirp(ad, 200) || "Yeni alt başlık", blok, alt: true, ...govde });
   const l = [...t.bolumler];
   l.splice(Math.max(0, Math.min(p, l.length)), 0, b);
@@ -116,6 +125,18 @@ export function ogeSil(t: FormatTanimi, i: number, id: string): FormatTanimi {
   else if (b.blok === "olcum") y = { ...b, sutunlar: b.sutunlar.filter((c) => c.id !== id) };
   else if (b.blok === "test") y = { ...b, degerler: b.degerler.filter((d) => d.id !== id) };
   return { ...t, bolumler: t.bolumler.map((x, j) => (j === i ? y : x)) };
+}
+
+/** 486 (reisim 2026-10-10, hata listesi 38: "silinemiyor hala ekipman bilgileri tablosu"): 2. bölümü (ekipman bilgileri) kaldırır — tam ekipman
+    bölümü çıkar, görünümde ekipman: false (kod ve tür 1. bölümde yazar; Bakanlık bölümüyse yayında uyarı). Geri ekleme: ekipman kaydına bağlı
+    varsayılan alanlarla yeni bölüm (duzen.ts ekipmanTamYap). */
+export function ekipmanBolumuKaldir(t: FormatTanimi): FormatTanimi {
+  return { ...t, bolumler: t.bolumler.filter((b) => !(b.blok === "bilgi" && b.tam)), gorunum: { ...t.gorunum, ekipman: false } };
+}
+export function ekipmanBolumuGeriEkle(t: FormatTanimi): FormatTanimi {
+  const g = { ...t.gorunum };
+  delete g.ekipman;
+  return ekipmanTamYap({ ...t, gorunum: g });
 }
 
 /** bölüm sil (470: Bakanlık bölümü de — ekran önce sorar; 459: ölçüm cihazları bölümü sabit — silinmez) */

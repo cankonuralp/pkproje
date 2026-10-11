@@ -2339,6 +2339,18 @@ gözüksün"*; *"kağıttan düzenleyebiliyoruz ama sahadaki görüntü nasıl o
 fotoğraf mekanizması vs eklenmemişti bile … söylediğim hiç bir şeyi es geçme"*):** (1) DEĞİŞTİ → saha ekranı salt önizleme, tek düzenleme yeri kâğıt,
 sahaya özgü ayarlar kâğıtta (§11 483); (2) (3) (4) YAPILDI (§11 484 — bölüm ayarı "Fotoğraftan doldur" / "Excel'den yükle"; fotoğraf belgede
 görünmez); (5) (6) açık (hata listesi 46; madde 29 ile birlikte, önce maket).
+**Aynı gün sonra (ekran görüntüleriyle; reisim: *"test tablosu veya bu ekran görüntüsündeki gibi linye girme tablo doldurma alanlarında nerde fotoğraf
+ekleme tuşu? … buralarda yapay zekanın okuması için fotoğraf ekleme tuşu olsun yapay zeka okusun diye raporda gözükmesin raporda sadece fotoğraflar
+sekmesinde eklenen fotoğraflar gözüksün, format yapıcıda da ai için fotoğraf ekleme tuşu olsun … ayrıca test tablosu olan yerler de, son satırı
+kopyala, satırları otomatik sırala, gibi tuşlar da olsun … tip seçin kısmına tıklayınca saçma sapan başa atıp … Lütfen şu siteyi tüm açılardan
+tam kusursuz hale getirecek detaylı inceleme yap"*; *"rcd testleri tablosunda uygun uygun değil otomatik geliyor ? neden elle seçilmiyor ? neye göre
+otomatik uygun uygun değil diyor ?"*; hata listesi 38 *"silinemiyor hala ekipman bilgileri tablosu"*, 40 *"alt başlık ekleyince seçenekler çıksın
+illa üst başlıktaki formatta olması gerekmiyor"*):** YAPILDI (§11 486) — "Fotoğraf ekle (yapay zekâ okur)" tuşu formatta açık bölümde HER ZAMAN
+(yapay zekâ kapalıysa fotoğraf okunmadan saklanır, açılınca "Oku"; belgede yalnız Fotoğraflar bölümünün fotoğrafları); kâğıtta tuşlar bölümün altında
+görünür, "+ … koy" / ×; tabloda satır "Kopyala", "Son satırı kopyala", "Sırala"; Tip listesinin başa atması düzeldi; "Sonuç neye göre çıkar?"
+açıklaması; ekipman bilgileri bölümü bütünüyle silinir; alt başlık türü seçilir. **Açık soru:** ölçüm tablosunun Sonuç'u şimdi yalnız kurala göre
+(Bakanlık kriteri: ör. RCD testi IΔ ≤ IΔn ve TΔ ≤ 200 ms) — denetçi gerekçe yazarak elle değiştirebilsin mi? (öneri: evet, "kural sonucu" yanında
+gösterilir; reisim kararı bekliyor).
 
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
@@ -2377,6 +2389,26 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-11 (486): **TABLO VE FORMAT YAPICI İSTEKLERİ** (§9 elli dördüncü tur, son paragraf; hata listesi 38, 40, 44, 45). (1) **Tip listesi başa
+  atıyordu:** rapor tablosunun CSS'inde 452'den önce kalan ".olcumTablo [data-secim-kap] [role=listbox] { position: static }" ezmesi listeyi akışa
+  alıyordu — üst katmanda akıştaki öğe sayfanın başında çizilir, odak sayfayı oraya kaydırır. Ezme silindi; yuzen.ts konumu katmanın satır içi
+  biçemine yazar (hiçbir sayfa CSS'i ezemez), katmana odak sayfayı kaydırmadan (odakla — preventScroll). Kilit tests/yuzen-ezme.test.ts (yüzen
+  katmana başka CSS inemez) + olumsuz kanıt. (2) **"Fotoğraf ekle (yapay zekâ okur)" her zaman:** formatta açık bölümde (tablo, ekipman bilgileri,
+  bilgi, test); yapay zekâ kapalıysa fotoğraf OKUNMADAN okuma fotoğrafı olarak saklanır (foto-oku.ts okumaFotografiSakla — belgede yok), açılınca
+  fotoğrafın "Oku"su kayıtlı fotoğrafı okur (OkunacakFoto { dosya }; yeniden eklenmez); iş tablo ve alanlı bölümde ortak (Doldurma.tsx useFotoEkle,
+  FotoEkleTusu). 484'te kapalıyken tuş yerine yalnız not vardı. (3) **Kâğıtta tuşlar görünür:** her bilgi / tablo / test bölümünün (ve ekipman
+  bilgilerinin) altında "Sahada: [Fotoğraf ekle (yapay zekâ okur) ×] [Excel'den yükle ×]" — × kaldırır, "+ … tuşu koy" koyar (belgeye basılmaz).
+  (4) **Tablo:** satır başına "Kopyala" (altına; ilk sütundaki no bir artar — F3 → F4, X09 → X10), "Son satırı kopyala", "Sırala (ilk sütun)" (doğal
+  sıra, Türkçe) — raporlar/tablo.ts; sıra sütunu formatın kendi "No"su varken "Sıra" (duzen.ts siraBasligi; belge ve kâğıt da — belge-zpkr02.png
+  yenilendi); tablonun altında **"Sonuç neye göre çıkar?"** (motor.ts sonucKurallari: hesabın Bakanlık kuralı, sütun sınırları, olumsuz seçenekler).
+  (5) **Ekipman bilgileri bölümü silinir** (hata listesi 38): görünümde ekipman: false (tanim.ts) — belgede ve sahada 2. bölüm yok, ekipman kodu ve
+  türü 1. Firma bilgileri'nde, numaralar bir kayar, kurucu açılışta geri eklemez; kâğıtta "Ekipman bilgileri bölümünü geri ekle" (kurucu.ts
+  ekipmanBolumuKaldir / GeriEkle); sürüm farkı yazar; Bakanlık bölümüyse yayında uyarı. (6) **Alt başlık türü seçilir** (hata listesi 40): "+ Alt
+  başlık ekle" seçenek açar — ana bölümün türü önce ("ana bölümle aynı"), sonra kontrol listesi, ölçüm tablosu, test, bilgi, fotoğraf, not
+  (kurucu.ts ALT_TURLER). Kilitler: tests/tablo-sonuc.test.ts, ekipman-bolumu.test.ts (486), alt-baslik.test.ts (486), foto-oku.test.ts (sakla +
+  kayıtlı okuma), olumsuz kanıt tests/bozan/tablo-sonuc.bozan.ts (dolgu, doğal sıra, kurucu geri ekleme, numara kayması); e2e foto-oku.spec (Tip
+  listesi kaymaz, Sıra, kopyala, sırala, kurallar), saha-raporu.spec (yapay zekâ kapalı firmada fotoğraf saklanır, "Oku" yok), rapor-format.spec
+  (alt başlık türü, kâğıtta tuşlar, ekipman bölümü sil / geri ekle).
 - 2026-10-10 (485): **479–484 YAYINDA** — main 6b32015 (göç yok; 80 göç), sağlık "tamam" (sürüm 6b32015), duman 10/10; deneme makinesi 14/14
   yeşil (6b32015; bir önceki koşuda 6a8136b iki iş bellek sıkışıklığı / çerçeve gecikmesiyle düştü, kod değişikliğiyle ilgisiz). Canlıda reisim'in
   Chrome oturumuyla (yalnız okuma) ölçüldü: Dökümanlar'da ve Eğitim türleri'nde "Yan menüdeki Dökümanlar sayısı: 1 eğitimin tekrarı yaklaşıyor"

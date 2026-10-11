@@ -2,7 +2,9 @@
    olabiliyor sabit olan tek şey firma bilgileri, cihazlar ve standartlar". Format tanımında "tam" ekipman bölümü ve ekipman kaydına bağlı alan
    (src/format/tanim.ts), düzen ve eski formatı çevirme (src/format/duzen.ts ekipmanTamYap), belge (src/belge/belge.ts), kâğıt yardımcısı
    (rapor-format/kurucu.ts ekipmanAlaniEkle). Kilitler: şema yanlış bağlamayı reddeder; eski format çevrilince belgenin METNİ aynı kalır (Bakanlık
-   beşi ve kompresör); Bakanlık kilit denetimi çevrilmiş taslağı geçirir; tam bölümlü belgede 2. bölüm yalnız kod, tür ve formatın alanlarıdır. */
+   beşi ve kompresör); Bakanlık kilit denetimi çevrilmiş taslağı geçirir; tam bölümlü belgede 2. bölüm yalnız kod, tür ve formatın alanlarıdır.
+   486 (reisim 2026-10-10, hata listesi 38: "silinemiyor hala ekipman bilgileri tablosu"): 2. bölümün TAMAMI silinir (kurucu.ts ekipmanBolumuKaldir —
+   görünümde ekipman: false): belgede 2. bölüm yok, kod ve tür 1. bölümde, numaralar bir kayar, kurucu açılışta geri eklemez; geri eklenir. */
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -12,7 +14,11 @@ import { ekipmanTamYap, raporDuzeni, sabitEkipmanAlanlari } from "../src/format/
 import { degerlendir, kilitDenetimi, yayinDenetimi } from "../src/format/motor.ts";
 import { bosFormat, grupFormati, SABLONLAR } from "../src/format/sablonlar.ts";
 import { Cevaplar, EKIPMAN_ALANLARI, FormatTanimi, type BolumOf, type FormatGirdisi } from "../src/format/tanim.ts";
-import { ekipmanAlaniEkle, ogeSil, ogeYaz } from "../src/modules/rapor-format/kurucu.ts";
+import { ekipmanAlaniEkle, ekipmanBolumuGeriEkle, ekipmanBolumuKaldir, ogeSil, ogeYaz } from "../src/modules/rapor-format/kurucu.ts";
+import { kurucuyaHazirla } from "../src/format/duzen.ts";
+import { ekipmanAlanlari } from "../src/modules/raporlar/doldur.ts";
+import { kullanim } from "../src/modules/rapor-format/kullanim.ts";
+import { surumFarki } from "../src/modules/rapor-format/fark.ts";
 
 const metin = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/&amp;/g, "&").replace(/\s+/g, " ").trim();
 const belgeMetni = (t: FormatTanimi) => metin(renderToStaticMarkup(raporBelgesi({ ...ornekBelge("ZPKR01"), tanim: t, ekipman: {
@@ -88,3 +94,36 @@ test("değerlendirme: zorunlu işaretli bağlı alan cevaplarda aranmaz (değeri
   const t = FormatTanimi.parse({ sema: 1, bolumler: [bilgi([{ id: "a1", ad: "Marka", tur: "metin", ekipman: "marka", zorunlu: true }, { id: "a2", ad: "Basınç", tur: "metin", zorunlu: true }])] });
   assert.deepEqual(degerlendir(t, Cevaplar.parse({})).eksikler.map((e) => e.alan), ["a2"]);
 });
+
+test("486: ekipman bölümünün tamamı silinir — belgede 2. bölüm yok, kod ve tür 1. bölümde, numaralar bir kayar; kurucu geri eklemez; geri eklenir", () => {
+  const z = kurucuyaHazirla(SABLONLAR.ZPKR01.tanim);
+  const once = raporDuzeni(z, false), sil = ekipmanBolumuKaldir(z), d = raporDuzeni(sil, false);
+  assert.equal(FormatTanimi.safeParse(sil).success, true, "şemadan geçer");
+  assert.deepEqual([once.ekipman, d.ekipman, d.tam, d.katilan.length], [true, false, null, 0]);
+  assert.equal(sil.bolumler.some((b) => b.blok === "bilgi" && b.tam), false, "tam bölüm çıktı");
+  /* ilk format bölümünün numarası bir azaldı; cihazlı raporda cihaz bölümü 2 */
+  assert.equal(Number(d.bolumler[0].no), Number(once.bolumler[0].no) - 1);
+  assert.equal(raporDuzeni(sil, true).cihazNo, "2");
+  assert.equal(raporDuzeni(z, true).cihazNo, "3");
+  /* kurucu açılışı (ekipmanTamYap) ve eski formatın sabit satırları bölümü geri getirmez */
+  assert.deepEqual(kurucuyaHazirla(sil), sil);
+  assert.deepEqual(sabitEkipmanAlanlari(sil), []);
+  assert.deepEqual(ekipmanAlanlari(sil).alanlar, [], "fotoğraftan / Excel'den doldurulacak ekipman alanı yok");
+  /* belge: "2. Ekipman bilgileri" yok, kod ve tür 1. bölümde */
+  const b = belgeMetni(sil);
+  assert.doesNotMatch(b, /2\s*\.?\s*Ekipman bilgileri/);
+  assert.match(b, /1\s*\.?\s*Firma bilgileri.*Ekipman kodu DT-1 Ekipman türü Deneme türü/);
+  assert.doesNotMatch(b, /Deneme Marka/, "silinen bölümün alanları belgede yok");
+  /* kullanım kutusu ve sürüm farkı */
+  assert.equal(kullanim(sil).bolum, kullanim(z).bolum - 1);
+  assert.ok(surumFarki(z, sil).some((x) => x.metin.startsWith("Ekipman bilgileri bölümü kaldırıldı")), JSON.stringify(surumFarki(z, sil)));
+  /* geri ekle: tam bölüm, ekipman kaydına bağlı varsayılan alanlarla; numaralar eskisi gibi */
+  const geri = ekipmanBolumuGeriEkle(sil);
+  assert.equal(geri.gorunum.ekipman, undefined);
+  assert.ok(tamBolumu(geri)?.alanlar.some((a) => a.ekipman === "marka"));
+  assert.deepEqual(raporDuzeni(geri, false).bolumler.map((x) => x.no), once.bolumler.map((x) => x.no));
+  assert.match(belgeMetni(geri), /2\s*\.?\s*Ekipman bilgileri/);
+  /* Bakanlık bölümü silindi: yayında uyarı (engel değil) */
+  assert.ok(kilitDenetimi(sil, SABLONLAR.ZPKR01.tanim).length > 0);
+});
+

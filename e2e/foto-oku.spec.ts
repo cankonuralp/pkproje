@@ -5,10 +5,14 @@
    reddeder (istek yapılandırılmış çıktıyla); pano okumasında fotoğraf rapora eklenir (§11 92 — Fotoğraflar bölümü); uygulamadan sonra odak kartta.
    484 (reisim 2026-10-10: "fotoğraf eklenince belgede gözükmeyecek … aynı şekilde ekipman bilgilerinde de olsun"): okunan fotoğraf tablonun altında
    OKUMA fotoğrafı (Fotoğraflar bölümünde değil, belgede yok); ekipman bilgilerinde "Fotoğraftan doldur" (385'in "Etiketten oku"su); tabloya
-   "Excel'den yükle" (başlık satırı sütun adlarıyla) ve "Excel şablonu". */
+   "Excel'den yükle" (başlık satırı sütun adlarıyla) ve "Excel şablonu".
+   486 (reisim 2026-10-10): tuşun adı "Fotoğraf ekle (yapay zekâ okur)" (tabloda ve alanlı bölümde aynı); tablodaki Tip listesi alanın yanında açılır,
+   sayfa kaymaz ("tip seçin kısmına tıklayınca saçma sapan başa atıp"); sıra sütunu "Sıra"; "Son satırı kopyala" (No bir artar) ve "Sırala"
+   (No'ya göre doğal sıra); "Sonuç neye göre çıkar?" tablonun kuralını yazar. */
 import { expect, test } from "@playwright/test";
 import { xlsxBayt, XLSX_TURU } from "../src/components/disa/xlsx";
 import { SABLONLAR } from "../src/format/sablonlar";
+import { satirlariSirala, sonrakiKod } from "../src/modules/raporlar/tablo";
 import { E2E_KAPI, E2E_PAROLA, E2E_YZ } from "./hesaplar";
 import { bolumleriAc, hazir } from "./yardimci";
 
@@ -34,7 +38,7 @@ test("fotoğraftan okuma: öneri kartı; emin olunanlar toplu, emin olunmayan te
   await bolumleriAc(page);   // 463: bölümler kapalı açılır
 
   const linye = page.locator("#b-linye");
-  await linye.getByLabel("Pano sigortaları (linye): fotoğraftan oku").setInputFiles({ name: "pano.jpg", mimeType: "image/jpeg", buffer: JPEG });
+  await linye.getByLabel("Pano sigortaları (linye): fotoğraf ekle (yapay zekâ okur)").setInputFiles({ name: "pano.jpg", mimeType: "image/jpeg", buffer: JPEG });
   const kart = page.getByRole("region", { name: "Pano sigortaları (linye): fotoğraftan okunan" });
   await expect(kart).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText("3 satır okundu", { exact: false }).first()).toBeVisible();
@@ -84,7 +88,7 @@ test("ekipman bilgileri fotoğraftan: öneri kartı; emin olunanlar toplu, emin 
   await bolumleriAc(page);   // 463: bölümler kapalı açılır
 
   const ekip = page.locator("#b-sabit-ekipman");
-  await ekip.getByLabel(/: fotoğraftan doldur$/).setInputFiles({ name: "etiket.jpg", mimeType: "image/jpeg", buffer: JPEG });
+  await ekip.getByLabel(/: fotoğraf ekle \(yapay zekâ okur\)$/).setInputFiles({ name: "etiket.jpg", mimeType: "image/jpeg", buffer: JPEG });
   const kart = page.getByRole("region", { name: /: fotoğraftan okunan$/ });
   await expect(kart).toBeVisible({ timeout: 30_000 });
   await expect(kart).toBeFocused();
@@ -97,7 +101,7 @@ test("ekipman bilgileri fotoğraftan: öneri kartı; emin olunanlar toplu, emin 
   await kart.getByRole("button", { name: "Uygula" }).click();
   await expect(page.getByLabel("İmal yılı", { exact: true })).toHaveValue("2019");
   await expect(kart).toHaveCount(0);
-  await expect(ekip.getByLabel(/: fotoğraftan doldur$/)).toBeFocused();
+  await expect(ekip.getByLabel(/: fotoğraf ekle \(yapay zekâ okur\)$/)).toBeFocused();
   await expect(ekip.getByText("belgede görünmez", { exact: false })).toBeVisible({ timeout: 30_000 });
 });
 
@@ -127,4 +131,36 @@ test("ölçüm tablosu Excel'den: başlıklar sütunlara eşlenir, satırlar tab
   await expect.poll(() => linye.locator("input").evaluateAll((l) => l.map((i) => (i as HTMLInputElement).value))).toEqual(expect.arrayContaining(["X1", "X2", "Kombi"]));
   const [indirilen] = await Promise.all([page.waitForEvent("download", { timeout: 30_000 }), linye.getByRole("button", { name: "Pano sigortaları (linye): Excel şablonu" }).click()]);
   expect(indirilen.suggestedFilename()).toMatch(/sablonu\.xlsx$/);
+
+  /* 486: sıra sütunu "Sıra" — formatın kendi "No" sütunu var ("No | No" olmasın) */
+  await expect(linye.getByRole("columnheader", { name: "Sıra", exact: true })).toBeVisible();
+  /* 486 (reisim: "tip seçin kısmına tıklayınca saçma sapan başa atıp"): tablodaki seçim listesi alanın hemen altında / üstünde açılır, sayfa kaymaz */
+  const tip = linye.getByRole("combobox", { name: /· Tip$/ }).last();
+  await tip.scrollIntoViewIfNeeded();
+  const y0 = await page.evaluate(() => scrollY);
+  await tip.click();
+  const tipListe = page.getByRole("listbox", { name: /· Tip$/ });
+  await expect(tipListe).toBeVisible();
+  expect(await page.evaluate(() => scrollY), "sayfa kaymadı").toBe(y0);
+  const a = (await tip.boundingBox())!, l = (await tipListe.boundingBox())!;
+  expect(l.y >= a.y + a.height - 1 || l.y + l.height <= a.y + 1, `liste alanın altında ya da üstünde (alan ${a.y}, liste ${l.y})`).toBe(true);
+  expect(Math.min(Math.abs(l.y - (a.y + a.height)), Math.abs(a.y - (l.y + l.height))) < 20, "liste alana bitişik").toBe(true);
+  expect(l.x < a.x + a.width && l.x + l.width > a.x, "liste alanın hizasında").toBe(true);
+  await tipListe.getByRole("option", { name: "C", exact: true }).click();
+  await expect(tip).toContainText("C");
+  /* 486: son satırı kopyala — değerler gelir, No bir artar; Sırala — No'ya göre doğal sıra */
+  const nolar = () => linye.getByRole("textbox", { name: /· No$/ }).evaluateAll((x) => x.map((i) => (i as HTMLInputElement).value));
+  const once = await nolar();
+  const sonDevre = await linye.getByRole("textbox", { name: /· Devre$/ }).last().inputValue();
+  await linye.getByRole("button", { name: "Son satırı kopyala" }).click();
+  await expect(linye.getByRole("textbox", { name: /· No$/ })).toHaveCount(once.length + 1);
+  await expect(linye.getByRole("textbox", { name: /· No$/ }).last()).toHaveValue(sonrakiKod(once.at(-1)!));
+  await expect(linye.getByRole("textbox", { name: /· Devre$/ }).last()).toHaveValue(sonDevre);
+  const kopyali = await nolar();
+  await linye.getByRole("button", { name: "Sırala (No)" }).click();
+  await expect.poll(nolar).toEqual(satirlariSirala(kopyali.map((no) => ({ no })), "no").map((s) => s.no));
+  /* 486: "Sonuç neye göre çıkar?" tablonun kuralını yazar (RCD testi dahil) */
+  await linye.getByText("Sonuç neye göre çıkar?").click();
+  await expect(linye).toContainText("Ib ≤ In ≤ Iz");
+  await expect(linye).toContainText("TΔ ≤ 200 ms");
 });

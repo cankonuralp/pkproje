@@ -3,7 +3,7 @@
    kurucu K4'te de kullanır). Kilitli (Bakanlık) öğe kilit simgesiyle. PDF çizimi PDF kaleminde aynı tanımdan. */
 import type { ReactNode } from "react";
 import { SINIR_ISARETI } from "../../../format/hesap";
-import { kayittanBolumMu } from "../../../format/duzen";
+import { kayittanBolumMu, siraBasligi } from "../../../format/duzen";
 import type { Bolum, FormatTanimi, Sinir } from "../../../format/tanim";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { Rozet } from "../../../components/sayfa/Sayfa";
@@ -77,7 +77,7 @@ export function OlcumOnizleme({ b, tuslar, secili }: { b: Extract<Bolum, { blok:
         <caption className="gizli">{b.ad} · sütunlar</caption>
         <thead>
           <tr>
-            <th scope="col">No</th>
+            <th scope="col">{siraBasligi(b)}</th>
             {b.sutunlar.map((s) => (
               <th key={s.id} scope="col" className={secili === s.id ? stil.sutunSecili : undefined}>
                 <span className={stil.sutunAd}>{s.ad}{s.birim ? ` (${s.birim})` : ""}</span>

@@ -113,6 +113,11 @@ PDF'e basılmaz.
   Sahada: **Fotoğraftan doldur** (tabloda satır satır — 351; alanlı bölümde alan alan — 385'in genel hâli) yapay zekâyla okur, değerler ÖNERİ,
   denetçi uygular; fotoğraf raporda **okuma fotoğrafı** olarak durur, **belgede (PDF) görünmez**; firmada yapay zekâ kapalıysa yerine nereden
   açılacağı yazar. **Excel'den yükle** (.xlsx / .csv; tablo başlık satırıyla, alanlar "Alan | Değer"; türüne uymayan yazılmaz) + **Excel şablonu**.
+- **2026-10-11 (486):** sahadaki doldurma tuşları kâğıtta bölümün altında GÖRÜNÜR ("Sahada: Fotoğraf ekle (yapay zekâ okur) × · Excel'den yükle ×";
+  "+ … tuşu koy"); sahada "Fotoğraf ekle (yapay zekâ okur)" her zaman — yapay zekâ kapalıysa fotoğraf okunmadan saklanır, açılınca "Oku". **Ekipman
+  bilgileri bölümü silinir** (görünüm `ekipman: false`; kod ve tür 1. bölümde, numaralar kayar; geri eklenir). **Alt başlık türü** seçilir (ana
+  bölümle aynı ya da kontrol listesi / ölçüm tablosu / test / bilgi / fotoğraf / not). Ölçüm tablosunun sıra sütunu formatın "No" sütunu varken
+  "Sıra"; tablonun Sonuç'unun kuralı ekranda "Sonuç neye göre çıkar?" (motor.ts sonucKurallari).
 
 ## 7 · Veri
 

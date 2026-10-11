@@ -10,7 +10,9 @@
      bölüm, numarasız bölümden sonra, üst başlıklı grubun ardından) alt bayrağı yok sayılır, bölüm ana numarasını alır.
    · 460: "tam" ekipman bölümü varsa 2. bölüme YALNIZ o katılır ve 2. bölümde ekipman kodu ve türü dışında sabit satır yoktur (marka, model …
      onun ekipman kaydına bağlı alanlarıdır). Tam bölümsüz eski formatta 2. bölümün sabit satırları: kod, tür ve formatın aynı adlı alanı
-     olmayan marka, model, seri no, imal yılı, kullanım yeri, kullanım amacı (sabitEkipmanAlanlari) — belge ve saha ekranı aynı listeden. */
+     olmayan marka, model, seri no, imal yılı, kullanım yeri, kullanım amacı (sabitEkipmanAlanlari) — belge ve saha ekranı aynı listeden.
+   · 486: formatta ekipman bölümü kaldırıldıysa (gorunum.ekipman false — hata listesi 38) 2. bölüm yok: ekipman kodu ve türü 1. bölümde yazar,
+     cihaz bölümü 2, format bölümleri 2'den (cihazlıysa 3'ten) sonra numaralanır; ekipman adlı bilgi bölümleri sıradan bölümdür. */
 import { EKIPMAN_ALAN_ADI, type Bolum, type BolumOf, type EkipmanAlani, type FormatTanimi } from "./tanim.ts";
 
 const kucuk = (s: string) => s.toLocaleLowerCase("tr");
@@ -23,8 +25,13 @@ export interface DuzenBolumu {
   ust: { no: string; ad: string } | null;
 }
 /** sonraki: formatta imza bölümü yoksa en sona eklenen "Yetkili kişi" bölümünün numarası */
-/** tam: formatın tam ekipman bölümü (460) — varsa katilan yalnız odur */
-export interface RaporDuzeni { ekipmanBaslik: string; katilan: BolumOf<"bilgi">[]; tam: BolumOf<"bilgi"> | null; cihazNo: string | null; bolumler: DuzenBolumu[]; sonraki: string }
+/** tam: formatın tam ekipman bölümü (460) — varsa katilan yalnız odur. ekipman (486): 2. bölüm (ekipman bilgileri) var mı */
+export interface RaporDuzeni {
+  ekipman: boolean; ekipmanBaslik: string; katilan: BolumOf<"bilgi">[]; tam: BolumOf<"bilgi"> | null; cihazNo: string | null; bolumler: DuzenBolumu[]; sonraki: string;
+}
+
+/** 486: formatta 2. bölüm (ekipman bilgileri) var mı — kaldırılmadıysa var */
+export const ekipmanBolumuVar = (t: FormatTanimi) => t.gorunum.ekipman !== false;
 
 export const ekipmanBolumuMu = (b: Bolum): b is BolumOf<"bilgi"> =>
   b.blok === "bilgi" && (!!b.tam || ((b.id === "ekipman" || kucuk(b.ad).includes("ekipman")) && b.alanlar.some((a) => !a.kaynak)));
@@ -40,7 +47,7 @@ const ESKI_SABIT: readonly (readonly [EkipmanAlani, string])[] = [
 ];
 /** 2. bölümün kayıttan başlayan sabit satırları (eski format); tam ekipman bölümlü formatta yok */
 export function sabitEkipmanAlanlari(t: FormatTanimi): EkipmanAlani[] {
-  if (tamBolum(t)) return [];
+  if (!ekipmanBolumuVar(t) || tamBolum(t)) return [];
   const adlar = t.bolumler.flatMap((b) => (b.blok === "bilgi" ? b.alanlar.filter((a) => !a.kaynak).map((a) => kucuk(a.ad)) : []));
   return ESKI_SABIT.filter(([, x]) => !adlar.some((ad) => ad.includes(x))).map(([k]) => k);
 }
@@ -52,7 +59,7 @@ const EKIPMAN_KAYNAK = new Set(["ekipman_kodu", "ekipman_adi", "seri_no", "kulla
     (sabitEkipmanAlanlari) ekipman kaydına bağlı alan olur, ardından "Ekipman bölümü", sonra formatın kendi ekipman alanları. 2. bölümde sabit
     satırı olan kayıttan alanlar (kod, tür, seri no, kullanım yeri) kilitli değilse çıkar. Ekipman bölümü yoksa 1. bölümün kopyasından sonra açılır. */
 export function ekipmanTamYap(t: FormatTanimi): FormatTanimi {
-  if (tamBolum(t)) return t;
+  if (!ekipmanBolumuVar(t) || tamBolum(t)) return t;
   const kimlikler = new Set(t.bolumler.flatMap((b) => [b.id, ...(b.blok === "bilgi" ? b.alanlar.map((a) => a.id) : [])]));
   const tekil = (on: string) => { let id = on; for (let n = 2; kimlikler.has(id); n++) id = `${on}${n}`; kimlikler.add(id); return id; };
   const bagli = (k: EkipmanAlani) => ({ id: tekil(`e_${k}`), ad: EKIPMAN_ALAN_ADI[k], tur: "metin" as const, zorunlu: false, kilit: false, ekipman: k });
@@ -88,10 +95,12 @@ export const kurucuyaHazirla = (t: FormatTanimi): FormatTanimi => cihazBolumuEkl
 
 /** cihazEk: formatta cihaz bölümü yok ama rapora cihaz eklendi (sabit "Ölçüm cihazları" bölümü) */
 export function raporDuzeni(t: FormatTanimi, cihazEk: boolean): RaporDuzeni {
-  const tam = tamBolum(t);
-  const katilan = tam ? [tam] : t.bolumler.filter(ekipmanBolumuMu);
+  const ekipman = ekipmanBolumuVar(t);
+  const tam = ekipman ? tamBolum(t) : null;
+  const katilan = !ekipman ? [] : tam ? [tam] : t.bolumler.filter(ekipmanBolumuMu);
   const kalan = t.bolumler.filter((b) => !katilan.includes(b as BolumOf<"bilgi">) && !kayittanBolumMu(b));
-  let n = cihazEk ? 3 : 2, alt = 0, sonUst: string | null = null, anaVar = false;
+  const sabit = (ekipman ? 2 : 1) + (cihazEk ? 1 : 0);
+  let n = sabit, alt = 0, sonUst: string | null = null, anaVar = false;
   const bolumler = kalan.map((b): DuzenBolumu => {
     if (b.numarasiz) { sonUst = null; anaVar = false; return { b, no: null, ust: null }; }
     const ust = b.ust?.trim() || null;
@@ -104,7 +113,7 @@ export function raporDuzeni(t: FormatTanimi, cihazEk: boolean): RaporDuzeni {
     alt = 0;
     return { b, no: String(n), ust: null };
   });
-  return { ekipmanBaslik: katilan[0]?.ad || "Ekipman bilgileri", katilan, tam, cihazNo: cihazEk ? "3" : null, bolumler, sonraki: String(n + 1) };
+  return { ekipman, ekipmanBaslik: katilan[0]?.ad || "Ekipman bilgileri", katilan, tam, cihazNo: cihazEk ? String(sabit) : null, bolumler, sonraki: String(n + 1) };
 }
 
 /** 461 / 473: v. bölümden sonra eklenen alt başlığın ANA bölümü — v ana bölümse kendisi, alt başlıksa onun ana bölümü; üst başlıklı grup ya da
@@ -119,3 +128,7 @@ export function altBaslikAnasi(l: readonly DuzenBolumu[], v: number): Bolum | nu
 }
 /** v. bölümden sonra ana bölümün alt başlık grubu bitiyor mu (sonraki bölüm aynı ananın alt başlığı değil) */
 export const altGrupSonu = (l: readonly DuzenBolumu[], v: number) => { const s = l[v + 1]; return !(s?.b.alt && s.no?.includes(".")); };
+
+/** 486 (reisim 2026-10-10 ekran görüntüsü: linye tablosunda "No | No | Devre"): tablonun sıra sütununun başlığı — formatın kendi "No" sütunu varsa
+    "Sıra", yoksa "No" (saha ekranı, kâğıt, belge aynı) */
+export const siraBasligi = (b: { sutunlar: readonly { ad: string }[] }) => (b.sutunlar.some((s) => /^\s*no\.?\s*$/iu.test(s.ad)) ? "Sıra" : "No");

@@ -4,7 +4,7 @@
    döner), Tab kapatır, harfe basınca o harfle başlayan sonraki seçenek. Açılınca odak aramaya, yoksa seçili seçeneğe. Liste yalnız açıkken
    çizilir; 452: ÜST KATMANDA yüzer (yuzen.ts — alanın altı, sığmazsa üstü; sayfayı / pencereyi itmez, kesilmez). */
 import { useEffect, useRef, useState } from "react";
-import { useYuzen, type YuzenAyar } from "./yuzen";
+import { odakla, useYuzen, type YuzenAyar } from "./yuzen";
 import { Ikon } from "../ikon/Ikon";
 import { tr } from "../liste/suzgec";
 import { EN_COK_GORUNEN, gorunenSecenekler, type SecimSecenegi } from "./gorunen";
@@ -34,13 +34,13 @@ export function SecenekListesi({ id, ad, secenekler, deger, sec, kapat, yuzen, s
 
   useEffect(() => {
     const k = kap.current; if (!k) return;
-    (k.querySelector<HTMLElement>("[data-secim-ara]") ?? k.querySelector<HTMLElement>('[aria-selected="true"]') ?? k.querySelector<HTMLElement>('[role="option"]'))?.focus();
+    odakla(k.querySelector<HTMLElement>("[data-secim-ara]") ?? k.querySelector<HTMLElement>('[aria-selected="true"]') ?? k.querySelector<HTMLElement>('[role="option"]'));
   }, []);
 
   const tuslar = () => Array.from(kap.current?.querySelectorAll<HTMLButtonElement>('[role="option"]') ?? []);
   const klavye = (e: React.KeyboardEvent) => {
     const l = tuslar(), i = l.indexOf(document.activeElement as HTMLButtonElement);
-    const git = (n: number) => { e.preventDefault(); l[Math.max(0, Math.min(l.length - 1, n))]?.focus(); };
+    const git = (n: number) => { e.preventDefault(); odakla(l[Math.max(0, Math.min(l.length - 1, n))]); };
     switch (e.key) {
       case "ArrowDown": return git(i < 0 ? 0 : i + 1);
       case "ArrowUp": return git(i <= 0 ? 0 : i - 1);
@@ -53,7 +53,7 @@ export function SecenekListesi({ id, ad, secenekler, deger, sec, kapat, yuzen, s
     if (i >= 0 && e.key.length === 1 && /\p{L}|\d/u.test(e.key)) {
       const h = tr(e.key), sira = [...l.slice(i + 1), ...l.slice(0, i + 1)];
       const hedef = sira.find((b) => tr(b.dataset.etiket ?? "").startsWith(h));
-      if (hedef) { e.preventDefault(); hedef.focus(); }
+      if (hedef) { e.preventDefault(); odakla(hedef); }
     }
   };
 

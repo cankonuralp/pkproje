@@ -11,7 +11,7 @@ import { altBaslikAnasi, altGrupSonu, raporDuzeni } from "../src/format/duzen.ts
 import { kilitDenetimi } from "../src/format/motor.ts";
 import { SABLONLAR } from "../src/format/sablonlar.ts";
 import { FormatTanimi, type FormatGirdisi } from "../src/format/tanim.ts";
-import { altBaslikEkle, bolumDuzeni } from "../src/modules/rapor-format/kurucu.ts";
+import { ALT_TURLER, altBaslikEkle, bolumDuzeni } from "../src/modules/rapor-format/kurucu.ts";
 
 const not = (id: string, ek: Record<string, unknown> = {}) => ({ id, ad: id.toUpperCase(), blok: "not", ...ek });
 const tanim = (bolumler: unknown[]) => FormatTanimi.parse({ sema: 1, bolumler } as FormatGirdisi);
@@ -81,3 +81,23 @@ test("alt başlık grubu: ana bölümün grubu son alt başlıkta biter; ana bö
   assert.deepEqual(l.map((_, v) => altGrupSonu(l, v)), [false, false, true, true, true, true]);
   assert.deepEqual(l.map((_, v) => altBaslikAnasi(l, v)?.id ?? null), ["a", "a", "a", "d", null, null]);
 });
+
+/* 486 (reisim 2026-10-10, hata listesi 40: "alt başlık ekleyince seçenekler çıksın illa üst başlıktaki formatta olması gerekmiyor tabloda olabilir
+   başka bir şey de"): tür seçilince alt başlık o türde — içinde bir boş öğe; ana bölümün türü seçilirse ana bölümün yapısıyla */
+test("kurucu: alt başlık seçilen türde açılır (kontrol listesinin altına tablo, test, bilgi, fotoğraf, not); ana türde ana yapıyla", () => {
+  const z = SABLONLAR.ZPKR02.tanim;
+  const li = z.bolumler.findIndex((b) => b.blok === "liste");
+  for (const tur of ALT_TURLER) {
+    const y = altBaslikEkle(z, li + 1, z.bolumler[li], undefined, tur);
+    const b = y.t.bolumler[li + 1];
+    assert.deepEqual([b.id, b.blok, b.alt, b.kilit], [y.id, tur, true, false], tur);
+    FormatTanimi.parse(y.t);
+    assert.match(raporDuzeni(y.t, false).bolumler.find((x) => x.b.id === y.id)!.no ?? "", /^\d+\.1$/, `${tur}: ana bölümün altında N.1`);
+    if (b.blok === "olcum") assert.deepEqual(b.sutunlar.map((c) => [c.ad, c.giris]), [["Yeni sütun", "metin"]]);
+    if (b.blok === "liste") assert.deepEqual(b.cevaplar, (z.bolumler[li] as { cevaplar: string[] }).cevaplar, "ana türde cevap seti ana bölümden");
+  }
+  const oi = z.bolumler.findIndex((b) => b.blok === "olcum");
+  const o = altBaslikEkle(z, oi + 1, z.bolumler[oi], undefined, "olcum").t.bolumler[oi + 1], ana = z.bolumler[oi];
+  assert.ok(o.blok === "olcum" && ana.blok === "olcum" && o.sutunlar.length === ana.sutunlar.length, "tablonun altına tablo: ana sütunlarla");
+});
+

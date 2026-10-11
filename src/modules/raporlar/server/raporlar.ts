@@ -455,6 +455,8 @@ export async function alanOkunabilir(db: Sorgulayici, kim: Kisi, id: string, bol
   if (bolumId === "ekipman") {
     const x = ekipmanAlanlari(tanim);
     if (x.tam && !doldurma(x.tam).foto) return KAPALI;
+    /* 486: formatta ekipman bölümü kaldırıldıysa okunacak alan yok */
+    if (!x.alanlar.length) return { durum: "gecersiz", hatalar: { foto: "Bu formatta ekipman bilgileri bölümü yok." } };
     return { raporId: e.r.id, baslik: x.baslik, alanlar: x.alanlar };
   }
   const b = tanim.bolumler.find((y) => y.id === bolumId);
@@ -642,6 +644,16 @@ export async function okumaFotografiEkle(db: Sorgulayici, depo: Depo, kim: Kisi,
   const cevaplar = sayiliCevaplar(cev.data, { cihazlar: e.r.cihazlar, fotolar: yeni });
   return sonuc(await guncelle(db, RAPOR, id, e.r.surum, { fotolar: jsonDizi(yeni), cevaplar }, { kim: kim.ad, ne: "rapor.okuma_foto", gerekce: `${gorunenNo(e.r.no, e.r.revizyon)} · ${y.ad}` }),
     id, `${y.ad} eklendi (belgede görünmez).`);
+}
+
+/** 486: raporun OKUMA fotoğrafının baytları — yazanın raporunda, verilen bölümün okuma fotoğrafıysa (sonradan okuma: firmada yapay zekâ kapalıyken
+    eklenen fotoğraf, açılınca "Oku" ile okunur). Değilse null. Yazma yetkisi ve rapor durumu çağıranda (okunabilirOlcum / alanOkunabilir). */
+export async function okumaFotografiBaytlari(db: Sorgulayici, depo: Depo, kim: Kisi, id: string, bolum: string, dosyaId: string): Promise<{ ad: string; bayt: Uint8Array } | null> {
+  const e = await erisim(db, kim, id);
+  if (!e || !e.sahip) return null;
+  const f = e.r.fotolar.find((x) => x.okuma && x.bolum === bolum && x.dosya === dosyaId);
+  const d = f ? await kayitDosyasi(db, DOSYA_MODULU, e.r.id, f.dosya) : null;
+  return f && d ? { ad: f.ad, bayt: await depo.oku(d.anahtar, db) } : null;
 }
 
 /** fotoğraf sil: listeden çıkar, dosya çöpe (indirilemez). Yalnız yazan, Yeni raporda. */

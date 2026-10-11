@@ -8,7 +8,7 @@
 import { useCallback, useId, useRef, useState } from "react";
 import { Ikon } from "../ikon/Ikon";
 import { useDisariTiklama } from "./SecenekListesi";
-import { useYuzen, type YuzenAyar } from "./yuzen";
+import { odakla, useYuzen, type YuzenAyar } from "./yuzen";
 import { ayBasligi, ayGunleri, ayKaydir, bugunIso, GUN_KISA, iki, parcaGecerli, saatliKur, simdiIso, tarihNo, tarihOku } from "./tarih";
 import stil from "./Secim.module.css";
 
@@ -34,12 +34,12 @@ export function TarihAlani({ id, ad, deger, degistir, saat = false, tanim }: {
   const metin = taslak ?? (deger ? tarihNo(deger) : "");
   const gecersiz = taslak !== null && taslak.length >= 10 && !tarihOku(taslak);
   const yay = (gun: string) => degistir(saat ? saatliKur(deger, simdiIso(), { gun }) : gun);
-  const takvimAc = (odakla: boolean) => {
+  const takvimAc = (odakVer: boolean) => {
     setAy((tarihOku(metin) ?? deger ?? "").slice(0, 7) || bugunIso().slice(0, 7));
     setAcik(true);
-    if (odakla) requestAnimationFrame(() => {
+    if (odakVer) requestAnimationFrame(() => {
       const k = kap.current?.querySelector<HTMLElement>(`#${CSS.escape(takvimId)}`);
-      (k?.querySelector<HTMLElement>('[aria-pressed="true"]') ?? k?.querySelector<HTMLElement>("[data-bugun]") ?? k?.querySelector<HTMLElement>("[data-gun]"))?.focus();
+      odakla(k?.querySelector<HTMLElement>('[aria-pressed="true"]') ?? k?.querySelector<HTMLElement>("[data-bugun]") ?? k?.querySelector<HTMLElement>("[data-gun]"));
     });
   };
   const gunSec = (gun: string) => { setTaslak(null); yay(gun); setAcik(false); simge.current?.focus(); };
@@ -131,7 +131,7 @@ function Parca({ tur, ad, deger, sec }: { tur: "saat" | "dakika"; ad: string; de
       <button className={stil.zamanSimge} type="button" aria-haspopup="listbox" aria-expanded={acik} aria-controls={acik ? listeId : undefined} aria-label={`${ad2} seç`}
         onClick={() => { setTaslak(null); setAcik(!acik); if (!acik) requestAnimationFrame(() => {
           const l = kap.current?.querySelector<HTMLElement>('[role="listbox"]');
-          (l?.querySelector<HTMLElement>('[aria-selected="true"]') ?? l?.querySelector<HTMLElement>('[role="option"]'))?.focus();
+          odakla(l?.querySelector<HTMLElement>('[aria-selected="true"]') ?? l?.querySelector<HTMLElement>('[role="option"]'));
         }); }}>
         <Ikon ad="clock" kucuk />
       </button>

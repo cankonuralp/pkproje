@@ -8,7 +8,7 @@
    JSX değil createElement: düğüm test koşucusu (node --test) bu dosyayı doğrudan yükler (tests/belge.test.ts). */
 import { createElement as h, Fragment, type ReactNode } from "react";
 import { SINIR_ISARETI } from "../format/hesap.ts";
-import { raporDuzeni, sabitEkipmanAlanlari } from "../format/duzen.ts";
+import { raporDuzeni, sabitEkipmanAlanlari, siraBasligi } from "../format/duzen.ts";
 import { degerlendir } from "../format/motor.ts";
 import { EKIPMAN_ALAN_ADI, type Bolum, type BolumOf } from "../format/tanim.ts";
 /* veri.ts: saf tanımlar (tanimlar.ts node:crypto kullanır — 451: Format kurucunun belge önizlemesi bu çiziciyi tarayıcıda koşar) */
@@ -136,7 +136,7 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
       case "olcum": {
         const satirlar = c.tablo[b.id] ?? [], sonuclar = d.satirlar[b.id] ?? [];
         return h(Fragment, null,
-          h("table", null, baslikSatiri("No", ...b.sutunlar.map((s) => `${s.ad}${s.birim ? ` (${s.birim})` : ""}`), "Sonuç"),
+          h("table", null, baslikSatiri(siraBasligi(b), ...b.sutunlar.map((s) => `${s.ad}${s.birim ? ` (${s.birim})` : ""}`), "Sonuç"),
             h("tbody", null, ...(satirlar.length ? satirlar.map((s, i) => {
               const r = sonuclar[i], not = Number(s.not);
               const sonuc = not > 0 ? `Not-${not}` : r?.uygun === true ? "Uygun" : r?.uygun === false ? "Uygun değil" : "-";
@@ -196,8 +196,10 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
       ["Başlangıç tarihi ve saati", saatliNo(v.tarih.bas)], ["Bitiş tarihi ve saati", saatliNo(v.tarih.bit)],
       ["Bir sonraki periyodik kontrol tarihi", tarihNo(v.tarih.sonraki)], ["Takip kontrol tarihi", tarihNo(v.tarih.takip)],
       ["Periyodik kontrol metodu ve kapsamı", metot.length ? metot.join(" · ") : "-", true],
+      /* 486: formatta ekipman bölümü kaldırıldıysa kod ve tür burada (rapor hangi ekipmanın — her belgede) */
+      ...(duzen.ekipman ? [] : ekipman.slice(0, 2)),
     ])),
-    bolum("2", duzen.ekipmanBaslik, bilgiTablosu(ekipman), ...(duzen.tam ? [] : katilan).map((b) => h(Fragment, { key: b.id }, bilgi(b, true)))),
+    duzen.ekipman ? bolum("2", duzen.ekipmanBaslik, bilgiTablosu(ekipman), ...(duzen.tam ? [] : katilan).map((b) => h(Fragment, { key: b.id }, bilgi(b, true)))) : null,
     duzen.cihazNo ? bolum(duzen.cihazNo, "Ölçüm cihazları", cihazTablosu()) : null,
     ...duzen.bolumler.flatMap((x) => [x.ust ? ustBaslik(x.ust.no, x.ust.ad) : null, bolum(x.no, x.b.ad, formatBolumu(x.b))]),
     imzaVar ? null : bolum(duzen.sonraki, "Yetkili kişi", imza()),

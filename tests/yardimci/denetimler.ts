@@ -468,3 +468,22 @@ export function takipSeridiEksikleri(sayfa: string, kabuk: string, takip: string
   if (sebepli < 9) hata.push(`balonlu modül sayısı düştü: ${sebepli}`);
   return hata;
 }
+
+/** 486: yüzen katmanın (seçim listesi, takvim, saat önerileri — üst katman) biçemi YALNIZ kendi dosyasında. Başka CSS'te listbox / popover /
+    seçim kabına (data-secim-kap) inen seçici katmanı akışa alabilir (452 öncesinden kalan "position: static" ezmesi Tip listesini sayfanın başına
+    atıyordu). Kendi dosyasında .liste / .takvim konumu yalnız fixed. Dönen: "dosya: seçici" listesi. */
+export function yuzenEzmeleri(dosyalarCss: readonly { ad: string; metin: string }[], kendi = "src/components/secim/Secim.module.css"): string[] {
+  const hata: string[] = [];
+  for (const d of dosyalarCss) {
+    for (const blok of d.metin.replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+      const secici = blok[1].trim().replace(/\s+/g, " ");
+      if (d.ad === kendi) {
+        const konum = /(?:^|[;\s])position\s*:\s*([a-z-]+)/.exec(blok[2])?.[1];
+        if (konum && konum !== "fixed" && /\.(liste|takvim)\b/.test(secici)) hata.push(`${d.ad}: ${secici} (position: ${konum})`);
+        continue;
+      }
+      if (/role=["']?listbox|\[popover|:popover-open|data-secim-kap/.test(secici)) hata.push(`${d.ad}: ${secici}`);
+    }
+  }
+  return hata;
+}

@@ -11,7 +11,7 @@ import {
   raporSil, revizeIste, revizeIstegiGeriCek, type RaporYazma,
 } from "../server/raporlar";
 import { anthropicCagir, type OkunanSatir } from "../../../server/yz/okuma";
-import { FOTO_OKU_EN_BUYUK, fotoOkuBirak, fotoOkuHazirla, fotoOkuKaydet, fotoOkuKullanimYaz } from "../server/foto-oku";
+import { FOTO_OKU_EN_BUYUK, fotoOkuBirak, fotoOkuHazirla, fotoOkuKaydet, fotoOkuKullanimYaz, okumaFotografiSakla, type OkunacakFoto } from "../server/foto-oku";
 import { alanOkuBirak, alanOkuHazirla, alanOkuKullanimYaz, alanOkuSonuc } from "../server/alan-oku";
 import type { AlanOkunan } from "../../../server/yz/alanlar";
 
@@ -69,7 +69,23 @@ export async function fotoEkleEylemi(form: FormData): Promise<RaporYaniti> {
   return islem((o) => oturumIslemi(o, (db) => fotoEkle(db, depo(), o, o.kiraci.firmaId, metin(form.get("id")), Number(form.get("surum")),
     { bolum: metin(form.get("bolum")), madde: madde || null }, { ad: dosya.name, bayt })));
 }
-/** fotoğraftan okuma (351; form: id, bolum, dosya): hazırlık (ayırma) ve kayıt oturumun işlemlerinde, yapay zekâ çağrısı işlemin DIŞINDA; satırlar öneri.
+/** okunacak fotoğraf formdan (486): yeni dosya ("dosya") ya da raporun okuma fotoğrafı ("foto" — dosya kimliği; sonradan okuma). Dosya büyüklüğü burada,
+    fotoğrafın raporun o bölümüne ait olduğu modülde denetlenir. */
+async function okunacak(form: FormData): Promise<OkunacakFoto | string> {
+  const kayitli = metin(form.get("foto"));
+  if (kayitli) return { dosya: kayitli };
+  const dosya = form.get("dosya");
+  if (!(dosya instanceof File) || dosya.size === 0) return "Fotoğraf seçilmeli.";
+  if (dosya.size > FOTO_OKU_EN_BUYUK) return "Fotoğraf çok büyük (en çok 5 MB).";
+  return { bayt: new Uint8Array(await dosya.arrayBuffer()) };
+}
+/** 486: fotoğrafı OKUMADAN okuma fotoğrafı olarak ekle (form: id, bolum, dosya) — firmada yapay zekâ kapalıyken; belgede görünmez */
+export async function okumaFotografiEkleEylemi(form: FormData): Promise<RaporYaniti> {
+  const k = await okunacak(form);
+  if (typeof k === "string" || !("bayt" in k)) return { genel: typeof k === "string" ? k : "Fotoğraf seçilmeli." };
+  return islem((o) => oturumIslemi(o, (db) => okumaFotografiSakla(db, depo(), o, o.kiraci.firmaId, metin(form.get("id")), metin(form.get("bolum")), k)));
+}
+/** fotoğraftan okuma (351; form: id, bolum, dosya ya da foto): hazırlık (ayırma) ve kayıt oturumun işlemlerinde, yapay zekâ çağrısı işlemin DIŞINDA; satırlar öneri.
     354: beklenmeyen hata eylemi çökertmez (istemci hata ekranına düşüp kaydedilmemiş girişler kaybolmasın) — ileti döner; çağrı cevapsız biterse ayırma
     kapanır (ücretsizse bırakılır, sonucu bilinmiyorsa harcamaya yazılır); ödenen çağrı rapor yazılamaz olsa da kullanıma yazılır. */
 export interface FotoOkuYaniti { satirlar?: OkunanSatir[]; bildirim?: string; genel?: string; yenile?: boolean }
@@ -77,13 +93,11 @@ export async function fotoOkuEylemi(form: FormData): Promise<FotoOkuYaniti> {
   if (!(await ayniKoken())) return { genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };
   const o = await istekOturumu();
   if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
-  const dosya = form.get("dosya");
-  if (!(dosya instanceof File) || dosya.size === 0) return { genel: "Fotoğraf seçilmeli." };
-  if (dosya.size > FOTO_OKU_EN_BUYUK) return { genel: "Fotoğraf çok büyük (en çok 5 MB)." };
   const id = metin(form.get("id")), bolum = metin(form.get("bolum"));
   try {
-    const bayt = new Uint8Array(await dosya.arrayBuffer());
-    const h = await oturumIslemi(o, (db) => fotoOkuHazirla(db, o, id, bolum, { bayt }));
+    const kaynak = await okunacak(form);
+    if (typeof kaynak === "string") return { genel: kaynak };
+    const h = await oturumIslemi(o, (db) => fotoOkuHazirla(db, depo(), o, id, bolum, kaynak));
     if (h.durum !== "hazir") return { genel: yanit(h).genel ?? Object.values(yanit(h).hatalar ?? {})[0] ?? "Fotoğraftan okunamadı." };
     const y = await anthropicCagir(h.istek, h.anahtar);
     if (y.durum === "hata") {
@@ -105,13 +119,11 @@ export async function alanOkuEylemi(form: FormData): Promise<AlanOkuYaniti> {
   if (!(await ayniKoken())) return { genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };
   const o = await istekOturumu();
   if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
-  const dosya = form.get("dosya");
-  if (!(dosya instanceof File) || dosya.size === 0) return { genel: "Fotoğraf seçilmeli." };
-  if (dosya.size > FOTO_OKU_EN_BUYUK) return { genel: "Fotoğraf çok büyük (en çok 5 MB)." };
   const id = metin(form.get("id")), bolum = metin(form.get("bolum"));
   try {
-    const bayt = new Uint8Array(await dosya.arrayBuffer());
-    const h = await oturumIslemi(o, (db) => alanOkuHazirla(db, o, id, bolum, { bayt }));
+    const kaynak = await okunacak(form);
+    if (typeof kaynak === "string") return { genel: kaynak };
+    const h = await oturumIslemi(o, (db) => alanOkuHazirla(db, depo(), o, id, bolum, kaynak));
     if (h.durum !== "hazir") return { genel: yanit(h).genel ?? Object.values(yanit(h).hatalar ?? {})[0] ?? "Fotoğraftan okunamadı." };
     const y = await anthropicCagir(h.istek, h.anahtar);
     if (y.durum === "hata") {

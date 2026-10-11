@@ -100,6 +100,15 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   const gun = bugunTr();
   await expect(zamanAlani(page, BASLANGIC).locator("input:not([data-parca])")).toHaveValue(gun);   // başlangıç rapor açılınca yazılır
 
+  /* 486 (reisim 2026-10-10: "yapay zekanın okuması için fotoğraf ekleme tuşu olsun … raporda gözükmesin"): firmada yapay zekâ kapalı — tuş yine
+     görünür; fotoğraf okunmadan rapora eklenir (belgede yok), nereden açılacağı yazar, "Oku" yok (yapay zekâ açılınca çıkar) */
+  const ekipBolum = page.locator("#b-sabit-ekipman");
+  await expect(ekipBolum.getByText("Firmada yapay zekâ kapalı", { exact: false })).toBeVisible();
+  await ekipBolum.getByLabel(/: fotoğraf ekle \(yapay zekâ okur\)$/).setInputFiles({ name: "etiket.jpg", mimeType: "image/jpeg", buffer: Buffer.from(JPEG) });
+  await expect(page.getByText(/^Fotoğraf rapora eklendi \(belgede görünmez\)\./).first()).toBeVisible({ timeout: 30_000 });
+  await expect(ekipBolum.getByRole("button", { name: /fotoğrafı\.jpg sil$/ })).toBeVisible({ timeout: 30_000 });
+  await expect(ekipBolum.getByRole("button", { name: /oku \(yapay zekâ\)$/ })).toHaveCount(0);
+
   /* eksik rapor: Onaya gönder durur; format zorunluları ve türün gerekli ölçüm cihazı sayılır (ENGEL 5, ENGEL 2) — rapor yine kaydedilir */
   await onayaGonder(page);
   const eksik = page.getByRole("dialog", { name: "Zorunlu alanlar doldurulmadı" });

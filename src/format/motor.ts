@@ -10,7 +10,7 @@
    Kilitli öğe denetimi (§3, 2026-10-04): kilitli (Bakanlık) öğe silinmiş / değiştirilmiş / kilidi kaldırılmış — 470'ten beri UYARI (yayın durmaz;
    reisim 2026-10-10 "biraz daha serbestlik").
    ⛔ Bu dosya yalnız ./hesap.ts ve ./tanim.ts'i içe aktarır (olumsuz kanıt kopyası bu iki yolu çevirir). */
-import { linyeHesap, noktaHesap, pdHesap, rcdTestYeter, sayiOku, SINIR_ISARETI, sinirSonucu, ziHesap } from "./hesap.ts";
+import { EGRI_KAT, linyeHesap, noktaHesap, pdHesap, RCD_SURE, rcdTestYeter, sayiOku, SINIR_ISARETI, sinirSonucu, UO, ziHesap } from "./hesap.ts";
 import { kurucudan, type Bolum, type BolumOf, type Cevaplar, type FormatTanimi } from "./tanim.ts";
 
 export interface Eksik { bolum: string; alan: string; ad: string }
@@ -60,6 +60,28 @@ function satirDegerlendir(b: BolumOf<"olcum">, s: Record<string, string>, ik3: s
     else if (uygun === null) uygun = true;
   }
   return { uygun, neden, oneriNot, agir };
+}
+
+/** 486 (reisim 2026-10-10: "rcd testleri tablosunda uygun uygun değil otomatik geliyor? neden elle seçilmiyor? neye göre otomatik uygun uygun değil
+    diyor?"): ölçüm tablosunun Sonuç sütunu NEYE GÖRE çıkar — satirDegerlendir'in kuralları okunur cümleyle (ekranda tablonun altında, kâğıtta
+    tablonun altında). Hesabın formülü (Bakanlık kriteri) · sütun sınırları · olumsuz seçenekler. Boş liste: bu tabloda sonuç kuralı yok. */
+export function sonucKurallari(b: BolumOf<"olcum">): string[] {
+  const l: string[] = [];
+  const egri = Object.entries(EGRI_KAT).map(([k, v]) => `${k} ${v}`).join(", ");
+  const rcd = `RCD testi: ölçülen açma akımı IΔ ≤ anma akımı IΔn ve açma süresi TΔ ≤ ${RCD_SURE} ms`;
+  if (b.hesap === "nokta") l.push(`Zx ≤ Zs → Uygun (Zs = ${UO} V ÷ Ia; Ia = eğri çarpanı × In — ${egri}; ZPKK01)`);
+  else if (b.hesap === "selektivite") l.push(`${rcd} → Uygun; biri sağlanmazsa Uygun değil (ZPKK01)`);
+  else if (b.hesap === "linye") {
+    l.push("Icu ≥ hesaplanan 3 fazlı kısa devre akımı (Fonksiyon testlerindeki değer)", "Ib ≤ In ≤ Iz", "N/PEN kesiti ≥ faz kesiti",
+      "PE kesiti ≥ faz kesitine göre en az (16 mm²'ye kadar faz kesiti kadar, 16–35 mm² arası 16 mm², 35 mm² üstü yarısı)",
+      `RCD IΔn yazılmışsa ${rcd.charAt(0).toLocaleLowerCase("tr")}${rcd.slice(1)} (ZPKK02)`);
+  } else if (b.hesap === "pd") l.push("PD kesiti 6–25 mm²", "Tamamlayıcı PD kesiti ≥ 4 mm² (ZPKK02)");
+  else if (b.hesap === "zi") l.push("Zemin izolasyon direnci > 50 kΩ (ZPKK02)");
+  for (const c of b.sutunlar) {
+    if (c.olumsuz?.length) l.push(`${c.ad}: ${c.olumsuz.map((o) => (c.giris === "evet" ? (o === "evet" ? "Evet" : "Hayır") : o)).join(" / ")} seçilirse Uygun değil`);
+    else if (c.op && c.sinir !== undefined) l.push(`${c.ad} ${SINIR_ISARETI[c.op]} ${virgul(c.sinir)}${c.birim ? ` ${c.birim}` : ""}`);
+  }
+  return l;
 }
 
 export function degerlendir(t: FormatTanimi, c: Cevaplar): Degerlendirme {

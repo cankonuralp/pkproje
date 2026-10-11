@@ -9,76 +9,38 @@
    12): dönen simge + 3 sn sonra geçen süre, girdi odağını korur (disabled değil, aria-busy); uygulamadan sonra odak kalan ilk tuşa, kart kapanınca
    "Fotoğraftan oku"ya. Okuma rapora pano fotoğrafı eklediyse ekran yenilenir (yeni sürüm).
    484: formatta tablonun "Fotoğraftan doldur"u açıksa çizilir (Bloklar — tanim.ts doldurma); okunan fotoğraf her tabloda rapora OKUMA fotoğrafı olarak
-   eklenir (belgede görünmez; tablonun altında Doldurma.tsx OkumaFotolari). */
-import { useEffect, useRef, useState, type ReactNode } from "react";
+   eklenir (belgede görünmez; tablonun altında Doldurma.tsx OkumaFotolari).
+   486: tuş "Fotoğraf ekle (yapay zekâ okur)" — formatta açık tabloda HER ZAMAN; firmada yapay zekâ kapalıyken fotoğraf okunmadan saklanır, açılınca
+   fotoğrafın "Oku"su okur (iş Doldurma.tsx useFotoEkle'de, alanlı bölümle ortak). */
+import { useRef, useState, type ReactNode } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
-import { fotografiKucult } from "../../../components/foto/kucult";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { Rozet } from "../../../components/sayfa/Sayfa";
-import { Tus, tusSinifi } from "../../../components/tus/Tus";
-import tusStil from "../../../components/tus/Tus.module.css";
+import { Tus } from "../../../components/tus/Tus";
 import type { BolumOf } from "../../../format/tanim";
 import type { OkunanSatir } from "../../../server/yz/okuma";
 import { okunanHedefleri, okunanlariUygula, type Satir } from "../foto-eslestir";
+import type { RaporFoto } from "../server/raporlar";
 import type { Baglam } from "./Bloklar";
+import { FotoEkleTusu, OkumaFotolari, OkumaNotu, useFotoEkle, type OkumaKipi } from "./Doldurma";
 import { fotoOkuEylemi } from "./eylemler";
 import stil from "./raporlar.module.css";
 
-const SURE_GOSTER_SN = 3;
 type Oneri = OkunanSatir & { kimlik: number };
 
-/** `tuslar`: tablonun öteki tuşları (Satır ekle …) — maketteki gibi aynı çubukta, "Fotoğraftan oku" önce; öneri kartı çubuğun üstünde */
-export function FotoOkuma({ raporId, b, satirlar, tablo, islem, tuslar, cubuk, deneme = false }: {
-  raporId: string; b: BolumOf<"olcum">; satirlar: readonly Satir[]; tablo: (f: (l: Satir[]) => Satir[]) => void; islem: Baglam["islem"];
-  tuslar: ReactNode; cubuk: string;
-  /** 484: format kurucusunun saha ekranındaki örnek rapor — fotoğraf okunmaz, ne olacağı söylenir */
-  deneme?: boolean;
+/** `tuslar`: tablonun öteki tuşları (Satır ekle …) — maketteki gibi aynı çubukta, "Fotoğraf ekle" önce; öneri kartı çubuğun üstünde */
+export function FotoOkuma({ v, b, satirlar, tablo, islem, tuslar, cubuk, kip }: {
+  v: { id: string; surum: number; fotolar: RaporFoto[] }; b: BolumOf<"olcum">; satirlar: readonly Satir[]; tablo: (f: (l: Satir[]) => Satir[]) => void;
+  islem: Baglam["islem"]; tuslar: ReactNode; cubuk: string; kip: OkumaKipi;
 }) {
   const bildir = useBildir();
-  const girdi = useRef<HTMLInputElement>(null);
   const kart = useRef<HTMLDivElement>(null);
-  const [okunuyor, setOkunuyor] = useState(false);
-  const [sn, setSn] = useState(0);
   const [oneri, setOneri] = useState<Oneri[] | null>(null);
   const kartId = `r-oneri-${b.id}`;
-
-  useEffect(() => {
-    if (!okunuyor) return;
-    const bas = Date.now();
-    const zaman = setInterval(() => setSn(Math.floor((Date.now() - bas) / 1000)), 500);
-    return () => { clearInterval(zaman); setSn(0); };
-  }, [okunuyor]);
-
-  const girdiyeDon = () => requestAnimationFrame(() => girdi.current?.focus());
-  const oku = (dosya: File) => {
-    if (girdi.current) girdi.current.value = "";
-    if (okunuyor || islem.mesgul) return;
-    if (deneme) { bildir("Örnek raporda fotoğraf okunmaz; gerçek raporda yapay zekâ tablonun satırlarını okur, öneri olarak gelir, fotoğraf belgede görünmez."); return; }
-    if (typeof navigator !== "undefined" && navigator.onLine === false) {
-      bildir("Bağlantı yok: fotoğraftan okuma bağlantı gelince yapılır. Değerleri elle girebilirsiniz.");
-      return;
-    }
-    setOkunuyor(true);
-    bildir("Fotoğraf okunuyor…");
-    islem.baslat(async () => {
-      try {
-        const f = new FormData();
-        f.set("id", raporId); f.set("bolum", b.id); f.set("dosya", await fotografiKucult(dosya));
-        const r = await fotoOkuEylemi(f);
-        if (!r.satirlar) { bildir(r.genel ?? "Fotoğraftan okunamadı. Değerleri elle girebilirsiniz."); girdiyeDon(); return; }
-        bildir(r.bildirim ?? "");
-        if (r.yenile) islem.yenile();
-        if (r.satirlar.length) { setOneri(r.satirlar.map((s, i) => ({ ...s, kimlik: i }))); requestAnimationFrame(() => kart.current?.focus()); }
-        else girdiyeDon();
-      } catch {
-        bildir("Fotoğraftan okunamadı: bağlantı koptu ya da sunucu yanıt vermedi. Değerleri elle girebilirsiniz.");
-        girdiyeDon();
-      } finally {
-        setOkunuyor(false);
-      }
-    });
-  };
-  const kapat = () => { setOneri(null); girdiyeDon(); };
+  const f = useFotoEkle<OkunanSatir>({ raporId: v.id, bolumId: b.id, kip, islem, elle: "Değerleri elle girebilirsiniz.",
+    oku: async (x) => { const r = await fotoOkuEylemi(x); return { ...r, oneri: r.satirlar }; },
+    oneri: (l) => { setOneri(l.map((s, i) => ({ ...s, kimlik: i }))); requestAnimationFrame(() => kart.current?.focus()); return true; } });
+  const kapat = () => { setOneri(null); f.girdiyeDon(); };
   /* kartın gösterdiği yerler: bütün öneriler aynı anki tabloya göre */
   const hedef = oneri ? okunanHedefleri(satirlar, oneri) : [];
   const uygula = (secilen: number[]) => {
@@ -122,18 +84,11 @@ export function FotoOkuma({ raporId, b, satirlar, tablo, islem, tuslar, cubuk, d
         </div>
       )}
       <div className={cubuk}>
-        {!oneri && (
-          <label className={`${tusSinifi("ikincil", okunuyor ? tusStil.mesgul : undefined)} ${stil.fotoEkle}`} aria-disabled={(islem.mesgul && !okunuyor) || undefined}>
-            <input ref={girdi} type="file" accept="image/jpeg,image/png" className="gizli" aria-busy={okunuyor || undefined} aria-disabled={(islem.mesgul && !okunuyor) || undefined}
-              aria-label={`${b.ad}: fotoğraftan oku`} onClick={(e) => { if (okunuyor || islem.mesgul) e.preventDefault(); }}
-              onChange={(e) => { const d = e.target.files?.[0]; if (d) oku(d); }} />
-            {okunuyor ? <span className={tusStil.donen} aria-hidden="true" /> : <Ikon ad="camera" kucuk />}
-            <span>{okunuyor ? "Okunuyor…" : "Fotoğraftan oku"}</span>
-            {okunuyor && sn >= SURE_GOSTER_SN && <span className={tusStil.sure}>{sn} sn</span>}
-          </label>
-        )}
+        {!oneri && <FotoEkleTusu baslik={b.ad} girdi={f.girdi} okunuyor={f.okunuyor} sn={f.sn} kip={kip} mesgul={islem.mesgul} gonder={f.gonder} />}
         {tuslar}
       </div>
+      {kip === "sakla" && <OkumaNotu />}
+      <OkumaFotolari v={v} bolumId={b.id} oku={false} islem={islem} okut={kip === "oku" && !oneri ? f.gonder : undefined} />
     </>
   );
 }

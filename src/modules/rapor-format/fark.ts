@@ -82,5 +82,7 @@ export function surumFarki(once: FormatTanimi, simdi: FormatTanimi): Fark[] {
   if (g0.dayanak.join("\n") !== g1.dayanak.join("\n")) ekle("degis", "Metot ve kapsam (dayanak) değişti");
   if (g0.talimat !== g1.talimat) ekle("degis", "Genel muayene talimatı değişti");
   if (g0.cevap !== g1.cevap) ekle("degis", `Madde cevabı: ${CEVAP_AD[g0.cevap]} → ${CEVAP_AD[g1.cevap]}`);
+  /* 486: ekipman bilgileri bölümü kaldırıldı / geri eklendi */
+  if ((g0.ekipman !== false) !== (g1.ekipman !== false)) ekle("degis", `Ekipman bilgileri bölümü ${g1.ekipman === false ? "kaldırıldı (kod ve tür 1. bölümde)" : "geri eklendi"}`);
   return l;
 }

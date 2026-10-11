@@ -34,6 +34,7 @@ export function kullanim(t: FormatTanimi): Kullanim {
     else if (b.blok === "not") yazilan++;
     else if (b.blok === "foto" && b.enAz > 0) foto++;
   }
-  const bolum = 2 + raporDuzeni(t, false).bolumler.filter((x) => x.b.blok !== "imza").length;
+  const d = raporDuzeni(t, false);
+  const bolum = (d.ekipman ? 2 : 1) + d.bolumler.filter((x) => x.b.blok !== "imza").length;
   return { bolum, madde, acilir: madde * 2, tus: madde, yazilan, secilen, tablolar, foto };
 }

@@ -234,7 +234,7 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
   };
   const yaz = (f: (c: Cevaplar) => Cevaplar) => { setCevaplar(f); setKirli(true); };
   const bag: Baglam = {
-    v, c: cevaplar, yaz, d, oku, gecersiz, kaynak: (k) => kaynaklar[k], yz: !oku && !yeni && v.yz, deneme: denemede, islem: { mesgul, baslat, yenile },
+    v, c: cevaplar, yaz, d, oku, gecersiz, kaynak: (k) => kaynaklar[k], okumaKipi: denemede ? "deneme" : oku || yeni ? null : v.yz ? "oku" : "sakla", deneme: denemede, islem: { mesgul, baslat, yenile },
     ekipmanAlani: (a) => (a.ekipman ? metinSatiri(a.ekipman, a.ad, EN[a.ekipman], a.ekipman === "imal") : null),
     cihaz: (bolumId) => <CihazBolumu v={v} bolumId={bolumId} oku={oku || !!yeni || denemede} gecersiz={gecersiz} mesgul={mesgul} baslat={baslat} yenile={yenile} />,
     foto: (bolumId, madde) => (denemede
@@ -261,7 +261,7 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
   const degistir = (id: string) => (a: boolean) => { const y = new Set(acikSet); if (a) y.add(id); else y.delete(id); acikYaz(y); };
   /* ekranda görünen bölümler (imza bölümü yalnız belgede — 447): "Tümünü aç / kapat" */
   const gorunurBolumler = duzen.bolumler.filter(({ b }) => b.blok !== "imza");
-  const gorunenBolumler = [SABIT.firma, SABIT.ekipman, ...(cihazEk ? [SABIT.cihaz] : []), ...gorunurBolumler.map(({ b }) => b.id)];
+  const gorunenBolumler = [SABIT.firma, ...(duzen.ekipman ? [SABIT.ekipman] : []), ...(cihazEk ? [SABIT.cihaz] : []), ...gorunurBolumler.map(({ b }) => b.id)];
   const hepsiAcik = gorunenBolumler.every((id) => acikSet.has(id));
 
   /* ── yazma ── */
@@ -621,11 +621,13 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
             <Satir etiket="E-posta">{v.kunye.eposta ?? <DegerYok>-</DegerYok>}</Satir>
             <Satir etiket="Telefon">{v.kunye.tel ?? <DegerYok>-</DegerYok>}</Satir>
             <Satir etiket="Periyodik kontrol metodu ve kapsamı">{metot}</Satir>
-            {!duzen.tam && metinSatiri("bolum", "Ekipman bölümü", 60)}
+            {duzen.ekipman && !duzen.tam && metinSatiri("bolum", "Ekipman bölümü", 60)}
+            {/* 486: formatta ekipman bölümü kaldırıldıysa kod ve tür burada (belgeyle aynı) */}
+            {!duzen.ekipman && <><Satir etiket="Ekipman kodu"><Kod>{v.ekipman.kod}</Kod></Satir><Satir etiket="Ekipman türü">{v.tur.ad}</Satir></>}
           </Satirlar>
         </RaporBolumu>
 
-        <RaporBolumu id={SABIT.ekipman} no="2" baslik={duzen.ekipmanBaslik} acik={acik(SABIT.ekipman)} degistir={degistir(SABIT.ekipman)}
+        {duzen.ekipman && <RaporBolumu id={SABIT.ekipman} no="2" baslik={duzen.ekipmanBaslik} acik={acik(SABIT.ekipman)} degistir={degistir(SABIT.ekipman)}
           eksik={katilan.some((b) => bolumEksik(b.id))}>
           {/* 385 → 484: fotoğraftan doldur (etiket plakası dahil) ve Excel'den yükle — formatın bölüm ayarıyla */}
           <AlanDoldurma bag={bag} bolumId="ekipman" baslik={ekipAlan.baslik} alanlar={ekipAlan.alanlar}
@@ -643,10 +645,10 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
             </Satir>
           </Satirlar>
           {!duzen.tam && katilan.map((b) => <BilgiBlok key={b.id} b={b} bag={bag} />)}
-        </RaporBolumu>
+        </RaporBolumu>}
 
         {cihazEk && (
-          <RaporBolumu id={SABIT.cihaz} no="3" baslik="Ölçüm cihazları" acik={acik(SABIT.cihaz)} degistir={degistir(SABIT.cihaz)} eksik={cihazEksik}>
+          <RaporBolumu id={SABIT.cihaz} no={duzen.cihazNo} baslik="Ölçüm cihazları" acik={acik(SABIT.cihaz)} degistir={degistir(SABIT.cihaz)} eksik={cihazEksik}>
             {bag.cihaz(SABIT.cihaz)}
           </RaporBolumu>
         )}

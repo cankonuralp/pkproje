@@ -4,7 +4,10 @@
    edilemez"): pencerede liste akış içinde açılıp altındaki alanları itiyordu; takvim pencerenin altında kesiliyordu.
    Konum, katmanın ait olduğu alanın (DOM'daki üst öğesi) ekrandaki yerinden: altında; sığmazsa ve üstte daha çok yer varsa üstünde; ekranın
    kenarından taşmaz (en az 8 px pay); sayfa ya da pencere kayınca, boyut değişince yeniden yerleşir. Üst katman yoksa (eski tarayıcı) sabit
-   konumla yine yüzer. Katman DOM'da alanın içinde kalır: dışarı tıklama, odak ve klavye eskisi gibi. */
+   konumla yine yüzer. Katman DOM'da alanın içinde kalır: dışarı tıklama, odak ve klavye eskisi gibi.
+   486 (reisim 2026-10-10: "tip seçin kısmına tıklayınca saçma sapan başa atıp"): tablodaki eski bir CSS ezmesi katmanı akışa (position: static)
+   alıyordu — üst katmanda akıştaki öğe sayfanın başında çizilir, odak sayfayı oraya kaydırır. Artık konum biçemi katmanın KENDİ satır içi
+   biçeminde (fixed, kenarlar, pay sıfır): hiçbir sayfa CSS'i ezemez; katmanın içine odak sayfayı kaydırmadan verilir (odakla). */
 import { useLayoutEffect, type RefObject } from "react";
 
 const BOSLUK = 6, PAY = 8;
@@ -33,10 +36,16 @@ export function yuzenSol(alan: { left: number; right: number }, ekranX: number, 
   return Math.max(PAY, Math.min(sol, ekranX - genislik - PAY));
 }
 
-/** katmanı alanına göre yerleştirir (biçemi yazar) */
+/** yüzen katmanın içindeki öğeye odak — sayfa ya da kayan kap KAYMAZ (katman zaten alanın yanında, ekranda) */
+export function odakla(e: HTMLElement | null | undefined) {
+  e?.focus({ preventScroll: true });
+}
+
+/** katmanı alanına göre yerleştirir (biçemi yazar — konum dahil: sayfanın CSS'i katmanı akışa alamaz) */
 function yerlestir(k: HTMLElement, alan: HTMLElement, { genislik = "alan", enAzGenislik = 220, enCokYukseklik = 320, hiza = "sol" }: YuzenAyar) {
   const r = alan.getBoundingClientRect(), ekranX = document.documentElement.clientWidth, ekranY = document.documentElement.clientHeight;
   const sinir = ekranX - 2 * PAY, b = k.style;
+  b.position = "fixed"; b.margin = "0"; b.right = "auto";
   if (genislik === "dogal") { b.width = ""; b.maxWidth = `${sinir}px`; }
   else b.width = `${Math.min(typeof genislik === "number" ? genislik : Math.max(r.width, enAzGenislik), sinir)}px`;
   b.maxHeight = `${enCokYukseklik}px`;

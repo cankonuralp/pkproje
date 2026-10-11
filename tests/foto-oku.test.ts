@@ -10,6 +10,9 @@
    ekleyebiliyim"): etiket okuması genel ALAN okumasına geçti (alan-oku.ts; ekipman bilgileri bölüm "ekipman", okuma kaydı bölümün kimliği);
    okunan fotoğraf her okumada rapora OKUMA fotoğrafı olarak eklenir — okunan bölümün kimliğiyle, BELGE VERİSİNDE YOK, fotoğraf bölümü sayısına
    girmez; formatta bölümün "Fotoğraftan doldur"u kapalıysa okunmaz.
+   486 (reisim 2026-10-10: "buralarda yapay zekanın okuması için fotoğraf ekleme tuşu olsun yapay zeka okusun diye raporda gözükmesin"): yapay zekâ
+   kapalıyken fotoğraf OKUNMADAN okuma fotoğrafı olarak saklanır (yalnız yazan, Yeni raporunda, doldurulan bölümde; belgede yok); açılınca kayıtlı
+   fotoğraf okunur (baytlar depodan, yalnız o bölümün okuma fotoğrafı) ve yeniden eklenmez.
    Olumsuz kanıt: tests/bozan/foto-oku.bozan.ts, tests/bozan/alan-okuma.bozan.ts. */
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
@@ -21,7 +24,7 @@ import { SABLONLAR } from "../src/format/sablonlar.ts";
 import { planKabul, planIci } from "../src/modules/planlar/server/plan-ici.ts";
 import { bugunTr, planAc, type Kisi } from "../src/modules/planlar/server/planlar.ts";
 import { taslakBaslat, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
-import { fotoOkuBirak, fotoOkuHazirla, fotoOkuKaydet, fotoOkuKullanimYaz, type FotoOkuHazir } from "../src/modules/raporlar/server/foto-oku.ts";
+import { fotoOkuBirak, fotoOkuHazirla, fotoOkuKaydet, fotoOkuKullanimYaz, KAYITSIZ_FOTO, okumaFotografiSakla, type FotoOkuHazir } from "../src/modules/raporlar/server/foto-oku.ts";
 import { alanOkuHazirla, alanOkuKullanimYaz, alanOkuSonuc } from "../src/modules/raporlar/server/alan-oku.ts";
 import { raporBelgesiVerisi, raporOlustur, raporSil, sahaRaporu } from "../src/modules/raporlar/server/raporlar.ts";
 import { ayarOku, ayarYaz } from "../src/server/ayar/ayar.ts";
@@ -77,7 +80,7 @@ async function firmaKur(firma: string, ek: string): Promise<Firma> {
 }
 
 const a = <T,>(k: Kisi, is: (db: Sorgulayici) => Promise<T>) => kiraciIcinde(havuz, A, is, { hesapId: k.id });
-const hazirla = (k: Kisi, rapor = FA.rapor, bolum = "linye", foto = JPEG) => a(k, (db) => fotoOkuHazirla(db, k, rapor, bolum, { bayt: foto }));
+const hazirla = (k: Kisi, rapor = FA.rapor, bolum = "linye", foto = JPEG) => a(k, (db) => fotoOkuHazirla(db, depo, k, rapor, bolum, { bayt: foto }));
 const yzAyari = (d: object) => a(FA.yon, async (db) => { const m = await ayarOku(db, "yapay_zeka"); return ayarYaz(db, "yapay_zeka", m.surum, { ...m.deger, ...d }, { kim: "Deneme", ne: "ayar.yapay_zeka" }); });
 
 before(async () => {
@@ -124,7 +127,7 @@ test("yalnız yazan, Yeni raporunda, ölçüm tablosunda; başka firma raporu bu
   assert.equal((await hazirla(FA.den1, FA.rapor, "nokta")).durum, "gecersiz", "formatta olmayan bölüm");
   const bilgi = SABLONLAR.ZPKR02.tanim.bolumler.find((b) => b.blok !== "olcum")!.id;
   assert.equal((await hazirla(FA.den1, FA.rapor, bilgi)).durum, "gecersiz", "ölçüm olmayan bölüm");
-  assert.equal((await kiraciIcinde(havuz, B, (db) => fotoOkuHazirla(db, FB.den1, FA.rapor, "linye", { bayt: JPEG }), { hesapId: FB.den1.id })).durum, "yok");
+  assert.equal((await kiraciIcinde(havuz, B, (db) => fotoOkuHazirla(db, depo, FB.den1, FA.rapor, "linye", { bayt: JPEG }), { hesapId: FB.den1.id })).durum, "yok");
   assert.equal((await hazirla(FA.den1, "kotu-kimlik")).durum, "yok");
 });
 
@@ -222,10 +225,10 @@ test("484 alan okuması (ekipman bilgileri): yalnız yazan, Yeni raporunda; iste
   const ayarla = async (d: object) => assert.match((await yzAyari(d)).durum, /^(tamam|degisiklik_yok)$/);
   const onceki = (await a(FA.yon, (db) => ayarOku(db, "yapay_zeka"))).deger.sinir;
   await ayarla({ sinir: null });
-  const et = (k: Kisi, rapor = FA.rapor, foto = JPEG, bolum = "ekipman") => a(k, (db) => alanOkuHazirla(db, k, rapor, bolum, { bayt: foto }));
+  const et = (k: Kisi, rapor = FA.rapor, foto = JPEG, bolum = "ekipman") => a(k, (db) => alanOkuHazirla(db, depo, k, rapor, bolum, { bayt: foto }));
   assert.equal((await et(FA.den2)).durum, "yok", "başka denetçi");
   assert.equal((await et(FA.plan)).durum, "yetkisiz", "raporu gören planlamacı okutamaz");
-  assert.equal((await kiraciIcinde(havuz, B, (db) => alanOkuHazirla(db, FB.den1, FA.rapor, "ekipman", { bayt: JPEG }), { hesapId: FB.den1.id })).durum, "yok");
+  assert.equal((await kiraciIcinde(havuz, B, (db) => alanOkuHazirla(db, depo, FB.den1, FA.rapor, "ekipman", { bayt: JPEG }), { hesapId: FB.den1.id })).durum, "yok");
   assert.match(JSON.stringify(await et(FA.den1, FA.rapor, JPEG, "yok-boyle")), /Okunacak bölüm bulunamadı/);
   assert.deepEqual(await et(FA.den1, FA.rapor, PDF), { durum: "gecersiz", hatalar: { foto: "Yalnız JPEG ya da PNG fotoğraf." } });
   const k0 = await kullanim(FA.den1);
@@ -256,6 +259,45 @@ test("484 alan okuması (ekipman bilgileri): yalnız yazan, Yeni raporunda; iste
   assert.match(JSON.stringify(await et(FA.den1)), /firmada kapalı/);
   tamam(await yzAyari({ acik: true }));
   await ayarla({ sinir: onceki });
+});
+
+test("486: yapay zekâ kapalıyken fotoğraf okunmadan saklanır (belgede yok); açılınca kayıtlı fotoğraf okunur, yeniden eklenmez", async () => {
+  const ayarla = async (d: object) => assert.match((await yzAyari(d)).durum, /^(tamam|degisiklik_yok)$/);
+  const onceki = (await a(FA.yon, (db) => ayarOku(db, "yapay_zeka"))).deger;
+  await ayarla({ acik: false, sinir: null });
+  const sakla = (k: Kisi, bolum = "linye", foto = JPEG) => a(k, (db) => okumaFotografiSakla(db, depo, k, A, FA.rapor, bolum, { bayt: foto }));
+  assert.equal((await sakla(FA.den2)).durum, "yok", "başka denetçi");
+  assert.equal((await sakla(FA.plan)).durum, "yetkisiz", "raporu gören planlamacı ekleyemez");
+  assert.equal((await kiraciIcinde(havuz, B, (db) => okumaFotografiSakla(db, depo, FB.den1, B, FA.rapor, "linye", { bayt: JPEG }), { hesapId: FB.den1.id })).durum, "yok");
+  assert.deepEqual(await sakla(FA.den1, "linye", PDF), { durum: "gecersiz", hatalar: { foto: "Yalnız JPEG ya da PNG fotoğraf." } });
+  const gozle = SABLONLAR.ZPKR02.tanim.bolumler.find((b) => b.blok === "liste")!.id;
+  assert.equal((await sakla(FA.den1, gozle)).durum, "gecersiz", "kontrol listesine okuma fotoğrafı eklenmez");
+  const once = (await a(FA.den1, (db) => sahaRaporu(db, FA.den1, FA.rapor)))!.fotolar.length;
+  assert.match(tamam(await sakla(FA.den1)).bildirim, /belgede görünmez/);
+  tamam(await sakla(FA.den1, "ekipman"));
+  const fl = (await a(FA.den1, (db) => sahaRaporu(db, FA.den1, FA.rapor)))!.fotolar;
+  assert.equal(fl.length, once + 2);
+  const f = fl.find((x) => x.bolum === "linye" && x.okuma && !fl.slice(0, once).includes(x))!;
+  assert.ok(f && fl.at(-1)!.bolum === "ekipman" && fl.at(-1)!.okuma, "okuma fotoğrafları bölümlerinde");
+  const belge = await a(FA.den1, (db) => raporBelgesiVerisi(db, depo, FA.den1, FA.rapor));
+  assert.ok(belge && belge.belge.fotolar.length === 0, "okuma fotoğrafı belgede yok");
+  /* kayıtlı fotoğrafın okunması: kapalıyken okunmaz; açılınca yalnız o bölümün okuma fotoğrafı, baytlar depodan (konum bilgisi yüklenirken silinmişti) */
+  const okut = (k: Kisi, dosya: string, bolum = "linye") => a(k, (db) => fotoOkuHazirla(db, depo, k, FA.rapor, bolum, { dosya }));
+  assert.match(JSON.stringify(await okut(FA.den1, f.dosya)), /firmada kapalı/);
+  await ayarla({ acik: true });
+  assert.deepEqual(await okut(FA.den1, f.dosya, "pd"), KAYITSIZ_FOTO, "başka tablonun fotoğrafı değil");
+  assert.deepEqual(await okut(FA.den1, "00000000-0000-4000-8000-000000000000"), KAYITSIZ_FOTO);
+  assert.equal((await okut(FA.den2, f.dosya)).durum, "yok", "başka denetçi");
+  const h = hazir(await okut(FA.den1, f.dosya));
+  assert.equal(h.foto, null, "kayıtlı fotoğraf yeniden eklenmeyecek");
+  const resim = Buffer.from((h.istek.govde as { messages: { content: { source?: { data: string } }[] }[] }).messages[0].content[0].source!.data, "base64").toString("latin1");
+  assert.ok(resim.includes("goruntu-verisi") && !resim.includes("GPS-KONUM"), "depodaki (konumsuz) fotoğraf gönderildi");
+  const ku = await a(FA.den1, (db) => fotoOkuKullanimYaz(db, FA.rapor, h, cevap([{ no: "F7", guven: "yuksek" }])));
+  const k = tamam(await a(FA.den1, (db) => fotoOkuKaydet(db, depo, FA.den1, A, FA.rapor, h, ku)));
+  assert.deepEqual([k.satirlar.length, k.fotoEklendi], [1, false]);
+  assert.doesNotMatch(k.bildirim, /Fotoğraf rapora eklendi/);
+  assert.equal((await a(FA.den1, (db) => sahaRaporu(db, FA.den1, FA.rapor)))!.fotolar.length, once + 2, "fotoğraf sayısı aynı");
+  await ayarla({ acik: onceki.acik, sinir: onceki.sinir });
 });
 
 test("ödenen okuma rapor okuma sürerken silinse de kişinin kullanımına yazılır; öneri dönmez (en sonda — rapor silinir)", async () => {
