@@ -2389,6 +2389,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-11 (490): **488 + 489 YAYINDA** — main dc763ee (göç yok), sağlık "tamam" (sürüm dc763ee), duman **11/11** (489'un iki yeni denetimi:
+  CSP'de upgrade-insecure-requests var, /vitrin 404), son 1 saatte yalnız bilinen duyuru kaynağı zaman aşımı (eski yayından). 489'un ilk koşusunda
+  (4ff286a) 10 iş iki beklenen yayın farkından düştü — oturum çerezi yayında "__Host-probata" + Secure (giris.spec adı arıyordu), taramanın
+  addStyleTag'i nonce'suz satır içi stil (CSP keser). Düzeltme dc763ee: e2e/yardimci.ts OTURUM_CEREZI + "yayında Secure" ölçümü; tarama stili
+  sayfanın kendi nonce'uyla (CSP gevşetilmedi). dc763ee koşusu 14/14 yeşil, **iş başına 3–5 dk** (geliştirme sunucusuyla ~25 dk; makine belleği
+  sınırda değil). 488 gözle: canlı raporda tablolar boştu, satır eklemek canlıya yazma olacağından eklenmedi — "Elle değiştir" / gerekçe /
+  belgedeki "(elle; kural: …)" deneme makinesinde yayın derlemesinde ölçüldü (e2e/foto-oku.spec, tests/tablo-sonuc). Hata listesi 29 + 46 + 9
+  için tıklanır maket yayında (karar soruları K1–K11, öneriler işaretli): https://claude.ai/artifact/TgA7oTqRojdEe7qAfjqAfJ — onaydan önce kod yok.
 - 2026-10-11 (489): **UÇTAN UCA YAYIN DERLEMESİNDE** (hata listesi 43 kararı — reisim *"karar bekleyen sorularda önerilerini kabul ediyorum"*; öneri:
   *"denemeleri yayındaki gibi derlenmiş uygulamada koşmak … yalnız deneme ortamında iki güvenlik ayarını gevşetmek"*). Neden: geliştirme sunucusu
   ~13 GB'a çıkıp deneme makinesini kapatıyor (468), sayfaları yeniden derlerken açık sayfayı baştan yüklüyordu (486 izleri — "[Fast Refresh]
