@@ -84,9 +84,17 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
   const [gecmis, setGecmis] = useState<Gecmis<FormatTanimi>>(bosGecmis);
   if (son !== ilkJson) { setSon(ilkJson); setT(tanim); setHatalar([]); setGecmis(bosGecmis()); }
   const kirli = JSON.stringify(t) !== ilkJson;
-  const degis = (y: FormatTanimi) => { setGecmis((g) => adimEkle(g, t)); setT(y); setHatalar([]); };
-  const geri = () => { const x = geriAl(gecmis, t); if (!x) return; setGecmis(x.gecmis); setT(x.deger); setHatalar([]); bildir("Geri alındı."); };
-  const ileri = () => { const x = yinele(gecmis, t); if (!x) return; setGecmis(x.gecmis); setT(x.deger); setHatalar([]); bildir("Yinelendi."); };
+  /* 495: aynı yazı alanında art arda yazılanlar (öğe ayrıntılarındaki ad, formül …) tek adım — Geri al harf harf geri almasın; başka alanda ya da
+     tuşla yapılan değişiklik yeni adım */
+  const sonAdim = useRef<{ el: Element | null }>({ el: null });
+  const degis = (y: FormatTanimi) => {
+    const el = document.activeElement, yazi = !!el && /^(INPUT|TEXTAREA)$/.test(el.tagName);
+    if (!(yazi && el === sonAdim.current.el)) setGecmis((g) => adimEkle(g, t));
+    sonAdim.current = { el: yazi ? el : null };
+    setT(y); setHatalar([]);
+  };
+  const geri = () => { const x = geriAl(gecmis, t); if (!x) return; sonAdim.current = { el: null }; setGecmis(x.gecmis); setT(x.deger); setHatalar([]); bildir("Geri alındı."); };
+  const ileri = () => { const x = yinele(gecmis, t); if (!x) return; sonAdim.current = { el: null }; setGecmis(x.gecmis); setT(x.deger); setHatalar([]); bildir("Yinelendi."); };
   const kisayolGuncel = useRef({ geri, ileri });
   useEffect(() => { kisayolGuncel.current = { geri, ileri }; });
   useEffect(() => {

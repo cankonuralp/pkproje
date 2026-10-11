@@ -11,6 +11,7 @@ import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { Tus } from "../../../components/tus/Tus";
 import { SINIR_ISARETI } from "../../../format/hesap";
 import { SINIRLAR, type Bolum, type BolumOf, type FormatTanimi } from "../../../format/tanim";
+import { FORMUL_EN_UZUN, formulDenet, genelSayiAdlari, tabloSayiAdlari } from "../../../format/formul";
 import { cevaplarYaz, gorunumYaz, grupEkle, grupSil, grupYaz, notlarYaz, ogeYaz, resmiFormat, satirlar, type NotGirdisi, type OgeTuru, type OgeYamasi } from "../kurucu";
 import stil from "./format.module.css";
 
@@ -66,7 +67,8 @@ export function OgeDuzenleyici({ t, i, b, id, degis }: { t: FormatTanimi; i: num
           <Alan id={`${k}-birim`} etiket="Birim"><Girdi id={`${k}-birim`} value={a.birim ?? ""} maxLength={40} onChange={(e) => yaz({ birim: e.target.value })} /></Alan>
         </FormIzgara>
         {secmeli && <SatirAlani id={`${k}-sec`} etiket="Seçenekler" deger={(a.secenekler ?? []).join("\n")} ipucu="Her satıra bir seçenek." uygula={(s) => yaz({ secenekler: satirlar(s, 40, 200) })} />}
-        <label className={stil.secenek}><input type="checkbox" checked={a.zorunlu} onChange={(e) => yaz({ zorunlu: e.target.checked })} /><span>Zorunlu</span></label>
+        {a.tur === "sayi" && <FormulAlani k={k} deger={a.formul} adlar={genelSayiAdlari(t)} kendi={a.ad} yaz={yaz} />}
+        {!a.formul && <label className={stil.secenek}><input type="checkbox" checked={a.zorunlu} onChange={(e) => yaz({ zorunlu: e.target.checked })} /><span>Zorunlu</span></label>}
       </div>
     );
   }
@@ -105,6 +107,7 @@ export function OgeDuzenleyici({ t, i, b, id, degis }: { t: FormatTanimi; i: num
           {c.giris === "sayi" && <SinirAlani k={k} op={c.op} sinir={c.sinir} yaz={yaz} />}
         </FormIzgara>
         {c.giris === "secim" && <SatirAlani id={`${k}-sec`} etiket="Seçenekler" deger={(c.secenekler ?? []).join("\n")} ipucu="Her satıra bir seçenek (ör. U, UD, UG)." uygula={(s) => yaz({ secenekler: satirlar(s) })} />}
+        {c.giris === "sayi" && <FormulAlani k={k} deger={c.formul} adlar={tabloSayiAdlari(b)} kendi={c.ad} yaz={yaz} tablo />}
         {(c.giris === "secim" || c.giris === "evet") && <OlumsuzSecici ad={c.ad} secenekler={secenek} secili={c.olumsuz ?? []} degis={(l) => yaz({ olumsuz: l })} kapali={false} />}
         <div className={stil.secenekler}>
           <label className={stil.secenek}><input type="checkbox" checked={c.zorunlu} onChange={(e) => yaz({ zorunlu: e.target.checked })} /><span>Zorunlu</span></label>
@@ -129,6 +132,7 @@ export function OgeDuzenleyici({ t, i, b, id, degis }: { t: FormatTanimi; i: num
         </FormIzgara>
         {tur === "secim" && <SatirAlani id={`${k}-sec`} etiket="Seçenekler" deger={(d.secenekler ?? []).join("\n")} ipucu="Her satıra bir seçenek (ör. Not 1: Uygun)." uygula={(s) => yaz({ secenekler: satirlar(s) })} />}
         {tur === "secim" && <OlumsuzSecici ad={d.ad} secenekler={(d.secenekler ?? []).map((s) => [s, s] as const)} secili={d.olumsuz ?? []} degis={(l) => yaz({ olumsuz: l })} kapali={false} />}
+        {tur === "sayi" && <FormulAlani k={k} deger={d.formul} adlar={genelSayiAdlari(t)} kendi={d.ad} yaz={yaz} />}
         <div className={stil.secenekler}>
           <label className={stil.secenek}><input type="checkbox" checked={d.zorunlu} onChange={(e) => yaz({ zorunlu: e.target.checked })} /><span>Zorunlu</span></label>
           <label className={stil.secenek}><input type="checkbox" checked={d.agir} onChange={(e) => yaz({ agir: e.target.checked })} /><span>Uygun değilse ağır kusur</span></label>
@@ -137,6 +141,39 @@ export function OgeDuzenleyici({ t, i, b, id, degis }: { t: FormatTanimi; i: num
     );
   }
   return null;
+}
+
+/** 495 (hata listesi 29 + 46 maketi: firmanın kendi hesabı): sayı alanının / sütununun / test değerinin formülü — adlar köşeli parantezle; ada ya da işarete
+    basınca imlecin yerine eklenir; yazarken denetlenir (format/formul.ts formulDenet); alandan çıkınca işlenir. Doluysa sahada kendiliğinden hesaplanır,
+    denetçi yazmaz; sınırı varsa sonuç ondan çıkar. tablo: adlar aynı satırın sütunları; değilse formatın sayı alanları ve test değerleri. */
+function FormulAlani({ k, deger, adlar, kendi, yaz, tablo = false }: {
+  k: string; deger?: string; adlar: readonly string[]; kendi: string; yaz: (y: OgeYamasi) => void; tablo?: boolean;
+}) {
+  const [taslak, setTaslak] = useState<string | null>(null);
+  const id = `${k}-formul`, metin = taslak ?? deger ?? "";
+  const hata = metin.trim() ? formulDenet(metin, adlar, kendi) : null;
+  const ekle = (s: string) => {
+    const el = document.getElementById(id) as HTMLInputElement | null;
+    const a = el?.selectionStart ?? metin.length, b = el?.selectionEnd ?? metin.length;
+    const y = (metin.slice(0, a) + s + metin.slice(b)).slice(0, FORMUL_EN_UZUN);
+    setTaslak(null); yaz({ formul: y });
+    requestAnimationFrame(() => { const g = document.getElementById(id) as HTMLInputElement | null; g?.focus(); g?.setSelectionRange(a + s.length, a + s.length); });
+  };
+  const digerleri = adlar.filter((x) => x.trim().toLocaleLowerCase("tr") !== kendi.trim().toLocaleLowerCase("tr"));
+  return (
+    <div className={stil.formul}>
+      <Alan id={id} etiket="Formül (isteğe bağlı — doluysa sahada kendiliğinden hesaplanır)" genis hata={hata ?? undefined}
+        sonuc={!hata ? (tablo ? "Aynı satırın sayı sütunlarıyla; örn. ([İlk kalınlık] − [Ölçülen]) / [İlk kalınlık] × 100" : "Formatın sayı alanları ve test değerleriyle; örn. 1,25 × [Kapasite]") : undefined}>
+        <Girdi id={id} value={metin} maxLength={FORMUL_EN_UZUN} hata={!!hata} mesajli spellCheck={false} autoComplete="off"
+          onChange={(e) => setTaslak(e.target.value)} onBlur={() => { if (taslak === null) return; yaz({ formul: taslak }); setTaslak(null); }} />
+      </Alan>
+      <div className={stil.formulAdlar} role="group" aria-label="Formüle ekle">
+        {digerleri.map((x) => <button key={`a-${x}`} type="button" className={stil.formulTus} onClick={() => ekle(`[${x}]`)}>{x}</button>)}
+        {["+", "−", "×", "÷", "(", ")"].map((o) => <button key={`o-${o}`} type="button" className={stil.formulTus} aria-label={`Formüle ekle: ${o}`} onClick={() => ekle(` ${o} `)}>{o}</button>)}
+        {!digerleri.length && <span className={stil.satir}>{tablo ? "Tabloda başka sayı sütunu yok — önce bir sayı sütunu ekleyin." : "Formatta başka sayı alanı ya da test değeri yok."}</span>}
+      </div>
+    </div>
+  );
 }
 
 /** sayı sütunu / değeri için sınır: kural + değer (değer alandan çıkınca işlenir) */

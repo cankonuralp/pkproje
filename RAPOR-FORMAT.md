@@ -40,6 +40,11 @@ kusur listesini hesaplar. Firmalar arasında motor ortak, tanım firmaya özel.
 8. **Sonuç ve kanaat** — cümle şablonu ("… kullanılması uygundur / uygun değildir"); otomatik öneri.
 9. **Not / yorum** — serbest metin (muayene uzmanı yorumu).
 10. **İmza alanları** — muayene uzmanı, teknik yönetici; imza yöntemi firma ayarından.
+11. **Serbest metin** (2026-10-12, 495) — belgeye basılan sabit yazı (açıklama, yöntem notu); sahada okunur, doldurulmaz.
+
+**2026-10-12 (495; 29 + 46 maketi):** **formül** — sayı alanı, tablo sütunu, test değeri firmanın kendi formülüyle hesaplanır (adlar köşeli parantezle,
+dört işlem, parantez, yüzde); sahada kendiliğinden, sınırı varsa sonuç ondan. Bakanlık hesapları (nokta, selektivite, linye, PD, Zi) olduğu gibi
+kalır; yeni hesap artık kod işi değil (src/format/formul.ts).
 
 **2026-10-09 (426; reisim: *"bir kullanıcı da bu ve benzeri rapor formatlarını isterse kendi eli ile format yapıcıdan yapabileceği şekilde format
 yapıcıyı düzenle"*):** ölçüm tablosu sütunu ve test değeri **seçmeli** olabilir; seçeneklerden hangilerinin **"uygun değil"** sayılacağı ve kusurun
@@ -125,6 +130,7 @@ PDF'e basılmaz.
   kopyasında değiştirilir; formatın **"Sahada denetçi değiştiremez"** seçimi (gorunum.kilitli; başlangıç SGK ve İSG-KATİP) kilitler — kâğıtta 1.
   bölümün altında. Kilitli bilgiyi sunucu da reddeder (src/format/kunye.ts).
 - **2026-10-12 (493; 29 + 46 maketi):** kâğıdın üstünde **Geri al / Yinele** (Ctrl+Z / Ctrl+Y); her değişiklik bir adım, en çok 100 (gecmis.ts).
+- **2026-10-12 (495):** öğenin ayrıntılarında **Formül** (ada / işarete basınca eklenir, yazarken denetlenir); **Serbest metin** bölümü.
 - **2026-10-12 (494; 29 + 46 maketi, reisim: "mevcuttaki sistemi koruyalım gelişmiş seçenekler tuşu olsun"):** **Gelişmiş seçenekler** — aynı kâğıdın
   solunda **parçalar** (bölümler, tek alanlar, kayıttan gelen alanlar; sürükle-bırak ya da bas-yerini seç), sağında **seçili bölüm** (kopyala, sil);
   bölüm tutamaktan taşınır. Kâğıt (basit görünüm) değişmedi.

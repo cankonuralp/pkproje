@@ -38,7 +38,7 @@ test("1. kopyada sıfır dolgusu kalkınca A007'nin kopyası A8 olur (kilidin ko
 type Motor = typeof import("../../src/format/motor.ts");
 test("2. elle sonucun gerekçe denetimi kalkınca gerekçesiz değiştirilen sonuç eksik sayılmaz (kilidin koruduğu açık)", async () => {
   const m = await bozuk<Motor>("src/format/motor.ts", "elle", "          if (d.elle && d.elle.gerekce.length < ELLE_GEREKCE_EN_AZ) {", "          if (false) {",
-    { "./hesap.ts": "src/format/hesap.ts", "./tanim.ts": "src/format/tanim.ts" });
+    { "./hesap.ts": "src/format/hesap.ts", "./tanim.ts": "src/format/tanim.ts", "./formul.ts": "src/format/formul.ts" });   // 495: motor formülü de aktarır
   const { Cevaplar } = await import("../../src/format/tanim.ts");
   const d = m.degerlendir(SABLONLAR.ZPKR02.tanim, Cevaplar.parse({ tablo: { linye: [{ no: "F1", akim: "16", ib: "10", iz: "20", _sonuc: "uygun_degil" }] } }));
   assert.equal(d.eksikler.some((x) => x.alan.endsWith("_gerekce")), false, "bozuk: gerekçesiz elle sonuç geçti");

@@ -22,6 +22,7 @@ import { canDo, canDoEylem, duzey, type YetkiHesabi } from "../../../server/yetk
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { degerlendir, type Degerlendirme } from "../../../format/motor.ts";
 import { gecerliKunye, kilitliKunye, kunyeKilitHatalari, kunyeKilitTemizle, metotMetni } from "../../../format/kunye.ts";
+import { formulluSutun } from "../../../format/formul.ts";
 import { Cevaplar, doldurma, type BolumOf, type FormatTanimi } from "../../../format/tanim.ts";
 import type { OkunacakAlan } from "../../../format/deger.ts";
 import { bilgiAlanlari, ekipmanAlanlari, testAlanlari } from "../doldur.ts";
@@ -438,7 +439,8 @@ export async function okunabilirOlcum(db: Sorgulayici, kim: Kisi, id: string, bo
   if (!b || b.blok !== "olcum") return { durum: "gecersiz", hatalar: { foto: "Okunacak tablo bulunamadı." } };
   /* 484: formatta bu tablonun fotoğraftan doldurulması kapalıysa okunmaz (kâğıtta bölüm ayarı) */
   if (!doldurma(b).foto) return { durum: "red", neden: "Bu tabloda fotoğraftan doldurma kapalı (formatın bölüm ayarı)." };
-  return { raporId: e.r.id, bolum: b };
+  /* 495: formüllü sütun kendiliğinden hesaplanır — yapay zekâ okumaz */
+  return { raporId: e.r.id, bolum: { ...b, sutunlar: b.sutunlar.filter((s) => !formulluSutun(s)) } };
 }
 
 /** 484: fotoğraftan alan okuma (385'in etiket plakası okumasının genel hâli) — yazanın Yeni raporunda, bölümün okunacak alanları. bolumId "ekipman":

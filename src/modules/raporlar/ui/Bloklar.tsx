@@ -32,6 +32,7 @@ import { Tus, tusSinifi } from "../../../components/tus/Tus";
 import { SINIR_ISARETI } from "../../../format/hesap";
 import { ELLE_GEREKCE, ELLE_GEREKCE_EN_AZ, ELLE_SONUC, satirAnahtari, sonucKurallari, type Degerlendirme, type SatirDegerlendirmesi } from "../../../format/motor";
 import { siraBasligi } from "../../../format/duzen";
+import { formulluAlan, formulluDeger, formulluSutun } from "../../../format/formul";
 import { doldurma, type Bolum, type BolumOf, type Cevaplar, type Sinir } from "../../../format/tanim";
 import { meslek } from "../../personel/sema";
 import { SONUC_AD } from "../sema";
@@ -68,6 +69,8 @@ export interface Baglam {
   oku: boolean;
   /** Onaya gönder bu alanı eksik dedi ve alan hâlâ boş */
   gecersiz: (alan: string) => boolean;
+  /** 495: formüllerin değeriyle cevaplar (format/formul.ts formulUygula — motorla aynı) */
+  h: Cevaplar;
   /** kayıttan gelen alanın ekrandaki değeri (seri no, kullanım yeri, kontrol tarihi raporun güncel hâliyle; 492: künye bilgisi denetçinin 1. bölümde
       değiştirdiği hâliyle) */
   kaynak: (k: Kaynak) => string | null;
@@ -234,6 +237,8 @@ function BlokIcerik({ b, no, bag }: { b: Bolum; no: string | null; bag: Baglam }
     case "sonuc": return <SonucBlok b={b} bag={bag} />;
     case "not": return <NotBlok b={b} bag={bag} />;
     case "imza": return <ImzaBlok b={b} v={bag.v} />;
+    /* 495: serbest metin — formatın sabit yazısı, sahada okunur */
+    case "metin": return b.metin.trim() ? <div className={stil.serbestMetin}>{b.metin.trim()}</div> : <p className={stil.bosSatir}>-</p>;
     default: return null;
   }
 }
@@ -253,6 +258,8 @@ export function BilgiAlani({ a, bag }: { a: BolumOf<"bilgi">["alanlar"][number];
   if (a.ekipman) return <>{bag.ekipmanAlani(a)}</>;
   const id = alanId(a.id);
   const etiket = a.birim ? `${a.ad} (${a.birim})` : a.ad;
+  /* 495: formüllü alan — kendiliğinden, yazılmaz */
+  if (formulluAlan(a)) return <Satir etiket={etiket}><Hesapli deger={bag.h.alan[a.id]} formul={a.formul!} /></Satir>;
   if (a.kaynak) {
     const d = bag.kaynak(a.kaynak);
     return <Satir etiket={etiket}>{d ?? <DegerYok>-</DegerYok>}</Satir>;
@@ -454,6 +461,8 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
                     {b.sutunlar.map((col) => {
                       const anahtar = satirAnahtari(b.id, i, col.id), id = alanId(anahtar), deger = s[col.id] ?? "";
                       const ad = `${i + 1}. satır · ${col.ad}${col.birim ? ` (${col.birim})` : ""}`;
+                      /* 495: formüllü sütun — aynı satırdan kendiliğinden */
+                      if (formulluSutun(col)) return <td key={col.id}><Hesapli deger={bag.h.tablo[b.id]?.[i]?.[col.id]} formul={col.formul!} /></td>;
                       if (bag.oku) return <td key={col.id}>{(col.giris === "evet" ? etiketi(EVET, deger) : deger) || <DegerYok />}</td>;
                       if (col.giris === "secim" || col.giris === "evet") {
                         return (
@@ -584,6 +593,14 @@ function TestBlok({ b, bag }: { b: BolumOf<"test">; bag: Baglam }) {
         const secmeli = !!d.secenekler?.length;
         const sonuc = ipucu || r !== null ? <>{ipucu}{r !== null && <>{ipucu && " · "}<span className={r ? stil.onay : stil.hataMetin}>{r ? "Uygun" : secmeli ? (d.agir ? "Ağır kusur" : "Uygun değil") : "Sınır dışı"}</span></>}</> : undefined;
         const yaz = (x: string) => bag.yaz((c) => ({ ...c, deger: { ...c.deger, [d.id]: x } }));
+        /* 495: formüllü değer — kendiliğinden; sınırı varsa sonucu yanında */
+        if (formulluDeger(d)) {
+          return (
+            <Alan key={d.id} id={id} etiket={d.birim ? `${d.ad} (${d.birim})` : d.ad} sonuc={sonuc}>
+              <Hesapli deger={bag.h.deger[d.id]} formul={d.formul!} />
+            </Alan>
+          );
+        }
         return (
           <Alan key={d.id} id={id} etiket={d.birim ? `${d.ad} (${d.birim})` : d.ad} zorunlu={d.zorunlu && !bag.oku} hata={gec ? (secmeli ? "Seçilmeli." : "Değer yazılmalı.") : undefined} sonuc={sonuc}>
             {bag.oku ? <OkuGirdi id={id} deger={deger} />
@@ -595,6 +612,17 @@ function TestBlok({ b, bag }: { b: BolumOf<"test">; bag: Baglam }) {
       })}
     </FormIzgara>
     </>
+  );
+}
+
+/** 495: formülle hesaplanan değer (salt okunur) — altında formülün kendisi; hesaplanamadıysa söyler */
+function Hesapli({ deger, formul }: { deger: unknown; formul: string }) {
+  const v = typeof deger === "string" && deger ? deger : null;
+  return (
+    <span className={stil.hesapli}>
+      <span className={stil.hesapliDeger}>{v ?? <span className={stil.altMetin}>hesaplanamadı</span>}</span>
+      <span className={stil.hesapliFormul}>= {formul}</span>
+    </span>
   );
 }
 

@@ -7,7 +7,7 @@ export const DURUM_ROZET: Record<FormatDurumu, readonly [RozetTuru, string]> = {
 /** blok adları (maket MV.FORMAT_BLOK) */
 export const BLOK_ADI = {
   bilgi: "Bilgi alanları", liste: "Kontrol listesi", olcum: "Ölçüm tablosu", test: "Test değerleri", cihaz: "Ölçüm cihazları",
-  foto: "Fotoğraflar", kusur: "Kusur açıklamaları", sonuc: "Sonuç ve kanaat", not: "Not / yorum", imza: "İmza alanları",
+  foto: "Fotoğraflar", kusur: "Kusur açıklamaları", sonuc: "Sonuç ve kanaat", not: "Not / yorum", imza: "İmza alanları", metin: "Serbest metin",
 } as const;
 /** "Taslak" ya da "Sürüm N" */
 export const surumAdi = (x: Pick<FormatOzeti, "sira">) => (x.sira === null ? "Taslak" : `Sürüm ${x.sira}`);

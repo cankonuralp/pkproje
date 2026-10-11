@@ -36,18 +36,22 @@ export const EKIPMAN_ALAN_ADI: Record<EkipmanAlani, string> = {
 };
 /** ölçüm tablosunun adıyla seçilen hesabı (hesap.ts) */
 export const HESAPLAR = ["nokta", "selektivite", "linye", "pd", "zi"] as const;
-export const BLOKLAR = ["bilgi", "liste", "olcum", "test", "cihaz", "foto", "kusur", "sonuc", "not", "imza"] as const;
+/** 495: "metin" — serbest metin (belgeye basılan sabit yazı; sahada okunur, doldurulmaz) */
+export const BLOKLAR = ["bilgi", "liste", "olcum", "test", "cihaz", "foto", "kusur", "sonuc", "not", "imza", "metin"] as const;
 /** sınır kuralı (426: kesin küçük / büyük eklendi — ZPKR05 "RB < 2 Ω"): en çok · en az · küçük · büyük */
 export const SINIRLAR = ["<=", ">=", "<", ">"] as const;
 export type Sinir = (typeof SINIRLAR)[number];
 /** talimat (430): maddenin / grubun / genel muayenenin NASIL yapılacağı — saha ekranında ünlemle açılır, PDF'e basılmaz */
 const talimat = z.string().max(4000);
 export type Blok = (typeof BLOKLAR)[number];
+/** 495 (hata listesi 29 + 46 maketi): firmanın KENDİ hesabı — sayı alanı / sütunu / test değeri formülle hesaplanır (src/format/formul.ts); sahada
+    denetçi yazmaz. Yalnız sayı türünde anlamlı; ötekinde yok sayılır. */
+const formul = z.string().trim().max(400).optional();
 
 const Alan = z.object({
   id: kimlik, ad, tur: z.enum(ALAN_TURLERI), zorunlu: z.boolean().default(false), kilit: z.boolean().default(false),
   secenekler: z.array(z.string().trim().min(1).max(200)).max(40).optional(), birim: kisa.optional(), kaynak: z.enum(KAYNAKLAR).optional(),
-  ekipman: z.enum(EKIPMAN_ALANLARI).optional(),
+  ekipman: z.enum(EKIPMAN_ALANLARI).optional(), formul,
 });
 const Madde = z.object({ id: kimlik, metin: ad, aciklama: metin.optional(), std: z.string().max(200).optional(), talimat: talimat.optional(), kilit: z.boolean().default(false) });
 const Grup = z.object({ id: kimlik, ad: z.string().max(200), talimat: talimat.optional(), maddeler: z.array(Madde).max(200) });
@@ -56,13 +60,13 @@ const secenekListesi = z.array(z.string().trim().min(1).max(60)).max(20);
 const Sutun = z.object({
   id: kimlik, ad, birim: kisa.optional(), giris: z.enum(["sayi", "metin", "secim", "evet"]).default("sayi"),
   secenekler: secenekListesi.optional(), olumsuz: secenekListesi.optional(), agir: z.boolean().default(false), zorunlu: z.boolean().default(false),
-  op: z.enum(SINIRLAR).optional(), sinir: z.number().finite().optional(),
+  op: z.enum(SINIRLAR).optional(), sinir: z.number().finite().optional(), formul,
 });
 const Deger = z.object({
   id: kimlik, ad, birim: kisa.optional(), metin: z.boolean().default(false), zorunlu: z.boolean().default(true), kilit: z.boolean().default(false),
   /** seçmeli değer (426): değer bu seçeneklerden biri; olumsuz olanı kusur */
   secenekler: secenekListesi.optional(), olumsuz: secenekListesi.optional(), agir: z.boolean().default(false),
-  op: z.enum(SINIRLAR).optional(), sinir: z.number().finite().optional(), not: z.string().max(120).optional(),
+  op: z.enum(SINIRLAR).optional(), sinir: z.number().finite().optional(), not: z.string().max(120).optional(), formul,
 });
 /** seçmeli uygunluk notu (ZPKR01 Not-1 … Not-11): kusur mu, ağır mı */
 const Not = z.object({ metin: z.string().trim().min(1).max(400), kusur: z.boolean(), agir: z.boolean().default(false) });
@@ -96,6 +100,8 @@ export const Bolum = z.discriminatedUnion("blok", [
   z.object({ ...ortak, blok: z.literal("sonuc"), cumle: z.string().max(400).default(""), aciklama: z.string().max(4000).default("") }),
   z.object({ ...ortak, blok: z.literal("not"), zorunlu: z.boolean().default(false) }),
   z.object({ ...ortak, blok: z.literal("imza"), imzalar: z.array(z.enum(["uzman", "teknik"])).min(1).max(2).default(["uzman"]) }),
+  /* 495 (hata listesi 29 + 46 maketi): serbest metin — belgeye basılan sabit yazı (açıklama, yöntem notu …); sahada okunur */
+  z.object({ ...ortak, blok: z.literal("metin"), metin: z.string().max(4000).default("") }),
 ]);
 export type Bolum = z.output<typeof Bolum>;
 export type BolumOf<B extends Blok> = Extract<Bolum, { blok: B }>;

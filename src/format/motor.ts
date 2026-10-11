@@ -9,8 +9,12 @@
    Yayın denetimi (§5): boş bölüm, cevap seti eksik liste, sınırı / hesabı / notu olmayan ölçüm tablosu — UYARI (yayın olur).
    Kilitli öğe denetimi (§3, 2026-10-04): kilitli (Bakanlık) öğe silinmiş / değiştirilmiş / kilidi kaldırılmış — 470'ten beri UYARI (yayın durmaz;
    reisim 2026-10-10 "biraz daha serbestlik").
-   ⛔ Bu dosya yalnız ./hesap.ts ve ./tanim.ts'i içe aktarır (olumsuz kanıt kopyası bu iki yolu çevirir). */
+   495 (hata listesi 29 + 46 maketi): FORMÜL — değerlendirme formulUygula'nın doldurduğu cevaplarla (formüllü sayı alanı / sütunu / test değeri
+   kendiliğinden; sınırı varsa ondan Uygun / Uygun değil); formüllü öğe zorunlu eksik sayılmaz (girdileri sayılır). Yayın denetimi bilinmeyen adı
+   ve yapı hatasını söyler (uyarı).
+   ⛔ Bu dosya yalnız ./hesap.ts, ./tanim.ts ve ./formul.ts'i içe aktarır (olumsuz kanıt kopyası bu yolları çevirir). */
 import { EGRI_KAT, linyeHesap, noktaHesap, pdHesap, RCD_SURE, rcdTestYeter, sayiOku, SINIR_ISARETI, sinirSonucu, UO, ziHesap } from "./hesap.ts";
+import { formulDenet, formulluAlan, formulluDeger, formulluSutun, formulUygula, genelSayiAdlari, tabloSayiAdlari } from "./formul.ts";
 import { kurucudan, type Bolum, type BolumOf, type Cevaplar, type FormatTanimi } from "./tanim.ts";
 
 export interface Eksik { bolum: string; alan: string; ad: string }
@@ -93,20 +97,24 @@ export function sonucKurallari(b: BolumOf<"olcum">): string[] {
   } else if (b.hesap === "pd") l.push("PD kesiti 6–25 mm²", "Tamamlayıcı PD kesiti ≥ 4 mm² (ZPKK02)");
   else if (b.hesap === "zi") l.push("Zemin izolasyon direnci > 50 kΩ (ZPKK02)");
   for (const c of b.sutunlar) {
+    /* 495: formüllü sütun — hesabı önce */
+    if (formulluSutun(c)) l.push(`${c.ad} = ${c.formul} (kendiliğinden hesaplanır)`);
     if (c.olumsuz?.length) l.push(`${c.ad}: ${c.olumsuz.map((o) => (c.giris === "evet" ? (o === "evet" ? "Evet" : "Hayır") : o)).join(" / ")} seçilirse Uygun değil`);
     else if (c.op && c.sinir !== undefined) l.push(`${c.ad} ${SINIR_ISARETI[c.op]} ${virgul(c.sinir)}${c.birim ? ` ${c.birim}` : ""}`);
   }
   return l;
 }
 
-export function degerlendir(t: FormatTanimi, c: Cevaplar): Degerlendirme {
+export function degerlendir(t: FormatTanimi, c0: Cevaplar): Degerlendirme {
+  /* 495: formüllerin değeri (kaydedilen cevaplarda yok — her değerlendirmede yeniden) */
+  const c = formulUygula(t, c0);
   const eksikler: Eksik[] = [], kusurlar: Kusur[] = [], satirlar: Record<string, SatirDegerlendirmesi[]> = {}, degerler: Record<string, boolean | null> = {};
   const ik3 = c.deger.ik3 ?? "";
   for (const b of t.bolumler) {
     switch (b.blok) {
       case "bilgi":
         /* ekipman kaydına bağlı alanın (460) değeri cevaplarda değil, raporun ekipman bilgisinde */
-        for (const a of b.alanlar) if (a.zorunlu && !a.kaynak && !a.ekipman && bos(c.alan[a.id])) eksikler.push({ bolum: b.id, alan: a.id, ad: a.ad });
+        for (const a of b.alanlar) if (a.zorunlu && !a.kaynak && !a.ekipman && !formulluAlan(a) && bos(c.alan[a.id])) eksikler.push({ bolum: b.id, alan: a.id, ad: a.ad });
         break;
       case "liste":
         for (const g of b.gruplar) for (const m of g.maddeler) {
@@ -124,7 +132,7 @@ export function degerlendir(t: FormatTanimi, c: Cevaplar): Degerlendirme {
         if (l.length < b.enAz) eksikler.push({ bolum: b.id, alan: b.id, ad: `${b.ad} · en az ${b.enAz} satır` });
         satirlar[b.id] = l.map((s, i) => {
           const d = satirDegerlendir(b, s, ik3);
-          for (const col of b.sutunlar) if (col.zorunlu && bos(s[col.id])) eksikler.push({ bolum: b.id, alan: satirAnahtari(b.id, i, col.id), ad: `${b.ad} · ${i + 1}. satır · ${col.ad}` });
+          for (const col of b.sutunlar) if (col.zorunlu && !formulluSutun(col) && bos(s[col.id])) eksikler.push({ bolum: b.id, alan: satirAnahtari(b.id, i, col.id), ad: `${b.ad} · ${i + 1}. satır · ${col.ad}` });
           /* 488: elle değiştirilen sonucun gerekçesi şart */
           if (d.elle && d.elle.gerekce.length < ELLE_GEREKCE_EN_AZ) {
             eksikler.push({ bolum: b.id, alan: satirAnahtari(b.id, i, ELLE_GEREKCE), ad: `${b.ad} · ${i + 1}. satır · elle sonucun gerekçesi (en az ${ELLE_GEREKCE_EN_AZ} harf)` });
@@ -153,7 +161,7 @@ export function degerlendir(t: FormatTanimi, c: Cevaplar): Degerlendirme {
             continue;
           }
           const dolu = d.metin ? !bos(v) : !Number.isNaN(sayiOku(v));
-          if (d.zorunlu && !dolu) eksikler.push({ bolum: b.id, alan: d.id, ad: d.ad });
+          if (d.zorunlu && !dolu && !formulluDeger(d)) eksikler.push({ bolum: b.id, alan: d.id, ad: d.ad });
           const r = d.metin ? null : sinirSonucu(d.op, d.sinir, v);
           degerler[d.id] = r;
           if (r === false) kusurlar.push({ bolum: b.id, ref: d.id, kriter: d.ad, metin: `${d.ad}: ${v}${d.birim ? ` ${d.birim}` : ""} (sınır ${SINIR_ISARETI[d.op!]} ${virgul(d.sinir!)}${d.birim ? ` ${d.birim}` : ""})`, agir: d.agir });
@@ -227,10 +235,10 @@ type AlanT = BolumOf<"bilgi">["alanlar"][number];
 type MaddeT = BolumOf<"liste">["gruplar"][number]["maddeler"][number];
 type DegerT = BolumOf<"test">["degerler"][number];
 type SutunT = BolumOf<"olcum">["sutunlar"][number];
-const alanOzu = (a: AlanT) => oz({ ad: a.ad, tur: a.tur, secenekler: a.secenekler, kaynak: a.kaynak, ekipman: a.ekipman, birim: a.birim });
+const alanOzu = (a: AlanT) => oz({ ad: a.ad, tur: a.tur, secenekler: a.secenekler, kaynak: a.kaynak, ekipman: a.ekipman, birim: a.birim, formul: a.formul });
 const maddeOzu = (m: MaddeT) => oz({ metin: m.metin, std: m.std });
-const degerOzu = (d: DegerT) => oz({ ad: d.ad, birim: d.birim, metin: d.metin, op: d.op, sinir: d.sinir, secenekler: d.secenekler, olumsuz: d.olumsuz, agir: d.agir || undefined });
-const sutunOzu = (s: SutunT) => oz({ ad: s.ad, birim: s.birim, giris: s.giris, secenekler: s.secenekler, op: s.op, sinir: s.sinir, olumsuz: s.olumsuz, agir: s.agir || undefined });
+const degerOzu = (d: DegerT) => oz({ ad: d.ad, birim: d.birim, metin: d.metin, op: d.op, sinir: d.sinir, secenekler: d.secenekler, olumsuz: d.olumsuz, agir: d.agir || undefined, formul: d.formul });
+const sutunOzu = (s: SutunT) => oz({ ad: s.ad, birim: s.birim, giris: s.giris, secenekler: s.secenekler, op: s.op, sinir: s.sinir, olumsuz: s.olumsuz, agir: s.agir || undefined, formul: s.formul });
 
 interface Ogeler { bolum: Map<string, Bolum>; alan: Map<string, AlanT>; madde: Map<string, MaddeT>; deger: Map<string, DegerT> }
 function ogeler(t: FormatTanimi): Ogeler {
@@ -310,12 +318,21 @@ export function yayinDenetimi(t: FormatTanimi, kaynak?: FormatTanimi | null): st
     if (b.blok === "bilgi" && !b.alanlar.length) bosBolum(b);
     if (b.blok === "liste" && !b.gruplar.some((g) => g.maddeler.length)) bosBolum(b);
     if (b.blok === "test" && !b.degerler.length) bosBolum(b);
+    if (b.blok === "metin" && !b.metin.trim()) bosBolum(b);
     if (b.blok === "olcum") {
       if (!b.sutunlar.length) bosBolum(b);
       /* 427: "uygun değil" seçeneği olan seçmeli sütun da değerlendirir (ZPKR04 5.2: U / UD / UG) */
       else if (!b.hesap && !b.notlar?.length && !b.sutunlar.some((c) => (c.op && c.sinir !== undefined) || c.olumsuz?.length))
         l.push(`“${b.ad}” tablosunda sınırı ya da “uygun değil” seçeneği olan sütun, hesap ya da uygunluk notu yok.`);
     }
+  }
+  /* 495: formül — yapı hatası, bilinmeyen ad, kendine bakma (uyarı; hesaplanamayan formülün değeri sahada boş kalır) */
+  const genel = genelSayiAdlari(t);
+  const formulSorun = (yer: string, f: string, adlar: readonly string[], kendi: string) => { const h = formulDenet(f, adlar, kendi); if (h) l.push(`${yer} formülü: ${h}`); };
+  for (const b of t.bolumler) {
+    if (b.blok === "bilgi") for (const a of b.alanlar) if (formulluAlan(a)) formulSorun(`“${b.ad} · ${a.ad}”`, a.formul!, genel, a.ad);
+    if (b.blok === "test") for (const d of b.degerler) if (formulluDeger(d)) formulSorun(`“${b.ad} · ${d.ad}”`, d.formul!, genel, d.ad);
+    if (b.blok === "olcum") for (const s of b.sutunlar) if (formulluSutun(s)) formulSorun(`“${b.ad} · ${s.ad}”`, s.formul!, tabloSayiAdlari(b), s.ad);
   }
   if (!t.bolumler.some((b) => b.blok === "sonuc")) l.push("Sonuç ve kanaat bölümü yok.");
   if (!t.bolumler.some((b) => b.blok === "imza")) l.push("İmza alanları bölümü yok.");

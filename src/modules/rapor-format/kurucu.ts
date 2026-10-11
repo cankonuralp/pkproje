@@ -9,6 +9,7 @@ import { kilitliKimlikler } from "../../format/motor.ts";
 import { ekipmanTamYap } from "../../format/duzen.ts";
 import { Bolum, EKIPMAN_ALAN_ADI, KUNYE_ALANLARI, kurucudan, type Blok, type EkipmanAlani, type FormatTanimi, type KunyeAlani, type Sinir } from "../../format/tanim.ts";
 import { kilitliKunye } from "../../format/kunye.ts";
+import { FORMUL_EN_UZUN, formulAdDegistir } from "../../format/formul.ts";
 
 export { kurucudan };
 
@@ -40,7 +41,7 @@ export function yeniBolum(t: FormatTanimi, blok: Blok, ad: string): Bolum {
     bilgi: { alanlar: [] },
     liste: { cevaplar: ["Uygun", "Uygun değil", "Uygulanamaz"], gruplar: [{ id: yeniKimlik(t, "g", new Set([id])), ad: "", maddeler: [] }] },
     olcum: { satir: "ekle", sutunlar: [] }, test: { degerler: [] }, cihaz: {}, foto: { enAz: 0, enCok: 20 }, kusur: {}, sonuc: { cumle: "" },
-    not: { zorunlu: false }, imza: { imzalar: ["uzman"] },
+    not: { zorunlu: false }, imza: { imzalar: ["uzman"] }, metin: { metin: "" },
   };
   return Bolum.parse({ id, ad, blok, ...ek[blok] });
 }
@@ -166,6 +167,8 @@ export type OgeTuru = "metin" | "sayi" | "tarih" | "secim" | "coklu" | "evet";
 export interface OgeYamasi {
   ad?: string; tur?: OgeTuru; secenekler?: string[]; olumsuz?: string[]; agir?: boolean; birim?: string; zorunlu?: boolean;
   op?: Sinir | ""; sinir?: number | null; std?: string; aciklama?: string; talimat?: string; not?: string; grup?: string;
+  /** 495: formül (yalnız sayı türünde; boş = formül yok) */
+  formul?: string;
 }
 const kirp = (s: string, n: number) => s.trim().replace(/\s+/g, " ").slice(0, n);
 /** çok satırlı metinden seçenekler: kırpılmış, boşsuz, tekil, en çok `adet` tane, her biri en çok `uzun` karakter */
@@ -178,6 +181,15 @@ function sinirli<T extends { op?: Sinir; sinir?: number }>(o: T, y: { op?: Sinir
   return { ...o, op, sinir: op ? sinir : undefined };
 }
 
+/** 495: öğenin formülü — yalnız sayıda; yazılmadıysa eskisi; boşsa ya da sayı değilse anahtar hiç yok */
+function formulYaz<O extends { formul?: string }>(o: O, sayi: boolean, y: OgeYamasi): O {
+  const f = sayi ? (y.formul !== undefined ? istege(y.formul.slice(0, FORMUL_EN_UZUN)) : o.formul) : undefined;
+  const r = { ...o };
+  delete r.formul;
+  if (f) r.formul = f;
+  return r;
+}
+
 export function ogeYaz(t: FormatTanimi, i: number, id: string, y: OgeYamasi): FormatTanimi {
   const b = t.bolumler[i];
   if (!b) return t;
@@ -187,11 +199,11 @@ export function ogeYaz(t: FormatTanimi, i: number, id: string, y: OgeYamasi): Fo
       if (a.id !== id) return a;
       if (a.kaynak || a.ekipman) return y.ad !== undefined ? { ...a, ad: kirp(y.ad, 200) || a.ad } : a;
       const tur = y.tur ?? a.tur, secmeli = tur === "secim" || tur === "coklu";
-      return {
+      return formulYaz({
         ...a, ad: y.ad !== undefined ? kirp(y.ad, 200) || a.ad : a.ad, tur,
         secenekler: secmeli ? (y.secenekler ? y.secenekler.slice(0, 40).map((x) => kirp(x, 200)).filter(Boolean) : a.secenekler) : undefined,
         birim: y.birim !== undefined ? istege(kirp(y.birim, 40)) : a.birim, zorunlu: y.zorunlu ?? a.zorunlu,
-      };
+      }, tur === "sayi", y);
     }) };
   } else if (b.blok === "liste") {
     const m = b.gruplar.flatMap((g) => g.maddeler).find((x) => x.id === id);
@@ -214,10 +226,10 @@ export function ogeYaz(t: FormatTanimi, i: number, id: string, y: OgeYamasi): Fo
       const secenekler = giris === "secim" ? (y.secenekler ?? c.secenekler) : undefined;
       const gecerli = giris === "evet" ? ["evet", "hayir"] : secenekler ?? [];
       const olumsuz = (y.olumsuz ?? c.olumsuz)?.filter((o) => gecerli.includes(o));
-      return sinirli({
+      return sinirli(formulYaz({
         ...c, ad: y.ad !== undefined ? kirp(y.ad, 200) || c.ad : c.ad, giris, secenekler, olumsuz: olumsuz?.length ? olumsuz : undefined,
         agir: y.agir ?? c.agir, birim: y.birim !== undefined ? istege(kirp(y.birim, 40)) : c.birim, zorunlu: y.zorunlu ?? c.zorunlu,
-      }, giris === "sayi" ? y : { op: "", sinir: null });
+      }, giris === "sayi", y), giris === "sayi" ? y : { op: "", sinir: null });
     }) };
   } else if (b.blok === "test") {
     n = { ...b, degerler: b.degerler.map((d) => {
@@ -225,14 +237,35 @@ export function ogeYaz(t: FormatTanimi, i: number, id: string, y: OgeYamasi): Fo
       const tur = y.tur ?? (d.secenekler?.length ? "secim" : d.metin ? "metin" : "sayi");
       const secenekler = tur === "secim" ? (y.secenekler ?? d.secenekler) : undefined;
       const olumsuz = (y.olumsuz ?? d.olumsuz)?.filter((o) => (secenekler ?? []).includes(o));
-      return sinirli({
+      return sinirli(formulYaz({
         ...d, ad: y.ad !== undefined ? kirp(y.ad, 200) || d.ad : d.ad, metin: tur === "metin", secenekler, olumsuz: olumsuz?.length ? olumsuz : undefined,
         agir: y.agir ?? d.agir, birim: y.birim !== undefined ? istege(kirp(y.birim, 40)) : d.birim, zorunlu: y.zorunlu ?? d.zorunlu,
         not: y.not !== undefined ? istege(kirp(y.not, 120)) : d.not,
-      }, tur === "sayi" ? y : { op: "", sinir: null });
+      }, tur === "sayi", y), tur === "sayi" ? y : { op: "", sinir: null });
     }) };
   }
-  return n === b ? t : { ...t, bolumler: t.bolumler.map((x, j) => (j === i ? n : x)) };
+  if (n === b) return t;
+  const y2 = { ...t, bolumler: t.bolumler.map((x, j) => (j === i ? n : x)) };
+  return y.ad !== undefined ? formulAdlariniDegistir(y2, t, i, id) : y2;
+}
+
+/** 495: öğenin adı değişince onu anan formüllerde de değişir — tablo sütunu aynı tablonun sütun formüllerinde; sayı alanı / test değeri formatın
+    bütün alan ve değer formüllerinde (format/formul.ts formulAdDegistir) */
+function formulAdlariniDegistir(y: FormatTanimi, once: FormatTanimi, i: number, id: string): FormatTanimi {
+  const ad = (t: FormatTanimi) => {
+    const b = t.bolumler[i];
+    if (b?.blok === "bilgi") return b.alanlar.find((a) => a.id === id)?.ad;
+    if (b?.blok === "test") return b.degerler.find((d) => d.id === id)?.ad;
+    if (b?.blok === "olcum") return b.sutunlar.find((s) => s.id === id)?.ad;
+    return undefined;
+  };
+  const eski = ad(once), yeni = ad(y), b = y.bolumler[i];
+  if (!eski || !yeni || eski === yeni) return y;
+  /* formülü olmayan öğeye dokunulmaz (anahtar eklenmez) */
+  const f = <O extends { formul?: string }>(o: O): O => (o.formul ? { ...o, formul: formulAdDegistir(o.formul, eski, yeni) } : o);
+  if (b.blok === "olcum") return { ...y, bolumler: y.bolumler.map((x, j) => (j === i && x.blok === "olcum" ? { ...x, sutunlar: x.sutunlar.map(f) } : x)) };
+  return { ...y, bolumler: y.bolumler.map((x) => x.blok === "bilgi" ? { ...x, alanlar: x.alanlar.map(f) }
+    : x.blok === "test" ? { ...x, degerler: x.degerler.map(f) } : x) };
 }
 
 /* ── GRUPLAR (kontrol listesi) ── ad ve talimat her grupta yazılır (470: Bakanlık grubunda da) */

@@ -2405,6 +2405,18 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-12 (495): **FORMÜL VE SERBEST METİN** (hata listesi 29 + 46 maketi onaylı; reisim 2026-10-11 29: *"isteyenin istediği gibi bir şey yapabileceği
+  bir sistem"*; sunumdaki ölçüm: "yeni bir hesap gereken her rapor bugün kod işi"). **Formül:** sayı alanı, ölçüm tablosu sütunu ve test değeri
+  öğenin ayrıntılarında formülle hesaplanır — adlar köşeli parantezle ([İlk kalınlık]), + − × ÷, parantez, yüzde, ondalık virgül; ada / işarete
+  basınca eklenir, yazarken denetlenir ("“Yok” adında sayı yok"). Tablo sütunu aynı satırın sayı sütunlarına, test değeri ve alan formatın sayı
+  alanları ve test değerlerine bakar; formül formüle bakabilir (en çok 5 kat; döngü hesaplanamaz). Sahada kendiliğinden hesaplanır (salt okunur,
+  altında formül), sınırı varsa Uygun / Uygun değil ve kusur ondan; formüllü öğe eksik sayılmaz; hesaplanamazsa boş. Belge (PDF), motor ve saha
+  aynı işlevden (src/format/formul.ts formulUygula; eval yok — küçük çözücü); kaydedilen cevaplarda hesap yok. Excel'e ve fotoğraftan okumaya
+  formüllü öğe girmez. Adı değişen öğenin formüllerdeki adı da değişir. Yayın denetimi formül hatasını uyarır; Bakanlık öğesine formül "değişti"
+  sayılır. **Serbest metin** bölümü (blok "metin"; RAPOR-FORMAT §2'ye 11. blok): belgeye basılan sabit yazı, kâğıtta yerinde yazılır, sahada
+  okunur; parça kutusunda. Ayrıca: kurucuda aynı yazı alanında art arda yazılanlar tek Geri al adımı. Kilitler tests/formul.test.ts (7) + olumsuz
+  kanıt tests/bozan/formul.bozan.ts (3); yapboz testi 10 bölüm parçası (tarih + gerekçeyle güncellendi); tablo-sonuc.bozan motor kopyası formul.ts
+  yolunu da çevirir; e2e rapor-format (formül alanı: bilinmeyen ad, adlarla ekleme, kâğıtta "= [Iz] − [Ib]").
 - 2026-10-12 (494): **FORMAT KURUCUDA "GELİŞMİŞ SEÇENEKLER" — YAPBOZ** (hata listesi 29 + 46 maketi onaylı; reisim 2026-10-11: *"maketi onaylıyorum ama
   bu da çok karmaşık olmuş, şöyle yapalım mevcuttaki sistemi koruyalım gelişmiş seçenekler tuşu olsun ve tıklayınca buraya gitsin"*). Kurucu
   bugünkü gibi açılır; araç çubuğundaki "Gelişmiş seçenekler" (puzzle) AYNI kâğıdın soluna PARÇALAR, sağına SEÇİLİ BÖLÜM koyar ("Basit görünüme

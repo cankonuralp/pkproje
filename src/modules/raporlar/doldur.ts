@@ -9,6 +9,7 @@
 import { alanDegeri, type OkunacakAlan } from "../../format/deger.ts";
 import { raporDuzeni, sabitEkipmanAlanlari } from "../../format/duzen.ts";
 import { EKIPMAN_ALAN_ADI, EKIPMAN_ALANLARI, type BolumOf, type EkipmanAlani, type FormatTanimi } from "../../format/tanim.ts";
+import { formulluAlan, formulluDeger, formulluSutun } from "../../format/formul.ts";
 
 export const EXCEL_EN_COK_SATIR = 300;
 type Sutun = BolumOf<"olcum">["sutunlar"][number];
@@ -20,7 +21,9 @@ const sutunDegeri = (s: Sutun, ham: string, bugun: Date) =>
 
 export interface TabloExceli { satirlar: Record<string, string>[]; eslesen: string[]; eslesmeyen: string[]; atlanan: number }
 
-export function tabloExceli(ham: readonly (readonly string[])[], sutunlar: readonly Sutun[], bugun = new Date()): TabloExceli {
+export function tabloExceli(ham: readonly (readonly string[])[], tumSutunlar: readonly Sutun[], bugun = new Date()): TabloExceli {
+  /* 495: formüllü sütun kendiliğinden hesaplanır — Excel'den yazılmaz */
+  const sutunlar = tumSutunlar.filter((s) => !formulluSutun(s));
   const adlar = new Map(sutunlar.map((s) => [norm(s.ad), s] as const));
   const eslesme = (r: readonly string[]) => r.map((h) => adlar.get(norm(String(h ?? ""))) ?? null);
   let bas = -1, en = 0;
@@ -68,7 +71,7 @@ export function alanExceli(ham: readonly (readonly string[])[], alanlar: readonl
 }
 
 /** şablon satırları: tablo → başlık satırı; alanlar → "Alan | Değer" + her alan bir satır */
-export const tabloSablonu = (sutunlar: readonly Sutun[]) => [sutunlar.map((s) => (s.birim ? `${s.ad} (${s.birim})` : s.ad))];
+export const tabloSablonu = (sutunlar: readonly Sutun[]) => [sutunlar.filter((s) => !formulluSutun(s)).map((s) => (s.birim ? `${s.ad} (${s.birim})` : s.ad))];
 export const alanSablonu = (alanlar: readonly OkunacakAlan[]) => [["Alan", "Değer"], ...alanlar.map((a) => [a.ad, ""])];
 
 /* ── OKUNACAK / YÜKLENECEK ALANLAR — sunucu (raporlar.ts alanOkunabilir) ve ekran (SahaRaporu, Bloklar) AYNI listeyi kullanır ── */
@@ -79,14 +82,14 @@ const ekipmanAlani = (k: EkipmanAlani, ad: string): OkunacakAlan => (k === "imal
 /** bilgi bölümünün doldurulabilen alanları — kayıttan gelen ve çok seçimli alan hariç; ekipman kaydına bağlı alan EkipmanBilgisi anahtarıyla */
 export function bilgiAlanlari(b: BolumOf<"bilgi">): OkunacakAlan[] {
   return b.alanlar.flatMap((a): OkunacakAlan[] => {
-    if (a.kaynak || a.tur === "coklu") return [];
+    if (a.kaynak || a.tur === "coklu" || formulluAlan(a)) return [];
     if (a.ekipman) return [ekipmanAlani(a.ekipman, a.ad)];
     return [{ id: a.id, ad: a.birim ? `${a.ad} (${a.birim})` : a.ad, tur: a.tur === "secim" || a.tur === "evet" || a.tur === "tarih" || a.tur === "sayi" ? a.tur : "metin",
       uzun: 500, secenekler: a.secenekler, birim: a.birim }];
   });
 }
 /** test bölümünün değerleri */
-export const testAlanlari = (b: BolumOf<"test">): OkunacakAlan[] => b.degerler.map((d) => ({
+export const testAlanlari = (b: BolumOf<"test">): OkunacakAlan[] => b.degerler.filter((d) => !formulluDeger(d)).map((d) => ({
   id: d.id, ad: d.birim ? `${d.ad} (${d.birim})` : d.ad, tur: d.secenekler?.length ? "secim" : d.metin ? "metin" : "sayi", uzun: d.metin ? 60 : 12,
   secenekler: d.secenekler, birim: d.birim }));
 /** 2. bölüm (ekipman bilgileri): formatın tam ekipman bölümü varsa onun alanları, yoksa ekranda kayıttan başlayan sabit satırlar */

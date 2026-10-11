@@ -24,7 +24,7 @@ test("parça kutusu: bölümler (cihaz bölümü varsa yok), altı tek alan, on 
   assert.deepEqual(g.map((x) => x.ad), ["Bölümler", "Tek alan · bir bilgi bölümüne", "Kayıttan gelen · bilgi bölümüne"]);
   assert.ok(T.bolumler.some((b) => b.blok === "cihaz"));
   assert.ok(!g[0].parcalar.some((p) => p.k === "b:cihaz"), "ölçüm cihazları bölümü tektir");
-  assert.equal(g[0].parcalar.length, 9);
+  assert.equal(g[0].parcalar.length, 10, "495: serbest metin bölümü eklendi (2026-10-12)");
   const cihazsiz = { ...T, bolumler: T.bolumler.filter((b) => b.blok !== "cihaz") };
   assert.ok(parcaGruplari(cihazsiz)[0].parcalar.some((p) => p.k === "b:cihaz"));
   assert.equal(g[1].parcalar.length, 6);

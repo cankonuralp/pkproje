@@ -133,3 +133,14 @@
 /* 493: kâğıdın üstündeki araç çubuğu (Geri al / Yinele; gelişmiş seçenekler) — telefonda kurucu yok (yalnizGenis'ten SONRA tanımlandığı için ayrıca) */
 .aracCubugu { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
 @media (max-width: 767.98px) { .aracCubugu { display: none; } }
+
+/* 495: öğenin formülü — ada / işarete basınca eklenir */
+.formul { display: grid; gap: 6px; }
+.formulAdlar { display: flex; flex-wrap: wrap; gap: 6px; }
+.formulTus {
+  min-height: 32px; padding: 0 10px; border: 1px solid var(--kenar-alan); border-radius: 999px; background: var(--kart); color: var(--yazi);
+  font: inherit; font-size: var(--boy-kucuk); cursor: pointer;
+}
+.formulTus:hover { border-color: var(--yazi2); }
+.formulTus:focus-visible { outline: 2px solid var(--odak); outline-offset: 2px; }
+@media (pointer: coarse) { .formulTus { min-height: 44px; } }

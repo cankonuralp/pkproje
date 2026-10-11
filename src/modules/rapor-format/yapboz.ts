@@ -30,8 +30,9 @@ export const KAYNAK_ADI: Record<Kaynak, string> = {
 const BOLUM_ACIK: Record<Blok, string> = {
   bilgi: "etiket + değer", liste: "maddeler · Uygun / Uygun değil", olcum: "satır × sütun, sınır", test: "tek tek değer, sınır", cihaz: "kullanılan cihazlar",
   foto: "fotoğraf kutuları", kusur: "kendiliğinden dolar", sonuc: "uygundur / değildir", not: "uzmanın yorumu", imza: "belgede imza yerleri",
+  metin: "belgeye basılan sabit yazı",
 };
-const BOLUM_SIRASI: readonly Blok[] = ["bilgi", "liste", "olcum", "test", "foto", "not", "kusur", "sonuc", "imza", "cihaz"];
+const BOLUM_SIRASI: readonly Blok[] = ["bilgi", "liste", "olcum", "test", "foto", "metin", "not", "kusur", "sonuc", "imza", "cihaz"];
 
 /** parça kutusu (ölçüm cihazları bölümü tektir — varsa listede yok) */
 export function parcaGruplari(t: FormatTanimi): ParcaGrubu[] {
@@ -57,6 +58,7 @@ function parcaBolumu(t: FormatTanimi, blok: Blok): Bolum {
   if (b.blok === "olcum") return { ...b, sutunlar: [
     { id: id("s"), ad: "Ölçüm yeri", giris: "metin", zorunlu: false, agir: false }, { id: id("s"), ad: "Ölçülen", giris: "sayi", zorunlu: false, agir: false }] };
   if (b.blok === "test") return { ...b, degerler: [{ id: id("d"), ad: "Yeni değer", metin: false, zorunlu: true, kilit: false, agir: false }] };
+  if (b.blok === "metin") return { ...b, ad: "Açıklama", metin: "Belgeye basılacak yazıyı buraya yazın." };
   return b;
 }
 

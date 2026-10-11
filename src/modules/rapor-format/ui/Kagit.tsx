@@ -42,6 +42,7 @@ import k from "./kagit.module.css";
 const BLOK_KISA: Record<Blok, string> = {
   bilgi: "etiket + değer", liste: "maddeler · Uygun / Uygun değil", olcum: "satır satır ölçüm", test: "tek tek değer, sınır", cihaz: "kullanılan cihazlar",
   foto: "fotoğraf kutuları", kusur: "kendiliğinden dolar", sonuc: "uygundur / değildir", not: "uzmanın yorumu", imza: "belgede imza yerleri",
+  metin: "belgeye basılan sabit yazı",
 };
 const BOLUM_SECENEK = BLOKLAR.map((b) => [b, BLOK_ADI[b], BLOK_KISA[b]] as const);
 /** 486: alt başlığın türleri — ana bölümün türü alt başlık olabiliyorsa önce ("ana bölümle aynı"), sonra ötekiler */
@@ -120,6 +121,7 @@ const Secenekler = ({ l }: { l: readonly string[] }) => <>{l.map((x) => <span ke
 function AlanOrnegi({ a }: { a: BolumOf<"bilgi">["alanlar"][number] }) {
   if (a.ekipman) return <span className={k.ornek}>sahada · ekipman kaydından başlar</span>;
   if (a.kaynak) return <span className={k.ornek}>kayıttan</span>;
+  if (a.tur === "sayi" && a.formul?.trim()) return <span className={k.ornek}>= {a.formul}{a.birim ? ` · ${a.birim}` : ""} (kendiliğinden)</span>;
   if (a.tur === "secim" || a.tur === "coklu") return a.secenekler?.length ? <Secenekler l={a.secenekler} /> : <span className={k.ornek}>seçenek yok — ayarlardan</span>;
   if (a.tur === "evet") return <Secenekler l={["Evet", "Hayır"]} />;
   if (a.tur === "tarih") return <span className={k.ornek}>GG.AA.YYYY</span>;
@@ -307,7 +309,8 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
       }
       case "olcum": {
         const notlar = b.notlar ?? [];
-        const ornek = (s: BolumOf<"olcum">["sutunlar"][number]) => s.giris === "secim" ? (s.secenekler?.join(" / ") || "seçim") : s.giris === "evet" ? "evet / hayır" : s.giris === "metin" ? "yazı" : "sayı";
+        const ornek = (s: BolumOf<"olcum">["sutunlar"][number]) => s.giris === "secim" ? (s.secenekler?.join(" / ") || "seçim") : s.giris === "evet" ? "evet / hayır" : s.giris === "metin" ? "yazı"
+          : s.formul?.trim() ? `= ${s.formul}` : "sayı";
         return <>
           <table>
             <thead><tr>
@@ -355,7 +358,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
                 <tr key={d.id}>
                   <td><span className={k.satir}><Yazi deger={d.ad} ad="Değer adı" ac={yeniId === d.id} yaz={(s) => degis(ogeYaz(t, i, d.id, { ad: s }))} />
                     {ogeTuslari(b, i, d.id, d.ad, d.kilit)}</span></td>
-                  <td><span className={k.ornek}>{d.secenekler?.length ? d.secenekler.join(" / ") : d.metin ? "yazı" : `sayı${d.birim ? ` · ${d.birim}` : ""}`}</span></td>
+                  <td><span className={k.ornek}>{d.secenekler?.length ? d.secenekler.join(" / ") : d.metin ? "yazı" : d.formul?.trim() ? `= ${d.formul} (kendiliğinden)` : `sayı${d.birim ? ` · ${d.birim}` : ""}`}</span></td>
                   <td>{d.op && d.sinir !== undefined ? `${SINIR_ISARETI[d.op]} ${virgul(d.sinir)}${d.birim ? ` ${d.birim}` : ""}` : d.not || <span className={k.ornek}>sınır yok</span>}</td>
                   <td><span className={k.ornek}>Uygun / Uygun değil</span></td>
                 </tr>
@@ -401,6 +404,10 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
         </>;
       case "not":
         return <p className="rb-kutu-metin"><span className={k.ornek}>Muayene uzmanının yorumu{b.zorunlu ? " (zorunlu)" : " (isteğe bağlı)"}.</span></p>;
+      /* 495: serbest metin — belgeye basılan sabit yazı, kâğıtta yerinde yazılır */
+      case "metin":
+        return <div className="rb-aciklama"><Yazi deger={b.metin} ad="Serbest metin" bos="Belgeye basılacak yazıyı yazın" cok uzun={4000}
+          yaz={(s) => degis(bolumYaz(t, i, { metin: s.slice(0, 4000) }))} /></div>;
       case "imza":
         return <>
           {b.imzalar.includes("uzman") && <BilgiTablosu l={[["Adı soyadı", "—"], ["Mesleği", "—"], ["Yetkili kişi kayıt no (EKİPNET)", "—"], ["Diploma no", "—"],

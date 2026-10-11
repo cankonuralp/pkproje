@@ -10,6 +10,7 @@ import { createElement as h, Fragment, type ReactNode } from "react";
 import { SINIR_ISARETI } from "../format/hesap.ts";
 import { raporDuzeni, sabitEkipmanAlanlari, siraBasligi } from "../format/duzen.ts";
 import { gecerliKunye, kilitliKunye, metotMetni } from "../format/kunye.ts";
+import { formulUygula } from "../format/formul.ts";
 import { degerlendir } from "../format/motor.ts";
 import { EKIPMAN_ALAN_ADI, type Bolum, type BolumOf } from "../format/tanim.ts";
 /* veri.ts: saf tanımlar (tanimlar.ts node:crypto kullanır — 451: Format kurucunun belge önizlemesi bu çiziciyi tarayıcıda koşar) */
@@ -61,7 +62,8 @@ const kutu = (...icerik: ReactNode[]) => h("p", { className: "rb-kutu-metin" }, 
 const baslikSatiri = (...l: string[]) => h("thead", null, h("tr", null, ...l.map((x, i) => h("th", { key: i, className: "rb-ab" }, x))));
 
 export function raporBelgesi(v: BelgeVerisi): ReactNode {
-  const { tanim: t, cevaplar: c } = v;
+  /* 495: formüllü öğelerin değeri basılır (kaydedilen cevaplarda yok — motorla aynı işlev) */
+  const t = v.tanim, c = formulUygula(t, v.cevaplar);
   /* sayılar raporun kendi listesinden (saha ekranı ve sunucuyla aynı) */
   const foto: Record<string, number> = {}, mf: Record<string, number> = {};
   for (const f of v.fotolar) { if (f.madde) mf[f.madde] = (mf[f.madde] ?? 0) + 1; else foto[f.bolum] = (foto[f.bolum] ?? 0) + 1; }
@@ -175,6 +177,8 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
       }
       case "not": return kutu(deger(c.yorum));
       case "imza": return imza(b);
+      /* 495: serbest metin — formatın sabit yazısı, satır satır */
+      case "metin": return b.metin.trim() ? h("div", { className: "rb-aciklama" }, ...b.metin.trim().split("\n").map((s, i) => h("p", { key: i }, s))) : kutu("-");
     }
   };
 

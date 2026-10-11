@@ -128,6 +128,21 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await sutun.fill("Deneme sütunu");
     await sutun.press("Enter");
     await expect(linye.getByRole("columnheader", { name: /Deneme sütunu/ })).toBeVisible();
+    /* 495 (29 + 46 maketi: "isteyenin istediği gibi" — firmanın kendi hesabı): sütunun ayrıntılarında formül; bilinmeyen ad söylenir, adlara ve
+       işaretlere basınca eklenir; kâğıtta "= formül" */
+    await linye.getByRole("button", { name: "Deneme sütunu · ayrıntılar" }).click();
+    const formul = page.getByRole("textbox", { name: /^Formül/ });
+    await formul.fill("[Yok] + 1");
+    await formul.blur();
+    await expect(page.getByText("“Yok” adında sayı yok", { exact: false }).first()).toBeVisible();   // alanın altında ve "Yayından önce bakılacak"ta
+    await formul.fill("");
+    const formuleEkle = page.getByRole("group", { name: "Formüle ekle" });
+    await formuleEkle.getByRole("button", { name: "Iz", exact: true }).click();
+    await formuleEkle.getByRole("button", { name: "Formüle ekle: −" }).click();
+    await formuleEkle.getByRole("button", { name: "Ib", exact: true }).click();
+    await expect(formul).toHaveValue("[Iz] − [Ib]");
+    await expect(linye.getByText("= [Iz] − [Ib]").first()).toBeVisible();
+    await page.getByRole("button", { name: "Ayrıntıları kapat" }).click();
     /* bölüm ekle (sonda) → adı yerinde yazılır → kaydedilmedi (yayınlanmaz) → taslağı kaydet */
     await page.getByRole("combobox", { name: "Bölüm ekle", exact: true }).click();
     await page.getByRole("option", { name: /Not \/ yorum/ }).click();

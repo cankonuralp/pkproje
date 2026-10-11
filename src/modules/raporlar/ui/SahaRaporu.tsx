@@ -41,6 +41,7 @@ import { raporDuzeni, sabitEkipmanAlanlari } from "../../../format/duzen";
 import { degerlendir } from "../../../format/motor";
 import { doldurma, EKIPMAN_ALAN_ADI, KUNYE_ALAN_ADI, KUNYE_ALANLARI, KUNYE_EN_COK, type Cevaplar, type KunyeAlani } from "../../../format/tanim";
 import { gecerliKunye, kayitKunyesi, kilitliKunye, metotMetni } from "../../../format/kunye";
+import { formulUygula } from "../../../format/formul";
 import { ekipmanAlanlari, ekipmanAnahtari } from "../doldur";
 import { ayEkle, RAPOR_DURUM, type EkipmanBilgisi, type RaporDurumu, type RaporTarihleri } from "../sema";
 import { cevaplariTamamla } from "../ornek";
@@ -249,8 +250,10 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
     if (x === (kayit[a] ?? "")) delete k[a]; else k[a] = x;
     return { ...c, kunye: k };
   });
+  /* 495: formüllerin değeri (motorla aynı; kaydedilmez) */
+  const hesapli = useMemo(() => formulUygula(v.tanim, cevaplar), [v.tanim, cevaplar]);
   const bag: Baglam = {
-    v, c: cevaplar, yaz, d, oku, gecersiz, kaynak: (k) => kaynaklar[k], okumaKipi: denemede ? "deneme" : oku || yeni ? null : v.yz ? "oku" : "sakla", deneme: denemede, islem: { mesgul, baslat, yenile },
+    v, c: cevaplar, h: hesapli, yaz, d, oku, gecersiz, kaynak: (k) => kaynaklar[k], okumaKipi: denemede ? "deneme" : oku || yeni ? null : v.yz ? "oku" : "sakla", deneme: denemede, islem: { mesgul, baslat, yenile },
     ekipmanAlani: (a) => (a.ekipman ? metinSatiri(a.ekipman, a.ad, EN[a.ekipman], a.ekipman === "imal") : null),
     cihaz: (bolumId) => <CihazBolumu v={v} bolumId={bolumId} oku={oku || !!yeni || denemede} gecersiz={gecersiz} mesgul={mesgul} baslat={baslat} yenile={yenile} />,
     foto: (bolumId, madde) => (denemede
