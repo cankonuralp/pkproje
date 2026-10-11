@@ -69,6 +69,12 @@
 .sutun { flex-wrap: wrap; align-items: center; }
 .ogeTus { display: inline-flex; flex: none; gap: 0; margin-left: auto; opacity: .55; }
 .satir:hover .ogeTus, .etiket:hover .ogeTus, .sutun:hover .ogeTus, .ogeTus:focus-within { opacity: 1; }
+/* 495 düzeltmesi (deneme makinesi düşüşü — CI 8d8eea5, masaüstü ve tablet): belge tablosu sabit düzenli (belge.css table-layout: fixed), çok sütunlu
+   tabloda sütun dar — öğe tuşları sütundan taşıp komşu sütunun tuşlarının üstüne biniyordu. Üstüne gelince saydamlık kalktığından boyama sırası
+   değişiyor, basılan tuş komşununki oluyordu ("ayrıntılar" açılmıyor, odak yandaki "çıkar"da). Tuşlar sütunda alt alta sarar; üstüne gelinen /
+   odaktaki başlık öne çıkar. */
+.sutun > .ogeTus { flex: 0 1 auto; flex-wrap: wrap; min-width: 0; }
+.sutun:hover, .sutun:focus-within { position: relative; z-index: 1; }
 @media (pointer: coarse) { .ogeTus { opacity: 1; } }
 .metot { display: flex; flex-direction: column; gap: 2px; white-space: pre-line; }
 .foto { width: 160px; }

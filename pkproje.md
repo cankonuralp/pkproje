@@ -2405,6 +2405,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-12 (495 düzeltmesi): deneme makinesi masaüstü ve tablette düştü — format kurucuda çok sütunlu ölçüm tablosunun (linye, 15 sütun) yeni
+  sütununda "ayrıntılar" açılmadı. Neden (iz kaydı ve ekran karesinden): belge tablosu sabit düzenli, sütun dar; öğe tuşları sütundan taşıp
+  komşunun tuşlarının üstüne biniyor, üstüne gelince saydamlık kalktığından boyama sırası değişiyor ve basılan tuş komşununki oluyordu (gerçek
+  kullanıcıda da). Düzeltme: başlıktaki tuşlar sütunda alt alta sarar; üstüne gelinen / odaktaki başlık öne çıkar (kagit.module.css).
 - 2026-10-12 (495): **FORMÜL VE SERBEST METİN** (hata listesi 29 + 46 maketi onaylı; reisim 2026-10-11 29: *"isteyenin istediği gibi bir şey yapabileceği
   bir sistem"*; sunumdaki ölçüm: "yeni bir hesap gereken her rapor bugün kod işi"). **Formül:** sayı alanı, ölçüm tablosu sütunu ve test değeri
   öğenin ayrıntılarında formülle hesaplanır — adlar köşeli parantezle ([İlk kalınlık]), + − × ÷, parantez, yüzde, ondalık virgül; ada / işarete
