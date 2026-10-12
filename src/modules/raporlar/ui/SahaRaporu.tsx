@@ -181,7 +181,8 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
   /* 463 (reisim 2026-10-09, hata listesi 8: "her bölüm açık geliyor, her bölüm kapalı gelmeli"): bölümler KAPALI açılır; bu sekmede aynı raporda
      açılanlar yenilemede ve geri gelişte açık kalır (sessionStorage, rapor başına); "Tümünü aç / kapat"; eksik bulununca hepsi açılır */
   const acikAnahtar = `probata-rapor-acik:${v.id}`;
-  const [acikSet, setAcikSet] = useState<ReadonlySet<string>>(() => new Set());
+  /* 525: S.A.Y Chat'ten okunan öneri bekleyen bölüm açık gelir (kartı görünsün) */
+  const [acikSet, setAcikSet] = useState<ReadonlySet<string>>(() => new Set(v.oneriler.filter((o) => o.tur !== "bilgi").map((o) => o.bolum)));
   useEffect(() => {
     if (denemede) return;
     let l: string[] = [];
@@ -189,7 +190,7 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
       const s = sessionStorage.getItem(acikAnahtar);
       if (s) l = (JSON.parse(s) as unknown[]).filter((x): x is string => typeof x === "string").slice(0, 60);
     } catch { /* okunamazsa kapalı */ }
-    if (l.length) queueMicrotask(() => setAcikSet(new Set(l)));
+    if (l.length) queueMicrotask(() => setAcikSet((a) => new Set([...a, ...l])));
   }, [acikAnahtar, denemede]);
   /* 472: örnek raporda (kurucunun saha ekranı) bölümler gerçek ekran gibi kapalı gelir; kâğıtta eklenen maddeye ilk cevap, çıkarılan maddenin
      cevabı düşer (taslak her değiştiğinde) */

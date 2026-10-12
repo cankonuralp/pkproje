@@ -159,10 +159,12 @@ test("S.A.Y Chat: bekleyenler için rapor yaz — kod, koşullar, taslak, rapord
   await panel.getByRole("button", { name: /rapor taslağı oluştur/ }).click();
   const sonuc = panel.getByRole("status").filter({ hasText: "rapor taslağı oluştu" });
   await expect(sonuc).toBeVisible({ timeout: 90_000 });
+  await expect(sonuc).toContainText("değer öneri");   // okunacak fotoğraf yapay zekâyla okundu (taklit), öneri raporda bekliyor
   await sonuc.getByRole("link", { name: "Raporu aç" }).first().click();
   await expect(page).toHaveURL(/\/raporlar\/[0-9a-f-]{36}$/, { timeout: 30_000 });
   await hazir(page);
   await expect(page.getByText("S.A.Y Chat kaydından oluşturuldu.", { exact: false })).toBeVisible();
+  /* önerisi bekleyen bölüm açık gelir, kartı görünür */
   await expect(page.getByRole("region", { name: /fotoğraftan okunan/ }).first()).toBeVisible();
 });
 
