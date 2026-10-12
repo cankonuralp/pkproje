@@ -2405,6 +2405,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-12 (509): **506 + 507 + 508 YAYINDA** — main 996238b (göç yok; 82 göç), sağlık "tamam" (sürüm 996238b), duman **11/11**, son 1 saatte hata kaydı
+  yok. Deneme makinesi 996238b: 13/13 yeşil — saha-raporu (Onaya gönder: pencere yok, üstte uyarı görünür ve ekranda, odak ekranda, test değeri
+  kırmızı, cihaz bölümünde "Eksik", aşama Yeni), rapor-format (kurucunun saha denemesi), cevrimdisi (bağlantısızken eksik rapor kuyruğa girmez),
+  olcum-cihazlari (Zimmet → kart, teslim penceresi cihaz seçili açık, yenileyince açılmaz, Konum yüzü karta). ee170b0'ın koşusunda saha-raporu
+  cihaz bölümünü yanlış kimlikle arıyordu (#b-sabit-cihaz; kompresörün kendi bölümü #b-cihaz) — test başlıkla bulacak biçimde düzeltildi (f152872).
 - 2026-10-12 (508): **Ölçüm cihazında "Zimmet" tuşu** (reisim: *"bu ekranda personele atamayı kolaylaştırıcı bir şey yapmalıyız zimmet tuşu olsun,
   tıklayınca zimmetlerde bu cihazın kartı açılsın zimmetine ekleyelim personelin"*). Cihaz sayfasında Zimmetler'i gören kişiye **Zimmet** →
   /zimmetler/varlik/c/<cihaz>#teslim: cihazın zimmet kartı açılır, "Teslim et" penceresi cihaz seçili hazır gelir (teslim alan seçilip kaydedilir);
