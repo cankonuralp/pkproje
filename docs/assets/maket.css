@@ -981,8 +981,10 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 /* S.A.Y (Z2, 2026-10-02): düğme eylem çubuğunun solunda; panel masaüstü / tablette sağda yan pencere (üst çubuğun altında), telefonda tam ekran */
 /* BB6 (2026-10-03, reisim: "her yer de gözükecek … daha şık … daha yuvarlak daha ilgi çekici"): rapor çubuğundaki düğme kalktı; her sayfada sağ altta
    yuvarlak düğme (renkler token: vurgu → vurgu-2 geçişi, içte açık daire). Telefonda yalnız daire; altta yapışkan çubuk olan sayfada çubuğun üstünde. */
+/* 2026-10-13 (S.A.Y Chat): düğmeler sağ altta bir grupta — S.A.Y en sağda, plan içinde yanında S.A.Y Chat (maket-saychat.js); konum grubun */
+.a-fab-grup { position: fixed; right: 20px; bottom: 20px; z-index: 65; display: flex; flex-direction: row-reverse; align-items: center; gap: 12px; }
 .a-say-fab {
-  position: fixed; right: 20px; bottom: 20px; z-index: 65; display: inline-flex; align-items: center; gap: 10px; height: 56px; padding: 0 22px 0 8px;
+  order: 0; display: inline-flex; align-items: center; gap: 10px; height: 56px; padding: 0 22px 0 8px;
   border: 0; border-radius: 999px; background: linear-gradient(135deg, var(--vurgu-2), var(--vurgu)); color: var(--vurgu-uzeri);
   box-shadow: var(--golge-2); font: inherit; font-weight: 700; cursor: pointer; transition: transform .15s ease, box-shadow .15s ease;
 }
@@ -993,7 +995,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-say-fab-ikon .a-ikon, .a-say-avatar .a-ikon { width: 22px; height: 22px; }
 .a-say-fab-yazi { display: flex; flex-direction: column; align-items: flex-start; font-size: var(--boy-bolum); line-height: 1.1; letter-spacing: .02em; }
 .a-say-fab-yazi small { font-size: var(--boy-etiket); font-weight: 500; opacity: .85; letter-spacing: 0; }
-body:has(.a-rapor-eylem) .a-say-fab { bottom: 88px; }   /* rapor: sağ alttaki Kaydet / Onaya gönder ile çakışmasın */
+body:has(.a-rapor-eylem) .a-fab-grup { bottom: 88px; }   /* rapor: sağ alttaki Kaydet / Onaya gönder ile çakışmasın */
 @media (min-width: 768px) { body.a-say-var .a-icerik { padding-bottom: 96px; } }   /* sayfanın sonu düğmenin altında kalmasın */
 .a-say {
   position: fixed; right: 16px; top: calc(var(--ust-y) + 16px); bottom: 16px; z-index: 70; width: min(420px, calc(100vw - 32px));
@@ -1031,6 +1033,95 @@ body:has(.a-rapor-eylem) .a-say-fab { bottom: 88px; }   /* rapor: sağ alttaki K
 .a-say-yaz .a-girdi { flex: 1 1 auto; min-width: 0; }
 .a-say-gonder { flex: none; border: 1px solid var(--kenar-alan); }
 .a-say-not { margin: 0; color: var(--yazi2); font-size: var(--boy-etiket); }
+/* S.A.Y asistana ek (2026-10-13, ön model ekran 11): yazma kutusunun yanında ataç → Fotoğraf çek · Galeriden seç · Belge ekle; eklenenler kutunun
+   üstünde küçük görüntü / ad + boyut, × ile çıkar; gönderilen mesajda da adı görünür */
+.a-say-ek { position: relative; flex: none; }
+.a-say-ek-menu { position: absolute; left: 0; bottom: calc(100% + 6px); z-index: 2; min-width: 220px; padding: 6px; display: grid; gap: 2px;
+  background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-orta); box-shadow: var(--golge-2); }
+.a-say-ek-menu[hidden] { display: none; }
+.a-say-ek-oge { display: flex; align-items: center; gap: 8px; min-height: var(--tus-y); padding: 0 10px; border-radius: var(--r-kucuk); color: var(--yazi); cursor: pointer; }
+.a-say-ek-oge:hover, .a-say-ek-oge:focus-within { background: var(--zemin2); }
+.a-say-ek-oge small { margin-left: auto; color: var(--yazi2); font-size: var(--boy-etiket); }
+.a-say-ekler { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.a-say-ekler li { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; padding: 4px 4px 4px 8px; border: 1px solid var(--kenar); border-radius: var(--r-orta); background: var(--zemin2); font-size: var(--boy-etiket); }
+.a-say-ekler img { width: 32px; height: 32px; border-radius: var(--r-kucuk); object-fit: cover; }
+.a-say-ekler b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px; }
+.a-say-ekler small { color: var(--yazi2); }
+.a-say-mesaj .a-say-ekler { margin-bottom: 6px; }
+.a-say-ben .a-say-ekler li { background: transparent; border-color: currentColor; }
+
+/* ── S.A.Y CHAT (2026-10-13; maket-saychat.js, ön model docs/maket/say-chat-onmodel.html ekran 1–10): plan içinde S.A.Y'ın yanında düğme; panel
+   S.A.Y panelinin yerinde (.a-say), içi: kayıtlar, ekipman seçimi, yönerge + numaralı mesaj, okunacak fotoğraflar, rapor yaz ── */
+.a-sc-fab { order: 1; background: var(--kart); color: var(--yazi); border: 1px solid var(--kenar-alan); }
+.a-sc-fab .a-say-fab-ikon { background: var(--vurgu); color: var(--vurgu-uzeri); }
+.a-sc-goz { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 8px 16px; border-bottom: 1px solid var(--kenar); background: var(--zemin2); color: var(--yazi2); font-size: var(--boy-kucuk); }
+.a-sc-adim { margin: 0; font-size: var(--boy-govde); font-weight: 700; }
+.a-sc-adim:focus { outline: none; }
+.a-sc-ara { margin: 0; color: var(--yazi2); font-size: var(--boy-kucuk); font-weight: 600; }
+.a-sc-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.a-sc-kayit { display: grid; gap: 8px; padding: 10px 12px; border: 1px solid var(--kenar); border-radius: var(--r-orta); background: var(--kart); }
+.a-sc-kayit-bas { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; margin: 0; font-weight: 700; overflow-wrap: anywhere; }
+.a-sc-ozet { display: grid; gap: 2px; margin: 0; color: var(--yazi2); font-size: var(--boy-kucuk); overflow-wrap: anywhere; }
+.a-sc-ozet b { color: var(--yazi); font-weight: 600; }
+.a-sc-cipler { display: flex; flex-wrap: wrap; gap: 6px; }
+.a-sc-cip { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 0 10px; border-radius: var(--r-tam); background: var(--zemin2); color: var(--yazi2); font-size: var(--boy-etiket); font-weight: 600; }
+.a-sc-kayit-alt { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; color: var(--yazi2); font-size: var(--boy-etiket); }
+.a-sc-durum { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+.a-sc-durum-cihaz { color: var(--uyari-yazi); }
+.a-sc-durum-gitti { color: var(--onay-yazi); }
+.a-sc-fotolar { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.a-sc-foto { position: relative; display: grid; place-items: center; align-content: center; gap: 2px; width: 72px; height: 72px; overflow: hidden;
+  border: 1px solid var(--kenar); border-radius: var(--r-orta); background: var(--zemin2); color: var(--yazi2); }
+.a-sc-foto img { width: 100%; height: 100%; object-fit: cover; }
+.a-sc-foto-ad { max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--boy-etiket); }
+.a-sc-foto-sil { position: absolute; top: 2px; right: 2px; display: grid; place-items: center; width: 24px; height: 24px; padding: 0;
+  border: 1px solid var(--kenar); border-radius: var(--r-tam); background: var(--kart); color: var(--yazi); cursor: pointer; }
+.a-sc-ekle { display: inline-grid; place-items: center; align-content: center; gap: 2px; width: 72px; height: 72px; border: 1px dashed var(--kenar-alan);
+  border-radius: var(--r-orta); color: var(--yazi2); font-size: var(--boy-etiket); font-weight: 600; cursor: pointer; }
+.a-sc-ekle:hover { background: var(--zemin2); color: var(--yazi); }
+.a-sc-ekipman { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 10px 12px;
+  border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); overflow-wrap: anywhere; }
+.a-sc-genis { width: 100%; justify-content: center; }
+.a-sc-yonerge { display: grid; gap: 8px; padding: 10px 12px; border-radius: var(--r-orta); background: var(--zemin2); }
+.a-sc-yonerge ol { display: grid; gap: 2px; margin: 0; padding-left: 22px; font-size: var(--boy-kucuk); }
+.a-sc-yonerge .a-tus { justify-self: start; }
+.a-sc-etiket-durum { display: flex; align-items: center; gap: 6px; margin: 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.a-sc-mesaj { list-style: none; margin: 0; padding: 0; border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); }
+.a-sc-mesaj li { display: flex; align-items: center; gap: 8px; padding: 0 8px; border-top: 1px solid var(--kenar); }
+.a-sc-mesaj li:first-child { border-top: 0; }
+.a-sc-no { flex: none; width: 22px; color: var(--yazi3); font-size: var(--boy-kucuk); font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
+.a-sc-mesaj .a-girdi { flex: 1 1 auto; min-width: 0; padding: 0 4px; border-color: transparent; background: transparent; }
+.a-sc-dagilim { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 12px; color: var(--yazi2); font-size: var(--boy-etiket); }
+.a-sc-dagilim b { color: var(--yazi); }
+.a-sc-tamam { color: var(--onay-yazi); font-weight: 700; }
+.a-sc-okuma { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.a-sc-okuma > li { display: grid; gap: 6px; padding: 8px 10px; border: 1px solid var(--kenar); border-radius: var(--r-orta); background: var(--kart); }
+.a-sc-okuma-bas { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; }
+.a-sc-tuslar { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
+.a-sc-yeni { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.a-sc-secim { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 4px; max-height: 50vh; max-height: 50dvh; overflow-y: auto; }
+.a-sc-secenek { width: 100%; justify-content: space-between; height: auto; min-height: var(--tus-y); padding: 6px 10px; text-align: left; white-space: normal;
+  background: var(--kart); color: var(--yazi); border: 1px solid var(--kenar); font-weight: 400; }
+.a-sc-secenek:hover { background: var(--zemin2); }
+.a-sc-secenek small { display: block; color: var(--yazi2); font-size: var(--boy-etiket); }
+/* Ekipman türleri › S.A.Y Chat ayarları (ekran 12): solda satırlar ve okunacak başlıklar, sağda "Telefonda böyle görünür"; dar ekranda alt alta */
+.a-sca-govde { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 300px); gap: 16px 24px; align-items: start; }
+.a-sca-sol { display: grid; gap: 10px; min-width: 0; }
+.a-sca-sag { position: sticky; top: calc(var(--ust-y) + 12px); display: grid; gap: 8px; padding: 12px; border: 1px solid var(--kenar); border-radius: calc(var(--r-buyuk) * 2); background: var(--kart); }
+.a-sca-baslik { margin: 6px 0 0; font-size: var(--boy-govde); font-weight: 700; }
+.a-sca-satirlar { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.a-sca-satir { display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 0.9fr) auto; align-items: end; gap: 8px 10px; padding: 8px 10px;
+  border: 1px solid var(--kenar); border-radius: var(--r-orta); background: var(--kart); }
+.a-sca-satir > .a-sc-no { align-self: center; }
+.a-sca-satir .a-alan-grup { min-width: 0; margin: 0; }
+.a-sca-tuslar { display: flex; gap: 2px; }
+.a-sca-oklar { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.a-sca-ok { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 6px 10px; border: 1px solid var(--kenar); border-radius: var(--r-orta); background: var(--kart); }
+.a-sca-ok > span { flex: 1 1 200px; min-width: 0; }
+.a-sca-ok-ekle { max-width: 360px; }
+.a-sca-onizle-ok { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: var(--boy-kucuk); }
+.a-sca-onizle-ok li { display: flex; align-items: center; gap: 6px; }
+.a-sca-alt { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--kenar); }
 .a-tus-sil { color: var(--hata-yazi); }
 /* günlük süre çubuğu (2026-09-30, 212): normal · mesai */
 .a-rapor-mesai { margin: 12px 0 0; } .a-rapor-mesai:empty { display: none; }
@@ -1285,6 +1376,8 @@ body:has(.a-rapor-eylem) .a-say-fab { bottom: 88px; }   /* rapor: sağ alttaki K
 
 /* orta + dar (< 1280): yan menü çekmece, üst çubukta ☰ + işaret */
 @media (max-width: 1279.98px) {
+  .a-sca-govde { grid-template-columns: minmax(0, 1fr); }
+  .a-sca-sag { position: static; }
   .a-kabuk { grid-template-columns: minmax(0, 1fr); }
   .a-cubuk {
     position: fixed; left: 0; top: 0; bottom: 0; z-index: 60; width: min(86vw, 300px);
@@ -1308,9 +1401,15 @@ body:has(.a-rapor-eylem) .a-say-fab { bottom: 88px; }   /* rapor: sağ alttaki K
 /* dar (< 768): arama + Süzgeç üstte; çipler yana kayar; seçiciler + Temizle levhada; pencere alttan levha */
 @media (max-width: 767.98px) {
   /* BB6: telefonda S.A.Y yalnız daire; altta yapışkan çubuk varsa üstünde */
-  .a-say-fab { right: 16px; bottom: 16px; padding: 8px; }
+  .a-fab-grup { right: 16px; bottom: 16px; }
+  .a-say-fab { padding: 8px; }
   .a-say-fab-yazi { display: none; }
-  body:has(#a-icerik .a-eylem-cubugu-alt, #a-icerik .a-form-eylem) .a-say-fab { bottom: calc(var(--tus-y) + 32px); }
+  body:has(#a-icerik .a-eylem-cubugu-alt, #a-icerik .a-form-eylem) .a-fab-grup { bottom: calc(var(--tus-y) + 32px); }
+  /* S.A.Y Chat (2026-10-13): telefonda panel tam ekran (.a-say); alttaki tuşlar eşit genişlikte yan yana */
+  .a-sc-tuslar > .a-tus { flex: 1 1 0; }
+  .a-sca-satir { grid-template-columns: auto minmax(0, 1fr); }
+  .a-sca-satir > .a-alan-grup { grid-column: 2; }
+  .a-sca-satir > .a-sca-tuslar { grid-column: 2; justify-content: flex-end; }
   .a-kullanici-yazi { display: none; }
   /* ⛔ 2026-09-25 (320 px): müşteri panelinde "Müşteri paneli" tek satırda kalınca kullanıcı simgesi 21 px taşıyordu */
   .a-ust-panel { min-width: 0; white-space: normal; line-height: 1.2; }

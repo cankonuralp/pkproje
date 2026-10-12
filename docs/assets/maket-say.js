@@ -12,11 +12,31 @@
    aynı: firma yapay zekâyı açtıysa görünür; öneri verir, kendisi yazmaz.
    Geçmiş kalıcı (2026-10-03, reisim: "her yerden tek boy yönetilir sayfa değiince vs geçmiş silinmez geçmiş olayı önemli"): tek S.A.Y kabukta; sohbet
    ve panelin açık / kapalı hâli sayfa değişince, yenilenince kalır (makette tarayıcı kaydı; uygulamada kişinin hesabında, yalnız kendisi görür).
-   Her mesaj hangi sayfada / raporda sorulduğunu taşır; rapor önerisi yalnız o rapor açıkken uygulanır. "Sohbeti temizle" geçmişi siler. */
+   Her mesaj hangi sayfada / raporda sorulduğunu taşır; rapor önerisi yalnız o rapor açıkken uygulanır. "Sohbeti temizle" geçmişi siler.
+   2026-10-13 (ön model ekran 11, reisim'le bulut oturumu): soruya FOTOĞRAF ve BELGE eklenir — yazma kutusunun yanında ataç → Fotoğraf çek ·
+   Galeriden seç · Belge ekle (PDF, Word); eklenenler gönderilmeden önce kutunun üstünde küçük görüntü / ad + boyut, × ile çıkar; gönderilen mesajda
+   adı görünür. Ekler yapay zekâya gider, kotadan harcar, en çok 4 MB; tür içerikten denetlenir (uygulamada). Öneri: dosya saklanmaz, yalnız o soruda
+   okunur; geçmişte adı kalır. Düğme plan içinde S.A.Y Chat'in yanında (ortak grup .a-fab-grup); iki panel aynı anda açılmaz. */
 (function () {
   "use strict";
   var $ = MK.$, kacis = MK.kacis, ikon = MK.ikon, X = MK.eylem, B = function () { return MK.sayBag; };
-  var S = { acik: false, mesaj: [], n: 0 };   /* mesaj: { kim: "ben" | "say", html, yer, rapor, eksik?, oneri?: { id, deger, ad, durum } } */
+  var S = { acik: false, mesaj: [], n: 0, ek: [], menu: false };   /* mesaj: { kim: "ben" | "say", html, yer, rapor, eksik?, oneri?: { id, deger, ad, durum }, ek?: [{ ad, boyut, tur }] } */
+  var EK_EN_COK = 4 * 1024 * 1024, EK_URL = {}, ekSira = 0;   /* ekin görüntüsü yalnız bu oturumda (dosya saklanmaz) */
+  var boyutYaz = function (b) { return b >= 1048576 ? String(Math.round(b / 104857.6) / 10).replace(".", ",") + " MB" : Math.max(1, Math.round(b / 1024)) + " KB"; };
+  var ekTuru = function (f) {
+    var ad = (f.name || "").toLocaleLowerCase("tr");
+    if (/^image\/(jpeg|png|webp|heic|heif)$/.test(f.type || "") || /\.(jpe?g|png|webp|heic)$/.test(ad)) return "foto";
+    if (f.type === "application/pdf" || /\.pdf$/.test(ad)) return "pdf";
+    if (/officedocument\.wordprocessingml|msword/.test(f.type || "") || /\.docx?$/.test(ad)) return "word";
+    return null;
+  };
+  var ekHtml = function (l, sil) {
+    return '<ul class="a-say-ekler">' + l.map(function (e, i) {
+      var u = EK_URL[e.id];
+      return "<li>" + (u && e.tur === "foto" ? '<img src="' + u + '" alt="">' : ikon(e.tur === "foto" ? "image" : "file-text", "a-ikon-kucuk")) + "<b title=\"" + kacis(e.ad) + "\">" + kacis(e.ad) + "</b><small>" +
+        (e.tur === "pdf" ? "PDF" : e.tur === "word" ? "Word" : "Fotoğraf") + " · " + boyutYaz(e.boyut) + "</small>" +
+        (sil ? '<button class="a-ikon-tus" type="button" data-eylem="say-ek-sil" data-i="' + i + '" aria-label="' + kacis(e.ad) + ' eki çıkar" title="Çıkar">' + ikon("x", "a-ikon-kucuk") + "</button>" : "") + "</li>"; }).join("") + "</ul>";
+  };
   var ilkAcik = false;
   MK.kalici("say", function () { return { mesaj: S.mesaj, acik: S.acik }; }, function (d) { if (d && Array.isArray(d.mesaj)) S.mesaj = d.mesaj; ilkAcik = !!(d && d.acik); });
   var yerAd = function () {
@@ -59,11 +79,13 @@
   var sayac = function () { MV.yzKullan(MK.BEN, "mesaj"); };   /* bu ayki kullanım: mesaj + yaklaşık harcama */
 
   /* yuvarlak düğme (BB6): sağ altta, her sayfada; panel açıkken gizli */
+  var grup = document.querySelector(".a-fab-grup");   /* ortak düğme grubu (plan içinde S.A.Y Chat de burada) */
+  if (!grup) { grup = document.createElement("div"); grup.className = "a-fab-grup"; grup.setAttribute("data-katman", ""); document.body.appendChild(grup); }
   var fab = document.createElement("button");
   fab.type = "button"; fab.className = "a-say-fab"; fab.id = "a-say-fab"; fab.hidden = true; fab.setAttribute("data-eylem", "say-ac"); fab.setAttribute("data-katman", "");
   fab.setAttribute("aria-haspopup", "dialog"); fab.setAttribute("aria-controls", "a-say"); fab.setAttribute("aria-expanded", "false"); fab.setAttribute("aria-label", "S.A.Y — saha asistanı");
   fab.innerHTML = '<span class="a-say-fab-ikon">' + ikon("sparkles") + '</span><span class="a-say-fab-yazi">S.A.Y<small>Asistan</small></span>';
-  document.body.appendChild(fab);
+  grup.appendChild(fab);
   function fabGuncelle() { fab.hidden = !MV.yz().acik || S.acik; fab.setAttribute("aria-expanded", String(S.acik)); document.body.classList.toggle("a-say-var", MV.yz().acik); }
   /* panel kabukta bir kez kurulur (rapor yeniden çizilince silinmesin) */
   var kap = document.createElement("aside");
@@ -73,7 +95,7 @@
 
   function mesajHtml(m, i, l) {
     var yer = m.yer && (i === 0 || l[i - 1].yer !== m.yer) ? '<li class="a-say-yer">' + kacis(m.yer) + "</li>" : "";   /* yer değişince ayraç */
-    if (m.kim === "ben") return yer + '<li class="a-say-mesaj a-say-ben">' + kacis(m.metin) + "</li>";
+    if (m.kim === "ben") return yer + '<li class="a-say-mesaj a-say-ben">' + (m.ek && m.ek.length ? ekHtml(m.ek, false) : "") + kacis(m.metin) + "</li>";
     var o = m.oneri, burada = !m.rapor || m.rapor === S.rapor;
     var html = burada ? m.html : m.html.replace(/<button[^>]*data-eylem="say-git"[\s\S]*?<\/button>/g, "");   /* Git yalnız o rapor açıkken */
     return yer + '<li class="a-say-mesaj a-say-o" data-m="' + i + '">' + html + (!o ? "" : '<div class="a-say-oneri" id="a-say-o' + i + '"><p class="a-say-oneri-bas">' + ikon("pencil", "a-ikon-kucuk") + "Öneri</p>" +
@@ -100,20 +122,28 @@
         '<ol class="a-say-liste" aria-live="polite">' + S.mesaj.map(mesajHtml).join("") + "</ol></div>" +
       '<div class="a-say-alt-kisim">' +
         '<div class="a-say-hizli">' + hizli().map(function (x) { return '<button class="a-cip" type="button" data-eylem="say-hizli" data-k="' + x[0] + '"' + (anah ? "" : " disabled") + ">" + x[1] + "</button>"; }).join("") + "</div>" +
-        '<div class="a-say-yaz"><label class="a-gizli" for="a-say-girdi">S.A.Y\'a sor</label><input class="a-girdi" id="a-say-girdi" autocomplete="off" maxlength="500" placeholder="' + (rp ? "Bu rapor hakkında sorun" : "S.A.Y'a sorun") + '"' + (anah ? "" : " disabled") + ">" +
+        (S.ek.length ? ekHtml(S.ek, true) : "") +
+        '<div class="a-say-yaz"><div class="a-say-ek"><button class="a-ikon-tus a-say-gonder" type="button" data-eylem="say-ek-menu" aria-haspopup="true" aria-expanded="' + S.menu + '" aria-controls="a-say-ek-menu" aria-label="Ek ekle: fotoğraf ya da belge" title="Ek ekle"' + (anah ? "" : " disabled") + ">" + ikon("paperclip") + "</button>" +
+          '<div class="a-say-ek-menu" id="a-say-ek-menu"' + (S.menu && anah ? "" : " hidden") + ">" +
+            '<label class="a-say-ek-oge"><input type="file" class="a-gizli" accept="image/*" capture="environment" data-say-ek="foto">' + ikon("camera", "a-ikon-kucuk") + "Fotoğraf çek</label>" +
+            '<label class="a-say-ek-oge"><input type="file" class="a-gizli" accept="image/*" data-say-ek="galeri">' + ikon("image", "a-ikon-kucuk") + "Galeriden seç</label>" +
+            '<label class="a-say-ek-oge"><input type="file" class="a-gizli" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" data-say-ek="belge">' + ikon("file-text", "a-ikon-kucuk") + "Belge ekle<small>PDF, Word</small></label></div></div>" +
+          '<label class="a-gizli" for="a-say-girdi">S.A.Y\'a sor</label><input class="a-girdi" id="a-say-girdi" autocomplete="off" maxlength="500" placeholder="' + (rp ? "Bu rapor hakkında sorun" : "S.A.Y'a sorun") + '"' + (anah ? "" : " disabled") + ">" +
           '<button class="a-ikon-tus a-say-gonder" type="button" data-eylem="say-gonder" aria-label="Gönder"' + (anah ? "" : " disabled") + ">" + ikon("send") + "</button></div>" +
-        '<p class="a-say-not">Müşteri adı, adres ve kişi adları gönderilmez. Sohbet geçmişiniz saklanır, yalnız siz görürsünüz; sayfa değişince silinmez.</p></div>';
+        '<p class="a-say-not">Ekler yapay zekâya gider, kotadan harcar · en çok 4 MB; dosya saklanmaz, sohbette adı kalır. Müşteri adı, adres ve kişi adları gönderilmez. Sohbet geçmişiniz saklanır, yalnız siz görürsünüz; sayfa değişince silinmez.</p></div>';
     var g = $("a-say-govde"); g.scrollTop = g.scrollHeight;
   }
   function ac(odaksiz) {
+    if (MK.sayChatKapat) MK.sayChatKapat();   /* S.A.Y Chat açıksa kapanır: iki panel aynı yerde */
     S.acik = true; kap.hidden = false; ciz(); document.body.classList.add("a-say-acik"); fabGuncelle();
     if (odaksiz) return;
     var g = $("a-say-girdi"); (g && !g.disabled ? g : kap.querySelector("[data-eylem=say-kapat]")).focus();
   }
   function kapat() {
-    S.acik = false; kap.hidden = true; document.body.classList.remove("a-say-acik"); fabGuncelle(); fab.focus();
+    S.acik = false; S.menu = false; kap.hidden = true; document.body.classList.remove("a-say-acik"); fabGuncelle(); fab.focus();
   }
   MK.sayAcik = function () { return S.acik; };
+  MK.sayKapat = function (sessiz) { if (!S.acik) return; S.acik = false; S.menu = false; kap.hidden = true; document.body.classList.remove("a-say-acik"); fabGuncelle(); if (!sessiz) fab.focus(); };
   /* rapor her çizilişte: düzenlenen rapor rapor bağlamıdır, öteki (onaydaki) raporda S.A.Y genel kalır; sohbet düşmez (geçmiş kalıcı);
      yapay zekâ kapanınca panel ve düğme kalkar */
   MK.sayGuncelle = function (r, oku) {
@@ -125,6 +155,8 @@
   };
   /* yapay zekâ başka sayfada (Firma ayarları) açılıp kapanabilir: her tıklamadan sonra düğme güncellenir */
   document.addEventListener("click", function () { setTimeout(function () { if (!MV.yz().acik && S.acik) kapat(); else fabGuncelle(); }, 0); });
+  /* ek menüsü dışarı tıklanınca kapanır */
+  document.addEventListener("click", function (e) { if (S.menu && !e.target.closest(".a-say-ek")) { S.menu = false; var m = $("a-say-ek-menu"), t = kap.querySelector('[data-eylem="say-ek-menu"]'); if (m) m.hidden = true; if (t) t.setAttribute("aria-expanded", "false"); } });
   fabGuncelle();
   if (MK.sayBag) { var r0 = MK.sayBag.rapor(); MK.sayGuncelle(r0, !r0 || r0.durum !== "taslak"); }   /* rapor ekranı: betik kabuktan sonra yüklenir */
   if (ilkAcik && MV.yz().acik) ac(true);   /* önceki sayfada açık bırakılan panel açık gelir (odak çalınmaz) */
@@ -161,8 +193,10 @@
     return [{ html: "<p>Makette serbest soru cevaplanmaz. Uygulamada S.A.Y bu raporun alanlarına, türün kriterlerine ve firmanın dökümanlarına bakarak cevaplar.</p>" }];
   }
   function sor(metin, k) {
-    var yer = yerAd(), rp = raporda() ? S.rapor : null;
-    S.mesaj.push({ kim: "ben", metin: metin, yer: yer, rapor: rp }); sayac();
+    var yer = yerAd(), rp = raporda() ? S.rapor : null, ek = S.ek.map(function (e) { return { id: e.id, ad: e.ad, boyut: e.boyut, tur: e.tur }; });
+    S.mesaj.push({ kim: "ben", metin: metin, yer: yer, rapor: rp, ek: ek.length ? ek : undefined }); sayac(); S.ek = []; S.menu = false;
+    if (ek.length) S.mesaj.push({ kim: "say", html: "<p>" + (ek.length === 1 ? "Eki" : ek.length + " eki") + " aldım. Makette ek okunmaz; uygulamada S.A.Y fotoğrafı ve belgeyi okuyup (firmanın yapay zekâ kotasından) sorunuza ona göre cevap verir. Dosya saklanmaz, sohbette yalnız adı kalır.</p>", yer: yer, rapor: rp });
+    if (!metin) { ciz(); return; }
     cevap(k).forEach(function (m) { S.mesaj.push({ kim: "say", html: m.html, yer: yer, rapor: rp, eksik: m.eksik || null, oneri: m.oneri ? Object.assign({ durum: "" }, m.oneri) : null }); });
     ciz();
   }
@@ -170,8 +204,19 @@
   X["say-ac"] = function () { if (S.acik) kapat(); else ac(); };
   X["say-kapat"] = kapat;
   X["say-hizli"] = function (el) { var k = el.dataset.k; sor(HIZLI.concat(GENEL).filter(function (x) { return x[0] === k; })[0][1], k); var f = kap.querySelector('[data-eylem="say-hizli"][data-k="' + k + '"]'); if (f) f.focus(); };
+  X["say-ek-menu"] = function () { S.menu = !S.menu; var m = $("a-say-ek-menu"), t = kap.querySelector('[data-eylem="say-ek-menu"]'); if (m) m.hidden = !S.menu; if (t) t.setAttribute("aria-expanded", String(S.menu)); if (S.menu && m) { var i = m.querySelector("input"); if (i) i.focus(); } };
+  X["say-ek-sil"] = function (el) { var e = S.ek.splice(+el.dataset.i, 1)[0]; ciz(); var g = $("a-say-girdi"); if (g) g.focus(); if (e) MK.bildir(e.ad + " çıkarıldı."); };
+  kap.addEventListener("change", function (e) {
+    var t = e.target; if (!t.matches || !t.matches("input[type=file][data-say-ek]")) return;
+    var f = t.files && t.files[0]; t.value = ""; S.menu = false; if (!f) { ciz(); return; }
+    var tur = ekTuru(f);
+    if (!tur) { ciz(); MK.bildir("Yalnız fotoğraf, PDF ya da Word eklenir."); return; }
+    if (f.size > EK_EN_COK) { ciz(); MK.bildir(f.name + " " + boyutYaz(f.size) + ": ek en çok 4 MB olabilir."); return; }
+    var id = "ek" + (++ekSira); if (tur === "foto") { try { EK_URL[id] = URL.createObjectURL(f); } catch (h) { /* görüntü yok */ } }
+    S.ek.push({ id: id, ad: f.name, boyut: f.size, tur: tur }); ciz(); var g = $("a-say-girdi"); if (g) g.focus(); MK.bildir(f.name + " eklendi; sorunuzla birlikte gider.");
+  });
   X["say-gonder"] = function () {
-    var g = $("a-say-girdi"), v = (g.value || "").trim(); if (!v) { g.focus(); return; }
+    var g = $("a-say-girdi"), v = (g.value || "").trim(); if (!v && !S.ek.length) { g.focus(); return; }
     var k = raporda() && /eksik/i.test(v) ? "eksik" : raporda() && /sonuç|kanaat/i.test(v) ? "sonuc" : /bekle|işim|görev/i.test(v) ? "bekleyen" : /sayfa|ne yap/i.test(v) ? "sayfa" : "serbest";
     sor(v, k); $("a-say-girdi").focus();
   };
@@ -190,6 +235,7 @@
     o.durum = "vazgecildi"; ciz(); var d = kap.querySelector("#a-say-o" + i + " .a-say-oneri-durum"); if (d) d.focus();
   };
   kap.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && S.menu) { e.stopPropagation(); S.menu = false; ciz(); var a = kap.querySelector('[data-eylem="say-ek-menu"]'); if (a) a.focus(); return; }
     if (e.key === "Escape") { e.stopPropagation(); kapat(); }
     else if (e.key === "Enter" && e.target.id === "a-say-girdi") { e.preventDefault(); X["say-gonder"](); }
   });

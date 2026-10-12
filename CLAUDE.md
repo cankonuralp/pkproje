@@ -371,6 +371,7 @@ pkproje/
                             gevşetme yalnız yerel adreste — src/proxy.ts upgrade-insecure-requests, src/app/(gelistirme)/vitrin-acik.ts (kilit e2e-yayin.test)
   docs/                     maket + sunum (Pages sitesinin kökü); maketlerin ortak kabuğu assets/maket-ortak.js, ortak uydurma
                             veri assets/maket-veri.js, ölçüm sonuçları assets/olcum/<maket>.json (2026-09-24)
+                            · 521 S.A.Y Chat maketi assets/maket-saychat.js (plan içi; ön model maket/say-chat-onmodel.html) — ONAY BEKLİYOR
   data/                     yerel veritabanı + dosya deposu (git dışı)
 ```
 

@@ -142,6 +142,8 @@
       if (kay.gonderildi) { r.gonderildi = kay.gonderildi; if (!r.bitEl) r.bit = kay.gonderildi; }
       r.durum = kay.durum === "geri" ? "taslak" : DURUM[kay.durum] ? kay.durum : r.durum;
       if (r.durum === "taslak") { r.gonderildi = kay.gonderildi || null; if (kay.geri) r.geri = kay.geri; }
+      /* S.A.Y Chat (2026-10-13): sohbet kaydından açılan taslak — ilk açılışta bir kez (sonra raporun kendi kaydı) */
+      if (kay.chat && !KAYIT[r.no] && r.durum === "taslak" && !r.chat) chatUygula(r, kay.chat);
     }
     return (R[an] = r);
   }
@@ -542,7 +544,9 @@
         i0 += g[1].length; return h; }).join("")
         : r.kriter.map(function (x, i) { return kriterHtml(r, oku, i); }).join("")),
       '<span class="a-sayac" id="r-kriter-say"><b>' + cevaplanan + "</b> / " + r.kriter.length + " madde</span>" + (oku ? "" : topluMenu(0, r.kriter.length, "", true)));
-    var testlerHtml = '<div class="a-form">' + MV.testler(t).map(function (x, i) {
+    var testlerHtml = (!oku && r.testOneri && r.testOneri.length ? oneriKart({ id: "r-test-oneri", baslik: "Fotoğraftan okunan test değerleri (S.A.Y Chat)", uygula: "test-oneri-uygula", vazgec: "test-oneri-vazgec",
+        satirlar: r.testOneri.map(function (x) { return { ad: x.ad, deger: x.v, dusuk: x.dusuk, tek: { eylem: "test-oneri-tek", veri: { i: x.i } } }; }) }) : "") +
+      '<div class="a-form">' + MV.testler(t).map(function (x, i) {
       var s = testSonuc(x, r.test[i]);
       return MK.alan({ id: "r-t" + i, etiket: kacis(x.ad) + (x.birim ? " (" + x.birim + ")" : ""), zorunlu: !oku && testZorunlu(x), hata: "",
         girdi: MK.girdi({ id: "r-t" + i, alan: "t" + i, deger: r.test[i], sinif: "a-girdi-sicil" + (oku ? " a-girdi-oku" : ""), ek: (x.metin ? ' maxlength="20"' : ' inputmode="decimal" maxlength="10"') + (oku ? " readonly" : "") + (s === false || uyar(r, testZorunlu(x) && !testDolu(x, r.test[i])) ? ' aria-invalid="true"' : "") }) });
@@ -595,6 +599,7 @@
           "<span>Bu rapor eski format sürümüyle açıldı (" + kacis(r.sablon) + "); güncel sürüm " + kacis(t.sablon) + ".</span>" +
           MK.tus({ eylem: "format-guncelle", ad: "Formatı güncelle", ikon: "refresh-cw", sinif: "a-tus-ikincil a-serit-tus" }) + "</div>" : "") +
         (r.kopya && r.durum === "taslak" ? MK.serit("bilgi", "copy", "Bilgiler " + '<span class="a-rapor-no">' + r.kopya + "</span> raporundan kopyalandı; test değerleri, fotoğraflar ve sonuç bu ekipman için girilir.") : "") +
+        (r.chat && r.durum === "taslak" ? MK.serit("bilgi", "message-square-text", chatSerit(r)) : "") +
         /* meslek uyarısı (V4; §3.2 öneri 2c → karar): engel değil */
         (!MV.meslekYetkili(r.kisi, t) ? MK.serit("uyari", "triangle-alert", "Mesleğiniz (" + kacis(MV.meslekAd(p)) + ") " + kacis(t.ad).toLocaleLowerCase("tr") + " için yetkili meslekler arasında değil. Rapor yazılabilir; teknik yönetici onayda görür.") : "") +
         /* ekipman ataması (L4, 2026-09-30): açık raporda, yazan bu türe atanmamışsa uyarı, engel değil; meslek uyarısı varsa o yeter */
@@ -996,11 +1001,43 @@
   };
   X["sigorta-oku"] = function () {
     var r = aktif(); if (!okuyabilir(r)) return;
-    r.pano = true;
-    r.sigorta = SIGORTA.map(function (s) { return { no: s[0], devre: s[1], tip: s[2], akim: s[3], kutup: s[4], rcd: s[5], icu: s[4] > 1 ? "10" : "6", faz: "", npen: "", pe: "", ib: "", iz: "", id: "", td: "", guven: s[6] || "yuksek", durum: "oneri" }; });
+    sigortaOneri(r);
     ciz(); var t = document.querySelector('[data-eylem="sigorta-oku"]'); if (t) t.focus();
     MK.bildir("Pano fotoğrafından " + r.sigorta.length + " sigorta okundu; öneriler onayınızı bekliyor.");
   };
+  /* ── S.A.Y CHAT'TEN AÇILAN TASLAK (2026-10-13; maket-saychat.js "Bekleyenler için rapor yaz"): mesajın kuralla dağıtılan alanları (ekipman
+     bilgileri, formatın ekipman detayları, test değerleri) ve not → uzman yorumu yazılır; ekipman fotoğrafları rapora geçer; okunacak fotoğraflar
+     yapay zekâyla okunduysa değerler o bölümde ÖNERİ olarak bekler (pano sigortaları, test değerleri) — denetçi onaylar. Etiket fotoğrafı rapora
+     konmaz. Makette potansiyel dengeleme, zemin izolasyonu ve ölçüm noktası okumaları önerisiz gösterilir (şeritte adı yazar). */
+  function chatUygula(r, c) {
+    Object.keys(c.ekipman || {}).forEach(function (k) { if (["marka", "model", "seri", "imal", "konum", "amac"].indexOf(k) >= 0) r[k] = c.ekipman[k]; });
+    Object.keys(c.detay || {}).forEach(function (k) { if (r.detay) r.detay[k] = c.detay[k]; });
+    Object.keys(c.test || {}).forEach(function (i) { if (r.test[+i] !== undefined) r.test[+i] = c.test[i]; });
+    if (c.yorum) r.notlar = c.yorum;
+    r.foto = (r.foto || 0) + (c.foto || []).length;
+    r.chat = { okunacak: c.okunacak || [], ad: c.basliklar || {}, yz: !!c.yz, foto: (c.foto || []).length };
+    if (!c.yz) return;
+    if ((c.okunacak || []).indexOf("linye") >= 0 && sigortali(r)) sigortaOneri(r);
+    if ((c.okunacak || []).indexOf("test") >= 0) r.testOneri = MV.testler(r.t).map(function (x, i) { return { i: i, ad: x.ad + (x.birim ? " (" + x.birim + ")" : ""), v: String(x.ornek || ""), dusuk: i === 1 }; })
+      .filter(function (x) { return x.v && !String(r.test[x.i] || "").trim(); });
+  }
+  function chatSerit(r) {
+    var c = r.chat, ad = c.okunacak.map(function (k) { return c.ad[k] || k; }), oneri = c.okunacak.filter(function (k) { return k === "linye" || k === "test"; }).map(function (k) { return c.ad[k] || k; });
+    var diger = c.okunacak.filter(function (k) { return k !== "linye" && k !== "test"; }).map(function (k) { return c.ad[k] || k; });
+    return "<b>S.A.Y Chat kaydından oluşturuldu.</b> Ekipman bilgileri ve not mesajdan geldi" + (c.foto ? ", " + c.foto + " ekipman fotoğrafı rapora geçti" : "") + "." +
+      (!ad.length ? "" : c.yz ? " Yapay zekâ okudu: " + kacis(ad.join(", ")) + (oneri.length ? " — değerler o bölümlerde öneri olarak bekliyor, onaylayın." : ".") + (diger.length ? " (Makette " + kacis(diger.join(", ")) + " önerisi gösterilmez.)" : "")
+        : " Okunacak fotoğraflar (" + kacis(ad.join(", ")) + ") raporda okuma fotoğrafı olarak saklandı; yapay zekâ açılınca okunur.");
+  }
+  function sigortaOneri(r) {
+    r.pano = true;
+    r.sigorta = SIGORTA.map(function (s) { return { no: s[0], devre: s[1], tip: s[2], akim: s[3], kutup: s[4], rcd: s[5], icu: s[4] > 1 ? "10" : "6", faz: "", npen: "", pe: "", ib: "", iz: "", id: "", td: "", guven: s[6] || "yuksek", durum: "oneri" }; });
+  }
+  /* test değerleri önerisi (S.A.Y Chat'in okunan fotoğrafından): toplu "Önerileri uygula", emin olunmayan tek tek */
+  var testOneriYaz = function (r, l) { l.forEach(function (x) { r.test[x.i] = x.v; }); r.testOneri = r.testOneri.filter(function (x) { return l.indexOf(x) < 0; }); if (!r.testOneri.length) r.testOneri = null; degisti(r); };
+  X["test-oneri-uygula"] = function () { var r = aktif(), l = r.testOneri.filter(function (x) { return !x.dusuk; }); testOneriYaz(r, l); ciz(); odakla(r.testOneri ? '#r-test-oneri [data-eylem="test-oneri-tek"]' : "#r-t0");
+    MK.bildir(l.length + " test değeri rapora yazıldı." + (r.testOneri ? " Emin olunmayanı tek tek kontrol edin." : "")); };
+  X["test-oneri-tek"] = function (el) { var r = aktif(), x = r.testOneri.filter(function (y) { return y.i === +el.dataset.i; })[0]; testOneriYaz(r, [x]); ciz(); odakla(r.testOneri ? "#r-test-oneri button" : "#r-t" + x.i); MK.bildir(x.ad + " rapora yazıldı: " + x.v + "."); };
+  X["test-oneri-vazgec"] = function () { var r = aktif(); r.testOneri = null; ciz(); odakla("#r-t0"); MK.bildir("Okunan test değerleri uygulanmadı."); };
   /* Z3: etiket plakası — marka, model, seri no, imal yılı (imal yılı çoğu plakada silik: emin değil) */
   var ETIKET = [["marka", "Marka"], ["model", "Model"], ["seri", "Seri no"], ["imal", "İmal yılı"]];
   var odakla = function (sec) { var b = document.querySelector(sec); if (b) b.focus(); };

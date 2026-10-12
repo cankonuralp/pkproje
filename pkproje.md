@@ -1034,6 +1034,66 @@ rehberleri, saha hizmeti (FSM) ve faturalama yazılımı yazıları (kaynaklar �
 firmaya yeni iş; (2) teknik yöneticiye gözetim / tanıklık kaydı — 17020 denetiminde sorulan; (3) planlamaya takvim görünümü; (4) çevrimdışı
 saha (zaten planlı, sonraki faz); (5) QR etiket. Bildirim gerektirenler (hatırlatma, haftalık özet) reisim demeden kurulmaz (anayasa 1.3).
 
+### 3.10 · S.A.Y Chat ve S.A.Y asistana ek (reisim 2026-10-12, bulut oturumunda 7 tur; maket 2026-10-13) — ONAY BEKLİYOR
+Ön model: `docs/maket/say-chat-onmodel.html` (12 ekran + "Konuşulan kurallar"; asıl maket işlenince kaldırılabilir). Asıl maket: plan içi
+(`docs/maket/planlarim.html#/plan/1` — sağ altta S.A.Y'ın yanında **S.A.Y Chat**; `docs/assets/maket-saychat.js`), Ekipman türleri › tür sayfası
+(**S.A.Y Chat ayarları**; `maket-turler.js`), saha raporu (sohbetten açılan taslak; `maket-rapor.js`), S.A.Y paneli (ataç; `maket-say.js`).
+Onaydan sonra KOD-GECIS'e kalem olarak girer ve kodlanır. *(öneri)* işaretliler benim; ötekiler reisim'in.
+
+**S.A.Y Chat — kararlar**
+1. **Yer:** S.A.Y asistan tuşunun yanında "S.A.Y Chat" tuşu. Plana girince o planın sohbeti açılır; geçmiş plana bağlı.
+2. **Kişiye özel:** sohbeti yalnız kaydı yazan denetçi görür (plan sorumlusu, teknik yönetici, yönetici GÖREMEZ) → yetki "kendi", RLS'te sahibi süzgeci.
+3. **Akış:** fotoğraf çek → "Ekipman seçin" → pencerede **Plandan seç** (plandaki, branşına uygun, raporu yazılmamış ekipmanlar: kod · tür · yer;
+   rapor o ekipmana yazılır) ya da **Yeni ekle** (branşındaki, rapor formatı kurulmuş türler; rapor yazılırken plana yeni ekipman olarak eklenir).
+   Mekanik denetçi yalnız mekanik, elektrik denetçisi yalnız elektrik görür.
+4. **Yönerge** (sağ üst): numaralı etiket bilgisi satırları (ör. 1. Marka 2. Model 3. Sn 4. İmal yılı 5. Kullanım yeri 6. Şebeke gerilimi 7. Not);
+   yazı alanı değil, yalnız sırayı gösterir; altında "Etiket fotoğrafı" tuşu.
+5. **Mesaj:** etiket yazılmaz; n. satır = yönergenin n. maddesi; mesaj kutusu numaralı satırlı; "-" ya da boş satır = bilinmiyor (alan boş);
+   fazla satırlar nota eklenir; Not → Muayene uzmanı yorumu. Satırları alana dağıtmak KURALLA, yapay zekâ yok; altta her satırın nereye düştüğü
+   işaretle gösterilir.
+6. **Hazır değer:** ayarda satıra hazır değer verilebilir (ör. Şebeke gerilimi → 220 V); mesaj kutusunda o satır dolu ve "hazır" işaretli gelir,
+   denetçi üstüne yazıp değiştirir, dokunmazsa hazır değer kalır.
+7. **Okunacak fotoğraflar:** kayıtta türün ayarındaki başlıklar altında (Pano sigortaları (linye), Fonksiyon testleri, Potansiyel dengeleme …) test
+   tablosu / ölçüm ekranı fotoğrafı; sohbette başlığıyla görünür. Rapor yazılırken yapay zekâ okur *(öneri: çekerken değil, rapor yazılırken)*
+   (mevcut "Fotoğraftan doldur" altyapısı: raporlar/server/alan-oku.ts, formatın bölüm ayarı doldur.foto); değerler o bölüme ÖNERİ olarak düşer,
+   denetçi onaylar; okuma fotoğrafı olarak saklanır, belgeye BASILMAZ; çevrimdışıyken bekler.
+8. **Bir kayıt = bir ekipman.** Ek fotoğraf Gönder'den önce eklenir; Gönder = bu ekipman bitti.
+9. **Çevrimdışı:** kayıtlar cihazda birikir ("Cihazda" / "Gönderildi"), bağlantı gelince gider (mevcut çevrimdışı kuyruk).
+10. **Düzeltme:** rapor yazılana kadar kayıt geçmişten açılıp değiştirilir (ekipman, fotoğraflar, mesaj, okunacak fotoğraflar) ya da silinir.
+11. **Etiketten okuma** (isteğe bağlı): fotoğraf eklenirken uyarı ("yapay zekâ kullanır, firmanın kotasından harcar, bu ay x / y"); "Oku ve mesaja
+    yaz" ya da "Okumadan geç"; okunanlar mesaja öneri olarak yazılır; çevrimdışıyken sırada bekler; etiket fotoğrafı rapora KONMAZ.
+12. **"Bekleyenler için rapor yaz (n)":** kayıtlar sırayla rapor taslağı olur; önce koşullar: plan günü, günlük süre / mesai, internet (rapor
+    numarası sunucuda), yapay zekânın okuyacağı fotoğraf sayısı + kota. Rapor oluşunca kayıt sohbetten SİLİNİR, ekipman fotoğrafları rapora geçer.
+
+**S.A.Y Chat ayarları** (Ekipman türleri › tür sayfası, tıklayınca açılan bölüm)
+13. Mesaj satırları: sıra · telefonda yazan ad · rapordaki alan (formatın alanlarından: ekipman bilgileri, ölçüm / test değerleri, Muayene uzmanı
+    yorumu) · hazır değer (isteğe bağlı) · yukarı / aşağı · sil · "Satır ekle".
+14. Okunacak fotoğraflar: başlıklar formatta fotoğraftan doldurması açık bölümlerden; aç / kapa · sil · "Başlık ekle".
+15. Sağda "Telefonda böyle görünür"; bölümün kendi Kaydet / Vazgeç'i. Yeni türde satırlar formatın ekipman bilgisi alanlarından, başlıklar
+    fotoğraftan doldurması açık bölümlerden hazır gelir.
+16. Değişiklik yeni kayıtlarda geçerli; gönderilmiş kayıt gönderildiği andaki tanımla okunur (kayıt tanım sürümünü taşır). Düzenleyen: ekipman
+    türünü düzenleyebilen roller.
+
+**S.A.Y asistana fotoğraf ve belge** (src/modules/say)
+17. Yazma kutusunun yanında ataç → Fotoğraf çek · Galeriden seç · Belge ekle (PDF, Word); eklenenler gönderilmeden önce kutunun üstünde küçük
+    görüntü / ad + boyut, × ile çıkar; gönderilen mesajda da görünür. Altta "Ekler yapay zekâya gider, kotadan harcar · en çok 4 MB"; tür içerikten
+    denetlenir. Altyapı: rapor-format/server/yz.ts formatBelgesi (PDF / fotoğraf / Word, 4 MB), src/server/yz/word.ts, components/foto/kucult.ts,
+    src/server/yz/kullanim.ts. *(öneri: dosya saklanmaz, yalnız o soruda okunur; sohbet geçmişinde adı kalır)*
+
+**Makette eklediğim ayrıntılar** *(öneri — onayında değişebilir)*
+18. S.A.Y Chat tuşu yalnız plan içinde ve plan kabul / denetimde / tamamlandı iken görünür; S.A.Y ile S.A.Y Chat aynı anda açılmaz (aynı yerde panel).
+19. Yeni ekle'de ekipman kodu sahada sorulmaz; **rapor yazılırken** istenir (etiketteki kod, firmada eşsiz — plan içindeki "Ekipman ekle" kod
+    denetimiyle aynı); kullanım yeri mesajın "Kullanım yeri" satırından gelir.
+20. Gönder için en az bir ekipman fotoğrafı gerekir; başka bir kayıtta olan ekipman "Plandan seç" listesinde görünmez.
+21. Tamamlanmış planda sohbet açık kalır, kayıt tutulur; "Bekleyenler için rapor yaz" koşullarda durur (519: tamamlanmış planda yeni rapor yok).
+22. Günlük süre yetmezse sığan raporlar açılır, kalan kayıtlar bekler. Yapay zekâ kapalıysa etiket okunmaz; okunacak fotoğraflar raporda okuma
+    fotoğrafı olarak saklanır, açılınca okunur (bugünkü "Fotoğraf ekle (yapay zekâ okur)" kapalı kipiyle aynı).
+23. Makette "Makette bakış" ile planın denetçileri arasında geçilir (branşa göre listeler denensin); uygulamada herkes yalnız kendi sohbetini görür.
+    Makette fotoğrafın yalnız adı kalır; görüntüsü o oturumda görünür.
+24. Veri taslağı (kodda): `say_chat_kayit` (firma, plan, yazan hesap, ekipman: plan ekipmanı ya da yeni tür, fotoğraflar, mesaj satırları,
+    okunacak fotoğraflar, etiket, tanım sürümü, durum, zaman — RLS sahibi süzgeci, rapor yazılınca silinir) · `say_chat_ayar` (firma × tür, sürümlü:
+    satırlar, okunacak başlıklar; yayınlanan sürüm değişmez).
+
 ## 4 · Mevzuat bulguları (2026-09-18 araştırması; kaynaklar bölüm 10)
 
 ### 4.1 Çerçeve
@@ -2407,6 +2467,16 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-13 (521): **S.A.Y CHAT + S.A.Y ASİSTANA EK — MAKET** (reisim'in bulut oturumundaki 7 turun iş emri; ön model `docs/maket/say-chat-onmodel.html`,
+  bulut commit'leri 048c133 + 1729a8f). Kararlar §3.10 (1–17 reisim'in, 18–24 öneri). **Maket:** plan içinde S.A.Y'ın yanında "S.A.Y Chat" (ekran
+  1–10: planın sohbeti, fotoğraf + ekipman seçimi — Plandan seç / Yeni ekle branşa göre, yönerge + numaralı mesaj + kural dağılımı + hazır değer,
+  okunacak fotoğraflar, etiketten okuma uyarısı ve kota, geçmişten düzenleme / silme, bekleyenler için rapor yaz — koşullar ve taslaklar; çevrimdışı
+  "Cihazda" → "Gönderildi"); S.A.Y paneline ataç (ekran 11: fotoğraf çek, galeriden, belge; 4 MB, tür denetimi, × ile çıkar, mesajda adı); Ekipman
+  türleri › tür sayfasında "S.A.Y Chat ayarları" (ekran 12: satırlar, rapordaki alan, hazır değer, sıra, okunacak başlıklar, telefon önizlemesi,
+  Kaydet / Vazgeç, sürüm); saha raporu sohbetten açılan taslakta mesajın alanlarını, notu ve fotoğrafları alır, okunan pano sigortaları ve test
+  değerleri öneri olarak bekler, üstte "S.A.Y Chat kaydından oluşturuldu" şeridi. Ortak veri MV.SAY_CHAT, MV.SAY_CHAT_AYAR (örnek: plan 1'de elektrik
+  denetçisinin iki kaydı); S.A.Y ve Chat düğmeleri ortak grupta (.a-fab-grup). Plan içi maketinde tamamlanmış planda "Rapor oluştur" artık uyarı
+  verir (519 ile aynı). Simgeler: paperclip, image, message-square-text, list-ordered, tag (Lucide 1.47.0, iki kopya). Kod YOK — onay bekliyor.
 - 2026-10-12 (520): **519 YAYINDA** — göç yok (84 göç). main 472c10d; deneme makinesi 13/13 (veritabanlı testler ve yeni olumsuz kanıt 9 dahil);
   sağlık "tamam", duman **11/11**, son 1 saatte hata kaydı yok. Canlıda oturumla bakılamadı (giriş reisim'in) — ölçemedim; reisim'in baktığı iki
   elektrik iç tesisat raporu (P-1026-006, Tamamlandı) artık "Kaydet ve kopyala"yı gösterir, basınca uyarı verir.

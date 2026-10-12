@@ -1726,6 +1726,69 @@
   ];
   MV.belgeOnaylari = function (ben) { return MV.BELGE_ONAY.filter(function (x) { return x.kisi === ben; }); };
   MV.takip = function (no, ben) { var f = MV.TAKIP[no]; return f ? f(ben) : null; };
+  /* ── S.A.Y CHAT (2026-10-13; reisim'le bulut oturumunda 7 tur — ön model docs/maket/say-chat-onmodel.html; ekranlar maket-saychat.js) ─────────
+     Kayıt = sahada BİR ekipman: ekipman fotoğrafları + numaralı mesaj (n. satır = yönergenin n. maddesi) + isteğe bağlı etiket fotoğrafı +
+     okunacak fotoğraflar (başlık başlık). Plana bağlı, KİŞİYE ÖZEL (yalnız yazan görür). "Bekleyenler için rapor yaz" ile rapor taslağı olur,
+     kayıt silinir. Tür ayarı (mesaj satırları + okunacak fotoğraf başlıkları) Ekipman türleri › tür sayfasında; yoksa formattan hazır gelir.
+     Kayıt, gönderildiği andaki satır tanımını taşır (sonradan ayar değişse de kendi tanımıyla okunur). */
+  MV.SAY_CHAT = [];
+  /* rapordaki alanlar: ekipman bilgileri (kayıttan) + formatın ekipman detayları + test değerleri + uzman yorumu — anahtar "e:" "d:" "t:" "yorum" */
+  var SC_EKIPMAN = [["marka", "Marka"], ["model", "Model"], ["seri", "Seri no"], ["imal", "İmal yılı"], ["konum", "Kullanım yeri"], ["amac", "Kullanım amacı"]];
+  MV.sayChatTestBolum = function (t) { var f = MV.formatYapi(t); return f && f.gozle ? "Fonksiyon testleri" : "Test değerleri"; };
+  MV.sayChatAlanlar = function (t) {
+    var f = MV.formatYapi(t), l = SC_EKIPMAN.map(function (x) { return ["e:" + x[0], "Ekipman bilgileri › " + x[1]]; });
+    if (f) f.detay.forEach(function (x) { if (x.k !== "amac") l.push(["d:" + x.k, "Ekipman bilgileri › " + x.ad]); });
+    MV.testler(t).forEach(function (x, i) { l.push(["t:" + i, MV.sayChatTestBolum(t) + " › " + x.ad]); });
+    l.push(["yorum", "Muayene uzmanı yorumu"]);
+    return l;
+  };
+  MV.sayChatAlanAd = function (t, k) { var x = MV.sayChatAlanlar(t).filter(function (y) { return y[0] === k; })[0]; return x ? x[1] : "—"; };
+  /* okunacak fotoğraf başlıkları: formatta fotoğraftan doldurması açık bölümler (ölçüm tabloları, testler) — [anahtar, ad, ne] */
+  MV.sayChatBasliklar = function (t) {
+    var f = MV.formatYapi(t), l = [];
+    if (f && f.linye) l.push(["linye", "Pano sigortaları (linye)", "ölçüm tablosu"]);
+    else if (t.g === "elektrik" && !f) l.push(["linye", "Pano sigortaları", "ölçüm tablosu"]);
+    if (MV.testler(t).length) l.push(["test", MV.sayChatTestBolum(t), "test"]);
+    if (f && f.linye) { l.push(["pd", "Potansiyel dengeleme", "ölçüm tablosu"]); l.push(["zi", "Zemin izolasyonu", "ölçüm tablosu"]); }
+    if (f && f.noktalar) { l.push(["nokta", "Ölçüm noktaları (Zx)", "ölçüm tablosu"]); l.push(["rcd", "RCD selektivite", "ölçüm tablosu"]); }
+    return l;
+  };
+  /* firmanın ayarı (tür başına; yoksa hazır): satır = { ad (telefonda yazan), alan, hazir }; okunacak = { k, acik } */
+  MV.SAY_CHAT_AYAR = {
+    ET: { surum: 2, satirlar: [{ ad: "Marka", alan: "e:marka", hazir: "" }, { ad: "Model", alan: "e:model", hazir: "" }, { ad: "Sn", alan: "e:seri", hazir: "" },
+      { ad: "İmal yılı", alan: "e:imal", hazir: "" }, { ad: "Kullanım yeri", alan: "e:konum", hazir: "" }, { ad: "Şebeke gerilimi", alan: "d:gerilim", hazir: "220 V" },
+      { ad: "Not", alan: "yorum", hazir: "" }],
+      okunacak: [{ k: "linye", acik: true }, { k: "test", acik: true }, { k: "pd", acik: true }, { k: "zi", acik: false }] }
+  };
+  MV.sayChatAyar = function (t) {
+    var a = MV.SAY_CHAT_AYAR[t.k];
+    if (a) return a;
+    return { surum: 1, hazirGeldi: true, satirlar: [{ ad: "Marka", alan: "e:marka", hazir: "" }, { ad: "Model", alan: "e:model", hazir: "" }, { ad: "Sn", alan: "e:seri", hazir: "" },
+      { ad: "İmal yılı", alan: "e:imal", hazir: "" }, { ad: "Kullanım yeri", alan: "e:konum", hazir: "" }, { ad: "Not", alan: "yorum", hazir: "" }],
+      okunacak: MV.sayChatBasliklar(t).map(function (b) { return { k: b[0], acik: b[0] !== "zi" }; }) };
+  };
+  /* örnek kayıtlar: plan 1'de (denetimde, bugün) elektrik denetçisinin (Elif Aydın) iki kaydı — plandaki raporsuz elektrik ekipmanı ve plana
+     yeni eklenecek AG topraklama (uydurma; kod yok, rapor yazılırken girilir) */
+  (function () {
+    var raporlu = MV.RAPORLAR.filter(function (r) { return r.plan === 1; }).map(function (r) { return r.kod; });
+    /* mesaj türün satırlarından kurulur (alan → uydurma değer); okunacak yalnız türün açık başlıklarından */
+    var kur = function (t, deger, foto) {
+      var a = MV.sayChatAyar(t), acik = a.okunacak.filter(function (x) { return x.acik; }).map(function (x) { return x.k; }), ok = {};
+      Object.keys(foto).forEach(function (k) { if (acik.indexOf(k) >= 0) ok[k] = foto[k]; });
+      return { mesaj: a.satirlar.map(function (x) { return deger[x.alan] || ""; }), okunacak: ok,
+        tanim: { surum: a.surum, satirlar: a.satirlar.map(function (x) { return Object.assign({}, x); }), okunacak: a.okunacak.map(function (x) { return Object.assign({}, x); }) } };
+    };
+    var e = MV.EKIPMAN.filter(function (x) { return x.plan === 1 && MV.tur(x.tur).b === "e" && raporlu.indexOf(x.kod) < 0; })[0];
+    if (e) {
+      var k1 = kur(MV.tur(e.tur), { "e:marka": "Örnek Elektrik", "e:model": "P-400", "e:seri": "88213", "e:imal": "-", "e:konum": "bakım binası", "d:gerilim": "220 V",
+        yorum: "pano kapağı kilitsiz, iç kapak yok" }, { linye: ["linye-tablosu.jpg"], test: ["fonksiyon-testi.jpg"] });
+      MV.SAY_CHAT.push({ id: "sc1", plan: 1, kisi: "ea", zaman: MK.BUGUN + "T09:40", durum: "gonderildi", ekipman: { tip: "plan", kod: e.kod, tur: e.tur },
+        foto: ["pano-on.jpg", "pano-ic.jpg"], etiket: null, mesaj: k1.mesaj, okunan: [], okunacak: k1.okunacak, tanim: k1.tanim });
+    }
+    var k2 = kur(MV.tur("AT"), { "e:konum": "jeneratör odası", yorum: "bara bağlantısı paslı" }, {});
+    MV.SAY_CHAT.push({ id: "sc2", plan: 1, kisi: "ea", zaman: MK.BUGUN + "T10:05", durum: "gonderildi", ekipman: { tip: "yeni", kod: "", tur: "AT" },
+      foto: ["topraklama-barasi.jpg"], etiket: null, mesaj: k2.mesaj, okunan: [], okunacak: k2.okunacak, tanim: k2.tanim });
+  })();
   /* kalıcı maket: tohum kuruldu, bu tarayıcıdaki denemeler yerinde yüklenir (maket-ortak.js KALICI MAKET) */
   if (MK.kaliciMV) MK.kaliciMV(MV);
   /* Plan aç'ta açılan plan raporu oluşunca Muhasebe'de iş olur (Ö5, 2026-10-01: uçtan uca denemede P-0926-041'in üç imzalı raporu vardı,

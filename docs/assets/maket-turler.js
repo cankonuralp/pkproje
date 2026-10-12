@@ -15,7 +15,12 @@
    · 2026-09-27 (yirmi dördüncü tur): türün kullanacağı ölçüm cihazları (düzenlenir; rapor bunları ister) · rapor bölümleri
      (formattan · standart · sabit)
    · 52 → yetkili meslekler bölümü yok (yetkisiz denetçide yalnız uyarı) · 53 → periyot türde, tek ekipmanın tarihi planda değişir ·
-     54 → tahmini kontrol süresi isteğe bağlı. */
+     54 → tahmini kontrol süresi isteğe bağlı.
+   · 2026-10-13 (S.A.Y Chat, ön model ekran 12 — reisim: "yönergedeki etiket bilgisi satırlarını kullanıcı ekipman türlerinde düzenleyebilmeli,
+     S.A.Y Chat ayarları diye bir kısım olsun"): tür sayfasında tıklayınca açılan "S.A.Y Chat ayarları" — mesaj satırları (sıra · telefonda yazan
+     ad · rapordaki alan, formatın alanlarından · hazır değer · yukarı / aşağı · sil · Satır ekle) ve okunacak fotoğraf başlıkları (formatta
+     fotoğraftan doldurması açık bölümlerden; aç / kapa · sil · Başlık ekle); sağda "Telefonda böyle görünür"; bölümün kendi Kaydet / Vazgeç'i.
+     Yeni türde satırlar formatın ekipman bilgisi alanlarından hazır gelir. Değişiklik yeni kayıtlarda geçerli (kayıt tanım sürümünü taşır). */
 (function () {
   "use strict";
   var $ = MK.$, kacis = MK.kacis, ikon = MK.ikon, kirp = MK.kirp, rozet = MK.rozet, bilgi = MK.bilgi;
@@ -88,6 +93,66 @@
         return '<div class="a-eylem"><div class="a-eylem-tuslar">' + MK.pdfTus(x.dosya) + '<button class="a-ikon-tus" type="button" data-eylem="format-sil" data-surum="' + kacis(x.surum) + '" aria-label="' + kacis(x.surum) + ' sil" title="Sil">' + ikon("x") + "</button></div></div>"; } }
     ];
   }
+  /* ── S.A.Y CHAT AYARLARI (2026-10-13, ekran 12): taslak SCA (Kaydet'e kadar kaydedilmez); açık / kapalı hâli tür başına ─────────────── */
+  var SCA = null, SC_ACIK = {};
+  var scKopya = function (a) { return { satirlar: a.satirlar.map(function (x) { return Object.assign({}, x); }), okunacak: a.okunacak.map(function (x) { return Object.assign({}, x); }) }; };
+  var scTaslak = function (t) { if (!SCA || SCA.k !== t.k) SCA = { k: t.k, d: scKopya(MV.sayChatAyar(t)), hata: null }; return SCA; };
+  function scAyarHtml(t) {
+    var kayitli = MV.sayChatAyar(t), x = SCA && SCA.k === t.k ? SCA : null, a = x ? x.d : kayitli, alan = MV.sayChatAlanlar(t), bas = MV.sayChatBasliklar(t), bm = {};
+    bas.forEach(function (b) { bm[b[0]] = b; });
+    var ok = a.okunacak.filter(function (o) { return bm[o.k]; }), acikSay = ok.filter(function (o) { return o.acik; }).length;
+    var kalan = bas.filter(function (b) { return !a.okunacak.some(function (o) { return o.k === b[0]; }); });
+    var satirlar = a.satirlar.map(function (st, i) {
+      var hata = x && x.hata && x.hata.i === i;
+      return '<li class="a-sca-satir"><span class="a-sc-no" aria-hidden="true">' + (i + 1) + "</span>" +
+        '<div class="a-alan-grup"><label class="a-etiket" for="a-sca-ad' + i + '">' + (i + 1) + ". satır · telefonda yazan</label>" +
+          '<input class="a-girdi" id="a-sca-ad' + i + '" data-sca="ad" data-i="' + i + '" maxlength="30" autocomplete="off" value="' + kacis(st.ad) + '"' + (hata && x.hata.ne === "ad" ? ' aria-invalid="true"' : "") + "></div>" +
+        '<div class="a-alan-grup"><p class="a-etiket" id="a-sca-alan' + i + '-e">Rapordaki alan</p>' + MK.secim({ id: "a-sca-alan" + i, ad: (i + 1) + ". satır · rapordaki alan", deger: st.alan, secenekler: alan, ipucu: "Alan seçin",
+          gecersiz: hata && x.hata.ne === "alan" }) + "</div>" +
+        '<div class="a-alan-grup"><label class="a-etiket" for="a-sca-hz' + i + '">Hazır değer <span class="a-alt-inline">isteğe bağlı</span></label>' +
+          '<input class="a-girdi" id="a-sca-hz' + i + '" data-sca="hazir" data-i="' + i + '" maxlength="40" autocomplete="off" placeholder="yok" value="' + kacis(st.hazir || "") + '"></div>' +
+        '<div class="a-sca-tuslar">' +
+          '<button class="a-ikon-tus" type="button" data-eylem="sca-yukari" data-i="' + i + '" aria-label="' + (i + 1) + '. satırı yukarı al" title="Yukarı"' + (i ? "" : " disabled") + ">" + ikon("arrow-up") + "</button>" +
+          '<button class="a-ikon-tus" type="button" data-eylem="sca-asagi" data-i="' + i + '" aria-label="' + (i + 1) + '. satırı aşağı al" title="Aşağı"' + (i < a.satirlar.length - 1 ? "" : " disabled") + ">" + ikon("arrow-down") + "</button>" +
+          '<button class="a-ikon-tus" type="button" data-eylem="sca-sil" data-i="' + i + '" aria-label="' + (i + 1) + '. satırı sil" title="Sil">' + ikon("trash-2") + "</button></div></li>";
+    }).join("");
+    var okunacak = ok.map(function (o) {
+      return '<li class="a-sca-ok"><span><b>' + kacis(bm[o.k][1]) + '</b><small class="a-alt-satir">' + bm[o.k][2] + "</small></span>" +
+        '<button class="a-cip" type="button" data-eylem="sca-ok-ac" data-k="' + o.k + '" aria-pressed="' + o.acik + '">' + (o.acik ? "Açık" : "Kapalı") + "</button>" +
+        '<button class="a-ikon-tus" type="button" data-eylem="sca-ok-sil" data-k="' + o.k + '" aria-label="' + kacis(bm[o.k][1]) + ' başlığını sil" title="Sil">' + ikon("trash-2") + "</button></li>";
+    }).join("");
+    var onizle = '<div class="a-sc-yonerge"><p class="a-sc-ara">Her satıra sırayla</p><ol>' + a.satirlar.map(function (st) { return "<li>" + (kacis(st.ad) || '<span class="a-deger-yok">ad yok</span>') + (st.hazir ? ' <span class="a-alt-inline">· ' + kacis(st.hazir) + "</span>" : "") + "</li>"; }).join("") + "</ol>" +
+      '<p class="a-sc-etiket-durum">' + ikon("tag", "a-ikon-kucuk") + "Etiket fotoğrafı</p>" +
+      (ok.filter(function (o) { return o.acik; }).length ? '<p class="a-sc-ara">Okunacak fotoğraflar</p><ul class="a-sca-onizle-ok">' + ok.filter(function (o) { return o.acik; }).map(function (o) { return "<li>" + ikon("scan-text", "a-ikon-kucuk") + kacis(bm[o.k][1]) + "</li>"; }).join("") + "</ul>" : "") + "</div>";
+    return '<details class="a-bolum a-bolum-acilir" id="a-sca"' + (SC_ACIK[t.k] || x ? " open" : "") + '><summary class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-sca">S.A.Y Chat ayarları</h2>' +
+        '<span class="a-sayac"><b>' + a.satirlar.length + "</b> satır · <b>" + acikSay + "</b> okunacak fotoğraf" + (x ? " · kaydedilmedi" : kayitli.hazirGeldi ? " · formattan hazır" : " · sürüm " + kayitli.surum) + "</span>" +
+        ikon("chevron-down", "a-ikon-kucuk a-acilir-ok") + "</summary>" +
+      '<div class="a-sca-govde"><div class="a-sca-sol">' +
+        '<h3 class="a-sca-baslik">Mesaj satırları (etiket bilgileri)</h3><p class="a-ipucu">Denetçinin mesajında her satır sırayla bir alana yazılır. Satır adını, sırasını, rapordaki alanını ve hazır değerini değiştirin; satır ekleyin ya da silin.</p>' +
+        '<ol class="a-sca-satirlar" aria-label="Mesaj satırları">' + satirlar + "</ol>" +
+        MK.tus({ eylem: "sca-ekle", ad: "Satır ekle", ikon: "plus", sinif: "a-tus-ikincil" }) +
+        '<p class="a-ipucu">Hazır değerli satır mesaj kutusunda dolu gelir; denetçi üstüne yazıp değiştirir. Yönergeden fazla yazılan satırlar nota eklenir. Değişiklik yeni kayıtlarda geçerli; gönderilmiş kayıtlar gönderildikleri andaki sırayla okunur.</p>' +
+        '<h3 class="a-sca-baslik">Okunacak fotoğraflar (yapay zekâ)</h3><p class="a-ipucu">Kayıtta bu başlıklar altında fotoğraf eklenir (test tablosu, linye, ölçüm ekranı). Rapor yazılırken yapay zekâ okur, o bölümü öneri olarak doldurur. Başlıklar, rapor formatında fotoğraftan doldurması açık bölümlerden seçilir.</p>' +
+        (okunacak ? '<ul class="a-sca-oklar">' + okunacak + "</ul>" : '<p class="a-bos-satir">Okunacak fotoğraf başlığı yok.</p>') +
+        (kalan.length ? '<div class="a-alan-grup a-sca-ok-ekle"><p class="a-etiket" id="a-sca-ok-e">Başlık ekle</p>' + MK.secim({ id: "a-sca-ok", ad: "Okunacak fotoğraf başlığı ekle", deger: "", secenekler: kalan.map(function (b) { return [b[0], b[1], b[2]]; }), ipucu: "Başlık seçin" }) + "</div>"
+          : '<p class="a-ipucu">Formatta fotoğraftan doldurması açık başka bölüm yok.</p>') +
+      "</div>" +
+      '<aside class="a-sca-sag" aria-label="Telefonda böyle görünür"><p class="a-sc-ara">' + ikon("smartphone", "a-ikon-kucuk") + " Telefonda böyle görünür</p>" + onizle + "</aside></div>" +
+      '<div class="a-sc-tuslar a-sca-alt">' + MK.tus({ eylem: "sca-vazgec", ad: "Vazgeç", sinif: "a-tus-ikincil", kapali: !x }) + MK.tus({ eylem: "sca-kaydet", ad: "Kaydet", ikon: "check", kapali: !x }) + "</div></details>";
+  }
+  /* yeniden çizerken odak ve imleç yerinde (yazarken satır değişince) */
+  function scCiz(t, odak) {
+    var a = document.activeElement, id = odak || (a && a.id), ss = a && a.selectionStart, se = a && a.selectionEnd;
+    turCiz(t);
+    var el = id && document.getElementById(id); if (el) { el.focus({ preventScroll: true }); if (!odak) { try { el.setSelectionRange(ss, se); } catch (h) { /* girdi değil */ } } }
+  }
+  document.addEventListener("toggle", function (e) { var d = e.target; if (d.id === "a-sca") { var r = rota(); if (r.id) SC_ACIK[r.id] = d.open; } }, true);
+  document.addEventListener("input", function (e) {
+    var el = e.target, ne = el.dataset && el.dataset.sca; if (!ne) return;
+    var t = MV.tur(rota().id); if (!t) return;
+    var x = scTaslak(t); x.d.satirlar[+el.dataset.i][ne] = el.value; x.hata = null; scCiz(t);
+  });
+  function scTur() { return MV.tur(rota().id); }
   function turCiz(t) {
     if (!t) {
       $("a-nesne").innerHTML = MK.kirinti([["Ekipman türleri", "#/"]]) + '<h1 class="a-gizli" tabindex="-1">Tür bulunamadı</h1>' +
@@ -121,6 +186,8 @@
         '<a class="a-tus a-tus-ikincil a-bolum-tus" href="#/tur/' + t.k + '/duzenle">' + ikon("pencil", "a-ikon-kucuk") + "Düzenle</a></div>" +
         (t.cihaz.length ? '<ul class="a-kosullar">' + t.cihaz.map(function (c) { return '<li class="a-kosul-bilgi">' + ikon("gauge", "a-ikon-kucuk") + "<span>" + kacis(MV.cihazTuru(c).ad) + "</span></li>"; }).join("") + "</ul>"
           : '<p class="a-bos-satir">Cihaz türü seçilmedi.</p>') + "</section>" +
+      /* 2026-10-13: S.A.Y Chat ayarları (ekran 12) — tıklayınca açılır */
+      scAyarHtml(t) +
       /* rapor bölümleri (reisim 2026-09-27: "7-8-9. kısımlar da sabit ama muayene kriterleri test değerleri kısımlar firmanın verdiği pdf e göre
          düzenlenebilir olacak diğer kısımlarda düzenlenebilir olacak gerçi ama standart") */
       '<section class="a-bolum" aria-labelledby="a-b-bolum"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-bolum">Rapor bölümleri</h2></div><dl class="a-satirlar">' +
@@ -244,6 +311,33 @@
   MK.goster = goster;
   var X = MK.eylem;
   X["tur-ac"] = function () { location.hash = "#/yeni"; };
+  /* S.A.Y Chat ayarları (ekran 12) */
+  X["sca-ekle"] = function () { var t = scTur(), x = scTaslak(t); x.d.satirlar.push({ ad: "", alan: "", hazir: "" }); scCiz(t, "a-sca-ad" + (x.d.satirlar.length - 1)); };
+  X["sca-sil"] = function (el) {
+    var t = scTur(), x = scTaslak(t), i = +el.dataset.i, ad = x.d.satirlar[i].ad || (i + 1) + ". satır";
+    if (x.d.satirlar.length === 1) { MK.bildir("En az bir satır kalmalı."); return; }
+    x.d.satirlar.splice(i, 1); scCiz(t, x.d.satirlar[i] ? "a-sca-ad" + i : "a-sca-ad" + (i - 1)); MK.bildir(ad + " silindi; Kaydet ile geçerli olur.");
+  };
+  var scTasi = function (el, y) {
+    var t = scTur(), x = scTaslak(t), i = +el.dataset.i, j = i + y, l = x.d.satirlar; if (j < 0 || j >= l.length) return;
+    var a = l[i]; l[i] = l[j]; l[j] = a; scCiz(t); var b = document.querySelector('[data-eylem="' + el.dataset.eylem + '"][data-i="' + j + '"]:not([disabled])') || $("a-sca-ad" + j); if (b) b.focus();
+  };
+  X["sca-yukari"] = function (el) { scTasi(el, -1); };
+  X["sca-asagi"] = function (el) { scTasi(el, 1); };
+  X["sca-ok-ac"] = function (el) { var t = scTur(), x = scTaslak(t), o = x.d.okunacak.filter(function (y) { return y.k === el.dataset.k; })[0]; o.acik = !o.acik; scCiz(t); var b = document.querySelector('[data-eylem="sca-ok-ac"][data-k="' + o.k + '"]'); if (b) b.focus(); };
+  X["sca-ok-sil"] = function (el) { var t = scTur(), x = scTaslak(t); x.d.okunacak = x.d.okunacak.filter(function (y) { return y.k !== el.dataset.k; }); scCiz(t); var o = $("a-sca-ok") || document.querySelector('[data-eylem="sca-kaydet"]'); if (o) o.focus(); };
+  X["sca-vazgec"] = function () { var t = scTur(); SCA = null; SC_ACIK[t.k] = true; scCiz(t); var b = $("a-b-sca"); if (b) b.closest("summary").focus(); MK.bildir("Değişiklikler bırakıldı."); };
+  X["sca-kaydet"] = function () {
+    var t = scTur(), x = SCA && SCA.k === t.k ? SCA : null; if (!x) return;
+    var i = -1, ne = "";
+    x.d.satirlar.some(function (st, j) { if (!st.ad.trim()) { i = j; ne = "ad"; return true; } if (!st.alan) { i = j; ne = "alan"; return true; } return false; });
+    if (i >= 0) { x.hata = { i: i, ne: ne }; scCiz(t, ne === "ad" ? "a-sca-ad" + i : "a-sca-alan" + i); MK.bildir((i + 1) + ". satırın " + (ne === "ad" ? "telefonda yazan adı" : "rapordaki alanı") + " boş."); return; }
+    var eski = MV.SAY_CHAT_AYAR[t.k];
+    MV.SAY_CHAT_AYAR[t.k] = { surum: eski ? eski.surum + 1 : 2, satirlar: x.d.satirlar.map(function (st) { return { ad: st.ad.trim(), alan: st.alan, hazir: (st.hazir || "").trim() }; }),
+      okunacak: x.d.okunacak.map(function (o) { return { k: o.k, acik: !!o.acik }; }) };
+    SCA = null; SC_ACIK[t.k] = true; scCiz(t); var b = $("a-b-sca"); if (b) b.closest("summary").focus();
+    MK.bildir("S.A.Y Chat ayarları kaydedildi (sürüm " + MV.SAY_CHAT_AYAR[t.k].surum + "); yeni kayıtlarda geçerli.");
+  };
   /* 2026-09-27: gerçek dosya penceresi; seçilen PDF "Aç" ile görüntülenir */
   X["pdf-sec"] = function () {
     var k = (W.id || W.d.k || "tur").toLowerCase();
@@ -293,7 +387,11 @@
     MK.bildir(ileti);
   };
   MK.onGirdi = function (e) { if (MK.kurucuGirdi && rota().v === "kurucu" && MK.kurucuGirdi(e)) return; var k = e.target.dataset && e.target.dataset.alan; if (k && W) W.d[k] = k === "k" ? e.target.value.toUpperCase().replace(/[^A-Z]/g, "") : e.target.value; };
-  MK.onSecim = function (id, deger) { if (W && id === "w-g") { W.d.g = deger; delete W.hata.g; pencereCiz("w-g"); } else if (W && id === "w-b") { W.d.b = deger; delete W.hata.b; pencereCiz("w-b"); } else if (W && id === "w-olcum") { W.d.olcum = deger; pencereCiz("w-olcum"); } };
+  MK.onSecim = function (id, deger) {
+    var m = /^a-sca-alan(\d+)$/.exec(id), t = scTur();
+    if (m && t) { var x = scTaslak(t); x.d.satirlar[+m[1]].alan = deger; x.hata = null; scCiz(t, id); return; }
+    if (id === "a-sca-ok" && t && deger) { var y = scTaslak(t); y.d.okunacak.push({ k: deger, acik: true }); scCiz(t, "a-sca-ok"); MK.bildir("Okunacak fotoğraf başlığı eklendi; Kaydet ile geçerli olur."); return; }
+    if (W && id === "w-g") { W.d.g = deger; delete W.hata.g; pencereCiz("w-g"); } else if (W && id === "w-b") { W.d.b = deger; delete W.hata.b; pencereCiz("w-b"); } else if (W && id === "w-olcum") { W.d.olcum = deger; pencereCiz("w-olcum"); } };
   document.addEventListener("change", function (e) {
     var c = e.target.dataset && e.target.dataset.cihazTur;
     if (c && W) { var j = W.d.cihaz.indexOf(c); if (e.target.checked && j < 0) W.d.cihaz.push(c); else if (!e.target.checked && j >= 0) W.d.cihaz.splice(j, 1); return; }

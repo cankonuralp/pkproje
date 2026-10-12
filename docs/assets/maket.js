@@ -700,16 +700,45 @@
   };
   X.tamamla = function (el) { var p = pl(el); if (p && p.durum === "denetimde" && p.kontrolTamam) { p.durum = "tamam"; p.bitti = simdi(); kaydet(p, simdi(), BEN, "Plan tamamlandı"); goster(false); MK.bildir("Plan tamamlandı."); } };
   X["geri-al"] = function (el) { var p = pl(el); if (p && p.durum === "tamam") { p.durum = "denetimde"; p.bitti = null; kaydet(p, simdi(), BEN, "Tamamlama geri alındı"); goster(false); MK.bildir("Tamamlama geri alındı; plan yeniden denetime açıldı."); } };
+  /* 2026-10-12 (519, reisim: "tamamlamayı geri almadan yeni rapor oluşturulmasın, uyarı çıksın rapor oluştur diyince"): tamamlanmış planda yeni
+     rapor yok — tuş görünür, basınca bu söylenir (uygulamayla aynı ileti) */
+  var TAMAMLANDI = "Plan tamamlandı: yeni rapor (kopya dahil) oluşturulmaz. Önce plan içinden “Tamamlamayı geri al” deyin.";
+  function raporAcIc(p, kod, kim) {
+    var r = { no: raporNo("0926", raporSira++).replace(/^[^-]+/, MV.firmaKodu()), kod: kod, durum: "taslak", olustu: simdi(), sonuc: null };
+    if (p.durum === "kabul") { p.durum = "denetimde"; p.basladi = simdi(); kaydet(p, simdi(), kim || BEN, "Denetime başlandı", "ilk rapor oluşturuldu"); }
+    p.rapor.push(r); ortakEkipman(p, r.kod); ortakRapor(p, r); kaydet(p, simdi(), kim || BEN, "Rapor oluşturuldu", r.no + " · " + r.kod); SZ.r.sayfa = 1;
+    return r;
+  }
   X["rapor-olustur"] = function (el) {
     var p = pl(el);
+    if (p && p.durum === "tamam") { MK.bildir(TAMAMLANDI); return; }
     if (p && calisir(p) && erken(p)) { MK.bildir(MK.erkenMetin(p.tarih)); return; }   /* P1 */
     if (p && calisir(p) && MV.gunlukSure(BEN).dolu) { MK.bildir("Günlük süre doldu (mesai takibi); bugün yeni rapor oluşturulamaz."); return; }   /* 212 */
     if (p && calisir(p) && !raporuVar(p, el.dataset.kod)) {   /* ekipman başına bir rapor (2026-09-30, 203) */
-      var r = { no: raporNo("0926", raporSira++).replace(/^[^-]+/, MV.firmaKodu()), kod: el.dataset.kod, durum: "taslak", olustu: simdi(), sonuc: null };
-      if (p.durum === "kabul") { p.durum = "denetimde"; p.basladi = simdi(); kaydet(p, simdi(), BEN, "Denetime başlandı", "ilk rapor oluşturuldu"); }
-      p.rapor.push(r); ortakEkipman(p, r.kod); ortakRapor(p, r); kaydet(p, simdi(), BEN, "Rapor oluşturuldu", r.no + " · " + r.kod); SZ.r.sayfa = 1;
+      var r = raporAcIc(p, el.dataset.kod);
       goster(false); MK.bildir("Rapor oluşturuldu: " + r.no + ". Satırındaki “Raporu düzenle” saha rapor ekranını açar.");
     }
+  };
+  /* ── S.A.Y CHAT BAĞI (2026-10-13; maket-saychat.js): açık plan, ekipmanları, rapor açma — plan içiyle aynı kurallar (plan günü, günlük süre,
+     ekipman başına bir rapor, tamamlanmış planda yeni rapor yok, firmada eşsiz ekipman kodu). Sohbet kişiye özel: "kim" sohbeti yazan denetçi. */
+  MK.planIci = {
+    aktif: function () { var r = rota(); return r && !r.ekle && VERI === "dolu" ? bul(r.id) || null : null; },
+    kisi: function (k) { return KISI[k] || null; },
+    ekipmanlar: function (p) { return p.ekp.map(function (k) { var e = SICIL[k]; return { kod: k, tur: e.tur.k, konum: e.konum, pasif: !!e.pasif, raporlu: !!raporuVar(p, k) }; }); },
+    /* yeni rapor açılabilir mi; açılamıyorsa neden (null: açılır) */
+    engel: function (p) { return p.durum === "tamam" ? TAMAMLANDI : !calisir(p) ? "Plan kabul edilmeden rapor oluşturulmaz." : erken(p) ? MK.erkenMetin(p.tarih) : null; },
+    kodDurum: function (p, kod) { return kodDurum(p, kodNormal(kod || "")); },
+    kodNormal: kodNormal,
+    /* yeni: { tur, konum } — ekipman önce plana eklenir (sahada eklenen gibi "Yeni"), sonra raporu açılır */
+    raporAc: function (p, kod, kim, yeni) {
+      if (yeni) {
+        var t = turBul(yeni.tur);
+        SICIL[kod] = { kod: kod, tur: t, konum: (yeni.konum || "").trim() || "Konum yazılmadı", tesis: p.id, onceki: null, eklendi: simdi() };
+        p.ekp.push(kod); p.sonradan.push(kod); ortakEkipman(p, kod); kaydet(p, simdi(), kim || BEN, "Ekipman eklendi", kod + " · " + t.ad + " · S.A.Y Chat");
+      }
+      return raporAcIc(p, kod, kim);
+    },
+    ciz: function () { goster(false); }
   };
   X["ekipman-pasif"] = function (el) { var p = pl(el), e = SICIL[el.dataset.kod]; e.pasif = true; kaydet(p, simdi(), BEN, "Ekipman pasife alındı", e.kod); goster(false); MK.bildir(e.kod + " pasife alındı; rapor açılamaz. Etkinleştir ile geri alınır."); };
   X["ekipman-etkin"] = function (el) { var p = pl(el), e = SICIL[el.dataset.kod]; e.pasif = false; kaydet(p, simdi(), BEN, "Ekipman etkinleştirildi", e.kod); goster(false); MK.bildir(e.kod + " yeniden etkin."); };
