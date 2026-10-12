@@ -50,7 +50,9 @@ test("fotoğraftan okuma: öneri kartı; emin olunanlar toplu, emin olunmayan te
      satırında (gövdede değil), telefonda yalnız simge; bölüm kapalıyken de görünür, fotoğraf seçilince bölüm açılır */
   const linyeFoto = linye.getByLabel("Pano sigortaları (linye): fotoğraf ekle (yapay zekâ okur)");
   await expect(page.locator("#b-linye-ic").getByLabel("Pano sigortaları (linye): fotoğraf ekle (yapay zekâ okur)")).toHaveCount(0);
-  const fotoTus = linye.locator("label", { has: linyeFoto });
+  /* `has` içteki konumu etiketin İÇİNDE arar — bölümün kimliğiyle başlayan konum (linyeFoto) orada bulunmaz; sayfa düzeyindeki ad eşleşir */
+  const fotoTus = linye.locator("label", { has: page.getByLabel("Pano sigortaları (linye): fotoğraf ekle (yapay zekâ okur)") });
+  await expect(fotoTus).toHaveCount(1);
   const fotoYazi = fotoTus.getByText("Fotoğraf ekle (yapay zekâ okur)");
   if (bilgi.project.name === "telefon") await expect(fotoYazi).toBeHidden(); else await expect(fotoYazi).toBeVisible();
   await expect(fotoTus).toHaveAttribute("title", "Fotoğraf ekle (yapay zekâ okur)");
