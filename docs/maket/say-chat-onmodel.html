@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>S.A.Y Chat ön model · probata maket</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="../marka/favicon.svg" type="image/svg+xml">
+<!-- S.A.Y CHAT ÖN MODELİ (2026-10-12, bulut oturumu; reisim'in taslağı ve dört tur geri bildirimiyle). Tek başına durağan sayfa: maket kabuğu
+     (maket-ortak.js) ve ortak veri kullanılmaz; renkler tokens.css değerlerinin kopyası. Asıl maket bu sayfaya bakılarak docs/maket'teki
+     ilgili ekranlara (plan içi, rapor, ekipman türleri) işlenir; sonra bu dosya kaldırılabilir. Veriler uydurmadır. -->
+<style>
+/* Sora 5.3.0 — SIL OFL 1.1 — kendi sunucumuzdan (dış yazı tipi bağlantısı yok) */
+@font-face {
+  font-family: "Sora"; font-style: normal; font-display: swap; font-weight: 100 800;
+  src: url("../vendor/sora-5.3.0/sora-latin-ext-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face {
+  font-family: "Sora"; font-style: normal; font-display: swap; font-weight: 100 800;
+  src: url("../vendor/sora-5.3.0/sora-latin-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+/* Düzen: üstte kararlar, altta telefon ekranları akış sırasıyla; geniş ekranda 3 sütun, telefonda tek sütun */
+:root {
+  --zemin: #F5F3EE; --zemin2: #ECE9E1; --kart: #FFFFFF; --kenar: #DEDAD0; --kenar-alan: #7E8C96;
+  --yazi: #0F2A3D; --yazi2: #4E5F6C; --yazi3: #56646E;
+  --koyu: #0F2A3D; --koyu-yazi: #F5F3EE; --koyu-yazi2: #A8B7C1;
+  --onay: #1FA37A; --onay-yazi: #137050; --onay-zemin: #DCF1E7;
+  --uyari-yazi: #7F4F00; --uyari-zemin: #FAEACB; --bilgi-zemin: #E1EAF0;
+  --perde: rgba(15, 42, 61, .42);
+  --font: "Sora", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --zemin: #081925; --zemin2: #0B2130; --kart: #0F2A3D; --kenar: #21445B; --kenar-alan: #6F8796;
+  --yazi: #F5F3EE; --yazi2: #A8B7C1; --yazi3: #A8B7C1;
+  --koyu: #050F17; --koyu-yazi: #F5F3EE; --koyu-yazi2: #A8B7C1;
+  --onay: #2BB98B; --onay-yazi: #45CC9E; --onay-zemin: #0E3A30;
+  --uyari-yazi: #F2C46B; --uyari-zemin: #3A2C10; --bilgi-zemin: #16374D;
+  --perde: rgba(0, 0, 0, .55);
+  color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --zemin: #081925; --zemin2: #0B2130; --kart: #0F2A3D; --kenar: #21445B; --kenar-alan: #6F8796;
+  --yazi: #F5F3EE; --yazi2: #A8B7C1; --yazi3: #A8B7C1;
+  --koyu: #050F17; --koyu-yazi: #F5F3EE; --koyu-yazi2: #A8B7C1;
+  --onay: #2BB98B; --onay-yazi: #45CC9E; --onay-zemin: #0E3A30;
+  --uyari-yazi: #F2C46B; --uyari-zemin: #3A2C10; --bilgi-zemin: #16374D;
+  --perde: rgba(0, 0, 0, .55);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--zemin); color: var(--yazi); font-family: var(--font); font-size: 14px; line-height: 1.5; }
+.sayfa { max-width: 1240px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 48px; display: flex; flex-direction: column; gap: 28px; }
+h1 { margin: 0; font-size: 26px; line-height: 1.2; text-wrap: balance; }
+.alt { margin: 6px 0 0; color: var(--yazi2); max-width: 70ch; }
+.kurallar { background: var(--kart); border: 1px solid var(--kenar); border-radius: 12px; padding: 16px 18px; }
+.kurallar h2 { margin: 0 0 10px; font-size: 15px; }
+.kurallar ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; max-width: 80ch; }
+.kurallar b { font-weight: 600; }
+.ekranlar { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 32px 24px; }
+figure { margin: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+figcaption { display: flex; flex-direction: column; gap: 2px; }
+figcaption strong { font-size: 14px; }
+figcaption span { color: var(--yazi2); font-size: 12.5px; }
+.tel { width: 100%; max-width: 360px; height: 720px; border: 1px solid var(--kenar); border-radius: 22px; overflow: hidden; display: flex; flex-direction: column; background: var(--zemin); position: relative; box-shadow: 0 8px 28px rgba(15, 42, 61, .10); }
+.ust { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: var(--koyu); color: var(--koyu-yazi); }
+.ust .geri { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; flex: none; }
+.ust strong { display: block; font-size: 15px; }
+.ust span { display: block; font-size: 11.5px; color: var(--koyu-yazi2); }
+.serit { display: flex; align-items: center; gap: 8px; padding: 7px 12px; background: var(--uyari-zemin); color: var(--uyari-yazi); font-size: 12px; font-weight: 600; }
+.govde { flex: 1; overflow: hidden; display: flex; flex-direction: column; gap: 10px; padding: 12px; min-height: 0; }
+.alt-cubuk { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px 14px; background: var(--kart); border-top: 1px solid var(--kenar); }
+.gun { align-self: center; font-size: 11px; color: var(--yazi2); background: var(--zemin2); padding: 2px 10px; border-radius: 999px; }
+.balon { align-self: flex-end; width: 88%; background: var(--kart); border: 1px solid var(--kenar); border-radius: 12px 12px 4px 12px; padding: 9px; display: flex; flex-direction: column; gap: 6px; }
+.balon.cihazda { border-style: dashed; border-color: var(--kenar-alan); }
+.sistem { align-self: flex-start; max-width: 88%; background: var(--bilgi-zemin); border-radius: 12px 12px 12px 4px; padding: 9px 11px; }
+.fotolar { display: flex; gap: 6px; }
+.foto { background: var(--zemin2); border: 1px solid var(--kenar); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--yazi3); font-size: 11px; text-align: center; padding: 4px; }
+.f-k { width: 76px; height: 60px; } .f-b { height: 170px; } .f-o { width: 100%; height: 120px; }
+.baslik-satir { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.ad { font-weight: 600; }
+.satirlar { white-space: pre-line; font-size: 13px; }
+.durum { display: flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; color: var(--yazi2); }
+.durum i { width: 8px; height: 8px; border-radius: 999px; background: var(--onay); display: inline-block; }
+.durum.bekle { color: var(--uyari-yazi); } .durum.bekle i { background: #F2C46B; }
+.tus { height: 44px; border-radius: 8px; border: 1px solid var(--kenar-alan); background: var(--kart); color: var(--yazi); font: 600 13px var(--font); display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 12px; }
+.tus.ana { background: var(--koyu); color: var(--koyu-yazi); border-color: var(--koyu); }
+.tus.yesil { background: var(--onay); color: #0F2A3D; border-color: var(--onay); }
+.tus.kucuk { height: 32px; font-size: 12px; padding: 0 10px; }
+.yuvarlak { width: 46px; height: 46px; border-radius: 999px; padding: 0; flex: none; }
+.etiket { font-size: 11px; font-weight: 600; color: var(--yazi2); }
+.girdi { width: 100%; min-height: 44px; border: 1px solid var(--kenar-alan); border-radius: 8px; background: var(--kart); color: var(--yazi); padding: 10px 12px; font: 14px var(--font); }
+.liste { list-style: none; margin: 0; padding: 0; background: var(--kart); border: 1px solid var(--kenar); border-radius: 12px; overflow: hidden; }
+.liste li { padding: 9px 12px; border-top: 1px solid var(--kenar); display: flex; flex-direction: column; gap: 1px; }
+.liste li:first-child { border-top: 0; }
+.liste li.secili { background: var(--onay-zemin); }
+.liste small { color: var(--yazi2); font-size: 11.5px; }
+.cipler { display: flex; flex-wrap: wrap; gap: 6px; }
+.cip { font-size: 11.5px; padding: 3px 9px; border-radius: 999px; background: var(--onay-zemin); color: var(--onay-yazi); font-weight: 600; }
+.cip.bos { background: var(--zemin2); color: var(--yazi2); }
+.cip.not { background: var(--bilgi-zemin); color: var(--yazi); }
+.iki { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.yonerge { background: var(--kart); border: 1px solid var(--kenar); border-radius: 12px; padding: 9px; display: flex; flex-direction: column; gap: 4px; }
+.yonerge .satirlar { color: var(--yazi3); font-size: 12.5px; line-height: 1.75; }
+.mesaj-kutu { border: 1px solid var(--kenar-alan); border-radius: 12px; background: var(--kart); display: flex; flex-direction: column; }
+.mesaj-kutu .yazi { padding: 10px 12px; white-space: pre-line; font-size: 13.5px; line-height: 1.6; min-height: 150px; }
+.mesaj-kutu .araclar { display: flex; justify-content: flex-end; gap: 8px; padding: 8px; border-top: 1px solid var(--kenar); }
+.perde { position: absolute; inset: 0; background: var(--perde); }
+.alttan { position: absolute; left: 0; right: 0; bottom: 0; background: var(--kart); border-radius: 16px 16px 0 0; padding: 16px 14px 18px; display: flex; flex-direction: column; gap: 12px; }
+.alttan h3 { margin: 0; font-size: 16px; }
+.uyari { display: flex; gap: 8px; padding: 10px; border-radius: 8px; background: var(--uyari-zemin); color: var(--uyari-yazi); font-size: 12px; line-height: 1.45; }
+.uyari div { display: flex; flex-direction: column; gap: 4px; }
+.kosul { display: flex; gap: 8px; font-size: 12.5px; }
+.kosul b { color: var(--onay-yazi); } .kosul b.u { color: var(--uyari-yazi); }
+.kart { background: var(--kart); border: 1px solid var(--kenar); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; }
+.kart small { color: var(--yazi2); font-size: 12px; }
+.secim { width: 100%; min-height: 48px; border: 1px solid var(--kenar-alan); border-radius: 8px; background: var(--kart); color: var(--yazi); padding: 0 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; font: 600 14px var(--font); }
+.secim.bos { color: var(--yazi3); font-weight: 400; }
+.secim small { color: var(--yazi2); font-size: 11.5px; font-weight: 400; }
+.tus.kapali { background: var(--zemin2); color: var(--yazi3); border-color: var(--kenar); }
+.tur-liste { list-style: none; margin: 0; padding: 0; border: 1px solid var(--kenar); border-radius: 12px; overflow: hidden; }
+.tur-liste li { min-height: 44px; padding: 0 12px; border-top: 1px solid var(--kenar); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.tur-liste li:first-child { border-top: 0; }
+.tur-liste li small { color: var(--yazi2); font-size: 11.5px; }
+.tur-liste li.secili { background: var(--onay-zemin); font-weight: 600; }
+.tur-liste li.secili small { color: var(--onay-yazi); display: inline-flex; align-items: center; gap: 4px; }
+.tur-liste li.daha { justify-content: center; color: var(--yazi2); font-size: 12px; background: var(--zemin2); }
+.alttan .ust-satir { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.alttan .not { color: var(--yazi2); font-size: 12px; margin-top: -4px; }
+.secenek { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 10px; background: var(--zemin2); }
+.secenek span { height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font: 600 13px var(--font); color: var(--yazi2); }
+.secenek span.acik { background: var(--kart); color: var(--yazi); border: 1px solid var(--kenar-alan); }
+.tur-liste li.iki-satir { min-height: 54px; padding-block: 6px; }
+.tur-liste li.iki-satir > span { display: flex; flex-direction: column; gap: 1px; }
+.tur-liste li.iki-satir > span small { font-weight: 400; }
+.genis { grid-column: 1 / -1; }
+.masa { border: 1px solid var(--kenar); border-radius: 14px; overflow: hidden; background: var(--zemin); box-shadow: 0 8px 28px rgba(15, 42, 61, .10); }
+.masa-ust { padding: 14px 18px; border-bottom: 1px solid var(--kenar); background: var(--kart); display: flex; flex-direction: column; gap: 4px; }
+.kirinti { font-size: 12px; color: var(--yazi2); display: flex; align-items: center; gap: 4px; }
+.masa-ust h3 { margin: 0; font-size: 19px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.rozet { font-size: 11.5px; font-weight: 600; padding: 2px 9px; border-radius: 999px; background: var(--bilgi-zemin); color: var(--yazi); }
+.masa-govde { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 10px; }
+.bolum-satir { background: var(--kart); border: 1px solid var(--kenar); border-radius: 12px; min-height: 52px; padding: 0 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; font-weight: 600; }
+.bolum-satir small { color: var(--yazi2); font-weight: 400; font-size: 12px; }
+.bolum-acik { background: var(--kart); border: 1px solid var(--kenar-alan); border-radius: 12px; overflow: hidden; }
+.bolum-acik > .bolum-bas { min-height: 52px; padding: 0 14px; display: flex; align-items: center; gap: 8px; font-weight: 700; border-bottom: 1px solid var(--kenar); }
+.bolum-acik > .bolum-bas small { margin-left: auto; color: var(--yazi2); font-weight: 400; font-size: 12px; }
+.ayar { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 18px; padding: 14px; }
+.ayar-satirlar { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.ayar-bas, .ayar-satir { display: grid; grid-template-columns: 30px minmax(0, 1fr) minmax(0, 1.25fr) auto; gap: 8px; align-items: center; }
+.ayar-bas { font-size: 11px; font-weight: 600; color: var(--yazi2); padding: 0 2px; }
+.sira { width: 30px; height: 30px; border-radius: 999px; background: var(--zemin2); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12.5px; }
+.ayar-satir .girdi { min-height: 40px; padding: 8px 10px; font-size: 13.5px; }
+.ayar-satir .secim { min-height: 40px; font-weight: 400; font-size: 13px; }
+.kucuk-tuslar { display: flex; gap: 4px; }
+.kucuk-tuslar span { width: 34px; height: 34px; border: 1px solid var(--kenar); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--yazi2); background: var(--kart); }
+.kucuk-tuslar span.pasif { opacity: .4; }
+.ayar-on { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.ayar-on .yonerge { max-width: 220px; }
+.ayar-alt { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 14px; border-top: 1px solid var(--kenar); }
+.bilgi-not { font-size: 12px; color: var(--yazi2); line-height: 1.5; margin: 0; }
+@media (max-width: 760px) {
+  .ayar { grid-template-columns: 1fr; }
+  .ayar-bas { display: none; }
+  .ayar-satir { grid-template-columns: 30px minmax(0, 1fr) auto; padding-bottom: 8px; border-bottom: 1px solid var(--kenar); }
+  .ayar-satir .girdi { grid-column: 2; grid-row: 1; }
+  .ayar-satir .kucuk-tuslar { grid-column: 3; grid-row: 1; }
+  .ayar-satir .secim { grid-column: 2 / 4; grid-row: 2; }
+}
+svg { flex: none; }
+:focus-visible { outline: 2px solid var(--onay); outline-offset: 2px; }
+@media (max-width: 420px) { .tel { height: 680px; } h1 { font-size: 22px; } }
+body { margin: 0; }
+</style>
+</head>
+<body>
+<div class="sayfa">
+  <header>
+    <h1>S.A.Y Chat</h1>
+    <p class="alt">Sahada internet olmasa da ekipman fotoğrafı ve kısa notla kayıt tutulur; sonra tek tuşla bu kayıtlardan rapor taslakları oluşur. Ön model · ekranlar telefon boyunda, örnek veriler uydurmadır.</p>
+  </header>
+
+  <section class="kurallar" aria-labelledby="kur-bas">
+    <h2 id="kur-bas">Konuşulan kurallar</h2>
+    <ul>
+      <li><b>Plana bağlı, kişiye özel.</b> Plana girince o plana özel sohbet ve geçmişi açılır. Her denetçi yalnız kendi sohbetini görür; plan sorumlusu, teknik yönetici ya da yönetici göremez.</li>
+      <li><b>Etiket yazmadan, sırayla.</b> Mesajın 1. satırı yönergenin 1. maddesi (Marka), 2. satırı 2. maddesi (Model) sayılır, böyle devam eder. Bilinmeyen madde için satıra <b>-</b> yazılır ya da boş bırakılır. Yönergeden fazla satırlar nota eklenir.</li>
+      <li><b>Ekipman seçme tuşuyla seçilir.</b> Fotoğraftan sonra <b>Ekipman seçin</b> tuşuna basılır; açılan pencerede iki seçenek var. <b>Plandan seç:</b> plandaki ekipmanlardan biri seçilir, rapor o ekipmana yazılır. <b>Yeni ekle:</b> ekipman türü seçilir, rapor yazılırken plana yeni ekipman olarak eklenir.</li>
+      <li><b>Liste branşa göre.</b> Mekanik denetçi yalnız mekanik, elektrik denetçisi yalnız elektrik ekipmanlarını ve türlerini görür. Plandan seç'te raporu yazılmış ekipman yer almaz; Yeni ekle'de rapor formatı kurulmuş türler yer alır.</li>
+      <li><b>Bir kayıt = bir ekipman.</b> Ekipman fotoğrafları, etiket fotoğrafı ve mesaj tamamlanınca <b>Gönder</b> ile kayıt kapanır; ek fotoğraf göndermeden önce eklenir.</li>
+      <li><b>Sonradan düzeltme.</b> Gönderilen kayıt, rapor yazılana kadar geçmişten açılıp değiştirilebilir.</li>
+      <li><b>Yönerge yazı alanı değil.</b> Sağ üstteki numaralı Marka / Model / Sn… satırları yalnız sırayı gösterir; türe göre değişir.</li>
+      <li><b>Satırları firma ayarlar.</b> Etiket bilgisi satırları (Marka, Model, Sn…) <b>Ekipman türleri</b>'nde tür düzenlenirken <b>S.A.Y Chat ayarları</b> bölümünden değiştirilir: satır adı, sırası, rapordaki alanı; satır eklenir, silinir. Yeni türde satırlar rapor formatının ekipman bilgisi alanlarından hazır gelir. Değişiklik yeni kayıtlarda geçerli; gönderilmiş kayıt gönderildiği andaki sırayla okunur.</li>
+      <li><b>Yapay zekâ yalnız etiket okumada.</b> Etiket fotoğrafından okuma isteğe bağlıdır ve token harcadığı uyarısıyla gelir. Satırları alanlara dağıtmak kuralla yapılır, ücretsizdir.</li>
+      <li><b>Rapor yazılınca kayıt silinir.</b> Ekipman fotoğrafları rapora geçer; etiket fotoğrafı rapora konmaz.</li>
+    </ul>
+  </section>
+
+  <div class="ekranlar">
+
+    <figure>
+      <figcaption><strong>1 · Planın sohbeti</strong><span>Yalnız bu denetçinin bekleyen kayıtları; raporu yazılanlar görünmez</span></figcaption>
+      <div class="tel" role="img" aria-label="Planın sohbet ekranı">
+        <div class="ust"><span class="geri"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></span><div><strong>S.A.Y Chat</strong><span>P-2610-0012 · Deneme Gıda · Merkez Fabrika</span></div></div>
+        <div class="serit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h.01"/><path d="M8.5 16.4a5 5 0 0 1 7 0"/><path d="m2 2 20 20"/></svg>Çevrimdışı · 1 kayıt cihazda bekliyor</div>
+        <div class="govde">
+          <span class="gun">Bugün</span>
+          <div class="balon">
+            <div class="fotolar"><div class="foto f-k">ekipman</div><div class="foto f-k">ekipman</div></div>
+            <div class="baslik-satir"><span class="ad">ET-2001 · Elektrik iç tesisatı</span><small style="color:var(--yazi2);font-size:11.5px">ZPKR02</small></div>
+            <div class="satirlar">Marka: Örnek Elektrik
+Model: P-400
+Not: pano kapağı kilitsiz</div>
+            <div class="baslik-satir"><span class="durum"><i></i>Gönderildi · 09:40</span><span class="tus kucuk">Düzenle</span></div>
+          </div>
+          <div class="balon cihazda">
+            <div class="fotolar"><div class="foto f-k">ekipman</div></div>
+            <div class="baslik-satir"><span class="ad">AG topraklama (yeni)</span><small style="color:var(--yazi2);font-size:11.5px">ZPKR01</small></div>
+            <div class="satirlar">Kullanım yeri: trafo odası
+Not: bara bağlantısı paslı</div>
+            <div class="baslik-satir"><span class="durum bekle"><i></i>Cihazda · 10:05</span><span class="tus kucuk">Düzenle</span></div>
+          </div>
+        </div>
+        <div class="alt-cubuk">
+          <span class="tus ana">Bekleyenler için rapor yaz (2)</span>
+          <div style="display:flex;align-items:center;gap:10px"><span class="tus yesil yuvarlak"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></span><small style="color:var(--yazi2);font-size:12px">Yeni kayıt: önce ekipmanın fotoğrafını çekin</small></div>
+        </div>
+      </div>
+    </figure>
+
+    <figure>
+      <figcaption><strong>2 · Fotoğraf ve ekipman seçimi</strong><span>Seçme tuşuna basınca pencere açılır: Plandan seç ya da Yeni ekle</span></figcaption>
+      <div class="tel" role="img" aria-label="Fotoğraf ve ekipman seçme tuşu">
+        <div class="ust"><span class="geri"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span><div><strong>Yeni kayıt</strong><span>1 / 2 · Hangi ekipman?</span></div></div>
+        <div class="govde">
+          <div class="foto f-o">çekilen ekipman fotoğrafı</div>
+          <div class="sistem">Bu hangi ekipman? Seçin.</div>
+          <span class="etiket">Ekipman</span>
+          <div class="secim bos"><span>Ekipman seçin</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
+          <small style="color:var(--yazi2);font-size:12px;line-height:1.5">Seçince yönerge o türün rapor formatına göre gelir.</small>
+        </div>
+        <div class="alt-cubuk"><span class="tus kapali">Devam · önce ekipman seçin</span></div>
+      </div>
+    </figure>
+
+    <figure>
+      <figcaption><strong>3 · Plandan seç · elektrik denetçisi</strong><span>Plandaki elektrik ekipmanları; rapor seçilen ekipmana yazılır</span></figcaption>
+      <div class="tel" role="img" aria-label="Plandan seç: elektrik denetçisinin plan ekipmanları">
+        <div class="ust"><span class="geri"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span><div><strong>Yeni kayıt</strong><span>1 / 2 · Hangi ekipman?</span></div></div>
+        <div class="govde">
+          <div class="foto f-o">çekilen ekipman fotoğrafı</div>
+          <div class="sistem">Bu hangi ekipman? Seçin.</div>
+          <span class="etiket">Ekipman</span>
+          <div class="secim bos"><span>Ekipman seçin</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
+        </div>
+        <div class="perde"></div>
+        <div class="alttan">
+          <div class="ust-satir"><h3>Ekipman seçin</h3><span class="geri" style="width:40px;height:40px;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span></div>
+          <div class="secenek"><span class="acik">Plandan seç</span><span class="">Yeni ekle</span></div>
+          <div class="not">Elektrik branşı · raporu yazılmamış 4 ekipman</div>
+          <div class="girdi" style="display:flex;align-items:center;gap:8px;color:var(--yazi3)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>Kod, tür, yer</div>
+          <ul class="tur-liste">
+            <li class="iki-satir secili"><span><span>ET-2001 · Elektrik iç tesisatı</span><small>Ana dağıtım odası</small></span><small style="color:var(--onay-yazi)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></small></li>
+            <li class="iki-satir"><span><span>ET-2002 · Elektrik iç tesisatı</span><small>Üretim holü</small></span></li>
+            <li class="iki-satir"><span><span>ET-2004 · Elektrik iç tesisatı</span><small>Kompresör odası</small></span></li>
+            <li class="iki-satir"><span><span>AT-2005 · AG topraklama</span><small>Jeneratör odası</small></span></li>
+          </ul>
+        </div>
+      </div>
+    </figure>
+
+    <figure>
+      <figcaption><strong>4 · Yeni ekle · elektrik denetçisi</strong><span>Planda olmayan ekipman: tür seçilir, rapor yazılırken plana eklenir</span></figcaption>
+      <div class="tel" role="img" aria-label="Yeni ekle: elektrik denetçisinin ekipman türleri">
+        <div class="ust"><span class="geri"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span><div><strong>Yeni kayıt</strong><span>1 / 2 · Hangi ekipman?</span></div></div>
+        <div class="govde">
+          <div class="foto f-o">çekilen ekipman fotoğrafı</div>
+          <div class="sistem">Bu hangi ekipman? Seçin.</div>
+          <span class="etiket">Ekipman</span>
+          <div class="secim bos"><span>Ekipman seçin</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
+        </div>
+        <div class="perde"></div>
+        <div class="alttan">
+          <div class="ust-satir"><h3>Ekipman seçin</h3><span class="geri" style="width:40px;height:40px;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span></div>
+          <div class="secenek"><span class="">Plandan seç</span><span class="acik">Yeni ekle</span></div>
+          <div class="not">Elektrik branşı · rapor formatı olan 6 tür</div>
+          <div class="girdi" style="display:flex;align-items:center;gap:8px;color:var(--yazi3)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>Tür ara</div>
+          <ul class="tur-liste">
+            <li class="secili"><span>AG topraklama</span><small>ZPKR01 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></small></li>
+            <li><span>Dağıtım panosu</span><small>Firma</small></li>
+            <li><span>Elektrik iç tesisatı</span><small>ZPKR02</small></li>
+            <li><span>Transformatör (1–36 kV)</span><small>ZPKR05</small></li>
+            <li><span>Yangın algılama sistemi</span><small>ZPKR04</small></li>
+            <li><span>Yıldırımdan korunma</span><small>ZPKR03</small></li>
+          </ul>
+        </div>
+      </div>
+    </figure>
+
+    <figure>
+      <figcaption><strong>5 · Plandan seç · mekanik denetçisi</strong><span>Aynı plan, başka denetçi: yalnız mekanik ekipmanlar; Yeni ekle'de de yalnız mekanik türler</span></figcaption>
+      <div class="tel" role="img" aria-label="Plandan seç: mekanik denetçinin plan ekipmanları">
+        <div class="ust"><span class="geri"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span><div><strong>Yeni kayıt</strong><span>1 / 2 · Hangi ekipman?</span></div></div>
+        <div class="govde">
+          <div class="foto f-o">çekilen ekipman fotoğrafı</div>
+          <div class="sistem">Bu hangi ekipman? Seçin.</div>
+          <span class="etiket">Ekipman</span>
+          <div class="secim bos"><span>Ekipman seçin</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
+        </div>
+        <div class="perde"></div>
+        <div class="alttan">
+          <div class="ust-satir"><h3>Ekipman seçin</h3><span class="geri" style="width:40px;height:40px;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span></div>
+          <div class="secenek"><span class="acik">Plandan seç</span><span class="">Yeni ekle</span></div>
+          <div class="not">Mekanik branşı · raporu yazılmamış 3 ekipman</div>
+          <div class="girdi" style="display:flex;align-items:center;gap:8px;color:var(--yazi3)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>Kod, tür, yer</div>
+          <ul class="tur-liste">
+            <li class="iki-satir"><span><span>KS-2006 · Kompresör</span><small>Kompresör odası</small></span></li>
+            <li class="iki-satir"><span><span>HT-2007 · Hava tankı</span><small>Kompresör odası</small></span></li>
+            <li class="iki-satir"><span><span>FL-2008 · Forklift</span><small>Sevkiyat alanı</small></span></li>
+          </ul>
+        </div>
+      </div>
+    </figure>
+
+    <figure>
+      <figcaption><strong>6 · Yönerge ve mesaj</strong><span>Gönder = bu ekipman bitti; ek fotoğraf göndermeden önce eklenir</span></figcaption>
+      <div class="tel" role="img" aria-label="Yönerge ve mesaj ekranı">
+        <div class="ust"><span class="geri"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></span><div><strong>Yeni kayıt</strong><span>2 / 2 · ET-2001 · Elektrik iç tesisatı</span></div></div>
+        <div class="govde">
+          <div class="iki">
+            <div style="display:flex;flex-direction:column;gap:4px"><span class="etiket">O anki ekipman</span><div class="foto f-b">fotoğraf</div></div>
+            <div class="yonerge">
+              <span class="etiket">Her satıra sırayla</span>
+              <div class="satirlar">1. Marka
+2. Model
+3. Sn
+4. İmal yılı
+5. Kullanım yeri
+6. Not</div>
+              <span class="tus kucuk" style="margin-top:auto"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>Etiket fotoğrafı</span>
+            </div>
+          </div>
+          <div class="fotolar"><div class="foto f-k">ekipman 1</div><div class="foto f-k">ekipman 2</div><div class="foto f-k" style="border-style:dashed">+ ek</div></div>
+          <div class="mesaj-kutu">
+            <div class="yazi">Örnek Elektrik
+P-400
+88213
+-
+bakım binası
+pano kapağı kilitsiz, iç kapak yok</div>
+            <div class="araclar">
+              <span class="tus yuvarlak" aria-label="Ek fotoğraf"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></span>
+              <span class="tus yesil yuvarlak" aria-label="Gönder"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg></span>
+            </div>
+          </div>
+          <div class="cipler"><span class="cip">1 Marka ✓</span><span class="cip">2 Model ✓</span><span class="cip">3 Sn ✓</span><span class="cip bos">4 İmal yılı boş</span><span class="cip">5 Kullanım yeri ✓</span><span class="cip not">6 Not → uzman yorumu</span></div>
+        </div>
+      </div>
+    </figure>
+
+    <figure>
+      <figcaption><strong>7 · Etiketten okuma</strong><span>İsteğe bağlı; tek yapay zekâ noktası</span></figcaption>
+      <div class="tel" role="img" aria-label="Etiketten okuma uyarı penceresi">
+        <div class="ust"><span class="geri"></span><div><strong>Yeni kayıt</strong><span>2 / 2 · ET-2001 · Elektrik iç tesisatı</span></div></div>
+        <div class="govde"></div>
+        <div class="perde"></div>
+        <div class="alttan">
+          <h3>Etiket fotoğrafı</h3>
+          <div class="foto" style="height:120px">çekilen etiket</div>
+          <div class="uyari"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><div><strong>Okuma yapay zekâ kullanır</strong><span>Firmanın kotasından harcar: okuma başına yaklaşık 0,1 cent. Bu ay 3,20 $ / 20 $.</span><span>Çevrimdışıyken okuma sırada bekler.</span></div></div>
+          <small style="color:var(--yazi2);font-size:12px">Okunan değerler mesaja öneri olarak yazılır, siz düzeltirsiniz. Etiket fotoğrafı rapora konmaz.</small>
+          <span class="tus ana">Oku ve mesaja yaz</span>
+          <span class="tus">Okumadan geç</span>
+        </div>
+      </div>
+    </figure>
+
+    <figure>
+      <figcaption><strong>8 · Geçmişten düzenleme</strong><span>Rapor yazılana kadar her kayıt açılıp değiştirilebilir</span></figcaption>
+      <div class="tel" role="img" aria-label="Kayıt düzenleme ekranı">
+        <div class="ust"><span class="geri"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></span><div><strong>Kaydı düzenle</strong><span>ET-2001 · gönderildi 09:40</span></div></div>
+        <div class="govde">
+          <span class="etiket">Ekipman</span>
+          <div class="secim"><span>ET-2001 · Elektrik iç tesisatı <small>Plandan</small></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
+          <span class="etiket">Fotoğraflar</span>
+          <div class="fotolar"><div class="foto f-k">ekipman 1 ×</div><div class="foto f-k">ekipman 2 ×</div><div class="foto f-k" style="border-style:dashed">+ ekle</div></div>
+          <span class="etiket">Mesaj</span>
+          <div class="mesaj-kutu"><div class="yazi" style="min-height:130px">Örnek Elektrik
+P-400
+88213
+2015
+bakım binası
+pano kapağı kilitsiz, iç kapak yok</div></div>
+          <span class="tus" style="color:var(--uyari-yazi)">Kaydı sil</span>
+        </div>
+        <div class="alt-cubuk"><span class="tus ana">Kaydet</span></div>
+      </div>
+    </figure>
+
+    <figure>
+      <figcaption><strong>9 · Bekleyenler için rapor yaz</strong><span>Taslaklar oluşur, kayıtlar sohbetten silinir</span></figcaption>
+      <div class="tel" role="img" aria-label="Rapor yazma onay ekranı">
+        <div class="ust"><span class="geri"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></span><div><strong>Bekleyenler için rapor yaz</strong><span>P-2610-0012 · 2 kayıt</span></div></div>
+        <div class="govde">
+          <div class="kart"><div class="baslik-satir"><strong>1 · ET-2001 · Elektrik iç tesisatı</strong><small>ZPKR02</small></div><small>Plandaki ekipmana yazılacak · 5 alan dolacak · 2 fotoğraf rapora geçecek · not → uzman yorumu</small></div>
+          <div class="kart"><div class="baslik-satir"><strong>2 · AG topraklama (yeni)</strong><small>ZPKR01</small></div><small>Plana yeni ekipman olarak eklenecek · 1 alan dolacak · 1 fotoğraf rapora geçecek · not → uzman yorumu</small></div>
+          <div class="kart">
+            <strong style="font-size:13px">Oluşturmadan önce</strong>
+            <div class="kosul"><b>✓</b><span>Plan günü bugün</span></div>
+            <div class="kosul"><b>✓</b><span>Günlük süre yetiyor: 2 rapor, 135 dk</span></div>
+            <div class="kosul"><b class="u">!</b><span>İnternet gerekli: rapor numarası sunucuda verilir</span></div>
+          </div>
+          <small style="color:var(--yazi2);font-size:12px;line-height:1.5">Taslaklar sırayla açılır; kriterleri ve ölçümleri raporda doldurursunuz. Raporu oluşan kayıtlar sohbetten silinir, etiket fotoğrafları rapora konmaz.</small>
+        </div>
+        <div class="alt-cubuk"><span class="tus ana">2 rapor taslağı oluştur</span></div>
+      </div>
+    </figure>
+
+
+    <figure class="genis">
+      <figcaption><strong>10 · Ekipman türleri › S.A.Y Chat ayarları</strong><span>Tür düzenlenirken bölüme tıklanınca açılır; etiket bilgisi satırları burada değişir (masaüstü)</span></figcaption>
+      <div class="masa" role="img" aria-label="Ekipman türü sayfasında S.A.Y Chat ayarları bölümü">
+        <div class="masa-ust">
+          <span class="kirinti">Ekipman türleri <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg> Elektrik</span>
+          <h3>Elektrik iç tesisatı <span class="rozet">Elektrik · ZPKR02</span></h3>
+        </div>
+        <div class="masa-govde">
+          <div class="bolum-satir"><span>Genel bilgiler</span><small>periyot 12 ay · tahmini süre 90 dk</small></div>
+          <div class="bolum-satir"><span>Rapor formatı</span><small>ZPKR02 · v4</small></div>
+          <div class="bolum-satir"><span>Ölçüm cihazları</span><small>3 cihaz türü</small></div>
+          <div class="bolum-acik">
+            <div class="bolum-bas"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>S.A.Y Chat ayarları<small>6 satır</small></div>
+            <div class="ayar">
+              <div class="ayar-satirlar">
+                <p class="bilgi-not">Denetçinin mesajında her satır sırayla bir alana yazılır. Satır adını, sırasını ve rapordaki alanını değiştirin; satır ekleyin ya da silin.</p>
+                <div class="ayar-bas"><span>Sıra</span><span>Telefonda yazan</span><span>Rapordaki alan</span><span></span></div>
+              <div class="ayar-satir">
+                <span class="sira">1</span>
+                <div class="girdi">Marka</div>
+                <div class="secim"><span>Ekipman bilgileri › Marka</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
+                <div class="kucuk-tuslar"><span class="pasif" aria-label="Yukarı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></span><span  aria-label="Aşağı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span><span aria-label="Satırı sil"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span></div>
+              </div>
+              <div class="ayar-satir">
+                <span class="sira">2</span>
+                <div class="girdi">Model</div>
+                <div class="secim"><span>Ekipman bilgileri › Model</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
+                <div class="kucuk-tuslar"><span  aria-label="Yukarı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></span><span  aria-label="Aşağı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span><span aria-label="Satırı sil"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span></div>
+              </div>
+              <div class="ayar-satir">
+                <span class="sira">3</span>
+                <div class="girdi">Sn</div>
+                <div class="secim"><span>Ekipman bilgileri › Seri no</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
+                <div class="kucuk-tuslar"><span  aria-label="Yukarı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></span><span  aria-label="Aşağı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span><span aria-label="Satırı sil"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span></div>
+              </div>
+              <div class="ayar-satir">
+                <span class="sira">4</span>
+                <div class="girdi">İmal yılı</div>
+                <div class="secim"><span>Ekipman bilgileri › İmal yılı</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
+                <div class="kucuk-tuslar"><span  aria-label="Yukarı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></span><span  aria-label="Aşağı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span><span aria-label="Satırı sil"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span></div>
+              </div>
+              <div class="ayar-satir">
+                <span class="sira">5</span>
+                <div class="girdi">Kullanım yeri</div>
+                <div class="secim"><span>Ekipman bilgileri › Kullanım yeri</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
+                <div class="kucuk-tuslar"><span  aria-label="Yukarı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></span><span  aria-label="Aşağı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span><span aria-label="Satırı sil"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span></div>
+              </div>
+              <div class="ayar-satir">
+                <span class="sira">6</span>
+                <div class="girdi">Not</div>
+                <div class="secim"><span>Muayene uzmanı yorumu</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
+                <div class="kucuk-tuslar"><span  aria-label="Yukarı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></span><span class="pasif" aria-label="Aşağı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span><span aria-label="Satırı sil"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span></div>
+              </div>
+                <span class="tus" style="align-self:flex-start"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Satır ekle</span>
+                <p class="bilgi-not">Yönergeden fazla yazılan satırlar nota eklenir. Değişiklik yeni kayıtlarda geçerli; gönderilmiş kayıtlar gönderildikleri andaki sırayla okunur.</p>
+              </div>
+              <div class="ayar-on">
+                <span class="etiket">Telefonda böyle görünür</span>
+                <div class="yonerge">
+                  <span class="etiket">Her satıra sırayla</span>
+                  <div class="satirlar">1. Marka
+2. Model
+3. Sn
+4. İmal yılı
+5. Kullanım yeri
+6. Not</div>
+                  <span class="tus kucuk"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>Etiket fotoğrafı</span>
+                </div>
+              </div>
+            </div>
+            <div class="ayar-alt"><span class="tus">Vazgeç</span><span class="tus ana">Kaydet</span></div>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+  </div>
+</div>
+</body>
+</html>
