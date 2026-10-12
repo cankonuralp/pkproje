@@ -13,6 +13,8 @@ CREATE TABLE IF NOT EXISTS rapor_oneri (
   bolum     text NOT NULL CHECK (bolum ~ '^[A-Za-z0-9_-]{0,60}$'),
   tur       text NOT NULL CHECK (tur IN ('alan', 'tablo', 'bilgi')),
   okunan    jsonb NOT NULL CHECK (jsonb_typeof(okunan) IN ('array', 'object') AND length(okunan::text) <= 60000),
+  -- güvenli yazıcının döndürdüğü sürüm (öneri değişmez; hep 0)
+  surum     integer NOT NULL DEFAULT 0,
   olustu    timestamptz NOT NULL DEFAULT now(),
   FOREIGN KEY (firma_id, rapor_id) REFERENCES rapor (firma_id, id) ON DELETE CASCADE,
   UNIQUE (firma_id, id)
