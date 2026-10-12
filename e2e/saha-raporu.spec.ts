@@ -120,7 +120,9 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.locator(":focus")).toBeInViewport();
   await expect(girdi(page, "Hidrostatik deney basıncı").first()).toHaveAttribute("aria-invalid", "true");
-  await expect(page.locator("#b-sabit-cihaz").getByText("Eksik", { exact: true }).first()).toBeVisible();
+  /* cihaz bölümü formatın kendi "Ölçüm cihazları" bölümü (459) ya da sabit bölüm — başlığıyla bulunur */
+  const cihazBolum = page.locator("section", { has: page.getByRole("heading", { level: 2, name: /Ölçüm cihazları$/ }) });
+  await expect(cihazBolum.getByText("Eksik", { exact: true }).first()).toBeVisible();
   await expect(asama(page)).toContainText("Yeni");
   await expect(page).toHaveURL(new RegExp(`${raporAdresi}$`));
 
