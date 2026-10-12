@@ -2467,6 +2467,18 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-13 (523): **S.A.Y CHAT AYARLARI** (§3.10 m.13–16; maket 521 ekran 12 onaylı). Ekipman türleri › tür sayfasında ölçüm cihazlarından sonra
+  tıklayınca açılan "S.A.Y Chat ayarları": mesaj satırları (sıra · telefonda yazan ad · rapordaki alan · hazır değer · yukarı / aşağı · sil · Satır
+  ekle), okunacak fotoğraf başlıkları (Açık / Kapalı · sil · Başlık ekle), sağda "Telefonda böyle görünür"; bölümün kendi Kaydet / Vazgeç'i (değişiklik
+  yoksa kapalı). Kayıt yoksa FORMATTAN HAZIR: satırlar formatın ekipman bölümü alanlarından (yoksa marka, model, seri no, imal yılı, kullanım yeri) +
+  Not → Muayene uzmanı yorumu; başlıklar fotoğraftan doldurması açık ölçüm tabloları ve test değerleri bölümü (kâğıtta kapatılmadıkça — maketteki
+  "Fonksiyon testleri"). Rapordaki alan seçenekleri: ekipman bilgileri (formatın adıyla), formatın bilgi alanları, test değerleri, uzman yorumu —
+  formülle hesaplanan, kayıttan gelen (künye) ve çoklu seçim alanı seçilmez; aynı alan iki satırda olamaz; ad en çok 60, hazır değer 40 karakter,
+  en çok 30 satır. Format sonradan değişip alan / başlık kalktıysa ayardan düşer ve sayısı şeritte söylenir. Görür: türü gören; değiştirir: ekipman
+  türünü düzenleyebilen (modül 5 "yaz"). Göç **0084** say_chat_ayar (firma × tür tek satır, sürüm kilidi, eski hâli denetim izinde; tür kesin
+  silinince birlikte — ON DELETE CASCADE, silici.ts "birlikte"; türü değişmez tetiği; DELETE hakkı yok). Kod: src/modules/say-chat (sema.ts saf
+  kurallar + 524'ün dağılımı dagit, server/ayar.ts, ui/ChatAyarlari.tsx). Kilit tests/say-chat-sema.test.ts (saf) + tests/say-chat-ayar.test.ts
+  (gerçek PostgreSQL, iki firma) + olumsuz kanıt tests/bozan/say-chat-sema.bozan.ts; uçtan uca e2e/ekipman-turleri.spec.ts.
 - 2026-10-13 (522): **S.A.Y'A FOTOĞRAF VE BELGE EKİ** (§3.10 m.17; maket 521 onaylı — reisim: *"onayılıyorum, yap bitir"*). S.A.Y panelinde yazma
   kutusunun solunda ataç → Fotoğraf çek (kamera) · Galeriden seç · Belge ekle (PDF, Word .docx); eklenenler kutunun üstünde küçük görüntü / ad +
   boyut, × ile çıkar; gönderilen soruda adları görünür; yalnız ekle de sorulur ("Eki inceler misin?"). Fotoğraf cihazda küçültülür (1600 px). Sunucuda

@@ -198,3 +198,83 @@ test("Bakanlık türleri hazır: resmî PDF ve yayındaki şablon; sıfırdan ra
   /* 451: kâğıtta (geniş ekran) ya da belge önizlemesinde (telefon) — görünen ilk eşleşme */
   await expect(page.getByText("Kontrol maddeleri").filter({ visible: true }).first()).toBeVisible();
 });
+
+/* 523 — S.A.Y Chat ayarları (pkproje §3.10 m.13–16; maket 521 ekran 12): tür sayfasında tıklayınca açılan bölüm; kayıt yoksa formattan hazır
+   (ekipman bilgileri + Not; test değerleri okunacak başlık); aynı alan iki satırda → hata alanın altında, odak orada; düzeltilip Kaydet → sürüm 1;
+   telefon önizlemesi satırları sırayla gösterir; Vazgeç taslağı bırakır; denetçi görür, değiştiremez. */
+test("S.A.Y Chat ayarları: formattan hazır, satır ekle, hata, kaydet, sürüm; denetçi yalnız görür", async ({ page }, bilgi) => {
+  test.setTimeout(120_000);
+  const on = { masaustu: "SM", tablet: "ST", telefon: "SF" }[bilgi.project.name] ?? "SX";
+  const kod = `${on}${"ABCDEFGH"[bilgi.retry]}C`;
+  await girisli(page, "yonetici");
+  await page.goto("/ekipman-turleri");
+  await hazir(page);
+  await page.getByRole("button", { name: "Tür ekle" }).click();
+  const p = page.getByRole("dialog", { name: "Tür ekle" });
+  await p.getByLabel("Tür adı").fill(`Deneme Chat ${kod}`);
+  await p.getByLabel("Kod").fill(kod.toLowerCase());
+  await p.getByRole("combobox", { name: "Ek-III grubu" }).click();
+  await p.getByRole("option", { name: /Kaldırma ve iletme/ }).click();
+  await p.getByLabel("Periyot (ay)").fill("12");
+  await p.getByRole("button", { name: "Kaydet" }).click();
+  await expect(page).toHaveURL(/\/ekipman-turleri\/[0-9a-f-]{36}$/, { timeout: 30_000 });
+  const adres = page.url();
+  await hazir(page);
+
+  const bolum = page.locator("details#b-say-chat");
+  const ozet = bolum.locator("summary");
+  await expect(ozet).toContainText("formattan hazır");
+  await expect(bolum.getByRole("list", { name: "Mesaj satırları" })).toBeHidden();
+  await ozet.click();
+  const satirlar = bolum.getByRole("list", { name: "Mesaj satırları" });
+  await expect(satirlar).toBeVisible();
+  await expect(bolum.getByLabel("1. satır · telefonda yazan")).toHaveValue("Marka");
+  const n = await satirlar.getByRole("listitem").count();
+  await expect(bolum.getByLabel(`${n}. satır · telefonda yazan`)).toHaveValue("Not");
+  await expect(bolum.getByRole("button", { name: "Kaydet" })).toBeDisabled();
+  await expect(bolum.getByRole("button", { name: /Test değerleri: açık/ })).toHaveAttribute("aria-pressed", "true");
+
+  /* satır ekle: alan seçilmeden Kaydet → hata; aynı alan (yorum) → hata; Not satırı silinince geçer */
+  await bolum.getByRole("button", { name: "Satır ekle" }).click();
+  const yeni = bolum.getByLabel(`${n + 1}. satır · telefonda yazan`);
+  await expect(yeni).toBeFocused();
+  await yeni.fill("Şebeke gerilimi");
+  await bolum.getByLabel(`${n + 1}. satır · hazır değer`).fill("220 V");
+  await bolum.getByRole("button", { name: "Kaydet" }).click();
+  await expect(bolum.getByText(`${n + 1}. satırın rapordaki alanı seçilmedi.`)).toBeVisible();
+  await bolum.getByRole("combobox", { name: `${n + 1}. satır · rapordaki alan` }).click();
+  await page.getByRole("option", { name: "Muayene uzmanı yorumu" }).click();
+  await bolum.getByRole("button", { name: "Kaydet" }).click();
+  await expect(bolum.getByText(`${n + 1}. satırın alanı başka bir satırda da seçili.`)).toBeVisible();
+  /* Not satırını sil → yorum artık yalnız yeni satırda */
+  await bolum.getByRole("button", { name: `${n}. satırı sil` }).click();
+  await expect(satirlar.getByRole("listitem")).toHaveCount(n);
+  await expect(bolum.getByRole("complementary", { name: "Telefonda böyle görünür" })).toContainText("Şebeke gerilimi · 220 V");
+  await expect(ozet).toContainText("kaydedilmedi");
+  /* okunacak başlık kapat */
+  await bolum.getByRole("button", { name: /Test değerleri: açık/ }).click();
+  await expect(bolum.getByRole("button", { name: /Test değerleri: kapalı/ })).toHaveAttribute("aria-pressed", "false");
+  await bolum.getByRole("button", { name: "Kaydet" }).click();
+  await expect(page.getByText("S.A.Y Chat ayarları kaydedildi (sürüm 1); yeni kayıtlarda geçerli.").first()).toBeVisible();
+  await expect(ozet).toContainText("sürüm 1");
+  await expect(ozet).toContainText(`${n} satır · 0 okunacak fotoğraf`);
+
+  /* yenileyince kayıtlı; Vazgeç taslağı bırakır */
+  await page.reload();
+  await hazir(page);
+  await ozet.click();
+  await expect(bolum.getByLabel(`${n}. satır · telefonda yazan`)).toHaveValue("Şebeke gerilimi");
+  await bolum.getByLabel("1. satır · telefonda yazan").fill("Markası");
+  await bolum.getByRole("button", { name: "Vazgeç" }).click();
+  await expect(bolum.getByLabel("1. satır · telefonda yazan")).toHaveValue("Marka");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), "yana taşma yok").toBe(true);
+
+  /* denetçi görür, değiştiremez */
+  await girisli(page, "denetci");
+  await page.goto(adres);
+  await hazir(page);
+  await ozet.click();
+  await expect(bolum.getByLabel("1. satır · telefonda yazan")).toBeDisabled();
+  await expect(bolum.getByRole("button", { name: "Kaydet" })).toHaveCount(0);
+  await expect(bolum.getByRole("button", { name: "Satır ekle" })).toHaveCount(0);
+});

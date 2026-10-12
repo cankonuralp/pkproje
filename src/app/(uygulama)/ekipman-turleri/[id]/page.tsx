@@ -3,7 +3,7 @@
    basılı format PDF'i. 450 (reisim 2026-10-09: "standart olarak pdf formatı yükleyin diyor hala yeni tür ekleyince … default olarak makette
    yaptıklarımız gibi olacak"): rapor yayındaki şablondan yazılır ve belge Bakanlık görünümünde çizilir — PDF İSTEĞE BAĞLI (firmanın kendi basılı
    formatı, başvuru için); yeni türe şablon kendiliğinden gelir. "Rapor formatı" yüzü yayındaki şablonu gösterir. Görmeyen / başka firmanın kaydı:
-   bulunamadı. */
+   bulunamadı. 523 (pkproje §3.10 m.13–16): "S.A.Y Chat ayarları" — tıklayınca açılan bölüm (src/modules/say-chat; yazma ekipman türünü düzenleyebilende). */
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Bilgi, BilgiListesi, Yuz, Yuzler } from "../../../../components/bilgi/Bilgi";
@@ -23,6 +23,8 @@ import { formatDegistirir, formatSurumleri, silinebilirSurumler } from "../../..
 import { formatRaporSayilari } from "../../../../modules/raporlar/server/format-baglanti";
 import { SablonBaslatTusu, SablonTablosu, SifirdanTusu } from "../../../../modules/rapor-format/ui/SablonBolumu";
 import { surumAdi, tarihYaz as sablonTarihi } from "../../../../modules/rapor-format/ui/ortak";
+import { sayChatAyari } from "../../../../modules/say-chat/server/ayar";
+import { ChatAyarlari } from "../../../../modules/say-chat/ui/ChatAyarlari";
 import { modulOturumu, oturumIslemi } from "../../../../server/kimlik/istek";
 
 const MODUL = modulBul("ekipman-turleri")!;
@@ -33,11 +35,11 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
   const o = await modulOturumu(MODUL.no);
   if (!o) return <Yetkisiz />;
   const { id } = await params;
-  const [t, sec, sablonlar, silme, surumSilme, raporlar] = await oturumIslemi(o, async (db) => {
+  const [t, sec, sablonlar, silme, surumSilme, raporlar, chat] = await oturumIslemi(o, async (db) => {
     const l = await formatSurumleri(db, o, id);
     const idler = (l ?? []).map((x) => x.id);
     return [await turKarti(db, o, id), await baglantiSecenekleri(db, o), l, await turSilmeDurumu(db, o, id),
-      await silinebilirSurumler(db, o, idler), await formatRaporSayilari(db, idler)] as const;
+      await silinebilirSurumler(db, o, idler), await formatRaporSayilari(db, idler), await sayChatAyari(db, o, id)] as const;
   });
   if (!t) notFound();
   const yaz = turDegistirir(o), sablonYaz = formatDegistirir(o);
@@ -70,6 +72,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
         {t.cihazTurleri.length ? <ul className={stil.bagListe}>{t.cihazTurleri.map((c) => <li key={c.id}>{c.ad}</li>)}</ul>
           : <SeritKap><Serit tur="uyari" ikon="gauge">Ölçüm cihazı seçilmemiş; raporda cihaz şartı aranmaz.</Serit></SeritKap>}
       </Bolum>
+      {chat && <ChatAyarlari ayar={chat} />}
       <Bolum id="b-tur-std" baslik="Kontrol metodu standartları" sayac={<><b>{t.standartlar.length}</b> standart</>}>
         {t.standartlar.length ? <ul className={stil.bagListe}>{t.standartlar.map((s) => <li key={s.no}><span>{s.id ? `${s.no}:${s.surumAdi}` : s.no}
           <span className={stil.altMetin}>{s.konu ?? "Kütüphanede güncel sürüm yok — Dökümanlar › Standartlar’dan yüklenir"}</span></span></li>)}</ul>

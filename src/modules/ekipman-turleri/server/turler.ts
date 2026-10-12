@@ -35,6 +35,8 @@ export type Yazma =
 const gorur = (kim: YetkiHesabi) => canDo(kim, MODUL, "gor") && ["gor", "yaz"].includes(duzey(kim, MODUL));
 const degistirir = (kim: YetkiHesabi) => duzey(kim, MODUL) === "yaz";
 export const turDegistirir = degistirir;
+/** 523: türü görebilen (S.A.Y Chat ayarlarını görür) */
+export const turGorur = gorur;
 const gun = (d: Date | string) => (typeof d === "string" ? d : d.toISOString()).slice(0, 10);
 
 /** dosya erişimi (src/server/dosya/erisim.ts): türü görebilen, türün rapor formatı PDF'ini açar */

@@ -23,12 +23,13 @@ export const SILINEBILIR = {
     kullanim: "ekipman_kullanim", sil: "ekipman_sil",
     fk: { kullanim: ["rapor.ekipman_id"], birlikte: ["ekipman_kodu.ekipman_id", "plan_ekipman.ekipman_id"] },
   },
-  /* 361: ekipmanı, raporu, personel ataması, teklif kalemi, fatura satırı olmayan tür; fiyat, format sürümleri ve PDF'ler birlikte (kod serbest; 0057) */
+  /* 361: ekipmanı, raporu, personel ataması, teklif kalemi, fatura satırı olmayan tür; fiyat, format sürümleri ve PDF'ler birlikte (kod serbest; 0057)
+     · 523: S.A.Y Chat ayarı birlikte (yabancı anahtar ON DELETE CASCADE — 0084) */
   ekipman_turu: {
     kullanim: "ekipman_turu_kullanim", sil: "ekipman_turu_sil",
     fk: {
       kullanim: ["ekipman.tur_id", "ekipman_atamasi.tur_id", "fatura_rapor.tur_id", "rapor.tur_id", "teklif_kalem.tur_id"],
-      birlikte: ["fiyat_listesi.tur_id", "rapor_format.tur_id", "tur_format.tur_id"],
+      birlikte: ["fiyat_listesi.tur_id", "rapor_format.tur_id", "say_chat_ayar.tur_id", "tur_format.tur_id"],
     },
   },
   /* 362: zimmet hareketi ve imzalı zimmet formu olmayan demirbaş (kod serbest; 0058) */
