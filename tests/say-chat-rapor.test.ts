@@ -126,7 +126,7 @@ test("bekleyen öneri kişiye özel, raporun verisinde, kapatılınca kalkar; ta
   await assert.rejects(ile(ELK, (db) => db.sorgu("UPDATE rapor_oneri SET bolum = 'x'")), /permission denied|değişmez/);
   /* tamamlanmış plan: koşulda engel, rapor açılmaz (tetikler kapalı — yalnız test kurulumu) */
   const s = kume.sahipIstemci(); await s.connect();
-  try { await s.query("SET session_replication_role = replica"); await s.query("UPDATE plan SET durum = 'tamamlandi' WHERE id = $1", [PLAN]); }
+  try { await s.query("SET session_replication_role = replica"); await s.query("UPDATE plan SET durum = 'tamamlandi', kontrol_tamam = now(), bitti = now() WHERE id = $1", [PLAN]); }
   finally { await s.end(); }
   const kos = await ile(ELK, (db) => raporKosullari(db, { durum: "tamamlandi", baslangic: bugunTr(), personelId: null }));
   assert.match(kos.engel ?? "", /tamamlan/i);
