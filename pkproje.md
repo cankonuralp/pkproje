@@ -2405,6 +2405,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-12 (508): **Ölçüm cihazında "Zimmet" tuşu** (reisim: *"bu ekranda personele atamayı kolaylaştırıcı bir şey yapmalıyız zimmet tuşu olsun,
+  tıklayınca zimmetlerde bu cihazın kartı açılsın zimmetine ekleyelim personelin"*). Cihaz sayfasında Zimmetler'i gören kişiye **Zimmet** →
+  /zimmetler/varlik/c/<cihaz>#teslim: cihazın zimmet kartı açılır, "Teslim et" penceresi cihaz seçili hazır gelir (teslim alan seçilip kaydedilir);
+  işaret adresten silinir, yenileyince pencere yeniden açılmaz. Konum yüzü de karta götürür; personelin zimmetindeyse "bir personelin zimmetinde".
+  Pasif cihazda tuş yok. Yetki yine sunucuda (teslim penceresi yalnız teslim edebilene). Uçtan uca: olcum-cihazlari ("Zimmet tuşu …").
 - 2026-10-12 (507): **SUNUM — depolama, yedek ve yapay zekâ modeli** (reisim: *"firma ayarlarında depolama ve yedekleme kısmı var bir de bulut bağlantısı
   kısmı var biz seninle en son her firma kendi supabaseini kullansın diye konuştuk ama şimdi bakınca ne olduğunu tam anlayamadım ve yapay zekada da
   "haiku" ve diğer haiku sürümleri seçenekler olmalı daha uygun ücretlendirme için bu konuları ele alıp bana bir sunum hazırla"*). Sunum + maket +

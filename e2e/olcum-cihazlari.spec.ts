@@ -134,3 +134,38 @@ test("cihaz türleri: tür ekle, kullanılmamış türü sil", async ({ page }, 
   await expect(page.getByRole("dialog", { name: "Cihaz türleri" }).getByRole("listitem").filter({ hasText: ad })).toHaveCount(0);
   await expect(page.getByRole("dialog", { name: "Cihaz türleri" }).getByRole("button", { name: "Cihaz türü ekle" })).toBeFocused();
 });
+
+/* 2026-10-12 (reisim: "bu ekranda personele atamayı kolaylaştırıcı bir şey yapmalıyız zimmet tuşu olsun, tıklayınca zimmetlerde bu cihazın kartı
+   açılsın zimmetine ekleyelim personelin"): cihaz sayfasında "Zimmet" → cihazın zimmet kartı, "Teslim et" penceresi cihaz seçili açık gelir; Vazgeç
+   ile kapanır (veri değişmez), yenileyince yeniden açılmaz. Konum yüzü de karta götürür. */
+test("ölçüm cihazı: Zimmet tuşu cihazın zimmet kartını teslim penceresiyle açar", async ({ page }, bilgi) => {
+  const kod = `ZMT-${bilgi.project.name.slice(0, 3).toUpperCase()}${bilgi.retry}`;
+  await girisli(page, "yonetici");
+  await page.goto("/olcum-cihazlari");
+  await hazir(page);
+  await page.getByRole("button", { name: "Cihaz ekle" }).click();
+  const p = page.getByRole("dialog", { name: "Cihaz ekle" });
+  await p.getByLabel("Cihaz kodu").fill(kod);
+  const tur = p.getByRole("combobox", { name: "Cihaz türü" });
+  if (await tur.count()) { await tur.click(); await p.getByRole("option", { name: "Yeni tür…" }).click(); }
+  await p.getByLabel("Yeni tür adı").fill(`Deneme zimmet ölçer ${kod}`);
+  await p.getByRole("button", { name: "Kaydet" }).click();
+  await expect(page).toHaveURL(/\/olcum-cihazlari\/[0-9a-f-]{36}$/, { timeout: 30_000 });
+  await hazir(page);
+  const cihazAdresi = new URL(page.url()).pathname, id = cihazAdresi.split("/").pop()!;
+  await page.getByRole("link", { name: "Zimmet", exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`/zimmetler/varlik/c/${id}$`), { timeout: 30_000 });
+  const t = page.getByRole("dialog", { name: "Teslim et" });
+  await expect(t).toBeVisible({ timeout: 30_000 });
+  await expect(t.getByRole("combobox", { name: "Varlık" })).toContainText(kod);
+  await t.getByRole("button", { name: "Vazgeç" }).click();
+  await expect(t).toHaveCount(0);
+  await expect(page.getByRole("heading", { level: 1, name: new RegExp(`^${kod} · `) })).toBeVisible();
+  await page.reload();
+  await hazir(page);
+  await expect(page.getByRole("dialog", { name: "Teslim et" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Teslim et" })).toBeVisible();
+  await page.goto(cihazAdresi);
+  await hazir(page);
+  await expect(page.getByRole("link", { name: /^Konum/ })).toHaveAttribute("href", `/zimmetler/varlik/c/${id}`);
+});

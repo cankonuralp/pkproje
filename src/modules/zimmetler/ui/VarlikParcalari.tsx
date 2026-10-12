@@ -2,7 +2,7 @@
 /* Varlık sayfasının istemci parçaları (maket zimmetler.html varlikCiz): "Teslim et" tuşu (varlık önceden seçili) ve teslim geçmişi (fotoğraflar
    GizliResim ile — adres <img src>'ye yazılmaz). 362: demirbaş tuşları — Sil (yalnız yöneticiye ve hiç kullanılmamış demirbaşa) ya da Pasife al;
    pasif demirbaşta Etkinleştir (ölçüm cihazı 357–358 deseni; karar sunucuda). */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { GizliResim } from "../../../components/gizli-resim/GizliResim";
 import { AltSatir } from "../../../components/sayfa/Sayfa";
 import { PasifPenceresi } from "../../../components/sil/PasifPenceresi";
@@ -14,8 +14,16 @@ import { TeslimPenceresi } from "./Pencereler";
 import { zamanYaz } from "./ortak";
 import stil from "./zimmet.module.css";
 
+/** 2026-10-12 (reisim: "bu ekranda personele atamayı kolaylaştırıcı bir şey yapmalıyız zimmet tuşu olsun, tıklayınca zimmetlerde bu cihazın kartı
+    açılsın zimmetine ekleyelim personelin"): ölçüm cihazı sayfasındaki "Zimmet" bu karta #teslim ile gelir — pencere varlık seçili açılır; işaret
+    adresten silinir (yenileyince yeniden açılmaz). Yetki yine sunucuda (tuş yalnız teslim edebilene çizilir). */
 export function TeslimTusu({ varlik, varliklar, kisiler, bugun }: { varlik: string; varliklar: VarlikSatiri[]; kisiler: { id: string; ad: string }[]; bugun: string }) {
   const [acik, setAcik] = useState(false);
+  useEffect(() => {
+    if (window.location.hash !== "#teslim") return;
+    window.history.replaceState(window.history.state, "", window.location.pathname + window.location.search);
+    queueMicrotask(() => setAcik(true));
+  }, []);
   return (
     <>
       <Tus ikon="arrow-right-left" onClick={() => setAcik(true)}>Teslim et</Tus>
