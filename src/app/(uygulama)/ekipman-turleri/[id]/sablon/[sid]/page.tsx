@@ -1,6 +1,6 @@
 /* RAPOR ŞABLONU SÜRÜMÜ (RAPOR-FORMAT.md §5–6). 471 (reisim 2026-10-10, maket kararı k5 "evet" — sürüm sayfasında önceki sürüme göre değişenler):
    sayfa formatın KİMLİĞİNİ söyler, teknik listeler kalktı. Başlık + durum (Taslak / Yayında / Eski) · tek Düzenle (taslakta Format kurucu +
-   Yayınla; yayındaki sürümde o sürümden taslak — 439; yalnız "değiştirir") · yüzler: yayınlanma (kim, ne zaman), bu sürümle yazılan rapor,
+   Yayınla; yayındaki sürümde o sürümden taslak — 439; eski sürümde "Bu sürüme geri dön" — 2026-10-12; yalnız "değiştirir") · yüzler: yayınlanma (kim, ne zaman), bu sürümle yazılan rapor,
    doküman kodu, bölüm · madde · sürüm notu · taslakta yayın denetimi (uyarılar) · ÖNCEKİ SÜRÜME GÖRE DEĞİŞENLER (rapor-format/fark.ts; taslak
    yayındaki sürümle, sürüm N bir öncekiyle) · önizleme: Belge (PDF'le aynı çizici) ↔ Saha ekranı (örnek raporla, tablet / telefon) · kurallar ·
    öteki sürümler. Görmeyen, başka firmanın ya da başka türün sürümü: bulunamadı. Karar sunucuda. */
@@ -22,7 +22,7 @@ import { surumFarki } from "../../../../../../modules/rapor-format/fark";
 import { formatAyrintisi, formatDegistirir, formatSurumleri } from "../../../../../../modules/rapor-format/server/formatlar";
 import { kurucuOrnegi } from "../../../../../../modules/rapor-format/ui/kurucuOrnegi";
 import { DURUM_ROZET, surumAdi, tarihYaz } from "../../../../../../modules/rapor-format/ui/ortak";
-import { SablonTablosu, SurumDuzenleTusu, YayinlaTusu } from "../../../../../../modules/rapor-format/ui/SablonBolumu";
+import { GeriDonTusu, SablonTablosu, SurumDuzenleTusu, YayinlaTusu } from "../../../../../../modules/rapor-format/ui/SablonBolumu";
 import { SurumOnizleme } from "../../../../../../modules/rapor-format/ui/SurumOnizleme";
 import stil from "../../../../../../modules/rapor-format/ui/format.module.css";
 import { formatRaporSayilari } from "../../../../../../modules/raporlar/server/format-baglanti";
@@ -69,7 +69,9 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string; 
         alt={`${tur.ad} · ${f.kaynakAd ?? "Firma formatı"}`} tuslar={yaz ? <>
           <TusBaglanti ikon="pencil" href={`/ekipman-turleri/${tur.id}/sablon/${f.id}/kurucu`}>Düzenle</TusBaglanti>
           <YayinlaTusu format={{ id: f.id, surum: f.surum }} />
-        </> : degistirir && f.durum === "yayinda" ? <SurumDuzenleTusu turId={tur.id} surum={f} taslak={taslak} /> : null} />
+        </> : degistirir && f.durum === "yayinda" ? <SurumDuzenleTusu turId={tur.id} surum={f} taslak={taslak} />
+          : degistirir && f.durum === "eski" ? <GeriDonTusu turId={tur.id} surum={f} taslak={taslak} yayinda={surumler.find((x) => x.durum === "yayinda") ?? null} git />
+          : null} />
       <Yuzler>
         <Yuz ikon="calendar" ad={f.yayin ? "Yayınlandı" : "Son değişiklik"} sayi={tarihYaz(f.yayin ?? f.degisti)} not={f.yayinlayan ?? f.olusturan} />
         <Yuz ikon="file-text" ad="Bu sürümle yazılan rapor" sayi={raporlar[f.id] ?? 0} not={f.durum === "taslak" ? "taslakla rapor açılmaz" : undefined} />
@@ -109,7 +111,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string; 
       </>}
       {oteki.length > 0 && (
         <Bolum id="b-surumler" baslik="Öteki sürümler" sayac={<span className={stil.ogeAlt}><b>{oteki.length}</b> sürüm</span>}>
-          <SablonTablosu turId={tur.id} surumler={oteki} yaz={degistirir} raporlar={raporlar} />
+          <SablonTablosu turId={tur.id} surumler={oteki} tumu={surumler} yaz={degistirir} raporlar={raporlar} />
         </Bolum>
       )}
     </>

@@ -3,7 +3,8 @@
    yayın öncesi denetim). Sürüm tablosu (taslak üstte, sonra yeniden eskiye) · Şablondan başlat penceresi (hazır şablon ya da yayınlanmış sürüm;
    varsa taslağın yerine geçer) · 437 Sıfırdan oluştur (boş iskelet; onaylı, taslak varsa yerine geçer) · 439 yayındaki sürümde Düzenle (o sürümden
    taslak → Format kurucu; açık taslak varsa "Taslağa devam et" ya da yeniden başla) · Yayınla penceresi (engeller + uyarılar sunucudan, sürüm notu). Tuşlar yalnız "değiştirir" düzeyine çizilir;
-   karar ve denetim yine sunucuda. Taslak Format kurucuda düzenlenir (…/sablon/<sürüm>/kurucu, K4). */
+   karar ve denetim yine sunucuda. Taslak Format kurucuda düzenlenir (…/sablon/<sürüm>/kurucu, K4).
+   2026-10-12 (reisim: "ekipman türlerinde eski sürüme geri dön tuşu olsun"): eski sürümde "Bu sürüme geri dön" — içeriği yeni sürüm olarak yayınlanır. */
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { Kosullar } from "../../../components/bilgi/Bilgi";
@@ -18,16 +19,19 @@ import { Serit } from "../../../components/serit/Serit";
 import { SilTusu } from "../../../components/sil/SilTusu";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
 import type { FormatOzeti } from "../server/formatlar";
-import { taslakBaslatEylemi, taslakSilEylemi, yayinDenetleEylemi, yayinlaEylemi } from "./eylemler";
+import { surumeGeriDonEylemi, taslakBaslatEylemi, taslakSilEylemi, yayinDenetleEylemi, yayinlaEylemi } from "./eylemler";
 import { DURUM_ROZET, surumAdi, tarihYaz } from "./ortak";
 import stil from "./format.module.css";
 
-const BASLA_ID = "sb-baslangic", NOT_ID = "sb-not";
+const BASLA_ID = "sb-baslangic", NOT_ID = "sb-not", GERI_NOT_ID = "sb-geri-not";
 
-/** 370: `sil` — taslağı kesin silebilir (yönetici; yayınlanmış sürüm silinmez). 471: `raporlar` — sürüm başına bu sürümle yazılan rapor sayısı */
-export function SablonTablosu({ turId, surumler, yaz, sil = false, raporlar }:
-  { turId: string; surumler: FormatOzeti[]; yaz: boolean; sil?: boolean; raporlar?: Record<string, number> }) {
-  const taslak = surumler.find((x) => x.durum === "taslak") ?? null;
+/** 370: `sil` — taslağı kesin silebilir (yönetici; yayınlanmış sürüm silinmez). 471: `raporlar` — sürüm başına bu sürümle yazılan rapor sayısı.
+    `tumu` (2026-10-12): tablo bir kısmı gösteriyorsa (sürüm sayfasının "Öteki sürümler"i) türün bütün sürümleri — açık taslak ve yayındaki ondan
+    bulunur (geri dönüş görmediği taslak yüzünden "çakışma" demesin) */
+export function SablonTablosu({ turId, surumler, yaz, sil = false, raporlar, tumu }:
+  { turId: string; surumler: FormatOzeti[]; yaz: boolean; sil?: boolean; raporlar?: Record<string, number>; tumu?: FormatOzeti[] }) {
+  const taslak = (tumu ?? surumler).find((x) => x.durum === "taslak") ?? null;
+  const yayinda = (tumu ?? surumler).find((x) => x.durum === "yayinda") ?? null;
   const sutunlar: Sutun<FormatOzeti>[] = [
     { k: "surum", genislik: "26%", baslik: "Sürüm", kart: "ust", sira: 1, hucre: (x) => <><b>{surumAdi(x)}</b><AltSatir>{x.kaynakAd ?? "Firma formatı"} · {x.bolum} bölüm{raporlar ? ` · ${raporlar[x.id] ?? 0} rapor` : ""}</AltSatir></> },
     { k: "tarih", genislik: "24%", baslik: "Tarih", kart: "govde", sira: 2, hucre: (x) => <>
@@ -40,6 +44,7 @@ export function SablonTablosu({ turId, surumler, yaz, sil = false, raporlar }:
         {yaz && x.durum === "taslak" && <TusBaglanti ikon="pencil" href={`/ekipman-turleri/${turId}/sablon/${x.id}/kurucu`}>Düzenle</TusBaglanti>}
         {yaz && x.durum === "yayinda" && <SurumDuzenleTusu turId={turId} surum={x} taslak={taslak} />}
         {yaz && x.durum === "taslak" && <YayinlaTusu format={x} />}
+        {yaz && x.durum === "eski" && <GeriDonTusu turId={turId} surum={x} taslak={taslak} yayinda={yayinda} />}
         {sil && x.durum === "taslak" && <SilTusu kucuk ikon="trash-2" ad="Taslak" erisimAdi="Taslağı sil" baslik="Rapor formatı taslağını sil" yanEtki="yayınlanmış sürümler etkilenmez"
           sil={() => taslakSilEylemi(x.id)} odak="#b-sablon" />}
       </span>
@@ -118,6 +123,52 @@ export function SurumDuzenleTusu({ turId, surum, taslak }:
         {taslak && <Serit tur="uyari" ikon="triangle-alert">Açık bir taslak var ({tarihYaz(taslak.degisti)}). “Bu sürümden yeniden başla” o taslağın
           yerine geçer; taslaktaki değişiklikleri korumak için “Taslağa devam et”.</Serit>}
         {genel && <Serit tur="hata" ikon="circle-alert">{genel}</Serit>}
+      </Pencere>}
+    </>
+  );
+}
+
+/** 2026-10-12 (reisim: "ekipman türlerinde eski sürüme geri dön tuşu olsun"): eski sürümün içeriği YENİ sürüm olarak yayınlanır — hiçbir sürüm
+    silinmez, yayındaki eskiye düşer, açık raporlar kendi sürümünde kalır, yeni raporlar bu içerikle açılır. Açık taslak varsa yerine geçer (pencere
+    söyler; gördüğü taslak sürümüyle — görmediğini ezmez). Karar ve denetim sunucuda (formatlar.ts surumeGeriDon). `git`: sonra yeni sürümün sayfası
+    (sürüm sayfasında), yoksa yerinde tazelenir (tür sayfası). */
+export function GeriDonTusu({ turId, surum, taslak, yayinda, git = false }: {
+  turId: string; surum: Pick<FormatOzeti, "id" | "sira">; taslak: Pick<FormatOzeti, "surum" | "degisti"> | null; yayinda: Pick<FormatOzeti, "sira"> | null; git?: boolean;
+}) {
+  const router = useRouter();
+  const bildir = useBildir();
+  const [acik, setAcik] = useState(false);
+  const [bekliyor, baslat] = useTransition();
+  const [notu, setNotu] = useState("");
+  const [h, setH] = useState<Record<string, string>>({});
+  const [genel, setGenel] = useState<string | null>(null);
+  const ad = surumAdi(surum);
+  const don = () => baslat(async () => {
+    const r = await surumeGeriDonEylemi(turId, surum.id, taslak?.surum ?? null, notu);
+    setH(r.hatalar ?? {}); setGenel(r.genel ?? (r.engeller?.length ? r.engeller.join(" · ") : null));
+    if (!r.tamam) return;
+    setAcik(false);
+    bildir(`${ad} geri yüklendi: Sürüm ${r.sira} yayında.${r.uyarilar?.length ? " Bakanlık formatından ayrılan yerler için sürüm sayfasındaki uyarılara bakın." : ""}`);
+    if (git && r.id) router.push(`/ekipman-turleri/${turId}/sablon/${r.id}`); else router.refresh();
+  });
+  return (
+    <>
+      <Tus tur="ikincil" ikon="rotate-ccw" aria-label={`${ad} · Bu sürüme geri dön`} onClick={() => { setNotu(`${ad} geri yüklendi`); setH({}); setGenel(null); setAcik(true); }}>
+        Bu sürüme geri dön</Tus>
+      {acik && <Pencere acik baslik={`${ad} · geri dön`} onKapat={() => setAcik(false)} odak={`#${GERI_NOT_ID}`}
+        alt={<><Tus tur="ikincil" onClick={() => setAcik(false)}>Vazgeç</Tus>
+          <Tus ikon="rotate-ccw" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={don}>Geri dön</Tus></>}>
+        <p className={pencereMetinSinifi}>{ad} içeriği yeni sürüm olarak yayınlanır{yayinda ? `; yayındaki ${surumAdi(yayinda)} eskiye düşer` : ""}. Hiçbir sürüm
+          silinmez: açık raporlar kendi sürümünde kalır, yeni raporlar bu içerikle açılır. Vazgeçerseniz eskiye düşen sürümde de bu tuş vardır.</p>
+        {taslak && <Serit tur="uyari" ikon="triangle-alert">Açık bir taslak var ({tarihYaz(taslak.degisti)}). Geri dönünce taslağın yerine geçer, taslaktaki
+          değişiklikler kalmaz. Korumak için önce taslağı yayınlayın.</Serit>}
+        {genel && <Serit tur="hata" ikon="circle-alert">{genel}</Serit>}
+        {h.surum && <Serit tur="hata" ikon="circle-alert">{h.surum}</Serit>}
+        <FormIzgara>
+          <Alan id={GERI_NOT_ID} etiket="Sürüm notu" genis hata={h.notu}>
+            <Girdi id={GERI_NOT_ID} value={notu} onChange={(e) => setNotu(e.target.value)} maxLength={200} hata={!!h.notu} />
+          </Alan>
+        </FormIzgara>
       </Pencere>}
     </>
   );

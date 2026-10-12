@@ -2405,6 +2405,17 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-12 (501): **ESKİ SÜRÜME GERİ DÖN** (reisim: *"ekipman türlerinde eski sürüme geri dön tuşu olsun"*). Ekipman türleri › tür › Rapor şablonu
+  sürümleri tablosunda ve eski sürümün kendi sayfasında **"Bu sürüme geri dön"** (yalnız "değiştirir"; yayındaki sürümde ve taslakta yok). Pencere:
+  "Sürüm N içeriği yeni sürüm olarak yayınlanır; yayındaki Sürüm M eskiye düşer. Hiçbir sürüm silinmez: açık raporlar kendi sürümünde kalır, yeni
+  raporlar bu içerikle açılır" + sürüm notu (başlangıç "Sürüm N geri yüklendi"). Açık taslak varsa uyarı: geri dönüş taslağın yerine geçer (tür başına
+  tek taslak — 0022 rapor_format_tek_taslak; 439'un "bu sürümden yeniden başla"sı gibi, yalnız istemcinin gördüğü taslak sürümüyle). Sunucu
+  (formatlar.ts surumeGeriDon): o sürümden taslak + yayınla TEK işlemde, aynı yayın denetimi (Bakanlık farkları uyarı); yayın tamamlanmazsa
+  GeriDonusIptal → işlem geri alınır, taslak dahil hiçbir şey değişmez. Yayındaki sürüme, taslağa, başka türün / firmanın sürümüne geri dönülmez;
+  geçersiz not hiçbir şeyi değiştirmez. İleri dönüş aynı tuşla (yeni eskiye düşen sürümde). Tasarım kararı (soru sorulmadı — en yakın mevcut desen):
+  "geri dön" doğrudan yayınlar (Düzenle gibi kurucuya götürmez); geçmiş korunur, yeni sürüm notu ve denetim izi kalır. Kilitler: tests/rapor-format.test.ts
+  "GERİ DÖN" (gerçek PostgreSQL), olumsuz kanıt rapor-format.bozan 4 (yayındaki sürüme geri dönülmez), e2e rapor-format (Sürüm 2'ye dön → Sürüm 4
+  yayında; denetçi tuşu görmez).
 - 2026-10-12 (500): **YAN KUTULAR SAYFAYI İZLER** (reisim, Format kurucu › Gelişmiş seçenekler: *"parça olarak kaydet yukarda kaldı her seferinde
   yukarı gidip seçmek mantıklı değil, takip etsin sayfayı"*). Neden: yapışkan kart (.yan) kendi boyundaki sarmalayıcının (.sag) içindeydi, hareket
   edecek yeri yoktu — "Seçili bölüm" kâğıdın tepesinde kalıyordu (Parçalar doğrudan ızgara öğesi olduğundan izliyordu); orta genişlikte (tablet)

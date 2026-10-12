@@ -3,7 +3,9 @@
    1. 0022'deki koruma tetiği olmasaydı yayınlanan sürümün tanımı sonradan değişirdi → imzalı raporun PDF'i başka formatla çizilirdi.
    2. Motorda "değiştirilmiş" denetimi olmasaydı Bakanlık maddesinin metni değiştirilip yayınlanırdı (yalnız silme yakalanırdı).
    3. Sunucu kilit kaynağını hazır şablondan almasaydı, ilk yayında istemci kilitli öğeleri silip yayınlayabilirdi (karşılaştıracak önceki yayın yok).
-      2026-10-10 (470): yayın artık durmuyor (uyarı) — bozuk sunucuda Bakanlık maddelerinin silindiği UYARIDA görünmez. */
+      2026-10-10 (470): yayın artık durmuyor (uyarı) — bozuk sunucuda Bakanlık maddelerinin silindiği UYARIDA görünmez.
+   4. (2026-10-12, eski sürüme geri dön) "yayındaki sürüme geri dönülmez" denetimi olmasaydı yayındaki sürüm kendi kopyasıyla yeni sürüm olarak
+      yeniden yayınlanırdı (anlamsız sürüm, sürüm geçmişi kirlenir). */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -94,5 +96,28 @@ test("sunucu kilit kaynağını şablondan almayınca ilk yayında Bakanlık ö�
     assert.ok(k.durum === "tamam");
     const y = await is((db) => f.yayinla(db, kim, k.id, k.surum, ""));
     assert.ok(y.durum === "tamam" && !y.uyarilar.some((x) => x.includes("silinmiş")), "bozuk: Bakanlık maddeleri silinmiş format uyarısız yayınlandı");
+  } finally { await h.end(); }
+});
+
+test("4. yayındaki sürüme 'geri dönülmez' denetimi kalkınca aynı içerik yeni sürüm olarak yeniden yayınlanır (kilidin koruduğu açık)", async () => {
+  type Formatlar = typeof import("../../src/modules/rapor-format/server/formatlar.ts");
+  const f = await bozukModul<Formatlar>("src/modules/rapor-format/server/formatlar.ts", '  if (hedef.durum === "yayinda") return { durum: "yayinda" };\n', "");
+  /* göçler bozulmamış: kümenin kendi veritabanı, ayrı firma */
+  const s = kume.sahipIstemci(); await s.connect();
+  const firma = await s.query<{ id: string }>("INSERT INTO firma (kisa_ad, ad, rapor_kodu) VALUES ('deneme-e', 'Deneme E', 'DE') RETURNING id").finally(() => s.end());
+  const E = firma.rows[0].id;
+  const h = havuzKur(kume.uygulama);
+  try {
+    const kimId = (await kiraciIcinde(h, E, (db) => db.sorgu<{ id: string }>(
+      "INSERT INTO hesap (eposta, ad, roller, durum) VALUES ('m@deneme-e.example', 'Deneme', '{mekanik_yonetici}', 'etkin') RETURNING id::text"))).rows[0].id;
+    const kim = { id: kimId, ad: "Deneme", roller: ["mekanik_yonetici"] as const };
+    const turE = (await kiraciIcinde(h, E, (db) => db.sorgu<{ id: string }>(
+      "INSERT INTO ekipman_turu (kod, ad, grup, brans, periyot) VALUES ('KM', 'Deneme Kompresör', 'elektrik', 'e', 12) RETURNING id::text"))).rows[0].id;
+    const is = <T,>(x: (db: Parameters<Parameters<typeof kiraciIcinde>[2]>[0]) => Promise<T>) => kiraciIcinde(h, E, x, { hesapId: kimId });
+    const b = await is((db) => f.taslakBaslat(db, kim, turE, "sablon:KOMPRESOR", null));
+    assert.ok(b.durum === "tamam");
+    assert.ok((await is((db) => f.yayinla(db, kim, b.id, b.surum, ""))).durum === "tamam");
+    const g = await is((db) => f.surumeGeriDon(db, kim, turE, b.id, null, ""));
+    assert.ok(g.durum === "tamam" && g.sira === 2, "bozuk: yayındaki sürüm kendi kopyasıyla yeni sürüm olarak yeniden yayınlandı");
   } finally { await h.end(); }
 });

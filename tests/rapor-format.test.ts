@@ -13,8 +13,8 @@ import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde, type Havuz, type Sorgulayici } from "../src/server/db/kiraci.ts";
 import { baglantiKaydet, formatYukle, turKaydet, type Kisi as TurKisi } from "../src/modules/ekipman-turleri/server/turler.ts";
 import {
-  formatAyrintisi, formatSurumleri, formatSurumuOku, sablondanTurEkle, sablonKullanimi, taslakBaslat, taslakKaydet, VARSAYILAN_NOT, yayinDenetle, yayindakiFormat,
-  yayinla, yeniTureFormat, type Kisi,
+  formatAyrintisi, formatSurumleri, formatSurumuOku, sablondanTurEkle, sablonKullanimi, surumeGeriDon, taslakBaslat, taslakKaydet, VARSAYILAN_NOT, yayinDenetle,
+  yayindakiFormat, yayinla, yeniTureFormat, type Kisi,
 } from "../src/modules/rapor-format/server/formatlar.ts";
 import { createHash } from "node:crypto";
 import { mkdtempSync, readFileSync } from "node:fs";
@@ -444,4 +444,45 @@ test("450 yeni türün hazır formatı: grubuna göre, yayında; bir kez; yetkis
   assert.equal((ey.tanim.bolumler.find((b) => b.id === "kriter") as BolumOf<"liste">).gruplar[0].maddeler[0].metin, "Taşıyıcı konstrüksiyon: çatlak, deformasyon, korozyon");
   assert.ok(ey.tanim.bolumler.some((b) => b.blok === "bilgi" && b.alanlar.some((x) => x.id === "kapasite")), "kaldırma: kapasite alanı");
   assert.equal((await kiraciIcinde(havuz, D, (db) => bakanlikKurulumu(db, depo))).varsayilan, 0, "ikinci kez yok");
+});
+
+/* 2026-10-12 (reisim: "ekipman türlerinde eski sürüme geri dön tuşu olsun"): eski sürümün içeriği YENİ sürüm olarak yayınlanır — hiçbir sürüm
+   silinmez, eski sürümler değişmez (yalnız yayındaki eskiye düşer); açık taslağın yerine yalnız gördüğü sürümle geçer; yayındaki sürüme, başka
+   türün ya da firmanın sürümüne geri dönülmez; yetkisiz dönemez; geçersiz not hiçbir şeyi değiştirmez; ileri dönüş de aynı tuşla. Olumsuz kanıt:
+   tests/bozan/rapor-format.bozan.ts 4. */
+test("GERİ DÖN: eski sürümün içeriği yeni sürüm olarak yayınlanır; sürümler silinmez / değişmez; taslak, yetki, kiracı, yayındaki sürüm", async () => {
+  const tur = await yeniTur();
+  const t1 = tamam(await a(MEK, (db) => taslakBaslat(db, MEK, tur, "sablon:KOMPRESOR", null)));
+  tamam(await a(MEK, (db) => yayinla(db, MEK, t1.id, t1.surum, "ilk")));
+  const v1 = (await a(MEK, (db) => yayindakiFormat(db, tur)))!;
+  const t2 = tamam(await a(MEK, (db) => taslakBaslat(db, MEK, tur, `surum:${t1.id}`, null)));
+  const ikinci = structuredClone(v1.tanim); ikinci.gorunum.baslik = "Sürüm iki başlığı";
+  const k2 = tamam(await a(MEK, (db) => taslakKaydet(db, MEK, t2.id, t2.surum, ikinci)));
+  tamam(await a(MEK, (db) => yayinla(db, MEK, k2.id, k2.surum, "ikinci")));
+  const surumler = async () => (await a(MEK, (db) => formatSurumleri(db, MEK, tur)))!.map((x) => [x.sira, x.durum, x.notu]);
+  /* yetkisiz, yayındaki, geçersiz not, başka tür, başka firma: hiçbir şey değişmez */
+  for (const k of [PLAN, DENETCI]) assert.deepEqual(await a(k, (db) => surumeGeriDon(db, k, tur, t1.id, null, "")), { durum: "yetkisiz" });
+  assert.deepEqual(await a(MEK, (db) => surumeGeriDon(db, MEK, tur, t2.id, null, "")), { durum: "yayinda" });
+  assert.equal((await a(MEK, (db) => surumeGeriDon(db, MEK, tur, t1.id, null, "x".repeat(201)))).durum, "gecersiz");
+  const tur2 = await yeniTur();
+  assert.deepEqual(await a(MEK, (db) => surumeGeriDon(db, MEK, tur2, t1.id, null, "")), { durum: "yok" });
+  assert.deepEqual(await b(MEK_B, (db) => surumeGeriDon(db, MEK_B, tur, t1.id, null, "")), { durum: "yok" });
+  assert.deepEqual(await surumler(), [[2, "yayinda", "ikinci"], [1, "eski", "ilk"]]);
+  /* açık taslak: görmeden çakışma (taslak yerinde); gördüğü sürümle yerine geçer, taslak kalmaz */
+  const ts = tamam(await a(MEK, (db) => taslakBaslat(db, MEK, tur, "sablon:ZPKR01", null)));
+  assert.deepEqual(await a(MEK, (db) => surumeGeriDon(db, MEK, tur, t1.id, null, "")), { durum: "cakisma" });
+  assert.equal((await a(MEK, (db) => formatAyrintisi(db, MEK, ts.id)))!.kaynak, "ZPKR01", "taslak yerinde");
+  const g = await a(MEK, (db) => surumeGeriDon(db, MEK, tur, t1.id, ts.surum, ""));
+  assert.ok(g.durum === "tamam", JSON.stringify(g));
+  assert.equal(g.sira, 3);
+  assert.deepEqual(await surumler(), [[3, "yayinda", "Sürüm 1 geri yüklendi"], [2, "eski", "ikinci"], [1, "eski", "ilk"]], "taslak kalmadı, hiçbir sürüm silinmedi");
+  const v3 = (await a(MEK, (db) => yayindakiFormat(db, tur)))!;
+  assert.deepEqual([v3.id, v3.tanim.gorunum.baslik, v3.tanim.bolumler.length], [g.id, v1.tanim.gorunum.baslik, v1.tanim.bolumler.length], "sürüm 1'in içeriği");
+  assert.equal((await a(MEK, (db) => formatAyrintisi(db, MEK, t1.id)))!.kaynak, "KOMPRESOR");
+  assert.equal((await a(MEK, (db) => formatSurumuOku(db, t1.id)))!.durum, "eski", "sürüm 1 yerinde");
+  /* ileri dönüş: sürüm 2'ye — sürüm 4 onun içeriği, not kullanıcının */
+  const g4 = await a(MEK, (db) => surumeGeriDon(db, MEK, tur, k2.id, null, "ileri"));
+  assert.ok(g4.durum === "tamam" && g4.sira === 4, JSON.stringify(g4));
+  assert.equal((await a(MEK, (db) => yayindakiFormat(db, tur)))!.tanim.gorunum.baslik, "Sürüm iki başlığı");
+  assert.deepEqual((await surumler())[0], [4, "yayinda", "ileri"]);
 });

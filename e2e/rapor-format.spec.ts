@@ -395,6 +395,19 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
   await expect(page.getByRole("button", { name: "Taslağı sil" })).toHaveCount(0);
   await expect(page.getByText("Yayında", { exact: true })).toBeVisible();
 
+  /* 2026-10-12 (reisim: "ekipman türlerinde eski sürüme geri dön tuşu olsun"): eski sürümde "Bu sürüme geri dön" — Sürüm 2'nin içeriği Sürüm 4
+     olarak yayınlanır, Sürüm 3 eskiye düşer, hiçbir sürüm silinmez; yayındaki sürümde tuş yok */
+  await expect(page.getByRole("button", { name: "Sürüm 3 · Bu sürüme geri dön" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Sürüm 2 · Bu sürüme geri dön" }).click();
+  const gd = page.getByRole("dialog", { name: "Sürüm 2 · geri dön" });
+  await expect(gd).toContainText("yayındaki Sürüm 3 eskiye düşer");
+  await expect(gd.getByLabel("Sürüm notu")).toHaveValue("Sürüm 2 geri yüklendi");
+  await gd.getByRole("button", { name: "Geri dön", exact: true }).click();
+  await expect(page.getByText("Sürüm 2 geri yüklendi: Sürüm 4 yayında.").first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("link", { name: /Rapor formatı\s*Sürüm 4/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Sürüm 3 · Bu sürüme geri dön" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Sürüm \d · Bu sürüme geri dön$/ })).toHaveCount(3);
+
   /* denetçi: görür, başlatamaz / yayınlayamaz */
   await context.clearCookies();
   await girisli(page, "denetci");
@@ -402,8 +415,10 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
   await hazir(page);
   await expect(page.getByRole("heading", { level: 2, name: "Rapor şablonu" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Şablondan başlat" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Sürüm 3 · Düzenle" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Sürüm 4 · Düzenle" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Bu sürüme geri dön$/ })).toHaveCount(0);
+  /* 2026-10-12: geri dönüşten sonra yayındaki Sürüm 4 (tablonun başında) */
   await page.getByRole("link", { name: "Önizle" }).first().click();
-  await expect(page.getByRole("heading", { level: 1, name: "Rapor şablonu · Sürüm 3" })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("heading", { level: 1, name: "Rapor şablonu · Sürüm 4" })).toBeVisible({ timeout: 30_000 });
   await expect(page.getByRole("button", { name: "Yayınla" })).toHaveCount(0);
 });

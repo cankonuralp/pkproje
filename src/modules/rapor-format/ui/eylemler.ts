@@ -6,7 +6,7 @@
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { depo } from "../../../server/dosya/depo";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
-import { sablondanTurEkle, taslakBaslat, taslakKaydet, taslakSil, yayinDenetle, yayinla } from "../server/formatlar";
+import { GeriDonusIptal, sablondanTurEkle, surumeGeriDon, taslakBaslat, taslakKaydet, taslakSil, yayinDenetle, yayinla, type GeriDonSonucu } from "../server/formatlar";
 import { bakanlikTamamla } from "../server/kurulum";
 import { parcaKaydet, parcaSil } from "../server/parcalar";
 import { BELGE_EN_BUYUK, formatBelgesi, formatYzBirak, formatYzHazirla, formatYzKapat, type FormatYzSonucu } from "../server/yz";
@@ -52,6 +52,25 @@ export async function yayinlaEylemi(formatId: string, surum: number, notu: strin
   const o = await oturum(); if (typeof o === "string") return { genel: o };
   const r = await oturumIslemi(o, (db) => yayinla(db, o, metin(formatId), Number(surum), metin(notu)));
   if (r.durum === "tamam") return { tamam: true, sira: r.sira, uyarilar: r.uyarilar };
+  if (r.durum === "engel") return { engeller: r.engeller };
+  if (r.durum === "gecersiz") return { hatalar: r.hatalar };
+  return { genel: SONUC[r.durum] };
+}
+
+/** 2026-10-12 (reisim: "ekipman türlerinde eski sürüme geri dön tuşu olsun"): eski sürümün içeriği yeni sürüm olarak yayınlanır — karar, yetki ve
+    denetim formatlar.ts surumeGeriDon'da; yayın tamamlanmazsa işlem geri alınır (GeriDonusIptal), hiçbir şey değişmez. */
+export async function surumeGeriDonEylemi(turId: string, surumId: string, taslakSurumu: number | null, notu: string): Promise<FormatDurumuYaniti> {
+  const o = await oturum(); if (typeof o === "string") return { genel: o };
+  const ts = taslakSurumu === null ? null : Number(taslakSurumu);
+  let r: GeriDonSonucu;
+  try {
+    r = await oturumIslemi(o, (db) => surumeGeriDon(db, o, metin(turId), metin(surumId), ts, metin(notu)));
+  } catch (h) {
+    if (!(h instanceof GeriDonusIptal)) throw h;
+    r = h.sonuc;
+  }
+  if (r.durum === "tamam") return { tamam: true, id: r.id, sira: r.sira, uyarilar: r.uyarilar };
+  if (r.durum === "yayinda") return { genel: "Bu sürüm zaten yayında." };
   if (r.durum === "engel") return { engeller: r.engeller };
   if (r.durum === "gecersiz") return { hatalar: r.hatalar };
   return { genel: SONUC[r.durum] };

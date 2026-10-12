@@ -302,6 +302,33 @@ export async function yayinla(db: Sorgulayici, kim: Kisi, id: string, surum: num
   return { durum: "tamam", sira, uyarilar: d.uyarilar };
 }
 
+/* ── ESKİ SÜRÜME GERİ DÖN (2026-10-12; reisim: "ekipman türlerinde eski sürüme geri dön tuşu olsun") — eski sürümün içeriği YENİ sürüm olarak
+   yayınlanır: sürümler değişmez, hiçbiri silinmez; yayındaki eskiye düşer; açık raporlar kendi sürümünde kalır, yeni raporlar bu içerikle açılır.
+   Tek işlem: o sürümden taslak (tür başına tek taslak — açık taslak varsa, istemcinin gördüğü sürümüyle, yerine geçer; 439 "bu sürümden yeniden başla"
+   gibi) + yayınla (aynı denetim; Bakanlık farkları uyarı). Yayın tamamlanmazsa GeriDonusIptal fırlatılır → işlem geri alınır, taslak dahil hiçbir
+   şey değişmez (çağıran yakalar). Yalnız "yaz"; yalnız eski sürüm (yayındaki zaten yayında, taslak sürüm değil). Kilit: tests/rapor-format.test.ts. */
+export type GeriDonSonucu = (YayinSonucu & { id?: string }) | { durum: "yayinda" };
+export class GeriDonusIptal extends Error {
+  sonuc: GeriDonSonucu;
+  constructor(sonuc: GeriDonSonucu) { super("eski sürüme geri dönüş tamamlanmadı"); this.sonuc = sonuc; }
+}
+export async function surumeGeriDon(db: Sorgulayici, kim: Kisi, turId: string, surumId: string, taslakSurumu: number | null, notu: unknown): Promise<GeriDonSonucu> {
+  if (!degistirir(kim)) return { durum: "yetkisiz" };
+  if (!UUID.test(turId) || !UUID.test(surumId)) return { durum: "yok" };
+  const n = dogrula(YayinNotu, notu ?? "");
+  if (!n.tamam) return { durum: "gecersiz", hatalar: { notu: Object.values(n.hatalar)[0]! } };
+  const hedef = (await db.sorgu<{ durum: FormatDurumu; sira: number | null }>(
+    "SELECT durum, sira FROM rapor_format WHERE id = $1 AND tur_id = $2", [surumId, turId])).rows[0];
+  if (!hedef || hedef.durum === "taslak") return { durum: "yok" };
+  if (hedef.durum === "yayinda") return { durum: "yayinda" };
+  const t = await taslakBaslat(db, kim, turId, `surum:${surumId}`, taslakSurumu);
+  if (t.durum === "gecersiz") return { durum: "gecersiz", hatalar: { surum: "Bu sürümün tanımı okunamadı." } };
+  if (t.durum !== "tamam") return { durum: t.durum === "kilitli" ? "cakisma" : t.durum };
+  const y = await yayinla(db, kim, t.id, t.surum, n.veri ?? `Sürüm ${hedef.sira} geri yüklendi`);
+  if (y.durum !== "tamam") throw new GeriDonusIptal(y);
+  return { ...y, id: t.id };
+}
+
 /** Raporlar için: türün YAYINDAKİ formatı (yeni rapor bununla açılır, RAPOR-FORMAT §5); yoksa null. Yetki ÇAĞIRANDA. */
 export async function yayindakiFormat(db: Sorgulayici, turId: string): Promise<{ id: string; sira: number; tanim: FormatTanimi } | null> {
   if (!UUID.test(turId)) return null;

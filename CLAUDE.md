@@ -137,6 +137,8 @@ pkproje/
                             yayında şablon (sistem, hesapsız, danışma kilidi; firma ayarı "kurulum") · "bos" başlangıç = sıfırdan (sablonlar.ts bosFormat)
                             · 438 resmî PDF Bakanlık şablonlu PDF'siz türlere (kurulum.pdf, resmiPdfEkle) · 439 yayındaki sürümde Düzenle (ui/SablonBolumu
                             SurumDuzenleTusu: o sürümden taslak → kurucu; açık taslak varsa devam / yeniden başla)
+                            · 501 ESKİ SÜRÜME GERİ DÖN: formatlar.ts surumeGeriDon (o sürümden taslak + yayınla tek işlemde; olmazsa GeriDonusIptal → geri
+                            alınır) · ui/SablonBolumu GeriDonTusu (sürüm tablosunda ve eski sürümün sayfasında)
                             · 440 Bakanlık türlerinde ölçüm cihazı türleri (src/tanim/standartlar.ts formatCihazTurleri → olcum-cihazlari hazirCihazTuru) +
                             boş bağlantı tamamlama (ekipman-turleri hazirBaglantiTamamla; ayar kurulum.baglanti; eylemde bakanlikTamamla)
                             · 450 YENİ TÜRE HAZIR FORMAT: sablonlar.ts grupFormati (Ek-III grubuna göre) → formatlar.ts varsayilanFormatKur (yetkisiz; kurulum
