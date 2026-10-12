@@ -2405,6 +2405,15 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-12 (512): **YAPAY ZEKÂ: CLAUDE HAIKU 5.5** (reisim, sunum 507'yi okuyup: *"okudum, inceledim, önerilerini kabul ediyorum, hayata geçir"* — Y1–Y4).
+  Firma ayarları › Yapay zekâ model listesi: **Claude Haiku 5.5** (en ucuz · $0,10 / $0,50, 1 milyon token · okuma ≈ $0,0015) · Sonnet 5.5 (dengeli) ·
+  Opus 5.5 (en doğru, en pahalı); açıklama satırı fiyatı ve bir okumanın yaklaşık maliyetini söyler. **Yeni firmada varsayılan Haiku 5.5** (eski
+  varsayılan Opus; kaydedilmiş seçim değişmez). Haiku 4.5 eklenmedi (Haiku 5.5'ten 10 kat pahalı ve zayıf), Haiku 3 / 3.5 emekli. Tek seçim:
+  fotoğraftan okuma, alan okuma, S.A.Y, format yardımcısı aynı modelle. Maliyet: token başına fiyat milyonda bir doların onda biri cinsinden tam sayı,
+  sonuç yukarı yuvarlanır (Haiku'nun kesirli maliyeti bigint sütuna yazılabilsin); Haiku'da istem 100 000 tokeni aşarsa üst fiyat ($0,50 / $2,50 —
+  belgeden başlat gibi uzun istem). Göç **0083** yz_okuma model kısıtına 'haiku'. Kilitler: tests/yz-okuma.test.ts (Haiku kimliği, fiyat, eşik, yuvarlama,
+  en ucuz), tests/firma-ayarlari.test.ts (varsayılan Haiku, listede olmayan model reddedilir), olumsuz kanıt yz-maliyet.bozan (eşik, yuvarlama),
+  e2e firma-ayarlari (listede Haiku, açıklama). S.A.Y ve fotoğraftan okuma testlerinin Opus hesapları açık Opus seçimiyle (varsayılan değişti).
 - 2026-10-12 (511): **510 SAHA FORMU YAYINDA** — main 89fd3d6, göç **0082** Supabase'e işlendi (goc kaydı, özet dosyayla aynı; 83 göç; RLS açık, API
   rollerinin hakkı yok, uygulama rolü yalnız tarama / sürüm / zaman sütununu günceller), sağlık "tamam" (sürüm 89fd3d6), duman **11/11**, son 1 saatte
   hata kaydı yok. Deneme makinesi 89fd3d6: 13/13 yeşil. Yolda düzeltilenler (hepsi test tarafı ya da ölçü): beklenen adres il / ilçeyle; Tamamlama

@@ -50,7 +50,7 @@ export interface FirmaAyarlari {
   mbelge: Surumlu<{ secili: string[] }> & { turler: MusteriBelgeTuru[]; ekSurum: number };
   /** 336: yapay zekâ (anahtar yalnız "tanımlı + son 4"; değer asla), bulut kaydı, yedek; saklama süresi (aylık arşiv) */
   /** kullanim: bu ayın kişi başı kullanımı (354; maket Y1 "Bu ay kullanım (kişi başına)") — maliyet milyonda bir dolar */
-  yz: Surumlu<{ acik: boolean; model: "opus" | "sonnet"; sinir: number | null }> & { anahtar: { tanimli: boolean; son4: string | null }; kullanim: YzKisiKullanimi[] };
+  yz: Surumlu<{ acik: boolean; model: "haiku" | "sonnet" | "opus"; sinir: number | null }> & { anahtar: { tanimli: boolean; son4: string | null }; kullanim: YzKisiKullanimi[] };
   bulut: Surumlu<{ saglayici: "" | "gdrive" | "onedrive" | "dropbox" | "yandex" | "sftp"; kok: string; duzen: "mt" | "mty" | "my" }>;
   yedek: Surumlu<{ sik: "saatlik" | "gunluk" | "haftalik"; saat: string; gun: 30 | 90 | 365 }>;
   /** 337: son içe aktarımlar */

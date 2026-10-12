@@ -54,6 +54,9 @@ test("firma ayarları: bölüm kaydet, geçersiz değer kaydedilmez, mesai şeri
   await yz.getByRole("radio", { name: "Açık" }).check();
   await expect(yz.getByText(/Anthropic'e \(ABD\) gider/)).toBeVisible();
   await expect(yz.getByLabel("API anahtarı")).toBeVisible();
+  /* 2026-10-12 (sunum Y1–Y3): model listesinde Haiku 5.5, yeni firmada varsayılan; açıklamada fiyat */
+  await expect(yz.getByRole("combobox", { name: "Model" })).toContainText("Claude Haiku 5.5");
+  await expect(yz.getByText(/en ucuz · 1 milyon token: giriş \$0,10/)).toBeVisible();
   await yz.getByRole("button", { name: "Vazgeç" }).click();
   await expect(yz.getByRole("radio", { name: "Kapalı" })).toBeChecked();
   const bulut = page.getByRole("region", { name: "Bulut kaydı" });

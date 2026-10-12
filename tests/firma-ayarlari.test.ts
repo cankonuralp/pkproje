@@ -228,6 +228,9 @@ test("yapay zekâ, bulut, yedek: anahtar biçimi denetlenir, şifreli saklanır,
   assert.ok(!JSON.stringify(v).includes(ANAHTAR), "anahtar ekran verisinde yok");
   const satir = (await a(YON, (db) => db.sorgu<{ sifreli: string }>("SELECT sifreli FROM firma_sir WHERE ad = 'yapay_zeka_anahtari'"))).rows[0];
   assert.ok(!satir.sifreli.includes(ANAHTAR), "veritabanında düz metin yok");
+  /* 2026-10-12 (sunum Y3): yeni firmada varsayılan Claude Haiku 5.5; Haiku 4.5 listede yok (Y2) */
+  assert.equal(v.yz.deger.model, "haiku", "yeni firmada varsayılan Haiku 5.5");
+  assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "yz", v.yz.surum, { acik: true, model: "haiku45", sinir: "" }))).durum, "gecersiz", "listede olmayan model");
   assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "yz", v.yz.surum, { acik: true, model: "sonnet", sinir: "abc" }))).durum, "gecersiz");
   tamam(await a(YON, (db) => ayarKaydet(db, YON, "yz", v.yz.surum, { acik: true, model: "sonnet", sinir: "12,5" })));
   const y = (await a(YON, (db) => ayarOku(db, "yapay_zeka"))).deger;

@@ -75,7 +75,7 @@ before(async () => {
   rapor = tamam(await kiraciIcinde(havuz, A, (db) => raporOlustur(db, den1, plan, f.ekp), { hesapId: den1.id })).id;
   await kiraciIcinde(havuz, A, async (db) => {
     const m = await ayarOku(db, "yapay_zeka");
-    tamam(await ayarYaz(db, "yapay_zeka", m.surum, { ...m.deger, acik: true, sinir: 1 }, { kim: "Deneme", ne: "ayar.yapay_zeka" }));
+    tamam(await ayarYaz(db, "yapay_zeka", m.surum, { ...m.deger, acik: true, sinir: 1, model: "opus" }, { kim: "Deneme", ne: "ayar.yapay_zeka" }));
     await sirYaz(db, "yapay_zeka_anahtari", "sk-ant-deneme-anahtar-0123456789", { kim: "Deneme" });
   }, { hesapId: yon.id });
 });

@@ -90,6 +90,20 @@ test("maliyet: milyonda bir dolar (Opus $4 / $20, Sonnet $2 / $10 — 1 milyon t
   assert.ok(enCokMaliyet("sonnet") < enCokMaliyet("opus"));
 });
 
+/* 2026-10-12 (reisim: "yapay zekada da haiku … seçenekler olmalı daha uygun ücretlendirme için" → sunum Y1–Y4 kabul) */
+test("Haiku 5.5: model kimliği; $0,10 / $0,50, istem 100 000 tokeni aşarsa $0,50 / $2,50; maliyet tam sayı (yukarı yuvarlanır); en ucuz", () => {
+  assert.equal(okumaIstegi({ model: "haiku", bolum: LINYE, resim: RESIM, tur: "jpeg" }).govde.model, "claude-haiku-5-5");
+  assert.equal(maliyetHesapla("haiku", 100_000, 0), 10_000, "giriş $0,10 / 1 milyon token");
+  assert.equal(maliyetHesapla("haiku", 0, 1_000_000), 500_000, "çıkış $0,50 / 1 milyon token");
+  assert.equal(maliyetHesapla("haiku", 5_000, 2_000), 1_500, "bir okuma ≈ $0,0015");
+  assert.equal(maliyetHesapla("haiku", 100_000, 10_000), 15_000, "eşikte alt fiyat");
+  assert.equal(maliyetHesapla("haiku", 100_001, 0), 50_001, "eşiği aşan istem üst fiyat");
+  assert.equal(maliyetHesapla("haiku", 200_000, 10_000), 125_000);
+  assert.equal(maliyetHesapla("haiku", 1, 1), 1, "kesirli maliyet yukarı yuvarlanır (bigint sütun)");
+  for (const [g, c] of [[3, 7], [12_345, 678], [99_999, 1]]) assert.ok(Number.isInteger(maliyetHesapla("haiku", g, c)));
+  assert.ok(enCokMaliyet("haiku") < enCokMaliyet("sonnet") && enCokMaliyet("haiku") > 0);
+});
+
 test("Anthropic çağrısı (yerel taklit): anahtar başlıkta, gövde istekle aynı; hata kodları kullanıcı iletisine", async () => {
   let son: { yol?: string; baslik?: IncomingHttpHeaders; govde?: string } = {};
   let durum = 200, hataIletisi = "";

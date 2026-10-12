@@ -82,7 +82,7 @@ test("kapalıyken ve anahtarsızken cevap yok; açık + anahtar: hızlı sorular
   assert.deepEqual(await ile(A, FA.den, (db) => sayDurumu(db)), { acik: false, anahtar: false, sinirDoldu: false });
   assert.deepEqual(await ile(A, FA.den, (db) => sayHizli(db, FA.den, "bekleyen", "/")), { durum: "red", neden: "S.A.Y firmada kapalı (Firma ayarları › Yapay zekâ)." });
   assert.deepEqual(await ile(A, FA.den, (db) => sayGecmisi(db)), []);
-  await yzAyari(A, FA.yon, { acik: true, sinir: 1 });
+  await yzAyari(A, FA.yon, { acik: true, sinir: 1, model: "opus" });   // 2026-10-12: varsayılan Haiku oldu; bu denemenin hesapları Opus'la
   assert.deepEqual(await ile(A, FA.den, (db) => sayDurumu(db)), { acik: true, anahtar: false, sinirDoldu: false });
   assert.match(JSON.stringify(await ile(A, FA.den, (db) => sayHizli(db, FA.den, "sayfa", "/planlar"))), /API anahtarı girilmedi/);
   await ile(A, FA.yon, (db) => sirYaz(db, "yapay_zeka_anahtari", "sk-ant-deneme-anahtar-0123456789", { kim: "Deneme" }));

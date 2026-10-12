@@ -56,7 +56,8 @@ export const AYAR_BOLUMLERI = {
       ABD doları (null = sınırsız; başlangıç 20). kisi_aylik_sinir eski alan, kullanılmıyor. */
   yapay_zeka: z.object({
     acik: z.boolean().default(false), kisi_aylik_sinir: gun(0, 100000).default(200),
-    model: z.enum(["opus", "sonnet"]).default("opus"),
+    /* 2026-10-12: yeni firmada varsayılan Haiku 5.5 (sunum Y3); kaydedilmiş seçim değişmez */
+    model: z.enum(["haiku", "sonnet", "opus"]).default("haiku"),
     sinir: z.number().min(0).max(10000).nullable().default(20),
   }),
   /** Bulut kaydı (336; maket bulutCiz, Ö2): sağlayıcı, ana klasör, klasör düzeni — hesap bağlantısı ve kendiliğinden kayıt K5 */

@@ -76,7 +76,13 @@ export const MUSTERI_BELGE_BAS = [["ekipnet", "EKİPNET kayıt belgesi", false],
 export const MUSTERI_BELGE_SON = [["kimlik", "Kimlik belgesi", true], ["saglik", "Sağlık raporu", true], ["is", "İş sözleşmesi", true], ["diger", "Diğer", true]] as const;
 
 /* ── 336: yapay zekâ, bulut kaydı, yedek (maket MV.YZ_MODEL, MV.BULUT_SAGLAYICI, MV.BULUT_DUZEN, YEDEK_SIK, YEDEK_GUN) ── */
-export const YZ_MODEL = { opus: ["Claude Opus 5.5", "daha doğru · 1 milyon token: giriş $4, çıkış $20"], sonnet: ["Claude Sonnet 5.5", "yarı fiyat · 1 milyon token: giriş $2, çıkış $10"] } as const;
+/* 2026-10-12 (reisim: "yapay zekada da haiku … seçenekler olmalı daha uygun ücretlendirme için" → sunum Y1–Y4 kabul): Haiku 5.5 eklendi, en ucuz
+   ve yeni firmada varsayılan; Haiku 4.5 eklenmedi (Haiku 5.5'ten pahalı ve zayıf), Haiku 3 / 3.5 emekli. Tek seçim (bütün yapay zekâ işleri aynı model). */
+export const YZ_MODEL = {
+  haiku: ["Claude Haiku 5.5", "en ucuz · 1 milyon token: giriş $0,10, çıkış $0,50 · bir fotoğraftan okuma ≈ $0,0015"],
+  sonnet: ["Claude Sonnet 5.5", "dengeli · 1 milyon token: giriş $2, çıkış $10 · bir fotoğraftan okuma ≈ $0,03"],
+  opus: ["Claude Opus 5.5", "en doğru, en pahalı · 1 milyon token: giriş $4, çıkış $20 · bir fotoğraftan okuma ≈ $0,06"],
+} as const;
 /** [ad, verileri Türkiye dışında saklayabilir] */
 export const BULUT_SAGLAYICI = {
   gdrive: ["Google Drive", true], onedrive: ["Microsoft OneDrive / SharePoint", true], dropbox: ["Dropbox", true], yandex: ["Yandex Disk", true],
@@ -86,7 +92,7 @@ export const BULUT_DUZEN = { mt: "Müşteri / Tesis", mty: "Müşteri / Tesis / 
 export const YEDEK_SIK = { saatlik: "Saatlik", gunluk: "Günlük", haftalik: "Haftalık (Pazartesi)" } as const;
 export const YEDEK_GUN = [30, 90, 365] as const;
 export const YzGirdisi = z.object({
-  acik: z.boolean(), model: z.enum(["opus", "sonnet"], { error: "Model seçin." }),
+  acik: z.boolean(), model: z.enum(["haiku", "sonnet", "opus"], { error: "Model seçin." }),
   sinir: z.preprocess((v) => (typeof v === "string" ? v.trim().replace(",", ".") : v),
     z.string().regex(/^(\d{1,5}(\.\d{1,2})?)?$/, "Sayı yazılmalı (ör. 20). Kaydedilmedi.")).transform((s) => (s === "" ? null : Number(s)))
     .refine((n) => n === null || n <= 10000, "En çok 10.000 $."),

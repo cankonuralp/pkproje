@@ -8,13 +8,15 @@
      da hizmet okumayı reddettiyse (refusal) sessizce "okunamadı" denmez — nedeni söylenir.
    · Sayı sütunun BİRİMİYLE istenir (inceleme: "fotoğraftaki birimle" denince 52,3 MΩ kΩ sütununa 52,3 diye düşerdi).
    · Fotoğraftaki yazı TALİMAT değildir: sistem talimatı bunu söyler, cevap yalnız veri olarak kullanılır.
-   · Maliyet token × fiyat (milyonda bir dolar); fiyatlar firma ayarının model listesiyle aynı (src/modules/firma-ayarlari/sema.ts YZ_MODEL). Ayırma
+   · Maliyet token × fiyat (milyonda bir dolar, yukarı yuvarlanır — tam sayı); fiyatlar firma ayarının model listesiyle aynı
+     (src/modules/firma-ayarlari/sema.ts YZ_MODEL). 2026-10-12 (reisim: "yapay zekada da haiku … seçenekler olmalı daha uygun ücretlendirme için" →
+     sunum kabul): Claude Haiku 5.5 — istem 100 000 tokeni aşarsa üst fiyat (Anthropic fiyat sayfası, 2026-10-12). Ayırma
      (0053) için en kötü maliyet: giriş üst sınırı + yanıt sınırı.
    · Ağ çağrısı ayrı (anthropicCagir): uç ortamdan (PROBATA_YZ_UC; yoksa Anthropic) — uçtan uca testte yerel taklit sunucu. Hata ücretli mi
      bilinir: hizmet hata döndürdüyse ücret yok; zaman aşımında (ya da cevap gövdesi okunamadıysa) bilinmiyor — ayırma harcamaya yazılır. */
 import type { BolumOf } from "../../format/tanim.ts";
 
-export type YzModel = "opus" | "sonnet";
+export type YzModel = "haiku" | "sonnet" | "opus";
 export type Guven = "yuksek" | "orta" | "dusuk";
 export interface OkunanSatir { degerler: Record<string, string>; guven: Guven }
 export interface OkumaIstegi { govde: Record<string, unknown> }
@@ -22,9 +24,12 @@ export interface OkumaIstegi { govde: Record<string, unknown> }
 export type OkumaYaniti = { durum: "tamam"; govde: unknown } | { durum: "hata"; neden: string; ucret: "yok" | "bilinmiyor" };
 export type YzCagirici = (istek: OkumaIstegi, anahtar: string) => Promise<OkumaYaniti>;
 
-export const MODEL_KIMLIGI: Record<YzModel, string> = { opus: "claude-opus-5-5", sonnet: "claude-sonnet-5-5" };
-/** milyonda bir dolar / token (giriş, çıkış) — Opus 5.5: $4 / $20, Sonnet 5.5: $2 / $10 (1 milyon token) */
-const FIYAT: Record<YzModel, { giris: number; cikis: number }> = { opus: { giris: 4, cikis: 20 }, sonnet: { giris: 2, cikis: 10 } };
+export const MODEL_KIMLIGI: Record<YzModel, string> = { haiku: "claude-haiku-5-5", sonnet: "claude-sonnet-5-5", opus: "claude-opus-5-5" };
+/** token başına fiyat, milyonda bir doların ONDA BİRİ cinsinden (tam sayı — kayan nokta hatası yok): Haiku 5.5 $0,10 / $0,50 (istem 100 000 tokeni
+    aşarsa $0,50 / $2,50), Sonnet 5.5 $2 / $10, Opus 5.5 $4 / $20 (1 milyon token) */
+const FIYAT: Record<YzModel, { giris: number; cikis: number; ust?: { esik: number; giris: number; cikis: number } }> = {
+  haiku: { giris: 1, cikis: 5, ust: { esik: 100_000, giris: 5, cikis: 25 } }, sonnet: { giris: 20, cikis: 100 }, opus: { giris: 40, cikis: 200 },
+};
 export const EN_COK_SATIR = 60;
 /** yanıt sınırı (düşünme dahil) */
 export const YANIT_SINIRI = 16_000;
@@ -34,7 +39,10 @@ const GIRIS_UST = 10_000;
 const ZAMAN_SINIRI_MS = 45_000;
 
 /** maliyet (milyonda bir dolar) */
-export const maliyetHesapla = (model: YzModel, giris: number, cikis: number) => giris * FIYAT[model].giris + cikis * FIYAT[model].cikis;
+export function maliyetHesapla(model: YzModel, giris: number, cikis: number): number {
+  const f = FIYAT[model], u = f.ust && giris > f.ust.esik ? f.ust : f;
+  return Math.ceil((giris * u.giris + cikis * u.cikis) / 10);
+}
 /** bir okumanın olabilecek en yüksek maliyeti (ayırma) */
 export const enCokMaliyet = (model: YzModel) => maliyetHesapla(model, GIRIS_UST, YANIT_SINIRI);
 
