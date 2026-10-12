@@ -2405,6 +2405,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-12 (511): **510 SAHA FORMU YAYINDA** — main 89fd3d6, göç **0082** Supabase'e işlendi (goc kaydı, özet dosyayla aynı; 83 göç; RLS açık, API
+  rollerinin hakkı yok, uygulama rolü yalnız tarama / sürüm / zaman sütununu günceller), sağlık "tamam" (sürüm 89fd3d6), duman **11/11**, son 1 saatte
+  hata kaydı yok. Deneme makinesi 89fd3d6: 13/13 yeşil. Yolda düzeltilenler (hepsi test tarafı ya da ölçü): beklenen adres il / ilçeyle; Tamamlama
+  adımı boşken içerik kutusu çizilmez (donmuş referans ekranın görsel karşılaştırması 8 px uzamıştı); kesin silme olumsuz kanıtı 17 bozulan satırı
+  0082'de arar (plan_kullanim orada yeniden tanımlı); uçtan uca test planı "Proje no" alanıyla bulur.
 - 2026-10-12 (510): **SAHA FORMU** (reisim: *"görselde saha takip formu üretme işi yok ? neden ? geri gelsin."*). Maket onaylıydı (planlarim.html,
   2026-09-26: *"plan tamamlandıktan sonra saha formu oluştur tuşu gelsin bu tuşa istenildiği kadar basılsın … yapılan ekipmanlar ve yapıldığına dair
   firma onayı için imza yerleri"*; 197 imzalı saha formu yükle) ama koda yazılmamıştı — kaldırılmamış, eksik kalmıştı. Şimdi: plan **Tamamlandı**
