@@ -118,6 +118,11 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
     window.addEventListener("probata-panel", f);
     return () => window.removeEventListener("probata-panel", f);
   }, []);
+  /* sayfanın sonu düğmenin altında kalmasın (temel.css html[data-saychat]) */
+  useEffect(() => {
+    document.documentElement.setAttribute("data-saychat", "var");
+    return () => document.documentElement.removeAttribute("data-saychat");
+  }, []);
   /* düğme S.A.Y düğmesinin solunda (S.A.Y yoksa sağ altta) */
   useEffect(() => {
     const olc = () => {
@@ -531,7 +536,7 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
   return (
     <>
       {!acik && (
-        <button ref={fab} className={stil.fab} type="button" onClick={ac} aria-haspopup="dialog" aria-controls="sc-panel" aria-expanded={false}
+        <button ref={fab} className={stil.fab} type="button" data-saychat-fab="" onClick={ac} aria-haspopup="dialog" aria-controls="sc-panel" aria-expanded={false}
           aria-label="S.A.Y Chat — planın sohbeti" style={konum ? { right: konum.right, bottom: konum.bottom } : undefined}>
           <span className={stil.fabIkon}><Ikon ad="message-square-text" /></span>
           <span className={stil.fabYazi}>S.A.Y<small>Chat</small></span>
