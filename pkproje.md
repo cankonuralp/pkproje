@@ -2405,6 +2405,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-12 (518): **517 YAYINDA** — göç yok (84 göç). main cda7a54 (517 + test düzeltmesi: `has` içteki konumu etiketin İÇİNDE arar,
+  bölüm kimliğiyle başlayan konum bulunmuyordu — telefonda "gizli" denetimi boşuna geçmişti; ilk koşu 10/13). Deneme makinesi cda7a54 13/13; sağlık
+  "tamam", duman **11/11**. Gözle (deneme makinesinin görüntüleri, e2e-goz): masaüstü 1920 ve tablet 1080'de "Fotoğraf
+  ekle (yapay zekâ okur)" bölüm başlığında, okun yanında; telefon 375'te yalnız kamera simgesi; Sil · Kaydet ve kopyala · Kaydet · Onaya gönder
+  çubuksuz, gölgeli, sağ altta; S.A.Y üstlerinde (telefonda iki sıranın üstünde). Canlıda oturumla bakılamadı (giriş reisim'in) — ölçemedim.
+  Son 1 saatteki tek hata kaydı bilinen duyuru zaman aşımı (iş ekipmanları portalı, önceki sürümde) — bu işle ilgisiz.
 - 2026-10-12 (517): **RAPOR EKRANI: FOTOĞRAF TUŞU BÖLÜM BAŞLIĞINDA, TUŞLAR HAVADA** (reisim, ekran görüntüleriyle: *"1. görselde paintten kes
   yapıştır yaptım o tuşun orada olmasını istiyorum, ekran daralınca logo olarak kalsın, aynı şekilde fotoğraflar bölümü için de ekipman bölümü içinde
   fotoğraf istenen yerlerde bu şekilde olsun. Kaydet gönder kopyala tuşları da say tuşu gibi hava da olsun bir barın içinde durduğu görüntü şık
