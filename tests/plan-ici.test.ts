@@ -1,7 +1,10 @@
 /* NEREDEN GELDİ: maket planlarim.html (4.–5. tur: akış Planlandı → Kabul → Denetim → Tamamlama, tarafsızlık beyanı, Reddet gerekçe, kontrol listesi
    iki adım, Tamamlamayı geri al, Ekipman ekle iki yol + kod mesajları, pasife al, Proje notları) · pkproje §3.4 (karar 9–12, 26–28, "Plan künyesi":
    denetçiye kendiliğinden geçmez, Güncelle) · KOD-GECIS §4 (plan_kabul_red yalnız atanan; Ekipman "yaz") · reisim 2026-10-04: "rol değiştirme, sızma,
-   veri çalma; yetki her zaman sunucuda". GERÇEK PostgreSQL, iki firma (310). */
+   veri çalma; yetki her zaman sunucuda". GERÇEK PostgreSQL, iki firma (310).
+   2026-10-12 saha formu (reisim: "görselde saha takip formu üretme işi yok ? neden ? geri gelsin." — maket planlarim.html saha formu, 197; göç 0082):
+   tamamlanan planda ekip / Planlar "yaz" oluşturur, numara SF1, SF2 …; belge plandan; müşteri taraması yükle / değiştir / kaldır; değişmez, silinmez;
+   planı kullanılmış sayar; B dokunamaz. */
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -13,7 +16,7 @@ import { klasorDepo } from "../src/server/dosya/depo.ts";
 import { VARSAYILAN_BEYAN } from "../src/server/ayar/ayar.ts";
 import {
   denetimeBasla, ekipmanPasif, kayitliEkle, kodDurumu, kontrolListesi, kunyeDuzenle, kunyeGuncelle, notEkle, planIci, planKabul, planListesi, planReddet,
-  planTamamla, tamamlamaGeriAl, yeniEkipman, type PlanYazma,
+  planSil, planTamamla, sahaDosyasiGorulur, sahaFormuOlustur, sahaFormuVerisi, sahaTaramaKaldir, sahaTaramaYukle, tamamlamaGeriAl, yeniEkipman, type PlanYazma,
 } from "../src/modules/planlar/server/plan-ici.ts";
 import { bugunTr, planAc, type Kisi } from "../src/modules/planlar/server/planlar.ts";
 import { MATRIS_ONERI } from "../src/server/yetki/tanim.ts";
@@ -267,4 +270,107 @@ test("KİRACI + ROL: B'nin kişisi A'nın planında hiçbir şey yapamaz; rol d�
   /* planlamacı plana atanmış gibi davranamaz: kabul özel eylemi atananları veritabanından okur */
   assert.equal((await a(FA.yon, (db) => planKabul(db, FA.yon, id, v.surum, true))).durum, "yetkisiz");
   assert.equal((await ici(FA.den1, id))!.durum, "bekliyor");
+});
+
+/* ── SAHA FORMU (2026-10-12; göç 0082) ── */
+const PDF = new TextEncoder().encode("%PDF-1.4\n1 0 obj << /Type /Catalog >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF\n");
+/** planı kabul → denetim → kontrol listesi → tamamla (ekipteki denetçi) */
+async function tamamlananPlan(tesis = FA.tesis) {
+  const id = await yeniPlan(FA, A, tesis);
+  let v = (await ici(FA.den1, id))!;
+  tamam(await a(FA.den1, (db) => planKabul(db, FA.den1, id, v.surum, true, v.beyanOzet)));
+  assert.equal(await a(FA.den1, (db) => denetimeBasla(db, "Deneme", id)), true);
+  v = (await ici(FA.den1, id))!;
+  return { id, v };
+}
+
+test("saha formu: tamamlanan planda ekip ve Planlar 'yaz' istendiği kadar oluşturur (SF1, SF2); belge plandan; tarama yükle / değiştir / kaldır; değişmez, silinmez; B dokunamaz", async () => {
+  const { id, v: v0 } = await tamamlananPlan();
+  let v = v0;
+  assert.equal(v.izin.sahaFormu, false, "denetimdeki planda saha formu yok");
+  assert.deepEqual(await a(FA.den1, (db) => sahaFormuOlustur(db, FA.den1, id)), { durum: "red", neden: "Saha formu plan tamamlanınca oluşturulur." });
+  tamam(await a(FA.den1, (db) => kontrolListesi(db, FA.den1, id, v.surum, true)));
+  v = (await ici(FA.den1, id))!;
+  tamam(await a(FA.den1, (db) => planTamamla(db, FA.den1, id, v.surum)));
+  v = (await ici(FA.den1, id))!;
+  assert.deepEqual([v.izin.sahaFormu, v.sahaFormlari], [true, []]);
+  assert.equal((await ici(FA.mek, id))!.izin.sahaFormu, false, "yönetici (görür) oluşturamaz");
+  assert.equal((await a(FA.mek, (db) => sahaFormuOlustur(db, FA.mek, id))).durum, "yetkisiz");
+  assert.equal((await a(FA.den2, (db) => sahaFormuOlustur(db, FA.den2, id))).durum, "yok", "ekipte olmayan denetçi planı görmez");
+  assert.equal((await b(FB.plan, (db) => sahaFormuOlustur(db, FB.plan, id))).durum, "yok", "B, A'nın planına form açamaz");
+  const s1 = tamam(await a(FA.den1, (db) => sahaFormuOlustur(db, FA.den1, id)));
+  const s2 = tamam(await a(FA.plan, (db) => sahaFormuOlustur(db, FA.plan, id)));
+  v = (await ici(FA.den1, id))!;
+  assert.deepEqual(v.sahaFormlari.map((f) => [f.id, f.no, f.tarama]), [[s2.id, `${v.kart.no}-SF2`, null], [s1.id, `${v.kart.no}-SF1`, null]], "en yeni üstte; numara plan + SF + sıra");
+  const [f2, f1] = v.sahaFormlari;
+
+  /* belge plandan: yapılan ekipmanlar = planın etkin raporlarının ekipmanları, rapor numarası sırasıyla (bu denemede rapor satırı doğrudan yazılır) */
+  const s = kume.sahipIstemci(); await s.connect();
+  try {
+    await s.query("SET session_replication_role = replica");
+    for (const [no, kod] of [["DA-1026-002-bbbbb", "HT-A1"], ["DA-1026-001-aaaaa", "HT-A2"]]) {
+      await s.query("INSERT INTO rapor (firma_id, no, plan_id, ekipman_id, tur_id, format_id, personel_id, kunye) VALUES ($1, $2, $3, $4, $5, gen_random_uuid(), $6, '{}')",
+        [A, no, id, await ekipmanId(A, kod), FA.tur, FA.den1P]);
+    }
+  } finally { await s.end(); }
+  const belge = await a(FA.den1, (db) => sahaFormuVerisi(db, FA.den1, id, f1.id, null));
+  assert.ok(belge);
+  assert.deepEqual([belge.no, belge.projeNo, belge.musteri, belge.tesis, belge.adres, belge.uzmanlar], [f1.no, v.kart.no, "Deneme Sanayi A.Ş.", "Merkez", "Deneme Cad. 1", ["Deneme Bir"]]);
+  assert.deepEqual(belge.ekipmanlar.map((x) => [x.kod, x.tur]), [["HT-A2", "Hava tankı"], ["HT-A1", "Hava tankı"]]);
+  assert.equal(await a(FA.den2, (db) => sahaFormuVerisi(db, FA.den2, id, f1.id, null)), null);
+  assert.equal(await b(FB.plan, (db) => sahaFormuVerisi(db, FB.plan, id, f1.id, null)), null);
+  const baska = await yeniPlan(FA, A, FA.tesis2);
+  assert.equal(await a(FA.plan, (db) => sahaFormuVerisi(db, FA.plan, baska, f1.id, null)), null, "başka planın kimliğiyle form açılmaz");
+
+  /* tarama: yükle (PDF) → değiştir (eskisi çöpe) → eski sürüm çakışır → kaldır; tür denetimi; yetki */
+  assert.deepEqual(await a(FA.den1, (db) => sahaTaramaYukle(db, depo, FA.den1, A, id, f1.id, f1.surum, { ad: "x.txt", bayt: new TextEncoder().encode("düz metin") })),
+    { durum: "gecersiz", hatalar: { dosya: "Dosya PDF, JPEG ya da PNG değil ya da bozuk." } });
+  assert.equal((await a(FA.mek, (db) => sahaTaramaYukle(db, depo, FA.mek, A, id, f1.id, f1.surum, { ad: "t.pdf", bayt: PDF }))).durum, "yetkisiz");
+  tamam(await a(FA.den1, (db) => sahaTaramaYukle(db, depo, FA.den1, A, id, f1.id, f1.surum, { ad: "imzali.pdf", bayt: PDF })));
+  let g = (await ici(FA.den1, id))!.sahaFormlari.find((x) => x.id === f1.id)!;
+  const ilk = g.tarama!;
+  const d1 = (await sql<{ modul: string; kayit_id: string; cop: Date | null }>(A, "SELECT modul, kayit_id::text, cop FROM dosya WHERE id = $1", [ilk])).rows[0];
+  assert.deepEqual([d1.modul, d1.kayit_id, d1.cop], ["saha_formu", f1.id, null]);
+  assert.equal(await a(FA.den1, (db) => sahaDosyasiGorulur(db, FA.den1, f1.id)), true);
+  assert.equal(await a(FA.den2, (db) => sahaDosyasiGorulur(db, FA.den2, f1.id)), false, "planı görmeyen taramayı açamaz");
+  assert.equal(await b(FB.plan, (db) => sahaDosyasiGorulur(db, FB.plan, f1.id)), false);
+  const dosyaSayisi = async () => (await sql<{ n: number }>(A, "SELECT count(*)::int AS n FROM dosya WHERE kayit_id = $1", [f1.id])).rows[0].n;
+  assert.equal((await a(FA.den1, (db) => sahaTaramaYukle(db, depo, FA.den1, A, id, f1.id, f1.surum, { ad: "eski.pdf", bayt: PDF }))).durum, "cakisma");
+  assert.equal(await dosyaSayisi(), 1, "çakışan yükleme dosya bırakmaz");
+  tamam(await a(FA.plan, (db) => sahaTaramaYukle(db, depo, FA.plan, A, id, f1.id, g.surum, { ad: "yeni.pdf", bayt: PDF })));
+  g = (await ici(FA.den1, id))!.sahaFormlari.find((x) => x.id === f1.id)!;
+  assert.notEqual(g.tarama, ilk);
+  assert.ok((await sql<{ cop: Date | null }>(A, "SELECT cop FROM dosya WHERE id = $1", [ilk])).rows[0].cop, "değiştirilen tarama çöpe");
+  tamam(await a(FA.den1, (db) => sahaTaramaKaldir(db, FA.den1, id, f1.id, g.surum)));
+  const son = (await ici(FA.den1, id))!.sahaFormlari.find((x) => x.id === f1.id)!;
+  assert.equal(son.tarama, null);
+  assert.ok((await sql<{ cop: Date | null }>(A, "SELECT cop FROM dosya WHERE id = $1", [g.tarama])).rows[0].cop, "kaldırılan tarama çöpe");
+  assert.deepEqual(await a(FA.den1, (db) => sahaTaramaKaldir(db, FA.den1, id, f1.id, son.surum)), { durum: "red", neden: "Bu formda yüklü tarama yok." });
+  assert.equal((await a(FA.den1, (db) => sahaTaramaYukle(db, depo, FA.den1, A, id, f2.id, f2.surum, { ad: "a.pdf", bayt: PDF }))).durum, "tamam", "her formun kendi taraması");
+
+  /* veritabanı: numara / sıra / plan değişmez, form silinmez; B göremez, yazamaz */
+  await assert.rejects(sql(A, "UPDATE saha_formu SET no = 'SAHTE-1' WHERE id = $1", [f1.id]), /permission denied|izin/i);
+  await assert.rejects(sql(A, "DELETE FROM saha_formu WHERE id = $1", [f1.id]), /permission denied|izin/i);
+  assert.equal((await sql(B, "SELECT 1 FROM saha_formu WHERE id = $1", [f1.id])).rowCount, 0);
+  assert.equal((await sql(B, "UPDATE saha_formu SET tarama = NULL WHERE id = $1", [f2.id])).rowCount, 0);
+  await assert.rejects(sql(B, "INSERT INTO saha_formu (plan_id, sira, no, olusturan) VALUES ($1, 9, 'SAHTE-9', 'x')", [id]), /foreign key|yabancı anahtar/i);
+  await assert.rejects(sql(A, "INSERT INTO saha_formu (plan_id, sira, no, olusturan) VALUES ($1, 1, 'TEKRAR-1', 'x')", [id]), /unique|benzersiz/i, "aynı sıra iki kez yok");
+});
+
+test("saha formu planı kullanılmış sayar: tamamlaması geri alınan, raporsuz planda form varsa plan silinmez", async () => {
+  const { id, v: v0 } = await tamamlananPlan(FA.tesis2);
+  tamam(await a(FA.den1, (db) => kontrolListesi(db, FA.den1, id, v0.surum, true)));
+  let v = (await ici(FA.den1, id))!;
+  tamam(await a(FA.den1, (db) => planTamamla(db, FA.den1, id, v.surum)));
+  tamam(await a(FA.den1, (db) => sahaFormuOlustur(db, FA.den1, id)));
+  v = (await ici(FA.den1, id))!;
+  tamam(await a(FA.den1, (db) => tamamlamaGeriAl(db, FA.den1, id, v.surum)));
+  v = (await ici(FA.den1, id))!;
+  assert.equal(v.izin.sahaFormu, false, "geri alınan planda yeni form yok");
+  assert.equal(v.sahaFormlari.length, 1, "oluşturulmuş form kalır");
+  const f = v.sahaFormlari[0];
+  assert.deepEqual(await a(FA.den1, (db) => sahaTaramaYukle(db, depo, FA.den1, A, id, f.id, f.surum, { ad: "a.pdf", bayt: PDF })),
+    { durum: "red", neden: "Saha formu taraması tamamlanmış planda yüklenir." });
+  assert.deepEqual(await a(FA.yon, (db) => planSil(db, FA.yon, id)), { durum: "red", neden: "Plan silinemez: 1 saha formunda kullanıldı." });
+  assert.equal((await sql(A, "SELECT 1 FROM plan WHERE id = $1", [id])).rowCount, 1);
 });

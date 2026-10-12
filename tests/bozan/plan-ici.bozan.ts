@@ -3,7 +3,11 @@
    1. 0024'teki akış tetiği olmasaydı plan "kabul bekliyor"dan doğrudan "tamamlandı"ya geçer, tarih elle yazılırdı (denetimsiz kapanış, uydurma damga).
    2. Not damga tetiği olmasaydı notu yazan hesap uydurulurdu (karar 27: not kimin, değişmez).
    3. Sunucuda plan_kabul_red denetimi olmasaydı ekipte olmayan planlamacı tarafsızlık beyanını denetçi yerine onaylardı.
-   4. Künye düzenlenirken denetçinin gördüğü künye saklanmasaydı denetçinin ekranı kendiliğinden değişirdi (§3.4: "kendiliğinden geçmez"). */
+   4. Künye düzenlenirken denetçinin gördüğü künye saklanmasaydı denetçinin ekranı kendiliğinden değişirdi (§3.4: "kendiliğinden geçmez").
+   2026-10-12 saha formu (göç 0082):
+   5. Sunucuda "ekip ya da Planlar yaz" denetimi olmasaydı yalnız gören yönetici de saha formu açardı.
+   6. Plan durumu denetimi olmasaydı kabul bile edilmemiş plana saha formu açılırdı (yapılmamış iş müşteriye imzalatılırdı).
+   7. 0082'de güncelleme yalnız tarama sütunuyla sınırlanmasaydı uygulama rolü formun numarasını değiştirirdi (müşterideki kâğıtla kayıt ayrışırdı). */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -20,6 +24,7 @@ import { supabaseBenzeri, type SupabaseBenzeri } from "../yardimci/supabase.ts";
 
 const AKIS = "CREATE OR REPLACE TRIGGER plan_akis BEFORE INSERT OR UPDATE ON plan FOR EACH ROW EXECUTE FUNCTION plan_akis();";
 const NOT = "CREATE OR REPLACE TRIGGER plan_not_damga BEFORE INSERT ON plan_not FOR EACH ROW EXECUTE FUNCTION plan_not_damga();";
+const SAHA_KOLON = "GRANT UPDATE (tarama, surum, degisti) ON saha_formu TO probata_uygulama;";
 let kume: GomuluKume;
 let supa: SupabaseBenzeri;
 let havuz: Havuz;
@@ -63,6 +68,10 @@ before(async () => {
       const k = readFileSync(join(GOC_KLASORU, ad), "utf8");
       assert.ok(k.includes(AKIS) && k.includes(NOT), "bozulacak satırlar kaynakta yok");
       writeFileSync(join(klasor, ad), k.replace(AKIS, "").replace(NOT, ""));
+    } else if (ad.startsWith("0082_")) {
+      const k = readFileSync(join(GOC_KLASORU, ad), "utf8");
+      assert.ok(k.includes(SAHA_KOLON), "bozulacak satır kaynakta yok");
+      writeFileSync(join(klasor, ad), k.replace(SAHA_KOLON, "GRANT UPDATE ON saha_formu TO probata_uygulama;"));
     } else copyFileSync(join(GOC_KLASORU, ad), join(klasor, ad));
   }
   supa = await supabaseBenzeri(kume, "plan_ici_bozuk", klasor);
@@ -91,7 +100,7 @@ async function saglam() {
   const s = kume.sahipIstemci(); await s.connect();
   const C = (await s.query<{ id: string }>("INSERT INTO firma (kisa_ad, ad, rapor_kodu) VALUES ($1, 'Deneme C', 'DC') RETURNING id", [`deneme-c${sira}`]).finally(() => s.end())).rows[0].id;
   const h = havuzKur(kume.uygulama);
-  return { h, ...(await kur(h, C)) };
+  return { h, C, ...(await kur(h, C)) };
 }
 type PlanIci = typeof import("../../src/modules/planlar/server/plan-ici.ts");
 
@@ -114,5 +123,48 @@ test("künye düzenlenirken denetçinin gördüğü künye saklanmayınca denet�
     assert.equal((await is(plan, (db) => m.kunyeDuzenle(db, plan, id, v.surum, { firmaAdi: "Yeni Ünvan A.Ş." }))).durum, "tamam");
     const d = (await is(den, (db) => m.planIci(db, den, id)))!;
     assert.equal(d.kunye.firmaAdi, "Yeni Ünvan A.Ş.", "denetçinin künyesi Güncelle'siz değişti");
+  } finally { await h.end(); }
+});
+
+test("saha formu: 0082'de güncelleme tarama sütunuyla sınırlanmayınca uygulama rolü formun numarasını değiştirir", async () => {
+  const id = (await supa.sahip.query<{ id: string }>("SELECT id::text FROM plan LIMIT 1")).rows[0].id;
+  await kiraciIcinde(havuz, A, (db) => db.sorgu("INSERT INTO saha_formu (plan_id, sira, no, olusturan) VALUES ($1, 1, 'P-0000-001-SF1', 'Deneme')", [id]));
+  const r = await kiraciIcinde(havuz, A, (db) => db.sorgu("UPDATE saha_formu SET no = 'SAHTE-1' WHERE plan_id = $1", [id]));
+  assert.equal(r.rowCount, 1, "numara değişti");
+});
+
+/** plan akışı (tetikler yerinde): kabul → denetim → kontrol listesi → tamamla */
+async function tamamla(m: PlanIci, den: Kisi, is: Awaited<ReturnType<typeof saglam>>["is"], id: string) {
+  let v = (await is(den, (db) => m.planIci(db, den, id)))!;
+  assert.equal((await is(den, (db) => m.planKabul(db, den, id, v.surum, true, v.beyanOzet))).durum, "tamam");
+  assert.equal(await is(den, (db) => m.denetimeBasla(db, "Deneme", id)), true);
+  v = (await is(den, (db) => m.planIci(db, den, id)))!;
+  assert.equal((await is(den, (db) => m.kontrolListesi(db, den, id, v.surum, true))).durum, "tamam");
+  v = (await is(den, (db) => m.planIci(db, den, id)))!;
+  assert.equal((await is(den, (db) => m.planTamamla(db, den, id, v.surum))).durum, "tamam");
+}
+
+test("saha formu: sunucuda ekip / Planlar 'yaz' denetimi kalkınca yalnız gören yönetici de form açar", async () => {
+  const m = await bozukModul<PlanIci>("src/modules/planlar/server/plan-ici.ts",
+    `  if (!isci(e)) return { durum: "yetkisiz" };\n  await db.sorgu("SELECT 1 FROM plan WHERE id = $1 FOR UPDATE", [id]);\n`,
+    `  await db.sorgu("SELECT 1 FROM plan WHERE id = $1 FOR UPDATE", [id]);\n`);
+  const { h, C, den, id, is } = await saglam();
+  try {
+    await tamamla(m, den, is, id);
+    const mek: Kisi = { id: await kiraciIcinde(h, C, async (db) => (await db.sorgu<{ id: string }>(
+      "INSERT INTO hesap (eposta, ad, roller, durum) VALUES ($1, 'Deneme', '{mekanik_yonetici}', 'etkin') RETURNING id::text", [`m${sira}@deneme.example`])).rows[0].id),
+      ad: "Deneme", roller: ["mekanik_yonetici"] };
+    assert.equal((await is(mek, (db) => m.sahaFormuOlustur(db, mek, id))).durum, "tamam", "gören yönetici form açtı");
+  } finally { await h.end(); }
+});
+
+test("saha formu: plan durumu denetimi kalkınca kabul edilmemiş plana form açılır", async () => {
+  const m = await bozukModul<PlanIci>("src/modules/planlar/server/plan-ici.ts",
+    `  if (!p || p.durum !== "tamamlandi") return { durum: "red", neden: "Saha formu plan tamamlanınca oluşturulur." };\n`,
+    `  if (!p) return { durum: "yok" };\n`);
+  const { h, den, id, is } = await saglam();
+  try {
+    assert.equal((await is(den, (db) => m.planIci(db, den, id)))!.durum, "bekliyor");
+    assert.equal((await is(den, (db) => m.sahaFormuOlustur(db, den, id))).durum, "tamam", "kabul bekleyen plana saha formu");
   } finally { await h.end(); }
 });

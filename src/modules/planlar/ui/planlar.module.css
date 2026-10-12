@@ -186,3 +186,15 @@
 @media (max-width: 767.98px) {
   .yeniSatir { grid-template-columns: minmax(0, 1fr); align-items: stretch; }
 }
+
+/* 2026-10-12 SAHA FORMLARI (maket sahaListe): Tamamlama adımının altında, en yeni üstte; satırda numara · oluşturan, tarama rozeti, tuşlar */
+.sahaListe { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.sahaSatir {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 8px 10px 8px 12px;
+  background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-orta);
+}
+.sahaBilgi { display: grid; gap: 2px; min-width: 0; margin-right: auto; }
+.sahaTuslar { display: flex; flex-wrap: wrap; gap: 8px; }
+.sahaHata { flex-basis: 100%; margin: 0; color: var(--hata-yazi); font-size: var(--boy-kucuk); }
+.sahaDosya { position: relative; cursor: pointer; }
+.sahaDosya[aria-disabled="true"] { opacity: .6; cursor: default; }

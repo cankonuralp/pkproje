@@ -6,13 +6,19 @@
    · Proje notu: plandaki denetçiler ve Planlar "yaz" yazar ve görür; müşteri ve öteki roller görmez (karar 27); not değişmez, silinmez.
    · Ekipman ekle / kayıtlıyı plana al: plan görülüyor + Ekipman "yaz" + plan Kabul edildi ya da Denetimde (tamamlanmış planda kapalı — 12).
      Pasife al / etkinleştir: özel eylem ekipman_pasif + plan görülüyor; silme yok.
+   · Saha formu (2026-10-12, göç 0082): tamamlanan planda plandaki denetçi ya da Planlar "yaz" oluşturur, müşterinin imzalı taramasını yükler /
+     değiştirir / kaldırır; planı gören formu ve taramayı açar.
    · Durum geçişleri ve zaman damgaları veritabanında (göç 0024); burada yalnız izinli geçiş istenir. İstemciden gelen sürüm yalnız "hangi
      sürümü gördüm" bilgisidir (iyimser kilit); yetki vermez. */
 import { createHash } from "node:crypto";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { kesinSil, kullanimlar } from "../../../server/db/silici.ts";
 import { ekle, guncelle, tablo, type GuncelleSonucu, type Iz } from "../../../server/db/yazici.ts";
-import { ayarOku } from "../../../server/ayar/ayar.ts";
+import { ayarOku, firmaBelgeKunyesi } from "../../../server/ayar/ayar.ts";
+import type { Depo } from "../../../server/dosya/depo.ts";
+import { dosyaCope, dosyaYukle } from "../../../server/dosya/dosya.ts";
+import type { YetkiHesabi } from "../../../server/yetki/canDo.ts";
+import type { SahaFormuVerisi } from "../../../belge/saha.ts";
 import { personelHesaplari } from "../../../server/kimlik/hesap.ts";
 import { canDo, canDoEylem, duzey } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
@@ -90,6 +96,8 @@ export interface PlanIzni {
   ekipmanSil: boolean;
   /** plandaki denetçi, plan kabul edilmiş / denetimde / tamamlanmış, plan günü gelmiş (ENGEL 1: ileri tarihli plana rapor açılmaz) */
   raporOlustur: boolean;
+  /** 2026-10-12: saha formu oluştur ve müşteri taramasını yükle / kaldır — plandaki denetçi ya da Planlar "yaz", plan tamamlanmış */
+  sahaFormu: boolean;
 }
 function izinler(kim: Kisi, e: Erisim): PlanIzni {
   const d = e.p.durum, isci = e.uye || e.yazar;
@@ -103,6 +111,7 @@ function izinler(kim: Kisi, e: Erisim): PlanIzni {
     ekipmanPasif: isci && canDoEylem(kim, "ekipman_pasif") && (d === "kabul" || d === "denetimde" || d === "tamamlandi"),
     ekipmanSil: canDoEylem(kim, "kayit_sil", { modul: EKIPMAN_MODULU }),
     raporOlustur: e.uye && duzey(kim, RAPORLAR_MODULU) !== "yok" && canDoEylem(kim, "rapor_olustur", { atananlar: e.atananlar }) && (d === "kabul" || d === "denetimde" || d === "tamamlandi") && e.p.baslangic <= bugunTr(),
+    sahaFormu: isci && d === "tamamlandi",
   };
 }
 
@@ -180,6 +189,8 @@ export interface PlanIci {
   notlar: { id: string; metin: string; yazan: string; zaman: string }[] | null;
   /** 432: plan açılınca giden e-postalar (alıcı, durum) — yalnız plan açabilene (planlama, yönetici); öteki null */
   epostalar: EpostaDurumu[] | null;
+  /** 2026-10-12: oluşturulan saha formları, en yeni üstte (planı gören görür) */
+  sahaFormlari: SahaFormuSatiri[];
   izin: PlanIzni;
 }
 
@@ -246,7 +257,7 @@ export async function planIci(db: Sorgulayici, kim: Kisi, id: string): Promise<P
       .filter((r) => canDo(kim, RAPORLAR_MODULU, "gor", { sahip: r.hesapId, brans: turBul.get(r.turId)?.brans ?? null }))
       .map(({ hesapId, personelId: _p, ...r }) => ({ ...r, benim: !!hesapId && hesapId === kim.id })),
     raporluEkipman: [...new Set(tumRaporlar.map((r) => r.ekipmanId))], erken: p.baslangic > bugunTr(), mesai: m?.dolu ? { normal: m.normal, mesai: m.mesai } : null, notlar,
-    epostalar: planAcabilir(kim) ? await kaynakEpostalari(db, "plan", p.id) : null, izin,
+    epostalar: planAcabilir(kim) ? await kaynakEpostalari(db, "plan", p.id) : null, sahaFormlari: await sahaFormlari(db, id), izin,
   };
 }
 
@@ -510,4 +521,100 @@ export async function planSil(db: Sorgulayici, kim: Kisi, id: string): Promise<P
       : `Plan silinemez: ${kullanimMetni(diger) || "başka kayıtlarda"} kullanıldı.` };
   }
   return r.durum === "tamam" ? { durum: "tamam", bildirim: `${r.ad} silindi.` } : { durum: "yok" };
+}
+
+/* ── SAHA FORMU (2026-10-12; reisim: "görselde saha takip formu üretme işi yok ? neden ? geri gelsin." — maket planlarim.html saha formu (2026-09-26:
+   "plan tamamlandıktan sonra saha formu oluştur tuşu gelsin bu tuşa istenildiği kadar basılsın … yapılan ekipmanlar ve yapıldığına dair firma onayı
+   için imza yerleri"), 197 imzalı saha formu yükle; göç 0082). Tamamlanan planda plandaki denetçi ya da Planlar "yaz" istendiği kadar oluşturur:
+   numara planın numarası + "-SF" + sıra (plan satırı kilitlenir — aynı anda iki oluşturma aynı sırayı almaz; numara yeniden verilmez). Belge
+   basılırken içerik plandan okunur: yapılan ekipmanlar (planın etkin raporlarının ekipmanları, rapor numarası sırasıyla, her ekipman bir kez) ve
+   ekip. Müşterinin ıslak imzalı + kaşeli kâğıdının taraması (PDF / JPEG / PNG) aynı kişilerce yüklenir, değiştirilir, kaldırılır; eskisi çöpe (30
+   gün). Formu ve taramayı planı gören açar (dosya erişim kaydı: DOSYA_SAHA). Form silinmez (müşteriye verilmiş belge; planı kullanılmış sayar). ── */
+export const SAHA = tablo({ ad: "saha_formu", sutunlar: ["plan_id", "sira", "no", "olusturan", "tarama"] });
+export const DOSYA_SAHA = "saha_formu";
+export interface SahaFormuSatiri { id: string; no: string; olusturan: string; zaman: string; tarama: string | null; surum: number }
+
+async function sahaFormlari(db: Sorgulayici, planId: string): Promise<SahaFormuSatiri[]> {
+  return (await db.sorgu<{ id: string; no: string; olusturan: string; olustu: Date; tarama: string | null; surum: number }>(
+    "SELECT id::text, no, olusturan, olustu, tarama::text, surum FROM saha_formu WHERE plan_id = $1 ORDER BY sira DESC", [planId])).rows
+    .map((x) => ({ id: x.id, no: x.no, olusturan: x.olusturan, zaman: x.olustu.toISOString(), tarama: x.tarama, surum: x.surum }));
+}
+
+export async function sahaFormuOlustur(db: Sorgulayici, kim: Kisi, id: string): Promise<PlanYazma> {
+  const e = await erisim(db, kim, id);
+  if (!e) return { durum: "yok" };
+  if (!isci(e)) return { durum: "yetkisiz" };
+  await db.sorgu("SELECT 1 FROM plan WHERE id = $1 FOR UPDATE", [id]);
+  const p = await planOku(db, id);
+  if (!p || p.durum !== "tamamlandi") return { durum: "red", neden: "Saha formu plan tamamlanınca oluşturulur." };
+  const sira = (await db.sorgu<{ n: number }>("SELECT coalesce(max(sira), 0)::int + 1 AS n FROM saha_formu WHERE plan_id = $1", [id])).rows[0].n;
+  if (sira > 999) return { durum: "red", neden: "Bir planda en çok 999 saha formu oluşturulur." };
+  const no = `${p.no}-SF${sira}`;
+  const r = await ekle(db, SAHA, { plan_id: id, sira, no, olusturan: kim.ad }, iz(kim, "saha_formu.olustur", p, no));
+  return { durum: "tamam", bildirim: `${no} oluşturuldu. PDF'ini açıp yazdırın; müşterinin imzalı taramasını buraya yükleyin.`, id: r.id };
+}
+
+/** formun belgesi (PDF ucu); planı göremeyene ya da başka planın formuna null */
+export async function sahaFormuVerisi(db: Sorgulayici, kim: Kisi, planId: string, formId: string, depo: Depo | null): Promise<SahaFormuVerisi | null> {
+  if (!UUID.test(formId)) return null;
+  const e = await erisim(db, kim, planId);
+  if (!e) return null;
+  const f = (await db.sorgu<{ no: string }>("SELECT no FROM saha_formu WHERE id = $1 AND plan_id = $2", [formId, planId])).rows[0];
+  const kart = f ? await planKarti(db, kim, planId) : null;
+  if (!f || !kart) return null;
+  const sirali = [...(await planRaporlari(db, planId))].sort((a, b) => a.no.localeCompare(b.no, "tr"));
+  const tekil = [...new Map(sirali.map((x) => [x.ekipmanId, x] as const)).values()];
+  const ekp = new Map((await ekipmanlar(db, tekil.map((x) => x.ekipmanId))).map((x) => [x.id, x] as const));
+  const turAd = new Map((await turOzetleri(db)).map((t) => [t.id, t.ad] as const));
+  const firma = await firmaBelgeKunyesi(db, depo);
+  return {
+    firma: { ad: firma.ad, kod: firma.kod, adres: firma.adres, logo: firma.logo },
+    no: f.no, projeNo: kart.no, baslangic: kart.baslangic, bitis: kart.bitis, musteri: kart.musteri.unvan, tesis: kart.tesis.ad, adres: e.p.adres,
+    ekipmanlar: tekil.map((x) => { const k = ekp.get(x.ekipmanId); return { kod: k?.kod ?? "—", tur: turAd.get(x.turId) ?? "—", konum: k?.konum ?? null }; }),
+    uzmanlar: kart.ekip.map((x) => x.ad),
+  };
+}
+
+/** taramanın formu (yazma öncesi; satır kilitlenir, gördüğü sürüm denetlenir — dosya yüklenmeden önce) */
+async function sahaKilitli(db: Sorgulayici, kim: Kisi, planId: string, formId: string, surum: number):
+  Promise<{ e: Erisim; f: { no: string; tarama: string | null } } | Exclude<PlanYazma, { durum: "tamam" }>> {
+  const e = await erisim(db, kim, planId);
+  if (!e || !UUID.test(formId)) return { durum: "yok" };
+  if (!isci(e)) return { durum: "yetkisiz" };
+  if (e.p.durum !== "tamamlandi") return { durum: "red", neden: "Saha formu taraması tamamlanmış planda yüklenir." };
+  const f = (await db.sorgu<{ no: string; tarama: string | null; surum: number }>(
+    "SELECT no, tarama::text, surum FROM saha_formu WHERE id = $1 AND plan_id = $2 FOR UPDATE", [formId, planId])).rows[0];
+  if (!f) return { durum: "yok" };
+  if (!Number.isSafeInteger(surum) || f.surum !== surum) return { durum: "cakisma" };
+  return { e, f };
+}
+
+export async function sahaTaramaYukle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, planId: string, formId: string, surum: number,
+  belge: { ad: string; bayt: Uint8Array } | null): Promise<PlanYazma> {
+  const k = await sahaKilitli(db, kim, planId, formId, surum);
+  if ("durum" in k) return k;
+  if (!belge) return { durum: "gecersiz", hatalar: { dosya: "Tarama seçilmeli (PDF, JPEG ya da PNG)." } };
+  const y = await dosyaYukle(db, depo, { firmaId, modul: DOSYA_SAHA, kayitId: formId, ad: belge.ad, bayt: belge.bayt, izinli: ["pdf", "jpeg", "png"], kim: kim.ad, yukleyen: kim.id });
+  if (!y.tamam) return { durum: "gecersiz", hatalar: { dosya: y.neden === "buyuk" ? "Tarama çok büyük (PDF en çok 25 MB, fotoğraf 8 MB)." : "Dosya PDF, JPEG ya da PNG değil ya da bozuk." } };
+  const r = await guncelle(db, SAHA, formId, surum, { tarama: y.id }, iz(kim, k.f.tarama ? "saha_formu.tarama_degistir" : "saha_formu.tarama_yukle", k.e.p, k.f.no));
+  if (r.durum !== "tamam") throw new Error("saha formu taraması bağlanamadı");   // satır kilitli ve sürüm denetlendi: beklenmez, işlem geri alınır
+  if (k.f.tarama) await dosyaCope(db, k.f.tarama, { kim: kim.ad, ne: "saha_formu.tarama_degistir", gerekce: k.f.no });
+  return { durum: "tamam", bildirim: `${k.f.no} imzalı taraması ${k.f.tarama ? "değiştirildi" : "yüklendi"}.` };
+}
+
+export async function sahaTaramaKaldir(db: Sorgulayici, kim: Kisi, planId: string, formId: string, surum: number): Promise<PlanYazma> {
+  const k = await sahaKilitli(db, kim, planId, formId, surum);
+  if ("durum" in k) return k;
+  if (!k.f.tarama) return { durum: "red", neden: "Bu formda yüklü tarama yok." };
+  const r = await guncelle(db, SAHA, formId, surum, { tarama: null }, iz(kim, "saha_formu.tarama_kaldir", k.e.p, k.f.no));
+  if (r.durum !== "tamam") throw new Error("saha formu taraması kaldırılamadı");
+  await dosyaCope(db, k.f.tarama, { kim: kim.ad, ne: "saha_formu.tarama_kaldir", gerekce: k.f.no });
+  return { durum: "tamam", bildirim: `${k.f.no} taraması kaldırıldı.` };
+}
+
+/** dosya erişim kaydı: taramayı planı gören açar */
+export async function sahaDosyasiGorulur(db: Sorgulayici, kisi: YetkiHesabi, formId: string): Promise<boolean> {
+  if (!UUID.test(formId)) return false;
+  const f = (await db.sorgu<{ plan_id: string }>("SELECT plan_id::text FROM saha_formu WHERE id = $1", [formId])).rows[0];
+  return !!f && !!(await erisim(db, { ...kisi, ad: "" }, f.plan_id));
 }

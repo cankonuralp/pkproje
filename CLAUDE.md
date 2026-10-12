@@ -172,6 +172,9 @@ pkproje/
                             akış kabul/red/kontrol/tamamla, künye düzenle/güncelle, plan ekipmanı, proje notları; geçişler göç 0024 tetiğinde) · 372 planSil
                             (raporsuz, tamamlanmamış; 0067; ui/PlanSilTusu.tsx) · 465 Plan aç: haric (çıkarılan tesis ekipmanı), excel.ts +
                             ui/EkipmanExcel.tsx (Excel'den elle ekipman)
+                            · 510 SAHA FORMU (göç 0082 saha_formu): plan-ici.ts sahaFormuOlustur / sahaFormuVerisi / sahaTaramaYukle / sahaTaramaKaldir
+                            (tamamlanan plan; P-…-SFn) · ui/SahaFormlari.tsx (Tamamlama altında liste) · belge src/belge/saha.ts (<kod>-FR-SAH-01) → PDF
+                            /planlar/<id>/saha-formu/<form>/pdf · müşteri imzalı tarama dosya modülü "saha_formu" (planı gören açar)
   src/modules/raporlar/     RAPORLAR (2026-10-05, 311; modül 14): saha raporu (göç 0025 rapor: plan × ekipman başına tek etkin rapor, açıldığı
                             format sürümü, künye kopyası, cevaplar JSON, cihazlar; durum ve içerik değişmezliği tetikte) · server/raporlar.ts (oluştur,
                             saha verisi, kaydet, onaya gönder: ENGEL 1 / 2 / 5, sil, cihaz) · server/plan-baglanti.ts (Planlar'ın rapora baktığı tek yer)

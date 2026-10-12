@@ -96,7 +96,8 @@ export const SILINEBILIR = {
   /* 372: raporu, faturası, gideri olmayan, tamamlanmamış plan; ekip, ekipman satırları ve notlar birlikte; İSG ID yeniden kullanılmamış olur (0067) */
   plan: {
     kullanim: "plan_kullanim", sil: "plan_sil",
-    fk: { kullanim: ["fatura_rapor.plan_id", "gider.plan_id", "rapor.plan_id"], birlikte: ["plan_ekip.plan_id", "plan_ekipman.plan_id", "plan_not.plan_id"] },
+    /* 2026-10-12: saha formu (0082) — müşteriye verilmiş belge; planı kullanılmış sayar */
+    fk: { kullanim: ["fatura_rapor.plan_id", "gider.plan_id", "rapor.plan_id", "saha_formu.plan_id"], birlikte: ["plan_ekip.plan_id", "plan_ekipman.plan_id", "plan_not.plan_id"] },
   },
   /* 496: firmanın format parçası — formatlara kopyalanır, hiçbir yerde kullanılmaz (0080) */
   format_parca: {

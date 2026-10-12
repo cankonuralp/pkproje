@@ -25,9 +25,10 @@ import { akisAdimlari, gunNo, tarihNo, type AdimDurumu } from "../sema";
 import type { PlanIci } from "../server/plan-ici";
 import { EkipmanBolumu, ERKEN_ID, MESAI_ID } from "./EkipmanBolumu";
 import {
-  kontrolListesiEylemi, kunyeDuzenleEylemi, kunyeGuncelleEylemi, planKabulEylemi, planReddetEylemi, planTamamlaEylemi, tamamlamaGeriAlEylemi, type PlanYaniti,
+  kontrolListesiEylemi, kunyeDuzenleEylemi, kunyeGuncelleEylemi, planKabulEylemi, planReddetEylemi, planTamamlaEylemi, sahaFormuOlusturEylemi, tamamlamaGeriAlEylemi, type PlanYaniti,
 } from "./eylemler";
 import { ProjeNotlari } from "./ProjeNotlari";
+import { SahaFormlari } from "./SahaFormlari";
 import { PlanEpostalari } from "./PlanEpostalari";
 import { RaporBolumu } from "./RaporBolumu";
 import stil from "./planlar.module.css";
@@ -126,7 +127,11 @@ export function PlanIciEkrani({ v }: { v: PlanIci }) {
   </>) : d === "denetimde" && v.izin.kontrol ? (kt
     ? <Tus ikon="circle-check" disabled={bekliyor} onClick={() => calistir(() => planTamamlaEylemi(k.id, v.surum))}>Tamamla</Tus>
     : <Tus ikon="list-checks" disabled={bekliyor} onClick={() => calistir(() => kontrolListesiEylemi(k.id, v.surum, true))}>Tamamla</Tus>)
-    : d === "tamamlandi" && v.izin.kontrol ? <Tus tur="ikincil" ikon="undo-2" disabled={bekliyor} onClick={() => calistir(() => tamamlamaGeriAlEylemi(k.id, v.surum))}>Tamamlamayı geri al</Tus>
+    : d === "tamamlandi" && (v.izin.kontrol || v.izin.sahaFormu) ? <>
+      {v.izin.kontrol && <Tus tur="ikincil" ikon="undo-2" disabled={bekliyor} onClick={() => calistir(() => tamamlamaGeriAlEylemi(k.id, v.surum))}>Tamamlamayı geri al</Tus>}
+      {/* 2026-10-12 (reisim: "görselde saha takip formu üretme işi yok ? neden ? geri gelsin." — maket planEylem "Saha formu oluştur"): istendiği kadar */}
+      {v.izin.sahaFormu && <Tus ikon="file-text" disabled={bekliyor} onClick={() => calistir(() => sahaFormuOlusturEylemi(k.id))}>Saha formu oluştur</Tus>}
+    </>
     : null;
   const eylemKutusu = (not?: ReactNode) => (eylem || not) && (
     <div className={stil.adimEylem}>{not && <p className={stil.adimNot}>{not}</p>}{eylem && <div className={stil.adimTuslar}>{eylem}</div>}</div>
@@ -289,9 +294,10 @@ export function PlanIciEkrani({ v }: { v: PlanIci }) {
   /* ── 4 · Tamamlama ── */
   const a4 = (
     <Adim no={4} durum={adim[3]} baslik="Tamamlama" ozet={d === "tamamlandi" && v.bitti ? gunNo(v.bitti) : null}>
-      {kt ? eylemKutusu("Planı tamamlayın; plan Tamamlandı olur.")
-        : d === "denetimde" ? <p className={stil.adimNot}>Kontrol listesi tamamlanınca plan buradan tamamlanır.</p>
-        : d === "tamamlandi" ? eylemKutusu() : null}
+      {kt ? eylemKutusu("Planı tamamlayın; plan Tamamlandı olur. Saha formu plan tamamlanınca buradan oluşturulur.")
+        : d === "denetimde" ? <p className={stil.adimNot}>Kontrol listesi tamamlanınca plan buradan tamamlanır; saha formu da tamamlanınca oluşturulur.</p>
+        : d === "tamamlandi" ? eylemKutusu(v.sahaFormlari.length ? null : "Saha formu: yapılan ekipmanlar ve firma onayı imza yerleriyle; istediğiniz kadar oluşturun.") : null}
+      <SahaFormlari planId={k.id} formlar={v.sahaFormlari} yaz={v.izin.sahaFormu} />
     </Adim>
   );
 

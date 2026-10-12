@@ -10,6 +10,7 @@ import type { ReactNode } from "react";
 import { aracTutanagi, type AracTutanagiVerisi } from "./arac.ts";
 import { egitimFormu, type EgitimFormuVerisi } from "./egitim.ts";
 import { raporBelgesi } from "./belge.ts";
+import { sahaFormu, type SahaFormuVerisi } from "./saha.ts";
 import { faturaBelgesi, type FaturaBelgesiVerisi } from "./fatura.ts";
 import { talepFormu, type TalepFormuVerisi } from "./talep.ts";
 import { teklifBelgesi, type TeklifBelgesiVerisi } from "./teklif.ts";
@@ -74,6 +75,8 @@ export const aracTutanagiPdf = (v: AracTutanagiVerisi) => htmlPdf(sayfaHtml(v.no
 export const zimmetPdf = (v: ZimmetFormuVerisi) => htmlPdf(sayfaHtml(v.no ?? "Zimmet teslim formu", zimmetFormu(v)));
 /** eğitim katılım formu (345): temel format; katılanın imzasına (Onaylar › Diğer) */
 export const egitimPdf = (v: EgitimFormuVerisi) => htmlPdf(sayfaHtml(v.no, egitimFormu(v)));
+/** saha formu (2026-10-12): tamamlanan planda; yapılan ekipmanlar + firma onayı imza yerleri — müşterinin ıslak imzalı taraması plana yüklenir */
+export const sahaPdf = (v: SahaFormuVerisi) => htmlPdf(sayfaHtml(v.no, sahaFormu(v)));
 
 async function htmlPdf(html: string): Promise<Uint8Array> {
   const b = await tarayici();

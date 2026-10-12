@@ -6,7 +6,7 @@ import { join } from "node:path";
 
 /* 468: rota parametresinin hazırlık değeri — olmayan kayıt "bulunamadı" çizer, rota yine derlenir */
 export const BOS_KIMLIK = "00000000-0000-4000-8000-000000000000";
-export const PARAMETRE: Readonly<Record<string, string>> = { id: BOS_KIMLIK, sid: BOS_KIMLIK, plan: BOS_KIMLIK, tur: "d", kod: "ZPKK01", anahtar: "ZPKR01", tip: "izin", dosya: "yok" };
+export const PARAMETRE: Readonly<Record<string, string>> = { id: BOS_KIMLIK, sid: BOS_KIMLIK, plan: BOS_KIMLIK, form: BOS_KIMLIK, tur: "d", kod: "ZPKK01", anahtar: "ZPKR01", tip: "izin", dosya: "yok" };
 /** ara katmanın yasak adresleri yeniden yazdığı "bulunamadı" (src/proxy.ts YOK_YOLU) — kökün not-found sayfası */
 export const YOK_SAYFASI = "/_bulunamadi";
 

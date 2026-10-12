@@ -7,8 +7,8 @@ import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { firmaAdresi } from "../../../server/kiraci/istek";
 import { epostalariSonraGonder } from "../../../server/eposta/sonra";
 import {
-  ekipmanPasif, ekipmanSil, kayitliEkle, kodDurumu, kontrolListesi, kunyeDuzenle, kunyeGuncelle, notEkle, planKabul, planReddet, planSil, planTamamla, tamamlamaGeriAl, yeniEkipman,
-  type KodDurumu, type PlanYazma,
+  ekipmanPasif, ekipmanSil, kayitliEkle, kodDurumu, kontrolListesi, kunyeDuzenle, kunyeGuncelle, notEkle, planKabul, planReddet, planSil, planTamamla,
+  sahaFormuOlustur, sahaTaramaKaldir, sahaTaramaYukle, tamamlamaGeriAl, yeniEkipman, type KodDurumu, type PlanYazma,
 } from "../server/plan-ici";
 import { cevrimdisiPaketi, type CevrimdisiPaketi } from "../server/cevrimdisi";
 import { bugunTr, planAc, tesisPlanBilgisi, type TesisPlanBilgisi } from "../server/planlar";
@@ -101,4 +101,21 @@ export async function ekipmanSilEylemi(id: string, ekipmanId: string): Promise<P
 /** 372: raporsuz, tamamlanmamış plan kesin silinir (yalnız yönetici; karar plan-ici.ts / veritabanında) */
 export async function planSilEylemi(id: string): Promise<PlanYaniti> {
   return planIslemi((o) => oturumIslemi(o, (db) => planSil(db, o, metin(id))));
+}
+
+/* ── SAHA FORMU (2026-10-12; reisim: "görselde saha takip formu üretme işi yok ? neden ? geri gelsin.") — yetki, plan durumu ve dosya türü
+   plan-ici.ts'te; burada yalnız oturum, köken ve dosyanın okunması ── */
+export async function sahaFormuOlusturEylemi(id: string): Promise<PlanYaniti> {
+  return planIslemi((o) => oturumIslemi(o, (db) => sahaFormuOlustur(db, o, metin(id))));
+}
+/** müşteri imzalı tarama: form alanları plan, form, surum, dosya (PDF / JPEG / PNG; boyut sunucuda — en çok 25 MB) */
+export async function sahaTaramaYukleEylemi(form: FormData): Promise<PlanYaniti> {
+  const d = form.get("dosya");
+  if (d instanceof File && d.size > 25 << 20) return { hatalar: { dosya: "Tarama en çok 25 MB." } };
+  const belge = d instanceof File && d.size > 0 ? { ad: d.name, bayt: new Uint8Array(await d.arrayBuffer()) } : null;
+  return planIslemi((o) => oturumIslemi(o, (db) => sahaTaramaYukle(db, depo(), o, o.kiraci.firmaId, metin(form.get("plan")), metin(form.get("form")),
+    Number(form.get("surum")), belge)));
+}
+export async function sahaTaramaKaldirEylemi(id: string, formId: string, surum: number): Promise<PlanYaniti> {
+  return planIslemi((o) => oturumIslemi(o, (db) => sahaTaramaKaldir(db, o, metin(id), metin(formId), Number(surum))));
 }

@@ -40,7 +40,8 @@ const ortak: NextConfig = {
   async redirects() { return [{ source: "/favicon.ico", destination: "/icon.svg", permanent: true }]; },
   serverExternalPackages: ["playwright-core", "@sparticuz/chromium"],
   outputFileTracingIncludes: { ...Object.fromEntries([String.raw`/raporlar/\[id\]`, String.raw`/raporlar/\[id\]/pdf`, String.raw`/teklifler/\[id\]/pdf`, String.raw`/muhasebe/f/\[id\]/pdf`, String.raw`/talepler/pdf/\[tip\]/\[id\]`, "/araclar", String.raw`/araclar/\[id\]`, String.raw`/araclar/tutanak/\[id\]/pdf`,
-    String.raw`/personel/\[id\]`, String.raw`/personel/\[id\]/zimmet-formu/pdf`, "/dokumanlar/egitimler", "/api/olcum/pdf"].map((u) =>
+    String.raw`/personel/\[id\]`, String.raw`/personel/\[id\]/zimmet-formu/pdf`, "/dokumanlar/egitimler", "/api/olcum/pdf",
+    String.raw`/planlar/\[id\]/saha-formu/\[form\]/pdf`].map((u) =>
     [u, ["./src/belge/belge.css", "./src/belge/carlito-5.3.0/*", "./node_modules/@sparticuz/chromium/bin/**"]])),
     /* 437: Bakanlığın resmî PDF'leri (src/server/bakanlik.ts) yalnız onları okuyan uçların izinde — hazır kurulum (Ana sayfa, Ekipman türleri) ve
        resmî belgeyi gösteren uçlar · 438: "Şablondan başlat" (tür sayfası) ve "Tür olarak ekle" (liste, şablon önizlemesi) eylemleri de okur */

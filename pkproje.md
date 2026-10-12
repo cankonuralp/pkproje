@@ -2405,6 +2405,23 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-12 (510): **SAHA FORMU** (reisim: *"görselde saha takip formu üretme işi yok ? neden ? geri gelsin."*). Maket onaylıydı (planlarim.html,
+  2026-09-26: *"plan tamamlandıktan sonra saha formu oluştur tuşu gelsin bu tuşa istenildiği kadar basılsın … yapılan ekipmanlar ve yapıldığına dair
+  firma onayı için imza yerleri"*; 197 imzalı saha formu yükle) ama koda yazılmamıştı — kaldırılmamış, eksik kalmıştı. Şimdi: plan **Tamamlandı**
+  olunca Tamamlama adımında **Saha formu oluştur** (plandaki denetçi ya da Planlar "yaz"; istendiği kadar) → numara planın numarası + "-SF" + sıra
+  (P-…-SF1, SF2; plan satırı kilitli, yeniden verilmez) → adımın altında **Saha formları** listesi (en yeni üstte): numara · oluşturan ve zaman ·
+  müşteri taraması rozeti · **PDF indir** (temel format <kod>-FR-SAH-01: firma künyesi, form / proje no, tarih aralığı, müşteri · tesis · adres,
+  1 Kontrolü yapılan ekipmanlar — planın etkin raporlarının ekipmanları, rapor numarası sırasıyla, her ekipman bir kez · 2 Firma onayı · imza
+  yerleri: firma yetkilisi "Tarih · imza · kaşe", muayene uzmanları "Tarih · imza") · **İmzalı taramayı yükle** (PDF / JPEG / PNG) → "Taramayı aç",
+  "Değiştir" (eskisi çöpe, 30 gün), "Kaldır" (sorulur). Tamamlanmadan önce adımda "saha formu plan tamamlanınca oluşturulur" yazar. Göç **0082**
+  saha_formu (RLS; uygulama rolünde UPDATE yalnız tarama — numara / sıra / plan değişmez, form silinmez; plan_kullanim'a saha formu: formlu plan
+  kesin silinmez). Dosya erişimi: planı gören (DOSYA_SAHA). PDF ucu /planlar/<id>/saha-formu/<form>/pdf (Chromium paketinde, maxDuration 60).
+  Kilitler: tests/plan-ici.test.ts (iki test: yetki — ekip / Planlar "yaz", gören yönetici ve ekip dışı denetçi yok, B yok; tamamlanmamış planda red;
+  SF1 / SF2 ve sıra; belge verisi ve ekipman sırası; tarama tür / yetki / çakışma (dosya bırakmaz) / değiştir / kaldır / çöp; erişim; veritabanında
+  numara değişmez, silinmez, aynı sıra iki kez yok, B yazamaz; formlu plan silinmez), tests/saha-belgesi.test.ts (belge, kaçış, React'le birebir),
+  olumsuz kanıt plan-ici.bozan 5–7 (yetki, durum, sütun izni), e2e/saha-formu.spec.ts (oluştur ×2, PDF, tarama yükle / aç / kaldır).
+  **Açık (maketteki):** muayene uzmanlarının saha formunu e-imza / mobil imzayla imzalaması (birden çok imzacı — Onaylar › Diğer bugün tek kişilik);
+  şimdilik uzman da kâğıtta imzalar.
 - 2026-10-12 (509): **506 + 507 + 508 YAYINDA** — main 996238b (göç yok; 82 göç), sağlık "tamam" (sürüm 996238b), duman **11/11**, son 1 saatte hata kaydı
   yok. Deneme makinesi 996238b: 13/13 yeşil — saha-raporu (Onaya gönder: pencere yok, üstte uyarı görünür ve ekranda, odak ekranda, test değeri
   kırmızı, cihaz bölümünde "Eksik", aşama Yeni), rapor-format (kurucunun saha denemesi), cevrimdisi (bağlantısızken eksik rapor kuyruğa girmez),
