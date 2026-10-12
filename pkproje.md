@@ -2467,6 +2467,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-13 (526): **522–525 YAYINDA (S.A.Y CHAT)** — göç **0084, 0085, 0086** Supabase'e (`goc` kaydıyla; **87 göç**). 522 main b5431c4, 523 main
+  22986c0 (0084), 524 + 525 main **bc25166** (0085 say_chat_kayit, 0086 rapor_oneri); deneme makinesi her birinde 13/13 (veritabanlı testler, yeni
+  olumsuz kanıtlar say-ek, say-chat-sema, say-chat-kayit, say-chat-rapor ve uçtan uca üç genişlik dahil). Sağlık "tamam", duman **11/11**, son 1 saatte hata kaydı yok.
+  Canlıda oturumla bakılamadı (giriş reisim'in) — ölçemedim. Canlı deneme firmasında yapay zekâ anahtarı yok (Firma ayarları › Yapay zekâ): S.A.Y
+  Chat kayıtları, Gönder, Düzenle / Sil ve "Bekleyenler için rapor yaz" çalışır; fotoğraftan / etiketten okuma ve S.A.Y'ın ekli sorusu anahtar girilince.
 - 2026-10-13 (525): **S.A.Y CHAT — BEKLEYENLER İÇİN RAPOR YAZ** (§3.10 m.7, m.12, m.19, m.21–22; maket 521 ekran 10 onaylı). S.A.Y Chat listesinde
   "Bekleyenler için rapor yaz (n)" (gönderilmiş, cihazda işi olmayan, ekipmanı ve ekipman fotoğrafı olan kayıtlar) → ekran: kayıt başına ne olacağı
   (plandaki ekipmana / plana yeni ekipman, n alan dolacak, n fotoğraf rapora geçecek, n fotoğraf yapay zekâyla okunacak / saklanacak, not → uzman
