@@ -2405,6 +2405,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-12 (505): **503 + 504 YAYINDA** — main 3751b0e, göç **0081** Supabase'e işlendi (goc kaydı, özet dosyayla aynı; 82 göç), sağlık "tamam"
+  (sürüm 3751b0e), duman **11/11**, son 1 saatte yalnız bilinen duyuru kaynağı zaman aşımı. Deneme makinesi 3751b0e: 13/13 yeşil (denetim + uçtan uca
+  üç genişlik; rapor-format: Sürüm 1 silinir, yayındakinde Sil yok, satırın tuşları yan yana). Hata listesi 58.
 - 2026-10-12 (504): **ESKİ SÜRÜMÜ SİL** (reisim: *"eski sürümleri silmekte olsun"*, *"silme tuşuda ekle"*). Rapor şablonu sürümleri tablosunda ve eski
   sürümün sayfasında **Sil** — yalnız yönetici (kayit_sil, modül 5) ve yalnız HİÇ KULLANILMAMIŞ eski sürüm. Kural (göç 0081, veritabanında): yayındaki
   sürüm silinmez (yeni raporlar onunla açılır); o sürümle açılmış rapor (silinmiş taslak rapor dahil) ya da o sürümle İMZALANMIŞ rapor sürümü varsa
