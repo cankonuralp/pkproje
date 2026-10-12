@@ -2405,6 +2405,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-12 (502): **500 + 501 YAYINDA** — main 5cb8893 (göç yok; 81 göç), sağlık "tamam" (sürüm 5cb8893), duman **11/11**, son 1 saatte yalnız bilinen
+  duyuru kaynağı zaman aşımı (iş ekipmanları portalı, Frankfurt'tan). Deneme makinesi: ac0a9b9 (500) ve 5cb8893 (501) koşuları 13/13 yeşil. Gözle
+  (deneme makinesinin görünen alan görüntüsü e2e-goz/*-kurucu-izleyen.png): masaüstünde kâğıdın sonunda solda Parçalar, sağda Seçili bölüm
+  ("Parça olarak kaydet" görünür), ikisi üst çubuğun altında; tablette solda tek sütunda Seçili bölüm üstte, Parçalar altında. Hata listesi 56, 57.
 - 2026-10-12 (501): **ESKİ SÜRÜME GERİ DÖN** (reisim: *"ekipman türlerinde eski sürüme geri dön tuşu olsun"*). Ekipman türleri › tür › Rapor şablonu
   sürümleri tablosunda ve eski sürümün kendi sayfasında **"Bu sürüme geri dön"** (yalnız "değiştirir"; yayındaki sürümde ve taslakta yok). Pencere:
   "Sürüm N içeriği yeni sürüm olarak yayınlanır; yayındaki Sürüm M eskiye düşer. Hiçbir sürüm silinmez: açık raporlar kendi sürümünde kalır, yeni
