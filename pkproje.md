@@ -2405,6 +2405,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-12 (503): **SÜRÜM TABLOSUNDA TUŞLAR YAN YANA** (reisim, ekran görüntüsüyle: *"tuşlar yan yana olabilecekken altlı üstlü ? boşuna sayfa uzuyor"*).
+  Rapor şablonu sürümleri tablosunda İşlem sütunu %18'di — "Önizle" ile "Bu sürüme geri dön" alt alta düşüyor, satır iki katı uzuyordu; Durum ve Kişi
+  sütunları boştu. Oranlar: Sürüm 22 · Tarih 18 · Kişi 16 · Durum 10 · İşlem 34 (anayasa 3.4: oran). "Bu sürüme geri dön"ün görünen adı "Geri dön"
+  (erişilebilir ad sürümle: "Sürüm 2 · Bu sürüme geri dön"). Kilit: e2e rapor-format — masaüstü ve tablette Önizle ile Geri dön aynı satırda.
 - 2026-10-12 (502): **500 + 501 YAYINDA** — main 5cb8893 (göç yok; 81 göç), sağlık "tamam" (sürüm 5cb8893), duman **11/11**, son 1 saatte yalnız bilinen
   duyuru kaynağı zaman aşımı (iş ekipmanları portalı, Frankfurt'tan). Deneme makinesi: ac0a9b9 (500) ve 5cb8893 (501) koşuları 13/13 yeşil. Gözle
   (deneme makinesinin görünen alan görüntüsü e2e-goz/*-kurucu-izleyen.png): masaüstünde kâğıdın sonunda solda Parçalar, sağda Seçili bölüm

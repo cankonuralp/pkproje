@@ -32,13 +32,15 @@ export function SablonTablosu({ turId, surumler, yaz, sil = false, raporlar, tum
   { turId: string; surumler: FormatOzeti[]; yaz: boolean; sil?: boolean; raporlar?: Record<string, number>; tumu?: FormatOzeti[] }) {
   const taslak = (tumu ?? surumler).find((x) => x.durum === "taslak") ?? null;
   const yayinda = (tumu ?? surumler).find((x) => x.durum === "yayinda") ?? null;
+  /* 2026-10-12 (reisim: "tuşlar yan yana olabilecekken altlı üstlü ? boşuna sayfa uzuyor"): İşlem sütunu %18'de "Önizle" ile "Bu sürüme geri dön"
+     alt alta düşüyordu (Durum ve Kişi sütunları boştu) — genişlik İşlem'e: satırın tuşları (Önizle · Geri dön / Düzenle · Yayınla · Sil) tek satırda */
   const sutunlar: Sutun<FormatOzeti>[] = [
-    { k: "surum", genislik: "26%", baslik: "Sürüm", kart: "ust", sira: 1, hucre: (x) => <><b>{surumAdi(x)}</b><AltSatir>{x.kaynakAd ?? "Firma formatı"} · {x.bolum} bölüm{raporlar ? ` · ${raporlar[x.id] ?? 0} rapor` : ""}</AltSatir></> },
-    { k: "tarih", genislik: "24%", baslik: "Tarih", kart: "govde", sira: 2, hucre: (x) => <>
+    { k: "surum", genislik: "22%", baslik: "Sürüm", kart: "ust", sira: 1, hucre: (x) => <><b>{surumAdi(x)}</b><AltSatir>{x.kaynakAd ?? "Firma formatı"} · {x.bolum} bölüm{raporlar ? ` · ${raporlar[x.id] ?? 0} rapor` : ""}</AltSatir></> },
+    { k: "tarih", genislik: "18%", baslik: "Tarih", kart: "govde", sira: 2, hucre: (x) => <>
       <KartEtiket>{x.yayin ? "Yayınlandı" : "Son değişiklik"}</KartEtiket>{tarihYaz(x.yayin ?? x.degisti)}{x.notu && <AltSatir>{x.notu}</AltSatir>}</> },
-    { k: "kisi", genislik: "20%", baslik: "Kişi", kart: "govde", sira: 3, hucre: (x) => <><KartEtiket>{x.yayinlayan ? "Yayınlayan" : "Hazırlayan"}</KartEtiket>{x.yayinlayan ?? x.olusturan}</> },
-    { k: "durum", genislik: "12%", baslik: "Durum", kart: "rozet", sira: 1, hucre: (x) => <Rozet tur={DURUM_ROZET[x.durum][0]}>{DURUM_ROZET[x.durum][1]}</Rozet> },
-    { k: "eylem", genislik: "18%", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: (x) => (
+    { k: "kisi", genislik: "16%", baslik: "Kişi", kart: "govde", sira: 3, hucre: (x) => <><KartEtiket>{x.yayinlayan ? "Yayınlayan" : "Hazırlayan"}</KartEtiket>{x.yayinlayan ?? x.olusturan}</> },
+    { k: "durum", genislik: "10%", baslik: "Durum", kart: "rozet", sira: 1, hucre: (x) => <Rozet tur={DURUM_ROZET[x.durum][0]}>{DURUM_ROZET[x.durum][1]}</Rozet> },
+    { k: "eylem", genislik: "34%", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: (x) => (
       <span className={stil.tuslar}>
         <TusBaglanti ikon="eye" href={`/ekipman-turleri/${turId}/sablon/${x.id}`}>Önizle</TusBaglanti>
         {yaz && x.durum === "taslak" && <TusBaglanti ikon="pencil" href={`/ekipman-turleri/${turId}/sablon/${x.id}/kurucu`}>Düzenle</TusBaglanti>}
@@ -153,8 +155,9 @@ export function GeriDonTusu({ turId, surum, taslak, yayinda, git = false }: {
   });
   return (
     <>
+      {/* görünen ad kısa (satırın tuşları yan yana sığsın); erişilebilir ad sürümle birlikte */}
       <Tus tur="ikincil" ikon="rotate-ccw" aria-label={`${ad} · Bu sürüme geri dön`} onClick={() => { setNotu(`${ad} geri yüklendi`); setH({}); setGenel(null); setAcik(true); }}>
-        Bu sürüme geri dön</Tus>
+        Geri dön</Tus>
       {acik && <Pencere acik baslik={`${ad} · geri dön`} onKapat={() => setAcik(false)} odak={`#${GERI_NOT_ID}`}
         alt={<><Tus tur="ikincil" onClick={() => setAcik(false)}>Vazgeç</Tus>
           <Tus ikon="rotate-ccw" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={don}>Geri dön</Tus></>}>

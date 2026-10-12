@@ -407,6 +407,12 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
   await expect(page.getByRole("link", { name: /Rapor formatı\s*Sürüm 4/ })).toBeVisible();
   await expect(page.getByRole("button", { name: "Sürüm 3 · Bu sürüme geri dön" })).toBeVisible();
   await expect(page.getByRole("button", { name: /^Sürüm \d · Bu sürüme geri dön$/ })).toHaveCount(3);
+  /* 2026-10-12 (reisim: "tuşlar yan yana olabilecekken altlı üstlü ? boşuna sayfa uzuyor"): tabloda satırın tuşları tek satırda (telefonda kart) */
+  if (bilgi.project.name !== "telefon") {
+    const satir = page.getByRole("row", { name: /^Sürüm 2 / });
+    const [k1, k2] = [await satir.getByRole("link", { name: "Önizle" }).boundingBox(), await satir.getByRole("button", { name: "Sürüm 2 · Bu sürüme geri dön" }).boundingBox()];
+    expect(Math.abs(k1!.y - k2!.y), "Önizle ile Geri dön yan yana").toBeLessThan(4);
+  }
 
   /* denetçi: görür, başlatamaz / yayınlayamaz */
   await context.clearCookies();
