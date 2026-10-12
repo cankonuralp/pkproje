@@ -72,6 +72,8 @@ test("firma ayarları: bölüm kaydet, geçersiz değer kaydedilmez, mesai şeri
   await expect(supa.getByText("Supabase hesabı nasıl bağlanır (yayına çıkışta)")).toBeVisible();
   await expect(supa.getByText(/İlk iş “Supabase hesabını bağla”/)).toBeVisible();
   await expect(supa.getByText(/Supabase günlük yedeği/)).toBeVisible();
+  /* 515: 7 gün raporların ömrü değil (geri sarma yedeği) — ekran bunu açıkça söyler */
+  await expect(supa.getByText(/raporlar 7 gün sonra silinmez/)).toBeVisible();
   await expect(supa.getByRole("combobox")).toHaveCount(0);
 
   /* 335: fiyat listesi (tohumdaki Hava tankı 900,00 — değiştirilmez: muhasebe testi bu fiyatla); firmaya belge türü ekle → listede → kaldır */

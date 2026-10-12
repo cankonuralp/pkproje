@@ -441,16 +441,20 @@ function SupabaseYedek({ v }: { v: Veri }) {
       <ul className={stil.bilgiListe}>
         <li><b>Şu an</b> · probata&apos;nın ortak deneme projesi (Supabase, Frankfurt). Kendi hesabınız yayına çıkışta bağlanır.</li>
         <li><b>Dosyalar</b> · {v.depolama.dosya.toLocaleString("tr-TR")} dosya · {megabayt(v.depolama.bayt)} MB (fotoğraf, belge, imzalı raporlar)</li>
-        <li><b>Pro paket</b> · 25 $/ay: 8 GB veritabanı, 100 GB dosya, ayda 250 GB indirme, 7 günlük günlük yedek</li>
+        <li><b>Pro paket</b> · 25 $/ay: 8 GB veritabanı, 100 GB dosya, ayda 250 GB indirme, her gün alınan veritabanı yedeği (7 gün geriye dönülebilir)</li>
       </ul>
       <p className={stil.etiket}>Supabase hesabı nasıl bağlanır (yayına çıkışta)</p>
       <ol className={stil.bilgiListe}>{SUPABASE_ADIMLAR.map((x) => <li key={x}>{x}</li>)}</ol>
-      <p className={stil.etiket}>Yedek (kendiliğinden, ayar yok)</p>
+      {/* 2026-10-12 (515; reisim: "supabase de neden raporlar 7 gün duruyor peki daha fazla değil de ?" → "evet netleştir"): 7 gün raporların ömrü
+         değil, veritabanının geri sarma yedeği — önce raporların ne kadar durduğu, sonra yedekler */}
+      <p className={stil.etiket}>Raporlar ne kadar durur, yedek ne işe yarar (kendiliğinden, ayar yok)</p>
       <ul className={stil.bilgiListe}>
-        <li><b>Supabase günlük yedeği</b> · veritabanı, son 7 gün — Supabase&apos;in kendisi alır (Pro). Dosyaları kapsamaz.</li>
-        <li><b>Aylık arşiv yedeği</b> · her ayın 1&apos;i · arsiv/yedek/ — saklama süresi ({v.saklama.deger.yil} yıl) boyunca durur, sonra kendiliğinden silinir.
-          Kendi hesabınız bağlanınca başlar.</li>
-        <li><b>Rapor arşivi</b> · arsiv/raporlar/YIL/Müşteri/ — imzalanan her rapor; saklama süresi dolmadan silinmez, silinecekler 30 gün önce listelenir.</li>
+        <li><b>Raporlar</b> · arsiv/raporlar/YIL/Müşteri/ — imzalanan her rapor saklama süresi ({v.saklama.deger.yil} yıl) boyunca durur; süre dolmadan
+          silinmez, silinecekler 30 gün önce listelenir.</li>
+        <li><b>Aylık arşiv yedeği</b> · her ayın 1&apos;i · arsiv/yedek/ — veritabanının o ayki tam kopyası; o da saklama süresi
+          ({v.saklama.deger.yil} yıl) boyunca durur. Kendi hesabınız bağlanınca başlar.</li>
+        <li><b>Supabase günlük yedeği</b> · yalnız geri sarma içindir: veritabanı yanlışlıkla bozulursa son 7 günün herhangi bir gününe dönülür.
+          7 gün raporların ömrü değildir, raporlar 7 gün sonra silinmez. Supabase&apos;in kendisi alır (Pro paket); dosyaları kapsamaz.</li>
       </ul>
       <Serit tur="bilgi" ikon="info">probata saklama süresi dolmadan hiçbir dosyayı silmez. Supabase hesabınızda dosyaları ya da projeyi kendiniz silerseniz geri getirilemez; raporların ikinci kopyası bunun içindir.</Serit>
     </Kart>
