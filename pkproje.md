@@ -2405,15 +2405,19 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-12 (516): **515 YAYINDA** — göç yok (84 göç). main 1c15a4e; deneme makinesi 13/13; sağlık "tamam" (1c15a4e), duman **11/11**, son 1 saatte
+  hata kaydı yok. Ekrandaki yeni metne oturumla bakılamadı (giriş reisim'in) — ölçemedim; yayın derlemesindeki uçtan uca testi metni gördü ("raporlar
+  7 gün sonra silinmez"). 515 notundaki Vercel koruması cümlesi ölçümle düzeltildi (ana adresler herkese açık).
 - 2026-10-12 (515): **SUPABASE YEDEĞİ METNİ NETLEŞTİ** (reisim: *"supabase de neden raporlar 7 gün duruyor peki daha fazla değil de ?"* → açıklama →
   *"evet netleştir"*). Firma ayarları › Supabase hesabı ve yedek: bölüm adı "Raporlar ne kadar durur, yedek ne işe yarar"; sıra **Raporlar** (saklama
   süresi boyunca, süre dolmadan silinmez, 30 gün önce liste) → **Aylık arşiv yedeği** (veritabanının o ayki tam kopyası, saklama süresi boyunca) →
   **Supabase günlük yedeği** ("yalnız geri sarma içindir: son 7 günün herhangi bir gününe dönülür. 7 gün raporların ömrü değildir, raporlar 7 gün sonra
   silinmez"); Pro paket satırı "her gün alınan veritabanı yedeği (7 gün geriye dönülebilir)". Kilit: e2e firma-ayarlari ("raporlar 7 gün sonra silinmez").
   Aynı turda hazırlık durumu ölçüldü (yalnız okuma): Supabase örgütü **Free** paket (yedek yok, bir hafta kullanılmayan proje uyur); Vercel'de yalnız
-  *.vercel.app adresleri ve **Vercel Kimlik Doğrulaması açık** (yalnız Vercel ekibi girer — özel alan adında kalkar); alan adı / joker yok → Yönetim'den
-  açılan yeni firmanın adresi (<kısa ad>.vercel.app) bu projeye bağlı değil. K7 (firmanın Supabase bağlantısı, aylık yedek işi, ikinci kopya) ve
-  Y3–Y5 (alan adı, e-posta sağlayıcı, mobil imza) açık.
+  *.vercel.app adresleri — probata-deneme ve probata-yonetim herkese açık (giriş 200), Vercel'in ürettiği sürüm adresleri Vercel girişi ister (302;
+  293'teki "yalnız Vercel hesabıyla girilir" artık yalnız bunlar için doğru — 516'da ölçülerek düzeltildi); alan adı / joker yok → Yönetim'den açılan
+  yeni firmanın adresi (<kısa ad>.vercel.app) bu projeye bağlı değil. K7 (firmanın Supabase bağlantısı, aylık yedek işi, ikinci kopya) ve Y3–Y5 (alan
+  adı, e-posta sağlayıcı, mobil imza) açık.
 - 2026-10-12 (514): **512 + 513 YAYINDA** — göç **0083** Supabase'e işlendi (goc kaydı; 84 göç); önce main 46b6d80 (512 — göçle birlikte; arada sağlık
   "göç güncel değil" diyordu, 512 yayınlanınca "tamam"), sonra main 2f140d1 (513). Sağlık "tamam" (2f140d1), duman **11/11**, son 1 saatte hata kaydı
   yok. Deneme makinesi: 46b6d80 13/13, 2f140d1 13/13. Ders: göçü yayından önce işlerken sağlık ucu kodun beklediği göç sayısını aşınca "sorun" der —
