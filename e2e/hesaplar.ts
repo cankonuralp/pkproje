@@ -46,6 +46,8 @@ export const E2E_YZ = {
   kabulPlan: { masaustu: "Kabul Deneme Masaüstü A.Ş.", tablet: "Kabul Deneme Tablet A.Ş.", telefon: "Kabul Deneme Telefon A.Ş." } as Record<string, string>,
   /* bağlantısız yeni rapor (405): genişlik başına YZ planında raporu OLMAYAN ekipman — bağlantı kesikken plandan rapor açılır */
   yeniRapor: { masaustu: "EP-0501", tablet: "EP-0502", telefon: "EP-0503" } as Record<string, string>,
+  /* S.A.Y Chat (524): genişlik başına YZ planında raporu OLMAYAN ekipman — "Plandan seç" ile kayıt yazılır */
+  sayChat: { masaustu: "EP-0601", tablet: "EP-0602", telefon: "EP-0603" } as Record<string, string>,
   /* saklama süresi (387): ayrı tesiste, süresi 10 gün sonra dolacak imzalı rapor (Uyarılar + Firma ayarları › Saklama süresi dolacak raporlar) */
   saklama: { tesis: "YZ Arşiv Tesisi", ekipman: "EP-0950", plan: "P-0121-950", rapor: "YZ-0121-950-00001" },
 } as const;

@@ -189,6 +189,15 @@ export function SayAsistan() {
     return () => document.removeEventListener("click", d);
   }, [menu]);
   useEffect(() => {
+    const f = (e: Event) => {
+      if ((e as CustomEvent<string>).detail !== "saychat") return;
+      setAcik(false);
+      try { localStorage.setItem(ACIK_ANAHTARI, "0"); } catch { /* saklama yok */ }
+    };
+    window.addEventListener("probata-panel", f);
+    return () => window.removeEventListener("probata-panel", f);
+  }, []);
+  useEffect(() => {
     if (durum?.acik) document.documentElement.setAttribute("data-say", "var");
     return () => document.documentElement.removeAttribute("data-say");
   }, [durum?.acik]);
@@ -198,6 +207,8 @@ export function SayAsistan() {
   const raporda = !!rb;
 
   const ac = (odakla = true) => {
+    /* 524: S.A.Y Chat ile aynı yer — biri açılınca öteki kapanır */
+    window.dispatchEvent(new CustomEvent("probata-panel", { detail: "say" }));
     setAcik(true); setHata(null);
     try { localStorage.setItem(ACIK_ANAHTARI, "1"); } catch { /* saklama yok */ }
     if (odakla) requestAnimationFrame(() => (girdi.current && !girdi.current.disabled ? girdi.current : document.getElementById("say-kapat"))?.focus());

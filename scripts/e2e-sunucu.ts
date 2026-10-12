@@ -139,7 +139,7 @@ process.env.PROBATA_SIR_ANAHTARI = sirAnahtari;
     const tesis = await q("INSERT INTO tesis (musteri_id, ad, adres, il, ilce, sgk) VALUES ($1, $2, 'Deneme Cad. No 9', 'Kocaeli', 'Gebze', $3) RETURNING id::text", [m, E2E_YZ.tesis, "3".repeat(26)]);
     const tur = await q("INSERT INTO ekipman_turu (kod, ad, grup, brans, periyot) VALUES ('EP', 'Elektrik panosu', 'elektrik', 'e', 12) RETURNING id::text");
     const ekp: Record<string, string> = {};
-    for (const kod of [...Object.values(E2E_YZ.ekipman), ...Object.values(E2E_YZ.cevrimdisi), ...Object.values(E2E_YZ.yeniRapor)]) ekp[kod] = await q("INSERT INTO ekipman (tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, $3, 'Deneme') RETURNING id::text", [tesis, tur, kod]);
+    for (const kod of [...Object.values(E2E_YZ.ekipman), ...Object.values(E2E_YZ.cevrimdisi), ...Object.values(E2E_YZ.yeniRapor), ...Object.values(E2E_YZ.sayChat)]) ekp[kod] = await q("INSERT INTO ekipman (tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, $3, 'Deneme') RETURNING id::text", [tesis, tur, kod]);
     return { yon, pl, den, tesis, tur, ekp };
   });
   const kim = (h: string, rol: string, ad: string): Kisi => ({ id: h, ad, roller: [rol] as Kisi["roller"] });
@@ -164,7 +164,7 @@ process.env.PROBATA_SIR_ANAHTARI = sirAnahtari;
   const v = (await kiraciIcinde(havuz, yzFirma, (db) => planIci(db, den, plan), { hesapId: den.id }))!;
   kesin(await kiraciIcinde(havuz, yzFirma, (db) => planKabul(db, den, plan, v.surum, true), { hesapId: den.id }), "plan kabul");
   /* 405: yeni rapor ekipmanlarının raporu AÇILMAZ (bağlantı kesikken plandan açılır) */
-  const yeniRaporKodlari = new Set(Object.values(E2E_YZ.yeniRapor));
+  const yeniRaporKodlari = new Set([...Object.values(E2E_YZ.yeniRapor), ...Object.values(E2E_YZ.sayChat)]);
   for (const [kod, id] of Object.entries(t.ekp)) if (!yeniRaporKodlari.has(kod)) kesin(await kiraciIcinde(havuz, yzFirma, (db) => raporOlustur(db, den, plan, id), { hesapId: den.id }), "rapor");
   /* bağlantısız plan kabulü (400): genişlik başına kabul bekleyen plan, kendi müşterisinde; 30 gün sonra başlar (önceden indirme sayısına girmez) */
   const otuz = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(Date.now() + 30 * 86_400_000));
@@ -281,7 +281,17 @@ const yzTaklit = createServer((istek, yanit) => {
       }));
       return;
     }
-    /* 385: etiket plakası okuması (şemada "alanlar") — uydurma künye; imal yılı emin değil (tek tek uygulanır) */
+    /* 385: etiket plakası okuması (şemada "alanlar") — uydurma künye; imal yılı emin değil (tek tek uygulanır).
+       524 S.A.Y Chat: alan kimlikleri mesaj satırının numarası (s0, s1 …) — ilk iki satıra uydurma değer */
+    const alanKimlikleri = (sema as { alanlar?: { items?: { properties?: { alan?: { enum?: string[] } } } } } | undefined)?.alanlar?.items?.properties?.alan?.enum ?? [];
+    if (sema && "alanlar" in sema && alanKimlikleri.length && alanKimlikleri.every((x) => /^s\d+$/.test(x))) {
+      yanit.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({
+        content: [{ type: "text", text: JSON.stringify({ alanlar: [{ alan: alanKimlikleri[0], deger: "Okunan Marka", guven: "yuksek" },
+          { alan: alanKimlikleri[1], deger: "OK-200", guven: "orta" }], not: null }) }],
+        stop_reason: "end_turn", usage: { input_tokens: 1200, output_tokens: 60 },
+      }));
+      return;
+    }
     if (sema && "alanlar" in sema) {
       yanit.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({
         content: [{ type: "text", text: JSON.stringify({ alanlar: [{ alan: "marka", deger: "Deneme Marka", guven: "yuksek" }, { alan: "model", deger: "DM-100", guven: "yuksek" },

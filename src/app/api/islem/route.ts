@@ -2,11 +2,12 @@
    kez uygulanır (src/server/islem/islem.ts; aynı kimlik yeniden gelirse saklanan sonuç). Kapılar sırayla: aynı köken (kiracılar arası sahte istek
    yok), JSON, gövde sınırı, biçim, oturum; işi yazanın etiketi oturumdaki kişininki değilse işlenmez (09-D2 — cihaz işi saklar, o hesapla
    girilince gider; etiket server/islem/yazan.ts, kimlik tarayıcıya gitmez). Yetki, kurallar ve sürüm kilidi modül işlevinde
-   (raporlar/server/islem-baglanti.ts, planlar/server/islem-baglanti.ts). Cihaz saati sunucudan 10 dakikadan fazla saparsa
+   (raporlar/server/islem-baglanti.ts, planlar/server/islem-baglanti.ts; 524 S.A.Y Chat kayıtları say-chat/server/kayitlar.ts). Cihaz saati sunucudan 10 dakikadan fazla saparsa
    yanıtta söylenir (ARKA-UC §4.5; resmî alanlar zaten sunucu saatinden). Önbellek yok. */
 import { PLAN_ISLEM_TURLERI, planGuncelSurum, planIslemi, planIslemTuruMu } from "../../../modules/planlar/server/islem-baglanti";
 import type { PlanYazma } from "../../../modules/planlar/server/plan-ici";
 import { RAPOR_ISLEM_TURLERI, raporGuncelSurum, raporIslemi, type RaporIslemSonucu } from "../../../modules/raporlar/server/islem-baglanti";
+import { CHAT_ISLEM_TURLERI, chatGuncelSurum, chatIslemi, chatIslemTuruMu, type ChatFotoYazma, type ChatYazma } from "../../../modules/say-chat/server/kayitlar";
 import { kimlik, surum, z } from "../../../sema/ortak";
 import { tekSeferlik } from "../../../server/islem/islem";
 import { YAZAN_BICIMI, yazanEtiketi } from "../../../server/islem/yazan";
@@ -22,7 +23,7 @@ const GOVDE_SINIR = 3 * 1024 * 1024;
 const SAAT_FARKI_DK = 10;
 
 const Govde = z.object({
-  id: kimlik, tur: z.enum([...RAPOR_ISLEM_TURLERI, ...PLAN_ISLEM_TURLERI]), kayit: kimlik, yazan: z.string().regex(YAZAN_BICIMI), surum, girdi: z.unknown(),
+  id: kimlik, tur: z.enum([...RAPOR_ISLEM_TURLERI, ...PLAN_ISLEM_TURLERI, ...CHAT_ISLEM_TURLERI]), kayit: kimlik, yazan: z.string().regex(YAZAN_BICIMI), surum, girdi: z.unknown(),
   zaman: z.iso.datetime({ offset: true }).nullable(),
 });
 const yanit = (govde: object, status = 200) => Response.json(govde, { status, headers: BASLIK });
@@ -43,12 +44,14 @@ export async function POST(istek: Request) {
   if (b.yazan !== yazanEtiketi(o.id)) return yanit({ hata: "baska_hesap" }, 409);
   const { s, guncel } = await oturumIslemi(o, async (db) => {
     const tur = b.tur;
-    const s = await tekSeferlik(db, { id: b.id, tur, kayit: b.kayit, zaman: b.zaman }, (): Promise<PlanYazma | RaporIslemSonucu> => (planIslemTuruMu(tur)
+    const dosya = { depo: depo(), firmaId: o.kiraci.firmaId };
+    const s = await tekSeferlik(db, { id: b.id, tur, kayit: b.kayit, zaman: b.zaman }, (): Promise<PlanYazma | RaporIslemSonucu | ChatYazma | ChatFotoYazma> => (planIslemTuruMu(tur)
       ? planIslemi(db, o, tur, b.kayit, b.surum, b.girdi)
-      : raporIslemi(db, { depo: depo(), firmaId: o.kiraci.firmaId }, o, tur, b.kayit, b.surum, b.girdi)));
+      : chatIslemTuruMu(tur) ? chatIslemi(db, dosya, o, tur, b.kayit, b.surum, b.girdi)
+      : raporIslemi(db, dosya, o, tur, b.kayit, b.surum, b.girdi)));
     /* çakışmada güncel sürüm ("benimkini yaz" seçilirse cihaz bununla yeni kimlik gönderir) */
     const cakisma = s.durum !== "kimlik_kullanildi" && s.sonuc.durum === "cakisma";
-    return { s, guncel: cakisma ? await (planIslemTuruMu(tur) ? planGuncelSurum : raporGuncelSurum)(db, b.kayit) : null };
+    return { s, guncel: cakisma ? await (planIslemTuruMu(tur) ? planGuncelSurum : chatIslemTuruMu(tur) ? chatGuncelSurum : raporGuncelSurum)(db, b.kayit) : null };
   });
   if (s.durum === "kimlik_kullanildi") return yanit({ hata: "kimlik" }, 409);
   const cihaz = Number(istek.headers.get("x-probata-saat"));

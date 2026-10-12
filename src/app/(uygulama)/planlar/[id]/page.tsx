@@ -1,5 +1,6 @@
 /* PLAN İÇİ (maket planlarim.html #/plan/<id>; donmuş referans ekran): kırıntı Planlar › proje no · başlıkta firma adı (künyeden; L7 "firma ismi önde"),
-   altında tesis · durum rozeti · açık planda denetçi başına uyarılar (engel değil) · akış (PlanIciEkrani). Görmeyen / başka firmanın planı: bulunamadı. */
+   altında tesis · durum rozeti · açık planda denetçi başına uyarılar (engel değil) · akış (PlanIciEkrani). Görmeyen / başka firmanın planı: bulunamadı.
+   524: S.A.Y Chat (plan ekibindeki kişi, plan kabul / denetimde / tamamlandı) — veri sayfayla gelir (çevrimdışı açılan sayfada da hazır). */
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Yetkisiz } from "../../../../components/hata/Hata";
@@ -12,6 +13,8 @@ import { planIci } from "../../../../modules/planlar/server/plan-ici";
 import { planAcabilir } from "../../../../modules/planlar/server/planlar";
 import { PlanIciEkrani } from "../../../../modules/planlar/ui/PlanIciEkrani";
 import { PlanSilTusu } from "../../../../modules/planlar/ui/PlanSilTusu";
+import { sayChatPaneli } from "../../../../modules/say-chat/server/kayitlar";
+import { SayChat } from "../../../../modules/say-chat/ui/SayChat";
 import { modulOturumu, oturumIslemi } from "../../../../server/kimlik/istek";
 
 const MODUL = modulBul("planlar")!;
@@ -21,7 +24,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
   const o = await modulOturumu(MODUL.no);
   if (!o) return <Yetkisiz />;
   const { id } = await params;
-  const v = await oturumIslemi(o, (db) => planIci(db, o, id));
+  const [v, chat] = await oturumIslemi(o, async (db) => [await planIci(db, o, id), await sayChatPaneli(db, o, id)] as const);
   if (!v) notFound();
   const p = v.kart;
   const [durumAd, rozet] = PLAN_DURUM[v.durum];
@@ -45,6 +48,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
         ))}
       </SeritKap>}
       <PlanIciEkrani v={v} />
+      {chat && <SayChat veri={chat} />}
     </>
   );
 }

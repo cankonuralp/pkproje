@@ -630,3 +630,24 @@ export async function sahaDosyasiGorulur(db: Sorgulayici, kisi: YetkiHesabi, for
   const f = (await db.sorgu<{ plan_id: string }>("SELECT plan_id::text FROM saha_formu WHERE id = $1", [formId])).rows[0];
   return !!f && !!(await erisim(db, { ...kisi, ad: "" }, f.plan_id));
 }
+
+/* ── 524 S.A.Y CHAT (src/modules/say-chat; pkproje §3.10) ── planın S.A.Y Chat'e açık bilgisi: kişi plan ekibinde mi, durum, plan günü, kişinin
+   personeli; plandaki ekipman (tür, branş, konum, pasif) ve raporu olanlar. Planı göremeyene null. Kayıt yazma ve rapor kararları S.A.Y Chat'te. */
+export interface SayChatPlani {
+  id: string; no: string; durum: PlanDurumu; baslangic: string; uye: boolean; personelId: string | null;
+  ekipman: { id: string; kod: string; turId: string; brans: "m" | "e"; konum: string | null; pasif: boolean }[];
+  raporlu: string[];
+}
+export async function sayChatPlani(db: Sorgulayici, kim: Kisi, id: string): Promise<SayChatPlani | null> {
+  const e = await erisim(db, kim, id);
+  if (!e) return null;
+  const pe = (await db.sorgu<{ ekipman_id: string }>("SELECT ekipman_id::text FROM plan_ekipman WHERE plan_id = $1", [id])).rows;
+  const turBul = new Map((await turOzetleri(db)).map((t) => [t.id, t]));
+  const ekipman = (await ekipmanlar(db, pe.map((x) => x.ekipman_id))).map((x) => ({
+    id: x.id, kod: x.kod, turId: x.turId, brans: turBul.get(x.turId)?.brans ?? "m", konum: x.konum, pasif: x.pasif,
+  })).sort((a, b) => a.kod.localeCompare(b.kod, "tr"));
+  return {
+    id, no: e.p.no, durum: e.p.durum, baslangic: e.p.baslangic, uye: e.uye, personelId: e.benim?.personel_id ?? null, ekipman,
+    raporlu: [...new Set((await planRaporlari(db, id)).map((r) => r.ekipmanId))],
+  };
+}

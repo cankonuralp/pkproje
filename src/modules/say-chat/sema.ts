@@ -141,3 +141,37 @@ export function dagit(tanim: ChatTanimi, mesaj: readonly string[]): ChatDagilim 
   if (fazla.length) degerler.yorum = [degerler.yorum, ...fazla].filter(Boolean).join("\n");
   return { satirlar, fazla, degerler };
 }
+
+/* ── KAYIT (524; maket maket-saychat.js) — ekran ve sunucu aynı şemayı kullanır ── */
+export const MESAJ_EN_COK = 60;
+export const MESAJ_SATIR_EN_COK = 200;
+/** kayıt başına ekipman fotoğrafı, başlık başına okunacak fotoğraf (en çok) */
+export const EKIPMAN_FOTO_EN_COK = 12;
+export const OKUNACAK_FOTO_EN_COK = 6;
+/** kuyruktaki fotoğraf (cihazda küçültülmüş; raporlar/sema.ts FotoIslemGirdisi ile aynı sınır) */
+export const CHAT_FOTO_BAYT = 2 * 1024 * 1024;
+export const FOTO_ROLLERI = ["ekipman", "etiket", "okunacak"] as const;
+export type FotoRolu = (typeof FOTO_ROLLERI)[number];
+export interface ChatFoto { dosya: string; ad: string; rol: FotoRolu; k: string | null }
+export type ChatEkipman = { tip: "plan"; id: string } | { tip: "yeni"; tur: string };
+
+const kimlik = z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+/** "saychat.kaydet": ekipman (plandan ya da yeni tür), mesaj satırları, kaydın tanımı, çıkarılan (sunucudaki) fotoğraflar */
+export const KayitGirdisi = z.object({
+  plan: kimlik,
+  ekipman: z.union([z.object({ tip: z.literal("plan"), id: kimlik }), z.object({ tip: z.literal("yeni"), tur: kimlik })]).nullable(),
+  mesaj: z.array(z.string().max(MESAJ_SATIR_EN_COK)).max(MESAJ_EN_COK),
+  tanim: z.unknown(),
+  tanimSurum: z.number().int().min(0).max(1_000_000),
+  kaldir: z.array(kimlik).max(60).default([]),
+});
+export type KayitGirdisi = z.input<typeof KayitGirdisi>;
+/** "saychat.foto": fotoğraf (base64), rolü, okunacakta bölümü; plan (kayıt henüz yoksa fotoğrafla açılır) */
+export const ChatFotoGirdisi = z.object({
+  plan: kimlik,
+  rol: z.enum(FOTO_ROLLERI),
+  k: z.string().regex(/^[A-Za-z0-9_-]{1,60}$/).nullable(),
+  ad: z.string().min(1).max(200),
+  veri: z.string().min(1).max(Math.ceil(CHAT_FOTO_BAYT / 3) * 4),
+});
+export type ChatFotoGirdisi = z.input<typeof ChatFotoGirdisi>;

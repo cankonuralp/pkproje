@@ -7,7 +7,8 @@
    imzalı zimmet formu — kişinin kartını gören (denetçi yalnız kendisininkini). 2026-10-05 (312): rapor fotoğrafı — raporu gören (Raporlar düzeyi:
    denetçi kendi, branş yöneticisi branşı). 328: gider belgesi (fiş / fatura) — Muhasebe'yi gören (gör / yaz); 330: masraf formunun fişini gönderen
    de · izin talebinin belgesi — talep eden ve firma yöneticisi. 333: imzaya gönderilen belge ve imzalı hâli (Onaylar › Diğer belgeler) — imzalayacak
-   kişi, gönderen, Personel'de "yaz"; bordroda Muhasebe'yi gören de. 2026-10-12: saha formunun müşteri imzalı taraması — planı gören. */
+   kişi, gönderen, Personel'de "yaz"; bordroda Muhasebe'yi gören de. 2026-10-12: saha formunun müşteri imzalı taraması — planı gören.
+   524: S.A.Y Chat kaydının fotoğrafı — YALNIZ kaydın sahibi (kayıt kişiye özel, RLS). */
 import { DOSYA as DOK_DOSYA, dokumanDosyasiGorulur, standartDosyasiGorulur } from "../../modules/dokumanlar/server/dokumanlar.ts";
 import { DOSYA_MODULU as EGITIM_DOSYASI, egitimDosyasiGorulur } from "../../modules/egitimler/server/egitimler.ts";
 import { GIDER_DOSYA, giderDosyasiGorulur } from "../../modules/muhasebe/server/giderler.ts";
@@ -22,6 +23,7 @@ import { DOSYA as SOZ_DOSYA, isgDosyasiGorulur, sablonDosyasiGorulur, sozlesmeDo
 import { DOSYA_MODULU as ZIMMET_DOSYASI, zimmetDosyasiGorulur } from "../../modules/zimmetler/server/zimmet.ts";
 import { DOSYA_MODULU as RAPOR_DOSYASI, IMZALI_MODULU, PDF_MODULU, raporDosyasiGorulur } from "../../modules/raporlar/server/raporlar.ts";
 import { DOSYA_SAHA, sahaDosyasiGorulur } from "../../modules/planlar/server/plan-ici.ts";
+import { chatDosyasiGorulur, DOSYA_SAY_CHAT } from "../../modules/say-chat/server/kayitlar.ts";
 import type { YetkiHesabi } from "../yetki/canDo.ts";
 import type { ErisimKaydi } from "./dosya.ts";
 
@@ -49,4 +51,5 @@ export const DOSYA_ERISIMI: ErisimKaydi = Object.freeze({
   [BELGE_IMZALI]: (db, kisi, kayitId) => belgeDosyasiGorulur(db, kisi as YetkiHesabi, kayitId),
   [AYAR_DOSYA]: (db, kisi, kayitId) => ayarDosyasiGorulur(db, kisi as YetkiHesabi, kayitId),
   [DOSYA_SAHA]: (db, kisi, kayitId) => sahaDosyasiGorulur(db, kisi as YetkiHesabi, kayitId),
+  [DOSYA_SAY_CHAT]: (db, _kisi, kayitId) => chatDosyasiGorulur(db, kayitId),
 });

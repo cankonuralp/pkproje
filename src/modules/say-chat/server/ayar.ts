@@ -6,6 +6,7 @@ import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { ekle, guncelle, tablo } from "../../../server/db/yazici.ts";
 import type { YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { turDegistirir, turGorur, turOzeti } from "../../ekipman-turleri/server/turler.ts";
+import type { FormatTanimi } from "../../../format/tanim.ts";
 import { yayindakiFormat } from "../../rapor-format/server/formatlar.ts";
 import { chatAlanlari, chatBasliklari, hazirTanim, tanimDenetle, tanimiSuz, type AlanSecenegi, type BaslikSecenegi, type ChatTanimi, type TanimHatasi } from "../sema.ts";
 
@@ -73,4 +74,15 @@ export async function sayChatAyarKaydet(db: Sorgulayici, kim: YetkiHesabi & { ad
   if (ayni(a.tanim, d.tanim)) return { durum: "degisiklik_yok", surum: a.surum };
   const g = await guncelle(db, AYAR, a.id, surum, { tanim: d.tanim }, iz);
   return g.durum === "tamam" || g.durum === "degisiklik_yok" ? { durum: g.durum, surum: g.surum } : g.durum === "yok" ? { durum: "yok" } : { durum: "cakisma" };
+}
+
+/** 524: kayıt ekranı için türün tanımı + açık okunacak başlıkların adları + formatı (yoksa null — o türde kayıt yazılmaz). Yetki ÇAĞIRANDA. */
+export async function chatTuru(db: Sorgulayici, turId: string): Promise<{ tanim: ChatTanimi; surum: number; basliklar: BaslikSecenegi[]; format: FormatTanimi } | null> {
+  if (!UUID.test(turId)) return null;
+  const f = (await yayindakiFormat(db, turId))?.tanim ?? null;
+  if (!f) return null;
+  const a = await ayarOku(db, turId);
+  const tanim = a ? tanimiSuz(f, a.tanim).tanim : hazirTanim(f);
+  const acik = new Set(tanim.okunacak.filter((o) => o.acik).map((o) => o.k));
+  return { tanim, surum: a?.surum ?? 0, basliklar: chatBasliklari(f).filter(([k]) => acik.has(k)), format: f };
 }

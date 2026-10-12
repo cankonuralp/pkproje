@@ -2467,6 +2467,22 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-13 (524): **S.A.Y CHAT KAYITLARI — PLAN İÇİNDE** (§3.10 m.1–11, 18–24; maket 521 ekran 1–9 onaylı). Plan içinde S.A.Y düğmesinin solunda
+  "S.A.Y Chat" (yalnız plan ekibindeki kişi, plan kabul / denetimde / tamamlandı iken; S.A.Y ile aynı yerde — biri açılınca öteki kapanır). Panel:
+  kişinin bu plandaki kayıtları (ekipman, ilk dört dolu satır + not, okunacak fotoğraf çipleri, "Cihazda" / "Gönderildi" + saat, Düzenle), "Fotoğraf
+  çek" → "Ekipman seçin" penceresi (Plandan seç: plandaki, branşına uygun — meslekten —, pasif olmayan, raporsuz, başka kaydında olmayan; Yeni ekle:
+  branşındaki, formatı yayında türler; arama) → yönerge (türün S.A.Y Chat ayarı, 523) + numaralı mesaj (hazır değerli satır dolu, "hazır" /
+  "okundu" rozeti) + satırların düştüğü alanlar (kural; fazla satır nota) + okunacak fotoğraflar (türün açık başlıkları) + etiket fotoğrafı (kota
+  uyarısı; "Oku ve mesaja yaz" boş ya da hazır değeri değişmemiş satırlara yazar — dolu satır ezilmez; "Okumadan geç") → Gönder (en az bir ekipman
+  fotoğrafı ve ekipman şart). Düzenle → Kaydet / Kaydı sil (önce sorar). Gönder / Kaydet / Sil ÇEVRİMDIŞI KUYRUKTAN (saychat.kaydet — sürüm kilidi;
+  saychat.foto — kayıt yoksa fotoğrafla açılır, sürüm önce / sonra; saychat.sil); fotoğraflar Gönder'de kuyruğa girer (Vazgeç'te gitmez). Sayfa
+  verisi sunucuda çizilir (çevrimdışı açılan sayfada da hazır). Göç **0085** say_chat_kayit (RLS firma + KİŞİ — plan sorumlusu, yönetici
+  göremez; sahip işlemden damgalanır; sahip / cihaz kimliği / plan değişmez; cihaz kimliği başkasındaysa iş yapılmadan red —
+  say_chat_cihaz_baskasinda; plan / ekipman / tür kesin silinince ON DELETE CASCADE — silici.ts "birlikte"); fotoğraflar dosya modülü say_chat
+  (yalnız sahibi açar). Etiket okuması kayda yazılmaz, S.A.Y mesajı olarak kotaya yazılır. Kod: say-chat/server/kayitlar.ts, server/etiket.ts,
+  ui/SayChat.tsx; planlar sayChatPlani, personel personelBransi; /api/islem + kuyruk saychat işleri. Rapor yazma 525'te. Kilit
+  tests/say-chat-kayit.test.ts (gerçek PostgreSQL) + olumsuz kanıt tests/bozan/say-chat-kayit.bozan.ts (kişi koşulu, plan değişmez); uçtan uca
+  e2e/say-chat.spec.ts (fotoğraf → seçim → mesaj → okunacak → etiket okuma → gönder → çevrimdışı düzenle → sil; ekip dışı görmez).
 - 2026-10-13 (523): **S.A.Y CHAT AYARLARI** (§3.10 m.13–16; maket 521 ekran 12 onaylı). Ekipman türleri › tür sayfasında ölçüm cihazlarından sonra
   tıklayınca açılan "S.A.Y Chat ayarları": mesaj satırları (sıra · telefonda yazan ad · rapordaki alan · hazır değer · yukarı / aşağı · sil · Satır
   ekle), okunacak fotoğraf başlıkları (Açık / Kapalı · sil · Başlık ekle), sağda "Telefonda böyle görünür"; bölümün kendi Kaydet / Vazgeç'i (değişiklik
