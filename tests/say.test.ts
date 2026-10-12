@@ -10,6 +10,7 @@
    · 382 rapor ekranı: "Eksik alanlar" / "Sonuç" cevabının METNİNİ sunucu kurar (ekranın yapısından), yer "Rapor <no>"; öneri yalnız seçilen sonuç
      kriterlerden ayrıysa; öneri kartı bir kez işaretlenir, başkası işaretleyemez; serbest soruda yer rapor numarası;
    · 384 açık rapor: özet yalnız raporu yazanın Yeni raporunda ve adres o raporsa; başkası / başka firma alamaz; giden özette serbest metin yok.
+   · 522 ek: fotoğraf / PDF soruyla gider (adı gitmez), geçmişte yalnız adı / boyu / türü, dosya saklanmaz, ayırma ek sayısıyla büyür.
    Olumsuz kanıt: tests/bozan/say.bozan.ts. */
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
@@ -23,6 +24,7 @@ import { taslakBaslat, yayinla } from "../src/modules/rapor-format/server/format
 import { raporOlustur } from "../src/modules/raporlar/server/raporlar.ts";
 import { raporSayBilgisi } from "../src/modules/raporlar/server/say-baglanti.ts";
 import { sayBirak, sayDurumu, sayGecmisi, sayHizli, sayOneri, sayRaporCevabi, saySorHazirla, saySorKaydet, sayTemizle } from "../src/modules/say/server/say.ts";
+import { sayEkleriOku } from "../src/modules/say/server/ek.ts";
 import { ayarOku, ayarYaz } from "../src/server/ayar/ayar.ts";
 import { sirYaz } from "../src/server/ayar/sir.ts";
 import type { GomuluKume } from "../src/server/db/gomulu.ts";
@@ -262,4 +264,32 @@ test("384 açık rapor özeti: yalnız raporu yazanın Yeni raporunda, adres o r
     assert.doesNotMatch((x.istek.govde as { system: { text: string }[] }).system[1].text, /Açık rapor/);
     await ile(A, k, (db) => sayBirak(db, x, "yok"));
   }
+});
+
+test("522 ek: fotoğraf ve PDF soruyla gider, adları gitmez; geçmişte adı / türü / boyu kalır, dosya saklanmaz; ayırma ek sayısıyla; yalnız ekle soru", async () => {
+  const jpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xdb, 0x00, 0x03, 0x01, 0xff, 0xda, 0x00, 0x02, 0x01, 0x02, 0x03, 0xff, 0xd9]);
+  const pdf = new Uint8Array(Buffer.from("%PDF-1.4\n%%EOF"));
+  const ekler = sayEkleriOku([{ bayt: jpeg, ad: "Gizli etiket.jpg" }, { bayt: pdf, ad: "kılavuz.pdf" }]);
+  if (!Array.isArray(ekler)) return assert.fail(JSON.stringify(ekler));
+  const dosyaOnce = (await ile(A, FA.plan, (db) => db.sorgu<{ n: number }>("SELECT count(*)::int AS n FROM dosya"))).rows[0].n;
+  /* soru boş, yalnız ek: soru kendiliğinden */
+  const h = await ile(A, FA.plan, (db) => saySorHazirla(db, FA.plan, "  ", "/planlar", new Date(), null, null, ekler));
+  if (h.durum !== "hazir") return assert.fail(JSON.stringify(h));
+  assert.equal(h.ust, sayEnCokMaliyet("opus", 2));
+  assert.equal((await kullanim(A, FA.plan))?.ayrilan, String(sayEnCokMaliyet("opus", 2)), "ayırma iki ekle");
+  const son = (h.istek.govde as { messages: { content: unknown }[] }).messages.at(-1)!.content as { type: string; text?: string }[];
+  assert.deepEqual(son.map((b) => b.type), ["image", "document", "text"]);
+  assert.match(son[2].text ?? "", /Ek 1 \(fotoğraf\), Ek 2 \(PDF belge\)[\s\S]*Soru:\nEkleri inceler misin\?$/);
+  assert.doesNotMatch(JSON.stringify(h.istek.govde), /Gizli|kılavuz|Saklı|iletisim@/, "ek adı, müşteri, kişi gitmez");
+  const k = await ile(A, FA.plan, (db) => saySorKaydet(db, h, cevap("Etikette 220 V yazıyor.")));
+  if (k.durum !== "tamam") return assert.fail(JSON.stringify(k));
+  assert.deepEqual(k.iletiler.map((m) => [m.kim, m.metin, m.ek?.ekler ?? null]), [
+    ["ben", "Ekleri inceler misin?", [{ ad: "Gizli etiket.jpg", boyut: jpeg.length, tur: "foto" }, { ad: "kılavuz.pdf", boyut: pdf.length, tur: "pdf" }]],
+    ["say", "Etikette 220 V yazıyor.", null]]);
+  const g = (await ile(A, FA.plan, (db) => sayGecmisi(db))).at(-2);
+  assert.deepEqual(g?.ek, { ekler: [{ ad: "Gizli etiket.jpg", boyut: jpeg.length, tur: "foto" }, { ad: "kılavuz.pdf", boyut: pdf.length, tur: "pdf" }] }, "geçmişte yalnız ad / boy / tür");
+  assert.equal((await ile(A, FA.plan, (db) => db.sorgu<{ n: number }>("SELECT count(*)::int AS n FROM dosya"))).rows[0].n, dosyaOnce, "dosya saklanmadı");
+  assert.equal((await kullanim(A, FA.plan))?.ayrilan, "0", "ayırma gerçek maliyetle kapandı");
+  /* eksiz boş soru yine red */
+  assert.deepEqual(await ile(A, FA.plan, (db) => saySorHazirla(db, FA.plan, "", "/")), { durum: "red", neden: "Sorunuzu yazın." });
 });

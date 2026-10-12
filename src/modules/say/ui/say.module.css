@@ -80,6 +80,33 @@
 }
 .gonder:disabled { opacity: .55; cursor: default; }
 .not { margin: 0; color: var(--yazi2); font-size: var(--boy-etiket); }
+/* 522 ek (maket .a-say-ek*): ataç menüsü kutunun üstünde açılır; eklenenler kutunun üstünde, gönderilen soruda da */
+.ek { position: relative; flex: none; }
+.ekMenu {
+  position: absolute; left: 0; bottom: calc(100% + 6px); z-index: 2; min-width: 220px; padding: 6px; display: grid; gap: 2px;
+  background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-orta); box-shadow: var(--golge-2);
+}
+.ekMenu[hidden] { display: none; }
+.ekOge { display: flex; align-items: center; gap: 8px; min-height: var(--tus-y); padding: 0 10px; border-radius: var(--r-kucuk); color: var(--yazi); cursor: pointer; }
+.ekOge:hover, .ekOge:focus-within { background: var(--zemin2); }
+.ekOge:focus-within { outline: 3px solid var(--odak); outline-offset: -3px; }
+.ekOge small { margin-left: auto; color: var(--yazi2); font-size: var(--boy-etiket); }
+.ekler { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; white-space: normal; }
+.ekler li {
+  display: inline-flex; align-items: center; gap: 6px; max-width: 100%; min-height: 40px; padding: 4px 4px 4px 8px;
+  border: 1px solid var(--kenar); border-radius: var(--r-orta); background: var(--zemin2); font-size: var(--boy-etiket);
+}
+.ekler img { width: 32px; height: 32px; border-radius: var(--r-kucuk); object-fit: cover; }
+.ekler b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px; }
+.ekler small { color: var(--yazi2); padding-right: 4px; }
+.mesaj .ekler { margin-bottom: 6px; }
+.ben .ekler li { background: transparent; border-color: currentColor; }
+.ben .ekler small { color: inherit; }
+.ekCikar {
+  display: inline-grid; place-items: center; flex: none; width: var(--tus-y); height: var(--tus-y); padding: 0;
+  border: 0; border-radius: var(--r-kucuk); background: transparent; color: var(--yazi); cursor: pointer;
+}
+.ekCikar:hover { background: var(--kart); }
 .gizli { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 /* sayfanın sonu düğmenin altında kalmasın (geniş ve orta bant): genel kural src/styles/temel.css'te (CSS modülünde yerel sınıfsız seçici derlenmez) */

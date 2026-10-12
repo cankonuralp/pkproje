@@ -9,8 +9,10 @@ export interface SohbetBekleyen { ad: string; href: string; kirmizi: number; sar
 export interface SohbetEksik { ad: string; bolum: string; bolumAd: string; alan: string }
 /** rapor ekranında "Sonuç ne olmalı?" öneri kartı (382): yalnız o rapor açıkken uygulanır; sonucu bir kez işaretlenir */
 export interface SohbetOnerisi { alan: "sonuc"; deger: "uygun" | "uygun_degil"; ad: string; durum: "" | "uygulandi" | "vazgecildi" }
+/** 522: soruya eklenen dosyanın yalnız adı, boyu ve türü (dosya saklanmaz) */
+export interface SohbetEkAdi { ad: string; boyut: number; tur: "foto" | "pdf" | "word" }
 /** rapor: iletinin sorulduğu rapor (kimlik — "Git" ve "Uygula" yalnız o rapor açıkken) */
-export interface SohbetEki { bekleyen?: SohbetBekleyen[]; eksik?: SohbetEksik[]; oneri?: SohbetOnerisi; rapor?: string }
+export interface SohbetEki { bekleyen?: SohbetBekleyen[]; eksik?: SohbetEksik[]; oneri?: SohbetOnerisi; rapor?: string; ekler?: SohbetEkAdi[] }
 export interface SohbetIletisi { id: string; kim: "ben" | "say"; metin: string; yer: string; ek: SohbetEki | null; zaman: string }
 
 export const GECMIS_ADET = 100;

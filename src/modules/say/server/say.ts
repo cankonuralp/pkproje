@@ -6,7 +6,9 @@
      AYIRMA — satır kilidiyle, soru geçmişe) → çağrı (işlem DIŞINDA) → kayıt (cevap geçmişe, ayırma gerçek maliyetle kapanır). Bağlam yalnız rol adları,
      sayfa ve bekleyen iş sayıları — müşteri / kişi bilgisi gönderilmez (ARKA-UC §5.4).
    · Geçmiş kişinin hesabında, yalnız kendisi görür; "Sohbeti temizle" yalnız kendi geçmişini siler.
-   · Öneri verir, kendisi yazmaz; imza / gönderme / onay / silme yolu yok (talimatta da yok). */
+   · Öneri verir, kendisi yazmaz; imza / gönderme / onay / silme yolu yok (talimatta da yok).
+   · 522: serbest soruya fotoğraf / PDF / Word eki (server/ek.ts — tür içerikten, adet ve toplam boy sınırlı); ek yalnız o soruda gider, saklanmaz;
+     geçmişte sorunun yanında adı, türü, boyu kalır; ayırma ek sayısıyla büyür. */
 import { ayarOku } from "../../../server/ayar/ayar.ts";
 import { sirDurumu, sirKullan } from "../../../server/ayar/sir.ts";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
@@ -14,6 +16,7 @@ import { ROL_ADI } from "../../../server/yetki/tanim.ts";
 import { sinirli, yzAyi, yzAyir, yzAyirmaBirak, yzKendiAyi, yzMesajSay, yzSohbetKapat } from "../../../server/yz/kullanim.ts";
 import { maliyetHesapla, type OkumaIstegi, type YzModel } from "../../../server/yz/okuma.ts";
 import { SAY_GECMIS, sayEnCokMaliyet, sayIstegi, sayYanitiCoz, SORU_SINIRI } from "../../../server/yz/say.ts";
+import type { SayEkDosyasi } from "./ek.ts";
 import { sohbetGecmisi, sohbetOneriDurumu, sohbetTemizle, sohbetYaz, type SohbetBekleyen, type SohbetEksik, type SohbetIletisi } from "../../../server/yz/sohbet.ts";
 import { SONUC_AD } from "../../raporlar/sema.ts";
 import { raporSayBilgisi } from "../../raporlar/server/say-baglanti.ts";
@@ -155,8 +158,9 @@ export interface SaySorHazir { durum: "hazir"; istek: OkumaIstegi; anahtar: stri
 
 /** serbest soru, adım 1 (işlem içinde): kapı, soru, ayırma (sınır doluysa soru yazılmaz), soru geçmişe, istek gövdesi */
 export async function saySorHazirla(db: Sorgulayici, kim: Kisi, soru: string, yol: string, simdi = new Date(), raporNo: string | null = null,
-  canli: { id: string; cevaplar: unknown } | null = null): Promise<SaySorHazir | { durum: "red"; neden: string }> {
-  const metin = soru.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "").trim();
+  canli: { id: string; cevaplar: unknown } | null = null, ekler: readonly SayEkDosyasi[] = []): Promise<SaySorHazir | { durum: "red"; neden: string }> {
+  /* 522: yalnız ek gönderildiyse soru kendiliğinden ("Eki inceler misin?") */
+  const metin = soru.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "").trim() || (ekler.length ? (ekler.length === 1 ? "Eki inceler misin?" : "Ekleri inceler misin?") : "");
   if (!metin) return { durum: "red", neden: "Sorunuzu yazın." };
   if (metin.length > SORU_SINIRI) return { durum: "red", neden: `Soru en çok ${SORU_SINIRI} karakter.` };
   const k = await kapi(db);
@@ -168,11 +172,11 @@ export async function saySorHazirla(db: Sorgulayici, kim: Kisi, soru: string, yo
   const s = raporNo && RAPOR_NO.test(raporNo) && sayfa.modul === 14 ? { ...sayfa, yer: `Rapor ${raporNo}` } : sayfa;
   const gecmis = (await sohbetGecmisi(db, SAY_GECMIS)).map((m) => ({ kim: m.kim, metin: m.metin }));
   const bekleyen = (await bekleyenler(db, kim)).map((b) => `${b.ad}: ${[b.kirmizi ? `${b.kirmizi} ${b.kirmiziAd}` : "", b.sari ? `${b.sari} ${b.sariAd}` : ""].filter(Boolean).join(", ")}`);
-  const ay = yzAyi(simdi), ust = sayEnCokMaliyet(k.model);
+  const ay = yzAyi(simdi), ust = sayEnCokMaliyet(k.model, ekler.length);
   if (!(await yzAyir(db, ay, k.sinir, ust))) {
     return { durum: "red", neden: "Bu ay yapay zekâ sınırınız doldu; firma yöneticisi Firma ayarları › Yapay zekâ'dan artırabilir. Hızlı sorular çalışır." };
   }
-  await sohbetYaz(db, { kim: "ben", metin, yer: s.yer });
+  await sohbetYaz(db, { kim: "ben", metin, yer: s.yer, ek: ekler.length ? { ekler: ekler.map((e) => e.ad) } : null });
   /* 384: rapor sayfasında açık raporun özeti — yalnız adres o raporsa ve kişi raporu yazan, rapor Yeni (raporlar/server/say-baglanti.ts);
      özet yalnız formatın adları, seçenekler ve sayılar (rapor-ozeti.ts) */
   let rapor: string | null = null;
@@ -180,7 +184,8 @@ export async function saySorHazirla(db: Sorgulayici, kim: Kisi, soru: string, yo
     const b = await raporSayBilgisi(db, kim, canli.id);
     rapor = b ? raporOzeti(b.tanim, b.turAd, canli.cevaplar) : null;
   }
-  const istek = sayIstegi({ model: k.model, kilavuz: SAY_KILAVUZU, baglam: { roller: kim.roller.map((r) => ROL_ADI[r]), yer: s.yer, yardim: s.yardim, bekleyen, rapor }, gecmis, soru: metin });
+  const istek = sayIstegi({ model: k.model, kilavuz: SAY_KILAVUZU, baglam: { roller: kim.roller.map((r) => ROL_ADI[r]), yer: s.yer, yardim: s.yardim, bekleyen, rapor }, gecmis, soru: metin,
+    ekler: ekler.map((e) => e.icerik) });
   return { durum: "hazir", istek, anahtar, model: k.model, ay, ust, yer: s.yer };
 }
 

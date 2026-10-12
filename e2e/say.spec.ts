@@ -2,7 +2,8 @@
    silinmez"). Gerçek sunucuda, üç genişlikte, yapay zekâsı açık uydurma firmada (yerel Anthropic taklidi — gerçek hizmete istek gitmez; istekte
    kişi / müşteri bilgisi olursa taklit reddeder): sağ altta yuvarlak düğme → panel (odak soru alanında) → "Beni ne bekliyor?" kuralla → serbest
    soru yapay zekâdan → başka sayfaya geçince panel ve geçmiş kalır, yer ayracı → sayfa yenilenince de → Esc kapatır, odak düğmede → "Sohbeti
-   temizle" önce sorar. Yapay zekâsı kapalı firmada düğme yok. Telefonda panel tam ekran; yana taşma yok. */
+   temizle" önce sorar. Yapay zekâsı kapalı firmada düğme yok. Telefonda panel tam ekran; yana taşma yok.
+   522: ataç → fotoğraf / belge eki (desteklenmeyen dosya söylenir, × çıkarır), ekli soru gider, gönderilen soruda adı görünür. */
 import { expect, test } from "@playwright/test";
 import { E2E_KAPI, E2E_PAROLA, E2E_YZ } from "./hesaplar";
 import { bolumleriAc, girisli, hazir } from "./yardimci";
@@ -50,6 +51,37 @@ test("S.A.Y: düğme, hızlı soru, serbest soru, sayfa değişince ve yenileyin
   await expect(liste).toContainText("Deneme cevabı: “Planımı nasıl kabul ederim?” için menüden Planlar'ı açın.", { timeout: 30_000 });
   await expect(liste.getByRole("listitem").filter({ hasText: "Bu bir taklit cevaptır." }).first()).toBeVisible();
   await expect(panel.getByLabel("S.A.Y'a sor")).toHaveValue("");
+
+  /* 522 ek: ataç → menü (Fotoğraf çek · Galeriden seç · Belge ekle); desteklenmeyen dosya söylenir; eklenen kutunun üstünde, × çıkarır; soruyla
+     gider (taklit eki sayar), gönderilen soruda adı görünür, kutu boşalır */
+  const atac = panel.getByRole("button", { name: "Ek ekle: fotoğraf ya da belge" });
+  await atac.click();
+  await expect(atac).toHaveAttribute("aria-expanded", "true");
+  for (const ad of ["Fotoğraf çek", "Galeriden seç", "Belge ekle"]) await expect(panel.getByText(ad).first()).toBeVisible();
+  await panel.getByLabel(/Belge ekle/).setInputFiles({ name: "notlar.txt", mimeType: "text/plain", buffer: Buffer.from("deneme") });
+  await expect(page.getByText("Yalnız fotoğraf, PDF ya da Word (.docx) eklenir.").first()).toBeVisible();
+  await expect(atac).toHaveAttribute("aria-expanded", "false");
+  await atac.click();
+  await panel.getByLabel(/Belge ekle/).setInputFiles({ name: "kilavuz.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4\n%%EOF") });
+  await atac.click();
+  await panel.getByLabel("Galeriden seç").setInputFiles({ name: "etiket.png", mimeType: "image/png",
+    buffer: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFElEQVR4nGP4z8DAwAAi/v///x8AHu8F+5BApdwAAAAASUVORK5CYII=", "base64") });
+  const bekleyenEkler = panel.getByRole("list", { name: "Ekler" });
+  await expect(bekleyenEkler.getByRole("listitem")).toHaveCount(2);
+  await expect(bekleyenEkler).toContainText("kilavuz.pdf");
+  await expect(bekleyenEkler).toContainText("etiket.png");
+  await expect(bekleyenEkler.locator("img")).toHaveCount(1);
+  await panel.getByRole("button", { name: "kilavuz.pdf ekini çıkar" }).click();
+  await expect(bekleyenEkler.getByRole("listitem")).toHaveCount(1);
+  await expect(panel.getByLabel("S.A.Y'a sor")).toBeFocused();
+  await panel.getByLabel("S.A.Y'a sor").fill("Bu etikette ne yazıyor?");
+  await panel.getByLabel("S.A.Y'a sor").press("Enter");
+  await expect(liste).toContainText("Deneme cevabı: “Bu etikette ne yazıyor?” için menüden Planlar'ı açın.", { timeout: 30_000 });
+  await expect(liste).toContainText("1 eki okudum.");
+  await expect(liste.getByRole("listitem").filter({ hasText: "Bu etikette ne yazıyor?" }).first()).toContainText("etiket.png");
+  await expect(panel.getByRole("list", { name: "Ekler" })).toHaveCount(1, { timeout: 5_000 });   // yalnız gönderilen sorudaki
+  await expect(panel.getByText("Ekler yapay zekâya gider, kotadan harcar", { exact: false })).toBeVisible();
+  expect(await page.evaluate(TASMA), "yana taşma yok").toBe(true);
 
   /* başka sayfaya geçince panel açık, geçmiş duruyor; yeni yer ayracı */
   if (bilgi.project.name !== "masaustu") await page.keyboard.press("Escape");   // panel menüyü örtebilir: kapat, menüden git, düğmeyle aç

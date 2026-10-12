@@ -321,6 +321,8 @@ pkproje/
                             cevaplar) · rapor-ozeti.ts (384, saf: yapay zekâya yalnız formatın adları / seçenekler / sayılar) · raporlar/server/say-baglanti.ts
                             (raporSayBilgisi: yalnız yazanın Yeni raporu) · ui/eylemler.ts · çekirdek
                             src/server/yz/say.ts (istek: önbellekli talimat + bağlam, cevap çözme; saf) + sohbet.ts (geçmiş; göç 0071 yz_sohbet)
+                            · 522 EK: ataç (Fotoğraf çek · Galeriden seç · Belge ekle) → ek-sinir.ts (4 ek / 4 MB, ekran + sunucu) · server/ek.ts (tür
+                            içerikten, EXIF silinir, Word metni) · ui/eylemler.ts sayEkliSorEylemi (FormData) · yz/say.ts ekliIcerik (ek adı gitmez); saklanmaz
   src/server/eposta/        E-POSTA (432; göç 0077): eposta.ts kuyruk (alıcı başına bir satır; metin değişmez, silinmez) · saglayici.ts tek bağdaştırıcı
                             (Resend biçimi HTTP; PROBATA_EPOSTA_ANAHTAR / _KIMDEN / _UC — yoksa bekler) · gonder.ts bekleyenleriGonder · sonra.ts (after) ·
                             gece işi epostaIsi yeniden dener. İlk kullanım: plan açılınca ekip + bilgilendirme (planlar planAc, sema planEpostasi)

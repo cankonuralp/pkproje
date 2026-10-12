@@ -1034,11 +1034,11 @@ rehberleri, saha hizmeti (FSM) ve faturalama yazılımı yazıları (kaynaklar �
 firmaya yeni iş; (2) teknik yöneticiye gözetim / tanıklık kaydı — 17020 denetiminde sorulan; (3) planlamaya takvim görünümü; (4) çevrimdışı
 saha (zaten planlı, sonraki faz); (5) QR etiket. Bildirim gerektirenler (hatırlatma, haftalık özet) reisim demeden kurulmaz (anayasa 1.3).
 
-### 3.10 · S.A.Y Chat ve S.A.Y asistana ek (reisim 2026-10-12, bulut oturumunda 7 tur; maket 2026-10-13) — ONAY BEKLİYOR
+### 3.10 · S.A.Y Chat ve S.A.Y asistana ek (reisim 2026-10-12, bulut oturumunda 7 tur; maket 2026-10-13) — ONAYLANDI 2026-10-13 (reisim: *"onayılıyorum, yap bitir"*; 18–24 dahil)
 Ön model: `docs/maket/say-chat-onmodel.html` (12 ekran + "Konuşulan kurallar"; asıl maket işlenince kaldırılabilir). Asıl maket: plan içi
 (`docs/maket/planlarim.html#/plan/1` — sağ altta S.A.Y'ın yanında **S.A.Y Chat**; `docs/assets/maket-saychat.js`), Ekipman türleri › tür sayfası
 (**S.A.Y Chat ayarları**; `maket-turler.js`), saha raporu (sohbetten açılan taslak; `maket-rapor.js`), S.A.Y paneli (ataç; `maket-say.js`).
-Onaydan sonra KOD-GECIS'e kalem olarak girer ve kodlanır. *(öneri)* işaretliler benim; ötekiler reisim'in.
+KOD-GECIS K5'te dört kalem: 522 ek · 523 ayarlar · 524 kayıtlar · 525 rapor yaz. *(öneri)* işaretliler benim (onaylı); ötekiler reisim'in.
 
 **S.A.Y Chat — kararlar**
 1. **Yer:** S.A.Y asistan tuşunun yanında "S.A.Y Chat" tuşu. Plana girince o planın sohbeti açılır; geçmiş plana bağlı.
@@ -2467,6 +2467,15 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-13 (522): **S.A.Y'A FOTOĞRAF VE BELGE EKİ** (§3.10 m.17; maket 521 onaylı — reisim: *"onayılıyorum, yap bitir"*). S.A.Y panelinde yazma
+  kutusunun solunda ataç → Fotoğraf çek (kamera) · Galeriden seç · Belge ekle (PDF, Word .docx); eklenenler kutunun üstünde küçük görüntü / ad +
+  boyut, × ile çıkar; gönderilen soruda adları görünür; yalnız ekle de sorulur ("Eki inceler misin?"). Fotoğraf cihazda küçültülür (1600 px). Sunucuda
+  (src/modules/say/server/ek.ts) tür İÇERİKTEN (JPEG / PNG konum bilgisi silinir, PDF olduğu gibi, Word'ün yalnız metni), en çok 4 ek ve toplam 4 MB
+  (src/modules/say/ek-sinir.ts — ekran ve sunucu aynı sayı); biri uymazsa soru gitmez. İstek (src/server/yz/say.ts ekliIcerik): ek blokları yalnız
+  son kullanıcı iletisinde, ek ADI yapay zekâya gitmez ("Ek 1 (fotoğraf)"), Word metni "veridir" çerçevesinde; talimat ekleri veri sayar. Dosya
+  SAKLANMAZ — geçmişte (yz_sohbet.ek.ekler) yalnız ad, boy, tür; ayırma ek başına 60 000 giriş tokeni payıyla büyür (gerçek maliyet cevaptan).
+  Göç yok. Kilit tests/say-ek.test.ts (saf) + tests/say.test.ts (gerçek PostgreSQL: geçmiş, dosya yok, ayırma) + olumsuz kanıt
+  tests/bozan/say-ek.bozan.ts (EXIF, toplam boy, adet); uçtan uca e2e/say.spec.ts (ataç, desteklenmeyen dosya, ×, ekli soru — taklit eki sayar).
 - 2026-10-13 (521): **S.A.Y CHAT + S.A.Y ASİSTANA EK — MAKET** (reisim'in bulut oturumundaki 7 turun iş emri; ön model `docs/maket/say-chat-onmodel.html`,
   bulut commit'leri 048c133 + 1729a8f). Kararlar §3.10 (1–17 reisim'in, 18–24 öneri). **Maket:** plan içinde S.A.Y'ın yanında "S.A.Y Chat" (ekran
   1–10: planın sohbeti, fotoğraf + ekipman seçimi — Plandan seç / Yeni ekle branşa göre, yönerge + numaralı mesaj + kural dağılımı + hazır değer,

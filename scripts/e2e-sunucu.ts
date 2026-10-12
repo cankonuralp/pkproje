@@ -232,11 +232,15 @@ const yzTaklit = createServer((istek, yanit) => {
         yanit.writeHead(400, { "content-type": "application/json" }).end(JSON.stringify({ type: "error", error: { type: "invalid_request_error", message: "taklit: S.A.Y isteğinde kişisel / müşteri bilgisi" } }));
         return;
       }
-      const son = String(g.messages?.at(-1)?.content ?? "").slice(0, 80);
+      /* 522: ekli soruda son ileti bloklar (fotoğraf / PDF + metin) — taklit eki sayar, sorunun metnini "Soru:"dan sonra alır */
+      const sonIcerik = g.messages?.at(-1)?.content;
+      const bloklar = Array.isArray(sonIcerik) ? sonIcerik as { type?: string; text?: string }[] : null;
+      const ekSayisi = bloklar ? bloklar.filter((b) => b.type === "image" || b.type === "document").length : 0;
+      const son = (bloklar ? String(bloklar.find((b) => b.type === "text")?.text ?? "").replace(/^[\s\S]*Soru:\n/, "") : String(sonIcerik ?? "")).slice(0, 80);
       /* 384: bağlamda açık raporun özeti varsa söyler (uçtan uca: rapor ekranındaki serbest soru özeti taşıyor mu) */
       const raporlu = Array.isArray(g.system) && String((g.system[1] as { text?: unknown } | undefined)?.text ?? "").includes("Açık rapor");
       yanit.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({
-        content: [{ type: "text", text: `Deneme cevabı: “${son}” için menüden Planlar'ı açın.\n- Bu bir taklit cevaptır.${raporlu ? "\n- Raporu okudum." : ""}` }],
+        content: [{ type: "text", text: `Deneme cevabı: “${son}” için menüden Planlar'ı açın.\n- Bu bir taklit cevaptır.${raporlu ? "\n- Raporu okudum." : ""}${ekSayisi ? `\n- ${ekSayisi} eki okudum.` : ""}` }],
         stop_reason: "end_turn", usage: { input_tokens: 2500, output_tokens: 80 },
       }));
       return;
