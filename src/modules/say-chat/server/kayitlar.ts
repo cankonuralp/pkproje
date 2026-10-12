@@ -21,6 +21,7 @@ import {
   ChatFotoGirdisi, EKIPMAN_FOTO_EN_COK, KayitGirdisi, OKUNACAK_FOTO_EN_COK, tanimDenetle, type BaslikSecenegi, type ChatFoto, type ChatTanimi,
 } from "../sema.ts";
 import { chatTuru } from "./ayar.ts";
+import { raporKosullari } from "./rapor-yaz.ts";
 
 export const DOSYA_SAY_CHAT = "say_chat";
 const KAYIT = tablo({ ad: "say_chat_kayit", sutunlar: ["cihaz_id", "plan_id", "ekipman_id", "tur_id", "mesaj", "tanim", "tanim_surum", "fotolar"] });
@@ -47,6 +48,8 @@ export interface SayChatPaneli {
   turler: Record<string, ChatTuru>;
   /** etiketten okuma (m.11): firmada yapay zekâ hazır mı, kişinin bu ayki harcaması / sınırı (metin) */
   yz: { hazir: boolean; kota: string };
+  /** 525 "Bekleyenler için rapor yaz" koşulları: engel (tamamlanmış plan, plan günü, günlük süre dolu) ya da günlük süre bilgisi */
+  rapor: { engel: string | null; mesai: string };
 }
 
 type KayitDb = { id: string; cihaz_id: string; plan_id: string; ekipman_id: string | null; tur_id: string | null; mesaj: string[]; tanim: ChatTanimi | null;
@@ -91,6 +94,7 @@ export async function sayChatPaneli(db: Sorgulayici, kim: Kisi, planId: string, 
     plan: { id: p.id, no: p.no, durum: p.durum, baslangic: p.baslangic }, brans,
     kayitlar: kayitlar.map((k) => kayitGorunumu(k, kod)), planEkipmani: planEkipmani.filter((e) => turler[e.turId]), yeniTurler: yeniTurler.filter((id) => turler[id]), turler,
     yz: { hazir: await yzHazirMi(db), kota: `bu ay ${dolar(harcanan)} / ${sinirli(yz.sinir) ? `${String(yz.sinir).replace(".", ",")} $` : "sınırsız"}` },
+    rapor: await raporKosullari(db, p),
   };
 }
 

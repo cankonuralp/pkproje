@@ -43,13 +43,12 @@ export function chatAlanlari(t: FormatTanimi | null): AlanSecenegi[] {
   return l;
 }
 
-/** okunacak fotoğraf başlıkları: fotoğraftan doldurması açık bölümler (ekipman bölümü hariç — etiket fotoğrafı ayrı); test değerleri bölümü
-    kâğıtta kapatılmadıkça her zaman (maket: "Fonksiyon testleri" — ölçüm ekranının fotoğrafı; okuma raporlar/server/alan-oku.ts ile) */
+/** okunacak fotoğraf başlıkları: formatta fotoğraftan doldurması AÇIK bölümler (m.14 — rapor ekranı da yalnız onları okur; ekipman bölümü hariç,
+    etiket fotoğrafı ayrı). Test değerleri bölümü kâğıtta "Fotoğraftan doldur" açılınca gelir (525: 523'te kapalı test bölümü de geliyordu). */
 export function chatBasliklari(t: FormatTanimi | null): BaslikSecenegi[] {
   const l: BaslikSecenegi[] = [];
   for (const b of t?.bolumler ?? []) {
-    if (!DOLDURULUR.includes(b.blok) || (b.blok === "bilgi" && b.tam)) continue;
-    if (!(b.blok === "test" ? (b.doldur ? b.doldur.foto : true) : doldurma(b).foto)) continue;
+    if (!DOLDURULUR.includes(b.blok) || (b.blok === "bilgi" && b.tam) || !doldurma(b).foto) continue;
     l.push([b.id, b.ad, b.blok === "olcum" ? "ölçüm tablosu" : b.blok === "test" ? "test değerleri" : "bilgi alanları"]);
   }
   return l;

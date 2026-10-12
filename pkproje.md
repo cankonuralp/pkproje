@@ -2467,6 +2467,21 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-13 (525): **S.A.Y CHAT — BEKLEYENLER İÇİN RAPOR YAZ** (§3.10 m.7, m.12, m.19, m.21–22; maket 521 ekran 10 onaylı). S.A.Y Chat listesinde
+  "Bekleyenler için rapor yaz (n)" (gönderilmiş, cihazda işi olmayan, ekipmanı ve ekipman fotoğrafı olan kayıtlar) → ekran: kayıt başına ne olacağı
+  (plandaki ekipmana / plana yeni ekipman, n alan dolacak, n fotoğraf rapora geçecek, n fotoğraf yapay zekâyla okunacak / saklanacak, not → uzman
+  yorumu), "Yeni ekle"de **Ekipman kodu** (m.19; biçim ve eşsizlik plan içi "Ekipman ekle" denetimiyle, kullanım yeri ve seri no mesajdan); "Oluşturmadan
+  önce" koşulları (plan günü / tamamlanmış plan — 519, günlük süre, internet, yapay zekâ ve kota) → "n rapor taslağı oluştur": kayıtlar SIRAYLA, her biri
+  ayrı istekte ve kendi veritabanı işleminde (olmayan kayıt nedeniyle bekler — m.22), sonra okunacak fotoğraflar tek tek yapay zekâyla okunur (m.7 —
+  raporun fotoğraftan okuma işlevleriyle aynı yol, kota); olan raporlar "Raporu aç" bağlantısıyla. Raporda: mesajın değerleri alanlara (türüne uymayan
+  yazılmaz, adı şeritte), not + fazla satır uzman yorumuna, ekipman fotoğrafları genel fotoğraf bölümüne ("foto"; yoksa son fotoğraf bölümü), okunacak
+  fotoğraflar o bölüme okuma fotoğrafı (belgede yok), etiket fotoğrafı KONMAZ; kayıt silinir (fotoğrafları çöpe). Okunan değerler raporda ÖNERİ olarak
+  bekler: göç **0086** rapor_oneri (kişiye özel RLS, değişmez, rapor silinirse gider) — rapor açılınca bölümün öneri kartı (AlanOkuma / FotoOkuma) dolu
+  gelir, Uygula / Vazgeç deyince kalkar; üstte "S.A.Y Chat kaydından oluşturuldu" şeridi (Kapat). 523 düzeltmesi: okunacak başlıklar YALNIZ fotoğraftan
+  doldurması açık bölümlerden (m.14 aynen — rapor da yalnız onları okur). 524 düzeltmesi: Gönder'de önce kayıt, sonra fotoğraflar kuyruğa (telefonda ilk
+  fotoğraf kayıttan önce gidince kayıt "çakışma"ya düşüyordu). Kod: say-chat/server/rapor-yaz.ts, raporlar chatRaporuDoldur + server/oneri.ts, eylemler
+  chatRaporYazEylemi / chatOkutEylemi / raporOneriKapatEylemi. Kilit tests/say-chat-rapor.test.ts + olumsuz kanıt tests/bozan/say-chat-rapor.bozan.ts;
+  uçtan uca e2e/say-chat.spec.ts (yeni ekipmanla kayıt → kod → taslak → raporda şerit ve öneri kartı).
 - 2026-10-13 (524): **S.A.Y CHAT KAYITLARI — PLAN İÇİNDE** (§3.10 m.1–11, 18–24; maket 521 ekran 1–9 onaylı). Plan içinde S.A.Y düğmesinin solunda
   "S.A.Y Chat" (yalnız plan ekibindeki kişi, plan kabul / denetimde / tamamlandı iken; S.A.Y ile aynı yerde — biri açılınca öteki kapanır). Panel:
   kişinin bu plandaki kayıtları (ekipman, ilk dört dolu satır + not, okunacak fotoğraf çipleri, "Cihazda" / "Gönderildi" + saat, Düzenle), "Fotoğraf

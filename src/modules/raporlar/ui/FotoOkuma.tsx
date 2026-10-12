@@ -24,24 +24,34 @@ import { okunanHedefleri, okunanlariUygula, type Satir } from "../foto-eslestir"
 import type { RaporFoto } from "../server/raporlar";
 import type { Baglam } from "./Bloklar";
 import { FotoEkleTusu, OkumaFotolari, OkumaNotu, useFotoEkle, type OkumaKipi } from "./Doldurma";
-import { fotoOkuEylemi } from "./eylemler";
+import type { RaporOnerisi } from "../server/oneri";
+import { fotoOkuEylemi, raporOneriKapatEylemi } from "./eylemler";
 import stil from "./raporlar.module.css";
 
 type Oneri = OkunanSatir & { kimlik: number };
 
 /** `tuslar`: tablonun öteki tuşları (Satır ekle …) — maketteki gibi aynı çubukta, "Fotoğraf ekle" önce; öneri kartı çubuğun üstünde */
 export function FotoOkuma({ v, b, satirlar, tablo, islem, tuslar, cubuk, kip }: {
-  v: { id: string; surum: number; fotolar: RaporFoto[] }; b: BolumOf<"olcum">; satirlar: readonly Satir[]; tablo: (f: (l: Satir[]) => Satir[]) => void;
+  v: { id: string; surum: number; fotolar: RaporFoto[]; oneriler?: RaporOnerisi[] }; b: BolumOf<"olcum">; satirlar: readonly Satir[]; tablo: (f: (l: Satir[]) => Satir[]) => void;
   islem: Baglam["islem"]; tuslar: ReactNode; cubuk: string; kip: OkumaKipi;
 }) {
   const bildir = useBildir();
   const kart = useRef<HTMLDivElement>(null);
-  const [oneri, setOneri] = useState<Oneri[] | null>(null);
+  /* 525: S.A.Y Chat'ten rapor yazılırken okunan satırlar bekliyorsa kart açık gelir; uygulanınca / bırakılınca bekleyen öneri kalkar */
+  const [oneri, setOneri] = useState<Oneri[] | null>(() => {
+    const o = v.oneriler?.find((x) => x.bolum === b.id && x.tur === "tablo")?.okunan;
+    const l = Array.isArray(o) ? (o as OkunanSatir[]).filter((s) => s && typeof s === "object" && s.degerler) : [];
+    return l.length ? l.map((s, i) => ({ ...s, kimlik: i })) : null;
+  });
+  const kalici = useRef(!!v.oneriler?.some((x) => x.bolum === b.id && x.tur === "tablo"));
   const kartId = `r-oneri-${b.id}`;
   const f = useFotoEkle<OkunanSatir>({ raporId: v.id, bolumId: b.id, kip, islem, elle: "Değerleri elle girebilirsiniz.",
     oku: async (x) => { const r = await fotoOkuEylemi(x); return { ...r, oneri: r.satirlar }; },
     oneri: (l) => { setOneri(l.map((s, i) => ({ ...s, kimlik: i }))); requestAnimationFrame(() => kart.current?.focus()); return true; } });
-  const kapat = () => { setOneri(null); f.girdiyeDon(); };
+  const kapat = () => {
+    setOneri(null); f.girdiyeDon();
+    if (kalici.current) { kalici.current = false; void raporOneriKapatEylemi(v.id, b.id); }
+  };
   /* kartın gösterdiği yerler: bütün öneriler aynı anki tabloya göre */
   const hedef = oneri ? okunanHedefleri(satirlar, oneri) : [];
   const uygula = (secilen: number[]) => {

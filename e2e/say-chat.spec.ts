@@ -122,6 +122,50 @@ test("S.A.Y Chat: fotoğraf, ekipman, numaralı mesaj, okunacak fotoğraf, etike
   await expect(fab).toBeFocused();
 });
 
+/* 525: bekleyenler için rapor yaz — "Yeni ekle" kaydı (genişlik + deneme başına ayrı kod; plandaki ekipmana dokunmaz) → kod → taslak; okunacak
+   fotoğraf yapay zekâyla okunur (taklit), rapor ekranında "S.A.Y Chat kaydından oluşturuldu" şeridi ve tablonun öneri kartı */
+test("S.A.Y Chat: bekleyenler için rapor yaz — kod, koşullar, taslak, raporda şerit ve öneri", async ({ page }, bilgi) => {
+  test.setTimeout(180_000);
+  const kod = `SC${({ masaustu: "M", tablet: "T", telefon: "F" } as Record<string, string>)[bilgi.project.name] ?? "X"}-${bilgi.retry}${Date.now() % 1000}`;
+  await giris(page, E2E_YZ.denetci);
+  const adres = await planAdresi(page);
+  await page.goto(`${Y}${adres}`);
+  await hazir(page);
+  await page.getByRole("button", { name: "S.A.Y Chat — planın sohbeti" }).click();
+  const panel = page.getByRole("dialog", { name: "S.A.Y Chat" });
+  await panel.getByLabel("Fotoğraf çek").setInputFiles(foto("yeni-pano.png"));
+  const secim = page.getByRole("dialog", { name: "Ekipman seçin" });
+  await secim.getByRole("tab", { name: "Yeni ekle" }).click();
+  await secim.getByRole("button", { name: /Elektrik panosu/ }).first().click();
+  await panel.getByRole("textbox", { name: /^1\. satır/ }).fill("Rapor Marka");
+  const linye = panel.locator("li", { has: page.getByText("Pano sigortaları", { exact: false }) }).first();
+  await linye.getByLabel("Fotoğraf çek").setInputFiles(foto("linye-2.png"));
+  await panel.getByRole("button", { name: "Gönder" }).click();
+  const kayit = panel.getByRole("list", { name: "Kayıtlar" }).getByRole("listitem").filter({ hasText: "Rapor Marka" }).first();
+  await expect(kayit).toContainText("Gönderildi", { timeout: 30_000 });
+
+  await panel.getByRole("button", { name: /Bekleyenler için rapor yaz/ }).click();
+  await expect(panel.getByRole("heading", { name: "Bekleyenler için rapor yaz" })).toBeVisible();
+  await expect(panel).toContainText("İnternet var: rapor numarası sunucuda verilir");
+  await expect(panel).toContainText("firmanın kotasından harcar");
+  const kayitlar = panel.getByRole("list", { name: "Rapora dönüşecek kayıtlar" }).getByRole("listitem");
+  const benim = kayitlar.filter({ hasText: "Plana yeni ekipman olarak eklenecek" }).first();
+  await benim.getByLabel(/Ekipman kodu/).fill(kod);
+  /* öteki genişliklerin kayıtları kişiye ait değil — ama bu kişide eski kod isteyen kayıt kaldıysa onlara da kod verilir */
+  for (const g of await kayitlar.filter({ has: page.getByLabel(/Ekipman kodu/) }).all()) {
+    const k = g.getByLabel(/Ekipman kodu/);
+    if (!(await k.inputValue())) await k.fill(`${kod}${Math.floor(Math.random() * 90 + 10)}`);
+  }
+  await panel.getByRole("button", { name: /rapor taslağı oluştur/ }).click();
+  const sonuc = panel.getByRole("status").filter({ hasText: "rapor taslağı oluştu" });
+  await expect(sonuc).toBeVisible({ timeout: 90_000 });
+  await sonuc.getByRole("link", { name: "Raporu aç" }).first().click();
+  await expect(page).toHaveURL(/\/raporlar\/[0-9a-f-]{36}$/, { timeout: 30_000 });
+  await hazir(page);
+  await expect(page.getByText("S.A.Y Chat kaydından oluşturuldu.", { exact: false })).toBeVisible();
+  await expect(page.getByRole("region", { name: /fotoğraftan okunan/ }).first()).toBeVisible();
+});
+
 test("S.A.Y Chat: plan ekibinde olmayan (yönetici) görmez", async ({ page }) => {
   await giris(page, E2E_YZ.yonetici);
   const adres = await planAdresi(page);

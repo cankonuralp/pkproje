@@ -13,6 +13,7 @@ import {
 import { anthropicCagir, type OkunanSatir } from "../../../server/yz/okuma";
 import { FOTO_OKU_EN_BUYUK, fotoOkuBirak, fotoOkuHazirla, fotoOkuKaydet, fotoOkuKullanimYaz, okumaFotografiSakla, type OkunacakFoto } from "../server/foto-oku";
 import { alanOkuBirak, alanOkuHazirla, alanOkuKullanimYaz, alanOkuSonuc } from "../server/alan-oku";
+import { raporOneriSil } from "../server/oneri";
 import type { AlanOkunan } from "../../../server/yz/alanlar";
 
 export interface RaporYaniti {
@@ -33,6 +34,14 @@ async function islem(is: (o: NonNullable<Awaited<ReturnType<typeof istekOturumu>
   return yanit(await is(o));
 }
 const metin = (v: unknown) => (typeof v === "string" ? v : "");
+
+/** 525: bekleyen öneri (S.A.Y Chat okuması) uygulandı / bırakıldı ya da şerit kapatıldı — bölümün önerileri kalkar (yalnız kişinin kendisininkiler) */
+export async function raporOneriKapatEylemi(raporId: unknown, bolum: unknown): Promise<boolean> {
+  if (!(await ayniKoken())) return false;
+  const o = await istekOturumu();
+  if (!o || typeof raporId !== "string" || typeof bolum !== "string") return false;
+  return (await oturumIslemi(o, (db) => raporOneriSil(db, o, raporId, bolum))) > 0;
+}
 
 export async function raporOlusturEylemi(planId: string, ekipmanId: string): Promise<RaporYaniti> {
   return islem((o) => oturumIslemi(o, (db) => raporOlustur(db, o, metin(planId), metin(ekipmanId))));

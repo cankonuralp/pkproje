@@ -64,7 +64,7 @@ import { AsamaCizgisi } from "./AsamaCizgisi";
 import { RevizeIstePenceresi } from "./RevizeIstePenceresi";
 import {
   onayaGonderEylemi, raporFormatGuncelleEylemi, raporKaydetEylemi, raporKopyalaEylemi, raporKunyeGuncelleEylemi, raporSilEylemi, revizeIstegiGeriCekEylemi,
-  revizeIsteEylemi, type RaporYaniti,
+  raporOneriKapatEylemi, revizeIsteEylemi, type RaporYaniti,
 } from "./eylemler";
 import { sayRaporBagla } from "../../say/ui/baglam";
 import stil from "./raporlar.module.css";
@@ -155,6 +155,7 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
     return { sonraki: !!v.tarih.sonraki && v.tarih.sonraki !== ayEkle(basGun, v.tur.periyot), rapor: !!v.tarih.rapor && v.tarih.rapor !== basGun };
   });
   const [kirli, setKirli] = useState(false);
+  const [chatKapali, setChatKapali] = useState(false);
   /* 404: cihazda bekleyen (gönderilmemiş) kayıt varsa ekran onu gösterir — sunucudaki eski hâl değil (açılışta ve sayfa tazelenince; kullanıcı o
      sırada yazıyorsa onun yazdığı kalır) */
   const [cihazdaki, setCihazdaki] = useState(false);
@@ -616,6 +617,16 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
     seritler.push(
       <Serit key="revize" tur="uyari" ikon="file-pen-line">
         <b>Revize isteği reddedildi</b> · {v.revize.red.kim} · {zamanNo(v.revize.red.zaman)}{v.revize.red.gerekce ? <>: “{v.revize.red.gerekce}”</> : null}
+      </Serit>,
+    );
+  }
+  /* 525: S.A.Y Chat kaydından açılan taslak — ne geldi, ne öneri olarak bekliyor (kapatılınca bir daha gösterilmez) */
+  const chatBilgi = v.oneriler.find((o) => o.tur === "bilgi");
+  if (v.durum === "taslak" && chatBilgi && !chatKapali) {
+    seritler.push(
+      <Serit key="saychat" tur="bilgi" ikon="message-square-text"
+        eylem={<Tus tur="ikincil" ikon="x" onClick={() => { setChatKapali(true); void raporOneriKapatEylemi(v.id, ""); }}>Kapat</Tus>}>
+        <b>S.A.Y Chat kaydından oluşturuldu.</b> {String((chatBilgi.okunan as { metin?: unknown })?.metin ?? "")}
       </Serit>,
     );
   }

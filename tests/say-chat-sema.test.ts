@@ -32,19 +32,19 @@ test("rapordaki alanlar: ekipman bilgileri, bilgi alanları, test değerleri, yo
   assert.deepEqual(chatAlanlari(null).map(([x]) => x), ["e:marka", "e:model", "e:seri", "e:imal", "e:konum", "e:amac", "e:bolum", "yorum"]);
 });
 
-test("okunacak başlıklar: fotoğraftan doldurması açık bölümler + test değerleri; ekipman bölümü yok; kapatılan test yok", () => {
-  assert.deepEqual(chatBasliklari(IC).map(([k, , ne]) => [k, ne]), [["fonk", "test değerleri"], ["linye", "ölçüm tablosu"], ["pd", "ölçüm tablosu"], ["zi", "ölçüm tablosu"]]);
+test("okunacak başlıklar: yalnız fotoğraftan doldurması açık bölümler; ekipman bölümü yok; kâğıtta açılan test gelir", () => {
+  assert.deepEqual(chatBasliklari(IC).map(([k, , ne]) => [k, ne]), [["linye", "ölçüm tablosu"], ["pd", "ölçüm tablosu"], ["zi", "ölçüm tablosu"]]);
   assert.deepEqual(chatBasliklari(KREN), [], "kule kren: ölçüm tablosu ve test bölümü yok");
   assert.deepEqual(chatBasliklari(null), []);
-  const kapali = { ...IC, bolumler: IC.bolumler.map((b) => (b.blok === "test" ? { ...b, doldur: { foto: false, excel: false } } : b.blok === "olcum" && b.id === "zi" ? { ...b, doldur: { foto: false, excel: true } } : b)) } as FormatTanimi;
-  assert.deepEqual(chatBasliklari(kapali).map(([k]) => k), ["linye", "pd"]);
+  const degisik = { ...IC, bolumler: IC.bolumler.map((b) => (b.blok === "test" ? { ...b, doldur: { foto: true, excel: false } } : b.blok === "olcum" && b.id === "zi" ? { ...b, doldur: { foto: false, excel: true } } : b)) } as FormatTanimi;
+  assert.deepEqual(chatBasliklari(degisik).map(([k, , ne]) => [k, ne]), [["fonk", "test değerleri"], ["linye", "ölçüm tablosu"], ["pd", "ölçüm tablosu"]]);
 });
 
 test("hazır ayar: formatın ekipman alanlarından + Not (uzun ad kısaltılır); ekipman bölümsüz formatta beş alan + Not; başlıklar açık", () => {
   const h = hazirTanim(IC);
   assert.deepEqual(h.satirlar.map((s) => [s.ad, s.alan, s.hazir]), [["Marka", "e:marka", ""], ["Model", "e:model", ""], ["Seri no", "e:seri", ""], ["İmal yılı", "e:imal", ""],
     ["Kullanım yeri", "e:konum", ""], ["Not", "yorum", ""]]);
-  assert.deepEqual(h.okunacak, [{ k: "fonk", acik: true }, { k: "linye", acik: true }, { k: "pd", acik: true }, { k: "zi", acik: true }]);
+  assert.deepEqual(h.okunacak, [{ k: "linye", acik: true }, { k: "pd", acik: true }, { k: "zi", acik: true }]);
   const k = hazirTanim(KREN);
   assert.equal(k.satirlar[1].alan, "e:marka");
   assert.equal(k.satirlar.at(-1)?.alan, "yorum");

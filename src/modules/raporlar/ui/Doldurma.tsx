@@ -35,7 +35,8 @@ import { alanExceli, alanSablonu, tabloExceli, tabloSablonu } from "../doldur";
 import type { RaporFoto } from "../server/raporlar";
 import type { Baglam } from "./Bloklar";
 import { BaslikTusu, useBolumAc } from "./BaslikYuvasi";
-import { alanOkuEylemi, fotoSilEylemi, okumaFotografiEkleEylemi } from "./eylemler";
+import type { RaporOnerisi } from "../server/oneri";
+import { alanOkuEylemi, fotoSilEylemi, okumaFotografiEkleEylemi, raporOneriKapatEylemi } from "./eylemler";
 import stil from "./raporlar.module.css";
 
 const SURE_GOSTER_SN = 3;
@@ -125,13 +126,19 @@ export function FotoEkleTusu({ baslik, girdi, okunuyor, sn, kip, mesgul, gonder 
 
 /** fotoğraftan doldur — bölümün alanları (ekranda satırı olanlar); yaz: okunan değeri alana yazar (Kaydet'e kadar ekranda) */
 export function AlanOkuma({ v, bolumId, baslik, alanlar, yaz, islem, kip, tuslar }: {
-  v: { id: string; surum: number; fotolar: RaporFoto[] }; bolumId: string; baslik: string; alanlar: readonly Pick<OkunacakAlan, "id" | "ad">[];
+  v: { id: string; surum: number; fotolar: RaporFoto[]; oneriler?: RaporOnerisi[] }; bolumId: string; baslik: string; alanlar: readonly Pick<OkunacakAlan, "id" | "ad">[];
   yaz: (id: string, deger: string) => void; islem: Baglam["islem"]; kip: OkumaKipi; tuslar?: ReactNode;
 }) {
   const bildir = useBildir();
   const kart = useRef<HTMLDivElement>(null);
-  const [oneri, setOneri] = useState<AlanOkunan[] | null>(null);
   const ad = new Map(alanlar.map((a) => [a.id, a.ad]));
+  /* 525: S.A.Y Chat'ten rapor yazılırken okunan değerler bekliyorsa kart açık gelir; uygulanınca / bırakılınca bekleyen öneri kalkar */
+  const [oneri, setOneri] = useState<AlanOkunan[] | null>(() => {
+    const o = v.oneriler?.find((x) => x.bolum === bolumId && x.tur === "alan")?.okunan;
+    const l = Array.isArray(o) ? (o as AlanOkunan[]).filter((x) => x && ad.has(x.alan)) : [];
+    return l.length ? l : null;
+  });
+  const kalici = useRef(!!v.oneriler?.some((x) => x.bolum === bolumId && x.tur === "alan"));
   /* yeni öneri gelince odak kartta — kart çizildikten sonra (385'teki ders: requestAnimationFrame bazen çizimden önce koşuyordu) */
   const kartaOdak = useRef(false);
   useEffect(() => {
@@ -143,7 +150,10 @@ export function AlanOkuma({ v, bolumId, baslik, alanlar, yaz, islem, kip, tuslar
     oku: async (x) => { const r = await alanOkuEylemi(x); return { ...r, oneri: r.okunan }; },
     /* ekranda satırı olmayan alan öneriye girmez */
     oneri: (o) => { const l = o.filter((x) => ad.has(x.alan)); if (!l.length) return false; kartaOdak.current = true; setOneri(l); return true; } });
-  const kapat = () => { setOneri(null); f.girdiyeDon(); };
+  const kapat = () => {
+    setOneri(null); f.girdiyeDon();
+    if (kalici.current) { kalici.current = false; void raporOneriKapatEylemi(v.id, bolumId); }
+  };
   const uygula = (secilen: AlanOkunan[]) => {
     if (!oneri) return;
     for (const x of secilen) yaz(x.alan, x.deger);

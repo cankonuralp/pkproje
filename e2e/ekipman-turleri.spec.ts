@@ -233,7 +233,8 @@ test("S.A.Y Chat ayarları: formattan hazır, satır ekle, hata, kaydet, sürüm
   const n = await satirlar.getByRole("listitem").count();
   await expect(bolum.getByLabel(`${n}. satır · telefonda yazan`)).toHaveValue("Not");
   await expect(bolum.getByRole("button", { name: "Kaydet" })).toBeDisabled();
-  await expect(bolum.getByRole("button", { name: /Test değerleri: açık/ })).toHaveAttribute("aria-pressed", "true");
+  /* Ek-III grubunun hazır formatında fotoğraftan doldurması açık bölüm yok (525: başlıklar yalnız onlardan) */
+  await expect(bolum.getByText("Okunacak fotoğraf başlığı yok.")).toBeVisible();
 
   /* satır ekle: alan seçilmeden Kaydet → hata; aynı alan (yorum) → hata; Not satırı silinince geçer */
   await bolum.getByRole("button", { name: "Satır ekle" }).click();
@@ -252,9 +253,6 @@ test("S.A.Y Chat ayarları: formattan hazır, satır ekle, hata, kaydet, sürüm
   await expect(satirlar.getByRole("listitem")).toHaveCount(n);
   await expect(bolum.getByRole("complementary", { name: "Telefonda böyle görünür" })).toContainText("Şebeke gerilimi · 220 V");
   await expect(ozet).toContainText("kaydedilmedi");
-  /* okunacak başlık kapat */
-  await bolum.getByRole("button", { name: /Test değerleri: açık/ }).click();
-  await expect(bolum.getByRole("button", { name: /Test değerleri: kapalı/ })).toHaveAttribute("aria-pressed", "false");
   await bolum.getByRole("button", { name: "Kaydet" }).click();
   await expect(page.getByText("S.A.Y Chat ayarları kaydedildi (sürüm 1); yeni kayıtlarda geçerli.").first()).toBeVisible();
   await expect(ozet).toContainText("sürüm 1");

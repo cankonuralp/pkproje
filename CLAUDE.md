@@ -328,6 +328,8 @@ pkproje/
                             (Ekipman türleri › tür sayfası, açılır bölüm) · ui/eylemler.ts · 524 server/kayitlar.ts (sayChatPaneli, chatKaydet / chatFoto /
                             chatSil — kuyruk işleri saychat.*, göç 0085 say_chat_kayit kişiye özel RLS; dosya modülü say_chat) · server/etiket.ts (etiketten
                             okuma, kayda yazılmaz) · ui/SayChat.tsx (plan içi düğme + panel; planlar sayChatPlani, personel say-chat-baglanti personelBransi)
+                            · 525 server/rapor-yaz.ts (raporKosullari, chatRaporYaz — kayıt başına işlem; raporlar chatRaporuDoldur) · eylemler chatRaporYazEylemi,
+                            chatOkutEylemi (okunanlar raporlar/server/oneri.ts — göç 0086 rapor_oneri; rapor ekranında öneri kartı + şerit)
   src/server/eposta/        E-POSTA (432; göç 0077): eposta.ts kuyruk (alıcı başına bir satır; metin değişmez, silinmez) · saglayici.ts tek bağdaştırıcı
                             (Resend biçimi HTTP; PROBATA_EPOSTA_ANAHTAR / _KIMDEN / _UC — yoksa bekler) · gonder.ts bekleyenleriGonder · sonra.ts (after) ·
                             gece işi epostaIsi yeniden dener. İlk kullanım: plan açılınca ekip + bilgilendirme (planlar planAc, sema planEpostasi)

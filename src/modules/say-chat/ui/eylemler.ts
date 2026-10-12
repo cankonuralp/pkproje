@@ -6,6 +6,11 @@ import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { sayChatAyarKaydet } from "../server/ayar";
 import { anthropicCagir } from "../../../server/yz/okuma";
 import { ETIKET_EN_BUYUK, etiketBirak, etiketHazirla, etiketKapat, type EtiketSonucu } from "../server/etiket";
+import { chatRaporYaz, type KayitRaporSonucu } from "../server/rapor-yaz";
+import { depo } from "../../../server/dosya/depo";
+import { alanOkuBirak, alanOkuHazirla, alanOkuKullanimYaz } from "../../raporlar/server/alan-oku";
+import { fotoOkuBirak, fotoOkuHazirla, fotoOkuKullanimYaz } from "../../raporlar/server/foto-oku";
+import { raporOneriYaz } from "../../raporlar/server/oneri";
 import type { TanimHatasi } from "../sema";
 
 export type AyarKaydetSonucu = { durum: "tamam"; surum: number; ayni: boolean } | { durum: "hata"; hata: TanimHatasi } | { durum: "red"; neden: string };
@@ -48,4 +53,40 @@ export async function chatEtiketOkuEylemi(form: FormData): Promise<EtiketSonucu>
     return { durum: "red", neden: y.neden };
   }
   return oturumIslemi(o, (db) => etiketKapat(db, h, y.govde));
+}
+
+/** 525: bekleyen bir kaydın rapor taslağı (kendi işleminde; ekran kayıtları SIRAYLA gönderir — her istek kısa sürer) */
+export async function chatRaporYazEylemi(planId: unknown, kayit: unknown, kod: unknown): Promise<KayitRaporSonucu> {
+  const o = await oturum();
+  const k = typeof kayit === "string" ? kayit : "";
+  if (typeof o === "string") return { kayit: k, durum: "hata", neden: o };
+  if (typeof planId !== "string") return { kayit: k, durum: "hata", neden: "Plan bulunamadı." };
+  return oturumIslemi(o, (db) => chatRaporYaz(db, depo(), o, o.kiraci.firmaId, planId, { kayit: k, kod: typeof kod === "string" ? kod : null }));
+}
+
+/** 525: açılan raporun okuma fotoğrafını yapay zekâ okur (m.7) — okunanlar raporda öneri olarak bekler; çağrı işlemin DIŞINDA. Yetki, fotoğrafın
+    o raporun o bölümündeki okuma fotoğrafı olması ve kota raporun okuma işlevlerinde. Dönen: okunan sayısı (okunamadıysa 0). */
+export async function chatOkutEylemi(raporId: unknown, okuma: unknown): Promise<number> {
+  const o = await oturum();
+  const x = (okuma ?? {}) as { bolum?: unknown; dosya?: unknown; tur?: unknown };
+  if (typeof o === "string" || typeof raporId !== "string" || typeof x.bolum !== "string" || typeof x.dosya !== "string") return 0;
+  const d = depo(), bolum = x.bolum, kaynak = { dosya: x.dosya };
+  if (x.tur === "tablo") {
+    const h = await oturumIslemi(o, (db) => fotoOkuHazirla(db, d, o, raporId, bolum, kaynak));
+    if (h.durum !== "hazir") return 0;
+    const y = await anthropicCagir(h.istek, h.anahtar);
+    if (y.durum === "hata") { await oturumIslemi(o, (db) => fotoOkuBirak(db, h, y.ucret)); return 0; }
+    const k = await oturumIslemi(o, (db) => fotoOkuKullanimYaz(db, raporId, h, y.govde));
+    if (!k.satirlar.length) return 0;
+    await oturumIslemi(o, (db) => raporOneriYaz(db, o, raporId, bolum, "tablo", k.satirlar));
+    return k.satirlar.length;
+  }
+  const h = await oturumIslemi(o, (db) => alanOkuHazirla(db, d, o, raporId, bolum, kaynak));
+  if (h.durum !== "hazir") return 0;
+  const y = await anthropicCagir(h.istek, h.anahtar);
+  if (y.durum === "hata") { await oturumIslemi(o, (db) => alanOkuBirak(db, h, y.ucret)); return 0; }
+  const k = await oturumIslemi(o, (db) => alanOkuKullanimYaz(db, raporId, h, y.govde));
+  if (!k.okunan.length) return 0;
+  await oturumIslemi(o, (db) => raporOneriYaz(db, o, raporId, bolum, "alan", k.okunan));
+  return k.okunan.length;
 }
