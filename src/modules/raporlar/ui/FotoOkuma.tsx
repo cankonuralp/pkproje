@@ -11,7 +11,8 @@
    484: formatta tablonun "Fotoğraftan doldur"u açıksa çizilir (Bloklar — tanim.ts doldurma); okunan fotoğraf her tabloda rapora OKUMA fotoğrafı olarak
    eklenir (belgede görünmez; tablonun altında Doldurma.tsx OkumaFotolari).
    486: tuş "Fotoğraf ekle (yapay zekâ okur)" — formatta açık tabloda HER ZAMAN; firmada yapay zekâ kapalıyken fotoğraf okunmadan saklanır, açılınca
-   fotoğrafın "Oku"su okur (iş Doldurma.tsx useFotoEkle'de, alanlı bölümle ortak). */
+   fotoğrafın "Oku"su okur (iş Doldurma.tsx useFotoEkle'de, alanlı bölümle ortak).
+   2026-10-12 (reisim, ekran görüntüsüyle): tuş tablonun altındaki çubuktan BÖLÜM BAŞLIĞINA taşındı (BaslikYuvasi.tsx); telefonda yalnız simge. */
 import { useRef, useState, type ReactNode } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Ikon } from "../../../components/ikon/Ikon";
@@ -83,10 +84,9 @@ export function FotoOkuma({ v, b, satirlar, tablo, islem, tuslar, cubuk, kip }: 
           </div>
         </div>
       )}
-      <div className={cubuk}>
-        {!oneri && <FotoEkleTusu baslik={b.ad} girdi={f.girdi} okunuyor={f.okunuyor} sn={f.sn} kip={kip} mesgul={islem.mesgul} gonder={f.gonder} />}
-        {tuslar}
-      </div>
+      {/* 2026-10-12 (reisim): fotoğraf tuşu bölümün başlığında (FotoEkleTusu → BaslikTusu); tablonun altında Satır ekle, Excel … */}
+      {!oneri && <FotoEkleTusu baslik={b.ad} girdi={f.girdi} okunuyor={f.okunuyor} sn={f.sn} kip={kip} mesgul={islem.mesgul} gonder={f.gonder} />}
+      <div className={cubuk}>{tuslar}</div>
       {kip === "sakla" && <OkumaNotu />}
       <OkumaFotolari v={v} bolumId={b.id} oku={false} islem={islem} okut={kip === "oku" && !oneri ? f.gonder : undefined} />
     </>

@@ -36,6 +36,10 @@ label:has(> .gizli:focus-visible) { outline: 3px solid var(--odak); outline-offs
 /* S.A.Y (380): düğme sağ altta sabit — sayfanın sonu düğmenin altında kalmasın. 421: telefonda da (düğme orada daire ama yine 56 px, alttan 16 px:
    sayfanın son satırının sağ ucu altında kalabiliyordu) */
 html[data-say="var"] main { padding-bottom: 96px; }
+/* 2026-10-12 (reisim: rapor ekranında tuşlar "say tuşu gibi havada"): havada duran tuş kabı (raporlar .eylem, data-alt-cubuk="her") sayfanın alt
+   boşluğunu kendi ayırır — main'in alt boşluğu yok; klavyeyle odaklanan alan tuşların altında kalmasın diye kaydırma alttan boşluk bırakır */
+html main:has([data-alt-cubuk="her"]) { padding-bottom: 0; }
+html:has([data-alt-cubuk="her"]) { scroll-padding-bottom: 160px; }
 /* çevrimdışı göstergesi (394): telefonda üst çubuğun altında tam genişlik şerit — içerik şerit kadar aşağı iner */
 @media (max-width: 599.98px) {
   html[data-cevrimdisi="var"] main { margin-top: var(--tus-y); }

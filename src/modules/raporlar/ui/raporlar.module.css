@@ -192,13 +192,17 @@ input.oku { background: var(--zemin2); border-color: var(--kenar); color: var(--
 }
 .bosSatir { margin: 0; padding: 6px 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
 
-/* Kaydet · Onaya gönder · Sil: sayfa kaysa da görünür, altta yapışkan (reisim 2026-09-27); telefonda tuşlar tam genişlik */
+/* Kaydet · Onaya gönder · Sil: sayfa kaysa da görünür, altta yapışkan (reisim 2026-09-27); telefonda tuşlar tam genişlik.
+   2026-10-12 (reisim: "Kaydet gönder kopyala tuşları da say tuşu gibi havada olsun bir barın içinde durduğu görüntü şık değil"): ÇUBUK YOK — kap
+   saydam ve tıklamayı geçirir (arkadan kayan içerik görünür, tıklanır); tuşlar S.A.Y gibi gölgeli, sağ altta havada. S.A.Y düğmesi tuşların üstünde
+   (say.module.css); kabın üstü düğmeye yer ayırır — sayfa sonunda son satır düğmenin altında kalmaz (bu sayfada main'in alt boşluğu yok, temel.css) */
 .eylem {
-  position: sticky; bottom: 0; z-index: 10; display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px;
-  margin: 16px calc(var(--bosluk-sayfa) * -1) calc(var(--bosluk-sayfa) * -1);
-  padding: 8px var(--bosluk-sayfa) calc(8px + env(safe-area-inset-bottom));
-  background: var(--kart); border-top: 1px solid var(--kenar);
+  position: sticky; bottom: 0; z-index: 10; display: flex; justify-content: flex-end; align-items: flex-end; align-content: flex-end; flex-wrap: wrap;
+  gap: 8px; margin-top: 16px; padding-bottom: calc(16px + env(safe-area-inset-bottom)); pointer-events: none;
 }
+.eylem > * { pointer-events: auto; box-shadow: var(--golge-2); }
+/* S.A.Y düğmesi (56 px) tuşların 16 px üstünde: kap en az düğmenin üst kenarına kadar */
+:global(html[data-say="var"]) .eylem { min-height: calc(var(--tus-y) + 88px); }
 button.silTus { color: var(--hata-yazi); }
 .kayit { margin: 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
 .kirli { color: var(--uyari-yazi); font-weight: 600; }
@@ -228,7 +232,11 @@ button.silTus { color: var(--hata-yazi); }
 /* 484: okunan bölümün okuma fotoğrafları (belgede görünmez) ve yapay zekâ kapalı notu */
 .okumaFoto { display: grid; gap: 6px; margin: 10px 0 0; }
 .doldurma { display: grid; gap: 6px; margin: 0 0 10px; }
+.doldurma:empty { display: none; }
 .doldurma > .etiketCubuk { margin: 0; }
+/* 2026-10-12 (reisim, ekran görüntüsüyle): bölümün fotoğraf tuşu başlık satırında, aç / kapat tuşunun yanında (BaslikYuvasi.tsx — yuva kutu
+   üretmez, tuş satırın öğesi olur); telefonda yazı gizlenir, simge kalır (ad girdide / aria-label'da, ipucu title'da) */
+.basTuslari { display: contents; }
 .okumaFoto > p, .ipucuMetin > svg { vertical-align: -2px; }
 .fotoEkle[aria-disabled] { opacity: .55; cursor: default; }
 
@@ -244,6 +252,9 @@ button.silTus { color: var(--hata-yazi); }
   .stdCerceve { display: none; }
   .stdTelefon { display: block; }
   .eylem > * { flex: 1 1 auto; }
+  :global(html[data-say="var"]) .eylem { min-height: calc(var(--tus-y) * 2 + 96px); }
+  .basTuslari .fotoYazi { display: none; }
+  .basTuslari .fotoEkle { min-width: var(--tus-y); padding-inline: 8px; }
 }
 /* Raporlar listesi (318) */
 .kod { font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: .01em; overflow-wrap: anywhere; }

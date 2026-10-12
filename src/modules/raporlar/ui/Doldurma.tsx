@@ -13,7 +13,9 @@
    ekleme tuşu olsun yapay zeka okusun diye raporda gözükmesin"): "Fotoğraf ekle (yapay zekâ okur)" tuşu formatta açık bölümde HER ZAMAN — kip
    (OkumaKipi; SahaRaporu kurar): "oku" firmada yapay zekâ açık → okur, öneri gelir · "sakla" kapalı → fotoğraf okunmadan rapora eklenir
    (belgede görünmez), açılınca fotoğrafın "Oku"su okur · "deneme" örnek rapor. Eskiden kapalıyken tuş yerine yalnız not vardı (484): tuş
-   görünmüyordu. İş tablo ve alanlı bölümde ortak (useFotoEkle, FotoEkleTusu). */
+   görünmüyordu. İş tablo ve alanlı bölümde ortak (useFotoEkle, FotoEkleTusu).
+   2026-10-12 (reisim: "o tuşun orada olmasını istiyorum, ekran daralınca logo olarak kalsın … ekipman bölümü içinde fotoğraf istenen yerlerde bu
+   şekilde olsun"): "Fotoğraf ekle (yapay zekâ okur)" bölümün BAŞLIK SATIRINDA (BaslikYuvasi.tsx); Excel tuşları bölümün içinde kalır. */
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { baytIndir } from "../../../components/disa/indir";
@@ -32,6 +34,7 @@ import type { AlanOkunan } from "../../../server/yz/alanlar";
 import { alanExceli, alanSablonu, tabloExceli, tabloSablonu } from "../doldur";
 import type { RaporFoto } from "../server/raporlar";
 import type { Baglam } from "./Bloklar";
+import { BaslikTusu, useBolumAc } from "./BaslikYuvasi";
 import { alanOkuEylemi, fotoSilEylemi, okumaFotografiEkleEylemi } from "./eylemler";
 import stil from "./raporlar.module.css";
 
@@ -98,20 +101,25 @@ export function useFotoEkle<T>({ raporId, bolumId, kip, islem, elle, oku, oneri 
   return { girdi, okunuyor, sn, gonder, girdiyeDon };
 }
 
-/** "Fotoğraf ekle (yapay zekâ okur)" — kamera ya da galeri; okunurken dönen simge + 3 sn sonra geçen süre (kalıp 12), odak girdide kalır */
+/** "Fotoğraf ekle (yapay zekâ okur)" — kamera ya da galeri; okunurken dönen simge + 3 sn sonra geçen süre (kalıp 12), odak girdide kalır.
+    2026-10-12 (reisim): bölümün başlık satırında (BaslikTusu); telefonda yazı gizlenir, simge kalır (ad girdinin aria-label'ında, ipucu title'da);
+    fotoğraf seçilince bölüm açılır (useBolumAc) — okunanlar / öneri kartı bölümün içinde */
 export function FotoEkleTusu({ baslik, girdi, okunuyor, sn, kip, mesgul, gonder }: {
   baslik: string; girdi: RefObject<HTMLInputElement | null>; okunuyor: boolean; sn: number; kip: OkumaKipi; mesgul: boolean; gonder: (d: File) => void;
 }) {
+  const ac = useBolumAc();
   const kapali = (mesgul && !okunuyor) || undefined;
   return (
-    <label className={`${tusSinifi("ikincil", okunuyor ? tusStil.mesgul : undefined)} ${stil.fotoEkle}`} aria-disabled={kapali}>
-      <input ref={girdi} type="file" accept="image/jpeg,image/png" className="gizli" aria-busy={okunuyor || undefined} aria-disabled={kapali}
-        aria-label={`${baslik}: fotoğraf ekle (yapay zekâ okur)`} onClick={(e) => { if (okunuyor || mesgul) e.preventDefault(); }}
-        onChange={(e) => { const d = e.target.files?.[0]; if (d) gonder(d); }} />
-      {okunuyor ? <span className={tusStil.donen} aria-hidden="true" /> : <Ikon ad="camera" kucuk />}
-      <span>{okunuyor ? (kip === "sakla" ? "Ekleniyor…" : "Okunuyor…") : "Fotoğraf ekle (yapay zekâ okur)"}</span>
-      {okunuyor && sn >= SURE_GOSTER_SN && <span className={tusStil.sure}>{sn} sn</span>}
-    </label>
+    <BaslikTusu>
+      <label className={`${tusSinifi("ikincil", okunuyor ? tusStil.mesgul : undefined)} ${stil.fotoEkle}`} aria-disabled={kapali} title="Fotoğraf ekle (yapay zekâ okur)">
+        <input ref={girdi} type="file" accept="image/jpeg,image/png" className="gizli" aria-busy={okunuyor || undefined} aria-disabled={kapali}
+          aria-label={`${baslik}: fotoğraf ekle (yapay zekâ okur)`} onClick={(e) => { if (okunuyor || mesgul) e.preventDefault(); }}
+          onChange={(e) => { const d = e.target.files?.[0]; if (d) { ac(); gonder(d); } }} />
+        {okunuyor ? <span className={tusStil.donen} aria-hidden="true" /> : <Ikon ad="camera" kucuk />}
+        <span className={stil.fotoYazi}>{okunuyor ? (kip === "sakla" ? "Ekleniyor…" : "Okunuyor…") : "Fotoğraf ekle (yapay zekâ okur)"}</span>
+        {okunuyor && sn >= SURE_GOSTER_SN && <span className={tusStil.sure}>{sn} sn</span>}
+      </label>
+    </BaslikTusu>
   );
 }
 
@@ -170,12 +178,9 @@ export function AlanOkuma({ v, bolumId, baslik, alanlar, yaz, islem, kip, tuslar
           </div>
         </div>
       )}
-      {!oneri && (
-        <div className={stil.etiketCubuk}>
-          <FotoEkleTusu baslik={baslik} girdi={f.girdi} okunuyor={f.okunuyor} sn={f.sn} kip={kip} mesgul={islem.mesgul} gonder={f.gonder} />
-          {tuslar}
-        </div>
-      )}
+      {/* 2026-10-12: fotoğraf tuşu bölümün başlığında; burada yalnız Excel tuşları */}
+      {!oneri && <FotoEkleTusu baslik={baslik} girdi={f.girdi} okunuyor={f.okunuyor} sn={f.sn} kip={kip} mesgul={islem.mesgul} gonder={f.gonder} />}
+      {!oneri && tuslar && <div className={stil.etiketCubuk}>{tuslar}</div>}
       {kip === "sakla" && <OkumaNotu />}
       <OkumaFotolari v={v} bolumId={bolumId} oku={false} islem={islem} okut={kip === "oku" && !oneri ? f.gonder : undefined} />
     </>

@@ -8,7 +8,9 @@
    "Excel'den yükle" (başlık satırı sütun adlarıyla) ve "Excel şablonu".
    486 (reisim 2026-10-10): tuşun adı "Fotoğraf ekle (yapay zekâ okur)" (tabloda ve alanlı bölümde aynı); tablodaki Tip listesi alanın yanında açılır,
    sayfa kaymaz ("tip seçin kısmına tıklayınca saçma sapan başa atıp"); sıra sütunu "Sıra"; "Son satırı kopyala" (No bir artar); "Sonuç neye göre
-   çıkar?" tablonun kuralını yazar. 488: "Sırala" ve satırın Kopyala işareti kalktı (reisim); satırın sonucu gerekçeyle elle değiştirilir. */
+   çıkar?" tablonun kuralını yazar. 488: "Sırala" ve satırın Kopyala işareti kalktı (reisim); satırın sonucu gerekçeyle elle değiştirilir.
+   2026-10-12 (reisim): fotoğraf tuşu bölüm başlığında (telefonda simge), kapalı bölümde fotoğraf seçilince bölüm açılır; Kaydet / Onaya gönder
+   çubuksuz, havada — S.A.Y düğmesiyle örtüşmez. Görüntüler e2e-goz/ (foto-baslik, eylem). */
 import { mkdirSync } from "node:fs";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { xlsxBayt, XLSX_TURU } from "../src/components/disa/xlsx";
@@ -44,7 +46,34 @@ test("fotoğraftan okuma: öneri kartı; emin olunanlar toplu, emin olunmayan te
   await bolumleriAc(page);   // 463: bölümler kapalı açılır
 
   const linye = page.locator("#b-linye");
-  await linye.getByLabel("Pano sigortaları (linye): fotoğraf ekle (yapay zekâ okur)").setInputFiles({ name: "pano.jpg", mimeType: "image/jpeg", buffer: JPEG });
+  /* 2026-10-12 (reisim, ekran görüntüsüyle: "o tuşun orada olmasını istiyorum, ekran daralınca logo olarak kalsın"): fotoğraf tuşu bölümün BAŞLIK
+     satırında (gövdede değil), telefonda yalnız simge; bölüm kapalıyken de görünür, fotoğraf seçilince bölüm açılır */
+  const linyeFoto = linye.getByLabel("Pano sigortaları (linye): fotoğraf ekle (yapay zekâ okur)");
+  await expect(page.locator("#b-linye-ic").getByLabel("Pano sigortaları (linye): fotoğraf ekle (yapay zekâ okur)")).toHaveCount(0);
+  const fotoTus = linye.locator("label", { has: linyeFoto });
+  const fotoYazi = fotoTus.getByText("Fotoğraf ekle (yapay zekâ okur)");
+  if (bilgi.project.name === "telefon") await expect(fotoYazi).toBeHidden(); else await expect(fotoYazi).toBeVisible();
+  await expect(fotoTus).toHaveAttribute("title", "Fotoğraf ekle (yapay zekâ okur)");
+  await linye.scrollIntoViewIfNeeded();
+  await goz(linye, "foto-baslik", bilgi.project.name);
+  /* Kaydet / Onaya gönder havada (reisim: "say tuşu gibi havada olsun bir barın içinde durduğu görüntü şık değil"): kap saydam, tuşlar gölgeli;
+     S.A.Y düğmesi tuşların üstünde — hiçbir tuşla örtüşmez */
+  const eylem = page.locator('[data-alt-cubuk="her"]');
+  await expect(eylem).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(eylem.getByRole("button", { name: "Onaya gönder" })).not.toHaveCSS("box-shadow", "none");
+  const fab = page.getByRole("button", { name: "S.A.Y — saha asistanı" });
+  await expect(fab).toBeVisible({ timeout: 30_000 });
+  const f = (await fab.boundingBox())!;
+  const tuslar = await eylem.getByRole("button").evaluateAll((l) => l.map((e) => { const r = e.getBoundingClientRect(); return { ad: e.textContent, sol: r.left, sag: r.right, ust: r.top, alt: r.bottom }; }));
+  expect(tuslar.length).toBeGreaterThan(1);
+  expect(tuslar.filter((t) => f.x < t.sag && f.x + f.width > t.sol && f.y < t.alt && f.y + f.height > t.ust)).toEqual([]);
+  await goz(page, "eylem", bilgi.project.name);
+  const linyeAc = linye.getByRole("button", { name: "Pano sigortaları (linye) bölümü" });
+  await linyeAc.click();
+  await expect(linyeAc).toHaveAttribute("aria-expanded", "false");
+  await expect(fotoTus).toBeVisible();
+  await linyeFoto.setInputFiles({ name: "pano.jpg", mimeType: "image/jpeg", buffer: JPEG });
+  await expect(linyeAc).toHaveAttribute("aria-expanded", "true");
   const kart = page.getByRole("region", { name: "Pano sigortaları (linye): fotoğraftan okunan" });
   await expect(kart).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText("3 satır okundu", { exact: false }).first()).toBeVisible();

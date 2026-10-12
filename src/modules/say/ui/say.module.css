@@ -12,8 +12,8 @@
 .fabIkon, .avatar { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 50%; background: var(--vurgu-uzeri); color: var(--vurgu); }
 .fabYazi { display: flex; flex-direction: column; align-items: flex-start; font-size: var(--boy-bolum); line-height: 1.1; letter-spacing: .02em; }
 .fabYazi small { font-size: var(--boy-etiket); font-weight: 500; opacity: .85; letter-spacing: 0; }
-/* rapor: sağ alttaki Kaydet / Onaya gönder çubuğu her genişlikte yapışkan */
-:global(body:has([data-alt-cubuk="her"])) .fab { bottom: 88px; }
+/* rapor: sağ alttaki Kaydet / Onaya gönder her genişlikte yapışkan; 2026-10-12 çubuksuz, havada (alttan 16 px, tuş yüksekliği) — düğme 16 px üstünde */
+:global(body:has([data-alt-cubuk="her"])) .fab { bottom: calc(var(--tus-y) + 32px); }
 
 .panel {
   position: fixed; right: 16px; top: calc(var(--ust-y) + 16px); bottom: 16px; z-index: 70; width: min(420px, calc(100vw - 32px));
@@ -88,5 +88,7 @@
   .fab { right: 16px; bottom: 16px; padding: 8px; }
   .fabYazi { display: none; }
   :global(body:has([data-alt-cubuk])) .fab { bottom: calc(var(--tus-y) + 32px); }
+  /* rapor (2026-10-12): telefonda tuşlar tam genişlik, dört tuş iki sıraya iner — düğme iki sıranın üstünde (raporlar .eylem en az yüksekliği buna göre) */
+  :global(body:has([data-alt-cubuk="her"])) .fab { bottom: calc(var(--tus-y) * 2 + 40px); }
   .panel { inset: 0; width: auto; border: 0; border-radius: 0; z-index: 80; }
 }

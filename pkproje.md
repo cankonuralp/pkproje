@@ -2405,6 +2405,19 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-12 (517): **RAPOR EKRANI: FOTOĞRAF TUŞU BÖLÜM BAŞLIĞINDA, TUŞLAR HAVADA** (reisim, ekran görüntüleriyle: *"1. görselde paintten kes
+  yapıştır yaptım o tuşun orada olmasını istiyorum, ekran daralınca logo olarak kalsın, aynı şekilde fotoğraflar bölümü için de ekipman bölümü içinde
+  fotoğraf istenen yerlerde bu şekilde olsun. Kaydet gönder kopyala tuşları da say tuşu gibi hava da olsun bir barın içinde durduğu görüntü şık
+  değil"*). **Fotoğraf tuşu:** "Fotoğraf ekle (yapay zekâ okur)" (ölçüm tablosu, ekipman bilgileri, bilgi ve test bölümleri) ve Fotoğraflar
+  bölümünün "Fotoğraf ekle"si bölümün başlık satırında, aç / kapat okunun yanında; telefonda yazı gizlenir, kamera simgesi kalır (ad ekran okuyucuda
+  aynı, fareyle üstüne gelince ipucu). Bölüm kapalıyken de görünür; fotoğraf seçilince bölüm açılır (öneri kartı, okunan fotoğraf görünsün). Satır
+  ekle / Excel tuşları bölümün içinde kalır; "Uygun değil" maddenin fotoğraf tuşu maddenin içinde. Örnek raporda (format kurucunun saha ekranı) da
+  aynı. **Tuşlar:** Sil · Kaydet ve kopyala · Kaydet · Onaya gönder artık çubukta değil — saydam kap, tuşlar gölgeli, sağ altta havada; S.A.Y
+  düğmesi tuşların 16 px üstünde (telefonda iki sıra tuşun üstünde); sayfa sonunda son satır düğmelerin altında kalmaz, klavyeyle odaklanan alan
+  tuşların altında kalmaz (kaydırma alttan boşluk bırakır). Kilitler: e2e foto-oku (tuş başlıkta, gövdede yok; telefonda yazı gizli; kapalı
+  bölümde fotoğraf seçilince açılır; kap saydam, tuşlarda gölge, S.A.Y hiçbir tuşla örtüşmez; görüntüler foto-baslik, eylem) · e2e saha-raporu
+  (Fotoğraflar bölümünün tuşu hiçbir gövdede değil). Aynı turda hafıza düzeltildi: Ana sayfadaki "… duyuruları alınamadı" şeridi 462'de kalkmıştı
+  (515 / 516 cevabımda yanlış söylemiştim).
 - 2026-10-12 (516): **515 YAYINDA** — göç yok (84 göç). main 1c15a4e; deneme makinesi 13/13; sağlık "tamam" (1c15a4e), duman **11/11**, son 1 saatte
   hata kaydı yok. Ekrandaki yeni metne oturumla bakılamadı (giriş reisim'in) — ölçemedim; yayın derlemesindeki uçtan uca testi metni gördü ("raporlar
   7 gün sonra silinmez"). 515 notundaki Vercel koruması cümlesi ölçümle düzeltildi (ana adresler herkese açık).

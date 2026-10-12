@@ -12,12 +12,14 @@ import { useBildir } from "../../../components/bildirim/Bildirim";
 import { kuyrugaEkle, kuyrukAbone, kuyrukAnlik, kuyrukGonder, kuyrukSunucuAnlik, kuyruktanCikar } from "../../../components/cevrimdisi/kuyruk";
 import { fotografiKucult } from "../../../components/foto/kucult";
 import { DosyaAcTusu } from "../../../components/gizli-resim/GizliResim";
+import { Ikon } from "../../../components/ikon/Ikon";
 import { useOnayla } from "../../../components/pencere/Onay";
 import { Rozet } from "../../../components/sayfa/Sayfa";
 import { Tus, tusSinifi } from "../../../components/tus/Tus";
 import { FOTO_KUYRUK_EN_BUYUK } from "../sema";
 import type { SahaRaporu } from "../server/raporlar";
 import { alanId } from "./Bloklar";
+import { BaslikTusu, useBolumAc } from "./BaslikYuvasi";
 import { fotoEkleEylemi, fotoSilEylemi } from "./eylemler";
 import stil from "./raporlar.module.css";
 
@@ -40,6 +42,7 @@ export function FotoListesi({ v, bolumId, madde, oku, gecersiz, mesgul, baslat, 
 }) {
   const bildir = useBildir();
   const onayla = useOnayla();
+  const ac = useBolumAc();
   const girdi = useRef<HTMLInputElement>(null);
   const kuyruk = useSyncExternalStore(kuyrukAbone, kuyrukAnlik, kuyrukSunucuAnlik);
   const liste = v.fotolar.filter((f) => f.bolum === bolumId && (madde ? f.madde === madde : !f.madde));
@@ -79,6 +82,15 @@ export function FotoListesi({ v, bolumId, madde, oku, gecersiz, mesgul, baslat, 
       if (r.tamam) yenile();
     });
   };
+  /* 2026-10-12 (reisim): bölümün "Fotoğraf ekle"si bölüm başlığında (BaslikTusu — seçilince bölüm açılır), telefonda yalnız simge; "Uygun değil"
+     maddenin tuşu maddenin içinde kalır */
+  const ekle = (
+    <label className={`${tusSinifi("ikincil")} ${stil.fotoEkle}`} aria-disabled={mesgul || undefined} title={madde ? undefined : "Fotoğraf ekle"}>
+      <input ref={girdi} type="file" accept="image/jpeg,image/png" className="gizli" disabled={mesgul}
+        aria-label={madde ? "Maddeye fotoğraf ekle" : "Fotoğraf ekle"} onChange={(e) => { const d = e.target.files?.[0]; if (d) { if (!madde) ac(); yukle(d); } }} />
+      <Ikon ad="camera" kucuk /><span className={stil.fotoYazi}>Fotoğraf ekle</span>
+    </label>
+  );
   /* gönderilmemiş fotoğraf: cihazdan silinir (rapora hiç gitmedi) */
   const kaldir = async (isId: string, ad: string) => {
     if (!(await onayla({ baslik: "Fotoğrafı kaldır", metin: `${ad} bu cihazdan silinir, rapora gönderilmez.`, tus: "Kaldır", tehlike: true }))) return;
@@ -114,13 +126,7 @@ export function FotoListesi({ v, bolumId, madde, oku, gecersiz, mesgul, baslat, 
           ))}
         </ul>
       ) : <p className={stil.bosSatir}>{madde ? "Fotoğraf yok." : "Fotoğraf eklenmedi."}</p>}
-      {!oku && (
-        <label className={`${tusSinifi("ikincil")} ${stil.fotoEkle}`} aria-disabled={mesgul || undefined}>
-          <input ref={girdi} type="file" accept="image/jpeg,image/png" className="gizli" disabled={mesgul}
-            aria-label={madde ? "Maddeye fotoğraf ekle" : "Fotoğraf ekle"} onChange={(e) => { const d = e.target.files?.[0]; if (d) yukle(d); }} />
-          Fotoğraf ekle
-        </label>
-      )}
+      {!oku && (madde ? ekle : <BaslikTusu>{ekle}</BaslikTusu>)}
     </div>
   );
 }

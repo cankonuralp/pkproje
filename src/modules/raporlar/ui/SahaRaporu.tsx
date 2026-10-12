@@ -9,7 +9,8 @@
    kaydından başlar), sonra türün formatının bölümleri sırasıyla (Bloklar). Formatın yalnız kayıttan gelen alanlardan oluşan bilgi bölümü
    (hazır şablonlarda "Firma bilgileri") 1. bölümün kopyası olduğundan ayrıca çizilmez; format cihaz bölümü vermiyor ama tür cihaz istiyorsa
    "Ölçüm cihazları" sabit bölüm olur.
-   Kaydet + Onaya gönder hep görünür, altta yapışkan (reisim 2026-09-27); Sil yanında (2026-09-29), sorulur (AA8). Onaya gönder önce kaydeder;
+   Kaydet + Onaya gönder hep görünür, altta yapışkan (reisim 2026-09-27); Sil yanında (2026-09-29), sorulur (AA8); 2026-10-12 (reisim: "say tuşu
+   gibi havada olsun bir barın içinde durduğu görüntü şık değil"): çubuk yok, tuşlar gölgeli havada (raporlar.module.css .eylem). Onaya gönder önce kaydeder;
    sonuç seçilmediyse önerisi yazılır (reisim 2026-09-27); zorunlu alan eksikse (ENGEL 5) ya da cihaz eksik / kalibrasyonu geçmişse (ENGEL 2)
    gönderilmez: boş alanlar kırmızı (aria-invalid), doldurdukça işaret kalkar (maket UY / zorunluEksik). 2026-10-12 (reisim: "onaya gönder diyince
    ekrana pop-up uyarı ekranı gelmesin. ilgili yere ekran kaysın zorunlu yerler doldurulmalıdır uyarısı kısa süreli ekranın üstünden belirsin
@@ -51,6 +52,7 @@ import type { SahaRaporu as SahaRaporuVerisi } from "../server/raporlar";
 import {
   alanId, BilgiAlani, BilgiBlok, FormatBolumu, OkuGirdi, RaporBolumu, Satir, Satirlar, TarihKutusu, type Baglam, type Kaynak,
 } from "./Bloklar";
+import { BaslikTusu, useBolumAc } from "./BaslikYuvasi";
 import { CihazBolumu } from "./CihazBolumu";
 import { AlanDoldurma } from "./Doldurma";
 import { FotoListesi } from "./FotoListesi";
@@ -288,7 +290,7 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
     ekipmanAlani: (a) => (a.ekipman ? metinSatiri(a.ekipman, a.ad, EN[a.ekipman], a.ekipman === "imal") : null),
     cihaz: (bolumId) => <CihazBolumu v={v} bolumId={bolumId} oku={oku || !!yeni || denemede} gecersiz={gecersiz} mesgul={mesgul} baslat={baslat} yenile={yenile} />,
     foto: (bolumId, madde) => (denemede
-      ? <DenemeFoto key={`${bolumId}-${madde ?? ""}`} adet={denemeFoto.filter((f) => f.bolum === bolumId && f.madde === madde).length}
+      ? <DenemeFoto key={`${bolumId}-${madde ?? ""}`} madde={!!madde} adet={denemeFoto.filter((f) => f.bolum === bolumId && f.madde === madde).length}
         gecersiz={gecersiz(madde ? `${madde}.foto` : bolumId)} ekle={() => setDenemeFoto((l) => [...l, { bolum: bolumId, madde }])}
         cikar={() => setDenemeFoto((l) => { const i = l.findIndex((f) => f.bolum === bolumId && f.madde === madde); return i < 0 ? l : l.filter((_, j) => j !== i); })} />
       : <FotoListesi key={`${bolumId}-${madde ?? ""}`} v={v} bolumId={bolumId} madde={madde} oku={oku} yeniAc={yeni ? yeniAc : undefined}
@@ -751,12 +753,18 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
   );
 }
 
-/** 472: örnek raporun fotoğrafı — dosya seçilmez, yüklenmez; "Fotoğraf ekle" yalnız sayar (zorunlu fotoğraf kuralı denensin) */
-function DenemeFoto({ adet, gecersiz, ekle, cikar }: { adet: number; gecersiz: boolean; ekle: () => void; cikar: () => void }) {
+/** 472: örnek raporun fotoğrafı — dosya seçilmez, yüklenmez; "Fotoğraf ekle" yalnız sayar (zorunlu fotoğraf kuralı denensin). 2026-10-12: gerçek
+    rapor gibi bölümün "Fotoğraf ekle"si bölüm başlığında (madde fotoğrafı yerinde) */
+function DenemeFoto({ adet, gecersiz, ekle, cikar, madde }: { adet: number; gecersiz: boolean; ekle: () => void; cikar: () => void; madde: boolean }) {
+  const ac = useBolumAc();
+  const tus = (
+    <Tus tur="ikincil" ikon="camera" className={stil.fotoEkle} aria-label="Fotoğraf ekle" title={madde ? undefined : "Fotoğraf ekle"}
+      onClick={() => { if (!madde) ac(); ekle(); }}><span className={stil.fotoYazi}>Fotoğraf ekle</span></Tus>
+  );
   return (
     <div className={stil.tabloAlt}>
       <span className={gecersiz ? stil.hataMetin : stil.ipucuMetin}>{adet ? `${adet} örnek fotoğraf` : "Fotoğraf yok"} · örnek raporda dosya yüklenmez</span>
-      <Tus tur="ikincil" ikon="camera" onClick={ekle}>Fotoğraf ekle</Tus>
+      {madde ? tus : <BaslikTusu>{tus}</BaslikTusu>}
       {adet > 0 && <Tus tur="ikincil" ikon="x" onClick={cikar}>Fotoğrafı çıkar</Tus>}
     </div>
   );

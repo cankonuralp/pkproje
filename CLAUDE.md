@@ -184,6 +184,9 @@ pkproje/
                             denetimi imza-pdf.ts (saf, beyaz liste: ek ayrıştırılır, trailer kökü aynı, özgün nesneden yalnız katalog / sayfa /Annots
                             değişir, yeni imza sözlüğü şart — 0028 ve 318 incelemeleri) · revize isteği server/revize.ts (318, göç 0029
                             rapor_revize_istegi; ui/RevizeIstePenceresi.tsx; 0031: imza günü ≥ muayene tarihi, eskimiş sürüm uygunsuzluk kapatmaz)
+                            · 517 BÖLÜM BAŞLIĞINDA FOTOĞRAF TUŞU: ui/BaslikYuvasi.tsx (RaporBolumu başlıkta yuva; FotoEkleTusu ve Fotoğraflar
+                            bölümünün "Fotoğraf ekle"si portalla oraya — telefonda simge, seçilince bölüm açılır; madde fotoğrafı yerinde) · Kaydet /
+                            Onaya gönder çubuksuz, havada (.eylem saydam, tuşlar gölgeli; S.A.Y üstünde — say.module.css, temel.css main alt boşluğu)
                             · FOTOĞRAFTAN / EXCEL'DEN DOLDURMA (484): formatta bölüm ayarı (tanim.ts doldur / doldurma — varsayılan tablo ve ekipman
                             bölümü açık; kâğıtta bölüm ayarı) · ui/Doldurma.tsx (AlanOkuma "Fotoğraftan doldur", ExcelYukle + şablon, OkumaFotolari, YzKapali)
                             · doldur.ts (saf: Excel eşleme, sunucu ve ekranın ortak alan listeleri) · okuma fotoğrafı (RaporFoto.okuma) belgede görünmez

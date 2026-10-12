@@ -18,7 +18,7 @@
    "Sıra" (duzen.ts siraBasligi); tablonun altında "Sonuç neye göre çıkar?" (motor.ts sonucKurallari); "Fotoğraf ekle (yapay zekâ okur)" her zaman
    (okumaKipi). 488 (reisim 2026-10-11: "sağdaki kopyalama işareti kalksın … sırala tuşu da kalksın … son satırı kopyala diyince sıra no değişerek
    iniyor"): satırın kopyala işareti ve "Sırala" KALKTI, işlem sütunu yapışık değil (Sonuç sütununun üstüne biniyordu); satır sonucu gerekçeyle elle
-   değiştirilir (ElleSonuc — hata listesi 54). */
+   değiştirilir (ElleSonuc — hata listesi 54). 2026-10-12 (reisim): bölümün fotoğraf tuşu bölüm başlığında (BaslikYuvasi.tsx), telefonda simge. */
 import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode, type TransitionStartFunction } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Alan, FormIzgara, Girdi } from "../../../components/form/Form";
@@ -38,6 +38,7 @@ import { meslek } from "../../personel/sema";
 import { SONUC_AD } from "../sema";
 import type { SahaRaporu } from "../server/raporlar";
 import { bilgiAlanlari, testAlanlari } from "../doldur";
+import { BaslikBaglami } from "./BaslikYuvasi";
 import { okunanHedefleri, okunanlariUygula } from "../foto-eslestir";
 import { satirKopyala } from "../tablo";
 import { AlanDoldurma, ExcelYukle, OkumaFotolari, type OkumaKipi } from "./Doldurma";
@@ -94,13 +95,16 @@ export interface Baglam {
 /** bölüm kartı: "N · ad" başlığı, eksik rozeti, sayaç, başlık tuşları, aç / kapat (her başlık açılır kapanır — reisim 2026-09-26).
     445 (reisim 2026-10-09: "açılır kapanır ekranların başlık satırına basınca açılıp kapanmalı sadece kenardaki küçük bir açma kapama tuşu ile
     olmaz"): başlık satırının HER yerine basınca açılır / kapanır; satırdaki öteki tuş ve bağlantılar (talimat, standart, Hepsini işaretle …) kendi
-    işini yapar. Klavye ve ekran okuyucu için kenardaki tuş kalır (aria-expanded); tıklaması da satıra kabarır — tek kez değişir. */
+    işini yapar. Klavye ve ekran okuyucu için kenardaki tuş kalır (aria-expanded); tıklaması da satıra kabarır — tek kez değişir.
+    2026-10-12: başlık satırında içeriğin fotoğraf tuşu için yuva (BaslikYuvasi.tsx — tuş portalla gelir; React olayı içeriğin ağacında kabarır,
+    satırın aç / kapat'ına gitmez). */
 export function RaporBolumu({ id, no, baslik, acik, degistir, eksik = false, sayac, tuslar, ek, children }: {
   id: string; no: string | null; baslik: string; acik: boolean; degistir: (acik: boolean) => void; eksik?: boolean; sayac?: ReactNode; tuslar?: ReactNode;
   /** başlığın hemen yanında (430: adsız tek gruplu kontrol listesinin talimat ünlemi) */
   ek?: ReactNode; children: ReactNode;
 }) {
   const b = `b-${id}`;
+  const [yuva, setYuva] = useState<HTMLElement | null>(null);
   return (
     <section className={stil.bolum} id={b} aria-labelledby={`${b}-b`}>
       <div className={`${stil.bolumBas} ${stil.bolumBasTik}`} onClick={(e) => {
@@ -114,12 +118,15 @@ export function RaporBolumu({ id, no, baslik, acik, degistir, eksik = false, say
         {sayac}
         <div className={stil.bolumSag}>
           {tuslar}
+          <span className={stil.basTuslari} ref={setYuva} />
           <button className={stil.acTus} type="button" aria-expanded={acik} aria-controls={`${b}-ic`} aria-label={`${baslik} bölümü`} title={acik ? "Kapat" : "Aç"}>
             <Ikon ad="chevron-down" kucuk />
           </button>
         </div>
       </div>
-      <div className={stil.bolumIc} id={`${b}-ic`} hidden={!acik}>{children}</div>
+      <BaslikBaglami.Provider value={{ yuva, ac: () => { if (!acik) degistir(true); } }}>
+        <div className={stil.bolumIc} id={`${b}-ic`} hidden={!acik}>{children}</div>
+      </BaslikBaglami.Provider>
     </section>
   );
 }
