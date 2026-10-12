@@ -11,8 +11,11 @@
    "Ölçüm cihazları" sabit bölüm olur.
    Kaydet + Onaya gönder hep görünür, altta yapışkan (reisim 2026-09-27); Sil yanında (2026-09-29), sorulur (AA8). Onaya gönder önce kaydeder;
    sonuç seçilmediyse önerisi yazılır (reisim 2026-09-27); zorunlu alan eksikse (ENGEL 5) ya da cihaz eksik / kalibrasyonu geçmişse (ENGEL 2)
-   gönderilmez: "Zorunlu alanlar doldurulmadı" penceresi eksikleri sayar, her biri alanına götürür; boş alanlar kırmızı (aria-invalid), doldurdukça işaret
-   kalkar (maket UY / zorunluEksik). Göndermeden önce sorulur (maket gonder: "Rapor onaya gönderilsin mi?"). Gönderilen rapor salt okunur (kilit
+   gönderilmez: boş alanlar kırmızı (aria-invalid), doldurdukça işaret kalkar (maket UY / zorunluEksik). 2026-10-12 (reisim: "onaya gönder diyince
+   ekrana pop-up uyarı ekranı gelmesin. ilgili yere ekran kaysın zorunlu yerler doldurulmalıdır uyarısı kısa süreli ekranın üstünden belirsin
+   bildirim gibi"): eksik varsa PENCERE YOK — ekranın bildiği eksik varsa soru da sorulmaz, hiçbir şey gönderilmez / kuyruğa girmez; bölümler açılır,
+   ilk eksiğe (ekrandaki sıraya göre) kayılır ve odaklanır, üstte kısa uyarı (useUyar). Sunucu da eksik derse (rapor kaydedilir) aynısı. Eksiksizse
+   göndermeden önce sorulur (maket gonder: "Rapor onaya gönderilsin mi?"). Gönderilen rapor salt okunur (kilit
    şeridi). Formatın kendi ekipman bilgi bölümü (ör. kompresör) 2. bölüme katılır; formatın sorduğu alan sabit satırda tekrar edilmez (marka,
    model, imal yılı …); 460: tam ekipman bölümlü formatta 2. bölüm yalnız kod, tür, metot ve formatın alanlarıdır (marka, model … ekipman
    kaydına bağlı alan olarak formatın koyduğu yerde ve adla). Yetki, kural ve ENGEL sunucuda; buradaki tuşlar yalnız izinli olanı gösterir.
@@ -27,12 +30,11 @@
    o ekranda düzenleme yapılamasın"): 473'ün "duzenle" kipi (formatın saha ekranında yerinde düzenlenmesi) kalktı — format yalnız kâğıtta. */
 import { useRouter } from "next/navigation";
 import { Fragment, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition, type ReactNode, type TransitionStartFunction } from "react";
-import { useBildir } from "../../../components/bildirim/Bildirim";
+import { useBildir, useUyar } from "../../../components/bildirim/Bildirim";
 import { bekleyenIcerik, kayitBilgileriniKapat, kuyrugaEkle, kuyrukAbone, kuyrukAnlik, kuyrukSunucuAnlik, type KuyrukSonucOlayi, type KuyrukTuru } from "../../../components/cevrimdisi/kuyruk";
 import { Girdi, ipucuId } from "../../../components/form/Form";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { useOnayla } from "../../../components/pencere/Onay";
-import { Pencere, pencereMetinSinifi } from "../../../components/pencere/Pencere";
 import { DegerYok, Kirinti, Kod, NesneBasi, Rozet, SeritKap } from "../../../components/sayfa/Sayfa";
 import { simdiIso, tarihNo } from "../../../components/secim/tarih";
 import { Serit } from "../../../components/serit/Serit";
@@ -105,6 +107,7 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
   const denemede = !!deneme;
   const router = useRouter();
   const bildir = useBildir();
+  const uyar = useUyar();
   const onayla = useOnayla();
   const [bekliyor, baslatHam] = useTransition();
   /* bağlantı yokken sunucuya giden her tuş (fotoğraf, cihaz, kopya …) sayfayı hata ekranına düşürmez: şeritte söyler, yazılanlar ekranda kalır
@@ -169,7 +172,6 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
   }, [v.id, v.surum, denemede]);
   const [sonKayit, setSonKayit] = useState<string | null>(v.surum > 0 ? v.degisti : null);
   const [isaretli, setIsaretli] = useState<ReadonlySet<string>>(() => new Set());
-  const [eksikler, setEksikler] = useState<Eksik[] | null>(null);
   const [genel, setGenel] = useState<string | null>(null);
   const [alanHata, setAlanHata] = useState<Record<string, string>>({});
   /* 463 (reisim 2026-10-09, hata listesi 8: "her bölüm açık geliyor, her bölüm kapalı gelmeli"): bölümler KAPALI açılır; bu sekmede aynı raporda
@@ -227,6 +229,35 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
     return s;
   }, [d, tarih.bas, v.cihazlar]);
   const gecersiz = (alan: string) => isaretli.has(alan) && canli.has(alan);
+  /* ekranın şu an bildiği eksikler (canli ile aynı kaynak; sunucu da aynı kuralla bakar — ENGEL 2, 5): başlangıç tarihi, format, gerekli cihazlar */
+  const eksikListesi = (): Eksik[] => {
+    const l: Eksik[] = [];
+    if (!tarih.bas) l.push({ bolum: SABIT.firma, alan: "tarih.bas", ad: "Periyodik kontrol başlangıç tarihi ve saati" });
+    for (const e of d.eksikler) l.push(e);
+    for (const x of v.cihazlar) if (!x.cihaz || x.cihaz.eksik || x.cihaz.gecti) l.push({ bolum: SABIT.cihaz, alan: `cihaz.${x.turId}`, ad: `${x.turAd}: ölçüm cihazı` });
+    return l;
+  };
+  /* eksiğe git (maket eksikeGit; S.A.Y'nin "Git"i de): bölümler açılır, verilen eksiklerden EKRANDA EN ÜSTTE olana kayılır ve odaklanır (bölümler
+     açıldıktan sonra; alan yoksa bölümün başlığına) */
+  const eksigeGit = (l: readonly Eksik[]) => {
+    hepsiniAc();
+    window.setTimeout(() => {
+      const yerler = l.map((e) => document.getElementById(alanId(e.alan)) ?? document.getElementById(`b-${e.bolum}-b`)).filter((x): x is HTMLElement => !!x);
+      const el = yerler.reduce<HTMLElement | null>((ilk, x) => (!ilk || ilk.compareDocumentPosition(x) & Node.DOCUMENT_POSITION_PRECEDING ? x : ilk), null);
+      if (!el) return;
+      const hedef = el.matches("input, textarea, button") ? el : el.querySelector<HTMLElement>("input, textarea, button") ?? el;
+      el.scrollIntoView({ block: "center" });
+      hedef.focus({ preventScroll: true });
+    }, 60);
+  };
+  const git = (e: Eksik) => eksigeGit([e]);
+  /* eksik var (2026-10-12; pencere yerine): alanlar işaretlenir, üstte kısa uyarı, ilk eksiğe kayılır. kaydir=false: kuyruktan SONRADAN gelen sonuç
+     — kişi o an başka yerde yazıyor olabilir, odak çalınmaz (işaret ve uyarı yeter) */
+  const eksikGoster = (l: readonly Eksik[], ek: string, kaydir = true) => {
+    setIsaretli(new Set(l.map((e) => e.alan)));
+    uyar(`Zorunlu alanlar doldurulmalıdır: ${l.length} eksik alan kırmızıyla işaretlendi. ${ek}`);
+    if (kaydir) eksigeGit(l); else hepsiniAc();
+  };
   /* 473: denemenin canlı eksik / kusur sayısı kurucuya */
   const durumBildir = deneme?.durum, eksikSay = canli.size, kusurSay = d.kusurlar.length;
   useEffect(() => { durumBildir?.({ eksik: eksikSay, kusur: kusurSay }); }, [durumBildir, eksikSay, kusurSay]);
@@ -358,7 +389,7 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
         yenile();
         return;
       }
-      if (d.durum === "eksik" && d.eksikler) { setIsaretli(new Set(d.eksikler.map((e) => e.alan))); hepsiniAc(); setEksikler(d.eksikler); yenile(); return; }
+      if (d.durum === "eksik" && d.eksikler) { eksikGoster(d.eksikler, `${v.no}: cihazda bekleyen onaya gönderim gitmedi.`, false); yenile(); return; }
       setGenel(`${v.no}: cihazda bekleyen iş gönderilemedi — ${d.ileti ?? "üst çubuktaki bekleyen işlemlere bakın"}.`);
     };
   });
@@ -368,6 +399,8 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
     return () => window.removeEventListener("probata-islem", f);
   }, []);
   const gonder = async () => {
+    const l = eksikListesi();
+    if (l.length) { eksikGoster(l, "Rapor gönderilmedi."); return; }
     if (!(await onayla({ baslik: "Rapor onaya gönderilsin mi?", tus: "Onaya gönder",
       metin: `${v.no} teknik yöneticinin onayına gider. Onaylanana ya da geri gönderilene kadar raporda değişiklik yapılamaz.` }))) return;
     gonderIc();
@@ -382,20 +415,17 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
       return;
     }
     if (r.eksikler) {   /* rapor kaydedildi, gönderilmedi */
-      kaydedildi(); setIsaretli(new Set(r.eksikler.map((e) => e.alan))); hepsiniAc(); setEksikler(r.eksikler); yenile();
+      kaydedildi(); eksikGoster(r.eksikler, "Rapor kaydedildi, gönderilmedi."); yenile();
       return;
     }
     if (r.tamam) { kaydedildi(); void kayitBilgileriniKapat(v.id); setIsaretli(new Set()); bildir(r.bildirim ?? "Rapor onaya gönderildi."); yenile(); window.scrollTo({ top: 0 }); return; }
     yanitHatasi(r);
   });
-  /* 472: örnek raporda Onaya gönder yalnız denetler — gerçek Onaya gönder'in eksik listesi (boş zorunlu alan, cihaz) aynı pencerede */
+  /* 472: örnek raporda Onaya gönder yalnız denetler — gerçek Onaya gönder'in eksikleri (boş zorunlu alan, cihaz), aynı uyarı ve kayma */
   const denemeGonder = () => {
-    const l: Eksik[] = [];
-    if (!tarih.bas) l.push({ bolum: SABIT.firma, alan: "tarih.bas", ad: "Periyodik kontrol başlangıç tarihi ve saati" });
-    for (const e of d.eksikler) l.push(e);
-    for (const x of v.cihazlar) if (!x.cihaz || x.cihaz.eksik || x.cihaz.gecti) l.push({ bolum: SABIT.cihaz, alan: `cihaz.${x.turId}`, ad: `${x.turAd}: ölçüm cihazı` });
+    const l = eksikListesi();
     if (!l.length) { setIsaretli(new Set()); bildir("Örnek rapor eksiksiz: gerçek raporda onaya giderdi. Örnek rapor kaydedilmez."); return; }
-    setIsaretli(new Set(l.map((e) => e.alan))); hepsiniAc(); setEksikler(l);
+    eksikGoster(l, "Örnek rapor kaydedilmez.");
   };
   const sil = async () => {
     if (!(await onayla({ baslik: "Raporu sil", metin: `${v.no} · ${v.ekipman.kod} raporu ve içine yazılan her şey silinir; geri alınamaz.`, tus: "Sil", tehlike: true }))) return;
@@ -440,20 +470,6 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
     if (r.tamam) { setGenel(null); bildir(r.bildirim ?? "Plan bilgileri güncellendi."); yenile(); return; }
     yanitHatasi(r);
   });
-  /* eksiğe git (maket eksikeGit): pencere kapanır, bölümler açılır, alana kayılır ve odaklanır (pencerenin odak iadesinden sonra). Listedeki
-     eksiğe ya da Tamam'a basınca; X / Esc yalnız kapatır (odak Onaya gönder'e döner, kişi nereye gideceğini kendi seçer) */
-  const git = (e: Eksik) => {
-    setEksikler(null);
-    hepsiniAc();
-    window.setTimeout(() => {
-      const el = document.getElementById(alanId(e.alan)) ?? document.getElementById(`b-${e.bolum}-b`);
-      if (!el) return;
-      const hedef = el.matches("input, textarea, button") ? el : el.querySelector<HTMLElement>("input, textarea, button") ?? el;
-      el.scrollIntoView({ block: "center" });
-      hedef.focus({ preventScroll: true });
-    }, 60);
-  };
-  const tamam = () => (eksikler?.length ? git(eksikler[0]) : setEksikler(null));
 
   /* S.A.Y (382): düzenlenebilir rapor açıkken S.A.Y bu raporu okur — CANLI hâl (kaydedilmemiş değişiklikler dahil): boş zorunlu alanlar, sonuç
      önerisi; öneri denetçinin seçimiyle aynı yoldan uygulanır (Kaydet'le yazılır); eksiğe aynı "git" götürür. Rapor ekranı kapanınca bağ kalkar. */
@@ -731,18 +747,6 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
       {kopya && <KopyaPenceresi kaydetVe={duzenle} kaynakKod={v.ekipman.kod} turAd={v.tur.ad} konum={ekipman.konum} mesgul={mesgul}
         onKapat={() => setKopya(false)} kopyala={kopyala} />}
 
-      <Pencere acik={!!eksikler} baslik="Zorunlu alanlar doldurulmadı" onKapat={() => setEksikler(null)} alt={<Tus onClick={tamam}>Tamam</Tus>}>
-        <p className={pencereMetinSinifi}>Eksik alanlar kırmızıyla işaretlendi. {deneme ? "Örnek rapor kaydedilmez." : "Rapor kaydedildi, gönderilmedi."}</p>
-        <ul className={stil.eksikListe}>
-          {(eksikler ?? []).map((e, i) => (
-            <li key={`${e.alan}-${i}`}>
-              <button className={stil.eksikTus} type="button" data-ilk-odak={i === 0 ? "" : undefined} onClick={() => git(e)}>
-                <Ikon ad="circle-alert" kucuk /><span>{e.ad}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </Pencere>
     </>
   );
 }

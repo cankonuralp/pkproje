@@ -13,3 +13,12 @@
 @media (max-width: 767.98px) {
   .bildirim { bottom: calc(var(--tus-y) + 40px); }
 }
+
+/* UYARI (2026-10-12; reisim: "zorunlu yerler doldurulmalıdır uyarısı kısa süreli ekranın üstünden belirsin bildirim gibi") — üstte, üst çubuğun
+   altında ortada; uyarı renginde (şerit / rozet çifti, kontrast ölçülü). İki sınıflı seçici: telefondaki "bottom" kuralı uyarıya inmez. */
+.bildirim.uyari {
+  top: calc(var(--ust-y) + 12px); bottom: auto; transform: translate(-50%, -16px);
+  background: var(--uyari-zemin); color: var(--uyari-yazi); border: 1px solid var(--uyari-yazi);
+}
+.uyari.gorunur { transform: translate(-50%, 0); }
+.bildirim.uyari > svg { color: var(--uyari-yazi); }

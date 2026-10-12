@@ -8,7 +8,8 @@
    · 396: kişinin planı önceden iner — hiç açılmamış plan sayfası bağlantı kesikken açılır, pencere "Çevrimdışı hazır: 1 plan";
    · 398: fotoğraf bağlantısızken cihaza (şifreli) — listede kendi yerinde "Gönderilmedi", üst çubukta "1 fotoğraf"; bağlantı gelince gider, raporun
      listesine düşer (Görüntüle);
-   · Onaya gönder bağlantısızken: rapor salt okunur, "Gönderilmedi · bağlantı bekleniyor"; bağlantı gelince gider (eksikse alanlar işaretlenir);
+   · Onaya gönder bağlantısızken, rapor eksik (2026-10-12 — pencere yerine kısa uyarı): soru yok, kuyruğa bir şey girmez, üstte uyarı, ilk eksiğe
+     kayılır, rapor düzenlenebilir kalır (eksiksiz raporun kuyruktan onaya gidişi tests/kuyruk.test.ts ve tests/islem.test.ts kilitlerinde);
    · 400: plan kabulü bağlantısızken cihaza — plan içinde "Kabulünüz bu cihazda bekliyor", tuşlar kalkar; bağlantı gelince gider, plan kabul edilir;
    · 405: yeni rapor bağlantısızken — plandaki "Rapor oluştur" cihaza önceden inen sayfayı açar, rapor doldurulup kaydedilir; bağlantı gelince
      sunucuda açılır (numara sunucudan), ekran raporun kendi sayfasına geçer, yazılan gelir. */
@@ -194,18 +195,20 @@ test("çevrimdışı: bağlantı kes → Kaydet cihaza → bağlantı gelince gi
   await expect(fotoSatiri.getByText("Gönderilmedi", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: /Çevrimdışı|bekleyen işlem/ })).toHaveCount(0);
 
-  /* 7) Onaya gönder bağlantısızken: rapor salt okunur, bağlantı gelince gider (eksikse alanlar işaretlenir) */
+  /* 7) Onaya gönder bağlantısızken, rapor eksik. 2026-10-12 (reisim: "onaya gönder diyince ekrana pop-up uyarı ekranı gelmesin. ilgili yere ekran
+     kaysın zorunlu yerler doldurulmalıdır uyarısı kısa süreli ekranın üstünden belirsin bildirim gibi"): ekran eksiği bildiği için soru yok, kuyruğa
+     hiçbir şey girmez (eksik rapor bağlantı gelince de gidemezdi) — üstte kısa uyarı, ilk eksiğe kayılır, rapor düzenlenebilir kalır. Önceki adım
+     (eksik raporu kuyruğa alıp bağlantı gelince sunucunun "eksik" demesi) bu yüzden kalktı; eksiksiz raporun kuyruktan onaya gidişi
+     tests/kuyruk.test.ts (sıra, fotoğraf bekleme) ve tests/islem.test.ts (rapor.gonder: eksik / tamam / tekrar) kilitlerinde. */
   await page.context().setOffline(true);
   await page.getByRole("button", { name: "Onaya gönder" }).click();
-  await page.getByRole("dialog").getByRole("button", { name: "Onaya gönder" }).click();
-  await expect(page.getByText("Cihaza kaydedildi: bağlantı gelince onaya gider.").first()).toBeVisible();
-  await expect(page.getByText("Gönderilmedi · bağlantı bekleniyor")).toBeVisible();
-  await expect(page.getByText("Onaya gönderim bu cihazda bekliyor", { exact: false })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Kaydet", exact: true })).toHaveCount(0);
-  await page.context().setOffline(false);
-  await expect(page.getByText("onaya gönderim gitti", { exact: false }).first().or(page.getByRole("dialog", { name: "Zorunlu alanlar doldurulmadı" })))
-    .toBeVisible({ timeout: 30_000 });
+  await expect(page.locator("[data-uyari]")).toContainText("Zorunlu alanlar doldurulmalıdır");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.locator(":focus")).toBeInViewport();
   await expect(page.getByText("Gönderilmedi · bağlantı bekleniyor")).toHaveCount(0);
+  await expect(page.getByText("Onaya gönderim bu cihazda bekliyor", { exact: false })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Kaydet", exact: true })).toBeVisible();
+  await page.context().setOffline(false);
 
   /* 8) plan kabulü bağlantısızken (400): kabul cihaza; bağlantı gelince gider, plan "kabul edildi" */
   await page.goto(`${Y}/planlar`);

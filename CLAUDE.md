@@ -340,7 +340,8 @@ pkproje/
   src/server/yetki/         TEK YETKİ: tanim.ts (roller, matris, sabitler) · canDo.ts (canDo, canDoEylem) — ayna testi: DB CHECK · maket · KOD-GECIS §4
   src/components/disa/      DIŞA / İÇE AKTARMA (tarayıcıda, saf): zip.ts (STORE yazıcı) · xlsx.ts (yazıcı) · oku.ts (325: .xlsx / .csv OKUYUCU — DEFLATE
                             DecompressionStream ile, ortak dizgi, tarih biçimi, Türkçe Windows CSV; 10 MB / 50 MB açılmış / 5 000 satır sınırı) · indir.ts
-  src/components/           TEK ÜRETİCİLER: sayfa/ (kırıntı, sayfa / nesne başlığı, bölüm, rozet, sekmeler) · kabuk (yan menü + üst çubuk) · ikon · boş durum · tuş · şerit · bildirim · pencere + onay ·
+  src/components/           TEK ÜRETİCİLER: sayfa/ (kırıntı, sayfa / nesne başlığı, bölüm, rozet, sekmeler) · kabuk (yan menü + üst çubuk) · ikon · boş durum · tuş · şerit · bildirim (altta; 506 useUyar: işlemi
+                            durduran kısa uyarı üstte — eksikte pencere yerine) · pencere + onay ·
                             liste (tablo↔kart, süzgeç mantığı liste/suzgec.ts) · YÜZEN KATMAN secim/yuzen.ts (452: seçim listesi, süzgeç seçicisi, takvim,
                             saat önerileri üst katmanda — sayfayı / pencereyi itmez, kesilmez; tarama açılır katman denetimi; 486: konum satır içi biçemde,
                             odak sayfayı kaydırmaz, başka CSS katmana inemez — tests/yuzen-ezme.test.ts) · fotoğraf küçültme (foto/kucult.ts) · filtre satırı · sayfalayıcı · seçim alanı + tarih/saat (secim/) · bilgi yüzleri / bilgi listesi / koşullar (bilgi/) · form sayfası (form/) · uzun tuş (tus/UzunTus) · kopyala (pencere/Kopyala: sonuç pencerenin içinde) · dışa aktarma (disa/: ZIP + .xlsx yazıcı, saf; tarayıcıda indirme — 320) · kesin silme / pasif (sil/: SilTusu, PasifPenceresi — engel, metin.ts kullanimMetni, odak.ts — 357/365)

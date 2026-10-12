@@ -1,8 +1,8 @@
 /* NEREDEN GELDİ: 311 K3 saha raporu (maket rapor.html M8 + planlarim.html RAP_SUTUN; KOD-GECIS §5 Rapor, §9 ENGEL 2 ve 5; RAPOR-FORMAT §7). Gerçek
    tarayıcıda, üç genişlikte: yönetici Saha Tesisi'ne plan açar (denetçiyle) → denetçi kabul eder → ekipman satırında "HT-0201 için rapor oluştur"
    (planda kalınır, bildirim) → Raporlar satırında "Raporu düzenle" → saha rapor ekranı (/raporlar/<id>, başlık "HT-0201 · Hava tankı", durum
-   Yeni, başlangıç bugünle dolu) → eksik raporla Onaya gönder (soru: "Rapor onaya gönderilsin mi?") durur, "Zorunlu alanlar doldurulmadı"
-   penceresi format zorunlularını ve türün gerekli ölçüm cihazını sayar → tarihler, format alanları, kriterler (Hepsini uygun yap), test
+   Yeni, başlangıç bugünle dolu) → eksik raporla Onaya gönder durur — 2026-10-12: pencere ve soru yok, üstte kısa uyarı, ilk eksiğe kayılır, format
+   zorunluları kırmızı, türün gerekli ölçüm cihazı bölümünde "Eksik" → tarihler, format alanları, kriterler (Hepsini uygun yap), test
    değerleri, sonuç → Kaydet → Cihaz ekle (zimmetteki, kalibrasyonu geçerli MN-01) → Onaya gönder → "Teknik yönetici onayında", Onaya
    gönder kalkar → kırıntıdan plana dönülür: plan Denetimde, Raporlar listesinde rapor no ve durum, Rapor oluştur artık yok. Tohum
    scripts/e2e-sunucu.ts (E2E_SAHA): HT'nin yayındaki formatı hazır şablon KOMPRESOR, gerekli cihaz türü Manometre. Her proje kendi planını açar
@@ -109,14 +109,19 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await expect(ekipBolum.getByRole("button", { name: /fotoğrafı\.jpg sil$/ })).toBeVisible({ timeout: 30_000 });
   await expect(ekipBolum.getByRole("button", { name: /oku \(yapay zekâ\)$/ })).toHaveCount(0);
 
-  /* eksik rapor: Onaya gönder durur; format zorunluları ve türün gerekli ölçüm cihazı sayılır (ENGEL 5, ENGEL 2) — rapor yine kaydedilir */
-  await onayaGonder(page);
-  const eksik = page.getByRole("dialog", { name: "Zorunlu alanlar doldurulmadı" });
-  await expect(eksik).toBeVisible({ timeout: 30_000 });
-  await expect(eksik).toContainText("Hidrostatik deney basıncı");
-  await expect(eksik).toContainText(`${E2E_SAHA.cihazTuru}: ölçüm cihazı eklenmedi`);
-  await eksik.getByRole("button", { name: "Kapat" }).first().click();
-  await expect(eksik).toHaveCount(0);
+  /* eksik rapor: Onaya gönder durur; format zorunluları ve türün gerekli ölçüm cihazı (ENGEL 5, ENGEL 2). 2026-10-12 (reisim: "onaya gönder diyince
+     ekrana pop-up uyarı ekranı gelmesin. ilgili yere ekran kaysın zorunlu yerler doldurulmalıdır uyarısı kısa süreli ekranın üstünden belirsin
+     bildirim gibi"): pencere yok, soru da yok (ekran eksiği biliyor) — üstte kısa uyarı, ilk eksiğe kayılır ve odaklanır; hiçbir şey gönderilmez */
+  await page.getByRole("button", { name: "Onaya gönder" }).first().click();
+  const uyari = page.locator("[data-uyari]");
+  await expect(uyari).toContainText("Zorunlu alanlar doldurulmalıdır", { timeout: 30_000 });
+  await expect(uyari).toContainText("Rapor gönderilmedi.");
+  await expect(uyari).toBeInViewport();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.locator(":focus")).toBeInViewport();
+  await expect(girdi(page, "Hidrostatik deney basıncı").first()).toHaveAttribute("aria-invalid", "true");
+  await expect(page.locator("#b-sabit-cihaz").getByText("Eksik", { exact: true }).first()).toBeVisible();
+  await expect(asama(page)).toContainText("Yeni");
   await expect(page).toHaveURL(new RegExp(`${raporAdresi}$`));
 
   /* doldur: kontrol tarihleri, format alanları (KOMPRESOR: Marka / model, İmal yılı, Çalışma basıncı), kriterler, test değerleri, sonuç */

@@ -316,13 +316,12 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     }).toPass({ timeout: 45_000 });
     await goz(page, "kurucu-saha", bilgi.project.name);
     await expect(page.getByRole("region", { name: "Kullanım" })).toContainText("Deneme:");
+    /* 2026-10-12 (reisim: "onaya gönder diyince ekrana pop-up uyarı ekranı gelmesin …"): eksikte pencere yok — üstte kısa uyarı, ilk eksiğe kayılır */
     await saha.getByRole("button", { name: "Onaya gönder" }).click();
-    const eksik = saha.getByRole("dialog", { name: "Zorunlu alanlar doldurulmadı" });
-    await expect(eksik.or(saha.getByText(/Örnek rapor eksiksiz/))).toBeVisible();
-    if (await eksik.isVisible()) {
-      await expect(eksik).toContainText("Örnek rapor kaydedilmez.");
-      await eksik.getByRole("button", { name: "Tamam" }).click();
-    }
+    const eksikUyari = saha.locator("[data-uyari]").getByText(/^Zorunlu alanlar doldurulmalıdır/);
+    await expect(eksikUyari.or(saha.getByText(/Örnek rapor eksiksiz/))).toBeVisible();
+    await expect(saha.getByRole("dialog")).toHaveCount(0);
+    if (await eksikUyari.count()) await expect(eksikUyari).toContainText("Örnek rapor kaydedilmez.");
     await page.getByRole("button", { name: "Kâğıt", exact: true }).click();
     await expect(page.getByText("Kaydedilmedi")).toHaveCount(0);
     await expect(kagit.getByRole("region", { name: /Deneme yorumu$/ })).toBeVisible({ timeout: 30_000 });

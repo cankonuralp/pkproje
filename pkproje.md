@@ -2405,6 +2405,18 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-12 (506): **Onaya gönder: eksikte pencere yok, üstte kısa uyarı + ilk eksiğe kayma** (reisim: *"raporlarda onaya gönder diyince ekrana pop-up
+  uyarı ekranı gelmesin. ilgili yere ekran kaysın zorunlu yerler doldurulmalıdır uyarısı kısa süreli ekranın üstünden belirsin bildirim gibi"*).
+  Saha raporunda Onaya gönder'e basınca ekranın bildiği eksik (boş zorunlu alan, başlangıç tarihi, türün gerekli ölçüm cihazı — sunucuyla aynı
+  kural, ENGEL 2 / 5) varsa: "Zorunlu alanlar doldurulmadı" penceresi ve "Rapor onaya gönderilsin mi?" sorusu AÇILMAZ, hiçbir şey gönderilmez ya da
+  cihaz kuyruğuna girmez; bölümler açılır, boş zorunlular kırmızı, ekrandaki sıraya göre ilk eksiğe kayılır ve odaklanır, üstte (üst çubuğun
+  altında) uyarı renginde 4 sn'lik ileti: "Zorunlu alanlar doldurulmalıdır: n eksik alan kırmızıyla işaretlendi. Rapor gönderilmedi." Eksiksizse
+  soru eskisi gibi sorulur (kilitlenen raporun onayı — uyarı değil). Sunucu yine eksik derse (rapor kaydedilir) aynı uyarı + kayma; kuyruktan
+  sonradan gelen "eksik" sonucunda odak çalınmaz (işaret + uyarı). Format kurucunun saha ekranındaki denemesi de aynı. Tek üretici: bildirim
+  bileşenine useUyar (üstte, role=alert; bildirimle ayrı yer). Eksik penceresi ve biçemi kalktı. Çevrimdışı akış değişti: bağlantısızken eksik
+  rapor artık kuyruğa alınmaz (bağlantı gelince de gidemezdi) — e2e/cevrimdisi 7. adım bu davranışı sınar; eksiksiz raporun kuyruktan gidişi
+  tests/kuyruk.test.ts + tests/islem.test.ts kilitlerinde. Uçtan uca: saha-raporu (uyarı görünür ve ekranda, pencere yok, odak ekranda, test değeri
+  kırmızı, cihaz bölümünde "Eksik", aşama Yeni), rapor-format (kurucunun saha ekranı), cevrimdisi.
 - 2026-10-12 (505): **503 + 504 YAYINDA** — main 3751b0e, göç **0081** Supabase'e işlendi (goc kaydı, özet dosyayla aynı; 82 göç), sağlık "tamam"
   (sürüm 3751b0e), duman **11/11**, son 1 saatte yalnız bilinen duyuru kaynağı zaman aşımı. Deneme makinesi 3751b0e: 13/13 yeşil (denetim + uçtan uca
   üç genişlik; rapor-format: Sürüm 1 silinir, yayındakinde Sil yok, satırın tuşları yan yana). Hata listesi 58.

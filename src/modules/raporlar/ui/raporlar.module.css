@@ -202,12 +202,6 @@ input.oku { background: var(--zemin2); border-color: var(--kenar); color: var(--
 button.silTus { color: var(--hata-yazi); }
 .kayit { margin: 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
 .kirli { color: var(--uyari-yazi); font-weight: 600; }
-.eksikListe { display: grid; gap: 4px; margin: 12px 0 0; padding: 0; list-style: none; }
-.eksikTus {
-  display: flex; align-items: center; gap: 8px; width: 100%; min-height: var(--tus-y); padding: 6px 10px; text-align: left;
-  border: 0; border-radius: var(--r-orta); background: transparent; color: var(--hata-yazi); font-weight: 600;
-}
-.eksikTus:hover, .eksikTus:focus-visible { background: var(--zemin2); }
 
 /* ölçüm cihazları (maket CIHAZ_SATIR, .a-cihaz-grup): satırda cihaz ya da "Cihaz ekle"; pencerede zimmetteki geçerli cihazlar */
 .cihazKap { display: grid; gap: 10px; min-width: 0; }
