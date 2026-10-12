@@ -123,8 +123,9 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
     const olc = () => {
       const s = document.querySelector<HTMLElement>("[data-say-fab]");
       if (!s) { setKonum(null); return; }
-      const r = s.getBoundingClientRect();
-      setKonum({ right: Math.round(window.innerWidth - r.left + 10), bottom: Math.round(window.innerHeight - r.bottom) });
+      const r = s.getBoundingClientRect(), right = Math.round(window.innerWidth - r.left + 10), bottom = Math.round(window.innerHeight - r.bottom);
+      /* aynı konumda durum değişmez (her DOM değişikliğinde yeniden çizilmesin) */
+      setKonum((k) => (k && k.right === right && k.bottom === bottom ? k : { right, bottom }));
     };
     olc();
     const g = new MutationObserver(olc);

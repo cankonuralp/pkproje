@@ -1,7 +1,8 @@
 /* OLUMSUZ KANIT — tests/say-chat-rapor.test.ts (525, göç 0086 rapor_oneri) neyi koruyor. Kaynak diskte DEĞİŞTİRİLMEZ (anayasa 13.11): göçler geçici
    klasöre kopyalanır, 0086'daki iki denetim bellekte kaldırılır. O zaman:
    1) politikadan kişi koşulu kalkınca raporu yazmayan (yönetici) yazanın bekleyen önerilerini okur — öneri kişiye özeldir;
-   2) tetikten "öneri değişmez" kalkınca okunan değer sonradan değiştirilir (yapay zekânın okuduğu değer denetçiye başka gösterilir). */
+   2) değiştirme hakkı verilip tetikten "öneri değişmez" kalkınca okunan değer sonradan değiştirilir (yapay zekânın okuduğu değer denetçiye
+      başka gösterilir). */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -22,6 +23,7 @@ import { supabaseBenzeri, type SupabaseBenzeri } from "../yardimci/supabase.ts";
 const BOZMALAR: [string, string][] = [
   /* 1 politika */ ["      USING (firma_id = gecerli_firma() AND hesap_id = NULLIF(current_setting('app.hesap_id', true), '')::uuid)\n", "      USING (firma_id = gecerli_firma())\n"],
   /* 2 değişmez */ ["  IF TG_OP = 'UPDATE' THEN RAISE EXCEPTION 'öneri değişmez' USING ERRCODE = '23514'; END IF;\n", "  IF TG_OP = 'UPDATE' THEN RETURN NEW; END IF;\n"],
+  /* 2 hak */ ["GRANT SELECT, INSERT, DELETE ON rapor_oneri TO probata_uygulama;", "GRANT SELECT, INSERT, UPDATE, DELETE ON rapor_oneri TO probata_uygulama;"],
 ];
 const VT = "say_chat_rapor_bozuk";
 const gecici = mkdtempSync(join(tmpdir(), "say-chat-rapor-bozan-"));

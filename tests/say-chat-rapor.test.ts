@@ -122,7 +122,8 @@ test("bekleyen öneri kişiye özel, raporun verisinde, kapatılınca kalkar; ta
   assert.equal(await ile(YON, (db) => raporOneriSil(db, YON, r.rapor.id, "linye")), 0, "başkası silemez");
   assert.equal(await ile(ELK, (db) => raporOneriSil(db, ELK, r.rapor.id, "linye")), 2);
   assert.ok(!(await ile(ELK, (db) => raporOnerileri(db, r.rapor.id))).some((o) => o.bolum === "linye"));
-  await assert.rejects(ile(ELK, (db) => db.sorgu("UPDATE rapor_oneri SET bolum = 'x'")), /değişmez/);
+  /* öneri değişmez: uygulama rolünün UPDATE hakkı yok (tetik de durdurur) */
+  await assert.rejects(ile(ELK, (db) => db.sorgu("UPDATE rapor_oneri SET bolum = 'x'")), /permission denied|değişmez/);
   /* tamamlanmış plan: koşulda engel, rapor açılmaz (tetikler kapalı — yalnız test kurulumu) */
   const s = kume.sahipIstemci(); await s.connect();
   try { await s.query("SET session_replication_role = replica"); await s.query("UPDATE plan SET durum = 'tamamlandi' WHERE id = $1", [PLAN]); }
