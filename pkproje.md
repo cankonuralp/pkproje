@@ -2405,6 +2405,17 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-12 (507): **SUNUM — depolama, yedek ve yapay zekâ modeli** (reisim: *"firma ayarlarında depolama ve yedekleme kısmı var bir de bulut bağlantısı
+  kısmı var biz seninle en son her firma kendi supabaseini kullansın diye konuştuk ama şimdi bakınca ne olduğunu tam anlayamadım ve yapay zekada da
+  "haiku" ve diğer haiku sürümleri seçenekler olmalı daha uygun ücretlendirme için bu konuları ele alıp bana bir sunum hazırla"*). Sunum + maket +
+  hesaplayıcı + karar soruları (claude.ai, özel; db "kararlar" D1–D3, Y1–Y4): https://claude.ai/artifact/7tA3vpK7TJEvQZYQnNmmZQ — onaylanmadan kod yok.
+  Tespit: "Depolama ve yedek" 255'te (3 Ekim) ayrı S3 deposu varsayımıyla tasarlandı, 294 (4 Ekim, her firma kendi Supabase'inde) ile güncellenmedi;
+  "Bulut kaydı" (202) ana depo değil ikinci kopya; ikisi de yalnız ayar kaydediyor. Supabase belgesi: günlük yedek dosya deposunu (Storage) KAPSAMAZ,
+  proje silinince yedekler de gider; Pro 25 $/ay (8 GB veritabanı, 100 GB dosya, 250 GB indirme, 7 gün yedek; PITR +100 $/ay). Öneri: bölüm "Supabase
+  hesabı ve yedek" (S3 formu kalkar), yedekte ayar yok (Supabase günlük + probata aylık arşiv yedeği saklama süresi boyunca), "Bulut kaydı" →
+  "Raporların ikinci kopyası" isteğe bağlı (imzalı raporlar + aylık yedek; ilk yayında Google Drive + OneDrive). Yapay zekâ: Haiku 5.5 (0,10 $ / 0,50 $,
+  1 milyon token; okuma ≈ 0,0015 $) listeye; Haiku 4.5 (1 $ / 5 $) önerilmez (Haiku 5.5'ten pahalı ve zayıf); Haiku 3.5 / 3 emekli; yeni firmada
+  varsayılan Haiku 5.5 (bugün Opus 5.5). Canlıda yz_okuma kaydı yok — maliyetler kaba tahmin (okuma 5 000 + 2 000 token).
 - 2026-10-12 (506): **Onaya gönder: eksikte pencere yok, üstte kısa uyarı + ilk eksiğe kayma** (reisim: *"raporlarda onaya gönder diyince ekrana pop-up
   uyarı ekranı gelmesin. ilgili yere ekran kaysın zorunlu yerler doldurulmalıdır uyarısı kısa süreli ekranın üstünden belirsin bildirim gibi"*).
   Saha raporunda Onaya gönder'e basınca ekranın bildiği eksik (boş zorunlu alan, başlangıç tarihi, türün gerekli ölçüm cihazı — sunucuyla aynı
