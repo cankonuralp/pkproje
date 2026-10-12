@@ -229,7 +229,8 @@
             okl.length ? okunacakSay(x) + " fotoğraf " + (r.yz ? "yapay zekâyla okunacak" : "saklanacak") + " (" + okl.map(function (kk) { return b[kk][1]; }).join(", ") + ")" : "", d.deger.yorum ? "not → uzman yorumu" : ""].filter(Boolean);
           var kodAlan = "";
           if (x.ekipman.tip === "yeni") {
-            var v = C.kod[x.id] || "", kd = v ? P().kodDurum(p, v) : null, id = "a-sc-kod-" + x.id;
+            /* kod yazıldıkça denetlenir; boşken "oluştur"a basıldıysa uyarı alanın altında da (C.kodHata) */
+            var v = C.kod[x.id] || "", kd = v ? P().kodDurum(p, v) : C.kodHata === x.id ? P().kodDurum(p, "") : null, id = "a-sc-kod-" + x.id;
             kodAlan = '<div class="a-alan-grup"><label class="a-etiket" for="' + id + '">Ekipman kodu <span class="a-alt-inline">etiketteki; firmada eşsiz</span></label>' +
               '<input class="a-girdi a-girdi-sicil" id="' + id + '" data-sc-kod="' + x.id + '" maxlength="20" autocomplete="off" value="' + kacis(v) + '"' + (kd && kd.tur !== "tamam" ? ' aria-invalid="true" aria-describedby="' + id + '-i"' : "") + ">" +
               (kd ? '<p class="a-ipucu' + (kd.tur !== "tamam" ? " a-ipucu-uyari" : "") + '" id="' + id + '-i">' + kacis(kd.metin) + "</p>" : "") + "</div>";
@@ -288,7 +289,7 @@
       return { bilgi: MV.bransAd(br) + " branşı · raporu yazılmamış " + l.length + " ekipman", ara: "Kod, tür, yer",
         l: l.filter(function (e) { return uy(e.kod + " " + turAd(e.tur) + " " + e.konum); }).map(function (e) {
           return MK.tus({ eylem: "sc-sec", ad: "<span><b>" + kacis(e.kod) + "</b> · " + kacis(turAd(e.tur)) + "<small>" + kacis(e.konum) + "</small></span>" + MK.rozet({ ad: formatAd(e.tur), rozet: "a-rozet-notr" }), sinif: "a-sc-secenek", veri: { tip: "plan", kod: e.kod, tk: e.tur, konum: e.konum } }); }),
-        bos: "Plandaki " + MV.bransAd(br).toLocaleLowerCase("tr") + " ekipmanlarının hepsinin raporu yazılmış ya da kayıtta. Planda olmayan ekipman için Yeni ekle." };
+        bos: "Plandaki " + MV.bransAd(br).toLocaleLowerCase("tr") + " ekipmanların hepsinin raporu yazılmış ya da kayıtta. Planda olmayan ekipman için Yeni ekle." };
     }
     var t = MV.KATALOG.filter(function (x) { return x.b === br && x.sablon; });
     return { bilgi: MV.bransAd(br) + " branşı · rapor formatı olan " + t.length + " tür", ara: "Tür ara",
@@ -389,7 +390,7 @@
     var x = C.t; MK.onayla({ baslik: "Kaydı sil", metin: kacis(ekipAd(x)) + " kaydı, fotoğrafları ve mesajı silinir; geri alınamaz.", tus: "Sil", tamam: function () {
       MV.SAY_CHAT = MV.SAY_CHAT.filter(function (y) { return y.id !== x.id; }); C.t = null; ekranaGec("sohbet"); MK.bildir("Kayıt silindi."); } });
   };
-  X["sc-rapor"] = function () { C.kod = {}; ekranaGec("rapor"); };
+  X["sc-rapor"] = function () { C.kod = {}; C.kodHata = null; ekranaGec("rapor"); };
   /* ekran 10 → taslaklar: plan içiyle aynı yol (MK.planIci.raporAc); mesajın alanları ve okunacak fotoğraflar raporun ortak kaydına (MV.RAPORLAR[x].chat)
      — saha raporu ekranı ilk açılışta uygular (maket-rapor.js chatUygula) */
   X["sc-olustur"] = function () {
@@ -400,7 +401,7 @@
       var v = P().kodNormal(C.kod[x.id] || ""), kd = P().kodDurum(p, v);
       if (kd.tur !== "tamam") hata = { id: x.id, metin: kd.metin }; else if (gorulen[v]) hata = { id: x.id, metin: v + " başka bir kayda da yazıldı; kod firmada eşsiz olmalı." }; gorulen[v] = true;
     });
-    if (hata) { cizKoru(); var g = $("a-sc-kod-" + hata.id); if (g) g.focus(); MK.bildir("Yeni ekipmanın kodu: " + hata.metin); return; }
+    if (hata) { C.kodHata = hata.id; cizKoru(); var g = $("a-sc-kod-" + hata.id); if (g) g.focus(); MK.bildir("Yeni ekipmanın kodu: " + hata.metin); return; }
     var acilan = [], kalan = 0;
     r.l.forEach(function (x) {
       var gs = MV.gunlukSure(k); if (gs.m.acik && gs.dolu) { kalan++; return; }
@@ -437,7 +438,7 @@
       var i = +t.dataset.scSatir; C.t.mesaj[i] = t.value; C.t.okunan = (C.t.okunan || []).filter(function (j) { return j !== i; });
       while (C.t.mesaj.length && bos(C.t.mesaj[C.t.mesaj.length - 1]) && C.t.mesaj.length > C.t.tanim.satirlar.length) C.t.mesaj.pop();
       cizKoru();
-    } else if (t.dataset.scKod !== undefined) { C.kod[t.dataset.scKod] = t.value; cizKoru(); }
+    } else if (t.dataset.scKod !== undefined) { C.kod[t.dataset.scKod] = t.value; C.kodHata = null; cizKoru(); }
   });
   kap.addEventListener("keydown", function (e) {
     if (e.key === "Escape") { e.stopPropagation(); kapat(); return; }
