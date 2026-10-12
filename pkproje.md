@@ -2407,6 +2407,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-12 (520): **519 YAYINDA** — göç yok (84 göç). main 472c10d; deneme makinesi 13/13 (veritabanlı testler ve yeni olumsuz kanıt 9 dahil);
+  sağlık "tamam", duman **11/11**, son 1 saatte hata kaydı yok. Canlıda oturumla bakılamadı (giriş reisim'in) — ölçemedim; reisim'in baktığı iki
+  elektrik iç tesisat raporu (P-1026-006, Tamamlandı) artık "Kaydet ve kopyala"yı gösterir, basınca uyarı verir.
 - 2026-10-12 (519): **TAMAMLANMIŞ PLANDA YENİ RAPOR YOK, TUŞLAR NEDENİNİ SÖYLER** (reisim: *"kaydet ve kopyala tuşunu bazı raporlarda göremedim bir
   raporda varken diğerinde yok, elektrik iç tesisat raporlarının 2 sine de bak dediğimi anlayacaksın"* → çalışırken: *"tamamlamayı geri almadan yeni
   rapor oluşturulmasın, uyarı çıksın rapor oluştur diyince"*). **Neden (canlıda ölçüldü, salt okuma):** iki elektrik iç tesisat raporu (DM-1026-001,
