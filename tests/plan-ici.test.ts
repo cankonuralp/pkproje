@@ -315,7 +315,7 @@ test("saha formu: tamamlanan planda ekip ve Planlar 'yaz' istendiği kadar oluş
   } finally { await s.end(); }
   const belge = await a(FA.den1, (db) => sahaFormuVerisi(db, FA.den1, id, f1.id, null));
   assert.ok(belge);
-  assert.deepEqual([belge.no, belge.projeNo, belge.musteri, belge.tesis, belge.adres, belge.uzmanlar], [f1.no, v.kart.no, "Deneme Sanayi A.Ş.", "Merkez", "Deneme Cad. 1", ["Deneme Bir"]]);
+  assert.deepEqual([belge.no, belge.projeNo, belge.musteri, belge.tesis, belge.adres, belge.uzmanlar], [f1.no, v.kart.no, "Deneme Sanayi A.Ş.", "Merkez", "Deneme Cad. 1, Çankaya / Ankara", ["Deneme Bir"]]);
   assert.deepEqual(belge.ekipmanlar.map((x) => [x.kod, x.tur]), [["HT-A2", "Hava tankı"], ["HT-A1", "Hava tankı"]]);
   assert.equal(await a(FA.den2, (db) => sahaFormuVerisi(db, FA.den2, id, f1.id, null)), null);
   assert.equal(await b(FB.plan, (db) => sahaFormuVerisi(db, FB.plan, id, f1.id, null)), null);
