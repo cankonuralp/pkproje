@@ -56,6 +56,9 @@ const ayEkle = (iso: string, n: number) => {
   const son = new Date(Date.UTC(y, m - 1 + n + 1, 0)).getUTCDate();
   return new Date(Date.UTC(y, m - 1 + n, Math.min(g, son))).toISOString().slice(0, 10);
 };
+/** 2026-10-12 (reisim: "tamamlamayı geri almadan yeni rapor oluşturulmasın, uyarı çıksın rapor oluştur diyince"; karar 12 değişti): tamamlanmış
+    planda var olan raporlar yazılır, YENİ rapor (kopya dahil) açılmaz — tuş görünür, basınca bu söylenir; sunucu da aynı iletiyle reddeder */
+export const TAMAMLANDI_RAPOR = "Plan tamamlandı: yeni rapor (kopya dahil) oluşturulmaz. Önce plan içinden “Tamamlamayı geri al” deyin.";
 export const tarihNo = (iso: string) => `${iso.slice(8, 10)}.${iso.slice(5, 7)}.${iso.slice(0, 4)}`;
 const TR_ZAMAN = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 /** zaman damgasının Türkiye'deki günü "GG.AA.YYYY" (sunucu ve tarayıcıda aynı sonuç) */

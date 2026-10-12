@@ -7,7 +7,9 @@
    5. (313) Sunucuda günlük süre (ENGEL 3) denetimi olmasaydı süre dolmuşken kopya ve yeni rapor açılırdı.
    6. (318) Raporlar listesinde kayıt kayıt görme süzgeci olmasaydı denetçi başka denetçinin raporunu listede görürdü.
    7. (429) Kontrol günü değişince o günün süresi denetlenmeseydi rapor dolu güne alınır, günün sınırı aşılırdı.
-   8. (492) Sunucuda künye kilidi denetlenmeseydi formatın kilitli bilgisi (SGK, İSG-KATİP) elle kurulmuş istekle raporda değişirdi. */
+   8. (492) Sunucuda künye kilidi denetlenmeseydi formatın kilitli bilgisi (SGK, İSG-KATİP) elle kurulmuş istekle raporda değişirdi.
+   9. (519) Sunucuda tamamlanmış plan denetimi olmasaydı (eski kural) tamamlanmış plana yeni rapor açılırdı — reisim 2026-10-12: "tamamlamayı geri
+      almadan yeni rapor oluşturulmasın". */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -126,6 +128,23 @@ test("sunucuda ENGEL 1 (plan günü) denetimi kalkınca ileri tarihli plana rapo
   try {
     const r = await is(den, (db) => m.raporOlustur(db, den, id, ekipman));
     assert.equal(r.durum, "tamam", `ileri tarihli plana rapor açıldı: ${JSON.stringify(r)}`);
+  } finally { await h.end(); }
+});
+
+test("sunucuda tamamlanmış plan denetimi kalkınca (eski kural) tamamlanmış plana yeni rapor açılır", async () => {
+  const m = await bozukModul<Raporlar>(RAPORLAR,
+    'if (plan.durum === "tamamlandi") return { hata: { durum: "red", neden: TAMAMLANDI_RAPOR } };\n  if (plan.durum !== "kabul" && plan.durum !== "denetimde")',
+    'if (plan.durum !== "kabul" && plan.durum !== "denetimde" && plan.durum !== "tamamlandi")');
+  const { h, den, id, ekipman, is } = await saglam(bugunTr());
+  try {
+    /* durum geçişi bu kanıtın konusu değil — süper kullanıcı tetikleri atlayarak planı tamamlar (kesin-silme.test gibi) */
+    const s = kume.sahipIstemci(); await s.connect();
+    try {
+      await s.query("SET session_replication_role = replica");
+      await s.query("UPDATE plan SET durum = 'tamamlandi', kontrol_tamam = now(), bitti = now() WHERE id = $1", [id]);
+    } finally { await s.end(); }
+    const r = await is(den, (db) => m.raporOlustur(db, den, id, ekipman));
+    assert.equal(r.durum, "tamam", `tamamlanmış plana rapor açıldı: ${JSON.stringify(r)}`);
   } finally { await h.end(); }
 });
 

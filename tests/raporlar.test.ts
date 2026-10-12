@@ -20,9 +20,9 @@ import { Cevaplar } from "../src/format/tanim.ts";
 import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde, type Havuz, type Sorgulayici } from "../src/server/db/kiraci.ts";
 import { klasorDepo } from "../src/server/dosya/depo.ts";
-import { ekipmanPasif, kunyeDuzenle, planIci, planKabul, planReddet } from "../src/modules/planlar/server/plan-ici.ts";
+import { ekipmanPasif, kontrolListesi, kunyeDuzenle, planIci, planKabul, planReddet, planTamamla, tamamlamaGeriAl } from "../src/modules/planlar/server/plan-ici.ts";
 import { bugunTr, planAc, type Kisi } from "../src/modules/planlar/server/planlar.ts";
-import { tarihNo } from "../src/modules/planlar/sema.ts";
+import { TAMAMLANDI_RAPOR, tarihNo } from "../src/modules/planlar/sema.ts";
 import { taslakBaslat, taslakKaydet, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
 import { ayEkle } from "../src/modules/raporlar/sema.ts";
 import {
@@ -295,15 +295,15 @@ test("saha raporu: yazan görür ve düzenler; başka denetçi, öteki branşın
   for (const kod of ["MN-02", "MN-03", "TM-01"]) assert.ok(!sec.includes(kod), `${kod} seçilemez (kalibrasyon geçmiş / başkasının zimmeti / başka tür)`);
   assert.equal(d.secilebilir["*"], undefined, "tür cihaz türü verdiyse yalnız o tür");
   /* 2026-10-05 (313): izne "kopyala" eklendi (Kaydet ve kopyala — yalnız yazan) */
-  assert.deepEqual(d.izin, { duzenle: true, sil: true, kopyala: true });
+  assert.deepEqual(d.izin, { duzenle: true, sil: true, kopyala: true, kopyaEngel: null });
   /* görme */
   assert.equal(await sr(FA.den2, r.id), null, "başka denetçi (Raporlar 'kendi')");
   const mek = (await sr(FA.mek, r.id))!;
   assert.deepEqual([mek.no, mek.izin.duzenle, mek.izin.sil, mek.secilebilir, mek.kunyeFark], [d.no, false, true, {}, []],
     "branş yöneticisi görür, düzenlemez (teknik yönetici Yeni'yi silebilir)");
   assert.equal(await sr(FA.elk, r.id), null, "öteki branşın yöneticisi");
-  assert.deepEqual((await sr(FA.plan, r.id))!.izin, { duzenle: false, sil: false, kopyala: false }, "planlama görür");
-  assert.deepEqual((await sr(FA.yon, r.id))!.izin, { duzenle: false, sil: false, kopyala: false }, "firma yöneticisi görür");
+  assert.deepEqual((await sr(FA.plan, r.id))!.izin, { duzenle: false, sil: false, kopyala: false, kopyaEngel: null }, "planlama görür");
+  assert.deepEqual((await sr(FA.yon, r.id))!.izin, { duzenle: false, sil: false, kopyala: false, kopyaEngel: null }, "firma yöneticisi görür");
   assert.equal(await sr(FA.muh, r.id), null);
   assert.equal(await b(FB.den1, (db) => sahaRaporu(db, FB.den1, r.id)), null, "başka firma kimliği bilse de");
   assert.equal(await b(FB.yon, (db) => sahaRaporu(db, FB.yon, r.id)), null);
@@ -761,6 +761,23 @@ test("kaydet ve kopyala: yalnız yazan; Yeni rapor önce kaydedilir; yeni ekipma
   /* kopyanın kopyası: kaynak kopyanın kendisi */
   const k3 = tamam(await kopyala(FA.den1, k.id, 0, { kod: "HT-K3", konum: null }, null));
   assert.equal((await sr(FA.den1, k3.id))!.kopyaKaynak, no);
+  /* 2026-10-12 (reisim: "kaydet ve kopyala tuşunu bazı raporlarda göremedim bir raporda varken diğerinde yok" → "tamamlamayı geri almadan yeni
+     rapor oluşturulmasın, uyarı çıksın rapor oluştur diyince"): tamamlanmış planda yeni rapor ve kopya açılmaz, var olan rapor yazılır; yazana NEDENİ
+     verilir — tuş görünür, basınca söylenir; kopya hakkı olmayana neden de yok; tamamlama geri alınınca ikisi de açılır */
+  const ps = async () => (await sql<{ s: number }>(A, "SELECT surum AS s FROM plan WHERE id = $1", [id])).rows[0].s;
+  tamam(await a(FA.den1, async (db) => kontrolListesi(db, FA.den1, id, await ps(), true)));
+  tamam(await a(FA.den1, async (db) => planTamamla(db, FA.den1, id, await ps())));
+  const t = (await sr(FA.den1, k3.id))!;
+  assert.deepEqual([t.izin.duzenle, t.izin.kopyala, t.izin.kopyaEngel], [true, false, TAMAMLANDI_RAPOR], "tamamlanmış planda rapor yazılır, kopya nedeniyle kapalı");
+  assert.deepEqual([(await sr(FA.mek, k3.id))!.izin.kopyala, (await sr(FA.mek, k3.id))!.izin.kopyaEngel], [false, null], "kopya hakkı olmayana neden de yok");
+  assert.deepEqual(await kopyala(FA.den1, k3.id, 0, { kod: "HT-K4", konum: null }, null), { durum: "red", neden: TAMAMLANDI_RAPOR }, "sunucu da aynı nedenle reddeder");
+  assert.deepEqual(await olustur(FA.den1, id, FA.ekp["HT-A2"]), { durum: "red", neden: TAMAMLANDI_RAPOR }, "plandaki raporsuz ekipmana da yeni rapor açılmaz");
+  const pi = (await a(FA.den1, (db) => planIci(db, FA.den1, id)))!;
+  assert.deepEqual([pi.izin.raporOlustur, pi.izin.raporEngel], [true, TAMAMLANDI_RAPOR], "plan içinde Rapor oluştur görünür, basınca nedeni söylenir");
+  tamam(await a(FA.den1, async (db) => tamamlamaGeriAl(db, FA.den1, id, await ps())));
+  assert.deepEqual([(await sr(FA.den1, k3.id))!.izin.kopyala, (await sr(FA.den1, k3.id))!.izin.kopyaEngel], [true, null], "tamamlama geri alınınca kopya açılır");
+  assert.equal((await a(FA.den1, (db) => planIci(db, FA.den1, id)))!.izin.raporEngel, null);
+  tamam(await olustur(FA.den1, id, FA.ekp["HT-A2"]));
 });
 
 /* 2026-10-05 (313; maket MV.gunlukSure, plan içi "a-mesai-sebep", rapor ekranı "r-mesai-sebep"; 212, AA2; KOD-GECIS ENGEL 3): günlük süre = denetçinin

@@ -22,6 +22,7 @@
    kaydına bağlı alan olarak formatın koyduğu yerde ve adla). Yetki, kural ve ENGEL sunucuda; buradaki tuşlar yalnız izinli olanı gösterir.
    313: "Kaydet ve kopyala" (Yeni) / "Kopyala" (gönderilmiş) yeni ekipmanın raporunu açar ve oraya gider (karar 204–209); kopyadan açılan Yeni
    raporda kaynak şeridi (U7); daha yeni format sürümü yayınlandıysa "Formatı güncelle" şeridi (U6, 211); günlük süre dolduysa neden şeridi (212).
+   2026-10-12: plan tamamlandıysa kopya tuşu yine görünür, basınca nedeni üstte kısa uyarıyla (izin.kopyaEngel — karar 12).
    318 revizyon (maket raporlar.html 192, 131): tamamlanan raporda yazana "Revize iste" (gerekçe) → "Revize isteğiniz teknik yöneticide" şeridi
    + "Revize isteğini geri çek"; reddedilirse "Revize isteği reddedildi" şeridi; revizeye gönderilen rapor Yeni açılır, üstünde "Revizeye
    gönderildi (R1)" + gerekçe; rapor no revizyon ekiyle.
@@ -733,10 +734,15 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
           <Tus tur="ikincil" ikon="check" onClick={() => bildir("Örnek rapor kaydedilmez.")}>Kaydet</Tus>
           <Tus ikon="send" onClick={denemeGonder}>Onaya gönder</Tus>
         </div>
-      ) : (duzenle || v.izin.sil || v.izin.kopyala) && (
+      ) : (duzenle || v.izin.sil || v.izin.kopyala || v.izin.kopyaEngel) && (
         <div className={stil.eylem} data-alt-cubuk="her">
           {v.izin.sil && <Tus tur="ikincil" ikon="trash-2" className={stil.silTus} disabled={mesgul} onClick={sil}>Sil</Tus>}
-          {v.izin.kopyala && <Tus tur="ikincil" ikon="copy" disabled={mesgul} onClick={() => setKopya(true)}>{duzenle ? "Kaydet ve kopyala" : "Kopyala"}</Tus>}
+          {/* 2026-10-12 (reisim: "kaydet ve kopyala tuşunu bazı raporlarda göremedim bir raporda varken diğerinde yok"): tamamlanmış planda da
+              görünür — basınca nedeni ve ne yapılacağı üstte kısa uyarıyla (karar 12: kopya yeni ekipman ekler, önce tamamlama geri alınır) */}
+          {(v.izin.kopyala || v.izin.kopyaEngel) && (
+            <Tus tur="ikincil" ikon="copy" disabled={mesgul} onClick={() => (v.izin.kopyaEngel ? uyar(v.izin.kopyaEngel) : setKopya(true))}>
+              {duzenle ? "Kaydet ve kopyala" : "Kopyala"}</Tus>
+          )}
           {duzenle && <>
             <Tus tur="ikincil" ikon="check" disabled={mesgul} onClick={kaydet}>Kaydet</Tus>
             <Tus ikon="send" disabled={mesgul} onClick={gonder}>Onaya gönder</Tus>

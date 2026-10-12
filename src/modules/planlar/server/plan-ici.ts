@@ -6,6 +6,8 @@
    · Proje notu: plandaki denetçiler ve Planlar "yaz" yazar ve görür; müşteri ve öteki roller görmez (karar 27); not değişmez, silinmez.
    · Ekipman ekle / kayıtlıyı plana al: plan görülüyor + Ekipman "yaz" + plan Kabul edildi ya da Denetimde (tamamlanmış planda kapalı — 12).
      Pasife al / etkinleştir: özel eylem ekipman_pasif + plan görülüyor; silme yok.
+   · Rapor oluştur (2026-10-12, karar 12 değişti): tamamlanmış planda yeni rapor (kopya dahil) açılmaz — tuş görünür, izin.raporEngel nedeni söyler;
+     açılışın kendisi Raporlar'da (acilabilirPlan) reddedilir.
    · Saha formu (2026-10-12, göç 0082): tamamlanan planda plandaki denetçi ya da Planlar "yaz" oluşturur, müşterinin imzalı taramasını yükler /
      değiştirir / kaldırır; planı gören formu ve taramayı açar.
    · Durum geçişleri ve zaman damgaları veritabanında (göç 0024); burada yalnız izinli geçiş istenir. İstemciden gelen sürüm yalnız "hangi
@@ -28,7 +30,7 @@ import { turOzetleri } from "../../ekipman-turleri/server/turler.ts";
 import { musteriOzetleri } from "../../musteriler/server/musteriler.ts";
 import { personelOzetleri } from "../../personel/server/personel.ts";
 import { ekipmanRaporuVar, mesaiDurumu, planRaporlari, raporKunyeleriniYaz, type PlanRaporu } from "../../raporlar/server/plan-baglanti.ts";
-import { KunyeGirdisi, kodBicimi, kodNormal, NotGirdisi, RedGirdisi, YeniEkipmanGirdisi, type KodTuru, type PlanDurumu } from "../sema.ts";
+import { KunyeGirdisi, kodBicimi, kodNormal, NotGirdisi, RedGirdisi, TAMAMLANDI_RAPOR, YeniEkipmanGirdisi, type KodTuru, type PlanDurumu } from "../sema.ts";
 import { bugunTr, EKIP, MODUL, PLAN, PLAN_EKIPMAN, planAcabilir, planKarti, UUID, type Kisi, type PlanKarti } from "./planlar.ts";
 import { kaynakEpostalari, type EpostaDurumu } from "../../../server/eposta/eposta.ts";
 
@@ -94,8 +96,10 @@ export interface PlanIzni {
   /** 360: kullanılmamış ekipmanı kesin silmek — planın durumundan bağımsız. 365 (352–361 incelemesi): kesin silme ilkesiyle aynı kural, canDo kayit_sil
       (Ekipman modülünde "yaz" + yönetici; firma matrisi Ekipman'ı kısıtlarsa silme de kapanır). Eski ekipman_sil yalnız role bakıyordu. */
   ekipmanSil: boolean;
-  /** plandaki denetçi, plan kabul edilmiş / denetimde / tamamlanmış, plan günü gelmiş (ENGEL 1: ileri tarihli plana rapor açılmaz) */
+  /** plandaki denetçi, plan kabul edilmiş / denetimde / tamamlanmış, plan günü gelmiş (ENGEL 1: ileri tarihli plana rapor açılmaz) — tuş görünür */
   raporOlustur: boolean;
+  /** 2026-10-12 (reisim): tamamlanmış planda yeni rapor açılmaz — tuş görünür, basınca bu neden söylenir (null: açılır) */
+  raporEngel: string | null;
   /** 2026-10-12: saha formu oluştur ve müşteri taramasını yükle / kaldır — plandaki denetçi ya da Planlar "yaz", plan tamamlanmış */
   sahaFormu: boolean;
 }
@@ -111,6 +115,7 @@ function izinler(kim: Kisi, e: Erisim): PlanIzni {
     ekipmanPasif: isci && canDoEylem(kim, "ekipman_pasif") && (d === "kabul" || d === "denetimde" || d === "tamamlandi"),
     ekipmanSil: canDoEylem(kim, "kayit_sil", { modul: EKIPMAN_MODULU }),
     raporOlustur: e.uye && duzey(kim, RAPORLAR_MODULU) !== "yok" && canDoEylem(kim, "rapor_olustur", { atananlar: e.atananlar }) && (d === "kabul" || d === "denetimde" || d === "tamamlandi") && e.p.baslangic <= bugunTr(),
+    raporEngel: d === "tamamlandi" ? TAMAMLANDI_RAPOR : null,
     sahaFormu: isci && d === "tamamlandi",
   };
 }
@@ -484,8 +489,15 @@ export interface RaporPlani {
 }
 /** Raporlar "Kaydet ve kopyala" için: kişi bu plana yeni ekipman ekleyebilir mi (plan içi "Ekipman ekle" ile aynı izin) */
 export async function ekipmanEklenebilir(db: Sorgulayici, kim: Kisi, planId: string): Promise<boolean> {
+  return (await ekipmanEklemeDurumu(db, kim, planId)) === "tamam";
+}
+/** 2026-10-12 (reisim: "kaydet ve kopyala tuşunu bazı raporlarda göremedim"): eklenebilir mi; eklenemiyorsa YALNIZ plan tamamlandığı için mi
+    ("tamamlandi" — karar 12: önce tamamlama geri alınır; kişi Tamamlamayı geri alınca ekleyebilir) — Raporlar kopya tuşunda nedenini söyler */
+export async function ekipmanEklemeDurumu(db: Sorgulayici, kim: Kisi, planId: string): Promise<"tamam" | "tamamlandi" | "yok"> {
   const e = await erisim(db, kim, planId);
-  return !!e && izinler(kim, e).ekipmanEkle;
+  if (!e) return "yok";
+  if (izinler(kim, e).ekipmanEkle) return "tamam";
+  return e.p.durum === "tamamlandi" && izinler(kim, { ...e, p: { ...e.p, durum: "denetimde" } }).ekipmanEkle ? "tamamlandi" : "yok";
 }
 /** planı görebilene planın rapor için gereken bilgisi; göremeyene null */
 export async function raporIcinPlan(db: Sorgulayici, kim: Kisi, planId: string): Promise<RaporPlani | null> {

@@ -32,7 +32,8 @@ import { turRaporBilgisi } from "../../ekipman-turleri/server/turler.ts";
 import { tesisMusteriIletisim } from "../../musteriler/server/musteriler.ts";
 import { raporCihazlari } from "../../olcum-cihazlari/server/cihazlar.ts";
 import { personelOzetleri } from "../../personel/server/personel.ts";
-import { denetimeBasla, ekipmanEklenebilir, kodDurumu, kunyeGuncelle, plandakiEkipman, plandakiEkipmanlar, raporIcinPlan, yeniEkipman, type Kunye, type RaporPlani } from "../../planlar/server/plan-ici.ts";
+import { TAMAMLANDI_RAPOR } from "../../planlar/sema.ts";
+import { denetimeBasla, ekipmanEklemeDurumu, kodDurumu, kunyeGuncelle, plandakiEkipman, plandakiEkipmanlar, raporIcinPlan, yeniEkipman, type Kunye, type RaporPlani } from "../../planlar/server/plan-ici.ts";
 import { formatSurumuOku, yayindakiFormat } from "../../rapor-format/server/formatlar.ts";
 import { kimdeHaritasi } from "../../zimmetler/server/zimmet.ts";
 import { roldekiHesapAdlari } from "../../../server/kimlik/hesap.ts";
@@ -110,7 +111,9 @@ async function acilabilirPlan(db: Sorgulayici, kim: Kisi, planId: string): Promi
   if (!plan) return { hata: { durum: "yok" } };
   const personelId = plan.personelId;
   if (!personelId || duzey(kim, MODUL) === "yok" || !canDoEylem(kim, "rapor_olustur", { atananlar: plan.atananlar })) return { hata: { durum: "yetkisiz" } };
-  if (plan.durum !== "kabul" && plan.durum !== "denetimde" && plan.durum !== "tamamlandi") return { hata: { durum: "red", neden: "Rapor yalnız kabul edilmiş planda oluşturulur." } };
+  /* 2026-10-12 (reisim: "tamamlamayı geri almadan yeni rapor oluşturulmasın"): tamamlanmış planda yeni rapor (kopya, bağlantısız açılan dahil) yok */
+  if (plan.durum === "tamamlandi") return { hata: { durum: "red", neden: TAMAMLANDI_RAPOR } };
+  if (plan.durum !== "kabul" && plan.durum !== "denetimde") return { hata: { durum: "red", neden: "Rapor yalnız kabul edilmiş planda oluşturulur." } };
   const bugun = bugunTr();
   if (plan.baslangic > bugun) {
     return { hata: { durum: "red", neden: `Plan günü ${tarihNo(plan.baslangic)} henüz gelmedi (bugün ${tarihNo(bugun)}). Rapor plan gününden itibaren oluşturulur; geçmiş günlere açık, ileri tarihe kapalı.` } };
@@ -252,7 +255,8 @@ export interface SahaRaporu {
   imza: { hazir: boolean; pdf: string | null } | null;
   /** tamamlanan raporun imzalı sürümü; dosya null = saklama süresi dolduğu için PDF silindi (387; silindi: o an) */
   imzali: { dosya: string | null; zaman: string; no: string; silindi: string | null } | null;
-  izin: { duzenle: boolean; sil: boolean; kopyala: boolean };
+  /** kopyaEngel (2026-10-12): kopya hakkı var ama plan tamamlandı — tuş görünür, basınca bu söylenir (kopyala false) */
+  izin: { duzenle: boolean; sil: boolean; kopyala: boolean; kopyaEngel: string | null };
   /** fotoğraftan okuma (351): düzenleyebilene, firmada yapay zekâ açık ve anahtar girilmişse */
   yz: boolean;
   /** standart penceresi (428): firmanın güncel standartları (Dökümanlar'ı görmeyene null) ve formatın atıf yaptığı Bakanlık kriter belgeleri */
@@ -321,9 +325,12 @@ export async function sahaRaporu(db: Sorgulayici, kim: Kisi, id: string): Promis
   const kk = r.kopya_kaynak ? (await db.sorgu<{ no: string; revizyon: number }>("SELECT no, revizyon FROM rapor WHERE id = $1", [r.kopya_kaynak])).rows[0] : undefined;
   const kopyaKaynak = kk ? gorunenNo(kk.no, kk.revizyon) : null;
   const yeni = duzenle ? await yayindakiFormat(db, r.tur_id) : null;
-  /* kopya: yalnız raporu yazan, plandaki kendi personeliyle, rapor açabilen ve plana ekipman ekleyebilen (sunucu kopyada yeniden bakar) */
-  const kopyala = e.sahip && !!plan && plan.personelId === r.personel_id && canDoEylem(kim, "rapor_olustur", { atananlar: plan.atananlar })
-    && await ekipmanEklenebilir(db, kim, r.plan_id);
+  /* kopya: yalnız raporu yazan, plandaki kendi personeliyle, rapor açabilen ve plana ekipman ekleyebilen (sunucu kopyada yeniden bakar).
+     2026-10-12: yalnız plan tamamlandığı için eklenemiyorsa kopyaEngel — tuş görünür, basınca nedeni söylenir (eskiden tuş sessizce yoktu) */
+  const kopyaHakki = e.sahip && !!plan && plan.personelId === r.personel_id && canDoEylem(kim, "rapor_olustur", { atananlar: plan.atananlar });
+  const ekleme = kopyaHakki ? await ekipmanEklemeDurumu(db, kim, r.plan_id) : "yok";
+  const kopyala = ekleme === "tamam";
+  const kopyaEngel = ekleme === "tamamlandi" ? TAMAMLANDI_RAPOR : null;
   const mesaiDolu = (duzenle || kopyala) && (await mesaiDurumu(db, r.personel_id, bugun)).dolu;
   const sg = r.durum === "taslak" ? await sonGeriGonderme(db, r.id) : null;
   const geri = sg ? { kim: (await hesapAdlari(db, [sg.hesapId])).get(sg.hesapId ?? "") ?? "—", zaman: sg.zaman, gerekce: sg.gerekce, revize: sg.revize } : null;
@@ -353,7 +360,7 @@ export async function sahaRaporu(db: Sorgulayici, kim: Kisi, id: string): Promis
     imza: r.durum === "onaylandi" && e.sahip && canDoEylem(kim, "rapor_son_imza", { sahip: r.hesap_id })
       ? { hazir: true, pdf: (await bekleyenIstek(db, r.id, r.revizyon))?.pdf_dosya ?? null } : null,
     imzali: r.durum === "imzali" ? await imzaliSurum(db, r.id, r.revizyon) : null,
-    izin: { duzenle, sil: r.durum === "taslak" && r.revizyon === 0 && canDoEylem(kim, "rapor_sil", { sahip: r.hesap_id, durum: "Yeni", brans: tur.brans }), kopyala },
+    izin: { duzenle, sil: r.durum === "taslak" && r.revizyon === 0 && canDoEylem(kim, "rapor_sil", { sahip: r.hesap_id, durum: "Yeni", brans: tur.brans }), kopyala, kopyaEngel },
     yz: duzenle ? await yzHazirMi(db) : false,
     kaynak: await raporKaynaklari(db, kim, format.tanim),
   };
@@ -694,7 +701,6 @@ export async function raporKopyala(db: Sorgulayici, kim: Kisi, id: string, surum
   const a = await acilabilirPlan(db, kim, e.r.plan_id);
   if ("hata" in a) return a.hata;
   if (a.p.personelId !== e.r.personel_id) return { durum: "yetkisiz" };
-  if (a.p.durum === "tamamlandi") return { durum: "red", neden: "Plan tamamlandı; tamamlanmış plana ekipman eklenmez, kopya açılamaz." };
   const g = dogrula(KopyaGirdisi, girdi);
   if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
   const kd = await kodDurumu(db, kim, a.p.id, g.veri.kod);

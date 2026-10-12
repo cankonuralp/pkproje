@@ -261,7 +261,9 @@ girdiğinde eğer çakışan ekipman adı var ise uyarmalı izin vermemeli"* (bi
   red (gerekçe) · denetime başlandı · ekipman eklendi / plana alındı · rapor oluşturuldu · tamamlandı · tamamlama geri
   alındı → kim + ne zaman, plan içinde "Plan geçmişi". (10)
 · **Tamamla** raporu olmayan ekipman varken **engellenmez**, yalnız sayısını söyler. (11)
-· **Tamamlanmış planda** raporlar düzenlenir ve oluşturulur; **ekipman ekleme kapalı**, önce tamamlama geri alınır. (12)
+· **Tamamlanmış planda** var olan raporlar düzenlenir; **yeni rapor (kopya dahil) oluşturulmaz** ve **ekipman ekleme kapalı** — önce tamamlama geri
+  alınır; "Rapor oluştur" / "Kaydet ve kopyala" görünür, basınca nedeni üstte kısa uyarıyla söylenir. (12; 2026-10-12 reisim: *"tamamlamayı geri
+  almadan yeni rapor oluşturulmasın, uyarı çıksın rapor oluştur diyince"* — eskiden "raporlar … oluşturulur") 
 · **Ekipman sayısı** listede yok (14). Proje no ile Proje adı **birleşmez**; dar kapta kart (15).
 · **Numara sistemi kurulur**: proje ve rapor numaraları eşsiz (16) → §3.5.
 · **Ekipman ile rapor ayrı**: plan içinde **üstte Ekipmanlar, altta Raporlar**. Ekipman tesisin **kalıcı** kaydıdır;
@@ -2405,6 +2407,17 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-12 (519): **TAMAMLANMIŞ PLANDA YENİ RAPOR YOK, TUŞLAR NEDENİNİ SÖYLER** (reisim: *"kaydet ve kopyala tuşunu bazı raporlarda göremedim bir
+  raporda varken diğerinde yok, elektrik iç tesisat raporlarının 2 sine de bak dediğimi anlayacaksın"* → çalışırken: *"tamamlamayı geri almadan yeni
+  rapor oluşturulmasın, uyarı çıksın rapor oluştur diyince"*). **Neden (canlıda ölçüldü, salt okuma):** iki elektrik iç tesisat raporu (DM-1026-001,
+  -002) **Tamamlandı** durumundaki P-1026-006 planında, tuşun göründüğü DM-1026-004 **Denetimde** olan P-1026-010'da; kopya yeni ekipman eklediği için
+  tamamlanmış planda tuş SESSİZCE gizleniyordu (karar 12). **Şimdi:** karar 12 değişti (§3.4 satırı yerinde) — tamamlanmış planda var olan rapor
+  yazılır, yeni rapor ve kopya açılmaz. Rapor ekranında "Kaydet ve kopyala" / "Kopyala" ve plan içinde "Rapor oluştur" görünür; basınca rapor
+  açılmaz, üstte kısa uyarı: *"Plan tamamlandı: yeni rapor (kopya dahil) oluşturulmaz. Önce plan içinden “Tamamlamayı geri al” deyin."* (tek
+  ileti planlar/sema.ts TAMAMLANDI_RAPOR). Sunucu: raporlar.ts acilabilirPlan tamamlanmış planı reddeder — çevrimiçi Rapor oluştur, bağlantısız
+  açılan yeni rapor (kuyruk) ve kopya üçü de buradan; Planlar izinleri raporEngel, rapor izinleri kopyaEngel (yalnız kopya hakkı olana; plan-ici.ts
+  ekipmanEklemeDurumu). Çevrimdışı paket tamamlanmış planı zaten indirmiyordu. Kilit: tests/raporlar.test.ts (tamamlanınca: rapor yazılır, kopya ve
+  yeni rapor aynı iletiyle reddedilir, izinlerde neden; kopya hakkı olmayana neden yok; tamamlama geri alınınca ikisi açılır).
 - 2026-10-12 (518): **517 YAYINDA** — göç yok (84 göç). main cda7a54 (517 + test düzeltmesi: `has` içteki konumu etiketin İÇİNDE arar,
   bölüm kimliğiyle başlayan konum bulunmuyordu — telefonda "gizli" denetimi boşuna geçmişti; ilk koşu 10/13). Deneme makinesi cda7a54 13/13; sağlık
   "tamam", duman **11/11**. Gözle (deneme makinesinin görüntüleri, e2e-goz): masaüstü 1920 ve tablet 1080'de "Fotoğraf

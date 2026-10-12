@@ -10,10 +10,12 @@
    405 (ARKA-UC §4.1): bağlantı yokken (ya da istek ağda düşerse) Rapor oluştur, cihaza önceden inen yeni rapor sayfasını açar
    (/raporlar/yeni/<plan>#<ekipman>); bu ekipmana cihazda açılmış, henüz gitmemiş rapor varsa tuş "Cihazdaki rapor".
    Ekipman ekle iki yol: YENİ (kodu personel etiketten yazar; yazarken denetlenir: bu planda var · bu tesiste kayıtlı → "Kayıtlı ekipmanı seç" ·
-   başka tesiste · eski kod · kullanılabilir) ya da TESİSTE KAYITLI ekipmanı plana al. Eşsizlik sunucuda ve veritabanında da. */
+   başka tesiste · eski kod · kullanılabilir) ya da TESİSTE KAYITLI ekipmanı plana al. Eşsizlik sunucuda ve veritabanında da.
+   2026-10-12 (reisim: "tamamlamayı geri almadan yeni rapor oluşturulmasın, uyarı çıksın rapor oluştur diyince"): tamamlanmış planda Rapor oluştur
+   görünür; basınca rapor açılmaz, üstte kısa uyarı nedeni ve ne yapılacağını söyler (izin.raporEngel; sunucu da reddeder). */
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore, useTransition } from "react";
-import { useBildir } from "../../../components/bildirim/Bildirim";
+import { useBildir, useUyar } from "../../../components/bildirim/Bildirim";
 import { kuyrukAbone, kuyrukAnlik, kuyrukSunucuAnlik } from "../../../components/cevrimdisi/kuyruk";
 import { Alan, FormIzgara, Girdi, ipucuId } from "../../../components/form/Form";
 import { Ikon } from "../../../components/ikon/Ikon";
@@ -72,6 +74,7 @@ const BOS: Ekle = { sekme: "yeni", kod: "", tur: "", seri: "", konum: "", secili
 export function EkipmanBolumu({ v }: { v: PlanIci }) {
   const router = useRouter();
   const bildir = useBildir();
+  const uyar = useUyar();
   const [bekliyor, baslat] = useTransition();
   const raporlu = new Set(v.raporluEkipman);
   const s = useSuzgec(tanim(raporlu), v.ekipman);
@@ -140,6 +143,7 @@ export function EkipmanBolumu({ v }: { v: PlanIci }) {
 
   /* Rapor oluştur (311): sunucu numarayı verir, ilk rapor planı Denetimde yapar; başarıda saha rapor ekranına geçilir */
   function raporAc(e: PlanEkipmani) {
+    if (v.izin.raporEngel) { uyar(v.izin.raporEngel); return; }
     if (cevrimdisiMi()) { yeniRapor(e); return; }
     baslat(async () => {
       let r: Awaited<ReturnType<typeof raporOlusturEylemi>>;
