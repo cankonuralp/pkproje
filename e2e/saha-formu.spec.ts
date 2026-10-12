@@ -17,7 +17,7 @@ test("saha formu: tamamlanan planda oluştur (istendiği kadar), PDF indir, mü�
   await girisli(page, "yonetici");
   await page.goto("/planlar");
   await hazir(page);
-  await page.getByRole("searchbox", { name: "Planlarda ara" }).fill(planNo);
+  await page.getByRole("searchbox", { name: "Proje no" }).fill(planNo);   // Planlar listesinin süzgeci alanlı (Proje adı · Proje no)
   await page.getByRole("link", { name: planNo, exact: true }).first().click();
   await expect(page).toHaveURL(/\/planlar\/[0-9a-f-]{36}$/, { timeout: 30_000 });
   await hazir(page);
