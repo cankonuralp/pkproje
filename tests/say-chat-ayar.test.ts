@@ -92,7 +92,7 @@ test("GÜVENLİK: firma yalnız kendi ayarını görür; türü değişmez; DELE
   tamam(await ile(B, YON_B, (db) => sayChatAyarKaydet(db, YON_B, TUR_B, null, { satirlar: [satir("Marka", "e:marka")] })));
   assert.equal((await ile(B, YON_B, (db) => db.sorgu<{ n: number }>("SELECT count(*)::int AS n FROM say_chat_ayar"))).rows[0].n, 1, "B yalnız kendini görür");
   await assert.rejects(ile(A, YON, (db) => db.sorgu("UPDATE say_chat_ayar SET tur_id = $1", [TUR_B])), "başka türe taşınamaz");
-  const t2 = await ile(A, YON, async (db) => (await db.sorgu<{ id: string }>("INSERT INTO ekipman_turu (kod, ad, grup, brans, periyot) VALUES ('EI2', 'İkinci', 'elektrik', 'e', 12) RETURNING id::text")).rows[0].id);
+  const t2 = await ile(A, YON, async (db) => (await db.sorgu<{ id: string }>("INSERT INTO ekipman_turu (kod, ad, grup, brans, periyot) VALUES ('EIK', 'İkinci', 'elektrik', 'e', 12) RETURNING id::text")).rows[0].id);
   await assert.rejects(ile(A, YON, (db) => db.sorgu("UPDATE say_chat_ayar SET tur_id = $1", [t2])), /türü değişmez/);
   await assert.rejects(ile(A, YON, (db) => db.sorgu("DELETE FROM say_chat_ayar")), /permission denied|izin/);
   assert.equal((await ile(A, YON, (db) => turSil(db, YON, TUR))).durum, "tamam", "kullanılmamış tür silinir");

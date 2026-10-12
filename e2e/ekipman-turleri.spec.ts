@@ -202,10 +202,11 @@ test("Bakanlık türleri hazır: resmî PDF ve yayındaki şablon; sıfırdan ra
 /* 523 — S.A.Y Chat ayarları (pkproje §3.10 m.13–16; maket 521 ekran 12): tür sayfasında tıklayınca açılan bölüm; kayıt yoksa formattan hazır
    (ekipman bilgileri + Not; test değerleri okunacak başlık); aynı alan iki satırda → hata alanın altında, odak orada; düzeltilip Kaydet → sürüm 1;
    telefon önizlemesi satırları sırayla gösterir; Vazgeç taslağı bırakır; denetçi görür, değiştiremez. */
-test("S.A.Y Chat ayarları: formattan hazır, satır ekle, hata, kaydet, sürüm; denetçi yalnız görür", async ({ page }, bilgi) => {
+test("S.A.Y Chat ayarları: formattan hazır, satır ekle, hata, kaydet, sürüm; denetçi yalnız görür", async ({ page, context }, bilgi) => {
   test.setTimeout(120_000);
-  const on = { masaustu: "SM", tablet: "ST", telefon: "SF" }[bilgi.project.name] ?? "SX";
-  const kod = `${on}${"ABCDEFGH"[bilgi.retry]}C`;
+  /* tür kodu 2–3 büyük harf (0013): genişlik + deneme başına ayrı */
+  const on = { masaustu: "QC", tablet: "WC", telefon: "ZC" }[bilgi.project.name] ?? "XC";
+  const kod = `${on}${"ABCDEFGH"[bilgi.retry]}`;
   await girisli(page, "yonetici");
   await page.goto("/ekipman-turleri");
   await hazir(page);
@@ -270,6 +271,7 @@ test("S.A.Y Chat ayarları: formattan hazır, satır ekle, hata, kaydet, sürüm
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), "yana taşma yok").toBe(true);
 
   /* denetçi görür, değiştiremez */
+  await context.clearCookies();
   await girisli(page, "denetci");
   await page.goto(adres);
   await hazir(page);
