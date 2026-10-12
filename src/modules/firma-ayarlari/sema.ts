@@ -7,7 +7,7 @@ export const AYAR_BASLIK = {
   firma: "Firma bilgileri", imza: "İmza yöntemi", zimmet: "Zimmet teslim formu", saklama: "Rapor saklama süresi", onbilgi: "Ön bilgilendirme formu",
   bordro: "Bordro formatı", mesai: "Mesai takibi", esik: "Uyarı eşikleri", kod: "Rapor numarası", sabit: "Sabit giderler",
   fiyat: "Fiyat listesi", mbelge: "Müşteriye açık personel belgeleri",
-  bulut: "Bulut kaydı", depo: "Depolama ve yedek", yz: "Yapay zekâ", ice: "Toplu içe aktarma (ilk kurulum)",
+  bulut: "Raporların ikinci kopyası", depo: "Supabase hesabı ve yedek", yz: "Yapay zekâ", ice: "Toplu içe aktarma (ilk kurulum)",
 } as const;
 export type AyarKesimi = keyof typeof AYAR_BASLIK;
 
@@ -75,7 +75,7 @@ export const BelgeTuruGirdisi = z.object({
 export const MUSTERI_BELGE_BAS = [["ekipnet", "EKİPNET kayıt belgesi", false], ["diploma", "Diploma", false], ["oda", "Oda kaydı", false], ["atama", "Ekipman atama belgesi", false]] as const;
 export const MUSTERI_BELGE_SON = [["kimlik", "Kimlik belgesi", true], ["saglik", "Sağlık raporu", true], ["is", "İş sözleşmesi", true], ["diger", "Diğer", true]] as const;
 
-/* ── 336: yapay zekâ, bulut kaydı, yedek (maket MV.YZ_MODEL, MV.BULUT_SAGLAYICI, MV.BULUT_DUZEN, YEDEK_SIK, YEDEK_GUN) ── */
+/* ── 336: yapay zekâ, bulut kaydı (2026-10-12: raporların ikinci kopyası), Supabase hesabı ve yedek (maket MV.YZ_MODEL, MV.BULUT_SAGLAYICI, MV.BULUT_DUZEN) ── */
 /* 2026-10-12 (reisim: "yapay zekada da haiku … seçenekler olmalı daha uygun ücretlendirme için" → sunum Y1–Y4 kabul): Haiku 5.5 eklendi, en ucuz
    ve yeni firmada varsayılan; Haiku 4.5 eklenmedi (Haiku 5.5'ten pahalı ve zayıf), Haiku 3 / 3.5 emekli. Tek seçim (bütün yapay zekâ işleri aynı model). */
 export const YZ_MODEL = {
@@ -83,14 +83,22 @@ export const YZ_MODEL = {
   sonnet: ["Claude Sonnet 5.5", "dengeli · 1 milyon token: giriş $2, çıkış $10 · bir fotoğraftan okuma ≈ $0,03"],
   opus: ["Claude Opus 5.5", "en doğru, en pahalı · 1 milyon token: giriş $4, çıkış $20 · bir fotoğraftan okuma ≈ $0,06"],
 } as const;
-/** [ad, verileri Türkiye dışında saklayabilir] */
+/** [ad, verileri Türkiye dışında saklayabilir] — 2026-10-12 (sunum D3 kabul): "Raporların ikinci kopyası" ilk yayında yalnız Google Drive ve OneDrive;
+    Dropbox, Yandex Disk ve kendi sunucusu istek gelirse */
 export const BULUT_SAGLAYICI = {
-  gdrive: ["Google Drive", true], onedrive: ["Microsoft OneDrive / SharePoint", true], dropbox: ["Dropbox", true], yandex: ["Yandex Disk", true],
-  sftp: ["Kendi sunucunuz (SFTP / WebDAV)", false],
+  gdrive: ["Google Drive", true], onedrive: ["Microsoft OneDrive / SharePoint", true],
 } as const;
 export const BULUT_DUZEN = { mt: "Müşteri / Tesis", mty: "Müşteri / Tesis / Yıl", my: "Müşteri / Yıl" } as const;
-export const YEDEK_SIK = { saatlik: "Saatlik", gunluk: "Günlük", haftalik: "Haftalık (Pazartesi)" } as const;
-export const YEDEK_GUN = [30, 90, 365] as const;
+/* 2026-10-12 (sunum D2 kabul): yedekte firma ayarı yok — Supabase'in günlük yedeği + probata'nın aylık arşiv yedeği kendiliğinden (eski sıklık / saat /
+   saklama seçimleri kalktı). Supabase hesabı bağlama akışı (sunum D1; yayına çıkışta açılır) — Firma ayarları ve Yönetim aynı metni gösterir. */
+export const SUPABASE_ADIMLAR = [
+  "probata firmayı açar (Yönetim › Firma aç): adres ve ilk yöneticinin e-postası.",
+  "Firma yöneticisi adrese girer, geçici parolayla kendi parolasını belirler.",
+  "İlk iş “Supabase hesabını bağla”: Supabase'in kendi giriş ve izin ekranı açılır; yönetici Supabase hesabıyla girip izin verir. Anahtar kopyalanmaz, parola paylaşılmaz.",
+  "probata, firmanın hesabında Frankfurt'ta proje kurar; tabloları ve güvenlik ayarlarını yükler (birkaç dakika). Firmanın verisi o andan itibaren yalnız orada.",
+  "Yönetici Supabase'te Pro paketi (25 $/ay) ve ödeme yöntemini seçer; fatura doğrudan firmaya gelir.",
+  "Bağlantı, kullanım ve yedek bu bölümde görünür; probata'da yalnız “hangi adres → hangi proje” kaydı kalır.",
+] as const;
 export const YzGirdisi = z.object({
   acik: z.boolean(), model: z.enum(["haiku", "sonnet", "opus"], { error: "Model seçin." }),
   sinir: z.preprocess((v) => (typeof v === "string" ? v.trim().replace(",", ".") : v),
@@ -101,15 +109,10 @@ export const YzGirdisi = z.object({
 export const AnahtarGirdisi = z.object({ anahtar: z.preprocess((v) => (typeof v === "string" ? v.trim() : v),
   z.string({ error: "Anahtarı yapıştırın." }).min(1, "Anahtarı yapıştırın.").regex(/^sk-ant-[A-Za-z0-9_-]{16,200}$/, "Geçerli bir Anthropic API anahtarı değil (sk-ant- ile başlar).")) });
 export const BulutGirdisi = z.object({
-  saglayici: z.enum(["", "gdrive", "onedrive", "dropbox", "yandex", "sftp"], { error: "Bulut seçin." }),
+  saglayici: z.enum(["", "gdrive", "onedrive"], { error: "Hizmet seçin." }),
   kok: z.preprocess((v) => (typeof v === "string" ? v.trim() : v), z.string().min(1, "Ana klasör adı yazın.").max(80, "En çok 80 karakter.")
     .refine((s) => !/[\\/:*?"<>|]/.test(s), "Klasör adında \\ / : * ? \" < > | kullanılamaz.")),
   duzen: z.enum(["mt", "mty", "my"], { error: "Klasör düzeni seçin." }),
-});
-export const YedekGirdisi = z.object({
-  sik: z.enum(["saatlik", "gunluk", "haftalik"], { error: "Sıklık seçin." }),
-  saat: z.string().regex(/^([01][0-9]|2[0-3])$/, "Saat seçin."),
-  gun: z.coerce.number().refine((n) => (YEDEK_GUN as readonly number[]).includes(n), "Saklama seçin."),
 });
 
 /** dosya ayarları (logo, ön bilgilendirme formu, bordro formatı): ayar alanı, izinli türler, en çok boyut */

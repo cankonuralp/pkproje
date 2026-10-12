@@ -216,8 +216,10 @@ test("müşteriye açık belgeler ve belge türü ekle: seçim ayara yazılır; 
   assert.ok(!(await a(YON, (db) => ayarOku(db, "musteri_belge"))).deger.ozluk.includes("ek2"), "yeni tür müşteriye kapalı doğar");
 });
 
-/* 336: yapay zekâ (anahtar şifreli sırda — değer ekrana ve yanıta dönmez, yalnız son 4), bulut kaydı, yedek */
-test("yapay zekâ, bulut, yedek: anahtar biçimi denetlenir, şifreli saklanır, yalnız son 4 görünür; sınır $, bulut klasör adı, yedek seçenekleri", async () => {
+/* 336: yapay zekâ (anahtar şifreli sırda — değer ekrana ve yanıta dönmez, yalnız son 4), bulut kaydı, yedek. 2026-10-12 (sunum D1–D3 kabul — reisim:
+   "önerilerini kabul ediyorum, hayata geçir"): bulut kaydı = raporların ikinci kopyası, yalnız Google Drive / OneDrive (eski Dropbox / Yandex / SFTP
+   değeri kapalıya döner); yedek ayarı kalktı (Supabase'in günlük yedeği + aylık arşiv yedeği kendiliğinden); Supabase bölümü firmanın dosya kullanımını gösterir */
+test("yapay zekâ, ikinci kopya, Supabase bölümü: anahtar biçimi denetlenir, şifreli saklanır, yalnız son 4 görünür; sınır $, klasör adı, hizmet; yedek ayarı yok", async () => {
   process.env.PROBATA_SIR_ANAHTARI ??= randomBytes(32).toString("base64");
   const ANAHTAR = "sk-ant-deneme-0123456789abcdefWXYZ";
   assert.deepEqual(await a(YON, (db) => yzAnahtarYaz(db, YON, { anahtar: "sk-deneme" })), { durum: "gecersiz", hatalar: { anahtar: "Geçerli bir Anthropic API anahtarı değil (sk-ant- ile başlar)." } });
@@ -251,14 +253,26 @@ test("yapay zekâ, bulut, yedek: anahtar biçimi denetlenir, şifreli saklanır,
     tamam(await a(YON, (db) => yzAnahtarYaz(db, YON, null)));
   } finally { process.env.PROBATA_SIR_ANAHTARI = ana; }
   assert.deepEqual((await a(YON, (db) => firmaAyarlari(db, YON)))!.yz.anahtar, { tanimli: false, son4: null }, "ana anahtarsız kaldırıldı");
-  /* bulut ve yedek */
+  /* raporların ikinci kopyası (bulut) */
   assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "bulut", -1, { saglayici: "gdrive", kok: "Rapor/2026", duzen: "mt" }))).durum, "gecersiz", "klasör adında /");
   assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "bulut", -1, { saglayici: "baska", kok: "Raporlar", duzen: "mt" }))).durum, "gecersiz");
-  tamam(await a(YON, (db) => ayarKaydet(db, YON, "bulut", -1, { saglayici: "sftp", kok: "Deneme Raporlar", duzen: "mty" })));
-  assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "yedek", -1, { sik: "gunluk", saat: "25", gun: "30" }))).durum, "gecersiz");
-  assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "yedek", -1, { sik: "gunluk", saat: "02", gun: "45" }))).durum, "gecersiz");
-  tamam(await a(YON, (db) => ayarKaydet(db, YON, "yedek", -1, { sik: "haftalik", saat: "02", gun: "90" })));
-  assert.deepEqual((await a(YON, (db) => ayarOku(db, "yedek"))).deger, { sik: "haftalik", saat: "02", gun: 90 });
+  assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "bulut", -1, { saglayici: "sftp", kok: "Raporlar", duzen: "mt" }))).durum, "gecersiz", "SFTP ilk yayında yok");
+  assert.equal((await a(DEN, (db) => ayarKaydet(db, DEN, "bulut", -1, { saglayici: "gdrive", kok: "Raporlar", duzen: "mt" }))).durum, "yetkisiz");
+  const k = tamam(await a(YON, (db) => ayarKaydet(db, YON, "bulut", -1, { saglayici: "onedrive", kok: "Deneme Raporlar", duzen: "mty" })));
+  assert.equal(k.bildirim, "Raporların ikinci kopyası ayarları kaydedildi.");
+  assert.deepEqual((await a(YON, (db) => ayarOku(db, "bulut"))).deger, { saglayici: "onedrive", kok: "Deneme Raporlar", duzen: "mty" });
+  const bs = (await a(YON, (db) => ayarOku(db, "bulut"))).surum;
+  assert.equal(tamam(await a(YON, (db) => ayarKaydet(db, YON, "bulut", bs, { saglayici: "", kok: "Deneme Raporlar", duzen: "mty" }))).bildirim, "Raporların ikinci kopyası kapatıldı.");
+  /* eski kayıtlı hizmet (Dropbox) kapalıya döner, öteki alanlar kalır */
+  await a(YON, (db) => db.sorgu("UPDATE firma_ayar SET deger = jsonb_set(deger, '{saglayici}', '\"dropbox\"') WHERE bolum = 'bulut'"));
+  assert.deepEqual((await a(YON, (db) => ayarOku(db, "bulut"))).deger, { saglayici: "", kok: "Deneme Raporlar", duzen: "mty" });
+  /* yedek ayarı kalktı: kesim yok, ekran verisinde yok */
+  assert.notEqual((await a(YON, (db) => ayarKaydet(db, YON, "yedek", -1, { sik: "haftalik", saat: "02", gun: "90" }))).durum, "tamam");
+  const v2 = (await a(YON, (db) => firmaAyarlari(db, YON)))!;
+  assert.ok(!("yedek" in v2));
+  /* Supabase bölümü: firmanın dosyaları (çöptekiler hariç) — sayı ve bayt, yalnız bu firma */
+  const d = (await a(YON, (db) => db.sorgu<{ n: number; b: string }>("SELECT count(*)::int AS n, coalesce(sum(boyut), 0)::text AS b FROM dosya WHERE cop IS NULL"))).rows[0];
+  assert.deepEqual(v2.depolama, { dosya: d.n, bayt: Number(d.b) });
 });
 
 test("firma sızıntısı: B kendi ayarlarını görür (başlangıç değerleri), A'nınkini değil", async () => {
@@ -266,5 +280,5 @@ test("firma sızıntısı: B kendi ayarlarını görür (başlangıç değerleri
   assert.deepEqual([v.kod, v.firma.deger.ad, v.firma.deger.nusha, v.esik.deger.kalibrasyon, v.sabit.deger.kalemler, v.kisiler.map((k) => k.ad)],
     ["DB", "", 2, 30, [], ["Deneme B Kişi"]]);
   assert.deepEqual([v.mbelge.deger.secili, v.mbelge.turler.filter((t) => t.ek || t.k.startsWith("eg:")).length, v.fiyat.turler.map((t) => t.fiyat)], [["ekipnet"], 0, [null]]);
-  assert.deepEqual([v.yz.anahtar, v.yz.deger.acik, v.bulut.deger.saglayici, v.yedek.deger.sik], [{ tanimli: false, son4: null }, false, "", "gunluk"]);
+  assert.deepEqual([v.yz.anahtar, v.yz.deger.acik, v.bulut.deger.saglayici, v.depolama.dosya], [{ tanimli: false, son4: null }, false, "", 0], "B'nin dosyası yok (A'nınkiler sayılmaz)");
 });

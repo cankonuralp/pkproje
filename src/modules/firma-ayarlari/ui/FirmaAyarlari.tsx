@@ -16,7 +16,7 @@ import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus } from "../../../components/tus/Tus";
 import {
-  AYAR_BASLIK, AYAR_DOSYASI, BULUT_DUZEN, BULUT_SAGLAYICI, ESIK, IMZA_YONTEM, NUSHA, SAKLAMA_YIL, YASAL, YEDEK_GUN, YEDEK_SIK, YZ_MODEL, kodBuyut, onBilgiFormKodu,
+  AYAR_BASLIK, AYAR_DOSYASI, BULUT_DUZEN, BULUT_SAGLAYICI, ESIK, IMZA_YONTEM, NUSHA, SAKLAMA_YIL, SUPABASE_ADIMLAR, YASAL, YZ_MODEL, kodBuyut, onBilgiFormKodu,
   type AyarDosyasi, type AyarKesimi, type EsikAdi,
 } from "../sema";
 import type { FirmaAyarlari as Veri } from "../server/ayarlar";
@@ -388,77 +388,71 @@ function MusteriBelgeleri({ v }: { v: Veri }) {
   );
 }
 
-/* ── BULUT KAYDI (336; maket bulutCiz Ö2): sağlayıcı, klasör düzeni, ana klasör; hesap bağlantısı ve kendiliğinden kayıt K5 ── */
+/* ── RAPORLARIN İKİNCİ KOPYASI (336 "Bulut kaydı", maket bulutCiz Ö2; 2026-10-12 sunum D3 kabul — reisim: "önerilerini kabul ediyorum, hayata
+   geçir"): isteğe bağlı; imzalanan raporlar (müşteri klasörlü) ve aylık arşiv yedeği Supabase dışında firmanın Google Drive / OneDrive'ında da durur.
+   Kapalıyken uyarı: raporların tek kopyası Supabase'te. Hesap bağlantısı ve kendiliğinden kopya yayına çıkışta (K7); ayarlar şimdiden kaydedilir. ── */
 const BID = { s: "w-ay-bulut-s", d: "w-ay-bulut-d", kok: "w-ay-bulut-kok" } as const;
-function BulutKaydi({ v }: { v: Veri }) {
+function IkinciKopya({ v }: { v: Veri }) {
   const s = useKesim("bulut", v.bulut.deger, v.bulut.surum);
+  const acik = s.d.saglayici !== "";
   const sg = s.d.saglayici ? BULUT_SAGLAYICI[s.d.saglayici] : null;
   const ornek = `${s.d.kok || "…"} / ${s.d.duzen === "my" ? "Müşteri / 2026" : s.d.duzen === "mty" ? "Müşteri / Tesis / 2026" : "Müşteri / Tesis"} / RAPOR-NO.pdf`;
   return (
-    <Kart kesim="bulut" yaz={v.yaz} kirli={s.kirli} mesgul={s.mesgul} kaydet={s.kaydet} vazgec={s.vazgec} sayac="bağlı değil">
-      <p className={stil.ipucuUst}>Rapor imzalanınca imzalı PDF müşterinin bulut klasörüne kendiliğinden kaydedilir. Müşteri başına aç / kapa ve klasör adı müşteri kartında.</p>
-      <FormIzgara>
-        <Alan id={BID.s} etiket="Bulut" hata={s.h.saglayici}>
-          <SecimAlani id={BID.s} ad="Bulut" deger={s.d.saglayici} kapali={!v.yaz} secenekler={[["", "Seçilmedi"], ...(Object.keys(BULUT_SAGLAYICI) as (keyof typeof BULUT_SAGLAYICI)[]).map((k) => [k, BULUT_SAGLAYICI[k][0]] as const)]}
-            degistir={(x) => s.setD({ ...s.d, saglayici: x as typeof s.d.saglayici })} />
-        </Alan>
-        <Alan id={BID.d} etiket="Klasör düzeni" hata={s.h.duzen}>
-          <SecimAlani id={BID.d} ad="Klasör düzeni" deger={s.d.duzen} kapali={!v.yaz} secenekler={(Object.keys(BULUT_DUZEN) as (keyof typeof BULUT_DUZEN)[]).map((k) => [k, BULUT_DUZEN[k]] as const)}
-            degistir={(x) => s.setD({ ...s.d, duzen: x as typeof s.d.duzen })} />
-        </Alan>
-        <Alan id={BID.kok} etiket="Ana klasör" hata={s.h.kok} genis sonuc={s.h.kok ? undefined : `Örnek yol: ${ornek}`}>
-          <Girdi id={BID.kok} value={s.d.kok} maxLength={80} disabled={!v.yaz} hata={!!s.h.kok} mesajli onChange={(e) => s.setD({ ...s.d, kok: e.target.value })} />
-        </Alan>
-      </FormIzgara>
-      {sg?.[1] && <Serit tur="uyari" ikon="triangle-alert">{sg[0]} verileri Türkiye dışında saklayabilir: raporlar yurt dışına çıkar (KVKK sorumluluğu firmanın). Kendi sunucunuz seçeneği veriyi Türkiye&apos;de tutar.</Serit>}
-      <Serit tur="bilgi" ikon="info">Hesap bağlantısı ve imzalanan raporların kendiliğinden kaydı yayına çıkışla açılır; ayarlar şimdiden kaydedilir.</Serit>
+    <Kart kesim="bulut" yaz={v.yaz} kirli={s.kirli} mesgul={s.mesgul} kaydet={s.kaydet} vazgec={s.vazgec} sayac={v.bulut.deger.saglayici ? "açık" : "kapalı"}>
+      <p className={stil.ipucuUst}>İmzalanan her rapor (müşteri klasörlü) ve aylık arşiv yedeği, Supabase dışında firmanızın kendi bulutunda da durur. İsteğe bağlı.</p>
+      <div role="radiogroup" aria-labelledby={bolumId("bulut")} className={stil.secenekler}>
+        {([[false, "Kapalı"], [true, "Açık"]] as const).map(([d, ad]) => (
+          <label key={ad} className={stil.secenek}><input type="radio" name="w-ay-bulut-acik" checked={acik === d} disabled={!v.yaz}
+            onChange={() => s.setD({ ...s.d, saglayici: d ? (v.bulut.deger.saglayici || "gdrive") : "" })} /><span>{ad}</span></label>
+        ))}
+      </div>
+      {acik ? <>
+        <FormIzgara>
+          <Alan id={BID.s} etiket="Hizmet" hata={s.h.saglayici}>
+            <SecimAlani id={BID.s} ad="Hizmet" deger={s.d.saglayici} kapali={!v.yaz} secenekler={(Object.keys(BULUT_SAGLAYICI) as (keyof typeof BULUT_SAGLAYICI)[]).map((k) => [k, BULUT_SAGLAYICI[k][0]] as const)}
+              degistir={(x) => s.setD({ ...s.d, saglayici: x as typeof s.d.saglayici })} />
+          </Alan>
+          <Alan id={BID.d} etiket="Klasör düzeni" hata={s.h.duzen}>
+            <SecimAlani id={BID.d} ad="Klasör düzeni" deger={s.d.duzen} kapali={!v.yaz} secenekler={(Object.keys(BULUT_DUZEN) as (keyof typeof BULUT_DUZEN)[]).map((k) => [k, BULUT_DUZEN[k]] as const)}
+              degistir={(x) => s.setD({ ...s.d, duzen: x as typeof s.d.duzen })} />
+          </Alan>
+          <Alan id={BID.kok} etiket="Ana klasör" hata={s.h.kok} genis sonuc={s.h.kok ? undefined : `Örnek yol: ${ornek}`}>
+            <Girdi id={BID.kok} value={s.d.kok} maxLength={80} disabled={!v.yaz} hata={!!s.h.kok} mesajli onChange={(e) => s.setD({ ...s.d, kok: e.target.value })} />
+          </Alan>
+        </FormIzgara>
+        {sg?.[1] && <Serit tur="uyari" ikon="triangle-alert">{sg[0]} verileri Türkiye dışında saklayabilir: raporların kopyası yurt dışına çıkar (KVKK sorumluluğu firmanın).</Serit>}
+        <Serit tur="bilgi" ikon="info">Hesap bağlantısı ve kendiliğinden kopya yayına çıkışta açılır: hizmetin kendi izin ekranı açılır, probata yalnız ana klasöre yazar. Ayarlar şimdiden kaydedilir.</Serit>
+      </> : <Serit tur="uyari" ikon="triangle-alert">Raporlarınızın tek kopyası Supabase&apos;te. Supabase hesabı kapanırsa ya da proje silinirse raporlar geri gelmez; ikinci kopyayı açmanızı öneririz.</Serit>}
     </Kart>
   );
 }
 
-/* ── DEPOLAMA VE YEDEK (336; maket depoCiz — G2/G3 "elle yedekleme olmasın", "kendi depolarında da yedekleri ve raporlar düzenli arşivlensin") ── */
-const YID = { sik: "w-ay-yedek-sik", saat: "w-ay-yedek-saat", gun: "w-ay-yedek-gun" } as const;
-const SAAT = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", hourCycle: "h23" });
-/** sonraki yedek (Türkiye saati) — maket sonrakiYedek */
-function sonrakiYedek(sik: string, saat: string): string {
-  const p = Object.fromEntries(SAAT.formatToParts(new Date()).map((x) => [x.type, x.value]));
-  const gun = `${p.year}-${p.month}-${p.day}`, simdi = Number(p.hour);
-  const ekle = (g: string, n: number) => { const d = new Date(`${g}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
-  const yaz = (g: string, s: number) => `${g.slice(8, 10)}.${g.slice(5, 7)}.${g.slice(0, 4)} ${String(s).padStart(2, "0")}:00`;
-  if (sik === "saatlik") return simdi + 1 > 23 ? yaz(ekle(gun, 1), 0) : yaz(gun, simdi + 1);
-  const s = Number(saat);
-  if (sik === "gunluk") return s > simdi ? yaz(gun, s) : yaz(ekle(gun, 1), s);
-  const hafta = (8 - new Date(`${gun}T12:00:00Z`).getUTCDay()) % 7;   // Pazartesi
-  return hafta === 0 && s > simdi ? yaz(gun, s) : yaz(ekle(gun, hafta || 7), s);
-}
-function DepoYedek({ v }: { v: Veri }) {
-  const s = useKesim("depo", { sik: v.yedek.deger.sik, saat: v.yedek.deger.saat, gun: String(v.yedek.deger.gun) }, v.yedek.surum, (d) => ayarKaydetEylemi("yedek", v.yedek.surum, d));
+/* ── SUPABASE HESABI VE YEDEK (336 "Depolama ve yedek", maket depoCiz G2/G3; 2026-10-12 sunum D1–D2 kabul — reisim: "supabase hesabını nasıl
+   bağlayacağımızı göremedim eğer o da kurguluysa sorun yok"): firmanın veritabanı ve dosyaları kendi Supabase hesabında; bağlama akışı
+   (SUPABASE_ADIMLAR — Yönetim de aynı metni gösterir) yayına çıkışta açılır, deneme yayınında probata'nın ortak deneme projesi. Ayrı S3 deposu formu ve
+   yedek sıklığı / saati / saklama seçimleri kalktı: Supabase'in günlük yedeği + aylık arşiv yedeği kendiliğinden. Yalnız bilgi, düzenleme yok. ── */
+const megabayt = (bayt: number) => (bayt / 1e6).toLocaleString("tr-TR", { maximumFractionDigits: 1 });
+function SupabaseYedek({ v }: { v: Veri }) {
+  const yok = () => undefined;
   return (
-    <Kart kesim="depo" genis yaz={v.yaz} kirli={s.kirli} mesgul={s.mesgul} kaydet={s.kaydet} vazgec={s.vazgec}>
-      <p className={stil.etiketUst}>Firmanın deposu</p>
-      <Serit tur="bilgi" ikon="info">Deneme yayınında dosyalar uygulamanın deposunda. Firmanın kendi S3 uyumlu deposu yayına çıkışta bağlanır; depo olmadan firma açılmaz.</Serit>
-      <p className={stil.etiket}>Düzenli arşiv (kendiliğinden)</p>
+    <Kart kesim="depo" genis yaz={false} kirli={false} mesgul={false} kaydet={yok} vazgec={yok} sayac="deneme projesi">
+      <p className={stil.ipucuUst}>Veritabanı ve dosyalar firmanızın kendi Supabase hesabında durur (Frankfurt). Paket ve ödeme Supabase&apos;te, fatura doğrudan size gelir.</p>
+      <p className={stil.etiket}>Bağlantı ve kullanım</p>
       <ul className={stil.bilgiListe}>
-        <li><b>Rapor arşivi</b> · arsiv/raporlar/YIL/Müşteri/ — imzalanan her rapor PDF&apos;i hemen yazılır</li>
-        <li><b>Otomatik silme</b> · saklama süresi dolunca ({v.saklama.deger.yil} yıl); raporlar ve aylık yedekler, silinecekler 30 gün önce listelenir</li>
+        <li><b>Şu an</b> · probata&apos;nın ortak deneme projesi (Supabase, Frankfurt). Kendi hesabınız yayına çıkışta bağlanır.</li>
+        <li><b>Dosyalar</b> · {v.depolama.dosya.toLocaleString("tr-TR")} dosya · {megabayt(v.depolama.bayt)} MB (fotoğraf, belge, imzalı raporlar)</li>
+        <li><b>Pro paket</b> · 25 $/ay: 8 GB veritabanı, 100 GB dosya, ayda 250 GB indirme, 7 günlük günlük yedek</li>
       </ul>
-      <Serit tur="bilgi" ikon="info">probata saklama süresi dolmadan hiçbir dosyayı silmez. Deponuzda dosyaları kendiniz silerseniz geri getirilemez; bu sorumluluk firmanızındır.</Serit>
-      <p className={stil.etiket}>Yedek (kendiliğinden)</p>
-      <FormIzgara>
-        <Alan id={YID.sik} etiket="Sıklık" hata={s.h.sik}>
-          <SecimAlani id={YID.sik} ad="Yedek sıklığı" deger={s.d.sik} kapali={!v.yaz} secenekler={(Object.keys(YEDEK_SIK) as (keyof typeof YEDEK_SIK)[]).map((k) => [k, YEDEK_SIK[k]] as const)}
-            degistir={(x) => s.setD({ ...s.d, sik: x as typeof s.d.sik })} />
-        </Alan>
-        <Alan id={YID.saat} etiket="Saat (günlük, haftalık)" hata={s.h.saat}>
-          <SecimAlani id={YID.saat} ad="Yedek saati" deger={s.d.saat} kapali={!v.yaz || s.d.sik === "saatlik"}
-            secenekler={Array.from({ length: 24 }, (_, i) => { const x = String(i).padStart(2, "0"); return [x, `${x}:00`] as const; })} degistir={(x) => s.setD({ ...s.d, saat: x })} />
-        </Alan>
-        <Alan id={YID.gun} etiket="Yedeklerin saklanması" hata={s.h.gun} sonuc={`Her ayın ilk yedeği ${v.saklama.deger.yil} yıl saklanır. Sonraki yedek: ${sonrakiYedek(s.d.sik, s.d.saat)}.`}>
-          <SecimAlani id={YID.gun} ad="Yedeklerin saklanması" deger={s.d.gun} kapali={!v.yaz} tanim={ipucuId(YID.gun)}
-            secenekler={YEDEK_GUN.map((g) => [String(g), `${g} gün`] as const)} degistir={(x) => s.setD({ ...s.d, gun: x })} />
-        </Alan>
-      </FormIzgara>
-      <p className={stil.ipucu}>Son yedekler: henüz yedek alınmadı — yedek işi yayına çıkışla kendiliğinden çalışır (elle yedek yok).</p>
+      <p className={stil.etiket}>Supabase hesabı nasıl bağlanır (yayına çıkışta)</p>
+      <ol className={stil.bilgiListe}>{SUPABASE_ADIMLAR.map((x) => <li key={x}>{x}</li>)}</ol>
+      <p className={stil.etiket}>Yedek (kendiliğinden, ayar yok)</p>
+      <ul className={stil.bilgiListe}>
+        <li><b>Supabase günlük yedeği</b> · veritabanı, son 7 gün — Supabase&apos;in kendisi alır (Pro). Dosyaları kapsamaz.</li>
+        <li><b>Aylık arşiv yedeği</b> · her ayın 1&apos;i · arsiv/yedek/ — saklama süresi ({v.saklama.deger.yil} yıl) boyunca durur, sonra kendiliğinden silinir.
+          Kendi hesabınız bağlanınca başlar.</li>
+        <li><b>Rapor arşivi</b> · arsiv/raporlar/YIL/Müşteri/ — imzalanan her rapor; saklama süresi dolmadan silinmez, silinecekler 30 gün önce listelenir.</li>
+      </ul>
+      <Serit tur="bilgi" ikon="info">probata saklama süresi dolmadan hiçbir dosyayı silmez. Supabase hesabınızda dosyaları ya da projeyi kendiniz silerseniz geri getirilemez; raporların ikinci kopyası bunun içindir.</Serit>
     </Kart>
   );
 }
@@ -572,10 +566,10 @@ export function FirmaAyarlari({ v }: { v: Veri }) {
           <Mesai v={v} />
           <Esikler v={v} />
           <RaporNumarasi v={v} />
-          <BulutKaydi v={v} />
+          <IkinciKopya v={v} />
           <FiyatListesi v={v} />
           <SabitGiderler v={v} />
-          <DepoYedek v={v} />
+          <SupabaseYedek v={v} />
           <YapayZeka v={v} />
           <MusteriBelgeleri v={v} />
           <Kart kesim="ice" genis yaz={false} kirli={false} mesgul={false} kaydet={() => undefined} vazgec={() => undefined}>

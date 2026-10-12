@@ -14,6 +14,7 @@ import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
 import { firmaAcSemasi, oneri } from "../sema";
 import { firmaAcEylemi } from "./eylemler";
+import { SUPABASE_ADIMLAR } from "../../firma-ayarlari/sema";
 import { DEPO_AD, DEPO_NOT, firmaAdresi, type DepoTuru } from "./ortak";
 import { SonrasiAdimlar } from "./SonrasiAdimlar";
 import stil from "./yonetim.module.css";
@@ -121,9 +122,11 @@ export function FirmaAcFormu({ anaAlan, depo }: { anaAlan: string; depo: DepoTur
               {alan("eposta", "E-posta (giriş adı)", { type: "email", inputMode: "email", maxLength: 120, spellCheck: false, autoCapitalize: "off" })}
             </FormIzgara>
           </FormBolum>
-          <FormBolum baslik="Firmanın deposu (raporlar, fotoğraflar, yedekler)" id="y-b-depo" genis>
+          {/* 2026-10-12 (sunum D1 kabul; reisim: "supabase hesabını nasıl bağlayacağımızı göremedim"): firmanın verisi kendi Supabase hesabında — akış adım adım */}
+          <FormBolum baslik="Firmanın Supabase hesabı (veritabanı, dosyalar, yedek)" id="y-b-depo" genis>
             <BilgiListesi><Bilgi etiket="Şu an" genis="cift">{DEPO_AD[depo]}</Bilgi></BilgiListesi>
             <Serit tur="bilgi" ikon="archive">{DEPO_NOT}</Serit>
+            <ol className={stil.adimlar} aria-label="Supabase hesabı nasıl bağlanır">{SUPABASE_ADIMLAR.map((x) => <li key={x}>{x}</li>)}</ol>
           </FormBolum>
         </FormSayfa>
         <FormEylem>

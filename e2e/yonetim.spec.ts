@@ -56,6 +56,8 @@ test("yönetim: ayrı adres; ilk kurulum; firma aç → geçici parolayla yeni f
   /* firma aç: boş form → alan hataları; ünvandan öneri; ayrılmış ad; başka firmanın kodu sunucuda reddedilir */
   await page.getByRole("link", { name: "Firma aç" }).first().click();
   await expect(page.getByRole("heading", { level: 1, name: "Firma aç" })).toBeVisible();
+  /* 2026-10-12 (sunum D1): firmanın Supabase hesabı — bağlama akışı adım adım (yayına çıkışta) */
+  await expect(page.getByRole("list", { name: "Supabase hesabı nasıl bağlanır" }).getByRole("listitem")).toHaveCount(6);
   await page.getByRole("button", { name: "Firmayı aç" }).click();
   await expect(page.getByText("Ticari ünvan yazılmalı.")).toBeVisible();
   await expect(page.getByLabel("Ticari ünvan")).toBeFocused();

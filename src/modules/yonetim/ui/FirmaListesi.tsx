@@ -36,7 +36,7 @@ export function FirmaListesi({ kayitlar, anaAlan, depo }: { kayitlar: FirmaSatir
     ) },
     { k: "durum", genislik: "14%", baslik: "Durum", kart: "rozet", sira: 1, hucre: (f) => <DurumRozeti durum={f.durum} /> },
     { k: "kod", genislik: "10%", baslik: "Kısa kod", kart: "govde", sira: 3, hucre: (f) => <><KartEtiket>Kısa kod</KartEtiket><Kod>{f.kod}</Kod></> },
-    { k: "depo", genislik: "18%", baslik: "Depo", kart: "govde", sira: 4, hucre: () => <><KartEtiket>Depo</KartEtiket><Kirp>{DEPO_AD[depo]}</Kirp></> },
+    { k: "depo", genislik: "18%", baslik: "Veritabanı", kart: "govde", sira: 4, hucre: () => <><KartEtiket>Veritabanı</KartEtiket><Kirp>{DEPO_AD[depo]}</Kirp></> },
     { k: "acilis", genislik: "12%", baslik: "Açılış", kart: "govde", sira: 5, hucre: (f) => <><KartEtiket>Açılış</KartEtiket>{tarihYaz(f.acilis)}</> },
     { k: "kullanici", genislik: "12%", baslik: "Kullanıcı", kart: "govde", sira: 6, hucre: (f) => <><KartEtiket>Kullanıcı</KartEtiket><span className={stil.sayi}>{f.kullanici}</span></> },
   ];

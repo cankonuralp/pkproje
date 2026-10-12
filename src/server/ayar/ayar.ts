@@ -60,18 +60,12 @@ export const AYAR_BOLUMLERI = {
     model: z.enum(["haiku", "sonnet", "opus"]).default("haiku"),
     sinir: z.number().min(0).max(10000).nullable().default(20),
   }),
-  /** Bulut kaydı (336; maket bulutCiz, Ö2): sağlayıcı, ana klasör, klasör düzeni — hesap bağlantısı ve kendiliğinden kayıt K5 */
+  /** Raporların ikinci kopyası (336 "Bulut kaydı"; 2026-10-12 sunum D3): hizmet ("" = kapalı), ana klasör, klasör düzeni — imzalı raporlar ve aylık
+      yedek firmanın Google Drive / OneDrive'ına; hesap bağlantısı ve kendiliğinden kopya yayına çıkışta (K7). Eski Dropbox / Yandex / SFTP değeri kapalıya döner. */
   bulut: z.object({
-    saglayici: z.enum(["", "gdrive", "onedrive", "dropbox", "yandex", "sftp"]).default(""),
+    saglayici: z.enum(["", "gdrive", "onedrive"]).default(""),
     kok: z.string().trim().min(1).max(80).default("probata Raporlar"),
     duzen: z.enum(["mt", "mty", "my"]).default("mt"),
-  }),
-  /** Yedek (336; maket depoCiz — G2/G3: "elle yedekleme olmasın"): sıklık, saat (günlük / haftalık), yedeklerin saklanması (gün); aylık ilk yedek
-      saklama süresi kadar. Yedek işi K5 (iş kuyruğu), firmanın deposu K7. */
-  yedek: z.object({
-    sik: z.enum(["saatlik", "gunluk", "haftalik"]).default("gunluk"),
-    saat: z.string().regex(/^([01][0-9]|2[0-3])$/).default("03"),
-    gun: z.union([z.literal(30), z.literal(90), z.literal(365)]).default(30),
   }),
   /** Tarafsızlık ve çıkar çatışması beyanı (§3.7 satır 3; karar 26): kalite el kitabındaki metin; boşsa varsayılan. Kabul anındaki metin plana yazılır */
   beyan: z.object({ metin: z.string().trim().min(20).max(4000).default(VARSAYILAN_BEYAN) }),

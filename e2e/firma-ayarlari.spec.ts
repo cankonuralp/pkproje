@@ -59,11 +59,20 @@ test("firma ayarları: bölüm kaydet, geçersiz değer kaydedilmez, mesai şeri
   await expect(yz.getByText(/en ucuz · 1 milyon token: giriş \$0,10/)).toBeVisible();
   await yz.getByRole("button", { name: "Vazgeç" }).click();
   await expect(yz.getByRole("radio", { name: "Kapalı" })).toBeChecked();
-  const bulut = page.getByRole("region", { name: "Bulut kaydı" });
-  await bulut.getByRole("combobox", { name: "Bulut" }).click();
-  await page.getByRole("option", { name: "Google Drive" }).click();
-  await expect(bulut.getByText(/Türkiye dışında saklayabilir/)).toBeVisible();
-  await bulut.getByRole("button", { name: "Vazgeç" }).click();
+  /* 2026-10-12 (sunum D1–D3 kabul): raporların ikinci kopyası — kapalıyken "tek kopya Supabase'te" uyarısı; Açık → hizmet Google Drive, yurt dışı
+     uyarısı, Vazgeç ile geri · Supabase hesabı ve yedek — bağlama akışı adım adım, yedekte ayar yok */
+  const kopya = page.getByRole("region", { name: "Raporların ikinci kopyası" });
+  await expect(kopya.getByText(/tek kopyası Supabase/)).toBeVisible();
+  await kopya.getByRole("radio", { name: "Açık" }).check();
+  await expect(kopya.getByRole("combobox", { name: "Hizmet" })).toContainText("Google Drive");
+  await expect(kopya.getByText(/Türkiye dışında saklayabilir/)).toBeVisible();
+  await kopya.getByRole("button", { name: "Vazgeç" }).click();
+  await expect(kopya.getByRole("radio", { name: "Kapalı" })).toBeChecked();
+  const supa = page.getByRole("region", { name: "Supabase hesabı ve yedek" });
+  await expect(supa.getByText("Supabase hesabı nasıl bağlanır (yayına çıkışta)")).toBeVisible();
+  await expect(supa.getByText(/İlk iş “Supabase hesabını bağla”/)).toBeVisible();
+  await expect(supa.getByText(/Supabase günlük yedeği/)).toBeVisible();
+  await expect(supa.getByRole("combobox")).toHaveCount(0);
 
   /* 335: fiyat listesi (tohumdaki Hava tankı 900,00 — değiştirilmez: muhasebe testi bu fiyatla); firmaya belge türü ekle → listede → kaldır */
   await expect(page.getByRole("region", { name: "Fiyat listesi" }).getByLabel("Hava tankı (TL)")).toHaveValue("900,00");

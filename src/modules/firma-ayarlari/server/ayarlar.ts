@@ -19,7 +19,7 @@ import { tutar } from "../../../sema/ortak.ts";
 import { sirDurumu, sirYaz } from "../../../server/ayar/sir.ts";
 import { yzAyi, yzAyKullanimi, type YzKisiKullanimi } from "../../../server/yz/kullanim.ts";
 import {
-  AnahtarGirdisi, BulutGirdisi, YedekGirdisi, YzGirdisi,
+  AnahtarGirdisi, BulutGirdisi, YzGirdisi,
   BelgeTuruGirdisi, FiyatGirdisi, MUSTERI_BELGE_BAS, MUSTERI_BELGE_SON, MusteriBelgeGirdisi,
   AYAR_DOSYASI, EsikGirdisi, FirmaBilgiGirdisi, ImzaGirdisi, KodGirdisi, MesaiGirdisi, SabitGiderGirdisi, SaklamaGirdisi, ZimmetGirdisi, type AyarDosyasi,
 } from "../sema.ts";
@@ -48,11 +48,12 @@ export interface FirmaAyarlari {
   fiyat: { turler: { id: string; ad: string; kod: string; brans: "m" | "e"; fiyat: number | null }[] };
   /** müşteriye açık personel belgeleri (335): türler ve seçililer */
   mbelge: Surumlu<{ secili: string[] }> & { turler: MusteriBelgeTuru[]; ekSurum: number };
-  /** 336: yapay zekâ (anahtar yalnız "tanımlı + son 4"; değer asla), bulut kaydı, yedek; saklama süresi (aylık arşiv) */
+  /** 336: yapay zekâ (anahtar yalnız "tanımlı + son 4"; değer asla), raporların ikinci kopyası (bulut); saklama süresi (aylık arşiv) */
   /** kullanim: bu ayın kişi başı kullanımı (354; maket Y1 "Bu ay kullanım (kişi başına)") — maliyet milyonda bir dolar */
   yz: Surumlu<{ acik: boolean; model: "haiku" | "sonnet" | "opus"; sinir: number | null }> & { anahtar: { tanimli: boolean; son4: string | null }; kullanim: YzKisiKullanimi[] };
-  bulut: Surumlu<{ saglayici: "" | "gdrive" | "onedrive" | "dropbox" | "yandex" | "sftp"; kok: string; duzen: "mt" | "mty" | "my" }>;
-  yedek: Surumlu<{ sik: "saatlik" | "gunluk" | "haftalik"; saat: string; gun: 30 | 90 | 365 }>;
+  bulut: Surumlu<{ saglayici: "" | "gdrive" | "onedrive"; kok: string; duzen: "mt" | "mty" | "my" }>;
+  /** 2026-10-12 (sunum D1–D2): Supabase hesabı ve yedek bölümü — firmanın dosyaları (çöptekiler hariç): sayı ve toplam bayt */
+  depolama: { dosya: number; bayt: number };
   /** 337: son içe aktarımlar */
   ice: IaGecmis[];
 }
@@ -108,7 +109,10 @@ export async function firmaAyarlari(db: Sorgulayici, kim: Kisi): Promise<FirmaAy
     })(),
     bulut: await (async () => { const b = await ayarOku(db, "bulut"); return { deger: b.deger, surum: b.surum }; })(),
     ice: await iceAktarimlar(db),
-    yedek: await (async () => { const b = await ayarOku(db, "yedek"); return { deger: b.deger, surum: b.surum }; })(),
+    depolama: await (async () => {
+      const r = (await db.sorgu<{ n: number; bayt: string }>("SELECT count(*)::int AS n, coalesce(sum(boyut), 0)::text AS bayt FROM dosya WHERE cop IS NULL")).rows[0];
+      return { dosya: r.n, bayt: Number(r.bayt) };
+    })(),
     mbelge: await (async () => {
       const mb = await ayarOku(db, "musteri_belge"), t = await musteriBelgeTurleri(db);
       const secili = [...mb.deger.ozluk, ...mb.deger.egitim.map((x) => `eg:${x}`), ...(mb.deger.atama ? ["atama"] : [])].filter((k) => t.turler.some((x) => x.k === k));
@@ -212,11 +216,8 @@ export async function ayarKaydet(db: Sorgulayici, kim: Kisi, kesim: string, suru
     }
     case "bulut": {
       const g = dogrula(BulutGirdisi, girdi);
-      return g.tamam ? yaz("bulut", g.veri, "Bulut kaydı ayarları kaydedildi.") : { durum: "gecersiz", hatalar: g.hatalar };
-    }
-    case "yedek": {
-      const g = dogrula(YedekGirdisi, girdi);
-      return g.tamam ? yaz("yedek", g.veri, "Yedek ayarları kaydedildi.") : { durum: "gecersiz", hatalar: g.hatalar };
+      return g.tamam ? yaz("bulut", g.veri, g.veri.saglayici ? "Raporların ikinci kopyası ayarları kaydedildi." : "Raporların ikinci kopyası kapatıldı.")
+        : { durum: "gecersiz", hatalar: g.hatalar };
     }
     case "mbelge": {
       const g = dogrula(MusteriBelgeGirdisi, girdi);

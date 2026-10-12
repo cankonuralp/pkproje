@@ -96,7 +96,7 @@ export function FirmaSayfasi({ firma: f, anaAlan, depo }: { firma: FirmaSatiri |
             {f.yonetici ? <>{f.yonetici.ad}<AltSatir>{f.yonetici.eposta} · {YON_DURUM[f.yonetici.durum]}</AltSatir></> : "—"}
           </Bilgi>
           <Bilgi etiket="Kullanıcı">{String(f.kullanici)}</Bilgi>
-          <Bilgi etiket="Depo" genis="cift">{DEPO_AD[depo]}<AltSatir>{DEPO_NOT}</AltSatir></Bilgi>
+          <Bilgi etiket="Veritabanı" genis="cift">{DEPO_AD[depo]}<AltSatir>{DEPO_NOT}</AltSatir></Bilgi>
         </BilgiListesi>
       </Bolum>
       <SonrasiAdimlar />

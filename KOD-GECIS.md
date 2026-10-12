@@ -230,6 +230,8 @@ denetlenir, çelişirse sunucu kazanır (ARKA-UC §4.4).
 8. Ayrılan personele hesap açılmaz · aynı kişiye ikinci kez teslim edilmez · mobil imza telefonu yoksa mobil imzaya gönderilmez (öteki yol açık).
 9. Teklif yalnız taslakken düzenlenir · kullanılmış İSG-KATİP ID silinmez.
 10. **Firmanın deposu bağlanıp denenmeden firma açılmaz**; depo kesilemez, yalnız değiştirilir (yeni depo denenir, taşınır) — reisim 2026-10-03, pkproje §11 255.
+    **2026-10-12 (sunum D1 kabul, pkproje §11 513):** "depo" = firmanın kendi Supabase hesabı (veritabanı + dosyalar, 294); ayrı S3 deposu formu yok.
+    Firma, yöneticisi ilk girişte Supabase hesabını bağlayıp proje kurulmadan çalışmaz; akış firma-ayarlari/sema.ts SUPABASE_ADIMLAR (K7).
 11. **Bizim kod imzalı rapor PDF'lerini ve aylık arşiv yedeklerini saklama süresi (en az 5 yıl; firma 6–20 yıla uzatabilir — reisim "2 olsun") dolmadan silmez; süre dolunca depodan siler** (30 gün önce firma yöneticisine liste) — reisim 2026-10-03: *"biz kurgulayalım, depoda 5 sene sonra silcek şekilde kodla , müşteri deposunu bağladıktan sonra siler silmez kendi bilir"*. Depo kilidi (nesne kilidi) kullanılmaz; firmanın kendi deposunda elle sildiği dosya firmanın sorumluluğu.
 
 **UYARI (kayıt olur, şerit / pencere söyler):** plan günü geçmiş tarih (G1) · İSG-KATİP ID yok / geç onay / bitmiş · EKİPNET boş · meslek türe yetkili değil · türe ekipman ataması

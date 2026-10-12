@@ -19,7 +19,7 @@ export const SAYFA_YARDIMI: Readonly<Record<number, string>> = {
   19: "Performans: rapor süreleri ve tamamlanma dilimleri.",
   5: "Ekipman türleri: tür kataloğu, kontrol süresi, ölçüm cihazları ve rapor formatı.",
   4: "Dökümanlar: standartlar, talimatlar ve eğitimler.",
-  22: "Firma ayarları: künye, imza yöntemi, depolama ve yedek, yapay zekâ, formatlar.",
+  22: "Firma ayarları: künye, imza yöntemi, Supabase hesabı ve yedek, raporların ikinci kopyası, yapay zekâ, formatlar.",
 };
 export const ANA_SAYFA_YARDIMI = "Ana sayfa rolünüze göre bugünün işlerini, bekleyenleri ve duyuruları toplar.";
 

@@ -2405,6 +2405,22 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-12 (513): **FİRMA AYARLARI: SUPABASE HESABI VE YEDEK + RAPORLARIN İKİNCİ KOPYASI** (reisim, sunum 507 için: *"okudum, inceledim, önerilerini
+  kabul ediyorum, hayata geçir ama supabase hesabını nasıl bağlayacağımızı göremedim eğer o da kurguluysa sorun yok sen yayınlayınca incelerim"* —
+  D1–D3). **"Depolama ve yedek" → "Supabase hesabı ve yedek"** (yalnız bilgi, düzenleme yok): bağlantı (deneme yayınında probata'nın ortak deneme
+  projesi; kendi hesap yayına çıkışta), firmanın dosya kullanımı (sayı, MB — gerçek), Pro paket sınırları; **"Supabase hesabı nasıl bağlanır"** adım
+  adım (6 adım, firma-ayarlari/sema.ts SUPABASE_ADIMLAR): probata firmayı açar → yönetici geçici parolayla girer → ilk iş "Supabase hesabını bağla"
+  (Supabase'in kendi giriş ve izin ekranı; anahtar kopyalanmaz, parola paylaşılmaz) → probata firmanın hesabında Frankfurt'ta proje kurar, tabloları
+  ve güvenliği yükler → yönetici Supabase'te Pro paketi ve ödemeyi seçer (fatura firmaya) → bağlantı, kullanım, yedek bu bölümde; probata'da yalnız
+  "hangi adres → hangi proje" kaydı. Yedek: **ayar yok** — Supabase günlük yedeği (veritabanı, 7 gün, dosyaları kapsamaz) + aylık arşiv yedeği
+  (saklama süresi boyunca) + rapor arşivi; eski sıklık / saat / saklama seçimleri ve "yedek" ayar bölümü kalktı. **"Bulut kaydı" → "Raporların
+  ikinci kopyası"**: Kapalı / Açık; açıkken hizmet (yalnız Google Drive, OneDrive — Dropbox / Yandex / SFTP kalktı, kayıtlı eski değer kapalıya döner),
+  klasör düzeni, ana klasör, yurt dışı uyarısı, "hesap bağlantısı yayına çıkışta"; kapalıyken uyarı "raporlarınızın tek kopyası Supabase'te".
+  **Yönetim:** Firma aç'ta "Firmanın deposu" → "Firmanın Supabase hesabı" + aynı 6 adım; liste ve firma sayfasında "Depo" → "Veritabanı"; "Sonrası"
+  adımlarına Supabase bağlama. Gerçek bağlantı (OAuth, proje kurma, aylık yedek işi, ikinci kopya gönderimi) yayına çıkış işi (K7) — ekran bunu
+  açıkça söyler. Kilitler: tests/firma-ayarlari.test.ts (hizmet listesi, SFTP reddedilir, yetkisiz, kapat bildirimi, eski Dropbox kapalıya döner,
+  yedek kesimi yok, dosya kullanımı firmaya göre, B'de 0), e2e firma-ayarlari (ikinci kopya aç / Vazgeç, Supabase adımları, ayarsız yedek) +
+  yonetim (Firma aç'ta 6 adım). KOD-GECIS ENGEL 10'a not.
 - 2026-10-12 (512): **YAPAY ZEKÂ: CLAUDE HAIKU 5.5** (reisim, sunum 507'yi okuyup: *"okudum, inceledim, önerilerini kabul ediyorum, hayata geçir"* — Y1–Y4).
   Firma ayarları › Yapay zekâ model listesi: **Claude Haiku 5.5** (en ucuz · $0,10 / $0,50, 1 milyon token · okuma ≈ $0,0015) · Sonnet 5.5 (dengeli) ·
   Opus 5.5 (en doğru, en pahalı); açıklama satırı fiyatı ve bir okumanın yaklaşık maliyetini söyler. **Yeni firmada varsayılan Haiku 5.5** (eski
