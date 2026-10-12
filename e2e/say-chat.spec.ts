@@ -47,7 +47,7 @@ test("S.A.Y Chat: fotoğraf, ekipman, numaralı mesaj, okunacak fotoğraf, etike
   await fab.click();
   const panel = page.getByRole("dialog", { name: "S.A.Y Chat" });
   await expect(panel).toBeVisible();
-  await expect(page.getByRole("dialog", { name: "S.A.Y" })).toHaveCount(0);
+  await expect(page.getByRole("dialog", { name: "S.A.Y", exact: true })).toHaveCount(0);
   if (bilgi.project.name === "telefon") expect(Math.round((await panel.boundingBox())!.width)).toBe(page.viewportSize()!.width);
   await expect(panel).toContainText("Bu sohbeti yalnız siz görürsünüz");
 
