@@ -292,12 +292,14 @@ export function PlanIciEkrani({ v }: { v: PlanIci }) {
   );
 
   /* ── 4 · Tamamlama ── */
+  /* adımın içeriği yoksa içerik kutusu hiç çizilmez (Adim: children boşsa kutu yok — donmuş referans ekranın ölçüsü; görsel karşılaştırma) */
+  const a4Eylem = kt ? eylemKutusu("Planı tamamlayın; plan Tamamlandı olur. Saha formu plan tamamlanınca buradan oluşturulur.")
+    : d === "denetimde" ? <p className={stil.adimNot}>Kontrol listesi tamamlanınca plan buradan tamamlanır; saha formu da tamamlanınca oluşturulur.</p>
+    : d === "tamamlandi" ? eylemKutusu(v.sahaFormlari.length ? null : "Saha formu: yapılan ekipmanlar ve firma onayı imza yerleriyle; istediğiniz kadar oluşturun.") : null;
+  const a4Saha = v.sahaFormlari.length > 0 && <SahaFormlari planId={k.id} formlar={v.sahaFormlari} yaz={v.izin.sahaFormu} />;
   const a4 = (
     <Adim no={4} durum={adim[3]} baslik="Tamamlama" ozet={d === "tamamlandi" && v.bitti ? gunNo(v.bitti) : null}>
-      {kt ? eylemKutusu("Planı tamamlayın; plan Tamamlandı olur. Saha formu plan tamamlanınca buradan oluşturulur.")
-        : d === "denetimde" ? <p className={stil.adimNot}>Kontrol listesi tamamlanınca plan buradan tamamlanır; saha formu da tamamlanınca oluşturulur.</p>
-        : d === "tamamlandi" ? eylemKutusu(v.sahaFormlari.length ? null : "Saha formu: yapılan ekipmanlar ve firma onayı imza yerleriyle; istediğiniz kadar oluşturun.") : null}
-      <SahaFormlari planId={k.id} formlar={v.sahaFormlari} yaz={v.izin.sahaFormu} />
+      {a4Eylem || a4Saha ? <>{a4Eylem}{a4Saha}</> : null}
     </Adim>
   );
 
