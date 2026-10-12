@@ -78,7 +78,8 @@ export const SILINEBILIR = {
     kullanim: "is_sozlesmesi_kullanim", sil: "is_sozlesmesi_sil",
     fk: { kullanim: ["fatura.sozlesme_id"], birlikte: ["is_sozlesmesi_tesis.sozlesme_id"] },
   },
-  /* 370: hiç yayınlanmamış (taslak) rapor formatı; yayınlanmış / eski sürüm silinmez (0065) */
+  /* 370: taslak rapor formatı (0065); 2026-10-12 hiç kullanılmamış ESKİ sürüm de (0081) — yayındaki, raporlu (rapor.format_id) ve imzalı rapor sürümü
+     olan (rapor_surumu.format_id — yabancı anahtar değil, kullanım işlevinde sayılır) sürüm silinmez */
   rapor_format: {
     kullanim: "rapor_format_kullanim", sil: "rapor_format_sil",
     fk: { kullanim: ["rapor.format_id"], birlikte: [] },

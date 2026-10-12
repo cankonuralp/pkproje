@@ -84,7 +84,9 @@ PDF'e basılmaz.
 - Format **taslak** → **yayınla** (v1, v2 …; değişiklik notu). Açık raporlar başladıkları sürümle kalır; yeni raporlar yeni sürümle açılır
   (bugünkü "Formatı güncelle" — 211 — taslak raporu yeni sürüme taşır).
 - Yayın öncesi denetim: boş bölüm, sınırı olmayan ölçüm sütunu, cevap seti olmayan liste, kilitli alan eksik → liste hâlinde söylenir.
-- Eski sürümler saklanır (imzalı raporun PDF'i hangi sürümle çizildiyse o sürümle yeniden üretilebilir).
+- Eski sürümler saklanır (imzalı raporun PDF'i hangi sürümle çizildiyse o sürümle yeniden üretilebilir). 2026-10-12 (reisim: "eski sürümleri silmekte
+  olsun"): HİÇ KULLANILMAMIŞ eski sürüm (rapor açılmamış, imzalı rapor sürümü yok) yönetici tarafından silinebilir; kullanılmış eski sürüm ve yayındaki
+  sürüm silinmez. Silinen sürümün numarası yeniden verilmez.
 - **2026-10-10 (471; maket kararı k5):** sürüm sayfası formatın kimliğini söyler — yayınlanma (kim, ne zaman), bu sürümle yazılan rapor sayısı,
   doküman kodu, bölüm · madde, sürüm notu; **önceki sürüme göre değişenler** (taslak yayındaki sürümle, sürüm N bir öncekiyle; öğeler kimlikle
   eşlenir — `src/modules/rapor-format/fark.ts`); önizleme Belge ↔ Saha ekranı; kurallar; öteki sürümler. Tek "Düzenle". Eski teknik listeler
@@ -130,6 +132,7 @@ PDF'e basılmaz.
   kopyasında değiştirilir; formatın **"Sahada denetçi değiştiremez"** seçimi (gorunum.kilitli; başlangıç SGK ve İSG-KATİP) kilitler — kâğıtta 1.
   bölümün altında. Kilitli bilgiyi sunucu da reddeder (src/format/kunye.ts).
 - **2026-10-12 (493; 29 + 46 maketi):** kâğıdın üstünde **Geri al / Yinele** (Ctrl+Z / Ctrl+Y); her değişiklik bir adım, en çok 100 (gecmis.ts).
+- **2026-10-12 (504):** hiç kullanılmamış eski sürümde **Sil** (yönetici; tablo satırında ve sürüm sayfasında). Tablonun tuşları yan yana (503).
 - **2026-10-12 (501):** eski sürümde **"Bu sürüme geri dön"** — içeriği yeni sürüm olarak yayınlanır (sürümler değişmez, hiçbiri silinmez; açık
   raporlar kendi sürümünde kalır). Açık taslak varsa yerine geçer (pencere uyarır).
 - **2026-10-12 (498):** **Belgeden başlat** (§4.3) — yapay zekâ kutusunda; firmanın PDF / Word / fotoğraf formatından bölüm önerileri (kâğıtta

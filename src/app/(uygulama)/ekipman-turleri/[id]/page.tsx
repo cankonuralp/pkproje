@@ -19,7 +19,8 @@ import { TurTuslari } from "../../../../modules/ekipman-turleri/ui/KartTuslari";
 import { tarihYaz } from "../../../../modules/ekipman-turleri/ui/ortak";
 import { modulBul } from "../../../../modules/moduller";
 import { SABLONLAR } from "../../../../format/sablonlar";
-import { formatDegistirir, formatSurumleri, formatSilebilir } from "../../../../modules/rapor-format/server/formatlar";
+import { formatDegistirir, formatSurumleri, silinebilirSurumler } from "../../../../modules/rapor-format/server/formatlar";
+import { formatRaporSayilari } from "../../../../modules/raporlar/server/format-baglanti";
 import { SablonBaslatTusu, SablonTablosu, SifirdanTusu } from "../../../../modules/rapor-format/ui/SablonBolumu";
 import { surumAdi, tarihYaz as sablonTarihi } from "../../../../modules/rapor-format/ui/ortak";
 import { modulOturumu, oturumIslemi } from "../../../../server/kimlik/istek";
@@ -32,8 +33,12 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
   const o = await modulOturumu(MODUL.no);
   if (!o) return <Yetkisiz />;
   const { id } = await params;
-  const [t, sec, sablonlar, silme] = await oturumIslemi(o, async (db) => [await turKarti(db, o, id), await baglantiSecenekleri(db, o), await formatSurumleri(db, o, id),
-    await turSilmeDurumu(db, o, id)] as const);
+  const [t, sec, sablonlar, silme, surumSilme, raporlar] = await oturumIslemi(o, async (db) => {
+    const l = await formatSurumleri(db, o, id);
+    const idler = (l ?? []).map((x) => x.id);
+    return [await turKarti(db, o, id), await baglantiSecenekleri(db, o), l, await turSilmeDurumu(db, o, id),
+      await silinebilirSurumler(db, o, idler), await formatRaporSayilari(db, idler)] as const;
+  });
   if (!t) notFound();
   const yaz = turDegistirir(o), sablonYaz = formatDegistirir(o);
   const surumler = sablonlar ?? [], yayinda = surumler.find((x) => x.durum === "yayinda"), taslak = surumler.find((x) => x.durum === "taslak");
@@ -56,7 +61,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
           <SablonBaslatTusu turId={t.id} turAd={t.ad} taslak={taslak ? { surum: taslak.surum, degisti: taslak.degisti } : null}
             surumler={surumler} sablonlar={SABLON_SECENEKLERI} />
         </>}>
-        {surumler.length ? <SablonTablosu turId={t.id} surumler={surumler} yaz={sablonYaz} sil={formatSilebilir(o)} />
+        {surumler.length ? <SablonTablosu turId={t.id} surumler={surumler} yaz={sablonYaz} silinebilir={surumSilme} raporlar={raporlar} />
           : <SeritKap><Serit tur="uyari" ikon="layout-list">Rapor şablonu yayınlanmadı.</Serit></SeritKap>}
         {surumler.length > 0 && !yayinda && <SeritKap><Serit tur="uyari" ikon="layout-list">Rapor şablonu yayınlanmadı; yayınlanınca bu türde rapor yazılır.</Serit></SeritKap>}
       </Bolum>

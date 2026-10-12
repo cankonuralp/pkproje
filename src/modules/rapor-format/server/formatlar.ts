@@ -14,7 +14,7 @@ import { kilitDenetimi, kilitNormallestir, yayinDenetimi } from "../../../format
 import { bosFormat, grupFormati } from "../../../format/sablonlar.ts";
 import { FormatTanimi } from "../../../format/tanim.ts";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
-import { kesinSil } from "../../../server/db/silici.ts";
+import { kesinSil, kullanimlar, type Kullanim } from "../../../server/db/silici.ts";
 import { ekle, guncelle, tablo } from "../../../server/db/yazici.ts";
 import { canDoEylem, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, hatalar, type DogrulamaHatalari } from "../../../sema/ortak.ts";
@@ -347,12 +347,20 @@ export async function formatSurumuOku(db: Sorgulayici, id: string): Promise<{ id
   return r && t ? { id: r.id, turId: r.tur_id, sira: r.sira, durum: r.durum, tanim: t } : null;
 }
 
-/* ── TASLAĞI SİL (370; reisim 2026-10-07 "eklenebilen şeyler silinemiyor"; §9 elli üçüncü tur) — yalnız yönetici (kayit_sil, modül 5) ve yalnız hiç
-   yayınlanmamış taslak (veritabanında, göç 0065); yayınlanmış / eski sürüm silinmez (0022). Tanım izde kalır. */
+/* ── SÜRÜM SİL (370 taslak; 2026-10-12 reisim: "eski sürümleri silmekte olsun", "silme tuşuda ekle" — göç 0081) — yalnız yönetici (kayit_sil,
+   modül 5). Taslak ve HİÇ KULLANILMAMIŞ eski sürüm kesin silinir; yayındaki sürüm, rapor açılmış (silinmiş taslak rapor dahil) ya da imzalı rapor
+   sürümü bulunan sürüm silinmez — karar veritabanında (rapor_format_kullanim / _sil), tanım izde kalır. Ekran Sil tuşunu yalnız silinebilene çizer
+   (silinebilirSurumler — aynı kullanım işlevinden). */
 export const formatSilebilir = (kim: YetkiHesabi) => canDoEylem(kim, "kayit_sil", { modul: MODUL });
-export async function taslakSil(db: Sorgulayici, kim: Kisi, id: string): Promise<Yazma> {
+export type SurumSilme = { durum: "tamam"; id: string; ad: string } | { durum: "kullanildi"; kullanim: Kullanim } | { durum: "yok" } | { durum: "yetkisiz" };
+export async function surumSil(db: Sorgulayici, kim: Kisi, id: string): Promise<SurumSilme> {
   if (!formatSilebilir(kim)) return { durum: "yetkisiz" };
   const r = await kesinSil(db, "rapor_format", id, kim.ad);
-  if (r.durum === "kullanildi") return { durum: "kilitli" };
-  return r.durum === "tamam" ? { durum: "tamam", id, surum: 0 } : { durum: "yok" };
+  return r.durum === "tamam" ? { durum: "tamam", id, ad: r.ad } : r;
+}
+/** verilen sürümlerden silinebilenler (yönetici değilse hiçbiri) — Sil tuşu yalnız bunlara çizilir */
+export async function silinebilirSurumler(db: Sorgulayici, kim: YetkiHesabi, idler: readonly string[]): Promise<string[]> {
+  if (!formatSilebilir(kim) || !idler.length) return [];
+  const k = await kullanimlar(db, "rapor_format", idler);
+  return idler.filter((x) => UUID.test(x) && !k.has(x));
 }

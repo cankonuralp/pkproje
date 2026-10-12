@@ -4,7 +4,8 @@
    varsa taslağın yerine geçer) · 437 Sıfırdan oluştur (boş iskelet; onaylı, taslak varsa yerine geçer) · 439 yayındaki sürümde Düzenle (o sürümden
    taslak → Format kurucu; açık taslak varsa "Taslağa devam et" ya da yeniden başla) · Yayınla penceresi (engeller + uyarılar sunucudan, sürüm notu). Tuşlar yalnız "değiştirir" düzeyine çizilir;
    karar ve denetim yine sunucuda. Taslak Format kurucuda düzenlenir (…/sablon/<sürüm>/kurucu, K4).
-   2026-10-12 (reisim: "ekipman türlerinde eski sürüme geri dön tuşu olsun"): eski sürümde "Bu sürüme geri dön" — içeriği yeni sürüm olarak yayınlanır. */
+   2026-10-12 (reisim: "ekipman türlerinde eski sürüme geri dön tuşu olsun"): eski sürümde "Bu sürüme geri dön" — içeriği yeni sürüm olarak yayınlanır.
+   2026-10-12 (reisim: "eski sürümleri silmekte olsun", "silme tuşuda ekle"): hiç kullanılmamış eski sürümde Sil (yalnız yönetici; göç 0081). */
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { Kosullar } from "../../../components/bilgi/Bilgi";
@@ -19,17 +20,19 @@ import { Serit } from "../../../components/serit/Serit";
 import { SilTusu } from "../../../components/sil/SilTusu";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
 import type { FormatOzeti } from "../server/formatlar";
-import { surumeGeriDonEylemi, taslakBaslatEylemi, taslakSilEylemi, yayinDenetleEylemi, yayinlaEylemi } from "./eylemler";
+import { surumeGeriDonEylemi, surumSilEylemi, taslakBaslatEylemi, yayinDenetleEylemi, yayinlaEylemi } from "./eylemler";
 import { DURUM_ROZET, surumAdi, tarihYaz } from "./ortak";
 import stil from "./format.module.css";
 
 const BASLA_ID = "sb-baslangic", NOT_ID = "sb-not", GERI_NOT_ID = "sb-geri-not";
 
-/** 370: `sil` — taslağı kesin silebilir (yönetici; yayınlanmış sürüm silinmez). 471: `raporlar` — sürüm başına bu sürümle yazılan rapor sayısı.
+/** `silinebilir` (370 taslak; 2026-10-12 eski sürüm — "eski sürümleri silmekte olsun"): kesin silinebilen sürümler — yönetici ve hiç kullanılmamış
+    (sunucuda formatlar.ts silinebilirSurumler; yayındaki, rapor açılmış ya da imzalı rapor sürümü olan sürüm yok). 471: `raporlar` — sürüm başına bu
+    sürümle yazılan rapor sayısı.
     `tumu` (2026-10-12): tablo bir kısmı gösteriyorsa (sürüm sayfasının "Öteki sürümler"i) türün bütün sürümleri — açık taslak ve yayındaki ondan
     bulunur (geri dönüş görmediği taslak yüzünden "çakışma" demesin) */
-export function SablonTablosu({ turId, surumler, yaz, sil = false, raporlar, tumu }:
-  { turId: string; surumler: FormatOzeti[]; yaz: boolean; sil?: boolean; raporlar?: Record<string, number>; tumu?: FormatOzeti[] }) {
+export function SablonTablosu({ turId, surumler, yaz, silinebilir = [], raporlar, tumu }:
+  { turId: string; surumler: FormatOzeti[]; yaz: boolean; silinebilir?: readonly string[]; raporlar?: Record<string, number>; tumu?: FormatOzeti[] }) {
   const taslak = (tumu ?? surumler).find((x) => x.durum === "taslak") ?? null;
   const yayinda = (tumu ?? surumler).find((x) => x.durum === "yayinda") ?? null;
   /* 2026-10-12 (reisim: "tuşlar yan yana olabilecekken altlı üstlü ? boşuna sayfa uzuyor"): İşlem sütunu %18'de "Önizle" ile "Bu sürüme geri dön"
@@ -47,12 +50,20 @@ export function SablonTablosu({ turId, surumler, yaz, sil = false, raporlar, tum
         {yaz && x.durum === "yayinda" && <SurumDuzenleTusu turId={turId} surum={x} taslak={taslak} />}
         {yaz && x.durum === "taslak" && <YayinlaTusu format={x} />}
         {yaz && x.durum === "eski" && <GeriDonTusu turId={turId} surum={x} taslak={taslak} yayinda={yayinda} />}
-        {sil && x.durum === "taslak" && <SilTusu kucuk ikon="trash-2" ad="Taslak" erisimAdi="Taslağı sil" baslik="Rapor formatı taslağını sil" yanEtki="yayınlanmış sürümler etkilenmez"
-          sil={() => taslakSilEylemi(x.id)} odak="#b-sablon" />}
+        {silinebilir.includes(x.id) && x.durum === "taslak" && <SilTusu kucuk ikon="trash-2" ad="Taslak" erisimAdi="Taslağı sil" baslik="Rapor formatı taslağını sil"
+          yanEtki="yayınlanmış sürümler etkilenmez" sil={() => surumSilEylemi(x.id)} odak="#b-sablon" />}
+        {silinebilir.includes(x.id) && x.durum === "eski" && <SurumSilTusu id={x.id} ad={surumAdi(x)} kucuk />}
       </span>
     ) },
   ];
   return <Liste baslik="Rapor şablonu sürümleri" sutunlar={sutunlar} kayitlar={surumler} anahtar={(x) => x.id} />;
+}
+
+/** 2026-10-12 (reisim: "eski sürümleri silmekte olsun", "silme tuşuda ekle"): hiç kullanılmamış ESKİ sürümün kesin silinmesi — çağıran yalnız
+    silinebilene çizer (silinebilirSurumler); karar yine sunucuda. `kucuk`: tablo satırında simge; değilse sürüm sayfasının başlığında, sonra türe döner. */
+export function SurumSilTusu({ id, ad, kucuk = false, donus }: { id: string; ad: string; kucuk?: boolean; donus?: string }) {
+  return <SilTusu kucuk={kucuk} ikon="trash-2" ad={ad} erisimAdi={kucuk ? `${ad} · Sil` : undefined} baslik="Rapor şablonu sürümünü sil"
+    yanEtki="bu sürümle rapor yazılmadı; öteki sürümler ve raporlar etkilenmez" sil={() => surumSilEylemi(id)} donus={donus} odak={kucuk ? "#b-sablon" : undefined} />;
 }
 
 /** şablondan başlat: hazır şablon ya da yayınlanmış sürüm; taslak varsa onun yerine geçer (onun sürümüyle — görmediği taslağı ezmez) */

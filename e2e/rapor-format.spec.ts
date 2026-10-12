@@ -410,9 +410,20 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
   /* 2026-10-12 (reisim: "tuşlar yan yana olabilecekken altlı üstlü ? boşuna sayfa uzuyor"): tabloda satırın tuşları tek satırda (telefonda kart) */
   if (bilgi.project.name !== "telefon") {
     const satir = page.getByRole("row", { name: /^Sürüm 2 / });
-    const [k1, k2] = [await satir.getByRole("link", { name: "Önizle" }).boundingBox(), await satir.getByRole("button", { name: "Sürüm 2 · Bu sürüme geri dön" }).boundingBox()];
+    const [k1, k2, k3] = [await satir.getByRole("link", { name: "Önizle" }).boundingBox(), await satir.getByRole("button", { name: "Sürüm 2 · Bu sürüme geri dön" }).boundingBox(),
+      await satir.getByRole("button", { name: "Sürüm 2 · Sil" }).boundingBox()];
     expect(Math.abs(k1!.y - k2!.y), "Önizle ile Geri dön yan yana").toBeLessThan(4);
+    expect(Math.abs(k1!.y - k3!.y), "Önizle ile Sil yan yana").toBeLessThan(4);
   }
+  /* 2026-10-12 (reisim: "eski sürümleri silmekte olsun", "silme tuşuda ekle"): hiç kullanılmamış eski sürüm silinir; yayındaki sürümde Sil yok */
+  await expect(page.getByRole("button", { name: "Sürüm 4 · Sil" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Sürüm 1 · Sil" }).click();
+  const silOnay = page.locator("dialog[open]");
+  await expect(silOnay).toContainText("Sürüm 1 kalıcı olarak silinir; bu sürümle rapor yazılmadı; öteki sürümler ve raporlar etkilenmez. Geri alınamaz.");
+  await silOnay.getByRole("button", { name: "Sil", exact: true }).click();
+  await expect(page.getByText("Sürüm 1 silindi.").first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("button", { name: /^Sürüm \d · Bu sürüme geri dön$/ })).toHaveCount(2);
+  await expect(page.getByRole("link", { name: /Rapor formatı\s*Sürüm 4/ })).toBeVisible();
 
   /* denetçi: görür, başlatamaz / yayınlayamaz */
   await context.clearCookies();

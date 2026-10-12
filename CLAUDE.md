@@ -131,7 +131,8 @@ pkproje/
   src/modules/rapor-format/ RAPOR FORMATI (2026-10-04, 308): sürümlü tanım (rapor_format, göç 0022: taslak → yayında → eski; yayınlanan değişmez) ·
                             şablondan başlat · taslak kaydet · yayınla (kilitli Bakanlık öğesi ENGEL, öteki denetim uyarı) · yayındaki format;
                             ekran: tür sayfası "Rapor şablonu" + önizleme /ekipman-turleri/<tür>/sablon/<sürüm> · FORMAT KURUCU (338, K4):
-                            …/sablon/<taslak>/kurucu (ui/FormatKurucu.tsx; saf düzenleme kurucu.ts — yeni kimlik tekil, kilitli bölüm / öğe silinmez) · 370 taslakSil (0065)
+                            …/sablon/<taslak>/kurucu (ui/FormatKurucu.tsx; saf düzenleme kurucu.ts — yeni kimlik tekil, kilitli bölüm / öğe silinmez) · 370 taslak sil (0065) → 504 surumSil: taslak +
+                            hiç kullanılmamış ESKİ sürüm (0081; yayındaki, raporlu, imzalı rapor sürümlü silinmez) · silinebilirSurumler (Sil tuşu yalnız onlara)
                             · 436 hazır şablonlar Ekipman türleri'nde (ui/HazirFormatlar, sablondanTurEkle; önizleme /ekipman-turleri/sablon/<ZPKR…>)
                             · 437 HAZIR KURULUM server/kurulum.ts: firmanın ilk açılışında (Ana sayfa, Ekipman türleri) Bakanlık türleri — tür + resmî PDF +
                             yayında şablon (sistem, hesapsız, danışma kilidi; firma ayarı "kurulum") · "bos" başlangıç = sıfırdan (sablonlar.ts bosFormat)

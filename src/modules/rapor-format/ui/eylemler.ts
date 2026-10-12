@@ -3,10 +3,11 @@
    gelen kimlik / sürüm yalnız "hangi kayıt, hangi sürümü gördüm" bilgisidir; yayının engeli ve uyarıları sunucuda yeniden hesaplanır.
    438 / 440: Bakanlık şablonundan başlatma / tür eklemede türün PDF'i yoksa resmî PDF, boş standart / cihaz bağlantısı formatınkiyle — aynı işlemde
    (kurulum.ts bakanlikTamamla). */
+import { kullanimMetni } from "../../../components/sil/metin";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { depo } from "../../../server/dosya/depo";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
-import { GeriDonusIptal, sablondanTurEkle, surumeGeriDon, taslakBaslat, taslakKaydet, taslakSil, yayinDenetle, yayinla, type GeriDonSonucu } from "../server/formatlar";
+import { GeriDonusIptal, sablondanTurEkle, surumeGeriDon, surumSil, taslakBaslat, taslakKaydet, yayinDenetle, yayinla, type GeriDonSonucu } from "../server/formatlar";
 import { bakanlikTamamla } from "../server/kurulum";
 import { parcaKaydet, parcaSil } from "../server/parcalar";
 import { BELGE_EN_BUYUK, formatBelgesi, formatYzBirak, formatYzHazirla, formatYzKapat, type FormatYzSonucu } from "../server/yz";
@@ -85,12 +86,16 @@ export async function taslakKaydetEylemi(formatId: string, surum: number, tanim:
   return { genel: SONUC[r.durum] };
 }
 
-/** 370: hiç yayınlanmamış taslak kesin silinir (yalnız yönetici; karar formatlar.ts / veritabanında) */
-export async function taslakSilEylemi(id: string): Promise<FormatDurumuYaniti> {
+/** sürüm sil (370 taslak; 2026-10-12 hiç kullanılmamış eski sürüm — göç 0081): yalnız yönetici; karar formatlar.ts surumSil / veritabanında.
+    Silinemezse nedeni: yayındaki sürüm ya da kullanıldığı yerler ("2 raporda, 1 imzalı rapor sürümünde"). */
+export async function surumSilEylemi(id: string): Promise<FormatDurumuYaniti> {
   const o = await oturum(); if (typeof o === "string") return { genel: o };
-  const r = await oturumIslemi(o, (db) => taslakSil(db, o, metin(id)));
+  const r = await oturumIslemi(o, (db) => surumSil(db, o, metin(id)));
   if (r.durum === "tamam") return { tamam: true, id: r.id };
-  if (r.durum === "gecersiz") return { hatalar: r.hatalar };
+  if (r.durum === "kullanildi") {
+    return { genel: r.kullanim.yayinda ? "Yayındaki sürüm silinmez; yeni raporlar onunla açılır."
+      : `Bu sürüm silinemez: ${kullanimMetni(r.kullanim)} kullanıldı — o raporların belgesi bu sürümle çizilir.` };
+  }
   return { genel: SONUC[r.durum] };
 }
 

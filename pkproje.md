@@ -2405,6 +2405,17 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-12 (504): **ESKİ SÜRÜMÜ SİL** (reisim: *"eski sürümleri silmekte olsun"*, *"silme tuşuda ekle"*). Rapor şablonu sürümleri tablosunda ve eski
+  sürümün sayfasında **Sil** — yalnız yönetici (kayit_sil, modül 5) ve yalnız HİÇ KULLANILMAMIŞ eski sürüm. Kural (göç 0081, veritabanında): yayındaki
+  sürüm silinmez (yeni raporlar onunla açılır); o sürümle açılmış rapor (silinmiş taslak rapor dahil) ya da o sürümle İMZALANMIŞ rapor sürümü varsa
+  silinmez — rapor sonradan "Formatı güncelle" ile yeni sürüme geçmiş olsa da eski imzalı sürümün belgesi o format sürümüyle yeniden çizilir
+  (rapor_surumu.format_id; yabancı anahtar yok — kullanımda sayılır). Silinemezse neden söylenir ("2 raporda, 1 imzalı rapor sürümünde kullanıldı").
+  Tuş yalnız silinebilene çizilir (formatlar.ts silinebilirSurumler — aynı kullanım işlevi); tür sayfası sürüm başına rapor sayısını da gösterir.
+  Silinen sürümün numarası yeniden verilmez, tanımı denetim izinde kalır. 0022'nin "yayınlanan sürüm silinmez" kuralı bu kadar gevşedi — gerekçesi
+  (imzalı raporun belgesi) korunarak. taslakSil → surumSil (taslak + eski). Kilitler: tests/kesin-silme.test.ts 370 (yetki, başka firma, yayındaki,
+  raporlu, imzalı sürümlü, silinebilir listesi, numara yeniden verilmez — eski "kilitli" beklentisi yeni kurala göre güncellendi), olumsuz kanıt
+  kesin-silme.bozan 15 (bozulan satır 0081'e taşındı) + 15b (imzalı sürüm sayımı); e2e rapor-format (Sürüm 1 silinir, yayındakinde Sil yok, satırın
+  üç tuşu yan yana).
 - 2026-10-12 (503): **SÜRÜM TABLOSUNDA TUŞLAR YAN YANA** (reisim, ekran görüntüsüyle: *"tuşlar yan yana olabilecekken altlı üstlü ? boşuna sayfa uzuyor"*).
   Rapor şablonu sürümleri tablosunda İşlem sütunu %18'di — "Önizle" ile "Bu sürüme geri dön" alt alta düşüyor, satır iki katı uzuyordu; Durum ve Kişi
   sütunları boştu. Oranlar: Sürüm 22 · Tarih 18 · Kişi 16 · Durum 10 · İşlem 34 (anayasa 3.4: oran). "Bu sürüme geri dön"ün görünen adı "Geri dön"
