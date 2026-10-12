@@ -2405,6 +2405,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-12 (514): **512 + 513 YAYINDA** — göç **0083** Supabase'e işlendi (goc kaydı; 84 göç); önce main 46b6d80 (512 — göçle birlikte; arada sağlık
+  "göç güncel değil" diyordu, 512 yayınlanınca "tamam"), sonra main 2f140d1 (513). Sağlık "tamam" (2f140d1), duman **11/11**, son 1 saatte hata kaydı
+  yok. Deneme makinesi: 46b6d80 13/13, 2f140d1 13/13. Ders: göçü yayından önce işlerken sağlık ucu kodun beklediği göç sayısını aşınca "sorun" der —
+  göçü içeren yeşil sürüm hemen ana dala alınır.
 - 2026-10-12 (513): **FİRMA AYARLARI: SUPABASE HESABI VE YEDEK + RAPORLARIN İKİNCİ KOPYASI** (reisim, sunum 507 için: *"okudum, inceledim, önerilerini
   kabul ediyorum, hayata geçir ama supabase hesabını nasıl bağlayacağımızı göremedim eğer o da kurguluysa sorun yok sen yayınlayınca incelerim"* —
   D1–D3). **"Depolama ve yedek" → "Supabase hesabı ve yedek"** (yalnız bilgi, düzenleme yok): bağlantı (deneme yayınında probata'nın ortak deneme
