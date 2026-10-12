@@ -75,7 +75,7 @@ export function konusma(gecmis: readonly SayGecmisIletisi[], soru: string): { ro
 }
 
 /** 522: son kullanıcı iletisi eklerle — fotoğraf / PDF blokları önce, sonra soru ve Word metinleri (ek adı gitmez: "Ek 1 (fotoğraf)") */
-export function ekliIcerik(ekler: readonly SayEki[], metin: string): Record<string, unknown>[] {
+export function ekliIcerik(ekler: readonly SayEki[], metin: string, onceki = ""): Record<string, unknown>[] {
   const l: Record<string, unknown>[] = [];
   const adlar: string[] = [];
   const metinler: string[] = [];
@@ -91,7 +91,8 @@ export function ekliIcerik(ekler: readonly SayEki[], metin: string): Record<stri
     l.push(e.tur === "pdf" ? { type: "document", source: { type: "base64", media_type: "application/pdf", data } }
       : { type: "image", source: { type: "base64", media_type: e.tur === "png" ? "image/png" : "image/jpeg", data } });
   });
-  l.push({ type: "text", text: [`Kullanıcı soruya ek koydu: ${adlar.join(", ")}.`, ...metinler, `Soru:\n${metin}`].join("\n\n") });
+  l.push({ type: "text", text: [onceki && `Önceki (cevapsız kalan) iletileri:\n${onceki}`, `Kullanıcı soruya ek koydu: ${adlar.join(", ")}.`, ...metinler,
+    `Soru:\n${metin}`].filter(Boolean).join("\n\n") });
   return l;
 }
 
@@ -112,7 +113,13 @@ export function sayIstegi(p: { model: YzModel; kilavuz: readonly (readonly [stri
         { type: "text", text: `Bağlam (veri):\n${baglam}` },
       ],
       output_config: { effort: "low" },
-      messages: konusma(p.gecmis, p.soru).map((m, i, l) => (i === l.length - 1 && p.ekler?.length ? { role: m.role, content: ekliIcerik(p.ekler, m.content) } : m)),
+      messages: konusma(p.gecmis, p.soru).map((m, i, l) => {
+        if (i !== l.length - 1 || !p.ekler?.length) return m;
+        /* son kullanıcı iletisine cevapsız kalmış önceki sorular da birleşmiş olabilir (konusma): soru ayrı, öncekiler ayrı başlıkla */
+        const soru = p.soru.slice(0, SORU_SINIRI);
+        const onceki = m.content.endsWith(soru) ? m.content.slice(0, m.content.length - soru.length).trim() : "";
+        return { role: m.role, content: ekliIcerik(p.ekler, soru, onceki) };
+      }),
     },
   };
 }
