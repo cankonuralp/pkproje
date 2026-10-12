@@ -426,6 +426,25 @@ export function vhYukseklikHatalari(dosyalarCss: readonly { ad: string; metin: s
   return hatalar;
 }
 
+/* ── YAPIŞKAN ÜST (2026-10-12; reisim: "parça olarak kaydet yukarda kaldı … takip etsin sayfayı") ── sayfa pencereyle kayar, üst çubuk (kabuk .ust,
+   --ust-y yüksekliğinde) yapışkan ve öndedir: sayfayı izleyen kutunun `top`'u çubuğu hesaba katmazsa kutunun tepesi çubuğun altında kalır (Onaylar ›
+   Talepler ayrıntısı, Saha ekranının kullanım kutusu 12px'teydi). Kural: kabuk dışındaki her `position: sticky` + `top` bloğunda top var(--ust-y) içerir.
+   İstisna: tablo başlığı (`th`) — kendi kaydırma kutusunun tepesine yapışır, sayfaya değil. Dönen: "dosya: seçici top: değer" listesi. */
+export function yapiskanUstHatalari(dosyalarCss: readonly { ad: string; metin: string }[]): string[] {
+  const hatalar: string[] = [];
+  for (const d of dosyalarCss) {
+    if (d.ad.replace(/\\/g, "/").includes("src/components/kabuk/")) continue;
+    for (const blok of d.metin.replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+      if (!/(?:^|[;\s])position\s*:\s*sticky\b/.test(blok[2])) continue;
+      const top = /(?:^|[;\s])top\s*:\s*([^;]+)/.exec(blok[2]);
+      if (!top) continue;
+      const secici = blok[1].trim();
+      if (secici.split(",").every((s) => /\bth$/.test(s.trim()))) continue;
+      if (!/var\(--ust-y\)/.test(top[1])) hatalar.push(`${d.ad}: ${secici} top: ${top[1].trim()}`);
+    }
+  }
+  return hatalar;
+}
 
 /** 481: süzgeçsiz <Liste> izni — dosya (src/'ye göre) → sayı ve gerekçe (sayfanın ana listesi değil: özet, rapor tablosu, kartın bölümü, pencere) */
 export const SUZGECSIZ_BOLUMLER_GEREKCE: Record<string, [number, string]> = {

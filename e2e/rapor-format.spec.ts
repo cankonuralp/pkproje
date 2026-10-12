@@ -221,6 +221,15 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await expect(bolumler).toHaveCount(say + 1);
     await expect(listeParca).toHaveAttribute("aria-pressed", "false");
     await expect(page.getByRole("complementary", { name: "Seçili bölüm" })).toContainText("Kontrol listesi");
+    /* 2026-10-12 (reisim: "parça olarak kaydet yukarda kaldı her seferinde yukarı gidip seçmek mantıklı değil, takip etsin sayfayı"): kâğıdın
+       sonuna inilince yan kutular ekranda — seçili bölümün tuşları (Parça olarak kaydet) ve parça kutusu; geniş ekranda ayrı sütunlar, tablette tek
+       sütun (yapboz.module.css). Ardından kâğıdın başına dönülür (sonraki adımlar oradaki bölümle) */
+    await page.getByRole("combobox", { name: "Bölüm ekle", exact: true }).scrollIntoViewIfNeeded();
+    await expect(page.getByRole("complementary", { name: "Seçili bölüm" }).getByRole("button", { name: "Parça olarak kaydet" })).toBeInViewport();
+    await expect(parcalar).toBeInViewport();
+    mkdirSync("e2e-goz", { recursive: true });
+    await page.screenshot({ path: `e2e-goz/${bilgi.project.name}-kurucu-izleyen.png` });   // görünen alan (yapışkan kutular tam sayfa görüntüsünde yanıltır)
+    await page.evaluate(() => window.scrollTo(0, 0));
     /* 494 düzeltmesi: eklenen bölüme kaydırma bitmeden sürükleme başlarsa hedef yerinden kayıyordu (masaüstü, "element is not stable") — kaydırma
        hareketi azalt tercihine uyar (gelişmiş görünüm açılmadan önce ayarlandı); hedef görünürken sürüklenir */
     await ekip.scrollIntoViewIfNeeded();

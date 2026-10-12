@@ -1,14 +1,35 @@
-/* GELİŞMİŞ GÖRÜNÜM (494) — solda parçalar, ortada kâğıt, sağda seçili bölüm (geniş ekranda); orta genişlikte parçalar solda, seçili bölüm altta.
-   Telefonda kurucu yok (FormatKurucu: yalnız ≥ 768). Uygulama renkleri (tokens); kâğıdın kendi renkleri kagit.module.css'te. */
+/* GELİŞMİŞ GÖRÜNÜM (494) — geniş ekranda solda parçalar, ortada kâğıt, sağda seçili bölüm; orta genişlikte iki yan kutu solda tek sütunda.
+   Telefonda kurucu yok (FormatKurucu: yalnız ≥ 768). Uygulama renkleri (tokens); kâğıdın kendi renkleri kagit.module.css'te.
+   YAN KUTULAR SAYFAYI İZLER (reisim 2026-10-12: "parça olarak kaydet yukarda kaldı her seferinde yukarı gidip seçmek mantıklı değil, takip etsin
+   sayfayı"): yapışkan olan IZGARA ÖĞESİNİN KENDİSİDİR — eskiden yapışkan kart (.yan) kendi boyundaki sarmalayıcının (.sag) içindeydi, hareket
+   edecek yeri yoktu; seçili bölüm kâğıdın tepesinde kalıyordu (parçalar doğrudan ızgara öğesi olduğundan izliyordu). Orta genişlikte seçili bölüm
+   kâğıdın ALTINA düşüyordu, hiçbiri izlemiyordu. Yapışkan kutunun boyu ekranla sınırlı, kendi içinde kayar; üst çubuğun altında durur (--ust-y). */
 .yapboz { display: grid; gap: 12px; margin-top: 12px; grid-template-columns: minmax(0, 1fr); align-items: start; }
 .orta { display: grid; gap: 10px; min-width: 0; }
+.yanlar { display: grid; gap: 12px; align-content: start; min-width: 0; }
+.sol, .sag { min-width: 0; }
 /* telefonda kurucu yok (belge önizlemesi görünür) — format.module.css yalnizGenis ile aynı eşik, bu dosyada da (modüllerin sırası belirsiz) */
 @media (max-width: 767.98px) { .yapboz { display: none; } }
-@media (min-width: 768px) { .yapboz { grid-template-columns: 220px minmax(0, 1fr); } .sag { grid-column: 1 / -1; } }
+/* orta genişlik: iki yan kutu tek yapışkan sütunda — seçili bölüm üstte (tuşları hep görünür), parçalar altında */
+@media (min-width: 768px) {
+  .yapboz { grid-template-columns: 220px minmax(0, 1fr); }
+  .yanlar {
+    grid-row: 1; grid-column: 1; position: sticky; top: calc(var(--ust-y) + 8px);
+    max-height: calc(100vh - var(--ust-y) - 16px); max-height: calc(100dvh - var(--ust-y) - 16px); overflow-y: auto; overscroll-behavior: contain;
+  }
+  .sag { order: -1; }
+  .orta { grid-row: 1; grid-column: 2; }
+}
+/* geniş: sarmalayıcı ızgarada yok sayılır, iki kutu kendi sütununda ayrı ayrı yapışkan */
 @media (min-width: 1280px) {
   .yapboz { grid-template-columns: 236px minmax(0, 1fr) 248px; }
-  .sag { grid-column: auto; }
-  .yan { position: sticky; top: calc(var(--ust-y) + 8px); max-height: calc(100vh - var(--ust-y) - 16px); max-height: calc(100dvh - var(--ust-y) - 16px); overflow-y: auto; }
+  .yanlar { display: contents; }
+  .sol { grid-row: 1; grid-column: 1; }
+  .sag { grid-row: 1; grid-column: 3; order: 0; }
+  .sol, .sag {
+    position: sticky; top: calc(var(--ust-y) + 8px); align-self: start;
+    max-height: calc(100vh - var(--ust-y) - 16px); max-height: calc(100dvh - var(--ust-y) - 16px); overflow-y: auto; overscroll-behavior: contain;
+  }
 }
 .yan { display: grid; gap: 10px; align-content: start; min-width: 0; padding: 12px; border: 1px solid var(--kenar); border-radius: var(--r-kucuk); background: var(--kart); }
 .baslik { display: flex; align-items: center; gap: 6px; margin: 0; font-size: var(--boy-bolum); }

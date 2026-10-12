@@ -20,7 +20,8 @@
    araç çubuğu — Geri al / Yinele (Ctrl+Z, Ctrl+Y; yazı alanındayken alanın kendi geri alması); her değişiklik bir adım (../gecmis.ts).
    494: araç çubuğunda "Gelişmiş seçenekler" — kâğıt AYNI kalır, soluna parça kutusu (sürükle-bırak ya da bas-yerini seç), sağına seçili bölüm
    gelir (Yapboz.tsx, ../yapboz.ts); bölümler tutamaktan taşınır. Aynı taslak, aynı geçmiş; "Basit görünüme dön" ile kâğıt tek başına. Seçim bu
-   sekmede taslak başına hatırlanır. Telefonda kurucu yok.
+   sekmede taslak başına hatırlanır. Telefonda kurucu yok. 2026-10-12 (reisim: "parça olarak kaydet yukarda kaldı … takip etsin sayfayı"): yan
+   kutular sayfayı izler — geniş ekranda iki ayrı sütun, orta genişlikte tek sütunda (seçili bölüm üstte); düzen yapboz.module.css.
    496: parça kitaplığı — Bakanlık formatlarının bölümleri ve firmanın parçaları (seçili bölümde "Parça olarak kaydet"; sunucuda format_parca).
    497: gelişmiş görünümde kâğıdın üstünde "Yapay zekâya anlat" (YzKutusu.tsx) — öneriler kâğıtta kesik çizgiyle; "Ekle" / "Uygula" taslağa
    ekler (geçmişe bir adım; yine "Taslağı kaydet"le yazılır), "Vazgeç" atar. Öneri taslak değişse de kimliğiyle yerini bulur (../yz-oneri.ts). */
@@ -332,7 +333,13 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
       </div>
       {gelismis && gorunum === "duzen" ? (
         <div className={`${ys.yapboz} ${stil.yalnizGenis}`}>
-          <Parcalar t={t} kitaplik={kitaplik} tutulan={tutulan} tut={setTutulan} sil={parcaSilebilir ? (id, ad) => void parcaSil(id, ad) : null} />
+          {/* yan kutular sayfayı izler (yapboz.module.css): geniş ekranda iki ayrı sütun, orta genişlikte tek sütunda seçili bölüm üstte */}
+          <div className={ys.yanlar}>
+            <div className={ys.sol}>
+              <Parcalar t={t} kitaplik={kitaplik} tutulan={tutulan} tut={setTutulan} sil={parcaSilebilir ? (id, ad) => void parcaSil(id, ad) : null} />
+            </div>
+            <div className={ys.sag}><SeciliBolum t={t} secili={secili} kopyala={kopyala} sil={(i) => void bolumuSil(i)} parcaKaydet={mesgul ? null : parcaKaydet} /></div>
+          </div>
           <div className={ys.orta}>
             <YzKutusu t={t} yz={yz} mesgul={mesgul} cevap={yzCevap} oneriler={oneriler} oner={oner} uygula={yzUygula} vazgec={oneriAt} belgeden={belgeden} />
             <Kagit t={t} degis={degis} tur={tur} bolumuSil={(i) => void bolumuSil(i)} bildir={bildir}
@@ -340,7 +347,6 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
                 oneriler: oneriler.flatMap((o) => (o.tur === "ekle" ? [{ id: o.id, p: oneriYeri(t, o), aciklama: o.aciklama, bolum: o.bolum }] : [])),
                 oneriEkle: yzEkle, oneriVazgec: oneriAt }} />
           </div>
-          <div className={ys.sag}><SeciliBolum t={t} secili={secili} kopyala={kopyala} sil={(i) => void bolumuSil(i)} parcaKaydet={mesgul ? null : parcaKaydet} /></div>
         </div>
       ) : (
         <div className={gorunum === "duzen" ? stil.yalnizGenis : stil.gizliHer}>

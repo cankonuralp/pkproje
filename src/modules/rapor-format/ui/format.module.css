@@ -85,7 +85,13 @@
   display: grid; gap: 10px; min-width: 0; padding: 14px; border: 1px solid var(--kenar); border-radius: var(--r-buyuk); background: var(--kart);
   font-size: var(--boy-kucuk);
 }
-@media (min-width: 1280px) { .kullanim { position: sticky; top: 12px; } }
+/* sayfayı izler, üst çubuğun ALTINDA (top 12px'te tepesi çubuğun altında kalıyordu — yapışkan kutu sınıfı, 2026-10-12) */
+@media (min-width: 1280px) {
+  .kullanim {
+    position: sticky; top: calc(var(--ust-y) + 12px);
+    max-height: calc(100vh - var(--ust-y) - 24px); max-height: calc(100dvh - var(--ust-y) - 24px); overflow-y: auto; overscroll-behavior: contain;
+  }
+}
 .kullanimBaslik { margin: 0; font-size: var(--boy-govde); font-weight: 700; }
 .kullanimEtiket { margin: 0 0 4px; color: var(--yazi2); font-weight: 600; }
 .olcu { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; margin: 0; font-variant-numeric: tabular-nums; }

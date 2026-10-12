@@ -8,7 +8,7 @@ import { MODUL_GRUPLARI } from "../../src/modules/moduller.ts";
 import {
   bantDisiDaraltma, ciftIdler, ciftSeciciler, ciftTanimliDegiskenler, daralmisSerit, degiskenDegeri, dosyalar, eksikIkonlar, girdiYaziHatalari, kalipDisiEsikler,
   hamYazma, kiraciDisiErisim, kullanilanIkonlar, maketIkonlari, maketMenusu, oku, parantezHatasi, rlsEksikTablolar, tanimsizDegiskenler, testKapisiEksikleri, tokenGovdesi, pdfPaketEksikleri,
-  swEksikleri, baglantiRengiEksikleri, cekmeceBoyuHatasi, vhYukseklikHatalari, cerceveIzniEksikleri, suzgecsizListeler, SUZGECSIZ_BOLUMLER, takipSeridiEksikleri,
+  swEksikleri, baglantiRengiEksikleri, cekmeceBoyuHatasi, vhYukseklikHatalari, yapiskanUstHatalari, cerceveIzniEksikleri, suzgecsizListeler, SUZGECSIZ_BOLUMLER, takipSeridiEksikleri,
   yuzenEzmeleri, yonlendirmeYarislari, e2eYayinBayragiEksikleri,
 } from "../yardimci/denetimler.ts";
 
@@ -191,6 +191,17 @@ test("bağlantı rengi: renksiz sınıflı bağlantı ve silinen bağlantı taba
 test("çekmece boyu: yan menü yüksekliği 100vh'ye dönünce yakalanır", () => {
   assert.equal(cekmeceBoyuHatasi(kabuk), null);
   assert.equal(cekmeceBoyuHatasi(kabuk.replace("height: 100vh; height: 100dvh;", "height: 100vh;")), ".cubuk yüksekliği 100vh — görünen boy (100dvh) olmalı");
+});
+
+/* 2026-10-12: sayfayı izleyen kutu üst çubuğu hesaba katmazsa (top 12px) tepesi çubuğun altında kalır — Saha ekranının kullanım kutusu eski hâline */
+test("yapışkan üst: kullanım kutusu top 12px'e dönünce yakalanır", () => {
+  const ad = "src/modules/rapor-format/ui/format.module.css", metin = oku(ad);
+  assert.deepEqual(yapiskanUstHatalari([{ ad, metin }]), []);
+  const bozuk = yapiskanUstHatalari([{ ad, metin: metin.replace("position: sticky; top: calc(var(--ust-y) + 12px);", "position: sticky; top: 12px;") }]);
+  assert.equal(bozuk.length, 1);
+  assert.match(bozuk[0], /format\.module\.css: \.kullanim top: 12px$/);
+  /* tablo başlığı istisnası daralmaz: th dışı bir seçici top: 0 ile yakalanır */
+  assert.equal(yapiskanUstHatalari([{ ad: "x.css", metin: ".kutu th { position: sticky; top: 0; } .kutu { position: sticky; top: 0; }" }]).length, 1);
 });
 
 /* 421: vh yükseklik — levhanın en büyük yüksekliğinden dvh kalkınca yakalanır */

@@ -2405,6 +2405,17 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-12 (500): **YAN KUTULAR SAYFAYI İZLER** (reisim, Format kurucu › Gelişmiş seçenekler: *"parça olarak kaydet yukarda kaldı her seferinde
+  yukarı gidip seçmek mantıklı değil, takip etsin sayfayı"*). Neden: yapışkan kart (.yan) kendi boyundaki sarmalayıcının (.sag) içindeydi, hareket
+  edecek yeri yoktu — "Seçili bölüm" kâğıdın tepesinde kalıyordu (Parçalar doğrudan ızgara öğesi olduğundan izliyordu); orta genişlikte (tablet)
+  "Seçili bölüm" kâğıdın en ALTINA düşüyordu, hiçbir kutu izlemiyordu. Düzeltme (yapboz.module.css, FormatKurucu): yapışkan olan ızgara öğesinin
+  kendisi; geniş ekranda iki kutu ayrı sütunlarda ayrı ayrı izler, orta genişlikte iki kutu soldaki tek yapışkan sütunda — Seçili bölüm üstte
+  (tuşları hep görünür), Parçalar altında; kutu ekranla sınırlı, kendi içinde kayar. HATA SINIFI (anayasa 0.8): sayfayı izleyen öteki kutular
+  tarandı — Onaylar › Talepler ayrıntısı ve Saha ekranının kullanım kutusu top 12px'teydi, tepeleri üst çubuğun (52 px) altında kalıyordu →
+  top var(--ust-y) + 12px, ekrandan uzunsa kendi içinde kayar (talep ayrıntısının karar tuşları erişilir); Firma ayarları menüsü zaten doğruydu.
+  Kilitler: tests/css-butunlugu.test.ts "yapışkan üst" (kabuk dışında her sticky + top var(--ust-y) içerir; th istisna) + olumsuz kanıt
+  kilitler.bozan "yapışkan üst"; e2e rapor-format: kâğıdın sonuna inince "Parça olarak kaydet" ve Parçalar ekranda (masaüstü + tablet), görünen
+  alanın görüntüsü e2e-goz/<genişlik>-kurucu-izleyen.png.
 - 2026-10-12 (499): **491–498 YAYINDA** — Supabase 0080 format_parca (81 göç; goc kaydı özeti 9dabe9e'deki dosyadan; ölçüldü: yalnız
   probata_uygulama SELECT / INSERT, RLS açık + zorunlu, değişmezlik tetiği var, silme işlevlerini yalnız uygulama rolü çalıştırır — Supabase'in açık
   rolleri erişemez), main 9dabe9e, sağlık "tamam" (sürüm 9dabe9e, göç güncel), duman **11/11**, son 1 saatte çalışma hatası yok. Yayında: 492 künye

@@ -3,7 +3,7 @@
    "aynı seçici" taraması). Uygulamanın BÜTÜN CSS'i ve TSX'i taranır. Olumsuz kanıt: tests/bozan/kilitler.bozan.ts. */
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { baglantiRengiEksikleri, vhYukseklikHatalari, ciftSeciciler, ciftTanimliDegiskenler, dosyalar, oku, parantezHatasi, tanimsizDegiskenler } from "./yardimci/denetimler.ts";
+import { baglantiRengiEksikleri, vhYukseklikHatalari, yapiskanUstHatalari, ciftSeciciler, ciftTanimliDegiskenler, dosyalar, oku, parantezHatasi, tanimsizDegiskenler } from "./yardimci/denetimler.ts";
 
 const CSS = dosyalar("src", [".css"]);
 const TSX = dosyalar("src", [".tsx", ".ts"]);
@@ -68,4 +68,14 @@ test("vh ile verilen her yükseklik görünen boya (dvh) da sahip (telefonda adr
   const css = CSS.map((ad) => ({ ad, metin: oku(ad) }));
   assert.ok(css.some((d) => /height: 100dvh/.test(d.metin)), "dvh kullanan kural bulunamadı (boş tarama yalancı geçer)");
   assert.deepEqual(vhYukseklikHatalari(css), []);
+});
+
+/* 2026-10-12 (reisim, Format kurucu › Gelişmiş seçenekler: "parça olarak kaydet yukarda kaldı her seferinde yukarı gidip seçmek mantıklı değil,
+   takip etsin sayfayı"): sayfayı izleyen kutu üst çubuğun ALTINDA durur — top var(--ust-y) içerir (Onaylar › Talepler ayrıntısı ve Saha ekranının
+   kullanım kutusu 12px'teydi, tepesi çubuğun altında kalıyordu). Yapboz yan kutularının gerçekten izlediği uçtan uca: e2e/rapor-format.spec.ts.
+   Olumsuz kanıt: kilitler.bozan "yapışkan üst". */
+test("sayfayı izleyen (yapışkan) her kutu üst çubuğun altında durur — top var(--ust-y) içerir; tablo başlığı istisna", () => {
+  const css = CSS.map((ad) => ({ ad, metin: oku(ad) }));
+  assert.ok(css.filter((d) => /position: sticky; top: calc\(var\(--ust-y\)/.test(d.metin.replace(/\s+/g, " "))).length >= 3, "yapışkan kutu bulunamadı (boş tarama yalancı geçer)");
+  assert.deepEqual(yapiskanUstHatalari(css), []);
 });

@@ -39,7 +39,12 @@ button.reddetTus { color: var(--hata-yazi); }
 .yalnizTelefon { display: none; }
 @media (min-width: 1280px) {
   .talepSahne[data-secili] { grid-template-columns: minmax(0, 1fr) minmax(0, 400px); }
-  .talepAyrinti { grid-column: 2; grid-row: 1; position: sticky; top: 12px; }
+  /* sayfayı izler, üst çubuğun ALTINDA durur (top 12px'te tepesi çubuğun altında kalıyordu — yapışkan kutu sınıfı, 2026-10-12); ekrandan uzunsa
+     kendi içinde kayar (karar tuşları erişilir) */
+  .talepAyrinti {
+    grid-column: 2; grid-row: 1; position: sticky; top: calc(var(--ust-y) + 12px);
+    max-height: calc(100vh - var(--ust-y) - 24px); max-height: calc(100dvh - var(--ust-y) - 24px); overflow-y: auto; overscroll-behavior: contain;
+  }
   .talepListe { grid-column: 1; grid-row: 1; }
 }
 @media (max-width: 767.98px) {
