@@ -6,7 +6,7 @@
 <title>S.A.Y Chat ön model · probata maket</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="../marka/favicon.svg" type="image/svg+xml">
-<!-- S.A.Y CHAT ÖN MODELİ (2026-10-12, bulut oturumu; reisim'in taslağı ve dört tur geri bildirimiyle). Tek başına durağan sayfa: maket kabuğu
+<!-- S.A.Y CHAT ÖN MODELİ (2026-10-12, bulut oturumu; reisim'in taslağı ve altı tur geri bildirimiyle). Tek başına durağan sayfa: maket kabuğu
      (maket-ortak.js) ve ortak veri kullanılmaz; renkler tokens.css değerlerinin kopyası. Asıl maket bu sayfaya bakılarak docs/maket'teki
      ilgili ekranlara (plan içi, rapor, ekipman türleri) işlenir; sonra bu dosya kaldırılabilir. Veriler uydurmadır. -->
 <style>
@@ -21,6 +21,7 @@
   src: url("../vendor/sora-5.3.0/sora-latin-wght-normal.woff2") format("woff2-variations");
   unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
 }
+/* Düzen: üstte kararlar, altta telefon ekranları akış sırasıyla; geniş ekranda 3 sütun, telefonda tek sütun */
 /* Düzen: üstte kararlar, altta telefon ekranları akış sırasıyla; geniş ekranda 3 sütun, telefonda tek sütun */
 :root {
   --zemin: #F5F3EE; --zemin2: #ECE9E1; --kart: #FFFFFF; --kenar: #DEDAD0; --kenar-alan: #7E8C96;
@@ -148,7 +149,8 @@ figcaption span { color: var(--yazi2); font-size: 12.5px; }
 .bolum-acik > .bolum-bas small { margin-left: auto; color: var(--yazi2); font-weight: 400; font-size: 12px; }
 .ayar { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 18px; padding: 14px; }
 .ayar-satirlar { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-.ayar-bas, .ayar-satir { display: grid; grid-template-columns: 30px minmax(0, 1fr) minmax(0, 1.25fr) auto; gap: 8px; align-items: center; }
+.ayar-bas, .ayar-satir { display: grid; grid-template-columns: 30px minmax(0, 1fr) minmax(0, 1.35fr) minmax(0, .7fr) auto; gap: 8px; align-items: center; }
+.ayar-satir .bos-deger { color: var(--yazi3); }
 .ayar-bas { font-size: 11px; font-weight: 600; color: var(--yazi2); padding: 0 2px; }
 .sira { width: 30px; height: 30px; border-radius: 999px; background: var(--zemin2); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12.5px; }
 .ayar-satir .girdi { min-height: 40px; padding: 8px 10px; font-size: 13.5px; }
@@ -167,9 +169,44 @@ figcaption span { color: var(--yazi2); font-size: 12.5px; }
   .ayar-satir .girdi { grid-column: 2; grid-row: 1; }
   .ayar-satir .kucuk-tuslar { grid-column: 3; grid-row: 1; }
   .ayar-satir .secim { grid-column: 2 / 4; grid-row: 2; }
+  .ayar-satir .deger { grid-column: 2 / 4; grid-row: 3; }
+  .okuma-ayar { grid-template-columns: minmax(0, 1fr) auto; }
+  .okuma-ayar .secim { grid-column: 1 / -1; }
 }
 svg { flex: none; }
 :focus-visible { outline: 2px solid var(--onay); outline-offset: 2px; }
+.f-m { width: 46px; height: 36px; font-size: 9.5px; flex: none; padding: 2px; }
+.okumalar { display: flex; flex-wrap: wrap; gap: 6px; }
+.okuma { display: flex; align-items: center; gap: 6px; padding: 3px 8px 3px 3px; border: 1px solid var(--kenar); border-radius: 8px; background: var(--zemin); font-size: 11.5px; font-weight: 600; }
+.okuma-liste { list-style: none; margin: 0; padding: 0; background: var(--kart); border: 1px solid var(--kenar); border-radius: 12px; overflow: hidden; }
+.okuma-liste li { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-top: 1px solid var(--kenar); min-height: 54px; }
+.okuma-liste li:first-child { border-top: 0; }
+.okuma-liste .ad { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; font-size: 13px; }
+.okuma-liste .ad small { color: var(--yazi2); font-size: 11.5px; font-weight: 400; }
+.foto-yok { width: 46px; height: 36px; flex: none; border: 1px dashed var(--kenar-alan); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--yazi2); }
+.satirli { padding: 8px 10px; display: grid; grid-template-columns: 18px minmax(0, 1fr); column-gap: 8px; font-size: 13.5px; line-height: 1.55; }
+.satirli .no { color: var(--yazi3); font-size: 11px; text-align: right; line-height: 21px; }
+.satirli .hazir { color: var(--yazi); }
+.satirli .hazir small { margin-left: 6px; font-size: 10.5px; font-weight: 600; padding: 1px 6px; border-radius: 999px; background: var(--bilgi-zemin); color: var(--yazi); }
+.anahtar { width: 40px; height: 24px; flex: none; border-radius: 999px; background: var(--onay); position: relative; }
+.anahtar::after { content: ""; position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; border-radius: 999px; background: #FFFFFF; }
+.anahtar.kapali { background: var(--kenar-alan); } .anahtar.kapali::after { right: auto; left: 3px; }
+.ayrac { border: 0; border-top: 1px solid var(--kenar); margin: 6px 0; }
+.alt-baslik { margin: 0; font-size: 13.5px; font-weight: 700; }
+.okuma-ayar { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center; }
+.okuma-ayar .secim { min-height: 40px; font-weight: 400; font-size: 13px; }
+.okuma-ayar label { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--yazi2); }
+.sohbet-sag { align-self: flex-end; max-width: 88%; background: var(--onay-zemin); border-radius: 12px 12px 4px 12px; padding: 9px 11px; display: flex; flex-direction: column; gap: 6px; }
+.ek { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 8px; background: var(--kart); border: 1px solid var(--kenar); font-size: 12px; }
+.ek small { color: var(--yazi2); font-size: 11px; }
+.ek-tepsi { display: flex; flex-wrap: wrap; gap: 6px; }
+.ek-tepsi .ek { padding: 4px 6px 4px 8px; }
+.yazma { display: flex; align-items: flex-end; gap: 8px; }
+.yazma .girdi { flex: 1; color: var(--yazi3); }
+.ek-menu { position: absolute; left: 12px; bottom: 132px; width: 230px; background: var(--kart); border: 1px solid var(--kenar-alan); border-radius: 12px; box-shadow: 0 8px 28px rgba(15, 42, 61, .18); overflow: hidden; }
+.ek-menu div { min-height: 46px; padding: 0 12px; display: flex; align-items: center; gap: 10px; border-top: 1px solid var(--kenar); font-weight: 600; font-size: 13px; }
+.ek-menu div:first-child { border-top: 0; }
+.ek-menu small { color: var(--yazi2); font-weight: 400; font-size: 11px; margin-left: auto; }
 @media (max-width: 420px) { .tel { height: 680px; } h1 { font-size: 22px; } }
 body { margin: 0; }
 </style>
@@ -185,40 +222,43 @@ body { margin: 0; }
     <h2 id="kur-bas">Konuşulan kurallar</h2>
     <ul>
       <li><b>Plana bağlı, kişiye özel.</b> Plana girince o plana özel sohbet ve geçmişi açılır. Her denetçi yalnız kendi sohbetini görür; plan sorumlusu, teknik yönetici ya da yönetici göremez.</li>
-      <li><b>Etiket yazmadan, sırayla.</b> Mesajın 1. satırı yönergenin 1. maddesi (Marka), 2. satırı 2. maddesi (Model) sayılır, böyle devam eder. Bilinmeyen madde için satıra <b>-</b> yazılır ya da boş bırakılır. Yönergeden fazla satırlar nota eklenir.</li>
+      <li><b>Etiket yazmadan, sırayla.</b> Mesajın 1. satırı yönergenin 1. maddesi (Marka), 2. satırı 2. maddesi (Model) sayılır, böyle devam eder. Bilinmeyen madde için satıra <b>-</b> yazılır ya da boş bırakılır. Yönergeden fazla satırlar nota eklenir. Mesaj kutusunun satırları numaralıdır.</li>
+      <li><b>Hazır değer.</b> Bir satıra ayarlarda hazır değer verilebilir (ör. <b>Şebeke gerilimi: 220 V</b>). Mesaj kutusunda o satır dolu gelir; denetçi üstüne yazıp değiştirir, dokunmazsa hazır değer kalır.</li>
+      <li><b>Okunacak fotoğraflar.</b> Kayıtta, türün ayarlarındaki başlıklar altında (Pano sigortaları (linye), Fonksiyon testleri…) test tablosu, ölçüm ekranı gibi fotoğraflar eklenir. Sohbette başlığı yazılı, yanında fotoğrafıyla görünür. Rapor yazılırken yapay zekâ okur, değerler o bölüme öneri olarak düşer, denetçi onaylar. Bu fotoğraflar belgeye basılmaz.</li>
       <li><b>Ekipman seçme tuşuyla seçilir.</b> Fotoğraftan sonra <b>Ekipman seçin</b> tuşuna basılır; açılan pencerede iki seçenek var. <b>Plandan seç:</b> plandaki ekipmanlardan biri seçilir, rapor o ekipmana yazılır. <b>Yeni ekle:</b> ekipman türü seçilir, rapor yazılırken plana yeni ekipman olarak eklenir.</li>
       <li><b>Liste branşa göre.</b> Mekanik denetçi yalnız mekanik, elektrik denetçisi yalnız elektrik ekipmanlarını ve türlerini görür. Plandan seç'te raporu yazılmış ekipman yer almaz; Yeni ekle'de rapor formatı kurulmuş türler yer alır.</li>
       <li><b>Bir kayıt = bir ekipman.</b> Ekipman fotoğrafları, etiket fotoğrafı ve mesaj tamamlanınca <b>Gönder</b> ile kayıt kapanır; ek fotoğraf göndermeden önce eklenir.</li>
       <li><b>Sonradan düzeltme.</b> Gönderilen kayıt, rapor yazılana kadar geçmişten açılıp değiştirilebilir.</li>
       <li><b>Yönerge yazı alanı değil.</b> Sağ üstteki numaralı Marka / Model / Sn… satırları yalnız sırayı gösterir; türe göre değişir.</li>
-      <li><b>Satırları firma ayarlar.</b> Etiket bilgisi satırları (Marka, Model, Sn…) <b>Ekipman türleri</b>'nde tür düzenlenirken <b>S.A.Y Chat ayarları</b> bölümünden değiştirilir: satır adı, sırası, rapordaki alanı; satır eklenir, silinir. Yeni türde satırlar rapor formatının ekipman bilgisi alanlarından hazır gelir. Değişiklik yeni kayıtlarda geçerli; gönderilmiş kayıt gönderildiği andaki sırayla okunur.</li>
-      <li><b>Yapay zekâ yalnız etiket okumada.</b> Etiket fotoğrafından okuma isteğe bağlıdır ve token harcadığı uyarısıyla gelir. Satırları alanlara dağıtmak kuralla yapılır, ücretsizdir.</li>
-      <li><b>Rapor yazılınca kayıt silinir.</b> Ekipman fotoğrafları rapora geçer; etiket fotoğrafı rapora konmaz.</li>
+      <li><b>Satırları firma ayarlar.</b> Etiket bilgisi satırları (Marka, Model, Sn…) <b>Ekipman türleri</b>'nde tür düzenlenirken <b>S.A.Y Chat ayarları</b> bölümünden değiştirilir: satır adı, sırası, rapordaki alanı, hazır değeri; satır eklenir, silinir. Okunacak fotoğraf başlıkları da aynı yerden seçilir. Yeni türde satırlar rapor formatının ekipman bilgisi alanlarından hazır gelir. Değişiklik yeni kayıtlarda geçerli; gönderilmiş kayıt gönderildiği andaki sırayla okunur.</li>
+      <li><b>Yapay zekâ yalnız fotoğraf okumada.</b> Etiket fotoğrafı (isteğe bağlı, eklerken token uyarısıyla) ve okunacak fotoğraflar (rapor yazılırken, uyarıyla). Satırları alanlara dağıtmak kuralla yapılır, ücretsizdir.</li>
+      <li><b>Rapor yazılınca kayıt silinir.</b> Ekipman fotoğrafları rapora geçer; etiket fotoğrafı rapora konmaz, okunan fotoğraflar raporda okuma fotoğrafı olarak saklanır, belgeye basılmaz.</li>
+      <li><b>S.A.Y asistana ek.</b> S.A.Y asistanda (sohbet) soruya fotoğraf ve belge eklenebilir (ekran 11).</li>
     </ul>
   </section>
 
   <div class="ekranlar">
 
     <figure>
-      <figcaption><strong>1 · Planın sohbeti</strong><span>Yalnız bu denetçinin bekleyen kayıtları; raporu yazılanlar görünmez</span></figcaption>
+      <figcaption><strong>1 · Planın sohbeti</strong><span>Yalnız bu denetçinin bekleyen kayıtları; en yenisi altta, yukarı kaydırılır. Raporu yazılanlar görünmez</span></figcaption>
       <div class="tel" role="img" aria-label="Planın sohbet ekranı">
         <div class="ust"><span class="geri"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></span><div><strong>S.A.Y Chat</strong><span>P-2610-0012 · Deneme Gıda · Merkez Fabrika</span></div></div>
         <div class="serit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h.01"/><path d="M8.5 16.4a5 5 0 0 1 7 0"/><path d="m2 2 20 20"/></svg>Çevrimdışı · 1 kayıt cihazda bekliyor</div>
-        <div class="govde">
+        <div class="govde" style="justify-content:flex-end">
           <span class="gun">Bugün</span>
           <div class="balon">
             <div class="fotolar"><div class="foto f-k">ekipman</div><div class="foto f-k">ekipman</div></div>
             <div class="baslik-satir"><span class="ad">ET-2001 · Elektrik iç tesisatı</span><small style="color:var(--yazi2);font-size:11.5px">ZPKR02</small></div>
             <div class="satirlar">Marka: Örnek Elektrik
-Model: P-400
+Şebeke gerilimi: 220 V
 Not: pano kapağı kilitsiz</div>
+            <div class="okumalar"><div class="okuma"><div class="foto f-m">foto</div>Pano sigortaları (linye)</div><div class="okuma"><div class="foto f-m">foto</div>Fonksiyon testleri</div></div>
             <div class="baslik-satir"><span class="durum"><i></i>Gönderildi · 09:40</span><span class="tus kucuk">Düzenle</span></div>
           </div>
           <div class="balon cihazda">
             <div class="fotolar"><div class="foto f-k">ekipman</div></div>
             <div class="baslik-satir"><span class="ad">AG topraklama (yeni)</span><small style="color:var(--yazi2);font-size:11.5px">ZPKR01</small></div>
-            <div class="satirlar">Kullanım yeri: trafo odası
-Not: bara bağlantısı paslı</div>
+            <div class="satirlar">Not: bara bağlantısı paslı</div>
             <div class="baslik-satir"><span class="durum bekle"><i></i>Cihazda · 10:05</span><span class="tus kucuk">Düzenle</span></div>
           </div>
         </div>
@@ -324,12 +364,12 @@ Not: bara bağlantısı paslı</div>
     </figure>
 
     <figure>
-      <figcaption><strong>6 · Yönerge ve mesaj</strong><span>Gönder = bu ekipman bitti; ek fotoğraf göndermeden önce eklenir</span></figcaption>
+      <figcaption><strong>6 · Yönerge ve mesaj</strong><span>Satırlar numaralı; 6. satır hazır değerle dolu gelir. Aşağı kaydırınca okunacak fotoğraflar (ekran 7)</span></figcaption>
       <div class="tel" role="img" aria-label="Yönerge ve mesaj ekranı">
         <div class="ust"><span class="geri"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></span><div><strong>Yeni kayıt</strong><span>2 / 2 · ET-2001 · Elektrik iç tesisatı</span></div></div>
         <div class="govde">
           <div class="iki">
-            <div style="display:flex;flex-direction:column;gap:4px"><span class="etiket">O anki ekipman</span><div class="foto f-b">fotoğraf</div></div>
+            <div style="display:flex;flex-direction:column;gap:4px"><span class="etiket">O anki ekipman</span><div class="foto" style="flex:1">fotoğraf</div><div class="fotolar"><div class="foto f-m">1</div><div class="foto f-m">2</div><div class="foto f-m" style="border-style:dashed">+ ek</div></div></div>
             <div class="yonerge">
               <span class="etiket">Her satıra sırayla</span>
               <div class="satirlar">1. Marka
@@ -337,30 +377,44 @@ Not: bara bağlantısı paslı</div>
 3. Sn
 4. İmal yılı
 5. Kullanım yeri
-6. Not</div>
-              <span class="tus kucuk" style="margin-top:auto"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>Etiket fotoğrafı</span>
+6. Şebeke gerilimi
+7. Not</div>
+              <span class="tus kucuk" style="margin-top:auto"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>Etiket fotoğrafı</span>
             </div>
           </div>
-          <div class="fotolar"><div class="foto f-k">ekipman 1</div><div class="foto f-k">ekipman 2</div><div class="foto f-k" style="border-style:dashed">+ ek</div></div>
           <div class="mesaj-kutu">
-            <div class="yazi">Örnek Elektrik
-P-400
-88213
--
-bakım binası
-pano kapağı kilitsiz, iç kapak yok</div>
+            <div class="satirli"><span class="no">1</span><span>Örnek Elektrik</span><span class="no">2</span><span>P-400</span><span class="no">3</span><span>88213</span><span class="no">4</span><span>-</span><span class="no">5</span><span>bakım binası</span><span class="no">6</span><span class="hazir">220 V<small>hazır</small></span><span class="no">7</span><span>pano kapağı kilitsiz, iç kapak yok</span></div>
             <div class="araclar">
               <span class="tus yuvarlak" aria-label="Ek fotoğraf"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></span>
               <span class="tus yesil yuvarlak" aria-label="Gönder"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg></span>
             </div>
           </div>
-          <div class="cipler"><span class="cip">1 Marka ✓</span><span class="cip">2 Model ✓</span><span class="cip">3 Sn ✓</span><span class="cip bos">4 İmal yılı boş</span><span class="cip">5 Kullanım yeri ✓</span><span class="cip not">6 Not → uzman yorumu</span></div>
+          <div class="cipler"><span class="cip">1 Marka ✓</span><span class="cip">2 Model ✓</span><span class="cip">3 Sn ✓</span><span class="cip bos">4 İmal yılı boş</span><span class="cip">5 Kullanım yeri ✓</span><span class="cip">6 Şebeke gerilimi 220 V · hazır</span><span class="cip not">7 Not → uzman yorumu</span></div>
         </div>
       </div>
     </figure>
 
     <figure>
-      <figcaption><strong>7 · Etiketten okuma</strong><span>İsteğe bağlı; tek yapay zekâ noktası</span></figcaption>
+      <figcaption><strong>7 · Okunacak fotoğraflar</strong><span>Aynı kayıt, aşağı kaydırınca: test tablosu, linye… başlığıyla fotoğraf; rapor yazılırken yapay zekâ okur</span></figcaption>
+      <div class="tel" role="img" aria-label="Okunacak fotoğraflar bölümü">
+        <div class="ust"><span class="geri"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></span><div><strong>Yeni kayıt</strong><span>2 / 2 · ET-2001 · Elektrik iç tesisatı</span></div></div>
+        <div class="govde">
+          <div class="kart"><small>Mesaj · 7 satır</small><span style="font-size:13px">Örnek Elektrik · P-400 · 88213 · - · bakım binası · 220 V · pano kapağı…</span></div>
+          <span class="etiket">Yapay zekânın okuyacağı fotoğraflar</span>
+          <ul class="okuma-liste">
+            <li><div class="foto f-m">test tablosu</div><span class="ad"><span>Pano sigortaları (linye)</span><small>ölçüm tablosu · 1 fotoğraf</small></span><span class="tus kucuk" aria-label="Fotoğrafı kaldır"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span></li>
+            <li><div class="foto f-m">test tablosu</div><span class="ad"><span>Fonksiyon testleri</span><small>test · 1 fotoğraf</small></span><span class="tus kucuk" aria-label="Fotoğrafı kaldır"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span></li>
+            <li><span class="foto-yok"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></span><span class="ad"><span>Potansiyel dengeleme</span><small>ölçüm tablosu · fotoğraf yok</small></span><span class="tus kucuk">Fotoğraf çek</span></li>
+            <li><span class="foto-yok"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></span><span class="ad"><span>Zemin izolasyonu</span><small>ölçüm tablosu · fotoğraf yok</small></span><span class="tus kucuk">Fotoğraf çek</span></li>
+          </ul>
+          <div class="uyari"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><div><strong>Rapor yazılırken yapay zekâ okur</strong><span>Değerler o bölüme öneri olarak düşer, siz onaylarsınız. Firmanın yapay zekâ kotasından harcar; çevrimdışıyken bekler.</span><span>Bu fotoğraflar belgeye basılmaz.</span></div></div>
+        </div>
+        <div class="alt-cubuk"><span class="tus yesil"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg>Gönder</span></div>
+      </div>
+    </figure>
+
+    <figure>
+      <figcaption><strong>8 · Etiketten okuma</strong><span>İsteğe bağlı; eklerken token uyarısı</span></figcaption>
       <div class="tel" role="img" aria-label="Etiketten okuma uyarı penceresi">
         <div class="ust"><span class="geri"></span><div><strong>Yeni kayıt</strong><span>2 / 2 · ET-2001 · Elektrik iç tesisatı</span></div></div>
         <div class="govde"></div>
@@ -377,49 +431,70 @@ pano kapağı kilitsiz, iç kapak yok</div>
     </figure>
 
     <figure>
-      <figcaption><strong>8 · Geçmişten düzenleme</strong><span>Rapor yazılana kadar her kayıt açılıp değiştirilebilir</span></figcaption>
+      <figcaption><strong>9 · Geçmişten düzenleme</strong><span>Rapor yazılana kadar her kayıt açılıp değiştirilebilir</span></figcaption>
       <div class="tel" role="img" aria-label="Kayıt düzenleme ekranı">
         <div class="ust"><span class="geri"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></span><div><strong>Kaydı düzenle</strong><span>ET-2001 · gönderildi 09:40</span></div></div>
         <div class="govde">
           <span class="etiket">Ekipman</span>
           <div class="secim"><span>ET-2001 · Elektrik iç tesisatı <small>Plandan</small></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
           <span class="etiket">Fotoğraflar</span>
-          <div class="fotolar"><div class="foto f-k">ekipman 1 ×</div><div class="foto f-k">ekipman 2 ×</div><div class="foto f-k" style="border-style:dashed">+ ekle</div></div>
+          <div class="fotolar"><div class="foto f-m">1 ×</div><div class="foto f-m">2 ×</div><div class="foto f-m" style="border-style:dashed">+ ekle</div></div>
           <span class="etiket">Mesaj</span>
-          <div class="mesaj-kutu"><div class="yazi" style="min-height:130px">Örnek Elektrik
-P-400
-88213
-2015
-bakım binası
-pano kapağı kilitsiz, iç kapak yok</div></div>
-          <span class="tus" style="color:var(--uyari-yazi)">Kaydı sil</span>
+          <div class="mesaj-kutu"><div class="satirli"><span class="no">1</span><span>Örnek Elektrik</span><span class="no">2</span><span>P-400</span><span class="no">3</span><span>88213</span><span class="no">4</span><span>2015</span><span class="no">5</span><span>bakım binası</span><span class="no">6</span><span class="hazir">220 V<small>hazır</small></span><span class="no">7</span><span>pano kapağı kilitsiz, iç kapak yok</span></div></div>
+          <span class="etiket">Okunacak fotoğraflar</span>
+          <div class="okumalar"><div class="okuma"><div class="foto f-m">foto</div>Pano sigortaları (linye) ×</div><div class="okuma"><div class="foto f-m">foto</div>Fonksiyon testleri ×</div><div class="okuma"><span class="foto-yok" style="width:36px;height:30px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></span>Başlık seç</div></div>
         </div>
-        <div class="alt-cubuk"><span class="tus ana">Kaydet</span></div>
+        <div class="alt-cubuk"><div class="iki"><span class="tus" style="color:var(--uyari-yazi)">Kaydı sil</span><span class="tus ana">Kaydet</span></div></div>
       </div>
     </figure>
 
     <figure>
-      <figcaption><strong>9 · Bekleyenler için rapor yaz</strong><span>Taslaklar oluşur, kayıtlar sohbetten silinir</span></figcaption>
+      <figcaption><strong>10 · Bekleyenler için rapor yaz</strong><span>Taslaklar oluşur, kayıtlar sohbetten silinir</span></figcaption>
       <div class="tel" role="img" aria-label="Rapor yazma onay ekranı">
         <div class="ust"><span class="geri"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></span><div><strong>Bekleyenler için rapor yaz</strong><span>P-2610-0012 · 2 kayıt</span></div></div>
         <div class="govde">
-          <div class="kart"><div class="baslik-satir"><strong>1 · ET-2001 · Elektrik iç tesisatı</strong><small>ZPKR02</small></div><small>Plandaki ekipmana yazılacak · 5 alan dolacak · 2 fotoğraf rapora geçecek · not → uzman yorumu</small></div>
+          <div class="kart"><div class="baslik-satir"><strong>1 · ET-2001 · Elektrik iç tesisatı</strong><small>ZPKR02</small></div><small>Plandaki ekipmana yazılacak · 5 alan dolacak · 2 fotoğraf rapora geçecek · 2 fotoğraf yapay zekâyla okunacak (linye, fonksiyon testleri) · not → uzman yorumu</small></div>
           <div class="kart"><div class="baslik-satir"><strong>2 · AG topraklama (yeni)</strong><small>ZPKR01</small></div><small>Plana yeni ekipman olarak eklenecek · 1 alan dolacak · 1 fotoğraf rapora geçecek · not → uzman yorumu</small></div>
           <div class="kart">
             <strong style="font-size:13px">Oluşturmadan önce</strong>
             <div class="kosul"><b>✓</b><span>Plan günü bugün</span></div>
             <div class="kosul"><b>✓</b><span>Günlük süre yetiyor: 2 rapor, 135 dk</span></div>
             <div class="kosul"><b class="u">!</b><span>İnternet gerekli: rapor numarası sunucuda verilir</span></div>
+            <div class="kosul"><b class="u">!</b><span>Yapay zekâ 2 fotoğraf okuyacak: firmanın kotasından harcar (bu ay 3,20 $ / 20 $)</span></div>
           </div>
-          <small style="color:var(--yazi2);font-size:12px;line-height:1.5">Taslaklar sırayla açılır; kriterleri ve ölçümleri raporda doldurursunuz. Raporu oluşan kayıtlar sohbetten silinir, etiket fotoğrafları rapora konmaz.</small>
+          <small style="color:var(--yazi2);font-size:12px;line-height:1.5">Taslaklar sırayla açılır; kriterleri ve ölçümleri raporda doldurursunuz. Okunan değerler raporda öneri olarak bekler. Raporu oluşan kayıtlar sohbetten silinir; etiket fotoğrafı rapora konmaz.</small>
         </div>
         <div class="alt-cubuk"><span class="tus ana">2 rapor taslağı oluştur</span></div>
       </div>
     </figure>
 
+    <figure>
+      <figcaption><strong>11 · S.A.Y asistan: fotoğraf ve belge</strong><span>Asistanda soruya ek: ataç tuşu → fotoğraf çek, galeriden seç, belge ekle</span></figcaption>
+      <div class="tel" role="img" aria-label="S.A.Y asistanda fotoğraf ve belge ekleme">
+        <div class="ust"><span class="geri"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></span><div><strong>S.A.Y asistan</strong><span>Saha raporu · ET-2001</span></div></div>
+        <div class="govde">
+          <div class="sohbet-sag">
+            <div class="ek-tepsi"><div class="foto f-m">foto</div><div class="ek"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg><span>sertifika.pdf<br><small>PDF · 1,2 MB</small></span></div></div>
+            <span>Bu panodaki eksikleri ve sertifikanın geçerlilik tarihini kontrol eder misin?</span>
+          </div>
+          <div class="sistem">Fotoğrafta iç kapak görünmüyor, iki çıkışta devre etiketi yok. Sertifikanın geçerlilik tarihi muayene tarihinden sonra.</div>
+        </div>
+        <div class="ek-menu">
+          <div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>Fotoğraf çek</div>
+          <div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>Galeriden seç</div>
+          <div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>Belge ekle<small>PDF, Word</small></div>
+        </div>
+        <div class="alt-cubuk">
+          <div class="ek-tepsi"><div class="ek"><div class="foto f-m" style="width:30px;height:24px">·</div><span>pano-2.jpg</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></div></div>
+          <div class="yazma"><span class="tus yuvarlak" aria-label="Ek ekle" style="border-color:var(--onay);color:var(--onay-yazi)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></span><div class="girdi">Sorunuzu yazın</div><span class="tus yesil yuvarlak" aria-label="Gönder"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg></span></div>
+          <small style="color:var(--yazi2);font-size:11.5px">Ekler yapay zekâya gider, kotadan harcar · en çok 4 MB</small>
+        </div>
+      </div>
+    </figure>
+
 
     <figure class="genis">
-      <figcaption><strong>10 · Ekipman türleri › S.A.Y Chat ayarları</strong><span>Tür düzenlenirken bölüme tıklanınca açılır; etiket bilgisi satırları burada değişir (masaüstü)</span></figcaption>
+      <figcaption><strong>12 · Ekipman türleri › S.A.Y Chat ayarları</strong><span>Tür düzenlenirken bölüme tıklanınca açılır: mesaj satırları (adı, sırası, rapordaki alanı, hazır değeri) ve okunacak fotoğraf başlıkları (masaüstü)</span></figcaption>
       <div class="masa" role="img" aria-label="Ekipman türü sayfasında S.A.Y Chat ayarları bölümü">
         <div class="masa-ust">
           <span class="kirinti">Ekipman türleri <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg> Elektrik</span>
@@ -430,49 +505,71 @@ pano kapağı kilitsiz, iç kapak yok</div></div>
           <div class="bolum-satir"><span>Rapor formatı</span><small>ZPKR02 · v4</small></div>
           <div class="bolum-satir"><span>Ölçüm cihazları</span><small>3 cihaz türü</small></div>
           <div class="bolum-acik">
-            <div class="bolum-bas"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>S.A.Y Chat ayarları<small>6 satır</small></div>
+            <div class="bolum-bas"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>S.A.Y Chat ayarları<small>7 satır · 3 okunacak fotoğraf</small></div>
             <div class="ayar">
               <div class="ayar-satirlar">
-                <p class="bilgi-not">Denetçinin mesajında her satır sırayla bir alana yazılır. Satır adını, sırasını ve rapordaki alanını değiştirin; satır ekleyin ya da silin.</p>
-                <div class="ayar-bas"><span>Sıra</span><span>Telefonda yazan</span><span>Rapordaki alan</span><span></span></div>
-              <div class="ayar-satir">
-                <span class="sira">1</span>
-                <div class="girdi">Marka</div>
-                <div class="secim"><span>Ekipman bilgileri › Marka</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
-                <div class="kucuk-tuslar"><span class="pasif" aria-label="Yukarı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></span><span  aria-label="Aşağı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span><span aria-label="Satırı sil"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span></div>
-              </div>
-              <div class="ayar-satir">
-                <span class="sira">2</span>
-                <div class="girdi">Model</div>
-                <div class="secim"><span>Ekipman bilgileri › Model</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
-                <div class="kucuk-tuslar"><span  aria-label="Yukarı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></span><span  aria-label="Aşağı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span><span aria-label="Satırı sil"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span></div>
-              </div>
-              <div class="ayar-satir">
-                <span class="sira">3</span>
-                <div class="girdi">Sn</div>
-                <div class="secim"><span>Ekipman bilgileri › Seri no</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
-                <div class="kucuk-tuslar"><span  aria-label="Yukarı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></span><span  aria-label="Aşağı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span><span aria-label="Satırı sil"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span></div>
-              </div>
-              <div class="ayar-satir">
-                <span class="sira">4</span>
-                <div class="girdi">İmal yılı</div>
-                <div class="secim"><span>Ekipman bilgileri › İmal yılı</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
-                <div class="kucuk-tuslar"><span  aria-label="Yukarı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></span><span  aria-label="Aşağı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span><span aria-label="Satırı sil"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span></div>
-              </div>
-              <div class="ayar-satir">
-                <span class="sira">5</span>
-                <div class="girdi">Kullanım yeri</div>
-                <div class="secim"><span>Ekipman bilgileri › Kullanım yeri</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
-                <div class="kucuk-tuslar"><span  aria-label="Yukarı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></span><span  aria-label="Aşağı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span><span aria-label="Satırı sil"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span></div>
-              </div>
-              <div class="ayar-satir">
-                <span class="sira">6</span>
-                <div class="girdi">Not</div>
-                <div class="secim"><span>Muayene uzmanı yorumu</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
-                <div class="kucuk-tuslar"><span  aria-label="Yukarı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></span><span class="pasif" aria-label="Aşağı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span><span aria-label="Satırı sil"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span></div>
-              </div>
+                <h4 class="alt-baslik">Mesaj satırları (etiket bilgileri)</h4>
+                <p class="bilgi-not">Denetçinin mesajında her satır sırayla bir alana yazılır. Satır adını, sırasını, rapordaki alanını ve hazır değerini değiştirin; satır ekleyin ya da silin.</p>
+                <div class="ayar-bas"><span>Sıra</span><span>Telefonda yazan</span><span>Rapordaki alan</span><span>Hazır değer</span><span></span></div>
+                <div class="ayar-satir">
+                  <span class="sira">1</span>
+                  <div class="girdi">Marka</div>
+                  <div class="secim"><span>Ekipman bilgileri › Marka</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
+                  <div class="girdi deger bos-deger">yok</div>
+                  <div class="kucuk-tuslar"><span class="pasif" aria-label="Yukarı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></span><span  aria-label="Aşağı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span><span aria-label="Satırı sil"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span></div>
+                </div>
+                <div class="ayar-satir">
+                  <span class="sira">2</span>
+                  <div class="girdi">Model</div>
+                  <div class="secim"><span>Ekipman bilgileri › Model</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
+                  <div class="girdi deger bos-deger">yok</div>
+                  <div class="kucuk-tuslar"><span  aria-label="Yukarı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></span><span  aria-label="Aşağı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span><span aria-label="Satırı sil"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span></div>
+                </div>
+                <div class="ayar-satir">
+                  <span class="sira">3</span>
+                  <div class="girdi">Sn</div>
+                  <div class="secim"><span>Ekipman bilgileri › Seri no</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
+                  <div class="girdi deger bos-deger">yok</div>
+                  <div class="kucuk-tuslar"><span  aria-label="Yukarı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></span><span  aria-label="Aşağı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span><span aria-label="Satırı sil"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span></div>
+                </div>
+                <div class="ayar-satir">
+                  <span class="sira">4</span>
+                  <div class="girdi">İmal yılı</div>
+                  <div class="secim"><span>Ekipman bilgileri › İmal yılı</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
+                  <div class="girdi deger bos-deger">yok</div>
+                  <div class="kucuk-tuslar"><span  aria-label="Yukarı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></span><span  aria-label="Aşağı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span><span aria-label="Satırı sil"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span></div>
+                </div>
+                <div class="ayar-satir">
+                  <span class="sira">5</span>
+                  <div class="girdi">Kullanım yeri</div>
+                  <div class="secim"><span>Ekipman bilgileri › Kullanım yeri</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
+                  <div class="girdi deger bos-deger">yok</div>
+                  <div class="kucuk-tuslar"><span  aria-label="Yukarı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></span><span  aria-label="Aşağı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span><span aria-label="Satırı sil"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span></div>
+                </div>
+                <div class="ayar-satir">
+                  <span class="sira">6</span>
+                  <div class="girdi">Şebeke gerilimi</div>
+                  <div class="secim"><span>Fonksiyon testleri › Gerilim L-N</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
+                  <div class="girdi deger">220 V</div>
+                  <div class="kucuk-tuslar"><span  aria-label="Yukarı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></span><span  aria-label="Aşağı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span><span aria-label="Satırı sil"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span></div>
+                </div>
+                <div class="ayar-satir">
+                  <span class="sira">7</span>
+                  <div class="girdi">Not</div>
+                  <div class="secim"><span>Muayene uzmanı yorumu</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
+                  <div class="girdi deger bos-deger">yok</div>
+                  <div class="kucuk-tuslar"><span  aria-label="Yukarı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></span><span class="pasif" aria-label="Aşağı"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span><span aria-label="Satırı sil"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span></div>
+                </div>
                 <span class="tus" style="align-self:flex-start"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Satır ekle</span>
-                <p class="bilgi-not">Yönergeden fazla yazılan satırlar nota eklenir. Değişiklik yeni kayıtlarda geçerli; gönderilmiş kayıtlar gönderildikleri andaki sırayla okunur.</p>
+                <p class="bilgi-not">Hazır değerli satır mesaj kutusunda dolu gelir; denetçi üstüne yazıp değiştirir. Yönergeden fazla yazılan satırlar nota eklenir. Değişiklik yeni kayıtlarda geçerli; gönderilmiş kayıtlar gönderildikleri andaki sırayla okunur.</p>
+                <hr class="ayrac">
+                <h4 class="alt-baslik">Okunacak fotoğraflar (yapay zekâ)</h4>
+                <p class="bilgi-not">Kayıtta bu başlıklar altında fotoğraf eklenir (test tablosu, linye, ölçüm ekranı). Rapor yazılırken yapay zekâ okur, o bölümü öneri olarak doldurur. Başlıklar, rapor formatında fotoğraftan doldurması açık bölümlerden seçilir.</p>
+                <div class="okuma-ayar"><div class="secim"><span>Pano sigortaları (linye)</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div><label><span class="anahtar"></span>Açık</label><div class="kucuk-tuslar"><span aria-label="Başlığı sil"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span></div></div>
+                <div class="okuma-ayar"><div class="secim"><span>Fonksiyon testleri</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div><label><span class="anahtar"></span>Açık</label><div class="kucuk-tuslar"><span aria-label="Başlığı sil"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span></div></div>
+                <div class="okuma-ayar"><div class="secim"><span>Potansiyel dengeleme</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div><label><span class="anahtar"></span>Açık</label><div class="kucuk-tuslar"><span aria-label="Başlığı sil"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span></div></div>
+                <div class="okuma-ayar"><div class="secim"><span>Zemin izolasyonu</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div><label><span class="anahtar kapali"></span>Kapalı</label><div class="kucuk-tuslar"><span aria-label="Başlığı sil"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span></div></div>
+                <span class="tus" style="align-self:flex-start"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Başlık ekle</span>
               </div>
               <div class="ayar-on">
                 <span class="etiket">Telefonda böyle görünür</span>
@@ -483,9 +580,12 @@ pano kapağı kilitsiz, iç kapak yok</div></div>
 3. Sn
 4. İmal yılı
 5. Kullanım yeri
-6. Not</div>
+6. Şebeke gerilimi · 220 V
+7. Not</div>
                   <span class="tus kucuk"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>Etiket fotoğrafı</span>
                 </div>
+                <span class="etiket">Okunacak fotoğraflar</span>
+                <ul class="okuma-liste" style="max-width:260px"><li style="min-height:40px"><span class="foto-yok" style="width:30px;height:26px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></span><span class="ad"><span>Pano sigortaları (linye)</span></span></li><li style="min-height:40px"><span class="foto-yok" style="width:30px;height:26px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></span><span class="ad"><span>Fonksiyon testleri</span></span></li><li style="min-height:40px"><span class="foto-yok" style="width:30px;height:26px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></span><span class="ad"><span>Potansiyel dengeleme</span></span></li></ul>
               </div>
             </div>
             <div class="ayar-alt"><span class="tus">Vazgeç</span><span class="tus ana">Kaydet</span></div>
