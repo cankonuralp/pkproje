@@ -350,7 +350,8 @@ test("16. sertifika denetimi kalkınca sertifikalı eğitim kaydı silinir (kili
 
 test("17. tamamlandı denetimi kalkınca tamamlanmış plan silinir (kilidin koruduğu açık)", async () => {
   const TAMAM = "    'tamamlandi', CASE WHEN p.durum = 'tamamlandi' THEN 1 END,";
-  const supa = await supabaseBenzeri(kume, "silme_bozuk_17", gocler(degistir(TAMAM, "    'tamamlandi', NULL,"), undefined, "0067_"));
+  /* 2026-10-12: plan_kullanim 0082'de (saha formu) yeniden tanımlanır — bozulan satır oradaki tanımda */
+  const supa = await supabaseBenzeri(kume, "silme_bozuk_17", gocler(degistir(TAMAM, "    'tamamlandi', NULL,"), undefined, "0082_"));
   const h = havuzKur({ ...kume.uygulama, database: "silme_bozuk_17" });
   try {
     const A = (await supa.sahip.query<{ id: string }>("INSERT INTO firma (kisa_ad, ad, rapor_kodu) VALUES ('deneme-a', 'Deneme A', 'DA') RETURNING id::text")).rows[0].id;
