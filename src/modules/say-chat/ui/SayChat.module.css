@@ -35,6 +35,9 @@
 .basTus:hover { background: var(--kart); }
 .basTus:focus-visible { outline: 3px solid var(--odak); outline-offset: -3px; }
 .govdeP { flex: 1 1 auto; overflow-y: auto; overscroll-behavior: contain; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+/* 542: gövdenin öğeleri sıkışmaz — uzun mesaj kutusu (türde 30 satıra kadar) küçülüp üstteki satırın üstüne binmesin; gövde kendi içinde kayar
+   (uçtan uca: "Görüntüle"nin üstüne mesaj kutusu biniyordu) */
+.govdeP > * { flex: none; }
 .altP { padding: 8px 12px; border-top: 1px solid var(--kenar); display: grid; gap: 6px; }
 .ara { margin: 2px 0 0; color: var(--yazi2); font-size: var(--boy-etiket); font-weight: 600; }
 .not { margin: 0; color: var(--yazi2); font-size: var(--boy-etiket); }
