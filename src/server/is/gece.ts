@@ -5,8 +5,8 @@ import type { Havuz } from "../db/kiraci.ts";
 import { copTemizle } from "../dosya/cop.ts";
 import type { Depo } from "../dosya/depo.ts";
 import { firmalardaKos, type IsOzeti } from "./firmalar.ts";
+import { firmaGonderimi } from "../eposta/firma.ts";
 import { bekleyenleriGonder } from "../eposta/gonder.ts";
-import { epostaSaglayicisi } from "../eposta/saglayici.ts";
 
 export type GeceOzeti = IsOzeti<{ silinen: number; bayt: number; bagli: number; oksuz: number }>;
 
@@ -19,12 +19,11 @@ export async function geceIsleri(havuz: Havuz, depo: Depo, sure = GECE_SURE): Pr
   });
 }
 
-/** 432: kuyrukta bekleyen e-postaları yeniden dener (yanıttan sonra gönderilemeyenler; firma başına en eski 50) */
+/** 432: kuyrukta bekleyen e-postaları yeniden dener (yanıttan sonra gönderilemeyenler; firma başına en eski 50) — 536: firmanın kendi gönderim ayarıyla */
 export type EpostaOzeti = IsOzeti<{ gonderilen: number; bekleyen: number; hatali: number }>;
 export async function epostaIsi(havuz: Havuz, sure: number): Promise<EpostaOzeti> {
-  const saglayici = epostaSaglayicisi();
   return firmalardaKos(havuz, "eposta_yeniden", sure, { gonderilen: 0, bekleyen: 0, hatali: 0 }, async (db) => {
-    const o = await bekleyenleriGonder(db, saglayici, { enCok: 50 });
+    const o = await bekleyenleriGonder(db, await firmaGonderimi(db), { enCok: 50 });
     return { sayilar: o, kalan: false };
   });
 }

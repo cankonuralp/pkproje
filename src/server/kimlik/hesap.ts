@@ -40,6 +40,17 @@ export async function epostaRehberi(db: Sorgulayici): Promise<{ ad: string; epos
   return (await db.sorgu<{ ad: string; eposta: string }>("SELECT ad, eposta FROM hesap WHERE durum <> 'pasif' ORDER BY ad, eposta")).rows;
 }
 
+/** 536: e-postayı gönderen kişi — oturumdaki hesabın adı ve giriş e-postası (Kimden; istemciden alınmaz). Yetki ÇAĞIRANDA. */
+export async function hesapGonderen(db: Sorgulayici, hesapId: string): Promise<{ ad: string; eposta: string } | null> {
+  if (!/^[0-9a-f-]{36}$/.test(hesapId)) return null;
+  return (await db.sorgu<{ ad: string; eposta: string }>("SELECT ad, eposta FROM hesap WHERE id = $1", [hesapId])).rows[0] ?? null;
+}
+
+/** 536: açık (ilk / etkin) hesapların adı, e-postası ve rolleri — Firma ayarları › E-posta "çalışanların e-postası nereden gider" (yetki ÇAĞIRANDA) */
+export async function gonderenListesi(db: Sorgulayici): Promise<{ id: string; ad: string; eposta: string; roller: Rol[] }[]> {
+  return (await db.sorgu<{ id: string; ad: string; eposta: string; roller: Rol[] }>("SELECT id::text, ad, eposta, roller FROM hesap WHERE durum <> 'pasif' ORDER BY ad, eposta")).rows;
+}
+
 /** oturumdaki hesabın personel kaydı (yoksa null) — "kendi" düzeyi için */
 export async function hesabinPersoneli(db: Sorgulayici, hesapId: string): Promise<string | null> {
   return (await db.sorgu<{ p: string | null }>("SELECT personel_id::text AS p FROM hesap WHERE id = $1", [hesapId])).rows[0]?.p ?? null;

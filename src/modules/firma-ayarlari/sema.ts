@@ -1,13 +1,14 @@
 /* FİRMA AYARLARI — form şemaları ve seçenekler (334; maket firma-ayarlari.html, maket-ayarlar.js; MV.ESIK, MV.IMZA_YONTEM, MV.YASAL). İstemci ve
    sunucu aynı şemayı kullanır; iletiler Türkçe. Değerler src/server/ayar/ayar.ts bölümlerine yazılır (tek kaynak, başlangıç değerleri orada). */
 import { tutar, z } from "../../sema/ortak.ts";
+import { ALAN_BICIMI, alanSadelestir } from "../../server/eposta/kimden.ts";
 
 /** bölümler (sol liste ve sayfa sırası — maket ayarCiz sırası; 334'te olanlar) */
 export const AYAR_BASLIK = {
   firma: "Firma bilgileri", imza: "İmza yöntemi", zimmet: "Zimmet teslim formu", saklama: "Rapor saklama süresi", onbilgi: "Ön bilgilendirme formu",
   bordro: "Bordro formatı", mesai: "Mesai takibi", esik: "Uyarı eşikleri", kod: "Rapor numarası", sabit: "Sabit giderler",
   fiyat: "Fiyat listesi", mbelge: "Müşteriye açık personel belgeleri",
-  bulut: "Raporların ikinci kopyası", depo: "Supabase hesabı ve yedek", yz: "Yapay zekâ", ice: "Toplu içe aktarma (ilk kurulum)",
+  bulut: "Raporların ikinci kopyası", depo: "Supabase hesabı ve yedek", yz: "Yapay zekâ", eposta: "E-posta", ice: "Toplu içe aktarma (ilk kurulum)",
 } as const;
 export type AyarKesimi = keyof typeof AYAR_BASLIK;
 
@@ -114,6 +115,24 @@ export const BulutGirdisi = z.object({
     .refine((s) => !/[\\/:*?"<>|]/.test(s), "Klasör adında \\ / : * ? \" < > | kullanılamaz.")),
   duzen: z.enum(["mt", "mty", "my"], { error: "Klasör düzeni seçin." }),
 });
+
+/* ── 536 E-POSTA (maket postaCiz 535; reisim "A": her firma kendi Resend hesabı; "kim mail gönder tuşuna basarsa onun mailinden gitmeli") ── */
+export const RESEND_ADIMLAR = [
+  "resend.com'da firma adına hesap açın (ayda 3.000, günde 100 e-postaya kadar ücretsiz).",
+  "Domains › Add domain: firmanızın alan adı (ör. firmaniz.com.tr).",
+  "Resend'in verdiği kayıtları alan adınızın yönetim paneline ekleyin (alan adını aldığınız firma); Resend “Verified” deyince hazır.",
+  "API Keys › Create API key: izin “Sending access”.",
+  "Anahtarı aşağıya yapıştırın, alan adını yazıp kaydedin; “Deneme e-postası gönder”e basın.",
+] as const;
+/** gönderen alan adı (Resend'de doğrulanmış; boş = bağlı değil) ve gönderene gizli kopya */
+export const EpostaGirdisi = z.object({
+  alan: z.preprocess((v) => (typeof v === "string" ? alanSadelestir(v) : v),
+    z.string().max(100, "En çok 100 karakter.").refine((a) => a === "" || ALAN_BICIMI.test(a), "Alan adı okunamadı (ör. firmaniz.com.tr). Kaydedilmedi.")),
+  kopya: z.boolean(),
+});
+/** Resend API anahtarı (re_ ile başlar); şifreli saklanır, ekranda son 4 hane */
+export const ResendAnahtarGirdisi = z.object({ anahtar: z.preprocess((v) => (typeof v === "string" ? v.trim() : v),
+  z.string({ error: "Anahtarı yapıştırın." }).min(1, "Anahtarı yapıştırın.").regex(/^re_[A-Za-z0-9_]{16,200}$/, "Geçerli bir Resend API anahtarı değil (re_ ile başlar).")) });
 
 /** dosya ayarları (logo, ön bilgilendirme formu, bordro formatı): ayar alanı, izinli türler, en çok boyut */
 export const AYAR_DOSYASI = {

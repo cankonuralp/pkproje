@@ -29,6 +29,9 @@ import { parolaOzeti } from "../src/server/kimlik/parola.ts";
 import { bosKapi } from "../tests/yardimci/kume.ts";
 import { nextCalistir } from "./next.ts";
 
+/* firmaların şifreli sırları (yapay zekâ anahtarı 351, Resend anahtarı 536, yönetim doğrulama anahtarı 348) bu sunucunun ana anahtarıyla — tohumdan önce */
+const sirAnahtari = randomBytes(32).toString("base64");
+process.env.PROBATA_SIR_ANAHTARI = sirAnahtari;
 const kume = await gomuluBaslat({ klasor: join(mkdtempSync(join(tmpdir(), "probata-e2e-")), "pg"), port: await bosKapi(), kalici: false });
 const sahip = kume.sahipIstemci();
 await sahip.connect();
@@ -92,6 +95,16 @@ for (const f of firmalar) {
   /* muhasebe (327): her proje için tamamlanmış bir plan ve imzalı raporu (imza zinciri e2e/saha-raporu'nda denenir; burada yalnız muhasebenin
      başlangıç durumu) — süper kullanıcıyla, tetiksiz, geçici veritabanı */
   if (f.kisa_ad !== E2E_FIRMA.kisaAd) continue;
+  /* 536: firmanın e-posta hesabı (Firma ayarları › E-posta) — uydurma Resend anahtarı (yerel taklit), gönderen alan adı = hesapların alan adı,
+     Rapor e-postası alan adında; Başka Muayene'de yok (e-postaları bekler) */
+  await kiraciIcinde(havuz, f.id, async (db) => {
+    const iz = { kim: E2E_HESAPLAR.yonetici.ad, ne: "ayar.eposta" };
+    const e = await ayarOku(db, "eposta");
+    if ((await ayarYaz(db, "eposta", e.surum, { alan: E2E_EPOSTA.alan, kopya: false }, iz)).durum !== "tamam") throw new Error("e-posta ayarı yazılamadı");
+    const b = await ayarOku(db, "firma_bilgileri");
+    if ((await ayarYaz(db, "firma_bilgileri", b.surum, { ...b.deger, eposta: E2E_EPOSTA.genel }, iz)).durum !== "tamam") throw new Error("Rapor e-postası yazılamadı");
+    await sirYaz(db, "eposta_anahtari", E2E_EPOSTA.anahtar, { kim: E2E_HESAPLAR.yonetici.ad });
+  }, { hesapId: tohum.yonetici });
   const s2 = kume.sahipIstemci();
   await s2.connect();
   try {
@@ -118,8 +131,6 @@ for (const f of firmalar) {
 /* fotoğraftan okuma (351): ayrı uydurma firma — yönetici, planlama, denetçi; Elektrik panosu türü ZPKR02 formatıyla yayında; tesiste proje başına bir
    ekipman, bir plan (denetçi kabul etti) ve denetçinin Yeni raporu; yapay zekâ açık, anahtar uydurma (ana anahtar bu sunucunun). Hepsi modülün
    kendi işlevleriyle (yetki, numara, denetim izi) — ham SQL yalnız kayıt tohumu. */
-const sirAnahtari = randomBytes(32).toString("base64");
-process.env.PROBATA_SIR_ANAHTARI = sirAnahtari;
 {
   const sz = kume.sahipIstemci();
   await sz.connect();
@@ -204,6 +215,7 @@ await havuz.end();
 /* yerel Anthropic taklidi (351; 354): yalnız bu sunucunun uydurma anahtarını kabul eder. Gerçek hizmet gibi (Opus 5.5 / Sonnet 5.5) zorunlu araç
    seçimini (tool_choice "tool" / "any") 400 ile reddeder — 350–351 incelemesi: eski istek canlıda her okumada düşüyordu, taklit bunu görmüyordu.
    Yapılandırılmış çıktı istenmeliyse (output_config.format json_schema) metin bloğunda JSON ile üç satır döner (biri emin değil). */
+const KIMDEN = new RegExp(`^"[^"<>\\r\\n]+" <[^<>@\\s]+@${E2E_EPOSTA.alan.replace(/\./g, "\\.")}>$`);
 const yzTaklit = createServer((istek, yanit) => {
   /* 379: Bakanlık duyuru sayfalarının UYDURMA taklidi (PROBATA_DUYURU_UC; e2e/duyuru-ornek.ts) — gerçek siteye istek gitmez */
   const duyuruSayfasi = istek.method === "GET" ? ornekSayfa(istek.url ?? "") : null;
@@ -211,10 +223,14 @@ const yzTaklit = createServer((istek, yanit) => {
   let govde = ""; istek.on("data", (p) => { govde += p; }).on("end", () => {
     /* 432: e-posta sağlayıcısının taklidi (Resend biçimi) — yalnız uydurma anahtarla ve yalnız .example alıcıya; gerçek adrese gitmez */
     if (istek.url === "/emails") {
-      let e: { from?: unknown; to?: unknown; subject?: unknown; text?: unknown } = {};
+      let e: { from?: unknown; to?: unknown; subject?: unknown; text?: unknown; reply_to?: unknown; bcc?: unknown } = {};
       try { e = JSON.parse(govde); } catch { /* boş kalır → 422 */ }
-      const tamam = istek.headers.authorization === `Bearer ${E2E_EPOSTA.anahtar}` && e.from === E2E_EPOSTA.kimden && Array.isArray(e.to) && e.to.length === 1
-        && e.to.every((x) => typeof x === "string" && x.endsWith(".example")) && typeof e.subject === "string" && typeof e.text === "string";
+      /* 536: Kimden = tuşa basan kişi ("Ad" <kisi@alan>) ya da Rapor e-postası — firmanın alan adında; cevap / gizli kopya varsa yalnız .example */
+      const ekler = [e.reply_to, e.bcc].filter((x) => x !== undefined);
+      const tamam = istek.headers.authorization === `Bearer ${E2E_EPOSTA.anahtar}` && typeof e.from === "string" && KIMDEN.test(e.from)
+        && Array.isArray(e.to) && e.to.length === 1 && e.to.every((x) => typeof x === "string" && x.endsWith(".example"))
+        && ekler.every((x) => Array.isArray(x) && x.length === 1 && typeof x[0] === "string" && x[0].endsWith(".example"))
+        && typeof e.subject === "string" && typeof e.text === "string";
       yanit.writeHead(tamam ? 200 : 422, { "content-type": "application/json" }).end(JSON.stringify(tamam ? { id: "e2e" } : { message: "taklit: geçersiz istek" }));
       return;
     }
@@ -410,7 +426,7 @@ const ortam: Record<string, string> = {
   PROBATA_YZ_UC: `http://127.0.0.1:${yzKapi}`,   // 351: yerel Anthropic taklidi
   CRON_SECRET: E2E_ZAMANLI_SIR,   // 378: gece işi ucu (uydurma sır)
   PROBATA_DUYURU_UC: `http://127.0.0.1:${yzKapi}`,   // 379: duyuru sayfalarının yerel taklidi
-  PROBATA_EPOSTA_UC: `http://127.0.0.1:${yzKapi}/emails`, PROBATA_EPOSTA_ANAHTAR: E2E_EPOSTA.anahtar, PROBATA_EPOSTA_KIMDEN: E2E_EPOSTA.kimden,   // 432
+  PROBATA_EPOSTA_UC: `http://127.0.0.1:${yzKapi}/emails`,   // 432 (536: anahtar firmanın — deneme firmasına tohumlanır)
 };
 
 /* 489: yayın derlemesiyle — Next'in bağımsız sunucusu (output "standalone"; Vercel'deki gibi derlenmiş). Statik dosyalar ve public/ sunucunun

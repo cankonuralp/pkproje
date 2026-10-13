@@ -2479,7 +2479,21 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
-- 2026-10-13 (535): **E-POSTA KURGUSU — MAKET (ONAY BEKLİYOR)** (reisim, 533'e: *"A seçeneğini kabul ediyorum"* → her firma KENDİ Resend hesabı).
+- 2026-10-13 (536): **E-POSTA: HER FİRMA KENDİ RESEND HESABI, KİMDEN = TUŞA BASAN KİŞİ — KODDA** (reisim, 535 maketine: *"onaylıyorum, işin bitince
+  pc yi kapat"*). Firma ayarları › **E-posta** bölümü maketteki gibi: kurulum adımları (anahtar yokken), Resend API anahtarı (re_ ile başlar; firma
+  sırrı `eposta_anahtari`, AES-GCM, bir kez yazılır, ekranda son 4 — Değiştir / Kaldır), gönderen alan adı (yazılan sadeleşir: http, www, yol, büyük
+  harf atılır; bozuğu kaydedilmez), gönderene gizli kopya (başlangıçta Kapalı), "Kimden gider" kuralları, Rapor e-postası alan adında değilse uyarı,
+  **Deneme e-postası gönder** (tuşa basanın kendi adresine, hemen; sonucu söylenir), bu ay gönderilen, çalışanların e-postası nereden gider tablosu.
+  Kural (src/server/eposta/kimden.ts, saf): adresi gönderen alan adında olan kişi → Kimden kendisi ("Ad" <kisi@alan>), cevap ona; değilse ya da
+  otomatik e-postada → Rapor e-postasından, kişinin (otomatikte firmanın) adıyla, Cevap = kişi; Rapor e-postası da alan adında değilse e-posta
+  gönderilmez, **sırada bekler**, nedeni yazılır (deneme sayılmaz; ayar düzelince gider). Gönderen kişi kuyruğa yazılırken oturumdaki hesaptan alınır
+  (istemciden gelmez) ve satırda değişmez (göç 0087: eposta.gonderen_ad / gonderen_eposta, tetik). Plan açınca giden e-postalar artık planı açanın
+  adresinden. Ortamdaki ortak anahtar / gönderen (PROBATA_EPOSTA_ANAHTAR / _KIMDEN) kalktı; anahtar firmanın (src/server/eposta/firma.ts). Kilitler:
+  tests/eposta-saf.test.ts (Kimden kuralı, sağlayıcı istek biçimi — reply_to / bcc), tests/planlar.test.ts 432 / 536 (gönderen satırda, değişmez;
+  alan dışı → bekler), tests/firma-ayarlari.test.ts 536 (yetki sunucuda, anahtar şifreli, deneme yerel taklide gider), olumsuz kanıt
+  tests/bozan/eposta.bozan.ts (alan adı denetimleri), uçtan uca e2e/firma-ayarlari.spec.ts + e2e/planlar.spec.ts (taklit Kimden'i denetler). Gerçek
+  gönderim için firmanın Resend hesabı ve doğrulanmış alan adı gerekir — deneme yayınında bağlı değil (e-postalar bekler).
+- 2026-10-13 (535): **E-POSTA KURGUSU — MAKET (ONAYLANDI, 536'da kodda)** (reisim, 533'e: *"A seçeneğini kabul ediyorum"* → her firma KENDİ Resend hesabı).
   Maket: Firma ayarları › **E-posta** (`docs/assets/maket-ayarlar.js` postaCiz; `docs/maket/firma-ayarlari.html`): kurulum adımları (resend.com hesabı →
   Domains › Add domain → DNS kayıtları → API Keys "Sending access" → anahtar + alan adı) · Resend API anahtarı (re_; bir kez yazılır, son 4 hane;
   Değiştir / Kaldır) · Gönderen alan adı (Resend'de doğrulanmış) · Gönderene gizli kopya (Kapalı / Açık — *öneri: firma ayarı, başlangıçta kapalı*) ·

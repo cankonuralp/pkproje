@@ -5,6 +5,7 @@
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import { mkdtempSync, rmSync } from "node:fs";
+import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, test } from "node:test";
@@ -15,7 +16,7 @@ import { raporNoAl } from "../src/server/numara/numara.ts";
 import { dosyaIndirilebilir } from "../src/server/dosya/dosya.ts";
 import { DOSYA_ERISIMI } from "../src/server/dosya/erisim.ts";
 import { ayarOku, firmaBelgeKunyesi, firmaKunyesi } from "../src/server/ayar/ayar.ts";
-import { ayarDosyasiYaz, ayarKaydet, belgeTuruEkle, belgeTuruKaldir, firmaAyarlari, firmaKoduKaydet, yzAnahtarYaz, type Kisi } from "../src/modules/firma-ayarlari/server/ayarlar.ts";
+import { ayarDosyasiYaz, ayarKaydet, belgeTuruEkle, belgeTuruKaldir, denemeEpostasi, epostaAnahtarYaz, firmaAyarlari, firmaKoduKaydet, yzAnahtarYaz, type Kisi } from "../src/modules/firma-ayarlari/server/ayarlar.ts";
 import { ozlukEkle, ozlukKaldir, personelDosyasi } from "../src/modules/personel/server/dosyalar.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
@@ -281,4 +282,67 @@ test("firma sızıntısı: B kendi ayarlarını görür (başlangıç değerleri
     ["DB", "", 2, 30, [], ["Deneme B Kişi"]]);
   assert.deepEqual([v.mbelge.deger.secili, v.mbelge.turler.filter((t) => t.ek || t.k.startsWith("eg:")).length, v.fiyat.turler.map((t) => t.fiyat)], [["ekipnet"], 0, [null]]);
   assert.deepEqual([v.yz.anahtar, v.yz.deger.acik, v.bulut.deger.saglayici, v.depolama.dosya], [{ tanimli: false, son4: null }, false, "", 0], "B'nin dosyası yok (A'nınkiler sayılmaz)");
+});
+
+/* NEREDEN GELDİ: 536 — reisim 2026-10-13: "kim mail gönder tuşuna basarsa onun mailinden gitmeli" → "A seçeneğini kabul ediyorum" (her firma kendi
+   Resend hesabı) → maket Firma ayarları › E-posta "onaylıyorum". Yerel sağlayıcı taklidiyle (gerçek hizmete istek gitmez). */
+test("536 e-posta: alan adı sadeleşir, bozuğu kaydedilmez; Resend anahtarı şifreli, ekranda son 4; yetki sunucuda; deneme e-postası tuşa basanın adresine, kendi adresinden", async () => {
+  process.env.PROBATA_SIR_ANAHTARI ??= randomBytes(32).toString("base64");
+  const ANAHTAR = "re_Deneme0123456789_abcdWXYZ";
+  const gelen: { yetki?: string; govde: Record<string, unknown> }[] = [];
+  const taklit = createServer((i, y) => {
+    let g = ""; i.on("data", (p) => { g += p; }).on("end", () => {
+      gelen.push({ yetki: i.headers.authorization, govde: JSON.parse(g || "{}") as Record<string, unknown> });
+      y.writeHead(200, { "content-type": "application/json" }).end("{}");
+    });
+  });
+  await new Promise<void>((c) => taklit.listen(0, "127.0.0.1", c));
+  const eskiUc = process.env.PROBATA_EPOSTA_UC;
+  process.env.PROBATA_EPOSTA_UC = `http://127.0.0.1:${(taklit.address() as { port: number }).port}/emails`;
+  try {
+    /* yetki sunucuda: denetçi ayar yazamaz, anahtar giremez, deneme gönderemez */
+    assert.equal((await a(DEN, (db) => ayarKaydet(db, DEN, "eposta", -1, { alan: "deneme-a.example", kopya: false }))).durum, "yetkisiz");
+    assert.equal((await a(DEN, (db) => epostaAnahtarYaz(db, DEN, { anahtar: ANAHTAR }))).durum, "yetkisiz");
+    assert.equal((await a(DEN, (db) => denemeEpostasi(db, DEN))).durum, "yetkisiz");
+    /* ayar yokken deneme gönderilmez, kuyruğa da yazılmaz */
+    assert.deepEqual(await a(YON, (db) => denemeEpostasi(db, YON)), { durum: "red", neden: "Önce Resend anahtarını ve gönderen alan adını kaydedin." });
+    assert.equal(await sql(A, "SELECT id::text FROM eposta WHERE kaynak = 'eposta_deneme'"), undefined);
+    /* alan adı: bozuğu kaydedilmez (alanın altında), yazılanı sadeleşir */
+    assert.deepEqual(await a(YON, (db) => ayarKaydet(db, YON, "eposta", -1, { alan: "kötü alan", kopya: false })),
+      { durum: "gecersiz", hatalar: { alan: "Alan adı okunamadı (ör. firmaniz.com.tr). Kaydedilmedi." } });
+    tamam(await a(YON, (db) => ayarKaydet(db, YON, "eposta", -1, { alan: " https://www.Deneme-A.example/ayarlar ", kopya: false })));
+    assert.deepEqual((await a(YON, (db) => ayarOku(db, "eposta"))).deger, { alan: "deneme-a.example", kopya: false });
+    /* anahtar: biçim denetimi; şifreli, ekranda ve veritabanında düz metin yok */
+    assert.deepEqual(await a(YON, (db) => epostaAnahtarYaz(db, YON, { anahtar: "sk-ant-deneme-0123456789abcdef" })),
+      { durum: "gecersiz", hatalar: { anahtar: "Geçerli bir Resend API anahtarı değil (re_ ile başlar)." } });
+    tamam(await a(YON, (db) => epostaAnahtarYaz(db, YON, { anahtar: ANAHTAR })));
+    const v = (await a(YON, (db) => firmaAyarlari(db, YON)))!;
+    assert.deepEqual(v.eposta.anahtar, { tanimli: true, son4: "WXYZ" });
+    assert.ok(!JSON.stringify(v).includes(ANAHTAR), "anahtar ekran verisinde yok");
+    const satir = (await a(YON, (db) => db.sorgu<{ sifreli: string }>("SELECT sifreli FROM firma_sir WHERE ad = 'eposta_anahtari'"))).rows[0];
+    assert.ok(!satir.sifreli.includes(ANAHTAR), "veritabanında düz metin yok");
+    assert.equal(v.eposta.ben, "yon@deneme-a.example");
+    assert.deepEqual(v.eposta.kisiler.filter((k) => k.eposta === "yon@deneme-a.example").map((k) => k.yol), ["kendi"]);
+    /* başka firma: A'nın ayarını ve anahtarını görmez, kullanamaz */
+    const vb = (await a(YON_B, (db) => firmaAyarlari(db, YON_B), B))!;
+    assert.deepEqual([vb.eposta.deger.alan, vb.eposta.anahtar], ["", { tanimli: false, son4: null }]);
+    assert.equal((await a(YON_B, (db) => denemeEpostasi(db, YON_B), B)).durum, "red");
+    /* deneme: tuşa basanın adresine, kendi adresinden (alan adında), firmanın anahtarıyla; satırda gönderen yazılı */
+    assert.deepEqual(await a(YON, (db) => denemeEpostasi(db, YON)),
+      { durum: "tamam", bildirim: "Deneme e-postası gönderildi: yon@deneme-a.example — kendi adresinizden. Kutunuza bakın." });
+    assert.equal(gelen.length, 1);
+    assert.equal(gelen[0].yetki, `Bearer ${ANAHTAR}`);
+    assert.deepEqual([gelen[0].govde.from, gelen[0].govde.to, gelen[0].govde.reply_to, gelen[0].govde.bcc],
+      ["\"Deneme\" <yon@deneme-a.example>", ["yon@deneme-a.example"], undefined, undefined]);
+    const d = (await a(YON, (db) => db.sorgu<{ durum: string; gonderen_eposta: string }>("SELECT durum, gonderen_eposta FROM eposta WHERE kaynak = 'eposta_deneme'"))).rows;
+    assert.deepEqual(d, [{ durum: "gonderildi", gonderen_eposta: "yon@deneme-a.example" }]);
+    /* anahtar kaldırılınca yeniden "bağlı değil": deneme reddedilir */
+    tamam(await a(YON, (db) => epostaAnahtarYaz(db, YON, null)));
+    assert.deepEqual((await a(YON, (db) => firmaAyarlari(db, YON)))!.eposta.anahtar, { tanimli: false, son4: null });
+    assert.equal((await a(YON, (db) => denemeEpostasi(db, YON))).durum, "red");
+    assert.equal(gelen.length, 1, "kaldırıldıktan sonra sağlayıcıya istek gitmez");
+  } finally {
+    if (eskiUc === undefined) delete process.env.PROBATA_EPOSTA_UC; else process.env.PROBATA_EPOSTA_UC = eskiUc;
+    await new Promise<void>((c) => taklit.close(() => c()));
+  }
 });

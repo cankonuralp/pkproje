@@ -18,7 +18,7 @@ import { turOzetleri } from "../../ekipman-turleri/server/turler.ts";
 import { musteriOzetleri } from "../../musteriler/server/musteriler.ts";
 import { atamaHaritasi } from "../../personel/server/dosyalar.ts";
 import { denetciAdaylari, personelOzetleri } from "../../personel/server/personel.ts";
-import { epostaRehberi, personelHesaplari } from "../../../server/kimlik/hesap.ts";
+import { epostaRehberi, hesapGonderen, personelHesaplari } from "../../../server/kimlik/hesap.ts";
 import { firmaBelgeKunyesi } from "../../../server/ayar/ayar.ts";
 import { epostaKuyruga } from "../../../server/eposta/eposta.ts";
 import { tesisMusteriIletisim } from "../../musteriler/server/musteriler.ts";
@@ -169,10 +169,12 @@ export async function planAc(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: st
   const ortak = { firma: (await firmaBelgeKunyesi(db, null)).ad, no, musteri: m.kisa, tesis: t.ad, adres, baslangic: v.baslangic, bitis: v.bitis, ekip: ekipAd.filter(Boolean),
     aciklama: v.aciklama, baglanti: secenek.kok ? `${secenek.kok}/planlar/${p.id}` : null };
   const iz = { kim: kim.ad, ne: "plan.eposta", gerekce: no };
+  /* 536 (reisim: "kim mail gönder tuşuna basarsa onun mailinden gitmeli"): gönderen = planı açan kişi (oturumdaki hesap; sunucuda) */
+  const gonderen = await hesapGonderen(db, kim.id);
   const e1 = planEpostasi({ ...ortak, ekipten: true });
-  await epostaKuyruga(db, { kime: ekipEposta, konu: e1.konu, govde: e1.govde, kaynak: "plan", kaynakId: p.id }, iz);
+  await epostaKuyruga(db, { kime: ekipEposta, konu: e1.konu, govde: e1.govde, kaynak: "plan", kaynakId: p.id, gonderen }, iz);
   const e2 = planEpostasi({ ...ortak, ekipten: false });
-  const bilgi = await epostaKuyruga(db, { kime: v.bilgilendirme.filter((x) => !ekipEposta.includes(x)), konu: e2.konu, govde: e2.govde, kaynak: "plan", kaynakId: p.id }, iz);
+  const bilgi = await epostaKuyruga(db, { kime: v.bilgilendirme.filter((x) => !ekipEposta.includes(x)), konu: e2.konu, govde: e2.govde, kaynak: "plan", kaynakId: p.id, gonderen }, iz);
   return { durum: "tamam", id: p.id, no, eposta: ekipEposta.length + bilgi.length };
 }
 

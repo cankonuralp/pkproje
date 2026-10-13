@@ -451,7 +451,7 @@ export const SUZGECSIZ_BOLUMLER_GEREKCE: Record<string, [number, string]> = {
   "modules/anasayfa/ui/AnaSayfa.tsx": [3, "Ana sayfa özet listeleri (ilk 5; tamamı modülün süzgeçli listesinde)"],
   "modules/araclar/ui/AracListesi.tsx": [2, "araç kartının bölümleri: haftalık kilometre geçmişi, aracın tutanakları"],
   "modules/egitimler/ui/EgitimListesi.tsx": [1, "kayıt penceresinde kaydın geçmişi"],
-  "modules/firma-ayarlari/ui/FirmaAyarlari.tsx": [1, "Yapay zekâ bölümündeki aylık kullanım tablosu"],
+  "modules/firma-ayarlari/ui/FirmaAyarlari.tsx": [2, "Yapay zekâ bölümündeki aylık kullanım tablosu; E-posta bölümündeki çalışanların e-postası nereden gider tablosu (536)"],
   "modules/muhasebe/ui/Giderler.tsx": [1, "iş kartındaki işin giderleri bölümü"],
   "modules/muhasebe/ui/Karlilik.tsx": [3, "gelir-gider rapor tabloları (dönem seçicisiyle)"],
   "modules/performans/ui/Performans.tsx": [1, "kişi sayfasının günlük iş bölümü (dönem seçicisiyle)"],

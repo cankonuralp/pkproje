@@ -18,8 +18,14 @@ import { ozlukTurKullanimi } from "../../personel/server/dosyalar.ts";
 import { tutar } from "../../../sema/ortak.ts";
 import { sirDurumu, sirYaz } from "../../../server/ayar/sir.ts";
 import { yzAyi, yzAyKullanimi, type YzKisiKullanimi } from "../../../server/yz/kullanim.ts";
+import { epostaKuyruga } from "../../../server/eposta/eposta.ts";
+import { firmaGonderimi } from "../../../server/eposta/firma.ts";
+import { bekleyenleriGonder } from "../../../server/eposta/gonder.ts";
+import { gonderenYolu, type GonderenYolu } from "../../../server/eposta/kimden.ts";
+import { gonderenListesi, hesapGonderen } from "../../../server/kimlik/hesap.ts";
+import { ROL_ADI } from "../../../server/yetki/tanim.ts";
 import {
-  AnahtarGirdisi, BulutGirdisi, YzGirdisi,
+  AnahtarGirdisi, BulutGirdisi, EpostaGirdisi, ResendAnahtarGirdisi, YzGirdisi,
   BelgeTuruGirdisi, FiyatGirdisi, MUSTERI_BELGE_BAS, MUSTERI_BELGE_SON, MusteriBelgeGirdisi,
   AYAR_DOSYASI, EsikGirdisi, FirmaBilgiGirdisi, ImzaGirdisi, KodGirdisi, MesaiGirdisi, SabitGiderGirdisi, SaklamaGirdisi, ZimmetGirdisi, type AyarDosyasi,
 } from "../sema.ts";
@@ -52,6 +58,10 @@ export interface FirmaAyarlari {
   /** kullanim: bu ayın kişi başı kullanımı (354; maket Y1 "Bu ay kullanım (kişi başına)") — maliyet milyonda bir dolar */
   yz: Surumlu<{ acik: boolean; model: "haiku" | "sonnet" | "opus"; sinir: number | null }> & { anahtar: { tanimli: boolean; son4: string | null }; kullanim: YzKisiKullanimi[] };
   bulut: Surumlu<{ saglayici: "" | "gdrive" | "onedrive"; kok: string; duzen: "mt" | "mty" | "my" }>;
+  /** 536 E-posta: gönderen alan adı + gizli kopya; Resend anahtarı yalnız "tanımlı + son 4"; genel adres (Firma bilgileri › Rapor e-postası);
+      ben: oturumdaki kişinin adresi (deneme e-postası); kisiler: açık hesaplar ve e-postalarının nereden gideceği (kayıtlı alan adına göre); ay: bu ay gönderilen */
+  eposta: Surumlu<{ alan: string; kopya: boolean }> & { anahtar: { tanimli: boolean; son4: string | null }; genel: string; ben: string | null;
+    kisiler: { id: string; ad: string; eposta: string; roller: string; yol: GonderenYolu }[]; ay: number };
   /** 2026-10-12 (sunum D1–D2): Supabase hesabı ve yedek bölümü — firmanın dosyaları (çöptekiler hariç): sayı ve toplam bayt */
   depolama: { dosya: number; bayt: number };
   /** 337: son içe aktarımlar */
@@ -108,6 +118,13 @@ export async function firmaAyarlari(db: Sorgulayici, kim: Kisi): Promise<FirmaAy
         kullanim: await yzAyKullanimi(db, yzAyi()) };
     })(),
     bulut: await (async () => { const b = await ayarOku(db, "bulut"); return { deger: b.deger, surum: b.surum }; })(),
+    eposta: await (async () => {
+      const e = await ayarOku(db, "eposta");
+      const ay = (await db.sorgu<{ n: number }>(
+        "SELECT count(*)::int AS n FROM eposta WHERE durum = 'gonderildi' AND gonderildi >= (date_trunc('month', now() AT TIME ZONE 'Europe/Istanbul') AT TIME ZONE 'Europe/Istanbul')")).rows[0].n;
+      return { deger: e.deger, surum: e.surum, anahtar: await sirDurumu(db, "eposta_anahtari"), genel: f.deger.eposta, ben: (await hesapGonderen(db, kim.id))?.eposta ?? null, ay,
+        kisiler: (await gonderenListesi(db)).map((h) => ({ id: h.id, ad: h.ad, eposta: h.eposta, roller: h.roller.map((r) => ROL_ADI[r] ?? r).join(" · "), yol: gonderenYolu(h.eposta, e.deger.alan) })) };
+    })(),
     ice: await iceAktarimlar(db),
     depolama: await (async () => {
       const r = (await db.sorgu<{ n: number; bayt: string }>("SELECT count(*)::int AS n, coalesce(sum(boyut), 0)::text AS bayt FROM dosya WHERE cop IS NULL")).rows[0];
@@ -214,6 +231,11 @@ export async function ayarKaydet(db: Sorgulayici, kim: Kisi, kesim: string, suru
       const eski = (await ayarOku(db, "yapay_zeka")).deger;
       return yaz("yapay_zeka", { ...eski, ...g.veri }, g.veri.acik ? "Yapay zekâ ayarları kaydedildi (açık)." : "Yapay zekâ kapatıldı; fotoğraftan okuma ve S.A.Y görünmez.");
     }
+    case "eposta": {
+      const g = dogrula(EpostaGirdisi, girdi);
+      return g.tamam ? yaz("eposta", g.veri, g.veri.alan ? `E-posta ayarı kaydedildi: gönderen alan adı ${g.veri.alan}.` : "Gönderen alan adı kaldırıldı; e-postalar gönderilmez, sırada bekler.")
+        : { durum: "gecersiz", hatalar: g.hatalar };
+    }
     case "bulut": {
       const g = dogrula(BulutGirdisi, girdi);
       return g.tamam ? yaz("bulut", g.veri, g.veri.saglayici ? "Raporların ikinci kopyası ayarları kaydedildi." : "Raporların ikinci kopyası kapatıldı.")
@@ -261,6 +283,43 @@ export async function yzAnahtarYaz(db: Sorgulayici, kim: Kisi, girdi: unknown | 
     return { durum: "tamam", bildirim: "API anahtarı kaydedildi; yapay zekâ açık." };
   }
   return { durum: "tamam", bildirim: anahtar ? "API anahtarı kaydedildi." : "API anahtarı kaldırıldı." };
+}
+
+/** 536: Resend API anahtarı (maket postaCiz): bir kez yazılır, şifreli saklanır (sir.ts), bir daha gösterilmez — yalnız son 4. null: kaldır. */
+export async function epostaAnahtarYaz(db: Sorgulayici, kim: Kisi, girdi: unknown | null): Promise<AyarYazma> {
+  if (!ayarlarYazar(kim)) return { durum: "yetkisiz" };
+  let anahtar: string | null = null;
+  if (girdi !== null) {
+    const g = dogrula(ResendAnahtarGirdisi, girdi);
+    if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
+    anahtar = g.veri.anahtar;
+  }
+  try {
+    await sirYaz(db, "eposta_anahtari", anahtar, { kim: kim.ad });
+  } catch (h) {
+    if (h instanceof Error && /Sır anahtarı tanımlı değil/.test(h.message)) return { durum: "red", neden: "Sunucuda sır şifreleme anahtarı tanımlı değil; anahtar kaydedilemedi (yönetim ayarı)." };
+    throw h;
+  }
+  return { durum: "tamam", bildirim: anahtar ? "Resend API anahtarı kaydedildi." : "Resend API anahtarı kaldırıldı; e-postalar gönderilmez, sırada bekler." };
+}
+
+/** 536: deneme e-postası — tuşa basanın KENDİ adresine (oturumdaki hesap; istemciden adres gelmez), hemen gönderilir; sonucu söylenir. Ayar
+    yoksa kuyruğa yazılmaz. Gönderilemezse kayıt kuyrukta kalır (gece işi yeniden dener) ve nedeni söylenir. */
+export async function denemeEpostasi(db: Sorgulayici, kim: Kisi): Promise<AyarYazma> {
+  if (!ayarlarYazar(kim)) return { durum: "yetkisiz" };
+  const g = await firmaGonderimi(db);
+  if (!g) return { durum: "red", neden: "Önce Resend anahtarını ve gönderen alan adını kaydedin." };
+  const ben = await hesapGonderen(db, kim.id);
+  const [id] = ben ? await epostaKuyruga(db, {
+    kime: [ben.eposta], konu: `probata deneme e-postası · ${g.firma.firmaAd}`, kaynak: "eposta_deneme", kaynakId: kim.id, gonderen: ben,
+    govde: `Bu, probata'dan bir deneme e-postasıdır.\n\nFirma ayarları › E-posta doğru kurulmuş: ${g.firma.firmaAd} adına giden e-postalar Resend hesabınızla gönderiliyor.\n` +
+      `Kim gönder tuşuna basarsa e-posta onun adresinden gider (adresi ${g.firma.alan} alan adındaysa); öteki durumlarda Rapor e-postasından, kişinin adıyla.`,
+  }, { kim: kim.ad, ne: "eposta.deneme" }) : [];
+  if (!ben || !id) return { durum: "red", neden: "Hesabınızın geçerli bir e-posta adresi yok." };
+  await bekleyenleriGonder(db, g, { kaynak: "eposta_deneme", kaynakId: kim.id });
+  const d = (await db.sorgu<{ durum: string; son_hata: string | null }>("SELECT durum, son_hata FROM eposta WHERE id = $1", [id])).rows[0];
+  if (d?.durum !== "gonderildi") return { durum: "red", neden: `Deneme e-postası gönderilemedi: ${d?.son_hata ?? "bilinmeyen neden"}` };
+  return { durum: "tamam", bildirim: `Deneme e-postası gönderildi: ${ben.eposta} — ${gonderenYolu(ben.eposta, g.firma.alan) === "kendi" ? "kendi adresinizden" : "Rapor e-postasından, adınızla"}. Kutunuza bakın.` };
 }
 
 const kucuk = (s: string) => s.trim().toLocaleLowerCase("tr");

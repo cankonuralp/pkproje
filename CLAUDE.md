@@ -332,8 +332,12 @@ pkproje/
                             chatOkutEylemi (okunanlar raporlar/server/oneri.ts — göç 0086 rapor_oneri; rapor ekranında öneri kartı + şerit)
                             · 527 fotoğraf tuşları components/foto/FotoTusu (531'de ortak oldu)
   src/server/eposta/        E-POSTA (432; göç 0077): eposta.ts kuyruk (alıcı başına bir satır; metin değişmez, silinmez) · saglayici.ts tek bağdaştırıcı
-                            (Resend biçimi HTTP; PROBATA_EPOSTA_ANAHTAR / _KIMDEN / _UC — yoksa bekler) · gonder.ts bekleyenleriGonder · sonra.ts (after) ·
+                            (Resend biçimi HTTP; uç PROBATA_EPOSTA_UC — anahtar yoksa bekler) · gonder.ts bekleyenleriGonder · sonra.ts (after) ·
                             gece işi epostaIsi yeniden dener. İlk kullanım: plan açılınca ekip + bilgilendirme (planlar planAc, sema planEpostasi)
+                            · 536 HER FİRMA KENDİ RESEND HESABI: firma.ts firmaGonderimi (sır eposta_anahtari + ayar eposta: alan, kopya + Rapor e-postası) ·
+                            kimden.ts (saf: Kimden = tuşa basan kişi, alan adında değilse Rapor e-postasından kişinin adıyla, cevap kişiye; olmazsa bekler) ·
+                            gönderen kuyrukta (göç 0087 gonderen_ad / gonderen_eposta, değişmez; kimlik/hesap.ts hesapGonderen) · ekran Firma ayarları › E-posta
+                            (firma-ayarlari epostaAnahtarYaz, denemeEpostasi)
   src/server/islem/         TEK SEFERLİK İŞLEM (392; 09-D2, çevrimdışı kuyruk): islem.ts tekSeferlik (kimliğe danışma kilidi, iş + sonuç aynı veritabanı
                             işleminde; göç 0076 islem) · yazan.ts (işi yazanın etiketi — kimlik tarayıcıya gitmez) · uç src/app/api/islem (köken, oturum,
                             yazan kapıları) · iş türleri modülde: raporlar/server/islem-baglanti.ts

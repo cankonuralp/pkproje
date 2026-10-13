@@ -6,7 +6,7 @@ import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { AYAR_DOSYASI } from "../sema";
 import { iceAktar, iceAktarDenetle, iceAktarimGeriAl, type IaSatirOzeti, type IaSonuc } from "../server/ice-aktar";
-import { ayarDosyasiYaz, ayarKaydet, belgeTuruEkle, belgeTuruKaldir, firmaKoduKaydet, yzAnahtarYaz, type AyarYazma } from "../server/ayarlar";
+import { ayarDosyasiYaz, ayarKaydet, belgeTuruEkle, belgeTuruKaldir, denemeEpostasi, epostaAnahtarYaz, firmaKoduKaydet, yzAnahtarYaz, type AyarYazma } from "../server/ayarlar";
 
 export interface AyarYaniti { tamam?: boolean; bildirim?: string; hatalar?: Record<string, string>; genel?: string; degismedi?: boolean }
 const SONUC = { yetkisiz: "Bu işlem için yetkiniz yok.", cakisma: "Bu bölüm siz açtıktan sonra değiştirildi. Sayfayı yenileyip yeniden deneyin." } as const;
@@ -34,6 +34,14 @@ export async function belgeTuruKaldirEylemi(k: string): Promise<AyarYaniti> {
 /** API anahtarı: girdi { anahtar } ya da null (kaldır); anahtar yanıta konmaz. ac: ekranda "Açık" seçiliyse bölümün gördüğü sürüm */
 export async function yzAnahtarEylemi(girdi: unknown | null, ac: number | null = null): Promise<AyarYaniti> {
   return islem((o) => oturumIslemi(o, (db) => yzAnahtarYaz(db, o, girdi === null ? null : girdi, typeof ac === "number" ? ac : null)));
+}
+/** 536: Resend API anahtarı — girdi { anahtar } ya da null (kaldır); anahtar yanıta konmaz */
+export async function epostaAnahtarEylemi(girdi: unknown | null): Promise<AyarYaniti> {
+  return islem((o) => oturumIslemi(o, (db) => epostaAnahtarYaz(db, o, girdi === null ? null : girdi)));
+}
+/** 536: deneme e-postası — oturumdaki kişinin kendi adresine (adres istemciden gelmez) */
+export async function denemeEpostasiEylemi(): Promise<AyarYaniti> {
+  return islem((o) => oturumIslemi(o, (db) => denemeEpostasi(db, o)));
 }
 /** form: ne (logo | on_bilgi | bordro_format), surum, dosya (yoksa kaldır) */
 export async function ayarDosyasiEylemi(form: FormData): Promise<AyarYaniti> {

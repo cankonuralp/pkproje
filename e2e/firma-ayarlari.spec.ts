@@ -3,6 +3,7 @@
    mesai takibini açar, toplam 660 dk'yı aşınca kanun şeridi, Vazgeç geri alır · logo yükler, kaldırır (önce sorulur) · yana taşma yok · denetçi
    göremez. Firma kodu ve sabit giderler değiştirilmez (öteki testlerin rapor numaraları ve gelir-gider tutarları). */
 import { expect, test } from "@playwright/test";
+import { E2E_HESAPLAR } from "./hesaplar";
 import { girisli, hazir } from "./yardimci";
 
 const parca = (ad: string, govde: string) => Buffer.concat([Buffer.from([0, 0, govde.length >> 8, govde.length & 0xff]), Buffer.from(ad + govde, "latin1"), Buffer.from([0, 0, 0, 0])]);
@@ -75,6 +76,25 @@ test("firma ayarları: bölüm kaydet, geçersiz değer kaydedilmez, mesai şeri
   /* 515: 7 gün raporların ömrü değil (geri sarma yedeği) — ekran bunu açıkça söyler */
   await expect(supa.getByText(/raporlar 7 gün sonra silinmez/)).toBeVisible();
   await expect(supa.getByRole("combobox")).toHaveCount(0);
+
+  /* 536 (reisim: "kim mail gönder tuşuna basarsa onun mailinden gitmeli" → "A" → maket onaylı): firmanın Resend hesabı bağlı (tohum: uydurma anahtar,
+     alan adı deneme.example) — anahtar yalnız son 4 · çalışanın e-postası kendi adresinden · geçersiz alan adı kaydedilmez · deneme e-postası tuşa
+     basanın adresine, kendi adresinden (yerel sağlayıcı taklidi Kimden'i denetler) */
+  const posta = page.getByRole("region", { name: "E-posta", exact: true });
+  await expect(posta.getByText("bağlı · deneme.example")).toBeVisible();
+  await expect(posta.getByText("…0001 kayıtlı")).toBeVisible();
+  await expect(posta.getByText("Kurulum", { exact: true })).toHaveCount(0);
+  await expect(posta.getByText(/Rapor e-postası bilgi@deneme\.example/)).toBeVisible();
+  await expect(posta.getByText(/alan adında değil/)).toHaveCount(0);
+  await expect(posta.getByText(E2E_HESAPLAR.muhasebe.eposta).first()).toBeVisible();   // çalışanlar tablosu
+  await expect(posta.getByText("Kendi adresinden", { exact: true }).first()).toBeVisible();
+  await posta.getByLabel("Gönderen alan adı").fill("kötü alan");
+  await posta.getByRole("button", { name: "Kaydet", exact: true }).click();
+  await expect(posta.getByText("Alan adı okunamadı (ör. firmaniz.com.tr). Kaydedilmedi.")).toBeVisible({ timeout: 30_000 });
+  await posta.getByRole("button", { name: "Vazgeç", exact: true }).click();
+  await expect(posta.getByLabel("Gönderen alan adı")).toHaveValue("deneme.example");
+  await posta.getByRole("button", { name: "Deneme e-postası gönder" }).click();
+  await expect(page.getByText(`Deneme e-postası gönderildi: ${E2E_HESAPLAR.yonetici.eposta} — kendi adresinizden. Kutunuza bakın.`).first()).toBeVisible({ timeout: 30_000 });
 
   /* 335: fiyat listesi (tohumdaki Hava tankı 900,00 — değiştirilmez: muhasebe testi bu fiyatla); firmaya belge türü ekle → listede → kaldır */
   await expect(page.getByRole("region", { name: "Fiyat listesi" }).getByLabel("Hava tankı (TL)")).toHaveValue("900,00");

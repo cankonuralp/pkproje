@@ -5,6 +5,7 @@ import { z } from "../../sema/ortak.ts";
 import type { Sorgulayici } from "../db/kiraci.ts";
 import { ekle, guncelle, izYaz, tablo, type GuncelleSonucu, type Iz } from "../db/yazici.ts";
 import type { Depo } from "../dosya/depo.ts";
+import { ALAN_BICIMI } from "../eposta/kimden.ts";
 import { DUZEYLER } from "../yetki/tanim.ts";
 
 const onek = z.string().regex(/^[A-Z]{1,4}$/, "Önek: 1–4 büyük harf");
@@ -66,6 +67,12 @@ export const AYAR_BOLUMLERI = {
     saglayici: z.enum(["", "gdrive", "onedrive"]).default(""),
     kok: z.string().trim().min(1).max(80).default("probata Raporlar"),
     duzen: z.enum(["mt", "mty", "my"]).default("mt"),
+  }),
+  /** E-posta (536; reisim "A": her firma kendi Resend hesabı; maket postaCiz): gönderen alan adı (Resend'de doğrulanmış; "" = bağlı değil) ve
+      gönderene gizli kopya (başlangıçta kapalı). Resend anahtarı sırlarda (eposta_anahtari). Gönderim src/server/eposta/firma.ts. */
+  eposta: z.object({
+    alan: z.string().trim().toLowerCase().max(100).refine((a) => a === "" || ALAN_BICIMI.test(a)).default(""),
+    kopya: z.boolean().default(false),
   }),
   /** Tarafsızlık ve çıkar çatışması beyanı (§3.7 satır 3; karar 26): kalite el kitabındaki metin; boşsa varsayılan. Kabul anındaki metin plana yazılır */
   beyan: z.object({ metin: z.string().trim().min(20).max(4000).default(VARSAYILAN_BEYAN) }),

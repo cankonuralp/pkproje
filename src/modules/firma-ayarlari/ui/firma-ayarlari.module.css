@@ -63,3 +63,5 @@
   .duzen { grid-template-columns: 200px minmax(0, 1fr); align-items: start; }
   .nav { display: block; position: sticky; top: calc(var(--ust-y) + 16px); }
 }
+/* 536: E-posta › çalışanlar listesinde rol / açıklama alt satırı */
+.altSatir { display: block; color: var(--yazi2); font-size: var(--boy-kucuk); font-weight: 400; }

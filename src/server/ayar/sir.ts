@@ -7,7 +7,8 @@ import type { Sorgulayici } from "../db/kiraci.ts";
 import { izYaz } from "../db/yazici.ts";
 
 const AD = /^[a-z_]{1,40}$/;
-export const SIR_ADLARI = ["yapay_zeka_anahtari", "bulut_erisimi", "imza_saglayici"] as const;
+/* 536: eposta_anahtari — firmanın Resend API anahtarı (Firma ayarları › E-posta) */
+export const SIR_ADLARI = ["yapay_zeka_anahtari", "bulut_erisimi", "imza_saglayici", "eposta_anahtari"] as const;
 export type SirAdi = (typeof SIR_ADLARI)[number];
 
 /** ana anahtar: ortamdan; yoksa ya da bozuksa sır yazılamaz / okunamaz (sessizce düz metne düşmez) */
