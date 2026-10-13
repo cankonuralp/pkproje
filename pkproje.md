@@ -2479,6 +2479,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-13 (534): **SONUÇ VE KANAAT'TA "ÖNERİ" SATIRI KALKTI** (reisim, rapor ekranı görüntüsüyle: *"Sonuç ve kanaat kısmında öneri olmasın"*). Saha
+  raporunun Sonuç ve kanaat bölümünde seçim kutusunun altındaki "Öneri: Uygun / Uygun değil" yazısı kaldırıldı (raporlar/ui/Bloklar.tsx SonucBlok).
+  Yerinde kalanlar: cümle (… kullanımı uygundur / uygun değildir), seçim kutusu, "Uygun değil madde varken sonuç Uygun" uyarısı. Öneri HESABI kalıyor
+  (format/motor.ts; Format kurucu "Sonuç önerisi" kuralı): sonuç seçilmeden Onaya gönderilirse sonuç ondan yazılır, S.A.Y'ın sonuç sorusu onu söyler.
+  Uçtan uca e2e/saha-raporu.spec.ts (bölümde "Öneri:" yok).
 - 2026-10-13 (533): **E-POSTA: GÖNDEREN = TUŞA BASAN KİŞİ — İSTEK, KARAR BEKLİYOR** (reisim: *"resende hesabını bağlayalım ama … planlamacı mail
   gönderirken kendi mail adresi pazarlamacı mail gönderirken kendi mail adresiyle göndermeli kim mail gönder tuşuna basarsa onun mailinden gitmeli
   bunu nasıl kurgulayabiliriz?"*; Y4). Ölçüm (resend.com, 2026-10-13): doğrulanmış alan adındaki HER adresten ek ayarsız gönderilir; gmail / hotmail

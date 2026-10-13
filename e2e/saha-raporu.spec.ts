@@ -193,6 +193,8 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await page.getByRole("combobox", { name: "Sonuç ve kanaat" }).click();
   await page.getByRole("option", { name: /^Uygun(?!\s*değil)/ }).click();
   await expect(page.getByRole("combobox", { name: "Sonuç ve kanaat" })).toContainText("Uygun");
+  /* 534 (reisim 2026-10-13: "Sonuç ve kanaat kısmında öneri olmasın"): sonuç bölümünde "Öneri: …" satırı yok */
+  await expect(page.getByRole("region", { name: /Sonuç ve kanaat/ }).first()).not.toContainText("Öneri:");
   await page.getByRole("button", { name: "Kaydet", exact: true }).first().click();
   await expect(page.getByText("Rapor kaydedildi.").first()).toBeVisible({ timeout: 30_000 });
 

@@ -661,7 +661,8 @@ function SonucBlok({ b, bag }: { b: BolumOf<"sonuc">; bag: Baglam }) {
         {!bag.oku && s === "uygun" && bag.d.kusurlar.length > 0 && (
           <p className={`${stil.maddeUyari} ${stil.uyari}`}>Uygun değil madde ya da sınır dışı test değeri varken sonuç “Uygun”.</p>
         )}
-        {!bag.oku && bag.v.tanim.kurallar.oneri && <p className={`${stil.maddeUyari} ${stil.ipucuMetin}`}>Öneri: <b>{SONUC_AD[bag.d.oneri]}</b></p>}
+        {/* 534 (reisim 2026-10-13: "Sonuç ve kanaat kısmında öneri olmasın"): "Öneri: …" satırı kalktı. Öneri hesabı (format/motor.ts) yerinde:
+            sonuç seçilmeden Onaya gönderilirse sonuç ondan yazılır (raporlar.ts), S.A.Y'ın "sonuç" sorusu onu söyler. */}
       </div>
     </>
   );
