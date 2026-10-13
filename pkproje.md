@@ -2479,6 +2479,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-13 (532): **531 YAYINDA** — göç yok (87 göç). main 94de31d (529 yayın kaydı 530 dahil; f9f81b6'ya yanlış dosya yolu yüzünden yalnız taşımalar
+  girmişti, içerik 94de31d'de); deneme makinesi 13/13 (araç: Ön açısı galeriden + Değiştir; zimmet: iki fotoğraf galeriden, metin dosyası eklenmez;
+  S.A.Y Chat ortak tuşla). Sağlık "tamam", duman **11/11**, son 30 dakikada hata kaydı yok. Canlıda oturumla bakılamadı (giriş reisim'in) — ölçemedim.
 - 2026-10-13 (531): **ARAÇ VE ZİMMET FOTOĞRAFI DA GALERİDEN / BİLGİSAYARDAN** (reisim: *"araçlar ve zimmetlerde de galeriden fotoğraf ekleme seçeneği
   ekle"*). 527'nin fotoğraf tuşu ORTAK oldu: `src/components/foto/FotoTusu.tsx` (menü Fotoğraf çek · Galeriden / bilgisayardan seç; FotoKucuk /
   FotoKucukler — seçilenin küçük görüntüsü, × çıkarır) + `src/components/foto/secim.ts` (saf: JPEG / PNG, boş değil, çağıranın bayt sınırı, yer;
