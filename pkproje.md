@@ -2479,6 +2479,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-13 (537): **536 YAYINDA** — CI f0a6089 yeşil (13 iş başarılı, 2 atlandı; veritabanlı testler ve uçtan uca üç genişlik dahil) → göç 0087
+  Supabase'e (`goc` kaydıyla; 88 göç) → main f0a6089 → Vercel yayını (sağlık ucu sürüm f0a6089, bütün denetimler tamam) → duman 11/11 → son bir
+  saatte çalışma hatası yok. Ölçemedim: Firma ayarları › E-posta ekranı canlıda gözle (oturum ister; giriş reisim'in) — uçtan uca testte üç
+  genişlikte denendi. Gerçek gönderim: firmanın Resend hesabı ve doğrulanmış alan adı girilince.
 - 2026-10-13 (536): **E-POSTA: HER FİRMA KENDİ RESEND HESABI, KİMDEN = TUŞA BASAN KİŞİ — KODDA** (reisim, 535 maketine: *"onaylıyorum, işin bitince
   pc yi kapat"*). Firma ayarları › **E-posta** bölümü maketteki gibi: kurulum adımları (anahtar yokken), Resend API anahtarı (re_ ile başlar; firma
   sırrı `eposta_anahtari`, AES-GCM, bir kez yazılır, ekranda son 4 — Değiştir / Kaldır), gönderen alan adı (yazılan sadeleşir: http, www, yol, büyük
