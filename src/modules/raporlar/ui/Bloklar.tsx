@@ -15,8 +15,8 @@
    483 (reisim 2026-10-10: "rapor düzenlemede sadece saha ekranı gözüksün o ekranda düzenleme yapılamasın … sadece sahada personelin nasıl
    göreceği gözüksün"): 473'ün saha ekranında yerinde düzenlemesi (Baglam.yerinde) KALKTI — format yalnız kâğıtta düzenlenir.
    486 (reisim 2026-10-10): ölçüm tablosunda "Son satırı kopyala" (kimlik / no bir artar — ../tablo.ts); sıra sütunu formatın kendi "No"su varken
-   "Sıra" (duzen.ts siraBasligi); tablonun altında "Sonuç neye göre çıkar?" (motor.ts sonucKurallari); "Fotoğraf ekle (yapay zekâ okur)" her zaman
-   (okumaKipi). 488 (reisim 2026-10-11: "sağdaki kopyalama işareti kalksın … sırala tuşu da kalksın … son satırı kopyala diyince sıra no değişerek
+   "Sıra" (duzen.ts siraBasligi); tablonun altında "Sonuç neye göre çıkar?" (motor.ts sonucKurallari); "Fotoğraf ekle" her zaman (okumaKipi; 542:
+   fotoğraf okunmadan eklenir, S.A.Y okur). 488 (reisim 2026-10-11: "sağdaki kopyalama işareti kalksın … sırala tuşu da kalksın … son satırı kopyala diyince sıra no değişerek
    iniyor"): satırın kopyala işareti ve "Sırala" KALKTI, işlem sütunu yapışık değil (Sonuç sütununun üstüne biniyordu); satır sonucu gerekçeyle elle
    değiştirilir (ElleSonuc — hata listesi 54). 2026-10-12 (reisim): bölümün fotoğraf tuşu bölüm başlığında (BaslikYuvasi.tsx), telefonda simge. */
 import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode, type TransitionStartFunction } from "react";
@@ -41,8 +41,7 @@ import { bilgiAlanlari, testAlanlari } from "../doldur";
 import { BaslikBaglami } from "./BaslikYuvasi";
 import { okunanHedefleri, okunanlariUygula } from "../foto-eslestir";
 import { satirKopyala } from "../tablo";
-import { AlanDoldurma, ExcelYukle, OkumaFotolari, type OkumaKipi } from "./Doldurma";
-import { FotoOkuma } from "./FotoOkuma";
+import { AlanDoldurma, ExcelYukle, FotoBolumu, OkumaFotolari, type OkumaKipi } from "./Doldurma";
 import { StandartTusu, TalimatTusu, type TalimatParcasi } from "./Kaynaklar";
 import stil from "./raporlar.module.css";
 
@@ -82,8 +81,8 @@ export interface Baglam {
   cihaz: (bolumId: string) => ReactNode;
   /** fotoğraf listesi: bölümün (madde null) ya da "Uygun değil" maddenin (FotoListesi; SahaRaporu verir) */
   foto: (bolumId: string, madde: string | null) => ReactNode;
-  /** "Fotoğraf ekle (yapay zekâ okur)" (351 → 486): "oku" firmada yapay zekâ açık ve anahtar girilmiş · "sakla" kapalı (fotoğraf okunmadan saklanır,
-      açılınca "Oku") · "deneme" örnek rapor · null düzenlenemez (gönderilmiş rapor, cihazda açılmış yeni rapor) */
+  /** "Fotoğraf ekle" (351 → 486 → 542): "ekle" fotoğraf okunmadan eklenir (S.A.Y "fotoğrafları oku ve gir" ile okur) · "deneme" örnek rapor ·
+      null düzenlenemez (gönderilmiş rapor, cihazda açılmış yeni rapor) */
   okumaKipi: OkumaKipi | null;
   /** 484: format kurucusunun saha ekranındaki örnek rapor (fotoğraf okunmaz, ne olacağı söylenir; Excel yalnız ekranda) */
   deneme: boolean;
@@ -546,7 +545,7 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
           {b.enAz > 0 && <span className={azEksik ? stil.hataMetin : stil.ipucuMetin}>En az {b.enAz} satır.</span>}
         </>;
         return ayar.foto && bag.okumaKipi
-          ? <FotoOkuma v={bag.v} b={b} satirlar={satirlar} tablo={tablo} islem={bag.islem} cubuk={stil.tabloAlt} tuslar={tuslar} kip={bag.okumaKipi} />
+          ? <FotoBolumu v={bag.v} bolumId={b.id} baslik={b.ad} islem={bag.islem} kip={bag.okumaKipi} tuslar={tuslar} cubuk={stil.tabloAlt} />
           : <><div className={stil.tabloAlt}>{tuslar}</div><OkumaFotolari v={bag.v} bolumId={b.id} oku={bag.oku} islem={bag.islem} /></>;
       })()}
       {bag.oku && <OkumaFotolari v={bag.v} bolumId={b.id} oku islem={bag.islem} />}

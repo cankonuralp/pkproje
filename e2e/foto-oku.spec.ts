@@ -10,7 +10,10 @@
    sayfa kaymaz ("tip seçin kısmına tıklayınca saçma sapan başa atıp"); sıra sütunu "Sıra"; "Son satırı kopyala" (No bir artar); "Sonuç neye göre
    çıkar?" tablonun kuralını yazar. 488: "Sırala" ve satırın Kopyala işareti kalktı (reisim); satırın sonucu gerekçeyle elle değiştirilir.
    2026-10-12 (reisim): fotoğraf tuşu bölüm başlığında (telefonda simge), kapalı bölümde fotoğraf seçilince bölüm açılır; Kaydet / Onaya gönder
-   çubuksuz, havada — S.A.Y düğmesiyle örtüşmez. Görüntüler e2e-goz/ (foto-baslik, eylem). */
+   çubuksuz, havada — S.A.Y düğmesiyle örtüşmez. Görüntüler e2e-goz/ (foto-baslik, eylem).
+   542 (reisim 2026-10-14: "oku tuşu olmayacak say asistandan gir ve fotoğrafı okuyup ilgili yerlere girişleri yap diyeceğim ve yapacak"; sunum 541
+   onaylı): "Fotoğraf ekle" fotoğrafı OKUMADAN ekler; S.A.Y'a "Fotoğrafları oku ve gir" → okunmamış fotoğraflar okunur, değerler boş alanlara /
+   tabloya girer (emin olunmayan sarı), dolu alan sorulur ("Dolu alanları da değiştir"), "Geri al"; öneri kartı ve "Oku" tuşu kalktı. */
 import { mkdirSync } from "node:fs";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { xlsxBayt, XLSX_TURU } from "../src/components/disa/xlsx";
@@ -29,8 +32,8 @@ async function goz(hedef: Page | Locator, ad: string, proje: string) {
    küçültme dosyayı olduğu gibi gönderir, sunucu konum bilgisini silerken parçaları okur) */
 const JPEG = Buffer.from([0xff, 0xd8, 0xff, 0xdb, 0x00, 0x03, 0x01, 0xff, 0xda, 0x00, 0x02, 0x01, 0x02, 0x03, 0xff, 0xd9]);
 
-test("fotoğraftan okuma: öneri kartı; emin olunanlar toplu, emin olunmayan tek tek; tabloya eklenir ve kaydedilir", async ({ page }, bilgi) => {
-  const kod = E2E_YZ.ekipman[bilgi.project.name];
+/** 542: raporu açar (YZ firması, projenin ekipmanı), bölümler açık */
+async function raporuAc(page: Page, kod: string) {
   await page.goto(`${Y}/giris`);
   await hazir(page);
   await page.getByLabel("E-posta").fill(E2E_YZ.denetci.eposta);
@@ -44,18 +47,30 @@ test("fotoğraftan okuma: öneri kartı; emin olunanlar toplu, emin olunmayan te
   await expect(page).toHaveURL(/\/raporlar\/[0-9a-f-]{36}$/, { timeout: 30_000 });
   await hazir(page);
   await bolumleriAc(page);   // 463: bölümler kapalı açılır
+}
+/** 542: S.A.Y paneli açılır, hızlı tuşa basılır, S.A.Y'ın cevabı beklenir; telefonda panel raporu örttüğü için sonra kapatılır */
+async function sayaDe(page: Page, tus: string, bekle: RegExp) {
+  const fab = page.getByRole("button", { name: "S.A.Y — saha asistanı" });
+  if (await fab.isVisible()) await fab.click();
+  const panel = page.locator("#say-panel");
+  await panel.getByRole("button", { name: tus, exact: true }).click();
+  await expect(panel.getByText(bekle).last()).toBeVisible({ timeout: 30_000 });
+  return panel;
+}
 
+test("fotoğraf ekle okumaz; S.A.Y \"Fotoğrafları oku ve gir\" okur, satırlar tabloya girer (emin olmayan sarı); Kaydet'le kalır", async ({ page }, bilgi) => {
+  await raporuAc(page, E2E_YZ.ekipman[bilgi.project.name]);
   const linye = page.locator("#b-linye");
   /* 2026-10-12 (reisim, ekran görüntüsüyle: "o tuşun orada olmasını istiyorum, ekran daralınca logo olarak kalsın"): fotoğraf tuşu bölümün BAŞLIK
-     satırında (gövdede değil), telefonda yalnız simge; bölüm kapalıyken de görünür, fotoğraf seçilince bölüm açılır */
-  const linyeFoto = linye.getByLabel("Pano sigortaları (linye): fotoğraf ekle (yapay zekâ okur)");
-  await expect(page.locator("#b-linye-ic").getByLabel("Pano sigortaları (linye): fotoğraf ekle (yapay zekâ okur)")).toHaveCount(0);
+     satırında (gövdede değil), telefonda yalnız simge; bölüm kapalıyken de görünür, fotoğraf seçilince bölüm açılır. 542: adı "Fotoğraf ekle" */
+  const linyeFoto = linye.getByLabel("Pano sigortaları (linye): fotoğraf ekle", { exact: true });
+  await expect(page.locator("#b-linye-ic").getByLabel("Pano sigortaları (linye): fotoğraf ekle", { exact: true })).toHaveCount(0);
   /* `has` içteki konumu etiketin İÇİNDE arar — bölümün kimliğiyle başlayan konum (linyeFoto) orada bulunmaz; sayfa düzeyindeki ad eşleşir */
-  const fotoTus = linye.locator("label", { has: page.getByLabel("Pano sigortaları (linye): fotoğraf ekle (yapay zekâ okur)") });
+  const fotoTus = linye.locator("label", { has: page.getByLabel("Pano sigortaları (linye): fotoğraf ekle", { exact: true }) });
   await expect(fotoTus).toHaveCount(1);
-  const fotoYazi = fotoTus.getByText("Fotoğraf ekle (yapay zekâ okur)");
+  const fotoYazi = fotoTus.getByText("Fotoğraf ekle", { exact: true });
   if (bilgi.project.name === "telefon") await expect(fotoYazi).toBeHidden(); else await expect(fotoYazi).toBeVisible();
-  await expect(fotoTus).toHaveAttribute("title", "Fotoğraf ekle (yapay zekâ okur)");
+  await expect(fotoTus).toHaveAttribute("title", "Fotoğraf ekle");
   await linye.scrollIntoViewIfNeeded();
   await goz(linye, "foto-baslik", bilgi.project.name);
   /* Kaydet / Onaya gönder havada (reisim: "say tuşu gibi havada olsun bir barın içinde durduğu görüntü şık değil"): kap saydam, tuşlar gölgeli;
@@ -74,72 +89,77 @@ test("fotoğraftan okuma: öneri kartı; emin olunanlar toplu, emin olunmayan te
   await linyeAc.click();
   await expect(linyeAc).toHaveAttribute("aria-expanded", "false");
   await expect(fotoTus).toBeVisible();
+  /* 542 (reisim 2026-10-14: "oku tuşu olmayacak say asistandan gir"): fotoğraf OKUNMADAN eklenir — öneri kartı, "Oku" tuşu, açıklama satırı yok */
   await linyeFoto.setInputFiles({ name: "pano.jpg", mimeType: "image/jpeg", buffer: JPEG });
   await expect(linyeAc).toHaveAttribute("aria-expanded", "true");
-  const kart = page.getByRole("region", { name: "Pano sigortaları (linye): fotoğraftan okunan" });
-  await expect(kart).toBeVisible({ timeout: 30_000 });
-  await expect(page.getByText("3 satır okundu", { exact: false }).first()).toBeVisible();
-  /* 484: okunan fotoğraf tablonun altında okuma fotoğrafı (belgede görünmez); Fotoğraflar bölümünde değil */
-  await expect(linye.getByText("belgede görünmez", { exact: false })).toBeVisible({ timeout: 30_000 });
-  await expect(linye).toContainText("fotoğrafı.jpg");
+  await expect(page.getByText("Fotoğraf eklendi.").first()).toBeVisible({ timeout: 30_000 });
+  await expect(linye).toContainText("fotoğrafı.jpg", { timeout: 30_000 });
   await expect(page.locator("#b-foto")).not.toContainText("fotoğrafı.jpg");
-  await expect(kart.getByText("Emin değil")).toBeVisible();
-  await expect(kart.getByText(/No: F1 · Devre: Aydınlatma/)).toBeVisible();
-  /* emin olunanlar toplu */
-  await kart.getByRole("button", { name: "Önerileri uygula (2)" }).click();
+  await expect(linye.getByRole("link", { name: "Görüntüle" })).toBeVisible();
+  await expect(linye.getByRole("button", { name: "Oku", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("region", { name: /fotoğraftan okunan/ })).toHaveCount(0);
+  await expect(linye.getByLabel("1. satır · No")).toHaveCount(0);
+  /* S.A.Y okur ve girer: 3 satır; emin olunmayan (F3) sarı, ötekiler yeşil — kaydetmek kişide */
+  const panel = await sayaDe(page, "Fotoğrafları oku ve gir", /1 fotoğrafı okudum/);
+  await expect(panel.getByText(/Pano sigortaları \(linye\): 3 satır/).last()).toBeVisible();
+  await expect(panel.getByRole("button", { name: "Geri al" }).last()).toBeVisible();
+  if (bilgi.project.name === "telefon") await panel.getByRole("button", { name: "S.A.Y'ı kapat" }).click();
   await expect(linye.getByLabel("1. satır · No")).toHaveValue("F1");
-  await expect(linye.getByLabel("2. satır · No")).toHaveValue("F2");
   await expect(linye.getByLabel("2. satır · In (A)")).toHaveValue("20");
-  await expect(page.getByText("2 satır tabloya yazıldı", { exact: false }).first()).toBeVisible();
-  /* kart açık kaldı: odak kalan satırın Uygula'sında (klavyeyle sürdürülebilir) */
-  await expect(kart.getByRole("button", { name: "Uygula", exact: true })).toBeFocused();
-  /* emin olunmayan tek tek */
-  await kart.getByRole("button", { name: "Uygula", exact: true }).click();
   await expect(linye.getByLabel("3. satır · No")).toHaveValue("F3");
-  await expect(kart).toHaveCount(0);
+  await expect(linye.getByLabel("1. satır · No")).toHaveAttribute("data-say-giris", "emin");
+  await expect(linye.getByLabel("3. satır · No")).toHaveAttribute("data-say-giris", "belirsiz");
+  await expect(page.getByText("Kaydedilmemiş değişiklik var")).toBeVisible();
+  /* kişi değeri değiştirince işaret kalkar */
+  await linye.getByLabel("3. satır · No").fill("F3A");
+  await expect(linye.getByLabel("3. satır · No")).not.toHaveAttribute("data-say-giris", /.+/);
+  /* aynı fotoğraf ikinci kez okunmaz */
+  await sayaDe(page, "Fotoğrafları oku ve gir", /Okunacak fotoğraf yok/);
+  if (bilgi.project.name === "telefon") await page.locator("#say-panel").getByRole("button", { name: "S.A.Y'ı kapat" }).click();
   /* rapora ancak Kaydet ile yazılır */
   /* 355: "kaydedildi" geçen gizli pencere metni (eksik alanlar penceresi) değil, kaydın kendi bildirimi (saha-raporu.spec gibi) */
   await page.getByRole("button", { name: "Kaydet", exact: true }).first().click();
   await expect(page.getByText("Rapor kaydedildi.").first()).toBeVisible({ timeout: 30_000 });
   await page.reload();
   await hazir(page);
-  await expect(page.locator("#b-linye").getByLabel("3. satır · No")).toHaveValue("F3");
+  await expect(page.locator("#b-linye").getByLabel("3. satır · No")).toHaveValue("F3A");
 });
 
-/* 385 → 484: ekipman bilgileri fotoğraftan (etiket plakası) — "Fotoğraftan doldur" → "…: fotoğraftan okunan" kartı; emin olunanlar toplu, "Emin değil"
-   olan (imal yılı) tek tek alana yazılır; yazılanlar Kaydet'e kadar kaydedilmemiş değişiklik */
-test("ekipman bilgileri fotoğraftan: öneri kartı; emin olunanlar toplu, emin olunmayan tek tek alana yazılır", async ({ page }, bilgi) => {
-  const kod = E2E_YZ.ekipman[bilgi.project.name];
-  await page.goto(`${Y}/giris`);
-  await hazir(page);
-  await page.getByLabel("E-posta").fill(E2E_YZ.denetci.eposta);
-  await page.getByLabel("Parola", { exact: true }).fill(E2E_PAROLA);
-  await page.getByRole("button", { name: "Giriş yap" }).click();
-  await expect(page.locator("header")).toContainText(E2E_YZ.denetci.ad);
-  await page.goto(`${Y}/raporlar`);
-  await hazir(page);
-  await page.getByRole("searchbox", { name: "Ekipman kodu" }).fill(kod);
-  await page.getByRole("link", { name: /^YZ-/ }).first().click();
-  await expect(page).toHaveURL(/\/raporlar\/[0-9a-f-]{36}$/, { timeout: 30_000 });
-  await hazir(page);
-  await bolumleriAc(page);   // 463: bölümler kapalı açılır
-
+/* 542 (sunum 541 K1 · K2): ekipman bilgileri (etiket plakası) — S.A.Y boş alanlara girer, emin olmadığı (imal yılı) sarı; dolu alanın üstüne yazmaz,
+   "Dolu alanları da değiştir" yazar; "Geri al" girdiklerini geri alır */
+test("ekipman bilgileri: S.A.Y boş alanlara girer, dolu alanı sorar, Geri al", async ({ page }, bilgi) => {
+  await raporuAc(page, E2E_YZ.ekipman[bilgi.project.name]);
   const ekip = page.locator("#b-sabit-ekipman");
-  await ekip.getByLabel(/: fotoğraf ekle \(yapay zekâ okur\)$/).setInputFiles({ name: "etiket.jpg", mimeType: "image/jpeg", buffer: JPEG });
-  const kart = page.getByRole("region", { name: /: fotoğraftan okunan$/ });
-  await expect(kart).toBeVisible({ timeout: 30_000 });
-  await expect(kart).toBeFocused();
-  await expect(kart.getByText("Emin değil")).toBeVisible();
-  await kart.getByRole("button", { name: "Önerileri uygula (3)" }).click();
-  await expect(page.getByLabel("Marka", { exact: true })).toHaveValue("Deneme Marka");
+  await page.getByLabel("Marka", { exact: true }).fill("Elle Marka");
+  await page.getByLabel("Model", { exact: true }).fill("");
+  await page.getByLabel("Seri no", { exact: true }).fill("");
+  await page.getByLabel("İmal yılı", { exact: true }).fill("");
+  await ekip.getByLabel(/: fotoğraf ekle$/).setInputFiles({ name: "etiket.jpg", mimeType: "image/jpeg", buffer: JPEG });
+  await expect(ekip).toContainText("fotoğrafı.jpg", { timeout: 30_000 });
+  const panel = await sayaDe(page, "Fotoğrafları oku ve gir", /1 fotoğrafı okudum/);
+  await expect(panel.getByText(/Dolu olduğu için değiştirmediğim: Marka/).last()).toBeVisible();
+  const kapat = async () => { if (bilgi.project.name === "telefon") await panel.getByRole("button", { name: "S.A.Y'ı kapat" }).click(); };
+  await kapat();
+  await expect(page.getByLabel("Marka", { exact: true })).toHaveValue("Elle Marka");
   await expect(page.getByLabel("Model", { exact: true })).toHaveValue("DM-100");
   await expect(page.getByLabel("Seri no", { exact: true })).toHaveValue("SN-0001");
-  await expect(page.getByLabel("İmal yılı", { exact: true })).toHaveValue("");
-  await kart.getByRole("button", { name: "Uygula" }).click();
   await expect(page.getByLabel("İmal yılı", { exact: true })).toHaveValue("2019");
-  await expect(kart).toHaveCount(0);
-  await expect(ekip.getByLabel(/: fotoğraf ekle \(yapay zekâ okur\)$/)).toBeFocused();
-  await expect(ekip.getByText("belgede görünmez", { exact: false })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByLabel("İmal yılı", { exact: true })).toHaveAttribute("data-say-giris", "belirsiz");
+  await expect(ekip.getByText("emin değil")).toBeVisible();
+  /* dolu alan: "Dolu alanları da değiştir" */
+  if (bilgi.project.name === "telefon") await page.getByRole("button", { name: "S.A.Y — saha asistanı" }).click();
+  await panel.getByRole("button", { name: "Dolu alanları da değiştir" }).last().click();
+  await expect(panel.getByText(/1 dolu alanı okunan değerle değiştirdim/).last()).toBeVisible({ timeout: 30_000 });
+  await kapat();
+  await expect(page.getByLabel("Marka", { exact: true })).toHaveValue("Deneme Marka");
+  /* ilk işin Geri al'ı: girdiği üç alan boşalır (değiştirdiği Marka ayrı işin) */
+  if (bilgi.project.name === "telefon") await page.getByRole("button", { name: "S.A.Y — saha asistanı" }).click();
+  await panel.getByRole("button", { name: "Geri al" }).first().click();
+  await expect(panel.getByText(/3 girişi geri aldım/).last()).toBeVisible({ timeout: 30_000 });
+  await kapat();
+  await expect(page.getByLabel("Model", { exact: true })).toHaveValue("");
+  await expect(page.getByLabel("İmal yılı", { exact: true })).toHaveValue("");
+  await expect(page.getByLabel("Marka", { exact: true })).toHaveValue("Deneme Marka");
 });
 
 /* 484: ölçüm tablosuna Excel'den yükle — başlık satırı sütun adlarıyla eşlenir, satırlar tabloya yazılır; Excel şablonu iner */

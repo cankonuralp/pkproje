@@ -5,10 +5,12 @@
    sürüm aranmaz; sınır, yer, tür, EXIF, yetki fotoEkle'de aynen). Sonuçta önceki / sonraki sürüm döner: cihaz aynı raporun bekleyen Kaydet'ini
    yalnız sürüm KENDİ fotoğrafıyla değiştiyse yeni sürüme taşır — arada başkası değiştirdiyse çakışma yine görünür.
    405: bağlantısız açılan YENİ rapor (rapor.olustur) — kayıt cihazın geçici kimliği; rapor raporOlustur ile açılır (plan günü, günlük süre, yetki,
-   ekipmanın bu planda raporu var mı aynen); sonuçta gerçek kimlik ve sürüm döner, cihaz bekleyen işleri o kimliğe bağlar. */
+   ekipmanın bu planda raporu var mı aynen); sonuçta gerçek kimlik ve sürüm döner, cihaz bekleyen işleri o kimliğe bağlar.
+   542: okuma fotoğrafı da (girdi.okuma) bağlantısız eklenir — S.A.Y'a "fotoğrafları oku ve gir" deyince okunur. */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import type { Depo } from "../../../server/dosya/depo.ts";
 import { FotoIslemGirdisi, OlusturIslemGirdisi } from "../sema.ts";
+import { okumaFotografiSakla } from "./foto-oku.ts";
 import { fotoEkle, onayaGonder, raporKaydet, raporOlustur, type Kisi, type RaporYazma } from "./raporlar.ts";
 
 export const RAPOR_ISLEM_TURLERI = ["rapor.kaydet", "rapor.gonder", "rapor.foto", "rapor.olustur"] as const;
@@ -39,8 +41,10 @@ export async function raporIslemi(db: Sorgulayici, dosya: { depo: Depo; firmaId:
   if (!g.success) return { durum: "gecersiz", hatalar: { foto: "Fotoğraf okunamadı." } };
   const once = await raporGuncelSurum(db, rapor);
   if (once === null) return { durum: "yok" };
-  const r = await fotoEkle(db, dosya.depo, kim, dosya.firmaId, rapor, once, { bolum: g.data.bolum, madde: g.data.madde },
-    { ad: g.data.ad, bayt: new Uint8Array(Buffer.from(g.data.veri, "base64")) });
+  const bayt = new Uint8Array(Buffer.from(g.data.veri, "base64"));
+  /* 542: okuma fotoğrafı (S.A.Y okur; belgede görünmez) — bölümde fotoğraftan doldurma açık olmalı, sınır ve tür okumaFotografiSakla'da */
+  const r = g.data.okuma ? await okumaFotografiSakla(db, dosya.depo, kim, dosya.firmaId, rapor, g.data.bolum, { bayt })
+    : await fotoEkle(db, dosya.depo, kim, dosya.firmaId, rapor, once, { bolum: g.data.bolum, madde: g.data.madde }, { ad: g.data.ad, bayt });
   if (r.durum !== "tamam") return r;
   return { ...r, surum: { once, sonra: (await raporGuncelSurum(db, rapor)) ?? once } };
 }

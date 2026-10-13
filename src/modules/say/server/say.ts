@@ -87,23 +87,86 @@ export async function sayHizli(db: Sorgulayici, kim: Kisi, hizli: SayHizli, yol:
    yazamaz); geçmiş kişinin kendisinin. Öneri yalnız o rapor açıkken uygulanır (denetçinin seçimiyle aynı yoldan; Kaydet'le yazılır). */
 export type SayRaporHizli = "eksik" | "sonuc";
 export const RAPOR_HIZLI_SORU: Readonly<Record<SayRaporHizli, string>> = { eksik: "Eksik alanlar neler?", sonuc: "Sonuç ne olmalı?" };
+/* 542 (sunum 541 onaylı — reisim 2026-10-14: "say asistandan gir ve fotoğrafı okuyup ilgili yerlere girişleri yap diyeceğim ve yapacak"): S.A.Y
+   RAPORA GİRER — iş rapor ekranında (raporlar/say-doldur.ts: okunmamış fotoğrafları okur, boş alanlara girer; maddeler; sonuç; geri al); ekran
+   yalnız SAYILARI ve formatın adlarını gönderir, S.A.Y'ın cevabını sunucu kurar (istemci S.A.Y adına serbest metin yazamaz). Kuralla, ücretsiz. */
+export const SAY_ISLEMLERI = ["oku", "ustune", "maddeler", "sonuc_uygun", "sonuc_uygun_degil", "geri"] as const;
+export type SayIslemi = (typeof SAY_ISLEMLERI)[number];
+export interface SayOkumaGirdisi {
+  okunan: number; okunamayan: number; neden: string | null;
+  bolumler: { ad: string; alan: number; satir: number; belirsiz: number }[];
+  dolu: string[];
+}
+export interface SayIslemGirdisi { istek: SayIslemi; soru: string; sayi: number; var?: boolean; okuma?: SayOkumaGirdisi }
 export interface SayRaporGirdisi {
-  hizli: SayRaporHizli;
+  hizli: SayRaporHizli | "islem";
   rapor: { id: string; no: string };
   eksik?: SohbetEksik[];
   sonuc?: { var: boolean; oneri: "uygun" | "uygun_degil"; secili: "" | "uygun" | "uygun_degil"; kusur: number };
+  islem?: SayIslemGirdisi;
 }
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const RAPOR_NO = /^[\p{L}\p{N}-]{3,40}$/u;
 const metinMi = (x: unknown, en: number): x is string => typeof x === "string" && x.length >= 1 && x.length <= en;
 const sonucMu = (x: unknown): x is "uygun" | "uygun_degil" => x === "uygun" || x === "uygun_degil";
+const sayiMi = (x: unknown, en = 9999): x is number => Number.isInteger(x) && (x as number) >= 0 && (x as number) <= en;
+
+/** 542: ekranın yaptığı işin sayıları (serbest metin yalnız kişinin kendi sorusu ve formatın adları; uzunluklar sınırlı) */
+function islemGirdisi(g: unknown): SayIslemGirdisi | null {
+  const x = (g ?? {}) as Record<string, unknown>;
+  if (!SAY_ISLEMLERI.includes(x.istek as SayIslemi) || !metinMi(x.soru, 300) || !sayiMi(x.sayi) || (x.var !== undefined && typeof x.var !== "boolean")) return null;
+  const islem: SayIslemGirdisi = { istek: x.istek as SayIslemi, soru: x.soru, sayi: x.sayi, ...(typeof x.var === "boolean" ? { var: x.var } : {}) };
+  if (x.istek !== "oku") return x.okuma === undefined ? islem : null;
+  const o = (x.okuma ?? null) as Record<string, unknown> | null;
+  if (!o || !sayiMi(o.okunan, 100) || !sayiMi(o.okunamayan, 100) || (o.neden !== null && !metinMi(o.neden, 300))
+    || !Array.isArray(o.bolumler) || o.bolumler.length > 40 || !Array.isArray(o.dolu) || o.dolu.length > 60) return null;
+  const bolumler: SayOkumaGirdisi["bolumler"] = [];
+  for (const b of o.bolumler as Record<string, unknown>[]) {
+    if (!b || !metinMi(b.ad, 120) || !sayiMi(b.alan, 999) || !sayiMi(b.satir, 999) || !sayiMi(b.belirsiz, 999)) return null;
+    bolumler.push({ ad: b.ad, alan: b.alan, satir: b.satir, belirsiz: b.belirsiz });
+  }
+  const dolu: string[] = [];
+  for (const d of o.dolu) { if (!metinMi(d, 120)) return null; dolu.push(d); }
+  return { ...islem, okuma: { okunan: o.okunan, okunamayan: o.okunamayan, neden: o.neden as string | null, bolumler, dolu } };
+}
+
+/** 542: S.A.Y'ın kısa cevabı — ne yaptı (sayılarla), ne yapamadı; dolu alan varsa sorar ("Dolu alanları da değiştir" tuşu ekranda) */
+export function islemMetni(i: SayIslemGirdisi): string {
+  const kaydet = "Kaydetmeyi unutmayın.";
+  switch (i.istek) {
+    case "oku": {
+      const o = i.okuma!;
+      if (!o.okunan && !o.okunamayan) return "Okunacak fotoğraf yok: bölümün başlığındaki “Fotoğraf ekle” ile ekleyin, sonra “Fotoğrafları oku ve gir” deyin.";
+      const l: string[] = [];
+      if (o.okunan) l.push(`${o.okunan} fotoğrafı okudum.`);
+      for (const b of o.bolumler) {
+        const n = [b.alan ? `${b.alan} alan` : "", b.satir ? `${b.satir} satır` : ""].filter(Boolean).join(", ");
+        l.push(`- ${b.ad}: ${n || "boş alana girecek değer çıkmadı"}${b.belirsiz ? ` (${b.belirsiz} değerden emin değilim, sarı)` : ""}`);
+      }
+      if (o.dolu.length) l.push(`Dolu olduğu için değiştirmediğim: ${o.dolu.slice(0, 8).join(", ")}${o.dolu.length > 8 ? ` ve ${o.dolu.length - 8} alan daha` : ""}. Değiştireyim mi?`);
+      if (o.okunamayan) l.push(`${o.okunamayan} fotoğraf okunamadı${o.neden ? `: ${o.neden}` : "."}`);
+      if (o.bolumler.some((b) => b.alan || b.satir)) l.push(kaydet);
+      return l.join("\n");
+    }
+    case "ustune": return i.sayi ? `${i.sayi} dolu alanı okunan değerle değiştirdim. ${kaydet}` : "Değiştirilecek dolu alan kalmadı.";
+    case "maddeler": return i.sayi ? `${i.sayi} maddeyi “Uygun” işaretledim. ${kaydet}` : "Cevapsız madde yok.";
+    case "geri": return i.sayi ? `${i.sayi} girişi geri aldım.` : "Geri alınacak giriş kalmadı (değerler sonradan değişmiş).";
+    default: {
+      const ad = SONUC_AD[i.istek === "sonuc_uygun" ? "uygun" : "uygun_degil"];
+      if (i.var === false) return "Bu raporun formatında sonuç alanı yok.";
+      return i.sayi ? `Sonucu “${ad}” yaptım. ${kaydet}` : `Sonuç zaten “${ad}”.`;
+    }
+  }
+}
 
 /** ekrandan gelen yapının denetimi (alan sayıları ve uzunlukları sınırlı; serbest metin yok) */
 export function raporGirdisi(g: unknown): SayRaporGirdisi | null {
   const x = (g ?? {}) as Record<string, unknown>;
   const r = (x.rapor ?? {}) as Record<string, unknown>;
-  if ((x.hizli !== "eksik" && x.hizli !== "sonuc") || typeof r.id !== "string" || !UUID.test(r.id) || typeof r.no !== "string" || !RAPOR_NO.test(r.no)) return null;
+  if ((x.hizli !== "eksik" && x.hizli !== "sonuc" && x.hizli !== "islem") || typeof r.id !== "string" || !UUID.test(r.id) || typeof r.no !== "string"
+    || !RAPOR_NO.test(r.no)) return null;
   const rapor = { id: r.id, no: r.no };
+  if (x.hizli === "islem") { const islem = islemGirdisi(x.islem); return islem ? { hizli: "islem", rapor, islem } : null; }
   if (x.hizli === "eksik") {
     if (!Array.isArray(x.eksik) || x.eksik.length > 60) return null;
     const eksik: SohbetEksik[] = [];
@@ -126,6 +189,13 @@ export async function sayRaporCevabi(db: Sorgulayici, girdi: unknown, simdi = ne
   if ("durum" in k) return k;
   const yer = `Rapor ${g.rapor.no}`;
   let metin: string, ek: Record<string, unknown> = { rapor: g.rapor.id };
+  if (g.hizli === "islem") {
+    const i = g.islem!;
+    await sohbetYaz(db, { kim: "ben", metin: i.soru, yer, ek: { rapor: g.rapor.id } });
+    await sohbetYaz(db, { kim: "say", metin: islemMetni(i), yer, ek: { rapor: g.rapor.id, islem: { istek: i.istek, dolu: i.okuma?.dolu.length ?? 0 } } });
+    await yzMesajSay(db, yzAyi(simdi));
+    return { durum: "tamam", iletiler: await sohbetGecmisi(db, 2) };
+  }
   if (g.hizli === "eksik") {
     const l = g.eksik ?? [];
     metin = l.length ? `${l.length} zorunlu alan boş:` : "Zorunlu alanların hepsi dolu; raporu onaya gönderebilirsiniz.";
@@ -143,7 +213,7 @@ export async function sayRaporCevabi(db: Sorgulayici, girdi: unknown, simdi = ne
       }
     }
   }
-  await sohbetYaz(db, { kim: "ben", metin: RAPOR_HIZLI_SORU[g.hizli], yer, ek: { rapor: g.rapor.id } });
+  await sohbetYaz(db, { kim: "ben", metin: RAPOR_HIZLI_SORU[g.hizli as SayRaporHizli], yer, ek: { rapor: g.rapor.id } });
   await sohbetYaz(db, { kim: "say", metin, yer, ek });
   await yzMesajSay(db, yzAyi(simdi));
   return { durum: "tamam", iletiler: await sohbetGecmisi(db, 2) };

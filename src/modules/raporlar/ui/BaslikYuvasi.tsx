@@ -1,9 +1,9 @@
 "use client";
 /* SAHA RAPORU · BÖLÜM BAŞLIĞINDAKİ TUŞ (2026-10-12; reisim, ekran görüntüsüyle: "o tuşun orada olmasını istiyorum, ekran daralınca logo olarak
    kalsın, aynı şekilde fotoğraflar bölümü için de ekipman bölümü içinde fotoğraf istenen yerlerde bu şekilde olsun"): bölümün fotoğraf tuşu
-   ("Fotoğraf ekle (yapay zekâ okur)", Fotoğraflar bölümünün "Fotoğraf ekle") başlık satırında, aç / kapat tuşunun yanında; telefonda yalnız simge
-   (raporlar.module.css .basTuslari). Tuşu çizen içerik bileşeni (FotoOkuma, AlanOkuma, FotoListesi) tuşu başlığa TAŞIR (portal): durumu (okunuyor,
-   öneri kartı, odak) kendinde kalır, bölüm kapalıyken de görünür; fotoğraf seçilince bölüm açılır (okunan, eklenen görünsün). Bölümün dışında
+   (okuma fotoğrafının "Fotoğraf ekle"si, Fotoğraflar bölümünün "Fotoğraf ekle") başlık satırında, aç / kapat tuşunun yanında; telefonda yalnız simge
+   (raporlar.module.css .basTuslari). Tuşu çizen içerik bileşeni (Doldurma FotoBolumu, FotoListesi) tuşu başlığa TAŞIR (portal): durumu (ekleniyor,
+   odak) kendinde kalır, bölüm kapalıyken de görünür; fotoğraf seçilince bölüm açılır (okunan, eklenen görünsün). Bölümün dışında
    (madde fotoğrafı) tuş yerinde çizilir. Bloklar ile Doldurma birbirini içe aktarmasın diye ayrı dosya. */
 import { createContext, useContext, type ReactNode } from "react";
 import { createPortal } from "react-dom";

@@ -1312,7 +1312,9 @@ tarih-saat, fotoğraflar, form) · **Eğitim kaydı** (personel, eğitim, belge,
 10. **8.10 Sigorta okuma — KARAR (2026-09-22):** elektrik panosu fotoğrafından sigorta bilgilerini okumak için
    **görsel okuyabilen yapay zekâ servisi** (ör. Claude). Okunan değerler tabloya **öneri** olarak düşer;
    **inspector kontrol edip onaylamadan kaydedilmez**. Fotoğraf dış servise gider; pano fotoğrafı kişisel veri
-   taşımaz. (Reisim'in ikinci önceliği — §1.1.)
+   taşımaz. (Reisim'in ikinci önceliği — §1.1.) **2026-10-14 (542, sunum 541 onaylı):** fotoğraf okunmadan eklenir; S.A.Y'a "Fotoğrafları
+   oku ve gir" denince okunur ve değerler BOŞ alanlara girer (emin olunmayan sarı işaretli); öneri kartı kalktı — inspector kontrol eder,
+   **Kaydet demeden rapora yazılmaz**; dolu alan sorulmadan değişmez.
 11. **8.11 Mimari — KARAR (2026-09-22):** **profesyonel modüler yapı**; tek dosya derleme ve tek küresel ad alanı
    **YOK** (EKSIKLER-VE-ONERILER 11–12'nin karşılığı). Reisim: *"tek dosya yapısı falan istemiyorum … profesyonel
    modüler bir yapı istiyorum"*. Kurallar: (a) her iş modülü kendi klasöründe (`src/modules/<modül>/`);
@@ -2479,6 +2481,31 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-14 (542): **S.A.Y FOTOĞRAFTAN OKUYUP GİRER; S.A.Y CHAT MESAJ KUTUSU; ETİKET UYARISIZ** (reisim, iPhone ekran görüntüleriyle: *"FOTOĞRAFI KOYAR
+  KOYMAZ OKUMAMALI FOTOĞRAFI KOYUP DAHA SONRA, ETİKETTEN OKU DİYEBİLMEM LAZIM OFFLİNE ÇALIŞMAYA DA UYGUN OLMALI VE KOYDUĞUM FOTOĞRAFI AI OKUYAMAZSA DİYE
+  BENİMDE GÖRÜNTÜLE TUŞU İLE GÖREBİLİYO OLMAM GEREKLİ AYRICA İNGİLİZCE OLDUĞU İÇİN Mİ BİLİNMEZ OKUYAMIYOR ATTIĞIM ETİKETLERİ AI"* · *"SAY CHATTE MESAJ YAZAR
+  GİBİ OLMALI SATIRA YAZIP ALT SATIRA GEÇMEM YETERLİ OLMALI TEK TEK TIKLAYARAK GİRMEMEM GEREKLİ HER SATIRI VE NEREYE NE GİRECEĞİM EKRANDA GÖZÜKMELİ"* ·
+  *"örnekler ekranda durmalı"* · *"Etiket fotoğrafı koyunca uyarı ekranı gelmesin … daha sonra raporu gönderirken yapay zeka okuyacak"* · *"EKRANDA YAZI
+  YAZMAK İÇİN TIKLAYINCA YAKLAŞIYOR"* · *"GEREKSİZ BÜYÜK HER ŞEY"* · *"MAKETLERİ FALAN DA ONAYLIYORUM"*; önceki mesajda: *"OKU TUŞU OLMAYACAK SAY ASİSTANDAN
+  GİR VE FOTOĞRAFI OKUYUP İLGİLİ YERLERE GİRİŞLERİ YAP DİYECEĞİM VE YAPACAK"*). Sunum 541 (K1–K5, önerilen seçenekler) ve maket 539 bununla ONAYLI.
+  **Rapor ekranı:** bölüm başlığındaki tuş "Fotoğraf ekle" — fotoğraf OKUNMADAN rapora eklenir (belgede görünmez), bağlantı yoksa cihazda bekler
+  (kuyruk rapor.foto, okuma); bölümde Görüntüle · Sil. "Oku" tuşu, öneri kartı, "Okunanlar uygulanmadı" ve açıklama satırları kalktı. **S.A.Y rapora
+  girer** (raporlar/say-doldur.ts — saf; say/istek.ts): "Fotoğrafları oku ve gir" (hızlı tuş ya da yazarak) → raporun OKUNMAMIŞ fotoğrafları (göç 0089
+  yz_okuma.dosya — okunan fotoğraf bir daha okunmaz) okunur, değerler BOŞ alanlara / tablonun boş satırlarına girer: yeşil (emin), sarı + "emin değil"
+  (K1); dolu alan değişmez, S.A.Y "Değiştireyim mi?" der, "Dolu alanları da değiştir" yazar (K2); her işin "Geri al"ı (yalnız S.A.Y'ın girdiği ve hâlâ
+  duran değer döner); "Maddeleri uygun işaretle" (cevapsız maddeler) ve "sonucu uygun / uygun değil yap" (K4); rapordayken S.A.Y'ın ataçıyla eklenen
+  fotoğraf rapora konur (birden çok bölüm varsa hangisi sorulur) ve okunup girilir (K5). Kısa komutlar kuralla, ücretsiz; S.A.Y'ın cevabını sunucu
+  sayılardan kurar (istemci serbest metin yazamaz). S.A.Y kuralları: en çok 3 cümle, "yapamam" demez, komutu söyler; kaydetmek / göndermek / imzalamak
+  kişide. **S.A.Y Chat:** mesaj TEK yazı kutusu, solda her satırın adı hep görünür (n. satır = n. bilgi); Enter alttaki satıra geçer (satır açmaz —
+  sıra kaymaz), son satırdan sonrası nota; ayrı satır kutuları, "satırların düştüğü alanlar" listesi, yönerge kutusu, açıklama şeritleri kalktı;
+  satır düzeni (solda ad), küçük fotoğraflar, her fotoğrafa dokununca büyük görüntü. Etiket uyarısız eklenir (bağlantısız da, kayıtla gider);
+  "Görüntüle" ve bağlantı + yapay zekâ varken "Etiketten oku" (mesajın boş satırlarına). Rapor yazılırken mesajda boş bilgi kaldıysa etiket raporun
+  ekipman bilgilerine okuma fotoğrafı olarak konur ve okunur; okunanlar rapor açılınca boş alanlara girer (rapor_oneri; kaydedilince kapanır).
+  **Okuma talimatı:** etiket Türkçe değilse anlam eşleşir (Manufacturer → Marka, S/N → Seri no, Year of manufacture → İmal yılı, Rated load →
+  kapasite …), kod / seri no harf harf. **Telefonda büyütme:** modül sınıflarının "font: inherit"i yazı alanını 15 px'e indiriyordu (iPhone
+  büyütüyordu) — tablet / telefon ve dokunmatikte yazı alanı her zaman 16 px (temel.css); S.A.Y ve S.A.Y Chat paneli klavye açılınca görünen alana
+  sığar (components/pencere/gorunurAlan.ts). Kilitler: tests/say-doldur.test.ts (+ bozan), alan-okuma, foto-oku, say-chat-rapor; uçtan uca foto-oku,
+  say-chat, say, saha-raporu, rapor-format. PC'de veritabanısız testler 321/321, olumsuz kanıt 125/125, tip, lint; veritabanlı ve uçtan uca CI'da.
 - 2026-10-14 (540): **DÜZELTMELER: EKİPMAN KODU TÜRKÇE HARF, EKİPMAN EKLE'DE SERİ NO YOK, EN YENİ ÜSTTE, KAYDIRMA ÇUBUĞU YOK, EKİPMAN BİLGİLERİ TEK
   VE DEĞİŞTİRİLEBİLİR** (reisim, canlı ekranların görüntüleriyle: *"BURADA SERİ NO SORMASIN ETİKETTEN OKUMA VS YAPILACAK SONUÇTA, TÜRKÇE KARAKTER DE
   KABUL ETMİYOR ETMELİ. YENİ EKLENEN EKİPMANLAR HEP EN ÜSTTE OLSUN, HER ZAMAN EN SON EKLENEN RAPOR VE EKİPMANLAR EN ÜSTTE OLSUN"* · *"SERİ NO BURADA DA
@@ -2493,7 +2520,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   fotoğraftan / Excel'den doldurma aynı listeden (format/duzen.ts tamAlanlari; Format kurucu formatın kendisini gösterir). Canlıdaki Transpalet
   formatında seri no ve kullanım yeri ikişer kez (biri salt okunur) çıkıyordu. Makette eski kod kuralı yazıyor (maket.js, maket-veri.js; değişmedi).
   Fotoğraftan okuma ve S.A.Y'ın alanlara girmesi ayrı sunumda (541).
-- 2026-10-14 (539): **FİRMA AYARLARI YENİ TASARIM — MAKET (ONAY BEKLİYOR)** (reisim, canlı ekranın görüntüsüyle: *"burası ne ? sadece açıklama var çok
+- 2026-10-14 (539): **FİRMA AYARLARI YENİ TASARIM — MAKET (ONAYLANDI 2026-10-14: *"MAKETLERİ FALAN DA ONAYLIYORUM"*; kodu 544)** (reisim, canlı ekranın görüntüsüyle: *"burası ne ? sadece açıklama var çok
   saçma bi ekran??????? ayrıca ekranda mesela raporların ikinci kopyaso ekranında açı kkapalıyı seçince ekran komple kayıyo yani böyle bir tasarım
   sürdürülebiliri değil daha doğru bi tasarım olmalı ve raporların ikinci kopyası değl yedek olarak görülmeli çok fazla yazı var ve kafa karıştırıcı bu
   ekranı komple toparla tıklayınca pop-up olarak açılarak seçimler yapılabilien küçük paneller haline çevir önce maket sunumu yap"*). Maket

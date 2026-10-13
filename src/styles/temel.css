@@ -22,6 +22,12 @@ button, input, textarea, select { font: inherit; color: inherit; }
    dokununca sayfayı büyütüyor, geri küçültmüyor, sayfa sağa sola kayıyordu. Yazı alanı kendi değişkeninden (--boy-girdi,
    dokunmatikte 16). Büyütmeyi kapatmak (maximum-scale) YOK: iki parmakla büyütme erişilebilirlik için açık kalır. */
 input, textarea, select { font-size: var(--boy-girdi); }
+/* 542 (reisim 2026-10-14, iPhone ekran görüntüleriyle: "ekranda yazı yazmak için tıklayınca yaklaşıyor ve uzaklaşmam gerekiyor sürekli"): modül
+   sınıflarındaki "font: inherit" yazı alanını gövde boyuna (15 px) indiriyordu (S.A.Y Chat, S.A.Y …) → iPhone / iPad büyütüyordu. Dokunmatikte
+   ve tablet / telefon genişliğinde yazı alanı her zaman --boy-girdi (16 px) — sınıf ezemez. */
+@media (max-width: 1279.98px), (pointer: coarse) {
+  input:not([type="checkbox"], [type="radio"], [type="file"], [type="range"]), textarea, select { font-size: var(--boy-girdi) !important; }
+}
 /* ipucu metni (placeholder) gövde boyunda kalır: iPhone büyütmesi yazılan metnin boyuna bakar, ipucu 16'ya çıkınca dar
    kutuda kesiliyordu (2026-09-25 ölçümü, 375: ekipman araması, rapor notu) */
 ::placeholder { font-size: var(--boy-govde); }

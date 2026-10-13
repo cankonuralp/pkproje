@@ -9,7 +9,12 @@
    "Git" ve "Uygula" yalnız o rapor açıkken; sonucu geçmişte kalır. Öneri vermeden rapora hiçbir şey yazılmaz.
    522 — EK (pkproje §3.10 m.17, maket say.js ekran 11): yazma kutusunun yanında ataç → Fotoğraf çek · Galeriden seç · Belge ekle (PDF, Word);
    eklenenler gönderilmeden önce kutunun üstünde küçük görüntü / ad + boyut, × ile çıkar; gönderilen soruda adı görünür. Fotoğraf cihazda küçültülür;
-   tür, adet (4) ve toplam boy (4 MB) sunucuda yeniden denetlenir. Dosya saklanmaz. */
+   tür, adet (4) ve toplam boy (4 MB) sunucuda yeniden denetlenir. Dosya saklanmaz.
+   542 — S.A.Y RAPORA GİRER (sunum 541 onaylı; reisim 2026-10-14: "oku tuşu olmayacak say asistandan gir ve fotoğrafı okuyup ilgili yerlere girişleri
+   yap diyeceğim ve yapacak"): rapor ekranında "Fotoğrafları oku ve gir" (okunmamış fotoğraflar okunur, değerler boş alanlara — yeşil / sarı),
+   "Maddeleri uygun işaretle", yazılan kısa komutlar (../istek.ts: "sonucu uygun yap", "üstüne yaz", "geri al" …) kuralla, yapay zekâya gitmeden
+   ekranda yapılır; S.A.Y'ın cevabını sunucu sayılardan kurar. Cevabın altında "Geri al" ve dolu alan kaldıysa "Dolu alanları da değiştir" (yalnız
+   işi yapan sayfada). K5: rapordayken ataçla eklenen fotoğraf rapora konur (birden çok bölüm varsa hangisine olduğu sorulur) ve okunup girilir. */
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
@@ -17,18 +22,23 @@ import { fotografiKucult } from "../../../components/foto/kucult";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { useOnayla } from "../../../components/pencere/Onay";
+import { useGorunurAlan } from "../../../components/pencere/gorunurAlan";
 import { Serit } from "../../../components/serit/Serit";
 import type { SohbetEkAdi, SohbetEksik, SohbetIletisi } from "../../../server/yz/sohbet";
 import { EK_EN_COK_ADET, EK_EN_COK_BAYT } from "../ek-sinir";
 import type { SayDurum, SayYaniti } from "../server/say";
-import { useSayRaporBagi, type SayRaporBagi } from "./baglam";
+import { istekTani, type Istek } from "../istek";
+import { useSayRaporBagi, type SayGeriAl, type SayRaporBagi } from "./baglam";
 import { sayDurumEylemi, sayEkliSorEylemi, sayGecmisEylemi, sayHizliEylemi, sayOneriEylemi, sayRaporEylemi, saySorEylemi, sayTemizleEylemi } from "./eylemler";
 import stil from "./say.module.css";
 
 const ACIK_ANAHTARI = "probata-say-acik";
-type Hizli = "bekleyen" | "sayfa" | "eksik" | "sonuc";
+type Hizli = "bekleyen" | "sayfa" | "eksik" | "sonuc" | "oku" | "maddeler";
 const GENEL: [k: Hizli, ad: string][] = [["bekleyen", "Beni ne bekliyor?"], ["sayfa", "Bu sayfada ne yapılır?"]];
-const RAPOR: [k: Hizli, ad: string][] = [["eksik", "Eksik alanlar neler?"], ["sonuc", "Sonuç ne olmalı?"]];
+const RAPOR: [k: Hizli, ad: string][] = [["oku", "Fotoğrafları oku ve gir"], ["maddeler", "Maddeleri uygun işaretle"], ["eksik", "Eksik alanlar neler?"],
+  ["sonuc", "Sonuç ne olmalı?"]];
+/** 542: S.A.Y'ın rapora yaptığı işin bu sayfadaki eylemleri (ileti kimliği → geri al / dolu alanları da değiştir) */
+interface IslemEylemi { geriAl?: SayGeriAl; ustune?: () => { sayi: number; geriAl: SayGeriAl } }
 const DAR = "(max-width: 767.98px)";
 
 function cevrimici(): boolean { return typeof navigator === "undefined" || navigator.onLine !== false; }
@@ -88,8 +98,9 @@ function bolumle(l: readonly SohbetEksik[]): { bolumAd: string; ilk: SohbetEksik
   return [...g.values()];
 }
 
-function Ileti({ m, rb, git, uygula, vazgec }: {
+function Ileti({ m, rb, git, uygula, vazgec, eylem, eylemYap }: {
   m: SohbetIletisi; rb: SayRaporBagi | null; git: (e: SohbetEksik) => void; uygula: (m: SohbetIletisi) => void; vazgec: (m: SohbetIletisi) => void;
+  eylem?: IslemEylemi; eylemYap: (m: SohbetIletisi, ne: "geri" | "ustune") => void;
 }) {
   if (m.kim === "ben") return <li className={`${stil.mesaj} ${stil.ben}`}>{m.ek?.ekler?.length ? <EkListesi ekler={m.ek.ekler} /> : null}{m.metin}</li>;
   const burada = !!rb && !!m.ek?.rapor && rb.id === m.ek.rapor;
@@ -116,6 +127,12 @@ function Ileti({ m, rb, git, uygula, vazgec }: {
           ))}
         </ul>
       ) : null}
+      {eylem && (eylem.geriAl || eylem.ustune) && (
+        <div className={stil.oneriTuslar}>
+          {eylem.ustune && <button className={`${stil.kucukTus} ${stil.birincil}`} type="button" onClick={() => eylemYap(m, "ustune")}><Ikon ad="pencil" kucuk />Dolu alanları da değiştir</button>}
+          {eylem.geriAl && <button className={stil.kucukTus} type="button" onClick={() => eylemYap(m, "geri")}><Ikon ad="undo-2" kucuk />Geri al</button>}
+        </div>
+      )}
       {o && (
         <div className={stil.oneri}>
           <p className={stil.oneriBas}><Ikon ad="pencil" kucuk />Öneri</p>
@@ -149,11 +166,17 @@ export function SayAsistan() {
   const [bagli, setBagli] = useState(true);
   const [ekler, setEkler] = useState<Ek[]>([]);
   const [menu, setMenu] = useState(false);
+  /* 542: rapora yapılan işin eylemleri (bu sayfada), okuma ilerlemesi, eklenen fotoğrafın bölümü sorusu */
+  const [islemler, setIslemler] = useState<ReadonlyMap<string, IslemEylemi>>(() => new Map());
+  const [ilerleme, setIlerleme] = useState<string | null>(null);
+  const [bolumSor, setBolumSor] = useState<{ fotolar: File[]; soru: string } | null>(null);
   const ekSira = useRef(0);
   const atac = useRef<HTMLButtonElement>(null);
   const fab = useRef<HTMLButtonElement>(null);
   const girdi = useRef<HTMLInputElement>(null);
   const govde = useRef<HTMLDivElement>(null);
+  const panel = useRef<HTMLElement>(null);
+  useGorunurAlan(panel, acik);
 
   /* durum: sayfa açılınca bir kez (düzen sayfalar arasında kalır); önceki sayfada açık bırakılan panel açık gelir (odak çalınmaz) */
   useEffect(() => {
@@ -223,8 +246,76 @@ export function SayAsistan() {
     setHata(y.neden);
     return false;
   };
+  /* ── 542: S.A.Y rapora girer — iş ekranda (rb), cevabı sunucu sayılardan kurar (geçmişe yazılır) ── */
+  const islemKaydet = async (girdi: Record<string, unknown>, eylem?: IslemEylemi) => {
+    if (!rb) return;
+    const y = await sayRaporEylemi({ hizli: "islem", rapor: { id: rb.id, no: rb.no }, islem: girdi });
+    if (y.durum === "tamam" && eylem && (eylem.geriAl || eylem.ustune)) {
+      const m = y.iletiler.find((x) => x.kim === "say");
+      if (m) setIslemler((x) => new Map(x).set(m.id, eylem));
+    }
+    sonuc(y);
+  };
+  /** en son, hâlâ kullanılabilen eylem (yazılan "üstüne yaz" / "geri al" için) */
+  const sonEylem = (ne: "geri" | "ustune") => [...islemler.entries()].reverse().find(([, e]) => (ne === "geri" ? e.geriAl : e.ustune));
+  const islemYap = async (istek: Istek, soru: string, ek: readonly { dosya: string; bolum: string }[] = []) => {
+    if (!rb || bekliyor) return;
+    setBekliyor(true); setHata(null);
+    try {
+      if (istek === "oku") {
+        const r = await rb.fotolariOku((x) => setIlerleme(x), ek);
+        setIlerleme(null);
+        await islemKaydet({ istek, soru, sayi: r.ozet.okunan, okuma: r.ozet }, { geriAl: r.geriAl, ...(r.ustune ? { ustune: r.ustune } : {}) });
+      } else if (istek === "maddeler") {
+        const r = rb.maddeleriIsaretle();
+        await islemKaydet({ istek, soru, sayi: r.sayi }, r.sayi ? { geriAl: r.geriAl } : undefined);
+      } else if (istek === "sonuc_uygun" || istek === "sonuc_uygun_degil") {
+        const r = rb.sonucYap(istek === "sonuc_uygun" ? "uygun" : "uygun_degil");
+        await islemKaydet({ istek, soru, sayi: r.sayi, var: r.var }, r.sayi ? { geriAl: r.geriAl } : undefined);
+      } else {
+        const s = sonEylem(istek === "geri" ? "geri" : "ustune");
+        await eylemCalistir(s?.[0] ?? null, istek === "geri" ? "geri" : "ustune", soru);
+      }
+    } catch { setIlerleme(null); setHata("S.A.Y'a ulaşılamadı; bağlantıyı kontrol edip yeniden deneyin."); } finally { setBekliyor(false); }
+  };
+  /** iletinin altındaki "Geri al" / "Dolu alanları da değiştir" (ya da yazılan komut): bir kez çalışır; sonucu geçmişe */
+  const eylemCalistir = async (id: string | null, ne: "geri" | "ustune", soru: string) => {
+    const e = id ? islemler.get(id) : undefined;
+    let sayi = 0, yeni: IslemEylemi | undefined, kalan: IslemEylemi | null = null;
+    if (e && ne === "geri" && e.geriAl) { sayi = e.geriAl(); kalan = {}; }
+    if (e && ne === "ustune" && e.ustune) { const r = e.ustune(); sayi = r.sayi; yeni = r.sayi ? { geriAl: r.geriAl } : undefined; kalan = { geriAl: e.geriAl }; }
+    if (id && kalan) { const k = kalan; setIslemler((x) => new Map(x).set(id, k)); }
+    await islemKaydet({ istek: ne, soru, sayi }, yeni);
+  };
+  const eylemYap = (m: SohbetIletisi, ne: "geri" | "ustune") => {
+    if (bekliyor) return;
+    setBekliyor(true);
+    eylemCalistir(m.id, ne, ne === "geri" ? "Geri al" : "Dolu alanları da değiştir")
+      .catch(() => setHata("S.A.Y'a ulaşılamadı; bağlantıyı kontrol edip yeniden deneyin."))
+      .finally(() => { setBekliyor(false); girdi.current?.focus(); });
+  };
+  /** K5: S.A.Y'a eklenen fotoğraflar rapora (seçilen bölüme) konur, sonra okunup girilir */
+  const fotoKoyVeOku = async (fotolar: readonly File[], bolum: string, soru: string) => {
+    if (!rb) return;
+    setBolumSor(null);
+    setBekliyor(true); setHata(null);
+    const eklenen: { dosya: string; bolum: string }[] = [];
+    try {
+      for (const [i, f] of fotolar.entries()) {
+        setIlerleme(`Fotoğraf rapora ekleniyor · ${i + 1} / ${fotolar.length}`);
+        const r = await rb.fotoEkle(f, bolum);
+        if ("neden" in r) { setHata(r.neden); break; }
+        eklenen.push({ dosya: r.dosya, bolum });
+      }
+    } catch { setHata("Fotoğraf eklenemedi; bağlantıyı kontrol edip yeniden deneyin."); }
+    setIlerleme(null); setBekliyor(false);
+    for (const x of ekler) if (x.url) URL.revokeObjectURL(x.url);
+    setEkler([]); setSoru("");
+    if (eklenen.length) await islemYap("oku", soru || "Fotoğrafı oku ve gir", eklenen);
+  };
   const hizliSor = async (k: Hizli) => {
     if (bekliyor) return;
+    if ((k === "oku" || k === "maddeler") && rb) { await islemYap(k, k === "oku" ? "Fotoğrafları oku ve gir" : "Maddeleri uygun işaretle"); return; }
     setBekliyor(true);
     try {
       if ((k === "eksik" || k === "sonuc") && rb) {
@@ -262,6 +353,22 @@ export function SayAsistan() {
     const v = soru.trim();
     if (!v && !ekler.length) { girdi.current?.focus(); return; }
     if (bekliyor) return;
+    /* 542: rapordayken kısa komut ekranda yapılır (yapay zekâya gitmez); "evet" yalnız bekleyen "Değiştireyim mi?" varsa */
+    if (rb) {
+      const istek = v ? istekTani(v) : null;
+      const fotolar = ekler.filter((x) => x.tur === "foto").map((x) => x.dosya);
+      if (fotolar.length && fotolar.length === ekler.length && (!v || istek === "oku")) {
+        const l = rb.fotoBolumleri();
+        if (l.length === 1) { await fotoKoyVeOku(fotolar, l[0].id, v); return; }
+        if (l.length > 1) { setBolumSor({ fotolar, soru: v }); return; }
+      }
+      if (istek && !ekler.length && !(istek === "ustune" && /^(evet|değiştir|evet değiştir)$/i.test(v) && !sonEylem("ustune"))) {
+        setSoru("");
+        await islemYap(istek, v);
+        girdi.current?.focus();
+        return;
+      }
+    }
     setBekliyor(true); setMenu(false);
     try {
       const canli = rb ? { id: rb.id, cevaplar: rb.cevaplar() } : undefined;
@@ -317,7 +424,7 @@ export function SayAsistan() {
         </button>
       )}
       {acik && (
-        <aside className={stil.panel} id="say-panel" role="dialog" aria-labelledby="say-baslik"
+        <aside ref={panel} className={stil.panel} id="say-panel" role="dialog" aria-labelledby="say-baslik"
           onKeyDown={(e) => {
             if (e.key !== "Escape") return;
             e.stopPropagation();
@@ -327,7 +434,7 @@ export function SayAsistan() {
             <span className={stil.avatar}><Ikon ad="sparkles" /></span>
             <div className={stil.kimlik}>
               <h2 id="say-baslik">S.A.Y</h2>
-              <p className={stil.altYazi}>{raporda ? "Bu raporu okudum · öneri verir, rapora siz uygularsınız" : "Saha asistanı · sorun, yol göstereyim"}</p>
+              <p className={stil.altYazi}>{raporda ? "Bu rapordayım · fotoğrafları okur, boş alanlara girerim" : "Saha asistanı · sorun, yol göstereyim"}</p>
             </div>
             {!!iletiler?.length && (
               <button className={stil.basTus} type="button" onClick={() => void temizle()} aria-label="Sohbeti temizle" title="Sohbeti temizle"><Ikon ad="trash-2" /></button>
@@ -340,15 +447,27 @@ export function SayAsistan() {
             {hazir && durum.sinirDoldu && <Serit tur="uyari" ikon="triangle-alert">Bu ay kişi başı sınırınız doldu; yönetici Firma ayarları&apos;ndan artırabilir.</Serit>}
             {iletiler && !iletiler.length && (
               <p className={stil.bos}>{raporda
-                ? "Bu raporu okudum. Eksikleri sorabilir, sonuç için öneri isteyebilirsiniz. Önerileri siz onaylamadan rapora hiçbir şey yazılmaz."
+                ? "Fotoğrafı bölümüne ekleyin, “Fotoğrafları oku ve gir” deyin; okuduklarımı boş alanlara girerim. Kaydetmek sizde."
                 : "Merhaba! Sizi bekleyen işleri gösterebilir, bu sayfada ne yapılacağını anlatabilirim. Bir sorunuz varsa yazın."}</p>
             )}
             <ol className={stil.liste} aria-live="polite" aria-busy={bekliyor || !iletiler || undefined}>
               {(iletiler ?? []).map((m, i, l) => (
-                <IletiYeri key={m.id} m={m} onceki={l[i - 1]} rb={rb} git={git} uygula={uygula} vazgec={vazgec} />
+                <IletiYeri key={m.id} m={m} onceki={l[i - 1]} rb={rb} git={git} uygula={uygula} vazgec={vazgec}
+                  eylem={rb && m.ek?.rapor === rb.id ? islemler.get(m.id) : undefined} eylemYap={eylemYap} />
               ))}
             </ol>
-            {bekliyor && <p className={stil.yaziyor} role="status">S.A.Y düşünüyor…</p>}
+            {bolumSor && rb && (
+              <div className={`${stil.mesaj} ${stil.o}`} role="group" aria-label="Fotoğraf hangi bölüme">
+                <p>Fotoğraf hangi bölüme?</p>
+                <div className={stil.oneriTuslar}>
+                  {rb.fotoBolumleri().map((b) => (
+                    <button key={b.id} className={stil.kucukTus} type="button" onClick={() => void fotoKoyVeOku(bolumSor.fotolar, b.id, bolumSor.soru)}>{b.ad}</button>
+                  ))}
+                  <button className={stil.kucukTus} type="button" onClick={() => setBolumSor(null)}>Vazgeç</button>
+                </div>
+              </div>
+            )}
+            {bekliyor && <p className={stil.yaziyor} role="status">{ilerleme ? `S.A.Y okuyor: ${ilerleme}` : "S.A.Y düşünüyor…"}</p>}
             {hata && <Serit tur="hata" ikon="circle-alert">{hata}</Serit>}
           </div>
           <div className={stil.alt}>
@@ -374,11 +493,11 @@ export function SayAsistan() {
                 </div>
               </div>
               <label className={stil.gizli} htmlFor="say-girdi">S.A.Y&apos;a sor</label>
-              <input ref={girdi} className={stil.girdi} id="say-girdi" autoComplete="off" maxLength={500} placeholder={raporda ? "Bu rapor hakkında sorun" : "S.A.Y'a sorun"}
+              <input ref={girdi} className={stil.girdi} id="say-girdi" autoComplete="off" maxLength={500} placeholder={raporda ? "Sorun ya da “oku ve gir” deyin" : "S.A.Y'a sorun"}
                 value={soru} onChange={(e) => setSoru(e.target.value)} disabled={!hazir} />
               <button className={stil.gonder} type="submit" aria-label="Gönder" disabled={!hazir || bekliyor}><Ikon ad="send" /></button>
             </form>
-            <p className={stil.not}>Ekler yapay zekâya gider, kotadan harcar · en çok 4 MB; dosya saklanmaz, sohbette adı kalır. S.A.Y&apos;a müşteri adı, adres ve kişi adı gönderilmez (sorunuza ya da ekinize kendiniz koymadıkça). Sohbet geçmişiniz saklanır, yalnız siz görürsünüz; sayfa değişince silinmez.</p>
+            <p className={stil.not}>Sohbeti yalnız siz görürsünüz. Ekler en çok 4 MB.</p>
           </div>
         </aside>
       )}
@@ -387,6 +506,9 @@ export function SayAsistan() {
 }
 
 /** yer değişince ayraç ("Planlar", "Rapor DM-…" …) */
-function IletiYeri({ m, onceki, ...p }: { m: SohbetIletisi; onceki?: SohbetIletisi; rb: SayRaporBagi | null; git: (e: SohbetEksik) => void; uygula: (m: SohbetIletisi) => void; vazgec: (m: SohbetIletisi) => void }) {
+function IletiYeri({ m, onceki, ...p }: {
+  m: SohbetIletisi; onceki?: SohbetIletisi; rb: SayRaporBagi | null; git: (e: SohbetEksik) => void; uygula: (m: SohbetIletisi) => void; vazgec: (m: SohbetIletisi) => void;
+  eylem?: IslemEylemi; eylemYap: (m: SohbetIletisi, ne: "geri" | "ustune") => void;
+}) {
   return <>{(!onceki || onceki.yer !== m.yer) && <li className={stil.yer}>{m.yer}</li>}<Ileti m={m} {...p} /></>;
 }

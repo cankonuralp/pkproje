@@ -46,7 +46,13 @@ import { degerlendir } from "../../../format/motor";
 import { doldurma, EKIPMAN_ALAN_ADI, KUNYE_ALAN_ADI, KUNYE_ALANLARI, KUNYE_EN_COK, type Cevaplar, type KunyeAlani } from "../../../format/tanim";
 import { gecerliKunye, kayitKunyesi, kilitliKunye, metotMetni } from "../../../format/kunye";
 import { formulUygula } from "../../../format/formul";
+import { satirAnahtari } from "../../../format/motor";
+import { fotografiKucult } from "../../../components/foto/kucult";
 import { ekipmanAlanlari, ekipmanAnahtari } from "../doldur";
+import {
+  alanlariUygula, geriAl, maddeleriIsaretle as maddeleriUygun, okumaHedefleri, sonucuYap, tabloyaUygula, yerDegeri,
+  type Durum, type Geri, type Guven, type OkunanAlan, type OkunanTabloSatiri, type OkumaHedefi, type Uygulama, type Yer,
+} from "../say-doldur";
 import { ayEkle, RAPOR_DURUM, type EkipmanBilgisi, type RaporDurumu, type RaporTarihleri } from "../sema";
 import { cevaplariTamamla } from "../ornek";
 import type { SahaRaporu as SahaRaporuVerisi } from "../server/raporlar";
@@ -63,10 +69,10 @@ import { StandartTusu, TalimatTusu } from "./Kaynaklar";
 import { AsamaCizgisi } from "./AsamaCizgisi";
 import { RevizeIstePenceresi } from "./RevizeIstePenceresi";
 import {
-  onayaGonderEylemi, raporFormatGuncelleEylemi, raporKaydetEylemi, raporKopyalaEylemi, raporKunyeGuncelleEylemi, raporSilEylemi, revizeIstegiGeriCekEylemi,
-  raporOneriKapatEylemi, revizeIsteEylemi, type RaporYaniti,
+  alanOkuEylemi, fotoOkuEylemi, okumaFotografiEkleEylemi, onayaGonderEylemi, raporFormatGuncelleEylemi, raporKaydetEylemi, raporKopyalaEylemi,
+  raporKunyeGuncelleEylemi, raporSilEylemi, revizeIstegiGeriCekEylemi, raporOneriKapatEylemi, revizeIsteEylemi, type RaporYaniti,
 } from "./eylemler";
-import { sayRaporBagla } from "../../say/ui/baglam";
+import { sayRaporBagla, type SayGeriAl, type SayOkumaOzeti } from "../../say/ui/baglam";
 import stil from "./raporlar.module.css";
 
 type Gorunum = SahaRaporuVerisi;
@@ -181,8 +187,8 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
   /* 463 (reisim 2026-10-09, hata listesi 8: "her bölüm açık geliyor, her bölüm kapalı gelmeli"): bölümler KAPALI açılır; bu sekmede aynı raporda
      açılanlar yenilemede ve geri gelişte açık kalır (sessionStorage, rapor başına); "Tümünü aç / kapat"; eksik bulununca hepsi açılır */
   const acikAnahtar = `probata-rapor-acik:${v.id}`;
-  /* 525: S.A.Y Chat'ten okunan öneri bekleyen bölüm açık gelir (kartı görünsün) */
-  const [acikSet, setAcikSet] = useState<ReadonlySet<string>>(() => new Set(v.oneriler.filter((o) => o.tur !== "bilgi").map((o) => o.bolum)));
+  /* 525 → 542: S.A.Y Chat'ten okunan değerler açılışta boş alanlara girer; girdiği bölümler açılır (bolumleriAc) */
+  const [acikSet, setAcikSet] = useState<ReadonlySet<string>>(() => new Set());
   useEffect(() => {
     if (denemede) return;
     let l: string[] = [];
@@ -289,7 +295,7 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
   /* 495: formüllerin değeri (motorla aynı; kaydedilmez) */
   const hesapli = useMemo(() => formulUygula(v.tanim, cevaplar), [v.tanim, cevaplar]);
   const bag: Baglam = {
-    v, c: cevaplar, h: hesapli, yaz, d, oku, gecersiz, kaynak: (k) => kaynaklar[k], okumaKipi: denemede ? "deneme" : oku || yeni ? null : v.yz ? "oku" : "sakla", deneme: denemede, islem: { mesgul, baslat, yenile },
+    v, c: cevaplar, h: hesapli, yaz, d, oku, gecersiz, kaynak: (k) => kaynaklar[k], okumaKipi: denemede ? "deneme" : oku || yeni ? null : "ekle", deneme: denemede, islem: { mesgul, baslat, yenile },
     ekipmanAlani: (a) => (a.ekipman ? metinSatiri(a.ekipman, a.ad, EN[a.ekipman], a.ekipman === "imal") : null),
     cihaz: (bolumId) => <CihazBolumu v={v} bolumId={bolumId} oku={oku || !!yeni || denemede} gecersiz={gecersiz} mesgul={mesgul} baslat={baslat} yenile={yenile} />,
     foto: (bolumId, madde) => (denemede
@@ -374,7 +380,7 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
       await kuyruga("rapor.kaydet", "Bağlantı koptu: cihaza kaydedildi; bağlantı gelince gönderilecek.");
       return;
     }
-    if (r.tamam) { kaydedildi(); void kayitBilgileriniKapat(v.id); bildir(r.bildirim ?? "Rapor kaydedildi."); yenile(); return; }
+    if (r.tamam) { kaydedildi(); onerileriKapat(); void kayitBilgileriniKapat(v.id); bildir(r.bildirim ?? "Rapor kaydedildi."); yenile(); return; }
     yanitHatasi(r);
   });
   /* kuyruktan giden işin sonucu (394): bu raporunsa ekran tazelenir; eksikse alanlar işaretlenir (bağlantılı Onaya gönder gibi) */
@@ -420,10 +426,10 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
       return;
     }
     if (r.eksikler) {   /* rapor kaydedildi, gönderilmedi */
-      kaydedildi(); eksikGoster(r.eksikler, "Rapor kaydedildi, gönderilmedi."); yenile();
+      kaydedildi(); onerileriKapat(); eksikGoster(r.eksikler, "Rapor kaydedildi, gönderilmedi."); yenile();
       return;
     }
-    if (r.tamam) { kaydedildi(); void kayitBilgileriniKapat(v.id); setIsaretli(new Set()); bildir(r.bildirim ?? "Rapor onaya gönderildi."); yenile(); window.scrollTo({ top: 0 }); return; }
+    if (r.tamam) { kaydedildi(); onerileriKapat(); void kayitBilgileriniKapat(v.id); setIsaretli(new Set()); bildir(r.bildirim ?? "Rapor onaya gönderildi."); yenile(); window.scrollTo({ top: 0 }); return; }
     yanitHatasi(r);
   });
   /* 472: örnek raporda Onaya gönder yalnız denetler — gerçek Onaya gönder'in eksikleri (boş zorunlu alan, cihaz), aynı uyarı ve kayma */
@@ -476,10 +482,154 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
     yanitHatasi(r);
   });
 
+  /* ── 542 S.A.Y RAPORA GİRER (sunum 541 K1–K5; ../say-doldur.ts) ──
+     Okunmamış okuma fotoğrafları okunur, değerler BOŞ alanlara girer: yeşil (emin) / sarı + "emin değil" işaret — işaret çizimden sonra öğeye yazılır
+     (data-say-giris; kişi değeri değiştirince kalkar). Dolu alan sayılır, "üstüne yaz"la değişir; her işin "Geri al"ı. S.A.Y Chat'ten açılan
+     raporun bekleyen okumaları (rapor_oneri) açılışta aynı yoldan girer; rapor kaydedilince bekleyen okumalar kapanır. Kaydetmek kişide. */
+  const sonucBolumu = v.tanim.bolumler.find((b) => b.blok === "sonuc")?.id ?? null;
+  const yerId = (y: Yer) => (y.tur === "ekipman" ? EID(y.id as EkipmanAnahtari) : y.tur === "hucre" ? alanId(satirAnahtari(y.bolum, y.satir, y.sutun))
+    : y.tur === "sonuc" ? (sonucBolumu ? alanId(sonucBolumu) : "") : alanId(y.id));
+  const isaretler = useRef(new Map<string, { yer: Yer; guven: Guven; deger: string }>());
+  useEffect(() => {
+    const d: Durum = { ekipman, cevaplar };
+    for (const [id, x] of isaretler.current) if (yerDegeri(d, x.yer) !== x.deger) isaretler.current.delete(id);
+    for (const el of document.querySelectorAll<HTMLElement>("[data-say-giris]")) {
+      if (isaretler.current.has(el.id)) continue;
+      el.removeAttribute("data-say-giris");
+      el.closest("dd, td")?.removeAttribute("data-say-not");
+    }
+    for (const [id, x] of isaretler.current) {
+      const el = id ? document.getElementById(id) : null;
+      if (!el) continue;
+      if (el.getAttribute("data-say-giris") !== x.guven) el.setAttribute("data-say-giris", x.guven);
+      const kutu = el.closest("dd, td");
+      if (x.guven === "belirsiz") kutu?.setAttribute("data-say-not", "emin değil"); else kutu?.removeAttribute("data-say-not");
+    }
+  });
+  const durumRef = useRef<Durum>({ ekipman, cevaplar });
+  const vRef = useRef(v);
+  useEffect(() => { durumRef.current = { ekipman, cevaplar }; vRef.current = v; });
+  const katilanIdler = new Set(katilan.map((b) => b.id));
+  const ekranBolumu = (bolum: string) => (bolum === "ekipman" || katilanIdler.has(bolum) || duzen.tam?.id === bolum ? SABIT.ekipman : bolum);
+  const bolumleriAc = (l: readonly string[]) => setAcikSet((a) => {
+    const y = new Set([...a, ...l.map(ekranBolumu)]);
+    if (!denemede) try { sessionStorage.setItem(acikAnahtar, JSON.stringify([...y])); } catch { /* saklanamazsa yalnız bu ekranda */ }
+    return y;
+  });
+  /** girilenler ekrana (kaydedilmemiş değişiklik), işaretler, bölümler açılır; dönen: girilen değer sayısı */
+  const uygula = (u: Uygulama, bolumler: readonly string[]): number => {
+    if (!u.geri.length) return 0;
+    durumRef.current = u.durum;
+    setEkipman(u.durum.ekipman as typeof ekipman); setCevaplar(u.durum.cevaplar); setKirli(true);
+    for (const i of u.isaretler) { const id = yerId(i.yer); if (id) isaretler.current.set(id, { yer: i.yer, guven: i.guven, deger: yerDegeri(u.durum, i.yer) }); }
+    bolumleriAc(bolumler);
+    return u.isaretler.length;
+  };
+  const geriAlici = (g: readonly Geri[]): SayGeriAl => () => {
+    const r = geriAl(durumRef.current, g);
+    if (r.sayi) { durumRef.current = r.durum; setEkipman(r.durum.ekipman as typeof ekipman); setCevaplar(r.durum.cevaplar); setKirli(true); }
+    return r.sayi;
+  };
+  const hedefler = useMemo(() => okumaHedefleri(v.tanim), [v.tanim]);
+  const okunanFoto = useRef(new Set<string>());
+  const okunmamis = () => vRef.current.fotolar.filter((f) => f.okuma && hedefler.has(f.bolum) && !okunanFoto.current.has(f.dosya)
+    && !vRef.current.okunanFotolar.includes(f.dosya));
+  const okunanUygula = (h: OkumaHedefi, okunan: unknown[], ustune = false): Uygulama => (h.tur === "tablo" && h.tablo
+    ? tabloyaUygula(durumRef.current, h.tablo, okunan as OkunanTabloSatiri[]) : alanlariUygula(durumRef.current, h.hedef, okunan as OkunanAlan[], h.adlar, ustune));
+  /* S.A.Y Chat'ten açılan raporun bekleyen okumaları: açılışta boş alanlara (bir kez); rapor kaydedilince kapanır */
+  const oneriBolumleri = useRef<string[]>([]);
+  const oneriAcilis = useRef(false);
+  const acilisUygula = useRef<() => void>(() => undefined);
+  useEffect(() => {
+    acilisUygula.current = () => {
+      for (const o of v.oneriler) {
+        const h = o.tur === "bilgi" ? undefined : hedefler.get(o.bolum);
+        if (!h || !Array.isArray(o.okunan)) continue;
+        uygula(okunanUygula(h, o.okunan), [o.bolum]);
+        oneriBolumleri.current.push(o.bolum);
+      }
+    };
+  });
+  useEffect(() => {
+    if (oneriAcilis.current || oku || yeni || denemede) return;
+    oneriAcilis.current = true;
+    queueMicrotask(() => acilisUygula.current());
+  }, [oku, yeni, denemede]);
+  const onerileriKapat = () => {
+    const l = [...new Set(oneriBolumleri.current)];
+    oneriBolumleri.current = [];
+    for (const b of l) void raporOneriKapatEylemi(v.id, b).catch(() => undefined);
+  };
+  const fotolariOku = async (ilerle: (metin: string) => void, ek: readonly { dosya: string; bolum: string }[] = []) => {
+    const l = [...okunmamis().map((f) => ({ dosya: f.dosya, bolum: f.bolum })), ...ek.filter((e) => hedefler.has(e.bolum))]
+      .filter((x, i, a) => a.findIndex((y) => y.dosya === x.dosya) === i);
+    const bolumler = new Map<string, { ad: string; alan: number; satir: Set<number>; belirsiz: number }>();
+    const dolu: { h: OkumaHedefi; okunan: OkunanAlan[] }[] = [], geri: Geri[] = [], nedenler: string[] = [];
+    let okunan = 0;
+    for (const [i, f] of l.entries()) {
+      const h = hedefler.get(f.bolum)!;
+      ilerle(`${i + 1} / ${l.length} · ${h.ad}`);
+      const fd = new FormData();
+      fd.set("id", v.id); fd.set("bolum", f.bolum); fd.set("foto", f.dosya);
+      let degerler: unknown[];
+      try {
+        if (h.tur === "tablo") {
+          const r = await fotoOkuEylemi(fd);
+          if (!r.satirlar) { nedenler.push(r.genel ?? "Fotoğraf okunamadı."); continue; }
+          degerler = r.satirlar;
+        } else {
+          const r = await alanOkuEylemi(fd);
+          if (!r.okunan) { nedenler.push(r.genel ?? "Fotoğraf okunamadı."); continue; }
+          degerler = r.okunan;
+        }
+      } catch { nedenler.push("Bağlantı koptu; yeniden deneyin."); break; }
+      okunan++; okunanFoto.current.add(f.dosya);
+      const u = okunanUygula(h, degerler);
+      uygula(u, [f.bolum]);
+      geri.push(...u.geri);
+      const b = bolumler.get(f.bolum) ?? { ad: h.ad, alan: 0, satir: new Set<number>(), belirsiz: 0 };
+      for (const x of u.isaretler) { if (x.yer.tur === "hucre") b.satir.add(x.yer.satir); else b.alan++; if (x.guven === "belirsiz") b.belirsiz++; }
+      bolumler.set(f.bolum, b);
+      if (u.dolu.length) dolu.push({ h, okunan: u.dolu.map((x) => ({ alan: x.alan, deger: x.deger, guven: x.guven })) });
+    }
+    const ozet: SayOkumaOzeti = {
+      okunan, okunamayan: nedenler.length, neden: nedenler[0]?.slice(0, 300) ?? null,
+      bolumler: [...bolumler.values()].map((b) => ({ ad: b.ad.slice(0, 120), alan: b.alan, satir: b.satir.size, belirsiz: b.belirsiz })),
+      dolu: dolu.flatMap((g) => g.okunan.map((o) => (g.h.adlar.get(o.alan) ?? o.alan).slice(0, 120))).slice(0, 60),
+    };
+    const ustune = dolu.length ? () => {
+      const g2: Geri[] = [];
+      let sayi = 0;
+      for (const x of dolu) { const u = okunanUygula(x.h, x.okunan, true); sayi += uygula(u, [x.h.bolum]); g2.push(...u.geri); }
+      return { sayi, geriAl: geriAlici(g2) };
+    } : null;
+    return { ozet, geriAl: geriAlici(geri), ustune };
+  };
+  const maddeleriIsaretle = () => {
+    const u = maddeleriUygun(durumRef.current, v.tanim);
+    const maddeler = new Set(u.isaretler.flatMap((x) => (x.yer.tur === "madde" ? [x.yer.id] : [])));
+    const bolumler = v.tanim.bolumler.filter((b) => b.blok === "liste" && b.gruplar.some((g) => g.maddeler.some((m) => maddeler.has(m.id)))).map((b) => b.id);
+    return { sayi: uygula(u, bolumler), geriAl: geriAlici(u.geri) };
+  };
+  const sonucYap = (x: "uygun" | "uygun_degil") => {
+    if (!sonucBolumu) return { var: false, sayi: 0, geriAl: () => 0 };
+    const u = sonucuYap(durumRef.current, x);
+    return { var: true, sayi: uygula(u, [sonucBolumu]), geriAl: geriAlici(u.geri) };
+  };
+  /* K5: S.A.Y'a eklenen fotoğraf rapora okuma fotoğrafı olarak (okunmadan) eklenir; S.A.Y hemen okur */
+  const fotoEkle = async (d: File, bolum: string): Promise<{ dosya: string } | { neden: string }> => {
+    const f = new FormData();
+    f.set("id", v.id); f.set("bolum", bolum); f.set("dosya", await fotografiKucult(d));
+    const r = await okumaFotografiEkleEylemi(f);
+    if (!r.tamam || !r.dosya) return { neden: r.genel ?? Object.values(r.hatalar ?? {})[0] ?? "Fotoğraf eklenemedi." };
+    yenile();
+    return { dosya: r.dosya };
+  };
+
   /* S.A.Y (382): düzenlenebilir rapor açıkken S.A.Y bu raporu okur — CANLI hâl (kaydedilmemiş değişiklikler dahil): boş zorunlu alanlar, sonuç
      önerisi; öneri denetçinin seçimiyle aynı yoldan uygulanır (Kaydet'le yazılır); eksiğe aynı "git" götürür. Rapor ekranı kapanınca bağ kalkar. */
-  const sayGuncel = useRef({ d, cevaplar, tarih, yaz, git });
-  useEffect(() => { sayGuncel.current = { d, cevaplar, tarih, yaz, git }; });
+  const sayGuncel = useRef({ d, cevaplar, tarih, yaz, git, fotolariOku, maddeleriIsaretle, sonucYap, fotoEkle, okunmamis });
+  useEffect(() => { sayGuncel.current = { d, cevaplar, tarih, yaz, git, fotolariOku, maddeleriIsaretle, sonucYap, fotoEkle, okunmamis }; });
   useEffect(() => {
     if (oku || yeni || denemede) return;
     const bolumAdi = (id: string) => v.tanim.bolumler.find((b) => b.id === id)?.ad ?? id;
@@ -503,8 +653,14 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
       sonucUygula: (x) => sayGuncel.current.yaz((c) => ({ ...c, sonuc: x })),
       git: (e) => sayGuncel.current.git({ bolum: e.bolum, alan: e.alan, ad: e.ad }),
       cevaplar: () => sayGuncel.current.cevaplar,
+      fotoBolumleri: () => [...hedefler.values()].map((h) => ({ id: h.bolum, ad: h.ad })),
+      okunmamis: () => sayGuncel.current.okunmamis().length,
+      fotolariOku: (ilerle, ek) => sayGuncel.current.fotolariOku(ilerle, ek),
+      maddeleriIsaretle: () => sayGuncel.current.maddeleriIsaretle(),
+      sonucYap: (x) => sayGuncel.current.sonucYap(x),
+      fotoEkle: (dosya, bolum) => sayGuncel.current.fotoEkle(dosya, bolum),
     });
-  }, [oku, yeni, denemede, v.id, v.no, v.tanim, v.cihazlar]);
+  }, [oku, yeni, denemede, v.id, v.no, v.tanim, v.cihazlar, hedefler]);
 
   /* ── alan çizicileri ── */
   const metinSatiri = (k: EkipmanAnahtari, etiket: string, en: number, sayisal = false) => {
@@ -621,7 +777,7 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
       </Serit>,
     );
   }
-  /* 525: S.A.Y Chat kaydından açılan taslak — ne geldi, ne öneri olarak bekliyor (kapatılınca bir daha gösterilmez) */
+  /* 525: S.A.Y Chat kaydından açılan taslak — ne geldi, ne okundu (kapatılınca bir daha gösterilmez; 542: okunanlar açılışta boş alanlara girer) */
   const chatBilgi = v.oneriler.find((o) => o.tur === "bilgi");
   if (v.durum === "taslak" && chatBilgi && !chatKapali) {
     seritler.push(

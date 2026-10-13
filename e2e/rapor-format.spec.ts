@@ -116,11 +116,12 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await page.getByRole("button", { name: "Bölüm ayarlarını kapat" }).click();
     /* 486 ("format yapıcıda da ai için fotoğraf ekleme tuşu olsun"): sahadaki tuşlar kâğıtta GÖRÜNÜR — bölümün altında; × ile kalkar, "+ … koy" ile konur */
     const sahaTuslari = linye.getByRole("group", { name: "Pano sigortaları (linye) · sahadaki doldurma tuşları" });
-    await expect(sahaTuslari.getByText("Fotoğraf ekle (yapay zekâ okur)")).toBeVisible();
+    /* 2026-10-14 (542): sahada tuşun adı "Fotoğraf ekle" — fotoğraf okunmadan eklenir, S.A.Y okur ("(yapay zekâ okur)" kalktı) */
+    await expect(sahaTuslari.getByText("Fotoğraf ekle", { exact: true })).toBeVisible();
     await sahaTuslari.getByRole("button", { name: "Pano sigortaları (linye) · fotoğraf tuşunu kaldır" }).click();
     await expect(linye.getByText("Excel", { exact: true })).toBeVisible();
     await sahaTuslari.getByRole("button", { name: "Pano sigortaları (linye) · fotoğraf tuşu koy (yapay zekâ okur)" }).click();
-    await expect(sahaTuslari.getByText("Fotoğraf ekle (yapay zekâ okur)")).toBeVisible();
+    await expect(sahaTuslari.getByText("Fotoğraf ekle", { exact: true })).toBeVisible();
     await expect(linye.getByRole("columnheader", { name: /Devre/ })).toBeVisible();
     await linye.getByRole("button", { name: "Sütun", exact: true }).click();
     const sutun = page.getByRole("textbox", { name: "Sütun adı" });

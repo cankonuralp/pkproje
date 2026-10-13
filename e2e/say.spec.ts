@@ -80,7 +80,7 @@ test("S.A.Y: düğme, hızlı soru, serbest soru, sayfa değişince ve yenileyin
   await expect(liste).toContainText("1 eki okudum.");
   await expect(liste.getByRole("listitem").filter({ hasText: "Bu etikette ne yazıyor?" }).first()).toContainText("etiket.png");
   await expect(panel.getByRole("list", { name: "Ekler" })).toHaveCount(1, { timeout: 5_000 });   // yalnız gönderilen sorudaki
-  await expect(panel.getByText("Ekler yapay zekâya gider, kotadan harcar", { exact: false })).toBeVisible();
+  await expect(panel.getByText("Ekler en çok 4 MB", { exact: false })).toBeVisible();   // 542: uzun açıklama kısaldı (reisim: "küçük açıklamalar olmasın")
   expect(await page.evaluate(TASMA), "yana taşma yok").toBe(true);
 
   /* başka sayfaya geçince panel açık, geçmiş duruyor; yeni yer ayracı */
@@ -155,7 +155,10 @@ test("S.A.Y rapor ekranında: eksik alanlar + Git, sonuç önerisi + Uygula", as
   const panel = page.getByRole("dialog", { name: "S.A.Y" });
   await expect(panel.or(fab)).toBeVisible({ timeout: 30_000 });
   if (!(await panel.isVisible())) await fab.click();
-  await expect(panel.getByText("Bu raporu okudum · öneri verir, rapora siz uygularsınız")).toBeVisible();
+  /* 542: S.A.Y rapora girer — alt yazı ve hızlı tuşlar ("Fotoğrafları oku ve gir", "Maddeleri uygun işaretle") */
+  await expect(panel.getByText("Bu rapordayım · fotoğrafları okur, boş alanlara girerim")).toBeVisible();
+  await expect(panel.getByRole("button", { name: "Fotoğrafları oku ve gir" })).toBeVisible();
+  await expect(panel.getByRole("button", { name: "Maddeleri uygun işaretle" })).toBeVisible();
   await expect(panel.getByRole("button", { name: "Beni ne bekliyor?" })).toHaveCount(0);
 
   await panel.getByRole("button", { name: "Eksik alanlar neler?" }).click();

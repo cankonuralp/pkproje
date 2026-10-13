@@ -52,8 +52,8 @@ Uçtan uca test: `npm run test:e2e` (Playwright, `e2e/`).
   uygulama AB bölgesinde hazır barındırmada (ör. Vercel); her firma kendi alt alan adında (`*.<ürün>.com.tr`), joker SSL. Veri AB'de; KVKK hukukçu işi
   yapılmaz (reisim 2026-10-03: raporları her firma kendi deposunda tutar). Yığın aynı (PostgreSQL + RLS, kendi girişimiz, pg-boss).
 - **Arka plan işleri — onaylı (§8.9):** PostgreSQL üstünde iş kuyruğu (pg-boss); ayrı servis yok.
-- **Sigorta okuma — onaylı (§8.10):** pano fotoğrafından okuma görsel yapay zekâ ile; değer **öneri** olarak
-  düşer, inspector onaylamadan kaydedilmez.
+- **Sigorta okuma — onaylı (§8.10):** pano fotoğrafından okuma görsel yapay zekâ ile; 542 (2026-10-14): fotoğraf okunmadan eklenir,
+  S.A.Y "Fotoğrafları oku ve gir" ile okur, değer BOŞ alana girer (emin değilse sarı); inspector Kaydet demeden rapora yazılmaz.
 - **Rapor formatları — onaylı (§8.3, 2026-10-02 değişti):** firma × ekipman türü başına, **firmanın Format kurucusunda** kurulan sürümlü
   tanım; saha ekranı ve PDF bu tanımdan çizilir, çizen motor kodda tek (`RAPOR-FORMAT.md`). Eski "kodda, site içi düzenleyici yok" kalktı.
 - **PostgreSQL**: yerelde projeyle gelen **gömülü sürüm** (npm paketi, kurulum yok, veri `data/` altında);
@@ -190,12 +190,16 @@ pkproje/
                             bölümünün "Fotoğraf ekle"si portalla oraya — telefonda simge, seçilince bölüm açılır; madde fotoğrafı yerinde) · Kaydet /
                             Onaya gönder çubuksuz, havada (.eylem saydam, tuşlar gölgeli; S.A.Y üstünde — say.module.css, temel.css main alt boşluğu)
                             · FOTOĞRAFTAN / EXCEL'DEN DOLDURMA (484): formatta bölüm ayarı (tanim.ts doldur / doldurma — varsayılan tablo ve ekipman
-                            bölümü açık; kâğıtta bölüm ayarı) · ui/Doldurma.tsx (AlanOkuma "Fotoğraftan doldur", ExcelYukle + şablon, OkumaFotolari, YzKapali)
+                            bölümü açık; kâğıtta bölüm ayarı) · ui/Doldurma.tsx (542: FotoBolumu "Fotoğraf ekle" — okunmadan eklenir, bağlantısız kuyrukta;
+                            ExcelYukle + şablon, OkumaFotolari Görüntüle · Sil; "Oku", öneri kartı, ui/FotoOkuma.tsx kalktı)
                             · doldur.ts (saf: Excel eşleme, sunucu ve ekranın ortak alan listeleri) · okuma fotoğrafı (RaporFoto.okuma) belgede görünmez
                             · 486: "Fotoğraf ekle (yapay zekâ okur)" her zaman (Baglam.okumaKipi oku / sakla / deneme; Doldurma.tsx useFotoEkle, FotoEkleTusu;
                             kapalıyken foto-oku.ts okumaFotografiSakla, açılınca kayıtlı fotoğrafın "Oku"su — OkunacakFoto) · TABLO: tablo.ts (saf: satır kopyası)
                             — Son satırı kopyala; "Sonuç neye göre çıkar?" (format/motor.ts sonucKurallari) · 488: satır sonucu gerekçeyle ELLE (Bloklar
                             ElleSonuc; motor.ts ELLE_SONUC / ELLE_GEREKCE — kural sonucu saklanır, belgede "(elle; kural: …)" + gerekçe); Sırala kalktı
+                            · 542 S.A.Y RAPORA GİRER: say-doldur.ts (saf: okunanı boş alana / tabloya, emin / belirsiz işaret, dolu sayılır, üstüne yaz,
+                            geri al, maddeler, sonuç, okumaHedefleri) → SahaRaporu (işaret data-say-giris, bağ fotolariOku / maddeleriIsaretle / sonucYap /
+                            fotoEkle; S.A.Y Chat okumaları açılışta boş alanlara, kaydedilince kapanır) · okunan fotoğraf göç 0089 yz_okuma.dosya (okunanFotolar)
                             · STANDART PENCERESİ (428): ui/Kaynaklar.tsx (önce sorar; kütüphanedeki PDF çerçevede / kriter belgesi metni) ·
                             eşleme dokumanlar/eslestir.ts (saf) · kütüphane dokumanlar raporStandartlari · formatKriterleri src/tanim/kriterler.ts
                             · SAKLAMA SÜRESİ (387, göç 0073; ENGEL 11): server/saklama.ts (gece işi saklamaIsi — süresi dolan imzalı sürümün PDF'leri
@@ -302,9 +306,9 @@ pkproje/
   src/server/yz/            YAPAY ZEKÂ (351): okuma.ts (fotoğraftan okuma isteği — 354: yapılandırılmış çıktı, zorunlu araç YOK (Opus / Sonnet 5.5 400) —
                             cevap süzme / maliyet, saf; anthropicCagir — uç PROBATA_YZ_UC, hata ücretli mi) · kullanim.ts (0052 yz_kullanim / yz_okuma; 0053
                             ayırma: yzAyir satır kilidiyle, yzOkumaYaz, yzAyirmaBirak; yzAyKullanimi firma ayarlarına) · modülde raporlar/server/foto-oku.ts
-                            (hazırla + ayır → çağrı → kullanım → öneri; pano fotoğrafı rapora) + foto-eslestir.ts (saf: okunan → boş satır) + ui/FotoOkuma.tsx
+                            (hazırla + ayır → çağrı → kullanım → öneri; pano fotoğrafı rapora) + foto-eslestir.ts (saf: okunan → boş satır); 542: okuma S.A.Y'da
                             · alanlar.ts (484; 385'in etiket okumasının genel hâli — bölümün alanları: ekipman bilgileri / etiket, bilgi, test; istek + cevap
-                            süzme, saf; değer denetimi src/format/deger.ts) → raporlar/server/alan-oku.ts + ui/Doldurma.tsx
+                            süzme, saf; değer denetimi src/format/deger.ts; 542: Türkçe olmayan etiket — anlam eşleşir) → raporlar/server/alan-oku.ts
   src/server/is/            ARKA PLAN İŞLERİ (378; K5): firmalar.ts (firmalardaKos — ortak çatı: firma başına kiracı işlemi, is_calisma kaydı,
                             süre sınırı; 387) · gece.ts (geceIsleri: çöp temizliği) · yetki.ts (zamanliYetkili: "Bearer <CRON_SECRET>", sır ≥ 32) ·
                             uç src/app/api/is/gece (Vercel Cron, vercel.json crons; çöp + saklama süresi — raporlar/server/saklama.ts) ·
@@ -323,13 +327,18 @@ pkproje/
                             src/server/yz/say.ts (istek: önbellekli talimat + bağlam, cevap çözme; saf) + sohbet.ts (geçmiş; göç 0071 yz_sohbet)
                             · 522 EK: ataç (Fotoğraf çek · Galeriden seç · Belge ekle) → ek-sinir.ts (4 ek / 4 MB, ekran + sunucu) · server/ek.ts (tür
                             içerikten, EXIF silinir, Word metni) · ui/eylemler.ts sayEkliSorEylemi (FormData) · yz/say.ts ekliIcerik (ek adı gitmez); saklanmaz
+                            · 542 RAPORA GİRER: istek.ts (saf: kısa komut — oku, maddeler, sonuç, üstüne yaz, geri al; soru yapay zekâya) · say.ts hizli "islem"
+                            (islemMetni: cevabı sunucu sayılardan kurar) · SayAsistan "Fotoğrafları oku ve gir", "Maddeleri uygun işaretle", Geri al, Dolu
+                            alanları da değiştir; rapordayken ataçla eklenen fotoğraf rapora (K5) · panel klavyede görünen alana (components/pencere/gorunurAlan.ts)
   src/modules/say-chat/     S.A.Y CHAT (523–525; pkproje §3.10): sema.ts (saf: alan / başlık seçenekleri, hazır ayar, denetim, dağılım dagit) ·
                             server/ayar.ts (523 tür ayarı — sayChatAyari, sayChatAyarKaydet, chatTanimi; göç 0084 say_chat_ayar) · ui/ChatAyarlari.tsx
                             (529: kendi sayfası /ekipman-turleri/<tür>/say-chat — Format kurucunun tuşlarından ve tür sayfasındaki kısa bölümden) · ui/eylemler.ts · 524 server/kayitlar.ts (sayChatPaneli, chatKaydet / chatFoto /
                             chatSil — kuyruk işleri saychat.*, göç 0085 say_chat_kayit kişiye özel RLS; dosya modülü say_chat) · server/etiket.ts (etiketten
                             okuma, kayda yazılmaz) · ui/SayChat.tsx (plan içi düğme + panel; planlar sayChatPlani, personel say-chat-baglanti personelBransi)
                             · 525 server/rapor-yaz.ts (raporKosullari, chatRaporYaz — kayıt başına işlem; raporlar chatRaporuDoldur) · eylemler chatRaporYazEylemi,
-                            chatOkutEylemi (okunanlar raporlar/server/oneri.ts — göç 0086 rapor_oneri; rapor ekranında öneri kartı + şerit)
+                            chatOkutEylemi (okunanlar raporlar/server/oneri.ts — göç 0086 rapor_oneri; 542: rapor açılınca boş alanlara + şerit)
+                            · 542: mesaj TEK yazı kutusu (MesajKutusu — solda satır adları, Enter alttaki satıra), etiket uyarısız + Görüntüle + Etiketten oku,
+                            büyük görüntü; rapor yazılırken boş bilgi varsa etiket ekipman bilgilerine okuma fotoğrafı (rapor-yaz.ts)
                             · 527 fotoğraf tuşları components/foto/FotoTusu (531'de ortak oldu)
   src/server/eposta/        E-POSTA (432; göç 0077): eposta.ts kuyruk (alıcı başına bir satır; metin değişmez, silinmez) · saglayici.ts tek bağdaştırıcı
                             (Resend biçimi HTTP; uç PROBATA_EPOSTA_UC — anahtar yoksa bekler) · gonder.ts bekleyenleriGonder · sonra.ts (after) ·

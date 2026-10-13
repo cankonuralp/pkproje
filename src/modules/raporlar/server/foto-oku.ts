@@ -39,7 +39,11 @@ export async function okunacakBaytlar(db: Sorgulayici, depo: Depo, kim: Kisi, ra
 export const KAYITSIZ_FOTO: RaporYazma = { durum: "gecersiz", hatalar: { foto: "Okunacak fotoğraf raporda bulunamadı; sayfayı yenileyin." } };
 
 /** hazırlık: çağrının ihtiyacı + kayıt adımının ihtiyacı (ayrılan tutar, temizlenmiş fotoğraf — raporda zaten duruyorsa null) */
-export interface FotoOkuHazir { durum: "hazir"; istek: OkumaIstegi; anahtar: string; model: YzModel; bolum: BolumOf<"olcum">; ay: string; ust: number; foto: { ad: string; bayt: Uint8Array } | null }
+/** dosya (542): okunan, raporun okuma fotoğrafıysa kimliği — okuma kaydına yazılır (okunmamış fotoğraflar bundan bilinir) */
+export interface FotoOkuHazir {
+  durum: "hazir"; istek: OkumaIstegi; anahtar: string; model: YzModel; bolum: BolumOf<"olcum">; ay: string; ust: number; foto: { ad: string; bayt: Uint8Array } | null;
+  dosya: string | null;
+}
 export type FotoOkuHazirlik = FotoOkuHazir | RaporYazma;
 
 export async function fotoOkuHazirla(db: Sorgulayici, depo: Depo, kim: Kisi, raporId: string, bolumId: string, kaynak: OkunacakFoto, simdi = new Date()): Promise<FotoOkuHazirlik> {
@@ -65,10 +69,10 @@ export async function fotoOkuHazirla(db: Sorgulayici, depo: Depo, kim: Kisi, rap
   }
   const ad = `${o.bolum.ad.replace(/[^\p{L}\p{N} ()-]/gu, "").trim().slice(0, 60) || "Tablo"} fotoğrafı.${tur === "png" ? "png" : "jpg"}`;
   return { durum: "hazir", istek: okumaIstegi({ model: yz.model, bolum: o.bolum, resim: temiz, tur }), anahtar, model: yz.model, bolum: o.bolum, ay, ust,
-    foto: k.kayitli ? null : { ad, bayt: temiz } };
+    foto: k.kayitli ? null : { ad, bayt: temiz }, dosya: "dosya" in kaynak ? kaynak.dosya : null };
 }
 
-/** 486: fotoğrafı OKUMADAN okuma fotoğrafı olarak saklar — firmada yapay zekâ kapalıyken (açılınca "Oku"). Bölümde fotoğraftan doldurma açık olmalı
+/** 486 → 542: fotoğrafı OKUMADAN okuma fotoğrafı olarak saklar — her zaman (S.A.Y'a "fotoğrafları oku ve gir" deyince okunur). Bölümde fotoğraftan doldurma açık olmalı
     (ölçüm tablosu, ekipman bilgileri, bilgi ya da test bölümü); yalnız yazan, Yeni raporda; JPEG / PNG, en çok 5 MB (sonra okunabilsin), konum
     bilgisi silinir (dosya yolu). Belgede görünmez. */
 export async function okumaFotografiSakla(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, raporId: string, bolumId: string, foto: { bayt: Uint8Array }): Promise<RaporYazma> {
@@ -81,7 +85,8 @@ export async function okumaFotografiSakla(db: Sorgulayici, depo: Depo, kim: Kisi
   const baslik = "bolum" in o ? o.bolum.ad : o.baslik;
   const ad = `${baslik.replace(/[^\p{L}\p{N} ()-]/gu, "").trim().slice(0, 60) || "Bölüm"} fotoğrafı.${tur === "png" ? "png" : "jpg"}`;
   const r = await okumaFotografiEkle(db, depo, kim, firmaId, raporId, bolumId, { ad, bayt: foto.bayt });
-  return r.durum === "tamam" ? { ...r, bildirim: "Fotoğraf rapora eklendi (belgede görünmez). Yapay zekâ okuması açılınca fotoğrafın “Oku”suyla okunur." } : r;
+  /* 542: fotoğraf okunmadan eklenir — S.A.Y'a "fotoğrafları oku ve gir" deyince okunur (kısa bildirim; açıklama yok) */
+  return r.durum === "tamam" ? { ...r, bildirim: "Fotoğraf eklendi." } : r;
 }
 
 /** çağrı cevapsız bitti: ücretsizse ayırma bırakılır; sonucu bilinmiyorsa (zaman aşımı) ayrılan tutar harcamaya yazılır */
@@ -92,9 +97,10 @@ export async function fotoOkuBirak(db: Sorgulayici, h: Pick<FotoOkuHazir, "ay" |
 export interface FotoOkuKullanim { satirlar: OkunanSatir[]; durum: "tamam" | "kesik" | "ret" }
 /** kayıt adımı 1 (kendi işleminde): cevap ÇAĞRI ANINDAKİ tablo tanımıyla süzülür; ayırma gerçek maliyetle kapanır, okuma kaydı yazılır — raporun şimdiki
     hâlinden bağımsız (ödenen çağrı kişinin kullanımına her durumda yazılır) */
-export async function fotoOkuKullanimYaz(db: Sorgulayici, raporId: string, h: Pick<FotoOkuHazir, "model" | "bolum" | "ay" | "ust">, govde: unknown): Promise<FotoOkuKullanim> {
+export async function fotoOkuKullanimYaz(db: Sorgulayici, raporId: string, h: Pick<FotoOkuHazir, "model" | "bolum" | "ay" | "ust"> & { dosya?: string | null }, govde: unknown): Promise<FotoOkuKullanim> {
   const { satirlar, giris, cikis, durum } = okumaYanitiCoz(govde, h.bolum);
-  await yzOkumaYaz(db, { ay: h.ay, ust: h.ust, raporId, bolum: h.bolum.id, model: h.model, oneri: satirlar, giris, cikis, maliyet: maliyetHesapla(h.model, giris, cikis) });
+  await yzOkumaYaz(db, { ay: h.ay, ust: h.ust, raporId, bolum: h.bolum.id, model: h.model, oneri: satirlar, giris, cikis, maliyet: maliyetHesapla(h.model, giris, cikis),
+    dosya: h.dosya ?? null });
   return { satirlar, durum };
 }
 

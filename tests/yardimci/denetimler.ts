@@ -151,7 +151,8 @@ export function girdiYaziHatalari(css: string): string[] {
   for (const m of temiz.slice(temiz.indexOf("}", bag) + 1).matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
     const secici = m[1]!.trim(), govde = m[2]!;
     if (!/(^|[\s,>+~(])(input|textarea|select)(?![\w-])/.test(secici)) continue;
-    if (/(^|[;\s])font\s*:/.test(govde) || /font-size\s*:(?!\s*var\(--boy-girdi\)\s*(;|$))/.test(govde)) hatalar.push(secici);
+    /* 2026-10-14 (542): dokunmatikte modül sınıfının "font: inherit"i ezemesin diye temel.css'teki !important'lı bağlama da aynı değişkene bağlıdır */
+    if (/(^|[;\s])font\s*:/.test(govde) || /font-size\s*:(?!\s*var\(--boy-girdi\)\s*(!important\s*)?(;|$))/.test(govde)) hatalar.push(secici);
   }
   return hatalar;
 }

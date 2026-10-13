@@ -229,15 +229,15 @@ button.silTus { color: var(--hata-yazi); }
 .fotoEkle { justify-self: start; cursor: pointer; }
 /* etiketten okuma (385): Ekipman bilgileri bölümünün başında, solda */
 .etiketCubuk { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 10px; }
-/* 484: okunan bölümün okuma fotoğrafları (belgede görünmez) ve yapay zekâ kapalı notu */
-.okumaFoto { display: grid; gap: 6px; margin: 10px 0 0; }
+/* 484 → 542: bölümün okuma fotoğrafları (belgede görünmez; S.A.Y okur) — Görüntüle · Sil */
+.okumaFoto { margin: 10px 0 0; }
 .doldurma { display: grid; gap: 6px; margin: 0 0 10px; }
 .doldurma:empty { display: none; }
 .doldurma > .etiketCubuk { margin: 0; }
 /* 2026-10-12 (reisim, ekran görüntüsüyle): bölümün fotoğraf tuşu başlık satırında, aç / kapat tuşunun yanında (BaslikYuvasi.tsx — yuva kutu
    üretmez, tuş satırın öğesi olur); telefonda yazı gizlenir, simge kalır (ad girdide / aria-label'da, ipucu title'da) */
 .basTuslari { display: contents; }
-.okumaFoto > p, .ipucuMetin > svg { vertical-align: -2px; }
+.ipucuMetin > svg { vertical-align: -2px; }
 .fotoEkle[aria-disabled] { opacity: .55; cursor: default; }
 
 @media (max-width: 767.98px) {
@@ -266,14 +266,13 @@ button.silTus { color: var(--hata-yazi); }
 .no:hover { text-decoration-color: currentColor; }
 .sonucHata { color: var(--hata-yazi); font-weight: 600; }
 
-/* fotoğraftan okuma (351; maket .a-oneri-kart ailesi — öneri kartı, emin olunmayan satırda tek tek Uygula) */
-.oneriKart { margin-top: 10px; padding: 12px 14px; border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--zemin2); }
-.oneriBas { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; font-weight: 600; }
-.oneriListe { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
-.oneriListe li { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; }
-.oneriAd { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
-.oneriSag { display: flex; align-items: center; gap: 8px; margin-left: auto; white-space: nowrap; }
-.oneriTuslar { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+/* 542 (sunum 541 K1): S.A.Y'ın girdiği değer — yeşil (emin), sarı ve altında "emin değil"; kişi o alanı değiştirince işaret kalkar (SahaRaporu
+   işaretleri çizimden sonra öğeye yazar: data-say-giris "emin" / "belirsiz", kutusuna data-say-not). Öneri kartı kalktı. */
+.bolumler :global([data-say-giris]) { background: var(--onay-zemin); border-color: var(--onay); }
+.bolumler :global([data-say-giris="belirsiz"]) { background: var(--uyari-zemin); border-color: var(--uyari-yazi); }
+.bolumler :global([data-say-not])::after {
+  content: attr(data-say-not); display: block; margin-top: 4px; color: var(--uyari-yazi); font-size: var(--boy-kucuk); font-weight: 600;
+}
 
 /* 492: künye — kilitli bilginin simgesi, değiştirilen bilginin altında kayıttaki değer ve "Kayıttakine dön", metot satırında standart tuşları */
 .kunyeKilit { display: inline-flex; vertical-align: -2px; margin-left: 6px; color: var(--yazi3); }

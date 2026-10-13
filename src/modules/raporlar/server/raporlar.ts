@@ -86,7 +86,8 @@ const zamanYaz = (s: string | null) => (s ? `${s}:00+03:00` : null);
 
 export interface Kisi extends YetkiHesabi { ad: string }
 export type RaporYazma =
-  | { durum: "tamam"; id: string; bildirim: string }
+  /** dosya (542): eklenen okuma fotoğrafının kimliği — S.A.Y'a eklenen fotoğraf hemen okunur */
+  | { durum: "tamam"; id: string; bildirim: string; dosya?: string }
   | { durum: "gecersiz"; hatalar: DogrulamaHatalari }
   | { durum: "eksik"; eksikler: { bolum: string; alan: string; ad: string }[] }
   | { durum: "red"; neden: string }
@@ -264,6 +265,8 @@ export interface SahaRaporu {
   kaynak: RaporKaynaklari;
   /** 525 S.A.Y Chat: bekleyen öneriler (bölüm başına; "bilgi" — üstteki şerit) — yalnız düzenleyene */
   oneriler: RaporOnerisi[];
+  /** 542: yapay zekânın okuduğu okuma fotoğrafları (dosya kimlikleri; göç 0089) — S.A.Y yalnız okunmamışları okur. Yalnız düzenleyene */
+  okunanFotolar: string[];
 }
 export interface RaporKaynaklari { standartlar: StandartOzeti[] | null; kriterler: KriterBelgesi[] }
 
@@ -367,6 +370,7 @@ export async function sahaRaporu(db: Sorgulayici, kim: Kisi, id: string): Promis
     yz: duzenle ? await yzHazirMi(db) : false,
     kaynak: await raporKaynaklari(db, kim, format.tanim),
     oneriler: duzenle ? await raporOnerileri(db, r.id) : [],
+    okunanFotolar: duzenle ? (await db.sorgu<{ d: string }>("SELECT DISTINCT dosya::text AS d FROM yz_okuma WHERE rapor_id = $1 AND dosya IS NOT NULL", [r.id])).rows.map((x) => x.d) : [],
   };
 }
 
@@ -661,8 +665,9 @@ export async function okumaFotografiEkle(db: Sorgulayici, depo: Depo, kim: Kisi,
   if (!y.tamam) return { durum: "gecersiz", hatalar: { foto: y.neden === "tur" ? "Yalnız JPEG ya da PNG fotoğraf." : y.neden === "buyuk" ? "Fotoğraf çok büyük (en çok 8 MB)." : "Fotoğraf okunamadı." } };
   const yeni = [...e.r.fotolar, { dosya: y.id, ad: y.ad, bolum, madde: null, okuma: true }];
   const cevaplar = sayiliCevaplar(cev.data, { cihazlar: e.r.cihazlar, fotolar: yeni });
-  return sonuc(await guncelle(db, RAPOR, id, e.r.surum, { fotolar: jsonDizi(yeni), cevaplar }, { kim: kim.ad, ne: "rapor.okuma_foto", gerekce: `${gorunenNo(e.r.no, e.r.revizyon)} · ${y.ad}` }),
+  const r = sonuc(await guncelle(db, RAPOR, id, e.r.surum, { fotolar: jsonDizi(yeni), cevaplar }, { kim: kim.ad, ne: "rapor.okuma_foto", gerekce: `${gorunenNo(e.r.no, e.r.revizyon)} · ${y.ad}` }),
     id, `${y.ad} eklendi (belgede görünmez).`);
+  return r.durum === "tamam" ? { ...r, dosya: y.id } : r;
 }
 
 /** 486: raporun OKUMA fotoğrafının baytları — yazanın raporunda, verilen bölümün okuma fotoğrafıysa (sonradan okuma: firmada yapay zekâ kapalıyken
@@ -1080,9 +1085,7 @@ export async function chatRaporuDoldur(db: Sorgulayici, depo: Depo, kim: Kisi, f
   const okuma: { bolum: string; dosya: string }[] = [];
   for (const o of p.okumalar) {
     const y = await okumaFotografiEkle(db, depo, kim, firmaId, id, o.bolum, { ad: o.ad, bayt: o.bayt });
-    if (y.durum !== "tamam") continue;
-    const son = (await raporOku(db, id))?.fotolar.filter((x) => x.okuma && x.bolum === o.bolum).at(-1);
-    if (son) okuma.push({ bolum: o.bolum, dosya: son.dosya });
+    if (y.durum === "tamam" && y.dosya) okuma.push({ bolum: o.bolum, dosya: y.dosya });
   }
   return { durum: "tamam", yazilan, atlanan, foto, fotoBolumuYok: !fotoBolumu && p.fotolar.length > 0, okuma };
 }

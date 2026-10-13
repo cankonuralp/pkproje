@@ -17,7 +17,8 @@ import { raporOneriSil } from "../server/oneri";
 import type { AlanOkunan } from "../../../server/yz/alanlar";
 
 export interface RaporYaniti {
-  tamam?: boolean; id?: string; bildirim?: string; hatalar?: Record<string, string>; eksikler?: { bolum: string; alan: string; ad: string }[]; genel?: string;
+  /** dosya (542): eklenen okuma fotoğrafının kimliği */
+  tamam?: boolean; id?: string; dosya?: string; bildirim?: string; hatalar?: Record<string, string>; eksikler?: { bolum: string; alan: string; ad: string }[]; genel?: string;
 }
 const SONUC = {
   yetkisiz: "Bu işlem için yetkiniz yok.",
@@ -25,7 +26,7 @@ const SONUC = {
   yok: "Rapor bulunamadı.",
 } as const;
 const yanit = (r: RaporYazma): RaporYaniti =>
-  r.durum === "tamam" ? { tamam: true, id: r.id, bildirim: r.bildirim } : r.durum === "gecersiz" ? { hatalar: r.hatalar } : r.durum === "eksik" ? { eksikler: r.eksikler }
+  r.durum === "tamam" ? { tamam: true, id: r.id, bildirim: r.bildirim, ...(r.dosya ? { dosya: r.dosya } : {}) } : r.durum === "gecersiz" ? { hatalar: r.hatalar } : r.durum === "eksik" ? { eksikler: r.eksikler }
     : r.durum === "red" ? { genel: r.neden } : { genel: SONUC[r.durum] };
 async function islem(is: (o: NonNullable<Awaited<ReturnType<typeof istekOturumu>>>) => Promise<RaporYazma>): Promise<RaporYaniti> {
   if (!(await ayniKoken())) return { genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };

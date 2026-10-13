@@ -16,6 +16,7 @@
 :global(body:has([data-alt-cubuk="her"])) .fab { bottom: calc(var(--tus-y) + 32px); }
 
 .panel {
+  --vv-y: 100dvh; --vv-ust: 0px;   /* 542: telefonda görünen alan (components/pencere/gorunurAlan.ts yazar) — klavye açılınca panel sığar */
   position: fixed; right: 16px; top: calc(var(--ust-y) + 16px); bottom: 16px; z-index: 70; width: min(420px, calc(100vw - 32px));
   display: flex; flex-direction: column; background: var(--kart); border: 1px solid var(--kenar); border-radius: calc(var(--r-buyuk) * 2);
   box-shadow: var(--golge-2); overflow: hidden;
@@ -117,5 +118,5 @@
   :global(body:has([data-alt-cubuk])) .fab { bottom: calc(var(--tus-y) + 32px); }
   /* rapor (2026-10-12): telefonda tuşlar tam genişlik, dört tuş iki sıraya iner — düğme iki sıranın üstünde (raporlar .eylem en az yüksekliği buna göre) */
   :global(body:has([data-alt-cubuk="her"])) .fab { bottom: calc(var(--tus-y) * 2 + 40px); }
-  .panel { inset: 0; width: auto; border: 0; border-radius: 0; z-index: 80; }
+  .panel { inset: auto 0 auto 0; top: var(--vv-ust); height: var(--vv-y); width: auto; border: 0; border-radius: 0; z-index: 80; }
 }

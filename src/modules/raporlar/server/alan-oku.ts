@@ -23,6 +23,8 @@ export interface AlanOkuHazir {
   durum: "hazir"; istek: OkumaIstegi; anahtar: string; model: YzModel; ay: string; ust: number; bolum: string; alanlar: OkunacakAlan[];
   /** raporda zaten duruyorsa (486 sonradan okuma) null — yeniden eklenmez */
   foto: { ad: string; bayt: Uint8Array } | null;
+  /** 542: okunan, raporun okuma fotoğrafıysa kimliği — okuma kaydına yazılır (okunmamış fotoğraflar bundan bilinir) */
+  dosya: string | null;
 }
 
 export async function alanOkuHazirla(db: Sorgulayici, depo: Depo, kim: Kisi, raporId: string, bolumId: string, kaynak: OkunacakFoto, simdi = new Date()): Promise<AlanOkuHazir | RaporYazma> {
@@ -47,7 +49,7 @@ export async function alanOkuHazirla(db: Sorgulayici, depo: Depo, kim: Kisi, rap
   }
   const ad = `${o.baslik.replace(/[^\p{L}\p{N} ()-]/gu, "").trim().slice(0, 60) || "Bölüm"} fotoğrafı.${tur === "png" ? "png" : "jpg"}`;
   return { durum: "hazir", istek: alanIstegi({ model: yz.model, baslik: o.baslik, alanlar: o.alanlar, resim: temiz, tur }), anahtar, model: yz.model, ay, ust,
-    bolum: bolumId, alanlar: o.alanlar, foto: k.kayitli ? null : { ad, bayt: temiz } };
+    bolum: bolumId, alanlar: o.alanlar, foto: k.kayitli ? null : { ad, bayt: temiz }, dosya: "dosya" in kaynak ? kaynak.dosya : null };
 }
 
 /** çağrı cevapsız bitti: ücretsizse ayırma bırakılır; sonucu bilinmiyorsa harcamaya yazılır */
@@ -58,10 +60,10 @@ export async function alanOkuBirak(db: Sorgulayici, h: Pick<AlanOkuHazir, "ay" |
 export interface AlanOkuKullanim { okunan: AlanOkunan[]; durum: "tamam" | "kesik" | "ret" }
 /** kayıt adımı 1 (kendi işleminde): cevap ÇAĞRI ANINDAKİ alanlarla süzülür; ayırma gerçek maliyetle kapanır, okuma kaydı (bölümün kimliği) yazılır —
     raporun şimdiki hâlinden bağımsız (ödenen çağrı kişinin kullanımına her durumda yazılır) */
-export async function alanOkuKullanimYaz(db: Sorgulayici, raporId: string, h: Pick<AlanOkuHazir, "model" | "ay" | "ust" | "bolum" | "alanlar">, govde: unknown, bugun = new Date()): Promise<AlanOkuKullanim> {
+export async function alanOkuKullanimYaz(db: Sorgulayici, raporId: string, h: Pick<AlanOkuHazir, "model" | "ay" | "ust" | "bolum" | "alanlar"> & { dosya?: string | null }, govde: unknown, bugun = new Date()): Promise<AlanOkuKullanim> {
   const { okunan, giris, cikis, durum } = alanYanitiCoz(govde, h.alanlar, bugun);
   await yzOkumaYaz(db, { ay: h.ay, ust: h.ust, raporId, bolum: h.bolum, model: h.model,
-    oneri: okunan.map((x) => ({ degerler: { [x.alan]: x.deger }, guven: x.guven })), giris, cikis, maliyet: maliyetHesapla(h.model, giris, cikis) });
+    oneri: okunan.map((x) => ({ degerler: { [x.alan]: x.deger }, guven: x.guven })), giris, cikis, maliyet: maliyetHesapla(h.model, giris, cikis), dosya: h.dosya ?? null });
   return { okunan, durum };
 }
 

@@ -64,7 +64,7 @@ export async function chatRaporYazEylemi(planId: unknown, kayit: unknown, kod: u
   return oturumIslemi(o, (db) => chatRaporYaz(db, depo(), o, o.kiraci.firmaId, planId, { kayit: k, kod: typeof kod === "string" ? kod : null }));
 }
 
-/** 525: açılan raporun okuma fotoğrafını yapay zekâ okur (m.7) — okunanlar raporda öneri olarak bekler; çağrı işlemin DIŞINDA. Yetki, fotoğrafın
+/** 525: açılan raporun okuma fotoğrafını yapay zekâ okur (m.7) — okunanlar raporda bekler, rapor açılınca boş alanlara girer (542); çağrı işlemin DIŞINDA. Yetki, fotoğrafın
     o raporun o bölümündeki okuma fotoğrafı olması ve kota raporun okuma işlevlerinde. Dönen: okunan sayısı (okunamadıysa 0). */
 export async function chatOkutEylemi(raporId: unknown, okuma: unknown): Promise<number> {
   const o = await oturum();

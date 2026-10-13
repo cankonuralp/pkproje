@@ -458,7 +458,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
     return (
       <div className={k.panelSatir} role="group" aria-label={`${b.ad} · sahada doldurma`}>
         <label className={k.panelKutu}><input type="checkbox" checked={d.foto} onChange={(e) => yaz({ foto: e.target.checked })} />
-          Fotoğraftan doldur (yapay zekâ okur, denetçi onaylar; fotoğraf raporda durur, belgede görünmez)</label>
+          Fotoğraftan doldur (S.A.Y okur, boş alanlara girer; fotoğraf belgede görünmez)</label>
         <label className={k.panelKutu}><input type="checkbox" checked={d.excel} onChange={(e) => yaz({ excel: e.target.checked })} />
           Excel&apos;den yükle (sütun başlıkları ya da “Alan | Değer” satırlarıyla)</label>
       </div>
@@ -466,7 +466,8 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
   };
   /* 486 (reisim 2026-10-10: "format yapıcıda da ai için fotoğraf ekleme tuşu olsun ki fotoğraftan algılanabilecek işler için fotoğraf ekleme tuşu
      koyabilsin kullanıcı firmalar"): sahadaki doldurma tuşları kâğıtta GÖRÜNÜR — bölümün altında, sahada çıkacakları gibi; "+ … koy" ile konur,
-     tuşun × işaretiyle kaldırılır (484'te yalnız bölüm ayarının içindeydi, görünmüyordu). Belgeye (PDF) basılmaz. */
+     tuşun × işaretiyle kaldırılır (484'te yalnız bölüm ayarının içindeydi, görünmüyordu). Belgeye (PDF) basılmaz. 542: sahada tuşun adı "Fotoğraf
+     ekle" — fotoğraf okunmadan eklenir, S.A.Y "fotoğrafları oku ve gir" ile okur. */
   const sahaTuslari = (b: Bolum, i: number) => {
     if (!DOLDURULUR.includes(b.blok)) return null;
     const d = doldurma(b);
@@ -475,7 +476,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
       <div className={k.sahaTuslari} role="group" aria-label={`${b.ad} · sahadaki doldurma tuşları`}>
         <span className={k.sahaBas}>Sahada:</span>
         {d.foto
-          ? <span className={k.sahaTus}><Ikon ad="camera" kucuk />Fotoğraf ekle (yapay zekâ okur)
+          ? <span className={k.sahaTus}><Ikon ad="camera" kucuk />Fotoğraf ekle
             <Tus ikon="x" ad={`${b.ad} · fotoğraf tuşunu kaldır`} onClick={() => yaz({ foto: false }, "fotoğraf tuşu kaldırıldı")} /></span>
           : <Ekle ad="Fotoğraf tuşu koy (yapay zekâ okur)" erisimAdi={`${b.ad} · fotoğraf tuşu koy (yapay zekâ okur)`}
             onClick={() => yaz({ foto: true }, "fotoğraf tuşu kondu")} />}
@@ -483,7 +484,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
           ? <span className={k.sahaTus}><Ikon ad="file-spreadsheet" kucuk />Excel&apos;den yükle
             <Tus ikon="x" ad={`${b.ad} · Excel tuşunu kaldır`} onClick={() => yaz({ excel: false }, "Excel tuşu kaldırıldı")} /></span>
           : <Ekle ad="Excel tuşu koy" erisimAdi={`${b.ad} · Excel tuşu koy`} onClick={() => yaz({ excel: true }, "Excel tuşu kondu")} />}
-        <span className={k.ornek}>{d.foto ? "fotoğrafı yapay zekâ okur, değerler öneri gelir; fotoğraf belgede görünmez" : "belgede basılmaz"}</span>
+        <span className={k.ornek}>{d.foto ? "fotoğrafı S.A.Y okur, boş alanlara girer; fotoğraf belgede görünmez" : "belgede basılmaz"}</span>
       </div>
     );
   };

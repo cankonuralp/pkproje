@@ -1,6 +1,6 @@
 /* RAPORDA BEKLEYEN ÖNERİLER (525; göç 0086 rapor_oneri; pkproje §3.10 m.7, m.12) — S.A.Y Chat kaydından rapor yazılırken yapay zekânın okuduğu
-   değerler raporun o bölümünde ÖNERİ olarak bekler (rapora yazılmaz); rapor ekranı açılınca bölümün öneri kartında görünür, "Uygula" / "Vazgeç"
-   deyince silinir. tur "bilgi" (bolum ''): raporun üstündeki "S.A.Y Chat kaydından oluşturuldu" şeridinin metni. Kişiye özel (RLS: firma + yazan);
+   değerler raporun o bölümünde ÖNERİ olarak bekler (rapora yazılmaz); 542: rapor ekranı açılınca boş alanlara girer (işaretli — öneri kartı
+   kalktı), rapor kaydedilince silinir. tur "bilgi" (bolum ''): raporun üstündeki "S.A.Y Chat kaydından oluşturuldu" şeridinin metni. Kişiye özel (RLS: firma + yazan);
    yazma S.A.Y Chat'in rapor yazmasından — rapor yazılabilir mi orada denetlenir (alanOkunabilir / okunabilirOlcum / chatRaporuDoldur). */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { ekle, sil, tablo } from "../../../server/db/yazici.ts";

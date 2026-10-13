@@ -4,9 +4,11 @@
      rapor numarası sunucuda (internet); "Yeni ekle"de ekipman kodu bu anda istenir (m.19 — biçim ve firmada eşsizlik plan içi "Ekipman ekle" ile
      aynı denetim; kullanım yeri mesajın "Kullanım yeri" satırından), ekipman plana eklenir;
    · mesajın değerleri raporun alanlarına (türüne uymayan yazılmaz, adı söylenir), not → uzman yorumu; ekipman fotoğrafları raporun fotoğraf
-     bölümüne, okunacak fotoğraflar o bölüme OKUMA fotoğrafı olarak (belgede yok); etiket fotoğrafı rapora KONMAZ;
+     bölümüne, okunacak fotoğraflar o bölüme OKUMA fotoğrafı olarak (belgede yok); 542 (reisim 2026-10-14: "etiket fotoğrafını koysun daha sonra
+     raporu gönderirken yapay zeka okuyacak"): etiket fotoğrafı, mesajda boş kalan bilgi varsa ve formatta ekipman bilgileri fotoğraftan
+     doldurulabiliyorsa raporun ekipman bilgilerine OKUMA fotoğrafı olarak konur ve okunur (yalnız boş alanlara girer);
    · rapor açılınca kayıt sohbetten SİLİNİR (fotoğrafları çöpe — kopyaları raporda); raporun üstüne "S.A.Y Chat kaydından oluşturuldu" şeridi.
-   Okunacak fotoğrafların yapay zekâyla okunması eylemde (çağrı işlemin DIŞINDA) — okunanlar raporda öneri olarak bekler (raporlar/server/oneri.ts). */
+   Okunacak fotoğrafların yapay zekâyla okunması eylemde (çağrı işlemin DIŞINDA) — okunanlar raporda bekler (raporlar/server/oneri.ts), rapor açılınca boş alanlara girer (542). */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import type { Depo } from "../../../server/dosya/depo.ts";
 import { dosyaCope, kayitDosyasi } from "../../../server/dosya/dosya.ts";
@@ -19,6 +21,7 @@ import { formatSurumuOku } from "../../rapor-format/server/formatlar.ts";
 import { raporOneriYaz } from "../../raporlar/server/oneri.ts";
 import { mesaiDurumu } from "../../raporlar/server/plan-baglanti.ts";
 import { chatRaporuDoldur, raporOlustur } from "../../raporlar/server/raporlar.ts";
+import { okumaHedefleri } from "../../raporlar/say-doldur.ts";
 import { dagit, type ChatFoto, type ChatTanimi } from "../sema.ts";
 import { chatKapisi, DOSYA_SAY_CHAT, type Kisi } from "./kayitlar.ts";
 
@@ -72,6 +75,9 @@ export async function chatRaporYaz(db: Sorgulayici, depo: Depo, kim: Kisi, firma
   if (r.durum !== "tamam") {
     return hata(r.durum === "red" ? r.neden : r.durum === "gecersiz" ? Object.values(r.hatalar)[0] ?? "Rapor açılamadı." : r.durum === "yetkisiz" ? "Rapor açma yetkiniz yok." : "Rapor açılamadı.");
   }
+  const format = (await db.sorgu<{ format_id: string; no: string }>("SELECT format_id::text, no FROM rapor WHERE id = $1", [r.id])).rows[0];
+  const tanim = format ? (await formatSurumuOku(db, format.format_id))?.tanim ?? null : null;
+  const bolumler = tanim?.bolumler ?? [];
   /* fotoğraflar: kaydın dosyaları okunur, rapora kopyalanır (tür, EXIF, sınır yine raporun fotoğraf yolunda) */
   const oku = async (f: ChatFoto) => {
     const x = await kayitDosyasi(db, DOSYA_SAY_CHAT, k.id, f.dosya);
@@ -82,6 +88,13 @@ export async function chatRaporYaz(db: Sorgulayici, depo: Depo, kim: Kisi, firma
   const okumalar = (await Promise.all(k.fotolar.filter((f) => f.rol === "okunacak" && f.k && acik.has(f.k)).map(async (f) => {
     const x = await oku(f); return x ? { ...x, bolum: f.k! } : null;
   }))).filter((x): x is { ad: string; bayt: Uint8Array; bolum: string } => !!x);
+  /* 542: etiket — mesajda boş kalan bilgi varsa ve formatın ekipman bilgileri fotoğraftan doldurulabiliyorsa okunur (yalnız boş alanlara girer) */
+  const etiket = k.fotolar.find((f) => f.rol === "etiket");
+  const bosSatir = k.tanim.satirlar.some((s) => s.alan !== "yorum" && !d.degerler[s.alan]);
+  if (etiket && bosSatir && tanim && okumaHedefleri(tanim).has("ekipman")) {
+    const x = await oku(etiket);
+    if (x) okumalar.unshift({ ...x, ad: "Etiket fotoğrafı.jpg", bolum: "ekipman" });
+  }
   const doldu = await chatRaporuDoldur(db, depo, kim, firmaId, r.id, {
     degerler: Object.entries(d.degerler).map(([anahtar, deger]) => ({ anahtar, ad: ad.get(anahtar) ?? (anahtar === "yorum" ? "Not" : anahtar), deger })),
     fotolar, okumalar,
@@ -90,17 +103,15 @@ export async function chatRaporYaz(db: Sorgulayici, depo: Depo, kim: Kisi, firma
   /* kayıt silinir, fotoğrafları çöpe (kopyaları raporda) */
   await sil(db, KAYIT, k.id, { kim: kim.ad, ne: "say_chat.rapor_yazildi" });
   for (const f of k.fotolar) await dosyaCope(db, f.dosya, { kim: kim.ad, ne: "say_chat.rapor_yazildi" });
-  /* şerit: ne geldi, ne bekliyor */
-  const format = (await db.sorgu<{ format_id: string; no: string }>("SELECT format_id::text, no FROM rapor WHERE id = $1", [r.id])).rows[0];
-  const bolumler = format ? (await formatSurumuOku(db, format.format_id))?.tanim.bolumler ?? [] : [];
-  const okunacakAd = [...new Set(doldu.okuma.map((o) => bolumler.find((b) => b.id === o.bolum)?.ad ?? o.bolum))];
+  /* şerit: ne geldi, ne okundu */
+  const okunacakAd = [...new Set(doldu.okuma.map((o) => (o.bolum === "ekipman" ? "etiket" : bolumler.find((b) => b.id === o.bolum)?.ad ?? o.bolum)))];
   const yz = await yzHazirMi(db);
   const metin = [
     `Mesajdan ${doldu.yazilan} bilgi geldi${doldu.foto ? `, ${doldu.foto} ekipman fotoğrafı rapora geçti` : ""}.`,
     doldu.fotoBolumuYok ? "Formatta fotoğraf bölümü olmadığı için ekipman fotoğrafları eklenmedi." : "",
     doldu.atlanan.length ? `Biçime uymadığı için yazılmayan: ${doldu.atlanan.join(", ")}.` : "",
-    okunacakAd.length ? (yz ? `Yapay zekâ okudu: ${okunacakAd.join(", ")} — değerler o bölümlerde öneri olarak bekliyor, onaylayın.`
-      : `Okunacak fotoğraflar (${okunacakAd.join(", ")}) okuma fotoğrafı olarak saklandı; yapay zekâ açılınca bölümlerinde “Oku” ile okunur.`) : "",
+    okunacakAd.length ? (yz ? `Yapay zekâ okudu: ${okunacakAd.join(", ")} — değerler boş alanlara girdi (emin olunmayan sarı); kontrol edip kaydedin.`
+      : `Fotoğraflar (${okunacakAd.join(", ")}) rapora eklendi; S.A.Y'a “Fotoğrafları oku ve gir” deyince okunur.`) : "",
   ].filter(Boolean).join(" ");
   await raporOneriYaz(db, kim, r.id, "", "bilgi", { metin });
   return {

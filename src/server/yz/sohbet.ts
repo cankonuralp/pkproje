@@ -11,8 +11,10 @@ export interface SohbetEksik { ad: string; bolum: string; bolumAd: string; alan:
 export interface SohbetOnerisi { alan: "sonuc"; deger: "uygun" | "uygun_degil"; ad: string; durum: "" | "uygulandi" | "vazgecildi" }
 /** 522: soruya eklenen dosyanın yalnız adı, boyu ve türü (dosya saklanmaz) */
 export interface SohbetEkAdi { ad: string; boyut: number; tur: "foto" | "pdf" | "word" }
+/** 542: S.A.Y'ın rapora yaptığı iş (ne istendi, dolu kalan alan sayısı) — "Geri al" / "Dolu alanları da değiştir" yalnız o sayfada, işi yapan ekranda */
+export interface SohbetIslemi { istek: string; dolu: number }
 /** rapor: iletinin sorulduğu rapor (kimlik — "Git" ve "Uygula" yalnız o rapor açıkken) */
-export interface SohbetEki { bekleyen?: SohbetBekleyen[]; eksik?: SohbetEksik[]; oneri?: SohbetOnerisi; rapor?: string; ekler?: SohbetEkAdi[] }
+export interface SohbetEki { bekleyen?: SohbetBekleyen[]; eksik?: SohbetEksik[]; oneri?: SohbetOnerisi; rapor?: string; ekler?: SohbetEkAdi[]; islem?: SohbetIslemi }
 export interface SohbetIletisi { id: string; kim: "ben" | "say"; metin: string; yer: string; ek: SohbetEki | null; zaman: string }
 
 export const GECMIS_ADET = 100;

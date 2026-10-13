@@ -73,9 +73,11 @@ export const gorunenNo = (no: string, revizyon: number) => (revizyon > 0 ? `${no
 /** cihaz kuyruğundaki fotoğraf en çok 2 MB (cihazda 1600 px'e küçültülmüş hâli; metne çevrilince işlem ucunun 3 MB gövde sınırına sığar) */
 export const FOTO_KUYRUK_EN_BUYUK = 2 * 1024 * 1024;
 /** kuyruktan gelen fotoğraf: yeri (bölüm, madde), adı, içeriği (base64 — tür ve EXIF sunucuda baytlardan, dosya yolunda) */
+/** okuma (542): bölümün OKUMA fotoğrafı (S.A.Y okur; belgede görünmez) — bağlantısız da eklenir, bağlantı gelince gider */
 export const FotoIslemGirdisi = z.object({
   bolum: z.string().min(1).max(64), madde: z.string().min(1).max(64).nullable(), ad: z.string().min(1).max(200),
   veri: z.string().min(4).max(Math.ceil(FOTO_KUYRUK_EN_BUYUK / 3) * 4).regex(/^[A-Za-z0-9+/]+={0,2}$/),
+  okuma: z.boolean().optional(),
 });
 
 /* ── BAĞLANTISIZ YENİ RAPOR (405) ── kuyruktaki "rapor.olustur": hangi planda hangi ekipmana (kayıt = cihazın geçici kimliği; gerçek kimliği ve

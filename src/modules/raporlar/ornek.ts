@@ -56,6 +56,6 @@ export function ornekSahaRaporu(tanim: FormatTanimi, tur: OrnekTur, bugun: strin
       cihaz: { id: `ornek${i + 1}`, kod: `ÖC-${String(i + 1).padStart(3, "0")}`, marka: "Örnek", model: "Ö-1", seri: String(1000 + i), bitis: yil, gecti: false, eksik: false, lab: false },
     })),
     fotolar: [], secilebilir: {}, kopyaKaynak: null, guncelFormat: null, mesaiDolu: false, geri: null, revize: null, imza: null, imzali: null,
-    izin: { duzenle: true, sil: false, kopyala: false, kopyaEngel: null }, yz: false, kaynak, oneriler: [],
+    izin: { duzenle: true, sil: false, kopyala: false, kopyaEngel: null }, yz: false, kaynak, oneriler: [], okunanFotolar: [],
   };
 }

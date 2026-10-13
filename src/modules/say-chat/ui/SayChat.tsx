@@ -1,9 +1,16 @@
 "use client";
 /* S.A.Y CHAT (524; pkproje §3.10 m.1–12, 18–24; maket 521 maket-saychat.js ekran 1–9 — reisim 2026-10-13: "onayılıyorum, yap bitir"). Plan içinde,
    S.A.Y düğmesinin yanında "S.A.Y Chat"; o planın sohbeti (kişinin kayıtları). S.A.Y paneliyle aynı yerde: biri açılınca öteki kapanır.
-   · Kayıt = bir ekipman: Fotoğraf çek → Ekipman seçin (Plandan seç / Yeni ekle; branşa göre) → yönerge + numaralı mesaj (n. satır = n. madde; "-" ya
-     da boş = bilinmiyor; fazla satırlar nota; hazır değerli satır dolu gelir; altında her satırın düştüğü alan — KURALLA, sema.ts dagit) → okunacak
-     fotoğraflar (türün açık başlıkları) → Gönder. Etiket fotoğrafı isteğe bağlı: eklenince kota uyarısı, "Oku ve mesaja yaz" / "Okumadan geç".
+   · Kayıt = bir ekipman: Fotoğraf çek → Ekipman seçin (Plandan seç / Yeni ekle; branşa göre) → mesaj → okunacak fotoğraflar (türün açık
+     başlıkları) → Gönder. 542 (reisim 2026-10-14, iPhone ekran görüntüleriyle: "mesaj yazar gibi olmalı satıra yazıp alt satıra geçmem yeterli
+     olmalı tek tek tıklayarak girmemem gerekli her satırı ve nereye ne gireceğim ekranda gözükmeli", "örnekler ekranda durmalı", "ekran kaymaları
+     oluyo", "gereksiz büyük her şey"): mesaj TEK yazı kutusu — her satırın solunda o satırın adı hep görünür (n. satır = n. madde; "-" ya da boş
+     = bilinmiyor; fazla satırlar nota; hazır değerli satır dolu gelir — KURALLA, sema.ts dagit); Enter alttaki satıra geçer (satırlar kaymaz).
+     Ayrı satır kutuları, "satırların düştüğü alanlar" listesi ve açıklama şeritleri kalktı.
+   · Etiket fotoğrafı isteğe bağlı (542: "fotoğrafı koyar koymaz okumamalı … daha sonra etiketten oku diyebilmem lazım offline çalışmaya da uygun
+     olmalı … ai okuyamazsa diye benim de görüntüle tuşu ile görebiliyor olmam gerekli", "etiket fotoğrafı koyunca uyarı ekranı gelmesin"): uyarısız
+     eklenir (bağlantı olmasa da — kayıtla kuyruğa); yanında "Görüntüle" ve bağlantı + yapay zekâ varken "Etiketten oku" (mesajın BOŞ satırlarına
+     yazar). Okunmazsa rapor yazılırken yapay zekâ etiketi okur (server/rapor-yaz.ts). Her küçük fotoğrafa dokununca büyük görüntü açılır.
    · Gönder / Kaydet / Sil ÇEVRİMDIŞI KUYRUĞA yazılır (bağlantı varsa hemen gider): kayıt "Cihazda" görünür, gidince "Gönderildi" (sunucudan yenilenir).
      Fotoğraflar Gönder'de kuyruğa girer (Vazgeç'te hiçbir şey gitmez); görüntüsü bu oturumda bu cihazda, gidince sunucudan (yalnız sahibi açar).
    · Kişiye özel: veri sunucuda kişinin kendi kayıtlarıyla gelir (RLS).
@@ -21,10 +28,10 @@ import { FotoTusu } from "../../../components/foto/FotoTusu";
 import { fotografiKucult } from "../../../components/foto/kucult";
 import { fotolariSec, fotoSecimiUyarisi } from "../../../components/foto/secim";
 import { GizliResim } from "../../../components/gizli-resim/GizliResim";
+import { useGorunurAlan } from "../../../components/pencere/gorunurAlan";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { useOnayla } from "../../../components/pencere/Onay";
 import { Pencere } from "../../../components/pencere/Pencere";
-import { Rozet } from "../../../components/sayfa/Sayfa";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
 import type { ChatKaydi, SayChatPaneli } from "../server/kayitlar";
@@ -54,20 +61,65 @@ let yerelSira = 0;
 interface Yerel { anahtar: number; dosya: File; url: string; rol: FotoRolu; k: string | null }
 interface Taslak {
   id: string; yeni: boolean; surum: number; ekipman: ChatEkipman | null; mesaj: string[]; tanim: ChatTanimi | null; tanimSurum: number;
-  fotolar: ChatFoto[]; kaldir: string[]; yerel: Yerel[]; okundu: number[];
+  fotolar: ChatFoto[]; kaldir: string[]; yerel: Yerel[];
+  /** etiketten okunan satırlar: satır → okunan değer (satır değişince işaret kalkar) */
+  okundu: Record<number, string>;
 }
 /** listede görünen kayıt: sunucudaki + cihazda bekleyen hâli */
 interface Gorunen { id: string; surum: number; zaman: string | null; ekipman: ChatEkipman | null; mesaj: string[]; tanim: ChatTanimi | null; tanimSurum: number;
   fotolar: ChatFoto[]; bekleyenFoto: number; cihazda: boolean; ileti: string | null; sunucuda: boolean }
 
-/** küçük görüntü: bu cihazda seçilen (blob:) ya da sunucudaki (GizliResim — yalnız sahibi açar) */
-function Foto({ f, cikar }: { f: { url?: string; dosya?: string; ad: string }; cikar?: () => void }) {
+/** küçük görüntü: bu cihazda seçilen (blob:) ya da sunucudaki (GizliResim — yalnız sahibi açar); 542: dokununca büyük görüntü (ac) */
+function Foto({ f, cikar, ac }: { f: { url?: string; dosya?: string; ad: string }; cikar?: () => void; ac?: () => void }) {
+  const resim = f.url
+    // eslint-disable-next-line @next/next/no-img-element
+    ? <img src={f.url} alt={f.ad} /> : f.dosya ? <GizliResim dosyaId={f.dosya} alt={f.ad} className={stil.fotoResim} /> : <Ikon ad="camera" />;
   return (
     <li className={stil.foto} title={f.ad}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      {f.url ? <img src={f.url} alt={f.ad} /> : f.dosya ? <GizliResim dosyaId={f.dosya} alt={f.ad} className={stil.fotoResim} /> : <Ikon ad="camera" />}
+      {ac ? <button className={stil.fotoAc} type="button" onClick={ac} aria-label={`${f.ad} — görüntüle`}>{resim}</button> : resim}
       {cikar && <button className={stil.fotoSil} type="button" onClick={cikar} aria-label={`${f.ad} kaldır`} title="Kaldır"><Ikon ad="x" kucuk /></button>}
     </li>
+  );
+}
+
+/** 542 MESAJ KUTUSU: tek yazı alanı; solda her satırın adı (hep görünür), n. satır = n. madde; Enter alttaki satıra geçer (yeni satır açmaz —
+    satırlar kaymaz), son satırda yeni satır açar (nota). Uzun satır kayar, alta sarmaz (adlarla hizası bozulmaz). */
+function MesajKutusu({ tanim, mesaj, okundu, degisti }: {
+  tanim: ChatTanimi; mesaj: readonly string[]; okundu: Readonly<Record<number, string>>; degisti: (l: string[]) => void;
+}) {
+  const n = Math.max(tanim.satirlar.length, mesaj.length);
+  const deger = Array.from({ length: n }, (_, i) => mesaj[i] ?? "").join("\n");
+  const satir = Math.min(MESAJ_EN_COK, n + 1);
+  return (
+    <div className={stil.mesajKutu}>
+      <ol className={stil.mesajAdlar} aria-hidden="true">
+        {Array.from({ length: satir }, (_, i) => {
+          const st = tanim.satirlar[i], okd = okundu[i] !== undefined && okundu[i] === (mesaj[i] ?? "");
+          return (
+            <li key={i} className={st ? undefined : stil.mesajNot} title={st?.ad ?? "Fazla satır nota eklenir"}>
+              <span>{st ? (st.alan === "yorum" ? `${st.ad}` : st.ad) : "+ not"}</span>
+              {okd && <Ikon ad="check" kucuk />}
+            </li>
+          );
+        })}
+      </ol>
+      <label className={stil.gizli} htmlFor="sc-mesaj">Mesaj: her satıra soldaki bilgiyi yazın</label>
+      <textarea id="sc-mesaj" className={stil.mesajAlan} value={deger} rows={satir} wrap="off" spellCheck={false} autoCapitalize="sentences" autoComplete="off"
+        aria-describedby="sc-mesaj-sira" style={{ height: `calc(${satir} * var(--sc-satir))` }}
+        onChange={(e) => degisti(e.target.value.split("\n").slice(0, MESAJ_EN_COK).map((x) => x.slice(0, MESAJ_SATIR_EN_COK)))}
+        onKeyDown={(e) => {
+          if (e.key !== "Enter" || e.shiftKey || e.nativeEvent.isComposing) return;
+          const ta = e.currentTarget, v = ta.value, p = ta.selectionStart;
+          const sonraki = v.indexOf("\n", p);
+          if (sonraki >= 0) {
+            /* alttaki satır var: yeni satır açılmaz, imleç alttaki satırın sonuna */
+            e.preventDefault();
+            const bitis = v.indexOf("\n", sonraki + 1), yer = bitis < 0 ? v.length : bitis;
+            ta.setSelectionRange(yer, yer);
+          } else if (v.split("\n").length >= MESAJ_EN_COK) e.preventDefault();
+        }} />
+      <p className={stil.gizli} id="sc-mesaj-sira">{tanim.satirlar.map((x, i) => `${i + 1}. satır ${x.ad}`).join(", ")}; fazla satırlar nota eklenir; bilinmeyene tire.</p>
+    </div>
   );
 }
 
@@ -82,7 +134,11 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
   const [taslak, setTaslak] = useState<Taslak | null>(null);
   const [cihazIcerik, setCihazIcerik] = useState<Record<string, KayitGirdisi>>({});
   const [secim, setSecim] = useState<{ sekme: "plan" | "yeni"; ara: string } | null>(null);
-  const [etiket, setEtiket] = useState<{ dosya: File; okunuyor: boolean } | null>(null);
+  const [okunuyor, setOkunuyor] = useState(false);
+  /** büyük görüntü (542 "görüntüle"): bu cihazda seçilen (blob:) ya da sunucudaki fotoğraf */
+  const [goster, setGoster] = useState<{ url?: string; dosya?: string; ad: string } | null>(null);
+  const panel = useRef<HTMLElement>(null);
+  useGorunurAlan(panel, acik);
   const [konum, setKonum] = useState<{ right: number; bottom: number } | null>(null);
   /* 525: rapor yaz ekranı — ekipman kodları (yeni ekipman), kayıt başına hata, oluşan raporlar */
   const [raporEkrani, setRaporEkrani] = useState(false);
@@ -187,12 +243,12 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
   const yeniKayit = async (l: File[]) => {
     const y = await yerelHazirla(l, "ekipman", null, EKIPMAN_FOTO_EN_COK, EKIPMAN_SINIRI);
     if (!y.length) return;
-    setTaslak({ id: crypto.randomUUID(), yeni: true, surum: 0, ekipman: null, mesaj: [], tanim: null, tanimSurum: 0, fotolar: [], kaldir: [], yerel: y, okundu: [] });
+    setTaslak({ id: crypto.randomUUID(), yeni: true, surum: 0, ekipman: null, mesaj: [], tanim: null, tanimSurum: 0, fotolar: [], kaldir: [], yerel: y, okundu: {} });
     setSecim({ sekme: "plan", ara: "" });
   };
   const duzenle = (g: Gorunen) => {
     setTaslak({ id: g.id, yeni: !g.sunucuda, surum: g.surum, ekipman: g.ekipman, mesaj: [...g.mesaj], tanim: g.tanim, tanimSurum: g.tanimSurum,
-      fotolar: g.fotolar, kaldir: [], yerel: [], okundu: [] });
+      fotolar: g.fotolar, kaldir: [], yerel: [], okundu: {} });
     requestAnimationFrame(() => document.getElementById("sc-form-bas")?.focus());
   };
   const birak = (t: Taslak | null) => { for (const y of t?.yerel ?? []) URL.revokeObjectURL(y.url); };
@@ -208,14 +264,14 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
       const acikK = new Set(c.tanim.okunacak.filter((o) => o.acik).map((o) => o.k));
       const dusen = t.fotolar.filter((f) => f.rol === "okunacak" && !acikK.has(f.k ?? ""));
       return { ...t, ekipman: e, tanim: ayniTur ? t.tanim : c.tanim, tanimSurum: ayniTur ? t.tanimSurum : c.surum,
-        mesaj: ayniTur ? t.mesaj : c.tanim.satirlar.map((s) => s.hazir), okundu: ayniTur ? t.okundu : [],
+        mesaj: ayniTur ? t.mesaj : c.tanim.satirlar.map((s) => s.hazir), okundu: ayniTur ? t.okundu : {},
         fotolar: t.fotolar.filter((f) => !dusen.includes(f)), kaldir: [...t.kaldir, ...dusen.map((f) => f.dosya)],
         yerel: t.yerel.filter((y) => y.rol !== "okunacak" || acikK.has(y.k ?? "")) };
     });
     setSecim(null);
     bildir(`${ekipAd(e)} seçildi; yönerge türün ayarından geldi.`);
-    /* pencere kapanınca odağı açana döndürür; sonra ilk satıra */
-    setTimeout(() => document.getElementById("sc-s0")?.focus(), 80);
+    /* pencere kapanınca odağı açana döndürür; sonra mesaja (ilk satır) */
+    setTimeout(() => { const m = document.getElementById("sc-mesaj") as HTMLTextAreaElement | null; m?.focus(); m?.setSelectionRange(0, 0); }, 80);
   };
   const fotoEkle = async (l: File[], rol: "ekipman" | "okunacak", k: string | null) => {
     if (!taslak) return;
@@ -227,39 +283,54 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
   const yerelCikar = (a: number) => degis((t) => { const y = t.yerel.find((x) => x.anahtar === a); if (y) URL.revokeObjectURL(y.url); return { ...t, yerel: t.yerel.filter((x) => x.anahtar !== a) }; });
   const sunucuCikar = (d: string) => degis((t) => ({ ...t, fotolar: t.fotolar.filter((f) => f.dosya !== d), kaldir: [...t.kaldir, d] }));
 
-  /* etiket fotoğrafı: önce kota uyarısı; okununca boş (ya da hazır değeri değişmemiş) satırlara öneri */
+  /* etiket fotoğrafı (542): UYARISIZ eklenir (yenisi eskisinin yerine), kayıtla gider — bağlantı olmasa da; okuma isteğe bağlı ("Etiketten oku") */
   const etiketSec = async (l: File[]) => {
     if (!taslak) return;
-    /* etiket tektir: yenisi eskisinin yerine (yer hep 1) */
     const [y] = await yerelHazirla(l.slice(0, 1), "etiket", null, 1, "");
     if (!y) return;
-    degis((t) => ({ ...t, yerel: [...t.yerel.filter((x) => x.rol !== "etiket"), y], fotolar: t.fotolar.filter((x) => x.rol !== "etiket"),
-      kaldir: [...t.kaldir, ...t.fotolar.filter((x) => x.rol === "etiket").map((x) => x.dosya)] }));
-    setEtiket({ dosya: y.dosya, okunuyor: false });
+    degis((t) => {
+      for (const x of t.yerel) if (x.rol === "etiket") URL.revokeObjectURL(x.url);
+      return { ...t, yerel: [...t.yerel.filter((x) => x.rol !== "etiket"), y], fotolar: t.fotolar.filter((x) => x.rol !== "etiket"),
+        kaldir: [...t.kaldir, ...t.fotolar.filter((x) => x.rol === "etiket").map((x) => x.dosya)] };
+    });
   };
+  const etiketKaldir = () => degis((t) => {
+    for (const x of t.yerel) if (x.rol === "etiket") URL.revokeObjectURL(x.url);
+    return { ...t, yerel: t.yerel.filter((x) => x.rol !== "etiket"), fotolar: t.fotolar.filter((x) => x.rol !== "etiket"),
+      kaldir: [...t.kaldir, ...t.fotolar.filter((x) => x.rol === "etiket").map((x) => x.dosya)] };
+  });
+  /** etiketten oku: okunanlar mesajın BOŞ (ya da hazır değeri değişmemiş) satırlarına; yapay zekâ çağrısı sunucuda (firmanın kotası) */
   const etiketOku = async () => {
-    if (!etiket || !taslak?.tanim) return;
-    setEtiket({ ...etiket, okunuyor: true });
-    const fd = new FormData();
-    fd.set("foto", etiket.dosya); fd.set("plan", veri.plan.id); fd.set("satirlar", JSON.stringify(taslak.tanim.satirlar.map((s) => ({ ad: s.ad, alan: s.alan }))));
+    const t = taslak;
+    if (!t?.tanim || okunuyor) return;
+    const yerel = t.yerel.find((y) => y.rol === "etiket"), sunucu = t.fotolar.find((f) => f.rol === "etiket");
+    if (!yerel && !sunucu) return;
+    setOkunuyor(true);
     try {
+      let dosya: File;
+      if (yerel) dosya = yerel.dosya;
+      else {
+        const y = await fetch(`/api/dosya/${sunucu!.dosya}`, { credentials: "same-origin", cache: "no-store" });
+        if (!y.ok) { uyar("Etiket fotoğrafı açılamadı; sayfayı yenileyip yeniden deneyin."); return; }
+        dosya = new File([await y.blob()], sunucu!.ad, { type: y.headers.get("Content-Type") ?? "image/jpeg" });
+      }
+      const fd = new FormData();
+      fd.set("foto", dosya); fd.set("plan", veri.plan.id); fd.set("satirlar", JSON.stringify(t.tanim.satirlar.map((s) => ({ ad: s.ad, alan: s.alan }))));
       const r = await chatEtiketOkuEylemi(fd);
-      if (r.durum !== "tamam") { uyar(r.neden); setEtiket(null); return; }
-      degis((t) => {
-        const mesaj = [...t.mesaj], okundu = [...t.okundu];
+      if (r.durum !== "tamam") { uyar(r.neden); return; }
+      degis((x) => {
+        const mesaj = [...x.mesaj], okundu = { ...x.okundu };
         for (const o of r.okunan) {
-          const st = t.tanim?.satirlar[o.i];
+          const st = x.tanim?.satirlar[o.i];
           if (!st || st.alan === "yorum") continue;
           if (!bos(mesaj[o.i]) && mesaj[o.i] !== st.hazir) continue;
-          mesaj[o.i] = o.deger.slice(0, MESAJ_SATIR_EN_COK); if (!okundu.includes(o.i)) okundu.push(o.i);
+          while (mesaj.length < o.i) mesaj.push("");
+          mesaj[o.i] = o.deger.replace(/\s+/g, " ").slice(0, MESAJ_SATIR_EN_COK); okundu[o.i] = mesaj[o.i];
         }
-        return { ...t, mesaj, okundu };
+        return { ...x, mesaj, okundu };
       });
-      bildir(r.bildirim);
-    } catch { uyar("Okuma yapılamadı; bağlantıyı kontrol edip satırları elle yazın."); }
-    setEtiket(null);
-    /* pencere kapanınca odağı açana döndürür; sonra ilk satıra */
-    setTimeout(() => document.getElementById("sc-s0")?.focus(), 80);
+      bildir(r.okunan.length ? `Etiketten ${r.okunan.length} bilgi okundu; boş satırlara yazıldı.` : r.bildirim);
+    } catch { uyar("Okuma yapılamadı; bağlantıyı kontrol edip satırları elle yazın."); } finally { setOkunuyor(false); }
   };
 
   const gonder = async () => {
@@ -297,8 +368,10 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
 
   /* ── çizim ── */
   const fotolar = (t: Taslak, rol: FotoRolu, k: string | null) => [
-    ...t.fotolar.filter((f) => f.rol === rol && f.k === k).map((f) => <Foto key={f.dosya} f={{ dosya: f.dosya, ad: f.ad }} cikar={() => sunucuCikar(f.dosya)} />),
-    ...t.yerel.filter((y) => y.rol === rol && y.k === k).map((y) => <Foto key={y.anahtar} f={{ url: y.url, ad: y.dosya.name }} cikar={() => yerelCikar(y.anahtar)} />),
+    ...t.fotolar.filter((f) => f.rol === rol && f.k === k).map((f) => <Foto key={f.dosya} f={{ dosya: f.dosya, ad: f.ad }} cikar={() => sunucuCikar(f.dosya)}
+      ac={() => setGoster({ dosya: f.dosya, ad: f.ad })} />),
+    ...t.yerel.filter((y) => y.rol === rol && y.k === k).map((y) => <Foto key={y.anahtar} f={{ url: y.url, ad: y.dosya.name }} cikar={() => yerelCikar(y.anahtar)}
+      ac={() => setGoster({ url: y.url, ad: y.dosya.name })} />),
   ];
   const sohbet = (
     <>
@@ -306,7 +379,6 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
         {cevrimdisi && <Serit tur="uyari" ikon="wifi-off">Çevrimdışı · {bekleyenSayisi ? `${bekleyenSayisi} kayıt cihazda bekliyor; bağlantı gelince gider.` : "kayıtlar cihazda birikir, bağlantı gelince gider."}</Serit>}
         {gorunenler.length ? (
           <>
-            <p className={stil.ara}>Yalnız sizin bekleyen kayıtlarınız · raporu yazılanlar burada görünmez</p>
             <ol className={stil.liste} aria-label="Kayıtlar">
               {gorunenler.map((g) => {
                 const d = g.tanim ? dagit(g.tanim, g.mesaj) : null, turId = ekipmanTuru(g.ekipman), b = turId ? veri.turler[turId]?.basliklar ?? [] : [];
@@ -315,7 +387,8 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
                 const ekip = g.fotolar.filter((f) => f.rol === "ekipman");
                 return (
                   <li key={g.id} className={stil.kayit}>
-                    {ekip.length > 0 && <ul className={stil.fotolar} aria-label="Ekipman fotoğrafları">{ekip.slice(0, 4).map((f) => <Foto key={f.dosya} f={{ dosya: f.dosya, ad: f.ad }} />)}</ul>}
+                    {ekip.length > 0 && <ul className={stil.fotolar} aria-label="Ekipman fotoğrafları">{ekip.slice(0, 4).map((f) => (
+                      <Foto key={f.dosya} f={{ dosya: f.dosya, ad: f.ad }} ac={() => setGoster({ dosya: f.dosya, ad: f.ad })} />))}</ul>}
                     <p className={stil.kayitBas}><b>{ekipAd(g.ekipman)}</b></p>
                     {(ozet.length > 0 || d?.degerler.yorum) && (
                       <div className={stil.ozet}>
@@ -345,96 +418,82 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
             )}
           </>
         ) : (
-          <p className={stil.bosMetin}>Sahada her ekipman için bir kayıt: önce ekipmanın fotoğrafını ekleyin (çekin ya da galeriden seçin), sonra hangi ekipman olduğunu seçin ve yönergedeki sırayla
-            mesajı yazın. İnternet olmasa da kayıt cihazda birikir; sonra “Bekleyenler için rapor yaz” ile rapor taslakları oluşur.</p>
+          <p className={stil.bosMetin}>Her ekipman için: fotoğraf ekleyin, ekipmanı seçin, bilgileri satır satır yazın. İnternet yoksa kayıt cihazda bekler.</p>
         )}
       </div>
       <div className={stil.altP}>
         <div className={stil.yeni}>
           <FotoTusu ad="Fotoğraf ekle" ikon="camera" sinif={stil.birincil} id="sc-ilk" coklu sec={(l) => void yeniKayit(l)} />
-          <span className={stil.not}>Yeni kayıt: önce ekipmanın fotoğrafını çekin ya da galeriden seçin.</span>
         </div>
-        <p className={stil.not}>Bu sohbeti yalnız siz görürsünüz; plan sorumlusu, teknik yönetici ve yönetici görmez.</p>
       </div>
     </>
   );
 
   const form = taslak && (() => {
     const t = taslak, tur = ekipmanTuru(t.ekipman), c = tur ? veri.turler[tur] : null;
-    const d = t.tanim ? dagit(t.tanim, t.mesaj) : null;
-    const n = t.tanim ? Math.min(MESAJ_EN_COK, Math.max(t.tanim.satirlar.length, t.mesaj.length) + 1) : 0;
-    const etiketVar = t.fotolar.some((f) => f.rol === "etiket") || t.yerel.some((y) => y.rol === "etiket");
+    const etiketYerel = t.yerel.find((y) => y.rol === "etiket"), etiketSunucu = t.fotolar.find((f) => f.rol === "etiket");
+    const etiketVar = !!etiketYerel || !!etiketSunucu;
     return (
       <>
         <div className={stil.govdeP}>
-          <h3 className={stil.adim} id="sc-form-bas" tabIndex={-1}>{t.yeni && !veri.kayitlar.some((k) => k.id === t.id) ? "Yeni kayıt" : "Kaydı düzenle"} · {ekipAd(t.ekipman)}</h3>
-          <div className={stil.ekipman}>
-            <span><b>{ekipAd(t.ekipman)}</b><small>{!t.ekipman ? "Bu hangi ekipman? Seçin." : t.ekipman.tip === "plan" ? "plandan" : "rapor yazılırken plana eklenir; kodu o zaman yazılır"}</small></span>
-            <Tus tur="ikincil" ikon={t.ekipman ? "pencil" : "list-ordered"} onClick={() => setSecim({ sekme: t.ekipman?.tip === "yeni" ? "yeni" : "plan", ara: "" })}>
-              {t.ekipman ? "Değiştir" : "Ekipman seçin"}</Tus>
+          <h3 className={stil.gizli} id="sc-form-bas" tabIndex={-1}>{t.yeni && !veri.kayitlar.some((k) => k.id === t.id) ? "Yeni kayıt" : "Kaydı düzenle"} · {ekipAd(t.ekipman)}</h3>
+          {/* 542: satır satır — solda ad, sağda içerik; sabit yükseklik (yazdıkça ekran kaymaz) */}
+          <div className={stil.satirP}>
+            <span className={stil.satirAd}>Ekipman</span>
+            <div className={stil.ekipman}>
+              <b>{ekipAd(t.ekipman)}</b>
+              <Tus tur="ikincil" ikon={t.ekipman ? "pencil" : "list-ordered"} onClick={() => setSecim({ sekme: t.ekipman?.tip === "yeni" ? "yeni" : "plan", ara: "" })}>
+                {t.ekipman ? "Değiştir" : "Ekipman seçin"}</Tus>
+            </div>
           </div>
-          <p className={stil.ara}>Ekipman fotoğrafları</p>
-          <ul className={stil.fotolar} aria-label="Ekipman fotoğrafları">
-            {fotolar(t, "ekipman", null)}
-            <li><FotoTusu ad="+ ek" etiket="Ekipman fotoğrafı ekle" ikon="camera" sinif={stil.ekle} coklu sec={(l) => void fotoEkle(l, "ekipman", null)} /></li>
-          </ul>
-          {t.tanim && c && d && (
+          <div className={stil.satirP}>
+            <span className={stil.satirAd}>Fotoğraf</span>
+            <ul className={stil.fotolar} aria-label="Ekipman fotoğrafları">
+              {fotolar(t, "ekipman", null)}
+              <li><FotoTusu ad="" etiket="Ekipman fotoğrafı ekle" ikon="plus" sinif={stil.ekle} coklu sec={(l) => void fotoEkle(l, "ekipman", null)} /></li>
+            </ul>
+          </div>
+          {t.tanim && c && (
             <>
-              <div className={stil.yonerge}>
-                <p className={stil.ara}>Her satıra sırayla</p>
-                <ol>{t.tanim.satirlar.map((s, i) => <li key={i}>{s.ad}{s.hazir && <span className={stil.alt}> · {s.hazir}</span>}</li>)}</ol>
-                <FotoTusu ad={etiketVar ? "Etiket fotoğrafı · yeniden" : "Etiket fotoğrafı"} ikon="tag" sinif={stil.ikincil} sec={(l) => void etiketSec(l)} />
+              <div className={stil.satirP}>
+                <span className={stil.satirAd}>Etiket</span>
+                <div className={stil.etiket}>
+                  {etiketVar ? (
+                    <ul className={stil.fotolar} aria-label="Etiket fotoğrafı">
+                      {etiketYerel
+                        ? <Foto f={{ url: etiketYerel.url, ad: "Etiket fotoğrafı" }} ac={() => setGoster({ url: etiketYerel.url, ad: "Etiket fotoğrafı" })} cikar={etiketKaldir} />
+                        : <Foto f={{ dosya: etiketSunucu!.dosya, ad: "Etiket fotoğrafı" }} ac={() => setGoster({ dosya: etiketSunucu!.dosya, ad: "Etiket fotoğrafı" })} cikar={etiketKaldir} />}
+                    </ul>
+                  ) : <FotoTusu ad="" etiket="Etiket fotoğrafı ekle" ikon="tag" sinif={stil.ekle} sec={(l) => void etiketSec(l)} />}
+                  {etiketVar && (
+                    <div className={stil.etiketTus}>
+                      <Tus tur="ikincil" ikon="eye" onClick={() => setGoster(etiketYerel ? { url: etiketYerel.url, ad: "Etiket fotoğrafı" } : { dosya: etiketSunucu!.dosya, ad: "Etiket fotoğrafı" })}>Görüntüle</Tus>
+                      {veri.yz.hazir && !cevrimdisi && (
+                        <Tus tur="ikincil" ikon="sparkles" onClick={() => void etiketOku()} disabled={okunuyor} aria-busy={okunuyor || undefined}>
+                          {okunuyor ? "Okunuyor…" : "Etiketten oku"}</Tus>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
-              {etiketVar && <p className={stil.etiketDurum}><Ikon ad="tag" kucuk />Etiket fotoğrafı eklendi · rapora konmaz{t.okundu.length ? ` · ${t.okundu.length} satır okundu` : ""}</p>}
-              <p className={stil.ara} id="sc-mesaj-bas">Mesaj · etiket yazmayın; satır sırası yönergenin sırasıdır, bilinmeyene &quot;-&quot;</p>
-              <ol className={stil.mesaj} aria-labelledby="sc-mesaj-bas">
-                {Array.from({ length: n }, (_, i) => {
-                  const st = t.tanim!.satirlar[i], v = t.mesaj[i] ?? "", hz = !!st?.hazir && v === st.hazir, okd = t.okundu.includes(i);
-                  return (
-                    <li key={i}>
-                      <span className={stil.no} aria-hidden="true">{i + 1}</span>
-                      <input className={stil.girdi} id={`sc-s${i}`} autoComplete="off" maxLength={MESAJ_SATIR_EN_COK} value={v}
-                        aria-label={`${i + 1}. satır (${st ? st.ad : "nota eklenir"})`}
-                        onChange={(e) => degis((x) => { const m = [...x.mesaj]; while (m.length < i) m.push(""); m[i] = e.target.value; return { ...x, mesaj: m, okundu: x.okundu.filter((o) => o !== i) }; })} />
-                      {hz ? <Rozet tur="notr">hazır</Rozet> : okd ? <Rozet tur="kabul">okundu</Rozet> : null}
-                    </li>
-                  );
-                })}
-              </ol>
-              <ul className={stil.dagilim} aria-label="Satırların düştüğü alanlar">
-                {d.satirlar.map((s, i) => (
-                  <li key={i}><b>{i + 1}</b> {s.ad} {s.alan === "yorum" ? (s.deger ? "→ uzman yorumu" : "boş") : !s.deger ? "boş" : t.tanim!.satirlar[i]?.hazir === s.deger ? `${s.deger} · hazır` : <span className={stil.tamam}>✓</span>}</li>
-                ))}
-                {d.fazla.map((f, j) => <li key={`f${j}`}><b>{t.tanim!.satirlar.length + j + 1}</b> fazla satır → nota eklenir</li>)}
-              </ul>
-              <p className={stil.ara}>Yapay zekânın okuyacağı fotoğraflar</p>
-              {c.basliklar.length ? (
-                <>
-                  <ul className={stil.okuma}>
-                    {c.basliklar.map(([k, ad, ne]) => {
-                      const sayi = t.fotolar.filter((f) => f.rol === "okunacak" && f.k === k).length + t.yerel.filter((y) => y.rol === "okunacak" && y.k === k).length;
-                      return (
-                        <li key={k}>
-                          <div className={stil.okumaBas}>
-                            <span><b>{ad}</b><small>{ne} · {sayi ? `${sayi} fotoğraf` : "fotoğraf yok"}</small></span>
-                            <FotoTusu ad={sayi ? "Bir daha ekle" : "Fotoğraf ekle"} etiket={`${ad}: ${sayi ? "bir daha fotoğraf ekle" : "fotoğraf ekle"}`} ikon="camera"
-                              sinif={stil.ikincil} coklu sec={(l) => void fotoEkle(l, "okunacak", k)} />
-                          </div>
-                          {sayi > 0 && <ul className={stil.fotolar} aria-label={`${ad} fotoğrafları`}>{fotolar(t, "okunacak", k)}</ul>}
-                        </li>
-                      );
-                    })}
+              <MesajKutusu tanim={t.tanim} mesaj={t.mesaj} okundu={t.okundu}
+                degisti={(m) => degis((x) => ({ ...x, mesaj: m }))} />
+              {c.basliklar.map(([k, ad]) => (
+                <div key={k} className={stil.satirP}>
+                  <span className={stil.satirAd} title={ad}>{ad}</span>
+                  <ul className={stil.fotolar} aria-label={`${ad} fotoğrafları`}>
+                    {fotolar(t, "okunacak", k)}
+                    <li><FotoTusu ad="" etiket={`${ad}: fotoğraf ekle`} ikon="plus" sinif={stil.ekle} coklu sec={(l) => void fotoEkle(l, "okunacak", k)} /></li>
                   </ul>
-                  <Serit tur="bilgi" ikon="sparkles"><b>Rapor yazılırken yapay zekâ okur.</b> Değerler o bölüme öneri olarak düşer, siz onaylarsınız. Firmanın yapay zekâ kotasından harcar; çevrimdışıyken bekler. Bu fotoğraflar belgeye basılmaz.</Serit>
-                </>
-              ) : <p className={stil.not}>Bu türde okunacak fotoğraf başlığı yok (Ekipman türleri › S.A.Y Chat ayarları).</p>}
+                </div>
+              ))}
             </>
           )}
         </div>
         <div className={stil.altP}>
           <div className={stil.tuslar}>
             {veri.kayitlar.some((k) => k.id === t.id) || chatIsleri.some((x) => x.kayit === t.id)
-              ? <Tus tur="tehlike" ikon="trash-2" onClick={() => void kayitSil()}>Kaydı sil</Tus> : null}
+              ? <Tus tur="tehlike" ikon="trash-2" onClick={() => void kayitSil()} aria-label="Kaydı sil">Sil</Tus> : null}
             <Tus tur="ikincil" onClick={vazgec}>Vazgeç</Tus>
             <Tus ikon="send" onClick={() => void gonder()}>{t.yeni ? "Gönder" : "Kaydet"}</Tus>
           </div>
@@ -472,7 +531,7 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
     setYaziyor(null);
     setSonuclar(sonuc);
     router.refresh();
-    bildir(`${olan} rapor taslağı oluştu${okunan ? `, ${okunan} değer öneri olarak bekliyor` : ""}${olan < hazirlar.length ? `; ${hazirlar.length - olan} kayıt bekliyor` : ""}.`);
+    bildir(`${olan} rapor taslağı oluştu${okunan ? `, ${okunan} değer okundu` : ""}${olan < hazirlar.length ? `; ${hazirlar.length - olan} kayıt bekliyor` : ""}.`);
     requestAnimationFrame(() => document.getElementById("sc-rapor-sonuc")?.focus());
   };
   const olusanlar = Object.entries(sonuclar).filter(([, x]) => x.rapor);
@@ -483,8 +542,8 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
         <p className={stil.ara}>{veri.plan.no} · {hazirlar.length} kayıt</p>
         {olusanlar.length > 0 && (
           <div className={stil.sonuc} id="sc-rapor-sonuc" tabIndex={-1} role="status">
-            <p><b>{olusanlar.length} rapor taslağı oluştu.</b> Kriterleri ve ölçümleri raporda doldurursunuz; okunan değerler raporda öneri olarak bekler.</p>
-            <ul>{olusanlar.map(([k, x]) => <li key={k}><span>{x.rapor!.no}{x.okunan ? ` · ${x.okunan} değer öneri` : ""}</span><TusBaglanti href={`/raporlar/${x.rapor!.id}`} ikon="arrow-right">Raporu aç</TusBaglanti></li>)}</ul>
+            <p><b>{olusanlar.length} rapor taslağı oluştu.</b> Okunan değerler raporu açınca boş alanlara girer.</p>
+            <ul>{olusanlar.map(([k, x]) => <li key={k}><span>{x.rapor!.no}{x.okunan ? ` · ${x.okunan} değer okundu` : ""}</span><TusBaglanti href={`/raporlar/${x.rapor!.id}`} ikon="arrow-right">Raporu aç</TusBaglanti></li>)}</ul>
           </div>
         )}
         {hazirlar.length > 0 ? (
@@ -500,10 +559,10 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
                   <p className={stil.not}>{on.join(" · ")}</p>
                   {g.ekipman?.tip === "yeni" && (
                     <div className={stil.kod}>
-                      <label htmlFor={`sc-kod-${g.id}`}>Ekipman kodu <small>etiketteki; firmada eşsiz</small></label>
+                      <label htmlFor={`sc-kod-${g.id}`}>Ekipman kodu</label>
                       <input className={stil.girdi} id={`sc-kod-${g.id}`} maxLength={20} autoComplete="off" value={kodlar[g.id] ?? ""} aria-invalid={x?.kod || undefined}
                         aria-describedby={x?.neden ? `sc-kod-${g.id}-i` : undefined}
-                        onChange={(e) => { setKodlar((k) => ({ ...k, [g.id]: e.target.value.toLocaleUpperCase("tr") })); setSonuclar((s) => { const y = { ...s }; delete y[g.id]; return y; }); }} />
+                        onChange={(e) => { setKodlar((k) => ({ ...k, [g.id]: e.target.value.toUpperCase() }));   /* 540: kodda büyütme yerelden bağımsız (anayasa 5.5; ortak.ts ekipmanKodu ile aynı) */ setSonuclar((s) => { const y = { ...s }; delete y[g.id]; return y; }); }} />
                     </div>
                   )}
                   {x?.neden && <p className={stil.hata} id={`sc-kod-${g.id}-i`}>{x.neden}</p>}
@@ -523,7 +582,6 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
             ? `Yapay zekâ ${toplamOkuma} fotoğraf okuyacak: firmanın kotasından harcar (${veri.yz.kota})`
             : `Yapay zekâ kapalı: ${toplamOkuma} fotoğraf raporda saklanır, açılınca okunur`}</li>}
         </ul>
-        <p className={stil.not}>Taslaklar sırayla açılır; kriterleri ve ölçümleri raporda doldurursunuz. Raporu oluşan kayıtlar sohbetten silinir; etiket fotoğrafı rapora konmaz.</p>
         {yaziyor && <p className={stil.not} role="status">Oluşturuluyor: {yaziyor}</p>}
       </div>
       <div className={stil.altP}>
@@ -553,9 +611,9 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
         </button>
       )}
       {acik && (
-        <aside className={stil.panel} id="sc-panel" role="dialog" aria-labelledby="sc-baslik"
+        <aside ref={panel} className={stil.panel} id="sc-panel" role="dialog" aria-labelledby="sc-baslik"
           onKeyDown={(e) => {
-            if (e.key !== "Escape" || secim || etiket) return;
+            if (e.key !== "Escape" || secim || goster) return;
             e.stopPropagation();
             if (taslak) vazgec(); else if (raporEkrani && !yaziyor) setRaporEkrani(false); else kapat();
           }}>
@@ -600,16 +658,12 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
           ) : <p className={stil.not}>Branşınızda rapor formatı yayında tür yok.</p>
         )}
       </Pencere>
-      <Pencere acik={!!etiket} baslik="Etiketten okuma" onKapat={() => setEtiket(null)}
-        alt={<>
-          <Tus tur="ikincil" onClick={() => setEtiket(null)} data-ilk-odak="">Okumadan geç</Tus>
-          <Tus ikon="sparkles" onClick={() => void etiketOku()} disabled={!veri.yz.hazir || cevrimdisi || etiket?.okunuyor}>{etiket?.okunuyor ? "Okunuyor…" : "Oku ve mesaja yaz"}</Tus>
-        </>}>
-        <p>Etiket fotoğrafı eklendi. Yapay zekâ etiketi okuyup mesajın boş satırlarına yazabilir; siz kontrol edip değiştirirsiniz. Etiket fotoğrafı rapora konmaz.</p>
-        {veri.yz.hazir
-          ? <Serit tur="uyari" ikon="sparkles">Okuma yapay zekâ kullanır, firmanın kotasından harcar: {veri.yz.kota}.</Serit>
-          : <Serit tur="bilgi" ikon="info">Yapay zekâ firmada kapalı ya da anahtar girilmedi; satırları elle yazın.</Serit>}
-        {cevrimdisi && <Serit tur="uyari" ikon="wifi-off">Bağlantı yok: okuma bağlantı gelince yapılabilir. Fotoğraf kayıtla birlikte saklanır.</Serit>}
+      {/* 542: büyük görüntü (yapay zekâ okuyamazsa kişi kendisi okur) — bu cihazda seçilen ya da sunucudaki (yalnız sahibi açar) */}
+      <Pencere acik={!!goster} baslik={goster?.ad ?? "Fotoğraf"} onKapat={() => setGoster(null)} genis>
+        <div className={stil.buyuk}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {goster?.url ? <img src={goster.url} alt={goster.ad} /> : goster?.dosya ? <GizliResim dosyaId={goster.dosya} alt={goster.ad} className={stil.buyukResim} /> : null}
+        </div>
       </Pencere>
     </>
   );

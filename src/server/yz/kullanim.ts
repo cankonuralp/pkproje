@@ -53,13 +53,14 @@ export async function yzKendiAyi(db: Sorgulayici, ay: string): Promise<number> {
 }
 
 /** bir okuma: ayırma gerçek maliyetle kapanır (kişinin aylık kullanımı artar), okuma kaydedilir (aynı işlemde) */
-export async function yzOkumaYaz(db: Sorgulayici, o: { ay: string; ust: number; raporId: string; bolum: string; model: YzModel; oneri: OkunanSatir[]; giris: number; cikis: number; maliyet: number }): Promise<void> {
+/** 542: dosya — okunan fotoğraf raporun okuma fotoğrafıysa kimliği (göç 0089; okunmamış fotoğraflar bundan bilinir) */
+export async function yzOkumaYaz(db: Sorgulayici, o: { ay: string; ust: number; raporId: string; bolum: string; model: YzModel; oneri: OkunanSatir[]; giris: number; cikis: number; maliyet: number; dosya?: string | null }): Promise<void> {
   await db.sorgu(
     `INSERT INTO yz_kullanim (ay, okuma, maliyet) VALUES ($1, 1, $2)
      ON CONFLICT (firma_id, hesap_id, ay) DO UPDATE SET okuma = yz_kullanim.okuma + 1, maliyet = yz_kullanim.maliyet + EXCLUDED.maliyet,
        ayrilan = greatest(yz_kullanim.ayrilan - $3, 0)`, [o.ay, o.maliyet, o.ust]);
-  await db.sorgu("INSERT INTO yz_okuma (rapor_id, bolum, model, oneri, giris, cikis, maliyet) VALUES ($1, $2, $3, $4, $5, $6, $7)",
-    [o.raporId, o.bolum, o.model, JSON.stringify(o.oneri), o.giris, o.cikis, o.maliyet]);
+  await db.sorgu("INSERT INTO yz_okuma (rapor_id, bolum, model, oneri, giris, cikis, maliyet, dosya) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+    [o.raporId, o.bolum, o.model, JSON.stringify(o.oneri), o.giris, o.cikis, o.maliyet, o.dosya ?? null]);
 }
 
 /** S.A.Y (380): kuralla cevaplanan mesaj (yapay zekâ çağrısı yok, ücretsiz) — kişinin bu ayki mesaj sayısı artar */

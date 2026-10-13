@@ -120,7 +120,7 @@ export function ChatAyarlari({ ayar }: { ayar: SayChatAyari }) {
           </FormBolum>
           <FormBolum id="sca-oklar" baslik="Okunacak fotoğraflar (yapay zekâ)">
             <div className={stil.ic}>
-              <p className={stil.ipucu}>Kayıtta bu başlıklar altında fotoğraf eklenir (test tablosu, linye, ölçüm ekranı). Rapor yazılırken yapay zekâ okur, o bölümü öneri olarak doldurur. Başlıklar, rapor formatında fotoğraftan doldurması açık bölümlerden seçilir.</p>
+              <p className={stil.ipucu}>Kayıtta bu başlıklar altında fotoğraf eklenir (test tablosu, linye, ölçüm ekranı). Rapor yazılırken yapay zekâ okur, o bölümün boş alanlarına girer. Başlıklar, rapor formatında fotoğraftan doldurması açık bölümlerden seçilir.</p>
               {ok.length ? (
                 <ul className={stil.oklar}>
                   {ok.map((o) => { const b = basAd.get(o.k)!; return (

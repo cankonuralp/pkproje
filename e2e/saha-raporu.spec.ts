@@ -100,14 +100,16 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   const gun = bugunTr();
   await expect(zamanAlani(page, BASLANGIC).locator("input:not([data-parca])")).toHaveValue(gun);   // başlangıç rapor açılınca yazılır
 
-  /* 486 (reisim 2026-10-10: "yapay zekanın okuması için fotoğraf ekleme tuşu olsun … raporda gözükmesin"): yapay zekâ okuması kapalı — tuş yine
-     görünür; fotoğraf okunmadan rapora eklenir (belgede yok), nereden açılacağı yazar, "Oku" yok (yapay zekâ açılınca çıkar) */
+  /* 486 (reisim 2026-10-10: "yapay zekanın okuması için fotoğraf ekleme tuşu olsun … raporda gözükmesin"): tuş her zaman; fotoğraf okunmadan rapora
+     eklenir (belgede yok). 542 (reisim 2026-10-14: "oku tuşu olmayacak say asistandan gir", "küçük açıklamalar olmasın"): kısa bildirim, açıklama
+     satırı ve "Oku" yok — okuma S.A.Y'da ("Fotoğrafları oku ve gir"); Görüntüle · Sil */
   const ekipBolum = page.locator("#b-sabit-ekipman");
-  await expect(ekipBolum.getByText("Yapay zekâ okuması kapalı", { exact: false })).toBeVisible();
-  await ekipBolum.getByLabel(/: fotoğraf ekle \(yapay zekâ okur\)$/).setInputFiles({ name: "etiket.jpg", mimeType: "image/jpeg", buffer: Buffer.from(JPEG) });
-  await expect(page.getByText(/^Fotoğraf rapora eklendi \(belgede görünmez\)\./).first()).toBeVisible({ timeout: 30_000 });
+  await expect(ekipBolum.getByText("Yapay zekâ okuması kapalı", { exact: false })).toHaveCount(0);
+  await ekipBolum.getByLabel(/: fotoğraf ekle$/).setInputFiles({ name: "etiket.jpg", mimeType: "image/jpeg", buffer: Buffer.from(JPEG) });
+  await expect(page.getByText(/^Fotoğraf eklendi\.$/).first()).toBeVisible({ timeout: 30_000 });
   await expect(ekipBolum.getByRole("button", { name: /fotoğrafı\.jpg sil$/ })).toBeVisible({ timeout: 30_000 });
-  await expect(ekipBolum.getByRole("button", { name: /oku \(yapay zekâ\)$/ })).toHaveCount(0);
+  await expect(ekipBolum.getByRole("link", { name: "Görüntüle" })).toBeVisible();
+  await expect(ekipBolum.getByRole("button", { name: "Oku", exact: true })).toHaveCount(0);
 
   /* eksik rapor: Onaya gönder durur; format zorunluları ve türün gerekli ölçüm cihazı (ENGEL 5, ENGEL 2). 2026-10-12 (reisim: "onaya gönder diyince
      ekrana pop-up uyarı ekranı gelmesin. ilgili yere ekran kaysın zorunlu yerler doldurulmalıdır uyarısı kısa süreli ekranın üstünden belirsin

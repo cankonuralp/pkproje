@@ -53,7 +53,8 @@ test("2. zimmet teslimi eski capture'lı tek girdiye dönünce denetim yakalar (
 
 test("3. S.A.Y Chat'te bir tuş capture'lı etikete dönünce denetim yakalar (kilidin koruduğu açık)", () => {
   const ad = "src/modules/say-chat/ui/SayChat.tsx";
-  const k = bozukKaynaklar(ad, '<FotoTusu ad="+ ek" etiket="Ekipman fotoğrafı ekle" ikon="camera" sinif={stil.ekle} coklu sec={(l) => void fotoEkle(l, "ekipman", null)} />',
+  /* 2026-10-14 (542): S.A.Y Chat'in ekipman fotoğrafı tuşu küçük "+" kutusu (adı erişilebilir adda) */
+  const k = bozukKaynaklar(ad, '<FotoTusu ad="" etiket="Ekipman fotoğrafı ekle" ikon="plus" sinif={stil.ekle} coklu sec={(l) => void fotoEkle(l, "ekipman", null)} />',
     '<label className={stil.ekle}><input className={stil.gizli} type="file" accept="image/*" capture="environment" />+ ek</label>');
   assert.ok(fotoTuslari(k, FOTOTUSU, FOTO_TUSU_KULLANANLAR).length > 0, "bozuk: doğrudan girdi, denetim yakaladı");
 });

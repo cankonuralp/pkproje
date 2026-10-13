@@ -275,12 +275,16 @@ test("486: yapay zekâ kapalıyken fotoğraf okunmadan saklanır (belgede yok); 
   const gozle = SABLONLAR.ZPKR02.tanim.bolumler.find((b) => b.blok === "liste")!.id;
   assert.equal((await sakla(FA.den1, gozle)).durum, "gecersiz", "kontrol listesine okuma fotoğrafı eklenmez");
   const once = (await a(FA.den1, (db) => sahaRaporu(db, FA.den1, FA.rapor)))!.fotolar.length;
-  assert.match(tamam(await sakla(FA.den1)).bildirim, /belgede görünmez/);
+  /* 2026-10-14 (542; reisim: "oku tuşu olmayacak say asistandan gir"): fotoğraf her zaman okunmadan eklenir — bildirim kısa ("Oku" yok), eklenen
+     fotoğrafın kimliği döner (S.A.Y'a eklenen fotoğraf hemen okunur) */
+  const s1 = tamam(await sakla(FA.den1));
+  assert.equal(s1.bildirim, "Fotoğraf eklendi.");
   tamam(await sakla(FA.den1, "ekipman"));
   const fl = (await a(FA.den1, (db) => sahaRaporu(db, FA.den1, FA.rapor)))!.fotolar;
   assert.equal(fl.length, once + 2);
   const f = fl.find((x) => x.bolum === "linye" && x.okuma && !fl.slice(0, once).includes(x))!;
   assert.ok(f && fl.at(-1)!.bolum === "ekipman" && fl.at(-1)!.okuma, "okuma fotoğrafları bölümlerinde");
+  assert.equal("dosya" in s1 ? s1.dosya : null, f.dosya, "eklenen fotoğrafın kimliği döner");
   const belge = await a(FA.den1, (db) => raporBelgesiVerisi(db, depo, FA.den1, FA.rapor));
   assert.ok(belge && belge.belge.fotolar.length === 0, "okuma fotoğrafı belgede yok");
   /* kayıtlı fotoğrafın okunması: kapalıyken okunmaz; açılınca yalnız o bölümün okuma fotoğrafı, baytlar depodan (konum bilgisi yüklenirken silinmişti) */
@@ -292,9 +296,13 @@ test("486: yapay zekâ kapalıyken fotoğraf okunmadan saklanır (belgede yok); 
   assert.equal((await okut(FA.den2, f.dosya)).durum, "yok", "başka denetçi");
   const h = hazir(await okut(FA.den1, f.dosya));
   assert.equal(h.foto, null, "kayıtlı fotoğraf yeniden eklenmeyecek");
+  assert.equal(h.dosya, f.dosya, "542: okunan fotoğraf okuma kaydına yazılacak");
   const resim = Buffer.from((h.istek.govde as { messages: { content: { source?: { data: string } }[] }[] }).messages[0].content[0].source!.data, "base64").toString("latin1");
   assert.ok(resim.includes("goruntu-verisi") && !resim.includes("GPS-KONUM"), "depodaki (konumsuz) fotoğraf gönderildi");
+  assert.ok(!(await a(FA.den1, (db) => sahaRaporu(db, FA.den1, FA.rapor)))!.okunanFotolar.includes(f.dosya), "okunmadan önce okunmamış");
   const ku = await a(FA.den1, (db) => fotoOkuKullanimYaz(db, FA.rapor, h, cevap([{ no: "F7", guven: "yuksek" }])));
+  /* 542 (göç 0089): S.A.Y yalnız okunmamış fotoğrafları okur — okunan fotoğraf raporun görünümünde okunmuş sayılır */
+  assert.ok((await a(FA.den1, (db) => sahaRaporu(db, FA.den1, FA.rapor)))!.okunanFotolar.includes(f.dosya), "okunduktan sonra okunmuş");
   const k = tamam(await a(FA.den1, (db) => fotoOkuKaydet(db, depo, FA.den1, A, FA.rapor, h, ku)));
   assert.deepEqual([k.satirlar.length, k.fotoEklendi], [1, false]);
   assert.doesNotMatch(k.bildirim, /Fotoğraf rapora eklendi/);

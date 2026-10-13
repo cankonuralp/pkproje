@@ -1,23 +1,18 @@
 "use client";
-/* SAHA RAPORU · FOTOĞRAFTAN / EXCEL'DEN DOLDURMA (484; reisim 2026-10-10: "test tablosu olarak kullanılan yerlere excelden yükle ve fotoğraf ekleme
+/* SAHA RAPORU · FOTOĞRAF VE EXCEL'DEN DOLDURMA (484; reisim 2026-10-10: "test tablosu olarak kullanılan yerlere excelden yükle ve fotoğraf ekleme
    özelliği olsun fotoğraf eklenince belgede gözükmeyecek yapay zeka buradan okuma yapıp tabloyu dolduracak, aynı şekilde ekipman bilgilerinde de
    olsun bunu istediğim başlığa da ekleyebiliyim"). Formatta (kâğıtta bölüm ayarı — tanim.ts doldurma) açık bölümde:
-   · AlanOkuma — "Fotoğraftan doldur" (385'in "Etiketten oku"sunun genel hâli): ekipman bilgileri, bilgi bölümü, test değerleri; okunanlar ÖNERİ
-     kartında (emin olunanlar toplu, "Emin değil" tek tek), yazılanlar rapora ancak Kaydet ile geçer; fotoğraf rapora okuma fotoğrafı olarak eklenir
-     (belgede görünmez). Ölçüm tablosunda aynı iş FotoOkuma.tsx'te (satır satır).
+   · "Fotoğraf ekle" — bölümün BAŞLIK SATIRINDA (BaslikYuvasi.tsx; telefonda simge). 542 (reisim 2026-10-14: "oku tuşu olmayacak say asistandan gir
+     ve fotoğrafı okuyup ilgili yerlere girişleri yap diyeceğim ve yapacak", sunum 541 onaylı): fotoğraf OKUNMADAN rapora okuma fotoğrafı olarak
+     eklenir (belgede görünmez); bağlantı yoksa cihazda bekler, bağlantı gelince gider. Okuma S.A.Y'da: "Fotoğrafları oku ve gir" — okunmamış
+     fotoğraflar okunur, değerler boş alanlara girer (raporlar/say-doldur.ts). "Oku" tuşu, öneri kartı ve küçük açıklama satırları kalktı.
+   · OkumaFotolari — bölümün okuma fotoğrafları: Görüntüle · Sil (cihazda bekleyen "cihazda" yazar).
    · ExcelYukle — "Excel'den yükle" (.xlsx / .csv, tarayıcıda okunur; components/disa/oku.ts) + "Excel şablonu": tablo başlık satırıyla, alanlar
      "Alan | Değer" satırlarıyla eşlenir (doldur.ts); değer türüne uymuyorsa yazılmaz, eşleşmeyen sütun / alan söylenir.
-   · OkumaFotolari — okunan bölümün okuma fotoğrafları: Görüntüle · Oku · Sil (raporda kanıt; belgede yok).
-   Örnek raporda (format kurucusunun saha ekranı) fotoğraf okunmaz, ne olacağı söylenir; Excel çalışır (yalnız ekranda).
-   486 (reisim 2026-10-10: "linye girme tablo doldurma alanlarında nerde fotoğraf ekleme tuşu? … buralarda yapay zekanın okuması için fotoğraf
-   ekleme tuşu olsun yapay zeka okusun diye raporda gözükmesin"): "Fotoğraf ekle (yapay zekâ okur)" tuşu formatta açık bölümde HER ZAMAN — kip
-   (OkumaKipi; SahaRaporu kurar): "oku" firmada yapay zekâ açık → okur, öneri gelir · "sakla" kapalı → fotoğraf okunmadan rapora eklenir
-   (belgede görünmez), açılınca fotoğrafın "Oku"su okur · "deneme" örnek rapor. Eskiden kapalıyken tuş yerine yalnız not vardı (484): tuş
-   görünmüyordu. İş tablo ve alanlı bölümde ortak (useFotoEkle, FotoEkleTusu).
-   2026-10-12 (reisim: "o tuşun orada olmasını istiyorum, ekran daralınca logo olarak kalsın … ekipman bölümü içinde fotoğraf istenen yerlerde bu
-   şekilde olsun"): "Fotoğraf ekle (yapay zekâ okur)" bölümün BAŞLIK SATIRINDA (BaslikYuvasi.tsx); Excel tuşları bölümün içinde kalır. */
-import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
+   Örnek raporda (format kurucusunun saha ekranı) fotoğraf eklenmez, ne olacağı söylenir; Excel çalışır (yalnız ekranda). */
+import { useRef, useState, useSyncExternalStore, type ReactNode, type RefObject } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
+import { kuyrugaEkle, kuyrukAbone, kuyrukAnlik, kuyrukSunucuAnlik } from "../../../components/cevrimdisi/kuyruk";
 import { baytIndir } from "../../../components/disa/indir";
 import { tabloOku, TabloHatasi } from "../../../components/disa/oku";
 import { XLSX_TURU, xlsxBayt } from "../../../components/disa/xlsx";
@@ -30,169 +25,96 @@ import { Tus, tusSinifi } from "../../../components/tus/Tus";
 import tusStil from "../../../components/tus/Tus.module.css";
 import type { OkunacakAlan } from "../../../format/deger";
 import type { BolumOf } from "../../../format/tanim";
-import type { AlanOkunan } from "../../../server/yz/alanlar";
 import { alanExceli, alanSablonu, tabloExceli, tabloSablonu } from "../doldur";
+import { FOTO_KUYRUK_EN_BUYUK } from "../sema";
 import type { RaporFoto } from "../server/raporlar";
 import type { Baglam } from "./Bloklar";
 import { BaslikTusu, useBolumAc } from "./BaslikYuvasi";
-import type { RaporOnerisi } from "../server/oneri";
-import { alanOkuEylemi, fotoSilEylemi, okumaFotografiEkleEylemi, raporOneriKapatEylemi } from "./eylemler";
+import { fotoSilEylemi, okumaFotografiEkleEylemi } from "./eylemler";
 import stil from "./raporlar.module.css";
 
-const SURE_GOSTER_SN = 3;
 const dosyaAdi = (s: string) => s.replace(/[^\p{L}\p{N} ._-]/gu, "").trim().slice(0, 60) || "bolum";
+/** kuyruktaki okuma fotoğrafının adı (cihazda bekleyenler bölümün listesinde "cihazda" görünür) */
+export const OKUMA_KUYRUK_AD = "Okuma fotoğrafı";
 
-/** 486: fotoğraf ekleme kipi — "oku": firmada yapay zekâ açık, fotoğraf okunur · "sakla": kapalı, fotoğraf okunmadan saklanır (açılınca "Oku") ·
-    "deneme": format kurucusunun örnek raporu (ne olacağı söylenir) */
-export type OkumaKipi = "oku" | "sakla" | "deneme";
-const DENEME = "Örnek raporda fotoğraf eklenmez; gerçek raporda fotoğraf rapora eklenir (belgede görünmez), yapay zekâ okur, değerler öneri olarak gelir.";
+/** 542: fotoğraf ekleme kipi — "ekle": gerçek rapor (fotoğraf okunmadan eklenir) · "deneme": format kurucusunun örnek raporu (ne olacağı söylenir) */
+export type OkumaKipi = "ekle" | "deneme";
+const DENEME = "Örnek raporda fotoğraf eklenmez; gerçek raporda fotoğraf rapora eklenir (belgede görünmez), S.A.Y okuyup boş alanlara girer.";
+const metneCevir = (d: Blob) => new Promise<string>((coz, red) => {
+  const r = new FileReader();
+  r.onload = () => { const s = String(r.result); coz(s.slice(s.indexOf(",") + 1)); };
+  r.onerror = () => red(r.error ?? new Error("Fotoğraf okunamadı."));
+  r.readAsDataURL(d);
+});
 
-/** fotoğraf ekle / oku işi — tablo (FotoOkuma) ve alanlı bölüm (AlanOkuma) ortak. gonder: yeni fotoğraf (File) ya da raporun okuma fotoğrafı
-    (dosya kimliği — "Oku"). "oku" kipinde eylem okur, öneri `oneri`ye; "sakla"da fotoğraf okunmadan rapora eklenir; "deneme"de söylenir. */
-export function useFotoEkle<T>({ raporId, bolumId, kip, islem, elle, oku, oneri }: {
-  raporId: string; bolumId: string; kip: OkumaKipi; islem: Baglam["islem"]; elle: string;
-  oku: (f: FormData) => Promise<{ oneri?: T[]; bildirim?: string; genel?: string; yenile?: boolean }>;
-  /** okunan öneriler (boş değil); dönen false: gösterilecek öneri yok (odak tuşa döner) */
-  oneri: (l: T[]) => boolean;
-}) {
+/** fotoğraf ekle — tablo ve alanlı bölüm ortak: fotoğraf küçültülür, OKUNMADAN okuma fotoğrafı olarak eklenir; bağlantı yoksa (ya da istek ağda
+    düşerse) cihaz kuyruğuna girer (rapor.foto, okuma) ve bağlantı gelince gider */
+export function useFotoEkle({ v, bolumId, kip, islem }: { v: { id: string; surum: number; no: string }; bolumId: string; kip: OkumaKipi; islem: Baglam["islem"] }) {
   const bildir = useBildir();
   const girdi = useRef<HTMLInputElement>(null);
-  const [okunuyor, setOkunuyor] = useState(false);
-  const [sn, setSn] = useState(0);
-  useEffect(() => {
-    if (!okunuyor) return;
-    const bas = Date.now();
-    const zaman = setInterval(() => setSn(Math.floor((Date.now() - bas) / 1000)), 500);
-    return () => { clearInterval(zaman); setSn(0); };
-  }, [okunuyor]);
+  const [ekleniyor, setEkleniyor] = useState(false);
   const girdiyeDon = () => requestAnimationFrame(() => girdi.current?.focus());
-  const gonder = (k: File | string) => {
+  const kuyruga = async (d: File) => {
+    if (d.size > FOTO_KUYRUK_EN_BUYUK) { bildir("Fotoğraf bağlantısız eklenemeyecek kadar büyük (en çok 2 MB); bağlantı gelince ekleyin."); return; }
+    await kuyrugaEkle({ tur: "rapor.foto", kayit: v.id, surum: v.surum, girdi: { bolum: bolumId, madde: null, ad: d.name, veri: await metneCevir(d), okuma: true },
+      ad: `${OKUMA_KUYRUK_AD} · ${v.no} · ${d.name}`, yer: `${bolumId}|` });
+    bildir("Fotoğraf cihazda; bağlantı gelince eklenir.");
+  };
+  const gonder = (d: File) => {
     if (girdi.current) girdi.current.value = "";
-    if (okunuyor || islem.mesgul) return;
+    if (ekleniyor || islem.mesgul) return;
     if (kip === "deneme") { bildir(DENEME); return; }
-    if (typeof navigator !== "undefined" && navigator.onLine === false) { bildir(`Bağlantı yok: fotoğraf bağlantı gelince eklenir. ${elle}`); return; }
-    const sakla = kip === "sakla" && typeof k !== "string";
-    setOkunuyor(true);
-    bildir(sakla ? "Fotoğraf ekleniyor…" : "Fotoğraf okunuyor…");
+    setEkleniyor(true);
     islem.baslat(async () => {
       try {
+        const k = await fotografiKucult(d);
+        if (typeof navigator !== "undefined" && navigator.onLine === false) { await kuyruga(k); return; }
         const f = new FormData();
-        f.set("id", raporId); f.set("bolum", bolumId);
-        if (typeof k === "string") f.set("foto", k); else f.set("dosya", await fotografiKucult(k));
-        if (sakla) {
-          const r = await okumaFotografiEkleEylemi(f);
-          bildir(r.tamam ? r.bildirim ?? "Fotoğraf rapora eklendi (belgede görünmez)." : r.genel ?? Object.values(r.hatalar ?? {})[0] ?? "Fotoğraf eklenemedi.");
-          if (r.tamam) islem.yenile();
-          girdiyeDon();
-          return;
-        }
-        const r = await oku(f);
-        if (!r.oneri) { bildir(r.genel ?? `Fotoğraftan okunamadı. ${elle}`); girdiyeDon(); return; }
-        bildir(r.bildirim ?? "");
-        if (r.yenile) islem.yenile();
-        if (!r.oneri.length || !oneri(r.oneri)) girdiyeDon();
-      } catch {
-        bildir(`${sakla ? "Fotoğraf eklenemedi" : "Fotoğraftan okunamadı"}: bağlantı koptu ya da sunucu yanıt vermedi. ${elle}`);
-        girdiyeDon();
+        f.set("id", v.id); f.set("bolum", bolumId); f.set("dosya", k);
+        let r: Awaited<ReturnType<typeof okumaFotografiEkleEylemi>>;
+        try { r = await okumaFotografiEkleEylemi(f); } catch { await kuyruga(k); return; }
+        bildir(r.tamam ? r.bildirim ?? "Fotoğraf eklendi." : r.genel ?? Object.values(r.hatalar ?? {})[0] ?? "Fotoğraf eklenemedi.");
+        if (r.tamam) islem.yenile();
       } finally {
-        setOkunuyor(false);
+        setEkleniyor(false);
+        girdiyeDon();
       }
     });
   };
-  return { girdi, okunuyor, sn, gonder, girdiyeDon };
+  return { girdi, ekleniyor, gonder };
 }
 
-/** "Fotoğraf ekle (yapay zekâ okur)" — kamera ya da galeri; okunurken dönen simge + 3 sn sonra geçen süre (kalıp 12), odak girdide kalır.
-    2026-10-12 (reisim): bölümün başlık satırında (BaslikTusu); telefonda yazı gizlenir, simge kalır (ad girdinin aria-label'ında, ipucu title'da);
-    fotoğraf seçilince bölüm açılır (useBolumAc) — okunanlar / öneri kartı bölümün içinde */
-export function FotoEkleTusu({ baslik, girdi, okunuyor, sn, kip, mesgul, gonder }: {
-  baslik: string; girdi: RefObject<HTMLInputElement | null>; okunuyor: boolean; sn: number; kip: OkumaKipi; mesgul: boolean; gonder: (d: File) => void;
+/** "Fotoğraf ekle" — kamera ya da galeri; bölümün başlık satırında (BaslikTusu); telefonda yazı gizlenir, simge kalır (ad girdinin aria-label'ında);
+    fotoğraf seçilince bölüm açılır (useBolumAc) — eklenen fotoğraf bölümün içinde görünür */
+export function FotoEkleTusu({ baslik, girdi, ekleniyor, mesgul, gonder }: {
+  baslik: string; girdi: RefObject<HTMLInputElement | null>; ekleniyor: boolean; mesgul: boolean; gonder: (d: File) => void;
 }) {
   const ac = useBolumAc();
-  const kapali = (mesgul && !okunuyor) || undefined;
+  const kapali = (mesgul && !ekleniyor) || undefined;
   return (
     <BaslikTusu>
-      <label className={`${tusSinifi("ikincil", okunuyor ? tusStil.mesgul : undefined)} ${stil.fotoEkle}`} aria-disabled={kapali} title="Fotoğraf ekle (yapay zekâ okur)">
-        <input ref={girdi} type="file" accept="image/jpeg,image/png" className="gizli" aria-busy={okunuyor || undefined} aria-disabled={kapali}
-          aria-label={`${baslik}: fotoğraf ekle (yapay zekâ okur)`} onClick={(e) => { if (okunuyor || mesgul) e.preventDefault(); }}
+      <label className={`${tusSinifi("ikincil", ekleniyor ? tusStil.mesgul : undefined)} ${stil.fotoEkle}`} aria-disabled={kapali} title="Fotoğraf ekle">
+        <input ref={girdi} type="file" accept="image/jpeg,image/png" className="gizli" aria-busy={ekleniyor || undefined} aria-disabled={kapali}
+          aria-label={`${baslik}: fotoğraf ekle`} onClick={(e) => { if (ekleniyor || mesgul) e.preventDefault(); }}
           onChange={(e) => { const d = e.target.files?.[0]; if (d) { ac(); gonder(d); } }} />
-        {okunuyor ? <span className={tusStil.donen} aria-hidden="true" /> : <Ikon ad="camera" kucuk />}
-        <span className={stil.fotoYazi}>{okunuyor ? (kip === "sakla" ? "Ekleniyor…" : "Okunuyor…") : "Fotoğraf ekle (yapay zekâ okur)"}</span>
-        {okunuyor && sn >= SURE_GOSTER_SN && <span className={tusStil.sure}>{sn} sn</span>}
+        {ekleniyor ? <span className={tusStil.donen} aria-hidden="true" /> : <Ikon ad="camera" kucuk />}
+        <span className={stil.fotoYazi}>{ekleniyor ? "Ekleniyor…" : "Fotoğraf ekle"}</span>
       </label>
     </BaslikTusu>
   );
 }
 
-/** fotoğraftan doldur — bölümün alanları (ekranda satırı olanlar); yaz: okunan değeri alana yazar (Kaydet'e kadar ekranda) */
-export function AlanOkuma({ v, bolumId, baslik, alanlar, yaz, islem, kip, tuslar }: {
-  v: { id: string; surum: number; fotolar: RaporFoto[]; oneriler?: RaporOnerisi[] }; bolumId: string; baslik: string; alanlar: readonly Pick<OkunacakAlan, "id" | "ad">[];
-  yaz: (id: string, deger: string) => void; islem: Baglam["islem"]; kip: OkumaKipi; tuslar?: ReactNode;
+/** bölümün fotoğraf tuşu + okuma fotoğrafları (tablo ve alanlı bölüm ortak); tuslar: bölümün öteki tuşları (Excel …) */
+export function FotoBolumu({ v, bolumId, baslik, islem, kip, tuslar, cubuk }: {
+  v: { id: string; surum: number; no: string; fotolar: RaporFoto[] }; bolumId: string; baslik: string; islem: Baglam["islem"]; kip: OkumaKipi;
+  tuslar?: ReactNode; cubuk?: string;
 }) {
-  const bildir = useBildir();
-  const kart = useRef<HTMLDivElement>(null);
-  const ad = new Map(alanlar.map((a) => [a.id, a.ad]));
-  /* 525: S.A.Y Chat'ten rapor yazılırken okunan değerler bekliyorsa kart açık gelir; uygulanınca / bırakılınca bekleyen öneri kalkar */
-  const [oneri, setOneri] = useState<AlanOkunan[] | null>(() => {
-    const o = v.oneriler?.find((x) => x.bolum === bolumId && x.tur === "alan")?.okunan;
-    const l = Array.isArray(o) ? (o as AlanOkunan[]).filter((x) => x && ad.has(x.alan)) : [];
-    return l.length ? l : null;
-  });
-  const kalici = useRef(!!v.oneriler?.some((x) => x.bolum === bolumId && x.tur === "alan"));
-  /* yeni öneri gelince odak kartta — kart çizildikten sonra (385'teki ders: requestAnimationFrame bazen çizimden önce koşuyordu) */
-  const kartaOdak = useRef(false);
-  useEffect(() => {
-    if (!kartaOdak.current || !oneri) return;
-    kartaOdak.current = false;
-    kart.current?.focus();
-  }, [oneri]);
-  const f = useFotoEkle<AlanOkunan>({ raporId: v.id, bolumId, kip, islem, elle: "Bilgileri elle girebilirsiniz.",
-    oku: async (x) => { const r = await alanOkuEylemi(x); return { ...r, oneri: r.okunan }; },
-    /* ekranda satırı olmayan alan öneriye girmez */
-    oneri: (o) => { const l = o.filter((x) => ad.has(x.alan)); if (!l.length) return false; kartaOdak.current = true; setOneri(l); return true; } });
-  const kapat = () => {
-    setOneri(null); f.girdiyeDon();
-    if (kalici.current) { kalici.current = false; void raporOneriKapatEylemi(v.id, bolumId); }
-  };
-  const uygula = (secilen: AlanOkunan[]) => {
-    if (!oneri) return;
-    for (const x of secilen) yaz(x.alan, x.deger);
-    const kalan = oneri.filter((x) => !secilen.includes(x));
-    bildir(`${secilen.map((x) => ad.get(x.alan)).join(", ")} rapora yazıldı; kaydetmeyi unutmayın.${kalan.length ? " Emin olunmayanları tek tek kontrol edin." : ""}`);
-    if (!kalan.length) { kapat(); return; }
-    setOneri(kalan);
-    requestAnimationFrame(() => (kart.current?.querySelector<HTMLElement>("li button") ?? kart.current?.querySelector<HTMLElement>("button"))?.focus());
-  };
-  const emin = oneri ? oneri.filter((x) => x.guven !== "dusuk") : [];
-
+  const f = useFotoEkle({ v, bolumId, kip, islem });
   return (
     <>
-      {oneri && (
-        <div className={stil.oneriKart} ref={kart} tabIndex={-1} role="region" aria-label={`${baslik}: fotoğraftan okunan`}>
-          <p className={stil.oneriBas}><Ikon ad="camera" kucuk />Fotoğraftan okunan</p>
-          <ul className={stil.oneriListe}>
-            {oneri.map((x) => (
-              <li key={x.alan}>
-                <span className={stil.oneriAd}>{ad.get(x.alan)}: <b>{x.deger}</b></span>
-                <span className={stil.oneriSag}>
-                  {x.guven === "dusuk"
-                    ? <><Rozet tur="bekliyor">Emin değil</Rozet><Tus tur="ikincil" onClick={() => uygula([x])}>Uygula</Tus></>
-                    : <Rozet tur="notr">Öneri</Rozet>}
-                </span>
-              </li>
-            ))}
-          </ul>
-          <div className={stil.oneriTuslar}>
-            <Tus tur="ikincil" onClick={() => { bildir("Okunanlar uygulanmadı."); kapat(); }}>Vazgeç</Tus>
-            {emin.length > 0 && <Tus ikon="check" onClick={() => uygula(emin)}>Önerileri uygula ({emin.length})</Tus>}
-          </div>
-        </div>
-      )}
-      {/* 2026-10-12: fotoğraf tuşu bölümün başlığında; burada yalnız Excel tuşları */}
-      {!oneri && <FotoEkleTusu baslik={baslik} girdi={f.girdi} okunuyor={f.okunuyor} sn={f.sn} kip={kip} mesgul={islem.mesgul} gonder={f.gonder} />}
-      {!oneri && tuslar && <div className={stil.etiketCubuk}>{tuslar}</div>}
-      {kip === "sakla" && <OkumaNotu />}
-      <OkumaFotolari v={v} bolumId={bolumId} oku={false} islem={islem} okut={kip === "oku" && !oneri ? f.gonder : undefined} />
+      <FotoEkleTusu baslik={baslik} girdi={f.girdi} ekleniyor={f.ekleniyor} mesgul={islem.mesgul} gonder={f.gonder} />
+      {tuslar && <div className={cubuk ?? stil.etiketCubuk}>{tuslar}</div>}
+      <OkumaFotolari v={v} bolumId={bolumId} oku={false} islem={islem} />
     </>
   );
 }
@@ -241,16 +163,19 @@ export function ExcelYukle(p: { baslik: string; mesgul: boolean } & (
   );
 }
 
-/** okunan bölümün okuma fotoğrafları (belgede görünmez). okut (486): firmada yapay zekâ açıkken fotoğrafın "Oku"su — saklanan fotoğraf okunur */
-export function OkumaFotolari({ v, bolumId, oku, islem, okut }: {
-  v: { id: string; surum: number; fotolar: RaporFoto[] }; bolumId: string; oku: boolean; islem: Baglam["islem"]; okut?: (dosya: string) => void;
+/** bölümün okuma fotoğrafları (belgede görünmez): Görüntüle · Sil; cihazda bekleyenler "cihazda" (bağlantı gelince eklenir) */
+export function OkumaFotolari({ v, bolumId, oku, islem }: {
+  v: { id: string; surum: number; fotolar: RaporFoto[] }; bolumId: string; oku: boolean; islem: Baglam["islem"];
 }) {
   const bildir = useBildir();
   const onayla = useOnayla();
+  const kuyruk = useSyncExternalStore(kuyrukAbone, kuyrukAnlik, kuyrukSunucuAnlik);
   const l = v.fotolar.filter((f) => f.okuma && f.bolum === bolumId);
-  if (!l.length) return null;
+  const bekleyen = oku ? [] : kuyruk.isler.filter((x) => x.kayit === v.id && x.tur === "rapor.foto" && x.durum === "bekliyor" && x.yer === `${bolumId}|`
+    && x.ad.startsWith(OKUMA_KUYRUK_AD));
+  if (!l.length && !bekleyen.length) return null;
   const sil = async (f: RaporFoto) => {
-    if (!(await onayla({ baslik: "Okuma fotoğrafını sil", metin: `${f.ad} rapordan çıkarılır (okunan değerler kalır).`, tus: "Sil", tehlike: true }))) return;
+    if (!(await onayla({ baslik: "Fotoğrafı sil", metin: `${f.ad} rapordan çıkarılır (girilen değerler kalır).`, tus: "Sil", tehlike: true }))) return;
     islem.baslat(async () => {
       const r = await fotoSilEylemi(v.id, v.surum, f.dosya);
       bildir(r.tamam ? r.bildirim ?? "Fotoğraf silindi." : r.genel ?? "Fotoğraf silinemedi.");
@@ -258,33 +183,27 @@ export function OkumaFotolari({ v, bolumId, oku, islem, okut }: {
     });
   };
   return (
-    <div className={stil.okumaFoto}>
-      <p className={stil.ipucuMetin}><Ikon ad="camera" kucuk /> Okunan fotoğraf{l.length > 1 ? `lar (${l.length})` : ""} · raporda durur, belgede görünmez</p>
-      <ul className={stil.fotoListe}>
-        {l.map((f) => (
-          <li key={f.dosya}>
-            <span className={stil.fotoAd}>{f.ad}</span>
-            <span className={stil.fotoTuslar}>
-              <DosyaAcTusu dosyaId={f.dosya}>Görüntüle</DosyaAcTusu>
-              {!oku && okut && <Tus tur="ikincil" ikon="sparkles" disabled={islem.mesgul} aria-label={`${f.ad} oku (yapay zekâ)`} onClick={() => okut(f.dosya)}>Oku</Tus>}
-              {!oku && <Tus tur="ikincil" ikon="trash-2" disabled={islem.mesgul} aria-label={`${f.ad} sil`} onClick={() => void sil(f)}>Sil</Tus>}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <ul className={`${stil.fotoListe} ${stil.okumaFoto}`} aria-label="Okunacak fotoğraflar">
+      {l.map((f) => (
+        <li key={f.dosya}>
+          <span className={stil.fotoAd}><Ikon ad="camera" kucuk /> {f.ad}</span>
+          <span className={stil.fotoTuslar}>
+            <DosyaAcTusu dosyaId={f.dosya}>Görüntüle</DosyaAcTusu>
+            {!oku && <Tus tur="ikincil" ikon="trash-2" disabled={islem.mesgul} aria-label={`${f.ad} sil`} onClick={() => void sil(f)}>Sil</Tus>}
+          </span>
+        </li>
+      ))}
+      {bekleyen.map((x) => (
+        <li key={x.id}>
+          <span className={stil.fotoAd}><Ikon ad="wifi-off" kucuk /> {x.ad.split(" · ").pop()}</span>
+          <Rozet tur="bekliyor">cihazda</Rozet>
+        </li>
+      ))}
+    </ul>
   );
 }
 
-/** 486: yapay zekâ okuması kapalı (firmada kapalı ya da API anahtarı girilmemiş) — fotoğraf saklanır, okunmaz; nereden açılacağı */
-export function OkumaNotu() {
-  return (
-    <p className={stil.ipucuMetin}><Ikon ad="info" kucuk /> Yapay zekâ okuması kapalı (Firma ayarları › Yapay zekâ: açık olmalı ve API anahtarı girilmiş
-      olmalı): fotoğraf rapora eklenir (belgede görünmez), şimdi okunmaz; açılınca fotoğrafın yanındaki “Oku” ile okunur.</p>
-  );
-}
-
-/** alanlı bölümün (ekipman bilgileri, bilgi, test) doldurma çubuğu: formatın ayarına göre fotoğraftan doldur ve Excel; okuma fotoğrafları */
+/** alanlı bölümün (ekipman bilgileri, bilgi, test) doldurma çubuğu: formatın ayarına göre fotoğraf ekle ve Excel; okuma fotoğrafları */
 export function AlanDoldurma({ bag, bolumId, baslik, alanlar, ayar, yaz, dolu }: {
   bag: Baglam; bolumId: string; baslik: string; alanlar: readonly OkunacakAlan[]; ayar: { foto: boolean; excel: boolean };
   yaz: (id: string, deger: string) => void; dolu: (id: string) => boolean;
@@ -295,7 +214,7 @@ export function AlanDoldurma({ bag, bolumId, baslik, alanlar, ayar, yaz, dolu }:
   return (
     <div className={stil.doldurma}>
       {ayar.foto && bag.okumaKipi
-        ? <AlanOkuma v={bag.v} bolumId={bolumId} baslik={baslik} alanlar={alanlar} yaz={yaz} islem={bag.islem} kip={bag.okumaKipi} tuslar={excel} />
+        ? <FotoBolumu v={bag.v} bolumId={bolumId} baslik={baslik} islem={bag.islem} kip={bag.okumaKipi} tuslar={excel} />
         : <>{excel && <div className={stil.etiketCubuk}>{excel}</div>}<OkumaFotolari v={bag.v} bolumId={bolumId} oku={bag.oku} islem={bag.islem} /></>}
     </div>
   );

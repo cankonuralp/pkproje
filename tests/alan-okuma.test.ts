@@ -35,6 +35,9 @@ test("istek: fotoğraf + şema (alan kimlikleri), bölüm adı ve alanların tü
   assert.deepEqual(g.messages[0].content[0].source, { type: "base64", media_type: "image/png", data: Buffer.from([1, 2, 3]).toString("base64") });
   assert.match(g.messages[0].content[1].text!, /Bölüm: Ekipman bilgileri[\s\S]*imal: İmal yılı — yıl/);
   assert.doesNotMatch(JSON.stringify(g), /firma_adi|müşteri|unvan|@|sk-ant/i);
+  /* 542 (reisim 2026-10-14: "ingilizce olduğu için mi bilinmez okuyamıyor attığım etiketleri ai"): Türkçe olmayan etiket — anlam eşleşir */
+  const sistem = String(g.system);
+  for (const k of ["Türkçe DEĞİLDİR", "Manufacturer", "Serial No.", "S/N", "Year of manufacture", "Rated load", "Working pressure", "harf harf"]) assert.ok(sistem.includes(k), k);
 });
 
 test("cevap: alan başına ilki; bilinmeyen alan, boş / uzun değer, geçersiz / gelecek yıl atılır; güven bilinmiyorsa düşük", () => {

@@ -1,7 +1,8 @@
 /* NEREDEN GELDİ: 525 — S.A.Y Chat "Bekleyenler için rapor yaz" (pkproje §3.10 m.7, m.12, m.19, m.21–22; maket 521 ekran 10 — reisim 2026-10-13
    "onayılıyorum, yap bitir"). GERÇEK PostgreSQL, iki firma (göç 0086 rapor_oneri):
    · kayıt rapor taslağı olur: mesajın değerleri raporun alanlarına (biçime uymayan yazılmaz, adı söylenir), "-" boş kalır, not + fazla satır uzman
-     yorumuna; ekipman fotoğrafı raporun genel fotoğraf bölümüne, okunacak fotoğraf o bölüme OKUMA fotoğrafı olarak; etiket fotoğrafı rapora KONMAZ;
+     yorumuna; ekipman fotoğrafı raporun genel fotoğraf bölümüne, okunacak fotoğraf o bölüme OKUMA fotoğrafı olarak; etiket fotoğrafı (542) mesajda
+     boş bilgi kaldıysa raporun ekipman bilgilerine OKUMA fotoğrafı olarak (okunur, boş alanlara girer), hepsi doluysa konmaz;
      kayıt silinir, fotoğrafları çöpe; raporda "S.A.Y Chat kaydından oluşturuldu" bilgisi;
    · "Yeni ekle": kod bu anda istenir (boş / biçimsiz / kullanılmış red), ekipman plana eklenir, kullanım yeri mesajdan;
    · ekipman fotoğrafsız kayıt rapora dönüşmez; tamamlanmış planda rapor yok (519) — koşullarda söylenir;
@@ -74,7 +75,7 @@ async function kayitKur(ekipman: unknown, mesaj: string[], fotolar: ("ekipman" |
   return id;
 }
 
-test("plandaki ekipman: değerler alanlara (biçimsiz yazılmaz), not + fazla satır yoruma, fotoğraflar rapora (etiket hariç), kayıt silinir, bilgi şeridi", async () => {
+test("plandaki ekipman: değerler alanlara (biçimsiz yazılmaz), not + fazla satır yoruma, fotoğraflar rapora (boş bilgi varken etiket de), kayıt silinir, bilgi şeridi", async () => {
   /* ZPKR02 hazır satırları: Marka, Model, Seri no, İmal yılı, Kullanım yeri, Not */
   const k = await kayitKur({ tip: "plan", id: E1 }, ["Örnek Marka", "-", "SN-9", "19x9", "Bakım binası", "pano kapağı kilitsiz", "iç kapak yok"], ["ekipman", "etiket", "linye"]);
   const kayitDosyalari = (await ile(ELK, (db) => sayChatPaneli(db, ELK, PLAN)))!.kayitlar.find((x) => x.id === k)!.fotolar.map((f) => f.dosya);
@@ -85,14 +86,26 @@ test("plandaki ekipman: değerler alanlara (biçimsiz yazılmaz), not + fazla sa
   const v = (await ile(ELK, (db) => sahaRaporu(db, ELK, r.rapor.id)))!;
   assert.deepEqual([v.ekipmanBilgi.marka, v.ekipmanBilgi.model, v.ekipmanBilgi.seri, v.ekipmanBilgi.imal, v.ekipmanBilgi.konum], ["Örnek Marka", null, "SN-9", null, "Bakım binası"]);
   assert.equal(v.cevaplar.yorum, "pano kapağı kilitsiz\niç kapak yok");
-  assert.deepEqual(v.fotolar.map((f) => [f.bolum, !!f.okuma]), [["foto", false], ["linye", true]], "ekipman fotoğrafı genel bölüme, okunacak okuma fotoğrafı; etiket yok");
+  /* 2026-10-14 (542; reisim: "etiket fotoğrafını koysun daha sonra raporu gönderirken yapay zeka okuyacak"): mesajda boş bilgi (Model, İmal yılı) var →
+     etiket ekipman bilgilerine okuma fotoğrafı olarak (belgede yok); yapay zekâ kapalı — S.A.Y'a "oku ve gir" deyince okunur */
+  assert.deepEqual(v.fotolar.map((f) => [f.bolum, !!f.okuma]), [["foto", false], ["ekipman", true], ["linye", true]],
+    "ekipman fotoğrafı genel bölüme; etiket ekipman bilgilerine ve okunacak o bölüme okuma fotoğrafı");
+  assert.deepEqual(v.okunanFotolar, [], "okunmamış: S.A.Y okur");
   const bilgi = v.oneriler.find((o) => o.tur === "bilgi");
-  assert.match(String((bilgi?.okunan as { metin?: string })?.metin), /Mesajdan 4 bilgi geldi, 1 ekipman fotoğrafı rapora geçti\. Biçime uymadığı için yazılmayan: İmal yılı\. Okunacak fotoğraflar \(.*\) okuma fotoğrafı olarak saklandı/);
+  assert.match(String((bilgi?.okunan as { metin?: string })?.metin),
+    /Mesajdan 4 bilgi geldi, 1 ekipman fotoğrafı rapora geçti\. Biçime uymadığı için yazılmayan: İmal yılı\. Fotoğraflar \(etiket, .*\) rapora eklendi; S\.A\.Y'a “Fotoğrafları oku ve gir” deyince okunur\./);
   /* kayıt silindi, kaydın fotoğrafları çöpte (kopyaları raporda) */
   assert.ok(!(await ile(ELK, (db) => sayChatPaneli(db, ELK, PLAN)))!.kayitlar.some((x) => x.id === k));
   for (const d of kayitDosyalari) assert.equal(await ile(ELK, (db) => dosyaIndirilebilir(db, ELK, d, DOSYA_ERISIMI)), null);
   /* aynı kayıt ikinci kez yazılamaz */
   assert.equal((await ile(ELK, (db) => chatRaporYaz(db, depo, ELK, A, PLAN, { kayit: k, kod: null }))).durum, "hata");
+});
+
+test("542: mesajın bütün bilgileri doluysa etiket rapora konmaz (okunacak bir şey yok)", async () => {
+  const k = await kayitKur({ tip: "yeni", tur: EIT }, ["Dolu Marka", "DM-1", "SN-1", "2019", "Kazan dairesi"], ["ekipman", "etiket"]);
+  const r = tamam(await ile(ELK, (db) => chatRaporYaz(db, depo, ELK, A, PLAN, { kayit: k, kod: "EP-55" })));
+  const v = (await ile(ELK, (db) => sahaRaporu(db, ELK, r.rapor.id)))!;
+  assert.deepEqual(v.fotolar.map((f) => [f.bolum, !!f.okuma]), [["foto", false]], "etiket konmadı");
 });
 
 test("yeni ekipman: kod şart, biçim ve eşsizlik; plana eklenir; fotoğrafsız kayıt rapora dönüşmez", async () => {
