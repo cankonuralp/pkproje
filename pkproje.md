@@ -2473,6 +2473,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-13 (528): **527 YAYINDA** — göç yok (87 göç). main fbfed46; deneme makinesi 13/13 (yeni kilit say-chat-foto, olumsuz kanıt 4/4, uçtan uca üç
+  genişlik: menü, Esc, galeriden iki fotoğraf, metin dosyası eklenmez). Sağlık "tamam", duman **11/11**; son 1 saatte yeni hata kaydı yok (yalnız eski duyuru
+  zaman aşımı, dış site). Canlıda oturumla bakılamadı (giriş reisim'in) — ölçemedim. Reisim "S.A.Y Chat ayarlarını göremedim" dedi: bölüm tür sayfasında
+  (Ekipman türleri › tür › ölçüm cihazlarının altında, kapalı açılır bölüm); canlıda hiç ayar kaydı yok (0 — türler formattan hazır satırlarla). Kısayol
+  önerildi (tür sayfası üstünde "S.A.Y Chat" yüzü + S.A.Y Chat panelinden bağlantı) — reisim'in kararını bekliyor.
 - 2026-10-13 (527): **S.A.Y CHAT — FOTOĞRAF GALERİDEN / BİLGİSAYARDAN** (reisim: *"say chatte fotoğraf işaretine tıklayınca galeriden veya pc den de
   fotoğraf yükleyebilmek olsun"*; §3.10 m.25). Önce: dört fotoğraf tuşunun hepsi `capture="environment"` tek girdiydi — telefonda yalnız kamera açılıyordu
   (masaüstü tarayıcılar capture'ı genelde yok sayar; PC'de dosya penceresi açılıyordu). Şimdi her tuş `say-chat/ui/FotoTusu.tsx`: menü **Fotoğraf çek** ·
