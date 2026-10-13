@@ -16,11 +16,14 @@ test("parola: en az 10, harf ve rakam (karar 37)", () => {
   assert.equal(ileti(parola, "1234567890"), "En az 10 karakter; harf ve rakam içermeli.");
 });
 
-test("ekipman kodu: büyük harfe yerelden bağımsız, A–Z 0–9 tire 3–20; tireyle başlamaz / bitmez", () => {
+/* 2026-10-14 (reisim: "TÜRKÇE KARAKTER DE KABUL ETMİYOR ETMELİ"): Türkçe büyük harfler kodda; büyütme yine yerelden bağımsız (anayasa 5.5) */
+test("ekipman kodu: büyük harfe yerelden bağımsız, harf (Türkçe dahil) rakam tire 3–20; tireyle başlamaz / bitmez", () => {
   assert.equal(ok(ekipmanKodu, " kp-10 "), "KP-10");
-  assert.equal(ok(ekipmanKodu, "ki-10"), "KI-10");
+  assert.equal(ok(ekipmanKodu, "ki-10"), "KI-10", "i → I (Türkçe yerelde İ olmaz)");
+  assert.equal(ok(ekipmanKodu, "İM-01"), "İM-01", "İ yazılırsa kalır");
+  assert.equal(ok(ekipmanKodu, "şğç-ıöü"), "ŞĞÇ-IÖÜ");
   assert.equal(ileti(ekipmanKodu, ""), "Ekipman kodu boş");
-  for (const k of ["K", "-KP10", "KP10-", "KP--10", "KP_10", "Ş-10", "A".repeat(21)]) assert.equal(ileti(ekipmanKodu, k), "Kod: A–Z, 0–9, tire; 3–20 hane", k);
+  for (const k of ["K", "-KP10", "KP10-", "KP--10", "KP_10", "É-10", "KP 10", "A".repeat(21)]) assert.equal(ileti(ekipmanKodu, k), "Kod: harf, rakam, tire; 3–20 hane", k);
   assert.equal(ok(ekipmanKodu, "A".repeat(20)), "A".repeat(20));
 });
 
@@ -59,7 +62,7 @@ test("metin kırpılır; dogrula alan → ileti haritası verir, zod iletileri T
   assert.equal(r.tamam, false);
   if (r.tamam) return;
   assert.equal(r.hatalar.ad, "Ad yazılmalı.");
-  assert.equal(r.hatalar.kod, "Kod: A–Z, 0–9, tire; 3–20 hane");
+  assert.equal(r.hatalar.kod, "Kod: harf, rakam, tire; 3–20 hane");
   assert.match(r.hatalar.adet, /[ğüşıöçİ]|sayı|beklen/i);
   const iyi = dogrula(sema, { ad: " Örnek ", kod: "kp-1", adet: 2 });
   assert.deepEqual(iyi, { tamam: true, veri: { ad: "Örnek", kod: "KP-1", adet: 2 } });

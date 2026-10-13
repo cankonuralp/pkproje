@@ -204,7 +204,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
   /* yeni eklenen öğe / bölüm: adı yazma kipinde açılır */
   const [yeniId, setYeniId] = useState<string | null>(null);
   const onayla = useOnayla();
-  const duzen = raporDuzeni(t, false);
+  const duzen = raporDuzeni(t, false, false);   // 540: kurucu formatın kendisini (kayıttan alanlar dahil) gösterir
   const sira = (id: string) => t.bolumler.findIndex((b) => b.id === id);
   const ac = (key: string) => setAyar(ayar === key ? null : key);
   const gorunen = duzen.bolumler.map((x) => x.b.id);

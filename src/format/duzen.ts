@@ -12,7 +12,11 @@
      onun ekipman kaydına bağlı alanlarıdır). Tam bölümsüz eski formatta 2. bölümün sabit satırları: kod, tür ve formatın aynı adlı alanı
      olmayan marka, model, seri no, imal yılı, kullanım yeri, kullanım amacı (sabitEkipmanAlanlari) — belge ve saha ekranı aynı listeden.
    · 486: formatta ekipman bölümü kaldırıldıysa (gorunum.ekipman false — hata listesi 38) 2. bölüm yok: ekipman kodu ve türü 1. bölümde yazar,
-     cihaz bölümü 2, format bölümleri 2'den (cihazlıysa 3'ten) sonra numaralanır; ekipman adlı bilgi bölümleri sıradan bölümdür. */
+     cihaz bölümü 2, format bölümleri 2'den (cihazlıysa 3'ten) sonra numaralanır; ekipman adlı bilgi bölümleri sıradan bölümdür.
+   · 540 (reisim 2026-10-14, rapor ekranının görüntüsüyle: "SERİ NO BURADA DA VAR … DEĞİŞTİREMİYORUZ ? SAÇMA EKİPMAN BİLGİLERİNDEKİ HER ŞEY
+     DEĞİŞTİRİLEBİLİR OLMALI EKİPMAN KODU HARİÇ"): tam ekipman bölümünde KAYITTAN gelen kopyalar çizilmez (tamAlanlari) — ekipman kodu ve türü
+     2. bölümün sabit satırında zaten var; seri no ve kullanım yeri ekipman kaydına bağlı (raporda değiştirilebilir) alan olur, aynısı varsa çıkar.
+     Ekran ve belge aynı listeden; Format kurucu formatın kendisini gösterir (sade: false). */
 import { EKIPMAN_ALAN_ADI, type Bolum, type BolumOf, type EkipmanAlani, type FormatTanimi } from "./tanim.ts";
 
 const kucuk = (s: string) => s.toLocaleLowerCase("tr");
@@ -93,12 +97,30 @@ export function cihazBolumuEkle(t: FormatTanimi): FormatTanimi {
 /** Format kurucu açılırken: ekipman bölümü serbest (460), ölçüm cihazları bölümü var (459) */
 export const kurucuyaHazirla = (t: FormatTanimi): FormatTanimi => cihazBolumuEkle(ekipmanTamYap(t));
 
-/** cihazEk: formatta cihaz bölümü yok ama rapora cihaz eklendi (sabit "Ölçüm cihazları" bölümü) */
-export function raporDuzeni(t: FormatTanimi, cihazEk: boolean): RaporDuzeni {
+/* 540: tam ekipman bölümünde kayıttan gelen alanın karşılığı — null: 2. bölümün sabit satırında var (çizilmez) */
+const KAYITTAN_EKIPMAN: Partial<Record<string, EkipmanAlani | null>> = { ekipman_kodu: null, ekipman_adi: null, seri_no: "seri", kullanim_yeri: "konum" };
+/** 540: tam ekipman bölümünün raporda çizilen alanları — kayıttan gelen kod / tür çıkar; seri no ve kullanım yeri ekipman kaydına bağlı alan olur
+    (raporda değiştirilir), formatta aynı bağlı alan varsa çıkar. Öteki alanlar olduğu gibi, sırası korunur. */
+export function tamAlanlari(b: BolumOf<"bilgi">): BolumOf<"bilgi">["alanlar"] {
+  const bagli = new Set(b.alanlar.flatMap((a) => (a.ekipman ? [a.ekipman] : [])));
+  return b.alanlar.flatMap((a) => {
+    if (!a.kaynak || !(a.kaynak in KAYITTAN_EKIPMAN)) return [a];
+    const k = KAYITTAN_EKIPMAN[a.kaynak];
+    if (!k || bagli.has(k)) return [];
+    bagli.add(k);
+    return [{ id: a.id, ad: a.ad, tur: "metin" as const, zorunlu: false, kilit: a.kilit, ekipman: k }];
+  });
+}
+
+/** cihazEk: formatta cihaz bölümü yok ama rapora cihaz eklendi (sabit "Ölçüm cihazları" bölümü) · sade (540): tam ekipman bölümü raporda çizildiği
+    gibi (tamAlanlari) — rapor ekranı, belge, doldurma; Format kurucu formatın kendisini düzenler (false) */
+export function raporDuzeni(t: FormatTanimi, cihazEk: boolean, sade = true): RaporDuzeni {
   const ekipman = ekipmanBolumuVar(t);
-  const tam = ekipman ? tamBolum(t) : null;
-  const katilan = !ekipman ? [] : tam ? [tam] : t.bolumler.filter(ekipmanBolumuMu);
-  const kalan = t.bolumler.filter((b) => !katilan.includes(b as BolumOf<"bilgi">) && !kayittanBolumMu(b));
+  const tamHam = ekipman ? tamBolum(t) : null;
+  const tam = tamHam && sade ? { ...tamHam, alanlar: tamAlanlari(tamHam) } : tamHam;
+  const katilanHam = !ekipman ? [] : tamHam ? [tamHam] : t.bolumler.filter(ekipmanBolumuMu);
+  const katilan = tam ? [tam] : katilanHam;
+  const kalan = t.bolumler.filter((b) => !katilanHam.includes(b as BolumOf<"bilgi">) && !kayittanBolumMu(b));
   const sabit = (ekipman ? 2 : 1) + (cihazEk ? 1 : 0);
   let n = sabit, alt = 0, sonUst: string | null = null, anaVar = false;
   const bolumler = kalan.map((b): DuzenBolumu => {

@@ -17,10 +17,11 @@ type Satir = { id: string; kod: string; tur_id: string; tesis_id: string; konum:
 const SEC = "SELECT id::text, kod, tur_id::text, tesis_id::text, konum, seri, dis_kontrol::text, dis_sonuc, pasif, surum FROM ekipman";
 const ozet = (x: Satir): EkipmanOzeti => ({ id: x.id, kod: x.kod, turId: x.tur_id, tesisId: x.tesis_id, konum: x.konum, seri: x.seri, disKontrol: x.dis_kontrol, disSonuc: x.dis_sonuc, pasif: !!x.pasif, surum: x.surum });
 
-/** tesisin ekipmanları (pasifler dahil, işaretli). Yetki ÇAĞIRANDA. */
+/** tesisin ekipmanları (pasifler dahil, işaretli) — en son eklenen üstte (2026-10-14, reisim: "YENİ EKLENEN EKİPMANLAR HEP EN ÜSTTE OLSUN").
+    Yetki ÇAĞIRANDA. */
 export async function tesisEkipmanlari(db: Sorgulayici, tesisId: string): Promise<EkipmanOzeti[]> {
   if (!UUID.test(tesisId)) return [];
-  return (await db.sorgu<Satir>(`${SEC} WHERE tesis_id = $1 ORDER BY kod`, [tesisId])).rows.map(ozet);
+  return (await db.sorgu<Satir>(`${SEC} WHERE tesis_id = $1 ORDER BY olustu DESC, kod`, [tesisId])).rows.map(ozet);
 }
 
 /** kimlikleri verilen ekipmanlar (bu firmada olmayan görünmez). Yetki ÇAĞIRANDA. */

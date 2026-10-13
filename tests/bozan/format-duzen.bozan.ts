@@ -5,7 +5,8 @@
    3. Ekipman bölümü yalnız adından tanınınca ZPKR04 "Tesis bilgileri" 2. bölüme katılmaz, ayrı bölüm olur.
    4–5 (tests/ekipman-bolumu.test.ts, 460): eski format çevrilirken sabit satırlar bağlı alana dönmezse marka, model … belgeden düşer; 2. bölümde
    sabit satırı olan kayıttan alanlar çıkmazsa "Ekipman kodu" belgede iki kez basılır.
-   6 (tests/alt-baslik.test.ts, 461): alt başlık dalı kalkınca alt başlık ana numara alır, sonraki bölümlerin numarası kayar. */
+   6 (tests/alt-baslik.test.ts, 461): alt başlık dalı kalkınca alt başlık ana numara alır, sonraki bölümlerin numarası kayar.
+   7 (tests/ekipman-bolumu.test.ts "540"): raporun tam ekipman bölümü sadeleşmezse kayıttan seri no salt okunur kopya olarak ikinci kez çizilir. */
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -67,4 +68,11 @@ test("alt başlık dalı kalkınca 3.1 / 3.2 düz numara olur, sonraki ana böl�
   const m = await bozuk("if (!ust && b.alt && anaVar) { alt++; return { b, no: `${n}.${alt}`, ust: null }; }", "");
   const t = FormatTanimi.parse({ sema: 1, bolumler: [{ id: "a", ad: "A", blok: "not" }, { id: "b", ad: "B", blok: "not", alt: true }, { id: "c", ad: "C", blok: "not" }] });
   assert.deepEqual(m.raporDuzeni(t, false).bolumler.map((x) => x.no), ["3", "4", "5"], "bozuk: alt başlık ana numara aldı");
+});
+
+test("540: tam bölüm sadeleşmezse kayıttan seri no ikinci kez (salt okunur) çizilir", async () => {
+  const m = await bozuk("const tam = tamHam && sade ? { ...tamHam, alanlar: tamAlanlari(tamHam) } : tamHam;", "const tam = tamHam;");
+  const t = FormatTanimi.parse({ sema: 1, bolumler: [{ id: "ekipman", ad: "Ekipman bilgileri", blok: "bilgi", tam: true, alanlar: [
+    { id: "e_seri", ad: "Seri no", tur: "metin", ekipman: "seri" }, { id: "seri", ad: "Seri no", tur: "metin", kaynak: "seri_no" }] }] });
+  assert.equal(m.raporDuzeni(t, false).tam!.alanlar.filter((a) => a.ad === "Seri no").length, 2, "bozuk: seri no iki kez");
 });

@@ -22,11 +22,14 @@ export const eposta = z.preprocess((s) => (typeof s === "string" ? s.trim().toLo
 export const parola = z.string().min(10, "En az 10 karakter; harf ve rakam içermeli.").max(200)
   .refine((p) => /[A-Za-zÇĞİÖŞÜçğıöşü]/.test(p) && /\d/.test(p), "En az 10 karakter; harf ve rakam içermeli.");
 
-/** ekipman kodu (reisim: "ekipman kodu da yine eşsiz olmalı … personel el ile"; KOD-GECIS §3): A–Z 0–9 tire, 3–20, tireyle başlamaz /
- *  bitmez, çift tire yok. Büyük harfe yerelden bağımsız çevrilir (i → I; Türkçe İ A–Z dışında kalırdı). Maketteki denetimle aynı ileti. */
+/** ekipman kodu (reisim: "ekipman kodu da yine eşsiz olmalı … personel el ile"; KOD-GECIS §3): harf, rakam, tire; 3–20, tireyle başlamaz /
+ *  bitmez, çift tire yok. 2026-10-14 (reisim: "TÜRKÇE KARAKTER DE KABUL ETMİYOR ETMELİ"): Türkçe büyük harfler (Ç Ğ İ Ö Ş Ü) de. Büyük harfe
+ *  YERELDEN BAĞIMSIZ çevrilir (anayasa 5.5 — kimlik metin değildir): i → I, ı → I, ş → Ş …; İ yazılırsa İ kalır. Veritabanı kısıtı aynı (göç 0088). */
+export const KOD_HARFLERI = "A-ZÇĞİÖŞÜ0-9";
+export const EKIPMAN_KOD_BICIMI = /^[A-ZÇĞİÖŞÜ0-9](?:[A-ZÇĞİÖŞÜ0-9]|-(?=[A-ZÇĞİÖŞÜ0-9])){2,19}$/;
 export const ekipmanKodu = z.preprocess((s) => (typeof s === "string" ? s.trim().toUpperCase() : s),
   z.string({ error: "Ekipman kodu boş" }).min(1, "Ekipman kodu boş")
-    .regex(/^[A-Z0-9](?:[A-Z0-9]|-(?=[A-Z0-9])){2,19}$/, "Kod: A–Z, 0–9, tire; 3–20 hane"));
+    .regex(EKIPMAN_KOD_BICIMI, "Kod: harf, rakam, tire; 3–20 hane"));
 
 /** ölçüm cihazı kodu (maket Ölçüm cihazları): A–Z 0–9 tire, 3–12 */
 export const cihazKodu = z.preprocess((s) => (typeof s === "string" ? s.trim().toUpperCase() : s),

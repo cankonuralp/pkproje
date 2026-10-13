@@ -5,6 +5,7 @@
    kayıt sırasında düşmez. Dosya tarayıcıda okunur (src/components/disa/oku.ts); satırlar sunucuda YENİDEN denetlenir (istemciye güvenilmez). */
 import { IL_ILCE } from "../../tanim/iller.ts";
 import { TANIMLAR } from "../../tanim/veri.ts";
+import { EKIPMAN_KOD_BICIMI } from "../../sema/ortak.ts";
 
 export const IA_TURLER = ["musteri", "ekipman", "cihaz", "personel", "arac"] as const;
 export type IaTur = (typeof IA_TURLER)[number];
@@ -173,7 +174,7 @@ function ekipmanDenetle(h: string[], b: IaBilgi, onceki: IaSatir[]): Omit<IaSati
   const mb = musteriBul(b.musteriler.filter((x) => !x.pasif), mu), m = mb.m;
   const tesis = m ? b.tesisler.find((x) => !x.pasif && x.musteriId === m.id && tr(x.ad) === tr(te)) : undefined;
   const konum = temiz(h[4]), marka = temiz(h[5]), model = temiz(h[6]), seri = temiz(h[7]), yil = temiz(h[8]);
-  const neden = !kod ? "Ekipman kodu boş" : !/^[A-Z0-9](?:[A-Z0-9]|-(?=[A-Z0-9])){2,19}$/.test(kod) ? "Kod: A–Z, 0–9, tire; 3–20 hane"
+  const neden = !kod ? "Ekipman kodu boş" : !EKIPMAN_KOD_BICIMI.test(kod) ? "Kod: harf, rakam, tire; 3–20 hane"
     : b.ekipmanKodlari.includes(kod) ? "Bu kod kayıtlı" : onceki.some((o) => o.ok && o.kod === kod) ? "Dosyada aynı kod iki kez"
     : !tur ? "Ekipman türü bulunamadı" : mb.belirsiz ? BELIRSIZ : !tesis ? "Müşteri / tesis bulunamadı (önce müşterileri yükleyin)"
     : sinir(konum, 60, "Kullanım yeri") || sinir(marka, 60, "Marka") || sinir(model, 60, "Model") || sinir(seri, 30, "Seri no");

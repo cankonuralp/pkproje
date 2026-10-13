@@ -17,7 +17,7 @@
 .cubukIsaret { display: none; height: 32px; width: auto; }
 /* menüde bütün modüller (17) gruplar hâlinde; sığmayan yükseklikte YALNIZ menü kayar */
 /* alt pay: iPhone'un ev çubuğu (güvenli alan); menü kayarken arkadaki sayfa kaymaz (419) */
-.menu { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 4px 12px calc(12px + env(safe-area-inset-bottom, 0px)); scrollbar-width: thin; }
+.menu { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 4px 12px calc(12px + env(safe-area-inset-bottom, 0px)); }   /* kaydırma çubuğu görünmez: temel.css (2026-10-14) */
 .menuGrup { margin: 12px 0 4px; padding: 0 12px; font-size: var(--boy-etiket); font-weight: var(--kal-etiket); color: var(--cubuk-yazi2); letter-spacing: .02em; }
 .menu > div:first-of-type .menuGrup { margin-top: 12px; }
 .menuListe { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
@@ -106,7 +106,6 @@
   :global([data-menu="dar"]) .cubukBas { justify-content: center; padding: 0; }
   :global([data-menu="dar"]) .logo { display: none; }
   :global([data-menu="dar"]) .cubukIsaret { display: none; }   /* daralınca şeritte yalnız ☰ (maket 2026-10-03) */
-  :global([data-menu="dar"]) .menu { scrollbar-width: none; }
   :global([data-menu="dar"]) .menuGrup { height: 1px; margin: 8px 4px; padding: 0; overflow: hidden; font-size: 0; background: var(--cubuk-secili); }
   :global([data-menu="dar"]) .menuBaglanti { justify-content: center; gap: 0; padding: 0; }
   :global([data-menu="dar"]) .menuAd { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

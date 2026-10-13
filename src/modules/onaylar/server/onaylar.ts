@@ -104,7 +104,8 @@ export async function onayListeleri(db: Sorgulayici, kim: Kisi): Promise<OnayLis
   const hepsi = await raporOzetleri(db);
   const tum = yonetici ? hepsi.filter((r) => gorur(kim, r)) : [];
   const imzaBekleyen = hepsi.filter((r) => r.durum === "onaylandi" && !!r.hesapId && r.hesapId === kim.id && canDoEylem(kim, "rapor_son_imza", { sahip: r.hesapId }))
-    .sort((a, b) => (a.onay ?? "").localeCompare(b.onay ?? "")).map((r) => satir(kim, r, simdi));
+    /* 2026-10-14 (reisim: "HER ZAMAN EN SON EKLENEN RAPOR … EN ÜSTTE OLSUN"): en son oluşturulan üstte (Tüm raporlar gibi) */
+    .sort((a, b) => b.olustu.localeCompare(a.olustu)).map((r) => satir(kim, r, simdi));
   /* revize istekleri: görebildiği tamamlanan raporun şimdiki revizyonundaki bekleyen istek */
   const tamam = new Map(tum.filter((r) => r.durum === "imzali").map((r) => [r.id, r]));
   const ham = yonetici ? (await revizeIstekleri(db)).filter((x) => tamam.has(x.raporId)) : [];

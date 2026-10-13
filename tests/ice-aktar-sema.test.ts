@@ -72,7 +72,7 @@ test("ekipman: kod büyür (yerelden bağımsız), kayıtlı kod (eski kod dahil
   ]), b);
   assert.deepEqual(ozet(l), [
     [1, true, ""], [2, true, ""], [3, false, "Bu kod kayıtlı"], [4, false, "Ekipman türü bulunamadı"],
-    [5, false, "Müşteri / tesis bulunamadı (önce müşterileri yükleyin)"], [6, false, "Kod: A–Z, 0–9, tire; 3–20 hane"], [7, true, "imal yılı okunmadı, boş girer"],
+    [5, false, "Müşteri / tesis bulunamadı (önce müşterileri yükleyin)"], [6, false, "Kod: harf, rakam, tire; 3–20 hane"], [7, true, "imal yılı okunmadı, boş girer"],
     [8, false, "Dosyada aynı kod iki kez"],
   ]);
   assert.deepEqual(l[0].deger, { t: "ekipman", kod: "HT-2001", turId: "tur1", tesisId: "t1", konum: "Kompresör odası", marka: null, model: null, seri: null, imal: 2018 });

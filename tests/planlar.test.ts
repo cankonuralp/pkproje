@@ -173,7 +173,7 @@ test("PLAN değişmez alanlar: proje no ve tesis değişmez; bitiş başlangıç
   await assert.rejects(sql(A, "DELETE FROM plan WHERE id = $1", [r.id]), /permission denied|izin/i);
 });
 
-test("EKİPMAN KODU: firmada eşsiz; değiştirilen eski kod başkasına verilmez; biçim veritabanında da (A–Z 0–9 tire, 3–20); başka firmada serbest", async () => {
+test("EKİPMAN KODU: firmada eşsiz; değiştirilen eski kod başkasına verilmez; biçim veritabanında da (harf — Türkçe dahil —, rakam, tire, 3–20); başka firmada serbest", async () => {
   const ekle = (firma: string, f: Firma, kod: string) => sql<{ id: string }>(firma,
     "INSERT INTO ekipman (tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, $3, 'Deneme') RETURNING id::text", [f.tesis, f.tur, kod]);
   const x = (await ekle(A, FA, "HT-1001")).rows[0].id;
@@ -182,7 +182,9 @@ test("EKİPMAN KODU: firmada eşsiz; değiştirilen eski kod başkasına verilme
   await assert.rejects(ekle(A, FA, "HT-1001"), /başka bir ekipmana verilmiş/, "eski kod başkasına verilmez");
   await sql(A, "UPDATE ekipman SET kod = 'HT-1001' WHERE id = $1", [x]);
   assert.equal((await sql<{ kod: string }>(A, "SELECT kod FROM ekipman WHERE id = $1", [x])).rows[0].kod, "HT-1001", "ekipman kendi eski koduna dönebilir");
-  for (const kotu of ["-HT1", "HT1-", "HT--1", "ht-1", "AB", "A".repeat(21), "HT 1"]) await assert.rejects(ekle(A, FA, kotu), /check/i, kotu);
+  for (const kotu of ["-HT1", "HT1-", "HT--1", "ht-1", "AB", "A".repeat(21), "HT 1", "ş-01", "HT_1"]) await assert.rejects(ekle(A, FA, kotu), /check/i, kotu);
+  /* 2026-10-14 (göç 0088; reisim: "TÜRKÇE KARAKTER DE KABUL ETMİYOR ETMELİ"): Türkçe büyük harf veritabanında da geçer; İM-01 ile IM-01 ayrı kod */
+  for (const iyi of ["İM-01", "IM-01", "ŞĞÇ-ÖÜ1"]) assert.ok((await ekle(B, FB, iyi)).rowCount, iyi);   // B: A tesisinin ekipman sayısı aşağıda sayılıyor
   assert.ok((await ekle(B, FB, "HT-1001")).rowCount, "başka firmada aynı kod serbest");
   await assert.rejects(sql(A, "DELETE FROM ekipman WHERE id = $1", [x]), /permission denied|izin/i);
   await assert.rejects(sql(A, "DELETE FROM ekipman_kodu WHERE ekipman_id = $1", [x]), /permission denied|izin/i);

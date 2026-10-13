@@ -43,7 +43,7 @@ test("form alanı: hata altında, girdi geçersiz ve mesajına bağlı; uyarı k
   /* ileti ortak şemadan (src/sema/ortak.ts ekipmanKodu) — sunucuyla aynı kural */
   await kod.fill("k");
   await expect(kod).toHaveAttribute("aria-invalid", "true");
-  await expect(kod).toHaveAccessibleDescription("Kod: A–Z, 0–9, tire; 3–20 hane");
+  await expect(kod).toHaveAccessibleDescription("Kod: harf, rakam, tire; 3–20 hane");
   await kod.fill("kp-10");
   await expect(kod).not.toHaveAttribute("aria-invalid", "true");
   await expect(page.getByLabel("Seri no")).toHaveAccessibleDescription("Bu seri no başka bir kayıtta da var.");

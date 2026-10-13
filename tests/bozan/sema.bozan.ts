@@ -28,8 +28,15 @@ test("parola: rakam şartı kalkınca yalnız harfli parola geçer", async () =>
 });
 
 test("ekipman kodu: tire kuralı gevşeyince tireyle biten kod geçer", async () => {
-  const m = await bozuk("/^[A-Z0-9](?:[A-Z0-9]|-(?=[A-Z0-9])){2,19}$/", "/^[A-Z0-9-]{3,20}$/");
+  const m = await bozuk("/^[A-ZÇĞİÖŞÜ0-9](?:[A-ZÇĞİÖŞÜ0-9]|-(?=[A-ZÇĞİÖŞÜ0-9])){2,19}$/", "/^[A-ZÇĞİÖŞÜ0-9-]{3,20}$/");
   assert.equal(m.ekipmanKodu.safeParse("KP10-").success, true);
+});
+
+/* 2026-10-14: Türkçe harf kuralının olumsuz kanıtı — büyütme yerele bağlanınca (toLocaleUpperCase "tr") "ki-10" İ'li koda döner (anayasa 5.5) */
+test("ekipman kodu: büyütme Türkçe yerele bağlanınca i → İ olur", async () => {
+  const m = await bozuk('export const ekipmanKodu = z.preprocess((s) => (typeof s === "string" ? s.trim().toUpperCase() : s),',
+    'export const ekipmanKodu = z.preprocess((s) => (typeof s === "string" ? s.trim().toLocaleUpperCase("tr") : s),');
+  assert.equal(m.ekipmanKodu.parse("ki-10"), "Kİ-10", "bozuk: i → İ");
 });
 
 test("tutar: kuruş yerine lira tutulunca 1.234,56 → 123456 olmaz", async () => {

@@ -10,7 +10,7 @@ import { test } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { raporBelgesi } from "../src/belge/belge.ts";
 import { ornekBelge } from "../src/belge/ornek.ts";
-import { ekipmanTamYap, raporDuzeni, sabitEkipmanAlanlari } from "../src/format/duzen.ts";
+import { ekipmanTamYap, raporDuzeni, sabitEkipmanAlanlari, tamAlanlari } from "../src/format/duzen.ts";
 import { degerlendir, kilitDenetimi, yayinDenetimi } from "../src/format/motor.ts";
 import { bosFormat, grupFormati, SABLONLAR } from "../src/format/sablonlar.ts";
 import { Cevaplar, EKIPMAN_ALANLARI, FormatTanimi, type BolumOf, type FormatGirdisi } from "../src/format/tanim.ts";
@@ -127,3 +127,27 @@ test("486: ekipman bölümünün tamamı silinir — belgede 2. bölüm yok, kod
   assert.ok(kilitDenetimi(sil, SABLONLAR.ZPKR01.tanim).length > 0);
 });
 
+/* NEREDEN GELDİ: 540 — reisim 2026-10-14 (rapor ekranının görüntüsüyle): "SERİ NO BURADA DA VAR MESELA İLKİNDE GİRİP SONRA BURADA DEĞİŞTİREMİYİORUZ ?
+   SAÇMA EKİPMAN BİLGİLERİNDEKİ HER ŞEY DEĞİŞTİRİLEBİLİR OLMALI EKİPMAN KODU HARİÇ". Canlıdaki formatın tam ekipman bölümünde bağlı alanların yanında
+   kayıttan gelen kopyalar (ekipman kodu, seri no, kullanım yeri — salt okunur) da vardı. */
+test("540: tam bölümde kayıttan kopyalar çizilmez — kod / tür çıkar, seri no ve kullanım yeri bağlı (değiştirilebilir) alan olur, aynısı varsa çıkar", () => {
+  let t = grupFormati({ ad: "Transpalet", grup: "kaldirma" });
+  const i = t.bolumler.findIndex((b) => b.blok === "bilgi" && b.tam);
+  t = ogeSil(t, i, "e_konum");
+  t = FormatTanimi.parse({ ...t, bolumler: t.bolumler.map((b, j) => (j === i && b.blok === "bilgi" ? { ...b, alanlar: [...b.alanlar,
+    { id: "kodu", ad: "Ekipman kodu", tur: "metin", kaynak: "ekipman_kodu" }, { id: "seri", ad: "Seri no", tur: "metin", kaynak: "seri_no" },
+    { id: "yer", ad: "Kullanım yeri", tur: "metin", kaynak: "kullanim_yeri", kilit: true }] } : b)) });
+  const ham = raporDuzeni(t, false, false).tam!.alanlar, sade = raporDuzeni(t, false).tam!.alanlar;
+  assert.ok(ham.some((a) => a.kaynak === "seri_no"), "Format kurucu formatın kendisini görür");
+  assert.deepEqual(sade.filter((a) => a.kaynak), [], "raporda kayıttan kopya yok");
+  assert.equal(sade.filter((a) => a.ekipman === "seri").length, 1, "seri no bir kez (bağlı alan)");
+  assert.deepEqual(sade.find((a) => a.id === "yer"), { id: "yer", ad: "Kullanım yeri", tur: "metin", zorunlu: false, kilit: true, ekipman: "konum" }, "kullanım yeri değiştirilebilir");
+  assert.deepEqual(tamAlanlari(tamBolumu(t)), sade);
+  assert.ok(ekipmanAlanlari(t).alanlar.some((a) => a.id === "konum"), "fotoğraftan / Excel'den doldurulur");
+  /* belgede de: 2. bölümde ekipman kodu ve seri no birer kez, kullanım yeri raporun ekipman bilgisinden */
+  const m = belgeMetni(t);
+  const iki = m.slice(m.indexOf("2. Ekipman bilgileri"), m.indexOf("3. "));
+  assert.equal(iki.split("Seri no").length - 1, 1, iki);
+  assert.equal(iki.split("Ekipman kodu").length - 1, 1, iki);
+  assert.match(iki, /Kullanım yeri Deneme yeri/);
+});

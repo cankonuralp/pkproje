@@ -2479,6 +2479,20 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-14 (540): **DÜZELTMELER: EKİPMAN KODU TÜRKÇE HARF, EKİPMAN EKLE'DE SERİ NO YOK, EN YENİ ÜSTTE, KAYDIRMA ÇUBUĞU YOK, EKİPMAN BİLGİLERİ TEK
+  VE DEĞİŞTİRİLEBİLİR** (reisim, canlı ekranların görüntüleriyle: *"BURADA SERİ NO SORMASIN ETİKETTEN OKUMA VS YAPILACAK SONUÇTA, TÜRKÇE KARAKTER DE
+  KABUL ETMİYOR ETMELİ. YENİ EKLENEN EKİPMANLAR HEP EN ÜSTTE OLSUN, HER ZAMAN EN SON EKLENEN RAPOR VE EKİPMANLAR EN ÜSTTE OLSUN"* · *"SERİ NO BURADA DA
+  VAR MESELA İLKİNDE GİRİP SONRA BURADA DEĞİŞTİREMİYİORUZ ? SAÇMA EKİPMAN BİLGİLERİNDEKİ HER ŞEY DEĞİŞTİRİLEBİLİR OLMALI EKİPMAN KODU HARİÇ"* ·
+  *"KAYDIRMA ÇUBUĞU ÇOK BOKTAN KALDIR ŞUNU"*). (1) Ekipman kodunda Türkçe büyük harfler (Ç Ğ İ Ö Ş Ü) geçer — ekranda, sunucuda, Excel'de, toplu içe
+  aktarmada ve veritabanında aynı kural (src/sema/ortak.ts EKIPMAN_KOD_BICIMI; göç 0088); büyütme yerelden bağımsız (anayasa 5.5: i → I, ı → I,
+  ş → Ş; İ yazılırsa İ kalır; İM-01 ile IM-01 ayrı kod). Ölçüm cihazı ve demirbaş kodu değişmedi (istenmedi). (2) Plan içi "Ekipman ekle"de seri no
+  sorulmaz (raporda etiketten girilir). (3) Plandaki ekipmanlar plana en son eklenen üstte; tesisin kayıtlı ekipmanları (Plan aç, Ekipman ekle,
+  müşteri kartı) en son eklenen üstte; Onaylar › İmzamı bekleyen en yeni üstte (Raporlar listesi ve plan içi raporlar zaten öyleydi). (4) Kaydırma
+  çubukları görünmez (sayfa, yan menü, pencere, liste; kaydırma çalışır — temel.css). (5) Raporun ekipman bilgilerinde kayıttan gelen kopyalar
+  çizilmez: ekipman kodu ve türü sabit satırda, seri no ve kullanım yeri değiştirilebilir alan olur, aynısı varsa çıkar — ekran, belge ve
+  fotoğraftan / Excel'den doldurma aynı listeden (format/duzen.ts tamAlanlari; Format kurucu formatın kendisini gösterir). Canlıdaki Transpalet
+  formatında seri no ve kullanım yeri ikişer kez (biri salt okunur) çıkıyordu. Makette eski kod kuralı yazıyor (maket.js, maket-veri.js; değişmedi).
+  Fotoğraftan okuma ve S.A.Y'ın alanlara girmesi ayrı sunumda (541).
 - 2026-10-14 (539): **FİRMA AYARLARI YENİ TASARIM — MAKET (ONAY BEKLİYOR)** (reisim, canlı ekranın görüntüsüyle: *"burası ne ? sadece açıklama var çok
   saçma bi ekran??????? ayrıca ekranda mesela raporların ikinci kopyaso ekranında açı kkapalıyı seçince ekran komple kayıyo yani böyle bir tasarım
   sürdürülebiliri değil daha doğru bi tasarım olmalı ve raporların ikinci kopyası değl yedek olarak görülmeli çok fazla yazı var ve kafa karıştırıcı bu

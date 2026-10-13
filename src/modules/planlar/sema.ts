@@ -172,18 +172,20 @@ export const KunyeGirdisi = z.object({
 });
 export type KunyeGirdisi = z.output<typeof KunyeGirdisi>;
 
-/** ekipman kodu yazarken: boşluk atılır, küçük harf büyüğe (yalnız a–z; dile bağlı harf katlama yok, anayasa 5.5) */
-export const kodNormal = (v: string) => v.replace(/\s+/g, "").replace(/[a-z]/g, (c) => c.toUpperCase());
+/** ekipman kodu yazarken: boşluk atılır, küçük harf büyüğe — yerelden bağımsız (anayasa 5.5: i → I, ı → I, ş → Ş; İ yazılırsa İ kalır).
+    2026-10-14 (reisim: "TÜRKÇE KARAKTER DE KABUL ETMİYOR ETMELİ"): Türkçe harfler kodda kalır (src/sema/ortak.ts EKIPMAN_KOD_BICIMI) */
+export const kodNormal = (v: string) => v.replace(/\s+/g, "").toUpperCase();
 export type KodTuru = "bos" | "hata" | "tamam" | "tesiste";
 /** kodun biçimi (maket kodDurum ilk dört satır); biçim uygunsa null — eşsizlik sunucuda */
 export function kodBicimi(kod: string): { tur: KodTuru; metin: string } | null {
-  if (!kod) return { tur: "bos", metin: "Etiketteki kodu yazın: harf (A–Z), rakam ve tire. Kod firmada eşsiz olmalı." };
-  if (/[^A-Z0-9-]/.test(kod)) return { tur: "hata", metin: "Kodda yalnız A–Z, 0–9 ve tire olabilir (Türkçe harf ve boşluk yok)." };
+  if (!kod) return { tur: "bos", metin: "Etiketteki kodu yazın: harf, rakam ve tire. Kod firmada eşsiz olmalı." };
+  if (/[^A-ZÇĞİÖŞÜ0-9-]/.test(kod)) return { tur: "hata", metin: "Kodda yalnız harf, rakam ve tire olabilir (boşluk ve işaret yok)." };
   if (kod.length < 3 || kod.length > 20) return { tur: "hata", metin: "Kod 3 ile 20 hane arasında olmalı." };
-  if (!/^[A-Z0-9]+(-[A-Z0-9]+)*$/.test(kod)) return { tur: "hata", metin: "Tire başta, sonda ya da art arda olamaz." };
+  if (!/^[A-ZÇĞİÖŞÜ0-9]+(-[A-ZÇĞİÖŞÜ0-9]+)*$/.test(kod)) return { tur: "hata", metin: "Tire başta, sonda ya da art arda olamaz." };
   return null;
 }
-/** yeni ekipman (maket ekleCiz "Yeni ekipman"): kod + tür zorunlu; seri no, konum isteğe bağlı */
+/** yeni ekipman (maket ekleCiz "Yeni ekipman"): kod + tür zorunlu; konum isteğe bağlı. 2026-10-14 (reisim: "BURADA SERİ NO SORMASIN ETİKETTEN
+    OKUMA VS YAPILACAK SONUÇTA"): ekranda seri no sorulmaz (raporda etiketten girilir); şema eski istemci için kabul eder */
 export const YeniEkipmanGirdisi = z.object({
   kod: z.preprocess((s) => (typeof s === "string" ? kodNormal(s) : s), z.string({ error: "Ekipman kodu boş" })
     .superRefine((k, bag) => { const b = kodBicimi(k); if (b) bag.addIssue({ code: "custom", message: b.metin }); })),

@@ -10,7 +10,9 @@
    405 (ARKA-UC §4.1): bağlantı yokken (ya da istek ağda düşerse) Rapor oluştur, cihaza önceden inen yeni rapor sayfasını açar
    (/raporlar/yeni/<plan>#<ekipman>); bu ekipmana cihazda açılmış, henüz gitmemiş rapor varsa tuş "Cihazdaki rapor".
    Ekipman ekle iki yol: YENİ (kodu personel etiketten yazar; yazarken denetlenir: bu planda var · bu tesiste kayıtlı → "Kayıtlı ekipmanı seç" ·
-   başka tesiste · eski kod · kullanılabilir) ya da TESİSTE KAYITLI ekipmanı plana al. Eşsizlik sunucuda ve veritabanında da.
+   başka tesiste · eski kod · kullanılabilir) ya da TESİSTE KAYITLI ekipmanı plana al. Eşsizlik sunucuda ve veritabanında da. 2026-10-14 (reisim:
+   "BURADA SERİ NO SORMASIN ETİKETTEN OKUMA VS YAPILACAK SONUÇTA"): seri no sorulmaz — raporun ekipman bilgilerinde girilir. Liste en son
+   eklenen ekipman üstte (sunucu sırası, plan-ici.ts).
    2026-10-12 (reisim: "tamamlamayı geri almadan yeni rapor oluşturulmasın, uyarı çıksın rapor oluştur diyince"): tamamlanmış planda Rapor oluştur
    görünür; basınca rapor açılmaz, üstte kısa uyarı nedeni ve ne yapılacağını söyler (izin.raporEngel; sunucu da reddeder). */
 import { useRouter } from "next/navigation";
@@ -66,10 +68,10 @@ function tanim(raporlu: Set<string>): SuzgecTanimi<PlanEkipmani> {
   };
 }
 
-interface Ekle { sekme: "yeni" | "kayitli"; kod: string; tur: string; seri: string; konum: string; secili: string[]; hatalar: Record<string, string> }
-const ID = { kod: "ekle-kod", durum: "ekle-kod-durum", tur: "ekle-tur", seri: "ekle-seri", konum: "ekle-konum" } as const;
+interface Ekle { sekme: "yeni" | "kayitli"; kod: string; tur: string; konum: string; secili: string[]; hatalar: Record<string, string> }
+const ID = { kod: "ekle-kod", durum: "ekle-kod-durum", tur: "ekle-tur", konum: "ekle-konum" } as const;
 const KOD_SINIF: Record<KodTuru, string> = { bos: stil.kodBos, tamam: stil.kodTamam, hata: stil.kodHata, tesiste: stil.kodHata };
-const BOS: Ekle = { sekme: "yeni", kod: "", tur: "", seri: "", konum: "", secili: [], hatalar: {} };
+const BOS: Ekle = { sekme: "yeni", kod: "", tur: "", konum: "", secili: [], hatalar: {} };
 
 export function EkipmanBolumu({ v }: { v: PlanIci }) {
   const router = useRouter();
@@ -159,7 +161,7 @@ export function EkipmanBolumu({ v }: { v: PlanIci }) {
   }
 
   const yeniKaydet = () => ekle && baslat(async () => {
-    const r = await yeniEkipmanEylemi(planId, { kod: ekle.kod, tur: ekle.tur, seri: ekle.seri, konum: ekle.konum });
+    const r = await yeniEkipmanEylemi(planId, { kod: ekle.kod, tur: ekle.tur, konum: ekle.konum });
     if (r.tamam) { setEkle(null); bildir(r.bildirim ?? "Eklendi."); router.refresh(); return; }
     setEkle({ ...ekle, hatalar: r.hatalar ?? { genel: r.genel ?? "Eklenemedi." } });
   });
@@ -209,9 +211,6 @@ export function EkipmanBolumu({ v }: { v: PlanIci }) {
               <Alan id={ID.tur} etiket="Ekipman türü" zorunlu hata={ekle.hatalar.tur}>
                 <SecimAlani id={ID.tur} ad="Ekipman türü" deger={ekle.tur} ipucu="Tür seçin" gecersiz={!!ekle.hatalar.tur} tanim={ekle.hatalar.tur ? ipucuId(ID.tur) : undefined}
                   secenekler={v.turler.map((t) => [t.id, t.ad, bransAd(t.brans)] as const)} degistir={(x) => setEkle({ ...ekle, tur: x, hatalar: {} })} />
-              </Alan>
-              <Alan id={ID.seri} etiket="Seri no" hata={ekle.hatalar.seri}>
-                <Girdi id={ID.seri} value={ekle.seri} maxLength={30} hata={!!ekle.hatalar.seri} onChange={(e) => setEkle({ ...ekle, seri: e.target.value })} />
               </Alan>
               <Alan id={ID.konum} etiket="Konum / tanım" hata={ekle.hatalar.konum}>
                 <Girdi id={ID.konum} value={ekle.konum} maxLength={60} placeholder="Kompresör odası" hata={!!ekle.hatalar.konum} onChange={(e) => setEkle({ ...ekle, konum: e.target.value })} />

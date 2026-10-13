@@ -220,10 +220,13 @@ export async function planIci(db: Sorgulayici, kim: Kisi, id: string): Promise<P
     ? { firmaAdi: benimKunye.firma_adi, adres: benimKunye.adres, sgk: benimKunye.sgk, isg: isgListesi(true) }
     : { firmaAdi: p.firma_adi, adres: p.adres, sgk: p.sgk, isg: isgListesi(false) };
 
-  const pe = (await db.sorgu<{ ekipman_id: string; sonradan: boolean }>("SELECT ekipman_id::text, sonradan FROM plan_ekipman WHERE plan_id = $1", [id])).rows;
+  /* 2026-10-14 (reisim: "YENİ EKLENEN EKİPMANLAR HEP EN ÜSTTE OLSUN"): plana en son eklenen üstte; aynı anda eklenenler (plan açılışı) koda göre */
+  const pe = (await db.sorgu<{ ekipman_id: string; sonradan: boolean }>(
+    "SELECT ekipman_id::text, sonradan FROM plan_ekipman WHERE plan_id = $1 ORDER BY olustu DESC", [id])).rows;
   const turler = await turOzetleri(db), turBul = new Map(turler.map((t) => [t.id, t]));
   const tumRaporlar = await planRaporlari(db, id);
-  const ekp = await ekipmanlar(db, pe.map((x) => x.ekipman_id));
+  const sira = new Map(pe.map((x, i) => [x.ekipman_id, i]));
+  const ekp = (await ekipmanlar(db, pe.map((x) => x.ekipman_id))).sort((x, y) => (sira.get(x.id) ?? 0) - (sira.get(y.id) ?? 0));
   /* 360: silebilene (yönetici) hiç kullanılmamış ekipman — "Sil" (tanım veritabanında, göç 0056) */
   const kullanim = izin.ekipmanSil ? await ekipmanKullanimi(db, ekp.map((x) => x.id)) : null;
   const silinebilir = new Set(kullanim ? ekp.filter((x) => !kullanim.has(x.id)).map((x) => x.id) : []);
