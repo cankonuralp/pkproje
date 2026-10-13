@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>S.A.Y işlemleri ön model · probata maket</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="../marka/favicon.svg" type="image/svg+xml">
+<!-- S.A.Y İŞLEMLERİ ÖN MODELİ (2026-10-13, bulut oturumu; reisim: "TUŞLARI FALAN KULLANMASIN ... NE GEREKİYORSA YAPABİLSİN" → "TAMAM HAZIRLA").
+     S.A.Y kişinin yetkisiyle probata'nın kendi işlevlerini doğrudan çağırır; kayıt değiştiren işler tek onaylı işlem planıyla. Kendi başına durağan
+     sayfa: maket kabuğu ve ortak veri kullanılmaz; renkler tokens.css değerlerinin kopyası. Veriler uydurmadır. -->
+<style>
+/* Sora 5.3.0 — SIL OFL 1.1 — kendi sunucumuzdan (dış yazı tipi bağlantısı yok) */
+@font-face {
+  font-family: "Sora"; font-style: normal; font-display: swap; font-weight: 100 800;
+  src: url("../vendor/sora-5.3.0/sora-latin-ext-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face {
+  font-family: "Sora"; font-style: normal; font-display: swap; font-weight: 100 800;
+  src: url("../vendor/sora-5.3.0/sora-latin-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+/* Düzen: üstte kararlar, altta telefon ekranları akış sırasıyla; geniş ekranda 3 sütun, telefonda tek sütun */
+/* Düzen: üstte kararlar, altta telefon ekranları akış sırasıyla; geniş ekranda 3 sütun, telefonda tek sütun */
+/* Düzen: üstte kararlar, altta telefon ekranları akış sırasıyla; geniş ekranda 3 sütun, telefonda tek sütun */
+:root {
+  --zemin: #F5F3EE; --zemin2: #ECE9E1; --kart: #FFFFFF; --kenar: #DEDAD0; --kenar-alan: #7E8C96;
+  --yazi: #0F2A3D; --yazi2: #4E5F6C; --yazi3: #56646E;
+  --koyu: #0F2A3D; --koyu-yazi: #F5F3EE; --koyu-yazi2: #A8B7C1;
+  --onay: #1FA37A; --onay-yazi: #137050; --onay-zemin: #DCF1E7;
+  --uyari-yazi: #7F4F00; --uyari-zemin: #FAEACB; --bilgi-zemin: #E1EAF0;
+  --perde: rgba(15, 42, 61, .42);
+  --font: "Sora", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --zemin: #081925; --zemin2: #0B2130; --kart: #0F2A3D; --kenar: #21445B; --kenar-alan: #6F8796;
+  --yazi: #F5F3EE; --yazi2: #A8B7C1; --yazi3: #A8B7C1;
+  --koyu: #050F17; --koyu-yazi: #F5F3EE; --koyu-yazi2: #A8B7C1;
+  --onay: #2BB98B; --onay-yazi: #45CC9E; --onay-zemin: #0E3A30;
+  --uyari-yazi: #F2C46B; --uyari-zemin: #3A2C10; --bilgi-zemin: #16374D;
+  --perde: rgba(0, 0, 0, .55);
+  color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --zemin: #081925; --zemin2: #0B2130; --kart: #0F2A3D; --kenar: #21445B; --kenar-alan: #6F8796;
+  --yazi: #F5F3EE; --yazi2: #A8B7C1; --yazi3: #A8B7C1;
+  --koyu: #050F17; --koyu-yazi: #F5F3EE; --koyu-yazi2: #A8B7C1;
+  --onay: #2BB98B; --onay-yazi: #45CC9E; --onay-zemin: #0E3A30;
+  --uyari-yazi: #F2C46B; --uyari-zemin: #3A2C10; --bilgi-zemin: #16374D;
+  --perde: rgba(0, 0, 0, .55);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--zemin); color: var(--yazi); font-family: var(--font); font-size: 14px; line-height: 1.5; }
+.sayfa { max-width: 1240px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 48px; display: flex; flex-direction: column; gap: 28px; }
+h1 { margin: 0; font-size: 26px; line-height: 1.2; text-wrap: balance; }
+.alt { margin: 6px 0 0; color: var(--yazi2); max-width: 70ch; }
+.kurallar { background: var(--kart); border: 1px solid var(--kenar); border-radius: 12px; padding: 16px 18px; }
+.kurallar h2 { margin: 0 0 10px; font-size: 15px; }
+.kurallar ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; max-width: 80ch; }
+.kurallar b { font-weight: 600; }
+.ekranlar { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 32px 24px; }
+figure { margin: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+figcaption { display: flex; flex-direction: column; gap: 2px; }
+figcaption strong { font-size: 14px; }
+figcaption span { color: var(--yazi2); font-size: 12.5px; }
+.tel { width: 100%; max-width: 360px; height: 720px; border: 1px solid var(--kenar); border-radius: 22px; overflow: hidden; display: flex; flex-direction: column; background: var(--zemin); position: relative; box-shadow: 0 8px 28px rgba(15, 42, 61, .10); }
+.ust { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: var(--koyu); color: var(--koyu-yazi); }
+.ust .geri { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; flex: none; }
+.ust strong { display: block; font-size: 15px; }
+.ust span { display: block; font-size: 11.5px; color: var(--koyu-yazi2); }
+.serit { display: flex; align-items: center; gap: 8px; padding: 7px 12px; background: var(--uyari-zemin); color: var(--uyari-yazi); font-size: 12px; font-weight: 600; }
+.govde { flex: 1; overflow: hidden; display: flex; flex-direction: column; gap: 10px; padding: 12px; min-height: 0; }
+.alt-cubuk { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px 14px; background: var(--kart); border-top: 1px solid var(--kenar); }
+.gun { align-self: center; font-size: 11px; color: var(--yazi2); background: var(--zemin2); padding: 2px 10px; border-radius: 999px; }
+.balon { align-self: flex-end; width: 88%; background: var(--kart); border: 1px solid var(--kenar); border-radius: 12px 12px 4px 12px; padding: 9px; display: flex; flex-direction: column; gap: 6px; }
+.balon.cihazda { border-style: dashed; border-color: var(--kenar-alan); }
+.sistem { align-self: flex-start; max-width: 88%; background: var(--bilgi-zemin); border-radius: 12px 12px 12px 4px; padding: 9px 11px; }
+.fotolar { display: flex; gap: 6px; }
+.foto { background: var(--zemin2); border: 1px solid var(--kenar); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--yazi3); font-size: 11px; text-align: center; padding: 4px; }
+.f-k { width: 76px; height: 60px; } .f-b { height: 170px; } .f-o { width: 100%; height: 120px; }
+.baslik-satir { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.ad { font-weight: 600; }
+.satirlar { white-space: pre-line; font-size: 13px; }
+.durum { display: flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; color: var(--yazi2); }
+.durum i { width: 8px; height: 8px; border-radius: 999px; background: var(--onay); display: inline-block; }
+.durum.bekle { color: var(--uyari-yazi); } .durum.bekle i { background: #F2C46B; }
+.tus { height: 44px; border-radius: 8px; border: 1px solid var(--kenar-alan); background: var(--kart); color: var(--yazi); font: 600 13px var(--font); display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 12px; }
+.tus.ana { background: var(--koyu); color: var(--koyu-yazi); border-color: var(--koyu); }
+.tus.yesil { background: var(--onay); color: #0F2A3D; border-color: var(--onay); }
+.tus.kucuk { height: 32px; font-size: 12px; padding: 0 10px; }
+.yuvarlak { width: 46px; height: 46px; border-radius: 999px; padding: 0; flex: none; }
+.etiket { font-size: 11px; font-weight: 600; color: var(--yazi2); }
+.girdi { width: 100%; min-height: 44px; border: 1px solid var(--kenar-alan); border-radius: 8px; background: var(--kart); color: var(--yazi); padding: 10px 12px; font: 14px var(--font); }
+.liste { list-style: none; margin: 0; padding: 0; background: var(--kart); border: 1px solid var(--kenar); border-radius: 12px; overflow: hidden; }
+.liste li { padding: 9px 12px; border-top: 1px solid var(--kenar); display: flex; flex-direction: column; gap: 1px; }
+.liste li:first-child { border-top: 0; }
+.liste li.secili { background: var(--onay-zemin); }
+.liste small { color: var(--yazi2); font-size: 11.5px; }
+.cipler { display: flex; flex-wrap: wrap; gap: 6px; }
+.cip { font-size: 11.5px; padding: 3px 9px; border-radius: 999px; background: var(--onay-zemin); color: var(--onay-yazi); font-weight: 600; }
+.cip.bos { background: var(--zemin2); color: var(--yazi2); }
+.cip.not { background: var(--bilgi-zemin); color: var(--yazi); }
+.iki { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.yonerge { background: var(--kart); border: 1px solid var(--kenar); border-radius: 12px; padding: 9px; display: flex; flex-direction: column; gap: 4px; }
+.yonerge .satirlar { color: var(--yazi3); font-size: 12.5px; line-height: 1.75; }
+.mesaj-kutu { border: 1px solid var(--kenar-alan); border-radius: 12px; background: var(--kart); display: flex; flex-direction: column; }
+.mesaj-kutu .yazi { padding: 10px 12px; white-space: pre-line; font-size: 13.5px; line-height: 1.6; min-height: 150px; }
+.mesaj-kutu .araclar { display: flex; justify-content: flex-end; gap: 8px; padding: 8px; border-top: 1px solid var(--kenar); }
+.perde { position: absolute; inset: 0; background: var(--perde); }
+.alttan { position: absolute; left: 0; right: 0; bottom: 0; background: var(--kart); border-radius: 16px 16px 0 0; padding: 16px 14px 18px; display: flex; flex-direction: column; gap: 12px; }
+.alttan h3 { margin: 0; font-size: 16px; }
+.uyari { display: flex; gap: 8px; padding: 10px; border-radius: 8px; background: var(--uyari-zemin); color: var(--uyari-yazi); font-size: 12px; line-height: 1.45; }
+.uyari div { display: flex; flex-direction: column; gap: 4px; }
+.kosul { display: flex; gap: 8px; font-size: 12.5px; }
+.kosul b { color: var(--onay-yazi); } .kosul b.u { color: var(--uyari-yazi); }
+.kart { background: var(--kart); border: 1px solid var(--kenar); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; }
+.kart small { color: var(--yazi2); font-size: 12px; }
+.secim { width: 100%; min-height: 48px; border: 1px solid var(--kenar-alan); border-radius: 8px; background: var(--kart); color: var(--yazi); padding: 0 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; font: 600 14px var(--font); }
+.secim.bos { color: var(--yazi3); font-weight: 400; }
+.secim small { color: var(--yazi2); font-size: 11.5px; font-weight: 400; }
+.tus.kapali { background: var(--zemin2); color: var(--yazi3); border-color: var(--kenar); }
+.tur-liste { list-style: none; margin: 0; padding: 0; border: 1px solid var(--kenar); border-radius: 12px; overflow: hidden; }
+.tur-liste li { min-height: 44px; padding: 0 12px; border-top: 1px solid var(--kenar); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.tur-liste li:first-child { border-top: 0; }
+.tur-liste li small { color: var(--yazi2); font-size: 11.5px; }
+.tur-liste li.secili { background: var(--onay-zemin); font-weight: 600; }
+.tur-liste li.secili small { color: var(--onay-yazi); display: inline-flex; align-items: center; gap: 4px; }
+.tur-liste li.daha { justify-content: center; color: var(--yazi2); font-size: 12px; background: var(--zemin2); }
+.alttan .ust-satir { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.alttan .not { color: var(--yazi2); font-size: 12px; margin-top: -4px; }
+.secenek { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 10px; background: var(--zemin2); }
+.secenek span { height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font: 600 13px var(--font); color: var(--yazi2); }
+.secenek span.acik { background: var(--kart); color: var(--yazi); border: 1px solid var(--kenar-alan); }
+.tur-liste li.iki-satir { min-height: 54px; padding-block: 6px; }
+.tur-liste li.iki-satir > span { display: flex; flex-direction: column; gap: 1px; }
+.tur-liste li.iki-satir > span small { font-weight: 400; }
+.genis { grid-column: 1 / -1; }
+.masa { border: 1px solid var(--kenar); border-radius: 14px; overflow: hidden; background: var(--zemin); box-shadow: 0 8px 28px rgba(15, 42, 61, .10); }
+.masa-ust { padding: 14px 18px; border-bottom: 1px solid var(--kenar); background: var(--kart); display: flex; flex-direction: column; gap: 4px; }
+.kirinti { font-size: 12px; color: var(--yazi2); display: flex; align-items: center; gap: 4px; }
+.masa-ust h3 { margin: 0; font-size: 19px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.rozet { font-size: 11.5px; font-weight: 600; padding: 2px 9px; border-radius: 999px; background: var(--bilgi-zemin); color: var(--yazi); }
+.masa-govde { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 10px; }
+.bolum-satir { background: var(--kart); border: 1px solid var(--kenar); border-radius: 12px; min-height: 52px; padding: 0 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; font-weight: 600; }
+.bolum-satir small { color: var(--yazi2); font-weight: 400; font-size: 12px; }
+.bolum-acik { background: var(--kart); border: 1px solid var(--kenar-alan); border-radius: 12px; overflow: hidden; }
+.bolum-acik > .bolum-bas { min-height: 52px; padding: 0 14px; display: flex; align-items: center; gap: 8px; font-weight: 700; border-bottom: 1px solid var(--kenar); }
+.bolum-acik > .bolum-bas small { margin-left: auto; color: var(--yazi2); font-weight: 400; font-size: 12px; }
+.ayar { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 18px; padding: 14px; }
+.ayar-satirlar { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.ayar-bas, .ayar-satir { display: grid; grid-template-columns: 30px minmax(0, 1fr) minmax(0, 1.35fr) minmax(0, .7fr) auto; gap: 8px; align-items: center; }
+.ayar-satir .bos-deger { color: var(--yazi3); }
+.ayar-bas { font-size: 11px; font-weight: 600; color: var(--yazi2); padding: 0 2px; }
+.sira { width: 30px; height: 30px; border-radius: 999px; background: var(--zemin2); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12.5px; }
+.ayar-satir .girdi { min-height: 40px; padding: 8px 10px; font-size: 13.5px; }
+.ayar-satir .secim { min-height: 40px; font-weight: 400; font-size: 13px; }
+.kucuk-tuslar { display: flex; gap: 4px; }
+.kucuk-tuslar span { width: 34px; height: 34px; border: 1px solid var(--kenar); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--yazi2); background: var(--kart); }
+.kucuk-tuslar span.pasif { opacity: .4; }
+.ayar-on { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.ayar-on .yonerge { max-width: 220px; }
+.ayar-alt { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 14px; border-top: 1px solid var(--kenar); }
+.bilgi-not { font-size: 12px; color: var(--yazi2); line-height: 1.5; margin: 0; }
+@media (max-width: 760px) {
+  .ayar { grid-template-columns: 1fr; }
+  .ayar-bas { display: none; }
+  .ayar-satir { grid-template-columns: 30px minmax(0, 1fr) auto; padding-bottom: 8px; border-bottom: 1px solid var(--kenar); }
+  .ayar-satir .girdi { grid-column: 2; grid-row: 1; }
+  .ayar-satir .kucuk-tuslar { grid-column: 3; grid-row: 1; }
+  .ayar-satir .secim { grid-column: 2 / 4; grid-row: 2; }
+  .ayar-satir .deger { grid-column: 2 / 4; grid-row: 3; }
+  .okuma-ayar { grid-template-columns: minmax(0, 1fr) auto; }
+  .okuma-ayar .secim { grid-column: 1 / -1; }
+}
+svg { flex: none; }
+:focus-visible { outline: 2px solid var(--onay); outline-offset: 2px; }
+.f-m { width: 46px; height: 36px; font-size: 9.5px; flex: none; padding: 2px; }
+.okumalar { display: flex; flex-wrap: wrap; gap: 6px; }
+.okuma { display: flex; align-items: center; gap: 6px; padding: 3px 8px 3px 3px; border: 1px solid var(--kenar); border-radius: 8px; background: var(--zemin); font-size: 11.5px; font-weight: 600; }
+.okuma-liste { list-style: none; margin: 0; padding: 0; background: var(--kart); border: 1px solid var(--kenar); border-radius: 12px; overflow: hidden; }
+.okuma-liste li { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-top: 1px solid var(--kenar); min-height: 54px; }
+.okuma-liste li:first-child { border-top: 0; }
+.okuma-liste .ad { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; font-size: 13px; }
+.okuma-liste .ad small { color: var(--yazi2); font-size: 11.5px; font-weight: 400; }
+.foto-yok { width: 46px; height: 36px; flex: none; border: 1px dashed var(--kenar-alan); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--yazi2); }
+.satirli { padding: 8px 10px; display: grid; grid-template-columns: 18px minmax(0, 1fr); column-gap: 8px; font-size: 13.5px; line-height: 1.55; }
+.satirli .no { color: var(--yazi3); font-size: 11px; text-align: right; line-height: 21px; }
+.satirli .hazir { color: var(--yazi); }
+.satirli .hazir small { margin-left: 6px; font-size: 10.5px; font-weight: 600; padding: 1px 6px; border-radius: 999px; background: var(--bilgi-zemin); color: var(--yazi); }
+.anahtar { width: 40px; height: 24px; flex: none; border-radius: 999px; background: var(--onay); position: relative; }
+.anahtar::after { content: ""; position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; border-radius: 999px; background: #FFFFFF; }
+.anahtar.kapali { background: var(--kenar-alan); } .anahtar.kapali::after { right: auto; left: 3px; }
+.ayrac { border: 0; border-top: 1px solid var(--kenar); margin: 6px 0; }
+.alt-baslik { margin: 0; font-size: 13.5px; font-weight: 700; }
+.okuma-ayar { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center; }
+.okuma-ayar .secim { min-height: 40px; font-weight: 400; font-size: 13px; }
+.okuma-ayar label { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--yazi2); }
+.sohbet-sag { align-self: flex-end; max-width: 88%; background: var(--onay-zemin); border-radius: 12px 12px 4px 12px; padding: 9px 11px; display: flex; flex-direction: column; gap: 6px; }
+.ek { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 8px; background: var(--kart); border: 1px solid var(--kenar); font-size: 12px; }
+.ek small { color: var(--yazi2); font-size: 11px; }
+.ek-tepsi { display: flex; flex-wrap: wrap; gap: 6px; }
+.ek-tepsi .ek { padding: 4px 6px 4px 8px; }
+.yazma { display: flex; align-items: flex-end; gap: 8px; }
+.yazma .girdi { flex: 1; color: var(--yazi3); }
+.ek-menu { position: absolute; left: 12px; bottom: 132px; width: 230px; background: var(--kart); border: 1px solid var(--kenar-alan); border-radius: 12px; box-shadow: 0 8px 28px rgba(15, 42, 61, .18); overflow: hidden; }
+.ek-menu div { min-height: 46px; padding: 0 12px; display: flex; align-items: center; gap: 10px; border-top: 1px solid var(--kenar); font-weight: 600; font-size: 13px; }
+.ek-menu div:first-child { border-top: 0; }
+.ek-menu small { color: var(--yazi2); font-weight: 400; font-size: 11px; margin-left: auto; }
+@media (max-width: 420px) { .tel { height: 680px; } h1 { font-size: 22px; } }
+
+.kullanici { align-self: flex-end; max-width: 86%; background: var(--koyu); color: var(--koyu-yazi); border-radius: 12px 12px 4px 12px; padding: 9px 11px; display: flex; flex-direction: column; gap: 6px; }
+.say { align-self: flex-start; max-width: 94%; background: var(--zemin2); border-radius: 12px 12px 12px 4px; padding: 9px 11px; display: flex; flex-direction: column; gap: 8px; }
+.plan { background: var(--kart); border: 1px solid var(--kenar-alan); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+.plan-bas { padding: 8px 10px; font-size: 11.5px; font-weight: 700; color: var(--yazi2); border-bottom: 1px solid var(--kenar); display: flex; justify-content: space-between; gap: 8px; }
+.ps { display: flex; align-items: flex-start; gap: 8px; padding: 7px 10px; border-top: 1px solid var(--kenar); font-size: 12.5px; line-height: 1.4; }
+.ps:first-of-type { border-top: 0; }
+.ps .i { flex: none; width: 20px; height: 20px; border-radius: 999px; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+.ps .i.ok { background: var(--onay-zemin); color: var(--onay-yazi); }
+.ps .i.uy { background: var(--uyari-zemin); color: var(--uyari-yazi); }
+.ps .i.kl { background: var(--bilgi-zemin); color: var(--yazi); }
+.ps .m { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.ps .m small { color: var(--yazi2); font-size: 11.5px; }
+.ps a, .bag { color: var(--onay-yazi); font-weight: 600; font-size: 12px; text-decoration: none; white-space: nowrap; display: inline-flex; align-items: center; gap: 2px; }
+.plan-alt { padding: 9px 10px; border-top: 1px solid var(--kenar); display: flex; flex-direction: column; gap: 8px; background: var(--zemin); }
+.plan-alt .tuslar { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+.not { font-size: 11px; color: var(--yazi2); line-height: 1.45; }
+.cip-satir { display: flex; flex-wrap: wrap; gap: 6px; }
+.cip-tus { font-size: 12px; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--kenar-alan); background: var(--kart); font-weight: 600; }
+.mini { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+.mini th, .mini td { padding: 4px 6px; border-top: 1px solid var(--kenar); text-align: left; }
+.mini th { color: var(--yazi2); font-weight: 600; border-top: 0; }
+.mini td.o { color: var(--onay-yazi); font-weight: 600; }
+.beyan { font-size: 11.5px; line-height: 1.5; color: var(--yazi); background: var(--zemin); border: 1px solid var(--kenar); border-radius: 8px; padding: 8px; max-height: 86px; overflow: hidden; }
+.kutu { display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 600; min-height: 36px; }
+.kutu span.k { width: 20px; height: 20px; border: 2px solid var(--kenar-alan); border-radius: 4px; background: var(--kart); flex: none; }
+.tus.pasif { background: var(--zemin2); color: var(--yazi3); border-color: var(--kenar); }
+.yazma { display: flex; align-items: flex-end; gap: 8px; }
+.yazma .girdi { flex: 1; color: var(--yazi3); }
+.foto-k { width: 54px; height: 42px; flex: none; }
+.bolunmus { display: grid; grid-template-columns: minmax(0, 1fr) 360px; min-height: 560px; }
+.bolunmus .sol { padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; border-right: 1px solid var(--kenar); }
+.bolunmus .sag { display: flex; flex-direction: column; background: var(--zemin); }
+.bolunmus .sag .ust { border-radius: 0; }
+.panel-govde { padding: 12px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.satir2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.bilgi { background: var(--kart); border: 1px solid var(--kenar); border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+.bilgi small { color: var(--yazi2); font-size: 11.5px; }
+.rozet { font-size: 11.5px; font-weight: 600; padding: 2px 9px; border-radius: 999px; background: var(--bilgi-zemin); color: var(--yazi); }
+.rozet.uy { background: var(--uyari-zemin); color: var(--uyari-yazi); }
+.tus-satir { display: flex; gap: 8px; flex-wrap: wrap; }
+.ayar-blok { background: var(--kart); border: 1px solid var(--kenar); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+.ayar-blok h4 { margin: 0; font-size: 14px; }
+.as { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 40px; border-top: 1px solid var(--kenar); padding-top: 6px; font-size: 13px; }
+.as:first-of-type { border-top: 0; }
+.as small { display: block; color: var(--yazi2); font-size: 11.5px; }
+.anahtar { width: 40px; height: 24px; flex: none; border-radius: 999px; background: var(--onay); position: relative; }
+.anahtar::after { content: ""; position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; border-radius: 999px; background: #FFFFFF; }
+.sabit { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 600; color: var(--yazi2); }
+.ayar-ikili { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 860px) { .bolunmus { grid-template-columns: 1fr; } .bolunmus .sol { border-right: 0; border-bottom: 1px solid var(--kenar); } .ayar-ikili { grid-template-columns: 1fr; } }
+body { margin: 0; }
+</style>
+</head>
+<body>
+<div class="sayfa">
+  <header>
+    <h1>S.A.Y işlemleri</h1>
+    <p class="alt">S.A.Y yalnız yol göstermez, işi de yapar: kişinin yetkisiyle, probata'nın kendi işlevleriyle; kayıt değiştiren işleri tek listede gösterip bir kez onay alır. Ön model · örnek veriler uydurmadır.</p>
+  </header>
+
+  <section class="kurallar" aria-labelledby="kur-bas">
+    <h2 id="kur-bas">Kurallar</h2>
+    <ul>
+      <li><b>Ekran yok, doğrudan işlev.</b> S.A.Y tuşlara basmaz; tuşların arkasındaki probata işlevlerini doğrudan çağırır. Veritabanına serbest erişimi yoktur: işler kendi işlevlerinden geçer (denetimler, numaralar, kim / ne zaman kaydı aynen işler).</li>
+      <li><b>Senin yetkin kadar.</b> Kişinin yapamadığı bir işi S.A.Y de yapamaz; yalnız kişinin firmasını ve görebildiği kayıtları görür.</li>
+      <li><b>Okuma hemen, değiştirme tek onayla.</b> Soru soran işler hemen cevaplanır. Kayıt değiştiren işler tek bir “İşlem planı” olarak gösterilir: ne yapılacak, ne yapılamayacak ve neden. Bir kez onaylanır, sonra hepsi yapılır.</li>
+      <li><b>Sonuç ve iz.</b> Yapılan / yapılamayan her kayıt nedeniyle yazılır; her işlem denetim izinde “S.A.Y ile · kişi · zaman” olarak kalır.</li>
+      <li><b>İnsanda kalan.</b> Ölçüm değerleri rapora öneri olarak düşer (onaylı kural). Onayla, Geri gönder, son imza, silme, ayarlar ve yetkiler kişide; plan kabulde tarafsızlık beyanını kişi işaretler. S.A.Y bunlarda kuyruğu açar, özet çıkarır.</li>
+      <li><b>Ekler veridir.</b> Fotoğraftaki ya da belgedeki yazılar S.A.Y'a talimat olmaz; S.A.Y yalnız kişinin yazdığı isteği yapar.</li>
+      <li><b>En az masraf.</b> Tek model (Haiku 5.5), sabit talimat önbellekte; işlem planı kısa komutlarla kurulur. Tipik bir toplu işlem bir kuruşun altında.</li>
+      <li><b>Firma ayarı.</b> Firma ayarları › Yapay zekâ › S.A.Y işlemleri: varsayılan hepsi açık, firma isterse tek tek kapatır.</li>
+    </ul>
+  </section>
+
+  <div class="ekranlar">
+
+    <figure>
+      <figcaption><strong>1 · Okuma: hemen cevap</strong><span>Yalnız okuyan işler onay istemez; bağlantıyla ilgili kayda gidilir</span></figcaption>
+      <div class="tel" role="img" aria-label="Okuma sorusu ve cevabı">
+        <div class="ust"><span class="geri"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/></svg></span><div><strong>S.A.Y</strong><span>Saha asistanı · sorun, yaptırın</span></div></div>
+        <div class="govde" style="justify-content:flex-end">
+
+          <div class="kullanici">Bu hafta kalibrasyonu bitecek cihaz var mı?</div>
+          <div class="say">
+            <span>2 cihazın kalibrasyonu 7 gün içinde bitiyor:</span>
+            <div class="plan">
+              <div class="ps"><span class="i uy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg></span><span class="m"><span>Örnek MI-3100 · seri 40211</span><small>kalibrasyon 16.10.2026'da bitiyor · zimmet: Reis Yönetici</small></span><a href="#">Aç<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a></div>
+              <div class="ps"><span class="i uy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg></span><span class="m"><span>Örnek PE-20 pens ampermetre</span><small>kalibrasyon 18.10.2026'da bitiyor · depoda</small></span><a href="#">Aç<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a></div>
+            </div>
+            <span class="not">Bu planlarda kullanılıyorlar: P-2610-0015 (14.10), P-2610-0016 (17.10).</span>
+          </div>
+        </div>
+        <div class="alt-cubuk"><div class="yazma"><span class="tus yuvarlak" aria-label="Ek ekle"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></span><div class="girdi">S.A.Y'a yazın</div><span class="tus yesil yuvarlak" aria-label="Gönder"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg></span></div></div>
+      </div>
+    </figure>
+
+    <figure>
+      <figcaption><strong>2 · İşlem planı: toplu onaya gönder</strong><span>Değiştiren işler tek listede gösterilir; bir kez onaylanır</span></figcaption>
+      <div class="tel" role="img" aria-label="Toplu onaya gönderme planı">
+        <div class="ust"><span class="geri"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/></svg></span><div><strong>S.A.Y</strong><span>Saha asistanı · sorun, yaptırın</span></div></div>
+        <div class="govde" style="justify-content:flex-end">
+
+          <div class="kullanici">Yeni durumdaki raporlarımı onaya gönder</div>
+          <div class="say">
+            <span>7 Yeni raporun var: 5'i hazır, 2'sinde eksik var.</span>
+            <div class="plan">
+              <div class="plan-bas"><span>İşlem planı</span><span>onaya gönder</span></div>
+              <div class="ps"><span class="i ok"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span><span class="m"><span>DM-1026-001 · ET-2001 · Uygun</span></span></div>
+              <div class="ps"><span class="i ok"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span><span class="m"><span>DM-1026-002 · ET-2002 · Hafif kusurlu</span></span></div>
+              <div class="ps"><span class="i ok"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span><span class="m"><span>DM-1026-003 · AT-2005 · Uygun</span></span></div>
+              <div class="ps"><span class="i ok"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span><span class="m"><span>DM-1026-005 · ET-2004 · Uygun</span></span></div>
+              <div class="ps"><span class="i ok"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span><span class="m"><span>DM-1026-007 · AT-2003 · Uygun</span></span></div>
+              <div class="ps"><span class="i uy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg></span><span class="m"><span>DM-1026-004 gönderilemez</span><small>ölçüm cihazı seçilmemiş</small></span><a href="#">Rapora git<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a></div>
+              <div class="ps"><span class="i uy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg></span><span class="m"><span>DM-1026-006 gönderilemez</span><small>sonuç seçilmemiş</small></span><a href="#">Rapora git<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a></div>
+              <div class="plan-alt">
+                <div class="tuslar"><span class="tus ana">5 raporu onaya gönder</span><span class="tus">Vazgeç</span></div>
+                <span class="not">Senin yetkinle, probata'nın kendi işleviyle yapılır; kayıtta "S.A.Y ile" yazar.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="alt-cubuk"><div class="yazma"><span class="tus yuvarlak" aria-label="Ek ekle"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></span><div class="girdi">S.A.Y'a yazın</div><span class="tus yesil yuvarlak" aria-label="Gönder"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg></span></div></div>
+      </div>
+    </figure>
+
+    <figure>
+      <figcaption><strong>3 · Sonuç</strong><span>Yapılan, yapılamayan ve nedeni; her satırdan kayda gidilir</span></figcaption>
+      <div class="tel" role="img" aria-label="İşlem sonucu">
+        <div class="ust"><span class="geri"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/></svg></span><div><strong>S.A.Y</strong><span>Saha asistanı · sorun, yaptırın</span></div></div>
+        <div class="govde" style="justify-content:flex-end">
+
+          <div class="kullanici" style="opacity:.75">Yeni durumdaki raporlarımı onaya gönder</div>
+          <div class="say">
+            <div class="plan">
+              <div class="plan-bas"><span>Yapıldı · 14:32</span><span>5 / 5</span></div>
+              <div class="ps"><span class="i ok"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span><span class="m"><span>DM-1026-001, 002, 003, 005, 007</span><small>onaya gönderildi · teknik yöneticinin kuyruğunda</small></span></div>
+              <div class="ps"><span class="i uy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg></span><span class="m"><span>DM-1026-004 · DM-1026-006</span><small>eksikler giderilince “gönder” demen yeter</small></span></div>
+            </div>
+            <span class="not">Denetim izinde: Reis Yönetici · S.A.Y ile · 13.10.2026 14:32</span>
+            <div class="cip-satir"><span class="cip-tus">Eksikleri göster</span><span class="cip-tus">Onaya gidenleri listele</span></div>
+          </div>
+        </div>
+        <div class="alt-cubuk"><div class="yazma"><span class="tus yuvarlak" aria-label="Ek ekle"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></span><div class="girdi">S.A.Y'a yazın</div><span class="tus yesil yuvarlak" aria-label="Gönder"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg></span></div></div>
+      </div>
+    </figure>
+
+    <figure>
+      <figcaption><strong>4 · Fotoğraftan rapora</strong><span>Eklediğin fotoğrafları okur; değerler rapora öneri olarak düşer</span></figcaption>
+      <div class="tel" role="img" aria-label="Fotoğraftan rapora yazma planı">
+        <div class="ust"><span class="geri"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/></svg></span><div><strong>S.A.Y</strong><span>Saha asistanı · sorun, yaptırın</span></div></div>
+        <div class="govde" style="justify-content:flex-end">
+
+          <div class="kullanici">
+            <div class="fotolar"><div class="foto foto-k">foto 1</div><div class="foto foto-k">foto 2</div></div>
+            <span>Bu iki fotoğraf DM-1026-004'ün linye tablosu, rapora yaz</span>
+          </div>
+          <div class="say">
+            <span>İki fotoğrafı okudum: Pano sigortaları (linye), 12 satır.</span>
+            <div class="plan">
+              <div class="plan-bas"><span>İşlem planı</span><span>DM-1026-004 · linye</span></div>
+              <div style="padding:6px 8px"><table class="mini"><tr><th>No</th><th>Devre</th><th>In</th><th>Zx</th></tr>
+                <tr><td>1</td><td>Aydınlatma</td><td>16 A</td><td class="o">0,82 Ω</td></tr>
+                <tr><td>2</td><td>Priz hattı</td><td>16 A</td><td class="o">0,91 Ω</td></tr>
+                <tr><td>3</td><td>Klima</td><td>25 A</td><td class="o">0,64 Ω</td></tr></table>
+                <span class="not">… 9 satır daha</span></div>
+              <div class="plan-alt">
+                <div class="tuslar"><span class="tus ana">Rapora öneri olarak yaz</span><span class="tus">Vazgeç</span></div>
+                <span class="not">Ölçüm değerleri öneri olarak düşer; raporda her satırı sen onaylarsın. Okuma kotadan harcar.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="alt-cubuk"><div class="yazma"><span class="tus yuvarlak" aria-label="Ek ekle"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></span><div class="girdi">S.A.Y'a yazın</div><span class="tus yesil yuvarlak" aria-label="Gönder"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg></span></div></div>
+      </div>
+    </figure>
+
+    <figure>
+      <figcaption><strong>5 · S.A.Y Chat kayıtlarından rapor</strong><span>Koşullar önce gösterilir; taslaklar tek onayla oluşur</span></figcaption>
+      <div class="tel" role="img" aria-label="S.A.Y Chat kayıtlarından rapor yazma planı">
+        <div class="ust"><span class="geri"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/></svg></span><div><strong>S.A.Y</strong><span>Saha asistanı · sorun, yaptırın</span></div></div>
+        <div class="govde" style="justify-content:flex-end">
+
+          <div class="kullanici">P-2610-0012'deki S.A.Y Chat kayıtlarımdan rapor yaz</div>
+          <div class="say">
+            <span>3 bekleyen kaydın var.</span>
+            <div class="plan">
+              <div class="plan-bas"><span>İşlem planı</span><span>3 rapor taslağı</span></div>
+              <div class="ps"><span class="i ok"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span><span class="m"><span>ET-2001 · Elektrik iç tesisatı</span><small>plandaki ekipmana · 5 alan · 2 fotoğraf</small></span></div>
+              <div class="ps"><span class="i ok"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span><span class="m"><span>AG topraklama (yeni)</span><small>plana yeni ekipman olarak · 1 alan</small></span></div>
+              <div class="ps"><span class="i ok"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span><span class="m"><span>ET-2004 · Elektrik iç tesisatı</span><small>plandaki ekipmana · 4 alan · 1 fotoğraf</small></span></div>
+              <div class="ps"><span class="i ok"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span><span class="m"><span>Plan günü bugün · günlük süre yetiyor (225 dk)</span></span></div>
+              <div class="ps"><span class="i uy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg></span><span class="m"><span>2 okunacak fotoğraf yapay zekâyla okunacak</span><small>kotadan harcar</small></span></div>
+              <div class="plan-alt">
+                <div class="tuslar"><span class="tus ana">3 taslak oluştur</span><span class="tus">Vazgeç</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="alt-cubuk"><div class="yazma"><span class="tus yuvarlak" aria-label="Ek ekle"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></span><div class="girdi">S.A.Y'a yazın</div><span class="tus yesil yuvarlak" aria-label="Gönder"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg></span></div></div>
+      </div>
+    </figure>
+
+    <figure>
+      <figcaption><strong>6 · Plan kabul</strong><span>Tarafsızlık beyanını S.A.Y veremez; kutuyu kişi işaretler</span></figcaption>
+      <div class="tel" role="img" aria-label="Plan kabul planı ve beyan">
+        <div class="ust"><span class="geri"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/></svg></span><div><strong>S.A.Y</strong><span>Saha asistanı · sorun, yaptırın</span></div></div>
+        <div class="govde" style="justify-content:flex-end">
+
+          <div class="kullanici">Yarınki planı kabul et</div>
+          <div class="say">
+            <div class="plan">
+              <div class="plan-bas"><span>İşlem planı</span><span>plan kabul</span></div>
+              <div class="ps"><span class="i ok"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span><span class="m"><span>P-2610-0015 · Örnek Metal · Fabrika</span><small>14.10.2026 · 09:00–17:00 · 12 ekipman (senin branşında 8)</small></span></div>
+              <div style="padding:8px 10px;display:flex;flex-direction:column;gap:6px">
+                <span class="not" style="font-weight:600">Tarafsızlık beyanı</span>
+                <div class="beyan">Bu plandaki ekipmanlarla ve işverenle tarafsızlığımı etkileyecek bir ilişkim olmadığını beyan ederim.</div>
+                <span class="kutu"><span class="k"></span>Beyanı okudum, kabul ediyorum</span>
+              </div>
+              <div class="plan-alt">
+                <div class="tuslar"><span class="tus pasif">Planı kabul et</span><span class="tus">Vazgeç</span></div>
+                <span class="not">Kutu işaretlenmeden kabul tuşu açılmaz.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="alt-cubuk"><div class="yazma"><span class="tus yuvarlak" aria-label="Ek ekle"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></span><div class="girdi">S.A.Y'a yazın</div><span class="tus yesil yuvarlak" aria-label="Gönder"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg></span></div></div>
+      </div>
+    </figure>
+
+    <figure>
+      <figcaption><strong>7 · Onayla ve son imza insanda</strong><span>S.A.Y kuyruğu sırayla açar, özet çıkarır; Onayla'ya kişi basar</span></figcaption>
+      <div class="tel" role="img" aria-label="Onaylama isteğine cevap">
+        <div class="ust"><span class="geri"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/></svg></span><div><strong>S.A.Y</strong><span>Saha asistanı · sorun, yaptırın</span></div></div>
+        <div class="govde" style="justify-content:flex-end">
+
+          <div class="kullanici">Onaydaki raporların hepsini onayla</div>
+          <div class="say">
+            <span>Onaylama ve son imza sende kalır; her raporda “Onayla”ya sen basarsın. Kuyrukta 3 rapor var, sırayla açıp her birinin özetini çıkarayım:</span>
+            <div class="plan">
+              <div class="ps"><span class="i ok"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span><span class="m"><span>DM-1026-001 · Uygun</span><small>kusur yok · eksik yok · ölçümler sınır içinde</small></span></div>
+              <div class="ps"><span class="i uy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg></span><span class="m"><span>DM-1026-002 · Hafif kusurlu</span><small>2 kusur · 1 ölçüm sınıra yakın</small></span></div>
+              <div class="ps"><span class="i ok"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span><span class="m"><span>DM-1026-003 · Uygun</span><small>kusur yok · eksik yok</small></span></div>
+              <div class="plan-alt"><div class="tuslar"><span class="tus ana">Kuyruğu sırayla aç</span><span class="tus">Vazgeç</span></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="alt-cubuk"><div class="yazma"><span class="tus yuvarlak" aria-label="Ek ekle"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></span><div class="girdi">S.A.Y'a yazın</div><span class="tus yesil yuvarlak" aria-label="Gönder"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg></span></div></div>
+      </div>
+    </figure>
+
+    <figure class="genis">
+      <figcaption><strong>8 · Onay ekranında S.A.Y özeti (masaüstü)</strong><span>Rapor solda, S.A.Y özeti sağda; “Onayla” ve “Geri gönder” sayfanın kendi tuşları, kişi basar</span></figcaption>
+      <div class="masa" role="img" aria-label="Onay ekranı ve S.A.Y özeti">
+        <div class="bolunmus">
+          <div class="sol">
+            <span class="kirinti">Onaylar <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg> Gözden geçir · 2 / 3</span>
+            <h3 style="margin:0;font-size:19px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">DM-1026-002 · ET-2002 Elektrik iç tesisatı <span class="rozet uy">Hafif kusurlu</span></h3>
+            <div class="satir2">
+              <div class="bilgi"><small>Plan</small>P-2610-0012 · Deneme Gıda · Merkez Fabrika</div>
+              <div class="bilgi"><small>Denetçi</small>Reis Yönetici · muayene 13.10.2026</div>
+            </div>
+            <div class="bilgi" style="min-height:220px"><small>Rapor</small><span style="color:var(--yazi3)">raporun tamamı burada (bölümler, tablolar, fotoğraflar)</span></div>
+            <div class="tus-satir"><span class="tus ana">Onayla</span><span class="tus">Geri gönder</span><span class="tus">Önceki</span><span class="tus">Sonraki</span></div>
+          </div>
+          <div class="sag">
+            <div class="ust"><span class="geri"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/></svg></span><div><strong>S.A.Y özeti</strong><span>DM-1026-002 · yalnız okur</span></div></div>
+            <div class="panel-govde">
+              <div class="plan">
+                <div class="ps"><span class="i uy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg></span><span class="m"><span>Sonuç: Hafif kusurlu (kurala göre)</span></span></div>
+                <div class="ps"><span class="i uy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg></span><span class="m"><span>Kusur 1 · 5.3 Pano kapağı kilitsiz</span><small>fotoğraf var</small></span></div>
+                <div class="ps"><span class="i uy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg></span><span class="m"><span>Kusur 2 · 5.7 Devre etiketleri eksik</span><small>fotoğraf var</small></span></div>
+                <div class="ps"><span class="i ok"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span><span class="m"><span>Eksik alan yok</span></span></div>
+                <div class="ps"><span class="i uy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg></span><span class="m"><span>14 ölçümün 13'ü sınır içinde</span><small>Zx 1,62 Ω · sınır 1,64 Ω (sınıra yakın)</small></span></div>
+                <div class="ps"><span class="i ok"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span><span class="m"><span>Önceki muayeneye göre: 1 yeni kusur, 1 kusur giderilmiş</span></span></div>
+              </div>
+              <span class="not">S.A.Y yalnız özet çıkarır; onay ya da geri gönderme kararı senindir.</span>
+              <div class="cip-satir"><span class="cip-tus">Sınıra yakın ölçümü göster</span><span class="cip-tus">Kusur fotoğrafları</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <figure class="genis">
+      <figcaption><strong>9 · Firma ayarları › Yapay zekâ › S.A.Y işlemleri (masaüstü)</strong><span>Varsayılan hepsi açık; firma isterse tek tek kapatır. İnsanda kalan işler değiştirilemez</span></figcaption>
+      <div class="masa" role="img" aria-label="Firma ayarları S.A.Y işlemleri bölümü">
+        <div class="masa-ust"><span class="kirinti">Firma ayarları <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg> Yapay zekâ</span><h3>S.A.Y işlemleri</h3></div>
+        <div class="masa-govde">
+          <div class="ayar-ikili">
+            <div class="ayar-blok">
+              <h4>S.A.Y işlem yapabilsin</h4>
+              <div class="as"><span>Açık<small>Kapalıyken S.A.Y yalnız okur ve yol gösterir</small></span><span class="anahtar"></span></div>
+              <div class="as"><span>Raporları onaya gönderme<small>eksiği olan gönderilmez, nedeni yazılır</small></span><span class="anahtar"></span></div>
+              <div class="as"><span>S.A.Y Chat kayıtlarından rapor yazma</span><span class="anahtar"></span></div>
+              <div class="as"><span>Fotoğraftan / belgeden rapora öneri yazma<small>değerler öneri olarak düşer</small></span><span class="anahtar"></span></div>
+              <div class="as"><span>Uzman yorumu taslağı<small>rapora öneri olarak eklenir</small></span><span class="anahtar"></span></div>
+              <div class="as"><span>Plan kabul<small>tarafsızlık beyanı kişide</small></span><span class="anahtar"></span></div>
+              <div class="as"><span>Bir seferde en çok<small>bir işlem planındaki kayıt sayısı</small></span><span class="girdi" style="width:90px;min-height:36px;padding:6px 10px">50</span></div>
+            </div>
+            <div class="ayar-blok">
+              <h4>Her zaman insanda</h4>
+              <div class="as"><span>Onayla / Geri gönder<small>teknik yönetici</small></span><span class="sabit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>kişi</span></div>
+              <div class="as"><span>Son imza<small>denetçi</small></span><span class="sabit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>kişi</span></div>
+              <div class="as"><span>Silme<small>rapor, plan, kayıt</small></span><span class="sabit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>kişi</span></div>
+              <div class="as"><span>Ayarlar, roller, yetkiler</span><span class="sabit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>kişi</span></div>
+              <span class="not">S.A.Y bunları yapmaz; kuyruğu açar, özet çıkarır, ilgili sayfaya götürür.</span>
+            </div>
+          </div>
+          <div class="tus-satir" style="justify-content:flex-end"><span class="tus">Vazgeç</span><span class="tus ana">Kaydet</span></div>
+        </div>
+      </div>
+    </figure>
+  </div>
+</div>
+</body>
+</html>
