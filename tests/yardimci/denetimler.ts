@@ -537,3 +537,21 @@ export function e2eYayinBayragiEksikleri(p: { proxy: string; vitrinAcik: string;
   return hata;
 }
 
+
+/** 527 (reisim 2026-10-13: "say chatte fotoğraf işaretine tıklayınca galeriden veya pc den de fotoğraf yükleyebilmek olsun"): S.A.Y Chat'in her
+    fotoğraf tuşu FotoTusu'dur — SayChat.tsx'te doğrudan dosya girdisi yok (yalnız kamera açan eski tuş geri gelemez); FotoTusu'nda iki girdi: kamera
+    (capture) ve galeri / bilgisayar (capture YOK, çoklu seçilebilir). Dönen: hata listesi (boş = tamam). */
+export function sayChatFotoTuslari(sayChat: string, fotoTusu: string): string[] {
+  const hata: string[] = [];
+  if (/type="file"/.test(sayChat)) hata.push("SayChat.tsx: doğrudan dosya girdisi var (fotoğraf tuşu FotoTusu olmalı)");
+  const tuslar = (sayChat.match(/<FotoTusu\b/g) ?? []).length;
+  if (tuslar < 4) hata.push(`SayChat.tsx: ${tuslar} FotoTusu (yeni kayıt, + ek, etiket, okunacak başlık — 4)`);
+  const girdiler = [...fotoTusu.matchAll(/<input\b[^>]*type="file"[^>]*>/g)].map((m) => m[0]);
+  if (girdiler.length !== 2) hata.push(`FotoTusu.tsx: ${girdiler.length} dosya girdisi (kamera + galeri = 2)`);
+  if (!girdiler.some((g) => /\bcapture=/.test(g))) hata.push("FotoTusu.tsx: kamera girdisi (capture) yok");
+  const galeri = girdiler.filter((g) => !/\bcapture=/.test(g));
+  if (!galeri.length) hata.push("FotoTusu.tsx: galeri / bilgisayar girdisi (capture'sız) yok");
+  else if (!galeri.some((g) => /\bmultiple=\{coklu\}/.test(g))) hata.push("FotoTusu.tsx: galeri girdisi birden çok fotoğraf seçemiyor");
+  if (!fotoTusu.includes("Galeriden / bilgisayardan seç")) hata.push("FotoTusu.tsx: \"Galeriden / bilgisayardan seç\" yazmıyor");
+  return hata;
+}

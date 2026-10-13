@@ -1094,6 +1094,12 @@ KOD-GECIS K5'te dört kalem: 522 ek · 523 ayarlar · 524 kayıtlar · 525 rapor
     okunacak fotoğraflar, etiket, tanım sürümü, durum, zaman — RLS sahibi süzgeci, rapor yazılınca silinir) · `say_chat_ayar` (firma × tür, sürümlü:
     satırlar, okunacak başlıklar; yayınlanan sürüm değişmez).
 
+**Yayından sonra eklenen** (reisim 2026-10-13: *"say chatte fotoğraf işaretine tıklayınca galeriden veya pc den de fotoğraf yükleyebilmek olsun"*)
+25. **Fotoğraf tuşu iki yol açar** (527): her S.A.Y Chat fotoğraf tuşu (yeni kayıt "Fotoğraf ekle", ekipman "+ ek", "Etiket fotoğrafı", okunacak
+    başlığın "Fotoğraf ekle") küçük menü açar: **Fotoğraf çek** (telefonda kamera) · **Galeriden / bilgisayardan seç** (etiket dışında birden çok
+    fotoğraf). Uymayan (JPEG / PNG değil, 2 MB üstü) ve kayıttaki yeri aşan (ekipman 12, başlık başına 6) fotoğraf eklenmez, adıyla söylenir. Menü S.A.Y
+    ataç menüsünün düzeninde, üst katmanda yüzer; Esc yalnız menüyü kapatır.
+
 ## 4 · Mevzuat bulguları (2026-09-18 araştırması; kaynaklar bölüm 10)
 
 ### 4.1 Çerçeve
@@ -2467,6 +2473,15 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-13 (527): **S.A.Y CHAT — FOTOĞRAF GALERİDEN / BİLGİSAYARDAN** (reisim: *"say chatte fotoğraf işaretine tıklayınca galeriden veya pc den de
+  fotoğraf yükleyebilmek olsun"*; §3.10 m.25). Önce: dört fotoğraf tuşunun hepsi `capture="environment"` tek girdiydi — telefonda yalnız kamera açılıyordu
+  (masaüstü tarayıcılar capture'ı genelde yok sayar; PC'de dosya penceresi açılıyordu). Şimdi her tuş `say-chat/ui/FotoTusu.tsx`: menü **Fotoğraf çek** ·
+  **Galeriden / bilgisayardan seç** (çoklu; etikette tek); menü üst katmanda (`components/secim/yuzen.ts` — panelin kenarında kesilmez), dışarı tıklama /
+  Esc kapatır (Esc paneli kapatmaz, odak tuşa döner). Seçilenler küçültülür; hangisinin gireceği saf `say-chat/foto-secim.ts` (yalnız JPEG / PNG, boş
+  değil, en çok 2 MB; kayıttaki yer kadar — yer dolunca kalanlar küçültülmez; eklenmeyen adıyla söylenir) — sunucu aynısını yeniden denetler. Kilit
+  `tests/say-chat-foto.test.ts` + olumsuz kanıt `tests/bozan/say-chat-foto.bozan.ts` (4/4); uçtan uca `e2e/say-chat.spec.ts` (menü, Esc, galeriden iki
+  fotoğraf, metin dosyası eklenmez). Aynı mekanizma (capture'lı tek girdi) Araçlar teslim açı fotoğraflarında ve Zimmet teslim fotoğrafında da var —
+  reisim "sadece S.A.Y Chat" dediği için dokunulmadı (tutanak kanıtı canlı çekim olabilir; istenirse aynı tuşla açılır).
 - 2026-10-13 (526): **522–525 YAYINDA (S.A.Y CHAT)** — göç **0084, 0085, 0086** Supabase'e (`goc` kaydıyla; **87 göç**). 522 main b5431c4, 523 main
   22986c0 (0084), 524 + 525 main **bc25166** (0085 say_chat_kayit, 0086 rapor_oneri); deneme makinesi her birinde 13/13 (veritabanlı testler, yeni
   olumsuz kanıtlar say-ek, say-chat-sema, say-chat-kayit, say-chat-rapor ve uçtan uca üç genişlik dahil). Sağlık "tamam", duman **11/11**, son 1 saatte hata kaydı yok.

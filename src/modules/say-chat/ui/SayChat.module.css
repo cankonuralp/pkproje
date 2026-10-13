@@ -38,17 +38,26 @@
 .hata { margin: 0; color: var(--hata-yazi); font-size: var(--boy-kucuk); }
 .gizli { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
-/* dosya seçen etiket tuş görünümünde (odak içindeki girdiden) */
+/* fotoğraf tuşu (FotoTusu, 527) — menüyü açar: Fotoğraf çek · Galeriden / bilgisayardan seç */
 .birincil, .ikincil, .ekle {
   position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: var(--tus-y); padding: 0 14px;
-  border-radius: var(--r-orta); font-weight: 600; cursor: pointer;
+  border-radius: var(--r-orta); font: inherit; font-weight: 600; cursor: pointer;
 }
 .birincil { background: var(--vurgu); color: var(--vurgu-uzeri); border: 1px solid var(--vurgu); }
 .ikincil { background: var(--kart); color: var(--yazi); border: 1px solid var(--kenar-alan); }
 .ikincil:hover { background: var(--zemin2); }
 .ekle { width: 64px; height: 64px; padding: 0; flex-direction: column; gap: 2px; border: 1px dashed var(--kenar-alan); background: var(--kart); color: var(--yazi2); font-size: var(--boy-etiket); }
-.birincil:focus-within, .ikincil:focus-within, .ekle:focus-within { outline: 3px solid var(--odak); outline-offset: 2px; }
+.birincil:focus-visible, .ikincil:focus-visible, .ekle:focus-visible { outline: 3px solid var(--odak); outline-offset: 2px; }
 .yeni { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; }
+/* menü S.A.Y ataç menüsünün düzeninde (say.module.css .ekMenu); üst katmanda yüzer — konumu components/secim/yuzen.ts satır içi yazar */
+.fotoKap { position: relative; display: inline-flex; }
+.fotoMenu {
+  position: fixed; inset: auto; z-index: 1000; margin: 0; min-width: 220px; padding: 6px; display: grid; gap: 2px; color: var(--yazi);
+  background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-orta); box-shadow: var(--golge-2);
+}
+.fotoOge { position: relative; display: flex; align-items: center; gap: 8px; min-height: var(--tus-y); padding: 0 10px; border-radius: var(--r-kucuk); cursor: pointer; white-space: nowrap; }
+.fotoOge:hover { background: var(--zemin2); }
+.fotoOge:focus-within { background: var(--zemin2); outline: 3px solid var(--odak); outline-offset: -3px; }
 
 .liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .kayit { display: grid; gap: 6px; padding: 10px 12px; border: 1px solid var(--kenar); border-radius: var(--r-orta); background: var(--kart); }

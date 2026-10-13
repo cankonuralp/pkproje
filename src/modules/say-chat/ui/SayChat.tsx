@@ -9,9 +9,12 @@
    · Kişiye özel: veri sunucuda kişinin kendi kayıtlarıyla gelir (RLS).
    · 525 "Bekleyenler için rapor yaz (n)" (ekran 10): gönderilmiş kayıtlar, ne olacağı, "Yeni ekle"de ekipman kodu, "Oluşturmadan önce" koşulları
      (plan günü / tamamlanmış plan, günlük süre, internet, yapay zekâ ve kota) → kayıtlar SIRAYLA taslak olur (her biri ayrı istek), okunacak
-     fotoğraflar yapay zekâyla okunur (her biri ayrı istek); olan raporlar bağlantısıyla listelenir, olmayan kayıt nedeniyle bekler. */
+     fotoğraflar yapay zekâyla okunur (her biri ayrı istek); olan raporlar bağlantısıyla listelenir, olmayan kayıt nedeniyle bekler.
+   · 527 (reisim 2026-10-13: "fotoğraf işaretine tıklayınca galeriden veya pc den de fotoğraf yükleyebilmek olsun"): her fotoğraf tuşu (yeni kayıt,
+     ekipman "+ ek", etiket, okunacak başlık) FotoTusu — Fotoğraf çek · Galeriden / bilgisayardan seç (etiket dışında birden çok); uymayan ve kayıttaki
+     yeri aşan fotoğraf eklenmez, söylenir (foto-secim.ts). */
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ChangeEvent } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useBildir, useUyar } from "../../../components/bildirim/Bildirim";
 import { bekleyenIcerik, kuyrugaEkle, kuyrukAbone, kuyrukAnlik, kuyrukSunucuAnlik, kuyruktanCikar, type KuyrukSonucOlayi } from "../../../components/cevrimdisi/kuyruk";
 import { fotografiKucult } from "../../../components/foto/kucult";
@@ -22,9 +25,12 @@ import { Pencere } from "../../../components/pencere/Pencere";
 import { Rozet } from "../../../components/sayfa/Sayfa";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
+import { fotolariSec, fotoSecimiUyarisi } from "../foto-secim";
 import type { ChatKaydi, SayChatPaneli } from "../server/kayitlar";
-import { dagit, MESAJ_EN_COK, MESAJ_SATIR_EN_COK, type ChatEkipman, type ChatFoto, type ChatTanimi, type FotoRolu, type KayitGirdisi } from "../sema";
+import { dagit, EKIPMAN_FOTO_EN_COK, MESAJ_EN_COK, MESAJ_SATIR_EN_COK, OKUNACAK_FOTO_EN_COK, type ChatEkipman, type ChatFoto, type ChatTanimi, type FotoRolu,
+  type KayitGirdisi } from "../sema";
 import { chatEtiketOkuEylemi, chatOkutEylemi, chatRaporYazEylemi } from "./eylemler";
+import { FotoTusu } from "./FotoTusu";
 import stil from "./SayChat.module.css";
 
 const baglantiAbone = (f: () => void) => {
@@ -40,6 +46,8 @@ const metneCevir = (d: Blob) => new Promise<string>((coz, red) => {
 });
 const SAAT = new Intl.DateTimeFormat("tr-TR", { timeZone: "Europe/Istanbul", hour: "2-digit", minute: "2-digit" });
 const bos = (v: string | undefined) => !v || !v.trim() || /^[-–—]+$/.test(v.trim());
+/* kayıttaki fotoğraf yeri (sunucunun cümlesi: server/kayitlar.ts chatFoto) */
+const EKIPMAN_SINIRI = `Kayda en çok ${EKIPMAN_FOTO_EN_COK} ekipman fotoğrafı`, OKUNACAK_SINIRI = `Başlık başına en çok ${OKUNACAK_FOTO_EN_COK} fotoğraf`;
 
 /** bu ekranda eklenen, henüz kuyruğa girmemiş fotoğraf (görüntüsü blob: adresiyle); anahtar sayfa boyunca artan sayaç */
 let yerelSira = 0;
@@ -165,15 +173,21 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
   const kapat = () => { setAcik(false); setTaslak(null); setRaporEkrani(false); requestAnimationFrame(() => fab.current?.focus()); };
 
   /* ── taslak ── */
-  const yerelEkle = async (f: File, rol: FotoRolu, k: string | null): Promise<Yerel> => {
-    const dosya = await fotografiKucult(f);
-    return { anahtar: ++yerelSira, dosya, url: URL.createObjectURL(dosya), rol, k };
+  /* seçilen fotoğraflar (kamera ya da galeri / bilgisayar — birden çok olabilir): küçültülür; uymayan ve kayıttaki yeri aşan eklenmez, söylenir */
+  const yerelHazirla = async (l: File[], rol: FotoRolu, k: string | null, yer: number, sinir: string): Promise<Yerel[]> => {
+    const s = await fotolariSec(l, yer, (f) => fotografiKucult(f));
+    const u = fotoSecimiUyarisi(s, sinir);
+    if (u) uyar(u);
+    return s.alinan.map((dosya) => ({ anahtar: ++yerelSira, dosya, url: URL.createObjectURL(dosya), rol, k }));
   };
-  const yeniKayit = async (e: ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0]; e.target.value = "";
-    if (!f) return;
-    const y = await yerelEkle(f, "ekipman", null);
-    setTaslak({ id: crypto.randomUUID(), yeni: true, surum: 0, ekipman: null, mesaj: [], tanim: null, tanimSurum: 0, fotolar: [], kaldir: [], yerel: [y], okundu: [] });
+  /** kayıtta bu rol / başlık için kalan yer (sunucudaki + bu ekranda eklenenler) */
+  const kalanYer = (t: Taslak, rol: "ekipman" | "okunacak", k: string | null) =>
+    (rol === "ekipman" ? EKIPMAN_FOTO_EN_COK : OKUNACAK_FOTO_EN_COK)
+    - t.fotolar.filter((f) => f.rol === rol && f.k === k).length - t.yerel.filter((y) => y.rol === rol && y.k === k).length;
+  const yeniKayit = async (l: File[]) => {
+    const y = await yerelHazirla(l, "ekipman", null, EKIPMAN_FOTO_EN_COK, EKIPMAN_SINIRI);
+    if (!y.length) return;
+    setTaslak({ id: crypto.randomUUID(), yeni: true, surum: 0, ekipman: null, mesaj: [], tanim: null, tanimSurum: 0, fotolar: [], kaldir: [], yerel: y, okundu: [] });
     setSecim({ sekme: "plan", ara: "" });
   };
   const duzenle = (g: Gorunen) => {
@@ -203,21 +217,22 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
     /* pencere kapanınca odağı açana döndürür; sonra ilk satıra */
     setTimeout(() => document.getElementById("sc-s0")?.focus(), 80);
   };
-  const fotoEkle = async (e: ChangeEvent<HTMLInputElement>, rol: FotoRolu, k: string | null) => {
-    const f = e.target.files?.[0]; e.target.value = "";
-    if (!f) return;
-    const y = await yerelEkle(f, rol, k);
-    degis((t) => ({ ...t, yerel: [...t.yerel, y] }));
-    bildir(`${f.name} eklendi; kayıtla birlikte gider.`);
+  const fotoEkle = async (l: File[], rol: "ekipman" | "okunacak", k: string | null) => {
+    if (!taslak) return;
+    const y = await yerelHazirla(l, rol, k, kalanYer(taslak, rol, k), rol === "ekipman" ? EKIPMAN_SINIRI : OKUNACAK_SINIRI);
+    if (!y.length) return;
+    degis((t) => ({ ...t, yerel: [...t.yerel, ...y] }));
+    bildir(`${y.length === 1 ? y[0].dosya.name : `${y.length} fotoğraf`} eklendi; kayıtla birlikte gider.`);
   };
   const yerelCikar = (a: number) => degis((t) => { const y = t.yerel.find((x) => x.anahtar === a); if (y) URL.revokeObjectURL(y.url); return { ...t, yerel: t.yerel.filter((x) => x.anahtar !== a) }; });
   const sunucuCikar = (d: string) => degis((t) => ({ ...t, fotolar: t.fotolar.filter((f) => f.dosya !== d), kaldir: [...t.kaldir, d] }));
 
   /* etiket fotoğrafı: önce kota uyarısı; okununca boş (ya da hazır değeri değişmemiş) satırlara öneri */
-  const etiketSec = async (e: ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0]; e.target.value = "";
-    if (!f || !taslak) return;
-    const y = await yerelEkle(f, "etiket", null);
+  const etiketSec = async (l: File[]) => {
+    if (!taslak) return;
+    /* etiket tektir: yenisi eskisinin yerine (yer hep 1) */
+    const [y] = await yerelHazirla(l.slice(0, 1), "etiket", null, 1, "");
+    if (!y) return;
     degis((t) => ({ ...t, yerel: [...t.yerel.filter((x) => x.rol !== "etiket"), y], fotolar: t.fotolar.filter((x) => x.rol !== "etiket"),
       kaldir: [...t.kaldir, ...t.fotolar.filter((x) => x.rol === "etiket").map((x) => x.dosya)] }));
     setEtiket({ dosya: y.dosya, okunuyor: false });
@@ -285,13 +300,6 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
     ...t.fotolar.filter((f) => f.rol === rol && f.k === k).map((f) => <Foto key={f.dosya} f={{ dosya: f.dosya, ad: f.ad }} cikar={() => sunucuCikar(f.dosya)} />),
     ...t.yerel.filter((y) => y.rol === rol && y.k === k).map((y) => <Foto key={y.anahtar} f={{ url: y.url, ad: y.dosya.name }} cikar={() => yerelCikar(y.anahtar)} />),
   ];
-  const dosyaTus = (ad: string, ikon: string, onChange: (e: ChangeEvent<HTMLInputElement>) => void, sinif = stil.ikincil, id?: string) => (
-    <label className={sinif}>
-      <input className={stil.gizli} id={id} type="file" accept="image/*" capture="environment" onChange={(e) => void onChange(e)} />
-      <Ikon ad={ikon} kucuk /><span>{ad}</span>
-    </label>
-  );
-
   const sohbet = (
     <>
       <div className={stil.govdeP}>
@@ -337,14 +345,14 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
             )}
           </>
         ) : (
-          <p className={stil.bosMetin}>Sahada her ekipman için bir kayıt: önce ekipmanın fotoğrafını çekin, sonra hangi ekipman olduğunu seçin ve yönergedeki sırayla
+          <p className={stil.bosMetin}>Sahada her ekipman için bir kayıt: önce ekipmanın fotoğrafını ekleyin (çekin ya da galeriden seçin), sonra hangi ekipman olduğunu seçin ve yönergedeki sırayla
             mesajı yazın. İnternet olmasa da kayıt cihazda birikir; sonra “Bekleyenler için rapor yaz” ile rapor taslakları oluşur.</p>
         )}
       </div>
       <div className={stil.altP}>
         <div className={stil.yeni}>
-          {dosyaTus("Fotoğraf çek", "camera", yeniKayit, stil.birincil, "sc-ilk")}
-          <span className={stil.not}>Yeni kayıt: önce ekipmanın fotoğrafını çekin.</span>
+          <FotoTusu ad="Fotoğraf ekle" ikon="camera" sinif={stil.birincil} id="sc-ilk" coklu sec={(l) => void yeniKayit(l)} />
+          <span className={stil.not}>Yeni kayıt: önce ekipmanın fotoğrafını çekin ya da galeriden seçin.</span>
         </div>
         <p className={stil.not}>Bu sohbeti yalnız siz görürsünüz; plan sorumlusu, teknik yönetici ve yönetici görmez.</p>
       </div>
@@ -368,14 +376,14 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
           <p className={stil.ara}>Ekipman fotoğrafları</p>
           <ul className={stil.fotolar} aria-label="Ekipman fotoğrafları">
             {fotolar(t, "ekipman", null)}
-            <li>{dosyaTus("+ ek", "camera", (e) => fotoEkle(e, "ekipman", null), stil.ekle)}</li>
+            <li><FotoTusu ad="+ ek" etiket="Ekipman fotoğrafı ekle" ikon="camera" sinif={stil.ekle} coklu sec={(l) => void fotoEkle(l, "ekipman", null)} /></li>
           </ul>
           {t.tanim && c && d && (
             <>
               <div className={stil.yonerge}>
                 <p className={stil.ara}>Her satıra sırayla</p>
                 <ol>{t.tanim.satirlar.map((s, i) => <li key={i}>{s.ad}{s.hazir && <span className={stil.alt}> · {s.hazir}</span>}</li>)}</ol>
-                {dosyaTus(etiketVar ? "Etiket fotoğrafı · yeniden" : "Etiket fotoğrafı", "tag", etiketSec)}
+                <FotoTusu ad={etiketVar ? "Etiket fotoğrafı · yeniden" : "Etiket fotoğrafı"} ikon="tag" sinif={stil.ikincil} sec={(l) => void etiketSec(l)} />
               </div>
               {etiketVar && <p className={stil.etiketDurum}><Ikon ad="tag" kucuk />Etiket fotoğrafı eklendi · rapora konmaz{t.okundu.length ? ` · ${t.okundu.length} satır okundu` : ""}</p>}
               <p className={stil.ara} id="sc-mesaj-bas">Mesaj · etiket yazmayın; satır sırası yönergenin sırasıdır, bilinmeyene &quot;-&quot;</p>
@@ -409,7 +417,8 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
                         <li key={k}>
                           <div className={stil.okumaBas}>
                             <span><b>{ad}</b><small>{ne} · {sayi ? `${sayi} fotoğraf` : "fotoğraf yok"}</small></span>
-                            {dosyaTus(sayi ? "Bir daha çek" : "Fotoğraf çek", "camera", (e) => fotoEkle(e, "okunacak", k))}
+                            <FotoTusu ad={sayi ? "Bir daha ekle" : "Fotoğraf ekle"} etiket={`${ad}: ${sayi ? "bir daha fotoğraf ekle" : "fotoğraf ekle"}`} ikon="camera"
+                              sinif={stil.ikincil} coklu sec={(l) => void fotoEkle(l, "okunacak", k)} />
                           </div>
                           {sayi > 0 && <ul className={stil.fotolar} aria-label={`${ad} fotoğrafları`}>{fotolar(t, "okunacak", k)}</ul>}
                         </li>

@@ -330,6 +330,8 @@ pkproje/
                             okuma, kayda yazılmaz) · ui/SayChat.tsx (plan içi düğme + panel; planlar sayChatPlani, personel say-chat-baglanti personelBransi)
                             · 525 server/rapor-yaz.ts (raporKosullari, chatRaporYaz — kayıt başına işlem; raporlar chatRaporuDoldur) · eylemler chatRaporYazEylemi,
                             chatOkutEylemi (okunanlar raporlar/server/oneri.ts — göç 0086 rapor_oneri; rapor ekranında öneri kartı + şerit)
+                            · 527 ui/FotoTusu.tsx (her fotoğraf tuşu: Fotoğraf çek · Galeriden / bilgisayardan seç — menü yuzen.ts üst katmanında) +
+                            foto-secim.ts (saf: JPEG / PNG, 2 MB, kayıttaki yer; eklenmeyen söylenir) — kilit tests/say-chat-foto.test.ts
   src/server/eposta/        E-POSTA (432; göç 0077): eposta.ts kuyruk (alıcı başına bir satır; metin değişmez, silinmez) · saglayici.ts tek bağdaştırıcı
                             (Resend biçimi HTTP; PROBATA_EPOSTA_ANAHTAR / _KIMDEN / _UC — yoksa bekler) · gonder.ts bekleyenleriGonder · sonra.ts (after) ·
                             gece işi epostaIsi yeniden dener. İlk kullanım: plan açılınca ekip + bilgilendirme (planlar planAc, sema planEpostasi)

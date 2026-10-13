@@ -4,6 +4,8 @@
    · plan içinde S.A.Y düğmesinin yanında "S.A.Y Chat"; açılınca S.A.Y paneli kapalı (aynı yer) · Fotoğraf çek → Ekipman seçin (Plandan seç, arama)
      → yönerge + numaralı mesaj, satırların düştüğü alanlar (fazla satır nota) → okunacak fotoğraf → etiket fotoğrafı: kota uyarısı, "Oku ve mesaja
      yaz" boş satırlara yazar ("okundu") → Gönder: kayıt listede, gidince "Gönderildi" → Düzenle → Kaydı sil (önce sorar);
+   · 527 (reisim 2026-10-13: "fotoğraf işaretine tıklayınca galeriden veya pc den de fotoğraf yükleyebilmek olsun"): fotoğraf tuşu menü açar — Fotoğraf
+     çek · Galeriden / bilgisayardan seç (birden çok); Esc yalnız menüyü kapatır (panel açık kalır, odak tuşta); PNG / JPEG olmayan dosya eklenmez, söylenir;
    · bağlantı kesikken Gönder: kayıt "Cihazda", bağlantı gelince gider;
    · ekip dışındaki (yönetici) plan içinde S.A.Y Chat görmez. Telefonda panel tam ekran; yana taşma yok. */
 import { expect, test, type Page } from "@playwright/test";
@@ -51,8 +53,18 @@ test("S.A.Y Chat: fotoğraf, ekipman, numaralı mesaj, okunacak fotoğraf, etike
   if (bilgi.project.name === "telefon") expect(Math.round((await panel.boundingBox())!.width)).toBe(page.viewportSize()!.width);
   await expect(panel).toContainText("Bu sohbeti yalnız siz görürsünüz");
 
-  /* 1 · fotoğraf → ekipman seçimi */
-  await panel.getByLabel("Fotoğraf çek").setInputFiles(foto("pano-on.png"));
+  /* 1 · fotoğraf tuşu menüsü: Esc yalnız menüyü kapatır; galeriden iki fotoğraf → ekipman seçimi */
+  const fotoEkle = panel.getByRole("button", { name: "Fotoğraf ekle" });
+  await fotoEkle.click();
+  await expect(fotoEkle).toHaveAttribute("aria-expanded", "true");
+  await expect(panel.getByText("Fotoğraf çek")).toBeVisible();
+  await expect(panel.getByText("Galeriden / bilgisayardan seç")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(fotoEkle).toHaveAttribute("aria-expanded", "false");
+  await expect(panel).toBeVisible();
+  await expect(fotoEkle).toBeFocused();
+  await fotoEkle.click();
+  await panel.getByLabel("Galeriden / bilgisayardan seç").setInputFiles([foto("pano-on.png"), foto("pano-yan.png")]);
   const secim = page.getByRole("dialog", { name: "Ekipman seçin" });
   await expect(secim).toBeVisible();
   await expect(secim.getByRole("tab", { name: "Plandan seç" })).toHaveAttribute("aria-selected", "true");
@@ -60,6 +72,13 @@ test("S.A.Y Chat: fotoğraf, ekipman, numaralı mesaj, okunacak fotoğraf, etike
   await secim.getByRole("button", { name: new RegExp(kod) }).click();
   await expect(secim).toHaveCount(0);
   await expect(panel.getByRole("heading", { name: new RegExp(`Yeni kayıt · ${kod}`) })).toBeVisible();
+  /* galeriden seçilen iki fotoğraf ve "+ ek" tuşu; PNG / JPEG olmayan eklenmez */
+  const ekipFoto = panel.getByRole("list", { name: "Ekipman fotoğrafları" });
+  await expect(ekipFoto.locator("img")).toHaveCount(2);
+  await panel.getByRole("button", { name: "Ekipman fotoğrafı ekle" }).click();
+  await panel.getByLabel("Galeriden / bilgisayardan seç").setInputFiles({ name: "notlar.txt", mimeType: "text/plain", buffer: Buffer.from("deneme") });
+  await expect(page.getByText("notlar.txt eklenmedi: yalnız JPEG ya da PNG", { exact: false }).first()).toBeVisible();
+  await expect(ekipFoto.locator("img")).toHaveCount(2);
 
   /* 2 · numaralı mesaj: 1. satır marka, 2. "-", fazla satır nota */
   const s1 = panel.getByRole("textbox", { name: /^1\. satır/ });
@@ -74,11 +93,13 @@ test("S.A.Y Chat: fotoğraf, ekipman, numaralı mesaj, okunacak fotoğraf, etike
 
   /* 3 · okunacak fotoğraf (linye) */
   const linye = panel.locator("li", { has: page.getByText("Pano sigortaları", { exact: false }) }).first();
+  await linye.getByRole("button", { name: /fotoğraf ekle/ }).click();
   await linye.getByLabel("Fotoğraf çek").setInputFiles(foto("linye.png"));
   await expect(linye).toContainText("1 fotoğraf");
 
   /* 4 · etiketten okuma: kota uyarısı, boş satırlara yazar */
-  await panel.getByLabel("Etiket fotoğrafı").setInputFiles(foto("etiket.png"));
+  await panel.getByRole("button", { name: "Etiket fotoğrafı" }).click();
+  await panel.getByLabel("Fotoğraf çek").setInputFiles(foto("etiket.png"));
   const et = page.getByRole("dialog", { name: "Etiketten okuma" });
   await expect(et).toContainText("firmanın kotasından harcar");
   await et.getByRole("button", { name: "Oku ve mesaja yaz" }).click();
@@ -116,7 +137,7 @@ test("S.A.Y Chat: fotoğraf, ekipman, numaralı mesaj, okunacak fotoğraf, etike
   await expect(panel.getByRole("list", { name: "Kayıtlar" }).getByRole("listitem").filter({ hasText: kod })).toHaveCount(0, { timeout: 30_000 });
 
   /* Esc kapatır, odak düğmede */
-  await panel.getByLabel("Fotoğraf çek").focus();
+  await panel.getByRole("button", { name: "Fotoğraf ekle" }).focus();
   await page.keyboard.press("Escape");
   await expect(panel).toHaveCount(0);
   await expect(fab).toBeFocused();
@@ -133,13 +154,15 @@ test("S.A.Y Chat: bekleyenler için rapor yaz — kod, koşullar, taslak, rapord
   await hazir(page);
   await page.getByRole("button", { name: "S.A.Y Chat — planın sohbeti" }).click();
   const panel = page.getByRole("dialog", { name: "S.A.Y Chat" });
+  await panel.getByRole("button", { name: "Fotoğraf ekle" }).click();
   await panel.getByLabel("Fotoğraf çek").setInputFiles(foto("yeni-pano.png"));
   const secim = page.getByRole("dialog", { name: "Ekipman seçin" });
   await secim.getByRole("tab", { name: "Yeni ekle" }).click();
   await secim.getByRole("button", { name: /Elektrik panosu/ }).first().click();
   await panel.getByRole("textbox", { name: /^1\. satır/ }).fill("Rapor Marka");
   const linye = panel.locator("li", { has: page.getByText("Pano sigortaları", { exact: false }) }).first();
-  await linye.getByLabel("Fotoğraf çek").setInputFiles(foto("linye-2.png"));
+  await linye.getByRole("button", { name: /fotoğraf ekle/ }).click();
+  await linye.getByLabel("Galeriden / bilgisayardan seç").setInputFiles(foto("linye-2.png"));
   await panel.getByRole("button", { name: "Gönder" }).click();
   const kayit = panel.getByRole("list", { name: "Kayıtlar" }).getByRole("listitem").filter({ hasText: "Rapor Marka" }).first();
   await expect(kayit).toContainText("Gönderildi", { timeout: 30_000 });
