@@ -2481,6 +2481,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-14 (545): **540 · 542 · 544 YAYINDA** — 540 main 95f81fd (göç 0088 Supabase'te); 542 + 544 main b5765c6 (göç 0089 yz_okuma.dosya —
+  90 göç). CI üç turda yeşile döndü; yakalananlar düzeltildi: S.A.Y / S.A.Y Chat paneli açıkken sayfa panelin solunda (panel raporun havadaki
+  Kaydet'ini örtüyordu), plandaki ekipman sırası eşitlikte koda göre (540'ta rastgeleydi), dosya adresi yalnız GizliResim'de (kayıtlı etiket
+  gizliGorselDosyasi ile), S.A.Y Chat gövdesinde öğeler sıkışmaz (30 satırlık mesaj kutusu etiket satırının üstüne biniyordu), iş gidince sunucudan
+  taze hâl gelene kadar "Gönderiliyor…" (düzenleme eski fotoğraf listesiyle açılıyordu); plan içi tablet / telefon görüntüleri yazı alanı 16 px
+  olunca 3 px uzadı (gözden geçirildi, yenilendi). Canlı: sağlık ucu b5765c6, duman 11/11, Vercel çalışma hatası yok. Gözle (oturum reisim'in):
+  ölçemedim. Deneme firmasında yapay zekâ anahtarı 2026-10-13'ten beri girili (hata listesi m51 kapandı); Resend anahtarı yok (m31 açık).
 - 2026-10-14 (544): **FİRMA AYARLARI: KÜÇÜK PANELLER + PENCERE** (maket 539 onaylı — reisim: *"MAKETLERİ FALAN DA ONAYLIYORUM"*; istek: *"bu ekranı
   komple toparla tıklayınca pop-up olarak açılarak seçimler yapılabilien küçük paneller haline çevir"*, *"açı kkapalıyı seçince ekran komple kayıyo"*,
   *"raporların ikinci kopyası değl yedek olarak görülmeli çok fazla yazı var"*). Ekran altı grupta 16 panel (Firma: Firma bilgileri, Rapor numarası,
