@@ -124,7 +124,7 @@
             MK.alan({ id: "ay-sg-not-" + i, etiket: "Not", girdi: MK.girdi({ id: "ay-sg-not-" + i, deger: x.not || "", ek: ' data-sg-not="' + i + '" maxlength="80"' }) }) +
             MK.tus({ eylem: "sg-sil", ad: "Kaldır", ikon: "x", sinif: "a-tus-ikincil a-kalem-sil", veri: { i: i } }) + "</div>";
         }).join("") +
-        '<div class="a-eylem-cubugu a-bolum-serit">' + MK.tus({ eylem: "sg-ekle", ad: "Sabit gider ekle", ikon: "plus", sinif: "a-tus-ikincil" }) + "</div></section>" + depoCiz() + yzCiz() + personelBelgeCiz() + iceCiz();
+        '<div class="a-eylem-cubugu a-bolum-serit">' + MK.tus({ eylem: "sg-ekle", ad: "Sabit gider ekle", ikon: "plus", sinif: "a-tus-ikincil" }) + "</div></section>" + depoCiz() + yzCiz() + postaCiz() + personelBelgeCiz() + iceCiz();
   }
 
   X["sg-ekle"] = function () {
@@ -241,6 +241,88 @@
     MK.onayla({ baslik: "API anahtarını kaldır", metin: "Fotoğraftan okuma ve S.A.Y, yeni anahtar girilene kadar çalışmaz (kendi anahtarı olanlar hariç).", tus: "Kaldır", tamam: function () {
       yzYaz({ anahtar: "" }); ayarCiz(); $("ay-yz-anahtar").focus(); MK.bildir("API anahtarı kaldırıldı.");
     } });
+  };
+  /* ── E-POSTA (535, 2026-10-13; reisim: "resende hesabını bağlayalım ama … planlamacı mail gönderirken kendi mail adresi pazarlamacı mail
+     gönderirken kendi mail adresiyle göndermeli kim mail gönder tuşuna basarsa onun mailinden gitmeli" → "A seçeneğini kabul ediyorum": her firma
+     KENDİ Resend hesabı). Firmanın Resend API anahtarı (yalnız gönderme izni; bir kez yazılır, yalnız son 4 hane) + gönderen alan adı (Resend'de
+     doğrulanmış; o alan adındaki her adresten gönderilir). Kimden = tuşa basan kişi: adresi bu alan adındaysa kendi adresinden; değilse
+     (kişisel posta) Firma bilgileri'ndeki Rapor e-postasından, kişinin adıyla, cevap kişiye. Kimsenin basmadığı (otomatik) e-postalar Rapor
+     e-postasından. Gönderene gizli kopya isteğe bağlı (başlangıçta kapalı — yapboz ilkesi). Deneme e-postası tuşa basanın kendi adresine.
+     Anahtar yokken e-postalar sırada bekler, girilince gider. ─────────────────────────────────────────────────────────────────────── */
+  var EP = { hata: "", yaz: false };
+  var posta = function () { var x = MV.FIRMA.posta || {}; return { anahtar: x.anahtar || "", alan: x.alan || "", kopya: !!x.kopya, ay: x.ay != null ? x.ay : 37 }; };
+  var postaYaz = function (d) { MV.FIRMA.posta = Object.assign({}, posta(), d); };
+  var alanAdi = function (e) { var m = /@([^@\s]+)$/.exec(String(e || "").trim().toLocaleLowerCase("tr")); return m ? m[1] : ""; };
+  /* kişinin e-postası nereden gider (tablo ve kural kutusu aynı ölçütten) */
+  var postaYolu = function (adres, alan) { return !adres ? "yok" : alan && alanAdi(adres) === alan ? "kendi" : "genel"; };
+  function postaCiz() {
+    var p = posta(), kayitli = !!p.anahtar && !EP.yaz, alan = String(TD("a-b-posta", "#ay-posta-alan", p.alan)).trim().toLocaleLowerCase("tr");
+    var genel = MV.FIRMA.eposta || "", genelUygun = !!alan && alanAdi(genel) === alan, hazir = !!p.anahtar && !!alan;
+    var ben = MV.kisi("ad"), kisiler = MV.PERSONEL.filter(function (x) { return x.durum === "etkin" && x.hesap; });
+    var ornek = kisiler.filter(function (x) { return postaYolu(x.eposta, alan) === "kendi"; })[0];
+    var SUT = [
+      { k: "kisi", baslik: "Kişi", kart: "ust", sira: 1, hucre: function (x) { return kacis(x.ad) + '<span class="a-alt-satir">' + x.hesap.roller.map(function (r) { return (MV.rol(r) || { kisa: r }).kisa; }).join(" · ") + "</span>"; } },
+      { k: "adres", baslik: "E-posta", kart: "govde", sira: 2, hucre: function (x) { return '<span class="a-kart-etiket">E-posta</span>' + (x.eposta ? '<span class="a-hucre-metin">' + kacis(x.eposta) + "</span>" : '<span class="a-deger-yok">Yok</span>'); } },
+      { k: "yol", baslik: "E-postası nereden gider", kart: "rozet", sira: 1, hucre: function (x) {
+        var y = postaYolu(x.eposta, alan);
+        return y === "kendi" ? MK.rozet({ ad: "Kendi adresinden", rozet: "a-rozet-tamam" })
+          : MK.rozet({ ad: "Rapor e-postasından", rozet: "a-rozet-bekliyor" }) + '<span class="a-alt-satir">' + (y === "yok" ? "e-posta adresi yok" : "kişinin adıyla, cevap kişiye") + "</span>"; } }
+    ];
+    return '<section class="a-bolum a-ayar-genis" aria-labelledby="a-b-posta"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-posta">E-posta</h2>' +
+        '<span class="a-sayac">' + (hazir ? "bağlı · " + kacis(alan) : "bağlı değil") + "</span></div>" +
+      '<p class="a-ipucu">Plan bildirimi, teklif, rapor gibi e-postalar firmanın kendi Resend hesabıyla gider; ücreti firmanındır (ayda 3.000, günde 100 e-postaya kadar ücretsiz). Kim gönder tuşuna basarsa e-posta onun adresinden gider.</p>' +
+      (p.anahtar ? "" : '<p class="a-etiket">Kurulum</p><ol class="a-posta-adimlar">' +
+        "<li>resend.com'da firma adına hesap açın.</li>" +
+        "<li><b>Domains › Add domain</b>: firmanızın alan adı (ör. firmaniz.com.tr).</li>" +
+        "<li>Resend'in verdiği kayıtları alan adınızın yönetim paneline ekleyin (alan adını aldığınız firma); Resend “Verified” deyince hazır.</li>" +
+        "<li><b>API Keys › Create API key</b>: izin “Sending access”.</li>" +
+        "<li>Anahtarı aşağıya yapıştırın, alan adını yazın, “Deneme e-postası gönder”e basın.</li></ol>") +
+      '<div class="a-form">' +
+        (kayitli
+          ? '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Resend API anahtarı</p><p class="a-yz-anahtar">' + ikon("key-round", "a-ikon-kucuk") + '<span class="a-kod">' + kacis(p.anahtar) + "</span> kayıtlı</p>" +
+              '<div class="a-eylem-cubugu a-eylem-sol">' + MK.tus({ eylem: "posta-anahtar-degistir", ad: "Değiştir", ikon: "pencil", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "posta-anahtar-kaldir", ad: "Kaldır", ikon: "trash-2", sinif: "a-tus-ikincil" }) + "</div></div>"
+          : MK.alan({ id: "ay-posta-anahtar", etiket: "Resend API anahtarı", genis: true, hata: EP.hata, sonuc: EP.hata ? "" : "re_ ile başlar. Şifreli saklanır, bir daha gösterilmez.",
+              girdi: '<input class="a-girdi" id="ay-posta-anahtar" type="password" autocomplete="off" spellcheck="false" maxlength="200" aria-describedby="ay-posta-anahtar-ipucu"' + (EP.hata ? ' aria-invalid="true"' : "") + ">" }) +
+            '<div class="a-eylem-cubugu a-eylem-sol a-alan-genis">' + MK.tus({ eylem: "posta-anahtar-kaydet", ad: "Anahtarı kaydet", ikon: "check" }) + (p.anahtar ? MK.tus({ eylem: "posta-anahtar-vazgec", ad: "Vazgeç", sinif: "a-tus-ikincil" }) : "") + "</div>") +
+        MK.alan({ id: "ay-posta-alan", etiket: "Gönderen alan adı", hata: AY.hata["posta-alan"], sonuc: AY.hata["posta-alan"] ? "" : "Resend'de doğrulanmış alan adı; bu alan adındaki her adresten gönderilir.",
+          girdi: MK.girdi({ id: "ay-posta-alan", deger: AY.hata["posta-alan"] ? AY["posta-alan"] : p.alan, hata: AY.hata["posta-alan"], ek: ' data-posta-alan inputmode="url" autocomplete="off" spellcheck="false" maxlength="100" placeholder="firmaniz.com.tr"' }) }) +
+        '<div class="a-alan-grup"><p class="a-etiket" id="ay-posta-kopya-e">Gönderene gizli kopya</p><div role="radiogroup" aria-labelledby="ay-posta-kopya-e">' + [["0", "Kapalı"], ["1", "Açık"]].map(function (x) {
+          return '<label class="a-onay-kutusu"><input type="radio" name="ay-posta-kopya" data-posta-kopya value="' + x[0] + '"' + ((p.kopya ? "1" : "0") === x[0] ? " checked" : "") + "><span>" + x[1] + "</span></label>"; }).join("") +
+          '</div><p class="a-ipucu">Açıksa gönderen, e-postanın bir kopyasını kendi kutusunda görür.</p></div>' +
+      "</div>" +
+      (!p.anahtar ? MK.serit("uyari", "key-round", "Anahtar girilmedi: e-postalar gönderilmez, sırada bekler; anahtar girilince gider.") : "") +
+      '<p class="a-etiket a-disa-gecmis-bas">Kimden gider</p><ul class="a-kosullar">' +
+        '<li class="a-kosul-tamam">' + ikon("circle-check", "a-ikon-kucuk") + "<span>Kim gönder tuşuna basarsa onun adresinden: adresi " + (alan ? "<b>@" + kacis(alan) + "</b>" : "firmanın alan adı") + " ile biten çalışan" +
+          (ornek ? ' (ör. <span class="a-kod">' + kacis(ornek.ad) + " &lt;" + kacis(ornek.eposta) + "&gt;</span>)" : "") + "; cevap da ona gelir.</span></li>" +
+        '<li class="a-kosul-bilgi">' + ikon("info", "a-ikon-kucuk") + "<span>Adresi başka alan adında olan (kişisel posta) ya da adresi olmayan: Rapor e-postasından, kişinin adıyla gider; cevap kişiye gelir.</span></li>" +
+        '<li class="' + (genelUygun || !alan ? "a-kosul-bilgi" : "a-kosul-eksik") + '">' + ikon(genelUygun || !alan ? "info" : "triangle-alert", "a-ikon-kucuk") + "<span>Otomatik e-postalar (hatırlatmalar; kimsenin basmadığı): Rapor e-postası" + (genel ? ' <span class="a-kod">' + kacis(genel) + "</span>" : "") +
+          (alan && !genelUygun ? " — bu adres @" + kacis(alan) + " alan adında değil: otomatik e-postalar ve kişisel adreslilerin e-postaları gönderilemez. Firma bilgileri'nde düzeltin." : "") + "</span></li></ul>" +
+      '<div class="a-eylem-cubugu a-eylem-sol">' + MK.tus({ eylem: "posta-deneme", ad: "Deneme e-postası gönder", ikon: "send", sinif: "a-tus-ikincil", kapali: !hazir }) + "</div>" +
+      '<p class="a-ipucu">Deneme e-postası sizin adresinize gider (' + kacis(ben ? ben.eposta : "") + "). Bu ay gönderilen: " + p.ay + " e-posta.</p>" +
+      '<p class="a-etiket a-disa-gecmis-bas">Çalışanların e-postası nereden gider</p>' +
+      '<div class="a-liste-kap">' + MK.tablo({ baslik: "Çalışanların e-postası nereden gider", sinif: "a-tablo-posta", sutunlar: SUT, kayitlar: kisiler }) + "</div>" +
+      "</section>";
+  }
+  X["posta-anahtar-kaydet"] = function () {
+    var v = (($("ay-posta-anahtar") || {}).value || "").trim();
+    if (!/^re_[A-Za-z0-9_]{16,}$/.test(v)) { EP.hata = v ? "Geçerli bir Resend API anahtarı değil (re_ ile başlar)." : "Anahtarı yapıştırın."; ayarCiz(); $("ay-posta-anahtar").focus(); return; }
+    EP.hata = ""; EP.yaz = false; postaYaz({ anahtar: "re_…" + v.slice(-4) }); v = "";   /* yalnız son 4 hane tutulur */
+    ayarCiz(); var b = document.querySelector('[data-eylem="posta-anahtar-degistir"]'); if (b) b.focus(); MK.bildir("Resend API anahtarı kaydedildi.");
+  };
+  X["posta-anahtar-degistir"] = function () { EP.yaz = true; EP.hata = ""; ayarCiz(); $("ay-posta-anahtar").focus(); };
+  X["posta-anahtar-vazgec"] = function () { EP.yaz = false; EP.hata = ""; ayarCiz(); var b = document.querySelector('[data-eylem="posta-anahtar-degistir"]'); if (b) b.focus(); };
+  X["posta-anahtar-kaldir"] = function () {
+    MK.onayla({ baslik: "Resend API anahtarını kaldır", metin: "Yeni anahtar girilene kadar e-postalar gönderilmez, sırada bekler.", tus: "Kaldır", tamam: function () {
+      postaYaz({ anahtar: "" }); ayarCiz(); $("ay-posta-anahtar").focus(); MK.bildir("Resend API anahtarı kaldırıldı.");
+    } });
+  };
+  X["posta-deneme"] = function () {
+    var p = posta(), ben = MV.kisi("ad");
+    if (!p.anahtar || !p.alan) { MK.bildir("Önce anahtarı ve alan adını kaydedin."); return; }
+    postaYaz({ ay: p.ay + 1 });
+    var y = postaYolu(ben.eposta, p.alan);
+    ayarCiz(); var b = document.querySelector('[data-eylem="posta-deneme"]'); if (b) b.focus();
+    MK.bildir("Deneme e-postası gönderildi: " + ben.eposta + " — " + (y === "kendi" ? "kendi adresinizden" : "Rapor e-postasından, adınızla") + ". Kutunuza bakın.");
   };
   /* ── MÜŞTERİYE AÇIK PERSONEL BELGELERİ (P3, 2026-10-01; reisim: "o müşteriye giden muayene personelinin firmanın izin verdiği belgelerini
      görür (ekipnet belgesi isg belgeleri vs)"): müşteri panelinde "Muayene personeli" sekmesinde yalnız işaretli türler görünür ───────── */
@@ -637,6 +719,16 @@
       delete AY.hata["yz-sinir"]; yzYaz({ sinir: sv === "" ? "" : +sv }); ayarCiz(); $("ay-yz-sinir").focus();
       MK.bildir(sv === "" ? "Kişi başı sınır kaldırıldı." : "Kişi başı aylık sınır $" + sv.replace(".", ",") + "."); return;
     }
+    if (t.hasAttribute && t.hasAttribute("data-posta-alan")) {   /* 535: gönderen alan adı — alan adı biçimi; geçersizse eski değer kalır */
+      var pa = t.value.trim().toLocaleLowerCase("tr").replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/.*$/, "");
+      if (pa !== "" && !/^(?!-)[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(pa)) { AY.hata["posta-alan"] = "Alan adı okunamadı (ör. firmaniz.com.tr). Kaydedilmedi."; AY["posta-alan"] = t.value; ayarCiz(); $("ay-posta-alan").focus(); return; }
+      delete AY.hata["posta-alan"]; postaYaz({ alan: pa }); ayarCiz(); $("ay-posta-alan").focus();
+      MK.bildir(pa ? "Gönderen alan adı " + pa + "." : "Gönderen alan adı kaldırıldı; e-postalar gönderilmez."); return;
+    }
+    if (t.hasAttribute && t.hasAttribute("data-posta-kopya")) {
+      postaYaz({ kopya: t.value === "1" }); ayarCiz(); var pk = document.querySelector('[data-posta-kopya][value="' + t.value + '"]'); if (pk) pk.focus();
+      MK.bildir(t.value === "1" ? "Gönderene gizli kopya açık." : "Gönderene gizli kopya kapalı."); return;
+    }
     if (t.dataset && t.dataset.mbelge) {   /* P3: müşteriye açık personel belgesi türü */
       var mb = MV.musteriBelgeIzni().slice(), k = t.dataset.mbelge, ad = MV.musteriBelgeTur().filter(function (x) { return x[0] === k; })[0][1];
       if (t.checked && mb.indexOf(k) < 0) mb.push(k); else if (!t.checked) mb = mb.filter(function (x) { return x !== k; });
@@ -684,9 +776,9 @@
      anlaşılmıyor"): değişiklik hemen kaydedilmez, bölümün taslağına yazılır; bölüm başlığının yanında Kaydet ve Vazgeç çıkar. Kaydet
      taslağı sırayla uygular (geçersiz değer yine kaydedilmez, alanın altında söylenir); Vazgeç kayıtlı değerlere döner. Yeniden çizimde
      taslak alanlara geri yazılır. Aç / kapa ile alan açan seçimler (yapay zekâ, mesai, arşiv) taslakta da alanlarını gösterir.
-     Taslağa girmeyenler: dışa aktarılacak bölüm seçimi (Dışa aktar tuşu var), API anahtarı (kendi tuşu var), eylem tuşları. ─────── */
+     Taslağa girmeyenler: dışa aktarılacak bölüm seçimi (Dışa aktar tuşu var), API anahtarları (kendi tuşları var), eylem tuşları. ─────── */
   var TS = {};
-  var muaf = function (t) { return t.id === "ay-yz-anahtar" || !!t.closest(".a-belge-ekle") || !!t.closest(".a-depo-form") || !t.closest("#a-ayarlar"); };
+  var muaf = function (t) { return t.id === "ay-yz-anahtar" || t.id === "ay-posta-anahtar" || !!t.closest(".a-belge-ekle") || !!t.closest(".a-depo-form") || !t.closest("#a-ayarlar"); };
   var YENIDEN = ["data-yz-acik", "data-mesai-acik"];   /* alan açıp kapatan seçimler: taslakta da yeniden çizilir */
   function secici(t) {
     if (t.type === "radio") return 'input[name="' + t.name + '"]';

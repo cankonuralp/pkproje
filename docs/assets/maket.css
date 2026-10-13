@@ -1237,6 +1237,9 @@ body:has(.a-rapor-eylem) .a-fab-grup { bottom: 88px; }   /* rapor: sağ alttaki 
 .a-personel-belgeler .a-tus { flex: none; }
 /* Y1 (2026-10-02): Firma ayarları › Yapay zekâ — kayıtlı anahtarın izi, kullanım tablosu */
 .a-yz-anahtar { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; }
+/* 535: Firma ayarları › E-posta — kurulum adımları, çalışanların e-postası nereden gider */
+.a-posta-adimlar { margin: 0; padding-left: 22px; display: grid; gap: 4px; }
+.a-tablo-posta .a-k-kisi { width: 34%; } .a-tablo-posta .a-k-adres { width: 36%; } .a-tablo-posta .a-k-yol { width: 30%; }
 .a-tablo-yz .a-k-kisi { width: 32%; } .a-tablo-yz .a-k-okuma { width: 18%; } .a-tablo-yz .a-k-mesaj { width: 16%; } .a-tablo-yz .a-k-usd { width: 16%; } .a-tablo-yz .a-k-durum { width: 18%; }
 .a-tablo-belge-onay .a-k-belge { width: 26%; } .a-tablo-belge-onay .a-k-gonderen { width: 13%; } .a-tablo-belge-onay .a-k-zaman { width: 14%; } .a-tablo-belge-onay .a-k-durum { width: 15%; } .a-tablo-belge-onay .a-k-eylem { width: 32%; }   /* AA3 */
 .a-tablo-uygunsuz .a-k-ekipman { width: 20%; } .a-tablo-uygunsuz .a-k-kusur { width: 32%; } .a-tablo-uygunsuz .a-k-rapor { width: 20%; }

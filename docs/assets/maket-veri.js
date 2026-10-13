@@ -114,7 +114,7 @@
     { id: "hp", ad: "Hakan Polat", meslek: "mak-ytek", diploma: "2015/06628", oda: "", ekipnet: "250019", eposta: "hakan.polat" + E, basla: "2021-04-12", durum: "etkin",
       hesap: { durum: "etkin", roller: ["inspector"], son: "2026-09-18T12:26" }, yetki: { basincli: "2021-07-19", kaldirma: "2021-07-19" },
       belge: { diploma: 1, oda: 0, ekipnet: 1, egitim: "2021-05-24" }, sayilar: { isg: 2, zimmet: 1, egitim: 3, egitimYakin: 0, plan: 1 } },
-    { id: "ga", ad: "Gizem Aksoy", meslek: "diger", meslekMetin: "İşletme", diploma: "", oda: "", ekipnet: "", eposta: "gizem.aksoy" + E, basla: "2024-02-19", durum: "etkin",
+    { id: "ga", ad: "Gizem Aksoy", meslek: "diger", meslekMetin: "İşletme", diploma: "", oda: "", ekipnet: "", eposta: "gizem.aksoy@kisisel.example", basla: "2024-02-19", durum: "etkin",   /* 535: kişisel adres (E-posta ayarında "Rapor e-postasından, cevap kişiye" örneği) */
       /* 2026-09-29 (35. tur 161): Muhasebe rolü de onda — masraf formları ona gider (UYDURMA) */
       hesap: { durum: "etkin", roller: ["planlama", "muhasebe"], son: "2026-09-23T08:40" }, yetki: {}, belge: {}, sayilar: { isg: 0, zimmet: 0, egitim: 0, egitimYakin: 0, plan: 0 } },
     { id: "ta", ad: "Tolga Aslan", meslek: "ins-muh", diploma: "2013/09917", oda: "82406", ekipnet: "244901", eposta: "tolga.aslan" + E, basla: "2022-01-17", durum: "etkin",

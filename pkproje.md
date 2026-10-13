@@ -2479,6 +2479,16 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-13 (535): **E-POSTA KURGUSU — MAKET (ONAY BEKLİYOR)** (reisim, 533'e: *"A seçeneğini kabul ediyorum"* → her firma KENDİ Resend hesabı).
+  Maket: Firma ayarları › **E-posta** (`docs/assets/maket-ayarlar.js` postaCiz; `docs/maket/firma-ayarlari.html`): kurulum adımları (resend.com hesabı →
+  Domains › Add domain → DNS kayıtları → API Keys "Sending access" → anahtar + alan adı) · Resend API anahtarı (re_; bir kez yazılır, son 4 hane;
+  Değiştir / Kaldır) · Gönderen alan adı (Resend'de doğrulanmış) · Gönderene gizli kopya (Kapalı / Açık — *öneri: firma ayarı, başlangıçta kapalı*) ·
+  "Kimden gider" kuralları · Deneme e-postası (tuşa basanın adresine) · bu ay gönderilen · **çalışanların e-postası nereden gider** tablosu (Kendi
+  adresinden / Rapor e-postasından — kişinin adıyla, cevap kişiye). Kural: Kimden = tuşa basan kişi (sunucu oturumdan alır); adresi doğrulanmış alan
+  adında değilse *(öneri)* Firma bilgileri'ndeki Rapor e-postasından, kişinin adıyla, Cevap = kişinin adresi; otomatik e-postalar Rapor e-postasından;
+  Rapor e-postası alan adında değilse uyarı. Anahtar yokken e-postalar sırada bekler. Maket verisinde bir kişinin adresi kişisel alan adında
+  (gizem.aksoy@kisisel.example — örnek). Kod: onaydan sonra (firma sırrı `eposta_anahtari`, ayar bölümü, kuyruğa gönderen kişi, saglayici.ts firmanın
+  anahtarıyla).
 - 2026-10-13 (534): **SONUÇ VE KANAAT'TA "ÖNERİ" SATIRI KALKTI** (reisim, rapor ekranı görüntüsüyle: *"Sonuç ve kanaat kısmında öneri olmasın"*). Saha
   raporunun Sonuç ve kanaat bölümünde seçim kutusunun altındaki "Öneri: Uygun / Uygun değil" yazısı kaldırıldı (raporlar/ui/Bloklar.tsx SonucBlok).
   Yerinde kalanlar: cümle (… kullanımı uygundur / uygun değildir), seçim kutusu, "Uygun değil madde varken sonuç Uygun" uyarısı. Öneri HESABI kalıyor
