@@ -2479,6 +2479,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-13 (531): **ARAÇ VE ZİMMET FOTOĞRAFI DA GALERİDEN / BİLGİSAYARDAN** (reisim: *"araçlar ve zimmetlerde de galeriden fotoğraf ekleme seçeneği
+  ekle"*). 527'nin fotoğraf tuşu ORTAK oldu: `src/components/foto/FotoTusu.tsx` (menü Fotoğraf çek · Galeriden / bilgisayardan seç; FotoKucuk /
+  FotoKucukler — seçilenin küçük görüntüsü, × çıkarır) + `src/components/foto/secim.ts` (saf: JPEG / PNG, boş değil, çağıranın bayt sınırı, yer;
+  eklenmeyen söylenir). Kullananlar: S.A.Y Chat (4 tuş, 2 MB), **araç teslim tutanağı** (açı başına: "Fotoğraf ekle" → küçük görüntü + "Değiştir";
+  8 MB), **zimmet teslimi** (birden çok, en çok 10; 8 MB). Araç ve zimmet fotoğrafı artık cihazda KÜÇÜLTÜLÜYOR (kucult.ts, 09-A4 — önceden tam boy
+  gidiyordu; birkaç tam boy fotoğraf sunucunun istek gövdesi sınırını aşabiliyordu). Kamera açan girdi (capture) yalnız FotoTusu ve S.A.Y ataç
+  menüsünde — kilit `tests/foto-tusu.test.ts` (tüm src taranır) + olumsuz kanıt `tests/bozan/foto-tusu.bozan.ts` (5/5); uçtan uca `e2e/araclar.spec.ts`
+  (Ön açısı galeriden, "Değiştir") ve `e2e/zimmetler.spec.ts` (iki fotoğraf galeriden, metin dosyası eklenmez, "Fotoğraf yok." kalkar).
 - 2026-10-13 (530): **529 YAYINDA** — göç yok (87 göç). main abd0ac3 (527 yayın kaydı 528 dahil); deneme makinesi 13/13 (uçtan uca üç genişlik: tür
   sayfası bölümü → Düzenle → S.A.Y Chat ayarları sayfası; denetçi Görüntüle; kurucuda bağlantı). Sağlık "tamam", duman **11/11**, yeni sayfa oturumsuz
   girişe yönleniyor (307), son 30 dakikada hata kaydı yok. Canlıda oturumla bakılamadı (giriş reisim'in) — ölçemedim.

@@ -12,6 +12,6 @@
 .not { color: var(--yazi2); font-size: var(--boy-kucuk); }
 .fotolar { display: flex; flex-wrap: wrap; gap: 8px; }
 .foto { width: 96px; height: 72px; border-radius: var(--r-orta); overflow: hidden; border: 1px solid var(--kenar); }
-.dosya { width: 100%; min-height: var(--tus-y); font: inherit; color: var(--yazi); }
+.fotoAlan { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .notAlan { width: 100%; min-height: 72px; padding: 8px 10px; border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); color: var(--yazi); font: inherit; resize: vertical; }
 .bosSatir { margin: 0; padding: 14px 0; color: var(--yazi2); font-size: var(--boy-kucuk); }

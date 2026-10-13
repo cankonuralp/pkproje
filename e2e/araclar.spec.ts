@@ -6,6 +6,9 @@ import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import { girisli, hazir } from "./yardimci";
 
+/* 531: açı fotoğrafı için 2×2 geçerli PNG (tarayıcı küçültüp JPEG'e çevirir) */
+const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFElEQVR4nGP4z8DAwAAi/v///x8AHu8F+5BApdwAAAAASUVORK5CYII=", "base64");
+
 test("araç: ekle, teslim tutanağı, sürücü haftalık kilometre", async ({ page, context }, bilgi) => {
   const plaka = `00 ${bilgi.project.name.slice(0, 3).toLocaleUpperCase("tr")} ${10 + bilgi.retry}`;
   await girisli(page, "yonetici");
@@ -33,6 +36,13 @@ test("araç: ekle, teslim tutanağı, sürücü haftalık kilometre", async ({ p
   await t.locator("#tw-km").fill("900");
   await t.getByRole("combobox", { name: "Yakıt seviyesi" }).click();
   await t.getByRole("option", { name: "1/2" }).click();
+  /* 531 (reisim: "araçlar ve zimmetlerde de galeriden fotoğraf ekleme seçeneği ekle"): açı fotoğrafı menüden — galeriden / bilgisayardan; küçük
+     görüntüsü açının altında, tuş "Değiştir" olur */
+  await t.getByRole("button", { name: "Ön: fotoğraf ekle" }).click();
+  await expect(t.getByText("Fotoğraf çek")).toBeVisible();
+  await t.getByLabel("Galeriden / bilgisayardan seç").setInputFiles({ name: "on.png", mimeType: "image/png", buffer: PNG });
+  await expect(t.getByRole("list", { name: "Ön fotoğrafı" }).locator("img")).toHaveCount(1);
+  await expect(t.getByRole("button", { name: "Ön: fotoğrafı değiştir" })).toBeVisible();
   await t.getByRole("button", { name: "Tutanağı kaydet" }).click();
   await expect(t.getByText("Son bilinen kilometreden (1.000) küçük olamaz.")).toBeVisible();
   await t.locator("#tw-km").fill("1.200");

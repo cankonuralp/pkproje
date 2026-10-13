@@ -4,6 +4,9 @@
 import { expect, test } from "@playwright/test";
 import { girisli, hazir } from "./yardimci";
 
+/* 531: teslim fotoğrafı için 2×2 geçerli PNG (tarayıcı küçültüp JPEG'e çevirir) */
+const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFElEQVR4nGP4z8DAwAAi/v///x8AHu8F+5BApdwAAAAASUVORK5CYII=", "base64");
+
 test("zimmet: demirbaş ekle, kişiye teslim, hareketler; denetçi yalnız kendi zimmetini görür", async ({ page, context }, bilgi) => {
   const kod = `DM-${bilgi.project.name.slice(0, 3).toUpperCase()}${bilgi.retry}`;
   await girisli(page, "yonetici");
@@ -25,6 +28,14 @@ test("zimmet: demirbaş ekle, kişiye teslim, hareketler; denetçi yalnız kendi
   await t.getByRole("combobox", { name: "Teslim alan" }).click();
   await t.getByRole("option", { name: "Deneme Denetçi" }).click();
   await expect(t.getByText("Fotoğraf yok.")).toBeVisible();
+  /* 531 (reisim: "araçlar ve zimmetlerde de galeriden fotoğraf ekleme seçeneği ekle"): fotoğraf menüden — galeriden / bilgisayardan birden çok;
+     PNG / JPEG olmayan eklenmez, alanın altında söylenir; küçük görüntüler, "Fotoğraf yok." kalkar */
+  await t.locator("#zw-foto").click();
+  await t.getByLabel("Galeriden / bilgisayardan seç").setInputFiles([{ name: "teslim-1.png", mimeType: "image/png", buffer: PNG },
+    { name: "notlar.txt", mimeType: "text/plain", buffer: Buffer.from("deneme") }, { name: "teslim-2.png", mimeType: "image/png", buffer: PNG }]);
+  await expect(t.getByRole("list", { name: "Seçilen fotoğraflar" }).locator("img")).toHaveCount(2);
+  await expect(t.getByText("notlar.txt eklenmedi: yalnız JPEG ya da PNG, en çok 8 MB.")).toBeVisible();
+  await expect(t.getByText("Fotoğraf yok.")).toHaveCount(0);
   await t.getByRole("button", { name: "Teslimi kaydet" }).click();
   await expect(page).toHaveURL(/\/zimmetler\/varlik\/d\/[0-9a-f-]{36}$/, { timeout: 30_000 });
   await expect(page.getByRole("heading", { level: 1, name: `${kod} · Deneme merdiven` })).toBeVisible();

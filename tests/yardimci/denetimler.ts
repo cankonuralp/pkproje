@@ -538,14 +538,28 @@ export function e2eYayinBayragiEksikleri(p: { proxy: string; vitrinAcik: string;
 }
 
 
-/** 527 (reisim 2026-10-13: "say chatte fotoğraf işaretine tıklayınca galeriden veya pc den de fotoğraf yükleyebilmek olsun"): S.A.Y Chat'in her
-    fotoğraf tuşu FotoTusu'dur — SayChat.tsx'te doğrudan dosya girdisi yok (yalnız kamera açan eski tuş geri gelemez); FotoTusu'nda iki girdi: kamera
-    (capture) ve galeri / bilgisayar (capture YOK, çoklu seçilebilir). Dönen: hata listesi (boş = tamam). */
-export function sayChatFotoTuslari(sayChat: string, fotoTusu: string): string[] {
+/** 527 / 531 (reisim 2026-10-13: "say chatte fotoğraf işaretine tıklayınca galeriden veya pc den de fotoğraf yükleyebilmek olsun" · "araçlar ve
+    zimmetlerde de galeriden fotoğraf ekleme seçeneği ekle"): telefonda YALNIZ kamera açan girdi kalmaz. Kamera açan dosya girdisi (capture) yalnız iki
+    yerde: ortak fotoğraf tuşu (components/foto/FotoTusu.tsx — kamera + galeri) ve S.A.Y ataç menüsü (Fotoğraf çek · Galeriden seç · Belge). FotoTusu'nda
+    iki girdi: kamera (capture) ve galeri / bilgisayar (capture YOK, çoklu seçilebilir). kullananlar: dosya → en az kaç FotoTusu (S.A.Y Chat 4, araç
+    teslim tutanağı 1, zimmet teslimi 1); onlarda doğrudan resim girdisi yok. Dönen: hata listesi (boş = tamam). */
+/** fotoğraf tuşunu kullananlar: dosya → en az kaç FotoTusu */
+export const FOTO_TUSU_KULLANANLAR: Readonly<Record<string, number>> = {
+  "src/modules/say-chat/ui/SayChat.tsx": 4,
+  "src/modules/araclar/ui/Pencereler.tsx": 1,
+  "src/modules/zimmetler/ui/Pencereler.tsx": 1,
+};
+export function fotoTuslari(kaynaklar: readonly { ad: string; metin: string }[], fotoTusu: string, kullananlar: Readonly<Record<string, number>>): string[] {
   const hata: string[] = [];
-  if (/type="file"/.test(sayChat)) hata.push("SayChat.tsx: doğrudan dosya girdisi var (fotoğraf tuşu FotoTusu olmalı)");
-  const tuslar = (sayChat.match(/<FotoTusu\b/g) ?? []).length;
-  if (tuslar < 4) hata.push(`SayChat.tsx: ${tuslar} FotoTusu (yeni kayıt, + ek, etiket, okunacak başlık — 4)`);
+  const izinli = new Set(["src/components/foto/FotoTusu.tsx", "src/modules/say/ui/SayAsistan.tsx"]);
+  for (const d of kaynaklar) if (!izinli.has(d.ad) && /\bcapture=/.test(d.metin)) hata.push(`${d.ad}: kamera açan tek girdi (capture) — FotoTusu kullanılmalı`);
+  for (const [ad, en] of Object.entries(kullananlar)) {
+    const d = kaynaklar.find((x) => x.ad === ad);
+    if (!d) { hata.push(`${ad}: dosya yok`); continue; }
+    const n = (d.metin.match(/<FotoTusu\b/g) ?? []).length;
+    if (n < en) hata.push(`${ad}: ${n} FotoTusu (en az ${en})`);
+    if (/<input\b[^>]*type="file"[^>]*accept="image/.test(d.metin)) hata.push(`${ad}: doğrudan resim girdisi var (fotoğraf tuşu FotoTusu olmalı)`);
+  }
   const girdiler = [...fotoTusu.matchAll(/<input\b[^>]*type="file"[^>]*>/g)].map((m) => m[0]);
   if (girdiler.length !== 2) hata.push(`FotoTusu.tsx: ${girdiler.length} dosya girdisi (kamera + galeri = 2)`);
   if (!girdiler.some((g) => /\bcapture=/.test(g))) hata.push("FotoTusu.tsx: kamera girdisi (capture) yok");

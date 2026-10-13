@@ -3,11 +3,16 @@
    bağlı; kayıttaki kilometre yalnız eklerken) · teslim tutanağı (araç · teslim alan: kişi ya da depo · tarih-saat · kilometre · yakıt · araçta
    olanlar · hasar · açı açı fotoğraf; işaretlenmeyen kalem tutanağa "yok", fotoğrafsız açı uyarı — kayıt yine yapılır) · tutanak görünümü.
    Teslim eden sunucuda o anki "kimde"den. Karar sunucuda. Teslim alan kişiyse tutanağın PDF'i onun imzasına gider (Onaylar › Diğer belgeler,
-   342); tutanak görünümünde imzanın durumu ve PDF. */
+   342); tutanak görünümünde imzanın durumu ve PDF. 531 (reisim 2026-10-13: "araçlar ve zimmetlerde de galeriden fotoğraf ekleme seçeneği ekle"): açı
+   fotoğrafı components/foto/FotoTusu — Fotoğraf çek · Galeriden / bilgisayardan seç; seçilen küçültülür (09-A4), küçük görüntüsü × ile çıkar,
+   "Değiştir" yenisini koyar; uymayan (JPEG / PNG değil, 8 MB üstü) açının altında söylenir. */
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Alan, FormIzgara, Girdi, ipucuId } from "../../../components/form/Form";
+import { FotoKucuk, FotoKucukler, FotoTusu } from "../../../components/foto/FotoTusu";
+import { fotografiKucult } from "../../../components/foto/kucult";
+import { fotolariSec, fotoSecimiUyarisi } from "../../../components/foto/secim";
 import { GizliResim } from "../../../components/gizli-resim/GizliResim";
 import { Bilgi, BilgiListesi } from "../../../components/bilgi/Bilgi";
 import { Pencere } from "../../../components/pencere/Pencere";
@@ -24,6 +29,8 @@ import { aracKaydetEylemi, tutanakKaydetEylemi } from "./eylemler";
 import { kimdeAd, zamanYaz } from "./ortak";
 import stil from "./araclar.module.css";
 
+/** teslim fotoğrafı sınırı (sunucu: eylemler.ts tutanakKaydetEylemi) */
+const TESLIM_FOTO_BAYT = 8 << 20;
 const A_ALAN = ["plaka", "tur", "marka", "model", "yil", "yakit", "ilkKm", "bakimKm", "muayene", "sigorta", "kasko"] as const;
 type AAlan = (typeof A_ALAN)[number];
 /* alan kimlikleri tek yerde (etiket for= ile girdi id= aynı sabitten — çift id kilidi) */
@@ -96,16 +103,34 @@ export function TutanakPenceresi({ kapat, araclar, kisiler, arac = "", surucu = 
   const [bekliyor, baslat] = useTransition();
   const [d, setD] = useState({ arac: arac || (surucu ? araclar[0]?.id ?? "" : ""), alan: surucu ? "depo" : "", zaman: simdiIso().slice(0, 16), km: "", yakit: "", hasar: "" });
   const [kontrol, setKontrol] = useState<Set<string>>(new Set());
-  const [fotolu, setFotolu] = useState<Set<string>>(new Set());
+  /* açı → seçilen fotoğraf (küçültülmüş; görüntüsü blob: adresiyle) */
+  const [fotolar, setFotolar] = useState<Record<string, { dosya: File; url: string }>>({});
   const [h, setH] = useState<Record<string, string>>({});
   const [genel, setGenel] = useState<string | null>(null);
   const form = useRef<HTMLFormElement>(null);
   const v = araclar.find((x) => x.id === d.arac);
-  const eksik = ARAC_KONTROL.length - kontrol.size, fotosuz = ARAC_FOTO.length - fotolu.size;
+  const eksik = ARAC_KONTROL.length - kontrol.size, fotosuz = ARAC_FOTO.length - Object.keys(fotolar).length;
+  /* açının fotoğrafı (kamera ya da galeri / bilgisayar): küçültülür; uymayan açının altında söylenir */
+  const aciSec = async (k: string, l: File[]) => {
+    const s = await fotolariSec(l.slice(0, 1), 1, (f) => fotografiKucult(f), TESLIM_FOTO_BAYT), x = s.alinan[0], alan = `foto-${k}`;
+    const u = fotoSecimiUyarisi(s, "", TESLIM_FOTO_BAYT);
+    setH((e) => { const y = { ...e }; if (u) y[alan] = u; else delete y[alan]; return y; });
+    if (!x) return;
+    const eski = fotolar[k], url = URL.createObjectURL(x);
+    if (eski) URL.revokeObjectURL(eski.url);
+    setFotolar((m) => ({ ...m, [k]: { dosya: x, url } }));
+  };
+  const aciCikar = (k: string) => {
+    const eski = fotolar[k];
+    if (eski) URL.revokeObjectURL(eski.url);
+    setFotolar((m) => { const y = { ...m }; delete y[k]; return y; });
+    requestAnimationFrame(() => document.getElementById(`tw-foto-${k}`)?.focus());
+  };
   const kaydet = () => baslat(async () => {
     const f = new FormData(form.current!);
     for (const [k, x] of Object.entries(d)) f.set(k, x);
     f.delete("kontrol"); for (const k of kontrol) f.append("kontrol", k);
+    for (const [k, x] of Object.entries(fotolar)) f.set(`foto-${k}`, x.dosya);
     const r = await tutanakKaydetEylemi(f);
     setH(r.hatalar ?? {}); setGenel(r.genel ?? null);
     if (!r.tamam) {
@@ -115,6 +140,7 @@ export function TutanakPenceresi({ kapat, araclar, kisiler, arac = "", surucu = 
       return;
     }
     const alanAd = d.alan === "depo" ? "Depo" : kisiler.find((k) => k.id === d.alan)?.ad ?? "";
+    for (const x of Object.values(fotolar)) URL.revokeObjectURL(x.url);
     kapat();
     bildir(`${v?.plaka ?? ""}: ${v ? kimdeAd(v.kimde) : ""} → ${alanAd}. Tutanak ${r.ileti ?? ""} kaydedildi, zimmet kaydı oluştu${d.alan === "depo" ? "." : r.imzaya ? `; ${alanAd} Onaylar'dan imzalar.` : `; ${alanAd} kişisinin giriş hesabı yok, tutanak imzaya gönderilmedi.`}`);
     router.push(surucu && d.alan !== "depo" ? "/araclar" : `/araclar/${d.arac}`);   // 486: tazeleme sunucuda (eylem refresh)
@@ -161,15 +187,18 @@ export function TutanakPenceresi({ kapat, araclar, kisiler, arac = "", surucu = 
         </FormIzgara>
         <p className={stil.etiket}>Fotoğraflar</p>
         <ul className={stil.acilar}>
-          {ARAC_FOTO.map(([k, ad]) => (
-            <li key={k}>
-              <label htmlFor={`tw-foto-${k}`}>{ad}</label>
-              <input id={`tw-foto-${k}`} className={stil.dosya} name={`foto-${k}`} type="file" accept="image/jpeg,image/png" capture="environment"
-                aria-describedby={h[`foto-${k}`] ? `tw-foto-${k}-hata` : undefined}
-                onChange={(e) => { const s = new Set(fotolu); if (e.target.files?.length) s.add(k); else s.delete(k); setFotolu(s); }} />
-              {h[`foto-${k}`] && <span id={`tw-foto-${k}-hata`} className={stil.ipucuHata}>{h[`foto-${k}`]}</span>}
-            </li>
-          ))}
+          {ARAC_FOTO.map(([k, ad]) => {
+            const x = fotolar[k];
+            return (
+              <li key={k}>
+                <span className={stil.aciAd}>{ad}</span>
+                {x && <FotoKucukler ad={`${ad} fotoğrafı`}><FotoKucuk url={x.url} ad={x.dosya.name} cikar={() => aciCikar(k)} /></FotoKucukler>}
+                <FotoTusu ad={x ? "Değiştir" : "Fotoğraf ekle"} etiket={`${ad}: ${x ? "fotoğrafı değiştir" : "fotoğraf ekle"}`} ikon="camera" sinif={tusSinifi("ikincil")}
+                  id={`tw-foto-${k}`} tanim={h[`foto-${k}`] ? `tw-foto-${k}-hata` : undefined} sec={(l) => void aciSec(k, l)} />
+                {h[`foto-${k}`] && <span id={`tw-foto-${k}-hata`} className={stil.ipucuHata}>{h[`foto-${k}`]}</span>}
+              </li>
+            );
+          })}
         </ul>
         {fotosuz > 0 && <p className={stil.ipucu}>{fotosuz} açı fotoğrafsız; tutanak yine kaydedilir.</p>}
       </form>

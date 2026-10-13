@@ -1,23 +1,28 @@
 "use client";
-/* S.A.Y CHAT FOTOĞRAF TUŞU (527; reisim 2026-10-13: "say chatte fotoğraf işaretine tıklayınca galeriden veya pc den de fotoğraf yükleyebilmek olsun").
+/* FOTOĞRAF TUŞU — tek üretici. 527 (reisim 2026-10-13: "say chatte fotoğraf işaretine tıklayınca galeriden veya pc den de fotoğraf yükleyebilmek
+   olsun") S.A.Y Chat'te doğdu; 531 (reisim 2026-10-13: "araçlar ve zimmetlerde de galeriden fotoğraf ekleme seçeneği ekle") ortak oldu: S.A.Y Chat,
+   araç teslim tutanağı (açı başına), zimmet teslimi. Eskiden hepsi capture'lı tek girdiydi — telefonda yalnız kamera açılıyordu.
    Tuş → küçük menü: "Fotoğraf çek" (telefonda kamera açılır) · "Galeriden / bilgisayardan seç" (telefon galerisi ya da bilgisayardaki dosya; çoklu
-   tuşta birden çok fotoğraf). S.A.Y ataç menüsünün düzeni (say.module.css .ekMenu). Menü üst katmanda yüzer (components/secim/yuzen.ts — panelin
-   kenarında kesilmez, kayan gövdeyi itmez); dışarı tıklanınca ya da Esc ile kapanır (Esc paneli kapatmaz, odak tuşa döner); seçim yapılınca kapanır.
-   Hangi fotoğrafın kayda gireceği çağıranda (foto-secim.ts). Kamera da galeri de aynı küçültme ve denetimden geçer. */
-import { useEffect, useId, useRef, useState, type ChangeEvent } from "react";
-import { useYuzen } from "../../../components/secim/yuzen";
-import { Ikon } from "../../../components/ikon/Ikon";
-import stil from "./SayChat.module.css";
+   tuşta birden çok fotoğraf). S.A.Y ataç menüsünün düzeni (say.module.css .ekMenu). Menü üst katmanda yüzer (components/secim/yuzen.ts — pencerenin
+   ya da panelin kenarında kesilmez, kayan gövdeyi itmez); dışarı tıklanınca ya da Esc ile kapanır (Esc pencereyi / paneli kapatmaz, odak tuşa
+   döner); seçim yapılınca kapanır. Hangi fotoğrafın gireceği çağıranda (secim.ts — küçültme, tür, boy, yer). FotoKucuk: seçilen fotoğrafın küçük
+   görüntüsü, × ile çıkar. */
+import { useEffect, useId, useRef, useState, type ChangeEvent, type ReactNode } from "react";
+import { Ikon } from "../ikon/Ikon";
+import { useYuzen } from "../secim/yuzen";
+import stil from "./foto.module.css";
 
 interface Props {
   /** tuşta yazan */
   ad: string;
   ikon: string;
-  /** tuşun görünümü (SayChat.module.css .birincil / .ikincil / .ekle) */
+  /** tuşun görünümü (çağıranın sınıfı: tusSinifi("ikincil"), modülün tuşu …) */
   sinif: string;
   id?: string;
   /** erişilebilir ad, tuşta yazandan farklıysa ("+ ek" → "Ekipman fotoğrafı ekle") */
   etiket?: string;
+  /** tuşu açıklayan mesajın kimliği (alanın uyarısı / hatası — aria-describedby) */
+  tanim?: string;
   /** galeriden birden çok fotoğraf seçilebilir */
   coklu?: boolean;
   sec: (dosyalar: File[]) => void;
@@ -28,16 +33,16 @@ function Menu({ id, coklu, degisti }: { id: string; coklu: boolean; degisti: (e:
   const kap = useRef<HTMLDivElement>(null);
   useYuzen(kap, { genislik: "dogal", enAzGenislik: 220, enCokYukseklik: 200 });
   return (
-    <div className={stil.fotoMenu} id={id} ref={kap} popover="manual">
-      <label className={stil.fotoOge}><input className={stil.gizli} type="file" accept="image/*" capture="environment" onChange={degisti} />
+    <div className={stil.menu} id={id} ref={kap} popover="manual">
+      <label className={stil.oge}><input className={stil.gizli} type="file" accept="image/*" capture="environment" onChange={degisti} />
         <Ikon ad="camera" kucuk />Fotoğraf çek</label>
-      <label className={stil.fotoOge}><input className={stil.gizli} type="file" accept="image/*" multiple={coklu} onChange={degisti} />
+      <label className={stil.oge}><input className={stil.gizli} type="file" accept="image/*" multiple={coklu} onChange={degisti} />
         <Ikon ad="image" kucuk />Galeriden / bilgisayardan seç</label>
     </div>
   );
 }
 
-export function FotoTusu({ ad, ikon, sinif, id, etiket, coklu = false, sec }: Props) {
+export function FotoTusu({ ad, ikon, sinif, id, etiket, tanim, coklu = false, sec }: Props) {
   const [acik, setAcik] = useState(false);
   const kok = useRef<HTMLSpanElement>(null), tus = useRef<HTMLButtonElement>(null);
   const menuId = useId();
@@ -57,13 +62,29 @@ export function FotoTusu({ ad, ikon, sinif, id, etiket, coklu = false, sec }: Pr
     if (l.length) sec(l);
   };
   return (
-    <span className={stil.fotoKap} ref={kok}
-      onKeyDown={(e) => { if (e.key === "Escape" && acik) { e.stopPropagation(); setAcik(false); tus.current?.focus(); } }}>
-      <button ref={tus} id={id} className={sinif} type="button" aria-label={etiket} aria-haspopup="true" aria-expanded={acik}
+    <span className={stil.kap} ref={kok}
+      onKeyDown={(e) => { if (e.key === "Escape" && acik) { e.stopPropagation(); e.preventDefault(); setAcik(false); tus.current?.focus(); } }}>
+      <button ref={tus} id={id} className={sinif} type="button" aria-label={etiket} aria-describedby={tanim} aria-haspopup="true" aria-expanded={acik}
         aria-controls={acik ? menuId : undefined} onClick={() => setAcik((a) => !a)}>
         <Ikon ad={ikon} kucuk /><span>{ad}</span>
       </button>
       {acik && <Menu id={menuId} coklu={coklu} degisti={degisti} />}
     </span>
+  );
+}
+
+/** seçilen fotoğrafların listesi (FotoKucuk'lar) — ad: liste adı (ekran okuyucu) */
+export function FotoKucukler({ ad, children }: { ad: string; children: ReactNode }) {
+  return <ul className={stil.kucukler} aria-label={ad}>{children}</ul>;
+}
+
+/** seçilen (henüz gönderilmemiş) fotoğrafın küçük görüntüsü; × çıkarır */
+export function FotoKucuk({ url, ad, cikar }: { url: string; ad: string; cikar: () => void }) {
+  return (
+    <li className={stil.kucuk} title={ad}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={url} alt={ad} />
+      <button className={stil.sil} type="button" onClick={cikar} aria-label={`${ad} kaldır`} title="Kaldır"><Ikon ad="x" kucuk /></button>
+    </li>
   );
 }

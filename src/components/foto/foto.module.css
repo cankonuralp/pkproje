@@ -1,0 +1,20 @@
+/* FOTOĞRAF TUŞU (FotoTusu.tsx, 527 / 531) — menü S.A.Y ataç menüsünün düzeninde (say.module.css .ekMenu); üst katmanda yüzer, konumu
+   components/secim/yuzen.ts satır içi yazar. Seçilen fotoğrafın küçük görüntüsü (FotoKucuk). ⛔ çıplak renk yok, yalnız tokens.css */
+.kap { position: relative; display: inline-flex; }
+.menu {
+  position: fixed; inset: auto; z-index: 1000; margin: 0; min-width: 220px; padding: 6px; display: grid; gap: 2px; color: var(--yazi);
+  background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-orta); box-shadow: var(--golge-2);
+}
+.oge { position: relative; display: flex; align-items: center; gap: 8px; min-height: var(--tus-y); padding: 0 10px; border-radius: var(--r-kucuk); cursor: pointer; white-space: nowrap; }
+.oge:hover { background: var(--zemin2); }
+.oge:focus-within { background: var(--zemin2); outline: 3px solid var(--odak); outline-offset: -3px; }
+.gizli { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+.kucukler { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.kucuk { position: relative; width: 64px; height: 64px; border-radius: var(--r-orta); overflow: hidden; background: var(--zemin2); }
+.kucuk img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sil {
+  position: absolute; top: 2px; right: 2px; width: 28px; height: 28px; display: grid; place-items: center; padding: 0;
+  border: 0; border-radius: 50%; background: var(--kart); color: var(--yazi); cursor: pointer; box-shadow: var(--golge-2);
+}
+.sil:focus-visible { outline: 3px solid var(--odak); outline-offset: 1px; }

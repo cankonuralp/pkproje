@@ -330,8 +330,7 @@ pkproje/
                             okuma, kayda yazılmaz) · ui/SayChat.tsx (plan içi düğme + panel; planlar sayChatPlani, personel say-chat-baglanti personelBransi)
                             · 525 server/rapor-yaz.ts (raporKosullari, chatRaporYaz — kayıt başına işlem; raporlar chatRaporuDoldur) · eylemler chatRaporYazEylemi,
                             chatOkutEylemi (okunanlar raporlar/server/oneri.ts — göç 0086 rapor_oneri; rapor ekranında öneri kartı + şerit)
-                            · 527 ui/FotoTusu.tsx (her fotoğraf tuşu: Fotoğraf çek · Galeriden / bilgisayardan seç — menü yuzen.ts üst katmanında) +
-                            foto-secim.ts (saf: JPEG / PNG, 2 MB, kayıttaki yer; eklenmeyen söylenir) — kilit tests/say-chat-foto.test.ts
+                            · 527 fotoğraf tuşları components/foto/FotoTusu (531'de ortak oldu)
   src/server/eposta/        E-POSTA (432; göç 0077): eposta.ts kuyruk (alıcı başına bir satır; metin değişmez, silinmez) · saglayici.ts tek bağdaştırıcı
                             (Resend biçimi HTTP; PROBATA_EPOSTA_ANAHTAR / _KIMDEN / _UC — yoksa bekler) · gonder.ts bekleyenleriGonder · sonra.ts (after) ·
                             gece işi epostaIsi yeniden dener. İlk kullanım: plan açılınca ekip + bilgilendirme (planlar planAc, sema planEpostasi)
@@ -365,7 +364,9 @@ pkproje/
                             DecompressionStream ile, ortak dizgi, tarih biçimi, Türkçe Windows CSV; 10 MB / 50 MB açılmış / 5 000 satır sınırı) · indir.ts
   src/components/           TEK ÜRETİCİLER: sayfa/ (kırıntı, sayfa / nesne başlığı, bölüm, rozet, sekmeler) · kabuk (yan menü + üst çubuk) · ikon · boş durum · tuş · şerit · bildirim (altta; 506 useUyar: işlemi
                             durduran kısa uyarı üstte — eksikte pencere yerine) · pencere + onay ·
-                            liste (tablo↔kart, süzgeç mantığı liste/suzgec.ts) · YÜZEN KATMAN secim/yuzen.ts (452: seçim listesi, süzgeç seçicisi, takvim,
+                            liste (tablo↔kart, süzgeç mantığı liste/suzgec.ts) · FOTOĞRAF TUŞU foto/FotoTusu.tsx (527 / 531: Fotoğraf çek · Galeriden /
+                            bilgisayardan seç; S.A.Y Chat, araç teslim tutanağı, zimmet teslimi — capture yalnız burada ve S.A.Y ataçta, kilit tests/foto-tusu.test.ts)
+                            + foto/secim.ts (saf: JPEG / PNG, bayt sınırı, yer) · YÜZEN KATMAN secim/yuzen.ts (452: seçim listesi, süzgeç seçicisi, takvim,
                             saat önerileri üst katmanda — sayfayı / pencereyi itmez, kesilmez; tarama açılır katman denetimi; 486: konum satır içi biçemde,
                             odak sayfayı kaydırmaz, başka CSS katmana inemez — tests/yuzen-ezme.test.ts) · fotoğraf küçültme (foto/kucult.ts) · filtre satırı · sayfalayıcı · seçim alanı + tarih/saat (secim/) · bilgi yüzleri / bilgi listesi / koşullar (bilgi/) · form sayfası (form/) · uzun tuş (tus/UzunTus) · kopyala (pencere/Kopyala: sonuç pencerenin içinde) · dışa aktarma (disa/: ZIP + .xlsx yazıcı, saf; tarayıcıda indirme — 320) · kesin silme / pasif (sil/: SilTusu, PasifPenceresi — engel, metin.ts kullanimMetni, odak.ts — 357/365)
                             (geliştirme vitrini /vitrin: yalnız geliştirmede, yayında 404)

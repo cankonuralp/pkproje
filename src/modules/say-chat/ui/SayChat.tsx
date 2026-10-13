@@ -12,12 +12,14 @@
      fotoğraflar yapay zekâyla okunur (her biri ayrı istek); olan raporlar bağlantısıyla listelenir, olmayan kayıt nedeniyle bekler.
    · 527 (reisim 2026-10-13: "fotoğraf işaretine tıklayınca galeriden veya pc den de fotoğraf yükleyebilmek olsun"): her fotoğraf tuşu (yeni kayıt,
      ekipman "+ ek", etiket, okunacak başlık) FotoTusu — Fotoğraf çek · Galeriden / bilgisayardan seç (etiket dışında birden çok); uymayan ve kayıttaki
-     yeri aşan fotoğraf eklenmez, söylenir (foto-secim.ts). */
+     yeri aşan fotoğraf eklenmez, söylenir (components/foto/secim.ts — 531'de ortak oldu). */
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useBildir, useUyar } from "../../../components/bildirim/Bildirim";
 import { bekleyenIcerik, kuyrugaEkle, kuyrukAbone, kuyrukAnlik, kuyrukSunucuAnlik, kuyruktanCikar, type KuyrukSonucOlayi } from "../../../components/cevrimdisi/kuyruk";
+import { FotoTusu } from "../../../components/foto/FotoTusu";
 import { fotografiKucult } from "../../../components/foto/kucult";
+import { fotolariSec, fotoSecimiUyarisi } from "../../../components/foto/secim";
 import { GizliResim } from "../../../components/gizli-resim/GizliResim";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { useOnayla } from "../../../components/pencere/Onay";
@@ -25,12 +27,10 @@ import { Pencere } from "../../../components/pencere/Pencere";
 import { Rozet } from "../../../components/sayfa/Sayfa";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
-import { fotolariSec, fotoSecimiUyarisi } from "../foto-secim";
 import type { ChatKaydi, SayChatPaneli } from "../server/kayitlar";
-import { dagit, EKIPMAN_FOTO_EN_COK, MESAJ_EN_COK, MESAJ_SATIR_EN_COK, OKUNACAK_FOTO_EN_COK, type ChatEkipman, type ChatFoto, type ChatTanimi, type FotoRolu,
+import { CHAT_FOTO_BAYT, dagit, EKIPMAN_FOTO_EN_COK, MESAJ_EN_COK, MESAJ_SATIR_EN_COK, OKUNACAK_FOTO_EN_COK, type ChatEkipman, type ChatFoto, type ChatTanimi, type FotoRolu,
   type KayitGirdisi } from "../sema";
 import { chatEtiketOkuEylemi, chatOkutEylemi, chatRaporYazEylemi } from "./eylemler";
-import { FotoTusu } from "./FotoTusu";
 import stil from "./SayChat.module.css";
 
 const baglantiAbone = (f: () => void) => {
@@ -175,8 +175,8 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
   /* ── taslak ── */
   /* seçilen fotoğraflar (kamera ya da galeri / bilgisayar — birden çok olabilir): küçültülür; uymayan ve kayıttaki yeri aşan eklenmez, söylenir */
   const yerelHazirla = async (l: File[], rol: FotoRolu, k: string | null, yer: number, sinir: string): Promise<Yerel[]> => {
-    const s = await fotolariSec(l, yer, (f) => fotografiKucult(f));
-    const u = fotoSecimiUyarisi(s, sinir);
+    const s = await fotolariSec(l, yer, (f) => fotografiKucult(f), CHAT_FOTO_BAYT);
+    const u = fotoSecimiUyarisi(s, sinir, CHAT_FOTO_BAYT);
     if (u) uyar(u);
     return s.alinan.map((dosya) => ({ anahtar: ++yerelSira, dosya, url: URL.createObjectURL(dosya), rol, k }));
   };
