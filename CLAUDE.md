@@ -248,7 +248,7 @@ pkproje/
                             · 387 Saklama süresi dolacak raporlar /firma-ayarlari/saklama (server/saklama.ts, ui/SaklamaListesi.tsx; yalnız firma yöneticisi)
                             · 513 "Supabase hesabı ve yedek" (ui SupabaseYedek: bağlama akışı sema.ts SUPABASE_ADIMLAR — Yönetim › Firma aç da gösterir —,
                             dosya kullanımı, yedekte ayar yok) · "Raporların ikinci kopyası" (ui IkinciKopya; ayar bulut: "" kapalı | gdrive | onedrive)
-                            · 512 yapay zekâ modeli Haiku 5.5 (varsayılan) / Sonnet 5.5 / Opus 5.5 — fiyatlar src/server/yz/okuma.ts
+                            · 512 → 538 yapay zekâ TEK MODEL Claude Haiku 5.5 (seçim yok; eski Sonnet / Opus kaydı okumada Haiku) — fiyat src/server/yz/okuma.ts
                             · TOPLU İÇE AKTARMA (337, göç 0047 ice_aktarim + ice_aktarim_geri_al): ice-aktar.ts (saf: türler, şablon, satır denetimi) ·
                             server/ice-aktar.ts (denetle, içe aktar — tek işlem, geri al) · ui/IceAktarma.tsx · bağlantılar <modül>/server/ice-aktar-baglanti.ts
                             (musteriler, ekipman, olcum-cihazlari — ilk_bitis, personel, araclar)

@@ -478,13 +478,13 @@ const yzSutunlari = (sinir: number | null): Sutun<YzKullanim>[] => [
     return o >= 1 ? <Rozet tur="red">Doldu</Rozet> : <Rozet tur={o >= 0.8 ? "bekliyor" : "tamam"}>%{Math.round(o * 100)}</Rozet>;
   } },
 ];
-const ZID = { anahtar: "w-ay-yz-anahtar", model: "w-ay-yz-model", sinir: "w-ay-yz-sinir" } as const;
+const ZID = { anahtar: "w-ay-yz-anahtar", sinir: "w-ay-yz-sinir" } as const;
 function YapayZeka({ v }: { v: Veri }) {
   const router = useRouter();
   const bildir = useBildir();
   const onayla = useOnayla();
   const [mesgulA, baslatA] = useTransition();
-  const s = useKesim("yz", { acik: v.yz.deger.acik, model: v.yz.deger.model, sinir: v.yz.deger.sinir === null ? "" : String(v.yz.deger.sinir).replace(".", ",") }, v.yz.surum);
+  const s = useKesim("yz", { acik: v.yz.deger.acik, sinir: v.yz.deger.sinir === null ? "" : String(v.yz.deger.sinir).replace(".", ",") }, v.yz.surum);
   const [yeni, setYeni] = useState<null | { deger: string; hata: string | null }>(v.yz.anahtar.tanimli ? null : { deger: "", hata: null });
   const anahtarKaydet = () => baslatA(async () => {
     if (!yeni) return;
@@ -526,10 +526,12 @@ function YapayZeka({ v }: { v: Veri }) {
           </div>
         </>}
         <FormIzgara>
-          <Alan id={ZID.model} etiket="Model" hata={s.h.model} sonuc={YZ_MODEL[s.d.model][1]}>
-            <SecimAlani id={ZID.model} ad="Model" deger={s.d.model} kapali={!v.yaz} tanim={ipucuId(ZID.model)} secenekler={(Object.keys(YZ_MODEL) as (keyof typeof YZ_MODEL)[]).map((k) => [k, YZ_MODEL[k][0]] as const)}
-              degistir={(x) => s.setD({ ...s.d, model: x as typeof s.d.model })} />
-          </Alan>
+          {/* 2026-10-14 (reisim: "tek seçenek claude haiku 5.5 olsun"): tek model — seçim yok, adı ve fiyatı yazar */}
+          <div>
+            <p className={stil.etiket}>Model</p>
+            <span className={stil.anahtar}>{YZ_MODEL[0]}</span>
+            <span className={stil.altSatir}>{YZ_MODEL[1]}</span>
+          </div>
           <Alan id={ZID.sinir} etiket="Kişi başı aylık sınır ($)" hata={s.h.sinir} sonuc={s.h.sinir ? undefined : "Boş: sınırsız. Dolunca o ay yalnız yönetici artırır."}>
             <Girdi id={ZID.sinir} value={s.d.sinir} inputMode="decimal" maxLength={8} disabled={!v.yaz} hata={!!s.h.sinir} mesajli onChange={(e) => s.setD({ ...s.d, sinir: e.target.value })} />
           </Alan>

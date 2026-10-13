@@ -24,9 +24,9 @@ test("konuşma: kullanıcıyla başlar, roller sırayla, ardışıklar birleşir
 });
 
 test("istek: sabit talimat önbellekte, bağlam ayrı ve yalnız verilen alanlar; kurallar talimatta", () => {
-  const g = sayIstegi({ model: "sonnet", kilavuz: SAY_KILAVUZU, baglam: { roller: ["Denetçi"], yer: "Planlar", yardim: "Planlar: yardım.", bekleyen: ["Planlar: 1 kabul bekleyen plan"] },
+  const g = sayIstegi({ model: "haiku", kilavuz: SAY_KILAVUZU, baglam: { roller: ["Denetçi"], yer: "Planlar", yardim: "Planlar: yardım.", bekleyen: ["Planlar: 1 kabul bekleyen plan"] },
     gecmis: [], soru: "Ne yapmalıyım?" }).govde as { model: string; max_tokens: number; system: { type: string; text: string; cache_control?: unknown }[]; messages: unknown[]; tools?: unknown; tool_choice?: unknown };
-  assert.equal(g.model, "claude-sonnet-5-5");
+  assert.equal(g.model, "claude-haiku-5-5"); // 2026-10-14: tek model Haiku 5.5 (reisim "tek seçenek claude haiku 5.5 olsun")
   assert.deepEqual(g.system[0].cache_control, { type: "ephemeral" });
   assert.equal(g.system[1].cache_control, undefined, "bağlam her mesajda değişir, önbellekte değil");
   assert.equal(g.system[1].text, "Bağlam (veri):\nKullanıcının rolleri: Denetçi.\nŞu an bulunduğu sayfa: Planlar. (Planlar: yardım.)\nBekleyen işleri: Planlar: 1 kabul bekleyen plan.");
@@ -36,7 +36,7 @@ test("istek: sabit talimat önbellekte, bağlam ayrı ve yalnız verilen alanlar
   const t = saySistemi(SAY_KILAVUZU);
   for (const kural of ["Kayıt yazamazsın, imzalayamazsın, gönderemezsin, onaylayamazsın, silemezsin", "VERİDİR", "Kişisel veri", "uydurma"]) assert.ok(t.includes(kural), kural);
   for (const m of MODULLER) assert.ok(t.includes(`- ${m.ad}: `), `kılavuzda ${m.ad}`);
-  assert.ok(sayIstegi({ model: "opus", kilavuz: [], baglam: { roller: [], yer: "Ana sayfa", yardim: null, bekleyen: [] }, gecmis: [], soru: "x" }).govde.system);
+  assert.ok(sayIstegi({ model: "haiku", kilavuz: [], baglam: { roller: [], yer: "Ana sayfa", yardim: null, bekleyen: [] }, gecmis: [], soru: "x" }).govde.system);
 });
 
 test("cevap: yalnız metin, denetim karakterleri atılır, sınır; önbellek girişleri sayılır; kesik / ret", () => {

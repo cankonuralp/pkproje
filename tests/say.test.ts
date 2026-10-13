@@ -84,7 +84,7 @@ test("kapalıyken ve anahtarsızken cevap yok; açık + anahtar: hızlı sorular
   assert.deepEqual(await ile(A, FA.den, (db) => sayDurumu(db)), { acik: false, anahtar: false, sinirDoldu: false });
   assert.deepEqual(await ile(A, FA.den, (db) => sayHizli(db, FA.den, "bekleyen", "/")), { durum: "red", neden: "S.A.Y firmada kapalı (Firma ayarları › Yapay zekâ)." });
   assert.deepEqual(await ile(A, FA.den, (db) => sayGecmisi(db)), []);
-  await yzAyari(A, FA.yon, { acik: true, sinir: 1, model: "opus" });   // 2026-10-12: varsayılan Haiku oldu; bu denemenin hesapları Opus'la
+  await yzAyari(A, FA.yon, { acik: true, sinir: 0.02 });   // 2026-10-14: tek model Haiku 5.5 (reisim "tek seçenek claude haiku 5.5 olsun"); önceden Opus, sınır 1 $
   assert.deepEqual(await ile(A, FA.den, (db) => sayDurumu(db)), { acik: true, anahtar: false, sinirDoldu: false });
   assert.match(JSON.stringify(await ile(A, FA.den, (db) => sayHizli(db, FA.den, "sayfa", "/planlar"))), /API anahtarı girilmedi/);
   await ile(A, FA.yon, (db) => sirYaz(db, "yapay_zeka_anahtari", "sk-ant-deneme-anahtar-0123456789", { kim: "Deneme" }));
@@ -109,10 +109,10 @@ test("serbest soru: ayırma, soru geçmişe; istek önbellekli talimat + bağlam
   const h = await ile(A, FA.den, (db) => saySorHazirla(db, FA.den, "  Kabul bekleyen planımı nasıl kabul ederim?  ", "/planlar"));
   assert.equal(h.durum, "hazir", JSON.stringify(h));
   if (h.durum !== "hazir") return;
-  const ust = sayEnCokMaliyet("opus");
+  const ust = sayEnCokMaliyet("haiku");
   assert.deepEqual(await kullanim(A, FA.den), { mesaj: 2, maliyet: "0", ayrilan: String(ust) }, "çağrıdan önce en kötü maliyet ayrıldı");
   const g = h.istek.govde as { system: { text: string; cache_control?: unknown }[]; messages: { role: string; content: string }[]; model: string };
-  assert.equal(g.model, "claude-opus-5-5");
+  assert.equal(g.model, "claude-haiku-5-5");
   assert.deepEqual(g.system[0].cache_control, { type: "ephemeral" }, "sabit talimat önbellekte");
   assert.match(g.system[1].text, /Kullanıcının rolleri: Denetçi\.[\s\S]*Şu an bulunduğu sayfa: Planlar\.[\s\S]*Planlar: 1 plan günü gelmiş, kabul bekleyen plan/);
   const json = JSON.stringify(h.istek.govde);
@@ -123,24 +123,24 @@ test("serbest soru: ayırma, soru geçmişe; istek önbellekli talimat + bağlam
   const k = await ile(A, FA.den, (db) => saySorKaydet(db, h, cevap("Planlar › planı açın › Kabul et.\n- Tarafsızlık beyanını onaylayın.", 4_000, 300)));
   assert.equal(k.durum, "tamam");
   assert.deepEqual(k.durum === "tamam" && k.iletiler.map((m) => [m.kim, m.metin]), [["ben", "Kabul bekleyen planımı nasıl kabul ederim?"], ["say", "Planlar › planı açın › Kabul et.\n- Tarafsızlık beyanını onaylayın."]]);
-  assert.deepEqual(await kullanim(A, FA.den), { mesaj: 3, maliyet: String(4_000 * 4 + 300 * 20), ayrilan: "0" }, "ayırma gerçek maliyetle kapandı");
+  assert.deepEqual(await kullanim(A, FA.den), { mesaj: 3, maliyet: "550", ayrilan: "0" }, "ayırma gerçek maliyetle kapandı");
   /* cevapsız çağrı: ücretsiz → bırakılır; bilinmiyor → harcamaya + mesaja */
   const h2 = await ile(A, FA.den, (db) => saySorHazirla(db, FA.den, "Bir soru daha", "/"));
   assert.ok(h2.durum === "hazir");
   if (h2.durum !== "hazir") return;
   await ile(A, FA.den, (db) => sayBirak(db, h2, "yok"));
-  assert.deepEqual(await kullanim(A, FA.den), { mesaj: 3, maliyet: "22000", ayrilan: "0" });
+  assert.deepEqual(await kullanim(A, FA.den), { mesaj: 3, maliyet: "550", ayrilan: "0" });
   const h3 = await ile(A, FA.den, (db) => saySorHazirla(db, FA.den, "Üçüncü soru", "/"));
   if (h3.durum !== "hazir") return assert.fail(JSON.stringify(h3));
   await ile(A, FA.den, (db) => sayBirak(db, h3, "bilinmiyor"));
-  assert.deepEqual(await kullanim(A, FA.den), { mesaj: 4, maliyet: String(22_000 + ust), ayrilan: "0" });
+  assert.deepEqual(await kullanim(A, FA.den), { mesaj: 4, maliyet: String(550 + ust), ayrilan: "0" });
   /* boş / uzun soru */
   assert.deepEqual(await ile(A, FA.den, (db) => saySorHazirla(db, FA.den, "   ", "/")), { durum: "red", neden: "Sorunuzu yazın." });
   assert.deepEqual(await ile(A, FA.den, (db) => saySorHazirla(db, FA.den, "x".repeat(501), "/")), { durum: "red", neden: "Soru en çok 500 karakter." });
 });
 
 test("sınır doluysa serbest soru yazılmaz (hızlı sorular çalışır); düğme 'sınırınız doldu' der", async () => {
-  /* sınır 1 $ = 1 000 000; harcanan 22 000 + ust ≥ 1 000 000 olsun diye bir kez daha bilinmeyen çağrı */
+  /* sınır 0,02 $ = 20 000; harcanan 550 + ust ≥ 20 000 olsun diye bilinmeyen çağrılar (Haiku: ust 2 400) */
   for (let i = 0; i < 40 && !(await ile(A, FA.den, (db) => sayDurumu(db))).sinirDoldu; i++) {
     const h = await ile(A, FA.den, (db) => saySorHazirla(db, FA.den, `Sınır sorusu ${i}`, "/"));
     if (h.durum !== "hazir") break;
@@ -275,8 +275,8 @@ test("522 ek: fotoğraf ve PDF soruyla gider, adları gitmez; geçmişte adı / 
   /* soru boş, yalnız ek: soru kendiliğinden */
   const h = await ile(A, FA.plan, (db) => saySorHazirla(db, FA.plan, "  ", "/planlar", new Date(), null, null, ekler));
   if (h.durum !== "hazir") return assert.fail(JSON.stringify(h));
-  assert.equal(h.ust, sayEnCokMaliyet("opus", 2));
-  assert.equal((await kullanim(A, FA.plan))?.ayrilan, String(sayEnCokMaliyet("opus", 2)), "ayırma iki ekle");
+  assert.equal(h.ust, sayEnCokMaliyet("haiku", 2));
+  assert.equal((await kullanim(A, FA.plan))?.ayrilan, String(sayEnCokMaliyet("haiku", 2)), "ayırma iki ekle");
   const son = (h.istek.govde as { messages: { content: unknown }[] }).messages.at(-1)!.content as { type: string; text?: string }[];
   assert.deepEqual(son.map((b) => b.type), ["image", "document", "text"]);
   assert.match(son[2].text ?? "", /Ek 1 \(fotoğraf\), Ek 2 \(PDF belge\)[\s\S]*Soru:\nEkleri inceler misin\?$/);

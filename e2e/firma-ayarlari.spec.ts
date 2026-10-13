@@ -55,9 +55,10 @@ test("firma ayarları: bölüm kaydet, geçersiz değer kaydedilmez, mesai şeri
   await yz.getByRole("radio", { name: "Açık" }).check();
   await expect(yz.getByText(/Anthropic'e \(ABD\) gider/)).toBeVisible();
   await expect(yz.getByLabel("API anahtarı")).toBeVisible();
-  /* 2026-10-12 (sunum Y1–Y3): model listesinde Haiku 5.5, yeni firmada varsayılan; açıklamada fiyat */
-  await expect(yz.getByRole("combobox", { name: "Model" })).toContainText("Claude Haiku 5.5");
-  await expect(yz.getByText(/en ucuz · 1 milyon token: giriş \$0,10/)).toBeVisible();
+  /* 2026-10-14 (reisim: "tek seçenek claude haiku 5.5 olsun"): model seçimi yok — tek model Claude Haiku 5.5, fiyatıyla */
+  await expect(yz.getByRole("combobox", { name: "Model" })).toHaveCount(0);
+  await expect(yz.getByText("Claude Haiku 5.5", { exact: true })).toBeVisible();
+  await expect(yz.getByText(/^1 milyon token: giriş \$0,10, çıkış \$0,50/)).toBeVisible();
   await yz.getByRole("button", { name: "Vazgeç" }).click();
   await expect(yz.getByRole("radio", { name: "Kapalı" })).toBeChecked();
   /* 2026-10-12 (sunum D1–D3 kabul): raporların ikinci kopyası — kapalıyken "tek kopya Supabase'te" uyarısı; Açık → hizmet Google Drive, yurt dışı

@@ -56,7 +56,7 @@ export interface FirmaAyarlari {
   mbelge: Surumlu<{ secili: string[] }> & { turler: MusteriBelgeTuru[]; ekSurum: number };
   /** 336: yapay zekâ (anahtar yalnız "tanımlı + son 4"; değer asla), raporların ikinci kopyası (bulut); saklama süresi (aylık arşiv) */
   /** kullanim: bu ayın kişi başı kullanımı (354; maket Y1 "Bu ay kullanım (kişi başına)") — maliyet milyonda bir dolar */
-  yz: Surumlu<{ acik: boolean; model: "haiku" | "sonnet" | "opus"; sinir: number | null }> & { anahtar: { tanimli: boolean; son4: string | null }; kullanim: YzKisiKullanimi[] };
+  yz: Surumlu<{ acik: boolean; sinir: number | null }> & { anahtar: { tanimli: boolean; son4: string | null }; kullanim: YzKisiKullanimi[] };
   bulut: Surumlu<{ saglayici: "" | "gdrive" | "onedrive"; kok: string; duzen: "mt" | "mty" | "my" }>;
   /** 536 E-posta: gönderen alan adı + gizli kopya; Resend anahtarı yalnız "tanımlı + son 4"; genel adres (Firma bilgileri › Rapor e-postası);
       ben: oturumdaki kişinin adresi (deneme e-postası); kisiler: açık hesaplar ve e-postalarının nereden gideceği (kayıtlı alan adına göre); ay: bu ay gönderilen */
@@ -114,7 +114,7 @@ export async function firmaAyarlari(db: Sorgulayici, kim: Kisi): Promise<FirmaAy
     })(),
     yz: await (async () => {
       const y = await ayarOku(db, "yapay_zeka");
-      return { deger: { acik: y.deger.acik, model: y.deger.model, sinir: y.deger.sinir }, surum: y.surum, anahtar: await sirDurumu(db, "yapay_zeka_anahtari"),
+      return { deger: { acik: y.deger.acik, sinir: y.deger.sinir }, surum: y.surum, anahtar: await sirDurumu(db, "yapay_zeka_anahtari"),
         kullanim: await yzAyKullanimi(db, yzAyi()) };
     })(),
     bulut: await (async () => { const b = await ayarOku(db, "bulut"); return { deger: b.deger, surum: b.surum }; })(),

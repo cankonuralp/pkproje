@@ -231,19 +231,23 @@ test("yapay zekâ, ikinci kopya, Supabase bölümü: anahtar biçimi denetlenir,
   assert.ok(!JSON.stringify(v).includes(ANAHTAR), "anahtar ekran verisinde yok");
   const satir = (await a(YON, (db) => db.sorgu<{ sifreli: string }>("SELECT sifreli FROM firma_sir WHERE ad = 'yapay_zeka_anahtari'"))).rows[0];
   assert.ok(!satir.sifreli.includes(ANAHTAR), "veritabanında düz metin yok");
-  /* 2026-10-12 (sunum Y3): yeni firmada varsayılan Claude Haiku 5.5; Haiku 4.5 listede yok (Y2) */
-  assert.equal(v.yz.deger.model, "haiku", "yeni firmada varsayılan Haiku 5.5");
-  assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "yz", v.yz.surum, { acik: true, model: "haiku45", sinir: "" }))).durum, "gecersiz", "listede olmayan model");
-  assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "yz", v.yz.surum, { acik: true, model: "sonnet", sinir: "abc" }))).durum, "gecersiz");
-  tamam(await a(YON, (db) => ayarKaydet(db, YON, "yz", v.yz.surum, { acik: true, model: "sonnet", sinir: "12,5" })));
+  /* 2026-10-14 (reisim: "tek seçenek claude haiku 5.5 olsun"): tek model Claude Haiku 5.5 — ekranda seçim yok, istemciden gelen model yazılmaz,
+     eski kayıttaki Sonnet / Opus okumada Haiku'ya döner (öteki alanlar kalır) */
+  assert.ok(!("model" in v.yz.deger), "ekran verisinde model seçimi yok");
+  assert.equal((await a(YON, (db) => ayarOku(db, "yapay_zeka"))).deger.model, "haiku", "tek model Haiku 5.5");
+  assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "yz", v.yz.surum, { acik: true, sinir: "abc" }))).durum, "gecersiz");
+  tamam(await a(YON, (db) => ayarKaydet(db, YON, "yz", v.yz.surum, { acik: true, model: "opus", sinir: "12,5" })));
   const y = (await a(YON, (db) => ayarOku(db, "yapay_zeka"))).deger;
-  assert.deepEqual([y.acik, y.model, y.sinir], [true, "sonnet", 12.5]);
+  assert.deepEqual([y.acik, y.model, y.sinir], [true, "haiku", 12.5], "istemciden gelen model yazılmaz");
+  await a(YON, (db) => db.sorgu(`UPDATE firma_ayar SET deger = deger || '{"model": "sonnet"}'::jsonb WHERE bolum = 'yapay_zeka'`));
+  const eski = (await a(YON, (db) => ayarOku(db, "yapay_zeka"))).deger;
+  assert.deepEqual([eski.acik, eski.model, eski.sinir], [true, "haiku", 12.5], "eski kayıttaki Sonnet okumada Haiku");
   tamam(await a(YON, (db) => yzAnahtarYaz(db, YON, null)));
   assert.deepEqual((await a(YON, (db) => firmaAyarlari(db, YON)))!.yz.anahtar, { tanimli: false, son4: null });
   /* 335 incelemesi: ekranda "Açık" seçiliyken anahtar girilince yapay zekâ da açılır (eski sürümle değil); ana şifreleme anahtarı olmadan
      anahtar kaldırılabilir */
   const ys = (await a(YON, (db) => ayarOku(db, "yapay_zeka"))).surum;
-  tamam(await a(YON, (db) => ayarKaydet(db, YON, "yz", ys, { acik: false, model: "sonnet", sinir: "12,5" })));
+  tamam(await a(YON, (db) => ayarKaydet(db, YON, "yz", ys, { acik: false, sinir: "12,5" })));
   assert.equal((await a(YON, (db) => yzAnahtarYaz(db, YON, { anahtar: ANAHTAR }, ys))).durum, "cakisma", "eski sürüm");
   assert.deepEqual(await a(YON, (db) => yzAnahtarYaz(db, YON, { anahtar: ANAHTAR }, ys + 1)), { durum: "tamam", bildirim: "API anahtarı kaydedildi; yapay zekâ açık." });
   assert.equal((await a(YON, (db) => ayarOku(db, "yapay_zeka"))).deger.acik, true);

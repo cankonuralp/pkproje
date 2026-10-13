@@ -25,11 +25,11 @@ const cevap = (alanlar: unknown, ek: Record<string, unknown> = {}) => ({ content
   stop_reason: "end_turn", usage: { input_tokens: 3000, output_tokens: 120 }, ...ek });
 
 test("istek: fotoğraf + şema (alan kimlikleri), bölüm adı ve alanların türü; zorunlu araç yok, kişi / firma bilgisi yok", () => {
-  const g = alanIstegi({ model: "sonnet", baslik: "Ekipman bilgileri", alanlar: ETIKET, resim: new Uint8Array([1, 2, 3]), tur: "png" }).govde as Record<string, unknown> & {
+  const g = alanIstegi({ model: "haiku", baslik: "Ekipman bilgileri", alanlar: ETIKET, resim: new Uint8Array([1, 2, 3]), tur: "png" }).govde as Record<string, unknown> & {
     messages: { content: { type: string; text?: string; source?: { media_type: string; data: string } }[] }[];
     output_config: { format: { schema: { properties: { alanlar: { items: { properties: { alan: { enum: string[] } } } } } } } };
   };
-  assert.equal(g.model, "claude-sonnet-5-5");
+  assert.equal(g.model, "claude-haiku-5-5"); // 2026-10-14: tek model Haiku 5.5 (reisim "tek seçenek claude haiku 5.5 olsun")
   assert.equal(g.tool_choice, undefined);
   assert.deepEqual(g.output_config.format.schema.properties.alanlar.items.properties.alan.enum, ["marka", "model", "seri", "imal"]);
   assert.deepEqual(g.messages[0].content[0].source, { type: "base64", media_type: "image/png", data: Buffer.from([1, 2, 3]).toString("base64") });

@@ -2479,6 +2479,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-14 (538): **YAPAY ZEKÂ TEK MODEL: CLAUDE HAIKU 5.5** (reisim: *"tek seçenek calud haiku 5.5 olsun"*). Firma ayarları › Yapay zekâ'da model seçimi
+  kalktı; yerinde "Model: Claude Haiku 5.5" ve fiyatı yazar (1 milyon token: giriş $0,10, çıkış $0,50). Bütün yapay zekâ işleri (fotoğraftan / Excel'den
+  okuma, S.A.Y, S.A.Y Chat etiketi, Format kurucuda yapay zekâya anlat / belgeden başlat) Haiku 5.5 ile; Sonnet 5.5 / Opus 5.5 kodda yok
+  (src/server/yz/okuma.ts tek model ve fiyat). Eski kayıtta Sonnet / Opus seçmiş firma okumada Haiku'ya döner (göç yok; ayarOku alan alan kurtarır);
+  istemciden gelen model yazılmaz. Haiku 5.5 isteklerimizle uyumlu (sıcaklık / ön doldurma / düşünme bütçesi göndermiyoruz; effort ve yapılandırılmış
+  çıktı destekli). Eski okuma kayıtlarında model adı kalır (0083 kısıtı değişmedi). Testler Haiku fiyatına göre yeniden hesaplandı (sınırlar $0,02 /
+  $0,005, okuma $0,015); olumsuz kanıt tests/bozan/ayar.bozan.ts (tek model kalkınca eski Sonnet okunur). Maketteki model listesi (maket-veri.js
+  MV.YZ_MODEL) eski hâlinde — Firma ayarları yeni tasarım maketi (539) ile yenilenecek.
 - 2026-10-13 (537): **536 YAYINDA** — CI f0a6089 yeşil (13 iş başarılı, 2 atlandı; veritabanlı testler ve uçtan uca üç genişlik dahil) → göç 0087
   Supabase'e (`goc` kaydıyla; 88 göç) → main f0a6089 → Vercel yayını (sağlık ucu sürüm f0a6089, bütün denetimler tamam) → duman 11/11 → son bir
   saatte çalışma hatası yok. Ölçemedim: Firma ayarları › E-posta ekranı canlıda gözle (oturum ister; giriş reisim'in) — uçtan uca testte üç

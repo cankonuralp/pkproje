@@ -47,7 +47,7 @@ test("kapalı / anahtarsız / yetkisiz / geçersiz istek: neden söylenir, ayır
   await yzAyari({ acik: false });
   assert.equal(await ile(MEK, (db) => formatYzDurumu(db)), "kapali");
   assert.deepEqual(await ile(MEK, (db) => formatYzHazirla(db, MEK, { istek: "tablo ekle", tanim: T, turAd: "Kompresör" })), { durum: "red", neden: YZ_KAPALI });
-  await yzAyari({ acik: true, model: "sonnet", sinir: null });
+  await yzAyari({ acik: true, sinir: null });   // 2026-10-14: tek model Haiku 5.5 (önceden bu deneme Sonnet'le)
   assert.equal(await ile(MEK, (db) => formatYzDurumu(db)), "anahtarsiz");
   assert.deepEqual(await ile(MEK, (db) => formatYzHazirla(db, MEK, { istek: "tablo ekle", tanim: T, turAd: "" })), { durum: "red", neden: YZ_ANAHTARSIZ });
   await ile(MEK, (db) => sirYaz(db, "yapay_zeka_anahtari", "sk-ant-deneme-anahtar-0123456789", { kim: "Deneme" }));
@@ -78,7 +78,7 @@ test("hazırla → ayırma, istekte anahtar yok; kapat → öneriler (yazılmaz)
   assert.match(r.cevap, /Bir tablo öneriyorum\. 1 öneri — kâğıtta kesik çizgiyle; “Ekle” \/ “Uygula” demeden yazılmaz\. 1 öneri biçime uymadığı için gösterilmedi\./);
   const k1 = await kullanim(MEK);
   assert.deepEqual([k1.mesaj, Number(k1.ayrilan)], [1, 0]);
-  assert.equal(Number(k1.maliyet), 4_000 * 2 + 600 * 10, "Sonnet: giriş 2, çıkış 10 (milyonda bir dolar)");
+  assert.equal(Number(k1.maliyet), 700, "Haiku 5.5: 4 000 giriş × $0,10 + 600 çıkış × $0,50 (1 milyon token) = 700 milyonda bir dolar");
   /* cevapsız: ücretsiz bırakılır; sonucu bilinmeyen harcamaya ve mesaja yazılır */
   const h2 = await ile(MEK, (db) => formatYzHazirla(db, MEK, { istek: "madde ekle", tanim: T, turAd: "" }));
   assert.equal(h2.durum, "hazir");
@@ -99,7 +99,7 @@ test("belgeden başlat: PDF istekte belge bloğu, ayırma belgeli; Word metni is
   const h = await ile(MEK, (db) => formatYzHazirla(db, MEK, { istek: "", tanim: T, turAd: "Kompresör", belge: pdf as FormatBelgesi }));
   assert.equal(h.durum, "hazir");
   if (h.durum !== "hazir") return;
-  assert.equal(h.ust, formatEnCokMaliyet("sonnet", true));
+  assert.equal(h.ust, formatEnCokMaliyet("haiku", true));
   const g = h.istek.govde as { messages: { content: { type: string; text?: string }[] }[] };
   assert.deepEqual(g.messages[0].content.map((c) => c.type), ["document", "text"]);
   await ile(MEK, (db) => formatYzBirak(db, h, "yok"));
@@ -111,8 +111,9 @@ test("belgeden başlat: PDF istekte belge bloğu, ayırma belgeli; Word metni is
 });
 
 test("kişinin aylık sınırı doluysa istek reddedilir (çağrı yok)", async () => {
-  await yzAyari({ sinir: 0.01 });
+  /* harcanan: 700 + bilinmeyen çağrının ayırması (Haiku 9 200) = 9 900 ≥ 0,005 $ (5 000) */
+  await yzAyari({ sinir: 0.005 });
   const r = await ile(MEK, (db) => formatYzHazirla(db, MEK, { istek: "madde ekle", tanim: T, turAd: "" }));
   assert.equal(r.durum, "red");
-  assert.match(r.durum === "red" ? r.neden : "", /sınırınız \(0,01 \$\) doldu/);
+  assert.match(r.durum === "red" ? r.neden : "", /sınırınız \(0,005 \$\) doldu/);
 });

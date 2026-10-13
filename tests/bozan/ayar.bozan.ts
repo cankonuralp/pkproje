@@ -1,6 +1,7 @@
 /* OLUMSUZ KANIT — tests/ayar.test.ts neyi koruyor. Kaynak diskte DEĞİŞTİRİLMEZ (anayasa 13.11): sir.ts / ayar.ts bellekte bozulup geçici klasörden
    içe aktarılır. (1) Ek doğrulama verisi (firma + ad) kalkınca bir firmanın şifreli sırrı öteki firmada çözülür. (2) Şema denetimi kalkınca saklama
-   süresi 5 yılın altına yazılır (ENGEL 11). K1 (2026-10-04). */
+   süresi 5 yılın altına yazılır (ENGEL 11). K1 (2026-10-04). (3) 2026-10-14 (reisim: "tek seçenek claude haiku 5.5 olsun"): tek model kalkınca eski
+   kayıttaki Sonnet seçimi okunur — firma ekranda göremediği pahalı modelle harcar (kilit tests/firma-ayarlari.test.ts). */
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -41,4 +42,11 @@ test("şema denetimi kalkınca saklama süresi 2 yıl yazılır", async () => {
   const r = await m.ayarYaz(db, "saklama", -1, { yil: 2 }, { kim: "x", ne: "x" });
   assert.equal(r.durum, "tamam", "bozuk: 2 yıl kabul edildi");
   assert.ok(JSON.stringify(yazilan).includes('"yil":2'));
+});
+
+test("tek model kalkınca eski kayıttaki Sonnet seçimi okunur", async () => {
+  const m = await bozuk<typeof import("../../src/server/ayar/ayar.ts")>("src/server/ayar/ayar.ts",
+    ['model: z.enum(["haiku"]).default("haiku")', 'model: z.enum(["haiku", "sonnet", "opus"]).default("haiku")']);
+  const db = { sorgu: async () => ({ rows: [{ id: "00000000-0000-4000-8000-000000000001", deger: { acik: true, model: "sonnet", sinir: 5 }, surum: 1 }] }) } as never;
+  assert.equal((await m.ayarOku(db, "yapay_zeka")).deger.model, "sonnet", "bozuk: eski Sonnet seçimi kullanılıyor");
 });

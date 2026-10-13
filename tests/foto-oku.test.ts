@@ -131,7 +131,9 @@ test("yalnız yazan, Yeni raporunda, ölçüm tablosunda; başka firma raporu bu
   assert.equal((await hazirla(FA.den1, "kotu-kimlik")).durum, "yok");
 });
 
-const UST = enCokMaliyet("opus");
+/* 2026-10-14 (reisim: "tek seçenek claude haiku 5.5 olsun"): tek model Haiku 5.5 — sınır ve tutarlar Haiku fiyatıyla (100 000 giriş + 10 000 çıkış =
+   $0,015; en kötü maliyet $0,009); önceden Opus'la $1 sınır / $0,60 okumaydı */
+const UST = enCokMaliyet("haiku");
 const kullanim = async (k: Kisi) => (await a(k, (db) => db.sorgu<{ okuma: number; maliyet: string; ayrilan: string }>(
   "SELECT okuma, maliyet::text, ayrilan::text FROM yz_kullanim WHERE hesap_id = $1 AND ay = $2", [k.id, yzAyi()]))).rows[0];
 const hazir = (h: Awaited<ReturnType<typeof hazirla>>): FotoOkuHazir => { assert.equal(h.durum, "hazir", JSON.stringify(h)); return h as FotoOkuHazir; };
@@ -143,12 +145,12 @@ async function oku(k: Kisi, govde: unknown, rapor = FA.rapor) {
 }
 
 test("kayıt: öneri şemaya göre süzülür, maliyet kişinin aylık kullanımına (ayırma gerçek maliyetle kapanır); sınır dolunca okunmaz; rapora yazılmaz", async () => {
-  tamam(await yzAyari({ acik: true, sinir: 1, model: "opus" }));
+  tamam(await yzAyari({ acik: true, sinir: 0.02 }));
   const once = (await a(FA.den1, (db) => sahaRaporu(db, FA.den1, FA.rapor)))!.cevaplar.tablo;
   const h = hazir(await hazirla(FA.den1));
   assert.deepEqual(await kullanim(FA.den1), { okuma: 0, maliyet: "0", ayrilan: String(UST) }, "çağrıdan önce en kötü maliyet ayrıldı");
   const ku = await a(FA.den1, (db) => fotoOkuKullanimYaz(db, FA.rapor, h, cevap([{ no: "F1", devre: "Aydınlatma", tip: TIP, akim: 16, guven: "yuksek" }, { no: "F2", tip: "yok", guven: "dusuk" }])));
-  assert.deepEqual(await kullanim(FA.den1), { okuma: 1, maliyet: "600000", ayrilan: "0" }, "ayırma gerçek maliyetle kapandı");
+  assert.deepEqual(await kullanim(FA.den1), { okuma: 1, maliyet: "15000", ayrilan: "0" }, "ayırma gerçek maliyetle kapandı");
   const r = tamam(await a(FA.den1, (db) => fotoOkuKaydet(db, depo, FA.den1, A, FA.rapor, h, ku)));
   assert.deepEqual(r.satirlar, [{ degerler: { no: "F1", devre: "Aydınlatma", tip: TIP, akim: "16" }, guven: "yuksek" }, { degerler: { no: "F2" }, guven: "dusuk" }]);
   const sonra = (await a(FA.den1, (db) => sahaRaporu(db, FA.den1, FA.rapor)))!;
@@ -159,10 +161,10 @@ test("kayıt: öneri şemaya göre süzülür, maliyet kişinin aylık kullanım
   assert.equal(sonra.cevaplar.foto.linye, undefined, "okuma fotoğrafı fotoğraf sayısına girmez");
   const belge = await a(FA.den1, (db) => raporBelgesiVerisi(db, depo, FA.den1, FA.rapor));
   assert.ok(belge && belge.belge.fotolar.length === 0, "okuma fotoğrafı belgede yok");
-  assert.equal((await oku(FA.den1, cevap([]))).durum, "tamam", "0,6 $ < 1 $");
-  assert.deepEqual(await kullanim(FA.den1), { okuma: 2, maliyet: "1200000", ayrilan: "0" });
+  assert.equal((await oku(FA.den1, cevap([]))).durum, "tamam", "0,015 $ < 0,02 $");
+  assert.deepEqual(await kullanim(FA.den1), { okuma: 2, maliyet: "30000", ayrilan: "0" });
   assert.equal((await a(FA.den1, (db) => sahaRaporu(db, FA.den1, FA.rapor)))!.fotolar.length, 1, "satır okunamadıysa fotoğraf eklenmez");
-  assert.match(JSON.stringify(await hazirla(FA.den1)), /sınırınız \(1 \$\) doldu/);
+  assert.match(JSON.stringify(await hazirla(FA.den1)), /sınırınız \(0,02 \$\) doldu/);
   assert.equal((await kullanim(FA.den1)).ayrilan, "0", "dolu sınırda ayırma yapılmaz");
   tamam(await yzAyari({ sinir: null }));
   const s0 = hazir(await hazirla(FA.den1));
@@ -170,16 +172,16 @@ test("kayıt: öneri şemaya göre süzülür, maliyet kişinin aylık kullanım
   tamam(await yzAyari({ sinir: 0 }));
   const s1 = hazir(await hazirla(FA.den1));
   await a(FA.den1, (db) => fotoOkuBirak(db, s1, "yok"));
-  assert.deepEqual(await kullanim(FA.den1), { okuma: 2, maliyet: "1200000", ayrilan: "0" }, "sınırsız (boş ya da 0, maket Y1); ücretsiz biten çağrıda ayırma bırakıldı");
-  const o = (await a(FA.den1, (db) => db.sorgu<{ n: number }>("SELECT count(*)::int AS n FROM yz_okuma WHERE rapor_id = $1 AND hesap_id = $2 AND model = 'opus'", [FA.rapor, FA.den1.id]))).rows[0].n;
+  assert.deepEqual(await kullanim(FA.den1), { okuma: 2, maliyet: "30000", ayrilan: "0" }, "sınırsız (boş ya da 0, maket Y1); ücretsiz biten çağrıda ayırma bırakıldı");
+  const o = (await a(FA.den1, (db) => db.sorgu<{ n: number }>("SELECT count(*)::int AS n FROM yz_okuma WHERE rapor_id = $1 AND hesap_id = $2 AND model = 'haiku'", [FA.rapor, FA.den1.id]))).rows[0].n;
   assert.equal(o, 2);
-  assert.deepEqual((await a(FA.yon, (db) => yzAyKullanimi(db, yzAyi()))).map((x) => [x.id, x.okuma, x.maliyet]), [[FA.den1.id, 2, 1_200_000]], "firma ayarlarında kişi başı");
+  assert.deepEqual((await a(FA.yon, (db) => yzAyKullanimi(db, yzAyi()))).map((x) => [x.id, x.okuma, x.maliyet]), [[FA.den1.id, 2, 30_000]], "firma ayarlarında kişi başı");
 });
 
 test("sınır yarışı: eşzamanlı ikinci okuma birincinin ayırmasını görür (satır kilidi); zaman aşımında ayrılan harcamaya yazılır", async () => {
   /* sınır: şu anki kullanımın üstüne bir ayırma sığar, ikincisi sığmaz */
   const k0 = await kullanim(FA.den1);
-  const sinir = Math.ceil((Number(k0.maliyet) + Number(k0.ayrilan)) / 1e4) / 100 + 0.3;
+  const sinir = (Number(k0.maliyet) + Number(k0.ayrilan) + UST / 2) / 1e6;
   tamam(await yzAyari({ sinir }));
   const ay = yzAyi();
   let ayrildi!: () => void, birak!: () => void;
@@ -244,7 +246,7 @@ test("484 alan okuması (ekipman bilgileri): yalnız yazan, Yeni raporunda; iste
   assert.ok(h.alanlar.some((x) => x.id === "marka") && h.alanlar.some((x) => x.id === "imal" && x.tur === "yil"), "ekipman alanları (etiket dahil)");
   const ku = await a(FA.den1, (db) => alanOkuKullanimYaz(db, FA.rapor, h, govde));
   const k1 = await kullanim(FA.den1);
-  assert.deepEqual([k1.okuma, Number(k1.maliyet), k1.ayrilan], [k0.okuma + 1, Number(k0.maliyet) + 600_000, k0.ayrilan], "ayırma gerçek maliyetle kapandı");
+  assert.deepEqual([k1.okuma, Number(k1.maliyet), k1.ayrilan], [k0.okuma + 1, Number(k0.maliyet) + 15_000, k0.ayrilan], "ayırma gerçek maliyetle kapandı");
   const fotoOnce = (await a(FA.den1, (db) => sahaRaporu(db, FA.den1, FA.rapor)))!.fotolar.length;
   assert.deepEqual(await a(FA.den1, (db) => alanOkuSonuc(db, depo, FA.den1, A, FA.rapor, h, ku)), { durum: "tamam",
     okunan: [{ alan: "marka", deger: "Deneme Marka", guven: "yuksek" }, { alan: "imal", deger: "2019", guven: "dusuk" }],
@@ -308,6 +310,6 @@ test("ödenen okuma rapor okuma sürerken silinse de kişinin kullanımına yaz�
   tamam(await a(FA.den1, (db) => raporSil(db, FA.den1, FA.rapor, v.surum)));
   const ku = await a(FA.den1, (db) => fotoOkuKullanimYaz(db, FA.rapor, h, cevap([{ no: "F9", guven: "yuksek" }])));
   const k1 = await kullanim(FA.den1);
-  assert.deepEqual([k1.okuma, Number(k1.maliyet), Number(k1.ayrilan)], [k0.okuma + 1, Number(k0.maliyet) + 600_000, Number(k0.ayrilan) - UST]);
+  assert.deepEqual([k1.okuma, Number(k1.maliyet), Number(k1.ayrilan)], [k0.okuma + 1, Number(k0.maliyet) + 15_000, Number(k0.ayrilan) - UST]);
   assert.equal((await a(FA.den1, (db) => fotoOkuKaydet(db, depo, FA.den1, A, FA.rapor, h, ku))).durum, "yok", "silinen rapora öneri dönmez");
 });

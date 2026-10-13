@@ -75,7 +75,7 @@ before(async () => {
   rapor = tamam(await kiraciIcinde(havuz, A, (db) => raporOlustur(db, den1, plan, f.ekp), { hesapId: den1.id })).id;
   await kiraciIcinde(havuz, A, async (db) => {
     const m = await ayarOku(db, "yapay_zeka");
-    tamam(await ayarYaz(db, "yapay_zeka", m.surum, { ...m.deger, acik: true, sinir: 1, model: "opus" }, { kim: "Deneme", ne: "ayar.yapay_zeka" }));
+    tamam(await ayarYaz(db, "yapay_zeka", m.surum, { ...m.deger, acik: true, sinir: 1 }, { kim: "Deneme", ne: "ayar.yapay_zeka" }));
     await sirYaz(db, "yapay_zeka_anahtari", "sk-ant-deneme-anahtar-0123456789", { kim: "Deneme" });
   }, { hesapId: yon.id });
 });
@@ -115,8 +115,9 @@ test("2. tetikteki hesap damgası kalkınca kullanım başkasının hanesine yaz
 
 test("3. ayırmadaki satır kilidi kalkınca eşzamanlı ikinci okuma sınırı aşar (kilidin koruduğu açık)", async () => {
   const m = await bozukYaz<KullanimModulu>(KULLANIM, " AND ay = $1 FOR UPDATE`", " AND ay = $1`");
-  /* satır önceden var (ayın ilk okuması değil); sınır 0,3 $: ilk ayırma (0,36 $) sığar, ardından sınır dolu — doğru kodda ikinci okuma reddedilir */
-  const ay = "2026-03", ust = enCokMaliyet("opus"), sinir = 0.3;
+  /* satır önceden var (ayın ilk okuması değil); sınır 0,005 $: ilk ayırma (0,009 $ — 2026-10-14: tek model Haiku 5.5) sığar, ardından sınır dolu —
+     doğru kodda ikinci okuma reddedilir */
+  const ay = "2026-03", ust = enCokMaliyet("haiku"), sinir = 0.005;
   await kiraciIcinde(havuz, A, (db) => db.sorgu("INSERT INTO yz_kullanim (ay) VALUES ($1)", [ay]), { hesapId: den1.id });
   let ayrildi!: () => void, birak!: () => void;
   const ayrildiSoz = new Promise<void>((c) => { ayrildi = c; }), kapi = new Promise<void>((c) => { birak = c; });

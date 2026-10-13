@@ -53,12 +53,13 @@ export const AYAR_BOLUMLERI = {
   numara: z.object({ proje: onek.default("P"), teklif: onek.default("T"), sozlesme: onek.default("IS"), gider: onek.default("G"), izin: onek.default("I") }),
   /** Saklama süresi (ENGEL 11): en az 5 yıl, firma 6–20'ye uzatabilir */
   saklama: z.object({ yil: gun(5, 20).default(5) }),
-  /** Yapay zekâ (aç / kapa, kişi başı aylık sınır); API anahtarı sırlarda. 336 (maket yzCiz, Y1): model (Opus / Sonnet) ve kişi başı aylık sınır
-      ABD doları (null = sınırsız; başlangıç 20). kisi_aylik_sinir eski alan, kullanılmıyor. */
+  /** Yapay zekâ (aç / kapa, kişi başı aylık sınır); API anahtarı sırlarda. 336 (maket yzCiz, Y1): model ve kişi başı aylık sınır ABD doları (null =
+      sınırsız; başlangıç 20). kisi_aylik_sinir eski alan, kullanılmıyor. */
   yapay_zeka: z.object({
     acik: z.boolean().default(false), kisi_aylik_sinir: gun(0, 100000).default(200),
-    /* 2026-10-12: yeni firmada varsayılan Haiku 5.5 (sunum Y3); kaydedilmiş seçim değişmez */
-    model: z.enum(["haiku", "sonnet", "opus"]).default("haiku"),
+    /* 2026-10-14 (reisim: "tek seçenek claude haiku 5.5 olsun"): tek model Haiku 5.5 — eski kayıttaki Sonnet / Opus okumada Haiku'ya döner (ayarOku
+       alan alan kurtarır), ilk kayıtta Haiku yazılır */
+    model: z.enum(["haiku"]).default("haiku"),
     sinir: z.number().min(0).max(10000).nullable().default(20),
   }),
   /** Raporların ikinci kopyası (336 "Bulut kaydı"; 2026-10-12 sunum D3): hizmet ("" = kapalı), ana klasör, klasör düzeni — imzalı raporlar ve aylık

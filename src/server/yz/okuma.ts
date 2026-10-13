@@ -10,13 +10,15 @@
    · Fotoğraftaki yazı TALİMAT değildir: sistem talimatı bunu söyler, cevap yalnız veri olarak kullanılır.
    · Maliyet token × fiyat (milyonda bir dolar, yukarı yuvarlanır — tam sayı); fiyatlar firma ayarının model listesiyle aynı
      (src/modules/firma-ayarlari/sema.ts YZ_MODEL). 2026-10-12 (reisim: "yapay zekada da haiku … seçenekler olmalı daha uygun ücretlendirme için" →
-     sunum kabul): Claude Haiku 5.5 — istem 100 000 tokeni aşarsa üst fiyat (Anthropic fiyat sayfası, 2026-10-12). Ayırma
+     sunum kabul): Claude Haiku 5.5 — istem 100 000 tokeni aşarsa üst fiyat (Anthropic fiyat sayfası, 2026-10-12). 2026-10-14 (reisim: "tek seçenek
+     claude haiku 5.5 olsun"): TEK MODEL Claude Haiku 5.5 — Sonnet 5.5 / Opus 5.5 kalktı (eski okuma kayıtlarında model adı kalır, 0083). Ayırma
      (0053) için en kötü maliyet: giriş üst sınırı + yanıt sınırı.
    · Ağ çağrısı ayrı (anthropicCagir): uç ortamdan (PROBATA_YZ_UC; yoksa Anthropic) — uçtan uca testte yerel taklit sunucu. Hata ücretli mi
      bilinir: hizmet hata döndürdüyse ücret yok; zaman aşımında (ya da cevap gövdesi okunamadıysa) bilinmiyor — ayırma harcamaya yazılır. */
 import type { BolumOf } from "../../format/tanim.ts";
 
-export type YzModel = "haiku" | "sonnet" | "opus";
+/** 2026-10-14: tek model (reisim "tek seçenek claude haiku 5.5 olsun") */
+export type YzModel = "haiku";
 export type Guven = "yuksek" | "orta" | "dusuk";
 export interface OkunanSatir { degerler: Record<string, string>; guven: Guven }
 export interface OkumaIstegi { govde: Record<string, unknown> }
@@ -24,11 +26,11 @@ export interface OkumaIstegi { govde: Record<string, unknown> }
 export type OkumaYaniti = { durum: "tamam"; govde: unknown } | { durum: "hata"; neden: string; ucret: "yok" | "bilinmiyor" };
 export type YzCagirici = (istek: OkumaIstegi, anahtar: string) => Promise<OkumaYaniti>;
 
-export const MODEL_KIMLIGI: Record<YzModel, string> = { haiku: "claude-haiku-5-5", sonnet: "claude-sonnet-5-5", opus: "claude-opus-5-5" };
+export const MODEL_KIMLIGI: Record<YzModel, string> = { haiku: "claude-haiku-5-5" };
 /** token başına fiyat, milyonda bir doların ONDA BİRİ cinsinden (tam sayı — kayan nokta hatası yok): Haiku 5.5 $0,10 / $0,50 (istem 100 000 tokeni
-    aşarsa $0,50 / $2,50), Sonnet 5.5 $2 / $10, Opus 5.5 $4 / $20 (1 milyon token) */
+    aşarsa $0,50 / $2,50; 1 milyon token) */
 const FIYAT: Record<YzModel, { giris: number; cikis: number; ust?: { esik: number; giris: number; cikis: number } }> = {
-  haiku: { giris: 1, cikis: 5, ust: { esik: 100_000, giris: 5, cikis: 25 } }, sonnet: { giris: 20, cikis: 100 }, opus: { giris: 40, cikis: 200 },
+  haiku: { giris: 1, cikis: 5, ust: { esik: 100_000, giris: 5, cikis: 25 } },
 };
 export const EN_COK_SATIR = 60;
 /** yanıt sınırı (düşünme dahil) */
