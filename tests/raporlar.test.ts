@@ -714,7 +714,7 @@ test("kaydet ve kopyala: yalnız yazan; Yeni rapor önce kaydedilir; yeni ekipma
     cevaplar: { ...g.cevaplar, yorum: "Deneme notu", madde: { ...g.cevaplar.madde, [MADDELER[0].id]: { c: "Uygun değil", not: "Korozyon", derece: "agir" } } },
   };
   /* kod (plan içi Ekipman ekle ile aynı denetim); engel varken rapor kaydedilmez */
-  assert.equal(kodHatasi(await kopyala(FA.den1, r.id, 2, { kod: "", konum: null }, kayit)), "Etiketteki kodu yazın: harf (A–Z), rakam ve tire. Kod firmada eşsiz olmalı.");
+  assert.equal(kodHatasi(await kopyala(FA.den1, r.id, 2, { kod: "", konum: null }, kayit)), "Etiketteki kodu yazın: harf, rakam ve tire. Kod firmada eşsiz olmalı.");
   assert.equal(kodHatasi(await kopyala(FA.den1, r.id, 2, { kod: "a b", konum: null }, kayit)), "Kod 3 ile 20 hane arasında olmalı.");
   assert.match(kodHatasi(await kopyala(FA.den1, r.id, 2, { kod: "ht-a2", konum: null }, kayit)), /^HT-A2 bu planda zaten var/);
   assert.match(kodHatasi(await kopyala(FA.den1, r.id, 2, { kod: "HT-B1", konum: null }, kayit)), /^HT-B1 başka bir tesiste kayıtlı/);
