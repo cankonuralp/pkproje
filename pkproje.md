@@ -2479,6 +2479,19 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-14 (539): **FİRMA AYARLARI YENİ TASARIM — MAKET (ONAY BEKLİYOR)** (reisim, canlı ekranın görüntüsüyle: *"burası ne ? sadece açıklama var çok
+  saçma bi ekran??????? ayrıca ekranda mesela raporların ikinci kopyaso ekranında açı kkapalıyı seçince ekran komple kayıyo yani böyle bir tasarım
+  sürdürülebiliri değil daha doğru bi tasarım olmalı ve raporların ikinci kopyası değl yedek olarak görülmeli çok fazla yazı var ve kafa karıştırıcı bu
+  ekranı komple toparla tıklayınca pop-up olarak açılarak seçimler yapılabilien küçük paneller haline çevir önce maket sunumu yap"*). Maket
+  `docs/maket/firma-ayarlari-yeni.html` (+ `assets/maket-ayarlar-yeni.js`, maket.css "FİRMA AYARLARI · YENİ TASARIM"); eski onaylı düzen
+  `firma-ayarlari.html` olduğu gibi. Ekran: konuya göre altı grupta (Firma · Çalışma · Fiyat ve gider · Veri ve yedek · Bağlantılar · Araçlar) 16 küçük
+  panel — ad, şu anki değerin tek satır özeti, gerekiyorsa rozet (ör. E-posta "Bağlı değil"); panele basınca pencere, seçim orada, Kaydet / Vazgeç
+  altta; geçersiz değer kaydedilmez (alanın altında), kaydedilmemiş değişiklikle kapatınca sorulur. Kayma yok: sayfa yerinde, pencerede seçim alan
+  açıp kapatmaz (kapalıyken soluk), uyarı satırı hep yerinde (ölçüldü: Yedek'te Kapalı → Google Drive, Yapay zekâ'da Kapalı → Açık — pencerenin ve
+  alanların yeri / boyu aynı). "Raporların ikinci kopyası" → Yedek penceresinde **Ek yedek** (Kapalı · Google Drive · OneDrive); "Supabase hesabı ve
+  yedek" ikiye ayrıldı: **Depolama** (hesap, dosya kullanımı, paket; bağlama adımları "Nasıl?" altında) ve **Yedek** (günlük, aylık arşiv, ek yedek).
+  Yazı az: pencerede en çok bir kısa satır, uzun anlatım açılır başlıkta. Yapay zekâ penceresinde tek model Claude Haiku 5.5 (538). Masaüstü 1440,
+  tablet 1080, telefon 375 (koyu) bölmemde ölçüldü: yana taşma yok, 16 pencere hatasız açılıyor; telefonda pencere alttan tam genişlik. Koda onaydan sonra.
 - 2026-10-14 (538): **YAPAY ZEKÂ TEK MODEL: CLAUDE HAIKU 5.5** (reisim: *"tek seçenek calud haiku 5.5 olsun"*). Firma ayarları › Yapay zekâ'da model seçimi
   kalktı; yerinde "Model: Claude Haiku 5.5" ve fiyatı yazar (1 milyon token: giriş $0,10, çıkış $0,50). Bütün yapay zekâ işleri (fotoğraftan / Excel'den
   okuma, S.A.Y, S.A.Y Chat etiketi, Format kurucuda yapay zekâya anlat / belgeden başlat) Haiku 5.5 ile; Sonnet 5.5 / Opus 5.5 kodda yok
