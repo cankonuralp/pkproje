@@ -2479,6 +2479,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-13 (530): **529 YAYINDA** — göç yok (87 göç). main abd0ac3 (527 yayın kaydı 528 dahil); deneme makinesi 13/13 (uçtan uca üç genişlik: tür
+  sayfası bölümü → Düzenle → S.A.Y Chat ayarları sayfası; denetçi Görüntüle; kurucuda bağlantı). Sağlık "tamam", duman **11/11**, yeni sayfa oturumsuz
+  girişe yönleniyor (307), son 30 dakikada hata kaydı yok. Canlıda oturumla bakılamadı (giriş reisim'in) — ölçemedim.
 - 2026-10-13 (529): **S.A.Y CHAT AYARLARI KENDİ SAYFASINDA** (reisim, tür sayfası ve Format kurucu ekran görüntüleriyle: *"say chat ayarları burda kötü
   durmuş görüpte anlamadım bile ne olduğunu gözümün önünde olmasına rağmen hemde, ikinci görselde attığım yere diğer tuşların yanına koy tuşa basınca
   ilgili sayfaya gitsin ve düzenleme yapalım"*; §3.10 m.26). Neden: tür sayfasındaki kapalı açılır bölüm (`details`) öteki bölümlerle aynı başlık
