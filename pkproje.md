@@ -2479,6 +2479,15 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-13 (533): **E-POSTA: GÖNDEREN = TUŞA BASAN KİŞİ — İSTEK, KARAR BEKLİYOR** (reisim: *"resende hesabını bağlayalım ama … planlamacı mail
+  gönderirken kendi mail adresi pazarlamacı mail gönderirken kendi mail adresiyle göndermeli kim mail gönder tuşuna basarsa onun mailinden gitmeli
+  bunu nasıl kurgulayabiliriz?"*; Y4). Ölçüm (resend.com, 2026-10-13): doğrulanmış alan adındaki HER adresten ek ayarsız gönderilir; gmail / hotmail
+  gibi kişisel alan adlarından gönderilmez; ücretsiz paket ayda 3.000 / günde 100 e-posta, 3 alan adı; Pro 20 $ (50.000, 10 alan adı); Scale 90 $
+  (1.000 alan adı). Önerilen kurgu: Kimden = oturumdaki kişinin adresi (sunucu oturumdan alır, ekrandan seçilmez) — adres firmanın doğrulanmış alan
+  adındaysa; değilse Kimden = firmanın genel adresi + kişinin adı, Cevap adresi = kişinin adresi; otomatik e-postalar genel adresten; e-posta
+  kuyruğuna gönderen kişi yazılır. Karar soruları: (1) Resend hesabı her firmanın kendisinin mi (anahtar Firma ayarları'nda, yapay zekâ anahtarı gibi)
+  yoksa probata'nın tek hesabı mı; (2) gönderene gizli kopya; (3) kişisel adresli çalışan için genel adres + cevap kişiye yolu. Hata listesi 9, 29,
+  30, 43 reisim'in isteğiyle kapatıldı.
 - 2026-10-13 (532): **531 YAYINDA** — göç yok (87 göç). main 94de31d (529 yayın kaydı 530 dahil; f9f81b6'ya yanlış dosya yolu yüzünden yalnız taşımalar
   girmişti, içerik 94de31d'de); deneme makinesi 13/13 (araç: Ön açısı galeriden + Değiştir; zimmet: iki fotoğraf galeriden, metin dosyası eklenmez;
   S.A.Y Chat ortak tuşla). Sağlık "tamam", duman **11/11**, son 30 dakikada hata kaydı yok. Canlıda oturumla bakılamadı (giriş reisim'in) — ölçemedim.
