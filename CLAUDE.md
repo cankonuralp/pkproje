@@ -246,7 +246,8 @@ pkproje/
   src/modules/performans/   PERFORMANS (2026-10-06, 329; modül 19): tablo yok (göç 0041 yalnız dizin) · hesap.ts (saf: dönem, özet, tamamlanma süresi,
                             zaman grafiği, süreç adımları, günlük iş, GÖRÜNÜRLÜK — kendi / branş / hepsi, kazanç) · server/performans.ts (pano, kişi) ·
                             ui/Performans.tsx · okuyucular: raporlar/server/performans-baglanti.ts, personel/server/performans-baglanti.ts
-  src/modules/firma-ayarlari/ FİRMA AYARLARI (2026-10-06, 334; modül 22): sema.ts (bölüm şemaları, seçenekler) · server/ayarlar.ts (ekran verisi, bölüm
+  src/modules/firma-ayarlari/ FİRMA AYARLARI (2026-10-06, 334; modül 22; 544: altı grupta 16 küçük panel + pencere — ui/FirmaAyarlari.tsx PANEL / GRUPLAR /
+                            ozet, Kart = Pencere, Segment; Yedek = Ek yedek, Depolama): sema.ts (bölüm şemaları, seçenekler) · server/ayarlar.ts (ekran verisi, bölüm
                             kaydet, firma kodu — çekirdek firmaKoduYaz, göç 0045; logo / ön bilgilendirme / bordro formatı dosyaları) · ui/FirmaAyarlari.tsx
                             (bölüm kartı + taslak Kaydet / Vazgeç) · belge başlığı künyesi src/server/ayar/ayar.ts firmaBelgeKunyesi (ticari ad, adres, akr., logo)
                             · 387 Saklama süresi dolacak raporlar /firma-ayarlari/saklama (server/saklama.ts, ui/SaklamaListesi.tsx; yalnız firma yöneticisi)

@@ -15,7 +15,9 @@ test("toplu içe aktarma: CSV denetimi, içe aktar ve geri al", async ({ page },
   await girisli(page, "yonetici");
   await page.goto("/firma-ayarlari");
   await hazir(page);
-  const b = page.getByRole("region", { name: "Toplu içe aktarma (ilk kurulum)" });
+  /* 544: Firma ayarları küçük paneller — "Toplu içe aktarma" paneli pencere açar */
+  await page.locator('[data-panel="ice"]').click();
+  const b = page.getByRole("dialog", { name: "Toplu içe aktarma" });
   await b.getByRole("combobox", { name: "Ne yüklenecek" }).click();
   await page.getByRole("option", { name: "Araçlar" }).click();
   await expect(b.getByText(/^Sütunlar: Plaka\* · Araç türü\*/)).toBeVisible();

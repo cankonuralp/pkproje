@@ -264,10 +264,10 @@ test("yapay zekâ, ikinci kopya, Supabase bölümü: anahtar biçimi denetlenir,
   assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "bulut", -1, { saglayici: "sftp", kok: "Raporlar", duzen: "mt" }))).durum, "gecersiz", "SFTP ilk yayında yok");
   assert.equal((await a(DEN, (db) => ayarKaydet(db, DEN, "bulut", -1, { saglayici: "gdrive", kok: "Raporlar", duzen: "mt" }))).durum, "yetkisiz");
   const k = tamam(await a(YON, (db) => ayarKaydet(db, YON, "bulut", -1, { saglayici: "onedrive", kok: "Deneme Raporlar", duzen: "mty" })));
-  assert.equal(k.bildirim, "Raporların ikinci kopyası ayarları kaydedildi.");
+  assert.equal(k.bildirim, "Ek yedek açık: OneDrive.");   // 2026-10-14 (544): Yedek penceresinde "Ek yedek" (reisim: "yedek olarak görülmeli")
   assert.deepEqual((await a(YON, (db) => ayarOku(db, "bulut"))).deger, { saglayici: "onedrive", kok: "Deneme Raporlar", duzen: "mty" });
   const bs = (await a(YON, (db) => ayarOku(db, "bulut"))).surum;
-  assert.equal(tamam(await a(YON, (db) => ayarKaydet(db, YON, "bulut", bs, { saglayici: "", kok: "Deneme Raporlar", duzen: "mty" }))).bildirim, "Raporların ikinci kopyası kapatıldı.");
+  assert.equal(tamam(await a(YON, (db) => ayarKaydet(db, YON, "bulut", bs, { saglayici: "", kok: "Deneme Raporlar", duzen: "mty" }))).bildirim, "Ek yedek kapalı.");
   /* eski kayıtlı hizmet (Dropbox) kapalıya döner, öteki alanlar kalır */
   await a(YON, (db) => db.sorgu("UPDATE firma_ayar SET deger = jsonb_set(deger, '{saglayici}', '\"dropbox\"') WHERE bolum = 'bulut'"));
   assert.deepEqual((await a(YON, (db) => ayarOku(db, "bulut"))).deger, { saglayici: "", kok: "Deneme Raporlar", duzen: "mty" });

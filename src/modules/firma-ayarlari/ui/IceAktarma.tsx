@@ -63,7 +63,7 @@ export function IceAktarma({ gecmis, yaz }: { gecmis: IaGecmis[]; yaz: boolean }
       if (!r.tamam) { setHata(r.genel ?? "İçe aktarılamadı."); return; }
       geriOdak.current = gecmis[0]?.id ?? "";
       setDosya(null); setHata(null); bildir(r.bildirim ?? "İçe aktarıldı."); router.refresh();
-      odak("#ay-b-ice");
+      odak("[data-ia-sec]");   // 544: pencerede — bölüm başlığı yok
     });
   };
   const geriAl = (g: IaGecmis) => baslat(async () => {
@@ -73,7 +73,7 @@ export function IceAktarma({ gecmis, yaz }: { gecmis: IaGecmis[]; yaz: boolean }
     if (!(await onayla({ baslik: "İçe aktarmayı geri al", metin: `${g.turAd}: ${g.adet} satırın kayıtları kaldırılır.`, tus: "Geri al", tehlike: true }))) return;
     const r = await iceAktarimGeriAlEylemi(g.id, false);
     bildir(r.tamam ? r.bildirim ?? "Geri alındı." : r.genel ?? "Geri alınamadı.");
-    if (r.tamam) { router.refresh(); odak("#ay-b-ice"); }
+    if (r.tamam) { router.refresh(); odak("[data-ia-sec]"); }
   });
 
   return (

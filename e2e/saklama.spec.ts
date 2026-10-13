@@ -46,7 +46,8 @@ test("saklama süresi: firma yöneticisi Uyarılar'da görür, listeyi açar; ra
   /* Firma ayarları › Rapor saklama süresi kartından da açılır */
   await page.goto(`${Y}/firma-ayarlari`);
   await hazir(page);
-  await page.getByRole("link", { name: "Saklama süresi dolacak raporlar" }).click();
+  await page.locator('[data-panel="saklama"]').click();   // 544: panel → pencere
+  await page.getByRole("dialog", { name: "Rapor saklama süresi" }).getByRole("link", { name: "Saklama süresi dolacak raporlar" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Saklama süresi dolacak raporlar" })).toBeVisible({ timeout: 30_000 });
 });
 

@@ -2481,6 +2481,19 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-14 (544): **FİRMA AYARLARI: KÜÇÜK PANELLER + PENCERE** (maket 539 onaylı — reisim: *"MAKETLERİ FALAN DA ONAYLIYORUM"*; istek: *"bu ekranı
+  komple toparla tıklayınca pop-up olarak açılarak seçimler yapılabilien küçük paneller haline çevir"*, *"açı kkapalıyı seçince ekran komple kayıyo"*,
+  *"raporların ikinci kopyası değl yedek olarak görülmeli çok fazla yazı var"*). Ekran altı grupta 16 panel (Firma: Firma bilgileri, Rapor numarası,
+  İmza yöntemi, Belge şablonları · Çalışma: Mesai takibi, Uyarı eşikleri, Zimmet teslim formu, Müşteriye açık personel belgeleri · Fiyat ve gider ·
+  Veri ve yedek: Yedek, Depolama, Rapor saklama süresi · Bağlantılar: Yapay zekâ, E-posta · Araçlar: Toplu içe aktarma); panel = ad + şu anki değerin
+  tek satırı + gerekiyorsa rozet ("Eksik", "Fiyatsız tür var", "Anahtar yok", "Bağlı değil"). Panele basınca pencere: Kaydet / Vazgeç altta,
+  kaydedilince kapanır ve panelin özeti değişir; geçersiz değer alanın altında, pencere açık kalır; kaydedilmemiş değişiklikle kapatınca sorulur.
+  Kayma yok: Kapalı · Açık seçimi alan açıp kapatmaz (kapalıyken soluk), durum satırı hep yerinde (mesai 660 dk uyarısı, yapay zekâ, e-posta,
+  belgelerde KVKK). "Raporların ikinci kopyası" → Yedek penceresinde **Ek yedek** (Kapalı · Google Drive · OneDrive; günlük ve aylık yedek
+  kendiliğinden); "Supabase hesabı ve yedek" → **Depolama** (hesap, dosyalar, paket; bağlama adımları ve "Raporlar ne kadar durur?" açılır
+  başlıkta). Uzun anlatımlar "Nasıl …?" başlıklarının altında (Resend kurulumu, çalışanların e-postası, bu ayın yapay zekâ kullanımı). Sunucu
+  bildirimi "Ek yedek açık: Google Drive." / "Ek yedek kapalı.". Kilitler: tests/firma-ayarlari.test.ts (bildirim), uçtan uca firma-ayarlari,
+  ice-aktarma, saklama yeniden yazıldı. PC'de veritabanısız testler 321/321, olumsuz kanıt 125/125, tip, lint; uçtan uca CI'da.
 - 2026-10-14 (542): **S.A.Y FOTOĞRAFTAN OKUYUP GİRER; S.A.Y CHAT MESAJ KUTUSU; ETİKET UYARISIZ** (reisim, iPhone ekran görüntüleriyle: *"FOTOĞRAFI KOYAR
   KOYMAZ OKUMAMALI FOTOĞRAFI KOYUP DAHA SONRA, ETİKETTEN OKU DİYEBİLMEM LAZIM OFFLİNE ÇALIŞMAYA DA UYGUN OLMALI VE KOYDUĞUM FOTOĞRAFI AI OKUYAMAZSA DİYE
   BENİMDE GÖRÜNTÜLE TUŞU İLE GÖREBİLİYO OLMAM GEREKLİ AYRICA İNGİLİZCE OLDUĞU İÇİN Mİ BİLİNMEZ OKUYAMIYOR ATTIĞIM ETİKETLERİ AI"* · *"SAY CHATTE MESAJ YAZAR

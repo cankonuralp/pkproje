@@ -238,7 +238,8 @@ export async function ayarKaydet(db: Sorgulayici, kim: Kisi, kesim: string, suru
     }
     case "bulut": {
       const g = dogrula(BulutGirdisi, girdi);
-      return g.tamam ? yaz("bulut", g.veri, g.veri.saglayici ? "Raporların ikinci kopyası ayarları kaydedildi." : "Raporların ikinci kopyası kapatıldı.")
+      /* 544 (reisim: "raporların ikinci kopyası değil yedek olarak görülmeli"): Yedek penceresinde "Ek yedek" */
+      return g.tamam ? yaz("bulut", g.veri, g.veri.saglayici ? `Ek yedek açık: ${g.veri.saglayici === "gdrive" ? "Google Drive" : "OneDrive"}.` : "Ek yedek kapalı.")
         : { durum: "gecersiz", hatalar: g.hatalar };
     }
     case "mbelge": {
