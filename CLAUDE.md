@@ -325,7 +325,7 @@ pkproje/
                             içerikten, EXIF silinir, Word metni) · ui/eylemler.ts sayEkliSorEylemi (FormData) · yz/say.ts ekliIcerik (ek adı gitmez); saklanmaz
   src/modules/say-chat/     S.A.Y CHAT (523–525; pkproje §3.10): sema.ts (saf: alan / başlık seçenekleri, hazır ayar, denetim, dağılım dagit) ·
                             server/ayar.ts (523 tür ayarı — sayChatAyari, sayChatAyarKaydet, chatTanimi; göç 0084 say_chat_ayar) · ui/ChatAyarlari.tsx
-                            (Ekipman türleri › tür sayfası, açılır bölüm) · ui/eylemler.ts · 524 server/kayitlar.ts (sayChatPaneli, chatKaydet / chatFoto /
+                            (529: kendi sayfası /ekipman-turleri/<tür>/say-chat — Format kurucunun tuşlarından ve tür sayfasındaki kısa bölümden) · ui/eylemler.ts · 524 server/kayitlar.ts (sayChatPaneli, chatKaydet / chatFoto /
                             chatSil — kuyruk işleri saychat.*, göç 0085 say_chat_kayit kişiye özel RLS; dosya modülü say_chat) · server/etiket.ts (etiketten
                             okuma, kayda yazılmaz) · ui/SayChat.tsx (plan içi düğme + panel; planlar sayChatPlani, personel say-chat-baglanti personelBransi)
                             · 525 server/rapor-yaz.ts (raporKosullari, chatRaporYaz — kayıt başına işlem; raporlar chatRaporuDoldur) · eylemler chatRaporYazEylemi,

@@ -195,13 +195,16 @@ test("Bakanlık türleri hazır: resmî PDF ve yayındaki şablon; sıfırdan ra
   await onay.getByRole("button", { name: "Oluştur" }).click();
   await expect(page).toHaveURL(/\/sablon\/[0-9a-f-]{36}\/kurucu$/, { timeout: 30_000 });
   await expect(page.getByRole("heading", { level: 1, name: /^Format kurucu · / })).toBeVisible();
+  /* 529: kurucunun tuşlarında "S.A.Y Chat ayarları" — kendi sayfasına */
+  await expect(page.getByRole("link", { name: "S.A.Y Chat ayarları" })).toHaveAttribute("href", /^\/ekipman-turleri\/[0-9a-f-]{36}\/say-chat$/);
   /* 451: kâğıtta (geniş ekran) ya da belge önizlemesinde (telefon) — görünen ilk eşleşme */
   await expect(page.getByText("Kontrol maddeleri").filter({ visible: true }).first()).toBeVisible();
 });
 
-/* 523 — S.A.Y Chat ayarları (pkproje §3.10 m.13–16; maket 521 ekran 12): tür sayfasında tıklayınca açılan bölüm; kayıt yoksa formattan hazır
-   (ekipman bilgileri + Not; test değerleri okunacak başlık); aynı alan iki satırda → hata alanın altında, odak orada; düzeltilip Kaydet → sürüm 1;
-   telefon önizlemesi satırları sırayla gösterir; Vazgeç taslağı bırakır; denetçi görür, değiştiremez. */
+/* 523 — S.A.Y Chat ayarları (pkproje §3.10 m.13–16; maket 521 ekran 12): kayıt yoksa formattan hazır (ekipman bilgileri + Not; test değerleri okunacak
+   başlık); aynı alan iki satırda → hata alanın altında, odak orada; düzeltilip Kaydet → sürüm 1; telefon önizlemesi satırları sırayla gösterir;
+   Vazgeç taslağı bırakır; denetçi görür, değiştiremez. 529 (reisim 2026-10-13: "burda kötü durmuş … tuşa basınca ilgili sayfaya gitsin"): tür
+   sayfasında kısa bölüm (satır sırası, okunacak fotoğraflar) + "Düzenle" → kendi sayfası /ekipman-turleri/<tür>/say-chat; düzenleme orada. */
 test("S.A.Y Chat ayarları: formattan hazır, satır ekle, hata, kaydet, sürüm; denetçi yalnız görür", async ({ page, context }, bilgi) => {
   test.setTimeout(120_000);
   /* tür kodu 2–3 büyük harf (0013): genişlik + deneme başına ayrı */
@@ -222,11 +225,18 @@ test("S.A.Y Chat ayarları: formattan hazır, satır ekle, hata, kaydet, sürüm
   const adres = page.url();
   await hazir(page);
 
-  const bolum = page.locator("details#b-say-chat");
-  const ozet = bolum.locator("summary");
+  /* tür sayfasında kısa bölüm: ne olduğu, satır sırası; Düzenle → kendi sayfası */
+  const turBolum = page.getByRole("region", { name: "S.A.Y Chat ayarları" });
+  await expect(turBolum).toContainText("formattan hazır");
+  await expect(turBolum).toContainText("Denetçinin sahada S.A.Y Chat'e yazdığı mesajın satır sırası");
+  await expect(turBolum).toContainText("1. Marka");
+  await turBolum.getByRole("link", { name: "Düzenle" }).click();
+  await expect(page).toHaveURL(/\/ekipman-turleri\/[0-9a-f-]{36}\/say-chat$/, { timeout: 30_000 });
+  await hazir(page);
+  await expect(page.getByRole("heading", { level: 1, name: `S.A.Y Chat ayarları · Deneme Chat ${kod}` })).toBeVisible();
+  const bolum = page.locator("main");
+  const ozet = page.locator("#sca-durum");
   await expect(ozet).toContainText("formattan hazır");
-  await expect(bolum.getByRole("list", { name: "Mesaj satırları" })).toBeHidden();
-  await ozet.click();
   const satirlar = bolum.getByRole("list", { name: "Mesaj satırları" });
   await expect(satirlar).toBeVisible();
   await expect(bolum.getByLabel("1. satır · telefonda yazan")).toHaveValue("Marka");
@@ -261,19 +271,20 @@ test("S.A.Y Chat ayarları: formattan hazır, satır ekle, hata, kaydet, sürüm
   /* yenileyince kayıtlı; Vazgeç taslağı bırakır */
   await page.reload();
   await hazir(page);
-  await ozet.click();
   await expect(bolum.getByLabel(`${n}. satır · telefonda yazan`)).toHaveValue("Şebeke gerilimi");
   await bolum.getByLabel("1. satır · telefonda yazan").fill("Markası");
   await bolum.getByRole("button", { name: "Vazgeç" }).click();
   await expect(bolum.getByLabel("1. satır · telefonda yazan")).toHaveValue("Marka");
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), "yana taşma yok").toBe(true);
 
-  /* denetçi görür, değiştiremez */
+  /* denetçi görür, değiştiremez: tür sayfasında "Görüntüle" */
   await context.clearCookies();
   await girisli(page, "denetci");
   await page.goto(adres);
   await hazir(page);
-  await ozet.click();
+  await page.getByRole("region", { name: "S.A.Y Chat ayarları" }).getByRole("link", { name: "Görüntüle" }).click();
+  await expect(page).toHaveURL(/\/say-chat$/, { timeout: 30_000 });
+  await hazir(page);
   await expect(bolum.getByLabel("1. satır · telefonda yazan")).toBeDisabled();
   await expect(bolum.getByRole("button", { name: "Kaydet" })).toHaveCount(0);
   await expect(bolum.getByRole("button", { name: "Satır ekle" })).toHaveCount(0);

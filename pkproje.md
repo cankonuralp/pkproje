@@ -1099,6 +1099,12 @@ KOD-GECIS K5'te dört kalem: 522 ek · 523 ayarlar · 524 kayıtlar · 525 rapor
     başlığın "Fotoğraf ekle") küçük menü açar: **Fotoğraf çek** (telefonda kamera) · **Galeriden / bilgisayardan seç** (etiket dışında birden çok
     fotoğraf). Uymayan (JPEG / PNG değil, 2 MB üstü) ve kayıttaki yeri aşan (ekipman 12, başlık başına 6) fotoğraf eklenmez, adıyla söylenir. Menü S.A.Y
     ataç menüsünün düzeninde, üst katmanda yüzer; Esc yalnız menüyü kapatır.
+26. **S.A.Y Chat ayarları kendi sayfasında** (529; reisim 2026-10-13: *"say chat ayarları burda kötü durmuş görüpte anlamadım bile ne olduğunu
+    gözümün önünde olmasına rağmen hemde, ikinci görselde attığım yere diğer tuşların yanına koy tuşa basınca ilgili sayfaya gitsin ve düzenleme
+    yapalım"*): m.15'teki "tür sayfasında tıklayınca açılan bölüm" kalktı. Düzenleme `/ekipman-turleri/<tür>/say-chat` sayfasında (solda mesaj satırları
+    ve okunacak fotoğraflar kartları, sağda "Telefonda böyle görünür", altta Vazgeç / Kaydet). Açıldığı yerler: **Format kurucunun tuşları** (Sürüm
+    sayfası'nın yanında "S.A.Y Chat ayarları") ve tür sayfasındaki kısa **"S.A.Y Chat ayarları"** bölümü (ne olduğu, satır sırası, okunacak fotoğraflar;
+    "Düzenle", yazamayana "Görüntüle"). Sayfada taslak varsa "Format kurucu"ya dönüş tuşu.
 
 ## 4 · Mevzuat bulguları (2026-09-18 araştırması; kaynaklar bölüm 10)
 
@@ -2473,6 +2479,16 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-13 (529): **S.A.Y CHAT AYARLARI KENDİ SAYFASINDA** (reisim, tür sayfası ve Format kurucu ekran görüntüleriyle: *"say chat ayarları burda kötü
+  durmuş görüpte anlamadım bile ne olduğunu gözümün önünde olmasına rağmen hemde, ikinci görselde attığım yere diğer tuşların yanına koy tuşa basınca
+  ilgili sayfaya gitsin ve düzenleme yapalım"*; §3.10 m.26). Neden: tür sayfasındaki kapalı açılır bölüm (`details`) öteki bölümlerle aynı başlık
+  satırında, açıklamasız duruyordu — ne olduğu anlaşılmıyordu. Şimdi: yeni sayfa `src/app/(uygulama)/ekipman-turleri/[id]/say-chat/page.tsx`
+  (kırıntı Ekipman türleri › tür › S.A.Y Chat ayarları; başlık "S.A.Y Chat ayarları · <tür>", altında ne olduğu ve alanların hangi format
+  sürümünden geldiği; taslak varsa "Format kurucu" tuşu) · `say-chat/ui/ChatAyarlari.tsx` sayfa gövdesi (FormBolum kartları + FormEylem — telefonda
+  yapışkan; durum satırı `#sca-durum`) · Format kurucunun tuşlarına "S.A.Y Chat ayarları" (Sürüm sayfası'nın yanında; kaydedilmemiş taslakta
+  kurucunun çıkış sorusu geçerli) · tür sayfasında kısa bölüm (satır sırası, okunacak fotoğraflar, Düzenle / Görüntüle). Uçtan uca
+  `e2e/ekipman-turleri.spec.ts` (tür sayfası bölümü → Düzenle → sayfada formattan hazır, satır ekle, hata, kaydet, Vazgeç; denetçi "Görüntüle", salt
+  okunur; kurucuda bağlantı).
 - 2026-10-13 (528): **527 YAYINDA** — göç yok (87 göç). main fbfed46; deneme makinesi 13/13 (yeni kilit say-chat-foto, olumsuz kanıt 4/4, uçtan uca üç
   genişlik: menü, Esc, galeriden iki fotoğraf, metin dosyası eklenmez). Sağlık "tamam", duman **11/11**; son 1 saatte yeni hata kaydı yok (yalnız eski duyuru
   zaman aşımı, dış site). Canlıda oturumla bakılamadı (giriş reisim'in) — ölçemedim. Reisim "S.A.Y Chat ayarlarını göremedim" dedi: bölüm tür sayfasında

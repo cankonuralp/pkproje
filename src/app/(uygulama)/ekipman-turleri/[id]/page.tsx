@@ -3,13 +3,16 @@
    basılı format PDF'i. 450 (reisim 2026-10-09: "standart olarak pdf formatı yükleyin diyor hala yeni tür ekleyince … default olarak makette
    yaptıklarımız gibi olacak"): rapor yayındaki şablondan yazılır ve belge Bakanlık görünümünde çizilir — PDF İSTEĞE BAĞLI (firmanın kendi basılı
    formatı, başvuru için); yeni türe şablon kendiliğinden gelir. "Rapor formatı" yüzü yayındaki şablonu gösterir. Görmeyen / başka firmanın kaydı:
-   bulunamadı. 523 (pkproje §3.10 m.13–16): "S.A.Y Chat ayarları" — tıklayınca açılan bölüm (src/modules/say-chat; yazma ekipman türünü düzenleyebilende). */
+   bulunamadı. 523 (pkproje §3.10 m.13–16): "S.A.Y Chat ayarları" (src/modules/say-chat; yazma ekipman türünü düzenleyebilende) — 529 (reisim
+   2026-10-13: "burda kötü durmuş görüpte anlamadım bile ne olduğunu"): burada öteki bölümler gibi kısa bölüm (ne olduğu + satırlar + okunacak
+   fotoğraflar), tuşu düzenleme sayfasına (…/say-chat) götürür; düzenleme orada. */
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Bilgi, BilgiListesi, Yuz, Yuzler } from "../../../../components/bilgi/Bilgi";
 import { Yetkisiz } from "../../../../components/hata/Hata";
 import { Bolum, DegerYok, Kirinti, NesneBasi, SeritKap } from "../../../../components/sayfa/Sayfa";
 import { Serit } from "../../../../components/serit/Serit";
+import { TusBaglanti } from "../../../../components/tus/Tus";
 import { bransAd, grupBul } from "../../../../modules/ekipman-turleri/sema";
 import { baglantiSecenekleri, turDegistirir, turKarti, turSilmeDurumu } from "../../../../modules/ekipman-turleri/server/turler";
 import { BaglantiTusu } from "../../../../modules/ekipman-turleri/ui/Baglantilar";
@@ -24,7 +27,6 @@ import { formatRaporSayilari } from "../../../../modules/raporlar/server/format-
 import { SablonBaslatTusu, SablonTablosu, SifirdanTusu } from "../../../../modules/rapor-format/ui/SablonBolumu";
 import { surumAdi, tarihYaz as sablonTarihi } from "../../../../modules/rapor-format/ui/ortak";
 import { sayChatAyari } from "../../../../modules/say-chat/server/ayar";
-import { ChatAyarlari } from "../../../../modules/say-chat/ui/ChatAyarlari";
 import { modulOturumu, oturumIslemi } from "../../../../server/kimlik/istek";
 
 const MODUL = modulBul("ekipman-turleri")!;
@@ -72,7 +74,21 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
         {t.cihazTurleri.length ? <ul className={stil.bagListe}>{t.cihazTurleri.map((c) => <li key={c.id}>{c.ad}</li>)}</ul>
           : <SeritKap><Serit tur="uyari" ikon="gauge">Ölçüm cihazı seçilmemiş; raporda cihaz şartı aranmaz.</Serit></SeritKap>}
       </Bolum>
-      {chat && <ChatAyarlari ayar={chat} />}
+      {chat && (() => {
+        const bas = new Map(chat.basliklar.map((b) => [b[0], b[1]])), ok = chat.tanim.okunacak.filter((x) => x.acik && bas.has(x.k));
+        return (
+          <Bolum id="b-say-chat" baslik="S.A.Y Chat ayarları"
+            sayac={<><b>{chat.tanim.satirlar.length}</b> satır · <b>{ok.length}</b> okunacak fotoğraf · {chat.kayitli ? `sürüm ${chat.kayitli.surum + 1}` : "formattan hazır"}</>}
+            tuslar={<TusBaglanti tur="ikincil" ikon={chat.yaz ? "pencil" : "eye"} href={`/ekipman-turleri/${t.id}/say-chat`}>{chat.yaz ? "Düzenle" : "Görüntüle"}</TusBaglanti>}>
+            <ul className={stil.bagListe}>
+              <li><span>Denetçinin sahada S.A.Y Chat&apos;e yazdığı mesajın satır sırası
+                <span className={stil.altMetin}>{chat.tanim.satirlar.map((x, i) => `${i + 1}. ${x.ad}${x.hazir ? ` (${x.hazir})` : ""}`).join(" · ")}</span></span></li>
+              <li><span>Yapay zekânın rapor yazılırken okuyacağı fotoğraflar
+                <span className={stil.altMetin}>{ok.length ? ok.map((x) => bas.get(x.k)).join(" · ") : "Yok"}</span></span></li>
+            </ul>
+          </Bolum>
+        );
+      })()}
       <Bolum id="b-tur-std" baslik="Kontrol metodu standartları" sayac={<><b>{t.standartlar.length}</b> standart</>}>
         {t.standartlar.length ? <ul className={stil.bagListe}>{t.standartlar.map((s) => <li key={s.no}><span>{s.id ? `${s.no}:${s.surumAdi}` : s.no}
           <span className={stil.altMetin}>{s.konu ?? "Kütüphanede güncel sürüm yok — Dökümanlar › Standartlar’dan yüklenir"}</span></span></li>)}</ul>
