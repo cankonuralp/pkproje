@@ -48,6 +48,11 @@ label:has(> .gizli:focus-visible) { outline: 3px solid var(--odak); outline-offs
 html[data-say="var"] main { padding-bottom: 96px; }
 /* 524: plan içindeki S.A.Y Chat düğmesi de (firmada S.A.Y kapalıyken yalnız o) — CI 69457a6 tablet: plan içinin son tuşu düğmenin altında kaldı */
 html[data-saychat="var"] main { padding-bottom: 96px; }
+/* 542: S.A.Y / S.A.Y Chat paneli açıkken (tablet ve masaüstü) sayfa panelin solunda kalır — panel raporun alanlarını ve havadaki Kaydet'i örtmez
+   (uçtan uca foto-oku: S.A.Y girişten sonra Kaydet panelin altında kalıyordu). Telefonda panel tam ekran */
+@media (min-width: 768px) {
+  html[data-panel-acik] main { padding-right: calc(min(440px, 100vw - 32px) + 32px); }
+}
 /* 2026-10-12 (reisim: rapor ekranında tuşlar "say tuşu gibi havada"): havada duran tuş kabı (raporlar .eylem, data-alt-cubuk="her") sayfanın alt
    boşluğunu kendi ayırır — main'in alt boşluğu yok; klavyeyle odaklanan alan tuşların altında kalmasın diye kaydırma alttan boşluk bırakır */
 html main:has([data-alt-cubuk="her"]) { padding-bottom: 0; }

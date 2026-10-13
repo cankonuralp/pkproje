@@ -220,6 +220,13 @@ export function SayAsistan() {
     window.addEventListener("probata-panel", f);
     return () => window.removeEventListener("probata-panel", f);
   }, []);
+  /* 542: panel açıkken sayfa panelin solunda (temel.css html[data-panel-acik]) */
+  useEffect(() => {
+    if (!acik) return;
+    const h = document.documentElement;
+    h.setAttribute("data-panel-acik", "say");
+    return () => { if (h.getAttribute("data-panel-acik") === "say") h.removeAttribute("data-panel-acik"); };
+  }, [acik]);
   useEffect(() => {
     if (durum?.acik) document.documentElement.setAttribute("data-say", "var");
     return () => document.documentElement.removeAttribute("data-say");

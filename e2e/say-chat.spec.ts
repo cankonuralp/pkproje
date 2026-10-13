@@ -74,6 +74,8 @@ test("S.A.Y Chat: fotoğraf, ekipman, tek kutuda mesaj, okunacak fotoğraf, etik
   await secim.getByRole("button", { name: new RegExp(kod) }).click();
   await expect(secim).toHaveCount(0);
   await expect(panel.getByRole("heading", { name: new RegExp(`Yeni kayıt · ${kod}`) })).toBeVisible();
+  /* 542: ekipman seçilince odak mesaj kutusunda (ilk satır) — yazmaya hazır */
+  await expect(panel.getByRole("textbox", { name: /^Mesaj/ })).toBeFocused();
   /* galeriden seçilen iki fotoğraf ve "+ ek" tuşu; PNG / JPEG olmayan eklenmez */
   const ekipFoto = panel.getByRole("list", { name: "Ekipman fotoğrafları" });
   await expect(ekipFoto.locator("img")).toHaveCount(2);
@@ -88,7 +90,8 @@ test("S.A.Y Chat: fotoğraf, ekipman, tek kutuda mesaj, okunacak fotoğraf, etik
   await expect(adlar.locator("li").first()).toBeVisible();   // ad sütunu ekran okuyucudan gizli (adlar kutunun açıklamasında)
   const ilkAd = (await adlar.locator("li").first().textContent())!.trim();
   expect(ilkAd.length).toBeGreaterThan(0);
-  await expect(mesaj).toBeFocused();
+  await mesaj.focus();
+  await mesaj.evaluate((el: HTMLTextAreaElement) => el.setSelectionRange(0, 0));
   const satirSayisi = (await mesaj.inputValue()).split("\n").length;
   await page.keyboard.type("Deneme Marka");
   await page.keyboard.press("Enter");

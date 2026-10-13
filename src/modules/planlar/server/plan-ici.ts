@@ -221,12 +221,14 @@ export async function planIci(db: Sorgulayici, kim: Kisi, id: string): Promise<P
     : { firmaAdi: p.firma_adi, adres: p.adres, sgk: p.sgk, isg: isgListesi(false) };
 
   /* 2026-10-14 (reisim: "YENİ EKLENEN EKİPMANLAR HEP EN ÜSTTE OLSUN"): plana en son eklenen üstte; aynı anda eklenenler (plan açılışı) koda göre */
-  const pe = (await db.sorgu<{ ekipman_id: string; sonradan: boolean }>(
-    "SELECT ekipman_id::text, sonradan FROM plan_ekipman WHERE plan_id = $1 ORDER BY olustu DESC", [id])).rows;
+  const pe = (await db.sorgu<{ ekipman_id: string; sonradan: boolean; o: string }>(
+    "SELECT ekipman_id::text, sonradan, to_char(olustu AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS.US') AS o FROM plan_ekipman WHERE plan_id = $1", [id])).rows;
   const turler = await turOzetleri(db), turBul = new Map(turler.map((t) => [t.id, t]));
   const tumRaporlar = await planRaporlari(db, id);
-  const sira = new Map(pe.map((x, i) => [x.ekipman_id, i]));
-  const ekp = (await ekipmanlar(db, pe.map((x) => x.ekipman_id))).sort((x, y) => (sira.get(x.id) ?? 0) - (sira.get(y.id) ?? 0));
+  /* 542: eşit zamanda eklenenler (plan açılışı) koda göre — CI görsel karşılaştırmasında sıra rastgele değişiyordu (540) */
+  const eklendi = new Map(pe.map((x) => [x.ekipman_id, x.o]));
+  const ekp = (await ekipmanlar(db, pe.map((x) => x.ekipman_id)))
+    .sort((x, y) => (eklendi.get(y.id) ?? "").localeCompare(eklendi.get(x.id) ?? "") || (x.kod < y.kod ? -1 : x.kod > y.kod ? 1 : 0));
   /* 360: silebilene (yönetici) hiç kullanılmamış ekipman — "Sil" (tanım veritabanında, göç 0056) */
   const kullanim = izin.ekipmanSil ? await ekipmanKullanimi(db, ekp.map((x) => x.id)) : null;
   const silinebilir = new Set(kullanim ? ekp.filter((x) => !kullanim.has(x.id)).map((x) => x.id) : []);

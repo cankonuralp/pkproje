@@ -145,7 +145,7 @@ test("ekipman bilgileri: S.A.Y boş alanlara girer, dolu alanı sorar, Geri al",
   await expect(page.getByLabel("Seri no", { exact: true })).toHaveValue("SN-0001");
   await expect(page.getByLabel("İmal yılı", { exact: true })).toHaveValue("2019");
   await expect(page.getByLabel("İmal yılı", { exact: true })).toHaveAttribute("data-say-giris", "belirsiz");
-  await expect(ekip.getByText("emin değil")).toBeVisible();
+  await expect(ekip.locator('[data-say-not="emin değil"]')).toHaveCount(1);   // "emin değil" yazısı kutunun ::after'ında
   /* dolu alan: "Dolu alanları da değiştir" */
   if (bilgi.project.name === "telefon") await page.getByRole("button", { name: "S.A.Y — saha asistanı" }).click();
   await panel.getByRole("button", { name: "Dolu alanları da değiştir" }).last().click();

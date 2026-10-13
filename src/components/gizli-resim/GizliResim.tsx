@@ -27,6 +27,16 @@ export function gizliResimAdresi(dosyaId: string): Promise<string> {
   return s;
 }
 
+/** 542: görselin kendisi (dosya olarak — S.A.Y Chat'te kayıtlı etiket fotoğrafı yeniden okunurken); oturumlu tek uçtan, önbelleksiz; görsel değilse hata */
+export async function gizliGorselDosyasi(dosyaId: string, ad: string): Promise<File> {
+  if (!UUID.test(dosyaId)) throw new Error("Geçersiz dosya");
+  const y = await fetch(`/api/dosya/${dosyaId}`, { credentials: "same-origin", cache: "no-store" });
+  if (!y.ok) throw new Error(String(y.status));
+  const tur = y.headers.get("Content-Type") ?? "";
+  if (!tur.startsWith("image/")) throw new Error("Görsel değil");
+  return new File([await y.blob()], ad, { type: tur });
+}
+
 /** dosyanın baytları (toplu indirme — ZIP; 321): oturumlu tek uçtan, önbelleksiz; yetki ve kiracı uçta. PDF değilse hata. */
 export async function dosyaBaytlari(dosyaId: string): Promise<Uint8Array> {
   if (!UUID.test(dosyaId)) throw new Error("Geçersiz dosya");

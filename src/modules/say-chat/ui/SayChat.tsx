@@ -27,7 +27,7 @@ import { bekleyenIcerik, kuyrugaEkle, kuyrukAbone, kuyrukAnlik, kuyrukSunucuAnli
 import { FotoTusu } from "../../../components/foto/FotoTusu";
 import { fotografiKucult } from "../../../components/foto/kucult";
 import { fotolariSec, fotoSecimiUyarisi } from "../../../components/foto/secim";
-import { GizliResim } from "../../../components/gizli-resim/GizliResim";
+import { GizliResim, gizliGorselDosyasi } from "../../../components/gizli-resim/GizliResim";
 import { useGorunurAlan } from "../../../components/pencere/gorunurAlan";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { useOnayla } from "../../../components/pencere/Onay";
@@ -182,6 +182,13 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
     window.addEventListener("probata-panel", f);
     return () => window.removeEventListener("probata-panel", f);
   }, []);
+  /* 542: panel açıkken sayfa panelin solunda (temel.css html[data-panel-acik]) */
+  useEffect(() => {
+    if (!acik) return;
+    const h = document.documentElement;
+    h.setAttribute("data-panel-acik", "saychat");
+    return () => { if (h.getAttribute("data-panel-acik") === "saychat") h.removeAttribute("data-panel-acik"); };
+  }, [acik]);
   /* sayfanın sonu düğmenin altında kalmasın (temel.css html[data-saychat]) */
   useEffect(() => {
     document.documentElement.setAttribute("data-saychat", "var");
@@ -310,9 +317,7 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
       let dosya: File;
       if (yerel) dosya = yerel.dosya;
       else {
-        const y = await fetch(`/api/dosya/${sunucu!.dosya}`, { credentials: "same-origin", cache: "no-store" });
-        if (!y.ok) { uyar("Etiket fotoğrafı açılamadı; sayfayı yenileyip yeniden deneyin."); return; }
-        dosya = new File([await y.blob()], sunucu!.ad, { type: y.headers.get("Content-Type") ?? "image/jpeg" });
+        try { dosya = await gizliGorselDosyasi(sunucu!.dosya, sunucu!.ad); } catch { uyar("Etiket fotoğrafı açılamadı; sayfayı yenileyip yeniden deneyin."); return; }
       }
       const fd = new FormData();
       fd.set("foto", dosya); fd.set("plan", veri.plan.id); fd.set("satirlar", JSON.stringify(t.tanim.satirlar.map((s) => ({ ad: s.ad, alan: s.alan }))));
