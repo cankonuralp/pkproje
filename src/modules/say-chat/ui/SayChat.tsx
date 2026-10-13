@@ -135,6 +135,11 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
   const [cihazIcerik, setCihazIcerik] = useState<Record<string, KayitGirdisi>>({});
   const [secim, setSecim] = useState<{ sekme: "plan" | "yeni"; ara: string } | null>(null);
   const [okunuyor, setOkunuyor] = useState(false);
+  /* 542: iş gidince sunucudaki hâl yenilenir — yeni hâl gelene kadar kayıt "Gönderiliyor…" (eski fotoğraf listesiyle "Düzenle" açılmasın;
+     uçtan uca masaüstünde etiket fotoğrafı yenilemeden önce açılan düzenlemede görünmüyordu) */
+  const [tazeleniyor, setTazeleniyor] = useState(false);
+  const [sonVeri, setSonVeri] = useState(veri);
+  if (sonVeri !== veri) { setSonVeri(veri); setTazeleniyor(false); }
   /** büyük görüntü (542 "görüntüle"): bu cihazda seçilen (blob:) ya da sunucudaki fotoğraf */
   const [goster, setGoster] = useState<{ url?: string; dosya?: string; ad: string } | null>(null);
   const panel = useRef<HTMLElement>(null);
@@ -172,7 +177,10 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
   }, [chatIsleri]);
   /* gönderilen iş sonucu: sunucudaki hâl yenilenir */
   useEffect(() => {
-    const f = (e: Event) => { const d = (e as CustomEvent<KuyrukSonucOlayi>).detail; if (d?.tur.startsWith("saychat.") && d.durum === "tamam") router.refresh(); };
+    const f = (e: Event) => {
+      const d = (e as CustomEvent<KuyrukSonucOlayi>).detail;
+      if (d?.tur.startsWith("saychat.") && d.durum === "tamam") { setTazeleniyor(true); router.refresh(); }
+    };
     window.addEventListener("probata-islem", f);
     return () => window.removeEventListener("probata-islem", f);
   }, [router]);
@@ -404,9 +412,9 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
                     {okl.length > 0 && <div className={stil.cipler}>{okl.map(([ad, n]) => <span key={ad} className={stil.cip}><Ikon ad="scan-text" kucuk />{ad}{n > 1 ? ` · ${n}` : ""}</span>)}</div>}
                     {g.ileti && <p className={stil.hata}>{g.ileti}</p>}
                     <div className={stil.kayitAlt}>
-                      <span className={g.cihazda || g.bekleyenFoto ? stil.cihazda : stil.gitti}>
-                        <Ikon ad={g.cihazda || g.bekleyenFoto ? "wifi-off" : "circle-check"} kucuk />
-                        {g.cihazda || g.bekleyenFoto ? `Cihazda${g.bekleyenFoto ? ` · ${g.bekleyenFoto} fotoğraf bekliyor` : ""}` : "Gönderildi"}
+                      <span className={g.cihazda || g.bekleyenFoto || tazeleniyor ? stil.cihazda : stil.gitti}>
+                        <Ikon ad={g.cihazda || g.bekleyenFoto ? "wifi-off" : tazeleniyor ? "refresh-cw" : "circle-check"} kucuk />
+                        {g.cihazda || g.bekleyenFoto ? `Cihazda${g.bekleyenFoto ? ` · ${g.bekleyenFoto} fotoğraf bekliyor` : ""}` : tazeleniyor ? "Gönderiliyor…" : "Gönderildi"}
                         {g.zaman ? ` · ${SAAT.format(new Date(g.zaman))}` : ""}
                       </span>
                       <Tus tur="ikincil" ikon="pencil" onClick={() => duzenle(g)} aria-label={`${ekipAd(g.ekipman)} kaydını düzenle`}>Düzenle</Tus>
