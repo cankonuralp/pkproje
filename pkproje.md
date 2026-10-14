@@ -2483,6 +2483,21 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-14 (557 · 2. tur): **SUNUM 557 — S.A.Y ŞİKÂYETLERİ, EKSİKSİZ (ONAY BEKLİYOR)** (aynı bağlantı, sürüm 2; reisim: *"say sohbetinde kutucuktan
+  tıklayarak göndermeyi onaylamıyorum ayrıca düşünüyor kısmında bir görsel hala göremedim makette, el ile girebildiğim değerleri say asistan ile
+  giremiyor … küçültme tuşu gelmeli, dediklerime odaklan isteklerimi atlama ve istemediğim şeyleri tekrar tekrar eklemeye çalışma asistanı istek
+  yapılmadan yapıldı dememesi üzerine eğit örneğin, komut gelsin, yapılsın, doğruluğunu teyit et, yapıldıysa yapıldı de, yapılamadıysa sebebi ile
+  yaz … 5 kere vs diye sınır koymaya da gerek yok … site dışı gereksiz sorulara da cevap veriyor, vermesin, bazen söylediğim şeyi cevaplamıyor bile
+  geçmiş sorularda takılı kalıyor, tekrardan tam kapsamlı şikayetlerimin hepsi için sunum yap eksiksiz olsun."*). 14 şikâyet sözüyle → neden → ne
+  yapılacak: (1) mesaj hemen balon; (2) S.A.Y balonunda üç nokta "Düşünüyor", iş sırasında "Rapora yazıyor"; (3–5) komut → ekran yapar → rapordan
+  geri okuyup teyit → sonuç S.A.Y'a → "yaptım" ya da nedeniyle "yapamadım", sunucunun "N giriş yapıyorum" cümlesi kalkar, yeniden deneme ve sınır
+  yok, alttaki bildirim kalkar; (6) elle girilen her yer S.A.Y'a açık, aynı denetimle — bugün S.A.Y'ın giremedikleri: sayı kutusuna sayı olmayan
+  yazı, tarih / saatler, künye (kilitsiz), çoklu seçim, uygunluk notu, elle satır sonucu + gerekçe, cihaz seçimi, satır silme (raporlar/say-doldur.ts
+  format/deger.ts alanDegeri — fotoğraf okuma denetimi; rapor-haritasi.ts künyesiz); (7) KONU SINIRI (550'nin "kural yok"u yerine reisim'in isteği):
+  yalnız probata / periyodik kontrol / iş ekipmanı / mevzuat-standart / açık rapor-format; (8) cevapsız eski mesajlar yeni mesajla birleşmez
+  (yz/say.ts konusma birleştiriyordu), geçmişe yalnız teyitli sonuç; (10) Küçült S.A.Y + S.A.Y Chat; (11) S.A.Y Chat boy tutamağı; (12) en alta in;
+  (13) tıklanıp gönderilen örnek cümle yok (yalnız "Fotoğrafları oku ve gir"); (14) 555 yapıldı. İlk turdan çıkanlar: örnek cümle tuşları, akış +
+  Durdur, 5 tur, "-" uygulanamaz kuralı, iş satırı.
 - 2026-10-14 (556 · 2. tur): **SUNUM 556 SADELEŞTİ — ONAY BEKLİYOR** (aynı bağlantı, sürüm 3; reisim: *"hesaplama olayını henüz onaylamıyorum
   abartmışsın, ve istediğim hesabı istediğim gibi yapabilmeliyim kısıtlama olmamalı, artı olarak mevcut formlarda değil ileride yapılacak olan formlarda
   da olmalı"*). İlk turdaki kurallar (onay ekranı izi, Sonuç açılır kutusu, seçim sonucunun seçeneklerde olma şartı, kayıttan gelenlerde tuş yok,
