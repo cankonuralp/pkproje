@@ -2483,6 +2483,19 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-14 (556): **SUNUM 556 — HER KUTUDA HESAP (ONAY BEKLİYOR)** https://claude.ai/artifact/CtsppwfP7AUgEfKthjjsgC (reisim, Zemin izolasyonu
+  ekran görüntüsüyle: *"hesaplama tuşu her kutucukta olmalı her türlü şey için hesaplama yapabilmeliyim sadece belirli şeyler ve test tablolarında
+  değil, ayrıca görüntüdeki gibi değiştirilemez olmasın, olması gerekenin dışında bir şey olursa değiştirebilelim, dışarıdan diğer kutular ile aynı
+  gözüksün, şu işlemlerin sonucudur gibi açıklama olmasın."*). Ölçüm: 10 hazır formatta sahada doldurulan 307 kutunun 97'sinde (sayı) formül
+  yazılabiliyor; yazı 116, seçim 71, tarih 22, evet 1 kutuda ve 246 kontrol maddesinde tuş yok. Öneri: hesap tuşu her kutuda (bilgi alanı, tablo
+  sütunu, test değeri, kontrol maddesinin cevabı; çoklu seçim ve kayıttan gelenler hariç); sahada hesaplanan kutu sıradan kutu, değer kendiliğinden
+  dolar, denetçinin yazdığı kalır, boşaltınca hesap geri gelir, hesaplanamazsa boş; formül dili Excel'in Türkçe işlevleri (EĞER, VE, YADA,
+  YUVARLA, KAREKÖK, MUTLAK, MAK, MİN, TOPLA, ORTALAMA, SAY, AY_EKLE), yazı (&), tarih + gün, tablonun bütün satırları; onay ekranında "elle · hesap"
+  izi; tablo Sonuç sütunu açılır kutu + gerekçe. Kararlar K1–K5; tıklanır maket (format yapıcı → saha → onay ekranı, aynı formüllerle canlı).
+  Onay gelmeden kod yok.
+- 2026-10-14 (555 yayın): **555 YAYINDA** — main ea7ab80 (göç yok; 91 göç). İki parça (5ced89e S.A.Y / S.A.Y Chat / format yapıcı, ea7ab80 kâğıt
+  yönergeleri) deneme makinesinde ayrı ayrı 13 / 13. Canlı sağlık tamam, duman 11/11; hata kaydında yalnız bilinen dış kaynak zaman aşımı
+  (Bakanlık iş ekipmanları duyuru sayfası).
 - 2026-10-14 (555): **AÇIKLAMA YAZILARI KALKTI** (reisim, S.A.Y paneli ekran görüntüsüyle: *"bu ve benzeri tüm saçma açıklamaları kaldır, formül kısmı
   için nerede ne yaptın anlat"*). S.A.Y: alt yazı yalnız "Claude Haiku 5.5" ("Bu rapordayım · ne yazayım?" / "Format yapıcıdayım …" yok), boş sohbet
   boş (örnekli açıklama paragrafı yok), "Sohbeti yalnız siz görürsünüz. Ekler en çok 4 MB." yok, yazı kutusunda "S.A.Y'a yazın"; "Fotoğrafları oku ve
