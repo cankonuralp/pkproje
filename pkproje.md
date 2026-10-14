@@ -2483,6 +2483,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-14 (560): **557 + 556 YAYINDA** — 557 (S.A.Y şikâyetleri; c655ed8) ve 556 (her kutuda hesap; dd8b593) deneme makinesinde ilk koşuda
+  13/13 yeşil (557'nin ilk koşusunda 3. parçadaki eski "Seri no" beklentisi düşmüştü — c655ed8 düzeltti); main önce c655ed8, sonra dd8b593; göç yok
+  (91 göç); canlı sağlık tamam (sürüm dd8b593), duman 11/11, Vercel'de çalışma hatası yok. Oturum isteyen ekranlar (saha raporu, format yapıcı)
+  canlıda gözle denenmedi — giriş reisim'in (ölçemedim); aynı akış deneme makinesinde uçtan uca koştu.
 - 2026-10-14 (559): **SUNUM 556 UYGULANDI — HER KUTUDA HESAP** (reisim: *"tamam işin bitince iki maketide onaylıyorum uygulamaya geç yayınla"*;
   istek: *"hesaplama tuşu her kutucukta olmalı … görüntüdeki gibi değiştirilemez olmasın, olması gerekenin dışında bir şey olursa değiştirebilelim,
   dışarıdan diğer kutular ile aynı gözüksün, şu işlemlerin sonucudur gibi açıklama olmasın"*, *"istediğim hesabı istediğim gibi yapabilmeliyim
