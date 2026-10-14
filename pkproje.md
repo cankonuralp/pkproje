@@ -2483,6 +2483,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-14 (554): **552–553 YAYINDA** — main 9fe0e37 (göç yok; 91 göç). Deneme makinesi ilk koşuda masaüstü 3'te yalnız yeni uçtan uca test düştü
+  (taklit yapay zekâ Bakanlık bölümünün harita satırındaki " (Bakanlık bölümü)" ekini beklemiyordu — 9fe0e37); ikinci koşu 13 / 13 (veritabanlı 758
+  test, format yapıcıda S.A.Y testi geçti). Canlı sağlık tamam, duman 11/11, hata kaydı yok. Hata listesi m85.
 - 2026-10-14 (552–553): **FORMÜL YAZILDIĞI GİBİ + FORMÜL TUŞU; S.A.Y FORMAT YAPICIDA KONUŞARAK DÜZENLER** (reisim: *"elindekileri yayınla, elektrikte
   hesaplamalarda olsun bu vb hesaplamalar için format yapıcıda formül kısmı olsun mesela (RCa=480/RCd ) örnekte rca ve rcd test değerlerinde girilen
   iki sütun, say chatten zaten konuşarak ilgili formatı yapabiliyo olalım, işin bitince direk yayınla sunuma gerek yok, sonrada pc yi kapat."*).
