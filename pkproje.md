@@ -2483,6 +2483,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-14 (556 · 2. tur): **SUNUM 556 SADELEŞTİ — ONAY BEKLİYOR** (aynı bağlantı, sürüm 3; reisim: *"hesaplama olayını henüz onaylamıyorum
+  abartmışsın, ve istediğim hesabı istediğim gibi yapabilmeliyim kısıtlama olmamalı, artı olarak mevcut formlarda değil ileride yapılacak olan formlarda
+  da olmalı"*). İlk turdaki kurallar (onay ekranı izi, Sonuç açılır kutusu, seçim sonucunun seçeneklerde olma şartı, kayıttan gelenlerde tuş yok,
+  kısıtlı işlev listesi, kararlar K1–K5) kalktı. Kalan dört madde: hesap tuşu formatın BÜTÜN kutularında (kayıttan gelen ve ekipman bilgisi dahil) —
+  tuş format yapıcıda olduğu için bugünkü, firmanın kurduğu ve ileride kurulacak her formatta, yeni kutu türünde de; formül Excel gibi ve kısıtsız —
+  Excel'in 373 işlevi Türkçe ya da İngilizce adıyla (hesap kitaplığı @formulajs/formulajs 4.6.1, MIT), formatın her kutusu adıyla, tabloda sütun adı
+  o satır, SÜTUN([Ad]) bütün satırlar, tablo adı DÜŞEYARA için tablo; sahada sıradan kutu, elle yazılan kalır, boşaltınca hesap; belgede kutudaki
+  değer. Maket bu kitaplıkla canlı (işlev arama, 373 işlev).
 - 2026-10-14 (557): **SUNUM 557 — S.A.Y SOHBETİ: GÖNDERİNCE GÖRÜNSÜN, YAPINCA SÖYLESİN (ONAY BEKLİYOR)** https://claude.ai/artifact/SQLPoK8o7xaVraAUdaAKn3
   (reisim, beş ekran görüntüsüyle: *"bir yazı girdiğimizde say düşünüyor diyor yazımız da gitmiyor, saçma sorulara saçma cevaplar veriyor bazı işleri
   yapamıyor, mesajı okuyor yazarken vs mesaj gitmiş gözüksün aynı claud chatindeki gibi ve bekleme işareti çıksın. bunun sunumunu yap"*, *"saychat ve
