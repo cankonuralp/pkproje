@@ -2481,6 +2481,21 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-14 (546): **SUNUM 546 — KAYMALAR, TABLOLAR, PLANDAN SEÇ, SERBEST S.A.Y (ONAY BEKLİYOR)** https://claude.ai/artifact/QAVRWciAqhMzqAdLd4fAw9
+  (reisim, beş canlı ekran görüntüsüyle: *"plandan seç diyince plandaki ekipmanlar gözükmüyor, telefonda böyle kaymalar oluyor, say asistan veya chat
+  açıldığında tüm sayfa kayıyor, yazılar yer olmasına rağmen üst üste biniyor, tabloyu kenara kaydıramıyorum ve ayrıca kenara kaymasına gerek olacak
+  kadar neden büyük yazılar ekrana sığdırılabilir bence, yapay zeka asistanı S.A.Y. de herhangi bir kısıt kural vb olmasını istemiyorum oradan direk
+  hiaku ile konuşmak aynı claud kullanır gibi oradan onu kullanabilmek istiyorum. bu konular hakkında bana cevap ver sunum yap"*). Ölçülen nedenler:
+  (1) S.A.Y Chat "Plandan seç" kişinin branşına (meslekten) ve raporsuza süzer (kayitlar.ts sayChatPaneli; sunucu da reddeder) — canlı deneme
+  firmasında yönetici hesabının meslek kaydı makine mühendisi, P-1026-006'nın raporsuz üç ekipmanı elektrik, iki transpaletin raporu var → liste boş.
+  (2) temel.css `html[data-panel-acik] main` sağ boşluğu (542) panel açılınca sayfayı 472 piksel daraltıyor. (3) Liste sütunları daralınca
+  satır sonundaki tuşlar sütuna sığmayıp soldaki tarihin üstüne taşıyor. (4) Ölçüm tablosu `td` en az 6.5rem, başlık tek satır → Pano sigortaları
+  ~1.900 piksel; 540'ta `* { scrollbar-width: none }` ile fareyle yana kaydırma yolu kalmadı. (5) Telefonda S.A.Y Chat paneli klavyeden önce bitiyor,
+  arada sayfa görünüyor (ekran görüntüsünden; iPhone'da ölçülemedi). (6) S.A.Y'ın 7 kuralı (yz/say.ts saySistemi: en çok 3 cümle, "kayıt
+  yazamazsın", rapora yalnız 5 komut, düz metin) + soru 500 harf, son 12 ileti, effort low. Öneriler ve kararlar K1–K8: başka branş uyarıyla
+  seçilir; Yeni raporu olan ekipmanın kaydı o rapora; panel sayfayı itmez (yalnız raporun Kaydet tuşları kayar); telefonda tablo satır kartı;
+  ince çubuk yalnız yana kayan tablolarda; S.A.Y doğrudan Haiku (kurallar kalkar, rapora her cümleyle yazar — işaret, Geri al, Kaydet kişide;
+  yetki sunucuda); internette arama; aylık harcama sınırı firma ayarı olarak kalır. Hata listesi m79–m84. Onaya kadar kod yok.
 - 2026-10-14 (545): **540 · 542 · 544 YAYINDA** — 540 main 95f81fd (göç 0088 Supabase'te); 542 + 544 main b5765c6 (göç 0089 yz_okuma.dosya —
   90 göç). CI üç turda yeşile döndü; yakalananlar düzeltildi: S.A.Y / S.A.Y Chat paneli açıkken sayfa panelin solunda (panel raporun havadaki
   Kaydet'ini örtüyordu), plandaki ekipman sırası eşitlikte koda göre (540'ta rastgeleydi), dosya adresi yalnız GizliResim'de (kayıtlı etiket
