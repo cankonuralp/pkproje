@@ -320,10 +320,10 @@ pkproje/
                             (göç 0070; 390 / 0074: okunamayan kaynağın adı — iş kaydı ozet.hatali, duyuru_durumu.hatali) · uydurma sayfalar
                             e2e/duyuru-ornek.ts (PROBATA_DUYURU_UC yalnız uçtan uca taklit)
   src/modules/say/          S.A.Y SAHA ASİSTANI (380; maket say.js BB6): yardim.ts (sayfa yardımı + yapay zekâ kılavuzu, adresten yer adı) ·
-                            server/say.ts (sayDurumu, sayHizli — kuralla, saySorHazirla / saySorKaydet / sayBirak — ayırma, işlem dışı çağrı,
+                            server/say.ts (sayDurumu, saySorHazirla / saySorKaydet / sayBirak — ayırma, işlem dışı çağrı,
                             sayTemizle; 382 sayRaporCevabi / sayOneri — rapor ekranı, metni sunucu kurar) · ui/SayAsistan.tsx (uygulama düzeninde tek
                             bileşen; düğme + panel) · ui/baglam.ts (382: saha raporu ekranı kendini bağlar — canlı eksikler, sonuç, Uygula, Git; 384 canlı
-                            cevaplar) · rapor-ozeti.ts (384, saf: yapay zekâya yalnız formatın adları / seçenekler / sayılar) · raporlar/server/say-baglanti.ts
+                            cevaplar) · rapor-haritasi.ts (550, saf: açık raporun yer kimlikleri + şu anki değerleri; künye yok) · raporlar/server/say-baglanti.ts
                             (raporSayBilgisi: yalnız yazanın Yeni raporu) · ui/eylemler.ts · çekirdek
                             src/server/yz/say.ts (istek: önbellekli talimat + bağlam, cevap çözme; saf) + sohbet.ts (geçmiş; göç 0071 yz_sohbet)
                             · 522 EK: ataç (Fotoğraf çek · Galeriden seç · Belge ekle) → ek-sinir.ts (4 ek / 4 MB, ekran + sunucu) · server/ek.ts (tür
@@ -331,6 +331,10 @@ pkproje/
                             · 542 RAPORA GİRER: istek.ts (saf: kısa komut — oku, maddeler, sonuç, üstüne yaz, geri al; soru yapay zekâya) · say.ts hizli "islem"
                             (islemMetni: cevabı sunucu sayılardan kurar) · SayAsistan "Fotoğrafları oku ve gir", "Maddeleri uygun işaretle", Geri al, Dolu
                             alanları da değiştir; rapordayken ataçla eklenen fotoğraf rapora (K5) · panel klavyede görünen alana (components/pencere/gorunurAlan.ts)
+                            · 550 KURALSIZ HAIKU (sunum 546): yz/say.ts talimatta kural yok, araçlar (rapora_yaz / fotograflari_oku / geri_al rapordayken,
+                            web_search her zaman), sayYanitiCoz komutlar + arama; markdown.ts (saf ayrıştırıcı) + ui/Markdown.tsx (HTML yok, http(s) bağlantı);
+                            komutları ekran uygular (baglam.ts yaz / ekipman → raporlar/say-doldur.ts komutlariUygula); tek hazır tuş "Fotoğrafları oku ve gir";
+                            istek.ts yalnız oku / geri al / üstüne yaz; yazı kutusu çok satırlı; göç 0090 (ileti ≤ 100 000); sayfa işlev süresi 55 sn (layout)
   src/modules/say-chat/     S.A.Y CHAT (523–525; pkproje §3.10): sema.ts (saf: alan / başlık seçenekleri, hazır ayar, denetim, dağılım dagit) ·
                             server/ayar.ts (523 tür ayarı — sayChatAyari, sayChatAyarKaydet, chatTanimi; göç 0084 say_chat_ayar) · ui/ChatAyarlari.tsx
                             (529: kendi sayfası /ekipman-turleri/<tür>/say-chat — Format kurucunun tuşlarından ve tür sayfasındaki kısa bölümden) · ui/eylemler.ts · 524 server/kayitlar.ts (sayChatPaneli, chatKaydet / chatFoto /
@@ -341,6 +345,8 @@ pkproje/
                             · 542: mesaj TEK yazı kutusu (MesajKutusu — solda satır adları, Enter alttaki satıra), etiket uyarısız + Görüntüle + Etiketten oku,
                             büyük görüntü; rapor yazılırken boş bilgi varsa etiket ekipman bilgilerine okuma fotoğrafı (rapor-yaz.ts)
                             · 527 fotoğraf tuşları components/foto/FotoTusu (531'de ortak oldu)
+                            · 549 secim.ts (saf: Plandan seç'te plandaki BÜTÜN ekipman — uygun / başka branş uyarıyla / kendi Yeni raporu → o rapora (rapor-yaz
+                            yalnizBos) / seçilemez nedeniyle); 547 telefonda panel tam örtü + data-klavye özet satırı
   src/server/eposta/        E-POSTA (432; göç 0077): eposta.ts kuyruk (alıcı başına bir satır; metin değişmez, silinmez) · saglayici.ts tek bağdaştırıcı
                             (Resend biçimi HTTP; uç PROBATA_EPOSTA_UC — anahtar yoksa bekler) · gonder.ts bekleyenleriGonder · sonra.ts (after) ·
                             gece işi epostaIsi yeniden dener. İlk kullanım: plan açılınca ekip + bilgilendirme (planlar planAc, sema planEpostasi)
@@ -378,7 +384,8 @@ pkproje/
                             DecompressionStream ile, ortak dizgi, tarih biçimi, Türkçe Windows CSV; 10 MB / 50 MB açılmış / 5 000 satır sınırı) · indir.ts
   src/components/           TEK ÜRETİCİLER: sayfa/ (kırıntı, sayfa / nesne başlığı, bölüm, rozet, sekmeler) · kabuk (yan menü + üst çubuk) · ikon · boş durum · tuş · şerit · bildirim (altta; 506 useUyar: işlemi
                             durduran kısa uyarı üstte — eksikte pencere yerine) · pencere + onay ·
-                            liste (tablo↔kart, süzgeç mantığı liste/suzgec.ts) · FOTOĞRAF TUŞU foto/FotoTusu.tsx (527 / 531: Fotoğraf çek · Galeriden /
+                            liste (tablo↔kart, süzgeç mantığı liste/suzgec.ts; 547 dar sütunda tuş yazısı ikinci satıra — hücreden taşmaz, tarama
+                            "hücreden taşan" bulgusu) · kaydir/useSurukleKaydir.ts (548: yana kayan kap fareyle sürüklenir; ölçüm tablosu) · FOTOĞRAF TUŞU foto/FotoTusu.tsx (527 / 531: Fotoğraf çek · Galeriden /
                             bilgisayardan seç; S.A.Y Chat, araç teslim tutanağı, zimmet teslimi — capture yalnız burada ve S.A.Y ataçta, kilit tests/foto-tusu.test.ts)
                             + foto/secim.ts (saf: JPEG / PNG, bayt sınırı, yer) · YÜZEN KATMAN secim/yuzen.ts (452: seçim listesi, süzgeç seçicisi, takvim,
                             saat önerileri üst katmanda — sayfayı / pencereyi itmez, kesilmez; tarama açılır katman denetimi; 486: konum satır içi biçemde,

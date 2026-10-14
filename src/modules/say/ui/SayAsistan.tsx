@@ -14,10 +14,15 @@
    yap diyeceğim ve yapacak"): rapor ekranında "Fotoğrafları oku ve gir" (okunmamış fotoğraflar okunur, değerler boş alanlara — yeşil / sarı),
    "Maddeleri uygun işaretle", yazılan kısa komutlar (../istek.ts: "sonucu uygun yap", "üstüne yaz", "geri al" …) kuralla, yapay zekâya gitmeden
    ekranda yapılır; S.A.Y'ın cevabını sunucu sayılardan kurar. Cevabın altında "Geri al" ve dolu alan kaldıysa "Dolu alanları da değiştir" (yalnız
-   işi yapan sayfada). K5: rapordayken ataçla eklenen fotoğraf rapora konur (birden çok bölüm varsa hangisine olduğu sorulur) ve okunup girilir. */
+   işi yapan sayfada). K5: rapordayken ataçla eklenen fotoğraf rapora konur (birden çok bölüm varsa hangisine olduğu sorulur) ve okunup girilir.
+   550 (sunum 546 — reisim 2026-10-14: "S.A.Y. de herhangi bir kısıt kural vb olmasını istemiyorum oradan direk haiku ile konuşmak aynı claud kullanır
+   gibi", "S.A.Y asistanda öneri soruları olarak sadece fotoğrafları oku ve gir kalsın başka bir şey olmasın"): tek hazır tuş "Fotoğrafları oku ve
+   gir" (rapor açıkken çalışır); öteki hazır sorular kalktı. Her yazılan Haiku'ya gider (yalnız "geri al" ve bekleyen "Değiştireyim mi?"ye "evet"
+   ekranda); cevap Markdown çizilir (ui/Markdown.tsx — HTML işlenmez). Rapordayken Haiku'nun istediği girişler (rapora_yaz) EKRANDA uygulanır:
+   işaretli, "Geri al" iletinin altında; kaydetmek kişide. Yazı kutusu çok satırlı: Enter gönderir, Shift+Enter yeni satır. */
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from "react";
 import { fotografiKucult } from "../../../components/foto/kucult";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Ikon } from "../../../components/ikon/Ikon";
@@ -27,16 +32,18 @@ import { Serit } from "../../../components/serit/Serit";
 import type { SohbetEkAdi, SohbetEksik, SohbetIletisi } from "../../../server/yz/sohbet";
 import { EK_EN_COK_ADET, EK_EN_COK_BAYT } from "../ek-sinir";
 import type { SayDurum, SayYaniti } from "../server/say";
+import type { SayKomutu } from "../../../server/yz/say";
+import { Markdown } from "./Markdown";
 import { istekTani, type Istek } from "../istek";
 import { useSayRaporBagi, type SayGeriAl, type SayRaporBagi } from "./baglam";
-import { sayDurumEylemi, sayEkliSorEylemi, sayGecmisEylemi, sayHizliEylemi, sayOneriEylemi, sayRaporEylemi, saySorEylemi, sayTemizleEylemi } from "./eylemler";
+import { sayDurumEylemi, sayEkliSorEylemi, sayGecmisEylemi, sayOneriEylemi, sayRaporEylemi, saySorEylemi, sayTemizleEylemi } from "./eylemler";
 import stil from "./say.module.css";
 
 const ACIK_ANAHTARI = "probata-say-acik";
-type Hizli = "bekleyen" | "sayfa" | "eksik" | "sonuc" | "oku" | "maddeler";
-const GENEL: [k: Hizli, ad: string][] = [["bekleyen", "Beni ne bekliyor?"], ["sayfa", "Bu sayfada ne yapılır?"]];
-const RAPOR: [k: Hizli, ad: string][] = [["oku", "Fotoğrafları oku ve gir"], ["maddeler", "Maddeleri uygun işaretle"], ["eksik", "Eksik alanlar neler?"],
-  ["sonuc", "Sonuç ne olmalı?"]];
+/** 550: tek hazır tuş (reisim: "sadece fotoğrafları oku ve gir kalsın başka bir şey olmasın") */
+const OKU = "Fotoğrafları oku ve gir";
+/** yazı kutusunun en çok uzunluğu (sunucu SORU_SINIRI ile aynı) */
+const SORU_EN_COK = 20_000;
 /** 542: S.A.Y'ın rapora yaptığı işin bu sayfadaki eylemleri (ileti kimliği → geri al / dolu alanları da değiştir) */
 interface IslemEylemi { geriAl?: SayGeriAl; ustune?: () => { sayi: number; geriAl: SayGeriAl } }
 const DAR = "(max-width: 767.98px)";
@@ -75,22 +82,6 @@ function EkListesi({ ekler, cikar }: { ekler: readonly (SohbetEkAdi & { url?: st
   );
 }
 
-/** düz metin: paragraflar; "- " ile başlayan satırlar liste */
-function Metin({ metin }: { metin: string }) {
-  const parcalar: { tur: "p" | "ul"; satirlar: string[] }[] = [];
-  for (const satir of metin.split("\n")) {
-    const madde = /^\s*[-•]\s+/.test(satir);
-    const son = parcalar[parcalar.length - 1];
-    if (!satir.trim()) { parcalar.push({ tur: "p", satirlar: [] }); continue; }
-    if (madde) { if (son?.tur === "ul") son.satirlar.push(satir.replace(/^\s*[-•]\s+/, "")); else parcalar.push({ tur: "ul", satirlar: [satir.replace(/^\s*[-•]\s+/, "")] }); }
-    else if (son?.tur === "p" && son.satirlar.length) son.satirlar.push(satir);
-    else parcalar.push({ tur: "p", satirlar: [satir] });
-  }
-  return <>{parcalar.filter((p) => p.satirlar.length).map((p, i) => p.tur === "ul"
-    ? <ul key={i} className={stil.madde}>{p.satirlar.map((s, j) => <li key={j}>{s}</li>)}</ul>
-    : <p key={i}>{p.satirlar.join("\n")}</p>)}</>;
-}
-
 /** eksikler bölüm başına (sırası korunur): "Bölüm · N alan" + Git (ilk alana) */
 function bolumle(l: readonly SohbetEksik[]): { bolumAd: string; ilk: SohbetEksik; n: number }[] {
   const g = new Map<string, { bolumAd: string; ilk: SohbetEksik; n: number }>();
@@ -107,7 +98,7 @@ function Ileti({ m, rb, git, uygula, vazgec, eylem, eylemYap }: {
   const o = m.ek?.oneri;
   return (
     <li className={`${stil.mesaj} ${stil.o}`}>
-      <Metin metin={m.metin} />
+      <Markdown metin={m.metin} />
       {m.ek?.bekleyen?.length ? (
         <ul className={stil.bekleyen}>
           {m.ek.bekleyen.map((b) => (
@@ -173,7 +164,7 @@ export function SayAsistan() {
   const ekSira = useRef(0);
   const atac = useRef<HTMLButtonElement>(null);
   const fab = useRef<HTMLButtonElement>(null);
-  const girdi = useRef<HTMLInputElement>(null);
+  const girdi = useRef<HTMLTextAreaElement>(null);
   const govde = useRef<HTMLDivElement>(null);
   const panel = useRef<HTMLElement>(null);
   useGorunurAlan(panel, acik);
@@ -204,6 +195,8 @@ export function SayAsistan() {
     return () => { canli = false; };
   }, [acik, iletiler]);
   useEffect(() => { const g = govde.current; if (g) g.scrollTop = g.scrollHeight; }, [iletiler, acik, hata]);
+  /* 550: gönderilince yazı kutusu tek satıra döner */
+  useEffect(() => { if (!soru && girdi.current) girdi.current.style.height = ""; }, [soru]);
   /* ek menüsü dışarı tıklanınca kapanır */
   useEffect(() => {
     if (!menu) return;
@@ -265,25 +258,35 @@ export function SayAsistan() {
   };
   /** en son, hâlâ kullanılabilen eylem (yazılan "üstüne yaz" / "geri al" için) */
   const sonEylem = (ne: "geri" | "ustune") => [...islemler.entries()].reverse().find(([, e]) => (ne === "geri" ? e.geriAl : e.ustune));
+  /** işin kendisi (bekleme göstergesi çağıranda): okuma, geri al, dolu alanları da değiştir */
+  const islemCalistir = async (istek: Istek, soru: string, ek: readonly { dosya: string; bolum: string }[] = []) => {
+    if (!rb) return;
+    if (istek === "oku") {
+      const r = await rb.fotolariOku((x) => setIlerleme(x), ek);
+      setIlerleme(null);
+      await islemKaydet({ istek, soru, sayi: r.ozet.okunan, okuma: r.ozet }, { geriAl: r.geriAl, ...(r.ustune ? { ustune: r.ustune } : {}) });
+    } else {
+      const s = sonEylem(istek === "geri" ? "geri" : "ustune");
+      await eylemCalistir(s?.[0] ?? null, istek === "geri" ? "geri" : "ustune", soru);
+    }
+  };
   const islemYap = async (istek: Istek, soru: string, ek: readonly { dosya: string; bolum: string }[] = []) => {
     if (!rb || bekliyor) return;
     setBekliyor(true); setHata(null);
-    try {
-      if (istek === "oku") {
-        const r = await rb.fotolariOku((x) => setIlerleme(x), ek);
-        setIlerleme(null);
-        await islemKaydet({ istek, soru, sayi: r.ozet.okunan, okuma: r.ozet }, { geriAl: r.geriAl, ...(r.ustune ? { ustune: r.ustune } : {}) });
-      } else if (istek === "maddeler") {
-        const r = rb.maddeleriIsaretle();
-        await islemKaydet({ istek, soru, sayi: r.sayi }, r.sayi ? { geriAl: r.geriAl } : undefined);
-      } else if (istek === "sonuc_uygun" || istek === "sonuc_uygun_degil") {
-        const r = rb.sonucYap(istek === "sonuc_uygun" ? "uygun" : "uygun_degil");
-        await islemKaydet({ istek, soru, sayi: r.sayi, var: r.var }, r.sayi ? { geriAl: r.geriAl } : undefined);
-      } else {
-        const s = sonEylem(istek === "geri" ? "geri" : "ustune");
-        await eylemCalistir(s?.[0] ?? null, istek === "geri" ? "geri" : "ustune", soru);
-      }
-    } catch { setIlerleme(null); setHata("S.A.Y'a ulaşılamadı; bağlantıyı kontrol edip yeniden deneyin."); } finally { setBekliyor(false); }
+    try { await islemCalistir(istek, soru, ek); }
+    catch { setIlerleme(null); setHata("S.A.Y'a ulaşılamadı; bağlantıyı kontrol edip yeniden deneyin."); } finally { setBekliyor(false); }
+  };
+  /** 550: Haiku'nun rapora istediği iş (rapora_yaz / fotograflari_oku / geri_al) — ekranda; "Geri al" S.A.Y'ın iletisinin altında */
+  const komutlariYap = async (komutlar: readonly SayKomutu[] | undefined, mesaj: string | null) => {
+    if (!rb || !komutlar?.length) return;
+    for (const k of komutlar) {
+      if (k.tur === "yaz") {
+        const r = rb.yaz(k.girisler);
+        if (r.sayi && mesaj) setIslemler((x) => new Map(x).set(mesaj, { geriAl: r.geriAl }));
+        if (r.gecersiz.length) bildir(`${r.sayi ? `${r.sayi} değer girildi; ` : ""}${r.gecersiz.length} giriş yapılamadı: ${r.gecersiz.slice(0, 3).join(" · ")}${r.gecersiz.length > 3 ? " …" : ""}`);
+        else if (r.sayi) bildir(`S.A.Y ${r.sayi} değer girdi (işaretli). Kaydetmeyi unutmayın.`);
+      } else await islemCalistir(k.tur === "oku" ? "oku" : "geri", k.tur === "oku" ? OKU : "Geri al");
+    }
   };
   /** iletinin altındaki "Geri al" / "Dolu alanları da değiştir" (ya da yazılan komut): bir kez çalışır; sonucu geçmişe */
   const eylemCalistir = async (id: string | null, ne: "geri" | "ustune", soru: string) => {
@@ -320,15 +323,13 @@ export function SayAsistan() {
     setEkler([]); setSoru("");
     if (eklenen.length) await islemYap("oku", soru || "Fotoğrafı oku ve gir", eklenen);
   };
-  const hizliSor = async (k: Hizli) => {
-    if (bekliyor) return;
-    if ((k === "oku" || k === "maddeler") && rb) { await islemYap(k, k === "oku" ? "Fotoğrafları oku ve gir" : "Maddeleri uygun işaretle"); return; }
-    setBekliyor(true);
-    try {
-      if ((k === "eksik" || k === "sonuc") && rb) {
-        sonuc(await sayRaporEylemi({ hizli: k, rapor: { id: rb.id, no: rb.no }, ...(k === "eksik" ? { eksik: rb.eksikler().slice(0, 60) } : { sonuc: rb.sonuc() }) }));
-      } else if (k === "bekleyen" || k === "sayfa") sonuc(await sayHizliEylemi(k, yol));
-    } catch { setHata("S.A.Y'a ulaşılamadı; bağlantıyı kontrol edip yeniden deneyin."); } finally { setBekliyor(false); }
+  /** yazı kutusu yazdıkça büyür (en çok ~8 satır; CSS max-height) */
+  const boyla = (e: HTMLTextAreaElement) => { e.style.height = "auto"; e.style.height = `${e.scrollHeight + 2}px`; };
+  /** Enter gönderir, Shift+Enter yeni satır (yazı birleştirilirken — ör. Türkçe klavye önerisi — Enter gönderilmez) */
+  const tusla = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key !== "Enter" || e.shiftKey || e.nativeEvent.isComposing) return;
+    e.preventDefault();
+    e.currentTarget.form?.requestSubmit();
   };
   /* 522: ek ekle — tür ve boy cihazda ön denetim (sunucu yeniden denetler); fotoğraf küçültülür */
   const ekSec = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -369,7 +370,8 @@ export function SayAsistan() {
         if (l.length === 1) { await fotoKoyVeOku(fotolar, l[0].id, v); return; }
         if (l.length > 1) { setBolumSor({ fotolar, soru: v }); return; }
       }
-      if (istek && !ekler.length && !(istek === "ustune" && /^(evet|değiştir|evet değiştir)$/i.test(v) && !sonEylem("ustune"))) {
+      /* "evet / üstüne yaz" yalnız bekleyen "Değiştireyim mi?" varsa ekranda — yoksa Haiku'ya gider */
+      if (istek && !ekler.length && !(istek === "ustune" && !sonEylem("ustune"))) {
         setSoru("");
         await islemYap(istek, v);
         girdi.current?.focus();
@@ -378,7 +380,7 @@ export function SayAsistan() {
     }
     setBekliyor(true); setMenu(false);
     try {
-      const canli = rb ? { id: rb.id, cevaplar: rb.cevaplar() } : undefined;
+      const canli = rb ? { id: rb.id, cevaplar: rb.cevaplar(), ekipman: rb.ekipman() } : undefined;
       let y: SayYaniti;
       if (ekler.length) {
         const fd = new FormData();
@@ -394,6 +396,7 @@ export function SayAsistan() {
       }
       /* soru geçmişe yazıldıysa (çağrı düştü) yeniden çekilir — geçmiş sunucudakiyle aynı kalsın */
       if (!sonuc(y)) setIletiler(await sayGecmisEylemi());
+      else if (y.durum === "tamam") await komutlariYap(y.komutlar, y.iletiler.find((m) => m.kim === "say")?.id ?? null);
     } catch { setHata("S.A.Y'a ulaşılamadı; bağlantıyı kontrol edip yeniden deneyin."); } finally { setBekliyor(false); girdi.current?.focus(); }
   };
   const temizle = async () => {
@@ -441,7 +444,7 @@ export function SayAsistan() {
             <span className={stil.avatar}><Ikon ad="sparkles" /></span>
             <div className={stil.kimlik}>
               <h2 id="say-baslik">S.A.Y</h2>
-              <p className={stil.altYazi}>{raporda ? "Bu rapordayım · fotoğrafları okur, boş alanlara girerim" : "Saha asistanı · sorun, yol göstereyim"}</p>
+              <p className={stil.altYazi}>{raporda ? "Bu rapordayım · ne yazayım?" : "Claude Haiku 5.5 · her konuda sorun"}</p>
             </div>
             {!!iletiler?.length && (
               <button className={stil.basTus} type="button" onClick={() => void temizle()} aria-label="Sohbeti temizle" title="Sohbeti temizle"><Ikon ad="trash-2" /></button>
@@ -454,8 +457,8 @@ export function SayAsistan() {
             {hazir && durum.sinirDoldu && <Serit tur="uyari" ikon="triangle-alert">Bu ay kişi başı sınırınız doldu; yönetici Firma ayarları&apos;ndan artırabilir.</Serit>}
             {iletiler && !iletiler.length && (
               <p className={stil.bos}>{raporda
-                ? "Fotoğrafı bölümüne ekleyin, “Fotoğrafları oku ve gir” deyin; okuduklarımı boş alanlara girerim. Kaydetmek sizde."
-                : "Merhaba! Sizi bekleyen işleri gösterebilir, bu sayfada ne yapılacağını anlatabilirim. Bir sorunuz varsa yazın."}</p>
+                ? "Rapora ne yazmamı istediğinizi yazın (ör. “1–3. satırların Icu değerine 6 gir”) ya da fotoğrafı bölümüne ekleyip “Fotoğrafları oku ve gir” deyin. Kaydetmek sizde."
+                : "Merhaba! Her konuda sorabilirsiniz."}</p>
             )}
             <ol className={stil.liste} aria-live="polite" aria-busy={bekliyor || !iletiler || undefined}>
               {(iletiler ?? []).map((m, i, l) => (
@@ -479,9 +482,8 @@ export function SayAsistan() {
           </div>
           <div className={stil.alt}>
             <div className={stil.hizli}>
-              {(raporda ? RAPOR : GENEL).map(([k, ad]) => (
-                <button key={k} className={stil.cip} type="button" disabled={!hazir || bekliyor} onClick={() => void hizliSor(k)}>{ad}</button>
-              ))}
+              <button className={stil.cip} type="button" disabled={!hazir || bekliyor || !raporda} title={raporda ? undefined : "Bir rapor açıkken çalışır"}
+                onClick={() => void islemYap("oku", OKU)}>{OKU}</button>
             </div>
             {!!ekler.length && <EkListesi ekler={ekler} cikar={ekCikar} />}
             <form className={stil.yaz} onSubmit={(e) => void gonder(e)}>
@@ -500,8 +502,9 @@ export function SayAsistan() {
                 </div>
               </div>
               <label className={stil.gizli} htmlFor="say-girdi">S.A.Y&apos;a sor</label>
-              <input ref={girdi} className={stil.girdi} id="say-girdi" autoComplete="off" maxLength={500} placeholder={raporda ? "Sorun ya da “oku ve gir” deyin" : "S.A.Y'a sorun"}
-                value={soru} onChange={(e) => setSoru(e.target.value)} disabled={!hazir} />
+              <textarea ref={girdi} className={stil.girdi} id="say-girdi" autoComplete="off" rows={1} maxLength={SORU_EN_COK}
+                placeholder={raporda ? "Ne yazayım? Ya da sorun" : "S.A.Y'a sorun"} value={soru} disabled={!hazir}
+                onChange={(e) => { setSoru(e.target.value); boyla(e.target); }} onKeyDown={tusla} />
               <button className={stil.gonder} type="submit" aria-label="Gönder" disabled={!hazir || bekliyor}><Ikon ad="send" /></button>
             </form>
             <p className={stil.not}>Sohbeti yalnız siz görürsünüz. Ekler en çok 4 MB.</p>

@@ -284,6 +284,10 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
         yerel: t.yerel.filter((y) => y.rol !== "okunacak" || acikK.has(y.k ?? "")) };
     });
     setSecim(null);
+    /* 549: başka branş uyarıdır (engel değil) — seçilince söylenir */
+    const pe = e.tip === "plan" ? veri.planEkipmani.find((x) => x.id === e.id) : null;
+    const uyari = pe && pe.durum !== "uygun" ? pe.neden : e.tip === "yeni" && veri.bransDisi.includes(e.tur) ? "Bu tür sizin branşınız dışında." : null;
+    if (uyari) bildir(uyari);
     bildir(`${ekipAd(e)} seçildi; yönerge türün ayarından geldi.`);
     /* pencere kapanınca odağı açana döndürür; sonra mesaja (ilk satır) */
     setTimeout(() => { const m = document.getElementById("sc-mesaj") as HTMLTextAreaElement | null; m?.focus(); m?.setSelectionRange(0, 0); }, 80);
@@ -446,12 +450,18 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
     const t = taslak, tur = ekipmanTuru(t.ekipman), c = tur ? veri.turler[tur] : null;
     const etiketYerel = t.yerel.find((y) => y.rol === "etiket"), etiketSunucu = t.fotolar.find((f) => f.rol === "etiket");
     const etiketVar = !!etiketYerel || !!etiketSunucu;
+    const ekipFotoSayisi = t.fotolar.filter((f) => f.rol === "ekipman").length + t.yerel.filter((y) => y.rol === "ekipman").length;
     return (
       <>
         <div className={stil.govdeP}>
           <h3 className={stil.gizli} id="sc-form-bas" tabIndex={-1}>{t.yeni && !veri.kayitlar.some((k) => k.id === t.id) ? "Yeni kayıt" : "Kaydı düzenle"} · {ekipAd(t.ekipman)}</h3>
+          {/* 547 (sunum 546): telefonda klavye açıkken Ekipman / Fotoğraf / Etiket tek ince satır — mesaj kutusu ve Gönder klavyenin üstünde kalır;
+              satıra basınca klavye kapanır, satırlar geri açılır (data-klavye: components/pencere/gorunurAlan.ts) */}
+          <button type="button" className={stil.ozetSatir} onClick={() => (document.activeElement as HTMLElement | null)?.blur()}>
+            <b>{ekipAd(t.ekipman)}</b><span>{ekipFotoSayisi} fotoğraf · etiket {etiketVar ? "var" : "yok"}</span><Ikon ad="chevron-down" />
+          </button>
           {/* 542: satır satır — solda ad, sağda içerik; sabit yükseklik (yazdıkça ekran kaymaz) */}
-          <div className={stil.satirP}>
+          <div className={`${stil.satirP} ${stil.ustSatir}`}>
             <span className={stil.satirAd}>Ekipman</span>
             <div className={stil.ekipman}>
               <b>{ekipAd(t.ekipman)}</b>
@@ -459,7 +469,7 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
                 {t.ekipman ? "Değiştir" : "Ekipman seçin"}</Tus>
             </div>
           </div>
-          <div className={stil.satirP}>
+          <div className={`${stil.satirP} ${stil.ustSatir}`}>
             <span className={stil.satirAd}>Fotoğraf</span>
             <ul className={stil.fotolar} aria-label="Ekipman fotoğrafları">
               {fotolar(t, "ekipman", null)}
@@ -468,7 +478,7 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
           </div>
           {t.tanim && c && (
             <>
-              <div className={stil.satirP}>
+              <div className={`${stil.satirP} ${stil.ustSatir}`}>
                 <span className={stil.satirAd}>Etiket</span>
                 <div className={stil.etiket}>
                   {etiketVar ? (
@@ -651,24 +661,29 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
         <label className={stil.gizli} htmlFor="sc-ara">Ara</label>
         <input className={stil.girdi} id="sc-ara" placeholder="Kod, tür ya da yer ara" autoComplete="off" value={secim?.ara ?? ""}
           onChange={(e) => setSecim((x) => (x ? { ...x, ara: e.target.value } : x))} />
+        {/* 549 (sunum 546 — reisim: "plandan seç diyince plandaki ekipmanlar gözükmüyor"): plandaki bütün ekipman; seçilemeyenin nedeni yazar,
+            başka branş ve kendi Yeni raporu olan uyarıyla seçilir */}
         {secim?.sekme === "plan" ? (
           planSecenek.length ? (
             <ul className={stil.secenekler}>
               {planSecenek.map((e) => (
-                <li key={e.id}><button type="button" className={stil.secenek} onClick={() => ekipmanSec({ tip: "plan", id: e.id })}>
-                  <b>{e.kod} · {turAd(e.turId)}</b><small>{e.konum ?? "yer yok"}</small></button></li>
+                <li key={e.id}><button type="button" className={stil.secenek} disabled={e.durum === "kapali"} data-durum={e.durum}
+                  onClick={() => ekipmanSec({ tip: "plan", id: e.id })}>
+                  <b>{e.kod} · {turAd(e.turId)}</b><small>{e.konum ?? "yer yok"}</small>
+                  {e.neden && <span className={e.durum === "kapali" ? stil.secenekNeden : stil.secenekUyari}>{e.neden}</span>}</button></li>
               ))}
             </ul>
-          ) : <p className={stil.not}>Plandaki, branşınıza uygun ve raporu yazılmamış ekipman kalmadı. Plana yeni ekipman için “Yeni ekle”.</p>
+          ) : <p className={stil.not}>{ara ? "Aramaya uyan ekipman yok." : "Planda ekipman yok."} Plana yeni ekipman için “Yeni ekle”.</p>
         ) : (
           yeniSecenek.length ? (
             <ul className={stil.secenekler}>
               {yeniSecenek.map((id) => (
                 <li key={id}><button type="button" className={stil.secenek} onClick={() => ekipmanSec({ tip: "yeni", tur: id })}>
-                  <b>{turAd(id)}</b><small>{veri.turler[id]?.kod} · rapor yazılırken plana eklenir</small></button></li>
+                  <b>{turAd(id)}</b><small>{veri.turler[id]?.kod} · rapor yazılırken plana eklenir</small>
+                  {veri.bransDisi.includes(id) && <span className={stil.secenekUyari}>Sizin branşınız dışında.</span>}</button></li>
               ))}
             </ul>
-          ) : <p className={stil.not}>Branşınızda rapor formatı yayında tür yok.</p>
+          ) : <p className={stil.not}>Rapor formatı yayında tür yok.</p>
         )}
       </Pencere>
       {/* 542: büyük görüntü (yapay zekâ okuyamazsa kişi kendisi okur) — bu cihazda seçilen ya da sunucudaki (yalnız sahibi açar) */}

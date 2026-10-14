@@ -1043,9 +1043,11 @@ KOD-GECIS K5'te dört kalem: 522 ek · 523 ayarlar · 524 kayıtlar · 525 rapor
 **S.A.Y Chat — kararlar**
 1. **Yer:** S.A.Y asistan tuşunun yanında "S.A.Y Chat" tuşu. Plana girince o planın sohbeti açılır; geçmiş plana bağlı.
 2. **Kişiye özel:** sohbeti yalnız kaydı yazan denetçi görür (plan sorumlusu, teknik yönetici, yönetici GÖREMEZ) → yetki "kendi", RLS'te sahibi süzgeci.
-3. **Akış:** fotoğraf çek → "Ekipman seçin" → pencerede **Plandan seç** (plandaki, branşına uygun, raporu yazılmamış ekipmanlar: kod · tür · yer;
-   rapor o ekipmana yazılır) ya da **Yeni ekle** (branşındaki, rapor formatı kurulmuş türler; rapor yazılırken plana yeni ekipman olarak eklenir).
-   Mekanik denetçi yalnız mekanik, elektrik denetçisi yalnız elektrik görür.
+3. **Akış:** fotoğraf çek → "Ekipman seçin" → pencerede **Plandan seç** (plandaki ekipmanlar: kod · tür · yer; rapor o ekipmana yazılır) ya da
+   **Yeni ekle** (rapor formatı kurulmuş türler; rapor yazılırken plana yeni ekipman olarak eklenir). **2026-10-14 değişti (549, sunum 546 K1–K2 —
+   reisim: "plandan seç diyince plandaki ekipmanlar gözükmüyor"):** listede plandaki BÜTÜN ekipman; branşınki önce; başka branşın ekipmanı / türü
+   UYARIYLA seçilir (engel değil); kişinin kendi Yeni raporu olan ekipman seçilir — kayıt o raporun BOŞ alanlarına girer; başkasının ya da onaya
+   gitmiş raporu olan, pasif, formatsız ekipman nedeniyle görünür, seçilmez. (Eski: yalnız branşına uygun ve raporsuz.)
 4. **Yönerge** (sağ üst): numaralı etiket bilgisi satırları (ör. 1. Marka 2. Model 3. Sn 4. İmal yılı 5. Kullanım yeri 6. Şebeke gerilimi 7. Not);
    yazı alanı değil, yalnız sırayı gösterir; altında "Etiket fotoğrafı" tuşu.
 5. **Mesaj:** etiket yazılmaz; n. satır = yönergenin n. maddesi; mesaj kutusu numaralı satırlı; "-" ya da boş satır = bilinmiyor (alan boş);
@@ -2481,6 +2483,29 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-14 (547–550): **SUNUM 546 UYGULANDI — KAYMALAR, TABLO, PLANDAN SEÇ, SERBEST S.A.Y** (reisim: *"telefonda yana kaydırsın kart falan olmaz
+  kullanışlı değil masa üstünde de ekrana sığcak şekilde olsun , tablo tablodur kart olmaz , diğer önerilerini kabul ediyorum ama S.A.Y asistanda öneri
+  soruları olarak sadece fotoğrafları oku ve gir kalsın başka bir şey olmasın. devam et."* — K4 değişti: telefonda da TABLO, yana kayar; K1–K3, K5–K8
+  önerildiği gibi). (547) Panel açılınca sayfa KIPIRDAMAZ: temel.css'teki main sağ boşluğu (542) kalktı, panel üstte durur; yalnız raporun havadaki
+  Kaydet / Onaya gönder kabı panelin soluna geçer (`[data-alt-cubuk="her"]`). Telefonda S.A.Y / S.A.Y Chat paneli görünen alana sığar, çevresi
+  panelin rengiyle örtülür (geniş gölge), sayfa kilitli (html taşma gizli); görünen alan odak değişince ve klavye hareketinin sonunda yeniden ölçülür
+  (components/pencere/gorunurAlan.ts — data-klavye); S.A.Y Chat'te klavye açıkken Ekipman / Fotoğraf / Etiket tek özet satırı. Listelerde tuş yazısı
+  dar sütunda ikinci satıra iner, tarih ve saat alt alta — hücreden taşıp tarihin üstüne binmez; site taraması "hücreden taşan" içeriği bulgu sayar
+  (e2e/tarama.ts tasanHucreler). (548) Ölçüm tablosu: hücre en az 6.5rem ve tek satır başlık kalktı — sayı kutusu ~4–5 hane, başlık iki satıra
+  kırılır, birim başlığın altında (Pano sigortaları masaüstünde sığar; uçtan uca ölçülür); sığmazsa (telefon) tablo kabı yana kayar, İNCE kaydırma
+  çubuğu yalnız burada (öteki çubuklar 540'taki gibi gizli), fareyle tutup sürüklenir (components/kaydir/useSurukleKaydir.ts). (549) S.A.Y Chat
+  Plandan seç: §3.10 m.3 (yukarıda) — say-chat/secim.ts planEkipmanDurumu; chatKaydet branşı engellemez; rapor-yaz.ts kişinin Yeni raporuna yazar
+  (raporlar chatRaporuDoldur yalnizBos; dolu kalanlar şeritte). (550) S.A.Y = DOĞRUDAN CLAUDE HAIKU 5.5: talimattaki 7 kural kalktı (yalnız nerede
+  olduğu, neler yapabildiği; Markdown serbest — ekranda güvenli çizim say/markdown.ts + ui/Markdown.tsx, HTML işlenmez, bağlantı yalnız http(s)); soru
+  20 000, cevap 60 000 karakter (göç 0090 yz_sohbet ileti sınırı 100 000), düşünme orta, cevap 8 000 token, konuşmanın son 150 000 karakteri;
+  internet araması (web_search_20250305, istek başına en çok 3; kabul edilmezse aramasız yeniden); rapordayken bağlamda RAPOR HARİTASI (yer
+  kimlikleri ve şu anki değerler, künye yok — say/rapor-haritasi.ts) ve araçlar rapora_yaz / fotograflari_oku / geri_al: Haiku'nun istediği girişleri
+  EKRAN uygular (raporlar/say-doldur.ts komutlariUygula — türüne göre denetlenir, dolu alana da yazılır, tabloya satır açar, işaretli, Geri al);
+  kaydetmek kişide. Hazır tuşlardan yalnız "Fotoğrafları oku ve gir" (rapor dışında kapalı); "Beni ne bekliyor?", "Bu sayfada ne yapılır?", "Eksik
+  alanlar neler?", "Sonuç ne olmalı?", "Maddeleri uygun işaretle" ve kuralla "maddeler / sonuç" komutları kalktı (Haiku cümlenin tamamını yapar).
+  Yazı kutusu çok satırlı (Enter gönderir, Shift+Enter yeni satır). Ayırma (en çok maliyet) aramayı da kapsar: ~0,044 $ / mesaj ayrılır, gerçek
+  maliyetle kapanır (aramalar $10 / 1 000). Aylık harcama sınırı firma ayarı olarak kalır (K8). Sayfaların işlev süresi 55 sn ((uygulama)/layout.tsx;
+  PDF uçları 60 — Chromium paketi ayrı kalsın). Hata listesi m79–m84.
 - 2026-10-14 (546): **SUNUM 546 — KAYMALAR, TABLOLAR, PLANDAN SEÇ, SERBEST S.A.Y (ONAY BEKLİYOR)** https://claude.ai/artifact/QAVRWciAqhMzqAdLd4fAw9
   (reisim, beş canlı ekran görüntüsüyle: *"plandan seç diyince plandaki ekipmanlar gözükmüyor, telefonda böyle kaymalar oluyor, say asistan veya chat
   açıldığında tüm sayfa kayıyor, yazılar yer olmasına rağmen üst üste biniyor, tabloyu kenara kaydıramıyorum ve ayrıca kenara kaymasına gerek olacak
@@ -2495,7 +2520,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   yazamazsın", rapora yalnız 5 komut, düz metin) + soru 500 harf, son 12 ileti, effort low. Öneriler ve kararlar K1–K8: başka branş uyarıyla
   seçilir; Yeni raporu olan ekipmanın kaydı o rapora; panel sayfayı itmez (yalnız raporun Kaydet tuşları kayar); telefonda tablo satır kartı;
   ince çubuk yalnız yana kayan tablolarda; S.A.Y doğrudan Haiku (kurallar kalkar, rapora her cümleyle yazar — işaret, Geri al, Kaydet kişide;
-  yetki sunucuda); internette arama; aylık harcama sınırı firma ayarı olarak kalır. Hata listesi m79–m84. Onaya kadar kod yok.
+  yetki sunucuda); internette arama; aylık harcama sınırı firma ayarı olarak kalır. Hata listesi m79–m84. Onaya kadar kod yok. **ONAYLANDI
+  2026-10-14** (K4 değişerek — telefonda da tablo, yana kayar; S.A.Y'da tek hazır tuş) → 547–550.
 - 2026-10-14 (545): **540 · 542 · 544 YAYINDA** — 540 main 95f81fd (göç 0088 Supabase'te); 542 + 544 main b5765c6 (göç 0089 yz_okuma.dosya —
   90 göç). CI üç turda yeşile döndü; yakalananlar düzeltildi: S.A.Y / S.A.Y Chat paneli açıkken sayfa panelin solunda (panel raporun havadaki
   Kaydet'ini örtüyordu), plandaki ekipman sırası eşitlikte koda göre (540'ta rastgeleydi), dosya adresi yalnız GizliResim'de (kayıtlı etiket

@@ -101,6 +101,24 @@ test("plandaki ekipman: değerler alanlara (biçimsiz yazılmaz), not + fazla sa
   assert.equal((await ile(ELK, (db) => chatRaporYaz(db, depo, ELK, A, PLAN, { kayit: k, kod: null }))).durum, "hata");
 });
 
+/* 549 (sunum 546 K2): önceki testin açtığı Yeni rapor kişinin kendisinin — ekipman listede "rapor" durumunda, seçilir; yazınca YENİ RAPOR AÇILMAZ,
+   kayıt o raporun yalnız BOŞ alanlarına girer (dolu kalanlar şeritte adıyla) */
+test("549: kendi Yeni raporu olan ekipman — kayıt o raporun boş alanlarına girer, yeni rapor açılmaz", async () => {
+  const e = (await ile(ELK, (db) => sayChatPaneli(db, ELK, PLAN)))!.planEkipmani.find((x) => x.id === E1);
+  assert.equal(e?.durum, "rapor", JSON.stringify(e));
+  const say = async () => (await ile(ELK, (db) => db.sorgu<{ n: number }>("SELECT count(*)::int AS n FROM rapor WHERE plan_id = $1 AND ekipman_id = $2 AND silindi IS NULL",
+    [PLAN, E1]))).rows[0].n;
+  assert.equal(await say(), 1);
+  const k = await kayitKur({ tip: "plan", id: E1 }, ["Başka Marka", "MD-7", "SN-0", "2020", "Yeni yer"], ["ekipman"]);
+  const r = tamam(await ile(ELK, (db) => chatRaporYaz(db, depo, ELK, A, PLAN, { kayit: k, kod: null })));
+  assert.equal(await say(), 1, "yeni rapor açılmadı");
+  const v = (await ile(ELK, (db) => sahaRaporu(db, ELK, r.rapor.id)))!;
+  assert.deepEqual([v.ekipmanBilgi.marka, v.ekipmanBilgi.model, v.ekipmanBilgi.seri, v.ekipmanBilgi.imal, v.ekipmanBilgi.konum],
+    ["Örnek Marka", "MD-7", "SN-9", "2020", "Bakım binası"], "dolu alanlar değişmedi, boşlar doldu");
+  assert.ok(v.oneriler.some((o) => o.tur === "bilgi" && /Raporda dolu olduğu için değişmeyen: Marka, Seri no, Kullanım yeri\./.test(String((o.okunan as { metin?: string })?.metin))),
+    "dolu kalanlar şeritte");
+});
+
 test("542: mesajın bütün bilgileri doluysa etiket rapora konmaz (okunacak bir şey yok)", async () => {
   const k = await kayitKur({ tip: "yeni", tur: EIT }, ["Dolu Marka", "DM-1", "SN-1", "2019", "Kazan dairesi"], ["ekipman", "etiket"]);
   const r = tamam(await ile(ELK, (db) => chatRaporYaz(db, depo, ELK, A, PLAN, { kayit: k, kod: "EP-55" })));

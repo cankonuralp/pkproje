@@ -7,7 +7,11 @@
    · K4 "bütün maddeleri uygun işaretle" (boş maddeler, cevap setinin ilk seçeneği) ve "sonucu uygun / uygun değil yap".
    · Geri al: S.A.Y'ın girdiği her değer önceki hâline döner (sonradan kişinin değiştirdiği alana dokunulmaz).
    · S.A.Y Chat'ten açılan raporun bekleyen okumaları (rapor_oneri) da aynı yoldan, açılışta boş alanlara girer (öneri kartı kalktı).
-   Kaydetmek kişide: girilenler ekranda kalır, Kaydet'le rapora yazılır. */
+   Kaydetmek kişide: girilenler ekranda kalır, Kaydet'le rapora yazılır.
+   550 (sunum 546 K6 — reisim 2026-10-14: "S.A.Y. de herhangi bir kısıt kural vb olmasını istemiyorum oradan direk haiku ile konuşmak aynı claude
+   kullanır gibi"): S.A.Y (Haiku) "rapora_yaz" aracıyla İSTEDİĞİNİZ cümleden girişleri verir — komutlariUygula: yer kimliği raporun haritasından
+   (say/rapor-haritasi.ts), değer alanın türüne göre denetlenir; kişi istediği için DOLU ALANA DA yazılır; işaret ve Geri al aynı. */
+import { alanDegeri, type OkunacakAlan } from "../../format/deger.ts";
 import { doldurma, type BolumOf, type Cevaplar, type FormatTanimi } from "../../format/tanim.ts";
 import { doluSatir, okunanHedefleri, type Satir } from "./foto-eslestir.ts";
 import { bilgiAlanlari, ekipmanAlanlari, ekipmanAnahtari, testAlanlari } from "./doldur.ts";
@@ -16,7 +20,9 @@ export type Guven = "emin" | "belirsiz";
 /** ekrandaki yeri: ekipman bilgisi · bilgi alanı · test değeri · tablo hücresi · madde · sonuç */
 export type Yer =
   | { tur: "ekipman"; id: string } | { tur: "alan"; id: string } | { tur: "deger"; id: string }
-  | { tur: "hucre"; bolum: string; satir: number; sutun: string } | { tur: "madde"; id: string } | { tur: "sonuc" };
+  | { tur: "hucre"; bolum: string; satir: number; sutun: string } | { tur: "madde"; id: string } | { tur: "sonuc" }
+  /* 550: maddenin kusur açıklaması ve derecesi, uzman yorumu */
+  | { tur: "madde_not"; id: string } | { tur: "derece"; id: string } | { tur: "yorum" };
 export interface Isaret { yer: Yer; guven: Guven }
 /** ekranın doldurulan hâli: ekipman bilgisi (2. bölümün kayda bağlı alanları) ve cevaplar */
 export interface Durum { ekipman: Readonly<Record<string, string>>; cevaplar: Cevaplar }
@@ -52,6 +58,9 @@ function oku(d: Durum, y: Exclude<Yer, { tur: "hucre" }>): string {
   if (y.tur === "deger") return d.cevaplar.deger[y.id] ?? "";
   if (y.tur === "madde") return d.cevaplar.madde[y.id]?.c ?? "";
   if (y.tur === "sonuc") return d.cevaplar.sonuc;
+  if (y.tur === "yorum") return d.cevaplar.yorum;
+  if (y.tur === "madde_not") return d.cevaplar.madde[y.id]?.not ?? "";
+  if (y.tur === "derece") return d.cevaplar.madde[y.id]?.derece ?? "";
   const v = d.cevaplar.alan[y.id];
   return typeof v === "string" ? v : "";
 }
@@ -64,6 +73,17 @@ function yaz(d: Durum, y: Exclude<Yer, { tur: "hucre" }>, x: string): Durum {
     return { ...d, cevaplar: { ...d.cevaplar, madde: m } };
   }
   if (y.tur === "sonuc") return { ...d, cevaplar: { ...d.cevaplar, sonuc: x as Cevaplar["sonuc"] } };
+  if (y.tur === "yorum") return { ...d, cevaplar: { ...d.cevaplar, yorum: x } };
+  if (y.tur === "madde_not" || y.tur === "derece") {
+    const m = { ...d.cevaplar.madde }, o = m[y.id];
+    if (!o) return d;                                                     // cevapsız maddeye açıklama / derece yazılmaz (önce cevap)
+    const yeni = { ...o };
+    if (y.tur === "madde_not") { if (x) yeni.not = x; else delete yeni.not; }
+    else if (x === "hafif" || x === "agir") yeni.derece = x;
+    else delete yeni.derece;
+    m[y.id] = yeni;
+    return { ...d, cevaplar: { ...d.cevaplar, madde: m } };
+  }
   return { ...d, cevaplar: { ...d.cevaplar, alan: { ...d.cevaplar.alan, [y.id]: x } } };
 }
 
@@ -177,4 +197,112 @@ export function geriAl(d: Durum, l: readonly Geri[]): { durum: Durum; sayi: numb
     sayi++;
   }
   return { durum, sayi };
+}
+
+/* ── 550 S.A.Y'IN İSTENEN GİRİŞLERİ ("rapora_yaz" aracı) ── */
+/** Haiku'nun verdiği giriş: yer kimliği (raporun haritasındaki) + değer */
+export interface RaporGirisi { yer: string; deger: string }
+/** tek istekte en çok giriş ve tabloda en çok yeni satır */
+export const GIRIS_EN_COK = 300;
+const YENI_SATIR_EN_COK = 100;
+const kucukTr = (s: string) => s.toLocaleLowerCase("tr").replace(/\s+/g, " ").trim();
+const sutunAlani = (s: BolumOf<"olcum">["sutunlar"][number]): Pick<OkunacakAlan, "tur" | "uzun" | "secenekler"> =>
+  s.giris === "sayi" ? { tur: "sayi" } : s.giris === "secim" ? { tur: "secim", secenekler: s.secenekler ?? [] } : s.giris === "evet" ? { tur: "evet" } : { tur: "metin", uzun: 200 };
+
+/** girişleri uygular; bilinmeyen yer ya da türüne uymayan değer yazılmaz, "yer: neden" olarak döner. Kişi istediği için dolu alana da yazılır. */
+export function komutlariUygula(d: Durum, t: FormatTanimi, girisler: readonly RaporGirisi[], bugun = new Date()): Uygulama & { gecersiz: string[] } {
+  /* yazılabilir yerler: ekipman / bilgi / test alanları (türleriyle), tablolar, maddeler (bölümün cevapları), sonuç, yorum */
+  const alanlar = new Map<string, { a: Pick<OkunacakAlan, "tur" | "uzun" | "secenekler">; yer: Exclude<Yer, { tur: "hucre" }> }>();
+  const ekipman = ekipmanAlanlari(t);
+  for (const a of ekipman.alanlar) alanlar.set(`e:${a.id}`, { a, yer: ekipmanAnahtari(a.id) ? { tur: "ekipman", id: a.id } : { tur: "alan", id: a.id } });
+  const tablolar = new Map<string, BolumOf<"olcum">>(), maddeler = new Map<string, readonly string[]>();
+  let sonucVar = false, notVar = false;
+  for (const b of t.bolumler) {
+    if (b.blok === "bilgi" && b.id !== ekipman.tam?.id) for (const a of bilgiAlanlari(b)) alanlar.set(ekipmanAnahtari(a.id) ? `e:${a.id}` : `a:${a.id}`, { a, yer: ekipmanAnahtari(a.id) ? { tur: "ekipman", id: a.id } : { tur: "alan", id: a.id } });
+    else if (b.blok === "test") for (const a of testAlanlari(b)) alanlar.set(`d:${a.id}`, { a, yer: { tur: "deger", id: a.id } });
+    else if (b.blok === "olcum") tablolar.set(b.id, b);
+    else if (b.blok === "liste") for (const g of b.gruplar) for (const m of g.maddeler) maddeler.set(m.id, b.cevaplar);
+    else if (b.blok === "sonuc") sonucVar = true;
+    else if (b.blok === "not") notVar = true;
+  }
+  let durum = d;
+  const isaretler: Isaret[] = [], geri: Geri[] = [], gecersiz: string[] = [];
+  const tabloOnce = new Map<string, Satir[]>(), tabloHucre = new Map<string, Set<string>>();
+  const tekYaz = (yer: Exclude<Yer, { tur: "hucre" }>, x: string) => {
+    const onceki = oku(durum, yer);
+    if (onceki === x) return;
+    durum = yaz(durum, yer, x);
+    if (oku(durum, yer) !== x) return;                                    // yazılamadı (ör. cevapsız maddeye açıklama)
+    isaretler.push({ yer, guven: "emin" });
+    geri.push({ yer, onceki, yeni: x });
+  };
+  for (const g of girisler.slice(0, GIRIS_EN_COK)) {
+    const yer = typeof g?.yer === "string" ? g.yer.trim() : "", ham = typeof g?.deger === "string" ? g.deger : "";
+    if (!yer) continue;
+    const red = (neden: string) => { gecersiz.push(`${yer.slice(0, 60)}: ${neden}`); };
+    const alan = alanlar.get(yer);
+    if (alan) {
+      if (!ham.trim()) { tekYaz(alan.yer, ""); continue; }               // boş değer: alanı temizle
+      const v = alanDegeri(alan.a, ham, bugun);
+      if (v === null) { red("değer alanın türüne uymuyor"); continue; }
+      tekYaz(alan.yer, v);
+      continue;
+    }
+    const h = /^t:([^:]+):(\d{1,4}):(.+)$/.exec(yer);
+    if (h) {
+      const b = tablolar.get(h[1]), satir = Number(h[2]) - 1, sutun = b?.sutunlar.find((s) => s.id === h[3] && !s.formul);
+      if (!b || !sutun || satir < 0) { red("tabloda böyle bir yer yok"); continue; }
+      const v = ham.trim() ? alanDegeri(sutunAlani(sutun), ham, bugun) : "";
+      if (v === null) { red("değer sütunun türüne uymuyor"); continue; }
+      const l = (durum.cevaplar.tablo[b.id] ?? []).map((s) => ({ ...s }));
+      if (satir >= l.length + YENI_SATIR_EN_COK) { red("satır çok ileride"); continue; }
+      if (!tabloOnce.has(b.id)) tabloOnce.set(b.id, (durum.cevaplar.tablo[b.id] ?? []).map((s) => ({ ...s })));
+      while (l.length <= satir) l.push({});
+      if ((l[satir][sutun.id] ?? "") === v) continue;
+      if (v) l[satir][sutun.id] = v; else delete l[satir][sutun.id];
+      durum = { ...durum, cevaplar: { ...durum.cevaplar, tablo: { ...durum.cevaplar.tablo, [b.id]: l } } };
+      const k = tabloHucre.get(b.id) ?? new Set<string>();
+      k.add(`${satir}:${sutun.id}`); tabloHucre.set(b.id, k);
+      continue;
+    }
+    const m = /^m:([^#]+)(?:#(not|derece))?$/.exec(yer);
+    if (m) {
+      const cevaplar = maddeler.get(m[1]);
+      if (!cevaplar) { red("böyle bir madde yok"); continue; }
+      if (!m[2]) {
+        const c = ham.trim() ? cevaplar.find((x) => kucukTr(x) === kucukTr(ham)) : "";
+        if (c === undefined) { red(`cevap şunlardan biri olmalı: ${cevaplar.join(", ")}`); continue; }
+        tekYaz({ tur: "madde", id: m[1] }, c);
+      } else if (m[2] === "derece") {
+        const x = kucukTr(ham), v = !x ? "" : /^(ağır|agir)/.test(x) ? "agir" : /^hafif/.test(x) ? "hafif" : null;
+        if (v === null) { red("derece hafif ya da ağır olmalı"); continue; }
+        if (!durum.cevaplar.madde[m[1]]) { red("önce maddenin cevabı yazılmalı"); continue; }
+        tekYaz({ tur: "derece", id: m[1] }, v);
+      } else {
+        if (!durum.cevaplar.madde[m[1]]) { red("önce maddenin cevabı yazılmalı"); continue; }
+        tekYaz({ tur: "madde_not", id: m[1] }, ham.trim().slice(0, 1000));
+      }
+      continue;
+    }
+    if (yer === "sonuc") {
+      const x = kucukTr(ham).replace(/[_-]/g, " ");
+      const v = !x ? "" : /uygun ?(değil|degil)|uygunsuz|olumsuz/.test(x) ? "uygun_degil" : /^(uygun|olumlu)$/.test(x) ? "uygun" : null;
+      if (!sonucVar || v === null) { red(sonucVar ? "sonuç uygun ya da uygun değil olmalı" : "formatta sonuç yok"); continue; }
+      tekYaz({ tur: "sonuc" }, v);
+      continue;
+    }
+    if (yer === "yorum" && notVar) { tekYaz({ tur: "yorum" }, ham.trim().slice(0, 4000)); continue; }
+    red("raporda böyle bir yer yok");
+  }
+  /* tablolar: bir tablonun bütün girişleri tek geri alma; yazılan hücreler işaretli */
+  for (const [b, once] of tabloOnce) {
+    const yeni = durum.cevaplar.tablo[b] ?? [];
+    if (JSON.stringify(yeni) === JSON.stringify(once)) continue;
+    geri.push({ tablo: b, onceki: once, yeni });
+    for (const k of tabloHucre.get(b) ?? []) {
+      const [s, ...c] = k.split(":");
+      if (yeni[Number(s)]?.[c.join(":")]) isaretler.push({ yer: { tur: "hucre", bolum: b, satir: Number(s), sutun: c.join(":") }, guven: "emin" });
+    }
+  }
+  return { durum, isaretler, dolu: [], geri, gecersiz };
 }

@@ -84,6 +84,16 @@
 /* 542: kayıt formu satır satır — solda ad (sabit genişlik), sağda içerik */
 .satirP { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 8px; align-items: center; min-height: 52px; }
 .satirAd { color: var(--yazi2); font-size: var(--boy-kucuk); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 547: klavye açıkken (telefon) üst satırlar yerine tek özet satırı */
+.ozetSatir {
+  display: none; align-items: center; gap: 8px; width: 100%; min-height: var(--tus-y); padding: 0 10px; text-align: left;
+  border: 1px solid var(--kenar); border-radius: var(--r-orta); background: var(--zemin2); color: var(--yazi); font: inherit; font-size: var(--boy-kucuk); cursor: pointer;
+}
+.ozetSatir b { flex: none; max-width: 50%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ozetSatir span { flex: 1 1 auto; min-width: 0; color: var(--yazi2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ozetSatir:focus-visible { outline: 3px solid var(--odak); outline-offset: 1px; }
+.panel[data-klavye] .ozetSatir { display: flex; }
+.panel[data-klavye] .ustSatir { display: none; }
 .ekipman { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
 .ekipman > b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--boy-kucuk); }
 .etiket { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; min-width: 0; }
@@ -136,12 +146,19 @@
 .secenek:hover { background: var(--zemin2); }
 .secenek:focus-visible { outline: 3px solid var(--odak); outline-offset: 1px; }
 .secenek small { color: var(--yazi2); font-size: var(--boy-etiket); }
+/* 549: seçilemeyen ekipman nedeniyle görünür; başka branş / kendi raporu uyarıyla */
+.secenek:disabled { cursor: not-allowed; background: var(--zemin2); color: var(--yazi2); }
+.secenekNeden { color: var(--yazi2); font-size: var(--boy-etiket); }
+.secenekUyari { padding: 1px 8px; border-radius: var(--r-tam); background: var(--uyari-zemin); color: var(--uyari-yazi); font-size: var(--boy-etiket); font-weight: 600; }
 
 @media (max-width: 767.98px) {
   .fab { padding: 6px; height: 46px; }
   .fabYazi { display: none; }
   /* telefonda tam ekran; klavye açılınca görünen alana sığar (yükseklik ve üst VisualViewport'tan) */
-  .panel { inset: auto 0 auto 0; top: var(--vv-ust); height: var(--vv-y); width: auto; border: 0; border-radius: 0; z-index: 80; }
+  /* 547 (reisim 2026-10-14, iPhone ekran görüntüsü: panel klavyeden önce bitiyor, arada sayfa görünüyordu): panel görünen alana sığar, çevresi
+     panelin rengiyle örtülür (geniş gölge — ölçüm geç kalsa da arkadaki sayfa görünmez); sayfa kaymaz (temel.css html[data-panel-acik]) */
+  .panel { inset: auto 0 auto 0; top: var(--vv-ust); height: var(--vv-y); width: auto; border: 0; border-radius: 0; z-index: 80;
+    box-shadow: 0 0 0 100vmax var(--kart); }
   .tuslar > * { flex: 1 1 0; }
 }
 

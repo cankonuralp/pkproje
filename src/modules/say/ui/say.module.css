@@ -42,6 +42,21 @@
 .o { align-self: flex-start; background: var(--zemin2); color: var(--yazi); border-bottom-left-radius: var(--r-orta); white-space: normal; }
 .o p { white-space: pre-wrap; }
 .madde { margin: 0; padding-left: 18px; display: grid; gap: 2px; }
+/* 550: cevap Markdown (ui/Markdown.tsx) — başlık, kod, alıntı, tablo, çizgi; paragraflar arası boşluk */
+.o > * + * { margin-top: 6px; }
+.mdBaslik { margin: 0; font-weight: 700; }
+.mdBaslik[data-duzey="1"], .mdBaslik[data-duzey="2"] { font-size: var(--boy-bolum); }
+.kod { padding: 1px 5px; border-radius: var(--r-kucuk); background: var(--kart); font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-size: .92em; }
+.mdKod { margin: 0; padding: 8px 10px; overflow-x: auto; border-radius: var(--r-orta); background: var(--kart); font-size: var(--boy-kucuk); white-space: pre; }
+.mdKod code { font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; }
+.mdAlinti { margin: 0; padding-left: 10px; border-left: 3px solid var(--kenar-alan); color: var(--yazi2); }
+.mdCizgi { border: 0; border-top: 1px solid var(--kenar-alan); margin: 8px 0; }
+.mdTabloKap { max-width: 100%; overflow-x: auto; border: 1px solid var(--kenar); border-radius: var(--r-orta); background: var(--kart);
+  scrollbar-width: thin; scrollbar-color: var(--kenar-alan) transparent; }
+.mdTablo { border-collapse: collapse; font-size: var(--boy-kucuk); }
+.mdTablo th, .mdTablo td { padding: 4px 8px; border-bottom: 1px solid var(--kenar); text-align: left; vertical-align: top; }
+.mdTablo th { background: var(--zemin2); font-weight: 600; }
+.mesaj a { color: var(--onay-yazi); }
 .bekleyen { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; }
 .bekleyen a { display: inline-flex; align-items: center; min-height: var(--tus-y); color: var(--onay-yazi); font-weight: 600; }
 .yaziyor { margin: 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
@@ -69,10 +84,11 @@
 }
 .cip:hover:not(:disabled) { border-color: var(--yazi2); color: var(--yazi); }
 .cip:disabled { opacity: .55; cursor: default; }
-.yaz { display: flex; gap: 6px; }
+.yaz { display: flex; align-items: flex-end; gap: 6px; }
+/* 550: çok satırlı yazı kutusu — Enter gönderir, Shift+Enter yeni satır; yazdıkça büyür (en çok ~8 satır, sonra kendi içinde kayar) */
 .girdi {
-  flex: 1 1 auto; min-width: 0; height: var(--tus-y); padding: 0 12px;
-  border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); color: var(--yazi); font: inherit;
+  flex: 1 1 auto; min-width: 0; min-height: var(--tus-y); max-height: 12.5em; padding: 7px 12px; resize: none; overflow-y: auto;
+  border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); color: var(--yazi); font: inherit; line-height: 1.4;
 }
 .girdi::placeholder { color: var(--yazi3); }
 .gonder {
@@ -118,5 +134,8 @@
   :global(body:has([data-alt-cubuk])) .fab { bottom: calc(var(--tus-y) + 32px); }
   /* rapor (2026-10-12): telefonda tuşlar tam genişlik, dört tuş iki sıraya iner — düğme iki sıranın üstünde (raporlar .eylem en az yüksekliği buna göre) */
   :global(body:has([data-alt-cubuk="her"])) .fab { bottom: calc(var(--tus-y) * 2 + 40px); }
-  .panel { inset: auto 0 auto 0; top: var(--vv-ust); height: var(--vv-y); width: auto; border: 0; border-radius: 0; z-index: 80; }
+  /* 547 (reisim 2026-10-14, iPhone ekran görüntüsü: panel klavyeden önce bitiyor, arada sayfa görünüyordu): panel görünen alana sığar, çevresi
+     panelin rengiyle örtülür (geniş gölge — ölçüm geç kalsa da arkadaki sayfa görünmez); sayfa kaymaz (temel.css html[data-panel-acik]) */
+  .panel { inset: auto 0 auto 0; top: var(--vv-ust); height: var(--vv-y); width: auto; border: 0; border-radius: 0; z-index: 80;
+    box-shadow: 0 0 0 100vmax var(--kart); }
 }

@@ -642,6 +642,8 @@ export interface SayChatPlani {
   id: string; no: string; durum: PlanDurumu; baslangic: string; uye: boolean; personelId: string | null;
   ekipman: { id: string; kod: string; turId: string; brans: "m" | "e"; konum: string | null; pasif: boolean }[];
   raporlu: string[];
+  /** 549 (sunum 546 K2): plandaki raporlar — ekipman, durum, kişinin kendi Yeni raporu mu (kayıt o raporun boş alanlarına girer) */
+  raporlar: { ekipmanId: string; id: string; durum: string; benimTaslak: boolean }[];
 }
 export async function sayChatPlani(db: Sorgulayici, kim: Kisi, id: string): Promise<SayChatPlani | null> {
   const e = await erisim(db, kim, id);
@@ -651,8 +653,10 @@ export async function sayChatPlani(db: Sorgulayici, kim: Kisi, id: string): Prom
   const ekipman = (await ekipmanlar(db, pe.map((x) => x.ekipman_id))).map((x) => ({
     id: x.id, kod: x.kod, turId: x.turId, brans: turBul.get(x.turId)?.brans ?? "m", konum: x.konum, pasif: x.pasif,
   })).sort((a, b) => a.kod.localeCompare(b.kod, "tr"));
+  const raporlar = await planRaporlari(db, id);
   return {
     id, no: e.p.no, durum: e.p.durum, baslangic: e.p.baslangic, uye: e.uye, personelId: e.benim?.personel_id ?? null, ekipman,
-    raporlu: [...new Set((await planRaporlari(db, id)).map((r) => r.ekipmanId))],
+    raporlu: [...new Set(raporlar.map((r) => r.ekipmanId))],
+    raporlar: raporlar.map((r) => ({ ekipmanId: r.ekipmanId, id: r.id, durum: r.durum, benimTaslak: r.durum === "taslak" && r.hesapId === kim.id })),
   };
 }

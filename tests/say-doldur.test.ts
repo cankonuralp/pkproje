@@ -4,12 +4,16 @@
    · K1 emin olunmayan değer de girer, "belirsiz" işaretlenir · K2 dolu alanın üstüne yazılmaz (dolu sayılır), "üstüne yaz" yazar · tablo satırları
      boş satıra / sona (elle yazılan hücre ezilmez) · K4 cevapsız maddeler cevap setinin ilk seçeneği, sonuç · geri al yalnız S.A.Y'ın girdiği ve
      hâlâ duran değeri döndürür · yalnız formatta fotoğraftan doldurması açık bölümler okunur · kısa komutlar kuralla tanınır, soru yapay zekâya gider ·
-     S.A.Y'ın cevabını sunucu sayılardan kurar (istemci serbest metin yazamaz). */
+     S.A.Y'ın cevabını sunucu sayılardan kurar (istemci serbest metin yazamaz).
+   550 (sunum 546 K6 — reisim 2026-10-14: "S.A.Y. de herhangi bir kısıt kural vb olmasını istemiyorum … aynı claude kullanır gibi"): ekranda kalan
+   komutlar yalnız "fotoğrafları oku (ve gir)", "geri al", "evet / üstüne yaz"; "maddeleri uygun işaretle", "sonucu … yap" ve birleşik istekler
+   Haiku'ya gider · Haiku'nun "rapora_yaz" girişleri (komutlariUygula): yer kimliğiyle, türüne göre denetlenir, kişi istediği için dolu alana da yazılır,
+   tabloya yeni satır açılır, formüllü sütuna / bilinmeyen yere yazılmaz (nedeniyle döner), madde cevabı bölümün seçeneklerinden, geri al. */
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { Cevaplar, FormatTanimi } from "../src/format/tanim.ts";
 import { SABLONLAR } from "../src/format/sablonlar.ts";
-import { alanlariUygula, geriAl, maddeleriIsaretle, okumaHedefleri, sonucuYap, tabloyaUygula, yerDegeri, type Durum } from "../src/modules/raporlar/say-doldur.ts";
+import { alanlariUygula, geriAl, komutlariUygula, maddeleriIsaretle, okumaHedefleri, sonucuYap, tabloyaUygula, yerDegeri, type Durum } from "../src/modules/raporlar/say-doldur.ts";
 import { istekTani } from "../src/modules/say/istek.ts";
 import { islemMetni, raporGirdisi } from "../src/modules/say/server/say.ts";
 
@@ -88,14 +92,51 @@ test("okunacak bölümler: formatta fotoğraftan doldurması açık olanlar (eki
   assert.ok(![...okumaHedefleri(kapali).values()].some((x) => x.tur === "tablo"), "fotoğraftan doldurma kapalı tablo okunmaz");
 });
 
-test("kısa komutlar kuralla tanınır; soru ve tanınmayan yapay zekâya gider", () => {
+test("kısa komutlar kuralla tanınır (yalnız oku / geri al / üstüne yaz); öteki her istek Haiku'ya gider", () => {
   for (const [m, i] of [
-    ["Fotoğrafları oku ve gir", "oku"], ["fotoğrafı okuyup gir", "oku"], ["etiketi oku", "oku"], ["oku ve gir", "oku"], ["Panoyu doldur", "oku"], ["pano kapağı kırık", null],
-    ["bütün maddeleri uygun işaretle", "maddeler"], ["Maddeleri uygun yap.", "maddeler"], ["sonucu uygun yap", "sonuc_uygun"],
-    ["Sonucu uygun değil yap", "sonuc_uygun_degil"], ["üstüne yaz", "ustune"], ["dolu alanları da değiştir", "ustune"], ["evet", "ustune"],
+    ["Fotoğrafları oku ve gir", "oku"], ["fotoğrafı okuyup gir", "oku"], ["etiketi oku", "oku"], ["oku ve gir", "oku"], ["Panoyu doldur", null], ["pano kapağı kırık", null],
+    /* 550: maddeler / sonuç / birleşik istek Haiku'ya (cümlenin tamamını yapar) */
+    ["bütün maddeleri uygun işaretle", null], ["Maddeleri uygun yap.", null], ["sonucu uygun yap", null], ["Sonucu uygun değil yap", null],
+    ["4.2'yi uygun değil işaretle ve sonucu uygun değil yap", null], ["fotoğrafları oku ve 1. satıra 3000 yaz", null], ["Fotoğrafları oku ve maddeleri işaretle", null],
+    ["üstüne yaz", "ustune"], ["dolu alanları da değiştir", "ustune"], ["evet", "ustune"],
     ["geri al", "geri"], ["fotoğrafı okuyabilir misin?", null], ["Sonuç ne olmalı", null], ["maddeler uygun mu", null], ["nasıl fotoğraf eklerim", null],
     ["merhaba", null], ["", null],
   ] as const) assert.equal(istekTani(m), i, m);
+});
+
+/* 550: Haiku'nun "rapora_yaz" girişleri */
+test("rapora_yaz: yer kimliğiyle, türüne göre; dolu alana da; tabloya yeni satır; formüllü / bilinmeyen yer yazılmaz; madde seçenekten; geri al", () => {
+  const t = FormatTanimi.parse(SABLONLAR.ZPKR02.tanim);
+  const tablo = t.bolumler.find((b) => b.blok === "olcum" && b.id === "linye");
+  const liste = t.bolumler.find((b) => b.blok === "liste");
+  if (!tablo || tablo.blok !== "olcum" || !liste || liste.blok !== "liste") throw new Error("ZPKR02 bölümleri yok");
+  const icu = tablo.sutunlar.find((s) => s.ad === "Icu")!, tip = tablo.sutunlar.find((s) => s.giris === "secim")!, m1 = liste.gruplar[0].maddeler[0];
+  const d: Durum = { ...bos(), cevaplar: { ...Cevaplar.parse({}), tablo: { linye: [{ [icu.id]: "6" }] } } };
+  const u = komutlariUygula(d, t, [
+    { yer: "e:model", deger: "DM-200" },                                  // dolu alan (Elle Model) — kişi istedi, yazılır
+    { yer: "e:imal", deger: "19x9" },                                     // yıl değil
+    { yer: `t:linye:1:${icu.id}`, deger: "3000" }, { yer: `t:linye:3:${icu.id}`, deger: "10" },   // 3. satır: 2. ve 3. satır açılır
+    { yer: `t:linye:1:${tip.id}`, deger: (tip.secenekler ?? [])[1] ?? "C" }, { yer: `t:linye:1:${tip.id}`, deger: "Z" },
+    { yer: `m:${m1.id}`, deger: liste.cevaplar[1].toLocaleUpperCase("tr") }, { yer: `m:${m1.id}#derece`, deger: "ağır" }, { yer: `m:${m1.id}#not`, deger: "Kapak kırık" },
+    { yer: "m:olmayan", deger: "Uygun" }, { yer: "t:olmayan:1:x", deger: "1" }, { yer: "x:y", deger: "1" },
+  ]);
+  assert.equal(u.durum.ekipman.model, "DM-200");
+  assert.equal(u.durum.ekipman.imal, "");
+  const l = u.durum.cevaplar.tablo.linye;
+  assert.deepEqual([l.length, l[0][icu.id], l[1], l[2][icu.id]], [3, "3000", {}, "10"]);
+  assert.equal(l[0][tip.id], (tip.secenekler ?? [])[1] ?? "C");
+  assert.deepEqual(u.durum.cevaplar.madde[m1.id], { c: liste.cevaplar[1], derece: "agir", not: "Kapak kırık" });
+  assert.deepEqual(u.gecersiz.map((g) => g.split(":")[0]), ["e", "t", "m", "t", "x"], u.gecersiz.join(" | "));
+  assert.ok(u.isaretler.some((i) => i.yer.tur === "hucre" && i.yer.satir === 2) && u.isaretler.every((i) => i.guven === "emin"));
+  /* geri al: hepsi önceki hâline (kişi sonradan değiştirmediyse) */
+  const g = geriAl(u.durum, u.geri);
+  assert.deepEqual([g.durum.ekipman.model, g.durum.cevaplar.tablo.linye, g.durum.cevaplar.madde[m1.id]], ["Elle Model", [{ [icu.id]: "6" }], undefined]);
+  /* formüllü sütun ve formatta olmayan sonuç / yorum yazılmaz */
+  const f = FormatTanimi.parse({ ...SABLONLAR.ZPKR02.tanim, bolumler: SABLONLAR.ZPKR02.tanim.bolumler.filter((b) => b.blok !== "sonuc" && b.blok !== "not") });
+  const v = komutlariUygula(bos(), f, [{ yer: "sonuc", deger: "uygun" }, { yer: "yorum", deger: "x" }]);
+  assert.equal(v.gecersiz.length, 2);
+  const s = komutlariUygula(bos(), t, [{ yer: "sonuc", deger: "Uygun değil" }]);
+  assert.equal(t.bolumler.some((b) => b.blok === "sonuc") ? s.durum.cevaplar.sonuc : "uygun_degil", "uygun_degil");
 });
 
 test("S.A.Y'ın cevabı sayılardan; girdi yapısı denetlenir (serbest metin yalnız soru ve formatın adları, sınırlı)", () => {
@@ -109,13 +150,12 @@ test("S.A.Y'ın cevabı sayılardan; girdi yapısı denetlenir (serbest metin ya
     "Dolu olduğu için değiştirmediğim: Marka. Değiştireyim mi?", "1 fotoğraf okunamadı: Fotoğraf bozuk.", "Kaydetmeyi unutmayın.",
   ].join("\n"));
   assert.match(islemMetni({ istek: "oku", soru: "x", sayi: 0, okuma: { okunan: 0, okunamayan: 0, neden: null, bolumler: [], dolu: [] } }), /^Okunacak fotoğraf yok/);
-  assert.equal(islemMetni({ istek: "maddeler", soru: "x", sayi: 5 }), "5 maddeyi “Uygun” işaretledim. Kaydetmeyi unutmayın.");
-  assert.equal(islemMetni({ istek: "sonuc_uygun_degil", soru: "x", sayi: 1, var: true }), "Sonucu “Uygun değil” yaptım. Kaydetmeyi unutmayın.");
-  assert.equal(islemMetni({ istek: "sonuc_uygun", soru: "x", sayi: 0, var: false }), "Bu raporun formatında sonuç alanı yok.");
   assert.equal(islemMetni({ istek: "geri", soru: "x", sayi: 3 }), "3 girişi geri aldım.");
+  assert.equal(islemMetni({ istek: "ustune", soru: "x", sayi: 2 }), "2 dolu alanı okunan değerle değiştirdim. Kaydetmeyi unutmayın.");
   for (const kotu of [
-    { istek: "sil", soru: "x", sayi: 0 }, { istek: "oku", soru: "x", sayi: 0 }, { istek: "maddeler", soru: "", sayi: 0 }, { istek: "maddeler", soru: "x".repeat(301), sayi: 0 },
-    { istek: "maddeler", soru: "x", sayi: -1 }, { istek: "maddeler", soru: "x", sayi: 1, okuma },
+    { istek: "sil", soru: "x", sayi: 0 }, { istek: "oku", soru: "x", sayi: 0 }, { istek: "geri", soru: "", sayi: 0 }, { istek: "geri", soru: "x".repeat(301), sayi: 0 },
+    { istek: "geri", soru: "x", sayi: -1 }, { istek: "geri", soru: "x", sayi: 1, okuma },
+    { istek: "maddeler", soru: "x", sayi: 1 }, { istek: "sonuc_uygun", soru: "x", sayi: 1 },   // 550: kalktı (Haiku rapora_yaz ile)
     { istek: "oku", soru: "x", sayi: 0, okuma: { ...okuma, bolumler: [{ ad: "x".repeat(121), alan: 0, satir: 0, belirsiz: 0 }] } },
     { istek: "oku", soru: "x", sayi: 0, okuma: { ...okuma, dolu: Array.from({ length: 61 }, () => "a") } },
     { istek: "oku", soru: "x", sayi: 0, okuma: { ...okuma, neden: "x".repeat(301) } },

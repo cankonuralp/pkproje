@@ -23,6 +23,7 @@ import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent, ty
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Alan, FormIzgara, Girdi } from "../../../components/form/Form";
 import { Ikon } from "../../../components/ikon/Ikon";
+import { useSurukleKaydir } from "../../../components/kaydir/useSurukleKaydir";
 import { DegerYok, Kod, Rozet } from "../../../components/sayfa/Sayfa";
 import { useDisariTiklama, type SecimSecenegi } from "../../../components/secim/SecenekListesi";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
@@ -434,12 +435,14 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
     bildir(`Son satır kopyalandı${ilk && satirlar[i]?.[ilk.id] ? ` (${ilk.ad} bir arttı)` : ""}; değişen değerleri yazın, kaydetmeyi unutmayın.`);
   };
   const kurallar = sonucKurallari(b);
+  const kap = useRef<HTMLDivElement>(null);
+  useSurukleKaydir(kap);
   return (
     <>
       {/* 447 (reisim: "satır eklemediğin sürece neyin nereye yazılacağı bile gözükmüyor tablo başlıkları gözükmüyor"): başlıklar her zaman */}
       {/* 452: kendi içinde yatay kayan kap klavyeyle de kaydırılır (odaklanır; ekran okuyucuya bölge adıyla) — boş tabloda odaklanacak alan yok */}
       {(
-        <div className={stil.tabloKap} role="region" aria-label={`${b.ad} tablosu`} tabIndex={0}>
+        <div ref={kap} className={stil.tabloKap} role="region" aria-label={`${b.ad} tablosu`} tabIndex={0}>
           <table className={stil.olcumTablo}>
             <caption className="gizli">{b.ad}</caption>
             <thead>
@@ -472,7 +475,7 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
                       if (bag.oku) return <td key={col.id}>{(col.giris === "evet" ? etiketi(EVET, deger) : deger) || <DegerYok />}</td>;
                       if (col.giris === "secim" || col.giris === "evet") {
                         return (
-                          <td key={col.id}>
+                          <td key={col.id} className={stil.secimHucre}>
                             <SecimAlani id={id} ad={ad} etiketsiz deger={deger} gecersiz={bag.gecersiz(anahtar)} degistir={(x) => hucre(i, col.id, x)}
                               secenekler={col.giris === "evet" ? EVET : (col.secenekler ?? []).map((x) => [x, x] as const)} />
                           </td>
@@ -481,6 +484,7 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
                       return (
                         <td key={col.id}>
                           <Girdi id={id} aria-label={ad} value={deger} maxLength={col.giris === "sayi" ? 12 : 120} inputMode={col.giris === "sayi" ? "decimal" : undefined}
+                            className={col.giris === "sayi" ? undefined : stil.metinHucre}
                             aria-invalid={bag.gecersiz(anahtar) || undefined} onChange={(e) => hucre(i, col.id, e.target.value)} />
                         </td>
                       );

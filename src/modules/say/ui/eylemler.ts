@@ -2,14 +2,16 @@
 /* S.A.Y SUNUCU EYLEMLERİ (380) — kişi ve kiracı oturumdan (istemciden kimlik alınmaz); başka kökenden gelen istek ve oturumsuz çağrı reddedilir.
    İstemciden gelen yalnız soru metni, hızlı sorunun adı ve bulunulan sayfanın adresi (yer adı sunucuda modül kaydından çıkarılır — kayıt bilgisi
    taşımaz). Yapay zekâ çağrısı veritabanı işleminin dışında.
-   522: ekli soru FormData ile (dosyalar + soru, adres, rapor); tür, adet ve boy sunucuda (server/ek.ts), dosya saklanmaz. */
+   522: ekli soru FormData ile (dosyalar + soru, adres, rapor); tür, adet ve boy sunucuda (server/ek.ts), dosya saklanmaz.
+   550: kuralla cevaplanan hızlı sorular kalktı (yalnız "Fotoğrafları oku ve gir" — ekranda); rapordayken canlı ekipman bilgisi de gelir (harita);
+   internet araması hizmetçe kabul edilmezse (400) soru aramasız bir kez yeniden gönderilir. */
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
-import { anthropicCagir } from "../../../server/yz/okuma";
+import { anthropicCagir, type OkumaIstegi } from "../../../server/yz/okuma";
 import type { SohbetIletisi } from "../../../server/yz/sohbet";
 import { EK_EN_COK_ADET, EK_EN_COK_BAYT } from "../ek-sinir";
 import { EK_BOY_HATASI, sayEkleriOku, type SayEkDosyasi } from "../server/ek";
-import { sayBirak, sayDurumu, sayGecmisi, sayHizli, sayOneri, sayRaporCevabi, saySorHazirla, saySorKaydet, sayTemizle, type SayDurum, type SayYaniti } from "../server/say";
+import { sayBirak, sayDurumu, sayGecmisi, sayOneri, sayRaporCevabi, saySorHazirla, saySorKaydet, sayTemizle, type SayDurum, type SayYaniti } from "../server/say";
 
 const RED: SayYaniti = { durum: "red", neden: "Oturumunuz kapandı. Sayfayı yenileyip yeniden giriş yapın." };
 const yolAl = (v: unknown) => (typeof v === "string" && v.startsWith("/") && v.length <= 300 ? v : "/");
@@ -29,14 +31,7 @@ export async function sayGecmisEylemi(): Promise<SohbetIletisi[]> {
   return o ? oturumIslemi(o, (db) => sayGecmisi(db)) : [];
 }
 
-export async function sayHizliEylemi(hizli: unknown, yol: unknown): Promise<SayYaniti> {
-  const o = await oturum();
-  if (!o) return RED;
-  if (hizli !== "bekleyen" && hizli !== "sayfa") return { durum: "red", neden: "Bilinmeyen soru." };
-  return oturumIslemi(o, (db) => sayHizli(db, o, hizli, yolAl(yol)));
-}
-
-/** rapor ekranının hızlı soruları (382): ekran açık raporun yapısını gönderir, metni sunucu kurar */
+/** rapor ekranının yaptığı iş (542): ekran işin sayılarını gönderir, metni sunucu kurar */
 export async function sayRaporEylemi(girdi: unknown): Promise<SayYaniti> {
   const o = await oturum();
   if (!o) return RED;
@@ -74,11 +69,17 @@ export async function sayEkliSorEylemi(form: FormData): Promise<SayYaniti> {
 type Oturum = NonNullable<Awaited<ReturnType<typeof oturum>>>;
 async function sor(o: Oturum, soru: unknown, yol: unknown, raporNo: unknown, canli: unknown, ekler: SayEkDosyasi[]): Promise<SayYaniti> {
   if (typeof soru !== "string") return { durum: "red", neden: "Sorunuzu yazın." };
-  const c = (canli ?? null) as { id?: unknown; cevaplar?: unknown } | null;
-  const rapor = c && typeof c.id === "string" ? { id: c.id, cevaplar: c.cevaplar } : null;
+  const c = (canli ?? null) as { id?: unknown; cevaplar?: unknown; ekipman?: unknown } | null;
+  const rapor = c && typeof c.id === "string" ? { id: c.id, cevaplar: c.cevaplar, ekipman: c.ekipman } : null;
   const h = await oturumIslemi(o, (db) => saySorHazirla(db, o, soru, yolAl(yol), new Date(), typeof raporNo === "string" ? raporNo : null, rapor, ekler));
   if (h.durum !== "hazir") return h;
-  const y = await anthropicCagir(h.istek, h.anahtar);
+  let y = await anthropicCagir(h.istek, h.anahtar);
+  /* K7: internet araması bu modelde kabul edilmezse (400 — araç) aramasız bir kez daha (ayırma aynı; ücret yalnız gerçek çağrıdan) */
+  if (y.durum === "hata" && y.kod === 400 && /web_search|tool/i.test(y.ileti ?? "")) {
+    const govde = { ...h.istek.govde, tools: ((h.istek.govde.tools ?? []) as { name?: string }[]).filter((t) => t.name !== "web_search") };
+    if (!(govde.tools as unknown[]).length) delete (govde as Record<string, unknown>).tools;
+    y = await anthropicCagir({ govde } satisfies OkumaIstegi, h.anahtar);
+  }
   if (y.durum === "hata") {
     await oturumIslemi(o, (db) => sayBirak(db, h, y.ucret));
     return { durum: "red", neden: y.neden };

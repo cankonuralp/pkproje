@@ -50,7 +50,7 @@ import { satirAnahtari } from "../../../format/motor";
 import { fotografiKucult } from "../../../components/foto/kucult";
 import { ekipmanAlanlari, ekipmanAnahtari } from "../doldur";
 import {
-  alanlariUygula, geriAl, maddeleriIsaretle as maddeleriUygun, okumaHedefleri, sonucuYap, tabloyaUygula, yerDegeri,
+  alanlariUygula, geriAl, komutlariUygula, maddeleriIsaretle as maddeleriUygun, okumaHedefleri, sonucuYap, tabloyaUygula, yerDegeri,
   type Durum, type Geri, type Guven, type OkunanAlan, type OkunanTabloSatiri, type OkumaHedefi, type Uygulama, type Yer,
 } from "../say-doldur";
 import { ayEkle, RAPOR_DURUM, type EkipmanBilgisi, type RaporDurumu, type RaporTarihleri } from "../sema";
@@ -487,8 +487,10 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
      (data-say-giris; kişi değeri değiştirince kalkar). Dolu alan sayılır, "üstüne yaz"la değişir; her işin "Geri al"ı. S.A.Y Chat'ten açılan
      raporun bekleyen okumaları (rapor_oneri) açılışta aynı yoldan girer; rapor kaydedilince bekleyen okumalar kapanır. Kaydetmek kişide. */
   const sonucBolumu = v.tanim.bolumler.find((b) => b.blok === "sonuc")?.id ?? null;
+  const notBolumu = v.tanim.bolumler.find((b) => b.blok === "not")?.id ?? null;
   const yerId = (y: Yer) => (y.tur === "ekipman" ? EID(y.id as EkipmanAnahtari) : y.tur === "hucre" ? alanId(satirAnahtari(y.bolum, y.satir, y.sutun))
-    : y.tur === "sonuc" ? (sonucBolumu ? alanId(sonucBolumu) : "") : alanId(y.id));
+    : y.tur === "sonuc" ? (sonucBolumu ? alanId(sonucBolumu) : "") : y.tur === "yorum" ? (notBolumu ? alanId(notBolumu) : "")
+    : y.tur === "madde_not" ? alanId(`${y.id}.not`) : y.tur === "derece" ? alanId(`${y.id}.derece`) : alanId(y.id));
   const isaretler = useRef(new Map<string, { yer: Yer; guven: Guven; deger: string }>());
   useEffect(() => {
     const d: Durum = { ekipman, cevaplar };
@@ -611,6 +613,15 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
     const bolumler = v.tanim.bolumler.filter((b) => b.blok === "liste" && b.gruplar.some((g) => g.maddeler.some((m) => maddeler.has(m.id)))).map((b) => b.id);
     return { sayi: uygula(u, bolumler), geriAl: geriAlici(u.geri) };
   };
+  /* 550: Haiku'nun istediği girişler — dolu alana da (kişi istedi); girilen yerlerin bölümleri açılır */
+  const raporaYaz = (girisler: readonly { yer: string; deger: string }[]) => {
+    const u = komutlariUygula(durumRef.current, v.tanim, girisler);
+    const bolumu = (y: Yer) => (y.tur === "hucre" ? y.bolum : y.tur === "ekipman" ? "ekipman" : y.tur === "sonuc" ? sonucBolumu : y.tur === "yorum" ? notBolumu
+      : y.tur === "madde" || y.tur === "madde_not" || y.tur === "derece" ? v.tanim.bolumler.find((b) => b.blok === "liste" && b.gruplar.some((g) => g.maddeler.some((m) => m.id === y.id)))?.id ?? null
+      : v.tanim.bolumler.find((b) => (b.blok === "bilgi" && b.alanlar.some((a) => a.id === y.id)) || (b.blok === "test" && b.degerler.some((d) => d.id === y.id)))?.id ?? "ekipman");
+    const bolumler = [...new Set(u.isaretler.map((i) => bolumu(i.yer)).filter((b): b is string => !!b))];
+    return { sayi: uygula(u, bolumler), gecersiz: u.gecersiz, geriAl: geriAlici(u.geri) };
+  };
   const sonucYap = (x: "uygun" | "uygun_degil") => {
     if (!sonucBolumu) return { var: false, sayi: 0, geriAl: () => 0 };
     const u = sonucuYap(durumRef.current, x);
@@ -628,8 +639,8 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
 
   /* S.A.Y (382): düzenlenebilir rapor açıkken S.A.Y bu raporu okur — CANLI hâl (kaydedilmemiş değişiklikler dahil): boş zorunlu alanlar, sonuç
      önerisi; öneri denetçinin seçimiyle aynı yoldan uygulanır (Kaydet'le yazılır); eksiğe aynı "git" götürür. Rapor ekranı kapanınca bağ kalkar. */
-  const sayGuncel = useRef({ d, cevaplar, tarih, yaz, git, fotolariOku, maddeleriIsaretle, sonucYap, fotoEkle, okunmamis });
-  useEffect(() => { sayGuncel.current = { d, cevaplar, tarih, yaz, git, fotolariOku, maddeleriIsaretle, sonucYap, fotoEkle, okunmamis }; });
+  const sayGuncel = useRef({ d, cevaplar, ekipman, tarih, yaz, git, fotolariOku, maddeleriIsaretle, sonucYap, fotoEkle, okunmamis, raporaYaz });
+  useEffect(() => { sayGuncel.current = { d, cevaplar, ekipman, tarih, yaz, git, fotolariOku, maddeleriIsaretle, sonucYap, fotoEkle, okunmamis, raporaYaz }; });
   useEffect(() => {
     if (oku || yeni || denemede) return;
     const bolumAdi = (id: string) => v.tanim.bolumler.find((b) => b.id === id)?.ad ?? id;
@@ -659,6 +670,8 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
       maddeleriIsaretle: () => sayGuncel.current.maddeleriIsaretle(),
       sonucYap: (x) => sayGuncel.current.sonucYap(x),
       fotoEkle: (dosya, bolum) => sayGuncel.current.fotoEkle(dosya, bolum),
+      ekipman: () => ({ ...sayGuncel.current.ekipman }) as Record<string, string>,
+      yaz: (girisler) => sayGuncel.current.raporaYaz(girisler),
     });
   }, [oku, yeni, denemede, v.id, v.no, v.tanim, v.cihazlar, hedefler]);
 

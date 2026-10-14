@@ -14,6 +14,9 @@
         teşekküllü tarama istiyorum"): sayfadaki ve sayfanın "… ekle / … düzenle / Yeni …" pencerelerindeki seçim listeleri ve takvimler açılır —
         açılınca hiçbir öğe yerinden oynamaz (sayfa / pencere itilmez, kaymaz), katman ekranın içinde ve tamamen görünür (kesilmez, örtülmez).
         Pencereler kaydedilmeden Esc ile kapatılır.
+     8. hücresinden taşan içerik (547; reisim 2026-10-14: "yazılar yer olmasına rağmen üst üste biniyor" — Raporlar listesinde tarih ve satırın
+        tuşları sütunlarından taşıp birbirinin üstüne biniyordu): tablo hücresinin görünür içeriği (yazı, tuş, alan) hücrenin kenarını aşıyorsa.
+        Kendi içinde kesilen / kayan kap ve konumlu katman (ipucu, liste) sayılmaz; belge görünümü (.rb-sayfa) ve gizli tablo (.gizli) dışarıda.
    Bulgular toplanır, sonda tek listede düşer (ilk hatada durmaz — hepsi bir koşuda görünsün). Gezilmez: /api, PDF, çıkış, giriş, indirme. */
 import AxeBuilder from "@axe-core/playwright";
 import type { ConsoleMessage, Dialog, Locator, Page, Response } from "@playwright/test";
@@ -107,6 +110,44 @@ export function tasanlar(): string[] {
     .sort((a, b) => b.r - a.r).slice(0, 3)
     .map(({ e, r }) => `${e.tagName.toLowerCase()}${e.className && typeof e.className === "string" ? "." + e.className.split(" ")[0] : ""} sağ kenar ${Math.round(r)} > ${g}`)
     .concat(`sayfa genişliği ${document.documentElement.scrollWidth} > ${g}`);
+}
+
+/** 547: hücresinden taşan içerik (tarayıcıda koşar) — ilk beş; her biri hücrenin ilk yazısı ve taşma miktarıyla */
+export function tasanHucreler(): string[] {
+  const sonuc: string[] = [];
+  const atla = (e: Element) => {
+    if (e instanceof SVGElement && e.ownerSVGElement) return true;                              // SVG'nin içi (çizim kendi kutusunda)
+    const s = getComputedStyle(e);
+    return s.position === "absolute" || s.position === "fixed" || s.overflowX !== "visible" || s.display === "none";
+  };
+  for (const td of document.querySelectorAll<HTMLTableCellElement>("main td, main th, [role=dialog] td, [role=dialog] th")) {
+    if (sonuc.length >= 5) break;
+    if (td.closest(".rb-sayfa, .gizli, [inert], [aria-hidden=true], nextjs-portal") || !td.checkVisibility()) continue;
+    if (getComputedStyle(td).overflowX !== "visible") continue;
+    const k = td.getBoundingClientRect();
+    if (k.width < 4 || k.height < 4) continue;
+    let sol = 0, sag = 0;
+    const yuru = document.createTreeWalker(td, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
+      acceptNode: (n) => (n.nodeType === Node.ELEMENT_NODE && atla(n as Element) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT),
+    });
+    for (let n = yuru.nextNode(); n; n = yuru.nextNode()) {
+      let r: DOMRect;
+      if (n.nodeType === Node.TEXT_NODE) {
+        if (!n.textContent?.trim()) continue;
+        const a = document.createRange();
+        a.selectNodeContents(n);
+        r = a.getBoundingClientRect();
+      } else r = (n as Element).getBoundingClientRect();
+      if (r.width < 1 || r.height < 1) continue;
+      sol = Math.max(sol, k.left - r.left);
+      sag = Math.max(sag, r.right - k.right);
+    }
+    if (sol > 1.5 || sag > 1.5) {
+      const ad = (td.innerText || td.getAttribute("aria-label") || "").trim().replace(/\s+/g, " ").slice(0, 40);
+      sonuc.push(`${td.tagName.toLowerCase()} "${ad}" ${sol > 1.5 ? `solundan ${Math.round(sol)} px` : ""}${sol > 1.5 && sag > 1.5 ? ", " : ""}${sag > 1.5 ? `sağından ${Math.round(sag)} px` : ""} taşıyor`);
+    }
+  }
+  return sonuc;
 }
 
 /** 452: kökteki (pencere ya da sayfa) basılabilir öğelerin yerleri — açılır katman açılınca kıyaslanır (katmanın kendi içi hariç) */
@@ -275,6 +316,7 @@ export async function siteyiTara(page: Page, baslangic: string[], { enCok = 90, 
       const tasan = await page.evaluate(tasanlar);
       if (tasan.length) bulgular.push({ sayfa: yer, tur: "yatay taşma", ayrinti: tasan.join(" · ") });
       for (const o of await page.evaluate(ortuluOgeler)) bulgular.push({ sayfa: yer, tur: "basılamıyor", ayrinti: `${o.ad} — ${o.neden}` });
+      for (const x of await page.evaluate(tasanHucreler)) bulgular.push({ sayfa: yer, tur: "hücreden taşan", ayrinti: x });
       /* 446 → 452: ilk koşuda yalnız günlükteydi (tek bulgu: Firma ayarlarının sütunlu yerleşimi — sayılmaz); artık bulgu (kilit) */
       for (const x of await page.evaluate(dengesizKartlar)) bulgular.push({ sayfa: yer, tur: "dengesiz kartlar", ayrinti: x });
       await page.evaluate(() => scrollTo(0, 0));

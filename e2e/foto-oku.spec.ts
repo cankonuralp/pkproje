@@ -191,6 +191,16 @@ test("ölçüm tablosu Excel'den: başlıklar sütunlara eşlenir, satırlar tab
 
   /* 486: sıra sütunu "Sıra" — formatın kendi "No" sütunu var ("No | No" olmasın) */
   await expect(linye.getByRole("columnheader", { name: "Sıra", exact: true })).toBeVisible();
+  /* 548 (sunum 546 — reisim: "masa üstünde de ekrana sığcak şekilde olsun", "telefonda yana kaydırsın … tablo tablodur kart olmaz"): 16 sütunluk
+     Pano sigortaları masaüstünde yana kaymadan sığar; telefonda tablo kalır, kabı yana kayar ve ince kaydırma çubuğu görünür */
+  const kap = linye.getByRole("region", { name: "Pano sigortaları (linye) tablosu" });
+  const olcu = await kap.evaluate((e) => ({ sw: e.scrollWidth, cw: e.clientWidth, cubuk: getComputedStyle(e).scrollbarWidth }));
+  expect(olcu.cubuk, "kaydırma çubuğu ince (gizli değil)").toBe("thin");
+  if (bilgi.project.name === "masaustu") expect(olcu.sw, `tablo sığar (${olcu.sw} ≤ ${olcu.cw})`).toBeLessThanOrEqual(olcu.cw + 1);
+  if (bilgi.project.name === "telefon") {
+    expect(olcu.sw, "telefonda tablo yana kayar").toBeGreaterThan(olcu.cw);
+    await expect(linye.getByRole("table")).toBeVisible();
+  }
   /* 486 (reisim: "tip seçin kısmına tıklayınca saçma sapan başa atıp"): tablodaki seçim listesi alanın hemen altında / üstünde açılır, sayfa kaymaz */
   const tip = linye.getByRole("combobox", { name: /· Tip$/ }).last();
   /* alan ekranın ve tablonun ortasına: tıklamadan önce test aracı kendisi kaydırmasın (alttaki sabit tuş çubuğu ya da tablonun yapışık sütunu

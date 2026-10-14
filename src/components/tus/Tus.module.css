@@ -26,3 +26,8 @@
 @container liste (min-width: 600px) and (max-width: 959.98px) {
   .tus { height: auto; min-height: var(--tus-y); padding: 4px 8px; white-space: normal; line-height: 1.2; }
 }
+/* 547 (reisim 2026-10-14: "yazılar yer olmasına rağmen üst üste biniyor"): geniş tabloda da sütun daralırsa tuşun yazısı ikinci satıra iner —
+   tuş sütunundan taşıp yanındaki hücrenin (tarih) üstüne binmez */
+@container liste (min-width: 960px) {
+  .tus { height: auto; min-height: var(--tus-y); padding-block: 4px; white-space: normal; line-height: 1.2; text-align: center; }
+}

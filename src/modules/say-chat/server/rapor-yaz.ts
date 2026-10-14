@@ -8,6 +8,8 @@
      raporu gönderirken yapay zeka okuyacak"): etiket fotoğrafı, mesajda boş kalan bilgi varsa ve formatta ekipman bilgileri fotoğraftan
      doldurulabiliyorsa raporun ekipman bilgilerine OKUMA fotoğrafı olarak konur ve okunur (yalnız boş alanlara girer);
    · rapor açılınca kayıt sohbetten SİLİNİR (fotoğrafları çöpe — kopyaları raporda); raporun üstüne "S.A.Y Chat kaydından oluşturuldu" şeridi.
+   549 (sunum 546 K2): ekipmanın kişinin kendi Yeni raporu varsa yeni rapor açılmaz — kayıt O RAPORUN BOŞ alanlarına girer (dolu alan değişmez,
+   adı şeritte), fotoğraflar o rapora eklenir.
    Okunacak fotoğrafların yapay zekâyla okunması eylemde (çağrı işlemin DIŞINDA) — okunanlar raporda bekler (raporlar/server/oneri.ts), rapor açılınca boş alanlara girer (542). */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import type { Depo } from "../../../server/dosya/depo.ts";
@@ -71,7 +73,10 @@ export async function chatRaporYaz(db: Sorgulayici, depo: Depo, kim: Kisi, firma
     }
     ekipmanId = y.id;
   }
-  const r = await raporOlustur(db, kim, p.id, ekipmanId);
+  /* 549: kişinin kendi Yeni raporu varsa o rapor (yalnız boş alanlar); başka rapor varsa kayıt bekler */
+  const varOlan = p.raporlar.find((x) => x.ekipmanId === ekipmanId);
+  if (varOlan && !varOlan.benimTaslak) return hata("Bu ekipmanın raporu sizin Yeni raporunuz değil; kayıt yazılamaz.");
+  const r = varOlan ? { durum: "tamam" as const, id: varOlan.id } : await raporOlustur(db, kim, p.id, ekipmanId);
   if (r.durum !== "tamam") {
     return hata(r.durum === "red" ? r.neden : r.durum === "gecersiz" ? Object.values(r.hatalar)[0] ?? "Rapor açılamadı." : r.durum === "yetkisiz" ? "Rapor açma yetkiniz yok." : "Rapor açılamadı.");
   }
@@ -97,7 +102,7 @@ export async function chatRaporYaz(db: Sorgulayici, depo: Depo, kim: Kisi, firma
   }
   const doldu = await chatRaporuDoldur(db, depo, kim, firmaId, r.id, {
     degerler: Object.entries(d.degerler).map(([anahtar, deger]) => ({ anahtar, ad: ad.get(anahtar) ?? (anahtar === "yorum" ? "Not" : anahtar), deger })),
-    fotolar, okumalar,
+    fotolar, okumalar, yalnizBos: !!varOlan,
   });
   if (doldu.durum !== "tamam") return hata("Rapor açıldı ama mesaj yazılamadı; raporu açıp elle doldurun.");
   /* kayıt silinir, fotoğrafları çöpe (kopyaları raporda) */
@@ -108,6 +113,7 @@ export async function chatRaporYaz(db: Sorgulayici, depo: Depo, kim: Kisi, firma
   const yz = await yzHazirMi(db);
   const metin = [
     `Mesajdan ${doldu.yazilan} bilgi geldi${doldu.foto ? `, ${doldu.foto} ekipman fotoğrafı rapora geçti` : ""}.`,
+    doldu.dolu.length ? `Raporda dolu olduğu için değişmeyen: ${doldu.dolu.join(", ")}.` : "",
     doldu.fotoBolumuYok ? "Formatta fotoğraf bölümü olmadığı için ekipman fotoğrafları eklenmedi." : "",
     doldu.atlanan.length ? `Biçime uymadığı için yazılmayan: ${doldu.atlanan.join(", ")}.` : "",
     okunacakAd.length ? (yz ? `Yapay zekâ okudu: ${okunacakAd.join(", ")} — değerler boş alanlara girdi (emin olunmayan sarı); kontrol edip kaydedin.`

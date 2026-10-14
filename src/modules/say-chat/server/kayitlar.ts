@@ -1,7 +1,10 @@
 /* S.A.Y CHAT KAYITLARI (524; pkproje §3.10 m.1–12, 18–24; maket 521 maket-saychat.js — reisim 2026-10-13: "onayılıyorum, yap bitir"). Göç 0085.
    · Yer: plan içinde; yalnız PLAN EKİBİNDEKİ kişi, plan kabul / denetimde / tamamlandı iken (m.18). Kayıtlar KİŞİYE ÖZEL (m.2; RLS firma + hesap).
    · Bir kayıt = bir ekipman (m.8): "Plandan seç" — plandaki, kişinin branşına uygun (meslekten), pasif olmayan, raporu yazılmamış, kişinin başka
-     kaydında olmayan ekipman; "Yeni ekle" — branşındaki, rapor formatı yayında tür (kod rapor yazılırken, m.19). Mesaj satırları ve kaydın tanımı
+     kaydında olmayan ekipman; "Yeni ekle" — branşındaki, rapor formatı yayında tür (kod rapor yazılırken, m.19).
+     549 (sunum 546 K1–K2 — reisim 2026-10-14: "plandan seç diyince plandaki ekipmanlar gözükmüyor"): listede plandaki BÜTÜN ekipman; başka branşın
+     ekipmanı ve türü UYARIYLA seçilir (kural uyarıdır, engel değil); kişinin kendi Yeni raporu olan ekipman seçilir — kayıt o raporun boş
+     alanlarına girer (rapor-yaz.ts); başkasının ya da onaya gitmiş raporu olan, pasif, formatı yayında olmayan ekipman nedeniyle görünür, seçilmez. Mesaj satırları ve kaydın tanımı
      (tür ayarı, 523) birlikte saklanır; tanım türün formatıyla denetlenir (ayar değiştiyse kayıt yeniden açılıp gönderilir).
    · Kayıtlar çevrimdışı kuyruktan gelir (m.9; /api/islem, tek seferlik): "saychat.kaydet" (sürüm kilidi — sessiz ezme yok), "saychat.foto" (ekler, ezmez;
      kayıt yoksa fotoğrafla açılır; sürüm önce / sonra döner, kuyruk bekleyen işleri taşır), "saychat.sil". Kayıt cihazın ürettiği kimlikle (cihaz_id).
@@ -20,6 +23,7 @@ import { formatsizTurler } from "../../rapor-format/server/formatlar.ts";
 import {
   ChatFotoGirdisi, EKIPMAN_FOTO_EN_COK, KayitGirdisi, OKUNACAK_FOTO_EN_COK, tanimDenetle, type BaslikSecenegi, type ChatFoto, type ChatTanimi,
 } from "../sema.ts";
+import { planEkipmanDurumu, type PlanEkipmani, type PlanEkipmanDurumu } from "../secim.ts";
 import { chatTuru } from "./ayar.ts";
 import { raporKosullari } from "./rapor-yaz.ts";
 
@@ -41,10 +45,13 @@ export interface SayChatPaneli {
   plan: { id: string; no: string; durum: string; baslangic: string };
   brans: "m" | "e" | null;
   kayitlar: ChatKaydi[];
-  /** seçilebilir plan ekipmanı (kişinin başka kaydındakiler ekranda düşer) */
-  planEkipmani: { id: string; kod: string; turId: string; konum: string | null }[];
-  /** "Yeni ekle" türleri (branşındaki, formatı yayında) */
+  /** 549: plandaki bütün ekipman (kişinin başka kaydındakiler ekranda düşer) — durum: uygun · brans (başka branş, uyarıyla seçilir) · rapor (kişinin
+      Yeni raporu var, kayıt o rapora girer) · kapali (seçilmez; neden yazar) */
+  planEkipmani: PlanEkipmani[];
+  /** "Yeni ekle" türleri (formatı yayında; kişinin branşındakiler önce) */
   yeniTurler: string[];
+  /** 549: kişinin branşı dışındaki türler (uyarıyla seçilir) */
+  bransDisi: string[];
   turler: Record<string, ChatTuru>;
   /** etiketten okuma (m.11): firmada yapay zekâ hazır mı, kişinin bu ayki harcaması / sınırı (metin) */
   yz: { hazir: boolean; kota: string };
@@ -74,14 +81,13 @@ export async function sayChatPaneli(db: Sorgulayici, kim: Kisi, planId: string, 
   const p = await chatKapisi(db, kim, planId);
   if (!p) return null;
   const brans = await personelBransi(db, p.personelId);
-  const raporlu = new Set(p.raporlu), formatsiz = new Set(await formatsizTurler(db));
+  const formatsiz = new Set(await formatsizTurler(db));
   const tumTurler = await turOzetleri(db);
   const kayitlar = (await db.sorgu<KayitDb>(`${SEC} WHERE plan_id = $1 ORDER BY olustu, id`, [planId])).rows;
   const kod = new Map(p.ekipman.map((e) => [e.id, e]));
-  const planEkipmani = p.ekipman.filter((e) => !e.pasif && (!brans || e.brans === brans) && !raporlu.has(e.id) && !formatsiz.has(e.turId))
-    .map((e) => ({ id: e.id, kod: e.kod, turId: e.turId, konum: e.konum }));
-  const yeniTurler = tumTurler.filter((t) => (!brans || t.brans === brans) && !formatsiz.has(t.id)).sort((a, b) => a.ad.localeCompare(b.ad, "tr")).map((t) => t.id);
-  const gerekli = new Set([...planEkipmani.map((e) => e.turId), ...yeniTurler,
+  const yeniTurler = tumTurler.filter((t) => !formatsiz.has(t.id))
+    .sort((a, b) => Number(!!brans && a.brans !== brans) - Number(!!brans && b.brans !== brans) || a.ad.localeCompare(b.ad, "tr")).map((t) => t.id);
+  const gerekli = new Set([...p.ekipman.filter((e) => !formatsiz.has(e.turId)).map((e) => e.turId), ...yeniTurler,
     ...kayitlar.map((k) => k.tur_id ?? (k.ekipman_id ? kod.get(k.ekipman_id)?.turId : null)).filter((x): x is string => !!x)]);
   const turBul = new Map(tumTurler.map((t) => [t.id, t]));
   const turler: Record<string, ChatTuru> = {};
@@ -90,9 +96,15 @@ export async function sayChatPaneli(db: Sorgulayici, kim: Kisi, planId: string, 
     if (t && c) turler[id] = { id, ad: t.ad, kod: t.kod, tanim: c.tanim, surum: c.surum, basliklar: c.basliklar };
   }
   const yz = (await ayarOku(db, "yapay_zeka")).deger, harcanan = await yzKendiAyi(db, yzAyi(simdi));
+  /* sıra: seçilebilir önce (uygun, kendi raporu, başka branş), seçilemeyen sonda; içinde kod sırası (sayChatPlani) */
+  const SIRA: Record<PlanEkipmanDurumu, number> = { uygun: 0, rapor: 1, brans: 2, kapali: 3 };
+  const planEkipmani = p.ekipman.map((e): PlanEkipmani => ({ id: e.id, kod: e.kod, turId: e.turId, konum: e.konum,
+    ...planEkipmanDurumu(e, brans, p.raporlar, !!turler[e.turId]) })).sort((a, b) => SIRA[a.durum] - SIRA[b.durum]);
+  const turBrans = new Map(tumTurler.map((t) => [t.id, t.brans]));
   return {
     plan: { id: p.id, no: p.no, durum: p.durum, baslangic: p.baslangic }, brans,
-    kayitlar: kayitlar.map((k) => kayitGorunumu(k, kod)), planEkipmani: planEkipmani.filter((e) => turler[e.turId]), yeniTurler: yeniTurler.filter((id) => turler[id]), turler,
+    kayitlar: kayitlar.map((k) => kayitGorunumu(k, kod)), planEkipmani, yeniTurler: yeniTurler.filter((id) => turler[id]),
+    bransDisi: brans ? yeniTurler.filter((id) => turler[id] && turBrans.get(id) !== brans) : [], turler,
     yz: { hazir: await yzHazirMi(db), kota: `bu ay ${dolar(harcanan)} / ${sinirli(yz.sinir) ? `${String(yz.sinir).replace(".", ",")} $` : "sınırsız"}` },
     rapor: await raporKosullari(db, p),
   };
@@ -126,21 +138,21 @@ export async function chatKaydet(db: Sorgulayici, kim: Kisi, cihazId: string, su
   if (mevcut && mevcut.plan_id !== p.id) return { durum: "gecersiz", hatalar: { kayit: "Kayıt başka bir plana ait." } };
   if (!mevcut && surum !== 0) return { durum: "yok" };
   if (!mevcut && (await baskasinda(db, cihazId))) return KIMLIK_KULLANILDI;
-  /* ekipman: plandaki uygun ekipman ya da formatı yayında yeni tür */
+  /* ekipman: plandaki ekipman ya da formatı yayında yeni tür — 549: başka branş uyarıdır (ekranda), engel değil; raporu olan yalnız kişinin kendi
+     Yeni raporuysa (kayıt o rapora girer) */
   let ekipmanId: string | null = null, turId: string | null = null;
-  const brans = await personelBransi(db, p.personelId);
   if (g.data.ekipman?.tip === "plan") {
     const id = g.data.ekipman.id, e = p.ekipman.find((x) => x.id === id);
     if (!e || e.pasif) return { durum: "gecersiz", hatalar: { ekipman: "Ekipman bu planda yok ya da pasif." } };
-    if (brans && e.brans !== brans) return { durum: "gecersiz", hatalar: { ekipman: "Bu ekipman sizin branşınızda değil." } };
-    if (p.raporlu.includes(e.id)) return { durum: "gecersiz", hatalar: { ekipman: "Bu ekipmanın raporu yazılmış." } };
+    const d = planEkipmanDurumu(e, null, p.raporlar, true);
+    if (d.durum === "kapali") return { durum: "gecersiz", hatalar: { ekipman: `${e.kod}: ${d.neden}` } };
     if ((await db.sorgu("SELECT 1 FROM say_chat_kayit WHERE ekipman_id = $1 AND cihaz_id <> $2", [e.id, cihazId])).rowCount) {
       return { durum: "gecersiz", hatalar: { ekipman: `${e.kod} başka bir kaydınızda.` } };
     }
     ekipmanId = e.id; turId = e.turId;
   } else if (g.data.ekipman?.tip === "yeni") {
     const t = (await turOzetleri(db)).find((x) => x.id === (g.data.ekipman as { tur: string }).tur);
-    if (!t || (brans && t.brans !== brans)) return { durum: "gecersiz", hatalar: { ekipman: "Bu tür sizin branşınızda değil." } };
+    if (!t) return { durum: "gecersiz", hatalar: { ekipman: "Tür bulunamadı." } };
     turId = t.id;
   }
   /* tanım türün formatıyla (ayar sonradan değişip alan kalktıysa kayıt yeniden açılır) */

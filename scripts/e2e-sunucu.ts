@@ -254,7 +254,23 @@ const yzTaklit = createServer((istek, yanit) => {
       const ekSayisi = bloklar ? bloklar.filter((b) => b.type === "image" || b.type === "document").length : 0;
       const son = (bloklar ? String(bloklar.find((b) => b.type === "text")?.text ?? "").replace(/^[\s\S]*Soru:\n/, "") : String(sonIcerik ?? "")).slice(0, 80);
       /* 384: bağlamda açık raporun özeti varsa söyler (uçtan uca: rapor ekranındaki serbest soru özeti taşıyor mu) */
-      const raporlu = Array.isArray(g.system) && String((g.system[1] as { text?: unknown } | undefined)?.text ?? "").includes("Açık rapor");
+      const baglam = Array.isArray(g.system) ? String((g.system[1] as { text?: unknown } | undefined)?.text ?? "") : "";
+      const raporlu = baglam.includes("Açık rapor");
+      /* 550: rapordayken "<alan adı> alanına <değer> yaz" → haritadaki yer kimliğiyle rapora_yaz aracı (araçlar istekte yoksa ret — taklit denetler) */
+      const yazIstegi = /^(.+?) alanına (.+?) yaz$/.exec(son.trim());
+      if (raporlu && yazIstegi) {
+        const yer = new RegExp(`^- (\\S+) · ${yazIstegi[1].replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} \\(`, "m").exec(baglam)?.[1];
+        const araclar = (g as { tools?: { name?: string }[] }).tools ?? [];
+        if (!yer || !araclar.some((a) => a.name === "rapora_yaz")) {
+          yanit.writeHead(400, { "content-type": "application/json" }).end(JSON.stringify({ type: "error", error: { type: "invalid_request_error", message: "taklit: harita ya da rapora_yaz aracı yok" } }));
+          return;
+        }
+        yanit.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({
+          content: [{ type: "text", text: `**${yazIstegi[1]}** alanına yazdım.` }, { type: "tool_use", id: "taklit_1", name: "rapora_yaz", input: { girisler: [{ yer, deger: yazIstegi[2] }] } }],
+          stop_reason: "tool_use", usage: { input_tokens: 4000, output_tokens: 60 },
+        }));
+        return;
+      }
       yanit.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({
         content: [{ type: "text", text: `Deneme cevabı: “${son}” için menüden Planlar'ı açın.\n- Bu bir taklit cevaptır.${raporlu ? "\n- Raporu okudum." : ""}${ekSayisi ? `\n- ${ekSayisi} eki okudum.` : ""}` }],
         stop_reason: "end_turn", usage: { input_tokens: 2500, output_tokens: 80 },

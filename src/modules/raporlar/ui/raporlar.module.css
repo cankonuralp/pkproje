@@ -143,22 +143,40 @@ input.oku { background: var(--zemin2); border-color: var(--kenar); color: var(--
 
 /* ölçüm tablosu: satır başına bir ölçüm; dar ekranda yalnız tablo kabı yatay kayar */
 /* 452: konumlu — gizli tablo başlığı (caption.gizli, mutlak konum) kabın içinde kalır, sayfayı yana taşırmaz */
-.tabloKap { position: relative; min-width: 0; overflow-x: auto; border: 1px solid var(--kenar); border-radius: var(--r-orta); }
+/* 548 (sunum 546 — reisim 2026-10-14: "tabloyu kenara kaydıramıyorum ve ayrıca kenara kaymasına gerek olacak kadar neden büyük yazılar ekrana
+   sığdırılabilir", "telefonda yana kaydırsın … masa üstünde de ekrana sığcak şekilde olsun, tablo tablodur kart olmaz"): hücre en az 6.5rem ve tek
+   satırlık başlık kalktı — sayı kutusu ~4–5 hane, başlık iki satıra kırılır, birim başlığın altında; masaüstünde 16 sütunluk Pano sigortaları
+   sığar. Yine sığmazsa (telefon, çok sütunlu format) kap yana kayar: İNCE kaydırma çubuğu yalnız burada görünür (540'ta bütün çubuklar gizlendi —
+   fareyle kaydırmanın yolu kalmamıştı; K5), fareyle tutup sürükleyerek de kayar (ui/Bloklar.tsx useSurukleKaydir) */
+.tabloKap {
+  position: relative; min-width: 0; overflow-x: auto; border: 1px solid var(--kenar); border-radius: var(--r-orta);
+  scrollbar-width: thin; scrollbar-color: var(--kenar-alan) transparent;
+}
+.tabloKap::-webkit-scrollbar { display: block; height: 8px; }
+.tabloKap::-webkit-scrollbar-thumb { background: var(--kenar-alan); border-radius: var(--r-tam); }
+.tabloKap::-webkit-scrollbar-track { background: transparent; }
+.tabloKap[data-suruklen] { cursor: grabbing; user-select: none; }
 .olcumTablo { width: 100%; border-collapse: collapse; font-size: var(--boy-kucuk); }
-.olcumTablo th, .olcumTablo td { padding: 6px 8px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--kenar); }
-.olcumTablo th { background: var(--zemin2); color: var(--yazi2); font-weight: 600; white-space: nowrap; }
-.olcumTablo td { min-width: 6.5rem; }
+.olcumTablo th, .olcumTablo td { padding: 5px 4px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--kenar); }
+.olcumTablo th:first-child, .olcumTablo td:first-child { padding-left: 10px; }
+.olcumTablo th {
+  background: var(--zemin2); color: var(--yazi2); font-size: var(--boy-etiket); font-weight: 600; line-height: 1.25; vertical-align: bottom;
+  overflow-wrap: break-word; hyphens: auto;
+}
 .olcumTablo tbody tr:last-child td { border-bottom: 0; }
-.olcumTablo td.satirNo { min-width: 0; padding-top: 14px; color: var(--yazi2); font-variant-numeric: tabular-nums; }
-.olcumTablo td.sonucHucre { min-width: 9rem; }
-.olcumTablo td.islemHucre { min-width: 0; }
+.olcumTablo td.satirNo { padding-top: 12px; color: var(--yazi2); font-variant-numeric: tabular-nums; }
+.olcumTablo td.sonucHucre { min-width: 6rem; }
+/* hücredeki alan dar: sayı ~4–5 hane, yazı biraz geniş, seçim kısa; dolgu az (form .girdi 12 px) */
+.olcumTablo input { min-width: 3.6rem; padding-inline: 6px; font-variant-numeric: tabular-nums; }
+.olcumTablo input.metinHucre { min-width: 7rem; }
+.olcumTablo td.secimHucre { min-width: 4.8rem; }
 /* 488 (reisim 2026-10-11 ekran görüntüsü): 486'daki sağa yapışık işlem sütunu KALKTI — tablo tam sağa kaydırılmadığında Sonuç sütununun üstüne
    biniyordu ("S" / "U" kesik); satırın kopyala işareti de kalktı, yalnız Kaldır (×) satırın sonunda */
 .olcumTablo td.bosHucre { padding: 14px 8px; color: var(--yazi2); text-align: center; }
 /* 486: tablodaki seçim listesi de ÜST KATMANDA yüzer (yuzen.ts) — buradaki eski "akışta açıl" ezmesi (452 öncesinden) listeyi sayfanın başına
    atıyor, odak sayfayı oraya kaydırıyordu (reisim 2026-10-10: "tip seçin kısmına tıklayınca saçma sapan başa atıp"). Yüzen katmanın biçemi
    yalnız Secim.module.css'te (kilit: tests/yuzen-ezme.test.ts) */
-.birim { font-weight: 400; }
+.birim { display: block; font-weight: 400; }
 .sinir { display: block; color: var(--yazi3); font-size: var(--boy-etiket); font-weight: 400; }
 .neden { margin: 4px 0 0; padding-left: 16px; color: var(--hata-yazi); }
 .oneri { display: block; margin-top: 4px; color: var(--yazi2); }

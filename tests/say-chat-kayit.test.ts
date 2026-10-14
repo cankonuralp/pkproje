@@ -3,6 +3,8 @@
    denetçisi yalnız elektrik görür"; reisim 2026-10-04: "yetki her zaman sunucuda; istemciden gelen kimlik ve sürüm yetki vermez"). GERÇEK PostgreSQL,
    iki firma (göç 0085 say_chat_kayit):
    · panel yalnız plan ekibindeki kişiye, plan kabul / denetimde / tamamlandı iken; seçenekler kişinin branşına göre (meslekten);
+     549 (sunum 546 — reisim 2026-10-14: "plandan seç diyince plandaki ekipmanlar gözükmüyor"): listede plandaki BÜTÜN ekipman, durumuyla —
+     başka branş ve kendi Yeni raporu uyarıyla seçilir (kaydet geçer), başkasının / onaya gitmiş raporu olan seçilmez;
    · kayıt kişiye özel: aynı plandaki öteki denetçi, plan açan ve yönetici göremez (RLS), fotoğrafını açamaz; başka firma hiç;
    · kaydet: plan ekipmanı branşa uygun, raporsuz, kişinin başka kaydında değil; yeni tür formatı yayında; tanım türün formatıyla denetlenir;
      sürüm kilidi (çakışma); kayıt yoksa sürüm 0 olmalı (silinmiş kayıt dirilmez);
@@ -81,29 +83,36 @@ after(async () => { await havuz?.end(); await kume?.durdur(); rmSync(klasor, { r
 const girdi = (ekipman: unknown, tanim: unknown, mesaj: string[] = ["Örnek", "-", ""], ek: object = {}) =>
   ({ plan: PLAN, ekipman, mesaj, tanim, tanimSurum: 0, kaldir: [], ...ek });
 
-test("panel: yalnız plan ekibine, plan kabul / denetimde / tamamlandı iken; seçenekler branşa göre", async () => {
+test("panel: yalnız plan ekibine, plan kabul / denetimde / tamamlandı iken; bütün plan ekipmanı, branşınki önce", async () => {
   const e = await ile(A, ELK, (db) => sayChatPaneli(db, ELK, PLAN));
   assert.ok(e);
   assert.equal(e!.brans, "e");
-  assert.deepEqual(e!.planEkipmani.map((x) => x.kod), ["EP-01", "EP-02"]);
-  assert.deepEqual(e!.yeniTurler, [EIT]);
-  assert.ok(e!.turler[EIT]?.tanim.satirlar.length && !e!.turler[KMP]);
+  assert.deepEqual(e!.planEkipmani.map((x) => [x.kod, x.durum]), [["EP-01", "uygun"], ["EP-02", "uygun"], ["KP-01", "brans"]]);
+  assert.equal(e!.planEkipmani[2].neden, "Mekanik branşında — sizin branşınız elektrik.");
+  assert.deepEqual([e!.yeniTurler, e!.bransDisi], [[EIT, KMP], [KMP]]);
+  assert.ok(e!.turler[EIT]?.tanim.satirlar.length && e!.turler[KMP]);
   assert.ok(e!.turler[EIT].basliklar.some(([k]) => k === "linye"), "okunacak başlıklar türün ayarından");
   const m = await ile(A, MAK, (db) => sayChatPaneli(db, MAK, PLAN));
-  assert.deepEqual([m!.brans, m!.planEkipmani.map((x) => x.kod), m!.yeniTurler], ["m", ["KP-01"], [KMP]]);
+  assert.deepEqual([m!.brans, m!.planEkipmani.map((x) => [x.kod, x.durum]), m!.yeniTurler, m!.bransDisi],
+    ["m", [["KP-01", "uygun"], ["EP-01", "brans"], ["EP-02", "brans"]], [KMP, EIT], [EIT]]);
   assert.equal(await ile(A, PLN, (db) => sayChatPaneli(db, PLN, PLAN)), null, "plan açan ekipte değil");
   assert.equal(await ile(A, YON, (db) => sayChatPaneli(db, YON, PLAN)), null, "yönetici ekipte değil");
   assert.equal(await ile(A, ELK, (db) => sayChatPaneli(db, ELK, BEKLEYEN)), null, "kabul bekleyen planda yok");
   assert.equal(await ile(B, YON_B, (db) => sayChatPaneli(db, YON_B, PLAN)), null, "başka firma");
 });
 
-test("kaydet: kişiye özel; branş, raporsuz, tekil ekipman; yeni tür; tanım formatla; sürüm kilidi; silinmiş kayıt dirilmez", async () => {
+test("kaydet: kişiye özel; başka branş uyarıyla geçer, tekil ekipman; yeni tür; tanım formatla; sürüm kilidi; silinmiş kayıt dirilmez", async () => {
   const p = (await ile(A, ELK, (db) => sayChatPaneli(db, ELK, PLAN)))!, tanim = p.turler[EIT].tanim;
   const k1 = randomUUID(), k2 = randomUUID();
   assert.deepEqual(await ile(A, ELK, (db) => chatKaydet(db, ELK, k1, 0, girdi({ tip: "plan", id: E1 }, tanim))), { durum: "tamam", yeniSurum: 0 });
   assert.equal((await ile(A, ELK, (db) => chatKaydet(db, ELK, k2, 0, girdi({ tip: "plan", id: E1 }, tanim)))).durum, "gecersiz", "aynı ekipman başka kayıtta");
-  assert.equal((await ile(A, ELK, (db) => chatKaydet(db, ELK, k2, 0, girdi({ tip: "plan", id: M1 }, tanim)))).durum, "gecersiz", "mekanik ekipman elektrikçiye");
-  assert.equal((await ile(A, ELK, (db) => chatKaydet(db, ELK, k2, 0, girdi({ tip: "yeni", tur: KMP }, tanim)))).durum, "gecersiz", "mekanik tür");
+  /* 549: başka branş engel değil — kaydet geçer (uyarı ekranda); deneme kayıtları silinir */
+  const tanimK = p.turler[KMP].tanim;
+  for (const ekipman of [{ tip: "plan", id: M1 }, { tip: "yeni", tur: KMP }]) {
+    const k = randomUUID();
+    assert.deepEqual(await ile(A, ELK, (db) => chatKaydet(db, ELK, k, 0, girdi(ekipman, tanimK))), { durum: "tamam", yeniSurum: 0 }, JSON.stringify(ekipman));
+    tamam(await ile(A, ELK, (db) => chatSil(db, ELK, k)));
+  }
   const bozuk = { satirlar: [{ ad: "X", alan: "a:olmayan", hazir: "" }], okunacak: [] };
   const b = await ile(A, ELK, (db) => chatKaydet(db, ELK, k2, 0, girdi({ tip: "yeni", tur: EIT }, bozuk)));
   assert.equal(b.durum === "gecersiz" && Object.keys(b.hatalar)[0], "tanim");

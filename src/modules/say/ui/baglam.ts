@@ -47,6 +47,10 @@ export interface SayRaporBagi {
   sonucYap: (x: "uygun" | "uygun_degil") => { var: boolean; sayi: number; geriAl: SayGeriAl };
   /** 542 (K5): S.A.Y'a eklenen fotoğraf rapora okuma fotoğrafı olarak (okunmadan) eklenir — dönen: dosya kimliği ya da neden */
   fotoEkle: (dosya: File, bolum: string) => Promise<{ dosya: string } | { neden: string }>;
+  /** 550: ekranın canlı ekipman bilgisi (raporun haritası için — sunucu Haiku'ya yer kimlikleri ve değerlerle gönderir) */
+  ekipman: () => Record<string, string>;
+  /** 550: Haiku'nun "rapora_yaz" girişleri (raporlar/say-doldur.ts komutlariUygula) — işaretli, dolu alana da; dönen: girilen sayı, yapılamayanlar, geri al */
+  yaz: (girisler: readonly { yer: string; deger: string }[]) => { sayi: number; gecersiz: string[]; geriAl: SayGeriAl };
 }
 
 let bag: SayRaporBagi | null = null;

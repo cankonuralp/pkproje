@@ -25,7 +25,8 @@ export async function raporOnerileri(db: Sorgulayici, raporId: string): Promise<
   for (const x of l) {
     const v = o.find((y) => y.bolum === x.bolum && y.tur === x.tur);
     if (v && Array.isArray(v.okunan) && Array.isArray(x.okunan)) v.okunan = [...v.okunan, ...x.okunan];
-    else if (!v) o.push({ ...x });
+    else if (v) v.okunan = x.okunan;                                     // 549: bilgi şeridi — aynı rapora ikinci kayıt yazılınca en yenisi
+    else o.push({ ...x });
   }
   return o;
 }

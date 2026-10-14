@@ -23,8 +23,9 @@ export type Guven = "yuksek" | "orta" | "dusuk";
 export interface OkunanSatir { degerler: Record<string, string>; guven: Guven }
 export interface OkumaIstegi { govde: Record<string, unknown> }
 /** hata: ucret "yok" = hizmet çağrıyı ücretlendirmedi (hata cevabı, bağlantı kurulamadı) · "bilinmiyor" = model koşmuş olabilir (zaman aşımı) */
-export type OkumaYaniti = { durum: "tamam"; govde: unknown } | { durum: "hata"; neden: string; ucret: "yok" | "bilinmiyor" };
-export type YzCagirici = (istek: OkumaIstegi, anahtar: string) => Promise<OkumaYaniti>;
+export type OkumaYaniti = { durum: "tamam"; govde: unknown } | { durum: "hata"; neden: string; ucret: "yok" | "bilinmiyor"; kod?: number; ileti?: string };
+/** 550: çağıran zaman sınırını verebilir (varsayılan 45 sn — sayfaların işlev süresi 55 / 60 sn: src/app/(uygulama)/layout.tsx) */
+export type YzCagirici = (istek: OkumaIstegi, anahtar: string, zamanMs?: number) => Promise<OkumaYaniti>;
 
 export const MODEL_KIMLIGI: Record<YzModel, string> = { haiku: "claude-haiku-5-5" };
 /** token başına fiyat, milyonda bir doların ONDA BİRİ cinsinden (tam sayı — kayan nokta hatası yok): Haiku 5.5 $0,10 / $0,50 (istem 100 000 tokeni
@@ -134,7 +135,7 @@ export function okumaYanitiCoz(govde: unknown, bolum: BolumOf<"olcum">): { satir
 
 /** Anthropic'e çağrı (yalnız sunucu): anahtar başlıkta, gövdede değil; 45 sn sınır. İleti kullanıcıya gösterilir (anahtar / ayrıntı sızmaz); hizmetin
     reddetme nedeni (tür + ileti, anahtarsız) sunucu günlüğüne yazılır — "biçim ya da boyut" diye sabitlenip gerçek neden gizlenmez. */
-export const anthropicCagir: YzCagirici = async (istek, anahtar) => {
+export const anthropicCagir: YzCagirici = async (istek, anahtar, zamanMs = ZAMAN_SINIRI_MS) => {
   const uc = (process.env.PROBATA_YZ_UC || "https://api.anthropic.com").replace(/\/$/, "");
   let r: Response;
   try {
@@ -142,7 +143,7 @@ export const anthropicCagir: YzCagirici = async (istek, anahtar) => {
       method: "POST",
       headers: { "content-type": "application/json", "x-api-key": anahtar, "anthropic-version": "2023-06-01" },
       body: JSON.stringify(istek.govde),
-      signal: AbortSignal.timeout(ZAMAN_SINIRI_MS),
+      signal: AbortSignal.timeout(zamanMs),
     });
   } catch (h) {
     const ad = (h as { name?: unknown } | null)?.name;
@@ -160,7 +161,8 @@ export const anthropicCagir: YzCagirici = async (istek, anahtar) => {
       : r.status === 400 && /image/i.test(ileti) ? "Fotoğraf okunamadı (biçim ya da boyut)."
       : r.status === 400 ? "Yapay zekâ isteği kabul edilmedi; firma yöneticisine bildirin."
       : "Yapay zekâ hizmeti yanıt vermedi; biraz sonra yeniden deneyin.";
-    return { durum: "hata", neden, ucret: "yok" };
+    /* kod + iletinin ilk kısmı (anahtarsız): çağıran 400'de isteği daraltıp yeniden deneyebilir (S.A.Y internet araması) */
+    return { durum: "hata", neden, ucret: "yok", kod: r.status, ileti: ileti.replace(/sk-ant-[A-Za-z0-9_-]+/g, "sk-ant-…").slice(0, 300) };
   }
   try { return { durum: "tamam", govde: await r.json() }; } catch { return { durum: "hata", neden: "Yapay zekâ yanıtı okunamadı.", ucret: "bilinmiyor" }; }
 };

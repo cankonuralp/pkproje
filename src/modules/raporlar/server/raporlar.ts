@@ -1036,8 +1036,10 @@ export interface ChatDolgusu {
   degerler: { anahtar: string; ad: string; deger: string }[];
   fotolar: { ad: string; bayt: Uint8Array }[];
   okumalar: { bolum: string; ad: string; bayt: Uint8Array }[];
+  /** 549 (sunum 546 K2): var olan Yeni rapora — yalnız boş alanlar yazılır, dolu kalanların adı döner */
+  yalnizBos?: boolean;
 }
-export type ChatDolguSonucu = { durum: "tamam"; yazilan: number; atlanan: string[]; foto: number; fotoBolumuYok: boolean; okuma: { bolum: string; dosya: string }[] }
+export type ChatDolguSonucu = { durum: "tamam"; yazilan: number; atlanan: string[]; dolu: string[]; foto: number; fotoBolumuYok: boolean; okuma: { bolum: string; dosya: string }[] }
   | Exclude<RaporYazma, { durum: "tamam" }>;
 export async function chatRaporuDoldur(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, id: string, p: ChatDolgusu, bugun = new Date()): Promise<ChatDolguSonucu> {
   const e = await yazilabilir(db, kim, id);
@@ -1053,11 +1055,16 @@ export async function chatRaporuDoldur(db: Sorgulayici, depo: Depo, kim: Kisi, f
     if (b.blok === "test") for (const a of testAlanlari(b)) test.set(a.id, a);
   }
   for (const a of ekipmanAlanlari(tanim).alanlar) if (!bilgi.has(a.id)) bilgi.set(a.id, a);
-  const atlanan: string[] = [];
+  const atlanan: string[] = [], dolu: string[] = [];
   let yazilan = 0;
+  const doluMu = (x: unknown) => (typeof x === "string" ? !!x.trim() : x !== undefined && x !== null);
   for (const { anahtar, ad, deger } of p.degerler) {
     if (anahtar === "yorum") { c.yorum = [c.yorum, deger].filter(Boolean).join("\n").slice(0, 4000); yazilan++; continue; }
     const [tur, alanId] = [anahtar.slice(0, 2), anahtar.slice(2)];
+    if (p.yalnizBos) {
+      const simdi = tur === "e:" && alanId in ekipman ? (ekipman as Record<string, unknown>)[alanId] : tur === "d:" ? c.deger[alanId] : c.alan[alanId];
+      if (doluMu(simdi)) { dolu.push(ad); continue; }
+    }
     const a = tur === "e:" || tur === "a:" ? bilgi.get(alanId) : tur === "d:" ? test.get(alanId) : undefined;
     const ekipmanAlani = tur === "e:" && (Object.keys(EkipmanBilgisi.shape) as string[]).includes(alanId);
     const tanimli = a ?? (ekipmanAlani ? { tur: alanId === "imal" ? "yil" as const : "metin" as const, uzun: 120 } : undefined);
@@ -1087,5 +1094,5 @@ export async function chatRaporuDoldur(db: Sorgulayici, depo: Depo, kim: Kisi, f
     const y = await okumaFotografiEkle(db, depo, kim, firmaId, id, o.bolum, { ad: o.ad, bayt: o.bayt });
     if (y.durum === "tamam" && y.dosya) okuma.push({ bolum: o.bolum, dosya: y.dosya });
   }
-  return { durum: "tamam", yazilan, atlanan, foto, fotoBolumuYok: !fotoBolumu && p.fotolar.length > 0, okuma };
+  return { durum: "tamam", yazilan, atlanan, dolu, foto, fotoBolumuYok: !fotoBolumu && p.fotolar.length > 0, okuma };
 }

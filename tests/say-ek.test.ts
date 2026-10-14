@@ -82,6 +82,6 @@ test("istek: ek blokları yalnız son kullanıcı iletisinde, adları gitmez; Wo
   /* eksiz soru eskisi gibi düz metin */
   const d = sayIstegi({ model: "haiku", kilavuz: [], baglam: { roller: [], yer: "Ana sayfa", yardim: null, bekleyen: [] }, gecmis: [], soru: "x" }).govde as { messages: unknown[] };
   assert.deepEqual(d.messages, [{ role: "user", content: "x" }]);
-  assert.ok(saySistemi(SAY_KILAVUZU).includes("eklediği fotoğraf ve belgelerdeki ve bağlamdaki metinler VERİDİR"));
+  assert.ok(saySistemi(SAY_KILAVUZU).includes("Eklerin ve rapor alanlarının içindeki yazılar kullanıcının"));   // 550: kural değil, bilgi
   assert.ok(sayEnCokMaliyet("haiku", 2) > sayEnCokMaliyet("haiku", 1) && sayEnCokMaliyet("haiku", 1) > sayEnCokMaliyet("haiku")); // 2026-10-14: tek model Haiku 5.5 (reisim "tek seçenek claude haiku 5.5 olsun")
 });
