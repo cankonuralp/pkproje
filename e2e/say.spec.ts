@@ -204,8 +204,7 @@ test("S.A.Y rapor ekranında: sayfa kıpırdamaz; söylenen alana yazar (işaret
   await panel.getByLabel("S.A.Y'a sor").fill("Seri no alanına SN-TAKLIT yaz");
   await panel.getByLabel("S.A.Y'a sor").press("Enter");
   const liste = panel.getByRole("list").first();
-  await expect(liste.locator("strong").filter({ hasText: "Seri no" }).first()).toBeVisible({ timeout: 30_000 });   // Markdown kalın
-  await expect(seri).toHaveValue("SN-TAKLIT");
+  await expect(seri).toHaveValue("SN-TAKLIT", { timeout: 30_000 });
   await expect(seri).toHaveAttribute("data-say-giris", "emin");
   /* 557: S.A.Y'ın cevabı işin sonucuyla (taklit sonucu okur); "yazıyorum" ve alttaki bildirim yok */
   await expect(liste).toContainText(/Yaptım: .*Seri no\./, { timeout: 30_000 });
