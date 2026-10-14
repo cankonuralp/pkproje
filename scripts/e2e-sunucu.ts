@@ -259,7 +259,8 @@ const yzTaklit = createServer((istek, yanit) => {
       /* 553: format yapıcıda "<tablo adı> tablosuna <ad> sütunu ekle, formül <formül>" → haritadaki bölüm kimliğiyle formati_duzenle (araç / harita yoksa ret) */
       const formatIstegi = /^(.+?) tablosuna (\S+) sütunu ekle, formül (.+)$/.exec(son.trim());
       if (formatIstegi) {
-        const bolum = new RegExp(`^## (\\S+) · ölçüm tablosu · ${formatIstegi[1].replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "m").exec(baglam)?.[1];
+        /* Bakanlık bölümünün satırı " (Bakanlık bölümü)" ile biter (say-kurucu.ts formatHaritasi) */
+        const bolum = new RegExp(`^## (\\S+) · ölçüm tablosu · ${formatIstegi[1].replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?: \\(Bakanlık bölümü\\))?$`, "m").exec(baglam)?.[1];
         const araclar = (g as { tools?: { name?: string }[] }).tools ?? [];
         if (!baglam.includes("Açık format taslağı") || !bolum || !araclar.some((a) => a.name === "formati_duzenle")) {
           yanit.writeHead(400, { "content-type": "application/json" }).end(JSON.stringify({ type: "error", error: { type: "invalid_request_error", message: "taklit: format haritası ya da formati_duzenle aracı yok" } }));
