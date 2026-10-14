@@ -7,7 +7,9 @@
    550 (sunum 546 — reisim 2026-10-14: "S.A.Y. de herhangi bir kısıt kural vb olmasını istemiyorum … aynı claud kullanır gibi", "öneri soruları olarak
    sadece fotoğrafları oku ve gir kalsın başka bir şey olmasın", "say asistan veya chat açıldığında tüm sayfa kayıyor"): tek hazır tuş (rapor dışında
    kapalı), her soru Haiku'ya; cevap Markdown (madde listesi, kalın); yazı kutusu çok satırlı (Shift+Enter yeni satır, Enter gönderir); panel
-   açılınca sayfa kıpırdamaz, Kaydet örtülmez; rapordayken "… alanına … yaz" alana yazar (işaretli), Geri al döndürür. */
+   açılınca sayfa kıpırdamaz, Kaydet örtülmez; rapordayken "… alanına … yaz" alana yazar (işaretli), Geri al döndürür.
+   555 (reisim 2026-10-14: "bu ve benzeri tüm saçma açıklamaları kaldır"): panelde açıklama yazısı yok — boş sohbet boş, alt yazı yalnız model adı,
+   hazır tuş yalnız rapordayken görünür. */
 import { expect, test } from "@playwright/test";
 import { E2E_KAPI, E2E_PAROLA, E2E_YZ } from "./hesaplar";
 import { bolumleriAc, girisli, hazir } from "./yardimci";
@@ -37,9 +39,12 @@ test("S.A.Y: düğme, hızlı soru, serbest soru, sayfa değişince ve yenileyin
     await temizle.click();
     await page.getByRole("dialog", { name: "Sohbeti temizle" }).getByRole("button", { name: "Temizle" }).click();
   }
-  await expect(panel.getByText("Merhaba! Her konuda sorabilirsiniz.")).toBeVisible();
-  /* 550: tek hazır tuş, rapor dışında kapalı; eski hazır sorular yok */
-  await expect(panel.getByRole("button", { name: "Fotoğrafları oku ve gir" })).toBeDisabled();
+  /* 555: boş sohbette açıklama yok; alt yazı yalnız model adı */
+  await expect(panel.getByRole("listitem")).toHaveCount(0);
+  await expect(panel.getByText("Claude Haiku 5.5", { exact: true })).toBeVisible();
+  for (const metin of ["Merhaba", "Her konuda", "Sohbeti yalnız siz görürsünüz", "Ekler en çok", "Bu rapordayım", "ne yazayım"]) await expect(panel).not.toContainText(metin);
+  /* 550 + 555: tek hazır tuş, rapor dışında yok; eski hazır sorular yok */
+  await expect(panel.getByRole("button", { name: "Fotoğrafları oku ve gir" })).toHaveCount(0);
   for (const ad of ["Beni ne bekliyor?", "Bu sayfada ne yapılır?", "Eksik alanlar neler?", "Sonuç ne olmalı?", "Maddeleri uygun işaretle"]) {
     await expect(panel.getByRole("button", { name: ad })).toHaveCount(0);
   }
@@ -87,7 +92,6 @@ test("S.A.Y: düğme, hızlı soru, serbest soru, sayfa değişince ve yenileyin
   await expect(liste).toContainText("1 eki okudum.");
   await expect(liste.getByRole("listitem").filter({ hasText: "Bu etikette ne yazıyor?" }).first()).toContainText("etiket.png");
   await expect(panel.getByRole("list", { name: "Ekler" })).toHaveCount(1, { timeout: 5_000 });   // yalnız gönderilen sorudaki
-  await expect(panel.getByText("Ekler en çok 4 MB", { exact: false })).toBeVisible();   // 542: uzun açıklama kısaldı (reisim: "küçük açıklamalar olmasın")
   expect(await page.evaluate(TASMA), "yana taşma yok").toBe(true);
 
   /* başka sayfaya geçince panel açık, geçmiş duruyor; yeni yer ayracı */
@@ -127,7 +131,7 @@ test("S.A.Y: düğme, hızlı soru, serbest soru, sayfa değişince ve yenileyin
   await panel.getByRole("button", { name: "Sohbeti temizle" }).click();
   await onay.getByRole("button", { name: "Temizle" }).click();
   await expect(page.getByText("Sohbet temizlendi.").first()).toBeVisible();
-  await expect(panel.getByText("Merhaba! Her konuda sorabilirsiniz.")).toBeVisible();
+  await expect(panel.getByRole("listitem")).toHaveCount(0);
   await expect(panel).not.toContainText("Deneme cevabı:");
 });
 
@@ -177,7 +181,7 @@ test("S.A.Y rapor ekranında: sayfa kıpırdamaz; söylenen alana yazar (işaret
     const ustte = await kaydet.evaluate((e) => { const r = e.getBoundingClientRect(); const u = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return !!u && (u === e || e.contains(u)); });
     expect(ustte, "Kaydet panelin altında kalmadı").toBe(true);
   }
-  await expect(panel.getByText("Bu rapordayım · ne yazayım?")).toBeVisible();
+  await expect(panel).not.toContainText("Bu rapordayım");   // 555: açıklama yok
   await expect(panel.getByRole("button", { name: "Fotoğrafları oku ve gir" })).toBeEnabled();
   for (const ad of ["Maddeleri uygun işaretle", "Eksik alanlar neler?", "Sonuç ne olmalı?"]) await expect(panel.getByRole("button", { name: ad })).toHaveCount(0);
 
@@ -231,7 +235,8 @@ test("S.A.Y format yapıcıda: konuşarak sütun + formül ekler, Geri al; form�
   const panel = page.getByRole("dialog", { name: "S.A.Y" });
   await expect(panel.or(fab)).toBeVisible({ timeout: 30_000 });
   if (!(await panel.isVisible())) await fab.click();
-  await expect(panel.getByText("Format yapıcıdayım · ne ekleyeyim?")).toBeVisible();
+  await expect(panel).not.toContainText("Format yapıcıdayım");   // 555: açıklama yok
+  await expect(panel.getByRole("button", { name: "Fotoğrafları oku ve gir" })).toHaveCount(0);
   await panel.getByLabel("S.A.Y'a sor").fill("Pano sigortaları (linye) tablosuna Deneme sütunu ekle, formül Ib × 2");
   await panel.getByLabel("S.A.Y'a sor").press("Enter");
   await expect(page.getByText("Format taslağında:", { exact: false }).first()).toBeVisible({ timeout: 30_000 });

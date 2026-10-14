@@ -42,12 +42,11 @@ export function Parcalar({ t, kitaplik, tutulan, tut, sil }: {
   return (
     <aside className={stil.yan} aria-label="Parçalar">
       <h2 className={stil.baslik}><Ikon ad="puzzle" kucuk />Parçalar</h2>
-      <p className={stil.not}>Kâğıda sürükleyin ya da basıp yerini seçin (Esc bırakır).</p>
       {gruplar.filter((g) => !g.katlanir).map((g) => (
         <div key={g.ad} className={stil.grup} role="group" aria-label={g.ad}>
           <span className={stil.grupAd}>{g.firma && <Ikon ad="bookmark-plus" kucuk />}{g.ad}</span>
           {g.firma && !g.parcalar.length
-            ? <p className={stil.not}>Henüz yok. Kâğıtta bir bölüme basın, sağda “Parça olarak kaydet” — bütün formatlarınızda burada çıkar.</p>
+            ? <p className={stil.not}>Henüz yok.</p>
             : liste(g)}
         </div>
       ))}
@@ -77,7 +76,7 @@ export function SeciliBolum({ t, secili, kopyala, sil, parcaKaydet }: {
     return (
       <aside className={stil.yan} aria-label="Seçili bölüm">
         <h2 className={stil.baslik}>Seçili bölüm</h2>
-        <p className={stil.not}>Kâğıtta bir bölüme basın; özeti ve tuşları burada açılır. Adları, maddeleri, sütunları kâğıtta yerinde yazın.</p>
+        <p className={stil.not}>Bölüm seçilmedi.</p>
       </aside>
     );
   }
@@ -94,8 +93,6 @@ export function SeciliBolum({ t, secili, kopyala, sil, parcaKaydet }: {
         {parcaKaydet && parcaOlur(b) && <Tus tur="ikincil" ikon="bookmark-plus" onClick={() => parcaKaydet(i)}>Parça olarak kaydet</Tus>}
         {!tam && b.blok !== "cihaz" && <Tus tur="tehlike" ikon="trash-2" onClick={() => sil(i)}>Sil</Tus>}
       </div>
-      <p className={stil.not}>{tam ? "Ekipman bilgileri bölümü kâğıttaki çöp kutusuyla kaldırılır, geri eklenir."
-        : "Bölümün ayarları kâğıtta şeritteki ayar tuşunda; öğenin ayrıntıları öğenin ayar tuşunda."}</p>
     </aside>
   );
 }

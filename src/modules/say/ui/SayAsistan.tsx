@@ -460,7 +460,7 @@ export function SayAsistan() {
             <span className={stil.avatar}><Ikon ad="sparkles" /></span>
             <div className={stil.kimlik}>
               <h2 id="say-baslik">S.A.Y</h2>
-              <p className={stil.altYazi}>{raporda ? "Bu rapordayım · ne yazayım?" : fb ? "Format yapıcıdayım · ne ekleyeyim?" : "Claude Haiku 5.5 · her konuda sorun"}</p>
+              <p className={stil.altYazi}>Claude Haiku 5.5</p>
             </div>
             {!!iletiler?.length && (
               <button className={stil.basTus} type="button" onClick={() => void temizle()} aria-label="Sohbeti temizle" title="Sohbeti temizle"><Ikon ad="trash-2" /></button>
@@ -471,12 +471,6 @@ export function SayAsistan() {
             {!bagli && <Serit tur="uyari" ikon="wifi-off">Bağlantı yok: S.A.Y bağlantı gelince çalışır.{raporda ? " Raporu yazmaya devam edebilirsiniz." : ""}</Serit>}
             {bagli && !durum.anahtar && <Serit tur="uyari" ikon="key-round">API anahtarı girilmedi (Firma ayarları › Yapay zekâ): S.A.Y cevap veremez.</Serit>}
             {hazir && durum.sinirDoldu && <Serit tur="uyari" ikon="triangle-alert">Bu ay kişi başı sınırınız doldu; yönetici Firma ayarları&apos;ndan artırabilir.</Serit>}
-            {iletiler && !iletiler.length && (
-              <p className={stil.bos}>{raporda
-                ? "Rapora ne yazmamı istediğinizi yazın (ör. “1–3. satırların Icu değerine 6 gir”) ya da fotoğrafı bölümüne ekleyip “Fotoğrafları oku ve gir” deyin. Kaydetmek sizde."
-                : fb ? "Formata ne eklememi istediğinizi yazın (ör. “Pano sigortaları tablosuna RCa sütunu ekle, formülü 480 / RCd”). Değişiklik taslakta; Kaydet ve Yayınla sizde."
-                : "Merhaba! Her konuda sorabilirsiniz."}</p>
-            )}
             <ol className={stil.liste} aria-live="polite" aria-busy={bekliyor || !iletiler || undefined}>
               {(iletiler ?? []).map((m, i, l) => (
                 <IletiYeri key={m.id} m={m} onceki={l[i - 1]} rb={rb} git={git} uygula={uygula} vazgec={vazgec}
@@ -498,10 +492,11 @@ export function SayAsistan() {
             {hata && <Serit tur="hata" ikon="circle-alert">{hata}</Serit>}
           </div>
           <div className={stil.alt}>
-            <div className={stil.hizli}>
-              <button className={stil.cip} type="button" disabled={!hazir || bekliyor || !raporda} title={raporda ? undefined : "Bir rapor açıkken çalışır"}
-                onClick={() => void islemYap("oku", OKU)}>{OKU}</button>
-            </div>
+            {raporda && (
+              <div className={stil.hizli}>
+                <button className={stil.cip} type="button" disabled={!hazir || bekliyor} onClick={() => void islemYap("oku", OKU)}>{OKU}</button>
+              </div>
+            )}
             {!!ekler.length && <EkListesi ekler={ekler} cikar={ekCikar} />}
             <form className={stil.yaz} onSubmit={(e) => void gonder(e)}>
               <div className={stil.ek} data-say-ek="">
@@ -520,11 +515,10 @@ export function SayAsistan() {
               </div>
               <label className={stil.gizli} htmlFor="say-girdi">S.A.Y&apos;a sor</label>
               <textarea ref={girdi} className={stil.girdi} id="say-girdi" autoComplete="off" rows={1} maxLength={SORU_EN_COK}
-                placeholder={raporda ? "Ne yazayım? Ya da sorun" : "S.A.Y'a sorun"} value={soru} disabled={!hazir}
+                placeholder="S.A.Y'a yazın" value={soru} disabled={!hazir}
                 onChange={(e) => { setSoru(e.target.value); boyla(e.target); }} onKeyDown={tusla} />
               <button className={stil.gonder} type="submit" aria-label="Gönder" disabled={!hazir || bekliyor}><Ikon ad="send" /></button>
             </form>
-            <p className={stil.not}>Sohbeti yalnız siz görürsünüz. Ekler en çok 4 MB.</p>
           </div>
         </aside>
       )}

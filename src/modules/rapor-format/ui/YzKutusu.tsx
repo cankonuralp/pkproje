@@ -40,7 +40,7 @@ export function YzKutusu({ t, yz, mesgul, cevap, oneriler, oner, uygula, vazgec,
       <form className={stil.yzForm} onSubmit={(e) => { e.preventDefault(); gonder(metin); }}>
         <label className="gizli" htmlFor="kb-yz">Yapay zekâya anlatın</label>
         <input id="kb-yz" className={stil.yzGirdi} value={metin} maxLength={500} autoComplete="off" disabled={mesgul}
-          placeholder="Yapay zekâya anlatın: “zincir uzaması için ölçüm tablosu ekle, sınır %3”" onChange={(e) => setMetin(e.target.value)} />
+          placeholder="Yapay zekâya anlatın" onChange={(e) => setMetin(e.target.value)} />
         <Tus type="submit" ikon="sparkles" disabled={mesgul || !metin.trim()} aria-busy={mesgul || undefined}>{mesgul ? "Düşünüyor…" : "Öner"}</Tus>
         {belgeden && <>
           <Tus tur="ikincil" ikon="scan-text" disabled={mesgul} onClick={() => dosya.current?.click()}>Belgeden başlat…</Tus>
@@ -49,7 +49,6 @@ export function YzKutusu({ t, yz, mesgul, cevap, oneriler, oner, uygula, vazgec,
             onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) belgeden(f); }} />
         </>}
       </form>
-      {belgeden && <p className={stil.not}>Belgeden başlat: firmanızın kendi rapor formatı (PDF, Word, fotoğraf; en çok 4 MB) — bölümleri öneri olarak çıkar; belge saklanmaz.</p>}
       <div className={stil.ornekler} role="group" aria-label="Örnek istekler">
         {ORNEKLER.map((x) => <button key={x} type="button" className={stil.ornek} disabled={mesgul} onClick={() => { setMetin(x); gonder(x); }}>{x}</button>)}
       </div>

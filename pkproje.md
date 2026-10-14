@@ -2483,6 +2483,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-14 (555): **AÇIKLAMA YAZILARI KALKTI** (reisim, S.A.Y paneli ekran görüntüsüyle: *"bu ve benzeri tüm saçma açıklamaları kaldır, formül kısmı
+  için nerede ne yaptın anlat"*). S.A.Y: alt yazı yalnız "Claude Haiku 5.5" ("Bu rapordayım · ne yazayım?" / "Format yapıcıdayım …" yok), boş sohbet
+  boş (örnekli açıklama paragrafı yok), "Sohbeti yalnız siz görürsünüz. Ekler en çok 4 MB." yok, yazı kutusunda "S.A.Y'a yazın"; "Fotoğrafları oku ve
+  gir" yalnız rapordayken görünür (rapor dışında kapalı tuş + ipucu yerine). S.A.Y Chat: boş kayıt listesinde yönerge yok, alt yazı yalnız plan no,
+  ekipman seçiminde "Plana yeni ekipman için …" / "rapor yazılırken plana eklenir" ve rapor sonucundaki "Okunan değerler …" cümlesi yok. Format
+  yapıcı: formül alanının etiketi "Formül" (uzun örnekli ipucu yok), Parçalar / Seçili bölüm kutularındaki yönergeler, "Belgeden başlat: …" notu ve
+  uzun yer tutucu kısaldı; ekipman / kayıt alanında tek cümle. Uyarılar (Bakanlık maddesi, bağlantı, sınır) duruyor. Uçtan uca S.A.Y testi: panelde
+  açıklama yazısı yok kilidi.
 - 2026-10-14 (554): **552–553 YAYINDA** — main 9fe0e37 (göç yok; 91 göç). Deneme makinesi ilk koşuda masaüstü 3'te yalnız yeni uçtan uca test düştü
   (taklit yapay zekâ Bakanlık bölümünün harita satırındaki " (Bakanlık bölümü)" ekini beklemiyordu — 9fe0e37); ikinci koşu 13 / 13 (veritabanlı 758
   test, format yapıcıda S.A.Y testi geçti). Canlı sağlık tamam, duman 11/11, hata kaydı yok. Hata listesi m85.

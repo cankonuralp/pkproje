@@ -434,9 +434,7 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
               </div>
             )}
           </>
-        ) : (
-          <p className={stil.bosMetin}>Her ekipman için: fotoğraf ekleyin, ekipmanı seçin, bilgileri satır satır yazın. İnternet yoksa kayıt cihazda bekler.</p>
-        )}
+        ) : null}
       </div>
       <div className={stil.altP}>
         <div className={stil.yeni}>
@@ -565,7 +563,7 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
         <p className={stil.ara}>{veri.plan.no} · {hazirlar.length} kayıt</p>
         {olusanlar.length > 0 && (
           <div className={stil.sonuc} id="sc-rapor-sonuc" tabIndex={-1} role="status">
-            <p><b>{olusanlar.length} rapor taslağı oluştu.</b> Okunan değerler raporu açınca boş alanlara girer.</p>
+            <p><b>{olusanlar.length} rapor taslağı oluştu.</b></p>
             <ul>{olusanlar.map(([k, x]) => <li key={k}><span>{x.rapor!.no}{x.okunan ? ` · ${x.okunan} değer okundu` : ""}</span><TusBaglanti href={`/raporlar/${x.rapor!.id}`} ikon="arrow-right">Raporu aç</TusBaglanti></li>)}</ul>
           </div>
         )}
@@ -644,7 +642,7 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
             <span className={stil.avatar}><Ikon ad="message-square-text" /></span>
             <div className={stil.kimlik}>
               <h2 id="sc-baslik">S.A.Y Chat</h2>
-              <p className={stil.altYazi}>{veri.plan.no} · sahadaki kayıtlarınız</p>
+              <p className={stil.altYazi}>{veri.plan.no}</p>
             </div>
             <button className={stil.basTus} type="button" onClick={kapat} aria-label="S.A.Y Chat'i kapat"><Ikon ad="x" /></button>
           </div>
@@ -673,13 +671,13 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
                   {e.neden && <span className={e.durum === "kapali" ? stil.secenekNeden : stil.secenekUyari}>{e.neden}</span>}</button></li>
               ))}
             </ul>
-          ) : <p className={stil.not}>{ara ? "Aramaya uyan ekipman yok." : "Planda ekipman yok."} Plana yeni ekipman için “Yeni ekle”.</p>
+          ) : <p className={stil.not}>{ara ? "Aramaya uyan ekipman yok." : "Planda ekipman yok."}</p>
         ) : (
           yeniSecenek.length ? (
             <ul className={stil.secenekler}>
               {yeniSecenek.map((id) => (
                 <li key={id}><button type="button" className={stil.secenek} onClick={() => ekipmanSec({ tip: "yeni", tur: id })}>
-                  <b>{turAd(id)}</b><small>{veri.turler[id]?.kod} · rapor yazılırken plana eklenir</small>
+                  <b>{turAd(id)}</b><small>{veri.turler[id]?.kod}</small>
                   {veri.bransDisi.includes(id) && <span className={stil.secenekUyari}>Sizin branşınız dışında.</span>}</button></li>
               ))}
             </ul>

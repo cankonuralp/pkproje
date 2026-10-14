@@ -55,8 +55,7 @@ export function OgeDuzenleyici({ t, i, b, id, degis }: { t: FormatTanimi; i: num
     const a = b.alanlar.find((x) => x.id === id);
     if (!a) return null;
     if (a.kaynak || a.ekipman) {
-      return <p className={stil.satir}>{a.ekipman ? "Ekipman kaydına bağlı alan: denetçi sahada yazar, değeri ekipman kaydından başlar; yalnız adı değişir, çıkarılabilir."
-        : "Kayıttan gelen alan: yalnız adı değişir."}</p>;
+      return <p className={stil.satir}>{a.ekipman ? "Ekipman kaydına bağlı alan." : "Kayıttan gelen alan."}</p>;
     }
     const secmeli = a.tur === "secim" || a.tur === "coklu";
     return (
@@ -161,16 +160,14 @@ function FormulAlani({ k, deger, adlar, kendi, yaz, tablo = false }: {
   const digerleri = adlar.filter((x) => x.trim().toLocaleLowerCase("tr") !== kendi.trim().toLocaleLowerCase("tr"));
   return (
     <div className={stil.formul}>
-      <Alan id={id} etiket="Formül (isteğe bağlı — doluysa sahada kendiliğinden hesaplanır)" genis hata={hata ?? undefined}
-        sonuc={!hata ? (tablo ? "Aynı satırın sayı sütunlarıyla; örn. RCa = 480 / RCd ya da ([İlk kalınlık] − [Ölçülen]) / [İlk kalınlık] × 100 (boşluklu ad köşeli parantezle)"
-          : "Formatın sayı alanları ve test değerleriyle; örn. 1,25 × Kapasite ya da 1,25 × [Test yükü] (boşluklu ad köşeli parantezle)") : undefined}>
+      <Alan id={id} etiket="Formül" genis hata={hata ?? undefined}>
         <Girdi id={id} value={metin} maxLength={FORMUL_EN_UZUN} hata={!!hata} mesajli spellCheck={false} autoComplete="off"
           onChange={(e) => setTaslak(e.target.value)} onBlur={() => { if (taslak === null) return; yaz({ formul: taslak }); setTaslak(null); }} />
       </Alan>
       <div className={stil.formulAdlar} role="group" aria-label="Formüle ekle">
         {digerleri.map((x) => <button key={`a-${x}`} type="button" className={stil.formulTus} onClick={() => ekle(`[${x}]`)}>{x}</button>)}
         {["+", "−", "×", "÷", "(", ")"].map((o) => <button key={`o-${o}`} type="button" className={stil.formulTus} aria-label={`Formüle ekle: ${o}`} onClick={() => ekle(o)}>{o}</button>)}
-        {!digerleri.length && <span className={stil.satir}>{tablo ? "Tabloda başka sayı sütunu yok — önce bir sayı sütunu ekleyin." : "Formatta başka sayı alanı ya da test değeri yok."}</span>}
+        {!digerleri.length && <span className={stil.satir}>{tablo ? "Başka sayı sütunu yok." : "Başka sayı alanı yok."}</span>}
       </div>
     </div>
   );
