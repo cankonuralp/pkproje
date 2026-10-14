@@ -36,7 +36,7 @@ export function formatHaritasi(t: FormatTanimi): string {
       l.push(`  cevaplar: ${b.cevaplar.join(" / ")}`);
       for (const g of b.gruplar) {
         l.push(`  grup ${g.id} · ${g.ad || "(adsız)"}`);
-        for (const m of g.maddeler) l.push(`- ${m.id} · ${m.metin.slice(0, 160)}`);
+        for (const m of g.maddeler) l.push(`- ${m.id} · ${m.metin.slice(0, 160)}${m.formul ? ` · formül ${m.formul}` : ""}`);
       }
     }
   }
@@ -74,7 +74,8 @@ function ogeBul(b: Bolum, x: unknown): string | null {
 }
 /** öğenin (kaydedilmiş biçimdeki) formülü */
 const formulOf = (b: Bolum, id: string): string | undefined => (b.blok === "olcum" ? b.sutunlar.find((x) => x.id === id)?.formul
-  : b.blok === "test" ? b.degerler.find((x) => x.id === id)?.formul : b.blok === "bilgi" ? b.alanlar.find((x) => x.id === id)?.formul : undefined);
+  : b.blok === "test" ? b.degerler.find((x) => x.id === id)?.formul : b.blok === "bilgi" ? b.alanlar.find((x) => x.id === id)?.formul
+  : b.blok === "liste" ? b.gruplar.flatMap((g) => g.maddeler).find((x) => x.id === id)?.formul : undefined);
 /** işlemin öğe yaması (yalnız verilen alanlar) */
 function yama(x: FormatIslemi): OgeYamasi {
   const y: OgeYamasi = {};
@@ -88,7 +89,7 @@ function yama(x: FormatIslemi): OgeYamasi {
   if (typeof x.sinir === "number" && Number.isFinite(x.sinir)) y.sinir = x.sinir;
   else if (typeof x.sinir === "string" && Number.isFinite(Number.parseFloat(x.sinir.replace(",", ".")))) y.sinir = Number.parseFloat(x.sinir.replace(",", "."));
   if (typeof x.zorunlu === "boolean") y.zorunlu = x.zorunlu;
-  /* formül yazılan öğe sayıdır */
+  /* türü verilmeyen formüllü öğe sayı açılır (556: formül her türde; tür verilirse o) */
   if (y.formul && !y.tur) y.tur = "sayi";
   return y;
 }

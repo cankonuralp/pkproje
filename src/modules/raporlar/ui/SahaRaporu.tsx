@@ -45,7 +45,7 @@ import { raporDuzeni, sabitEkipmanAlanlari } from "../../../format/duzen";
 import { degerlendir } from "../../../format/motor";
 import { doldurma, EKIPMAN_ALAN_ADI, KUNYE_ALAN_ADI, KUNYE_ALANLARI, KUNYE_EN_COK, type Cevaplar, type KunyeAlani } from "../../../format/tanim";
 import { gecerliKunye, kayitKunyesi, kilitliKunye, metotMetni } from "../../../format/kunye";
-import { formulUygula } from "../../../format/formul";
+import { formulDegeri, formulluAlan, formulUygula, type FormulEki } from "../../../format/formul";
 import { satirAnahtari } from "../../../format/motor";
 import { fotografiKucult } from "../../../components/foto/kucult";
 import { ekipmanAlanlari, ekipmanAnahtari } from "../doldur";
@@ -57,7 +57,7 @@ import { ayEkle, RAPOR_DURUM, type EkipmanBilgisi, type RaporDurumu, type RaporT
 import { cevaplariTamamla } from "../ornek";
 import type { SahaRaporu as SahaRaporuVerisi } from "../server/raporlar";
 import {
-  alanId, BilgiAlani, BilgiBlok, FormatBolumu, OkuGirdi, RaporBolumu, Satir, Satirlar, TarihKutusu, type Baglam, type Kaynak,
+  alanId, BilgiAlani, BilgiBlok, FormatBolumu, HesapGirdi, OkuGirdi, RaporBolumu, Satir, Satirlar, TarihKutusu, type Baglam, type Kaynak,
 } from "./Bloklar";
 import { BaslikTusu, useBolumAc } from "./BaslikYuvasi";
 import { CihazBolumu } from "./CihazBolumu";
@@ -292,11 +292,13 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
     if (x === (kayit[a] ?? "")) delete k[a]; else k[a] = x;
     return { ...c, kunye: k };
   });
-  /* 495: formüllerin değeri (motorla aynı; kaydedilmez) */
-  const hesapli = useMemo(() => formulUygula(v.tanim, cevaplar), [v.tanim, cevaplar]);
+  /* 495 → 556: formüllerin değeri (motor ve belgeyle aynı; kaydedilmez) — formül kayıttan gelen ve ekipman bilgisini de okur */
+  const formulEki: FormulEki = { kaynak: kaynaklar, ekipman };
+  const hesapli = formulUygula(v.tanim, cevaplar, formulEki);
   const bag: Baglam = {
-    v, c: cevaplar, h: hesapli, yaz, d, oku, gecersiz, kaynak: (k) => kaynaklar[k], okumaKipi: denemede ? "deneme" : oku || yeni ? null : "ekle", deneme: denemede, islem: { mesgul, baslat, yenile },
-    ekipmanAlani: (a) => (a.ekipman ? metinSatiri(a.ekipman, a.ad, EN[a.ekipman], a.ekipman === "imal") : null),
+    v, c: cevaplar, h: hesapli, hesap: (yer) => formulDegeri(v.tanim, cevaplar, yer, formulEki),
+    yaz, d, oku, gecersiz, kaynak: (k) => kaynaklar[k], okumaKipi: denemede ? "deneme" : oku || yeni ? null : "ekle", deneme: denemede, islem: { mesgul, baslat, yenile },
+    ekipmanAlani: (a) => (a.ekipman ? metinSatiri(a.ekipman, a.ad, EN[a.ekipman], a.ekipman === "imal", formulluAlan(a) ? a.id : undefined) : null),
     cihaz: (bolumId) => <CihazBolumu v={v} bolumId={bolumId} oku={oku || !!yeni || denemede} gecersiz={gecersiz} mesgul={mesgul} baslat={baslat} yenile={yenile} />,
     foto: (bolumId, madde) => (denemede
       ? <DenemeFoto key={`${bolumId}-${madde ?? ""}`} madde={!!madde} adet={denemeFoto.filter((f) => f.bolum === bolumId && f.madde === madde).length}
@@ -707,11 +709,17 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
   }, [oku, yeni, denemede, v.id, v.no, v.tanim, v.cihazlar, hedefler]);
 
   /* ── alan çizicileri ── */
-  const metinSatiri = (k: EkipmanAnahtari, etiket: string, en: number, sayisal = false) => {
+  /** formulAlan (556): formatın formüllü ekipman bilgisi — ekipman bilgisi boşken formülün değeri görünür, yazılan ekipman bilgisine gider */
+  const metinSatiri = (k: EkipmanAnahtari, etiket: string, en: number, sayisal = false, formulAlan?: string) => {
     const id = EID(k), h = alanHata[`ekipman.${k}`];
+    const hesap = formulAlan !== undefined && typeof hesapli.alan[formulAlan] === "string" ? hesapli.alan[formulAlan] as string : "";
+    const saf = () => (formulAlan === undefined ? null : formulDegeri(v.tanim, cevaplar, { tur: "alan", id: formulAlan }, { ...formulEki, ekipman: { ...ekipman, [k]: "" } }));
     return (
       <Satir key={id} etiket={etiket} htmlFor={id}>
-        {oku ? <OkuGirdi id={id} deger={ekipman[k]} /> : <Girdi id={id} value={ekipman[k]} maxLength={en} inputMode={sayisal ? "numeric" : undefined} hata={!!h}
+        {oku ? <OkuGirdi id={id} deger={ekipman[k] || hesap} />
+          : formulAlan !== undefined ? <HesapGirdi id={id} deger={ekipman[k] || hesap} saf={saf} yaz={(x) => ekipmanYaz(k, x ?? "")} maxLength={en}
+            inputMode={sayisal ? "numeric" : undefined} hata={!!h} />
+          : <Girdi id={id} value={ekipman[k]} maxLength={en} inputMode={sayisal ? "numeric" : undefined} hata={!!h}
           onChange={(e) => ekipmanYaz(k, e.target.value)} />}
         {h && <p className={stil.alanHata} id={ipucuId(id)}>{h}</p>}
       </Satir>

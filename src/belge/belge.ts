@@ -62,21 +62,27 @@ const kutu = (...icerik: ReactNode[]) => h("p", { className: "rb-kutu-metin" }, 
 const baslikSatiri = (...l: string[]) => h("thead", null, h("tr", null, ...l.map((x, i) => h("th", { key: i, className: "rb-ab" }, x))));
 
 export function raporBelgesi(v: BelgeVerisi): ReactNode {
-  /* 495: formüllü öğelerin değeri basılır (kaydedilen cevaplarda yok — motorla aynı işlev) */
-  const t = v.tanim, c = formulUygula(t, v.cevaplar);
+  const t = v.tanim;
   /* sayılar raporun kendi listesinden (saha ekranı ve sunucuyla aynı) */
   const foto: Record<string, number> = {}, mf: Record<string, number> = {};
   for (const f of v.fotolar) { if (f.madde) mf[f.madde] = (mf[f.madde] ?? 0) + 1; else foto[f.bolum] = (foto[f.bolum] ?? 0) + 1; }
-  const d = degerlendir(t, { ...c, foto, cihaz: v.cihazlar.length, madde: Object.fromEntries(Object.entries(c.madde).map(([k, x]) => [k, { ...x, foto: mf[k] ?? 0 }])) });
   const formKod = t.gorunum.formKodu || `${v.firma.kod}-FR-${v.tur.kod}-${v.formatSira}`;
   const no = v.revizyon ? `${v.no}-R${v.revizyon}` : v.no;
   /* 492: denetçinin raporda değiştirdiği künye bilgisi (formatın kilitli bilgisi hariç) — saha ekranıyla aynı işlev */
-  const kunye = gecerliKunye(v.kunye, metotMetni(t, v.tur.kontrolStd), c.kunye, kilitliKunye(t));
+  const kunye = gecerliKunye(v.kunye, metotMetni(t, v.tur.kontrolStd), v.cevaplar.kunye, kilitliKunye(t));
   const meslek = TANIMLAR.meslekler.find((m) => m.k === v.yazan.meslek)?.ad ?? v.yazan.meslek;
   const kaynak: Record<string, string> = {
     firma_adi: kunye.firma, tesis_adresi: deger(kunye.adres), sgk: deger(kunye.sgk), isg_id: deger(kunye.isg), kontrol_tarihi: tarihNo(v.tarih.bas),
     rapor_no: no, ekipman_kodu: v.ekipman.kod, ekipman_adi: v.tur.ad, seri_no: deger(v.ekipman.seri), kullanim_yeri: deger(v.ekipman.konum),
   };
+  /* 495 → 556: formüllü kutuların değeri basılır (kaydedilen cevaplarda yok — saha ekranı ve motorla aynı işlev); formül kayıttan gelen ve ekipman
+     bilgisini de okur (boşu boş: "-" değil) */
+  const ham = (s: string | null | undefined) => (s && s.trim() ? s : null);
+  const c = formulUygula(t, v.cevaplar, {
+    kaynak: Object.fromEntries(Object.entries(kaynak).map(([k, x]) => [k, x === "-" ? null : x])),
+    ekipman: Object.fromEntries(Object.entries(v.ekipman).flatMap(([k, x]) => (ham(x) ? [[k, x as string]] : []))),
+  });
+  const d = degerlendir(t, { ...c, foto, cihaz: v.cihazlar.length, madde: Object.fromEntries(Object.entries(c.madde).map(([k, x]) => [k, { ...x, foto: mf[k] ?? 0 }])) });
   const maddeAdi = new Map(t.bolumler.flatMap((b) => (b.blok === "liste" ? b.gruplar.flatMap((g) => g.maddeler.map((m) => [m.id, m.metin] as const)) : [])));
 
   /* saha ekranıyla aynı düzen ve numaralar (format/duzen.ts, 427): kayıttan gelen alanlı bilgi bölümü 1. bölümün kopyası (çizilmez); ekipman
@@ -89,8 +95,9 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
 
   const alanDegeri = (a: BolumOf<"bilgi">["alanlar"][number]): ReactNode => {
     /* 460: ekipman kaydına bağlı alan — raporun ekipman bilgisinden */
-    if (a.ekipman) return deger(v.ekipman[a.ekipman]);
-    if (a.kaynak) return kaynak[a.kaynak] ?? "-";
+    /* 556: formüllü ekipman bilgisi boşsa formülün değeri; kayıttan gelen alanda denetçinin yazdığı ya da formülün değeri kayıttakinden önce */
+    if (a.ekipman) return deger(v.ekipman[a.ekipman] || (typeof c.alan[a.id] === "string" ? c.alan[a.id] as string : null));
+    if (a.kaynak && !c.alan[a.id]?.length) return kaynak[a.kaynak] ?? "-";
     const x = c.alan[a.id];
     if (a.tur === "secim" || a.tur === "coklu") return secenekler(Array.isArray(x) ? x : x ? [x] : [], a.secenekler ?? []);
     if (a.tur === "evet") return secenekler(typeof x === "string" ? [x] : [], ["Evet", "Hayır"]);

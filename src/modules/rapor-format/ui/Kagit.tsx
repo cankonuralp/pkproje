@@ -118,9 +118,10 @@ const Secenekler = ({ l }: { l: readonly string[] }) => <>{l.map((x) => <span ke
 
 /** bilgi alanının belgedeki boş değeri (türüne göre) */
 function AlanOrnegi({ a }: { a: BolumOf<"bilgi">["alanlar"][number] }) {
+  /* 556: formüllü kutu (her türde) formülüyle */
+  if (a.formul?.trim()) return <span className={k.ornek}>= {a.formul}{a.birim ? ` · ${a.birim}` : ""}</span>;
   if (a.ekipman) return <span className={k.ornek}>sahada · ekipman kaydından başlar</span>;
   if (a.kaynak) return <span className={k.ornek}>kayıttan</span>;
-  if (a.tur === "sayi" && a.formul?.trim()) return <span className={k.ornek}>= {a.formul}{a.birim ? ` · ${a.birim}` : ""} (kendiliğinden)</span>;
   if (a.tur === "secim" || a.tur === "coklu") return a.secenekler?.length ? <Secenekler l={a.secenekler} /> : <span className={k.ornek}>seçenek yok — ayarlardan</span>;
   if (a.tur === "evet") return <Secenekler l={["Evet", "Hayır"]} />;
   if (a.tur === "tarih") return <span className={k.ornek}>GG.AA.YYYY</span>;
@@ -172,7 +173,7 @@ function OneriIcerigi({ b }: { b: Bolum }) {
     case "liste":
       return <table><tbody>{b.gruplar.flatMap((g) => [
         ...(g.ad ? [<tr key={g.id}><td colSpan={2} className="rb-ab">{g.ad}</td></tr>] : []),
-        ...g.maddeler.map((m, j) => <tr key={m.id}><td className="rb-orta">{j + 1}</td><td>{m.metin}</td></tr>),
+        ...g.maddeler.map((m, j) => <tr key={m.id}><td className="rb-orta">{j + 1}</td><td>{m.metin}{m.formul && <span className={k.ornek}> = {m.formul}</span>}</td></tr>),
       ])}</tbody></table>;
     case "olcum":
       return <table><thead><tr><th className="rb-ab">{siraBasligi(b)}</th>{b.sutunlar.map((s) => <th key={s.id} className="rb-ab">{birimli(s.ad, s.birim)}{sinir(s)}</th>)}</tr></thead>
@@ -282,17 +283,18 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
       </div>
     );
   };
-  /** öğe satırının küçük tuşları: Bakanlık işareti · (sayıysa) formül · ayrıntı · çıkar (470: Bakanlık öğesinde de, sorarak).
-      552 (reisim 2026-10-14: "format yapıcıda formül kısmı olsun mesela (RCa=480/RCd)"): sayı sütununda / değerinde / alanında hesap makinesi tuşu —
-      ayrıntıları açar, formül alanına odaklanır (formül ayrıntıların içinde kalıyordu, görünmüyordu) */
+  /** öğe satırının küçük tuşları: Bakanlık işareti · formül · ayrıntı · çıkar (470: Bakanlık öğesinde de, sorarak).
+      552 (reisim 2026-10-14: "format yapıcıda formül kısmı olsun mesela (RCa=480/RCd)"): hesap makinesi tuşu — ayrıntıları açar, formül alanına
+      odaklanır. 556 (reisim 2026-10-14: "hesaplama tuşu her kutucukta olmalı"): her öğede — alan (kayıttan gelen, ekipman bilgisi dahil), madde,
+      sütun, test değeri; ileride eklenen her öğede de (tuş öğenin türüne bakmaz) */
   const formulAc = (b: Bolum, id: string) => {
     setAyar(`o:${b.id}:${id}`);
     requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById(`kb-${id}-formul`)?.focus()));
   };
-  const ogeTuslari = (b: Bolum, i: number, id: string, ad: string, kilit: boolean, sayi = false) => (
+  const ogeTuslari = (b: Bolum, i: number, id: string, ad: string, kilit: boolean) => (
     <span className={k.ogeTus}>
       {kilit && <Kilit />}
-      {sayi && <Tus ikon="calculator" ad={`${ad} · formül`} onClick={() => formulAc(b, id)} />}
+      <Tus ikon="calculator" ad={`${ad} · formül`} onClick={() => formulAc(b, id)} />
       <Tus ikon="settings" ad={`${ad} · ayrıntılar`} basili={ayar === `o:${b.id}:${id}`} onClick={() => ac(`o:${b.id}:${id}`)} />
       <Tus ikon="x" ad={`${ad} · çıkar`} onClick={() => void cikar(i, id, ad, kilit)} />
     </span>
@@ -304,7 +306,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
       case "bilgi":
         return <BilgiTablosu l={b.alanlar.map((a) => [
           <span key={a.id} className={k.etiket}><Yazi deger={a.ad} ad="Alan adı" ac={yeniId === a.id} yaz={(s) => degis(ogeYaz(t, i, a.id, { ad: s }))} />
-            {ogeTuslari(b, i, a.id, a.ad, a.kilit, a.tur === "sayi" && !a.kaynak && !a.ekipman)}</span>,
+            {ogeTuslari(b, i, a.id, a.ad, a.kilit)}</span>,
           <AlanOrnegi key={`${a.id}-d`} a={a} />, a.tur === "coklu" || (a.secenekler?.length ?? 0) > 3] as const)}
           son={<Ekle ad="Alan ekle" onClick={() => ogeKoy(i, "a", "Yeni alan")} />} />;
       case "liste": {
@@ -327,7 +329,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
                       <td className="rb-orta">{cok ? `${gi + 1}.${mi + 1}` : mi + 1}</td>
                       <td><span className={k.satir}><Yazi deger={m.metin} ad="Madde metni" ac={yeniId === m.id} yaz={(s) => degis(ogeYaz(t, i, m.id, { ad: s }))} />
                         {ogeTuslari(b, i, m.id, m.metin, m.kilit)}</span></td>
-                      <td><Secenekler l={b.cevaplar} /></td>
+                      <td><Secenekler l={b.cevaplar} />{m.formul?.trim() && <span className={k.ornek}> = {m.formul}</span>}</td>
                     </tr>
                   ))}
                   <tr className={k.ekleSatir}><td /><td colSpan={2}>
@@ -345,8 +347,8 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
       }
       case "olcum": {
         const notlar = b.notlar ?? [];
-        const ornek = (s: BolumOf<"olcum">["sutunlar"][number]) => s.giris === "secim" ? (s.secenekler?.join(" / ") || "seçim") : s.giris === "evet" ? "evet / hayır" : s.giris === "metin" ? "yazı"
-          : s.formul?.trim() ? `= ${s.formul}` : "sayı";
+        const ornek = (s: BolumOf<"olcum">["sutunlar"][number]) => s.formul?.trim() ? `= ${s.formul}` : s.giris === "secim" ? (s.secenekler?.join(" / ") || "seçim")
+          : s.giris === "evet" ? "evet / hayır" : s.giris === "metin" ? "yazı" : "sayı";
         return <>
           <table>
             <thead><tr>
@@ -359,7 +361,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
                       <Yazi deger={s.ad} ad="Sütun adı" ac={yeniId === s.id} yaz={(x) => degis(ogeYaz(t, i, s.id, { ad: x }))} />
                       {s.birim && <span>({s.birim})</span>}
                       {s.op && s.sinir !== undefined && <span className={k.sinir}>sınır {SINIR_ISARETI[s.op]} {virgul(s.sinir)}</span>}
-                      {ogeTuslari(b, i, s.id, s.ad, kilit, s.giris === "sayi")}
+                      {ogeTuslari(b, i, s.id, s.ad, kilit)}
                     </span>
                   </th>
                 );
@@ -392,8 +394,8 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
               {b.degerler.map((d) => (
                 <tr key={d.id}>
                   <td><span className={k.satir}><Yazi deger={d.ad} ad="Değer adı" ac={yeniId === d.id} yaz={(s) => degis(ogeYaz(t, i, d.id, { ad: s }))} />
-                    {ogeTuslari(b, i, d.id, d.ad, d.kilit, !d.metin && !d.secenekler?.length)}</span></td>
-                  <td><span className={k.ornek}>{d.secenekler?.length ? d.secenekler.join(" / ") : d.metin ? "yazı" : d.formul?.trim() ? `= ${d.formul} (kendiliğinden)` : `sayı${d.birim ? ` · ${d.birim}` : ""}`}</span></td>
+                    {ogeTuslari(b, i, d.id, d.ad, d.kilit)}</span></td>
+                  <td><span className={k.ornek}>{d.formul?.trim() ? `= ${d.formul}` : d.secenekler?.length ? d.secenekler.join(" / ") : d.metin ? "yazı" : `sayı${d.birim ? ` · ${d.birim}` : ""}`}</span></td>
                   <td>{d.op && d.sinir !== undefined ? `${SINIR_ISARETI[d.op]} ${virgul(d.sinir)}${d.birim ? ` ${d.birim}` : ""}` : d.not || <span className={k.ornek}>sınır yok</span>}</td>
                   <td><span className={k.ornek}>Uygun / Uygun değil</span></td>
                 </tr>

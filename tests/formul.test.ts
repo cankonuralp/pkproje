@@ -2,7 +2,11 @@
    "yeni bir hesap gereken her rapor bugün kod işi" — çatal aşınma yüzdesi, 1,25 × kapasite yük testi). FORMÜL (src/format/formul.ts): firmanın kendi
    hesabı — sayı alanı, tablo sütunu, test değeri; eval yok, küçük çözücü; motor (sınır → Uygun / Uygun değil, kusur), belge, saha aynı formulUygula;
    formüllü öğe eksik sayılmaz; Excel'e ve fotoğraftan okumaya girmez; adı değişen öğenin formüllerdeki adı da değişir; yayın denetimi bilinmeyen
-   adı söyler. SERBEST METİN bölümü (belgeye basılan sabit yazı). Olumsuz kanıt: tests/bozan/formul.bozan.ts. Tarayıcıda: e2e/rapor-format.spec.ts. */
+   adı söyler. SERBEST METİN bölümü (belgeye basılan sabit yazı). Olumsuz kanıt: tests/bozan/formul.bozan.ts. Tarayıcıda: e2e/rapor-format.spec.ts.
+   556 (sunum 556 · 2. tur onaylı — reisim 2026-10-14: "hesaplama tuşu her kutucukta olmalı", "istediğim hesabı istediğim gibi yapabilmeliyim
+   kısıtlama olmamalı", "değiştirilemez olmasın"): formül HER KUTUDA (alan her türde — kayıttan gelen, ekipman bilgisi dahil —, sütun, test değeri,
+   madde cevabı); Excel işlevleri Türkçe / İngilizce adıyla; adlar formatın her kutusu (tablo dışında sütun = bütün satırlar, SÜTUN, tablo adı);
+   ELLE YAZILAN KALIR (boşsa formül); S.A.Y formüllü kutuya da yazar (bilgiAlanlari / testAlanlari formulluDahil). */
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -42,7 +46,8 @@ test("kurucuda denetim: yapı hatası, bilinmeyen ad, kendine bakma; doğru form
   assert.match(formulDenet("1,25 × [Kapasite", adlar, "Test yükü")!, /“\]” eksik/);
   assert.match(formulDenet("(1 + 2", adlar, "x")!, /parantez kapanmadı/);
   assert.match(formulDenet("1 2", adlar, "x")!, /fazladan/);
-  assert.match(formulDenet("[Ağırlık] × 2", adlar, "x")!, /“Ağırlık” adında sayı yok/);
+  /* 556 (2026-10-14): adlar artık her kutu — ileti "kutu yok" */
+  assert.match(formulDenet("[Ağırlık] × 2", adlar, "x")!, /“Ağırlık” adında kutu yok/);
   assert.equal(formulDenet("[Test yükü] × 2", adlar, "Test yükü"), "Formül kendisine bakamaz.");
   assert.match(formulDenet("2 $ 3", adlar, "x")!, /“\$” anlaşılmadı/);
 });
@@ -79,8 +84,10 @@ test("motor: formüllü test değeri girdiden hesaplanır, sınırdan Uygun / Uy
   const bos = degerlendir(t, Cevaplar.parse({ tablo: { catal: [{ ilk: "40" }] } }));
   assert.equal(bos.degerler.hidro, null);
   assert.deepEqual(bos.eksikler.filter((e) => e.bolum === "catal").map((e) => e.ad), ["Çatal aşınması · 1. satır · Ölçülen"]);
-  assert.ok(sonucKurallari(t.bolumler.find((b) => b.id === "catal") as BolumOf<"olcum">)
-    .includes("Aşınma = ([İlk kalınlık] − [Ölçülen]) / [İlk kalınlık] × 100 (kendiliğinden hesaplanır)"));
+  /* 556 (reisim 2026-10-14: "şu işlemlerin sonucudur gibi açıklama olmasın"): sonuç kurallarında formülün hesabı yazılmaz; sınırı yazar */
+  const kurallar = sonucKurallari(t.bolumler.find((b) => b.id === "catal") as BolumOf<"olcum">);
+  assert.ok(!kurallar.some((k) => k.includes("kendiliğinden") || k.includes("[Ölçülen]")), JSON.stringify(kurallar));
+  assert.ok(kurallar.some((k) => k.startsWith("Aşınma ≤ 10")), JSON.stringify(kurallar));
 });
 
 test("formül formüle bakar (zincir); döngü hesaplanamaz", () => {
@@ -94,7 +101,7 @@ test("formül formüle bakar (zincir); döngü hesaplanamaz", () => {
   assert.equal(formulUygula(dongu, Cevaplar.parse({ alan: { calisma: "10" } })).deger.hidro, undefined, "döngü: değer boş");
 });
 
-test("kurucu: adı değişen sütun / değer formüllerde de değişir; formül yalnız sayıda", () => {
+test("kurucu: adı değişen sütun / değer formüllerde de değişir; 556: formül her türde", () => {
   const t = formulluKompresor();
   const i = t.bolumler.findIndex((b) => b.id === "catal");
   const y = ogeYaz(t, i, "olc", { ad: "Ölçülen kalınlık" });
@@ -105,8 +112,9 @@ test("kurucu: adı değişen sütun / değer formüllerde de değişir; formül 
   const hidro = (z.bolumler.find((b) => b.blok === "test") as BolumOf<"test">).degerler.find((d) => d.id === "hidro")!;
   assert.equal(hidro.formul, "1,5 × [Çalışma basıncı (PS)]");
   assert.equal(formulAdDegistir("[a] + [A] + [b]", "a", "x"), "[x] + [x] + [b]");
+  /* 556 (2026-10-14, eskiden "metin sütunda formül yok"): yazı sütununun da formülü olur */
   const metin = ogeYaz(t, i, "asin", { tur: "metin" });
-  assert.equal((metin.bolumler[i] as BolumOf<"olcum">).sutunlar.find((x) => x.id === "asin")!.formul, undefined, "metin sütunda formül yok");
+  assert.equal((metin.bolumler[i] as BolumOf<"olcum">).sutunlar.find((x) => x.id === "asin")!.formul, "([İlk kalınlık] − [Ölçülen]) / [İlk kalınlık] × 100");
 });
 
 test("Excel ve fotoğraftan okuma formüllü öğeyi yazmaz; şablonda yok", () => {
@@ -119,13 +127,16 @@ test("Excel ve fotoğraftan okuma formüllü öğeyi yazmaz; şablonda yok", () 
   const b = structuredClone(t.bolumler.find((y) => y.blok === "bilgi" && y.alanlar.some((a) => a.id === "calisma")) as BolumOf<"bilgi">);
   b.alanlar.find((a) => a.id === "calisma")!.formul = "2 × 3";
   assert.ok(!bilgiAlanlari(b).some((a) => a.id === "calisma"));
+  /* 556: S.A.Y elle yazılabilen her kutuya yazar — formüllü olanlar da */
+  assert.ok(bilgiAlanlari(b, true).some((a) => a.id === "calisma"));
+  assert.ok(testAlanlari(t.bolumler.find((b) => b.blok === "test") as BolumOf<"test">, true).some((a) => a.id === "hidro"));
 });
 
 test("yayın denetimi formül hatasını söyler; belge hesaplanan değeri ve serbest metni basar", () => {
   const t = formulluKompresor();
   const bozuk = structuredClone(t);
   ((bozuk.bolumler.find((b) => b.blok === "test") as BolumOf<"test">).degerler.find((d) => d.id === "hidro")!).formul = "1,5 × [Basınç]";
-  assert.ok(yayinDenetimi(bozuk).some((s) => s.includes("formülü: “Basınç” adında sayı yok")), JSON.stringify(yayinDenetimi(bozuk)));
+  assert.ok(yayinDenetimi(bozuk).some((s) => s.includes("formülü: “Basınç” adında kutu yok")), JSON.stringify(yayinDenetimi(bozuk)));
   assert.ok(!yayinDenetimi(t).some((s) => s.includes("formülü")));
   const m = parcaYerlestir(t, "b:metin", t.bolumler.length)!;
   const mb = m.t.bolumler[m.t.bolumler.length - 1];
@@ -166,7 +177,9 @@ test("552: \"RCa = 480/RCd\" yazıldığı gibi hesaplanır; kaydedilince \"480 
   assert.equal(h("= 2 × Ib + 1", { Ib: 3 }), 7);
   assert.equal(formulDenet("RCa = 480/RCd", ["RCd"], "RCa"), null);
   assert.ok(formulDenet("480 / RCD testi", ["RCD testi IΔ"], "x")!.includes("boşluklu ad köşeli parantezle yazılır: [RCD testi…]"), "boşluklu ad parantezsiz anlaşılmaz");
-  assert.match(formulDenet("a = b = c", ["b", "c"], "a")!, /“=” anlaşılmadı/);
+  /* 556 (2026-10-14): "=" karşılaştırmadır — "a = b = c" artık b = c; iki "=" yan yana yanlış */
+  assert.equal(formulDenet("a = b = c", ["b", "c"], "a"), null);
+  assert.match(formulDenet("a = b = = c", ["b", "c"], "a")!, /“=” yanlış yerde/);
   assert.equal(formulDuzelt("RCa = 480/RCd"), "480 ÷ [RCd]");
   assert.equal(formulDuzelt("2 * (Ib - 1)"), "2 × ([Ib] − 1)");
   assert.equal(formulDuzelt("-3 + 1,5"), "−3 + 1,5");
@@ -183,4 +196,79 @@ test("552: \"RCa = 480/RCd\" yazıldığı gibi hesaplanır; kaydedilince \"480 
   assert.equal((z.bolumler[i] as BolumOf<"olcum">).sutunlar.find((x) => x.id === "rca")!.formul, "480 ÷ [RC direnci]");
   const u = formulUygula(z, Cevaplar.parse({ tablo: { rc: [{ rcd: "4" }] } }));
   assert.equal(u.tablo.rc[0].rca, "120");
+});
+
+/* ── 556 ── */
+/** her türde formüllü kutular: tarih, yazı, evet, seçim, tablo, test değeri, madde */
+function her556(): FormatTanimi {
+  const t = formulluKompresor();
+  return FormatTanimi.parse({ ...t, bolumler: [...t.bolumler,
+    { id: "ek", ad: "Ek bilgiler", blok: "bilgi", alanlar: [
+      { id: "kt", ad: "Kontrol", tur: "tarih" }, { id: "st", ad: "Sonraki", tur: "tarih", formul: "SERİTARİH([Kontrol]; 12)" },
+      { id: "st2", ad: "Bir yıl sonra", tur: "tarih", formul: "[Kontrol] + 365" },
+      { id: "dr", ad: "Durum", tur: "metin", formul: "EĞER([Çalışma basıncı] > 8; \"Yüksek\"; \"Normal\")" },
+      { id: "ev", ad: "Yüksek mi", tur: "evet", formul: "[Çalışma basıncı] > 8" },
+      { id: "bl", ad: "Bağlantı", tur: "secim", secenekler: ["Flanş", "Vida"], formul: "\"vida\"" },
+      { id: "et", ad: "Etiket", tur: "metin", formul: "\"K-\" & [Çalışma basıncı]" }] },
+    { id: "tb", ad: "Ölçümler", blok: "olcum", satir: "ekle", sutunlar: [{ id: "no", ad: "No", giris: "sayi" }, { id: "dg", ad: "Değer", giris: "sayi" },
+      { id: "iki", ad: "İki kat", giris: "sayi", formul: "[Değer] × 2" }, { id: "or", ad: "Ort", giris: "sayi", formul: "ORTALAMA(SÜTUN([Değer]))" }] },
+    { id: "ts", ad: "Toplamlar", blok: "test", degerler: [{ id: "tp", ad: "Toplam", formul: "TOPLA([Değer])" },
+      { id: "dy", ad: "Bul", formul: "DÜŞEYARA(2; [Ölçümler]; 2; YANLIŞ)" }, { id: "kac", ad: "Kaç", formul: "EĞERSAY([Değer]; \">5\")" }] },
+    { id: "ls", ad: "Ek kontrol", blok: "liste", cevaplar: ["Uygun", "Uygun değil", "Uygulanamaz"], gruplar: [{ id: "g1", ad: "", maddeler: [
+      { id: "m1", metin: "Değerler sınırda", formul: "EĞER(MAK([Değer]) <= 7; \"Uygun\"; \"Uygun değil\")" }] }] }] });
+}
+const C556 = () => Cevaplar.parse({ alan: { calisma: "10", kt: "2026-10-14" }, tablo: { tb: [{ no: "1", dg: "4" }, { no: "2", dg: "8" }, { no: "3", dg: "6", iki: "99" }] } });
+
+test("556: Excel işlevleri Türkçe ve İngilizce adıyla; ayraç ; (sayının içinde olmayan , de); bilinmeyen işlev söylenir", () => {
+  assert.equal(h("TOPLA(1; 2; 3)"), 6);
+  assert.equal(h("SUM(1, 2, 3)"), 6);
+  assert.equal(h("yuvarla(2,345; 2)"), 2.35);
+  assert.equal(h("EĞER(2 > 1; 10; 20)"), 10);
+  assert.equal(h("KAREKÖK(16) + MAK(1; 5)"), 9);
+  assert.equal(h("2 ^ 3"), 8);
+  assert.match(formulDenet("YOKİŞLEV(1)", [], "x")!, /“YOKİŞLEV” adında işlev yok/);
+});
+
+test("556: formül her kutuda — tarih, yazı (EĞER), evet, seçim, birleştirme; tablo sütunu aynı satırdan, SÜTUN bütün satırlar; DÜŞEYARA tablo adıyla; madde", () => {
+  const t = her556(), c = C556();
+  const u = formulUygula(t, c);
+  assert.deepEqual([u.alan.st, u.alan.st2, u.alan.dr, u.alan.ev, u.alan.bl, u.alan.et], ["2027-10-14", "2027-10-14", "Yüksek", "evet", "Vida", "K-10"]);
+  assert.deepEqual(u.tablo.tb.map((s) => [s.iki, s.or]), [["8", "6"], ["16", "6"], ["99", "6"]], "elle yazılan (99) kalır");
+  assert.deepEqual([u.deger.tp, u.deger.dy, u.deger.kac], ["18", "8", "2"]);
+  assert.equal(u.madde.m1?.c, "Uygun değil", "MAK(4; 8; 6) = 8 > 7");
+  const d = degerlendir(t, c);
+  assert.ok(!d.eksikler.some((e) => e.alan === "m1"), "formüllü madde cevaplı");
+  assert.ok(d.kusurlar.some((k) => k.ref === "m1"), "hesaplanan Uygun değil kusur");
+  assert.ok(!yayinDenetimi(t).some((s) => s.includes("formülü")), JSON.stringify(yayinDenetimi(t)));
+});
+
+test("556: elle yazılan kalır, boşaltılınca formül; formulDegeri kendi değeri yokmuş gibi; kayıttan gelen ve ekipman bilgisinde öncelik", async () => {
+  const { formulDegeri } = await import("../src/format/formul.ts");
+  const t = her556(), c = C556();
+  assert.equal(formulDegeri(t, c, { tur: "hucre", bolum: "tb", satir: 2, sutun: "iki" }), "12");
+  assert.equal(formulUygula(t, { ...c, alan: { ...c.alan, dr: "Elle" } }).alan.dr, "Elle");
+  assert.equal(formulUygula(t, { ...c, alan: { ...c.alan, dr: "" } }).alan.dr, "Yüksek", "boş kutu formülden");
+  assert.equal(formulUygula(t, { ...c, madde: { m1: { c: "Uygun" } } }).madde.m1.c, "Uygun", "seçilen cevap kalır");
+  /* kayıttan gelen alan: kendi > formül > kayıttaki; ekipman bilgisi: ekipman > formül */
+  const k = FormatTanimi.parse({ ...t, bolumler: [...t.bolumler, { id: "kb", ad: "Kayıt", blok: "bilgi", alanlar: [
+    { id: "kn", ad: "Kontrol tarihi", tur: "metin", kaynak: "kontrol_tarihi" }, { id: "gs", ad: "Gelecek", tur: "tarih", formul: "[Kontrol tarihi] + 30" }] },
+    { id: "eb", ad: "Ekipman bilgileri", blok: "bilgi", tam: true, alanlar: [{ id: "sr", ad: "Seri", tur: "metin", ekipman: "seri", formul: "\"S-\" & [Çalışma basıncı]" }] }] });
+  const ek = { kaynak: { kontrol_tarihi: "14.10.2026" }, ekipman: {} };
+  assert.equal(formulUygula(k, c, ek).alan.gs, "2026-11-13", "kayıttan gelen tarih formülde tarih");
+  assert.equal(formulUygula(k, c, ek).alan.sr, "S-10", "ekipman bilgisi boş: formül");
+  assert.equal(formulUygula(k, c, { ...ek, ekipman: { seri: "A1" } }).alan.sr, undefined, "ekipman bilgisi dolu: formül yazılmaz");
+});
+
+test("556: kaydedilen biçim — işlev adı Türkçe ve büyük harfli, yazı tırnakla, ayraç \"; \"; kurucu madde ve kayıttan gelen alanın formülünü yazar, adı değişen madde formüllerde de", () => {
+  const t = her556();
+  const li = t.bolumler.findIndex((b) => b.id === "ls");
+  const y = ogeYaz(t, li, "m1", { formul: "if(mak([Değer])<=7;\"Uygun\";\"Uygun değil\")" });
+  const m1 = (y.bolumler[li] as BolumOf<"liste">).gruplar[0].maddeler[0];
+  assert.equal(m1.formul, "EĞER(MAK([Değer]) <= 7; \"Uygun\"; \"Uygun değil\")");
+  const ti = t.bolumler.findIndex((b) => b.id === "tb");
+  const z = ogeYaz(y, ti, "dg", { ad: "Ölçülen değer" });
+  assert.equal((z.bolumler[li] as BolumOf<"liste">).gruplar[0].maddeler[0].formul, "EĞER(MAK([Ölçülen değer]) <= 7; \"Uygun\"; \"Uygun değil\")", "tablo dışından anılan sütun adı da değişir");
+  const kb = FormatTanimi.parse({ ...t, bolumler: [...t.bolumler, { id: "kb", ad: "Kayıt", blok: "bilgi", alanlar: [{ id: "kn", ad: "Kontrol tarihi", tur: "metin", kaynak: "kontrol_tarihi" }] }] });
+  const w = ogeYaz(kb, kb.bolumler.length - 1, "kn", { formul: "\"x\"" });
+  assert.equal((w.bolumler[w.bolumler.length - 1] as BolumOf<"bilgi">).alanlar[0].formul, "\"x\"");
 });

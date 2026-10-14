@@ -1,5 +1,5 @@
 /* RAPORUN BAŞLANGIÇ CEVAPLARI ve ÖRNEK SAHA RAPORU (saf; sunucu ve tarayıcı ortak).
-   · ilkCevaplar: yeni raporun başlangıç cevapları — bütün maddeler cevap setinin ilk öğesiyle ("Uygun") dolu (§3.8-3). Sunucu raporu açarken,
+   · ilkCevaplar: yeni raporun başlangıç cevapları — bütün maddeler (556: formüllüler hariç) cevap setinin ilk öğesiyle ("Uygun") dolu (§3.8-3). Sunucu raporu açarken,
      format kurucusunun saha görünümü denerken aynı işlevi kullanır.
    · ornekSahaRaporu (472; reisim 2026-10-10, maket kararları k1–k4): format kurucusunun "Saha ekranı" görünümü taslak formatı denetçinin
      göreceği ekranda gösterir — gerçek saha ekranı (SahaRaporu) bu UYDURMA raporla çizilir. Veritabanına hiçbir şey yazılmaz; kimlik "ornek",
@@ -12,7 +12,8 @@ import { ayEkle } from "./sema.ts";
 
 export function ilkCevaplar(t: FormatTanimi): Cevaplar {
   const madde: Cevaplar["madde"] = {};
-  for (const b of t.bolumler) if (b.blok === "liste") for (const g of b.gruplar) for (const m of g.maddeler) madde[m.id] = { c: b.cevaplar[0] };
+  /* 556: formüllü maddenin cevabı formülden — başlangıçta yazılmaz (yazılsa formülü ezerdi) */
+  for (const b of t.bolumler) if (b.blok === "liste") for (const g of b.gruplar) for (const m of g.maddeler) if (!m.formul?.trim()) madde[m.id] = { c: b.cevaplar[0] };
   return Cevaplar.parse({ madde });
 }
 

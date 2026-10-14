@@ -135,7 +135,7 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     const formul = page.getByRole("textbox", { name: /^Formül/ });
     await formul.fill("[Yok] + 1");
     await formul.blur();
-    await expect(page.getByText("“Yok” adında sayı yok", { exact: false }).first()).toBeVisible();   // alanın altında ve "Yayından önce bakılacak"ta
+    await expect(page.getByText("“Yok” adında kutu yok", { exact: false }).first()).toBeVisible();   // alanın altında ve "Yayından önce bakılacak"ta
     await formul.fill("");
     const formuleEkle = page.getByRole("group", { name: "Formüle ekle" });
     await formuleEkle.getByRole("button", { name: "Iz", exact: true }).click();
@@ -317,6 +317,27 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     }).toPass({ timeout: 45_000 });
     await goz(page, "kurucu-saha", bilgi.project.name);
     await expect(page.getByRole("region", { name: "Kullanım" })).toContainText("Deneme:");
+    /* 556 (reisim 2026-10-14: "görüntüdeki gibi değiştirilemez olmasın, olması gerekenin dışında bir şey olursa değiştirebilelim, dışarıdan diğer
+       kutular ile aynı gözüksün"): formüllü sütun (Deneme sütunu = [Iz] − [Ib]) sahada öteki hücreler gibi yazılır — boşken formülün değeri, yazılan
+       kalır, boşaltılınca yeniden formülden */
+    const linyeSaha = saha.locator("#b-linye");
+    await expect(async () => {
+      const ac = saha.getByRole("button", { name: "Pano sigortaları (linye) bölümü", exact: true });
+      if ((await ac.getAttribute("aria-expanded")) !== "true") await ac.click();
+      await expect(linyeSaha.getByRole("button", { name: "Satır ekle" })).toBeVisible({ timeout: 5_000 });
+    }).toPass({ timeout: 45_000 });
+    await linyeSaha.getByRole("button", { name: "Satır ekle" }).click();
+    await linyeSaha.getByRole("textbox", { name: "1. satır · Iz (A)", exact: true }).fill("32");
+    await linyeSaha.getByRole("textbox", { name: "1. satır · Ib (A)", exact: true }).fill("16");
+    const denemeHucre = linyeSaha.getByRole("textbox", { name: "1. satır · Deneme sütunu", exact: true });
+    await expect(denemeHucre).toHaveValue("16");
+    await expect(denemeHucre).toBeEditable();
+    await denemeHucre.fill("20");
+    await denemeHucre.blur();
+    await expect(denemeHucre).toHaveValue("20");
+    await denemeHucre.fill("");
+    await denemeHucre.blur();
+    await expect(denemeHucre).toHaveValue("16");
     /* 2026-10-12 (reisim: "onaya gönder diyince ekrana pop-up uyarı ekranı gelmesin …"): eksikte pencere yok — üstte kısa uyarı, ilk eksiğe kayılır */
     await saha.getByRole("button", { name: "Onaya gönder" }).click();
     const eksikUyari = saha.locator("[data-uyari]").getByText(/^Zorunlu alanlar doldurulmalıdır/);

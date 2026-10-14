@@ -298,8 +298,5 @@ button.silTus { color: var(--hata-yazi); }
 .kunyeDegisti > span { overflow-wrap: anywhere; }
 .metotStd { margin-top: 6px; }
 
-/* 495: formülle hesaplanan değer (salt okunur; altında formül) · serbest metin bölümü */
-.hesapli { display: grid; gap: 2px; min-width: 0; }
-.hesapliDeger { font-weight: 700; font-variant-numeric: tabular-nums; }
-.hesapliFormul { color: var(--yazi2); font-size: var(--boy-kucuk); overflow-wrap: anywhere; }
+/* 495: serbest metin bölümü */
 .serbestMetin { margin: 0; padding: 6px 0; white-space: pre-wrap; overflow-wrap: anywhere; }

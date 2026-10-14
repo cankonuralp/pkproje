@@ -11,7 +11,8 @@ import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { Tus } from "../../../components/tus/Tus";
 import { SINIR_ISARETI } from "../../../format/hesap";
 import { SINIRLAR, type Bolum, type BolumOf, type FormatTanimi } from "../../../format/tanim";
-import { FORMUL_EN_UZUN, formulDenet, genelSayiAdlari, tabloSayiAdlari } from "../../../format/formul";
+import { EN_TR, EXCEL_ISLEVLERI } from "../../../format/excel";
+import { FORMUL_EN_UZUN, formulDenet, genelAdlar, tabloAdlari } from "../../../format/formul";
 import { cevaplarYaz, formuleEkle, gorunumYaz, grupEkle, grupSil, grupYaz, notlarYaz, ogeYaz, resmiFormat, satirlar, type NotGirdisi, type OgeTuru, type OgeYamasi } from "../kurucu";
 import stil from "./format.module.css";
 
@@ -54,8 +55,12 @@ export function OgeDuzenleyici({ t, i, b, id, degis }: { t: FormatTanimi; i: num
   if (b.blok === "bilgi") {
     const a = b.alanlar.find((x) => x.id === id);
     if (!a) return null;
+    /* 556: kayıttan gelen ve ekipman bilgisine bağlı alanda da formül */
     if (a.kaynak || a.ekipman) {
-      return <p className={stil.satir}>{a.ekipman ? "Ekipman kaydına bağlı alan." : "Kayıttan gelen alan."}</p>;
+      return <div className={stil.duzenleyici}>
+        <p className={stil.satir}>{a.ekipman ? "Ekipman kaydına bağlı alan." : "Kayıttan gelen alan."}</p>
+        <FormulAlani k={k} deger={a.formul} adlar={genelAdlar(t)} kendi={a.ad} yaz={yaz} />
+      </div>;
     }
     const secmeli = a.tur === "secim" || a.tur === "coklu";
     return (
@@ -66,7 +71,7 @@ export function OgeDuzenleyici({ t, i, b, id, degis }: { t: FormatTanimi; i: num
           <Alan id={`${k}-birim`} etiket="Birim"><Girdi id={`${k}-birim`} value={a.birim ?? ""} maxLength={40} onChange={(e) => yaz({ birim: e.target.value })} /></Alan>
         </FormIzgara>
         {secmeli && <SatirAlani id={`${k}-sec`} etiket="Seçenekler" deger={(a.secenekler ?? []).join("\n")} ipucu="Her satıra bir seçenek." uygula={(s) => yaz({ secenekler: satirlar(s, 40, 200) })} />}
-        {a.tur === "sayi" && <FormulAlani k={k} deger={a.formul} adlar={genelSayiAdlari(t)} kendi={a.ad} yaz={yaz} />}
+        <FormulAlani k={k} deger={a.formul} adlar={genelAdlar(t)} kendi={a.ad} yaz={yaz} />
         {!a.formul && <label className={stil.secenek}><input type="checkbox" checked={a.zorunlu} onChange={(e) => yaz({ zorunlu: e.target.checked })} /><span>Zorunlu</span></label>}
       </div>
     );
@@ -88,6 +93,8 @@ export function OgeDuzenleyici({ t, i, b, id, degis }: { t: FormatTanimi; i: num
           <SatirAlani id={`${k}-ack`} etiket="Açıklama (raporda madde bilgisi)" deger={m.aciklama ?? ""} satir={2} uygula={(s) => yaz({ aciklama: s })} />
         </>
         <SatirAlani id={`${k}-tal`} etiket="Talimat (kontrol nasıl yapılır)" deger={m.talimat ?? ""} ipucu="Saha ekranında maddenin yanındaki ünlemden açılır; PDF'e basılmaz." uygula={(s) => yaz({ talimat: s })} />
+        {/* 556: maddenin cevabı da formülle (ör. EĞER(MİN([Direnç]) >= 50; "Uygun"; "Uygun değil")) */}
+        <FormulAlani k={k} deger={m.formul} adlar={genelAdlar(t)} kendi={m.metin} yaz={yaz} />
       </div>
     );
   }
@@ -106,7 +113,7 @@ export function OgeDuzenleyici({ t, i, b, id, degis }: { t: FormatTanimi; i: num
           {c.giris === "sayi" && <SinirAlani k={k} op={c.op} sinir={c.sinir} yaz={yaz} />}
         </FormIzgara>
         {c.giris === "secim" && <SatirAlani id={`${k}-sec`} etiket="Seçenekler" deger={(c.secenekler ?? []).join("\n")} ipucu="Her satıra bir seçenek (ör. U, UD, UG)." uygula={(s) => yaz({ secenekler: satirlar(s) })} />}
-        {c.giris === "sayi" && <FormulAlani k={k} deger={c.formul} adlar={tabloSayiAdlari(b)} kendi={c.ad} yaz={yaz} tablo />}
+        <FormulAlani k={k} deger={c.formul} adlar={tabloAdlari(t, b)} kendi={c.ad} yaz={yaz} tablo />
         {(c.giris === "secim" || c.giris === "evet") && <OlumsuzSecici ad={c.ad} secenekler={secenek} secili={c.olumsuz ?? []} degis={(l) => yaz({ olumsuz: l })} kapali={false} />}
         <div className={stil.secenekler}>
           <label className={stil.secenek}><input type="checkbox" checked={c.zorunlu} onChange={(e) => yaz({ zorunlu: e.target.checked })} /><span>Zorunlu</span></label>
@@ -131,7 +138,7 @@ export function OgeDuzenleyici({ t, i, b, id, degis }: { t: FormatTanimi; i: num
         </FormIzgara>
         {tur === "secim" && <SatirAlani id={`${k}-sec`} etiket="Seçenekler" deger={(d.secenekler ?? []).join("\n")} ipucu="Her satıra bir seçenek (ör. Not 1: Uygun)." uygula={(s) => yaz({ secenekler: satirlar(s) })} />}
         {tur === "secim" && <OlumsuzSecici ad={d.ad} secenekler={(d.secenekler ?? []).map((s) => [s, s] as const)} secili={d.olumsuz ?? []} degis={(l) => yaz({ olumsuz: l })} kapali={false} />}
-        {tur === "sayi" && <FormulAlani k={k} deger={d.formul} adlar={genelSayiAdlari(t)} kendi={d.ad} yaz={yaz} />}
+        <FormulAlani k={k} deger={d.formul} adlar={genelAdlar(t)} kendi={d.ad} yaz={yaz} />
         <div className={stil.secenekler}>
           <label className={stil.secenek}><input type="checkbox" checked={d.zorunlu} onChange={(e) => yaz({ zorunlu: e.target.checked })} /><span>Zorunlu</span></label>
           <label className={stil.secenek}><input type="checkbox" checked={d.agir} onChange={(e) => yaz({ agir: e.target.checked })} /><span>Uygun değilse ağır kusur</span></label>
@@ -142,32 +149,47 @@ export function OgeDuzenleyici({ t, i, b, id, degis }: { t: FormatTanimi; i: num
   return null;
 }
 
-/** 495 (hata listesi 29 + 46 maketi: firmanın kendi hesabı): sayı alanının / sütununun / test değerinin formülü — adlar köşeli parantezle; ada ya da işarete
-    basınca imlecin yerine eklenir; yazarken denetlenir (format/formul.ts formulDenet); alandan çıkınca işlenir. Doluysa sahada kendiliğinden hesaplanır,
-    denetçi yazmaz; sınırı varsa sonuç ondan çıkar. tablo: adlar aynı satırın sütunları; değilse formatın sayı alanları ve test değerleri. */
+/** 495 → 556 (sunum 556 · 2. tur — reisim: "istediğim hesabı istediğim gibi yapabilmeliyim kısıtlama olmamalı"): kutunun formülü — her kutuda;
+    Excel'in işlevleri (Türkçe ya da İngilizce adıyla — format/excel.ts), formatın her kutusunun adı; ada / işarete / işleve basınca imlecin yerine
+    eklenir; yazarken denetlenir (format/formul.ts formulDenet); alandan çıkınca işlenir. Sahada kutu formülle dolar, denetçi değiştirebilir. */
+const SIK_ISLEVLER = ["EĞER", "TOPLA", "ORTALAMA", "MİN", "MAK", "YUVARLA", "KAREKÖK", "EĞERSAY", "ETOPLA", "SERİTARİH", "BİRLEŞTİR", "DÜŞEYARA", "SÜTUN"];
+const ISARETLER = ["+", "−", "×", "÷", "^", "%", "(", ")", ";", "&", "=", "<>", "<", ">", "<=", ">=", "\"\""];
 function FormulAlani({ k, deger, adlar, kendi, yaz, tablo = false }: {
   k: string; deger?: string; adlar: readonly string[]; kendi: string; yaz: (y: OgeYamasi) => void; tablo?: boolean;
 }) {
   const [taslak, setTaslak] = useState<string | null>(null);
+  const [ara, setAra] = useState("");
   const id = `${k}-formul`, metin = taslak ?? deger ?? "";
   const hata = metin.trim() ? formulDenet(metin, adlar, kendi) : null;
   const ekle = (s: string) => {
     const el = document.getElementById(id) as HTMLInputElement | null;
     const { formul: y, imlec } = formuleEkle(metin, el?.selectionStart ?? metin.length, el?.selectionEnd ?? metin.length, s);
     setTaslak(null); yaz({ formul: y });
-    requestAnimationFrame(() => { const g = document.getElementById(id) as HTMLInputElement | null; g?.focus(); g?.setSelectionRange(imlec, imlec); });
+    const geri = s === "\"\"" ? 1 : 0;
+    requestAnimationFrame(() => { const g = document.getElementById(id) as HTMLInputElement | null; g?.focus(); g?.setSelectionRange(imlec - geri, imlec - geri); });
   };
-  const digerleri = adlar.filter((x) => x.trim().toLocaleLowerCase("tr") !== kendi.trim().toLocaleLowerCase("tr"));
+  const digerleri = [...new Set(adlar.filter((x) => x.trim().toLocaleLowerCase("tr") !== kendi.trim().toLocaleLowerCase("tr")))];
+  /* aranınca: adı geçen kutular (uzun madde metinleri dahil) ve işlevler; aranmazken kısa adlı kutular ve sık işlevler */
+  const q = ara.trim().toLocaleLowerCase("tr");
+  const adTuslari = q ? digerleri.filter((x) => x.toLocaleLowerCase("tr").includes(q)).slice(0, 20) : digerleri.filter((x) => x.length <= 40);
+  const islevTuslari = q ? EXCEL_ISLEVLERI.filter((en) => en.toLocaleLowerCase("tr").includes(q) || (EN_TR[en] ?? "").toLocaleLowerCase("tr").includes(q))
+    .slice(0, 40).map((en) => EN_TR[en] ?? en) : SIK_ISLEVLER;
   return (
     <div className={stil.formul}>
       <Alan id={id} etiket="Formül" genis hata={hata ?? undefined}>
         <Girdi id={id} value={metin} maxLength={FORMUL_EN_UZUN} hata={!!hata} mesajli spellCheck={false} autoComplete="off"
           onChange={(e) => setTaslak(e.target.value)} onBlur={() => { if (taslak === null) return; yaz({ formul: taslak }); setTaslak(null); }} />
       </Alan>
-      <div className={stil.formulAdlar} role="group" aria-label="Formüle ekle">
-        {digerleri.map((x) => <button key={`a-${x}`} type="button" className={stil.formulTus} onClick={() => ekle(`[${x}]`)}>{x}</button>)}
-        {["+", "−", "×", "÷", "(", ")"].map((o) => <button key={`o-${o}`} type="button" className={stil.formulTus} aria-label={`Formüle ekle: ${o}`} onClick={() => ekle(o)}>{o}</button>)}
-        {!digerleri.length && <span className={stil.satir}>{tablo ? "Başka sayı sütunu yok." : "Başka sayı alanı yok."}</span>}
+      <div className={stil.formulAdlar} role="group" aria-label={tablo ? "Formüle ekle: bu satırın sütunları ve formatın kutuları" : "Formüle ekle: formatın kutuları"}>
+        {adTuslari.map((x) => <button key={`a-${x}`} type="button" className={stil.formulTus} onClick={() => ekle(`[${x}]`)}>{x}</button>)}
+      </div>
+      <div className={stil.formulAdlar} role="group" aria-label="Formüle ekle: işaretler">
+        {ISARETLER.map((o) => <button key={`o-${o}`} type="button" className={stil.formulTus} aria-label={`Formüle ekle: ${o === "\"\"" ? "tırnak" : o}`} onClick={() => ekle(o)}>{o}</button>)}
+      </div>
+      <div className={stil.formulAdlar} role="group" aria-label="Formüle ekle: işlevler">
+        {islevTuslari.map((x) => <button key={`f-${x}`} type="button" className={`${stil.formulTus} ${stil.formulIslev}`} onClick={() => ekle(`${x}(`)}>{x}</button>)}
+        <label className="gizli" htmlFor={`${k}-formul-ara`}>Kutu ya da işlev ara</label>
+        <input id={`${k}-formul-ara`} className={stil.formulAra} type="search" value={ara} placeholder="Kutu ya da işlev ara" autoComplete="off" onChange={(e) => setAra(e.target.value)} />
       </div>
     </div>
   );

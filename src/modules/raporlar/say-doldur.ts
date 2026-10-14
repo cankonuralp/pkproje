@@ -298,16 +298,17 @@ export function komutlariUygula(d: Durum, t: FormatTanimi, girisler: readonly Ra
       : a.tur === "tarih" ? ((v) => (v ? { v } : { neden: "tarih GG.AA.YYYY biçiminde olmalı" }))(tarihOku(ham, false))
       : a.tur === "yil" ? ((v) => (v !== null ? { v } : { neden: "yıl 4 haneli olmalı (ör. 2019)" }))(alanDegeri(a, ham, new Date()))
       : metinKutusu(ham, a.uzun ?? en.metin);
-  const ekipman = ekipmanAlanlari(t);
+  /* 556: formüllü kutular da (sahada elle yazılır — yazılan kalır, boşaltılınca formülden) */
+  const ekipman = ekipmanAlanlari(t, true);
   for (const a of ekipman.alanlar) {
     kutular.set(`e:${a.id}`, { ad: `${ekipman.baslik} · ${a.ad}`, yer: ekipmanAnahtari(a.id) ? { tur: "ekipman", id: a.id } : { tur: "alan", id: a.id },
       denetle: alanKutusu(a, { sayi: ELLE_EN_COK.bilgiSayi, metin: ELLE_EN_COK.bilgiMetin }) });
   }
-  const tablolar = new Map<string, BolumOf<"olcum">>(), maddeler = new Map<string, { cevaplar: readonly string[]; ad: string }>();
+  const tablolar = new Map<string, BolumOf<"olcum">>(), maddeler = new Map<string, { cevaplar: readonly string[]; ad: string; formul: boolean }>();
   let sonucVar = false, notVar = false;
   for (const b of t.bolumler) {
     if (b.blok === "bilgi" && b.id !== ekipman.tam?.id) {
-      for (const a of bilgiAlanlari(b)) {
+      for (const a of bilgiAlanlari(b, true)) {
         const k = ekipmanAnahtari(a.id) ? `e:${a.id}` : `a:${a.id}`;
         kutular.set(k, { ad: `${b.ad} · ${a.ad}`, yer: ekipmanAnahtari(a.id) ? { tur: "ekipman", id: a.id } : { tur: "alan", id: a.id },
           denetle: alanKutusu(a, { sayi: ELLE_EN_COK.bilgiSayi, metin: ELLE_EN_COK.bilgiMetin }) });
@@ -324,9 +325,9 @@ export function komutlariUygula(d: Durum, t: FormatTanimi, girisler: readonly Ra
         } });
       }
     } else if (b.blok === "test") {
-      for (const a of testAlanlari(b)) kutular.set(`d:${a.id}`, { ad: `${b.ad} · ${a.ad}`, yer: { tur: "deger", id: a.id }, denetle: alanKutusu(a, { sayi: ELLE_EN_COK.degerSayi, metin: ELLE_EN_COK.degerMetin }) });
+      for (const a of testAlanlari(b, true)) kutular.set(`d:${a.id}`, { ad: `${b.ad} · ${a.ad}`, yer: { tur: "deger", id: a.id }, denetle: alanKutusu(a, { sayi: ELLE_EN_COK.degerSayi, metin: ELLE_EN_COK.degerMetin }) });
     } else if (b.blok === "olcum") tablolar.set(b.id, b);
-    else if (b.blok === "liste") for (const g of b.gruplar) for (const m of g.maddeler) maddeler.set(m.id, { cevaplar: b.cevaplar, ad: m.metin.slice(0, 80) });
+    else if (b.blok === "liste") for (const g of b.gruplar) for (const m of g.maddeler) maddeler.set(m.id, { cevaplar: b.cevaplar, ad: m.metin.slice(0, 80), formul: !!m.formul?.trim() });
     else if (b.blok === "sonuc") sonucVar = true;
     else if (b.blok === "not") notVar = true;
   }
@@ -414,7 +415,7 @@ export function komutlariUygula(d: Durum, t: FormatTanimi, girisler: readonly Ra
       if (!b || satir < 0) { red("tabloda böyle bir yer yok"); continue; }
       const notlar = b.notlar ?? [];
       const anahtar = h[3] === "sonuc" ? ELLE_SONUC : h[3] === "gerekce" ? ELLE_GEREKCE : h[3];
-      const sutun = b.sutunlar.find((s) => s.id === anahtar && !s.formul);
+      const sutun = b.sutunlar.find((s) => s.id === anahtar);
       const adi = sutun ? sutun.ad : anahtar === "not" ? "uygunluk notu" : anahtar === ELLE_SONUC ? "sonuç" : anahtar === ELLE_GEREKCE ? "sonucun gerekçesi" : h[3];
       const ad = `${b.ad} · ${satir + 1}. satır · ${adi}`;
       let r: { v: string } | { neden: string };
@@ -454,6 +455,8 @@ export function komutlariUygula(d: Durum, t: FormatTanimi, girisler: readonly Ra
     if (m) {
       const md = maddeler.get(m[1]);
       if (!md) { red("böyle bir madde yok"); continue; }
+      /* 556: formüllü maddenin cevabı formülden — açıklama / derece cevabı yazılmadan da yazılır (ekrandaki gibi) */
+      if (m[2] && md.formul && !durum.cevaplar.madde[m[1]]) durum = { ...durum, cevaplar: { ...durum.cevaplar, madde: { ...durum.cevaplar.madde, [m[1]]: { c: "" } } } };
       if (!m[2]) {
         const cv = temizle(ham) ? md.cevaplar.find((x) => kucukTr(x) === kucukTr(ham)) : "";
         if (cv === undefined) { red(`cevap şunlardan biri olmalı: ${md.cevaplar.join(", ")}`, md.ad); continue; }

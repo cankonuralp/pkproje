@@ -5,7 +5,7 @@
      bütün alanlar zorunlu, fazlası yok); belge (498) ayrı blokta;
    · cevap süzülür: en çok 8 öneri, kesik / ret durumu, bozuk JSON → öneri yok;
    · sade bölüm formata çevrilir ve şemadan geçer: bilinmeyen / ölçüm cihazları bölümü, değiştirilemeyen hedef, tür değişikliği atılır; seçeneksiz
-     seçim yazıya döner; formül yalnız sayıda;
+     seçim yazıya döner; formül her türde (556; sınır yalnız sayıda);
    · "Ekle": öneri kimliğiyle yerini bulur, kimlikler şimdiki taslağa göre yeniden; iki kez eklense de tekil;
    · "Uygula": bölümün kimliği, Bakanlık işareti, tablo hesabı, cevap seti korunur; adı aynı kalan öğe kimliğini ve işaretini korur.
    · 498 belgeden başlat: belge türü içerikten (PDF, fotoğraf, Word metni), başka dosya / boş Word / 4 MB üstü red.
@@ -73,12 +73,13 @@ test("cevap süzülür: en çok 8 öneri, kesik / ret, bozuk JSON", () => {
   assert.deepEqual(formatYanitiCoz(null).oneriler, []);
 });
 
-test("sade bölüm formata çevrilir: kimlikler tekil, seçeneksiz seçim yazı, formül yalnız sayıda, sınır; geçmeyen atılır", () => {
+/* 556 (2026-10-14, reisim: "hesaplama tuşu her kutucukta olmalı"): formül her türde — eskiden "formül yalnız sayıda" (Durum'un formülü atılırdı) */
+test("sade bölüm formata çevrilir: kimlikler tekil, seçeneksiz seçim yazı, formül her türde, sınır yalnız sayıda; geçmeyen atılır", () => {
   const b = hamdanBolum(T, ZINCIR)!;
   assert.ok(b && b.blok === "olcum");
   assert.deepEqual(b.sutunlar.map((s) => [s.ad, s.giris, s.birim ?? null, s.op ?? null, s.sinir ?? null, s.formul ?? null]), [
     ["Ölçüm yeri", "metin", null, null, null, null], ["İlk boy", "sayi", "mm", null, null, null], ["Ölçülen boy", "sayi", "mm", null, null, null],
-    ["Uzama", "sayi", "%", "<=", 3, "([Ölçülen boy] − [İlk boy]) / [İlk boy] × 100"], ["Durum", "metin", null, null, null, null]]);
+    ["Uzama", "sayi", "%", "<=", 3, "([Ölçülen boy] − [İlk boy]) / [İlk boy] × 100"], ["Durum", "metin", null, null, null, "[İlk boy]"]]);
   assert.ok(!kimlikler(T).has(b.id));
   assert.equal(hamdanBolum(T, { ...ZINCIR, blok: "cihaz" }), null, "ölçüm cihazları önerilmez");
   assert.equal(hamdanBolum(T, { ...ZINCIR, blok: "yok" }), null);

@@ -18,8 +18,10 @@
    "Sıra" (duzen.ts siraBasligi); tablonun altında "Sonuç neye göre çıkar?" (motor.ts sonucKurallari); "Fotoğraf ekle" her zaman (okumaKipi; 542:
    fotoğraf okunmadan eklenir, S.A.Y okur). 488 (reisim 2026-10-11: "sağdaki kopyalama işareti kalksın … sırala tuşu da kalksın … son satırı kopyala diyince sıra no değişerek
    iniyor"): satırın kopyala işareti ve "Sırala" KALKTI, işlem sütunu yapışık değil (Sonuç sütununun üstüne biniyordu); satır sonucu gerekçeyle elle
-   değiştirilir (ElleSonuc — hata listesi 54). 2026-10-12 (reisim): bölümün fotoğraf tuşu bölüm başlığında (BaslikYuvasi.tsx), telefonda simge. */
-import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode, type TransitionStartFunction } from "react";
+   değiştirilir (ElleSonuc — hata listesi 54). 2026-10-12 (reisim): bölümün fotoğraf tuşu bölüm başlığında (BaslikYuvasi.tsx), telefonda simge.
+   556 (sunum 556 · 2. tur — reisim 2026-10-14: "görüntüdeki gibi değiştirilemez olmasın … dışarıdan diğer kutular ile aynı gözüksün, şu işlemlerin
+   sonucudur gibi açıklama olmasın"): formüllü kutu öteki kutular gibidir (HesapGirdi) — boşken formülün değeri, yazılan kalır. */
+import { useCallback, useEffect, useId, useRef, useState, type ComponentProps, type KeyboardEvent, type ReactNode, type TransitionStartFunction } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Alan, FormIzgara, Girdi } from "../../../components/form/Form";
 import { Ikon } from "../../../components/ikon/Ikon";
@@ -33,7 +35,7 @@ import { Tus, tusSinifi } from "../../../components/tus/Tus";
 import { SINIR_ISARETI } from "../../../format/hesap";
 import { ELLE_GEREKCE, ELLE_GEREKCE_EN_AZ, ELLE_SONUC, satirAnahtari, sonucKurallari, type Degerlendirme, type SatirDegerlendirmesi } from "../../../format/motor";
 import { siraBasligi } from "../../../format/duzen";
-import { formulluAlan, formulluDeger, formulluSutun } from "../../../format/formul";
+import { formulluAlan, formulluDeger, formulluMadde, formulluSutun, type FormulYeri } from "../../../format/formul";
 import { doldurma, type Bolum, type BolumOf, type Cevaplar, type Sinir } from "../../../format/tanim";
 import { meslek } from "../../personel/sema";
 import { SONUC_AD } from "../sema";
@@ -70,8 +72,10 @@ export interface Baglam {
   oku: boolean;
   /** Onaya gönder bu alanı eksik dedi ve alan hâlâ boş */
   gecersiz: (alan: string) => boolean;
-  /** 495: formüllerin değeriyle cevaplar (format/formul.ts formulUygula — motorla aynı) */
+  /** 495: formüllerin değeriyle cevaplar (format/formul.ts formulUygula — motorla aynı); formüllü kutu bunu gösterir */
   h: Cevaplar;
+  /** 556: kutunun yalnız formülden gelen değeri (kendi yazılanı yokmuş gibi — format/formul.ts formulDegeri) */
+  hesap: (yer: FormulYeri) => string | string[] | null;
   /** kayıttan gelen alanın ekrandaki değeri (seri no, kullanım yeri, kontrol tarihi raporun güncel hâliyle; 492: künye bilgisi denetçinin 1. bölümde
       değiştirdiği hâliyle) */
   kaynak: (k: Kaynak) => string | null;
@@ -148,6 +152,18 @@ export function Satir({ etiket, htmlFor, zorunlu = false, genis = false, childre
   );
 }
 
+/** 556: formüllü yazı / sayı kutusu — öteki kutular gibi; değeri formülden (kendi yazılanı varsa o). Yazarken yazılan görünür (boşaltılan kutu hemen
+    dolmaz); alandan çıkınca boşsa ya da formülün değeri yazıldıysa kutu yeniden formülden gelir (yaz(null): kendi değeri silinir) */
+export function HesapGirdi({ id, deger, saf, yaz, ...ozellik }: { id: string; deger: string; saf: () => string | string[] | null; yaz: (x: string | null) => void }
+  & Omit<ComponentProps<typeof Girdi>, "id" | "value" | "onChange" | "onBlur">) {
+  const [taslak, setTaslak] = useState<string | null>(null);
+  return <Girdi id={id} {...ozellik} value={taslak ?? deger} onChange={(e) => { setTaslak(e.target.value); yaz(e.target.value); }}
+    onBlur={() => { if (taslak === null) return; const v = taslak.trim(); setTaslak(null); if (!v || v === saf()) yaz(null); }} />;
+}
+/** 556: formüllü seçim / tarih kutusunun yazıcısı — boş ya da formülün değeri seçilince kutu formülden gelir */
+const hesapYazici = (saf: () => string | string[] | null, yaz: (x: string | null) => void) => (x: string) => yaz(!x || x === saf() ? null : x);
+const ayniListe = (a: readonly string[], b: string | string[] | null) => Array.isArray(b) && a.length === b.length && a.every((x, i) => x === b[i]);
+
 /** salt okunur değer kutusu (maket okuGirdi): gönderilmiş raporda alan yerinde kalır */
 export function OkuGirdi({ id, deger, ad }: { id: string; deger: string; ad?: string }) {
   return <Girdi id={id} readOnly value={deger || "-"} aria-label={ad} className={stil.oku} />;
@@ -217,7 +233,7 @@ export function FormatBolumu({ b, no, bag, acik, degistir, eksik }:
     const adsiz = b.gruplar.find((g) => !g.ad);
     if (adsiz) ek = <TalimatTusu ad={b.ad} baslik={`Talimat · ${b.ad}`} parcalar={grupTalimati(adsiz, (m) => m.metin)} />;
     const maddeler = b.gruplar.flatMap((g) => g.maddeler);
-    const n = maddeler.filter((m) => b.cevaplar.includes(bag.c.madde[m.id]?.c ?? "")).length;
+    const n = maddeler.filter((m) => b.cevaplar.includes(bag.h.madde[m.id]?.c ?? "")).length;
     sayac = <span className={stil.sayac}><b>{n}</b> / {maddeler.length} madde</span>;
     if (!bag.oku && maddeler.length) tuslar = <TopluMenu cevaplar={b.cevaplar} sec={(c) => {
       bag.yaz((x) => ({ ...x, madde: { ...x.madde, ...Object.fromEntries(maddeler.map((m) => [m.id, { ...x.madde[m.id], c }])) } }));
@@ -265,18 +281,25 @@ export function BilgiAlani({ a, bag }: { a: BolumOf<"bilgi">["alanlar"][number];
   if (a.ekipman) return <>{bag.ekipmanAlani(a)}</>;
   const id = alanId(a.id);
   const etiket = a.birim ? `${a.ad} (${a.birim})` : a.ad;
-  /* 495: formüllü alan — kendiliğinden, yazılmaz */
-  if (formulluAlan(a)) return <Satir etiket={etiket}><Hesapli deger={bag.h.alan[a.id]} formul={a.formul!} /></Satir>;
-  if (a.kaynak) {
+  /* 556: formüllü alan öteki kutular gibi yazılır; değeri formülden (kendi yazılanı varsa o; kayıttan gelen alanda formül boşsa kayıttaki) */
+  const f = formulluAlan(a);
+  if (a.kaynak && !f) {
     const d = bag.kaynak(a.kaynak);
     return <Satir etiket={etiket}>{d ?? <DegerYok>-</DegerYok>}</Satir>;
   }
-  const deger = bag.c.alan[a.id];
-  const metin = typeof deger === "string" ? deger : "";
+  const deger = (f ? bag.h : bag.c).alan[a.id];
+  const metin = typeof deger === "string" && deger ? deger : a.kaynak ? bag.kaynak(a.kaynak) ?? "" : "";
   const liste = Array.isArray(deger) ? deger : [];
   const gec = bag.gecersiz(a.id);
-  const yaz = (x: string | string[]) => bag.yaz((c) => ({ ...c, alan: { ...c.alan, [a.id]: x } }));
-  const zorunlu = a.zorunlu && !bag.oku;
+  const yazAnahtar = (x: string | string[] | null) => bag.yaz((c) => {
+    const alan = { ...c.alan };
+    if (x === null) delete alan[a.id]; else alan[a.id] = x;
+    return { ...c, alan };
+  });
+  const yaz = (x: string | string[]) => yazAnahtar(x);
+  const saf = () => bag.hesap({ tur: "alan", id: a.id }) ?? (a.kaynak ? bag.kaynak(a.kaynak) : null);
+  const sec = f ? hesapYazici(saf, yazAnahtar) : yaz;
+  const zorunlu = a.zorunlu && !bag.oku && !f;
   if (a.tur === "coklu") {
     return (
       <Satir etiket={etiket} zorunlu={zorunlu} genis>
@@ -284,7 +307,10 @@ export function BilgiAlani({ a, bag }: { a: BolumOf<"bilgi">["alanlar"][number];
           <div className={gec ? `${stil.coklu} ${stil.gecersiz}` : stil.coklu} role="group" aria-label={a.ad} id={id}>
             {(a.secenekler ?? []).map((s, i) => (
               <label key={i} className={stil.kutu}>
-                <input type="checkbox" checked={liste.includes(s)} onChange={(e) => yaz(e.target.checked ? [...liste, s] : liste.filter((x) => x !== s))} />
+                <input type="checkbox" checked={liste.includes(s)} onChange={(e) => {
+                  const l = e.target.checked ? [...liste, s] : liste.filter((x) => x !== s);
+                  if (f) yazAnahtar(!l.length || ayniListe(l, saf()) ? null : l); else yaz(l);
+                }} />
                 <span>{s}</span>
               </label>
             ))}
@@ -297,10 +323,13 @@ export function BilgiAlani({ a, bag }: { a: BolumOf<"bilgi">["alanlar"][number];
   if (bag.oku) {
     girdi = <OkuGirdi id={id} deger={a.tur === "tarih" && metin ? tarihNo(metin) : a.tur === "evet" ? etiketi(EVET, metin) : metin} />;
   } else if (a.tur === "tarih") {
-    girdi = <TarihKutusu id={id} ad={a.ad} deger={metin} degistir={yaz} gecersiz={gec} />;
+    girdi = <TarihKutusu id={id} ad={a.ad} deger={metin} degistir={sec} gecersiz={gec} />;
   } else if (a.tur === "secim" || a.tur === "evet") {
-    girdi = <SecimAlani id={id} ad={a.ad} deger={metin} gecersiz={gec} degistir={yaz}
+    girdi = <SecimAlani id={id} ad={a.ad} deger={metin} gecersiz={gec} degistir={sec}
       secenekler={a.tur === "evet" ? EVET : (a.secenekler ?? []).map((s) => [s, s] as const)} />;
+  } else if (f) {
+    girdi = <HesapGirdi id={id} deger={metin} saf={saf} yaz={yazAnahtar} maxLength={a.tur === "sayi" ? 20 : 500} inputMode={a.tur === "sayi" ? "decimal" : undefined}
+      aria-invalid={gec || undefined} />;
   } else {
     girdi = <Girdi id={id} value={metin} maxLength={a.tur === "sayi" ? 20 : 500} inputMode={a.tur === "sayi" ? "decimal" : undefined}
       aria-invalid={gec || undefined} onChange={(e) => yaz(e.target.value)} />;
@@ -348,13 +377,16 @@ function ListeBlok({ b, no, bag }: { b: BolumOf<"liste">; no: string | null; bag
 
 function Madde({ m, numara, b, bag, grupStd }: { m: GrupT["maddeler"][number]; numara: string; b: BolumOf<"liste">; bag: Baglam; grupStd: string | null }) {
   const x = bag.c.madde[m.id];
-  const cevap = x?.c ?? "";
+  /* 556: formüllü maddenin cevabı formülden (seçilen kalır; formülün değeri seçilince yeniden formülden) */
+  const f = formulluMadde(m);
+  const cevap = (f ? bag.h.madde[m.id]?.c : x?.c) ?? "";
   const kusurlu = cevap !== "" && cevap === b.cevaplar[1];
   const id = alanId(m.id), notId = alanId(`${m.id}.not`), dereceId = alanId(`${m.id}.derece`);
   const derece = bag.v.tanim.kurallar.derece;
   /* 472: formatın cevap biçimi — yan yana tuşlar (tek dokunuş) ya da açılır liste */
   const tusla = bag.v.tanim.gorunum.cevap === "tus" && !bag.oku;
   const yaz = (y: Partial<MaddeCevabi>) => bag.yaz((c) => ({ ...c, madde: { ...c.madde, [m.id]: { ...((c.madde[m.id] as MaddeCevabi | undefined) ?? { c: "" }), ...y } } }));
+  const cevapYaz = (c: string) => yaz({ c: f && c === bag.hesap({ tur: "madde", id: m.id }) ? "" : c });
   return (
     <div className={tusla ? `${stil.madde} ${stil.maddeTusla}` : stil.madde}>
       <div className={stil.maddeSol}>
@@ -371,9 +403,9 @@ function Madde({ m, numara, b, bag, grupStd }: { m: GrupT["maddeler"][number]; n
       </div>
       <div className={stil.maddeCevap}>
         {bag.oku ? <OkuGirdi id={id} deger={cevap} ad={m.metin} />
-          : tusla ? <CevapTuslari id={id} ad={m.metin} deger={cevap} cevaplar={b.cevaplar} gecersiz={bag.gecersiz(m.id)} degistir={(c) => yaz({ c })} />
+          : tusla ? <CevapTuslari id={id} ad={m.metin} deger={cevap} cevaplar={b.cevaplar} gecersiz={bag.gecersiz(m.id)} degistir={cevapYaz} />
           : <SecimAlani id={id} ad={m.metin} etiketsiz deger={cevap} gecersiz={bag.gecersiz(m.id)} secenekler={b.cevaplar.map((c) => [c, c] as const)}
-            degistir={(c) => yaz({ c })} />}
+            degistir={cevapYaz} />}
       </div>
       {kusurlu && (
         <div className={stil.maddeKusur}>
@@ -425,7 +457,12 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
   const notlar = b.notlar ?? [];
   const notSecenek = notlar.map((n, j): SecimSecenegi => [String(j + 1), `Not-${j + 1}`, n.agir ? "ağır kusur" : n.kusur ? "kusur" : "uygun"]);
   const tablo = (f: (l: Record<string, string>[]) => Record<string, string>[]) => bag.yaz((c) => ({ ...c, tablo: { ...c.tablo, [b.id]: f(c.tablo[b.id] ?? []) } }));
-  const hucre = (i: number, k: string, deger: string) => tablo((l) => l.map((s, j) => (j === i ? { ...s, [k]: deger } : s)));
+  const hucre = (i: number, k: string, deger: string | null) => tablo((l) => l.map((s, j) => {
+    if (j !== i) return s;
+    const y = { ...s };
+    if (deger === null) delete y[k]; else y[k] = deger;
+    return y;
+  }));
   const azEksik = bag.gecersiz(b.id);
   /* 486: son satırın kopyası — ilk sütundaki kimlik / no bir artar; yazılanlar Kaydet'e kadar ekranda */
   const ilk = b.sutunlar[0];
@@ -468,24 +505,27 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
                   <tr key={i}>
                     <td className={stil.satirNo}>{i + 1}</td>
                     {b.sutunlar.map((col) => {
-                      const anahtar = satirAnahtari(b.id, i, col.id), id = alanId(anahtar), deger = s[col.id] ?? "";
+                      /* 556: formüllü sütun öteki hücreler gibi; değeri aynı satırdan formülle (yazılan kalır) */
+                      const f = formulluSutun(col);
+                      const anahtar = satirAnahtari(b.id, i, col.id), id = alanId(anahtar), deger = (f ? bag.h.tablo[b.id]?.[i] : s)?.[col.id] ?? "";
                       const ad = `${i + 1}. satır · ${col.ad}${col.birim ? ` (${col.birim})` : ""}`;
-                      /* 495: formüllü sütun — aynı satırdan kendiliğinden */
-                      if (formulluSutun(col)) return <td key={col.id}><Hesapli deger={bag.h.tablo[b.id]?.[i]?.[col.id]} formul={col.formul!} /></td>;
+                      const saf = () => bag.hesap({ tur: "hucre", bolum: b.id, satir: i, sutun: col.id });
+                      const hucreYaz = (x: string | null) => hucre(i, col.id, x);
                       if (bag.oku) return <td key={col.id}>{(col.giris === "evet" ? etiketi(EVET, deger) : deger) || <DegerYok />}</td>;
                       if (col.giris === "secim" || col.giris === "evet") {
                         return (
                           <td key={col.id} className={stil.secimHucre}>
-                            <SecimAlani id={id} ad={ad} etiketsiz deger={deger} gecersiz={bag.gecersiz(anahtar)} degistir={(x) => hucre(i, col.id, x)}
+                            <SecimAlani id={id} ad={ad} etiketsiz deger={deger} gecersiz={bag.gecersiz(anahtar)} degistir={f ? hesapYazici(saf, hucreYaz) : hucreYaz}
                               secenekler={col.giris === "evet" ? EVET : (col.secenekler ?? []).map((x) => [x, x] as const)} />
                           </td>
                         );
                       }
+                      const ozellik = { "aria-label": ad, maxLength: col.giris === "sayi" ? 12 : 120, inputMode: col.giris === "sayi" ? "decimal" as const : undefined,
+                        className: col.giris === "sayi" ? undefined : stil.metinHucre, "aria-invalid": bag.gecersiz(anahtar) || undefined };
                       return (
                         <td key={col.id}>
-                          <Girdi id={id} aria-label={ad} value={deger} maxLength={col.giris === "sayi" ? 12 : 120} inputMode={col.giris === "sayi" ? "decimal" : undefined}
-                            className={col.giris === "sayi" ? undefined : stil.metinHucre}
-                            aria-invalid={bag.gecersiz(anahtar) || undefined} onChange={(e) => hucre(i, col.id, e.target.value)} />
+                          {f ? <HesapGirdi id={id} deger={deger} saf={saf} yaz={hucreYaz} {...ozellik} />
+                            : <Girdi id={id} value={deger} {...ozellik} onChange={(e) => hucreYaz(e.target.value)} />}
                         </td>
                       );
                     })}
@@ -597,42 +637,31 @@ function TestBlok({ b, bag }: { b: BolumOf<"test">; bag: Baglam }) {
       yaz={(id, x) => bag.yaz((c) => ({ ...c, deger: { ...c.deger, [id]: x } }))} dolu={(id) => !!bag.c.deger[id]} />
     <FormIzgara>
       {b.degerler.map((d) => {
-        const id = alanId(d.id), deger = bag.c.deger[d.id] ?? "", r = bag.d.degerler[d.id] ?? null, gec = bag.gecersiz(d.id);
+        /* 556: formüllü değer öteki kutular gibi; değeri formülden (yazılan kalır), sınırı varsa sonucu yanında */
+        const f = formulluDeger(d);
+        const id = alanId(d.id), deger = (f ? bag.h : bag.c).deger[d.id] ?? "", r = bag.d.degerler[d.id] ?? null, gec = bag.gecersiz(d.id);
         const sinir = sinirMetni(d.op, d.sinir, d.birim);
         const ipucu = [sinir && `Sınır ${sinir}`, d.not].filter(Boolean).join(" · ");
         const secmeli = !!d.secenekler?.length;
         const sonuc = ipucu || r !== null ? <>{ipucu}{r !== null && <>{ipucu && " · "}<span className={r ? stil.onay : stil.hataMetin}>{r ? "Uygun" : secmeli ? (d.agir ? "Ağır kusur" : "Uygun değil") : "Sınır dışı"}</span></>}</> : undefined;
-        const yaz = (x: string) => bag.yaz((c) => ({ ...c, deger: { ...c.deger, [d.id]: x } }));
-        /* 495: formüllü değer — kendiliğinden; sınırı varsa sonucu yanında */
-        if (formulluDeger(d)) {
-          return (
-            <Alan key={d.id} id={id} etiket={d.birim ? `${d.ad} (${d.birim})` : d.ad} sonuc={sonuc}>
-              <Hesapli deger={bag.h.deger[d.id]} formul={d.formul!} />
-            </Alan>
-          );
-        }
+        const yaz = (x: string | null) => bag.yaz((c) => {
+          const deger = { ...c.deger };
+          if (x === null) delete deger[d.id]; else deger[d.id] = x;
+          return { ...c, deger };
+        });
+        const saf = () => bag.hesap({ tur: "deger", id: d.id });
+        const ozellik = { maxLength: d.metin ? 60 : 12, inputMode: d.metin ? undefined : "decimal" as const, hata: gec || r === false, mesajli: !!sonuc };
         return (
-          <Alan key={d.id} id={id} etiket={d.birim ? `${d.ad} (${d.birim})` : d.ad} zorunlu={d.zorunlu && !bag.oku} hata={gec ? (secmeli ? "Seçilmeli." : "Değer yazılmalı.") : undefined} sonuc={sonuc}>
+          <Alan key={d.id} id={id} etiket={d.birim ? `${d.ad} (${d.birim})` : d.ad} zorunlu={d.zorunlu && !bag.oku && !f} hata={gec ? (secmeli ? "Seçilmeli." : "Değer yazılmalı.") : undefined} sonuc={sonuc}>
             {bag.oku ? <OkuGirdi id={id} deger={deger} />
-              : secmeli ? <SecimAlani id={id} ad={d.ad} deger={deger} gecersiz={gec} degistir={yaz} secenekler={d.secenekler!.map((s) => [s, s] as const)} />
-                : <Girdi id={id} value={deger} maxLength={d.metin ? 60 : 12} inputMode={d.metin ? undefined : "decimal"} hata={gec || r === false} mesajli={!!sonuc}
-                  onChange={(e) => yaz(e.target.value)} />}
+              : secmeli ? <SecimAlani id={id} ad={d.ad} deger={deger} gecersiz={gec} degistir={f ? hesapYazici(saf, yaz) : yaz} secenekler={d.secenekler!.map((s) => [s, s] as const)} />
+                : f ? <HesapGirdi id={id} deger={deger} saf={saf} yaz={yaz} {...ozellik} />
+                  : <Girdi id={id} value={deger} {...ozellik} onChange={(e) => yaz(e.target.value)} />}
           </Alan>
         );
       })}
     </FormIzgara>
     </>
-  );
-}
-
-/** 495: formülle hesaplanan değer (salt okunur) — altında formülün kendisi; hesaplanamadıysa söyler */
-function Hesapli({ deger, formul }: { deger: unknown; formul: string }) {
-  const v = typeof deger === "string" && deger ? deger : null;
-  return (
-    <span className={stil.hesapli}>
-      <span className={stil.hesapliDeger}>{v ?? <span className={stil.altMetin}>hesaplanamadı</span>}</span>
-      <span className={stil.hesapliFormul}>= {formul}</span>
-    </span>
   );
 }
 

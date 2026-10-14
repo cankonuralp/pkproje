@@ -79,23 +79,26 @@ export const alanSablonu = (alanlar: readonly OkunacakAlan[]) => [["Alan", "Değ
 export const EKIPMAN_UZUN: Record<EkipmanAlani, number> = { marka: 40, model: 40, seri: 30, imal: 4, konum: 60, amac: 120, bolum: 60 };
 const ekipmanAlani = (k: EkipmanAlani, ad: string): OkunacakAlan => (k === "imal" ? { id: k, ad, tur: "yil", uzun: 4 } : { id: k, ad, tur: "metin", uzun: EKIPMAN_UZUN[k] });
 
-/** bilgi bölümünün doldurulabilen alanları — kayıttan gelen ve çok seçimli alan hariç; ekipman kaydına bağlı alan EkipmanBilgisi anahtarıyla */
-export function bilgiAlanlari(b: BolumOf<"bilgi">): OkunacakAlan[] {
+/** bilgi bölümünün doldurulabilen alanları — kayıttan gelen ve çok seçimli alan hariç; ekipman kaydına bağlı alan EkipmanBilgisi anahtarıyla.
+    556: formulluDahil — formüllü alanlar da (S.A.Y: elle yazılabilen her kutu; kayıttan gelen alan formüllüyse sahada yazılır); fotoğraftan / Excel'den
+    okuma formüllü alanı doldurmaz (ekipman bilgisi formüllü olsa da okunur — ekipman bilgisi formülden önce gelir) */
+export function bilgiAlanlari(b: BolumOf<"bilgi">, formulluDahil = false): OkunacakAlan[] {
   return b.alanlar.flatMap((a): OkunacakAlan[] => {
-    if (a.kaynak || a.tur === "coklu" || formulluAlan(a)) return [];
     if (a.ekipman) return [ekipmanAlani(a.ekipman, a.ad)];
+    const f = formulluAlan(a);
+    if (a.tur === "coklu" || (f && !formulluDahil) || (a.kaynak && !f)) return [];
     return [{ id: a.id, ad: a.birim ? `${a.ad} (${a.birim})` : a.ad, tur: a.tur === "secim" || a.tur === "evet" || a.tur === "tarih" || a.tur === "sayi" ? a.tur : "metin",
       uzun: 500, secenekler: a.secenekler, birim: a.birim }];
   });
 }
-/** test bölümünün değerleri */
-export const testAlanlari = (b: BolumOf<"test">): OkunacakAlan[] => b.degerler.filter((d) => !formulluDeger(d)).map((d) => ({
+/** test bölümünün değerleri (556: formulluDahil — formüllü değerler de; S.A.Y) */
+export const testAlanlari = (b: BolumOf<"test">, formulluDahil = false): OkunacakAlan[] => b.degerler.filter((d) => formulluDahil || !formulluDeger(d)).map((d) => ({
   id: d.id, ad: d.birim ? `${d.ad} (${d.birim})` : d.ad, tur: d.secenekler?.length ? "secim" : d.metin ? "metin" : "sayi", uzun: d.metin ? 60 : 12,
   secenekler: d.secenekler, birim: d.birim }));
 /** 2. bölüm (ekipman bilgileri): formatın tam ekipman bölümü varsa onun alanları, yoksa ekranda kayıttan başlayan sabit satırlar */
-export function ekipmanAlanlari(t: FormatTanimi): { tam: BolumOf<"bilgi"> | null; baslik: string; alanlar: OkunacakAlan[] } {
+export function ekipmanAlanlari(t: FormatTanimi, formulluDahil = false): { tam: BolumOf<"bilgi"> | null; baslik: string; alanlar: OkunacakAlan[] } {
   const d = raporDuzeni(t, false);
-  if (d.tam) return { tam: d.tam, baslik: d.tam.ad, alanlar: bilgiAlanlari(d.tam) };
+  if (d.tam) return { tam: d.tam, baslik: d.tam.ad, alanlar: bilgiAlanlari(d.tam, formulluDahil) };
   return { tam: null, baslik: d.ekipmanBaslik, alanlar: sabitEkipmanAlanlari(t).map((k) => ekipmanAlani(k, EKIPMAN_ALAN_ADI[k])) };
 }
 /** ekipman bilgisinin anahtarı mı (değeri raporun ekipman bilgisinde) */

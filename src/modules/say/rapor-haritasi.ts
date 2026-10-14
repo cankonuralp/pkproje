@@ -6,8 +6,11 @@
    rapora yazmak için gerekmez. Çok büyük raporda metin sınırlı (tablonun fazla satırları sayıyla).
    557 (sunum 557 · 2. tur — reisim 2026-10-14: "el ile girebildiğim değerleri say asistan ile giremiyor"): elle girilebilen her yer haritada —
    künye (YERİ ve kilidi; DEĞERİ GİTMEZ: müşteri / kişi bilgisi S.A.Y isteğine konmaz — değeri kişinin kendi mesajından), kontrol tarihleri, çoklu
-   seçim, tablonun uygunluk notu / satır sonucu + gerekçesi / satır silme, ölçüm cihazları (seçilebilir kodlarla). */
+   seçim, tablonun uygunluk notu / satır sonucu + gerekçesi / satır silme, ölçüm cihazları (seçilebilir kodlarla).
+   556 (sunum 556 · 2. tur): formüllü kutular da haritada, değerleri formülle (ekrandaki gibi; formül kayıttan gelen bilgiyi okumaz — künye
+   gitmez); kayıttan gelen formüllü alanın yeri var, değeri gitmez. */
 import { kilitliKunye } from "../../format/kunye.ts";
+import { formulUygula } from "../../format/formul.ts";
 import { Cevaplar, KUNYE_ALAN_ADI, KUNYE_ALANLARI, type FormatTanimi } from "../../format/tanim.ts";
 import type { OkunacakAlan } from "../../format/deger.ts";
 import { ELLE_GEREKCE, ELLE_SONUC } from "../../format/motor.ts";
@@ -45,9 +48,13 @@ function cihazlarOku(x: unknown): CanliCihaz[] {
 export function raporHaritasi(t: FormatTanimi, turAd: string, canli: CanliRapor): string | null {
   const g = Cevaplar.safeParse(canli.cevaplar);
   if (!g.success) return null;
-  const c = g.data;
+  /* 556: formüllü kutuların değeri (kayıttan gelen alanın yazılanı hesaba da girmez — künye gitmez) */
+  const kaynakli = new Set(t.bolumler.flatMap((b) => (b.blok === "bilgi" ? b.alanlar.filter((a) => a.kaynak).map((a) => a.id) : [])));
+  const ekipmanHam = canli.ekipman && typeof canli.ekipman === "object" ? canli.ekipman as Record<string, unknown> : {};
+  const c = formulUygula(t, { ...g.data, alan: Object.fromEntries(Object.entries(g.data.alan).filter(([k]) => !kaynakli.has(k))) },
+    { ekipman: Object.fromEntries(Object.entries(ekipmanHam).flatMap(([k, x]) => (typeof x === "string" ? [[k, x.slice(0, 200)]] : []))) });
   const ekipmanDegeri = (id: string) => {
-    const e = canli.ekipman && typeof canli.ekipman === "object" ? (canli.ekipman as Record<string, unknown>)[id] : undefined;
+    const e = ekipmanHam[id];
     return typeof e === "string" ? e : "";
   };
   const alanDegeri = (id: string) => (ekipmanAnahtari(id) ? ekipmanDegeri(id) : (() => { const v = c.alan[id]; return Array.isArray(v) ? v.join(", ") : v ?? ""; })());
@@ -66,7 +73,7 @@ export function raporHaritasi(t: FormatTanimi, turAd: string, canli: CanliRapor)
       l.push(`- tarih:${k} · ${TARIH_ADI[k]} (${k === "bas" || k === "bit" ? "tarih ve saat: GG.AA.YYYY SS:DD" : "tarih: GG.AA.YYYY"}) = ${tirnak(/^\d{4}-\d{2}-\d{2}/.test(v) ? tarihYazimi(v) : "")}`);
     }
   }
-  const ekipman = ekipmanAlanlari(t);
+  const ekipman = ekipmanAlanlari(t, true);
   if (ekipman.alanlar.length) {
     l.push(`## ${ekipman.baslik}`);
     for (const a of ekipman.alanlar) l.push(satir(`e:${a.id}`, a, alanDegeri(a.id)));
@@ -74,17 +81,18 @@ export function raporHaritasi(t: FormatTanimi, turAd: string, canli: CanliRapor)
   let sonucVar = false, notVar = false;
   for (const b of t.bolumler) {
     if (b.blok === "bilgi" && b.id !== ekipman.tam?.id) {
-      const alanlar = bilgiAlanlari(b);
+      const alanlar = bilgiAlanlari(b, true);
       if (!alanlar.length) continue;
       l.push(`## ${b.ad}`);
-      for (const a of alanlar) l.push(satir(ekipmanAnahtari(a.id) ? `e:${a.id}` : `a:${a.id}`, a, alanDegeri(a.id)));
+      for (const a of alanlar) l.push(kaynakli.has(a.id) ? `- a:${a.id} · ${a.ad} (yazı; kayıttan — değeri gönderilmez)`
+        : satir(ekipmanAnahtari(a.id) ? `e:${a.id}` : `a:${a.id}`, a, alanDegeri(a.id)));
       /* 557: çoklu seçim (virgülle birden çok) */
       for (const a of b.alanlar) if (a.tur === "coklu" && !a.kaynak) l.push(`- a:${a.id} · ${a.ad} (çoklu seçim: ${(a.secenekler ?? []).join(" / ")}; virgülle) = ${tirnak(alanDegeri(a.id))}`);
     } else if (b.blok === "test") {
       l.push(`## ${b.ad}`);
-      for (const a of testAlanlari(b)) l.push(satir(`d:${a.id}`, a, c.deger[a.id] ?? ""));
+      for (const a of testAlanlari(b, true)) l.push(satir(`d:${a.id}`, a, c.deger[a.id] ?? ""));
     } else if (b.blok === "olcum") {
-      const sutunlar = b.sutunlar.filter((s) => !s.formul);
+      const sutunlar = b.sutunlar;
       l.push(`## ${b.ad} — tablo; hücre kimliği t:${b.id}:<satır no>:<sütun kimliği> (satır 1'den; son satırdan sonraki numara yeni satır açar)`);
       l.push(`Sütunlar: ${sutunlar.map((s) => `${s.id} = ${s.ad}${s.birim ? ` (${s.birim})` : ""} [${s.giris === "secim" ? `seçim: ${(s.secenekler ?? []).join(" / ")}` : s.giris === "evet" ? "evet / hayır" : s.giris === "sayi" ? "sayı" : "yazı"}]`).join("; ")}`);
       /* 557: satırın uygunluk notu ya da elle sonucu + gerekçesi; satır silme */

@@ -20,6 +20,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@formulajs/formulajs": "4.6.1",
     "@sparticuz/chromium": "153.0.0",
     "embedded-postgres": "18.4.0-beta.17",
     "next": "16.3.6",

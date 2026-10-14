@@ -128,6 +128,11 @@ pkproje/
                             · 495: formul.ts (saf) — FORMÜL: sayı alanı / sütun / test değeri [Ad]larla hesaplanır (eval yok); formulUygula motor, belge,
                             552: boşluksuz ad parantezsiz + baştaki "Ad =" atılır ("RCa = 480/RCd"); kurucu formulDuzelt'le [Ad] biçiminde saklar;
                             saha ortak; formulDenet kurucuda; Excel ve fotoğraftan okumaya girmez · blok "metin" serbest metin
+                            · 556 HER KUTUDA HESAP: formül her öğede (alan her türde — kayıttan gelen, ekipman bilgisi —, sütun, test değeri, madde);
+                            dil Excel gibi (karşılaştırma, "yazı", &, ^) + excel.ts (@formulajs/formulajs 4.6.1 — 373 işlev, Türkçe ↔ İngilizce ad; tek giriş);
+                            adlar formatın her kutusu (tablo dışında sütun = bütün satırlar, SÜTUN([Ad]), tablo adı); ELLE YAZILAN KALIR (formulDegeri:
+                            yalnız formülden); sahada raporlar/ui/Bloklar.tsx HesapGirdi (öteki kutular gibi; boşaltınca formülden); S.A.Y yazar
+                            (doldur.ts formulluDahil)
                             · 492: kunye.ts (saf) — raporun künyesi denetçinin değiştirdiğiyle (cevaplar.kunye); formatın gorunum.kilitli bilgisi
                             (başlangıç SGK, İSG-KATİP) değişmez, sunucu reddeder (kunyeKilitHatalari); saha ekranı, belge, gözden geçirme aynı işlevden
   src/modules/rapor-format/ RAPOR FORMATI (2026-10-04, 308): sürümlü tanım (rapor_format, göç 0022: taslak → yayında → eski; yayınlanan değişmez) ·

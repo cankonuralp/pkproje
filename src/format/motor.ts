@@ -14,7 +14,7 @@
    ve yapı hatasını söyler (uyarı).
    ⛔ Bu dosya yalnız ./hesap.ts, ./tanim.ts ve ./formul.ts'i içe aktarır (olumsuz kanıt kopyası bu yolları çevirir). */
 import { EGRI_KAT, linyeHesap, noktaHesap, pdHesap, RCD_SURE, rcdTestYeter, sayiOku, SINIR_ISARETI, sinirSonucu, UO, ziHesap } from "./hesap.ts";
-import { formulDenet, formulluAlan, formulluDeger, formulluSutun, formulUygula, genelSayiAdlari, tabloSayiAdlari } from "./formul.ts";
+import { formulDenet, formulluAlan, formulluDeger, formulluMadde, formulluSutun, formulUygula, genelAdlar, tabloAdlari } from "./formul.ts";
 import { kurucudan, type Bolum, type BolumOf, type Cevaplar, type FormatTanimi } from "./tanim.ts";
 
 export interface Eksik { bolum: string; alan: string; ad: string }
@@ -97,8 +97,7 @@ export function sonucKurallari(b: BolumOf<"olcum">): string[] {
   } else if (b.hesap === "pd") l.push("PD kesiti 6–25 mm²", "Tamamlayıcı PD kesiti ≥ 4 mm² (ZPKK02)");
   else if (b.hesap === "zi") l.push("Zemin izolasyon direnci > 50 kΩ (ZPKK02)");
   for (const c of b.sutunlar) {
-    /* 495: formüllü sütun — hesabı önce */
-    if (formulluSutun(c)) l.push(`${c.ad} = ${c.formul} (kendiliğinden hesaplanır)`);
+    /* 495 → 556 (reisim 2026-10-14: "şu işlemlerin sonucudur gibi açıklama olmasın"): formüllü sütunun hesabı burada yazılmaz */
     if (c.olumsuz?.length) l.push(`${c.ad}: ${c.olumsuz.map((o) => (c.giris === "evet" ? (o === "evet" ? "Evet" : "Hayır") : o)).join(" / ")} seçilirse Uygun değil`);
     else if (c.op && c.sinir !== undefined) l.push(`${c.ad} ${SINIR_ISARETI[c.op]} ${virgul(c.sinir)}${c.birim ? ` ${c.birim}` : ""}`);
   }
@@ -119,7 +118,8 @@ export function degerlendir(t: FormatTanimi, c0: Cevaplar): Degerlendirme {
       case "liste":
         for (const g of b.gruplar) for (const m of g.maddeler) {
           const x = c.madde[m.id];
-          if (!x || !b.cevaplar.includes(x.c)) { eksikler.push({ bolum: b.id, alan: m.id, ad: m.metin }); continue; }
+          /* 556: formüllü madde (cevabı hesaplanır) hesaplanamazsa eksik sayılmaz */
+          if (!x || !b.cevaplar.includes(x.c)) { if (!formulluMadde(m)) eksikler.push({ bolum: b.id, alan: m.id, ad: m.metin }); continue; }
           if (x.c !== b.cevaplar[1]) continue;
           kusurlar.push({ bolum: b.id, ref: m.id, kriter: m.metin, metin: x.not?.trim() ? `${m.metin}: ${x.not.trim()}` : m.metin, agir: t.kurallar.derece && x.derece === "agir" });
           if (!x.not?.trim()) eksikler.push({ bolum: b.id, alan: `${m.id}.not`, ad: `${m.metin} · kusur açıklaması` });
@@ -154,7 +154,7 @@ export function degerlendir(t: FormatTanimi, c0: Cevaplar): Degerlendirme {
           /* seçmeli değer (426): seçeneklerden biri olmalı; olumsuz seçenek kusur (ağırlığı değerin kendisinde) */
           if (d.secenekler?.length) {
             const dolu = !bos(v) && d.secenekler.includes(v!);
-            if (d.zorunlu && !dolu) eksikler.push({ bolum: b.id, alan: d.id, ad: d.ad });
+            if (d.zorunlu && !dolu && !formulluDeger(d)) eksikler.push({ bolum: b.id, alan: d.id, ad: d.ad });
             const r = !dolu ? null : d.olumsuz?.length ? !d.olumsuz.includes(v!) : null;
             degerler[d.id] = r;
             if (r === false) kusurlar.push({ bolum: b.id, ref: d.id, kriter: d.ad, metin: `${d.ad}: ${v}`, agir: d.agir });
@@ -327,12 +327,14 @@ export function yayinDenetimi(t: FormatTanimi, kaynak?: FormatTanimi | null): st
     }
   }
   /* 495: formül — yapı hatası, bilinmeyen ad, kendine bakma (uyarı; hesaplanamayan formülün değeri sahada boş kalır) */
-  const genel = genelSayiAdlari(t);
+  const genel = genelAdlar(t);
   const formulSorun = (yer: string, f: string, adlar: readonly string[], kendi: string) => { const h = formulDenet(f, adlar, kendi); if (h) l.push(`${yer} formülü: ${h}`); };
   for (const b of t.bolumler) {
     if (b.blok === "bilgi") for (const a of b.alanlar) if (formulluAlan(a)) formulSorun(`“${b.ad} · ${a.ad}”`, a.formul!, genel, a.ad);
     if (b.blok === "test") for (const d of b.degerler) if (formulluDeger(d)) formulSorun(`“${b.ad} · ${d.ad}”`, d.formul!, genel, d.ad);
-    if (b.blok === "olcum") for (const s of b.sutunlar) if (formulluSutun(s)) formulSorun(`“${b.ad} · ${s.ad}”`, s.formul!, tabloSayiAdlari(b), s.ad);
+    if (b.blok === "olcum") for (const s of b.sutunlar) if (formulluSutun(s)) formulSorun(`“${b.ad} · ${s.ad}”`, s.formul!, tabloAdlari(t, b), s.ad);
+    /* 556: kontrol maddesinin cevabı da formülle */
+    if (b.blok === "liste") for (const g of b.gruplar) for (const m of g.maddeler) if (formulluMadde(m)) formulSorun(`“${b.ad} · ${m.metin.slice(0, 60)}”`, m.formul!, genel, m.metin);
   }
   if (!t.bolumler.some((b) => b.blok === "sonuc")) l.push("Sonuç ve kanaat bölümü yok.");
   if (!t.bolumler.some((b) => b.blok === "imza")) l.push("İmza alanları bölümü yok.");

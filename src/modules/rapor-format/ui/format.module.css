@@ -149,4 +149,11 @@
 }
 .formulTus:hover { border-color: var(--yazi2); }
 .formulTus:focus-visible { outline: 2px solid var(--odak); outline-offset: 2px; }
-@media (pointer: coarse) { .formulTus { min-height: 44px; } }
+/* 556: işlev tuşları ve işlev arama (Excel'in işlevleri, Türkçe ya da İngilizce adıyla) */
+.formulIslev { font-weight: 600; }
+.formulAra {
+  min-height: 32px; width: 11rem; max-width: 100%; padding: 0 12px; border: 1px solid var(--kenar-alan); border-radius: 999px; background: var(--kart);
+  color: var(--yazi); font: inherit; font-size: var(--boy-kucuk);
+}
+.formulAra:focus-visible { outline: 2px solid var(--odak); outline-offset: 2px; }
+@media (pointer: coarse) { .formulTus, .formulAra { min-height: 44px; } }

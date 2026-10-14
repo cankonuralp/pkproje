@@ -42,7 +42,7 @@ export function hamdanBolum(t: FormatTanimi, ham: unknown, ek: Set<string> = new
       const sec = secenekler(a.secenekler);
       const tur = a.tur === "secim" && !sec ? "metin" : (["metin", "sayi", "tarih", "secim", "evet"] as const).find((x) => x === a.tur) ?? "metin";
       return { id: yeni("a"), ad: yazi(a.ad, 200), tur, zorunlu: a.zorunlu === true, kilit: false, birim: istege(a.birim, 40),
-        ...(tur === "secim" ? { secenekler: sec } : {}), ...(tur === "sayi" && formul(a.formul) ? { formul: formul(a.formul) } : {}) };
+        ...(tur === "secim" ? { secenekler: sec } : {}), ...(formul(a.formul) ? { formul: formul(a.formul) } : {}) };
     });
   } else if (blok === "liste") {
     let gruplar = dizi(h.gruplar, 40).map(nesne).map((g) => ({ ad: yazi(g.ad, 200), maddeler: dizi(g.maddeler, 200).map((m) => yazi(m, 200)).filter(Boolean) }))
@@ -54,8 +54,9 @@ export function hamdanBolum(t: FormatTanimi, ham: unknown, ek: Set<string> = new
     b = { ...b, satir: "ekle", sutunlar: dizi(h.sutunlar, 20).map(nesne).filter((s) => { const a = kucuk(yazi(s.ad, 200)); if (!a || gorulen.has(a)) return false; gorulen.add(a); return true; }).map((s) => {
       const sec = secenekler(s.secenekler);
       const giris = s.giris === "secim" && !sec ? "metin" : (["sayi", "metin", "secim", "evet"] as const).find((x) => x === s.giris) ?? "sayi";
+      /* 556: formül her türde (sınır yalnız sayıda) */
       return { id: yeni("s"), ad: yazi(s.ad, 200), giris, birim: istege(s.birim, 40), ...(giris === "secim" ? { secenekler: sec } : {}),
-        ...(giris === "sayi" ? { ...sinir(s), ...(formul(s.formul) ? { formul: formul(s.formul) } : {}) } : {}) };
+        ...(giris === "sayi" ? sinir(s) : {}), ...(formul(s.formul) ? { formul: formul(s.formul) } : {}) };
     }) };
   } else if (blok === "test") {
     b.degerler = dizi(h.degerler, 40).map(nesne).filter((d) => yazi(d.ad, 200)).map((d) => ({

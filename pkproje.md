@@ -2483,6 +2483,20 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-14 (559): **SUNUM 556 UYGULANDI — HER KUTUDA HESAP** (reisim: *"tamam işin bitince iki maketide onaylıyorum uygulamaya geç yayınla"*;
+  istek: *"hesaplama tuşu her kutucukta olmalı … görüntüdeki gibi değiştirilemez olmasın, olması gerekenin dışında bir şey olursa değiştirebilelim,
+  dışarıdan diğer kutular ile aynı gözüksün, şu işlemlerin sonucudur gibi açıklama olmasın"*, *"istediğim hesabı istediğim gibi yapabilmeliyim
+  kısıtlama olmamalı … ileride yapılacak olan formlarda da olmalı"*). Format yapıcı: kâğıtta HER öğede hesap makinesi tuşu (alan — kayıttan gelen ve
+  ekipman bilgisi dahil —, kontrol maddesi, tablo sütunu, test değeri; tuş öğenin türüne bakmaz → ileride eklenen her formatta da); formül alanında
+  kutu adları, işaretler (+ − × ÷ ^ % ( ) ; & = <> < > <= >= "") ve Excel işlevleri, "Kutu ya da işlev ara". Dil Excel gibi: işlevler
+  @formulajs/formulajs (MIT, 373 işlev; Türkçe ya da İngilizce adıyla — EĞER, TOPLA, ORTALAMA, YUVARLA, SERİTARİH, DÜŞEYARA …), yazı ve
+  birleştirme, karşılaştırma, tarih (+ gün); ad formatın her kutusu (tabloda sütun adı o satır, tablo dışında bütün satırlar; SÜTUN([Ad]); tablo adı
+  DÜŞEYARA'ya satırlar). Sahada formüllü kutu öteki kutular gibi (eski salt okunur "= formül" kutusu ve "hesaplanamadı" kalktı): boşken formülün
+  değeri görünür, yazılan kalır, boşaltılınca (ya da formülün değeri yazılınca) yeniden formülden; belge kutuda ne varsa onu basar (kayıttan gelen
+  ve ekipman bilgisini de okur). Sonuç kurallarından "(kendiliğinden hesaplanır)" satırı kalktı. S.A.Y formüllü kutuya da yazar (haritada hesaplanmış
+  değeriyle; kayıttan gelen alanın değeri gitmez). Formüllü madde yeni raporda "Uygun" ile başlamaz (formülden). Kilitler: tests/formul.test.ts 556
+  testleri (işlevler, her türde formül, elle yazılan kalır, öncelik, kaydedilen biçim), bozan 6–7 (elle yazılanın üstüne yazma, Türkçe işlev adı);
+  uçtan uca: saha ekranında formüllü sütun yazılır / boşaltılınca formülden. Göç yok.
 - 2026-10-14 (558): **SUNUM 557 UYGULANDI — S.A.Y ŞİKÂYETLERİ** (reisim: *"tamam işin bitince iki maketide onaylıyorum uygulamaya geç yayınla işin
   bitince pc yi kapat"*). (1–2) SayAsistan: mesaj Gönder'e basınca hemen balon, kutu boşalır; S.A.Y'ın balonunda hareket eden üç nokta + "Düşünüyor",
   iş sırasında dönen işaret + "Rapora yazıyor" / "Formata yazıyor" / "Okuyor"; alttaki "S.A.Y düşünüyor…" satırı ve iş bildirimleri kalktı. (3–5) iş

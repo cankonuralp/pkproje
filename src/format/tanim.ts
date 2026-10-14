@@ -44,16 +44,17 @@ export type Sinir = (typeof SINIRLAR)[number];
 /** talimat (430): maddenin / grubun / genel muayenenin NASIL yapılacağı — saha ekranında ünlemle açılır, PDF'e basılmaz */
 const talimat = z.string().max(4000);
 export type Blok = (typeof BLOKLAR)[number];
-/** 495 (hata listesi 29 + 46 maketi): firmanın KENDİ hesabı — sayı alanı / sütunu / test değeri formülle hesaplanır (src/format/formul.ts); sahada
-    denetçi yazmaz. Yalnız sayı türünde anlamlı; ötekinde yok sayılır. */
-const formul = z.string().trim().max(400).optional();
+/** 495 (hata listesi 29 + 46 maketi): firmanın KENDİ hesabı (src/format/formul.ts). 556 (sunum 556 · 2. tur — reisim: "hesaplama tuşu her kutucukta
+    olmalı … kısıtlama olmamalı"): HER KUTUDA — bilgi alanı (her tür), sütun, test değeri, kontrol maddesinin cevabı; Excel işlevleri; sahada elle
+    yazılan kalır, boşsa formül. */
+const formul = z.string().trim().max(2000).optional();
 
 const Alan = z.object({
   id: kimlik, ad, tur: z.enum(ALAN_TURLERI), zorunlu: z.boolean().default(false), kilit: z.boolean().default(false),
   secenekler: z.array(z.string().trim().min(1).max(200)).max(40).optional(), birim: kisa.optional(), kaynak: z.enum(KAYNAKLAR).optional(),
   ekipman: z.enum(EKIPMAN_ALANLARI).optional(), formul,
 });
-const Madde = z.object({ id: kimlik, metin: ad, aciklama: metin.optional(), std: z.string().max(200).optional(), talimat: talimat.optional(), kilit: z.boolean().default(false) });
+const Madde = z.object({ id: kimlik, metin: ad, aciklama: metin.optional(), std: z.string().max(200).optional(), talimat: talimat.optional(), kilit: z.boolean().default(false), formul });
 const Grup = z.object({ id: kimlik, ad: z.string().max(200), talimat: talimat.optional(), maddeler: z.array(Madde).max(200) });
 /** seçmeli hücre / değerde "uygun değil" sayılan seçenekler (426; ör. ZPKR04 "UD", ZPKR05 "Not 2: Yetersiz") ve kusurun ağırlığı */
 const secenekListesi = z.array(z.string().trim().min(1).max(60)).max(20);
