@@ -2496,7 +2496,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   format/deger.ts alanDegeri — fotoğraf okuma denetimi; rapor-haritasi.ts künyesiz); (7) KONU SINIRI (550'nin "kural yok"u yerine reisim'in isteği):
   yalnız probata / periyodik kontrol / iş ekipmanı / mevzuat-standart / açık rapor-format; (8) cevapsız eski mesajlar yeni mesajla birleşmez
   (yz/say.ts konusma birleştiriyordu), geçmişe yalnız teyitli sonuç; (10) Küçült S.A.Y + S.A.Y Chat; (11) S.A.Y Chat boy tutamağı; (12) en alta in;
-  (13) tıklanıp gönderilen örnek cümle yok (yalnız "Fotoğrafları oku ve gir"); (14) 555 yapıldı. İlk turdan çıkanlar: örnek cümle tuşları, akış +
+  (13) tıklanıp gönderilen örnek cümle yok (yalnız "Fotoğrafları oku ve gir"); (14) 555 yapıldı; (15) reisim: *"makette sohbeti
+  temizle tuşunu göremedim"* — makete eklendi (sürüm 3): başlıkta Küçült'ün solunda, önce sorar; uygulamada yerinde kalır. İlk turdan çıkanlar: örnek cümle tuşları, akış +
   Durdur, 5 tur, "-" uygulanamaz kuralı, iş satırı.
 - 2026-10-14 (556 · 2. tur): **SUNUM 556 SADELEŞTİ — ONAY BEKLİYOR** (aynı bağlantı, sürüm 3; reisim: *"hesaplama olayını henüz onaylamıyorum
   abartmışsın, ve istediğim hesabı istediğim gibi yapabilmeliyim kısıtlama olmamalı, artı olarak mevcut formlarda değil ileride yapılacak olan formlarda
