@@ -21,7 +21,11 @@
    ekranda); cevap Markdown çizilir (ui/Markdown.tsx — HTML işlenmez). Rapordayken Haiku'nun istediği girişler (rapora_yaz) EKRANDA uygulanır:
    işaretli, "Geri al" iletinin altında; kaydetmek kişide. Yazı kutusu çok satırlı: Enter gönderir, Shift+Enter yeni satır.
    553 (reisim 2026-10-14: "konuşarak ilgili formatı yapabiliyo olalım"): format yapıcıdayken taslak gider (baglam.ts useSayFormatBagi); Haiku'nun
-   "formati_duzenle" işlemleri taslağa uygulanır, ne yapıldığı bildirimde, "Geri al" iletinin altında; Kaydet / Yayınla kişide. */
+   "formati_duzenle" işlemleri taslağa uygulanır, ne yapıldığı bildirimde, "Geri al" iletinin altında; Kaydet / Yayınla kişide.
+   557 (sunum 557 · 2. tur onaylı — reisim 2026-10-14): mesaj Gönder'e basınca HEMEN balon (kutu boşalır), altında S.A.Y'ın balonu: hareket eden üç
+   nokta + "Düşünüyor" (rapora yazarken "Rapora yazıyor"); S.A.Y iş isteyince ekran yapar, geri okuyup teyit eder, sonucu sayIsSonucuEylemi ile
+   döndürür — S.A.Y'ın cevabı ondan sonra ("yaptım" / nedeniyle "yapamadım"); alttaki bildirimler kalktı (her şey sohbette). Başlıkta Küçült (panel
+   alta tek satır; bu cihazda kalır); sohbet yukarı kaydırılınca "En alta in". */
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from "react";
@@ -38,10 +42,12 @@ import type { SayKomutu } from "../../../server/yz/say";
 import { Markdown } from "./Markdown";
 import { istekTani, type Istek } from "../istek";
 import { useSayFormatBagi, useSayRaporBagi, type SayGeriAl, type SayRaporBagi } from "./baglam";
-import { sayDurumEylemi, sayEkliSorEylemi, sayGecmisEylemi, sayOneriEylemi, sayRaporEylemi, saySorEylemi, sayTemizleEylemi } from "./eylemler";
+import { sayDurumEylemi, sayEkliSorEylemi, sayGecmisEylemi, sayIsSonucuEylemi, sayOneriEylemi, sayRaporEylemi, saySorEylemi, sayTemizleEylemi } from "./eylemler";
 import stil from "./say.module.css";
 
 const ACIK_ANAHTARI = "probata-say-acik";
+/** 557: küçük (alta tek satır) hâli bu cihazda kalır */
+const KUCUK_ANAHTARI = "probata-say-kucuk";
 /** 550: tek hazır tuş (reisim: "sadece fotoğrafları oku ve gir kalsın başka bir şey olmasın") */
 const OKU = "Fotoğrafları oku ve gir";
 /** yazı kutusunun en çok uzunluğu (sunucu SORU_SINIRI ile aynı) */
@@ -164,6 +170,12 @@ export function SayAsistan() {
   const [islemler, setIslemler] = useState<ReadonlyMap<string, IslemEylemi>>(() => new Map());
   const [ilerleme, setIlerleme] = useState<string | null>(null);
   const [bolumSor, setBolumSor] = useState<{ fotolar: File[]; soru: string } | null>(null);
+  /* 557: bekleme balonundaki yazı ("Düşünüyor" / "Rapora yazıyor" …), küçük hâl, sohbetin sonunda mı (en alta in tuşu) */
+  const [asama, setAsama] = useState<string | null>(null);
+  const [kucuk, setKucuk] = useState(false);
+  const [altta, setAltta] = useState(true);
+  const alttaRef = useRef(true);
+  const geciciSira = useRef(0);
   const ekSira = useRef(0);
   const atac = useRef<HTMLButtonElement>(null);
   const fab = useRef<HTMLButtonElement>(null);
@@ -179,7 +191,7 @@ export function SayAsistan() {
       if (!canli || !d) return;
       setDurum(d);
       let onceAcik = false;
-      try { onceAcik = localStorage.getItem(ACIK_ANAHTARI) === "1"; } catch { /* saklama yok */ }
+      try { onceAcik = localStorage.getItem(ACIK_ANAHTARI) === "1"; setKucuk(localStorage.getItem(KUCUK_ANAHTARI) === "1"); } catch { /* saklama yok */ }
       if (d.acik && onceAcik) setAcik(true);
     }, () => undefined);
     return () => { canli = false; };
@@ -197,7 +209,8 @@ export function SayAsistan() {
     sayGecmisEylemi().then((l) => { if (canli) setIletiler(l); }, () => { if (canli) setIletiler([]); });
     return () => { canli = false; };
   }, [acik, iletiler]);
-  useEffect(() => { const g = govde.current; if (g) g.scrollTop = g.scrollHeight; }, [iletiler, acik, hata]);
+  /* 557: yeni ileti gelince yalnız sohbetin sonundaysa aşağı kayar (yukarıda okurken yerinde kalır; "En alta in" çıkar) */
+  useEffect(() => { const g = govde.current; if (g && alttaRef.current) g.scrollTop = g.scrollHeight; }, [iletiler, acik, hata, asama, kucuk]);
   /* 550: gönderilince yazı kutusu tek satıra döner */
   useEffect(() => { if (!soru && girdi.current) girdi.current.style.height = ""; }, [soru]);
   /* ek menüsü dışarı tıklanınca kapanır */
@@ -221,8 +234,13 @@ export function SayAsistan() {
     if (!acik) return;
     const h = document.documentElement;
     h.setAttribute("data-panel-acik", "say");
-    return () => { if (h.getAttribute("data-panel-acik") === "say") h.removeAttribute("data-panel-acik"); };
-  }, [acik]);
+    /* 557: küçükken telefonda sayfa kaymaya devam eder, havadaki tuşlar küçük panelin üstüne çıkar (temel.css) */
+    if (kucuk) h.setAttribute("data-panel-kucuk", "say");
+    return () => {
+      if (h.getAttribute("data-panel-acik") === "say") h.removeAttribute("data-panel-acik");
+      if (h.getAttribute("data-panel-kucuk") === "say") h.removeAttribute("data-panel-kucuk");
+    };
+  }, [acik, kucuk]);
   useEffect(() => {
     if (durum?.acik) document.documentElement.setAttribute("data-say", "var");
     return () => document.documentElement.removeAttribute("data-say");
@@ -235,8 +253,8 @@ export function SayAsistan() {
   const ac = (odakla = true) => {
     /* 524: S.A.Y Chat ile aynı yer — biri açılınca öteki kapanır */
     window.dispatchEvent(new CustomEvent("probata-panel", { detail: "say" }));
-    setAcik(true); setHata(null);
-    try { localStorage.setItem(ACIK_ANAHTARI, "1"); } catch { /* saklama yok */ }
+    setAcik(true); setHata(null); setKucuk(false);
+    try { localStorage.setItem(ACIK_ANAHTARI, "1"); localStorage.setItem(KUCUK_ANAHTARI, "0"); } catch { /* saklama yok */ }
     if (odakla) requestAnimationFrame(() => (girdi.current && !girdi.current.disabled ? girdi.current : document.getElementById("say-kapat"))?.focus());
   };
   const kapat = () => {
@@ -276,30 +294,39 @@ export function SayAsistan() {
   };
   const islemYap = async (istek: Istek, soru: string, ek: readonly { dosya: string; bolum: string }[] = []) => {
     if (!rb || bekliyor) return;
-    setBekliyor(true); setHata(null);
+    alttaRef.current = true; setAltta(true);
+    setBekliyor(true); setHata(null); setAsama(istek === "oku" ? "Okuyor" : "Düşünüyor");
     try { await islemCalistir(istek, soru, ek); }
-    catch { setIlerleme(null); setHata("S.A.Y'a ulaşılamadı; bağlantıyı kontrol edip yeniden deneyin."); } finally { setBekliyor(false); }
+    catch { setIlerleme(null); setHata("S.A.Y'a ulaşılamadı; bağlantıyı kontrol edip yeniden deneyin."); } finally { setBekliyor(false); setAsama(null); }
   };
-  /** 550: Haiku'nun rapora istediği iş (rapora_yaz / fotograflari_oku / geri_al) — ekranda; "Geri al" S.A.Y'ın iletisinin altında */
-  const komutlariYap = async (komutlar: readonly SayKomutu[] | undefined, mesaj: string | null) => {
-    if (!komutlar?.length) return;
+  /** 550 → 557: Haiku'nun istediği iş — ekran yapar ve geri okuyup teyit eder; rapora yazma / format işinin SONUCU S.A.Y'a döner, cevabını o yazar
+      (yapıldıysa "yaptım", yapılamayan nedeniyle); okuma / geri almanın sonucunu ekranın işlem kaydı yazar. "Geri al" S.A.Y'ın iletisinin altında */
+  const isleriYap = async (komutlar: readonly SayKomutu[]) => {
     for (const k of komutlar) {
       /* 553: format yapıcıda taslağa */
       if (k.tur === "format") {
         if (!fb) continue;
+        setAsama("Formata yazıyor");
         const r = fb.uygula(k.islemler);
-        if (r.yapilan.length && mesaj) setIslemler((x) => new Map(x).set(mesaj, { geriAl: r.geriAl }));
-        bildir([r.yapilan.length ? `Format taslağında: ${r.yapilan.slice(0, 4).join(" · ")}${r.yapilan.length > 4 ? ` ve ${r.yapilan.length - 4} değişiklik daha` : ""}. Kaydetmeyi unutmayın.` : "",
-          r.gecersiz.length ? `Yapılamayan: ${r.gecersiz.slice(0, 3).join(" · ")}${r.gecersiz.length > 3 ? " …" : ""}` : ""].filter(Boolean).join(" "));
+        const ozet = { yazildi: r.yapilan.length, ayni: 0, bekliyor: 0, yapilan: r.yapilan.slice(0, 60),
+          yazilamadi: r.gecersiz.slice(0, 300).map((g) => { const i = g.indexOf(": "); return i > 0 ? { ad: g.slice(0, i), neden: g.slice(i + 2) } : { ad: g, neden: "" }; }) };
+        setAsama("Düşünüyor");
+        const y = await sayIsSonucuEylemi({ komut: { tur: "format", islemler: k.islemler }, ozet, rapor: null, format: fb.id }, yol);
+        if (sonuc(y) && y.durum === "tamam" && r.yapilan.length) { const m = y.iletiler.find((x) => x.kim === "say"); if (m) setIslemler((x) => new Map(x).set(m.id, { geriAl: r.geriAl })); }
         continue;
       }
       if (!rb) continue;
       if (k.tur === "yaz") {
-        const r = rb.yaz(k.girisler);
-        if (r.sayi && mesaj) setIslemler((x) => new Map(x).set(mesaj, { geriAl: r.geriAl }));
-        if (r.gecersiz.length) bildir(`${r.sayi ? `${r.sayi} değer girildi; ` : ""}${r.gecersiz.length} giriş yapılamadı: ${r.gecersiz.slice(0, 3).join(" · ")}${r.gecersiz.length > 3 ? " …" : ""}`);
-        else if (r.sayi) bildir(`S.A.Y ${r.sayi} değer girdi (işaretli). Kaydetmeyi unutmayın.`);
-      } else await islemCalistir(k.tur === "oku" ? "oku" : "geri", k.tur === "oku" ? OKU : "Geri al");
+        setAsama("Rapora yazıyor");
+        const r = await rb.yaz(k.girisler);
+        const say = (d: string) => r.sonuclar.filter((s) => s.durum === d).length;
+        const ozet = { yazildi: say("yazildi"), ayni: say("ayni"), bekliyor: say("bekliyor"),
+          yapilan: r.sonuclar.filter((s) => s.durum === "yazildi").slice(0, 60).map((s) => s.ad),
+          yazilamadi: r.sonuclar.filter((s) => s.durum === "yazilamadi").slice(0, 300).map((s) => ({ ad: s.ad, neden: s.neden ?? "" })) };
+        setAsama("Düşünüyor");
+        const y = await sayIsSonucuEylemi({ komut: { tur: "yaz", girisler: k.girisler }, ozet, rapor: rb.id, format: null }, yol);
+        if (sonuc(y) && y.durum === "tamam" && r.sayi) { const m = y.iletiler.find((x) => x.kim === "say"); if (m) setIslemler((x) => new Map(x).set(m.id, { geriAl: r.geriAl })); }
+      } else { setAsama(k.tur === "oku" ? "Okuyor" : "Geri alıyor"); await islemCalistir(k.tur === "oku" ? "oku" : "geri", k.tur === "oku" ? OKU : "Geri al"); }
     }
   };
   /** iletinin altındaki "Geri al" / "Dolu alanları da değiştir" (ya da yazılan komut): bir kez çalışır; sonucu geçmişe */
@@ -322,17 +349,18 @@ export function SayAsistan() {
   const fotoKoyVeOku = async (fotolar: readonly File[], bolum: string, soru: string) => {
     if (!rb) return;
     setBolumSor(null);
-    setBekliyor(true); setHata(null);
+    alttaRef.current = true; setAltta(true);
+    setBekliyor(true); setHata(null); setAsama("Okuyor");
     const eklenen: { dosya: string; bolum: string }[] = [];
     try {
       for (const [i, f] of fotolar.entries()) {
-        setIlerleme(`Fotoğraf rapora ekleniyor · ${i + 1} / ${fotolar.length}`);
+        setIlerleme(`Fotoğraf ekleniyor · ${i + 1} / ${fotolar.length}`);
         const r = await rb.fotoEkle(f, bolum);
         if ("neden" in r) { setHata(r.neden); break; }
         eklenen.push({ dosya: r.dosya, bolum });
       }
     } catch { setHata("Fotoğraf eklenemedi; bağlantıyı kontrol edip yeniden deneyin."); }
-    setIlerleme(null); setBekliyor(false);
+    setIlerleme(null); setBekliyor(false); setAsama(null);
     for (const x of ekler) if (x.url) URL.revokeObjectURL(x.url);
     setEkler([]); setSoru("");
     if (eklenen.length) await islemYap("oku", soru || "Fotoğrafı oku ve gir", eklenen);
@@ -392,28 +420,59 @@ export function SayAsistan() {
         return;
       }
     }
-    setBekliyor(true); setMenu(false);
+    /* 557: mesaj HEMEN balon (kutu boşalır); sunucunun kaydettiği iletiyle yer değiştirir; gönderilemezse yazı kutuya geri döner */
+    const gid = `gecici-${++geciciSira.current}`, giden = ekler;
+    setIletiler((l) => [...(l ?? []), { id: gid, kim: "ben", metin: v || (giden.length === 1 ? "Eki inceler misin?" : "Ekleri inceler misin?"), yer: l?.at(-1)?.yer ?? "",
+      ek: giden.length ? { ekler: giden.map((x) => ({ ad: x.ad, boyut: x.boyut, tur: x.tur })) } : null, zaman: new Date().toISOString() }]);
+    setSoru(""); setEkler([]);
+    alttaRef.current = true; setAltta(true);
+    setBekliyor(true); setAsama("Düşünüyor"); setMenu(false);
     try {
-      const canli = rb ? { id: rb.id, cevaplar: rb.cevaplar(), ekipman: rb.ekipman() } : undefined;
+      const canli = rb ? { id: rb.id, cevaplar: rb.cevaplar(), ekipman: rb.ekipman(), ...rb.canliEk() } : undefined;
       const kurucu = fb ? { id: fb.id, tanim: fb.tanim() } : undefined;
       let y: SayYaniti;
-      if (ekler.length) {
+      if (giden.length) {
         const fd = new FormData();
         fd.set("soru", v); fd.set("yol", yol);
         if (rb) { fd.set("raporNo", rb.no); fd.set("canli", JSON.stringify(canli)); }
         if (kurucu) fd.set("kurucu", JSON.stringify(kurucu));
-        for (const x of ekler) fd.append("ek", x.dosya, x.ad);
+        for (const x of giden) fd.append("ek", x.dosya, x.ad);
         y = await sayEkliSorEylemi(fd);
       } else y = await saySorEylemi(v, yol, rb?.no, canli, kurucu);
       if (y.durum === "tamam") {
-        setSoru("");
-        for (const x of ekler) if (x.url) URL.revokeObjectURL(x.url);
-        setEkler([]);
+        for (const x of giden) if (x.url) URL.revokeObjectURL(x.url);
+        setIletiler((l) => (l ?? []).filter((x) => x.id !== gid));
+        sonuc(y);
+        if (y.komutlar?.length) await isleriYap(y.komutlar);
+      } else {
+        /* soru geçmişe yazıldıysa (çağrı düştü) yeniden çekilir — geçmiş sunucudakiyle aynı kalsın */
+        setHata(y.neden);
+        setIletiler(await sayGecmisEylemi());
       }
-      /* soru geçmişe yazıldıysa (çağrı düştü) yeniden çekilir — geçmiş sunucudakiyle aynı kalsın */
-      if (!sonuc(y)) setIletiler(await sayGecmisEylemi());
-      else if (y.durum === "tamam") await komutlariYap(y.komutlar, y.iletiler.find((m) => m.kim === "say")?.id ?? null);
-    } catch { setHata("S.A.Y'a ulaşılamadı; bağlantıyı kontrol edip yeniden deneyin."); } finally { setBekliyor(false); girdi.current?.focus(); }
+    } catch {
+      setIletiler((l) => (l ?? []).filter((x) => x.id !== gid));
+      setSoru(v); setEkler(giden);
+      setHata("S.A.Y'a ulaşılamadı; bağlantıyı kontrol edip yeniden deneyin.");
+    } finally { setBekliyor(false); setAsama(null); girdi.current?.focus(); }
+  };
+  /* 557: küçült — panel alta tek satır; yeniden basınca aynı boyla açılır (sohbet ve yazılan kaybolmaz) */
+  const kucult = (k: boolean) => {
+    setKucuk(k);
+    try { localStorage.setItem(KUCUK_ANAHTARI, k ? "1" : "0"); } catch { /* saklama yok */ }
+    if (!k) requestAnimationFrame(() => (girdi.current && !girdi.current.disabled ? girdi.current : document.getElementById("say-kucult"))?.focus());
+  };
+  const kaydirildi = () => {
+    const g = govde.current;
+    if (!g) return;
+    const a = g.scrollHeight - g.scrollTop - g.clientHeight < 32;
+    alttaRef.current = a;
+    if (a !== altta) setAltta(a);
+  };
+  const enAlta = () => {
+    const g = govde.current;
+    if (g) g.scrollTop = g.scrollHeight;
+    alttaRef.current = true; setAltta(true);
+    girdi.current?.focus();
   };
   const temizle = async () => {
     if (!(await onayla({ baslik: "Sohbeti temizle", metin: "S.A.Y ile bütün sohbet geçmişiniz silinir.", tus: "Temizle", tehlike: true }))) return;
@@ -450,7 +509,7 @@ export function SayAsistan() {
         </button>
       )}
       {acik && (
-        <aside ref={panel} className={stil.panel} id="say-panel" role="dialog" aria-labelledby="say-baslik"
+        <aside ref={panel} className={stil.panel} id="say-panel" role="dialog" aria-labelledby="say-baslik" data-kucuk={kucuk || undefined}
           onKeyDown={(e) => {
             if (e.key !== "Escape") return;
             e.stopPropagation();
@@ -465,9 +524,11 @@ export function SayAsistan() {
             {!!iletiler?.length && (
               <button className={stil.basTus} type="button" onClick={() => void temizle()} aria-label="Sohbeti temizle" title="Sohbeti temizle"><Ikon ad="trash-2" /></button>
             )}
+            <button className={stil.basTus} id="say-kucult" type="button" onClick={() => kucult(!kucuk)} aria-expanded={!kucuk} aria-controls="say-govde"
+              aria-label={kucuk ? "Büyüt" : "Küçült"} title={kucuk ? "Büyüt" : "Küçült"}><Ikon ad={kucuk ? "chevron-up" : "chevron-down"} /></button>
             <button className={stil.basTus} id="say-kapat" type="button" onClick={kapat} aria-label="S.A.Y'ı kapat"><Ikon ad="x" /></button>
           </div>
-          <div className={stil.govde} ref={govde}>
+          <div className={stil.govde} ref={govde} id="say-govde" onScroll={kaydirildi} hidden={kucuk}>
             {!bagli && <Serit tur="uyari" ikon="wifi-off">Bağlantı yok: S.A.Y bağlantı gelince çalışır.{raporda ? " Raporu yazmaya devam edebilirsiniz." : ""}</Serit>}
             {bagli && !durum.anahtar && <Serit tur="uyari" ikon="key-round">API anahtarı girilmedi (Firma ayarları › Yapay zekâ): S.A.Y cevap veremez.</Serit>}
             {hazir && durum.sinirDoldu && <Serit tur="uyari" ikon="triangle-alert">Bu ay kişi başı sınırınız doldu; yönetici Firma ayarları&apos;ndan artırabilir.</Serit>}
@@ -488,10 +549,19 @@ export function SayAsistan() {
                 </div>
               </div>
             )}
-            {bekliyor && <p className={stil.yaziyor} role="status">{ilerleme ? `S.A.Y okuyor: ${ilerleme}` : "S.A.Y düşünüyor…"}</p>}
+            {/* 557: bekleme balonu — hareket eden üç nokta + "Düşünüyor"; iş sırasında dönen işaret + "Rapora yazıyor" */}
+            {bekliyor && (
+              <div className={`${stil.mesaj} ${stil.o} ${stil.bekleme}`} role="status" aria-live="polite" data-say-bekleme="">
+                {asama === "Düşünüyor" || !asama ? <span className={stil.noktalar} aria-hidden="true"><i /><i /><i /></span> : <span className={stil.donen} aria-hidden="true" />}
+                {asama ?? "Düşünüyor"}{ilerleme ? ` · ${ilerleme}` : ""}
+              </div>
+            )}
             {hata && <Serit tur="hata" ikon="circle-alert">{hata}</Serit>}
+            {!altta && (
+              <button className={stil.enAlta} type="button" onClick={enAlta} aria-label="En alta in" title="En alta in"><Ikon ad="arrow-down" /></button>
+            )}
           </div>
-          <div className={stil.alt}>
+          <div className={stil.alt} hidden={kucuk}>
             {raporda && (
               <div className={stil.hizli}>
                 <button className={stil.cip} type="button" disabled={!hazir || bekliyor} onClick={() => void islemYap("oku", OKU)}>{OKU}</button>
@@ -531,5 +601,5 @@ function IletiYeri({ m, onceki, ...p }: {
   m: SohbetIletisi; onceki?: SohbetIletisi; rb: SayRaporBagi | null; git: (e: SohbetEksik) => void; uygula: (m: SohbetIletisi) => void; vazgec: (m: SohbetIletisi) => void;
   eylem?: IslemEylemi; eylemYap: (m: SohbetIletisi, ne: "geri" | "ustune") => void;
 }) {
-  return <>{(!onceki || onceki.yer !== m.yer) && <li className={stil.yer}>{m.yer}</li>}<Ileti m={m} {...p} /></>;
+  return <>{(!onceki || onceki.yer !== m.yer) && !!m.yer && <li className={stil.yer}>{m.yer}</li>}<Ileti m={m} {...p} /></>;
 }

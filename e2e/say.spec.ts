@@ -9,7 +9,10 @@
    kapalı), her soru Haiku'ya; cevap Markdown (madde listesi, kalın); yazı kutusu çok satırlı (Shift+Enter yeni satır, Enter gönderir); panel
    açılınca sayfa kıpırdamaz, Kaydet örtülmez; rapordayken "… alanına … yaz" alana yazar (işaretli), Geri al döndürür.
    555 (reisim 2026-10-14: "bu ve benzeri tüm saçma açıklamaları kaldır"): panelde açıklama yazısı yok — boş sohbet boş, alt yazı yalnız model adı,
-   hazır tuş yalnız rapordayken görünür. */
+   hazır tuş yalnız rapordayken görünür.
+   557 (sunum 557 · 2. tur — reisim 2026-10-14): mesaj Gönder'e basınca HEMEN balon ve "Düşünüyor" balonu (taklit "[yavaş]" soruya 1,5 sn sonra
+   cevap verir); Küçült (yalnız başlık) / Büyüt; sohbet yukarı kaydırılınca "En alta in"; rapordayken S.A.Y'ın cevabı işin SONUCUYLA ("Yaptım …",
+   kilitli SGK için nedenli "Yapamadım …"), alttaki bildirim yok. */
 import { expect, test } from "@playwright/test";
 import { E2E_KAPI, E2E_PAROLA, E2E_YZ } from "./hesaplar";
 import { bolumleriAc, girisli, hazir } from "./yardimci";
@@ -56,13 +59,23 @@ test("S.A.Y: düğme, hızlı soru, serbest soru, sayfa değişince ve yenileyin
   /* serbest soru: yapay zekâdan (taklit); 550: çok satırlı — Shift+Enter yeni satır, Enter gönderir; cevap Markdown (madde listesi) */
   const liste = panel.getByRole("list").first();
   const soru = panel.getByLabel("S.A.Y'a sor");
-  await soru.fill("Planımı nasıl kabul ederim?");
+  await soru.fill("Planımı nasıl kabul ederim? [yavaş]");
   await soru.press("Shift+Enter");
-  await expect(soru).toHaveValue("Planımı nasıl kabul ederim?\n");
+  await expect(soru).toHaveValue("Planımı nasıl kabul ederim? [yavaş]\n");
   await soru.press("Enter");
-  await expect(liste).toContainText("Deneme cevabı: “Planımı nasıl kabul ederim?” için menüden Planlar'ı açın.", { timeout: 30_000 });
-  await expect(liste.locator("ul li").filter({ hasText: "Bu bir taklit cevaptır." }).first()).toBeVisible();
+  /* 557: mesaj hemen balon, kutu boşalır, "Düşünüyor" balonu (cevap 1,5 sn sonra) */
+  await expect(liste.getByRole("listitem").filter({ hasText: "Planımı nasıl kabul ederim? [yavaş]" }).first()).toBeVisible({ timeout: 1_000 });
   await expect(soru).toHaveValue("");
+  await expect(panel.locator("[data-say-bekleme]")).toContainText("Düşünüyor", { timeout: 1_000 });
+  await expect(liste).toContainText("Deneme cevabı: “Planımı nasıl kabul ederim? [yavaş]” için menüden Planlar'ı açın.", { timeout: 30_000 });
+  await expect(panel.locator("[data-say-bekleme]")).toHaveCount(0);
+  await expect(liste.locator("ul li").filter({ hasText: "Bu bir taklit cevaptır." }).first()).toBeVisible();
+  /* 557: Küçült — yalnız başlık; Büyüt — yazı kutusu geri */
+  await panel.getByRole("button", { name: "Küçült" }).click();
+  await expect(panel).toHaveAttribute("data-kucuk", "true");
+  await expect(panel.getByLabel("S.A.Y'a sor")).toBeHidden();
+  await panel.getByRole("button", { name: "Büyüt" }).click();
+  await expect(panel.getByLabel("S.A.Y'a sor")).toBeVisible();
 
   /* 522 ek: ataç → menü (Fotoğraf çek · Galeriden seç · Belge ekle); desteklenmeyen dosya söylenir; eklenen kutunun üstünde, × çıkarır; soruyla
      gider (taklit eki sayar), gönderilen soruda adı görünür, kutu boşalır */
@@ -194,10 +207,25 @@ test("S.A.Y rapor ekranında: sayfa kıpırdamaz; söylenen alana yazar (işaret
   await expect(liste.locator("strong").filter({ hasText: "Seri no" }).first()).toBeVisible({ timeout: 30_000 });   // Markdown kalın
   await expect(seri).toHaveValue("SN-TAKLIT");
   await expect(seri).toHaveAttribute("data-say-giris", "emin");
-  await expect(page.getByText("S.A.Y 1 değer girdi (işaretli). Kaydetmeyi unutmayın.").first()).toBeVisible();
+  /* 557: S.A.Y'ın cevabı işin sonucuyla (taklit sonucu okur); "yazıyorum" ve alttaki bildirim yok */
+  await expect(liste).toContainText(/Yaptım: .*Seri no\./, { timeout: 30_000 });
+  await expect(liste).not.toContainText("giriş yapıyorum");
+  await expect(page.getByText("S.A.Y 1 değer girdi")).toHaveCount(0);
   await panel.getByRole("button", { name: "Geri al" }).last().click();
   await expect(seri).toHaveValue(onceki);
   await expect(liste).toContainText("1 girişi geri aldım.");
+  /* 557: elle girilemeyen (kilitli SGK) S.A.Y ile de girilemez — nedeniyle söyler */
+  await panel.getByLabel("S.A.Y'a sor").fill("SGK DETSİS NO alanına 123 yaz");
+  await panel.getByLabel("S.A.Y'a sor").press("Enter");
+  await expect(liste).toContainText("Yapamadım: SGK DETSİS NO: bu formatta kilitli; elle de değiştirilemiyor", { timeout: 30_000 });
+  /* 557: en alta in — sohbet yukarı kaydırılınca çıkar, basınca son iletiye */
+  const govde = panel.locator("#say-govde");
+  if (await govde.evaluate((g) => g.scrollHeight > g.clientHeight + 40)) {
+    await govde.evaluate((g) => { g.scrollTop = 0; g.dispatchEvent(new Event("scroll")); });
+    await panel.getByRole("button", { name: "En alta in" }).click();
+    await expect(panel.getByRole("button", { name: "En alta in" })).toHaveCount(0);
+    expect(await govde.evaluate((g) => g.scrollHeight - g.scrollTop - g.clientHeight < 40)).toBe(true);
+  }
 
   /* serbest soru açık raporun haritasını taşır (taklit "Raporu okudum." der); yer "Rapor <no>" */
   await panel.getByLabel("S.A.Y'a sor").fill("Bu raporda neye dikkat edeyim?");
@@ -239,7 +267,9 @@ test("S.A.Y format yapıcıda: konuşarak sütun + formül ekler, Geri al; form�
   await expect(panel.getByRole("button", { name: "Fotoğrafları oku ve gir" })).toHaveCount(0);
   await panel.getByLabel("S.A.Y'a sor").fill("Pano sigortaları (linye) tablosuna Deneme sütunu ekle, formül Ib × 2");
   await panel.getByLabel("S.A.Y'a sor").press("Enter");
-  await expect(page.getByText("Format taslağında:", { exact: false }).first()).toBeVisible({ timeout: 30_000 });
+  /* 557: cevap işin sonucuyla ("Yaptım: …"); alttaki bildirim yok */
+  await expect(panel.getByRole("list").first()).toContainText("Yaptım:", { timeout: 30_000 });
+  await expect(page.getByText("Format taslağında:", { exact: false })).toHaveCount(0);
   await expect(page.getByText("= [Ib] × 2").first()).toBeVisible();
   await panel.getByRole("button", { name: "Geri al" }).last().click();
   await expect(page.getByText("= [Ib] × 2")).toHaveCount(0);

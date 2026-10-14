@@ -10,14 +10,19 @@
    · 550: rapordayken Haiku rapora "rapora_yaz" / "fotograflari_oku" / "geri_al" araçlarıyla girer — işi EKRAN yapar (raporlar/say-doldur.ts),
      sunucu yalnız komutları biçimiyle döner; imza / gönderme / onay / silme yolu yok. Kurallarımız kalktı (src/server/yz/say.ts).
    · 522: serbest soruya fotoğraf / PDF / Word eki (server/ek.ts — tür içerikten, adet ve toplam boy sınırlı); ek yalnız o soruda gider, saklanmaz;
-     geçmişte sorunun yanında adı, türü, boyu kalır; ayırma ek sayısıyla büyür. */
+     geçmişte sorunun yanında adı, türü, boyu kalır; ayırma ek sayısıyla büyür.
+   · 557 (sunum 557 · 2. tur — reisim 2026-10-14: "komut gelsin, yapılsın, doğruluğunu teyit et, yapıldıysa yapıldı de, yapılamadıysa sebebi ile
+     yaz"): S.A.Y rapora / formata iş isteyince (rapora_yaz, formati_duzenle) bu cevap GEÇMİŞE YAZILMAZ ("N giriş yapıyorum" cümlesi kalktı); ekran
+     işi yapar, geri okuyup teyit eder, sonucu sayIsSonucuHazirla ile gönderir; S.A.Y'ın cevabı o sonuçla yazılır (sayIsSonucuKaydet; çağrı düşerse
+     sonucu sunucu sayılardan yazar — isSonucuMetni). fotograflari_oku / geri_al: işin sonucunu ekranın işlem kaydı yazar (islemMetni). */
 import { ayarOku } from "../../../server/ayar/ayar.ts";
 import { sirDurumu, sirKullan } from "../../../server/ayar/sir.ts";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { ROL_ADI } from "../../../server/yetki/tanim.ts";
 import { sinirli, yzAyi, yzAyir, yzAyirmaBirak, yzKendiAyi, yzMesajSay, yzSohbetKapat } from "../../../server/yz/kullanim.ts";
 import { maliyetHesapla, type OkumaIstegi, type YzModel } from "../../../server/yz/okuma.ts";
-import { ARAMA_MALIYETI, SAY_GECMIS, sayEnCokMaliyet, sayIstegi, sayYanitiCoz, SORU_SINIRI, type SayKomutu } from "../../../server/yz/say.ts";
+import { ARAMA_MALIYETI, isSonucuMetni, SAY_GECMIS, sayEnCokMaliyet, sayIstegi, sayYanitiCoz, SORU_SINIRI, type IsOzeti, type SayKomutu } from "../../../server/yz/say.ts";
+import { z } from "zod";
 import type { SayEkDosyasi } from "./ek.ts";
 import { sohbetGecmisi, sohbetOneriDurumu, sohbetTemizle, sohbetYaz, type SohbetBekleyen, type SohbetIletisi } from "../../../server/yz/sohbet.ts";
 import { raporSayBilgisi } from "../../raporlar/server/say-baglanti.ts";
@@ -33,6 +38,7 @@ import { SAY_KILAVUZU, sayfaBilgisi } from "../yardim.ts";
 export interface SayDurum { acik: boolean; anahtar: boolean; sinirDoldu: boolean }
 /** 550: komutlar — S.A.Y'ın rapora yapmak istediği iş (ekran uygular) */
 export type SayYaniti = { durum: "tamam"; iletiler: SohbetIletisi[]; komutlar?: SayKomutu[] } | { durum: "red"; neden: string };
+const UUID_557 = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 const KAPALI = "S.A.Y firmada kapalı (Firma ayarları › Yapay zekâ).";
 const ANAHTARSIZ = "API anahtarı girilmedi (Firma ayarları › Yapay zekâ): S.A.Y cevap veremez.";
@@ -163,7 +169,7 @@ export interface SaySorHazir { durum: "hazir"; istek: OkumaIstegi; anahtar: stri
 
 /** serbest soru, adım 1 (işlem içinde): kapı, soru, ayırma (sınır doluysa soru yazılmaz), soru geçmişe, istek gövdesi */
 export async function saySorHazirla(db: Sorgulayici, kim: Kisi, soru: string, yol: string, simdi = new Date(), raporNo: string | null = null,
-  canli: { id: string; cevaplar: unknown; ekipman?: unknown } | null = null, ekler: readonly SayEkDosyasi[] = [],
+  canli: { id: string; cevaplar: unknown; ekipman?: unknown; tarih?: unknown; cihazlar?: unknown } | null = null, ekler: readonly SayEkDosyasi[] = [],
   kurucu: { id: string; tanim: unknown } | null = null): Promise<SaySorHazir | { durum: "red"; neden: string }> {
   /* 522: yalnız ek gönderildiyse soru kendiliğinden ("Eki inceler misin?") */
   const metin = soru.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "").trim() || (ekler.length ? (ekler.length === 1 ? "Eki inceler misin?" : "Ekleri inceler misin?") : "");
@@ -187,7 +193,7 @@ export async function saySorHazirla(db: Sorgulayici, kim: Kisi, soru: string, yo
   let rapor: string | null = null;
   if (canli && UUID.test(canli.id) && sayfa.modul === 14 && yol.split(/[?#]/)[0] === `/raporlar/${canli.id}`) {
     const b = await raporSayBilgisi(db, kim, canli.id);
-    rapor = b ? raporHaritasi(b.tanim, b.turAd, { cevaplar: canli.cevaplar, ekipman: canli.ekipman ?? {} }) : null;
+    rapor = b ? raporHaritasi(b.tanim, b.turAd, { cevaplar: canli.cevaplar, ekipman: canli.ekipman ?? {}, tarih: canli.tarih, cihazlar: canli.cihazlar }) : null;
   }
   /* 553: format yapıcıda açık TASLAĞIN haritası — yalnız adres o taslağın kurucusuysa, kişi formatı değiştirebiliyorsa, taslak bu firmanınsa ve
      ekranın gönderdiği tanım şemaya uyuyorsa; harita varsa formati_duzenle aracı gider (değişikliği ekran yapar, Kaydet kişide) */
@@ -208,15 +214,69 @@ export async function saySorHazirla(db: Sorgulayici, kim: Kisi, soru: string, yo
 export async function saySorKaydet(db: Sorgulayici, h: Pick<SaySorHazir, "model" | "ay" | "ust" | "yer"> & { rapor?: string | null; format?: string | null }, govde: unknown): Promise<SayYaniti> {
   const c = sayYanitiCoz(govde);
   await yzSohbetKapat(db, { ay: h.ay, ust: h.ust, maliyet: maliyetHesapla(h.model, c.giris, c.cikis) + c.arama * ARAMA_MALIYETI });
-  /* 550: komutlar yalnız rapordayken (araçlar yalnız o zaman gider) — metin yoksa ne yapılacağı yazılır */
+  /* 550: komutlar yalnız rapordayken (araçlar yalnız o zaman gider). 557: iş istendiyse bu cevap geçmişe YAZILMAZ — sonucu ekran döndürünce
+     S.A.Y yazar (sayIsSonucu…); okuma / geri almanın sonucunu ekranın işlem kaydı yazar. Dönen: yalnız kişinin sorusu + komutlar */
   const komutlar = c.komutlar.filter((k) => (k.tur === "format" ? !!h.format : !!h.rapor));
-  const yapilan = komutlar.map((k) => (k.tur === "yaz" ? `${k.girisler.length} giriş yapıyorum` : k.tur === "oku" ? "fotoğrafları okuyorum"
-    : k.tur === "format" ? `formatta ${k.islemler.length} değişiklik yapıyorum` : "son girişi geri alıyorum"));
+  if (komutlar.length && c.durum !== "ret") return { durum: "tamam", iletiler: await sohbetGecmisi(db, 1), komutlar };
   const metin = c.durum === "ret" ? (c.metin || "Bu isteğe cevap veremiyorum.")
-    : !c.metin ? (yapilan.length ? `${yapilan.join(", ")}.` : "Cevap boş geldi; isteğinizi başka türlü yazmayı deneyin.")
+    : !c.metin ? "Cevap boş geldi; isteğinizi başka türlü yazmayı deneyin."
     : c.durum === "kesik" ? `${c.metin} …\n\n(Cevap uzunluk sınırında kesildi; devamını isteyebilirsiniz.)` : c.metin;
   await sohbetYaz(db, { kim: "say", metin, yer: h.yer, ek: h.rapor ? { rapor: h.rapor } : h.format ? { format: h.format } : null });
-  return { durum: "tamam", iletiler: await sohbetGecmisi(db, 2), ...(komutlar.length ? { komutlar } : {}) };
+  return { durum: "tamam", iletiler: await sohbetGecmisi(db, 2) };
+}
+
+/* ── 557 İŞİN SONUCU: ekran yaptı, geri okuyup teyit etti → S.A.Y cevabını bununla yazar ── */
+const kisaMetin = (n: number) => z.string().transform((s) => s.replace(/[\u0000-\u001f\u007f]/g, " ").slice(0, n));
+export const IsSonucu = z.object({
+  komut: z.discriminatedUnion("tur", [
+    z.object({ tur: z.literal("yaz"), girisler: z.array(z.object({ yer: kisaMetin(200), deger: kisaMetin(4000) })).max(300) }),
+    z.object({ tur: z.literal("format"), islemler: z.array(z.record(z.string(), z.unknown())).max(100) }),
+  ]),
+  ozet: z.object({
+    yazildi: z.number().int().min(0).max(5000), ayni: z.number().int().min(0).max(5000), bekliyor: z.number().int().min(0).max(5000).default(0),
+    yapilan: z.array(kisaMetin(200)).max(60).default([]),
+    yazilamadi: z.array(z.object({ ad: kisaMetin(200), neden: kisaMetin(300) })).max(300),
+  }),
+  rapor: z.string().regex(UUID_557).nullable().default(null), format: z.string().regex(UUID_557).nullable().default(null),
+});
+export interface SayIsHazir { durum: "hazir"; istek: OkumaIstegi; anahtar: string; model: YzModel; ay: string; ust: number; yer: string; rapor: string | null; format: string | null; ozet: IsOzeti }
+
+/** adım 1 (işlem içinde): kapı, son soru (geçmişin sonu kişinin sorusu olmalı), ayırma, ikinci çağrının isteği (harita gitmez; araç kullanımı ve
+    düşünme kapalı) */
+export async function sayIsSonucuHazirla(db: Sorgulayici, kim: Kisi, girdi: unknown, yol: string, simdi = new Date()): Promise<SayIsHazir | { durum: "red"; neden: string }> {
+  const g = IsSonucu.safeParse(girdi);
+  if (!g.success) return { durum: "red", neden: "İşin sonucu okunamadı." };
+  const k = await kapi(db);
+  if ("durum" in k) return k;
+  const anahtar = await sirKullan(db, "yapay_zeka_anahtari");
+  if (!anahtar) return { durum: "red", neden: ANAHTARSIZ };
+  const gecmis = (await sohbetGecmisi(db, SAY_GECMIS)).map((x) => ({ kim: x.kim, metin: x.metin }));
+  const son = gecmis.at(-1);
+  if (!son || son.kim !== "ben") return { durum: "red", neden: "Sonucu yazılacak mesaj bulunamadı." };
+  const ay = yzAyi(simdi), ust = sayEnCokMaliyet(k.model, 0);
+  if (!(await yzAyir(db, ay, k.sinir, ust))) return { durum: "red", neden: "Bu ay yapay zekâ sınırınız doldu; firma yöneticisi Firma ayarları › Yapay zekâ'dan artırabilir." };
+  const s = sayfaBilgisi(yol);
+  const ozet: IsOzeti = { ...g.data.ozet, yazilamadi: g.data.ozet.yazilamadi.slice(0, 300) };
+  const sonuc = JSON.stringify({ yazilan: ozet.yazildi, zaten_oyle: ozet.ayni, ...(ozet.yapilan.length ? { yapilan: ozet.yapilan } : {}),
+    yazilamayan: ozet.yazilamadi.slice(0, 60), ...(ozet.yazilamadi.length > 60 ? { yazilamayan_daha: ozet.yazilamadi.length - 60 } : {}) });
+  const istek = sayIstegi({ model: k.model, kilavuz: SAY_KILAVUZU, baglam: { roller: kim.roller.map((r) => ROL_ADI[r]), yer: s.yer, yardim: s.yardim, bekleyen: [] },
+    gecmis: gecmis.slice(0, -1), soru: son.metin, formatAraci: [FORMAT_ARACI],
+    devam: g.data.komut.tur === "yaz" ? { arac: "rapora_yaz", girdi: { girisler: g.data.komut.girisler }, sonuc } : { arac: "formati_duzenle", girdi: { islemler: g.data.komut.islemler }, sonuc } });
+  return { durum: "hazir", istek, anahtar, model: k.model, ay, ust, yer: s.yer, rapor: g.data.rapor, format: g.data.format, ozet };
+}
+
+/** adım 2: S.A.Y'ın cevabı geçmişe (boş / kesikse sonucu sunucu yazar); ayırma gerçek maliyetle kapanır, mesaj sayılır. govde null: çağrı düştü
+    (ayırma bırakılır, sonucu sunucu yazar — kişi işin sonucunu yine görür) */
+export async function sayIsSonucuKaydet(db: Sorgulayici, h: SayIsHazir, govde: unknown | null, ucret: "yok" | "bilinmiyor" = "yok"): Promise<SayYaniti> {
+  let metin = isSonucuMetni(h.ozet);
+  if (govde === null) await yzAyirmaBirak(db, h.ay, h.ust, ucret === "bilinmiyor", "mesaj");
+  else {
+    const c = sayYanitiCoz(govde);
+    await yzSohbetKapat(db, { ay: h.ay, ust: h.ust, maliyet: maliyetHesapla(h.model, c.giris, c.cikis) });
+    if (c.metin && c.durum === "tamam") metin = c.metin;
+  }
+  await sohbetYaz(db, { kim: "say", metin, yer: h.yer, ek: h.rapor ? { rapor: h.rapor } : h.format ? { format: h.format } : null });
+  return { durum: "tamam", iletiler: await sohbetGecmisi(db, 1) };
 }
 
 /** çağrı cevapsız bitti: ücretsizse ayırma bırakılır; sonucu bilinmiyorsa (zaman aşımı) harcamaya ve mesaja yazılır. Soru geçmişte kalır. */

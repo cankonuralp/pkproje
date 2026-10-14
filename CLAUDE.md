@@ -338,6 +338,12 @@ pkproje/
                             web_search her zaman), sayYanitiCoz komutlar + arama; markdown.ts (saf ayrıştırıcı) + ui/Markdown.tsx (HTML yok, http(s) bağlantı);
                             komutları ekran uygular (baglam.ts yaz / ekipman → raporlar/say-doldur.ts komutlariUygula); tek hazır tuş "Fotoğrafları oku ve gir";
                             istek.ts yalnız oku / geri al / üstüne yaz; yazı kutusu çok satırlı; göç 0090 (ileti ≤ 100 000); sayfa işlev süresi 55 sn (layout)
+                            · 557 (sunum 557 · 2. tur): talimatta reisim'in iki kuralı (konu sınırı KONU_DISI; iş akışı); konusma kullanıcının ardışıklarını
+                            BİRLEŞTİRMEZ (CEVAPSIZ); iş istenince cevap geçmişe yazılmaz — ekran yapar + teyit (say-doldur komutlariUygula sonuclar: elle ne
+                            giriliyorsa — sayıya yazı, künye, tarih, çoklu, not, satır sonucu / gerekçe, satır sil, cihaz), sonuç sayIsSonucuEylemi ile ikinci
+                            çağrıya (tool_use + tool_result, tool_choice none, düşünme kapalı); düşerse isSonucuMetni; harita künyeyi değersiz taşır;
+                            SayAsistan: mesaj hemen balon, bekleme balonu (Düşünüyor / Rapora yazıyor), Küçült, En alta in; S.A.Y Chat: Küçült, boy tutamağı,
+                            En alta in (temel.css data-panel-kucuk)
   src/modules/say-chat/     S.A.Y CHAT (523–525; pkproje §3.10): sema.ts (saf: alan / başlık seçenekleri, hazır ayar, denetim, dağılım dagit) ·
                             server/ayar.ts (523 tür ayarı — sayChatAyari, sayChatAyarKaydet, chatTanimi; göç 0084 say_chat_ayar) · ui/ChatAyarlari.tsx
                             (529: kendi sayfası /ekipman-turleri/<tür>/say-chat — Format kurucunun tuşlarından ve tür sayfasındaki kısa bölümden) · ui/eylemler.ts · 524 server/kayitlar.ts (sayChatPaneli, chatKaydet / chatFoto /

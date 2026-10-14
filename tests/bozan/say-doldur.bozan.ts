@@ -4,7 +4,8 @@
    2. Geri al şimdiki değere bakmazsa kişinin S.A.Y'dan sonra değiştirdiği değer silinir.
    3. Maddelerde cevaplanmış madde atlanmazsa "Uygun değil" maddeler "Uygun" olur.
    4. Komut tanımada soru denetimi kalkınca "fotoğrafı okuyabilir misin?" sorusu yapay zekâya gitmez, okuma başlar.
-   5–6. (550) rapora_yaz: tür denetimi kalkınca türüne uymayan değer, seçenek denetimi kalkınca listede olmayan madde cevabı yazılır. */
+   5–6. (550) rapora_yaz: tür denetimi kalkınca türüne uymayan değer, seçenek denetimi kalkınca listede olmayan madde cevabı yazılır.
+   7–8. (557) künye kilidi kalkınca kilitli SGK S.A.Y ile değişir; yazdıktan sonra geri okuma (teyit) kalkınca yazılamayan "yazıldı" sayılır. */
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -60,16 +61,34 @@ test("komut tanımada soru denetimi kalkınca soru okuma başlatır", async () =
 
 /* 550: Haiku'nun rapora_yaz girişleri */
 test("rapora_yaz tür denetimi kalkınca yıl alanına \"19x9\" yazılır", async () => {
-  const m = await bozuk<Doldur>(DOLDUR, "      const v = alanDegeri(alan.a, ham, bugun);\n      if (v === null)", "      const v = ham;\n      if (v === null)");
+  const m = await bozuk<Doldur>(DOLDUR, "      const r = kutu.denetle(ham);", "      const r = { v: ham };");
   const u = m.komutlariUygula(bos(), FormatTanimi.parse(SABLONLAR.ZPKR02.tanim), [{ yer: "e:imal", deger: "19x9" }]);
   assert.equal(u.durum.ekipman.imal, "19x9", "bozuk: türüne uymayan değer yazıldı");
 });
 
 test("rapora_yaz madde seçenek denetimi kalkınca listede olmayan cevap yazılır", async () => {
-  const m = await bozuk<Doldur>(DOLDUR, "const c = ham.trim() ? cevaplar.find((x) => kucukTr(x) === kucukTr(ham)) : \"\";", "const c = ham;");
+  const m = await bozuk<Doldur>(DOLDUR, "const cv = temizle(ham) ? md.cevaplar.find((x) => kucukTr(x) === kucukTr(ham)) : \"\";", "const cv = ham;");
   const t = FormatTanimi.parse(SABLONLAR.ZPKR02.tanim);
   const liste = t.bolumler.find((b) => b.blok === "liste");
   if (!liste || liste.blok !== "liste") throw new Error("liste yok");
   const u = m.komutlariUygula(bos(), t, [{ yer: `m:${liste.gruplar[0].maddeler[0].id}`, deger: "Belki" }]);
   assert.equal(u.durum.cevaplar.madde[liste.gruplar[0].maddeler[0].id]?.c, "Belki", "bozuk: seçeneklerde olmayan cevap");
+});
+
+/* 557: künye kilidi ve teyit */
+test("künye kilidi kalkınca kilitli SGK S.A.Y ile değişir", async () => {
+  const m = await bozuk<Doldur>(DOLDUR, "      if (ek.kunyeKilit?.has(a)) return { neden: \"bu formatta kilitli; elle de değiştirilemiyor\" };", "");
+  const u = m.komutlariUygula(bos(), FormatTanimi.parse(SABLONLAR.ZPKR02.tanim), [{ yer: "k:sgk", deger: "123" }], { kunyeKilit: new Set(["sgk"] as const) });
+  assert.equal(u.durum.cevaplar.kunye.sgk, "123", "bozuk: kilitli künye değişti");
+});
+
+test("yazdıktan sonra geri okuma kalkınca yazılamayan giriş \"yazıldı\" sayılır", async () => {
+  /* yazıcı bozulur (yorum yazılmaz): teyit varken "yazılamadı", teyit de kalkınca "yazıldı" (yanlış) */
+  const YAZ_BOZUK = DOLDUR.replace('if (y.tur === "yorum") return { ...d, cevaplar: { ...d.cevaplar, yorum: x } };', 'if (y.tur === "yorum") return d;');
+  assert.notEqual(YAZ_BOZUK, DOLDUR, "yazıcı satırı kaynakta yok");
+  const t = FormatTanimi.parse(SABLONLAR.ZPKR02.tanim);
+  const tek = await bozuk<Doldur>(YAZ_BOZUK, "export function komutlariUygula(", "export function komutlariUygula(");
+  assert.equal(tek.komutlariUygula(bos(), t, [{ yer: "yorum", deger: "x" }]).sonuclar[0]?.durum, "yazilamadi", "teyit yazılamayanı yakalar");
+  const m = await bozuk<Doldur>(YAZ_BOZUK, "    if (oku(durum, yer) !== x) { sonuclar.push({ yer: k, ad, durum: \"yazilamadi\", neden: \"yazıldıktan sonra okunan değer farklı\" }); return; }", "");
+  assert.equal(m.komutlariUygula(bos(), t, [{ yer: "yorum", deger: "x" }]).sonuclar[0]?.durum, "yazildi", "bozuk: yazılamayan yazıldı sayıldı");
 });

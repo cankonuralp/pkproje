@@ -4,7 +4,9 @@
    · haritada ekipman / bilgi / test alanları, tablo (sütun kimlikleri, satırlar), kontrol maddeleri (cevap seçenekleri), sonuç, yorum — ŞU ANKİ
      değerleriyle (kaydedilmemiş değişiklik dahil); künye (firma, müşteri, tesis, adres) GİTMEZ;
    · haritadaki HER yer kimliği ekranın uygulayıcısında (raporlar/say-doldur.ts komutlariUygula) tanınır — ikisi aynı listeden kopmasın;
-   · şemaya uymayan cevap harita üretmez; çok büyük rapor sınırda kısalır. */
+   · şemaya uymayan cevap harita üretmez; çok büyük rapor sınırda kısalır.
+   557 (sunum 557 · 2. tur — reisim: "el ile girebildiğim değerleri say asistan ile giremiyor"): elle girilebilen her yer haritada — künyenin YERİ
+   ve kilidi (DEĞERİ GİTMEZ: müşteri / kişi bilgisi), kontrol tarihleri, uygunluk notu / satır sonucu / satır silme, ölçüm cihazları (kodlarıyla). */
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { SABLONLAR } from "../src/format/sablonlar.ts";
@@ -31,16 +33,35 @@ test("harita: yer kimlikleri ve şu anki değerler; künye yok", () => {
   assert.ok(h.includes(`- m:${m1.id} · ${m1.metin} = "${liste.cevaplar[1]}" (ağır kusur) not "Kapak kırık"`), "madde, cevap, derece, not");
   assert.match(h, /- sonuc · Sonuç \(uygun \/ uygun değil\) = "uygun"/);
   assert.match(h, /- yorum · Muayene uzmanının yorumu \(yazı\) = "Uzman notu"/);
-  assert.ok(!h.includes("Gizli Müşteri"), "künye gitmez");
+  assert.ok(!h.includes("Gizli Müşteri"), "künyenin değeri gitmez");
+  /* 557: künye yeri (değersiz, kilitli olan işaretli), satır sonucu ve silme yönergesi */
+  assert.match(h, /^- k:firma · Firma adı \(yazı\)$/m);
+  assert.match(h, /^- k:sgk · SGK DETSİS NO \(yazı; kilitli — elle de değiştirilemez\)$/m);
+  assert.ok(h.includes("Satır silmek: t:linye:<satır no> = sil"));
+  assert.ok(h.includes("Sayı kutularına elle olduğu gibi sayı olmayan yazı da yazılır (ör. -)."));
+});
+
+test("557: tarih ve cihazlar canlı hâlden; künye değeri hiç gitmez", () => {
+  const c = { ...Cevaplar.parse({}), kunye: { firma: "Gizli Müşteri A.Ş.", adres: "Gizli Sokak 1" } };
+  const h = raporHaritasi(T, "x", { cevaplar: c, ekipman: {}, tarih: { bas: "2026-10-14T09:30", bit: "", sonraki: "2027-10-14", takip: "", rapor: "2026-10-14" },
+    cihazlar: [{ turId: "t1", turAd: "Topraklama ölçer", secili: "c1", secenekler: [{ id: "c1", kod: "C-01", ad: "Marka M" }, { id: "c2", kod: "C-02", ad: "" }] }, { turAd: "eksik" }] })!;
+  assert.match(h, /^- tarih:bas · Periyodik kontrol başlangıç tarihi ve saati \(tarih ve saat: GG\.AA\.YYYY SS:DD\) = "14\.10\.2026 09:30"$/m);
+  assert.match(h, /^- tarih:bit · .* = —$/m);
+  assert.match(h, /^- cihaz:t1 · Topraklama ölçer = "C-01"; seçilebilir: C-01 \(Marka M\), C-02$/m);
+  assert.ok(!/Gizli/.test(h), "künyenin değeri gitmez");
 });
 
 test("haritadaki her yer kimliği ekranın uygulayıcısında tanınır", () => {
   const h = raporHaritasi(T, "Elektrik iç tesisatı", { cevaplar: Cevaplar.parse({}), ekipman: {} })!;
-  const yerler = [...h.matchAll(/^- ((?:[eadm]:[^ ]+)|sonuc|yorum) · /gm)].map((x) => x[1]);
+  const h2 = raporHaritasi(T, "Elektrik iç tesisatı", { cevaplar: Cevaplar.parse({}), ekipman: {}, tarih: { bas: "", bit: "", sonraki: "", takip: "", rapor: "" },
+    cihazlar: [{ turId: "t1", turAd: "Ölçer", secili: null, secenekler: [] }] })!;
+  const yerler = [...h2.matchAll(/^- ((?:[eadmk]:[^ ]+)|(?:tarih|cihaz):[^ ]+|sonuc|yorum) · /gm)].map((x) => x[1]);
+  assert.ok(yerler.some((y) => y.startsWith("k:")) && yerler.some((y) => y.startsWith("tarih:")) && yerler.some((y) => y.startsWith("cihaz:")), "557 yerleri haritada");
   assert.ok(yerler.length > 20, `yer sayısı ${yerler.length}`);
   for (const yer of yerler) {
-    const u = komutlariUygula({ ekipman: {}, cevaplar: Cevaplar.parse({}) }, T, [{ yer, deger: "" }]);
-    assert.ok(!u.gecersiz.some((g) => /yer yok|madde yok/.test(g)), `${yer}: ${u.gecersiz.join(" | ")}`);
+    const u = komutlariUygula({ ekipman: {}, cevaplar: Cevaplar.parse({}), tarih: { bas: "", bit: "", sonraki: "", takip: "", rapor: "" } }, T, [{ yer, deger: "" }],
+      { cihazlar: [{ turId: "t1", turAd: "Ölçer", secili: null, secenekler: [] }] });
+    assert.ok(!u.gecersiz.some((g) => /yer yok|madde yok|satırı yok/.test(g)), `${yer}: ${u.gecersiz.join(" | ")}`);
   }
   const tablolar = [...h.matchAll(/hücre kimliği t:([^:]+):/g)].map((x) => x[1]);
   for (const b of tablolar) {

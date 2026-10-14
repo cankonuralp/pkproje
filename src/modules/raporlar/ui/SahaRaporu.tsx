@@ -50,7 +50,7 @@ import { satirAnahtari } from "../../../format/motor";
 import { fotografiKucult } from "../../../components/foto/kucult";
 import { ekipmanAlanlari, ekipmanAnahtari } from "../doldur";
 import {
-  alanlariUygula, geriAl, komutlariUygula, maddeleriIsaretle as maddeleriUygun, okumaHedefleri, sonucuYap, tabloyaUygula, yerDegeri,
+  alanlariUygula, geriAl, komutlariUygula, maddeleriIsaretle as maddeleriUygun, okumaHedefleri, sonucuYap, tabloyaUygula, yerDegeri, TARIH_ANAHTARLARI,
   type Durum, type Geri, type Guven, type OkunanAlan, type OkunanTabloSatiri, type OkumaHedefi, type Uygulama, type Yer,
 } from "../say-doldur";
 import { ayEkle, RAPOR_DURUM, type EkipmanBilgisi, type RaporDurumu, type RaporTarihleri } from "../sema";
@@ -69,7 +69,7 @@ import { StandartTusu, TalimatTusu } from "./Kaynaklar";
 import { AsamaCizgisi } from "./AsamaCizgisi";
 import { RevizeIstePenceresi } from "./RevizeIstePenceresi";
 import {
-  alanOkuEylemi, fotoOkuEylemi, okumaFotografiEkleEylemi, onayaGonderEylemi, raporFormatGuncelleEylemi, raporKaydetEylemi, raporKopyalaEylemi,
+  alanOkuEylemi, cihazEkleEylemi, cihazKaldirEylemi, fotoOkuEylemi, okumaFotografiEkleEylemi, onayaGonderEylemi, raporFormatGuncelleEylemi, raporKaydetEylemi, raporKopyalaEylemi,
   raporKunyeGuncelleEylemi, raporSilEylemi, revizeIstegiGeriCekEylemi, raporOneriKapatEylemi, revizeIsteEylemi, type RaporYaniti,
 } from "./eylemler";
 import { sayRaporBagla, type SayGeriAl, type SayOkumaOzeti } from "../../say/ui/baglam";
@@ -490,10 +490,12 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
   const notBolumu = v.tanim.bolumler.find((b) => b.blok === "not")?.id ?? null;
   const yerId = (y: Yer) => (y.tur === "ekipman" ? EID(y.id as EkipmanAnahtari) : y.tur === "hucre" ? alanId(satirAnahtari(y.bolum, y.satir, y.sutun))
     : y.tur === "sonuc" ? (sonucBolumu ? alanId(sonucBolumu) : "") : y.tur === "yorum" ? (notBolumu ? alanId(notBolumu) : "")
+    /* 557: künye, kontrol tarihi */
+    : y.tur === "kunye" ? alanId(`kunye.${y.id}`) : y.tur === "tarih" ? TID(y.id)
     : y.tur === "madde_not" ? alanId(`${y.id}.not`) : y.tur === "derece" ? alanId(`${y.id}.derece`) : alanId(y.id));
   const isaretler = useRef(new Map<string, { yer: Yer; guven: Guven; deger: string }>());
   useEffect(() => {
-    const d: Durum = { ekipman, cevaplar };
+    const d: Durum = { ekipman, cevaplar, tarih };
     for (const [id, x] of isaretler.current) if (yerDegeri(d, x.yer) !== x.deger) isaretler.current.delete(id);
     for (const el of document.querySelectorAll<HTMLElement>("[data-say-giris]")) {
       if (isaretler.current.has(el.id)) continue;
@@ -508,9 +510,9 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
       if (x.guven === "belirsiz") kutu?.setAttribute("data-say-not", "emin değil"); else kutu?.removeAttribute("data-say-not");
     }
   });
-  const durumRef = useRef<Durum>({ ekipman, cevaplar });
+  const durumRef = useRef<Durum>({ ekipman, cevaplar, tarih });
   const vRef = useRef(v);
-  useEffect(() => { durumRef.current = { ekipman, cevaplar }; vRef.current = v; });
+  useEffect(() => { durumRef.current = { ekipman, cevaplar, tarih }; vRef.current = v; });
   const katilanIdler = new Set(katilan.map((b) => b.id));
   const ekranBolumu = (bolum: string) => (bolum === "ekipman" || katilanIdler.has(bolum) || duzen.tam?.id === bolum ? SABIT.ekipman : bolum);
   const bolumleriAc = (l: readonly string[]) => setAcikSet((a) => {
@@ -521,15 +523,21 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
   /** girilenler ekrana (kaydedilmemiş değişiklik), işaretler, bölümler açılır; dönen: girilen değer sayısı */
   const uygula = (u: Uygulama, bolumler: readonly string[]): number => {
     if (!u.geri.length) return 0;
+    const onceTarih = durumRef.current.tarih;
     durumRef.current = u.durum;
     setEkipman(u.durum.ekipman as typeof ekipman); setCevaplar(u.durum.cevaplar); setKirli(true);
+    /* 557: kontrol tarihleri elle yazılır gibi (başlangıç sonraki kontrolü ve rapor tarihini de getirir) */
+    if (u.durum.tarih && u.durum.tarih !== onceTarih) for (const k of TARIH_ANAHTARLARI) { const x = u.durum.tarih[k] ?? ""; if (x !== (onceTarih?.[k] ?? "")) tarihYaz(k, x); }
     for (const i of u.isaretler) { const id = yerId(i.yer); if (id) isaretler.current.set(id, { yer: i.yer, guven: i.guven, deger: yerDegeri(u.durum, i.yer) }); }
     bolumleriAc(bolumler);
     return u.isaretler.length;
   };
   const geriAlici = (g: readonly Geri[]): SayGeriAl => () => {
-    const r = geriAl(durumRef.current, g);
-    if (r.sayi) { durumRef.current = r.durum; setEkipman(r.durum.ekipman as typeof ekipman); setCevaplar(r.durum.cevaplar); setKirli(true); }
+    const once = durumRef.current.tarih, r = geriAl(durumRef.current, g);
+    if (r.sayi) {
+      durumRef.current = r.durum; setEkipman(r.durum.ekipman as typeof ekipman); setCevaplar(r.durum.cevaplar); setKirli(true);
+      if (r.durum.tarih && r.durum.tarih !== once) { const t = r.durum.tarih; setTarih((x) => ({ ...x, ...Object.fromEntries(Object.entries(t).map(([k, v]) => [k, v ?? ""])) })); }
+    }
     return r.sayi;
   };
   const hedefler = useMemo(() => okumaHedefleri(v.tanim), [v.tanim]);
@@ -613,14 +621,36 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
     const bolumler = v.tanim.bolumler.filter((b) => b.blok === "liste" && b.gruplar.some((g) => g.maddeler.some((m) => maddeler.has(m.id)))).map((b) => b.id);
     return { sayi: uygula(u, bolumler), geriAl: geriAlici(u.geri) };
   };
-  /* 550: Haiku'nun istediği girişler — dolu alana da (kişi istedi); girilen yerlerin bölümleri açılır */
-  const raporaYaz = (girisler: readonly { yer: string; deger: string }[]) => {
-    const u = komutlariUygula(durumRef.current, v.tanim, girisler);
+  /* 557: ölçüm cihazı satırları — S.A.Y'ın haritası ve seçimi için (seçilebilir: raporu yazanın zimmetindeki geçerli cihazlar) */
+  const cihazSatirlari = () => {
+    const w = vRef.current;
+    return w.cihazlar.map((x) => ({ turId: x.turId, turAd: x.turAd, secili: x.cihaz?.id ?? null,
+      secenekler: (w.secilebilir[x.turId] ?? w.secilebilir["*"] ?? []).map((c) => ({ id: c.id, kod: c.kod, ad: [c.marka, c.model].filter(Boolean).join(" ") })) }));
+  };
+  /** 557: cihaz yazıldıktan sonra yeni sürüm gelene kadar bekler (sonraki cihaz yeni sürümle) */
+  const surumBekle = async (eski: number) => {
+    for (let i = 0; i < 50 && vRef.current.surum === eski; i++) await new Promise((r) => window.setTimeout(r, 200));
+  };
+  /* 550 → 557: Haiku'nun istediği girişler — elle ne giriliyorsa (ekranın denetimi); dolu alana da (kişi istedi); girilen yerlerin bölümleri açılır;
+     yazıldıktan sonra geri okunup teyit edilir; ölçüm cihazı elle seçilir gibi sunucu işlemiyle */
+  const raporaYaz = async (girisler: readonly { yer: string; deger: string }[]) => {
+    const u = komutlariUygula(durumRef.current, v.tanim, girisler, { kunyeKilit, kunyeKayit: kayit, cihazlar: cihazSatirlari() });
     const bolumu = (y: Yer) => (y.tur === "hucre" ? y.bolum : y.tur === "ekipman" ? "ekipman" : y.tur === "sonuc" ? sonucBolumu : y.tur === "yorum" ? notBolumu
+      : y.tur === "kunye" || y.tur === "tarih" ? SABIT.firma
       : y.tur === "madde" || y.tur === "madde_not" || y.tur === "derece" ? v.tanim.bolumler.find((b) => b.blok === "liste" && b.gruplar.some((g) => g.maddeler.some((m) => m.id === y.id)))?.id ?? null
       : v.tanim.bolumler.find((b) => (b.blok === "bilgi" && b.alanlar.some((a) => a.id === y.id)) || (b.blok === "test" && b.degerler.some((d) => d.id === y.id)))?.id ?? "ekipman");
     const bolumler = [...new Set(u.isaretler.map((i) => bolumu(i.yer)).filter((b): b is string => !!b))];
-    return { sayi: uygula(u, bolumler), gecersiz: u.gecersiz, geriAl: geriAlici(u.geri) };
+    const sayi = uygula(u, bolumler);
+    /* teyit: komutlariUygula her girişi yazdıktan sonra raporun hâlinden geri okur (yazılamayan nedeniyle döner); ekran o hâli uygular */
+    const sonuclar = [...u.sonuclar];
+    for (const c of u.cihaz) {
+      const w = vRef.current, j = sonuclar.findIndex((s) => s.yer === c.yer);
+      const r = c.cihazId ? await cihazEkleEylemi(w.id, w.surum, c.turId, c.cihazId).catch(() => null) : await cihazKaldirEylemi(w.id, w.surum, c.turId).catch(() => null);
+      if (r?.tamam) { yenile(); await surumBekle(w.surum); }
+      const tamam = !!r?.tamam && (c.cihazId ? vRef.current.cihazlar.find((x) => x.turId === c.turId)?.cihaz?.id === c.cihazId : !vRef.current.cihazlar.find((x) => x.turId === c.turId)?.cihaz);
+      if (j >= 0) sonuclar[j] = tamam ? { ...sonuclar[j], durum: "yazildi" } : { ...sonuclar[j], durum: "yazilamadi", neden: r ? (r.genel ?? Object.values(r.hatalar ?? {})[0] ?? "cihaz seçilemedi") : "bağlantı koptu" };
+    }
+    return { sayi, sonuclar, geriAl: geriAlici(u.geri) };
   };
   const sonucYap = (x: "uygun" | "uygun_degil") => {
     if (!sonucBolumu) return { var: false, sayi: 0, geriAl: () => 0 };
@@ -639,8 +669,8 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
 
   /* S.A.Y (382): düzenlenebilir rapor açıkken S.A.Y bu raporu okur — CANLI hâl (kaydedilmemiş değişiklikler dahil): boş zorunlu alanlar, sonuç
      önerisi; öneri denetçinin seçimiyle aynı yoldan uygulanır (Kaydet'le yazılır); eksiğe aynı "git" götürür. Rapor ekranı kapanınca bağ kalkar. */
-  const sayGuncel = useRef({ d, cevaplar, ekipman, tarih, yaz, git, fotolariOku, maddeleriIsaretle, sonucYap, fotoEkle, okunmamis, raporaYaz });
-  useEffect(() => { sayGuncel.current = { d, cevaplar, ekipman, tarih, yaz, git, fotolariOku, maddeleriIsaretle, sonucYap, fotoEkle, okunmamis, raporaYaz }; });
+  const sayGuncel = useRef({ d, cevaplar, ekipman, tarih, yaz, git, fotolariOku, maddeleriIsaretle, sonucYap, fotoEkle, okunmamis, raporaYaz, cihazSatirlari });
+  useEffect(() => { sayGuncel.current = { d, cevaplar, ekipman, tarih, yaz, git, fotolariOku, maddeleriIsaretle, sonucYap, fotoEkle, okunmamis, raporaYaz, cihazSatirlari }; });
   useEffect(() => {
     if (oku || yeni || denemede) return;
     const bolumAdi = (id: string) => v.tanim.bolumler.find((b) => b.id === id)?.ad ?? id;
@@ -671,6 +701,7 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
       sonucYap: (x) => sayGuncel.current.sonucYap(x),
       fotoEkle: (dosya, bolum) => sayGuncel.current.fotoEkle(dosya, bolum),
       ekipman: () => ({ ...sayGuncel.current.ekipman }) as Record<string, string>,
+      canliEk: () => ({ tarih: { ...sayGuncel.current.tarih }, cihazlar: sayGuncel.current.cihazSatirlari() }),
       yaz: (girisler) => sayGuncel.current.raporaYaz(girisler),
     });
   }, [oku, yeni, denemede, v.id, v.no, v.tanim, v.cihazlar, hedefler]);

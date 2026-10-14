@@ -58,7 +58,24 @@
 .mesaj a { color: var(--onay-yazi); }
 .bekleyen { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; }
 .bekleyen a { display: inline-flex; align-items: center; min-height: var(--tus-y); color: var(--onay-yazi); font-weight: 600; }
-.yaziyor { margin: 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
+/* 557 (sunum 557 · 2. tur — reisim: "düşünüyor kısmında bir görsel"): bekleme balonu — hareket eden üç nokta ya da dönen işaret + ne yaptığı */
+.bekleme { display: inline-flex; align-items: center; gap: 10px; color: var(--yazi2); }
+.noktalar { display: inline-flex; gap: 4px; }
+.noktalar i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: zipla 1.1s infinite ease-in-out; }
+.noktalar i:nth-child(2) { animation-delay: .15s; }
+.noktalar i:nth-child(3) { animation-delay: .3s; }
+@keyframes zipla { 0%, 70%, 100% { opacity: .35; transform: translateY(0); } 35% { opacity: 1; transform: translateY(-3px); } }
+.donen { flex: none; width: 14px; height: 14px; border-radius: 50%; border: 2px solid currentColor; border-top-color: transparent; animation: don .8s linear infinite; }
+@keyframes don { to { transform: rotate(360deg); } }
+/* 557 (reisim: "en alta in tuşu olsun chatte"): sohbet yukarı kaydırılınca görünen alanın altında, sağda */
+.enAlta {
+  position: sticky; bottom: 0; align-self: flex-end; flex: none; margin-top: auto; display: grid; place-items: center; width: var(--tus-y); height: var(--tus-y);
+  padding: 0; border: 1px solid var(--kenar-alan); border-radius: 50%; background: var(--kart); color: var(--yazi); box-shadow: var(--golge-2); cursor: pointer;
+}
+.enAlta:focus-visible { outline: 3px solid var(--odak); outline-offset: 2px; }
+/* 557 (reisim: "say için alta küçültme tuşu olsun"): küçük hâl — yalnız başlık, sağ altta (havadaki tuşlar varsa düğmenin yerinde, onların üstünde) */
+.panel[data-kucuk] { top: auto; bottom: 20px; }
+:global(body:has([data-alt-cubuk="her"])) .panel[data-kucuk] { bottom: calc(var(--tus-y) + 32px); }
 /* rapor ekranı (382; maket .a-say-eksik / .a-say-oneri): bölüm başına eksik + Git; öneri kartı Uygula / Vazgeç */
 .eksik { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
 .eksik li { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -135,5 +152,10 @@
   /* 547 (reisim 2026-10-14, iPhone ekran görüntüsü: panel klavyeden önce bitiyor, arada sayfa görünüyordu): panel görünen alana sığar, çevresi
      panelin rengiyle örtülür (geniş gölge — ölçüm geç kalsa da arkadaki sayfa görünmez); sayfa kaymaz (temel.css html[data-panel-acik]) */
   .panel { inset: auto 0 auto 0; top: var(--vv-ust); height: var(--vv-y); width: auto; border: 0; border-radius: 0; z-index: 80;
-    box-shadow: 0 0 0 100vmax var(--kart); }
+    box-shadow: 0 0 0 100vmax var(--kart); }  /* 557: küçükken alta tek satır; sayfa görünür ve kayar (temel.css data-panel-kucuk) */
+  .panel[data-kucuk] { top: auto; bottom: 0; height: auto; box-shadow: var(--golge-2); }
+  :global(body:has([data-alt-cubuk="her"])) .panel[data-kucuk] { bottom: calc(var(--tus-y) * 2 + 40px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .noktalar i, .donen { animation: none; }
 }

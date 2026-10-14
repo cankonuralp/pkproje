@@ -45,6 +45,8 @@ const baglantiAbone = (f: () => void) => {
   return () => { window.removeEventListener("online", f); window.removeEventListener("offline", f); };
 };
 const cevrimdisiMi = () => navigator.onLine === false;
+/** 557: küçük hâl ve boy (kısaltılmış panelin yüksekliği) bu cihazda kalır */
+const SC_KUCUK = "probata-saychat-kucuk", SC_BOY = "probata-saychat-boy";
 const metneCevir = (d: Blob) => new Promise<string>((coz, red) => {
   const r = new FileReader();
   r.onload = () => { const s = String(r.result); coz(s.slice(s.indexOf(",") + 1)); };
@@ -144,6 +146,57 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
   const [goster, setGoster] = useState<{ url?: string; dosya?: string; ad: string } | null>(null);
   const panel = useRef<HTMLElement>(null);
   useGorunurAlan(panel, acik);
+  /* 557 (sunum 557 · 2. tur — reisim 2026-10-14: "saychat ve say için alta küçültme tuşu olsun", "say chati kısaltıp uzatma olsun sadece yazı
+     yazabileceğim yer gözükecek kadar kısaltabileyim", "en alta in tuşu olsun chatte"): küçük hâl (yalnız başlık), boy (üst kenardaki tutamak —
+     fare, dokunma, klavye; en kısası başlık + alttaki yazı / fotoğraf yeri), gövde yukarı kaydırılınca "En alta in". Boy ve küçük hâl bu cihazda. */
+  const [kucuk, setKucuk] = useState(false);
+  const [boy, setBoy] = useState<number | null>(null);
+  const [asagi, setAsagi] = useState<{ alt: number } | null>(null);
+  const kucult = (k: boolean) => {
+    setKucuk(k);
+    try { localStorage.setItem(SC_KUCUK, k ? "1" : "0"); } catch { /* saklama yok */ }
+  };
+  const boyKoy = (h: number | null) => {
+    const p = panel.current;
+    if (h !== null && p) {
+      const tut = p.querySelector<HTMLElement>("[data-sc-tutamak]"), bas = p.querySelector<HTMLElement>("[data-sc-bas]"), alt = p.querySelector<HTMLElement>("[data-sc-alt]");
+      const enKisa = (tut?.offsetHeight ?? 0) + (bas?.offsetHeight ?? 0) + (alt?.offsetHeight ?? 0) + 2;
+      const enUzun = window.innerHeight - 16;
+      h = Math.max(enKisa, Math.min(enUzun, Math.round(h)));
+      if (h >= enUzun - 4) h = null;
+    }
+    setBoy(h);
+    try { if (h === null) localStorage.removeItem(SC_BOY); else localStorage.setItem(SC_BOY, String(h)); } catch { /* saklama yok */ }
+  };
+  const surukle = useRef<{ y: number; h: number } | null>(null);
+  /* gövde yukarı kaydırılınca "En alta in" (gövde görünümle değişir: kayıtlar, form, rapor yaz) */
+  useEffect(() => {
+    if (!acik || kucuk) return;
+    const p = panel.current;
+    if (!p) return;
+    let g: HTMLElement | null = null;
+    const bak = () => {
+      if (!g) return;
+      const alt = p.querySelector<HTMLElement>("[data-sc-alt]")?.offsetHeight ?? 0;
+      const a = g.scrollHeight - g.scrollTop - g.clientHeight < 32;
+      setAsagi((x) => (a ? null : x && x.alt === alt ? x : { alt }));
+    };
+    const bagla = () => {
+      const y = p.querySelector<HTMLElement>("[data-sc-govde]");
+      if (y === g) return;
+      g?.removeEventListener("scroll", bak);
+      g = y; g?.addEventListener("scroll", bak); bak();
+    };
+    bagla();
+    const go = new MutationObserver(() => { bagla(); bak(); });
+    go.observe(p, { childList: true, subtree: true });
+    return () => { go.disconnect(); g?.removeEventListener("scroll", bak); };
+  }, [acik, kucuk]);
+  const enAlta = () => {
+    const g = panel.current?.querySelector<HTMLElement>("[data-sc-govde]");
+    if (g) g.scrollTop = g.scrollHeight;
+    setAsagi(null);
+  };
   const [konum, setKonum] = useState<{ right: number; bottom: number } | null>(null);
   /* 525: rapor yaz ekranı — ekipman kodları (yeni ekipman), kayıt başına hata, oluşan raporlar */
   const [raporEkrani, setRaporEkrani] = useState(false);
@@ -195,8 +248,13 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
     if (!acik) return;
     const h = document.documentElement;
     h.setAttribute("data-panel-acik", "saychat");
-    return () => { if (h.getAttribute("data-panel-acik") === "saychat") h.removeAttribute("data-panel-acik"); };
-  }, [acik]);
+    /* 557: küçük ya da kısaltılmışken sayfa görünür ve kayar (temel.css data-panel-kucuk) */
+    if (kucuk || boy !== null) h.setAttribute("data-panel-kucuk", "saychat");
+    return () => {
+      if (h.getAttribute("data-panel-acik") === "saychat") h.removeAttribute("data-panel-acik");
+      if (h.getAttribute("data-panel-kucuk") === "saychat") h.removeAttribute("data-panel-kucuk");
+    };
+  }, [acik, kucuk, boy]);
   /* sayfanın sonu düğmenin altında kalmasın (temel.css html[data-saychat]) */
   useEffect(() => {
     document.documentElement.setAttribute("data-saychat", "var");
@@ -238,7 +296,9 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
 
   const ac = () => {
     window.dispatchEvent(new CustomEvent("probata-panel", { detail: "saychat" }));
-    setAcik(true);
+    setAcik(true); setAsagi(null);
+    /* 557: küçük hâl ve boy bu cihazda kalır — panel açılırken okunur */
+    try { setKucuk(localStorage.getItem(SC_KUCUK) === "1"); const b = Number(localStorage.getItem(SC_BOY)); setBoy(b > 0 ? b : null); } catch { /* saklama yok */ }
     requestAnimationFrame(() => document.getElementById("sc-ilk")?.focus());
   };
   const kapat = () => { setAcik(false); setTaslak(null); setRaporEkrani(false); requestAnimationFrame(() => fab.current?.focus()); };
@@ -392,7 +452,7 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
   ];
   const sohbet = (
     <>
-      <div className={stil.govdeP}>
+      <div className={stil.govdeP} data-sc-govde="">
         {cevrimdisi && <Serit tur="uyari" ikon="wifi-off">Çevrimdışı · {bekleyenSayisi ? `${bekleyenSayisi} kayıt cihazda bekliyor; bağlantı gelince gider.` : "kayıtlar cihazda birikir, bağlantı gelince gider."}</Serit>}
         {gorunenler.length ? (
           <>
@@ -436,7 +496,7 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
           </>
         ) : null}
       </div>
-      <div className={stil.altP}>
+      <div className={stil.altP} data-sc-alt="">
         <div className={stil.yeni}>
           <FotoTusu ad="Fotoğraf ekle" ikon="camera" sinif={stil.birincil} id="sc-ilk" coklu sec={(l) => void yeniKayit(l)} />
         </div>
@@ -451,7 +511,7 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
     const ekipFotoSayisi = t.fotolar.filter((f) => f.rol === "ekipman").length + t.yerel.filter((y) => y.rol === "ekipman").length;
     return (
       <>
-        <div className={stil.govdeP}>
+        <div className={stil.govdeP} data-sc-govde="">
           <h3 className={stil.gizli} id="sc-form-bas" tabIndex={-1}>{t.yeni && !veri.kayitlar.some((k) => k.id === t.id) ? "Yeni kayıt" : "Kaydı düzenle"} · {ekipAd(t.ekipman)}</h3>
           {/* 547 (sunum 546): telefonda klavye açıkken Ekipman / Fotoğraf / Etiket tek ince satır — mesaj kutusu ve Gönder klavyenin üstünde kalır;
               satıra basınca klavye kapanır, satırlar geri açılır (data-klavye: components/pencere/gorunurAlan.ts) */}
@@ -511,7 +571,7 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
             </>
           )}
         </div>
-        <div className={stil.altP}>
+        <div className={stil.altP} data-sc-alt="">
           <div className={stil.tuslar}>
             {veri.kayitlar.some((k) => k.id === t.id) || chatIsleri.some((x) => x.kayit === t.id)
               ? <Tus tur="tehlike" ikon="trash-2" onClick={() => void kayitSil()} aria-label="Kaydı sil">Sil</Tus> : null}
@@ -558,7 +618,7 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
   const olusanlar = Object.entries(sonuclar).filter(([, x]) => x.rapor);
   const raporEkraniHtml = raporEkrani && (
     <>
-      <div className={stil.govdeP}>
+      <div className={stil.govdeP} data-sc-govde="">
         <h3 className={stil.adim} id="sc-rapor-bas" tabIndex={-1}>Bekleyenler için rapor yaz</h3>
         <p className={stil.ara}>{veri.plan.no} · {hazirlar.length} kayıt</p>
         {olusanlar.length > 0 && (
@@ -605,7 +665,7 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
         </ul>
         {yaziyor && <p className={stil.not} role="status">Oluşturuluyor: {yaziyor}</p>}
       </div>
-      <div className={stil.altP}>
+      <div className={stil.altP} data-sc-alt="">
         <div className={stil.tuslar}>
           <Tus tur="ikincil" ikon="arrow-left" onClick={() => { setRaporEkrani(false); requestAnimationFrame(() => document.getElementById("sc-ilk")?.focus()); }} disabled={!!yaziyor}>Geri</Tus>
           <Tus ikon="file-plus" onClick={() => void raporYaz()} disabled={!!yaziyor || !!veri.rapor.engel || cevrimdisi || !hazirlar.length}>
@@ -632,21 +692,40 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
         </button>
       )}
       {acik && (
-        <aside ref={panel} className={stil.panel} id="sc-panel" role="dialog" aria-labelledby="sc-baslik"
+        <aside ref={panel} className={stil.panel} id="sc-panel" role="dialog" aria-labelledby="sc-baslik" data-kucuk={kucuk || undefined}
+          data-boy={!kucuk && boy !== null ? "" : undefined} style={!kucuk && boy !== null ? { height: `${boy}px` } : undefined}
           onKeyDown={(e) => {
             if (e.key !== "Escape" || secim || goster) return;
             e.stopPropagation();
             if (taslak) vazgec(); else if (raporEkrani && !yaziyor) setRaporEkrani(false); else kapat();
           }}>
-          <div className={stil.basP}>
+          {!kucuk && (
+            <button className={stil.tutamak} type="button" data-sc-tutamak="" aria-label="S.A.Y Chat'in boyu: yukarı ok uzatır, aşağı ok kısaltır" title="Sürükleyip boyu değiştirin"
+              onPointerDown={(e) => { surukle.current = { y: e.clientY, h: panel.current?.offsetHeight ?? 0 }; e.currentTarget.setPointerCapture(e.pointerId); e.preventDefault(); }}
+              onPointerMove={(e) => { const s = surukle.current; if (s) boyKoy(s.h + (s.y - e.clientY)); }}
+              onPointerUp={() => { surukle.current = null; }} onPointerCancel={() => { surukle.current = null; }}
+              onKeyDown={(e) => {
+                const h = panel.current?.offsetHeight ?? 0;
+                if (e.key === "ArrowUp") boyKoy(h + 40); else if (e.key === "ArrowDown") boyKoy(h - 40);
+                else if (e.key === "Home") boyKoy(null); else if (e.key === "End") boyKoy(0); else return;
+                e.preventDefault();
+              }} />
+          )}
+          <div className={stil.basP} data-sc-bas="">
             <span className={stil.avatar}><Ikon ad="message-square-text" /></span>
             <div className={stil.kimlik}>
               <h2 id="sc-baslik">S.A.Y Chat</h2>
               <p className={stil.altYazi}>{veri.plan.no}</p>
             </div>
+            <button className={stil.basTus} id="sc-kucult" type="button" onClick={() => kucult(!kucuk)} aria-expanded={!kucuk}
+              aria-label={kucuk ? "Büyüt" : "Küçült"} title={kucuk ? "Büyüt" : "Küçült"}><Ikon ad={kucuk ? "chevron-up" : "chevron-down"} /></button>
             <button className={stil.basTus} type="button" onClick={kapat} aria-label="S.A.Y Chat'i kapat"><Ikon ad="x" /></button>
           </div>
-          {form ?? (raporEkrani ? raporEkraniHtml : sohbet)}
+          {/* küçükken içerik saklanır (yazılan kaybolmaz) */}
+          <div className={stil.icerik}>{form ?? (raporEkrani ? raporEkraniHtml : sohbet)}</div>
+          {asagi && !kucuk && (
+            <button className={stil.enAlta} type="button" onClick={enAlta} aria-label="En alta in" title="En alta in" style={{ bottom: asagi.alt + 12 }}><Ikon ad="arrow-down" /></button>
+          )}
         </aside>
       )}
       <Pencere acik={!!secim} baslik="Ekipman seçin" onKapat={() => setSecim(null)} odak="[data-ilk-odak]">

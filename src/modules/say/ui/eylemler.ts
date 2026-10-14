@@ -4,14 +4,17 @@
    taşımaz). Yapay zekâ çağrısı veritabanı işleminin dışında.
    522: ekli soru FormData ile (dosyalar + soru, adres, rapor); tür, adet ve boy sunucuda (server/ek.ts), dosya saklanmaz.
    550: kuralla cevaplanan hızlı sorular kalktı (yalnız "Fotoğrafları oku ve gir" — ekranda); rapordayken canlı ekipman bilgisi de gelir (harita);
-   internet araması hizmetçe kabul edilmezse (400) soru aramasız bir kez yeniden gönderilir. */
+   internet araması hizmetçe kabul edilmezse (400) soru aramasız bir kez yeniden gönderilir.
+   557: rapordayken kontrol tarihleri ve ölçüm cihazı satırları da gelir (harita); sayIsSonucuEylemi — ekranın yaptığı işin sonucu, S.A.Y cevabı
+   onunla yazar (çağrı düşerse sonucu sunucu yazar). */
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { anthropicCagir, type OkumaIstegi } from "../../../server/yz/okuma";
 import type { SohbetIletisi } from "../../../server/yz/sohbet";
 import { EK_EN_COK_ADET, EK_EN_COK_BAYT } from "../ek-sinir";
 import { EK_BOY_HATASI, sayEkleriOku, type SayEkDosyasi } from "../server/ek";
-import { sayBirak, sayDurumu, sayGecmisi, sayOneri, sayRaporCevabi, saySorHazirla, saySorKaydet, sayTemizle, type SayDurum, type SayYaniti } from "../server/say";
+import { sayBirak, sayDurumu, sayGecmisi, sayIsSonucuHazirla, sayIsSonucuKaydet, sayOneri, sayRaporCevabi, saySorHazirla, saySorKaydet, sayTemizle, type SayDurum,
+  type SayYaniti } from "../server/say";
 
 const RED: SayYaniti = { durum: "red", neden: "Oturumunuz kapandı. Sayfayı yenileyip yeniden giriş yapın." };
 const yolAl = (v: unknown) => (typeof v === "string" && v.startsWith("/") && v.length <= 300 ? v : "/");
@@ -71,8 +74,8 @@ export async function sayEkliSorEylemi(form: FormData): Promise<SayYaniti> {
 type Oturum = NonNullable<Awaited<ReturnType<typeof oturum>>>;
 async function sor(o: Oturum, soru: unknown, yol: unknown, raporNo: unknown, canli: unknown, ekler: SayEkDosyasi[], kurucuHam: unknown = null): Promise<SayYaniti> {
   if (typeof soru !== "string") return { durum: "red", neden: "Sorunuzu yazın." };
-  const c = (canli ?? null) as { id?: unknown; cevaplar?: unknown; ekipman?: unknown } | null;
-  const rapor = c && typeof c.id === "string" ? { id: c.id, cevaplar: c.cevaplar, ekipman: c.ekipman } : null;
+  const c = (canli ?? null) as { id?: unknown; cevaplar?: unknown; ekipman?: unknown; tarih?: unknown; cihazlar?: unknown } | null;
+  const rapor = c && typeof c.id === "string" ? { id: c.id, cevaplar: c.cevaplar, ekipman: c.ekipman, tarih: c.tarih, cihazlar: c.cihazlar } : null;
   const k = (kurucuHam ?? null) as { id?: unknown; tanim?: unknown } | null;
   const kurucu = k && typeof k.id === "string" ? { id: k.id, tanim: k.tanim } : null;
   const h = await oturumIslemi(o, (db) => saySorHazirla(db, o, soru, yolAl(yol), new Date(), typeof raporNo === "string" ? raporNo : null, rapor, ekler, kurucu));
@@ -89,6 +92,16 @@ async function sor(o: Oturum, soru: unknown, yol: unknown, raporNo: unknown, can
     return { durum: "red", neden: y.neden };
   }
   return oturumIslemi(o, (db) => saySorKaydet(db, h, y.govde));
+}
+
+/** 557: ekranın yaptığı işin sonucu (yazılan, zaten öyle olan, yazılamayan + neden) → S.A.Y cevabını bununla yazar */
+export async function sayIsSonucuEylemi(girdi: unknown, yol: unknown): Promise<SayYaniti> {
+  const o = await oturum();
+  if (!o) return RED;
+  const h = await oturumIslemi(o, (db) => sayIsSonucuHazirla(db, o, girdi, yolAl(yol)));
+  if (h.durum !== "hazir") return h;
+  const y = await anthropicCagir(h.istek, h.anahtar);
+  return oturumIslemi(o, (db) => (y.durum === "hata" ? sayIsSonucuKaydet(db, h, null, y.ucret) : sayIsSonucuKaydet(db, h, y.govde)));
 }
 
 export async function sayTemizleEylemi(): Promise<{ durum: "tamam"; silinen: number } | { durum: "red"; neden: string }> {

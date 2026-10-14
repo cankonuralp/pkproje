@@ -10,10 +10,11 @@
    Haiku'ya gider · Haiku'nun "rapora_yaz" girişleri (komutlariUygula): yer kimliğiyle, türüne göre denetlenir, kişi istediği için dolu alana da yazılır,
    tabloya yeni satır açılır, formüllü sütuna / bilinmeyen yere yazılmaz (nedeniyle döner), madde cevabı bölümün seçeneklerinden, geri al. */
 import assert from "node:assert/strict";
+import { ELLE_GEREKCE, ELLE_SONUC } from "../src/format/motor.ts";
 import { test } from "node:test";
 import { Cevaplar, FormatTanimi } from "../src/format/tanim.ts";
 import { SABLONLAR } from "../src/format/sablonlar.ts";
-import { alanlariUygula, geriAl, komutlariUygula, maddeleriIsaretle, okumaHedefleri, sonucuYap, tabloyaUygula, yerDegeri, type Durum } from "../src/modules/raporlar/say-doldur.ts";
+import { alanlariUygula, geriAl, komutlariUygula, maddeleriIsaretle, okumaHedefleri, sonucOzeti, sonucuYap, tabloyaUygula, yerDegeri, type Durum } from "../src/modules/raporlar/say-doldur.ts";
 import { istekTani } from "../src/modules/say/istek.ts";
 import { islemMetni, raporGirdisi } from "../src/modules/say/server/say.ts";
 
@@ -126,7 +127,9 @@ test("rapora_yaz: yer kimliğiyle, türüne göre; dolu alana da; tabloya yeni s
   assert.deepEqual([l.length, l[0][icu.id], l[1], l[2][icu.id]], [3, "3000", {}, "10"]);
   assert.equal(l[0][tip.id], (tip.secenekler ?? [])[1] ?? "C");
   assert.deepEqual(u.durum.cevaplar.madde[m1.id], { c: liste.cevaplar[1], derece: "agir", not: "Kapak kırık" });
-  assert.deepEqual(u.gecersiz.map((g) => g.split(":")[0]), ["e", "t", "m", "t", "x"], u.gecersiz.join(" | "));
+  /* 2026-10-14 (557): yapılamayanlar sonuçta yer kimliği + ad + nedenle (gecersiz artık "ad: neden" — S.A.Y'a okunur ad gider) */
+  assert.deepEqual(u.sonuclar.filter((s) => s.durum === "yazilamadi").map((s) => s.yer.split(":")[0]), ["e", "t", "m", "t", "x"], u.gecersiz.join(" | "));
+  assert.ok(u.gecersiz.every((g) => /: ./.test(g)), "her yapılamayanın nedeni var");
   assert.ok(u.isaretler.some((i) => i.yer.tur === "hucre" && i.yer.satir === 2) && u.isaretler.every((i) => i.guven === "emin"));
   /* geri al: hepsi önceki hâline (kişi sonradan değiştirmediyse) */
   const g = geriAl(u.durum, u.geri);
@@ -160,4 +163,61 @@ test("S.A.Y'ın cevabı sayılardan; girdi yapısı denetlenir (serbest metin ya
     { istek: "oku", soru: "x", sayi: 0, okuma: { ...okuma, dolu: Array.from({ length: 61 }, () => "a") } },
     { istek: "oku", soru: "x", sayi: 0, okuma: { ...okuma, neden: "x".repeat(301) } },
   ]) assert.equal(raporGirdisi({ hizli: "islem", rapor: R, islem: kotu }), null, JSON.stringify(kotu));
+});
+
+/* 557 (sunum 557 · 2. tur — reisim 2026-10-14: "el ile girebildiğim değerleri say asistan ile giremiyor", "yapıldıysa yapıldı de, yapılamadıysa sebebi
+   ile yaz"): S.A.Y elle ne giriliyorsa onu girer, ekranın denetimiyle — sayı kutusuna "-", künye (kilitli olmayan; kayıttakiyle aynısı değişiklik
+   değil), kontrol tarihleri, çoklu seçim, uygunluk notu, satır sonucu + gerekçe, satır silme, ölçüm cihazı (ekranda bekler); her girişin sonucu */
+test("557 rapora_yaz: elle ne giriliyorsa — sayıya yazı, künye, tarih, çoklu seçim, not, satır sonucu, satır silme, cihaz; her girişin sonucu", () => {
+  const t = FormatTanimi.parse({ sema: 1, bolumler: [
+    { id: "genel", ad: "Genel", blok: "bilgi", alanlar: [{ id: "kapsam", ad: "Kapsam", tur: "coklu", secenekler: ["Aydınlatma", "Priz", "Motor"] }] },
+    { id: "notlu", ad: "Notlu tablo", blok: "olcum", sutunlar: [{ id: "in", ad: "In", giris: "sayi" }], notlar: [{ metin: "Uygun", kusur: false }, { metin: "Yetersiz", kusur: true }] },
+    { id: "linye", ad: "Linye", blok: "olcum", sutunlar: [{ id: "icu", ad: "Icu", giris: "sayi" }, { id: "devre", ad: "Devre", giris: "metin" }] },
+  ] });
+  const d: Durum = { ekipman: {}, cevaplar: { ...Cevaplar.parse({}), tablo: { linye: [{ icu: "6" }, { icu: "10" }, { icu: "16" }], notlu: [{ in: "16" }] } },
+    tarih: { bas: "2026-10-14T09:00", bit: "", sonraki: "2027-10-14", takip: "", rapor: "2026-10-14" } };
+  const u = komutlariUygula(d, t, [
+    { yer: "t:linye:1:icu", deger: "-" }, { yer: "t:linye:2:icu", deger: "1.5" }, { yer: "t:linye:3:icu", deger: "16" },   // sayıya yazı · ondalık · aynı
+    { yer: "t:linye:1:devre", deger: "x".repeat(121) },                                                                     // ekrandaki sınırdan uzun
+    { yer: "k:firma", deger: "Yeni Unvan" }, { yer: "k:sgk", deger: "123" }, { yer: "k:adres", deger: "Kayıttaki adres" },
+    { yer: "tarih:bit", deger: "14.10.2026 11:30" }, { yer: "tarih:takip", deger: "31.02.2027" }, { yer: "tarih:sonraki", deger: "15.10.2027" },
+    { yer: "a:kapsam", deger: "priz, Aydınlatma" }, { yer: "a:kapsam", deger: "Priz, Pompa" },
+    { yer: "t:notlu:1:not", deger: "Not-2" }, { yer: "t:notlu:1:sonuc", deger: "uygun" },
+    { yer: "t:linye:1:sonuc", deger: "uygun değil" }, { yer: "t:linye:1:gerekce", deger: "Yerinde ölçüldü, değer düşük." },
+    { yer: "t:linye:2", deger: "sil" }, { yer: "t:linye:9", deger: "sil" },
+    { yer: "cihaz:tur1", deger: "C-01" }, { yer: "cihaz:tur1", deger: "YOK-9" },
+  ], { kunyeKilit: new Set(["sgk"] as const), kunyeKayit: { adres: "Kayıttaki adres" },
+    cihazlar: [{ turId: "tur1", turAd: "Topraklama ölçer", secili: null, secenekler: [{ id: "c1", kod: "C-01", ad: "Marka M" }] }] });
+  const s = (yer: string) => u.sonuclar.filter((x) => x.yer === yer).map((x) => `${x.durum}${x.neden ? `: ${x.neden}` : ""}`);
+  /* tablo: 2. satır silindi — 1. satır "-", eski 3. satır 2. oldu */
+  assert.deepEqual(u.durum.cevaplar.tablo.linye.map((r) => r.icu), ["-", "16"]);
+  assert.deepEqual(s("t:linye:2:icu"), ["yazildi"], "1.5 yazıldı (sonra satır silindi)");
+  assert.deepEqual(s("t:linye:3:icu"), ["ayni"]);
+  assert.match(s("t:linye:1:devre")[0], /^yazilamadi: bu kutuya en çok 120 karakter/);
+  assert.equal(u.durum.cevaplar.kunye.firma, "Yeni Unvan");
+  assert.match(s("k:sgk")[0], /kilitli; elle de değiştirilemiyor/);
+  assert.equal("adres" in u.durum.cevaplar.kunye, false, "kayıttakiyle aynısı değişiklik değil");
+  assert.equal(u.durum.tarih?.bit, "2026-10-14T11:30");
+  assert.equal(u.durum.tarih?.sonraki, "2027-10-15");
+  assert.match(s("tarih:takip")[0], /^yazilamadi: tarih GG\.AA\.YYYY/);
+  assert.deepEqual(u.durum.cevaplar.alan.kapsam, ["Aydınlatma", "Priz"], "seçeneklerin sırası, büyük / küçük harf seçenekten");
+  assert.match(s("a:kapsam")[1], /Pompa seçeneklerde yok/);
+  assert.equal(u.durum.cevaplar.tablo.notlu[0].not, "2");
+  assert.match(s("t:notlu:1:sonuc")[0], /uygunluk notundan çıkar/);
+  assert.deepEqual([u.durum.cevaplar.tablo.linye[0][ELLE_SONUC], u.durum.cevaplar.tablo.linye[0][ELLE_GEREKCE]], ["uygun_degil", "Yerinde ölçüldü, değer düşük."]);
+  assert.deepEqual(s("t:linye:9"), ["yazilamadi: tabloda bu satır yok"]);
+  assert.deepEqual(u.cihaz, [{ yer: "cihaz:tur1", ad: "Ölçüm cihazı · Topraklama ölçer", turId: "tur1", cihazId: "c1" }]);
+  assert.deepEqual(s("cihaz:tur1")[0], "bekliyor");
+  assert.match(s("cihaz:tur1")[1], /zimmetinizde böyle bir cihaz yok \(seçilebilir: C-01\)/);
+  const o = sonucOzeti(u.sonuclar);
+  assert.equal(o.yazilamadi.length, u.sonuclar.filter((x) => x.durum === "yazilamadi").length);
+  assert.ok(o.yazilamadi.every((x) => x.ad && x.neden), "her yapılamayanın adı ve nedeni");
+  /* "kurala göre": elle sonuç ve gerekçe birlikte kalkar */
+  const k = komutlariUygula(u.durum, t, [{ yer: "t:linye:1:sonuc", deger: "kurala göre" }]);
+  assert.deepEqual([k.durum.cevaplar.tablo.linye[0][ELLE_SONUC], k.durum.cevaplar.tablo.linye[0][ELLE_GEREKCE]], [undefined, undefined]);
+  /* geri al: tablo, künye, tarih önceki hâline */
+  const g = geriAl(u.durum, u.geri);
+  assert.deepEqual(g.durum.cevaplar.tablo.linye.map((r) => r.icu), ["6", "10", "16"]);
+  assert.equal(g.durum.cevaplar.kunye.firma, undefined);
+  assert.equal(g.durum.tarih?.bit, "");
 });

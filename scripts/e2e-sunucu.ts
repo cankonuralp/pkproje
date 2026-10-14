@@ -248,6 +248,23 @@ const yzTaklit = createServer((istek, yanit) => {
         yanit.writeHead(400, { "content-type": "application/json" }).end(JSON.stringify({ type: "error", error: { type: "invalid_request_error", message: "taklit: S.A.Y isteğinde kişisel / müşteri bilgisi" } }));
         return;
       }
+      /* 557: işin sonucu (ikinci çağrı) — son ileti tool_result; araç kullanımı ve düşünme kapalı olmalı; cevap sonuçtan ("Yaptım" / "Yapamadım") */
+      const sonBloklar = g.messages?.at(-1)?.content;
+      const isSonucu = Array.isArray(sonBloklar) ? (sonBloklar as { type?: string; content?: unknown }[]).find((b) => b.type === "tool_result") : undefined;
+      if (isSonucu) {
+        const d = g as { tool_choice?: { type?: string }; thinking?: { type?: string } };
+        if (d.tool_choice?.type !== "none" || d.thinking?.type !== "disabled") {
+          yanit.writeHead(400, { "content-type": "application/json" }).end(JSON.stringify({ type: "error", error: { type: "invalid_request_error", message: "taklit: sonuç çağrısında araç ve düşünme kapalı olmalı" } }));
+          return;
+        }
+        let r: { yazilan?: number; yapilan?: string[]; yazilamayan?: { ad: string; neden: string }[] } = {};
+        try { r = JSON.parse(String(isSonucu.content ?? "{}")); } catch { r = {}; }
+        const l = [r.yazilan ? (r.yapilan?.length ? `Yaptım: ${r.yapilan.join(", ")}.` : `Yaptım: ${r.yazilan} giriş yazıldı.`) : "",
+          r.yazilamayan?.length ? `Yapamadım: ${r.yazilamayan.map((x) => `${x.ad}: ${x.neden}`).join("; ")}` : ""].filter(Boolean);
+        yanit.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({
+          content: [{ type: "text", text: l.join("\n") || "Bir değişiklik olmadı." }], stop_reason: "end_turn", usage: { input_tokens: 3000, output_tokens: 40 } }));
+        return;
+      }
       /* 522: ekli soruda son ileti bloklar (fotoğraf / PDF + metin) — taklit eki sayar, sorunun metnini "Soru:"dan sonra alır */
       const sonIcerik = g.messages?.at(-1)?.content;
       const bloklar = Array.isArray(sonIcerik) ? sonIcerik as { type?: string; text?: string }[] : null;
@@ -288,10 +305,12 @@ const yzTaklit = createServer((istek, yanit) => {
         }));
         return;
       }
-      yanit.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({
+      /* 557: "[yavaş]" geçen soruya cevap 1,5 sn sonra (uçtan uca: mesaj hemen balon, "Düşünüyor" görünür) */
+      const yaz557 = () => yanit.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({
         content: [{ type: "text", text: `Deneme cevabı: “${son}” için menüden Planlar'ı açın.\n- Bu bir taklit cevaptır.${raporlu ? "\n- Raporu okudum." : ""}${ekSayisi ? `\n- ${ekSayisi} eki okudum.` : ""}` }],
         stop_reason: "end_turn", usage: { input_tokens: 2500, output_tokens: 80 },
       }));
+      if (son.includes("[yavaş]")) setTimeout(yaz557, 1500); else yaz557();
       return;
     }
     if (g.output_config?.format?.type !== "json_schema") {

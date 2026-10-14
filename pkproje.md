@@ -2483,6 +2483,22 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-14 (558): **SUNUM 557 UYGULANDI — S.A.Y ŞİKÂYETLERİ** (reisim: *"tamam işin bitince iki maketide onaylıyorum uygulamaya geç yayınla işin
+  bitince pc yi kapat"*). (1–2) SayAsistan: mesaj Gönder'e basınca hemen balon, kutu boşalır; S.A.Y'ın balonunda hareket eden üç nokta + "Düşünüyor",
+  iş sırasında dönen işaret + "Rapora yazıyor" / "Formata yazıyor" / "Okuyor"; alttaki "S.A.Y düşünüyor…" satırı ve iş bildirimleri kalktı. (3–5) iş
+  istenince S.A.Y'ın ilk cevabı geçmişe yazılmaz ("N giriş yapıyorum" kalktı); ekran yapar ve her girişi raporun hâlinden geri okuyup teyit eder
+  (raporlar/say-doldur.ts komutlariUygula → sonuclar: yazıldı · zaten öyleydi · yazılamadı + neden; cihaz ekranda sunucu işlemiyle); sonuç
+  sayIsSonucuEylemi ile ikinci çağrıya gider (tool_use + tool_result, araç kullanımı ve düşünme kapalı, harita gitmez) — S.A.Y "Yaptım" ya da
+  nedeniyle "Yapamadım" der; ikinci çağrı düşerse sonucu sunucu sayılardan yazar; yeniden deneme yok. (6) elle ne giriliyorsa S.A.Y de: sayı
+  kutusuna sayı olmayan yazı ("-"; ekrandaki uzunlukla), künye (kilitli olmayan; kayıttakiyle aynısı değişiklik değil — haritada yalnız yeri, DEĞERİ
+  gitmez), kontrol tarihleri (başlangıç sonraki kontrolü ve rapor tarihini getirir), çoklu seçim, uygunluk notu, satır sonucu + gerekçe, satır silme
+  ("t:<tablo>:<satır>" = sil), ölçüm cihazı (zimmetteki kodla); kilitli olan "elle de değiştirilemiyor" nedeniyle döner. (7) talimatta konu sınırı —
+  site dışı soruya tek cümle ("Bu konuda yardımcı olamam; probata ve periyodik kontrol işleriniz için buradayım."). (8) cevapsız eski mesaj yeni
+  mesajla birleşmez (araya "cevap verilemedi"); talimat: yalnız SON mesaj cevaplanır. (10–12) Küçült (S.A.Y ve S.A.Y Chat; bu cihazda kalır; telefonda
+  sayfa kayar, havadaki tuşların üstünde), S.A.Y Chat boy tutamağı (fare, dokunma, klavye; en kısası başlık + alttaki yer), En alta in (ikisinde).
+  (13) tıklanıp gönderilen örnek cümle yok. Kilitler: say-doldur 557 testi, say-rapor-haritasi 557, say-saf 557 (ikinci çağrı, yedek cevap), say.test
+  557 (DB: geçmişe yazılmaz, ikinci adım, yedek), bozan: künye kilidi, teyit, cevapsız ayracı; uçtan uca: hemen balon + Düşünüyor, Küçült, Yaptım,
+  kilitli SGK nedeni, En alta in. Göç yok.
 - 2026-10-14 (557 · 2. tur): **SUNUM 557 — S.A.Y ŞİKÂYETLERİ, EKSİKSİZ (ONAY BEKLİYOR)** (aynı bağlantı, sürüm 2; reisim: *"say sohbetinde kutucuktan
   tıklayarak göndermeyi onaylamıyorum ayrıca düşünüyor kısmında bir görsel hala göremedim makette, el ile girebildiğim değerleri say asistan ile
   giremiyor … küçültme tuşu gelmeli, dediklerime odaklan isteklerimi atlama ve istemediğim şeyleri tekrar tekrar eklemeye çalışma asistanı istek

@@ -10,9 +10,14 @@
    Kaydetmek kişide: girilenler ekranda kalır, Kaydet'le rapora yazılır.
    550 (sunum 546 K6 — reisim 2026-10-14: "S.A.Y. de herhangi bir kısıt kural vb olmasını istemiyorum oradan direk haiku ile konuşmak aynı claude
    kullanır gibi"): S.A.Y (Haiku) "rapora_yaz" aracıyla İSTEDİĞİNİZ cümleden girişleri verir — komutlariUygula: yer kimliği raporun haritasından
-   (say/rapor-haritasi.ts), değer alanın türüne göre denetlenir; kişi istediği için DOLU ALANA DA yazılır; işaret ve Geri al aynı. */
+   (say/rapor-haritasi.ts), değer alanın türüne göre denetlenir; kişi istediği için DOLU ALANA DA yazılır; işaret ve Geri al aynı.
+   557 (sunum 557 · 2. tur — reisim 2026-10-14: "el ile girebildiğim değerleri say asistan ile giremiyor", "komut gelsin, yapılsın, doğruluğunu teyit
+   et, yapıldıysa yapıldı de, yapılamadıysa sebebi ile yaz"): S.A.Y ELLE NE GİRİLİYORSA onu girer, ekrandaki denetimle (fotoğraf okumanın sıkı
+   denetimiyle değil) — sayı kutusuna sayı olmayan yazı ("-"), künye (kilitli olmayan), kontrol tarihleri, çoklu seçim, uygunluk notu, satır sonucu
+   ve gerekçesi, satır silme, ölçüm cihazı; her giriş için sonuç (yazıldı · zaten öyleydi · yazılamadı + neden) — S.A.Y cevabını bununla yazar. */
 import { alanDegeri, type OkunacakAlan } from "../../format/deger.ts";
-import { doldurma, type BolumOf, type Cevaplar, type FormatTanimi } from "../../format/tanim.ts";
+import { ELLE_GEREKCE, ELLE_SONUC } from "../../format/motor.ts";
+import { KUNYE_ALAN_ADI, KUNYE_ALANLARI, KUNYE_EN_COK, doldurma, type BolumOf, type Cevaplar, type FormatTanimi, type KunyeAlani } from "../../format/tanim.ts";
 import { doluSatir, okunanHedefleri, type Satir } from "./foto-eslestir.ts";
 import { bilgiAlanlari, ekipmanAlanlari, ekipmanAnahtari, testAlanlari } from "./doldur.ts";
 
@@ -22,10 +27,19 @@ export type Yer =
   | { tur: "ekipman"; id: string } | { tur: "alan"; id: string } | { tur: "deger"; id: string }
   | { tur: "hucre"; bolum: string; satir: number; sutun: string } | { tur: "madde"; id: string } | { tur: "sonuc" }
   /* 550: maddenin kusur açıklaması ve derecesi, uzman yorumu */
-  | { tur: "madde_not"; id: string } | { tur: "derece"; id: string } | { tur: "yorum" };
+  | { tur: "madde_not"; id: string } | { tur: "derece"; id: string } | { tur: "yorum" }
+  /* 557: künye bilgisi, kontrol tarihi, çoklu seçim alanı (değerleri satır satır) */
+  | { tur: "kunye"; id: KunyeAlani } | { tur: "tarih"; id: TarihAnahtari } | { tur: "coklu"; id: string };
+/** 557: raporun kontrol tarihleri (başlangıç / bitiş YYYY-AA-GGTSS:DD; ötekiler YYYY-AA-GG; boş "") */
+export const TARIH_ANAHTARLARI = ["bas", "bit", "sonraki", "takip", "rapor"] as const;
+export type TarihAnahtari = (typeof TARIH_ANAHTARLARI)[number];
+export const TARIH_ADI: Record<TarihAnahtari, string> = {
+  bas: "Periyodik kontrol başlangıç tarihi ve saati", bit: "Bitiş tarihi ve saati", sonraki: "Bir sonraki periyodik kontrol tarihi",
+  takip: "Takip kontrol tarihi", rapor: "Rapor tarihi",
+};
 export interface Isaret { yer: Yer; guven: Guven }
 /** ekranın doldurulan hâli: ekipman bilgisi (2. bölümün kayda bağlı alanları) ve cevaplar */
-export interface Durum { ekipman: Readonly<Record<string, string>>; cevaplar: Cevaplar }
+export interface Durum { ekipman: Readonly<Record<string, string>>; cevaplar: Cevaplar; tarih?: Readonly<Partial<Record<TarihAnahtari, string>>> }
 /** okunan değer (alanlı bölüm) — server/yz/alanlar.ts AlanOkunan ile aynı biçim */
 export interface OkunanAlan { alan: string; deger: string; guven: "yuksek" | "dusuk" | string }
 /** okunan satır (tablo) — server/yz/okuma.ts OkunanSatir ile aynı biçim */
@@ -61,6 +75,9 @@ function oku(d: Durum, y: Exclude<Yer, { tur: "hucre" }>): string {
   if (y.tur === "yorum") return d.cevaplar.yorum;
   if (y.tur === "madde_not") return d.cevaplar.madde[y.id]?.not ?? "";
   if (y.tur === "derece") return d.cevaplar.madde[y.id]?.derece ?? "";
+  if (y.tur === "kunye") return d.cevaplar.kunye[y.id] ?? "\u0000";                  // anahtar yok: kayıttaki (geri alınca anahtar silinir)
+  if (y.tur === "tarih") return d.tarih?.[y.id] ?? "";
+  if (y.tur === "coklu") { const c = d.cevaplar.alan[y.id]; return Array.isArray(c) ? c.join("\n") : typeof c === "string" ? c : ""; }
   const v = d.cevaplar.alan[y.id];
   return typeof v === "string" ? v : "";
 }
@@ -84,6 +101,14 @@ function yaz(d: Durum, y: Exclude<Yer, { tur: "hucre" }>, x: string): Durum {
     m[y.id] = yeni;
     return { ...d, cevaplar: { ...d.cevaplar, madde: m } };
   }
+  /* 557: künyede boş anahtar "kayıttaki" demek (ekrandaki kunyeYaz) — kayıtla aynısı komutlariUygula'da düşer */
+  if (y.tur === "kunye") {
+    const k = { ...d.cevaplar.kunye };
+    if (x === "\u0000") delete k[y.id]; else k[y.id] = x;
+    return { ...d, cevaplar: { ...d.cevaplar, kunye: k } };
+  }
+  if (y.tur === "tarih") return { ...d, tarih: { ...(d.tarih ?? {}), [y.id]: x } };
+  if (y.tur === "coklu") return { ...d, cevaplar: { ...d.cevaplar, alan: { ...d.cevaplar.alan, [y.id]: x ? x.split("\n") : [] } } };
   return { ...d, cevaplar: { ...d.cevaplar, alan: { ...d.cevaplar.alan, [y.id]: x } } };
 }
 
@@ -199,100 +224,281 @@ export function geriAl(d: Durum, l: readonly Geri[]): { durum: Durum; sayi: numb
   return { durum, sayi };
 }
 
-/* ── 550 S.A.Y'IN İSTENEN GİRİŞLERİ ("rapora_yaz" aracı) ── */
+/* ── 550 → 557 S.A.Y'IN İSTENEN GİRİŞLERİ ("rapora_yaz" aracı) — elle ne giriliyorsa, ekranın denetimiyle ── */
 /** Haiku'nun verdiği giriş: yer kimliği (raporun haritasındaki) + değer */
 export interface RaporGirisi { yer: string; deger: string }
 /** tek istekte en çok giriş ve tabloda en çok yeni satır */
 export const GIRIS_EN_COK = 300;
 const YENI_SATIR_EN_COK = 100;
+/** 557: sahadaki kutuların en çok uzunluğu — rapor ekranındakiyle aynı (ui/Bloklar.tsx, ui/SahaRaporu.tsx) */
+export const ELLE_EN_COK = { bilgiSayi: 20, bilgiMetin: 500, hucreSayi: 12, hucreMetin: 120, degerSayi: 12, degerMetin: 60, gerekce: 200, maddeNot: 1000, yorum: 4000 } as const;
+/** 557: girişin sonucu — S.A.Y cevabını bununla yazar (yazılmadan "yaptım" demez) */
+export interface GirisSonucu { yer: string; ad: string; durum: "yazildi" | "ayni" | "yazilamadi" | "bekliyor"; neden?: string }
+/** 557: ölçüm cihazı seçimi (sunucu işlemi — ekran yapar, sonucu sonra yazar) */
+export interface CihazIstegi { yer: string; ad: string; turId: string; cihazId: string | null }
+/** 557: elle yapılabilen ama tanımdan bilinmeyenler — künye kilidi ve kayıttaki künye, ölçüm cihazı satırları */
+export interface KomutEki {
+  kunyeKilit?: ReadonlySet<KunyeAlani>;
+  kunyeKayit?: Readonly<Partial<Record<KunyeAlani, string | null>>>;
+  cihazlar?: readonly { turId: string; turAd: string; secili: string | null; secenekler: readonly { id: string; kod: string; ad: string }[] }[];
+}
 const kucukTr = (s: string) => s.toLocaleLowerCase("tr").replace(/\s+/g, " ").trim();
-const sutunAlani = (s: BolumOf<"olcum">["sutunlar"][number]): Pick<OkunacakAlan, "tur" | "uzun" | "secenekler"> =>
-  s.giris === "sayi" ? { tur: "sayi" } : s.giris === "secim" ? { tur: "secim", secenekler: s.secenekler ?? [] } : s.giris === "evet" ? { tur: "evet" } : { tur: "metin", uzun: 200 };
+const temizle = (s: string) => s.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "").trim();
+const sayiNormal = (s: string): string | null => {
+  const n = Number(s.replace(/\s/g, "").replace(",", "."));
+  return /^[-+]?\d+([.,]\d+)?$/.test(s.replace(/\s/g, "")) && Number.isFinite(n) ? String(Math.round(n * 1e6) / 1e6).replace(".", ",") : null;
+};
+/** 557: sayı kutusu — elle her yazı yazılır (ekranda sayı denetimi yok); sayıysa virgüllü biçime, değilse yazıldığı gibi ("-", "<0,1") */
+const sayiKutusu = (ham: string, en: number): { v: string } | { neden: string } => {
+  const d = temizle(ham);
+  const n = sayiNormal(d);
+  if (n !== null) return { v: n };
+  return d.length <= en ? { v: d } : { neden: `bu kutuya en çok ${en} karakter yazılır` };
+};
+const metinKutusu = (ham: string, en: number): { v: string } | { neden: string } => {
+  const d = temizle(ham).replace(/\s+/g, " ");
+  return d.length <= en ? { v: d } : { neden: `bu kutuya en çok ${en} karakter yazılır` };
+};
+const secimKutusu = (ham: string, secenekler: readonly string[]): { v: string } | { neden: string } => {
+  const d = temizle(ham);
+  const s = secenekler.find((x) => kucukTr(x) === kucukTr(d));
+  return s !== undefined ? { v: s } : { neden: `yalnız şunlar seçilebilir: ${secenekler.join(", ")}` };
+};
+const EVET_HAYIR: readonly (readonly [string, string])[] = [["evet", "evet"], ["var", "evet"], ["hayır", "hayir"], ["hayir", "hayir"], ["yok", "hayir"]];
+const evetKutusu = (ham: string): { v: string } | { neden: string } => {
+  const x = EVET_HAYIR.find(([k]) => k === kucukTr(ham));
+  return x ? { v: x[1] } : { neden: "yalnız evet ya da hayır seçilebilir" };
+};
+/** tarih: GG.AA.YYYY ya da YYYY-AA-GG (saatli: "GG.AA.YYYY SS:DD") → saklanan biçim */
+function tarihOku(ham: string, saatli: boolean): string | null {
+  const d = temizle(ham).replace("T", " ");
+  const m = /^(\d{1,2})\.(\d{1,2})\.(\d{4})(?:\s+(\d{1,2}):(\d{2}))?$/.exec(d) ?? null;
+  const i = m ? null : /^(\d{4})-(\d{2})-(\d{2})(?:\s+(\d{1,2}):(\d{2}))?$/.exec(d);
+  const p = m ? { y: m[3], a: m[2], g: m[1], s: m[4], dk: m[5] } : i ? { y: i[1], a: i[2], g: i[3], s: i[4], dk: i[5] } : null;
+  if (!p) return null;
+  const gun = new Date(Date.UTC(Number(p.y), Number(p.a) - 1, Number(p.g)));
+  if (gun.getUTCFullYear() !== Number(p.y) || gun.getUTCMonth() !== Number(p.a) - 1 || gun.getUTCDate() !== Number(p.g)) return null;
+  const iso = `${p.y}-${p.a.padStart(2, "0")}-${p.g.padStart(2, "0")}`;
+  if (!saatli) return p.s ? null : iso;
+  if (!p.s) return null;
+  const s = Number(p.s), dk = Number(p.dk);
+  return s <= 23 && dk <= 59 ? `${iso}T${String(s).padStart(2, "0")}:${p.dk}` : null;
+}
+const tarihYazimi = (x: string) => (x ? `${x.slice(8, 10)}.${x.slice(5, 7)}.${x.slice(0, 4)}${x.length > 10 ? ` ${x.slice(11, 16)}` : ""}` : "");
 
-/** girişleri uygular; bilinmeyen yer ya da türüne uymayan değer yazılmaz, "yer: neden" olarak döner. Kişi istediği için dolu alana da yazılır. */
-export function komutlariUygula(d: Durum, t: FormatTanimi, girisler: readonly RaporGirisi[], bugun = new Date()): Uygulama & { gecersiz: string[] } {
-  /* yazılabilir yerler: ekipman / bilgi / test alanları (türleriyle), tablolar, maddeler (bölümün cevapları), sonuç, yorum */
-  const alanlar = new Map<string, { a: Pick<OkunacakAlan, "tur" | "uzun" | "secenekler">; yer: Exclude<Yer, { tur: "hucre" }> }>();
+type Kutu = { ad: string; yer: Exclude<Yer, { tur: "hucre" }>; denetle: (ham: string) => { v: string } | { neden: string } };
+
+/** girişleri uygular — elle yapılabilen her şey, ekranın denetimiyle; her giriş için sonuç (yazıldı · zaten öyleydi · yazılamadı + neden ·
+    cihaz: ekranda bekliyor). Kişi istediği için dolu alana da yazılır. Satır silme yazmalardan sonra (büyük satırdan küçüğe). */
+export function komutlariUygula(d: Durum, t: FormatTanimi, girisler: readonly RaporGirisi[], ek: KomutEki = {}):
+  Uygulama & { gecersiz: string[]; sonuclar: GirisSonucu[]; cihaz: CihazIstegi[] } {
+  const kutular = new Map<string, Kutu>();
+  const alanKutusu = (a: Pick<OkunacakAlan, "tur" | "uzun" | "secenekler">, en: { sayi: number; metin: number }): Kutu["denetle"] => (ham) =>
+    a.tur === "sayi" ? sayiKutusu(ham, en.sayi) : a.tur === "secim" ? secimKutusu(ham, a.secenekler ?? []) : a.tur === "evet" ? evetKutusu(ham)
+      : a.tur === "tarih" ? ((v) => (v ? { v } : { neden: "tarih GG.AA.YYYY biçiminde olmalı" }))(tarihOku(ham, false))
+      : a.tur === "yil" ? ((v) => (v !== null ? { v } : { neden: "yıl 4 haneli olmalı (ör. 2019)" }))(alanDegeri(a, ham, new Date()))
+      : metinKutusu(ham, a.uzun ?? en.metin);
   const ekipman = ekipmanAlanlari(t);
-  for (const a of ekipman.alanlar) alanlar.set(`e:${a.id}`, { a, yer: ekipmanAnahtari(a.id) ? { tur: "ekipman", id: a.id } : { tur: "alan", id: a.id } });
-  const tablolar = new Map<string, BolumOf<"olcum">>(), maddeler = new Map<string, readonly string[]>();
+  for (const a of ekipman.alanlar) {
+    kutular.set(`e:${a.id}`, { ad: `${ekipman.baslik} · ${a.ad}`, yer: ekipmanAnahtari(a.id) ? { tur: "ekipman", id: a.id } : { tur: "alan", id: a.id },
+      denetle: alanKutusu(a, { sayi: ELLE_EN_COK.bilgiSayi, metin: ELLE_EN_COK.bilgiMetin }) });
+  }
+  const tablolar = new Map<string, BolumOf<"olcum">>(), maddeler = new Map<string, { cevaplar: readonly string[]; ad: string }>();
   let sonucVar = false, notVar = false;
   for (const b of t.bolumler) {
-    if (b.blok === "bilgi" && b.id !== ekipman.tam?.id) for (const a of bilgiAlanlari(b)) alanlar.set(ekipmanAnahtari(a.id) ? `e:${a.id}` : `a:${a.id}`, { a, yer: ekipmanAnahtari(a.id) ? { tur: "ekipman", id: a.id } : { tur: "alan", id: a.id } });
-    else if (b.blok === "test") for (const a of testAlanlari(b)) alanlar.set(`d:${a.id}`, { a, yer: { tur: "deger", id: a.id } });
-    else if (b.blok === "olcum") tablolar.set(b.id, b);
-    else if (b.blok === "liste") for (const g of b.gruplar) for (const m of g.maddeler) maddeler.set(m.id, b.cevaplar);
+    if (b.blok === "bilgi" && b.id !== ekipman.tam?.id) {
+      for (const a of bilgiAlanlari(b)) {
+        const k = ekipmanAnahtari(a.id) ? `e:${a.id}` : `a:${a.id}`;
+        kutular.set(k, { ad: `${b.ad} · ${a.ad}`, yer: ekipmanAnahtari(a.id) ? { tur: "ekipman", id: a.id } : { tur: "alan", id: a.id },
+          denetle: alanKutusu(a, { sayi: ELLE_EN_COK.bilgiSayi, metin: ELLE_EN_COK.bilgiMetin }) });
+      }
+      /* 557: çoklu seçim — değerler virgülle; her biri seçeneklerden */
+      for (const a of b.alanlar) {
+        if (a.tur !== "coklu" || a.kaynak) continue;
+        const sec = a.secenekler ?? [];
+        kutular.set(`a:${a.id}`, { ad: `${b.ad} · ${a.ad}`, yer: { tur: "coklu", id: a.id }, denetle: (ham) => {
+          const l = temizle(ham).split(/[,;\n]/).map((x) => x.trim()).filter(Boolean);
+          const yok = l.filter((x) => !sec.some((s) => kucukTr(s) === kucukTr(x)));
+          if (yok.length) return { neden: `${yok.join(", ")} seçeneklerde yok (seçenekler: ${sec.join(", ")})` };
+          return { v: sec.filter((s) => l.some((x) => kucukTr(x) === kucukTr(s))).join("\n") };
+        } });
+      }
+    } else if (b.blok === "test") {
+      for (const a of testAlanlari(b)) kutular.set(`d:${a.id}`, { ad: `${b.ad} · ${a.ad}`, yer: { tur: "deger", id: a.id }, denetle: alanKutusu(a, { sayi: ELLE_EN_COK.degerSayi, metin: ELLE_EN_COK.degerMetin }) });
+    } else if (b.blok === "olcum") tablolar.set(b.id, b);
+    else if (b.blok === "liste") for (const g of b.gruplar) for (const m of g.maddeler) maddeler.set(m.id, { cevaplar: b.cevaplar, ad: m.metin.slice(0, 80) });
     else if (b.blok === "sonuc") sonucVar = true;
     else if (b.blok === "not") notVar = true;
   }
+  /* 557: künye (kilitli olan elle de değişmez) ve kontrol tarihleri */
+  for (const a of KUNYE_ALANLARI) {
+    kutular.set(`k:${a}`, { ad: KUNYE_ALAN_ADI[a], yer: { tur: "kunye", id: a }, denetle: (ham) => {
+      if (ek.kunyeKilit?.has(a)) return { neden: "bu formatta kilitli; elle de değiştirilemiyor" };
+      const r = metinKutusu(ham, KUNYE_EN_COK[a]);
+      if ("v" in r && a === "firma" && !r.v) return { neden: "firma adı boş olamaz" };
+      return r;
+    } });
+  }
+  if (d.tarih) {
+    for (const k of TARIH_ANAHTARLARI) {
+      const saatli = k === "bas" || k === "bit";
+      kutular.set(`tarih:${k}`, { ad: TARIH_ADI[k], yer: { tur: "tarih", id: k }, denetle: (ham) => {
+        const v = tarihOku(ham, saatli);
+        return v ? { v } : { neden: saatli ? "tarih ve saat GG.AA.YYYY SS:DD biçiminde olmalı" : "tarih GG.AA.YYYY biçiminde olmalı" };
+      } });
+    }
+  }
+  const cihazlar = new Map((ek.cihazlar ?? []).map((c) => [c.turId, c] as const));
+
   let durum = d;
-  const isaretler: Isaret[] = [], geri: Geri[] = [], gecersiz: string[] = [];
-  const tabloOnce = new Map<string, Satir[]>(), tabloHucre = new Map<string, Set<string>>();
-  const tekYaz = (yer: Exclude<Yer, { tur: "hucre" }>, x: string) => {
+  const isaretler: Isaret[] = [], geri: Geri[] = [], sonuclar: GirisSonucu[] = [], cihaz: CihazIstegi[] = [];
+  const tabloOnce = new Map<string, Satir[]>(), tabloHucre = new Map<string, Set<string>>(), silinecek = new Map<string, Set<number>>();
+  const tekYaz = (yer: Exclude<Yer, { tur: "hucre" }>, x: string, k: string, ad: string) => {
     const onceki = oku(durum, yer);
-    if (onceki === x) return;
+    if (onceki === x) { sonuclar.push({ yer: k, ad, durum: "ayni" }); return; }
     durum = yaz(durum, yer, x);
-    if (oku(durum, yer) !== x) return;                                    // yazılamadı (ör. cevapsız maddeye açıklama)
+    /* teyit: yazılan yerden geri okunur */
+    if (oku(durum, yer) !== x) { sonuclar.push({ yer: k, ad, durum: "yazilamadi", neden: "yazıldıktan sonra okunan değer farklı" }); return; }
+    sonuclar.push({ yer: k, ad, durum: "yazildi" });
     isaretler.push({ yer, guven: "emin" });
     geri.push({ yer, onceki, yeni: x });
   };
   for (const g of girisler.slice(0, GIRIS_EN_COK)) {
     const yer = typeof g?.yer === "string" ? g.yer.trim() : "", ham = typeof g?.deger === "string" ? g.deger : "";
     if (!yer) continue;
-    const red = (neden: string) => { gecersiz.push(`${yer.slice(0, 60)}: ${neden}`); };
-    const alan = alanlar.get(yer);
-    if (alan) {
-      if (!ham.trim()) { tekYaz(alan.yer, ""); continue; }               // boş değer: alanı temizle
-      const v = alanDegeri(alan.a, ham, bugun);
-      if (v === null) { red("değer alanın türüne uymuyor"); continue; }
-      tekYaz(alan.yer, v);
+    const red = (neden: string, ad = yer.slice(0, 60)) => { sonuclar.push({ yer: yer.slice(0, 80), ad, durum: "yazilamadi", neden }); };
+    const kutu = kutular.get(yer);
+    if (kutu) {
+      if (!temizle(ham)) {                                                // boş değer: kutuyu boşalt (künye: kayıttakine döner)
+        if (kutu.yer.tur === "kunye" && ek.kunyeKilit?.has(kutu.yer.id)) { red("bu formatta kilitli; elle de değiştirilemiyor", kutu.ad); continue; }
+        if (kutu.yer.tur === "kunye" && kutu.yer.id === "firma") { tekYaz(kutu.yer, "\u0000", yer, kutu.ad); continue; }
+        tekYaz(kutu.yer, kutu.yer.tur === "kunye" ? "\u0000" : "", yer, kutu.ad);
+        continue;
+      }
+      const r = kutu.denetle(ham);
+      if ("neden" in r) { red(r.neden, kutu.ad); continue; }
+      /* künye: kayıttakiyle aynısı değişiklik sayılmaz (ekrandaki kunyeYaz) */
+      const v = kutu.yer.tur === "kunye" && r.v === (ek.kunyeKayit?.[kutu.yer.id] ?? "") ? "\u0000" : r.v;
+      if (kutu.yer.tur === "tarih" && kutu.yer.id === "bit" && v && durum.tarih?.bas && v < durum.tarih.bas) { red("bitiş başlangıçtan önce olamaz", kutu.ad); continue; }
+      tekYaz(kutu.yer, v, yer, kutu.ad);
+      continue;
+    }
+    /* 557: ölçüm cihazı — "cihaz:<tür>" = cihazın kodu (boş: kaldır); seçimi ekran yapar */
+    const c = /^cihaz:(.+)$/.exec(yer);
+    if (c) {
+      const x = cihazlar.get(c[1]);
+      if (!x) { red("raporda böyle bir ölçüm cihazı satırı yok"); continue; }
+      const ad = `Ölçüm cihazı · ${x.turAd}`, h = kucukTr(ham);
+      if (!h) { if (!x.secili) { sonuclar.push({ yer, ad, durum: "ayni" }); continue; } cihaz.push({ yer, ad, turId: x.turId, cihazId: null }); sonuclar.push({ yer, ad, durum: "bekliyor" }); continue; }
+      const s = x.secenekler.find((o) => kucukTr(o.kod) === h || kucukTr(o.ad) === h || kucukTr(`${o.kod} · ${o.ad}`) === h);
+      if (!s) { red(x.secenekler.length ? `zimmetinizde böyle bir cihaz yok (seçilebilir: ${x.secenekler.map((o) => o.kod).join(", ")})` : "zimmetinizde bu türde cihaz yok", ad); continue; }
+      if (x.secili === s.id) { sonuclar.push({ yer, ad, durum: "ayni" }); continue; }
+      cihaz.push({ yer, ad, turId: x.turId, cihazId: s.id }); sonuclar.push({ yer, ad, durum: "bekliyor" });
+      continue;
+    }
+    /* tablo: hücre, uygunluk notu, satır sonucu ve gerekçesi; "t:<tablo>:<satır>" + "sil" satırı siler */
+    const sil = /^t:([^:]+):(\d{1,4})$/.exec(yer);
+    if (sil) {
+      const b = tablolar.get(sil[1]), satir = Number(sil[2]) - 1;
+      if (!b) { red("raporda böyle bir tablo yok"); continue; }
+      const ad = `${b.ad} · ${satir + 1}. satır`;
+      if (kucukTr(ham) !== "sil") { red("satır için yalnız \"sil\" yazılır", ad); continue; }
+      if (satir < 0 || satir >= (durum.cevaplar.tablo[b.id] ?? []).length) { red("tabloda bu satır yok", ad); continue; }
+      const s = silinecek.get(b.id) ?? new Set<number>(); s.add(satir); silinecek.set(b.id, s);
+      sonuclar.push({ yer, ad, durum: "yazildi" });
       continue;
     }
     const h = /^t:([^:]+):(\d{1,4}):(.+)$/.exec(yer);
     if (h) {
-      const b = tablolar.get(h[1]), satir = Number(h[2]) - 1, sutun = b?.sutunlar.find((s) => s.id === h[3] && !s.formul);
-      if (!b || !sutun || satir < 0) { red("tabloda böyle bir yer yok"); continue; }
-      const v = ham.trim() ? alanDegeri(sutunAlani(sutun), ham, bugun) : "";
-      if (v === null) { red("değer sütunun türüne uymuyor"); continue; }
+      const b = tablolar.get(h[1]), satir = Number(h[2]) - 1;
+      if (!b || satir < 0) { red("tabloda böyle bir yer yok"); continue; }
+      const notlar = b.notlar ?? [];
+      const anahtar = h[3] === "sonuc" ? ELLE_SONUC : h[3] === "gerekce" ? ELLE_GEREKCE : h[3];
+      const sutun = b.sutunlar.find((s) => s.id === anahtar && !s.formul);
+      const adi = sutun ? sutun.ad : anahtar === "not" ? "uygunluk notu" : anahtar === ELLE_SONUC ? "sonuç" : anahtar === ELLE_GEREKCE ? "sonucun gerekçesi" : h[3];
+      const ad = `${b.ad} · ${satir + 1}. satır · ${adi}`;
+      let r: { v: string } | { neden: string };
+      if (sutun) {
+        r = !temizle(ham) ? { v: "" } : sutun.giris === "sayi" ? sayiKutusu(ham, ELLE_EN_COK.hucreSayi) : sutun.giris === "secim" ? secimKutusu(ham, sutun.secenekler ?? [])
+          : sutun.giris === "evet" ? evetKutusu(ham) : metinKutusu(ham, ELLE_EN_COK.hucreMetin);
+      } else if (anahtar === "not") {
+        if (!notlar.length) { red("bu tabloda uygunluk notu yok", ad); continue; }
+        const n = Number(temizle(ham).replace(/^not\s*-?\s*/i, ""));
+        r = !temizle(ham) ? { v: "" } : Number.isInteger(n) && n >= 1 && n <= notlar.length ? { v: String(n) } : { neden: `Not-1 ile Not-${notlar.length} arası olmalı` };
+      } else if (anahtar === ELLE_SONUC) {
+        if (notlar.length) { red("bu tabloda sonuç uygunluk notundan çıkar; elle de değiştirilemiyor", ad); continue; }
+        const x = kucukTr(ham).replace(/[_-]/g, " ");
+        r = !x || /kural/.test(x) ? { v: "" } : /uygun ?(değil|degil)|uygunsuz/.test(x) ? { v: "uygun_degil" } : /^uygun$/.test(x) ? { v: "uygun" } : { neden: "uygun, uygun değil ya da kurala göre olmalı" };
+      } else if (anahtar === ELLE_GEREKCE) {
+        if (notlar.length) { red("bu tabloda sonuç uygunluk notundan çıkar", ad); continue; }
+        r = metinKutusu(ham, ELLE_EN_COK.gerekce);
+      } else { red("tabloda böyle bir sütun yok", ad); continue; }
+      if ("neden" in r) { red(r.neden, ad); continue; }
+      const v = r.v;
       const l = (durum.cevaplar.tablo[b.id] ?? []).map((s) => ({ ...s }));
-      if (satir >= l.length + YENI_SATIR_EN_COK) { red("satır çok ileride"); continue; }
+      if (satir >= l.length + YENI_SATIR_EN_COK) { red("satır çok ileride", ad); continue; }
       if (!tabloOnce.has(b.id)) tabloOnce.set(b.id, (durum.cevaplar.tablo[b.id] ?? []).map((s) => ({ ...s })));
       while (l.length <= satir) l.push({});
-      if ((l[satir][sutun.id] ?? "") === v) continue;
-      if (v) l[satir][sutun.id] = v; else delete l[satir][sutun.id];
+      if ((l[satir][anahtar] ?? "") === v) { sonuclar.push({ yer, ad, durum: "ayni" }); continue; }
+      if (v) l[satir][anahtar] = v; else delete l[satir][anahtar];
+      /* sonuç "kurala göre"ye dönünce gerekçe de kalkar (ekrandaki gibi) */
+      if (anahtar === ELLE_SONUC && !v) delete l[satir][ELLE_GEREKCE];
       durum = { ...durum, cevaplar: { ...durum.cevaplar, tablo: { ...durum.cevaplar.tablo, [b.id]: l } } };
-      const k = tabloHucre.get(b.id) ?? new Set<string>();
-      k.add(`${satir}:${sutun.id}`); tabloHucre.set(b.id, k);
+      /* teyit */
+      if ((durum.cevaplar.tablo[b.id]?.[satir]?.[anahtar] ?? "") !== v) { red("yazıldıktan sonra okunan değer farklı", ad); continue; }
+      sonuclar.push({ yer, ad, durum: "yazildi" });
+      if (sutun) { const k = tabloHucre.get(b.id) ?? new Set<string>(); k.add(`${satir}:${sutun.id}`); tabloHucre.set(b.id, k); }
       continue;
     }
     const m = /^m:([^#]+)(?:#(not|derece))?$/.exec(yer);
     if (m) {
-      const cevaplar = maddeler.get(m[1]);
-      if (!cevaplar) { red("böyle bir madde yok"); continue; }
+      const md = maddeler.get(m[1]);
+      if (!md) { red("böyle bir madde yok"); continue; }
       if (!m[2]) {
-        const c = ham.trim() ? cevaplar.find((x) => kucukTr(x) === kucukTr(ham)) : "";
-        if (c === undefined) { red(`cevap şunlardan biri olmalı: ${cevaplar.join(", ")}`); continue; }
-        tekYaz({ tur: "madde", id: m[1] }, c);
+        const cv = temizle(ham) ? md.cevaplar.find((x) => kucukTr(x) === kucukTr(ham)) : "";
+        if (cv === undefined) { red(`cevap şunlardan biri olmalı: ${md.cevaplar.join(", ")}`, md.ad); continue; }
+        tekYaz({ tur: "madde", id: m[1] }, cv, yer, md.ad);
       } else if (m[2] === "derece") {
-        const x = kucukTr(ham), v = !x ? "" : /^(ağır|agir)/.test(x) ? "agir" : /^hafif/.test(x) ? "hafif" : null;
-        if (v === null) { red("derece hafif ya da ağır olmalı"); continue; }
-        if (!durum.cevaplar.madde[m[1]]) { red("önce maddenin cevabı yazılmalı"); continue; }
-        tekYaz({ tur: "derece", id: m[1] }, v);
+        const ad = `${md.ad} · kusur derecesi`, x = kucukTr(ham), v = !x ? "" : /^(ağır|agir)/.test(x) ? "agir" : /^hafif/.test(x) ? "hafif" : null;
+        if (v === null) { red("derece hafif ya da ağır olmalı", ad); continue; }
+        if (!durum.cevaplar.madde[m[1]]) { red("önce maddenin cevabı yazılmalı", ad); continue; }
+        tekYaz({ tur: "derece", id: m[1] }, v, yer, ad);
       } else {
-        if (!durum.cevaplar.madde[m[1]]) { red("önce maddenin cevabı yazılmalı"); continue; }
-        tekYaz({ tur: "madde_not", id: m[1] }, ham.trim().slice(0, 1000));
+        const ad = `${md.ad} · kusur açıklaması`;
+        if (!durum.cevaplar.madde[m[1]]) { red("önce maddenin cevabı yazılmalı", ad); continue; }
+        const r = metinKutusu(ham, ELLE_EN_COK.maddeNot);
+        if ("neden" in r) { red(r.neden, ad); continue; }
+        tekYaz({ tur: "madde_not", id: m[1] }, r.v, yer, ad);
       }
       continue;
     }
     if (yer === "sonuc") {
       const x = kucukTr(ham).replace(/[_-]/g, " ");
       const v = !x ? "" : /uygun ?(değil|degil)|uygunsuz|olumsuz/.test(x) ? "uygun_degil" : /^(uygun|olumlu)$/.test(x) ? "uygun" : null;
-      if (!sonucVar || v === null) { red(sonucVar ? "sonuç uygun ya da uygun değil olmalı" : "formatta sonuç yok"); continue; }
-      tekYaz({ tur: "sonuc" }, v);
+      if (!sonucVar || v === null) { red(sonucVar ? "sonuç uygun ya da uygun değil olmalı" : "formatta sonuç yok", "Sonuç"); continue; }
+      tekYaz({ tur: "sonuc" }, v, yer, "Sonuç");
       continue;
     }
-    if (yer === "yorum" && notVar) { tekYaz({ tur: "yorum" }, ham.trim().slice(0, 4000)); continue; }
+    if (yer === "yorum") {
+      if (!notVar) { red("formatta uzman yorumu yok", "Muayene uzmanının yorumu"); continue; }
+      const r = metinKutusu(ham, ELLE_EN_COK.yorum);
+      if ("neden" in r) { red(r.neden, "Muayene uzmanının yorumu"); continue; }
+      tekYaz({ tur: "yorum" }, r.v, yer, "Muayene uzmanının yorumu");
+      continue;
+    }
     red("raporda böyle bir yer yok");
+  }
+  /* 557: satır silme — yazmalardan sonra, büyük satırdan küçüğe */
+  for (const [b, l] of silinecek) {
+    if (!tabloOnce.has(b)) tabloOnce.set(b, (durum.cevaplar.tablo[b] ?? []).map((s) => ({ ...s })));
+    const kalan = (durum.cevaplar.tablo[b] ?? []).filter((_, i) => !l.has(i));
+    durum = { ...durum, cevaplar: { ...durum.cevaplar, tablo: { ...durum.cevaplar.tablo, [b]: kalan } } };
+    const k = tabloHucre.get(b);
+    if (k) tabloHucre.set(b, new Set([...k].flatMap((x) => {
+      const [s, ...c] = x.split(":"), n = Number(s);
+      if (l.has(n)) return [];
+      return [`${n - [...l].filter((i) => i < n).length}:${c.join(":")}`];
+    })));
   }
   /* tablolar: bir tablonun bütün girişleri tek geri alma; yazılan hücreler işaretli */
   for (const [b, once] of tabloOnce) {
@@ -304,5 +510,14 @@ export function komutlariUygula(d: Durum, t: FormatTanimi, girisler: readonly Ra
       if (yeni[Number(s)]?.[c.join(":")]) isaretler.push({ yer: { tur: "hucre", bolum: b, satir: Number(s), sutun: c.join(":") }, guven: "emin" });
     }
   }
-  return { durum, isaretler, dolu: [], geri, gecersiz };
+  const gecersiz = sonuclar.filter((s) => s.durum === "yazilamadi").map((s) => `${s.ad}: ${s.neden}`);
+  return { durum, isaretler, dolu: [], geri, gecersiz, sonuclar, cihaz };
 }
+/** 557: sonucun okunur özeti (sayılar + yapılamayanlar nedeniyle) — S.A.Y'a ve geçmişe giden */
+export function sonucOzeti(l: readonly GirisSonucu[]): { yazildi: number; ayni: number; yazilamadi: { ad: string; neden: string }[]; bekliyor: number } {
+  return {
+    yazildi: l.filter((s) => s.durum === "yazildi").length, ayni: l.filter((s) => s.durum === "ayni").length,
+    yazilamadi: l.filter((s) => s.durum === "yazilamadi").map((s) => ({ ad: s.ad, neden: s.neden ?? "" })), bekliyor: l.filter((s) => s.durum === "bekliyor").length,
+  };
+}
+export { tarihYazimi };

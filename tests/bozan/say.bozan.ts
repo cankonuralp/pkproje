@@ -75,3 +75,15 @@ test("4) konuşmanın başı düzeltilmezse istek asistan iletisiyle başlar", a
   const m = await import(pathToFileURL(yol).href) as typeof import("../../src/server/yz/say.ts");
   assert.equal(m.konusma([{ kim: "say", metin: "Sizi bekleyenler:" }], "Soru")[0].role, "assistant", "bozuk: konuşma asistanla başladı");
 });
+
+/* 557 (reisim: "geçmiş sorularda takılı kalıyor"): cevapsız soruyla yeni soru arasına "cevap verilemedi" konmazsa iki kullanıcı iletisi art arda gider */
+test("5) cevapsız soru ayracı kalkınca kullanıcının iki iletisi art arda gider", async () => {
+  const kok = resolve("src/server/yz");
+  const KAYNAK = readFileSync(join(kok, "say.ts"), "utf8").replace(/from "(\.\.?\/[^"]+)"/g, (_, y) => `from "${pathToFileURL(resolve(kok, y)).href}"`);
+  const SATIR = "      if (son && son.role === role) l.push({ role: \"assistant\", content: CEVAPSIZ });\n";
+  assert.ok(KAYNAK.includes(SATIR), "bozulacak satır kaynakta yok");
+  const yol = join(gecici, "say-bozuk-557.ts");
+  writeFileSync(yol, KAYNAK.replace(SATIR, ""));
+  const m = await import(pathToFileURL(yol).href) as typeof import("../../src/server/yz/say.ts");
+  assert.deepEqual(m.konusma([{ kim: "ben", metin: "A" }], "B").map((x) => x.role), ["user", "user"], "bozuk: ayraç yok");
+});

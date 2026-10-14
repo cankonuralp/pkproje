@@ -17,6 +17,8 @@ export interface SayOkumaOzeti {
   /** dolu olduğu için değiştirilmeyen alanların adları */
   dolu: string[];
 }
+/** 557: bir girişin sonucu (raporlar/say-doldur.ts GirisSonucu ile aynı) */
+export interface SayGirisSonucu { yer: string; ad: string; durum: "yazildi" | "ayni" | "yazilamadi" | "bekliyor"; neden?: string }
 /** geri al: S.A.Y'ın girdiği ve hâlâ duran değerler önceki hâline döner — dönen: geri alınan giriş sayısı */
 export type SayGeriAl = () => number;
 
@@ -49,8 +51,11 @@ export interface SayRaporBagi {
   fotoEkle: (dosya: File, bolum: string) => Promise<{ dosya: string } | { neden: string }>;
   /** 550: ekranın canlı ekipman bilgisi (raporun haritası için — sunucu Haiku'ya yer kimlikleri ve değerlerle gönderir) */
   ekipman: () => Record<string, string>;
-  /** 550: Haiku'nun "rapora_yaz" girişleri (raporlar/say-doldur.ts komutlariUygula) — işaretli, dolu alana da; dönen: girilen sayı, yapılamayanlar, geri al */
-  yaz: (girisler: readonly { yer: string; deger: string }[]) => { sayi: number; gecersiz: string[]; geriAl: SayGeriAl };
+  /** 557: haritanın canlı ekleri — kontrol tarihleri, ölçüm cihazı satırları (seçilebilir cihazlarıyla); künyenin değeri gitmez */
+  canliEk: () => { tarih: Record<string, string>; cihazlar: { turId: string; turAd: string; secili: string | null; secenekler: { id: string; kod: string; ad: string }[] }[] };
+  /** 550 → 557: Haiku'nun "rapora_yaz" girişleri (raporlar/say-doldur.ts komutlariUygula) — elle ne giriliyorsa, ekranın denetimiyle; ekran yazar,
+      geri okuyup teyit eder, ölçüm cihazını sunucu işlemiyle seçer. Dönen: her girişin sonucu, girilen sayı, geri al */
+  yaz: (girisler: readonly { yer: string; deger: string }[]) => Promise<{ sayi: number; sonuclar: SayGirisSonucu[]; geriAl: SayGeriAl }>;
 }
 
 /* ── 553 FORMAT YAPICI (reisim 2026-10-14: "konuşarak ilgili formatı yapabiliyo olalım"): taslak açıkken format yapıcı kendini bağlar — S.A.Y

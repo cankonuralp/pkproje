@@ -8,17 +8,23 @@
    550 (sunum 546 K6–K8 — reisim 2026-10-14: "S.A.Y. de herhangi bir kısıt kural vb olmasını istemiyorum oradan direk haiku ile konuşmak aynı claud
    kullanır gibi"): talimatta KURAL YOK (uzunluk, biçim, "yazamazsın" kalktı) — yalnız nerede olduğu ve neler yapabildiği; konuşma son 150 000
    karakter; Markdown serbest; rapordayken araçlar (rapora_yaz, fotograflari_oku, geri_al), her zaman internet araması; cevaptaki araç çağrıları
-   komut olur (yalnız tanınan adlar, biçimiyle), arama sayılır; eski hızlı soruların ("eksik", "sonuc") girdisi kalktı. */
+   komut olur (yalnız tanınan adlar, biçimiyle), arama sayılır; eski hızlı soruların ("eksik", "sonuc") girdisi kalktı.
+   557 (sunum 557 · 2. tur — reisim 2026-10-14: "site dışı gereksiz sorulara da cevap veriyor, vermesin", "istek yapılmadan yapıldı dememesi …
+   komut gelsin, yapılsın, doğruluğunu teyit et, yapıldıysa yapıldı de, yapılamadıysa sebebi ile yaz", "geçmiş sorularda takılı kalıyor"): talimatta
+   reisim'in istediği İKİ kural (konu sınırı; iş akışı — sonucu görmeden "yaptım" demez); kullanıcının ardışık mesajları BİRLEŞMEZ (araya
+   CEVAPSIZ); işin sonucu ikinci çağrıyla (araç kullanımı ve düşünme kapalı, araç bloğu + sonucu konuşmanın sonunda); çağrı düşerse sonucu sunucu
+   sayılardan yazar (isSonucuMetni). */
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { ANA_SAYFA, MODULLER } from "../src/modules/moduller.ts";
 import { raporGirdisi } from "../src/modules/say/server/say.ts";
 import { SAY_KILAVUZU, SAYFA_YARDIMI, sayfaBilgisi } from "../src/modules/say/yardim.ts";
-import { ARAMA_ARACI, CEVAP_SINIRI, GECMIS_HARF, konusma, SAY_GECMIS, sayIstegi, saySistemi, sayYanitiCoz, SORU_SINIRI } from "../src/server/yz/say.ts";
+import { ARAMA_ARACI, CEVAP_SINIRI, CEVAPSIZ, GECMIS_HARF, isSonucuMetni, KONU_DISI, konusma, SAY_GECMIS, sayIstegi, saySistemi, sayYanitiCoz, SORU_SINIRI } from "../src/server/yz/say.ts";
 
-test("konuşma: kullanıcıyla başlar, roller sırayla, ardışıklar birleşir, en yeniler (ileti ve karakter sınırı), sınırlar", () => {
-  assert.deepEqual(konusma([{ kim: "say", metin: "Merhaba" }, { kim: "ben", metin: "A" }, { kim: "ben", metin: "B" }, { kim: "say", metin: "C" }], "D"), [
-    { role: "user", content: "A\n\nB" }, { role: "assistant", content: "C" }, { role: "user", content: "D" }]);
+test("konuşma: kullanıcıyla başlar, roller sırayla, kullanıcının ardışıkları birleşmez (557), en yeniler (ileti ve karakter sınırı), sınırlar", () => {
+  /* 557 (reisim: "geçmiş sorularda takılı kalıyor"): cevapsız kalan "A" yeni soruyla birleşmez — araya CEVAPSIZ; S.A.Y'ın ardışıkları birleşir */
+  assert.deepEqual(konusma([{ kim: "say", metin: "Merhaba" }, { kim: "ben", metin: "A" }, { kim: "ben", metin: "B" }, { kim: "say", metin: "C" }, { kim: "say", metin: "C2" }], "D"), [
+    { role: "user", content: "A" }, { role: "assistant", content: CEVAPSIZ }, { role: "user", content: "B" }, { role: "assistant", content: "C\n\nC2" }, { role: "user", content: "D" }]);
   assert.deepEqual(konusma([], "Tek soru"), [{ role: "user", content: "Tek soru" }]);
   const uzun = Array.from({ length: 40 }, (_, i) => ({ kim: (i % 2 ? "say" : "ben") as "ben" | "say", metin: `m${i}` }));
   const k = konusma(uzun, "son");
@@ -47,6 +53,10 @@ test("istek: sabit talimat önbellekte, bağlam ayrı ve yalnız verilen alanlar
   assert.ok(t.startsWith("Sen S.A.Y'sın: Claude Haiku 5.5."), "taklit sunucu bu başlangıçla tanır");
   /* 550: bizim kurallarımız kalktı — uzunluk / biçim / "yazamazsın" yok */
   for (const kural of ["en çok 3 cümle", "Kayıt yazamazsın", "Markdown başlığı, tablo, bağlantı ya da HTML kullanma", "Kuralların:", "\"yapamam\" deme"]) assert.ok(!t.includes(kural), kural);
+  /* 557: reisim'in istediği iki kural — konu sınırı (tek cümle) ve iş akışı; "her konuda" kalktı; yalnız son mesaj cevaplanır */
+  assert.ok(t.includes(KONU_DISI) && !t.includes("her konuda"), "konu sınırı");
+  assert.ok(t.includes("SON mesajını cevapla"), "son mesaj");
+  assert.ok(t.includes("Sonucu görmeden") && t.includes("yazılamayan ve nedeni"), "iş akışı: sonuç görmeden yaptım yok");
   assert.ok(t.includes("Markdown kullanabilirsin") && t.includes("kullanıcıya söyle"), "biçim serbest; ekteki talimat kullanıcıya söylenir");
   for (const m of MODULLER) assert.ok(t.includes(`- ${m.ad}: `), `kılavuzda ${m.ad}`);
   /* rapordayken: harita bağlamda, araçlar (yazma, okuma, geri al) + arama; arama kapatılabilir */
@@ -106,4 +116,32 @@ test("553 format: harita bağlamda, araç yalnız haritayla; formati_duzenle ça
   assert.deepEqual(yok.tools.map((t) => t.name), ["web_search"], "harita yoksa format aracı gitmez");
   const c = sayYanitiCoz({ content: [{ type: "tool_use", name: "formati_duzenle", input: { islemler: [{ islem: "oge_ekle", bolum: "linye", ad: "RCa", formul: "480/RCd" }, "x", [1], { islem: "y".repeat(5000) }] } }] });
   assert.deepEqual(c.komutlar, [{ tur: "format", islemler: [{ islem: "oge_ekle", bolum: "linye", ad: "RCa", formul: "480/RCd" }] }]);
+});
+
+/* 557: işin sonucu ikinci çağrıyla — araç bloğu ve sonucu konuşmanın sonunda; araç kullanımı ve düşünme kapalı; araç tanımı durur, arama yok */
+test("557 iş sonucu: ikinci çağrı (tool_use + tool_result, tool_choice none, düşünme kapalı); çağrı düşerse sonucu sunucu yazar", async () => {
+  const { FORMAT_ARACI } = await import("../src/modules/rapor-format/say-kurucu.ts");
+  const g = sayIstegi({ model: "haiku", kilavuz: [], baglam: { roller: [], yer: "Rapor X", yardim: null, bekleyen: [] }, gecmis: [{ kim: "ben", metin: "eski" }], soru: "boşlara - gir",
+    devam: { arac: "rapora_yaz", girdi: { girisler: [{ yer: "t:linye:1:icu", deger: "-" }] }, sonuc: "{\"yazilan\":1}" } }).govde as
+    { messages: { role: string; content: unknown }[]; tools: { name: string }[]; tool_choice: unknown; thinking: unknown; system: { text: string }[] };
+  assert.deepEqual(g.tool_choice, { type: "none" });
+  assert.deepEqual(g.thinking, { type: "disabled" });
+  assert.deepEqual(g.tools.map((t) => t.name), ["rapora_yaz", "fotograflari_oku", "geri_al"], "araç tanımı durur, arama yok");
+  assert.ok(!g.system[1].text.includes("Açık rapor"), "harita ikinci çağrıda gitmez");
+  assert.deepEqual(g.messages.slice(-3), [
+    { role: "user", content: "boşlara - gir" },
+    { role: "assistant", content: [{ type: "tool_use", id: "say_is", name: "rapora_yaz", input: { girisler: [{ yer: "t:linye:1:icu", deger: "-" }] } }] },
+    { role: "user", content: [{ type: "tool_result", tool_use_id: "say_is", content: "{\"yazilan\":1}" }] }]);
+  const f = sayIstegi({ model: "haiku", kilavuz: [], baglam: { roller: [], yer: "x", yardim: null, bekleyen: [] }, gecmis: [], soru: "s", formatAraci: [FORMAT_ARACI],
+    devam: { arac: "formati_duzenle", girdi: { islemler: [] }, sonuc: "{}" } }).govde as { tools: { name: string }[] };
+  assert.deepEqual(f.tools.map((t) => t.name), ["formati_duzenle"]);
+  /* ilk çağrıda bunlar yok */
+  const ilk = sayIstegi({ model: "haiku", kilavuz: [], baglam: { roller: [], yer: "x", yardim: null, bekleyen: [] }, gecmis: [], soru: "s" }).govde as Record<string, unknown>;
+  assert.ok(!("tool_choice" in ilk) && !("thinking" in ilk));
+  /* yedek cevap: yalnız sayılar ve nedenler */
+  assert.equal(isSonucuMetni({ yazildi: 144, ayni: 2, bekliyor: 0, yapilan: [], yazilamadi: [] }), "Yaptım: 144 giriş rapora yazıldı.\n2 giriş zaten öyleydi.");
+  assert.equal(isSonucuMetni({ yazildi: 0, ayni: 0, bekliyor: 0, yapilan: [], yazilamadi: [{ ad: "SGK", neden: "bu formatta kilitli; elle de değiştirilemiyor" }] }),
+    "Yapamadım:\n- SGK: bu formatta kilitli; elle de değiştirilemiyor");
+  assert.equal(isSonucuMetni({ yazildi: 1, ayni: 0, bekliyor: 0, yapilan: ["RCa sütunu eklendi"], yazilamadi: [{ ad: "x", neden: "y" }] }), "Yaptım:\n- RCa sütunu eklendi\nYapamadıklarım:\n- x: y");
+  assert.equal(isSonucuMetni({ yazildi: 0, ayni: 0, bekliyor: 0, yapilan: [], yazilamadi: [] }), "Bir değişiklik olmadı.");
 });

@@ -55,7 +55,8 @@ html[data-saychat="var"] main { padding-bottom: 96px; }
   html[data-panel-acik] [data-alt-cubuk="her"] { padding-right: calc(min(440px, 100vw - 32px) + 16px); }
 }
 @media (max-width: 767.98px) {
-  html[data-panel-acik], html[data-panel-acik] body { overflow: hidden; overscroll-behavior: none; }
+  /* 557: küçültülmüş ya da kısaltılmış panelde (data-panel-kucuk) sayfa görünür ve kayar */
+  html[data-panel-acik]:not([data-panel-kucuk]), html[data-panel-acik]:not([data-panel-kucuk]) body { overflow: hidden; overscroll-behavior: none; }
 }
 /* 2026-10-12 (reisim: rapor ekranında tuşlar "say tuşu gibi havada"): havada duran tuş kabı (raporlar .eylem, data-alt-cubuk="her") sayfanın alt
    boşluğunu kendi ayırır — main'in alt boşluğu yok; klavyeyle odaklanan alan tuşların altında kalmasın diye kaydırma alttan boşluk bırakır */
