@@ -6,7 +6,7 @@ import { Cevaplar, type FormatTanimi } from "../../../format/tanim.ts";
 
 export function kurucuOrnegi(tanim: FormatTanimi, tur: { ad: string; kod: string; std: readonly string[]; cihaz: readonly string[] }): BelgeVerisi {
   return {
-    firma: { ad: "Firmanızın adı", kod: "FR", nusha: 2, adres: "Adres, logo ve akreditasyon Firma ayarlarından", akr: null, logo: null },
+    firma: { ad: "Firmanızın adı", kod: "FR", nusha: 2, adres: "Firma ayarlarından", akr: null, logo: null },
     no: "—", revizyon: 0, formatSira: 1, durum: "taslak",
     tur: { ad: tur.ad, kod: tur.kod, kontrolStd: [...tur.std] },
     kunye: { firmaAdi: "Müşteri firma (plandan)", adres: "Periyodik kontrol adresi (plandan)", sgk: null, isgNo: null },

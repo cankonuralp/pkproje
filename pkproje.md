@@ -2489,7 +2489,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   gir" yalnız rapordayken görünür (rapor dışında kapalı tuş + ipucu yerine). S.A.Y Chat: boş kayıt listesinde yönerge yok, alt yazı yalnız plan no,
   ekipman seçiminde "Plana yeni ekipman için …" / "rapor yazılırken plana eklenir" ve rapor sonucundaki "Okunan değerler …" cümlesi yok. Format
   yapıcı: formül alanının etiketi "Formül" (uzun örnekli ipucu yok), Parçalar / Seçili bölüm kutularındaki yönergeler, "Belgeden başlat: …" notu ve
-  uzun yer tutucu kısaldı; ekipman / kayıt alanında tek cümle. Uyarılar (Bakanlık maddesi, bağlantı, sınır) duruyor. Uçtan uca S.A.Y testi: panelde
+  uzun yer tutucu kısaldı; ekipman / kayıt alanında tek cümle; kâğıtta künye kilidi, cihaz, kusur, imza, doldurma, başlık, standart ve tablo
+  altındaki yönerge cümleleri kalktı ya da tek söze indi. Uyarılar (Bakanlık maddesi, bağlantı, sınır) duruyor. Uçtan uca S.A.Y testi: panelde
   açıklama yazısı yok kilidi.
 - 2026-10-14 (554): **552–553 YAYINDA** — main 9fe0e37 (göç yok; 91 göç). Deneme makinesi ilk koşuda masaüstü 3'te yalnız yeni uçtan uca test düştü
   (taklit yapay zekâ Bakanlık bölümünün harita satırındaki " (Bakanlık bölümü)" ekini beklemiyordu — 9fe0e37); ikinci koşu 13 / 13 (veritabanlı 758

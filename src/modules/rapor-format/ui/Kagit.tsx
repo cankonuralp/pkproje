@@ -109,7 +109,6 @@ function KunyeKilitleri({ t, degis }: { t: FormatTanimi; degis: (y: FormatTanimi
           <Ikon ad={kilit.has(a) ? "lock" : "pencil"} kucuk />{KUNYE_ALAN_ADI[a]}
         </button>
       ))}
-      <span className={k.ornek}>Basılı olan sahada kilitli; öteki bilgiyi denetçi raporun kendi kopyasında değiştirir, kayıt değişmez.</span>
     </div>
   );
 }
@@ -381,8 +380,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
               ))}
             </tbody>
           </table>
-          <p className={k.altNot}>{b.satir === "ekle" ? "Satırları denetçi raporda ekler" : "Sabit satırlar"}{b.enAz > 0 ? ` · en az ${b.enAz} satır` : ""}.
-            {!b.sutunlar.some((s) => (s.op && s.sinir !== undefined) || s.olumsuz?.length) && !b.hesap && !notlar.length && " Sonucun kendiliğinden hesaplanması için bir sütuna sınır verin (sütunun ayrıntıları)."}</p>
+          <p className={k.altNot}>{b.satir === "ekle" ? "Satırları denetçi raporda ekler" : "Sabit satırlar"}{b.enAz > 0 ? ` · en az ${b.enAz} satır` : ""}.</p>
           {notlar.length > 0 && <ol className="rb-notlar">{notlar.map((x, j) => <li key={j}>Not-{j + 1}: {x.metin}</li>)}</ol>}
         </>;
       }
@@ -411,10 +409,9 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
             <thead><tr>{["Cihaz", "Kod / seri no", "Kalibrasyon tarihi", "Geçerlilik", "Sertifika no"].map((x) => <th key={x} className="rb-ab">{x}</th>)}</tr></thead>
             <tbody>
               {tur.cihaz.map((ad) => (
-                <tr key={ad}><td className={k.turdan}>{ad}</td><td colSpan={4}><span className={k.ornek}>sahada zimmetten seçilir · kalibrasyonu denetlenir</span></td></tr>
+                <tr key={ad}><td className={k.turdan}>{ad}</td><td colSpan={4}><span className={k.ornek}>sahada seçilir</span></td></tr>
               ))}
-              <tr><td colSpan={5}><span className={k.ornek}>{tur.cihaz.length ? "Cihaz türleri tür sayfasından, kendiliğinden; orada değişince burada da değişir."
-                : "Bu türe ölçüm cihazı türü seçilmemiş — tür sayfasında seçilince burada kendiliğinden görünür."}</span></td></tr>
+              {!tur.cihaz.length && <tr><td colSpan={5}><span className={k.ornek}>Ölçüm cihazı türü seçilmemiş.</span></td></tr>}
             </tbody>
           </table>
         );
@@ -427,7 +424,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
           </div>
         );
       case "kusur":
-        return <p className="rb-kutu-metin"><span className={k.ornek}>Kendiliğinden yazılır: “Uygun değil” maddeler ve sınır dışı ölçümler, fotoğraflarıyla (* hafif, ** ağır).</span></p>;
+        return <p className="rb-kutu-metin"><span className={k.ornek}>Uygunsuzluklar kendiliğinden yazılır.</span></p>;
       case "sonuc":
         return <>
           <p className="rb-kutu-metin">
@@ -450,7 +447,6 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
           {b.imzalar.includes("uzman") && <BilgiTablosu l={[["Adı soyadı", "—"], ["Mesleği", "—"], ["Yetkili kişi kayıt no (EKİPNET)", "—"], ["Diploma no", "—"],
             ["Oda sicil no", "—"], ["İmzası", <span key="i" className={k.ornek}>güvenli elektronik imza</span>, true]]} />}
           {b.imzalar.includes("teknik") && <BilgiTablosu l={[["Onaylayan teknik yönetici", "—"], ["Onay zamanı", "—"]]} />}
-          <p className={k.altNot}>Rapor ekranında görünmez; belgede (PDF) basılır.</p>
         </>;
     }
   };
@@ -491,7 +487,6 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
           ? <span className={k.sahaTus}><Ikon ad="file-spreadsheet" kucuk />Excel&apos;den yükle
             <Tus ikon="x" ad={`${b.ad} · Excel tuşunu kaldır`} onClick={() => yaz({ excel: false }, "Excel tuşu kaldırıldı")} /></span>
           : <Ekle ad="Excel tuşu koy" erisimAdi={`${b.ad} · Excel tuşu koy`} onClick={() => yaz({ excel: true }, "Excel tuşu kondu")} />}
-        <span className={k.ornek}>{d.foto ? "fotoğrafı S.A.Y okur, boş alanlara girer; fotoğraf belgede görünmez" : "belgede basılmaz"}</span>
       </div>
     );
   };
@@ -597,8 +592,8 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
         <colgroup><col style={{ width: "11%" }} /><col style={{ width: "27%" }} /><col style={{ width: "10%" }} /><col style={{ width: "27%" }} /><col style={{ width: "25%" }} /></colgroup>
         <tbody><tr>
           <td className="rb-logo">LOGO</td>
-          <td className="rb-firma"><b>Firmanızın adı</b><br /><span className={k.ornek}>adres, logo ve akreditasyon Firma ayarlarından</span></td>
-          <td className="rb-logo"><span className={k.ornek}>Akreditasyon (TÜRKAK) no · Firma ayarlarından; yoksa boş</span></td>
+          <td className="rb-firma"><b>Firmanızın adı</b><br /><span className={k.ornek}>Firma ayarlarından</span></td>
+          <td className="rb-logo"><span className={k.ornek}>Akreditasyon no</span></td>
           <td className="rb-bas-ad"><Yazi deger={t.gorunum.baslik} ad="Belge başlığı" bos={`${tur.ad} periyodik kontrol raporu`}
             yaz={(s) => degis(gorunumYaz(t, { baslik: s }))} /></td>
           <td className="rb-dok">
@@ -626,8 +621,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
           ["Periyodik kontrol metodu ve kapsamı", <span key="m" className={k.metot}>
             <Yazi deger={t.gorunum.dayanak.join("\n")} ad="Periyodik kontrol metodu ve kapsamı" bos="Standart / yönetmelik yazın (her satıra bir tane)" cok uzun={6000}
               yaz={(s) => degis(gorunumYaz(t, { dayanak: satirlar(s, 20, 300) }))} />
-            {tur.std.length ? <span className={k.turdan}>{tur.std.join(" · ")}<span className={k.ornek}> — türün standartları (tür sayfasından, kendiliğinden)</span></span>
-              : <span className={k.ornek}>Türün kontrol metodu standardı seçilmemiş — tür sayfasında seçilince burada kendiliğinden görünür.</span>}</span>, true],
+            {tur.std.length > 0 && <span className={k.turdan}>{tur.std.join(" · ")}</span>}</span>, true],
         ]} />
         <KunyeKilitleri t={t} degis={degis} />
       </section>
@@ -636,7 +630,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
           (kod ve tür 1. bölüme geçer), geri eklenir */}
       {!duzen.ekipman && (
         <div className={k.sahaTuslari} id="kb-ekipman-yok" role="group" aria-label="Ekipman bilgileri bölümü yok">
-          <span className={k.ornek}>Ekipman bilgileri bölümü kaldırıldı — ekipman kodu ve türü 1. bölümde yazar.</span>
+          <span className={k.ornek}>Ekipman bilgileri bölümü kaldırıldı.</span>
           <Ekle ad="Ekipman bilgileri bölümünü geri ekle" onClick={() => { degis(ekipmanBolumuGeriEkle(t)); bildir("Ekipman bilgileri bölümü geri eklendi (taslak)."); }} />
         </div>
       )}
