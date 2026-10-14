@@ -2483,6 +2483,17 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-14 (557): **SUNUM 557 — S.A.Y SOHBETİ: GÖNDERİNCE GÖRÜNSÜN, YAPINCA SÖYLESİN (ONAY BEKLİYOR)** https://claude.ai/artifact/SQLPoK8o7xaVraAUdaAKn3
+  (reisim, beş ekran görüntüsüyle: *"bir yazı girdiğimizde say düşünüyor diyor yazımız da gitmiyor, saçma sorulara saçma cevaplar veriyor bazı işleri
+  yapamıyor, mesajı okuyor yazarken vs mesaj gitmiş gözüksün aynı claud chatindeki gibi ve bekleme işareti çıksın. bunun sunumunu yap"*, *"saychat ve
+  say için alta küçültme tuşu olsun"*, *"bu nasıl bi hata ? ben sütuna neden istediğimi giremiyorum say asistan da yaptığını söyleyip duruyor ama
+  yapamıyor yapamamasının sebebini bile söylemiyor claud gibi çalışmıyor"*, *"say chati kısaltıp uzatma olsun sadece yazı yazabileceğim yer gözükecek
+  kadar kısaltabileyim"*, *"en alta in tuşu olsun chatte"*). Nedenler (kodda): mesaj ancak cevapla listeye giriyor, beklerken Gönder kapalı
+  (SayAsistan gonder); S.A.Y'ın rapora işinin sonucu S.A.Y'a dönmüyor — "N giriş yapıyorum" cümlesini sunucu yazıyor (say/server/say.ts
+  saySorKaydet), yapılamayanlar yalnız bildirimde (komutlariYap); S.A.Y'ın ve Excel'in değer denetimi sayı sütununa "-" kabul etmiyor
+  (raporlar/say-doldur.ts "değer sütunun türüne uymuyor"; elle yazınca kabul). Öneri: mesaj hemen balon + üç nokta + cevap akarak + Durdur;
+  iş döngüsü (sonuç S.A.Y'a döner, en çok 5 tur, iletide iş satırı ve nedenler, Geri al); "-" her kutuda uygulanamaz; işler geçmişte; Küçült,
+  boy tutamağı (en kısası başlık + yazı kutusu), en alta in — S.A.Y ve S.A.Y Chat. Kararlar K1–K5. Onay gelmeden kod yok. 556 da onay bekliyor.
 - 2026-10-14 (556): **SUNUM 556 — HER KUTUDA HESAP (ONAY BEKLİYOR)** https://claude.ai/artifact/CtsppwfP7AUgEfKthjjsgC (reisim, Zemin izolasyonu
   ekran görüntüsüyle: *"hesaplama tuşu her kutucukta olmalı her türlü şey için hesaplama yapabilmeliyim sadece belirli şeyler ve test tablolarında
   değil, ayrıca görüntüdeki gibi değiştirilemez olmasın, olması gerekenin dışında bir şey olursa değiştirebilelim, dışarıdan diğer kutular ile aynı
