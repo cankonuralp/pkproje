@@ -7,7 +7,10 @@
      önemsiz). Formül formüle bakabilir (en çok 5 kat; döngü hesaplanamaz).
    · Hesaplanamaz (boş değer, sıfıra bölme, bilinmeyen ad): değer boş kalır — sonuç çıkmaz, eksik sayılmaz (girdileri zorunluysa onlar eksik).
    Motor (degerlendir), belge (PDF) ve saha ekranı formulUygula'nın doldurduğu cevaplarla çalışır; kaydedilen cevaplarda hesap yok (her açılışta
-   yeniden). Kurucuda formulDenet yazarken söyler; adı değişen öğenin formüllerdeki adı formulAdDegistir'le değişir. */
+   yeniden). Kurucuda formulDenet yazarken söyler; adı değişen öğenin formüllerdeki adı formulAdDegistir'le değişir.
+   552 (reisim 2026-10-14: "elektrikte hesaplamalarda olsun … format yapıcıda formül kısmı olsun mesela (RCa=480/RCd)"): yazıldığı gibi de kabul —
+   boşluksuz ad köşeli parantezsiz (RCd), baştaki "Ad =" ya da "=" atılır; kurucu kaydederken formulDuzelt ile köşeli parantezli biçime çevirir
+   ("RCa = 480 / RCd" → "480 / [RCd]") — ad değişince formüldeki adı da değişsin. */
 import { sayiOku } from "./hesap.ts";
 import type { BolumOf, Cevaplar, FormatTanimi } from "./tanim.ts";
 
@@ -15,8 +18,12 @@ export const FORMUL_EN_UZUN = 400;
 const DERINLIK = 5;
 type Jeton = { n: number } | { ad: string } | { o: string };
 
+/** 552: baştaki "Ad =" / "=" atılır (formülün gövdesi) — ikinci "=" kalırsa jetonla "anlaşılmadı" der */
+const govde = (ifade: string) => { const k = ifade.indexOf("="); return k >= 0 ? ifade.slice(k + 1) : ifade; };
+const HARF = /[\p{L}_]/u, AD_HARFI = /[\p{L}\p{N}_]/u;
+
 function jetonla(ifade: string): Jeton[] {
-  const s = ifade.replace(/×/g, "*").replace(/÷/g, "/").replace(/[−–]/g, "-");
+  const s = govde(ifade).replace(/×/g, "*").replace(/÷/g, "/").replace(/[−–]/g, "-");
   const l: Jeton[] = [];
   for (let i = 0; i < s.length;) {
     const c = s[i];
@@ -35,6 +42,12 @@ function jetonla(ifade: string): Jeton[] {
       l.push({ n: Number.parseFloat(s.slice(i, j).replace(",", ".")) }); i = j; continue;
     }
     if ("+-*/()%".includes(c)) { l.push({ o: c }); i++; continue; }
+    /* 552: boşluksuz ad köşeli parantezsiz (RCd, Icu, Zx) */
+    if (HARF.test(c)) {
+      let j = i;
+      while (j < s.length && AD_HARFI.test(s[j])) j++;
+      l.push({ ad: s.slice(i, j) }); i = j; continue;
+    }
     throw new Error(`“${c}” anlaşılmadı`);
   }
   if (!l.length) throw new Error("formül boş");
@@ -89,7 +102,12 @@ function coz(ifade: string): { adlar: string[]; hesapla: (bul: (ad: string) => n
     throw new Error(`“${j.o === "*" ? "×" : j.o === "/" ? "÷" : j.o}” yanlış yerde`);
   };
   const kok = toplam();
-  if (p !== l.length) throw new Error((l[p] as { o?: string })?.o === ")" ? "fazladan “)”" : "fazladan işaret");
+  if (p !== l.length) {
+    /* 552: art arda iki ad = boşluklu ad parantezsiz yazılmış ("RCD testi") */
+    const a = l[p - 1] as { ad?: string } | undefined, b = l[p] as { ad?: string };
+    if (a?.ad && b.ad) throw new Error(`boşluklu ad köşeli parantezle yazılır: [${a.ad} ${b.ad}…]`);
+    throw new Error((l[p] as { o?: string })?.o === ")" ? "fazladan “)”" : "fazladan işaret");
+  }
   return {
     adlar,
     hesapla: (bul) => {
@@ -106,7 +124,7 @@ export function formulDenet(ifade: string, adlar: readonly string[], kendi?: str
   try { c = coz(ifade); } catch (e) { return `Formül anlaşılmadı: ${(e as Error).message}.`; }
   const bilinen = new Set(adlar.map(anahtar));
   const yok = c.adlar.find((a) => !bilinen.has(anahtar(a)));
-  if (yok) return `“${yok}” adında sayı yok — adı aynen yazın (köşeli parantezle).`;
+  if (yok) return `“${yok}” adında sayı yok — adı aynen yazın (boşluklu adı köşeli parantezle: [RCD testi IΔ]).`;
   if (kendi && c.adlar.some((a) => anahtar(a) === anahtar(kendi))) return "Formül kendisine bakamaz.";
   return null;
 }
@@ -187,6 +205,23 @@ export function satirFormulu(b: BolumOf<"olcum">, s: Record<string, string>): Re
 }
 
 /** kurucuda öğenin adı değişince formüllerdeki [eski] → [yeni] (kapsamdaki formüllerde; büyük / küçük harf önemsiz) */
+/** 552: kaydedilecek biçim — "Ad =" atılır, adlar köşeli parantezli, işaretler × ÷ −, ondalık virgül ("RCa = 480/RCd" → "480 ÷ [RCd]");
+    anlaşılmayan formül olduğu gibi kalır (kurucu hatayı gösterir) */
+export function formulDuzelt(ifade: string): string {
+  let l: Jeton[];
+  try { l = jetonla(ifade); } catch { return ifade.trim(); }
+  const parca = l.map((j) => ("n" in j ? String(j.n).replace(".", ",") : "ad" in j ? `[${j.ad}]` : j.o === "*" ? "×" : j.o === "/" ? "÷" : j.o === "-" ? "−" : j.o));
+  const isaret = (k: number) => { const j = l[k]; return j && "o" in j ? j.o : null; };
+  /* tekli eksi: başta ya da işaretten / "("dan sonra gelen "-" (ardından boşluk yok) */
+  const tekliEksi = (k: number) => isaret(k) === "-" && (k === 0 || (isaret(k - 1) !== null && isaret(k - 1) !== ")" && isaret(k - 1) !== "%"));
+  let m = "";
+  parca.forEach((p, i) => {
+    const bosluk = i > 0 && isaret(i - 1) !== "(" && isaret(i) !== ")" && isaret(i) !== "%" && !tekliEksi(i - 1);
+    m += (bosluk ? " " : "") + p;
+  });
+  return m;
+}
+
 export function formulAdDegistir(f: string, eski: string, yeni: string): string {
   const e = anahtar(eski);
   return f.replace(/\[([^\]]*)\]/g, (tam, ad: string) => (anahtar(ad) === e ? `[${yeni.trim()}]` : tam));

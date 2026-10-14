@@ -201,3 +201,52 @@ test("S.A.Y rapor ekranında: sayfa kıpırdamaz; söylenen alana yazar (işaret
   await expect(liste).toContainText("Raporu okudum.", { timeout: 30_000 });
   await expect(liste.getByRole("listitem").filter({ hasText: /^Rapor YZ-[0-9]{4}-[0-9]{3}/ }).first()).toBeVisible();
 });
+
+/* 552–553 (reisim 2026-10-14: "elektrikte hesaplamalarda olsun … format yapıcıda formül kısmı olsun mesela (RCa=480/RCd) … konuşarak ilgili formatı
+   yapabiliyo olalım"): format yapıcıda S.A.Y'a "<tablo> tablosuna <ad> sütunu ekle, formül …" → Haiku (taklit) haritadaki bölüm kimliğiyle
+   formati_duzenle → sütun taslakta, formül köşeli parantezli; iletinin altındaki Geri al çıkarır; sayı sütununun "formül" tuşu formül alanını açar,
+   "Iz / 2" yazılınca "= [Iz] ÷ 2". Yalnız masaüstünde (aynı türün taslağı — genişlikler aynı anda koşar). Kaydedilmez. */
+test("S.A.Y format yapıcıda: konuşarak sütun + formül ekler, Geri al; formül tuşu ve yazıldığı gibi formül", async ({ page }, bilgi) => {
+  test.skip(bilgi.project.name !== "masaustu", "aynı türün taslağı — yalnız masaüstü");
+  test.setTimeout(150_000);
+  await page.goto(`${Y}/giris`);
+  await hazir(page);
+  await page.getByLabel("E-posta").fill(E2E_YZ.yonetici.eposta);
+  await page.getByLabel("Parola", { exact: true }).fill(E2E_PAROLA);
+  await page.getByRole("button", { name: "Giriş yap" }).click();
+  await expect(page.locator("header")).toContainText(E2E_YZ.yonetici.ad);
+  await page.goto(`${Y}/ekipman-turleri?brans=e`);
+  await hazir(page);
+  await page.getByRole("link", { name: /Elektrik panosu/ }).first().click();
+  await expect(page).toHaveURL(/\/ekipman-turleri\/[0-9a-f-]{36}$/, { timeout: 30_000 });
+  await hazir(page);
+  await page.getByRole("button", { name: /^Sürüm \d+ · Düzenle$/ }).first().click();
+  const p = page.getByRole("dialog", { name: /^Sürüm \d+ · düzenle$/ });
+  const devam = p.getByRole("link", { name: "Taslağa devam et" });
+  if (await devam.count()) await devam.click(); else await p.getByRole("button", { name: "Taslak aç ve düzenle" }).click();
+  await expect(page).toHaveURL(/\/sablon\/[0-9a-f-]{36}\/kurucu$/, { timeout: 30_000 });
+  await hazir(page);
+
+  const fab = page.getByRole("button", { name: "S.A.Y — saha asistanı" });
+  const panel = page.getByRole("dialog", { name: "S.A.Y" });
+  await expect(panel.or(fab)).toBeVisible({ timeout: 30_000 });
+  if (!(await panel.isVisible())) await fab.click();
+  await expect(panel.getByText("Format yapıcıdayım · ne ekleyeyim?")).toBeVisible();
+  await panel.getByLabel("S.A.Y'a sor").fill("Pano sigortaları (linye) tablosuna Deneme sütunu ekle, formül Ib × 2");
+  await panel.getByLabel("S.A.Y'a sor").press("Enter");
+  await expect(page.getByText("Format taslağında:", { exact: false }).first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText("= [Ib] × 2").first()).toBeVisible();
+  await panel.getByRole("button", { name: "Geri al" }).last().click();
+  await expect(page.getByText("= [Ib] × 2")).toHaveCount(0);
+  await expect(page.getByText("S.A.Y'ın değişikliği geri alındı (taslak).").first()).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(panel).toHaveCount(0);
+
+  /* 552: sayı sütununda formül tuşu — formül alanına odak; yazıldığı gibi ("Iz / 2") → köşeli parantezli */
+  await page.getByRole("button", { name: "Ib · formül" }).first().click();
+  const formul = page.getByRole("textbox", { name: /^Formül/ });
+  await expect(formul).toBeFocused();
+  await formul.fill("Iz / 2");
+  await formul.press("Tab");
+  await expect(page.getByText("= [Iz] ÷ 2").first()).toBeVisible();
+});

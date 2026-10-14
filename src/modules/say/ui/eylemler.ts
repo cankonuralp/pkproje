@@ -45,9 +45,9 @@ export async function sayOneriEylemi(id: unknown, durum: unknown): Promise<boole
   return oturumIslemi(o, (db) => sayOneri(db, id, durum));
 }
 
-export async function saySorEylemi(soru: unknown, yol: unknown, raporNo?: unknown, canli?: unknown): Promise<SayYaniti> {
+export async function saySorEylemi(soru: unknown, yol: unknown, raporNo?: unknown, canli?: unknown, kurucu?: unknown): Promise<SayYaniti> {
   const o = await oturum();
-  return o ? sor(o, soru, yol, raporNo, canli, []) : RED;
+  return o ? sor(o, soru, yol, raporNo, canli, [], kurucu) : RED;
 }
 
 /** 522: ekli soru — form: soru, yol, raporNo, canli (JSON), ek (en çok 4 dosya, toplam 4 MB) */
@@ -63,15 +63,19 @@ export async function sayEkliSorEylemi(form: FormData): Promise<SayYaniti> {
   let canli: unknown = null;
   try { canli = JSON.parse(String(form.get("canli") ?? "null")); } catch { canli = null; }
   const raporNo = form.get("raporNo");
-  return sor(o, String(form.get("soru") ?? ""), form.get("yol"), typeof raporNo === "string" && raporNo ? raporNo : undefined, canli, ekler);
+  let kurucu: unknown = null;
+  try { kurucu = JSON.parse(String(form.get("kurucu") ?? "null")); } catch { kurucu = null; }
+  return sor(o, String(form.get("soru") ?? ""), form.get("yol"), typeof raporNo === "string" && raporNo ? raporNo : undefined, canli, ekler, kurucu);
 }
 
 type Oturum = NonNullable<Awaited<ReturnType<typeof oturum>>>;
-async function sor(o: Oturum, soru: unknown, yol: unknown, raporNo: unknown, canli: unknown, ekler: SayEkDosyasi[]): Promise<SayYaniti> {
+async function sor(o: Oturum, soru: unknown, yol: unknown, raporNo: unknown, canli: unknown, ekler: SayEkDosyasi[], kurucuHam: unknown = null): Promise<SayYaniti> {
   if (typeof soru !== "string") return { durum: "red", neden: "Sorunuzu yazın." };
   const c = (canli ?? null) as { id?: unknown; cevaplar?: unknown; ekipman?: unknown } | null;
   const rapor = c && typeof c.id === "string" ? { id: c.id, cevaplar: c.cevaplar, ekipman: c.ekipman } : null;
-  const h = await oturumIslemi(o, (db) => saySorHazirla(db, o, soru, yolAl(yol), new Date(), typeof raporNo === "string" ? raporNo : null, rapor, ekler));
+  const k = (kurucuHam ?? null) as { id?: unknown; tanim?: unknown } | null;
+  const kurucu = k && typeof k.id === "string" ? { id: k.id, tanim: k.tanim } : null;
+  const h = await oturumIslemi(o, (db) => saySorHazirla(db, o, soru, yolAl(yol), new Date(), typeof raporNo === "string" ? raporNo : null, rapor, ekler, kurucu));
   if (h.durum !== "hazir") return h;
   let y = await anthropicCagir(h.istek, h.anahtar);
   /* K7: internet araması bu modelde kabul edilmezse (400 — araç) aramasız bir kez daha (ayırma aynı; ücret yalnız gerçek çağrıdan) */

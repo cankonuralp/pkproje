@@ -42,6 +42,8 @@ import { Parcalar, SeciliBolum } from "./Yapboz";
 import { bolumeKaydir } from "./kaydir";
 import { formatBelgeEylemi, formatYzEylemi, parcaKaydetEylemi, parcaSilEylemi, taslakKaydetEylemi } from "./eylemler";
 import { oneriEkle, oneriUygula, oneriYeri, type Oneri } from "../yz-oneri";
+import { formatIslemleri, type FormatIslemi } from "../say-kurucu";
+import { sayFormatBagla } from "../../say/ui/baglam";
 import { YzKutusu } from "./YzKutusu";
 import { Kagit } from "./Kagit";
 import { SatirAlani } from "./KurucuDuzenleyici";
@@ -119,6 +121,28 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
     document.addEventListener("keydown", bas);
     return () => document.removeEventListener("keydown", bas);
   }, []);
+  /* 553 (reisim 2026-10-14: "konuşarak ilgili formatı yapabiliyo olalım"): S.A.Y taslağı görür (kaydedilmemiş değişiklikler dahil), Haiku'nun
+     "formati_duzenle" işlemlerini uygular — geçmişe bir adım (araç çubuğundaki Geri al da alır); S.A.Y iletisinin altındaki Geri al, taslak o
+     hâldeyse önceki hâline döndürür. Kaydet / Yayınla kişide. */
+  const sayGuncel = useRef({ t, degis });
+  useEffect(() => { sayGuncel.current = { t, degis }; });
+  useEffect(() => sayFormatBagla({
+    id: format.id,
+    tanim: () => sayGuncel.current.t,
+    uygula: (islemler) => {
+      const once = sayGuncel.current.t, r = formatIslemleri(once, islemler as readonly FormatIslemi[]);
+      const sonra = JSON.stringify(r.t);
+      if (r.t !== once) { sonAdim.current = { el: null }; sayGuncel.current.degis(r.t); }
+      return {
+        yapilan: r.yapilan, gecersiz: r.gecersiz,
+        geriAl: () => {
+          if (r.t === once || JSON.stringify(sayGuncel.current.t) !== sonra) return 0;
+          sonAdim.current = { el: null }; sayGuncel.current.degis(once);
+          return 1;
+        },
+      };
+    },
+  }), [format.id]);
   const stdAnahtar = turStd.join("\n"), cihazAnahtar = turCihaz.join("\n");
   const tur = useMemo(() => ({ ad: turAd, kod: turKod, std: stdAnahtar ? stdAnahtar.split("\n") : [], cihaz: cihazAnahtar ? cihazAnahtar.split("\n") : [] }),
     [turAd, turKod, stdAnahtar, cihazAnahtar]);

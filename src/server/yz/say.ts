@@ -8,7 +8,9 @@
    talimatta yalnız nerede olduğu ve neler yapabildiği (uzunluk, biçim, konu sınırı yok; Haiku'nun kendi ilkeleri Anthropic'in). Soru 20 000
    karakter, cevap düşünmeyle 8 000 token, konuşmanın son 150 000 karakteri; cevap Markdown (ekranda güvenli çizilir — HTML işlenmez). Rapordayken
    araçlar: rapora_yaz (istenen girişler — ekran uygular, işaretli, Geri al), fotograflari_oku, geri_al. İnternette arama (K7; Anthropic'in arama
-   aracı, istek başına en çok 3). */
+   aracı, istek başına en çok 3).
+   553 (reisim 2026-10-14: "konuşarak ilgili formatı yapabiliyo olalım"): format yapıcıdayken bağlamda format taslağının haritası ve modülün verdiği
+   araç (formati_duzenle — src/modules/rapor-format/say-kurucu.ts); cevaptaki çağrı "format" komutu olur, taslağı ekran değiştirir. */
 import { MODEL_KIMLIGI, maliyetHesapla, type YzModel } from "./okuma.ts";
 
 /** cevap sınırı (düşünme dahil) ve ayırma için giriş üst sınırı (talimat + bağlam + konuşma; 100 000 tokenin altında — Haiku'nun alt fiyatı) */
@@ -42,6 +44,8 @@ export interface SayBaglami {
   bekleyen: string[];
   /** 550: açık raporun haritası (src/modules/say/rapor-haritasi.ts) — varsa rapora yazma araçları da gider */
   rapor?: string | null;
+  /** 553: açık format taslağının haritası (rapor-format/say-kurucu.ts) — varsa format aracı da gider */
+  format?: string | null;
 }
 export interface SayGecmisIletisi { kim: "ben" | "say"; metin: string }
 /** 522: soruya eklenen dosya — fotoğraf / PDF baytları olduğu gibi, Word'ün yalnız metni (ad yapay zekâya gitmez) */
@@ -138,15 +142,16 @@ export function ekliIcerik(ekler: readonly SayEki[], metin: string, onceki = "")
 }
 
 export function sayIstegi(p: { model: YzModel; kilavuz: readonly (readonly [string, string])[]; baglam: SayBaglami; gecmis: readonly SayGecmisIletisi[]; soru: string;
-  ekler?: readonly SayEki[]; arama?: boolean }): { govde: Record<string, unknown> } {
+  ekler?: readonly SayEki[]; arama?: boolean; formatAraci?: readonly object[] }): { govde: Record<string, unknown> } {
   const b = p.baglam;
   const baglam = [
     `Kullanıcının rolleri: ${b.roller.join(", ") || "—"}.`,
     `Şu an bulunduğu sayfa: ${b.yer}.${b.yardim ? ` (${b.yardim})` : ""}`,
     b.bekleyen.length ? `Bekleyen işleri: ${b.bekleyen.join("; ")}.` : "Şu an bekleyen işi yok.",
     ...(b.rapor ? [`Açık rapor (kullanıcının şu an yazdığı, kaydedilmemiş değişiklikler dahil):\n${b.rapor}`] : []),
+    ...(b.format ? [`Açık format taslağı (format yapıcıda, kaydedilmemiş değişiklikler dahil):\n${b.format}`] : []),
   ].join("\n");
-  const araclar = [...(b.rapor ? RAPOR_ARACLARI : []), ...(p.arama === false ? [] : [ARAMA_ARACI])];
+  const araclar = [...(b.rapor ? RAPOR_ARACLARI : []), ...(b.format ? p.formatAraci ?? [] : []), ...(p.arama === false ? [] : [ARAMA_ARACI])];
   return {
     govde: {
       model: MODEL_KIMLIGI[p.model],
@@ -170,7 +175,11 @@ export function sayIstegi(p: { model: YzModel; kilavuz: readonly (readonly [stri
 
 export type SayDurumu = "tamam" | "kesik" | "ret";
 /** 550: S.A.Y'ın rapora yapmak istediği iş (ekran uygular) */
-export type SayKomutu = { tur: "yaz"; girisler: { yer: string; deger: string }[] } | { tur: "oku" } | { tur: "geri" };
+export type SayKomutu = { tur: "yaz"; girisler: { yer: string; deger: string }[] } | { tur: "oku" } | { tur: "geri" }
+  /** 553: format taslağına işlemler (biçimi ekran denetler — rapor-format/say-kurucu.ts formatIslemleri) */
+  | { tur: "format"; islemler: Record<string, unknown>[] };
+/** 553: format işlemi sınırları (tek istek, tek işlemin JSON boyu) */
+const FORMAT_ISLEM_EN_COK = 100, FORMAT_ISLEM_BOYU = 4_000;
 
 /** cevaptan Markdown metin (en çok CEVAP_SINIRI), token sayıları, internet araması sayısı, rapor komutları, durum */
 export function sayYanitiCoz(govde: unknown): { metin: string; giris: number; cikis: number; arama: number; komutlar: SayKomutu[]; durum: SayDurumu } {
@@ -199,6 +208,10 @@ export function sayYanitiCoz(govde: unknown): { metin: string; giris: number; ci
           ? [{ yer: y.yer, deger: String(y.deger).slice(0, 4000) }] : [];
       });
       if (girisler.length) komutlar.push({ tur: "yaz", girisler });
+    } else if (c.name === "formati_duzenle" && Array.isArray((girdi as { islemler?: unknown }).islemler)) {
+      const islemler = ((girdi as { islemler: unknown[] }).islemler).slice(0, FORMAT_ISLEM_EN_COK)
+        .filter((x): x is Record<string, unknown> => !!x && typeof x === "object" && !Array.isArray(x) && JSON.stringify(x).length <= FORMAT_ISLEM_BOYU);
+      if (islemler.length) komutlar.push({ tur: "format", islemler });
     }
   }
   return { metin, giris, cikis, arama, komutlar, durum };

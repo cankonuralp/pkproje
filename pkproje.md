@@ -2483,6 +2483,18 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-14 (552–553): **FORMÜL YAZILDIĞI GİBİ + FORMÜL TUŞU; S.A.Y FORMAT YAPICIDA KONUŞARAK DÜZENLER** (reisim: *"elindekileri yayınla, elektrikte
+  hesaplamalarda olsun bu vb hesaplamalar için format yapıcıda formül kısmı olsun mesela (RCa=480/RCd ) örnekte rca ve rcd test değerlerinde girilen
+  iki sütun, say chatten zaten konuşarak ilgili formatı yapabiliyo olalım, işin bitince direk yayınla sunuma gerek yok, sonrada pc yi kapat."*).
+  Formül (495) vardı ama öğenin "Ayrıntılar"ında saklıydı ve adlar yalnız köşeli parantezle yazılıyordu. (552) format/formul.ts: boşluksuz ad
+  parantezsiz (RCd, Icu, Ib), baştaki "Ad =" atılır — "RCa = 480/RCd" yazıldığı gibi hesaplanır; kurucu kaydederken formulDuzelt köşeli parantezli
+  biçime çevirir ("480 ÷ [RCd]" — ad değişince formüldeki adı da değişir); boşluklu ad parantezsiz yazılırsa "köşeli parantezle yazılır" der. Kâğıtta
+  sayı sütununun / test değerinin / sayı alanının yanında hesap makinesi tuşu ("… · formül") — ayrıntıları açar, formül alanına odaklanır. (553) S.A.Y
+  format yapıcıda: taslağın haritası (bölüm / öğe kimlikleri, türler, birim, formül, sınır, gruplar, maddeler — rapor-format/say-kurucu.ts) ve
+  "formati_duzenle" aracı (bölüm ekle / sil / adı, alan · sütun · test değeri · madde ekle / değiştir / çıkar, grup ekle; adıyla da bulur, aynı
+  istekte eklenen bölüme öğe eklenir); değişikliği ekran taslağa uygular (format yapıcının geçmişine bir adım; S.A.Y iletisinde Geri al); Kaydet /
+  Yayınla kişide. Harita yalnız adres o taslağın kurucusuysa, kişi formatı değiştirebiliyorsa (Ekipman türleri "yaz") ve taslak hâlâ taslaksa gider;
+  yoksa komut dönmez. Göç yok.
 - 2026-10-14 (551): **547–550 YAYINDA** — main 38aad66, göç 0090 Supabase'te (91 göç; yz_sohbet_metin_uzunluk ≤ 100 000). Deneme makinesi ilk koşuda
   13 / 13 yeşil (veritabanlı 752 test, uçtan uca üç genişlik + site taraması — "hücreden taşan" bulgusu yok); canlı sağlık tamam, duman 11/11, hata
   kaydı yok. Oturum isteyen ekranlara gözle bakılamadı (giriş reisim'in). Hata listesi m79–m84 yayında.

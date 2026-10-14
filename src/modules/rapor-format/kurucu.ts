@@ -9,7 +9,7 @@ import { kilitliKimlikler } from "../../format/motor.ts";
 import { ekipmanTamYap } from "../../format/duzen.ts";
 import { Bolum, EKIPMAN_ALAN_ADI, KUNYE_ALANLARI, kurucudan, type Blok, type EkipmanAlani, type FormatTanimi, type KunyeAlani, type Sinir } from "../../format/tanim.ts";
 import { kilitliKunye } from "../../format/kunye.ts";
-import { FORMUL_EN_UZUN, formulAdDegistir } from "../../format/formul.ts";
+import { FORMUL_EN_UZUN, formulAdDegistir, formulDuzelt } from "../../format/formul.ts";
 
 export { kurucudan };
 
@@ -194,7 +194,8 @@ function sinirli<T extends { op?: Sinir; sinir?: number }>(o: T, y: { op?: Sinir
 
 /** 495: öğenin formülü — yalnız sayıda; yazılmadıysa eskisi; boşsa ya da sayı değilse anahtar hiç yok */
 function formulYaz<O extends { formul?: string }>(o: O, sayi: boolean, y: OgeYamasi): O {
-  const f = sayi ? (y.formul !== undefined ? istege(y.formul.slice(0, FORMUL_EN_UZUN)) : o.formul) : undefined;
+  /* 552: "RCa = 480 / RCd" gibi yazılan formül köşeli parantezli biçime (formulDuzelt) */
+  const f = sayi ? (y.formul !== undefined ? istege(formulDuzelt(y.formul).slice(0, FORMUL_EN_UZUN)) : o.formul) : undefined;
   const r = { ...o };
   delete r.formul;
   if (f) r.formul = f;

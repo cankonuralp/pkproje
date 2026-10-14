@@ -126,6 +126,7 @@ pkproje/
                             · 486: ekipman bölümü kaldırılabilir (gorunum.ekipman false → 2. bölüm yok, kod / tür 1. bölümde, numaralar kayar) · siraBasligi
                             · 461: bölümün "alt" bayrağı — üstündeki ana bölümün altında N.1, N.2 (duzen.ts raporDuzeni)
                             · 495: formul.ts (saf) — FORMÜL: sayı alanı / sütun / test değeri [Ad]larla hesaplanır (eval yok); formulUygula motor, belge,
+                            552: boşluksuz ad parantezsiz + baştaki "Ad =" atılır ("RCa = 480/RCd"); kurucu formulDuzelt'le [Ad] biçiminde saklar;
                             saha ortak; formulDenet kurucuda; Excel ve fotoğraftan okumaya girmez · blok "metin" serbest metin
                             · 492: kunye.ts (saf) — raporun künyesi denetçinin değiştirdiğiyle (cevaplar.kunye); formatın gorunum.kilitli bilgisi
                             (başlangıç SGK, İSG-KATİP) değişmez, sunucu reddeder (kunyeKilitHatalari); saha ekranı, belge, gözden geçirme aynı işlevden
@@ -165,6 +166,8 @@ pkproje/
                             (Bakanlık işareti / üst-alt başlık kalkar; cihaz, ekipman, kayıttan bölüm parça olmaz), parcaKopyasi (yeni kimlik)
                             · 493 GERİ AL / YİNELE: gecmis.ts (saf; adım, geri al, yinele, kısayol — en çok 100 adım) → FormatKurucu araç çubuğu
                             "Taslak araçları" (Ctrl+Z / Ctrl+Y; yazı alanında yok)
+                            · 553 S.A.Y FORMAT YAPICIDA: say-kurucu.ts (saf: formatHaritasi, formatIslemleri, FORMAT_ARACI "formati_duzenle") · FormatKurucu
+                            sayFormatBagla (say/ui/baglam.ts) · say/server/say.ts harita yalnız kurucu adresi + formatDegistirir + taslak · Kâğıt "formül" tuşu (552)
                             · 471 SÜRÜM SAYFASI: fark.ts (önceki sürüme göre değişenler, saf) · ui/SurumOnizleme.tsx (Belge ↔ Saha) · rapor sayısı
                             raporlar/server/format-baglanti.ts formatRaporSayilari
   src/modules/planlar/      PLANLAR (2026-10-04, 309–310; modül 13): plan + plan ekibi (göç 0023; proje no sunucuda, değişmez; künye kayıttan) ·

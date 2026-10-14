@@ -22,6 +22,9 @@ import type { SayEkDosyasi } from "./ek.ts";
 import { sohbetGecmisi, sohbetOneriDurumu, sohbetTemizle, sohbetYaz, type SohbetBekleyen, type SohbetIletisi } from "../../../server/yz/sohbet.ts";
 import { raporSayBilgisi } from "../../raporlar/server/say-baglanti.ts";
 import { raporHaritasi } from "../rapor-haritasi.ts";
+import { FormatTanimi } from "../../../format/tanim.ts";
+import { FORMAT_ARACI, formatHaritasi } from "../../rapor-format/say-kurucu.ts";
+import { formatAyrintisi, formatDegistirir } from "../../rapor-format/server/formatlar.ts";
 import type { Kisi } from "../../anasayfa/server/anasayfa.ts";
 import { menuTakip } from "../../anasayfa/server/takip.ts";
 import { MODULLER } from "../../moduller.ts";
@@ -154,11 +157,14 @@ export async function sayOneri(db: Sorgulayici, id: string, durum: "uygulandi" |
   return UUID.test(id) && sohbetOneriDurumu(db, id, durum);
 }
 
-export interface SaySorHazir { durum: "hazir"; istek: OkumaIstegi; anahtar: string; model: YzModel; ay: string; ust: number; yer: string; rapor: string | null }
+export interface SaySorHazir { durum: "hazir"; istek: OkumaIstegi; anahtar: string; model: YzModel; ay: string; ust: number; yer: string; rapor: string | null;
+  /** 553: harita gönderilen format taslağı (komut yalnız o zaman döner) */
+  format?: string | null }
 
 /** serbest soru, adım 1 (işlem içinde): kapı, soru, ayırma (sınır doluysa soru yazılmaz), soru geçmişe, istek gövdesi */
 export async function saySorHazirla(db: Sorgulayici, kim: Kisi, soru: string, yol: string, simdi = new Date(), raporNo: string | null = null,
-  canli: { id: string; cevaplar: unknown; ekipman?: unknown } | null = null, ekler: readonly SayEkDosyasi[] = []): Promise<SaySorHazir | { durum: "red"; neden: string }> {
+  canli: { id: string; cevaplar: unknown; ekipman?: unknown } | null = null, ekler: readonly SayEkDosyasi[] = [],
+  kurucu: { id: string; tanim: unknown } | null = null): Promise<SaySorHazir | { durum: "red"; neden: string }> {
   /* 522: yalnız ek gönderildiyse soru kendiliğinden ("Eki inceler misin?") */
   const metin = soru.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "").trim() || (ekler.length ? (ekler.length === 1 ? "Eki inceler misin?" : "Ekleri inceler misin?") : "");
   if (!metin) return { durum: "red", neden: "Sorunuzu yazın." };
@@ -183,24 +189,33 @@ export async function saySorHazirla(db: Sorgulayici, kim: Kisi, soru: string, yo
     const b = await raporSayBilgisi(db, kim, canli.id);
     rapor = b ? raporHaritasi(b.tanim, b.turAd, { cevaplar: canli.cevaplar, ekipman: canli.ekipman ?? {} }) : null;
   }
+  /* 553: format yapıcıda açık TASLAĞIN haritası — yalnız adres o taslağın kurucusuysa, kişi formatı değiştirebiliyorsa, taslak bu firmanınsa ve
+     ekranın gönderdiği tanım şemaya uyuyorsa; harita varsa formati_duzenle aracı gider (değişikliği ekran yapar, Kaydet kişide) */
+  let format: string | null = null;
+  const kurucuYolu = /^\/ekipman-turleri\/[0-9a-f-]{36}\/sablon\/([0-9a-f-]{36})\/kurucu$/.exec(yol.split(/[?#]/)[0]);
+  if (kurucu && UUID.test(kurucu.id) && kurucuYolu?.[1] === kurucu.id && formatDegistirir(kim)) {
+    const f = await formatAyrintisi(db, kim, kurucu.id), g = FormatTanimi.safeParse(kurucu.tanim);
+    if (f && f.durum === "taslak" && g.success) format = formatHaritasi(g.data);
+  }
   const raporEki = rapor && canli ? { rapor: canli.id } : {};
   await sohbetYaz(db, { kim: "ben", metin, yer: s.yer, ek: ekler.length || rapor ? { ...raporEki, ...(ekler.length ? { ekler: ekler.map((e) => e.ad) } : {}) } : null });
-  const istek = sayIstegi({ model: k.model, kilavuz: SAY_KILAVUZU, baglam: { roller: kim.roller.map((r) => ROL_ADI[r]), yer: s.yer, yardim: s.yardim, bekleyen, rapor }, gecmis, soru: metin,
-    ekler: ekler.map((e) => e.icerik) });
-  return { durum: "hazir", istek, anahtar, model: k.model, ay, ust, yer: s.yer, rapor: rapor && canli ? canli.id : null };
+  const istek = sayIstegi({ model: k.model, kilavuz: SAY_KILAVUZU, baglam: { roller: kim.roller.map((r) => ROL_ADI[r]), yer: s.yer, yardim: s.yardim, bekleyen, rapor, format },
+    gecmis, soru: metin, ekler: ekler.map((e) => e.icerik), formatAraci: [FORMAT_ARACI] });
+  return { durum: "hazir", istek, anahtar, model: k.model, ay, ust, yer: s.yer, rapor: rapor && canli ? canli.id : null, format: format && kurucu ? kurucu.id : null };
 }
 
 /** serbest soru, adım 2 (kendi işleminde): cevap geçmişe; ayırma gerçek maliyetle kapanır, mesaj sayılır */
-export async function saySorKaydet(db: Sorgulayici, h: Pick<SaySorHazir, "model" | "ay" | "ust" | "yer"> & { rapor?: string | null }, govde: unknown): Promise<SayYaniti> {
+export async function saySorKaydet(db: Sorgulayici, h: Pick<SaySorHazir, "model" | "ay" | "ust" | "yer"> & { rapor?: string | null; format?: string | null }, govde: unknown): Promise<SayYaniti> {
   const c = sayYanitiCoz(govde);
   await yzSohbetKapat(db, { ay: h.ay, ust: h.ust, maliyet: maliyetHesapla(h.model, c.giris, c.cikis) + c.arama * ARAMA_MALIYETI });
   /* 550: komutlar yalnız rapordayken (araçlar yalnız o zaman gider) — metin yoksa ne yapılacağı yazılır */
-  const komutlar = h.rapor ? c.komutlar : [];
-  const yapilan = komutlar.map((k) => (k.tur === "yaz" ? `${k.girisler.length} giriş yapıyorum` : k.tur === "oku" ? "fotoğrafları okuyorum" : "son girişi geri alıyorum"));
+  const komutlar = c.komutlar.filter((k) => (k.tur === "format" ? !!h.format : !!h.rapor));
+  const yapilan = komutlar.map((k) => (k.tur === "yaz" ? `${k.girisler.length} giriş yapıyorum` : k.tur === "oku" ? "fotoğrafları okuyorum"
+    : k.tur === "format" ? `formatta ${k.islemler.length} değişiklik yapıyorum` : "son girişi geri alıyorum"));
   const metin = c.durum === "ret" ? (c.metin || "Bu isteğe cevap veremiyorum.")
     : !c.metin ? (yapilan.length ? `${yapilan.join(", ")}.` : "Cevap boş geldi; isteğinizi başka türlü yazmayı deneyin.")
     : c.durum === "kesik" ? `${c.metin} …\n\n(Cevap uzunluk sınırında kesildi; devamını isteyebilirsiniz.)` : c.metin;
-  await sohbetYaz(db, { kim: "say", metin, yer: h.yer, ek: h.rapor ? { rapor: h.rapor } : null });
+  await sohbetYaz(db, { kim: "say", metin, yer: h.yer, ek: h.rapor ? { rapor: h.rapor } : h.format ? { format: h.format } : null });
   return { durum: "tamam", iletiler: await sohbetGecmisi(db, 2), ...(komutlar.length ? { komutlar } : {}) };
 }
 

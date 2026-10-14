@@ -14,7 +14,8 @@ export interface SohbetEkAdi { ad: string; boyut: number; tur: "foto" | "pdf" | 
 /** 542: S.A.Y'ın rapora yaptığı iş (ne istendi, dolu kalan alan sayısı) — "Geri al" / "Dolu alanları da değiştir" yalnız o sayfada, işi yapan ekranda */
 export interface SohbetIslemi { istek: string; dolu: number }
 /** rapor: iletinin sorulduğu rapor (kimlik — "Git" ve "Uygula" yalnız o rapor açıkken) */
-export interface SohbetEki { bekleyen?: SohbetBekleyen[]; eksik?: SohbetEksik[]; oneri?: SohbetOnerisi; rapor?: string; ekler?: SohbetEkAdi[]; islem?: SohbetIslemi }
+/** format (553): iletinin sorulduğu format taslağı (kimlik — "Geri al" yalnız o taslak açıkken) */
+export interface SohbetEki { bekleyen?: SohbetBekleyen[]; eksik?: SohbetEksik[]; oneri?: SohbetOnerisi; rapor?: string; format?: string; ekler?: SohbetEkAdi[]; islem?: SohbetIslemi }
 export interface SohbetIletisi { id: string; kim: "ben" | "say"; metin: string; yer: string; ek: SohbetEki | null; zaman: string }
 
 export const GECMIS_ADET = 100;

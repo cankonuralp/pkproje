@@ -256,6 +256,22 @@ const yzTaklit = createServer((istek, yanit) => {
       /* 384: bağlamda açık raporun özeti varsa söyler (uçtan uca: rapor ekranındaki serbest soru özeti taşıyor mu) */
       const baglam = Array.isArray(g.system) ? String((g.system[1] as { text?: unknown } | undefined)?.text ?? "") : "";
       const raporlu = baglam.includes("Açık rapor");
+      /* 553: format yapıcıda "<tablo adı> tablosuna <ad> sütunu ekle, formül <formül>" → haritadaki bölüm kimliğiyle formati_duzenle (araç / harita yoksa ret) */
+      const formatIstegi = /^(.+?) tablosuna (\S+) sütunu ekle, formül (.+)$/.exec(son.trim());
+      if (formatIstegi) {
+        const bolum = new RegExp(`^## (\\S+) · ölçüm tablosu · ${formatIstegi[1].replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "m").exec(baglam)?.[1];
+        const araclar = (g as { tools?: { name?: string }[] }).tools ?? [];
+        if (!baglam.includes("Açık format taslağı") || !bolum || !araclar.some((a) => a.name === "formati_duzenle")) {
+          yanit.writeHead(400, { "content-type": "application/json" }).end(JSON.stringify({ type: "error", error: { type: "invalid_request_error", message: "taklit: format haritası ya da formati_duzenle aracı yok" } }));
+          return;
+        }
+        yanit.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({
+          content: [{ type: "text", text: `**${formatIstegi[2]}** sütununu ekledim.` },
+            { type: "tool_use", id: "taklit_2", name: "formati_duzenle", input: { islemler: [{ islem: "oge_ekle", bolum, ad: formatIstegi[2], formul: formatIstegi[3] }] } }],
+          stop_reason: "tool_use", usage: { input_tokens: 6000, output_tokens: 70 },
+        }));
+        return;
+      }
       /* 550: rapordayken "<alan adı> alanına <değer> yaz" → haritadaki yer kimliğiyle rapora_yaz aracı (araçlar istekte yoksa ret — taklit denetler) */
       const yazIstegi = /^(.+?) alanına (.+?) yaz$/.exec(son.trim());
       if (raporlu && yazIstegi) {

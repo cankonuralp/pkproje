@@ -53,6 +53,27 @@ export interface SayRaporBagi {
   yaz: (girisler: readonly { yer: string; deger: string }[]) => { sayi: number; gecersiz: string[]; geriAl: SayGeriAl };
 }
 
+/* ── 553 FORMAT YAPICI (reisim 2026-10-14: "konuşarak ilgili formatı yapabiliyo olalım"): taslak açıkken format yapıcı kendini bağlar — S.A.Y
+   taslağı (kaydedilmemiş değişiklikler dahil) gönderir, Haiku'nun "formati_duzenle" işlemlerini taslağa uygular (format yapıcının geçmişine bir
+   adım; Geri al iletinin altında). Kaydet / Yayınla kişide. */
+export interface SayFormatBagi {
+  /** taslağın kimliği (rapor_format) */
+  id: string;
+  /** canlı taslak (kaydedilmemiş değişiklikler dahil) */
+  tanim: () => unknown;
+  /** işlemleri uygular (rapor-format/say-kurucu.ts formatIslemleri) — dönen: yapılan / yapılamayan, geri al */
+  uygula: (islemler: readonly Record<string, unknown>[]) => { yapilan: string[]; gecersiz: string[]; geriAl: SayGeriAl };
+}
+let formatBag: SayFormatBagi | null = null;
+const formatDinleyen = new Set<() => void>();
+export function sayFormatBagla(b: SayFormatBagi): () => void {
+  formatBag = b; for (const d of formatDinleyen) d();
+  return () => { if (formatBag === b) { formatBag = null; for (const d of formatDinleyen) d(); } };
+}
+export function useSayFormatBagi(): SayFormatBagi | null {
+  return useSyncExternalStore((d) => { formatDinleyen.add(d); return () => { formatDinleyen.delete(d); }; }, () => formatBag, () => null);
+}
+
 let bag: SayRaporBagi | null = null;
 const dinleyenler = new Set<() => void>();
 const duyur = () => { for (const d of dinleyenler) d(); };

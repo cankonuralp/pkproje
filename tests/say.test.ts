@@ -297,3 +297,46 @@ test("522 ek: fotoğraf ve PDF soruyla gider, adları gitmez; geçmişte adı / 
   /* eksiz boş soru yine red */
   assert.deepEqual(await ile(A, FA.plan, (db) => saySorHazirla(db, FA.plan, "", "/")), { durum: "red", neden: "Sorunuzu yazın." });
 });
+
+/* 553 (reisim 2026-10-14: "konuşarak ilgili formatı yapabiliyo olalım"): format yapıcıda S.A.Y taslağın haritasını alır — yalnız adres o taslağın
+   kurucusuysa, kişi formatı DEĞİŞTİREBİLİYORSA (Ekipman türleri "yaz") ve taslak hâlâ taslaksa; Haiku'nun formati_duzenle çağrısı "format" komutu
+   olur (iletide taslağın kimliği — Geri al o taslakta), harita gönderilmediyse komut dönmez */
+test("553 format yapıcı: harita yalnız kurucu adresinde, formatı değiştirebilene, taslakta; format komutu döner", async () => {
+  const { FormatTanimi } = await import("../src/format/tanim.ts");
+  const { SABLONLAR } = await import("../src/format/sablonlar.ts");
+  const tamam = <R extends { durum: string }>(r: R) => { assert.equal(r.durum, "tamam", JSON.stringify(r)); return r as Extract<R, { durum: "tamam" }>; };
+  const f = await ile(A, FA.yon, async (db) => {
+    const tur = (await db.sorgu<{ id: string }>("INSERT INTO ekipman_turu (kod, ad, grup, brans, periyot) VALUES ('RC', 'RC deneme', 'elektrik', 'e', 12) RETURNING id::text")).rows[0].id;
+    const t = tamam(await taslakBaslat(db, FA.yon, tur, "sablon:ZPKR02", null));
+    return { tur, taslak: t.id, surum: t.surum };
+  });
+  await yzAyari(A, FA.yon, { sinir: null });
+  const kurucu = { id: f.taslak, tanim: FormatTanimi.parse(SABLONLAR.ZPKR02.tanim) };
+  const yol = `/ekipman-turleri/${f.tur}/sablon/${f.taslak}/kurucu`;
+  const h = await ile(A, FA.yon, (db) => saySorHazirla(db, FA.yon, "Pano sigortaları tablosuna RCa sütunu ekle, formülü 480 / RCd", yol, new Date(), null, null, [], kurucu));
+  if (h.durum !== "hazir") return assert.fail(JSON.stringify(h));
+  assert.equal(h.format, f.taslak);
+  const g = h.istek.govde as { system: { text: string }[]; tools: { name: string }[] };
+  assert.ok(g.system[1].text.includes("Açık format taslağı (format yapıcıda, kaydedilmemiş değişiklikler dahil):"));
+  assert.ok(g.system[1].text.includes("## linye · ölçüm tablosu · Pano sigortaları (linye)"));
+  assert.deepEqual(g.tools.map((t) => t.name), ["formati_duzenle", "web_search"]);
+  const k = await ile(A, FA.yon, (db) => saySorKaydet(db, h, { content: [{ type: "tool_use", name: "formati_duzenle",
+    input: { islemler: [{ islem: "oge_ekle", bolum: "linye", ad: "RCa", formul: "480 / RCd" }] } }], stop_reason: "tool_use", usage: { input_tokens: 9_000, output_tokens: 90 } }));
+  if (k.durum !== "tamam") return assert.fail(JSON.stringify(k));
+  assert.deepEqual(k.komutlar, [{ tur: "format", islemler: [{ islem: "oge_ekle", bolum: "linye", ad: "RCa", formul: "480 / RCd" }] }]);
+  assert.deepEqual([k.iletiler[1].metin, k.iletiler[1].ek], ["formatta 1 değişiklik yapıyorum.", { format: f.taslak }]);
+  /* değiştiremeyen (denetçi: Ekipman türleri "gör"), başka adres, yayımlanmış sürüm: harita ve format aracı yok, komut dönmez */
+  const yok = async (kim: Kisi, y: string) => {
+    const x = await ile(A, kim, (db) => saySorHazirla(db, kim, "Soru", y, new Date(), null, null, [], kurucu));
+    if (x.durum !== "hazir") return assert.fail(JSON.stringify(x));
+    assert.ok(!(x.istek.govde as { system: { text: string }[] }).system[1].text.includes("Açık format taslağı"), `${kim.roller[0]} ${y}`);
+    assert.deepEqual((x.istek.govde as { tools?: { name: string }[] }).tools?.map((t) => t.name), ["web_search"]);
+    const z = await ile(A, kim, (db) => saySorKaydet(db, x, { content: [{ type: "tool_use", name: "formati_duzenle", input: { islemler: [{ islem: "bolum_sil", bolum: "linye" }] } }],
+      stop_reason: "tool_use", usage: { input_tokens: 10, output_tokens: 1 } }));
+    assert.ok(z.durum === "tamam" && !z.komutlar, "harita yoksa komut yok");
+  };
+  await yok(FA.den, yol);
+  await yok(FA.yon, `/ekipman-turleri/${f.tur}`);
+  tamam(await ile(A, FA.yon, (db) => yayinla(db, FA.yon, f.taslak, f.surum, "")));
+  await yok(FA.yon, yol);
+});

@@ -162,7 +162,8 @@ function FormulAlani({ k, deger, adlar, kendi, yaz, tablo = false }: {
   return (
     <div className={stil.formul}>
       <Alan id={id} etiket="Formül (isteğe bağlı — doluysa sahada kendiliğinden hesaplanır)" genis hata={hata ?? undefined}
-        sonuc={!hata ? (tablo ? "Aynı satırın sayı sütunlarıyla; örn. ([İlk kalınlık] − [Ölçülen]) / [İlk kalınlık] × 100" : "Formatın sayı alanları ve test değerleriyle; örn. 1,25 × [Kapasite]") : undefined}>
+        sonuc={!hata ? (tablo ? "Aynı satırın sayı sütunlarıyla; örn. RCa = 480 / RCd ya da ([İlk kalınlık] − [Ölçülen]) / [İlk kalınlık] × 100 (boşluklu ad köşeli parantezle)"
+          : "Formatın sayı alanları ve test değerleriyle; örn. 1,25 × Kapasite ya da 1,25 × [Test yükü] (boşluklu ad köşeli parantezle)") : undefined}>
         <Girdi id={id} value={metin} maxLength={FORMUL_EN_UZUN} hata={!!hata} mesajli spellCheck={false} autoComplete="off"
           onChange={(e) => setTaslak(e.target.value)} onBlur={() => { if (taslak === null) return; yaz({ formul: taslak }); setTaslak(null); }} />
       </Alan>

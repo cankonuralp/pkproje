@@ -19,7 +19,9 @@
    gibi", "S.A.Y asistanda öneri soruları olarak sadece fotoğrafları oku ve gir kalsın başka bir şey olmasın"): tek hazır tuş "Fotoğrafları oku ve
    gir" (rapor açıkken çalışır); öteki hazır sorular kalktı. Her yazılan Haiku'ya gider (yalnız "geri al" ve bekleyen "Değiştireyim mi?"ye "evet"
    ekranda); cevap Markdown çizilir (ui/Markdown.tsx — HTML işlenmez). Rapordayken Haiku'nun istediği girişler (rapora_yaz) EKRANDA uygulanır:
-   işaretli, "Geri al" iletinin altında; kaydetmek kişide. Yazı kutusu çok satırlı: Enter gönderir, Shift+Enter yeni satır. */
+   işaretli, "Geri al" iletinin altında; kaydetmek kişide. Yazı kutusu çok satırlı: Enter gönderir, Shift+Enter yeni satır.
+   553 (reisim 2026-10-14: "konuşarak ilgili formatı yapabiliyo olalım"): format yapıcıdayken taslak gider (baglam.ts useSayFormatBagi); Haiku'nun
+   "formati_duzenle" işlemleri taslağa uygulanır, ne yapıldığı bildirimde, "Geri al" iletinin altında; Kaydet / Yayınla kişide. */
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from "react";
@@ -35,7 +37,7 @@ import type { SayDurum, SayYaniti } from "../server/say";
 import type { SayKomutu } from "../../../server/yz/say";
 import { Markdown } from "./Markdown";
 import { istekTani, type Istek } from "../istek";
-import { useSayRaporBagi, type SayGeriAl, type SayRaporBagi } from "./baglam";
+import { useSayFormatBagi, useSayRaporBagi, type SayGeriAl, type SayRaporBagi } from "./baglam";
 import { sayDurumEylemi, sayEkliSorEylemi, sayGecmisEylemi, sayOneriEylemi, sayRaporEylemi, saySorEylemi, sayTemizleEylemi } from "./eylemler";
 import stil from "./say.module.css";
 
@@ -148,6 +150,7 @@ export function SayAsistan() {
   const bildir = useBildir();
   const onayla = useOnayla();
   const rb = useSayRaporBagi();
+  const fb = useSayFormatBagi();
   const [durum, setDurum] = useState<SayDurum | null>(null);
   const [acik, setAcik] = useState(false);
   const [iletiler, setIletiler] = useState<SohbetIletisi[] | null>(null);
@@ -248,7 +251,8 @@ export function SayAsistan() {
   };
   /* ── 542: S.A.Y rapora girer — iş ekranda (rb), cevabı sunucu sayılardan kurar (geçmişe yazılır) ── */
   const islemKaydet = async (girdi: Record<string, unknown>, eylem?: IslemEylemi) => {
-    if (!rb) return;
+    /* 553: format yapıcıda (rapor yok) geri alma yalnız bildirimle — geçmişe rapor işi yazılmaz */
+    if (!rb) { if (girdi.istek === "geri") bildir(Number(girdi.sayi) ? "S.A.Y'ın değişikliği geri alındı (taslak)." : "Geri alınacak değişiklik kalmadı (taslak sonradan değişmiş)."); return; }
     const y = await sayRaporEylemi({ hizli: "islem", rapor: { id: rb.id, no: rb.no }, islem: girdi });
     if (y.durum === "tamam" && eylem && (eylem.geriAl || eylem.ustune)) {
       const m = y.iletiler.find((x) => x.kim === "say");
@@ -278,8 +282,18 @@ export function SayAsistan() {
   };
   /** 550: Haiku'nun rapora istediği iş (rapora_yaz / fotograflari_oku / geri_al) — ekranda; "Geri al" S.A.Y'ın iletisinin altında */
   const komutlariYap = async (komutlar: readonly SayKomutu[] | undefined, mesaj: string | null) => {
-    if (!rb || !komutlar?.length) return;
+    if (!komutlar?.length) return;
     for (const k of komutlar) {
+      /* 553: format yapıcıda taslağa */
+      if (k.tur === "format") {
+        if (!fb) continue;
+        const r = fb.uygula(k.islemler);
+        if (r.yapilan.length && mesaj) setIslemler((x) => new Map(x).set(mesaj, { geriAl: r.geriAl }));
+        bildir([r.yapilan.length ? `Format taslağında: ${r.yapilan.slice(0, 4).join(" · ")}${r.yapilan.length > 4 ? ` ve ${r.yapilan.length - 4} değişiklik daha` : ""}. Kaydetmeyi unutmayın.` : "",
+          r.gecersiz.length ? `Yapılamayan: ${r.gecersiz.slice(0, 3).join(" · ")}${r.gecersiz.length > 3 ? " …" : ""}` : ""].filter(Boolean).join(" "));
+        continue;
+      }
+      if (!rb) continue;
       if (k.tur === "yaz") {
         const r = rb.yaz(k.girisler);
         if (r.sayi && mesaj) setIslemler((x) => new Map(x).set(mesaj, { geriAl: r.geriAl }));
@@ -381,14 +395,16 @@ export function SayAsistan() {
     setBekliyor(true); setMenu(false);
     try {
       const canli = rb ? { id: rb.id, cevaplar: rb.cevaplar(), ekipman: rb.ekipman() } : undefined;
+      const kurucu = fb ? { id: fb.id, tanim: fb.tanim() } : undefined;
       let y: SayYaniti;
       if (ekler.length) {
         const fd = new FormData();
         fd.set("soru", v); fd.set("yol", yol);
         if (rb) { fd.set("raporNo", rb.no); fd.set("canli", JSON.stringify(canli)); }
+        if (kurucu) fd.set("kurucu", JSON.stringify(kurucu));
         for (const x of ekler) fd.append("ek", x.dosya, x.ad);
         y = await sayEkliSorEylemi(fd);
-      } else y = await saySorEylemi(v, yol, rb?.no, canli);
+      } else y = await saySorEylemi(v, yol, rb?.no, canli, kurucu);
       if (y.durum === "tamam") {
         setSoru("");
         for (const x of ekler) if (x.url) URL.revokeObjectURL(x.url);
@@ -444,7 +460,7 @@ export function SayAsistan() {
             <span className={stil.avatar}><Ikon ad="sparkles" /></span>
             <div className={stil.kimlik}>
               <h2 id="say-baslik">S.A.Y</h2>
-              <p className={stil.altYazi}>{raporda ? "Bu rapordayım · ne yazayım?" : "Claude Haiku 5.5 · her konuda sorun"}</p>
+              <p className={stil.altYazi}>{raporda ? "Bu rapordayım · ne yazayım?" : fb ? "Format yapıcıdayım · ne ekleyeyim?" : "Claude Haiku 5.5 · her konuda sorun"}</p>
             </div>
             {!!iletiler?.length && (
               <button className={stil.basTus} type="button" onClick={() => void temizle()} aria-label="Sohbeti temizle" title="Sohbeti temizle"><Ikon ad="trash-2" /></button>
@@ -458,12 +474,13 @@ export function SayAsistan() {
             {iletiler && !iletiler.length && (
               <p className={stil.bos}>{raporda
                 ? "Rapora ne yazmamı istediğinizi yazın (ör. “1–3. satırların Icu değerine 6 gir”) ya da fotoğrafı bölümüne ekleyip “Fotoğrafları oku ve gir” deyin. Kaydetmek sizde."
+                : fb ? "Formata ne eklememi istediğinizi yazın (ör. “Pano sigortaları tablosuna RCa sütunu ekle, formülü 480 / RCd”). Değişiklik taslakta; Kaydet ve Yayınla sizde."
                 : "Merhaba! Her konuda sorabilirsiniz."}</p>
             )}
             <ol className={stil.liste} aria-live="polite" aria-busy={bekliyor || !iletiler || undefined}>
               {(iletiler ?? []).map((m, i, l) => (
                 <IletiYeri key={m.id} m={m} onceki={l[i - 1]} rb={rb} git={git} uygula={uygula} vazgec={vazgec}
-                  eylem={rb && m.ek?.rapor === rb.id ? islemler.get(m.id) : undefined} eylemYap={eylemYap} />
+                  eylem={(rb && m.ek?.rapor === rb.id) || (fb && m.ek?.format === fb.id) ? islemler.get(m.id) : undefined} eylemYap={eylemYap} />
               ))}
             </ol>
             {bolumSor && rb && (

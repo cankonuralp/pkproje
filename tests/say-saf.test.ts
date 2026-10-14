@@ -93,3 +93,17 @@ test("rapor girdisi: yalnız işlem; kimlik ve numara denetlenir; eski hızlı s
     { hizli: "islem", rapor: R }, null, "metin",
   ]) assert.equal(raporGirdisi(kotu), null, JSON.stringify(kotu));
 });
+
+/* 553 (reisim 2026-10-14: "konuşarak ilgili formatı yapabiliyo olalım"): format yapıcıdayken bağlamda format haritası ve modülün aracı
+   (formati_duzenle); cevaptaki çağrı "format" komutu olur — işlemler nesne, sayı ve boy sınırlı (anlamı ekran denetler) */
+test("553 format: harita bağlamda, araç yalnız haritayla; formati_duzenle çağrısı format komutu (nesneler, sınırlı)", async () => {
+  const { FORMAT_ARACI } = await import("../src/modules/rapor-format/say-kurucu.ts");
+  const g = sayIstegi({ model: "haiku", kilavuz: [], baglam: { roller: [], yer: "Ekipman türleri", yardim: null, bekleyen: [], format: "FORMAT HARİTASI" }, gecmis: [], soru: "x",
+    formatAraci: [FORMAT_ARACI] }).govde as { system: { text: string }[]; tools: { name: string }[] };
+  assert.ok(g.system[1].text.includes("Açık format taslağı (format yapıcıda, kaydedilmemiş değişiklikler dahil):\nFORMAT HARİTASI"));
+  assert.deepEqual(g.tools.map((t) => t.name), ["formati_duzenle", "web_search"]);
+  const yok = sayIstegi({ model: "haiku", kilavuz: [], baglam: { roller: [], yer: "Planlar", yardim: null, bekleyen: [] }, gecmis: [], soru: "x", formatAraci: [FORMAT_ARACI] }).govde as { tools: { name: string }[] };
+  assert.deepEqual(yok.tools.map((t) => t.name), ["web_search"], "harita yoksa format aracı gitmez");
+  const c = sayYanitiCoz({ content: [{ type: "tool_use", name: "formati_duzenle", input: { islemler: [{ islem: "oge_ekle", bolum: "linye", ad: "RCa", formul: "480/RCd" }, "x", [1], { islem: "y".repeat(5000) }] } }] });
+  assert.deepEqual(c.komutlar, [{ tur: "format", islemler: [{ islem: "oge_ekle", bolum: "linye", ad: "RCa", formul: "480/RCd" }] }]);
+});

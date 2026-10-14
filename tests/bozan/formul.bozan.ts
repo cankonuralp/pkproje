@@ -3,7 +3,8 @@
    · Motor formülü uygulamasaydı formüllü değerin sınırı hiç değerlendirilmez — 1,5 × çalışma basıncı tutmayan kap "Uygun" kalırdı.
    · Formüllü değer eksik sayılsaydı denetçinin yazamadığı alan için rapor onaya gidemezdi.
    · Yüzde işareti yok sayılsaydı "50%" 50 olurdu (sonuç 100 kat yanlış).
-   · 495 düzeltmesi: formüle ekleme boşluksuz birleşseydi işaretten sonra eklenen ad bitişik kalırdı ("[Iz] −[Ib]" — deneme makinesi b51af0f). */
+   · 495 düzeltmesi: formüle ekleme boşluksuz birleşseydi işaretten sonra eklenen ad bitişik kalırdı ("[Iz] −[Ib]" — deneme makinesi b51af0f).
+   · 552: baştaki "Ad =" atılmasaydı reisim'in yazdığı "RCa = 480/RCd" hesaplanmazdı. */
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -58,4 +59,10 @@ test("4. formüle ekleme boşluksuz birleşince işaretten sonraki ad bitişik k
   let f = "", i = 0;
   for (const x of ["[Iz]", "−", "[Ib]"]) { const r = m.formuleEkle(f, i, i, x); f = r.formul.trim(); i = Math.min(r.imlec, f.length); }
   assert.notEqual(f, "[Iz] − [Ib]", "bozuk: boşluk kayboldu");
+});
+
+/* 552: "RCa = 480/RCd" yazıldığı gibi */
+test("5. baştaki \"Ad =\" atılmayınca \"RCa = 480/RCd\" hesaplanmaz (kilidin koruduğu açık)", async () => {
+  const m = await bozuk<Formul>("src/format/formul.ts", 'const k = ifade.indexOf("="); return k >= 0 ? ifade.slice(k + 1) : ifade;', "return ifade;");
+  assert.equal(m.formulHesapla("RCa = 480/RCd", (a) => (a === "RCd" ? 4 : undefined)), null, "bozuk: yazıldığı gibi hesaplanmadı");
 });

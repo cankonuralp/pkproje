@@ -157,3 +157,30 @@ test("kurucu: formüle ad / işaret ekleme tek boşlukla birleşir, kırpılmı�
   assert.deepEqual(formuleEkle("[A] + [C]", 6, 6, "[B]"), { formul: "[A] + [B] [C]", imlec: 9 });
   assert.deepEqual(formuleEkle("[A]", 0, 3, "[B]"), { formul: "[B]", imlec: 3 }, "seçili parça yerine");
 });
+
+/* 552 (reisim 2026-10-14: "elektrikte hesaplamalarda olsun … format yapıcıda formül kısmı olsun mesela (RCa=480/RCd)"): yazıldığı gibi — boşluksuz
+   ad parantezsiz, baştaki "Ad =" atılır; kurucu kaydederken köşeli parantezli biçime çevirir (ad değişince formüldeki adı da değişir) */
+test("552: \"RCa = 480/RCd\" yazıldığı gibi hesaplanır; kaydedilince \"480 ÷ [RCd]\"; boşluklu ad köşeli parantezle", async () => {
+  const { formulDuzelt } = await import("../src/format/formul.ts");
+  assert.equal(h("RCa = 480/RCd", { RCd: 4 }), 120);
+  assert.equal(h("= 2 × Ib + 1", { Ib: 3 }), 7);
+  assert.equal(formulDenet("RCa = 480/RCd", ["RCd"], "RCa"), null);
+  assert.ok(formulDenet("480 / RCD testi", ["RCD testi IΔ"], "x")!.includes("boşluklu ad köşeli parantezle yazılır: [RCD testi…]"), "boşluklu ad parantezsiz anlaşılmaz");
+  assert.match(formulDenet("a = b = c", ["b", "c"], "a")!, /“=” anlaşılmadı/);
+  assert.equal(formulDuzelt("RCa = 480/RCd"), "480 ÷ [RCd]");
+  assert.equal(formulDuzelt("2 * (Ib - 1)"), "2 × ([Ib] − 1)");
+  assert.equal(formulDuzelt("-3 + 1,5"), "−3 + 1,5");
+  assert.equal(formulDuzelt("([İlk kalınlık] − [Ölçülen]) / [İlk kalınlık] × 100"), "([İlk kalınlık] − [Ölçülen]) ÷ [İlk kalınlık] × 100");
+  assert.equal(formulDuzelt("2 $ 3"), "2 $ 3", "anlaşılmayan olduğu gibi (kurucu hatayı gösterir)");
+  /* kurucu: tablo sütununa yazılınca köşeli parantezli; RCd'nin adı değişince formül de */
+  const t = FormatTanimi.parse({ ...SABLONLAR.ZPKR02.tanim, bolumler: [...SABLONLAR.ZPKR02.tanim.bolumler, { id: "rc", ad: "RC ölçümü", blok: "olcum", satir: "ekle",
+    sutunlar: [{ id: "rcd", ad: "RCd", giris: "sayi" }, { id: "rca", ad: "RCa", giris: "sayi" }] }] });
+  const i = t.bolumler.findIndex((b) => b.id === "rc");
+  const y = ogeYaz(t, i, "rca", { formul: "RCa = 480/RCd" });
+  const s = (y.bolumler[i] as BolumOf<"olcum">).sutunlar.find((x) => x.id === "rca")!;
+  assert.equal(s.formul, "480 ÷ [RCd]");
+  const z = ogeYaz(y, i, "rcd", { ad: "RC direnci" });
+  assert.equal((z.bolumler[i] as BolumOf<"olcum">).sutunlar.find((x) => x.id === "rca")!.formul, "480 ÷ [RC direnci]");
+  const u = formulUygula(z, Cevaplar.parse({ tablo: { rc: [{ rcd: "4" }] } }));
+  assert.equal(u.tablo.rc[0].rca, "120");
+});
