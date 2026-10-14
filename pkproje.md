@@ -2483,6 +2483,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-14 (551): **547–550 YAYINDA** — main 38aad66, göç 0090 Supabase'te (91 göç; yz_sohbet_metin_uzunluk ≤ 100 000). Deneme makinesi ilk koşuda
+  13 / 13 yeşil (veritabanlı 752 test, uçtan uca üç genişlik + site taraması — "hücreden taşan" bulgusu yok); canlı sağlık tamam, duman 11/11, hata
+  kaydı yok. Oturum isteyen ekranlara gözle bakılamadı (giriş reisim'in). Hata listesi m79–m84 yayında.
 - 2026-10-14 (547–550): **SUNUM 546 UYGULANDI — KAYMALAR, TABLO, PLANDAN SEÇ, SERBEST S.A.Y** (reisim: *"telefonda yana kaydırsın kart falan olmaz
   kullanışlı değil masa üstünde de ekrana sığcak şekilde olsun , tablo tablodur kart olmaz , diğer önerilerini kabul ediyorum ama S.A.Y asistanda öneri
   soruları olarak sadece fotoğrafları oku ve gir kalsın başka bir şey olmasın. devam et."* — K4 değişti: telefonda da TABLO, yana kayar; K1–K3, K5–K8
