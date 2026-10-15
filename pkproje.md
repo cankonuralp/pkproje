@@ -2483,6 +2483,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-15 (562): **561 YAYINDA** — 552b486'nın ilk koşusunda uçtan uca 12/12 geçti, denetimde 561'in veritabanı kilidinin son adımı düştü (ikinci
+  deneme firmasında yapay zekâ anahtarı yok — testin kurgusu; 130902b başka firma denetimini raporSayDurumu ile yapar); 130902b 13/13 yeşil; main
+  130902b, göç yok (91 göç); canlı sağlık tamam (sürüm 130902b), duman 11/11, Vercel'de yeni çalışma hatası yok (tek kayıt yayından önceki dış duyuru
+  zaman aşımı). Oturum isteyen ekranlar (rapor, S.A.Y paneli) canlıda gözle denenmedi — giriş reisim'in (ölçemedim); aynı akış uçtan uca koştu.
 - 2026-10-15 (561): **S.A.Y AÇIK RAPORU HER DURUMDA BİLİR; PANEL ÜSTTEN TUTULUP KISALTILIR** (reisim, ekran görüntüsüyle: *"rapor teknik yönetici
   onayında olduğu için değiştiremiyordu ama açıkta rapor göremiyorum dedi ayrıca chati yukarıdan tutup aşağıya doğru küçültmeyi yapamadım"*). Neden
   (canlı kayıttan, salt okunur): o iki soru onaydaki raporun sayfasından gitmişti; rapor ekranı S.A.Y'a yalnız düzenlenebilir raporda bağlanıyordu →
