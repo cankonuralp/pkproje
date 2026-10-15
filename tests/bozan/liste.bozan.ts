@@ -68,7 +68,7 @@ const TANIM = {
 };
 
 test("4. sunucu süzgeç durumunu yok sayarsa 'ışıl' araması bütün kişileri döner (kilidin koruduğu açık)", async () => {
-  const m = await bozuk<Liste>("src/server/liste/liste.ts", "const o = listele(t, d, kayitlar);", "const o = listele(t, bas, kayitlar);");
+  const m = await bozuk<Liste>("src/server/liste/liste.ts", "const o = listele(t, d, kayitlar);", "const o = listele(t, yeniDurum(t), kayitlar);");
   const b = m.bellekteListele(TANIM, { ara: "ışıl" }, KISILER);
   assert.equal(b.adet, 45, "bozuk: süzülmedi");
 });
