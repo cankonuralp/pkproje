@@ -21,9 +21,14 @@ import { bugunTr, planAc } from "../src/modules/planlar/server/planlar.ts";
 import { taslakBaslat, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
 import { imzaHazirla, imzaliYukle, raporOlustur } from "../src/modules/raporlar/server/raporlar.ts";
 import { giderKdv, gunEkle } from "../src/modules/muhasebe/sema.ts";
-import { faturaBelgesiVerisi, faturaKarti, faturaKaydet, faturaListesi, gecikenFaturaSayisi, gelirGider, isKarti, isListesi, tahsilatKaydet, type Kisi } from "../src/modules/muhasebe/server/muhasebe.ts";
-import { giderDosyasiGorulur, giderExceliYukle, giderKaydet, giderListesi, giderOdendi, giderSecenekleri, isGiderleri, type GiderBelgesi, type GiderSonra }
-  from "../src/modules/muhasebe/server/giderler.ts";
+import {
+  faturaBelgesiVerisi, faturaKarti, faturaKaydet, faturaListesi, faturaSayfasi, gecikenFaturaSayisi, gelirGider, isKarti, isListesi, isSayfasi, muhasebeOzeti,
+  tahsilatKaydet, type Kisi,
+} from "../src/modules/muhasebe/server/muhasebe.ts";
+import { bekleyenGiderOzeti, giderDosyasiGorulur, giderExceliYukle, giderKaydet, giderListesi, giderOdendi, giderSecenekleri, isGiderleri, type GiderBelgesi,
+  type GiderSonra } from "../src/modules/muhasebe/server/giderler.ts";
+import { faturaTanim, isTanim, musteriSecenekleri } from "../src/modules/muhasebe/liste.ts";
+import { listele, yeniDurum } from "../src/components/liste/suzgec.ts";
 import { masrafKarar } from "../src/modules/muhasebe/server/talep-baglanti.ts";
 import { ayarOku, ayarYaz } from "../src/server/ayar/ayar.ts";
 import { testKumesi } from "./yardimci/kume.ts";
@@ -486,4 +491,38 @@ test("fatura kalemleri: tür × fiyat × teklif / teklif dışı başına satır
     { turId: "t2", fiyat: 90000, kaynak: "disi" },
   ] as never, tur);
   assert.deepEqual(k.map((x) => [x.turAd, x.fiyat, x.adet, x.disi]), [["Forklift", 90000, 1, true], ["Hava tankı", 125000, 2, false], ["Hava tankı", 125000, 1, true]]);
+});
+
+/* 566 (reisim 2026-10-15: "sitede donma yaşanabilecek şeyler …" → "elindeki bütün işleri yap"; 09-B3): İşler ve Faturalar bütün kayıtları tarayıcıya
+   indiriyordu — süzgeç sunucuda, ekranla aynı tanımla (liste.ts); Ana sayfa tek okuma + bekleyen masraf tek sayım. */
+test("566 İşler / Faturalar sunucuda sayfalı: ekranın süzgeciyle birebir; şerit ve Ana sayfa özeti listeyle aynı; görmeyene null; başka firma boş", async () => {
+  for (const k of [MUH, YON]) {
+    const isler = (await a(k, (db) => isListesi(db, k)))!, faturalar = (await a(k, (db) => faturaListesi(db, k)))!;
+    const ti = isTanim(musteriSecenekleri(isler)), tf = faturaTanim(musteriSecenekleri(faturalar));
+    for (const d0 of [{}, { secili: ["hazir"] }, { secili: ["gecikti", "kapandi"] }, { ara: "p-" }, { sayfa: 9 }]) {
+      const s = (await a(k, (db) => isSayfasi(db, k, d0)))!;
+      const o = listele(ti, { ...yeniDurum(ti), ...d0 }, isler);
+      assert.deepEqual(s.liste.gorunen, o.gorunen, `işler ${JSON.stringify(d0)}`);
+      assert.deepEqual([s.liste.adet, s.liste.kayitSayisi, s.liste.sayfa], [o.adet, isler.length, o.sayfa]);
+      assert.deepEqual(s.liste.secenekler.musteri, musteriSecenekleri(isler));
+      assert.deepEqual(s.uyari.hazir.map((x) => x.id), isler.filter((x) => x.durum === "hazir").map((x) => x.id), "şerit: faturaya hazır işler");
+    }
+    const f = (await a(k, (db) => faturaSayfasi(db, k, { secili: ["gecikti"] })))!;
+    const of = listele(tf, { ...yeniDurum(tf), secili: ["gecikti"] }, faturalar);
+    assert.deepEqual(f.liste.gorunen, of.gorunen);
+    assert.ok(f.liste.gorunen.length >= 1 && f.liste.gorunen.every((x) => x.durum === "gecikti"));
+    assert.equal(f.uyari.geciken, await a(k, (db) => gecikenFaturaSayisi(db, k)), "şerit: vadesi geçen = menü balonu");
+    assert.deepEqual(await a(k, (db) => muhasebeOzeti(db, k)), f.uyari, "Ana sayfa özeti");
+    const g = (await a(k, (db) => giderListesi(db, k)))!.filter((x) => x.durum === "bekliyor");
+    assert.deepEqual(await a(k, (db) => bekleyenGiderOzeti(db, k)), { sayi: g.length, tutar: g.reduce((n, x) => n + x.tutar, 0) }, "bekleyen masraf");
+  }
+  for (const k of [PLAN, DEN, MEK]) {
+    assert.equal(await a(k, (db) => isSayfasi(db, k, {})), null, k.roller[0]);
+    assert.equal(await a(k, (db) => faturaSayfasi(db, k, {})), null, k.roller[0]);
+    assert.equal(await a(k, (db) => muhasebeOzeti(db, k)), null, k.roller[0]);
+    assert.equal(await a(k, (db) => bekleyenGiderOzeti(db, k)), null, k.roller[0]);
+  }
+  const b = <T,>(is: (db: Sorgulayici) => Promise<T>) => kiraciIcinde(havuz, B, is, { hesapId: YON_B.id });
+  assert.equal((await b((db) => isSayfasi(db, YON_B, {})))!.liste.kayitSayisi, 0, "başka firma");
+  assert.equal((await b((db) => faturaSayfasi(db, YON_B, {})))!.liste.kayitSayisi, 0, "başka firma");
 });

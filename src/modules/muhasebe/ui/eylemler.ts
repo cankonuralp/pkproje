@@ -5,7 +5,8 @@ import { depo } from "../../../server/dosya/depo";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { BelgeHatasi, giderExceliYukle, giderKaydet, giderOdendi, type GiderBelgesi, type GiderSonra } from "../server/giderler";
-import { faturaKaydet, tahsilatKaydet, type Yazma } from "../server/muhasebe";
+import { faturaKaydet, faturaSayfasi, isSayfasi, tahsilatKaydet, type FaturaSatiri, type IsSatiri, type Yazma } from "../server/muhasebe";
+import type { SunucuListe } from "../../../components/liste/suzgec";
 import { bordroGonder, bordroGonderimi, type BordroGonderimi } from "../server/bordro-gonder";
 
 export interface MuhasebeYaniti { tamam?: boolean; id?: string; no?: string; bildirim?: string; hatalar?: Record<string, string>; genel?: string }
@@ -86,4 +87,20 @@ export async function bordroGonderEylemi(form: FormData): Promise<MuhasebeYaniti
   }
   const r = await oturumIslemi(o, (db) => bordroGonder(db, depo(), o, o.kiraci.firmaId, yazi(form.get("ay")), secili, dosyalar));
   return r.durum === "tamam" ? { tamam: true, bildirim: r.bildirim } : r.durum === "gecersiz" ? { hatalar: r.hatalar, genel: r.genel } : { genel: SONUC.yetkisiz };
+}
+
+/** 566: Muhasebe › İşler'in bir sayfası (süzgeç SUNUCUDA — 09-B3). Görme modül işlevinde; süzgeç durumu biçim denetiminden geçer. Göremeyene /
+    oturumsuza null. */
+export async function isSayfasiEylemi(durum: unknown): Promise<SunucuListe<IsSatiri> | null> {
+  if (!(await ayniKoken())) return null;
+  const o = await istekOturumu();
+  if (!o) return null;
+  return (await oturumIslemi(o, (db) => isSayfasi(db, o, durum)))?.liste ?? null;
+}
+/** 566: Muhasebe › Faturalar'ın bir sayfası */
+export async function faturaSayfasiEylemi(durum: unknown): Promise<SunucuListe<FaturaSatiri> | null> {
+  if (!(await ayniKoken())) return null;
+  const o = await istekOturumu();
+  if (!o) return null;
+  return (await oturumIslemi(o, (db) => faturaSayfasi(db, o, durum)))?.liste ?? null;
 }

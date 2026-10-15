@@ -4,7 +4,8 @@
    · Arama kutuları yazılırken istek 300 ms bekler (her harfte istek yok); öteki değişiklikler hemen.
    · Eski isteğin geç gelen cevabı yenisinin üstüne yazılmaz (sıra numarası).
    · Cevap gelene kadar önceki sayfa ekranda kalır; istek düşerse ekran bozulmaz, önceki liste kalır.
-   · Seçici seçenekleri (müşteri, il, yıl …) sunucudan, görebildiği kayıtlardan. */
+   · Seçici seçenekleri (müşteri, il, yıl …) sunucudan, görebildiği kayıtlardan.
+   · bas: başlangıç durumu (ör. adresten gelen ?durum=gecikti) — ilk sayfayı sunucu aynı durumla üretir. */
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Suzgec } from "./SuzgecliListe";
 import { sunucuSonucu, yeniDurum, type Secenek, type SunucuListe, type SuzgecDurumu, type SuzgecTanimi } from "./suzgec";
@@ -13,10 +14,10 @@ import { sunucuSonucu, yeniDurum, type Secenek, type SunucuListe, type SuzgecDur
 const BEKLE = 300;
 
 export function useSunucuSuzgec<K>(tanimYap: (secenekler: Record<string, Secenek[]>) => SuzgecTanimi<K>, ilk: SunucuListe<K>,
-  getir: (d: SuzgecDurumu) => Promise<SunucuListe<K> | null>): Suzgec<K> {
+  getir: (d: SuzgecDurumu) => Promise<SunucuListe<K> | null>, bas?: Partial<SuzgecDurumu>): Suzgec<K> {
   const [veri, setVeri] = useState(ilk);
   const tanim = useMemo(() => tanimYap(veri.secenekler), [tanimYap, veri.secenekler]);
-  const [durum, setDurum] = useState<SuzgecDurumu>(() => yeniDurum(tanim));
+  const [durum, setDurum] = useState<SuzgecDurumu>(() => ({ ...yeniDurum(tanim), ...bas }));
   const [yukleniyor, setYukleniyor] = useState(false);
   const sira = useRef(0);
   const sayac = useRef<ReturnType<typeof setTimeout> | null>(null);

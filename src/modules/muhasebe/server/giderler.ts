@@ -59,6 +59,12 @@ async function satirlar(db: Sorgulayici, kosul = "", p: unknown[] = []): Promise
 export async function giderListesi(db: Sorgulayici, kim: Kisi): Promise<GiderSatiri[] | null> {
   return gorur(kim) ? satirlar(db) : null;
 }
+/** 566 (Ana sayfa): onay bekleyen masrafların sayısı ve tutarı tek sorguyla (bütün giderler okunmaz); göremeyene null */
+export async function bekleyenGiderOzeti(db: Sorgulayici, kim: Kisi): Promise<{ sayi: number; tutar: number } | null> {
+  if (!gorur(kim)) return null;
+  const x = (await db.sorgu<{ n: number; t: string | null }>("SELECT count(*)::int AS n, sum(tutar)::text AS t FROM gider WHERE durum = 'bekliyor'")).rows[0];
+  return { sayi: x.n, tutar: Number(x.t ?? 0) };
+}
 /** işin giderleri (iş sayfası) */
 export async function isGiderleri(db: Sorgulayici, kim: Kisi, planId: string): Promise<GiderSatiri[] | null> {
   return gorur(kim) && UUID.test(planId) ? satirlar(db, "WHERE plan_id = $1", [planId]) : null;

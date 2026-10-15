@@ -8,7 +8,7 @@
    Kaynak (FROM … JOIN …) ve ifadeler listenin modülünde; başka modülün tablosu o modülün dışa açtığı parçayla (…_SQL) okunur. Görme yetkisi
    kaynağın koşuluyla (yetki/canDo.ts gorusKosulu) — tarayıcıdan gelen hiçbir şey koşul olmaz, değerler parametre. */
 import type { Sorgulayici } from "../db/kiraci.ts";
-import type { Secenek, SunucuListe, SuzgecDurumu } from "../../components/liste/suzgec.ts";
+import { listele, yeniDurum, type Secenek, type SunucuListe, type SuzgecDurumu, type SuzgecTanimi } from "../../components/liste/suzgec.ts";
 import { z } from "zod";
 
 /** parametre ekleyici: değeri ekler, yer tutucusunu ($n) döndürür */
@@ -119,5 +119,20 @@ export async function listeGetir<K>(db: Sorgulayici, k: ListeKaynagi, gorus: { s
   return {
     gorunen: rows as K[], adet, toplam: sayim.toplam ?? 0, kayitSayisi: sayim.kayit ?? 0, sayfa, sayfaSayisi,
     cipSayilari: Object.fromEntries(cipAdlari.map((c, i) => [c, sayim[`c${i}`] ?? 0])), secenekler,
+  };
+}
+
+/** HESAPLANMIŞ SATIRLAR (Muhasebe: iş durumu, kalan, kâr — SQL karşılığı kurulamayan): tarayıcının süzgeci (listele) AYNEN sunucuda koşar —
+    aynı tanım, aynı sonuç; tarayıcıya bütün kayıtlar inmez, yalnız sayfanın satırları, sayılar, çip sayıları ve seçenekler (sıralama seçicisi
+    hariç, "Tümü"süz). Süzgeç durumu biçim denetiminden geçer; bozuksa başlangıç durumu. Veri sunucuda bir kez hesaplanır. */
+export function bellekteListele<K>(t: SuzgecTanimi<K>, d0: unknown, kayitlar: readonly K[]): SunucuListe<K> {
+  const bas = yeniDurum(t);
+  const g = SuzgecDurumuSemasi.safeParse(d0);
+  const d: SuzgecDurumu = g.success ? { ...g.data, sec: { ...bas.sec, ...g.data.sec }, alan: { ...bas.alan, ...g.data.alan } } : bas;
+  const o = listele(t, d, kayitlar);
+  return {
+    gorunen: o.gorunen, adet: o.adet, toplam: o.toplam, kayitSayisi: kayitlar.length, sayfa: o.sayfa, sayfaSayisi: o.sayfaSayisi,
+    cipSayilari: Object.fromEntries(t.cipler.map((c) => [c.k, o.tb.filter(c.test).length])),
+    secenekler: Object.fromEntries(t.seciciler.filter((s) => !s.siralama).map((s) => [s.k, s.secenek().filter(([v]) => v !== "tumu")])),
   };
 }

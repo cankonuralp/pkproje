@@ -22,6 +22,9 @@ import { muhasebeRaporlari, type MuhasebeRaporu } from "../../raporlar/server/mu
 import { sozlesmeNumaralari, tesisSozlesmesi } from "../../sozlesmeler/server/sozlesmeler.ts";
 import { raporBaglari, type FiyatKaynagi } from "../../teklifler/server/rapor-bagi.ts";
 import { donemGelirGider, isKarlilik, sonAylar, type DonemGelirGider, type IsKarlilik, type KarVerisi } from "../karlilik.ts";
+import { faturaTanim, isTanim, musteriSecenekleri } from "../liste.ts";
+import { bellekteListele } from "../../../server/liste/liste.ts";
+import type { SunucuListe } from "../../../components/liste/suzgec.ts";
 import { FaturaGirdisi, gunEkle, kdvTutari, para, TahsilatGirdisi, YONTEM, type FaturaDurumu, type IsDurumu, type Yontem } from "../sema.ts";
 
 const MODUL = 18;
@@ -133,11 +136,11 @@ function isOzet(v: Veri, p: MuhasebePlani): IsSatiri & { raporlar: MuhasebeRapor
 }
 const satirOf = (o: ReturnType<typeof isOzet>): IsSatiri => { const { raporlar: _r, faturalar: _f, karlilik: _k, ...s } = o; void _r; void _f; void _k; return s; };
 
+const isSatirlari = (v: Veri) => v.planlar.map((p) => satirOf(isOzet(v, p))).sort((a, b) => b.tarih.localeCompare(a.tarih) || b.no.localeCompare(a.no));
 /** İşler listesi (planın ilk raporu yazılınca iş görünür), en yeni denetim üstte; göremeyene null */
 export async function isListesi(db: Sorgulayici, kim: Kisi): Promise<IsSatiri[] | null> {
   if (!gorur(kim)) return null;
-  const v = await oku(db, null);
-  return v.planlar.map((p) => satirOf(isOzet(v, p))).sort((a, b) => b.tarih.localeCompare(a.tarih) || b.no.localeCompare(a.no));
+  return isSatirlari(await oku(db, null));
 }
 
 /** Faturalar listesi, en yeni üstte; göremeyene null */
@@ -145,6 +148,36 @@ export async function faturaListesi(db: Sorgulayici, kim: Kisi): Promise<FaturaS
   if (!gorur(kim)) return null;
   const v = await oku(db, null);
   return v.faturalar.map((f) => faturaOzet(v, f));
+}
+
+/* ── 566: LİSTELER SUNUCUDA SAYFALI (09-B3) ──────────────────────────────────────────────────────────────────────────────────────────────
+   İş ve fatura satırları burada hesaplanır (veri BİR kez okunur — önceden sayfa iki kez okuyordu); süzgeç ekranla aynı tanımla sunucuda
+   (liste.ts + bellekteListele); ekrana yalnız sayfa, sayılar ve şerit (vadesi geçen alacak, faturaya hazır işler). */
+export interface MuhasebeUyarisi { geciken: number; gecikenKalan: number; hazir: { id: string; no: string; musteri: string; hazir: number }[] }
+export function muhasebeUyarisi(isler: readonly IsSatiri[], faturalar: readonly FaturaSatiri[]): MuhasebeUyarisi {
+  const gec = faturalar.filter((f) => f.durum === "gecikti");
+  return { geciken: gec.length, gecikenKalan: gec.reduce((n, f) => n + f.kalan, 0),
+    hazir: isler.filter((x) => x.durum === "hazir").map((x) => ({ id: x.id, no: x.no, musteri: x.musteri, hazir: x.hazir })) };
+}
+async function listeler(db: Sorgulayici, kim: Kisi): Promise<{ isler: IsSatiri[]; faturalar: FaturaSatiri[] } | null> {
+  if (!gorur(kim)) return null;
+  const v = await oku(db, null);
+  return { isler: isSatirlari(v), faturalar: v.faturalar.map((f) => faturaOzet(v, f)) };
+}
+/** Ana sayfa: vadesi geçen alacak ve faturaya hazır işler (tek okuma); göremeyene null */
+export async function muhasebeOzeti(db: Sorgulayici, kim: Kisi): Promise<MuhasebeUyarisi | null> {
+  const l = await listeler(db, kim);
+  return l && muhasebeUyarisi(l.isler, l.faturalar);
+}
+/** Muhasebe › İşler: süzgeçten geçenlerin SAYFASI + şerit; göremeyene null */
+export async function isSayfasi(db: Sorgulayici, kim: Kisi, durum: unknown): Promise<{ liste: SunucuListe<IsSatiri>; uyari: MuhasebeUyarisi } | null> {
+  const l = await listeler(db, kim);
+  return l && { liste: bellekteListele(isTanim(musteriSecenekleri(l.isler)), durum, l.isler), uyari: muhasebeUyarisi(l.isler, l.faturalar) };
+}
+/** Muhasebe › Faturalar: süzgeçten geçenlerin SAYFASI + şerit; göremeyene null */
+export async function faturaSayfasi(db: Sorgulayici, kim: Kisi, durum: unknown): Promise<{ liste: SunucuListe<FaturaSatiri>; uyari: MuhasebeUyarisi } | null> {
+  const l = await listeler(db, kim);
+  return l && { liste: bellekteListele(faturaTanim(musteriSecenekleri(l.faturalar)), durum, l.faturalar), uyari: muhasebeUyarisi(l.isler, l.faturalar) };
 }
 
 /** 565 (menü balonu — her sayfada): vadesi geçmiş, kalanı olan fatura sayısı TEK sorguyla (faturaListesi bütün raporları, planları, müşterileri,

@@ -2,7 +2,10 @@
    bellekte bozulup geçici klasörden içe aktarılır; veritabanı yerine sorguyu kaydeden sahte bir bağlantı. O zaman:
    1. görme kuralında "kendi" düzeyi açık bırakılınca denetçi BAŞKASININ raporunu da görür (koşulda yazan yok);
    2. aranan metin Türkçe küçük harfe çevrilmezse "IŞ" araması "ış"ı bulmaz (eski süzgeçle aynı sonuç vermez);
-   3. sayfa sınırı kalkınca bütün satırlar tarayıcıya gider (donma — işin kendisi). */
+   3. sayfa sınırı kalkınca bütün satırlar tarayıcıya gider (donma — işin kendisi).
+   Hesaplanmış satırlar (Muhasebe — bellekteListele; kilidi tests/suzgec.test.ts "566 bellekteListele"):
+   4. süzgeç durumu yok sayılırsa arama sonucu değiştirmez (sunucu hep başlangıç sayfasını döner);
+   5. sayfa yerine süzülmüş bütün liste dönerse bütün satırlar tarayıcıya gider. */
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -56,4 +59,21 @@ test("3. sayfa sınırı kalkınca bütün satırlar istenir (kilidin koruduğu 
   const { db, sorgular } = sahteDb();
   await m.listeGetir(db as never, KAYNAK, { sql: "true", p: [] }, {});
   assert.ok(sorgular.some((s) => s.sql.includes("ORDER BY") && !s.sql.includes("LIMIT")), "bozuk: sınırsız");
+});
+
+const KISILER = Array.from({ length: 45 }, (_, i) => ({ ad: i % 3 ? "Ayşe Örnek" : "Işıl Deneme", kod: `K-${i}` }));
+const TANIM = {
+  ad: "", ipucu: "", birim: "kişi", imkansiz: "", sayfa: 20, cipler: [], seciciler: [],
+  metin: (k: { ad: string }) => k.ad,
+};
+
+test("4. sunucu süzgeç durumunu yok sayarsa 'ışıl' araması bütün kişileri döner (kilidin koruduğu açık)", async () => {
+  const m = await bozuk<Liste>("src/server/liste/liste.ts", "const o = listele(t, d, kayitlar);", "const o = listele(t, bas, kayitlar);");
+  const b = m.bellekteListele(TANIM, { ara: "ışıl" }, KISILER);
+  assert.equal(b.adet, 45, "bozuk: süzülmedi");
+});
+
+test("5. sayfa yerine bütün liste dönerse 45 satırın hepsi tarayıcıya gider (kilidin koruduğu açık)", async () => {
+  const m = await bozuk<Liste>("src/server/liste/liste.ts", "gorunen: o.gorunen, adet: o.adet", "gorunen: o.liste, adet: o.adet");
+  assert.equal(m.bellekteListele(TANIM, {}, KISILER).gorunen.length, 45, "bozuk: sayfasız");
 });

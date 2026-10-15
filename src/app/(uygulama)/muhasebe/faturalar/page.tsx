@@ -4,7 +4,8 @@ import type { Metadata } from "next";
 import { Yetkisiz } from "../../../../components/hata/Hata";
 import { modulBul } from "../../../../modules/moduller";
 import { bordroGonderebilir } from "../../../../modules/muhasebe/server/bordro-gonder";
-import { faturaListesi, isListesi } from "../../../../modules/muhasebe/server/muhasebe";
+import { faturaSayfasi } from "../../../../modules/muhasebe/server/muhasebe";
+import { FATURA_DURUM } from "../../../../modules/muhasebe/sema";
 import { FaturaListesi } from "../../../../modules/muhasebe/ui/Listeler";
 import { modulOturumu, oturumIslemi } from "../../../../server/kimlik/istek";
 
@@ -14,9 +15,11 @@ export const metadata: Metadata = { title: "Faturalar" };
 export default async function Sayfa({ searchParams }: { searchParams: Promise<{ durum?: string | string[] }> }) {
   const o = await modulOturumu(MODUL.no);
   if (!o) return <Yetkisiz />;
-  const v = await oturumIslemi(o, async (db) => ({ isler: await isListesi(db, o), faturalar: await faturaListesi(db, o) }));
-  if (!v.isler || !v.faturalar) return <Yetkisiz />;
-  const { durum } = await searchParams;
-  /* adres süzgeci değişince (şeritteki "Faturalar" → ?durum=gecikti) liste yeniden kurulur — useSuzgec başlangıcı yalnız ilk çizimde okunur (329–332 incelemesi) */
-  return <FaturaListesi key={typeof durum === "string" ? durum : ""} isler={v.isler} faturalar={v.faturalar} durum={typeof durum === "string" ? durum : undefined} bordro={bordroGonderebilir(o)} />;
+  const { durum: d } = await searchParams;
+  const durum = typeof d === "string" && Object.hasOwn(FATURA_DURUM, d) ? d : undefined;
+  /* 566: liste SUNUCUDA sayfalı — ilk sayfa adresteki çiple (?durum=gecikti) burada, sonrakiler eylemle */
+  const v = await oturumIslemi(o, (db) => faturaSayfasi(db, o, durum ? { secili: [durum] } : {}));
+  if (!v) return <Yetkisiz />;
+  /* adres süzgeci değişince (şeritteki "Faturalar" → ?durum=gecikti) liste yeniden kurulur — başlangıç durumu yalnız ilk çizimde okunur (329–332 incelemesi) */
+  return <FaturaListesi key={durum ?? ""} ilk={v.liste} uyari={v.uyari} durum={durum} bordro={bordroGonderebilir(o)} />;
 }

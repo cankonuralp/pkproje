@@ -3,12 +3,16 @@
    · 2026-09-24: ayrılan kişi sayaca giriyordu ("16 kişi", listede 15) → toplam görünüm anahtarının içinden sayılır;
    · reisim 2026-09-28: alan alan arama kutusu olan listede genel arama yok, her kutu kendi alanında arar;
    · Temizle sıralamayı ve görünüm anahtarını sıfırlamaz (süzgeç değiller);
-   · 143 ekipman = 15 sayfa: tuşlar tek satır (ilk · … · ±1 · … · son). */
+   · 143 ekipman = 15 sayfa: tuşlar tek satır (ilk · … · ±1 · … · son).
+   · 566 (reisim 2026-10-15 analizi — listeler bütün kayıtları tarayıcıya indiriyordu): hesaplanmış satırların listesi (Muhasebe) süzgeci
+     SUNUCUDA aynı işlevle koşar (src/server/liste/liste.ts bellekteListele) — sonuç tarayıcıdakiyle birebir, ekrana yalnız sayfa. Olumsuz kanıt:
+     tests/bozan/liste.bozan.ts 4–5. */
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
-  imkansiz, listele, sayfaOgeleri, siraSonraki, suzgecVar, temizle, uygulanan, yeniDurum, type SuzgecTanimi,
+  imkansiz, listele, sayfaOgeleri, siraSonraki, suzgecVar, temizle, uygulanan, yeniDurum, type SuzgecDurumu, type SuzgecTanimi,
 } from "../src/components/liste/suzgec.ts";
+import { bellekteListele } from "../src/server/liste/liste.ts";
 
 interface Kisi { ad: string; il: string; durum: "calisiyor" | "ayrildi"; kod: string; yas: number }
 const KISILER: Kisi[] = [
@@ -112,4 +116,29 @@ test("sayfa tuşları: 7 ve altı hepsi; fazlası ilk · … · ±1 · … · so
   const o = sayfaOgeleri(15, 8).map((x) => (x.tur === "ara" ? "…" : x.komsu ? `(${x.no})` : String(x.no)));
   assert.deepEqual(o, ["1", "…", "(7)", "8", "(9)", "…", "15"]);
   assert.deepEqual(sayfaOgeleri(15, 1).map((x) => (x.tur === "ara" ? "…" : x.no)), [1, 2, "…", 15]);
+});
+
+test("566 bellekteListele: tarayıcının süzgeci sunucuda AYNEN (sayfa, sayılar, çip sayıları, seçenekler); bozuk durum başlangıç; ekrana yalnız sayfa", () => {
+  const cok = Array.from({ length: 45 }, (_, i) => ({ ...KISILER[i % 3], kod: `K-${i}`, yas: 20 + (i % 30) }));
+  const t: SuzgecTanimi<Kisi> = { ...TANIM, sayfa: 20 };
+  const durumlar: Partial<SuzgecDurumu>[] = [
+    {}, { sayfa: 2 }, { sayfa: 99 }, { ara: "IZMIR" }, { ara: "ışıl" }, { secili: ["izmir", "genc"], kip: "ve" }, { secili: ["izmir", "ankara"], kip: "ve" },
+    { sec: { gorunum: "hepsi", il: "İzmir" } }, { sec: { sira: "yas-azalan" }, sayfa: 2 }, { sec: { sira: "kod-artan" } },
+  ];
+  for (const d0 of durumlar) {
+    const d = { ...yeniDurum(t), ...d0, sec: { ...yeniDurum(t).sec, ...d0.sec } };
+    const o = listele(t, d, cok), b = bellekteListele(t, d0, cok);
+    assert.deepEqual(b.gorunen, o.gorunen, JSON.stringify(d0));
+    assert.deepEqual([b.adet, b.toplam, b.kayitSayisi, b.sayfa, b.sayfaSayisi], [o.adet, o.toplam, cok.length, o.sayfa, o.sayfaSayisi], JSON.stringify(d0));
+    for (const c of t.cipler) assert.equal(b.cipSayilari[c.k], o.tb.filter(c.test).length, `${JSON.stringify(d0)} ${c.k}`);
+    assert.ok(b.gorunen.length <= 20, "ekrana yalnız sayfa");
+  }
+  /* seçenekler: "Tümü" ve sıralama seçicisi yok (ekran kendi ekler) */
+  assert.deepEqual(bellekteListele(t, {}, cok).secenekler, { gorunum: [["calisan", "Çalışanlar"], ["hepsi", "Hepsi"]], il: [["İzmir", "İzmir"]] });
+  /* bozuk durum (yanlış tür, aşırı uzun) başlangıç sayılır — süzgece girmez */
+  const bas = listele(t, yeniDurum(t), cok);
+  for (const bozuk of [{ ara: 5 }, { alan: { x: "y".repeat(5000) } }, { secili: "izmir" }, null, "x"]) {
+    const b = bellekteListele(t, bozuk, cok);
+    assert.deepEqual([b.adet, b.gorunen], [bas.adet, bas.gorunen], JSON.stringify(bozuk));
+  }
 });

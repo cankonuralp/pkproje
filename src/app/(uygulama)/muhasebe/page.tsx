@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { Yetkisiz } from "../../../components/hata/Hata";
 import { modulBul } from "../../../modules/moduller";
 import { bordroGonderebilir } from "../../../modules/muhasebe/server/bordro-gonder";
-import { faturaListesi, isListesi } from "../../../modules/muhasebe/server/muhasebe";
+import { isSayfasi } from "../../../modules/muhasebe/server/muhasebe";
 import { IsListesi } from "../../../modules/muhasebe/ui/Listeler";
 import { modulOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 
@@ -14,7 +14,8 @@ export const metadata: Metadata = { title: MODUL.ad };
 export default async function Sayfa() {
   const o = await modulOturumu(MODUL.no);
   if (!o) return <Yetkisiz />;
-  const v = await oturumIslemi(o, async (db) => ({ isler: await isListesi(db, o), faturalar: await faturaListesi(db, o) }));
-  if (!v.isler || !v.faturalar) return <Yetkisiz />;
-  return <IsListesi isler={v.isler} faturalar={v.faturalar} bordro={bordroGonderebilir(o)} />;
+  /* 566: liste SUNUCUDA sayfalı (isSayfasi — ilk sayfa burada, sonrakiler eylemle) */
+  const v = await oturumIslemi(o, (db) => isSayfasi(db, o, {}));
+  if (!v) return <Yetkisiz />;
+  return <IsListesi ilk={v.liste} uyari={v.uyari} bordro={bordroGonderebilir(o)} />;
 }

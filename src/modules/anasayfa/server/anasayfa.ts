@@ -12,8 +12,8 @@ import { ROL_BRANS, type Rol } from "../../../server/yetki/tanim.ts";
 import { etkinEkipmanlar } from "../../ekipman/server/anasayfa-baglanti.ts";
 import { cihazTurBranslari, turOzetleri } from "../../ekipman-turleri/server/turler.ts";
 import { musteriOzetleri } from "../../musteriler/server/musteriler.ts";
-import { giderListesi } from "../../muhasebe/server/giderler.ts";
-import { faturaListesi, isListesi } from "../../muhasebe/server/muhasebe.ts";
+import { bekleyenGiderOzeti } from "../../muhasebe/server/giderler.ts";
+import { muhasebeOzeti } from "../../muhasebe/server/muhasebe.ts";
 import { bekleyenBelgeSayisi } from "../../onaylar/server/belge-baglanti.ts";
 import { onayTakibi } from "../../onaylar/server/onaylar.ts";
 import { eksikBilgi, personelListesi, personelOzetleri } from "../../personel/server/personel.ts";
@@ -158,14 +158,15 @@ export async function anaSayfa(db: Sorgulayici, kim: Kisi): Promise<AnaSayfa> {
   }
 
   if (roller.has("muhasebe")) {
-    const isler = (await isListesi(db, kim)) ?? [], faturalar = (await faturaListesi(db, kim)) ?? [], giderler = (await giderListesi(db, kim)) ?? [];
-    const hazir = isler.filter((x) => x.durum === "hazir"), gec = faturalar.filter((f) => f.durum === "gecikti"), bek = giderler.filter((g) => g.durum === "bekliyor");
+    /* 566: tek okuma (önceden işler, faturalar ve bütün giderler ayrı ayrı okunuyordu); bekleyen masraf tek sayımla */
+    const u = (await muhasebeOzeti(db, kim)) ?? { geciken: 0, gecikenKalan: 0, hazir: [] }, bek = (await bekleyenGiderOzeti(db, kim)) ?? { sayi: 0, tutar: 0 };
+    const hazir = u.hazir;
     const tl = (k: number) => `${Math.round(k / 100).toLocaleString("tr-TR")} TL`;
     bolumler.push({ rol: "muhasebe", yuzler: [
       { ikon: "file-check", ad: "Faturaya hazır iş", sayi: hazir.length, href: "/muhasebe", not: hazir.length ? hazir.slice(0, 3).map((x) => x.no).join(", ") : "yok", uyari: hazir.length > 0 },
-      { ikon: "clock", ad: "Vadesi geçen fatura", sayi: gec.length, href: "/muhasebe/faturalar?durum=gecikti", not: gec.length ? tl(gec.reduce((n, f) => n + f.kalan, 0)) : "yok", uyari: gec.length > 0 },
+      { ikon: "clock", ad: "Vadesi geçen fatura", sayi: u.geciken, href: "/muhasebe/faturalar?durum=gecikti", not: u.geciken ? tl(u.gecikenKalan) : "yok", uyari: u.geciken > 0 },
       /* 477 (T1): masraf formunun kararı Onaylar'da */
-      { ikon: "receipt", ad: "Onay bekleyen masraf", sayi: bek.length, href: "/onaylar/talepler", not: bek.length ? tl(bek.reduce((n, g) => n + g.tutar, 0)) : "yok", uyari: bek.length > 0 },
+      { ikon: "receipt", ad: "Onay bekleyen masraf", sayi: bek.sayi, href: "/onaylar/talepler", not: bek.sayi ? tl(bek.tutar) : "yok", uyari: bek.sayi > 0 },
     ], liste: null });
   }
   return { bugun, ad: kim.ad, planAc: planAcabilir(kim), bolumler, belgeBekleyen: await bekleyenBelgeSayisi(db, kim), duyuru: await duyuruBolumu(db) };
