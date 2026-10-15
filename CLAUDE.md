@@ -285,8 +285,9 @@ pkproje/
                             yeni geçici parola — server/yonetim.ts yalnız 0050 işlevleriyle (yönetim rolü); sema.ts (ayrılmış adlar göçle aynı) · ui/ ·
                             sayfalar src/app/(yonetim)/yonetim: giris (parola → kod → ilk kurulum) + (panel) + cikis (356: POST route — eylem redirect'i
                             yönetim adresini kaybediyordu) — yalnız PROBATA_YONETIM_ALAN adresinde
-  src/server/yonetim/       YÖNETİM ÇEKİRDEĞİ (348): adres.ts (saf; ara katman da okur) · totp.ts (RFC 6238, saf) · giris.ts (iki adımlı giriş, kilit,
-                            kurulum, oturum; 393: iki adım ayarı yonetim_ayar.iki_adim — göç 0075, şimdilik KAPALI: parolayla doğrudan giriş) · karekod.ts
+  src/server/yonetim/       YÖNETİM ÇEKİRDEĞİ (348): adres.ts (saf; ara katman da okur) · totp.ts (RFC 6238, saf) · giris.ts (iki adımlı giriş,
+                            kurulum, oturum; 393: iki adım ayarı yonetim_ayar.iki_adim — göç 0075; 466'dan beri AÇIK; 573: yönetimde KİLİT YOK — firma
+                            girişinin kilidi aynen; 572: anahtar yöneticiye bağlı — her girişte aynı karekod, kurulum 30 dk, yarıda kalan kurulum açıkça) · karekod.ts
                             (407: kurulum karekodu, qrcode → SVG yolu; tests/karekod.test.ts jsQR ile okur) · istek.ts (yonetimOturumGerekli, yonetimIslemi → db/kiraci.ts yonetimIcinde: SET LOCAL ROLE probata_yonetim)
   src/modules/ekipman/      EKİPMAN (2026-10-04, 309): tesisin kalıcı ekipman kaydı (kod firmada eşsiz; eski kod başkasına verilmez — ekipman_kodu)
                             · 360 ekipmanSil / ekipmanKullanimi (silici.ts; yetki Planlar'da: plan-ici ekipmanSil — yalnız yönetici)

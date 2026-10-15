@@ -2483,6 +2483,32 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-15 (577): **MÜŞTERİ PANELİ RAPORLARINIZ VE UYGUNSUZLUKLAR SUNUCUDA SAYFALI** — büyük müşteride binlerce rapor tarayıcıya iniyordu. Süzgeç
+  ekranla aynı tanımla sunucuda (musteri-paneli/liste.ts; görme yine veritabanında — müşteri rolü, tesis kapsamı), ekrana yalnız sayfa; Excel, toplu
+  ZIP ve "Uygunsuzları indir" süzülenlerin / açıkların tamamını sunucudan ister (musteri-paneli/ui/eylemler.ts). Kilit tests/musteri-paneli.test.ts 577.
+- 2026-10-15 (576): **GİDERLER SUNUCUDA SAYFALI** — süzgeç ekranla aynı tanımla sunucuda (muhasebe/gider-liste.ts); alt toplam (KDV hariç / KDV /
+  toplam) ve Excel'e aktar süzülenlerin TAMAMINDAN, "onay bekleyen" / "belgesi yok" şeridi bütün giderlerden. Sunucu sayfayı yenileyince (gider eklendi,
+  ödendi) liste o anki süzgeçle yeniden istenir (useSunucuSuzgec). Kilit tests/muhasebe.test.ts 576, tests/suzgec.test.ts bellekteSuz. Taleplerim ve
+  İzin talepleri çevrilmedi: kişi başına / yılda yüz-iki yüz kayıt, zaten 20'şer sayfa (gerek yok).
+- 2026-10-15 (575): **DOSYA BAĞLANTISI 15 DAKİKA; YENİ SEKMEDE ADRES HEP BİZİM** (reisim: *"dediklerini yap"* — 5 dakika sonra ne olduğu soruldu;
+  öneriler: süreyi uzatmak, süresi dolan bağlantının İngilizce hata yerine bizim sayfamıza dönmesi). Storage açıkken görsel / PDF yeni sekmede
+  /api/dosya/<id> adresinde kalır, dosya sayfanın içinde imzalı adresten çizilir (dosyaSayfasi: betik yok, yalnız Storage kökü, ad kaçışlı, önbellek
+  yok, no-referrer); sekme yenilenince yetki yeniden denetlenir, yeni adres verilir; kopyalanan adres oturum ister. İndirmede imzalı adrese yönlenme
+  (dosya adıyla). Süre 900 sn. Supabase'in dosya yanıtları çerçeveye gömmeyi engellemiyor (başlık ölçüldü). Kilit tests/depo-supabase.test.ts 575.
+- 2026-10-15 (574): **YÖNETİM GİRİŞİ YAYINDA (572 + 573)** — main fee351e (göç yok, 95 göç), deneme makinesi 13/13, sağlık tamam, duman 11/11; giriş
+  sayfasında kilit uyarısı yok, ?neden=kurulum açıklaması görünüyor. Canlı veritabanında elle (yönetim izine yazılarak): 14:14 hesap + IP kilidi
+  sıfırlandı (reisim: *"15 dakikalık engeli kaldır"*); 14:17 iki adım kapatıldı + bekleyen oturumlar silindi — reisim: *"kapatma … düzgün çalıştır"*;
+  14:18 iki adım yeniden açıldı. Ders (hafıza ozelligi-kapatma): sorunlu özelliği kapatarak çözme; akışın ortasındaki oturumu silme.
+- 2026-10-15 (573): **YÖNETİM GİRİŞİNDE KİLİT YOK** (reisim birebir: *"yönetim giriş denemesi için 15 dakikalık engeli kaldır diğer yerler için değil
+  sadece yönetim paneli için"*). Hatalı parola / kod denemesi hesabı ya da IP'yi kilitlemez, ileti kilit söylemez; her hata yönetim izinde. Firma ve
+  müşteri girişlerinin kilidi aynen (karar 37). Not: parola yavaş özetle (scrypt) korunur ve iki adım açıkken parola tek başına yetmez.
+- 2026-10-15 (572): **YÖNETİM İLK KURULUMU DÜZGÜN** (reisim: *"yönetim paneline girecek hesabın şifresini değiştirdim ilk girişte zorla değiştirtti ama
+  şimdide yeni şifreyi kabul etmiyor"*, *"kurulum yapmama rağmen eski şifre ile girdirtiyo"*). Neden (yönetim izi, salt okunur): kurulum hiç
+  tamamlanmamış — "kuruldu" ya da kod hatası kaydı yok; yeni parola kaydedilmemiş, geçici parola geçerli; yeni parola denenince 5 hatada kilit. Kurulum
+  ekranı 10 dakikalık oturumdaydı, her girişte YENİ anahtar üretiyordu (telefona önce eklenen kayıt geçersiz kalıyordu), yarıda kalan kurulum yalnız
+  "oturum kapandı" diyordu. Düzeltme: anahtar yöneticiye bağlı (her girişte aynı karekod); kurulum ekranı açılınca 30 dakika (bir kez uzar); eksik
+  alanda üstte "KURULUM TAMAMLANMADI — yeni parolanız kaydedilmedi"; süre dolunca giriş ekranı yeni parolanın kaydedilmediğini ve geçici parolanın
+  geçerli olduğunu söyler. Kilitler tests/yonetim.test.ts 572 / 573, bozan yonetim 3–4 (eski 3–4: kilit — kararla kalktı).
 - 2026-10-15 (571): **567 + 568 + 570 YAYINDA** — deneme makinesi da3b43d 13/13 yeşil (567'nin ilk koşusunda yalnız yeni uçtan uca test düştü:
   tarayıcının işaret isteğinin gövdesi Playwright'ta okunmuyor — içerik sayfanın belleğinden okunacak biçimde düzeltildi, 0173612); göç 0093 + 0094
   Supabase'te (95 göç; uygulama rolü hata defterini okuyamıyor, yönetim rolü okuyor, dış API rolleri erişemiyor, işlevler PUBLIC'e kapalı); main
