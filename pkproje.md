@@ -2483,6 +2483,17 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-15 (571): **567 + 568 + 570 YAYINDA** — deneme makinesi da3b43d 13/13 yeşil (567'nin ilk koşusunda yalnız yeni uçtan uca test düştü:
+  tarayıcının işaret isteğinin gövdesi Playwright'ta okunmuyor — içerik sayfanın belleğinden okunacak biçimde düzeltildi, 0173612); göç 0093 + 0094
+  Supabase'te (95 göç; uygulama rolü hata defterini okuyamıyor, yönetim rolü okuyor, dış API rolleri erişemiyor, işlevler PUBLIC'e kapalı); main
+  da3b43d; canlı sağlık tamam (sürüm da3b43d), duman 11/11, Vercel'de son 1 saatte çalışma hatası yok, hata defteri boş. Canlıda: /api/hata kökensiz
+  istekte yazmadan 204; /yonetim/hatalar oturumsuz girişe yönleniyor, firma adresinde 404. Storage ETKİN DEĞİL (Vercel'de PROBATA_DEPO=vt) — reisim
+  gizli anahtarı girince açılır (568). Oturum isteyen ekranlar canlıda gözle denenmedi — giriş reisim'in (ölçemedim); uçtan uca üç genişlikte koştu.
+- 2026-10-15 (570): **TEKLİFLER VE SÖZLEŞMELER SUNUCUDA SAYFALI** — 566'nın hesaplanmış satır yöntemi (tarayıcının süzgeci aynı tanımla sunucuda,
+  ekrana yalnız 20 satır): teklifler/liste.ts + teklifSayfasi, sozlesmeler/liste.ts + sozlesmeSayfasi (denetçi yine yalnız kendi İSG-KATİP ID'li
+  sözleşmeleri). Kilitler tests/teklifler.test.ts ve tests/sozlesmeler.test.ts 570 (ekranın süzgeciyle birebir). Kalan (büyüdükçe, aynı yöntemle):
+  Giderler (Excel'e aktar ve toplam süzülen listenin tamamından — sunucuya ayrı uç ister), Talepler, müşteri paneli listeleri; hepsi zaten 20'şer
+  sayfa çiziliyor (ekranda donma yok), yalnız veri bir kez tümüyle iniyor.
 - 2026-10-15 (568): **DOSYALAR SUPABASE STORAGE'DA — ÖZEL KOVA, 5 DAKİKALIK İMZALI ADRES, ESKİ DOSYALAR GECE TAŞINIR** (reisim: *"fotoğraflar neden
   veritabanından kota yiyor fotoğraflar storage de olması gerekmiyor mu"*, *"fotoğraflar neden hala gizli link ile açılmıyor"* → *"elindeki bütün işleri
   yap"*). Neden: deneme yayınında dosya içeriği veritabanındaydı (347, PROBATA_DEPO=vt — Vercel'in klasörü geçici olduğu için geçici çözüm); her fotoğraf
