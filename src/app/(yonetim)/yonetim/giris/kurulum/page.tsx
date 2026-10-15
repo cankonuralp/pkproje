@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { yonetimAdresinde, yonetimBekleyen, yonetimIkiAdim, yonetimIstekOturumu, yonetimKurulumu } from "../../../../../server/yonetim/istek";
 import { karekod } from "../../../../../server/yonetim/karekod";
+import { KURULUM_DK } from "../../../../../server/yonetim/giris";
 import { YonetimKurulumFormu } from "../YonetimGirisFormlari";
 
 export const metadata: Metadata = { title: { absolute: "İki adımlı giriş kurulumu · probata yönetim" } };
@@ -13,6 +14,7 @@ export default async function YonetimKurulumSayfasi() {
   if (await yonetimIstekOturumu()) redirect("/yonetim");
   if (!(await yonetimIkiAdim())) redirect("/yonetim/giris");   // 393: iki adım kapalı
   const k = await yonetimKurulumu();
-  if (!k) redirect((await yonetimBekleyen())?.durum === "etkin" ? "/yonetim/giris/kod" : "/yonetim/giris?neden=oturum");
-  return <YonetimKurulumFormu eposta={k.eposta} anahtar={k.anahtar} adres={k.adres} karekod={karekod(k.adres)} />;
+  /* 572: kurulum ekranına oturumsuz / süresi dolmuş gelindiyse yeni parola kaydedilmemiştir — giriş bunu söyler */
+  if (!k) redirect((await yonetimBekleyen())?.durum === "etkin" ? "/yonetim/giris/kod" : "/yonetim/giris?neden=kurulum");
+  return <YonetimKurulumFormu eposta={k.eposta} anahtar={k.anahtar} adres={k.adres} karekod={karekod(k.adres)} sure={KURULUM_DK} />;
 }

@@ -14,8 +14,10 @@ export interface YKodDurumu { hata?: string; yonlendir?: string }
 export interface YKurulumDurumu { hata?: { kod?: string; p1?: string; p2?: string; genel?: string }; yonlendir?: string }
 
 const REDDEDILDI = "İstek reddedildi. Sayfayı yenileyip yeniden deneyin.";
-const KILITLI = "Çok sayıda hatalı deneme yapıldı; giriş 15 dakika kilitlendi. Daha sonra yeniden deneyin.";
 const OTURUM = "/yonetim/giris?neden=oturum";
+/** 572: kurulum tamamlanmadan oturum düştü — yeni parola kaydedilmedi */
+const KURULUM_DOLDU = "/yonetim/giris?neden=kurulum";
+const TAMAMLANMADI = "KURULUM TAMAMLANMADI — yeni parolanız kaydedilmedi. Aşağıdaki işaretli alanı düzeltip kodu ve yeni parolayı yeniden yazın.";
 
 const GirisSemasi = z.object({ eposta: z.string().trim().toLowerCase().max(254), parola: z.string().max(200) });
 const kodTemiz = (v: FormDataEntryValue | null) => String(v ?? "").replace(/\s/g, "").slice(0, 12);
@@ -26,7 +28,8 @@ export async function yonetimGirisEylemi(_onceki: YGirisDurumu, form: FormData):
   if (!g.success || !g.data.eposta || !g.data.parola) return { hata: "E-posta ve parola yazılmalı.", eposta: String(form.get("eposta") ?? "").slice(0, 254) };
   const r = await yoneticiGiris(havuz(), { eposta: g.data.eposta, parola: g.data.parola, ip: await istemciIp() });
   if (!r.tamam) {
-    return { eposta: g.data.eposta, hata: r.neden === "kilitli" ? KILITLI : "E-posta ya da parola yanlış. 5 hatalı denemeden sonra giriş 15 dakika kilitlenir." };
+    /* 573: yönetim girişinde kilit yok — ileti sayaç / kilit söylemez */
+    return { eposta: g.data.eposta, hata: "E-posta ya da parola yanlış." };
   }
   (await cookies()).set(YONETIM_CEREZ, r.belirtec, yonetimCerezAyari());
   /* 393: iki adım kapalıyken belirteç yönetim oturumunun kendisi → doğrudan panele */
@@ -46,7 +49,7 @@ export async function yonetimKodEylemi(_onceki: YKodDurumu, form: FormData): Pro
       /* ilk kurulumu yapılmamış yönetici kod adımına gelemez: kuruluma */
       return { yonlendir: (await bekleyenOturum(havuz(), belirtec))?.durum === "ilk" ? "/yonetim/giris/kurulum" : OTURUM };
     }
-    return { hata: r.neden === "kilitli" ? KILITLI : "Kod yanlış ya da süresi geçti. Uygulamadaki güncel kodu yazın." };
+    return { hata: "Kod yanlış ya da süresi geçti. Uygulamadaki güncel kodu yazın." };
   }
   c.set(YONETIM_CEREZ, r.belirtec, yonetimCerezAyari());
   return { yonlendir: "/yonetim" };
@@ -62,13 +65,14 @@ export async function yonetimKurulumEylemi(_onceki: YKurulumDurumu, form: FormDa
   const s = parolaSemasi.safeParse(p1);
   if (!s.success) hata.p1 = s.error.issues[0]?.message ?? "En az 10 karakter; harf ve rakam içermeli.";
   else if (p1 !== p2) hata.p2 = "İki parola aynı değil.";
-  if (Object.keys(hata).length) return { hata };
+  /* 572: kurulum tamamlanmadı — form boşalır, neden üstte açık yazılır (yeni parola sanılıp girişte denenmesin) */
+  if (Object.keys(hata).length) return { hata: { ...hata, genel: TAMAMLANMADI } };
   const c = await cookies();
   const r = await kurulumTamamla(havuz(), { belirtec: c.get(YONETIM_CEREZ)?.value, kod, yeni: p1, ip: await istemciIp() });
   if (!r.tamam) {
-    if (r.neden === "oturum") return { yonlendir: OTURUM };
-    if (r.neden === "ayni") return { hata: { p1: "Yeni parola geçici parolayla aynı olamaz." } };
-    return { hata: r.neden === "kilitli" ? { genel: KILITLI } : { kod: "Kod yanlış ya da süresi geçti. Uygulamadaki güncel kodu yazın." } };
+    if (r.neden === "oturum") return { yonlendir: KURULUM_DOLDU };
+    if (r.neden === "ayni") return { hata: { p1: "Yeni parola geçici parolayla aynı olamaz.", genel: TAMAMLANMADI } };
+    return { hata: { kod: "Kod yanlış ya da süresi geçti. Uygulamadaki güncel kodu yazın.", genel: TAMAMLANMADI } };
   }
   c.set(YONETIM_CEREZ, r.belirtec, yonetimCerezAyari());
   return { yonlendir: "/yonetim" };

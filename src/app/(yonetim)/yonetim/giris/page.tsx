@@ -1,4 +1,5 @@
-/* YÖNETİM GİRİŞİ (348; KOD-GECIS Y1) — yalnız yönetim adresinde (başka adreste 404). Oturum varsa Firmalar'a. Nedenler: oturum doldu · çıkış. */
+/* YÖNETİM GİRİŞİ (348; KOD-GECIS Y1) — yalnız yönetim adresinde (başka adreste 404). Oturum varsa Firmalar'a. Nedenler: oturum doldu · çıkış ·
+   572 kurulum tamamlanmadı (yeni parola kaydedilmedi). */
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
@@ -11,7 +12,7 @@ export default async function YonetimGirisSayfasi({ searchParams }: { searchPara
   if (!(await yonetimAdresinde())) notFound();
   if (await yonetimIstekOturumu()) redirect("/yonetim");
   const q = await searchParams;
-  const neden = q.neden === "oturum" || q.neden === "cikis" ? q.neden : undefined;
+  const neden = q.neden === "oturum" || q.neden === "cikis" || q.neden === "kurulum" ? q.neden : undefined;
   const adres = ((await headers()).get("host") ?? "").replace(/:\d+$/, "");
   return <YonetimGirisFormu neden={neden} adres={adres} ikiAdim={await yonetimIkiAdim()} />;
 }

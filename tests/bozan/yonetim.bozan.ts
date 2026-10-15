@@ -2,8 +2,9 @@
    içe aktarılır (göreli içe aktarmalar mutlak yola çevrilir); göçler geçici klasöre kopyalanıp bellekte bozulur.
    1. Yeniden oynatma denetimi kalkınca (son kabul edilen adım yok sayılır) ele geçirilen bir kod aynı adımda ikinci kez geçer.
    2. Dondurma bayrağı firma_bul'dan kalkınca dondurulmuş firmanın alt alan adı yine açılır (kullanıcı ve müşteri girer).
-   3. Hesap kilidi kalkınca kilitli yöneticiye doğru parolayla girilir (parola tahmini sınırsız).
-   4. Parola adımı hatalı deneme sayacını sıfırlarsa "doğru parola → 4 yanlış kod" döngüsü kilide hiç takılmaz (kod kaba kuvvetle denenir).
+   3. 573 (reisim 2026-10-15: yönetim girişinde kilit yok): kilit geri gelirse 5 hatalı denemeden sonra doğru parola reddedilir (yönetici dışarıda
+      kalır) — "kilit yok" testi yakalar. (Önceki 3–4: hesap kilidi / parola adımı sayacı — kilit kararla kalktı.)
+   4. 572: kurulum ekranı oturumu uzatmazsa 26. dakikada kurulum düşer, yeni parola kaydedilmez.
    5. Kurulum eski oturumları düşürmezse kurulumdan önce açık kalmış bir oturum kurulumdan sonra geçerli olur.
    6. Dondurma müşteri oturumlarını silmezse dondurulmuş firmanın müşteri oturumu kalır.
    393 (göç 0075, iki adım ayarı; yukarıdakiler ayar AÇIKKEN):
@@ -91,25 +92,25 @@ test("2. dondurma bayrağı firma_bul'dan kalkınca dondurulmuş firma yine aç�
   } finally { await h.end(); await supa.kapat(); }
 });
 
-test("3. hesap kilidi kalkınca 5 hatalı denemeden sonra da doğru parola geçer — parola tahmini sınırsız (kilidin koruduğu açık)", async () => {
-  const g = await bozukGiris("    if (y?.kilit_bitis && y.kilit_bitis > simdi) { await sahteDenetim(g.parola); return { tamam: false, neden: \"kilitli\" }; }\n", "");
-  for (let i = 0; i < 5; i++) await g.yoneticiGiris(havuz, { eposta: "y@probata.example", parola: `yanlis-${i}-parola`, ip: `10.1.0.${i}`, simdi: T0 });
-  const r = await g.yoneticiGiris(havuz, { eposta: "y@probata.example", parola: PAROLA, ip: "10.1.1.1", simdi: new Date(T0.getTime() + 60_000) });
-  assert.equal(r.tamam, true, "bozuk: kilitli hesaba doğru parolayla girildi");
+test("3. kilit geri gelirse 5 hatalı denemeden sonra doğru parola reddedilir (kilidin koruduğu açık)", async () => {
+  const g = await bozukGiris("    const dogru = y && y.durum !== \"kapali\" ?",
+    "    if ((await db.sorgu<{ n: number }>(\"SELECT count(*)::int AS n FROM yonetim_izi WHERE ne = 'giris.parola_hatali'\")).rows[0].n >= 5) return { tamam: false, neden: \"hatali\" };\n    const dogru = y && y.durum !== \"kapali\" ?");
+  for (let i = 0; i < 5; i++) await g.yoneticiGiris(havuz, { eposta: "y@probata.example", parola: `yanlis-${i}-parola`, ip: `10.3.0.${i}`, simdi: T0 });
+  const r = await g.yoneticiGiris(havuz, { eposta: "y@probata.example", parola: PAROLA, ip: "10.3.1.1", simdi: new Date(T0.getTime() + 60_000) });
+  assert.equal(r.tamam, false, "bozuk: 5 hatadan sonra doğru parola reddedildi");
 });
 
-test("4. parola adımı sayacı sıfırlarsa doğrulama kodu döngüyle sınırsız denenir (kilidin koruduğu açık)", async () => {
-  const g = await bozukGiris("    /* önceki yarım kalmış parola oturumları düşer (aynı anda tek bekleyen adım) */\n",
-    "    await db.sorgu(\"UPDATE yonetici SET hatali_deneme = 0, kilit_bitis = NULL WHERE id = $1\", [y.id]);\n    await db.sorgu(\"DELETE FROM yonetim_kilit WHERE ip = $1\", [ip]);\n");
-  const t = new Date(T0.getTime() + 3600_000);
-  const gecerli = [-1, 0, 1].map((d) => totpKodu(ANAHTAR, zamanAdimi(t) + d));
-  const yanlis = ["123456", "654321", "111111"].find((x) => !gecerli.includes(x))!;
-  for (let tur = 0; tur < 3; tur++) {
-    const p = await g.yoneticiGiris(havuz, { eposta: "y@probata.example", parola: PAROLA, ip: "10.4.0.1", simdi: t });
-    assert.ok(p.tamam, "bozuk: döngü sürüyor");
-    if (!p.tamam) return;
-    for (let i = 0; i < 4; i++) assert.equal((await g.kodDogrula(havuz, { belirtec: p.belirtec, kod: yanlis, ip: "10.4.0.1", simdi: t })).tamam, false);
-  }
+test("4. kurulum ekranı oturumu uzatmazsa 26. dakikada kurulum düşer — yeni parola kaydedilmez (kilidin koruduğu açık)", async () => {
+  const g = await bozukGiris("UPDATE yonetim_oturum SET kurulum_sir = $2, bitis = greatest(bitis, $3) WHERE ozet = $1", "UPDATE yonetim_oturum SET kurulum_sir = $2 WHERE ozet = $1 AND $3::timestamptz IS NOT NULL");
+  const s = kume.sahipIstemci(); await s.connect();
+  try { await s.query("INSERT INTO yonetici (eposta, ad, parola_ozeti) VALUES ('kurulum@probata.example', 'Deneme', $1)", [await parolaOzeti("gecici-parola-4")]); } finally { await s.end(); }
+  const t = new Date(T0.getTime() + 9 * 3600_000), dk = (n: number) => new Date(t.getTime() + n * 60_000);
+  const p = await g.yoneticiGiris(havuz, { eposta: "kurulum@probata.example", parola: "gecici-parola-4", ip: "10.4.0.1", simdi: t });
+  assert.ok(p.tamam);
+  if (!p.tamam) return;
+  const k = (await g.kurulumBilgisi(havuz, p.belirtec, dk(1)))!;
+  const r = await g.kurulumTamamla(havuz, { belirtec: p.belirtec, kod: totpKodu(k.anahtar, zamanAdimi(dk(26))), yeni: "yeni-parola-2027", ip: "10.4.0.1", simdi: dk(26) });
+  assert.deepEqual(r, { tamam: false, neden: "oturum" }, "bozuk: 26. dakikada kurulum düştü");
 });
 
 test("5. kurulum eski oturumları düşürmezse önceki oturum kurulumdan sonra geçerli (kilidin koruduğu açık)", async () => {

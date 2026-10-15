@@ -1,9 +1,10 @@
 /* NEREDEN GELDİ: 348 — probata YÖNETİM sayfası (KOD-GECIS Y1, reisim 2026-10-03: "Yönetim sayfa önerini kabul ediyorum"; maket yonetim.html;
    reisim: "kaynak koddan rol değiştirme, sızma, veri çalma"). GERÇEK PostgreSQL, iki firma, iki yönetici:
    · iki adımlı giriş: parola → kısa ömürlü bekleyen oturum (yönetim oturumu sayılmaz) → doğrulama kodu → yönetim oturumu; aynı kod ikinci kez
-     geçmez (yeniden oynatma); 5 hatalı deneme (parola ya da kod) → 15 dk kilit, kilitliyken doğru parola da geçmez; IP kilidi;
+     geçmez (yeniden oynatma); 573 (reisim 2026-10-15): yönetim girişinde KİLİT YOK — hatalı deneme hesabı / IP'yi kilitlemez, her hata izde
+     (önceki "5 hata → 15 dk, IP kilidi" kuralı reisim kararıyla kalktı; firma girişinin kilidi aynen);
    · ilk kurulum: geçici parolalı yönetici kod adımına geçemez; anahtar bekleyen oturumda bir kez üretilir; kod + yeni parola (geçiciyle aynı
-     olamaz) → durum etkin, eski oturumlar düşer;
+     olamaz) → durum etkin, eski oturumlar düşer; 572: kurulum ekranı açılınca 30 dakika sürer, dolarsa yeni parola kaydedilmez, geçici geçerli;
    · firma aç: firma + ilk firma yöneticisinin personel kaydı ve hesabı (geçici parola, "ilk") — yeni firmaya o parolayla girilir; kayıtlı adres /
      kod, ayrılmış ad reddedilir; firmanın denetim izine ve yönetim izine (yönetici veritabanından) yazılır;
    · dondur: alt alan adı firma bulmaz, firmanın kullanıcı ve müşteri oturumları silinir; etkinleştir geri açar; geçici parola dondurulmuşta yok,
@@ -95,34 +96,32 @@ test("iki adımlı giriş: parola → bekleyen oturum (yönetim oturumu değil) 
   assert.deepEqual(await yoneticiGiris(havuz, { eposta: "kapali@probata.example", parola: PAROLA, ip: "10.1.0.3", simdi: T0 }), { tamam: false, neden: "hatali" });
 });
 
-test("kilit: 5 hatalı deneme (parola ya da kod, ortak sayaç) → 15 dk; parola adımı sayacı sıfırlamaz (kod kaba kuvvetle denenemez); IP kilidi", async () => {
-  for (let i = 0; i < 4; i++) assert.equal((await yoneticiGiris(havuz, { eposta: "y3@probata.example", parola: `yanlis-${i}-parola`, ip: `10.2.0.${i}`, simdi: T0 })).tamam, false);
-  /* doğru parola sayacı sıfırlamaz (347–348 incelemesi): 4 parola hatası + 1 kod hatası = kilit */
-  const g = await yoneticiGiris(havuz, { eposta: "y3@probata.example", parola: PAROLA, ip: "10.2.1.1", simdi: T0 });
-  assert.ok(g.tamam);
+/* 2026-10-15 (573; reisim: "yönetim giriş denemesi için 15 dakikalık engeli kaldır diğer yerler için değil sadece yönetim paneli için"): yönetim
+   girişinde hatalı deneme KİLİTLEMEZ. Önceki test ("5 hatalı deneme → 15 dk; parola adımı sayacı sıfırlamaz; IP kilidi") bu kararla değişti: aynı
+   denemeler artık kilide düşmez, her hata yönetim izine yazılır. Firma / müşteri girişinin kilidi aynen (src/server/kimlik — kendi testleri). */
+test("573 kilit yok: 5+ hatalı parola ya da kod denemesinden sonra doğru parola ve kod geçer; aynı IP'den çok hata kilitlemez; her hata izde", async () => {
+  for (let i = 0; i < 7; i++) {
+    assert.deepEqual(await yoneticiGiris(havuz, { eposta: "y3@probata.example", parola: `yanlis-${i}-parola`, ip: "10.2.0.1", simdi: T0 }), { tamam: false, neden: "hatali" });
+  }
+  const g = await yoneticiGiris(havuz, { eposta: "y3@probata.example", parola: PAROLA, ip: "10.2.0.1", simdi: sn(1) });
+  assert.ok(g.tamam && g.sonraki === "kod", "7 hatalı parolandan sonra doğru parola geçer");
   if (!g.tamam) return;
-  assert.deepEqual(await kodDogrula(havuz, { belirtec: g.belirtec, kod: yanlisKod(T0), ip: "10.2.1.1", simdi: T0 }), { tamam: false, neden: "kilitli" });
-  assert.deepEqual(await kodDogrula(havuz, { belirtec: g.belirtec, kod: kod(T0), ip: "10.2.1.1", simdi: T0 }), { tamam: false, neden: "oturum" }, "kilitlenince bekleyen oturum düşer");
-  assert.deepEqual(await yoneticiGiris(havuz, { eposta: "y3@probata.example", parola: PAROLA, ip: "10.2.2.2", simdi: sn(60) }), { tamam: false, neden: "kilitli" });
-  const acik = await yoneticiGiris(havuz, { eposta: "y3@probata.example", parola: PAROLA, ip: "10.2.2.2", simdi: sn(16 * 60) });
-  assert.ok(acik.tamam, "15 dk sonra açılır");
-  if (!acik.tamam) return;
-  const k = await kodDogrula(havuz, { belirtec: acik.belirtec, kod: kod(sn(16 * 60)), ip: "10.2.2.2", simdi: sn(16 * 60) });
-  assert.ok(k.tamam);
-  if (k.tamam) assert.equal((await yonetimOturumOku(havuz, k.belirtec, sn(16 * 60)))?.id, Y3);
-  /* döngü: tam girişten sonra sayaç 0 — doğru parola → 4 yanlış kod → yine doğru parola → 1 yanlış kod = kilit (parola adımı sıfırlasaydı sınırsızdı) */
-  const t = sn(20 * 60);
-  const p1 = await yoneticiGiris(havuz, { eposta: "y3@probata.example", parola: PAROLA, ip: "10.2.3.3", simdi: t });
-  assert.ok(p1.tamam);
-  if (!p1.tamam) return;
-  for (let i = 0; i < 4; i++) assert.deepEqual(await kodDogrula(havuz, { belirtec: p1.belirtec, kod: yanlisKod(t), ip: "10.2.3.3", simdi: t }), { tamam: false, neden: "hatali" });
-  const p2 = await yoneticiGiris(havuz, { eposta: "y3@probata.example", parola: PAROLA, ip: "10.2.3.4", simdi: t });
-  assert.ok(p2.tamam);
-  if (!p2.tamam) return;
-  assert.deepEqual(await kodDogrula(havuz, { belirtec: p2.belirtec, kod: yanlisKod(t), ip: "10.2.3.4", simdi: t }), { tamam: false, neden: "kilitli" }, "döngü kilide takılır");
-  /* aynı IP'den bilinmeyen hesaplarla 5 hata → IP kilitlenir (doğru hesap da o IP'den giremez) */
-  for (let i = 0; i < 5; i++) await yoneticiGiris(havuz, { eposta: `yok${i}@probata.example`, parola: "x-parola-12", ip: "10.9.9.9", simdi: T0 });
-  assert.deepEqual(await yoneticiGiris(havuz, { eposta: "y1@probata.example", parola: PAROLA, ip: "10.9.9.9", simdi: sn(10) }), { tamam: false, neden: "kilitli" });
+  for (let i = 0; i < 6; i++) {
+    assert.deepEqual(await kodDogrula(havuz, { belirtec: g.belirtec, kod: yanlisKod(sn(1)), ip: "10.2.0.1", simdi: sn(1) }), { tamam: false, neden: "hatali" });
+  }
+  const k = await kodDogrula(havuz, { belirtec: g.belirtec, kod: kod(sn(1)), ip: "10.2.0.1", simdi: sn(1) });
+  assert.ok(k.tamam, "6 hatalı koddan sonra doğru kod geçer");
+  if (k.tamam) assert.equal((await yonetimOturumOku(havuz, k.belirtec, sn(2)))?.id, Y3);
+  /* aynı IP'den bilinmeyen hesaplarla çok hata: IP kilitlenmez */
+  for (let i = 0; i < 6; i++) await yoneticiGiris(havuz, { eposta: `yok${i}@probata.example`, parola: "x-parola-12", ip: "10.9.9.9", simdi: T0 });
+  assert.ok((await yoneticiGiris(havuz, { eposta: "y1@probata.example", parola: PAROLA, ip: "10.9.9.9", simdi: sn(10) })).tamam, "IP kilidi yok");
+  const sa = kume.sahipIstemci(); await sa.connect();
+  try {
+    const iz = new Map((await sa.query<{ ne: string; n: number }>("SELECT ne, count(*)::int AS n FROM yonetim_izi GROUP BY ne")).rows.map((x) => [x.ne, x.n]));
+    assert.ok((iz.get("giris.parola_hatali") ?? 0) >= 7 && (iz.get("giris.kod_hatali") ?? 0) >= 6, "her hata izde");
+    assert.equal((iz.get("giris.hesap_kilitlendi") ?? 0) + (iz.get("giris.ip_kilitlendi") ?? 0), 0, "kilit kaydı yok");
+    assert.equal((await sa.query("SELECT 1 FROM yonetim_kilit")).rowCount, 0, "IP sayacı yazılmaz");
+  } finally { await sa.end(); }
 });
 
 test("ilk kurulum: kod adımına geçilmez; anahtar bekleyen oturumda bir kez üretilir; kod + yeni parola → etkin, eski oturumlar düşer", async () => {
@@ -154,6 +153,47 @@ test("ilk kurulum: kod adımına geçilmez; anahtar bekleyen oturumda bir kez ü
   assert.ok(g2.tamam && g2.sonraki === "kod");
   if (!g2.tamam) return;
   assert.ok((await kodDogrula(havuz, { belirtec: g2.belirtec, kod: kod(sn(70), b1.anahtar), ip: "10.3.0.2", simdi: sn(70) })).tamam, "kurulan anahtar yöneticiye taşındı");
+});
+
+/* 2026-10-15 (572; reisim: "yönetim paneline girecek hesabın şifresini değiştirdim ilk girişte zorla değiştirtti ama şimdide yeni şifreyi kabul
+   etmiyor"): kurulum ekranı 10 dakikalık parola oturumundaydı — uygulamayı kurup karekodu okutmak, kodu ve yeni parolayı yazmak uzun sürünce oturum
+   düşüyor, yeni parola KAYDEDİLMİYORDU. Kurulum ekranı ilk açılınca oturum 30 dakikaya uzar (bir kez); dolarsa geçici parola geçerli kalır. */
+test("572 ilk kurulum 30 dakika sürer (bir kez uzar); süre dolarsa yeni parola kaydedilmez, geçici parola geçerli, kurulum baştan", async () => {
+  const sa = kume.sahipIstemci(); await sa.connect();
+  try {
+    for (const e of ["y6@probata.example", "y7@probata.example"]) {
+      await sa.query("INSERT INTO yonetici (eposta, ad, parola_ozeti) VALUES ($1, 'Deneme Kurulum', $2)", [e, await parolaOzeti(GECICI)]);
+    }
+  } finally { await sa.end(); }
+  /* y6: kurulum ekranı 1. dakikada açıldı, 26. dakikada tamamlandı (eskiden 10. dakikada düşüyordu) */
+  const g6 = await yoneticiGiris(havuz, { eposta: "y6@probata.example", parola: GECICI, ip: "10.6.0.1", simdi: T0 });
+  assert.ok(g6.tamam && g6.sonraki === "kurulum");
+  if (!g6.tamam) return;
+  const b6 = (await kurulumBilgisi(havuz, g6.belirtec, sn(60)))!;
+  const b6b = (await kurulumBilgisi(havuz, g6.belirtec, sn(20 * 60)))!;
+  assert.equal(b6b.anahtar, b6.anahtar, "ikinci açılış yeni anahtar üretmez");
+  const t26 = sn(26 * 60);
+  const t6 = await kurulumTamamla(havuz, { belirtec: g6.belirtec, kod: kod(t26, b6.anahtar), yeni: "yeni-parola-2027", ip: "10.6.0.1", simdi: t26 });
+  assert.ok(t6.tamam, "26. dakikada kurulum tamamlanır");
+  /* y7: süre (ilk açılıştan 30 dk) dolunca kurulum düşer — ikinci açılış süreyi uzatmaz; yeni parola kaydedilmez, geçici geçer */
+  const g7 = await yoneticiGiris(havuz, { eposta: "y7@probata.example", parola: GECICI, ip: "10.6.0.2", simdi: T0 });
+  assert.ok(g7.tamam);
+  if (!g7.tamam) return;
+  const b7 = (await kurulumBilgisi(havuz, g7.belirtec, sn(60)))!;
+  assert.ok(await kurulumBilgisi(havuz, g7.belirtec, sn(29 * 60)), "29. dakikada ekran açık");
+  const t32 = sn(32 * 60);
+  assert.deepEqual(await kurulumTamamla(havuz, { belirtec: g7.belirtec, kod: kod(t32, b7.anahtar), yeni: "yeni-parola-2027", ip: "10.6.0.2", simdi: t32 }),
+    { tamam: false, neden: "oturum" });
+  assert.deepEqual(await yoneticiGiris(havuz, { eposta: "y7@probata.example", parola: "yeni-parola-2027", ip: "10.6.0.2", simdi: sn(33 * 60) }), { tamam: false, neden: "hatali" },
+    "yeni parola kaydedilmedi");
+  const g7b = await yoneticiGiris(havuz, { eposta: "y7@probata.example", parola: GECICI, ip: "10.6.0.2", simdi: sn(34 * 60) });
+  assert.ok(g7b.tamam && g7b.sonraki === "kurulum", "geçici parola geçerli, kurulum baştan");
+  /* anahtar yöneticiye bağlı: yeni girişte AYNI karekod (telefona önce eklenen kayıt geçerli) — eskiden her girişte yeni anahtar */
+  if (g7b.tamam) assert.equal((await kurulumBilgisi(havuz, g7b.belirtec, sn(34 * 60)))?.anahtar, b7.anahtar, "aynı anahtar");
+  /* kurulum ekranı hiç açılmadıysa bekleyen oturum yine 10 dakika */
+  const g7c = await yoneticiGiris(havuz, { eposta: "y7@probata.example", parola: GECICI, ip: "10.6.0.2", simdi: sn(40 * 60) });
+  assert.ok(g7c.tamam);
+  if (g7c.tamam) assert.equal(await kurulumBilgisi(havuz, g7c.belirtec, sn(51 * 60)), null, "açılmamış kurulum 10 dakikada düşer");
 });
 
 test("firma aç: firma + ilk yönetici (geçici parola ile girilir); kayıtlı adres / kod ve ayrılmış ad reddedilir; iki ize yazılır", async () => {
@@ -278,7 +318,7 @@ test("SIZMA: firma işlemi yönetime, yönetim işlemi firmalara dokunamaz; yön
   await assert.rejects(yonetimIcinde(havuz, async () => 1, { yoneticiId: "x' OR 1=1" }), /Geçersiz yönetici kimliği/);
 });
 
-test("iki adım KAPALI (393): parola doğruysa yönetim oturumu — geçici parolalı 'ilk' de; kilit aynen; açılınca 'ilk'in oturumu ve işlemi düşer", async () => {
+test("iki adım KAPALI (393): parola doğruysa yönetim oturumu — geçici parolalı 'ilk' de; kilit yok (573); açılınca 'ilk'in oturumu ve işlemi düşer", async () => {
   const s = kume.sahipIstemci(); await s.connect();
   let Y4 = "", Y5 = "";
   try {
@@ -300,10 +340,11 @@ test("iki adım KAPALI (393): parola doğruysa yönetim oturumu — geçici paro
   const g5 = await yoneticiGiris(havuz, { eposta: "y5@probata.example", parola: PAROLA, ip: "10.9.0.2", simdi: t });
   assert.ok(g5.tamam && g5.sonraki === "tamam");
   assert.equal((await yonetimOturumOku(havuz, g5.tamam ? g5.belirtec : "", t))?.id, Y5);
-  /* kapalı yönetici giremez; kilit aynen: 5 hatalı deneme → doğru parola da geçmez */
+  /* kapalı yönetici giremez; 573 (reisim 2026-10-15): kilit yok — 5 hatalı denemeden sonra doğru parola geçer (önceki "kilit aynen" beklentisi
+     bu kararla değişti) */
   assert.deepEqual(await yoneticiGiris(havuz, { eposta: "kapali@probata.example", parola: PAROLA, ip: "10.9.0.3", simdi: t }), { tamam: false, neden: "hatali" });
   for (let i = 0; i < 5; i++) await yoneticiGiris(havuz, { eposta: "y5@probata.example", parola: `yanlis-${i}-parola`, ip: `10.9.1.${i}`, simdi: t });
-  assert.deepEqual(await yoneticiGiris(havuz, { eposta: "y5@probata.example", parola: PAROLA, ip: "10.9.2.1", simdi: sn(5060) }), { tamam: false, neden: "kilitli" });
+  assert.ok((await yoneticiGiris(havuz, { eposta: "y5@probata.example", parola: PAROLA, ip: "10.9.2.1", simdi: sn(5060) })).tamam);
   /* ayar açılınca: "ilk"in oturumu düşer, işlemi reddedilir, girişi kuruluma gider */
   const s2 = kume.sahipIstemci(); await s2.connect();
   try { await s2.query("UPDATE yonetim_ayar SET iki_adim = true"); } finally { await s2.end(); }

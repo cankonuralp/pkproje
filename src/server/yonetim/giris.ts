@@ -3,8 +3,17 @@
    · İkinci adım doğrulama kodu (RFC 6238, src/server/yonetim/totp.ts): doğruysa yönetim oturumu (hareketsizlik 2 saat, mutlak 12 saat).
    · İlk giriş (durum "ilk", geçici parola): anahtar sunucuda üretilir, yalnız o parola oturumunda gösterilir (şifreli saklanır); kişi uygulamasına
      ekler, kodu ve YENİ parolasını yazar → anahtar yöneticiye taşınır, durum "etkin", bütün eski oturumları düşer.
-   · Kilit: yönetici başına 5 hata (parola ya da kod, ortak sayaç) → 15 dk; aynı IP'den 5 hata → 15 dk. Kilitliyken denetlenmez bile. Sayaçlar
-     yalnız TAM girişte sıfırlanır (parola adımı sıfırlamaz — kod kaba kuvvetle denenemez).
+     572 (reisim 2026-10-15: "yönetim paneline girecek hesabın şifresini değiştirdim ilk girişte zorla değiştirtti ama şimdide yeni şifreyi kabul
+     etmiyor"): kurulum ekranı 10 dakikalık parola oturumundaydı — uygulamayı kurup karekodu okutmak, kodu ve yeni parolayı yazmak uzun sürünce oturum
+     düşüyor, yeni parola KAYDEDİLMİYORDU (ekran yalnız "oturum kapandı" diyordu). Kurulum ekranı ilk açıldığında oturum KURULUM_DK'ya (30 dk) uzar;
+     dolarsa giriş ekranı yeni parolanın kaydedilmediğini ve geçici parolanın geçerli olduğunu söyler. Anahtar YÖNETİCİYE bağlı (kurulum bitene
+     kadar yonetici.totp_sir'de, durum "ilk"): her girişte AYNI karekod — eskiden her girişte yeni anahtar üretiliyordu, telefona önce eklenen kayıt
+     geçersiz kalıyor, kod hiç tutmuyordu.
+   · KİLİT YOK (573; reisim 2026-10-15: *"yönetim giriş denemesi için 15 dakikalık engeli kaldır diğer yerler için değil sadece yönetim paneli
+     için"*): yönetim girişinde hatalı parola / kod denemesi hesabı ya da IP'yi kilitlemez (önceki kural: 5 hata → 15 dk). Firma ve müşteri
+     girişlerinin kilidi AYNEN (src/server/kimlik). Her hatalı deneme yönetim izine yazılır; parola özeti yavaş (scrypt) ve iki adım açıkken parola
+     tek başına yetmez. Eski sayaç sütunları (yonetici.hatali_deneme / kilit_bitis) ve yonetim_kilit tablosu artık yazılmaz; başarılı girişte
+     sıfırlanır (eski kayıt kalmasın).
      Yanıt hesabın var olup olmadığını söylemez (tek ileti, eşit süre).
    · Belirteç 32 bayt rasgele; veritabanında yalnız SHA-256 özeti. Anahtar ana anahtarla şifreli, yöneticiye bağlı (başka satıra kopyalansa çözülmez).
    · Her adım yönetim izine (kim veritabanından damgalanır). */
@@ -24,9 +33,9 @@ async function ikiAdim(db: Sorgulayici): Promise<boolean> {
 }
 export const ikiAdimAcik = (havuz: Havuz): Promise<boolean> => yonetimIcinde(havuz, ikiAdim);
 
-export const Y_KILIT_ESIGI = 5;
-export const Y_KILIT_DK = 15;
 export const BEKLEYEN_DK = 10;
+/** 572: ilk kurulum ekranının süresi (ekran ilk açıldığında bekleyen oturum bu kadar uzar; bir kez) */
+export const KURULUM_DK = 30;
 export const Y_HAREKETSIZ_DK = 120;
 export const Y_MUTLAK_SAAT = 12;
 
@@ -39,45 +48,13 @@ const sirAdi = (yoneticiId: string) => `totp:${yoneticiId}`;
 
 export interface YoneticiOturumu { id: string; ad: string; eposta: string }
 /** sonraki "tamam": iki adım kapalı — belirteç yönetim oturumunun kendisi */
-export type YGirisSonucu = { tamam: true; belirtec: string; sonraki: "kod" | "kurulum" | "tamam" } | { tamam: false; neden: "hatali" | "kilitli" };
-export type YKodSonucu = { tamam: true; belirtec: string } | { tamam: false; neden: "hatali" | "kilitli" | "oturum" | "ayni" };
+export type YGirisSonucu = { tamam: true; belirtec: string; sonraki: "kod" | "kurulum" | "tamam" } | { tamam: false; neden: "hatali" };
+export type YKodSonucu = { tamam: true; belirtec: string } | { tamam: false; neden: "hatali" | "oturum" | "ayni" };
 
 interface YSatir { id: string; eposta: string; ad: string; durum: "ilk" | "etkin" | "kapali"; parola_ozeti: string; totp_sir: string | null; totp_son: string; hatali_deneme: number; kilit_bitis: Date | null }
 
 async function iz(db: Sorgulayici, kim: string, ne: string, ayrinti: Record<string, unknown> = {}) {
   await db.sorgu("INSERT INTO yonetim_izi (kim, ne, ayrinti) VALUES ($1, $2, $3)", [kim.slice(0, 254) || "bilinmiyor", ne, JSON.stringify(ayrinti)]);
-}
-
-/** hatalı deneme: IP sayacı + (varsa) yönetici sayacı; eşiği aşan kilitlenir. Dönen: kilit bitişi (kilitlendiyse) */
-async function hataliDeneme(db: Sorgulayici, y: YSatir | undefined, ip: string, simdi: Date, ne: string): Promise<Date | null> {
-  const kilit = new Date(simdi.getTime() + dk(Y_KILIT_DK));
-  const ipSayi = (await db.sorgu<{ hatali_deneme: number }>(
-    `INSERT INTO yonetim_kilit (ip, hatali_deneme, son) VALUES ($1, 1, $2)
-     ON CONFLICT (ip) DO UPDATE SET hatali_deneme = CASE WHEN yonetim_kilit.kilit_bitis IS NOT NULL AND yonetim_kilit.kilit_bitis <= $2 THEN 1
-       ELSE yonetim_kilit.hatali_deneme + 1 END, kilit_bitis = NULL, son = $2 RETURNING hatali_deneme`, [ip, simdi])).rows[0].hatali_deneme;
-  let kilitlendi = false;
-  if (ipSayi >= Y_KILIT_ESIGI) {
-    await db.sorgu("UPDATE yonetim_kilit SET kilit_bitis = $2, hatali_deneme = 0 WHERE ip = $1", [ip, kilit]);
-    await iz(db, y?.eposta ?? "bilinmiyor", "giris.ip_kilitlendi", { ip });
-    kilitlendi = true;
-  }
-  if (y && y.durum !== "kapali") {
-    const sayi = (y.kilit_bitis && y.kilit_bitis <= simdi ? 0 : y.hatali_deneme) + 1;
-    await db.sorgu("UPDATE yonetici SET hatali_deneme = $2, kilit_bitis = $3 WHERE id = $1",
-      [y.id, sayi >= Y_KILIT_ESIGI ? 0 : sayi, sayi >= Y_KILIT_ESIGI ? kilit : null]);
-    if (sayi >= Y_KILIT_ESIGI) {
-      /* kilitlenen yöneticinin bekleyen (parola) oturumları da düşer: kod denemesi kilitten sonra sürmez */
-      await db.sorgu("DELETE FROM yonetim_oturum WHERE yonetici_id = $1 AND adim = 'parola'", [y.id]);
-      await iz(db, y.eposta, "giris.hesap_kilitlendi", { ip, ne });
-      kilitlendi = true;
-    }
-  }
-  return kilitlendi ? kilit : null;
-}
-
-async function ipKilitli(db: Sorgulayici, ip: string, simdi: Date): Promise<boolean> {
-  const r = (await db.sorgu<{ kilit_bitis: Date | null }>("SELECT kilit_bitis FROM yonetim_kilit WHERE ip = $1 FOR UPDATE", [ip])).rows[0];
-  return !!r?.kilit_bitis && r.kilit_bitis > simdi;
 }
 
 const ipTemiz = (ip: string) => ip.slice(0, 64) || "bilinmiyor";
@@ -89,18 +66,13 @@ export async function yoneticiGiris(havuz: Havuz, g: { eposta: string; parola: s
   const ip = ipTemiz(g.ip);
   return yonetimIcinde(havuz, async (db) => {
     await db.sorgu("DELETE FROM yonetim_oturum WHERE bitis <= $1", [simdi]);
-    if (await ipKilitli(db, ip, simdi)) { await sahteDenetim(g.parola); return { tamam: false, neden: "kilitli" }; }
     const y = (await db.sorgu<YSatir>(
       "SELECT id, eposta, ad, durum, parola_ozeti, totp_sir, totp_son::text, hatali_deneme, kilit_bitis FROM yonetici WHERE eposta = $1 FOR UPDATE", [eposta])).rows[0];
-    if (y?.kilit_bitis && y.kilit_bitis > simdi) { await sahteDenetim(g.parola); return { tamam: false, neden: "kilitli" }; }
     const dogru = y && y.durum !== "kapali" ? await parolaDogru(g.parola, y.parola_ozeti) : (await sahteDenetim(g.parola), false);
     if (!dogru || !y) {
-      const k = await hataliDeneme(db, y, ip, simdi, "parola");
       if (y) await iz(db, y.eposta, "giris.parola_hatali", { ip });
-      return { tamam: false, neden: k ? "kilitli" : "hatali" };
+      return { tamam: false, neden: "hatali" };
     }
-    /* hatalı deneme sayaçları (yönetici + IP) parola adımında SIFIRLANMAZ — yalnız tam girişte (kod / kurulum) sıfırlanır: parolayı bilen biri
-       "doğru parola → 4 yanlış kod → doğru parola …" döngüsüyle kod denemesini sınırsız sürdüremez (347–348 incelemesi) */
     /* önceki yarım kalmış parola oturumları düşer (aynı anda tek bekleyen adım) */
     await db.sorgu("DELETE FROM yonetim_oturum WHERE yonetici_id = $1 AND adim = 'parola'", [y.id]);
     /* iki adım kapalı: parola tam giriştir — sayaçlar sıfırlanır, yönetim oturumu açılır (kod adımındaki gibi) */
@@ -160,12 +132,10 @@ export async function kodDogrula(havuz: Havuz, g: { belirtec: string | undefined
     const sir = b?.y.totp_sir;
     if (!b || b.y.durum !== "etkin" || !sir) return { tamam: false, neden: "oturum" };
     const { y } = b;
-    if ((y.kilit_bitis && y.kilit_bitis > simdi) || (await ipKilitli(db, ip, simdi))) return { tamam: false, neden: "kilitli" };
     const adim = totpDogrula(coz(sir, BAG, sirAdi(y.id)), g.kod, simdi, Number(y.totp_son));
     if (adim === null) {
-      const k = await hataliDeneme(db, y, ip, simdi, "kod");
       await iz(db, y.eposta, "giris.kod_hatali", { ip });
-      return { tamam: false, neden: k ? "kilitli" : "hatali" };
+      return { tamam: false, neden: "hatali" };
     }
     await db.sorgu("UPDATE yonetici SET totp_son = $2, hatali_deneme = 0, kilit_bitis = NULL WHERE id = $1", [y.id, adim]);
     await db.sorgu("DELETE FROM yonetim_oturum WHERE ozet = $1", [ozet(g.belirtec!)]);
@@ -186,8 +156,17 @@ export async function kurulumBilgisi(havuz: Havuz, belirtec: string | undefined,
     let anahtar: string;
     if (b.kurulum_sir) anahtar = coz(b.kurulum_sir, BAG, sirAdi(b.y.id));
     else {
-      anahtar = yeniAnahtar();
-      await db.sorgu("UPDATE yonetim_oturum SET kurulum_sir = $2 WHERE ozet = $1", [ozet(belirtec), sifrele(anahtar, BAG, sirAdi(b.y.id))]);
+      /* 572: anahtar yöneticiye bağlı — önceki girişte üretildiyse aynısı (telefondaki kayıt geçerli kalır), yoksa üretilip yöneticiye yazılır */
+      let sir = b.y.totp_sir;
+      if (sir) anahtar = coz(sir, BAG, sirAdi(b.y.id));
+      else {
+        anahtar = yeniAnahtar();
+        sir = sifrele(anahtar, BAG, sirAdi(b.y.id));
+        await db.sorgu("UPDATE yonetici SET totp_sir = $2 WHERE id = $1 AND durum = 'ilk'", [b.y.id, sir]);
+      }
+      /* oturum kurulum süresine uzar (yalnız bir kez — sonraki açılışlar uzatmaz) */
+      await db.sorgu("UPDATE yonetim_oturum SET kurulum_sir = $2, bitis = greatest(bitis, $3) WHERE ozet = $1",
+        [ozet(belirtec), sir, new Date(simdi.getTime() + dk(KURULUM_DK))]);
     }
     return { anahtar, adres: otpauthAdresi(anahtar, b.y.eposta), eposta: b.y.eposta };
   });
@@ -202,13 +181,11 @@ export async function kurulumTamamla(havuz: Havuz, g: { belirtec: string | undef
     const b = await bekleyenOku(db, g.belirtec, simdi, true);
     if (!b || b.y.durum !== "ilk" || !b.kurulum_sir) return { tamam: false, neden: "oturum" };
     const { y } = b;
-    if ((y.kilit_bitis && y.kilit_bitis > simdi) || (await ipKilitli(db, ip, simdi))) return { tamam: false, neden: "kilitli" };
     const anahtar = coz(b.kurulum_sir, BAG, sirAdi(y.id));
     const adim = totpDogrula(anahtar, g.kod, simdi, Number(y.totp_son));
     if (adim === null) {
-      const k = await hataliDeneme(db, y, ip, simdi, "kurulum");
       await iz(db, y.eposta, "giris.kod_hatali", { ip, kurulum: true });
-      return { tamam: false, neden: k ? "kilitli" : "hatali" };
+      return { tamam: false, neden: "hatali" };
     }
     if (await parolaDogru(g.yeni, y.parola_ozeti)) return { tamam: false, neden: "ayni" };
     await db.sorgu("UPDATE yonetici SET parola_ozeti = $2, totp_sir = $3, totp_son = $4, durum = 'etkin', hatali_deneme = 0, kilit_bitis = NULL WHERE id = $1",

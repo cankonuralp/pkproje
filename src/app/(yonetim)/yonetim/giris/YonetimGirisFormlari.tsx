@@ -74,7 +74,7 @@ function KodAlani({ hata }: { hata?: string }) {
 }
 
 /** ikiAdim (393): kapalıyken tuş "Giriş yap", altta iki adım yazmaz */
-export function YonetimGirisFormu({ neden, adres, ikiAdim }: { neden?: "oturum" | "cikis"; adres: string; ikiAdim: boolean }) {
+export function YonetimGirisFormu({ neden, adres, ikiAdim }: { neden?: "oturum" | "cikis" | "kurulum"; adres: string; ikiAdim: boolean }) {
   const [durum, eylem, gonderiyor] = useActionState<YGirisDurumu, FormData>(yonetimGirisEylemi, {});
   useEffect(() => yonlendir(durum.yonlendir), [durum.yonlendir]);
   /* hata dönünce odak alana (firma girişiyle aynı — 2026-10-08 canlı denetim): e-posta boşsa oraya, yoksa parolaya */
@@ -87,6 +87,8 @@ export function YonetimGirisFormu({ neden, adres, ikiAdim }: { neden?: "oturum" 
     <Kart baslik="Yönetim girişi" alt={adres} action={eylem}>
       {neden === "oturum" && !durum.hata && <Serit tur="bilgi" ikon="clock">Oturumunuz kapandı. Devam etmek için yeniden giriş yapın.</Serit>}
       {neden === "cikis" && !durum.hata && <Serit tur="onay">Çıkış yaptınız; oturumunuz kapatıldı.</Serit>}
+      {/* 572: kurulum yarıda kaldı — yeni parola sanılıp denenmesin (kilide düşülüyordu) */}
+      {neden === "kurulum" && !durum.hata && <Serit tur="uyari" ikon="circle-alert">İlk giriş kurulumu tamamlanmadan süresi doldu; <b>yeni parolanız kaydedilmedi</b>. Size verilen geçici parolayla yeniden girin; yeni bir karekod verilir (doğrulama uygulamasındaki eski “probata yönetim” kaydını silebilirsiniz).</Serit>}
       {durum.hata && <Serit tur="hata" ikon="circle-alert">{durum.hata}</Serit>}
       <div className={stil.alan}>
         <label className={stil.etiket} htmlFor="y-eposta">E-posta</label>
@@ -120,7 +122,7 @@ export function YonetimKodFormu({ eposta }: { eposta: string }) {
 }
 
 /** `karekod` (407): anahtarın karekodu (sunucuda üretilir, yalnız çizim yolu) — uygulamayla okutulur */
-export function YonetimKurulumFormu({ eposta, anahtar, adres, karekod }: { eposta: string; anahtar: string; adres: string; karekod: { boyut: number; yol: string } }) {
+export function YonetimKurulumFormu({ eposta, anahtar, adres, karekod, sure }: { eposta: string; anahtar: string; adres: string; karekod: { boyut: number; yol: string }; sure: number }) {
   const [durum, eylem, gonderiyor] = useActionState<YKurulumDurumu, FormData>(yonetimKurulumEylemi, {});
   useEffect(() => yonlendir(durum.yonlendir), [durum.yonlendir]);
   /* sunucudan dönen ilk hatalı alana odak; ileti alana aria-describedby ile bağlı, odakla okunur (347–348 incelemesi) */
@@ -133,7 +135,8 @@ export function YonetimKurulumFormu({ eposta, anahtar, adres, karekod }: { epost
   const h = durum.hata ?? {};
   return (
     <Kart baslik="İki adımlı giriş kurulumu" alt={eposta} action={eylem}>
-      <Serit tur="bilgi" ikon="shield-check">İlk girişiniz: telefonunuzdaki doğrulama uygulamasını bağlayın ve kendi parolanızı belirleyin.</Serit>
+      <Serit tur="bilgi" ikon="shield-check">İlk girişiniz: telefonunuzdaki doğrulama uygulamasını bağlayın ve kendi parolanızı belirleyin. Bu adımı {sure} dakika
+        içinde tamamlayın; “Kurulumu tamamla” başarılı olana kadar yeni parola kaydedilmez, geçici parolanız geçerlidir.</Serit>
       {h.genel && <Serit tur="hata" ikon="circle-alert">{h.genel}</Serit>}
       <div className={stil.alan}>
         <p className={stil.etiket}>1. Anahtarı uygulamaya ekleyin</p>
