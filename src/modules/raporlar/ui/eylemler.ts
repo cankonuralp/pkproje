@@ -15,6 +15,9 @@ import { FOTO_OKU_EN_BUYUK, fotoOkuBirak, fotoOkuHazirla, fotoOkuKaydet, fotoOku
 import { alanOkuBirak, alanOkuHazirla, alanOkuKullanimYaz, alanOkuSonuc } from "../server/alan-oku";
 import { raporOneriSil } from "../server/oneri";
 import type { AlanOkunan } from "../../../server/yz/alanlar";
+import { raporSayfasi } from "../server/liste";
+import type { RaporListeSatiri } from "../server/raporlar";
+import type { SunucuListe } from "../../../components/liste/suzgec";
 
 export interface RaporYaniti {
   /** dosya (542): eklenen okuma fotoğrafının kimliği */
@@ -35,6 +38,15 @@ async function islem(is: (o: NonNullable<Awaited<ReturnType<typeof istekOturumu>
   return yanit(await is(o));
 }
 const metin = (v: unknown) => (typeof v === "string" ? v : "");
+
+/** 566: Raporlar listesinin bir sayfası (süzgeç SUNUCUDA — 09-B3). Oturum ve kiracı istekten; görme kuralı modül işlevinde (raporSayfasi).
+    Süzgeç durumu biçim denetiminden geçer, koşula yalnız değer olarak girer. Göremeyene / oturumsuza null. */
+export async function raporSayfasiEylemi(durum: unknown): Promise<SunucuListe<RaporListeSatiri> | null> {
+  if (!(await ayniKoken())) return null;
+  const o = await istekOturumu();
+  if (!o) return null;
+  return oturumIslemi(o, (db) => raporSayfasi(db, o, durum));
+}
 
 /** 525: bekleyen öneri (S.A.Y Chat okuması) uygulandı / bırakıldı ya da şerit kapatıldı — bölümün önerileri kalkar (yalnız kişinin kendisininkiler) */
 export async function raporOneriKapatEylemi(raporId: unknown, bolum: unknown): Promise<boolean> {

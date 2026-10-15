@@ -15,7 +15,7 @@ import { aktifSecici, suzgecVar, temizle, uygulanan, type Secici, type SuzgecDur
 import stil from "./Filtre.module.css";
 
 
-export function FiltreSatiri<K>({ on, tanim, durum, degistir, tb, kip = "tablo" }: {
+export function FiltreSatiri<K>({ on, tanim, durum, degistir, tb, kip = "tablo", cipSayilari }: {
   /** sayfadaki süzgecin kısa adı (açık / kapalı tercihi bununla hatırlanır) */
   on: string;
   tanim: SuzgecTanimi<K>;
@@ -24,6 +24,8 @@ export function FiltreSatiri<K>({ on, tanim, durum, degistir, tb, kip = "tablo" 
   /** çipler hariç süzgeçten geçen kayıtlar (çip sayıları) */
   tb: readonly K[];
   kip?: ListeKipi;
+  /** 566: sunucuda süzülen listede çip sayıları sunucudan */
+  cipSayilari?: Record<string, number>;
 }) {
   const yol = usePathname();
   const anahtar = `probata-suzgec-${yol}-${on}`;
@@ -79,7 +81,7 @@ export function FiltreSatiri<K>({ on, tanim, durum, degistir, tb, kip = "tablo" 
               return (
                 <button key={c.k} className={stil.cip} type="button" aria-pressed={basili} data-cip={c.k}
                   onClick={() => yeni({ secili: basili ? durum.secili.filter((x) => x !== c.k) : [...durum.secili, c.k] })}>
-                  {c.ad} <span className={stil.cipSayi}>{tb.filter(c.test).length}</span>
+                  {c.ad} <span className={stil.cipSayi}>{cipSayilari ? (cipSayilari[c.k] ?? 0) : tb.filter(c.test).length}</span>
                 </button>
               );
             })}

@@ -28,3 +28,6 @@ export async function kendiYeniRaporlarim(db: Sorgulayici, hesapId: string): Pro
   return { geri: Number(r.geri), yeni: Number(r.yeni) };
 }
 
+
+/** 566 (Ana sayfa, Raporlar şeridi): kişinin yazdığı, son imzasını bekleyen rapor sayısı (sayım; bütün raporlar okunmaz) */
+export { imzamiBekleyenSayisi } from "./liste.ts";

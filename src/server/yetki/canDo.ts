@@ -54,6 +54,24 @@ export function canDo(h: YetkiHesabi | null, modul: ModulAnahtari, eylem: "gor" 
   }
   return kendisi(h, kayit);   // kendi: yalnız kendi kaydı (gör + değiştir)
 }
+/** 566 (sunucuda sayfalı listeler): canDo(h, modul, "gor", kayıt)'ın SQL KARŞILIĞI — liste sunucuda süzülürken her satıra aynı kural. s: kaynağın
+    sütun ifadeleri (sahip: hesap kimliği, brans: "m" / "e", atanan: kişinin atandığını söyleyen ifade). Kişi kimliği ve branşlar PARAMETRE
+    (ekle); tarayıcıdan gelen hiçbir şey koşula girmez. Kilit: her rol bileşiminde canDo ile aynı satırlar (tests/liste.test.ts). */
+export function gorusKosulu(h: YetkiHesabi, modul: ModulAnahtari, s: { sahip?: string; brans?: string; atanan?: (hesap: string) => string },
+  ekle: (deger: unknown) => string): string {
+  const d = duzey(h, modul);
+  if (d === "yok") return "false";
+  if (d === "yaz" || d === "gor") return "true";
+  const ben = ekle(h.id);
+  const kendisi = [s.sahip ? `${s.sahip} = ${ben}::uuid` : "", s.atanan ? `(${s.atanan(`${ben}::uuid`)})` : ""].filter(Boolean).join(" OR ") || "false";
+  if (d === "brans") {
+    const b = branslari(h);
+    const brans = s.brans && b.length ? `coalesce(${s.brans} = ANY (${ekle(b)}::text[]), false)` : "false";
+    return `(${brans} OR ${duzeyRolle(h, modul, "kendi") ? `coalesce(${kendisi}, false)` : "false"})`;
+  }
+  return `coalesce(${kendisi}, false)`;
+}
+
 function duzeyRolle(h: YetkiHesabi, modul: ModulAnahtari, istenen: Duzey, matris?: Partial<Matris> | null) {
   matris ??= h.matris;
   return h.roller.some((r) => SIRA[rolDuzeyi(r, modul, matris)] >= SIRA[istenen]);

@@ -24,6 +24,10 @@ export async function tesisEkipmanlari(db: Sorgulayici, tesisId: string): Promis
   return (await db.sorgu<Satir>(`${SEC} WHERE tesis_id = $1 ORDER BY olustu DESC, kod`, [tesisId])).rows.map(ozet);
 }
 
+/** 566 (sunucuda sayfalı listeler): öteki modüllerin liste sorgusunda birleştirdiği OKUMA PARÇASI — ekipmanın firması, kimliği, kodu, tesisi, türü.
+    Tablonun sahibi bu modül; başka modül ekipman tablosunu doğrudan değil bununla okur. Kiracı süzgeci RLS'de. */
+export const EKIPMAN_SQL = "(SELECT firma_id, id, kod, tesis_id, tur_id FROM ekipman)";
+
 /** kimlikleri verilen ekipmanlar (bu firmada olmayan görünmez). Yetki ÇAĞIRANDA. */
 export async function ekipmanlar(db: Sorgulayici, idler: readonly string[]): Promise<EkipmanOzeti[]> {
   const l = idler.filter((x) => UUID.test(x));

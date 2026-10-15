@@ -124,10 +124,12 @@ function sirala<K>(t: SuzgecTanimi<K>, deger: string | undefined, liste: K[]): K
 export type ListeHali = "veri-yok" | "gorunum-bos" | "imkansiz" | "suzgec-bos" | "dolu";
 
 export interface ListeSonucu<K> {
-  /** çip sayıları için taban */
+  /** çip sayıları için taban (566: sunucuda süzülen listede boş — sayılar cipSayilari'nda) */
   tb: K[];
-  /** süzgeçten geçen, sıralı, sayfalanmamış */
+  /** süzgeçten geçen, sıralı, sayfalanmamış (566: sunucuda süzülen listede boş — adet sayısı) */
   liste: K[];
+  /** süzgeçten geçen kayıt sayısı (sayaç ve sayfalayıcı bununla) */
+  adet: number;
   /** sayfadaki kayıtlar */
   gorunen: K[];
   /** görünüm anahtarının içindeki toplam (sayaç paydası) */
@@ -150,7 +152,25 @@ export function listele<K>(t: SuzgecTanimi<K>, d: SuzgecDurumu, kayitlar: readon
   const sayfa = Math.min(Math.max(1, d.sayfa), sayfaSayisi);
   const gorunen = boy ? liste.slice((sayfa - 1) * boy, sayfa * boy) : liste;
   const hal: ListeHali = !kayitlar.length ? "veri-yok" : !toplam ? "gorunum-bos" : liste.length ? "dolu" : imkansiz(t, d) ? "imkansiz" : "suzgec-bos";
-  return { tb, liste, gorunen, toplam, sayfa, sayfaSayisi, hal };
+  return { tb, liste, adet: liste.length, gorunen, toplam, sayfa, sayfaSayisi, hal };
+}
+
+/** 566 (09-B3 sunucuda sayfalı): sunucunun döndürdüğü liste — yalnız sayfanın satırları ve sayılar (src/server/liste/liste.ts listeGetir) */
+export interface SunucuListe<K> {
+  gorunen: K[];
+  /** süzgeçten geçen · görünüm anahtarının içindeki toplam · görebildiği bütün kayıtlar (veri yok mu) */
+  adet: number; toplam: number; kayitSayisi: number;
+  sayfa: number; sayfaSayisi: number;
+  /** çip → çipler hariç süzgeçten geçenlerde sayısı */
+  cipSayilari: Record<string, number>;
+  /** seçici → seçenekleri (görebildiği kayıtlardan) */
+  secenekler: Record<string, Secenek[]>;
+}
+
+/** sunucu listesinden ekranın sonucu (hal tarayıcıdakiyle aynı kural) */
+export function sunucuSonucu<K>(t: SuzgecTanimi<K>, d: SuzgecDurumu, s: SunucuListe<K>): ListeSonucu<K> {
+  const hal: ListeHali = !s.kayitSayisi ? "veri-yok" : !s.toplam ? "gorunum-bos" : s.adet ? "dolu" : imkansiz(t, d) ? "imkansiz" : "suzgec-bos";
+  return { tb: [], liste: [], adet: s.adet, gorunen: s.gorunen, toplam: s.toplam, sayfa: s.sayfa, sayfaSayisi: s.sayfaSayisi, hal };
 }
 
 /** sayfa tuşları: 7'den fazla sayfada ilk · … · bulunulan ±1 · … · son; komşular telefonda gizlenir (maket 2026-09-24) */

@@ -197,6 +197,11 @@ export async function tesisPasif(db: Sorgulayici, kim: Kisi, id: string, surum: 
   return cevir(r) ?? { durum: "tamam", id, surum: (r as { surum: number }).surum };
 }
 
+/** 566 (sunucuda sayfalı listeler): öteki modüllerin liste sorgusunda birleştirdiği OKUMA PARÇASI — tesis ve müşterisi: firma, tesis kimliği / adı /
+    adresi / il / ilçe, müşteri kimliği, kısa adı, ünvanı. */
+export const TESIS_YER_SQL = `(SELECT ts.firma_id, ts.id, ts.ad AS tesis, ts.adres, ts.il, ts.ilce, ts.musteri_id, m.kisa AS musteri, m.unvan
+  FROM tesis ts JOIN musteri m ON m.firma_id = ts.firma_id AND m.id = ts.musteri_id)`;
+
 /** öteki modüller için müşteri + tesis özeti (yetki ÇAĞIRANDA; Sözleşmeler kendi düzeyine göre gösterir). Pasif müşteri ve tesis dahil, işaretli.
     565 (reisim 2026-10-15 analizi — veri büyüyünce yavaşlama): s.tesisler verilirse YALNIZ o tesisler ve müşterileri okunur (rapor / plan listesi,
     menü balonu bütün müşterileri okumaz); gruplama tek geçişte (her müşteride bütün tesisleri süzmek yok). */

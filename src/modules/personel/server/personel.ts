@@ -186,6 +186,9 @@ export async function personelBelgeBilgisi(db: Sorgulayici, id: string): Promise
     "SELECT ad, meslek, ekipnet, diploma, oda FROM personel WHERE id = $1", [id])).rows[0] ?? null;
 }
 
+/** 566 (sunucuda sayfalı listeler): öteki modüllerin liste sorgusunda birleştirdiği OKUMA PARÇASI — personelin firması, kimliği, adı. */
+export const PERSONEL_AD_SQL = "(SELECT firma_id, id, ad FROM personel)";
+
 export async function personelOzetleri(db: Sorgulayici, idler: readonly string[]): Promise<{ id: string; ad: string; meslek: string; meslekMetin: string | null; ekipnet: string | null; etkin: boolean }[]> {
   const l = idler.filter((x) => /^[0-9a-f-]{36}$/.test(x));
   if (!l.length) return [];

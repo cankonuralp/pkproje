@@ -392,6 +392,11 @@ pkproje/
                             yükle / indirilebilir + modül erişim kaydı (kaydı olmayan modülün dosyası kimseye açılmaz) · çöp temizliği cop.ts
                             (378: 30 günü dolan çöp — satır dosya_cop_sil, içerik depo.copSil; bağlı dosya kalır; öksüz yalnız sayılır) ·
                             tek uç src/app/api/dosya/[id] · görsel yalnız <GizliResim> (components/gizli-resim)
+  src/server/liste/liste.ts SUNUCUDA SAYFALI LİSTE (566; 09-B3): listeGetir — tarayıcı süzgecinin (components/liste/suzgec.ts listele) SQL karşılığı
+                            (alan / genel arama tr_kucuk, çipler veya / ve + sayıları, seçiciler + seçenekleri, sıralama tr_sira — göç 0092; yalnız sayfa);
+                            görme yetki/canDo.ts gorusKosulu (canDo'nun SQL'i); modüller öteki modülün tablosunu OKUMA PARÇASIYLA birleştirir (EKIPMAN_SQL,
+                            TUR_SQL, TESIS_YER_SQL, PERSONEL_AD_SQL); ekran components/liste/SunucuSuzgec.ts useSunucuSuzgec (300 ms bekleme, eski cevap
+                            yazılmaz). İlk: Raporlar (raporlar/server/liste.ts raporSayfasi; kilit tests/liste.test.ts — eski süzgeçle birebir)
   src/server/db/silici.ts   KESİN SİLME — tek mekanizma (357; reisim 2026-10-07 "eklenebilen şeyler silinemiyor"): SILINEBILIR (tür → <tablo>_kullanim /
                             <tablo>_sil veritabanı işlevleri + her yabancı anahtar "kullanım" ya da "birlikte"), kullanimlar, kesinSil — yalnız hiç
                             kullanılmamış kayıt; yetki modülde canDo kayit_sil (yönetici); ekranda components/sil (SilTusu, kullanimMetni) · kilit

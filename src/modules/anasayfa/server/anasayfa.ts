@@ -15,13 +15,13 @@ import { musteriOzetleri } from "../../musteriler/server/musteriler.ts";
 import { giderListesi } from "../../muhasebe/server/giderler.ts";
 import { faturaListesi, isListesi } from "../../muhasebe/server/muhasebe.ts";
 import { bekleyenBelgeSayisi } from "../../onaylar/server/belge-baglanti.ts";
-import { onayListeleri } from "../../onaylar/server/onaylar.ts";
+import { onayTakibi } from "../../onaylar/server/onaylar.ts";
 import { eksikBilgi, personelListesi, personelOzetleri } from "../../personel/server/personel.ts";
 import { acikMi, anaPlanlar, isgEksikSayisi, type AnaPlan } from "../../planlar/server/anasayfa-baglanti.ts";
 import { planAcabilir } from "../../planlar/server/planlar.ts";
 import { geriGonderdiklerim, sonrakiKontroller } from "../../raporlar/server/anasayfa-baglanti.ts";
 import { mesaiDurumu } from "../../raporlar/server/plan-baglanti.ts";
-import { raporListesi } from "../../raporlar/server/raporlar.ts";
+import { imzamiBekleyenSayisi, kendiYeniRaporlarim } from "../../raporlar/server/anasayfa-baglanti.ts";
 import { uyariListesi } from "../../uyarilar/server/uyarilar.ts";
 import { kisininVarliklari } from "../../zimmetler/server/zimmet.ts";
 import type { PlanDurumu } from "../../planlar/sema.ts";
@@ -55,7 +55,8 @@ export async function anaSayfa(db: Sorgulayici, kim: Kisi): Promise<AnaSayfa> {
   const benP = await hesabinPersoneli(db, kim.id);
   /* ortak veri bir kez: planlar Planlar düzeyiyle — "kendi" ve "branşı" yalnız ekibinde olduğu planlar */
   const planlar = !gor(13) ? [] : (await anaPlanlar(db)).filter((p) => hepsi(13) || (!!benP && p.ekip.includes(benP)));
-  const musteriler = await musteriOzetleri(db);
+  /* 566: planlama bölümü bütün tesisleri ister (kontrolü yaklaşan tesisler); öteki roller yalnız planlarının tesislerini */
+  const musteriler = await musteriOzetleri(db, roller.has("planlama") ? {} : { tesisler: planlar.map((p) => p.tesisId) });
   const tesis = new Map(musteriler.flatMap((m) => m.tesisler.map((t) => [t.id, { ad: t.ad, il: t.il, musteri: m.kisa }] as const)));
   const ekipAd = new Map((await personelOzetleri(db, [...new Set(planlar.flatMap((p) => p.ekip))])).map((p) => [p.id, p.ad]));
   const planSatiri = (p: AnaPlan): AnaPlanSatiri => ({ id: p.id, no: p.no, musteri: tesis.get(p.tesisId)?.musteri ?? "—", tesis: tesis.get(p.tesisId)?.ad ?? "—",
@@ -98,8 +99,9 @@ export async function anaSayfa(db: Sorgulayici, kim: Kisi): Promise<AnaSayfa> {
     const ben = benP;
     const benim = planlar.filter((p) => !!ben && p.ekip.includes(ben) && acikMi(p));
     const bek = benim.filter((p) => p.durum === "bekliyor"), den = benim.filter((p) => p.durum === "denetimde");
-    const rap = ((await raporListesi(db, kim)) ?? []).filter((r) => r.benim);
-    const taslak = rap.filter((r) => r.durum === "taslak"), geri = taslak.filter((r) => r.geri), imza = rap.filter((r) => r.durum === "onaylandi");
+    /* 566: kendi raporlarının sayıları sayım sorgusuyla (bütün raporlar okunmaz) */
+    const kr = await kendiYeniRaporlarim(db, kim.id), imzaSayi = await imzamiBekleyenSayisi(db, kim);
+    const taslak = kr.geri + kr.yeni, geri = kr.geri;
     const zimmet = ben ? await kisininVarliklari(db, ben) : [];
     const kal = uyarilar.filter((u) => u.tur === "kal" && u.kisi?.id === ben).length;
     /* N6 (maket: mesai takibi açıksa; karar 182 "her denetçininki kendisi için"): bugünkü süre — normal ve mesai (329–332 incelemesi) */
@@ -109,8 +111,8 @@ export async function anaSayfa(db: Sorgulayici, kim: Kisi): Promise<AnaSayfa> {
     bolumler.push({ rol: "denetci", yuzler: [
       { ikon: "calendar-check", ad: "Kabul bekleyen plan", sayi: bek.length, href: "/planlar", not: bek.length ? `en yakını ${gunKisa(bek[0].baslangic)}` : "yok", uyari: bek.length > 0 },
       { ikon: "play", ad: "Denetimdeki plan", sayi: den.length, href: "/planlar", not: den.length ? den[0].no : "yok" },
-      { ikon: "file-pen-line", ad: "Taslak rapor", sayi: taslak.length, href: "/raporlar", not: geri.length ? `${geri.length} geri gönderildi` : "onaya gönderilmedi", uyari: geri.length > 0 },
-      { ikon: "file-signature", ad: "Son imzanı bekleyen", sayi: imza.length, href: "/onaylar/imza", not: "onaylandı, imza bekliyor", uyari: imza.length > 0 },
+      { ikon: "file-pen-line", ad: "Taslak rapor", sayi: taslak, href: "/raporlar", not: geri ? `${geri} geri gönderildi` : "onaya gönderilmedi", uyari: geri > 0 },
+      { ikon: "file-signature", ad: "Son imzanı bekleyen", sayi: imzaSayi, href: "/onaylar/imza", not: "onaylandı, imza bekliyor", uyari: imzaSayi > 0 },
       ...sure,
       { ikon: "package", ad: "Zimmetinde", sayi: zimmet.length, href: "/zimmetler", not: kal ? `${kal} cihazın kalibrasyonu uyarıda` : "uyarı yok", uyari: kal > 0 },
     ], liste: { tur: "plan", baslik: "Açık planların", kayitlar: benim.map(planSatiri), bos: "Açık planın yok.", tumu: ["Planlar", "/planlar"] } });
@@ -118,9 +120,10 @@ export async function anaSayfa(db: Sorgulayici, kim: Kisi): Promise<AnaSayfa> {
 
   for (const r of ["mekanik_yonetici", "elektrik_yonetici"] as const) {
     if (!roller.has(r)) continue;
-    const b = ROL_BRANS[r]!, o = await onayListeleri(db, kim);
+    /* 566: yalnız süreçteki raporlar (bütün raporlar okunmaz) */
+    const b = ROL_BRANS[r]!, o = await onayTakibi(db, kim);
     const kuyruk = (o?.kuyruk ?? []).filter((x) => x.brans === b).sort((x, y) => (x.gonderildi ?? "").localeCompare(y.gonderildi ?? ""));
-    const tumu = (o?.tumu ?? []).filter((x) => x.brans === b);
+    const tumu = (o?.surecte ?? []).filter((x) => x.brans === b);
     const imza = tumu.filter((x) => x.durum === "onaylandi");
     /* maket: "Geri gönderdiğin" — yöneticinin kendi geri gönderdiği, düzeltme bekleyen raporlar; kalibrasyon uyarısı branşın cihazları (cihaz türünü
        kullanan ekipman türlerinin branşı; hiçbir türde kullanılmayan iki branşta da) — 329–332 incelemesi */
@@ -139,7 +142,7 @@ export async function anaSayfa(db: Sorgulayici, kim: Kisi): Promise<AnaSayfa> {
 
   if (roller.has("firma_yoneticisi")) {
     const acik = planlar.filter(acikMi), bugunku = acik.filter((p) => p.baslangic === bugun);
-    const o = await onayListeleri(db, kim), tumu = o?.tumu ?? [];
+    const o = await onayTakibi(db, kim), tumu = o?.surecte ?? [];
     const kal = uyarilar.filter((u) => u.tur === "kal").length, egt = uyarilar.filter((u) => u.tur === "egt").length, arac = uyarilar.filter((u) => u.tur === "arac").length;
     const sak = uyarilar.filter((u) => u.tur === "sak").length;
     const eksik = ((await personelListesi(db, kim)) ?? []).filter((p) => p.durum === "etkin" && eksikBilgi(p).length);

@@ -18,6 +18,9 @@ export interface Suzgec<K> {
   durum: SuzgecDurumu;
   degistir: (d: SuzgecDurumu) => void;
   sonuc: ListeSonucu<K>;
+  /** 566: sunucuda süzülen liste — çip sayıları sunucudan; yükleniyor (liste aria-busy) */
+  cipSayilari?: Record<string, number>;
+  yukleniyor?: boolean;
 }
 
 export function useSuzgec<K>(tanim: SuzgecTanimi<K>, kayitlar: readonly K[], bas?: Partial<SuzgecDurumu>): Suzgec<K> {
@@ -31,7 +34,7 @@ export function Sayac<K>({ s }: { s: Suzgec<K> }) {
   const { tanim, durum, sonuc } = s;
   return (
     <span className={stil.sayac} role="status" data-sayac="">
-      {suzgecVar(tanim, durum) ? <><b>{sonuc.liste.length}</b> / {sonuc.toplam} {tanim.birim}</> : <><b>{sonuc.toplam}</b> {tanim.birim}</>}
+      {suzgecVar(tanim, durum) ? <><b>{sonuc.adet}</b> / {sonuc.toplam} {tanim.birim}</> : <><b>{sonuc.toplam}</b> {tanim.birim}</>}
     </span>
   );
 }
@@ -48,7 +51,7 @@ export function SuzgecliListe<K>({ s, on, baslik, sutunlar, anahtar, href, bosVe
   /** sütun başlığı sıralar (tanımda siralama seçicisi ve siraAnahtari olmalı) */
   siralanir?: boolean;
 }) {
-  const { tanim, durum, degistir, sonuc } = s;
+  const { tanim, durum, degistir, sonuc, cipSayilari } = s;
   const [kip, setKip] = useState<ListeKipi>("tablo");
   const kipDegisti = useCallback((k: ListeKipi) => setKip(k), []);
   const siraSecici = tanim.seciciler.find((x) => x.siralama);
@@ -75,10 +78,10 @@ export function SuzgecliListe<K>({ s, on, baslik, sutunlar, anahtar, href, bosVe
 
   return (
     <>
-      <FiltreSatiri on={on} tanim={tanim} durum={durum} degistir={degistir} tb={sonuc.tb} kip={kip} />
+      <FiltreSatiri on={on} tanim={tanim} durum={durum} degistir={degistir} tb={sonuc.tb} kip={kip} cipSayilari={cipSayilari} />
       {ic}
-      {tanim.sayfa && sonuc.liste.length > 0 && (
-        <Sayfalayici birim={tanim.birim} toplam={sonuc.liste.length} boy={tanim.sayfa} sayfa={sonuc.sayfa}
+      {tanim.sayfa && sonuc.adet > 0 && (
+        <Sayfalayici birim={tanim.birim} toplam={sonuc.adet} boy={tanim.sayfa} sayfa={sonuc.sayfa}
           degistir={(n) => degistir({ ...durum, sayfa: n })} />
       )}
     </>
