@@ -11,6 +11,20 @@ export const RAPOR_DURUM = {
   imzada: ["İmzaya gönderildi", "notr"], imzali: ["Tamamlandı", "tamam"],
 } as const;
 export type RaporDurumu = keyof typeof RAPOR_DURUM;
+/** 561 (reisim 2026-10-15: "rapor teknik yönetici onayında olduğu için değiştiremiyordu ama açıkta rapor göremiyorum dedi"): rapora yazılamıyorsa
+    NEDENİ — S.A.Y kullanıcıya bunu söyler. Elle düzenlemeyle aynı kural (yalnız raporu yazanın Yeni raporu, rapor yazma yetkisiyle); yazılabilirse
+    null. Kişi adı yok. */
+export const YAZILAMAZ_NEDEN: Record<Exclude<RaporDurumu, "taslak">, string> = {
+  onayda: "rapor teknik yönetici onayında; onaylanana ya da geri gönderilene kadar değiştirilemez",
+  onaylandi: "rapor teknik yönetici tarafından onaylandı, muayene uzmanının son imzasını bekliyor; değiştirilemez",
+  imzada: "rapor imzaya gönderildi; değiştirilemez",
+  imzali: "rapor imzalanıp tamamlandı; değişiklik ancak revizeyle yapılır",
+};
+export function raporYazmaNedeni(durum: RaporDurumu, sahip: boolean, yetkili: boolean): string | null {
+  if (durum !== "taslak") return YAZILAMAZ_NEDEN[durum];
+  if (!sahip) return "raporu yazan muayene uzmanı değiştirir; bu kullanıcı yalnız görüntüleyebilir";
+  return yetkili ? null : "kullanıcının rapor yazma yetkisi yok";
+}
 export const SONUC_AD = { uygun: "Uygun", uygun_degil: "Uygun değil" } as const;
 
 const bos = (s: unknown) => (s === undefined || s === null || (typeof s === "string" && s.trim() === "") ? null : typeof s === "string" ? s.trim().replace(/\s+/g, " ") : s);

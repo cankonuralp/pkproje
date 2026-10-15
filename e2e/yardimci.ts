@@ -1,5 +1,5 @@
 /* uçtan uca ortak adımlar: girişi gerçek formdan yapar (çerez sunucunun yazdığı) */
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 import { E2E_HESAPLAR, E2E_PAROLA } from "./hesaplar";
 
 /** 489: uçtan uca yayın derlemesinde (PROBATA_E2E_YAYIN=1) oturum çerezi yayındaki adıyla — "__Host-" önekli ve Secure (src/server/kimlik/istek.ts);
@@ -40,4 +40,35 @@ export async function bolumleriAc(page: Page) {
   await expect(tus).toBeVisible({ timeout: 30_000 });
   if ((await tus.textContent())?.includes("aç")) await tus.click();
   await expect(page.getByRole("button", { name: "Tümünü kapat" })).toBeVisible();
+}
+
+/** 561 (reisim 2026-10-15: "chati yukarıdan tutup aşağıya doğru küçültmeyi yapamadım"): yan panelin (S.A.Y, S.A.Y Chat) boyu — üst kenardaki
+    tutamak ve başlık aşağı sürüklenince kısalır (alt kenar yerinde), kısalmış hâl bayrakla; tutamakta Home tam boya döndürür. Sürükleme gerçek
+    fare olaylarıyla (pointerdown → adım adım pointermove → pointerup). */
+export async function panelBoyunuDene(page: Page, panel: Locator, tutamakAdi: RegExp, baslik: string) {
+  const tam = (await panel.boundingBox())!;
+  const surukle = async (x: number, y: number, dy: number) => {
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.move(x, y + dy / 2, { steps: 4 });
+    await page.mouse.move(x, y + dy, { steps: 4 });
+    await page.mouse.up();
+  };
+  const tutamak = panel.getByRole("button", { name: tutamakAdi });
+  const t = (await tutamak.boundingBox())!;
+  await surukle(t.x + t.width / 2, t.y + t.height / 2, 160);
+  await expect(panel).toHaveAttribute("data-boy", "");
+  const kisa = (await panel.boundingBox())!;
+  expect(kisa.height, "tutamaktan kısaldı").toBeLessThan(tam.height - 120);
+  expect(Math.abs(kisa.y + kisa.height - (tam.y + tam.height)), "alt kenar yerinde").toBeLessThanOrEqual(2);
+  /* başlıktan da (tuşları dışında) */
+  const b = (await panel.getByRole("heading", { name: baslik, exact: true }).boundingBox())!;
+  await surukle(b.x + b.width / 2, b.y + b.height / 2, 60);
+  const dahaKisa = (await panel.boundingBox())!;
+  expect(dahaKisa.height, "başlıktan kısaldı").toBeLessThan(kisa.height - 40);
+  /* klavye: Home tam boy */
+  await tutamak.focus();
+  await page.keyboard.press("Home");
+  await expect.poll(() => panel.getAttribute("data-boy")).toBeNull();
+  expect(Math.abs((await panel.boundingBox())!.height - tam.height), "tam boya döndü").toBeLessThanOrEqual(2);
 }

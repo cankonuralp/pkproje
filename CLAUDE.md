@@ -349,6 +349,9 @@ pkproje/
                             çağrıya (tool_use + tool_result, tool_choice none, düşünme kapalı); düşerse isSonucuMetni; harita künyeyi değersiz taşır;
                             SayAsistan: mesaj hemen balon, bekleme balonu (Düşünüyor / Rapora yazıyor), Küçült, En alta in; S.A.Y Chat: Küçült, boy tutamağı,
                             En alta in (temel.css data-panel-kucuk)
+                            · 561: açık rapor SUNUCUDA adresten (rapor-haritasi.ts yoldakiRapor — /raporlar/<id>, /onaylar/<id>; raporlar raporSayDurumu,
+                            sema.ts raporYazmaNedeni): durum ne olursa olsun bağlamda numara · tür · durum + yazılamıyorsa nedeni (acikRaporMetni); harita
+                            yalnız yazanın Yeni raporunda · panel boyu components/pencere/PanelBoyu (tutamak + başlık sürükleme; S.A.Y ve S.A.Y Chat ortak)
   src/modules/say-chat/     S.A.Y CHAT (523–525; pkproje §3.10): sema.ts (saf: alan / başlık seçenekleri, hazır ayar, denetim, dağılım dagit) ·
                             server/ayar.ts (523 tür ayarı — sayChatAyari, sayChatAyarKaydet, chatTanimi; göç 0084 say_chat_ayar) · ui/ChatAyarlari.tsx
                             (529: kendi sayfası /ekipman-turleri/<tür>/say-chat — Format kurucunun tuşlarından ve tür sayfasındaki kısa bölümden) · ui/eylemler.ts · 524 server/kayitlar.ts (sayChatPaneli, chatKaydet / chatFoto /
@@ -397,7 +400,7 @@ pkproje/
   src/components/disa/      DIŞA / İÇE AKTARMA (tarayıcıda, saf): zip.ts (STORE yazıcı) · xlsx.ts (yazıcı) · oku.ts (325: .xlsx / .csv OKUYUCU — DEFLATE
                             DecompressionStream ile, ortak dizgi, tarih biçimi, Türkçe Windows CSV; 10 MB / 50 MB açılmış / 5 000 satır sınırı) · indir.ts
   src/components/           TEK ÜRETİCİLER: sayfa/ (kırıntı, sayfa / nesne başlığı, bölüm, rozet, sekmeler) · kabuk (yan menü + üst çubuk) · ikon · boş durum · tuş · şerit · bildirim (altta; 506 useUyar: işlemi
-                            durduran kısa uyarı üstte — eksikte pencere yerine) · pencere + onay ·
+                            durduran kısa uyarı üstte — eksikte pencere yerine) · pencere + onay · yan panel boyu (pencere/PanelBoyu, 561) ·
                             liste (tablo↔kart, süzgeç mantığı liste/suzgec.ts; 547 dar sütunda tuş yazısı ikinci satıra — hücreden taşmaz, tarama
                             "hücreden taşan" bulgusu) · kaydir/useSurukleKaydir.ts (548: yana kayan kap fareyle sürüklenir; ölçüm tablosu) · FOTOĞRAF TUŞU foto/FotoTusu.tsx (527 / 531: Fotoğraf çek · Galeriden /
                             bilgisayardan seç; S.A.Y Chat, araç teslim tutanağı, zimmet teslimi — capture yalnız burada ve S.A.Y ataçta, kilit tests/foto-tusu.test.ts)

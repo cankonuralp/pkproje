@@ -18,6 +18,7 @@
 .panel {
   --vv-y: 100dvh; --vv-ust: 0px;   /* 542: telefonda görünen alan (components/pencere/gorunurAlan.ts yazar) — klavye açılınca panel sığar */
   position: fixed; right: 16px; top: calc(var(--ust-y) + 16px); bottom: 16px; z-index: 70; width: min(420px, calc(100vw - 32px));
+  max-height: calc(100dvh - var(--ust-y) - 32px);   /* 561: tam boy — sürüklenen boy bunu aşmaz (components/pencere/PanelBoyu) */
   display: flex; flex-direction: column; background: var(--kart); border: 1px solid var(--kenar); border-radius: calc(var(--r-buyuk) * 2);
   box-shadow: var(--golge-2); overflow: hidden;
 }
@@ -76,6 +77,10 @@
 /* 557 (reisim: "say için alta küçültme tuşu olsun"): küçük hâl — yalnız başlık, sağ altta (havadaki tuşlar varsa düğmenin yerinde, onların üstünde) */
 .panel[data-kucuk] { top: auto; bottom: 20px; }
 :global(body:has([data-alt-cubuk="her"])) .panel[data-kucuk] { bottom: calc(var(--tus-y) + 32px); }
+/* 561: kısaltılmış — alttan aynı yerde, boy sürüklenen (style height). Tutamak başlığın üst kenarında, rengiyle (ayrı gri şerit değil) */
+.panel[data-boy] { top: auto; }
+.panel .tutamak { position: absolute; top: 0; left: 0; right: 0; z-index: 1; height: 14px; background: transparent; }
+.panel .tutamak::before { background: color-mix(in srgb, var(--vurgu-uzeri) 55%, transparent); }
 /* rapor ekranı (382; maket .a-say-eksik / .a-say-oneri): bölüm başına eksik + Git; öneri kartı Uygula / Vazgeç */
 .eksik { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
 .eksik li { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -151,9 +156,13 @@
   :global(body:has([data-alt-cubuk="her"])) .fab { bottom: calc(var(--tus-y) * 2 + 40px); }
   /* 547 (reisim 2026-10-14, iPhone ekran görüntüsü: panel klavyeden önce bitiyor, arada sayfa görünüyordu): panel görünen alana sığar, çevresi
      panelin rengiyle örtülür (geniş gölge — ölçüm geç kalsa da arkadaki sayfa görünmez); sayfa kaymaz (temel.css html[data-panel-acik]) */
-  .panel { inset: auto 0 auto 0; top: var(--vv-ust); height: var(--vv-y); width: auto; border: 0; border-radius: 0; z-index: 80;
+  .panel { inset: auto 0 auto 0; top: var(--vv-ust); height: var(--vv-y); max-height: var(--vv-y); width: auto; border: 0; border-radius: 0; z-index: 80;
     box-shadow: 0 0 0 100vmax var(--kart); }  /* 557: küçükken alta tek satır; sayfa görünür ve kayar (temel.css data-panel-kucuk) */
   .panel[data-kucuk] { top: auto; bottom: 0; height: auto; box-shadow: var(--golge-2); }
+  /* 561: kısaltılmışken alta oturur, üstte sayfa görünür ve kayar (S.A.Y Chat'le aynı) */
+  .panel[data-boy] { top: auto; bottom: 0; box-shadow: var(--golge-2); border-top: 1px solid var(--kenar); border-radius: calc(var(--r-buyuk) * 2) calc(var(--r-buyuk) * 2) 0 0; }
+  /* rapor ekranında havadaki Kaydet / Onaya gönder örtülmez: kısaltılmış panel de (küçük hâl gibi) iki tuş sırasının üstünde */
+  :global(body:has([data-alt-cubuk="her"])) .panel[data-boy] { bottom: calc(var(--tus-y) * 2 + 40px); max-height: calc(var(--vv-y) - var(--tus-y) * 2 - 40px); }
   :global(body:has([data-alt-cubuk="her"])) .panel[data-kucuk] { bottom: calc(var(--tus-y) * 2 + 40px); }
 }
 @media (prefers-reduced-motion: reduce) {

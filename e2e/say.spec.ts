@@ -12,10 +12,13 @@
    hazır tuş yalnız rapordayken görünür.
    557 (sunum 557 · 2. tur — reisim 2026-10-14): mesaj Gönder'e basınca HEMEN balon ve "Düşünüyor" balonu (taklit "[yavaş]" soruya 1,5 sn sonra
    cevap verir); Küçült (yalnız başlık) / Büyüt; sohbet yukarı kaydırılınca "En alta in"; rapordayken S.A.Y'ın cevabı işin SONUCUYLA ("Yaptım …",
-   kilitli SGK için nedenli "Yapamadım …"), alttaki bildirim yok. */
+   kilitli SGK için nedenli "Yapamadım …"), alttaki bildirim yok.
+   561 (reisim 2026-10-15: "rapor teknik yönetici onayında olduğu için değiştiremiyordu ama açıkta rapor göremiyorum dedi ayrıca chati yukarıdan tutup
+   aşağıya doğru küçültmeyi yapamadım"): panel üstteki tutamaktan ve başlıktan sürüklenerek kısalır, Home tam boy; yazamadığı raporda (yönetici,
+   denetçinin raporunda) S.A.Y raporu bilir ("Rapor <no>") ve nedenini söyler. */
 import { expect, test } from "@playwright/test";
 import { E2E_KAPI, E2E_PAROLA, E2E_YZ } from "./hesaplar";
-import { bolumleriAc, girisli, hazir } from "./yardimci";
+import { bolumleriAc, girisli, hazir, panelBoyunuDene } from "./yardimci";
 
 const Y = `http://${E2E_YZ.firma.kisaAd}.localhost:${E2E_KAPI}`;
 const TASMA = () => document.documentElement.scrollWidth <= window.innerWidth;
@@ -76,6 +79,8 @@ test("S.A.Y: düğme, hızlı soru, serbest soru, sayfa değişince ve yenileyin
   await expect(panel.getByLabel("S.A.Y'a sor")).toBeHidden();
   await panel.getByRole("button", { name: "Büyüt" }).click();
   await expect(panel.getByLabel("S.A.Y'a sor")).toBeVisible();
+  /* 561: üstten tutup sürükleyince kısalır (tutamak ve başlık), Home tam boy */
+  await panelBoyunuDene(page, panel, /^S\.A\.Y'ın boyu/, "S.A.Y");
 
   /* 522 ek: ataç → menü (Fotoğraf çek · Galeriden seç · Belge ekle); desteklenmeyen dosya söylenir; eklenen kutunun üstünde, × çıkarır; soruyla
      gider (taklit eki sayar), gönderilen soruda adı görünür, kutu boşalır */
@@ -283,4 +288,36 @@ test("S.A.Y format yapıcıda: konuşarak sütun + formül ekler, Geri al; form�
   await formul.fill("Iz / 2");
   await formul.press("Tab");
   await expect(page.getByText("= [Iz] ÷ 2").first()).toBeVisible();
+});
+
+/* 561: yazamadığı rapor — firma yöneticisi denetçinin raporunu açar (salt okunur): S.A.Y raporu bilir (yer "Rapor <no>"), yazması istenince
+   nedenini söyler (taklit bağlamdaki nedeni okur; yazma aracı istekte varsa taklit reddeder) */
+test("S.A.Y yazamadığı raporda: raporu bilir, nedenini söyler", async ({ page }, bilgi) => {
+  test.setTimeout(120_000);
+  const kod = E2E_YZ.ekipman[bilgi.project.name];
+  await page.goto(`${Y}/giris`);
+  await hazir(page);
+  await page.getByLabel("E-posta").fill(E2E_YZ.yonetici.eposta);
+  await page.getByLabel("Parola", { exact: true }).fill(E2E_PAROLA);
+  await page.getByRole("button", { name: "Giriş yap" }).click();
+  await expect(page.locator("header")).toContainText(E2E_YZ.yonetici.ad);
+  await page.goto(`${Y}/raporlar`);
+  await hazir(page);
+  await page.getByRole("searchbox", { name: "Ekipman kodu" }).fill(kod);
+  await page.getByRole("link", { name: /^YZ-/ }).first().click();
+  await expect(page).toHaveURL(/\/raporlar\/[0-9a-f-]{36}$/, { timeout: 30_000 });
+  await hazir(page);
+  await expect(page.getByRole("button", { name: "Kaydet", exact: true })).toHaveCount(0);   // salt okunur
+
+  const fab = page.getByRole("button", { name: "S.A.Y — saha asistanı" });
+  const panel = page.getByRole("dialog", { name: "S.A.Y" });
+  await expect(panel.or(fab)).toBeVisible({ timeout: 30_000 });
+  if (!(await panel.isVisible())) await fab.click();
+  await expect(panel).toBeVisible();
+  await expect(panel.getByRole("button", { name: "Fotoğrafları oku ve gir" })).toHaveCount(0);
+  await panel.getByLabel("S.A.Y'a sor").fill("Seri no alanına SN-YAZILMAZ yaz");
+  await panel.getByLabel("S.A.Y'a sor").press("Enter");
+  const liste = panel.getByRole("list").first();
+  await expect(liste).toContainText(/Yapamadım: YZ-\S+ — raporu yazan muayene uzmanı değiştirir/, { timeout: 30_000 });
+  await expect(liste.getByRole("listitem").filter({ hasText: /^Rapor YZ-[0-9]{4}-[0-9]{3}/ }).first()).toBeVisible();
 });

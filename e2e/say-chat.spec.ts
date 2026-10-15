@@ -10,10 +10,12 @@
    · 527 (reisim 2026-10-13: "fotoğraf işaretine tıklayınca galeriden veya pc den de fotoğraf yükleyebilmek olsun"): fotoğraf tuşu menü açar — Fotoğraf
      çek · Galeriden / bilgisayardan seç (birden çok); Esc yalnız menüyü kapatır (panel açık kalır, odak tuşta); PNG / JPEG olmayan dosya eklenmez, söylenir;
    · bağlantı kesikken Gönder: kayıt "Cihazda", bağlantı gelince gider;
-   · ekip dışındaki (yönetici) plan içinde S.A.Y Chat görmez. Telefonda panel tam ekran; yana taşma yok. */
+   · ekip dışındaki (yönetici) plan içinde S.A.Y Chat görmez. Telefonda panel tam ekran; yana taşma yok.
+   · 561 (reisim 2026-10-15: "chati yukarıdan tutup aşağıya doğru küçültmeyi yapamadım"): panel tutamaktan ve başlıktan sürüklenerek kısalır, Home
+     tam boy (S.A.Y ile aynı ortak parça — components/pencere/PanelBoyu). */
 import { expect, test, type Page } from "@playwright/test";
 import { E2E_KAPI, E2E_PAROLA, E2E_YZ } from "./hesaplar";
-import { hazir } from "./yardimci";
+import { hazir, panelBoyunuDene } from "./yardimci";
 
 const Y = `http://${E2E_YZ.firma.kisaAd}.localhost:${E2E_KAPI}`;
 const TASMA = () => document.documentElement.scrollWidth <= window.innerWidth;
@@ -54,6 +56,8 @@ test("S.A.Y Chat: fotoğraf, ekipman, tek kutuda mesaj, okunacak fotoğraf, etik
   await expect(panel).toBeVisible();
   await expect(page.getByRole("dialog", { name: "S.A.Y", exact: true })).toHaveCount(0);
   if (bilgi.project.name === "telefon") expect(Math.round((await panel.boundingBox())!.width)).toBe(page.viewportSize()!.width);
+  /* 561: S.A.Y ile aynı ortak boy — tutamaktan ve başlıktan sürükleyince kısalır, Home tam boy */
+  await panelBoyunuDene(page, panel, /^S\.A\.Y Chat'in boyu/, "S.A.Y Chat");
 
   /* 1 · fotoğraf tuşu menüsü: Esc yalnız menüyü kapatır; galeriden iki fotoğraf → ekipman seçimi */
   const fotoEkle = panel.getByRole("button", { name: "Fotoğraf ekle" });

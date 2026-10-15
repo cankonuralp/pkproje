@@ -21,6 +21,7 @@
 .panel {
   --vv-y: 100dvh; --vv-ust: 0px;   /* telefonda görünen alan (bileşen VisualViewport'tan yazar) */
   position: fixed; right: 16px; top: calc(var(--ust-y) + 16px); bottom: 16px; z-index: 70; width: min(440px, calc(100vw - 32px));
+  max-height: calc(100dvh - var(--ust-y) - 32px);   /* 561: tam boy — sürüklenen boy bunu aşmaz (components/pencere/PanelBoyu) */
   display: flex; flex-direction: column; background: var(--kart); border: 1px solid var(--kenar); border-radius: calc(var(--r-buyuk) * 2);
   box-shadow: var(--golge-2); overflow: hidden;
 }
@@ -34,14 +35,12 @@
 }
 .basTus:hover { background: var(--kart); }
 .basTus:focus-visible { outline: 3px solid var(--odak); outline-offset: -3px; }
-/* 557 (sunum 557 · 2. tur): içerik kabı (küçükken saklanır — yazılan kaybolmaz), boy tutamağı, en alta in, küçük ve kısaltılmış hâl */
+/* 557 (sunum 557 · 2. tur): içerik kabı (küçükken saklanır — yazılan kaybolmaz), en alta in, küçük ve kısaltılmış hâl (boy tutamağı 561'de
+   components/pencere/PanelBoyu.module.css) */
 .icerik { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
 .panel[data-kucuk] .icerik { display: none; }
 .panel[data-kucuk] { top: auto; }
 .panel[data-boy] { top: auto; }
-.tutamak { flex: none; display: grid; place-items: center; width: 100%; height: 24px; padding: 0; border: 0; background: var(--zemin2); cursor: ns-resize; touch-action: none; }
-.tutamak::before { content: ""; width: 44px; height: 4px; border-radius: 4px; background: var(--kenar-alan); }
-.tutamak:focus-visible { outline: 3px solid var(--odak); outline-offset: -3px; }
 .enAlta {
   position: absolute; right: 16px; z-index: 2; display: grid; place-items: center; width: var(--tus-y); height: var(--tus-y); padding: 0;
   border: 1px solid var(--kenar-alan); border-radius: 50%; background: var(--kart); color: var(--yazi); box-shadow: var(--golge-2); cursor: pointer;
@@ -170,7 +169,7 @@
   /* telefonda tam ekran; klavye açılınca görünen alana sığar (yükseklik ve üst VisualViewport'tan) */
   /* 547 (reisim 2026-10-14, iPhone ekran görüntüsü: panel klavyeden önce bitiyor, arada sayfa görünüyordu): panel görünen alana sığar, çevresi
      panelin rengiyle örtülür (geniş gölge — ölçüm geç kalsa da arkadaki sayfa görünmez); sayfa kaymaz (temel.css html[data-panel-acik]) */
-  .panel { inset: auto 0 auto 0; top: var(--vv-ust); height: var(--vv-y); width: auto; border: 0; border-radius: 0; z-index: 80;
+  .panel { inset: auto 0 auto 0; top: var(--vv-ust); height: var(--vv-y); max-height: var(--vv-y); width: auto; border: 0; border-radius: 0; z-index: 80;
     box-shadow: 0 0 0 100vmax var(--kart); }
   /* 557: küçük ya da kısaltılmışken alta oturur, üstte sayfa görünür ve kayar */
   .panel[data-kucuk], .panel[data-boy] { top: auto; bottom: 0; box-shadow: var(--golge-2); border-top: 1px solid var(--kenar); border-radius: calc(var(--r-buyuk) * 2) calc(var(--r-buyuk) * 2) 0 0; }

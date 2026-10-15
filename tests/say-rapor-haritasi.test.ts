@@ -6,13 +6,17 @@
    · haritadaki HER yer kimliği ekranın uygulayıcısında (raporlar/say-doldur.ts komutlariUygula) tanınır — ikisi aynı listeden kopmasın;
    · şemaya uymayan cevap harita üretmez; çok büyük rapor sınırda kısalır.
    557 (sunum 557 · 2. tur — reisim: "el ile girebildiğim değerleri say asistan ile giremiyor"): elle girilebilen her yer haritada — künyenin YERİ
-   ve kilidi (DEĞERİ GİTMEZ: müşteri / kişi bilgisi), kontrol tarihleri, uygunluk notu / satır sonucu / satır silme, ölçüm cihazları (kodlarıyla). */
+   ve kilidi (DEĞERİ GİTMEZ: müşteri / kişi bilgisi), kontrol tarihleri, uygunluk notu / satır sonucu / satır silme, ölçüm cihazları (kodlarıyla).
+   561 (reisim 2026-10-15: "rapor teknik yönetici onayında olduğu için değiştiremiyordu ama açıkta rapor göremiyorum dedi"): adresteki rapor
+   (saha raporu, onay ekranı) bulunur; bağlam satırı numara, tür, durum ve yazılamıyorsa NEDENİ — onaydaki / imzalı / başkasının raporu
+   yazılabilir sayılmaz (elle düzenlemeyle aynı kural). */
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { SABLONLAR } from "../src/format/sablonlar.ts";
 import { Cevaplar, FormatTanimi } from "../src/format/tanim.ts";
 import { komutlariUygula } from "../src/modules/raporlar/say-doldur.ts";
-import { HARITA_SINIRI, raporHaritasi } from "../src/modules/say/rapor-haritasi.ts";
+import { raporYazmaNedeni, YAZILAMAZ_NEDEN } from "../src/modules/raporlar/sema.ts";
+import { acikRaporMetni, HARITA_SINIRI, raporHaritasi, yoldakiRapor } from "../src/modules/say/rapor-haritasi.ts";
 
 const T = FormatTanimi.parse(SABLONLAR.ZPKR02.tanim);
 const linye = T.bolumler.find((b) => b.blok === "olcum" && b.id === "linye");
@@ -76,4 +80,23 @@ test("şemaya uymayan cevap harita üretmez; çok büyük rapor sınırda kısal
   const h = raporHaritasi(T, "x", { cevaplar: { ...Cevaplar.parse({}), tablo: { linye: satirlar } }, ekipman: {} })!;
   assert.ok(h.length <= HARITA_SINIRI + 100, String(h.length));
   assert.match(h, /… ve 180 satır daha|kısaltıldı/);
+});
+
+test("561 açık rapor: adresteki rapor bulunur; yazılamıyorsa nedeni (elle düzenlemeyle aynı kural)", () => {
+  const id = "0f1e2d3c-4b5a-4c69-8d7e-9fa0b1c2d3e4";
+  for (const yol of [`/raporlar/${id}`, `/onaylar/${id}`, `/raporlar/${id}?x=1`, `/raporlar/${id}#b-linye`]) assert.equal(yoldakiRapor(yol), id, yol);
+  for (const yol of ["/raporlar", `/raporlar/${id}/onizle`, "/raporlar/yeni/abc", `/planlar/${id}`, `/raporlar/${id.toUpperCase()}`]) assert.equal(yoldakiRapor(yol), null, yol);
+  /* yalnız yazanın Yeni raporu, yetkiyle */
+  assert.equal(raporYazmaNedeni("taslak", true, true), null);
+  for (const d of ["onayda", "onaylandi", "imzada", "imzali"] as const) assert.equal(raporYazmaNedeni(d, true, true), YAZILAMAZ_NEDEN[d], d);
+  assert.match(raporYazmaNedeni("onayda", true, true)!, /^rapor teknik yönetici onayında; /);
+  assert.match(raporYazmaNedeni("taslak", false, true)!, /raporu yazan muayene uzmanı değiştirir/);
+  assert.match(raporYazmaNedeni("taslak", true, false)!, /yetkisi yok/);
+  /* bağlam satırı: numara, tür, durum; yazılamıyorsa nedeni; yazılabilir ama ekran bağlanmadıysa o */
+  const d = { no: "SA-1026-009-0a1b2", turAd: "Elektrik panosu", durumAd: "Teknik yönetici onayında", yazilabilir: false, neden: raporYazmaNedeni("onayda", true, true) };
+  assert.equal(acikRaporMetni(d, false), "Sayfada açık rapor: SA-1026-009-0a1b2 (Elektrik panosu) · durum: Teknik yönetici onayında.\n"
+    + "Bu rapora şu an yazılamaz; kullanıcı da elle değiştiremez: rapor teknik yönetici onayında; onaylanana ya da geri gönderilene kadar değiştirilemez.");
+  const y = { ...d, durumAd: "Yeni", yazilabilir: true, neden: null };
+  assert.equal(acikRaporMetni(y, true), "Sayfada açık rapor: SA-1026-009-0a1b2 (Elektrik panosu) · durum: Yeni.");
+  assert.match(acikRaporMetni(y, false), /ekranda şu an düzenlenemiyor[\s\S]*rapora yazılamaz\.$/);
 });

@@ -25,7 +25,9 @@
    557 (sunum 557 · 2. tur onaylı — reisim 2026-10-14): mesaj Gönder'e basınca HEMEN balon (kutu boşalır), altında S.A.Y'ın balonu: hareket eden üç
    nokta + "Düşünüyor" (rapora yazarken "Rapora yazıyor"); S.A.Y iş isteyince ekran yapar, geri okuyup teyit eder, sonucu sayIsSonucuEylemi ile
    döndürür — S.A.Y'ın cevabı ondan sonra ("yaptım" / nedeniyle "yapamadım"); alttaki bildirimler kalktı (her şey sohbette). Başlıkta Küçült (panel
-   alta tek satır; bu cihazda kalır); sohbet yukarı kaydırılınca "En alta in". */
+   alta tek satır; bu cihazda kalır); sohbet yukarı kaydırılınca "En alta in".
+   561 (reisim 2026-10-15: "chati yukarıdan tutup aşağıya doğru küçültmeyi yapamadım"): panelin boyu üst kenardaki tutamaktan ya da başlıktan
+   sürüklenerek değişir (S.A.Y Chat'le aynı ortak parça — components/pencere/PanelBoyu); boy bu cihazda kalır. */
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from "react";
@@ -34,6 +36,7 @@ import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { useOnayla } from "../../../components/pencere/Onay";
 import { useGorunurAlan } from "../../../components/pencere/gorunurAlan";
+import { usePanelBoyu } from "../../../components/pencere/PanelBoyu";
 import { Serit } from "../../../components/serit/Serit";
 import type { SohbetEkAdi, SohbetEksik, SohbetIletisi } from "../../../server/yz/sohbet";
 import { EK_EN_COK_ADET, EK_EN_COK_BAYT } from "../ek-sinir";
@@ -48,6 +51,8 @@ import stil from "./say.module.css";
 const ACIK_ANAHTARI = "probata-say-acik";
 /** 557: küçük (alta tek satır) hâli bu cihazda kalır */
 const KUCUK_ANAHTARI = "probata-say-kucuk";
+/** 561: kısaltılmış boy bu cihazda kalır */
+const BOY_ANAHTARI = "probata-say-boy";
 /** 550: tek hazır tuş (reisim: "sadece fotoğrafları oku ve gir kalsın başka bir şey olmasın") */
 const OKU = "Fotoğrafları oku ve gir";
 /** yazı kutusunun en çok uzunluğu (sunucu SORU_SINIRI ile aynı) */
@@ -183,6 +188,7 @@ export function SayAsistan() {
   const govde = useRef<HTMLDivElement>(null);
   const panel = useRef<HTMLElement>(null);
   useGorunurAlan(panel, acik);
+  const boyu = usePanelBoyu(panel, BOY_ANAHTARI), boy = boyu.boy, boyOku = boyu.oku;
 
   /* durum: sayfa açılınca bir kez (düzen sayfalar arasında kalır); önceki sayfada açık bırakılan panel açık gelir (odak çalınmaz) */
   useEffect(() => {
@@ -192,10 +198,11 @@ export function SayAsistan() {
       setDurum(d);
       let onceAcik = false;
       try { onceAcik = localStorage.getItem(ACIK_ANAHTARI) === "1"; setKucuk(localStorage.getItem(KUCUK_ANAHTARI) === "1"); } catch { /* saklama yok */ }
+      boyOku();
       if (d.acik && onceAcik) setAcik(true);
     }, () => undefined);
     return () => { canli = false; };
-  }, []);
+  }, [boyOku]);
   useEffect(() => {
     const g = () => setBagli(cevrimici());
     g();
@@ -234,13 +241,13 @@ export function SayAsistan() {
     if (!acik) return;
     const h = document.documentElement;
     h.setAttribute("data-panel-acik", "say");
-    /* 557: küçükken telefonda sayfa kaymaya devam eder, havadaki tuşlar küçük panelin üstüne çıkar (temel.css) */
-    if (kucuk) h.setAttribute("data-panel-kucuk", "say");
+    /* 557: küçükken (561: ya da kısaltılmışken) telefonda sayfa kaymaya devam eder, havadaki tuşlar küçük panelin üstüne çıkar (temel.css) */
+    if (kucuk || boy !== null) h.setAttribute("data-panel-kucuk", "say");
     return () => {
       if (h.getAttribute("data-panel-acik") === "say") h.removeAttribute("data-panel-acik");
       if (h.getAttribute("data-panel-kucuk") === "say") h.removeAttribute("data-panel-kucuk");
     };
-  }, [acik, kucuk]);
+  }, [acik, kucuk, boy]);
   useEffect(() => {
     if (durum?.acik) document.documentElement.setAttribute("data-say", "var");
     return () => document.documentElement.removeAttribute("data-say");
@@ -510,12 +517,14 @@ export function SayAsistan() {
       )}
       {acik && (
         <aside ref={panel} className={stil.panel} id="say-panel" role="dialog" aria-labelledby="say-baslik" data-kucuk={kucuk || undefined}
+          data-boy={!kucuk && boy !== null ? "" : undefined} style={!kucuk && boy !== null ? { height: `${boy}px` } : undefined}
           onKeyDown={(e) => {
             if (e.key !== "Escape") return;
             e.stopPropagation();
             if (menu) { setMenu(false); atac.current?.focus(); } else kapat();
           }}>
-          <div className={stil.bas}>
+          {!kucuk && boyu.tutamak("S.A.Y'ın", stil.tutamak)}
+          <div className={kucuk ? stil.bas : `${stil.bas} ${boyu.basSinif}`} {...(kucuk ? {} : boyu.bas)}>
             <span className={stil.avatar}><Ikon ad="sparkles" /></span>
             <div className={stil.kimlik}>
               <h2 id="say-baslik">S.A.Y</h2>
@@ -561,7 +570,7 @@ export function SayAsistan() {
               <button className={stil.enAlta} type="button" onClick={enAlta} aria-label="En alta in" title="En alta in"><Ikon ad="arrow-down" /></button>
             )}
           </div>
-          <div className={stil.alt} hidden={kucuk}>
+          <div className={stil.alt} hidden={kucuk} data-panel-alt="">
             {raporda && (
               <div className={stil.hizli}>
                 <button className={stil.cip} type="button" disabled={!hazir || bekliyor} onClick={() => void islemYap("oku", OKU)}>{OKU}</button>

@@ -17,6 +17,23 @@ import { ELLE_GEREKCE, ELLE_SONUC } from "../../format/motor.ts";
 import { bilgiAlanlari, ekipmanAlanlari, ekipmanAnahtari, testAlanlari } from "../raporlar/doldur.ts";
 import { TARIH_ADI, TARIH_ANAHTARLARI, tarihYazimi } from "../raporlar/say-doldur.ts";
 
+/* ── 561 (reisim 2026-10-15: "rapor teknik yönetici onayında olduğu için değiştiremiyordu ama açıkta rapor göremiyorum dedi"): S.A.Y, adresteki
+   raporu (saha raporu, onay ekranı) SUNUCUDA bulur — ekranın bağı yalnız yazılabilir raporda geldiği için onaydaki / başkasının raporunda "açık
+   rapor yok" diyordu. Bağlama künyesiz kimliği (numara, tür, durum) ve yazılamıyorsa nedeni girer; harita yalnız yazılabilir raporda. ── */
+const RAPOR_YOLU = /^\/(?:raporlar|onaylar)\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/;
+/** adresteki raporun kimliği (saha raporu /raporlar/<id>, onay ekranı /onaylar/<id>; sorgu ve # atılır) — yoksa null */
+export function yoldakiRapor(yol: string): string | null {
+  return RAPOR_YOLU.exec(yol.split(/[?#]/)[0])?.[1] ?? null;
+}
+/** bağlamdaki açık rapor satırı: numara, tür, durum; yazılamıyorsa nedeni (elle de değiştirilemez); yazılabilir ama ekran bağlanmadıysa (harita
+    yok — onaya gönderme cihazda bekliyor ya da sayfa yenilenmeli) o */
+export function acikRaporMetni(d: { no: string; turAd: string; durumAd: string; yazilabilir: boolean; neden: string | null }, harita: boolean): string {
+  const l = [`Sayfada açık rapor: ${d.no} (${d.turAd}) · durum: ${d.durumAd}.`];
+  if (!d.yazilabilir) l.push(`Bu rapora şu an yazılamaz; kullanıcı da elle değiştiremez: ${d.neden ?? "rapor düzenlenemez"}.`);
+  else if (!harita) l.push("Bu rapor ekranda şu an düzenlenemiyor (onaya gönderme işlemi cihazda bekliyor olabilir ya da sayfa yenilenmeli); rapora yazılamaz.");
+  return l.join("\n");
+}
+
 /** haritanın en çok uzunluğu (karakter) ve tablo başına gösterilen satır */
 export const HARITA_SINIRI = 60_000;
 const TABLO_SATIR = 120;

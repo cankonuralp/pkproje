@@ -292,6 +292,18 @@ const yzTaklit = createServer((istek, yanit) => {
       }
       /* 550: rapordayken "<alan adı> alanına <değer> yaz" → haritadaki yer kimliğiyle rapora_yaz aracı (araçlar istekte yoksa ret — taklit denetler) */
       const yazIstegi = /^(.+?) alanına (.+?) yaz$/.exec(son.trim());
+      /* 561: sayfadaki rapor yazılamıyorsa (onayda, başkasının …) bağlamda nedeni var — taklit onu söyler; araç gönderildiyse ret */
+      const yazilamaz = /^Bu rapora şu an yazılamaz; kullanıcı da elle değiştiremez: (.+)$/m.exec(baglam)?.[1];
+      if (yazilamaz && yazIstegi) {
+        if (((g as { tools?: { name?: string }[] }).tools ?? []).some((a) => a.name === "rapora_yaz")) {
+          yanit.writeHead(400, { "content-type": "application/json" }).end(JSON.stringify({ type: "error", error: { type: "invalid_request_error", message: "taklit: yazılamayan raporda rapora_yaz aracı" } }));
+          return;
+        }
+        const acikNo = /^Sayfada açık rapor: (\S+) /m.exec(baglam)?.[1] ?? "?";
+        yanit.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({
+          content: [{ type: "text", text: `Yapamadım: ${acikNo} — ${yazilamaz}` }], stop_reason: "end_turn", usage: { input_tokens: 2500, output_tokens: 40 } }));
+        return;
+      }
       if (raporlu && yazIstegi) {
         const yer = new RegExp(`^- (\\S+) · ${yazIstegi[1].replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} \\(`, "m").exec(baglam)?.[1];
         const araclar = (g as { tools?: { name?: string }[] }).tools ?? [];

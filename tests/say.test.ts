@@ -281,7 +281,8 @@ test("550 açık rapor haritası: yalnız raporu yazanın Yeni raporunda, adres 
   if (is2.durum !== "hazir") return assert.fail(JSON.stringify(is2));
   const yedek = await ile(A, FA.den, (db) => sayIsSonucuKaydet(db, is2, null, "yok"));
   assert.ok(yedek.durum === "tamam" && yedek.iletiler[0].metin === "Yaptım: 1 giriş rapora yazıldı.", JSON.stringify(yedek));
-  /* adres başka sayfaysa ya da raporu yazmayan sorarsa harita ve rapor araçları yok; araç çağrısı gelse de komut dönmez */
+  /* adres başka sayfaysa ya da raporu yazmayan sorarsa harita ve rapor araçları yok; araç çağrısı gelse de komut dönmez. 2026-10-15 (561): "Açık
+     rapor" haritanın başlığı — raporu görebilen yazmayanın bağlamında artık "Sayfada açık rapor: …" satırı var (aşağıdaki 561 testi), harita yok */
   for (const [kim, yol] of [[FA.den, "/planlar"], [FA.plan, `/raporlar/${rapor}`]] as const) {
     const x = await ile(A, kim, (db) => saySorHazirla(db, kim, "Soru", yol, new Date(), null, canli));
     assert.ok(x.durum === "hazir");
@@ -370,4 +371,69 @@ test("553 format yapıcı: harita yalnız kurucu adresinde, formatı değiştire
   await yok(FA.yon, `/ekipman-turleri/${f.tur}`);
   tamam(await ile(A, FA.yon, (db) => yayinla(db, FA.yon, f.taslak, f.surum, "")));
   await yok(FA.yon, yol);
+});
+
+/* 561 (reisim 2026-10-15: "rapor teknik yönetici onayında olduğu için değiştiremiyordu ama açıkta rapor göremiyorum dedi"): rapor SUNUCUDA adresten
+   bulunur — ekran bağlanmasa da (onaydaki / başkasının raporu salt okunur, ekran bağ göndermez) S.A.Y açık raporu, durumunu ve yazamıyorsa
+   nedenini bilir; yer "Rapor <no>". Harita ve yazma araçları yalnız yazanın Yeni raporunda; künye gitmez; başka firma raporu hiç görmez. */
+test("561 açık rapor: durum ne olursa olsun bilinir, yazılamıyorsa nedeni; harita yalnız yazılabilirde", async () => {
+  const tamam = <R extends { durum: string }>(r: R) => { assert.equal(r.durum, "tamam", JSON.stringify(r)); return r as Extract<R, { durum: "tamam" }>; };
+  const f = await ile(A, FA.yon, async (db) => {
+    const tur = (await db.sorgu<{ id: string }>("SELECT id::text FROM ekipman_turu WHERE kod = 'EP'")).rows[0].id;
+    const tesis = (await db.sorgu<{ id: string }>("SELECT id::text FROM tesis LIMIT 1")).rows[0].id;
+    const ekp = (await db.sorgu<{ id: string }>("INSERT INTO ekipman (tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, 'EP-S561', 'x') RETURNING id::text", [tesis, tur])).rows[0].id;
+    const per = (await db.sorgu<{ p: string }>("SELECT personel_id::text AS p FROM hesap WHERE id = $1", [FA.den.id])).rows[0].p;
+    return { ekp, tesis, per };
+  });
+  const g = bugunTr();
+  const plan = tamam(await ile(A, FA.plan, (db) => planAc(db, depo, FA.plan, A, { tesis: f.tesis, baslangic: g, bitis: g, ekip: [{ personel: f.per, isgNo: "ISG-3", kaydet: false }] }))).id;
+  const v = (await ile(A, FA.den, (db) => planIci(db, FA.den, plan)))!;
+  tamam(await ile(A, FA.den, (db) => planKabul(db, FA.den, plan, v.surum, true)));
+  const rapor = tamam(await ile(A, FA.den, (db) => raporOlustur(db, FA.den, plan, f.ekp))).id;
+  await yzAyari(A, FA.yon, { sinir: null });
+  const canli = { id: rapor, cevaplar: { kunye: { firma_adi: "Gizli Sanayi A.Ş." } }, ekipman: { marka: "Örnek Marka" } };
+  const sor = async (kim: Kisi, yol: string, c: typeof canli | null = canli, firma = A) => {
+    const h = await ile(firma, kim, (db) => saySorHazirla(db, kim, "Seri no alanına SN-1 yaz", yol, new Date(), null, c));
+    if (h.durum !== "hazir") return assert.fail(JSON.stringify(h));
+    await ile(firma, kim, (db) => sayBirak(db, h, "yok"));
+    const govde = h.istek.govde as { system: { text: string }[]; tools?: { name: string }[] };
+    assert.doesNotMatch(JSON.stringify(govde), /Gizli Sanayi|Gizli Tesis|Saklı Cad|Deneme Kişi|sk-ant/, "künye ve kişi gitmez");
+    return { h, baglam: govde.system[1].text, araclar: (govde.tools ?? []).map((t) => t.name) };
+  };
+  const no = (await ile(A, FA.den, (db) => db.sorgu<{ no: string }>("SELECT no FROM rapor WHERE id = $1", [rapor]))).rows[0].no;
+  const satir = (durum: string) => `Sayfada açık rapor: ${no} (Elektrik panosu) · durum: ${durum}.`;
+
+  /* yazanın Yeni raporu, ekran bağlı: satır + harita + araçlar; yer raporun numarası (ekran numara göndermese de) */
+  let x = await sor(FA.den, `/raporlar/${rapor}`);
+  assert.equal(x.h.yer, `Rapor ${no}`);
+  assert.ok(x.baglam.includes(`${satir("Yeni")}\nAçık rapor (kullanıcının şu an yazdığı`), x.baglam);
+  assert.doesNotMatch(x.baglam, /yazılamaz/);
+  assert.deepEqual(x.araclar, ["rapora_yaz", "fotograflari_oku", "geri_al", "web_search"]);
+  /* ekran bağlanmadıysa (onaya gönderme cihazda bekliyor): satır + neden, harita / araç yok */
+  x = await sor(FA.den, `/raporlar/${rapor}`, null);
+  assert.match(x.baglam, /ekranda şu an düzenlenemiyor/);
+  assert.doesNotMatch(x.baglam, /Açık rapor \(/);
+  assert.deepEqual(x.araclar, ["web_search"]);
+  /* başkasının Yeni raporu (firma yöneticisi görür, yazamaz): ekran ne gönderirse göndersin harita yok, neden "yazan değiştirir" */
+  x = await sor(FA.yon, `/raporlar/${rapor}`);
+  assert.ok(x.baglam.includes(`${satir("Yeni")}\nBu rapora şu an yazılamaz; kullanıcı da elle değiştiremez: raporu yazan muayene uzmanı değiştirir`), x.baglam);
+  assert.doesNotMatch(x.baglam, /Açık rapor \(/);
+  assert.deepEqual(x.araclar, ["web_search"]);
+  /* rapor teknik yönetici onayında: yazan da yazamaz — nedeni bağlamda (ekranın bağı gelse de harita yok); onay ekranında da aynı */
+  const s = kume.sahipIstemci(); await s.connect();
+  try { await s.query("SET session_replication_role = replica"); await s.query("UPDATE rapor SET durum = 'onayda' WHERE id = $1", [rapor]); } finally { await s.end(); }
+  for (const [kim, yol] of [[FA.den, `/raporlar/${rapor}`], [FA.yon, `/onaylar/${rapor}`]] as const) {
+    x = await sor(kim, yol);
+    assert.equal(x.h.yer, `Rapor ${no}`);
+    assert.ok(x.baglam.includes(`${satir("Teknik yönetici onayında")}\nBu rapora şu an yazılamaz; kullanıcı da elle değiştiremez: rapor teknik yönetici onayında;`), x.baglam);
+    assert.doesNotMatch(x.baglam, /Açık rapor \(/);
+    assert.deepEqual(x.araclar, ["web_search"]);
+    const k = await ile(A, kim, (db) => saySorKaydet(db, x.h, { content: [{ type: "tool_use", name: "rapora_yaz", input: { girisler: [{ yer: "e:seri", deger: "SN-1" }] } }, { type: "text", text: "Yazamıyorum." }],
+      stop_reason: "end_turn", usage: { input_tokens: 10, output_tokens: 1 } }));
+    assert.ok(k.durum === "tamam" && !k.komutlar, "yazılamayan raporda komut yok");
+  }
+  /* başka firma raporu görmez: satır yok, yer "Raporlar" */
+  x = await sor(FB.den, `/raporlar/${rapor}`, canli, B);
+  assert.doesNotMatch(x.baglam, /Sayfada açık rapor/);
+  assert.equal(x.h.yer, "Raporlar");
 });

@@ -25,8 +25,8 @@ import { ARAMA_MALIYETI, isSonucuMetni, SAY_GECMIS, sayEnCokMaliyet, sayIstegi, 
 import { z } from "zod";
 import type { SayEkDosyasi } from "./ek.ts";
 import { sohbetGecmisi, sohbetOneriDurumu, sohbetTemizle, sohbetYaz, type SohbetBekleyen, type SohbetIletisi } from "../../../server/yz/sohbet.ts";
-import { raporSayBilgisi } from "../../raporlar/server/say-baglanti.ts";
-import { raporHaritasi } from "../rapor-haritasi.ts";
+import { raporSayBilgisi, raporSayDurumu } from "../../raporlar/server/say-baglanti.ts";
+import { acikRaporMetni, raporHaritasi, yoldakiRapor } from "../rapor-haritasi.ts";
 import { FormatTanimi } from "../../../format/tanim.ts";
 import { FORMAT_ARACI, formatHaritasi } from "../../rapor-format/say-kurucu.ts";
 import { formatAyrintisi, formatDegistirir } from "../../rapor-format/server/formatlar.ts";
@@ -180,8 +180,13 @@ export async function saySorHazirla(db: Sorgulayici, kim: Kisi, soru: string, yo
   const anahtar = await sirKullan(db, "yapay_zeka_anahtari");
   if (!anahtar) return { durum: "red", neden: ANAHTARSIZ };
   const sayfa = sayfaBilgisi(yol);
-  /* rapor ekranında yer "Rapor <no>" (382; numara biçimi denetli — yalnız kişinin kendi geçmişinde etiket) */
-  const s = raporNo && RAPOR_NO.test(raporNo) && sayfa.modul === 14 ? { ...sayfa, yer: `Rapor ${raporNo}` } : sayfa;
+  /* 561: adres bir raporsa (saha raporu, onay ekranı) rapor SUNUCUDA bulunur — durumu ne olursa olsun S.A.Y açık raporu bilir (görme yetkisiyle;
+     künyesiz), yazamıyorsa nedenini. Ekranın bağı yalnız yazılabilir raporda gelir (haritası aşağıda) */
+  const yolRaporu = yoldakiRapor(yol);
+  const acik = yolRaporu ? await raporSayDurumu(db, kim, yolRaporu) : null;
+  /* rapor ekranında yer "Rapor <no>" (382; numara biçimi denetli — yalnız kişinin kendi geçmişinde etiket); 561: bulunan raporun numarası önce */
+  const s = acik ? { ...sayfa, yer: `Rapor ${acik.no}` }
+    : raporNo && RAPOR_NO.test(raporNo) && sayfa.modul === 14 ? { ...sayfa, yer: `Rapor ${raporNo}` } : sayfa;
   const gecmis = (await sohbetGecmisi(db, SAY_GECMIS)).map((m) => ({ kim: m.kim, metin: m.metin }));
   const bekleyen = (await bekleyenler(db, kim)).map((b) => `${b.ad}: ${[b.kirmizi ? `${b.kirmizi} ${b.kirmiziAd}` : "", b.sari ? `${b.sari} ${b.sariAd}` : ""].filter(Boolean).join(", ")}`);
   const ay = yzAyi(simdi), ust = sayEnCokMaliyet(k.model, ekler.length);
@@ -189,9 +194,9 @@ export async function saySorHazirla(db: Sorgulayici, kim: Kisi, soru: string, yo
     return { durum: "red", neden: "Bu ay yapay zekâ sınırınız doldu; firma yöneticisi Firma ayarları › Yapay zekâ'dan artırabilir. Hızlı sorular çalışır." };
   }
   /* 384 → 550: rapor sayfasında açık raporun HARİTASI (yer kimlikleri ve şu anki değerler; künye yok) — yalnız adres o raporsa ve kişi raporu
-     yazan, rapor Yeni (raporlar/server/say-baglanti.ts); harita varsa rapora yazma araçları da gider */
+     yazan, rapor Yeni (raporlar/server/say-baglanti.ts; 561: yazılabilirliği yukarıda bulundu); harita varsa rapora yazma araçları da gider */
   let rapor: string | null = null;
-  if (canli && UUID.test(canli.id) && sayfa.modul === 14 && yol.split(/[?#]/)[0] === `/raporlar/${canli.id}`) {
+  if (canli && UUID.test(canli.id) && acik?.yazilabilir && sayfa.modul === 14 && yol.split(/[?#]/)[0] === `/raporlar/${canli.id}`) {
     const b = await raporSayBilgisi(db, kim, canli.id);
     rapor = b ? raporHaritasi(b.tanim, b.turAd, { cevaplar: canli.cevaplar, ekipman: canli.ekipman ?? {}, tarih: canli.tarih, cihazlar: canli.cihazlar }) : null;
   }
@@ -205,8 +210,8 @@ export async function saySorHazirla(db: Sorgulayici, kim: Kisi, soru: string, yo
   }
   const raporEki = rapor && canli ? { rapor: canli.id } : {};
   await sohbetYaz(db, { kim: "ben", metin, yer: s.yer, ek: ekler.length || rapor ? { ...raporEki, ...(ekler.length ? { ekler: ekler.map((e) => e.ad) } : {}) } : null });
-  const istek = sayIstegi({ model: k.model, kilavuz: SAY_KILAVUZU, baglam: { roller: kim.roller.map((r) => ROL_ADI[r]), yer: s.yer, yardim: s.yardim, bekleyen, rapor, format },
-    gecmis, soru: metin, ekler: ekler.map((e) => e.icerik), formatAraci: [FORMAT_ARACI] });
+  const istek = sayIstegi({ model: k.model, kilavuz: SAY_KILAVUZU, baglam: { roller: kim.roller.map((r) => ROL_ADI[r]), yer: s.yer, yardim: s.yardim, bekleyen,
+    acikRapor: acik ? acikRaporMetni(acik, !!rapor) : null, rapor, format }, gecmis, soru: metin, ekler: ekler.map((e) => e.icerik), formatAraci: [FORMAT_ARACI] });
   return { durum: "hazir", istek, anahtar, model: k.model, ay, ust, yer: s.yer, rapor: rapor && canli ? canli.id : null, format: format && kurucu ? kurucu.id : null };
 }
 

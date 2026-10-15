@@ -38,7 +38,7 @@ import { formatSurumuOku, yayindakiFormat } from "../../rapor-format/server/form
 import { kimdeHaritasi } from "../../zimmetler/server/zimmet.ts";
 import { roldekiHesapAdlari } from "../../../server/kimlik/hesap.ts";
 import {
-  ayEkle, gorunenNo, kalibrasyonGecti, KopyaGirdisi, RAPOR_DURUM, RaporKaydi, RevizeGirdisi, SONUC_AD, EkipmanBilgisi, type RaporCihazi, type RaporDurumu, type RaporTarihleri,
+  ayEkle, gorunenNo, kalibrasyonGecti, KopyaGirdisi, RAPOR_DURUM, RaporKaydi, raporYazmaNedeni, RevizeGirdisi, SONUC_AD, EkipmanBilgisi, type RaporCihazi, type RaporDurumu, type RaporTarihleri,
 } from "../sema.ts";
 import { istekAc, istekKapat, revizeDurumu } from "./revize.ts";
 import { mesaiDurumu } from "./plan-baglanti.ts";
@@ -220,6 +220,18 @@ export async function raporSayBilgisi(db: Sorgulayici, kim: Kisi, id: string): P
   if (!e || !e.sahip || e.r.durum !== "taslak") return null;
   const f = await formatSurumuOku(db, e.r.format_id);
   return f ? { tanim: f.tanim, turAd: e.tur.ad } : null;
+}
+
+/** 561 (reisim 2026-10-15: "rapor teknik yönetici onayında olduğu için değiştiremiyordu ama açıkta rapor göremiyorum dedi"): sayfada açık raporun
+    KÜNYESİZ kimliği — numarası, türü, durumu ve kişi ona yazabilir mi; yazamıyorsa nedeni (elle düzenleme ile aynı kural: yalnız yazanın Yeni
+    raporu). Raporu göremeyene null (var olduğu da söylenmez). İçerik gitmez; kişi adı nedende yok. */
+export interface RaporSayDurumu { no: string; turAd: string; durum: RaporDurumu; durumAd: string; yazilabilir: boolean; neden: string | null }
+export async function raporSayDurumu(db: Sorgulayici, kim: Kisi, id: string): Promise<RaporSayDurumu | null> {
+  const e = await erisim(db, kim, id);
+  if (!e) return null;
+  const d = e.r.durum;
+  const neden = raporYazmaNedeni(d, e.sahip, canDoEylem(kim, "rapor_yaz", { sahip: e.r.hesap_id }));
+  return { no: gorunenNo(e.r.no, e.r.revizyon), turAd: e.tur.ad, durum: d, durumAd: RAPOR_DURUM[d][0], yazilabilir: neden === null, neden };
 }
 
 export interface CihazSatiri {

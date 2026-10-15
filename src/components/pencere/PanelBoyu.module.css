@@ -1,0 +1,6 @@
+/* PANEL BOYU (561): üst kenardaki tutamak (557'de S.A.Y Chat'te kuruldu — buraya taşındı) ve sürüklenen başlık. ⛔ çıplak renk yok */
+.tutamak { flex: none; display: grid; place-items: center; width: 100%; height: 24px; padding: 0; border: 0; background: var(--zemin2); cursor: ns-resize; touch-action: none; }
+.tutamak::before { content: ""; width: 44px; height: 4px; border-radius: 4px; background: var(--kenar-alan); }
+.tutamak:focus-visible { outline: 3px solid var(--odak); outline-offset: -3px; }
+/* başlık da tutulup sürüklenir (tuşları kendi imleciyle) */
+.bas { cursor: ns-resize; touch-action: none; user-select: none; }

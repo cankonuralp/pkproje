@@ -48,6 +48,8 @@ export interface SayBaglami {
   yardim: string | null;
   /** bekleyen işler: modül adı + sayı + ne olduğu (kişi / müşteri bilgisi yok) */
   bekleyen: string[];
+  /** 561: sayfada açık raporun künyesiz kimliği (numara, tür, durum) ve yazılamıyorsa nedeni — rapor sayfasında her zaman */
+  acikRapor?: string | null;
   /** 550: açık raporun haritası (src/modules/say/rapor-haritasi.ts) — varsa rapora yazma araçları da gider */
   rapor?: string | null;
   /** 553: açık format taslağının haritası (rapor-format/say-kurucu.ts) — varsa format aracı da gider */
@@ -171,6 +173,7 @@ export function sayIstegi(p: { model: YzModel; kilavuz: readonly (readonly [stri
     `Kullanıcının rolleri: ${b.roller.join(", ") || "—"}.`,
     `Şu an bulunduğu sayfa: ${b.yer}.${b.yardim ? ` (${b.yardim})` : ""}`,
     b.bekleyen.length ? `Bekleyen işleri: ${b.bekleyen.join("; ")}.` : "Şu an bekleyen işi yok.",
+    ...(b.acikRapor ? [b.acikRapor] : []),
     ...(b.rapor ? [`Açık rapor (kullanıcının şu an yazdığı, kaydedilmemiş değişiklikler dahil):\n${b.rapor}`] : []),
     ...(b.format ? [`Açık format taslağı (format yapıcıda, kaydedilmemiş değişiklikler dahil):\n${b.format}`] : []),
   ].join("\n");

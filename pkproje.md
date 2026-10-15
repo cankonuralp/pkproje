@@ -2483,6 +2483,19 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-15 (561): **S.A.Y AÇIK RAPORU HER DURUMDA BİLİR; PANEL ÜSTTEN TUTULUP KISALTILIR** (reisim, ekran görüntüsüyle: *"rapor teknik yönetici
+  onayında olduğu için değiştiremiyordu ama açıkta rapor göremiyorum dedi ayrıca chati yukarıdan tutup aşağıya doğru küçültmeyi yapamadım"*). Neden
+  (canlı kayıttan, salt okunur): o iki soru onaydaki raporun sayfasından gitmişti; rapor ekranı S.A.Y'a yalnız düzenlenebilir raporda bağlanıyordu →
+  salt okunur raporda bağlama hiçbir rapor bilgisi girmiyor, S.A.Y "açık rapor yok" diyordu. Düzeltme: adres rapor sayfasıysa (saha raporu
+  /raporlar/<id>, onay ekranı /onaylar/<id>) rapor SUNUCUDA bulunur (görme yetkisiyle; başka firma görmez) — bağlamda "Sayfada açık rapor: <no>
+  (<tür>) · durum: <durum>" ve yazılamıyorsa NEDENİ (elle düzenlemeyle aynı kural: onayda / onaylandı / imzada / tamamlandı, başkasının raporu, yetki
+  yok; ekran bağlanmadıysa o); yer "Rapor <no>". Harita ve yazma araçları yine yalnız yazanın Yeni raporunda (kişi elle ne girebiliyorsa S.A.Y o);
+  künye ve kişi adı gitmez. Panel: S.A.Y'a üst kenarda tutamak (başlığın üstünde, rengiyle) — tutup aşağı sürükleyince kısalır, yukarı uzar; başlık
+  çubuğu da tutulup sürüklenir (iki panelde); klavyede tutamakta ↑ ↓ Home End; boy bu cihazda kalır; telefonda kısalınca alta oturur, üstte sayfa
+  kayar. S.A.Y Chat'in 557 tutamağı ortak parçaya taşındı (components/pencere/PanelBoyu — tek üretici; en uzun boy panelin tam boyu, üst çubuğu
+  örtmez). Kilitler: tests/say-rapor-haritasi.test.ts 561 (adres, neden, bağlam satırı), tests/say.test.ts 561 (veritabanında: Yeni / ekran
+  bağlanmamış / başkasının / onaydaki / onay ekranı / başka firma), bozan say-acik-rapor 1–3; uçtan uca: iki panelde tutamak + başlık sürükleme, Home;
+  yönetici denetçinin raporunda "… yaz" → nedenli "Yapamadım". Göç yok.
 - 2026-10-14 (560): **557 + 556 YAYINDA** — 557 (S.A.Y şikâyetleri; c655ed8) ve 556 (her kutuda hesap; dd8b593) deneme makinesinde ilk koşuda
   13/13 yeşil (557'nin ilk koşusunda 3. parçadaki eski "Seri no" beklentisi düşmüştü — c655ed8 düzeltti); main önce c655ed8, sonra dd8b593; göç yok
   (91 göç); canlı sağlık tamam (sürüm dd8b593), duman 11/11, Vercel'de çalışma hatası yok. Oturum isteyen ekranlar (saha raporu, format yapıcı)
