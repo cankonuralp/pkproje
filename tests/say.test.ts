@@ -24,7 +24,7 @@ import { planIci, planKabul } from "../src/modules/planlar/server/plan-ici.ts";
 import { bugunTr, planAc, type Kisi } from "../src/modules/planlar/server/planlar.ts";
 import { taslakBaslat, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
 import { raporOlustur } from "../src/modules/raporlar/server/raporlar.ts";
-import { raporSayBilgisi } from "../src/modules/raporlar/server/say-baglanti.ts";
+import { raporSayBilgisi, raporSayDurumu } from "../src/modules/raporlar/server/say-baglanti.ts";
 import { sayBirak, sayDurumu, sayGecmisi, sayIsSonucuHazirla, sayIsSonucuKaydet, sayOneri, sayRaporCevabi, saySorHazirla, saySorKaydet, sayTemizle } from "../src/modules/say/server/say.ts";
 import { sayEkleriOku } from "../src/modules/say/server/ek.ts";
 import { ayarOku, ayarYaz } from "../src/server/ayar/ayar.ts";
@@ -392,10 +392,10 @@ test("561 açık rapor: durum ne olursa olsun bilinir, yazılamıyorsa nedeni; h
   const rapor = tamam(await ile(A, FA.den, (db) => raporOlustur(db, FA.den, plan, f.ekp))).id;
   await yzAyari(A, FA.yon, { sinir: null });
   const canli = { id: rapor, cevaplar: { kunye: { firma_adi: "Gizli Sanayi A.Ş." } }, ekipman: { marka: "Örnek Marka" } };
-  const sor = async (kim: Kisi, yol: string, c: typeof canli | null = canli, firma = A) => {
-    const h = await ile(firma, kim, (db) => saySorHazirla(db, kim, "Seri no alanına SN-1 yaz", yol, new Date(), null, c));
+  const sor = async (kim: Kisi, yol: string, c: typeof canli | null = canli) => {
+    const h = await ile(A, kim, (db) => saySorHazirla(db, kim, "Seri no alanına SN-1 yaz", yol, new Date(), null, c));
     if (h.durum !== "hazir") return assert.fail(JSON.stringify(h));
-    await ile(firma, kim, (db) => sayBirak(db, h, "yok"));
+    await ile(A, kim, (db) => sayBirak(db, h, "yok"));
     const govde = h.istek.govde as { system: { text: string }[]; tools?: { name: string }[] };
     assert.doesNotMatch(JSON.stringify(govde), /Gizli Sanayi|Gizli Tesis|Saklı Cad|Deneme Kişi|sk-ant/, "künye ve kişi gitmez");
     return { h, baglam: govde.system[1].text, araclar: (govde.tools ?? []).map((t) => t.name) };
@@ -432,8 +432,7 @@ test("561 açık rapor: durum ne olursa olsun bilinir, yazılamıyorsa nedeni; h
       stop_reason: "end_turn", usage: { input_tokens: 10, output_tokens: 1 } }));
     assert.ok(k.durum === "tamam" && !k.komutlar, "yazılamayan raporda komut yok");
   }
-  /* başka firma raporu görmez: satır yok, yer "Raporlar" */
-  x = await sor(FB.den, `/raporlar/${rapor}`, canli, B);
-  assert.doesNotMatch(x.baglam, /Sayfada açık rapor/);
-  assert.equal(x.h.yer, "Raporlar");
+  /* başka firma raporu görmez (B'de yapay zekâ kapalı — S.A.Y'ın rapora baktığı tek yerden): yok */
+  assert.equal(await ile(B, FB.den, (db) => raporSayDurumu(db, FB.den, rapor)), null, "başka firma görmez");
+  assert.equal((await ile(A, FA.den, (db) => raporSayDurumu(db, FA.den, rapor)))?.durum, "onayda");
 });
