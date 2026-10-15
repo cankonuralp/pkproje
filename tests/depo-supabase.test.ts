@@ -19,7 +19,7 @@ import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde, type Havuz } from "../src/server/db/kiraci.ts";
 import { dosyaAnahtari } from "../src/server/dosya/anahtar.ts";
 import { depoSec, klasorDepo, vtDepo, type Depo } from "../src/server/dosya/depo.ts";
-import { dosyaYukle, sayfaAcilisi } from "../src/server/dosya/dosya.ts";
+import { dosyaSayfasi, dosyaYukle, gosterilir, IMZA_SURESI, sayfaAcilisi } from "../src/server/dosya/dosya.ts";
 import { supabaseDepo, supabaseOrtami, type SupabaseDepo } from "../src/server/dosya/supabase.ts";
 import { depoTasimaIsi } from "../src/server/is/gece.ts";
 import { sahteDepoKur, type SahteDepo } from "./yardimci/sahte-depo.ts";
@@ -151,4 +151,21 @@ test("gece işi: yalnız taşıyan depoda koşar; firma firma, sayılarla", asyn
 test("dosya ucu yalnız sayfa açılışında imzalı adrese yönlenir; görsel / çerçeve / fetch akar", () => {
   assert.equal(sayfaAcilisi(new Headers({ "sec-fetch-dest": "document" })), true);
   for (const h of ["image", "iframe", "empty", "embed", ""]) assert.equal(sayfaAcilisi(new Headers(h ? { "sec-fetch-dest": h } : {})), false, h);
+});
+
+/* 575 (reisim 2026-10-15: "dediklerini yap" — süre 15 dk; süresi dolan bağlantı İngilizce hata yerine bizim sayfamıza): görsel / PDF açılışında adres
+   bizim kalır, dosya sayfanın içinde imzalı adresten çizilir; yenileyince yeni adres. */
+test("575 dosya sayfası: adres bizim, içerik yalnız Storage kökünden, betik yok, ad kaçışlı; süre 15 dakika; yalnız görsel ve PDF içeride", () => {
+  assert.equal(IMZA_SURESI, 900);
+  assert.deepEqual(["image/jpeg", "image/png", "application/pdf", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"].map(gosterilir), [true, true, true, false]);
+  const adres = "https://abcdefgh.supabase.co/storage/v1/object/sign/probata/firma/x?token=a&download=";
+  const p = dosyaSayfasi({ ad: 'Rapor "1" <script>alert(1)</script>.pdf', tur: "application/pdf" }, adres);
+  assert.match(p.govde, /<iframe src="https:\/\/abcdefgh\.supabase\.co\/storage\/v1\/object\/sign\/probata\/firma\/x\?token=a&amp;download=" title="Rapor &quot;1&quot; &lt;script&gt;/);
+  assert.doesNotMatch(p.govde, /<script/i, "betik yok (ad kaçışlı)");
+  assert.equal(p.basliklar["Content-Security-Policy"],
+    "default-src 'none'; img-src https://abcdefgh.supabase.co; frame-src https://abcdefgh.supabase.co; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'");
+  assert.deepEqual([p.basliklar["Cache-Control"], p.basliklar["Referrer-Policy"], p.basliklar["Content-Type"]], ["private, no-store", "no-referrer", "text/html; charset=utf-8"]);
+  const r = dosyaSayfasi({ ad: "foto.jpg", tur: "image/jpeg" }, "https://abcdefgh.supabase.co/storage/v1/object/sign/probata/y?token=b");
+  assert.match(r.govde, /<img src="https:\/\/abcdefgh\.supabase\.co\/storage\/v1\/object\/sign\/probata\/y\?token=b" alt="foto\.jpg">/);
+  assert.doesNotMatch(r.govde, /<iframe/);
 });

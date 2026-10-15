@@ -105,8 +105,35 @@ export function indirmeBasliklari(d: IndirilecekDosya, kip: "ac" | "indir"): Rec
   };
 }
 
-/** 568: imzalı adresin ömrü (sn) — kısa ömürlü, yetkili indirme (anayasa 5.1'in karşılığı) */
-export const IMZA_SURESI = 300;
+/** 568: imzalı adresin ömrü (sn) — kısa ömürlü, yetkili indirme (anayasa 5.1'in karşılığı). 575 (reisim 2026-10-15: "dediklerini yap" — 5 dk →
+    15 dk): uzun PDF açıkken tarayıcının sonradan istediği parçalar da süre içinde kalsın */
+export const IMZA_SURESI = 900;
+/** tarayıcının kendi içinde gösterdiği tür (görsel, PDF) — öteki türler indirilir */
+export const gosterilir = (tur: string) => tur.startsWith("image/") || tur === "application/pdf";
+const kacis = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" })[c] ?? c);
+/** 575 DOSYA SAYFASI (reisim 2026-10-15: "dediklerini yap" — süresi dolan bağlantı İngilizce hata yerine bizim sayfamıza dönsün): yeni sekmede
+    adres HEP BİZİM (/api/dosya/<id>); dosya Storage'ın kısa ömürlü imzalı adresinden sayfanın İÇİNDE çizilir (PDF çerçevede, görsel resim olarak).
+    Sekme yenilenince yetki yeniden denetlenir ve yeni imzalı adres üretilir — "süresi doldu" hatası görülmez; adres kopyalanırsa oturum ister.
+    Betik yok; içerik yalnız Storage kökünden; sayfa önbelleğe yazılmaz; Storage'a bizim adresimiz gitmez (no-referrer). */
+export function dosyaSayfasi(d: { ad: string; tur: string }, adres: string): { govde: string; basliklar: Record<string, string> } {
+  const kok = new URL(adres).origin;
+  const resim = d.tur.startsWith("image/");
+  const ic = resim ? `<img src="${kacis(adres)}" alt="${kacis(d.ad)}">` : `<iframe src="${kacis(adres)}" title="${kacis(d.ad)}"></iframe>`;
+  const bicim = resim ? "body{display:flex;align-items:center;justify-content:center}img{max-width:100%;max-height:100%;object-fit:contain}"
+    : "iframe{display:block;border:0;width:100%;height:100%}";
+  return {
+    govde: `<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">`
+      + `<title>${kacis(d.ad)}</title><style>:root{color-scheme:light dark}html,body{margin:0;height:100%}${bicim}</style></head><body>${ic}</body></html>`,
+    basliklar: {
+      "Content-Type": "text/html; charset=utf-8",
+      "Cache-Control": "private, no-store",
+      "Content-Security-Policy": `default-src 'none'; img-src ${kok}; frame-src ${kok}; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'`,
+      "Referrer-Policy": "no-referrer",
+      "X-Content-Type-Options": "nosniff",
+      "X-Frame-Options": "SAMEORIGIN",
+    },
+  };
+}
 /** 568: istek tarayıcının SAYFA açılışı mı (yeni sekme / indirme bağlantısı) — yalnız o zaman imzalı adrese yönlenir; fetch ve çerçeve kendi
     kökenimizden akar (CSP connect-src / frame-src ve CORS değişmez) */
 export const sayfaAcilisi = (h: Headers) => h.get("sec-fetch-dest") === "document";
