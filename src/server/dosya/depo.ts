@@ -1,5 +1,6 @@
 /* DEPO BAĞDAŞTIRICISI — tek arayüz (CLAUDE.md §2): yerelde klasör (data/depo); deneme yayınında VERİTABANI (347: PROBATA_DEPO=vt — Vercel'in
-   klasörü geçici, içerik işlev örnekleri arasında kayboluyordu); firmanın kendi S3 deposu K7 (KOD-GECIS Y2b).
+   klasörü geçici, içerik işlev örnekleri arasında kayboluyordu); 568: SUPABASE STORAGE (PROBATA_DEPO=supabase — supabase.ts; veritabanı deposu
+   geçişte yedek: eski nesneler oradan okunur, gece işi taşır). Firmanın kendi Supabase'i K7 (513).
    Yalnız anahtar üreticisinin biçimindeki anahtar kabul edilir (yol aşma olamaz); listeleme arayüzde YOK (A1). Silme YALNIZ gece çöp işinin
    copSil'i (378, A5: dosya satırı çöpte 30 günü doldurup silindikten sonra; veritabanı deposu satır yoksa siler — 0069 depo_nesne_sil). Aynı
    anahtara ikinci kez yazılmaz (dosya değişmez — yeni dosya yeni anahtar).
@@ -10,14 +11,23 @@ import { dirname, join, resolve, sep } from "node:path";
 import { havuz } from "../db/havuz.ts";
 import { kiraciIcinde, type Havuz, type Sorgulayici } from "../db/kiraci.ts";
 import { anahtarGecerli } from "./anahtar.ts";
+import { supabaseDepo, supabaseOrtami } from "./supabase.ts";
+
+/** gece taşımasının sonucu (568) */
+export interface TasimaSonucu { tasinan: number; bayt: number; hatali: number; kalan: boolean }
 
 export interface Depo {
-  yaz(anahtar: string, bayt: Uint8Array, db?: Sorgulayici): Promise<void>;
+  /** tur: içerik türü (Storage onu sunar; klasör ve veritabanı deposu saklamaz — tür dosya satırında) */
+  yaz(anahtar: string, bayt: Uint8Array, db?: Sorgulayici, tur?: string): Promise<void>;
   oku(anahtar: string, db?: Sorgulayici): Promise<Uint8Array>;
   /** YALNIZ gece çöp işi (src/server/dosya/cop.ts): dosya satırı silindikten sonra nesneyi siler; nesne yoksa sessiz */
   copSil(anahtar: string, db?: Sorgulayici): Promise<void>;
   /** depoda kaydı olmayan nesne sayısı, oturumdaki firmada (A5: raporlanır, SİLİNMEZ); listelenemeyen depoda null */
   oksuzSay(db: Sorgulayici): Promise<number | null>;
+  /** 568: kısa ömürlü imzalı adres (yalnız Storage); nesne Storage'da değilse null — çağıran içeriği kendisi akıtır */
+  imzaliAdres?(anahtar: string, saniye: number, indir: string | null): Promise<string | null>;
+  /** 568: veritabanı deposundan Storage'a gece taşıması (oturumdaki firmanın işleminde) */
+  tasi?(db: Sorgulayici, sinir: { adet: number; bayt: number }): Promise<TasimaSonucu>;
 }
 
 export function klasorDepo(kok: string): Depo {
@@ -77,9 +87,16 @@ export function vtDepo(h: () => Havuz): Depo {
 }
 
 const g = globalThis as { __probataDepo?: Depo };
-/** uygulamanın deposu: PROBATA_DEPO=vt → veritabanı (deneme yayını); yoksa klasör (PROBATA_DEPO_KLASOR, yoksa data/depo) */
+/** uygulamanın deposu: PROBATA_DEPO=supabase → Supabase Storage (yedek veritabanı deposu — geçiş, 568); vt → veritabanı (deneme yayını, 347);
+    yoksa klasör (PROBATA_DEPO_KLASOR, yoksa data/depo). Bilinmeyen değer hata (sessiz düşüş yok). */
 export function depo(): Depo {
-  g.__probataDepo ??= process.env.PROBATA_DEPO === "vt" ? vtDepo(havuz)
-    : klasorDepo(process.env.PROBATA_DEPO_KLASOR ?? join(process.cwd(), "data", "depo"));
+  g.__probataDepo ??= depoSec(process.env);
   return g.__probataDepo;
+}
+export function depoSec(e: Record<string, string | undefined>): Depo {
+  const t = e.PROBATA_DEPO ?? "";
+  if (t === "supabase") return supabaseDepo(supabaseOrtami(e), vtDepo(havuz));
+  if (t === "vt") return vtDepo(havuz);
+  if (t === "") return klasorDepo(e.PROBATA_DEPO_KLASOR ?? join(process.cwd(), "data", "depo"));
+  throw new Error("PROBATA_DEPO yalnız 'supabase', 'vt' ya da boş olabilir.");
 }

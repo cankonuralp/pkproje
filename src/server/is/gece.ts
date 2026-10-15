@@ -27,3 +27,15 @@ export async function epostaIsi(havuz: Havuz, sure: number): Promise<EpostaOzeti
     return { sayilar: o, kalan: false };
   });
 }
+
+/** 568: veritabanı deposundaki eski nesneleri Supabase Storage'a taşır (firma başına en eski 100 nesne / 40 MB; geri okunup özeti tutan silinir —
+    depo_nesne_tasindi). Depo taşımıyorsa (klasör, veritabanı) iş koşmaz: null. */
+export type TasimaOzeti = IsOzeti<{ tasinan: number; bayt: number; hatali: number }>;
+export async function depoTasimaIsi(havuz: Havuz, depo: Depo, sure: number): Promise<TasimaOzeti | null> {
+  const tasi = depo.tasi;
+  if (!tasi) return null;
+  return firmalardaKos(havuz, "depo_tasima", sure, { tasinan: 0, bayt: 0, hatali: 0 }, async (db) => {
+    const r = await tasi(db, { adet: 100, bayt: 40 * 1024 * 1024 });
+    return { sayilar: { tasinan: r.tasinan, bayt: r.bayt, hatali: r.hatali }, kalan: r.kalan };
+  });
+}

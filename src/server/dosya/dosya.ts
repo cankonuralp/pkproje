@@ -36,7 +36,7 @@ export async function dosyaYukle(db: Sorgulayici, depo: Depo, p: {
   const ad = AD_TEMIZ(p.ad);
   /* önce depo, sonra kayıt: kayıt düşerse depoda öksüz nesne kalır — gece işi raporlar, silmez (A5); veritabanı deposu aynı işlemde yazar (geri
      alınırsa nesne de kalmaz — 347) */
-  await depo.yaz(anahtar, icerik, db);
+  await depo.yaz(anahtar, icerik, db, TURLER[tur]);
   await db.sorgu(
     "INSERT INTO dosya (id, modul, kayit_id, anahtar, ad, tur, boyut, sha256, yukleyen) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
     [id, p.modul, p.kayitId, anahtar, ad, TURLER[tur], icerik.length, createHash("sha256").update(icerik).digest("hex"), p.yukleyen ?? null]);
@@ -104,3 +104,9 @@ export function indirmeBasliklari(d: IndirilecekDosya, kip: "ac" | "indir"): Rec
     "Cross-Origin-Resource-Policy": "same-origin",
   };
 }
+
+/** 568: imzalı adresin ömrü (sn) — kısa ömürlü, yetkili indirme (anayasa 5.1'in karşılığı) */
+export const IMZA_SURESI = 300;
+/** 568: istek tarayıcının SAYFA açılışı mı (yeni sekme / indirme bağlantısı) — yalnız o zaman imzalı adrese yönlenir; fetch ve çerçeve kendi
+    kökenimizden akar (CSP connect-src / frame-src ve CORS değişmez) */
+export const sayfaAcilisi = (h: Headers) => h.get("sec-fetch-dest") === "document";

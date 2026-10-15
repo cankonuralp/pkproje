@@ -392,6 +392,12 @@ pkproje/
                             yükle / indirilebilir + modül erişim kaydı (kaydı olmayan modülün dosyası kimseye açılmaz) · çöp temizliği cop.ts
                             (378: 30 günü dolan çöp — satır dosya_cop_sil, içerik depo.copSil; bağlı dosya kalır; öksüz yalnız sayılır) ·
                             tek uç src/app/api/dosya/[id] · görsel yalnız <GizliResim> (components/gizli-resim)
+                            · 568 SUPABASE STORAGE (PROBATA_DEPO=supabase; supabase.ts — REST, ek paket yok): özel kova (yoksa bir kez kurulur), yazılan
+                            değişmez (x-upsert false), gizli anahtar PROBATA_SUPABASE_GIZLI (+ _URL, _KOVA); veritabanı deposu geçişte YEDEK (Storage'da
+                            yoksa oradan okunur); gece işi depoTasimaIsi (is/gece.ts) eski nesneleri taşır — geri okunan özet tutarsa satır silinir
+                            (göç 0094 depo_nesne_tasindi), tutmazsa satır kalır, bozuk kopya kaldırılır · dosya ucu yalnız SAYFA AÇILIŞINDA (Sec-Fetch-Dest
+                            document) yetkiden sonra 5 dk imzalı adrese yönlenir (dosya.ts IMZA_SURESI, sayfaAcilisi); fetch / çerçeve akar (CSP aynı)
+                            · kilit tests/depo-supabase.test.ts (taklit tests/yardimci/sahte-depo.ts)
   src/server/liste/liste.ts SUNUCUDA SAYFALI LİSTE (566; 09-B3): listeGetir — tarayıcı süzgecinin (components/liste/suzgec.ts listele) SQL karşılığı
                             (alan / genel arama tr_kucuk, çipler veya / ve + sayıları, seçiciler + seçenekleri, sıralama tr_sira — göç 0092; yalnız sayfa);
                             görme yetki/canDo.ts gorusKosulu (canDo'nun SQL'i); modüller öteki modülün tablosunu OKUMA PARÇASIYLA birleştirir (EKIPMAN_SQL,
