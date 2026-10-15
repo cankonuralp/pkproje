@@ -18,3 +18,7 @@ CREATE OR REPLACE FUNCTION tr_sira(x text) RETURNS text
   SET search_path = pg_catalog, public, pg_temp
   AS $$ SELECT replace(replace(replace(replace(replace(replace(translate(tr_kucuk(x), 'âîû', 'aiu'),
     'ç', 'c~'), 'ğ', 'g~'), 'ı', 'h~'), 'ö', 'o~'), 'ş', 's~'), 'ü', 'u~') $$;
+
+-- yeni işlevler herkese kapalı başlar (0000 varsayılan izinler): uygulama rolü çalıştırır (deneme makinesi 54f3e8d: "permission denied for function tr_sira")
+GRANT EXECUTE ON FUNCTION tr_kucuk(text) TO probata_uygulama;
+GRANT EXECUTE ON FUNCTION tr_sira(text) TO probata_uygulama;
