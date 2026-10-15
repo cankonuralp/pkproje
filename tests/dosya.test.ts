@@ -74,10 +74,11 @@ test("ANAHTAR yalnız kimliklerden; yol aşma ve okunur ad giremez; depo anahtar
   } finally { rmSync(kok, { recursive: true, force: true }); }
 });
 
-test("BAŞLIKLAR: private, nosniff, sandbox; Excel her zaman indirilir; dosya adı başlığa satır / tırnak sokamaz", () => {
+/* 563 (2026-10-15): önbellek "private, no-store" — çıkıştan sonra tarayıcı önbelleğinden açılamaz (eski: private, max-age=3600) */
+test("BAŞLIKLAR: private + no-store, nosniff, sandbox; Excel her zaman indirilir; dosya adı başlığa satır / tırnak sokamaz", () => {
   const h = indirmeBasliklari({ anahtar: "x", ad: 'rapor"\r\nSet-Cookie: x=1.xlsx', tur: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", boyut: 10 }, "ac");
   assert.equal(h["X-Content-Type-Options"], "nosniff");
-  assert.match(h["Cache-Control"]!, /^private/);
+  assert.equal(h["Cache-Control"], "private, no-store");
   assert.match(h["Content-Security-Policy"]!, /sandbox/);
   assert.match(h["Content-Disposition"]!, /^attachment; /);
   assert.ok(!/[\r\n]/.test(h["Content-Disposition"]!) && !h["Content-Disposition"]!.includes('rapor"'));

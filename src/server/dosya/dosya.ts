@@ -85,7 +85,9 @@ export async function kayitDosyasi(db: Sorgulayici, modul: string, kayitId: stri
   return d ? { anahtar: d.anahtar, ad: d.ad, tur: d.tur, boyut: Number(d.boyut) } : null;
 }
 
-/** yanıt başlıkları (A2): özel önbellek, tür koklama yok, dosya kendi kökeninde betik çalıştıramaz (sandbox) */
+/** yanıt başlıkları (A2): önbelleğe yazılmaz, tür koklama yok, dosya kendi kökeninde betik çalıştıramaz (sandbox).
+    563 (reisim 2026-10-15 analizi): "private, max-age=3600" idi — çıkıştan sonra ortak bilgisayarda fotoğraf / PDF tarayıcı geçmişinden bir saat
+    açılabiliyordu (önbellekten, oturum sorulmadan). "no-store": tarayıcı diske yazmaz. Bir kez inme (B2) <GizliResim>'in oturum belleğinde. */
 export function indirmeBasliklari(d: IndirilecekDosya, kip: "ac" | "indir"): Record<string, string> {
   const ac = kip === "ac" && (d.tur.startsWith("image/") || d.tur === "application/pdf");
   const ascii = d.ad.replace(/[^\x20-\x7e]/g, "_").replace(/["\\]/g, "_");
@@ -93,7 +95,7 @@ export function indirmeBasliklari(d: IndirilecekDosya, kip: "ac" | "indir"): Rec
     "Content-Type": d.tur,
     "Content-Length": String(d.boyut),
     "Content-Disposition": `${ac ? "inline" : "attachment"}; filename="${ascii}"; filename*=UTF-8''${encodeURIComponent(d.ad)}`,
-    "Cache-Control": "private, max-age=3600, immutable",
+    "Cache-Control": "private, no-store",
     "X-Content-Type-Options": "nosniff",
     /* görsel / tablo: hiçbir şey çalışmaz (sandbox). PDF: tarayıcının PDF görüntüleyicisi sandbox altında açılmıyor, yalnız gömme sınırı
        (PDF görüntüleyici sayfanın kökeninde betik çalıştırmaz). Uygulama içinde çerçevede açılabilir, başka site gömemez. */

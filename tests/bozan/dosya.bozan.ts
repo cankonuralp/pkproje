@@ -56,3 +56,9 @@ test("erişim denetimi varsayılanı açık olunca denetimi tanımsız modülün
   const db = { sorgu: async () => ({ rows: [{ modul: "personel", kayit_id: "k", anahtar: "a", ad: "ozluk.pdf", tur: "application/pdf", boyut: "1" }] }) } as never;
   assert.ok(await m.dosyaIndirilebilir(db, { id: "x", roller: [] }, "00000000-0000-4000-8000-000000000000", {}), "bozuk: denetimsiz dosya açıldı");
 });
+
+/* 563: dosya yanıtı yeniden önbelleğe yazılır olursa çıkıştan sonra tarayıcı geçmişinden açılır */
+test("önbellek yasağı kalkınca dosya tarayıcı önbelleğine yazılır", async () => {
+  const m = await bozuk<typeof import("../../src/server/dosya/dosya.ts")>("dosya/dosya.ts", '"Cache-Control": "private, no-store",', '"Cache-Control": "private, max-age=3600, immutable",');
+  assert.doesNotMatch(m.indirmeBasliklari({ anahtar: "x", ad: "foto.jpg", tur: "image/jpeg", boyut: 1 }, "ac")["Cache-Control"]!, /no-store/);
+});
