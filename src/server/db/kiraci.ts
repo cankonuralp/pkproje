@@ -36,13 +36,24 @@ export type Havuz = pg.Pool;
     dinleyici yoksa bu yakalanmamış istisna olur ve süreci düşürebilir → günlüğe yazılır, havuz kendini toparlar. Bağlanma 5 sn'de, boştaki
     bağlantı 5 sn'de bırakılır (sunucusuz ortamda askıdaki örnek bağlantı tutmasın). */
 export function havuzKur(ayar: UygulamaBaglantisi): pg.Pool {
+  const havuz = new pg.Pool(havuzSecenekleri(ayar));
+  havuzHatasiniDinle(havuz);
+  return havuz;
+}
+
+/** havuzun pg ayarı — havuzKur ve firma başına havuz (src/server/db/firma-havuzu.ts, FIRMA-VT FV3) ORTAK: TLS'de yalnız verilen kök, sertifikası
+    tutmayan sunucuya parola gönderilmez; bağlanma ve boşta bekleme 5 sn */
+export function havuzSecenekleri(ayar: UygulamaBaglantisi): pg.PoolConfig {
   const { kokSertifika, enCok, ...baglanti } = ayar;
-  const havuz = new pg.Pool({
+  return {
     ...baglanti, max: enCok ?? 10, connectionTimeoutMillis: 5000, idleTimeoutMillis: 5000,
     ssl: kokSertifika ? { ca: kokSertifika, rejectUnauthorized: true } : false,
-  });
+  };
+}
+
+/** boştaki bağlantı koparsa havuzun 'error'u günlüğe yazılır (dinleyicisiz yakalanmamış istisna olurdu); ileti sır taşımaz */
+export function havuzHatasiniDinle(havuz: pg.Pool): void {
   havuz.on("error", (e) => { console.error("[veritabanı] boştaki bağlantı koptu:", e.message); });
-  return havuz;
 }
 
 /** müşteri paneli işlemi (0030): işlemin müşterisi ve tesis kapsamı (null = bütün tesisler) */
@@ -113,7 +124,9 @@ export async function yonetimIcinde<T>(havuz: pg.Pool, is: (db: Sorgulayici) => 
   }
 }
 
-/** Alt alan adındaki kısa addan firma kimliği; yoksa null. Kiracı bilinmeden çağrılır (0001: firma_bul). */
+/** Alt alan adındaki kısa addan firma kimliği; yoksa null. Kiracı bilinmeden çağrılır (0001: firma_bul). FIRMA-VT FV3 (2026-10-15): ÜRETİM YOLU DEĞİL —
+    istek alt alan adını firma_coz ile çözer (src/server/kiraci/istek.ts → src/server/db/firma-havuzu.ts firmaKaydi; dondurma kilidinin olumsuz kanıtı
+    tests/bozan/firma-baglanti.bozan.ts 12). Yalnız veritabanı işlevi firma_bul'u sınayan testler kullanır; kaldırılması testleriyle birlikte (FV4+). */
 export async function firmaKimligi(havuz: pg.Pool, kisaAd: string): Promise<string | null> {
   const sonuc = await havuz.query<{ firma_bul: string | null }>("SELECT firma_bul($1)", [kisaAd]);
   return sonuc.rows[0]?.firma_bul ?? null;

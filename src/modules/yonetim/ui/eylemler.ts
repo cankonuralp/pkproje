@@ -2,6 +2,7 @@
 /* YÖNETİM SUNUCU EYLEMLERİ (348) — yalnız yönetim adresinde ve yönetim oturumuyla (yönetici istemciden alınmaz); işlem veritabanında yönetim
    rolünde (yonetimIslemi). Köken iki katman. Geçici parola yalnız bu yanıtta döner (kaydedilmez, sayfa yenilenince yoktur). */
 import { refresh } from "next/cache";
+import { firmaKayitlariniUnut } from "../../../server/db/firma-havuzu";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { anaAlan } from "../../../server/kiraci/istek";
 import { yonetimAlani } from "../../../server/yonetim/adres";
@@ -22,15 +23,19 @@ async function islem<T extends YonetimSonucu<Partial<Pick<YonetimYaniti, "id" | 
   return cevir(await is(o));
 }
 const yazi = (v: unknown) => (typeof v === "string" ? v : "");
+/* FIRMA-VT FV3 (2026-10-15): firma açıldı / durumu değişti → bu örnekteki kiracı kaydı önbelleği HEMEN boşalır (yeni firma 5 sn'lik "yok"
+   kaydına, dondurulan firma 15 sn'lik "etkin" kaydına takılmasın). Öteki örneklerde en geç 15 sn; o pencerede dondurulmuş firmaya giriş ve oturum
+   yine yok (src/server/kimlik/oturum.ts ETKIN_FIRMA). */
+const unut = (y: YonetimYaniti) => { if (y.tamam) firmaKayitlariniUnut(); return y; };
 
 export async function firmaAcEylemi(form: FormData): Promise<YonetimYaniti> {
   const girdi = { unvan: yazi(form.get("unvan")), alt: yazi(form.get("alt")), kod: yazi(form.get("kod")), yon: yazi(form.get("yon")), eposta: yazi(form.get("eposta")) };
-  return islem((o) => yonetimIslemi(o, (db) => firmaAc(db, girdi, yonetimEtiketi(yonetimAlani(), anaAlan()), anaAlan())));
+  return unut(await islem((o) => yonetimIslemi(o, (db) => firmaAc(db, girdi, yonetimEtiketi(yonetimAlani(), anaAlan()), anaAlan()))));
 }
 
 /* durum ve parola eylemleri istemci yönlendiricisini SUNUCUDA yeniler (yeni sayfa eylem yanıtıyla gelir): istemcideki ayrı router.refresh()
    başka bir yönlendirici işiyle çakışınca düşebiliyordu — CI 8dc6d06 tablet: Etkinleştir sonrası sayfa "Dondurulmuş"ta kaldı (raporlar 318 ile aynı) */
-const yenileyerek = (y: YonetimYaniti) => { if (y.tamam) refresh(); return y; };
+const yenileyerek = (y: YonetimYaniti) => { if (unut(y).tamam) refresh(); return y; };
 
 export async function firmaDondurEylemi(id: string): Promise<YonetimYaniti> {
   return yenileyerek(await islem((o) => yonetimIslemi(o, (db) => firmaDurumu(db, yazi(id), "dondu"))));

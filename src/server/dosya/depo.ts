@@ -8,7 +8,7 @@
    alınmaz); klasör deposu kullanmaz. */
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join, resolve, sep } from "node:path";
-import { havuz } from "../db/havuz.ts";
+import { merkezHavuzu } from "../db/havuz.ts";
 import { kiraciIcinde, type Havuz, type Sorgulayici } from "../db/kiraci.ts";
 import { anahtarGecerli } from "./anahtar.ts";
 import { supabaseDepo, supabaseOrtami } from "./supabase.ts";
@@ -95,8 +95,8 @@ export function depo(): Depo {
 }
 export function depoSec(e: Record<string, string | undefined>): Depo {
   const t = e.PROBATA_DEPO ?? "";
-  if (t === "supabase") return supabaseDepo(supabaseOrtami(e), vtDepo(havuz));
-  if (t === "vt") return vtDepo(havuz);
+  if (t === "supabase") return supabaseDepo(supabaseOrtami(e), vtDepo(merkezHavuzu));
+  if (t === "vt") return vtDepo(merkezHavuzu);
   if (t === "") return klasorDepo(e.PROBATA_DEPO_KLASOR ?? join(process.cwd(), "data", "depo"));
   throw new Error("PROBATA_DEPO yalnız 'supabase', 'vt' ya da boş olabilir.");
 }

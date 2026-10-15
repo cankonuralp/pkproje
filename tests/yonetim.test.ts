@@ -7,7 +7,8 @@
      olamaz) → durum etkin, eski oturumlar düşer; 572: kurulum ekranı açılınca 30 dakika sürer, dolarsa yeni parola kaydedilmez, geçici geçerli;
    · firma aç: firma + ilk firma yöneticisinin personel kaydı ve hesabı (geçici parola, "ilk") — yeni firmaya o parolayla girilir; kayıtlı adres /
      kod, ayrılmış ad reddedilir; firmanın denetim izine ve yönetim izine (yönetici veritabanından) yazılır;
-   · dondur: alt alan adı firma bulmaz, firmanın kullanıcı ve müşteri oturumları silinir; etkinleştir geri açar; geçici parola dondurulmuşta yok,
+   · dondur: alt alan adı firma bulmaz (firma_bul ve — 2026-10-15, FIRMA-VT FV3'ten beri üretim yolu — firma_coz; olumsuz kanıtı
+     tests/bozan/firma-baglanti.bozan.ts 12), firmanın kullanıcı ve müşteri oturumları silinir; etkinleştir geri açar; geçici parola dondurulmuşta yok,
      etkinde eski parola geçmez;
    · SIZMA: uygulama rolü (firma işlemi) yönetim işlevlerini ve tablolarını göremez; yönetim rolü firmaların tablolarına dokunamaz, yönetici
      ekleyemez; yöneticisiz (ya da kapalı yöneticili) yönetim işlemi işlevleri çağıramaz; yönetim izi değişmez.
@@ -23,6 +24,7 @@ import { firmaAc, firmaDurumu, firmalar, yoneticiyeGeciciParola } from "../src/m
 import { sifrele } from "../src/server/ayar/sir.ts";
 import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { firmaKimligi, havuzKur, kiraciIcinde, yonetimIcinde, type Havuz } from "../src/server/db/kiraci.ts";
+import { firmaCoz } from "../src/server/db/merkez.ts";
 import { parolaOzeti } from "../src/server/kimlik/parola.ts";
 import { girisYap } from "../src/server/kimlik/oturum.ts";
 import { ikiAdimAcik, kodDogrula, kurulumBilgisi, kurulumTamamla, yoneticiGiris, yonetimOturumOku } from "../src/server/yonetim/giris.ts";
@@ -248,12 +250,15 @@ test("dondur: firma bulunmaz, oturumları silinir; etkinleştir geri açar; geç
   assert.equal((await y((db) => firmaDurumu(db, r.id, "dondu"))).durum, "tamam");
   assert.equal((await kiraciIcinde(havuz, r.id, (db) => db.sorgu("SELECT 1 FROM musteri_oturum"))).rowCount, 0, "müşteri oturumları silindi");
   assert.equal(await firmaKimligi(havuz, "dondur"), null, "dondurulmuş firma alt alan adından bulunmaz");
+  /* 2026-10-15 (FIRMA-VT FV3 incelemesi): uygulama alt alan adını firma_coz ile çözer (firma_bul üretim yolunda değil) — üretim yolu da sınanır */
+  assert.equal(await firmaCoz(havuz, "dondur"), null, "dondurulmuş firma üretim yolunda (firma_coz) çözülmez");
   assert.equal((await kiraciIcinde(havuz, r.id, (db) => db.sorgu("SELECT 1 FROM oturum"))).rowCount, 0, "oturumlar silindi");
   assert.deepEqual(await y((db) => firmaDurumu(db, r.id, "dondu")), { durum: "red", neden: "Firma zaten dondurulmuş." });
   assert.equal((await y((db) => yoneticiyeGeciciParola(db, r.id))).durum, "red");
   assert.equal(await firmaKimligi(havuz, "deneme-a"), A, "öteki firma etkilenmez");
   assert.equal((await y((db) => firmaDurumu(db, r.id, "etkin"))).durum, "tamam");
   assert.equal(await firmaKimligi(havuz, "dondur"), r.id);
+  assert.equal((await firmaCoz(havuz, "dondur"))?.id, r.id, "etkinleşince üretim yolunda da çözülür");
   const p = await y((db) => yoneticiyeGeciciParola(db, r.id));
   assert.equal(p.durum, "tamam");
   if (p.durum !== "tamam") return;

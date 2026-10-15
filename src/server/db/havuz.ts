@@ -1,5 +1,5 @@
-/* UYGULAMANIN VERİTABANI HAVUZU — tek örnek. Bağlantı bilgisi yalnız ortam değişkenlerinden (PROBATA_VT_*; yerelde scripts/gelistir.ts verir,
-   yayında barındırmanın sır ayarı). Koda parola yazılmaz (CLAUDE.md §8). Geliştirmede sıcak yeniden yükleme havuzu çoğaltmasın diye globalThis'te.
+/* MERKEZ VERİTABANI HAVUZU — tek örnek (FIRMA-VT FV3, 2026-10-15: kendi projeli firmanın havuzu ayrı — firma-havuzu.ts). Bağlantı bilgisi
+   yalnız ortam değişkenlerinden (PROBATA_VT_*; yerelde scripts/gelistir.ts verir, yayında barındırmanın sır ayarı). Koda parola yazılmaz (CLAUDE.md §8). Geliştirmede sıcak yeniden yükleme havuzu çoğaltmasın diye globalThis'te.
    2026-10-04 (yayın, Supabase): ağ üzerinden ŞİFRESİZ bağlantı kurulmaz — sunucu 127.0.0.1 / localhost değilse PROBATA_VT_SSL=dogrula zorunlu;
    o zaman bağlantı TLS'li ve sunucu sertifikası yalnız Supabase kökü ile doğrulanır (kok-sertifika.ts). Bilinmeyen değer = hata (sessiz düşüş yok). */
 import { kapiGecerli, sifresizAgDenetle, tlsAyari } from "./baglanti.ts";
@@ -30,19 +30,31 @@ const g = globalThis as { __probataHavuz?: Havuz };
 /* Vercel (sunucusuz): istek bitince örnek askıya alınabilir; askıdaki örnekte havuzun "boştaki bağlantıyı kapat" sayacı işlemez ve bağlantı
    Supabase havuzlayıcısında asılı kalır. Bağlantı havuza her dönüşünde işlev, boşta bekleme süresi kadar (5 sn + pay) açık tutulur (waitUntil).
    Vercel'in @vercel/functions paketindeki attachDatabasePool ile aynı iş; paket komut çalıştıran yan bağımlılıklar getirdiği için alınmadı
-   (2026-10-04 yayın denetimi). İstek bağlamı yoksa (yerel, test) hiçbir şey yapmaz. */
+   (2026-10-04 yayın denetimi). İstek bağlamı yoksa (yerel, test) hiçbir şey yapmaz. FIRMA-VT FV3 (2026-10-15): firma başına havuzların da
+   "release"ine takılır (src/server/db/firma-havuzu.ts) — sayaç ortak, son bırakılan bağlantıdan sonra 5 sn. */
 type IstekBaglami = { get?: () => { waitUntil?: (p: Promise<unknown>) => void } | undefined };
+const istekBaglami = () => (globalThis as Record<symbol, IstekBaglami | undefined>)[Symbol.for("@vercel/request-context")]?.get?.();
 let bosBekleme: { sayac: ReturnType<typeof setTimeout>; bitir: () => void } | undefined;
-function vercelBosBekle(): void {
+export function vercelBosBekle(): void {
   if (!process.env.VERCEL_REGION) return;
   if (bosBekleme) { clearTimeout(bosBekleme.sayac); bosBekleme.bitir(); }
   let bitir = () => {};
   const bekle = new Promise<void>((coz) => { bitir = coz; });
   bosBekleme = { sayac: setTimeout(() => bitir(), 5100), bitir };
-  (globalThis as Record<symbol, IstekBaglami | undefined>)[Symbol.for("@vercel/request-context")]?.get?.()?.waitUntil?.(bekle);
+  istekBaglami()?.waitUntil?.(bekle);
 }
 
-export function havuz(): Havuz {
+/** FIRMA-VT FV3: düşürülen firma havuzunun kapanışı (end — açık işlemler bitince bağlantılar kapanır) istek yanıtlandıktan sonra da beklenir
+    (Vercel waitUntil); istek bağlamı yoksa yalnız beklenir. Kapanış hatası günlüğe (sır taşımaz), yukarı gitmez. */
+export function istekSonrasinaBirak(p: Promise<unknown>): void {
+  const korunan = p.catch((e: unknown) => { console.error("[veritabanı] havuz kapatılamadı:", e instanceof Error ? e.message : String(e)); });
+  istekBaglami()?.waitUntil?.(korunan);
+}
+
+/** MERKEZ HAVUZU (FIRMA-VT §3: merkez = ortak proje) — ortak firmaların verisi, firma kayıtları (firma_coz), yönetim, hata kaydı, duyuru, gece işinin
+    firma listesi, sağlık burada. Kiracının işi KİRACININ havuzundan (src/server/db/firma-havuzu.ts kiraciHavuzu); bu dosyayı içe aktaranlar izin
+    listesinde (tests/havuz-kapsami.test.ts). 2026-10-15 (FV3): adı havuz() idi. */
+export function merkezHavuzu(): Havuz {
   if (!g.__probataHavuz) {
     g.__probataHavuz = havuzKur(ortamdanBaglanti(process.env));
     g.__probataHavuz.on("release", vercelBosBekle);

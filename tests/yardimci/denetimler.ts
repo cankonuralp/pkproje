@@ -3,7 +3,7 @@
    bellekte BOZULMUŞ kopyalarla çağırır ve bulgu bekler (olumsuz kanıt, EKSIKLER 9 + anayasa 13.11: kaynak diskte
    değiştirilmez). Bir denetim burada tek yerde durur; test ile olumsuz kanıt aynı mantığı sınar. */
 import { readdirSync, readFileSync, statSync } from "node:fs";
-import { join, relative, sep } from "node:path";
+import { join, posix, relative, sep } from "node:path";
 import { MODULLER } from "../../src/modules/moduller.ts";
 
 export const KOK = join(import.meta.dirname, "..", "..");
@@ -242,6 +242,84 @@ export function hamYazma(metinler: readonly { ad: string; metin: string }[]): st
     .filter(({ ad }) => !ad.startsWith("src/server/"))
     .filter(({ metin }) => /\bINSERT\s+INTO\b|\bUPDATE\s+\w+\s+SET\b|\bDELETE\s+FROM\b|\bTRUNCATE\b/i.test(metin))
     .map(({ ad }) => ad);
+}
+
+/* ── MERKEZ HAVUZU KAPSAMI (FIRMA-VT §2 A6, §5.1 — FV3, 2026-10-15) ───────────────────────────────────────────────────────────────── */
+
+/** merkez havuzunu (src/server/db/havuz.ts) içe aktarmasına İZİN verilen dosyalar ve gerekçesi. Kiracının işi KİRACININ havuzundan
+    (src/server/db/firma-havuzu.ts kiraciHavuzu); merkezi kullanan her yer burada, gerekçesiyle — yeni bir dosya merkezi içe aktarırsa kilit düşer,
+    listedeki bir dosya bırakırsa da (liste tam kalır). Kilit tests/havuz-kapsami.test.ts · olumsuz kanıt tests/bozan/havuz-kapsami.bozan.ts. */
+export const MERKEZ_HAVUZU_IZNI: Readonly<Record<string, string>> = {
+  "src/app/api/is/gece/route.ts": "gece işinin firma listesi ve iş kaydı merkezde (kendi projeli firmanın havuzu FV6)",
+  "src/server/db/firma-havuzu.ts": "kiracı kaydının çözümü (firma_coz) merkezde; ortak firmanın havuzu merkezin kendisi",
+  "src/server/dosya/depo.ts": "veritabanı deposu (vtDepo): db verilmezse anahtarın firmasının işlemi merkezde (kendi projeli firmanın deposu FV5)",
+  "src/server/duyuru/sonra.ts": "Bakanlık duyuruları merkezde (firmaya ait değil)",
+  "src/server/hata/kaydet.ts": "hata kaydı merkezde (yalnız yönetim okur)",
+  "src/server/saglik.ts": "sağlık ucu merkezi denetler (firma veritabanları FV7)",
+  "src/server/yonetim/eylemler.ts": "yönetim girişi merkezde (yönetici, iki adım)",
+  "src/server/yonetim/istek.ts": "yönetim oturumu ve yönetim işlemleri merkezde",
+};
+
+/** yorumlar atılır (yorumdaki söz içe aktarma sayılmaz); "://" bozulmaz */
+const yorumsuz = (m: string) => m.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/(^|[^:])\/\/[^\n]*/g, "$1");
+/** içe aktarma belirteci → depo köküne göre yol (uzantısız); paket adıysa null. Göreli yol dosyanın klasöründen, "@/" src'den. */
+function iceAktarilan(ad: string, belirtec: string): string | null {
+  let yol: string;
+  if (belirtec.startsWith("@/")) yol = "src/" + belirtec.slice(2);
+  else if (belirtec.startsWith(".")) yol = posix.normalize(posix.join(posix.dirname(ad), belirtec));
+  else return null;
+  return yol.replace(/\.(ts|tsx|mts|js|mjs|cjs)$/, "").replace(/\/index$/, "");
+}
+/** merkez havuzunu içe aktaran dosyalar (sıralı): statik (from), yan etkili (import "…"), dinamik (import(…)), yeniden dışa açma, require */
+export function merkezHavuzuIceAktaranlar(metinler: readonly { ad: string; metin: string }[]): string[] {
+  const kalip = /\b(?:from|import)\s*\(?\s*["']([^"']+)["']|\brequire\s*\(\s*["']([^"']+)["']/g;
+  return metinler
+    .filter(({ ad, metin }) => [...yorumsuz(metin).matchAll(kalip)].some((m) => iceAktarilan(ad, m[1] ?? m[2]!) === "src/server/db/havuz"))
+    .map(({ ad }) => ad).sort();
+}
+/** kiracının işi merkez havuzuyla açılan dosyalar (kiraciIcinde(merkezHavuzu() …) — olmamalı: kiracının işi kiraciHavuzu'ndan */
+export function merkezdeKiraciIsi(metinler: readonly { ad: string; metin: string }[]): string[] {
+  return metinler.filter(({ metin }) => /\bkiraciIcinde\s*\(\s*merkezHavuzu\s*\(/.test(yorumsuz(metin))).map(({ ad }) => ad).sort();
+}
+
+/** isteğin kiracısı YALNIZ Host başlığından (09-E2; FIRMA-VT §3 karar 3.1): src/server/kiraci/istek.ts'te başlıklar BİR kez okunur, başlıktan yalnız
+    "host"; çerez, sorgu dizesi, X-Forwarded-*, istek adresi, Referer / Origin ve başlığın öteki okuma yolları (entries, has, forEach …) yok; çözüm
+    hosttanKiraci'ye yalnız host + ana alanla gider. Her eksik / fazla bir satır. Kilit tests/kiraci-coz.test.ts, tests/firma-vt.test.ts · olumsuz kanıt
+    tests/bozan/kiraci-coz.bozan.ts. 2026-10-15 (FV3 incelemesi): önce firma-vt.test.ts içinde düz ifadelerdi, olumsuz kanıtı yoktu. */
+export function kiraciBasligiEksikleri(metin: string): string[] {
+  const k = yorumsuz(metin);
+  const e: string[] = [];
+  if (!/const host = \(await headers\(\)\)\.get\("host"\) \?\? "";/.test(k)) e.push("başlıktan host okunmuyor");
+  const baslik = (k.match(/\bheaders\s*\(/g) ?? []).length;
+  if (baslik !== 1) e.push(`başlıklar ${baslik} kez okunuyor (yalnız bir kez)`);
+  const alan = (k.match(/\.get\s*\(/g) ?? []).length;
+  if (alan !== 1) e.push(`${alan} alan okunuyor (yalnız host)`);
+  const yasak = k.match(/cookies|searchParams|forwarded|nextUrl|x-probata|x-real|referer|origin|\.(?:entries|has|forEach|keys|values)\s*\(/gi);
+  if (yasak) e.push(`kiracı başka kaynaktan: ${[...new Set(yasak.map((x) => x.toLowerCase()))].join(", ")}`);
+  if (!/return hosttanKiraci\(host, anaAlan\(\), firmaKaydi\);/.test(k)) e.push("çözüm yalnız host + ana alanla değil");
+  return e;
+}
+
+/** yönetim eylemleri kiracı kaydı önbelleğini boşaltır (FIRMA-VT §5.1, FV3): firma açma, dondurma, etkinleştirme, geçici parola BAŞARI yolunda
+    firmaKayitlariniUnut'a uğrar — yoksa bu örnekte dondurulan firma 15 sn "etkin", yeni açılan firma 5 sn "yok" kalır. src/modules/yonetim/ui/eylemler.ts
+    metninde: unut başarıda firmaKayitlariniUnut'u çağırır; yenileyerek unut'tan geçer; firma işlevini (firmaAc / firmaDurumu / yoneticiyeGeciciParola)
+    çağıran her dışa açık eylem sonucunu unut ya da yenileyerek'ten geçirir (en az dört eylem). Kilit tests/havuz-kapsami.test.ts · olumsuz kanıt
+    tests/bozan/havuz-kapsami.bozan.ts. 2026-10-15 (FV3 incelemesi): önce yalnız uçtan uca "Dondur → adres kapanır" adımı dolaylı yakalıyordu, o da
+    zamanlamaya bağlıydı (olumlu kayıt 15 sn'de kendiliğinden bayatlar). */
+export function yonetimOnbellekEksikleri(metin: string): string[] {
+  const k = yorumsuz(metin);
+  const e: string[] = [];
+  if (!/const unut = \(y: YonetimYaniti\) => \{ if \(y\.tamam\) firmaKayitlariniUnut\(\); return y; \};/.test(k)) e.push("unut önbelleği boşaltmıyor");
+  if (!/const yenileyerek = \(y: YonetimYaniti\) => \{ if \(unut\(y\)\.tamam\)/.test(k)) e.push("yenileyerek unut'tan geçmiyor");
+  let firmaEylemi = 0;
+  for (const p of k.split(/(?=export async function )/)) {
+    const ad = /^export async function (\w+)/.exec(p)?.[1];
+    if (!ad || !/\b(?:firmaAc|firmaDurumu|yoneticiyeGeciciParola)\s*\(/.test(p)) continue;
+    firmaEylemi++;
+    if (!/\breturn (?:unut|yenileyerek)\(await islem\(/.test(p)) e.push(`${ad} önbelleği boşaltmıyor`);
+  }
+  if (firmaEylemi < 4) e.push(`firma eylemi ${firmaEylemi} (en az 4 bekleniyor)`);
+  return e;
 }
 
 /** ayrılmış alt alan adı listesi göçlerde birden çok işlevde (0050 yonetim_firma_ac, 0096 yonetim_firma_kayit_ac): her biri uygulamanın listesiyle

@@ -6,14 +6,14 @@
    311 saha raporu: Saha Tesisi + HT-0201, cihaz türü Manometre + MN-01 (geçerli kalibrasyon, denetçinin zimmetinde), HT'nin gerekli cihaz türü
    Manometre, HT'nin rapor formatı hazır şablon KOMPRESOR'dan yayında — format modülün kendi işlevleriyle (yönetici adına, denetim izi ve yayın
    damgasıyla); öteki tohumlar ham SQL (geçici veritabanı, yalnız bu betik). */
-import { randomBytes } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import { execFileSync, spawn } from "node:child_process";
 import { cpSync, existsSync, mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createServer } from "node:http";
 import { ornekSayfa } from "../e2e/duyuru-ornek.ts";
-import { E2E_FIRMA, E2E_GORSEL, E2E_HESAPLAR, E2E_ILK, E2E_KAPI, E2E_MUHASEBE, E2E_PAROLA, E2E_PLAN, E2E_SAHA, E2E_YONETIM, E2E_YONETIM_PROJELER, E2E_YZ, E2E_ZAMANLI_SIR, E2E_EPOSTA } from "../e2e/hesaplar.ts";
+import { E2E_FIRMA, E2E_GORSEL, E2E_HESAPLAR, E2E_ILK, E2E_KAPI, E2E_KENDI_FIRMALAR, E2E_MUHASEBE, E2E_PAROLA, E2E_PLAN, E2E_SAHA, E2E_YONETIM, E2E_YONETIM_PROJELER, E2E_YZ, E2E_ZAMANLI_SIR, E2E_EPOSTA } from "../e2e/hesaplar.ts";
 import { planKabul, planIci } from "../src/modules/planlar/server/plan-ici.ts";
 import { planAc } from "../src/modules/planlar/server/planlar.ts";
 import { raporOlustur } from "../src/modules/raporlar/server/raporlar.ts";
@@ -23,6 +23,8 @@ import { klasorDepo } from "../src/server/dosya/depo.ts";
 import { ekipmanTamYap } from "../src/format/duzen.ts";
 import { formatAyrintisi, taslakBaslat, taslakKaydet, yayinla, type Kisi } from "../src/modules/rapor-format/server/formatlar.ts";
 import { sifrele } from "../src/server/ayar/sir.ts";
+import { baglantiSifrele } from "../src/server/db/baglanti.ts";
+import { gocleriUygula } from "../src/server/db/goc.ts";
 import { gomuluBaslat } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde } from "../src/server/db/kiraci.ts";
 import { parolaOzeti } from "../src/server/kimlik/parola.ts";
@@ -442,6 +444,44 @@ try {
       [pl, e]);
   }
 } finally { await sg.end(); }
+
+/* FIRMA-VT FV3 (2026-10-15; e2e/firma-vt.spec.ts): KENDİ VERİTABANLI firma — aynı gömülü kümede AYRI veritabanı (merkez yerelde olduğu için yerel
+   adres kabul — src/server/db/baglanti.ts), göçler aynen, kimlik kurulumdaki sırayla (vt_kimlik 'firma' → firma satırı). Merkezde: kayıt (vt 'kendi'),
+   bağlantı (uygulama parolası bu sunucunun ana anahtarıyla ŞİFRELİ; ek veri firma + ref + ad) ve kurulum "tamam". Yönetici + bir müşteri firmanın
+   KENDİ veritabanında (kiracı işlemiyle); merkezde aynı firma kimliğiyle TUZAK müşteri (istek merkeze gitseydi ekranda görünürdü). Süper kullanıcı
+   yalnız kurulum ve tuzak için, geçici veritabanı. Liste e2e/hesaplar.ts E2E_KENDI_FIRMALAR (gece testinin beklediği sayı da ondan türer). */
+for (const k of E2E_KENDI_FIRMALAR) {
+  const id = randomUUID();
+  const sy = kume.sahipIstemci("postgres");
+  await sy.connect();
+  try { await sy.query(`CREATE DATABASE ${k.vt} ENCODING 'UTF8' LOCALE 'C' TEMPLATE template0`); } finally { await sy.end(); }
+  const sv = kume.sahipIstemci(k.vt);
+  await sv.connect();
+  try {
+    await gocleriUygula(sv);
+    await sv.query("UPDATE vt_kimlik SET tur = 'firma', firma_id = $1 WHERE tur = 'ortak'", [id]);
+    await sv.query("INSERT INTO firma (id, kisa_ad, ad, rapor_kodu, vt) VALUES ($1, $2, $3, $4, 'kendi')", [id, k.firma.kisaAd, k.firma.ad, k.firma.raporKodu]);
+  } finally { await sv.end(); }
+  const sm = kume.sahipIstemci();
+  await sm.connect();
+  try {
+    await sm.query("INSERT INTO firma (id, kisa_ad, ad, rapor_kodu, vt) VALUES ($1, $2, $3, $4, 'kendi')", [id, k.firma.kisaAd, k.firma.ad, k.firma.raporKodu]);
+    await sm.query("INSERT INTO firma_vt (firma_id, sunucu, kapi, vt_ad, kullanici, parola_sifreli, surum) VALUES ($1, '127.0.0.1', $2, $3, 'probata_uygulama', $4, 1)",
+      [id, kume.uygulama.port, k.vt, baglantiSifrele(kume.uygulama.password, id, null, "uygulama_parolasi", Buffer.from(sirAnahtari, "base64"))]);
+    await sm.query("INSERT INTO firma_kurulum (firma_id, adim, durum, bitti) VALUES ($1, 'tamam', 'tamam', now())", [id]);
+    await sm.query("INSERT INTO musteri (firma_id, unvan, kisa) VALUES ($1, $2, 'Tuzak')", [id, k.tuzak]);
+  } finally { await sm.end(); }
+  const hv = havuzKur({ ...kume.uygulama, database: k.vt });
+  try {
+    await kiraciIcinde(hv, id, async (db) => {
+      const p = (await db.sorgu<{ id: string }>("INSERT INTO personel (ad, eposta, basla, meslek) VALUES ($1, $2, '2024-01-15', 'mak-muh') RETURNING id::text",
+        [k.yonetici.ad, k.yonetici.eposta])).rows[0].id;
+      await db.sorgu("INSERT INTO hesap (eposta, ad, parola_ozeti, roller, durum, personel_id) VALUES ($1, $2, $3, '{firma_yoneticisi}', 'etkin', $4)",
+        [k.yonetici.eposta, k.yonetici.ad, ozet, p]);
+      await db.sorgu("INSERT INTO musteri (unvan, kisa) VALUES ($1, 'Kendi VT')", [k.musteri]);
+    });
+  } finally { await hv.end(); }
+}
 
 let kapaniyor = false;
 const kapat = async (kod: number) => { if (kapaniyor) return; kapaniyor = true; await kume.durdur(); process.exit(kod); };

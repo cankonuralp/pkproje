@@ -316,6 +316,18 @@ Her kalem tek commit; `son-goc.ts` her göçte güncellenir.
 
 FV1–FV11 dış hesap olmadan, CI'da tam doğrulanır. FV1–FV9 canlıda davranış değiştirmez: deneme firması `'ortak'` kalır.
 
+### 6.1 FV3'ten sonraki kalemlere devredilenler (2026-10-15, FV3 incelemesi)
+
+Kendi projeli firma yayında yok (FV10 ile açılır); aşağıdakiler yalnız sınamada ve uçtan uçta görünür, kalemleri gelince kapanır.
+
+- **FV5:** veritabanı deposu (`vtDepo`) istek işlemi dışında merkezde okur; kendi projeli firmanın dosyası bu yoldan okunamaz. `e2e/firma-vt.spec.ts`'e dosya yükle / indir adımı eklenir.
+- **FV6:**
+  - `e2e/api.spec.ts` "gece işi" beklentisi (`GECE_DURUMU`, `KENDI_VT_FIRMA_SAYISI`) yeniden `tamam` / 200 / `hatali_firma = 0` olur. Bugün uçtan uçtaki kendi veritabanlı firma merkezde `vt_firma_dogrula`'ya takılır (42501, veri karışmaz), iş "hata" biter.
+  - `src/app/(uygulama)/page.tsx`: duyuru okuması bugün yalnız ortak firmanın sayfasından tetiklenir (`!o.kiraci.vt`); duyuru merkezden okununca (§5.9) koşul kalkar (kilit `tests/havuz-kapsami.test.ts`).
+- **FV9:**
+  - Kendi projeli firmada "Dondur" bugün yalnız merkezi yazar (0096 `yonetim_firma_durum`): firma veritabanındaki durum kopyası "etkin" kalır, oturumlar silinmez. Dondurmanın ikinci kilidi (`ETKIN_FIRMA`) o firmada henüz işlemez: öteki örneklerde ≤ 15 sn giriş / oturum sürer, etkinleştirmede eski oturumlar geri gelir.
+  - `tests/firma-vt.test.ts` dondurma testindeki elle durum yazımı (sahip bağlantısı) yönetim işlemine çevrilir.
+
 ---
 
 ## 7 · Canlıya geçiş sırası

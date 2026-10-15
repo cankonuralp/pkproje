@@ -4,7 +4,7 @@
    adrese gidilir (açık yönlendirme yok). */
 import { cookies } from "next/headers";
 import { parola as parolaSemasi, z } from "../../sema/ortak.ts";
-import { havuz } from "../db/havuz.ts";
+import { merkezHavuzu } from "../db/havuz.ts";
 import { ayniKoken, istemciIp } from "../kimlik/koken.ts";
 import { bekleyenOturum, ikiAdimAcik, kodDogrula, kurulumTamamla, yoneticiGiris } from "./giris.ts";
 import { yonetimAdresinde, yonetimCerezAyari, YONETIM_CEREZ } from "./istek.ts";
@@ -26,7 +26,7 @@ export async function yonetimGirisEylemi(_onceki: YGirisDurumu, form: FormData):
   if (!(await yonetimAdresinde()) || !(await ayniKoken())) return { hata: REDDEDILDI };
   const g = GirisSemasi.safeParse({ eposta: form.get("eposta"), parola: form.get("parola") });
   if (!g.success || !g.data.eposta || !g.data.parola) return { hata: "E-posta ve parola yazılmalı.", eposta: String(form.get("eposta") ?? "").slice(0, 254) };
-  const r = await yoneticiGiris(havuz(), { eposta: g.data.eposta, parola: g.data.parola, ip: await istemciIp() });
+  const r = await yoneticiGiris(merkezHavuzu(), { eposta: g.data.eposta, parola: g.data.parola, ip: await istemciIp() });
   if (!r.tamam) {
     /* 573: yönetim girişinde kilit yok — ileti sayaç / kilit söylemez */
     return { eposta: g.data.eposta, hata: "E-posta ya da parola yanlış." };
@@ -38,16 +38,16 @@ export async function yonetimGirisEylemi(_onceki: YGirisDurumu, form: FormData):
 
 export async function yonetimKodEylemi(_onceki: YKodDurumu, form: FormData): Promise<YKodDurumu> {
   if (!(await yonetimAdresinde()) || !(await ayniKoken())) return { hata: REDDEDILDI };
-  if (!(await ikiAdimAcik(havuz()))) return { yonlendir: "/yonetim/giris" };   // 393: iki adım kapalı — kod adımı yok
+  if (!(await ikiAdimAcik(merkezHavuzu()))) return { yonlendir: "/yonetim/giris" };   // 393: iki adım kapalı — kod adımı yok
   const c = await cookies();
   const belirtec = c.get(YONETIM_CEREZ)?.value;
   const kod = kodTemiz(form.get("kod"));
   if (!/^\d{6}$/.test(kod)) return { hata: "Uygulamadaki 6 haneli kodu yazın." };
-  const r = await kodDogrula(havuz(), { belirtec, kod, ip: await istemciIp() });
+  const r = await kodDogrula(merkezHavuzu(), { belirtec, kod, ip: await istemciIp() });
   if (!r.tamam) {
     if (r.neden === "oturum") {
       /* ilk kurulumu yapılmamış yönetici kod adımına gelemez: kuruluma */
-      return { yonlendir: (await bekleyenOturum(havuz(), belirtec))?.durum === "ilk" ? "/yonetim/giris/kurulum" : OTURUM };
+      return { yonlendir: (await bekleyenOturum(merkezHavuzu(), belirtec))?.durum === "ilk" ? "/yonetim/giris/kurulum" : OTURUM };
     }
     return { hata: "Kod yanlış ya da süresi geçti. Uygulamadaki güncel kodu yazın." };
   }
@@ -57,7 +57,7 @@ export async function yonetimKodEylemi(_onceki: YKodDurumu, form: FormData): Pro
 
 export async function yonetimKurulumEylemi(_onceki: YKurulumDurumu, form: FormData): Promise<YKurulumDurumu> {
   if (!(await yonetimAdresinde()) || !(await ayniKoken())) return { hata: { genel: REDDEDILDI } };
-  if (!(await ikiAdimAcik(havuz()))) return { yonlendir: "/yonetim/giris" };   // 393: iki adım kapalı — kurulum yok
+  if (!(await ikiAdimAcik(merkezHavuzu()))) return { yonlendir: "/yonetim/giris" };   // 393: iki adım kapalı — kurulum yok
   const kod = kodTemiz(form.get("kod"));
   const p1 = String(form.get("p1") ?? ""), p2 = String(form.get("p2") ?? "");
   const hata: NonNullable<YKurulumDurumu["hata"]> = {};
@@ -68,7 +68,7 @@ export async function yonetimKurulumEylemi(_onceki: YKurulumDurumu, form: FormDa
   /* 572: kurulum tamamlanmadı — form boşalır, neden üstte açık yazılır (yeni parola sanılıp girişte denenmesin) */
   if (Object.keys(hata).length) return { hata: { ...hata, genel: TAMAMLANMADI } };
   const c = await cookies();
-  const r = await kurulumTamamla(havuz(), { belirtec: c.get(YONETIM_CEREZ)?.value, kod, yeni: p1, ip: await istemciIp() });
+  const r = await kurulumTamamla(merkezHavuzu(), { belirtec: c.get(YONETIM_CEREZ)?.value, kod, yeni: p1, ip: await istemciIp() });
   if (!r.tamam) {
     if (r.neden === "oturum") return { yonlendir: KURULUM_DOLDU };
     if (r.neden === "ayni") return { hata: { p1: "Yeni parola geçici parolayla aynı olamaz.", genel: TAMAMLANMADI } };

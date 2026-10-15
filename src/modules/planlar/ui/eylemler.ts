@@ -44,7 +44,7 @@ export async function planAcEylemi(girdi: unknown): Promise<PlanAcYaniti> {
   const o = await oturum(); if (typeof o === "string") return { genel: o };
   const r = await oturumIslemi(o, (db) => planAc(db, depo(), o, o.kiraci.firmaId, girdi, { kok: firmaAdresi(o.kiraci.kisaAd) }));
   /* 432: kuyruğa yazılan e-postalar yanıttan sonra gönderilir (plan açan beklemez) */
-  if (r.durum === "tamam") { if (r.eposta) epostalariSonraGonder(o.kiraci.firmaId, "plan", r.id); return { tamam: true, id: r.id, no: r.no, eposta: r.eposta ?? 0 }; }
+  if (r.durum === "tamam") { if (r.eposta) epostalariSonraGonder(o.kiraci, "plan", r.id); return { tamam: true, id: r.id, no: r.no, eposta: r.eposta ?? 0 }; }
   if (r.durum === "gecersiz") return { hatalar: r.hatalar };
   return { genel: "Plan açma yetkiniz yok." };
 }

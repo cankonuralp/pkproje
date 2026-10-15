@@ -3,11 +3,12 @@
    · Kilit (karar 37): girişte 5 hata → 15 dk; aynı IP'den firmada 5 hata → 15 dk (personel girişiyle ortak IP sayacı).
    · Pasif giriş ya da pasif müşteri giremez; oturum her istekte girişten, müşteriden ve tesis kapsamından TAZE okunur (kapsam daralınca hemen).
    · Belirteç 32 bayt rasgele, veritabanında yalnız SHA-256 özeti; süreler personelinkiyle aynı.
+   · Dondurmanın ikinci kilidi (FIRMA-VT FV3): giriş ve oturum sorgusu işlemin firmasının etkin olmasını arar (oturum.ts ETKIN_FIRMA).
    Müşterinin VERİ işlemleri ayrı rolde koşar (src/server/db/kiraci.ts musteri seçeneği → probata_musteri, kısıtlayıcı politikalar). */
 import { randomBytes } from "node:crypto";
 import { kiraciIcinde, type Havuz } from "../db/kiraci.ts";
 import { izYaz } from "../db/yazici.ts";
-import { belirtecOzeti, HAREKETSIZ_SAAT, HATIRLA_HAREKETSIZ_GUN, KILIT_ESIGI, KILIT_SURE_DK, MUTLAK_GUN } from "./oturum.ts";
+import { belirtecOzeti, ETKIN_FIRMA, HAREKETSIZ_SAAT, HATIRLA_HAREKETSIZ_GUN, KILIT_ESIGI, KILIT_SURE_DK, MUTLAK_GUN } from "./oturum.ts";
 import { parolaDogru, parolaOzeti, sahteDenetim } from "./parola.ts";
 
 export interface MusteriOturumHesabi {
@@ -36,7 +37,7 @@ interface Satir {
   hatali_deneme: number; kilit_bitis: Date | null; musteri_pasif: string | null; kisa: string;
 }
 const SEC = `SELECT h.id::text, h.firma_id::text, h.musteri_id::text, h.ad, h.eposta, h.tesisler::text[] AS tesisler, h.durum, h.parola_ozeti, h.hatali_deneme,
-  h.kilit_bitis, m.pasif AS musteri_pasif, m.kisa FROM musteri_hesap h JOIN musteri m ON m.id = h.musteri_id`;
+  h.kilit_bitis, m.pasif AS musteri_pasif, m.kisa FROM musteri_hesap h JOIN musteri m ON m.id = h.musteri_id ${ETKIN_FIRMA}`;
 const hesapOf = (h: Satir, hatirla: boolean): MusteriOturumHesabi => ({
   id: h.id, firmaId: h.firma_id, musteriId: h.musteri_id, ad: h.ad, eposta: h.eposta, tesisler: h.tesisler, durum: h.durum as "ilk" | "etkin", hatirla, musteriAd: h.kisa,
 });

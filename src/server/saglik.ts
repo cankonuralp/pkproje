@@ -3,7 +3,7 @@
      atlanmış göç) · rls: firma_id taşıyan her tabloda RLS açık + zorlanmış + politikalı mı · api_kapali: Supabase API rolleri (anon / authenticated /
      service_role) şemaya giremiyor mu · uygulama_kisitli: BAĞLANAN rol (354: adı sabit rol değil) uygulama rolü ve süper kullanıcı / RLS'yi aşan ya da
      öyle bir rolün üyesi değil mi · isler (383): 1 saatten uzun "çalışıyor"da kalan arka plan işi yok mu. Hepsi doğruysa durum "tamam". */
-import { havuz } from "./db/havuz.ts";
+import { merkezHavuzu } from "./db/havuz.ts";
 import { saglikOku, type SaglikVerisi } from "./db/saglik.ts";
 import { GOC_SAYISI, SON_GOC } from "./db/son-goc.ts";
 
@@ -24,6 +24,6 @@ export function saglikDegerlendir(v: SaglikVerisi | null, beklenen: { son: strin
 
 export async function saglik(): Promise<Saglik> {
   let v: SaglikVerisi | null = null;
-  try { v = await saglikOku(havuz()); } catch (h) { console.error("[sağlık] veritabanı denetimi düştü:", (h as Error).message); }
+  try { v = await saglikOku(merkezHavuzu()); } catch (h) { console.error("[sağlık] veritabanı denetimi düştü:", (h as Error).message); }
   return saglikDegerlendir(v, { son: SON_GOC, sayi: GOC_SAYISI }, (process.env.VERCEL_GIT_COMMIT_SHA ?? "yerel").slice(0, 7));
 }

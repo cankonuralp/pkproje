@@ -4,7 +4,13 @@
    · Yanıt hesabın var olup olmadığını söylemez (tek ileti, eşit süre).
    · Belirteç 32 bayt rasgele; veritabanında yalnız SHA-256 özeti. Hareketsizlik 12 saat, mutlak süre 14 gün (2026-10-04, teknik seçim);
      "Beni hatırla" işaretliyse hareketsizlik 7 gün (mutlak yine 14 gün; 0011).
-   · Oturum okunurken roller ve durum HER SEFERİNDE hesaptan okunur — rol istemciden gelmez, düşürülen yetki hemen geçerlidir (09-E4). */
+   · Oturum okunurken roller ve durum HER SEFERİNDE hesaptan okunur — rol istemciden gelmez, düşürülen yetki hemen geçerlidir (09-E4).
+   · DONDURMANIN İKİNCİ KİLİDİ (FIRMA-VT §5.1, FV3 — 2026-10-15): giriş ve oturum sorgusu işlemin firmasının ETKİN olmasını arar (ETKIN_FIRMA).
+     Alt alan adının çözümü 15 sn önbellekte (src/server/kiraci/kayit-onbellek.ts) — o pencerede dondurulan firmaya giriş ve oturum yine yok.
+     Kendi projeli firmada bakılan, firma veritabanındaki durum kopyasıdır. ⚠ FV9'A KADAR yönetimin "Dondur"u kendi projeli firmada yalnız merkezi
+     yazar (0096): kopya "etkin" kalır, oturumlar silinmez — o firmada bu kilit henüz işlemez, öteki örneklerde ≤ 15 sn giriş / oturum sürer,
+     etkinleştirmede eski oturumlar geri gelir. Yayında kendi projeli firma yok (FV10 ile açılır, FV9'dan sonra); FIRMA-VT.md §6.1. Dondurulmuş
+     firmanın girişi "hatalı" ileti alır (hesap yokmuş gibi, eşit süre); oturum yok sayılır, silinmez. */
 import { createHash, randomBytes } from "node:crypto";
 import { kiraciIcinde, type Havuz } from "../db/kiraci.ts";
 import { izYaz } from "../db/yazici.ts";
@@ -27,6 +33,9 @@ export type GirisSonucu =
 export const belirtecOzeti = (b: string) => createHash("sha256").update(b, "utf8").digest("hex");
 const BELIRTEC = /^[A-Za-z0-9_-]{43}$/;
 const dk = (n: number) => n * 60_000;
+/** işlemin firması (gecerli_firma — kiracı bağlamı) etkin mi: firma tablosu kiracı politikasıyla okunur (firma_kendi, 0001); dondurulmuşta satır
+    yok → hesap / oturum bulunmamış sayılır. musteri.ts de kullanır. */
+export const ETKIN_FIRMA = "JOIN firma f ON f.id = gecerli_firma() AND f.durum = 'etkin'";
 
 interface HesapSatiri { id: string; firma_id: string; ad: string; eposta: string; roller: Rol[]; durum: string; parola_ozeti: string | null; hatali_deneme: number; kilit_bitis: Date | null }
 
@@ -37,7 +46,9 @@ export async function girisYap(havuz: Havuz, firmaId: string, g: { eposta: strin
   return kiraciIcinde(havuz, firmaId, async (db) => {
     const ipKilit = (await db.sorgu<{ kilit_bitis: Date | null }>("SELECT kilit_bitis FROM giris_kilidi WHERE ip = $1 FOR UPDATE", [ip])).rows[0];
     if (ipKilit?.kilit_bitis && ipKilit.kilit_bitis > simdi) { await sahteDenetim(g.parola); return { tamam: false, neden: "kilitli", kilitBitis: ipKilit.kilit_bitis }; }
-    const h = (await db.sorgu<HesapSatiri>("SELECT id, firma_id, ad, eposta, roller, durum, parola_ozeti, hatali_deneme, kilit_bitis FROM hesap WHERE eposta = $1 FOR UPDATE", [eposta])).rows[0];
+    const h = (await db.sorgu<HesapSatiri>(
+      `SELECT h.id, h.firma_id, h.ad, h.eposta, h.roller, h.durum, h.parola_ozeti, h.hatali_deneme, h.kilit_bitis FROM hesap h ${ETKIN_FIRMA}
+       WHERE h.eposta = $1 FOR UPDATE OF h`, [eposta])).rows[0];
     if (h?.kilit_bitis && h.kilit_bitis > simdi) { await sahteDenetim(g.parola); return { tamam: false, neden: "kilitli", kilitBitis: h.kilit_bitis }; }
     const dogru = h && h.parola_ozeti && h.durum !== "pasif" ? await parolaDogru(g.parola, h.parola_ozeti) : (await sahteDenetim(g.parola), false);
     if (!dogru || !h) {
@@ -81,7 +92,8 @@ export async function oturumOku(havuz: Havuz, firmaId: string, belirtec: string 
   const ozet = belirtecOzeti(belirtec);
   return kiraciIcinde(havuz, firmaId, async (db) => {
     const r = (await db.sorgu<HesapSatiri & { son_kullanim: Date; bitis: Date; hatirla: boolean }>(
-      `SELECT h.id, h.firma_id, h.ad, h.eposta, h.roller, h.durum, o.son_kullanim, o.bitis, o.hatirla FROM oturum o JOIN hesap h ON h.id = o.hesap_id WHERE o.ozet = $1`, [ozet])).rows[0];
+      `SELECT h.id, h.firma_id, h.ad, h.eposta, h.roller, h.durum, o.son_kullanim, o.bitis, o.hatirla FROM oturum o JOIN hesap h ON h.id = o.hesap_id ${ETKIN_FIRMA}
+       WHERE o.ozet = $1`, [ozet])).rows[0];
     if (!r) return null;
     const hareketsizSinir = r.hatirla ? HATIRLA_HAREKETSIZ_GUN * 86_400_000 : HAREKETSIZ_SAAT * 3_600_000;
     const dolmus = r.bitis <= simdi || simdi.getTime() - r.son_kullanim.getTime() > hareketsizSinir;

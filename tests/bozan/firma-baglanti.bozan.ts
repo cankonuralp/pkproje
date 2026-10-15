@@ -18,7 +18,10 @@
    9. Bakım (göç dışı) koşulu kalkınca bakımdaki firma çözülür — geride kalmış veritabanına istek gider; "bakımdaki çözülmez" yakalar.
    10. Merkez doğrulaması kalkınca firma veritabanında firma_coz sessizce boş döner (yanlış havuz "firma yok" sanılır) — "firma veritabanında RED" yakalar.
    11. Hata maskesi kalkınca sır taşıyan hata metni ilerletmeyi düşürür (kurulum hatasını yazamaz; red ayrıntısının satırı sırrı taşır) — "maskelenir"
-      beklentisi yakalar. */
+      beklentisi yakalar.
+   2026-10-15 (FV3 incelemesi) eklenen:
+   12. firma_coz_id'den dondurma koşulu kalkınca dondurulmuş firma alt alan adından yine çözülür — FV3'ten beri ÜRETİM yolu firma_coz (firma_bul değil);
+      merkez-kaydi "dondurulmuş … çözülmez" ve yonetim "dondur" (firmaCoz) beklentileri yakalar. */
 import assert from "node:assert/strict";
 import { randomBytes, randomUUID } from "node:crypto";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -268,4 +271,18 @@ test("11. hata maskesi kalkınca sır taşıyan hata metni ilerletmeyi düşür�
     "anahtar sbp_***");
   const bozuk = await ayriVt("probata_bozan_fb11", [["kurulum_hata_maskele(p_degisim->>'hata')", "p_degisim->>'hata'"]]);
   await assert.rejects(dene(bozuk, "maske-b", "MB"), (e: unknown) => (e as { code?: string }).code === "23514", "bozuk: sır taşıyan hata metni ilerletmeyi düşürdü");
+});
+
+test("12. firma_coz_id'den dondurma koşulu kalkınca dondurulmuş firma alt alan adından yine çözülür (kilidin koruduğu açık)", async () => {
+  /* 2026-10-15 (FV3 incelemesi): uygulama alt alan adını artık firma_coz ile çözer (src/server/kiraci/istek.ts → firma-havuzu.ts firmaKaydi); firma_bul /
+     firmaKimligi üretim yolunda değil. Dondurmanın birinci kilidinin ÜRETİMDEKİ yolu burada — merkez-kaydi "dondurulmuş … çözülmez" ve yonetim "dondur:
+     firma bulunmaz" (firmaCoz) yakalar. (İkinci kilit — giriş / oturum — tests/bozan/firma-vt.bozan.ts 3 ve 5.) */
+  const kur = async (sahip: pg.Client, kisa: string, kod: string) => (await sahip.query<{ id: string }>(
+    "INSERT INTO firma (kisa_ad, ad, rapor_kodu, durum) VALUES ($1, 'Dondurma Deneme A.Ş.', $2, 'dondu') RETURNING id::text", [kisa, kod])).rows[0]!.id;
+  await kur(saglam.sahip, "dondu-s", "DZ");
+  assert.equal((await saglam.havuz.query<{ s: unknown }>("SELECT firma_coz('dondu-s') AS s")).rows[0]!.s, null, "sağlam: dondurulmuş firma çözülmez");
+  const bozuk = await ayriVt("probata_bozan_fb12", [["  SELECT * INTO f FROM firma WHERE id = p_id AND durum = 'etkin';\n", "  SELECT * INTO f FROM firma WHERE id = p_id;\n"]]);
+  const id = await kur(bozuk.sahip, "dondu-b", "DY");
+  const s = (await bozuk.havuz.query<{ s: { id?: string; vt?: string } | null }>("SELECT firma_coz('dondu-b') AS s")).rows[0]!.s;
+  assert.deepEqual([s?.id, s?.vt], [id, "ortak"], "bozuk: dondurulmuş firma çözüldü");
 });

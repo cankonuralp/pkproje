@@ -11,9 +11,8 @@ import { formatDegistirir, sablonKullanimi, yayindakiSurumler } from "../../../m
 import { hazirKurulum } from "../../../modules/rapor-format/server/kurulum";
 import { TurListesi } from "../../../modules/ekipman-turleri/ui/TurListesi";
 import { modulBul } from "../../../modules/moduller";
-import { havuz } from "../../../server/db/havuz";
 import { depo } from "../../../server/dosya/depo";
-import { modulOturumu, oturumIslemi } from "../../../server/kimlik/istek";
+import { modulOturumu, oturumHavuzu, oturumIslemi } from "../../../server/kimlik/istek";
 
 const MODUL = modulBul("ekipman-turleri")!;
 export const metadata: Metadata = { title: MODUL.ad };
@@ -22,7 +21,7 @@ export default async function Sayfa({ searchParams }: { searchParams: Promise<{ 
   const o = await modulOturumu(MODUL.no);
   if (!o) return <Yetkisiz />;
   const brans = (await searchParams).brans === "e" ? "e" : "m";
-  await hazirKurulum(havuz(), depo(), o.kiraci.firmaId);
+  await hazirKurulum(oturumHavuzu(o), depo(), o.kiraci.firmaId);
   const [l, kullanim, yayinda] = await oturumIslemi(o, async (db) => [await turListesi(db, o), await sablonKullanimi(db, o), await yayindakiSurumler(db, o)] as const);
   const liste = l ?? [];
   const sayilar = { m: liste.filter((t) => t.brans === "m").length, e: liste.filter((t) => t.brans === "e").length };

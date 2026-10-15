@@ -6,7 +6,7 @@ import "server-only";
 import { cookies, headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
-import { havuz } from "../db/havuz.ts";
+import { merkezHavuzu } from "../db/havuz.ts";
 import { ayniKoken } from "../kimlik/koken.ts";
 import { yonetimIcinde, type Sorgulayici } from "../db/kiraci.ts";
 import { yonetimAdresiMi } from "./adres.ts";
@@ -22,7 +22,7 @@ export async function yonetimAdresinde(): Promise<boolean> {
 
 export const yonetimIstekOturumu = cache(async (): Promise<YoneticiOturumu | null> => {
   if (!(await yonetimAdresinde())) return null;
-  return yonetimOturumOku(havuz(), (await cookies()).get(YONETIM_CEREZ)?.value);
+  return yonetimOturumOku(merkezHavuzu(), (await cookies()).get(YONETIM_CEREZ)?.value);
 });
 
 /** yönetim sayfasının kapısı: yönetim adresi değilse 404; oturum yoksa yönetim girişine ("oturum doldu" çerez varken) */
@@ -35,22 +35,22 @@ export async function yonetimOturumGerekli(): Promise<YoneticiOturumu> {
 
 /** oturumdaki yöneticinin işlemi: veritabanında yönetim rolü, yönetici işlemin bağlamında (izin "kim"i, işlevlerin yetki denetimi) */
 export function yonetimIslemi<T>(o: YoneticiOturumu, is: (db: Sorgulayici) => Promise<T>): Promise<T> {
-  return yonetimIcinde(havuz(), is, { yoneticiId: o.id });
+  return yonetimIcinde(merkezHavuzu(), is, { yoneticiId: o.id });
 }
 
 /** iki adımlı giriş açık mı (393; göç 0075 yonetim_ayar) — kapalıyken kod / kurulum sayfaları girişe döner */
-export const yonetimIkiAdim = (): Promise<boolean> => ikiAdimAcik(havuz());
+export const yonetimIkiAdim = (): Promise<boolean> => ikiAdimAcik(merkezHavuzu());
 
 /** girişin ikinci adımı / ilk kurulum: çerezdeki bekleyen (parola) oturumun yöneticisi */
 export async function yonetimBekleyen(): Promise<{ eposta: string; durum: "ilk" | "etkin" } | null> {
   if (!(await yonetimAdresinde())) return null;
-  return bekleyenOturum(havuz(), (await cookies()).get(YONETIM_CEREZ)?.value);
+  return bekleyenOturum(merkezHavuzu(), (await cookies()).get(YONETIM_CEREZ)?.value);
 }
 
 /** ilk kurulum ekranının bilgisi (anahtar yalnız bu bekleyen oturumda; ilk çağrıda üretilir) */
 export async function yonetimKurulumu(): Promise<{ anahtar: string; adres: string; eposta: string } | null> {
   if (!(await yonetimAdresinde())) return null;
-  return kurulumBilgisi(havuz(), (await cookies()).get(YONETIM_CEREZ)?.value);
+  return kurulumBilgisi(merkezHavuzu(), (await cookies()).get(YONETIM_CEREZ)?.value);
 }
 
 /** çıkış (355; menü "Çıkış yap" ve giriş adımlarında "Girişe dön" — src/app/(yonetim)/yonetim/cikis/route.ts): yalnız yönetim adresinde ("adres"),
@@ -59,7 +59,7 @@ export async function yonetimOturumunuKapat(): Promise<"tamam" | "adres" | "koke
   if (!(await yonetimAdresinde())) return "adres";
   if (!(await ayniKoken())) return "koken";
   const c = await cookies();
-  await yonetimCikis(havuz(), c.get(YONETIM_CEREZ)?.value);
+  await yonetimCikis(merkezHavuzu(), c.get(YONETIM_CEREZ)?.value);
   c.set(YONETIM_CEREZ, "", { ...yonetimCerezAyari(), maxAge: 0 });
   return "tamam";
 }

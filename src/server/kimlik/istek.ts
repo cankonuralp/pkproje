@@ -2,13 +2,16 @@
    · Çerez: HttpOnly · SameSite=Lax · yayında Secure ve "__Host-" önekli (alan adı yazılamaz → yalnız o firmanın alt alan adına gider, üst alana
      sızmaz). Geliştirmede (http://<firma>.localhost) önek ve Secure yok.
    · Oturum, isteğin kiracısında okunur: başka firmanın adresinde aynı çerez geçersizdir (oturum tablosu RLS).
-   · Rol ve durum her istekte veritabanından (oturumOku). */
+   · Rol ve durum her istekte veritabanından (oturumOku).
+   · FIRMA-VT FV3 (2026-10-15): her veritabanı işi KİRACININ havuzunda (kiraciHavuzu — ortak firmaya merkez, kendi projeli firmaya kendi
+     veritabanı); oturum da kiracının veritabanında okunur. Dondurulmuş firmada oturum / giriş yok (oturum.ts ETKIN_FIRMA — kayıt önbelleği
+     bayatken de). */
 import "server-only";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
-import { havuz } from "../db/havuz.ts";
-import { kiraciIcinde, type Sorgulayici } from "../db/kiraci.ts";
+import { kiraciHavuzu } from "../db/firma-havuzu.ts";
+import { kiraciIcinde, type Havuz, type Sorgulayici } from "../db/kiraci.ts";
 import { istekKiracisi, type IstekKiracisi } from "../kiraci/istek.ts";
 import { canDo } from "../yetki/canDo.ts";
 import type { ModulAnahtari } from "../yetki/tanim.ts";
@@ -28,7 +31,7 @@ export const istekOturumu = cache(async (): Promise<IstekOturumu | null> => {
   const kiraci = await istekKiracisi();
   if (!kiraci) return null;
   const belirtec = (await cookies()).get(CEREZ)?.value;
-  const h = await oturumOku(havuz(), kiraci.firmaId, belirtec);
+  const h = await oturumOku(kiraciHavuzu(kiraci), kiraci.firmaId, belirtec);
   return h && h.firmaId === kiraci.firmaId ? { ...h, kiraci } : null;
 });
 
@@ -59,8 +62,12 @@ export function modulGorur(o: IstekOturumu, modul: ModulAnahtari): boolean {
 /** Oturumdaki kişinin işlemi: kiracı isteğin alt alan adından, hesap oturumdan (denetim izinin "kim"i — 0003). Modül yazıcıları buradan koşar;
     kiracı ya da hesap kimliği istemciden alınmaz (09-E2). */
 export function oturumIslemi<T>(o: IstekOturumu, is: (db: Sorgulayici) => Promise<T>): Promise<T> {
-  return kiraciIcinde(havuz(), o.kiraci.firmaId, is, { hesapId: o.id });
+  return kiraciIcinde(kiraciHavuzu(o.kiraci), o.kiraci.firmaId, is, { hesapId: o.id });
 }
+
+/** oturumun kiracısının havuzu — kendi işlemini açan çekirdek işlevlere verilir (Bakanlık formatlarının hazır kurulumu:
+    rapor-format/server/kurulum.ts); sayfa db/ katmanını içe aktarmaz */
+export const oturumHavuzu = (o: { kiraci: IstekKiracisi }): Havuz => kiraciHavuzu(o.kiraci);
 
 /** modül sayfasının kapısı: oturum ister (yoksa girişe), modülü göremiyorsa null (sayfa Yetkisiz çizer). Ekranı yapılan modül sayfaları bunu çağırır. */
 export async function modulOturumu(no: number): Promise<IstekOturumu | null> {
@@ -75,7 +82,7 @@ export const musteriIstekOturumu = cache(async (): Promise<MusteriIstekOturumu |
   const kiraci = await istekKiracisi();
   if (!kiraci) return null;
   const belirtec = (await cookies()).get(MUSTERI_CEREZ)?.value;
-  const h = await musteriOturumOku(havuz(), kiraci.firmaId, belirtec);
+  const h = await musteriOturumOku(kiraciHavuzu(kiraci), kiraci.firmaId, belirtec);
   return h && h.firmaId === kiraci.firmaId ? { ...h, kiraci } : null;
 });
 
@@ -96,5 +103,5 @@ export async function musteriOturumGerekli(): Promise<MusteriIstekOturumu> {
 /** müşterinin VERİ işlemi: kiracı isteğin alt alan adından, müşteri ve tesis kapsamı oturumdan (istemciden değil); işlem veritabanında müşteri
     rolüne geçer (kısıtlayıcı politikalar — 0030) */
 export function musteriIslemi<T>(o: MusteriIstekOturumu, is: (db: Sorgulayici) => Promise<T>): Promise<T> {
-  return kiraciIcinde(havuz(), o.kiraci.firmaId, is, { musteri: { id: o.musteriId, tesisler: o.tesisler } });
+  return kiraciIcinde(kiraciHavuzu(o.kiraci), o.kiraci.firmaId, is, { musteri: { id: o.musteriId, tesisler: o.tesisler } });
 }

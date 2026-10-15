@@ -2,11 +2,12 @@
 /* GİRİŞ / ÇIKIŞ SUNUCU EYLEMLERİ (09-E1–E3). Next sunucu eylemleri kökeni (Origin ↔ Host) zaten denetler; burada AYRICA denetlenir (CSRF iki
    katman). Girdi ortak şemayla doğrulanır; yanıt hesabın var olup olmadığını söylemez. Başarılı girişte çerez yazılır ve yalnız site içi
    dönüş adresine gidilir (açık yönlendirme yok). Müşteri kullanıcısı da aynı ekrandan girer (karar 35, 0030): e-posta bir müşteri girişiyse
-   müşteri girişi denenir, ayrı çerez yazılır, panele (/portal) gidilir. */
+   müşteri girişi denenir, ayrı çerez yazılır, panele (/portal) gidilir. FIRMA-VT FV3 (2026-10-15): giriş, çıkış, parola KİRACININ veritabanında
+   (kiraciHavuzu — kiracı yalnız adresten). */
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { parola as parolaSemasi, z } from "../../sema/ortak.ts";
-import { havuz } from "../db/havuz.ts";
+import { kiraciHavuzu } from "../db/firma-havuzu.ts";
 import { istekKiracisi } from "../kiraci/istek.ts";
 import { ayniKoken, istemciIp } from "./koken.ts";
 import { CEREZ, cerezAyari, guvenliDonus, istekOturumu, MUSTERI_CEREZ, musteriIstekOturumu } from "./istek.ts";
@@ -31,8 +32,9 @@ export async function girisEylemi(_onceki: GirisDurumu, form: FormData): Promise
   const h = await headers();
   const HATALI = "E-posta ya da parola yanlış. 5 hatalı denemeden sonra giriş 15 dakika kilitlenir.";
   const KILITLI = "Çok sayıda hatalı deneme yapıldı; giriş 15 dakika kilitlendi. Daha sonra yeniden deneyin.";
-  if (await musteriGirisiMi(havuz(), kiraci.firmaId, g.data.eposta)) {
-    const m = await musteriGirisYap(havuz(), kiraci.firmaId, {
+  const vt = kiraciHavuzu(kiraci);
+  if (await musteriGirisiMi(vt, kiraci.firmaId, g.data.eposta)) {
+    const m = await musteriGirisYap(vt, kiraci.firmaId, {
       eposta: g.data.eposta, parola: g.data.parola, ip: await istemciIp(), tarayici: h.get("user-agent") ?? undefined, hatirla: g.data.hatirla === "1",
     });
     if (!m.tamam) return { eposta: g.data.eposta, hata: m.neden === "kilitli" ? KILITLI : HATALI };
@@ -40,7 +42,7 @@ export async function girisEylemi(_onceki: GirisDurumu, form: FormData): Promise
     const md = guvenliDonus(g.data.donus) && g.data.donus.startsWith("/portal") ? g.data.donus : "/portal";
     return { yonlendir: m.hesap.durum === "ilk" ? `/giris/parola?donus=${encodeURIComponent(md)}` : md };
   }
-  const sonuc = await girisYap(havuz(), kiraci.firmaId, {
+  const sonuc = await girisYap(vt, kiraci.firmaId, {
     eposta: g.data.eposta, parola: g.data.parola, ip: await istemciIp(), tarayici: h.get("user-agent") ?? undefined, hatirla: g.data.hatirla === "1",
   });
   if (!sonuc.tamam) {
@@ -70,7 +72,7 @@ export async function parolaBelirleEylemi(_onceki: ParolaDurumu, form: FormData)
   if (!s.success) return { hata: { p1: s.error.issues[0]?.message ?? "En az 10 karakter; harf ve rakam içermeli." } };
   if (p1 !== p2) return { hata: { p2: "İki parola aynı değil." } };
   const h = await headers();
-  const r = await parolaDegistir(havuz(), o.kiraci.firmaId, o.id, { yeni: p1, ip: await istemciIp(), tarayici: h.get("user-agent") ?? undefined, hatirla: o.hatirla });
+  const r = await parolaDegistir(kiraciHavuzu(o.kiraci), o.kiraci.firmaId, o.id, { yeni: p1, ip: await istemciIp(), tarayici: h.get("user-agent") ?? undefined, hatirla: o.hatirla });
   if (!r.tamam) {
     return { hata: r.neden === "ayni" ? { p1: "Yeni parola geçici parolayla aynı olamaz." } : { genel: "Parola değiştirilemedi. Yeniden giriş yapıp deneyin." } };
   }
@@ -84,8 +86,9 @@ export async function cikisEylemi(): Promise<void> {
   const kiraci = await istekKiracisi();
   const c = await cookies();
   if (kiraci) {
-    await cikisYap(havuz(), kiraci.firmaId, c.get(CEREZ)?.value);
-    await musteriCikis(havuz(), kiraci.firmaId, c.get(MUSTERI_CEREZ)?.value);
+    const vt = kiraciHavuzu(kiraci);
+    await cikisYap(vt, kiraci.firmaId, c.get(CEREZ)?.value);
+    await musteriCikis(vt, kiraci.firmaId, c.get(MUSTERI_CEREZ)?.value);
   }
   /* silme yazımdaki niteliklerle (Secure, yol): tarayıcı __Host- önekli çerezin Secure'suz silme isteğini yok sayar — çerez kalır, sonraki
      girişte yanlış "oturumunuz kapandı" çıkardı (319 incelemesi) */
@@ -103,7 +106,7 @@ export async function musteriParolaEylemi(_onceki: ParolaDurumu, form: FormData)
   if (!s.success) return { hata: { p1: s.error.issues[0]?.message ?? "En az 10 karakter; harf ve rakam içermeli." } };
   if (p1 !== p2) return { hata: { p2: "İki parola aynı değil." } };
   const h = await headers();
-  const r = await musteriParolaDegistir(havuz(), o.kiraci.firmaId, o.id, { yeni: p1, ip: await istemciIp(), tarayici: h.get("user-agent") ?? undefined, hatirla: o.hatirla });
+  const r = await musteriParolaDegistir(kiraciHavuzu(o.kiraci), o.kiraci.firmaId, o.id, { yeni: p1, ip: await istemciIp(), tarayici: h.get("user-agent") ?? undefined, hatirla: o.hatirla });
   if (!r.tamam) {
     return { hata: r.neden === "ayni" ? { p1: "Yeni parola geçici parolayla aynı olamaz." } : { genel: "Parola değiştirilemedi. Yeniden giriş yapıp deneyin." } };
   }

@@ -318,6 +318,15 @@ pkproje/
                             kira / maskeli hata; firma_coz, goc_hedefleri, yonetim_firma_kayit_ac; işlev arama yolu pg_catalog, public, pg_temp) · baglanti.ts
                             (saf: Frankfurt havuzcu izin listesi, TLS zorunlu, ek veri firma + ref + ad, kurulum sırları ref'siz) · merkez.ts (firmaCoz,
                             firmaCozId, merkezOku) · scram.ts (rol parolası özeti — düz parola API'ye gitmez) · ayar/aes.ts (sir.ts'in çekirdeği, çıktı aynı)
+                            · FV3 YÖNLENDİRME: kiraci/istek.ts istekKiracisi (YALNIZ Host) → firma-havuzu.ts firmaKaydi (önbellekli firma_coz —
+                            kiraci/kayit-onbellek.ts: olumlu 15 sn PROBATA_KAYIT_ONBELLEK_SN, olumsuz 5 sn, 2 000, tek uçuş) → kiraciHavuzu(kiraci): ortak
+                            firmaya merkezHavuzu() (havuz.ts — eski adı havuz()), kendi projeliye firmanın havuzu (parola yalnız havuz kurulurken çözülür;
+                            firma başına PROBATA_FIRMA_HAVUZ 3, örnek başına PROBATA_FIRMA_HAVUZ_SAYI 32 — LRU yalnız BOŞTAKİ havuzu atar, sert sınır 2 ×;
+                            sürüm yalnız ileri; düşen havuzun sırasındaki istek beklemeden güncel havuza, tek atlama; 28P01 / bağlantı reddinde kayıt merkezden
+                            taze okunur — firma başına tek uçuş, en çok 5 sn'de bir — ve BİR kez daha bağlanılır, parola reddinde sürüm aynıysa ikinci deneme
+                            YOK; iş tekrarlanmaz) · kiracının bağlantı kaydı (kiraci/coz.ts vt) numaralanamaz · merkez havuzunu içe aktaranlar izin listesinde
+                            (tests/havuz-kapsami) · dondurmanın ikinci kilidi kimlik/oturum.ts ETKIN_FIRMA (giriş + oturum, önbellek bayatken de; kendi projeli
+                            firmada FV9'a kadar işlemez — FIRMA-VT.md §6.1) · yönetim eylemi önbelleği boşaltır (kilitli)
   src/server/db/gocler/0091  VERİTABANI HIZI (564): politikada firma süzgeci "(SELECT gecerli_firma())" (sorgu başına bir kez; gecerli_musteri,
                             app.hesap_id aynı) + her yabancı anahtara dizin — YENİ POLİTİKA VE YABANCI ANAHTAR DA BÖYLE (kilit kiraci-izolasyonu,
                             sorgular tests/yardimci/vt-hiz.ts)
