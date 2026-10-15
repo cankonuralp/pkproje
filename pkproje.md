@@ -2483,6 +2483,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-15 (578): **575 + 576 + 577 YAYINDA** — deneme makinesi 8cea02a 13/13 (5c8b222'de yalnız olumsuz kanıt 4 eski değişkeni arıyordu — düzeltildi);
+  main 8cea02a (göç yok, 95 göç); canlı sağlık tamam, duman 11/11, Vercel'de son 1 saatte çalışma hatası yok, hata defteri boş. Oturum isteyen
+  ekranlar (Giderler, müşteri paneli) canlıda gözle denenmedi — giriş reisim'in / müşterinin (ölçemedim); uçtan uca üç genişlikte koştu. Dosya
+  sayfası Storage açılınca etkin (PROBATA_DEPO=supabase — anahtar reisim'in). Yönetim hesabı hâlâ "ilk" (kurulum reisim'de).
 - 2026-10-15 (577): **MÜŞTERİ PANELİ RAPORLARINIZ VE UYGUNSUZLUKLAR SUNUCUDA SAYFALI** — büyük müşteride binlerce rapor tarayıcıya iniyordu. Süzgeç
   ekranla aynı tanımla sunucuda (musteri-paneli/liste.ts; görme yine veritabanında — müşteri rolü, tesis kapsamı), ekrana yalnız sayfa; Excel, toplu
   ZIP ve "Uygunsuzları indir" süzülenlerin / açıkların tamamını sunucudan ister (musteri-paneli/ui/eylemler.ts). Kilit tests/musteri-paneli.test.ts 577.
