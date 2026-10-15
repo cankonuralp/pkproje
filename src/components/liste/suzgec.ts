@@ -165,6 +165,8 @@ export interface SunucuListe<K> {
   cipSayilari: Record<string, number>;
   /** seçici → seçenekleri (görebildiği kayıtlardan) */
   secenekler: Record<string, Secenek[]>;
+  /** 576: listeye özgü sayılar (ör. Giderler: süzülenlerin toplamı) — sunucu her sayfayla gönderir */
+  ek?: Record<string, number>;
 }
 
 /** sunucu listesinden ekranın sonucu (hal tarayıcıdakiyle aynı kural) */

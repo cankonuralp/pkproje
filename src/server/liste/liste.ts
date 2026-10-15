@@ -126,9 +126,7 @@ export async function listeGetir<K>(db: Sorgulayici, k: ListeKaynagi, gorus: { s
     aynı tanım, aynı sonuç; tarayıcıya bütün kayıtlar inmez, yalnız sayfanın satırları, sayılar, çip sayıları ve seçenekler (sıralama seçicisi
     hariç, "Tümü"süz). Süzgeç durumu biçim denetiminden geçer; bozuksa başlangıç durumu. Veri sunucuda bir kez hesaplanır. */
 export function bellekteListele<K>(t: SuzgecTanimi<K>, d0: unknown, kayitlar: readonly K[]): SunucuListe<K> {
-  const bas = yeniDurum(t);
-  const g = SuzgecDurumuSemasi.safeParse(d0);
-  const d: SuzgecDurumu = g.success ? { ...g.data, sec: { ...bas.sec, ...g.data.sec }, alan: { ...bas.alan, ...g.data.alan } } : bas;
+  const d = bellekDurumu(t, d0);
   const o = listele(t, d, kayitlar);
   return {
     gorunen: o.gorunen, adet: o.adet, toplam: o.toplam, kayitSayisi: kayitlar.length, sayfa: o.sayfa, sayfaSayisi: o.sayfaSayisi,
@@ -136,3 +134,12 @@ export function bellekteListele<K>(t: SuzgecTanimi<K>, d0: unknown, kayitlar: re
     secenekler: Object.fromEntries(t.seciciler.filter((s) => !s.siralama).map((s) => [s.k, s.secenek().filter(([v]) => v !== "tumu")])),
   };
 }
+
+/** tarayıcıdan gelen süzgeç durumu → tanımın başlangıcıyla birleşmiş durum (bozuksa başlangıç) */
+export function bellekDurumu<K>(t: SuzgecTanimi<K>, d0: unknown): SuzgecDurumu {
+  const bas = yeniDurum(t);
+  const g = SuzgecDurumuSemasi.safeParse(d0);
+  return g.success ? { ...g.data, sec: { ...bas.sec, ...g.data.sec }, alan: { ...bas.alan, ...g.data.alan } } : bas;
+}
+/** 576: süzgeçten geçen BÜTÜN kayıtlar (sayfasız; sıralı) — toplam ve Excel'e aktarma için (ekrana sayfa gider) */
+export const bellekteSuz = <K,>(t: SuzgecTanimi<K>, d0: unknown, kayitlar: readonly K[]): K[] => listele(t, bellekDurumu(t, d0), kayitlar).liste;

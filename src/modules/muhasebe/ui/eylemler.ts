@@ -4,7 +4,8 @@
 import { depo } from "../../../server/dosya/depo";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
-import { BelgeHatasi, giderExceliYukle, giderKaydet, giderOdendi, type GiderBelgesi, type GiderSonra } from "../server/giderler";
+import { BelgeHatasi, giderExcelListesi, giderExceliYukle, giderKaydet, giderOdendi, giderSayfasi, type GiderBelgesi, type GiderSatiri, type GiderSonra }
+  from "../server/giderler";
 import { faturaKaydet, faturaSayfasi, isSayfasi, tahsilatKaydet, type FaturaSatiri, type IsSatiri, type Yazma } from "../server/muhasebe";
 import type { SunucuListe } from "../../../components/liste/suzgec";
 import { bordroGonder, bordroGonderimi, type BordroGonderimi } from "../server/bordro-gonder";
@@ -103,4 +104,19 @@ export async function faturaSayfasiEylemi(durum: unknown): Promise<SunucuListe<F
   const o = await istekOturumu();
   if (!o) return null;
   return (await oturumIslemi(o, (db) => faturaSayfasi(db, o, durum)))?.liste ?? null;
+}
+
+/** 576: Giderler listesinin bir sayfası (süzgeç SUNUCUDA) + toplamlar. Göremeyene / oturumsuza null. */
+export async function giderSayfasiEylemi(durum: unknown): Promise<SunucuListe<GiderSatiri> | null> {
+  if (!(await ayniKoken())) return null;
+  const o = await istekOturumu();
+  if (!o) return null;
+  return oturumIslemi(o, (db) => giderSayfasi(db, o, durum));
+}
+/** 576: Excel'e aktar — süzgeçten geçen bütün giderler */
+export async function giderExcelEylemi(durum: unknown): Promise<GiderSatiri[] | null> {
+  if (!(await ayniKoken())) return null;
+  const o = await istekOturumu();
+  if (!o) return null;
+  return oturumIslemi(o, (db) => giderExcelListesi(db, o, durum));
 }

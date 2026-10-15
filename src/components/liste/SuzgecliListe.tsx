@@ -21,6 +21,8 @@ export interface Suzgec<K> {
   /** 566: sunucuda süzülen liste — çip sayıları sunucudan; yükleniyor (liste aria-busy) */
   cipSayilari?: Record<string, number>;
   yukleniyor?: boolean;
+  /** 576: listeye özgü sayılar (sunucudan) */
+  ek?: Record<string, number>;
 }
 
 export function useSuzgec<K>(tanim: SuzgecTanimi<K>, kayitlar: readonly K[], bas?: Partial<SuzgecDurumu>): Suzgec<K> {

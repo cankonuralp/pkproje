@@ -12,7 +12,7 @@ import { test } from "node:test";
 import {
   imkansiz, listele, sayfaOgeleri, siraSonraki, suzgecVar, temizle, uygulanan, yeniDurum, type SuzgecDurumu, type SuzgecTanimi,
 } from "../src/components/liste/suzgec.ts";
-import { bellekteListele } from "../src/server/liste/liste.ts";
+import { bellekteListele, bellekteSuz } from "../src/server/liste/liste.ts";
 
 interface Kisi { ad: string; il: string; durum: "calisiyor" | "ayrildi"; kod: string; yas: number }
 const KISILER: Kisi[] = [
@@ -141,4 +141,15 @@ test("566 bellekteListele: tarayıcının süzgeci sunucuda AYNEN (sayfa, sayıl
     const b = bellekteListele(t, bozuk, cok);
     assert.deepEqual([b.adet, b.gorunen], [bas.adet, bas.gorunen], JSON.stringify(bozuk));
   }
+});
+
+test("576 bellekteSuz: süzgeçten geçen BÜTÜN kayıtlar (sayfasız, sıralı) — toplam ve Excel'e aktarma için; bozuk durum başlangıç", () => {
+  const cok = Array.from({ length: 45 }, (_, i) => ({ ...KISILER[i % 3], kod: `K-${i}`, yas: 20 + (i % 30) }));
+  const t: SuzgecTanimi<Kisi> = { ...TANIM, sayfa: 20 };
+  for (const d0 of [{}, { ara: "izmir" }, { sec: { gorunum: "hepsi" } }, { sec: { sira: "yas-azalan" } }] as Partial<SuzgecDurumu>[]) {
+    const d = { ...yeniDurum(t), ...d0, sec: { ...yeniDurum(t).sec, ...d0.sec } };
+    assert.deepEqual(bellekteSuz(t, d0, cok), listele(t, d, cok).liste, JSON.stringify(d0));
+  }
+  assert.ok(bellekteSuz(t, {}, cok).length > 20, "sayfa sınırı yok");
+  assert.deepEqual(bellekteSuz(t, { ara: 5 }, cok), listele(t, yeniDurum(t), cok).liste);
 });

@@ -5,9 +5,12 @@
    · Eski isteğin geç gelen cevabı yenisinin üstüne yazılmaz (sıra numarası).
    · Cevap gelene kadar önceki sayfa ekranda kalır; istek düşerse ekran bozulmaz, önceki liste kalır.
    · Seçici seçenekleri (müşteri, il, yıl …) sunucudan, görebildiği kayıtlardan.
-   · bas: başlangıç durumu (ör. adresten gelen ?durum=gecikti) — ilk sayfayı sunucu aynı durumla üretir. */
+   · bas: başlangıç durumu (ör. adresten gelen ?durum=gecikti) — ilk sayfayı sunucu aynı durumla üretir.
+   · 576: sayfa sunucuda yenilenince (kayıt eklendi / değişti — refresh) yeni ilk sayfa gelir: liste o anki süzgeçle YENİDEN istenir (eski satırlar
+     kalmaz); listeye özgü sayılar (ek — ör. Giderler toplamı) her cevapla. */
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Suzgec } from "./SuzgecliListe";
+import { useCallback } from "react";
 import { sunucuSonucu, yeniDurum, type Secenek, type SunucuListe, type SuzgecDurumu, type SuzgecTanimi } from "./suzgec";
 
 /** arama kutusu yazılırken bekleme (ms) */
@@ -25,7 +28,7 @@ export function useSunucuSuzgec<K>(tanimYap: (secenekler: Record<string, Secenek
   useEffect(() => { getirRef.current = getir; });
   useEffect(() => () => { if (sayac.current) clearTimeout(sayac.current); }, []);
 
-  const iste = (d: SuzgecDurumu) => {
+  const iste = useCallback((d: SuzgecDurumu) => {
     const no = ++sira.current;
     setYukleniyor(true);
     getirRef.current(d).then((v) => {
@@ -33,7 +36,16 @@ export function useSunucuSuzgec<K>(tanimYap: (secenekler: Record<string, Secenek
       if (v) setVeri(v);
       setYukleniyor(false);
     }, () => { if (no === sira.current) setYukleniyor(false); });
-  };
+  }, []);
+  /* sunucu sayfayı yeniden çizdi (yeni ilk): o anki süzgeçle yeniden iste */
+  const ilkRef = useRef(ilk), durumRef = useRef(durum);
+  useEffect(() => { durumRef.current = durum; });
+  useEffect(() => {
+    if (ilkRef.current === ilk) return;
+    ilkRef.current = ilk;
+    setVeri(ilk);
+    iste(durumRef.current);
+  }, [ilk, iste]);
   const degistir = (d: SuzgecDurumu) => {
     const yazi = d.ara !== durum.ara || Object.keys({ ...d.alan, ...durum.alan }).some((k) => (d.alan[k] ?? "") !== (durum.alan[k] ?? ""));
     setDurum(d);
@@ -42,5 +54,5 @@ export function useSunucuSuzgec<K>(tanimYap: (secenekler: Record<string, Secenek
     else iste(d);
   };
   const sonuc = useMemo(() => sunucuSonucu(tanim, durum, veri), [tanim, durum, veri]);
-  return { tanim, durum, degistir, sonuc, cipSayilari: veri.cipSayilari, yukleniyor };
+  return { tanim, durum, degistir, sonuc, cipSayilari: veri.cipSayilari, yukleniyor, ek: veri.ek };
 }

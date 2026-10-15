@@ -28,6 +28,8 @@ import {
 import { bekleyenGiderOzeti, giderDosyasiGorulur, giderExceliYukle, giderKaydet, giderListesi, giderOdendi, giderSecenekleri, isGiderleri, type GiderBelgesi,
   type GiderSonra } from "../src/modules/muhasebe/server/giderler.ts";
 import { faturaTanim, isTanim, musteriSecenekleri } from "../src/modules/muhasebe/liste.ts";
+import { giderEk, giderSecimleri, giderTanim } from "../src/modules/muhasebe/gider-liste.ts";
+import { giderExcelListesi, giderSayfasi } from "../src/modules/muhasebe/server/giderler.ts";
 import { listele, yeniDurum } from "../src/components/liste/suzgec.ts";
 import { masrafKarar } from "../src/modules/muhasebe/server/talep-baglanti.ts";
 import { ayarOku, ayarYaz } from "../src/server/ayar/ayar.ts";
@@ -525,4 +527,28 @@ test("566 İşler / Faturalar sunucuda sayfalı: ekranın süzgeciyle birebir; �
   const b = <T,>(is: (db: Sorgulayici) => Promise<T>) => kiraciIcinde(havuz, B, is, { hesapId: YON_B.id });
   assert.equal((await b((db) => isSayfasi(db, YON_B, {})))!.liste.kayitSayisi, 0, "başka firma");
   assert.equal((await b((db) => faturaSayfasi(db, YON_B, {})))!.liste.kayitSayisi, 0, "başka firma");
+});
+
+/* 576 (09-B3; reisim 2026-10-15 "elindeki işlerin hepsini sırayla bitir"): Giderler bütün giderleri tarayıcıya indiriyordu — süzgeç ekranla aynı
+   tanımla (gider-liste.ts) sunucuda; toplam ve Excel'e aktar süzülenlerin TAMAMINDAN (yalnız sayfa değil); şerit sayıları bütün giderlerden. */
+test("576 Giderler sunucuda sayfalı: ekranın süzgeciyle birebir; toplamlar ve Excel süzülenlerin hepsinden; görmeyene null", async () => {
+  for (const k of [MUH, YON]) {
+    const l = (await a(k, (db) => giderListesi(db, k)))!;
+    assert.ok(l.length >= 2);
+    const t = giderTanim(giderSecimleri(l));
+    const durumlar: { ara?: string; secili?: string[]; sec?: Record<string, string> }[] = [{}, { secili: ["belgesiz"] }, { sec: { bag: "is" } }, { sec: { tur: "yakit" } }, { ara: "g-" }];
+    for (const d0 of durumlar) {
+      const s = (await a(k, (db) => giderSayfasi(db, k, d0)))!;
+      const o = listele(t, { ...yeniDurum(t), ...d0, sec: { ...yeniDurum(t).sec, ...d0.sec } }, l);
+      assert.deepEqual(s.gorunen, o.gorunen, JSON.stringify(d0));
+      assert.deepEqual([s.adet, s.kayitSayisi], [o.adet, l.length]);
+      assert.deepEqual(s.ek, giderEk(o.liste, l), "toplam süzülenlerin hepsinden, şerit bütün giderlerden");
+      assert.deepEqual((await a(k, (db) => giderExcelListesi(db, k, d0)))!.map((g) => g.id), o.liste.map((g) => g.id), "Excel süzülenlerin hepsi");
+    }
+    assert.deepEqual((await a(k, (db) => giderSayfasi(db, k, {})))!.secenekler.ay, giderSecimleri(l).ay);
+  }
+  for (const k of [PLAN, DEN]) {
+    assert.equal(await a(k, (db) => giderSayfasi(db, k, {})), null, k.roller[0]);
+    assert.equal(await a(k, (db) => giderExcelListesi(db, k, {})), null, k.roller[0]);
+  }
 });

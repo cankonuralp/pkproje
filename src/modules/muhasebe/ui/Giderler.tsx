@@ -4,20 +4,23 @@
    penceresi: ekle (ödendi / ödenecek), düzenle, ödeneceği "Ödendi". Excel'e aktar (süzülen liste) ve Excel'den yükle (tarayıcıda okunur,
    satır satır önizleme; sunucu yeniden denetler). İş sayfasının "Giderler" bölümü de buradan. Görme ve karar sunucuda (modül 18).
    477 (reisim 2026-10-10, Talepler–Onaylar kararları T2 · T4 · T5): masraf formunun onayı / reddi / düzeltmeye geri gönderilmesi ONAYLAR'DA —
-   buradan onay tuşları kalktı; masraf formu salt okunur (onaylayan değiştirmez), onay bekliyorsa "Onaylar'da aç", onaylandıysa "Ödendi". */
+   buradan onay tuşları kalktı; masraf formu salt okunur (onaylayan değiştirmez), onay bekliyorsa "Onaylar'da aç", onaylandıysa "Ödendi".
+   576 (09-B3): süzgeç, sayfa, toplam ve şerit sayıları SUNUCUDA (server/giderler.ts giderSayfasi; tanım ../gider-liste.ts — ekranla aynı); Excel'e
+   aktar süzülen bütün satırları sunucudan ister (giderExcelEylemi). */
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import { Bilgi, BilgiListesi } from "../../../components/bilgi/Bilgi";
-import { useBildir } from "../../../components/bildirim/Bildirim";
+import { useBildir, useUyar } from "../../../components/bildirim/Bildirim";
 import { baytIndir, dosyaGunu } from "../../../components/disa/indir";
 import { tabloOku, TabloHatasi } from "../../../components/disa/oku";
 import { XLSX_TURU } from "../../../components/disa/xlsx";
 import { Alan, Girdi, ipucuId } from "../../../components/form/Form";
 import { DosyaAcTusu } from "../../../components/gizli-resim/GizliResim";
 import { KartEtiket, Kirp, Liste, type Sutun } from "../../../components/liste/Liste";
-import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
-import type { SuzgecTanimi } from "../../../components/liste/suzgec";
+import { Sayac, SuzgecliListe } from "../../../components/liste/SuzgecliListe";
+import { useSunucuSuzgec } from "../../../components/liste/SunucuSuzgec";
+import type { Secenek, SunucuListe, SuzgecDurumu } from "../../../components/liste/suzgec";
 import { Pencere, pencereMetinSinifi } from "../../../components/pencere/Pencere";
 import { AltSatir, Bolum, DegerYok, Rozet, SayfaBasi, SeritKap } from "../../../components/sayfa/Sayfa";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
@@ -28,36 +31,17 @@ import { Ikon } from "../../../components/ikon/Ikon";
 import { Tus, TusBaglanti, tusSinifi } from "../../../components/tus/Tus";
 import { tutar as tutarSema } from "../../../sema/ortak";
 import { GIDER_EXCEL_SINIR, GIDER_SABLON, giderExceli, giderSablonu, giderSatirlari, type GiderExcelSatiri } from "../excel";
-import { ayAd } from "../karlilik";
+import { giderTanim } from "../gider-liste";
 import { GIDER_DURUM, GIDER_TUR, giderKdv, KDV_ORAN, para, type GiderTuru } from "../sema";
 import type { GiderSatiri, GiderSecenekleri } from "../server/giderler";
-import { giderExceliYukleEylemi, giderKaydetEylemi, giderOdendiEylemi } from "./eylemler";
+import { giderExcelEylemi, giderExceliYukleEylemi, giderKaydetEylemi, giderOdendiEylemi, giderSayfasiEylemi } from "./eylemler";
 import { BordroGonderTusu } from "./BordroGonder";
 import { MuhasebeSekmeleri } from "./ortak";
 import stil from "./muhasebe.module.css";
 
 type Pen = null | { g: GiderSatiri | null; is?: string };
-const tekil = (l: [string, string][]) => [...new Map(l)].sort((a, b) => a[1].localeCompare(b[1], "tr"));
-
-function tanim(l: readonly GiderSatiri[]): SuzgecTanimi<GiderSatiri> {
-  return {
-    ad: "Giderlerde ara", ipucu: "Gider no, iş, açıklama", birim: "gider", sayfa: 20, imkansiz: "Bir gider aynı anda iki durumda olamaz",
-    metin: (g) => [g.no, GIDER_TUR[g.tur][0], g.aciklama ?? "", g.is?.no ?? "", g.is?.musteri ?? "", g.personel?.ad ?? ""].join(" "),
-    cipler: [
-      { k: "bekliyor", ad: "Onay bekliyor", grup: "durum", test: (g) => g.durum === "bekliyor" },
-      { k: "onaylandi", ad: "Ödenecek", grup: "durum", test: (g) => g.durum === "onaylandi" },
-      { k: "belgesiz", ad: "Belgesi yok", test: (g) => !g.belge },
-    ],
-    seciciler: [
-      { k: "bag", ad: "İş", secenek: () => [["tumu", "Tümü"], ["is", "İşe bağlı"], ["genel", "Genel"]], gecer: (g, v) => v === "tumu" || (v === "is") === !!g.is },
-      { k: "tur", ad: "Tür", secenek: () => [["tumu", "Tümü"], ...Object.entries(GIDER_TUR).map(([k, [ad]]) => [k, ad] as [string, string])], gecer: (g, v) => v === "tumu" || g.tur === v },
-      { k: "ay", ad: "Dönem", secenek: () => [["tumu", "Tümü"], ...[...new Set(l.map((g) => g.tarih.slice(0, 7)))].sort().reverse().map((a) => [a, ayAd(a)] as [string, string])],
-        gecer: (g, v) => v === "tumu" || g.tarih.slice(0, 7) === v },
-      { k: "kisi", ad: "Personel", secenek: () => [["tumu", "Tümü"], ...tekil(l.filter((g) => g.personel).map((g) => [g.personel!.id, g.personel!.ad]))],
-        gecer: (g, v) => v === "tumu" || g.personel?.id === v },
-    ],
-  };
-}
+/* tanım ../gider-liste.ts'te (sunucu da aynısını koşar); dönem ve personel seçenekleri sunucudan */
+const tanim = (sec: Record<string, Secenek[]>) => giderTanim(sec);
 
 function sutunlar(ac: (g: GiderSatiri) => void, isIcinde: boolean): Sutun<GiderSatiri>[] {
   return [
@@ -85,8 +69,9 @@ function sutunlar(ac: (g: GiderSatiri) => void, isIcinde: boolean): Sutun<GiderS
     ) },
   ];
 }
-function Toplam({ l }: { l: readonly GiderSatiri[] }) {
-  const t = l.reduce((n, g) => ({ haric: n.haric + g.haric, kdv: n.kdv + g.kdv, top: n.top + g.tutar }), { haric: 0, kdv: 0, top: 0 });
+/** süzülen giderlerin toplamı (sunucudan — bütün süzülenler, yalnız sayfa değil) */
+function Toplam({ ek }: { ek: Record<string, number> }) {
+  const t = { haric: ek.haric ?? 0, kdv: ek.kdv ?? 0, top: ek.top ?? 0 };
   return (
     <BilgiListesi>
       <Bilgi etiket="KDV hariç">{para(t.haric)}</Bilgi>
@@ -95,33 +80,34 @@ function Toplam({ l }: { l: readonly GiderSatiri[] }) {
     </BilgiListesi>
   );
 }
-const toplamTL = (l: readonly GiderSatiri[]) => para(l.reduce((n, g) => n + g.tutar, 0));
+
 
 /** Giderler sekmesi */
-export function GiderListesi({ giderler, secenekler, bugun, bordro = false }: { giderler: GiderSatiri[]; secenekler: GiderSecenekleri | null; bugun: string; bordro?: boolean }) {
-  const s = useSuzgec(tanim(giderler), giderler);
+export function GiderListesi({ ilk, secenekler, bugun, bordro = false }: { ilk: SunucuListe<GiderSatiri>; secenekler: GiderSecenekleri | null; bugun: string; bordro?: boolean }) {
+  const s = useSunucuSuzgec(tanim, ilk, giderSayfasiEylemi);
   const [p, setP] = useState<Pen>(null);
-  const bek = giderler.filter((g) => g.durum === "bekliyor"), bel = giderler.filter((g) => !g.belge);
+  const ek = s.ek ?? {};
+  const bek = { n: ek.bekN ?? 0, t: ek.bekT ?? 0 }, bel = { n: ek.belN ?? 0, t: ek.belT ?? 0 };
   const goster = (k: string) => s.degistir({ ...s.durum, secili: [k], kip: "veya", sayfa: 1 });
   return (
     <>
       <SayfaBasi baslik="Muhasebe" sayac={<Sayac s={s} />} tuslar={<>
-        <GiderExcelAktar l={s.sonuc.liste} />
+        <GiderExcelAktar durum={s.durum} adet={ek.adet ?? 0} toplam={ek.top ?? 0} />
         {secenekler && <GiderExcelYukle secenekler={secenekler} bugun={bugun} />}
         {bordro && <BordroGonderTusu />}
         {secenekler && <Tus ikon="plus" onClick={() => setP({ g: null })}>Gider ekle</Tus>}
       </>} />
       <MuhasebeSekmeleri secili="/muhasebe/giderler" />
-      {(bek.length > 0 || bel.length > 0) && <SeritKap>
+      {(bek.n > 0 || bel.n > 0) && <SeritKap>
         {/* 477 (T1): onay Onaylar'da — burada liste */}
-        {bek.length > 0 && <Serit tur="bilgi" ikon="receipt"><b>Onay bekleyen masraf:</b> {bek.length} · {toplamTL(bek)} · kararı Onaylar&apos;da{" "}
+        {bek.n > 0 && <Serit tur="bilgi" ikon="receipt"><b>Onay bekleyen masraf:</b> {bek.n} · {para(bek.t)} · kararı Onaylar&apos;da{" "}
           <Tus tur="ikincil" onClick={() => goster("bekliyor")}>Göster</Tus>{secenekler && <> <TusBaglanti tur="ikincil" href="/onaylar/talepler">Onaylar&apos;da aç</TusBaglanti></>}</Serit>}
-        {bel.length > 0 && <Serit tur="uyari" ikon="triangle-alert"><b>Belgesi yok:</b> {bel.length} gider · {toplamTL(bel)}{" "}
+        {bel.n > 0 && <Serit tur="uyari" ikon="triangle-alert"><b>Belgesi yok:</b> {bel.n} gider · {para(bel.t)}{" "}
           <Tus tur="ikincil" onClick={() => goster("belgesiz")}>Göster</Tus></Serit>}
       </SeritKap>}
       <SuzgecliListe s={s} on="g" baslik="Giderler" sutunlar={sutunlar((g) => setP({ g }), false)} anahtar={(g) => g.id}
         bosVeri={{ ikon: "receipt", baslik: "Gider yok", metin: "“Gider ekle” ile fişi ya da faturası eklenir." }} />
-      {s.sonuc.liste.length > 0 && <Toplam l={s.sonuc.liste} />}
+      {s.sonuc.adet > 0 && <Toplam ek={ek} />}
       {p && <GiderPenceresi g={p.g} sabitIs={p.is} secenekler={secenekler} bugun={bugun} kapat={() => setP(null)} />}
     </>
   );
@@ -266,17 +252,27 @@ function GiderPenceresi({ g, sabitIs, sabitIsNo, secenekler, bugun, kapat }: {
 
 /* ── EXCEL ── */
 /** "Excel'e aktar": süzülen liste (maket gider-excel-disa) */
-function GiderExcelAktar({ l }: { l: readonly GiderSatiri[] }) {
+/** 576: süzülen BÜTÜN giderler sunucudan istenir (ekranda yalnız sayfa var) */
+function GiderExcelAktar({ durum, adet, toplam }: { durum: SuzgecDurumu; adet: number; toplam: number }) {
   const [acik, setAcik] = useState(false);
+  const [bekliyor, setBekliyor] = useState(false);
+  const uyar = useUyar();
   const ad = `giderler-${dosyaGunu().slice(0, 7)}.xlsx`;
-  const indir = () => baytIndir(ad, giderExceli(l.map((g) => ({ no: g.no, tarih: g.tarih, tur: g.tur, tutar: g.tutar, oran: g.oran, aciklama: g.aciklama, isNo: g.is?.no ?? null,
-    personel: g.personel?.ad ?? null, durum: g.durum, odeme: g.odeme, belge: !!g.belge }))), XLSX_TURU);
+  const indir = async () => {
+    setBekliyor(true);
+    try {
+      const l = await giderExcelEylemi(durum);
+      if (!l) { uyar("Giderler alınamadı; sayfayı yenileyip yeniden deneyin."); return; }
+      baytIndir(ad, giderExceli(l.map((g) => ({ no: g.no, tarih: g.tarih, tur: g.tur, tutar: g.tutar, oran: g.oran, aciklama: g.aciklama, isNo: g.is?.no ?? null,
+        personel: g.personel?.ad ?? null, durum: g.durum, odeme: g.odeme, belge: !!g.belge }))), XLSX_TURU);
+    } finally { setBekliyor(false); }
+  };
   return (
     <>
       <Tus tur="ikincil" ikon="download" onClick={() => setAcik(true)}>Excel&apos;e aktar</Tus>
       <Pencere acik={acik} baslik="Excel'e aktar · Giderler" onKapat={() => setAcik(false)} odak="#w-gider-indir"
-        alt={<><Tus tur="ikincil" onClick={() => setAcik(false)}>Kapat</Tus><Tus id="w-gider-indir" ikon="download" disabled={!l.length} onClick={indir}>İndir</Tus></>}>
-        <p className={pencereMetinSinifi}><b>{l.length} gider</b> · {ad} · {toplamTL(l)}</p>
+        alt={<><Tus tur="ikincil" onClick={() => setAcik(false)}>Kapat</Tus><Tus id="w-gider-indir" ikon="download" disabled={!adet || bekliyor} aria-busy={bekliyor || undefined} onClick={indir}>İndir</Tus></>}>
+        <p className={pencereMetinSinifi}><b>{adet} gider</b> · {ad} · {para(toplam)}</p>
         <p className={stil.ozet}>Listede süzülen satırlar aktarılır: gider no, tarih, tür, tutar, KDV, açıklama, proje no, personel, durum, ödeme tarihi, belge.</p>
       </Pencere>
     </>

@@ -5,6 +5,9 @@
    477 (reisim 2026-10-10, Talepler–Onaylar kararları T2 · T4 · T5): masraf formunun kararı Onaylar'da (talep-baglanti.ts masrafKarar) — burada
    onay / red yok; formun içeriği Muhasebe'de DEĞİŞMEZ (düzeltilecekse Onaylar'dan düzeltmeye geri gönderilir; veritabanı 0079). Onaylanan
    formun ödemesi burada: Ödendi (giderOdendi). Elle girilen gider eskisi gibi düzenlenir. */
+import { bellekteListele, bellekteSuz } from "../../../server/liste/liste.ts";
+import type { SunucuListe } from "../../../components/liste/suzgec.ts";
+import { giderEk, giderSecimleri, giderTanim } from "../gider-liste.ts";
 import type { Depo } from "../../../server/dosya/depo.ts";
 import { dosyaYukle } from "../../../server/dosya/dosya.ts";
 import { SINIR, turBul } from "../../../server/dosya/tur.ts";
@@ -59,6 +62,19 @@ async function satirlar(db: Sorgulayici, kosul = "", p: unknown[] = []): Promise
 export async function giderListesi(db: Sorgulayici, kim: Kisi): Promise<GiderSatiri[] | null> {
   return gorur(kim) ? satirlar(db) : null;
 }
+/** 576: Giderler ekranı — süzgeçten geçenlerin SAYFASI (ekranla aynı tanım — ../gider-liste.ts) + toplamlar ve şerit sayıları; göremeyene null */
+export async function giderSayfasi(db: Sorgulayici, kim: Kisi, durum: unknown): Promise<SunucuListe<GiderSatiri> | null> {
+  if (!gorur(kim)) return null;
+  const l = await satirlar(db), t = giderTanim(giderSecimleri(l));
+  return { ...bellekteListele(t, durum, l), ek: giderEk(bellekteSuz(t, durum, l), l) };
+}
+/** 576: Excel'e aktar — süzgeçten geçen BÜTÜN giderler (en çok GIDER_EXCEL_SINIR); göremeyene null */
+export async function giderExcelListesi(db: Sorgulayici, kim: Kisi, durum: unknown): Promise<GiderSatiri[] | null> {
+  if (!gorur(kim)) return null;
+  const l = await satirlar(db);
+  return bellekteSuz(giderTanim(giderSecimleri(l)), durum, l).slice(0, GIDER_EXCEL_SINIR);
+}
+
 /** 566 (Ana sayfa): onay bekleyen masrafların sayısı ve tutarı tek sorguyla (bütün giderler okunmaz); göremeyene null */
 export async function bekleyenGiderOzeti(db: Sorgulayici, kim: Kisi): Promise<{ sayi: number; tutar: number } | null> {
   if (!gorur(kim)) return null;
