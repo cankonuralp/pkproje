@@ -65,7 +65,10 @@ export async function kiraciIcinde<T>(havuz: pg.Pool, firmaId: string, is: (db: 
   baglanti.on("error", dinle);
   try {
     await baglanti.query("BEGIN");
-    await baglanti.query("SELECT set_config('app.firma_id', $1, true), set_config('app.hesap_id', $2, true)", [firmaId, secenek.hesapId ?? ""]);
+    /* FIRMA-VT FV1 (göç 0095): veritabanı bu firmanın mı — firma veritabanında başka firmanın, ortakta kendi projesine geçmiş firmanın işi
+       reddedilir (42501). Yanlış havuz seçilse bile veri karışmaz; ayarla AYNI sorguda (ek gidiş-dönüş yok) */
+    await baglanti.query("SELECT set_config('app.firma_id', $1, true), set_config('app.hesap_id', $2, true), vt_firma_dogrula($1::uuid)",
+      [firmaId, secenek.hesapId ?? ""]);
     if (m) {
       await baglanti.query("SELECT set_config('app.musteri_id', $1, true), set_config('app.musteri_tesisler', $2, true)", [m.id, m.tesisler ? m.tesisler.join(",") : ""]);
       await baglanti.query("SET LOCAL ROLE probata_musteri");
