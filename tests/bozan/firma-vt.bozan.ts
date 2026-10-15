@@ -83,11 +83,16 @@ before(async () => {
   await v.A.sahip.query("INSERT INTO musteri_hesap (firma_id, musteri_id, ana, eposta, ad, parola_ozeti, durum) VALUES ($1, $2, true, $3, 'Deneme', $4, 'etkin')",
     [v.A.id, m, MUSTERI, ozet]);
 });
+/* 2026-10-15 (deneme makinesi 30c8c18: olumsuz kanıt koşusu 17 dk takıldı): bozuk yönlendiricinin kapanışı düşebilir (bozan 2 aynı havuzu iki firmaya
+   kaydeder) — o düşüş temizliği yarıda bırakıp iki gömülü kümeyi açık bırakıyor, süreç hiç bitmiyordu. Her kapanış ayrı denenir, kümeler HER DURUMDA durur. */
 after(async () => {
-  for (const y of kapanacak) await y.kapat();
-  await v?.kapat();
-  rmSync(gecici, { recursive: true, force: true });
-});
+  try {
+    for (const y of kapanacak) await y.kapat().catch(() => {});
+  } finally {
+    await v?.kapat();
+    rmSync(gecici, { recursive: true, force: true });
+  }
+}, { timeout: 120_000 });
 
 test("1. çözücü hep merkez havuzunu verince kendi-A'nın işi merkeze gider ve vt_firma_dogrula'ya takılır (kilidin koruduğu açık)", async () => {
   const y = yonlendirici(saglamHavuz);

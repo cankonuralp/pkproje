@@ -275,7 +275,9 @@ export function yonlendiriciKur(a: YonlendiriciAyari): Yonlendirici {
     get acikHavuzlar() { return [...havuzlar.values()].map((h) => h.kimlik); },
     async kapat() {
       kapandi = true;
-      const l = [...havuzlar.values()];
+      /* aynı havuz iki kayıtta olsa da bir kez kapatılır (pg ikinci end'i reddeder; 2026-10-15 deneme makinesi 30c8c18: bozuk yönlendiricinin çift
+         kaydı kapanışı düşürüp temizliği yarıda bırakıyordu) */
+      const l = [...new Set(havuzlar.values())];
       havuzlar.clear();
       await Promise.all(l.filter((h) => !h.ending).map((h) => h.end()));
     },
