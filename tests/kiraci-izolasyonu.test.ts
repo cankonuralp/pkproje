@@ -11,6 +11,7 @@ import { gocleriUygula } from "../src/server/db/goc.ts";
 import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { firmaKimligi, havuzKur, kiraciIcinde } from "../src/server/db/kiraci.ts";
 import { testKumesi } from "./yardimci/kume.ts";
+import { CIPLAK_POLITIKA, DIZINSIZ_YABANCI_ANAHTAR } from "./yardimci/vt-hiz.ts";
 
 let kume: GomuluKume;
 let havuz: pg.Pool;
@@ -104,6 +105,16 @@ test("firma_id taşıyan her tabloda RLS açık ve ZORUNLU (FORCE)", async () =>
     ORDER BY 1`);
   assert.ok(r.rows.length >= 2);
   for (const t of r.rows) assert.deepEqual([t.tablo, t.rls, t.zorunlu], [t.tablo, true, true]);
+});
+
+/* 564 (reisim 2026-10-15 analizi — veri büyüyünce donma): firma süzgeci sorgu başına bir kez hesaplanır (politikada çıplak gecerli_firma() yok) ve
+   her yabancı anahtarın dizini var (göç 0091). Yeni göçün politikası "(SELECT gecerli_firma())" ile, yabancı anahtarı dizinle yazılır. */
+test("politikalarda çıplak firma / müşteri / hesap çağrısı yok; her yabancı anahtarın dizini var", async () => {
+  assert.deepEqual((await havuz.query<{ ad: string }>(CIPLAK_POLITIKA)).rows.map((r) => r.ad), []);
+  assert.deepEqual((await havuz.query<{ ad: string }>(DIZINSIZ_YABANCI_ANAHTAR)).rows.map((r) => r.ad), []);
+  /* politika hâlâ firmayı süzüyor (anlam değişmedi): uygulama rolü kiracısız hiçbir satır görmez, kendi firmasınınkini görür */
+  const p = (await havuz.query<{ n: number }>("SELECT count(*)::int AS n FROM pg_policies WHERE schemaname = 'public' AND (qual LIKE '%SELECT gecerli_firma()%' OR with_check LIKE '%SELECT gecerli_firma()%')")).rows[0].n;
+  assert.ok(p > 100, `sarılmış firma süzgeci ${p}`);
 });
 
 test("göçler iki kez koşunca hiçbir şey uygulanmaz ve hata vermez (idempotent)", async () => {

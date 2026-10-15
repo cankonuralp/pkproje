@@ -310,6 +310,9 @@ pkproje/
                             kiracı süzgeçli TEK erişim katmanı (kiraci.ts: kiraciIcinde) — pg YALNIZ burada içe aktarılır ·
                             GÜVENLİ YAZICI (yazici.ts: tablo / ekle / guncelle / izYaz — sürüm kilidi + denetim izi; modül ve sayfa ham
                             yazma SQL'i taşımaz, 2026-10-04)
+  src/server/db/gocler/0091  VERİTABANI HIZI (564): politikada firma süzgeci "(SELECT gecerli_firma())" (sorgu başına bir kez; gecerli_musteri,
+                            app.hesap_id aynı) + her yabancı anahtara dizin — YENİ POLİTİKA VE YABANCI ANAHTAR DA BÖYLE (kilit kiraci-izolasyonu,
+                            sorgular tests/yardimci/vt-hiz.ts)
   src/server/db/gocler/0000, 0008–0010  YAYIN SERTLEŞTİRME (2026-10-04): Supabase API rolleri şemaya giremez (0000 önce, 0008 temizlik + doğrulama),
                             rol süre sınırları (0009), işlev arama yolu (0010) — kilit tests/yayin.test.ts (Supabase taklidi, süper kullanıcı olmayan sahip)
   src/server/yz/            YAPAY ZEKÂ (351): okuma.ts (fotoğraftan okuma isteği — 354: yapılandırılmış çıktı, zorunlu araç YOK (Opus / Sonnet 5.5 400) —
