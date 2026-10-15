@@ -138,8 +138,14 @@ before(async () => {
     const bugun = bugunTr(), pdurum = ["bekliyor", "kabul", "denetimde", "tamamlandi", "reddedildi"] as const;
     for (let n = 0; n < 25; n++) {
       const tesis = v.tesisler[n % 3], bas = gunEkle(bugun, (n % 11) - 5), bit = gunEkle(bas, n % 3);
-      const pid = (await s2.query<{ id: string }>(`INSERT INTO plan (firma_id, no, tesis_id, baslangic, bitis, durum, firma_adi, acan, olustu)
-        VALUES ($1, $2, $3, $4, $5, $6, 'Liste A', 'Deneme', $7) RETURNING id::text`,
+      /* durumun tutarlılık kuralları (0024): kabul edilmiş planda kabul + beyan, reddedilende red + gerekçe, tamamlananda kontrol + bitiş */
+      const pid = (await s2.query<{ id: string }>(`INSERT INTO plan (firma_id, no, tesis_id, baslangic, bitis, durum, firma_adi, acan, olustu,
+          kabul, kabul_eden, beyan, red, red_eden, red_gerekce, kontrol_tamam, bitti)
+        SELECT $1::uuid, $2::text, $3::uuid, $4::date, $5::date, $6::text, 'Liste A', 'Deneme', $7::timestamptz,
+          CASE WHEN k THEN $7::timestamptz END, CASE WHEN k THEN 'Deneme' END, CASE WHEN k THEN 'Plan okundu, kabul ediyorum — deneme beyanı.' END,
+          CASE WHEN r THEN $7::timestamptz END, CASE WHEN r THEN 'Deneme' END, CASE WHEN r THEN 'Uygun değil' END,
+          CASE WHEN t THEN $7::timestamptz END, CASE WHEN t THEN $7::timestamptz END
+        FROM (SELECT $6::text IN ('kabul', 'denetimde', 'tamamlandi') AS k, $6::text = 'reddedildi' AS r, $6::text = 'tamamlandi' AS t) d RETURNING id::text`,
         [A, `LA-1026-${String(n + 1).padStart(3, "0")}`, tesis, bas, bit, pdurum[n % 5], new Date(Date.UTC(2026, 0, 1, 8, n)).toISOString()])).rows[0].id;
       for (const per of n % 3 === 0 ? [v.p1, v.p2] : n % 3 === 1 ? [v.p1] : [v.p2]) await s2.query("INSERT INTO plan_ekip (firma_id, plan_id, personel_id) VALUES ($1, $2, $3)", [A, pid, per]);
       for (const e of v.ekp.filter((x) => x.tesis === tesis).slice(0, 1 + (n % 4))) await s2.query("INSERT INTO plan_ekipman (firma_id, plan_id, ekipman_id, ekleyen) VALUES ($1, $2, $3, 'Deneme')", [A, pid, e.id]);
