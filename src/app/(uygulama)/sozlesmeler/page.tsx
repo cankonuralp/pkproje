@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { Yetkisiz } from "../../../components/hata/Hata";
 import { isgEksikTakip } from "../../../modules/anasayfa/server/takip";
 import { modulBul } from "../../../modules/moduller";
-import { sablonlar, sozlesmeDegistirir, sozlesmeListesi } from "../../../modules/sozlesmeler/server/sozlesmeler";
+import { sablonlar, sozlesmeDegistirir, sozlesmeSayfasi } from "../../../modules/sozlesmeler/server/sozlesmeler";
 import { SozlesmeListesi } from "../../../modules/sozlesmeler/ui/SozlesmeListesi";
 import { modulOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 
@@ -14,7 +14,8 @@ export const metadata: Metadata = { title: MODUL.ad };
 export default async function Sayfa() {
   const o = await modulOturumu(MODUL.no);
   if (!o) return <Yetkisiz />;
-  const [l, s, eksik] = await oturumIslemi(o, async (db) => [await sozlesmeListesi(db, o), await sablonlar(db, o), await isgEksikTakip(db, o)] as const);
+  /* 570: liste SUNUCUDA sayfalı (sozlesmeSayfasi — ilk sayfa burada, sonrakiler eylemle) */
+  const [l, s, eksik] = await oturumIslemi(o, async (db) => [await sozlesmeSayfasi(db, o, {}), await sablonlar(db, o), await isgEksikTakip(db, o)] as const);
   if (!l) return <Yetkisiz />;
-  return <SozlesmeListesi sozlesmeler={l} yaz={sozlesmeDegistirir(o)} sablonlar={s} isgEksik={eksik} />;
+  return <SozlesmeListesi ilk={l} yaz={sozlesmeDegistirir(o)} sablonlar={s} isgEksik={eksik} />;
 }

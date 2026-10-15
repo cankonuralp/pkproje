@@ -24,6 +24,9 @@ import {
   etkinDurum, teklifBelgesiVerisi, teklifEkipmanListesi, teklifExcelVerisi, teklifGonder, teklifKabul, teklifKarti, teklifKaydet, teklifListesi, teklifMusteriBagla,
   teklifMusteriKaydet, teklifReddet, teklifSecenekleri, type Kisi,
 } from "../src/modules/teklifler/server/teklifler.ts";
+import { teklifSayfasi } from "../src/modules/teklifler/server/teklifler.ts";
+import { teklifMusterileri, teklifTanim } from "../src/modules/teklifler/liste.ts";
+import { listele, yeniDurum, type SuzgecDurumu } from "../src/components/liste/suzgec.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
 let kume: GomuluKume;
@@ -386,3 +389,26 @@ async function imzaliRapor(tesis: string, kod: string): Promise<string> {
   tamam(await a(DEN, async (db) => imzaliYukle(db, depo, DEN, A, h, s2, { ad: "imzali.pdf", bayt: imzala(await depo.oku(ham.anahtar)) })));
   return h;
 }
+
+/* 570 (reisim 2026-10-15: "sitede donma …" → "elindeki bütün işleri yap"; 09-B3): Teklifler listesi bütün teklifleri tarayıcıya indiriyordu — süzgeç
+   ekranla aynı tanımla (liste.ts) sunucuda, ekrana yalnız sayfa */
+test("570 Teklifler sunucuda sayfalı: ekranın süzgeciyle birebir; görmeyene null; başka firmanınki yok", async () => {
+  for (const k of [MUH, YON]) {
+    const l = (await a(k, (db) => teklifListesi(db, k)))!;
+    assert.ok(l.length >= 2);
+    const t = teklifTanim(teklifMusterileri(l));
+    const durumlar: Partial<SuzgecDurumu>[] = [{}, { secili: ["taslak"] }, { secili: ["kabul", "kapanan"] }, { secili: ["gonderildi", "yakin"], kip: "ve" }, { ara: "t-" }, { sayfa: 9 }];
+    for (const d0 of durumlar) {
+      const s = (await a(k, (db) => teklifSayfasi(db, k, d0)))!;
+      const o = listele(t, { ...yeniDurum(t), ...d0 }, l);
+      assert.deepEqual(s.gorunen, o.gorunen, JSON.stringify(d0));
+      assert.deepEqual([s.adet, s.toplam, s.kayitSayisi, s.sayfa], [o.adet, o.toplam, l.length, o.sayfa]);
+      for (const c of t.cipler) assert.equal(s.cipSayilari[c.k], o.tb.filter(c.test).length, `${JSON.stringify(d0)} ${c.k}`);
+    }
+    assert.deepEqual((await a(k, (db) => teklifSayfasi(db, k, {})))!.secenekler.musteri, teklifMusterileri(l));
+  }
+  assert.equal(await a(DEN, (db) => teklifSayfasi(db, DEN, {})), null, "denetçi görmez");
+  const b = <T,>(is: (db: Sorgulayici) => Promise<T>) => kiraciIcinde(havuz, B, is, { hesapId: YON_B.id });
+  const bl = (await b((db) => teklifListesi(db, YON_B)))!;
+  assert.equal((await b((db) => teklifSayfasi(db, YON_B, {})))!.kayitSayisi, bl.length, "başka firma kendi tekliflerini görür, A'nınkini değil");
+});

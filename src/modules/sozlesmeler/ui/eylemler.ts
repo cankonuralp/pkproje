@@ -3,7 +3,9 @@
 import { depo } from "../../../server/dosya/depo";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
-import { DosyaHatasi, imzaliYukle, isgKaldir, isgKaydet, sablonKaldir, sablonYukle, sozlesmeHazirla, sozlesmeSil, type Yazma } from "../server/sozlesmeler";
+import { DosyaHatasi, imzaliYukle, isgKaldir, isgKaydet, sablonKaldir, sablonYukle, sozlesmeHazirla, sozlesmeSayfasi, sozlesmeSil, type SozlesmeSatiri, type Yazma }
+  from "../server/sozlesmeler";
+import type { SunucuListe } from "../../../components/liste/suzgec";
 
 export interface PencereDurumu { tamam?: boolean; id?: string; no?: string; hatalar?: Record<string, string>; genel?: string }
 
@@ -74,4 +76,13 @@ export async function sablonKaldirEylemi(id: string, surum: number): Promise<Pen
 export async function sozlesmeSilEylemi(id: string): Promise<PencereDurumu> {
   const o = await oturum(); if (typeof o === "string") return { genel: o };
   return cevir(await oturumIslemi(o, (db) => sozlesmeSil(db, o, yazi(id))));
+}
+
+/** 570: Sözleşmeler listesinin bir sayfası (süzgeç SUNUCUDA — 09-B3). Görme modül işlevinde (denetçi yalnız kendi İSG-KATİP ID'si olanlar).
+    Göremeyene / oturumsuza null. */
+export async function sozlesmeSayfasiEylemi(durum: unknown): Promise<SunucuListe<SozlesmeSatiri> | null> {
+  if (!(await ayniKoken())) return null;
+  const o = await istekOturumu();
+  if (!o) return null;
+  return oturumIslemi(o, (db) => sozlesmeSayfasi(db, o, durum));
 }

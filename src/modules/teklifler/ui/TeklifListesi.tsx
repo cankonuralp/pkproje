@@ -1,17 +1,20 @@
 "use client";
 /* TEKLİFLER LİSTESİ (maket teklifler.html #/ — SUTUN, suzgecTanimla "t"): en yeni üstte; sütunlar Teklif no (tarih) · Müşteri / tesis · Kalem ·
    Tutar (KDV hariç) · Geçerlilik · Durum. Çipler: Taslak · Gönderildi · Kabul edildi · Red ya da süresi doldu (aynı grup) · Geçerliliği 7 gün
-   içinde bitiyor; seçici Müşteri. "Teklif hazırla" yalnız "yaz" düzeyine. Görme ve karar sunucuda. */
+   içinde bitiyor; seçici Müşteri. "Teklif hazırla" yalnız "yaz" düzeyine. Görme ve karar sunucuda.
+   570 (09-B3): süzgeç ve sayfa SUNUCUDA (server/teklifler.ts teklifSayfasi; tanım ../liste.ts — ekranla aynı); ekrana yalnız sayfa. */
 import Link from "next/link";
 import { KartEtiket, Kirp, type Sutun } from "../../../components/liste/Liste";
-import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
-import type { SuzgecTanimi } from "../../../components/liste/suzgec";
+import { Sayac, SuzgecliListe } from "../../../components/liste/SuzgecliListe";
+import { useSunucuSuzgec } from "../../../components/liste/SunucuSuzgec";
+import type { Secenek, SunucuListe } from "../../../components/liste/suzgec";
 import { AltSatir, Rozet, SayfaBasi } from "../../../components/sayfa/Sayfa";
 import { tarihNo } from "../../../components/secim/tarih";
 import { TusBaglanti } from "../../../components/tus/Tus";
 import { para, TEKLIF_DURUM } from "../sema";
 import type { TeklifSatiri } from "../server/teklifler";
-import { gunFarki } from "./ortak";
+import { gunFarki, teklifTanim } from "../liste";
+import { teklifSayfasiEylemi } from "./eylemler";
 import stil from "./teklifler.module.css";
 
 const SUTUNLAR: Sutun<TeklifSatiri>[] = [
@@ -28,24 +31,10 @@ const SUTUNLAR: Sutun<TeklifSatiri>[] = [
   { k: "durum", genislik: "12%", baslik: "Durum", kart: "rozet", sira: 1, hucre: (t) => <Rozet tur={TEKLIF_DURUM[t.durum][1]}>{TEKLIF_DURUM[t.durum][0]}</Rozet> },
 ];
 
-function tanim(l: readonly TeklifSatiri[]): SuzgecTanimi<TeklifSatiri> {
-  const musteriler = [...new Map(l.filter((t) => t.musteriId).map((t) => [t.musteriId!, t.musteri])).entries()].sort((a, b) => a[1].localeCompare(b[1], "tr"));
-  return {
-    ad: "Tekliflerde ara", ipucu: "Teklif no, müşteri, tesis", birim: "teklif", sayfa: 20, imkansiz: "Bir teklif aynı anda iki durumda olamaz",
-    metin: (t) => [t.no, t.musteri, t.unvan, t.tesis, t.yer ?? ""].join(" "),
-    cipler: [
-      { k: "taslak", ad: "Taslak", grup: "durum", test: (t) => t.durum === "taslak" },
-      { k: "gonderildi", ad: "Gönderildi", grup: "durum", test: (t) => t.durum === "gonderildi" },
-      { k: "kabul", ad: "Kabul edildi", grup: "durum", test: (t) => t.durum === "kabul" },
-      { k: "kapanan", ad: "Red ya da süresi doldu", grup: "durum", test: (t) => t.durum === "red" || t.durum === "suresi" },
-      { k: "yakin", ad: "Geçerliliği 7 gün içinde bitiyor", test: (t) => { const k = t.bitis ? gunFarki(t.bitis) : -1; return t.durum === "gonderildi" && k >= 0 && k <= 7; } },
-    ],
-    seciciler: [{ k: "musteri", ad: "Müşteri", secenek: () => [["tumu", "Tümü"], ...musteriler.map(([id, ad]) => [id, ad] as const)], gecer: (t, v) => v === "tumu" || t.musteriId === v }],
-  };
-}
+const tanim = (sec: Record<string, Secenek[]>) => teklifTanim(sec.musteri ?? []);
 
-export function TeklifListesi({ teklifler, yaz }: { teklifler: TeklifSatiri[]; yaz: boolean }) {
-  const s = useSuzgec(tanim(teklifler), teklifler);
+export function TeklifListesi({ ilk, yaz }: { ilk: SunucuListe<TeklifSatiri>; yaz: boolean }) {
+  const s = useSunucuSuzgec(tanim, ilk, teklifSayfasiEylemi);
   return (
     <>
       <SayfaBasi baslik="Teklifler" sayac={<Sayac s={s} />} tuslar={yaz ? <TusBaglanti tur="birincil" ikon="plus" href="/teklifler/yeni">Teklif hazırla</TusBaglanti> : undefined} />

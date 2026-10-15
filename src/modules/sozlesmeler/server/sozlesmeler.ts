@@ -4,6 +4,9 @@
    sözleşmeleri ve o sözleşmede yalnız kendi ID'lerini görür. Uyarı YALNIZ İSG-KATİP için (reisim 2026-09-26); açık plana bağlı uyarılar
    (ID eksik, geç onay, plan günü bitişten sonra) Planlar kaleminde. Yazmalar güvenli yazıcıdan; dosyalar tek dosya yolundan (yalnız PDF).
    Silme yok: kullanılmamış İSG-KATİP ID'si KALDIRILIR (kayıt kalır), kullanılmış yalnız düzeltilir. */
+import { bellekteListele } from "../../../server/liste/liste.ts";
+import type { SunucuListe } from "../../../components/liste/suzgec.ts";
+import { sozlesmeListeSecenekleri, sozlesmeTanim } from "../liste.ts";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { kesinSil, kullanimlar } from "../../../server/db/silici.ts";
 import { ekle, guncelle, tablo } from "../../../server/db/yazici.ts";
@@ -103,6 +106,12 @@ export async function sozlesmeListesi(db: Sorgulayici, kim: Kisi): Promise<Sozle
   const s = await durum(db), bugun = bugunTr();
   return s.sozlesmeler.map((x) => satir(s, x, bugun, k)).filter((x) => k === null || x.isgSayisi > 0)
     .sort((a, b) => (a.baslangic < b.baslangic ? 1 : a.baslangic > b.baslangic ? -1 : b.no.localeCompare(a.no)));
+}
+
+/** 570: Sözleşmeler ekranı — süzgeçten geçenlerin SAYFASI (süzgeç ekranla aynı tanımla sunucuda — ../liste.ts); göremeyene null */
+export async function sozlesmeSayfasi(db: Sorgulayici, kim: Kisi, durum: unknown): Promise<SunucuListe<SozlesmeSatiri> | null> {
+  const l = await sozlesmeListesi(db, kim);
+  return l && bellekteListele(sozlesmeTanim(sozlesmeListeSecenekleri(l)), durum, l);
 }
 
 export async function sozlesmeKarti(db: Sorgulayici, kim: Kisi, id: string): Promise<SozlesmeKarti | null> {

@@ -4,7 +4,9 @@
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import type { TeklifEkipmani } from "../excel";
-import { teklifEkipmanListesi, teklifGonder, teklifKabul, teklifKaydet, teklifMusteriBagla, teklifMusteriKaydet, teklifReddet, type Yazma, teklifSil } from "../server/teklifler";
+import { teklifEkipmanListesi, teklifGonder, teklifKabul, teklifKaydet, teklifMusteriBagla, teklifMusteriKaydet, teklifReddet, type Yazma, teklifSil, teklifSayfasi,
+  type TeklifSatiri } from "../server/teklifler";
+import type { SunucuListe } from "../../../components/liste/suzgec";
 
 /** uyarilar: Müşteriler'in uyarısı (Müşteri olarak kaydet — kişi görür, onaylarsa onay=true ile yeniden) */
 export interface TeklifYaniti { tamam?: boolean; id?: string; no?: string; bildirim?: string; hatalar?: Record<string, string>; uyarilar?: Record<string, string>; genel?: string }
@@ -53,4 +55,13 @@ export async function teklifEkipmanlariEylemi(tesisler: unknown): Promise<{ list
 /** 368: kullanılmamış taslak kesin silinir (yalnız yönetici; karar teklifler.ts / veritabanında) */
 export async function teklifSilEylemi(id: string): Promise<TeklifYaniti> {
   return islem((o) => oturumIslemi(o, (db) => teklifSil(db, o, String(id))));
+}
+
+/** 570: Teklifler listesinin bir sayfası (süzgeç SUNUCUDA — 09-B3). Görme modül işlevinde; süzgeç durumu biçim denetiminden geçer. Göremeyene /
+    oturumsuza null. */
+export async function teklifSayfasiEylemi(durum: unknown): Promise<SunucuListe<TeklifSatiri> | null> {
+  if (!(await ayniKoken())) return null;
+  const o = await istekOturumu();
+  if (!o) return null;
+  return oturumIslemi(o, (db) => teklifSayfasi(db, o, durum));
 }

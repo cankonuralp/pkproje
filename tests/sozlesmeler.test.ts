@@ -18,6 +18,9 @@ import { bitisHesapla } from "../src/modules/sozlesmeler/sema.ts";
 import { imzaliYukle, isgIdBul, isgKaldir, isgKaydet, sablonKaldir, sablonlar, sablonYukle, sozlesmeHazirla, sozlesmeKarti, sozlesmeListesi, sozlesmeSecenekleri,
   type Kisi }
   from "../src/modules/sozlesmeler/server/sozlesmeler.ts";
+import { sozlesmeSayfasi } from "../src/modules/sozlesmeler/server/sozlesmeler.ts";
+import { sozlesmeListeSecenekleri, sozlesmeTanim } from "../src/modules/sozlesmeler/liste.ts";
+import { listele, yeniDurum, type SuzgecDurumu } from "../src/components/liste/suzgec.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
 let kume: GomuluKume;
@@ -200,4 +203,25 @@ test("KİRACI: B, A'nın sözleşmesini göremez, ID ekleyemez; veritabanı baş
   await assert.rejects(b((db) => db.sorgu("INSERT INTO is_sozlesmesi (no, musteri_id, baslangic, bitis, vade, yenileme) VALUES ('IS-1026-009', $1, '2026-01-01', '2026-12-31', 30, 'yok')", [musteri])), /foreign key|yabancı anahtar/i);
   const pB = tamam(await b((db) => personelEkle(db, YON_B, { ...P, ad: "Deneme B" }))).id;
   await assert.rejects(b((db) => db.sorgu("INSERT INTO isg_katip (tesis_id, personel_id, no) VALUES ($1, $2, 'X')", [t1, pB])), /foreign key|yabancı anahtar/i);
+});
+
+/* 570 (reisim 2026-10-15: "sitede donma …" → "elindeki bütün işleri yap"; 09-B3): Sözleşmeler listesi bütün sözleşmeleri tarayıcıya indiriyordu —
+   süzgeç ekranla aynı tanımla (liste.ts) sunucuda, ekrana yalnız sayfa; denetçi yine yalnız kendi İSG-KATİP ID'li sözleşmeleri */
+test("570 Sözleşmeler sunucuda sayfalı: ekranın süzgeciyle birebir; denetçi yalnız kendininkiler; başka firma boş", async () => {
+  for (const k of [YON, MUH, DENETCI]) {
+    const l = (await a((db) => sozlesmeListesi(db, k)))!;
+    const t = sozlesmeTanim(sozlesmeListeSecenekleri(l));
+    const durumlar: Partial<SuzgecDurumu>[] = [{}, { secili: ["imza"] }, { secili: ["yururlukte", "isgyok"], kip: "ve" }, { ara: "is-" }, { sayfa: 9 }];
+    for (const d0 of durumlar) {
+      const s = (await a((db) => sozlesmeSayfasi(db, k, d0)))!;
+      const o = listele(t, { ...yeniDurum(t), ...d0 }, l);
+      assert.deepEqual(s.gorunen, o.gorunen, `${k.roller[0]} ${JSON.stringify(d0)}`);
+      assert.deepEqual([s.adet, s.toplam, s.kayitSayisi, s.sayfa], [o.adet, o.toplam, l.length, o.sayfa]);
+      for (const c of t.cipler) assert.equal(s.cipSayilari[c.k], o.tb.filter(c.test).length);
+    }
+    const s0 = (await a((db) => sozlesmeSayfasi(db, k, {})))!;
+    assert.deepEqual([s0.secenekler.musteri, s0.secenekler.kisi], [sozlesmeListeSecenekleri(l).musteri, sozlesmeListeSecenekleri(l).kisi]);
+  }
+  assert.deepEqual((await a((db) => sozlesmeSayfasi(db, DENETCI, {})))!.gorunen.map((x) => x.no), (await a((db) => sozlesmeListesi(db, DENETCI)))!.map((x) => x.no).slice(0, 20));
+  assert.equal((await b((db) => sozlesmeSayfasi(db, YON_B, {})))!.kayitSayisi, 0, "başka firma");
 });

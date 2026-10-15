@@ -1,41 +1,29 @@
 "use client";
 /* SÖZLEŞMELER LİSTESİ (maket sozlesmeler.html #/): süzgeç (durum çipleri aynı grupta, müşteri ve denetçi seçicisi), en yeni üstte, tablo ↔ kart.
-   "Yeni sözleşme" ve "Sözleşme şablonu" yalnız "değiştirir" düzeyine. Hizmet sözleşmesinin bitişi için uyarı yok (reisim 2026-09-26). */
+   "Yeni sözleşme" ve "Sözleşme şablonu" yalnız "değiştirir" düzeyine. Hizmet sözleşmesinin bitişi için uyarı yok (reisim 2026-09-26).
+   570 (09-B3): süzgeç ve sayfa SUNUCUDA (server/sozlesmeler.ts sozlesmeSayfasi; tanım ../liste.ts — ekranla aynı); ekrana yalnız sayfa. */
 import Link from "next/link";
 import { useState } from "react";
 import { KartEtiket, Kirp, type Sutun } from "../../../components/liste/Liste";
-import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
-import type { SuzgecTanimi } from "../../../components/liste/suzgec";
+import { Sayac, SuzgecliListe } from "../../../components/liste/SuzgecliListe";
+import { useSunucuSuzgec } from "../../../components/liste/SunucuSuzgec";
+import type { Secenek, SunucuListe } from "../../../components/liste/suzgec";
 import { AltSatir, SayfaBasi, SeritKap } from "../../../components/sayfa/Sayfa";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
 import type { SablonSatiri, SozlesmeSatiri } from "../server/sozlesmeler";
 import { DurumRozeti, tarihYaz } from "./ortak";
 import { SablonPenceresi } from "./Pencereler";
+import { sozlesmeTanim } from "../liste";
+import { sozlesmeSayfasiEylemi } from "./eylemler";
 import stil from "./sozlesmeler.module.css";
 
-function tanim(l: readonly SozlesmeSatiri[]): SuzgecTanimi<SozlesmeSatiri> {
-  const tekil = (x: string[]) => [...new Set(x)].sort((a, b) => a.localeCompare(b, "tr"));
-  return {
-    ad: "Sözleşmelerde ara", ipucu: "No, müşteri, tesis", birim: "sözleşme", sayfa: 20, imkansiz: "Bir sözleşme aynı anda iki durumda olamaz",
-    metin: (x) => `${x.no} ${x.musteri} ${x.tesisler.join(" ")} ${x.teklif?.no ?? ""}`,
-    cipler: [
-      { k: "imza", ad: "İmza bekliyor", grup: "durum", test: (x) => x.durum === "imza" },
-      { k: "yururlukte", ad: "Yürürlükte", grup: "durum", test: (x) => x.durum === "yururlukte" },
-      { k: "suresi", ad: "Süresi doldu", grup: "durum", test: (x) => x.durum === "suresi" },
-      { k: "isgyok", ad: "İSG-KATİP ID yok", test: (x) => x.isgSayisi === 0 },
-    ],
-    seciciler: [
-      { k: "musteri", ad: "Müşteri", secenek: () => [["tumu", "Tümü"], ...tekil(l.map((x) => x.musteri)).map((m) => [m, m] as const)], gecer: (x, s) => s === "tumu" || x.musteri === s },
-      { k: "kisi", ad: "Denetçi", secenek: () => [["tumu", "Tümü"], ...tekil(l.flatMap((x) => x.isgKisileri)).map((k) => [k, k] as const)], gecer: (x, s) => s === "tumu" || x.isgKisileri.includes(s) },
-    ],
-  };
-}
+const tanim = (sec: Record<string, Secenek[]>) => sozlesmeTanim(sec);
 
 /** 449: isgEksik — yan menüdeki kırmızı sayının planları (açık planda İSG-KATİP ID'si eksik ya da bitmiş) */
-export function SozlesmeListesi({ sozlesmeler, yaz, sablonlar, isgEksik = [] }:
-  { sozlesmeler: SozlesmeSatiri[]; yaz: boolean; sablonlar: SablonSatiri[]; isgEksik?: { id: string; no: string; baslangic: string; firmaAdi: string; eksik: number }[] }) {
-  const s = useSuzgec(tanim(sozlesmeler), sozlesmeler);
+export function SozlesmeListesi({ ilk, yaz, sablonlar, isgEksik = [] }:
+  { ilk: SunucuListe<SozlesmeSatiri>; yaz: boolean; sablonlar: SablonSatiri[]; isgEksik?: { id: string; no: string; baslangic: string; firmaAdi: string; eksik: number }[] }) {
+  const s = useSunucuSuzgec(tanim, ilk, sozlesmeSayfasiEylemi);
   const [sablon, setSablon] = useState(false);
   const sutunlar: Sutun<SozlesmeSatiri>[] = [
     { k: "no", genislik: "16%", baslik: "Sözleşme no", kart: "ust", sira: 1, hucre: (x) => <Link className={stil.no} href={`/sozlesmeler/${x.id}`}>{x.no}</Link> },

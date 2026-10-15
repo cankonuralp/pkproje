@@ -7,6 +7,9 @@
    tür için, raporun imza gününde geçerli en son kabul edilmiş teklif; pencere teklif tarihinden — maket); "Müşteri olarak kaydet" Müşteriler'in
    uyarısını gösterir, var olan müşteriye bağlama yolu var; sonraki adımların tuşları hedef modülün yetkisiyle.
    368 (§9 elli üçüncü tur): hiç gönderilmemiş taslak yalnız yöneticiye kesin silinir (kayit_sil, modül 11; göç 0063) — gönderilmiş teklif silinmez. */
+import { bellekteListele } from "../../../server/liste/liste.ts";
+import type { SunucuListe } from "../../../components/liste/suzgec.ts";
+import { teklifMusterileri, teklifTanim } from "../liste.ts";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { kesinSil, kullanimlar } from "../../../server/db/silici.ts";
 import { ekle, guncelle, sil, tablo, type Iz } from "../../../server/db/yazici.ts";
@@ -112,6 +115,12 @@ export async function teklifListesi(db: Sorgulayici, kim: Kisi): Promise<TeklifS
   const d = await okuIc(db, "ORDER BY tarih DESC, no DESC", []);
   const bugun = bugunTr();
   return d.l.map((x) => satirOf(x, d, bugun));
+}
+
+/** 570: Teklifler ekranı — süzgeçten geçenlerin SAYFASI (süzgeç ekranla aynı tanımla sunucuda — ../liste.ts); göremeyene null */
+export async function teklifSayfasi(db: Sorgulayici, kim: Kisi, durum: unknown): Promise<SunucuListe<TeklifSatiri> | null> {
+  const l = await teklifListesi(db, kim);
+  return l && bellekteListele(teklifTanim(teklifMusterileri(l)), durum, l);
 }
 
 /** teklif sayfası; göremeyene ya da yoksa null */

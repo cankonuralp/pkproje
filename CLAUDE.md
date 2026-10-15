@@ -405,7 +405,8 @@ pkproje/
                             yazılmaz). Raporlar (raporlar/server/liste.ts raporSayfasi), Planlar (planlar/server/liste.ts planSayfasi), Onaylar › Tüm raporlar
                             (onayTumSayfasi → onaylar tumRaporlarSayfasi; onayListeleri artık bütün raporları okumaz — tumSayisi); kilit tests/liste.test.ts
                             (eski süzgeçle birebir) · HESAPLANMIŞ SATIRLAR (Muhasebe İşler / Faturalar): bellekteListele — tarayıcının süzgeci aynı tanımla
-                            sunucuda (muhasebe/liste.ts isTanim / faturaTanim; muhasebe.ts isSayfasi / faturaSayfasi / muhasebeOzeti), ekrana yalnız sayfa
+                            sunucuda (muhasebe/liste.ts isTanim / faturaTanim; muhasebe.ts isSayfasi / faturaSayfasi / muhasebeOzeti), ekrana yalnız sayfa;
+                            570: Teklifler (teklifler/liste.ts, teklifSayfasi) ve Sözleşmeler (sozlesmeler/liste.ts, sozlesmeSayfasi) aynı yöntemle
   src/server/hata/          HATA KAYDI (567; 06-HATA-TAKIBI, 09 G2 / B11; göç 0093 hata_kaydi): maske.ts (saf — e-posta, uzun sayı, jeton maskesi; adres
                             yalnız yol; yığın izi kırpılır; gürültü listesi nedenleriyle) · kaydet.ts hataKaydet (fırlatmaz) → db/hata.ts hata_yaz (aynı hata
                             10 dk tek satır, saatte 300 / oturumsuz 60, 30 gün / 2000) · tarayıcı: components/hata/HataDinleyici (kök düzende; error +
