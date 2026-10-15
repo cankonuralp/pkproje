@@ -6,30 +6,29 @@
 --      sabit: set_config(…, true)). Aynısı gecerli_musteri() ve current_setting('app.hesap_id', true) için.
 --   2. 47 yabancı anahtarın dizini yoktu: ilişkili kaydı arayan birleştirme ve silme (kesin silme — silici.ts kullanım sayımı) bütün tabloyu tarar.
 -- Yeni politika ve yabancı anahtarlar da böyle yazılır — kilit tests/kiraci-izolasyonu.test.ts (çıplak çağrı ve dizinsiz yabancı anahtar kalmaz).
--- ⛔ Her göç IDEMPOTENT: sarılmış çağrı yeniden sarılmaz (önünde "SELECT " var), dizin varsa atlanır.
+-- ⛔ Her göç IDEMPOTENT: sarılmış çağrı yeniden sarılmaz (sarılmış hâli varsa atlanır), dizin varsa atlanır. Düzenli ifade kullanılmaz:
+-- "önünde SELECT yok" (lookbehind) PostgreSQL 18'de 17'deki gibi davranmadı (deneme makinesi, 0243bf5).
 
 DO $$
 DECLARE
   r record;
-  q text; c text; yq text; yc text;
-  sar constant text[][] := ARRAY[
-    ARRAY['gecerli_firma\(\)', '( SELECT gecerli_firma() AS gecerli_firma)'],
-    ARRAY['gecerli_musteri\(\)', '( SELECT gecerli_musteri() AS gecerli_musteri)'],
-    ARRAY['current_setting\(''app\.hesap_id''::text, true\)', '( SELECT current_setting(''app.hesap_id''::text, true) AS current_setting)']
-  ];
+  yq text; yc text;
+  /* düz metin (düzenli ifade yok — sürümler arasında aynı davranır): çağrı, sarılmış hâli; sarılmış hâli zaten varsa o çağrıya dokunulmaz */
+  cagri constant text[] := ARRAY['gecerli_firma()', 'gecerli_musteri()', 'current_setting(''app.hesap_id''::text, true)'];
+  sarili constant text[] := ARRAY['( SELECT gecerli_firma() AS gecerli_firma)', '( SELECT gecerli_musteri() AS gecerli_musteri)',
+    '( SELECT current_setting(''app.hesap_id''::text, true) AS current_setting)'];
   i int;
 BEGIN
   FOR r IN SELECT p.schemaname, p.tablename, p.policyname, p.qual, p.with_check FROM pg_policies p WHERE p.schemaname = 'public' LOOP
-    q := r.qual; c := r.with_check; yq := q; yc := c;
-    FOR i IN 1 .. array_length(sar, 1) LOOP
-      /* önünde "SELECT " olan (zaten sarılmış) çağrıya dokunulmaz */
-      IF yq IS NOT NULL THEN yq := regexp_replace(yq, '(?<!SELECT )' || sar[i][1], sar[i][2], 'g'); END IF;
-      IF yc IS NOT NULL THEN yc := regexp_replace(yc, '(?<!SELECT )' || sar[i][1], sar[i][2], 'g'); END IF;
+    yq := r.qual; yc := r.with_check;
+    FOR i IN 1 .. array_length(cagri, 1) LOOP
+      IF yq IS NOT NULL AND position(sarili[i] IN yq) = 0 THEN yq := replace(yq, cagri[i], sarili[i]); END IF;
+      IF yc IS NOT NULL AND position(sarili[i] IN yc) = 0 THEN yc := replace(yc, cagri[i], sarili[i]); END IF;
     END LOOP;
-    IF yq IS DISTINCT FROM q THEN
+    IF yq IS DISTINCT FROM r.qual THEN
       EXECUTE format('ALTER POLICY %I ON %I.%I USING (%s)', r.policyname, r.schemaname, r.tablename, yq);
     END IF;
-    IF yc IS DISTINCT FROM c THEN
+    IF yc IS DISTINCT FROM r.with_check THEN
       EXECUTE format('ALTER POLICY %I ON %I.%I WITH CHECK (%s)', r.policyname, r.schemaname, r.tablename, yc);
     END IF;
   END LOOP;

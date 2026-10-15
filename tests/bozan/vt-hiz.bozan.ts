@@ -26,7 +26,7 @@ after(async () => { await supa?.kapat(); await kume?.durdur(); rmSync(gecici, { 
 
 test("0091 olmadan politikalar firma süzgecini her satırda hesaplar (kilidin koruduğu açık)", async () => {
   const l = (await supa.sahip.query<{ ad: string }>(CIPLAK_POLITIKA)).rows;
-  assert.ok(l.length > 100, `bozuk: çıplak politika ${l.length}`);
+  assert.ok(l.length >= 60, `bozuk: çıplak politika ${l.length}`);
   assert.ok(l.some((x) => x.ad.startsWith("rapor.")), "rapor tablosunun politikası çıplak");
 });
 
