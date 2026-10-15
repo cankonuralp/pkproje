@@ -2483,6 +2483,52 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-15 (568): **DOSYALAR SUPABASE STORAGE'DA — ÖZEL KOVA, 5 DAKİKALIK İMZALI ADRES, ESKİ DOSYALAR GECE TAŞINIR** (reisim: *"fotoğraflar neden
+  veritabanından kota yiyor fotoğraflar storage de olması gerekmiyor mu"*, *"fotoğraflar neden hala gizli link ile açılmıyor"* → *"elindeki bütün işleri
+  yap"*). Neden: deneme yayınında dosya içeriği veritabanındaydı (347, PROBATA_DEPO=vt — Vercel'in klasörü geçici olduğu için geçici çözüm); her fotoğraf
+  ve PDF veritabanı kotasından yiyordu, dosya her açılışta işlevden akıyordu. Yapılan: Supabase Storage bağdaştırıcısı (REST, ek paket yok): kova ÖZEL
+  (herkese açık adres yok; yoksa bir kez kurulur), yazılan değişmez (ikinci yazma içeriği değiştirmez), içerik türüyle ve önbelleğe yazılmaz başlığıyla;
+  sunucu gizli anahtarla yazar / okur. Dosya ucu yetkiyi denetledikten SONRA sayfa açılışında (yeni sekme, indirme bağlantısı) Storage'ın 5 dakikalık
+  imzalı adresine yönlenir (indirmede dosya adıyla); ekrandaki görseller, PDF penceresi ve toplu indirme kendi kökenimizden akmaya devam eder (güvenlik
+  başlıkları değişmez). Geçiş: veritabanındaki eski dosyalar Storage'da yoksa oradan okunur; gece işi her firmada en eski 100 dosyayı (40 MB) taşır —
+  yüklenen içerik GERİ okunur, özeti veritabanındakiyle tutarsa satır silinir (göç 0094 depo_nesne_tasindi; veritabanı da özeti denetler), tutmazsa
+  satır kalır, bozuk kopya Storage'dan kaldırılır (içerik hiçbir yoldan kaybolmaz). **Etkin değil — reisim'in işi:** Vercel'e PROBATA_DEPO=supabase,
+  PROBATA_SUPABASE_URL (proje adresi), PROBATA_SUPABASE_GIZLI (Supabase › Project Settings › API keys › secret) girilince açılır; o zamana kadar dosyalar
+  eskisi gibi veritabanında. Her firmanın kendi Supabase'i (513, K7) bağlanınca aynı bağdaştırıcı firmanın projesine yazar. Kilitler:
+  tests/depo-supabase.test.ts (yerel Storage taklidi + gerçek PostgreSQL, iki firma: ayar, kova, değişmezlik, yedekten okuma, imzalı adres, çöp, taşıma
+  sınırı / bozuk yükleme / başka firma / firma işlemi, gece işi, yönlendirme yalnız sayfa açılışında), bozan depo-supabase 1–3. Göç 0094 (95 göç).
+- 2026-10-15 (567): **HATA KAYDI — TARAYICI VE SUNUCU HATALARI MASKELİ, SINIRLI DEFTERE; YALNIZ YÖNETİM OKUR** (reisim 2026-10-15 analizi: *"sızıntı …
+  donma … genel bi analiz yap aklıma gelmeyen söylemediğim şeylerde olabilir"* → *"elindeki bütün işleri yap"*; 06-HATA-TAKIBI, 09 G2 / B11). Önceden
+  tarayıcıda çıkan hata hiçbir yere düşmüyordu (yalnız Vercel sunucu günlüğü). Yapılan: göç 0093 hata_kaydi — aynı hata 10 dakikada tek satır (sayı
+  artar), sel sınırı saatte 300 yeni hata (oturumsuzdan 60), 30 gün / en yeni 2000 tutulur; uygulama rolü defteri OKUYAMAZ, yalnız yönetim rolü okur.
+  Yazmadan önce maske: e-posta, telefon / T.C. / SGK gibi uzun sayılar, anahtar ve jetonlar yazılmaz; sayfa yalnız yol (arama metni yok); kişi adı yok
+  (yalnız oturumlu mu); yığın izi kırpılır; bilinen gürültü (bağlantı kopması, iptal, eski sekme) yazılmaz. Tarayıcı: yakalanmayan hata + reddedilen
+  söz + ekranın hata sınırı → /api/hata (aynı köken, 16 KB, her zaman 204; kişi ve firma oturumdan / adresten, tarayıcıdan değil); aynı hata 60 sn'de
+  bir; son 20 hata cihazın belleğinde. Sunucu: Next'in yakaladığı her istek hatası (instrumentation.ts; başlık / çerez yazılmaz). Yönetim › Firmalar'da
+  "Hata kaydı" (/yonetim/hatalar). Bildirim / alarm YOK (anayasa 1.3 — reisim karar verirse). Kilitler: tests/hata-maske.test.ts, tests/hata.test.ts
+  (gerçek PostgreSQL), uçtan uca e2e/hata.spec.ts, kaynak kilidi tests/moduller.test.ts (uç), bozan hata 1–3. Göç 0093.
+- 2026-10-15 (569): **563–566 YAYINDA** — 563–565: main 2140968, göç 0091 Supabase'te (92 göç; sarılmış firma süzgeci 72, çıplak 0, dizinsiz yabancı
+  anahtar 0). 566: deneme makinesi c0819e8 13/13 yeşil; göç 0092 Supabase'te (93 göç; tr_kucuk / tr_sira, uygulama rolüne çalıştırma izni); main
+  c0819e8; canlı sağlık tamam (sürüm c0819e8), duman 11/11, Vercel'de son 1 saatte çalışma hatası yok. Oturum isteyen listeler canlıda gözle
+  denenmedi — giriş reisim'in (ölçemedim); aynı listeler uçtan uca üç genişlikte koştu. Yolda: CI'daki PostgreSQL 18'de lookbehind'li düzenli ifade
+  çalışmadı (0091 ve denetimi düz metin işlevleriyle yeniden yazıldı), liste kilidinin örnek verisi rapor / plan durum kurallarına uyduruldu (0024, 0026).
+- 2026-10-15 (566): **LİSTELER SUNUCUDA SAYFALI — RAPORLAR, PLANLAR, ONAYLAR › TÜM RAPORLAR, MUHASEBE** (reisim: *"sitede donma yaşanabilecek şeyler
+  düşünülüp kurgumuz … yapıldı mı genel bi analiz yap"* → *"elindeki bütün işleri yap"*; 09-B3). Neden: bu listeler firmanın BÜTÜN raporlarını /
+  planlarını / işlerini tarayıcıya indirip orada süzüyordu — yılda binlerce raporda telefonda donar. Yapılan: süzgeç, sıralama ve sayfa SUNUCUDA, ekrana
+  yalnız 20 satır ve sayılar (ekran ve anlam aynı: aynı arama kutuları, çipler, seçiciler, sıralamalar). Raporlar, Planlar ve Onaylar › Tüm raporlar
+  SQL'de (Türkçe küçük harf ve Türkçe harf sırası veritabanında — göç 0092 tr_kucuk / tr_sira; görme kuralı canDo'nun SQL karşılığı; başka modülün
+  tablosu o modülün okuma parçasıyla); Muhasebe İşler ve Faturalar hesaplanmış satırlar olduğu için tarayıcının süzgeci aynı tanımla sunucuda koşar.
+  Onaylar sayfaları ve Ana sayfa artık bütün raporları okumuyor (süreçteki raporlar, sayılar tek sorguyla); Muhasebe verisi sayfa başına bir kez
+  okunuyor (önceden iki kez). Kilitler: tests/liste.test.ts (gerçek PostgreSQL: beş kişi × onlarca süzgeç durumunda eski tarayıcı süzgeciyle
+  BİREBİR — satırlar, sıra, sayılar, çip sayıları, seçenekler; Türkçe harfler; görme; enjeksiyon), tests/suzgec.test.ts bellekteListele,
+  tests/muhasebe.test.ts 566, bozan liste 1–5. Göç 0092. Sonraki aynı yöntemle (büyüdükçe): Teklifler, Sözleşmeler, Giderler, Talepler, müşteri paneli.
+- 2026-10-15 (565): **MENÜ BALONLARI HAFİF** — her sayfada açılan yan menü balonları bütün raporları, faturaları, müşterileri okuyordu: süreçteki
+  raporlar (onayda + onaylandı), geciken fatura tek sayımla, müşteri özeti yalnız ilgili tesislerle (onayTakibi, gecikenFaturaSayisi, musteriOzetleri).
+- 2026-10-15 (564): **VERİTABANI HIZI — FİRMA SÜZGECİ SORGU BAŞINA BİR KEZ, YABANCI ANAHTAR DİZİNLERİ** — satır güvenliği politikalarındaki
+  gecerli_firma() / müşteri / hesap çağrıları "(SELECT …)" ile sarıldı (her satırda değil sorgu başına bir kez), dizinsiz her yabancı anahtara dizin
+  (göç 0091; kilit tests/kiraci-izolasyonu.test.ts — çıplak politika 0, dizinsiz anahtar 0; bozan vt-hiz).
+- 2026-10-15 (563): **DOSYA ÖNBELLEĞE YAZILMAZ; NEXT.JS GÜVENLİK YAMASI** — dosya ucu "private, max-age=3600" yerine "private, no-store" (çıkıştan sonra
+  ortak bilgisayarda fotoğraf / PDF tarayıcı geçmişinden açılabiliyordu); Next.js 16.3.8 (güvenlik yaması), sharp / source-map-js yamaları.
 - 2026-10-15 (562): **561 YAYINDA** — 552b486'nın ilk koşusunda uçtan uca 12/12 geçti, denetimde 561'in veritabanı kilidinin son adımı düştü (ikinci
   deneme firmasında yapay zekâ anahtarı yok — testin kurgusu; 130902b başka firma denetimini raporSayDurumu ile yapar); 130902b 13/13 yeşil; main
   130902b, göç yok (91 göç); canlı sağlık tamam (sürüm 130902b), duman 11/11, Vercel'de yeni çalışma hatası yok (tek kayıt yayından önceki dış duyuru
