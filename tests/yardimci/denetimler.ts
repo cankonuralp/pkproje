@@ -244,6 +244,21 @@ export function hamYazma(metinler: readonly { ad: string; metin: string }[]): st
     .map(({ ad }) => ad);
 }
 
+/** ayrılmış alt alan adı listesi göçlerde birden çok işlevde (0050 yonetim_firma_ac, 0096 yonetim_firma_kayit_ac): her biri uygulamanın listesiyle
+    (src/modules/yonetim/sema.ts AYRILMIS) aynı olmalı. `bulunan`: listeyi taşıyan göçler (sırayla), `farklar`: "<göç>: <liste>". FIRMA-VT FV2 incelemesi
+    (2026-10-15): kilit yalnız 0050'nin kopyasına bakıyordu, 0096'daki üçüncü kopya kayabilirdi. */
+export function ayrilmisAdListeleri(gocler: readonly { ad: string; metin: string }[], beklenen: readonly string[]): { bulunan: string[]; farklar: string[] } {
+  const bulunan: string[] = [], farklar: string[] = [];
+  for (const g of gocler) {
+    for (const m of g.metin.matchAll(/p_kisa_ad = ANY \(ARRAY\[([^\]]+)\]\)/g)) {
+      bulunan.push(g.ad);
+      const liste = m[1]!.split(",").map((x) => x.trim().replace(/^'|'$/g, ""));
+      if (liste.join(",") !== beklenen.join(",")) farklar.push(`${g.ad}: ${liste.join(",")}`);
+    }
+  }
+  return { bulunan, farklar };
+}
+
 /** firma_id taşıyan (ya da firma) her tablo: ENABLE + FORCE ROW LEVEL SECURITY + en az bir politika */
 export function rlsEksikTablolar(sqlMetinleri: readonly string[]): string[] {
   const sql = sqlMetinleri.join("\n").replace(/--[^\n]*/g, "");

@@ -9,8 +9,9 @@ import {
   bantDisiDaraltma, ciftIdler, ciftSeciciler, ciftTanimliDegiskenler, daralmisSerit, degiskenDegeri, dosyalar, eksikIkonlar, girdiYaziHatalari, kalipDisiEsikler,
   hamYazma, kiraciDisiErisim, kullanilanIkonlar, maketIkonlari, maketMenusu, oku, parantezHatasi, rlsEksikTablolar, tanimsizDegiskenler, testKapisiEksikleri, tokenGovdesi, pdfPaketEksikleri,
   swEksikleri, baglantiRengiEksikleri, cekmeceBoyuHatasi, vhYukseklikHatalari, yapiskanUstHatalari, cerceveIzniEksikleri, suzgecsizListeler, SUZGECSIZ_BOLUMLER, takipSeridiEksikleri,
-  yuzenEzmeleri, yonlendirmeYarislari, e2eYayinBayragiEksikleri,
+  yuzenEzmeleri, yonlendirmeYarislari, e2eYayinBayragiEksikleri, ayrilmisAdListeleri,
 } from "../yardimci/denetimler.ts";
+import { AYRILMIS } from "../../src/modules/yonetim/sema.ts";
 
 const kabuk = oku("src/components/kabuk/Kabuk.module.css");
 const tokens = oku("src/styles/tokens.css");
@@ -132,6 +133,15 @@ test("RLS: göçte FORCE ya da politika eksik tablo yakalanır", () => {
   /* 2026-10-04 (309): sahte tablonun adı "plan" idi; göç 0023 gerçek plan tablosunu RLS'li kurunca aynı ad yakalanmaz oldu → hiç olmayan ad */
   const yeniTablo = "CREATE TABLE IF NOT EXISTS sahte_kiraci_tablosu (\n  id uuid PRIMARY KEY,\n  firma_id uuid NOT NULL\n);";
   assert.equal(rlsEksikTablolar([...sql, yeniTablo]).length, 1);
+});
+
+test("ayrılmış alt alan adları (FIRMA-VT FV2, 2026-10-15): 0096'daki kopyadan bir ad düşünce ya da liste kaybolunca yakalanır", () => {
+  const gocler = dosyalar("src/server/db/gocler", [".sql"]).map((ad) => ({ ad: ad.split("/").pop()!, metin: oku(ad) }));
+  const temiz = ayrilmisAdListeleri(gocler, AYRILMIS);
+  assert.deepEqual(temiz.farklar, []);
+  assert.equal(temiz.bulunan.length, 2);
+  const bozuk = gocler.map((g) => g.ad.startsWith("0096_") ? { ...g, metin: g.metin.replace(", 'demo']", "]") } : g);
+  assert.deepEqual(ayrilmisAdListeleri(bozuk, AYRILMIS).farklar, ["0096_merkez_kaydi.sql: www,yonetim,api,mail,destek,probata,test"]);
 });
 
 test("test kapısı: derleme betiği testsiz kalınca, yayın denetimden kopunca ya da bir genişlik uçtan ucadan düşünce yakalanır", () => {

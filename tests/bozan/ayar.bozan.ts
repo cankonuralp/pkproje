@@ -17,14 +17,19 @@ let sira = 0;
 async function bozuk<T>(dosya: string, ...degisim: [string, string][]): Promise<T> {
   let k = readFileSync(dosya, "utf8");
   for (const [eski, yeni] of degisim) { assert.ok(k.includes(eski), `bozulacak satır kaynakta yok: ${eski}`); k = k.split(eski).join(yeni); }
-  k = k.replace(/from "\.\.\/(db|yetki|eposta)\/([\w.]+)"/g, (_, d, a) => `from "${mutlak(`src/server/${d}/${a}`)}"`).replace(/from "\.\.\/\.\.\/sema\/([\w.]+)"/g, (_, a) => `from "${mutlak(`src/sema/${a}`)}"`);
+  k = k.replace(/from "\.\.\/(db|yetki|eposta)\/([\w.]+)"/g, (_, d, a) => `from "${mutlak(`src/server/${d}/${a}`)}"`).replace(/from "\.\.\/\.\.\/sema\/([\w.]+)"/g, (_, a) => `from "${mutlak(`src/sema/${a}`)}"`)
+    /* 2026-10-15 (FIRMA-VT FV2): sir.ts şifrelemeyi ortak çekirdekten (./aes.ts) alıyor */
+    .replace(/from "\.\/([\w.]+)"/g, (_, a) => `from "${mutlak(`src/server/ayar/${a}`)}"`);
   const yol = join(klasor, `${sira++}-${dosya.split("/").pop()}`);
   writeFileSync(yol, k);
   return import(pathToFileURL(yol).href);
 }
 
 test("ek doğrulama verisi kalkınca firma A'nın şifreli sırrı firma B'nin kimliğiyle çözülür", async () => {
-  const m = await bozuk<typeof import("../../src/server/ayar/sir.ts")>("src/server/ayar/sir.ts", ["c.setAAD(ek(firmaId, ad));", ""], ["d.setAAD(ek(firmaId, ad));", ""]);
+  /* 2026-10-15 (FIRMA-VT FV2): şifreleme ortak çekirdeğe (aes.ts) taşındı, sir.ts ek veriyi oraya verir — bozma artık ek verinin kendisinde (firma ve
+     ad düşer, sabit kalır); önceki "setAAD satırları silinir" bozması sir.ts'te o satırlar kalmadığı için taşındı. Koruduğu açık aynı. */
+  const m = await bozuk<typeof import("../../src/server/ayar/sir.ts")>("src/server/ayar/sir.ts",
+    ["const ek = (firmaId: string, ad: string) => `probata:sir:v1:${firmaId}:${ad}`;", "const ek = (_firmaId: string, _ad: string) => \"probata:sir:v1\";"]);
   const anahtar = randomBytes(32);
   const s = m.sifrele("gizli-deger", "00000000-0000-4000-8000-00000000000a", "yapay_zeka_anahtari", anahtar);
   assert.equal(m.coz(s, "00000000-0000-4000-8000-00000000000b", "bulut_erisimi", anahtar), "gizli-deger", "bozuk: başka firmada çözüldü");

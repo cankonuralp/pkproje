@@ -313,6 +313,11 @@ pkproje/
                             kiracı süzgeçli TEK erişim katmanı (kiraci.ts: kiraciIcinde) — pg YALNIZ burada içe aktarılır ·
                             GÜVENLİ YAZICI (yazici.ts: tablo / ekle / guncelle / izYaz — sürüm kilidi + denetim izi; modül ve sayfa ham
                             yazma SQL'i taşımaz, 2026-10-04)
+  src/server/db/            FİRMA BAŞINA VERİTABANI (FIRMA-VT; 580–): göç 0095 vt_kimlik (her veritabanı kimliğini bilir; kiraciIcinde her işlemde
+                            vt_firma_dogrula — yanlış havuzda başka firmanın işi 42501) · 0096 merkez kaydı (firma_vt bağlantı ŞİFRELİ, firma_kurulum adım /
+                            kira / maskeli hata; firma_coz, goc_hedefleri, yonetim_firma_kayit_ac; işlev arama yolu pg_catalog, public, pg_temp) · baglanti.ts
+                            (saf: Frankfurt havuzcu izin listesi, TLS zorunlu, ek veri firma + ref + ad, kurulum sırları ref'siz) · merkez.ts (firmaCoz,
+                            firmaCozId, merkezOku) · scram.ts (rol parolası özeti — düz parola API'ye gitmez) · ayar/aes.ts (sir.ts'in çekirdeği, çıktı aynı)
   src/server/db/gocler/0091  VERİTABANI HIZI (564): politikada firma süzgeci "(SELECT gecerli_firma())" (sorgu başına bir kez; gecerli_musteri,
                             app.hesap_id aynı) + her yabancı anahtara dizin — YENİ POLİTİKA VE YABANCI ANAHTAR DA BÖYLE (kilit kiraci-izolasyonu,
                             sorgular tests/yardimci/vt-hiz.ts)

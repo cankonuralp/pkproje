@@ -4,7 +4,8 @@
    kalabilen 0008, 0008'den önceki açık pencere, kopan bağlantının süreci düşürmesi). Bu dosya şu kapıları kilitler:
    1) 0000 + 0008: Supabase'in API rolleri şemamıza giremez — Supabase düzenini TAKLİT EDEN gerçek PostgreSQL'de, göçler süper kullanıcı OLMAYAN
       sahip rolüyle koşarak, rolün YERİNE geçilerek denenir; 0008 kendi sonucunu doğrular;
-   2) 0009: uygulama rolünde sorgu ve boşta işlem süre sınırı;
+   2) 0009: uygulama rolünde sorgu ve boşta işlem süre sınırı; 0010: işlevlerin arama yolu sabit — tanımlayıcı-yetkili işlevde geçici şema EN SONDA
+      (2026-10-15, FIRMA-VT FV2 incelemesi; olumsuz kanıtı tests/bozan/firma-baglanti.bozan.ts);
    3) veritabanı bağlantısı: ağ üzerinden şifresiz bağlantı kurulmaz, TLS'de sunucu yalnız kilitli Supabase kökü ile doğrulanır; kopan bağlantı
       yakalanmamış istisnaya dönüşmez;
    4) yayın ayarı (vercel.json): uygulama AB'de (Frankfurt) koşar, derleme projenin kendi yolundan (telemetri kapalı, webpack) geçer.
@@ -19,6 +20,7 @@ import { ortamdanBaglanti } from "../src/server/db/havuz.ts";
 import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde } from "../src/server/db/kiraci.ts";
 import { SUPABASE_KOK_2021 } from "../src/server/db/kok-sertifika.ts";
+import { GECICI_SEMA_ONDE } from "./yardimci/arama-yolu.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 import { API_ROLLERI, supabaseBenzeri, type SupabaseBenzeri } from "./yardimci/supabase.ts";
 
@@ -147,6 +149,12 @@ test("0010: public'teki her işlevin arama yolu sabit (Supabase denetimi: functi
   const r = await sahip.query<{ ad: string }>(
     "SELECT p.proname AS ad FROM pg_proc p JOIN pg_namespace s ON s.oid = p.pronamespace WHERE s.nspname = 'public' AND NOT EXISTS (SELECT 1 FROM unnest(coalesce(p.proconfig, '{}')) c WHERE c LIKE 'search_path=%')");
   assert.deepEqual(r.rows.map((x) => x.ad), []);
+});
+
+/* 2026-10-15 (FIRMA-VT FV2 incelemesi): 0010 yalnız "arama yolu var mı"ya bakıyordu — 0096'nın ilk yazımı "public" ile hem yeni işlevlerde hem 0050'nin
+   sıkılaştırılmış üç işlevinde geçici şemayı arama yolunun BAŞINA geri getirmişti (yazılmayan pg_temp tablo adlarında önce aranır) */
+test("0010 + 0096: tanımlayıcı-yetkili her işlevde geçici şema arama yolunun SONUNDA (çağıranın geçici tablosu işlevin tablosunu gölgeleyemez)", async () => {
+  assert.deepEqual((await sahip.query<{ ad: string }>(GECICI_SEMA_ONDE)).rows.map((x) => x.ad), []);
 });
 
 test("bağlantı koparsa (veritabanı yeniden başladı) yakalanmamış istisna olmaz; asıl hata yukarı gider, havuz toparlanır", async () => {

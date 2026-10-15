@@ -2,9 +2,9 @@
    ana anahtar ortam değişkeninde (PROBATA_SIR_ANAHTARI, 32 bayt base64), veritabanında / depoda / kodda DEĞİL. Şifreli metin firmaya ve sırrın adına
    bağlıdır (ek doğrulama verisi): satır başka firmaya ya da başka ada kopyalansa çözülmez. Sır istemciye gönderilmez, loga yazılmaz; ekranda son 4.
    Çözme yalnız sunucuda, kullanılacağı an (ör. yapay zekâ isteği) — sayfaya ya da sunucu eylemi yanıtına konmaz. */
-import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 import type { Sorgulayici } from "../db/kiraci.ts";
 import { izYaz } from "../db/yazici.ts";
+import { aesCoz, aesSifrele } from "./aes.ts";
 
 const AD = /^[a-z_]{1,40}$/;
 /* 536: eposta_anahtari — firmanın Resend API anahtarı (Firma ayarları › E-posta) */
@@ -18,23 +18,16 @@ export function anaAnahtar(ortam: string | undefined = process.env.PROBATA_SIR_A
   return a;
 }
 
-const ek = (firmaId: string, ad: string) => Buffer.from(`probata:sir:v1:${firmaId}:${ad}`, "utf8");
+/* ek doğrulama verisi: firma + sırrın adı. FIRMA-VT FV2 (2026-10-15): şifreleme ortak çekirdekte (aes.ts); ek ve biçim aynı kaldı — eski kayıtlar
+   çözülür, yeni metin eskisiyle aynı biçimde (kilit tests/firma-baglanti.test.ts) */
+const ek = (firmaId: string, ad: string) => `probata:sir:v1:${firmaId}:${ad}`;
 
 export function sifrele(duz: string, firmaId: string, ad: string, anahtar = anaAnahtar()): string {
-  const iv = randomBytes(12);
-  const c = createCipheriv("aes-256-gcm", anahtar, iv);
-  c.setAAD(ek(firmaId, ad));
-  const govde = Buffer.concat([c.update(duz, "utf8"), c.final()]);
-  return `v1.${iv.toString("base64url")}.${c.getAuthTag().toString("base64url")}.${govde.toString("base64url")}`;
+  return aesSifrele(duz, ek(firmaId, ad), anahtar);
 }
 
 export function coz(sifreli: string, firmaId: string, ad: string, anahtar = anaAnahtar()): string {
-  const [s, iv, etiket, govde] = sifreli.split(".");
-  if (s !== "v1" || !iv || !etiket || !govde) throw new Error("Bozuk sır");
-  const d = createDecipheriv("aes-256-gcm", anahtar, Buffer.from(iv, "base64url"));
-  d.setAAD(ek(firmaId, ad));
-  d.setAuthTag(Buffer.from(etiket, "base64url"));
-  return Buffer.concat([d.update(Buffer.from(govde, "base64url")), d.final()]).toString("utf8");
+  return aesCoz(sifreli, ek(firmaId, ad), anahtar);
 }
 
 const firmaKimligi = async (db: Sorgulayici) => {

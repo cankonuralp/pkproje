@@ -1,12 +1,14 @@
 /* NEREDEN GELDİ: 348 — yönetim sayfasının saf parçaları (veritabanısız): doğrulama kodu RFC 6238 test vektörleriyle (telefon uygulamasıyla aynı kodu
    üretmezse kimse giremez), saat kayması penceresi ve yeniden oynatma; yönetim adresi denetimi; firma aç şeması (maketin iletileri), ünvandan öneri,
-   ayrılmış ad listesinin göçle (0050) aynı olması. Gerçek veritabanı davranışı: tests/yonetim.test.ts. */
+   ayrılmış ad listesinin göçle (0050; 2026-10-15'ten beri listeyi taşıyan HER göç — 0096 dahil) aynı olması. Gerçek veritabanı davranışı:
+   tests/yonetim.test.ts. Olumsuz kanıt (ayrılmış ad listesi): tests/bozan/kilitler.bozan.ts. */
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 import { AYRILMIS, firmaAcSemasi, oneri, yonetimEtiketi } from "../src/modules/yonetim/sema.ts";
 import { yonetimAdresiMi, yonetimAlani } from "../src/server/yonetim/adres.ts";
 import { base32Oku, base32Yaz, otpauthAdresi, totpDogrula, totpKodu, zamanAdimi } from "../src/server/yonetim/totp.ts";
+import { ayrilmisAdListeleri } from "./yardimci/denetimler.ts";
 
 const RFC = base32Yaz(Buffer.from("12345678901234567890", "ascii"));
 
@@ -61,10 +63,13 @@ test("firma aç şeması: maketin iletileri, ayrılmış adlar (göçle aynı li
   assert.deepEqual(hata({ yon: "Deneme" }), { yon: "Ad ve soyad yazılmalı." });
   assert.deepEqual(hata({ eposta: "deneme" }), { eposta: "Geçerli bir e-posta değil." });
   assert.equal(sema.parse({ unvan: "  Deneme   Muayene ", alt: " Deneme ", kod: "dm", yon: "Deneme  Kişi", eposta: " A@Deneme.Example " }).eposta, "a@deneme.example");
-  /* ayrılmış adlar: uygulama ve veritabanı aynı listeyi tutar */
-  const goc = readFileSync("src/server/db/gocler/0050_yonetim.sql", "utf8");
-  const sql = /p_kisa_ad = ANY \(ARRAY\[([^\]]+)\]\)/.exec(goc)?.[1].split(",").map((x) => x.trim().replace(/^'|'$/g, ""));
-  assert.deepEqual(sql, [...AYRILMIS]);
+  /* ayrılmış adlar: uygulama ve veritabanı aynı listeyi tutar. 2026-10-15 (FIRMA-VT FV2 incelemesi): liste 0096'da (yonetim_firma_kayit_ac) üçüncü kez
+     yazıldı — kilit yalnız 0050'ye bakıyordu, kopya kayabilirdi (kurulum yolu ayrılmış adı kabul ederdi); artık her göçteki her liste */
+  const gocler = readdirSync("src/server/db/gocler").filter((d) => d.endsWith(".sql")).sort()
+    .map((ad) => ({ ad, metin: readFileSync(`src/server/db/gocler/${ad}`, "utf8") }));
+  const ayrilmis = ayrilmisAdListeleri(gocler, AYRILMIS);
+  assert.deepEqual(ayrilmis.bulunan, ["0050_yonetim.sql", "0096_merkez_kaydi.sql"]);
+  assert.deepEqual(ayrilmis.farklar, []);
   assert.deepEqual(oneri("Örnek Muayene ve Kontrol Ltd. Şti."), { alt: "ornek", kod: "OM" });
   assert.deepEqual(oneri("ABC Test Muayene"), { alt: "abctest", kod: "AT" });
   assert.deepEqual(oneri("İşık"), { alt: "isik", kod: "IS" });

@@ -136,7 +136,9 @@ test("5. kurulum eski oturumları düşürmezse önceki oturum kurulumdan sonra 
 });
 
 test("6. dondurma müşteri oturumlarını silmezse dondurulmuş firmanın müşteri oturumu kalır (kilidin koruduğu açık)", async () => {
-  const klasor = bozukGocler("g6", "    DELETE FROM musteri_oturum WHERE firma_id = p_firma;\n", "");
+  /* 2026-10-15 (FIRMA-VT FV2): yonetim_firma_durum'un son tanımı 0096'da (ortak firma dalı 0050 ile aynı + kendi projeli firma dalı) — bozma oraya
+     taşındı; 0050'yi bozmak artık etkisiz (0096 yeniden tanımlar) */
+  const klasor = bozukGocler("g6", "    DELETE FROM musteri_oturum WHERE firma_id = p_firma;\n", "", "0096_");
   const supa = await supabaseBenzeri(kume, "yonetim_bozuk_6", klasor);
   const h = havuzKur({ ...kume.uygulama, database: "yonetim_bozuk_6" });
   try {
