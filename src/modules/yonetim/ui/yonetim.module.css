@@ -18,3 +18,8 @@
 .adresKod { font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: .01em; white-space: normal; overflow-wrap: anywhere; word-break: break-all; }
 .eylemSol { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .adimlar { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 6px; color: var(--yazi2); }
+/* 567 hata kaydı: mesaj tam (kırpılmaz), yığın izi açılır kutuda, satır içinde kayar */
+.hataMesaj { font-weight: 600; overflow-wrap: anywhere; }
+.hataAyrinti { margin-top: 4px; font-size: var(--boy-kucuk); color: var(--yazi2); }
+.hataAyrinti summary { cursor: pointer; min-height: var(--tus-y); display: inline-flex; align-items: center; }
+.hataYigin { margin: 4px 0; padding: 8px; max-width: 100%; overflow-x: auto; border-radius: var(--r-orta); background: var(--zemin2); font-size: var(--boy-kucuk); white-space: pre; }

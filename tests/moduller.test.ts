@@ -57,8 +57,10 @@ const GELISTIRME_ROTALARI = ["vitrin"];
    2026-10-05 (316): olcum — PDF motorunun Vercel ölçümü, oturumsuz ama YALNIZ önizleme dağıtımında (aşağıdaki test kilitler; yayında 404)
    2026-10-06 (350, 09-G5): saglik — oturumsuz sağlık ucu; yalnız evet / hayır denetimleri ve sürüm (firma / kişi bilgisi yok — e2e/api.spec)
    2026-10-08 (378, K5): is — zamanlayıcı uçları (gece işi); oturumsuz ama YALNIZ CRON_SECRET'le (aşağıdaki test: ilk iş zamanliYetkili)
-   2026-10-08 (392, 09-D2): islem — çevrimdışı kuyruğun tek seferlik işlem ucu; ilk iş aynı köken, oturum ister, yalnız POST (aşağıdaki test) */
-const API_UCLARI = ["dosya", "is", "islem", "olcum", "saglik", "surum", "tanim"];
+   2026-10-08 (392, 09-D2): islem — çevrimdışı kuyruğun tek seferlik işlem ucu; ilk iş aynı köken, oturum ister, yalnız POST (aşağıdaki test)
+   2026-10-15 (567, 06-HATA-TAKIBI): hata — tarayıcı hatası ucu; ilk iş aynı köken, yalnız POST, her zaman 204 (bilgi döndürmez), kişi ve firma
+   oturumdan / adresten (aşağıdaki test) */
+const API_UCLARI = ["dosya", "hata", "is", "islem", "olcum", "saglik", "surum", "tanim"];
 const klasorlerOf = (yol: string) => readdirSync(yol).filter((ad) => statSync(join(yol, ad)).isDirectory()).sort();
 
 test("her modülün rota klasörü var ve src/app'te modül dışı rota yok", () => {
@@ -161,6 +163,20 @@ test("api/islem: ilk iş aynı köken; oturum ve hesap denetimi işten önce; i�
   assert.match(govde, /^export async function POST\(istek: Request\) \{\n {2}if \(!\(await ayniKoken\(\)\)\) return yanit\(\{ hata: "koken" \}, 403\);/);
   const sira = ["istekOturumu()", "b.yazan !== yazanEtiketi(o.id)", "oturumIslemi(o, async (db) => {", "await tekSeferlik(db,"].map((x) => govde.indexOf(x));
   assert.ok(sira.every((i, n) => i > 0 && (n === 0 || i > sira[n - 1])), `sıra: ${sira.join(", ")}`);
+  assert.doesNotMatch(kaynak, /export (async )?function (GET|PUT|PATCH|DELETE)/);
+});
+
+/* 2026-10-15 (567): tarayıcı hatası ucu — ilk iş aynı köken (başka kökenden kayıt yok); gövde sınırlı ve biçimli; her dönüş 204 (yazıldı mı söylenmez);
+   hesap ve firma gövdeden ALINMAZ (oturum, Host); yalnız POST */
+test("api/hata: ilk iş aynı köken; her dönüş 204; kişi ve firma gövdeden alınmaz; yalnız POST", () => {
+  const kaynak = readFileSync(join(KOK, "src", "app", "api", "hata", "route.ts"), "utf8");
+  const govde = kaynak.slice(kaynak.indexOf("export async function POST"));
+  assert.match(govde, /^export async function POST\(istek: Request\) \{\n {2}if \(!\(await ayniKoken\(\)\)\) return BOS\(\);/);
+  assert.match(kaynak, /const BOS = \(\) => new Response\(null, \{ status: 204/);
+  assert.equal([...govde.matchAll(/return /g)].length, [...govde.matchAll(/return BOS\(\);/g)].length, "her dönüş 204");
+  assert.match(govde, /hesap: o\?\.id \?\? null/);
+  assert.match(govde, /alan: kiraciAdiCoz\(h\.get\("host"\)/);
+  assert.doesNotMatch(kaynak.slice(kaynak.indexOf("const Govde"), kaynak.indexOf("const BOS")), /hesap|alan|firma/, "gövde şemasında kişi / firma yok");
   assert.doesNotMatch(kaynak, /export (async )?function (GET|PUT|PATCH|DELETE)/);
 });
 

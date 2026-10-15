@@ -26,3 +26,26 @@ test("tarayıcı simgesi: /favicon.ico sitenin simgesine yönlenir", async ({ pa
   expect(r.url()).toMatch(/\/icon\.svg$/);
   expect(r.headers()["content-type"] ?? "").toContain("svg");
 });
+
+/* 567 (06-HATA-TAKIBI): yakalanmayan hata ve reddedilen söz hata kaydı ucuna gider; aynı hata 60 sn'de bir (kısma); son 20 hata bellekte
+   (window._istemciHatalari); gürültü (bağlantı kopması) gönderilmez. Yazıldığı veritabanı kilidinde (tests/hata.test.ts). */
+test("tarayıcı hatası hata kaydına gider: yakalanmayan hata ve reddedilen söz; aynı hata kısılır; gürültü gitmez", async ({ page }) => {
+  await page.goto("/giris");
+  const giden: string[] = [];
+  page.on("request", (r) => { if (new URL(r.url()).pathname === "/api/hata") giden.push(r.postData() ?? ""); });
+  await page.evaluate(() => {
+    setTimeout(() => { throw new Error("deneme-567 yakalanmayan"); });
+    setTimeout(() => { throw new Error("deneme-567 yakalanmayan"); }, 20);
+    setTimeout(() => { void Promise.reject(new Error("deneme-567 söz")); }, 40);
+    setTimeout(() => { void Promise.reject(new TypeError("Failed to fetch")); }, 60);
+  });
+  await expect.poll(() => giden.length).toBe(2);
+  await page.waitForTimeout(300);
+  expect(giden.length, giden.join(" | ")).toBe(2);
+  expect(giden.join(" ")).toContain("deneme-567 yakalanmayan");
+  expect(giden.join(" ")).toContain("deneme-567 söz");
+  expect(giden.join(" ")).not.toContain("Failed to fetch");
+  const bellek = await page.evaluate(() => (window as unknown as { _istemciHatalari?: { mesaj: string }[] })._istemciHatalari?.map((h) => h.mesaj) ?? []);
+  expect(bellek.filter((m) => m.includes("deneme-567"))).toHaveLength(2);
+  await expect(page.getByRole("button", { name: "Giriş yap" })).toBeVisible();
+});

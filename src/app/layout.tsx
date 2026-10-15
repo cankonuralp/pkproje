@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
 import type { ReactNode } from "react";
 import { BildirimSaglayici } from "../components/bildirim/Bildirim";
+import { HataDinleyici } from "../components/hata/HataDinleyici";
 import { Hazir } from "../components/hazir/Hazir";
 import { OnaySaglayici } from "../components/pencere/Onay";
 import "../styles/yazi.css";
@@ -40,6 +41,8 @@ export default async function KokDuzen({ children }: { children: ReactNode }) {
         <BildirimSaglayici>
           <OnaySaglayici>{children}</OnaySaglayici>
           <Hazir />
+          {/* 567: yakalanmayan hata ve reddedilen söz hata kaydına (06-HATA-TAKIBI) */}
+          <HataDinleyici />
         </BildirimSaglayici>
       </body>
     </html>

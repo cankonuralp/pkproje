@@ -396,7 +396,16 @@ pkproje/
                             (alan / genel arama tr_kucuk, çipler veya / ve + sayıları, seçiciler + seçenekleri, sıralama tr_sira — göç 0092; yalnız sayfa);
                             görme yetki/canDo.ts gorusKosulu (canDo'nun SQL'i); modüller öteki modülün tablosunu OKUMA PARÇASIYLA birleştirir (EKIPMAN_SQL,
                             TUR_SQL, TESIS_YER_SQL, PERSONEL_AD_SQL); ekran components/liste/SunucuSuzgec.ts useSunucuSuzgec (300 ms bekleme, eski cevap
-                            yazılmaz). İlk: Raporlar (raporlar/server/liste.ts raporSayfasi; kilit tests/liste.test.ts — eski süzgeçle birebir)
+                            yazılmaz). Raporlar (raporlar/server/liste.ts raporSayfasi), Planlar (planlar/server/liste.ts planSayfasi), Onaylar › Tüm raporlar
+                            (onayTumSayfasi → onaylar tumRaporlarSayfasi; onayListeleri artık bütün raporları okumaz — tumSayisi); kilit tests/liste.test.ts
+                            (eski süzgeçle birebir) · HESAPLANMIŞ SATIRLAR (Muhasebe İşler / Faturalar): bellekteListele — tarayıcının süzgeci aynı tanımla
+                            sunucuda (muhasebe/liste.ts isTanim / faturaTanim; muhasebe.ts isSayfasi / faturaSayfasi / muhasebeOzeti), ekrana yalnız sayfa
+  src/server/hata/          HATA KAYDI (567; 06-HATA-TAKIBI, 09 G2 / B11; göç 0093 hata_kaydi): maske.ts (saf — e-posta, uzun sayı, jeton maskesi; adres
+                            yalnız yol; yığın izi kırpılır; gürültü listesi nedenleriyle) · kaydet.ts hataKaydet (fırlatmaz) → db/hata.ts hata_yaz (aynı hata
+                            10 dk tek satır, saatte 300 / oturumsuz 60, 30 gün / 2000) · tarayıcı: components/hata/HataDinleyici (kök düzende; error +
+                            unhandledrejection) + bildir.ts (60 sn kısma, son 20 bellekte window._istemciHatalari) → /api/hata (köken, 16 KB; kişi ve firma
+                            oturumdan / adresten) · error.tsx sınırları (yalnız tarayıcıda çıkan; digest'li sunucuda) · sunucu: src/instrumentation.ts
+                            onRequestError (başlık / çerez yazılmaz) · okuyan yalnız yönetim: /yonetim/hatalar (yonetim/server/hatalar.ts); uygulama rolü okuyamaz
   src/server/db/silici.ts   KESİN SİLME — tek mekanizma (357; reisim 2026-10-07 "eklenebilen şeyler silinemiyor"): SILINEBILIR (tür → <tablo>_kullanim /
                             <tablo>_sil veritabanı işlevleri + her yabancı anahtar "kullanım" ya da "birlikte"), kullanimlar, kesinSil — yalnız hiç
                             kullanılmamış kayıt; yetki modülde canDo kayit_sil (yönetici); ekranda components/sil (SilTusu, kullanimMetni) · kilit
