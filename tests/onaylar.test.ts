@@ -131,13 +131,14 @@ test("kuyruk: branş yöneticisi yalnız kendi branşının onaydaki raporların
   /* 2026-10-05 (318, C5): denetçinin Onaylar düzeyi "kendi" — imzanın tek merkezi Onaylar (pkproje §11 264; maket onaylar.html BB4). Önceki
      "denetçi Onaylar'ı görmez" beklentisi bu kararla değişti; denetçi yine kuyruğu, tüm raporları ve onay ekranını görmez. */
   const den = (await a(FA.den, (db) => onayListeleri(db, FA.den)))!;
-  assert.deepEqual([den.yonetici, den.kuyruk, den.tumu, den.branslar, den.imzaBekleyen], [false, [], [], [], []], "denetçi: kuyruk ve tüm raporlar yok");
+  /* 2026-10-15 (566): Tüm raporlar sunucuda sayfalı — listede yalnız sayısı (tumSayisi); sayfası tumRaporlarSayfasi (denetçiye null) */
+  assert.deepEqual([den.yonetici, den.kuyruk, den.tumSayisi, den.branslar, den.imzaBekleyen], [false, [], 0, [], []], "denetçi: kuyruk ve tüm raporlar yok");
   /* 2026-10-10 (477; reisim, Talepler–Onaylar kararları T1 "onay bekleyen her şey Onaylar'da"): planlama ve muhasebe Onaylar'da "kendi" — kendi
      belgeleri ve karar verebildiği talepler (muhasebe: masraf formları); rapor kuyruğu, tüm raporlar ve onay ekranı yine yok. Önceki "planlama,
      muhasebe Onaylar'ı görmez" beklentisi bu kararla değişti. */
   for (const k of [FA.plan, FA.muh]) {
     const v = (await a(k, (db) => onayListeleri(db, k)))!;
-    assert.deepEqual([v.yonetici, v.kuyruk, v.tumu, v.imzaBekleyen, v.imzaci], [false, [], [], [], false], `${k.roller[0]}: rapor kuyruğu yok`);
+    assert.deepEqual([v.yonetici, v.kuyruk, v.tumSayisi, v.imzaBekleyen, v.imzaci], [false, [], 0, [], false], `${k.roller[0]}: rapor kuyruğu yok`);
     assert.equal(v.talepOnaylar, k === FA.muh, `${k.roller[0]}: talep kararı yalnız muhasebede`);
     assert.equal(await a(k, (db) => onayEkrani(db, k, h1)), null, `${k.roller[0]} onay ekranını açamaz`);
   }

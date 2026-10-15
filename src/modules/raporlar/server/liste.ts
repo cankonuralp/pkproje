@@ -85,6 +85,42 @@ export async function raporSayfasi(db: Sorgulayici, kim: YetkiHesabi, durum: unk
   };
 }
 
+/* ── ONAYLAR › TÜM RAPORLAR (maket onaylar.html #/tum — 190; Onaylar onay-baglanti.ts kapısından) ─────────────────────────────────────────
+   Ekran ve anlam aynı (onaylar/ui/OnayListesi.tsx tanımı): rapor no ve tesis (+ müşteri) ayrı aranır; seçiciler Durum · Denetçi; sıralama rapor no,
+   durum (akış sırası), denetçi; varsayılan en son oluşturulan üstte; 20'şer. */
+const DENETCI = "coalesce(pe.ad, '—')";
+const DURUM_SIRASI = "CASE r.durum WHEN 'taslak' THEN 1 WHEN 'onayda' THEN 2 WHEN 'onaylandi' THEN 3 WHEN 'imzada' THEN 4 ELSE 5 END";
+export function onayTumKaynagi(): ListeKaynagi {
+  return {
+    kaynak: RAPOR_KAYNAGI,
+    secim: RAPOR_SECIMI,
+    metin: [NO],
+    alanlar: { no: NO, tesis: "concat_ws(' ', y.musteri, y.tesis)" },
+    cipler: {},
+    seciciler: {
+      durum: { kosul: (v, ekle) => `r.durum = ${ekle(v)}` },
+      kisi: { kosul: (v, ekle) => `${DENETCI} = ${ekle(v)}`, secenek: { deger: DENETCI, etiket: DENETCI } },
+      sira: { kosul: () => null },
+    },
+    siraSecici: "sira",
+    sira: { no: { ifade: `tr_sira(${NO})`, metin: true }, durum: { ifade: DURUM_SIRASI }, denetci: { ifade: `tr_sira(${DENETCI})`, metin: true } },
+    varsayilanSira: "r.olustu DESC, r.id",
+    sayfa: 20,
+  };
+}
+/** Onaylar › Tüm raporlar: Onaylar düzeyiyle görebildiği raporlardan süzgeçten geçenlerin SAYFASI (yönetici kapısı ÇAĞIRANDA) */
+export async function onayTumSayfasi(db: Sorgulayici, kim: YetkiHesabi, durum: unknown): Promise<SunucuListe<RaporOzeti>> {
+  const l = await listeGetir<Ham>(db, onayTumKaynagi(), raporGorusu(kim, 15), durum);
+  return { ...l, gorunen: l.gorunen.map((x) => { const r: RaporOzeti & { geri?: boolean } = raporSatiri(x); delete r.geri; return r; }) };
+}
+/** görebildiği raporların sayısı ve branşları (Onaylar sekmesi "Tüm raporlar (n)", kuyruğun branş adı) — bütün raporlar okunmaz */
+export async function gorunenRaporOzeti(db: Sorgulayici, kim: YetkiHesabi, modul: 14 | 15): Promise<{ sayi: number; branslar: ("m" | "e")[] }> {
+  const g = raporGorusu(kim, modul);
+  const x = (await db.sorgu<{ n: number; b: ("m" | "e")[] | null }>(
+    `SELECT count(*)::int AS n, array_agg(DISTINCT t.brans ORDER BY t.brans) AS b FROM ${RAPOR_KAYNAGI} WHERE ${g.sql}`, g.p)).rows[0];
+  return { sayi: x.n, branslar: x.b ?? [] };
+}
+
 /** Raporlar ekranının şeridi: kişinin yazdığı, son imzasını bekleyen rapor sayısı */
 export async function imzamiBekleyenSayisi(db: Sorgulayici, kim: YetkiHesabi): Promise<number> {
   return (await db.sorgu<{ n: number }>("SELECT count(*)::int AS n FROM rapor WHERE silindi IS NULL AND durum = 'onaylandi' AND hesap_id = $1::uuid", [kim.id])).rows[0].n;

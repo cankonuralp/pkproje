@@ -8,19 +8,20 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { KartEtiket, Kirp, type Sutun } from "../../../components/liste/Liste";
 import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
-import type { SuzgecTanimi } from "../../../components/liste/suzgec";
+import { useSunucuSuzgec } from "../../../components/liste/SunucuSuzgec";
+import type { Secenek, SunucuListe, SuzgecTanimi } from "../../../components/liste/suzgec";
 import { AltSatir, Rozet, SayfaBasi, Sekmeler, SeritKap, type RozetTuru } from "../../../components/sayfa/Sayfa";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
 import { RAPOR_DURUM, type RaporDurumu } from "../../raporlar/sema";
 import type { OnayListeleri, OnaySatiri, RevizeIstekSatiri } from "../server/onaylar";
 import { RevizePenceresi, type RevizeTuru } from "./RevizePenceresi";
+import { tumRaporlarEylemi } from "./eylemler";
 import stil from "./onaylar.module.css";
 
 const TR_ZAMAN = new Intl.DateTimeFormat("tr-TR", { timeZone: "Europe/Istanbul", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 export const zamanYaz = (z: string) => TR_ZAMAN.format(new Date(z)).replace(",", "");
 export const SONUC_ROZET: Record<string, readonly [string, RozetTuru]> = { uygun: ["Uygun", "tamam"], uygun_degil: ["Uygun değil", "red"] };
-const DURUM_SIRA: Record<RaporDurumu, number> = { taslak: 1, onayda: 2, onaylandi: 3, imzada: 4, imzali: 5 };
 const benzersiz = <T,>(l: readonly T[]) => [...new Set(l)];
 const SIRA_AD: Record<string, string> = { no: "Rapor no", durum: "Durum", denetci: "Denetçi" };
 function siraEtiketi(v: string) {
@@ -71,32 +72,33 @@ function kuyrukTanimi(l: readonly OnaySatiri[]): SuzgecTanimi<OnaySatiri> {
     ],
   };
 }
-function tumTanimi(l: readonly OnaySatiri[]): SuzgecTanimi<OnaySatiri> {
+/* 566 (09-B3): Tüm raporlar SUNUCUDA süzülür ve sayfalanır (raporlar/server/liste.ts onayTumKaynagi — aynı anahtarlar); burada yalnız ekranın
+   çizimi (ad, seçenek; denetçi seçenekleri sunucudan). Sıralanabilir sütunlar: siraAnahtari'nın anahtarları (değerleri sunucuda). */
+const hep = () => true;
+const sifir = () => 0;
+function tumTanimi(sec: Record<string, Secenek[]>): SuzgecTanimi<OnaySatiri> {
   return {
     ad: "Raporlarda ara", ipucu: "", birim: "rapor", imkansiz: "", sayfa: 20,
-    metin: (r) => r.no,
+    metin: () => "",
     alanlar: [
-      { k: "no", ad: "Rapor no", ipucu: "ör. DA-1026-…", metin: (r) => r.no },
-      { k: "tesis", ad: "Tesis", ipucu: "Tesis ya da müşteri", metin: (r) => `${r.musteri} ${r.tesis}` },
+      { k: "no", ad: "Rapor no", ipucu: "ör. DA-1026-…", metin: () => "" },
+      { k: "tesis", ad: "Tesis", ipucu: "Tesis ya da müşteri", metin: () => "" },
     ],
     cipler: [],
     seciciler: [
-      { k: "durum", ad: "Durum", secenek: () => [["tumu", "Tümü"], ...(Object.keys(RAPOR_DURUM) as RaporDurumu[]).map((d) => [d, RAPOR_DURUM[d][0]] as const)],
-        gecer: (r, v) => v === "tumu" || r.durum === v },
-      { k: "kisi", ad: "Denetçi", secenek: () => [["tumu", "Tümü"], ...benzersiz(l.map((r) => r.denetci)).sort((a, b) => a.localeCompare(b, "tr")).map((x) => [x, x] as const)],
-        gecer: (r, v) => v === "tumu" || r.denetci === v },
+      { k: "durum", ad: "Durum", secenek: () => [["tumu", "Tümü"], ...(Object.keys(RAPOR_DURUM) as RaporDurumu[]).map((d) => [d, RAPOR_DURUM[d][0]] as const)], gecer: hep },
+      { k: "kisi", ad: "Denetçi", secenek: () => [["tumu", "Tümü"], ...(sec.kisi ?? [])], gecer: hep },
       { k: "sira", ad: "Sıralama", siralama: true, secenek: () => ["varsayilan", "no-artan", "no-azalan", "durum-artan", "durum-azalan", "denetci-artan", "denetci-azalan"]
-        .map((x) => [x, siraEtiketi(x)] as const), gecer: () => true },
+        .map((x) => [x, siraEtiketi(x)] as const), gecer: hep },
     ],
-    siraAnahtari: { no: (r) => r.no, durum: (r) => DURUM_SIRA[r.durum], denetci: (r) => r.denetci },
-    varsayilanSira: (a, b) => b.olustu.localeCompare(a.olustu),
+    siraAnahtari: { no: sifir, durum: sifir, denetci: sifir },
   };
 }
 
 /** secili: bulunulan sekme — liste boşken de kendi sekmesi görünür (318 incelemesi: İmzamı bekleyen sayfasında hiçbir sekme seçili değildi).
     477 (Talepler–Onaylar kararları T1): "Talepler" — karar verebildiği izin talepleri ve masraf formları; rapor yazmayanda (planlama, muhasebe)
     İmzamı bekleyen raporlar sekmesi yok */
-export function onaySekmeleri(v: Pick<OnayListeleri, "yonetici" | "kuyruk" | "tumu" | "branslar" | "imzaBekleyen" | "istekler" | "belgeBekleyen" | "talepler"
+export function onaySekmeleri(v: Pick<OnayListeleri, "yonetici" | "kuyruk" | "tumSayisi" | "branslar" | "imzaBekleyen" | "istekler" | "belgeBekleyen" | "talepler"
   | "talepOnaylar" | "imzaci">, secili?: string) {
   /* 333: Diğer belgeler (bordro, eğitim / zimmet formu, araç tutanağı) — herkesin kendi; denetçinin iki sekmesi (maket onaylar.html BB4) */
   const diger = [`Diğer belgeler (${v.belgeBekleyen})`, "/onaylar/diger"] as const;
@@ -108,7 +110,7 @@ export function onaySekmeleri(v: Pick<OnayListeleri, "yonetici" | "kuyruk" | "tu
   }
   const brans = v.branslar.length === 1 ? ` · ${v.branslar[0] === "m" ? "mekanik" : "elektrik"}` : "";
   const l: (readonly [string, string])[] = [[`Onay kuyruğu${brans} (${v.kuyruk.length})`, "/onaylar"], ...(talepVar ? [talep] : []),
-    [`Tüm raporlar (${v.tumu.length})`, "/onaylar/tum"], [`Revize istekleri (${v.istekler.length})`, "/onaylar/istekler"]];
+    [`Tüm raporlar (${v.tumSayisi})`, "/onaylar/tum"], [`Revize istekleri (${v.istekler.length})`, "/onaylar/istekler"]];
   /* yönetici aynı zamanda rapor yazıyorsa (ör. mekanik yönetici + denetçi) kendi imzası ayrı sekmede */
   if (v.imzaBekleyen.length || secili === "/onaylar/imza") l.push(imza);
   l.push(diger);
@@ -127,8 +129,8 @@ export function OnayKuyrugu({ v }: { v: OnayListeleri }) {
   );
 }
 
-export function TumRaporlar({ v }: { v: OnayListeleri }) {
-  const s = useSuzgec(tumTanimi(v.tumu), v.tumu);
+export function TumRaporlar({ v, ilk }: { v: OnayListeleri; ilk: SunucuListe<OnaySatiri> }) {
+  const s = useSunucuSuzgec(tumTanimi, ilk, tumRaporlarEylemi);
   return (
     <>
       <SayfaBasi baslik="Onaylar" sayac={<Sayac s={s} />} />

@@ -6,7 +6,8 @@
    birebir: sayfanın satırları ve sırası, süzgeçten geçen sayı, toplam, çip sayıları, seçici seçenekleri, boş durumun hâli. Türkçe harfler
    (I / ı, İ / i, ş, ç …) aramada ve seçenek sırasında; görme kuralı canDo ile aynı (gorusKosulu); başka firmanın raporu yok. Planlar da aynı
    ölçüyle (planListesi + 318 öncesi tanım): sütun başlığı sıralamaları (no, ad, müşteri, adres, denetçi, başlangıç, durum; artan / azalan),
-   tarih pencereleri (bugün, bu hafta, 7 gün), branş, müşteri, durum.
+   tarih pencereleri (bugün, bu hafta, 7 gün), branş, müşteri, durum. Onaylar › Tüm raporlar da (Onaylar düzeyiyle görülen bütün raporlar + 566 öncesi
+   tanım): rapor no, tesis, durum, denetçi, sıralamalar; satırın izinleri kuyruktakiyle aynı; sekmedeki sayı (tumSayisi) görülen rapor sayısı.
    Olumsuz kanıt: tests/bozan/liste.bozan.ts. */
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
@@ -20,7 +21,10 @@ import { planListesi, type PlanSatir } from "../src/modules/planlar/server/plan-
 import { bugunTr } from "../src/modules/planlar/server/planlar.ts";
 import { PLAN_DURUM, type PlanDurumu } from "../src/modules/planlar/sema.ts";
 import { raporListesi, type Kisi, type RaporListeSatiri } from "../src/modules/raporlar/server/raporlar.ts";
-import { RAPOR_DURUM } from "../src/modules/raporlar/sema.ts";
+import { RAPOR_DURUM, type RaporDurumu } from "../src/modules/raporlar/sema.ts";
+import { raporOzetleri, type RaporOzeti } from "../src/modules/raporlar/server/onay-baglanti.ts";
+import { onayListeleri, tumRaporlarSayfasi } from "../src/modules/onaylar/server/onaylar.ts";
+import { canDo } from "../src/server/yetki/canDo.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
 let kume: GomuluKume, havuz: Havuz, A = "", B = "";
@@ -250,4 +254,60 @@ test("Planlar: sunucu süzgeci ve sıralaması eski tarayıcı süzgeciyle bireb
   ];
   for (const k of ["yon", "d1", "d2", "mek", "elk"] as const) for (const [ne, d] of durumlar) await planKarsilastir(K[k], d, `${k} · ${ne}`);
   assert.equal(Object.keys(PLAN_DURUM).length, 5);
+});
+
+/* ESKİ Onaylar › Tüm raporlar tanımı (onaylar/ui/OnayListesi.tsx'in 566 öncesi hâli); liste: Onaylar düzeyiyle görülen bütün raporlar, en yeni üstte */
+const RDURUM_SIRA: Record<RaporDurumu, number> = { taslak: 1, onayda: 2, onaylandi: 3, imzada: 4, imzali: 5 };
+function eskiTumTanimi(l: readonly RaporOzeti[]): SuzgecTanimi<RaporOzeti> {
+  return {
+    ad: "", ipucu: "", birim: "rapor", imkansiz: "", sayfa: 20,
+    metin: (r) => r.no,
+    alanlar: [{ k: "no", ad: "", metin: (r) => r.no }, { k: "tesis", ad: "", metin: (r) => `${r.musteri} ${r.tesis}` }],
+    cipler: [],
+    seciciler: [
+      { k: "durum", ad: "", secenek: () => [], gecer: (r, v) => v === "tumu" || r.durum === v },
+      { k: "kisi", ad: "", secenek: () => [["tumu", ""], ...benzersiz(l.map((r) => r.denetci)).sort((a, b) => a.localeCompare(b, "tr")).map((x) => [x, x] as const)],
+        gecer: (r, v) => v === "tumu" || r.denetci === v },
+      { k: "sira", ad: "", siralama: true, secenek: () => [], gecer: () => true },
+    ],
+    siraAnahtari: { no: (r) => r.no, durum: (r) => RDURUM_SIRA[r.durum], denetci: (r) => r.denetci },
+    varsayilanSira: (a, b) => b.olustu.localeCompare(a.olustu),
+  };
+}
+const disinda = (x: object, ...adlar: string[]) => Object.fromEntries(Object.entries(x).filter(([a]) => !adlar.includes(a)));
+
+async function onayKarsilastir(kim: Kisi, d: Partial<SuzgecDurumu>, ne: string) {
+  const eski = (await ile(A, kim, (db) => raporOzetleri(db))).filter((r) => canDo(kim, 15, "gor", { sahip: r.hesapId, brans: r.brans }))
+    .sort((a, b) => b.olustu.localeCompare(a.olustu));
+  const t = eskiTumTanimi(eski);
+  const durum = { ...yeniDurum(t), ...d, sec: { ...yeniDurum(t).sec, ...d.sec }, alan: { ...yeniDurum(t).alan, ...d.alan } };
+  const o = listele(t, durum, eski);
+  const y = (await ile(A, kim, (db) => tumRaporlarSayfasi(db, kim, durum)))!;
+  assert.deepEqual(y.gorunen.map((r) => r.no), o.gorunen.map((r) => r.no), `${ne}: sayfanın satırları ve sırası`);
+  assert.deepEqual([y.adet, y.toplam, y.kayitSayisi, y.sayfa, y.sayfaSayisi], [o.liste.length, o.toplam, eski.length, o.sayfa, o.sayfaSayisi], `${ne}: sayılar`);
+  assert.deepEqual(y.secenekler.kisi, (t.seciciler.find((x) => x.k === "kisi")!.secenek().slice(1) as Secenek[]).map(([a, b]) => [a, b]), `${ne}: denetçi seçenekleri`);
+  const v = (await ile(A, kim, (db) => onayListeleri(db, kim)))!;
+  assert.equal(v.tumSayisi, eski.length, `${ne}: sekmedeki sayı`);
+  assert.deepEqual(v.branslar, benzersiz(eski.map((r) => r.brans)).sort(), `${ne}: branşlar`);
+  for (const r of y.gorunen) {
+    assert.deepEqual(disinda(r, "izin", "bekleme", "eski"), disinda(eski.find((x) => x.id === r.id)!, "hesapId"), `${ne}: ${r.no} satırı (yazanın kimliği gitmez)`);
+    const q = v.kuyruk.find((x) => x.id === r.id);
+    if (q) assert.deepEqual(r, q, `${ne}: ${r.no} kuyruktaki satırla aynı (izinler, bekleme)`);
+  }
+}
+
+test("Onaylar › Tüm raporlar: sunucu süzgeci eski tarayıcı süzgeciyle birebir (yöneticiler × süzgeç × sıralama); denetçiye yok", async () => {
+  const durumlar: [string, Partial<SuzgecDurumu>][] = [
+    ["başlangıç", {}], ["2. sayfa", { sayfa: 2 }], ["sayfa aşımı", { sayfa: 99 }],
+    ["rapor no", { alan: { no: "la-1026-01" } }], ["tesis (Işık ↔ ışık)", { alan: { tesis: "ışık" } }], ["tesis (Şantiye ↔ şantiye)", { alan: { tesis: "ŞANTİYE" } }],
+    ["müşteri + tesis", { alan: { tesis: "çınar yapı depo" } }], ["genel arama", { ara: "LA-1026-02" }],
+    ["durum onayda", { sec: { durum: "onayda" } }], ["durum tamamlandı", { sec: { durum: "imzali" } }], ["denetçi", { sec: { kisi: "Deneme İki" } }],
+    ...["no", "durum", "denetci"].flatMap((s) => (["artan", "azalan"] as const).map((yon) => [`sıra ${s} ${yon}`, { sec: { sira: `${s}-${yon}` } }] as [string, Partial<SuzgecDurumu>])),
+    ["sıra + 2. sayfa", { sec: { sira: "denetci-azalan" }, sayfa: 2 }],
+  ];
+  for (const k of ["yon", "mek", "elk"] as const) for (const [ne, d] of durumlar) await onayKarsilastir(K[k], d, `${k} · ${ne}`);
+  for (const k of ["d1", "d2"] as const) {
+    assert.equal(await ile(A, K[k], (db) => tumRaporlarSayfasi(db, K[k], {})), null, `${k}: tüm raporlar yöneticinin (C5)`);
+    assert.equal((await ile(A, K[k], (db) => onayListeleri(db, K[k])))!.tumSayisi, 0);
+  }
 });

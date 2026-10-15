@@ -6,7 +6,8 @@ import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { depo } from "../../../server/dosya/depo";
 import { belgeGeriGonder, belgeImzaliYukle, type BelgeYazma } from "../server/belgeler";
-import { durumDegistir, geriGonder, onayGeriAl, onayla, revizeIstegiReddet, revizeyeGonder, type OnayYazma } from "../server/onaylar";
+import { durumDegistir, geriGonder, onayGeriAl, onayla, revizeIstegiReddet, revizeyeGonder, tumRaporlarSayfasi, type OnaySatiri, type OnayYazma } from "../server/onaylar";
+import type { SunucuListe } from "../../../components/liste/suzgec";
 import { talepKarar, type Yazma as TalepYazma } from "../../talepler/server/talepler";
 
 export interface OnayYaniti { tamam?: boolean; bildirim?: string; sonraki?: string | null; hatalar?: Record<string, string>; genel?: string }
@@ -25,6 +26,15 @@ async function islem(is: (o: NonNullable<Awaited<ReturnType<typeof istekOturumu>
   return yanit(await is(o));
 }
 const metin = (v: unknown) => (typeof v === "string" ? v : "");
+
+/** 566: Onaylar › Tüm raporlar'ın bir sayfası (süzgeç SUNUCUDA — 09-B3). Görme ve yönetici kapısı modül işlevinde; süzgeç durumu biçim
+    denetiminden geçer, koşula yalnız değer olarak girer. Göremeyene / oturumsuza null. */
+export async function tumRaporlarEylemi(durum: unknown): Promise<SunucuListe<OnaySatiri> | null> {
+  if (!(await ayniKoken())) return null;
+  const o = await istekOturumu();
+  if (!o) return null;
+  return oturumIslemi(o, (db) => tumRaporlarSayfasi(db, o, durum));
+}
 
 export async function onaylaEylemi(id: string, surum: number): Promise<OnayYaniti> {
   return islem((o) => oturumIslemi(o, (db) => onayla(db, o, metin(id), Number(surum))));

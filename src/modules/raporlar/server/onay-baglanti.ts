@@ -9,6 +9,8 @@ import { musteriOzetleri } from "../../musteriler/server/musteriler.ts";
 import { personelOzetleri } from "../../personel/server/personel.ts";
 import { gorunenNo, type RaporDurumu } from "../sema.ts";
 import { bekleyenIstekler, istekKapat, revizeDurumu, type RevizeIstegi } from "./revize.ts";
+/* 566: Onaylar › Tüm raporlar sunucuda sayfalı (liste.ts) — Onaylar bu kapıdan okur */
+export { gorunenRaporOzeti, onayTumSayfasi } from "./liste.ts";
 
 const RAPOR = tablo({ ad: "rapor", sutunlar: ["durum"] });
 const RAPOR_REVIZE = tablo({ ad: "rapor", sutunlar: ["durum", "revizyon"] });
@@ -24,9 +26,11 @@ export interface RaporOzeti {
 }
 
 /** etkin (silinmemiş) raporların özetleri: durum süzgeci ya da tek rapor. Yetki ÇAĞIRANDA (Onaylar kayıt kayıt canDo ile süzer). */
-export async function raporOzetleri(db: Sorgulayici, s: { durumlar?: readonly RaporDurumu[]; id?: string } = {}): Promise<RaporOzeti[]> {
+export async function raporOzetleri(db: Sorgulayici, s: { durumlar?: readonly RaporDurumu[]; id?: string; idler?: readonly string[] } = {}): Promise<RaporOzeti[]> {
   const kosul: string[] = [], p: unknown[] = [];
   if (s.id !== undefined) { if (!UUID.test(s.id)) return []; p.push(s.id); kosul.push(`id = $${p.length}`); }
+  /* 566: yalnız bu raporlar (revize istekleri — bütün raporlar okunmaz) */
+  if (s.idler !== undefined) { const l = s.idler.filter((x) => UUID.test(x)); if (!l.length) return []; p.push(l); kosul.push(`id = ANY ($${p.length}::uuid[])`); }
   if (s.durumlar) { p.push([...s.durumlar]); kosul.push(`durum = ANY ($${p.length}::text[])`); }
   const l = (await db.sorgu<{
     id: string; no: string; revizyon: number; durum: RaporDurumu; surum: number; plan_id: string; ekipman_id: string; tur_id: string; personel_id: string; hesap_id: string | null;

@@ -18,8 +18,10 @@ import type { Iz } from "../../../server/db/yazici.ts";
 import { canDo, canDoEylem, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import {
-  bekleyenRevizeIstegi, raporDurumYaz, raporOzetleri, raporRevizeYaz, revizeIstegiReddet as istekReddet, revizeIstekleri, type OnayGecisi, type RaporOzeti,
+  bekleyenRevizeIstegi, gorunenRaporOzeti, onayTumSayfasi, raporDurumYaz, raporOzetleri, raporRevizeYaz, revizeIstegiReddet as istekReddet, revizeIstekleri,
+  type OnayGecisi, type RaporOzeti,
 } from "../../raporlar/server/onay-baglanti.ts";
+import type { SunucuListe } from "../../../components/liste/suzgec.ts";
 import { gozdenGecirme, type GozdenGecirmeMaddesi } from "../../raporlar/server/raporlar.ts";
 import { gorunenNo, RAPOR_DURUM, RevizeGirdisi, RevizeRedGirdisi } from "../../raporlar/sema.ts";
 import { hesapAdlari } from "../../../server/kimlik/hesap.ts";
@@ -82,7 +84,8 @@ async function kuyrukOzetleri(db: Sorgulayici, kim: Kisi): Promise<RaporOzeti[]>
 export interface OnayListeleri {
   /** yönetici düzeyi (kuyruk ve tüm raporlar onun); değilse yalnız imzasını bekleyen raporlar */
   yonetici: boolean;
-  kuyruk: OnaySatiri[]; tumu: OnaySatiri[]; branslar: ("m" | "e")[];
+  /** 566: Tüm raporlar sunucuda sayfalı (tumRaporlarSayfasi) — burada yalnız sayısı (sekme adı) */
+  kuyruk: OnaySatiri[]; tumSayisi: number; branslar: ("m" | "e")[];
   /** kişinin YAZDIĞI, onaylanmış (son imzasını bekleyen) raporları — maket onaylar.html BB4 "İmzamı bekleyen raporlar"; onay sırasıyla (eski önce) */
   imzaBekleyen: OnaySatiri[];
   /** görebildiği tamamlanan raporlardaki bekleyen revize istekleri (318; yalnız yönetici), en yeni üstte */
@@ -97,25 +100,29 @@ export interface OnayListeleri {
 /** revize isteği: isteyenin adı, zaman, gerekçe; isteğin sürümü (Reddet onunla yazılır) */
 export interface RevizeIstekBilgisi { id: string; surum: number; kim: string; zaman: string; gerekce: string }
 export type RevizeIstekSatiri = OnaySatiri & { istek: RevizeIstekBilgisi };
-/** Onay kuyruğu + Tüm raporlar (branşın bütün raporları; maket 190) + İmzamı bekleyen raporlar (C5); Onaylar'ı göremeyene null */
+/** Onay kuyruğu + Tüm raporların sayısı (branşın bütün raporları; maket 190) + İmzamı bekleyen raporlar (C5); Onaylar'ı göremeyene null.
+    566 (09-B3): firmanın BÜTÜN raporları okunmaz — süreçteki raporlar (onayda + onaylandı), sayı ve branşlar tek sayımla, revize istekleri
+    yalnız isteği olan raporlarla. */
 export async function onayListeleri(db: Sorgulayici, kim: Kisi): Promise<OnayListeleri | null> {
   if (!onaylarGorur(kim)) return null;
   const simdi = Date.now(), yonetici = yoneticiMi(kim);
-  const hepsi = await raporOzetleri(db);
-  const tum = yonetici ? hepsi.filter((r) => gorur(kim, r)) : [];
-  const imzaBekleyen = hepsi.filter((r) => r.durum === "onaylandi" && !!r.hesapId && r.hesapId === kim.id && canDoEylem(kim, "rapor_son_imza", { sahip: r.hesapId }))
+  const surecte = await raporOzetleri(db, { durumlar: ["onayda", "onaylandi"] });
+  const imzaBekleyen = surecte.filter((r) => r.durum === "onaylandi" && !!r.hesapId && r.hesapId === kim.id && canDoEylem(kim, "rapor_son_imza", { sahip: r.hesapId }))
     /* 2026-10-14 (reisim: "HER ZAMAN EN SON EKLENEN RAPOR … EN ÜSTTE OLSUN"): en son oluşturulan üstte (Tüm raporlar gibi) */
     .sort((a, b) => b.olustu.localeCompare(a.olustu)).map((r) => satir(kim, r, simdi));
+  const ozet = yonetici ? await gorunenRaporOzeti(db, kim, MODUL) : { sayi: 0, branslar: [] };
   /* revize istekleri: görebildiği tamamlanan raporun şimdiki revizyonundaki bekleyen istek */
-  const tamam = new Map(tum.filter((r) => r.durum === "imzali").map((r) => [r.id, r]));
-  const ham = yonetici ? (await revizeIstekleri(db)).filter((x) => tamam.has(x.raporId)) : [];
+  const bekleyen = yonetici ? await revizeIstekleri(db) : [];
+  const tamam = new Map((bekleyen.length ? await raporOzetleri(db, { idler: bekleyen.map((x) => x.raporId), durumlar: ["imzali"] }) : [])
+    .filter((r) => gorur(kim, r)).map((r) => [r.id, r]));
+  const ham = bekleyen.filter((x) => tamam.has(x.raporId));
   const adlar = await hesapAdlari(db, ham.map((x) => x.hesapId));
   const istekler = ham.map((x) => ({ ...satir(kim, tamam.get(x.raporId)!, simdi), istek: { id: x.id, surum: x.surum, kim: adlar.get(x.hesapId ?? "") ?? "—", zaman: x.zaman, gerekce: x.gerekce } }));
   return {
     yonetici,
-    kuyruk: tum.filter((r) => r.durum === "onayda").sort(enYeni).map((r) => satir(kim, r, simdi)),
-    tumu: [...tum].sort((a, b) => b.olustu.localeCompare(a.olustu)).map((r) => satir(kim, r, simdi)),
-    branslar: [...new Set(tum.map((r) => r.brans))].sort(),
+    kuyruk: yonetici ? surecte.filter((r) => r.durum === "onayda" && gorur(kim, r)).sort(enYeni).map((r) => satir(kim, r, simdi)) : [],
+    tumSayisi: ozet.sayi,
+    branslar: ozet.branslar,
     imzaBekleyen,
     istekler,
     belgeBekleyen: await bekleyenBelgeSayisi(db, kim),
@@ -123,6 +130,15 @@ export async function onayListeleri(db: Sorgulayici, kim: Kisi): Promise<OnayLis
     talepOnaylar: talepOnaylar(kim),
     imzaci: imzaBekleyen.length > 0 || kim.roller.some((r) => RAPOR_YAZAN.includes(r)),
   };
+}
+
+/** 566: Onaylar › Tüm raporlar — görebildiği raporlardan süzgeçten geçenlerin SAYFASI (sunucuda; 09-B3). Yalnız yönetici düzeyi (C5: denetçi
+    tüm raporları görmez); satırlar kuyruktaki gibi (izinler, bekleme; yazan hesabın kimliği gitmez). Göremeyene null. */
+export async function tumRaporlarSayfasi(db: Sorgulayici, kim: Kisi, durum: unknown): Promise<SunucuListe<OnaySatiri> | null> {
+  if (!onaylarGorur(kim) || !yoneticiMi(kim)) return null;
+  const simdi = Date.now();
+  const l = await onayTumSayfasi(db, kim, durum);
+  return { ...l, gorunen: l.gorunen.map((r) => satir(kim, r, simdi)) };
 }
 
 /** 565 (menü balonu — her sayfada): yalnız SÜREÇTEKİ raporlar okunur (onayda + onaylandı; tamamlanan bütün raporlar okunmaz) — imzasını bekleyen,
