@@ -26,7 +26,12 @@ import { musteriCikis, musteriGirisiMi, musteriGirisYap, musteriOturumOku, muste
 import { girisYap } from "../src/server/kimlik/oturum.ts";
 import { anaGeciciParola, ekGeciciParola, ekGirisEkle, girisBilgisi, girisPasif } from "../src/modules/musteriler/server/girisler.ts";
 import { musteriKaydet, musteriPasif } from "../src/modules/musteriler/server/musteriler.ts";
-import { panelPersoneli, panelPlanlari, panelRaporlari, panelRaporu, panelSozlesmeleri, panelSozlesmesi, panelUygunsuzluklari } from "../src/modules/musteri-paneli/server/panel.ts";
+import {
+  panelPersoneli, panelPlanlari, panelRaporlari, panelRaporlariSuz, panelRaporSayfasi, panelRaporu, panelSozlesmeleri, panelSozlesmesi, panelUygunsuzluklari,
+  panelUygunsuzluklariSuz, panelUygunsuzlukSayfasi,
+} from "../src/modules/musteri-paneli/server/panel.ts";
+import { raporSecimleri, raporTanim, uygunsuzlukTanim } from "../src/modules/musteri-paneli/liste.ts";
+import { listele, yeniDurum, type SuzgecDurumu } from "../src/components/liste/suzgec.ts";
 import { kusurParcala } from "../src/modules/musteri-paneli/ui/kusur.ts";
 import { atamaEkle, ozlukEkle } from "../src/modules/personel/server/dosyalar.ts";
 import { belgeTuruEkle } from "../src/modules/firma-ayarlari/server/ayarlar.ts";
@@ -545,4 +550,37 @@ test("KRİTER (0036): uygunsuzluğun kriteri metnin başı olmalı ve imzadan so
   await assert.rejects(sql(A, "UPDATE uygunsuzluk SET kriter = 'Başka', surum = surum + 1 WHERE id = $1", [u.id], FA.den.id), /içeriği değişmez|uygunsuzluk_kriter/);
   await assert.rejects(sql(A, "UPDATE uygunsuzluk SET kriter = NULL, surum = surum + 1 WHERE id = $1", [u.id], FA.den.id), /içeriği değişmez/);
   await assert.rejects(m(FA.m1, null, (db) => db.sorgu("UPDATE uygunsuzluk SET kriter = NULL")), /permission denied/);
+});
+
+/* 577 (09-B3; reisim 2026-10-15 "elindeki işlerin hepsini sırayla bitir"): Raporlarınız ve Uygunsuzluklar müşterinin bütün raporlarını
+   tarayıcıya indiriyordu — süzgeç ekranla aynı tanımla (musteri-paneli/liste.ts) sunucuda, yalnız sayfa; Excel / ZIP süzülenlerin tamamı; görme
+   kapsamı (müşteri rolü, tesis kapsamı) aynen. */
+test("577 müşteri paneli listeleri sunucuda sayfalı: ekranın süzgeciyle birebir; ZIP / Excel süzülenlerin hepsi; tesis kapsamı aynen", async () => {
+  const p = await m(FA.m1, null, (db) => panelRaporlari(db));
+  assert.ok(p.raporlar.length >= 1);
+  const tr = raporTanim(raporSecimleri(p.raporlar, p.tesisler));
+  const durumlar: Partial<SuzgecDurumu>[] = [{}, { secili: ["uygunsuz"] }, { secili: ["yakin"] }, { ara: "ht" }, { sayfa: 4 }];
+  for (const d0 of durumlar) {
+    const s = await m(FA.m1, null, (db) => panelRaporSayfasi(db, d0));
+    const o = listele(tr, { ...yeniDurum(tr), ...d0 }, p.raporlar);
+    assert.deepEqual(s.ilk.gorunen, o.gorunen, JSON.stringify(d0));
+    assert.deepEqual([s.ilk.adet, s.ilk.kayitSayisi], [o.adet, p.raporlar.length]);
+    assert.deepEqual((await m(FA.m1, null, (db) => panelRaporlariSuz(db, d0))).map((r) => r.id), o.liste.map((r) => r.id), "ZIP / Excel süzülenlerin hepsi");
+  }
+  const u = await m(FA.m1, null, (db) => panelUygunsuzluklari(db));
+  const tu = uygunsuzlukTanim(raporSecimleri([], u.tesisler));
+  for (const d0 of [{}, { secili: ["acik"] }, { secili: ["agir"] }] as Partial<SuzgecDurumu>[]) {
+    const s = await m(FA.m1, null, (db) => panelUygunsuzlukSayfasi(db, d0));
+    const o = listele(tu, { ...yeniDurum(tu), ...d0 }, u.uygunsuzluklar);
+    assert.deepEqual(s.ilk.gorunen, o.gorunen, JSON.stringify(d0));
+    assert.deepEqual((await m(FA.m1, null, (db) => panelUygunsuzluklariSuz(db, d0))).map((x) => x.id), o.liste.map((x) => x.id));
+  }
+  assert.deepEqual((await m(FA.m1, null, (db) => panelUygunsuzluklariSuz(db, "acik"))).map((x) => x.id), u.uygunsuzluklar.filter((x) => x.acik).map((x) => x.id),
+    "Excel penceresi: bütün açık uygunsuzluklar");
+  /* tesis kapsamlı müşteri girişi: sunucu sayfası da yalnız kapsamdakini sayar */
+  if (p.tesisler.length) {
+    const t0 = p.tesisler[0].id;
+    const kapsam = await m(FA.m1, [t0], (db) => panelRaporlari(db));
+    assert.equal((await m(FA.m1, [t0], (db) => panelRaporSayfasi(db, {}))).ilk.kayitSayisi, kapsam.raporlar.length);
+  }
 });

@@ -3,26 +3,29 @@
    Ekipman (kod + tür) · Tesis · Kontrol · Sonraki kontrol (60 gün içindeyse uyarı) · Sonuç. Çipler Uygunsuz ve Sonraki kontrol 60 gün içinde;
    seçiciler Tesis ve Yıl. Satır rapor sayfasını açar (imzalı PDF orada). Görme sunucuda (müşteri rolü). 320: sekmeler + "Excel indir" (süzgeçteki
    raporlar, satır başında "Rapor" bağlantısı — maket Ö3; tarayıcıda, panelin zaten aldığı veriden). 321: "Toplu indir (ZIP)" — süzgeçteki
-   raporların imzalı PDF'leri, tesis klasörlü (ui/topluIndir.ts). */
+   raporların imzalı PDF'leri, tesis klasörlü (ui/topluIndir.ts). 577 (09-B3): süzgeç ve sayfa SUNUCUDA (server/panel.ts panelRaporSayfasi;
+   tanım ../liste.ts); Excel ve ZIP süzülen bütün raporları sunucudan ister. */
 import Link from "next/link";
 import { baytIndir, dosyaGunu } from "../../../components/disa/indir";
 import { XLSX_TURU, xlsxBayt } from "../../../components/disa/xlsx";
 import { Tus } from "../../../components/tus/Tus";
 import { KartEtiket, Kirp, type Sutun } from "../../../components/liste/Liste";
-import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
-import type { SuzgecTanimi } from "../../../components/liste/suzgec";
+import { Sayac, SuzgecliListe } from "../../../components/liste/SuzgecliListe";
+import { useSunucuSuzgec } from "../../../components/liste/SunucuSuzgec";
+import type { Secenek } from "../../../components/liste/suzgec";
+import { useUyar } from "../../../components/bildirim/Bildirim";
 import { AltSatir, SayfaBasi, SeritKap } from "../../../components/sayfa/Sayfa";
 import { Serit } from "../../../components/serit/Serit";
 import { tarihNo } from "../../../components/secim/tarih";
 import type { MusteriRaporu } from "../../raporlar/server/musteri-baglanti";
-import type { PanelRaporlari } from "../server/panel";
+import type { PanelRaporSayfasi } from "../server/panel";
+import { raporTanim, YAKIN } from "../liste";
+import { panelRaporlariSuzEylemi, panelRaporSayfasiEylemi } from "./eylemler";
 import { adParcasi } from "./ad";
 import { gunFarki, PanelSekmeleri, raporAdresi, SonucYazisi } from "./ortak";
 import { useTopluIndir } from "./topluIndir";
 import stil from "./panel.module.css";
 
-const benzersiz = <T,>(l: readonly T[]) => [...new Set(l)];
-const YAKIN = 60;
 
 const SUTUNLAR: Sutun<MusteriRaporu>[] = [
   { k: "no", genislik: "22%", baslik: "Rapor no", kart: "ust", sira: 1, hucre: (r) => <Link className={stil.no} href={`/portal/r/${r.id}`}>{r.no}</Link> },
@@ -36,21 +39,8 @@ const SUTUNLAR: Sutun<MusteriRaporu>[] = [
   { k: "sonuc", genislik: "10%", baslik: "Sonuç", kart: "rozet", sira: 1, hucre: (r) => <SonucYazisi sonuc={r.sonuc} /> },
 ];
 
-function tanim(l: readonly MusteriRaporu[], tesisler: PanelRaporlari["tesisler"]): SuzgecTanimi<MusteriRaporu> {
-  return {
-    ad: "Raporlarda ara", ipucu: "Rapor no, ekipman kodu", birim: "rapor", sayfa: 20, imkansiz: "",
-    metin: (r) => [r.no, r.ekipmanKod, r.turAd, r.tesis].join(" "),
-    cipler: [
-      { k: "uygunsuz", ad: "Uygunsuz", test: (r) => r.sonuc === "uygun_degil" },
-      { k: "yakin", ad: `Sonraki kontrol ${YAKIN} gün içinde`, test: (r) => !!r.sonraki && gunFarki(r.sonraki) <= YAKIN },
-    ],
-    seciciler: [
-      { k: "tesis", ad: "Tesis", secenek: () => [["tumu", "Tümü"], ...tesisler.map((t) => [t.id, t.ad] as const)], gecer: (r, v) => v === "tumu" || r.tesisId === v },
-      { k: "yil", ad: "Yıl", secenek: () => [["tumu", "Tümü"], ...benzersiz(l.map((r) => (r.kontrol ?? r.imzaGunu).slice(0, 4))).sort().reverse().map((y) => [y, y] as const)],
-        gecer: (r, v) => v === "tumu" || (r.kontrol ?? r.imzaGunu).startsWith(v) },
-    ],
-  };
-}
+/* tanım ../liste.ts'te (sunucu da aynısını koşar); tesis ve yıl seçenekleri sunucudan */
+const tanim = (sec: Record<string, Secenek[]>) => raporTanim(sec);
 
 const SONUC_AD = { uygun: "Uygun", uygun_degil: "Uygun değil" } as const;
 /** süzgeçteki raporlar → .xlsx (maket rapor-excel sütunları) */
@@ -60,14 +50,23 @@ export function raporExceli(l: readonly MusteriRaporu[]): Uint8Array {
       r.sonraki ? tarihNo(r.sonraki) : "", r.sonuc ? SONUC_AD[r.sonuc] : ""])]);
 }
 
-export function PanelRaporListesi({ v }: { v: PanelRaporlari }) {
-  const s = useSuzgec(tanim(v.raporlar, v.tesisler), v.raporlar);
-  const excel = () => baytIndir(`raporlar-${dosyaGunu()}.xlsx`, raporExceli(s.sonuc.liste), XLSX_TURU);
+export function PanelRaporListesi({ v }: { v: PanelRaporSayfasi }) {
+  const s = useSunucuSuzgec(tanim, v.ilk, panelRaporSayfasiEylemi);
+  const uyar = useUyar();
+  /* süzülen BÜTÜN raporlar (ekranda yalnız sayfa var) */
+  const suzulenler = async () => {
+    const l = await panelRaporlariSuzEylemi(s.durum);
+    if (!l) uyar("Raporlar alınamadı; sayfayı yenileyip yeniden deneyin.");
+    return l;
+  };
+  const excel = async () => { const l = await suzulenler(); if (l) baytIndir(`raporlar-${dosyaGunu()}.xlsx`, raporExceli(l), XLSX_TURU); };
   const zip = useTopluIndir();
   /* saklama süresi dolup PDF'i silinen rapor (387) ZIP'e girmez */
-  const topluIndir = () => zip.indir(s.sonuc.liste.flatMap((r) => (r.dosya ? [{ dosya: r.dosya, no: r.no, tesis: r.tesis, boyut: r.boyut }] : [])),
-    `${adParcasi(v.musteri?.kisa ?? "musteri")}-raporlar-${dosyaGunu()}.zip`);
-  const bos = !s.sonuc.liste.length;
+  const topluIndir = async () => {
+    const l = await suzulenler();
+    if (l) zip.indir(l.flatMap((r) => (r.dosya ? [{ dosya: r.dosya, no: r.no, tesis: r.tesis, boyut: r.boyut }] : [])), `${adParcasi(v.musteri?.kisa ?? "musteri")}-raporlar-${dosyaGunu()}.zip`);
+  };
+  const bos = !s.sonuc.adet;
   return (
     <>
       <SayfaBasi baslik="Raporlarınız" sayac={<Sayac s={s} />}

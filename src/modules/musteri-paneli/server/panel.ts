@@ -13,6 +13,10 @@ import { musteriPersoneli, type MusteriPersoneli } from "../../personel/server/m
 import { musteriPlanlari, type MusteriPlani } from "../../planlar/server/musteri-baglanti.ts";
 import { musteriSozlesmeleri, type MusteriSozlesmesi } from "../../sozlesmeler/server/musteri-baglanti.ts";
 
+import { bellekteListele, bellekteSuz } from "../../../server/liste/liste.ts";
+import type { SunucuListe } from "../../../components/liste/suzgec.ts";
+import { raporSecimleri, raporTanim, uygunsuzlukTanim } from "../liste.ts";
+
 const GUN = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit" });
 import {
   musteriAcikUygunsuzluk, musteriRaporlari, musteriRaporu, musteriUygunsuzluklari, type MusteriRaporu, type MusteriUygunsuzlugu, type MusteriUygunsuzlukSatiri,
@@ -36,9 +40,33 @@ export async function panelRaporlari(db: Sorgulayici): Promise<PanelRaporlari> {
   return { ...(await panelBasligi(db)), raporlar: await musteriRaporlari(db) };
 }
 
+/** 577: Raporlarınız — süzgeçten geçenlerin SAYFASI (ekranla aynı tanım — ../liste.ts) + başlık */
+export interface PanelRaporSayfasi extends PanelBasligi { ilk: SunucuListe<MusteriRaporu> }
+export async function panelRaporSayfasi(db: Sorgulayici, durum: unknown): Promise<PanelRaporSayfasi> {
+  const b = await panelBasligi(db), l = await musteriRaporlari(db);
+  return { ...b, ilk: bellekteListele(raporTanim(raporSecimleri(l, b.tesisler)), durum, l) };
+}
+/** 577: Excel / toplu ZIP — süzgeçten geçen BÜTÜN raporlar */
+export async function panelRaporlariSuz(db: Sorgulayici, durum: unknown): Promise<MusteriRaporu[]> {
+  const b = await panelBasligi(db), l = await musteriRaporlari(db);
+  return bellekteSuz(raporTanim(raporSecimleri(l, b.tesisler)), durum, l);
+}
+
 /** Uygunsuzluklar (320): görebildiği uygunsuzluklar, en yeni tespit üstte */
 export async function panelUygunsuzluklari(db: Sorgulayici): Promise<PanelUygunsuzluklari> {
   return { ...(await panelBasligi(db)), uygunsuzluklar: await musteriUygunsuzluklari(db) };
+}
+
+/** 577: Uygunsuzluklar — süzgeçten geçenlerin SAYFASI + başlık */
+export interface PanelUygunsuzlukSayfasi extends PanelBasligi { ilk: SunucuListe<MusteriUygunsuzlukSatiri> }
+export async function panelUygunsuzlukSayfasi(db: Sorgulayici, durum: unknown): Promise<PanelUygunsuzlukSayfasi> {
+  const b = await panelBasligi(db), l = await musteriUygunsuzluklari(db);
+  return { ...b, ilk: bellekteListele(uygunsuzlukTanim(raporSecimleri([], b.tesisler)), durum, l) };
+}
+/** 577: toplu ZIP — süzgeçten geçen BÜTÜN uygunsuzluklar; acik: "Uygunsuzları indir" (Excel) — bütün açık uygunsuzluklar */
+export async function panelUygunsuzluklariSuz(db: Sorgulayici, durum: unknown | "acik"): Promise<MusteriUygunsuzlukSatiri[]> {
+  const b = await panelBasligi(db), l = await musteriUygunsuzluklari(db);
+  return durum === "acik" ? l.filter((u) => u.acik) : bellekteSuz(uygunsuzlukTanim(raporSecimleri([], b.tesisler)), durum, l);
 }
 
 /** Planlanan kontroller (321; maket planCiz): görebildiği her tesis — açık planı (en yakını; başkaları da varsa sayısı) ve sonraki kontrol

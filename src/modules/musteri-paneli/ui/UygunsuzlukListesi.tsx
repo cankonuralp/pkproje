@@ -5,21 +5,26 @@
    tespit üstte. Sütunlar Ekipman · Kusur · Rapor · Tespit · Durum (giderildiyse gideren kontrolün tarihi). Çipler Açık / Giderildi (aynı grup) ve
    Ağır; seçici Tesis. "Uygunsuzları indir": açık uygunsuzlukların önizlemesi (pencere) → .xlsx (satır başında "Rapor" bağlantısı; tarayıcıda,
    panelin zaten aldığı veriden — yeni sunucu ucu yok). 321: "Uygunsuz raporlar (ZIP)" — süzgeçteki uygunsuzlukların raporları (imzalı PDF,
-   tesis klasörlü). Görme sunucuda (müşteri rolü, veritabanı politikası). */
+   tesis klasörlü). Görme sunucuda (müşteri rolü, veritabanı politikası). 577 (09-B3): süzgeç ve sayfa SUNUCUDA (server/panel.ts
+   panelUygunsuzlukSayfasi; tanım ../liste.ts); ZIP süzülen bütün uygunsuzlukları, Excel penceresi bütün açık uygunsuzlukları sunucudan ister. */
 import Link from "next/link";
 import { useState } from "react";
+import { useUyar } from "../../../components/bildirim/Bildirim";
 import { baytIndir, dosyaGunu } from "../../../components/disa/indir";
 import { XLSX_TURU, xlsxBayt } from "../../../components/disa/xlsx";
 import { KartEtiket, Kirp, type Sutun } from "../../../components/liste/Liste";
-import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
-import type { SuzgecTanimi } from "../../../components/liste/suzgec";
+import { Sayac, SuzgecliListe } from "../../../components/liste/SuzgecliListe";
+import { useSunucuSuzgec } from "../../../components/liste/SunucuSuzgec";
+import type { Secenek } from "../../../components/liste/suzgec";
 import { Pencere, pencereMetinSinifi } from "../../../components/pencere/Pencere";
 import { AltSatir, Rozet, SayfaBasi, SeritKap } from "../../../components/sayfa/Sayfa";
 import { Serit } from "../../../components/serit/Serit";
 import { tarihNo } from "../../../components/secim/tarih";
 import { Tus } from "../../../components/tus/Tus";
 import type { MusteriUygunsuzlukSatiri } from "../../raporlar/server/musteri-baglanti";
-import type { PanelUygunsuzluklari } from "../server/panel";
+import type { PanelUygunsuzlukSayfasi } from "../server/panel";
+import { uygunsuzlukTanim } from "../liste";
+import { panelUygunsuzluklariSuzEylemi, panelUygunsuzlukSayfasiEylemi } from "./eylemler";
 import { adParcasi } from "./ad";
 import { kusurParcala } from "./kusur";
 import { useTopluIndir, type ZipRaporu } from "./topluIndir";
@@ -45,20 +50,8 @@ const SUTUNLAR: Sutun<MusteriUygunsuzlukSatiri>[] = [
   ) },
 ];
 
-function tanim(tesisler: PanelUygunsuzluklari["tesisler"]): SuzgecTanimi<MusteriUygunsuzlukSatiri> {
-  return {
-    ad: "Uygunsuzluklarda ara", ipucu: "Ekipman, kriter, rapor no", birim: "uygunsuzluk", sayfa: 20, imkansiz: "Bir uygunsuzluk hem açık hem giderilmiş olamaz",
-    metin: (u) => [u.ekipmanKod, u.turAd, u.tesis, u.metin, u.raporNo].join(" "),
-    cipler: [
-      { k: "acik", ad: "Açık", grup: "durum", test: (u) => u.acik },
-      { k: "giderildi", ad: "Giderildi", grup: "durum", test: (u) => !u.acik },
-      { k: "agir", ad: "Ağır kusur", test: (u) => u.agir },
-    ],
-    seciciler: [
-      { k: "tesis", ad: "Tesis", secenek: () => [["tumu", "Tümü"], ...tesisler.map((t) => [t.id, t.ad] as const)], gecer: (u, v) => v === "tumu" || u.tesisId === v },
-    ],
-  };
-}
+/* tanım ../liste.ts'te (sunucu da aynısını koşar); tesis seçenekleri sunucudan */
+const tanim = (sec: Record<string, Secenek[]>) => uygunsuzlukTanim(sec);
 
 /** açık uygunsuzluklar → .xlsx (maket excel-indir sütunları; ilk sütun raporu açan bağlantı) */
 export function uygunsuzlukExceli(l: readonly MusteriUygunsuzlukSatiri[]): Uint8Array {
@@ -69,27 +62,35 @@ export function uygunsuzlukExceli(l: readonly MusteriUygunsuzlukSatiri[]): Uint8
     })]);
 }
 
-export function PanelUygunsuzlukListesi({ v }: { v: PanelUygunsuzluklari }) {
-  const s = useSuzgec(tanim(v.tesisler), v.uygunsuzluklar);
+export function PanelUygunsuzlukListesi({ v }: { v: PanelUygunsuzlukSayfasi }) {
+  const s = useSunucuSuzgec(tanim, v.ilk, panelUygunsuzlukSayfasiEylemi);
+  const uyar = useUyar();
   const [pencere, setPencere] = useState(false);
-  const acik = v.uygunsuzluklar.filter((u) => u.acik);
+  /* Excel penceresi: bütün açık uygunsuzluklar — pencere açılınca sunucudan */
+  const [acik, setAcik] = useState<MusteriUygunsuzlukSatiri[]>([]);
+  const pencereAc = async () => {
+    const l = await panelUygunsuzluklariSuzEylemi("acik");
+    if (!l) { uyar("Uygunsuzluklar alınamadı; sayfayı yenileyip yeniden deneyin."); return; }
+    setAcik(l); setPencere(true);
+  };
   const indir = () => { baytIndir(`uygunsuzluklar-${dosyaGunu()}.xlsx`, uygunsuzlukExceli(acik), XLSX_TURU); setPencere(false); };
   const zip = useTopluIndir();
-  /* süzgeçteki uygunsuzlukların raporları (her rapor bir kez, son imzalı PDF'i) */
-  const zipRaporlari = () => {
+  /* süzgeçteki BÜTÜN uygunsuzlukların raporları (her rapor bir kez, son imzalı PDF'i) — sunucudan */
+  const topluIndir = async () => {
+    const su = await panelUygunsuzluklariSuzEylemi(s.durum);
+    if (!su) { uyar("Uygunsuzluklar alınamadı; sayfayı yenileyip yeniden deneyin."); return; }
     const l: ZipRaporu[] = [], gorulen = new Set<string>();
-    for (const u of s.sonuc.liste) if (u.raporDosya && !gorulen.has(u.raporId)) { gorulen.add(u.raporId); l.push({ dosya: u.raporDosya, no: u.raporNo, tesis: u.tesis, boyut: u.raporBoyut }); }
-    return l;
+    for (const u of su) if (u.raporDosya && !gorulen.has(u.raporId)) { gorulen.add(u.raporId); l.push({ dosya: u.raporDosya, no: u.raporNo, tesis: u.tesis, boyut: u.raporBoyut }); }
+    zip.indir(l, `${adParcasi(v.musteri?.kisa ?? "musteri")}-uygunsuz-raporlar-${dosyaGunu()}.zip`);
   };
-  const topluIndir = () => zip.indir(zipRaporlari(), `${adParcasi(v.musteri?.kisa ?? "musteri")}-uygunsuz-raporlar-${dosyaGunu()}.zip`);
   return (
     <>
       <SayfaBasi baslik="Uygunsuzluklar" sayac={<Sayac s={s} />}
         tuslar={<>
-          <Tus tur="ikincil" ikon="download" onClick={topluIndir} disabled={!s.sonuc.liste.length || !!zip.ilerleme} aria-live="polite">
+          <Tus tur="ikincil" ikon="download" onClick={topluIndir} disabled={!s.sonuc.adet || !!zip.ilerleme} aria-live="polite">
             {zip.ilerleme ? `İndiriliyor ${zip.ilerleme}` : "Uygunsuz raporlar (ZIP)"}
           </Tus>
-          <Tus ikon="file-check" onClick={() => setPencere(true)} disabled={!acik.length}>Uygunsuzları indir</Tus>
+          <Tus ikon="file-check" onClick={pencereAc} disabled={!v.acikUygunsuz}>Uygunsuzları indir</Tus>
         </>} />
       <p className={stil.alt}>{v.musteri?.unvan ?? "—"}</p>
       <PanelSekmeleri acikUygunsuz={v.acikUygunsuz} secili="/portal/uygunsuz" />
