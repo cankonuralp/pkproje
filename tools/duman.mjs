@@ -1,12 +1,12 @@
 /* DUMAN TESTİ (350; 09-G5, 06 "her teslimden sonra canlıya karşı duman testi koşulur") — canlı siteyi DIŞARIDAN yoklar; salt okunur (yalnız GET,
    oturum yok, parola yok, veri yazılmaz). Çıkış kodu 0 = hepsi geçti.
      node tools/duman.mjs [firma adresi] [yönetim adresi]
-   Varsayılan: https://probata-deneme.vercel.app ve https://probata-yonetim.vercel.app (deneme yayını).
+   Varsayılan: https://deneme.probata.com.tr ve https://yonetim.probata.com.tr (582, 2026-10-15: probata.com.tr; eski vercel.app adresleri 308 ile yönlenir).
    Denetimler: sağlık ucu (veritabanı, göç güncel, RLS, Supabase API rolleri kapalı, uygulama rolü kısıtlı) · giriş sayfası + güvenlik başlıkları
    (CSP nonce'lu, HSTS, çerçeveye gömülmez, nosniff) · oturumsuz sayfa girişe yönlenir · anonim dosya isteği 403 · oturumsuz tanım dizini 403 ·
    firma adresinde /yonetim yok · /favicon.ico simgeye yönlenir (409) · yönetim adresinde yalnız /yonetim (firma ekranı ve API 404 — önceden yükleme başlığıyla da). */
-const FIRMA = (process.argv[2] ?? "https://probata-deneme.vercel.app").replace(/\/$/, "");
-const YONETIM = (process.argv[3] ?? "https://probata-yonetim.vercel.app").replace(/\/$/, "");
+const FIRMA = (process.argv[2] ?? "https://deneme.probata.com.tr").replace(/\/$/, "");
+const YONETIM = (process.argv[3] ?? "https://yonetim.probata.com.tr").replace(/\/$/, "");
 const sonuclar = [];
 const denet = async (ad, is) => {
   try {

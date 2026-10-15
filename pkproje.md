@@ -2498,6 +2498,22 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-15 (582): **YAYIN probata.com.tr'DE** (reisim: *"probata.com.tr yi aldım … yayına oradan devam edelim vercel deneme sayfasından çıkalım"*).
+  Alan adı Natro'dan; ad sunucuları ns1 / ns2.vercel-dns.com (TRABİS aynı akşam yayınladı). Vercel'de probata.com.tr, www (→ probata.com.tr 308),
+  *.probata.com.tr, deneme. ve yonetim. alt adları; sertifikalar Vercel'in (kök: ZeroSSL / Sectigo, www ve joker: Let's Encrypt; Ocak 2027'ye dek,
+  kendiliğinden yenilenir); CAA kayıtlarını Vercel DNS kendisi koydu (letsencrypt.org, sectigo.com, pki.goog). Ortam: PROBATA_ANA_ALAN=probata.com.tr,
+  PROBATA_YONETIM_ALAN=yonetim.probata.com.tr (yeniden yayın df1b9cd). Deneme firmasının kısa adı probata-deneme → deneme (canlıda, yönetim izine
+  "firma.kisa_ad_degisti"); adresi https://deneme.probata.com.tr, yönetim https://yonetim.probata.com.tr. Eski probata-deneme.vercel.app ve
+  probata-yonetim.vercel.app yolu koruyarak 308 ile yeni adreslere. Ölçüldü: duman 11/11 yeni adreslerde, http → https 308, HSTS (2 yıl, alt alanlar),
+  CSP nonce'lu, X-Frame-Options DENY. Kök adres şimdilik giriş sayfası ("Bu adreste kayıtlı bir firma yok") — karşılama sayfası maket + onay bekliyor.
+  Açık (reisim): Natro'da otomatik yenileme; e-posta paketi yoksa SPF / DMARC kayıtları. Vercel Hobby ticari kullanıma kapalı, Supabase Free'de
+  yedek yok ve en çok 2 proje — ilk gerçek firmadan önce ikisi de Pro.
+- 2026-10-15 (581): **FV2 YAYINDA** — merkez kaydı (göç 0096: firma_vt şifreli bağlantı, firma_kurulum, firma_coz, goc_hedefleri, yönetim işlevleri;
+  arama yolu pg_temp sonda), src/server/db/baglanti.ts / merkez.ts / scram.ts, ayar/aes.ts. Yazım + iki bağımsız inceleme (13 bulgunun 12'si
+  uygulandı) + deneme makinesi tam yeşil (df1b9cd) → Supabase 0096 (97 göç; goc özeti 6442ce83…) → main df1b9cd, duman 11/11, çalışma anı hatası yok.
+- 2026-10-15 (580): **FV1 YAYINDA** — göç 0095 vt_kimlik (her veritabanı kimliğini bilir; kiraciIcinde her işlemde vt_firma_dogrula), firma.vt.
+  Deneme makinesi 6f419e3'te olumsuz kanıt yonetim 2 düştü (firma_bul'un son tanımı artık 0095'te — bozma oraya taşındı, 36d07e0) → Supabase 0095
+  (96 göç) → main 36d07e0, duman 11/11. Tasarım FIRMA-VT.md (579).
 - 2026-10-15 (579): **SUNUM 579 ONAYLANDI — FİRMA KURULUMU PANELDEN** (Supabase projesi, Resend alan adı, yapay zekâ anahtarı Yönetim'den; Firma ayarlarında
   Supabase ve gönderim kilitli). Kararlar §9 (2026-10-15). Tasarım `FIRMA-VT.md`: iki bağımsız tasarım + hakem birleşimi; merkez = ortak proje (tek göç
   zinciri), firma.vt 'ortak' | 'kendi', bağlantı merkezde şifreli, yanlış yönlendirmeye veritabanı kilidi (vt_kimlik + vt_firma_dogrula), göç
