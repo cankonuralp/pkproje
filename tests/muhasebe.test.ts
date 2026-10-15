@@ -21,7 +21,7 @@ import { bugunTr, planAc } from "../src/modules/planlar/server/planlar.ts";
 import { taslakBaslat, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
 import { imzaHazirla, imzaliYukle, raporOlustur } from "../src/modules/raporlar/server/raporlar.ts";
 import { giderKdv, gunEkle } from "../src/modules/muhasebe/sema.ts";
-import { faturaBelgesiVerisi, faturaKarti, faturaKaydet, faturaListesi, gelirGider, isKarti, isListesi, tahsilatKaydet, type Kisi } from "../src/modules/muhasebe/server/muhasebe.ts";
+import { faturaBelgesiVerisi, faturaKarti, faturaKaydet, faturaListesi, gecikenFaturaSayisi, gelirGider, isKarti, isListesi, tahsilatKaydet, type Kisi } from "../src/modules/muhasebe/server/muhasebe.ts";
 import { giderDosyasiGorulur, giderExceliYukle, giderKaydet, giderListesi, giderOdendi, giderSecenekleri, isGiderleri, type GiderBelgesi, type GiderSonra }
   from "../src/modules/muhasebe/server/giderler.ts";
 import { masrafKarar } from "../src/modules/muhasebe/server/talep-baglanti.ts";
@@ -195,6 +195,11 @@ test("vadesi geçen fatura: durum 'Vadesi geçti', iş de vadesi geçti", async 
   await sahip("UPDATE fatura SET tarih = tarih - 60, vade = vade - 60 WHERE id = $1", [r.id]);
   assert.equal((await a(MUH, (db) => faturaKarti(db, MUH, r.id)))!.durum, "gecikti");
   assert.equal((await a(MUH, (db) => isKarti(db, MUH, P3)))!.durum, "gecikti");
+  /* 565: menü balonunun tek sorgusu fatura listesinin "gecikti" sayısıyla aynı; Muhasebe'yi görmeyene null */
+  const liste = (await a(MUH, (db) => faturaListesi(db, MUH)))!.filter((f) => f.durum === "gecikti").length;
+  assert.ok(liste >= 1);
+  assert.equal(await a(MUH, (db) => gecikenFaturaSayisi(db, MUH)), liste);
+  assert.equal(await a(DEN, (db) => gecikenFaturaSayisi(db, DEN)), null);
 });
 
 test("toplu fatura: müşterinin faturaya hazır bütün işleri tek faturada", async () => {

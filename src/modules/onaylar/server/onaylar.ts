@@ -125,6 +125,21 @@ export async function onayListeleri(db: Sorgulayici, kim: Kisi): Promise<OnayLis
   };
 }
 
+/** 565 (menü balonu — her sayfada): yalnız SÜREÇTEKİ raporlar okunur (onayda + onaylandı; tamamlanan bütün raporlar okunmaz) — imzasını bekleyen,
+    onaylayabildiği kuyruk, karar verebildiği talepler, bekleyen belgeler. Kural onayListeleri'ndekiyle aynı (izinler, satir). Göremeyene null. */
+export async function onayTakibi(db: Sorgulayici, kim: Kisi): Promise<Pick<OnayListeleri, "imzaBekleyen" | "kuyruk" | "talepler" | "belgeBekleyen"> | null> {
+  if (!onaylarGorur(kim)) return null;
+  const simdi = Date.now(), yonetici = yoneticiMi(kim);
+  const surecte = await raporOzetleri(db, { durumlar: ["onayda", "onaylandi"] });
+  return {
+    imzaBekleyen: surecte.filter((r) => r.durum === "onaylandi" && !!r.hesapId && r.hesapId === kim.id && canDoEylem(kim, "rapor_son_imza", { sahip: r.hesapId }))
+      .map((r) => satir(kim, r, simdi)),
+    kuyruk: yonetici ? surecte.filter((r) => r.durum === "onayda" && gorur(kim, r)).sort(enYeni).map((r) => satir(kim, r, simdi)) : [],
+    talepler: (await onayTalepleri(db, kim)).map((t) => ({ ...t, ...beklemesi(t.gonderildi, simdi) })),
+    belgeBekleyen: await bekleyenBelgeSayisi(db, kim),
+  };
+}
+
 export interface OnayEkrani {
   r: OnaySatiri; ozet: GozdenGecirmeMaddesi[]; sira: number | null; kuyrukBoyu: number;
   /** tamamlanan raporda yazanın bekleyen revize isteği (318) */

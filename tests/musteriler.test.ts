@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde, type Havuz } from "../src/server/db/kiraci.ts";
-import { musteriKaydet, musteriKarti, musteriListesi, musteriPasif, tesisKaydet, tesisKarti, tesisPasif, type Kisi } from "../src/modules/musteriler/server/musteriler.ts";
+import { musteriKaydet, musteriKarti, musteriListesi, musteriOzetleri, musteriPasif, tesisKaydet, tesisKarti, tesisPasif, type Kisi } from "../src/modules/musteriler/server/musteriler.ts";
 import { MATRIS_ONERI } from "../src/server/yetki/tanim.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
@@ -142,4 +142,20 @@ test("PASİF (karar 48): müşteri pasif → etkin tesisleri onunla pasif; geri 
   assert.deepEqual(p.tesisler.map((t) => [t.ad, !!t.pasif]), [["Bir", false], ["İki", true]], "kendi başına pasif olan tesis pasif kalır");
   /* silme yetkisi yok: uygulama rolü DELETE yapamaz */
   await assert.rejects(a((db) => db.sorgu("DELETE FROM musteri WHERE id = $1", [m.id])), /permission denied|izin/i);
+});
+
+/* 565 (reisim 2026-10-15 analizi — veri büyüyünce yavaşlama): öteki modüllerin müşteri özeti istenen tesislerle sınırlanır (rapor listesi, menü
+   balonu bütün müşterileri okumaz) — yalnız o tesisler ve müşterileri; boş liste boş; sınırsız çağrı hepsini verir; başka firmanın tesisi gelmez */
+test("müşteri özeti tesislerle sınırlanır: yalnız istenen tesisler ve müşterileri; başka firmanınki gelmez", async () => {
+  const m1 = tamam(await a((db) => musteriKaydet(db, PLAN, null, 0, { ...M, unvan: "Özet Bir A.Ş.", vno: "", vd: "", eposta: "" }, false)));
+  const m2 = tamam(await a((db) => musteriKaydet(db, PLAN, null, 0, { ...M, unvan: "Özet İki A.Ş.", vno: "", vd: "", eposta: "" }, false)));
+  const t1 = tamam(await a((db) => tesisKaydet(db, PLAN, m1.id, null, 0, { ...T, ad: "Özet Tesis 1", sgk: "" }, false)));
+  tamam(await a((db) => tesisKaydet(db, PLAN, m1.id, null, 0, { ...T, ad: "Özet Tesis 2", sgk: "" }, false)));
+  tamam(await a((db) => tesisKaydet(db, PLAN, m2.id, null, 0, { ...T, ad: "Özet Tesis 3", sgk: "" }, false)));
+  const s = await a((db) => musteriOzetleri(db, { tesisler: [t1.id] }));
+  assert.deepEqual(s.map((x) => [x.id, x.tesisler.map((t) => t.id)]), [[m1.id, [t1.id]]]);
+  assert.deepEqual(await a((db) => musteriOzetleri(db, { tesisler: [] })), []);
+  assert.deepEqual(await b((db) => musteriOzetleri(db, { tesisler: [t1.id] })), [], "başka firma görmez");
+  const hepsi = await a((db) => musteriOzetleri(db));
+  assert.ok(hepsi.some((x) => x.id === m2.id) && hepsi.find((x) => x.id === m1.id)!.tesisler.length === 2);
 });

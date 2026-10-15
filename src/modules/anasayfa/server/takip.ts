@@ -13,9 +13,9 @@
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { hesabinPersoneli } from "../../../server/kimlik/hesap.ts";
 import { duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
-import { faturaListesi } from "../../muhasebe/server/muhasebe.ts";
+import { gecikenFaturaSayisi } from "../../muhasebe/server/muhasebe.ts";
 import { aracTakip } from "../../araclar/server/araclar.ts";
-import { onayListeleri } from "../../onaylar/server/onaylar.ts";
+import { onayTakibi } from "../../onaylar/server/onaylar.ts";
 import { anaPlanlar, isgEksikPlanlar, type IsgEksikPlan } from "../../planlar/server/anasayfa-baglanti.ts";
 import { kendiYeniRaporlarim } from "../../raporlar/server/anasayfa-baglanti.ts";
 import { uyariListesi } from "../../uyarilar/server/uyarilar.ts";
@@ -85,7 +85,8 @@ export async function menuTakip(db: Sorgulayici, kim: Kisi & YetkiHesabi): Promi
 
   /* onaylar (15): imzasını bekleyen raporları + onay kuyruğundan ONAYLAYABİLDİKLERİ (branş yöneticisi; N5) + diğer belgeler + 477 karar
      verebildiği izin talepleri / masraf formları; 24 saati geçen kırmızı */
-  const o = gor(15) ? await onayListeleri(db, kim) : null;
+  /* 565: yalnız süreçteki raporlar (bütün raporlar okunmaz) */
+  const o = gor(15) ? await onayTakibi(db, kim) : null;
   if (o) {
     const kuyruk = o.kuyruk.filter((x) => x.izin.onayla);
     /* her bölümün 24 saati geçeni kırmızı, kalanı sarı (sebep kendi sekmesine götürür) */
@@ -98,8 +99,8 @@ export async function menuTakip(db: Sorgulayici, kim: Kisi & YetkiHesabi): Promi
       ne("sari", o.belgeBekleyen, "belge imzanızı bekliyor", "/onaylar/diger", true));
   }
 
-  /* muhasebe (18): vadesi geçen fatura */
+  /* muhasebe (18): vadesi geçen fatura — 565: tek sayım sorgusu (bütün muhasebe okunmaz) */
   if (hepsi(18)) koy(18, { kirmizi: "vadesi geçen fatura", sari: "" },
-    ne("kirmizi", ((await faturaListesi(db, kim)) ?? []).filter((f) => f.durum === "gecikti").length, "faturanın vadesi geçti", "/muhasebe/faturalar"));
+    ne("kirmizi", (await gecikenFaturaSayisi(db, kim)) ?? 0, "faturanın vadesi geçti", "/muhasebe/faturalar"));
   return t;
 }

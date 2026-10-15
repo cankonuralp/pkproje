@@ -36,7 +36,8 @@ export async function raporOzetleri(db: Sorgulayici, s: { durumlar?: readonly Ra
   if (!l.length) return [];
   const ek = new Map((await ekipmanlar(db, [...new Set(l.map((x) => x.ekipman_id))])).map((e) => [e.id, e]));
   const tur = new Map((await turOzetleri(db)).map((t) => [t.id, t]));
-  const yer = new Map((await musteriOzetleri(db)).flatMap((m) => m.tesisler.map((t) => [t.id, { tesis: t.ad, musteri: m.kisa, musteriId: m.id, il: t.il }] as const)));
+  /* 565: yalnız bu raporların tesisleri (bütün müşteri listesi okunmaz) */
+  const yer = new Map((await musteriOzetleri(db, { tesisler: [...ek.values()].map((e) => e.tesisId) })).flatMap((m) => m.tesisler.map((t) => [t.id, { tesis: t.ad, musteri: m.kisa, musteriId: m.id, il: t.il }] as const)));
   const ad = new Map((await personelOzetleri(db, [...new Set(l.map((x) => x.personel_id))])).map((x) => [x.id, x.ad]));
   return l.map((x) => {
     const e = ek.get(x.ekipman_id), t = tur.get(x.tur_id), y = e ? yer.get(e.tesisId) : undefined;

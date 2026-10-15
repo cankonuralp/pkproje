@@ -197,13 +197,22 @@ export async function tesisPasif(db: Sorgulayici, kim: Kisi, id: string, surum: 
   return cevir(r) ?? { durum: "tamam", id, surum: (r as { surum: number }).surum };
 }
 
-/** öteki modüller için müşteri + tesis özeti (yetki ÇAĞIRANDA; Sözleşmeler kendi düzeyine göre gösterir). Pasif müşteri ve tesis dahil, işaretli. */
-export async function musteriOzetleri(db: Sorgulayici): Promise<{ id: string; unvan: string; kisa: string; vd: string | null; vno: string | null; pasif: boolean;
+/** öteki modüller için müşteri + tesis özeti (yetki ÇAĞIRANDA; Sözleşmeler kendi düzeyine göre gösterir). Pasif müşteri ve tesis dahil, işaretli.
+    565 (reisim 2026-10-15 analizi — veri büyüyünce yavaşlama): s.tesisler verilirse YALNIZ o tesisler ve müşterileri okunur (rapor / plan listesi,
+    menü balonu bütün müşterileri okumaz); gruplama tek geçişte (her müşteride bütün tesisleri süzmek yok). */
+export async function musteriOzetleri(db: Sorgulayici, s: { tesisler?: readonly string[] } = {}): Promise<{ id: string; unvan: string; kisa: string; vd: string | null; vno: string | null; pasif: boolean;
   tesisler: { id: string; ad: string; adres: string | null; il: string | null; ilce: string | null; sgk: string | null; pasif: boolean }[] }[]> {
-  const m = (await db.sorgu<{ id: string; unvan: string; kisa: string; vd: string | null; vno: string | null; pasif: string | null }>("SELECT id::text, unvan, kisa, vd, vno, pasif FROM musteri")).rows;
-  const t = (await db.sorgu<TesisSatirDb>(TESIS_SEC)).rows;
+  const sinirli = s.tesisler !== undefined;
+  const istenen = sinirli ? [...new Set(s.tesisler!.filter((x) => /^[0-9a-f-]{36}$/.test(x)))] : [];
+  if (sinirli && !istenen.length) return [];
+  const t = (await db.sorgu<TesisSatirDb>(sinirli ? `${TESIS_SEC} WHERE id = ANY ($1::uuid[])` : TESIS_SEC, sinirli ? [istenen] : [])).rows;
+  const m = (await db.sorgu<{ id: string; unvan: string; kisa: string; vd: string | null; vno: string | null; pasif: string | null }>(
+    sinirli ? "SELECT id::text, unvan, kisa, vd, vno, pasif FROM musteri WHERE id = ANY ($1::uuid[])" : "SELECT id::text, unvan, kisa, vd, vno, pasif FROM musteri",
+    sinirli ? [[...new Set(t.map((x) => x.musteri_id))]] : [])).rows;
+  const tesisleri = new Map<string, TesisSatirDb[]>();
+  for (const y of t) { const l = tesisleri.get(y.musteri_id); if (l) l.push(y); else tesisleri.set(y.musteri_id, [y]); }
   return m.map((x) => ({ id: x.id, unvan: x.unvan, kisa: x.kisa, vd: x.vd, vno: x.vno, pasif: !!x.pasif,
-    tesisler: t.filter((y) => y.musteri_id === x.id).map((y) => ({ id: y.id, ad: y.ad, adres: y.adres, il: y.il, ilce: y.ilce, sgk: y.sgk, pasif: !!y.pasif })).sort((a, b) => a.ad.localeCompare(b.ad, "tr")) }))
+    tesisler: (tesisleri.get(x.id) ?? []).map((y) => ({ id: y.id, ad: y.ad, adres: y.adres, il: y.il, ilce: y.ilce, sgk: y.sgk, pasif: !!y.pasif })).sort((a, b) => a.ad.localeCompare(b.ad, "tr")) }))
     .sort((a, b) => a.kisa.localeCompare(b.kisa, "tr"));
 }
 

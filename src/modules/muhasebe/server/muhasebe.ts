@@ -147,6 +147,16 @@ export async function faturaListesi(db: Sorgulayici, kim: Kisi): Promise<FaturaS
   return v.faturalar.map((f) => faturaOzet(v, f));
 }
 
+/** 565 (menü balonu — her sayfada): vadesi geçmiş, kalanı olan fatura sayısı TEK sorguyla (faturaListesi bütün raporları, planları, müşterileri,
+    giderleri okuyordu). Kural faturaOzet'teki "gecikti" ile aynı: kalan > 0 ve vade < bugün (Türkiye günü). Göremeyene null. */
+export async function gecikenFaturaSayisi(db: Sorgulayici, kim: Kisi): Promise<number | null> {
+  if (!gorur(kim)) return null;
+  return (await db.sorgu<{ n: number }>(
+    `SELECT count(*)::int AS n FROM fatura f
+     WHERE f.vade < $1::date AND f.toplam > coalesce((SELECT sum(t.tutar) FROM tahsilat t WHERE t.firma_id = f.firma_id AND t.fatura_id = f.id), 0)`,
+    [bugunTr()])).rows[0].n;
+}
+
 /* ── İŞ SAYFASI ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────── */
 export interface IsRaporu {
   id: string; no: string; ekipmanKod: string; turAd: string; durum: MuhasebeRaporu["durum"]; imzali: boolean;
