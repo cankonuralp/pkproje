@@ -6,6 +6,10 @@ import type { Rol } from "../yetki/tanim.ts";
 
 export interface HesapOzeti { id: string; personelId: string; eposta: string; durum: "ilk" | "etkin" | "pasif"; roller: Rol[]; sonGiris: Date | null; olustu: Date }
 
+/** 566 (sunucuda sayfalı listeler): öteki modüllerin liste sorgusunda birleştirdiği OKUMA PARÇASI — hesabın firması, kimliği, personeli
+    (planın ekibindeki kişinin hesabı: "atandığı plan" görme kuralı). */
+export const HESAP_PERSONEL_SQL = "(SELECT firma_id, id, personel_id FROM hesap)";
+
 /** personellerin hesapları (liste ve kart için; parola özeti ve kilit bilgisi DÖNMEZ) */
 export async function personelHesaplari(db: Sorgulayici, personelIdleri: readonly string[]): Promise<Map<string, HesapOzeti>> {
   if (!personelIdleri.length) return new Map();

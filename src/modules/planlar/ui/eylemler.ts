@@ -12,12 +12,21 @@ import {
 } from "../server/plan-ici";
 import { cevrimdisiPaketi, type CevrimdisiPaketi } from "../server/cevrimdisi";
 import { bugunTr, planAc, tesisPlanBilgisi, type TesisPlanBilgisi } from "../server/planlar";
+import { planSayfasi } from "../server/liste";
+import type { PlanSatir } from "../server/plan-ici";
+import type { SunucuListe } from "../../../components/liste/suzgec";
 
 export interface PlanAcYaniti { tamam?: boolean; id?: string; no?: string; eposta?: number; hatalar?: Record<string, string>; genel?: string }
 
 async function oturum() {
   if (!(await ayniKoken())) return "İstek reddedildi. Sayfayı yenileyip yeniden deneyin.";
   return (await istekOturumu()) ?? "Oturumunuz kapandı. Yeniden giriş yapın.";
+}
+
+/** 566: Planlar listesinin bir sayfası (süzgeç SUNUCUDA — 09-B3). Oturum ve kiracı istekten; görme kuralı modül işlevinde (planSayfasi). */
+export async function planSayfasiEylemi(durum: unknown): Promise<SunucuListe<PlanSatir> | null> {
+  const o = await oturum(); if (typeof o === "string") return null;
+  return oturumIslemi(o, (db) => planSayfasi(db, o, durum));
 }
 
 /** çevrimdışı paket (396): kişinin önümüzdeki 7 gündeki planları ve Yeni raporları — cihaz bu sayfaları önceden açar */

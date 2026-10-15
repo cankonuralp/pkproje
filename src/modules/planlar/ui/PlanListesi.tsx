@@ -1,20 +1,21 @@
 "use client";
 /* PLANLAR LİSTESİ (referans ekran; maket planlarim.html #/ — 2. tur sütunları, 2026-09-26 "Görüntüle", 2026-09-28 süzgeç): Proje no · Proje adı ·
    Müşteri · Adres · Denetçi · Başlangıç · Durum · Görüntüle. Süzgeç: proje adı ve proje no ayrı kutular; seçiciler Durum, Tarih, Müşteri, Branş;
-   sıralama sütun başlığından (kartta "Sıralama"); varsayılan en yeni tarih üstte, aynı günde en son açılan üstte. "Plan aç" yalnız yetkisi olana. */
+   sıralama sütun başlığından (kartta "Sıralama"); varsayılan en yeni tarih üstte, aynı günde en son açılan üstte. "Plan aç" yalnız yetkisi olana.
+   566 (09-B3): süzgeç, sıralama ve sayfa SUNUCUDA (server/liste.ts planSayfasi — aynı anahtarlar); ekrana yalnız sayfanın 20 satırı ve sayılar. */
 import Link from "next/link";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { KartEtiket, Kirp, type Sutun } from "../../../components/liste/Liste";
-import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
-import type { SuzgecTanimi } from "../../../components/liste/suzgec";
+import { Sayac, SuzgecliListe } from "../../../components/liste/SuzgecliListe";
+import { useSunucuSuzgec } from "../../../components/liste/SunucuSuzgec";
+import type { Secenek, SunucuListe, SuzgecTanimi } from "../../../components/liste/suzgec";
 import { AltSatir, Rozet, SayfaBasi } from "../../../components/sayfa/Sayfa";
 import { TusBaglanti } from "../../../components/tus/Tus";
 import { PLAN_DURUM, tarihNo, type PlanDurumu } from "../sema";
 import type { PlanSatir } from "../server/plan-ici";
+import { planSayfasiEylemi } from "./eylemler";
 import stil from "./planlar.module.css";
 
-const DURUM_SIRA: Record<PlanDurumu, number> = { bekliyor: 1, kabul: 2, denetimde: 3, tamamlandi: 4, reddedildi: 5 };
-const gunEkle = (iso: string, n: number) => new Date(Date.parse(`${iso}T00:00:00Z`) + n * 864e5).toISOString().slice(0, 10);
 const adres = (p: PlanSatir) => [p.adres, [p.ilce, p.il].filter(Boolean).join(" / ")].filter(Boolean).join(", ");
 const SIRA_AD: Record<string, string> = { no: "Proje no", ad: "Proje adı", musteri: "Müşteri", adres: "Adres", ekip: "Denetçi", baslangic: "Başlangıç", durum: "Durum" };
 function siraEtiket(v: string) {
@@ -25,35 +26,28 @@ function siraEtiket(v: string) {
   return `${SIRA_AD[s] ?? s}: ${yon}`;
 }
 
-function tanim(kayitlar: readonly PlanSatir[], bugun: string): SuzgecTanimi<PlanSatir> {
-  /* hafta pazartesi başlar (tarih.ts ile aynı) */
-  const gun = new Date(`${bugun}T00:00:00Z`).getUTCDay(), pzt = gunEkle(bugun, -((gun + 6) % 7)), paz = gunEkle(pzt, 6), yedi = gunEkle(bugun, 7);
+/* süzgeç tanımı: anahtarlar sunucudakiyle aynı (server/liste.ts planKaynagi); süzme, sıralama ve tarih pencereleri SUNUCUDA — burada yalnız ekranın
+   çizimi (ad, seçenek; müşteri seçenekleri sunucudan). Sıralanabilir sütunlar: siraAnahtari'nın anahtarları (değerleri sunucuda). */
+const hep = () => true;
+const sifir = () => 0;
+function tanim(sec: Record<string, Secenek[]>): SuzgecTanimi<PlanSatir> {
   return {
     ad: "Planlarda ara", ipucu: "Proje, müşteri, il", birim: "plan", sayfa: 20, imkansiz: "Bir plan aynı anda iki durumda olamaz",
-    metin: (p) => [p.no, p.ad, p.musteri, p.adres ?? "", p.ilce ?? "", p.il ?? ""].join(" "),
+    metin: () => "",
     alanlar: [
-      { k: "ad", ad: "Proje adı", ipucu: "ör. fabrika", metin: (p) => p.ad },
-      { k: "no", ad: "Proje no", ipucu: "ör. P-0926-03", metin: (p) => p.no },
+      { k: "ad", ad: "Proje adı", ipucu: "ör. fabrika", metin: () => "" },
+      { k: "no", ad: "Proje no", ipucu: "ör. P-0926-03", metin: () => "" },
     ],
     cipler: [],
     seciciler: [
-      { k: "durum", ad: "Durum", secenek: () => [["tumu", "Tümü"], ...(Object.keys(PLAN_DURUM) as PlanDurumu[]).map((k) => [k, PLAN_DURUM[k][0]] as const)],
-        gecer: (p, v) => v === "tumu" || p.durum === v },
-      { k: "tarih", ad: "Tarih", secenek: () => [["tumu", "Tümü"], ["bugun", "Bugün"], ["hafta", "Bu hafta"], ["yedi", "Önümüzdeki 7 gün"]],
-        gecer: (p, v) => v === "tumu" || (v === "bugun" ? p.baslangic <= bugun && p.bitis >= bugun
-          : v === "hafta" ? p.baslangic <= paz && p.bitis >= pzt : p.baslangic <= yedi && p.bitis >= bugun) },
-      { k: "musteri", ad: "Müşteri", secenek: () => [["tumu", "Tümü"], ...[...new Set(kayitlar.map((p) => p.musteri))].sort((a, b) => a.localeCompare(b, "tr")).map((m) => [m, m] as const)],
-        gecer: (p, v) => v === "tumu" || p.musteri === v },
-      { k: "brans", ad: "Branş", secenek: () => [["tumu", "Tümü"], ["m", "Mekanik"], ["e", "Elektrik"]],
-        gecer: (p, v) => v === "tumu" || (v === "m" ? p.mekanik : p.elektrik) },
+      { k: "durum", ad: "Durum", secenek: () => [["tumu", "Tümü"], ...(Object.keys(PLAN_DURUM) as PlanDurumu[]).map((k) => [k, PLAN_DURUM[k][0]] as const)], gecer: hep },
+      { k: "tarih", ad: "Tarih", secenek: () => [["tumu", "Tümü"], ["bugun", "Bugün"], ["hafta", "Bu hafta"], ["yedi", "Önümüzdeki 7 gün"]], gecer: hep },
+      { k: "musteri", ad: "Müşteri", secenek: () => [["tumu", "Tümü"], ...(sec.musteri ?? [])], gecer: hep },
+      { k: "brans", ad: "Branş", secenek: () => [["tumu", "Tümü"], ["m", "Mekanik"], ["e", "Elektrik"]], gecer: hep },
       { k: "sira", ad: "Sıralama", siralama: true, secenek: () => ["varsayilan", "baslangic-artan", "baslangic-azalan", "musteri-artan", "no-artan"].map((x) => [x, siraEtiket(x)] as const),
-        gecer: () => true },
+        gecer: hep },
     ],
-    siraAnahtari: {
-      no: (p) => p.no, ad: (p) => p.ad, musteri: (p) => p.musteri, adres: (p) => `${p.il ?? ""} ${p.ilce ?? ""} ${p.adres ?? ""}`, ekip: (p) => p.ekip[0] ?? "",
-      baslangic: (p) => p.baslangic, durum: (p) => DURUM_SIRA[p.durum],
-    },
-    varsayilanSira: (a, b) => b.baslangic.localeCompare(a.baslangic) || b.olustu.localeCompare(a.olustu),
+    siraAnahtari: { no: sifir, ad: sifir, musteri: sifir, adres: sifir, ekip: sifir, baslangic: sifir, durum: sifir },
   };
 }
 
@@ -81,8 +75,8 @@ const SUTUNLAR: Sutun<PlanSatir>[] = [
   ) },
 ];
 
-export function PlanListesi({ kayitlar, bugun, acabilir }: { kayitlar: PlanSatir[]; bugun: string; acabilir: boolean }) {
-  const s = useSuzgec(tanim(kayitlar, bugun), kayitlar);
+export function PlanListesi({ ilk, acabilir }: { ilk: SunucuListe<PlanSatir>; acabilir: boolean }) {
+  const s = useSunucuSuzgec(tanim, ilk, planSayfasiEylemi);
   return (
     <>
       <SayfaBasi baslik="Planlar" sayac={<Sayac s={s} />} tuslar={acabilir && <TusBaglanti tur="birincil" ikon="plus" href="/planlar/ac">Plan aç</TusBaglanti>} />
