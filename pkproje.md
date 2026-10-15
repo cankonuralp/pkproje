@@ -2446,6 +2446,21 @@ olduğu formatın ayarı (format yapıcıda açılıp kapanır). Rapor no, ekipm
 kesintisizliği, ekipman bağı). Sıra: madde 9 → Geri al / Yinele → Gelişmiş seçenekler → formül + serbest metin → parçalar → yapay zekâya anlat →
 belgeden başlat; bitince kalan işler sıralanır.
 
+**2026-10-15 — sunum 579 ONAYLANDI: firma kurulumu panelden** (reisim birebir: *"supabase ve resend bağlantılarını firma açarken biz buradan panelden
+yapalım daha sonra müşteri uğraşmasın. supabase ve resend dışında aı apı key de buradan girilsin firma ayarlardan değiştirebilsin tabi yine ama ben de
+buradan müdahele edebileyim, ayrıca resend ve supabase ayarları firma ayarları kısmından değiştirilemesin"*; karar formu 15:44 UTC "Onaylıyorum"):
+· **K1 ikisi** — her yeni firmanın veritabanı + dosya deposu AYRI Supabase projesi; varsayılan probata'nın örgütünde (firma hiçbir şey yapmaz; isteyen
+firmaya proje sonradan devredilir), isteyen firma kendi örgütünde (probata'yı ekibine davet eder). Proje Yönetim › Firma aç'ta panelden açılır (Supabase
+Management API; OAuth yok). Bu, 513'teki "firma kendi Supabase hesabını bağlar" akışının yerini alır. · **K2 firmanın alan adı** — reisim notu: *"resend
+için tek seçenek var ve o da firmaların kendi mail adresleri ile mail atılması … planlamacı mail gönder dediğinde planlamacının mail adresinden, denetçi mail
+at dediğinde kendi mail adresinden veya pazarlamacı mail at dediği zaman kendi mail adresinden gitmeli"*. probata'nın TEK Resend hesabı, firmanın alan adı
+panelden eklenir (DNS kayıtları panelde); kişinin adresi o alan adındaysa Kimden kişinin kendisi, değilse (Gmail vb.) firmanın genel adresinden kişinin
+adıyla, yanıt kişiye. Bu, 536'daki "her firma kendi Resend hesabı"nın yerini alır. · **K3** Firma ayarlarında Supabase ve gönderim bağlantısı KİLİTLİ
+(salt okunur); yanıt adresi (Rapor e-postası) ve gizli kopya firmada. · **K4** yapay zekâ anahtarı firma açarken isteğe bağlı; Yönetim'den girilir /
+değiştirilir / kaldırılır, firma da değiştirir, iki taraf denetim izinde. · **K5** bugünkü deneme firması ortak projede kalır. · **K6** alan adı
+probata.com.tr (reisim alacak; *"moda-enerji.probata.com.tr gibi urlleri atayabilecek miyim"* → evet: *.probata.com.tr joker, ad sunucuları Vercel'e,
+firma başına DNS işi yok). Tasarım ve kalemler: `FIRMA-VT.md` (FV1–FV15).
+
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
@@ -2483,6 +2498,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-15 (579): **SUNUM 579 ONAYLANDI — FİRMA KURULUMU PANELDEN** (Supabase projesi, Resend alan adı, yapay zekâ anahtarı Yönetim'den; Firma ayarlarında
+  Supabase ve gönderim kilitli). Kararlar §9 (2026-10-15). Tasarım `FIRMA-VT.md`: iki bağımsız tasarım + hakem birleşimi; merkez = ortak proje (tek göç
+  zinciri), firma.vt 'ortak' | 'kendi', bağlantı merkezde şifreli, yanlış yönlendirmeye veritabanı kilidi (vt_kimlik + vt_firma_dogrula), göç
+  yürütücüsü Management API (ölçüm: ortak projede göçler postgres rolüyle), Vercel derlemesinde göç denetimi. Kalemler FV1–FV15; FV1–FV11 dış hesap
+  olmadan deneme makinesinde doğrulanır.
 - 2026-10-15 (578): **575 + 576 + 577 YAYINDA** — deneme makinesi 8cea02a 13/13 (5c8b222'de yalnız olumsuz kanıt 4 eski değişkeni arıyordu — düzeltildi);
   main 8cea02a (göç yok, 95 göç); canlı sağlık tamam, duman 11/11, Vercel'de son 1 saatte çalışma hatası yok, hata defteri boş. Oturum isteyen
   ekranlar (Giderler, müşteri paneli) canlıda gözle denenmedi — giriş reisim'in / müşterinin (ölçemedim); uçtan uca üç genişlikte koştu. Dosya

@@ -75,6 +75,8 @@ pkproje/
   KOD-GECIS.md              maketten koda geçiş hazırlığı (2026-10-03): başlama kararları G0–G1, çekirdek, veri modeli, yetki, durum makineleri,
                             numaralar, ENGEL / UYARI kataloğu, yapım sırası K0–K7, kilit planı, yayın öncesi kararlar — KOD BAŞLARKEN TAM OKUNUR
   RAPOR-FORMAT.md           firmanın kendi rapor formatını kurduğu sistem (2026-10-02, AA10 — onaylı, §8.3)
+  FIRMA-VT.md               her firmaya ayrı veritabanı + panelden kurulum (sunum 579, onaylı 2026-10-15): veri yerleşimi, yönlendirme, bağlantı, göç
+                            dağıtımı, kurulum makinesi, e-posta alan adı, kalemler FV1–FV15 — bu işe dokunurken TAM OKUNUR
   ARKA-UC.md                arka uç kurgusu (2026-10-01; K1–K6 kabul, K7–K8 kabul edilmedi — 2026-10-02): veri, dosya, çevrimdışı, uygulama, yapay zekâ, yedek
   ANAYASA.md · TASARIM-KALIBI.md · 00–08-*.md · 09-SUNUCU-VE-VERI.md · EKSIKLER-VE-ONERILER.md
                             kural dosyaları (ANAYASA/KALIP'a madde yalnız reisim onayıyla eklenir)
