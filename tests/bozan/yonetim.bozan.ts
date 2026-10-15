@@ -83,7 +83,9 @@ test("1. yeniden oynatma denetimi kalkınca aynı kod ikinci kez geçer (kilidin
 });
 
 test("2. dondurma bayrağı firma_bul'dan kalkınca dondurulmuş firma yine açılır (kilidin koruduğu açık)", async () => {
-  const klasor = bozukGocler("g2", "AS $$ SELECT id FROM firma WHERE kisa_ad = p_kisa_ad AND durum = 'etkin' $$;", "AS $$ SELECT id FROM firma WHERE kisa_ad = p_kisa_ad $$;");
+  /* 2026-10-15 (FIRMA-VT FV1): firma_bul'un son tanımı 0095'te (dondurma koşulu + ortak / kendi veritabanı) — bozma oraya taşındı; 0050'yi bozmak artık
+     etkisiz (0095 yeniden tanımlar) */
+  const klasor = bozukGocler("g2", "AS $$ SELECT id FROM firma WHERE kisa_ad = p_kisa_ad AND durum = 'etkin'\n", "AS $$ SELECT id FROM firma WHERE kisa_ad = p_kisa_ad\n", "0095_");
   const supa = await supabaseBenzeri(kume, "yonetim_bozuk_2", klasor);
   const h = havuzKur({ ...kume.uygulama, database: "yonetim_bozuk_2" });
   try {
