@@ -159,7 +159,8 @@ export function oneriUygula(t: FormatTanimi, o: Extract<Oneri, { tur: "degistir"
       tablo.add(`k_s${n}`);
       return { ...s, id: `k_s${n}` };
     });
-    y = { ...b, ...korunan, satir: eski.satir, hesap: eski.hesap, notlar: eski.notlar, enAz: eski.enAz, sutunlar };
+    /* 2026-10-16: tablonun sonuç kuralı da korunur (yapay zekânın önerisi sütunları değiştirir, kuralı değil) */
+    y = { ...b, ...korunan, satir: eski.satir, hesap: eski.hesap, notlar: eski.notlar, enAz: eski.enAz, sonucKurali: eski.sonucKurali, sutunlar };
   } else if (b.blok === "test" && eski.blok === "test") y = { ...b, ...korunan, degerler: kimlikVer(b.degerler, (d) => d.ad, eski.degerler, "d") };
   else if (b.blok === "foto" && eski.blok === "foto") y = { ...b, ...korunan, enCok: Math.max(eski.enCok, b.enAz || 1) };
   else if (b.blok === "sonuc" && eski.blok === "sonuc") y = { ...b, ...korunan, cumle: eski.cumle, aciklama: eski.aciklama };

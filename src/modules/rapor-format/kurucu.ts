@@ -7,9 +7,11 @@
 import { SINIR_ISARETI } from "../../format/hesap.ts";
 import { kilitliKimlikler } from "../../format/motor.ts";
 import { ekipmanTamYap } from "../../format/duzen.ts";
-import { Bolum, EKIPMAN_ALAN_ADI, KUNYE_ALANLARI, kurucudan, type Blok, type EkipmanAlani, type FormatTanimi, type KunyeAlani, type Sinir } from "../../format/tanim.ts";
+import { Bolum, EKIPMAN_ALAN_ADI, KUNYE_ALANLARI, KURAL_EN_COK, kurucudan, type Blok, type EkipmanAlani, type FormatTanimi, type KunyeAlani, type Sinir,
+  type SonucKurali } from "../../format/tanim.ts";
 import { kilitliKunye } from "../../format/kunye.ts";
 import { FORMUL_EN_UZUN, formulAdDegistir, formulDuzelt } from "../../format/formul.ts";
+import { varsayilanKurallar } from "../../format/sonuc.ts";
 
 export { kurucudan };
 
@@ -277,9 +279,54 @@ function formulAdlariniDegistir(y: FormatTanimi, once: FormatTanimi, i: number, 
   if (!eski || !yeni || eski === yeni) return y;
   /* formülü olmayan öğeye dokunulmaz (anahtar eklenmez) */
   const f = <O extends { formul?: string }>(o: O): O => (o.formul ? { ...o, formul: formulAdDegistir(o.formul, eski, yeni) } : o);
+  /* 2026-10-16: tablonun sonuç kuralları da (koşul ve "=" ile başlayan neden) */
+  const k = (r: SonucKurali): SonucKurali => ({ ...r, kosul: formulAdDegistir(r.kosul, eski, yeni),
+    ...(r.neden?.trim().startsWith("=") ? { neden: formulAdDegistir(r.neden, eski, yeni) } : {}) });
   void b;
   return { ...y, bolumler: y.bolumler.map((x) => x.blok === "bilgi" ? { ...x, alanlar: x.alanlar.map(f) } : x.blok === "test" ? { ...x, degerler: x.degerler.map(f) }
-    : x.blok === "olcum" ? { ...x, sutunlar: x.sutunlar.map(f) } : x.blok === "liste" ? { ...x, gruplar: x.gruplar.map((g) => ({ ...g, maddeler: g.maddeler.map(f) })) } : x) };
+    : x.blok === "olcum" ? { ...x, sutunlar: x.sutunlar.map(f), ...(x.sonucKurali ? { sonucKurali: x.sonucKurali.map(k) } : {}) }
+    : x.blok === "liste" ? { ...x, gruplar: x.gruplar.map((g) => ({ ...g, maddeler: g.maddeler.map(f) })) } : x) };
+}
+
+/* ── SONUÇ KURALI (2026-10-16; pkproje §9 "SONUÇ KURALI FORMAT YAPICIDA" — reisim: "kurala göre otomatik uygun uygun değil diyor, ama ilgili ayar
+   buradan yapılamıyor … format yapıcıya koyalım") — tablonun ayarında; değerlendirme src/format/sonuc.ts ── */
+/** kuralın kaydedilecek biçimi: koşul ve "=" ile başlayan neden köşeli parantezli formül biçimine (formulDuzelt), boş alan anahtarsız */
+export function kuralDuzelt(k: SonucKurali): SonucKurali {
+  const kosul = k.kosul.trim() ? formulDuzelt(k.kosul).slice(0, FORMUL_EN_UZUN) : "";
+  const n = (k.neden ?? "").trim();
+  const neden = (n.startsWith("=") ? `=${formulDuzelt(n.slice(1))}` : n.replace(/\s+/g, " ")).slice(0, 2000);
+  const aciklama = kirp(k.aciklama ?? "", 400);
+  return { kosul, ...(neden && neden !== "=" ? { neden } : {}), ...(aciklama ? { aciklama } : {}), ...(k.agir ? { agir: true } : {}) };
+}
+/** tablonun sonuç kuralları (boş liste: kendiliğinden sonuç yok — denetçi seçer; en çok KURAL_EN_COK) */
+export function sonucKuraliYaz(t: FormatTanimi, i: number, l: readonly SonucKurali[]): FormatTanimi {
+  const b = t.bolumler[i];
+  if (b?.blok !== "olcum") return t;
+  return { ...t, bolumler: t.bolumler.map((x, j) => (j === i ? { ...b, sonucKurali: l.slice(0, KURAL_EN_COK).map(kuralDuzelt) } : x)) };
+}
+/** hesaplı (Bakanlık) tabloda Bakanlık kurallarına dön */
+export function bakanlikKuralinaDon(t: FormatTanimi, i: number): FormatTanimi {
+  const b = t.bolumler[i];
+  return b?.blok === "olcum" && b.hesap ? sonucKuraliYaz(t, i, varsayilanKurallar(t, b)) : t;
+}
+
+/* ── FORMÜL PANELİNİN ADLARI (2026-10-16 — reisim: "hesaplama tuşuna basınca bir sürü değer çıkıyor … her birimin kendi tablosundaki değerler
+   çıksın, diğer değerler diğer olarak gözüksün tıklayıp açılan listeden seçilebilsin") ── */
+export interface AdGruplari { kendi: string[]; diger: { bolum: string; adlar: string[] }[] }
+const anahtarAd = (s: string) => s.trim().toLocaleLowerCase("tr");
+/** öğenin bölümünün (tabloda tablonun sütunları) adları önce; formatın öteki kutuları bölüm bölüm "Diğer"de. kendi: öğenin kendi adı (listede yok);
+    adlar tekil (aynı ad bir kez — formül ilk bulduğunu kullanır) */
+export function formulAdGruplari(t: FormatTanimi, b: Bolum, kendi = ""): AdGruplari {
+  const gor = new Set<string>([anahtarAd(kendi)].filter(Boolean));
+  const temiz = (l: readonly string[]) => l.filter((a) => { const k = anahtarAd(a); if (!k || gor.has(k)) return false; gor.add(k); return true; });
+  const adlar = (x: Bolum): string[] => (x.blok === "bilgi" ? x.alanlar.map((a) => a.ad) : x.blok === "test" ? x.degerler.map((d) => d.ad)
+    : x.blok === "liste" ? x.gruplar.flatMap((g) => g.maddeler.map((m) => m.metin)) : x.blok === "olcum" ? (x === b ? x.sutunlar.map((s) => s.ad) : [x.ad, ...x.sutunlar.map((s) => s.ad)]) : []);
+  const kendiAdlari = temiz(adlar(b));
+  const diger = [
+    ...(b.blok === "olcum" ? [{ bolum: `${b.ad} (bütün tablo)`, adlar: temiz([b.ad]) }] : []),
+    ...t.bolumler.filter((x) => x !== b).map((x) => ({ bolum: x.ad, adlar: temiz(adlar(x)) })),
+  ].filter((g) => g.adlar.length);
+  return { kendi: kendiAdlari, diger };
 }
 
 /* ── GRUPLAR (kontrol listesi) ── ad ve talimat her grupta yazılır (470: Bakanlık grubunda da) */

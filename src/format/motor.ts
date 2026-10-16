@@ -12,10 +12,14 @@
    495 (hata listesi 29 + 46 maketi): FORMÜL — değerlendirme formulUygula'nın doldurduğu cevaplarla (formüllü sayı alanı / sütunu / test değeri
    kendiliğinden; sınırı varsa ondan Uygun / Uygun değil); formüllü öğe zorunlu eksik sayılmaz (girdileri sayılır). Yayın denetimi bilinmeyen adı
    ve yapı hatasını söyler (uyarı).
-   ⛔ Bu dosya yalnız ./hesap.ts, ./tanim.ts ve ./formul.ts'i içe aktarır (olumsuz kanıt kopyası bu yolları çevirir). */
-import { EGRI_KAT, linyeHesap, noktaHesap, pdHesap, RCD_SURE, rcdTestYeter, sayiOku, SINIR_ISARETI, sinirSonucu, UO, ziHesap } from "./hesap.ts";
-import { formulDenet, formulluAlan, formulluDeger, formulluMadde, formulluSutun, formulUygula, genelAdlar, tabloAdlari } from "./formul.ts";
-import { kurucudan, type Bolum, type BolumOf, type Cevaplar, type FormatTanimi } from "./tanim.ts";
+   2026-10-16 (pkproje §9 "SONUÇ KURALI FORMAT YAPICIDA"): ölçüm satırının kendiliğinden sonucu tablonun SONUÇ KURALIYLA (./sonuc.ts — formül; tanımda
+   yoksa hesabın Bakanlık kuralları, aynı sonuç); hesap yalnız uygunluk notu önerisi için (nokta). Kural yoksa sonucu sütun sınırları ve olumsuz
+   seçenekler verir, o da yoksa denetçi seçer.
+   ⛔ Bu dosya yalnız ./hesap.ts, ./tanim.ts, ./formul.ts ve ./sonuc.ts'i içe aktarır (olumsuz kanıt kopyası bu yolları çevirir). */
+import { noktaHesap, sayiOku, SINIR_ISARETI, sinirSonucu } from "./hesap.ts";
+import { formulDenet, formulluAlan, formulluDeger, formulluMadde, formulluSutun, formulUygula, genelAdlar, satirHesabi, tabloAdlari, type Deger } from "./formul.ts";
+import { etkinKurallar, kuralOzu, kuralUygula } from "./sonuc.ts";
+import { kurucudan, type Bolum, type BolumOf, type Cevaplar, type FormatTanimi, type SonucKurali } from "./tanim.ts";
 
 export interface Eksik { bolum: string; alan: string; ad: string }
 /** kriter: kusurun ölçütü (madde metni, ölçüm satırının etiketi, test değerinin adı); metin "kriter: açıklama" ya da yalnız kriter — kriter ayrı
@@ -42,23 +46,14 @@ export const ELLE_SONUC = "_sonuc", ELLE_GEREKCE = "_gerekce";
 export const ELLE_GEREKCE_EN_AZ = 10;
 export const elleSonucu = (s: Record<string, string>): boolean | null => (s[ELLE_SONUC] === "uygun" ? true : s[ELLE_SONUC] === "uygun_degil" ? false : null);
 
-function satirDegerlendir(b: BolumOf<"olcum">, s: Record<string, string>, ik3: string): SatirDegerlendirmesi {
-  const neden: string[] = [];
-  let uygun: boolean | null = null;
-  let oneriNot: number | null = null;
-  let agir = false;
-  if (b.hesap === "nokta") {
-    const h = noktaHesap({ egri: s.egri ?? "", In: s.inom, zx: s.zx, rcd: s.rcd, priz: s.priz === "evet" });
-    oneriNot = h.not;
-    if (h.zx !== null) { uygun = h.zx <= h.zs; if (!uygun) neden.push(`Zx ${virgul(h.zx)} Ω > Zs ${virgul(h.zs)} Ω`); }
-  } else if (b.hesap === "selektivite") {
-    const r = rcdTestYeter(s.idn, s.id, s.td);
-    if (r !== null) { uygun = r; if (!r) neden.push("RCD testi yetersiz"); }
-  } else if (b.hesap) {
-    const h = b.hesap === "linye" ? linyeHesap({ akim: s.akim, ib: s.ib, iz: s.iz, faz: s.faz, npen: s.npen, pe: s.pe, icu: s.icu, rcd: s.rcd, id: s.id, td: s.td }, ik3)
-      : b.hesap === "pd" ? pdHesap({ kesit: s.kesit, tkesit: s.tkesit }) : ziHesap({ direnc: s.direnc });
-    if (h) { uygun = h.uygun; neden.push(...h.neden); }
-  }
+/** satır: önce tablonun sonuç kuralları (formül — hesapla: satırın bağlamında), sonra sütun sınırları ve olumsuz seçenekler; nokta tablosunda
+    uygunluk notu önerisi Bakanlık hesabından */
+function satirDegerlendir(b: BolumOf<"olcum">, s: Record<string, string>, kurallar: readonly SonucKurali[], hesapla: (ifade: string) => Deger): SatirDegerlendirmesi {
+  const k = kuralUygula(kurallar, hesapla);
+  const neden: string[] = [...k.neden];
+  let uygun: boolean | null = k.uygun;
+  let agir = k.agir;
+  const oneriNot = b.hesap === "nokta" ? noktaHesap({ egri: s.egri ?? "", In: s.inom, zx: s.zx, rcd: s.rcd, priz: s.priz === "evet" }).not : null;
   for (const c of b.sutunlar) {
     /* seçmeli hücre (426): olumsuz seçeneklerden biri seçildiyse satır uygun değil; öteki seçenek seçildiyse uygun */
     if (c.olumsuz?.length && !bos(s[c.id])) {
@@ -82,20 +77,11 @@ function satirDegerlendir(b: BolumOf<"olcum">, s: Record<string, string>, ik3: s
 }
 
 /** 486 (reisim 2026-10-10: "rcd testleri tablosunda uygun uygun değil otomatik geliyor? neden elle seçilmiyor? neye göre otomatik uygun uygun değil
-    diyor?"): ölçüm tablosunun Sonuç sütunu NEYE GÖRE çıkar — satirDegerlendir'in kuralları okunur cümleyle (ekranda tablonun altında, kâğıtta
-    tablonun altında). Hesabın formülü (Bakanlık kriteri) · sütun sınırları · olumsuz seçenekler. Boş liste: bu tabloda sonuç kuralı yok. */
-export function sonucKurallari(b: BolumOf<"olcum">): string[] {
-  const l: string[] = [];
-  const egri = Object.entries(EGRI_KAT).map(([k, v]) => `${k} ${v}`).join(", ");
-  const rcd = `RCD testi: ölçülen açma akımı IΔ ≤ anma akımı IΔn ve açma süresi TΔ ≤ ${RCD_SURE} ms`;
-  if (b.hesap === "nokta") l.push(`Zx ≤ Zs → Uygun (Zs = ${UO} V ÷ Ia; Ia = eğri çarpanı × In — ${egri}; ZPKK01)`);
-  else if (b.hesap === "selektivite") l.push(`${rcd} → Uygun; biri sağlanmazsa Uygun değil (ZPKK01)`);
-  else if (b.hesap === "linye") {
-    l.push("Icu ≥ hesaplanan 3 fazlı kısa devre akımı (Fonksiyon testlerindeki değer)", "Ib ≤ In ≤ Iz", "N/PEN kesiti ≥ faz kesiti",
-      "PE kesiti ≥ faz kesitine göre en az (16 mm²'ye kadar faz kesiti kadar, 16–35 mm² arası 16 mm², 35 mm² üstü yarısı)",
-      `RCD IΔn yazılmışsa ${rcd} (ZPKK02)`);
-  } else if (b.hesap === "pd") l.push("PD kesiti 6–25 mm²", "Tamamlayıcı PD kesiti ≥ 4 mm² (ZPKK02)");
-  else if (b.hesap === "zi") l.push("Zemin izolasyon direnci > 50 kΩ (ZPKK02)");
+    diyor?"): ölçüm tablosunun Sonuç sütunu NEYE GÖRE çıkar — satirDegerlendir'in kuralları okunur cümleyle (ekranda tablonun altında). 2026-10-16:
+    tablonun sonuç kuralları (açıklaması; yoksa formülü — ./sonuc.ts; tanımda kural yoksa hesabın Bakanlık kuralları) · sütun sınırları · olumsuz
+    seçenekler. Boş liste: bu tabloda sonuç kuralı yok. t: K3'ün adı için (verilmezse açıklamalar yine aynı) */
+export function sonucKurallari(b: BolumOf<"olcum">, t: FormatTanimi | null = null): string[] {
+  const l: string[] = etkinKurallar(t, b).filter((k) => k.kosul.trim()).map((k) => k.aciklama?.trim() || k.kosul.trim());
   for (const c of b.sutunlar) {
     /* 495 → 556 (reisim 2026-10-14: "şu işlemlerin sonucudur gibi açıklama olmasın"): formüllü sütunun hesabı burada yazılmaz */
     if (c.olumsuz?.length) l.push(`${c.ad}: ${c.olumsuz.map((o) => (c.giris === "evet" ? (o === "evet" ? "Evet" : "Hayır") : o)).join(" / ")} seçilirse Uygun değil`);
@@ -108,7 +94,8 @@ export function degerlendir(t: FormatTanimi, c0: Cevaplar): Degerlendirme {
   /* 495: formüllerin değeri (kaydedilen cevaplarda yok — her değerlendirmede yeniden) */
   const c = formulUygula(t, c0);
   const eksikler: Eksik[] = [], kusurlar: Kusur[] = [], satirlar: Record<string, SatirDegerlendirmesi[]> = {}, degerler: Record<string, boolean | null> = {};
-  const ik3 = c.deger.ik3 ?? "";
+  /* sonuç kurallarının hesaplayıcısı (tek ortam — bütün tablolar ve satırlar) */
+  let hesap: ReturnType<typeof satirHesabi> | null = null;
   for (const b of t.bolumler) {
     switch (b.blok) {
       case "bilgi":
@@ -130,8 +117,9 @@ export function degerlendir(t: FormatTanimi, c0: Cevaplar): Degerlendirme {
       case "olcum": {
         const l = c.tablo[b.id] ?? [];
         if (l.length < b.enAz) eksikler.push({ bolum: b.id, alan: b.id, ad: `${b.ad} · en az ${b.enAz} satır` });
+        const kurallar = etkinKurallar(t, b);
         satirlar[b.id] = l.map((s, i) => {
-          const d = satirDegerlendir(b, s, ik3);
+          const d = satirDegerlendir(b, s, kurallar, (f) => (hesap ??= satirHesabi(t, c))(b, i, f));
           for (const col of b.sutunlar) if (col.zorunlu && !formulluSutun(col) && bos(s[col.id])) eksikler.push({ bolum: b.id, alan: satirAnahtari(b.id, i, col.id), ad: `${b.ad} · ${i + 1}. satır · ${col.ad}` });
           /* 488: elle değiştirilen sonucun gerekçesi şart */
           if (d.elle && d.elle.gerekce.length < ELLE_GEREKCE_EN_AZ) {
@@ -223,11 +211,12 @@ export function kilitNormallestir(t: FormatTanimi, kaynaklar: readonly FormatTan
    zorunlu olan isteğe bağlıya, en az satır sayısı aşağıya çekilemez. Sırası serbest, kilitli bölüme yeni (kilitsiz) öğe eklenebilir. Kaynak
    SUNUCUDA seçilir (hazır şablon koddan, önceki yayın veritabanından) — istemcinin yolladığı tanımdaki "kilit" bayrağına güvenilmez. */
 const oz = (o: Record<string, unknown>) => JSON.stringify(o, (_k, v) => (v === undefined ? undefined : v));
-/* 427: üst başlık ve numarasızlık da öz — Bakanlık formatının başlık düzeni ("ana başlıklar ve sıralamaları değişmeyecek") değiştirilemez */
-const bolumOzu = (b: Bolum) => oz({
+/* 427: üst başlık ve numarasızlık da öz — Bakanlık formatının başlık düzeni ("ana başlıklar ve sıralamaları değişmeyecek") değiştirilemez.
+   2026-10-16: tablonun sonuç kuralları da öz (geçerli kurallar — tanımda yoksa Bakanlık kuralları; açıklama sayılmaz): Bakanlık kuralı değişince uyarı */
+const bolumOzu = (b: Bolum, t: FormatTanimi) => oz({
   blok: b.blok, ad: b.ad, ust: b.ust, numarasiz: b.numarasiz, alt: b.alt,
   ...(b.blok === "liste" ? { cevaplar: b.cevaplar } : {}),
-  ...(b.blok === "olcum" ? { hesap: b.hesap, notlar: b.notlar, satir: b.satir } : {}),
+  ...(b.blok === "olcum" ? { hesap: b.hesap, notlar: b.notlar, satir: b.satir, sonuc: kuralOzu(etkinKurallar(t, b)) } : {}),
   ...(b.blok === "sonuc" ? { cumle: b.cumle, aciklama: b.aciklama } : {}),
   ...(b.blok === "imza" ? { imzalar: b.imzalar } : {}),
 });
@@ -263,9 +252,11 @@ export function kilitDenetimi(t: FormatTanimi, kaynak: FormatTanimi): string[] {
       kilitVar = true;
       const n = y.bolum.get(b.id);
       if (!n) sorun("silinmiş", b.id, b.ad);
-      else if (bolumOzu(n) !== bolumOzu(b)) sorun("değiştirilmiş", b.id, b.ad);
+      else if (bolumOzu(n, t) !== bolumOzu(b, kaynak)) sorun("değiştirilmiş", b.id, b.ad);
       else if (!n.kilit) sorun("kilidi kaldırılmış", b.id, b.ad);
-      else if (b.blok === "olcum" && n.blok === "olcum") {
+      /* 2026-10-16: tablonun sütunları bölümün özünden bağımsız denetlenir — silinen Bakanlık sütunu sonuç kuralını da değiştirir (bölüm "değiştirilmiş"),
+         sütunun kendisi yine söylenir */
+      if (n && b.blok === "olcum" && n.blok === "olcum") {
         if (n.enAz < b.enAz) sorun("değiştirilmiş", b.id, `${b.ad} · en az satır`);
         /* kurucuda eklenen sütun (k_) Bakanlık öğesi değil: kaynak yayındaki sürüm olsa da zorunlu sayılmaz, çıkarılabilir (340–345 incelemesi) */
         for (const s of b.sutunlar.filter((x) => !kurucudan(x.id))) {
@@ -321,9 +312,10 @@ export function yayinDenetimi(t: FormatTanimi, kaynak?: FormatTanimi | null): st
     if (b.blok === "metin" && !b.metin.trim()) bosBolum(b);
     if (b.blok === "olcum") {
       if (!b.sutunlar.length) bosBolum(b);
-      /* 427: "uygun değil" seçeneği olan seçmeli sütun da değerlendirir (ZPKR04 5.2: U / UD / UG) */
-      else if (!b.hesap && !b.notlar?.length && !b.sutunlar.some((c) => (c.op && c.sinir !== undefined) || c.olumsuz?.length))
-        l.push(`“${b.ad}” tablosunda sınırı ya da “uygun değil” seçeneği olan sütun, hesap ya da uygunluk notu yok.`);
+      /* 427: "uygun değil" seçeneği olan seçmeli sütun da değerlendirir (ZPKR04 5.2: U / UD / UG). 2026-10-16: sonuç kuralı da (bilgi — reisim
+         kuralı kaldırabilir, o zaman sonucu denetçi seçer) */
+      else if (!etkinKurallar(t, b).some((k) => k.kosul.trim()) && !b.notlar?.length && !b.sutunlar.some((c) => (c.op && c.sinir !== undefined) || c.olumsuz?.length))
+        l.push(`“${b.ad}” tablosunda sonuç kuralı, sınırı ya da “uygun değil” seçeneği olan sütun, uygunluk notu yok: Sonuç sütununu denetçi seçer.`);
     }
   }
   /* 495: formül — yapı hatası, bilinmeyen ad, kendine bakma (uyarı; hesaplanamayan formülün değeri sahada boş kalır) */
@@ -333,6 +325,15 @@ export function yayinDenetimi(t: FormatTanimi, kaynak?: FormatTanimi | null): st
     if (b.blok === "bilgi") for (const a of b.alanlar) if (formulluAlan(a)) formulSorun(`“${b.ad} · ${a.ad}”`, a.formul!, genel, a.ad);
     if (b.blok === "test") for (const d of b.degerler) if (formulluDeger(d)) formulSorun(`“${b.ad} · ${d.ad}”`, d.formul!, genel, d.ad);
     if (b.blok === "olcum") for (const s of b.sutunlar) if (formulluSutun(s)) formulSorun(`“${b.ad} · ${s.ad}”`, s.formul!, tabloAdlari(t, b), s.ad);
+    /* 2026-10-16: sonuç kuralı (koşulu ve "=" ile başlayan nedeni); boş kural da söylenir */
+    if (b.blok === "olcum" && b.sonucKurali) b.sonucKurali.forEach((k, j) => {
+      const yer = `“${b.ad}” ${j + 1}. sonuç kuralı`;
+      if (!k.kosul.trim()) { l.push(`${yer} boş (değerlendirilmez).`); return; }
+      const h = formulDenet(k.kosul, tabloAdlari(t, b));
+      if (h) l.push(`${yer}: ${h}`);
+      const n = (k.neden ?? "").trim();
+      if (n.startsWith("=")) { const hn = formulDenet(n.slice(1), tabloAdlari(t, b)); if (hn) l.push(`${yer} nedeninin formülü: ${hn}`); }
+    });
     /* 556: kontrol maddesinin cevabı da formülle */
     if (b.blok === "liste") for (const g of b.gruplar) for (const m of g.maddeler) if (formulluMadde(m)) formulSorun(`“${b.ad} · ${m.metin.slice(0, 60)}”`, m.formul!, genel, m.metin);
   }

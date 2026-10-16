@@ -483,7 +483,7 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
     tablo((l) => satirKopyala(l, i, ilk?.id));
     bildir(`Son satır kopyalandı${ilk && satirlar[i]?.[ilk.id] ? ` (${ilk.ad} bir arttı)` : ""}; değişen değerleri yazın, kaydetmeyi unutmayın.`);
   };
-  const kurallar = sonucKurallari(b);
+  const kurallar = sonucKurallari(b, bag.v.tanim);
   const kap = useRef<HTMLDivElement>(null);
   useSurukleKaydir(kap);
   /* 2026-10-16 (reisim: "herhangi bir tabloda 20 den sonrası sayfalı olacak … diğer sayfalara doğru aksın"; örnek bu tablo — 35+ satır tek
@@ -584,7 +584,7 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
           ? <><p className={stil.kuralBas}>Sonuç ölçülen değerlerden kendiliğinden çıkar — kural sağlanırsa Uygun, biri sağlanmazsa Uygun değil (nedeni satırda
             yazar); değeri boş olan kural değerlendirilmez.{!notlar.length && " Gerekirse satırın “Elle değiştir”iyle gerekçe yazarak değiştirilir; belgede kural sonucu da yazar."}</p>
             <ul>{kurallar.map((k, j) => <li key={j}>{k}</li>)}</ul></>
-          : <p className={stil.kuralBas}>Bu tabloda sonuç kuralı yok (formatta sütun sınırı, hesap ya da olumsuz seçenek tanımlanmamış): Sonuç boş kalır
+          : <p className={stil.kuralBas}>Bu tabloda sonuç kuralı yok (formatta sonuç kuralı, sütun sınırı ya da olumsuz seçenek tanımlanmamış): Sonuç boş kalır
             {!notlar.length && "; satırın “Elle değiştir”iyle gerekçe yazarak seçilir"}.</p>}
       </details>
       {notlar.length > 0 && (

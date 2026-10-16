@@ -18,6 +18,7 @@
      2. bölümün sabit satırında zaten var; seri no ve kullanım yeri ekipman kaydına bağlı (raporda değiştirilebilir) alan olur, aynısı varsa çıkar.
      Ekran ve belge aynı listeden; Format kurucu formatın kendisini gösterir (sade: false). */
 import { EKIPMAN_ALAN_ADI, type Bolum, type BolumOf, type EkipmanAlani, type FormatTanimi } from "./tanim.ts";
+import { sonucKurallariniYaz } from "./sonuc.ts";
 
 const kucuk = (s: string) => s.toLocaleLowerCase("tr");
 
@@ -94,8 +95,9 @@ export function cihazBolumuEkle(t: FormatTanimi): FormatTanimi {
   const yeni: Bolum = { id, ad: "Ölçüm cihazları", blok: "cihaz", kilit: false };
   return { ...t, bolumler: [...t.bolumler.slice(0, p), yeni, ...t.bolumler.slice(p)] };
 }
-/** Format kurucu açılırken: ekipman bölümü serbest (460), ölçüm cihazları bölümü var (459) */
-export const kurucuyaHazirla = (t: FormatTanimi): FormatTanimi => cihazBolumuEkle(ekipmanTamYap(t));
+/** Format kurucu açılırken: ekipman bölümü serbest (460), ölçüm cihazları bölümü var (459), hesaplı tablonun Bakanlık kuralları tablonun sonuç
+    kuralı olarak görünür ve değişir (2026-10-16 — ./sonuc.ts; sonuç aynı) */
+export const kurucuyaHazirla = (t: FormatTanimi): FormatTanimi => sonucKurallariniYaz(cihazBolumuEkle(ekipmanTamYap(t)));
 
 /* 540: tam ekipman bölümünde kayıttan gelen alanın karşılığı — null: 2. bölümün sabit satırında var (çizilmez) */
 const KAYITTAN_EKIPMAN: Partial<Record<string, EkipmanAlani | null>> = { ekipman_kodu: null, ekipman_adi: null, seri_no: "seri", kullanim_yeri: "konum" };

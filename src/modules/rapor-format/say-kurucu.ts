@@ -5,10 +5,15 @@
    · formatIslemleri: işlem listesi — bölüm ekle / sil / adını değiştir, öğe (alan, madde, sütun, test değeri) ekle / değiştir / çıkar, grup ekle.
      Bölüm ve öğe kimlikle ya da ADIYLA bulunur (aynı istekte yeni eklenen bölüme adıyla öğe eklenir). Öğe değişikliği kurucu.ts ogeYaz ile
      (formül formulDuzelt'le köşeli parantezli biçime; adı değişen öğe formüllerde de değişir) — format yapıcının kendi tuşlarıyla aynı yol.
-   Değişiklik ekranda TASLAKTA olur (geri al / Kaydet / Yayınla kişide); yapılamayan işlem nedeniyle döner. */
+   Değişiklik ekranda TASLAKTA olur (geri al / Kaydet / Yayınla kişide); yapılamayan işlem nedeniyle döner.
+   2026-10-16 (pkproje §9 "SONUÇ KURALI FORMAT YAPICIDA"): ölçüm tablosunun sonuç kuralı haritada ve "sonuc_kurali" işlemiyle (yaz / kaldır / Bakanlık
+   kuralına dön) — kurucunun tuşlarıyla aynı yol (kurucu.ts sonucKuraliYaz, bakanlikKuralinaDon). */
 import { SINIR_ISARETI } from "../../format/hesap.ts";
-import type { Blok, Bolum, FormatTanimi } from "../../format/tanim.ts";
-import { bolumAdi, bolumSil, grupEkle, maddeEkle, ogeEkle, ogeSil, ogeYaz, yeniBolum, yeniKimlik, type OgeTuru, type OgeYamasi } from "./kurucu.ts";
+import { etkinKurallar } from "../../format/sonuc.ts";
+import { KURAL_EN_COK, type Blok, type Bolum, type FormatTanimi, type SonucKurali } from "../../format/tanim.ts";
+import {
+  bakanlikKuralinaDon, bolumAdi, bolumSil, grupEkle, maddeEkle, ogeEkle, ogeSil, ogeYaz, sonucKuraliYaz, yeniBolum, yeniKimlik, type OgeTuru, type OgeYamasi,
+} from "./kurucu.ts";
 
 /** haritanın en çok uzunluğu (karakter) */
 export const FORMAT_HARITA_SINIRI = 40_000;
@@ -28,8 +33,13 @@ export function formatHaritasi(t: FormatTanimi): string {
     l.push(`## ${b.id} · ${BLOK_TR[b.blok]} · ${b.ad}${b.kilit ? " (Bakanlık bölümü)" : ""}`);
     if (b.blok === "bilgi") for (const a of b.alanlar) {
       l.push(`- ${a.id} · ${a.ad} · ${a.ekipman ? "ekipman kaydından" : a.kaynak ? "kayıttan" : a.tur}${a.birim ? ` (${a.birim})` : ""}${a.formul ? ` · formül ${a.formul}` : ""}${a.secenekler?.length ? ` · seçenekler: ${a.secenekler.join(" / ")}` : ""}`);
-    } else if (b.blok === "olcum") for (const s of b.sutunlar) {
-      l.push(`- ${s.id} · ${s.ad} · sütun, ${s.giris === "sayi" ? "sayı" : s.giris === "secim" ? `seçim: ${(s.secenekler ?? []).join(" / ")}` : s.giris === "evet" ? "evet / hayır" : "yazı"}${s.birim ? ` (${s.birim})` : ""}${s.formul ? ` · formül ${s.formul}` : ""}${sinirMetni(s)}`);
+    } else if (b.blok === "olcum") {
+      for (const s of b.sutunlar) {
+        l.push(`- ${s.id} · ${s.ad} · sütun, ${s.giris === "sayi" ? "sayı" : s.giris === "secim" ? `seçim: ${(s.secenekler ?? []).join(" / ")}` : s.giris === "evet" ? "evet / hayır" : "yazı"}${s.birim ? ` (${s.birim})` : ""}${s.formul ? ` · formül ${s.formul}` : ""}${sinirMetni(s)}`);
+      }
+      const k = etkinKurallar(t, b);
+      l.push(k.length ? `  sonuç kuralı${b.hesap ? " (Bakanlık tablosu)" : ""}:` : "  sonuç kuralı yok (Sonuç'u denetçi seçer)");
+      k.forEach((x, j) => l.push(`  ${j + 1}) ${x.kosul || "(boş)"}${x.neden ? ` · neden ${x.neden}` : ""}${x.agir ? " · ağır kusur" : ""}`));
     } else if (b.blok === "test") for (const d of b.degerler) {
       l.push(`- ${d.id} · ${d.ad} · test değeri, ${d.secenekler?.length ? `seçim: ${d.secenekler.join(" / ")}` : d.metin ? "yazı" : "sayı"}${d.birim ? ` (${d.birim})` : ""}${d.formul ? ` · formül ${d.formul}` : ""}${sinirMetni(d)}`);
     } else if (b.blok === "liste") {
@@ -48,6 +58,8 @@ export function formatHaritasi(t: FormatTanimi): string {
 export interface FormatIslemi {
   islem?: unknown; bolum?: unknown; oge?: unknown; tur?: unknown; ad?: unknown; birim?: unknown; formul?: unknown; secenekler?: unknown;
   op?: unknown; sinir?: unknown; zorunlu?: unknown; grup?: unknown; sonra?: unknown;
+  /** sonuc_kurali: kurallar (boş liste kaldırır) ya da bakanlik: true (Bakanlık kuralına dön) */
+  kurallar?: unknown; bakanlik?: unknown;
 }
 const metin = (x: unknown, n = 200) => (typeof x === "string" ? x.trim().replace(/\s+/g, " ").slice(0, n) : "");
 const tr = (s: string) => s.trim().toLocaleLowerCase("tr");
@@ -129,6 +141,24 @@ export function formatIslemleri(t0: FormatTanimi, islemler: readonly FormatIslem
       if (!ad) { red("yeni ad yok"); continue; }
       t = bolumAdi(t, i, ad); yapilan.push(`“${b.ad}” bölümünün adı “${ad}” oldu`); continue;
     }
+    if (islem === "sonuc_kurali") {
+      if (b.blok !== "olcum") { red(`sonuç kuralı yalnız ölçüm tablosunda olur (“${b.ad}”)`); continue; }
+      if (x.bakanlik === true) {
+        if (!b.hesap) { red(`“${b.ad}” tablosunun Bakanlık kuralı yok`); continue; }
+        t = bakanlikKuralinaDon(t, i); yapilan.push(`“${b.ad}” tablosunun sonuç kuralı Bakanlık kuralına döndü`); continue;
+      }
+      if (!Array.isArray(x.kurallar)) { red("kurallar listesi yok (boş liste kuralları kaldırır)"); continue; }
+      const l: SonucKurali[] = (x.kurallar as unknown[]).slice(0, KURAL_EN_COK).flatMap((k) => {
+        const o = k && typeof k === "object" && !Array.isArray(k) ? k as Record<string, unknown> : null;
+        if (!o || typeof o.kosul !== "string" || !o.kosul.trim()) return [];
+        const yazi = (v: unknown, n: number) => (typeof v === "string" && v.trim() ? v.slice(0, n) : undefined);
+        return [{ kosul: o.kosul.slice(0, 2000), neden: yazi(o.neden, 2000), aciklama: yazi(o.aciklama, 400), agir: o.agir === true }];
+      });
+      if (x.kurallar.length && !l.length) { red("kuralların koşulu (formül) yok"); continue; }
+      t = sonucKuraliYaz(t, i, l);
+      yapilan.push(l.length ? `“${b.ad}” tablosunun sonuç kuralı yazıldı (${l.length} kural)` : `“${b.ad}” tablosunun sonuç kuralları kaldırıldı (Sonuç'u denetçi seçer)`);
+      continue;
+    }
     if (islem === "grup_ekle") {
       if (b.blok !== "liste") { red("grup yalnız kontrol listesine eklenir"); continue; }
       const ad = metin(x.ad);
@@ -169,7 +199,7 @@ export function formatIslemleri(t0: FormatTanimi, islemler: readonly FormatIslem
       yapilan.push(`“${ad}” değişti`);
       continue;
     }
-    red("bilinmeyen işlem (bolum_ekle, bolum_sil, bolum_adi, grup_ekle, oge_ekle, oge_degistir, oge_sil)");
+    red("bilinmeyen işlem (bolum_ekle, bolum_sil, bolum_adi, grup_ekle, oge_ekle, oge_degistir, oge_sil, sonuc_kurali)");
   }
   return { t, yapilan, gecersiz };
 }
@@ -181,8 +211,10 @@ export const FORMAT_ARACI = {
     + "bulunur (aynı istekte eklenen bölüme adıyla öğe eklenebilir). islem: bolum_ekle (tur: olcum | test | bilgi | liste | foto | not | metin | sonuc; ad; "
     + "sonra: hangi bölümün ardına), bolum_sil, bolum_adi (ad), grup_ekle (liste bölümüne; ad), oge_ekle (bölüme alan / sütun / test değeri / madde: ad, tur: "
     + "sayi | metin | secim | evet | tarih, birim, formul, secenekler, op: <= | >= | < | >, sinir, zorunlu; listeye madde için grup), oge_degistir (oge + "
-    + "değişecek alanlar), oge_sil (oge). Formül: aynı satırın / formatın sayılarıyla, örn. 480 / [RCd] — boşluklu ad köşeli parantezle. Değişiklik "
-    + "taslakta olur; kullanıcı Kaydet ve Yayınla der.",
+    + "değişecek alanlar), oge_sil (oge), sonuc_kurali (ölçüm tablosunun satır sonucu: kurallar — her biri kosul: DOĞRU / YANLIŞ veren formül, ör. "
+    + "[Direnç] > 50; neden: sağlanmazsa yazılan, \"=\" ile başlarsa formül; aciklama; agir — listenin tamamı yazılır, boş liste kuralları kaldırır; ya da "
+    + "bakanlik: true Bakanlık kuralına döner; ZS([Açma eğrisi]; [In]) Zs'yi verir). Formül: aynı satırın / formatın sayılarıyla, örn. 480 / [RCd] — "
+    + "boşluklu ad köşeli parantezle. Değişiklik taslakta olur; kullanıcı Kaydet ve Yayınla der.",
   input_schema: {
     type: "object",
     properties: {
@@ -191,10 +223,13 @@ export const FORMAT_ARACI = {
         items: {
           type: "object",
           properties: {
-            islem: { type: "string", enum: ["bolum_ekle", "bolum_sil", "bolum_adi", "grup_ekle", "oge_ekle", "oge_degistir", "oge_sil"] },
+            islem: { type: "string", enum: ["bolum_ekle", "bolum_sil", "bolum_adi", "grup_ekle", "oge_ekle", "oge_degistir", "oge_sil", "sonuc_kurali"] },
             bolum: { type: "string" }, oge: { type: "string" }, tur: { type: "string" }, ad: { type: "string" }, birim: { type: "string" },
             formul: { type: "string" }, secenekler: { type: "array", items: { type: "string" } }, op: { type: "string" }, sinir: { type: "number" },
             zorunlu: { type: "boolean" }, grup: { type: "string" }, sonra: { type: "string" },
+            kurallar: { type: "array", maxItems: KURAL_EN_COK, items: { type: "object", properties: {
+              kosul: { type: "string" }, neden: { type: "string" }, aciklama: { type: "string" }, agir: { type: "boolean" } }, required: ["kosul"] } },
+            bakanlik: { type: "boolean" },
           },
           required: ["islem"],
         },

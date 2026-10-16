@@ -71,6 +71,18 @@ const Deger = z.object({
 });
 /** seçmeli uygunluk notu (ZPKR01 Not-1 … Not-11): kusur mu, ağır mı */
 const Not = z.object({ metin: z.string().trim().min(1).max(400), kusur: z.boolean(), agir: z.boolean().default(false) });
+/** 2026-10-16 (pkproje §9 "SONUÇ KURALI FORMAT YAPICIDA" — reisim: "kurala göre otomatik uygun uygun değil diyor, ama ilgili ayar buradan
+    yapılamıyor … koda gömülmüş gibi … format yapıcıya koyalım"): ölçüm tablosunun SONUÇ KURALI — satırın kendiliğinden Uygun / Uygun değil
+    sonucu (src/format/sonuc.ts). kosul: formül (DOĞRU → sağlandı, YANLIŞ → Uygun değil; "Uygun" / "Uygun değil: neden" yazısı da olur; boş /
+    hesaplanamaz → değerlendirilmez); neden: satırda ve kusurlarda yazan neden (yazı ya da "=" ile başlayan formül); aciklama: sahada "Sonuç neye göre
+    çıkar?"da; agir: sağlanmazsa ağır kusur. Kurucuda yeni eklenen kural boş olabilir (değerlendirilmez, yayında uyarı). */
+export const SonucKurali = z.object({
+  kosul: z.string().trim().max(2000), neden: z.string().trim().max(2000).optional(), aciklama: z.string().trim().max(400).optional(),
+  agir: z.boolean().optional(),
+});
+export type SonucKurali = z.output<typeof SonucKurali>;
+/** bir tabloda en çok sonuç kuralı */
+export const KURAL_EN_COK = 20;
 
 /* ust (427): ardışık bölümlerin ortak üst başlığı — belgede ve ekranda N.1, N.2 numarasıyla tek başlık altında (ZPKR04 "5. Tespit ve
    değerlendirmeler" › 5.1 / 5.2); numarasiz: bölüm numara almaz (ZPKR04 "Fotoğraflar"); alt (461; reisim 2026-10-09: "alt başlık ekleme olsun"):
@@ -92,6 +104,9 @@ export const Bolum = z.discriminatedUnion("blok", [
   z.object({
     ...ortak, blok: z.literal("olcum"), satir: z.enum(["sabit", "ekle"]).default("ekle"), sutunlar: z.array(Sutun).max(20),
     hesap: z.enum(HESAPLAR).optional(), notlar: z.array(Not).max(20).optional(), enAz: z.number().int().min(0).max(200).default(0),
+    /* 2026-10-16: sonuç kuralı — verilmemişse hesabın Bakanlık kuralı (sonuc.ts varsayilanKurallar: eski sürümler ve hazır şablonlar aynı sonucu
+       verir); boş liste: kendiliğinden sonuç yok (denetçi seçer; sütun sınırları ve olumsuz seçenekler yine geçerli) */
+    sonucKurali: z.array(SonucKurali).max(KURAL_EN_COK).optional(),
   }),
   z.object({ ...ortak, blok: z.literal("test"), degerler: z.array(Deger).max(40) }),
   z.object({ ...ortak, blok: z.literal("cihaz") }),

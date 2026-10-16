@@ -32,7 +32,7 @@ import {
   ALT_TURLER, altBaslikEkle, bolumAdi, ekipmanBolumuGeriEkle, ekipmanBolumuKaldir, bolumDuzeni, ekipmanAlaniEkle, gorunumYaz, grupEkle, grupSil, grupYaz, kunyeKilitYaz, kurucudan, maddeEkle, ogeEkle, ogeSil, ogeYaz, satirlar, tasi,
   yeniBolum, yeniKimlik,
 } from "../kurucu";
-import { ListeDuzenleyici, NotDuzenleyici, OgeDuzenleyici, SonucAciklamasi } from "./KurucuDuzenleyici";
+import { ListeDuzenleyici, NotDuzenleyici, OgeDuzenleyici, SonucAciklamasi, SonucKuraliDuzenleyici } from "./KurucuDuzenleyici";
 import { SURUKLE, type Parca } from "../yapboz";
 import { bolumeKaydir } from "./kaydir";
 import { BLOK_ADI } from "./ortak";
@@ -512,6 +512,8 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
           <label className={k.panelAlan}>En az satır
             <SayiGirdi deger={b.enAz} en={0} enCok={200} ad="En az satır" yaz={(n) => degis(bolumYaz(t, i, { enAz: n }))} /></label>
         </div>}
+        {/* 2026-10-16 (reisim: "kurala göre otomatik uygun uygun değil diyor, ama ilgili ayar buradan yapılamıyor"): tablonun sonuç kuralı */}
+        <SonucKuraliDuzenleyici t={t} i={i} b={b} degis={degis} />
         <NotDuzenleyici t={t} i={i} b={b} degis={degis} />
       </>}
       {b.blok === "sonuc" && <SonucAciklamasi t={t} i={i} b={b} degis={degis} />}

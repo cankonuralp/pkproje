@@ -4,6 +4,7 @@
    (kimlikler bütün tanımda tekil — ad değişse de aynı öğe). Saf; sürüm sayfası çizer. */
 import { KUNYE_ALAN_ADI, KUNYE_ALANLARI, type Bolum, type FormatTanimi, type KunyeAlani } from "../../format/tanim.ts";
 import { kilitliKunye } from "../../format/kunye.ts";
+import { etkinKurallar } from "../../format/sonuc.ts";
 import { BLOK_ADI } from "./ui/ortak.ts";
 
 export interface Fark { tur: "ekle" | "cikar" | "degis"; metin: string }
@@ -40,7 +41,8 @@ function ogeler(t: FormatTanimi): Map<string, Oge> {
 /** bölümün öğeleri ve adı dışındaki ayarları (üst başlık, numarasızlık, alt başlık, en az, sonuç metni, imzalar, tablo hesabı, notlar …) */
 function bolumGovdesi(b: Bolum): string {
   const { ...k } = b as Record<string, unknown>;
-  for (const a of ["ad", "id", "gruplar", "alanlar", "sutunlar", "degerler", "cevaplar", "kilit"]) delete k[a];
+  /* 2026-10-16: sonuç kuralı ayrıca, geçerli kurallarla karşılaştırılır (tanıma ilk yazılması — kurucu açılışı — değişiklik değildir) */
+  for (const a of ["ad", "id", "gruplar", "alanlar", "sutunlar", "degerler", "cevaplar", "kilit", "sonucKurali"]) delete k[a];
   return JSON.stringify(k);
 }
 
@@ -57,6 +59,9 @@ export function surumFarki(once: FormatTanimi, simdi: FormatTanimi): Fark[] {
       ekle("degis", `Cevap seti (${b.ad}): ${o.cevaplar.join(" / ")} → ${b.cevaplar.join(" / ")}`);
     }
     if (o.blok !== b.blok || bolumGovdesi(o) !== bolumGovdesi(b)) ekle("degis", `Bölüm ayarları değişti: ${tirnak(b.ad)}`);
+    if (o.blok === "olcum" && b.blok === "olcum" && JSON.stringify(etkinKurallar(once, o)) !== JSON.stringify(etkinKurallar(simdi, b))) {
+      ekle("degis", `Sonuç kuralı değişti: ${tirnak(b.ad)}`);
+    }
   }
   for (const b of once.bolumler) if (!simdiB.has(b.id)) ekle("cikar", `Bölüm çıkarıldı: ${tirnak(b.ad)}`);
   const ortak = (x: FormatTanimi, y: Map<string, Bolum>) => x.bolumler.filter((b) => y.has(b.id)).map((b) => b.id).join("\n");

@@ -156,4 +156,14 @@
   color: var(--yazi); font: inherit; font-size: var(--boy-kucuk);
 }
 .formulAra:focus-visible { outline: 2px solid var(--odak); outline-offset: 2px; }
-@media (pointer: coarse) { .formulTus, .formulAra { min-height: 44px; } }
+/* 2026-10-16 (reisim: "her birimin kendi tablosundaki değerler çıksın, diğer değerler diğer olarak gözüksün tıklayıp açılan listeden seçilebilsin"):
+   formatın öteki kutuları açılır listede, bölüm bölüm, aranır */
+.formulDiger { border: 1px solid var(--kenar); border-radius: var(--r-orta); background: var(--kart); }
+.formulDiger > summary { min-height: 32px; display: flex; align-items: center; padding: 0 10px; cursor: pointer; font-size: var(--boy-kucuk); font-weight: 600; }
+.formulDiger > summary:focus-visible { outline: 2px solid var(--odak); outline-offset: 2px; }
+.formulDigerIc { display: grid; gap: 8px; max-height: 280px; overflow-y: auto; padding: 8px 10px 10px; border-top: 1px solid var(--kenar); }
+.formulGrupAdi { margin: 0; font-size: var(--boy-kucuk); color: var(--yazi2); overflow-wrap: anywhere; }
+/* 2026-10-16: tablonun sonuç kuralı — kural başına formül, neden, açıklama */
+.kural { display: grid; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--kenar); }
+.kuralTuslari { display: flex; flex-wrap: wrap; gap: 8px; }
+@media (pointer: coarse) { .formulTus, .formulAra, .formulDiger > summary { min-height: 44px; } }

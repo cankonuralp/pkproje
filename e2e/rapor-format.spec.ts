@@ -143,7 +143,32 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await formuleEkle.getByRole("button", { name: "Ib", exact: true }).click();
     await expect(formul).toHaveValue("[Iz] − [Ib]");
     await expect(linye.getByText("= [Iz] − [Ib]").first()).toBeVisible();
+    /* 2026-10-16 (reisim: "hesaplama tuşuna basınca bir sürü değer çıkıyor … her birimin kendi tablosundaki değerler çıksın, diğer değerler diğer
+       olarak gözüksün"): tuşlarda yalnız bu tablonun sütunları; öteki bölümlerin kutuları "Diğer kutular" açılır listesinde */
+    await expect(formuleEkle.getByRole("button", { name: "Hesaplanan 3 fazlı kısa devre akımı", exact: true })).toHaveCount(0);
+    await page.getByText(/^Diğer kutular \(\d+\)$/).first().click();
+    await expect(page.getByRole("group", { name: "Formüle ekle: Fonksiyon testleri" }).getByRole("button", { name: "Hesaplanan 3 fazlı kısa devre akımı", exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Ayrıntıları kapat" }).click();
+    /* 2026-10-16 (reisim: "kurala göre otomatik uygun uygun değil diyor, ama ilgili ayar buradan yapılamıyor … format yapıcıya koyalım"): tablonun
+       sonuç kuralı bölüm ayarında — Bakanlık kuralı formül olarak görünür ve değişir; kuralları kaldırılan tabloda Sonuç'u denetçi seçer */
+    const zi = kagit.getByRole("region", { name: /Zemin izolasyonu$/ });
+    await zi.getByRole("button", { name: "Zemin izolasyonu · bölüm ayarları" }).click();
+    const ziKural = page.getByRole("group", { name: "Zemin izolasyonu · sonuç kuralı" });
+    await expect(ziKural.getByText("Sonuç kuralı (1) — Bakanlık kuralı", { exact: true })).toBeVisible();
+    const ziKosul = ziKural.getByRole("textbox", { name: /^1\. kural/ });
+    await expect(ziKosul).toHaveValue("[Direnç] > 50");
+    await ziKosul.fill("[Direnç] > 40");
+    await ziKosul.blur();
+    await expect(ziKural.getByText("Sonuç kuralı (1) — Bakanlık kuralı değiştirildi", { exact: true })).toBeVisible();
+    await expect(ziKural.getByRole("button", { name: "Bakanlık kuralına dön" })).toBeVisible();
+    await page.getByRole("button", { name: "Bölüm ayarlarını kapat" }).click();
+    const pd = kagit.getByRole("region", { name: /Potansiyel dengeleme$/ });
+    await pd.getByRole("button", { name: "Potansiyel dengeleme · bölüm ayarları" }).click();
+    const pdKural = page.getByRole("group", { name: "Potansiyel dengeleme · sonuç kuralı" });
+    await expect(pdKural.getByText("Sonuç kuralı (2) — Bakanlık kuralı", { exact: true })).toBeVisible();
+    await pdKural.getByRole("button", { name: "Kuralları kaldır (sonucu denetçi seçer)" }).click();
+    await expect(pdKural.getByText("Sonuç kuralı (0) — Bakanlık kuralı değiştirildi", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Bölüm ayarlarını kapat" }).click();
     /* bölüm ekle (sonda) → adı yerinde yazılır → kaydedilmedi (yayınlanmaz) → taslağı kaydet */
     await page.getByRole("combobox", { name: "Bölüm ekle", exact: true }).click();
     await page.getByRole("option", { name: /Not \/ yorum/ }).click();
@@ -338,6 +363,24 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await denemeHucre.fill("");
     await denemeHucre.blur();
     await expect(denemeHucre).toHaveValue("16");
+    /* 2026-10-16: kâğıtta değişen sonuç kuralı sahada — Zemin izolasyonu "[Direnç] > 40": 45 kΩ Uygun (Bakanlık kuralıyla Uygun değil olurdu);
+       kuralları kaldırılan Potansiyel dengelemede Sonuç kendiliğinden çıkmaz */
+    for (const [id, ad] of [["zi", "Zemin izolasyonu"], ["pd", "Potansiyel dengeleme"]] as const) {
+      const b = saha.locator(`#b-${id}`);
+      await expect(async () => {
+        const ac = saha.getByRole("button", { name: `${ad} bölümü`, exact: true });
+        if ((await ac.getAttribute("aria-expanded")) !== "true") await ac.click();
+        await expect(b.getByRole("button", { name: "Satır ekle" })).toBeVisible({ timeout: 5_000 });
+      }).toPass({ timeout: 45_000 });
+      await b.getByRole("button", { name: "Satır ekle" }).click();
+    }
+    const ziSaha = saha.locator("#b-zi"), pdSaha = saha.locator("#b-pd");
+    await ziSaha.getByRole("textbox", { name: "1. satır · Direnç (kΩ)", exact: true }).fill("45");
+    await expect(ziSaha.locator("tbody tr").first().getByText("Uygun", { exact: true })).toBeVisible();
+    await pdSaha.getByRole("textbox", { name: "1. satır · PD kesiti (mm²)", exact: true }).fill("2");
+    await expect(pdSaha.locator("tbody tr").first().getByText(/^Uygun/)).toHaveCount(0);
+    await pdSaha.getByText("Sonuç neye göre çıkar?").click();
+    await expect(pdSaha.getByText(/Bu tabloda sonuç kuralı yok/)).toBeVisible();
     /* 2026-10-12 (reisim: "onaya gönder diyince ekrana pop-up uyarı ekranı gelmesin …"): eksikte pencere yok — üstte kısa uyarı, ilk eksiğe kayılır */
     await saha.getByRole("button", { name: "Onaya gönder" }).click();
     const eksikUyari = saha.locator("[data-uyari]").getByText(/^Zorunlu alanlar doldurulmalıdır/);

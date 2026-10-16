@@ -80,8 +80,9 @@ test("6. formül kutunun elle yazılan değerinin üstüne yazınca denetçinin 
 });
 
 test("7. Türkçe işlev adı Excel adına çevrilmeyince TOPLA hesaplanmaz (kilidin koruduğu açık)", async () => {
-  const m = await bozuk<Formul>("src/format/formul.ts", "const ad = sutun ? SUTUN_ISLEVI : islevAdi(j.v);",
-    "const ad = sutun ? SUTUN_ISLEVI : islevAdi(j.v) === j.v.toUpperCase() ? j.v.toUpperCase() : null;");
+  /* 2026-10-16: kaynaktaki satır probata işlevini (ZS) de arar — bozulan yer aynı (Excel adına çeviri) */
+  const m = await bozuk<Formul>("src/format/formul.ts", "const ad = sutun ? SUTUN_ISLEVI : ozelIslevAdi(j.v) ?? islevAdi(j.v);",
+    "const ad = sutun ? SUTUN_ISLEVI : ozelIslevAdi(j.v) ?? (islevAdi(j.v) === j.v.toUpperCase() ? j.v.toUpperCase() : null);");
   assert.equal(m.formulHesapla("SUM(1; 2)", () => undefined), 3, "İngilizce ad yine çalışır");
   assert.equal(m.formulHesapla("TOPLA(1; 2)", () => undefined), null, "bozuk: TOPLA bilinmedi");
 });

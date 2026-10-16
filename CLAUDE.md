@@ -137,6 +137,14 @@ pkproje/
                             (doldur.ts formulluDahil)
                             · 492: kunye.ts (saf) — raporun künyesi denetçinin değiştirdiğiyle (cevaplar.kunye); formatın gorunum.kilitli bilgisi
                             (başlangıç SGK, İSG-KATİP) değişmez, sunucu reddeder (kunyeKilitHatalari); saha ekranı, belge, gözden geçirme aynı işlevden
+                            · 2026-10-16 SONUÇ KURALI: sonuc.ts (saf) — ölçüm tablosunun satır sonucu tablonun kurallarıyla (tanim.ts sonucKurali: kosul
+                            formülü DOĞRU / YANLIŞ / "Uygun değil: …", neden — yazı ya da "=" formül —, aciklama, agir; boş liste = kural yok, denetçi seçer);
+                            Bakanlık hesapları (hesap.ts) aynı sonucu veren formüllere çevrildi (varsayilanKurallar — sütunlara kimlikle; tanımda kural yoksa
+                            onlar); formul.ts satirHesabi (satır bağlamı, sayı sütununda yazı boş) + probata işlevi ZS (ZPKK01 Zs); motor satirDegerlendir
+                            kurallarla (not önerisi hesapta kalır); kurucuyaHazirla kuralları tanıma yazar; kurucuda tablonun bölüm ayarında
+                            KurucuDuzenleyici SonucKuraliDuzenleyici (kurucu.ts sonucKuraliYaz / bakanlikKuralinaDon); formül panelinde bölümün adları
+                            tuş, öteki kutular "Diğer" (kurucu.ts formulAdGruplari); S.A.Y say-kurucu.ts "sonuc_kurali" · kilit tests/sonuc-kurali.test.ts
+                            (eski hesapla satır satır eşdeğerlik) + bozan sonuc-kurali
   src/modules/rapor-format/ RAPOR FORMATI (2026-10-04, 308): sürümlü tanım (rapor_format, göç 0022: taslak → yayında → eski; yayınlanan değişmez) ·
                             şablondan başlat · taslak kaydet · yayınla (kilitli Bakanlık öğesi ENGEL, öteki denetim uyarı) · yayındaki format;
                             ekran: tür sayfası "Rapor şablonu" + önizleme /ekipman-turleri/<tür>/sablon/<sürüm> · FORMAT KURUCU (338, K4):

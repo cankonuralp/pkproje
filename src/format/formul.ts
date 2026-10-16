@@ -12,8 +12,12 @@
    · ELLE YAZILAN KALIR: kutunun kendi değeri (sahada yazılan) varsa o; boşsa formül; kayıttan gelen kutuda formül boşsa kayıttaki; ekipman
      bilgisinde ekipman bilgisi boşsa formül;
    · hesaplanamayan (boş girdi, sıfıra bölme, hata değeri, döngü) kutu boş kalır — eksik sayılmaz.
-   eval YOK — küçük özyinelemeli çözücü; işlevleri kitaplık hesaplar. */
+   eval YOK — küçük özyinelemeli çözücü; işlevleri kitaplık hesaplar.
+   2026-10-16 (pkproje §9 "SONUÇ KURALI FORMAT YAPICIDA" — reisim: "kurala göre otomatik uygun uygun değil diyor … koda gömülmüş gibi"): ölçüm
+   tablosunun sonuç kuralları da bu dille (src/format/sonuc.ts) — satirHesabi satırın bağlamında hesaplar (sayı kutusunda sayı olmayan yazı boş
+   sayılır: Bakanlık hesaplarının "sayı değilse değerlendirilmez" kuralı); probata işlevi ZS (ZPKK01 Zs — OZEL_ISLEVLER); çözülen formül önbellekte. */
 import { excelCagir, islevAdi, islevYazimi } from "./excel.ts";
+import { EGRI_KAT, UO } from "./hesap.ts";
 import type { BolumOf, Cevaplar, FormatTanimi } from "./tanim.ts";
 
 /** formülün en çok uzunluğu (tanim.ts şeması ile aynı) */
@@ -114,7 +118,7 @@ function coz(ifade: string): Dugum {
     }
     if (j.t === "islev") {
       const sutun = j.v.toLocaleUpperCase("tr") === SUTUN_ISLEVI || j.v.toUpperCase() === "SUTUN";
-      const ad = sutun ? SUTUN_ISLEVI : islevAdi(j.v);
+      const ad = sutun ? SUTUN_ISLEVI : ozelIslevAdi(j.v) ?? islevAdi(j.v);
       if (!ad) throw new Error(`“${j.v}” adında işlev yok`);
       p++;   // "("
       const arg: Dugum[] = [];
@@ -147,6 +151,39 @@ const adlari = (d: Dugum, l: string[] = []): string[] => {
   if ("b" in d) adlari(d.b, l);
   if (d.k === "f") for (const x of d.arg) adlari(x, l);
   return l;
+};
+/** çözülen formüller (aynı formül her satırda, her değerlendirmede yeniden çözülmesin — ağaç değişmez); hata da saklanır */
+const COZUM = new Map<string, Dugum | Error>();
+function cozulen(ifade: string): Dugum {
+  let d = COZUM.get(ifade);
+  if (d === undefined) {
+    try { d = coz(ifade); } catch (e) { d = e instanceof Error ? e : new Error(String(e)); }
+    if (COZUM.size >= 2_000) COZUM.clear();
+    COZUM.set(ifade, d);
+  }
+  if (d instanceof Error) throw d;
+  return d;
+}
+
+/* ── probata işlevleri (Excel'de olmayan, Bakanlık kriterlerinin hesabı) ── */
+/** ZS(eğri; In): ZPKK01 çevrim empedansı sınırı Zs = Uo ÷ Ia, Ia = eğri çarpanı × In (B 5 · C 10 · D 15; başka eğri 10); In sayı değilse ya da
+    Ia sıfırsa 0 — Bakanlık hesabının (hesap.ts noktaHesap) aynısı, 3 ondalık */
+function zs(a: readonly Deger[]): Deger {
+  if (a.some((x) => Array.isArray(x))) throw new FormulHatasi("ZS bir eğri ve bir In ister: ZS([Açma eğrisi]; [In])");
+  const egri = typeof a[0] === "string" ? a[0] : "";
+  const kat = Object.hasOwn(EGRI_KAT, egri) ? EGRI_KAT[egri] : 10;
+  const In = sayiMi((a[1] ?? null) as Deger);
+  const ia = kat * (In ?? 0);
+  return ia > 0 ? Math.round((UO / ia) * 1000) / 1000 : 0;
+}
+const OZEL_ISLEVLER: Readonly<Record<string, (a: readonly Deger[]) => Deger>> = Object.freeze({ ZS: zs });
+/** probata işlevlerinin adları ve kısa tarifleri (kurucuda işlev listesinde) */
+export const OZEL_ISLEV_TARIFI: Readonly<Record<string, string>> = Object.freeze({
+  ZS: `ZS(eğri; In) — Zs = ${UO} V ÷ (eğri çarpanı × In); B 5, C 10, D 15 (ZPKK01)`,
+});
+const ozelIslevAdi = (yazilan: string): string | null => {
+  const u = yazilan.toLocaleUpperCase("tr");
+  return Object.hasOwn(OZEL_ISLEVLER, u) ? u : null;
 };
 
 /* ── değerler ── */
@@ -245,6 +282,8 @@ function hesapla(d: Dugum, bag: Bag): Deger {
         if (!s) throw new FormulHatasi("SÜTUN bir tablo sütununun adını ister: SÜTUN([Direnç])");
         return s;
       }
+      const ozel = Object.hasOwn(OZEL_ISLEVLER, d.ad) ? OZEL_ISLEVLER[d.ad] : null;
+      if (ozel) return ozel(d.arg.map((x) => hesapla(x, bag)));
       return islevDegeri(excelCagir(d.ad, d.arg.map((x) => excelDegeri(hesapla(x, bag)))));
     }
     default: return aritmetik(d.k as "+" | "-" | "*" | "/" | "^", hesapla(d.a, bag), hesapla(d.b, bag));
@@ -256,7 +295,7 @@ class BilinmeyenAd extends Error { ad: string; constructor(ad: string) { super(a
 export function formulDenet(ifade: string, adlar: readonly string[], kendi?: string): string | null {
   if (ifade.length > FORMUL_EN_UZUN) return `En çok ${FORMUL_EN_UZUN} karakter.`;
   let d: Dugum;
-  try { d = coz(ifade); } catch (e) { return `Formül anlaşılmadı: ${(e as Error).message}.`; }
+  try { d = cozulen(ifade); } catch (e) { return `Formül anlaşılmadı: ${(e as Error).message}.`; }
   const bilinen = new Set(adlar.map(anahtar));
   const l = adlari(d);
   const yok = l.find((a) => !bilinen.has(anahtar(a)));
@@ -266,12 +305,12 @@ export function formulDenet(ifade: string, adlar: readonly string[], kendi?: str
 }
 /** formülün başvurduğu adlar (yapı hatasında boş) */
 export function formulAdlari(ifade: string): string[] {
-  try { return adlari(coz(ifade)); } catch { return []; }
+  try { return adlari(cozulen(ifade)); } catch { return []; }
 }
 /** formülü SAYI değerlerle hesaplar (bul: ad → sayı · null boş · undefined yok); sonuç sayı değilse ya da hesaplanamazsa null */
 export function formulHesapla(ifade: string, bul: (ad: string) => number | null | undefined): number | null {
   try {
-    const v = hesapla(coz(ifade), { satir: null, sutun: () => null, ad: (a) => bul(a) });
+    const v = hesapla(cozulen(ifade), { satir: null, sutun: () => null, ad: (a) => bul(a) });
     return typeof v === "number" ? v : sayiMi(v as Deger);
   } catch { return null; }
 }
@@ -303,11 +342,12 @@ export const tabloAdlari = (t: FormatTanimi, b: BolumOf<"olcum">) => [...b.sutun
 /** kayıttan gelen ve ekipman kaydına bağlı kutuların değerleri (saha ekranı ve belge verir; motor vermez — o kutular boş sayılır) */
 export interface FormulEki { kaynak?: Readonly<Partial<Record<string, string | null>>>; ekipman?: Readonly<Record<string, string>> }
 
-/** saklanan yazı → değer (kutunun türüne göre) */
-function okunan(ham: unknown, tur: "sayi" | "metin" | "tarih" | "evet" | "secim" | "coklu"): Deger {
+/** saklanan yazı → değer (kutunun türüne göre). kati (sonuç kuralı — satirHesabi): sayı kutusunda sayı olmayan yazı BOŞ sayılır (Bakanlık
+    hesaplarının "sayı değilse değerlendirilmez" kuralı; yazı karşılaştırması sonucu belirlemesin) */
+function okunan(ham: unknown, tur: "sayi" | "metin" | "tarih" | "evet" | "secim" | "coklu", kati = false): Deger {
   if (Array.isArray(ham)) return ham.filter((x): x is string => typeof x === "string");
   if (typeof ham !== "string" || !ham.trim()) return null;
-  if (tur === "sayi") return sayiMi(ham) ?? ham;
+  if (tur === "sayi") return sayiMi(ham) ?? (kati ? null : ham);
   if (tur === "tarih") return tarihOku(ham) ?? ham;
   if (tur === "evet") return ham === "evet" ? true : ham === "hayir" ? false : ham;
   /* yazı kutusundaki tam tarih (14.10.2026 · 2026-10-14) tarih sayılır — Excel hücresi gibi (kayıttan gelen "Kontrol tarihi" + 365) */
@@ -337,74 +377,7 @@ const degerTuru = (d: DegerT): "sayi" | "metin" | "secim" => (d.secenekler?.leng
     kutunun formülü kayıttaki değerden önce gelir; ekipman bilgisinin formülü yalnız ekipman bilgisi boşsa. Hesaplanamayan kutu boş. */
 export function formulUygula(t: FormatTanimi, c: Cevaplar, ek: FormulEki = {}): Cevaplar {
   if (!formulVar(t)) return c;
-  const genel = new Map<string, { tur: "alan"; o: Alan } | { tur: "deger"; o: DegerT } | { tur: "madde"; o: Madde; cevaplar: readonly string[] }>();
-  const tablolar = new Map<string, BolumOf<"olcum">>(), sutunlar = new Map<string, { b: BolumOf<"olcum">; s: Sutun }>();
-  for (const b of t.bolumler) {
-    const koy = (ad: string, x: Parameters<typeof genel.set>[1]) => { if (!genel.has(anahtar(ad))) genel.set(anahtar(ad), x); };
-    if (b.blok === "bilgi") for (const a of b.alanlar) koy(a.ad, { tur: "alan", o: a });
-    if (b.blok === "test") for (const d of b.degerler) koy(d.ad, { tur: "deger", o: d });
-    if (b.blok === "liste") for (const g of b.gruplar) for (const m of g.maddeler) koy(m.metin, { tur: "madde", o: m, cevaplar: b.cevaplar });
-    if (b.blok === "olcum") {
-      if (!tablolar.has(anahtar(b.ad))) tablolar.set(anahtar(b.ad), b);
-      for (const s of b.sutunlar) if (!sutunlar.has(anahtar(s.ad))) sutunlar.set(anahtar(s.ad), { b, s });
-    }
-  }
-  const onbellek = new Map<string, Deger>(), yigin = new Set<string>();
-  const formulle = (k: string, f: string, satir: number | null, tablo: BolumOf<"olcum"> | null): Deger => {
-    if (onbellek.has(k)) return onbellek.get(k)!;
-    if (yigin.has(k) || yigin.size >= DERINLIK) return null;              // döngü ya da çok derin zincir: hesaplanamaz
-    yigin.add(k);
-    let v: Deger = null;
-    try { v = hesapla(coz(f), bagi(satir, tablo)); } catch { v = null; } finally { yigin.delete(k); }
-    onbellek.set(k, v);
-    return v;
-  };
-  /* kutuların değeri: kendi değeri > formül (> kayıttaki) */
-  const alanDegeri = (a: Alan): Deger => {
-    if (a.ekipman) {
-      const e = okunan(ek.ekipman?.[a.ekipman], alanTuru(a));
-      return !bosMu(e) ? e : formulluAlan(a) ? formulle(`a:${a.id}`, a.formul!, null, null) : null;
-    }
-    const kendi = okunan(c.alan[a.id], alanTuru(a));
-    if (!bosMu(kendi)) return kendi;
-    const f = formulluAlan(a) ? formulle(`a:${a.id}`, a.formul!, null, null) : null;
-    if (!bosMu(f) || !a.kaynak) return f;
-    return okunan(ek.kaynak?.[a.kaynak] ?? null, alanTuru(a));
-  };
-  const degerDegeri = (d: DegerT): Deger => {
-    const kendi = okunan(c.deger[d.id], degerTuru(d));
-    return !bosMu(kendi) ? kendi : formulluDeger(d) ? formulle(`d:${d.id}`, d.formul!, null, null) : null;
-  };
-  const maddeDegeri = (m: Madde): Deger => {
-    const kendi = c.madde[m.id]?.c;
-    return kendi ? kendi : formulluMadde(m) ? formulle(`m:${m.id}`, m.formul!, null, null) : null;
-  };
-  const hucre = (b: BolumOf<"olcum">, s: Sutun, i: number): Deger => {
-    const kendi = okunan(c.tablo[b.id]?.[i]?.[s.id], sutunTuru(s));
-    return !bosMu(kendi) ? kendi : formulluSutun(s) ? formulle(`t:${b.id}:${i}:${s.id}`, s.formul!, i, b) : null;
-  };
-  const sutunDegerleri = (x: { b: BolumOf<"olcum">; s: Sutun }): Deger[] => (c.tablo[x.b.id] ?? []).map((_, i) => hucre(x.b, x.s, i));
-  const bagi = (satir: number | null, tablo: BolumOf<"olcum"> | null): Bag => ({
-    satir,
-    /* SÜTUN([Ad]): önce kendi tablosunun sütunu, yoksa formatın o adlı ilk sütunu */
-    sutun: (ad) => {
-      const kendi = tablo?.sutunlar.find((s) => anahtar(s.ad) === anahtar(ad));
-      const x = kendi && tablo ? { b: tablo, s: kendi } : sutunlar.get(anahtar(ad));
-      return x ? sutunDegerleri(x) : null;
-    },
-    ad: (ad, s) => {
-      const a = anahtar(ad);
-      /* tabloda: önce aynı satırın sütunu */
-      if (tablo && s !== null) { const kol = tablo.sutunlar.find((x) => anahtar(x.ad) === a); if (kol) return hucre(tablo, kol, s); }
-      const g = genel.get(a);
-      if (g) return g.tur === "alan" ? alanDegeri(g.o) : g.tur === "deger" ? degerDegeri(g.o) : maddeDegeri(g.o);
-      const kol = sutunlar.get(a);
-      if (kol) return sutunDegerleri(kol);
-      const tb = tablolar.get(a);
-      if (tb) return (c.tablo[tb.id] ?? []).map((_, i) => tb.sutunlar.map((x) => hucre(tb, x, i)));
-      return undefined;
-    },
-  });
+  const { formulle } = ortamKur(t, c, ek, false);
   /* yalnız boş kutulara yazılır */
   const alan = { ...c.alan }, deger = { ...c.deger }, tablo = { ...c.tablo }, madde = { ...c.madde };
   for (const b of t.bolumler) {
@@ -439,6 +412,89 @@ export function formulUygula(t: FormatTanimi, c: Cevaplar, ek: FormulEki = {}): 
     }
   }
   return { ...c, alan, deger, tablo, madde };
+}
+
+/** 2026-10-16 (sonuç kuralı — src/format/sonuc.ts): ölçüm tablosu SATIRININ bağlamında formül hesaplayıcısı (aynı satırın sütunları, formatın
+    kutuları; kati — sayı kutusunda sayı olmayan yazı boş). c: formüllerin değeri yazılmış cevaplar (formulUygula). Hesaplanamayan formül null. */
+export function satirHesabi(t: FormatTanimi, c: Cevaplar, ek: FormulEki = {}): (b: BolumOf<"olcum">, i: number, ifade: string) => Deger {
+  const { bagi } = ortamKur(t, c, ek, true);
+  return (b, i, ifade) => {
+    if (!ifade.trim()) return null;
+    try { return hesapla(cozulen(ifade), bagi(i, b)); } catch { return null; }
+  };
+}
+
+/** formatın kutularının değerleri ve formülün ad bağlamı (formulUygula ve satirHesabi ortak): kutunun kendi değeri > formül (> kayıttaki) */
+function ortamKur(t: FormatTanimi, c: Cevaplar, ek: FormulEki, kati: boolean) {
+  const genel = new Map<string, { tur: "alan"; o: Alan } | { tur: "deger"; o: DegerT } | { tur: "madde"; o: Madde; cevaplar: readonly string[] }>();
+  const tablolar = new Map<string, BolumOf<"olcum">>(), sutunlar = new Map<string, { b: BolumOf<"olcum">; s: Sutun }>();
+  for (const b of t.bolumler) {
+    const koy = (ad: string, x: Parameters<typeof genel.set>[1]) => { if (!genel.has(anahtar(ad))) genel.set(anahtar(ad), x); };
+    if (b.blok === "bilgi") for (const a of b.alanlar) koy(a.ad, { tur: "alan", o: a });
+    if (b.blok === "test") for (const d of b.degerler) koy(d.ad, { tur: "deger", o: d });
+    if (b.blok === "liste") for (const g of b.gruplar) for (const m of g.maddeler) koy(m.metin, { tur: "madde", o: m, cevaplar: b.cevaplar });
+    if (b.blok === "olcum") {
+      if (!tablolar.has(anahtar(b.ad))) tablolar.set(anahtar(b.ad), b);
+      for (const s of b.sutunlar) if (!sutunlar.has(anahtar(s.ad))) sutunlar.set(anahtar(s.ad), { b, s });
+    }
+  }
+  const onbellek = new Map<string, Deger>(), yigin = new Set<string>();
+  const formulle = (k: string, f: string, satir: number | null, tablo: BolumOf<"olcum"> | null): Deger => {
+    if (onbellek.has(k)) return onbellek.get(k)!;
+    if (yigin.has(k) || yigin.size >= DERINLIK) return null;              // döngü ya da çok derin zincir: hesaplanamaz
+    yigin.add(k);
+    let v: Deger = null;
+    try { v = hesapla(cozulen(f), bagi(satir, tablo)); } catch { v = null; } finally { yigin.delete(k); }
+    onbellek.set(k, v);
+    return v;
+  };
+  /* kutuların değeri: kendi değeri > formül (> kayıttaki) */
+  const alanDegeri = (a: Alan): Deger => {
+    if (a.ekipman) {
+      const e = okunan(ek.ekipman?.[a.ekipman], alanTuru(a), kati);
+      return !bosMu(e) ? e : formulluAlan(a) ? formulle(`a:${a.id}`, a.formul!, null, null) : null;
+    }
+    const kendi = okunan(c.alan[a.id], alanTuru(a), kati);
+    if (!bosMu(kendi)) return kendi;
+    const f = formulluAlan(a) ? formulle(`a:${a.id}`, a.formul!, null, null) : null;
+    if (!bosMu(f) || !a.kaynak) return f;
+    return okunan(ek.kaynak?.[a.kaynak] ?? null, alanTuru(a), kati);
+  };
+  const degerDegeri = (d: DegerT): Deger => {
+    const kendi = okunan(c.deger[d.id], degerTuru(d), kati);
+    return !bosMu(kendi) ? kendi : formulluDeger(d) ? formulle(`d:${d.id}`, d.formul!, null, null) : null;
+  };
+  const maddeDegeri = (m: Madde): Deger => {
+    const kendi = c.madde[m.id]?.c;
+    return kendi ? kendi : formulluMadde(m) ? formulle(`m:${m.id}`, m.formul!, null, null) : null;
+  };
+  const hucre = (b: BolumOf<"olcum">, s: Sutun, i: number): Deger => {
+    const kendi = okunan(c.tablo[b.id]?.[i]?.[s.id], sutunTuru(s), kati);
+    return !bosMu(kendi) ? kendi : formulluSutun(s) ? formulle(`t:${b.id}:${i}:${s.id}`, s.formul!, i, b) : null;
+  };
+  const sutunDegerleri = (x: { b: BolumOf<"olcum">; s: Sutun }): Deger[] => (c.tablo[x.b.id] ?? []).map((_, i) => hucre(x.b, x.s, i));
+  const bagi = (satir: number | null, tablo: BolumOf<"olcum"> | null): Bag => ({
+    satir,
+    /* SÜTUN([Ad]): önce kendi tablosunun sütunu, yoksa formatın o adlı ilk sütunu */
+    sutun: (ad) => {
+      const kendi = tablo?.sutunlar.find((s) => anahtar(s.ad) === anahtar(ad));
+      const x = kendi && tablo ? { b: tablo, s: kendi } : sutunlar.get(anahtar(ad));
+      return x ? sutunDegerleri(x) : null;
+    },
+    ad: (ad, s) => {
+      const a = anahtar(ad);
+      /* tabloda: önce aynı satırın sütunu */
+      if (tablo && s !== null) { const kol = tablo.sutunlar.find((x) => anahtar(x.ad) === a); if (kol) return hucre(tablo, kol, s); }
+      const g = genel.get(a);
+      if (g) return g.tur === "alan" ? alanDegeri(g.o) : g.tur === "deger" ? degerDegeri(g.o) : maddeDegeri(g.o);
+      const kol = sutunlar.get(a);
+      if (kol) return sutunDegerleri(kol);
+      const tb = tablolar.get(a);
+      if (tb) return (c.tablo[tb.id] ?? []).map((_, i) => tb.sutunlar.map((x) => hucre(tb, x, i)));
+      return undefined;
+    },
+  });
+  return { formulle, bagi };
 }
 
 /** kutunun yalnız FORMÜLDEN gelen değeri (kendi değeri yokmuş gibi) — sahada kişi yazdığı değeri hesapla aynı yazınca kutu yeniden kendiliğinden olur */

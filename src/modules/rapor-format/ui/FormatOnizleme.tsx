@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { SINIR_ISARETI } from "../../../format/hesap";
 import { kayittanBolumMu, siraBasligi } from "../../../format/duzen";
 import type { Bolum, FormatTanimi, Sinir } from "../../../format/tanim";
+import { etkinKurallar } from "../../../format/sonuc";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { Rozet } from "../../../components/sayfa/Sayfa";
 import { BLOK_ADI } from "./ortak";
@@ -12,7 +13,6 @@ import stil from "./format.module.css";
 
 const ALAN_TUR = { metin: "metin", sayi: "sayı", tarih: "tarih", secim: "seçim", coklu: "çoklu seçim", evet: "evet / hayır" } as const;
 const GIRIS = { sayi: "sayı", metin: "metin", secim: "seçim", evet: "evet / hayır" } as const;
-const HESAP = { nokta: "Ia · Zs · Ik1 hesabı", selektivite: "RCD testi", linye: "Linye hesabı", pd: "Potansiyel dengeleme hesabı", zi: "Zemin izolasyonu hesabı" } as const;
 const IMZA = { uzman: "Muayene uzmanı", teknik: "Teknik yönetici" } as const;
 const virgul = (n: number) => String(n).replace(".", ",");
 const sinir = (op?: Sinir, s?: number, birim?: string) => (op && s !== undefined ? `${SINIR_ISARETI[op]} ${virgul(s)}${birim ? ` ${birim}` : ""}` : null);
@@ -28,7 +28,7 @@ function Oge({ ad, alt, kilit }: { ad: ReactNode; alt?: string; kilit?: boolean 
   );
 }
 
-function Icerik({ b }: { b: Bolum }) {
+function Icerik({ b, t }: { b: Bolum; t: FormatTanimi }) {
   switch (b.blok) {
     case "bilgi":
       return <ul className={stil.ogeler}>{b.alanlar.map((a) => <Oge key={a.id} ad={a.ad} kilit={a.kilit}
@@ -45,7 +45,9 @@ function Icerik({ b }: { b: Bolum }) {
       </>;
     case "olcum":
       return <>
-        <p className={stil.satir}>{ekler(b.satir === "ekle" ? "Satırı denetçi ekler" : "Sabit satırlar", b.enAz > 0 && `en az ${b.enAz} satır`, b.hesap && HESAP[b.hesap])}</p>
+        {/* 2026-10-16: tablonun sonuç kuralı (src/format/sonuc.ts — hesabın Bakanlık kuralı ya da firmanın) */}
+        <p className={stil.satir}>{ekler(b.satir === "ekle" ? "Satırı denetçi ekler" : "Sabit satırlar", b.enAz > 0 && `en az ${b.enAz} satır`,
+          (() => { const n = etkinKurallar(t, b).filter((k) => k.kosul.trim()).length; return n ? `sonuç kuralı: ${n} kural` : null; })())}</p>
         {/* 447 (reisim: "sütun gibi gözükmüyor kafa karıştırıcı tablo gibi gözükmeli"): sütunlar tablo başlığı; altında örnek satır */}
         <OlcumOnizleme b={b} />
         {b.notlar?.length ? <ul className={stil.ogeler}>{b.notlar.map((n, i) => <Oge key={i} ad={`Not-${i + 1}`} alt={ekler(n.metin, n.kusur && (n.agir ? "ağır kusur" : "kusur"))} />)}</ul> : null}
@@ -116,7 +118,7 @@ export function FormatOnizleme({ tanim }: { tanim: FormatTanimi }) {
             {b.ust && <Rozet tur="notr">Üst başlık: {b.ust}</Rozet>}
             {b.numarasiz && <Rozet tur="notr">Numarasız</Rozet>}
           </div>
-          <Icerik b={b} />
+          <Icerik b={b} t={tanim} />
         </li>
       ))}
     </ol>
