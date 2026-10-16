@@ -51,6 +51,19 @@ export const E2E_YZ = {
   /* saklama süresi (387): ayrı tesiste, süresi 10 gün sonra dolacak imzalı rapor (Uyarılar + Firma ayarları › Saklama süresi dolacak raporlar) */
   saklama: { tesis: "YZ Arşiv Tesisi", ekipman: "EP-0950", plan: "P-0121-950", rapor: "YZ-0121-950-00001" },
 } as const;
+/* 596 TOPLU İMZA / TOPLU ONAY (e2e/toplu-imza.spec.ts): YZ firmasında genişlik başına AYRI denetçi — kendi planında iki rapor, onaya gönderilmiş
+   ve elektrik teknik yöneticisince onaylanmış (toplu imza); bir denetçinin iki raporu onayda (toplu onay — yalnız masaüstü, kod aranarak seçilir:
+   kuyruk firmanın bütün elektrik raporlarını taşır). Öteki YZ testlerinin hesabına ve planlarına dokunulmaz */
+export const E2E_TOPLU = {
+  teknik: { eposta: "toplu-teknik@yzdeneme.example", ad: "Toplu Teknik" },
+  denetci: {
+    masaustu: { eposta: "toplu-masaustu@yzdeneme.example", ad: "Toplu Denetçi Masaüstü" },
+    tablet: { eposta: "toplu-tablet@yzdeneme.example", ad: "Toplu Denetçi Tablet" },
+    telefon: { eposta: "toplu-telefon@yzdeneme.example", ad: "Toplu Denetçi Telefon" },
+  } as Record<string, { eposta: string; ad: string }>,
+  ekipman: { masaustu: ["EP-0701", "EP-0702"], tablet: ["EP-0703", "EP-0704"], telefon: ["EP-0705", "EP-0706"] } as Record<string, readonly string[]>,
+  onay: { denetci: { eposta: "toplu-onay@yzdeneme.example", ad: "Toplu Onay Denetçi" }, ekipman: ["EP-0711", "EP-0712"] },
+} as const;
 /* S.A.Y'ın sunucu işlemleri (2026-10-16; pkproje §9 "S.A.Y CLAUDE GİBİ" 2. adım a — e2e/say-islem.spec.ts): YZ firmasında AYRI uydurma müşteri /
    tesis, denetçi ve planlamacı — S.A.Y plan açar, müşteri arar. Adlar taklidin kişisel bilgi süzgecine ("YZ …") takılmaz; öteki YZ testlerinin
    hesabına ve planlarına dokunulmaz */

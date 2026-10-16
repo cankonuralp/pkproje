@@ -25,6 +25,16 @@ export interface RaporOzeti {
   sonuc: "uygun" | "uygun_degil" | null; gonderildi: string | null; onay: string | null; olustu: string;
 }
 
+/** 596 (İmzamı bekleyen raporlar — "imzaya hazır" rozeti): verilen raporlardan imzasız PDF'i hazırlanmış olanlar (şimdiki revizyonda bekleyen imza
+    isteği). Yalnız kimlikler; görme yetkisi çağıranda (Onaylar kişinin kendi imza bekleyenlerini verir). */
+export async function imzaHazirOlanlar(db: Sorgulayici, idler: readonly string[]): Promise<string[]> {
+  const l = idler.filter((x) => UUID.test(x));
+  if (!l.length) return [];
+  return (await db.sorgu<{ id: string }>(
+    `SELECT r.id::text FROM rapor r JOIN imza_istegi i ON i.rapor_id = r.id AND i.revizyon = r.revizyon AND i.durum = 'bekliyor'
+     WHERE r.id = ANY ($1::uuid[]) AND r.silindi IS NULL`, [l])).rows.map((x) => x.id);
+}
+
 /** etkin (silinmemiş) raporların özetleri: durum süzgeci ya da tek rapor. Yetki ÇAĞIRANDA (Onaylar kayıt kayıt canDo ile süzer). */
 export async function raporOzetleri(db: Sorgulayici, s: { durumlar?: readonly RaporDurumu[]; id?: string; idler?: readonly string[] } = {}): Promise<RaporOzeti[]> {
   const kosul: string[] = [], p: unknown[] = [];

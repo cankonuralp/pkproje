@@ -2525,9 +2525,19 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-16 (596b): **TOPLU İMZA + TOPLU ONAY YAZILDI** (sunum 596 kararları — reisim cevapları: K1 yalnız raporlar · K2 tek ZIP · K3 imzalı PDF
+  içeriğinden eşleşir · K4 toplu onay seçilen hepsi · K5 bir seferde en çok 50 · K6 araç e-İmzaTR): Onaylar › İmzamı bekleyen raporlar'da satır
+  başında seçim kutusu, "Tümünü seç", altta havada "n rapor seçili · İmzaya hazırla"; imza penceresi: imzasız PDF'ler sunucuda tek tek hazırlanır
+  (hazırlanan kalır, listede "İmzaya hazır") → ZIP indir (adlar rapor no) → e-İmzaTR'de birlikte imza (PAdES; .imz kabul edilmez) → imzalı PDF'ler
+  ya da ZIP bırakılır: hangi rapora ait olduğu sunucuda içerikten bulunur (önekin SHA-256'sı; adaylar yalnız kişinin kendi onaylanmış raporları),
+  her biri imzaliYukle ile ayrı denetlenir → sonuç listesi (İmzalandı / Reddedildi + neden: imza yok, başka PDF, daha önce yüklendi). Onay
+  kuyruğunda teknik yönetici seçip "Seçilenleri onayla" — "Uygun değil" ve sonucu seçilmemiş raporlar da girer, onay penceresi sayılarını söyler.
+  Diğer belgeler toplu imzaya girmedi (K1). Kilit tests/onaylar.test.ts (596), oku.test.ts (ZIP açıcı), olumsuz kanıt onaylar.bozan.ts 11–12,
+  uçtan uca e2e/toplu-imza.spec.ts.
 - 2026-10-16 (596): **SUNUM 596 — TOPLU İMZALAMA** (reisim: *"ayrıca imzalam sürecinde toplu imzalama için belge seçme vs olmalı onu içim sunum yap"*):
   İmzamı bekleyen raporlar ve Diğer belgelerde seçim, tek ZIP, e-imza aracında tek oturum, toplu yükleme (içerikten eşleştirme, her PDF ayrı
-  doğrulanır), sonuç tablosu; teknik yönetici toplu onayı (yalnız uyarısız raporlar). https://claude.ai/artifact/THU4YZorNkQkp6mTeBvV6J — onay bekliyor.
+  doğrulanır), sonuç tablosu; teknik yönetici toplu onayı (yalnız uyarısız raporlar). https://claude.ai/artifact/THU4YZorNkQkp6mTeBvV6J — reisim cevapladı
+  (K4 "hepsi": uyarılılar da toplu onaya girer), yazıldı (596b).
 - 2026-10-16 (595b): **SUNUM 595 — KİLİTLİ KALAN ALANLAR** (reisim: *"format yapıcıda bu ve benzeri kısımlarda değişiklik yapamıyorum, tıklayıp
   değiştiremiyorum, satır sütun ekleyemiyorum … bu listeyi düzeltmeliyiz"* + *"format yapıcıda e imza yeri de seçilebilsin … bu rapor e imzalıdır diye
   şerit gelecek … aşağıda boşluk bırakmayı unutmasınlar"*): format yapıcıda kodda sabit kalan 16 yer (imza bölümü, cihaz sütunları, tablo başlıkları,

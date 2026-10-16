@@ -57,6 +57,27 @@ async function zipParca(z: Uint8Array, g: Giris, sinir: number = OKU_SINIR.parca
   return out;
 }
 
+/** 596 (toplu imzalı PDF yüklemesi): ZIP'in dosyaları — klasör girdileri, macOS'un "__MACOSX/" kopyaları ve gizli dosyalar (".") atlanır; ad yolun
+    son parçası. Açılmış TOPLAM boyut sınırı aşılınca durur (sıkıştırma bombası); en çok `adet` dosya. Okunamayan ZIP TabloHatasi (ZIP iletisiyle). */
+export async function zipAc(z: Uint8Array, toplam: number, adet: number): Promise<{ ad: string; bayt: Uint8Array }[]> {
+  let dizin: Map<string, Giris>;
+  try { dizin = zipDizini(z); } catch { throw new TabloHatasi("ZIP dosyası okunamadı ya da bozuk."); }
+  const l: { ad: string; bayt: Uint8Array }[] = [];
+  let top = 0;
+  for (const [yol, g] of dizin) {
+    const ad = yol.split("/").pop() ?? "";
+    if (!ad || yol.endsWith("/") || yol.startsWith("__MACOSX/") || ad.startsWith(".")) continue;
+    if (l.length >= adet) throw new TabloHatasi(`ZIP'te ${adet} dosyadan çoğu var.`);
+    let bayt: Uint8Array;
+    try { bayt = await zipParca(z, g, toplam - top); } catch (e) {
+      throw new TabloHatasi(e instanceof TabloHatasi && e.message === "Dosya çok büyük." ? "ZIP'in açılmış hâli çok büyük." : "ZIP dosyası okunamadı ya da bozuk.");
+    }
+    top += bayt.length;
+    l.push({ ad, bayt });
+  }
+  return l;
+}
+
 const VARLIK: Record<string, string> = { lt: "<", gt: ">", amp: "&", quot: '"', apos: "'" };
 /** XML metni: varlıklar ve OOXML'in _xHHHH_ kaçışı */
 export const xmlCoz = (s: string) => s

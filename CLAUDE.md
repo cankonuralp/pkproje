@@ -231,6 +231,11 @@ pkproje/
                             muhasebe/server/bordro-gonder.ts + ui/BordroGonder.tsx; ui/DigerBelgeler.tsx; sayfa modülden bağımsız, oturum kapısı)
                             · TALEPLER /onaylar/talepler (477, göç 0079): ui/TalepOnaylari.tsx — izin talebi (firma yöneticisi) ve masraf formu (Muhasebe'yi
                             değiştiren) salt okunur; Onayla · Düzeltmeye geri gönder · Reddet (gerekçe ≥ 10); veri talepler onayTalepleri / talepKarar
+                            · 596 TOPLU İMZA / TOPLU ONAY: ui/TopluImza.tsx (useSecim, SecimKutusu, SecimCubugu — data-alt-cubuk; TopluImzaPenceresi: sırayla
+                            imzaHazirlaEylemi → ZIP tarayıcıda → PDF / ZIP bırak → imzaliEslestirYukleEylemi dosya dosya → sonuç; en çok 50) · raporlar.ts
+                            imzaliEslestirYukle (imzalı PDF İÇERİĞİNDEN: önekin SHA-256'sı = isteğin pdf_sha256'sı, adaylar kişinin kendi onaylanmış raporları;
+                            imzaliYukle yeniden denetler) · onay-baglanti imzaHazirOlanlar ("İmzaya hazır") · ZIP açıcı components/disa/oku.ts zipAc ·
+                            kuyrukta "Seçilenleri onayla" (onaylaEylemi rapor rapor) · /onaylar ve /onaylar/imza PDF listesinde (maxDuration 60)
   src/modules/musteri-paneli/ MÜŞTERİ PANELİ (2026-10-05, 319; modül 17): server/panel.ts (yalnız musteriIslemi içinde; Raporlar'ın musteri-baglanti.ts
                             ve Müşteriler'den okur; 0033 uygunsuzluk yalnız açık sürümün, pasif müşterinin oturumu hemen düşer) · ui/ (Raporlarınız; 320: Uygunsuzluklar /portal/uygunsuz, Excel tarayıcıda — ui/kusur.ts; 321: Planlanan kontroller /portal/plan — Planlar'ın
                             server/musteri-baglanti.ts, göç 0032 sütun sınırlı —, toplu ZIP ui/topluIndir.ts + ui/zipla.ts (saf; 300 rapor / 500 MB) + ui/ad.ts; 322: Sözleşmeler /portal/sozlesme + /portal/s/<id> — Sözleşmeler'in

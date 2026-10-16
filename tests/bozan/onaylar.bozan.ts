@@ -14,6 +14,8 @@
       bir PDF imzalı sürüm olurdu.
    9. (0031) İleri tarih kuralı olmasaydı imza gününden ileri tarihli rapor imzalanır, ekipmanın sonraki kusurlarını "giderildi" kapatırdı.
   10. (0031) Eskimiş sürüm kuralı olmasaydı revizyonla düzeltilen yanlış (ileri) tarih başka raporun kusurunu giderilmiş doğururdu.
+  11. (596 toplu imza) İçerik eşleşmesi (önekin SHA-256'sı) olmasaydı başka bir PDF'in imzalısı imzası bekleyen bir rapora eşleşirdi.
+  12. (596) Adaylar yalnız kişinin kendi raporları olmasaydı raporu yazmayan kişi başkasının imzalı PDF'ini yükleyince raporun numarasını öğrenirdi.
    Akış ve hareket işlevlerini sonraki göçler (0027, 0029) yeniden yazdığından her kural geçtiği bütün göçlerden birlikte sökülür. */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -288,4 +290,34 @@ test("0031'deki eskimiş sürüm kuralı kalkınca revizyonla düzeltilen yanlı
   await tarihle(y.id, "2026-03-01");
   const u = (await supa.sahip.query<{ kapanis: string | null }>("SELECT kapanis FROM uygunsuzluk WHERE rapor_id = $1", [y.id])).rows;
   assert.ok(u.length >= 1 && u.every((z) => z.kapanis === "giderildi"), `eskimiş sürümün tarihi kusuru kapattı: ${JSON.stringify(u)}`);
+});
+
+/* 596 TOPLU İMZA: bozulan sunucu kodu (raporlar.ts imzaliEslestirYukle); göçler önemsiz — onaylanmış rapor, imzasız PDF'i hazır */
+type Raporlar = typeof import("../../src/modules/raporlar/server/raporlar.ts");
+const RAPORLAR = "src/modules/raporlar/server/raporlar.ts";
+const imzaEki = (b: Uint8Array) => new Uint8Array(Buffer.concat([Buffer.from(b),
+  Buffer.from("\n9 0 obj << /Type /Sig /ByteRange [0 1 2 3] /Contents <00> >> endobj\ntrailer << /Root 1 0 R /Prev 0 >>\n%%EOF\n", "latin1")]));
+async function hazirRapor(kisa: string, kod: string) {
+  const F = await yeniFirma(kisa, kod);
+  const k = await kur(havuz, F);
+  await k.is(k.yon, (db) => db.sorgu("UPDATE rapor SET durum = 'onaylandi' WHERE id = $1", [k.rapor]));
+  const pdf = new TextEncoder().encode(`%PDF-1.4\n% toplu ${kisa}\n1 0 obj << /Type /Catalog >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF\n`);
+  const h = await k.is(k.den, (db) => imzaHazirla(db, depo, k.den, F, k.rapor, async () => pdf));
+  assert.equal(h.durum, "tamam", JSON.stringify(h));
+  return { F, k, pdf };
+}
+
+test("596: içerik eşleşmesi (önekin SHA-256'sı) kalkınca başka bir PDF'in imzalısı imzası bekleyen rapora eşleşir", async () => {
+  const m = await bozukModul<Raporlar>(RAPORLAR, "Number(x.boyut) <= b.length && onek(Number(x.boyut)) === x.sha", "Number(x.boyut) <= b.length");
+  const { F, k } = await hazirRapor("deneme-t1", "DT");
+  const baska = imzaEki(new TextEncoder().encode("%PDF-1.4\n% bambaşka bir belge — bu rapora hiç hazırlanmamış, daha uzun bir içerik ve biraz daha\n%%EOF\n"));
+  const x = await k.is(k.den, (db) => m.imzaliEslestirYukle(db, depo, k.den, F, { ad: "baska.pdf", bayt: baska }));
+  assert.equal(x.id, k.rapor, `başka PDF bu rapora eşleşti: ${JSON.stringify(x)}`);
+});
+
+test("596: adaylar yalnız kişinin kendi raporları olmasaydı raporu yazmayan yönetici imzalı PDF'le başkasının rapor numarasını öğrenir", async () => {
+  const m = await bozukModul<Raporlar>(RAPORLAR, "r.durum = 'onaylandi' AND r.hesap_id = $1 ORDER BY", "r.durum = 'onaylandi' AND $1::uuid IS NOT NULL ORDER BY");
+  const { F, k, pdf } = await hazirRapor("deneme-t2", "DU");
+  const x = await k.is(k.yon, (db) => m.imzaliEslestirYukle(db, depo, k.yon, F, { ad: "imzali.pdf", bayt: imzaEki(pdf) }));
+  assert.ok(x.no !== null && x.id === k.rapor, `yazmayan kişiye numara söylendi: ${JSON.stringify(x)}`);
 });

@@ -7,7 +7,7 @@ import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { depo } from "../../../server/dosya/depo";
 import { belgePdf } from "../../../belge/pdf";
 import {
-  cihazEkle, cihazKaldir, fotoEkle, fotoSil, imzaHazirla, imzaliYukle, onayaGonder, raporFormatGuncelle, raporKaydet, raporKopyala, raporKunyeGuncelle, raporOlustur,
+  cihazEkle, cihazKaldir, fotoEkle, fotoSil, imzaHazirla, imzaliEslestirYukle, imzaliYukle, onayaGonder, raporFormatGuncelle, raporKaydet, raporKopyala, raporKunyeGuncelle, raporOlustur,
   raporSil, revizeIste, revizeIstegiGeriCek, type RaporYazma,
 } from "../server/raporlar";
 import { anthropicCagir, type OkunanSatir } from "../../../server/yz/okuma";
@@ -181,6 +181,19 @@ export async function imzaliYukleEylemi(form: FormData): Promise<RaporYaniti> {
   if (dosya.size > 25 << 20) return { hatalar: { dosya: "PDF çok büyük (en çok 25 MB)." } };
   const bayt = new Uint8Array(await dosya.arrayBuffer());
   return islem((o) => oturumIslemi(o, (db) => imzaliYukle(db, depo(), o, o.kiraci.firmaId, metin(form.get("id")), Number(form.get("surum")), { ad: dosya.name, bayt })));
+}
+/** 596 toplu imza: tek imzalı PDF (form: dosya) — hangi rapora ait olduğu sunucuda İÇERİKTEN bulunur (rapor kimliği istemciden alınmaz);
+    yanıtta raporun kimliği ve numarası (sonuç tablosu) */
+export async function imzaliEslestirYukleEylemi(form: FormData): Promise<RaporYaniti & { no?: string | null; rapor?: string | null }> {
+  const dosya = form.get("dosya");
+  if (!(dosya instanceof File) || dosya.size === 0) return { hatalar: { dosya: "İmzalı PDF seçilmeli." } };
+  if (dosya.size > 25 << 20) return { hatalar: { dosya: "PDF çok büyük (en çok 25 MB)." } };
+  if (!(await ayniKoken())) return { genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };
+  const o = await istekOturumu();
+  if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
+  const bayt = new Uint8Array(await dosya.arrayBuffer());
+  const s = await oturumIslemi(o, (db) => imzaliEslestirYukle(db, depo(), o, o.kiraci.firmaId, { ad: dosya.name, bayt }));
+  return { ...yanit(s.sonuc), no: s.no, rapor: s.id };
 }
 /* revize isteği (318): yalnız raporu yazan, tamamlanan raporda */
 export async function revizeIsteEylemi(id: string, girdi: unknown): Promise<RaporYaniti> {

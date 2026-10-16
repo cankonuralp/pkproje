@@ -921,14 +921,16 @@ async function imzaliSurum(db: Sorgulayici, raporId: string, revizyon: number) {
 const IMZA_GECERSIZ = "Yüklenen PDF bu raporun imzaya hazırlanan PDF'i değil ya da imza taşımıyor.";
 
 /** imzaya hazırla: yalnız raporu yazan (rapor_son_imza), rapor onaylanmış. Kesin imzasız PDF bir kez üretilir ve saklanır (SHA-256 istekte);
-    bekleyen istek varsa onun PDF'i döner (yeniden üretilmez — imzalanacak bayt değişmesin). uret: belge → PDF (sunucuda başsız Chromium). */
+    bekleyen istek varsa onun PDF'i döner (yeniden üretilmez — imzalanacak bayt değişmesin). uret: belge → PDF (sunucuda başsız Chromium).
+    Yanıtın dosyası imzasız PDF'in kimliği (596: toplu imzanın ZIP'i onu indirir — dosya ucu yetkiyi yeniden denetler). */
 export async function imzaHazirla(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, id: string,
   uret: (v: BelgeVerisi) => Promise<Uint8Array>): Promise<RaporYazma> {
   const e = await erisim(db, kim, id, true);
   if (!e) return { durum: "yok" };
   if (!e.sahip || !canDoEylem(kim, "rapor_son_imza", { sahip: e.r.hesap_id })) return { durum: "yetkisiz" };
   if (e.r.durum !== "onaylandi") return { durum: "red", neden: `Rapor imzaya hazır değil (şu an: ${RAPOR_DURUM[e.r.durum][0]}).` };
-  if (await bekleyenIstek(db, id, e.r.revizyon)) return { durum: "tamam", id, bildirim: "İmzasız PDF hazır; indirip imzalayın, imzalı PDF'i yükleyin." };
+  const hazir = await bekleyenIstek(db, id, e.r.revizyon);
+  if (hazir) return { durum: "tamam", id, bildirim: "İmzasız PDF hazır; indirip imzalayın, imzalı PDF'i yükleyin.", dosya: hazir.pdf_dosya };
   const v = await raporBelgesiVerisi(db, depo, kim, id);
   if (!v) return { durum: "yok" };
   /* PDF motoru düşerse rapor ekranı hata sayfasına dönmez: neden şeritte (315–317 incelemesi) */
@@ -940,7 +942,7 @@ export async function imzaHazirla(db: Sorgulayici, depo: Depo, kim: Kisi, firmaI
   await ekle(db, ISTEK, { rapor_id: id, revizyon: e.r.revizyon, yontem: "dosya", durum: "bekliyor", pdf_dosya: y.id, pdf_sha256: createHash("sha256").update(pdf).digest("hex"),
     kopya },
     { kim: kim.ad, ne: "rapor.imza_hazirla", gerekce: gorunenNo(e.r.no, e.r.revizyon) });
-  return { durum: "tamam", id, bildirim: "İmzasız PDF hazır; indirip imzalayın, imzalı PDF'i yükleyin." };
+  return { durum: "tamam", id, bildirim: "İmzasız PDF hazır; indirip imzalayın, imzalı PDF'i yükleyin.", dosya: y.id };
 }
 
 /** imzalı PDF'i yükle: yalnız yazan; bekleyen istek olmalı. Kabul: tür baytlardan PDF, İLK BAYTLARI imzaya hazırlanan PDF'in kendisi (PAdES
@@ -991,6 +993,44 @@ export async function imzaliYukle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaI
   const g = await guncelle(db, ISTEK, istek.id, istek.surum, { durum: "tamam", imzali_dosya: y.id }, iz);
   if (g.durum !== "tamam") return { durum: "cakisma" };
   return sonuc(await guncelle(db, RAPOR, id, surum, { durum: "imzali" }, iz), id, `${gno} imzalandı, tamamlandı ve müşteriye açıldı.`);
+}
+
+/* ── TOPLU İMZA (596; reisim 2026-10-16 kararları: yalnız raporlar · tek ZIP · imzalı PDF içeriğinden eşleşir · bir seferde en çok 50) ──────────
+   Seçim ve hazırlama İmzamı bekleyen raporlarda: her rapor imzaHazirla ile (kendi işlemi), ZIP tarayıcıda. Yükleme dosya dosya: hangi rapora ait
+   olduğu dosya adından değil İÇERİKTEN bulunur, sonra o rapora imzaliYukle — bütün denetimler (yetki, durum, önek, imza sözlüğü) orada, yeniden.
+   İstemciden rapor kimliği alınmaz: başkasının raporu aday bile olmaz. */
+export const TOPLU_IMZA_EN_COK = 50;
+/** imzalı PDF'in sonucu: hangi rapor (eşleşmediyse null) ve yazma sonucu */
+export interface TopluImzaSonucu { id: string | null; no: string | null; sonuc: RaporYazma }
+const ESLESMEDI = "Bu PDF, imzanızı bekleyen raporlarınızdan birinin imzaya hazırlanan PDF'i değil (başka bir PDF ya da rapor bu arada geri alınmış).";
+/** kişinin imzasını bekleyen raporlarından (onaylanmış, şimdiki revizyonda bekleyen imza isteği olan) imzalı PDF'in hangisine ait olduğu: imzalı PDF
+    imzaya hazırlanan PDF'in baytlarıyla başlar (PAdES artımlı imza) — önekin SHA-256'sı isteğin pdf_sha256'sı. Aynı boydaki adaylar için özet bir kez. */
+export async function imzaliEslestirYukle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, dosya: { ad: string; bayt: Uint8Array }): Promise<TopluImzaSonucu> {
+  const b = dosya.bayt;
+  const adaylar = (await db.sorgu<{ id: string; no: string; revizyon: number; surum: number; boyut: string; sha: string }>(
+    `SELECT r.id::text, r.no, r.revizyon, r.surum, d.boyut, i.pdf_sha256 AS sha FROM rapor r
+       JOIN imza_istegi i ON i.rapor_id = r.id AND i.revizyon = r.revizyon AND i.durum = 'bekliyor'
+       JOIN dosya d ON d.id = i.pdf_dosya AND d.cop IS NULL
+     WHERE r.silindi IS NULL AND r.durum = 'onaylandi' AND r.hesap_id = $1 ORDER BY r.olustu LIMIT 500`, [kim.id])).rows;
+  const ozetler = new Map<number, string>();
+  const onek = (n: number) => {
+    let h = ozetler.get(n);
+    if (h === undefined) { h = createHash("sha256").update(b.subarray(0, n)).digest("hex"); ozetler.set(n, h); }
+    return h;
+  };
+  const a = adaylar.find((x) => Number(x.boyut) <= b.length && onek(Number(x.boyut)) === x.sha);
+  if (a) {
+    const no = gorunenNo(a.no, a.revizyon);
+    /* imzasız PDF'in kendisi yüklendi (önek = bütün dosya): imza yok */
+    if (Number(a.boyut) === b.length) return { id: a.id, no, sonuc: { durum: "gecersiz", hatalar: { dosya: "PDF'te imza yok (imzalanmamış dosya yüklendi)." } } };
+    return { id: a.id, no, sonuc: await imzaliYukle(db, depo, kim, firmaId, a.id, a.surum, dosya) };
+  }
+  /* aynı imzalı PDF ikinci kez: kişinin kendi raporuysa numarasıyla söylenir */
+  const once = (await db.sorgu<{ id: string; no: string; revizyon: number }>(
+    `SELECT r.id::text, s.no, s.revizyon FROM rapor_surumu s JOIN rapor r ON r.id = s.rapor_id
+     WHERE s.imzali_sha256 = $1 AND r.hesap_id = $2 LIMIT 1`, [createHash("sha256").update(b).digest("hex"), kim.id])).rows[0];
+  if (once) return { id: once.id, no: gorunenNo(once.no, once.revizyon), sonuc: { durum: "red", neden: "Bu imzalı PDF daha önce yüklendi; rapor zaten tamamlandı." } };
+  return { id: null, no: null, sonuc: { durum: "gecersiz", hatalar: { dosya: ESLESMEDI } } };
 }
 
 /* ── RAPORLAR LİSTESİ (modül 14 ana sayfası; maket raporlar.html #/ — 318) ─────────────────────────────────────────────────────────────── */

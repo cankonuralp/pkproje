@@ -18,7 +18,7 @@ import type { Iz } from "../../../server/db/yazici.ts";
 import { canDo, canDoEylem, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import {
-  bekleyenRevizeIstegi, gorunenRaporOzeti, onayTumSayfasi, raporDurumYaz, raporOzetleri, raporRevizeYaz, revizeIstegiReddet as istekReddet, revizeIstekleri,
+  bekleyenRevizeIstegi, gorunenRaporOzeti, imzaHazirOlanlar, onayTumSayfasi, raporDurumYaz, raporOzetleri, raporRevizeYaz, revizeIstegiReddet as istekReddet, revizeIstekleri,
   type OnayGecisi, type RaporOzeti,
 } from "../../raporlar/server/onay-baglanti.ts";
 import type { SunucuListe } from "../../../components/liste/suzgec.ts";
@@ -88,6 +88,8 @@ export interface OnayListeleri {
   kuyruk: OnaySatiri[]; tumSayisi: number; branslar: ("m" | "e")[];
   /** kişinin YAZDIĞI, onaylanmış (son imzasını bekleyen) raporları — maket onaylar.html BB4 "İmzamı bekleyen raporlar"; onay sırasıyla (eski önce) */
   imzaBekleyen: OnaySatiri[];
+  /** 596: imzaBekleyen'lerden imzasız PDF'i hazırlanmış olanların kimlikleri ("imzaya hazır" — toplu imzada yarıda kalan hazırlık kalır) */
+  imzaHazir: string[];
   /** görebildiği tamamlanan raporlardaki bekleyen revize istekleri (318; yalnız yönetici), en yeni üstte */
   istekler: RevizeIstekSatiri[];
   /** imzasını bekleyen diğer belgeler (333; bordro, eğitim / zimmet formu, araç tutanağı — kişinin kendi) */
@@ -124,6 +126,7 @@ export async function onayListeleri(db: Sorgulayici, kim: Kisi): Promise<OnayLis
     tumSayisi: ozet.sayi,
     branslar: ozet.branslar,
     imzaBekleyen,
+    imzaHazir: await imzaHazirOlanlar(db, imzaBekleyen.map((r) => r.id)),
     istekler,
     belgeBekleyen: await bekleyenBelgeSayisi(db, kim),
     talepler: (await onayTalepleri(db, kim)).map((t) => ({ ...t, ...beklemesi(t.gonderildi, simdi) })),

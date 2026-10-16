@@ -2,10 +2,13 @@
 /* ONAYLAR LİSTELERİ (maket onaylar.html #/ kuyruk, #/tum — 190): Onay kuyruğu (branşın onaydaki raporları, en yeni üstte; çipler Kusurlu ve
    24 saatten eski, seçiciler Denetçi ve Tesis; sütunlar Rapor no · Ekipman · Denetçi · Gönderildi · Sonuç) ve Tüm raporlar (branşın bütün
    raporları; rapor no ve tesis ayrı aranır, seçiciler Durum ve Denetçi). Satır onay ekranını açar. Bekleme sunucuda hesaplanır (az önce /
-   N saattir / N gündür). Yetki sunucuda: liste yalnız görülebilen raporları taşır. 318: İmzamı bekleyen raporlar (C5) ve Revize istekleri. */
+   N saattir / N gündür). Yetki sunucuda: liste yalnız görülebilen raporları taşır. 318: İmzamı bekleyen raporlar (C5) ve Revize istekleri.
+   596: İmzamı bekleyen raporlarda seçip birlikte imzalama, Onay kuyruğunda seçip birlikte onaylama (TopluImza.tsx). */
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition, type ReactNode } from "react";
+import { useBildir } from "../../../components/bildirim/Bildirim";
+import { useOnayla } from "../../../components/pencere/Onay";
 import { KartEtiket, Kirp, type Sutun } from "../../../components/liste/Liste";
 import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
 import { useSunucuSuzgec } from "../../../components/liste/SunucuSuzgec";
@@ -17,7 +20,8 @@ import { Tus, TusBaglanti } from "../../../components/tus/Tus";
 import { RAPOR_DURUM, type RaporDurumu } from "../../raporlar/sema";
 import type { OnayListeleri, OnaySatiri, RevizeIstekSatiri } from "../server/onaylar";
 import { RevizePenceresi, type RevizeTuru } from "./RevizePenceresi";
-import { tumRaporlarEylemi } from "./eylemler";
+import { onaylaEylemi, tumRaporlarEylemi } from "./eylemler";
+import { SecimCubugu, SecimKutusu, TopluImzaPenceresi, useSecim, type Secim } from "./TopluImza";
 import stil from "./onaylar.module.css";
 
 const TR_ZAMAN = new Intl.DateTimeFormat("tr-TR", { timeZone: "Europe/Istanbul", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -35,6 +39,12 @@ const noHucre = (r: OnaySatiri) => <><Link className={stil.no} href={`/onaylar/$
 const ekipmanHucre = (r: OnaySatiri) => <span className={stil.hucreSatir}><span className={stil.kod}>{r.ekipmanKod}</span><Kirp>{r.turAd}</Kirp></span>;
 const denetciHucre = (r: OnaySatiri) => <><KartEtiket>Denetçi</KartEtiket><Kirp>{r.denetci}</Kirp></>;
 
+/** 596: numara hücresinin solunda seçim kutusu (secilir değilse yalnız numara) */
+function secNoHucre(sec: Secim, secilir: (r: OnaySatiri) => boolean, ic: (r: OnaySatiri) => ReactNode) {
+  return function hucre(r: OnaySatiri) {
+    return secilir(r) ? <div className={stil.secHucre}><SecimKutusu s={sec} id={r.id} ad={r.no} /><div className={stil.secIc}>{ic(r)}</div></div> : ic(r);
+  };
+}
 const KUYRUK_SUTUN: Sutun<OnaySatiri>[] = [
   { k: "no", genislik: "24%", baslik: "Rapor no", kart: "ust", sira: 1, hucre: noHucre },
   { k: "ekipman", genislik: "24%", baslik: "Ekipman", kart: "govde", sira: 2, hucre: ekipmanHucre },
@@ -118,14 +128,61 @@ export function onaySekmeleri(v: Pick<OnayListeleri, "yonetici" | "kuyruk" | "tu
   return l;
 }
 
+/* 596 TOPLU ONAY (karar K4 "hepsi"): onaylayabildiği raporlar seçilir; "Uygun değil" ya da sonucu seçilmemiş olanlar da girer — onay penceresi
+   sayılarını söyler. Her rapor kendi isteğiyle onaylanır (yetki, sürüm, durum sunucuda yeniden); düşenler numarasıyla şeritte. */
 export function OnayKuyrugu({ v }: { v: OnayListeleri }) {
+  const router = useRouter();
+  const bildir = useBildir();
+  const onayla = useOnayla();
   const s = useSuzgec(kuyrukTanimi(v.kuyruk), v.kuyruk);
+  const sec = useSecim();
+  const [mesgul, baslat] = useTransition();
+  const [ilerleme, setIlerleme] = useState<string | null>(null);
+  const [red, setRed] = useState<string[]>([]);
+  const secilir = (r: OnaySatiri) => r.izin.onayla;
+  const secilen = v.kuyruk.filter((r) => secilir(r) && sec.secili.includes(r.id));
+  const onaylanir = s.sonuc.liste.filter(secilir);
+  const sutunlar: Sutun<OnaySatiri>[] = [{ ...KUYRUK_SUTUN[0], hucre: secNoHucre(sec, secilir, noHucre) }, ...KUYRUK_SUTUN.slice(1)];
+  const topluOnay = async () => {
+    const l = secilen, kusurlu = l.filter((r) => r.sonuc === "uygun_degil").length, sonucsuz = l.filter((r) => !r.sonuc).length;
+    const ek = [kusurlu ? `${kusurlu} rapor “Uygun değil”` : "", sonucsuz ? `${sonucsuz} raporda sonuç seçilmemiş` : ""].filter(Boolean).join(", ");
+    if (!(await onayla({ baslik: `${l.length} raporu onayla`, tus: "Onayla",
+      metin: <>Seçilen <b>{l.length}</b> rapor onaylanacak ve muayene uzmanlarının son imzasına düşecek.{ek && <> Dikkat: {ek}.</>}</> }))) return;
+    baslat(async () => {
+      let tamam = 0;
+      const dusen: string[] = [];
+      for (const [i, r] of l.entries()) {
+        setIlerleme(`${i} / ${l.length} rapor onaylandı…`);
+        try {
+          const y = await onaylaEylemi(r.id, r.surum);
+          if (y.tamam) tamam++; else dusen.push(`${r.no}: ${y.genel ?? Object.values(y.hatalar ?? {})[0] ?? "onaylanamadı"}`);
+        } catch { dusen.push(`${r.no}: bağlantı ya da sunucu hatası`); }
+      }
+      setIlerleme(null); setRed(dusen); sec.temizle();
+      bildir(`${tamam} rapor onaylandı.`);
+      router.refresh();
+    });
+  };
   return (
     <>
       <SayfaBasi baslik="Onaylar" sayac={<Sayac s={s} />} />
       <Sekmeler ad="Onaylar bölümleri" ogeler={onaySekmeleri(v)} secili="/onaylar" />
-      <SuzgecliListe s={s} on="o" baslik="Onay kuyruğu" sutunlar={KUYRUK_SUTUN} anahtar={(r) => r.id} href={(r) => `/onaylar/${r.id}`}
+      {(ilerleme || red.length > 0 || onaylanir.length > 1) && (
+        <SeritKap>
+          {ilerleme && <Serit tur="bilgi" ikon="list-checks"><span role="status">{ilerleme}</span></Serit>}
+          {red.length > 0 && <Serit tur="hata" ikon="circle-alert"><b>{red.length} rapor onaylanamadı</b> · {red.join(" · ")}</Serit>}
+          {!ilerleme && onaylanir.length > 1 && (
+            <Serit tur="bilgi" ikon="list-checks" eylem={<Tus tur="ikincil" disabled={mesgul} onClick={() => sec.hepsi(onaylanir.map((r) => r.id))}>Tümünü seç</Tus>}>
+              Raporları seçip birlikte onaylayabilirsiniz.
+            </Serit>
+          )}
+        </SeritKap>
+      )}
+      <SuzgecliListe s={s} on="o" baslik="Onay kuyruğu" sutunlar={sutunlar} anahtar={(r) => r.id} href={(r) => `/onaylar/${r.id}`}
         bosVeri={{ ikon: "circle-check", baslik: "Onay bekleyen rapor yok", metin: "Denetçi raporu onaya gönderince burada görünür." }} />
+      <SecimCubugu sayi={secilen.length} temizle={sec.temizle}>
+        <Tus ikon="circle-check" disabled={mesgul} onClick={() => void topluOnay()}>Seçilenleri onayla</Tus>
+      </SecimCubugu>
     </>
   );
 }
@@ -143,14 +200,17 @@ export function TumRaporlar({ v, ilk }: { v: OnayListeleri; ilk: SunucuListe<Ona
 }
 
 /* İMZAMI BEKLEYEN RAPORLAR (C5; maket onaylar.html BB4 imzaCiz, IMZA_SUTUN): kişinin yazdığı, teknik yöneticinin onayladığı raporlar — son imza
-   rapor ekranında (İmzala → imzasız PDF'i indir → imzalı PDF'i yükle; her rapor ayrı). Denetçinin Onaylar'ı yalnız bu listedir. */
-const IMZA_SUTUN: Sutun<OnaySatiri>[] = [
-  { k: "no", genislik: "26%", baslik: "Rapor no", kart: "ust", sira: 1, hucre: (r) => (
-    <><Link className={stil.no} href={`/raporlar/${r.id}`}>{r.no}</Link><AltSatir><Kirp>{`${r.musteri} / ${r.tesis}`}</Kirp></AltSatir></>
-  ) },
+   rapor ekranında (İmzala → imzasız PDF'i indir → imzalı PDF'i yükle) ya da 596'dan beri seçip birlikte (TopluImza.tsx). Denetçinin Onaylar'ı
+   yalnız bu listedir. İmzasız PDF'i hazırlanmış rapor "İmzaya hazır". */
+const imzaNoHucre = (r: OnaySatiri) => (
+  <><Link className={stil.no} href={`/raporlar/${r.id}`}>{r.no}</Link><AltSatir><Kirp>{`${r.musteri} / ${r.tesis}`}</Kirp></AltSatir></>
+);
+const imzaSutunlari = (sec: Secim, hazir: ReadonlySet<string>): Sutun<OnaySatiri>[] => [
+  { k: "no", genislik: "26%", baslik: "Rapor no", kart: "ust", sira: 1, hucre: secNoHucre(sec, () => true, imzaNoHucre) },
   { k: "ekipman", genislik: "28%", baslik: "Ekipman", kart: "govde", sira: 2, hucre: ekipmanHucre },
   { k: "onay", genislik: "24%", baslik: "Onaylandı", kart: "govde", sira: 3, hucre: (r) => (
-    <><KartEtiket>Onaylandı</KartEtiket><span className={stil.sayi}>{r.onay ? zamanYaz(r.onay) : "—"}</span></>
+    <><KartEtiket>Onaylandı</KartEtiket><span><span className={stil.sayi}>{r.onay ? zamanYaz(r.onay) : "—"}</span>
+      {hazir.has(r.id) && <AltSatir><Rozet tur="kabul">İmzaya hazır</Rozet></AltSatir>}</span></>
   ) },
   { k: "eylem", genislik: "22%", baslik: "İşlem", gizliBaslik: true, siralanmaz: true, kart: "eylem", sira: 9, hucre: (r) => (
     <div className={stil.eylemTuslar}><TusBaglanti tur="birincil" ikon="file-signature" href={`/raporlar/${r.id}`}>İmzala</TusBaglanti></div>
@@ -161,19 +221,34 @@ function imzaTanimi(): SuzgecTanimi<OnaySatiri> {
     metin: (r) => [r.no, r.ekipmanKod, r.turAd, r.tesis, r.musteri].join(" ") };
 }
 export function ImzaBekleyen({ v }: { v: OnayListeleri }) {
+  const router = useRouter();
   const s = useSuzgec(imzaTanimi(), v.imzaBekleyen);
-  const n = v.imzaBekleyen.length;
+  const sec = useSecim();
+  const [pen, setPen] = useState<OnaySatiri[] | null>(null);
+  const hazir = new Set(v.imzaHazir);
+  const n = v.imzaBekleyen.length, hazirSayi = v.imzaBekleyen.filter((r) => hazir.has(r.id)).length;
+  const secilen = v.imzaBekleyen.filter((r) => sec.secili.includes(r.id));
   return (
     <>
       <SayfaBasi baslik="Onaylar" sayac={<Sayac s={s} />} />
       <Sekmeler ad="Onaylar bölümleri" ogeler={onaySekmeleri(v, "/onaylar/imza")} secili="/onaylar/imza" />
       {n > 0 && (
         <SeritKap>
-          <Serit tur="uyari" ikon="file-signature"><b>{n} rapor imzanızı bekliyor</b> · her rapor ayrı imzalanır: raporu açın, İmzala.</Serit>
+          <Serit tur="uyari" ikon="file-signature" eylem={<>
+            {n > 1 && <Tus tur="ikincil" onClick={() => sec.hepsi(s.sonuc.liste.map((r) => r.id))}>Tümünü seç</Tus>}
+            {hazirSayi > 0 && <Tus tur="ikincil" ikon="upload" onClick={() => setPen([])}>İmzalı PDF&apos;leri yükle</Tus>}
+          </>}>
+            <b>{n} rapor imzanızı bekliyor</b> · seçip birlikte imzalayabilirsiniz ya da raporu açıp İmzala.
+            {hazirSayi > 0 && <> {hazirSayi} raporun imzasız PDF&apos;i hazır.</>}
+          </Serit>
         </SeritKap>
       )}
-      <SuzgecliListe s={s} on="i" baslik="İmzamı bekleyen raporlar" sutunlar={IMZA_SUTUN} anahtar={(r) => r.id} href={(r) => `/raporlar/${r.id}`}
+      <SuzgecliListe s={s} on="i" baslik="İmzamı bekleyen raporlar" sutunlar={imzaSutunlari(sec, hazir)} anahtar={(r) => r.id} href={(r) => `/raporlar/${r.id}`}
         bosVeri={{ ikon: "circle-check", baslik: "İmzanızı bekleyen rapor yok", metin: "Teknik yönetici raporunuzu onaylayınca son imza için burada görünür." }} />
+      <SecimCubugu sayi={secilen.length} temizle={sec.temizle}>
+        <Tus ikon="file-signature" onClick={() => setPen(secilen)}>İmzaya hazırla</Tus>
+      </SecimCubugu>
+      {pen && <TopluImzaPenceresi raporlar={pen} onKapat={(degisti) => { setPen(null); if (degisti) { sec.temizle(); router.refresh(); } }} />}
     </>
   );
 }

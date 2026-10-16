@@ -4,7 +4,8 @@
    satır sonu, BOM, Türkçe Windows kodlaması); sınırlar (sıkıştırma bombası, satır, eski .xls). Olumsuz kanıt: tests/bozan/oku.bozan.ts. */
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { csvOku, excelTarihi, OKU_SINIR, tabloOku, TabloHatasi } from "../src/components/disa/oku.ts";
+import { csvOku, excelTarihi, OKU_SINIR, tabloOku, TabloHatasi, zipAc } from "../src/components/disa/oku.ts";
+import { zipBayt } from "../src/components/disa/zip.ts";
 import { xlsxBayt } from "../src/components/disa/xlsx.ts";
 import { deflateZip } from "./yardimci/zip.ts";
 
@@ -75,4 +76,18 @@ test("CSV: ayraç ilk satırdan (; , sekme), tırnaklı alan, \"\" kaçışı, s
   const b = new Uint8Array([0x44, 0xf6, 0x6b, 0xfc, 0x6d, 0x3b, 0xde, 0x69, 0xfe, 0x65, 0x0a, 0xdd, 0xe7, 0x3b, 0xf0, 0xfd]);
   assert.deepEqual(await tabloOku("liste.csv", b), [["Döküm", "Şişe"], ["İç", "ğı"]]);
   assert.deepEqual(await tabloOku("liste.csv", new TextEncoder().encode("Kod;Tür\nHT-1;Hava tankı")), [["Kod", "Tür"], ["HT-1", "Hava tankı"]]);
+});
+
+/* 596 (toplu imzalı PDF yüklemesi — reisim 2026-10-16 kararı "tek ZIP"): ZIP açıcı — kendi ZIP yazıcımızın ve DEFLATE'li ZIP'in dosyaları; klasör,
+   macOS kopyası (__MACOSX/), gizli dosya atlanır, ad yolun son parçası; açılmış toplam sınırı ve dosya sayısı sınırı; bozuk ZIP anlaşılır iletiyle */
+test("596 ZIP açıcı: dosyalar adlarıyla; klasör / __MACOSX / gizli dosya atlanır; toplam boyut ve dosya sayısı sınırı; bozuk ZIP", async () => {
+  const pdf = (n: number) => new TextEncoder().encode(`%PDF-1.4\n% ${n}\n%%EOF\n`);
+  const z = zipBayt([["DA-1026-0001.pdf", pdf(1)], ["imzali/DA-1026-0002.pdf", pdf(2)], ["__MACOSX/._DA-1026-0001.pdf", "x"], [".DS_Store", "x"]]);
+  assert.deepEqual((await zipAc(z, 1 << 20, 10)).map((x) => [x.ad, new TextDecoder().decode(x.bayt)]),
+    [["DA-1026-0001.pdf", "%PDF-1.4\n% 1\n%%EOF\n"], ["DA-1026-0002.pdf", "%PDF-1.4\n% 2\n%%EOF\n"]]);
+  const d = deflateZip([["a.pdf", pdf(3)], ["b/", new Uint8Array(0)]]);
+  assert.deepEqual((await zipAc(d, 1 << 20, 10)).map((x) => x.ad), ["a.pdf"], "DEFLATE'li ZIP; klasör girdisi atlanır");
+  await assert.rejects(zipAc(deflateZip([["buyuk.pdf", new Uint8Array(2 << 20)]]), 1 << 20, 10), (e) => e instanceof TabloHatasi && e.message === "ZIP'in açılmış hâli çok büyük.");
+  await assert.rejects(zipAc(zipBayt([["1.pdf", pdf(1)], ["2.pdf", pdf(2)], ["3.pdf", pdf(3)]]), 1 << 20, 2), (e) => e instanceof TabloHatasi && /2 dosyadan çoğu/.test(e.message));
+  await assert.rejects(zipAc(new TextEncoder().encode("PK\u0003\u0004 bozuk"), 1 << 20, 10), (e) => e instanceof TabloHatasi && e.message === "ZIP dosyası okunamadı ya da bozuk.");
 });

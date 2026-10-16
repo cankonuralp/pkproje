@@ -13,7 +13,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createServer } from "node:http";
 import { ornekSayfa } from "../e2e/duyuru-ornek.ts";
-import { E2E_FIRMA, E2E_GORSEL, E2E_HESAPLAR, E2E_ILK, E2E_KAPI, E2E_KENDI_FIRMALAR, E2E_KURULUM, E2E_MUHASEBE, E2E_PAROLA, E2E_PLAN, E2E_SAHA, E2E_YONETIM, E2E_YONETIM_PROJELER, E2E_YZ, E2E_ZAMANLI_SIR, E2E_SAGLIK_SIR, E2E_EPOSTA, E2E_ISLEM } from "../e2e/hesaplar.ts";
+import { E2E_FIRMA, E2E_GORSEL, E2E_HESAPLAR, E2E_ILK, E2E_KAPI, E2E_KENDI_FIRMALAR, E2E_KURULUM, E2E_MUHASEBE, E2E_PAROLA, E2E_PLAN, E2E_SAHA, E2E_YONETIM, E2E_YONETIM_PROJELER, E2E_YZ, E2E_ZAMANLI_SIR, E2E_SAGLIK_SIR, E2E_EPOSTA, E2E_ISLEM, E2E_TOPLU } from "../e2e/hesaplar.ts";
+import { onayla } from "../src/modules/onaylar/server/onaylar.ts";
 import { planKabul, planIci } from "../src/modules/planlar/server/plan-ici.ts";
 import { planAc } from "../src/modules/planlar/server/planlar.ts";
 import { raporOlustur } from "../src/modules/raporlar/server/raporlar.ts";
@@ -234,6 +235,36 @@ for (const f of firmalar) {
       await q("INSERT INTO hesap (eposta, ad, parola_ozeti, roller, durum, personel_id) VALUES ($1, $2, $3, $4, 'etkin', $5) RETURNING id::text", [h.eposta, h.ad, ozet, [rol], p]);
     }
   });
+  /* 596 toplu imza / toplu onay (e2e/toplu-imza.spec.ts): genişlik başına ayrı denetçi, kendi planı (kabul edilmiş), iki raporu onaya gönderilmiş
+     (tetiğin açtığı geçiş — tests/onaylar.test.ts gibi) ve elektrik teknik yöneticisince modülün onayla işleviyle onaylanmış; toplu onay için bir
+     denetçinin iki raporu onayda. Ham SQL yalnız kayıt tohumu */
+  const tk = await kiraciIcinde(havuz, yzFirma, async (db) => (await db.sorgu<{ id: string }>(
+    "INSERT INTO hesap (eposta, ad, parola_ozeti, roller, durum) VALUES ($1, $2, $3, $4, 'etkin') RETURNING id::text",
+    [E2E_TOPLU.teknik.eposta, E2E_TOPLU.teknik.ad, ozet, ["elektrik_yonetici"]])).rows[0].id);
+  const teknik = { id: tk, ad: E2E_TOPLU.teknik.ad, roller: ["elektrik_yonetici"] } as Kisi;
+  const toplu = async (h: { eposta: string; ad: string }, kodlar: readonly string[], onaylansin: boolean, sira: string) => {
+    const x = await kiraciIcinde(havuz, yzFirma, async (db) => {
+      const q = async (sql: string, p: unknown[] = []) => (await db.sorgu<{ id: string }>(sql, p)).rows[0].id;
+      const p = await q("INSERT INTO personel (ad, eposta, basla, meslek, ekipnet) VALUES ($1, $2, '2024-01-15', 'elk-muh', '123') RETURNING id::text", [h.ad, h.eposta]);
+      const hs = await q("INSERT INTO hesap (eposta, ad, parola_ozeti, roller, durum, personel_id) VALUES ($1, $2, $3, $4, 'etkin', $5) RETURNING id::text", [h.eposta, h.ad, ozet, ["denetci"], p]);
+      const ekp: string[] = [];
+      for (const kod of kodlar) ekp.push(await q("INSERT INTO ekipman (tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, $3, 'Deneme') RETURNING id::text", [t.tesis, t.tur, kod]));
+      return { p, hs, ekp };
+    });
+    const dk = kim(x.hs, "denetci", h.ad);
+    const pl2 = kesin(await kiraciIcinde(havuz, yzFirma, (db) => planAc(db, depoYz, pl, yzFirma,
+      { tesis: t.tesis, baslangic: bugun, bitis: bugun, ekip: [{ personel: x.p, isgNo: `ISG-TOPLU-${sira}`, kaydet: false }] }), { hesapId: pl.id }), "toplu plan").id;
+    const pv = (await kiraciIcinde(havuz, yzFirma, (db) => planIci(db, dk, pl2), { hesapId: dk.id }))!;
+    kesin(await kiraciIcinde(havuz, yzFirma, (db) => planKabul(db, dk, pl2, pv.surum, true), { hesapId: dk.id }), "toplu plan kabul");
+    for (const e of x.ekp) {
+      const r = kesin(await kiraciIcinde(havuz, yzFirma, (db) => raporOlustur(db, dk, pl2, e), { hesapId: dk.id }), "toplu rapor");
+      const s = (await kiraciIcinde(havuz, yzFirma, (db) => db.sorgu<{ surum: number }>(
+        "UPDATE rapor SET durum = 'onayda', surum = surum + 1 WHERE id = $1 RETURNING surum", [r.id]), { hesapId: dk.id })).rows[0].surum;
+      if (onaylansin) kesin(await kiraciIcinde(havuz, yzFirma, (db) => onayla(db, teknik, r.id, s), { hesapId: teknik.id }), "toplu onay");
+    }
+  };
+  for (const [proje, h] of Object.entries(E2E_TOPLU.denetci)) await toplu(h, E2E_TOPLU.ekipman[proje], true, proje);
+  await toplu(E2E_TOPLU.onay.denetci, E2E_TOPLU.onay.ekipman, false, "onay");
 }
 await havuz.end();
 

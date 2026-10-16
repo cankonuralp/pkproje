@@ -9,6 +9,8 @@ import { modulOturumu, oturumIslemi } from "../../../../server/kimlik/istek";
 
 const MODUL = modulBul("onaylar")!;
 export const metadata: Metadata = { title: "İmzamı bekleyen raporlar" };
+/* 596 toplu imza: imzasız kesin PDF'i basan sunucu eylemi (başsız Chromium) bu sayfada koşar — süre ayarı PDF uçlarıyla aynı (352) */
+export const maxDuration = 60;
 
 export default async function Sayfa() {
   const o = await modulOturumu(MODUL.no);
