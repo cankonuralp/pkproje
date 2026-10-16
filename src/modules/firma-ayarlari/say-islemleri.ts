@@ -5,7 +5,7 @@
    bilgisi döner (son dört hane bile gitmez). Logo / ön bilgilendirme / bordro formatı dosyası ekrandan yüklenir. */
 import { surum, z } from "../../sema/ortak.ts";
 import { islem, yazmaCevabi, type Islem } from "../../server/yz/islem.ts";
-import { BelgeTuruGirdisi, EkTurAnahtari, KodGirdisi } from "./sema.ts";
+import { AyarSurumu, BelgeTuruGirdisi, EkTurAnahtari, KodGirdisi } from "./sema.ts";
 import { ayarKaydet, belgeTuruEkle, belgeTuruKaldir, denemeEpostasi, firmaAyarlari, firmaKoduKaydet } from "./server/ayarlar.ts";
 
 const MODUL = 22;
@@ -27,10 +27,10 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
     },
   }),
   islem({
-    ad: "firma_ayari_kaydet", modul: MODUL, tur: "yaz", girdi: z.object({ kesim: z.enum(KESIMLER), surum, deger: z.record(z.string(), z.unknown()) }), kaynak: [surum],
+    ad: "firma_ayari_kaydet", modul: MODUL, tur: "yaz", girdi: z.object({ kesim: z.enum(KESIMLER), surum: AyarSurumu, deger: z.record(z.string(), z.unknown()) }), kaynak: [AyarSurumu],
     islev: ayarKaydet,
     tarif: "Firma ayarlarının bir bölümünü kaydeder (firma yöneticisi): kesim (firma | imza | zimmet | saklama | mesai | esik | sabit | fiyat | yz | eposta | bulut | "
-      + "mbelge), surum (firma_ayarlari'ndaki bölüm sürümü), deger (bölümün alanları — firma_ayarlari'ndaki biçimle). Anahtarlar burada değil, ekrandan.",
+      + "mbelge), surum (firma_ayarlari'ndaki bölüm sürümü; hiç kaydedilmemiş bölümde -1), deger (bölümün alanları — firma_ayarlari'ndaki biçimle). Anahtarlar burada değil, ekrandan.",
     calistir: async (b, v, ham) => yazmaCevabi(await ayarKaydet(b.db, b.kim, v.kesim, v.surum, ham.deger)),
   }),
   islem({

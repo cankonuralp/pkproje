@@ -203,10 +203,11 @@ test("5. Personel, Ölçüm cihazları, Zimmetler, Araçlar, Eğitimler, Ekipman
   const z = tamam(await isle(A, FA.yon, "zimmet_ara", { ara: "DB-001" }));
   assert.equal((z.varliklar as { yer: string; personel?: string }[])[0].personel, FA.den1P, "kimde: denetçi");
   assert.equal(neden(await isle(A, FA.den1, "demirbas_ekle", { kod: "DB-002", ad: "Yetkisiz" })), YETKISIZ);
-  /* Araçlar: araç, haftalık kilometre (sayı da olur) */
+  /* Araçlar: araç; haftalık kilometre sayıyla da katalogdan geçer ve modülün kuralına ulaşır — yeni araç depoda, modül kendi iletisiyle reddeder
+     (2026-10-16 ilk koşu: test aracı depodayken kilometreyi "tamam" bekliyordu; teslim açı fotoğrafı ister, ekrandan) */
   const a = tamam(await isle(A, FA.yon, "arac_kaydet", { alanlar: { plaka: "06 ABC 123", tur: "Binek araç", marka: "Deneme", model: "D1", yil: "2022", yakit: "dizel" } }));
   const km = await isle(A, FA.yon, "arac_km", { arac: a.id, km: 12500 });
-  assert.ok(km.tamam, JSON.stringify(km));
+  assert.equal((km as { hatalar?: Record<string, string> }).hatalar?.km, "Araç depoda; haftalık kilometre istenmez.", JSON.stringify(km));
   assert.equal(tamam(await isle(A, FA.yon, "arac_ara", { ara: "06 ABC" })).toplam, 1);
   assert.equal(neden(await isle(A, FA.den1, "arac_kaydet", { alanlar: { plaka: "06 XYZ 999", tur: "Binek araç", marka: "X", model: "Y", yil: "2022", yakit: "dizel" } })), YETKISIZ);
   /* Eğitimler: tür + kayıt */
@@ -245,7 +246,9 @@ test("6. Sözleşmeler, Muhasebe, Talepler, Firma ayarları, okumalar: tuşun i�
   const fa = tamam(await isle(A, FA.yon, "firma_ayarlari", {}));
   assert.deepEqual(Object.keys((fa.yz as { anahtar: object }).anahtar), ["tanimli"]);
   assert.ok(!JSON.stringify(fa).includes("son4"), "anahtarın son haneleri gitmez");
+  /* hiç kaydedilmemiş bölümün sürümü -1 (2026-10-16 ilk koşu: katalog ortak "surum"la -1'i reddediyordu — S.A.Y yeni bölümü kaydedemezdi) */
   const sk = fa.saklama as { surum: number };
+  assert.equal(sk.surum, -1, "saklama bölümü daha kaydedilmedi");
   tamam(await isle(A, FA.yon, "firma_ayari_kaydet", { kesim: "saklama", surum: sk.surum, deger: { yil: 6 } }));
   assert.equal((tamam(await isle(A, FA.yon, "firma_ayarlari", {})).saklama as { deger: { yil: number } }).deger.yil, 6);
   assert.match(neden(await isle(A, FA.den1, "firma_ayarlari", {})), /göremiyor/);
