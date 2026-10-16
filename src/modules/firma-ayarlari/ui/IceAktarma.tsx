@@ -10,6 +10,7 @@ import { baytIndir } from "../../../components/disa/indir";
 import { tabloOku, TabloHatasi } from "../../../components/disa/oku";
 import { XLSX_TURU, xlsxBayt } from "../../../components/disa/xlsx";
 import { Alan, FormIzgara } from "../../../components/form/Form";
+import { SayfaliListe, TabloSayfalari, useSayfa } from "../../../components/liste/Sayfalayici";
 import { useOnayla } from "../../../components/pencere/Onay";
 import { Rozet } from "../../../components/sayfa/Sayfa";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
@@ -31,6 +32,7 @@ export function IceAktarma({ gecmis, yaz }: { gecmis: IaGecmis[]; yaz: boolean }
   const [tur, setTur] = useState<IaTur>("musteri");
   const [dosya, setDosya] = useState<{ ad: string; ham: string[][]; satirlar: IaSatirOzeti[] } | null>(null);
   const [hata, setHata] = useState<string | null>(null);
+  const sy = useSayfa(dosya?.satirlar.length ?? 0, { anahtar: dosya });   // 2026-10-16: yeni dosya 1. sayfadan
   const secici = useRef<HTMLInputElement>(null);
   const T = IA_TUR[tur];
   const gecerli = dosya?.satirlar.filter((x) => x.ok).length ?? 0;
@@ -102,7 +104,7 @@ export function IceAktarma({ gecmis, yaz }: { gecmis: IaGecmis[]; yaz: boolean }
               <caption className="gizli">Satır denetimi</caption>
               <thead><tr><th scope="col">Satır</th><th scope="col">Kayıt</th><th scope="col">Durum</th></tr></thead>
               <tbody>
-                {dosya.satirlar.map((x) => (
+                {sy.dilim(dosya.satirlar).map((x) => (
                   <tr key={x.no}>
                     <td className={stil.sayi}>{x.no}</td>
                     <td>{x.kod && <span className={stil.kodYazi}>{x.kod} </span>}{x.ana}{x.alt && <span className={stil.alt}>{x.alt}</span>}</td>
@@ -112,6 +114,7 @@ export function IceAktarma({ gecmis, yaz }: { gecmis: IaGecmis[]; yaz: boolean }
               </tbody>
             </table>
           </div>
+          <TabloSayfalari s={sy} ad="Satır denetimi" />
           <div className={stil.tuslar}>
             <Tus ikon="check" disabled={mesgul || !gecerli} aria-busy={mesgul || undefined} data-ia-aktar="" onClick={aktar}>İçe aktar ({gecerli})</Tus>
             <Tus tur="ikincil" disabled={mesgul} onClick={() => { setDosya(null); setHata(null); odak("[data-ia-sec]"); }}>Vazgeç</Tus>
@@ -120,15 +123,13 @@ export function IceAktarma({ gecmis, yaz }: { gecmis: IaGecmis[]; yaz: boolean }
       </>}
       {gecmis.length > 0 ? <>
         <p className={stil.etiket}>Son içe aktarımlar</p>
-        <ul className={stil.bilgiListe}>
-          {gecmis.map((g) => (
+        <SayfaliListe ad="Son içe aktarımlar" className={stil.bilgiListe} ogeler={gecmis.map((g) => (
             <li key={g.id}>
               {zamanYaz(g.zaman)} · {g.turAd} · {g.adet} kayıt{g.atlanan ? ` (${g.atlanan} satır atlandı)` : ""} · {g.kim}
               {g.geri && <span className={stil.alt}>geri alındı</span>}
               {yaz && g.son && !g.geri && <> <Tus tur="ikincil" ikon="undo-2" disabled={mesgul} data-ia-geri="" onClick={() => geriAl(g)}>Geri al</Tus></>}
             </li>
-          ))}
-        </ul>
+          ))} />
       </> : !yaz && <p className={stil.ipucu}>Henüz içe aktarma yapılmadı.</p>}
     </>
   );

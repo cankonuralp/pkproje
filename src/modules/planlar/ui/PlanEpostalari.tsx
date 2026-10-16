@@ -1,5 +1,6 @@
 /* PLAN E-POSTALARI (432): plan açılınca ekipteki denetçilere ve bilgilendirme listesine giden e-postalar — alıcı, durum (Gönderildi · Bekliyor ·
    Gönderilemedi) ve nedeni. Yalnız plan açabilene (planlama, yönetici; plan-ici.ts). Gönderim yanıttan sonra; sayfa yenilenince güncel durum. */
+import { SayfaliListe } from "../../../components/liste/Sayfalayici";
 import { Rozet } from "../../../components/sayfa/Sayfa";
 import type { EpostaDurumu } from "../../../server/eposta/eposta";
 import { zamanNo } from "../sema";
@@ -15,8 +16,7 @@ export function PlanEpostalari({ epostalar }: { epostalar: EpostaDurumu[] }) {
         <h2 className={stil.adimBaslik} id="plan-epostalari">Bilgilendirme e-postaları</h2>
         <span className={stil.altInline}><b>{gonderilen}</b> / {epostalar.length} gönderildi</span>
       </div>
-      <ul className={stil.epostalar}>
-        {epostalar.map((e) => {
+      <SayfaliListe ad="Bilgilendirme e-postaları" className={stil.epostalar} ogeler={epostalar.map((e) => {
           const [ad, tur] = DURUM[e.durum];
           return (
             <li key={e.id}>
@@ -25,8 +25,7 @@ export function PlanEpostalari({ epostalar }: { epostalar: EpostaDurumu[] }) {
               <span className={stil.altInline}>{e.gonderildi ? zamanNo(e.gonderildi) : e.sonHata ?? ""}</span>
             </li>
           );
-        })}
-      </ul>
+        })} />
     </section>
   );
 }

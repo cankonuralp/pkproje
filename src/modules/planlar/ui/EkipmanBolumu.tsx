@@ -22,6 +22,7 @@ import { kuyrukAbone, kuyrukAnlik, kuyrukSunucuAnlik } from "../../../components
 import { Alan, FormIzgara, Girdi, ipucuId } from "../../../components/form/Form";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { KartEtiket, Kirp, type Sutun } from "../../../components/liste/Liste";
+import { SayfaliListe } from "../../../components/liste/Sayfalayici";
 import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
 import type { SuzgecTanimi } from "../../../components/liste/suzgec";
 import { Pencere } from "../../../components/pencere/Pencere";
@@ -68,7 +69,8 @@ function tanim(raporlu: Set<string>): SuzgecTanimi<PlanEkipmani> {
   };
 }
 
-interface Ekle { sekme: "yeni" | "kayitli"; kod: string; tur: string; konum: string; secili: string[]; hatalar: Record<string, string> }
+/** ac: "Kayıtlı ekipmanı seç"le gelinen ekipman — kayıtlı listede onun sayfası açılır (2026-10-16: liste 20'şer sayfalı) */
+interface Ekle { sekme: "yeni" | "kayitli"; kod: string; tur: string; konum: string; secili: string[]; hatalar: Record<string, string>; ac?: string }
 const ID = { kod: "ekle-kod", durum: "ekle-kod-durum", tur: "ekle-tur", konum: "ekle-konum" } as const;
 const KOD_SINIF: Record<KodTuru, string> = { bos: stil.kodBos, tamam: stil.kodTamam, hata: stil.kodHata, tesiste: stil.kodHata };
 const BOS: Ekle = { sekme: "yeni", kod: "", tur: "", konum: "", secili: [], hatalar: {} };
@@ -205,7 +207,7 @@ export function EkipmanBolumu({ v }: { v: PlanIci }) {
                   <Ikon ad={durum.tur === "tamam" ? "circle-check" : durum.tur === "bos" ? "circle-alert" : "triangle-alert"} kucuk /><span>{durum.metin}</span>
                 </p>}
                 {durum.tur === "tesiste" && durum.ekipmanId && (
-                  <Tus tur="ikincil" onClick={() => setEkle({ ...ekle, sekme: "kayitli", secili: [durum.ekipmanId!], hatalar: {} })}>Kayıtlı ekipmanı seç</Tus>
+                  <Tus tur="ikincil" onClick={() => setEkle({ ...ekle, sekme: "kayitli", secili: [durum.ekipmanId!], hatalar: {}, ac: durum.ekipmanId! })}>Kayıtlı ekipmanı seç</Tus>
                 )}
               </Alan>
               <Alan id={ID.tur} etiket="Ekipman türü" zorunlu hata={ekle.hatalar.tur}>
@@ -217,8 +219,8 @@ export function EkipmanBolumu({ v }: { v: PlanIci }) {
               </Alan>
             </FormIzgara>
           ) : v.kayitli.length ? (
-            <ul className={stil.secimListesi}>
-              {v.kayitli.map((x) => (
+            <SayfaliListe ad="Kayıtlı ekipmanlar" className={stil.secimListesi} ac={ekle.ac ? v.kayitli.findIndex((x) => x.id === ekle.ac) : null}
+              ogeler={v.kayitli.map((x) => (
                 <li key={x.id}>
                   <label className={stil.secimSatir}>
                     <input type="checkbox" checked={ekle.secili.includes(x.id)} aria-label={`${x.kod} ${x.tur}`}
@@ -227,8 +229,7 @@ export function EkipmanBolumu({ v }: { v: PlanIci }) {
                       <span className={stil.altMetin}>{[x.konum, x.onceki ? `Önceki kontrol ${tarihNo(x.onceki)}` : "İlk kontrol"].filter(Boolean).join(" · ")}</span></span>
                   </label>
                 </li>
-              ))}
-            </ul>
+              ))} />
           ) : <p className={stil.bosSatir}>Bu tesiste plana alınmamış kayıtlı ekipman yok.</p>}
           {ekle.hatalar.secim && <p className={stil.uyari}>{ekle.hatalar.secim}</p>}
         </Pencere>

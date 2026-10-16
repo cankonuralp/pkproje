@@ -267,30 +267,45 @@ test("S.A.Y iş döngüsü: satırlar parça parça ve tek komutla eklenir (No a
   const liste = panel.getByRole("list").first(), son = liste.getByRole("listitem").last();
   const sor = async (metin: string) => { await panel.getByLabel("S.A.Y'a sor").fill(metin); await panel.getByLabel("S.A.Y'a sor").press("Enter"); };
 
-  /* tablonun şimdiki satırları ve son No (başka testler kaydetmiş olabilir: "F3" → F4 …) */
-  const noKutulari = page.locator("#b-linye").getByLabel(/^\d+\. satır · No$/);
-  const once = await noKutulari.count();
-  const sonNo = /^(.*?)(\d+)$/.exec(once ? (await noKutulari.nth(once - 1).inputValue()).trim() : "");
+  /* tablonun şimdiki satırları ve son No (başka testler kaydetmiş olabilir: "F3" → F4 …). 2026-10-16 (reisim: "herhangi bir tabloda 20 den sonrası
+     sayfalı olacak … diğer sayfalara doğru aksın"; beklenti değişikliği — önceki hâli bütün satırları ekranda sayıyordu): tablo 20'şer sayfalı, ekranda
+     yalnız açık sayfanın satırları; tablonun bütün satır sayısı bölgenin data-satir'inde, satır numarası genel ("33. satır · No"); eklenen satırlar
+     eklemenin başladığı sayfada açılır — son satır son sayfadan okunur */
+  const linye = page.locator("#b-linye");
+  const tabloBolgesi = linye.getByRole("region", { name: "Pano sigortaları (linye) tablosu" });
+  const satirSayisi = async () => Number(await tabloBolgesi.getAttribute("data-satir"));
+  const noKutusu = (n: number) => linye.getByRole("textbox", { name: `${n}. satır · No`, exact: true });
+  const noKutulari = linye.getByLabel(/^\d+\. satır · No$/);
+  /** son sayfaya git (son sayfanın tuşu her zaman çizilir) ve son satırın No kutusu — telefonda S.A.Y paneli sayfayı örter: tuşa olay gönderilir */
+  const sonSatir = async () => {
+    const n = await satirSayisi(), sayfa = Math.ceil(n / 20);
+    if (sayfa > 1) await linye.getByRole("navigation", { name: "Pano sigortaları (linye) sayfaları" }).getByRole("button", { name: `Sayfa ${sayfa}`, exact: true }).dispatchEvent("click");
+    return noKutusu(n);
+  };
+  const once = await satirSayisi();
+  const sonNo = /^(.*?)(\d+)$/.exec(once ? (await (await sonSatir()).inputValue()).trim() : "");
   const beklenen = (n: number) => (sonNo ? `${sonNo[1]}${Number(sonNo[2]) + n}` : String(n));
 
   /* A: 20 + 10 satır iki turda, araya soru yok; son satırın No'su kesintisiz */
   await sor("Pano sigortaları (linye) tablosuna 30 satır ekle [parça]");
   await expect(son).toContainText("Yaptım: 30 satır eklendi.", { timeout: 60_000 });
-  await expect(noKutulari).toHaveCount(once + 30);
-  await expect(noKutulari.nth(once + 29)).toHaveValue(beklenen(30));
+  await expect(tabloBolgesi).toHaveAttribute("data-satir", String(once + 30));
+  expect(await noKutulari.count(), "ekranda en çok 20 satır").toBeLessThanOrEqual(20);
+  await expect(await sonSatir()).toHaveValue(beklenen(30));
   await expect(liste).not.toContainText("ekleyeyim mi");
   await expect(panel.locator("[data-say-bekleme]")).toHaveCount(0);
   /* bütün işin (iki turun) Geri al'ı son iletinin altında */
   await panel.getByRole("button", { name: "Geri al" }).last().click();
-  await expect(noKutulari).toHaveCount(once);
+  await expect(tabloBolgesi).toHaveAttribute("data-satir", String(once));
 
   /* C: tek komutla 50 satır */
   await sor("Pano sigortaları (linye) tablosuna 50 satır ekle");
   await expect(son).toContainText("Yaptım: 50 satır eklendi.", { timeout: 60_000 });
-  await expect(noKutulari).toHaveCount(once + 50);
-  await expect(noKutulari.nth(once + 49)).toHaveValue(beklenen(50));
+  await expect(tabloBolgesi).toHaveAttribute("data-satir", String(once + 50));
+  expect(await noKutulari.count(), "ekranda en çok 20 satır").toBeLessThanOrEqual(20);
+  await expect(await sonSatir()).toHaveValue(beklenen(50));
   await panel.getByRole("button", { name: "Geri al" }).last().click();
-  await expect(noKutulari).toHaveCount(once);
+  await expect(tabloBolgesi).toHaveAttribute("data-satir", String(once));
 
   /* D: taklit önce aracı çağırmadan "yazdım" der — gösterilmez; düzeltme turunda alana yazar, sonucu söyler */
   const seri = page.getByRole("textbox", { name: "Seri no", exact: true });

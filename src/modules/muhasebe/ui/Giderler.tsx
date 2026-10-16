@@ -18,6 +18,7 @@ import { XLSX_TURU } from "../../../components/disa/xlsx";
 import { Alan, Girdi, ipucuId } from "../../../components/form/Form";
 import { DosyaAcTusu } from "../../../components/gizli-resim/GizliResim";
 import { KartEtiket, Kirp, Liste, type Sutun } from "../../../components/liste/Liste";
+import { TabloSayfalari, useSayfa } from "../../../components/liste/Sayfalayici";
 import { Sayac, SuzgecliListe } from "../../../components/liste/SuzgecliListe";
 import { useSunucuSuzgec } from "../../../components/liste/SunucuSuzgec";
 import type { Secenek, SunucuListe, SuzgecDurumu } from "../../../components/liste/suzgec";
@@ -286,6 +287,7 @@ function GiderExcelYukle({ secenekler, bugun }: { secenekler: GiderSecenekleri; 
   const [bekliyor, baslat] = useTransition();
   const [acik, setAcik] = useState(false);
   const [dosya, setDosya] = useState<{ ad: string; ham: string[][]; satirlar: GiderExcelSatiri[] } | null>(null);
+  const sy = useSayfa(dosya?.satirlar.length ?? 0, { anahtar: dosya });   // 2026-10-16: yeni dosya 1. sayfadan
   const [hata, setHata] = useState<string | null>(null);
   const girdi = useRef<HTMLInputElement>(null);
   const ok = dosya?.satirlar.filter((x) => x.ok) ?? [];
@@ -332,12 +334,12 @@ function GiderExcelYukle({ secenekler, bugun }: { secenekler: GiderSecenekleri; 
         </div>
         {hata && <Serit tur="hata" ikon="circle-alert">{hata}</Serit>}
         {dosya && (dosya.satirlar.length
-          ? <div className={stil.onizlemeKap}>
+          ? <><div className={stil.onizlemeKap}>
               <table className={stil.onizleme}>
                 <caption className="gizli">Dosyadaki satırlar</caption>
                 <thead><tr><th scope="col">Satır</th><th scope="col">Gider</th><th scope="col">Tutar</th><th scope="col">Durum</th></tr></thead>
                 <tbody>
-                  {dosya.satirlar.map((x) => (
+                  {sy.dilim(dosya.satirlar).map((x) => (
                     <tr key={x.satir}>
                       <td className={stil.sayi}>{x.satir}</td>
                       <td>{x.tarih ? tarihNo(x.tarih) : x.tarihYazi} · {x.tur ? GIDER_TUR[x.tur][0] : x.turYazi}{x.aciklama && <span className={stil.altSatir}>{x.aciklama}</span>}
@@ -349,6 +351,7 @@ function GiderExcelYukle({ secenekler, bugun }: { secenekler: GiderSecenekleri; 
                 </tbody>
               </table>
             </div>
+            <TabloSayfalari s={sy} ad="Dosyadaki satırlar" /></>
           : <p className={stil.ozet}>Dosyada gider satırı yok.</p>)}
       </Pencere>
     </>

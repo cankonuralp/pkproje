@@ -205,13 +205,24 @@ test("S.A.Y Chat: bekleyenler için rapor yaz — kod, koşullar, taslak, rapord
   await expect(panel).toContainText("İnternet var: rapor numarası sunucuda verilir");
   await expect(panel).toContainText("firmanın kotasından harcar");
   const kayitlar = panel.getByRole("list", { name: "Rapora dönüşecek kayıtlar" }).getByRole("listitem");
-  const benim = kayitlar.filter({ hasText: "Plana yeni ekipman olarak eklenecek" }).first();
-  await benim.getByLabel(/Ekipman kodu/).fill(kod);
-  /* öteki genişliklerin kayıtları kişiye ait değil — ama bu kişide eski kod isteyen kayıt kaldıysa onlara da kod verilir */
-  for (const g of await kayitlar.filter({ has: page.getByLabel(/Ekipman kodu/) }).all()) {
-    const k = g.getByLabel(/Ekipman kodu/);
-    if (!(await k.inputValue())) await k.fill(`${kod}${Math.floor(Math.random() * 90 + 10)}`);
+  /* 2026-10-16 (reisim: "herhangi bir liste tablo … 20 den fazlası sayfalı olsun"; beklenti değişikliği — önceki hâli bütün kayıtları tek ekranda
+     görüyordu): liste 20'şer sayfalı — bu kişide eski kayıt birikmişse yeni kayıt sonraki sayfada olabilir: kod isteyen kayıtlar sayfa sayfa doldurulur
+     (öteki genişliklerin kayıtları kişiye ait değil — ama bu kişide eski kod isteyen kayıt kaldıysa onlara da kod verilir) */
+  const sayfalar = panel.getByRole("navigation", { name: "Rapora dönüşecek kayıtlar sayfaları" });
+  let benimki = false;
+  for (;;) {
+    for (const g of await kayitlar.filter({ has: page.getByLabel(/Ekipman kodu/) }).all()) {
+      const k = g.getByLabel(/Ekipman kodu/);
+      if (await k.inputValue()) continue;
+      await k.fill(benimki ? `${kod}${Math.floor(Math.random() * 90 + 10)}` : kod);
+      benimki = true;
+    }
+    if (!(await sayfalar.count())) break;
+    const ileri = sayfalar.getByRole("button", { name: "Sonraki sayfa" });
+    if (await ileri.isDisabled()) break;
+    await ileri.click();
   }
+  expect(benimki, "yeni ekipmanın kayıtı rapora dönüşecekler arasında").toBe(true);
   await panel.getByRole("button", { name: /rapor taslağı oluştur/ }).click();
   const sonuc = panel.getByRole("status").filter({ hasText: "rapor taslağı oluştu" });
   await expect(sonuc).toBeVisible({ timeout: 90_000 });

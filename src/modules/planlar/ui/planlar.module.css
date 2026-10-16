@@ -76,6 +76,8 @@
 .teklif { background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-orta); }
 .teklifBaslik { margin: 0; padding: 12px; font-size: var(--boy-govde); font-weight: 700; border-bottom: 1px solid var(--kenar); }
 .teklifKap { padding: 12px; overflow-x: auto; }
+/* 2026-10-16: tablonun sayfa tuşları yana kayan kabın dışında (kayınca kaybolmaz), kabın iç boşluğuyla hizalı */
+.teklifSayfa { padding: 0 12px 12px; }
 .duzTablo { width: 100%; border-collapse: collapse; font-size: var(--boy-kucuk); }
 .duzTablo th, .duzTablo td { padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--kenar); }
 .duzTablo th { color: var(--yazi2); font-weight: 600; }

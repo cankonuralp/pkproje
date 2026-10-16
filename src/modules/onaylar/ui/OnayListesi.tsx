@@ -10,6 +10,7 @@ import { KartEtiket, Kirp, type Sutun } from "../../../components/liste/Liste";
 import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
 import { useSunucuSuzgec } from "../../../components/liste/SunucuSuzgec";
 import type { Secenek, SunucuListe, SuzgecTanimi } from "../../../components/liste/suzgec";
+import { TABLO_SAYFA } from "../../../components/liste/sayfa";
 import { AltSatir, Rozet, SayfaBasi, Sekmeler, SeritKap, type RozetTuru } from "../../../components/sayfa/Sayfa";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
@@ -57,7 +58,7 @@ const TUM_SUTUN: Sutun<OnaySatiri>[] = [
 
 function kuyrukTanimi(l: readonly OnaySatiri[]): SuzgecTanimi<OnaySatiri> {
   return {
-    ad: "Kuyrukta ara", ipucu: "Rapor no, kod, tesis", birim: "rapor", imkansiz: "",
+    ad: "Kuyrukta ara", ipucu: "Rapor no, kod, tesis", birim: "rapor", imkansiz: "", sayfa: TABLO_SAYFA,
     metin: (r) => [r.no, r.ekipmanKod, r.turAd, r.tesis, r.musteri, r.denetci].join(" "),
     cipler: [
       { k: "kusurlu", ad: "Kusurlu", test: (r) => r.sonuc === "uygun_degil" },
@@ -156,7 +157,7 @@ const IMZA_SUTUN: Sutun<OnaySatiri>[] = [
   ) },
 ];
 function imzaTanimi(): SuzgecTanimi<OnaySatiri> {
-  return { ad: "İmza bekleyenlerde ara", ipucu: "Rapor no, kod, tesis", birim: "rapor", imkansiz: "", cipler: [], seciciler: [],
+  return { ad: "İmza bekleyenlerde ara", ipucu: "Rapor no, kod, tesis", birim: "rapor", imkansiz: "", cipler: [], seciciler: [], sayfa: TABLO_SAYFA,
     metin: (r) => [r.no, r.ekipmanKod, r.turAd, r.tesis, r.musteri].join(" ") };
 }
 export function ImzaBekleyen({ v }: { v: OnayListeleri }) {
@@ -197,7 +198,7 @@ function istekSutunlari(ac: (r: RevizeIstekSatiri, t: RevizeTuru) => void): Sutu
   ];
 }
 function istekTanimi(): SuzgecTanimi<RevizeIstekSatiri> {
-  return { ad: "Revize isteklerinde ara", ipucu: "Rapor no, kod, tesis", birim: "istek", imkansiz: "", cipler: [], seciciler: [],
+  return { ad: "Revize isteklerinde ara", ipucu: "Rapor no, kod, tesis", birim: "istek", imkansiz: "", cipler: [], seciciler: [], sayfa: TABLO_SAYFA,
     metin: (r) => [r.no, r.ekipmanKod, r.turAd, r.tesis, r.musteri, r.denetci, r.istek.gerekce].join(" ") };
 }
 export function RevizeIstekleri({ v }: { v: OnayListeleri }) {

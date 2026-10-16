@@ -8,6 +8,7 @@ import { useRef, useState, useTransition } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Alan } from "../../../components/form/Form";
 import { KartEtiket, Liste, type Sutun } from "../../../components/liste/Liste";
+import { satirSayfasi } from "../../../components/liste/sayfa";
 import { Pencere, pencereMetinSinifi } from "../../../components/pencere/Pencere";
 import { AltSatir, Rozet } from "../../../components/sayfa/Sayfa";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
@@ -20,7 +21,8 @@ import stil from "./muhasebe.module.css";
 
 const ID = { ay: "w-bg-ay", hata: "w-bg-hata", yontem: "w-bg-yontem" } as const;
 type Yontem = "format" | "elle";
-interface Durum { veri: BordroGonderimi; yontem: Yontem; sec: Set<string>; dosya: Map<string, File>; hatalar: Record<string, string>; genel: string | null }
+/** sayfa: personel listesinin sayfası (2026-10-16: liste 20'şer sayfalı — gönderimde hatalı satır başka sayfadaysa o sayfa açılır, odak satıra) */
+interface Durum { veri: BordroGonderimi; yontem: Yontem; sec: Set<string>; dosya: Map<string, File>; hatalar: Record<string, string>; genel: string | null; sayfa: number }
 
 export function BordroGonderTusu() {
   const router = useRouter();
@@ -34,7 +36,7 @@ export function BordroGonderTusu() {
     if (!r.veri) { bildir(r.genel ?? "Açılamadı."); return; }
     const v = r.veri;
     /* varsayılan: bütün çalışanlar seçili (maket); dönem değişince seçim ve dosyalar kalır */
-    setD({ veri: v, yontem: onceki?.yontem ?? "elle", sec: onceki?.sec ?? new Set(v.kisiler.map((k) => k.id)), dosya: onceki?.dosya ?? new Map(), hatalar: {}, genel: null });
+    setD({ veri: v, yontem: onceki?.yontem ?? "elle", sec: onceki?.sec ?? new Set(v.kisiler.map((k) => k.id)), dosya: onceki?.dosya ?? new Map(), hatalar: {}, genel: null, sayfa: 1 });
   });
   /* gitti: dönemin şimdiki bordrosunun etkin belgesi (bekliyor / imzalı); geri gönderilen ve iptal edilen yeniden gönderilir */
   const gitti = (k: BordroGonderimSatiri) => belgeEtkin(k.belge);
@@ -54,8 +56,9 @@ export function BordroGonderTusu() {
       const r = await bordroGonderEylemi(f);
       if (r.tamam) { setD(null); bildir(r.bildirim ?? "Gönderildi."); router.refresh(); return; }
       /* biri reddedilince HİÇBİRİ gönderilmez (sunucu önce hepsini denetler) — ileti bunu söyler, odak ilk hatalı satıra (333 incelemesi) */
-      const h = r.hatalar ?? {}, ilk = d.veri.kisiler.find((k) => h[k.id]);
-      setD({ ...d, hatalar: h, genel: r.genel ?? (ilk ? "Hiçbir bordro gönderilmedi: işaretli satırlardaki dosyaları değiştirip yeniden gönderin." : "Gönderilemedi.") });
+      const h = r.hatalar ?? {}, i = d.veri.kisiler.findIndex((k) => h[k.id]), ilk = i >= 0 ? d.veri.kisiler[i] : undefined;
+      setD({ ...d, hatalar: h, genel: r.genel ?? (ilk ? "Hiçbir bordro gönderilmedi: işaretli satırlardaki dosyaları değiştirip yeniden gönderin." : "Gönderilemedi."),
+        sayfa: ilk ? satirSayfasi(i) : d.sayfa });
       if (ilk) requestAnimationFrame(() => document.querySelector<HTMLElement>(`[aria-label="${ilk.ad} bordro dosyasını kaldır"]`)?.focus());
     } catch { setD({ ...d, genel: "Bağlantı ya da sunucu hatası; yeniden deneyin (bir seferde en çok 25 MB)." }); }
   });
@@ -110,7 +113,8 @@ export function BordroGonderTusu() {
           const h = { ...d.hatalar }; delete h[id];
           setD({ ...d, dosya: m, hatalar: h, genel: null });
         }} />
-        <div className={stil.bgListe}><Liste baslik="Personel" sutunlar={sutunlar} kayitlar={d.veri.kisiler} anahtar={(k) => k.id} /></div>
+        <div className={stil.bgListe}><Liste baslik="Personel" sutunlar={sutunlar} kayitlar={d.veri.kisiler} anahtar={(k) => k.id}
+          sayfa={d.sayfa} sayfaDegistir={(n) => setD((x) => (x ? { ...x, sayfa: n } : x))} /></div>
         {d.genel && <p className={stil.bgHata} id={ID.hata} role="alert">{d.genel}</p>}
       </Pencere>}
     </>

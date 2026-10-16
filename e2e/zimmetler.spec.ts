@@ -50,6 +50,7 @@ test("zimmet: demirbaş ekle, kişiye teslim, hareketler; denetçi yalnız kendi
   await girisli(page, "denetci");
   await page.goto("/zimmetler");
   await hazir(page);
+  await page.getByRole("searchbox", { name: "Varlıklarda ara" }).fill(kod);   // 2026-10-16: liste 20'şer sayfalı
   await expect(page.getByRole("link", { name: kod })).toBeAttached();
   await expect(page.getByRole("button", { name: "Teslim et" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Demirbaş ekle" })).toHaveCount(0);

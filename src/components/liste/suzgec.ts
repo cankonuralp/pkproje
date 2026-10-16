@@ -31,7 +31,8 @@ export interface SuzgecTanimi<K> {
   /** imkânsız çip birleşiminin sebebi (ör. "Bir plan aynı anda iki durumda olamaz") */
   imkansiz: string;
   alanlar?: readonly AlanArama<K>[];
-  /** sayfa boyu (kalip.ts sayfa); verilmezse sayfalama yok (kalıp 10) */
+  /** sayfa boyu (kalip.ts sayfa); verilmezse sayfalama yok (kalıp 10). 2026-10-16 (reisim: "herhangi bir liste tablo … 20 den fazlası sayfalı
+      olsun"): ekrandaki her süzgeç tanımı sayfa boyu taşır — kendi boyu yoksa kalip.ts sayfa.tablo (kaynak kilidi tests/sayfalama.test.ts) */
   sayfa?: number;
   /** sıralama anahtarları: sütun → karşılaştırılan değer */
   siraAnahtari?: Record<string, (kayit: K) => string | number>;

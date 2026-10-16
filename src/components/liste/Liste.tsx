@@ -3,11 +3,16 @@
    (kalip.ts kartEsigi — reisim 2026-09-26: "kart görünümü istemiyorum" tablette; kart yalnız telefonda). Maketteki MK.tablo ile aynı:
    sütunun kart rolü ust (sol üst) · rozet (sağ üst) · govde (tam satır, sira ile dizilir) · eylem (altta, çizgiyle).
    Sıralama tabloda sütun başlığından; kartta başlık yok, süzgeç satırındaki "Sıralama" seçicisi yapar (kip bildirilir).
-   Tıklanır satır / kart: tuşa, bağlantıya, alana basılmadıysa kayda girer. */
+   Tıklanır satır / kart: tuşa, bağlantıya, alana basılmadıysa kayda girer.
+   2026-10-16 (reisim: "herhangi bir liste tablo … 20 den fazlası sayfalı olsun"): 20'den çok kayıt verilirse kendisi sayfalar (useSayfa, kalip.ts
+   sayfa.tablo); süzgeçli liste kayıtları kendi sayfasıyla verir (SuzgecliListe — o zaman burada tek sayfa, sayfalayıcı çizilmez). Sayfa isteğe bağlı
+   çağıranın durumunda (sayfa + sayfaDegistir: ör. hatalı satırın sayfası açılıp odak oraya); alt: her sayfanın altında, sayfalanmayan satırlar
+   (toplam satırı — son sayfaya kaymaz). */
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import { KALIP } from "../../styles/kalip";
 import { Ikon } from "../ikon/Ikon";
+import { TabloSayfalari, useSayfa } from "./Sayfalayici";
 import stil from "./Liste.module.css";
 
 export type KartRolu = "ust" | "rozet" | "govde" | "eylem";
@@ -30,7 +35,7 @@ export interface Sutun<K> {
 
 export interface ListeSiralama { deger: string; degistir: (sutun: string) => void }
 
-export function Liste<K>({ baslik, sutunlar, kayitlar, anahtar, href, siralama, kipDegisti }: {
+export function Liste<K>({ baslik, sutunlar, kayitlar, anahtar, href, siralama, kipDegisti, sayfa: sayfaNo, sayfaDegistir, alt = [] }: {
   /** tablonun erişilebilir adı (caption, gizli) */
   baslik: string;
   sutunlar: readonly Sutun<K>[];
@@ -40,10 +45,16 @@ export function Liste<K>({ baslik, sutunlar, kayitlar, anahtar, href, siralama, 
   href?: (kayit: K) => string | undefined;
   siralama?: ListeSiralama;
   kipDegisti?: (kip: ListeKipi) => void;
+  /** çağıranın tuttuğu sayfa (sayfaDegistir ile birlikte; verilmezse liste kendi tutar) */
+  sayfa?: number;
+  sayfaDegistir?: (n: number) => void;
+  /** her sayfanın altında çizilen, sayfalanmayan satırlar (toplam satırı) */
+  alt?: readonly K[];
 }) {
   const router = useRouter();
   const kap = useRef<HTMLDivElement>(null);
   const odakSutun = useRef<string | null>(null);
+  const sayfa = useSayfa(kayitlar.length, sayfaDegistir ? { deger: sayfaNo, degistir: sayfaDegistir } : {});
 
   /* kip CSS'in kendi eşiğinden (kap genişliği) okunur; değişince bildirilir */
   useEffect(() => {
@@ -94,7 +105,7 @@ export function Liste<K>({ baslik, sutunlar, kayitlar, anahtar, href, siralama, 
           </tr>
         </thead>
         <tbody>
-          {kayitlar.map((r) => {
+          {[...sayfa.dilim(kayitlar), ...alt].map((r) => {
             const adres = href?.(r);
             return (
               <tr key={anahtar(r)} data-href={adres} onClick={adres ? (e) => satiraGir(e, adres) : undefined}>
@@ -106,6 +117,7 @@ export function Liste<K>({ baslik, sutunlar, kayitlar, anahtar, href, siralama, 
           })}
         </tbody>
       </table>
+      <TabloSayfalari s={sayfa} ad={baslik} />
     </div>
   );
 }

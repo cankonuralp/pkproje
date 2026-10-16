@@ -20,12 +20,16 @@
    iniyor"): satırın kopyala işareti ve "Sırala" KALKTI, işlem sütunu yapışık değil (Sonuç sütununun üstüne biniyordu); satır sonucu gerekçeyle elle
    değiştirilir (ElleSonuc — hata listesi 54). 2026-10-12 (reisim): bölümün fotoğraf tuşu bölüm başlığında (BaslikYuvasi.tsx), telefonda simge.
    556 (sunum 556 · 2. tur — reisim 2026-10-14: "görüntüdeki gibi değiştirilemez olmasın … dışarıdan diğer kutular ile aynı gözüksün, şu işlemlerin
-   sonucudur gibi açıklama olmasın"): formüllü kutu öteki kutular gibidir (HesapGirdi) — boşken formülün değeri, yazılan kalır. */
+   sonucudur gibi açıklama olmasın"): formüllü kutu öteki kutular gibidir (HesapGirdi) — boşken formülün değeri, yazılan kalır.
+   2026-10-16 (reisim: "herhangi bir tabloda 20 den sonrası sayfalı olacak … herhangi bir liste tablo … 20 den fazlası sayfalı olsun diğer sayfalara
+   doğru aksın"): ölçüm tablosu ve kontrol listesi maddeleri 20'şer sayfalı; satır / madde numarası ve kimlikler GENEL. Açık sayfa rapor ekranında
+   (Baglam.bolumSayfasi — hangi sayfanın açılacağı ../sayfa-yeri.ts'in tek kuralıyla SahaRaporu'nda); belge / PDF bütün satırları basar (src/belge). */
 import { useCallback, useEffect, useId, useRef, useState, type ComponentProps, type KeyboardEvent, type ReactNode, type TransitionStartFunction } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Alan, FormIzgara, Girdi } from "../../../components/form/Form";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { useSurukleKaydir } from "../../../components/kaydir/useSurukleKaydir";
+import { SayfaliListe, TabloSayfalari, useSayfa } from "../../../components/liste/Sayfalayici";
 import { DegerYok, Kod, Rozet } from "../../../components/sayfa/Sayfa";
 import { useDisariTiklama, type SecimSecenegi } from "../../../components/secim/SecenekListesi";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
@@ -43,6 +47,7 @@ import type { SahaRaporu } from "../server/raporlar";
 import { bilgiAlanlari, testAlanlari } from "../doldur";
 import { BaslikBaglami } from "./BaslikYuvasi";
 import { okunanHedefleri, okunanlariUygula } from "../foto-eslestir";
+import { maddeDilimi } from "../sayfa-yeri";
 import { satirKopyala } from "../tablo";
 import { AlanDoldurma, ExcelYukle, FotoBolumu, OkumaFotolari, type OkumaKipi } from "./Doldurma";
 import { StandartTusu, TalimatTusu, type TalimatParcasi } from "./Kaynaklar";
@@ -93,6 +98,10 @@ export interface Baglam {
   deneme: boolean;
   /** üst ekranın işlemi (354): okuma sürerken Kaydet / Onaya gönder / öteki okumalar kapalı (FotoListesi gibi); okuma rapora fotoğraf ekleyince yenile */
   islem: { mesgul: boolean; baslat: TransitionStartFunction; yenile: () => void };
+  /** 2026-10-16: ölçüm tablosunun / kontrol listesinin açık sayfası (20'den sonrası sayfalı) — SahaRaporu tutar: tablo değişince ilk değişen satırın,
+      eksiğe git ve S.A.Y'ın işaretlediği maddenin sayfasını o açar (../sayfa-yeri.ts) */
+  bolumSayfasi: (bolumId: string) => number;
+  bolumSayfaGit: (bolumId: string, sayfa: number) => void;
 }
 
 /* ── ORTAK PARÇALAR ──────────────────────────────────────────────────────────────────────────────────────────── */
@@ -350,13 +359,15 @@ const ortakStd = (g: GrupT) => {
   return l.length && l[0] && l.every((x) => x === l[0]) ? l[0] : null;
 };
 
-/* numarasız bölümde (no null) madde numarası bölüm numarasız: "1", "1.2" */
+/* numarasız bölümde (no null) madde numarası bölüm numarasız: "1", "1.2". 2026-10-16: 20 madde / sayfa (gruplar boyunca); grup sayfaya taşıyorsa
+   başlığı, talimatı ve ortak standardı o sayfada da; numara genel. "Hepsini işaretle" bütün maddeleri yazar (sayfadan bağımsız) */
 function ListeBlok({ b, no, bag }: { b: BolumOf<"liste">; no: string | null; bag: Baglam }) {
   const on = no ? `${no}.` : "";
   const gruplu = b.gruplar.length > 1 || b.gruplar.some((g) => g.ad);
+  const sy = useSayfa(b.gruplar.reduce((n, g) => n + g.maddeler.length, 0), { deger: bag.bolumSayfasi(b.id), degistir: (n) => bag.bolumSayfaGit(b.id, n) });
   return (
     <>
-      {b.gruplar.map((g, gi) => {
+      {maddeDilimi(b.gruplar, sy.bas, sy.son).map(({ g, gi, maddeler }) => {
         const std = ortakStd(g);
         return (
           <div key={g.id} className={stil.grup}>
@@ -367,10 +378,11 @@ function ListeBlok({ b, no, bag }: { b: BolumOf<"liste">; no: string | null; bag
               </div>
             )}
             {std && <div className={stil.grupStd}><StandartTusu std={std} kaynak={bag.v.kaynak} /></div>}
-            {g.maddeler.map((m, mi) => <Madde key={m.id} m={m} numara={gruplu ? `${on}${gi + 1}.${mi + 1}` : `${on}${mi + 1}`} b={b} bag={bag} grupStd={std} />)}
+            {maddeler.map(({ m, mi }) => <Madde key={m.id} m={m} numara={gruplu ? `${on}${gi + 1}.${mi + 1}` : `${on}${mi + 1}`} b={b} bag={bag} grupStd={std} />)}
           </div>
         );
       })}
+      <TabloSayfalari s={sy} ad={b.ad} />
     </>
   );
 }
@@ -474,12 +486,17 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
   const kurallar = sonucKurallari(b);
   const kap = useRef<HTMLDivElement>(null);
   useSurukleKaydir(kap);
+  /* 2026-10-16 (reisim: "herhangi bir tabloda 20 den sonrası sayfalı olacak … diğer sayfalara doğru aksın"; örnek bu tablo — 35+ satır tek
+     sayfadaydı): 20 satır / sayfa, satır numarası ve kimlikler GENEL (21. satır · No). Sayfa SahaRaporu'nda (bag): tablo değişince (Satır ekle, Son
+     satırı kopyala, Excel, S.A.Y, silme, Geri al) İLK DEĞİŞEN satırın sayfası, Onaya gönder'de en üstteki eksiğin sayfası açılır; silinince sayfa
+     taşmaz. Belge / PDF bütün satırları basar (src/belge). data-satir: tablonun bütün satır sayısı (ekranda yalnız sayfa var) */
+  const sy = useSayfa(satirlar.length, { deger: bag.bolumSayfasi(b.id), degistir: (n) => bag.bolumSayfaGit(b.id, n) });
   return (
     <>
       {/* 447 (reisim: "satır eklemediğin sürece neyin nereye yazılacağı bile gözükmüyor tablo başlıkları gözükmüyor"): başlıklar her zaman */}
       {/* 452: kendi içinde yatay kayan kap klavyeyle de kaydırılır (odaklanır; ekran okuyucuya bölge adıyla) — boş tabloda odaklanacak alan yok */}
       {(
-        <div ref={kap} className={stil.tabloKap} role="region" aria-label={`${b.ad} tablosu`} tabIndex={0}>
+        <div ref={kap} className={stil.tabloKap} role="region" aria-label={`${b.ad} tablosu`} tabIndex={0} data-satir={satirlar.length}>
           <table className={stil.olcumTablo}>
             <caption className="gizli">{b.ad}</caption>
             <thead>
@@ -499,8 +516,8 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
                 <tr><td className={stil.bosHucre} colSpan={2 + b.sutunlar.length + (notlar.length ? 1 : 0) + (bag.oku ? 0 : 1)}>
                   Satır yok{bag.oku ? "." : " — “Satır ekle” ile ekleyin; her satır bir ölçüm noktası."}</td></tr>
               )}
-              {satirlar.map((s, i) => {
-                const r = sonuclar[i], notAnahtar = satirAnahtari(b.id, i, "not");
+              {sy.dilim(satirlar).map((s, j) => {
+                const i = sy.bas + j, r = sonuclar[i], notAnahtar = satirAnahtari(b.id, i, "not");
                 return (
                   <tr key={i}>
                     <td className={stil.satirNo}>{i + 1}</td>
@@ -559,6 +576,7 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
           </table>
         </div>
       )}
+      <TabloSayfalari s={sy} ad={b.ad} />
       {/* 486 (reisim 2026-10-10: "neye göre otomatik uygun uygun değil diyor? bununda açıklamasını yap"): Sonuç sütununun kuralı */}
       <details className={stil.notlar}>
         <summary>Sonuç neye göre çıkar?</summary>
@@ -669,10 +687,11 @@ function TestBlok({ b, bag }: { b: BolumOf<"test">; bag: Baglam }) {
 function KusurBlok({ bag }: { bag: Baglam }) {
   const l = bag.d.kusurlar;
   if (!l.length) return <p className={stil.bosSatir}>Kusur yok.</p>;
-  return <ol className={stil.kusurListe}>{l.map((k, i) => {
+  /* 2026-10-16: 20'den çok kusur sayfalı (numara genel); belgede hepsi */
+  return <SayfaliListe ad="Kusur açıklamaları" sirali className={stil.kusurListe} ogeler={l.map((k, i) => {
     const f = bag.v.fotolar.filter((x) => x.madde === k.ref).map((x) => x.ad);
     return <li key={`${k.ref}-${i}`}>{k.agir ? "** " : ""}{k.metin}{f.length > 0 && <span className={stil.altMetin}> (Fotoğraf: {f.join(", ")})</span>}</li>;
-  })}</ol>;
+  })} />;
 }
 
 function SonucBlok({ b, bag }: { b: BolumOf<"sonuc">; bag: Baglam }) {

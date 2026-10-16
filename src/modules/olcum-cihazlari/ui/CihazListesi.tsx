@@ -8,6 +8,7 @@ import { useState } from "react";
 import { KartEtiket, Kirp, type Sutun } from "../../../components/liste/Liste";
 import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
 import type { SuzgecTanimi } from "../../../components/liste/suzgec";
+import { TABLO_SAYFA } from "../../../components/liste/sayfa";
 import { AltSatir, Rozet, SayfaBasi } from "../../../components/sayfa/Sayfa";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus } from "../../../components/tus/Tus";
@@ -20,7 +21,7 @@ import stil from "./cihazlar.module.css";
 
 function tanim(esik: number, turler: readonly CihazTuru[]): SuzgecTanimi<CihazSatiri> {
   return {
-    ad: "Cihazlarda ara", ipucu: "Cihaz kodu, cihaz, seri no", birim: "cihaz", imkansiz: "Bir cihazın kalibrasyonu aynı anda iki durumda olamaz",
+    ad: "Cihazlarda ara", ipucu: "Cihaz kodu, cihaz, seri no", birim: "cihaz", sayfa: TABLO_SAYFA, imkansiz: "Bir cihazın kalibrasyonu aynı anda iki durumda olamaz",
     metin: (c) => [c.kod, c.tur, c.marka ?? "", c.model ?? "", c.seri ?? ""].join(" "),
     cipler: [
       { k: "gecti", ad: "Kalibrasyonu geçmiş", grup: "kal", test: (c) => c.durum === "gecti" },

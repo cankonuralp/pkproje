@@ -3,11 +3,15 @@
    123; kayıtlı olmayan müşteri: ünvan, vergi, adres, il / ilçe, e-posta, telefon, yetkili — 2026-09-27) · Koşullar (geçerlilik gün, KDV %,
    not) · Kalemler (ekipman türü × adet × birim fiyat; tür seçilince fiyat listesinden — 119, satırda değişir; "Tesisteki ekipmandan doldur";
    tutar ve toplam canlı) · Excel: "Excel'den yükle" (müşterinin ekipman listesi tür başına adetle kalemlere) ve "Excel'e aktar" (yüklenen liste,
-   yoksa seçili tesislerin kayıtlı ekipmanı — 325). Numara ve kurallar sunucuda; yalnız taslak düzenlenir. */
+   yoksa seçili tesislerin kayıtlı ekipmanı — 325). Numara ve kurallar sunucuda; yalnız taslak düzenlenir.
+   2026-10-16 (reisim: "herhangi bir liste tablo … 20 den fazlası sayfalı olsun diğer sayfalara doğru aksın"): kalemler 20'şer sayfalı (useSayfa,
+   akış — eklenen kalemin sayfası açılır); sıra ve alan kimlikleri genel; hatalı kalemin sayfası açılıp odak oraya. */
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Alan, FormBolum, FormEylem, FormIzgara, FormSayfa, Girdi, ipucuId } from "../../../components/form/Form";
+import { TabloSayfalari, useSayfa } from "../../../components/liste/Sayfalayici";
+import { degisenSayfa } from "../../../components/liste/sayfa";
 import { Kirinti, SayfaBasi } from "../../../components/sayfa/Sayfa";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { Serit } from "../../../components/serit/Serit";
@@ -52,6 +56,7 @@ export function TeklifFormu({ secenekler, deger, id, surum, no, kopyaKaynak, dus
   const odakla = (hedef: string) => requestAnimationFrame(() => document.getElementById(hedef)?.focus());
   const adayYaz = (k: keyof Aday, v: string) => setF((x) => ({ ...x, aday: { ...x.aday, [k]: v, ...(k === "il" ? { ilce: "" } : {}) } }));
   const kalemYaz = (i: number, p: Partial<Kalem>) => setF((x) => ({ ...x, kalemler: x.kalemler.map((k, j) => (j === i ? { ...k, ...p } : k)) }));
+  const ks = useSayfa(f.kalemler.length, { akis: true });
   const m = secenekler.musteriler.find((x) => x.id === f.musteri);
   const tur = new Map(secenekler.turler.map((t) => [t.id, t]));
   const oran = /^\d{1,2}$/.test(f.kdv) ? Number(f.kdv) : 20;
@@ -72,7 +77,8 @@ export function TeklifFormu({ secenekler, deger, id, surum, no, kopyaKaynak, dus
     const r = kalemlereEkle(f.kalemler, f.ekipmanlar, l, (t) => tur.get(t)?.fiyat ?? null);
     yaz({ kalemler: r.kalemler, ekipmanlar: r.ekipmanlar }); setH({});
     bildir(`${r.eklenen} ekipman ${r.turSayisi} türle kalemlere eklendi${r.atlanan ? `; ${r.atlanan} satır atlandı.` : "."}`);
-    odakla("f-tur-0");
+    /* odak açılan sayfanın ilk kalemine (useSayfa'nın akışıyla aynı hesap: kalem sayısı arttıysa eklemenin başladığı sayfa) */
+    odakla(`f-tur-${(degisenSayfa(f.kalemler.length, r.kalemler.length, ks.sayfa, ks.boy) - 1) * ks.boy}`);
   };
   const tesisEkipmani = seciliTesisler.reduce((n, tid) => n + Object.values(m?.tesisler.find((x) => x.id === tid)?.ekipman ?? {}).reduce((a, b) => a + b, 0), 0);
   const excelFiyat: Record<string, number | null> = Object.fromEntries(secenekler.turler.map((t) => [t.id, t.fiyat]));
@@ -85,7 +91,9 @@ export function TeklifFormu({ secenekler, deger, id, surum, no, kopyaKaynak, dus
       kopyaKaynak?.id ?? null);
     setH(r.hatalar ?? {}); setGenel(r.genel ?? null);
     if (!r.tamam) {
-      const k = Object.keys(r.hatalar ?? {})[0];
+      const k = Object.keys(r.hatalar ?? {})[0], kalem = /^kalemler\.(\d+)\./.exec(k ?? "");
+      /* hatalı kalem başka sayfadaysa önce onun sayfası */
+      if (kalem) ks.satiraGit(Number(kalem[1])); else if (k === "kalemler") ks.git(1);
       requestAnimationFrame(() => document.getElementById(k ? alanId(k) : OZET)?.focus());
       return;
     }
@@ -178,8 +186,8 @@ export function TeklifFormu({ secenekler, deger, id, surum, no, kopyaKaynak, dus
           </FormIzgara>
         </FormBolum>
         <FormBolum baslik="Kalemler" id="tf-b3" genis>
-          {f.kalemler.map((k, i) => {
-            const a = Number(k.adet), p = kurus(k.fiyat);
+          {ks.dilim(f.kalemler).map((k, j) => {
+            const i = ks.bas + j, a = Number(k.adet), p = kurus(k.fiyat);
             return (
               <div className={stil.kalem} key={i}>
                 <Alan id={`f-tur-${i}`} etiket="Ekipman türü" hata={h[`kalemler.${i}.tur`]}>
@@ -199,10 +207,11 @@ export function TeklifFormu({ secenekler, deger, id, surum, no, kopyaKaynak, dus
                 </Alan>
                 <div><p className={stil.kalemEtiket}>Tutar</p><p className={stil.kalemTutar} aria-live="polite">{a > 0 && p ? para(a * p) : "—"}</p></div>
                 <Tus tur="ikincil" ikon="x" disabled={f.kalemler.length === 1} aria-label={`Kalem ${i + 1} kaldır`}
-                  onClick={() => { yaz({ kalemler: f.kalemler.filter((_, j) => j !== i) }); setH({}); odakla(`f-tur-${Math.max(0, i - 1)}`); }}>Kaldır</Tus>
+                  onClick={() => { yaz({ kalemler: f.kalemler.filter((_, x) => x !== i) }); setH({}); ks.satiraGit(Math.max(0, i - 1)); odakla(`f-tur-${Math.max(0, i - 1)}`); }}>Kaldır</Tus>
               </div>
             );
           })}
+          <TabloSayfalari s={ks} ad="Kalemler" />
           {h.kalemler && <p className={stil.hata}>{h.kalemler}</p>}
           <div className={stil.eylemler}>
             {f.tip === "kayitli" && <Tus tur="ikincil" ikon="list-checks" disabled={!f.tesis} onClick={doldur}>Tesisteki ekipmandan doldur</Tus>}

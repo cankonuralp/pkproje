@@ -9,6 +9,7 @@ import Link from "next/link";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { useBildir } from "../bildirim/Bildirim";
 import { Ikon } from "../ikon/Ikon";
+import { SayfaliListe } from "../liste/Sayfalayici";
 import { useOnayla } from "../pencere/Onay";
 import { Pencere } from "../pencere/Pencere";
 import { Rozet, type RozetTuru } from "../sayfa/Sayfa";
@@ -160,8 +161,7 @@ function KuyrukPenceresi({ acik, kapat, cevrimdisi }: { acik: boolean; kapat: ()
       {k.isler.length ? (
         <>
           <p className={stil.baslik}>Bekleyen işler ({k.isler.length})</p>
-          <ol className={stil.liste}>
-            {k.isler.map((x) => (
+          <SayfaliListe ad="Bekleyen işler" sirali className={stil.liste} ogeler={k.isler.map((x) => (
               <li key={x.id} className={stil.is}>
                 <span className={stil.isBas}><Ikon ad="cloud-upload" kucuk /><b>{x.ad}</b><Rozet tur={DURUM[x.durum][0]}>{DURUM[x.durum][1]}</Rozet></span>
                 <span className={stil.alt}>{ZAMAN.format(new Date(x.zaman)).replace(",", "")}{x.ileti ? ` · ${x.ileti}` : ""}</span>
@@ -183,8 +183,7 @@ function KuyrukPenceresi({ acik, kapat, cevrimdisi }: { acik: boolean; kapat: ()
                   </span>
                 )}
               </li>
-            ))}
-          </ol>
+            ))} />
         </>
       ) : <p className={stil.bos}>Gönderilmeyi bekleyen işlem yok.</p>}
     </Pencere>

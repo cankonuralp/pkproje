@@ -11,6 +11,7 @@ import { raporBelgesi } from "../../../../../../belge/belge";
 import { Bilgi, BilgiListesi, Kosullar, Yuz, Yuzler } from "../../../../../../components/bilgi/Bilgi";
 import { Yetkisiz } from "../../../../../../components/hata/Hata";
 import { Ikon } from "../../../../../../components/ikon/Ikon";
+import { SayfaliListe } from "../../../../../../components/liste/Sayfalayici";
 import { Bolum, Kirinti, NesneBasi, Rozet, SeritKap } from "../../../../../../components/sayfa/Sayfa";
 import { TusBaglanti } from "../../../../../../components/tus/Tus";
 import { Serit } from "../../../../../../components/serit/Serit";
@@ -98,7 +99,8 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string; 
           {!onceki ? <p className={stil.bosMetin}>İlk sürüm — karşılaştırılacak önceki sürüm yok.</p>
             : !fark ? <p className={stil.bosMetin}>{surumAdi(onceki)} okunamadı.</p>
             : !fark.length ? <p className={stil.bosMetin}>{surumAdi(onceki)} ile aynı.</p>
-            : <ul className={stil.farkListe}>{fark.map((x, i) => <li key={i} className={FARK_SINIF[x.tur]}><Ikon ad={FARK_IKON[x.tur]} kucuk /><span>{x.metin}</span></li>)}</ul>}
+            /* 2026-10-16: 20'den çok değişiklik sayfalı */
+            : <SayfaliListe ad="Değişenler" className={stil.farkListe} ogeler={fark.map((x, i) => <li key={i} className={FARK_SINIF[x.tur]}><Ikon ad={FARK_IKON[x.tur]} kucuk /><span>{x.metin}</span></li>)} />}
         </Bolum>
         <Bolum id="b-onizleme" baslik="Önizleme">
           <SurumOnizleme turId={tur.id} formatId={f.id} t={t} belge={raporBelgesi(kurucuOrnegi(t, turBilgi))} />

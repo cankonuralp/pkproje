@@ -13,6 +13,7 @@ import { useUyar } from "../../../components/bildirim/Bildirim";
 import { baytIndir, dosyaGunu } from "../../../components/disa/indir";
 import { XLSX_TURU, xlsxBayt } from "../../../components/disa/xlsx";
 import { KartEtiket, Kirp, type Sutun } from "../../../components/liste/Liste";
+import { TabloSayfalari, useSayfa } from "../../../components/liste/Sayfalayici";
 import { Sayac, SuzgecliListe } from "../../../components/liste/SuzgecliListe";
 import { useSunucuSuzgec } from "../../../components/liste/SunucuSuzgec";
 import type { Secenek } from "../../../components/liste/suzgec";
@@ -68,6 +69,7 @@ export function PanelUygunsuzlukListesi({ v }: { v: PanelUygunsuzlukSayfasi }) {
   const [pencere, setPencere] = useState(false);
   /* Excel penceresi: bütün açık uygunsuzluklar — pencere açılınca sunucudan */
   const [acik, setAcik] = useState<MusteriUygunsuzlukSatiri[]>([]);
+  const sy = useSayfa(acik.length, { anahtar: acik });   // 2026-10-16: pencere her açılışta (yeni liste) 1. sayfadan
   const pencereAc = async () => {
     const l = await panelUygunsuzluklariSuzEylemi("acik");
     if (!l) { uyar("Uygunsuzluklar alınamadı; sayfayı yenileyip yeniden deneyin."); return; }
@@ -108,7 +110,7 @@ export function PanelUygunsuzlukListesi({ v }: { v: PanelUygunsuzlukSayfasi }) {
         <table className={stil.onizleme}>
           <thead><tr><th scope="col">Uygunsuzluk</th><th scope="col">Rapor</th></tr></thead>
           <tbody>
-            {acik.map((u) => (
+            {sy.dilim(acik).map((u) => (
               <tr key={u.id}>
                 <td><span className={stil.kod}>{u.ekipmanKod}</span> {u.turAd}<AltSatir>{`${u.tesis} · ${sinif(u)} · ${u.metin}`}</AltSatir></td>
                 <td><Link className={stil.no} href={`/portal/r/${u.raporId}`}>{u.raporNo}</Link></td>
@@ -116,6 +118,7 @@ export function PanelUygunsuzlukListesi({ v }: { v: PanelUygunsuzlukSayfasi }) {
             ))}
           </tbody>
         </table>
+        <TabloSayfalari s={sy} ad="Açık uygunsuzluklar" />
       </Pencere>
     </>
   );

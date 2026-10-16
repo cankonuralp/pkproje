@@ -8,6 +8,7 @@ import { Ikon } from "../../../components/ikon/Ikon";
 import { KartEtiket, Kirp, type Sutun } from "../../../components/liste/Liste";
 import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
 import type { SuzgecTanimi } from "../../../components/liste/suzgec";
+import { TABLO_SAYFA } from "../../../components/liste/sayfa";
 import { AltSatir, DegerYok, Rozet, SayfaBasi, Sekmeler } from "../../../components/sayfa/Sayfa";
 import { Tus } from "../../../components/tus/Tus";
 import type { HareketSatiri, VarlikSatiri } from "../server/zimmet";
@@ -20,7 +21,7 @@ const SEKMELER = [["Kimde", "/zimmetler"], ["Hareketler", "/zimmetler/hareketler
 
 function kimdeTanim(varliklar: readonly VarlikSatiri[], bugun: string): SuzgecTanimi<VarlikSatiri> {
   return {
-    ad: "Varlıklarda ara", ipucu: "Kod, varlık, kişi", birim: "varlık", imkansiz: "Bir varlık aynı anda iki türde olamaz",
+    ad: "Varlıklarda ara", ipucu: "Kod, varlık, kişi", birim: "varlık", sayfa: TABLO_SAYFA, imkansiz: "Bir varlık aynı anda iki türde olamaz",
     metin: (v) => `${v.kod} ${v.ad} ${kimdeAd(v.kimde)}`,
     cipler: [
       { k: "c", ad: "Ölçüm cihazı", grup: "tur", test: (v) => v.tur === "c" },

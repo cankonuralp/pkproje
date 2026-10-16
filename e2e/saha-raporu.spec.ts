@@ -278,6 +278,7 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   const onayEkrani = async () => {
     await page.goto("/onaylar");
     await hazir(page);
+    await page.getByRole("searchbox", { name: "Kuyrukta ara" }).fill(raporNo);   // 2026-10-16: kuyruk 20'şer sayfalı
     await page.getByRole("link", { name: raporNo }).first().click();
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(raporNo, { timeout: 30_000 });
   };
@@ -337,6 +338,7 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await page.getByRole("link", { name: "İmzamı bekleyen raporlar" }).click();
   await expect(page).toHaveURL(/\/onaylar\/imza$/, { timeout: 30_000 });
   await hazir(page);
+  await page.getByRole("searchbox", { name: "İmza bekleyenlerde ara" }).fill(raporNo);   // 2026-10-16: liste 20'şer sayfalı
   await page.getByRole("link", { name: raporNo }).first().click();
   await expect(page).toHaveURL(new RegExp(`${raporAdresi}$`), { timeout: 30_000 });
   await hazir(page);

@@ -4,6 +4,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
+import { SayfaliListe } from "../../../components/liste/Sayfalayici";
 import { Tus } from "../../../components/tus/Tus";
 import { zamanNo } from "../sema";
 import { notEkleEylemi } from "./eylemler";
@@ -33,14 +34,12 @@ export function ProjeNotlari({ planId, notlar }: { planId: string; notlar: { id:
       </div>
       {hata && <p className={stil.uyari} id="not-hata">{hata}</p>}
       {notlar.length > 0 && (
-        <ol className={stil.gecmis}>
-          {gorunen.map((n) => (
+        <SayfaliListe ad="Proje notları" sirali className={stil.gecmis} ogeler={gorunen.map((n) => (
             <li key={n.id}>
               <span className={stil.gecmisZaman}>{zamanNo(n.zaman)}</span>
               <span className={stil.gecmisNe}><b>{n.yazan}</b><span className={stil.notMetin}>{n.metin}</span></span>
             </li>
-          ))}
-        </ol>
+          ))} />
       )}
       {notlar.length > 6 && <Tus tur="ikincil" className={stil.hepsiTus} onClick={() => setHepsi(!hepsi)}>{hepsi ? "Son 6 notu göster" : `Tümünü göster (${notlar.length})`}</Tus>}
     </section>

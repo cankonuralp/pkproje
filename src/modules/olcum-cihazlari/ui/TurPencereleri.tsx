@@ -3,11 +3,13 @@
    firmanın türleri — ad, "N ekipman türünde · M cihaz", Düzenle (yalnız ad; N3: hangi ekipman türünde kullanılacağı Ekipman türleri'nde seçilir) ve
    cihazı olmayan, raporda geçmeyen türde Sil (yalnız yönetici; onay maketten: "<ad> … ekipman türlerinin kullanacağı cihazlardan da çıkar"). Altta
    "Cihaz türü ekle". Ekle / düzenle ayrı pencerede ("Geri" listeye döner); kaydedince listeye dönülür. Karar sunucuda. 365: metinler maket T7 ile
-   aynı (maket-cihazlar.js); silince odak "Cihaz türü ekle"de. */
+   aynı (maket-cihazlar.js); silince odak "Cihaz türü ekle"de. 2026-10-16: liste 20'şer sayfalı — eklenen türün sayfası açılır (sayfa yenilenip tür
+   listeye gelince). */
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Alan, Girdi } from "../../../components/form/Form";
+import { SayfaliListe } from "../../../components/liste/Sayfalayici";
 import { Pencere } from "../../../components/pencere/Pencere";
 import { Serit } from "../../../components/serit/Serit";
 import { SilTusu } from "../../../components/sil/SilTusu";
@@ -18,19 +20,22 @@ import stil from "./cihazlar.module.css";
 
 const AD_ID = "tw-ad";
 const EKLE_ID = "tw-ekle";
+/** aynı tür adı (sunucu da büyük / küçük harfe bakmaz) */
+const adAyni = (a: string, b: string) => a.trim().replace(/\s+/g, " ").toLocaleLowerCase("tr") === b.trim().replace(/\s+/g, " ").toLocaleLowerCase("tr");
 
 export function CihazTurleriPenceresi({ acik, kapat, turler }: { acik: boolean; kapat: () => void; turler: CihazTuruSatiri[] }) {
   const [duzen, setDuzen] = useState<null | { id: string | null; surum: number; ad: string }>(null);
+  const [eklenen, setEklenen] = useState<string | null>(null);
+  const kapa = () => { setEklenen(null); kapat(); };
   return (
     <>
-      <Pencere acik={acik && !duzen} baslik="Cihaz türleri" onKapat={kapat}
+      <Pencere acik={acik && !duzen} baslik="Cihaz türleri" onKapat={kapa}
         alt={<>
-          <Tus tur="ikincil" onClick={kapat}>Kapat</Tus>
+          <Tus tur="ikincil" onClick={kapa}>Kapat</Tus>
           <Tus ikon="plus" id={EKLE_ID} data-ilk-odak="" onClick={() => setDuzen({ id: null, surum: 0, ad: "" })}>Cihaz türü ekle</Tus>
         </>}>
         {turler.length ? (
-          <ul className={stil.turListe}>
-            {turler.map((t) => (
+          <SayfaliListe ad="Cihaz türleri" className={stil.turListe} ac={eklenen ? turler.findIndex((t) => adAyni(t.ad, eklenen)) : null} ogeler={turler.map((t) => (
               <li key={t.id}>
                 <span className={stil.turAd}><b>{t.ad}</b><span className={stil.turAlt}>{t.ekipmanTuru} ekipman türünde · {t.cihaz} cihaz</span></span>
                 <span className={stil.turTuslar}>
@@ -39,16 +44,15 @@ export function CihazTurleriPenceresi({ acik, kapat, turler }: { acik: boolean; 
                     sil={() => cihazTuruSilEylemi(t.id)} odak={`#${EKLE_ID}`} />}
                 </span>
               </li>
-            ))}
-          </ul>
+            ))} />
         ) : <p className={stil.bosSatir}>Henüz cihaz türü yok.</p>}
       </Pencere>
-      {duzen && <TurPenceresi tur={duzen} kapat={() => setDuzen(null)} />}
+      {duzen && <TurPenceresi tur={duzen} kapat={() => setDuzen(null)} eklendi={setEklenen} />}
     </>
   );
 }
 
-function TurPenceresi({ tur, kapat }: { tur: { id: string | null; surum: number; ad: string }; kapat: () => void }) {
+function TurPenceresi({ tur, kapat, eklendi }: { tur: { id: string | null; surum: number; ad: string }; kapat: () => void; eklendi: (ad: string) => void }) {
   const router = useRouter();
   const bildir = useBildir();
   const [bekliyor, baslat] = useTransition();
@@ -59,7 +63,8 @@ function TurPenceresi({ tur, kapat }: { tur: { id: string | null; surum: number;
     const r = await cihazTuruKaydetEylemi(tur.id, tur.surum, { ad });
     setHata(r.hatalar?.ad ?? null); setGenel(r.genel ?? null);
     if (!r.tamam) { if (r.hatalar?.ad) requestAnimationFrame(() => document.getElementById(AD_ID)?.focus()); return; }
-    kapat(); bildir(tur.id ? `${ad.trim()} güncellendi.` : `${ad.trim()} eklendi; cihaz eklerken seçilir.`); router.refresh();
+    kapat(); if (!tur.id) eklendi(ad.trim());
+    bildir(tur.id ? `${ad.trim()} güncellendi.` : `${ad.trim()} eklendi; cihaz eklerken seçilir.`); router.refresh();
   });
   return (
     <Pencere acik baslik={tur.id ? `${tur.ad} · düzenle` : "Cihaz türü ekle"} onKapat={kapat}

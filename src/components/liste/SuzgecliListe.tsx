@@ -4,14 +4,17 @@
      <h1>Planlar</h1> <Sayac s={s} />
      <SuzgecliListe s={s} on="l" baslik="Planlar" sutunlar={…} anahtar={(p) => p.id} bosVeri={{ ikon, baslik, metin }} />
    Boş durumun dört hâli ayrı söylenir: veri yok · görünüm boş · süzgeç boş (Temizle) · imkânsız birleşim ("veya"ya geç). */
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { BosDurum, type BosDurumEylemi } from "../bos/BosDurum";
-import { Ikon } from "../ikon/Ikon";
 import { Tus } from "../tus/Tus";
 import { FiltreSatiri } from "./Filtre";
 import { Liste, type ListeKipi, type Sutun } from "./Liste";
-import { listele, sayfaOgeleri, siraSonraki, suzgecVar, temizle, yeniDurum, type ListeSonucu, type SuzgecDurumu, type SuzgecTanimi } from "./suzgec";
+import { Sayfalayici } from "./Sayfalayici";
+import { listele, siraSonraki, suzgecVar, temizle, yeniDurum, type ListeSonucu, type SuzgecDurumu, type SuzgecTanimi } from "./suzgec";
 import stil from "./SuzgecliListe.module.css";
+
+/* sayfa tuşlarının tek üreticisi ./Sayfalayici.tsx (2026-10-16: süzgeçsiz tablolar ve listeler de onunla sayfalı — useSayfa) */
+export { Sayfalayici };
 
 export interface Suzgec<K> {
   tanim: SuzgecTanimi<K>;
@@ -87,39 +90,5 @@ export function SuzgecliListe<K>({ s, on, baslik, sutunlar, anahtar, href, bosVe
           degistir={(n) => degistir({ ...durum, sayfa: n })} />
       )}
     </>
-  );
-}
-
-/* sayfalayıcı (kalıp 10: yalnız istenen listede; reisim 2026-09-23 "10 taneden sonra diğer sayfaya geçsin") — tıklanınca odak
-   yeni sayfanın tuşuna geçer (yeniden çizimde kaybolmaz) */
-export function Sayfalayici({ birim, toplam, boy, sayfa, degistir }: { birim: string; toplam: number; boy: number; sayfa: number; degistir: (n: number) => void }) {
-  const kap = useRef<HTMLElement>(null);
-  /* odaklanacak sayfa NUMARASI (bayrak değil): tuş hangi çizimde DOM'a gelirse gelsin o sayfanın tuşu odak alır. 2026-10-04: CI'da (telefon) odak
-     "Sayfa 1"de kaldı (6739afa); yerelde yeniden üretilemedi. Önceki hâli yalnız [sayfa] değişince bir kez "aria-current"ı arıyordu — o çizimde
-     kaçırılırsa bir daha denemiyordu. Şimdi her çizimden sonra, hedef sayfanın tuşu odak alana kadar. */
-  const hedef = useRef<number | null>(null);
-  useEffect(() => {
-    if (hedef.current === null || hedef.current !== sayfa) return;
-    const tus = kap.current?.querySelector<HTMLButtonElement>(`button[aria-label="Sayfa ${sayfa}"]`);
-    if (!tus) return;
-    tus.focus();
-    if (document.activeElement === tus) hedef.current = null;
-  });
-  const n = Math.ceil(toplam / boy);
-  const git = (i: number) => { hedef.current = i; degistir(i); };
-  return (
-    <nav className={stil.sayfalar} aria-label={`${birim} sayfaları`} ref={kap}>
-      <span className={stil.sayfaBilgi}>{(sayfa - 1) * boy + 1}–{Math.min(toplam, sayfa * boy)} / {toplam}</span>
-      {n > 1 && (
-        <div className={stil.sayfaTuslar}>
-          <button className={stil.sayfa} type="button" aria-label="Önceki sayfa" disabled={sayfa === 1} onClick={() => git(sayfa - 1)}><Ikon ad="chevron-left" kucuk /></button>
-          {sayfaOgeleri(n, sayfa).map((o) => o.tur === "ara"
-            ? <span key={`a${o.no}`} className={stil.sayfaAra} aria-hidden="true">…</span>
-            : <button key={o.no} className={o.komsu ? `${stil.sayfa} ${stil.komsu}` : stil.sayfa} type="button" aria-label={`Sayfa ${o.no}`}
-                aria-current={o.no === sayfa ? "page" : undefined} onClick={() => git(o.no)}>{o.no}</button>)}
-          <button className={stil.sayfa} type="button" aria-label="Sonraki sayfa" disabled={sayfa === n} onClick={() => git(sayfa + 1)}><Ikon ad="chevron-right" kucuk /></button>
-        </div>
-      )}
-    </nav>
   );
 }

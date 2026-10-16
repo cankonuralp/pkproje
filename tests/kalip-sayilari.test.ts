@@ -6,6 +6,7 @@
    2026-09-24 (maket 6. tur, reisim "uygun"): daraltılmış yan menü 64 px, YALNIZ geniş bantta (anayasa 2.11: tablette ikon
    şeridi yok) → eşik denetimi min-width eşiklerini de kapsayacak şekilde genişletildi (geniş bant bloğu eklendi).
    2026-09-25: yazı alanı 14/16 (--boy-girdi) eklendi, reisim "bunu düzelt" (iPhone odakta büyütme).
+   2026-10-16: sayfa.tablo 20 eklendi (reisim: "herhangi bir liste tablo … 20 den fazlası sayfalı olsun") — en alttaki test.
    Olumsuz kanıt: tests/bozan/kilitler.bozan.ts. */
 import assert from "node:assert/strict";
 import { test } from "node:test";
@@ -76,4 +77,14 @@ test("onaylı maket aynı sayıları taşıyor: kart eşiği 600, sayfa ekipman 
    vh adres çubuğu gizliyken boy, son modül ekran dışında kalıyordu. Görünen boy (dvh) şart. Olumsuz kanıt: kilitler.bozan "çekmece boyu". */
 test("çekmece görünen boyda: yan menü yüksekliği 100dvh (telefonda adres çubuğu açıkken de son modül ekranda)", () => {
   assert.equal(cekmeceBoyuHatasi(kabuk), null);
+});
+
+/* 2026-10-16 (reisim: "herhangi bir tabloda 20 den sonrası sayfalı olacak … herhangi bir liste tablo, ekranda çok fazla veri olunca ekran kasacağı
+   için 20 den fazlası sayfalı olsun diğer sayfalara doğru aksın"; pkproje §9 2026-10-15 (3)): kalıba sayfa.tablo 20 eklendi — kendi boyu olmayan
+   her ekran tablosu ve listesi (rapor ölçüm tabloları dahil) bununla sayfalı; ekipman 10 ve rapor 20 aynen (onaylı maket SAYFA'sı değişmedi).
+   reddedilen: tabloda sınırsız satır (35+ satırlık pano sigortaları tablosu tek sayfadaydı). Kaynak kilidi tests/sayfalama.test.ts. */
+test("tablo ve listeler 20'den sonra sayfalı: sayfa.tablo 20, ortak sayfa hesabı bu sayıyla", async () => {
+  assert.equal(KALIP.sayfa.tablo, 20);
+  const { TABLO_SAYFA } = await import("../src/components/liste/sayfa.ts");
+  assert.equal(TABLO_SAYFA, KALIP.sayfa.tablo);
 });

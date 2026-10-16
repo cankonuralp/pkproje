@@ -4,6 +4,7 @@
 import type { Metadata } from "next";
 import { BosDurum } from "../../../../../components/bos/BosDurum";
 import { DosyaAcTusu } from "../../../../../components/gizli-resim/GizliResim";
+import { SayfaliListe } from "../../../../../components/liste/Sayfalayici";
 import { Bolum, Kirinti, Kod, NesneBasi, SeritKap } from "../../../../../components/sayfa/Sayfa";
 import { tarihNo } from "../../../../../components/secim/tarih";
 import { Serit } from "../../../../../components/serit/Serit";
@@ -55,11 +56,9 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
       </Bolum>
       {uygunsuzluklar.length > 0 && (
         <Bolum id="p-uygunsuz" baslik="Uygunsuzluklar" sayac={<><b>{acik.length}</b> açık</>}>
-          <ul className={stil.uygunsuzListe}>
-            {uygunsuzluklar.map((u) => (
+          <SayfaliListe ad="Uygunsuzluklar" className={stil.uygunsuzListe} ogeler={uygunsuzluklar.map((u) => (
               <li key={u.id}><span className={u.agir ? stil.agir : undefined}>{u.agir ? "Ağır · " : ""}</span>{u.metin}{u.acik ? "" : " — giderildi"}</li>
-            ))}
-          </ul>
+            ))} />
         </Bolum>
       )}
     </>

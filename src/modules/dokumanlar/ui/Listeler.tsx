@@ -14,6 +14,7 @@ import { DosyaAcTusu } from "../../../components/gizli-resim/GizliResim";
 import { KartEtiket, Kirp, type Sutun } from "../../../components/liste/Liste";
 import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
 import type { SuzgecTanimi } from "../../../components/liste/suzgec";
+import { TABLO_SAYFA } from "../../../components/liste/sayfa";
 import { useOnayla } from "../../../components/pencere/Onay";
 import { AltSatir, DegerYok, Kod, Rozet, SayfaBasi, Sekmeler } from "../../../components/sayfa/Sayfa";
 import { Tus } from "../../../components/tus/Tus";
@@ -91,7 +92,7 @@ const KRITER_SEKME = { m: "/dokumanlar/kriterler", e: "/dokumanlar/kriterler?bra
 /** 442 (reisim 2026-10-09: "sadece standartlarda değil muayene kriterlerinde de olacak"): Mekanik / Elektrik alt sekmesi */
 /** 481: Muayene kriterleri süzgeçli — arama (kod, ad, rapor formatı, madde metni) */
 const KRITER_TANIMI: SuzgecTanimi<KriterBelgesi> = {
-  ad: "Kriterlerde ara", ipucu: "Kod, ad, rapor formatı, madde", birim: "belge", imkansiz: "", cipler: [], seciciler: [],
+  ad: "Kriterlerde ara", ipucu: "Kod, ad, rapor formatı, madde", birim: "belge", imkansiz: "", cipler: [], seciciler: [], sayfa: TABLO_SAYFA,
   metin: (x) => `${x.kod} ${x.ad} ${x.rapor} ${x.maddeler.map((m) => JSON.stringify(m)).join(" ")}`,
 };
 

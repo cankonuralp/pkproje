@@ -26,7 +26,9 @@ const KAR_SUTUN: Sutun<KarSatiri>[] = [
     <><KartEtiket>Tutar</KartEtiket><span className={s.toplam && s.tutar < 0 ? `${stil.sayi} ${stil.uyari}` : stil.sayi}>{s.eksi ? "− " : ""}{para(s.tutar)}</span></>
   ) },
 ];
-const KarTablosu = ({ baslik, satirlar }: { baslik: string; satirlar: KarSatiri[] }) => <Liste baslik={baslik} sutunlar={KAR_SUTUN} kayitlar={satirlar} anahtar={(s) => s.ad} />;
+/* 2026-10-16: tablo 20'den çok satırda sayfalı (Liste); toplam satırı ("Kâr") sayfalanmaz — her sayfanın altında (son sayfaya kaymaz) */
+const KarTablosu = ({ baslik, satirlar }: { baslik: string; satirlar: KarSatiri[] }) =>
+  <Liste baslik={baslik} sutunlar={KAR_SUTUN} kayitlar={satirlar.filter((s) => !s.toplam)} alt={satirlar.filter((s) => s.toplam)} anahtar={(s) => s.ad} />;
 const sayiTr = (n: number) => n.toLocaleString("tr-TR", { maximumFractionDigits: 2 });
 
 /** kâr hücresi (İşler listesi, işlerin kârı): tutar + oran; eksiyse uyarı rengi */
@@ -86,7 +88,8 @@ export function GelirGiderGorunumu({ v, bordro = false }: { v: GelirGider; bordr
     { ad: "Kâr", ayrinti: d.oran === null ? "gelir yok" : yuzde(d.oran), tutar: d.kar, toplam: true },
   ];
   const aylar: AySatiri[] = [...d.aylar].reverse();
-  aylar.push({ ay: "toplam", toplam: true, isler: d.isler, gelir: d.gelir, gider: d.gider, kar: d.kar });
+  /* toplam satırı sayfalanmaz (2026-10-16): 20 aydan sonra da her sayfanın altında */
+  const aylarToplami: AySatiri[] = [{ ay: "toplam", toplam: true, isler: d.isler, gelir: d.gelir, gider: d.gider, kar: d.kar }];
   const bas = toplam ? <><b>Toplam</b> · {n ? `${ayAd(v.aylar[0])} – ${ayAd(v.aylar[n - 1])}` : ""}</> : <b>{ayAd(v.secili)}</b>;
   return (
     <>
@@ -111,7 +114,7 @@ export function GelirGiderGorunumu({ v, bordro = false }: { v: GelirGider; bordr
       </Bolum>
       {toplam
         ? <Bolum id="b-gg-ay" baslik="Aylara göre" sayac={<><b>{n}</b> ay</>}>
-            <Liste baslik="Aylara göre gelir ve gider" sutunlar={AY_SUTUN} kayitlar={aylar} anahtar={(x) => x.ay} />
+            <Liste baslik="Aylara göre gelir ve gider" sutunlar={AY_SUTUN} kayitlar={aylar} alt={aylarToplami} anahtar={(x) => x.ay} />
           </Bolum>
         : <Bolum id="b-gg-is" baslik="İşlerin kârı" sayac={<><b>{v.isler.length}</b> iş</>}>
             {v.isler.length ? <Liste baslik="İşlerin kârı" sutunlar={GG_SUTUN} kayitlar={v.isler} anahtar={(x) => x.id} href={(x) => `/muhasebe/is/${x.id}`} />

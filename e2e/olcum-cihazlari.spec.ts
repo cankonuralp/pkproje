@@ -53,6 +53,7 @@ test("ölçüm cihazı: ekle, kalibrasyon kaydı, kalibrasyona gönder; denetçi
   await page.goto("/olcum-cihazlari");
   await hazir(page);
   await expect(page.getByRole("heading", { level: 1, name: "Ölçüm cihazları" })).toBeVisible();
+  await page.getByRole("searchbox", { name: "Cihazlarda ara" }).fill(kod);   // 2026-10-16: liste 20'şer sayfalı — başka sayfada da olmadığı görülsün
   await expect(page.getByRole("link", { name: kod })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Cihaz ekle" })).toHaveCount(0);
 });
@@ -82,6 +83,7 @@ test("ölçüm cihazı: kullanılmamış cihaz silinir, kod serbest kalır", asy
   await onay.getByRole("button", { name: "Sil" }).click();
   await expect(page).toHaveURL(/\/olcum-cihazlari$/, { timeout: 30_000 });
   await expect(page.getByText(`${kod} silindi.`).first()).toBeVisible();
+  await page.getByRole("searchbox", { name: "Cihazlarda ara" }).fill(kod);   // 2026-10-16: liste 20'şer sayfalı — başka sayfada da olmadığı görülsün
   await expect(page.getByRole("link", { name: kod })).toHaveCount(0);
   await ekle();
   await expect(page.getByRole("heading", { level: 1, name: `${kod} · Deneme silme ölçer` })).toBeVisible();
@@ -94,6 +96,7 @@ test("ölçüm cihazı: kullanılmış cihazda Sil yok, Pasife al zimmetteyken r
   await girisli(page, "yonetici");
   await page.goto("/olcum-cihazlari");
   await hazir(page);
+  await page.getByRole("searchbox", { name: "Cihazlarda ara" }).fill(E2E_SAHA.cihaz);   // 2026-10-16: liste 20'şer sayfalı
   await page.getByRole("link", { name: E2E_SAHA.cihaz, exact: true }).click();
   await expect(page.getByRole("heading", { level: 1, name: new RegExp(`^${E2E_SAHA.cihaz} · `) })).toBeVisible({ timeout: 30_000 });
   await hazir(page);

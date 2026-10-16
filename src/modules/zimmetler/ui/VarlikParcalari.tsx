@@ -4,6 +4,7 @@
    pasif demirbaşta Etkinleştir (ölçüm cihazı 357–358 deseni; karar sunucuda). */
 import { useEffect, useState } from "react";
 import { GizliResim } from "../../../components/gizli-resim/GizliResim";
+import { SayfaliListe } from "../../../components/liste/Sayfalayici";
 import { AltSatir } from "../../../components/sayfa/Sayfa";
 import { PasifPenceresi } from "../../../components/sil/PasifPenceresi";
 import { SilTusu } from "../../../components/sil/SilTusu";
@@ -35,8 +36,7 @@ export function TeslimTusu({ varlik, varliklar, kisiler, bugun }: { varlik: stri
 export function TeslimGecmisi({ hareketler, ad }: { hareketler: HareketSatiri[]; ad: string }) {
   if (!hareketler.length) return <p className={stil.bosSatir}>Bu varlığın hareketi yok; depoda.</p>;
   return (
-    <ol className={stil.gecmis}>
-      {hareketler.map((h) => (
+    <SayfaliListe ad="Teslim geçmişi" sirali className={stil.gecmis} ogeler={hareketler.map((h) => (
         <li key={h.id}>
           <span className={stil.zaman}>{zamanYaz(h.zaman)}</span>
           <b>{h.eden} → {h.alan}</b>
@@ -45,8 +45,7 @@ export function TeslimGecmisi({ hareketler, ad }: { hareketler: HareketSatiri[];
             ? <span className={stil.fotolar}>{h.fotolar.map((f, i) => <GizliResim key={f} dosyaId={f} alt={`${ad} teslim fotoğrafı ${i + 1}`} className={stil.foto} />)}</span>
             : <AltSatir>Fotoğraf yok</AltSatir>}
         </li>
-      ))}
-    </ol>
+      ))} />
   );
 }
 

@@ -7,6 +7,7 @@ import { useRef, useState } from "react";
 import { baytIndir } from "../../../components/disa/indir";
 import { tabloOku, TabloHatasi } from "../../../components/disa/oku";
 import { XLSX_TURU } from "../../../components/disa/xlsx";
+import { TabloSayfalari, useSayfa } from "../../../components/liste/Sayfalayici";
 import { Pencere, pencereMetinSinifi } from "../../../components/pencere/Pencere";
 import { Rozet } from "../../../components/sayfa/Sayfa";
 import { Serit } from "../../../components/serit/Serit";
@@ -23,6 +24,7 @@ export function ExcelYukle({ turler, mevcut, onEkle }: { turler: readonly ExcelT
   const [dosya, setDosya] = useState<{ ad: string; satirlar: ExcelSatiri[] } | null>(null);
   const [hata, setHata] = useState<string | null>(null);
   const [okunuyor, setOkunuyor] = useState(false);
+  const sy = useSayfa(dosya?.satirlar.length ?? 0, { anahtar: dosya });   // 2026-10-16: yeni dosya 1. sayfadan
   const girdi = useRef<HTMLInputElement>(null);
   const gecerli = dosya?.satirlar.filter((x) => x.ok) ?? [];
   const sec = async (f: File | undefined) => {
@@ -63,12 +65,12 @@ export function ExcelYukle({ turler, mevcut, onEkle }: { turler: readonly ExcelT
         </div>
         {hata && <Serit tur="hata" ikon="circle-alert">{hata}</Serit>}
         {dosya && (dosya.satirlar.length
-          ? <div className={stil.onizlemeKap}>
+          ? <><div className={stil.onizlemeKap}>
               <table className={stil.onizleme}>
                 <caption className="gizli">Dosyadaki satırlar</caption>
                 <thead><tr><th scope="col">Satır</th><th scope="col">Ekipman</th><th scope="col">Durum</th></tr></thead>
                 <tbody>
-                  {dosya.satirlar.map((x) => (
+                  {sy.dilim(dosya.satirlar).map((x) => (
                     <tr key={x.satir}>
                       <td className={stil.sayi}>{x.satir}</td>
                       <td>{x.kod && <span className={stil.kod}>{x.kod} </span>}{x.turAd}{x.konum && <span className={stil.altSatir}>{x.konum}</span>}</td>
@@ -78,6 +80,7 @@ export function ExcelYukle({ turler, mevcut, onEkle }: { turler: readonly ExcelT
                 </tbody>
               </table>
             </div>
+            <TabloSayfalari s={sy} ad="Dosyadaki satırlar" /></>
           : <p className={stil.ipucu}>Dosyada ekipman satırı yok.</p>)}
       </Pencere>
     </>
@@ -92,6 +95,7 @@ export function ExcelAktar({ turler, fiyat, ad, ne, liste, getir, kapali, sebep 
   const [acik, setAcik] = useState<readonly TeklifEkipmani[] | null>(null);
   const [hata, setHata] = useState<string | null>(null);
   const [bekliyor, setBekliyor] = useState(false);
+  const sy = useSayfa(acik?.length ?? 0, { anahtar: acik });   // 2026-10-16: pencere her açılışta 1. sayfadan
   const ac = async () => {
     setHata(null);
     if (liste) { setAcik(liste); return; }
@@ -123,8 +127,8 @@ export function ExcelAktar({ turler, fiyat, ad, ne, liste, getir, kapali, sebep 
                   <caption className="gizli">Aktarılacak ekipmanlar</caption>
                   <thead><tr><th scope="col">Ekipman</th><th scope="col">Konum · seri no</th></tr></thead>
                   <tbody>
-                    {acik.map((e, i) => {
-                      const t = turAdi(turler, e.tur);
+                    {sy.dilim(acik).map((e, j) => {
+                      const i = sy.bas + j, t = turAdi(turler, e.tur);
                       return (
                         <tr key={`${e.kod}-${i}`}>
                           <td>{e.kod && <span className={stil.kod}>{e.kod} </span>}{t?.ad ?? "—"}{t && <span className={stil.altSatir}>{bransAd(t.brans)}</span>}</td>
@@ -135,6 +139,7 @@ export function ExcelAktar({ turler, fiyat, ad, ne, liste, getir, kapali, sebep 
                   </tbody>
                 </table>
               </div>
+              <TabloSayfalari s={sy} ad="Aktarılacak ekipmanlar" />
             </>
           : <p className={pencereMetinSinifi}>Aktarılacak ekipman yok: seçili tesislerde kayıtlı etkin ekipman bulunmuyor.</p>)}
       </Pencere>

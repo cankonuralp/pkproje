@@ -7,6 +7,7 @@ import { useRef, useState } from "react";
 import { baytIndir } from "../../../components/disa/indir";
 import { tabloOku, TabloHatasi } from "../../../components/disa/oku";
 import { XLSX_TURU } from "../../../components/disa/xlsx";
+import { TabloSayfalari, useSayfa } from "../../../components/liste/Sayfalayici";
 import { Pencere, pencereMetinSinifi } from "../../../components/pencere/Pencere";
 import { Rozet } from "../../../components/sayfa/Sayfa";
 import { Serit } from "../../../components/serit/Serit";
@@ -22,6 +23,7 @@ export function PlanExcelYukle({ turler, tesiste, listede, bos, onEkle }: {
   const [dosya, setDosya] = useState<{ ad: string; satirlar: PlanExcelSatiri[] } | null>(null);
   const [hata, setHata] = useState<string | null>(null);
   const [okunuyor, setOkunuyor] = useState(false);
+  const sy = useSayfa(dosya?.satirlar.length ?? 0, { anahtar: dosya });   // 2026-10-16: yeni dosya 1. sayfadan
   const girdi = useRef<HTMLInputElement>(null);
   const gecerli = (dosya?.satirlar.filter((x) => x.ok) ?? []).slice(0, Math.max(0, bos));
   const fazla = (dosya?.satirlar.filter((x) => x.ok).length ?? 0) - gecerli.length;
@@ -64,12 +66,12 @@ export function PlanExcelYukle({ turler, tesiste, listede, bos, onEkle }: {
         {hata && <Serit tur="hata" ikon="circle-alert">{hata}</Serit>}
         {fazla > 0 && <Serit tur="uyari" ikon="triangle-alert">Listeye en çok {bos} ekipman daha eklenebilir; {fazla} satır eklenmez.</Serit>}
         {dosya && (dosya.satirlar.length
-          ? <div className={stil.onizlemeKap}>
+          ? <><div className={stil.onizlemeKap}>
               <table className={stil.onizleme}>
                 <caption className="gizli">Dosyadaki satırlar</caption>
                 <thead><tr><th scope="col">Satır</th><th scope="col">Ekipman</th><th scope="col">Durum</th></tr></thead>
                 <tbody>
-                  {dosya.satirlar.map((x) => (
+                  {sy.dilim(dosya.satirlar).map((x) => (
                     <tr key={x.satir}>
                       <td className={stil.sayi}>{x.satir}</td>
                       <td>{x.kod && <span className={stil.kod}>{x.kod} </span>}{x.turAd}{x.konum && <span className={stil.altMetin}>{x.konum}</span>}</td>
@@ -79,6 +81,7 @@ export function PlanExcelYukle({ turler, tesiste, listede, bos, onEkle }: {
                 </tbody>
               </table>
             </div>
+            <TabloSayfalari s={sy} ad="Dosyadaki satırlar" /></>
           : <p className={stil.altMetin}>Dosyada ekipman satırı yok.</p>)}
       </Pencere>
     </>

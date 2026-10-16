@@ -28,6 +28,7 @@ import { FotoTusu } from "../../../components/foto/FotoTusu";
 import { fotografiKucult } from "../../../components/foto/kucult";
 import { fotolariSec, fotoSecimiUyarisi } from "../../../components/foto/secim";
 import { GizliResim, gizliGorselDosyasi } from "../../../components/gizli-resim/GizliResim";
+import { SayfaliListe, TabloSayfalari, useSayfa } from "../../../components/liste/Sayfalayici";
 import { useGorunurAlan } from "../../../components/pencere/gorunurAlan";
 import { usePanelBoyu } from "../../../components/pencere/PanelBoyu";
 import { Ikon } from "../../../components/ikon/Ikon";
@@ -137,6 +138,9 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
   const [taslak, setTaslak] = useState<Taslak | null>(null);
   const [cihazIcerik, setCihazIcerik] = useState<Record<string, KayitGirdisi>>({});
   const [secim, setSecim] = useState<{ sekme: "plan" | "yeni"; ara: string } | null>(null);
+  /* 2026-10-16: son gönderilen kaydın kimliği — kayıtlar 20'şer sayfalı, o kaydın sayfası açılır (cihazdaki kayıtların açılışta yüklenmesi sayfayı
+     kaydırmaz: akış değil, kaydın kendisi) */
+  const [sonKayit, setSonKayit] = useState<string | null>(null);
   const [okunuyor, setOkunuyor] = useState(false);
   /* 542: iş gidince sunucudaki hâl yenilenir — yeni hâl gelene kadar kayıt "Gönderiliyor…" (eski fotoğraf listesiyle "Düzenle" açılmasın;
      uçtan uca masaüstünde etiket fotoğrafı yenilemeden önce açılan düzenlemede görünmüyordu) */
@@ -282,6 +286,10 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
   const bekleyenSayisi = gorunenler.filter((g) => g.cihazda || g.bekleyenFoto).length;
   /* rapora hazır: gönderilmiş, cihazda işi yok, ekipmanı ve en az bir ekipman fotoğrafı var */
   const hazirlar = gorunenler.filter((g) => g.sunucuda && !g.cihazda && !g.bekleyenFoto && g.ekipman && g.tanim && g.fotolar.some((f) => f.rol === "ekipman"));
+  /* 2026-10-16 (reisim: "herhangi bir liste tablo … 20 den fazlası sayfalı olsun"): kayıtlar ve rapora dönüşecekler 20'şer; gönderilen kayıt kendi
+     sayfasında (ac); rapor ekranı her açılışta 1. sayfadan (anahtar) */
+  const kayitSayfa = useSayfa(gorunenler.length, { ac: sonKayit ? gorunenler.findIndex((g) => g.id === sonKayit) : null });
+  const hazirSayfa = useSayfa(hazirlar.length, { anahtar: raporEkrani });
 
   const ac = () => {
     window.dispatchEvent(new CustomEvent("probata-panel", { detail: "saychat" }));
@@ -419,7 +427,7 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
           girdi: { plan: veri.plan.id, rol: y.rol, k: y.k, ad: y.dosya.name, veri: await metneCevir(y.dosya) } });
       }
     } catch { uyar("Kayıt cihaza yazılamadı; yeniden deneyin."); return; }
-    birak(t); setTaslak(null);
+    birak(t); setTaslak(null); setSonKayit(t.id);
     bildir(cevrimdisiMi() ? "Kayıt cihaza kaydedildi; bağlantı gelince gönderilecek." : t.yeni ? "Kayıt gönderiliyor…" : "Değişiklik gönderiliyor…");
     requestAnimationFrame(() => document.getElementById("sc-ilk")?.focus());
   };
@@ -447,7 +455,7 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
         {gorunenler.length ? (
           <>
             <ol className={stil.liste} aria-label="Kayıtlar">
-              {gorunenler.map((g) => {
+              {kayitSayfa.dilim(gorunenler).map((g) => {
                 const d = g.tanim ? dagit(g.tanim, g.mesaj) : null, turId = ekipmanTuru(g.ekipman), b = turId ? veri.turler[turId]?.basliklar ?? [] : [];
                 const ozet = d ? d.satirlar.filter((s) => s.deger && s.alan !== "yorum").slice(0, 4) : [];
                 const okl = b.map(([k, ad]) => [ad, g.fotolar.filter((f) => f.rol === "okunacak" && f.k === k).length] as const).filter(([, n]) => n);
@@ -477,6 +485,7 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
                 );
               })}
             </ol>
+            <TabloSayfalari s={kayitSayfa} ad="Kayıtlar" />
             {hazirlar.length > 0 && (
               <div className={stil.tuslar}>
                 <Tus tur="ikincil" ikon="file-plus" onClick={() => { setRaporEkrani(true); setSonuclar({}); requestAnimationFrame(() => document.getElementById("sc-rapor-bas")?.focus()); }}>
@@ -582,7 +591,8 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
     if (yeniKodsuz) {
       setSonuclar((s) => ({ ...s, [yeniKodsuz.id]: { neden: "Ekipman kodunu yazın (etiketteki; firmada eşsiz).", kod: true } }));
       uyar("Yeni ekipmanın kodunu yazın.");
-      requestAnimationFrame(() => document.getElementById(`sc-kod-${yeniKodsuz.id}`)?.focus());
+      hazirSayfa.satiraGit(hazirlar.indexOf(yeniKodsuz));
+      window.setTimeout(() => document.getElementById(`sc-kod-${yeniKodsuz.id}`)?.focus(), 60);
       return;
     }
     const sonuc: typeof sonuclar = {};
@@ -614,12 +624,13 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
         {olusanlar.length > 0 && (
           <div className={stil.sonuc} id="sc-rapor-sonuc" tabIndex={-1} role="status">
             <p><b>{olusanlar.length} rapor taslağı oluştu.</b></p>
-            <ul>{olusanlar.map(([k, x]) => <li key={k}><span>{x.rapor!.no}{x.okunan ? ` · ${x.okunan} değer okundu` : ""}</span><TusBaglanti href={`/raporlar/${x.rapor!.id}`} ikon="arrow-right">Raporu aç</TusBaglanti></li>)}</ul>
+            <SayfaliListe ad="Oluşan rapor taslakları" ogeler={olusanlar.map(([k, x]) => <li key={k}><span>{x.rapor!.no}{x.okunan ? ` · ${x.okunan} değer okundu` : ""}</span><TusBaglanti href={`/raporlar/${x.rapor!.id}`} ikon="arrow-right">Raporu aç</TusBaglanti></li>)} />
           </div>
         )}
         {hazirlar.length > 0 ? (
           <ol className={stil.liste} aria-label="Rapora dönüşecek kayıtlar">
-            {hazirlar.map((g, i) => {
+            {hazirSayfa.dilim(hazirlar).map((g, j) => {
+              const i = hazirSayfa.bas + j;
               const d = dagit(g.tanim!, g.mesaj), alan = Object.keys(d.degerler).filter((a) => a !== "yorum").length;
               const ekip = g.fotolar.filter((f) => f.rol === "ekipman").length, ok = okunacakSayisi(g), x = sonuclar[g.id];
               const on = [g.ekipman?.tip === "plan" ? "Plandaki ekipmana yazılacak" : "Plana yeni ekipman olarak eklenecek", `${alan} alan dolacak`, `${ekip} fotoğraf rapora geçecek`,
@@ -642,6 +653,7 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
             })}
           </ol>
         ) : <p className={stil.bosMetin}>Rapora dönüşecek kayıt kalmadı.</p>}
+        <TabloSayfalari s={hazirSayfa} ad="Rapora dönüşecek kayıtlar" />
         <p className={stil.ara}>Oluşturmadan önce</p>
         <ul className={stil.kosullar}>
           {veri.rapor.engel ? <li className={stil.kosulEksik}><Ikon ad="circle-alert" kucuk />{veri.rapor.engel}</li>
@@ -721,24 +733,20 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
             başka branş ve kendi Yeni raporu olan uyarıyla seçilir */}
         {secim?.sekme === "plan" ? (
           planSecenek.length ? (
-            <ul className={stil.secenekler}>
-              {planSecenek.map((e) => (
+            <SayfaliListe ad="Plandaki ekipmanlar" className={stil.secenekler} anahtar={`plan|${ara}`} ogeler={planSecenek.map((e) => (
                 <li key={e.id}><button type="button" className={stil.secenek} disabled={e.durum === "kapali"} data-durum={e.durum}
                   onClick={() => ekipmanSec({ tip: "plan", id: e.id })}>
                   <b>{e.kod} · {turAd(e.turId)}</b><small>{e.konum ?? "yer yok"}</small>
                   {e.neden && <span className={e.durum === "kapali" ? stil.secenekNeden : stil.secenekUyari}>{e.neden}</span>}</button></li>
-              ))}
-            </ul>
+              ))} />
           ) : <p className={stil.not}>{ara ? "Aramaya uyan ekipman yok." : "Planda ekipman yok."}</p>
         ) : (
           yeniSecenek.length ? (
-            <ul className={stil.secenekler}>
-              {yeniSecenek.map((id) => (
+            <SayfaliListe ad="Ekipman türleri" className={stil.secenekler} anahtar={`yeni|${ara}`} ogeler={yeniSecenek.map((id) => (
                 <li key={id}><button type="button" className={stil.secenek} onClick={() => ekipmanSec({ tip: "yeni", tur: id })}>
                   <b>{turAd(id)}</b><small>{veri.turler[id]?.kod}</small>
                   {veri.bransDisi.includes(id) && <span className={stil.secenekUyari}>Sizin branşınız dışında.</span>}</button></li>
-              ))}
-            </ul>
+              ))} />
           ) : <p className={stil.not}>Rapor formatı yayında tür yok.</p>
         )}
       </Pencere>

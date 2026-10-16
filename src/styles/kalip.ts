@@ -12,8 +12,12 @@ export const KALIP = {
    *  gözüksün, gerekiyorsa biraz sıkışsın, kart görünümü istemiyorum"); tablet dikeyde (810) tablo sıkışır.
    *  reddedilen: 960 (tablet dikeyde karta geçiyordu) · 1.180 (3. tur, 40 px tuşla) */
   kartEsigi: 600,
-  /** sayfa boyu listeye göre — ekipman 10 ("10 taneden sonra diğer sayfaya geçsin"), rapor 20 ("5 değil 20") */
-  sayfa: { ekipman: 10, rapor: 20 },
+  /** sayfa boyu listeye göre — ekipman 10 ("10 taneden sonra diğer sayfaya geçsin"), rapor 20 ("5 değil 20").
+   *  tablo 20 (reisim 2026-10-16: "herhangi bir liste tablo, ekranda çok fazla veri olunca ekran kasacağı için 20 den fazlası sayfalı olsun diğer
+   *  sayfalara doğru aksın"; pkproje §9 2026-10-15 "S.A.Y CLAUDE GİBİ" (3)): kendi boyu olmayan HER ekran tablosu ve listesi — rapor ölçüm tabloları
+   *  ve kontrol listesi maddeleri dahil; 20 ve altında sayfalayıcı yok. Tek üretici src/components/liste/Sayfalayici.tsx (useSayfa); belge / PDF bütün satırları basar.
+   *  reddedilen: tabloda sınırsız satır (35+ satırlık pano sigortaları tablosu tek sayfada ekranı yavaşlatıyordu) */
+  sayfa: { ekipman: 10, rapor: 20, tablo: 20 },
   /** yazı ölçeği px — başlık 20 (telefonda 18) · bölüm 15 · gövde 14 (dokunmatikte 15) · küçük 12,5 · etiket 11,5 ·
    *  yazı alanı 14 (dokunmatikte 16; reisim 2026-09-25 "bunu düzelt" — reddedilen: 15, iPhone odakta sayfayı büyütüyordu) */
   yazi: { baslik: 20, baslikTelefon: 18, bolum: 15, govde: 14, govdeDokunmatik: 15, girdi: 14, girdiDokunmatik: 16, kucuk: 12.5, etiket: 11.5 },

@@ -19,6 +19,7 @@ import { TarihAlani } from "../../../components/secim/TarihAlani";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
 import { Ikon } from "../../../components/ikon/Ikon";
+import { SayfaliListe, useSayfa, TabloSayfalari } from "../../../components/liste/Sayfalayici";
 import { meslek } from "../../personel/sema";
 import { adayUyarilari, isgDurumu, kapsamHesapla, kodBicimi, kodNormal, kontrolGeliyor, sozlesmeUyarisi, tarihNo, turUyarilari, type Aday } from "../sema";
 import type { PlanAcVerisi, TesisPlanBilgisi } from "../server/planlar";
@@ -55,6 +56,7 @@ export function PlanAcFormu({ veri, baslangic }: { veri: PlanAcVerisi; baslangic
   const [sayac, setSayac] = useState(0);
   /* 465: bu plana alınmayan (tesiste kayıtlı) ekipmanlar */
   const [haric, setHaric] = useState<ReadonlySet<string>>(() => new Set());
+  const yeniSayfa = useSayfa(yeni.length, { akis: true });
 
   /* tesis seçilince o tesisin İSG-KATİP ID'leri, sözleşmeleri ve ekipmanı sunucudan; yalnız seçili tesisinki kullanılır */
   useEffect(() => {
@@ -136,7 +138,8 @@ export function PlanAcFormu({ veri, baslangic }: { veri: PlanAcVerisi; baslangic
       const k = Object.keys(hatalar)[0];
       const ek = /^yeniEkipman\.(\d+)\.(tur|kod)$/.exec(k ?? "");
       const odakId = ek ? `pa-yeni-${ek[2]}-${yeni[Number(ek[1])]?.a}` : k?.startsWith("bilgilendirme") ? ID.bilgilendirme : ID[k as keyof typeof ID];
-      requestAnimationFrame(() => (k === "ekip" ? document.querySelector<HTMLInputElement>("[data-aday]") : document.getElementById(odakId ?? OZET))?.focus());
+      const odakla = () => (k === "ekip" ? document.querySelector<HTMLInputElement>("[data-aday]") : document.getElementById(odakId ?? OZET))?.focus();
+      if (ek) { yeniSayfa.satiraGit(Number(ek[1])); window.setTimeout(odakla, 60); } else requestAnimationFrame(odakla);
       return;
     }
     bildir(`${r.no} açıldı.${r.eposta ? ` ${r.eposta} kişiye e-posta gönderiliyor.` : ""}`);
@@ -206,7 +209,7 @@ export function PlanAcFormu({ veri, baslangic }: { veri: PlanAcVerisi; baslangic
         </FormBolum>
         <FormBolum baslik="3 · Denetçi" id="pa-b3" kaydir={!!d.tesis}>
           {!d.tesis ? <p className={stil.bosSatir}>Önce tesis seçin.</p> : <>
-            {veri.adaylar.length ? <ul className={stil.adaylar} aria-label="Denetçiler">{veri.adaylar.map(adaySatiri)}</ul>
+            {veri.adaylar.length ? <SayfaliListe ad="Denetçiler" className={stil.adaylar} ogeler={veri.adaylar.map(adaySatiri)} />
               : <p className={stil.bosSatir}>Denetçi yok: Personel&apos;de denetçi rolünde hesabı olan kişi gerekir.</p>}
             {h.ekip && <p className={stil.uyari} id="pa-ekip-ipucu">{h.ekip}</p>}
             {elle.length > 0 && <>
@@ -271,8 +274,7 @@ export function PlanAcFormu({ veri, baslangic }: { veri: PlanAcVerisi; baslangic
                 onClick={() => setHaric((s) => new Set([...s, ...yakinDegil.map((e) => e.id)]))}>Kontrolü yakın olmayanları çıkar ({yakinDegil.filter((e) => !haric.has(e.id)).length})</Tus>}
               {cikarilan > 0 && <Tus tur="ikincil" ikon="undo-2" onClick={() => setHaric(new Set())}>Çıkarılanları geri al ({cikarilan})</Tus>}
             </div>}
-            {tesisteki.length > 0 && <ul className={stil.ekipmanlar} aria-label="Tesisteki ekipmanlar">
-              {tesisteki.map((e) => {
+            {tesisteki.length > 0 && <SayfaliListe ad="Tesisteki ekipmanlar" className={stil.ekipmanlar} anahtar={d.tesis} ogeler={tesisteki.map((e) => {
                 const cik = haric.has(e.id), t = veri.turler.find((x) => x.id === e.turId);
                 return (
                   <li key={e.id} className={cik ? stil.cikarilan : undefined}>
@@ -284,11 +286,10 @@ export function PlanAcFormu({ veri, baslangic }: { veri: PlanAcVerisi; baslangic
                       onClick={() => haricDegistir(e.id, !cik)}>{cik ? "Geri al" : "Çıkar"}</Tus>
                   </li>
                 );
-              })}
-            </ul>}
-            {yeni.length > 0 && <ul className={stil.yeniEkipmanlar} aria-label="Elle eklenecek ekipmanlar">
-              {yeni.map((e, i) => {
-                const kb = e.kod ? kodBicimi(kodNormal(e.kod)) : null, ht = h[`yeniEkipman.${i}.tur`], hk = h[`yeniEkipman.${i}.kod`] ?? (kb?.tur === "hata" ? kb.metin : undefined);
+              })} />}
+            {yeni.length > 0 && <><ul className={stil.yeniEkipmanlar} aria-label="Elle eklenecek ekipmanlar">
+              {yeniSayfa.dilim(yeni).map((e, j) => {
+                const i = yeniSayfa.bas + j, kb = e.kod ? kodBicimi(kodNormal(e.kod)) : null, ht = h[`yeniEkipman.${i}.tur`], hk = h[`yeniEkipman.${i}.kod`] ?? (kb?.tur === "hata" ? kb.metin : undefined);
                 return (
                   <li key={e.a} className={stil.yeniSatir}>
                     <Alan id={`pa-yeni-tur-${e.a}`} etiket={`${i + 1}. ekipman türü`} zorunlu hata={ht}>
@@ -305,7 +306,7 @@ export function PlanAcFormu({ veri, baslangic }: { veri: PlanAcVerisi; baslangic
                   </li>
                 );
               })}
-            </ul>}
+            </ul><TabloSayfalari s={yeniSayfa} ad="Elle eklenecek ekipmanlar" /></>}
             <div className={stil.ekleSatiri}>
               <Tus tur="ikincil" ikon="plus" disabled={yeni.length >= 200} onClick={() => { setYeni([...yeni, { a: sayac, tur: "", kod: "", konum: "" }]); setSayac(sayac + 1);
                 requestAnimationFrame(() => document.getElementById(`pa-yeni-tur-${sayac}`)?.focus()); }}>Ekipman ekle (elle)</Tus>
