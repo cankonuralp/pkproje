@@ -341,6 +341,12 @@ pkproje/
                             ulaşılamazsa ya da reddederse çıkış 1; geçici hata bir kez yeniden denenir, bütün denetim ≤ 120 sn; kurulumdaki atlanır,
                             bakımdaki listede yok (yalnız sayısı); ortamda veritabanı yoksa --zorunlu / VERCEL ile 1, yoksa "atlandı" 0; ana anahtar yalnız
                             verilen ortamdan; merkeze YAZMAZ; çıktı sırsız, adıyla yalnız sorunlu firma — kilit tests/goc-dagit(-saf).test.ts
+                            · FV8 (2026-10-16) "uygula" KİPİ: goc-uygula.ts (yazan kısım; goc-dagit.ts salt okunur kalır) — merkezde is_basla('goc_dagitim')
+                            kilidi, önce HEPSİNDE özet denetimi (fark → hiçbirine başlanmaz), sırayla merkez + firmalar, ilk hatada dur, sonda salt okunur
+                            denetim + firma_vt.son_goc; göç Supabase Yönetim API'siyle (src/server/dis/supabase-yonetim.ts — PROBATA_SUPABASE_YONETIM_ANAHTARI,
+                            uç yalnız yerel taklitte değişir, 429 sınırlı, hata sırsız; yonetimApiYurutucu göç başına tek istek); goc.ts GocYurutucu / pgYurutucu
+                            / gocFarki — kilit tests/goc-uygula.test.ts (taklit tests/yardimci/sahte-supabase-yonetim.ts), supabase-yonetim, goc-yurutucu,
+                            yonetim-anahtari (ortam adları yalnız src/server/dis/** ve scripts/)
   src/server/db/gocler/0091  VERİTABANI HIZI (564): politikada firma süzgeci "(SELECT gecerli_firma())" (sorgu başına bir kez; gecerli_musteri,
                             app.hesap_id aynı) + her yabancı anahtara dizin — YENİ POLİTİKA VE YABANCI ANAHTAR DA BÖYLE (kilit kiraci-izolasyonu,
                             sorgular tests/yardimci/vt-hiz.ts)

@@ -3,7 +3,8 @@
    metni bellekte bozulup kilidin denetim işlevine verilir. Veritabanı gerekmez. Her test önce sağlam kodda neyin geçtiğini gösterir.
    1. Vercel denetimi kalkınca (ayarsız ortamda yalnız --zorunlu) VERCEL'li derleme 0 döner; --zorunlu yok sayılınca Vercel'in sistem değişkeni
       gelmeyen derlemesi 0 döner — yayın kapısı sessizce açılır.
-   2. Kip, veritabanı ayarından SONRA denetlenince ayarsız derlemede "uygula" 0 olur (FV8'e kadar açık hata olmalı).
+   2. Kip (ve 2026-10-16 FV8'den beri Yönetim API anahtarı), veritabanı ayarından SONRA denetlenince ayarsız derlemede "uygula" 0 olur (anahtarsız
+      uygula 1 olmalı).
    3. Kip denetimi gevşeyince (bilinmeyen değer "denetle" sayılır) yanlış yazılmış kip sessizce geçer.
    4. Neden metni hata iletisini yazınca iletideki sır (parola, bağlantı dizesi) çıktıya düşer.
    5. Göç SAYISI karşılaştırması kalkınca arada atlanmış göç "güncel" görünür (354'ün aynısı).

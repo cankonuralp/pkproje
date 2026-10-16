@@ -2,8 +2,10 @@
    Vercel derleme adımı (vercel.json buildCommand: "node scripts/goc-dagit.ts --zorunlu && node scripts/next.ts build" — betik yalnız bunu çağırır):
    derlenecek kodun beklediği göç (son-goc.ts SON_GOC + GOC_SAYISI) merkezde ve her kendi projeli firmanın veritabanında uygulanmış mı. Değilse çıkış
    kodu 1 → derleme durur, yayın olmaz ("önce göç, sonra kod" — bugünkü elle akışın da kapısı: Supabase'e göç unutulursa main yayınlanmaz).
-   Kip PROBATA_GOC_DAGIT: boş ya da "denetle" (varsayılan) — yalnız tanı; "uygula" FV8'de (Management API yürütücüsü) — şimdi verilirse AÇIK HATA (1);
-   başka değer de hata. Kip, veritabanı ayarından ÖNCE denetlenir (ayarsız derlemede "uygula" sessizce "atlandı" olmasın).
+   Kip PROBATA_GOC_DAGIT: boş ya da "denetle" (varsayılan) — yalnız tanı; "uygula" (FV8, 2026-10-16) — göçleri Supabase Yönetim API'siyle uygular
+   (src/server/db/goc-uygula.ts: kilit, önce hepsinde özet denetimi, sırayla uygulama, sonunda bu dosyanın salt okunur denetimi; yazan her şey orada —
+   bu dosya salt okunur kalır); Yönetim API anahtarı (PROBATA_SUPABASE_YONETIM_ANAHTARI) yoksa / uç yerel değilse 1. Başka kip değeri hata. Kip ve
+   anahtar, veritabanı ayarından ÖNCE denetlenir (ayarsız derlemede "uygula" sessizce "atlandı" olmasın).
    denetle:
    · merkez: ortamdaki bağlantı (havuz.ts ortamdanBaglanti — PROBATA_VT_*; şifresiz ağ bağlantısı yok), uygulama rolü; merkez.ts merkezOku (READ ONLY,
      vt_merkez_dogrula — ortam bir firma veritabanını gösteriyorsa red) içinde saglik_denetimi(). Merkeze ulaşılamazsa ya da merkez reddederse 1;
@@ -38,7 +40,10 @@
    tests/bozan/goc-dagit-saf.bozan.ts. */
 import pg from "pg";
 import { anaAnahtar } from "../ayar/sir.ts";
+import { supabaseYonetimi, yonetimAyari, type SupabaseYonetimi } from "../dis/supabase-yonetim.ts";
 import { kayittanBaglanti, merkezYerelMi, type FirmaVtKaydi } from "./baglanti.ts";
+import { GOC_KLASORU, gocDosyalari } from "./goc.ts";
+import { gocUygula, type DenetimSonucu } from "./goc-uygula.ts";
 import { ortamdanBaglanti } from "./havuz.ts";
 import { havuzHatasiniDinle, havuzSecenekleri, kiraciIcinde, yonetimIcinde, type Havuz, type UygulamaBaglantisi } from "./kiraci.ts";
 import { merkezOku } from "./merkez.ts";
@@ -74,6 +79,15 @@ export const vercelde = (e: Ortam): boolean => !!e.VERCEL;
 
 /** ana anahtar YALNIZ verilen ortamdan: yoksa boş metin — sir.ts anaAnahtar'ın varsayılanı (process.env) devreye girmez (ortam tek kaynak) */
 export const anahtarOku = (e: Ortam): Buffer => anaAnahtar(e.PROBATA_SIR_ANAHTARI ?? "");
+
+/** FV8: merkezin Supabase projesi — havuzcu kullanıcısından ("probata_uygulama.<ref>"); ref'siz (yerel) merkez yalnız yerel Yönetim API taklidiyle
+    ("yerel-merkez"); yoksa HATA */
+export function merkezProjesi(e: Ortam, yerelApi: boolean): string {
+  const m = /^probata_uygulama\.([a-z0-9]{20})$/.exec(e.PROBATA_VT_KULLANICI ?? "");
+  if (m) return m[1]!;
+  if (yerelApi) return "yerel-merkez";
+  throw new Error("Merkezin proje kimliği bulunamadı (PROBATA_VT_KULLANICI 'probata_uygulama.<ref>' biçiminde olmalı).");
+}
 
 /* ── sonuç ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── */
 /** saglik_denetimi()'nin göç alanları (sayı jsonb'den sayı gelir; metin gelse de sayıya çevrilir — saglik.ts saglikDegerlendir ile aynı) */
@@ -262,6 +276,8 @@ export interface GocDagitAyari {
   beklenen?: Beklenen;
   /** bütün denetimin üst sınırı (ms; varsayılan GOC_DAGIT.toplamMs — testler kısaltır) */
   sureMs?: number;
+  /** göç dosyalarının klasörü (varsayılan src/server/db/gocler — testler ek göçlü kopya verir; beklenen verilmezse ondan) */
+  klasor?: string;
 }
 
 /** göç dağıtıcı: çıkış kodu (0 — yayın sürer, 1 — durur). Fırlatmaz. Süre dolarsa 1; arkada süren işin satırları yazılmaz. */
@@ -269,11 +285,14 @@ export async function gocDagit(a: GocDagitAyari): Promise<number> {
   let bitti = false;
   const y = (s: string) => { if (!bitti) a.yaz(`[göç dağıtıcı] ${s}`); };
   const sureMs = a.sureMs ?? GOC_DAGIT.toplamMs;
-  const is = dagit(a.ortam, a.arguman ?? [], y, a.beklenen ?? { son: SON_GOC, sayi: GOC_SAYISI })
+  let doldu = false;
+  const beklenen = a.beklenen ?? (a.klasor ? klasorBeklenen(a.klasor) : { son: SON_GOC, sayi: GOC_SAYISI });
+  const is = Promise.resolve()
+    .then(() => dagit(a.ortam, a.arguman ?? [], y, beklenen, a.klasor ?? GOC_KLASORU, () => doldu || bitti))
     .catch((h: unknown) => { y(`HATA: beklenmeyen hata — ${nedenMetni(h)}`); return 1; });
   let sayac: ReturnType<typeof setTimeout> | undefined;
   const sure = new Promise<number>((coz) => {
-    sayac = setTimeout(() => { y(`DURDU: süre doldu (${Math.ceil(sureMs / 1000)} sn) — denetim bitmedi, yayın yapılmaz.`); coz(1); }, sureMs);
+    sayac = setTimeout(() => { doldu = true; y(`DURDU: süre doldu (${Math.ceil(sureMs / 1000)} sn) — denetim bitmedi, yayın yapılmaz.`); coz(1); }, sureMs);
   });
   try {
     return await Promise.race([is, sure]);
@@ -283,14 +302,24 @@ export async function gocDagit(a: GocDagitAyari): Promise<number> {
   }
 }
 
-async function dagit(e: Ortam, arg: readonly string[], y: (s: string) => void, beklenen: Beklenen): Promise<number> {
+/** klasördeki göçlerden beklenen (son ad, sayı) */
+function klasorBeklenen(klasor: string): Beklenen {
+  const d = gocDosyalari(klasor);
+  return { son: d.at(-1)?.ad ?? "", sayi: d.length };
+}
+
+async function dagit(e: Ortam, arg: readonly string[], y: (s: string) => void, beklenen: Beklenen, klasor: string, durdu: () => boolean): Promise<number> {
   let zorunlu: boolean;
   try { ({ zorunlu } = argumanOku(arg)); } catch (h) { y(`HATA: ${(h as Error).message}`); return 1; }
   let kip: GocKipi;
   try { kip = kipOku(e); } catch (h) { y(`HATA: ${(h as Error).message}`); return 1; }
+  /* uygula: Yönetim API anahtarı ve ucu veritabanı ayarından ÖNCE (iletiler sabit metin) */
+  let api: SupabaseYonetimi | null = null, yerelApi = false;
   if (kip === "uygula") {
-    y("HATA: 'uygula' kipi henüz yok (FIRMA-VT FV8 — Management API yürütücüsü); PROBATA_GOC_DAGIT boş ya da 'denetle' olmalı.");
-    return 1;
+    try { const ya = yonetimAyari(e); api = supabaseYonetimi(ya); yerelApi = ya.yerel; } catch (h) {
+      y(`HATA: ${(h as Error).message.replace(/\.$/, "")} — 'uygula' kipi göçleri Supabase Yönetim API'siyle uygular.`);
+      return 1;
+    }
   }
   if (vtAyariYok(e)) {
     if (zorunlu || vercelde(e)) {
@@ -304,9 +333,39 @@ async function dagit(e: Ortam, arg: readonly string[], y: (s: string) => void, b
   let ayar: UygulamaBaglantisi;
   try { ayar = ortamdanBaglanti(e); } catch (h) { y(`HATA: ${(h as Error).message}`); return 1; }
 
-  y(`kip: denetle (salt okunur) · beklenen ${beklenen.son} / ${beklenen.sayi}`);
+  let merkezProje = "";
+  if (api) { try { merkezProje = merkezProjesi(e, yerelApi); } catch (h) { y(`HATA: ${(h as Error).message}`); return 1; } }
+
   const merkez = havuzAc(ayar, 2);
   try {
+    if (api) {
+      y(`kip: uygula (Supabase Yönetim API'si) · beklenen ${beklenen.son} / ${beklenen.sayi}`);
+      return await gocUygula({
+        merkez, api, yerel: yerelApi, merkezProje, dosyalar: gocDosyalari(klasor), beklenen, yaz: y, durdu,
+        hedefler: async () => (await hedefOku(merkez)).hedefler
+          .map((h) => ({ firmaId: h.firma_id, kisaAd: h.kisa_ad, ref: h.ref, kurulumTamam: h.kurulum_durum === "tamam" })),
+        denetle: () => denetim(merkez, e, beklenen, y),
+      });
+    }
+    y(`kip: denetle (salt okunur) · beklenen ${beklenen.son} / ${beklenen.sayi}`);
+    return (await denetim(merkez, e, beklenen, y)).kod;
+  } finally {
+    await kapat(merkez);
+  }
+}
+
+/** hedefler + bakımdaki firma sayısı — yöneticisiz yönetim işlemi, READ ONLY */
+async function hedefOku(merkez: Havuz): Promise<{ hedefler: HedefSatiri[]; bakimda: number }> {
+  return birKezDaha(() => yonetimIcinde(merkez, async (db) => {
+    await db.sorgu("SET TRANSACTION READ ONLY");
+    return { hedefler: (await db.sorgu<HedefSatiri>(HEDEFLER_SQL)).rows, bakimda: (await db.sorgu<{ n: number }>(BAKIMDA_SQL)).rows[0]!.n };
+  }));
+}
+
+/** SALT OKUNUR DENETİM (denetle kipi; uygula kipinin sonunda da): merkez, hedefler, firmalar — satırları yazar; çıkış kodu + güncel firmalar */
+async function denetim(merkez: Havuz, e: Ortam, beklenen: Beklenen, y: (s: string) => void): Promise<DenetimSonucu> {
+  const bir = { kod: 1, guncel: [] as string[] };
+  {
     /* 1. merkez — merkezOku: READ ONLY + vt_merkez_dogrula (ortam firma veritabanını gösteriyorsa red) */
     let m: HedefSonucu;
     try {
@@ -316,30 +375,27 @@ async function dagit(e: Ortam, arg: readonly string[], y: (s: string) => void, b
       m = hataSonucu("merkez", h);
     }
     y(sonucSatiri(m, beklenen, true));
-    if (m.durum === "ulasilamadi") { y("DURDU: merkeze ulaşılamadı — yayın yapılmaz."); return 1; }
+    if (m.durum === "ulasilamadi") { y("DURDU: merkeze ulaşılamadı — yayın yapılmaz."); return bir; }
     if (m.durum === "reddedildi") {
       y("DURDU: merkez denetimi reddetti — ortam (PROBATA_VT_*) merkezi göstermiyor ya da merkezde göçler eksik; yayın yapılmaz.");
-      return 1;
+      return bir;
     }
 
-    /* 2. hedefler + bakımdaki firma sayısı — yöneticisiz yönetim işlemi, READ ONLY */
+    /* 2. hedefler + bakımdaki firma sayısı */
     let hedefler: HedefSatiri[];
     let bakimda: number;
     try {
-      ({ hedefler, bakimda } = await birKezDaha(() => yonetimIcinde(merkez, async (db) => {
-        await db.sorgu("SET TRANSACTION READ ONLY");
-        return { hedefler: (await db.sorgu<HedefSatiri>(HEDEFLER_SQL)).rows, bakimda: (await db.sorgu<{ n: number }>(BAKIMDA_SQL)).rows[0]!.n };
-      })));
+      ({ hedefler, bakimda } = await hedefOku(merkez));
     } catch (h) {
       y(`HATA: göç hedefleri okunamadı — ${nedenMetni(h)}`);
-      return 1;
+      return bir;
     }
     if (!hedefler.length) y("denetlenecek kendi projeli firma yok.");
 
     /* 3. ana anahtar yalnız denetlenecek firma varsa, yalnız verilen ortamdan (ileti sabit metin) */
     let anahtar: Buffer = Buffer.alloc(0);
     if (hedefler.some((h) => h.kurulum_durum === "tamam")) {
-      try { anahtar = anahtarOku(e); } catch (h) { y(`HATA: ${(h as Error).message} — firma veritabanlarına bağlanılamaz.`); return 1; }
+      try { anahtar = anahtarOku(e); } catch (h) { y(`HATA: ${(h as Error).message} — firma veritabanlarına bağlanılamaz.`); return bir; }
     }
 
     /* 4. firmalar — en çok 4 aynı anda; adıyla yalnız sorunlu olanlar (açılış sırasıyla), öteki sonuçlar sayıyla */
@@ -356,11 +412,9 @@ async function dagit(e: Ortam, arg: readonly string[], y: (s: string) => void, b
     if (sorunlu) {
       y(`DURDU: ${sorunlu} veritabanı uyumsuz, ulaşılamadı ya da reddetti (${ozet}) — yayın yapılmaz. Önce göç (Supabase'e goc kaydıyla), sonra kod; `
         + "ulaşılamayan firma için yönetimde \"bakımda\" (göç dışı).");
-      return 1;
+      return bir;
     }
     y(`TAMAM: ${ozet}.`);
-    return 0;
-  } finally {
-    await kapat(merkez);
+    return { kod: 0, guncel: hedefler.filter((_, i) => sonuclar[i]!.durum === "guncel").map((h) => h.firma_id) };
   }
 }

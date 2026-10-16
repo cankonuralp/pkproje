@@ -1,6 +1,7 @@
 /* NEREDEN GELDİ: FIRMA-VT.md §5.5, §7.3, FV4 (sunum 579, reisim onayı 2026-10-15) — "göç dağıtımı Vercel derleme adımında; varsayılan denetle … son_goc
    = SON_GOC ve goc_sayisi = GOC_SAYISI değilse çıkış kodu 1. Bugünkü elle akışa da yayın kapısı olur." Veritabanısız (saf) parçalar:
-   · kip: boş / denetle → denetle; uygula → AÇIK HATA (FV8'e kadar); başka değer hata; kip veritabanı ayarından ÖNCE (ayarsız derlemede "uygula" 0 olmaz);
+   · kip: boş / denetle → denetle; uygula → Yönetim API anahtarı ister (2026-10-16 FV8: önce "henüz yok" açık hatasıydı — kip geldi; anahtarsız / uç
+     yerel değilse yine 1); başka değer hata; kip ve anahtar veritabanı ayarından ÖNCE (ayarsız derlemede "uygula" 0 olmaz);
    · ortamda veritabanı yok: "--zorunlu" ya da VERCEL varsa 1, ikisi de yoksa "atlandı" + 0 (CI / yerel derleme kırılmaz); bilinmeyen bağımsız
      değişken 1; yarım ya da geçersiz ayar her yerde 1, bağlanmadan;
    · ana anahtar YALNIZ verilen ortamdan (sir.ts anaAnahtar'ın process.env varsayılanına düşmez — FV4 incelemesi, 2026-10-15);
@@ -115,7 +116,13 @@ test("kip veritabanı ayarından ÖNCE: 'uygula' ve geçersiz kip ayarsız da, a
     assert.match(r.cikti, /HATA: /);
     assert.doesNotMatch(r.cikti, /merkez:|atlandı/, "bağlanılmadı, atlanmadı");
   }
-  assert.match((await kos({ PROBATA_GOC_DAGIT: "uygula" })).cikti, /'uygula' kipi henüz yok \(FIRMA-VT FV8/);
+  /* 2026-10-16 (FV8): "henüz yok" yerine Yönetim API anahtarı istenir; uç yerel değilse de bağlanmadan 1 (uygula davranışı: tests/goc-uygula.test.ts) */
+  assert.match((await kos({ PROBATA_GOC_DAGIT: "uygula" })).cikti, /HATA: Supabase yönetim anahtarı yok \(PROBATA_SUPABASE_YONETIM_ANAHTARI\) — 'uygula' kipi/);
+  const uzak = await kos({ PROBATA_GOC_DAGIT: "uygula", PROBATA_SUPABASE_YONETIM_ANAHTARI: "sbp_uydurma0123456789abcdef0123456789abcd",
+    PROBATA_SUPABASE_YONETIM_UC: "https://baska.example", ...yerelOrtam(kapi) });
+  assert.equal(uzak.kod, 1);
+  assert.match(uzak.cikti, /yalnız yerel adres/);
+  assert.doesNotMatch(uzak.cikti, /merkez:|sbp_/);
 });
 
 test("yarım ya da geçersiz veritabanı ayarı her yerde 1, bağlanmadan (ileti sabit metin, değer yok)", async () => {

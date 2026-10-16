@@ -13,6 +13,11 @@ test("maske: e-posta, telefon, T.C. kimlik, SGK, jeton, anahtar maskelenir; UUID
   assert.equal(maskele("Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0.abc_DEF-123 geçersiz"), "Bearer [iz] geçersiz");
   assert.equal(maskele("anahtar anahtar-deneme-Ab12Cd34Ef56Gh78Ij90Kl12 reddedildi"), "anahtar [iz] reddedildi");
   assert.equal(maskele(`özet ${"a1".repeat(32)} tutmadı`), "özet [iz] tutmadı");
+  /* FIRMA-VT FV8 (2026-10-16): Supabase ve Resend anahtar biçimleri — kısa olanlar da (uydurma değerler) */
+  assert.equal(maskele("yönetim sbp_uydurmaAnahtarDegildir0123456789wxyz reddedildi"), "yönetim [iz] reddedildi");
+  assert.equal(maskele("gizli sb_secret_AbCdEf123456 ve sb_publishable_x1Y2z3a4"), "gizli [iz] ve [iz]");
+  assert.equal(maskele("resend re_AbC12xYz9 geçersiz"), "resend [iz] geçersiz");
+  assert.equal(maskele("alan re_kayit ve are_ok kalır"), "alan re_kayit ve are_ok kalır", "rakamsız re_ adı ve sözcük içi kalır");
   const id = "6f9619ff-8b86-4011-b42d-00c04fc964ff";
   assert.equal(maskele(`rapor ${id} bulunamadı`), `rapor ${id} bulunamadı`, "kayıt kimliği kalır");
   assert.equal(maskele("Cannot read properties of undefined (reading 'kod')"), "Cannot read properties of undefined (reading 'kod')");

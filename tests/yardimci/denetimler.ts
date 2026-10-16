@@ -280,6 +280,32 @@ export function merkezHavuzuIceAktaranlar(metinler: readonly { ad: string; metin
     .filter(({ ad, metin }) => [...yorumsuz(metin).matchAll(kalip)].some((m) => iceAktarilan(ad, m[1] ?? m[2]!) === "src/server/db/havuz"))
     .map(({ ad }) => ad).sort();
 }
+/** FIRMA-VT FV8 (2026-10-16): DIŞ HİZMET YÖNETİM ANAHTARLARI — Supabase Yönetim API'sinin PAT'i ve Resend ana anahtarı (FIRMA-VT §7: Vercel ortamında):
+    · ortam adları (yorum dışında) YALNIZ src/server/dis/** ve scripts/** içinde;
+    · src/server/dis/** dosyalarını (kendi içi dışında) YALNIZ izin listesindeki dosyalar içe aktarır — uygulamanın istek yolu, modüller, sayfalar ve
+      tarayıcı zinciri değil (anahtar istemci paketine ya da istek işlevine taşınmaz). Liste tam: fazlası da eksiği de bulgu.
+    Dönen: bulgu listesi. Kilit tests/yonetim-anahtari.test.ts · olumsuz kanıt tests/bozan/yonetim-anahtari.bozan.ts. */
+export const DIS_IZNI: Readonly<Record<string, string>> = {
+  "src/server/db/goc-dagit.ts": "göç dağıtıcı (Vercel derlemesi): 'uygula' kipinde Yönetim API istemcisini kurar",
+  "src/server/db/goc-uygula.ts": "göç dağıtıcının 'uygula' kipi: göçleri Yönetim API yürütücüsüyle uygular",
+};
+const DIS_ORTAM = /\bPROBATA_(?:SUPABASE_YONETIM_(?:ANAHTARI|UC)|SUPABASE_ORGUT|RESEND_(?:ANAHTARI|YONETIM_UC))\b/;
+export function yonetimAnahtariEksikleri(metinler: readonly { ad: string; metin: string }[]): string[] {
+  const hata: string[] = [];
+  const kalip = /\b(?:from|import)\s*\(?\s*["']([^"']+)["']|\brequire\s*\(\s*["']([^"']+)["']/g;
+  const iceride = (ad: string) => ad.startsWith("src/server/dis/");
+  const aktaranlar: string[] = [];
+  for (const { ad, metin } of metinler) {
+    const k = yorumsuz(metin);
+    if (!iceride(ad) && !ad.startsWith("scripts/") && DIS_ORTAM.test(k)) hata.push(`${ad}: yönetim anahtarının ortam adı dış hizmet katmanı dışında`);
+    if (!iceride(ad) && [...k.matchAll(kalip)].some((m) => (iceAktarilan(ad, m[1] ?? m[2]!) ?? "").startsWith("src/server/dis/"))) aktaranlar.push(ad);
+  }
+  const izin = Object.keys(DIS_IZNI);
+  for (const ad of aktaranlar.sort()) if (!izin.includes(ad)) hata.push(`${ad}: dış hizmet istemcisini izinsiz içe aktarıyor`);
+  for (const ad of izin) if (!aktaranlar.includes(ad)) hata.push(`${ad}: izin listesinde ama içe aktarmıyor (liste tam olmalı)`);
+  return hata;
+}
+
 /** kiracının işi merkez havuzuyla açılan dosyalar (kiraciIcinde(merkezHavuzu() …) — olmamalı: kiracının işi kiraciHavuzu'ndan */
 export function merkezdeKiraciIsi(metinler: readonly { ad: string; metin: string }[]): string[] {
   return metinler.filter(({ metin }) => /\bkiraciIcinde\s*\(\s*merkezHavuzu\s*\(/.test(yorumsuz(metin))).map(({ ad }) => ad).sort();

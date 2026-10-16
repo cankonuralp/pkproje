@@ -31,6 +31,9 @@ export function maskele(s: string): string {
   return s
     .replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, "[e-posta]")
     .replace(/\beyJ[A-Za-z0-9_-]{6,}\.[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)?/g, "[iz]")
+    /* FIRMA-VT FV8 (2026-10-16): Supabase yönetim / gizli / yayımlanabilir anahtarı ve Resend anahtarı — kısa olsa da (uzun dizgi kuralına girmeyen) */
+    .replace(/\b(?:sbp|sb_secret|sb_publishable)_[A-Za-z0-9_-]{6,}/g, "[iz]")
+    .replace(/\bre_(?=[A-Za-z0-9_-]*\d)[A-Za-z0-9_-]{8,}/g, "[iz]")
     /* uzun rastgele dizgi: içinde onaltılık olmayan harf ya da _ olan 24+ karakter (UUID yalnız onaltılık + tire — kalır) */
     .replace(/(?<![A-Za-z0-9_-])(?=[A-Za-z0-9_-]*[g-zG-Z_])(?=[A-Za-z0-9_-]*\d)[A-Za-z0-9_-]{24,}(?![A-Za-z0-9_-])/g, "[iz]")
     .replace(/(?<![0-9a-fA-F])[0-9a-fA-F]{40,}(?![0-9a-fA-F])/g, "[iz]")
