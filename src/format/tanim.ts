@@ -143,6 +143,17 @@ export type TestSutunu = z.output<typeof TestSutunu>;
 const KusurSutunu = z.object({ id: kimlik, ad, alan: z.enum(KUSUR_ALANLARI) });
 export type CihazSutunu = z.output<typeof CihazSutunu>;
 export type KusurSutunu = z.output<typeof KusurSutunu>;
+/** 595 (madde 13): başlık tablosunun doküman bilgisi satırları — kaynak değerin nereden geldiği (serbest: formatın sabit yazısı); hücrelerin sırası */
+export const BAS_KAYNAKLARI = ["kod", "surum", "no", "tarih", "revizyon", "nusha", "sonraki", "serbest"] as const;
+export type BasKaynagi = (typeof BAS_KAYNAKLARI)[number];
+export const BAS_KAYNAK_ADI: Record<BasKaynagi, string> = {
+  kod: "Doküman Kodu", surum: "Format sürümü", no: "Rapor No", tarih: "Rapor Tarihi", revizyon: "Revizyon", nusha: "Nüsha sayısı", sonraki: "Sonraki kontrol",
+  serbest: "Serbest satır",
+};
+export const BAS_HUCRELERI = ["logo", "firma", "akr", "ad", "dok"] as const;
+export type BasHucresi = (typeof BAS_HUCRELERI)[number];
+const BasSatiri = z.object({ id: kimlik, ad, kaynak: z.enum(BAS_KAYNAKLARI), metin: z.string().trim().max(200).optional() });
+export type BasSatiri = z.output<typeof BasSatiri>;
 const FirmaSatiri = z.object({
   id: kimlik, ad, kaynak: z.enum(FIRMA_KAYNAKLARI), metin: z.string().max(400).optional(), tam: z.boolean().optional(),
 });
@@ -266,6 +277,10 @@ export const Gorunum = z.object({
       üstünden; A4 210 × 297) · gorunmez: alan yok (araç görünmez imza atar). src/belge/eimza.ts */
   /** 595 (madde 13–15): başlık tablosunun etiketleri, sayfa altı yazısı ({firma}, {kod} yer tutucularıyla), ekipman kodu / türü satırlarının adı */
   bas: z.object({ kod: baslik, surum: baslik, no: baslik, tarih: baslik }).optional(),
+  /** 595 (madde 13): doküman bilgisi satırları (verilmemişse bugünkü dört satır, adları bas'tan) ve hücrelerin sırası (verilmemişse logo · firma ·
+      akreditasyon · belge adı · doküman bilgisi) */
+  basSatirlar: z.array(BasSatiri).max(10).optional(),
+  basSira: z.array(z.enum(BAS_HUCRELERI)).length(5).optional(),
   altYazi: z.string().trim().max(300).optional(),
   ekipmanAd: z.object({ kod: baslik, tur: baslik }).optional(),
   /** 595 (madde 3): 1. bölümün satırları (FirmaSatiri); verilmemişse bugünkü satırlar */
@@ -290,6 +305,12 @@ export const FormatTanimi = z.object({
   };
   const bagli = new Set<string>();
   let tamSayisi = 0;
+  /* 595 (madde 13): başlık tablosu satırları — kimlik tekil, kayıt bilgisi iki kez yok; hücre sırası beşi birden, tekrarsız */
+  t.gorunum.basSatirlar?.forEach((s, j, l) => {
+    tek(s.id, ["gorunum", "basSatirlar", j, "id"]);
+    if (s.kaynak !== "serbest" && l.findIndex((x) => x.kaynak === s.kaynak) !== j) bag.addIssue({ code: "custom", path: ["gorunum", "basSatirlar", j], message: `Başlık bilgisi iki kez: ${BAS_KAYNAK_ADI[s.kaynak]}` });
+  });
+  if (t.gorunum.basSira && new Set(t.gorunum.basSira).size !== BAS_HUCRELERI.length) bag.addIssue({ code: "custom", path: ["gorunum", "basSira"], message: "Başlık hücreleri tekrarsız olmalı." });
   /* 595 (madde 3): firma bilgileri satırları — kimlik tekil, kayıt bilgisi iki kez yok, zorunlular var */
   const fs = t.gorunum.firma?.satirlar;
   if (fs) {

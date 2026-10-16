@@ -2525,6 +2525,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-17 (595m): **BAŞLIK TABLOSU** (sunum 595 madde 13; K1 *"Evet, hepsi"* — *"başlık tablosuna satır eklenir — ör. revizyon, nüsha —; hücrelerin
+  yeri değişir"*). Format yapıcıda kâğıdın başındaki tabloda: doküman bilgisi hücresine "+ Satır" (Revizyon, Nüsha sayısı, Sonraki kontrol, Doküman
+  kodu / Format sürümü / Rapor no / Rapor tarihi çıkarılmışsa geri, Serbest satır — sabit yazı), satırın adı yerinde yazılır, ↑ ↓ ile sırası, × ile
+  çıkar (son satır çıkmaz); her hücrenin altında ← → ile yeri (logo, firma, akreditasyon, belge adı, doküman bilgisi). Değerler kayıttan (revizyon,
+  nüsha Firma ayarlarından, sonraki kontrol tarihi). Dokunulmayan format birebir aynı çizilir; Bakanlık formatında değişiklik yayında uyarı. S.A.Y
+  aynı işi "bas_satiri" / "bas_hucre" ile yapar.
 - 2026-10-17 (595l): **ŞARTLI UYGUN — ÜÇÜNCÜ SONUÇ** (sunum 595 madde 12; K1 *"Evet, hepsi"* — çözüm satırı: *"iki seçeneğin metni yazılır; üçüncü seçenek eklenir
   (ör. şartlı uygun)"*; 595f'te "ayrı karar ister" diye bırakılmıştı, reisim 2026-10-17: *"kalan işleri bitir hiç iş kalmasın"*). Format yapıcıda sonuç
   bölümünün ayarında "Üçüncü seçenek: şartlı uygun" — açılınca kâğıtta sözcüğü yazılır (varsayılan "şartlı uygundur"); sahada sonuç seçiminde üçüncü

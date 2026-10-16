@@ -9,12 +9,12 @@
 import { createElement as h, Fragment, type ReactNode } from "react";
 import { SINIR_ISARETI } from "../format/hesap.ts";
 import {
-  altYazisi, basEtiketleri, cihazSutunlari, fotoKutulari, sonucSozcugu, ekipmanEtiketleri, firmaSatirlari, listeBasliklari, olcumBasliklari, raporDuzeni, sabitEkipmanAlanlari, testBasliklari,
+  altYazisi, BAS_GENISLIK, basSatirlari, basSirasi, cihazSutunlari, fotoKutulari, sonucSozcugu, ekipmanEtiketleri, firmaSatirlari, listeBasliklari, olcumBasliklari, raporDuzeni, sabitEkipmanAlanlari, testBasliklari,
 } from "../format/duzen.ts";
 import { gecerliKunye, kilitliKunye, metotMetni } from "../format/kunye.ts";
 import { formulUygula } from "../format/formul.ts";
 import { degerlendir } from "../format/motor.ts";
-import { EKIPMAN_ALAN_ADI, ekAnahtari, HAZIR_AD, type Bolum, type BolumOf, type CihazAlani, type FirmaSatiri, type ImzaSatiri, type KusurAlani } from "../format/tanim.ts";
+import { EKIPMAN_ALAN_ADI, ekAnahtari, HAZIR_AD, type BasSatiri, type Bolum, type BolumOf, type CihazAlani, type FirmaSatiri, type ImzaSatiri, type KusurAlani } from "../format/tanim.ts";
 /* veri.ts: saf tanımlar (tanimlar.ts node:crypto kullanır — 451: Format kurucunun belge önizlemesi bu çiziciyi tarayıcıda koşar) */
 import { TANIMLAR } from "../tanim/veri.ts";
 import type { BelgeFotosu, BelgeVerisi, ImzaKisiBilgisi } from "./veri.ts";
@@ -340,6 +340,19 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
       case "serbest": return s.metin?.trim() ?? "";
     }
   };
+  /* 595 (madde 13): başlık tablosunun doküman bilgisi */
+  const basDegeri = (s: BasSatiri): string => {
+    switch (s.kaynak) {
+      case "kod": return formKod;
+      case "surum": return String(v.formatSira);
+      case "no": return no;
+      case "tarih": return tarihNo(v.tarih.rapor);
+      case "revizyon": return String(v.revizyon);
+      case "nusha": return String(v.firma.nusha);
+      case "sonraki": return tarihNo(v.tarih.sonraki);
+      case "serbest": return s.metin?.trim() || "";
+    }
+  };
   /* 2. bölüm: kod ve tür; tam ekipman bölümlü formatta (460) ardından YALNIZ o bölümün alanları, formatın sırasıyla ve adıyla; eski formatta
      kayıttan başlayan sabit satırlar (formatın aynı adlı alanı yoksa — saha ekranıyla aynı liste), "Ekipman bölümü", sonra formatın ekipman alanları */
   const ekipman: Cift[] = [
@@ -348,14 +361,14 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
       : [...sabitEkipmanAlanlari(t).map((k): Cift => [EKIPMAN_ALAN_ADI[k], deger(v.ekipman[k])]), ["Ekipman bölümü", deger(v.ekipman.bolum)] as Cift]),
   ];
   return h("article", { className: "rb-sayfa", "aria-label": `${no} rapor belgesi` },
-    h("table", { className: "rb-bas" }, kolonlar(["11%", "27%", "10%", "27%", "25%"]), h("tbody", null, h("tr", null,
-      h("td", { className: "rb-logo" }, firmaLogosu(v.firma)), h("td", { className: "rb-firma" }, h("b", null, v.firma.ad), ...firmaAdresi(v.firma)),
-      /* akreditasyon (TÜRKAK) numarası Firma ayarlarından; yoksa hücre boş (458: "AKR." yer tutucusu anlaşılmıyordu) */
-      h("td", { className: "rb-logo" }, v.firma.akr ? `AKR. ${v.firma.akr}` : ""),
-      h("td", { className: "rb-bas-ad" }, t.gorunum.baslik || `${v.tur.ad} periyodik kontrol raporu`),
-      h("td", { className: "rb-dok" },
-        h("div", null, h("span", null, basEtiketleri(t).kod), `: ${formKod}`), h("div", null, h("span", null, basEtiketleri(t).surum), `: ${v.formatSira}`),
-        h("div", null, h("span", null, basEtiketleri(t).no), `: ${no}`), h("div", null, h("span", null, basEtiketleri(t).tarih), `: ${tarihNo(v.tarih.rapor)}`))))),
+    /* 595 (madde 13): hücrelerin sırası ve doküman bilgisi satırları formatın (verilmemişse bugünkü tablo) */
+    h("table", { className: "rb-bas" }, kolonlar(basSirasi(t).map((x) => BAS_GENISLIK[x])), h("tbody", null, h("tr", null,
+      ...basSirasi(t).map((x) => x === "logo" ? h("td", { key: x, className: "rb-logo" }, firmaLogosu(v.firma))
+        : x === "firma" ? h("td", { key: x, className: "rb-firma" }, h("b", null, v.firma.ad), ...firmaAdresi(v.firma))
+        /* akreditasyon (TÜRKAK) numarası Firma ayarlarından; yoksa hücre boş (458: "AKR." yer tutucusu anlaşılmıyordu) */
+        : x === "akr" ? h("td", { key: x, className: "rb-logo" }, v.firma.akr ? `AKR. ${v.firma.akr}` : "")
+        : x === "ad" ? h("td", { key: x, className: "rb-bas-ad" }, t.gorunum.baslik || `${v.tur.ad} periyodik kontrol raporu`)
+        : h("td", { key: x, className: "rb-dok" }, ...basSatirlari(t).map((s) => h("div", { key: s.id }, h("span", null, s.ad), `: ${basDegeri(s)}`))))))),
     v.imza || v.kesin ? null : h("p", { className: "rb-taslak" }, "İmzasız önizleme — muayene uzmanının son imzasıyla geçerli olur."),
     /* 595 (madde 3): satırlar formatın (adı, sırası, varlığı — format/duzen.ts firmaSatirlari; verilmemişse bugünkü 11 satır), değer kayıttan */
     bolum("1", "Firma bilgileri", bilgiTablosu([

@@ -7,9 +7,9 @@
 import { SINIR_ISARETI } from "../../format/hesap.ts";
 import { kilitliKimlikler } from "../../format/motor.ts";
 import {
-  basEtiketleri, cihazSutunlari, ekipmanEtiketleri, ekipmanTamYap, firmaSatirlari, imzaSatirlari, imzaVarsayilani, listeBasliklari, olcumBasliklari, sonucMetinleri, testBasliklari,
+  basEtiketleri, basSatirlari, basSirasi, cihazSutunlari, ekipmanEtiketleri, ekipmanTamYap, firmaSatirlari, imzaSatirlari, imzaVarsayilani, listeBasliklari, olcumBasliklari, sonucMetinleri, testBasliklari,
 } from "../../format/duzen.ts";
-import { Bolum, EK_SUTUN_EN_COK, LISTE_SUTUN_ADI, LISTE_SUTUN_ALANLARI, TEST_SUTUN_ADI, TEST_SUTUN_TURLERI, type ListeSutunAlani, type TestSutunTuru, CIHAZ_ALAN_ADI, CIHAZ_ALANLARI, EIMZA_KUTU, EKIPMAN_ALAN_ADI, KUSUR_ALAN_ADI, KUSUR_ALANLARI, type CihazAlani, type KusurAlani, FIRMA_KAYNAK_ADI, FIRMA_KAYNAKLARI, FIRMA_ZORUNLU, IMZA_ALAN_ADI, imzaAlanlari, KUNYE_ALANLARI, KURAL_EN_COK, kurucudan, type Blok, type BolumOf, type EkipmanAlani, type FormatTanimi,
+import { BAS_HUCRELERI, BAS_KAYNAK_ADI, BAS_KAYNAKLARI, type BasHucresi, type BasKaynagi, type BasSatiri, Bolum, EK_SUTUN_EN_COK, LISTE_SUTUN_ADI, LISTE_SUTUN_ALANLARI, TEST_SUTUN_ADI, TEST_SUTUN_TURLERI, type ListeSutunAlani, type TestSutunTuru, CIHAZ_ALAN_ADI, CIHAZ_ALANLARI, EIMZA_KUTU, EKIPMAN_ALAN_ADI, KUSUR_ALAN_ADI, KUSUR_ALANLARI, type CihazAlani, type KusurAlani, FIRMA_KAYNAK_ADI, FIRMA_KAYNAKLARI, FIRMA_ZORUNLU, IMZA_ALAN_ADI, imzaAlanlari, KUNYE_ALANLARI, KURAL_EN_COK, kurucudan, type Blok, type BolumOf, type EkipmanAlani, type FormatTanimi,
   type FirmaKaynagi, type FirmaSatiri, type ImzaAlani, type ImzaKisisi, type ImzaSatiri, type KunyeAlani, type Sinir, type SonucKurali } from "../../format/tanim.ts";
 import { kilitliKunye } from "../../format/kunye.ts";
 import { FORMUL_EN_UZUN, formulAdDegistir, formulDuzelt } from "../../format/formul.ts";
@@ -32,11 +32,12 @@ export function kimlikler(t: FormatTanimi): Set<string> {
     if (b.blok === "foto") for (const x of b.kutular ?? []) s.add(x.id);
   }
   for (const x of t.gorunum.firma?.satirlar ?? []) s.add(x.id);
+  for (const x of t.gorunum.basSatirlar ?? []) s.add(x.id);
   return s;
 }
 
 /** önek + en küçük kullanılmayan sayı (ör. "k_a3"): şablonların kimlikleriyle çakışmaz, tanımda tekil */
-export function yeniKimlik(t: FormatTanimi, onek: "b" | "a" | "g" | "m" | "s" | "d" | "i" | "f" | "t" | "k", ek: ReadonlySet<string> = new Set()): string {
+export function yeniKimlik(t: FormatTanimi, onek: "b" | "a" | "g" | "m" | "s" | "d" | "i" | "f" | "t" | "k" | "h", ek: ReadonlySet<string> = new Set()): string {
   const var_ = kimlikler(t);
   let n = 1;
   while (var_.has(`k_${onek}${n}`) || ek.has(`k_${onek}${n}`)) n++;
@@ -599,6 +600,11 @@ export function gorunumBasligiYaz(t: FormatTanimi, a: GorunumBasligi, metin: str
     return { ...t, gorunum: g };
   }
   const [grup, k] = a.split("_") as ["bas" | "ekipman", string];
+  /* 595 (madde 13): satırları tanımlı başlık tablosunda etiket satırın adıdır */
+  if (grup === "bas" && t.gorunum.basSatirlar) {
+    const s = t.gorunum.basSatirlar.find((x) => x.kaynak === k);
+    return s ? basSatiriYaz(t, s.id, { ad: metin.trim() || BAS_KAYNAK_ADI[k as BasKaynagi] }) : t;
+  }
   const d = grup === "bas" ? basEtiketleri({ gorunum: { ...g, bas: undefined } }) : ekipmanEtiketleri({ gorunum: { ...g, ekipmanAd: undefined } });
   const v = temiz(metin, 60), eski = { ...((grup === "bas" ? g.bas : g.ekipmanAd) ?? {}) } as Record<string, string>;
   if (!v || v === (d as Record<string, string>)[k]) delete eski[k]; else eski[k] = v;
@@ -818,4 +824,51 @@ export function sartliYaz(t: FormatTanimi, i: number, acik: boolean): FormatTani
   const y = { ...b };
   if (acik) y.sartli = true; else { delete y.sartli; delete y.sartliMetin; }
   return { ...t, bolumler: t.bolumler.map((x, j) => (j === i ? y : x)) };
+}
+
+/* ── BAŞLIK TABLOSU (595 madde 13): doküman bilgisi satırları (ad, sıra, varlık; değer kayıttan ya da serbest yazı) ve hücrelerin yeri. İlk
+   değişiklikte bugünkü dört satır yeni kimlikle tanıma yazılır (adları bas etiketlerinden; bas kalkar) — dokunulmayan format aynı. ── */
+function basYaz(t: FormatTanimi, l: readonly (Omit<BasSatiri, "id"> & { id?: string })[]): FormatTanimi {
+  const g = { ...t.gorunum };
+  delete g.basSatirlar; delete g.bas;
+  const var_ = kimlikler({ ...t, gorunum: g }), ek = new Set<string>();
+  g.basSatirlar = l.slice(0, 10).map((x) => {
+    const id = x.id && !var_.has(x.id) && !ek.has(x.id) && !x.id.startsWith("bs_") ? x.id : yeniKimlik({ ...t, bolumler: [], gorunum: g }, "h", new Set([...var_, ...ek]));
+    ek.add(id);
+    const y: BasSatiri = { id, ad: x.ad.trim().replace(/\s+/g, " ").slice(0, 200) || BAS_KAYNAK_ADI[x.kaynak], kaynak: x.kaynak };
+    if (x.kaynak === "serbest" && x.metin?.trim()) y.metin = x.metin.trim().slice(0, 200);
+    return y;
+  });
+  return { ...t, gorunum: g };
+}
+/** eklenebilecek bilgiler (başlık tablosunda olmayanlar; serbest satır her zaman) */
+export function eksikBasKaynaklari(t: FormatTanimi): BasKaynagi[] {
+  const l = basSatirlari(t);
+  return l.length >= 10 ? [] : BAS_KAYNAKLARI.filter((k) => k === "serbest" || !l.some((s) => s.kaynak === k));
+}
+export function basSatiriEkle(t: FormatTanimi, kaynak: BasKaynagi, ad?: string): { t: FormatTanimi; id: string | null } {
+  if (!eksikBasKaynaklari(t).includes(kaynak)) return { t, id: null };
+  const y = basYaz(t, [...basSatirlari(t), { ad: (ad ?? BAS_KAYNAK_ADI[kaynak]).trim() || BAS_KAYNAK_ADI[kaynak], kaynak }]);
+  return { t: y, id: y.gorunum.basSatirlar?.at(-1)?.id ?? null };
+}
+export function basSatiriYaz(t: FormatTanimi, id: string, y: { ad?: string; metin?: string }): FormatTanimi {
+  const l = basSatirlari(t);
+  if (!l.some((s) => s.id === id)) return t;
+  return basYaz(t, l.map((s) => (s.id === id ? { ...s, ...(y.ad !== undefined && y.ad.trim() ? { ad: y.ad } : {}), ...(y.metin !== undefined ? { metin: y.metin } : {}) } : s)));
+}
+export function basSatiriSil(t: FormatTanimi, id: string): FormatTanimi {
+  const l = basSatirlari(t);
+  return l.length <= 1 || !l.some((s) => s.id === id) ? t : basYaz(t, l.filter((s) => s.id !== id));
+}
+export function basSatiriTasi(t: FormatTanimi, id: string, yon: -1 | 1): FormatTanimi {
+  const l = basSatirlari(t), j = l.findIndex((s) => s.id === id);
+  return j < 0 || j + yon < 0 || j + yon >= l.length ? t : basYaz(t, tasi(l, j, j + yon));
+}
+/** hücrenin yeri: bir sola / sağa (bugünkü sıra yazılmaz) */
+export function basHucreTasi(t: FormatTanimi, h: BasHucresi, yon: -1 | 1): FormatTanimi {
+  const l = basSirasi(t), j = l.indexOf(h);
+  if (j < 0 || j + yon < 0 || j + yon >= l.length) return t;
+  const yeni = tasi(l, j, j + yon), g = { ...t.gorunum };
+  if (yeni.every((x, k) => x === BAS_HUCRELERI[k])) delete g.basSira; else g.basSira = yeni;
+  return { ...t, gorunum: g };
 }

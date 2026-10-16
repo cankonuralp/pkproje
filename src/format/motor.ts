@@ -19,7 +19,7 @@
 import { noktaHesap, sayiOku, SINIR_ISARETI, sinirSonucu } from "./hesap.ts";
 import { formulDenet, formulluAlan, formulluDeger, formulluMadde, formulluSutun, formulUygula, genelAdlar, satirHesabi, tabloAdlari, type Deger } from "./formul.ts";
 import { etkinKurallar, kuralOzu, kuralUygula } from "./sonuc.ts";
-import { cihazSutunlari, firmaSatirlari, imzaSatirlari, sartliAcik } from "./duzen.ts";
+import { basSatirlari, basSirasi, cihazSutunlari, firmaSatirlari, imzaSatirlari, sartliAcik } from "./duzen.ts";
 import { HAZIR_AD, kurucudan, type RaporSonucu, type Bolum, type BolumOf, type Cevaplar, type FormatTanimi, type SonucKurali } from "./tanim.ts";
 
 export interface Eksik { bolum: string; alan: string; ad: string }
@@ -310,7 +310,8 @@ export function kilitDenetimi(t: FormatTanimi, kaynak: FormatTanimi): string[] {
   const firmaOzu = (x: FormatTanimi) => oz({ satirlar: firmaSatirlari(x).map((s) => ({ ad: s.ad, kaynak: s.kaynak, metin: s.metin, tam: s.tam })) });
   if (kilitVar && firmaOzu(t) !== firmaOzu(kaynak)) sorun("değiştirilmiş", "firma", "Firma bilgileri");
   /* 595 (madde 13–15): başlık tablosunun etiketleri, sayfa altı, ekipman satır adları */
-  const gorunumOzu = (x: FormatTanimi) => oz({ bas: x.gorunum.bas, altYazi: x.gorunum.altYazi, ekipmanAd: x.gorunum.ekipmanAd });
+  const gorunumOzu = (x: FormatTanimi) => oz({ bas: basSatirlari(x).map((s) => ({ ad: s.ad, kaynak: s.kaynak, metin: s.metin })), basSira: basSirasi(x),
+    altYazi: x.gorunum.altYazi, ekipmanAd: x.gorunum.ekipmanAd });
   if (kilitVar && gorunumOzu(t) !== gorunumOzu(kaynak)) sorun("değiştirilmiş", "gorunum", "Başlık tablosu, sayfa altı ve ekipman satır adları");
   /* resmî formatın kimliği: form kodu ve başlık (PDF üst bilgisi) — kilitli öğesi olan kaynakta değişmez */
   if (kilitVar && kaynak.gorunum.formKodu && (t.gorunum.formKodu !== kaynak.gorunum.formKodu || t.gorunum.baslik !== kaynak.gorunum.baslik)) {

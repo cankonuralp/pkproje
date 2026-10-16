@@ -37,16 +37,16 @@ import { useOnayla } from "../../../components/pencere/Onay";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { SINIR_ISARETI } from "../../../format/hesap";
 import {
-  altBaslikAnasi, altGrupSonu, basEtiketleri, cihazSutunlari, ekipmanEtiketleri, firmaSatirlari, imzaSatirlari, listeBasliklari, olcumBasliklari, raporDuzeni, siraBasligi,
+  altBaslikAnasi, altGrupSonu, BAS_GENISLIK, basSatirlari, basSirasi, cihazSutunlari, ekipmanEtiketleri, firmaSatirlari, imzaSatirlari, listeBasliklari, olcumBasliklari, raporDuzeni, siraBasligi,
   sonucMetinleri, testBasliklari,
 } from "../../../format/duzen";
 import {
-  BLOKLAR, CIHAZ_ALAN_ADI, doldurma, DOLDURULUR, EKIPMAN_ALAN_ADI, KUSUR_ALAN_ADI, type CihazAlani, type KusurAlani, EKIPMAN_ALANLARI, FIRMA_KAYNAK_ADI, FIRMA_ZORUNLU, IMZA_ALAN_ADI, IMZA_KISI_ADI, KUNYE_ALAN_ADI, KUNYE_ALANLARI,
+  BAS_KAYNAK_ADI, type BasHucresi, type BasKaynagi, BLOKLAR, CIHAZ_ALAN_ADI, doldurma, DOLDURULUR, EKIPMAN_ALAN_ADI, KUSUR_ALAN_ADI, type CihazAlani, type KusurAlani, EKIPMAN_ALANLARI, FIRMA_KAYNAK_ADI, FIRMA_ZORUNLU, IMZA_ALAN_ADI, IMZA_KISI_ADI, KUNYE_ALAN_ADI, KUNYE_ALANLARI,
   type Blok, type Bolum, type BolumOf, type FirmaKaynagi, type FirmaSatiri, type FormatTanimi, type ImzaAlani, type ImzaSatiri,
 } from "../../../format/tanim";
 import { kilitliKunye } from "../../../format/kunye";
 import {
-  ALT_TURLER, altBaslikEkle, bilgiDizilisiYaz, sartliYaz, fotoKutusuEkle, fotoKutusuSil, fotoKutusuTasi, fotoKutusuYaz, ekSutunAdi, ekSutunEkle, ekSutunSil, ekSutunTasi, ekSutunYaz, eksikEkSutunlar, hazirSatirEkle, hazirSatirSil, hazirSatirTasi, hazirSatirYaz, bolumAdi, eksikTabloAlanlari, kusurTablosuYaz, tabloSutunuEkle, tabloSutunuSil, tabloSutunuTasi, tabloSutunuYaz, eksikFirmaKaynaklari, eksikImzaAlanlari, FIRMA_ADI_SABIT, firmaSatiriEkle, firmaSatiriSil, firmaSatiriTasi,
+  ALT_TURLER, altBaslikEkle, basHucreTasi, basSatiriEkle, basSatiriSil, basSatiriTasi, basSatiriYaz, eksikBasKaynaklari, bilgiDizilisiYaz, sartliYaz, fotoKutusuEkle, fotoKutusuSil, fotoKutusuTasi, fotoKutusuYaz, ekSutunAdi, ekSutunEkle, ekSutunSil, ekSutunTasi, ekSutunYaz, eksikEkSutunlar, hazirSatirEkle, hazirSatirSil, hazirSatirTasi, hazirSatirYaz, bolumAdi, eksikTabloAlanlari, kusurTablosuYaz, tabloSutunuEkle, tabloSutunuSil, tabloSutunuTasi, tabloSutunuYaz, eksikFirmaKaynaklari, eksikImzaAlanlari, FIRMA_ADI_SABIT, firmaSatiriEkle, firmaSatiriSil, firmaSatiriTasi,
   firmaSatiriYaz, bolumBasligiYaz, gorunumBasligiYaz, notSatiriYaz, ogeTasi, sonucYeriYaz, type BolumBasligi, type GorunumBasligi, ekipmanBolumuGeriEkle, ekipmanBolumuKaldir, bolumDuzeni, ekipmanAlaniEkle, gorunumYaz, grupEkle, grupSil, grupYaz,
   imzaKisisiYaz, imzaSatiriEkle, imzaSatiriSil, imzaSatiriTasi, imzaSatiriYaz, kunyeKilitYaz, kurucudan, maddeEkle, ogeEkle, ogeSil, ogeYaz, satirlar, tasi,
   yeniBolum, yeniKimlik,
@@ -150,6 +150,9 @@ function AlanOrnegi({ a }: { a: BolumOf<"bilgi">["alanlar"][number] }) {
 
 type Hucre = readonly [etiket: ReactNode, deger: ReactNode, tam?: boolean];
 /** belgedeki etiket – değer tablosu (belge.ts bilgiTablosu ile aynı dizilim); 595 (madde 9): n — bir satırda kaç bilgi (1 · 2 · 3) */
+/** 595 (madde 13): başlık tablosu hücrelerinin adları (yer tuşlarının erişim adı) */
+const BAS_HUCRE_ADI: Record<BasHucresi, string> = { logo: "Logo hücresi", firma: "Firma hücresi", akr: "Akreditasyon hücresi", ad: "Belge adı hücresi", dok: "Doküman bilgisi hücresi" };
+
 function BilgiTablosu({ l, son, n = 2 }: { l: readonly Hucre[]; son?: ReactNode; n?: 1 | 2 | 3 }) {
   const satir: ReactNode[] = [], genis = n * 2;
   if (n === 1) for (let i = 0; i < l.length; i++) satir.push(<tr key={i}><td className="rb-e">{l[i][0]}</td><td>{l[i][1]}</td></tr>);
@@ -921,21 +924,49 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
   return (
     <article className={`rb-sayfa ${k.kagit}`} aria-label="Rapor formatı · düzenlenebilir belge">
       {/* başlık tablosu (belge.ts): logo · firma · akreditasyon · belge adı · doküman bilgisi */}
+      {/* 595 (madde 13): hücreler sola / sağa taşınır; doküman bilgisi satırları — adı yerinde, ↑ ↓ ×, "+ Satır" */}
       <table className="rb-bas">
-        <colgroup><col style={{ width: "11%" }} /><col style={{ width: "27%" }} /><col style={{ width: "10%" }} /><col style={{ width: "27%" }} /><col style={{ width: "25%" }} /></colgroup>
+        <colgroup>{basSirasi(t).map((x) => <col key={x} style={{ width: BAS_GENISLIK[x] }} />)}</colgroup>
         <tbody><tr>
-          <td className="rb-logo">LOGO</td>
-          <td className="rb-firma"><b>Firmanızın adı</b><br /><span className={k.ornek}>Firma ayarlarından</span></td>
-          <td className="rb-logo"><span className={k.ornek}>Akreditasyon no</span></td>
-          <td className="rb-bas-ad"><Yazi deger={t.gorunum.baslik} ad="Belge başlığı" bos={`${tur.ad} periyodik kontrol raporu`}
-            yaz={(s) => degis(gorunumYaz(t, { baslik: s }))} /></td>
-          <td className="rb-dok">
-            <div><span>{gbas("bas_kod", basEtiketleri(t).kod, "Doküman kodu etiketi")}</span>: <Yazi deger={t.gorunum.formKodu} ad="Doküman kodu" bos="kendiliğinden" uzun={20}
-              yaz={(s) => degis(gorunumYaz(t, { formKodu: s }))} /></div>
-            <div><span>{gbas("bas_surum", basEtiketleri(t).surum, "Format sürümü etiketi")}</span>: taslak</div>
-            <div><span>{gbas("bas_no", basEtiketleri(t).no, "Rapor no etiketi")}</span>: —</div>
-            <div><span>{gbas("bas_tarih", basEtiketleri(t).tarih, "Rapor tarihi etiketi")}</span>: —</div>
-          </td>
+          {basSirasi(t).map((x, j, l) => {
+            const yerTus = (
+              <span className={k.basYer}>
+                <Tus ikon="arrow-left" ad={`${BAS_HUCRE_ADI[x]} · sola`} disabled={j === 0} onClick={() => degis(basHucreTasi(t, x, -1))} />
+                <Tus ikon="arrow-right" ad={`${BAS_HUCRE_ADI[x]} · sağa`} disabled={j === l.length - 1} onClick={() => degis(basHucreTasi(t, x, 1))} />
+              </span>
+            );
+            if (x === "logo") return <td key={x} className="rb-logo">LOGO{yerTus}</td>;
+            if (x === "firma") return <td key={x} className="rb-firma"><b>Firmanızın adı</b><br /><span className={k.ornek}>Firma ayarlarından</span>{yerTus}</td>;
+            if (x === "akr") return <td key={x} className="rb-logo"><span className={k.ornek}>Akreditasyon no</span>{yerTus}</td>;
+            if (x === "ad") {
+              return <td key={x} className="rb-bas-ad"><Yazi deger={t.gorunum.baslik} ad="Belge başlığı" bos={`${tur.ad} periyodik kontrol raporu`}
+                yaz={(s) => degis(gorunumYaz(t, { baslik: s }))} />{yerTus}</td>;
+            }
+            const bl = basSatirlari(t);
+            return (
+              <td key={x} className="rb-dok">
+                {bl.map((s, n) => (
+                  <div key={s.id} className={k.basSatir}>
+                    <span className={k.basEtiket}><Yazi deger={s.ad} ad="Başlık bilgisinin adı" ac={yeniId === s.id} uzun={60} yaz={(v) => degis(basSatiriYaz(t, s.id, { ad: v }))} /></span>:{" "}
+                    {s.kaynak === "kod" ? <Yazi deger={t.gorunum.formKodu} ad="Doküman kodu" bos="kendiliğinden" uzun={20} yaz={(v) => degis(gorunumYaz(t, { formKodu: v }))} />
+                      : s.kaynak === "serbest" ? <Yazi deger={s.metin ?? ""} ad={`${s.ad} · sabit yazı`} bos="yazı" uzun={200} yaz={(v) => degis(basSatiriYaz(t, s.id, { metin: v }))} />
+                      : <span className={k.ornek}>{s.kaynak === "surum" ? "taslak" : s.kaynak === "nusha" ? "Firma ayarlarından" : "—"}</span>}
+                    <span className={k.ogeTus}>
+                      <Tus ikon="arrow-up" ad={`${s.ad} · yukarı`} disabled={n === 0} onClick={() => degis(basSatiriTasi(t, s.id, -1))} />
+                      <Tus ikon="arrow-down" ad={`${s.ad} · aşağı`} disabled={n === bl.length - 1} onClick={() => degis(basSatiriTasi(t, s.id, 1))} />
+                      {bl.length > 1 && <Tus ikon="x" ad={`${s.ad} · çıkar`} onClick={() => { degis(basSatiriSil(t, s.id)); bildir(`“${s.ad}” başlık bilgisi çıkarıldı (taslak).`); }} />}
+                    </span>
+                  </div>
+                ))}
+                {eksikBasKaynaklari(t).length > 0 && <span className={k.ekleSecim}>
+                  <SecimAlani id="kb-bas-ekle" ad="Başlık tablosu · satır ekle" etiketsiz deger="" ipucu="+ Satır"
+                    secenekler={eksikBasKaynaklari(t).map((v) => [v, BAS_KAYNAK_ADI[v], v === "serbest" ? "sabit yazı" : "kayıttan"] as const)}
+                    degistir={(v) => { const y = basSatiriEkle(t, v as BasKaynagi); if (!y.id) return; degis(y.t); setYeniId(y.id); bildir("Başlık tablosuna satır eklendi (taslak); adını yazabilirsiniz."); }} />
+                </span>}
+                {yerTus}
+              </td>
+            );
+          })}
         </tr></tbody>
       </table>
 

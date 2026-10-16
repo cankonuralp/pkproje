@@ -161,3 +161,11 @@
 .eimzaOlculer { display: grid; gap: 6px; flex: 1 1 14rem; min-width: 0; }
 /* kâğıttaki İmza hücresi e-imzanın yeriyse kesik çerçeve */
 .eimzaHucre { display: inline-block; padding: 1px 6px; border: 1px dashed #1fa37a; border-radius: 4px; }
+/* 595 (madde 13): başlık tablosu — hücrenin yer tuşları ve doküman bilgisi satırı */
+.basYer { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px; margin-top: 4px; opacity: .55; }
+td:hover > .basYer, .basYer:focus-within { opacity: 1; }
+@media (pointer: coarse) { .basYer { opacity: 1; } }
+.basSatir { display: flex; align-items: center; flex-wrap: wrap; gap: 2px; }
+/* belge.css ".rb-dok span" etiket genişliğini (84 px) kâğıdın tuşlarına ve örnek değerine uygulamasın */
+:global(.rb-dok) .basSatir span, :global(.rb-dok) .basYer span, :global(.rb-dok) .ekleSecim span { width: auto; }
+:global(.rb-dok) .basSatir .basEtiket { width: 84px; }

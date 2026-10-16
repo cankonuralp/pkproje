@@ -161,6 +161,11 @@ pkproje/
                             11 satır, birebir) · belge.ts firmaDegeri · SahaRaporu firmaSatiri (eski formatta sahanın bugünkü adları; e-posta / telefon künyede
                             kalır) · kurucu.ts firmaSatiri* (SGK / İSG-KATİP adı sabit) · Kagit.tsx 1. bölüm · motor kilitDenetimi firma özü · S.A.Y
                             "firma_satiri" · kilit tests/firma-satirlari, bozan firma-satirlari
+                            · 595 BAŞLIK TABLOSU (madde 13): tanim.ts gorunum.basSatirlar (BasSatiri: ad, kaynak BAS_KAYNAKLARI — kod · surum · no · tarih ·
+                            revizyon · nusha · sonraki · serbest —, metin) + basSira (BAS_HUCRELERI logo · firma · akr · ad · dok) · duzen.ts basSatirlari /
+                            basSirasi / BAS_GENISLIK (verilmemişse bugünkü dört satır ve sıra, birebir) · belge.ts basDegeri · kurucu.ts basSatiri* /
+                            basHucreTasi / eksikBasKaynaklari (ilk değişiklikte satırlar k_h kimliğiyle tanıma; bas etiketleri satır adına) · Kagit.tsx
+                            "+ Satır", ↑ ↓ ×, hücre ← → · motor Bakanlık özü · S.A.Y "bas_satiri" / "bas_hucre" · kilit tests/bas-tablosu, bozan bas-tablosu
                             · 595 BAŞLIKLAR VE SIRA (madde 4, 6–8, 11–15): tanim.ts olcum / test / liste basliklar, olcum sonucYeri (belgede son · baş · gizli),
                             sonuc uygunMetin / uygunDegilMetin, not yonlendirme / satir, gorunum bas / altYazi ({firma}, {kod}) / ekipmanAd · duzen.ts
                             …Basliklari, sonucMetinleri, basEtiketleri, ekipmanEtiketleri, altYazisi (bugünkü yazı varsayılan; belge, saha, kâğıt ortak) ·

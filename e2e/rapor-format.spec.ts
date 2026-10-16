@@ -382,6 +382,17 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await page.getByRole("checkbox", { name: /^Üçüncü seçenek: şartlı uygun/ }).check();
     await page.getByRole("button", { name: "Bölüm ayarlarını kapat" }).click();
     await expect(sonucBolumu.getByRole("button", { name: "şartlı uygundur", exact: true })).toBeVisible();
+    /* 595 (madde 13): başlık tablosuna satır eklenir (revizyon), adı yazılır; doküman bilgisi hücresi sola taşınır */
+    const basTablo = kagit.locator("table.rb-bas");
+    await basTablo.getByRole("combobox", { name: "Başlık tablosu · satır ekle" }).click();
+    await page.getByRole("option", { name: /^Revizyon/ }).click();
+    const basAdi = page.getByRole("textbox", { name: "Başlık bilgisinin adı" });
+    await expect(basAdi).toBeFocused();
+    await basAdi.fill("Rev. No");
+    await basAdi.press("Enter");
+    await expect(basTablo.getByRole("button", { name: "Rev. No", exact: true })).toBeVisible();
+    await basTablo.getByRole("button", { name: "Doküman bilgisi hücresi · sola" }).click();
+    await expect(basTablo.locator("td").nth(3)).toHaveClass(/rb-dok/);
     /* 459: standartlar ve cihazlar türden, kendiliğinden — ZPKR02'den başlatınca türün boş bağlantısı Bakanlık formatınkiyle doldu (440);
        ölçüm cihazları bölümü silinmez */
     await expect(firma.getByText(/TS HD 60364-6/).first()).toBeVisible();

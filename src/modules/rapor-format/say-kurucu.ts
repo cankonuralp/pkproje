@@ -16,15 +16,17 @@
    belgedeki yeri "sonuc_yeri", yorumun satır sayısı "not_satiri", öğelerin sırası "oge_tasi" (kurucu.ts bolumBasligiYaz, gorunumBasligiYaz,
    sonucYeriYaz, notSatiriYaz, ogeTasi). Ölçüm cihazları ve uygunsuzluk tablosunun sütunları "tablo_sutunu" (ekle — cihaz / uygunsuzluk bilgisi —,
    değiştir, çıkar, sola / sağa; uygunsuzlukta tablo / liste), bilgi bölümünün dizilişi "dizilis" (1 · 2 · 3), alanın tam satırı oge_degistir "tam"
-   (kurucu.ts tabloSutunu*, kusurTablosuYaz, bilgiDizilisiYaz; sunum 595 madde 2, 9, 10). */
+   (kurucu.ts tabloSutunu*, kusurTablosuYaz, bilgiDizilisiYaz; sunum 595 madde 2, 9, 10). Başlık tablosunun doküman bilgisi satırları "bas_satiri"
+   (ekle — kayıt bilgisi ya da serbest —, değiştir, çıkar, yukarı, aşağı), hücrelerin yeri "bas_hucre" (sola / sağa; kurucu.ts basSatiri*, basHucreTasi;
+   madde 13). */
 import { SINIR_ISARETI } from "../../format/hesap.ts";
 import {
-  basEtiketleri, cihazSutunlari, ekipmanEtiketleri, firmaSatirlari, imzaSatirlari, listeBasliklari, olcumBasliklari, sonucMetinleri, testBasliklari,
+  basSatirlari, basSirasi, cihazSutunlari, ekipmanEtiketleri, firmaSatirlari, imzaSatirlari, listeBasliklari, olcumBasliklari, sonucMetinleri, testBasliklari,
 } from "../../format/duzen.ts";
 import { etkinKurallar } from "../../format/sonuc.ts";
-import { CIHAZ_ALANLARI, FIRMA_KAYNAK_ADI, FIRMA_KAYNAKLARI, KUSUR_ALANLARI, type CihazAlani, type KusurAlani, IMZA_ALAN_ADI, IMZA_ALANLARI, IMZA_KISI_ADI, KURAL_EN_COK, type Blok, type Bolum, type FormatTanimi, type ImzaAlani, type SonucKurali } from "../../format/tanim.ts";
+import { BAS_HUCRELERI, BAS_KAYNAK_ADI, BAS_KAYNAKLARI, type BasHucresi, type BasKaynagi, CIHAZ_ALANLARI, FIRMA_KAYNAK_ADI, FIRMA_KAYNAKLARI, KUSUR_ALANLARI, type CihazAlani, type KusurAlani, IMZA_ALAN_ADI, IMZA_ALANLARI, IMZA_KISI_ADI, KURAL_EN_COK, type Blok, type Bolum, type FormatTanimi, type ImzaAlani, type SonucKurali } from "../../format/tanim.ts";
 import {
-  bakanlikKuralinaDon, bilgiDizilisiYaz, sartliYaz, fotoKutusuEkle, fotoKutusuSil, fotoKutusuTasi, fotoKutusuYaz, ekSutunAdi, ekSutunEkle, ekSutunSil, ekSutunTasi, ekSutunYaz, eksikEkSutunlar, hazirSatirEkle, hazirSatirSil, hazirSatirTasi, hazirSatirYaz, bolumAdi, eksikTabloAlanlari, kusurTablosuYaz, tabloSutunuEkle, tabloSutunuSil, tabloSutunuTasi, tabloSutunuYaz, bolumBasligiYaz, bolumSil, eimzaYaz, gorunumBasligiYaz, notSatiriYaz, ogeTasi, sonucYeriYaz, type BolumBasligi,
+  bakanlikKuralinaDon, basHucreTasi, basSatiriEkle, basSatiriSil, basSatiriTasi, basSatiriYaz, bilgiDizilisiYaz, sartliYaz, fotoKutusuEkle, fotoKutusuSil, fotoKutusuTasi, fotoKutusuYaz, ekSutunAdi, ekSutunEkle, ekSutunSil, ekSutunTasi, ekSutunYaz, eksikEkSutunlar, hazirSatirEkle, hazirSatirSil, hazirSatirTasi, hazirSatirYaz, bolumAdi, eksikTabloAlanlari, kusurTablosuYaz, tabloSutunuEkle, tabloSutunuSil, tabloSutunuTasi, tabloSutunuYaz, bolumBasligiYaz, bolumSil, eimzaYaz, gorunumBasligiYaz, notSatiriYaz, ogeTasi, sonucYeriYaz, type BolumBasligi,
   type GorunumBasligi, firmaSatiriEkle, firmaSatiriSil, firmaSatiriTasi, firmaSatiriYaz, grupEkle, imzaSatiriEkle, imzaSatiriSil, imzaSatiriTasi, imzaSatiriYaz, maddeEkle, ogeEkle, ogeSil, ogeYaz,
   sonucKuraliYaz, yeniBolum, yeniKimlik, type OgeTuru, type OgeYamasi,
 } from "./kurucu.ts";
@@ -45,9 +47,12 @@ export function formatHaritasi(t: FormatTanimi): string {
   const l: string[] = ["Format taslağının bölümleri (bölüm kimliği · tür · ad) ve öğeleri (öğe kimliği · ad · tür; formül = kendiliğinden hesaplanan):"];
   l.push("## firma · 1. bölüm · Firma bilgileri (satırlar — kimlik · ad · bilgi):");
   for (const s of firmaSatirlari(t)) l.push(`- ${s.id} · ${s.ad} · ${s.kaynak === "serbest" ? `serbest${s.metin ? `, yazı: ${s.metin.slice(0, 80)}` : ""}` : FIRMA_KAYNAK_ADI[s.kaynak]}${s.tam ? " · tam satır" : ""}`);
-  const be = basEtiketleri(t), ee = ekipmanEtiketleri(t);
-  l.push(`Başlık tablosu etiketleri: doküman kodu “${be.kod}”, format sürümü “${be.surum}”, rapor no “${be.no}”, rapor tarihi “${be.tarih}” · ekipman satırları: `
-    + `“${ee.kod}”, “${ee.tur}” · sayfa altı: “${t.gorunum.altYazi ?? "{firma} · {kod}"}”`);
+  const ee = ekipmanEtiketleri(t);
+  /* 595 (madde 13): başlık tablosu — hücrelerin sırası ve doküman bilgisi satırları */
+  l.push(`## Başlık tablosu (sayfa başı) · hücreler soldan sağa: ${basSirasi(t).join(" · ")} (logo · firma · akr = akreditasyon · ad = belge adı · dok = doküman bilgisi)`);
+  l.push("Doküman bilgisi satırları (kimlik · ad · bilgi):");
+  for (const s of basSatirlari(t)) l.push(`- ${s.id} · ${s.ad} · ${s.kaynak === "serbest" ? `serbest${s.metin ? `, yazı: ${s.metin.slice(0, 80)}` : ""}` : BAS_KAYNAK_ADI[s.kaynak]}`);
+  l.push(`Ekipman satırları: “${ee.kod}”, “${ee.tur}” · sayfa altı: “${t.gorunum.altYazi ?? "{firma} · {kod}"}”`);
   const e = t.gorunum.eimza;
   l.push(`E-imzanın yeri: ${!e || e.yer === "hucre" ? "imza bölümündeki İmza hücresi" : e.yer === "gorunmez" ? "görünmez imza"
     : `son sayfada kutu (soldan ${e.x ?? "?"} mm, üstten ${e.y ?? "?"} mm, ${e.en ?? "?"} × ${e.boy ?? "?"} mm)`}`);
@@ -220,6 +225,44 @@ export function formatIslemleri(t0: FormatTanimi, islemler: readonly FormatIslem
       } else { red("eylem: ekle, degistir, cikar, yukari ya da asagi"); continue; }
       if (t === once || JSON.stringify(t) === JSON.stringify(once)) { red(`“${s.ad}” değişmedi (SGK, İSG-KATİP ve başlangıç çıkarılmaz; SGK / İSG-KATİP'in adı değişmez)`); continue; }
       yapilan.push(`Firma bilgileri: “${s.ad}” ${eylem === "cikar" ? "çıkarıldı" : eylem === "degistir" ? "değişti" : "taşındı"}`);
+      continue;
+    }
+    /* 595 (madde 13): başlık tablosu */
+    if (islem === "bas_satiri") {
+      const eylem = metin(x.eylem, 20);
+      if (eylem === "ekle") {
+        const k = metin(x.kaynak, 20);
+        if (!(BAS_KAYNAKLARI as readonly string[]).includes(k)) { red(`kaynak şunlardan biri olmalı: ${BAS_KAYNAKLARI.join(", ")}`); continue; }
+        const y = basSatiriEkle(t, k as BasKaynagi, metin(x.ad) || undefined);
+        if (!y.id) { red(`“${BAS_KAYNAK_ADI[k as BasKaynagi]}” zaten var ya da başlık tablosu dolu (en çok 10 satır)`); continue; }
+        t = k === "serbest" && typeof x.yazi === "string" ? basSatiriYaz(y.t, y.id, { metin: x.yazi }) : y.t;
+        yapilan.push(`Başlık tablosuna satır eklendi: ${metin(x.ad) || BAS_KAYNAK_ADI[k as BasKaynagi]}`);
+        continue;
+      }
+      const k = metin(x.oge), l = basSatirlari(t);
+      const s = l.find((o) => o.id === k) ?? l.find((o) => tr(o.ad) === tr(k)) ?? l.find((o) => o.kaynak === k);
+      if (!s) { red(`başlık tablosu satırı bulunamadı (${metin(x.oge, 60) || "—"})`); continue; }
+      const once = t;
+      if (eylem === "cikar") t = basSatiriSil(t, s.id);
+      else if (eylem === "yukari" || eylem === "asagi") t = basSatiriTasi(t, s.id, eylem === "yukari" ? -1 : 1);
+      else if (eylem === "degistir") {
+        const y: { ad?: string; metin?: string } = {};
+        if (metin(x.ad)) y.ad = metin(x.ad);
+        if (typeof x.yazi === "string") y.metin = x.yazi;
+        t = basSatiriYaz(t, s.id, y);
+      } else { red("eylem: ekle, degistir, cikar, yukari ya da asagi"); continue; }
+      if (JSON.stringify(basSatirlari(t)) === JSON.stringify(basSatirlari(once))) { red(`“${s.ad}” değişmedi (son satır çıkarılmaz)`); t = once; continue; }
+      yapilan.push(`Başlık tablosu: “${s.ad}” ${eylem === "cikar" ? "çıkarıldı" : eylem === "degistir" ? "değişti" : "taşındı"}`);
+      continue;
+    }
+    if (islem === "bas_hucre") {
+      const h = metin(x.alan, 20), eylem = metin(x.eylem, 20);
+      if (!(BAS_HUCRELERI as readonly string[]).includes(h)) { red(`alan şunlardan biri olmalı: ${BAS_HUCRELERI.join(", ")}`); continue; }
+      if (eylem !== "yukari" && eylem !== "asagi") { red("eylem: yukari (sola) ya da asagi (sağa)"); continue; }
+      const once = t;
+      t = basHucreTasi(t, h as BasHucresi, eylem === "yukari" ? -1 : 1);
+      if (t === once) { red(`“${h}” hücresi zaten ${eylem === "yukari" ? "en solda" : "en sağda"}`); continue; }
+      yapilan.push(`Başlık tablosu: ${h} hücresi ${eylem === "yukari" ? "sola" : "sağa"} taşındı (${basSirasi(t).join(" · ")})`);
       continue;
     }
     if (islem === "baslik" && typeof x.alan === "string" && GORUNUM_BASLIKLARI.includes(x.alan as GorunumBasligi)) {
@@ -488,7 +531,7 @@ export function formatIslemleri(t0: FormatTanimi, islemler: readonly FormatIslem
       continue;
     }
     red("bilinmeyen işlem (bolum_ekle, bolum_sil, bolum_adi, grup_ekle, oge_ekle, oge_degistir, oge_sil, oge_tasi, sonuc_kurali, imza_satiri, eimza_yeri, firma_satiri, "
-      + "baslik, sonuc_yeri, not_satiri, tablo_sutunu, dizilis, hazir_satir, foto_kutusu, sartli_secenek)");
+      + "baslik, sonuc_yeri, not_satiri, tablo_sutunu, dizilis, hazir_satir, foto_kutusu, sartli_secenek, bas_satiri, bas_hucre)");
   }
   return { t, yapilan, gecersiz };
 }
@@ -522,6 +565,9 @@ export const FORMAT_ARACI = {
     + "yukari, asagi). foto_kutusu (fotoğraf bölümünün adlı kutuları — sahada fotoğraf o kutuya çekilir: eylem ekle (ad, ör. Etiket), degistir (oge + ad), "
     + "cikar, yukari, asagi). sartli_secenek (sonuç bölümünde üçüncü seçenek “şartlı uygun” — hafif kusurla kullanılabilir, uygunsuzluk açılır: "
     + "bolum + acik true | false; sözcüğü baslik alan sartli). "
+    + "bas_satiri (sayfa başındaki başlık tablosunun doküman bilgisi satırları: eylem ekle — kaynak kod | surum | no | tarih | revizyon | nusha | sonraki | "
+    + "serbest, ad, serbestte yazi —, degistir (oge + ad / yazi), cikar, yukari, asagi). bas_hucre (başlık tablosu hücresinin yeri: alan logo | firma | akr | "
+    + "ad | dok, eylem yukari — sola — | asagi — sağa). "
     + "Değişiklik taslakta olur; kullanıcı Kaydet ve Yayınla der.",
   input_schema: {
     type: "object",
@@ -532,7 +578,7 @@ export const FORMAT_ARACI = {
           type: "object",
           properties: {
             islem: { type: "string", enum: ["bolum_ekle", "bolum_sil", "bolum_adi", "grup_ekle", "oge_ekle", "oge_degistir", "oge_sil", "oge_tasi", "sonuc_kurali", "imza_satiri", "eimza_yeri", "firma_satiri",
-              "baslik", "sonuc_yeri", "not_satiri", "tablo_sutunu", "dizilis", "hazir_satir", "foto_kutusu", "sartli_secenek"] },
+              "baslik", "sonuc_yeri", "not_satiri", "tablo_sutunu", "dizilis", "hazir_satir", "foto_kutusu", "sartli_secenek", "bas_satiri", "bas_hucre"] },
             bolum: { type: "string" }, oge: { type: "string" }, tur: { type: "string" }, ad: { type: "string" }, birim: { type: "string" },
             formul: { type: "string" }, secenekler: { type: "array", items: { type: "string" } }, op: { type: "string" }, sinir: { type: "number" },
             zorunlu: { type: "boolean" }, grup: { type: "string" }, sonra: { type: "string" },
@@ -541,7 +587,7 @@ export const FORMAT_ARACI = {
             bakanlik: { type: "boolean" },
             eylem: { type: "string", enum: ["ekle", "degistir", "cikar", "yukari", "asagi", "tablo", "liste"] }, dizilis: { type: "number" }, acik: { type: "boolean" }, kisi: { type: "string", enum: ["uzman", "teknik", "diger"] },
             bilgi: { type: "string", enum: [...IMZA_ALANLARI] }, yazi: { type: "string" }, tam: { type: "boolean" },
-            kaynak: { type: "string", enum: [...FIRMA_KAYNAKLARI] },
+            kaynak: { type: "string", enum: [...new Set<string>([...FIRMA_KAYNAKLARI, ...BAS_KAYNAKLARI])] },
             yer: { type: "string", enum: ["hucre", "kutu", "gorunmez", "son", "bas", "gizli"] }, alan: { type: "string" }, satir: { type: "number" }, x: { type: "number" }, y: { type: "number" }, en: { type: "number" }, boy: { type: "number" },
           },
           required: ["islem"],

@@ -18,7 +18,7 @@
      2. bölümün sabit satırında zaten var; seri no ve kullanım yeri ekipman kaydına bağlı (raporda değiştirilebilir) alan olur, aynısı varsa çıkar.
      Ekran ve belge aynı listeden; Format kurucu formatın kendisini gösterir (sade: false). */
 import {
-  CIHAZ_ALAN_ADI, EKIPMAN_ALAN_ADI, FIRMA_KAYNAK_ADI, type Bolum, type BolumOf, type CihazAlani, type CihazSutunu, type EkipmanAlani, type FirmaKaynagi, type FirmaSatiri,
+  BAS_HUCRELERI, type BasHucresi, type BasSatiri, CIHAZ_ALAN_ADI, EKIPMAN_ALAN_ADI, FIRMA_KAYNAK_ADI, type Bolum, type BolumOf, type CihazAlani, type CihazSutunu, type EkipmanAlani, type FirmaKaynagi, type FirmaSatiri,
   type FormatTanimi, type ImzaSatiri,
 } from "./tanim.ts";
 import { sonucKurallariniYaz } from "./sonuc.ts";
@@ -230,3 +230,11 @@ export const cihazSutunlari = (b?: BolumOf<"cihaz"> | null): readonly CihazSutun
    (sunucu sayiliCevaplar, saha ekranı ve belge aynı sayım) */
 export const fotoKutulari = (t: Pick<FormatTanimi, "bolumler">): ReadonlySet<string> =>
   new Set(t.bolumler.flatMap((b) => (b.blok === "foto" ? (b.kutular ?? []).map((k) => k.id) : [])));
+
+/* 595 (madde 13): başlık tablosu — doküman bilgisi satırları (verilmemişse bugünkü dört satır, adları basEtiketleri'nden; kimlik bs_*) ve hücre sırası */
+const BAS_VARSAYILAN: readonly ("kod" | "surum" | "no" | "tarih")[] = ["kod", "surum", "no", "tarih"];
+export const basSatirlari = (t: Pick<FormatTanimi, "gorunum">): readonly BasSatiri[] =>
+  t.gorunum.basSatirlar ?? BAS_VARSAYILAN.map((k) => ({ id: `bs_${k}`, ad: basEtiketleri(t)[k], kaynak: k }));
+export const basSirasi = (t: Pick<FormatTanimi, "gorunum">): readonly BasHucresi[] => t.gorunum.basSira ?? BAS_HUCRELERI;
+/** hücrenin belgedeki genişliği (%) — bugünkü tablo 11 · 27 · 10 · 27 · 25 */
+export const BAS_GENISLIK: Record<BasHucresi, string> = { logo: "11%", firma: "27%", akr: "10%", ad: "27%", dok: "25%" };
