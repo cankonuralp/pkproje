@@ -327,6 +327,12 @@ pkproje/
                             YOK; iş tekrarlanmaz) · kiracının bağlantı kaydı (kiraci/coz.ts vt) numaralanamaz · merkez havuzunu içe aktaranlar izin listesinde
                             (tests/havuz-kapsami) · dondurmanın ikinci kilidi kimlik/oturum.ts ETKIN_FIRMA (giriş + oturum, önbellek bayatken de; kendi projeli
                             firmada FV9'a kadar işlemez — FIRMA-VT.md §6.1) · yönetim eylemi önbelleği boşaltır (kilitli)
+                            · FV4 GÖÇ DAĞITICI / YAYIN KAPISI: goc-dagit.ts (betik scripts/goc-dagit.ts; vercel.json buildCommand önce o, --zorunlu ve "&&")
+                            — kip PROBATA_GOC_DAGIT (boş / denetle; uygula FV8'de, şimdi açık hata); merkez (merkezOku) + goc_hedefleri (yönetim işlemi) +
+                            her kurulu kendi projeli firma (kiraciIcinde — vt_firma_dogrula) READ ONLY saglik_denetimi: SON_GOC / GOC_SAYISI değilse,
+                            ulaşılamazsa ya da reddederse çıkış 1; geçici hata bir kez yeniden denenir, bütün denetim ≤ 120 sn; kurulumdaki atlanır,
+                            bakımdaki listede yok (yalnız sayısı); ortamda veritabanı yoksa --zorunlu / VERCEL ile 1, yoksa "atlandı" 0; ana anahtar yalnız
+                            verilen ortamdan; merkeze YAZMAZ; çıktı sırsız, adıyla yalnız sorunlu firma — kilit tests/goc-dagit(-saf).test.ts
   src/server/db/gocler/0091  VERİTABANI HIZI (564): politikada firma süzgeci "(SELECT gecerli_firma())" (sorgu başına bir kez; gecerli_musteri,
                             app.hesap_id aynı) + her yabancı anahtara dizin — YENİ POLİTİKA VE YABANCI ANAHTAR DA BÖYLE (kilit kiraci-izolasyonu,
                             sorgular tests/yardimci/vt-hiz.ts)
@@ -372,6 +378,14 @@ pkproje/
                             · 561: açık rapor SUNUCUDA adresten (rapor-haritasi.ts yoldakiRapor — /raporlar/<id>, /onaylar/<id>; raporlar raporSayDurumu,
                             sema.ts raporYazmaNedeni): durum ne olursa olsun bağlamda numara · tür · durum + yazılamıyorsa nedeni (acikRaporMetni); harita
                             yalnız yazanın Yeni raporunda · panel boyu components/pencere/PanelBoyu (tutamak + başlık sürükleme; S.A.Y ve S.A.Y Chat ortak)
+                            · 2026-10-15 S.A.Y CLAUDE GİBİ (1): İŞ DÖNGÜSÜ — sonuç S.A.Y'a döner, yeniden araç çağırır (tool_choice auto, tur sınırı yok;
+                            tek güvenlik yz/say.ts donguTekrari: aynı iş aynı girdiyle değişmeden → araçsız son tur); SayAsistan isleriYap / sayIsSonucuEylemi
+                            adımların hepsini + canlı hâli taşır; rapora_yaz satir_ekle (tek komutla N satır, raporlar/say-doldur.ts); sınırlar 5 000 giriş /
+                            32 000 token; aracı çağırmadan "yaptım" → sunucu düzeltme turu (yz/say.ts yapildiDiyor, eylemler.ts duzelt; kilit say-dongu bozan)
+                            · 2026-10-16 inceleme: tablo satırı raporun sınırı (format/tanim.ts TABLO_SATIR_EN_COK — Cevaplar ile tek kaynak); döngünün hedefi
+                            başladığı rapor / taslak; sorunun ekleri her turda (sayIsSonucuEkliEylemi); yarıda kalan iş sayılarla + nedeni (server/say.ts
+                            sayIsYarim, sayIsSonucuKaydet yarim); tur mesajı yeniden saymaz; ayırma isteğin boyundan (yz/say.ts istekGirisi); düzeltme yalnız
+                            iş yapan araç varken (isAraciVar); donguTekrari A-B-A-B'yi de görür
   src/modules/say-chat/     S.A.Y CHAT (523–525; pkproje §3.10): sema.ts (saf: alan / başlık seçenekleri, hazır ayar, denetim, dağılım dagit) ·
                             server/ayar.ts (523 tür ayarı — sayChatAyari, sayChatAyarKaydet, chatTanimi; göç 0084 say_chat_ayar) · ui/ChatAyarlari.tsx
                             (529: kendi sayfası /ekipman-turleri/<tür>/say-chat — Format kurucunun tuşlarından ve tür sayfasındaki kısa bölümden) · ui/eylemler.ts · 524 server/kayitlar.ts (sayChatPaneli, chatKaydet / chatFoto /
@@ -396,11 +410,21 @@ pkproje/
                             yazan kapıları) · iş türleri modülde: raporlar/server/islem-baglanti.ts
   src/server/saglik.ts      SAĞLIK (350; 09-G5): /api/saglik denetimleri (db/saglik.ts → saglik_denetimi + 383 is_denetimi — takılı iş, 0072; geçerli tanım 0053 — bağlanan rol, göç sayısı;
                             db/son-goc.ts SON_GOC + GOC_SAYISI — her yeni göçte ikisi güncellenir, testle kilitli) · canlı duman testi: node tools/duman.mjs (salt okunur, çıkış kodu)
+                            · FV7 (2026-10-15) SAĞLIK HER PROJEDE: /api/saglik'e "firma_vt" — firma adresinde o firmanın veritabanı (kiraciHavuzu, kiracı
+                            işleminde vt_firma_dogrula + altı denetim, READ ONLY, 5 sn; tek uçuş, süre sınırı tek uçuşun dışında; firma sonucu örnek başına
+                            önbellekte — sağlam 10 sn, sorunlu 30 sn); kök / yönetim / bilinmeyen adreste yalnız merkez, yedi anahtar HER ZAMAN (liste / sayı
+                            sızmaz; sorunlu firma veritabanında firma_vt=false o adresi ele verir) · /api/saglik/projeler (PROBATA_SAGLIK_SIR ya da CRON_SECRET;
+                            4 aynı anda — arkadaki iş de sayılır —, proje 5 sn, tek bitiş 35 sn, merkez okuma / yazma 5 sn; yanıt yalnız {toplam, tamam,
+                            sorunlu}; proje başına sonuç merkezde firma_vt.son_saglik — sırsız, göç bilgisi biçim denetimli) · duman: PROBATA_DUMAN_SIR
+                            (= PROBATA_SAGLIK_SIR) varsa projeleri de yoklar (yalnız https://<ad>.probata.com.tr / yerel http, sır biçimi denetimli) — kilit
+                            tests/saglik-coklu(-saf).test.ts
   src/server/db/havuz.ts    ortamdan bağlantı: ağda şifresiz bağlantı YOK (PROBATA_VT_SSL=dogrula → kok-sertifika.ts Supabase kökü); Vercel'de boşta bekleme
   vercel.json               deneme yayını (Vercel fra1, https://probata-deneme.vercel.app; veritabanı Supabase eu-central-1 — pkproje.md §11 293)
                             · yalnız main yayınlanır (git.deploymentEnabled; kalem/* önizleme kurmaz — 2026-10-06, Function Storage kotası)
                             · 352: Chromium yalnız PDF işlevinde (PDF basan sayfalar maxDuration 60 — tests/pdf-paket.test.ts); saklama 1 gün
                             · 378: crons /api/is/gece günde bir (01:15 UTC; Vercel ortamında CRON_SECRET)
+                            · FV4 (2026-10-15): buildCommand "node scripts/goc-dagit.ts --zorunlu && node scripts/next.ts build" — göç kapısı düşerse
+                            derleme yok; "public" yazılmaz (derleme günlüğü ekibe özel kalır)
   src/server/kiraci/        kiracı çözümleme (alt alan adı → firma kısa adı; istek.ts: istekKiracisi) · ★ güvenli yazıcılar
   src/server/kimlik/        parola özeti (scrypt) · giriş · oturum (belirteç özeti, kilit) — 2026-10-04 · istek.ts (oturumGerekli, modulGorur,
                             güvenli dönüş adresi) · eylemler.ts (giriş / çıkış sunucu eylemleri)
@@ -451,7 +475,7 @@ pkproje/
                             (geliştirme vitrini /vitrin: yalnız geliştirmede, yayında 404)
   src/styles/               tokens.css (TEK KAYNAK; docs kopyası testle aynı) · yazi.css (Sora) · temel.css · kalip.ts
   public/vendor/            üçüncü parti kendi kökenimizden, adında sürüm (lucide-1.47.0 ikonları)
-  scripts/                  next.ts (telemetri kapalı + webpack) · gelistir.ts (npm run dev) · onizleme.ts + onizleme-sun.ts
+  scripts/                  next.ts (telemetri kapalı + webpack) · gelistir.ts (npm run dev) · onizleme.ts + onizleme-sun.ts · goc-dagit.ts (FV4 yayın kapısı, Vercel derlemesinde)
   tests/                    `*.test.ts` kilit testleri (başında "NEREDEN GELDİ"); yardimci/denetimler.ts saf denetim işlevleri
   tests/bozan/              olumsuz kanıt (`*.bozan.ts`; kaynağı diskte DEĞİŞTİRMEDEN bellekte bozar)
   tools/                    salt okunur araçlar: palet-olc.mjs · sunum-uret.mjs · olc-maket.js · olc-uygulama.js ·

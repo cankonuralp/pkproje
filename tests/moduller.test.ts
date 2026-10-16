@@ -59,7 +59,9 @@ const GELISTIRME_ROTALARI = ["vitrin"];
    2026-10-08 (378, K5): is — zamanlayıcı uçları (gece işi); oturumsuz ama YALNIZ CRON_SECRET'le (aşağıdaki test: ilk iş zamanliYetkili)
    2026-10-08 (392, 09-D2): islem — çevrimdışı kuyruğun tek seferlik işlem ucu; ilk iş aynı köken, oturum ister, yalnız POST (aşağıdaki test)
    2026-10-15 (567, 06-HATA-TAKIBI): hata — tarayıcı hatası ucu; ilk iş aynı köken, yalnız POST, her zaman 204 (bilgi döndürmez), kişi ve firma
-   oturumdan / adresten (aşağıdaki test) */
+   oturumdan / adresten (aşağıdaki test)
+   2026-10-15 (FIRMA-VT FV7): saglik/projeler — proje sağlığı; oturumsuz ama YALNIZ PROBATA_SAGLIK_SIR ya da CRON_SECRET'le, ilk iş zamanliYetkili;
+   saglik altında başka dosya yok — her düzey (tests/saglik-coklu-saf.test.ts, tests/yardimci/denetimler.ts saglikKlasoruEksikleri) */
 const API_UCLARI = ["dosya", "hata", "is", "islem", "olcum", "saglik", "surum", "tanim"];
 const klasorlerOf = (yol: string) => readdirSync(yol).filter((ad) => statSync(join(yol, ad)).isDirectory()).sort();
 

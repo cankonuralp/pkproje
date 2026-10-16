@@ -8,7 +8,8 @@
       (2026-10-15, FIRMA-VT FV2 incelemesi; olumsuz kanıtı tests/bozan/firma-baglanti.bozan.ts);
    3) veritabanı bağlantısı: ağ üzerinden şifresiz bağlantı kurulmaz, TLS'de sunucu yalnız kilitli Supabase kökü ile doğrulanır; kopan bağlantı
       yakalanmamış istisnaya dönüşmez;
-   4) yayın ayarı (vercel.json): uygulama AB'de (Frankfurt) koşar, derleme projenin kendi yolundan (telemetri kapalı, webpack) geçer.
+   4) yayın ayarı (vercel.json): uygulama AB'de (Frankfurt) koşar, derleme projenin kendi yolundan (telemetri kapalı, webpack) geçer; derlemeden önce
+      göç dağıtıcı (yayın kapısı — FIRMA-VT FV4, 2026-10-15).
    Olumsuz kanıt: tests/bozan/yayin.bozan.ts. */
 import assert from "node:assert/strict";
 import { X509Certificate } from "node:crypto";
@@ -220,7 +221,11 @@ test("Supabase kök sertifikası kilitli (parmak izi) ve süresi geçmemiş", ()
 test("yayın ayarı: Vercel'de AB (Frankfurt), derleme projenin kendi yolundan", () => {
   const v = JSON.parse(readFileSync(new URL("../vercel.json", import.meta.url), "utf8")) as Record<string, unknown>;
   assert.deepEqual(v.regions, ["fra1"]);
-  assert.equal(v.buildCommand, "node scripts/next.ts build");
+  /* 2026-10-15 (FIRMA-VT FV4 — kasıtlı beklenti değişikliği): derlemeden ÖNCE göç dağıtıcı (yayın kapısı: kodun beklediği göç merkezde ve her
+     kendi projeli firmada yoksa derleme yok); "&&" — kapı düşerse derleme koşmaz. Önceki beklenti "node scripts/next.ts build" idi. Aynı gün FV4
+     incelemesi: "--zorunlu" — kapı Vercel'in VERCEL sistem değişkenine dayanmaz, veritabanı ayarı derlemeye gelmezse "atlandı" değil 1. Ayrıntılı
+     kilit tests/goc-dagit-saf.test.ts (yayinKapisiEksikleri) */
+  assert.equal(v.buildCommand, "node scripts/goc-dagit.ts --zorunlu && node scripts/next.ts build");
   assert.equal(v.installCommand, "npm ci");
   assert.equal(v.framework, "nextjs");
   /* 378: gece işi günde bir (Vercel Cron); uç yalnız CRON_SECRET'le açılır (src/server/is/yetki.ts) */

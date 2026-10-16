@@ -252,10 +252,13 @@ export function hamYazma(metinler: readonly { ad: string; metin: string }[]): st
 export const MERKEZ_HAVUZU_IZNI: Readonly<Record<string, string>> = {
   "src/app/api/is/gece/route.ts": "gece işinin firma listesi ve iş kaydı merkezde (kendi projeli firmanın havuzu FV6)",
   "src/server/db/firma-havuzu.ts": "kiracı kaydının çözümü (firma_coz) merkezde; ortak firmanın havuzu merkezin kendisi",
+  /* 2026-10-15 (FIRMA-VT FV4): merkezHavuzu() KULLANMAZ — yalnız ortamdanBaglanti; derleme adımında kendi kısa ömürlü havuzunu kurar ve kapatır */
+  "src/server/db/goc-dagit.ts": "göç dağıtıcı (yayın kapısı, derleme adımı): merkez bağlantısı ortamdan (ortamdanBaglanti), goc_hedefleri merkezde",
   "src/server/dosya/depo.ts": "veritabanı deposu (vtDepo): db verilmezse anahtarın firmasının işlemi merkezde (kendi projeli firmanın deposu FV5)",
   "src/server/duyuru/sonra.ts": "Bakanlık duyuruları merkezde (firmaya ait değil)",
   "src/server/hata/kaydet.ts": "hata kaydı merkezde (yalnız yönetim okur)",
-  "src/server/saglik.ts": "sağlık ucu merkezi denetler (firma veritabanları FV7)",
+  /* 2026-10-15 (FIRMA-VT FV7): firmanın veritabanını kiracının havuzundan denetler (kiraciHavuzu); merkezde yalnız merkezin denetimi ve projeler */
+  "src/server/saglik.ts": "sağlık ucu merkezi denetler; proje yoklamasının hedefleri (goc_hedefleri) ve sonuç yazımı (son_saglik) merkezde",
   "src/server/yonetim/eylemler.ts": "yönetim girişi merkezde (yönetici, iki adım)",
   "src/server/yonetim/istek.ts": "yönetim oturumu ve yönetim işlemleri merkezde",
 };
@@ -629,6 +632,130 @@ export function e2eYayinBayragiEksikleri(p: { proxy: string; vitrinAcik: string;
   const izinli = new Set(["src/proxy.ts", "src/app/(gelistirme)/vitrin-acik.ts"]);
   for (const d of p.kaynaklar) if (!izinli.has(d.ad) && d.metin.includes("PROBATA_E2E_YAYIN")) hata.push(`bayrak başka yerde okunuyor: ${d.ad}`);
   return hata;
+}
+
+/** FIRMA-VT FV4 (2026-10-15): YAYIN KAPISI — Vercel derleme komutu ÖNCE göç dağıtıcıyı koşar, "--zorunlu" (veritabanı ayarı derlemeye gelmezse
+    "atlandı" değil 1 — VERCEL sistem değişkenine dayanmaz) ve "&&" ile (kapı 1 dönerse derleme koşmaz, yayın olmaz); kip vercel.json'a yazılmaz
+    (ortam değişkeni PROBATA_GOC_DAGIT — "uygula" FV8'de Vercel ortamından); yalnız main yayınlanır, gece işi zamanlaması yerinde (kapı eklenirken
+    ikisi bozulmadı); derleme günlüğü ve kaynak herkese açılmaz (vercel.json "public" yok — günlükte sorunlu firmanın kısa adı yazılır). Betik
+    mantığı ortam ve bağımsız değişkenlerle çağırır, çıkış kodunu süreç koduna verir. Dönen: bulgu listesi. Kilit tests/goc-dagit-saf.test.ts ·
+    olumsuz kanıt tests/bozan/goc-dagit-saf.bozan.ts. */
+export function yayinKapisiEksikleri(p: { vercel: string; betik: string }): string[] {
+  const hata: string[] = [];
+  let v: { buildCommand?: unknown; git?: { deploymentEnabled?: Record<string, unknown> }; crons?: unknown };
+  try { v = JSON.parse(p.vercel) as typeof v; } catch { return ["vercel.json okunamadı"]; }
+  if (v.buildCommand !== "node scripts/goc-dagit.ts --zorunlu && node scripts/next.ts build") hata.push("derleme komutu göç kapısından geçmiyor");
+  const de = v.git?.deploymentEnabled ?? {};
+  if (de.main !== true || de["kalem/*"] !== false || de["**"] !== false) hata.push("yalnız main yayınlanmıyor (git.deploymentEnabled)");
+  if (JSON.stringify(v.crons) !== JSON.stringify([{ path: "/api/is/gece", schedule: "15 1 * * *" }])) hata.push("gece işi zamanlaması değişmiş");
+  if (p.vercel.includes("PROBATA_GOC_DAGIT")) hata.push("göç kipi vercel.json'da (ortam değişkeni olmalı)");
+  if (Object.hasOwn(v, "public")) hata.push("derleme günlüğü / kaynak herkese açık (vercel.json public)");
+  const betik = yorumsuz(p.betik);
+  if (!/const kod = await gocDagit\(\{ ortam: process\.env, arguman: process\.argv\.slice\(2\), yaz: \(s\) => console\.log\(s\) \}\);/.test(betik)) {
+    hata.push("betik göç dağıtıcıyı ortamla çağırmıyor");
+  }
+  if (!/process\.exitCode = kod;/.test(betik) || !/setTimeout\(\(\) => process\.exit\(kod\), \d+\)\.unref\(\);/.test(betik)) hata.push("betik çıkış kodunu sürece vermiyor");
+  if (/process\.exit(?:Code)?\s*(?:=\s*0|\(0\))/.test(betik)) hata.push("betik 0 ile çıkıyor");
+  return hata;
+}
+
+/** FIRMA-VT FV4 (2026-10-15): göç dağıtıcının "denetle" kipi SALT OKUNUR ve doğru kapılardan geçer (src/server/db/goc-dagit.ts metni): merkez
+    havuzunu (merkezHavuzu) kullanmaz — kendi kısa ömürlü havuzu, sorgu süre sınırlı; yazma SQL'i yok (firma_vt.son_goc denetlemede yazılmaz — FV8);
+    merkez merkezOku'dan (READ ONLY + vt_merkez_dogrula), hedefler ve firmalar READ ONLY işlemde; firma kiraciIcinde'den (vt_firma_dogrula — yanlış
+    veritabanının göçü karşılaştırılmaz). Davranış gerçek PostgreSQL'de tests/goc-dagit.test.ts. Aynı gün FV4 incelemesi: ortam TEK kaynak — modül
+    process.env okumaz, ana anahtar yalnız verilen ortamdan (anaAnahtar'ın varsayılanı process.env; undefined geçilirse o devreye girerdi). Dönen:
+    bulgu listesi. Olumsuz kanıt tests/bozan/goc-dagit-saf.bozan.ts. */
+export function gocDagitEksikleri(metin: string): string[] {
+  const k = yorumsuz(metin);
+  const hata: string[] = [];
+  if (/\bmerkezHavuzu\b/.test(k)) hata.push("merkez havuzunu kullanıyor");
+  if (/\bINSERT\s+INTO\b|\bUPDATE\s+\w+\s+SET\b|\bDELETE\s+FROM\b|\bTRUNCATE\b/i.test(k)) hata.push("denetlemede yazıyor");
+  if ((k.match(/await db\.sorgu\("SET TRANSACTION READ ONLY"\);/g) ?? []).length !== 2) hata.push("hedef / firma işlemi salt okunur değil");
+  if (!/\bmerkezOku\(merkez, /.test(k)) hata.push("merkez merkezOku'dan okunmuyor");
+  if (!/\bkiraciIcinde\(havuz, h\.firma_id, /.test(k)) hata.push("firma vt_firma_dogrula'dan (kiraciIcinde) geçmiyor");
+  if (!/query_timeout: GOC_DAGIT\.sorguMs/.test(k)) hata.push("sorgu süre sınırı yok");
+  if (/\bprocess\.env\b/.test(k) || (k.match(/\banaAnahtar\(/g) ?? []).length !== 1 || !/\banaAnahtar\(e\.PROBATA_SIR_ANAHTARI \?\? ""\)/.test(k)) {
+    hata.push("ortam tek kaynak değil (process.env ya da ana anahtarın varsayılanı)");
+  }
+  return hata;
+}
+
+/** FIRMA-VT FV7 (2026-10-15): SAĞLIK HER PROJEDE — uçların ve çekirdeğin kapıları (metinden; davranış tests/saglik-coklu*.test.ts):
+    · /api/saglik (ucu): kiracı YALNIZ istekKiracisi'nden (Host) — istek nesnesi, başlık, çerez, sorgu okunmaz; çekirdeğe istekKiracisi verilir; yalnız
+      GET; 503 / no-store;
+    · /api/saglik/projeler (projeler): ilk iş zamanliYetkili — PROBATA_SAGLIK_SIR (duman testi; yalnız bu uç) ya da CRON_SECRET (zamanlayıcı), değilse
+      401 (2026-10-15 FV7 incelemesi, en az yetki: önce yalnız CRON_SECRET — duman makinesindeki sır gece işlerini de açıyordu); yanıt YALNIZ {toplam,
+      tamam, sorunlu} (öteki yanıtlar sabit metinli hata); yalnız GET; maxDuration 60 DEĞİL (PDF uçlarının Chromium paketli işlev grubuna girmesin — 352);
+    · çekirdek (src/server/saglik.ts): firma denetimi kiracının havuzuyla (a.havuz(k) → yayında kiraciHavuzu), tek uçuşta ve süre sınırı tek uçuşun
+      DIŞINDA (sureli(tekUcus(…)) — süresi dolan iş arkada sürerken yeni bağlantı açılmaz); merkez denetimi de öyle; yayında firma sonucu önbellekte
+      (saglik() onbellek: firmaSonuclari — sağlam / sorunlu süreleri SAGLIK'ten); kısa ad (kisaAd / kisa_ad) ve hata iletisi (.message) hiç geçmez —
+      ne yanıta ne son_saglik'e ne günlüğe; firmadan gelen göç bilgisi gocBilgisi'nden (biçim denetimi) geçer; kurulumu bitmemiş proje yoklanmaz;
+      merkez okuma / yazma süre sınırlı (sureli … merkezMs); süresi dolan projenin arkadaki işi beklenir (bitmesiniBekle); sonuç sonSaglikYaz ile;
+    · veritabanı (src/server/db/saglik.ts): firma kiraciIcinde'den (vt_firma_dogrula), SALT OKUNUR, sunucuda süre sınırlı; hedefler merkezOku'dan
+      (vt_merkez_dogrula); hedef okuma ve yazma da sunucuda süre sınırlı (statement_timeout — üç yerde); yazma YALNIZ firma_vt.son_saglik /
+      son_saglik_zaman (tek UPDATE, ekleme / silme yok).
+    Dönen: bulgu listesi. Kilit tests/saglik-coklu-saf.test.ts · olumsuz kanıt tests/bozan/saglik-coklu-saf.bozan.ts. */
+export function saglikUcuEksikleri(p: { ucu: string; projeler: string; cekirdek: string; vt: string }): string[] {
+  const hata: string[] = [];
+  const u = yorumsuz(p.ucu), pr = yorumsuz(p.projeler), c = yorumsuz(p.cekirdek), v = yorumsuz(p.vt);
+  const yalnizGet = (m: string) => /export (async )?function GET\b/.test(m) && !/export (async )?function (POST|PUT|PATCH|DELETE)\b/.test(m);
+
+  if (!/import \{ istekKiracisi \} from "\.\.\/\.\.\/\.\.\/server\/kiraci\/istek";/.test(u)) hata.push("sağlık ucu kiracıyı istekKiracisi'nden almıyor");
+  if (!/export async function GET\(\) \{\n {2}const s = await saglik\(istekKiracisi\);/.test(u)) hata.push("sağlık ucu çekirdeği isteğin kiracısıyla çağırmıyor (ya da isteği okuyor)");
+  if (/\b(headers|cookies)\s*\(|searchParams|nextUrl|\brequest\b/.test(u)) hata.push("sağlık ucu isteği / başlığı okuyor (kiracı yalnız Host'tan)");
+  if (!/status: s\.durum === "tamam" \? 200 : 503, headers: \{ "Cache-Control": "no-store" \}/.test(u)) hata.push("sağlık ucu 503 / no-store değil");
+  if (!yalnizGet(u)) hata.push("sağlık ucu yalnız GET değil");
+
+  const govde = pr.slice(pr.indexOf("export async function GET"));
+  if (!/^export async function GET\(istek: Request\) \{\n {2}const yetki = istek\.headers\.get\("authorization"\);\n {2}if \(!zamanliYetkili\(yetki, process\.env\.PROBATA_SAGLIK_SIR\) && !zamanliYetkili\(yetki, process\.env\.CRON_SECRET\)\) \{\n {4}return Response\.json\(\{ hata: "Yetkisiz\." \}, \{ status: 401/.test(govde)) {
+    hata.push("proje sağlığı ucunun ilk işi zamanliYetkili değil");
+  }
+  if ((pr.match(/process\.env\.\w+/g) ?? []).sort().join(" ") !== "process.env.CRON_SECRET process.env.PROBATA_SAGLIK_SIR") hata.push("proje sağlığı ucu başka bir ortam sırrını okuyor");
+  const yanitlar = [...pr.matchAll(/Response\.json\((\{[^}]*\})/g)].map((m) => m[1]!);
+  const veri = yanitlar.filter((y) => !/^\{ hata: "[^"$`]+" \}$/.test(y));
+  if (veri.length !== 1 || veri[0] !== "{ toplam: o.toplam, tamam: o.tamam, sorunlu: o.sorunlu }") hata.push("proje sağlığı yanıtı yalnız {toplam, tamam, sorunlu} değil");
+  if (/\.\.\.\s*o\b/.test(pr)) hata.push("proje sağlığı yanıtı sonucu yayıyor");
+  if (!yalnizGet(pr)) hata.push("proje sağlığı ucu yalnız GET değil");
+  if (/export const maxDuration = 60;/.test(pr)) hata.push("proje sağlığı ucu PDF işlev grubunda (maxDuration 60)");
+  if (!/"Cache-Control": "no-store"/.test(pr)) hata.push("proje sağlığı ucu no-store değil");
+
+  if (!/const havuz = a\.havuz\(k\);/.test(c) || !/await sureli\(tekUcus\(havuz, `firma:\$\{firmaId\}`, \(\) => firmaSaglikOku\(havuz, firmaId, ms\)\), ms\);/.test(c)) {
+    hata.push("firma denetimi kiracının havuzunda / tek uçuşta / süre sınırı tek uçuşun dışında değil");
+  }
+  if (!/await sureli\(tekUcus\(m, "merkez", \(\) => saglikOku\(m\)\), a\.merkezMs \?\? SAGLIK\.merkezMs\);/.test(c)) hata.push("merkez denetimi tek uçuşta / süre sınırlı değil");
+  if (!/saglikDenetle\(\{ merkez: merkezHavuzu, kiraciBul, havuz: kiraciHavuzu, onbellek: firmaSonuclari \}\)/.test(c)) hata.push("yayında firma havuzu kiraciHavuzu değil ya da firma sonucu önbellekte değil");
+  if (!/const firmaSonuclari = kayitOnbellegiKur<true>\(\{ olumluSn: SAGLIK\.olumluSn, olumsuzSn: SAGLIK\.olumsuzSn \}\);/.test(c)) hata.push("firma sonucunun önbellek süreleri SAGLIK'ten değil");
+  if (!/goc: gocBilgisi\(y\.veri\)/.test(c)) hata.push("firmadan gelen göç bilgisi denetimsiz yazılıyor");
+  if (!/await sureli\(projeHedefleri\(a\.merkez, merkezMs\), merkezMs\)/.test(c)) hata.push("hedeflerin okunması süre sınırlı değil");
+  if (!/await bitmesiniBekle\(is, bitis - Date\.now\(\)\);/.test(c)) hata.push("süresi dolan projenin arkadaki işi beklenmiyor (eşzamanlılık sınırı aşılır)");
+  if (/\bkisa_?[aA]d\b/.test(c)) hata.push("çekirdek kısa adı taşıyor (yanıt / son_saglik / günlük firma adı içermez)");
+  if (/\.message\b/.test(c)) hata.push("çekirdek hata iletisini yazıyor (yalnız sınıflanmış neden)");
+  if (!/\.filter\(\(h\) => h\.kurulumTamam\)/.test(c)) hata.push("kurulumu bitmemiş proje yoklanıyor");
+  if (!/await sureli\(sonSaglikYaz\(a\.merkez, /.test(c)) hata.push("yoklama sonucu merkeze yazılmıyor (ya da yazma süre sınırsız)");
+
+  if (!/return kiraciIcinde\(havuz, firmaId, async \(db\) => \{\n {4}await db\.sorgu\("SET TRANSACTION READ ONLY"\);\n {4}await db\.sorgu\("SELECT set_config\('statement_timeout', \$1, true\)"/.test(v)) {
+    hata.push("firma veritabanı kiraciIcinde'den / salt okunur / süre sınırlı okunmuyor");
+  }
+  if (!/await merkezOku\(merkez, /.test(v)) hata.push("hedefler merkezOku'dan (vt_merkez_dogrula) okunmuyor");
+  if ((v.match(/await db\.sorgu\("SELECT set_config\('statement_timeout', \$1, true\)", \[sureMetni\(sureMs\)\]\);/g) ?? []).length !== 3) {
+    hata.push("firma okuma / hedef okuma / yazma sunucuda süre sınırlı değil");
+  }
+  const yazmalar = v.match(/\bINSERT\s+INTO\b|\bUPDATE\s+\w+(?:\s+\w+)?\s+SET\b|\bDELETE\s+FROM\b|\bTRUNCATE\b/gi) ?? [];
+  if (yazmalar.length !== 1 || !/UPDATE firma_vt v SET son_saglik = x\.s, son_saglik_zaman = now\(\)\n\s+FROM jsonb_to_recordset/.test(v)) {
+    hata.push("veritabanı katmanı son_saglik / son_saglik_zaman dışında yazıyor");
+  }
+  return hata;
+}
+
+/** FIRMA-VT FV7 (2026-10-15, FV7 incelemesi): src/app/api/saglik altında YALNIZ iki dosya — oturumsuz sağlık ucu ve sırlı proje sağlığı ucu. Liste
+    klasörün HER düzeyinden (dosyalar() özyinelemeli): daha derine eklenen bir uç (ör. projeler/<x>/route.ts) da yakalanır — önce yalnız ilk düzeydeki
+    klasörlere bakılıyordu. Dönen: bulgu listesi. Kilit tests/saglik-coklu-saf.test.ts · olumsuz kanıt tests/bozan/saglik-coklu-saf.bozan.ts. */
+export const SAGLIK_UC_DOSYALARI: readonly string[] = ["src/app/api/saglik/projeler/route.ts", "src/app/api/saglik/route.ts"];
+export function saglikKlasoruEksikleri(liste: readonly string[]): string[] {
+  return [
+    ...liste.filter((d) => !SAGLIK_UC_DOSYALARI.includes(d)).map((d) => `sağlık klasöründe izinsiz dosya: ${d}`),
+    ...SAGLIK_UC_DOSYALARI.filter((d) => !liste.includes(d)).map((d) => `sağlık ucu yok: ${d}`),
+  ];
 }
 
 

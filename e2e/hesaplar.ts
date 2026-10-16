@@ -53,6 +53,9 @@ export const E2E_YZ = {
 } as const;
 /* gece işi (378): uçtan uca sunucunun zamanlayıcı sırrı — UYDURMA, yalnız geçici test sunucusunda (yayında Vercel ortam değişkeni CRON_SECRET) */
 export const E2E_ZAMANLI_SIR = "e2e-zamanli-is-sirri-uydurma-0000000001";
+/* FIRMA-VT FV7 (2026-10-15, FV7 incelemesi — en az yetki): proje sağlığı ucunun AYRI sırrı (duman testi bunu taşır; gece işlerini açmaz) — UYDURMA,
+   yalnız geçici test sunucusunda (yayında Vercel ortam değişkeni PROBATA_SAGLIK_SIR) */
+export const E2E_SAGLIK_SIR = "e2e-saglik-sirri-uydurma-00000000000001";
 /** 432: e-posta sağlayıcısının yerel taklidi (scripts/e2e-sunucu.ts; PROBATA_EPOSTA_UC) — uydurma anahtar, gerçek sağlayıcıya istek gitmez.
     536: anahtar FİRMANIN (Firma ayarları › E-posta; deneme firmasına sır olarak tohumlanır), gönderen alan adı ve Rapor e-postası; hesaplar bu alan adında
     → Kimden = tuşa basan kişi */

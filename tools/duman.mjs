@@ -4,10 +4,23 @@
    Varsayılan: https://deneme.probata.com.tr ve https://yonetim.probata.com.tr (582, 2026-10-15: probata.com.tr; eski vercel.app adresleri 308 ile yönlenir).
    Denetimler: sağlık ucu (veritabanı, göç güncel, RLS, Supabase API rolleri kapalı, uygulama rolü kısıtlı) · giriş sayfası + güvenlik başlıkları
    (CSP nonce'lu, HSTS, çerçeveye gömülmez, nosniff) · oturumsuz sayfa girişe yönlenir · anonim dosya isteği 403 · oturumsuz tanım dizini 403 ·
-   firma adresinde /yonetim yok · /favicon.ico simgeye yönlenir (409) · yönetim adresinde yalnız /yonetim (firma ekranı ve API 404 — önceden yükleme başlığıyla da). */
+   firma adresinde /yonetim yok · /favicon.ico simgeye yönlenir (409) · yönetim adresinde yalnız /yonetim (firma ekranı ve API 404 — önceden yükleme başlığıyla da).
+   FIRMA-VT FV7 (2026-10-15): sağlık ucu firma adresinde o firmanın veritabanını da denetler ("firma_vt" — bütün denetimler doğru olmalı). Ortamda
+   PROBATA_DUMAN_SIR varsa (değeri yayının PROBATA_SAGLIK_SIR'ı — CRON_SECRET DEĞİL: o gece işlerini de açar, bu makineye konmaz; yalnız bu makinenin
+   ortamında, koda / komut satırına yazılmaz) /api/saglik/projeler de yoklanır: her kendi projeli firma veritabanı — sorunlu 0 olmalı. Sır yalnız
+   https://<ad>.probata.com.tr adresine ya da yerel http adrese gönderilir (yazım hatalı / benzer alan adına gitmez), biçimi önce denetlenir (en az 32
+   görünür ASCII karakter — satır sonu ya da boşluk varsa istek yapılmaz: fetch'in başlık hatası sırrı iletisine yazardı), yönlendirme izlenmez,
+   çıktıya yazılmaz (istek hatasında yalnız hata kodu). Yoksa bu denetim atlanır (sayıya girmez, "atlandı" satırı). 2026-10-15 (FV7 incelemesi):
+   önce her https adresine gidiyordu, biçim denetimi yoktu (gömülü satır sonu sırrı hata iletisiyle çıktıya düşürüyordu). */
 const FIRMA = (process.argv[2] ?? "https://deneme.probata.com.tr").replace(/\/$/, "");
 const YONETIM = (process.argv[3] ?? "https://yonetim.probata.com.tr").replace(/\/$/, "");
+const DUMAN_SIR = (process.env.PROBATA_DUMAN_SIR ?? "").trim();
+/** sırlı isteğin gidebileceği adresler: ürünün alt adresleri (https) ve yerel geliştirme / test (http) */
+const SIRLI_ADRES = /^(?:https:\/\/[a-z0-9-]+\.probata\.com\.tr|http:\/\/(?:127\.0\.0\.1|localhost|[a-z0-9-]+\.localhost)(?::\d{1,5})?)$/;
+/** sırrın biçimi: en az 32 görünür ASCII karakter (boşluk, satır sonu, NUL yok — zamanliYetkili de 32'den kısasını kabul etmez) */
+const SIR_BICIMI = /^[\x21-\x7e]{32,}$/;
 const sonuclar = [];
+const atlananlar = [];
 const denet = async (ad, is) => {
   try {
     const r = await is();
@@ -79,8 +92,29 @@ await denet("yönetim paneli oturumsuz girişe yönlenir", async () => {
   const yer = r.headers.get("location") ?? "";
   return [303, 307, 308].includes(r.status) && /\/yonetim\/giris/.test(yer) ? true : `HTTP ${r.status} → ${yer}`;
 });
+/* FV7: her kendi projeli firma veritabanı (yalnız sırla). Sır yalnız ürünün https alt adresine ya da yerel adrese; yönlendirme izlenmez (al: manual) */
+const PROJELER = "proje sağlığı: her kendi projeli firma veritabanı (sorunlu 0)";
+if (DUMAN_SIR) {
+  await denet(PROJELER, async () => {
+    if (!SIRLI_ADRES.test(FIRMA)) return "sır yalnız https://<ad>.probata.com.tr ya da yerel http adrese gönderilir — istek yapılmadı";
+    if (!SIR_BICIMI.test(DUMAN_SIR)) return "PROBATA_DUMAN_SIR biçimi geçersiz (en az 32 görünür ASCII karakter; boşluk / satır sonu yok) — istek yapılmadı";
+    let r;
+    try {
+      r = await al(`${FIRMA}/api/saglik/projeler`, { Authorization: `Bearer ${DUMAN_SIR}` });
+    } catch (h) {
+      /* hata iletisi isteğin başlığını (sırrı) taşıyabilir — yalnız hata kodu yazılır */
+      const kod = h?.cause?.code ?? h?.code;
+      return `istek gönderilemedi${typeof kod === "string" && /^[A-Z0-9_]{2,40}$/.test(kod) ? ` (${kod})` : ""}`;
+    }
+    const j = await r.json().catch(() => ({}));
+    const sayi = (x) => (Number.isInteger(x) ? x : "?");
+    return r.status === 200 && j.sorunlu === 0 && Number.isInteger(j.toplam) && j.tamam === j.toplam
+      ? true : `HTTP ${r.status}, toplam ${sayi(j.toplam)}, tamam ${sayi(j.tamam)}, sorunlu ${sayi(j.sorunlu)}`;
+  });
+} else atlananlar.push(`${PROJELER} — PROBATA_DUMAN_SIR yok`);
 
 for (const [tamam, ad, neden] of sonuclar) console.log(`${tamam ? "✔" : "✖"} ${ad}${neden ? ` — ${neden}` : ""}`);
+for (const ad of atlananlar) console.log(`– atlandı: ${ad}`);
 const dusen = sonuclar.filter(([t]) => !t).length;
 console.log(dusen ? `\n${dusen}/${sonuclar.length} denetim DÜŞTÜ` : `\n${sonuclar.length}/${sonuclar.length} denetim geçti`);
 process.exit(dusen ? 1 : 0);
