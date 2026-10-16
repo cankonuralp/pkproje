@@ -34,7 +34,7 @@ before(async () => {
   hA = havuzKur(v.A.baglanti);
   hB = havuzKur(v.B.baglanti);
   // örnek veri UYDURMADIR (CLAUDE.md §7)
-  Y = (await v.merkezSahip.query<{ id: string }>("INSERT INTO yonetici (eposta, ad, parola_ozeti, durum) VALUES ($1, 'Deneme Yönetici', $2, 'etkin') RETURNING id::text",
+  Y = (await v.merkezSahip.query<{ id: string }>("INSERT INTO yonetici (eposta, ad, parola_ozeti, durum, totp_sir) VALUES ($1, 'Deneme Yönetici', $2, 'etkin', 'v1.uydurma-dogrulama-anahtari') RETURNING id::text",
     [YE, await parolaOzeti("yonetim-parola-2026")])).rows[0]!.id;
   const ozet = await parolaOzeti("firma-parola-2026");
   for (const f of [v.O, v.A]) {

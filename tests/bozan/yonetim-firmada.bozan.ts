@@ -20,7 +20,7 @@ const YE = "yonetici@probata.example";
 before(async () => {
   v = await cokluVtKur();
   hA = havuzKur(v.A.baglanti);
-  const y = (await v.merkezSahip.query<{ id: string }>("INSERT INTO yonetici (eposta, ad, parola_ozeti, durum) VALUES ($1, 'Deneme Yönetici', $2, 'etkin') RETURNING id::text",
+  const y = (await v.merkezSahip.query<{ id: string }>("INSERT INTO yonetici (eposta, ad, parola_ozeti, durum, totp_sir) VALUES ($1, 'Deneme Yönetici', $2, 'etkin', 'v1.uydurma-dogrulama-anahtari') RETURNING id::text",
     [YE, await parolaOzeti("yonetim-parola-2026")])).rows[0]!.id;
   c = { merkez: (is) => yonetimIcinde(v.merkez, is, { yoneticiId: y }), firmada: (_k, id, is) => yonetimFirmadaIcinde(hA, id, is, { yoneticiEposta: YE }) };
 });
