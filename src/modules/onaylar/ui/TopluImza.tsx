@@ -9,6 +9,7 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { useUyar } from "../../../components/bildirim/Bildirim";
 import { TabloHatasi, zipAc } from "../../../components/disa/oku";
 import { baytIndir, dosyaGunu } from "../../../components/disa/indir";
+import { dosyaBaytlari } from "../../../components/gizli-resim/GizliResim";
 import { zipParcalari } from "../../../components/disa/zip";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { Pencere, pencereMetinSinifi } from "../../../components/pencere/Pencere";
@@ -112,16 +113,12 @@ export function TopluImzaPenceresi({ raporlar, onKapat }: { raporlar: readonly O
     onKapat(degisti.current);
   };
 
-  /* 2) tek ZIP: hazırlanan PDF'ler dosya ucundan (yetki orada yeniden), adları rapor no */
+  /* 2) tek ZIP: hazırlanan PDF'ler oturumlu tek dosya ucundan (GizliResim dosyaBaytlari — yetki uçta yeniden), adları rapor no */
   const indir = async () => {
     setIndiriliyor(true); setHata(null);
     try {
       const dosyalar: [string, Uint8Array][] = [];
-      for (const p of hazir) {
-        const y = await fetch(`/api/dosya/${p.dosya}`, { credentials: "same-origin", cache: "no-store" });
-        if (!y.ok) throw new Error(String(y.status));
-        dosyalar.push([`${p.no}.pdf`, new Uint8Array(await y.arrayBuffer())]);
-      }
+      for (const p of hazir) dosyalar.push([`${p.no}.pdf`, await dosyaBaytlari(p.dosya)]);
       baytIndir(`imzalanacak-raporlar-${dosyaGunu()}.zip`, zipParcalari(dosyalar), "application/zip");
       setIndirildi(true);
     } catch { setHata("PDF'ler indirilemedi; yeniden deneyin."); } finally { setIndiriliyor(false); }
