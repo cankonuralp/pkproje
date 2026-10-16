@@ -377,6 +377,11 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await uygunSozcuk.fill("KULLANIMA UYGUNDUR");
     await uygunSozcuk.press("Enter");
     await expect(sonucBolumu.getByRole("button", { name: "KULLANIMA UYGUNDUR", exact: true })).toBeVisible();
+    /* 595 (madde 12): üçüncü seçenek — bölüm ayarında açılır, sözcüğü kâğıtta yazılır */
+    await sonucBolumu.getByRole("button", { name: /Sonuç ve kanaat · bölüm ayarları$/ }).click();
+    await page.getByRole("checkbox", { name: /^Üçüncü seçenek: şartlı uygun/ }).check();
+    await page.getByRole("button", { name: "Bölüm ayarlarını kapat" }).click();
+    await expect(sonucBolumu.getByRole("button", { name: "şartlı uygundur", exact: true })).toBeVisible();
     /* 459: standartlar ve cihazlar türden, kendiliğinden — ZPKR02'den başlatınca türün boş bağlantısı Bakanlık formatınkiyle doldu (440);
        ölçüm cihazları bölümü silinmez */
     await expect(firma.getByText(/TS HD 60364-6/).first()).toBeVisible();

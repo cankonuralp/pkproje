@@ -43,7 +43,7 @@ import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
 import { ekipmanEtiketleri, firmaSatirlari, fotoKutulari, raporDuzeni, sabitEkipmanAlanlari } from "../../../format/duzen";
 import { degerlendir } from "../../../format/motor";
-import { doldurma, EKIPMAN_ALAN_ADI, KUNYE_ALAN_ADI, KUNYE_ALANLARI, KUNYE_EN_COK, type Cevaplar, type FirmaSatiri, type KunyeAlani } from "../../../format/tanim";
+import { doldurma, EKIPMAN_ALAN_ADI, KUNYE_ALAN_ADI, KUNYE_ALANLARI, KUNYE_EN_COK, type Cevaplar, type FirmaSatiri, type KunyeAlani, type RaporSonucu } from "../../../format/tanim";
 import { gecerliKunye, kayitKunyesi, kilitliKunye, metotMetni } from "../../../format/kunye";
 import { formulDegeri, formulluAlan, formulUygula, type FormulEki } from "../../../format/formul";
 import { satirAnahtari } from "../../../format/motor";
@@ -696,7 +696,7 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
     }
     return { sayi, sonuclar, geriAl: geriAlici(u.geri), satir: u.satir };
   };
-  const sonucYap = (x: "uygun" | "uygun_degil") => {
+  const sonucYap = (x: RaporSonucu) => {
     if (!sonucBolumu) return { var: false, sayi: 0, geriAl: () => 0 };
     const u = sonucuYap(durumRef.current, x);
     return { var: true, sayi: uygula(u, [sonucBolumu]), geriAl: geriAlici(u.geri) };
@@ -765,7 +765,7 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
       },
       sonuc: () => {
         const { d, cevaplar } = sayGuncel.current;
-        return { var: v.tanim.bolumler.some((b) => b.blok === "sonuc"), oneri: d.oneri, secili: cevaplar.sonuc === "uygun" || cevaplar.sonuc === "uygun_degil" ? cevaplar.sonuc : "", kusur: d.kusurlar.length };
+        return { var: v.tanim.bolumler.some((b) => b.blok === "sonuc"), oneri: d.oneri, secili: cevaplar.sonuc, kusur: d.kusurlar.length };
       },
       sonucUygula: (x) => sayGuncel.current.yaz((c) => ({ ...c, sonuc: x })),
       git: (e) => sayGuncel.current.git({ bolum: e.bolum, alan: e.alan, ad: e.ad }),

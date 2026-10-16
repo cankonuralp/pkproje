@@ -2,6 +2,7 @@
    YALNIZ müşteri işleminde çağrılır (src/server/kimlik/istek.ts musteriIslemi → veritabanında probata_musteri): hangi satırın döneceğine
    veritabanının kısıtlayıcı politikaları karar verir — kendi müşterisi, kendi tesis kapsamı, raporun SON imzalı sürümü (193), revizyonla kapanan
    uygunsuzluk değil. Burada ayrıca süzgeç yok (unutulsa da sızmaz); imzasız rapor müşteriye hiç görünmez (rapor_surumu yalnız imzalı). */
+import type { RaporSonucu } from "../../../format/tanim.ts";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { ekipmanlar } from "../../ekipman/server/ekipman.ts";
 import { turOzetleri } from "../../ekipman-turleri/server/turler.ts";
@@ -18,7 +19,7 @@ export interface MusteriRaporu {
   yerine: string | null;
   /** ekipmanPasif: ekipman pasife alınmış — planlanan kontrolde sonraki tarihi sayılmaz (firma tarafındaki kapsam hesabı gibi) */
   ekipmanId: string; ekipmanKod: string; ekipmanPasif: boolean; turAd: string; tesisId: string; tesis: string;
-  kontrol: string | null; sonraki: string | null; sonuc: "uygun" | "uygun_degil" | null; imzalandi: string;
+  kontrol: string | null; sonraki: string | null; sonuc: RaporSonucu | null; imzalandi: string;
   /** imza günü — Türkiye takvimi (gece imzalanan rapor bir gün önce görünmesin — 319 incelemesi) */
   imzaGunu: string;
   /** imzalı PDF dosyasının kimliği (tek indirme ucundan, müşteri rolünde — kendi raporu); boyut: bayt (toplu indirmenin sınırı). null: saklama

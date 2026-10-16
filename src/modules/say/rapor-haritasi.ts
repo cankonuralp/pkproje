@@ -97,7 +97,7 @@ export function raporHaritasi(t: FormatTanimi, turAd: string, canli: CanliRapor,
     l.push(`## ${ekipman.baslik}`);
     for (const a of ekipman.alanlar) l.push(satir(`e:${a.id}`, a, alanDegeri(a.id)));
   }
-  let sonucVar = false, notVar = false;
+  let sonucVar = false, notVar = false, sartliVar = false;
   for (const b of t.bolumler) {
     if (b.blok === "bilgi" && b.id !== ekipman.tam?.id) {
       const alanlar = bilgiAlanlari(b, true);
@@ -139,10 +139,13 @@ export function raporHaritasi(t: FormatTanimi, turAd: string, canli: CanliRapor,
         const ekler = (b.ekSutunlar ?? []).filter((s) => s.alan === "yazi").map((s) => `, x:${m.id}:${s.id} (${s.ad}) = ${tirnak(c.ek[`${m.id}|${s.id}`] ?? "")}`).join("");
         l.push(`- m:${m.id} · ${m.metin.slice(0, 200)} = ${x?.c ? tirnak(x.c) : "—"}${x?.derece ? ` (${x.derece === "agir" ? "ağır" : "hafif"} kusur)` : ""}${x?.not ? ` not ${tirnak(x.not)}` : ""}${ekler}`);
       }
-    } else if (b.blok === "sonuc") sonucVar = true;
+    } else if (b.blok === "sonuc") { sonucVar = true; if (b.sartli) sartliVar = true; }
     else if (b.blok === "not") notVar = true;
   }
-  if (sonucVar) l.push("## Sonuç", `- sonuc · Sonuç (uygun / uygun değil) = ${c.sonuc === "uygun" ? "\"uygun\"" : c.sonuc === "uygun_degil" ? "\"uygun değil\"" : "—"}`);
+  if (sonucVar) {
+    l.push("## Sonuç", `- sonuc · Sonuç (uygun / uygun değil${sartliVar ? " / şartlı uygun" : ""}) = ${c.sonuc === "uygun" ? "\"uygun\"" : c.sonuc === "uygun_degil"
+      ? "\"uygun değil\"" : c.sonuc === "sartli" ? "\"şartlı uygun\"" : "—"}`);
+  }
   if (notVar) l.push("## Uzman yorumu", `- yorum · Muayene uzmanının yorumu (yazı) = ${tirnak(c.yorum)}`);
   /* 557: ölçüm cihazları — seçilebilir cihazın koduyla (boş: kaldır) */
   const cihazlar = cihazlarOku(canli.cihazlar);

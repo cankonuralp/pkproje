@@ -11,6 +11,7 @@
 .hucreSatir { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; min-width: 0; }
 .sonucUygun { color: var(--onay-yazi); font-weight: 600; }
 .sonucHata { color: var(--hata-yazi); font-weight: 600; }
+.sonucSartli { color: var(--uyari-yazi); font-weight: 600; }
 .sonucYok { color: var(--yazi2); }
 .uygunsuzListe { margin: 0; padding-left: 18px; }
 .uygunsuzListe li { margin: 0 0 6px; }

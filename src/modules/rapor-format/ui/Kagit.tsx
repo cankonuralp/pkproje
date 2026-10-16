@@ -46,7 +46,7 @@ import {
 } from "../../../format/tanim";
 import { kilitliKunye } from "../../../format/kunye";
 import {
-  ALT_TURLER, altBaslikEkle, bilgiDizilisiYaz, fotoKutusuEkle, fotoKutusuSil, fotoKutusuTasi, fotoKutusuYaz, ekSutunAdi, ekSutunEkle, ekSutunSil, ekSutunTasi, ekSutunYaz, eksikEkSutunlar, hazirSatirEkle, hazirSatirSil, hazirSatirTasi, hazirSatirYaz, bolumAdi, eksikTabloAlanlari, kusurTablosuYaz, tabloSutunuEkle, tabloSutunuSil, tabloSutunuTasi, tabloSutunuYaz, eksikFirmaKaynaklari, eksikImzaAlanlari, FIRMA_ADI_SABIT, firmaSatiriEkle, firmaSatiriSil, firmaSatiriTasi,
+  ALT_TURLER, altBaslikEkle, bilgiDizilisiYaz, sartliYaz, fotoKutusuEkle, fotoKutusuSil, fotoKutusuTasi, fotoKutusuYaz, ekSutunAdi, ekSutunEkle, ekSutunSil, ekSutunTasi, ekSutunYaz, eksikEkSutunlar, hazirSatirEkle, hazirSatirSil, hazirSatirTasi, hazirSatirYaz, bolumAdi, eksikTabloAlanlari, kusurTablosuYaz, tabloSutunuEkle, tabloSutunuSil, tabloSutunuTasi, tabloSutunuYaz, eksikFirmaKaynaklari, eksikImzaAlanlari, FIRMA_ADI_SABIT, firmaSatiriEkle, firmaSatiriSil, firmaSatiriTasi,
   firmaSatiriYaz, bolumBasligiYaz, gorunumBasligiYaz, notSatiriYaz, ogeTasi, sonucYeriYaz, type BolumBasligi, type GorunumBasligi, ekipmanBolumuGeriEkle, ekipmanBolumuKaldir, bolumDuzeni, ekipmanAlaniEkle, gorunumYaz, grupEkle, grupSil, grupYaz,
   imzaKisisiYaz, imzaSatiriEkle, imzaSatiriSil, imzaSatiriTasi, imzaSatiriYaz, kunyeKilitYaz, kurucudan, maddeEkle, ogeEkle, ogeSil, ogeYaz, satirlar, tasi,
   yeniBolum, yeniKimlik,
@@ -657,7 +657,9 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
           <p className="rb-kutu-metin">
             <Yazi deger={b.cumle} ad="Sonuç cümlesi" bos="Sonuç cümlesi (ör. … ekipmanın kullanımı)" uzun={400}
               yaz={(s) => degis(bolumYaz(t, i, { cumle: s.trim() }))} /> <b>{bas(i, "uygun", sonucMetinleri(b).uygun, "Uygun sonucun sözcüğü")} /{" "}
-              {bas(i, "uygun_degil", sonucMetinleri(b).uygunDegil, "Uygun değil sonucun sözcüğü")}</b>.
+              {bas(i, "uygun_degil", sonucMetinleri(b).uygunDegil, "Uygun değil sonucun sözcüğü")}
+              {/* 595 (madde 12): üçüncü seçenek — bölüm ayarında açılır */}
+              {b.sartli && <> / {bas(i, "sartli", sonucMetinleri(b).sartli, "Şartlı uygun sonucun sözcüğü")}</>}</b>.
           </p>
           {<div className="rb-aciklama">
             <Yazi deger={b.aciklama} ad="Sonuç açıklaması" bos="Açıklama (isteğe bağlı: ağır kusurların tanımı, notlar)" cok uzun={4000}
@@ -815,6 +817,10 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
         <SonucKuraliDuzenleyici t={t} i={i} b={b} degis={degis} />
         <NotDuzenleyici t={t} i={i} b={b} degis={degis} />
       </>}
+      {b.blok === "sonuc" && <div className={k.panelSatir}>
+        <label className={k.panelKutu}><input type="checkbox" checked={!!b.sartli} onChange={(e) => degis(sartliYaz(t, i, e.target.checked))} />
+          Üçüncü seçenek: şartlı uygun (hafif kusurla kullanılabilir; uygunsuzluk kaydı açılır)</label>
+      </div>}
       {b.blok === "sonuc" && <SonucAciklamasi t={t} i={i} b={b} degis={degis} />}
       {b.blok === "not" && <div className={k.panelSatir}>
         <label className={k.panelKutu}><input type="checkbox" checked={b.zorunlu} onChange={(e) => degis(bolumYaz(t, i, { zorunlu: e.target.checked }))} />Yorum zorunlu</label>

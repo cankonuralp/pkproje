@@ -200,7 +200,16 @@ export const testBasliklari = (b: BolumOf<"test">) => ({
 export const listeBasliklari = (b: BolumOf<"liste">) => ({
   no: yazili(b.basliklar?.no, "No"), madde: yazili(b.basliklar?.madde, "Kontrol maddesi"), sonuc: yazili(b.basliklar?.sonuc, "Sonuç"),
 });
-export const sonucMetinleri = (b: BolumOf<"sonuc">) => ({ uygun: yazili(b.uygunMetin, "uygundur"), uygunDegil: yazili(b.uygunDegilMetin, "uygun değildir") });
+export const sonucMetinleri = (b: BolumOf<"sonuc">) => ({
+  uygun: yazili(b.uygunMetin, "uygundur"), uygunDegil: yazili(b.uygunDegilMetin, "uygun değildir"), sartli: yazili(b.sartliMetin, "şartlı uygundur"),
+});
+/** 595 (madde 12): sonuç seçeneğinin belgedeki sözcüğü */
+export const sonucSozcugu = (b: BolumOf<"sonuc">, s: string | null | undefined): string | null => {
+  const m = sonucMetinleri(b);
+  return s === "uygun" ? m.uygun : s === "uygun_degil" ? m.uygunDegil : s === "sartli" ? m.sartli : null;
+};
+/** 595 (madde 12): formatta üçüncü seçenek (şartlı uygun) açık mı */
+export const sartliAcik = (t: Pick<FormatTanimi, "bolumler">) => t.bolumler.some((b) => b.blok === "sonuc" && !!b.sartli);
 export const basEtiketleri = (t: Pick<FormatTanimi, "gorunum">) => ({
   kod: yazili(t.gorunum.bas?.kod, "Doküman Kodu"), surum: yazili(t.gorunum.bas?.surum, "Format sürümü"), no: yazili(t.gorunum.bas?.no, "Rapor No"),
   tarih: yazili(t.gorunum.bas?.tarih, "Rapor Tarihi"),

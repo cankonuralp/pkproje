@@ -1,14 +1,16 @@
 /* müşteri panelinin ortak küçük parçaları: sonuç yazısı (maket sonucHtml), bugüne gün farkı (Türkiye takvim günü), panel sekmeleri, Excel'deki
    rapor bağlantısı */
 import { Sekmeler } from "../../../components/sayfa/Sayfa";
+import type { RaporSonucu } from "../../../format/tanim";
+import { SONUC_AD } from "../../raporlar/sema";
 import stil from "./panel.module.css";
 
 /** bugünden verilen güne kaç gün — 577: tek tanım ../liste.ts'te (sunucu süzgeci de kullanır) */
 export { gunFarki } from "../liste";
 
-export function SonucYazisi({ sonuc }: { sonuc: "uygun" | "uygun_degil" | null }) {
+export function SonucYazisi({ sonuc }: { sonuc: RaporSonucu | null }) {
   if (!sonuc) return <span className={stil.sonucYok}>—</span>;
-  return <span className={sonuc === "uygun" ? stil.sonucUygun : stil.sonucHata}>{sonuc === "uygun" ? "Uygun" : "Uygun değil"}</span>;
+  return <span className={sonuc === "uygun" ? stil.sonucUygun : sonuc === "sartli" ? stil.sonucSartli : stil.sonucHata}>{SONUC_AD[sonuc]}</span>;
 }
 
 /** panel sekmeleri (maket musteri.html a-sekmeler): Raporlar · Uygunsuzluklar (açık sayısı) · Planlanan kontroller (321) · Sözleşmeler (322) ·

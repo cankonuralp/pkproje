@@ -24,7 +24,7 @@
 import type { SatirEkle } from "../../server/yz/say.ts";
 import { alanDegeri, type OkunacakAlan } from "../../format/deger.ts";
 import { ELLE_GEREKCE, ELLE_SONUC } from "../../format/motor.ts";
-import { KUNYE_ALAN_ADI, KUNYE_ALANLARI, KUNYE_EN_COK, TABLO_SATIR_EN_COK, doldurma, ekAnahtari, type BolumOf, type Cevaplar, type FormatTanimi, type KunyeAlani } from "../../format/tanim.ts";
+import { KUNYE_ALAN_ADI, KUNYE_ALANLARI, KUNYE_EN_COK, TABLO_SATIR_EN_COK, doldurma, ekAnahtari, type RaporSonucu, type BolumOf, type Cevaplar, type FormatTanimi, type KunyeAlani } from "../../format/tanim.ts";
 import { doluSatir, okunanHedefleri, type Satir } from "./foto-eslestir.ts";
 import { bilgiAlanlari, ekipmanAlanlari, ekipmanAnahtari, testAlanlari } from "./doldur.ts";
 
@@ -211,7 +211,7 @@ export function maddeleriIsaretle(d: Durum, t: Pick<FormatTanimi, "bolumler">): 
 }
 
 /** K4: sonuç (formatta sonuç bölümü varsa) */
-export function sonucuYap(d: Durum, x: "uygun" | "uygun_degil"): Uygulama {
+export function sonucuYap(d: Durum, x: RaporSonucu): Uygulama {
   const yer = { tur: "sonuc" as const }, onceki = d.cevaplar.sonuc;
   if (onceki === x) return { durum: d, isaretler: [], dolu: [], geri: [] };
   return { durum: yaz(d, yer, x), isaretler: [{ yer, guven: "emin" }], dolu: [], geri: [{ yer, onceki, yeni: x }] };
@@ -361,7 +361,7 @@ export function komutlariUygula(d: Durum, t: FormatTanimi, girisler: readonly Ra
       denetle: alanKutusu(a, { sayi: ELLE_EN_COK.bilgiSayi, metin: ELLE_EN_COK.bilgiMetin }) });
   }
   const tablolar = new Map<string, BolumOf<"olcum">>(), maddeler = new Map<string, { cevaplar: readonly string[]; ad: string; formul: boolean }>();
-  let sonucVar = false, notVar = false;
+  let sonucVar = false, notVar = false, sartliVar = false;
   for (const b of t.bolumler) {
     if (b.blok === "bilgi" && b.id !== ekipman.tam?.id) {
       for (const a of bilgiAlanlari(b, true)) {
@@ -395,7 +395,7 @@ export function komutlariUygula(d: Durum, t: FormatTanimi, girisler: readonly Ra
         kutular.set(`x:${m.id}:${s.id}`, { ad: `${m.metin.slice(0, 60)} · ${s.ad}`, yer: { tur: "ek", id: ekAnahtari(m.id, s.id) }, denetle: (ham) => metinKutusu(ham, 1000) });
       }
     }
-    else if (b.blok === "sonuc") sonucVar = true;
+    else if (b.blok === "sonuc") { sonucVar = true; if (b.sartli) sartliVar = true; }
     else if (b.blok === "not") notVar = true;
   }
   /* 557: künye (kilitli olan elle de değişmez) ve kontrol tarihleri */
@@ -527,8 +527,10 @@ export function komutlariUygula(d: Durum, t: FormatTanimi, girisler: readonly Ra
     }
     if (yer === "sonuc") {
       const x = kucukTr(ham).replace(/[_-]/g, " ");
-      const v = !x ? "" : /uygun ?(değil|degil)|uygunsuz|olumsuz/.test(x) ? "uygun_degil" : /^(uygun|olumlu)$/.test(x) ? "uygun" : null;
-      if (!sonucVar || v === null) { red(sonucVar ? "sonuç uygun ya da uygun değil olmalı" : "formatta sonuç yok", "Sonuç"); continue; }
+      const v = !x ? "" : /uygun ?(değil|degil)|uygunsuz|olumsuz/.test(x) ? "uygun_degil" : /şartlı|sartli|koşullu/.test(x) ? "sartli"
+        : /^(uygun|olumlu)$/.test(x) ? "uygun" : null;
+      if (v === "sartli" && sonucVar && !sartliVar) { red("bu formatta “şartlı uygun” seçeneği yok", "Sonuç"); continue; }
+      if (!sonucVar || v === null) { red(sonucVar ? `sonuç uygun${sartliVar ? ", şartlı uygun" : ""} ya da uygun değil olmalı` : "formatta sonuç yok", "Sonuç"); continue; }
       tekYaz({ tur: "sonuc" }, v, yer, "Sonuç");
       continue;
     }

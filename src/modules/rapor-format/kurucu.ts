@@ -536,7 +536,7 @@ export function firmaSatiriTasi(t: FormatTanimi, id: string, yon: -1 | 1): Forma
 }
 
 /* ── BAŞLIKLAR VE SABİT SÖZCÜKLER (595 madde 4, 6, 7, 11–15) — boş ya da bugünkü yazıyla aynı yazılan kalkar (görünümde hep bugünkü yazı) ── */
-export type BolumBasligi = "sira" | "not" | "sonuc" | "olcum" | "deger" | "sinir" | "no" | "madde" | "uygun" | "uygun_degil" | "yonlendirme";
+export type BolumBasligi = "sira" | "not" | "sonuc" | "olcum" | "deger" | "sinir" | "no" | "madde" | "uygun" | "uygun_degil" | "sartli" | "yonlendirme";
 const temiz = (s: string, n: number) => s.trim().replace(/\s+/g, " ").slice(0, n);
 /** bölümün sabit başlığını / sözcüğünü yazar (yanlış bölüm türü → aynı tanım) */
 export function bolumBasligiYaz(t: FormatTanimi, i: number, a: BolumBasligi, metin: string): FormatTanimi {
@@ -560,10 +560,10 @@ export function bolumBasligiYaz(t: FormatTanimi, i: number, a: BolumBasligi, met
     const d = listeBasliklari({ ...b, basliklar: undefined });
     return yaz({ ...b, basliklar: kume(b.basliklar, a, d[a]) });
   }
-  if (b.blok === "sonuc" && (a === "uygun" || a === "uygun_degil")) {
-    const v = temiz(metin, 120), d = sonucMetinleri({ ...b, uygunMetin: undefined, uygunDegilMetin: undefined });
-    const k = a === "uygun" ? "uygunMetin" : "uygunDegilMetin", y = { ...b };
-    if (!v || v === (a === "uygun" ? d.uygun : d.uygunDegil)) delete y[k]; else y[k] = v;
+  if (b.blok === "sonuc" && (a === "uygun" || a === "uygun_degil" || a === "sartli")) {
+    const v = temiz(metin, 120), d = sonucMetinleri({ ...b, uygunMetin: undefined, uygunDegilMetin: undefined, sartliMetin: undefined });
+    const k = a === "uygun" ? "uygunMetin" : a === "uygun_degil" ? "uygunDegilMetin" : "sartliMetin", y = { ...b };
+    if (!v || v === (a === "uygun" ? d.uygun : a === "uygun_degil" ? d.uygunDegil : d.sartli)) delete y[k]; else y[k] = v;
     return yaz(y);
   }
   if (b.blok === "not" && a === "yonlendirme") {
@@ -809,4 +809,13 @@ export function fotoKutusuSil(t: FormatTanimi, i: number, id: string): FormatTan
 export function fotoKutusuTasi(t: FormatTanimi, i: number, id: string, yon: -1 | 1): FormatTanimi {
   const l = kutulari(t, i), j = l.findIndex((k) => k.id === id);
   return j < 0 || j + yon < 0 || j + yon >= l.length ? t : kutuYaz(t, i, tasi(l, j, j + yon));
+}
+
+/* ── ŞARTLI UYGUN (595 madde 12): sonuç bölümünde üçüncü seçenek — açılır / kapanır; kapanınca sözcüğü de kalkar (eski format aynı) ── */
+export function sartliYaz(t: FormatTanimi, i: number, acik: boolean): FormatTanimi {
+  const b = t.bolumler[i];
+  if (b?.blok !== "sonuc" || acik === !!b.sartli) return t;
+  const y = { ...b };
+  if (acik) y.sartli = true; else { delete y.sartli; delete y.sartliMetin; }
+  return { ...t, bolumler: t.bolumler.map((x, j) => (j === i ? y : x)) };
 }

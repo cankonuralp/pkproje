@@ -24,6 +24,7 @@ export function raporTanim(sec: Secimler): SuzgecTanimi<MusteriRaporu> {
     metin: (r) => [r.no, r.ekipmanKod, r.turAd, r.tesis].join(" "),
     cipler: [
       { k: "uygunsuz", ad: "Uygunsuz", test: (r) => r.sonuc === "uygun_degil" },
+      { k: "sartli", ad: "Şartlı uygun", test: (r) => r.sonuc === "sartli" },
       { k: "yakin", ad: `Sonraki kontrol ${YAKIN} gün içinde`, test: (r) => !!r.sonraki && gunFarki(r.sonraki) <= YAKIN },
     ],
     seciciler: [

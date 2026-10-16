@@ -23,10 +23,10 @@ import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { degerlendir, type Degerlendirme } from "../../../format/motor.ts";
 import { gecerliKunye, kilitliKunye, kunyeKilitHatalari, kunyeKilitTemizle, metotMetni } from "../../../format/kunye.ts";
 import { formulluSutun } from "../../../format/formul.ts";
-import { Cevaplar, doldurma, ekAnahtari, type BolumOf, type FormatTanimi } from "../../../format/tanim.ts";
+import { Cevaplar, doldurma, ekAnahtari, raporSonucuMu, type BolumOf, type FormatTanimi, type RaporSonucu } from "../../../format/tanim.ts";
 import { alanDegeri, type OkunacakAlan } from "../../../format/deger.ts";
 import { bilgiAlanlari, ekipmanAlanlari, testAlanlari } from "../doldur.ts";
-import { fotoKutulari } from "../../../format/duzen.ts";
+import { fotoKutulari, sartliAcik } from "../../../format/duzen.ts";
 import { yzHazirMi } from "../../../server/yz/kullanim.ts";
 import { ekipmanEtiketi, ekipmanKilitle } from "../../ekipman/server/ekipman.ts";
 import { turRaporBilgisi } from "../../ekipman-turleri/server/turler.ts";
@@ -583,7 +583,9 @@ export async function onayaGonder(db: Sorgulayici, kim: Kisi, id: string, surum:
   if (raporGunu > bugun) return { durum: "gecersiz", hatalar: { "tarih.rapor": "Rapor tarihi bugünden sonra olamaz." } };
   if (raporGunu < muayeneGunu) return { durum: "gecersiz", hatalar: { "tarih.rapor": "Rapor tarihi kontrol başlangıcından önce olamaz." } };
   const oto = !cev.sonuc;
-  const sonucu: "uygun" | "uygun_degil" = cev.sonuc || d.oneri;
+  const sonucu: RaporSonucu = cev.sonuc || d.oneri;
+  /* 595 (madde 12): şartlı uygun yalnız formatın sonuç bölümü açtıysa (eski sürümle açılan raporda seçenek yoksa seçilemez) */
+  if (sonucu === "sartli" && !sartliAcik(format.tanim)) return { durum: "gecersiz", hatalar: { sonuc: "Bu raporun formatında “Şartlı uygun” seçeneği yok." } };
   const basGun = muayeneGunu;
   const g = await guncelle(db, RAPOR, id, r.surum, {
     durum: "onayda", cevaplar: { ...cev, sonuc: sonucu }, sonuc: sonucu, sonuc_oto: oto,
@@ -857,6 +859,7 @@ export async function gozdenGecirme(db: Sorgulayici, id: string): Promise<Gozden
   const sonucAd = r.sonuc ? SONUC_AD[r.sonuc as keyof typeof SONUC_AD] : null;
   l.push({ tamam: r.sonuc !== "uygun_degil", metin: `Sonuç: ${sonucAd ?? "seçilmedi"}${r.sonuc && r.sonuc_oto ? " (kriterlere göre)" : ""}` });
   if (r.sonuc === "uygun" && d.kusurlar.length) l.push({ tamam: false, metin: "Uygun değil madde ya da sınır dışı test değeri varken sonuç “Uygun”." });
+  if (r.sonuc === "sartli" && d.kusurlar.some((k) => k.agir)) l.push({ tamam: false, metin: "Ağır kusur varken sonuç “Şartlı uygun”." });
   return l;
 }
 
@@ -916,7 +919,7 @@ export async function raporBelgesiVerisi(db: Sorgulayici, depo: Depo, kim: Kisi,
       tarih: { bas: zamanOku(r.bas), bit: zamanOku(r.bit), sonraki: r.sonraki, takip: r.takip, rapor: r.rapor_tarihi },
       ekipman: { kod: etiket?.kod ?? "—", ...r.ekipman_bilgi },
       tanim: format.tanim, cevaplar: cev.success ? cev.data : Cevaplar.parse({}), cihazlar, fotolar,
-      sonuc: r.sonuc === "uygun" || r.sonuc === "uygun_degil" ? r.sonuc : null,
+      sonuc: raporSonucuMu(r.sonuc) ? r.sonuc : null,
       yazan: { ad: yazan?.ad ?? "—", meslek: yazan?.meslek ?? "diger", meslekMetin: yazan?.meslekMetin ?? null, ekipnet: yazan?.ekipnet ?? null,
         diploma: yazan?.diploma ?? null, oda: yazan?.oda ?? null, eposta: yazan?.eposta ?? null, tel: yazan?.tel ?? null },
       onay: r.onay && onayAd ? { ad: onayAd, zaman: r.onay.toISOString(),
@@ -1008,8 +1011,8 @@ export async function imzaliYukle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaI
     kunye: e.r.kunye, personel: istek.kopya.yazan ?? v.belge.yazan, cihazlar: jsonDizi(istek.kopya.cihazlar ?? v.belge.cihazlar),
     icerik: { cevaplar: v.belge.cevaplar, ekipman_bilgi: e.r.ekipman_bilgi, tarih: v.belge.tarih, format_id: e.r.format_id, format_sira: v.belge.formatSira },
   }, iz);
-  /* uygunsuzluk: imzalı ve "Uygun" olmayan rapordan, motorun kusur listesinden */
-  if (e.r.sonuc === "uygun_degil") {
+  /* uygunsuzluk: imzalı ve "Uygun" olmayan rapordan (Uygun değil · 595 Şartlı uygun — hafif kusurlar takip edilir), motorun kusur listesinden */
+  if (e.r.sonuc === "uygun_degil" || e.r.sonuc === "sartli") {
     const d = degerle(v.belge.tanim, v.belge.cevaplar, e.r);
     const blok = new Map(v.belge.tanim.bolumler.map((x) => [x.id, x.blok]));
     for (const k of d.kusurlar) {

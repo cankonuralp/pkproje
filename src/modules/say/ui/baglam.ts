@@ -5,7 +5,7 @@
    RAPORA GİRER — okunmamış fotoğrafları okuyup boş alanlara girer, maddeleri uygun işaretler, sonucu yapar; her işin "Geri al"ı. İş rapor ekranında
    (raporlar/say-doldur.ts); kaydetmek kişide. */
 import { useSyncExternalStore } from "react";
-import type { Cevaplar } from "../../../format/tanim";
+import type { Cevaplar, RaporSonucu } from "../../../format/tanim";
 import type { SohbetEksik } from "../../../server/yz/sohbet";
 import type { SatirEkle } from "../../../server/yz/say";
 
@@ -29,9 +29,9 @@ export interface SayRaporBagi {
   /** şu an boş olan zorunlu alanlar */
   eksikler: () => SohbetEksik[];
   /** sonuç: formatta var mı, kriterlere göre öneri, seçili, kusur sayısı */
-  sonuc: () => { var: boolean; oneri: "uygun" | "uygun_degil"; secili: "" | "uygun" | "uygun_degil"; kusur: number };
+  sonuc: () => { var: boolean; oneri: RaporSonucu; secili: "" | RaporSonucu; kusur: number };
   /** öneriyi denetçinin seçimiyle aynı yoldan uygular (kaydedilmemiş değişiklik olur) */
-  sonucUygula: (deger: "uygun" | "uygun_degil") => void;
+  sonucUygula: (deger: RaporSonucu) => void;
   /** eksik alana götürür (bölümler açılır, alan odaklanır) */
   git: (e: SohbetEksik) => void;
   /** 384: ekranın canlı cevapları (serbest soruda sunucu özetler — yalnız formatın adları, seçenekler, sayılar yapay zekâya gider) */
@@ -47,7 +47,7 @@ export interface SayRaporBagi {
   /** 542 (K4): cevapsız maddeler "Uygun" */
   maddeleriIsaretle: () => { sayi: number; geriAl: SayGeriAl };
   /** 542 (K4): sonuç — formatta sonuç yoksa var false */
-  sonucYap: (x: "uygun" | "uygun_degil") => { var: boolean; sayi: number; geriAl: SayGeriAl };
+  sonucYap: (x: RaporSonucu) => { var: boolean; sayi: number; geriAl: SayGeriAl };
   /** 542 (K5): S.A.Y'a eklenen fotoğraf rapora okuma fotoğrafı olarak (okunmadan) eklenir — dönen: dosya kimliği ya da neden */
   fotoEkle: (dosya: File, bolum: string) => Promise<{ dosya: string } | { neden: string }>;
   /** 550: ekranın canlı ekipman bilgisi (raporun haritası için — sunucu Haiku'ya yer kimlikleri ve değerlerle gönderir) */

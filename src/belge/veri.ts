@@ -1,7 +1,7 @@
 /* RAPOR BELGESİ VERİSİ — belge çizicinin (belge.ts raporBelgesi) tek girdisi. Sunucuda Raporlar modülü doldurur (raporBelgesi); çizici veritabanına
    gitmez, saf: aynı veri → aynı belge (önizleme ve kesin PDF aynı çiziciden, pkproje §4.2, RAPOR-FORMAT §1 "Görünüm"). Değerler raporun kendi
    kayıtlarından ve açıldığı format sürümünden; fotoğraflar sunucuda okunup veri adresi olarak gömülür (dış adres yok). */
-import type { Cevaplar, FormatTanimi } from "../format/tanim.ts";
+import type { Cevaplar, FormatTanimi, RaporSonucu } from "../format/tanim.ts";
 
 export interface BelgeCihazi { turAd: string; kod: string; marka: string | null; model: string | null; seri: string | null;
   kalTarih: string | null; kalBitis: string | null; sertifika: string | null }
@@ -26,7 +26,7 @@ export interface BelgeVerisi {
   cevaplar: Cevaplar;
   cihazlar: BelgeCihazi[];
   fotolar: BelgeFotosu[];
-  sonuc: "uygun" | "uygun_degil" | null;
+  sonuc: RaporSonucu | null;
   yazan: { ad: string } & ImzaKisiBilgisi;
   /** onaylayan teknik yönetici (yalnız formatın imza bloğunda "teknik" yeri varsa basılır — karar 105); 595: hesabı bir personele bağlıysa o kaydın
       bilgileri (imza bölümünde teknik yöneticinin meslek / diploma / oda sicil … satırları) */

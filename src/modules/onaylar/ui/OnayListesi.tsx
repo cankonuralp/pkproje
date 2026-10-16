@@ -26,7 +26,7 @@ import stil from "./onaylar.module.css";
 
 const TR_ZAMAN = new Intl.DateTimeFormat("tr-TR", { timeZone: "Europe/Istanbul", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 export const zamanYaz = (z: string) => TR_ZAMAN.format(new Date(z)).replace(",", "");
-export const SONUC_ROZET: Record<string, readonly [string, RozetTuru]> = { uygun: ["Uygun", "tamam"], uygun_degil: ["Uygun değil", "red"] };
+export const SONUC_ROZET: Record<string, readonly [string, RozetTuru]> = { uygun: ["Uygun", "tamam"], uygun_degil: ["Uygun değil", "red"], sartli: ["Şartlı uygun", "bekliyor"] };
 const benzersiz = <T,>(l: readonly T[]) => [...new Set(l)];
 const SIRA_AD: Record<string, string> = { no: "Rapor no", durum: "Durum", denetci: "Denetçi" };
 function siraEtiketi(v: string) {
@@ -71,7 +71,7 @@ function kuyrukTanimi(l: readonly OnaySatiri[]): SuzgecTanimi<OnaySatiri> {
     ad: "Kuyrukta ara", ipucu: "Rapor no, kod, tesis", birim: "rapor", imkansiz: "", sayfa: TABLO_SAYFA,
     metin: (r) => [r.no, r.ekipmanKod, r.turAd, r.tesis, r.musteri, r.denetci].join(" "),
     cipler: [
-      { k: "kusurlu", ad: "Kusurlu", test: (r) => r.sonuc === "uygun_degil" },
+      { k: "kusurlu", ad: "Kusurlu", test: (r) => r.sonuc === "uygun_degil" || r.sonuc === "sartli" },
       { k: "eski", ad: "24 saatten eski", test: (r) => r.eski },
     ],
     seciciler: [
@@ -144,8 +144,10 @@ export function OnayKuyrugu({ v }: { v: OnayListeleri }) {
   const onaylanir = s.sonuc.liste.filter(secilir);
   const sutunlar: Sutun<OnaySatiri>[] = [{ ...KUYRUK_SUTUN[0], hucre: secNoHucre(sec, secilir, noHucre) }, ...KUYRUK_SUTUN.slice(1)];
   const topluOnay = async () => {
-    const l = secilen, kusurlu = l.filter((r) => r.sonuc === "uygun_degil").length, sonucsuz = l.filter((r) => !r.sonuc).length;
-    const ek = [kusurlu ? `${kusurlu} rapor “Uygun değil”` : "", sonucsuz ? `${sonucsuz} raporda sonuç seçilmemiş` : ""].filter(Boolean).join(", ");
+    const l = secilen, kusurlu = l.filter((r) => r.sonuc === "uygun_degil").length, sartli = l.filter((r) => r.sonuc === "sartli").length;
+    const sonucsuz = l.filter((r) => !r.sonuc).length;
+    const ek = [kusurlu ? `${kusurlu} rapor “Uygun değil”` : "", sartli ? `${sartli} rapor “Şartlı uygun”` : "", sonucsuz ? `${sonucsuz} raporda sonuç seçilmemiş` : ""]
+      .filter(Boolean).join(", ");
     if (!(await onayla({ baslik: `${l.length} raporu onayla`, tus: "Onayla",
       metin: <>Seçilen <b>{l.length}</b> rapor onaylanacak ve muayene uzmanlarının son imzasına düşecek.{ek && <> Dikkat: {ek}.</>}</> }))) return;
     baslat(async () => {

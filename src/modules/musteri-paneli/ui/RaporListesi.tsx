@@ -42,7 +42,7 @@ const SUTUNLAR: Sutun<MusteriRaporu>[] = [
 /* tanım ../liste.ts'te (sunucu da aynısını koşar); tesis ve yıl seçenekleri sunucudan */
 const tanim = (sec: Record<string, Secenek[]>) => raporTanim(sec);
 
-const SONUC_AD = { uygun: "Uygun", uygun_degil: "Uygun değil" } as const;
+const SONUC_AD = { uygun: "Uygun", uygun_degil: "Uygun değil", sartli: "Şartlı uygun" } as const;
 /** süzgeçteki raporlar → .xlsx (maket rapor-excel sütunları) */
 export function raporExceli(l: readonly MusteriRaporu[]): Uint8Array {
   return xlsxBayt("Raporlar", [["Rapor", "Rapor no", "Ekipman kodu", "Ekipman türü", "Tesis", "Kontrol tarihi", "Sonraki kontrol", "Sonuç"],

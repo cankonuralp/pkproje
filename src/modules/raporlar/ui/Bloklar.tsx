@@ -38,9 +38,9 @@ import { tarihNo } from "../../../components/secim/tarih";
 import { Tus, tusSinifi } from "../../../components/tus/Tus";
 import { SINIR_ISARETI } from "../../../format/hesap";
 import { ELLE_GEREKCE, ELLE_GEREKCE_EN_AZ, ELLE_SONUC, satirAnahtari, sonucKurallari, type Degerlendirme, type SatirDegerlendirmesi } from "../../../format/motor";
-import { imzaSatirlari, olcumBasliklari, sonucMetinleri } from "../../../format/duzen";
+import { imzaSatirlari, olcumBasliklari, sonucMetinleri, sonucSozcugu } from "../../../format/duzen";
 import { formulluAlan, formulluDeger, formulluMadde, formulluSutun, type FormulYeri } from "../../../format/formul";
-import { doldurma, ekAnahtari, HAZIR_AD, type Bolum, type BolumOf, type Cevaplar, type Sinir } from "../../../format/tanim";
+import { doldurma, ekAnahtari, HAZIR_AD, raporSonucuMu, type Bolum, type BolumOf, type Cevaplar, type Sinir } from "../../../format/tanim";
 import { meslek } from "../../personel/sema";
 import { SONUC_AD } from "../sema";
 import type { SahaRaporu } from "../server/raporlar";
@@ -754,18 +754,22 @@ function SonucBlok({ b, bag }: { b: BolumOf<"sonuc">; bag: Baglam }) {
   return (
     <>
       {cumle && (
-        <p className={stil.cumle}>{cumle} {s === "uygun" ? <b>{sm.uygun}</b> : s === "uygun_degil" ? <b>{sm.uygunDegil}</b> : `${sm.uygun} / ${sm.uygunDegil}`}.</p>
+        <p className={stil.cumle}>{cumle} {sonucSozcugu(b, s) ? <b>{sonucSozcugu(b, s)}</b> : [sm.uygun, sm.uygunDegil, ...(b.sartli ? [sm.sartli] : [])].join(" / ")}.</p>
       )}
       {b.aciklama.trim() && <p className={stil.aciklama}>{b.aciklama.trim()}</p>}
       <div className={`${stil.madde} ${stil.maddeSonuc}`}>
         <label className={stil.maddeAd} htmlFor={id}>Sonuç ve kanaat</label>
         <div className={stil.maddeCevap}>
           {bag.oku ? <OkuGirdi id={id} deger={s ? SONUC_AD[s] : ""} />
-            : <SecimAlani id={id} ad="Sonuç ve kanaat" deger={s} secenekler={SONUC} gecersiz={bag.gecersiz(b.id)}
-              degistir={(x) => bag.yaz((c) => ({ ...c, sonuc: x === "uygun" || x === "uygun_degil" ? x : "" }))} />}
+            : <SecimAlani id={id} ad="Sonuç ve kanaat" deger={s} gecersiz={bag.gecersiz(b.id)}
+              secenekler={b.sartli ? [...SONUC, ["sartli", SONUC_AD.sartli, "hafif kusurla kullanılabilir"]] : SONUC}
+              degistir={(x) => bag.yaz((c) => ({ ...c, sonuc: raporSonucuMu(x) && (x !== "sartli" || b.sartli) ? x : "" }))} />}
         </div>
         {!bag.oku && s === "uygun" && bag.d.kusurlar.length > 0 && (
           <p className={`${stil.maddeUyari} ${stil.uyari}`}>Uygun değil madde ya da sınır dışı test değeri varken sonuç “Uygun”.</p>
+        )}
+        {!bag.oku && s === "sartli" && bag.d.kusurlar.some((k) => k.agir) && (
+          <p className={`${stil.maddeUyari} ${stil.uyari}`}>Ağır kusur varken sonuç “Şartlı uygun”.</p>
         )}
         {/* 534 (reisim 2026-10-13: "Sonuç ve kanaat kısmında öneri olmasın"): "Öneri: …" satırı kalktı. Öneri hesabı (format/motor.ts) yerinde:
             sonuç seçilmeden Onaya gönderilirse sonuç ondan yazılır (raporlar.ts), S.A.Y'ın "sonuç" sorusu onu söyler. */}

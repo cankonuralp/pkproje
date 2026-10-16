@@ -1,6 +1,7 @@
 /* S.A.Y SOHBET GEÇMİŞİ (380; göç 0071 yz_sohbet) — kişinin kendi geçmişi (RLS: firma + hesap), kalıcı (reisim 2026-10-03: "geçmiş silinmez, geçmiş
    olayı önemli"). Yazma ve temizleme tanımlayıcı-yetkili işlevlerle (uygulama rolünün tabloya yazma / silme hakkı yok; kişi işlemin bağlamından);
    kişi başı en yeni 200 ileti. Çekirdek: modül (src/modules/say) buradan çağırır. */
+import type { RaporSonucu } from "../../format/tanim.ts";
 import type { Sorgulayici } from "../db/kiraci.ts";
 
 /** kuralla cevaplanan "Beni ne bekliyor?" satırı (yalnız modül adı ve sayılar — kişi / müşteri bilgisi yok) */
@@ -8,7 +9,7 @@ export interface SohbetBekleyen { ad: string; href: string; kirmizi: number; sar
 /** rapor ekranında "Eksik alanlar neler?" (382): alanın adı, bölümü, ekrandaki anahtarı ("Git" alana götürür) */
 export interface SohbetEksik { ad: string; bolum: string; bolumAd: string; alan: string }
 /** rapor ekranında "Sonuç ne olmalı?" öneri kartı (382): yalnız o rapor açıkken uygulanır; sonucu bir kez işaretlenir */
-export interface SohbetOnerisi { alan: "sonuc"; deger: "uygun" | "uygun_degil"; ad: string; durum: "" | "uygulandi" | "vazgecildi" }
+export interface SohbetOnerisi { alan: "sonuc"; deger: RaporSonucu; ad: string; durum: "" | "uygulandi" | "vazgecildi" }
 /** 522: soruya eklenen dosyanın yalnız adı, boyu ve türü (dosya saklanmaz) */
 export interface SohbetEkAdi { ad: string; boyut: number; tur: "foto" | "pdf" | "word" }
 /** 542: S.A.Y'ın rapora yaptığı iş (ne istendi, dolu kalan alan sayısı) — "Geri al" / "Dolu alanları da değiştir" yalnız o sayfada, işi yapan ekranda */

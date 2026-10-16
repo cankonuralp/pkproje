@@ -9,7 +9,7 @@
 import { createElement as h, Fragment, type ReactNode } from "react";
 import { SINIR_ISARETI } from "../format/hesap.ts";
 import {
-  altYazisi, basEtiketleri, cihazSutunlari, fotoKutulari, ekipmanEtiketleri, firmaSatirlari, listeBasliklari, olcumBasliklari, raporDuzeni, sabitEkipmanAlanlari, sonucMetinleri, testBasliklari,
+  altYazisi, basEtiketleri, cihazSutunlari, fotoKutulari, sonucSozcugu, ekipmanEtiketleri, firmaSatirlari, listeBasliklari, olcumBasliklari, raporDuzeni, sabitEkipmanAlanlari, testBasliklari,
 } from "../format/duzen.ts";
 import { gecerliKunye, kilitliKunye, metotMetni } from "../format/kunye.ts";
 import { formulUygula } from "../format/formul.ts";
@@ -25,7 +25,7 @@ const tarihNo = (s: string | null | undefined) => (s ? `${s.slice(8, 10)}.${s.sl
 const saatliNo = (s: string | null | undefined) => (s ? `${tarihNo(s)} ${s.slice(11, 16)}` : "-");
 const deger = (s: string | null | undefined) => (s && s.trim() ? s : "-");
 const SAYI_AD = ["sıfır", "bir", "iki", "üç", "dört", "beş"];
-const SONUC = { uygun: "Uygun", uygun_degil: "Uygun değil" } as const;
+const SONUC = { uygun: "Uygun", uygun_degil: "Uygun değil", sartli: "Şartlı uygun" } as const;
 const kucuk = (s: string) => s.toLocaleLowerCase("tr");
 const ZAMAN = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 /** zaman damgası → "GG.AA.YYYY SS:DD" (Türkiye saati) */
@@ -301,9 +301,9 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
         }))
         : kutu("Kusur yok.");
       case "sonuc": {
-        const cumle = b.cumle.trim(), aciklama = b.aciklama.trim(), sm = sonucMetinleri(b);
+        const cumle = b.cumle.trim(), aciklama = b.aciklama.trim();
         return h(Fragment, null, cumle
-          ? kutu(`${cumle} `, h("b", null, v.sonuc === "uygun" ? sm.uygun : v.sonuc === "uygun_degil" ? sm.uygunDegil : "-"), ".")
+          ? kutu(`${cumle} `, h("b", null, sonucSozcugu(b, v.sonuc) ?? "-"), ".")
           : kutu("Sonuç: ", h("b", null, v.sonuc ? SONUC[v.sonuc] : "-")),
           /* 426: Bakanlık formatının sonuç metni (ağır kusurlar tanımı, açıklamalar) satır satır */
           aciklama ? h("div", { className: "rb-aciklama" }, ...aciklama.split("\n").map((s, i) => h("p", { key: i }, s))) : null);

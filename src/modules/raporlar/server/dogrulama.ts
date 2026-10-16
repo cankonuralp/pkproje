@@ -7,9 +7,10 @@ import { firmaBelgeKunyesi } from "../../../server/ayar/ayar.ts";
 import { ekipmanEtiketi } from "../../ekipman/server/ekipman.ts";
 import { turRaporBilgisi } from "../../ekipman-turleri/server/turler.ts";
 import { gorunenNo } from "../sema.ts";
+import { raporSonucuMu, type RaporSonucu } from "../../../format/tanim.ts";
 
 export type RaporDogrulama =
-  | { durum: "gecerli" | "yenisi_var"; no: string; firma: string; tur: string; ekipman: string; kontrol: string | null; sonuc: "uygun" | "uygun_degil" | null;
+  | { durum: "gecerli" | "yenisi_var"; no: string; firma: string; tur: string; ekipman: string; kontrol: string | null; sonuc: RaporSonucu | null;
     imzalandi: string; yeni: string | null; saklamaBitti: boolean }
   | { durum: "imzasiz"; no: string; firma: string }
   | { durum: "yok" };
@@ -29,7 +30,7 @@ export async function raporDogrulamaBilgisi(db: Sorgulayici, raporId: string, re
   return {
     /* imzalı sürümün numarası revizyon ekini taşır (R1 …) */
     durum: yeni ? "yenisi_var" : "gecerli", no: s.no, firma: firma.ad, tur: tur?.ad ?? "-", ekipman: ekipman?.kod ?? "-",
-    kontrol: s.kontrol, sonuc: s.sonuc === "uygun" || s.sonuc === "uygun_degil" ? s.sonuc : null, imzalandi: s.imzalandi.toISOString(),
+    kontrol: s.kontrol, sonuc: raporSonucuMu(s.sonuc) ? s.sonuc : null, imzalandi: s.imzalandi.toISOString(),
     yeni: yeni?.no ?? null, saklamaBitti: !!s.silindi,
   };
 }

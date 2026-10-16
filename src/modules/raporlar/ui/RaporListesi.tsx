@@ -35,7 +35,7 @@ const SUTUNLAR: Sutun<RaporListeSatiri>[] = [
   ) },
   { k: "sonuc", genislik: "12%", baslik: "Sonuç", kart: "govde", sira: 4, hucre: (r) => {
     const s = sonucAd(r);
-    return <><KartEtiket>Sonuç</KartEtiket>{s ? <span className={r.sonuc === "uygun_degil" ? stil.sonucHata : undefined}>{s}</span> : <span className={stil.bosSatir}>—</span>}</>;
+    return <><KartEtiket>Sonuç</KartEtiket>{s ? <span className={r.sonuc === "uygun_degil" ? stil.sonucHata : r.sonuc === "sartli" ? stil.sonucUyari : undefined}>{s}</span> : <span className={stil.bosSatir}>—</span>}</>;
   } },
   { k: "durum", genislik: "18%", baslik: "Durum", kart: "rozet", sira: 1, hucre: (r) => <Rozet tur={RAPOR_DURUM[r.durum][1]}>{RAPOR_DURUM[r.durum][0]}</Rozet> },
 ];
@@ -61,7 +61,7 @@ function tanim(sec: Record<string, Secenek[]>): SuzgecTanimi<RaporListeSatiri> {
     seciciler: [
       { k: "musteri", ad: "Müşteri", secenek: () => [tumu, ...(sec.musteri ?? [])], gecer: hep },
       { k: "il", ad: "İl", secenek: () => [tumu, ...(sec.il ?? [])], gecer: hep },
-      { k: "sonuc", ad: "Sonuç", secenek: () => [tumu, ["uygun", "Uygun"], ["uygun_degil", "Uygun değil"], ["yok", "Sonuç yok"]], gecer: hep },
+      { k: "sonuc", ad: "Sonuç", secenek: () => [tumu, ["uygun", "Uygun"], ["uygun_degil", "Uygun değil"], ["sartli", "Şartlı uygun"], ["yok", "Sonuç yok"]], gecer: hep },
       { k: "yil", ad: "Yıl", secenek: () => [tumu, ...(sec.yil ?? [])], gecer: hep },
     ],
   };

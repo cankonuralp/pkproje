@@ -64,6 +64,11 @@ export const FIRMA_KAYNAK_ADI: Record<FirmaKaynagi, string> = {
 };
 /** çıkarılamayan satırlar (Bakanlık: SGK ve İSG-KATİP kayıttan, kilitli; başlangıç rapor açılınca yazılır, zorunlu) */
 export const FIRMA_ZORUNLU: readonly FirmaKaynagi[] = ["isg", "sgk", "bas"];
+/** 595 (madde 12; K1 "hepsi"): raporun sonucu — "sartli" (şartlı uygun: ekipman kullanılabilir, hafif kusurları sonraki kontrole kadar giderilir;
+    uygunsuzluk kaydı açılır) yalnız formatın sonuç bölümü bu seçeneği açtıysa seçilir */
+export const RAPOR_SONUCLARI = ["uygun", "uygun_degil", "sartli"] as const;
+export type RaporSonucu = (typeof RAPOR_SONUCLARI)[number];
+export const raporSonucuMu = (x: unknown): x is RaporSonucu => typeof x === "string" && (RAPOR_SONUCLARI as readonly string[]).includes(x);
 /** 595 (madde 7): kontrol listesinin ek sütunları — aciklama (maddenin açıklaması: sahada her maddede yazılır, "Uygun değil"in kusur açıklamasıyla
     aynı alan), std (standart maddesi — formattan), foto (maddenin fotoğrafları — sahada her maddede çekilir), yazi (serbest yazı, birden çok) */
 export const LISTE_SUTUN_ALANLARI = ["aciklama", "std", "foto", "yazi"] as const;
@@ -209,7 +214,9 @@ export const Bolum = z.discriminatedUnion("blok", [
   /* aciklama (426): sonuç bölümünün sabit metni — Bakanlık formatlarındaki "Ağır kusurlar tanımı", "Açıklamalar" (PDF'e basılır) */
   /* 595 (madde 12): sonuç cümlesinin bitişi — "uygundur" / "uygun değildir" yerine (ör. "KULLANIMA UYGUNDUR") */
   z.object({ ...ortak, blok: z.literal("sonuc"), cumle: z.string().max(400).default(""), aciklama: z.string().max(4000).default(""),
-    uygunMetin: z.string().trim().max(120).optional(), uygunDegilMetin: z.string().trim().max(120).optional() }),
+    uygunMetin: z.string().trim().max(120).optional(), uygunDegilMetin: z.string().trim().max(120).optional(),
+    /* 595 (madde 12): üçüncü seçenek — şartlı uygun (sözcüğü sartliMetin; verilmemişse "şartlı uygundur") */
+    sartli: z.boolean().optional(), sartliMetin: z.string().trim().max(120).optional() }),
   /* 595 (madde 11): yönlendirme — sahada yorum kutusunun üstünde, belgede yorum boşsa; satir: belgede yorumun en az satırı (boşluk) */
   z.object({ ...ortak, blok: z.literal("not"), zorunlu: z.boolean().default(false), yonlendirme: z.string().trim().max(400).optional(),
     satir: z.number().int().min(1).max(30).optional() }),
@@ -381,7 +388,7 @@ export const Cevaplar = z.object({
   /** 595 (madde 6, 7): kontrol listesi / test bölümünün ek sütunlarına sahada yazılanlar (ekAnahtari(öğe, sütun) → değer) */
   ek: z.record(z.string(), z.string().max(1000)).default({}),
   cihaz: z.number().int().min(0).max(50).default(0),
-  sonuc: z.enum(["", "uygun", "uygun_degil"]).default(""),
+  sonuc: z.enum(["", ...RAPOR_SONUCLARI]).default(""),
   yorum: z.string().max(4000).default(""),
   /** 492: denetçinin raporda değiştirdiği künye bilgileri (anahtar varsa değer o; yoksa raporun künye kopyası). Firma adı boş olamaz; kilitli
       olanlar sunucuda reddedilir (format/kunye.ts kunyeKilitHatalari) */

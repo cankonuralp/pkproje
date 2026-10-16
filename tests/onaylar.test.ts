@@ -814,3 +814,23 @@ test("595 K8 doğrulama: imzaya hazırlanan PDF'e firmanın adresiyle doğrulama
   assert.deepEqual([eski.durum, eski.durum === "yenisi_var" ? eski.yeni : null], ["yenisi_var", `${kok}-R1`]);
   assert.deepEqual([yeni.durum, yeni.durum === "gecerli" ? yeni.no : null], ["gecerli", `${kok}-R1`]);
 });
+
+/* ── 595 MADDE 12 ŞARTLI UYGUN (reisim K1 "hepsi": "üçüncü seçenek eklenir (ör. şartlı uygun)") ───────────────────────────────────────────── */
+test("595 madde 12 şartlı uygun: rapor ve imzalı sürüm 'sartli' taşır, imzalanınca hafif kusurlar uygunsuzluk olarak açılır; uydurma sonuç veritabanında reddedilir", async () => {
+  const bas = bugunTr();
+  const id = tamam(await a(FA.plan, (db) => planAc(db, depo, FA.plan, A, { tesis: FA.tesis, baslangic: bas, bitis: bas,
+    ekip: [FA.denP, FA.mekP].map((p, i) => ({ personel: p, isgNo: `ISG-S${planSira++}-${i}`, kaydet: false })) }))).id;
+  tamam(await a(FA.den, async (db) => planKabul(db, FA.den, id, (await planIci(db, FA.den, id))!.surum, true)));
+  const r = tamam(await a(FA.den, (db) => raporOlustur(db, FA.den, id, FA.ekp["HT-3"])));
+  await assert.rejects(sql(A, "UPDATE rapor SET sonuc = 'belki', surum = surum + 1 WHERE id = $1", [r.id], FA.den.id), /rapor_sonuc_check/);
+  await sql(A, `UPDATE rapor SET cevaplar = jsonb_set(cevaplar, '{madde,k1}', '{"c": "Uygun değil", "not": "Hafif korozyon"}'::jsonb), sonuc = 'sartli', surum = surum + 1
+    WHERE id = $1`, [r.id], FA.den.id);
+  await sql(A, "UPDATE rapor SET durum = 'onayda', surum = surum + 1 WHERE id = $1", [r.id], FA.den.id);
+  const s0 = await surum(r.id);
+  tamam(await a(FA.mek, (db) => onayla(db, FA.mek, r.id, s0)));
+  tamam(await hazirla(FA.den, r.id));
+  tamam(await yukle(FA.den, r.id, await surum(r.id), imzala(await imzasizBayt(r.id))));
+  assert.equal((await sql<{ sonuc: string }>(A, "SELECT sonuc FROM rapor_surumu WHERE rapor_id = $1", [r.id])).rows[0].sonuc, "sartli");
+  const u = (await sql<{ metin: string; agir: boolean; kapanis: string | null }>(A, "SELECT metin, agir, kapanis FROM uygunsuzluk WHERE rapor_id = $1", [r.id])).rows;
+  assert.ok(u.length >= 1 && u.some((x) => /Hafif korozyon/.test(x.metin)) && u.every((x) => x.kapanis === null), JSON.stringify(u));
+});

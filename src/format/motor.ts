@@ -19,8 +19,8 @@
 import { noktaHesap, sayiOku, SINIR_ISARETI, sinirSonucu } from "./hesap.ts";
 import { formulDenet, formulluAlan, formulluDeger, formulluMadde, formulluSutun, formulUygula, genelAdlar, satirHesabi, tabloAdlari, type Deger } from "./formul.ts";
 import { etkinKurallar, kuralOzu, kuralUygula } from "./sonuc.ts";
-import { cihazSutunlari, firmaSatirlari, imzaSatirlari } from "./duzen.ts";
-import { HAZIR_AD, kurucudan, type Bolum, type BolumOf, type Cevaplar, type FormatTanimi, type SonucKurali } from "./tanim.ts";
+import { cihazSutunlari, firmaSatirlari, imzaSatirlari, sartliAcik } from "./duzen.ts";
+import { HAZIR_AD, kurucudan, type RaporSonucu, type Bolum, type BolumOf, type Cevaplar, type FormatTanimi, type SonucKurali } from "./tanim.ts";
 
 export interface Eksik { bolum: string; alan: string; ad: string }
 /** kriter: kusurun ölçütü (madde metni, ölçüm satırının etiketi, test değerinin adı); metin "kriter: açıklama" ya da yalnız kriter — kriter ayrı
@@ -29,7 +29,7 @@ export interface Kusur { bolum: string; ref: string; kriter: string; metin: stri
 /** elle (488): denetçi sonucu gerekçeyle değiştirdi — kural: formülün / sınırların verdiği sonuç (belgede de yazar), gerekce: denetçinin yazdığı */
 export interface SatirDegerlendirmesi { uygun: boolean | null; neden: string[]; oneriNot: number | null; agir: boolean; elle?: { kural: boolean | null; gerekce: string } }
 export interface Degerlendirme {
-  eksikler: Eksik[]; kusurlar: Kusur[]; oneri: "uygun" | "uygun_degil";
+  eksikler: Eksik[]; kusurlar: Kusur[]; oneri: RaporSonucu;
   satirlar: Record<string, SatirDegerlendirmesi[]>;
   degerler: Record<string, boolean | null>;
 }
@@ -172,7 +172,10 @@ export function degerlendir(t: FormatTanimi, c0: Cevaplar): Degerlendirme {
         break;
     }
   }
-  return { eksikler, kusurlar, oneri: t.kurallar.oneri && kusurlar.length > 0 ? "uygun_degil" : "uygun", satirlar, degerler };
+  /* 595 (madde 12): formatta şartlı uygun açıksa ve kusur dereceleri soruluyorsa — ağır kusur yoksa öneri "şartlı uygun" */
+  const oneri: RaporSonucu = !t.kurallar.oneri || !kusurlar.length ? "uygun"
+    : sartliAcik(t) && t.kurallar.derece && !kusurlar.some((k) => k.agir) ? "sartli" : "uygun_degil";
+  return { eksikler, kusurlar, oneri, satirlar, degerler };
 }
 
 /** kilitli (Bakanlık) öğelerin kimlikleri — bölüm, alan, madde, değer */
@@ -225,7 +228,7 @@ const bolumOzu = (b: Bolum, t: FormatTanimi) => oz({
   ...(b.blok === "bilgi" ? { dizilis: b.dizilis } : {}),
   ...(b.blok === "foto" ? { kutular: b.kutular?.map((k) => k.ad) } : {}),
   ...(b.blok === "olcum" ? { hesap: b.hesap, notlar: b.notlar, satir: b.satir, sonuc: kuralOzu(etkinKurallar(t, b)), basliklar: b.basliklar, sonucYeri: b.sonucYeri, hazir: b.hazir } : {}),
-  ...(b.blok === "sonuc" ? { cumle: b.cumle, aciklama: b.aciklama, uygunMetin: b.uygunMetin, uygunDegilMetin: b.uygunDegilMetin } : {}),
+  ...(b.blok === "sonuc" ? { cumle: b.cumle, aciklama: b.aciklama, uygunMetin: b.uygunMetin, uygunDegilMetin: b.uygunDegilMetin, sartli: b.sartli, sartliMetin: b.sartliMetin } : {}),
   /* 595: imza bölümünün satırları (adı, kişisi, bilgisi, sabit yazısı, tam satır) — satırsız eski bölüm imzalar'dan aynı satırları verir */
   ...(b.blok === "imza" ? { imza: imzaSatirlari(b).map((x) => ({ ad: x.ad, kim: x.kim, alan: x.alan, metin: x.metin, tam: x.tam })) } : {}),
 });

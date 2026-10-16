@@ -188,6 +188,10 @@ pkproje/
                             (yonetim/karekod.ts) + bağlantı · açık sayfa (acik)/dogrula/[kod] → raporlar/server/dogrula-sayfa.ts (src/server/kiraci/acik.ts
                             acikOkuma: oturumsuz, READ ONLY) + dogrulama.ts (yalnız imzalı sürümün kimliği; müşteri, kişi, PDF yok) + ui/Dogrulama.tsx ·
                             kilit tests/dogrulama + onaylar (PG), bozan dogrulama, e2e toplu-imza
+                            · 595 ŞARTLI UYGUN (madde 12): tanim.ts RAPOR_SONUCLARI (uygun · uygun_degil · sartli) + sonuç bölümü sartli / sartliMetin ·
+                            duzen.ts sonucSozcugu, sartliAcik · motor öneri (dereceli + şartlı açık + ağır yok → sartli) · göç 0100 (CHECK'ler, uygunsuzluk
+                            Uygun değil VE Şartlı uygun sürüme) · raporlar onayaGonder seçeneği formatta ister, imzalıda uygunsuzluk · rozet / müşteri paneli /
+                            doğrulama / S.A.Y ("sartli_secenek", rapora "şartlı uygun") · kilit tests/sartli-uygun, onaylar + raporlar (PG), bozan
   src/modules/rapor-format/ RAPOR FORMATI (2026-10-04, 308): sürümlü tanım (rapor_format, göç 0022: taslak → yayında → eski; yayınlanan değişmez) ·
                             şablondan başlat · taslak kaydet · yayınla (kilitli Bakanlık öğesi ENGEL, öteki denetim uyarı) · yayındaki format;
                             ekran: tür sayfası "Rapor şablonu" + önizleme /ekipman-turleri/<tür>/sablon/<sürüm> · FORMAT KURUCU (338, K4):

@@ -1,6 +1,7 @@
 /* ONAYLAR'IN RAPORA BAKTIĞI YER (modül 15 → 14; 0026, 0029). Onaylar rapor tablosuna dokunmaz: rapor özetlerini buradan okur, durumu buradan yazar.
    Yetki ÇAĞIRANDA (Onaylar: modül 15 düzeyi + canDoEylem rapor_onayla / rapor_geri_gonder / rapor_durum_degistir / rapor_revizeye_gonder). Durum
    geçişinin kuralları, onay damgası, revizyon ve hareket kaydı (gerekçesiyle) veritabanı tetiğinde (0026–0029 rapor_akis, rapor_hareket_yaz). */
+import type { RaporSonucu } from "../../../format/tanim.ts";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { guncelle, tablo, type GuncelleSonucu, type Iz } from "../../../server/db/yazici.ts";
 import { ekipmanlar } from "../../ekipman/server/ekipman.ts";
@@ -22,7 +23,7 @@ export interface RaporOzeti {
   musteri: string; musteriId: string; tesis: string; tesisId: string; il: string | null; personelId: string; denetci: string;
   /** yazan hesap (yetki kaydının sahibi; istemciye gönderilmez) */
   hesapId: string | null;
-  sonuc: "uygun" | "uygun_degil" | null; gonderildi: string | null; onay: string | null; olustu: string;
+  sonuc: RaporSonucu | null; gonderildi: string | null; onay: string | null; olustu: string;
 }
 
 /** 596 (İmzamı bekleyen raporlar — "imzaya hazır" rozeti): verilen raporlardan imzasız PDF'i hazırlanmış olanlar (şimdiki revizyonda bekleyen imza

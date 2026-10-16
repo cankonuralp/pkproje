@@ -454,8 +454,11 @@ test("onaya gönder: sonuç elle seçildiyse o yazılır (öneri değil), elle s
      veritabanı da ister — 0031, tests/onaylar.test.ts). Her deneme önce kaydeder (sürüm artar), göndermez. */
   assert.deepEqual(await gonder(FA.den1, r.id, 3, { ...el, tarih: { ...el.tarih, rapor: gun(1) } }), { durum: "gecersiz", hatalar: { "tarih.rapor": "Rapor tarihi bugünden sonra olamaz." } });
   assert.deepEqual(await gonder(FA.den1, r.id, 4, { ...el, tarih: { ...el.tarih, rapor: gun(-2) } }), { durum: "gecersiz", hatalar: { "tarih.rapor": "Rapor tarihi kontrol başlangıcından önce olamaz." } });
+  /* 595 (madde 12): "Şartlı uygun" yalnız formatın sonuç bölümü açtıysa — bu formatta kapalı: kaydedilir, gönderilmez */
+  assert.deepEqual(await gonder(FA.den1, r.id, 5, { ...el, cevaplar: { ...el.cevaplar, sonuc: "sartli" } }),
+    { durum: "gecersiz", hatalar: { sonuc: "Bu raporun formatında “Şartlı uygun” seçeneği yok." } });
   assert.equal((await sql<{ durum: string }>(A, "SELECT durum FROM rapor WHERE id = $1", [r.id])).rows[0].durum, "taslak", "gönderilmedi");
-  assert.deepEqual(await gonder(FA.den1, r.id, 5, el), { durum: "tamam", id: r.id, bildirim: "Onaya gönderildi: Deneme, Mekanik branş yöneticisi." });
+  assert.deepEqual(await gonder(FA.den1, r.id, 6, el), { durum: "tamam", id: r.id, bildirim: "Onaya gönderildi: Deneme, Mekanik branş yöneticisi." });
   const s = (await sql<{ sonuc: string; oto: boolean; sonraki: string; rt: string }>(A,
     "SELECT sonuc, sonuc_oto AS oto, sonraki, rapor_tarihi AS rt FROM rapor WHERE id = $1", [r.id])).rows[0];
   assert.deepEqual([s.sonuc, s.oto, s.sonraki, s.rt], ["uygun", false, gun(364), dun], "denetçinin kararı; uyarı engel değil");

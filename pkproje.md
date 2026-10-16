@@ -2525,6 +2525,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-17 (595l): **ŞARTLI UYGUN — ÜÇÜNCÜ SONUÇ** (sunum 595 madde 12; K1 *"Evet, hepsi"* — çözüm satırı: *"iki seçeneğin metni yazılır; üçüncü seçenek eklenir
+  (ör. şartlı uygun)"*; 595f'te "ayrı karar ister" diye bırakılmıştı, reisim 2026-10-17: *"kalan işleri bitir hiç iş kalmasın"*). Format yapıcıda sonuç
+  bölümünün ayarında "Üçüncü seçenek: şartlı uygun" — açılınca kâğıtta sözcüğü yazılır (varsayılan "şartlı uygundur"); sahada sonuç seçiminde üçüncü
+  seçenek. Anlamı: ekipman kullanılabilir, hafif kusurları sonraki kontrole kadar giderilir — imzalanınca kusurlar uygunsuzluk olarak açılır (Uygun
+  değil gibi; sonraki imzalı muayeneyle kapanır), müşteri panelinde "Şartlı uygun" (ayrı çip), onay listesinde sarı rozet ve "Kusurlu" çipinde.
+  Öneri: kusur dereceleri soruluyorsa ve ağır kusur yoksa "Şartlı uygun", ağır varsa "Uygun değil". Seçeneği olmayan formattaki rapor şartlı
+  uygunla onaya gönderilmez; ağır kusur varken şartlı uygun seçilirse uyarı (engel değil). Veritabanı göçü 0100 (sonuç CHECK'leri, uygunsuzluk tetiği).
 - 2026-10-16 (595k): **K8 — DOĞRULAMA KAREKODU** (reisim: *"Kanun cümlesi + rapor no + sayfa + doğrulama karekodu"*): imzaya hazırlanan PDF'in her sayfasının
   altındaki şeritte karekod ve doğrulama adresi (firmanın adresi /dogrula/<kod>). Sayfa oturum istemez; kod tahmin edilemez (rapor + revizyon + firmaya bağlı
   imza), başka firmanın adresinde açılmaz. Gösterilen: rapor no, muayene firması, ekipman türü ve kodu, kontrol tarihi, sonuç, e-imza zamanı; yeni revizyon

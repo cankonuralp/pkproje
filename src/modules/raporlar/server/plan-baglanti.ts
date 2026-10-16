@@ -6,7 +6,7 @@ import { guncelle, tablo, type Iz } from "../../../server/db/yazici.ts";
 import { ayarOku } from "../../../server/ayar/ayar.ts";
 import { turSureleri } from "../../ekipman-turleri/server/turler.ts";
 import { kunyeFarkTemizle } from "../../../format/kunye.ts";
-import { Cevaplar } from "../../../format/tanim.ts";
+import { Cevaplar, type RaporSonucu } from "../../../format/tanim.ts";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const KUNYE = tablo({ ad: "rapor", sutunlar: ["kunye", "kunye_surum", "cevaplar"] });
@@ -14,7 +14,7 @@ const KUNYE = tablo({ ad: "rapor", sutunlar: ["kunye", "kunye_surum", "cevaplar"
 export type RaporDurumu = "taslak" | "onayda" | "onaylandi" | "imzada" | "imzali";
 export interface PlanRaporu {
   /** no: görünen numara (revizyonda "-R1" ekiyle — 193) */
-  id: string; no: string; revizyon: number; ekipmanId: string; turId: string; durum: RaporDurumu; sonuc: "uygun" | "uygun_degil" | null; olustu: string; personelId: string; hesapId: string | null;
+  id: string; no: string; revizyon: number; ekipmanId: string; turId: string; durum: RaporDurumu; sonuc: RaporSonucu | null; olustu: string; personelId: string; hesapId: string | null;
   /** satır sürümü (plan içinden Sil, sürüm kilidiyle) */
   surum: number;
 }
@@ -22,7 +22,7 @@ export interface PlanRaporu {
 /** planın etkin raporları (silinen görünmez), en yeni üstte */
 export async function planRaporlari(db: Sorgulayici, planId: string): Promise<PlanRaporu[]> {
   if (!UUID.test(planId)) return [];
-  return (await db.sorgu<{ id: string; no: string; revizyon: number; ekipman_id: string; tur_id: string; durum: RaporDurumu; sonuc: "uygun" | "uygun_degil" | null; olustu: Date; personel_id: string; hesap_id: string | null; surum: number }>(
+  return (await db.sorgu<{ id: string; no: string; revizyon: number; ekipman_id: string; tur_id: string; durum: RaporDurumu; sonuc: RaporSonucu | null; olustu: Date; personel_id: string; hesap_id: string | null; surum: number }>(
     `SELECT id::text, no, revizyon, ekipman_id::text, tur_id::text, durum, sonuc, olustu, personel_id::text, hesap_id::text, surum FROM rapor
      WHERE plan_id = $1 AND silindi IS NULL ORDER BY olustu DESC, no DESC`, [planId])).rows
     .map((r) => ({ id: r.id, no: gorunenNo(r.no, r.revizyon), revizyon: r.revizyon, ekipmanId: r.ekipman_id, turId: r.tur_id, durum: r.durum, sonuc: r.sonuc, olustu: r.olustu.toISOString(), personelId: r.personel_id, hesapId: r.hesap_id, surum: r.surum }));

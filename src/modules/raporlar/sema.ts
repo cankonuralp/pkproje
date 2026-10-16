@@ -25,7 +25,7 @@ export function raporYazmaNedeni(durum: RaporDurumu, sahip: boolean, yetkili: bo
   if (!sahip) return "raporu yazan muayene uzmanı değiştirir; bu kullanıcı yalnız görüntüleyebilir";
   return yetkili ? null : "kullanıcının rapor yazma yetkisi yok";
 }
-export const SONUC_AD = { uygun: "Uygun", uygun_degil: "Uygun değil" } as const;
+export const SONUC_AD = { uygun: "Uygun", uygun_degil: "Uygun değil", sartli: "Şartlı uygun" } as const;
 
 const bos = (s: unknown) => (s === undefined || s === null || (typeof s === "string" && s.trim() === "") ? null : typeof s === "string" ? s.trim().replace(/\s+/g, " ") : s);
 const metin = (n: number) => z.preprocess(bos, z.string().max(n, `En çok ${n} karakter.`).nullable());

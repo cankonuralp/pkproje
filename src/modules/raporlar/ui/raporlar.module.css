@@ -283,6 +283,7 @@ button.silTus { color: var(--hata-yazi); }
 }
 .no:hover { text-decoration-color: currentColor; }
 .sonucHata { color: var(--hata-yazi); font-weight: 600; }
+.sonucUyari { color: var(--uyari-yazi); font-weight: 600; }
 
 /* 542 (sunum 541 K1): S.A.Y'ın girdiği değer — yeşil (emin), sarı ve altında "emin değil"; kişi o alanı değiştirince işaret kalkar (SahaRaporu
    işaretleri çizimden sonra öğeye yazar: data-say-giris "emin" / "belirsiz", kutusuna data-say-not). Öneri kartı kalktı. */

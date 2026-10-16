@@ -3,6 +3,7 @@
 import { Rozet } from "../../../components/sayfa/Sayfa";
 import { tarihNo } from "../../../components/secim/tarih";
 import type { RaporDogrulama } from "../server/dogrulama";
+import { SONUC_AD } from "../sema";
 import stil from "./dogrulama.module.css";
 
 const zaman = (iso: string) => new Intl.DateTimeFormat("tr-TR", { timeZone: "Europe/Istanbul", dateStyle: "short", timeStyle: "short" }).format(new Date(iso));
@@ -29,7 +30,7 @@ export function DogrulamaKarti({ d }: { d: RaporDogrulama }) {
               <dt>Muayene firması</dt><dd>{d.firma}</dd>
               <dt>Ekipman</dt><dd>{d.tur} · {d.ekipman}</dd>
               <dt>Kontrol tarihi</dt><dd>{d.kontrol ? tarihNo(d.kontrol) : "-"}</dd>
-              <dt>Sonuç</dt><dd>{d.sonuc === "uygun" ? "Uygun" : d.sonuc === "uygun_degil" ? "Uygun değil" : "-"}</dd>
+              <dt>Sonuç</dt><dd>{d.sonuc ? SONUC_AD[d.sonuc] : "-"}</dd>
               <dt>E-imza</dt><dd>{zaman(d.imzalandi)}</dd>
             </dl>
             {d.yeni && <p className={stil.uyari}>Bu raporun yerine geçen yeni revizyon imzalandı: <b>{d.yeni}</b>. Geçerli olan yeni revizyondur.</p>}
