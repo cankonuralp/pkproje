@@ -324,10 +324,17 @@ export const FormatTanimi = z.object({
         bag.addIssue({ code: "custom", path: yol, message: `İmza satırının bilgisi kişiye uymuyor: ${s.ad}` });
       }
     });
+    /* sütun kimlikleri BÖLÜM İÇİNDE tekil (ölçüm tablosunun sütunları gibi; ek sütunun cevabı öğe|sütun — öğe tanımda tekil): bölümün parça
+       kopyası (yapboz) aynı kimlikleri taşır */
+    const bolumde = new Set<string>();
+    const tekBolumde = (id: string, yol: (string | number)[]) => {
+      if (bolumde.has(id)) bag.addIssue({ code: "custom", path: yol, message: `Kimlik iki kez kullanılmış: ${id}` });
+      bolumde.add(id);
+    };
     if ((b.blok === "liste" || b.blok === "test") && b.ekSutunlar) {
       const al = new Set<string>();
       b.ekSutunlar.forEach((s, j) => {
-        tek(s.id, ["bolumler", i, "ekSutunlar", j, "id"]);
+        tekBolumde(s.id, ["bolumler", i, "ekSutunlar", j, "id"]);
         if (b.blok === "liste" && s.alan !== "yazi" && al.has(s.alan)) bag.addIssue({ code: "custom", path: ["bolumler", i, "ekSutunlar", j, "alan"], message: `Sütun iki kez: ${s.ad}` });
         al.add(s.alan);
       });
@@ -335,7 +342,7 @@ export const FormatTanimi = z.object({
     if ((b.blok === "cihaz" || b.blok === "kusur") && b.sutunlar) {
       const al = new Set<string>();
       b.sutunlar.forEach((s, j) => {
-        tek(s.id, ["bolumler", i, "sutunlar", j, "id"]);
+        tekBolumde(s.id, ["bolumler", i, "sutunlar", j, "id"]);
         if (al.has(s.alan)) bag.addIssue({ code: "custom", path: ["bolumler", i, "sutunlar", j, "alan"], message: `Sütun iki kez: ${s.ad}` });
         al.add(s.alan);
       });

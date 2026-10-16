@@ -15,6 +15,7 @@ import { formatHaritasi, formatIslemleri } from "../src/modules/rapor-format/say
 import { ilkCevaplar } from "../src/modules/raporlar/ornek.ts";
 import { komutlariUygula } from "../src/modules/raporlar/say-doldur.ts";
 import { raporHaritasi } from "../src/modules/say/rapor-haritasi.ts";
+import { parcaKopyasi } from "../src/modules/rapor-format/yapboz.ts";
 
 const Z2 = () => FormatTanimi.parse(SABLONLAR.ZPKR02.tanim);
 const yer = (t: FormatTanimi, blok: string) => t.bolumler.findIndex((b) => b.blok === blok);
@@ -99,4 +100,12 @@ test("S.A.Y: format işlemi (kontrol listesi / test sütunu) ve rapora yazma x:<
   assert.ok(u.isaretler.some((i) => i.yer.tur === "ek"));
   const harita = raporHaritasi(y, "Deneme türü", { cevaplar: u.durum.cevaplar, ekipman: {} }) ?? "";
   assert.ok(harita.includes(`x:${m.id}:${gs.id} (Gözlem) = "Deneme gözlemi"`), harita.slice(0, 4000));
+});
+
+test("parça kopyası: ek sütunlu kontrol listesi kopyalanınca tanım geçerli (sütun kimliği bölüm içinde tekil, ölçüm tablosu gibi)", () => {
+  const t = Z2(), l = yer(t, "liste"), y = ekSutunEkle(t, l, "yazi").t;
+  const k = parcaKopyasi(y, y.bolumler[l]);
+  assert.ok(k);
+  const r = FormatTanimi.safeParse({ ...y, bolumler: [...y.bolumler, k] });
+  assert.ok(r.success, r.success ? "" : r.error.issues.map((x) => x.message).join(" | "));
 });
