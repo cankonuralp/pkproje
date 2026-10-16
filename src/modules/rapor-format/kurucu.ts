@@ -6,9 +6,9 @@
    yalnız "Bakanlık formatının parçası" işaretidir. Sabit kalanlar reisim'in kararı: ölçüm cihazları bölümü (459; firma bilgileri kâğıtta sabit). */
 import { SINIR_ISARETI } from "../../format/hesap.ts";
 import { kilitliKimlikler } from "../../format/motor.ts";
-import { ekipmanTamYap, imzaSatirlari, imzaVarsayilani } from "../../format/duzen.ts";
-import { Bolum, EIMZA_KUTU, EKIPMAN_ALAN_ADI, IMZA_ALAN_ADI, imzaAlanlari, KUNYE_ALANLARI, KURAL_EN_COK, kurucudan, type Blok, type BolumOf, type EkipmanAlani, type FormatTanimi,
-  type ImzaAlani, type ImzaKisisi, type ImzaSatiri, type KunyeAlani, type Sinir, type SonucKurali } from "../../format/tanim.ts";
+import { ekipmanTamYap, firmaSatirlari, imzaSatirlari, imzaVarsayilani } from "../../format/duzen.ts";
+import { Bolum, EIMZA_KUTU, EKIPMAN_ALAN_ADI, FIRMA_KAYNAK_ADI, FIRMA_KAYNAKLARI, FIRMA_ZORUNLU, IMZA_ALAN_ADI, imzaAlanlari, KUNYE_ALANLARI, KURAL_EN_COK, kurucudan, type Blok, type BolumOf, type EkipmanAlani, type FormatTanimi,
+  type FirmaKaynagi, type FirmaSatiri, type ImzaAlani, type ImzaKisisi, type ImzaSatiri, type KunyeAlani, type Sinir, type SonucKurali } from "../../format/tanim.ts";
 import { kilitliKunye } from "../../format/kunye.ts";
 import { FORMUL_EN_UZUN, formulAdDegistir, formulDuzelt } from "../../format/formul.ts";
 import { varsayilanKurallar } from "../../format/sonuc.ts";
@@ -26,11 +26,12 @@ export function kimlikler(t: FormatTanimi): Set<string> {
     if (b.blok === "test") for (const d of b.degerler) s.add(d.id);
     if (b.blok === "imza") for (const x of b.satirlar ?? []) s.add(x.id);
   }
+  for (const x of t.gorunum.firma?.satirlar ?? []) s.add(x.id);
   return s;
 }
 
 /** önek + en küçük kullanılmayan sayı (ör. "k_a3"): şablonların kimlikleriyle çakışmaz, tanımda tekil */
-export function yeniKimlik(t: FormatTanimi, onek: "b" | "a" | "g" | "m" | "s" | "d" | "i", ek: ReadonlySet<string> = new Set()): string {
+export function yeniKimlik(t: FormatTanimi, onek: "b" | "a" | "g" | "m" | "s" | "d" | "i" | "f", ek: ReadonlySet<string> = new Set()): string {
   const var_ = kimlikler(t);
   let n = 1;
   while (var_.has(`k_${onek}${n}`) || ek.has(`k_${onek}${n}`)) n++;
@@ -475,4 +476,52 @@ export function eimzaYaz(t: FormatTanimi, y: { yer: "hucre" | "kutu" | "gorunmez
   const en = sinir(y.en ?? e?.en ?? EIMZA_KUTU.en, 20, 210), boy = sinir(y.boy ?? e?.boy ?? EIMZA_KUTU.boy, 10, 100);
   const x = sinir(y.x ?? e?.x ?? EIMZA_KUTU.x, 0, 210 - en), ust = sinir(y.y ?? e?.y ?? EIMZA_KUTU.y, 0, 297 - EIMZA_SERIT_MM - boy);
   return { ...t, gorunum: { ...g, eimza: { yer: "kutu", x, y: ust, en, boy } } };
+}
+
+/* ── FİRMA BİLGİLERİ (595 madde 3, K2 — reisim: "firma bilgileri kısmında da [satır eklemek istedim ekleyemedim]"): 1. bölümün satırları
+   formatın (adı, sırası, tam satırlığı, varlığı); SGK, İSG-KATİP ve başlangıç çıkarılmaz (FIRMA_ZORUNLU), SGK ve İSG-KATİP'in adı da değişmez
+   (Bakanlık / kayıt). Eski format (satırsız) ilk değişiklikte bugünkü satırlarıyla tanıma yazılır (yeni kimliklerle). ── */
+/** adı değişmeyen satırlar (SGK, İSG-KATİP — sahada da kilitli bilgiler) */
+export const FIRMA_ADI_SABIT: readonly FirmaKaynagi[] = ["isg", "sgk"];
+function firmaYaz(t: FormatTanimi, l: readonly (Omit<FirmaSatiri, "id"> & { id?: string })[]): FormatTanimi {
+  const g = { ...t.gorunum };
+  delete g.firma;
+  const var_ = kimlikler({ ...t, gorunum: g }), ek = new Set<string>();
+  const satirlar = l.slice(0, 40).map((x): FirmaSatiri => {
+    const id = x.id && !var_.has(x.id) && !ek.has(x.id) && !x.id.startsWith("fb_") ? x.id : yeniKimlik({ ...t, bolumler: [], gorunum: g }, "f", new Set([...var_, ...ek]));
+    ek.add(id);
+    return { ...x, id };
+  });
+  return { ...t, gorunum: { ...g, firma: { satirlar } } };
+}
+/** eklenebilecek kayıt bilgileri (listede olmayanlar; serbest satır her zaman) */
+export const eksikFirmaKaynaklari = (t: FormatTanimi): FirmaKaynagi[] =>
+  FIRMA_KAYNAKLARI.filter((k) => k !== "serbest" && !firmaSatirlari(t).some((s) => s.kaynak === k));
+/** satır ekler (sona); kimliği döner (adı yazma kipinde açılsın) — aynı kayıt bilgisi ikinci kez eklenmez */
+export function firmaSatiriEkle(t: FormatTanimi, kaynak: FirmaKaynagi, ad?: string): { t: FormatTanimi; id: string | null } {
+  const l = firmaSatirlari(t);
+  if (kaynak !== "serbest" && l.some((s) => s.kaynak === kaynak)) return { t, id: null };
+  const y = firmaYaz(t, [...l, { kaynak, ad: (ad ?? FIRMA_KAYNAK_ADI[kaynak]).trim().replace(/\s+/g, " ").slice(0, 200) || FIRMA_KAYNAK_ADI[kaynak],
+    ...(kaynak === "metot" || kaynak === "adres" ? { tam: true } : {}) }]);
+  return { t: y, id: y.gorunum.firma?.satirlar.at(-1)?.id ?? null };
+}
+export function firmaSatiriYaz(t: FormatTanimi, id: string, y: { ad?: string; metin?: string; tam?: boolean }): FormatTanimi {
+  const l = firmaSatirlari(t);
+  if (!l.some((x) => x.id === id)) return t;
+  return firmaYaz(t, l.map((x) => {
+    if (x.id !== id) return x;
+    const ad = y.ad === undefined || FIRMA_ADI_SABIT.includes(x.kaynak) ? x.ad : y.ad.trim().replace(/\s+/g, " ").slice(0, 200) || x.ad;
+    const metin = x.kaynak !== "serbest" ? undefined : y.metin === undefined ? x.metin : y.metin.trim().slice(0, 400) || undefined;
+    const tam = y.tam === undefined ? x.tam : y.tam || undefined;
+    return { ...x, ad, metin, tam };
+  }));
+}
+/** satırı çıkarır (zorunlu satır çıkmaz — aynı tanım döner) */
+export function firmaSatiriSil(t: FormatTanimi, id: string): FormatTanimi {
+  const l = firmaSatirlari(t), s = l.find((x) => x.id === id);
+  return !s || FIRMA_ZORUNLU.includes(s.kaynak) ? t : firmaYaz(t, l.filter((x) => x.id !== id));
+}
+export function firmaSatiriTasi(t: FormatTanimi, id: string, yon: -1 | 1): FormatTanimi {
+  const l = firmaSatirlari(t), j = l.findIndex((x) => x.id === id);
+  return j < 0 || j + yon < 0 || j + yon >= l.length ? t : firmaYaz(t, tasi(l, j, j + yon));
 }

@@ -50,6 +50,20 @@ export const IMZA_ALAN_ADI: Record<ImzaAlani, string> = {
 export const IMZA_KISI_ADI: Record<ImzaKisisi, string> = { uzman: "Muayene uzmanı", teknik: "Teknik yönetici", diger: "Serbest satır" };
 /** kişinin seçilebilen bilgileri (zaman yalnız teknik yöneticide — onay anı) */
 export const imzaAlanlari = (kim: ImzaKisisi): readonly ImzaAlani[] => (kim === "uzman" ? IMZA_ALANLARI.filter((x) => x !== "zaman") : kim === "teknik" ? IMZA_ALANLARI : []);
+/** 2026-10-16 (sunum 595 madde 3, K2 "serbest; SGK ve İSG-KATİP kilitli kalsın" — reisim: "firma bilgileri kısmında da [satır eklemek istedim
+    ekleyemedim]"): 1. bölümün (Firma bilgileri) SATIRLARI — adı, sırası, varlığı formatın; değeri plandan / kayıttan / sahadan. kaynak: hangi bilgi
+    (serbest: formatın sabit yazısı). Zorunlu satırlar (SGK, İSG-KATİP, başlangıç) çıkarılmaz. Verilmemişse bugünkü satırlar (format/duzen.ts
+    firmaSatirlari) — eski formatlar aynı çizilir. */
+export const FIRMA_KAYNAKLARI = ["firma", "adres", "rapor_no", "rapor_tarihi", "isg", "sgk", "bas", "bit", "sonraki", "takip", "metot", "eposta", "tel",
+  "plan_no", "serbest"] as const;
+export type FirmaKaynagi = (typeof FIRMA_KAYNAKLARI)[number];
+export const FIRMA_KAYNAK_ADI: Record<FirmaKaynagi, string> = {
+  firma: "Firma adı", adres: "Periyodik kontrol adresi", rapor_no: "Rapor numarası", rapor_tarihi: "Rapor tarihi", isg: "İSG-KATİP sözleşme ID",
+  sgk: "SGK sicil numarası", bas: "Başlangıç tarihi ve saati", bit: "Bitiş tarihi ve saati", sonraki: "Bir sonraki periyodik kontrol tarihi",
+  takip: "Takip kontrol tarihi", metot: "Periyodik kontrol metodu ve kapsamı", eposta: "E-posta", tel: "Telefon", plan_no: "Proje no", serbest: "Yeni satır",
+};
+/** çıkarılamayan satırlar (Bakanlık: SGK ve İSG-KATİP kayıttan, kilitli; başlangıç rapor açılınca yazılır, zorunlu) */
+export const FIRMA_ZORUNLU: readonly FirmaKaynagi[] = ["isg", "sgk", "bas"];
 /** ölçüm tablosunun adıyla seçilen hesabı (hesap.ts) */
 export const HESAPLAR = ["nokta", "selektivite", "linye", "pd", "zi"] as const;
 /** 495: "metin" — serbest metin (belgeye basılan sabit yazı; sahada okunur, doldurulmaz) */
@@ -85,6 +99,10 @@ const Deger = z.object({
   secenekler: secenekListesi.optional(), olumsuz: secenekListesi.optional(), agir: z.boolean().default(false),
   op: z.enum(SINIRLAR).optional(), sinir: z.number().finite().optional(), not: z.string().max(120).optional(), formul,
 });
+const FirmaSatiri = z.object({
+  id: kimlik, ad, kaynak: z.enum(FIRMA_KAYNAKLARI), metin: z.string().max(400).optional(), tam: z.boolean().optional(),
+});
+export type FirmaSatiri = z.output<typeof FirmaSatiri>;
 const ImzaSatiri = z.object({
   id: kimlik, ad, kim: z.enum(IMZA_KISILERI), alan: z.enum(IMZA_ALANLARI).optional(), metin: z.string().max(400).optional(), tam: z.boolean().optional(),
 });
@@ -179,6 +197,8 @@ export const Gorunum = z.object({
   /** 2026-10-16 (sunum 595 madde 25 — reisim: "format yapıcıda e imza yeri de seçilebilsin e imza seçilen yere işlesin"; K7 "ikisi"): imzaya
       hazırlanan PDF'teki boş imza alanının yeri — hucre: imza bölümünün İmza hücresi (verilmemişse bu) · kutu: son sayfada (mm, sayfanın sol
       üstünden; A4 210 × 297) · gorunmez: alan yok (araç görünmez imza atar). src/belge/eimza.ts */
+  /** 595 (madde 3): 1. bölümün satırları (FirmaSatiri); verilmemişse bugünkü satırlar */
+  firma: z.object({ satirlar: z.array(FirmaSatiri).max(40) }).optional(),
   eimza: z.object({
     yer: z.enum(["hucre", "kutu", "gorunmez"]),
     x: z.number().min(0).max(200).optional(), y: z.number().min(0).max(287).optional(),
@@ -199,6 +219,17 @@ export const FormatTanimi = z.object({
   };
   const bagli = new Set<string>();
   let tamSayisi = 0;
+  /* 595 (madde 3): firma bilgileri satırları — kimlik tekil, kayıt bilgisi iki kez yok, zorunlular var */
+  const fs = t.gorunum.firma?.satirlar;
+  if (fs) {
+    const gorulenK = new Set<string>();
+    fs.forEach((s, j) => {
+      tek(s.id, ["gorunum", "firma", "satirlar", j, "id"]);
+      if (s.kaynak !== "serbest" && gorulenK.has(s.kaynak)) bag.addIssue({ code: "custom", path: ["gorunum", "firma", "satirlar", j], message: `Firma bilgisi iki kez: ${FIRMA_KAYNAK_ADI[s.kaynak]}` });
+      gorulenK.add(s.kaynak);
+    });
+    for (const z0 of FIRMA_ZORUNLU) if (!gorulenK.has(z0)) bag.addIssue({ code: "custom", path: ["gorunum", "firma"], message: `Firma bilgilerinde zorunlu satır yok: ${FIRMA_KAYNAK_ADI[z0]}` });
+  }
   t.bolumler.forEach((b, i) => {
     tek(b.id, ["bolumler", i, "id"]);
     if (b.blok === "bilgi" && b.tam && ++tamSayisi > 1) bag.addIssue({ code: "custom", path: ["bolumler", i, "tam"], message: "Ekipman bölümü bir tane olur." });

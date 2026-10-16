@@ -19,7 +19,7 @@
 import { noktaHesap, sayiOku, SINIR_ISARETI, sinirSonucu } from "./hesap.ts";
 import { formulDenet, formulluAlan, formulluDeger, formulluMadde, formulluSutun, formulUygula, genelAdlar, satirHesabi, tabloAdlari, type Deger } from "./formul.ts";
 import { etkinKurallar, kuralOzu, kuralUygula } from "./sonuc.ts";
-import { imzaSatirlari } from "./duzen.ts";
+import { firmaSatirlari, imzaSatirlari } from "./duzen.ts";
 import { kurucudan, type Bolum, type BolumOf, type Cevaplar, type FormatTanimi, type SonucKurali } from "./tanim.ts";
 
 export interface Eksik { bolum: string; alan: string; ad: string }
@@ -296,6 +296,9 @@ export function kilitDenetimi(t: FormatTanimi, kaynak: FormatTanimi): string[] {
       }
     }
   }
+  /* 595 (madde 3): Bakanlık formatının 1. bölümü (Firma bilgileri) — satırların adı, bilgisi, sırası, tam satırlığı, sabit yazısı */
+  const firmaOzu = (x: FormatTanimi) => oz({ satirlar: firmaSatirlari(x).map((s) => ({ ad: s.ad, kaynak: s.kaynak, metin: s.metin, tam: s.tam })) });
+  if (kilitVar && firmaOzu(t) !== firmaOzu(kaynak)) sorun("değiştirilmiş", "firma", "Firma bilgileri");
   /* resmî formatın kimliği: form kodu ve başlık (PDF üst bilgisi) — kilitli öğesi olan kaynakta değişmez */
   if (kilitVar && kaynak.gorunum.formKodu && (t.gorunum.formKodu !== kaynak.gorunum.formKodu || t.gorunum.baslik !== kaynak.gorunum.baslik)) {
     l.push(`Bakanlık formatının form kodu ve başlığı değiştirilmiş: ${kaynak.gorunum.formKodu} (“${kaynak.gorunum.baslik}”).`);

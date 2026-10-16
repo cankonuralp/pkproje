@@ -8,11 +8,11 @@
    JSX değil createElement: düğüm test koşucusu (node --test) bu dosyayı doğrudan yükler (tests/belge.test.ts). */
 import { createElement as h, Fragment, type ReactNode } from "react";
 import { SINIR_ISARETI } from "../format/hesap.ts";
-import { raporDuzeni, sabitEkipmanAlanlari, siraBasligi } from "../format/duzen.ts";
+import { firmaSatirlari, raporDuzeni, sabitEkipmanAlanlari, siraBasligi } from "../format/duzen.ts";
 import { gecerliKunye, kilitliKunye, metotMetni } from "../format/kunye.ts";
 import { formulUygula } from "../format/formul.ts";
 import { degerlendir } from "../format/motor.ts";
-import { EKIPMAN_ALAN_ADI, type Bolum, type BolumOf, type ImzaSatiri } from "../format/tanim.ts";
+import { EKIPMAN_ALAN_ADI, type Bolum, type BolumOf, type FirmaSatiri, type ImzaSatiri } from "../format/tanim.ts";
 /* veri.ts: saf tanımlar (tanimlar.ts node:crypto kullanır — 451: Format kurucunun belge önizlemesi bu çiziciyi tarayıcıda koşar) */
 import { TANIMLAR } from "../tanim/veri.ts";
 import type { BelgeFotosu, BelgeVerisi, ImzaKisiBilgisi } from "./veri.ts";
@@ -233,6 +233,26 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
     }
   };
 
+  /* 595 (madde 3): 1. bölümün satır değeri — plandan / kayıttan / sahadan; serbest satır formatın sabit yazısı (boşsa boş hücre) */
+  const firmaDegeri = (s: FirmaSatiri): ReactNode => {
+    switch (s.kaynak) {
+      case "firma": return kunye.firma;
+      case "adres": return deger(kunye.adres);
+      case "rapor_no": return no;
+      case "rapor_tarihi": return tarihNo(v.tarih.rapor);
+      case "isg": return kunye.isg ?? "Yok";
+      case "sgk": return kunye.sgk ?? "Yok";
+      case "bas": return saatliNo(v.tarih.bas);
+      case "bit": return saatliNo(v.tarih.bit);
+      case "sonraki": return tarihNo(v.tarih.sonraki);
+      case "takip": return tarihNo(v.tarih.takip);
+      case "metot": return kunye.metot || "-";
+      case "eposta": return deger(kunye.eposta);
+      case "tel": return deger(kunye.tel);
+      case "plan_no": return deger(v.planNo);
+      case "serbest": return s.metin?.trim() ?? "";
+    }
+  };
   /* 2. bölüm: kod ve tür; tam ekipman bölümlü formatta (460) ardından YALNIZ o bölümün alanları, formatın sırasıyla ve adıyla; eski formatta
      kayıttan başlayan sabit satırlar (formatın aynı adlı alanı yoksa — saha ekranıyla aynı liste), "Ekipman bölümü", sonra formatın ekipman alanları */
   const ekipman: Cift[] = [
@@ -250,13 +270,9 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
         h("div", null, h("span", null, "Doküman Kodu"), `: ${formKod}`), h("div", null, h("span", null, "Format sürümü"), `: ${v.formatSira}`),
         h("div", null, h("span", null, "Rapor No"), `: ${no}`), h("div", null, h("span", null, "Rapor Tarihi"), `: ${tarihNo(v.tarih.rapor)}`))))),
     v.imza || v.kesin ? null : h("p", { className: "rb-taslak" }, "İmzasız önizleme — muayene uzmanının son imzasıyla geçerli olur."),
+    /* 595 (madde 3): satırlar formatın (adı, sırası, varlığı — format/duzen.ts firmaSatirlari; verilmemişse bugünkü 11 satır), değer kayıttan */
     bolum("1", "Firma bilgileri", bilgiTablosu([
-      ["Firma adı", kunye.firma, true], ["Periyodik kontrol adresi", deger(kunye.adres), true],
-      ["Rapor numarası", no], ["Rapor tarihi", tarihNo(v.tarih.rapor)],
-      ["İSG-KATİP sözleşme ID", kunye.isg ?? "Yok"], ["SGK sicil numarası", kunye.sgk ?? "Yok"],
-      ["Başlangıç tarihi ve saati", saatliNo(v.tarih.bas)], ["Bitiş tarihi ve saati", saatliNo(v.tarih.bit)],
-      ["Bir sonraki periyodik kontrol tarihi", tarihNo(v.tarih.sonraki)], ["Takip kontrol tarihi", tarihNo(v.tarih.takip)],
-      ["Periyodik kontrol metodu ve kapsamı", kunye.metot || "-", true],
+      ...firmaSatirlari(t).map((s): Cift => [s.ad, firmaDegeri(s), !!s.tam]),
       /* 486: formatta ekipman bölümü kaldırıldıysa kod ve tür burada (rapor hangi ekipmanın — her belgede) */
       ...(duzen.ekipman ? [] : ekipman.slice(0, 2)),
     ])),

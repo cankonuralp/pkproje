@@ -323,7 +323,7 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
       <div className={stil.seritKap}>
         <Serit tur="bilgi" ikon="info">
           <span className={stil.yalnizGenis}>Raporun kendisini düzenliyorsunuz: başlığa, maddeye, sütun başlığına basıp yazın; “+” ile ekleyin, “×” ile çıkarın,
-            ayrıntılar ayar tuşunda. Kilit simgeli yerler Bakanlık formatının; onlar da değişir, yayınlarken uyarı çıkar. Firma bilgileri her formatta aynıdır.
+            ayrıntılar ayar tuşunda. Kilit simgeli yerler Bakanlık formatının; onlar da değişir, yayınlarken uyarı çıkar. Firma bilgilerinde SGK, İSG-KATİP ve başlangıç çıkarılmaz.
             Açık raporlar başladıkları sürümle kalır, yeni raporlar yayındaki sürümle açılır.</span>
           <span className={stil.yalnizDar}>Format kurucu masaüstünde düzenlenir; burada belge önizlemesi ve saha ekranı (denetçi gibi dene) açılır.</span>
         </Serit>

@@ -881,6 +881,8 @@ export async function raporBelgesiVerisi(db: Sorgulayici, depo: Depo, kim: Kisi,
   /* 595: onaylayan teknik yöneticinin hesabı bir personele bağlıysa o kaydın bilgileri (imza bölümünün teknik satırları: meslek, diploma …) */
   const onayPersonel = r.onay && r.onay_hesap ? await hesabinPersoneli(db, r.onay_hesap) : null;
   const onayKisi = onayPersonel ? await personelBelgeBilgisi(db, onayPersonel) : null;
+  /* 595 (madde 3): 1. bölümün e-posta / telefon satırları için tesisin müşterisinin iletişimi (saha ekranıyla aynı kaynak) */
+  const iletisim = plan ? await tesisMusteriIletisim(db, plan.tesisId) : null;
   /* tamamlanan raporun önizlemesi "imzasız" demez: imza zamanı ve yolu imzalı sürümden */
   const imzali = r.durum === "imzali" ? await imzaliSurum(db, r.id, r.revizyon) : null;
   return {
@@ -891,7 +893,9 @@ export async function raporBelgesiVerisi(db: Sorgulayici, depo: Depo, kim: Kisi,
       firma: await firmaBelgeKunyesi(db, depo),
       no: r.no, revizyon: r.revizyon, formatSira: format.sira, durum: r.durum,
       tur: { ad: tur.ad, kod: tur.kod, kontrolStd: tur.kontrolStd },
-      kunye: { firmaAdi: r.kunye.firma_adi, adres: r.kunye.adres ?? null, sgk: r.kunye.sgk ?? null, isgNo: r.kunye.isg_no ?? null },
+      kunye: { firmaAdi: r.kunye.firma_adi, adres: r.kunye.adres ?? null, sgk: r.kunye.sgk ?? null, isgNo: r.kunye.isg_no ?? null,
+        eposta: iletisim?.eposta ?? null, tel: iletisim?.tel ?? null },
+      planNo: plan?.no ?? null,
       tarih: { bas: zamanOku(r.bas), bit: zamanOku(r.bit), sonraki: r.sonraki, takip: r.takip, rapor: r.rapor_tarihi },
       ekipman: { kod: etiket?.kod ?? "—", ...r.ekipman_bilgi },
       tanim: format.tanim, cevaplar: cev.success ? cev.data : Cevaplar.parse({}), cihazlar, fotolar,

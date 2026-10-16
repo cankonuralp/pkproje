@@ -41,9 +41,9 @@ import { DegerYok, Kirinti, Kod, NesneBasi, Rozet, SeritKap } from "../../../com
 import { simdiIso, tarihNo } from "../../../components/secim/tarih";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
-import { raporDuzeni, sabitEkipmanAlanlari } from "../../../format/duzen";
+import { firmaSatirlari, raporDuzeni, sabitEkipmanAlanlari } from "../../../format/duzen";
 import { degerlendir } from "../../../format/motor";
-import { doldurma, EKIPMAN_ALAN_ADI, KUNYE_ALAN_ADI, KUNYE_ALANLARI, KUNYE_EN_COK, type Cevaplar, type KunyeAlani } from "../../../format/tanim";
+import { doldurma, EKIPMAN_ALAN_ADI, KUNYE_ALAN_ADI, KUNYE_ALANLARI, KUNYE_EN_COK, type Cevaplar, type FirmaSatiri, type KunyeAlani } from "../../../format/tanim";
 import { gecerliKunye, kayitKunyesi, kilitliKunye, metotMetni } from "../../../format/kunye";
 import { formulDegeri, formulluAlan, formulUygula, type FormulEki } from "../../../format/formul";
 import { satirAnahtari } from "../../../format/motor";
@@ -829,6 +829,44 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
     k === "bit" && tarih.bas && tarih.bit && tarih.bit < tarih.bas ? "Bitiş başlangıçtan önce."
       : k === "sonraki" && tarih.bas && tarih.sonraki && tarih.sonraki <= tarih.bas.slice(0, 10) ? "Kontrol tarihinden sonra olmalı." : null;
   /* genis (464): başlangıç, bitiş ve sonraki kontrol alt alta, tam satır */
+  /* 595 (madde 3): 1. bölüm formatın satırlarıyla. Eski formatta (satır tanımı yok) sahanın bugünkü adları; e-posta / telefon satırı yoksa metottan
+     önce eklenir (künye — denetçi düzeltir) */
+  const yeniFirma = !!v.tanim.gorunum.firma;
+  const ESKI_AD: Partial<Record<FirmaSatiri["kaynak"], string>> = { rapor_no: "Rapor no", bas: "Periyodik kontrol başlangıç tarihi ve saati",
+    bit: "Periyodik kontrol bitiş tarihi ve saati" };
+  const firmaSatirlariSahada: readonly FirmaSatiri[] = (() => {
+    const l = [...firmaSatirlari(v.tanim)];
+    for (const k of ["eposta", "tel"] as const) {
+      if (l.some((s) => s.kaynak === k)) continue;
+      const m = l.findIndex((s) => s.kaynak === "metot");
+      const s: FirmaSatiri = { id: `fb_${k}`, ad: KUNYE_ALAN_ADI[k], kaynak: k };
+      if (m >= 0) l.splice(m, 0, s); else l.push(s);
+    }
+    return l;
+  })();
+  const firmaSatiri = (s: FirmaSatiri): ReactNode => {
+    const ad = yeniFirma ? s.ad : (ESKI_AD[s.kaynak] ?? s.ad);
+    const kad = yeniFirma ? { etiket: s.ad } : {};
+    switch (s.kaynak) {
+      case "firma": return kunyeSatiri("firma", kad);
+      case "adres": return kunyeSatiri("adres", { ...kad, cok: true });
+      case "rapor_no": return <Satir key={s.id} etiket={ad}><Kod>{v.no}</Kod></Satir>;
+      case "rapor_tarihi": return tarihSatiri("rapor", ad, false);
+      case "isg": return kunyeSatiri("isg", { ...kad, gosterim: kn.isg ? <span className={stil.kodUzun}>{kn.isg}</span> : <span className={stil.uyari}>Yok</span> });
+      case "sgk": return kunyeSatiri("sgk", { ...kad, gosterim: kn.sgk ? <span className={stil.kodUzun}>{kn.sgk}</span> : <span className={stil.uyari}>Yok</span> });
+      /* 464 (reisim, hata listesi 9: "Periyodik kontrol başlangıç ve bitiş tarihleri alt alta olmalı, hemen ardından bir sonraki kontrol tarihi
+         olmalı"): üçü tam satır */
+      case "bas": return tarihSatiri("bas", ad, true, true, true);
+      case "bit": return tarihSatiri("bit", ad, true, false, true);
+      case "sonraki": return tarihSatiri("sonraki", ad, false, false, true);
+      case "takip": return tarihSatiri("takip", ad, false);
+      case "metot": return kunyeSatiri("metot", { ...kad, gosterim: metot, cok: true });
+      case "eposta": return kunyeSatiri("eposta", kad);
+      case "tel": return kunyeSatiri("tel", kad);
+      case "plan_no": return <Satir key={s.id} etiket={ad}><Kod>{v.plan.no}</Kod></Satir>;
+      case "serbest": return <Satir key={s.id} etiket={ad} genis={s.tam}>{s.metin?.trim() || <DegerYok>-</DegerYok>}</Satir>;
+    }
+  };
   const tarihSatiri = (k: TarihAnahtari, etiket: string, saat: boolean, zorunlu = false, genis = false) => {
     const id = TID(k), alan = `tarih.${k}`, gec = gecersiz(alan);
     const h = alanHata[alan] ?? (gec ? "Tarih ve saat seçilmeli." : null), u = h ? null : tarihUyari(k);
@@ -964,21 +1002,9 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
               sırasıyla, iki sütunda satır satır eşleşir — firma adı | adres · rapor no | rapor tarihi · İSG-KATİP | SGK · başlangıç | bitiş ·
               sonraki | takip; sonra müşterinin e-posta | telefonu, metot ve ekipman bölümü */}
           <Satirlar>
-            {kunyeSatiri("firma")}
-            {kunyeSatiri("adres", { cok: true })}
-            <Satir etiket="Rapor no"><Kod>{v.no}</Kod></Satir>
-            {tarihSatiri("rapor", "Rapor tarihi", false)}
-            {kunyeSatiri("isg", { gosterim: kn.isg ? <span className={stil.kodUzun}>{kn.isg}</span> : <span className={stil.uyari}>Yok</span> })}
-            {kunyeSatiri("sgk", { gosterim: kn.sgk ? <span className={stil.kodUzun}>{kn.sgk}</span> : <span className={stil.uyari}>Yok</span> })}
-            {/* 464 (reisim, hata listesi 9: "Periyodik kontrol başlangıç ve bitiş tarihleri alt alta olmalı, hemen ardından bir sonraki kontrol
-                tarihi olmalı"): üçü alt alta, tam satır */}
-            {tarihSatiri("bas", "Periyodik kontrol başlangıç tarihi ve saati", true, true, true)}
-            {tarihSatiri("bit", "Periyodik kontrol bitiş tarihi ve saati", true, false, true)}
-            {tarihSatiri("sonraki", "Bir sonraki periyodik kontrol tarihi", false, false, true)}
-            {tarihSatiri("takip", "Takip kontrol tarihi", false)}
-            {kunyeSatiri("eposta")}
-            {kunyeSatiri("tel")}
-            {kunyeSatiri("metot", { gosterim: metot, cok: true })}
+            {/* 595 (madde 3): satırlar formatın (adı, sırası, varlığı — belgeyle aynı liste); satırları tanımlanmamış (eski) formatta bugünkü adlar
+                ve sıra; müşterinin e-postası ve telefonu formatta satırı yoksa da sahada (künye — eski düzendeki yerinde, metottan önce) */}
+            {firmaSatirlariSahada.map(firmaSatiri)}
             {duzen.ekipman && !duzen.tam && metinSatiri("bolum", "Ekipman bölümü", 60)}
             {/* 486: formatta ekipman bölümü kaldırıldıysa kod ve tür burada (belgeyle aynı) */}
             {!duzen.ekipman && <><Satir etiket="Ekipman kodu"><Kod>{v.ekipman.kod}</Kod></Satir><Satir etiket="Ekipman türü">{v.tur.ad}</Satir></>}

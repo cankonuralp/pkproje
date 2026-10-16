@@ -17,7 +17,7 @@
      DEĞİŞTİRİLEBİLİR OLMALI EKİPMAN KODU HARİÇ"): tam ekipman bölümünde KAYITTAN gelen kopyalar çizilmez (tamAlanlari) — ekipman kodu ve türü
      2. bölümün sabit satırında zaten var; seri no ve kullanım yeri ekipman kaydına bağlı (raporda değiştirilebilir) alan olur, aynısı varsa çıkar.
      Ekran ve belge aynı listeden; Format kurucu formatın kendisini gösterir (sade: false). */
-import { EKIPMAN_ALAN_ADI, type Bolum, type BolumOf, type EkipmanAlani, type FormatTanimi, type ImzaSatiri } from "./tanim.ts";
+import { EKIPMAN_ALAN_ADI, FIRMA_KAYNAK_ADI, type Bolum, type BolumOf, type EkipmanAlani, type FirmaKaynagi, type FirmaSatiri, type FormatTanimi, type ImzaSatiri } from "./tanim.ts";
 import { sonucKurallariniYaz } from "./sonuc.ts";
 
 const kucuk = (s: string) => s.toLocaleLowerCase("tr");
@@ -172,4 +172,15 @@ export const imzaVarsayilani = (kim: "uzman" | "teknik"): readonly ImzaSatiri[] 
 export function imzaSatirlari(b: BolumOf<"imza">): readonly ImzaSatiri[] {
   if (b.satirlar) return b.satirlar;
   return [...(b.imzalar.includes("uzman") ? UZMAN_SATIRLARI : []), ...(b.imzalar.includes("teknik") ? TEKNIK_SATIRLARI : [])];
+}
+
+/* 595 (sunum 595 madde 3): 1. bölümün (Firma bilgileri) satırları — tanımdakiler; verilmemişse bugünkü satırlar, belgenin bugünkü sırasıyla
+   (belge aynı çizilir). Varsayılanın kimlikleri yalnız bu listede (tanıma kurucu yeni kimlikle yazar). */
+const FIRMA_VARSAYILAN: readonly [FirmaKaynagi, boolean][] = [
+  ["firma", true], ["adres", true], ["rapor_no", false], ["rapor_tarihi", false], ["isg", false], ["sgk", false], ["bas", false], ["bit", false],
+  ["sonraki", false], ["takip", false], ["metot", true],
+];
+const FIRMA_SATIRLARI: readonly FirmaSatiri[] = FIRMA_VARSAYILAN.map(([k, tam]) => ({ id: `fb_${k}`, ad: FIRMA_KAYNAK_ADI[k], kaynak: k, ...(tam ? { tam } : {}) }));
+export function firmaSatirlari(t: Pick<FormatTanimi, "gorunum">): readonly FirmaSatiri[] {
+  return t.gorunum.firma?.satirlar ?? FIRMA_SATIRLARI;
 }

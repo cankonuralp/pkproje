@@ -85,7 +85,8 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
   if (bilgi.project.name !== "telefon") {
     await expect(kagit).toBeVisible();
     await expect(kagit.getByText("1. Firma bilgileri")).toBeVisible();
-    await expect(kagit.getByText("Sabit · her raporda aynı")).toBeVisible();
+    /* 2026-10-16 (595 madde 3, K2 — reisim: "firma bilgileri kısmında da [satır eklemek istedim]"): firma bilgileri artık sabit değil — "+ Satır ekle" */
+    await expect(kagit.getByRole("combobox", { name: "Firma bilgileri · satır ekle" })).toBeVisible();
     await expect(kagit.getByText("Kablo şebeke tarafı").first()).toBeVisible();
     await goz(page, "kurucu-ilk", bilgi.project.name);
     /* 470 (reisim hata listesi 38: "biraz daha serbestlik"): Bakanlık bölümü işaretli ama silinir — önce sorulur (burada Vazgeç) */
@@ -191,9 +192,24 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     const altBolum = kagit.getByRole("region", { name: /^\d+\.1 Deneme alt başlık$/ });
     await expect(altBolum).toBeVisible();
     await expect(altBolum.getByRole("columnheader", { name: /Yeni sütun/ })).toBeVisible();
-    /* firma bilgileri sabit: yalnız metot satırı yazılır, bölüm silinmez */
+    /* firma bilgileri: bölüm silinmez; 595 (madde 3, K2): satır eklenir (proje no), adı yazılır, çıkarılır; SGK / İSG-KATİP çıkarılmaz, adı değişmez */
     const firma = kagit.locator("#kb-firma");
     await expect(firma.getByRole("button", { name: /bölümü sil$/ })).toHaveCount(0);
+    await firma.getByRole("combobox", { name: "Firma bilgileri · satır ekle" }).click();
+    await page.getByRole("option", { name: /^Proje no/ }).click();
+    const firmaAdi = page.getByRole("textbox", { name: "Firma bilgisi satırının adı" });
+    await expect(firmaAdi).toBeFocused();
+    await firmaAdi.fill("Proje numarası");
+    await firmaAdi.press("Enter");
+    await expect(firma.getByRole("button", { name: "Proje numarası", exact: true })).toBeVisible();
+    await firma.getByRole("button", { name: "Rapor numarası", exact: true }).click();
+    await firmaAdi.fill("Rapor no");
+    await firmaAdi.press("Enter");
+    await expect(firma.getByRole("button", { name: "Rapor no", exact: true })).toBeVisible();
+    await expect(firma.getByRole("button", { name: "SGK sicil numarası · çıkar" })).toHaveCount(0);
+    await expect(firma.getByRole("button", { name: "SGK sicil numarası", exact: true })).toHaveCount(0);   // adı yazılmaz
+    await firma.getByRole("button", { name: "Takip kontrol tarihi · çıkar" }).click();
+    await expect(firma.getByText("Takip kontrol tarihi")).toHaveCount(0);
     /* 492 (hata listesi 9: "sadece sgk no ve isg katip no değiştirilemez olsun ve format yapıcıda bu belirlenebilir olsun"): sahada kilit — başlangıçta
        SGK ve İSG-KATİP basılı; basınca açılır, yeniden basınca kilitlenir */
     const kilitler = firma.getByRole("group", { name: "Sahada denetçinin değiştiremediği bilgiler" });
@@ -349,6 +365,8 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await expect(belge.getByText("Model / tip")).toBeVisible();
     await expect(belge.getByText("Teknik yöneticinin diploma no")).toBeVisible();
     await expect(belge.getByText("Tesis yetkilisi")).toBeVisible();
+    await expect(belge.getByText("Proje numarası")).toBeVisible();
+    await expect(belge.getByText("Takip kontrol tarihi")).toHaveCount(0);
     await expect(belge.getByText(/^\d+\.1 Deneme alt başlık$/)).toBeVisible();
     await expect(belge.getByText("Deneme yorumu", { exact: false }).first()).toBeVisible();
     await goz(page, "kurucu-belge", bilgi.project.name);

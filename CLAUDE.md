@@ -156,6 +156,11 @@ pkproje/
                             belge.ts değerleri kişinin kaydından (teknik: onaylayanın personeli — veri.ts onay.kisi; raporlar raporBelgesiVerisi) · kurucu.ts
                             imzaSatiri* / imzaKisisiYaz (ilk değişiklikte satırlar yeni kimlikle tanıma) · Kagit.tsx yerinde ad, yukarı / aşağı, tam satır,
                             "+ Satır ekle" · motor bolumOzu satırlar (Bakanlık değişikliği uyarı) · S.A.Y say-kurucu "imza_satiri" · kilit tests/imza-satirlari
+                            · 595 FİRMA BİLGİLERİ (madde 3, K2): tanim.ts gorunum.firma.satirlar (FirmaSatiri: ad, kaynak FIRMA_KAYNAKLARI — plan / künye /
+                            tarih / proje no / serbest —, metin, tam; FIRMA_ZORUNLU SGK · İSG-KATİP · başlangıç) · duzen.ts firmaSatirlari (eski format bugünkü
+                            11 satır, birebir) · belge.ts firmaDegeri · SahaRaporu firmaSatiri (eski formatta sahanın bugünkü adları; e-posta / telefon künyede
+                            kalır) · kurucu.ts firmaSatiri* (SGK / İSG-KATİP adı sabit) · Kagit.tsx 1. bölüm · motor kilitDenetimi firma özü · S.A.Y
+                            "firma_satiri" · kilit tests/firma-satirlari, bozan firma-satirlari
   src/modules/rapor-format/ RAPOR FORMATI (2026-10-04, 308): sürümlü tanım (rapor_format, göç 0022: taslak → yayında → eski; yayınlanan değişmez) ·
                             şablondan başlat · taslak kaydet · yayınla (kilitli Bakanlık öğesi ENGEL, öteki denetim uyarı) · yayındaki format;
                             ekran: tür sayfası "Rapor şablonu" + önizleme /ekipman-turleri/<tür>/sablon/<sürüm> · FORMAT KURUCU (338, K4):

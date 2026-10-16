@@ -23,20 +23,24 @@
    595 (2026-10-16; sunum 595 madde 1 — reisim: "format yapıcıda bu ve benzeri kısımlarda değişiklik yapamıyorum … satır sütun ekleyemiyorum" ·
    "mesela teknik yönetici için unvan diploma no gibi satırlar eklemek istedim ekleyemedim"): imza bölümünün satırları kâğıtta — adı yazılır,
    yukarı / aşağı taşınır, tam satır yapılır, çıkarılır; "+ Satır ekle" muayene uzmanının ya da teknik yöneticinin kaydından bilgi (meslek, EKİPNET,
-   diploma, oda sicil, e-posta, telefon, imza, onay zamanı) ya da serbest satır (tesis yetkilisi, kaşe — sabit yazı ya da boş hücre). */
+   diploma, oda sicil, e-posta, telefon, imza, onay zamanı) ya da serbest satır (tesis yetkilisi, kaşe — sabit yazı ya da boş hücre).
+   595 (madde 3, K2 "serbest; SGK ve İSG-KATİP kilitli kalsın"): 1. Firma bilgileri artık sabit değil — satırın adı yazılır, sırası değişir, tam
+   satır olur, çıkarılır; "+ Satır ekle" plandan / kayıttan başka bilgi (müşterinin e-postası, telefonu, proje no …) ya da serbest satır. SGK,
+   İSG-KATİP ve başlangıç çıkarılmaz; SGK ve İSG-KATİP'in adı da değişmez. */
 import { Fragment, useEffect, useRef, useState, type DragEvent, type ReactNode } from "react";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { useOnayla } from "../../../components/pencere/Onay";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { SINIR_ISARETI } from "../../../format/hesap";
-import { altBaslikAnasi, altGrupSonu, imzaSatirlari, raporDuzeni, siraBasligi } from "../../../format/duzen";
+import { altBaslikAnasi, altGrupSonu, firmaSatirlari, imzaSatirlari, raporDuzeni, siraBasligi } from "../../../format/duzen";
 import {
-  BLOKLAR, doldurma, DOLDURULUR, EKIPMAN_ALAN_ADI, EKIPMAN_ALANLARI, IMZA_ALAN_ADI, IMZA_KISI_ADI, KUNYE_ALAN_ADI, KUNYE_ALANLARI, type Blok, type Bolum, type BolumOf,
-  type FormatTanimi, type ImzaAlani, type ImzaSatiri,
+  BLOKLAR, doldurma, DOLDURULUR, EKIPMAN_ALAN_ADI, EKIPMAN_ALANLARI, FIRMA_KAYNAK_ADI, FIRMA_ZORUNLU, IMZA_ALAN_ADI, IMZA_KISI_ADI, KUNYE_ALAN_ADI, KUNYE_ALANLARI,
+  type Blok, type Bolum, type BolumOf, type FirmaKaynagi, type FirmaSatiri, type FormatTanimi, type ImzaAlani, type ImzaSatiri,
 } from "../../../format/tanim";
 import { kilitliKunye } from "../../../format/kunye";
 import {
-  ALT_TURLER, altBaslikEkle, bolumAdi, eksikImzaAlanlari, ekipmanBolumuGeriEkle, ekipmanBolumuKaldir, bolumDuzeni, ekipmanAlaniEkle, gorunumYaz, grupEkle, grupSil, grupYaz,
+  ALT_TURLER, altBaslikEkle, bolumAdi, eksikFirmaKaynaklari, eksikImzaAlanlari, FIRMA_ADI_SABIT, firmaSatiriEkle, firmaSatiriSil, firmaSatiriTasi,
+  firmaSatiriYaz, ekipmanBolumuGeriEkle, ekipmanBolumuKaldir, bolumDuzeni, ekipmanAlaniEkle, gorunumYaz, grupEkle, grupSil, grupYaz,
   imzaKisisiYaz, imzaSatiriEkle, imzaSatiriSil, imzaSatiriTasi, imzaSatiriYaz, kunyeKilitYaz, kurucudan, maddeEkle, ogeEkle, ogeSil, ogeYaz, satirlar, tasi,
   yeniBolum, yeniKimlik,
 } from "../kurucu";
@@ -308,6 +312,45 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
       <Tus ikon="x" ad={`${ad} · çıkar`} onClick={() => void cikar(i, id, ad, kilit)} />
     </span>
   );
+
+  /* ── 595 (madde 3): 1. bölümün (Firma bilgileri) satırları ── */
+  const FIRMA_ORNEK: Record<FirmaKaynagi, string> = {
+    firma: "plandan", adres: "plandan", rapor_no: "kendiliğinden", rapor_tarihi: "GG.AA.YYYY", isg: "plandan", sgk: "plandan", bas: "sahada", bit: "sahada",
+    sonraki: "periyottan", takip: "gerekirse", metot: "", eposta: "müşteriden", tel: "müşteriden", plan_no: "plandan", serbest: "",
+  };
+  const firmaKoy = (x: string) => {
+    const y = firmaSatiriEkle(t, x as FirmaKaynagi);
+    if (!y.id) return;
+    degis(y.t); setYeniId(y.id); bildir("Firma bilgilerine satır eklendi (taslak); adını yazabilirsiniz.");
+  };
+  const firmaTasi = (s: FirmaSatiri, yon: -1 | 1) => {
+    degis(firmaSatiriTasi(t, s.id, yon));
+    requestAnimationFrame(() => document.querySelector<HTMLElement>(`#kb-firma [data-firma-ad="${CSS.escape(s.ad)}"] [data-yon="${yon}"] button:not([disabled])`)?.focus());
+  };
+  const firmaEtiketi = (s: FirmaSatiri, j: number, l: readonly FirmaSatiri[]) => {
+    const sabitAd = FIRMA_ADI_SABIT.includes(s.kaynak), zorunlu = FIRMA_ZORUNLU.includes(s.kaynak);
+    return (
+      <span key={s.id} className={k.etiket} data-firma-ad={s.ad}>
+        {sabitAd ? <span>{s.ad}</span> : <Yazi deger={s.ad} ad="Firma bilgisi satırının adı" ac={yeniId === s.id} yaz={(x) => degis(firmaSatiriYaz(t, s.id, { ad: x }))} />}
+        <span className={k.ogeTus}>
+          {zorunlu && <Kilit ad={sabitAd ? "Kayıttan · Bakanlık" : "Zorunlu · çıkarılmaz"} not={sabitAd ? "adı ve yeri kayıtta; çıkarılmaz" : "adı yazılır, çıkarılmaz"} />}
+          <span data-yon="-1" className={k.yonKap}><Tus ikon="arrow-up" ad={`${s.ad} · yukarı`} disabled={j <= 0} onClick={() => firmaTasi(s, -1)} /></span>
+          <span data-yon="1" className={k.yonKap}><Tus ikon="arrow-down" ad={`${s.ad} · aşağı`} disabled={j >= l.length - 1} onClick={() => firmaTasi(s, 1)} /></span>
+          <Tus ikon="arrow-right-left" ad={`${s.ad} · tam satır`} basili={!!s.tam} onClick={() => degis(firmaSatiriYaz(t, s.id, { tam: !s.tam }))} />
+          {!zorunlu && <Tus ikon="x" ad={`${s.ad} · çıkar`} onClick={() => { degis(firmaSatiriSil(t, s.id)); bildir(`“${s.ad}” çıkarıldı (taslak).`); }} />}
+        </span>
+      </span>
+    );
+  };
+  const firmaDegeri = (s: FirmaSatiri): ReactNode => {
+    if (s.kaynak === "serbest") return <Yazi key={`${s.id}-d`} deger={s.metin ?? ""} ad={`${s.ad} · sabit yazı`} bos="boş hücre ya da sabit yazı" uzun={400}
+      yaz={(x) => degis(firmaSatiriYaz(t, s.id, { metin: x }))} />;
+    if (s.kaynak === "metot") return <span key={`${s.id}-d`} className={k.metot}>
+      <Yazi deger={t.gorunum.dayanak.join("\n")} ad="Periyodik kontrol metodu ve kapsamı" bos="Standart / yönetmelik yazın (her satıra bir tane)" cok uzun={6000}
+        yaz={(x) => degis(gorunumYaz(t, { dayanak: satirlar(x, 20, 300) }))} />
+      {tur.std.length > 0 && <span className={k.turdan}>{tur.std.join(" · ")}</span>}</span>;
+    return <span key={`${s.id}-d`} className={k.ornek}>{FIRMA_ORNEK[s.kaynak]}</span>;
+  };
 
   /* ── 595: imza bölümünün satırları ── */
   const imzaSecenekleri = (b: BolumOf<"imza">) => [
@@ -686,23 +729,19 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
         </tr></tbody>
       </table>
 
-      {/* 1 · Firma bilgileri — SABİT (her formatta ve raporda aynı; plandan ve kayıttan) */}
-      <section className={`rb-bolum ${k.bolum}`} id="kb-firma">
+      {/* 1 · Firma bilgileri — 595 (madde 3): satırlar formatın (adı, sırası, tam satır, çıkar, "+ Satır ekle"); SGK, İSG-KATİP, başlangıç çıkmaz */}
+      <section className={`rb-bolum ${k.bolum}`} id="kb-firma" aria-label="1 Firma bilgileri">
         <div className={k.bolumBas}><h2>1. Firma bilgileri</h2>
-          <span className={k.araclar}><span className={k.sabit}><Ikon ad="lock" kucuk />Sabit · her raporda aynı</span></span></div>
+          <span className={k.araclar}><span className={k.tur}>plandan · kayıttan · sahadan</span></span></div>
         <BilgiTablosu l={[
-          ["Firma adı", <span key="f" className={k.ornek}>plandan</span>, true], ["Periyodik kontrol adresi", <span key="a" className={k.ornek}>plandan</span>, true],
-          ["Rapor numarası", <span key="n" className={k.ornek}>kendiliğinden</span>], ["Rapor tarihi", <span key="t" className={k.ornek}>GG.AA.YYYY</span>],
-          ["İSG-KATİP sözleşme ID", <span key="i" className={k.ornek}>plandan</span>], ["SGK sicil numarası", <span key="s" className={k.ornek}>plandan</span>],
-          ["Başlangıç tarihi ve saati", <span key="b" className={k.ornek}>sahada</span>], ["Bitiş tarihi ve saati", <span key="e" className={k.ornek}>sahada</span>],
-          ["Bir sonraki periyodik kontrol tarihi", <span key="o" className={k.ornek}>periyottan</span>], ["Takip kontrol tarihi", <span key="k" className={k.ornek}>gerekirse</span>],
+          ...firmaSatirlari(t).map((s, j, l): Hucre => [firmaEtiketi(s, j, l), firmaDegeri(s), !!s.tam]),
           /* 486: ekipman bölümü kaldırıldıysa kod ve tür 1. bölümde (belge ve saha ekranıyla aynı) */
           ...(duzen.ekipman ? [] : [["Ekipman kodu", <span key="ek" className={k.ornek}>kayıttan</span>], ["Ekipman türü", tur.ad]] as Hucre[]),
-          ["Periyodik kontrol metodu ve kapsamı", <span key="m" className={k.metot}>
-            <Yazi deger={t.gorunum.dayanak.join("\n")} ad="Periyodik kontrol metodu ve kapsamı" bos="Standart / yönetmelik yazın (her satıra bir tane)" cok uzun={6000}
-              yaz={(s) => degis(gorunumYaz(t, { dayanak: satirlar(s, 20, 300) }))} />
-            {tur.std.length > 0 && <span className={k.turdan}>{tur.std.join(" · ")}</span>}</span>, true],
-        ]} />
+        ]} son={<span className={k.ekleSira}><span className={k.ekleSecim}>
+          <SecimAlani id="kb-firma-ekle" ad="Firma bilgileri · satır ekle" etiketsiz deger="" ipucu="+ Satır ekle" degistir={firmaKoy}
+            secenekler={[...eksikFirmaKaynaklari(t).map((x) => [x, FIRMA_KAYNAK_ADI[x], FIRMA_ORNEK[x] || "kayıttan"] as const),
+              ["serbest", "Serbest satır", "sabit yazı ya da boş hücre"] as const]} />
+        </span></span>} />
         <KunyeKilitleri t={t} degis={degis} />
       </section>
 

@@ -10,13 +10,14 @@
    kuralına dön) — kurucunun tuşlarıyla aynı yol (kurucu.ts sonucKuraliYaz, bakanlikKuralinaDon).
    595 (sunum 595 madde 1): imza bölümünün satırları haritada ve "imza_satiri" işlemiyle (ekle — kişinin bilgisi ya da serbest satır —, değiştir:
    ad / sabit yazı / tam satır, çıkar, yukarı, aşağı) — kurucunun tuşlarıyla aynı yol (kurucu.ts imzaSatiri*); e-imzanın yeri haritada ve
-   "eimza_yeri" işlemiyle (hücre / son sayfada kutu — mm — / görünmez; kurucu.ts eimzaYaz). */
+   "eimza_yeri" işlemiyle (hücre / son sayfada kutu — mm — / görünmez; kurucu.ts eimzaYaz). 1. bölümün (Firma bilgileri) satırları haritada ve
+   "firma_satiri" işlemiyle (ekle — kayıt bilgisi ya da serbest —, değiştir, çıkar, yukarı, aşağı; kurucu.ts firmaSatiri*). */
 import { SINIR_ISARETI } from "../../format/hesap.ts";
-import { imzaSatirlari } from "../../format/duzen.ts";
+import { firmaSatirlari, imzaSatirlari } from "../../format/duzen.ts";
 import { etkinKurallar } from "../../format/sonuc.ts";
-import { IMZA_ALAN_ADI, IMZA_ALANLARI, IMZA_KISI_ADI, KURAL_EN_COK, type Blok, type Bolum, type FormatTanimi, type ImzaAlani, type SonucKurali } from "../../format/tanim.ts";
+import { FIRMA_KAYNAK_ADI, FIRMA_KAYNAKLARI, IMZA_ALAN_ADI, IMZA_ALANLARI, IMZA_KISI_ADI, KURAL_EN_COK, type Blok, type Bolum, type FormatTanimi, type ImzaAlani, type SonucKurali } from "../../format/tanim.ts";
 import {
-  bakanlikKuralinaDon, bolumAdi, bolumSil, eimzaYaz, grupEkle, imzaSatiriEkle, imzaSatiriSil, imzaSatiriTasi, imzaSatiriYaz, maddeEkle, ogeEkle, ogeSil, ogeYaz,
+  bakanlikKuralinaDon, bolumAdi, bolumSil, eimzaYaz, firmaSatiriEkle, firmaSatiriSil, firmaSatiriTasi, firmaSatiriYaz, grupEkle, imzaSatiriEkle, imzaSatiriSil, imzaSatiriTasi, imzaSatiriYaz, maddeEkle, ogeEkle, ogeSil, ogeYaz,
   sonucKuraliYaz, yeniBolum, yeniKimlik, type OgeTuru, type OgeYamasi,
 } from "./kurucu.ts";
 
@@ -34,6 +35,8 @@ const sinirMetni = (o: { op?: string; sinir?: number }) => (o.op && o.sinir !== 
 
 export function formatHaritasi(t: FormatTanimi): string {
   const l: string[] = ["Format taslağının bölümleri (bölüm kimliği · tür · ad) ve öğeleri (öğe kimliği · ad · tür; formül = kendiliğinden hesaplanan):"];
+  l.push("## firma · 1. bölüm · Firma bilgileri (satırlar — kimlik · ad · bilgi):");
+  for (const s of firmaSatirlari(t)) l.push(`- ${s.id} · ${s.ad} · ${s.kaynak === "serbest" ? `serbest${s.metin ? `, yazı: ${s.metin.slice(0, 80)}` : ""}` : FIRMA_KAYNAK_ADI[s.kaynak]}${s.tam ? " · tam satır" : ""}`);
   const e = t.gorunum.eimza;
   l.push(`E-imzanın yeri: ${!e || e.yer === "hucre" ? "imza bölümündeki İmza hücresi" : e.yer === "gorunmez" ? "görünmez imza"
     : `son sayfada kutu (soldan ${e.x ?? "?"} mm, üstten ${e.y ?? "?"} mm, ${e.en ?? "?"} × ${e.boy ?? "?"} mm)`}`);
@@ -77,6 +80,8 @@ export interface FormatIslemi {
   eylem?: unknown; kisi?: unknown; bilgi?: unknown; yazi?: unknown; tam?: unknown;
   /** eimza_yeri (595): yer (hucre | kutu | gorunmez); kutuda mm — x soldan, y üstten, en, boy */
   yer?: unknown; x?: unknown; y?: unknown; en?: unknown; boy?: unknown;
+  /** firma_satiri (595): eylem; ekle'de kaynak (FIRMA_KAYNAKLARI), ad, serbestte yazi; öteki eylemlerde oge (satırın kimliği ya da adı) */
+  kaynak?: unknown;
 }
 const metin = (x: unknown, n = 200) => (typeof x === "string" ? x.trim().replace(/\s+/g, " ").slice(0, n) : "");
 const tr = (s: string) => s.trim().toLocaleLowerCase("tr");
@@ -144,6 +149,34 @@ export function formatIslemleri(t0: FormatTanimi, islemler: readonly FormatIslem
       const l = [...t.bolumler]; l.splice(p, 0, b);
       t = { ...t, bolumler: l };
       yapilan.push(`“${ad}” bölümü eklendi`);
+      continue;
+    }
+    if (islem === "firma_satiri") {
+      const eylem = metin(x.eylem, 20);
+      if (eylem === "ekle") {
+        const k = metin(x.kaynak, 20);
+        if (!(FIRMA_KAYNAKLARI as readonly string[]).includes(k)) { red(`kaynak şunlardan biri olmalı: ${FIRMA_KAYNAKLARI.join(", ")}`); continue; }
+        const y = firmaSatiriEkle(t, k as (typeof FIRMA_KAYNAKLARI)[number], metin(x.ad) || undefined);
+        if (!y.id) { red(`“${FIRMA_KAYNAK_ADI[k as (typeof FIRMA_KAYNAKLARI)[number]]}” zaten var`); continue; }
+        t = k === "serbest" && typeof x.yazi === "string" ? firmaSatiriYaz(y.t, y.id, { metin: x.yazi }) : y.t;
+        yapilan.push(`Firma bilgilerine satır eklendi: ${metin(x.ad) || FIRMA_KAYNAK_ADI[k as (typeof FIRMA_KAYNAKLARI)[number]]}`);
+        continue;
+      }
+      const k = metin(x.oge), l = firmaSatirlari(t);
+      const s = l.find((o) => o.id === k) ?? l.find((o) => tr(o.ad) === tr(k));
+      if (!s) { red(`firma bilgisi satırı bulunamadı (${metin(x.oge, 60) || "—"})`); continue; }
+      const once = t;
+      if (eylem === "cikar") t = firmaSatiriSil(t, s.id);
+      else if (eylem === "yukari" || eylem === "asagi") t = firmaSatiriTasi(t, s.id, eylem === "yukari" ? -1 : 1);
+      else if (eylem === "degistir") {
+        const y: { ad?: string; metin?: string; tam?: boolean } = {};
+        if (metin(x.ad)) y.ad = metin(x.ad);
+        if (typeof x.yazi === "string") y.metin = x.yazi;
+        if (typeof x.tam === "boolean") y.tam = x.tam;
+        t = firmaSatiriYaz(t, s.id, y);
+      } else { red("eylem: ekle, degistir, cikar, yukari ya da asagi"); continue; }
+      if (t === once || JSON.stringify(t) === JSON.stringify(once)) { red(`“${s.ad}” değişmedi (SGK, İSG-KATİP ve başlangıç çıkarılmaz; SGK / İSG-KATİP'in adı değişmez)`); continue; }
+      yapilan.push(`Firma bilgileri: “${s.ad}” ${eylem === "cikar" ? "çıkarıldı" : eylem === "degistir" ? "değişti" : "taşındı"}`);
       continue;
     }
     if (islem === "eimza_yeri") {
@@ -263,7 +296,7 @@ export function formatIslemleri(t0: FormatTanimi, islemler: readonly FormatIslem
       yapilan.push(`“${ad}” değişti`);
       continue;
     }
-    red("bilinmeyen işlem (bolum_ekle, bolum_sil, bolum_adi, grup_ekle, oge_ekle, oge_degistir, oge_sil, sonuc_kurali, imza_satiri, eimza_yeri)");
+    red("bilinmeyen işlem (bolum_ekle, bolum_sil, bolum_adi, grup_ekle, oge_ekle, oge_degistir, oge_sil, sonuc_kurali, imza_satiri, eimza_yeri, firma_satiri)");
   }
   return { t, yapilan, gecersiz };
 }
@@ -281,6 +314,8 @@ export const FORMAT_ARACI = {
     + "boşluklu ad köşeli parantezle. imza_satiri (imza bölümünün satırları: eylem ekle — kisi uzman | teknik | diger, bilgi ad | meslek | ekipnet | diploma | "
     + "oda | eposta | tel | imza | zaman (zaman yalnız teknikte), ad, serbest satırda yazi —, degistir (oge + ad / yazi / tam), cikar, yukari, asagi). "
     + "eimza_yeri (e-imzanın imzaya hazırlanan PDF'teki yeri: yer hucre — İmza hücresi — | kutu — son sayfada; x soldan, y üstten, en, boy mm — | gorunmez). "
+    + "firma_satiri (1. bölüm Firma bilgileri: eylem ekle — kaynak firma | adres | rapor_no | rapor_tarihi | isg | sgk | bas | bit | sonraki | takip | metot | "
+    + "eposta | tel | plan_no | serbest, ad, serbestte yazi —, degistir (oge + ad / yazi / tam), cikar, yukari, asagi; SGK, İSG-KATİP, başlangıç çıkmaz). "
     + "Değişiklik taslakta olur; kullanıcı Kaydet ve Yayınla der.",
   input_schema: {
     type: "object",
@@ -290,7 +325,7 @@ export const FORMAT_ARACI = {
         items: {
           type: "object",
           properties: {
-            islem: { type: "string", enum: ["bolum_ekle", "bolum_sil", "bolum_adi", "grup_ekle", "oge_ekle", "oge_degistir", "oge_sil", "sonuc_kurali", "imza_satiri", "eimza_yeri"] },
+            islem: { type: "string", enum: ["bolum_ekle", "bolum_sil", "bolum_adi", "grup_ekle", "oge_ekle", "oge_degistir", "oge_sil", "sonuc_kurali", "imza_satiri", "eimza_yeri", "firma_satiri"] },
             bolum: { type: "string" }, oge: { type: "string" }, tur: { type: "string" }, ad: { type: "string" }, birim: { type: "string" },
             formul: { type: "string" }, secenekler: { type: "array", items: { type: "string" } }, op: { type: "string" }, sinir: { type: "number" },
             zorunlu: { type: "boolean" }, grup: { type: "string" }, sonra: { type: "string" },
@@ -299,6 +334,7 @@ export const FORMAT_ARACI = {
             bakanlik: { type: "boolean" },
             eylem: { type: "string", enum: ["ekle", "degistir", "cikar", "yukari", "asagi"] }, kisi: { type: "string", enum: ["uzman", "teknik", "diger"] },
             bilgi: { type: "string", enum: [...IMZA_ALANLARI] }, yazi: { type: "string" }, tam: { type: "boolean" },
+            kaynak: { type: "string", enum: [...FIRMA_KAYNAKLARI] },
             yer: { type: "string", enum: ["hucre", "kutu", "gorunmez"] }, x: { type: "number" }, y: { type: "number" }, en: { type: "number" }, boy: { type: "number" },
           },
           required: ["islem"],

@@ -15,8 +15,10 @@ export interface BelgeVerisi {
   no: string; revizyon: number; formatSira: number;
   durum: "taslak" | "onayda" | "onaylandi" | "imzada" | "imzali";
   tur: { ad: string; kod: string; kontrolStd: string[] };
-  /** müşteri künyesi (raporun kendi kopyası) */
-  kunye: { firmaAdi: string; adres: string | null; sgk: string | null; isgNo: string | null };
+  /** müşteri künyesi (raporun kendi kopyası); 595: e-posta ve telefon tesisin müşterisinden (1. bölümde satırı varsa basılır) */
+  kunye: { firmaAdi: string; adres: string | null; sgk: string | null; isgNo: string | null; eposta?: string | null; tel?: string | null };
+  /** 595: planın proje numarası (1. bölümde "Proje no" satırı varsa) */
+  planNo?: string | null;
   /** başlangıç / bitiş "YYYY-MM-DDTHH:MM" (Türkiye saati); öteki "YYYY-MM-DD" */
   tarih: { bas: string | null; bit: string | null; sonraki: string | null; takip: string | null; rapor: string | null };
   ekipman: { kod: string; marka: string | null; model: string | null; seri: string | null; imal: string | null; konum: string | null; amac: string | null; bolum: string | null };

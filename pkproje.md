@@ -2525,6 +2525,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-16 (595e): **FİRMA BİLGİLERİ SERBEST** (sunum 595 madde 3; K2 *"serbest; SGK ve İSG-KATİP kilitli kalsın"*; K6 reisim: *"firma bilgileri kısmında
+  da [satır eklemek istedim ekleyemedim]"*; 9 Ekim'deki "sabit olan tek şey firma bilgileri" kararının yerine): format yapıcıda 1. bölümün satırları
+  — adı yerinde yazılır, yukarı / aşağı taşınır, tam satır yapılır, çıkarılır; "+ Satır ekle" plandan / kayıttan başka bilgi (müşterinin e-postası,
+  telefonu, proje no) ya da serbest satır (sabit yazı). SGK, İSG-KATİP ve başlangıç tarihi çıkarılmaz; SGK ve İSG-KATİP'in adı değişmez (kayıt /
+  Bakanlık). Belge ve saha ekranı aynı listeden; eski formatlar birebir aynı (sahada müşterinin e-postası ve telefonu künyede kalır). Bakanlık
+  formatında değişiklik yayında uyarı. S.A.Y aynı işlemi yapar ("firma_satiri").
 - 2026-10-16 (595d): **E-İMZANIN YERİ + "BU RAPOR E-İMZALIDIR" ŞERİDİ** (sunum 595 madde 25–26; reisim: *"format yapıcıda e imza yeri de seçilebilsin e imza
   seçilen yere işlesin aşağıyada bu rapor e imzalıdır diye şerit gelecek ona göre format yapıcıda raporlar aşağıda boşluk bırakmayı unutmasınlar"*;
   K7 "ikisi"): imzaya hazırlanan PDF'te BOŞ imza alanı formatın seçtiği yerde — İmza hücresi (varsayılan; sayfa kırılmasından sonraki gerçek yeri),
