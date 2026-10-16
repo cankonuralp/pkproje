@@ -29,6 +29,7 @@ import { gomuluBaslat } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde } from "../src/server/db/kiraci.ts";
 import { parolaOzeti } from "../src/server/kimlik/parola.ts";
 import { bosKapi } from "../tests/yardimci/kume.ts";
+import { sahteDepoKur } from "../tests/yardimci/sahte-depo.ts";
 import { nextCalistir } from "./next.ts";
 
 /* firmaların şifreli sırları (yapay zekâ anahtarı 351, Resend anahtarı 536, yönetim doğrulama anahtarı 348) bu sunucunun ana anahtarıyla — tohumdan önce */
@@ -559,9 +560,12 @@ try {
    adres kabul — src/server/db/baglanti.ts), göçler aynen, kimlik kurulumdaki sırayla (vt_kimlik 'firma' → firma satırı). Merkezde: kayıt (vt 'kendi'),
    bağlantı (uygulama parolası bu sunucunun ana anahtarıyla ŞİFRELİ; ek veri firma + ref + ad) ve kurulum "tamam". Yönetici + bir müşteri firmanın
    KENDİ veritabanında (kiracı işlemiyle); merkezde aynı firma kimliğiyle TUZAK müşteri (istek merkeze gitseydi ekranda görünürdü). Süper kullanıcı
-   yalnız kurulum ve tuzak için, geçici veritabanı. Liste e2e/hesaplar.ts E2E_KENDI_FIRMALAR (gece testinin beklediği sayı da ondan türer). */
+   yalnız kurulum ve tuzak için, geçici veritabanı. Liste e2e/hesaplar.ts E2E_KENDI_FIRMALAR (gece testinin beklediği sayı da ondan türer).
+   FV5 (2026-10-16): firmanın KENDİ Storage'ı — yerel Storage taklidi (tests/yardimci/sahte-depo.ts; gizli anahtar uydurma, merkezde ŞİFRELİ, ek veri
+   firma + ref + "depo_gizli"); ortak firmaların deposu veritabanı (PROBATA_DEPO=vt) — imzalı adres vermez, firmanınki verir. */
 for (const k of E2E_KENDI_FIRMALAR) {
   const id = randomUUID();
+  const fd = await sahteDepoKur(`${k.firma.kisaAd}-uydurma-gizli-anahtar-0123456789`);
   const sy = kume.sahipIstemci("postgres");
   await sy.connect();
   try { await sy.query(`CREATE DATABASE ${k.vt} ENCODING 'UTF8' LOCALE 'C' TEMPLATE template0`); } finally { await sy.end(); }
@@ -576,8 +580,11 @@ for (const k of E2E_KENDI_FIRMALAR) {
   await sm.connect();
   try {
     await sm.query("INSERT INTO firma (id, kisa_ad, ad, rapor_kodu, vt) VALUES ($1, $2, $3, $4, 'kendi')", [id, k.firma.kisaAd, k.firma.ad, k.firma.raporKodu]);
-    await sm.query("INSERT INTO firma_vt (firma_id, sunucu, kapi, vt_ad, kullanici, parola_sifreli, surum) VALUES ($1, '127.0.0.1', $2, $3, 'probata_uygulama', $4, 1)",
-      [id, kume.uygulama.port, k.vt, baglantiSifrele(kume.uygulama.password, id, null, "uygulama_parolasi", Buffer.from(sirAnahtari, "base64"))]);
+    const ana = Buffer.from(sirAnahtari, "base64");
+    await sm.query(`INSERT INTO firma_vt (firma_id, sunucu, kapi, vt_ad, kullanici, parola_sifreli, depo_url, depo_gizli_sifreli, kova, surum)
+      VALUES ($1, '127.0.0.1', $2, $3, 'probata_uygulama', $4, $5, $6, 'probata', 1)`,
+      [id, kume.uygulama.port, k.vt, baglantiSifrele(kume.uygulama.password, id, null, "uygulama_parolasi", ana), fd.url,
+        baglantiSifrele(fd.gizli, id, null, "depo_gizli", ana)]);
     await sm.query("INSERT INTO firma_kurulum (firma_id, adim, durum, bitti) VALUES ($1, 'tamam', 'tamam', now())", [id]);
     await sm.query("INSERT INTO musteri (firma_id, unvan, kisa) VALUES ($1, $2, 'Tuzak')", [id, k.tuzak]);
   } finally { await sm.end(); }

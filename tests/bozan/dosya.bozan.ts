@@ -14,7 +14,8 @@ let sira = 0;
 async function bozuk<T>(dosya: string, eski: string, yeni: string): Promise<T> {
   let k = readFileSync(resolve("src/server", dosya), "utf8");
   assert.ok(k.includes(eski), `bozulacak satır kaynakta yok: ${eski}`);
-  k = k.replace(eski, yeni).replace(/from "\.\/([\w.]+)"/g, (_, a) => `from "${mutlak(`dosya/${a}`)}"`).replace(/from "\.\.\/([\w./]+)"/g, (_, a) => `from "${mutlak(a)}"`);
+  /* 2026-10-16 (FV5): yolda tire de olur — depo.ts "../db/firma-havuzu.ts"yı içe aktarınca göreli kalıp geçici klasörde bulunamıyordu */
+  k = k.replace(eski, yeni).replace(/from "\.\/([\w.-]+)"/g, (_, a) => `from "${mutlak(`dosya/${a}`)}"`).replace(/from "\.\.\/([\w./-]+)"/g, (_, a) => `from "${mutlak(a)}"`);
   const yol = join(klasor, `${sira++}-${dosya.split("/").pop()}`);
   writeFileSync(yol, k);
   return import(pathToFileURL(yol).href);

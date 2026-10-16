@@ -258,7 +258,13 @@ export function yonlendiriciKur(a: YonlendiriciAyari): Yonlendirici {
   };
 
   return {
-    kayit: (kisaAd) => onbellek.getir(`a:${kisaAd}`, () => coz.ad(kisaAd)),
+    async kayit(kisaAd) {
+      const c = await onbellek.getir(`a:${kisaAd}`, () => coz.ad(kisaAd));
+      /* FV5: istekte çözülen firma kimlikle de bulunur (depo yönlendiricisi anahtardaki kimlikle sorar — açık işlemin yanında ikinci merkez
+         bağlantısı açılmasın); yalnız kimlik kaydı yoksa yazılır (kimlik kaydının yaşı kısa ad kaydınınkini en çok bir süre aşar) */
+      if (c && !onbellek.al(`k:${c.id}`)) onbellek.koy(`k:${c.id}`, c);
+      return c;
+    },
     kayitKimlikle,
     havuz(k) {
       if (!k.vt) return a.merkez();

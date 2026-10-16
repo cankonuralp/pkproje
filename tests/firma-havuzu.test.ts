@@ -252,7 +252,7 @@ test("parola reddi (28P01): merkezde daha yeni sürüm yoksa İKİNCİ DENEME YO
   } finally { await parola.kapat(); }
 });
 
-test("kayıt önbelleği: kısa ad ve kimlik ayrı tutulur; olumsuz 5 sn tutulur; unut boşaltır; kimlikten havuz", async () => {
+test("kayıt önbelleği: kısa ad ve kimlik ayrı anahtar — kısa adla çözülen firma kimlikle de bulunur (FV5); olumsuz 5 sn tutulur; unut boşaltır; kimlikten havuz", async () => {
   const s = { t: 0 };
   const kA = kayit(A, 6543);
   const cozumler = new Map<string, FirmaCozumu | null>([[A, kendi(kA)], [O, { id: O, kisaAd: "ortak-o", vt: "ortak" }]]);
@@ -269,7 +269,9 @@ test("kayıt önbelleği: kısa ad ve kimlik ayrı tutulur; olumsuz 5 sn tutulur
   assert.equal(await y.havuzKimlikle(O), merkez);
   assert.equal(await y.havuzKimlikle(A), y.havuz({ firmaId: A, vt: kA }));
   assert.equal(await y.havuzKimlikle(B), null);
-  assert.equal(sayac.id, 3);
+  /* 2026-10-16 (FV5, kasıtlı): önce kısa adla çözülen A kimlikle yeniden merkeze soruluyordu (3); artık kısa ad çözümü kimlik kaydını da yazar —
+     depo yönlendiricisi anahtardaki kimlikle sorar, açık işlemin yanında ikinci merkez bağlantısı açılmasın. Kısa adla çözülmemiş O ve B merkezden. */
+  assert.equal(sayac.id, 2, "A kimlikle önbellekten; O ve B merkezden");
   assert.equal(await y.kayit("kendi-a"), cozumler.get(A), "olumlu kayıt hâlâ önbellekte");
   assert.equal(sayac.ad, 3);
   y.unut();

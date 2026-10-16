@@ -254,7 +254,7 @@ export const MERKEZ_HAVUZU_IZNI: Readonly<Record<string, string>> = {
   "src/server/db/firma-havuzu.ts": "kiracı kaydının çözümü (firma_coz) merkezde; ortak firmanın havuzu merkezin kendisi",
   /* 2026-10-15 (FIRMA-VT FV4): merkezHavuzu() KULLANMAZ — yalnız ortamdanBaglanti; derleme adımında kendi kısa ömürlü havuzunu kurar ve kapatır */
   "src/server/db/goc-dagit.ts": "göç dağıtıcı (yayın kapısı, derleme adımı): merkez bağlantısı ortamdan (ortamdanBaglanti), goc_hedefleri merkezde",
-  "src/server/dosya/depo.ts": "veritabanı deposu (vtDepo): db verilmezse anahtarın firmasının işlemi merkezde (kendi projeli firmanın deposu FV5)",
+  "src/server/dosya/depo.ts": "veritabanı deposu (vtDepo) yalnız ortak firmanın: db verilmezse anahtarın firmasının işlemi merkezde (kendi projeli firma FV5 yönlendiricisiyle kendi Storage'ında)",
   "src/server/duyuru/sonra.ts": "Bakanlık duyuruları merkezde (firmaya ait değil)",
   "src/server/hata/kaydet.ts": "hata kaydı merkezde (yalnız yönetim okur)",
   /* 2026-10-15 (FIRMA-VT FV7): firmanın veritabanını kiracının havuzundan denetler (kiraciHavuzu); merkezde yalnız merkezin denetimi ve projeler */

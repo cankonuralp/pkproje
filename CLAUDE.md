@@ -464,6 +464,10 @@ pkproje/
                             (göç 0094 depo_nesne_tasindi), tutmazsa satır kalır, bozuk kopya kaldırılır · dosya ucu yalnız SAYFA AÇILIŞINDA (Sec-Fetch-Dest
                             document) yetkiden sonra 5 dk imzalı adrese yönlenir (dosya.ts IMZA_SURESI, sayfaAcilisi); fetch / çerçeve akar (CSP aynı)
                             · kilit tests/depo-supabase.test.ts (taklit tests/yardimci/sahte-depo.ts)
+                            · FV5 (2026-10-16) YÖNLENDİRİCİ: depo() = yonlendiriciDepo — anahtardaki firma (önbellekli firma_coz_id): ortak firma → ortamdaki
+                            depo (depoSec), kendi projeli → kendi Storage'ı (depoBaglantisi: gizli anahtar şifreli, yalnız kurulurken çözülür; yedeksiz);
+                            çözülmeyen / deposuz firma HATA (ortak depoya düşmez); oksuzSay / tasi işlemdeki firmadan (kendi projelide taşınacak yok) —
+                            kilit tests/depo-yonlendirme.test.ts, uçtan uca e2e/firma-vt.spec.ts (kendivt'nin yerel Storage taklidi)
   src/server/liste/liste.ts SUNUCUDA SAYFALI LİSTE (566; 09-B3): listeGetir — tarayıcı süzgecinin (components/liste/suzgec.ts listele) SQL karşılığı
                             (alan / genel arama tr_kucuk, çipler veya / ve + sayıları, seçiciler + seçenekleri, sıralama tr_sira — göç 0092; yalnız sayfa);
                             görme yetki/canDo.ts gorusKosulu (canDo'nun SQL'i); modüller öteki modülün tablosunu OKUMA PARÇASIYLA birleştirir (EKIPMAN_SQL,

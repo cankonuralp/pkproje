@@ -1,7 +1,9 @@
 /* SAHTE SUPABASE STORAGE (568) — tests/depo-supabase.test.ts ve tests/bozan/depo-supabase.bozan.ts için yerel HTTP taklidi. Gerçek Storage'ın
    bağdaştırıcının kullandığı uçları (kova kur, yükle, indir, imzala, sil) ve cevap biçimlerini taklit eder: "yok" 400 + not_found gövdesi (eski
    sürümler), kova yoksa "Bucket not found", var olana ikinci yükleme 409 benzeri; gizli anahtar hem apikey hem Authorization başlığında olmalı.
-   bozukYukle: sonraki yükleme içeriği bozarak saklar (taşımanın özet denetimi için). Veri UYDURMA. */
+   bozukYukle: sonraki yükleme içeriği bozarak saklar (taşımanın özet denetimi için). Veri UYDURMA.
+   2026-10-16 (FV5, e2e/firma-vt.spec.ts): imzalı adresle OKUMA — GET /object/sign/<kova>/<anahtar>?token=sahte-jeton gizli anahtar istemez (gerçek
+   Storage'daki gibi: tarayıcı başlıksız açar); jeton yanlışsa 400. */
 import { createServer, type Server } from "node:http";
 import { bosKapi } from "./kume.ts";
 
@@ -28,6 +30,12 @@ export async function sahteDepoKur(gizli = "sahte-gizli-anahtar-0123456789"): Pr
       const adres = new URL(istek.url ?? "/", "http://x");
       const yol = adres.pathname.replace(/^\/storage\/v1/, "");
       d.istekler.push(`${istek.method} ${yol}`);
+      const imzaliOku = /^\/object\/sign\/([^/]+)\/(.+)$/.exec(yol);
+      if (istek.method === "GET" && imzaliOku) {
+        const n = adres.searchParams.get("token") === "sahte-jeton" ? d.nesneler.get(`${imzaliOku[1]}/${imzaliOku[2]}`) : undefined;
+        if (!n) { json(y, 400, { statusCode: "400", error: "InvalidJWT", message: "invalid signature" }); return; }
+        y.writeHead(200, { "content-type": n.tur }).end(n.bayt); return;
+      }
       if (istek.headers.apikey !== d.gizli || istek.headers.authorization !== `Bearer ${d.gizli}`) { json(y, 403, { error: "Unauthorized" }); return; }
       if (istek.method === "POST" && yol === "/bucket") {
         const b = JSON.parse(govde.toString()) as { id: string; public: boolean };

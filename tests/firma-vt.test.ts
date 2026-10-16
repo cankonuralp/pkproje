@@ -146,11 +146,14 @@ test("kayıt önbelleği: olumlu sonuç 15 sn bayat kalır sonra yenilenir; olum
   const l = await Promise.all(Array.from({ length: 8 }, () => y.kayit("kendi-b")));
   assert.ok(l.every((c) => c?.id === v.B.id));
   assert.equal(sayac.ad, 5, "sekiz eşzamanlı istek merkeze tek sorgu");
-  /* kimlikten (arka plan) ayrı tutulur */
+  /* kimlik: kısa adla çözülen firma kimlikle de bulunur, merkez sorulmaz (2026-10-16 FV5, kasıtlı — önce "ayrı tutulur"du, burada 1 sayılıyordu;
+     depo yönlendiricisi anahtardaki kimlikle sorar, açık işlemin yanında ikinci merkez bağlantısı açılmasın); kısa adla çözülmemiş firma merkezden,
+     sonra önbellekten */
   assert.equal((await y.kayitKimlikle(v.B.id))?.id, v.B.id);
-  assert.equal((await y.kayitKimlikle(v.B.id))?.id, v.B.id);
-  assert.equal(sayac.id, 1);
+  assert.equal(sayac.id, 0);
   assert.equal(await y.havuzKimlikle(v.O.id), v.merkez);
+  assert.equal((await y.kayitKimlikle(v.O.id))?.id, v.O.id);
+  assert.equal(sayac.id, 1);
   assert.equal(await y.havuzKimlikle(v.B.id), y.havuz(cozumdenKiraci(await y.kayit("kendi-b"))!));
 });
 
