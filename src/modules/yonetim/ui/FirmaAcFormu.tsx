@@ -3,6 +3,7 @@
    öneri ezmez), adres canlı görünür; ilk firma yöneticisi ad + e-posta; depo bölümü (firmanın kendi deposu K7'de — bugün bilgi). Denetim aynı
    şemayla (sema.ts) önce burada, karar sunucuda ve veritabanında. "Firmayı aç" önce sorulur. Açılınca geçici parola YALNIZ bu ekranda bir kez
    gösterilir (kaydedilmez; sayfadan çıkınca yok). */
+import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition, type InputHTMLAttributes } from "react";
 import { BilgiListesi, Bilgi } from "../../../components/bilgi/Bilgi";
 import { useBildir } from "../../../components/bildirim/Bildirim";
@@ -23,9 +24,16 @@ type Alanlar = { unvan: string; alt: string; kod: string; yon: string; eposta: s
 const BOS: Alanlar = { unvan: "", alt: "", kod: "", yon: "", eposta: "" };
 const SIRA: (keyof Alanlar)[] = ["unvan", "alt", "kod", "yon", "eposta"];
 const ID: Record<keyof Alanlar, string> = { unvan: "y-unvan", alt: "y-alt", kod: "y-kod", yon: "y-yon", eposta: "y-eposta" };
+/** FV10: kendi projede kurulumda girilen yapay zekâ anahtarı alanı */
+const YZ_ALAN = "ya-yz";
 
-export function FirmaAcFormu({ anaAlan, depo }: { anaAlan: string; depo: DepoTuru }) {
+export function FirmaAcFormu({ anaAlan, depo, kendiProje = false }: { anaAlan: string; depo: DepoTuru; kendiProje?: boolean }) {
+  const router = useRouter();
   const [d, setD] = useState<Alanlar>(BOS);
+  /* FV10: veritabanı — kendi Supabase projesi (probata panelden kurar; anahtar + örgüt ortamdaysa) ya da ortak proje */
+  const [vt, setVt] = useState<"kendi" | "ortak">(kendiProje ? "kendi" : "ortak");
+  const [yz, setYz] = useState("");
+  const [yzHata, setYzHata] = useState<string | null>(null);
   const elle = useRef<{ alt: boolean; kod: boolean }>({ alt: false, kod: false });
   const [hatalar, setHatalar] = useState<Partial<Record<keyof Alanlar, string>>>({});
   const [genel, setGenel] = useState<string | null>(null);
@@ -46,9 +54,11 @@ export function FirmaAcFormu({ anaAlan, depo }: { anaAlan: string; depo: DepoTur
     setD(yeni);
     if (hatalar[k]) setHatalar({ ...hatalar, [k]: undefined });
   };
-  const odakla = (h: Partial<Record<keyof Alanlar, string>>) => {
+  /* FV10: yalnız yapay zekâ anahtarı hatalıysa odak o alana */
+  const odakla = (h: Partial<Record<keyof Alanlar | "yz", string>>) => {
     const ilk = SIRA.find((k) => h[k]);
-    if (ilk) requestAnimationFrame(() => document.getElementById(ID[ilk])?.focus());
+    const hedef = ilk ? ID[ilk] : h.yz ? YZ_ALAN : null;
+    if (hedef) requestAnimationFrame(() => document.getElementById(hedef)?.focus());
   };
 
   const gonder = async () => {
@@ -60,12 +70,18 @@ export function FirmaAcFormu({ anaAlan, depo }: { anaAlan: string; depo: DepoTur
       setHatalar(h); odakla(h); return;
     }
     const adres = firmaAdresi(g.data.alt, anaAlan);
-    if (!(await onayla({ baslik: "Firma açılsın mı?", metin: `${adres} hemen çalışır; ${g.data.yon} ilk girişte geçici parolayla girip kendi parolasını belirler.`, tus: "Firmayı aç" }))) return;
+    const metin = vt === "kendi"
+      ? `${adres} için firmanın Supabase projesi açılıp kurulur (birkaç dakika; firma sayfasında izlenir). Bitince ${g.data.yon} için geçici parola oluşturursunuz.`
+      : `${adres} hemen çalışır; ${g.data.yon} ilk girişte geçici parolayla girip kendi parolasını belirler.`;
+    if (!(await onayla({ baslik: "Firma açılsın mı?", metin, tus: "Firmayı aç" }))) return;
     baslat(async () => {
       const f = new FormData();
       for (const k of SIRA) f.set(k, d[k]);
+      f.set("vt", vt);
+      if (vt === "kendi" && yz.trim()) f.set("yz", yz.trim());
       const r = await firmaAcEylemi(f);
-      if (r.hatalar) { setHatalar(r.hatalar); odakla(r.hatalar); return; }
+      if (r.hatalar) { setYzHata(r.hatalar.yz ?? null); setHatalar(r.hatalar); odakla(r.hatalar); return; }
+      if (r.tamam && r.id && r.kurulum) { bildir(`Kurulum başladı: ${firmaAdresi(r.alt ?? g.data.alt, anaAlan)}`); router.push(`/yonetim/f/${r.id}`); return; }
       if (!r.tamam || !r.id || !r.parola) { setGenel(r.genel ?? "Firma açılamadı."); return; }
       kopya.sifirla();
       setAcilan({ id: r.id, parola: r.parola, eposta: r.eposta ?? g.data.eposta, alt: r.alt ?? g.data.alt, unvan: g.data.unvan });
@@ -122,11 +138,35 @@ export function FirmaAcFormu({ anaAlan, depo }: { anaAlan: string; depo: DepoTur
               {alan("eposta", "E-posta (giriş adı)", { type: "email", inputMode: "email", maxLength: 120, spellCheck: false, autoCapitalize: "off" })}
             </FormIzgara>
           </FormBolum>
-          {/* 2026-10-12 (sunum D1 kabul; reisim: "supabase hesabını nasıl bağlayacağımızı göremedim"): firmanın verisi kendi Supabase hesabında — akış adım adım */}
-          <FormBolum baslik="Firmanın Supabase hesabı (veritabanı, dosyalar, yedek)" id="y-b-depo" genis>
-            <BilgiListesi><Bilgi etiket="Şu an" genis="cift">{DEPO_AD[depo]}</Bilgi></BilgiListesi>
+          {/* 2026-10-16 (FIRMA-VT FV10, K1 — reisim: "supabase ve resend bağlantılarını firma açarken biz buradan panelden yapalım"): veritabanı seçimi;
+              kendi proje panelden kurulur (Yönetim API anahtarı + örgüt yoksa kapalı, açıklamalı). Önceki "firmanın hesabını bağla" akışı (D1) kalktı. */}
+          <FormBolum baslik="Veritabanı (veriler, dosyalar, yedek)" id="y-b-depo" genis>
+            <fieldset className={stil.vtSecim}>
+              <legend className="gizli">Veritabanı</legend>
+              <label className={stil.vtSecenek} data-kapali={kendiProje ? undefined : ""}>
+                <input type="radio" name="vt" value="kendi" checked={vt === "kendi"} disabled={!kendiProje} onChange={() => setVt("kendi")} />
+                <span>Kendi Supabase projesi (önerilen)
+                  <span className={stil.vtAciklama}>{kendiProje
+                    ? "Firmanın veritabanı ve dosyaları ayrı Supabase projesinde (Frankfurt); probata panelden açar ve kurar, firma bir şey yapmaz."
+                    : "Şu an kapalı: Supabase yönetim anahtarı ve örgütü bu sunucuda tanımlı değil (yayına çıkışta tanımlanır)."}</span>
+                </span>
+              </label>
+              <label className={stil.vtSecenek}>
+                <input type="radio" name="vt" value="ortak" checked={vt === "ortak"} onChange={() => setVt("ortak")} />
+                <span>Ortak proje
+                  <span className={stil.vtAciklama}>{`${DEPO_AD[depo]} — firma hemen açılır.`}</span>
+                </span>
+              </label>
+            </fieldset>
+            {vt === "kendi" && (
+              <>
+                <Alan id={YZ_ALAN} etiket="Yapay zekâ anahtarı (isteğe bağlı)" hata={yzHata}>
+                  <Girdi id={YZ_ALAN} type="password" value={yz} hata={!!yzHata} mesajli={!!yzHata} placeholder="sk-ant-…" onChange={(e) => { setYz(e.target.value); setYzHata(null); }} />
+                </Alan>
+                <ol className={stil.adimlar} aria-label="Kendi proje nasıl kurulur">{SUPABASE_ADIMLAR.map((x) => <li key={x}>{x}</li>)}</ol>
+              </>
+            )}
             <Serit tur="bilgi" ikon="archive">{DEPO_NOT}</Serit>
-            <ol className={stil.adimlar} aria-label="Supabase hesabı nasıl bağlanır">{SUPABASE_ADIMLAR.map((x) => <li key={x}>{x}</li>)}</ol>
           </FormBolum>
         </FormSayfa>
         <FormEylem>

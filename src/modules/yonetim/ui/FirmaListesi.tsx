@@ -20,7 +20,7 @@ const tanimKur = (anaAlan: string): SuzgecTanimi<FirmaSatiri> => ({
   metin: (f) => `${f.ad} ${firmaAdresi(f.kisaAd, anaAlan)} ${f.kod} ${f.yonetici?.eposta ?? ""}`,
   cipler: [],
   seciciler: [
-    { k: "durum", ad: "Durum", secenek: () => [["tumu", "Tümü"], ["etkin", "Etkin"], ["dondu", "Dondurulmuş"]], gecer: (f, v) => v === "tumu" || f.durum === v },
+    { k: "durum", ad: "Durum", secenek: () => [["tumu", "Tümü"], ["etkin", "Etkin"], ["dondu", "Dondurulmuş"], ["kurulum", "Kuruluyor"]], gecer: (f, v) => v === "tumu" || f.durum === v },
   ],
 });
 

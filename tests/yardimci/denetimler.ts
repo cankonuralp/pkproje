@@ -288,8 +288,12 @@ export function merkezHavuzuIceAktaranlar(metinler: readonly { ad: string; metin
 export const DIS_IZNI: Readonly<Record<string, string>> = {
   "src/server/db/goc-dagit.ts": "göç dağıtıcı (Vercel derlemesi): 'uygula' kipinde Yönetim API istemcisini kurar",
   "src/server/db/goc-uygula.ts": "göç dağıtıcının 'uygula' kipi: göçleri Yönetim API yürütücüsüyle uygular",
+  /* FV10 (2026-10-16): kurulum makinesi — yönetim sunucusunda, yönetim oturumuyla (yönetim adresi; tarayıcı zinciri değil) */
+  "src/modules/yonetim/server/calistirici.ts": "kurulumun ortamı: Yönetim API istemcisi ve kurulum ayarı (örgüt, yerel Storage) — yalnız yönetim oturumunda",
+  "src/modules/yonetim/server/kurulum.ts": "kurulum makinesi: projeyi Yönetim API'siyle açar, göçleri uygular, bağlar",
+  "src/modules/yonetim/server/kurulum-hata.ts": "kurulum hatasının sınıfı: Yönetim API istemcisinin hata türlerini tanır",
 };
-const DIS_ORTAM = /\bPROBATA_(?:SUPABASE_YONETIM_(?:ANAHTARI|UC)|SUPABASE_ORGUT|RESEND_(?:ANAHTARI|YONETIM_UC))\b/;
+const DIS_ORTAM = /\bPROBATA_(?:SUPABASE_YONETIM_(?:ANAHTARI|UC)|SUPABASE_ORGUT|SUPABASE_DEPO_UC|RESEND_(?:ANAHTARI|YONETIM_UC))\b/;
 export function yonetimAnahtariEksikleri(metinler: readonly { ad: string; metin: string }[]): string[] {
   const hata: string[] = [];
   const kalip = /\b(?:from|import)\s*\(?\s*["']([^"']+)["']|\brequire\s*\(\s*["']([^"']+)["']/g;
@@ -358,9 +362,12 @@ export function yonetimOnbellekEksikleri(metin: string): string[] {
        zekâ anahtarı eylemleri eklendi — onlar da önbelleği boşaltır */
     if (!ad || !/\b(?:firmaAc|firmaDurumu|yoneticiyeGeciciParola|firmaDurumuYonet|geciciParolaYonet|yzAnahtariYonet)\s*\(/.test(p)) continue;
     firmaEylemi++;
-    if (!/\breturn (?:unut|yenileyerek)\(await islem\(/.test(p)) e.push(`${ad} önbelleği boşaltmıyor`);
+    /* 2026-10-16 (FV10): Firma aç iki yollu (ortak / kendi proje) — işlemi döndüren HER return sarılı olmalı (biri sarılı diye öteki kaçmasın) */
+    if (!/\breturn (?:unut|yenileyerek)\(await islem\(/.test(p) || /\breturn\s+(?!unut\(|yenileyerek\()[^;\n]*\bawait islem\(/.test(p)) e.push(`${ad} önbelleği boşaltmıyor`);
   }
   if (firmaEylemi < 6) e.push(`firma eylemi ${firmaEylemi} (en az 6 bekleniyor)`);
+  /* FV10: kendi projeli firmanın kurulumu bitince firma çözülür olur — olumsuz önbellek (5 sn) boşalmalı */
+  if (!/if \(g\.durum === "tamam"\) \{ firmaKayitlariniUnut\(\); refresh\(\); \}/.test(k)) e.push("kurulum bitince önbellek boşalmıyor");
   return e;
 }
 

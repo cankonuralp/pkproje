@@ -47,7 +47,9 @@ const ortak: NextConfig = {
        resmî belgeyi gösteren uçlar · 438: "Şablondan başlat" (tür sayfası) ve "Tür olarak ekle" (liste, şablon önizlemesi) eylemleri de okur */
     ...Object.fromEntries(["/", "/ekipman-turleri", String.raw`/ekipman-turleri/\[id\]`, String.raw`/ekipman-turleri/sablon/\[anahtar\]`,
       String.raw`/ekipman-turleri/sablon/\[anahtar\]/pdf`, String.raw`/dokumanlar/kriterler/\[kod\]/pdf`]
-      .map((u) => [u, ["./src/tanim/bakanlik/*.pdf"]])) },
+      .map((u) => [u, ["./src/tanim/bakanlik/*.pdf"]])),
+    /* FIRMA-VT FV10: kurulum makinesinin göç adımı göç dosyalarını okur (src/server/db/goc.ts) — Firma aç ve firma sayfasının eylemleri */
+    ...Object.fromEntries(["/yonetim/yeni", String.raw`/yonetim/f/\[id\]`].map((u) => [u, ["./src/server/db/gocler/*.sql"]])) },
 };
 
 const ayar: NextConfig = { ...ortak, output: "standalone" };

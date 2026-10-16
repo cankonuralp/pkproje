@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { depoTuru } from "../../../../../../modules/yonetim/ui/ortak";
 import { yonetimCalistirici } from "../../../../../../modules/yonetim/server/calistirici";
 import { firmaOzetiYonet } from "../../../../../../modules/yonetim/server/firma-tarafi";
+import { kurulumGorunumu } from "../../../../../../modules/yonetim/server/kurulum";
 import { firma } from "../../../../../../modules/yonetim/server/yonetim";
 import { FirmaSayfasi } from "../../../../../../modules/yonetim/ui/FirmaSayfasi";
 import { anaAlan } from "../../../../../../server/kiraci/istek";
@@ -16,6 +17,9 @@ export default async function YonetimFirmaSayfasi({ params }: { params: Promise<
   const { id } = await params;
   const f = await yonetimIslemi(o, (db) => firma(db, id));
   /* FV9: özet (kullanıcı, yönetici, yapay zekâ anahtarı + bu ay) — kendi projeli firmada firmanın veritabanından; ulaşılamazsa null */
-  const ozet = f ? await firmaOzetiYonet(yonetimCalistirici(o), f.id) : null;
-  return <FirmaSayfasi firma={f} ozet={ozet} anaAlan={anaAlan()} depo={depoTuru(process.env.PROBATA_DEPO)} />;
+  const c = yonetimCalistirici(o);
+  /* FV10: kurulum sürüyorsa kurulumun görünümü (özet yok — firmanın veritabanı henüz hazır değil) */
+  const kurulum = f?.durum === "kurulum" ? await kurulumGorunumu(c, f.id) : null;
+  const ozet = f && f.durum !== "kurulum" ? await firmaOzetiYonet(c, f.id) : null;
+  return <FirmaSayfasi firma={f} ozet={ozet} kurulum={kurulum} anaAlan={anaAlan()} depo={depoTuru(process.env.PROBATA_DEPO)} />;
 }

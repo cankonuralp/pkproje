@@ -1,7 +1,7 @@
 /* NEREDEN GELDİ: K1 "tanım JSON'ları · API sürümü" (2026-10-04), ARKA-UC §2.1, 09-B6. Gerçek sunucuda: API sürüm başlığı, eski istemci 426, tanım dizini
    oturumsuz 403, karma adlı dosya sonsuz önbellekte, bilinmeyen karma 404. */
 import { expect, test } from "@playwright/test";
-import { E2E_KAPI, E2E_KENDI, E2E_SAGLIK_SIR, E2E_ZAMANLI_SIR, KENDI_VT_FIRMA_SAYISI } from "./hesaplar";
+import { E2E_KAPI, E2E_KENDI, E2E_KURULUM_EN_COK, E2E_SAGLIK_SIR, E2E_ZAMANLI_SIR, KENDI_VT_FIRMA_SAYISI } from "./hesaplar";
 import { girisli } from "./yardimci";
 
 test("API sürümü ve sabit tanımlar", async ({ page }) => {
@@ -53,7 +53,9 @@ test("sağlık ucu her adreste aynı biçim: kendi veritabanlı firma, kök, bil
 
 /* FV7: proje sağlığı ucu yalnız iki sırdan biriyle — kendi sırrı (PROBATA_SAGLIK_SIR; duman testi) ya da zamanlayıcının (CRON_SECRET); yanıt YALNIZ
    sayılar — kendi veritabanlı her firma yoklanır, hepsi sağlam (uçtan uca sunucusunun tohumladığı sayı: e2e/hesaplar.ts E2E_KENDI_FIRMALAR).
-   2026-10-15 (FV7 incelemesi, en az yetki): sağlık sırrı gece işi ucunu AÇMAZ (duman makinesindeki sır gece işlerini tetikleyemez). */
+   2026-10-15 (FV7 incelemesi, en az yetki): sağlık sırrı gece işi ucunu AÇMAZ (duman makinesindeki sır gece işlerini tetikleyemez).
+   2026-10-16 (FV10, kasıtlı): yönetim testi panelden kendi projeli firma kurar (genişlik başına bir; e2e/yonetim.spec.ts) — kurulumu bitmişse o da
+   yoklanır: toplam tohumlananla tohumlanan + kurulabilecek arasında (sıra testlerin koşu sırasına bağlı), HEPSİ sağlam (tamam = toplam, sorunlu 0). */
 test("proje sağlığı ucu: yalnız sırla; yalnız sayılar; sağlık sırrı gece işini açmaz", async ({ request }) => {
   expect((await request.get("/api/saglik/projeler")).status()).toBe(401);
   expect((await request.get("/api/saglik/projeler", { headers: { Authorization: "Bearer yanlis-sir-yanlis-sir-yanlis-sir-00" } })).status()).toBe(401);
@@ -62,7 +64,11 @@ test("proje sağlığı ucu: yalnız sırla; yalnız sayılar; sağlık sırrı 
     const r = await request.get("/api/saglik/projeler", { headers: { Authorization: `Bearer ${sir}` } });
     expect(r.status(), sir === E2E_SAGLIK_SIR ? "sağlık sırrı" : "zamanlayıcı sırrı").toBe(200);
     expect(r.headers()["cache-control"]).toBe("no-store");
-    expect(await r.json()).toEqual({ toplam: KENDI_VT_FIRMA_SAYISI, tamam: KENDI_VT_FIRMA_SAYISI, sorunlu: 0 });
+    const j = await r.json() as { toplam: number; tamam: number; sorunlu: number };
+    expect(Object.keys(j).sort()).toEqual(["sorunlu", "tamam", "toplam"]);
+    expect(j.toplam).toBeGreaterThanOrEqual(KENDI_VT_FIRMA_SAYISI);
+    expect(j.toplam).toBeLessThanOrEqual(KENDI_VT_FIRMA_SAYISI + E2E_KURULUM_EN_COK);
+    expect([j.tamam, j.sorunlu]).toEqual([j.toplam, 0]);
   }
   expect((await request.get("/api/is/gece", { headers: { Authorization: `Bearer ${E2E_SAGLIK_SIR}` } })).status(), "sağlık sırrı gece işini açmaz").toBe(401);
 });

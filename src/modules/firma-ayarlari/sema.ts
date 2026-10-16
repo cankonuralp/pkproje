@@ -93,13 +93,15 @@ export const BULUT_SAGLAYICI = {
 export const BULUT_DUZEN = { mt: "Müşteri / Tesis", mty: "Müşteri / Tesis / Yıl", my: "Müşteri / Yıl" } as const;
 /* 2026-10-12 (sunum D2 kabul): yedekte firma ayarı yok — Supabase'in günlük yedeği + probata'nın aylık arşiv yedeği kendiliğinden (eski sıklık / saat /
    saklama seçimleri kalktı). Supabase hesabı bağlama akışı (sunum D1; yayına çıkışta açılır) — Firma ayarları ve Yönetim aynı metni gösterir. */
+/* 2026-10-16 (FIRMA-VT FV10, K1 — reisim: "supabase ve resend bağlantılarını firma açarken biz buradan panelden yapalım daha sonra müşteri uğraşmasın"):
+   firmanın kendi hesabını bağlama akışı (513, D1) KALKTI — projeyi probata panelden açar ve kurar; Firma ayarlarında bağlantı kilitli (K3). */
 export const SUPABASE_ADIMLAR = [
-  "probata firmayı açar (Yönetim › Firma aç): adres ve ilk yöneticinin e-postası.",
-  "Firma yöneticisi adrese girer, geçici parolayla kendi parolasını belirler.",
-  "İlk iş “Supabase hesabını bağla”: Supabase'in kendi giriş ve izin ekranı açılır; yönetici Supabase hesabıyla girip izin verir. Anahtar kopyalanmaz, parola paylaşılmaz.",
-  "probata, firmanın hesabında Frankfurt'ta proje kurar; tabloları ve güvenlik ayarlarını yükler (birkaç dakika). Firmanın verisi o andan itibaren yalnız orada.",
-  "Yönetici Supabase'te Pro paketi (25 $/ay) ve ödeme yöntemini seçer; fatura doğrudan firmaya gelir.",
-  "Bağlantı, kullanım ve yedek bu bölümde görünür; probata'da yalnız “hangi adres → hangi proje” kaydı kalır.",
+  "probata, Yönetim › Firma aç'ta firmanın Supabase projesini açar (AB — Frankfurt); firma bir şey yapmaz.",
+  "Tablolar, güvenlik ayarları, uygulama rolü, bağlantı havuzu ve dosya deposu panelden kurulur (birkaç dakika).",
+  "Firmanın verisi ve dosyaları yalnız kendi projesinde; probata'da yalnız “hangi adres → hangi proje” kaydı kalır.",
+  "Bağlantı bilgileri Firma ayarlarında kilitli: değiştirilmez, gösterilmez.",
+  "İsteyen firmaya proje sonradan devredilir (Supabase'te proje devri); fatura o zaman doğrudan firmaya gelir.",
+  "Günlük yedeği Supabase alır; aylık arşiv yedeğini probata alır.",
 ] as const;
 export const YzGirdisi = z.object({
   acik: z.boolean(),

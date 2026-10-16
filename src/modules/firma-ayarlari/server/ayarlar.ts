@@ -63,7 +63,8 @@ export interface FirmaAyarlari {
   eposta: Surumlu<{ alan: string; kopya: boolean }> & { anahtar: { tanimli: boolean; son4: string | null }; genel: string; ben: string | null;
     kisiler: { id: string; ad: string; eposta: string; roller: string; yol: GonderenYolu }[]; ay: number };
   /** 2026-10-12 (sunum D1–D2): Supabase hesabı ve yedek bölümü — firmanın dosyaları (çöptekiler hariç): sayı ve toplam bayt */
-  depolama: { dosya: number; bayt: number };
+  /** proje: ortak (probata'nın ortak projesi) ya da kendi (firmanın kendi Supabase projesi — FV10); sayfa kiracıdan doldurur */
+  depolama: { dosya: number; bayt: number; proje?: "ortak" | "kendi" };
   /** 337: son içe aktarımlar */
   ice: IaGecmis[];
 }

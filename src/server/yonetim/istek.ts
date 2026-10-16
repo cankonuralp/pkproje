@@ -6,6 +6,7 @@ import "server-only";
 import { cookies, headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
+import { isBasla, isBitir } from "../db/is.ts";
 import { merkezHavuzu } from "../db/havuz.ts";
 import { ayniKoken } from "../kimlik/koken.ts";
 import { yonetimIcinde, type Sorgulayici } from "../db/kiraci.ts";
@@ -37,6 +38,13 @@ export async function yonetimOturumGerekli(): Promise<YoneticiOturumu> {
 export function yonetimIslemi<T>(o: YoneticiOturumu, is: (db: Sorgulayici) => Promise<T>): Promise<T> {
   return yonetimIcinde(merkezHavuzu(), is, { yoneticiId: o.id });
 }
+
+/** FIRMA-VT FV10 (2026-10-16): göç dağıtıcının kilidi (merkezde is_basla('goc_dagitim'), uygulama rolüyle) — kurulumun göç adımı yayının "uygula"
+    kipiyle çakışmasın; alınamazsa null (adım bekler) */
+export const yonetimGocKilidi = () => ({
+  al: (): Promise<string | null> => isBasla(merkezHavuzu(), "goc_dagitim"),
+  birak: (id: string, tamam: boolean): Promise<void> => isBitir(merkezHavuzu(), id, tamam ? "tamam" : "hata", { kurulum: 1 }),
+});
 
 /** iki adımlı giriş açık mı (393; göç 0075 yonetim_ayar) — kapalıyken kod / kurulum sayfaları girişe döner */
 export const yonetimIkiAdim = (): Promise<boolean> => ikiAdimAcik(merkezHavuzu());

@@ -23,3 +23,15 @@
 .hataAyrinti { margin-top: 4px; font-size: var(--boy-kucuk); color: var(--yazi2); }
 .hataAyrinti summary { cursor: pointer; min-height: var(--tus-y); display: inline-flex; align-items: center; }
 .hataYigin { margin: 4px 0; padding: 8px; max-width: 100%; overflow-x: auto; border-radius: var(--r-orta); background: var(--zemin2); font-size: var(--boy-kucuk); white-space: pre; }
+/* FIRMA-VT FV10 (2026-10-16): kurulum adımları (tamam · sürüyor · hata · bekliyor) ve Firma aç'ta veritabanı seçimi */
+.kurulumAdimlar { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 2px; }
+.kurulumAdim { display: flex; align-items: center; gap: 8px; min-height: var(--tus-y); color: var(--yazi2); }
+.kurulumAdim[data-durum=tamam] { color: var(--yazi); }
+.kurulumAdim[data-durum=suruyor] { color: var(--yazi); font-weight: 600; }
+.kurulumAdim[data-durum=hata] { color: var(--hata-yazi); font-weight: 600; }
+.kurulumIsaret { inline-size: 18px; flex: none; }
+.vtSecim { margin: 0; padding: 0; border: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.vtSecenek { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); cursor: pointer; }
+.vtSecenek[data-kapali] { cursor: not-allowed; color: var(--yazi2); }
+.vtSecenek input { margin: 4px 0 0; flex: none; }
+.vtAciklama { display: block; margin-top: 2px; color: var(--yazi2); font-size: var(--boy-kucuk); font-weight: 400; }

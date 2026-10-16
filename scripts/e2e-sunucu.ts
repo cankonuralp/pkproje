@@ -13,7 +13,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createServer } from "node:http";
 import { ornekSayfa } from "../e2e/duyuru-ornek.ts";
-import { E2E_FIRMA, E2E_GORSEL, E2E_HESAPLAR, E2E_ILK, E2E_KAPI, E2E_KENDI_FIRMALAR, E2E_MUHASEBE, E2E_PAROLA, E2E_PLAN, E2E_SAHA, E2E_YONETIM, E2E_YONETIM_PROJELER, E2E_YZ, E2E_ZAMANLI_SIR, E2E_SAGLIK_SIR, E2E_EPOSTA, E2E_ISLEM } from "../e2e/hesaplar.ts";
+import { E2E_FIRMA, E2E_GORSEL, E2E_HESAPLAR, E2E_ILK, E2E_KAPI, E2E_KENDI_FIRMALAR, E2E_KURULUM, E2E_MUHASEBE, E2E_PAROLA, E2E_PLAN, E2E_SAHA, E2E_YONETIM, E2E_YONETIM_PROJELER, E2E_YZ, E2E_ZAMANLI_SIR, E2E_SAGLIK_SIR, E2E_EPOSTA, E2E_ISLEM } from "../e2e/hesaplar.ts";
 import { planKabul, planIci } from "../src/modules/planlar/server/plan-ici.ts";
 import { planAc } from "../src/modules/planlar/server/planlar.ts";
 import { raporOlustur } from "../src/modules/raporlar/server/raporlar.ts";
@@ -30,6 +30,7 @@ import { havuzKur, kiraciIcinde } from "../src/server/db/kiraci.ts";
 import { parolaOzeti } from "../src/server/kimlik/parola.ts";
 import { bosKapi } from "../tests/yardimci/kume.ts";
 import { sahteDepoKur } from "../tests/yardimci/sahte-depo.ts";
+import { pgProjesi, sahteYonetimKur } from "../tests/yardimci/sahte-supabase-yonetim.ts";
 import { nextCalistir } from "./next.ts";
 
 /* firmaların şifreli sırları (yapay zekâ anahtarı 351, Resend anahtarı 536, yönetim doğrulama anahtarı 348) bu sunucunun ana anahtarıyla — tohumdan önce */
@@ -600,8 +601,30 @@ for (const k of E2E_KENDI_FIRMALAR) {
   } finally { await hv.end(); }
 }
 
+/* FIRMA-VT FV10 (2026-10-16; e2e/yonetim.spec.ts "kendi Supabase projesi"): Supabase Yönetim API'sinin yerel taklidi — "proje aç" gerçeği gibi hemen
+   döner, donanımı arkada kurar: her projede AYRI gömülü küme ve içinde BOŞ veritabanı (kurulum göçlerin hepsini API'yle uygular; rol adımının parola
+   değişikliği yalnız o kümeyi etkiler — uçtan uca kümesine dokunmaz); projelerin Storage'ı tek taklit (açılan gizli anahtarı kabul eder). Anahtar ve
+   örgüt UYDURMA (e2e/hesaplar.ts E2E_KURULUM) — gerçek Supabase'e istek gitmez. */
+const supabaseTaklit = await sahteYonetimKur(E2E_KURULUM.anahtar);
+const kurulumDepo = await sahteDepoKur("kurulum-uydurma-gizli-anahtar-0123456789");
+supabaseTaklit.anahtarEklendi = (a) => kurulumDepo.ekGizliler.add(a);
+supabaseTaklit.projeKur = async () => {
+  const pk = await gomuluBaslat({ klasor: join(mkdtempSync(join(tmpdir(), "probata-e2e-proje-")), "pg"), port: await bosKapi(), kalici: false });
+  const c = pk.sahipIstemci("postgres");
+  await c.connect();
+  try { await c.query("CREATE DATABASE proje_vt ENCODING 'UTF8' LOCALE 'C' TEMPLATE template0"); } finally { await c.end(); }
+  return { yurutucu: pgProjesi(() => pk.sahipIstemci("proje_vt")), kapat: () => pk.durdur(),
+    havuzcu: [{ db_host: "127.0.0.1", db_port: pk.uygulama.port, db_name: "proje_vt", pool_mode: "transaction" }] };
+};
+
 let kapaniyor = false;
-const kapat = async (kod: number) => { if (kapaniyor) return; kapaniyor = true; await kume.durdur(); process.exit(kod); };
+const kapat = async (kod: number) => {
+  if (kapaniyor) return;
+  kapaniyor = true;
+  await supabaseTaklit.kapat().catch(() => {});
+  await kume.durdur();
+  process.exit(kod);
+};
 process.on("SIGINT", () => { void kapat(0); });
 process.on("SIGTERM", () => { void kapat(0); });
 
@@ -649,6 +672,9 @@ const ortam: Record<string, string> = {
   PROBATA_SAGLIK_SIR: E2E_SAGLIK_SIR,   // FV7: proje sağlığı ucunun ayrı sırrı (uydurma; gece işini açmaz)
   PROBATA_DUYURU_UC: `http://127.0.0.1:${yzKapi}`,   // 379: duyuru sayfalarının yerel taklidi
   PROBATA_EPOSTA_UC: `http://127.0.0.1:${yzKapi}/emails`,   // 432 (536: anahtar firmanın — deneme firmasına tohumlanır)
+  /* FV10: Supabase Yönetim API'sinin yerel taklidi ("Kendi Supabase projesi" ile firma aç) — uydurma anahtar ve örgüt */
+  PROBATA_SUPABASE_YONETIM_ANAHTARI: E2E_KURULUM.anahtar, PROBATA_SUPABASE_YONETIM_UC: supabaseTaklit.url, PROBATA_SUPABASE_ORGUT: E2E_KURULUM.orgut,
+  PROBATA_SUPABASE_DEPO_UC: kurulumDepo.url,
 };
 
 /* 489: yayın derlemesiyle — Next'in bağımsız sunucusu (output "standalone"; Vercel'deki gibi derlenmiş). Statik dosyalar ve public/ sunucunun

@@ -9,13 +9,16 @@
    kipi). gocFarki saf: eksik, değiştirilmiş, kodda olmayan göçler. Göç dosyalarında BEGIN / COMMIT / CONCURRENTLY yok (tek işlemde koşar — kilit
    tests/goc-yurutucu.test.ts). */
 import { createHash } from "node:crypto";
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import type pg from "pg";
 
 /* import.meta.dirname yalnız Node'da (betik, test, gömülü veritabanı); uygulamanın derlenmiş paketinde tanımsız — modül yüklenirken düşmesin
-   (2026-10-16 FV8: sağlık ucu göç dağıtıcı üzerinden bu dosyaya ulaşınca derleme "path undefined" ile düşüyordu). Pakette boş: kullanılmaz. */
-export const GOC_KLASORU = typeof import.meta.dirname === "string" ? join(import.meta.dirname, "gocler") : "";
+   (2026-10-16 FV8: sağlık ucu göç dağıtıcı üzerinden bu dosyaya ulaşınca derleme "path undefined" ile düşüyordu). Pakette çalışma klasörüne göre
+   (FV10: kurulumun göç adımı — dosyalar yönetim sayfalarının izinde, next.config.ts outputFileTracingIncludes); paketleyici kaynak yolunu
+   gömerse (derleme makinesinin yolu) o klasör çalışırken yoktur — o zaman da çalışma klasörü. */
+const kaynakKlasor = typeof import.meta.dirname === "string" ? join(import.meta.dirname, "gocler") : null;
+export const GOC_KLASORU = kaynakKlasor && existsSync(kaynakKlasor) ? kaynakKlasor : join(process.cwd(), "src", "server", "db", "gocler");
 export const AD_KALIBI = /^\d{4}_[a-z0-9_]+\.sql$/;
 
 export interface GocDosyasi {

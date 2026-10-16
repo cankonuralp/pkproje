@@ -2525,6 +2525,26 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-16 (594): **FV10 — KURULUM MAKİNESİ** (FIRMA-VT §5.12, K1 — reisim: *"supabase ve resend bağlantılarını firma açarken biz buradan panelden
+  yapalım daha sonra müşteri uğraşmasın"*). Yönetim › Firma aç'ta veritabanı seçimi: "Kendi Supabase projesi" (probata örgütünde proje açılır,
+  göçler Yönetim API'siyle, uygulama rolü SCRAM, havuzcu, Storage, deneme, firma + ilk yönetici — göç 0098) ya da "Ortak proje". Firma sayfasında
+  kurulum paneli (12 adım; kesilip sürdürülür; kalıcı hatada "Sürdür", INIT_FAILED'de "Projeyi kaldır ve yeniden dene"); bitince "Yöneticiye yeni
+  geçici parola" (kendi projeli firmada tuş önce hep kapalıydı — düzeldi). Yayının iki yanına düşen kurulumda deneme adımı eksik göçü tamamlar.
+  Canlıda seçenek KAPALI ve açıklamalı: Vercel'e PAT (PROBATA_SUPABASE_YONETIM_ANAHTARI) ve örgüt (PROBATA_SUPABASE_ORGUT) girilince açılır.
+- 2026-10-16 (593): **FV9 YAYINDA** — kendi projeli firmada yönetim işleri (dondur / etkinleştir, geçici parola, özet) firmanın veritabanında, sıra kapalı
+  yönde; K4 yapay zekâ anahtarı yönetimden (kaydet / kaldır, bu ay kullanım). Göç 0097; main 7ec7ea7, sağlık tamam, duman 11/11.
+- 2026-10-16 (592): **FV8 YAYINDA** — Supabase Yönetim API istemcisi (429 bekleme, sırsız hata, uç yalnız yerel), göç yürütücüsü, göç dağıtıcıya
+  "uygula" kipi (kilit, önce özet denetimi, ilk hatada dur). Canlıda kip boş (denetle) kalır; derleme düşmesi düzeltildi (9b5b36a).
+- 2026-10-16 (591): **FV6 YAYINDA** — gece işleri her firmanın kendi veritabanında (ulaşılamayan firma ayrı sayılır); Ana sayfa duyuruları merkezden.
+- 2026-10-16 (590): **FV5 YAYINDA** — depo yönlendirici: ortak firma bugünkü depoda, kendi projeli firma kendi Supabase Storage'ında (kapalı düşer).
+- 2026-10-16 (589): **S.A.Y 2. adım b** — kalan modüller ve eksik tuşlar işlem kataloğunda (148 işlem); düzeltme cd46b2d (hiç kaydedilmemiş firma ayarı
+  bölümü sürüm -1 ile kaydedilir).
+- 2026-10-16 (588): **Sonuç kuralı format yapıcıda** — Bakanlık hesapları formül olarak tablonun ayarında görünür ve değişir.
+- 2026-10-16 (587): **S.A.Y 2. adım a** — S.A.Y uygulamanın sunucu işlevleriyle çalışır (Planlar, Raporlar, Müşteriler, Teklifler, Onaylar).
+- 2026-10-16 (586): **Sayfalama** — 20 satırdan uzun her tablo / liste sayfalı (reisim: *"herhangi bir liste tablo … 20 den fazlası sayfalı olsun"*).
+- 2026-10-16 (585): **S.A.Y Claude gibi (1)** — sınırsız iş döngüsü, tek komutla çok satır, sahte "yaptım" engeli.
+- 2026-10-15 (584): **FV4 + FV7 YAYINDA** — göç dağıtıcı yayın kapısı (Vercel derlemesinde denetle) ve her projede sağlık (/api/saglik/projeler).
+- 2026-10-15 (583): **FV3 YAYINDA** — firma başına havuz ve yönlendirme: her istek kendi firmasının veritabanına; düzeltme 6f92f86.
 - 2026-10-15 (582): **YAYIN probata.com.tr'DE** (reisim: *"probata.com.tr yi aldım … yayına oradan devam edelim vercel deneme sayfasından çıkalım"*).
   Alan adı Natro'dan; ad sunucuları ns1 / ns2.vercel-dns.com (TRABİS aynı akşam yayınladı). Vercel'de probata.com.tr, www (→ probata.com.tr 308),
   *.probata.com.tr, deneme. ve yonetim. alt adları; sertifikalar Vercel'in (kök: ZeroSSL / Sectigo, www ve joker: Let's Encrypt; Ocak 2027'ye dek,

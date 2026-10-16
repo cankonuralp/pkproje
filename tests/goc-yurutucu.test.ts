@@ -49,7 +49,7 @@ test("gocleriUygula yürütücüyle: eksikleri sırayla uygular, uygulanmışı 
 test("Yönetim API yürütücüsü: goc tablosu yoksa boş; göç TEK istekte — BEGIN, SET LOCAL ROLE postgres, tablo, göç, kayıt, COMMIT; biçimsiz ad / özet gömülmez", async () => {
   const istekler: { proje: string; sql: string }[] = [];
   let tabloVar = false;
-  const api: SupabaseYonetimi = {
+  const api: Pick<SupabaseYonetimi, "sorgu"> = {
     async sorgu<T>(proje: string, sql: string) {
       istekler.push({ proje, sql });
       if (sql.includes("to_regclass")) return [{ var: tabloVar }] as T[];

@@ -10,7 +10,7 @@
    geçersiz anahtar alanın altında reddedilir; kaydet → tanımlı, son 4; kaldır (önce sorulur) → tanımlı değil. Dondurma bu firmada uçtan uçta
    denenmez (aynı sunucudaki öteki testler firmayı kullanır) — sıra ve kapalı yön tests/yonetim-firmada.test.ts'te. */
 import { expect, test, type Page } from "@playwright/test";
-import { E2E_FIRMA, E2E_KAPI, E2E_KENDI, E2E_PAROLA, E2E_YONETIM } from "./hesaplar";
+import { E2E_FIRMA, E2E_KAPI, E2E_KENDI, E2E_KURULUM, E2E_PAROLA, E2E_YONETIM } from "./hesaplar";
 import { hazir } from "./yardimci";
 
 const Y = `http://${E2E_YONETIM.alan}:${E2E_KAPI}`;
@@ -59,8 +59,14 @@ test("yönetim: ayrı adres; ilk kurulum; firma aç → geçici parolayla yeni f
   /* firma aç: boş form → alan hataları; ünvandan öneri; ayrılmış ad; başka firmanın kodu sunucuda reddedilir */
   await page.getByRole("link", { name: "Firma aç" }).first().click();
   await expect(page.getByRole("heading", { level: 1, name: "Firma aç" })).toBeVisible();
-  /* 2026-10-12 (sunum D1): firmanın Supabase hesabı — bağlama akışı adım adım (yayına çıkışta) */
-  await expect(page.getByRole("list", { name: "Supabase hesabı nasıl bağlanır" }).getByRole("listitem")).toHaveCount(6);
+  /* 2026-10-16 (FIRMA-VT FV10, K1 — kasıtlı): firmanın Supabase hesabını bağlama akışı (2026-10-12, sunum D1) kalktı; yerine veritabanı seçimi —
+     "Kendi Supabase projesi" (panel açar ve kurar; uçtan uca sunucusunda Yönetim API taklidi tanımlı → varsayılan, kurulum adımları listede) ya da
+     "Ortak proje". Bu test ortak projeyle açar (kendi proje: aşağıdaki FV10 testi). */
+  await expect(page.getByRole("radio", { name: /^Kendi Supabase projesi/ })).toBeChecked();
+  await expect(page.getByRole("list", { name: "Kendi proje nasıl kurulur" }).getByRole("listitem")).toHaveCount(6);
+  await page.getByRole("radio", { name: /^Ortak proje/ }).check();
+  await expect(page.getByRole("list", { name: "Kendi proje nasıl kurulur" })).toHaveCount(0);
+  await expect(page.getByLabel("Yapay zekâ anahtarı (isteğe bağlı)")).toHaveCount(0);
   await page.getByRole("button", { name: "Firmayı aç" }).click();
   await expect(page.getByText("Ticari ünvan yazılmalı.")).toBeVisible();
   await expect(page.getByLabel("Ticari ünvan")).toBeFocused();
@@ -139,6 +145,55 @@ test("yönetim: kurulmuş yönetici — iki adım kapalıyken parolayla doğruda
   await expect(page).toHaveURL(/\/yonetim$/);
   await hazir(page);
   await expect(page.getByRole("heading", { level: 1, name: "Firmalar" })).toBeVisible();
+});
+
+/* FIRMA-VT FV10 (2026-10-16; K1 — reisim: "supabase ve resend bağlantılarını firma açarken biz buradan panelden yapalım daha sonra müşteri
+   uğraşmasın"): Firma aç → "Kendi Supabase projesi" (yapay zekâ anahtarı isteğe bağlı) → firma sayfasında kurulum adım adım ilerler (Yönetim API'sinin
+   yerel taklidi: proje arkada açılır; göçler API'yle, uygulama rolü, havuzcu, Storage, deneme, firma + ilk yönetici) → bitince sayfa yenilenir: firma
+   etkin, veritabanı "kendi Supabase projesi", kurulumda girilen yapay zekâ anahtarı tanımlı (…wxyz), yönetici firmanın veritabanından → "Yöneticiye
+   yeni geçici parola" → yeni firmanın adresinde o parolayla giriş (parola değiştir ekranı). Hata, kesilip sürdürme, sır: tests/firma-kurulum.test.ts. */
+test("yönetim: kendi Supabase projesi — Firma aç → kurulum adım adım → tamam → geçici parolayla yeni firmaya giriş (FV10)", async ({ page, browser }, bilgi) => {
+  test.setTimeout(360_000);
+  const F = E2E_KURULUM.firma(bilgi.project.name);
+  await parolaAdimi(page, E2E_YONETIM.proje(bilgi.project.name).etkin, E2E_PAROLA);
+  await expect(page).toHaveURL(/\/yonetim$/);
+  await hazir(page);
+  await page.getByRole("link", { name: "Firma aç" }).first().click();
+  await expect(page.getByRole("heading", { level: 1, name: "Firma aç" })).toBeVisible();
+  await page.getByLabel("Ticari ünvan").fill(F.unvan);
+  await page.getByLabel("Alt alan adı").fill(F.alt);
+  await page.getByLabel("Kısa kod (rapor no öneki)").fill(F.kod);
+  await page.getByLabel("Ad soyad").fill(F.yon);
+  await page.getByLabel("E-posta (giriş adı)").fill(F.eposta);
+  await expect(page.getByRole("radio", { name: /^Kendi Supabase projesi/ })).toBeChecked();
+  await page.getByLabel("Yapay zekâ anahtarı (isteğe bağlı)").fill(E2E_KURULUM.yz);
+  await page.getByRole("button", { name: "Firmayı aç" }).click();
+  await expect(page.locator("dialog[open]")).toContainText(`${F.alt}.localhost için firmanın Supabase projesi açılıp kurulur`);
+  await page.locator("dialog[open]").getByRole("button", { name: "Firmayı aç" }).click();
+  /* firma sayfası: kurulum bölümü — 12 adım; sayfa açıkken ilerler */
+  await expect(page).toHaveURL(/\/yonetim\/f\/[0-9a-f-]{36}$/, { timeout: 30_000 });
+  await expect(page.getByRole("heading", { level: 1, name: F.unvan })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Kurulum" }).getByRole("list", { name: "Kurulum adımları" }).getByRole("listitem")).toHaveCount(12);
+  /* bitince sayfa sunucudan yenilenir: kurulum bölümü yok, firma etkin, geçici parola tuşu açık */
+  await expect(page.getByRole("button", { name: "Yöneticiye yeni geçici parola" })).toBeEnabled({ timeout: 300_000 });
+  await expect(page.getByRole("region", { name: "Kurulum" })).toHaveCount(0);
+  await expect(page.getByText("Etkin", { exact: true })).toBeVisible();
+  await expect(page.getByText("Firmanın kendi Supabase projesi (Frankfurt)")).toBeVisible();
+  await expect(page.getByText(F.eposta, { exact: false }).first()).toBeVisible();
+  await expect(page.getByRole("region", { name: "Yapay zekâ anahtarı" }).getByText("…wxyz")).toBeVisible();
+  await page.getByRole("button", { name: "Yöneticiye yeni geçici parola" }).click();
+  await page.locator("dialog[open]").getByRole("button", { name: "Oluştur" }).click();
+  await expect(page.locator("#yf-parola")).toBeVisible({ timeout: 30_000 });
+  const parola = (await page.locator("#yf-parola").innerText()).trim();
+  expect(parola).toMatch(/^[A-Za-z2-9]{5}-[A-Za-z2-9]{5}-[A-Za-z2-9]{5}$/);
+  const kisi = await (await browser.newContext()).newPage();
+  await kisi.goto(`http://${F.alt}.localhost:${E2E_KAPI}/giris`);
+  await hazir(kisi);
+  await kisi.getByLabel("E-posta").fill(F.eposta);
+  await kisi.getByLabel("Parola", { exact: true }).fill(parola);
+  await kisi.getByRole("button", { name: "Giriş yap" }).click();
+  await expect(kisi).toHaveURL(/\/giris\/parola$/);
+  await kisi.context().close();
 });
 
 test("yönetim: kendi veritabanlı firma — özet firmanın veritabanından; yapay zekâ anahtarı kaydet / kaldır (FV9, K4)", async ({ page }, bilgi) => {

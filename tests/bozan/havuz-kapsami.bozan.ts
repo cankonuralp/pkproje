@@ -69,6 +69,9 @@ test("5. yönetim eylemi kiracı kaydı önbelleğini boşaltmayınca yakalanır
   assert.deepEqual(yonetimOnbellekEksikleri(metin), [], "sağlam");
   for (const [eski, yeni, beklenen] of [
     ["return unut(await islem((o) => yonetimIslemi(o, (db) => firmaAc(", "return (await islem((o) => yonetimIslemi(o, (db) => firmaAc(", "firmaAcEylemi önbelleği boşaltmıyor"],
+    /* FV10 (2026-10-16): Firma aç'ın kendi proje yolu da sarılı olmalı; kurulum bitince önbellek boşalmalı */
+    ["    return unut(await islem(async (o) => {\n      const k = kurulumOrtami(o);", "    return (await islem(async (o) => {\n      const k = kurulumOrtami(o);", "firmaAcEylemi önbelleği boşaltmıyor"],
+    ["if (g.durum === \"tamam\") { firmaKayitlariniUnut(); refresh(); }", "if (g.durum === \"tamam\") { refresh(); }", "kurulum bitince önbellek boşalmıyor"],
     ["{ if (unut(y).tamam) refresh();", "{ if (y.tamam) refresh();", "yenileyerek unut'tan geçmiyor"],
     ["{ if (y.tamam) firmaKayitlariniUnut(); return y; }", "{ return y; }", "unut önbelleği boşaltmıyor"],
     ["export async function firmaDondurEylemi(id: string): Promise<YonetimYaniti> {\n  return yenileyerek(",

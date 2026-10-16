@@ -9,6 +9,8 @@ import { bosKapi } from "./kume.ts";
 
 export interface SahteDepo {
   url: string; gizli: string;
+  /** FV10: ek gizli anahtarlar (kurulumun açtığı projelerin anahtarları — taklit hepsini kabul eder) */
+  ekGizliler: Set<string>;
   kovalar: Set<string>;
   nesneler: Map<string, { bayt: Buffer; tur: string; onbellek: string }>;
   istekler: string[];
@@ -17,7 +19,7 @@ export interface SahteDepo {
 }
 
 export async function sahteDepoKur(gizli = "sahte-gizli-anahtar-0123456789"): Promise<SahteDepo> {
-  const d: Omit<SahteDepo, "url" | "kapat"> = { gizli, kovalar: new Set(), nesneler: new Map(), istekler: [], bozukYukle: false };
+  const d: Omit<SahteDepo, "url" | "kapat"> = { gizli, ekGizliler: new Set(), kovalar: new Set(), nesneler: new Map(), istekler: [], bozukYukle: false };
   const json = (y: import("node:http").ServerResponse, durum: number, govde: unknown) => {
     y.writeHead(durum, { "content-type": "application/json" }).end(JSON.stringify(govde));
   };
@@ -36,7 +38,8 @@ export async function sahteDepoKur(gizli = "sahte-gizli-anahtar-0123456789"): Pr
         if (!n) { json(y, 400, { statusCode: "400", error: "InvalidJWT", message: "invalid signature" }); return; }
         y.writeHead(200, { "content-type": n.tur }).end(n.bayt); return;
       }
-      if (istek.headers.apikey !== d.gizli || istek.headers.authorization !== `Bearer ${d.gizli}`) { json(y, 403, { error: "Unauthorized" }); return; }
+      const k = String(istek.headers.apikey ?? "");
+      if ((k !== d.gizli && !d.ekGizliler.has(k)) || istek.headers.authorization !== `Bearer ${k}`) { json(y, 403, { error: "Unauthorized" }); return; }
       if (istek.method === "POST" && yol === "/bucket") {
         const b = JSON.parse(govde.toString()) as { id: string; public: boolean };
         if (b.public !== false) { json(y, 400, { error: "kova özel olmalı (taklit)" }); return; }

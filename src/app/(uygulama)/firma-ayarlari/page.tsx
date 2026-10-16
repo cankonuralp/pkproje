@@ -14,5 +14,6 @@ export default async function Sayfa() {
   if (!o) return <Yetkisiz />;
   const v = await oturumIslemi(o, (db) => firmaAyarlari(db, o));
   if (!v) return <Yetkisiz />;
-  return <FirmaAyarlari v={v} />;
+  /* FIRMA-VT FV10 (K3): Depolama yalnız bilgi — kiracının projesi (kendi / ortak) isteğin kiracısından */
+  return <FirmaAyarlari v={{ ...v, depolama: { ...v.depolama, proje: o.kiraci.vt ? "kendi" : "ortak" } }} />;
 }

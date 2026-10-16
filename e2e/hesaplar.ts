@@ -89,6 +89,19 @@ export const E2E_YONETIM = {
     };
   },
 };
+/* FIRMA-VT FV10 (2026-10-16; e2e/yonetim.spec.ts "kendi Supabase projesi"): Supabase Yönetim API'sinin YEREL TAKLİDİ (scripts/e2e-sunucu.ts;
+   tests/yardimci/sahte-supabase-yonetim.ts) — anahtar ve örgüt UYDURMA (gerçek anahtar biçiminde değil), gerçek Supabase'e istek gitmez. Proje
+   (genişlik) başına panelden kurulan bir firma; proje sağlığı ve gece işi onu da sayar (en çok E2E_KURULUM_EN_COK — e2e/api.spec.ts). */
+export const E2E_KURULUM = {
+  anahtar: "e2e-supabase-yonetim-uydurma-anahtari-0001",
+  orgut: "e2e-uydurma-orgut",
+  yz: "sk-ant-uydurmaAnahtarDegil0123456789wxyz",
+  firma: (p: string) => {
+    const ek = YONETIM_EK[p as keyof typeof YONETIM_EK] ?? "x";
+    return { unvan: "Kurulum Muayene Deneme A.Ş.", alt: `kurulum${ek}`, kod: `K${ek.toUpperCase()}`, yon: "Kurulum Deneme Yöneticisi", eposta: `yonetici@kurulum${ek}.example` };
+  },
+};
+export const E2E_KURULUM_EN_COK: number = E2E_YONETIM_PROJELER.length;
 /* görsel karşılaştırma (411): AYRI uydurma firma — referans ekranın (Planlar + plan içi; CLAUDE.md §6, src/styles/kalip.ts) görüntüsü her koşuda
    aynı çıksın diye SABİT numara, tarih ve içerikle (bugünden bağımsız); başka test bu firmaya dokunmaz */
 export const E2E_GORSEL = {

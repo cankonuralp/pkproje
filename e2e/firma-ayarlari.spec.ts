@@ -107,8 +107,10 @@ test("firma ayarları: paneller ve pencere; kaydet, geçersiz değer, kayma yok,
   /* Depolama: yalnız bilgi; uzun anlatım "Nasıl …?" başlıklarının altında */
   const depo = await ac(page, "depolama", "Depolama");
   await expect(depo.getByRole("combobox")).toHaveCount(0);
-  await depo.getByText("Kendi hesabınızı nasıl bağlarsınız?").click();
-  await expect(depo.getByText(/İlk iş “Supabase hesabını bağla”/)).toBeVisible();
+  /* 2026-10-16 (FIRMA-VT FV10, K1 / K3): "Kendi hesabınızı nasıl bağlarsınız?" kalktı — proje panelden kurulur, bağlantı kilitli */
+  await expect(depo.getByText("probata ortak projesi (Supabase, Frankfurt)")).toBeVisible();
+  await depo.getByText("Veritabanınız nasıl kurulur?").click();
+  await expect(depo.getByText(/Bağlantı bilgileri Firma ayarlarında kilitli/)).toBeVisible();
   await depo.getByText("Raporlar ne kadar durur?").click();
   /* 515: 7 gün raporların ömrü değil (geri sarma yedeği) */
   await expect(depo.getByText(/raporlar 7 gün sonra silinmez/)).toBeVisible();

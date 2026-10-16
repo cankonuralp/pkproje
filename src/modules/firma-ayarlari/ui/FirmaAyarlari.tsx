@@ -503,17 +503,18 @@ function Yedek({ v }: { v: Veri }) {
   );
 }
 
-/* ── DEPOLAMA (544; maket 539 "Depolama" — eski "Supabase hesabı ve yedek"in hesap kısmı; 2026-10-12 sunum D1, 515): yalnız bilgi ── */
+/* ── DEPOLAMA (544; maket 539 "Depolama" — eski "Supabase hesabı ve yedek"in hesap kısmı; 2026-10-12 sunum D1, 515): yalnız bilgi ──
+   2026-10-16 (FIRMA-VT FV10, K1 / K3): hesabı bağlama anlatımı kalktı — proje panelden kurulur, bağlantı kilitli; hesap satırı kiracının projesi */
 function Depolama({ v }: { v: Veri }) {
   return (
     <Kart yaz={false}>
       <dl className={stil.bilgi}>
-        <div><dt>Hesap</dt><dd>probata deneme projesi (Supabase, Frankfurt)</dd></div>
+        <div><dt>Hesap</dt><dd>{v.depolama.proje === "kendi" ? "Firmanın kendi Supabase projesi (Frankfurt)" : "probata ortak projesi (Supabase, Frankfurt)"}</dd></div>
         <div><dt>Dosyalar</dt><dd>{v.depolama.dosya.toLocaleString("tr-TR")} dosya · {megabayt(v.depolama.bayt)} MB</dd></div>
         <div><dt>Paket</dt><dd>Supabase Pro · 25 $/ay</dd></div>
       </dl>
-      <Not>Kendi Supabase hesabınız yayına çıkışta bağlanır; fatura doğrudan size gelir.</Not>
-      <Yardim baslik="Kendi hesabınızı nasıl bağlarsınız?"><ol className={stil.adimlar}>{SUPABASE_ADIMLAR.map((x) => <li key={x}>{x}</li>)}</ol></Yardim>
+      <Not>Bağlantıyı probata yönetimi kurar; burada değiştirilmez ve gösterilmez.</Not>
+      <Yardim baslik="Veritabanınız nasıl kurulur?"><ol className={stil.adimlar}>{SUPABASE_ADIMLAR.map((x) => <li key={x}>{x}</li>)}</ol></Yardim>
       <Yardim baslik="Raporlar ne kadar durur?">
         <ul className={stil.adimlar}>
           <li>İmzalanan her rapor saklama süresi ({v.saklama.deger.yil} yıl) boyunca durur; süre dolmadan silinmez, silinecekler 30 gün önce listelenir.</li>

@@ -1,5 +1,6 @@
 /* YÖNETİM › FİRMA AÇ (348; maket yonetim.html #/yeni) — form ve sonuç (geçici parola yalnız bir kez) istemci bileşeninde; karar sunucuda. */
 import type { Metadata } from "next";
+import { kendiProjeAcik } from "../../../../../modules/yonetim/server/calistirici";
 import { depoTuru } from "../../../../../modules/yonetim/ui/ortak";
 import { FirmaAcFormu } from "../../../../../modules/yonetim/ui/FirmaAcFormu";
 import { anaAlan } from "../../../../../server/kiraci/istek";
@@ -9,5 +10,6 @@ export const metadata: Metadata = { title: "Firma aç" };
 
 export default async function FirmaAcSayfasi() {
   await yonetimOturumGerekli();
-  return <FirmaAcFormu anaAlan={anaAlan()} depo={depoTuru(process.env.PROBATA_DEPO)} />;
+  /* FV10: "Kendi Supabase projesi" yalnız Yönetim API anahtarı + örgüt ortamdayken (yoksa kapalı, açıklamalı) */
+  return <FirmaAcFormu anaAlan={anaAlan()} depo={depoTuru(process.env.PROBATA_DEPO)} kendiProje={kendiProjeAcik()} />;
 }

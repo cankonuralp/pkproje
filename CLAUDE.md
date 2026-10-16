@@ -296,6 +296,11 @@ pkproje/
                             FV9 (2026-10-16): server/firma-tarafi.ts — kendi projeli firmada iş firmanın veritabanında (göç 0097 firma_yonetim_*), sıra kapalı
                             yönde (dondur: önce firma; etkinleştir: önce merkez); K4 yapay zekâ anahtarı kaydet / kaldır + bu ay (firma sayfası); özet;
                             server/calistirici.ts (merkez: yonetimIslemi, firmada: kiraci.ts yonetimFirmadaIcinde) — kilit tests/yonetim-firmada.test.ts ·
+                            FV10 (2026-10-16) KURULUM MAKİNESİ: Firma aç → "Kendi Supabase projesi" (PAT + örgüt ortamda değilse kapalı) → server/kurulum.ts
+                            (14 adım: proje · hazır · TLS · göç · kimlik · rol SCRAM · havuzcu · depo · deneme · firma_kur + ilk yönetici (0098) · e-posta (FV11) ·
+                            yz · tamam; merkezde firma_kurulum kira + ilerletme, adım kesilip sürdürülür; sırlar şifreli geçici girdide) · kurulum-adim.ts (saf,
+                            tarayıcıya da gider) · server/kurulum-hata.ts (yeniden / kalıcı) · ui/KurulumPaneli.tsx (sayfa açıkken 3 sn'de bir) · Yönetim API
+                            istemcisi src/server/dis/supabase-yonetim.ts (proje uçları) · kilit tests/firma-kurulum.test.ts (PG + taklit), kurulum-adim.test.ts ·
                             sayfalar src/app/(yonetim)/yonetim: giris (parola → kod → ilk kurulum) + (panel) + cikis (356: POST route — eylem redirect'i
                             yönetim adresini kaybediyordu) — yalnız PROBATA_YONETIM_ALAN adresinde
   src/server/yonetim/       YÖNETİM ÇEKİRDEĞİ (348): adres.ts (saf; ara katman da okur) · totp.ts (RFC 6238, saf) · giris.ts (iki adımlı giriş,
