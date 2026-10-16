@@ -29,13 +29,14 @@ export function kimlikler(t: FormatTanimi): Set<string> {
     if (b.blok === "imza") for (const x of b.satirlar ?? []) s.add(x.id);
     if (b.blok === "cihaz" || b.blok === "kusur") for (const x of b.sutunlar ?? []) s.add(x.id);
     if (b.blok === "liste" || b.blok === "test") for (const x of b.ekSutunlar ?? []) s.add(x.id);
+    if (b.blok === "foto") for (const x of b.kutular ?? []) s.add(x.id);
   }
   for (const x of t.gorunum.firma?.satirlar ?? []) s.add(x.id);
   return s;
 }
 
 /** önek + en küçük kullanılmayan sayı (ör. "k_a3"): şablonların kimlikleriyle çakışmaz, tanımda tekil */
-export function yeniKimlik(t: FormatTanimi, onek: "b" | "a" | "g" | "m" | "s" | "d" | "i" | "f" | "t", ek: ReadonlySet<string> = new Set()): string {
+export function yeniKimlik(t: FormatTanimi, onek: "b" | "a" | "g" | "m" | "s" | "d" | "i" | "f" | "t" | "k", ek: ReadonlySet<string> = new Set()): string {
   const var_ = kimlikler(t);
   let n = 1;
   while (var_.has(`k_${onek}${n}`) || ek.has(`k_${onek}${n}`)) n++;
@@ -775,4 +776,37 @@ export function ekSutunTasi(t: FormatTanimi, i: number, id: string, yon: -1 | 1)
   if (!b) return t;
   const l = ekSutunlari(b), j = l.findIndex((x) => x.id === id);
   return j < 0 || j + yon < 0 || j + yon >= l.length ? t : ekYaz(t, i, tasi(l, j, j + yon));
+}
+
+/* ── FOTOĞRAF KUTULARI (595 madde 16): adlı kutular — adı yazılır, sırası değişir, çıkarılır; sahada fotoğraf o kutuya çekilir. Son kutu çıkınca
+   liste kalkar (eski format aynı). Kimlik tanımda tekil (fotoğrafın yeri olarak saklanır). ── */
+function kutuYaz(t: FormatTanimi, i: number, l: readonly { id?: string; ad: string }[]): FormatTanimi {
+  const b = t.bolumler[i];
+  if (b?.blok !== "foto") return t;
+  const var_ = kimlikler({ ...t, bolumler: t.bolumler.map((x, j) => (j === i ? { ...b, kutular: [] } : x)) }), ek = new Set<string>();
+  const kutular = l.slice(0, 20).map((x) => {
+    const id = x.id && !var_.has(x.id) && !ek.has(x.id) ? x.id : yeniKimlik({ ...t, bolumler: [] }, "k", new Set([...var_, ...ek]));
+    ek.add(id);
+    return { id, ad: x.ad.trim().replace(/\s+/g, " ").slice(0, 200) || "Fotoğraf" };
+  });
+  const y = { ...b };
+  if (kutular.length) y.kutular = kutular; else delete y.kutular;
+  return { ...t, bolumler: t.bolumler.map((x, j) => (j === i ? y : x)) };
+}
+const kutulari = (t: FormatTanimi, i: number) => { const b = t.bolumler[i]; return b?.blok === "foto" ? b.kutular ?? [] : []; };
+export function fotoKutusuEkle(t: FormatTanimi, i: number, ad = "Yeni fotoğraf"): { t: FormatTanimi; id: string | null } {
+  if (t.bolumler[i]?.blok !== "foto" || kutulari(t, i).length >= 20) return { t, id: null };
+  const y = kutuYaz(t, i, [...kutulari(t, i), { ad }]);
+  return { t: y, id: kutulari(y, i).at(-1)?.id ?? null };
+}
+export function fotoKutusuYaz(t: FormatTanimi, i: number, id: string, ad: string): FormatTanimi {
+  const l = kutulari(t, i);
+  return !ad.trim() || !l.some((k) => k.id === id) ? t : kutuYaz(t, i, l.map((k) => (k.id === id ? { ...k, ad } : k)));
+}
+export function fotoKutusuSil(t: FormatTanimi, i: number, id: string): FormatTanimi {
+  return kutuYaz(t, i, kutulari(t, i).filter((k) => k.id !== id));
+}
+export function fotoKutusuTasi(t: FormatTanimi, i: number, id: string, yon: -1 | 1): FormatTanimi {
+  const l = kutulari(t, i), j = l.findIndex((k) => k.id === id);
+  return j < 0 || j + yon < 0 || j + yon >= l.length ? t : kutuYaz(t, i, tasi(l, j, j + yon));
 }

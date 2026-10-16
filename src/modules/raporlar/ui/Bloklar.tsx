@@ -264,7 +264,16 @@ function BlokIcerik({ b, no, bag }: { b: Bolum; no: string | null; bag: Baglam }
     case "olcum": return <OlcumBlok b={b} bag={bag} />;
     case "test": return <TestBlok b={b} bag={bag} />;
     case "cihaz": return <>{bag.cihaz(b.id)}</>;
-    case "foto": return <>{bag.foto(b.id, null)}</>;
+    /* 595 (madde 16): adlı fotoğraf kutuları — her biri kendi "Fotoğraf ekle"siyle; kutusuz fotoğraf da eklenir */
+    case "foto": return b.kutular?.length
+      ? <>{b.kutular.map((k) => (
+        <div key={k.id} className={stil.madde}>
+          <div className={stil.maddeSol}><p className={stil.maddeAd}>{k.ad}</p></div>
+          <div className={stil.maddeCevap}>{bag.foto(b.id, k.id)}</div>
+        </div>
+      ))}<div className={stil.madde}><div className={stil.maddeSol}><p className={stil.maddeAd}>Diğer fotoğraflar</p></div>
+        <div className={stil.maddeCevap}>{bag.foto(b.id, null)}</div></div></>
+      : <>{bag.foto(b.id, null)}</>;
     case "kusur": return <KusurBlok bag={bag} />;
     case "sonuc": return <SonucBlok b={b} bag={bag} />;
     case "not": return <NotBlok b={b} bag={bag} />;

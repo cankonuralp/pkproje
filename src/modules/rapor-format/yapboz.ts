@@ -190,7 +190,7 @@ export function parcaKopyasi(t: FormatTanimi, kaynak: Bolum): Bolum | null {
 
 function kopyaIc(t: FormatTanimi, b: Bolum, ad: string): Bolum {
   const ek = new Set(kimlikler(t));
-  const yeni = (onek: "b" | "a" | "g" | "m" | "s" | "d") => { const x = yeniKimlik(t, onek, ek); ek.add(x); return x; };
+  const yeni = (onek: "b" | "a" | "g" | "m" | "s" | "d" | "k") => { const x = yeniKimlik(t, onek, ek); ek.add(x); return x; };
   let k: Bolum;
   if (b.blok === "bilgi") k = { ...b, alanlar: b.alanlar.map((a) => ({ ...a, id: yeni("a"), kilit: false })) };
   else if (b.blok === "liste") k = { ...b, gruplar: b.gruplar.map((g) => ({ ...g, id: yeni("g"), maddeler: g.maddeler.map((m) => ({ ...m, id: yeni("m"), kilit: false })) })) };
@@ -198,6 +198,8 @@ function kopyaIc(t: FormatTanimi, b: Bolum, ad: string): Bolum {
      PD …) sütunları kimlikle okuduğu için bozulmaz */
   else if (b.blok === "olcum") k = { ...b };
   else if (b.blok === "test") k = { ...b, degerler: b.degerler.map((d) => ({ ...d, id: yeni("d"), kilit: false })) };
+  /* 595 (madde 16): fotoğraf kutularının kimliği tanımda tekil (fotoğrafın yeri) — kopyada yenisi */
+  else if (b.blok === "foto") k = { ...b, ...(b.kutular ? { kutular: b.kutular.map((x) => ({ ...x, id: yeni("k") })) } : {}) };
   else k = { ...b };
   return Bolum.parse({ ...k, id: yeni("b"), ad, kilit: false });
 }

@@ -399,6 +399,14 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await page.getByRole("checkbox", { name: /^Tablo olarak/ }).check();
     await page.getByRole("button", { name: "Bölüm ayarlarını kapat" }).click();
     await expect(kusurBolumu.getByRole("button", { name: "Uygunsuzluk", exact: true })).toBeVisible();
+    /* 595 (madde 16): adlı fotoğraf kutusu — adı yerinde yazılır (sahada fotoğraf o kutuya çekilir) */
+    const termal = kagit.getByRole("region", { name: /Termal kamera görüntüleri$/ });
+    await termal.getByRole("button", { name: "Termal kamera görüntüleri · fotoğraf kutusu ekle" }).click();
+    const kutuAdi = page.getByRole("textbox", { name: "Fotoğraf kutusunun adı" });
+    await expect(kutuAdi).toBeFocused();
+    await kutuAdi.fill("Pano termal");
+    await kutuAdi.press("Enter");
+    await expect(termal.getByRole("button", { name: "Pano termal", exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), "yana taşma yok").toBe(true);
     await goz(page, "kurucu-duzen", bilgi.project.name);
     /* belge önizlemesi: kesin belgenin çizicisinden, yazılanlarla */

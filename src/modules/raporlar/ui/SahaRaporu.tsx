@@ -251,7 +251,8 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
     /* sayılar sunucudaki gibi raporun kendi listesinden: bölüm başına ve madde başına fotoğraf */
     const foto: Record<string, number> = {}, mf: Record<string, number> = {};
     const yerler = [...v.fotolar, ...denemeFoto, ...bekleyenFotolar.map((x) => { const [bolum, m] = (x.yer ?? "|").split("|"); return { bolum, madde: m || null }; })];
-    for (const f of yerler) { if (f.madde) mf[f.madde] = (mf[f.madde] ?? 0) + 1; else foto[f.bolum] = (foto[f.bolum] ?? 0) + 1; }
+    /* 595 (madde 16): bölümün sayısı bütün fotoğraflarından (kutudakiler dahil) — sunucudaki sayiliCevaplar gibi */
+    for (const f of yerler) { if (f.madde) mf[f.madde] = (mf[f.madde] ?? 0) + 1; foto[f.bolum] = (foto[f.bolum] ?? 0) + 1; }
     const madde = Object.fromEntries(Object.entries(cevaplar.madde).map(([k, x]) => [k, { ...x, foto: mf[k] ?? 0 }]));
     return degerlendir(v.tanim, { ...cevaplar, madde, cihaz: v.cihazlar.filter((x) => x.cihaz).length, foto });
   }, [v.tanim, v.cihazlar, v.fotolar, denemeFoto, bekleyenFotolar, cevaplar]);

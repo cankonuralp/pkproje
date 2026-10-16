@@ -179,6 +179,10 @@ pkproje/
                             TEST_SUTUN_TURLERI yazı · sayı · seçim; en çok 4) + Cevaplar.ek (ekAnahtari öğe|sütun) · belge sütunlar · saha (Bloklar Madde /
                             TestBlok) her madde / değerde · kurucu.ts ekSutunEkle / Yaz / Sil / Tasi · Kagit "+ Sütun" · S.A.Y format "tablo_sutunu", rapora
                             x:<öğe>:<sütun> (say-doldur Yer "ek") · formataUyarla ek'i taşır · kilit tests/ek-sutunlar, bozan
+                            · 595 FOTOĞRAF KUTULARI (madde 16): tanim.ts foto kutular (adlı; kimlik tanımda tekil) — kutunun fotoğrafı RaporFoto.madde = kutu ·
+                            raporlar.ts fotoEkle kutuya izin, bölüm sayısı bütün fotoğraflardan (sayiliCevaplar, SahaRaporu, belge aynı) · belge bölümde kutu
+                            adıyla (ekteki madde fotoğraflarına girmez) · saha (Bloklar foto) kutu başına "Fotoğraf ekle" · kurucu.ts fotoKutusu* · yapboz
+                            kopyada yeni kimlik · S.A.Y "foto_kutusu" · kilit tests/foto-kutulari, bozan
   src/modules/rapor-format/ RAPOR FORMATI (2026-10-04, 308): sürümlü tanım (rapor_format, göç 0022: taslak → yayında → eski; yayınlanan değişmez) ·
                             şablondan başlat · taslak kaydet · yayınla (kilitli Bakanlık öğesi ENGEL, öteki denetim uyarı) · yayındaki format;
                             ekran: tür sayfası "Rapor şablonu" + önizleme /ekipman-turleri/<tür>/sablon/<sürüm> · FORMAT KURUCU (338, K4):

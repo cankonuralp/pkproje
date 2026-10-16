@@ -24,7 +24,7 @@ import {
 import { etkinKurallar } from "../../format/sonuc.ts";
 import { CIHAZ_ALANLARI, FIRMA_KAYNAK_ADI, FIRMA_KAYNAKLARI, KUSUR_ALANLARI, type CihazAlani, type KusurAlani, IMZA_ALAN_ADI, IMZA_ALANLARI, IMZA_KISI_ADI, KURAL_EN_COK, type Blok, type Bolum, type FormatTanimi, type ImzaAlani, type SonucKurali } from "../../format/tanim.ts";
 import {
-  bakanlikKuralinaDon, bilgiDizilisiYaz, ekSutunAdi, ekSutunEkle, ekSutunSil, ekSutunTasi, ekSutunYaz, eksikEkSutunlar, hazirSatirEkle, hazirSatirSil, hazirSatirTasi, hazirSatirYaz, bolumAdi, eksikTabloAlanlari, kusurTablosuYaz, tabloSutunuEkle, tabloSutunuSil, tabloSutunuTasi, tabloSutunuYaz, bolumBasligiYaz, bolumSil, eimzaYaz, gorunumBasligiYaz, notSatiriYaz, ogeTasi, sonucYeriYaz, type BolumBasligi,
+  bakanlikKuralinaDon, bilgiDizilisiYaz, fotoKutusuEkle, fotoKutusuSil, fotoKutusuTasi, fotoKutusuYaz, ekSutunAdi, ekSutunEkle, ekSutunSil, ekSutunTasi, ekSutunYaz, eksikEkSutunlar, hazirSatirEkle, hazirSatirSil, hazirSatirTasi, hazirSatirYaz, bolumAdi, eksikTabloAlanlari, kusurTablosuYaz, tabloSutunuEkle, tabloSutunuSil, tabloSutunuTasi, tabloSutunuYaz, bolumBasligiYaz, bolumSil, eimzaYaz, gorunumBasligiYaz, notSatiriYaz, ogeTasi, sonucYeriYaz, type BolumBasligi,
   type GorunumBasligi, firmaSatiriEkle, firmaSatiriSil, firmaSatiriTasi, firmaSatiriYaz, grupEkle, imzaSatiriEkle, imzaSatiriSil, imzaSatiriTasi, imzaSatiriYaz, maddeEkle, ogeEkle, ogeSil, ogeYaz,
   sonucKuraliYaz, yeniBolum, yeniKimlik, type OgeTuru, type OgeYamasi,
 } from "./kurucu.ts";
@@ -78,6 +78,7 @@ export function formatHaritasi(t: FormatTanimi): string {
       l.push(`  başlıklar: ölçüm “${tb.olcum}”, değer “${tb.deger}”, sınır “${tb.sinir}”, sonuç “${tb.sonuc}”`);
       if (b.ekSutunlar?.length) l.push(`  ek sütunlar (kimlik · ad · tür): ${b.ekSutunlar.map((s) => `${s.id} · ${s.ad} · ${s.alan}${s.secenekler?.length ? ` (${s.secenekler.join(" / ")})` : ""}`).join("; ")}`);
     }
+    if (b.blok === "foto") l.push(`  en az ${b.enAz}, en çok ${b.enCok} fotoğraf${b.kutular?.length ? ` · kutular: ${b.kutular.map((x) => `${x.id} · ${x.ad}`).join("; ")}` : " · adlı kutu yok"}`);
     if (b.blok === "sonuc") { const m = sonucMetinleri(b); l.push(`  sözcükler: uygun “${m.uygun}”, uygun değil “${m.uygunDegil}”`); }
     if (b.blok === "not") l.push(`  yönlendirme: ${b.yonlendirme ? `“${b.yonlendirme.slice(0, 120)}”` : "yok"}${b.satir ? ` · belgede en az ${b.satir} satır` : ""}`);
     if (b.blok === "test") for (const d of b.degerler) {
@@ -358,6 +359,29 @@ export function formatIslemleri(t0: FormatTanimi, islemler: readonly FormatIslem
       yapilan.push(`“${b.ad}” tablosunda “${s.ad}” ${eylem === "cikar" ? "çıkarıldı" : eylem === "degistir" ? "değişti" : "taşındı"}`);
       continue;
     }
+    /* 595 (madde 16): adlı fotoğraf kutuları */
+    if (islem === "foto_kutusu") {
+      if (b.blok !== "foto") { red("fotoğraf kutusu yalnız fotoğraf bölümünde"); continue; }
+      const eylem = metin(x.eylem, 20);
+      if (eylem === "ekle") {
+        const ad = metin(x.ad, 120);
+        if (!ad) { red("kutunun adı yok"); continue; }
+        const y = fotoKutusuEkle(t, i, ad);
+        if (!y.id) { red("en çok 20 kutu"); continue; }
+        t = y.t; yapilan.push(`“${b.ad}” bölümüne fotoğraf kutusu eklendi: ${ad}`); continue;
+      }
+      const l = b.kutular ?? [], k = metin(x.oge, 120);
+      const s = l.find((o) => o.id === k) ?? l.find((o) => tr(o.ad) === tr(k));
+      if (!s) { red(`fotoğraf kutusu bulunamadı (${k || "—"})`); continue; }
+      const once = t;
+      if (eylem === "cikar") t = fotoKutusuSil(t, i, s.id);
+      else if (eylem === "yukari" || eylem === "asagi") t = fotoKutusuTasi(t, i, s.id, eylem === "yukari" ? -1 : 1);
+      else if (eylem === "degistir") t = fotoKutusuYaz(t, i, s.id, metin(x.ad, 120));
+      else { red("eylem: ekle, degistir, cikar, yukari ya da asagi"); continue; }
+      if (JSON.stringify(t) === JSON.stringify(once)) { red(`“${s.ad}” değişmedi`); continue; }
+      yapilan.push(`“${s.ad}” fotoğraf kutusu ${eylem === "cikar" ? "çıkarıldı" : eylem === "degistir" ? "değişti" : "taşındı"}`);
+      continue;
+    }
     if (islem === "hazir_satir") {
       if (b.blok !== "olcum") { red("hazır satır yalnız ölçüm tablosunda"); continue; }
       const eylem = metin(x.eylem, 20), l = b.hazir ?? [];
@@ -450,7 +474,7 @@ export function formatIslemleri(t0: FormatTanimi, islemler: readonly FormatIslem
       continue;
     }
     red("bilinmeyen işlem (bolum_ekle, bolum_sil, bolum_adi, grup_ekle, oge_ekle, oge_degistir, oge_sil, oge_tasi, sonuc_kurali, imza_satiri, eimza_yeri, firma_satiri, "
-      + "baslik, sonuc_yeri, not_satiri, tablo_sutunu, dizilis, hazir_satir)");
+      + "baslik, sonuc_yeri, not_satiri, tablo_sutunu, dizilis, hazir_satir, foto_kutusu)");
   }
   return { t, yapilan, gecersiz };
 }
@@ -481,7 +505,8 @@ export const FORMAT_ARACI = {
     + "en çok 4); yazi | sayi | secim + secenekler (test, en çok 4); ad —, degistir (oge + ad / secenekler), cikar, yukari (sola), asagi (sağa); "
     + "uygunsuzlukta eylem tablo | liste). dizilis (bilgi bölümü: dizilis 1 | 2 | 3 — belgede bir satırda kaç bilgi). Alanın belgede tam satırı oge_degistir tam. "
     + "hazir_satir (ölçüm tablosunun hazır satırları — yeni raporda adlarıyla gelir: eylem ekle (ad, ör. L1-N), degistir (oge: adı ya da sırası + ad), cikar, "
-    + "yukari, asagi). "
+    + "yukari, asagi). foto_kutusu (fotoğraf bölümünün adlı kutuları — sahada fotoğraf o kutuya çekilir: eylem ekle (ad, ör. Etiket), degistir (oge + ad), "
+    + "cikar, yukari, asagi). "
     + "Değişiklik taslakta olur; kullanıcı Kaydet ve Yayınla der.",
   input_schema: {
     type: "object",
@@ -492,7 +517,7 @@ export const FORMAT_ARACI = {
           type: "object",
           properties: {
             islem: { type: "string", enum: ["bolum_ekle", "bolum_sil", "bolum_adi", "grup_ekle", "oge_ekle", "oge_degistir", "oge_sil", "oge_tasi", "sonuc_kurali", "imza_satiri", "eimza_yeri", "firma_satiri",
-              "baslik", "sonuc_yeri", "not_satiri", "tablo_sutunu", "dizilis", "hazir_satir"] },
+              "baslik", "sonuc_yeri", "not_satiri", "tablo_sutunu", "dizilis", "hazir_satir", "foto_kutusu"] },
             bolum: { type: "string" }, oge: { type: "string" }, tur: { type: "string" }, ad: { type: "string" }, birim: { type: "string" },
             formul: { type: "string" }, secenekler: { type: "array", items: { type: "string" } }, op: { type: "string" }, sinir: { type: "number" },
             zorunlu: { type: "boolean" }, grup: { type: "string" }, sonra: { type: "string" },

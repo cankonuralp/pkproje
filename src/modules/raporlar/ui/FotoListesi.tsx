@@ -50,6 +50,9 @@ export function FotoListesi({ v, bolumId, madde, oku, gecersiz, mesgul, baslat, 
   const bekleyenler = kuyruk.isler.filter((x) => x.tur === "rapor.foto" && x.kayit === v.id && x.yer === yer);
   const raporBekliyor = kuyruk.isler.some((x) => x.kayit === v.id && x.durum === "bekliyor");
   const id = alanId(madde ? `${madde}.foto` : bolumId);
+  /* 595 (madde 16): fotoğraf kutusu (madde = kutunun kimliği) — tuş kutunun adıyla, kutunun içinde */
+  const fb = v.tanim.bolumler.find((b) => b.id === bolumId);
+  const kutu = madde && fb?.blok === "foto" ? fb.kutular?.find((k) => k.id === madde) ?? null : null;
 
   const kuyruga = async (d: File) => {
     if (d.size > FOTO_KUYRUK_EN_BUYUK) { bildir("Fotoğraf bağlantısız eklenemeyecek kadar büyük (en çok 2 MB); bağlantı gelince ekleyin."); return; }
@@ -87,7 +90,7 @@ export function FotoListesi({ v, bolumId, madde, oku, gecersiz, mesgul, baslat, 
   const ekle = (
     <label className={`${tusSinifi("ikincil")} ${stil.fotoEkle}`} aria-disabled={mesgul || undefined} title={madde ? undefined : "Fotoğraf ekle"}>
       <input ref={girdi} type="file" accept="image/jpeg,image/png" className="gizli" disabled={mesgul}
-        aria-label={madde ? "Maddeye fotoğraf ekle" : "Fotoğraf ekle"} onChange={(e) => { const d = e.target.files?.[0]; if (d) { if (!madde) ac(); yukle(d); } }} />
+        aria-label={kutu ? `${kutu.ad} · fotoğraf ekle` : madde ? "Maddeye fotoğraf ekle" : "Fotoğraf ekle"} onChange={(e) => { const d = e.target.files?.[0]; if (d) { if (!madde) ac(); yukle(d); } }} />
       <Ikon ad="camera" kucuk /><span className={stil.fotoYazi}>Fotoğraf ekle</span>
     </label>
   );

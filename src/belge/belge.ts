@@ -98,7 +98,7 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
   const t = v.tanim;
   /* sayılar raporun kendi listesinden (saha ekranı ve sunucuyla aynı) */
   const foto: Record<string, number> = {}, mf: Record<string, number> = {};
-  for (const f of v.fotolar) { if (f.madde) mf[f.madde] = (mf[f.madde] ?? 0) + 1; else foto[f.bolum] = (foto[f.bolum] ?? 0) + 1; }
+  for (const f of v.fotolar) { if (f.madde) mf[f.madde] = (mf[f.madde] ?? 0) + 1; foto[f.bolum] = (foto[f.bolum] ?? 0) + 1; }
   const formKod = t.gorunum.formKodu || `${v.firma.kod}-FR-${v.tur.kod}-${v.formatSira}`;
   const no = v.revizyon ? `${v.no}-R${v.revizyon}` : v.no;
   /* 492: denetçinin raporda değiştirdiği künye bilgisi (formatın kilitli bilgisi hariç) — saha ekranıyla aynı işlev */
@@ -124,7 +124,9 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
   const duzen = raporDuzeni(t, cihazEk);
   const katilan = duzen.katilan;
   const imzaVar = t.bolumler.some((b) => b.blok === "imza");
-  const maddeFotolari = v.fotolar.filter((f) => f.madde);
+  /* 595 (madde 16): fotoğraf kutusunun fotoğrafı kendi bölümünde (ekte değil) */
+  const kutuAdi = new Map(t.bolumler.flatMap((b) => (b.blok === "foto" ? (b.kutular ?? []).map((k) => [k.id, k.ad] as const) : [])));
+  const maddeFotolari = v.fotolar.filter((f) => f.madde && !kutuAdi.has(f.madde));
 
   const alanDegeri = (a: BolumOf<"bilgi">["alanlar"][number]): ReactNode => {
     /* 460: ekipman kaydına bağlı alan — raporun ekipman bilgisinden */
@@ -269,7 +271,13 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
           h("td", null, r === true ? "Uygun" : r === false ? "Uygun değil" : "-"), ...(b.ekSutunlar ?? []).map((s) => h("td", { key: s.id }, deger(c.ek[ekAnahtari(x.id, s.id)]))));
       })));
       case "cihaz": return cihazTablosu(b);
-      case "foto": return fotolar(v.fotolar.filter((f) => !f.madde && f.bolum === b.id));
+      /* 595 (madde 16): önce kutuların fotoğrafları (kutu sırasıyla, altında kutunun adı), sonra kutusuzlar */
+      case "foto": {
+        const sira = new Map((b.kutular ?? []).map((k, j) => [k.id, j]));
+        const l = v.fotolar.filter((f) => f.bolum === b.id && (!f.madde || sira.has(f.madde)))
+          .map((f, j) => ({ f, j })).sort((x, y) => (sira.get(x.f.madde ?? "") ?? 99) - (sira.get(y.f.madde ?? "") ?? 99) || x.j - y.j).map((x) => x.f);
+        return fotolar(l, (f) => (f.madde && kutuAdi.has(f.madde) ? kutuAdi.get(f.madde)! : f.ad));
+      }
       /* 595 (madde 10): sütunları tanımlıysa tablo (No · Bölüm · Uygunluk · Ağırlık · Fotoğraf — formatın seçtikleri, adlarıyla) */
       case "kusur": if (b.sutunlar?.length) {
         const bolumAdi = new Map(t.bolumler.map((x) => [x.id, x.ad]));

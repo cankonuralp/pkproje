@@ -2525,6 +2525,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-16 (595j): **ADLI FOTOĞRAF KUTULARI** (sunum 595 madde 16): fotoğraf bölümüne kâğıtta "+ Fotoğraf kutusu ekle" — adı yazılır (ör. Etiket, Genel
+  görünüm), sırası değişir, çıkarılır; sahada her kutunun kendi "Fotoğraf ekle"si, kutusuz fotoğraf "Diğer fotoğraflar"da; belgede fotoğraflar kutu
+  sırasıyla, altında kutunun adı. En az / en çok bölümün bütün fotoğrafları. Kutu çıkarılır ya da format güncellenirse fotoğraf kaybolmaz (bölümde kalır).
 - 2026-10-16 (595i): **KONTROL LİSTESİNE VE TEST BÖLÜMÜNE SÜTUN** (sunum 595 madde 6, 7): kâğıtta "+ Sütun" — kontrol listesine açıklama (maddenin açıklaması;
   sahada her maddede yazılır, "Uygun değil"de kusur açıklamasıyla aynı), standart maddesi (formattan), fotoğraf (sahada her maddede çekilir), serbest yazı;
   test bölümüne yazı / sayı / seçim sütunu (seçenekler bölüm ayarında). En çok 4 sütun; adı yerinde yazılır, sola / sağa, çıkarılır. Belgede sütunlar

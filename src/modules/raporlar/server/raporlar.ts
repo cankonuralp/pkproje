@@ -500,7 +500,8 @@ export async function alanOkunabilir(db: Sorgulayici, kim: Kisi, id: string, bol
 /** cihaz ve fotoğraf sayıları raporun KENDİ listesinden (istemcinin sayısına güvenilmez): bölüm başına fotoğraf, madde başına fotoğraf */
 function sayiliCevaplar(c: Cevaplar, r: Pick<RaporSatiri, "cihazlar" | "fotolar">): Cevaplar {
   const bolum: Record<string, number> = {}, madde: Record<string, number> = {};
-  for (const f of r.fotolar) { if (f.okuma) continue; if (f.madde) madde[f.madde] = (madde[f.madde] ?? 0) + 1; else bolum[f.bolum] = (bolum[f.bolum] ?? 0) + 1; }
+  /* 595 (madde 16): bölümün sayısı bütün fotoğraflarından — fotoğraf kutusundaki fotoğraf (madde = kutu) bölümün en az / en çoğuna girer */
+  for (const f of r.fotolar) { if (f.okuma) continue; if (f.madde) madde[f.madde] = (madde[f.madde] ?? 0) + 1; bolum[f.bolum] = (bolum[f.bolum] ?? 0) + 1; }
   return { ...c, cihaz: r.cihazlar.length, foto: bolum, madde: Object.fromEntries(Object.entries(c.madde).map(([k, x]) => [k, { ...x, foto: madde[k] ?? 0 }])) };
 }
 function degerle(tanim: FormatTanimi, c: Cevaplar, r: Pick<RaporSatiri, "cihazlar" | "fotolar">): Degerlendirme {
@@ -646,12 +647,14 @@ export async function fotoEkle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: 
   if (!format) return { durum: "yok" };
   const b = format.tanim.bolumler.find((x) => x.id === hedef.bolum);
   const fotolar = e.r.fotolar;
-  if (hedef.madde) {
+  /* 595 (madde 16): fotoğraf kutusu — fotoğraf bölümünde, kutunun kimliğiyle; bölümün en çoğuna kutudakiler de girer */
+  const kutuIds = new Set(b?.blok === "foto" ? (b.kutular ?? []).map((k) => k.id) : []);
+  if (hedef.madde && !kutuIds.has(hedef.madde)) {
     if (b?.blok !== "liste" || !b.gruplar.some((g) => g.maddeler.some((m) => m.id === hedef.madde))) return { durum: "gecersiz", hatalar: { foto: "Fotoğrafın yeri bulunamadı." } };
     if (fotolar.filter((f) => f.madde === hedef.madde).length >= FOTO_MADDE_EN_COK) return { durum: "gecersiz", hatalar: { foto: `Maddeye en çok ${FOTO_MADDE_EN_COK} fotoğraf.` } };
   } else {
     if (b?.blok !== "foto") return { durum: "gecersiz", hatalar: { foto: "Fotoğrafın yeri bulunamadı." } };
-    if (fotolar.filter((f) => f.bolum === b.id && !f.madde).length >= b.enCok) return { durum: "gecersiz", hatalar: { foto: `En çok ${b.enCok} fotoğraf.` } };
+    if (fotolar.filter((f) => f.bolum === b.id && !f.okuma && (!f.madde || kutuIds.has(f.madde))).length >= b.enCok) return { durum: "gecersiz", hatalar: { foto: `En çok ${b.enCok} fotoğraf.` } };
   }
   /* cevaplar dosyadan ÖNCE okunur: okunamazsa depoya sahipsiz dosya yazılmaz */
   const cev = Cevaplar.safeParse(e.r.cevaplar);
@@ -771,11 +774,14 @@ function formataUyarla(t: FormatTanimi, c: Cevaplar): { cevaplar: Cevaplar; ekle
 /** fotoğrafların yeri yeni sürümde yoksa (bölüm ya da madde kalktı) formatın ilk fotoğraf bölümüne taşınır — fotoğraf kaybolmaz, silinebilir kalır */
 function fotolariUyarla(t: FormatTanimi, l: RaporFoto[]): RaporFoto[] {
   const fotoBolum = new Set(t.bolumler.filter((b) => b.blok === "foto").map((b) => b.id)), ilk = [...fotoBolum][0];
-  const maddeBolum = new Map(t.bolumler.flatMap((b) => (b.blok === "liste" ? b.gruplar.flatMap((g) => g.maddeler.map((m) => [m.id, b.id] as const)) : [])));
+  const maddeBolum = new Map(t.bolumler.flatMap((b) => (b.blok === "liste" ? b.gruplar.flatMap((g) => g.maddeler.map((m) => [m.id, b.id] as const))
+    : b.blok === "foto" ? (b.kutular ?? []).map((k) => [k.id, b.id] as const) : [])));
   return l.map((f) => {
     if (f.okuma) return f;   // 484: okuma fotoğrafı okunan bölümünde kalır (belgede görünmez)
     if (f.madde && maddeBolum.has(f.madde)) return { ...f, bolum: maddeBolum.get(f.madde)! };
     if (!f.madde && fotoBolum.has(f.bolum)) return f;
+    /* 595 (madde 16): kutusu yeni sürümde kalkan fotoğraf kendi fotoğraf bölümünde kutusuz kalır */
+    if (f.madde && fotoBolum.has(f.bolum)) return { ...f, madde: null };
     return ilk ? { ...f, bolum: ilk, madde: null } : f;
   });
 }

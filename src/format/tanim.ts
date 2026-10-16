@@ -200,7 +200,10 @@ export const Bolum = z.discriminatedUnion("blok", [
     basliklar: z.object({ olcum: baslik, deger: baslik, sinir: baslik, sonuc: baslik }).optional(), ekSutunlar: z.array(TestSutunu).max(EK_SUTUN_EN_COK).optional() }),
   /* 595 (madde 2): sutunlar — verilmemişse bugünkü 5 sütun (format/duzen.ts cihazSutunlari) */
   z.object({ ...ortak, blok: z.literal("cihaz"), sutunlar: z.array(CihazSutunu).max(10).optional() }),
-  z.object({ ...ortak, blok: z.literal("foto"), enAz: z.number().int().min(0).max(50).default(0), enCok: z.number().int().min(1).max(50).default(20) }),
+  /* 595 (madde 16): kutular — adlı fotoğraf kutuları (ör. Etiket, Genel görünüm); sahada fotoğraf o kutuya çekilir (RaporFoto.madde = kutunun kimliği),
+     belgede altında kutunun adı; kutusuz fotoğraf da eklenir. En az / en çok bölümün bütün fotoğrafları */
+  z.object({ ...ortak, blok: z.literal("foto"), enAz: z.number().int().min(0).max(50).default(0), enCok: z.number().int().min(1).max(50).default(20),
+    kutular: z.array(z.object({ id: kimlik, ad })).max(20).optional() }),
   /* 595 (madde 10): sutunlar — verilirse uygunsuzluklar tablo olarak (yoksa bugünkü madde listesi) */
   z.object({ ...ortak, blok: z.literal("kusur"), sutunlar: z.array(KusurSutunu).max(6).optional() }),
   /* aciklama (426): sonuç bölümünün sabit metni — Bakanlık formatlarındaki "Ağır kusurlar tanımı", "Açıklamalar" (PDF'e basılır) */
@@ -347,6 +350,7 @@ export const FormatTanimi = z.object({
         al.add(s.alan);
       });
     }
+    if (b.blok === "foto") b.kutular?.forEach((k, j) => tek(k.id, ["bolumler", i, "kutular", j, "id"]));
     if (b.blok === "foto" && b.enAz > b.enCok) bag.addIssue({ code: "custom", path: ["bolumler", i, "enAz"], message: "En az, en çoktan büyük olamaz." });
   });
 });

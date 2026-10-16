@@ -223,6 +223,7 @@ const bolumOzu = (b: Bolum, t: FormatTanimi) => oz({
   ...(b.blok === "cihaz" ? { sutunlar: cihazSutunlari(b).map((s) => ({ ad: s.ad, alan: s.alan })) } : {}),
   ...(b.blok === "kusur" ? { sutunlar: b.sutunlar?.map((s) => ({ ad: s.ad, alan: s.alan })) } : {}),
   ...(b.blok === "bilgi" ? { dizilis: b.dizilis } : {}),
+  ...(b.blok === "foto" ? { kutular: b.kutular?.map((k) => k.ad) } : {}),
   ...(b.blok === "olcum" ? { hesap: b.hesap, notlar: b.notlar, satir: b.satir, sonuc: kuralOzu(etkinKurallar(t, b)), basliklar: b.basliklar, sonucYeri: b.sonucYeri, hazir: b.hazir } : {}),
   ...(b.blok === "sonuc" ? { cumle: b.cumle, aciklama: b.aciklama, uygunMetin: b.uygunMetin, uygunDegilMetin: b.uygunDegilMetin } : {}),
   /* 595: imza bölümünün satırları (adı, kişisi, bilgisi, sabit yazısı, tam satır) — satırsız eski bölüm imzalar'dan aynı satırları verir */

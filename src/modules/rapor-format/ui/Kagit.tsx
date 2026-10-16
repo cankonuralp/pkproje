@@ -46,7 +46,7 @@ import {
 } from "../../../format/tanim";
 import { kilitliKunye } from "../../../format/kunye";
 import {
-  ALT_TURLER, altBaslikEkle, bilgiDizilisiYaz, ekSutunAdi, ekSutunEkle, ekSutunSil, ekSutunTasi, ekSutunYaz, eksikEkSutunlar, hazirSatirEkle, hazirSatirSil, hazirSatirTasi, hazirSatirYaz, bolumAdi, eksikTabloAlanlari, kusurTablosuYaz, tabloSutunuEkle, tabloSutunuSil, tabloSutunuTasi, tabloSutunuYaz, eksikFirmaKaynaklari, eksikImzaAlanlari, FIRMA_ADI_SABIT, firmaSatiriEkle, firmaSatiriSil, firmaSatiriTasi,
+  ALT_TURLER, altBaslikEkle, bilgiDizilisiYaz, fotoKutusuEkle, fotoKutusuSil, fotoKutusuTasi, fotoKutusuYaz, ekSutunAdi, ekSutunEkle, ekSutunSil, ekSutunTasi, ekSutunYaz, eksikEkSutunlar, hazirSatirEkle, hazirSatirSil, hazirSatirTasi, hazirSatirYaz, bolumAdi, eksikTabloAlanlari, kusurTablosuYaz, tabloSutunuEkle, tabloSutunuSil, tabloSutunuTasi, tabloSutunuYaz, eksikFirmaKaynaklari, eksikImzaAlanlari, FIRMA_ADI_SABIT, firmaSatiriEkle, firmaSatiriSil, firmaSatiriTasi,
   firmaSatiriYaz, bolumBasligiYaz, gorunumBasligiYaz, notSatiriYaz, ogeTasi, sonucYeriYaz, type BolumBasligi, type GorunumBasligi, ekipmanBolumuGeriEkle, ekipmanBolumuKaldir, bolumDuzeni, ekipmanAlaniEkle, gorunumYaz, grupEkle, grupSil, grupYaz,
   imzaKisisiYaz, imzaSatiriEkle, imzaSatiriSil, imzaSatiriTasi, imzaSatiriYaz, kunyeKilitYaz, kurucudan, maddeEkle, ogeEkle, ogeSil, ogeYaz, satirlar, tasi,
   yeniBolum, yeniKimlik,
@@ -220,7 +220,7 @@ function OneriIcerigi({ b }: { b: Bolum }) {
         <tbody><tr><td className="rb-orta">1</td>{b.sutunlar.map((s) => <td key={s.id}><span className={k.ornek}>{s.formul ? `= ${s.formul}` : s.giris === "sayi" ? "sayı" : s.giris === "secim" ? (s.secenekler ?? []).join(" / ") : s.giris === "evet" ? "evet / hayır" : "yazı"}</span></td>)}</tr></tbody></table>;
     case "test":
       return <table><tbody>{b.degerler.map((d) => <tr key={d.id}><td className="rb-ab">{birimli(d.ad, d.birim)}</td><td><span className={k.ornek}>{d.formul ? `= ${d.formul}` : "sayı"}{sinir(d)}</span></td></tr>)}</tbody></table>;
-    case "foto": return <p className={k.ornek}>Fotoğraflar · en az {b.enAz}</p>;
+    case "foto": return <p className={k.ornek}>Fotoğraflar · en az {b.enAz}{b.kutular?.length ? ` · ${b.kutular.map((x) => x.ad).join(", ")}` : ""}</p>;
     case "metin": return <p className={k.oneriMetin}>{b.metin || "—"}</p>;
     case "imza": return <p className={k.ornek}>İmza satırları: {imzaSatirlari(b).map((x) => x.ad).join(" · ")}</p>;
     default: return <p className={k.ornek}>{BLOK_ADI[b.blok]}</p>;
@@ -617,9 +617,26 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
       case "foto":
         return (
           <div className="rb-fotolar">
-            {Array.from({ length: Math.max(1, Math.min(b.enAz || 1, 3)) }, (_, j) => <div key={j} className={`rb-foto ${k.foto}`}><div className="rb-foto-bos">Fotoğraf {j + 1}</div></div>)}
+            {/* 595 (madde 16): adlı fotoğraf kutuları — adı yerinde yazılır, ← → ×; yoksa örnek kutular */}
+            {b.kutular?.length
+              ? b.kutular.map((x, j, l) => (
+                <div key={x.id} className={`rb-foto ${k.foto}`}>
+                  <div className="rb-foto-bos"><Yazi deger={x.ad} ad="Fotoğraf kutusunun adı" ac={yeniId === x.id} uzun={120} yaz={(s) => degis(fotoKutusuYaz(t, i, x.id, s))} /></div>
+                  <span className={k.ogeTus}>
+                    <Tus ikon="arrow-left" ad={`${x.ad} · sola`} disabled={j === 0} onClick={() => degis(fotoKutusuTasi(t, i, x.id, -1))} />
+                    <Tus ikon="arrow-right" ad={`${x.ad} · sağa`} disabled={j === l.length - 1} onClick={() => degis(fotoKutusuTasi(t, i, x.id, 1))} />
+                    <Tus ikon="x" ad={`${x.ad} · çıkar`} onClick={() => { degis(fotoKutusuSil(t, i, x.id)); bildir(`“${x.ad}” fotoğraf kutusu çıkarıldı (taslak).`); }} />
+                  </span>
+                </div>
+              ))
+              : Array.from({ length: Math.max(1, Math.min(b.enAz || 1, 3)) }, (_, j) => <div key={j} className={`rb-foto ${k.foto}`}><div className="rb-foto-bos">Fotoğraf {j + 1}</div></div>)}
             <p className={k.altNot}>En az <SayiYazi deger={b.enAz} en={0} ad="En az fotoğraf" yaz={(n) => degis(bolumYaz(t, i, { enAz: n }))} /> · en çok{" "}
-              <SayiYazi deger={b.enCok} en={1} ad="En çok fotoğraf" yaz={(n) => degis(bolumYaz(t, i, { enCok: n }))} /> fotoğraf</p>
+              <SayiYazi deger={b.enCok} en={1} ad="En çok fotoğraf" yaz={(n) => degis(bolumYaz(t, i, { enCok: n }))} /> fotoğraf{" "}
+              <Ekle ad="Fotoğraf kutusu ekle" erisimAdi={`${b.ad} · fotoğraf kutusu ekle`} onClick={() => {
+                const y = fotoKutusuEkle(t, i);
+                if (!y.id) return;
+                degis(y.t); setYeniId(y.id); bildir("Fotoğraf kutusu eklendi (taslak); adını yazın (ör. Etiket, Genel görünüm).");
+              }} /></p>
           </div>
         );
       case "kusur":
