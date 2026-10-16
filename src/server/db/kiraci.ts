@@ -124,6 +124,35 @@ export async function yonetimIcinde<T>(havuz: pg.Pool, is: (db: Sorgulayici) => 
   }
 }
 
+/** FIRMA-VT §5.11, FV9 (2026-10-16): kendi projeli firmanın KENDİ veritabanında yönetim işlemi (firma tarafı: dondurma kopyası, geçici parola, yapay
+    zekâ anahtarı, özet — göç 0097 firma_yonetim_*). Sıra: BEGIN; firma / hesap bağlamı boş, yöneticinin e-postası (app.yonetici_eposta — merkezdeki
+    yönetim oturumundan; firma veritabanında yönetici tablosu yok) ve vt_firma_dogrula(firma) AYNI sorguda (yanlış havuz → 42501); SET LOCAL ROLE
+    probata_yonetim; iş; COMMIT. Merkezin izi çağıranın işi (firma tarafı başarıdan sonra — yonetim_firmada_iz). */
+export async function yonetimFirmadaIcinde<T>(havuz: pg.Pool, firmaId: string, is: (db: Sorgulayici) => Promise<T>, secenek: { yoneticiEposta: string }): Promise<T> {
+  if (!UUID.test(firmaId)) throw new Error("Geçersiz firma kimliği");
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(secenek.yoneticiEposta) || secenek.yoneticiEposta.length > 254) throw new Error("Geçersiz yönetici e-postası");
+  const baglanti = await havuz.connect();
+  let kopuk: Error | undefined;
+  const dinle = (e: Error) => { kopuk = e; };
+  baglanti.on("error", dinle);
+  try {
+    await baglanti.query("BEGIN");
+    await baglanti.query(
+      "SELECT set_config('app.firma_id', '', true), set_config('app.hesap_id', '', true), set_config('app.yonetici_eposta', $2, true), vt_firma_dogrula($1::uuid)",
+      [firmaId, secenek.yoneticiEposta]);
+    await baglanti.query("SET LOCAL ROLE probata_yonetim");
+    const sonuc = await is({ sorgu: (metin, degerler) => baglanti.query(metin, degerler as unknown[]) });
+    await baglanti.query("COMMIT");
+    return sonuc;
+  } catch (hata) {
+    try { await baglanti.query("ROLLBACK"); } catch (e) { kopuk ??= e as Error; }
+    throw hata;
+  } finally {
+    baglanti.off("error", dinle);
+    baglanti.release(kopuk);
+  }
+}
+
 /** Alt alan adındaki kısa addan firma kimliği; yoksa null. Kiracı bilinmeden çağrılır (0001: firma_bul). FIRMA-VT FV3 (2026-10-15): ÜRETİM YOLU DEĞİL —
     istek alt alan adını firma_coz ile çözer (src/server/kiraci/istek.ts → src/server/db/firma-havuzu.ts firmaKaydi; dondurma kilidinin olumsuz kanıtı
     tests/bozan/firma-baglanti.bozan.ts 12). Yalnız veritabanı işlevi firma_bul'u sınayan testler kullanır; kaldırılması testleriyle birlikte (FV4+). */

@@ -144,7 +144,8 @@ test("6. kurulumdaki firma atlanmayınca kurulumu süren her firma bütün yayı
 
 test("7. ana anahtar yokken firmalar sessizce atlanınca kendi projeli firmalar denetlenmeden yayın sürer (kilidin koruduğu açık)", async () => {
   assert.equal((await kos(saglam, { PROBATA_SIR_ANAHTARI: "" })).kod, 1, "sağlam: ana anahtar yok → 1");
-  const b = await bozuk("try { anahtar = anahtarOku(e); } catch (h) { y(`HATA: ${(h as Error).message} — firma veritabanlarına bağlanılamaz.`); return 1; }",
+  /* 2026-10-16 (FV8): denetim artık sonuç nesnesi döner (uygula kipi sonda aynı denetimi kullanır) — "return 1" → "return bir" */
+  const b = await bozuk("try { anahtar = anahtarOku(e); } catch (h) { y(`HATA: ${(h as Error).message} — firma veritabanlarına bağlanılamaz.`); return bir; }",
     "try { anahtar = anahtarOku(e); } catch { hedefler = []; }");
   assert.equal((await kos(b, { PROBATA_SIR_ANAHTARI: "" })).kod, 0, "bozuk: firmalar denetlenmeden geçti — testin beklentisi (1) düşer");
 });

@@ -100,8 +100,9 @@ export const E2E_GORSEL = {
 } as const;
 /* FIRMA-VT FV3 (2026-10-15; e2e/firma-vt.spec.ts): KENDİ VERİTABANLI uydurma firma — verisi uçtan uca kümesinde AYRI bir veritabanında (vt), merkezde
    (ortak veritabanı) yalnız kaydı + şifreli bağlantısı + kurulumu tamam (scripts/e2e-sunucu.ts). Merkezde bu firmanın kimliğiyle bir TUZAK müşteri
-   durur: istek yanlışlıkla merkeze gitse ekranda görünürdü (son kapı vt_firma_dogrula onu da reddeder). Gece işi bu firmayı henüz merkezde dolaşır
-   ve sayar (FV6'ya kadar: e2e/api.spec.ts "gece işi" — KENDI_VT_FIRMA_SAYISI). */
+   durur: istek yanlışlıkla merkeze gitse ekranda görünürdü (son kapı vt_firma_dogrula onu da reddeder). Gece işi bu firmayı KENDİ veritabanında
+   dolaşır (FV6, 2026-10-16: e2e/api.spec.ts "gece işi" — KENDI_VT_FIRMA_SAYISI kadar fazla firma); dosyaları kendi Storage taklidinde (FV5);
+   yönetim panelinde özeti ve yapay zekâ anahtarı firmanın veritabanında (FV9: e2e/yonetim.spec.ts). */
 export const E2E_KENDI = {
   firma: { kisaAd: "kendivt", ad: "Kendi VT Muayene", raporKodu: "KV" },
   vt: "probata_kendivt",

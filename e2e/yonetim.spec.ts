@@ -5,9 +5,12 @@
    parola; Çıkış. Kurulmuş yönetici: yanlış kod reddedilir, doğru kodla girer.
    2026-10-08 (393; reisim: "ikii aşamalı doğrulamayı şimdilik kaldır, belirlediğin mail şifre ile direk girebileyim"): iki adım bir ayar
    (göç 0075, başlangıçta KAPALI) — uçtan uca yayındaki hâli sınar: geçici parolalı ilk yönetici de kurulmuş yönetici de parolayla doğrudan
-   Firmalar'a; kod ve kurulum sayfaları girişe döner. İki adımlı akış (ayar açık) gerçek PostgreSQL kilidinde (tests/yonetim.test.ts). */
+   Firmalar'a; kod ve kurulum sayfaları girişe döner. İki adımlı akış (ayar açık) gerçek PostgreSQL kilidinde (tests/yonetim.test.ts).
+   2026-10-16 (FIRMA-VT FV9, K4): kendi veritabanlı firmanın sayfasında özet FİRMANIN veritabanından (yönetici merkezde yok) ve "Yapay zekâ anahtarı":
+   geçersiz anahtar alanın altında reddedilir; kaydet → tanımlı, son 4; kaldır (önce sorulur) → tanımlı değil. Dondurma bu firmada uçtan uçta
+   denenmez (aynı sunucudaki öteki testler firmayı kullanır) — sıra ve kapalı yön tests/yonetim-firmada.test.ts'te. */
 import { expect, test, type Page } from "@playwright/test";
-import { E2E_FIRMA, E2E_KAPI, E2E_PAROLA, E2E_YONETIM } from "./hesaplar";
+import { E2E_FIRMA, E2E_KAPI, E2E_KENDI, E2E_PAROLA, E2E_YONETIM } from "./hesaplar";
 import { hazir } from "./yardimci";
 
 const Y = `http://${E2E_YONETIM.alan}:${E2E_KAPI}`;
@@ -136,4 +139,30 @@ test("yönetim: kurulmuş yönetici — iki adım kapalıyken parolayla doğruda
   await expect(page).toHaveURL(/\/yonetim$/);
   await hazir(page);
   await expect(page.getByRole("heading", { level: 1, name: "Firmalar" })).toBeVisible();
+});
+
+test("yönetim: kendi veritabanlı firma — özet firmanın veritabanından; yapay zekâ anahtarı kaydet / kaldır (FV9, K4)", async ({ page }, bilgi) => {
+  test.setTimeout(120_000);
+  await parolaAdimi(page, E2E_YONETIM.proje(bilgi.project.name).etkin, E2E_PAROLA);
+  await expect(page).toHaveURL(/\/yonetim$/);
+  await hazir(page);
+  await page.getByRole("link", { name: E2E_KENDI.firma.ad }).first().click();
+  await expect(page.getByRole("heading", { level: 1, name: E2E_KENDI.firma.ad })).toBeVisible();
+  /* yönetici merkezde değil, firmanın veritabanında — sayfada görünüyorsa özet oradan geldi */
+  await expect(page.getByText(E2E_KENDI.yonetici.eposta, { exact: false })).toBeVisible();
+  const yz = page.locator("#y-b-yz");
+  await expect(yz.getByText("Tanımlı değil")).toBeVisible();
+  await yz.getByLabel("Anthropic API anahtarı").fill("anahtar-degil");
+  await yz.getByRole("button", { name: "Anahtarı kaydet" }).click();
+  await expect(yz.getByText("Geçerli bir Anthropic API anahtarı değil", { exact: false })).toBeVisible({ timeout: 30_000 });
+  await yz.getByLabel("Anthropic API anahtarı").fill("sk-ant-uydurmaAnahtarDegil0123456789wxyz");
+  await yz.getByRole("button", { name: "Anahtarı kaydet" }).click();
+  await expect(page.getByText("Yapay zekâ anahtarı kaydedildi (…wxyz).").first()).toBeVisible({ timeout: 30_000 });
+  await expect(yz.getByText("Tanımlı", { exact: true })).toBeVisible();
+  await expect(yz.getByText("…wxyz")).toBeVisible();
+  await expect(yz.getByLabel("Yeni anahtar")).toHaveValue("");
+  await yz.getByRole("button", { name: "Kaldır" }).click();
+  await page.locator("dialog[open]").getByRole("button", { name: "Kaldır" }).click();
+  await expect(page.getByText("Yapay zekâ anahtarı kaldırıldı.").first()).toBeVisible({ timeout: 30_000 });
+  await expect(yz.getByText("Tanımlı değil")).toBeVisible();
 });

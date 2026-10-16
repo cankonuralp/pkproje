@@ -354,11 +354,13 @@ export function yonetimOnbellekEksikleri(metin: string): string[] {
   let firmaEylemi = 0;
   for (const p of k.split(/(?=export async function )/)) {
     const ad = /^export async function (\w+)/.exec(p)?.[1];
-    if (!ad || !/\b(?:firmaAc|firmaDurumu|yoneticiyeGeciciParola)\s*\(/.test(p)) continue;
+    /* 2026-10-16 (FIRMA-VT FV9): dondur / etkinleştir / geçici parola firma-tarafi.ts üzerinden (kendi projeli firmada firmanın veritabanında), yapay
+       zekâ anahtarı eylemleri eklendi — onlar da önbelleği boşaltır */
+    if (!ad || !/\b(?:firmaAc|firmaDurumu|yoneticiyeGeciciParola|firmaDurumuYonet|geciciParolaYonet|yzAnahtariYonet)\s*\(/.test(p)) continue;
     firmaEylemi++;
     if (!/\breturn (?:unut|yenileyerek)\(await islem\(/.test(p)) e.push(`${ad} önbelleği boşaltmıyor`);
   }
-  if (firmaEylemi < 4) e.push(`firma eylemi ${firmaEylemi} (en az 4 bekleniyor)`);
+  if (firmaEylemi < 6) e.push(`firma eylemi ${firmaEylemi} (en az 6 bekleniyor)`);
   return e;
 }
 

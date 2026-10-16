@@ -265,9 +265,10 @@ test("dondurmanın ikinci kilidi: kayıt önbelleği bayatken (15 sn) dondurulmu
   assert.ok(await oturumOku(y.havuz(kO), kO.firmaId, gO.belirtec));
   assert.ok(await oturumOku(y.havuz(kA), kA.firmaId, gA.belirtec));
   assert.ok(await musteriOturumOku(y.havuz(kA), kA.firmaId, mA.belirtec));
-  /* dondur: merkezde (O, A) ve A'nın kendi veritabanındaki durum kopyası. ⚠ Kopyayı burada SAHİP yazar: FV9'a kadar yönetimin "Dondur"u kendi projeli
-     firmada YALNIZ merkezi yazar (0096 yonetim_firma_durum), kopya "etkin" kalır, oturumlar silinmez — o arada öteki örneklerde ≤ 15 sn giriş / oturum
-     sürer, etkinleştirmede eski oturumlar geri gelir. FV9 (firma tarafı yönetim) bu elle yazımı yönetim işlemine çevirir (FIRMA-VT.md §6.1). */
+  /* dondur: merkezde (O, A) ve A'nın kendi veritabanındaki durum kopyası. Kopyayı burada SAHİP yazar — BİLEREK (2026-10-16, FV9): bu test dondurmanın
+     İKİNCİ kilidini (oturum.ts ETKIN_FIRMA) oturumlar SİLİNMEDEN sınar; yönetimin dondurması (FV9, 0097 firma_yonetim_durum) oturumları da sildiği için
+     onunla açık oturumun geçmediği sınanamazdı (kilit gevşerdi). Yönetimin dondurması — firma tarafı önce, oturumlar silinir, kapalı yön —
+     tests/yonetim-firmada.test.ts'te. */
   await v.merkezSahip.query("UPDATE firma SET durum = 'dondu' WHERE id = ANY ($1::uuid[])", [[v.O.id, v.A.id]]);
   await v.A.sahip.query("UPDATE firma SET durum = 'dondu' WHERE id = $1", [v.A.id]);
   try {

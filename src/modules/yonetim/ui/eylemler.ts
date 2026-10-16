@@ -2,20 +2,26 @@
 /* YÖNETİM SUNUCU EYLEMLERİ (348) — yalnız yönetim adresinde ve yönetim oturumuyla (yönetici istemciden alınmaz); işlem veritabanında yönetim
    rolünde (yonetimIslemi). Köken iki katman. Geçici parola yalnız bu yanıtta döner (kaydedilmez, sayfa yenilenince yoktur). */
 import { refresh } from "next/cache";
+import { anaAnahtar } from "../../../server/ayar/sir";
 import { firmaKayitlariniUnut } from "../../../server/db/firma-havuzu";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { anaAlan } from "../../../server/kiraci/istek";
 import { yonetimAlani } from "../../../server/yonetim/adres";
 import { yonetimAdresinde, yonetimIslemi, yonetimIstekOturumu } from "../../../server/yonetim/istek";
 import { yonetimEtiketi } from "../sema";
-import { firmaAc, firmaDurumu, yoneticiyeGeciciParola, type YonetimSonucu } from "../server/yonetim";
+import { yonetimCalistirici } from "../server/calistirici";
+import { firmaDurumuYonet, geciciParolaYonet, yzAnahtariYonet } from "../server/firma-tarafi";
+import { firmaAc, type YonetimSonucu } from "../server/yonetim";
 
-export interface YonetimYaniti { tamam?: boolean; id?: string; parola?: string; eposta?: string; ad?: string; alt?: string; hatalar?: Record<string, string>; genel?: string }
+export interface YonetimYaniti {
+  tamam?: boolean; id?: string; parola?: string; eposta?: string; ad?: string; alt?: string; son4?: string | null; hatalar?: Record<string, string>; genel?: string;
+}
+type Alanlar = Partial<Pick<YonetimYaniti, "id" | "parola" | "eposta" | "ad" | "alt" | "son4">>;
 
-const cevir = (r: YonetimSonucu<Partial<Pick<YonetimYaniti, "id" | "parola" | "eposta" | "ad" | "alt">>>): YonetimYaniti =>
+const cevir = (r: YonetimSonucu<Alanlar>): YonetimYaniti =>
   r.durum === "tamam" ? { ...r, tamam: true } : r.durum === "gecersiz" ? { hatalar: r.hatalar } : r.durum === "red" ? { genel: r.neden } : { genel: "Firma bulunamadı." };
 
-async function islem<T extends YonetimSonucu<Partial<Pick<YonetimYaniti, "id" | "parola" | "eposta" | "ad" | "alt">>>>(
+async function islem<T extends YonetimSonucu<Alanlar>>(
   is: (o: NonNullable<Awaited<ReturnType<typeof yonetimIstekOturumu>>>) => Promise<T>): Promise<YonetimYaniti> {
   if (!(await yonetimAdresinde()) || !(await ayniKoken())) return { genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };
   const o = await yonetimIstekOturumu();
@@ -34,17 +40,28 @@ export async function firmaAcEylemi(form: FormData): Promise<YonetimYaniti> {
 }
 
 /* durum ve parola eylemleri istemci yönlendiricisini SUNUCUDA yeniler (yeni sayfa eylem yanıtıyla gelir): istemcideki ayrı router.refresh()
-   başka bir yönlendirici işiyle çakışınca düşebiliyordu — CI 8dc6d06 tablet: Etkinleştir sonrası sayfa "Dondurulmuş"ta kaldı (raporlar 318 ile aynı) */
+   başka bir yönlendirici işiyle çakışınca düşebiliyordu — CI 8dc6d06 tablet: Etkinleştir sonrası sayfa "Dondurulmuş"ta kaldı (raporlar 318 ile aynı)
+   FIRMA-VT FV9 (2026-10-16): dondur / etkinleştir / geçici parola / yapay zekâ anahtarı firma-tarafi.ts üzerinden — ortak firmada merkezde (bugünkü gibi),
+   kendi projeli firmada firmanın veritabanında, sıra kapalı yönde. */
 const yenileyerek = (y: YonetimYaniti) => { if (unut(y).tamam) refresh(); return y; };
 
 export async function firmaDondurEylemi(id: string): Promise<YonetimYaniti> {
-  return yenileyerek(await islem((o) => yonetimIslemi(o, (db) => firmaDurumu(db, yazi(id), "dondu"))));
+  return yenileyerek(await islem((o) => firmaDurumuYonet(yonetimCalistirici(o), yazi(id), "dondu")));
 }
 
 export async function firmaEtkinlestirEylemi(id: string): Promise<YonetimYaniti> {
-  return yenileyerek(await islem((o) => yonetimIslemi(o, (db) => firmaDurumu(db, yazi(id), "etkin"))));
+  return yenileyerek(await islem((o) => firmaDurumuYonet(yonetimCalistirici(o), yazi(id), "etkin")));
 }
 
 export async function geciciParolaVerEylemi(id: string): Promise<YonetimYaniti> {
-  return yenileyerek(await islem((o) => yonetimIslemi(o, (db) => yoneticiyeGeciciParola(db, yazi(id)))));
+  return yenileyerek(await islem((o) => geciciParolaYonet(yonetimCalistirici(o), yazi(id))));
+}
+
+/** K4: yapay zekâ anahtarı — form: anahtar (Anthropic). Düz anahtar yalnız bu istekte, sunucuda şifrelenir; yanıtta yalnız son 4. */
+export async function yzAnahtariKaydetEylemi(id: string, form: FormData): Promise<YonetimYaniti> {
+  return yenileyerek(await islem((o) => yzAnahtariYonet(yonetimCalistirici(o), yazi(id), yazi(form.get("anahtar")), anaAnahtar())));
+}
+
+export async function yzAnahtariKaldirEylemi(id: string): Promise<YonetimYaniti> {
+  return yenileyerek(await islem((o) => yzAnahtariYonet(yonetimCalistirici(o), yazi(id), null, anaAnahtar())));
 }

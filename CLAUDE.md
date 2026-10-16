@@ -293,6 +293,9 @@ pkproje/
   src/components/grafik/    TEK GRAFİK ÜRETİCİSİ (329): dikey sütun (maket T9), etiket ölçülerek, gizli tablo (ekran okuyucu)
   src/modules/yonetim/      probata YÖNETİM (2026-10-06, 348; KOD-GECIS Y1): firmalar, firma aç (ilk yönetici + geçici parola), dondur / etkinleştir,
                             yeni geçici parola — server/yonetim.ts yalnız 0050 işlevleriyle (yönetim rolü); sema.ts (ayrılmış adlar göçle aynı) · ui/ ·
+                            FV9 (2026-10-16): server/firma-tarafi.ts — kendi projeli firmada iş firmanın veritabanında (göç 0097 firma_yonetim_*), sıra kapalı
+                            yönde (dondur: önce firma; etkinleştir: önce merkez); K4 yapay zekâ anahtarı kaydet / kaldır + bu ay (firma sayfası); özet;
+                            server/calistirici.ts (merkez: yonetimIslemi, firmada: kiraci.ts yonetimFirmadaIcinde) — kilit tests/yonetim-firmada.test.ts ·
                             sayfalar src/app/(yonetim)/yonetim: giris (parola → kod → ilk kurulum) + (panel) + cikis (356: POST route — eylem redirect'i
                             yönetim adresini kaybediyordu) — yalnız PROBATA_YONETIM_ALAN adresinde
   src/server/yonetim/       YÖNETİM ÇEKİRDEĞİ (348): adres.ts (saf; ara katman da okur) · totp.ts (RFC 6238, saf) · giris.ts (iki adımlı giriş,
