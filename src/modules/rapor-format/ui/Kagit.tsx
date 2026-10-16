@@ -26,13 +26,20 @@
    diploma, oda sicil, e-posta, telefon, imza, onay zamanı) ya da serbest satır (tesis yetkilisi, kaşe — sabit yazı ya da boş hücre).
    595 (madde 3, K2 "serbest; SGK ve İSG-KATİP kilitli kalsın"): 1. Firma bilgileri artık sabit değil — satırın adı yazılır, sırası değişir, tam
    satır olur, çıkarılır; "+ Satır ekle" plandan / kayıttan başka bilgi (müşterinin e-postası, telefonu, proje no …) ya da serbest satır. SGK,
-   İSG-KATİP ve başlangıç çıkarılmaz; SGK ve İSG-KATİP'in adı da değişmez. */
+   İSG-KATİP ve başlangıç çıkarılmaz; SGK ve İSG-KATİP'in adı da değişmez.
+   595 (madde 4, 6–8, 11–15): tabloların sabit başlıkları (ölçüm: sıra, uygunluk notu, sonuç — sonucun belgedeki yeri bölüm ayarında; test: ölçüm,
+   değer, sınır, sonuç; kontrol listesi: no, madde, sonuç), sonuç cümlesinin "uygundur / uygun değildir"i, yorumun yönlendirme yazısı (satır sayısı
+   bölüm ayarında), başlık tablosunun etiketleri, sayfa altı yazısı, ekipman kodu / türü satırlarının adı yerinde yazılır; öğeler (alan, madde,
+   sütun, değer) yukarı / aşağı (sütun sola / sağa) taşınır, madde grubun ucundan komşu gruba geçer. */
 import { Fragment, useEffect, useRef, useState, type DragEvent, type ReactNode } from "react";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { useOnayla } from "../../../components/pencere/Onay";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { SINIR_ISARETI } from "../../../format/hesap";
-import { altBaslikAnasi, altGrupSonu, firmaSatirlari, imzaSatirlari, raporDuzeni, siraBasligi } from "../../../format/duzen";
+import {
+  altBaslikAnasi, altGrupSonu, basEtiketleri, ekipmanEtiketleri, firmaSatirlari, imzaSatirlari, listeBasliklari, olcumBasliklari, raporDuzeni, siraBasligi,
+  sonucMetinleri, testBasliklari,
+} from "../../../format/duzen";
 import {
   BLOKLAR, doldurma, DOLDURULUR, EKIPMAN_ALAN_ADI, EKIPMAN_ALANLARI, FIRMA_KAYNAK_ADI, FIRMA_ZORUNLU, IMZA_ALAN_ADI, IMZA_KISI_ADI, KUNYE_ALAN_ADI, KUNYE_ALANLARI,
   type Blok, type Bolum, type BolumOf, type FirmaKaynagi, type FirmaSatiri, type FormatTanimi, type ImzaAlani, type ImzaSatiri,
@@ -40,7 +47,7 @@ import {
 import { kilitliKunye } from "../../../format/kunye";
 import {
   ALT_TURLER, altBaslikEkle, bolumAdi, eksikFirmaKaynaklari, eksikImzaAlanlari, FIRMA_ADI_SABIT, firmaSatiriEkle, firmaSatiriSil, firmaSatiriTasi,
-  firmaSatiriYaz, ekipmanBolumuGeriEkle, ekipmanBolumuKaldir, bolumDuzeni, ekipmanAlaniEkle, gorunumYaz, grupEkle, grupSil, grupYaz,
+  firmaSatiriYaz, bolumBasligiYaz, gorunumBasligiYaz, notSatiriYaz, ogeTasi, sonucYeriYaz, type BolumBasligi, type GorunumBasligi, ekipmanBolumuGeriEkle, ekipmanBolumuKaldir, bolumDuzeni, ekipmanAlaniEkle, gorunumYaz, grupEkle, grupSil, grupYaz,
   imzaKisisiYaz, imzaSatiriEkle, imzaSatiriSil, imzaSatiriTasi, imzaSatiriYaz, kunyeKilitYaz, kurucudan, maddeEkle, ogeEkle, ogeSil, ogeYaz, satirlar, tasi,
   yeniBolum, yeniKimlik,
 } from "../kurucu";
@@ -311,14 +318,37 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
     setAyar(`o:${b.id}:${id}`);
     requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById(`kb-${id}-formul`)?.focus()));
   };
+  /* 595 (madde 8): öğenin yeri — ilk / son (kontrol listesinde bütün gruplar boyunca) */
+  const ogeUclari = (b: Bolum, id: string) => {
+    const l = b.blok === "bilgi" ? b.alanlar : b.blok === "olcum" ? b.sutunlar : b.blok === "test" ? b.degerler : b.blok === "liste" ? b.gruplar.flatMap((g) => g.maddeler) : [];
+    const j = l.findIndex((x) => x.id === id);
+    return { ilk: j <= 0, son: j < 0 || j >= l.length - 1 };
+  };
+  const ogeyiTasi = (b: Bolum, i: number, id: string, ad: string, yon: -1 | 1) => {
+    degis(ogeTasi(t, i, id, yon));
+    requestAnimationFrame(() => document.querySelector<HTMLElement>(`#kb-${b.blok === "bilgi" && b.tam ? "ekipman" : b.id} [aria-label="${CSS.escape(`${ad} · ${b.blok === "olcum" ? (yon < 0 ? "sola" : "sağa") : yon < 0 ? "yukarı" : "aşağı"}`)}"]:not([disabled])`)?.focus());
+  };
   const ogeTuslari = (b: Bolum, i: number, id: string, ad: string, kilit: boolean) => (
     <span className={k.ogeTus}>
       {kilit && <Kilit />}
+      {(() => {
+        const u = ogeUclari(b, id), sutun = b.blok === "olcum";
+        return <>
+          <Tus ikon={sutun ? "arrow-left" : "arrow-up"} ad={`${ad} · ${sutun ? "sola" : "yukarı"}`} disabled={u.ilk} onClick={() => ogeyiTasi(b, i, id, ad, -1)} />
+          <Tus ikon={sutun ? "arrow-right" : "arrow-down"} ad={`${ad} · ${sutun ? "sağa" : "aşağı"}`} disabled={u.son} onClick={() => ogeyiTasi(b, i, id, ad, 1)} />
+        </>;
+      })()}
       <Tus ikon="calculator" ad={`${ad} · formül`} onClick={() => formulAc(b, id)} />
       <Tus ikon="settings" ad={`${ad} · ayrıntılar`} basili={ayar === `o:${b.id}:${id}`} onClick={() => ac(`o:${b.id}:${id}`)} />
       <Tus ikon="x" ad={`${ad} · çıkar`} onClick={() => void cikar(i, id, ad, kilit)} />
     </span>
   );
+
+  /* ── 595 (madde 4, 6, 7, 11–15): sabit başlık / sözcük — yerinde yazılır (boş ya da bugünkü yazı: bugünkü yazı) ── */
+  const bas = (i: number, a: BolumBasligi, deger: string, ad: string) =>
+    <Yazi deger={deger} ad={ad} uzun={60} yaz={(x) => degis(bolumBasligiYaz(t, i, a, x))} />;
+  const gbas = (a: GorunumBasligi, deger: string, ad: string, uzun = 60) =>
+    <Yazi deger={deger} ad={ad} uzun={uzun} yaz={(x) => degis(gorunumBasligiYaz(t, a, x))} />;
 
   /* ── 595 (madde 3): 1. bölümün (Firma bilgileri) satırları ── */
   const FIRMA_ORNEK: Record<FirmaKaynagi, string> = {
@@ -424,7 +454,11 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
         return <>
           <table>
             <colgroup><col style={{ width: "8%" }} /><col style={{ width: "62%" }} /><col style={{ width: "30%" }} /></colgroup>
-            <thead><tr><th className="rb-ab">No</th><th className="rb-ab">Kontrol maddesi</th><th className="rb-ab">Sonuç</th></tr></thead>
+            <thead><tr>
+              <th className="rb-ab">{bas(i, "no", listeBasliklari(b).no, "Sıra sütununun başlığı")}</th>
+              <th className="rb-ab">{bas(i, "madde", listeBasliklari(b).madde, "Madde sütununun başlığı")}</th>
+              <th className="rb-ab">{bas(i, "sonuc", listeBasliklari(b).sonuc, "Sonuç sütununun başlığı")}</th>
+            </tr></thead>
             <tbody>
               {b.gruplar.map((g, gi) => {
                 return <Fragment key={g.id}>
@@ -462,7 +496,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
         return <>
           <table>
             <thead><tr>
-              <th className="rb-ab">{siraBasligi(b)}</th>
+              <th className="rb-ab">{bas(i, "sira", olcumBasliklari(b).sira, "Sıra sütununun başlığı")}</th>
               {b.sutunlar.map((s) => {
                 const kilit = b.kilit && !kurucudan(s.id);
                 return (
@@ -476,8 +510,9 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
                   </th>
                 );
               })}
-              {notlar.length > 0 && <th className="rb-ab">Uygunluk notu</th>}
-              <th className="rb-ab">Sonuç</th>
+              {notlar.length > 0 && <th className="rb-ab">{bas(i, "not", olcumBasliklari(b).not, "Uygunluk notu sütununun başlığı")}</th>}
+              <th className="rb-ab">{bas(i, "sonuc", olcumBasliklari(b).sonuc, "Sonuç sütununun başlığı")}
+                {b.sonucYeri && <span className={k.sinir}>belgede {b.sonucYeri === "bas" ? "başta" : "gizli"}</span>}</th>
               <th className={k.ekleSutun}><Ekle ad="Sütun" onClick={() => ogeKoy(i, "s", "Yeni sütun")} /></th>
             </tr></thead>
             <tbody>
@@ -499,7 +534,12 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
       case "test":
         return (
           <table>
-            <thead><tr><th className="rb-ab">Ölçüm</th><th className="rb-ab">Değer</th><th className="rb-ab">Sınır</th><th className="rb-ab">Sonuç</th></tr></thead>
+            <thead><tr>
+              <th className="rb-ab">{bas(i, "olcum", testBasliklari(b).olcum, "Ölçüm sütununun başlığı")}</th>
+              <th className="rb-ab">{bas(i, "deger", testBasliklari(b).deger, "Değer sütununun başlığı")}</th>
+              <th className="rb-ab">{bas(i, "sinir", testBasliklari(b).sinir, "Sınır sütununun başlığı")}</th>
+              <th className="rb-ab">{bas(i, "sonuc", testBasliklari(b).sonuc, "Sonuç sütununun başlığı")}</th>
+            </tr></thead>
             <tbody>
               {b.degerler.map((d) => (
                 <tr key={d.id}>
@@ -541,7 +581,8 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
         return <>
           <p className="rb-kutu-metin">
             <Yazi deger={b.cumle} ad="Sonuç cümlesi" bos="Sonuç cümlesi (ör. … ekipmanın kullanımı)" uzun={400}
-              yaz={(s) => degis(bolumYaz(t, i, { cumle: s.trim() }))} /> <b>uygundur / uygun değildir</b>.
+              yaz={(s) => degis(bolumYaz(t, i, { cumle: s.trim() }))} /> <b>{bas(i, "uygun", sonucMetinleri(b).uygun, "Uygun sonucun sözcüğü")} /{" "}
+              {bas(i, "uygun_degil", sonucMetinleri(b).uygunDegil, "Uygun değil sonucun sözcüğü")}</b>.
           </p>
           {<div className="rb-aciklama">
             <Yazi deger={b.aciklama} ad="Sonuç açıklaması" bos="Açıklama (isteğe bağlı: ağır kusurların tanımı, notlar)" cok uzun={4000}
@@ -549,7 +590,10 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
           </div>}
         </>;
       case "not":
-        return <p className="rb-kutu-metin"><span className={k.ornek}>Muayene uzmanının yorumu{b.zorunlu ? " (zorunlu)" : " (isteğe bağlı)"}.</span></p>;
+        return <p className="rb-kutu-metin">
+          <Yazi deger={b.yonlendirme ?? ""} ad="Yorumun yönlendirme yazısı" bos={`Muayene uzmanının yorumu${b.zorunlu ? " (zorunlu)" : " (isteğe bağlı)"} — yönlendirme yazısı yazın`}
+            cok uzun={400} yaz={(x) => degis(bolumBasligiYaz(t, i, "yonlendirme", x))} />
+          {b.satir && <span className={k.ornek}> · belgede en az {b.satir} satır</span>}</p>;
       /* 495: serbest metin — belgeye basılan sabit yazı, kâğıtta yerinde yazılır */
       case "metin":
         return <div className="rb-aciklama"><Yazi deger={b.metin} ad="Serbest metin" bos="Belgeye basılacak yazıyı yazın" cok uzun={4000}
@@ -629,12 +673,23 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
           <label className={k.panelAlan}>En az satır
             <SayiGirdi deger={b.enAz} en={0} enCok={200} ad="En az satır" yaz={(n) => degis(bolumYaz(t, i, { enAz: n }))} /></label>
         </div>}
+        {/* 595 (madde 4): Sonuç sütununun belgedeki yeri — sahada hep sonda (elle sonuç orada); gizlide sonuç kuralı yine çalışır */}
+        <div className={k.panelSatir} role="radiogroup" aria-label={`${b.ad} · Sonuç sütunu belgede`}>
+          {([["son", "Sonuç sütunu sonda"], ["bas", "Başta (sıradan sonra)"], ["gizli", "Belgede gizli"]] as const).map(([x, ad]) => (
+            <label key={x} className={k.panelKutu}><input type="radio" name={`kb-${b.id}-sonuc-yeri`} checked={(b.sonucYeri ?? "son") === x}
+              onChange={() => degis(sonucYeriYaz(t, i, x))} />{ad}</label>
+          ))}
+        </div>
         {/* 2026-10-16 (reisim: "kurala göre otomatik uygun uygun değil diyor, ama ilgili ayar buradan yapılamıyor"): tablonun sonuç kuralı */}
         <SonucKuraliDuzenleyici t={t} i={i} b={b} degis={degis} />
         <NotDuzenleyici t={t} i={i} b={b} degis={degis} />
       </>}
       {b.blok === "sonuc" && <SonucAciklamasi t={t} i={i} b={b} degis={degis} />}
-      {b.blok === "not" && <label className={k.panelKutu}><input type="checkbox" checked={b.zorunlu} onChange={(e) => degis(bolumYaz(t, i, { zorunlu: e.target.checked }))} />Yorum zorunlu</label>}
+      {b.blok === "not" && <div className={k.panelSatir}>
+        <label className={k.panelKutu}><input type="checkbox" checked={b.zorunlu} onChange={(e) => degis(bolumYaz(t, i, { zorunlu: e.target.checked }))} />Yorum zorunlu</label>
+        <label className={k.panelAlan}>Belgede en az satır (boşluk)
+          <SayiGirdi deger={b.satir ?? 0} en={0} enCok={30} ad="Yorumun belgedeki en az satırı" yaz={(n) => degis(notSatiriYaz(t, i, n || null))} /></label>
+      </div>}
       {b.blok === "imza" && (() => {
         /* 595: kişi eklenince varsayılan satırlarıyla gelir, kaldırılınca bütün satırları çıkar; en az bir kişi kalır */
         const kisiler = (["uzman", "teknik"] as const).filter((x) => imzaSatirlari(b).some((s) => s.kim === x));
@@ -727,11 +782,11 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
           <td className="rb-bas-ad"><Yazi deger={t.gorunum.baslik} ad="Belge başlığı" bos={`${tur.ad} periyodik kontrol raporu`}
             yaz={(s) => degis(gorunumYaz(t, { baslik: s }))} /></td>
           <td className="rb-dok">
-            <div><span>Doküman Kodu</span>: <Yazi deger={t.gorunum.formKodu} ad="Doküman kodu" bos="kendiliğinden" uzun={20}
+            <div><span>{gbas("bas_kod", basEtiketleri(t).kod, "Doküman kodu etiketi")}</span>: <Yazi deger={t.gorunum.formKodu} ad="Doküman kodu" bos="kendiliğinden" uzun={20}
               yaz={(s) => degis(gorunumYaz(t, { formKodu: s }))} /></div>
-            <div><span>Format sürümü</span>: taslak</div>
-            <div><span>Rapor No</span>: —</div>
-            <div><span>Rapor Tarihi</span>: —</div>
+            <div><span>{gbas("bas_surum", basEtiketleri(t).surum, "Format sürümü etiketi")}</span>: taslak</div>
+            <div><span>{gbas("bas_no", basEtiketleri(t).no, "Rapor no etiketi")}</span>: —</div>
+            <div><span>{gbas("bas_tarih", basEtiketleri(t).tarih, "Rapor tarihi etiketi")}</span>: —</div>
           </td>
         </tr></tbody>
       </table>
@@ -743,7 +798,8 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
         <BilgiTablosu l={[
           ...firmaSatirlari(t).map((s, j, l): Hucre => [firmaEtiketi(s, j, l), firmaDegeri(s), !!s.tam]),
           /* 486: ekipman bölümü kaldırıldıysa kod ve tür 1. bölümde (belge ve saha ekranıyla aynı) */
-          ...(duzen.ekipman ? [] : [["Ekipman kodu", <span key="ek" className={k.ornek}>kayıttan</span>], ["Ekipman türü", tur.ad]] as Hucre[]),
+          ...(duzen.ekipman ? [] : [[gbas("ekipman_kod", ekipmanEtiketleri(t).kod, "Ekipman kodu satırının adı"), <span key="ek" className={k.ornek}>kayıttan</span>],
+            [gbas("ekipman_tur", ekipmanEtiketleri(t).tur, "Ekipman türü satırının adı"), tur.ad]] as Hucre[]),
         ]} son={<span className={k.ekleSira}><span className={k.ekleSecim}>
           <SecimAlani id="kb-firma-ekle" ad="Firma bilgileri · satır ekle" etiketsiz deger="" ipucu="+ Satır ekle" degistir={firmaKoy}
             secenekler={[...eksikFirmaKaynaklari(t).map((x) => [x, FIRMA_KAYNAK_ADI[x], FIRMA_ORNEK[x] || "kayıttan"] as const),
@@ -776,8 +832,10 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
           </div>
         )}
         <BilgiTablosu l={[
-          [<span key="kod" className={k.etiket}>Ekipman kodu<span className={k.ogeTus}><Kilit ad="Sabit · her raporda" not="değişmez" /></span></span>, <span key="k" className={k.ornek}>kayıttan</span>],
-          [<span key="tur" className={k.etiket}>Ekipman türü<span className={k.ogeTus}><Kilit ad="Sabit · her raporda" not="değişmez" /></span></span>, tur.ad],
+          [<span key="kod" className={k.etiket}>{gbas("ekipman_kod", ekipmanEtiketleri(t).kod, "Ekipman kodu satırının adı")}<span className={k.ogeTus}>
+            <Kilit ad="Sabit · her raporda" not="satırı ve değeri değişmez; adı yazılır" /></span></span>, <span key="k" className={k.ornek}>kayıttan</span>],
+          [<span key="tur" className={k.etiket}>{gbas("ekipman_tur", ekipmanEtiketleri(t).tur, "Ekipman türü satırının adı")}<span className={k.ogeTus}>
+            <Kilit ad="Sabit · her raporda" not="satırı ve değeri değişmez; adı yazılır" /></span></span>, tur.ad],
           ...(ekip ? ekip.alanlar.map((a): Hucre => [
             <span key={a.id} className={k.etiket} data-alan={a.id}><Yazi deger={a.ad} ad="Alan adı" ac={yeniId === a.id} yaz={(s) => degis(ogeYaz(t, ki, a.id, { ad: s }))} />
               {ogeTuslari(ekip, ki, a.id, a.ad, a.kilit)}</span>,
@@ -833,7 +891,9 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
         );
       })}
       {araEkle(t.bolumler.length, "Bölüm ekle", "kb-ekle", true, duzen.bolumler.length ? anaBolum(duzen.bolumler.length - 1) : null)}
-      <footer className="rb-alt">Firmanızın adı · {t.gorunum.formKodu || `doküman kodu kendiliğinden (${tur.kod})`}</footer>
+      {/* 595 (madde 14): sayfa altı yazısı — {firma} ve {kod} firma adı ve doküman koduyla değişir */}
+      <footer className="rb-alt">{gbas("alt_yazi", t.gorunum.altYazi ?? "{firma} · {kod}", "Sayfa altı yazısı ({firma} ve {kod} yerine firma adı ve doküman kodu)", 300)}
+        <span className={k.ornek}> · {"{firma}"}: Firmanızın adı · {"{kod}"}: {t.gorunum.formKodu || `kendiliğinden (${tur.kod})`}</span></footer>
     </article>
   );
 }

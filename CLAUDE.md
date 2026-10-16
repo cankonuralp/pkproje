@@ -161,6 +161,12 @@ pkproje/
                             11 satır, birebir) · belge.ts firmaDegeri · SahaRaporu firmaSatiri (eski formatta sahanın bugünkü adları; e-posta / telefon künyede
                             kalır) · kurucu.ts firmaSatiri* (SGK / İSG-KATİP adı sabit) · Kagit.tsx 1. bölüm · motor kilitDenetimi firma özü · S.A.Y
                             "firma_satiri" · kilit tests/firma-satirlari, bozan firma-satirlari
+                            · 595 BAŞLIKLAR VE SIRA (madde 4, 6–8, 11–15): tanim.ts olcum / test / liste basliklar, olcum sonucYeri (belgede son · baş · gizli),
+                            sonuc uygunMetin / uygunDegilMetin, not yonlendirme / satir, gorunum bas / altYazi ({firma}, {kod}) / ekipmanAd · duzen.ts
+                            …Basliklari, sonucMetinleri, basEtiketleri, ekipmanEtiketleri, altYazisi (bugünkü yazı varsayılan; belge, saha, kâğıt ortak) ·
+                            kurucu.ts bolumBasligiYaz / gorunumBasligiYaz (bugünkü yazıyla aynı yazılan kalkar), sonucYeriYaz, notSatiriYaz, ogeTasi (madde
+                            grubun ucundan komşu gruba) · Kagit.tsx yerinde yazı + öğe tuşlarında yukarı / aşağı (sütunda sola / sağa) · motor Bakanlık özü ·
+                            S.A.Y "baslik" / "sonuc_yeri" / "not_satiri" / "oge_tasi" · kilit tests/basliklar, bozan basliklar
   src/modules/rapor-format/ RAPOR FORMATI (2026-10-04, 308): sürümlü tanım (rapor_format, göç 0022: taslak → yayında → eski; yayınlanan değişmez) ·
                             şablondan başlat · taslak kaydet · yayınla (kilitli Bakanlık öğesi ENGEL, öteki denetim uyarı) · yayındaki format;
                             ekran: tür sayfası "Rapor şablonu" + önizleme /ekipman-turleri/<tür>/sablon/<sürüm> · FORMAT KURUCU (338, K4):

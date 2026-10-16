@@ -38,7 +38,7 @@ import { tarihNo } from "../../../components/secim/tarih";
 import { Tus, tusSinifi } from "../../../components/tus/Tus";
 import { SINIR_ISARETI } from "../../../format/hesap";
 import { ELLE_GEREKCE, ELLE_GEREKCE_EN_AZ, ELLE_SONUC, satirAnahtari, sonucKurallari, type Degerlendirme, type SatirDegerlendirmesi } from "../../../format/motor";
-import { imzaSatirlari, siraBasligi } from "../../../format/duzen";
+import { imzaSatirlari, olcumBasliklari, sonucMetinleri } from "../../../format/duzen";
 import { formulluAlan, formulluDeger, formulluMadde, formulluSutun, type FormulYeri } from "../../../format/formul";
 import { doldurma, type Bolum, type BolumOf, type Cevaplar, type Sinir } from "../../../format/tanim";
 import { meslek } from "../../personel/sema";
@@ -501,13 +501,13 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
             <caption className="gizli">{b.ad}</caption>
             <thead>
               <tr>
-                <th scope="col">{siraBasligi(b)}</th>
+                <th scope="col">{olcumBasliklari(b).sira}</th>
                 {b.sutunlar.map((s) => (
                   <th key={s.id} scope="col">{s.ad}{s.birim && <span className={stil.birim}> ({s.birim})</span>}
                     {sinirMetni(s.op, s.sinir) && <span className={stil.sinir}>sınır {sinirMetni(s.op, s.sinir, s.birim)}</span>}</th>
                 ))}
-                {notlar.length > 0 && <th scope="col">Uygunluk notu</th>}
-                <th scope="col">Sonuç</th>
+                {notlar.length > 0 && <th scope="col">{olcumBasliklari(b).not}</th>}
+                <th scope="col">{olcumBasliklari(b).sonuc}</th>
                 {!bag.oku && <th scope="col"><span className="gizli">İşlem</span></th>}
               </tr>
             </thead>
@@ -695,11 +695,11 @@ function KusurBlok({ bag }: { bag: Baglam }) {
 }
 
 function SonucBlok({ b, bag }: { b: BolumOf<"sonuc">; bag: Baglam }) {
-  const id = alanId(b.id), s = bag.c.sonuc, cumle = b.cumle.trim();
+  const id = alanId(b.id), s = bag.c.sonuc, cumle = b.cumle.trim(), sm = sonucMetinleri(b);
   return (
     <>
       {cumle && (
-        <p className={stil.cumle}>{cumle} {s === "uygun" ? <b>uygundur</b> : s === "uygun_degil" ? <b>uygun değildir</b> : "uygundur / uygun değildir"}.</p>
+        <p className={stil.cumle}>{cumle} {s === "uygun" ? <b>{sm.uygun}</b> : s === "uygun_degil" ? <b>{sm.uygunDegil}</b> : `${sm.uygun} / ${sm.uygunDegil}`}.</p>
       )}
       {b.aciklama.trim() && <p className={stil.aciklama}>{b.aciklama.trim()}</p>}
       <div className={`${stil.madde} ${stil.maddeSonuc}`}>
@@ -720,10 +720,14 @@ function SonucBlok({ b, bag }: { b: BolumOf<"sonuc">; bag: Baglam }) {
 }
 
 function NotBlok({ b, bag }: { b: BolumOf<"not">; bag: Baglam }) {
-  const gec = bag.gecersiz(b.id);
+  const gec = bag.gecersiz(b.id), yon = b.yonlendirme?.trim(), ipucu = yon ? `${alanId(b.id)}-yon` : undefined;
+  /* 595 (madde 11): formatın yönlendirme yazısı kutunun üstünde; satır sayısı kutunun boyu */
   return (
-    <textarea id={alanId(b.id)} className={stil.metinAlan} aria-label={b.ad} maxLength={4000} value={bag.c.yorum} readOnly={bag.oku}
-      aria-required={(b.zorunlu && !bag.oku) || undefined} aria-invalid={gec || undefined} onChange={(e) => bag.yaz((c) => ({ ...c, yorum: e.target.value }))} />
+    <>
+      {yon && <p className={stil.ipucuMetin} id={ipucu}>{yon}</p>}
+      <textarea id={alanId(b.id)} className={stil.metinAlan} aria-label={b.ad} aria-describedby={ipucu} maxLength={4000} value={bag.c.yorum} readOnly={bag.oku}
+        rows={b.satir} aria-required={(b.zorunlu && !bag.oku) || undefined} aria-invalid={gec || undefined} onChange={(e) => bag.yaz((c) => ({ ...c, yorum: e.target.value }))} />
+    </>
   );
 }
 

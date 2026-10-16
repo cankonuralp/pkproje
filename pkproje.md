@@ -2525,6 +2525,15 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-16 (595f): **BAŞLIKLAR, SÖZCÜKLER VE ÖĞELERİN SIRASI** (sunum 595 madde 4, 6, 7, 8, 11–15; reisim: *"format yapıcıda bu ve benzeri kısımlarda değişiklik
+  yapamıyorum, tıklayıp değiştiremiyorum"*): kâğıtta yerinde yazılır — ölçüm tablosunun "Sıra No / Uygunluk notu / Sonuç" başlıkları (Sonuç sütunu
+  belgede sonda, başta ya da gizli — sonuç kuralı yine çalışır; sahada hep sonda), test bölümünün "Ölçüm / Değer / Sınır / Sonuç"u, kontrol
+  listesinin "No / Kontrol maddesi / Sonuç"u, sonuç cümlesinin "uygundur / uygun değildir"i (ör. "KULLANIMA UYGUNDUR"), yorumun yönlendirme yazısı
+  (sahada kutunun üstünde, belgede yorum boşsa) ve belgedeki satır sayısı, başlık tablosunun etiketleri, sayfa altı yazısı ({firma}, {kod}), ekipman
+  kodu / türü satırlarının adı. Alan, madde, sütun ve test değeri yukarı / aşağı (sütun sola / sağa) taşınır; madde grubun ucundan komşu gruba geçer.
+  Boş ya da bugünkü yazıyla aynı yazılan kalkar (eski formatlar aynı); Bakanlık formatında değişiklik yayında uyarı; S.A.Y da yapar. Üçüncü sonuç
+  seçeneği ("şartlı uygun") yapılmadı: raporun sonucu iki değerli (Uygun / Uygun değil) — uygunsuzluk, müşteri paneli ve fatura buna bağlı; ayrı
+  karar ister.
 - 2026-10-16 (595e): **FİRMA BİLGİLERİ SERBEST** (sunum 595 madde 3; K2 *"serbest; SGK ve İSG-KATİP kilitli kalsın"*; K6 reisim: *"firma bilgileri kısmında
   da [satır eklemek istedim ekleyemedim]"*; 9 Ekim'deki "sabit olan tek şey firma bilgileri" kararının yerine): format yapıcıda 1. bölümün satırları
   — adı yerinde yazılır, yukarı / aşağı taşınır, tam satır yapılır, çıkarılır; "+ Satır ekle" plandan / kayıttan başka bilgi (müşterinin e-postası,

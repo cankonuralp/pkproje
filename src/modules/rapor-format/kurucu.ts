@@ -6,7 +6,9 @@
    yalnız "Bakanlık formatının parçası" işaretidir. Sabit kalanlar reisim'in kararı: ölçüm cihazları bölümü (459; firma bilgileri kâğıtta sabit). */
 import { SINIR_ISARETI } from "../../format/hesap.ts";
 import { kilitliKimlikler } from "../../format/motor.ts";
-import { ekipmanTamYap, firmaSatirlari, imzaSatirlari, imzaVarsayilani } from "../../format/duzen.ts";
+import {
+  basEtiketleri, ekipmanEtiketleri, ekipmanTamYap, firmaSatirlari, imzaSatirlari, imzaVarsayilani, listeBasliklari, olcumBasliklari, sonucMetinleri, testBasliklari,
+} from "../../format/duzen.ts";
 import { Bolum, EIMZA_KUTU, EKIPMAN_ALAN_ADI, FIRMA_KAYNAK_ADI, FIRMA_KAYNAKLARI, FIRMA_ZORUNLU, IMZA_ALAN_ADI, imzaAlanlari, KUNYE_ALANLARI, KURAL_EN_COK, kurucudan, type Blok, type BolumOf, type EkipmanAlani, type FormatTanimi,
   type FirmaKaynagi, type FirmaSatiri, type ImzaAlani, type ImzaKisisi, type ImzaSatiri, type KunyeAlani, type Sinir, type SonucKurali } from "../../format/tanim.ts";
 import { kilitliKunye } from "../../format/kunye.ts";
@@ -524,4 +526,102 @@ export function firmaSatiriSil(t: FormatTanimi, id: string): FormatTanimi {
 export function firmaSatiriTasi(t: FormatTanimi, id: string, yon: -1 | 1): FormatTanimi {
   const l = firmaSatirlari(t), j = l.findIndex((x) => x.id === id);
   return j < 0 || j + yon < 0 || j + yon >= l.length ? t : firmaYaz(t, tasi(l, j, j + yon));
+}
+
+/* ── BAŞLIKLAR VE SABİT SÖZCÜKLER (595 madde 4, 6, 7, 11–15) — boş ya da bugünkü yazıyla aynı yazılan kalkar (görünümde hep bugünkü yazı) ── */
+export type BolumBasligi = "sira" | "not" | "sonuc" | "olcum" | "deger" | "sinir" | "no" | "madde" | "uygun" | "uygun_degil" | "yonlendirme";
+const temiz = (s: string, n: number) => s.trim().replace(/\s+/g, " ").slice(0, n);
+/** bölümün sabit başlığını / sözcüğünü yazar (yanlış bölüm türü → aynı tanım) */
+export function bolumBasligiYaz(t: FormatTanimi, i: number, a: BolumBasligi, metin: string): FormatTanimi {
+  const b = t.bolumler[i];
+  if (!b) return t;
+  const yaz = (y: Bolum) => ({ ...t, bolumler: t.bolumler.map((x, j) => (j === i ? y : x)) });
+  const kume = <K extends string>(eski: Partial<Record<K, string | undefined>> | undefined, k: K, varsayilan: string) => {
+    const v = temiz(metin, 60), y = { ...(eski ?? {}) } as Partial<Record<K, string>>;
+    if (!v || v === varsayilan) delete y[k]; else y[k] = v;
+    return Object.keys(y).length ? y : undefined;
+  };
+  if (b.blok === "olcum" && (a === "sira" || a === "not" || a === "sonuc")) {
+    const d = olcumBasliklari({ ...b, basliklar: undefined });
+    return yaz({ ...b, basliklar: kume(b.basliklar, a, d[a]) });
+  }
+  if (b.blok === "test" && (a === "olcum" || a === "deger" || a === "sinir" || a === "sonuc")) {
+    const d = testBasliklari({ ...b, basliklar: undefined });
+    return yaz({ ...b, basliklar: kume(b.basliklar, a, d[a]) });
+  }
+  if (b.blok === "liste" && (a === "no" || a === "madde" || a === "sonuc")) {
+    const d = listeBasliklari({ ...b, basliklar: undefined });
+    return yaz({ ...b, basliklar: kume(b.basliklar, a, d[a]) });
+  }
+  if (b.blok === "sonuc" && (a === "uygun" || a === "uygun_degil")) {
+    const v = temiz(metin, 120), d = sonucMetinleri({ ...b, uygunMetin: undefined, uygunDegilMetin: undefined });
+    const k = a === "uygun" ? "uygunMetin" : "uygunDegilMetin", y = { ...b };
+    if (!v || v === (a === "uygun" ? d.uygun : d.uygunDegil)) delete y[k]; else y[k] = v;
+    return yaz(y);
+  }
+  if (b.blok === "not" && a === "yonlendirme") {
+    const v = metin.trim().slice(0, 400), y = { ...b };
+    if (v) y.yonlendirme = v; else delete y.yonlendirme;
+    return yaz(y);
+  }
+  return t;
+}
+/** ölçüm tablosunda Sonuç sütununun belgedeki yeri (son varsayılan — görünümden kalkar) */
+export function sonucYeriYaz(t: FormatTanimi, i: number, yer: "son" | "bas" | "gizli"): FormatTanimi {
+  const b = t.bolumler[i];
+  if (b?.blok !== "olcum") return t;
+  const y = { ...b };
+  if (yer === "son") delete y.sonucYeri; else y.sonucYeri = yer;
+  return { ...t, bolumler: t.bolumler.map((x, j) => (j === i ? y : x)) };
+}
+/** yorum bölümünün belgedeki en az satırı (boş: kendiliğinden) */
+export function notSatiriYaz(t: FormatTanimi, i: number, n: number | null): FormatTanimi {
+  const b = t.bolumler[i];
+  if (b?.blok !== "not") return t;
+  const y = { ...b };
+  if (n === null || !Number.isFinite(n) || n < 1) delete y.satir; else y.satir = Math.min(30, Math.round(n));
+  return { ...t, bolumler: t.bolumler.map((x, j) => (j === i ? y : x)) };
+}
+export type GorunumBasligi = "bas_kod" | "bas_surum" | "bas_no" | "bas_tarih" | "alt_yazi" | "ekipman_kod" | "ekipman_tur";
+/** başlık tablosunun etiketleri, sayfa altı yazısı, ekipman kodu / türü satırlarının adı */
+export function gorunumBasligiYaz(t: FormatTanimi, a: GorunumBasligi, metin: string): FormatTanimi {
+  const g = { ...t.gorunum };
+  if (a === "alt_yazi") {
+    const v = metin.trim().slice(0, 300);
+    if (v && v !== "{firma} · {kod}") g.altYazi = v; else delete g.altYazi;
+    return { ...t, gorunum: g };
+  }
+  const [grup, k] = a.split("_") as ["bas" | "ekipman", string];
+  const d = grup === "bas" ? basEtiketleri({ gorunum: { ...g, bas: undefined } }) : ekipmanEtiketleri({ gorunum: { ...g, ekipmanAd: undefined } });
+  const v = temiz(metin, 60), eski = { ...((grup === "bas" ? g.bas : g.ekipmanAd) ?? {}) } as Record<string, string>;
+  if (!v || v === (d as Record<string, string>)[k]) delete eski[k]; else eski[k] = v;
+  const yeni = Object.keys(eski).length ? eski : undefined;
+  if (grup === "bas") { if (yeni) g.bas = yeni; else delete g.bas; } else { if (yeni) g.ekipmanAd = yeni; else delete g.ekipmanAd; }
+  return { ...t, gorunum: g };
+}
+
+/* ── ÖĞELERİN SIRASI (595 madde 8): alan, madde, sütun, değer bir yukarı / aşağı; madde grubun ucundan komşu gruba geçer ── */
+export function ogeTasi(t: FormatTanimi, i: number, id: string, yon: -1 | 1): FormatTanimi {
+  const b = t.bolumler[i];
+  if (!b) return t;
+  const yaz = (y: Bolum) => ({ ...t, bolumler: t.bolumler.map((x, j) => (j === i ? y : x)) });
+  const kaydir = <T extends { id: string }>(l: readonly T[]) => { const j = l.findIndex((x) => x.id === id); return j < 0 || j + yon < 0 || j + yon >= l.length ? null : tasi(l, j, j + yon); };
+  if (b.blok === "bilgi") { const l = kaydir(b.alanlar); return l ? yaz({ ...b, alanlar: l }) : t; }
+  if (b.blok === "olcum") { const l = kaydir(b.sutunlar); return l ? yaz({ ...b, sutunlar: l }) : t; }
+  if (b.blok === "test") { const l = kaydir(b.degerler); return l ? yaz({ ...b, degerler: l }) : t; }
+  if (b.blok === "liste") {
+    const gi = b.gruplar.findIndex((g) => g.maddeler.some((m) => m.id === id));
+    if (gi < 0) return t;
+    const g = b.gruplar[gi], mi = g.maddeler.findIndex((m) => m.id === id), m = g.maddeler[mi];
+    const gruplar = b.gruplar.map((x) => ({ ...x, maddeler: [...x.maddeler] }));
+    if (mi + yon >= 0 && mi + yon < g.maddeler.length) gruplar[gi].maddeler = tasi(g.maddeler, mi, mi + yon);
+    else {
+      const hedef = gi + yon;
+      if (hedef < 0 || hedef >= gruplar.length) return t;
+      gruplar[gi].maddeler.splice(mi, 1);
+      if (yon < 0) gruplar[hedef].maddeler.push(m); else gruplar[hedef].maddeler.unshift(m);
+    }
+    return yaz({ ...b, gruplar });
+  }
+  return t;
 }

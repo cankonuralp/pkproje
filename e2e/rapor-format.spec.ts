@@ -350,6 +350,18 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await eimza.getByRole("radio", { name: /^İmza hücresi/ }).check();
     await expect(imzaBolumu.getByText("e-imza buraya işlenir · muayene uzmanı")).toBeVisible();
     await page.getByRole("button", { name: "Bölüm ayarlarını kapat" }).click();
+    /* 595 (madde 4, 12): sabit başlıklar ve sözcükler yerinde yazılır — tablonun Sonuç başlığı, sonuç cümlesinin "uygundur"u */
+    await linye.getByRole("button", { name: "Sonuç", exact: true }).click();
+    const sonucBasligi = page.getByRole("textbox", { name: "Sonuç sütununun başlığı" });
+    await sonucBasligi.fill("Değerlendirme");
+    await sonucBasligi.press("Enter");
+    await expect(linye.getByRole("button", { name: "Değerlendirme", exact: true })).toBeVisible();
+    const sonucBolumu = kagit.getByRole("region", { name: /Sonuç ve kanaat$/ });
+    await sonucBolumu.getByRole("button", { name: "uygundur", exact: true }).click();
+    const uygunSozcuk = page.getByRole("textbox", { name: "Uygun sonucun sözcüğü" });
+    await uygunSozcuk.fill("KULLANIMA UYGUNDUR");
+    await uygunSozcuk.press("Enter");
+    await expect(sonucBolumu.getByRole("button", { name: "KULLANIMA UYGUNDUR", exact: true })).toBeVisible();
     /* 459: standartlar ve cihazlar türden, kendiliğinden — ZPKR02'den başlatınca türün boş bağlantısı Bakanlık formatınkiyle doldu (440);
        ölçüm cihazları bölümü silinmez */
     await expect(firma.getByText(/TS HD 60364-6/).first()).toBeVisible();
@@ -366,6 +378,7 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await expect(belge.getByText("Teknik yöneticinin diploma no")).toBeVisible();
     await expect(belge.getByText("Tesis yetkilisi")).toBeVisible();
     await expect(belge.getByText("Proje numarası")).toBeVisible();
+    await expect(belge.getByText("Değerlendirme").first()).toBeVisible();
     await expect(belge.getByText("Takip kontrol tarihi")).toHaveCount(0);
     await expect(belge.getByText(/^\d+\.1 Deneme alt başlık$/)).toBeVisible();
     await expect(belge.getByText("Deneme yorumu", { exact: false }).first()).toBeVisible();

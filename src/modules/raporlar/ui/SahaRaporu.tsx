@@ -41,7 +41,7 @@ import { DegerYok, Kirinti, Kod, NesneBasi, Rozet, SeritKap } from "../../../com
 import { simdiIso, tarihNo } from "../../../components/secim/tarih";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
-import { firmaSatirlari, raporDuzeni, sabitEkipmanAlanlari } from "../../../format/duzen";
+import { ekipmanEtiketleri, firmaSatirlari, raporDuzeni, sabitEkipmanAlanlari } from "../../../format/duzen";
 import { degerlendir } from "../../../format/motor";
 import { doldurma, EKIPMAN_ALAN_ADI, KUNYE_ALAN_ADI, KUNYE_ALANLARI, KUNYE_EN_COK, type Cevaplar, type FirmaSatiri, type KunyeAlani } from "../../../format/tanim";
 import { gecerliKunye, kayitKunyesi, kilitliKunye, metotMetni } from "../../../format/kunye";
@@ -1007,7 +1007,7 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
             {firmaSatirlariSahada.map(firmaSatiri)}
             {duzen.ekipman && !duzen.tam && metinSatiri("bolum", "Ekipman bölümü", 60)}
             {/* 486: formatta ekipman bölümü kaldırıldıysa kod ve tür burada (belgeyle aynı) */}
-            {!duzen.ekipman && <><Satir etiket="Ekipman kodu"><Kod>{v.ekipman.kod}</Kod></Satir><Satir etiket="Ekipman türü">{v.tur.ad}</Satir></>}
+            {!duzen.ekipman && <><Satir etiket={ekipmanEtiketleri(v.tanim).kod}><Kod>{v.ekipman.kod}</Kod></Satir><Satir etiket={ekipmanEtiketleri(v.tanim).tur}>{v.tur.ad}</Satir></>}
           </Satirlar>
         </RaporBolumu>
 
@@ -1019,8 +1019,9 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
             yaz={(id, x) => (ekipmanAnahtari(id) ? ekipmanYaz(id, x) : yaz((c) => ({ ...c, alan: { ...c.alan, [id]: x } })))}
             dolu={(id) => (ekipmanAnahtari(id) ? !!ekipman[id] : !!cevaplar.alan[id]?.length)} />
           <Satirlar>
-            <Satir etiket="Kod"><Kod>{v.ekipman.kod}</Kod></Satir>
-            <Satir etiket="Ekipman türü">{v.tur.ad}</Satir>
+            {/* 595 (madde 15): satır adları formatta yazıldıysa o (yoksa sahanın bugünkü adları) */}
+            <Satir etiket={v.tanim.gorunum.ekipmanAd?.kod?.trim() ? ekipmanEtiketleri(v.tanim).kod : "Kod"}><Kod>{v.ekipman.kod}</Kod></Satir>
+            <Satir etiket={ekipmanEtiketleri(v.tanim).tur}>{v.tur.ad}</Satir>
             <Satir etiket="Kontrol metodu">{metot}</Satir>
             {duzen.tam ? duzen.tam.alanlar.map((a) => <BilgiAlani key={a.id} a={a} bag={bag} />)
               : sabit.map((k) => metinSatiri(k, EKIPMAN_ALAN_ADI[k], EN[k], k === "imal"))}

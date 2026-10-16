@@ -216,9 +216,11 @@ const oz = (o: Record<string, unknown>) => JSON.stringify(o, (_k, v) => (v === u
    2026-10-16: tablonun sonuç kuralları da öz (geçerli kurallar — tanımda yoksa Bakanlık kuralları; açıklama sayılmaz): Bakanlık kuralı değişince uyarı */
 const bolumOzu = (b: Bolum, t: FormatTanimi) => oz({
   blok: b.blok, ad: b.ad, ust: b.ust, numarasiz: b.numarasiz, alt: b.alt,
-  ...(b.blok === "liste" ? { cevaplar: b.cevaplar } : {}),
-  ...(b.blok === "olcum" ? { hesap: b.hesap, notlar: b.notlar, satir: b.satir, sonuc: kuralOzu(etkinKurallar(t, b)) } : {}),
-  ...(b.blok === "sonuc" ? { cumle: b.cumle, aciklama: b.aciklama } : {}),
+  ...(b.blok === "liste" ? { cevaplar: b.cevaplar, basliklar: b.basliklar } : {}),
+  /* 595 (madde 4, 6, 7, 12): sabit başlıklar, Sonuç sütununun yeri, sonuç sözcükleri de Bakanlık formatının görünümü */
+  ...(b.blok === "test" ? { basliklar: b.basliklar } : {}),
+  ...(b.blok === "olcum" ? { hesap: b.hesap, notlar: b.notlar, satir: b.satir, sonuc: kuralOzu(etkinKurallar(t, b)), basliklar: b.basliklar, sonucYeri: b.sonucYeri } : {}),
+  ...(b.blok === "sonuc" ? { cumle: b.cumle, aciklama: b.aciklama, uygunMetin: b.uygunMetin, uygunDegilMetin: b.uygunDegilMetin } : {}),
   /* 595: imza bölümünün satırları (adı, kişisi, bilgisi, sabit yazısı, tam satır) — satırsız eski bölüm imzalar'dan aynı satırları verir */
   ...(b.blok === "imza" ? { imza: imzaSatirlari(b).map((x) => ({ ad: x.ad, kim: x.kim, alan: x.alan, metin: x.metin, tam: x.tam })) } : {}),
 });
@@ -299,6 +301,9 @@ export function kilitDenetimi(t: FormatTanimi, kaynak: FormatTanimi): string[] {
   /* 595 (madde 3): Bakanlık formatının 1. bölümü (Firma bilgileri) — satırların adı, bilgisi, sırası, tam satırlığı, sabit yazısı */
   const firmaOzu = (x: FormatTanimi) => oz({ satirlar: firmaSatirlari(x).map((s) => ({ ad: s.ad, kaynak: s.kaynak, metin: s.metin, tam: s.tam })) });
   if (kilitVar && firmaOzu(t) !== firmaOzu(kaynak)) sorun("değiştirilmiş", "firma", "Firma bilgileri");
+  /* 595 (madde 13–15): başlık tablosunun etiketleri, sayfa altı, ekipman satır adları */
+  const gorunumOzu = (x: FormatTanimi) => oz({ bas: x.gorunum.bas, altYazi: x.gorunum.altYazi, ekipmanAd: x.gorunum.ekipmanAd });
+  if (kilitVar && gorunumOzu(t) !== gorunumOzu(kaynak)) sorun("değiştirilmiş", "gorunum", "Başlık tablosu, sayfa altı ve ekipman satır adları");
   /* resmî formatın kimliği: form kodu ve başlık (PDF üst bilgisi) — kilitli öğesi olan kaynakta değişmez */
   if (kilitVar && kaynak.gorunum.formKodu && (t.gorunum.formKodu !== kaynak.gorunum.formKodu || t.gorunum.baslik !== kaynak.gorunum.baslik)) {
     l.push(`Bakanlık formatının form kodu ve başlığı değiştirilmiş: ${kaynak.gorunum.formKodu} (“${kaynak.gorunum.baslik}”).`);

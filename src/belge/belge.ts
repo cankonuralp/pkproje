@@ -8,7 +8,9 @@
    JSX değil createElement: düğüm test koşucusu (node --test) bu dosyayı doğrudan yükler (tests/belge.test.ts). */
 import { createElement as h, Fragment, type ReactNode } from "react";
 import { SINIR_ISARETI } from "../format/hesap.ts";
-import { firmaSatirlari, raporDuzeni, sabitEkipmanAlanlari, siraBasligi } from "../format/duzen.ts";
+import {
+  altYazisi, basEtiketleri, ekipmanEtiketleri, firmaSatirlari, listeBasliklari, olcumBasliklari, raporDuzeni, sabitEkipmanAlanlari, sonucMetinleri, testBasliklari,
+} from "../format/duzen.ts";
 import { gecerliKunye, kilitliKunye, metotMetni } from "../format/kunye.ts";
 import { formulUygula } from "../format/formul.ts";
 import { degerlendir } from "../format/motor.ts";
@@ -178,7 +180,7 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
   const formatBolumu = (b: Bolum): ReactNode => {
     switch (b.blok) {
       case "bilgi": return bilgi(b);
-      case "liste": return h("table", null, kolonlar(["8%", "70%", "22%"]), baslikSatiri("No", "Kontrol maddesi", "Sonuç"),
+      case "liste": return h("table", null, kolonlar(["8%", "70%", "22%"]), baslikSatiri(...Object.values(listeBasliklari(b))),
         h("tbody", null, ...b.gruplar.flatMap((g, gi) => [
           ...(g.ad ? [h("tr", { key: `g-${g.id}` }, h("td", { colSpan: 3, className: "rb-grup" }, g.ad))] : []),
           ...g.maddeler.map((m, mi) => {
@@ -190,20 +192,25 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
         ])));
       case "olcum": {
         const satirlar = c.tablo[b.id] ?? [], sonuclar = d.satirlar[b.id] ?? [];
+        /* 595 (madde 4): sabit sütunların başlıkları formatın; Sonuç sütunu sonda (varsayılan), başta ya da gizli (sonuç kuralı yine çalışır) */
+        const ob = olcumBasliklari(b), yer = b.sonucYeri ?? "son";
+        const sutunAdlari = b.sutunlar.map((s) => `${s.ad}${s.birim ? ` (${s.birim})` : ""}`);
         return h(Fragment, null,
-          h("table", null, baslikSatiri(siraBasligi(b), ...b.sutunlar.map((s) => `${s.ad}${s.birim ? ` (${s.birim})` : ""}`), "Sonuç"),
+          h("table", null, baslikSatiri(ob.sira, ...(yer === "bas" ? [ob.sonuc] : []), ...sutunAdlari, ...(yer === "son" ? [ob.sonuc] : [])),
             h("tbody", null, ...(satirlar.length ? satirlar.map((s, i) => {
               const r = sonuclar[i], not = Number(s.not);
               const ad = (u: boolean | null | undefined) => (u === true ? "Uygun" : u === false ? "Uygun değil" : "-");
               /* 488: elle değiştirilen sonuçta kural sonucu da yazar ("Uygun değil (elle; kural: Uygun)"), gerekçe tablonun altında */
               const sonuc = not > 0 ? `Not-${not}` : r?.elle ? `${ad(r.uygun)} (elle; kural: ${ad(r.elle.kural)})` : ad(r?.uygun);
-              return h("tr", { key: i }, h("td", { className: "rb-orta" }, String(i + 1)), ...b.sutunlar.map((x) => h("td", { key: x.id }, deger(s[x.id]))), h("td", null, sonuc));
-            }) : [h("tr", { key: 0 }, h("td", { colSpan: b.sutunlar.length + 2 }, "-"))]))),
+              const sonucHucresi = h("td", { key: "_sonuc" }, sonuc);
+              return h("tr", { key: i }, h("td", { className: "rb-orta" }, String(i + 1)), ...(yer === "bas" ? [sonucHucresi] : []),
+                ...b.sutunlar.map((x) => h("td", { key: x.id }, deger(s[x.id]))), ...(yer === "son" ? [sonucHucresi] : []));
+            }) : [h("tr", { key: 0 }, h("td", { colSpan: b.sutunlar.length + (yer === "gizli" ? 1 : 2) }, "-"))]))),
           b.notlar?.length ? h("ol", { className: "rb-notlar" }, ...b.notlar.map((n, i) => h("li", { key: i }, `Not-${i + 1}: ${n.metin}`))) : null,
           sonuclar.some((r) => r?.elle) ? h("ul", { className: "rb-notlar" }, ...sonuclar.flatMap((r, i) => (r?.elle
             ? [h("li", { key: i }, `${i + 1}. satırın sonucu muayene uzmanınca değiştirildi (kural: ${r.elle.kural === true ? "Uygun" : r.elle.kural === false ? "Uygun değil" : "-"}): ${r.elle.gerekce || "-"}`)] : []))) : null);
       }
-      case "test": return h("table", null, baslikSatiri("Ölçüm", "Değer", "Sınır", "Sonuç"), h("tbody", null, ...b.degerler.map((x) => {
+      case "test": return h("table", null, baslikSatiri(...Object.values(testBasliklari(b))), h("tbody", null, ...b.degerler.map((x) => {
         const s = c.deger[x.id], r = d.degerler[x.id];
         const sinir = x.op && x.sinir !== undefined ? `${SINIR_ISARETI[x.op]} ${String(x.sinir).replace(".", ",")}${x.birim ? ` ${x.birim}` : ""}`
           : x.olumsuz?.length ? (x.secenekler ?? []).filter((o) => !x.olumsuz!.includes(o)).join(" / ") || "-" : deger(x.not);
@@ -219,14 +226,19 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
         }))
         : kutu("Kusur yok.");
       case "sonuc": {
-        const cumle = b.cumle.trim(), aciklama = b.aciklama.trim();
+        const cumle = b.cumle.trim(), aciklama = b.aciklama.trim(), sm = sonucMetinleri(b);
         return h(Fragment, null, cumle
-          ? kutu(`${cumle} `, h("b", null, v.sonuc === "uygun" ? "uygundur" : v.sonuc === "uygun_degil" ? "uygun değildir" : "-"), ".")
+          ? kutu(`${cumle} `, h("b", null, v.sonuc === "uygun" ? sm.uygun : v.sonuc === "uygun_degil" ? sm.uygunDegil : "-"), ".")
           : kutu("Sonuç: ", h("b", null, v.sonuc ? SONUC[v.sonuc] : "-")),
           /* 426: Bakanlık formatının sonuç metni (ağır kusurlar tanımı, açıklamalar) satır satır */
           aciklama ? h("div", { className: "rb-aciklama" }, ...aciklama.split("\n").map((s, i) => h("p", { key: i }, s))) : null);
       }
-      case "not": return kutu(deger(c.yorum));
+      /* 595 (madde 11): yorum boşsa yönlendirme yazısı; satır sayısı formatın (en az o kadar boşluk) */
+      case "not": {
+        const y = c.yorum.trim();
+        const stil = b.satir ? { minHeight: `${(b.satir * 1.25).toFixed(2)}em` } : undefined;
+        return h("p", { className: "rb-kutu-metin", ...(stil ? { style: stil } : {}) }, y || (b.yonlendirme ? b.yonlendirme : "-"));
+      }
       case "imza": return imza(b);
       /* 495: serbest metin — formatın sabit yazısı, satır satır */
       case "metin": return b.metin.trim() ? h("div", { className: "rb-aciklama" }, ...b.metin.trim().split("\n").map((s, i) => h("p", { key: i }, s))) : kutu("-");
@@ -256,7 +268,7 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
   /* 2. bölüm: kod ve tür; tam ekipman bölümlü formatta (460) ardından YALNIZ o bölümün alanları, formatın sırasıyla ve adıyla; eski formatta
      kayıttan başlayan sabit satırlar (formatın aynı adlı alanı yoksa — saha ekranıyla aynı liste), "Ekipman bölümü", sonra formatın ekipman alanları */
   const ekipman: Cift[] = [
-    ["Ekipman kodu", v.ekipman.kod], ["Ekipman türü", v.tur.ad],
+    [ekipmanEtiketleri(t).kod, v.ekipman.kod], [ekipmanEtiketleri(t).tur, v.tur.ad],
     ...(duzen.tam ? duzen.tam.alanlar.map((a): Cift => [a.ad, alanDegeri(a), a.tur === "coklu" || (a.secenekler?.length ?? 0) > 3])
       : [...sabitEkipmanAlanlari(t).map((k): Cift => [EKIPMAN_ALAN_ADI[k], deger(v.ekipman[k])]), ["Ekipman bölümü", deger(v.ekipman.bolum)] as Cift]),
   ];
@@ -267,8 +279,8 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
       h("td", { className: "rb-logo" }, v.firma.akr ? `AKR. ${v.firma.akr}` : ""),
       h("td", { className: "rb-bas-ad" }, t.gorunum.baslik || `${v.tur.ad} periyodik kontrol raporu`),
       h("td", { className: "rb-dok" },
-        h("div", null, h("span", null, "Doküman Kodu"), `: ${formKod}`), h("div", null, h("span", null, "Format sürümü"), `: ${v.formatSira}`),
-        h("div", null, h("span", null, "Rapor No"), `: ${no}`), h("div", null, h("span", null, "Rapor Tarihi"), `: ${tarihNo(v.tarih.rapor)}`))))),
+        h("div", null, h("span", null, basEtiketleri(t).kod), `: ${formKod}`), h("div", null, h("span", null, basEtiketleri(t).surum), `: ${v.formatSira}`),
+        h("div", null, h("span", null, basEtiketleri(t).no), `: ${no}`), h("div", null, h("span", null, basEtiketleri(t).tarih), `: ${tarihNo(v.tarih.rapor)}`))))),
     v.imza || v.kesin ? null : h("p", { className: "rb-taslak" }, "İmzasız önizleme — muayene uzmanının son imzasıyla geçerli olur."),
     /* 595 (madde 3): satırlar formatın (adı, sırası, varlığı — format/duzen.ts firmaSatirlari; verilmemişse bugünkü 11 satır), değer kayıttan */
     bolum("1", "Firma bilgileri", bilgiTablosu([
@@ -281,5 +293,5 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
     ...duzen.bolumler.flatMap((x) => [x.ust ? ustBaslik(x.ust.no, x.ust.ad) : null, bolum(x.no, x.b.ad, formatBolumu(x.b))]),
     imzaVar ? null : bolum(duzen.sonraki, "Yetkili kişi", imza()),
     maddeFotolari.length ? bolum("Ek", "Kontrol maddelerinin fotoğrafları", fotolar(maddeFotolari, (f) => `${f.ad} · ${maddeAdi.get(f.madde!) ?? ""}`)) : null,
-    h("footer", { className: "rb-alt" }, `${v.firma.ad} · ${formKod}`));
+    h("footer", { className: "rb-alt" }, altYazisi(t, v.firma.ad, formKod)));
 }

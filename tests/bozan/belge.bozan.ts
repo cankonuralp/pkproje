@@ -43,7 +43,8 @@ const VERI: BelgeVerisi = {
 const metin = (m: Modul) => renderToStaticMarkup(m.raporBelgesi(VERI) as never).replace(/<[^>]+>/g, " ");
 
 test("sonuç cümlesi seçilen sonuca bağlanmayınca belgede iki seçenek birden yazılır", async () => {
-  const m = await bozuk(`v.sonuc === "uygun" ? "uygundur" : v.sonuc === "uygun_degil" ? "uygun değildir" : "-"`, `"uygundur / uygun değildir"`);
+  /* 2026-10-16 (595 madde 12): sözcükler formatın (sonucMetinleri) — bozulan satır yeni yazımla */
+  const m = await bozuk(`v.sonuc === "uygun" ? sm.uygun : v.sonuc === "uygun_degil" ? sm.uygunDegil : "-"`, "`${sm.uygun} / ${sm.uygunDegil}`");
   assert.ok(metin(m).includes("uygundur / uygun değildir"));
 });
 

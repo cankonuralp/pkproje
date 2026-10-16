@@ -129,6 +129,9 @@ export const KURAL_EN_COK = 20;
    belgede gözükmeyecek yapay zeka buradan okuma yapıp tabloyu dolduracak, aynı şekilde ekipman bilgilerinde de olsun bunu istediğim başlığa da
    ekleyebiliyim rapor tasarımcısında da olsun"): bölümün sahada fotoğraftan (yapay zekâ okur, öneri) ve Excel'den doldurulması — kâğıtta bölüm
    ayarı; yalnız bilgi / ölçüm tablosu / test bölümünde anlamlı. Verilmemişse doldurma() varsayılanı. */
+/* 2026-10-16 (sunum 595 madde 4, 6, 7, 11–15 — reisim: "format yapıcıda bu ve benzeri kısımlarda değişiklik yapamıyorum, tıklayıp değiştiremiyorum"):
+   kâğıtta görünen sabit başlıklar ve sözcükler de formatın — boş / verilmemiş = bugünkü yazı (format/duzen.ts …Basliklari) */
+const baslik = z.string().trim().max(60).optional();
 const ortak = {
   id: kimlik, ad, kilit: z.boolean().default(false), ust: z.string().max(200).optional(), numarasiz: z.boolean().optional(), alt: z.boolean().optional(),
   doldur: z.object({ foto: z.boolean(), excel: z.boolean() }).optional(),
@@ -138,21 +141,30 @@ export const Bolum = z.discriminatedUnion("blok", [
      olabiliyor"): raporun 2. bölümü YALNIZ bu bölümün alanlarıdır — ekipman kodu ve türü dışında sabit satır yok; marka, model … ekipman
      kaydına bağlı alan olarak eklenir, çıkarılır, adı değişir. Tam bölümsüz (eski) formatlar eskisi gibi çizilir (format/duzen.ts). */
   z.object({ ...ortak, blok: z.literal("bilgi"), alanlar: z.array(Alan).max(60), tam: z.boolean().optional() }),
-  z.object({ ...ortak, blok: z.literal("liste"), cevaplar: z.array(z.string().trim().min(1).max(40)).min(2).max(6), gruplar: z.array(Grup).max(40) }),
+  z.object({ ...ortak, blok: z.literal("liste"), cevaplar: z.array(z.string().trim().min(1).max(40)).min(2).max(6), gruplar: z.array(Grup).max(40),
+    basliklar: z.object({ no: baslik, madde: baslik, sonuc: baslik }).optional() }),
   z.object({
     ...ortak, blok: z.literal("olcum"), satir: z.enum(["sabit", "ekle"]).default("ekle"), sutunlar: z.array(Sutun).max(20),
     hesap: z.enum(HESAPLAR).optional(), notlar: z.array(Not).max(20).optional(), enAz: z.number().int().min(0).max(200).default(0),
     /* 2026-10-16: sonuç kuralı — verilmemişse hesabın Bakanlık kuralı (sonuc.ts varsayilanKurallar: eski sürümler ve hazır şablonlar aynı sonucu
        verir); boş liste: kendiliğinden sonuç yok (denetçi seçer; sütun sınırları ve olumsuz seçenekler yine geçerli) */
     sonucKurali: z.array(SonucKurali).max(KURAL_EN_COK).optional(),
+    /* 595 (madde 4): sabit sütunların başlıkları; sonucYeri belgede Sonuç sütununun yeri (son · baş · gizli — sonuç kuralı yine çalışır; saha
+       ekranında Sonuç sütunu hep sonda, elle sonuç orada) */
+    basliklar: z.object({ sira: baslik, not: baslik, sonuc: baslik }).optional(), sonucYeri: z.enum(["son", "bas", "gizli"]).optional(),
   }),
-  z.object({ ...ortak, blok: z.literal("test"), degerler: z.array(Deger).max(40) }),
+  z.object({ ...ortak, blok: z.literal("test"), degerler: z.array(Deger).max(40),
+    basliklar: z.object({ olcum: baslik, deger: baslik, sinir: baslik, sonuc: baslik }).optional() }),
   z.object({ ...ortak, blok: z.literal("cihaz") }),
   z.object({ ...ortak, blok: z.literal("foto"), enAz: z.number().int().min(0).max(50).default(0), enCok: z.number().int().min(1).max(50).default(20) }),
   z.object({ ...ortak, blok: z.literal("kusur") }),
   /* aciklama (426): sonuç bölümünün sabit metni — Bakanlık formatlarındaki "Ağır kusurlar tanımı", "Açıklamalar" (PDF'e basılır) */
-  z.object({ ...ortak, blok: z.literal("sonuc"), cumle: z.string().max(400).default(""), aciklama: z.string().max(4000).default("") }),
-  z.object({ ...ortak, blok: z.literal("not"), zorunlu: z.boolean().default(false) }),
+  /* 595 (madde 12): sonuç cümlesinin bitişi — "uygundur" / "uygun değildir" yerine (ör. "KULLANIMA UYGUNDUR") */
+  z.object({ ...ortak, blok: z.literal("sonuc"), cumle: z.string().max(400).default(""), aciklama: z.string().max(4000).default(""),
+    uygunMetin: z.string().trim().max(120).optional(), uygunDegilMetin: z.string().trim().max(120).optional() }),
+  /* 595 (madde 11): yönlendirme — sahada yorum kutusunun üstünde, belgede yorum boşsa; satir: belgede yorumun en az satırı (boşluk) */
+  z.object({ ...ortak, blok: z.literal("not"), zorunlu: z.boolean().default(false), yonlendirme: z.string().trim().max(400).optional(),
+    satir: z.number().int().min(1).max(30).optional() }),
   /* satirlar (595): verilmemişse imzalar'dan bugünkü satırlar (format/duzen.ts imzaSatirlari) — eski formatlar aynı çizilir; verilmişse imzalar
      satırlardaki kişilerin özetidir (kurucu.ts yazar) */
   z.object({ ...ortak, blok: z.literal("imza"), imzalar: z.array(z.enum(["uzman", "teknik"])).min(1).max(2).default(["uzman"]), satirlar: z.array(ImzaSatiri).max(40).optional() }),
@@ -197,6 +209,10 @@ export const Gorunum = z.object({
   /** 2026-10-16 (sunum 595 madde 25 — reisim: "format yapıcıda e imza yeri de seçilebilsin e imza seçilen yere işlesin"; K7 "ikisi"): imzaya
       hazırlanan PDF'teki boş imza alanının yeri — hucre: imza bölümünün İmza hücresi (verilmemişse bu) · kutu: son sayfada (mm, sayfanın sol
       üstünden; A4 210 × 297) · gorunmez: alan yok (araç görünmez imza atar). src/belge/eimza.ts */
+  /** 595 (madde 13–15): başlık tablosunun etiketleri, sayfa altı yazısı ({firma}, {kod} yer tutucularıyla), ekipman kodu / türü satırlarının adı */
+  bas: z.object({ kod: baslik, surum: baslik, no: baslik, tarih: baslik }).optional(),
+  altYazi: z.string().trim().max(300).optional(),
+  ekipmanAd: z.object({ kod: baslik, tur: baslik }).optional(),
   /** 595 (madde 3): 1. bölümün satırları (FirmaSatiri); verilmemişse bugünkü satırlar */
   firma: z.object({ satirlar: z.array(FirmaSatiri).max(40) }).optional(),
   eimza: z.object({

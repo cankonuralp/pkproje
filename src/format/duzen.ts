@@ -184,3 +184,27 @@ const FIRMA_SATIRLARI: readonly FirmaSatiri[] = FIRMA_VARSAYILAN.map(([k, tam]) 
 export function firmaSatirlari(t: Pick<FormatTanimi, "gorunum">): readonly FirmaSatiri[] {
   return t.gorunum.firma?.satirlar ?? FIRMA_SATIRLARI;
 }
+
+/* 595 (madde 4, 6, 7, 11–15): kâğıtta görünen sabit başlıklar ve sözcükler — formatta yazılmamışsa bugünkü yazı. Belge, saha ekranı ve kâğıt aynı
+   işlevlerden okur. */
+const yazili = (x: string | undefined, d: string) => (x && x.trim() ? x.trim() : d);
+export const olcumBasliklari = (b: BolumOf<"olcum">) => ({
+  sira: yazili(b.basliklar?.sira, siraBasligi(b)), not: yazili(b.basliklar?.not, "Uygunluk notu"), sonuc: yazili(b.basliklar?.sonuc, "Sonuç"),
+});
+export const testBasliklari = (b: BolumOf<"test">) => ({
+  olcum: yazili(b.basliklar?.olcum, "Ölçüm"), deger: yazili(b.basliklar?.deger, "Değer"), sinir: yazili(b.basliklar?.sinir, "Sınır"), sonuc: yazili(b.basliklar?.sonuc, "Sonuç"),
+});
+export const listeBasliklari = (b: BolumOf<"liste">) => ({
+  no: yazili(b.basliklar?.no, "No"), madde: yazili(b.basliklar?.madde, "Kontrol maddesi"), sonuc: yazili(b.basliklar?.sonuc, "Sonuç"),
+});
+export const sonucMetinleri = (b: BolumOf<"sonuc">) => ({ uygun: yazili(b.uygunMetin, "uygundur"), uygunDegil: yazili(b.uygunDegilMetin, "uygun değildir") });
+export const basEtiketleri = (t: Pick<FormatTanimi, "gorunum">) => ({
+  kod: yazili(t.gorunum.bas?.kod, "Doküman Kodu"), surum: yazili(t.gorunum.bas?.surum, "Format sürümü"), no: yazili(t.gorunum.bas?.no, "Rapor No"),
+  tarih: yazili(t.gorunum.bas?.tarih, "Rapor Tarihi"),
+});
+export const ekipmanEtiketleri = (t: Pick<FormatTanimi, "gorunum">) => ({ kod: yazili(t.gorunum.ekipmanAd?.kod, "Ekipman kodu"), tur: yazili(t.gorunum.ekipmanAd?.tur, "Ekipman türü") });
+/** sayfa altı (belgenin sonundaki çizgili satır): formatın yazısı ({firma}, {kod} yerine firma adı ve doküman kodu) ya da bugünkü "firma · kod" */
+export function altYazisi(t: Pick<FormatTanimi, "gorunum">, firma: string, kod: string): string {
+  const y = t.gorunum.altYazi?.trim();
+  return y ? y.replaceAll("{firma}", firma).replaceAll("{kod}", kod) : `${firma} · ${kod}`;
+}
