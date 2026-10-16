@@ -40,10 +40,12 @@
    tests/bozan/goc-dagit-saf.bozan.ts. */
 import pg from "pg";
 import { anaAnahtar } from "../ayar/sir.ts";
-import { supabaseYonetimi, yonetimAyari, type SupabaseYonetimi } from "../dis/supabase-yonetim.ts";
+/* "uygula" kipinin kodu (Yönetim API istemcisi, yazan kısım) YALNIZ o kipte yüklenir (await import): bu dosyanın saf yardımcılarını sağlık modülü de
+   içe aktarır — uygulamanın paketine istemci ve göç yazımı statik girmez (kilit tests/yonetim-anahtari.test.ts) */
+import type { SupabaseYonetimi } from "../dis/supabase-yonetim.ts";
 import { kayittanBaglanti, merkezYerelMi, type FirmaVtKaydi } from "./baglanti.ts";
 import { GOC_KLASORU, gocDosyalari } from "./goc.ts";
-import { gocUygula, type DenetimSonucu } from "./goc-uygula.ts";
+import type { DenetimSonucu } from "./goc-uygula.ts";
 import { ortamdanBaglanti } from "./havuz.ts";
 import { havuzHatasiniDinle, havuzSecenekleri, kiraciIcinde, yonetimIcinde, type Havuz, type UygulamaBaglantisi } from "./kiraci.ts";
 import { merkezOku } from "./merkez.ts";
@@ -316,6 +318,7 @@ async function dagit(e: Ortam, arg: readonly string[], y: (s: string) => void, b
   /* uygula: Yönetim API anahtarı ve ucu veritabanı ayarından ÖNCE (iletiler sabit metin) */
   let api: SupabaseYonetimi | null = null, yerelApi = false;
   if (kip === "uygula") {
+    const { supabaseYonetimi, yonetimAyari } = await import("../dis/supabase-yonetim.ts");
     try { const ya = yonetimAyari(e); api = supabaseYonetimi(ya); yerelApi = ya.yerel; } catch (h) {
       y(`HATA: ${(h as Error).message.replace(/\.$/, "")} — 'uygula' kipi göçleri Supabase Yönetim API'siyle uygular.`);
       return 1;
@@ -340,6 +343,7 @@ async function dagit(e: Ortam, arg: readonly string[], y: (s: string) => void, b
   try {
     if (api) {
       y(`kip: uygula (Supabase Yönetim API'si) · beklenen ${beklenen.son} / ${beklenen.sayi}`);
+      const { gocUygula } = await import("./goc-uygula.ts");
       return await gocUygula({
         merkez, api, yerel: yerelApi, merkezProje, dosyalar: gocDosyalari(klasor), beklenen, yaz: y, durdu,
         hedefler: async () => (await hedefOku(merkez)).hedefler

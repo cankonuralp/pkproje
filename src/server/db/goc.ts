@@ -13,7 +13,9 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import type pg from "pg";
 
-export const GOC_KLASORU = join(import.meta.dirname, "gocler");
+/* import.meta.dirname yalnız Node'da (betik, test, gömülü veritabanı); uygulamanın derlenmiş paketinde tanımsız — modül yüklenirken düşmesin
+   (2026-10-16 FV8: sağlık ucu göç dağıtıcı üzerinden bu dosyaya ulaşınca derleme "path undefined" ile düşüyordu). Pakette boş: kullanılmaz. */
+export const GOC_KLASORU = typeof import.meta.dirname === "string" ? join(import.meta.dirname, "gocler") : "";
 export const AD_KALIBI = /^\d{4}_[a-z0-9_]+\.sql$/;
 
 export interface GocDosyasi {

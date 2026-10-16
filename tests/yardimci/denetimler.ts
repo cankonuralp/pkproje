@@ -306,6 +306,17 @@ export function yonetimAnahtariEksikleri(metinler: readonly { ad: string; metin:
   return hata;
 }
 
+/** göç dağıtıcı (goc-dagit.ts) Yönetim API istemcisini ve "uygula"nın yazan kısmını statik (değer olarak) içe aktarıyor mu — yalnız tür içe aktarması
+    ya da await import olmalı (sağlık modülü o dosyayı içe aktarır: statik içe aktarma uygulamanın paketine sokar). Dönen: bulgu listesi. */
+export function dagitStatikYukleme(metin: string): string[] {
+  const k = yorumsuz(metin);
+  const hata: string[] = [];
+  for (const m of k.matchAll(/^import\s+(type\s+)?[^;]*?from\s+"(\.\.\/dis\/[^"]+|\.\/goc-uygula\.ts)";/gm)) if (!m[1]) hata.push(`statik içe aktarma: ${m[2]}`);
+  if (!/await import\("\.\.\/dis\/supabase-yonetim\.ts"\)/.test(k)) hata.push("istemci dinamik yüklenmiyor");
+  if (!/await import\("\.\/goc-uygula\.ts"\)/.test(k)) hata.push("uygula kipi dinamik yüklenmiyor");
+  return hata;
+}
+
 /** kiracının işi merkez havuzuyla açılan dosyalar (kiraciIcinde(merkezHavuzu() …) — olmamalı: kiracının işi kiraciHavuzu'ndan */
 export function merkezdeKiraciIsi(metinler: readonly { ad: string; metin: string }[]): string[] {
   return metinler.filter(({ metin }) => /\bkiraciIcinde\s*\(\s*merkezHavuzu\s*\(/.test(yorumsuz(metin))).map(({ ad }) => ad).sort();

@@ -62,7 +62,8 @@ async function kos(k: string, ek: Ortam = {}) {
 const sahipleri = (): [string, pg.Client][] => [["merkez", v.merkezSahip], ["A", v.A.sahip], ["B", v.B.sahip]];
 const gocVar = async (sahip: pg.Client, ad: string) =>
   Number((await sahip.query<{ n: string }>("SELECT count(*) AS n FROM goc WHERE ad = $1", [ad])).rows[0]!.n) === 1;
-const uygulamaIstekleri = (ad: string) => s.istekler.filter((i) => i.sql.includes(`INSERT INTO public.goc (ad, ozet) VALUES ('${ad}'`));
+/** bu testin başından (bas) bu yana o göçü uygulayan istekler (2026-10-16 ilk koşu: önceki testin aynı adlı göç istekleri de sayılıyordu) */
+const uygulamaIstekleri = (ad: string, bas: number) => s.istekler.slice(bas).filter((i) => i.sql.includes(`INSERT INTO public.goc (ad, ozet) VALUES ('${ad}'`));
 
 test("özet farkı (bir firmada uygulanmış göç değiştirilmiş) → 1, adıyla; HİÇBİR projeye göç gitmez", async () => {
   const ilk = GOCLER[0]!;
@@ -108,7 +109,7 @@ test("başarı: sırayla merkez, A, B; sonda denetim TAMAM; son_goc / goc_sayisi
   assert.match(r.cikti, /3 göç uygulanacak \(3 projede\)\./);
   assert.match(r.cikti, /uygulandı: 3 göç\./);
   assert.match(r.cikti, /TAMAM: 3 veritabanı güncel\./);
-  assert.deepEqual(uygulamaIstekleri(D1.ad).map((i) => i.proje), ["yerel-merkez", `yerel-${v.A.id}`, `yerel-${v.B.id}`]);
+  assert.deepEqual(uygulamaIstekleri(D1.ad, once).map((i) => i.proje), ["yerel-merkez", `yerel-${v.A.id}`, `yerel-${v.B.id}`]);
   assert.ok(s.istekler.slice(once).every((i) => !i.sql.startsWith("BEGIN;") || i.sql.includes("SET LOCAL ROLE postgres;")));
   for (const [ad, sahip] of sahipleri()) {
     assert.equal(await gocVar(sahip, D1.ad), true, ad);
@@ -137,11 +138,12 @@ test("eşzamanlı iki koşu: ikincisi kilidi bekler; göç her projede BİR kez;
   /* merkezdeki göç yavaş: iki koşu üst üste biner */
   s.projeler.set("yerel-merkez", async (sql) => { if (sql.startsWith("BEGIN;")) await new Promise((c) => setTimeout(c, 1500)); return asil(sql); });
   try {
+    const once = s.istekler.length;
     const [r1, r2] = await Promise.all([kos(k), kos(k)]);
     assert.deepEqual([r1.kod, r2.kod], [0, 0], `${r1.cikti}\n---\n${r2.cikti}`);
     assert.ok([r1, r2].some((r) => /kilit bekleniyor/.test(r.cikti)), "biri kilidi bekledi");
     assert.ok([r1, r2].some((r) => /uygulanacak göç yok/.test(r.cikti)), "bekleyen, uygulanmış buldu");
-    assert.deepEqual(uygulamaIstekleri(D2.ad).map((i) => i.proje).sort(), ["yerel-merkez", `yerel-${v.A.id}`, `yerel-${v.B.id}`].sort(), "her projede bir kez");
+    assert.deepEqual(uygulamaIstekleri(D2.ad, once).map((i) => i.proje).sort(), ["yerel-merkez", `yerel-${v.A.id}`, `yerel-${v.B.id}`].sort(), "her projede bir kez");
   } finally {
     s.projeler.set("yerel-merkez", asil);
   }
