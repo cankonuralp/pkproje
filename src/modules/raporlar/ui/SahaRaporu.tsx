@@ -49,6 +49,8 @@ import { formulDegeri, formulluAlan, formulUygula, type FormulEki } from "../../
 import { satirAnahtari } from "../../../format/motor";
 import { fotografiKucult } from "../../../components/foto/kucult";
 import { ekipmanAlanlari, ekipmanAnahtari } from "../doldur";
+import { alanYeri, hedefSayfalari, ilkDegisenSatirlar, maddeSiralari, sayfalariYaz, type SayfaYeri } from "../sayfa-yeri";
+import { satirSayfasi } from "../../../components/liste/sayfa";
 import {
   alanlariUygula, geriAl, komutlariUygula, maddeleriIsaretle as maddeleriUygun, okumaHedefleri, sonucuYap, tabloyaUygula, yerDegeri, TARIH_ANAHTARLARI,
   type Durum, type Geri, type Guven, type OkunanAlan, type OkunanTabloSatiri, type OkumaHedefi, type Uygulama, type Yer,
@@ -72,7 +74,7 @@ import {
   alanOkuEylemi, cihazEkleEylemi, cihazKaldirEylemi, fotoOkuEylemi, okumaFotografiEkleEylemi, onayaGonderEylemi, raporFormatGuncelleEylemi, raporKaydetEylemi, raporKopyalaEylemi,
   raporKunyeGuncelleEylemi, raporSilEylemi, revizeIstegiGeriCekEylemi, raporOneriKapatEylemi, revizeIsteEylemi, type RaporYaniti,
 } from "./eylemler";
-import { sayRaporBagla, type SayGeriAl, type SayOkumaOzeti } from "../../say/ui/baglam";
+import { sayRaporBagla, type SayEkranSonucu, type SayGeriAl, type SayOkumaOzeti } from "../../say/ui/baglam";
 import type { SatirEkle } from "../../../server/yz/say";
 import stil from "./raporlar.module.css";
 
@@ -215,6 +217,26 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
   /* 472: örnek raporun fotoğrafları — dosya yüklenmez, yalnız yerleri sayılır (zorunlu fotoğraf denenebilsin) */
   const [denemeFoto, setDenemeFoto] = useState<{ bolum: string; madde: string | null }[]>([]);
   const hepsiniAc = () => acikYaz(new Set([SABIT.firma, SABIT.ekipman, SABIT.cihaz, ...v.tanim.bolumler.map((b) => b.id)]));
+  /* 2026-10-16 (reisim: "herhangi bir tabloda 20 den sonrası sayfalı olacak … herhangi bir liste tablo … 20 den fazlası sayfalı olsun diğer
+     sayfalara doğru aksın"): ölçüm tablolarının ve kontrol listelerinin açık sayfası (bölüm → sayfa; Bloklar useSayfa) burada, tek kuralla
+     (../sayfa-yeri.ts): tablo değişince İLK DEĞİŞEN satırının sayfası (eklenen satır kendi sayfasında; Excel'in ve S.A.Y'ın yazdığı değer görünür);
+     eksiğe git ve S.A.Y'ın işaretlediği madde bölüm başına en üstteki yerin sayfasını açar. Sayfa değişince S.A.Y işareti yeni görünen hücreye
+     yazılır (aşağıdaki işaret etkisi — işaretler öteki sayfalarda da durur) */
+  const [bolumSayfa, setBolumSayfa] = useState<Readonly<Record<string, number>>>({});
+  const bolumSayfaGit = (bolum: string, n: number) => setBolumSayfa((s) => sayfalariYaz(s, { [bolum]: n }));
+  const sayfalariAc = (yerler: readonly SayfaYeri[]) => {
+    const h = hedefSayfalari(yerler);
+    setBolumSayfa((s) => sayfalariYaz(s, h));
+    return h;
+  };
+  const maddeYerleri = useMemo(() => maddeSiralari(v.tanim), [v.tanim]);
+  /* tablo değişti: ilk değişen satırın sayfası (çizim sırasında — React: önceki çizimin bilgisini durumda tutmak; eklenen satır aynı çizimde görünür) */
+  const [gorulenTablo, setGorulenTablo] = useState(cevaplar.tablo);
+  if (gorulenTablo !== cevaplar.tablo) {
+    setGorulenTablo(cevaplar.tablo);
+    const d = ilkDegisenSatirlar(gorulenTablo, cevaplar.tablo);
+    if (Object.keys(d).length) setBolumSayfa((s) => sayfalariYaz(s, Object.fromEntries(Object.entries(d).map(([b, i]) => [b, satirSayfasi(i)]))));
+  }
   const [kopya, setKopya] = useState(false);
   const [revizeAc, setRevizeAc] = useState(false);
   /* yazmadan sonra sayfa yenilenip yeni sürüm gelene kadar yazan tuşlar kapalı: bildirim yenilemeden önce çıkar, hemen basılan ikinci tuş eski
@@ -253,8 +275,12 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
      açıldıktan sonra; alan yoksa bölümün başlığına) */
   const eksigeGit = (l: readonly Eksik[]) => {
     hepsiniAc();
+    /* 2026-10-16: sayfalı tabloda ve kontrol listesinde her bölümün EN ÜSTTEKİ eksiğinin sayfası açılır; öteki sayfadaki eksik ekranda yok — o
+       bölümün başlığına düşülmez (açılan sayfadaki eksik orada) */
+    const sayfalar = sayfalariAc(l.flatMap((e) => { const y = alanYeri(e.alan, maddeYerleri); return y ? [y] : []; }));
+    const baskaSayfada = (e: Eksik) => { const y = alanYeri(e.alan, maddeYerleri); return !!y && y.bolum in sayfalar && satirSayfasi(y.satir) !== sayfalar[y.bolum]; };
     window.setTimeout(() => {
-      const yerler = l.map((e) => document.getElementById(alanId(e.alan)) ?? document.getElementById(`b-${e.bolum}-b`)).filter((x): x is HTMLElement => !!x);
+      const yerler = l.filter((e) => !baskaSayfada(e)).map((e) => document.getElementById(alanId(e.alan)) ?? document.getElementById(`b-${e.bolum}-b`)).filter((x): x is HTMLElement => !!x);
       const el = yerler.reduce<HTMLElement | null>((ilk, x) => (!ilk || ilk.compareDocumentPosition(x) & Node.DOCUMENT_POSITION_PRECEDING ? x : ilk), null);
       if (!el) return;
       const hedef = el.matches("input, textarea, button") ? el : el.querySelector<HTMLElement>("input, textarea, button") ?? el;
@@ -299,6 +325,7 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
   const bag: Baglam = {
     v, c: cevaplar, h: hesapli, hesap: (yer) => formulDegeri(v.tanim, cevaplar, yer, formulEki),
     yaz, d, oku, gecersiz, kaynak: (k) => kaynaklar[k], okumaKipi: denemede ? "deneme" : oku || yeni ? null : "ekle", deneme: denemede, islem: { mesgul, baslat, yenile },
+    bolumSayfasi: (b) => bolumSayfa[b] ?? 1, bolumSayfaGit,
     ekipmanAlani: (a) => (a.ekipman ? metinSatiri(a.ekipman, a.ad, EN[a.ekipman], a.ekipman === "imal", formulluAlan(a) ? a.id : undefined) : null),
     cihaz: (bolumId) => <CihazBolumu v={v} bolumId={bolumId} oku={oku || !!yeni || denemede} gecersiz={gecersiz} mesgul={mesgul} baslat={baslat} yenile={yenile} />,
     foto: (bolumId, madde) => (denemede
@@ -528,17 +555,23 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
     if (!u.geri.length) return 0;
     const onceTarih = durumRef.current.tarih;
     durumRef.current = u.durum;
-    setEkipman(u.durum.ekipman as typeof ekipman); setCevaplar(u.durum.cevaplar); setKirli(true);
+    setEkipman(u.durum.ekipman as typeof ekipman); setCevaplar(u.durum.cevaplar); setKirli(true); kirliRef.current = true;
     /* 557: kontrol tarihleri elle yazılır gibi (başlangıç sonraki kontrolü ve rapor tarihini de getirir) */
     if (u.durum.tarih && u.durum.tarih !== onceTarih) for (const k of TARIH_ANAHTARLARI) { const x = u.durum.tarih[k] ?? ""; if (x !== (onceTarih?.[k] ?? "")) tarihYaz(k, x); }
     for (const i of u.isaretler) { const id = yerId(i.yer); if (id) isaretler.current.set(id, { yer: i.yer, guven: i.guven, deger: yerDegeri(u.durum, i.yer) }); }
     bolumleriAc(bolumler);
+    /* 2026-10-16: S.A.Y'ın işaretlediği madde başka sayfadaysa listenin o sayfası açılır (en üstteki); tablonun sayfası değişikliğinden (yukarıda:
+       ilk değişen satır); işaret öteki sayfalarda da durur */
+    sayfalariAc(u.isaretler.flatMap((i) => {
+      const y = i.yer.tur === "madde" || i.yer.tur === "madde_not" || i.yer.tur === "derece" ? maddeYerleri.get(i.yer.id) : undefined;
+      return y ? [y] : [];
+    }));
     return u.isaretler.length;
   };
   const geriAlici = (g: readonly Geri[]): SayGeriAl => () => {
     const once = durumRef.current.tarih, r = geriAl(durumRef.current, g);
     if (r.sayi) {
-      durumRef.current = r.durum; setEkipman(r.durum.ekipman as typeof ekipman); setCevaplar(r.durum.cevaplar); setKirli(true);
+      durumRef.current = r.durum; setEkipman(r.durum.ekipman as typeof ekipman); setCevaplar(r.durum.cevaplar); setKirli(true); kirliRef.current = true;
       if (r.durum.tarih && r.durum.tarih !== once) { const t = r.durum.tarih; setTarih((x) => ({ ...x, ...Object.fromEntries(Object.entries(t).map(([k, v]) => [k, v ?? ""])) })); }
     }
     return r.sayi;
@@ -671,10 +704,42 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
     return { dosya: r.dosya };
   };
 
+  /* 2026-10-16 (pkproje §9 "S.A.Y CLAUDE GİBİ" 2. adım a — C): S.A.Y'ın raporu_kaydet / onaya_gonder aracı — ekrandaki Kaydet / Onaya gönder'in
+     AYNISI (aynı sunucu eylemi ve ekran sonucu; ekranın son hâli durumRef'ten — S.A.Y'ın aynı turda yazdığı dahil); onay sorusu yok (reisim). Eksik
+     varsa alanlar işaretlenir, odak çalınmaz. Sonuç S.A.Y'a döner */
+  const sayKaydet = (gonderilsin: boolean) => new Promise<SayEkranSonucu>((bitti) => baslat(async () => {
+    try {
+      if (yeni || cevrimdisiMi() || bekleyenIs) { bitti({ tamam: false, neden: "raporun cihazda bekleyen işi var ya da bağlantı yok; ekrandaki Kaydet / Onaya gönder cihaz kuyruğuna alır" }); return; }
+      const g = { ekipman: durumRef.current.ekipman, tarih: { ...tarih, ...durumRef.current.tarih }, cevaplar: durumRef.current.cevaplar };
+      let r: RaporYaniti;
+      try { r = gonderilsin ? await onayaGonderEylemi(v.id, v.surum, g) : await raporKaydetEylemi(v.id, v.surum, g); } catch (e) {
+        if (!agHatasi(e)) throw e;
+        bitti({ tamam: false, neden: "bağlantı koptu; rapor kaydedilmedi" });
+        return;
+      }
+      /* kirliRef hemen (S.A.Y'ın sonraki turu "kaydedilmemiş" bilgisini çizimi beklemeden okur) */
+      if (r.eksikler) {
+        kaydedildi(); kirliRef.current = false; onerileriKapat(); eksikGoster(r.eksikler, "Rapor kaydedildi, gönderilmedi.", false); yenile();
+        bitti({ tamam: false, kaydedildi: true, neden: `rapor kaydedildi, onaya gönderilmedi — zorunlu alanlar eksik: ${r.eksikler.map((x) => x.ad).join(", ")}` });
+        return;
+      }
+      if (r.tamam) {
+        kaydedildi(); kirliRef.current = false; onerileriKapat(); void kayitBilgileriniKapat(v.id); if (gonderilsin) setIsaretli(new Set()); yenile();
+        bitti({ tamam: true, bildirim: r.bildirim ?? (gonderilsin ? "Rapor onaya gönderildi." : "Rapor kaydedildi.") });
+        return;
+      }
+      yanitHatasi(r);
+      const h = r.hatalar ?? {};
+      bitti({ tamam: false, neden: r.genel ?? (Object.keys(h).map((k) => `${ALAN_ADI[k] ?? k}: ${h[k]}`).join("; ") || "rapor kaydedilemedi") });
+    } catch (e) {
+      bitti({ tamam: false, neden: "beklenmeyen bir sorun oldu; rapor kaydedilmedi" });
+      throw e;
+    }
+  }));
   /* S.A.Y (382): düzenlenebilir rapor açıkken S.A.Y bu raporu okur — CANLI hâl (kaydedilmemiş değişiklikler dahil): boş zorunlu alanlar, sonuç
      önerisi; öneri denetçinin seçimiyle aynı yoldan uygulanır (Kaydet'le yazılır); eksiğe aynı "git" götürür. Rapor ekranı kapanınca bağ kalkar. */
-  const sayGuncel = useRef({ d, cevaplar, ekipman, tarih, yaz, git, fotolariOku, maddeleriIsaretle, sonucYap, fotoEkle, okunmamis, raporaYaz, cihazSatirlari });
-  useEffect(() => { sayGuncel.current = { d, cevaplar, ekipman, tarih, yaz, git, fotolariOku, maddeleriIsaretle, sonucYap, fotoEkle, okunmamis, raporaYaz, cihazSatirlari }; });
+  const sayGuncel = useRef({ d, cevaplar, ekipman, tarih, yaz, git, fotolariOku, maddeleriIsaretle, sonucYap, fotoEkle, okunmamis, raporaYaz, cihazSatirlari, sayKaydet });
+  useEffect(() => { sayGuncel.current = { d, cevaplar, ekipman, tarih, yaz, git, fotolariOku, maddeleriIsaretle, sonucYap, fotoEkle, okunmamis, raporaYaz, cihazSatirlari, sayKaydet }; });
   useEffect(() => {
     if (oku || yeni || denemede) return;
     const bolumAdi = (id: string) => v.tanim.bolumler.find((b) => b.id === id)?.ad ?? id;
@@ -708,6 +773,10 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
       ekipman: () => ({ ...durumRef.current.ekipman }) as Record<string, string>,
       canliEk: () => ({ tarih: Object.fromEntries(Object.entries(durumRef.current.tarih ?? sayGuncel.current.tarih).map(([k, x]) => [k, x ?? ""])), cihazlar: sayGuncel.current.cihazSatirlari() }),
       yaz: (girisler, satirlar) => sayGuncel.current.raporaYaz(girisler, satirlar),
+      /* 2026-10-16 (2. adım a — C, D): Kaydet / Onaya gönder S.A.Y'dan; kaydedilmemiş değişiklik (iş bitince sayfa yenilenmez) */
+      kaydet: () => sayGuncel.current.sayKaydet(false),
+      onayaGonder: () => sayGuncel.current.sayKaydet(true),
+      kirli: () => kirliRef.current,
     });
   }, [oku, yeni, denemede, v.id, v.no, v.tanim, v.cihazlar, hedefler]);
 

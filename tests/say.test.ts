@@ -257,7 +257,8 @@ test("550 açık rapor haritası: yalnız raporu yazanın Yeni raporunda, adres 
   const baglam = govde.system[1].text;
   assert.match(baglam, /Açık rapor \(kullanıcının şu an yazdığı, kaydedilmemiş değişiklikler dahil\):\nEkipman türü: Elektrik panosu\./);
   assert.ok(baglam.includes('- e:marka · Marka (yazı) = "Örnek Marka"') && baglam.includes('- a:kurulus · ') && baglam.includes(`- m:${madde.id} · ${madde.metin} = "Uygun değil"`), baglam);
-  assert.deepEqual(govde.tools.map((t) => t.name), ["rapora_yaz", "fotograflari_oku", "geri_al", "web_search"]);
+  /* 2026-10-16 (kasıtlı beklenti değişikliği — S.A.Y 2. adım a, C): rapor araçlarına ekrandaki Kaydet / Onaya gönder eklendi */
+  assert.deepEqual(govde.tools.map((t) => t.name), ["rapora_yaz", "fotograflari_oku", "geri_al", "raporu_kaydet", "onaya_gonder", "web_search"]);
   assert.doesNotMatch(JSON.stringify(h.istek.govde), /Gizli Sanayi|Gizli Tesis|Saklı Cad|sk-ant/, "künye ve anahtar gitmez");
   /* cevaptaki araç çağrıları komut olarak döner. 2026-10-14 (557 — reisim: "istek yapılmadan yapıldı dememesi …"): iş istendiyse S.A.Y'ın bu
      cevabı GEÇMİŞE YAZILMAZ ("1 giriş yapıyorum." kalktı) — dönen yalnız kişinin sorusu; S.A.Y'ın iletisi işin sonucuyla yazılır (aşağıda) */
@@ -279,7 +280,8 @@ test("550 açık rapor haritası: yalnız raporu yazanın Yeni raporunda, adres 
   const ig = is.istek.govde as { tool_choice?: unknown; thinking: unknown; system: { text: string }[]; messages: { role: string; content: unknown }[]; tools: { name: string }[] };
   assert.deepEqual([ig.tool_choice, ig.thinking], [undefined, { type: "disabled" }], "A: S.A.Y yeniden araç çağırabilir");
   assert.ok(ig.system[1].text.includes("Açık rapor (kullanıcının şu an yazdığı"), "harita her turda (işin ardından güncel)");
-  assert.deepEqual(ig.tools.map((t) => t.name), ["rapora_yaz", "fotograflari_oku", "geri_al", "web_search"]);
+  /* 2026-10-16 (kasıtlı beklenti değişikliği — S.A.Y 2. adım a, C): rapor araçlarına ekrandaki Kaydet / Onaya gönder eklendi */
+  assert.deepEqual(ig.tools.map((t) => t.name), ["rapora_yaz", "fotograflari_oku", "geri_al", "raporu_kaydet", "onaya_gonder", "web_search"]);
   assert.deepEqual(ig.messages.at(-3), { role: "user", content: "Seri no'ya SN-1 yaz" }, "cevaplanacak mesaj kişinin sorusu");
   assert.deepEqual(ig.messages.at(-2), { role: "assistant", content: [{ type: "tool_use", id: "toolu_s1", name: "rapora_yaz", input: { girisler: [{ yer: "e:seri", deger: "SN-1" }] } }] });
   assert.match(JSON.stringify(ig.messages.at(-1)), /tool_result[\s\S]*toolu_s1[\s\S]*yazilan[\s\S]*SGK[\s\S]*kilitli/);
@@ -493,7 +495,8 @@ test("561 açık rapor: durum ne olursa olsun bilinir, yazılamıyorsa nedeni; h
   assert.equal(x.h.yer, `Rapor ${no}`);
   assert.ok(x.baglam.includes(`${satir("Yeni")}\nAçık rapor (kullanıcının şu an yazdığı`), x.baglam);
   assert.doesNotMatch(x.baglam, /yazılamaz/);
-  assert.deepEqual(x.araclar, ["rapora_yaz", "fotograflari_oku", "geri_al", "web_search"]);
+  /* 2026-10-16 (kasıtlı beklenti değişikliği — S.A.Y 2. adım a, C): rapor araçlarına ekrandaki Kaydet / Onaya gönder eklendi */
+  assert.deepEqual(x.araclar, ["rapora_yaz", "fotograflari_oku", "geri_al", "raporu_kaydet", "onaya_gonder", "web_search"]);
   /* ekran bağlanmadıysa (onaya gönderme cihazda bekliyor): satır + neden, harita / araç yok */
   x = await sor(FA.den, `/raporlar/${rapor}`, null);
   assert.match(x.baglam, /ekranda şu an düzenlenemiyor/);

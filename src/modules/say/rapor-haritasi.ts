@@ -61,8 +61,10 @@ function cihazlarOku(x: unknown): CanliCihaz[] {
   });
 }
 
-/** canlı cevaplar şemaya uymuyorsa null (bağlam eklenmez) */
-export function raporHaritasi(t: FormatTanimi, turAd: string, canli: CanliRapor): string | null {
+/** canlı cevaplar şemaya uymuyorsa null (bağlam eklenmez). 2026-10-16 (S.A.Y 2. adım a incelemesi): tumu — bütün satırlar, kısaltmasız (rapor_getir
+    işlemi sayfa sayfa verir — src/server/yz/islem.ts metinSayfasi); bağlamdaki harita sınırlı kalır */
+export function raporHaritasi(t: FormatTanimi, turAd: string, canli: CanliRapor, secenek: { tumu?: boolean } = {}): string | null {
+  const tabloSatir = secenek.tumu ? Number.POSITIVE_INFINITY : TABLO_SATIR;
   const g = Cevaplar.safeParse(canli.cevaplar);
   if (!g.success) return null;
   /* 556: formüllü kutuların değeri (kayıttan gelen alanın yazılanı hesaba da girmez — künye gitmez) */
@@ -122,9 +124,9 @@ export function raporHaritasi(t: FormatTanimi, turAd: string, canli: CanliRapor)
       l.push(`Çok satır eklemek: rapora_yaz satir_ekle — tablo ${b.id}, adet, degerler (sütun kimliğiyle), sira (artan sütun); tabloda en çok ${TABLO_SATIR_EN_COK} satır olur`);
       const satirlar = c.tablo[b.id] ?? [];
       if (!satirlar.length) l.push("- satır yok");
-      satirlar.slice(0, TABLO_SATIR).forEach((s, i) => l.push(`- ${i + 1}. satır: ${sutunlar.map((x) => `${x.id}=${tirnak(s[x.id] ?? "")}`).join(", ")}${
+      satirlar.slice(0, tabloSatir).forEach((s, i) => l.push(`- ${i + 1}. satır: ${sutunlar.map((x) => `${x.id}=${tirnak(s[x.id] ?? "")}`).join(", ")}${
         notlar.length ? `, not=${s.not ? `"Not-${s.not}"` : "—"}` : s[ELLE_SONUC] ? `, sonuc="${s[ELLE_SONUC] === "uygun" ? "uygun" : "uygun değil"}", gerekce=${tirnak(s[ELLE_GEREKCE] ?? "")}` : ""}`));
-      if (satirlar.length > TABLO_SATIR) l.push(`- … ve ${satirlar.length - TABLO_SATIR} satır daha`);
+      if (satirlar.length > tabloSatir) l.push(`- … ve ${satirlar.length - tabloSatir} satır daha`);
     } else if (b.blok === "liste") {
       l.push(`## ${b.ad} — kontrol listesi; madde cevabı m:<kimlik> (${b.cevaplar.join(" / ")}), kusur açıklaması m:<kimlik>#not, derecesi m:<kimlik>#derece (hafif / ağır)`);
       for (const gr of b.gruplar) for (const m of gr.maddeler) {
@@ -146,5 +148,5 @@ export function raporHaritasi(t: FormatTanimi, turAd: string, canli: CanliRapor)
     }
   }
   const metin = l.join("\n");
-  return metin.length > HARITA_SINIRI ? `${metin.slice(0, HARITA_SINIRI)}\n… (rapor uzun; geri kalanı kısaltıldı)` : metin;
+  return !secenek.tumu && metin.length > HARITA_SINIRI ? `${metin.slice(0, HARITA_SINIRI)}\n… (rapor uzun; geri kalanı kısaltıldı)` : metin;
 }

@@ -25,7 +25,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { ANA_SAYFA, MODULLER } from "../src/modules/moduller.ts";
-import { raporGirdisi } from "../src/modules/say/server/say.ts";
+import { KAYDEDILMEMIS, kaydedilmemisEki, raporGirdisi } from "../src/modules/say/server/say.ts";
 import { SAY_KILAVUZU, SAYFA_YARDIMI, sayfaBilgisi } from "../src/modules/say/yardim.ts";
 import { GIRIS_EN_COK, SATIR_EKLE_EN_COK as EKRAN_SATIR_EKLE_EN_COK } from "../src/modules/raporlar/say-doldur.ts";
 import { maliyetHesapla } from "../src/server/yz/okuma.ts";
@@ -77,7 +77,9 @@ test("istek: sabit talimat önbellekte, bağlam ayrı ve yalnız verilen alanlar
   const r = sayIstegi({ model: "haiku", kilavuz: [], baglam: { roller: [], yer: "Rapor X", yardim: null, bekleyen: [], rapor: "HARİTA" }, gecmis: [], soru: "x" }).govde as
     { system: { text: string }[]; tools: { name: string }[]; output_config: unknown };
   assert.ok(r.system[1].text.includes("Açık rapor (kullanıcının şu an yazdığı, kaydedilmemiş değişiklikler dahil):\nHARİTA"));
-  assert.deepEqual(r.tools.map((x) => x.name), ["rapora_yaz", "fotograflari_oku", "geri_al", "web_search"]);
+  /* 2026-10-16 (kasıtlı beklenti değişikliği — pkproje §9 "S.A.Y CLAUDE GİBİ" 2. adım a, C: "kaydet, onaya gönder istenirse işlev çağrılır"): açık
+     raporun ekrandaki Kaydet / Onaya gönder'i de rapor araçlarında (eskisi: yazma, okuma, geri al + arama) */
+  assert.deepEqual(r.tools.map((x) => x.name), ["rapora_yaz", "fotograflari_oku", "geri_al", "raporu_kaydet", "onaya_gonder", "web_search"]);
   assert.deepEqual(r.output_config, { effort: "medium" });
   assert.equal((sayIstegi({ model: "haiku", kilavuz: [], baglam: { roller: [], yer: "Ana sayfa", yardim: null, bekleyen: [] }, gecmis: [], soru: "x", arama: false }).govde as { tools?: unknown }).tools, undefined);
 });
@@ -147,7 +149,8 @@ test("A iş döngüsü: adımlar konuşmanın sonunda, düşünme kapalı, araç
     soru: "linye tablosuna 50 satır ekle", adimlar }).govde as { messages: { role: string; content: unknown }[]; tools: { name: string }[]; tool_choice?: unknown; thinking: unknown; system: { text: string }[] };
   assert.equal(g.tool_choice, undefined, "S.A.Y yeniden araç çağırabilir (auto) — döngü tek tura düşmez");
   assert.deepEqual(g.thinking, { type: "disabled" });
-  assert.deepEqual(g.tools.map((t) => t.name), ["rapora_yaz", "fotograflari_oku", "geri_al", "web_search"]);
+  /* 2026-10-16 (kasıtlı beklenti değişikliği — S.A.Y 2. adım a, C): rapor araçlarına ekrandaki Kaydet / Onaya gönder eklendi */
+  assert.deepEqual(g.tools.map((t) => t.name), ["rapora_yaz", "fotograflari_oku", "geri_al", "raporu_kaydet", "onaya_gonder", "web_search"]);
   assert.ok(g.system[1].text.includes("Açık rapor (kullanıcının şu an yazdığı"), "bağlam her turda (güncel harita)");
   assert.deepEqual(g.messages.slice(-5).map((m) => m.role), ["user", "assistant", "user", "assistant", "user"]);
   assert.deepEqual(g.messages.at(-5), { role: "user", content: "linye tablosuna 50 satır ekle" });
@@ -186,6 +189,15 @@ test("A iş döngüsü: adımlar konuşmanın sonunda, düşünme kapalı, araç
   assert.equal(donguTekrari([yok(A1, "a"), yok(B1, "b"), yok(A1, "c")]), true, "A, B, A: A daha önce değişikliksizdi — durur");
   assert.equal(donguTekrari([[{ komut: A1, ozet: ozet(1) }], yok(B1, "b"), yok(A1, "c")]), false, "A önce değişiklik yaptıydı, art arda değil — sürer");
   assert.equal(donguTekrari([yok(A1, "a"), yok(B1, "b"), [{ komut: A1, ozet: ozet(1) }]]), false, "son adım değişiklik yaptı — sürer");
+  /* 2026-10-16 (S.A.Y 2. adım a incelemesi — "planı kabul et, sonra rapor aç" üçüncü adımda duruyordu): sunucu okumasının imzasında SONUCU da var —
+     araya giren yazmadan sonra aynı okuma yeni sürümü görmek içindir, sürer; sonuç da aynıysa (gerçekten hiçbir şey değişmedi) durur */
+  const getir: SayKomutu = { tur: "islem", ad: "plan_getir", girdi: { plan: "p1" } }, kabul: SayKomutu = { tur: "islem", ad: "plan_kabul", girdi: { plan: "p1", surum: 3 } };
+  const okuma = (sonuc: string, id: string): SayAdimi[] => [{ komut: { ...getir, id }, ozet: { ...ozet(0), sonuc } }];
+  const yazma: SayAdimi[] = [{ komut: kabul, ozet: { ...ozet(1), sonuc: "{\"durum\":\"tamam\"}" } }];
+  assert.equal(donguTekrari([okuma("{\"surum\":3}", "g1"), yazma, okuma("{\"surum\":4}", "g2")]), false, "getir → yaz → getir (yeni sürüm) — sürer");
+  assert.equal(donguTekrari([okuma("{\"surum\":3}", "g1"), okuma("{\"surum\":3}", "g2")]), true, "aynı okuma, aynı sonuç — durur");
+  assert.equal(donguTekrari([okuma("{\"surum\":4}", "g1"), [{ komut: { tur: "islem", ad: "plan_ara", girdi: {} }, ozet: { ...ozet(0), sonuc: "{}" } }],
+    okuma("{\"surum\":4}", "g3")]), true, "A, B, A — okumalar da hiçbir şey değiştirmedi, aynı sonuç: durur");
   /* toplam ve "iş yapıldı mı" (D) */
   assert.deepEqual(toplamOzet(adimlar), { yazildi: 1, ayni: 0, bekliyor: 0, satir: 40, yapilan: ["Linye · 20 satır eklendi (1–20. satır)"], yazilamadi: [] });
   assert.equal(isYapildi(adimlar), true);
@@ -266,9 +278,25 @@ test("D sahte \"yaptım\": kalıplar; araç çağrısı ya da yapılmış iş va
   assert.ok(DUZELTME.startsWith("Aracı çağırmadan yapıldı dedin; işi yap ya da yapamadığını nedeniyle söyle."));
   assert.equal(istek.govde.messages.length, 1, "asıl istek değişmez");
   assert.ok(!yapildiDiyor(SAHTE_YEDEK), "yedek cevap kendisi \"yaptım\" demez");
-  /* 2026-10-16: denetim yalnız istekte iş yapan araç varken — araçsız sayfada (yalnız internet araması) "taslağı yazdım" bilgi veren cevaptır */
-  const istekArac = (baglam: Parameters<typeof sayIstegi>[0]["baglam"]) => sayIstegi({ model: "haiku", kilavuz: [], baglam, gecmis: [], soru: "s" }).govde;
-  assert.equal(isAraciVar(istekArac({ roller: [], yer: "Planlar", yardim: null, bekleyen: [] })), false, "yalnız web_search");
+  /* 2026-10-16: denetim yalnız istekte iş yapan araç varken — araçsız istekte (yalnız internet araması) "taslağı yazdım" bilgi veren cevaptır.
+     2026-10-16 (S.A.Y 2. adım a — KASITLI beklenti değişikliği; görev: sahte "yaptım" engeli "bu adımla her sayfada çalışmalı"): eylem her istekte
+     işlem dizinini verir — "islemler" / "islem" her sayfada iş yapan araç, denetim her sayfada; araçsız istek yalnız dizinsiz çağrıda kalır */
+  const istekArac = (baglam: Parameters<typeof sayIstegi>[0]["baglam"], islemDizini: string | null = null) =>
+    sayIstegi({ model: "haiku", kilavuz: [], baglam, gecmis: [], soru: "s", islemDizini }).govde;
+  assert.equal(isAraciVar(istekArac({ roller: [], yer: "Planlar", yardim: null, bekleyen: [] })), false, "dizinsiz istek: yalnız web_search");
+  const planlarda = istekArac({ roller: [], yer: "Planlar", yardim: null, bekleyen: [] }, "Planlar:\n- plan_ac (yaz): Plan açar.") as { tools: { name: string }[] };
+  assert.deepEqual(planlarda.tools.map((t) => t.name), ["islemler", "islem", "web_search"]);
+  assert.equal(isAraciVar(planlarda), true, "yayının yolu (eylem dizini verir): Planlar'da da iş aracı var — sahte \"yaptım\" denetimi her sayfada");
   assert.equal(isAraciVar(istekArac({ roller: [], yer: "Rapor X", yardim: null, bekleyen: [], rapor: "HARİTA" })), true, "rapora_yaz var");
   assert.equal(isAraciVar(sayIstegi({ model: "haiku", kilavuz: [], baglam: { roller: [], yer: "x", yardim: null, bekleyen: [] }, gecmis: [], soru: "s", arama: false }).govde), false, "araç yok");
+});
+
+/* 2026-10-16 (pkproje §9 "S.A.Y CLAUDE GİBİ" 2. adım a — D; reisim: "f5 yapılması gerekiyorsa … haber veriyor"): veri değiştiren işlem çalıştı ve
+   ekranda kaydedilmemiş değişiklik var — sayfa yenilenmez, S.A.Y'ın cevabının SONUNA sunucunun metni (KAYDEDILMEMIS); öteki durumlarda cevap aynen */
+test("D kaydedilmemiş değişiklik: yalnız yenileme gerekip ekran kirliyken cevabın sonuna not", () => {
+  assert.equal(kaydedilmemisEki("Yaptım: plan açıldı.", { yenile: true, kaydedilmemis: true }), `Yaptım: plan açıldı.\n\n${KAYDEDILMEMIS}`);
+  for (const d of [{ yenile: true, kaydedilmemis: false }, { yenile: false, kaydedilmemis: true }, {}]) {
+    assert.equal(kaydedilmemisEki("Yaptım.", d), "Yaptım.", JSON.stringify(d));
+  }
+  assert.ok(!yapildiDiyor(KAYDEDILMEMIS), "notun kendisi \"yaptım\" demez");
 });

@@ -12,7 +12,11 @@
    7. güvenlik yalnız art arda iki adıma bakarsa değişiklik yapmayan A, B, A, B … hiç durmaz;
    8. durdurulmuş turda S.A.Y yine araç isterse komut ekrana dönerse (src/modules/say/server/say.ts "!h.durdur") döngü sürer;
    9. raporun tablo sınırı denetimi kalkarsa satir_ekle 300'ün üstüne çıkar — rapor kaydedilemez (Cevaplar şeması reddeder);
-   10. sahte "yaptım" denetimi araçsız istekte de çalışırsa bilgi veren cevap ("taslağı yazdım") düzeltme turuna düşer. */
+   10. sahte "yaptım" denetimi araçsız istekte de çalışırsa bilgi veren cevap ("taslağı yazdım") düzeltme turuna düşer (dizinsiz istek — 2. adım
+       a'dan beri eylem dizini her istekte verir, iş araçları her sayfada);
+   2026-10-16 (S.A.Y 2. adım a incelemesi):
+   11. güvenliğin imzası sunucu işleminin sonucunu görmezse araya yazma giren aynı okuma (plan_getir → plan_kabul → plan_getir) yineleme sayılır —
+       "planı kabul et, sonra rapor aç" üçüncü adımda durur. */
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -76,7 +80,9 @@ const ayni = [[{ komut: { tur: "geri" as const, id: "a" }, ozet: ozet(0) }], [{ 
 test("6) güvenlik hiç durmazsa ya da imzaya araç kimliği girerse aynı iş değişmeden yinelense de döngü sürer", async () => {
   const hic = await bozuk<Say>(SAY, "  if (degisen(son) !== 0) return false;\n", "  return false;\n");
   assert.equal(hic.donguTekrari(ayni), false, "bozuk: güvenlik hiç durmuyor");
-  const kimlikli = await bozuk<Say>(SAY, "const b = komutBlogu(x.komut); return [b.name, b.input];", "const b = komutBlogu(x.komut); return [b.id, b.name, b.input];");
+  /* 2026-10-16 (2. adım a incelemesi): imzada sunucu işleminin sonucu da var — bozulan satır onunla */
+  const kimlikli = await bozuk<Say>(SAY, "const b = komutBlogu(x.komut); return [b.name, b.input, x.ozet.sonuc ?? null];",
+    "const b = komutBlogu(x.komut); return [b.id, b.name, b.input, x.ozet.sonuc ?? null];");
   assert.equal(kimlikli.donguTekrari(ayni), false, "bozuk: her turda yeni kimlik — aynı iş hiç eşleşmez");
 });
 
@@ -113,4 +119,12 @@ test("10) sahte \"yaptım\" denetimi araçsız istekte de çalışırsa bilgi ve
   const g = m.sayIstegi({ model: "haiku", kilavuz: [], baglam: { roller: [], yer: "Planlar", yardim: null, bekleyen: [] }, gecmis: [], soru: "kontrol listesi" }).govde;
   assert.equal(m.isAraciVar(g) && m.sahteYapildi({ content: [{ type: "text", text: "Size bir kontrol listesi oluşturdum:" }], stop_reason: "end_turn" }, false), true,
     "bozuk: araçsız bilgi veren cevap sahte sayıldı");
+});
+
+test("11) güvenliğin imzası sunucu işleminin sonucunu görmezse getir → yaz → getir döngüsü durur", async () => {
+  const m = await bozuk<Say>(SAY, "return [b.name, b.input, x.ozet.sonuc ?? null];", "return [b.name, b.input];");
+  const getir = { tur: "islem" as const, ad: "plan_getir", girdi: { plan: "p1" } };
+  const okuma = (sonuc: string, id: string) => [{ komut: { ...getir, id }, ozet: { ...ozet(0), sonuc } }];
+  const yazma = [{ komut: { tur: "islem" as const, ad: "plan_kabul", girdi: { plan: "p1", surum: 3 } }, ozet: { ...ozet(1), sonuc: "tamam" } }];
+  assert.equal(m.donguTekrari([okuma("surum 3", "g1"), yazma, okuma("surum 4", "g2")]), true, "bozuk: yeni sürümü gören okuma döngüyü durdurdu");
 });

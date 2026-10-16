@@ -790,3 +790,73 @@ export function fotoTuslari(kaynaklar: readonly { ad: string; metin: string }[],
   if (!fotoTusu.includes("Galeriden / bilgisayardan seç")) hata.push("FotoTusu.tsx: \"Galeriden / bilgisayardan seç\" yazmıyor");
   return hata;
 }
+
+/* ── S.A.Y İŞLEM YÜRÜTÜCÜSÜNÜN ÇAĞRI YERİ (2026-10-16; pkproje §9 "S.A.Y CLAUDE GİBİ" 2. adım a, B — "sunucu araçları istemciden gelen bilgiye
+   güvenmez") ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   src/modules/say/ui/eylemler.ts uzantısız içe aktarmalar yüzünden node'da yüklenemez; kilit kaynak metninden: yürütücü TEK yerden, yalnız yapay zekâ
+   hizmetinin BU eylemde döndürdüğü komutlarla çağrılır (ekranın gönderdiği adımlar — d.onceki — yeniden çalıştırılmaz); işlemin ortamı oturumdan
+   (girdiden değil); aynı cevapta ekran komutundan sonraki işlem ekranın işini bekler; hazırlık (server/say.ts) yürütücüye dokunmaz. Dönen: bulgular
+   (boş = tamam). Olumsuz kanıt: tests/bozan/say-islem.bozan.ts. */
+export function sayEylemDenetimi(eylem: string, sunucu: string): string[] {
+  const b: string[] = [];
+  const n = [...eylem.matchAll(/sunucuKomutu\(/g)].length;
+  if (n !== 1) b.push(`eylemler.ts: yürütücü ${n} yerden çağrılıyor (tek yer olmalı)`);
+  if (!eylem.includes("const komutlar = r.komutlar ?? [];")) b.push("eylemler.ts: komutlar yapay zekâ hizmetinin bu çağrıdaki cevabından değil");
+  if (!/for \(const k of komutlar\) \{[\s\S]{0,400}?await sunucuKomutu\(ISLEM_KATALOGU, ortam, k, modulAdi\)/.test(eylem)) {
+    b.push("eylemler.ts: yürütücü yalnız bu çağrının komutlarıyla çağrılmıyor (ekranın adımları yeniden çalışabilir)");
+  }
+  if (/sunucuKomutu\([^)]*onceki/.test(eylem) || /islemYurut\(/.test(eylem)) b.push("eylemler.ts: yürütücü başka yoldan / ekranın adımlarıyla çağrılıyor");
+  const ortam = /function islemOrtami\([^]*?\n\}\n/.exec(eylem)?.[0] ?? "";
+  if (!ortam) b.push("eylemler.ts: islemOrtami yok");
+  else {
+    if (!ortam.includes("kim: o, firmaId: o.kiraci.firmaId, depo, kok: firmaAdresi(o.kiraci.kisaAd),")) b.push("eylemler.ts: işlemin kişisi / firması oturumdan değil");
+    if (/\bgirdi\b|\btaban\b|\bonceki\b/.test(ortam)) b.push("eylemler.ts: işlemin ortamı ekranın / yapay zekânın girdisinden okunuyor");
+  }
+  if (!/ekranda && k\.tur === "islem" \? islemOzeti\(/.test(eylem)) b.push("eylemler.ts: ekran komutundan sonraki işlem ekranın işini beklemiyor (sıra)");
+  if (/sunucuKomutu\(|islemYurut\(|from "[^"]*(islem-katalogu|yz\/islem)/.test(sunucu)) b.push("server/say.ts: hazırlık (ekranın adımlarını okuyan) yürütücüye dokunuyor");
+  return b;
+}
+
+/* ── S.A.Y İŞLEMLERİNİN GİRDİSİ MODÜLÜN ŞEMASINDAN (2026-10-16; 2. adım a, A — "girdi şeması modülün VAR OLAN zod şemasından; şema kopyalanmaz") ──
+   Girdinin ÜST DÜZEY her alanı ya dışa açılmış bir modül şemasının (sema.ts, src/sema/ortak.ts, liste süzgeci) ağacındaki nesneyi içerir (kendisi
+   ya da sarmaladığı — .partial(), .nullable(), .default(), z.array(kimlik) …), ya da aşağıdaki listede gerekçesiyle elle yazılmıştır (modül işlevi
+   konumsal değer alır, şeması yok). Kopyalanmış alan (ör. MusteriGirdisi'nin alanları elle) listede değilse bulgu. */
+type ZodDef = { _zod: { def: Record<string, unknown> } };
+const zodMu = (x: unknown): x is ZodDef => !!x && typeof x === "object" && "_zod" in x;
+/** zod şemasının ağacındaki bütün şema nesneleri (nesne alanları, sarmalayıcılar, boru, dizi, birleşim, kesişim, kayıt) */
+export function zodAgaci(s: unknown, l = new Set<unknown>()): Set<unknown> {
+  if (!zodMu(s) || l.has(s)) return l;
+  l.add(s);
+  const d = s._zod.def;
+  if (d.shape && typeof d.shape === "object") for (const v of Object.values(d.shape as object)) zodAgaci(v, l);
+  for (const k of ["innerType", "in", "out", "element", "left", "right", "valueType", "keyType"]) zodAgaci(d[k], l);
+  for (const k of ["options", "items"]) if (Array.isArray(d[k])) for (const v of d[k] as unknown[]) zodAgaci(v, l);
+  return l;
+}
+/** elle yazılan üst düzey alanlar: işlem → alan → gerekçe */
+export const SAY_ELLE_ALANLAR: Readonly<Record<string, Readonly<Record<string, string>>>> = {
+  plan_kabul: { beyan_onay: "planKabul'un konumsal onayı (tuşta beyan onay kutusu)", beyan_ozet: "planKabul'un konumsal metni (plan_getir'deki beyan özeti)" },
+  plan_ekipman_pasif: { pasif: "ekipmanPasif'in konumsal değeri (Pasife al / Etkinleştir)" },
+  plan_kontrol_listesi: { tamam: "kontrolListesi'nin konumsal değeri (Tamamla / Yeniden aç)" },
+  rapor_yaz: { girisler: "rapora_yaz aracının biçimi (komutDenetle aynı denetimden geçirir)", satir_ekle: "rapora_yaz'ın satir_ekle biçimi (komutDenetle)" },
+  musteri_kaydet: { onay: "musteriKaydet'in konumsal onayı (\"Yine de kaydet\")" },
+  tesis_kaydet: { onay: "tesisKaydet'in konumsal onayı (\"Yine de kaydet\")" },
+};
+export function islemAlanlariDenetimi(islemler: readonly { ad: string; girdi: unknown }[], izinliSemalar: Iterable<unknown>,
+  elle: Readonly<Record<string, Readonly<Record<string, string>>>>): string[] {
+  const izinli = new Set<unknown>();
+  for (const s of izinliSemalar) zodAgaci(s, izinli);
+  const b: string[] = [];
+  for (const t of islemler) {
+    const shape = zodMu(t.girdi) && t.girdi._zod.def.shape && typeof t.girdi._zod.def.shape === "object" ? t.girdi._zod.def.shape as Record<string, unknown> : null;
+    if (!shape) { b.push(`${t.ad}: girdi nesne şeması değil`); continue; }
+    for (const [ad, alan] of Object.entries(shape)) {
+      const turer = [...zodAgaci(alan)].some((x) => izinli.has(x));
+      const gerekce = elle[t.ad]?.[ad];
+      if (!turer && !gerekce) b.push(`${t.ad}.${ad}: modülün şemasından türemiyor (kopya?) ve elle alan listesinde yok`);
+      if (turer && gerekce) b.push(`${t.ad}.${ad}: modülün şemasından türüyor — elle alan listesinden çıkmalı`);
+    }
+    for (const ad of Object.keys(elle[t.ad] ?? {})) if (!Object.hasOwn(shape, ad)) b.push(`${t.ad}.${ad}: elle alan listesinde ama girdide yok`);
+  }
+  return b;
+}

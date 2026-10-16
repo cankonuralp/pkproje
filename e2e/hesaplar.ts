@@ -51,6 +51,15 @@ export const E2E_YZ = {
   /* saklama süresi (387): ayrı tesiste, süresi 10 gün sonra dolacak imzalı rapor (Uyarılar + Firma ayarları › Saklama süresi dolacak raporlar) */
   saklama: { tesis: "YZ Arşiv Tesisi", ekipman: "EP-0950", plan: "P-0121-950", rapor: "YZ-0121-950-00001" },
 } as const;
+/* S.A.Y'ın sunucu işlemleri (2026-10-16; pkproje §9 "S.A.Y CLAUDE GİBİ" 2. adım a — e2e/say-islem.spec.ts): YZ firmasında AYRI uydurma müşteri /
+   tesis, denetçi ve planlamacı — S.A.Y plan açar, müşteri arar. Adlar taklidin kişisel bilgi süzgecine ("YZ …") takılmaz; öteki YZ testlerinin
+   hesabına ve planlarına dokunulmaz */
+export const E2E_ISLEM = {
+  planlama: { eposta: "islem-planlama@islem.example", ad: "İşlem Planlamacı" },
+  denetci: { eposta: "islem-denetci@islem.example", ad: "İşlem Denetçi" },
+  musteri: "İşlem Deneme Sanayi A.Ş.",
+  tesis: "İşlem Tesisi",
+} as const;
 /* gece işi (378): uçtan uca sunucunun zamanlayıcı sırrı — UYDURMA, yalnız geçici test sunucusunda (yayında Vercel ortam değişkeni CRON_SECRET) */
 export const E2E_ZAMANLI_SIR = "e2e-zamanli-is-sirri-uydurma-0000000001";
 /* FIRMA-VT FV7 (2026-10-15, FV7 incelemesi — en az yetki): proje sağlığı ucunun AYRI sırrı (duman testi bunu taşır; gece işlerini açmaz) — UYDURMA,

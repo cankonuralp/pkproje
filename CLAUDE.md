@@ -386,6 +386,17 @@ pkproje/
                             başladığı rapor / taslak; sorunun ekleri her turda (sayIsSonucuEkliEylemi); yarıda kalan iş sayılarla + nedeni (server/say.ts
                             sayIsYarim, sayIsSonucuKaydet yarim); tur mesajı yeniden saymaz; ayırma isteğin boyundan (yz/say.ts istekGirisi); düzeltme yalnız
                             iş yapan araç varken (isAraciVar); donguTekrari A-B-A-B'yi de görür
+                            · 2026-10-16 S.A.Y CLAUDE GİBİ (2a): İŞLEM KATALOĞU — modül başına say-islemleri.ts (ad, tarif, girdi modülün zod şemasından,
+                            oku / yaz, çalıştırıcı modülün VAR OLAN işlevi) → tek kayıt islem-katalogu.ts (Planlar, Raporlar, Müşteriler, Teklifler,
+                            Onaylar); çekirdek src/server/yz/islem.ts (JSON şeması zod'dan, dizin önbellekli talimatta, yürütücü: şema denetimi, kişi /
+                            firma ortamdan, işlem başına kiracı işlemi); iki genel araç islemler / islem (yz/say.ts ISLEM_ARACLARI — her istekte en önde);
+                            işlemler ui/eylemler.ts surdur'da SUNUCUDA (ekranın adımları yeniden çalışmaz; ekran komutu gelince hazir, süre azsa devam);
+                            açık rapor raporu_kaydet / onaya_gonder (SahaRaporu sayKaydet), kapalı rapor rapor_yaz (komutlariUygula + raporKaydet); veri
+                            değişince router.refresh, kirliyse yenilenmez + KAYDEDILMEMIS (baglam.ts kaydedilmemisVar); sır yazan işlem kataloğa girmez ·
+                            kilit say-islem-katalog / say-islem-yurutucu / say-islem (PG), bozan say-islem, e2e say-islem.spec · inceleme: ekran komutundan
+                            sonraki işlem bekler (SIRA_BEKLER), e-posta yazılınca devam, sunucu işinden sonra hata eylemi düşürmez (sayIsYarim); açık kirli
+                            raporu ezen işlem önce kaydı ister (islem.ts EKRAN_KAYDEDILMEMIS); donguTekrari imzası sonucu da görür; rapor_getir haritası
+                            sayfalı (metinSayfasi); denetimler tests/yardimci/denetimler.ts sayEylemDenetimi, islemAlanlariDenetimi (SAY_ELLE_ALANLAR)
   src/modules/say-chat/     S.A.Y CHAT (523–525; pkproje §3.10): sema.ts (saf: alan / başlık seçenekleri, hazır ayar, denetim, dağılım dagit) ·
                             server/ayar.ts (523 tür ayarı — sayChatAyari, sayChatAyarKaydet, chatTanimi; göç 0084 say_chat_ayar) · ui/ChatAyarlari.tsx
                             (529: kendi sayfası /ekipman-turleri/<tür>/say-chat — Format kurucunun tuşlarından ve tür sayfasındaki kısa bölümden) · ui/eylemler.ts · 524 server/kayitlar.ts (sayChatPaneli, chatKaydet / chatFoto /
@@ -467,7 +478,12 @@ pkproje/
   src/components/           TEK ÜRETİCİLER: sayfa/ (kırıntı, sayfa / nesne başlığı, bölüm, rozet, sekmeler) · kabuk (yan menü + üst çubuk) · ikon · boş durum · tuş · şerit · bildirim (altta; 506 useUyar: işlemi
                             durduran kısa uyarı üstte — eksikte pencere yerine) · pencere + onay · yan panel boyu (pencere/PanelBoyu, 561) ·
                             liste (tablo↔kart, süzgeç mantığı liste/suzgec.ts; 547 dar sütunda tuş yazısı ikinci satıra — hücreden taşmaz, tarama
-                            "hücreden taşan" bulgusu) · kaydir/useSurukleKaydir.ts (548: yana kayan kap fareyle sürüklenir; ölçüm tablosu) · FOTOĞRAF TUŞU foto/FotoTusu.tsx (527 / 531: Fotoğraf çek · Galeriden /
+                            "hücreden taşan" bulgusu) · SAYFALAMA liste/Sayfalayici.tsx (2026-10-16, reisim "herhangi bir liste tablo … 20 den fazlası
+                            sayfalı olsun": Sayfalayici · useSayfa (akis · anahtar: yeni veri kümesi 1. sayfa · ac: öğenin sayfası) · TabloSayfalari (canlı
+                            sayfa bilgisi) · SayfaliListe; hesap liste/sayfa.ts, boy kalip.ts sayfa.tablo 20; Liste kendisi sayfalar (sayfa / sayfaDegistir,
+                            alt: sayfalanmayan toplam satırı); saha raporu ölçüm tablosu + kontrol listesi sayfası SahaRaporu'nda, tek kural
+                            raporlar/sayfa-yeri.ts — tablo değişince ilk değişen satırın, eksiğe git / S.A.Y'ın işaretlediği madde en üstteki yerin sayfası;
+                            belge / PDF bütün satırlar; kaynak kilidi tests/sayfalama.test.ts + tests/yardimci/sayfalama.ts) · kaydir/useSurukleKaydir.ts (548: yana kayan kap fareyle sürüklenir; ölçüm tablosu) · FOTOĞRAF TUŞU foto/FotoTusu.tsx (527 / 531: Fotoğraf çek · Galeriden /
                             bilgisayardan seç; S.A.Y Chat, araç teslim tutanağı, zimmet teslimi — capture yalnız burada ve S.A.Y ataçta, kilit tests/foto-tusu.test.ts)
                             + foto/secim.ts (saf: JPEG / PNG, bayt sınırı, yer) · YÜZEN KATMAN secim/yuzen.ts (452: seçim listesi, süzgeç seçicisi, takvim,
                             saat önerileri üst katmanda — sayfayı / pencereyi itmez, kesilmez; tarama açılır katman denetimi; 486: konum satır içi biçemde,

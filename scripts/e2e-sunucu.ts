@@ -13,7 +13,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createServer } from "node:http";
 import { ornekSayfa } from "../e2e/duyuru-ornek.ts";
-import { E2E_FIRMA, E2E_GORSEL, E2E_HESAPLAR, E2E_ILK, E2E_KAPI, E2E_KENDI_FIRMALAR, E2E_MUHASEBE, E2E_PAROLA, E2E_PLAN, E2E_SAHA, E2E_YONETIM, E2E_YONETIM_PROJELER, E2E_YZ, E2E_ZAMANLI_SIR, E2E_SAGLIK_SIR, E2E_EPOSTA } from "../e2e/hesaplar.ts";
+import { E2E_FIRMA, E2E_GORSEL, E2E_HESAPLAR, E2E_ILK, E2E_KAPI, E2E_KENDI_FIRMALAR, E2E_MUHASEBE, E2E_PAROLA, E2E_PLAN, E2E_SAHA, E2E_YONETIM, E2E_YONETIM_PROJELER, E2E_YZ, E2E_ZAMANLI_SIR, E2E_SAGLIK_SIR, E2E_EPOSTA, E2E_ISLEM } from "../e2e/hesaplar.ts";
 import { planKabul, planIci } from "../src/modules/planlar/server/plan-ici.ts";
 import { planAc } from "../src/modules/planlar/server/planlar.ts";
 import { raporOlustur } from "../src/modules/raporlar/server/raporlar.ts";
@@ -211,6 +211,17 @@ for (const f of firmalar) {
       repeat('0', 64), 'dosya', now() - interval '5 years' + interval '10 days', 'uygun', current_date - 1815, '{}', '{}', '{}')`,
       [yzFirma, r, E2E_YZ.saklama.rapor, pl, e, t.tur, format, tesis, musteri]);
   } finally { await ss.end(); }
+  /* 2026-10-16 (S.A.Y 2. adım a — e2e/say-islem.spec.ts): S.A.Y'ın sunucu işlemleri için AYRI uydurma müşteri / tesis, denetçi ve planlamacı (adlar
+     taklidin kişisel bilgi süzgecine takılmaz; öteki YZ testlerinin hesabına ve planlarına dokunulmaz) — ham SQL yalnız kayıt tohumu */
+  await kiraciIcinde(havuz, yzFirma, async (db) => {
+    const q = async (sql: string, p: unknown[] = []) => (await db.sorgu<{ id: string }>(sql, p)).rows[0].id;
+    const m = await q("INSERT INTO musteri (unvan, kisa) VALUES ($1, 'İşlem Deneme') RETURNING id::text", [E2E_ISLEM.musteri]);
+    await q("INSERT INTO tesis (musteri_id, ad, adres, il, ilce) VALUES ($1, $2, 'Deneme Cad. No 7', 'Kocaeli', 'Gebze') RETURNING id::text", [m, E2E_ISLEM.tesis]);
+    for (const [h, rol] of [[E2E_ISLEM.denetci, "denetci"], [E2E_ISLEM.planlama, "planlama"]] as const) {
+      const p = await q("INSERT INTO personel (ad, eposta, basla, meslek, ekipnet) VALUES ($1, $2, '2024-01-15', 'elk-muh', '123') RETURNING id::text", [h.ad, h.eposta]);
+      await q("INSERT INTO hesap (eposta, ad, parola_ozeti, roller, durum, personel_id) VALUES ($1, $2, $3, $4, 'etkin', $5) RETURNING id::text", [h.eposta, h.ad, ozet, [rol], p]);
+    }
+  });
 }
 await havuz.end();
 
@@ -257,6 +268,50 @@ const yzTaklit = createServer((istek, yanit) => {
       /* 2026-10-15 (C): haritadaki tablonun kimliği (adıyla) — "<ad> tablosuna N satır ekle" isteği satir_ekle'ye */
       const tabloKimligi = (ad: string) => new RegExp(`^## ${ad.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} — tablo; hücre kimliği t:([^:]+):`, "m").exec(baglamMetni)?.[1];
       const SATIR_ISTEGI = /^(.+?) tablosuna (\d+) satır ekle( \[parça\])?$/;
+      /* 2026-10-16 (S.A.Y 2. adım a — e2e/say-islem.spec.ts): uygulamanın SUNUCU İŞLEMLERİ. "[islem-plan]": islemler (plan_ac şeması gelmeli) →
+         plan_ac_secenekleri → plan_ac → "Yaptım: plan açıldı — <no>."; "[islem-ara]": musteri_ara → bulunan müşteri. İşlem araçları rapor açık
+         değilken de istekte olmalı; sonuç tool_result'taki sunucunun JSON'undan okunur (işlemi SUNUCU yapar, taklit yalnız sonucu görür) */
+      const islemIstegi = String([...(g.messages ?? [])].reverse().find((m) => typeof m.content === "string" && (m as { role?: string }).role === "user")?.content ?? "");
+      const islemSoru = /\[islem-(plan|ara)\]/.exec(islemIstegi)?.[1];
+      if (islemSoru) {
+        const araclar = ((g as { tools?: { name?: string }[] }).tools ?? []).map((a) => a.name);
+        if (!araclar.includes("islem") || !araclar.includes("islemler")) { ret("taklit: işlem araçları istekte yok"); return; }
+        const sonB = g.messages?.at(-1)?.content;
+        const sonuclar = Array.isArray(sonB) ? (sonB as { type?: string; content?: unknown }[]).filter((b) => b.type === "tool_result") : [];
+        type Is = { islem?: string; durum?: string; neden?: string } & Record<string, unknown>;
+        const is = sonuclar.map((b): Is | null => { try { return JSON.parse(String(b.content)) as Is; } catch { return null; } }).filter((x): x is Is => !!x?.islem).at(-1);
+        const cagir = (ad: string, girdi: unknown, id: string) =>
+          tamamYaz([{ type: "tool_use", id, name: ad === "islemler" ? "islemler" : "islem", input: ad === "islemler" ? girdi : { ad, girdi } }], "tool_use");
+        if (!is) {
+          if (sonuclar.length) { ret("taklit: işlem sonucu tool_result'ta yok"); return; }
+          if (islemSoru === "plan") cagir("islemler", { adlar: ["plan_ac_secenekleri", "plan_ac"] }, "taklit_i1");
+          else cagir("musteri_ara", { ara: "İşlem Deneme" }, "taklit_i1");
+          return;
+        }
+        if ((g as { thinking?: { type?: string } }).thinking?.type !== "disabled") { ret("taklit: döngünün devamında düşünme kapalı olmalı"); return; }
+        if (is.durum !== "tamam") { tamamYaz([{ type: "text", text: `Yapamadım: ${String(is.neden ?? "")}` }], "end_turn"); return; }
+        if (is.islem === "islemler") {
+          const sema = (is.islemler as { ad: string; girdi?: { properties?: Record<string, unknown> } }[] | undefined)?.find((x) => x.ad === "plan_ac")?.girdi?.properties;
+          if (!sema?.tesis || !sema.ekip) { ret("taklit: plan_ac şeması gelmedi"); return; }
+          cagir("plan_ac_secenekleri", { ara: "İşlem", denetci: "İşlem" }, "taklit_i2");
+          return;
+        }
+        if (is.islem === "plan_ac_secenekleri") {
+          const tesis = ((is.musteriler as { tesisler: { id: string; ad: string }[] }[] | undefined) ?? []).flatMap((m) => m.tesisler).find((t) => t.ad === E2E_ISLEM.tesis)?.id;
+          const den = ((is.denetciler as { personel: string; ad: string }[] | undefined) ?? []).find((d) => d.ad === E2E_ISLEM.denetci.ad)?.personel;
+          if (!tesis || !den) { tamamYaz([{ type: "text", text: "Yapamadım: tesis ya da denetçi bulunamadı (taklit)." }], "end_turn"); return; }
+          cagir("plan_ac", { tesis, baslangic: is.bugun, bitis: is.bugun, aciklama: null, ekip: [{ personel: den, isgNo: null }] }, "taklit_i3");
+          return;
+        }
+        if (is.islem === "plan_ac") { tamamYaz([{ type: "text", text: `Yaptım: plan açıldı — ${String(is.no)}.` }], "end_turn"); return; }
+        if (is.islem === "musteri_ara") {
+          const m = (is.musteriler as { unvan: string; tesisler: unknown[] }[] | undefined) ?? [];
+          tamamYaz([{ type: "text", text: m.length ? `Buldum: ${m.map((x) => `${x.unvan} (${x.tesisler.length} tesis)`).join(", ")}.` : "Bulamadım." }], "end_turn");
+          return;
+        }
+        ret(`taklit: beklenmeyen işlem sonucu ${is.islem}`);
+        return;
+      }
       /* 557 → 2026-10-15 (A): işin sonucu = DÖNGÜNÜN DEVAMI — son ileti tool_result; düşünme kapalı olmalı, araç seçimi verilmez (auto; gerçek hizmet
          gibi zorunlu seçim zaten reddedilir) — yalnız güvenlik durdurduysa "none" olur. "[parça]" isteğinde satırları 20'şer ekler (çok turlu döngü:
          sonucu görünce kalanını ekler), bitince "Yaptım: N satır eklendi."; öteki istekte son turun sonuçlarından "Yaptım" / "Yapamadım" */

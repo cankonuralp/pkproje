@@ -59,7 +59,15 @@ export interface SayRaporBagi {
       Dönen: her girişin sonucu, girilen sayı, eklenen satır, geri al. A: cevaplar / ekipman / canliEk bu yazmanın hemen ardından GÜNCEL hâli verir
       (döngünün sonraki turu haritayı onunla kurar) */
   yaz: (girisler: readonly { yer: string; deger: string }[], satirlar?: readonly SatirEkle[]) => Promise<{ sayi: number; sonuclar: SayGirisSonucu[]; geriAl: SayGeriAl; satir?: number }>;
+  /** 2026-10-16 (pkproje §9 "S.A.Y CLAUDE GİBİ" 2. adım a — D): ekranda kaydedilmemiş değişiklik var mı (iş bitince sayfa yenilenmez, S.A.Y söyler) */
+  kirli?: () => boolean;
+  /** 2026-10-16 (C): S.A.Y'ın raporu_kaydet / onaya_gonder aracı — ekrandaki Kaydet / Onaya gönder'in AYNISI (ekranın son hâli, aynı sunucu eylemi) */
+  kaydet?: () => Promise<SayEkranSonucu>;
+  onayaGonder?: () => Promise<SayEkranSonucu>;
 }
+/** ekranın yaptığı kaydetme / gönderme işinin sonucu (S.A.Y'a döner). kaydedildi: Onaya gönder'de rapor kaydedildi ama gönderilmedi (zorunlu alan
+    eksik) — kayıt iş sayılır (S.A.Y "kaydettim" diyebilir) */
+export type SayEkranSonucu = { tamam: true; bildirim: string } | { tamam: false; neden: string; kaydedildi?: boolean };
 
 /* ── 553 FORMAT YAPICI (reisim 2026-10-14: "konuşarak ilgili formatı yapabiliyo olalım"): taslak açıkken format yapıcı kendini bağlar — S.A.Y
    taslağı (kaydedilmemiş değişiklikler dahil) gönderir, Haiku'nun "formati_duzenle" işlemlerini taslağa uygular (format yapıcının geçmişine bir
@@ -71,6 +79,8 @@ export interface SayFormatBagi {
   tanim: () => unknown;
   /** işlemleri uygular (rapor-format/say-kurucu.ts formatIslemleri) — dönen: yapılan / yapılamayan, geri al */
   uygula: (islemler: readonly Record<string, unknown>[]) => { yapilan: string[]; gecersiz: string[]; geriAl: SayGeriAl };
+  /** 2026-10-16 (D): taslakta kaydedilmemiş değişiklik var mı */
+  kirli?: () => boolean;
 }
 let formatBag: SayFormatBagi | null = null;
 const formatDinleyen = new Set<() => void>();
@@ -94,4 +104,9 @@ export function sayRaporBagla(b: SayRaporBagi): () => void {
 
 export function useSayRaporBagi(): SayRaporBagi | null {
   return useSyncExternalStore((d) => { dinleyenler.add(d); return () => { dinleyenler.delete(d); }; }, () => bag, () => null);
+}
+
+/** 2026-10-16 (2. adım a — D): ekranda kaydedilmemiş değişiklik var mı (açık rapor ya da format taslağı) — varsa S.A.Y işten sonra sayfayı yenilemez */
+export function kaydedilmemisVar(): boolean {
+  return !!bag?.kirli?.() || !!formatBag?.kirli?.();
 }

@@ -80,6 +80,11 @@ test("şemaya uymayan cevap harita üretmez; çok büyük rapor sınırda kısal
   const h = raporHaritasi(T, "x", { cevaplar: { ...Cevaplar.parse({}), tablo: { linye: satirlar } }, ekipman: {} })!;
   assert.ok(h.length <= HARITA_SINIRI + 100, String(h.length));
   assert.match(h, /… ve 180 satır daha|kısaltıldı/);
+  /* 2026-10-16 (S.A.Y 2. adım a incelemesi — "sınır koyma, sayfalı okuma"): rapor_getir işlemi için bütün satırlar kısaltmasız (sayfa sayfa verilir —
+     src/server/yz/islem.ts metinSayfasi); bağlamdaki harita yukarıdaki gibi sınırlı kalır */
+  const t = raporHaritasi(T, "x", { cevaplar: { ...Cevaplar.parse({}), tablo: { linye: satirlar } }, ekipman: {} }, { tumu: true })!;
+  assert.ok(t.includes("- 300. satır: ") && !/satır daha|kısaltıldı/.test(t), "bütün satırlar");
+  assert.ok(t.length > HARITA_SINIRI);
 });
 
 test("561 açık rapor: adresteki rapor bulunur; yazılamıyorsa nedeni (elle düzenlemeyle aynı kural)", () => {

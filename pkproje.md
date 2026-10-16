@@ -2474,7 +2474,9 @@ sunucu işlevleri (tuşların çağırdığı işlevler + sayfaların okuma işl
 ekranda açıksa forma yazar (istenirse kaydeder / onaya gönderir), açık değilse doğrudan kaydeder; kullanıcının oturumu ve sunucunun bugünkü denetimi
 aynen (ayrı kural yok); e-imza kullanıcının cihazında. İşten sonra açık sayfa kendiliğinden yenilenir; ekranda kaydedilmemiş değişiklik varsa S.A.Y
 söyler. (3) Bütün tablo ve listelerde 20 satırdan sonrası sayfalı (rapor ölçüm tabloları dahil), yeni satır sonraki sayfaya akar. Tek kural: site
-dışı soruya cevap yok. Sıra: (1) → (3) → (2); FV kalemleri arada sürer.
+dışı soruya cevap yok. Sıra: (1) → (3) → (2); FV kalemleri arada sürer. Bu kararla S.A.Y'ın okuma işlemleri kullanıcının görebildiği müşteri, kişi, plan ve rapor
+bilgisini (firmanın kendi yapay zekâ anahtarıyla) Claude'a gönderir — ARKA-UC.md §5.4'teki "müşteri / kişi bilgisi gönderilmez" ilkesinin S.A.Y için yerine
+geçer (reisim: *"zaten direk database den, backendden herşeyi görüpte yapıyor"*). Sır / anahtar yazan işlemler S.A.Y'a verilmez (anahtar sohbete girmesin).
 
 **2026-10-16 — SONUÇ KURALI FORMAT YAPICIDA, HESAP LİSTESİ SADE** (reisim birebir, pano sigortaları (linye) tablosunun kurucu ekran görüntüsüyle:
 *"saha ekranında doldururken kurala göre otomatik uygun uygun değil diyor, ama ilgili ayar buradan yapılamıyor ? ben göremiyorum sanki o kısım koda

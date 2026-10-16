@@ -1,0 +1,165 @@
+/* PLANLAR — S.A.Y'IN ÇAĞIRABİLDİĞİ İŞLEMLER (2026-10-16; pkproje §9 "S.A.Y CLAUDE GİBİ" 2. adım a; çekirdek src/server/yz/islem.ts). Her işlem
+   modülün VAR OLAN işlevini oturumdaki kişiyle çağırır — Planlar ekranının tuşları ve sayfalarıyla aynı işlev, aynı yetki ve kural (plan_ac
+   planlama / yönetici, kabul / red yalnız plandaki denetçi, ekipman ekle plan kabul edilmiş ya da denetimdeyken …); girdi modülün şemasından
+   (sema.ts, src/sema/ortak.ts kimlik / surum, liste süzgeci). Burada yeni kural yok; sonuç kısa (listeler sayfalı). Ekipman kaydı (tesisin kalıcı
+   ekipmanı) planın içinden yazılır — ayrı ekranı yok (reisim 2026-09-26).
+   2026-10-16 (2. adım a incelemesi): plan_kabul'da beyan özeti ŞART (tuşun eylemi ve çevrimdışı plan.kabul gibi — metin okunmadan kabul yok);
+   plan_ac sonucu ekranın gösterdiği uyarıları taşır (planKarti — engel değil, bilgi); plan_kunye_guncelle ekranda açık, kaydedilmemiş raporu
+   ezmez (önce ekranın kaydı — EKRAN_KAYDEDILMEMIS). */
+import { kimlik, surum, z } from "../../sema/ortak.ts";
+import { SuzgecDurumuSemasi } from "../../server/liste/liste.ts";
+import { EKRAN_KAYDEDILMEMIS, ekranRaporuKirli, GORUNMEZ, islem, kirp, sayfaBilgisi, sayfala, trIcerir, yazmaCevabi, type Islem } from "../../server/yz/islem.ts";
+import { KunyeGirdisi, NotGirdisi, PLAN_DURUM, PlanAcGirdisi, RedGirdisi, YeniEkipmanGirdisi } from "./sema.ts";
+import { planSayfasi } from "./server/liste.ts";
+import {
+  ekipmanPasif, ekipmanSil, kayitliEkle, kontrolListesi, kunyeDuzenle, kunyeGuncelle, notEkle, planIci, planKabul, planReddet, planTamamla,
+  tamamlamaGeriAl, yeniEkipman,
+} from "./server/plan-ici.ts";
+import { planAc, planAcVerisi, planKarti, tesisPlanBilgisi } from "./server/planlar.ts";
+
+const MODUL = 13;
+const PLAN_ID = z.object({ plan: kimlik });
+const PLAN_SURUM = z.object({ plan: kimlik, surum });
+const durumAdi = (d: keyof typeof PLAN_DURUM) => PLAN_DURUM[d][0];
+
+export const SAY_ISLEMLERI: readonly Islem[] = [
+  islem({
+    ad: "plan_ara", modul: MODUL, tur: "oku", girdi: SuzgecDurumuSemasi, kaynak: [SuzgecDurumuSemasi], islev: planSayfasi,
+    tarif: "Görebildiğin planları arar (20'şer): ara (proje no, tesis, müşteri, adres), sec.durum (bekliyor | kabul | denetimde | tamamlandi | reddedildi), "
+      + "sec.tarih (bugun | hafta | yedi), sec.brans (m | e), sayfa.",
+    calistir: async (b, _v, ham) => {
+      const l = await planSayfasi(b.db, b.kim, ham);
+      if (!l) return { tamam: false, neden: "Bu kullanıcı Planlar'ı göremiyor." };
+      return { tamam: true, sonuc: { ...sayfaBilgisi(l), planlar: l.gorunen.map((p) => ({ id: p.id, no: p.no, durum: durumAdi(p.durum), tesis: p.ad, musteri: p.musteri,
+        yer: [p.ilce, p.il].filter(Boolean).join(" / ") || null, baslangic: p.baslangic, bitis: p.bitis, ekip: p.ekip })) } };
+    },
+  }),
+  islem({
+    ad: "plan_getir", modul: MODUL, tur: "oku", girdi: PLAN_ID, kaynak: [kimlik], islev: planIci,
+    tarif: "Planın bilgisi: durum, sürüm, tesis, ekip, plandaki ekipman (kimlik, kod, tür, sürüm), tesiste plana alınmamış ekipman, raporlar, izinler, tarafsızlık beyanı.",
+    calistir: async (b, v) => {
+      const p = await planIci(b.db, b.kim, v.plan);
+      if (!p) return { tamam: false, neden: GORUNMEZ };
+      const raporlu = new Set(p.raporluEkipman);
+      return { tamam: true, sonuc: {
+        id: p.kart.id, no: p.kart.no, durum: durumAdi(p.durum), surum: p.surum, baslangic: p.kart.baslangic, bitis: p.kart.bitis, aciklama: kirp(p.kart.aciklama),
+        tesis: p.kart.tesis, musteri: { id: p.kart.musteri.id, kisa: p.kart.musteri.kisa }, uyarilar: [...p.kart.turUyarilari, ...(p.kart.sozlesmeUyarisi ? [p.kart.sozlesmeUyarisi] : [])],
+        ekip: p.kart.ekip.map((e) => ({ personel: e.personelId, ad: e.ad, isgNo: e.isgNo, uyarilar: e.uyarilar })),
+        ekipman: p.ekipman.map((e) => ({ id: e.id, kod: e.kod, tur: e.tur, turId: e.turId, konum: e.konum, pasif: e.pasif, surum: e.surum, rapor_var: raporlu.has(e.id) })),
+        tesiste_planda_olmayan: p.kayitli.map((e) => ({ id: e.id, kod: e.kod, tur: e.tur, konum: e.konum })),
+        turler: p.turler.map((t) => ({ id: t.id, ad: t.ad, brans: t.brans })),
+        raporlar: p.raporlar.map((r) => ({ id: r.id, no: r.no, durum: r.durum, ekipmanId: r.ekipmanId, surum: r.surum, benim: r.benim })),
+        izin: p.izin, erken: p.erken, beyan_ozet: p.beyanOzet, beyan: p.durum === "bekliyor" ? kirp(p.beyan, 4_000) : null,
+      } };
+    },
+  }),
+  islem({
+    ad: "plan_ac_secenekleri", modul: MODUL, tur: "oku", islev: planAcVerisi, kaynak: [SuzgecDurumuSemasi],
+    girdi: z.object({ ara: SuzgecDurumuSemasi.shape.ara, denetci: SuzgecDurumuSemasi.shape.ara, sayfa: SuzgecDurumuSemasi.shape.sayfa }),
+    tarif: "Plan açmak için seçenekler: etkin müşteriler ve tesisleri (ara: müşteri / tesis adı; 20'şer, sayfa), denetçiler (denetci: ad), ekipman türleri, bugün.",
+    calistir: async (b, v) => {
+      const d = await planAcVerisi(b.db, b.kim);
+      if (!d) return { tamam: false, neden: "Bu kullanıcının plan açma yetkisi yok." };
+      const m = d.musteriler.filter((x) => trIcerir([x.kisa, x.unvan, ...x.tesisler.flatMap((t) => [t.ad, t.il ?? "", t.ilce ?? ""])].join(" "), v.ara));
+      const s = sayfala(m, v.sayfa);
+      return { tamam: true, sonuc: { ...s.bilgi, bugun: d.bugun, musteriler: s.satirlar,
+        denetciler: d.adaylar.filter((a) => trIcerir(a.ad, v.denetci)).map((a) => ({ personel: a.id, ad: a.ad, meslek: a.meslekMetin ?? a.meslek, hesap: a.hesapDurum })),
+        turler: d.turler.map((t) => ({ id: t.id, ad: t.ad, brans: t.brans })) } };
+    },
+  }),
+  islem({
+    ad: "tesis_ekipmanlari", modul: MODUL, tur: "oku", islev: tesisPlanBilgisi, kaynak: [kimlik, SuzgecDurumuSemasi],
+    girdi: z.object({ tesis: kimlik, sayfa: SuzgecDurumuSemasi.shape.sayfa }),
+    tarif: "Tesisin kayıtlı ekipmanı (kod, tür kimliği, konum, son kontrol, pasif; 50'şer), İSG-KATİP ID'leri ve iş sözleşmeleri (plan açabilene).",
+    calistir: async (b, v) => {
+      const t = await tesisPlanBilgisi(b.db, b.kim, v.tesis);
+      if (!t) return { tamam: false, neden: "Tesis bulunamadı ya da bu kullanıcı plan açamıyor." };
+      const s = sayfala(t.ekipmanlar, v.sayfa, 50);
+      return { tamam: true, sonuc: { ...s.bilgi, ekipmanlar: s.satirlar, isg: t.isg.map((x) => ({ personel: x.personelId, no: x.no, onay: x.onay, bitis: x.bitis })),
+        sozlesmeler: t.sozlesmeler, yururlukte_sozlesme: t.yururlukte } };
+    },
+  }),
+  islem({
+    ad: "plan_ac", modul: MODUL, tur: "yaz", girdi: PlanAcGirdisi, kaynak: [PlanAcGirdisi], islev: planAc,
+    tarif: "Plan açar: tesis, baslangic ve bitis (YYYY-AA-GG), ekip [{ personel (denetçinin personel kimliği), isgNo }], aciklama; tesisin etkin ekipmanı plana "
+      + "girer (haric: alınmayacak ekipman kimlikleri), yeniEkipman [{ tur, kod, konum }] tesise de kaydedilir; ekibe e-posta gider.",
+    calistir: async (b, _v, ham) => {
+      const r = await planAc(b.db, b.depo(), b.kim, b.firmaId, ham, { kok: b.kok ?? undefined });
+      if (r.durum !== "tamam") return yazmaCevabi(r);
+      if (r.eposta) b.epostaGonder("plan", r.id);
+      /* ekranda plan sayfasının gösterdiği uyarılar (İSG-KATİP, EKİPNET, meslek, sözleşme dışı gün, türe yetkili yok — engel değil) S.A.Y'a da */
+      const k = await planKarti(b.db, b.kim, r.id);
+      const uyarilar = k ? [...k.turUyarilari, ...(k.sozlesmeUyarisi ? [k.sozlesmeUyarisi] : []), ...k.ekip.flatMap((e) => e.uyarilar.map((u) => `${e.ad}: ${u}`))] : [];
+      return yazmaCevabi(r, { bildirim: `Plan açıldı: ${r.no}.`, sonuc: { id: r.id, no: r.no, eposta: r.eposta ?? 0, ...(uyarilar.length ? { uyarilar } : {}) } });
+    },
+  }),
+  islem({
+    ad: "plan_kabul", modul: MODUL, tur: "yaz", islev: planKabul, kaynak: [kimlik, surum],
+    girdi: z.object({ plan: kimlik, surum, beyan_onay: z.boolean(), beyan_ozet: z.string().min(1).max(64) }),
+    tarif: "Planı kabul eder (yalnız plandaki denetçi): beyan_onay — kullanıcı tarafsızlık beyanını onayladı; beyan_ozet — plan_getir'deki beyan_ozet (zorunlu; metin değiştiyse kabul edilmez).",
+    calistir: async (b, v) => yazmaCevabi(await planKabul(b.db, b.kim, v.plan, v.surum, v.beyan_onay, v.beyan_ozet)),
+  }),
+  islem({
+    ad: "plan_reddet", modul: MODUL, tur: "yaz", girdi: RedGirdisi.extend({ plan: kimlik, surum }), kaynak: [RedGirdisi, kimlik, surum], islev: planReddet,
+    tarif: "Planı reddeder (yalnız plandaki denetçi; gerekçe zorunlu).",
+    calistir: async (b, v, ham) => yazmaCevabi(await planReddet(b.db, b.kim, v.plan, v.surum, { gerekce: ham.gerekce })),
+  }),
+  islem({
+    ad: "plan_ekipman_ekle", modul: MODUL, tur: "yaz", girdi: YeniEkipmanGirdisi.extend({ plan: kimlik }), kaynak: [YeniEkipmanGirdisi, kimlik], islev: yeniEkipman,
+    tarif: "Plana yeni ekipman ekler — tesise kalıcı kayıt da açılır: kod (etiketteki, firmada eşsiz), tur (ekipman türü kimliği), konum.",
+    calistir: async (b, v, ham) => yazmaCevabi(await yeniEkipman(b.db, b.kim, v.plan, { kod: ham.kod, tur: ham.tur, seri: ham.seri, konum: ham.konum })),
+  }),
+  islem({
+    ad: "plan_kayitli_ekle", modul: MODUL, tur: "yaz", girdi: z.object({ plan: kimlik, ekipmanlar: z.array(kimlik).min(1) }), kaynak: [kimlik], islev: kayitliEkle,
+    tarif: "Tesiste kayıtlı, plana alınmamış ekipmanı plana alır (ekipmanlar: kimlikler — plan_getir tesiste_planda_olmayan).",
+    calistir: async (b, v) => yazmaCevabi(await kayitliEkle(b.db, b.kim, v.plan, v.ekipmanlar)),
+  }),
+  islem({
+    ad: "plan_ekipman_pasif", modul: MODUL, tur: "yaz", girdi: z.object({ plan: kimlik, ekipman: kimlik, surum, pasif: z.boolean() }), kaynak: [kimlik, surum],
+    islev: ekipmanPasif,
+    tarif: "Plandaki ekipmanı pasife alır (pasif: true — plandan çıkar, rapor açılmaz) ya da yeniden etkinleştirir; surum ekipmanın sürümü (plan_getir).",
+    calistir: async (b, v) => yazmaCevabi(await ekipmanPasif(b.db, b.kim, v.plan, v.ekipman, v.surum, v.pasif)),
+  }),
+  islem({
+    ad: "plan_ekipman_sil", modul: MODUL, tur: "yaz", girdi: z.object({ plan: kimlik, ekipman: kimlik }), kaynak: [kimlik], islev: ekipmanSil,
+    tarif: "Hiç kullanılmamış ekipmanı kesin siler (yönetici; raporu olan silinmez — pasife alınır).",
+    calistir: async (b, v) => yazmaCevabi(await ekipmanSil(b.db, b.kim, v.plan, v.ekipman)),
+  }),
+  islem({
+    ad: "plan_kunye_duzenle", modul: MODUL, tur: "yaz", girdi: z.object({ plan: kimlik, surum, kunye: KunyeGirdisi }), kaynak: [KunyeGirdisi, kimlik, surum],
+    islev: kunyeDuzenle,
+    tarif: "Plan bilgilerini düzenler (planlamacı): kunye { firmaAdi, adres, sgk, isg: { <personel kimliği>: İSG-KATİP SÖZLEŞME ID } } — ekibin İSG-KATİP ID'leri.",
+    calistir: async (b, v, ham) => yazmaCevabi(await kunyeDuzenle(b.db, b.kim, v.plan, v.surum, ham.kunye)),
+  }),
+  islem({
+    ad: "plan_kunye_guncelle", modul: MODUL, tur: "yaz", girdi: PLAN_ID, kaynak: [kimlik], islev: kunyeGuncelle,
+    tarif: "Denetçi: planlamacının değiştirdiği plan bilgilerini kendi planına ve taslak raporlarına alır (Güncelle).",
+    calistir: async (b, v) => {
+      /* taslak raporlara da yazar: ekranda açık rapor bu plandaysa ve kaydedilmemiş değişikliği varsa önce ekranın kaydı */
+      if (b.ekrandakiRapor && b.kaydedilmemis && ekranRaporuKirli(b, ((await planIci(b.db, b.kim, v.plan))?.raporlar ?? []).map((r) => r.id))) {
+        return { tamam: false, neden: EKRAN_KAYDEDILMEMIS };
+      }
+      return yazmaCevabi(await kunyeGuncelle(b.db, b.kim, v.plan));
+    },
+  }),
+  islem({
+    ad: "plan_not_ekle", modul: MODUL, tur: "yaz", girdi: NotGirdisi.extend({ plan: kimlik }), kaynak: [NotGirdisi, kimlik], islev: notEkle,
+    tarif: "Plana proje notu ekler (değişmez, silinmez).",
+    calistir: async (b, v, ham) => yazmaCevabi(await notEkle(b.db, b.kim, v.plan, { metin: ham.metin })),
+  }),
+  islem({
+    ad: "plan_kontrol_listesi", modul: MODUL, tur: "yaz", girdi: PLAN_SURUM.extend({ tamam: z.boolean() }), kaynak: [kimlik, surum], islev: kontrolListesi,
+    tarif: "Denetimdeki planın kontrol listesini tamamlar (tamam: true) ya da yeniden açar.",
+    calistir: async (b, v) => yazmaCevabi(await kontrolListesi(b.db, b.kim, v.plan, v.surum, v.tamam)),
+  }),
+  islem({
+    ad: "plan_tamamla", modul: MODUL, tur: "yaz", girdi: PLAN_SURUM, kaynak: [kimlik, surum], islev: planTamamla,
+    tarif: "Planı tamamlar (kontrol listesi tamamlanmış olmalı).",
+    calistir: async (b, v) => yazmaCevabi(await planTamamla(b.db, b.kim, v.plan, v.surum)),
+  }),
+  islem({
+    ad: "plan_tamamlama_geri_al", modul: MODUL, tur: "yaz", girdi: PLAN_SURUM, kaynak: [kimlik, surum], islev: tamamlamaGeriAl,
+    tarif: "Tamamlanmış planı yeniden denetime açar.",
+    calistir: async (b, v) => yazmaCevabi(await tamamlamaGeriAl(b.db, b.kim, v.plan, v.surum)),
+  }),
+];

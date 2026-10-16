@@ -124,11 +124,13 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
   /* 553 (reisim 2026-10-14: "konuşarak ilgili formatı yapabiliyo olalım"): S.A.Y taslağı görür (kaydedilmemiş değişiklikler dahil), Haiku'nun
      "formati_duzenle" işlemlerini uygular — geçmişe bir adım (araç çubuğundaki Geri al da alır); S.A.Y iletisinin altındaki Geri al, taslak o
      hâldeyse önceki hâline döndürür. Kaydet / Yayınla kişide. */
-  const sayGuncel = useRef({ t, degis });
-  useEffect(() => { sayGuncel.current = { t, degis }; });
+  const sayGuncel = useRef({ t, degis, kirli });
+  useEffect(() => { sayGuncel.current = { t, degis, kirli }; });
   useEffect(() => sayFormatBagla({
     id: format.id,
     tanim: () => sayGuncel.current.t,
+    /* 2026-10-16 (S.A.Y 2. adım a — D): kaydedilmemiş taslak varsa S.A.Y işten sonra sayfayı yenilemez, söyler */
+    kirli: () => sayGuncel.current.kirli,
     uygula: (islemler) => {
       const once = sayGuncel.current.t, r = formatIslemleri(once, islemler as readonly FormatIslemi[]);
       const sonra = JSON.stringify(r.t);
