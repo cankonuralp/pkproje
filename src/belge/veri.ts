@@ -31,6 +31,8 @@ export interface BelgeVerisi {
   /** onaylayan teknik yönetici (yalnız formatın imza bloğunda "teknik" yeri varsa basılır — karar 105); 595: hesabı bir personele bağlıysa o kaydın
       bilgileri (imza bölümünde teknik yöneticinin meslek / diploma / oda sicil … satırları) */
   onay: { ad: string; zaman: string; kisi?: ImzaKisiBilgisi | null } | null;
+  /** 595 (madde 1): sahada seçilen ikinci muayene uzmanı (plan ekibinden; kaydının bilgileri) */
+  ikinci?: ({ ad: string } & ImzaKisiBilgisi) | null;
   /** son imza (imza kalemi); yoksa belge imzasızdır */
   imza: { zaman: string; yontem: string } | null;
   /** imzaya hazırlanan KESİN belge (317): önizleme şeridi yok, imza hücresi elektronik imzayı söyler (imza PDF'in kendisinde) */

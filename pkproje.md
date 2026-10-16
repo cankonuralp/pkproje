@@ -2525,6 +2525,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-17 (595o): **İMZA YERLERİ — İKİNCİ UZMAN VE TESİS YETKİLİSİ** (sunum 595 madde 1; K1 *"Evet, hepsi"* — *"“+ İmza yeri” (uzman, teknik
+  yönetici, ikinci uzman, tesis yetkilisi)"*). Format yapıcıda imza bölümünün ayarındaki "İmza yerleri"ne İkinci muayene uzmanı (adı, mesleği,
+  EKİPNET, imzası; diploma, oda sicil, e-posta, telefon "+ Satır ekle"den) ve Tesis yetkilisi (adı, unvanı, imzası) eklendi. Sahada imza bölümü
+  görünür: ikinci uzman planın ekibinden seçilir (raporu yazan hariç; sunucu ekipte mi diye yeniden bakar — elle kurulmuş istek başkasını
+  yazamaz), tesis yetkilisinin adı ve unvanı yazılır. Belgede ikinci uzmanın bilgileri kendi kaydından, ikisinin imzası boş hücre (ıslak imza);
+  e-imza yine muayene uzmanınındır. Bu satırları olmayan formatların belgesi aynı.
 - 2026-10-17 (595n): **SAYFA ALTI YAZISI** (sunum 595 madde 14; K1 *"Evet, hepsi"* — *"sayfa altı yazısı yazılır (adres, telefon, sayfa no, gizlilik
   notu)"*). Format yapıcıda sayfa altı yazısında {firma}, {kod} yanında {adres}, {tel}, {eposta} — değerler Firma ayarlarından (Firma bilgilerine
   "Telefon" eklendi; rakam, boşluk, + ( ) -). Boş kalan bilgi ayracıyla düşer. Formatın kendi yazısı PDF'te her sayfanın altındaki şeritte, rapor no ve

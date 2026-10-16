@@ -13,7 +13,7 @@ import stil from "./format.module.css";
 
 const ALAN_TUR = { metin: "metin", sayi: "sayı", tarih: "tarih", secim: "seçim", coklu: "çoklu seçim", evet: "evet / hayır" } as const;
 const GIRIS = { sayi: "sayı", metin: "metin", secim: "seçim", evet: "evet / hayır" } as const;
-const IMZA = { uzman: "Muayene uzmanı", teknik: "Teknik yönetici", diger: "serbest satırlar" } as const;
+const IMZA = { uzman: "Muayene uzmanı", teknik: "Teknik yönetici", uzman2: "İkinci muayene uzmanı", tesis: "Tesis yetkilisi", diger: "serbest satırlar" } as const;
 const virgul = (n: number) => String(n).replace(".", ",");
 const sinir = (op?: Sinir, s?: number, birim?: string) => (op && s !== undefined ? `${SINIR_ISARETI[op]} ${virgul(s)}${birim ? ` ${birim}` : ""}` : null);
 const olumsuz = (l?: readonly string[], agir?: boolean) => (l?.length ? `uygun değil: ${l.join(" / ")}${agir ? " (ağır)" : ""}` : null);

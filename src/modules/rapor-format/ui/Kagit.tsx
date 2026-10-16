@@ -41,7 +41,7 @@ import {
   sonucMetinleri, testBasliklari,
 } from "../../../format/duzen";
 import {
-  BAS_KAYNAK_ADI, type BasHucresi, type BasKaynagi, BLOKLAR, CIHAZ_ALAN_ADI, doldurma, DOLDURULUR, EKIPMAN_ALAN_ADI, KUSUR_ALAN_ADI, type CihazAlani, type KusurAlani, EKIPMAN_ALANLARI, FIRMA_KAYNAK_ADI, FIRMA_ZORUNLU, IMZA_ALAN_ADI, IMZA_KISI_ADI, KUNYE_ALAN_ADI, KUNYE_ALANLARI,
+  BAS_KAYNAK_ADI, type BasHucresi, type BasKaynagi, BLOKLAR, CIHAZ_ALAN_ADI, doldurma, DOLDURULUR, EKIPMAN_ALAN_ADI, KUSUR_ALAN_ADI, type CihazAlani, type KusurAlani, EKIPMAN_ALANLARI, FIRMA_KAYNAK_ADI, FIRMA_ZORUNLU, IMZA_ALAN_ADI, IMZA_KISI_ADI, IMZA_YERLERI, type ImzaYeri, KUNYE_ALAN_ADI, KUNYE_ALANLARI,
   type Blok, type Bolum, type BolumOf, type FirmaKaynagi, type FirmaSatiri, type FormatTanimi, type ImzaAlani, type ImzaSatiri,
 } from "../../../format/tanim";
 import { kilitliKunye } from "../../../format/kunye";
@@ -413,13 +413,16 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
   };
 
   /* ── 595: imza bölümünün satırları ── */
+  const IMZA_KAYNAGI: Record<ImzaYeri, string> = { uzman: "raporu yazanın kaydından", teknik: "onaylayan teknik yöneticiden",
+    uzman2: "sahada plan ekibinden seçilenin kaydından", tesis: "sahada yazılır (imza: boş hücre)" };
   const imzaSecenekleri = (b: BolumOf<"imza">) => [
-    ...(["uzman", "teknik"] as const).flatMap((kim) => eksikImzaAlanlari(b, kim).map((a) =>
-      [`${kim}:${a}`, `${IMZA_KISI_ADI[kim]} · ${IMZA_ALAN_ADI[a]}`, kim === "uzman" ? "raporu yazanın kaydından" : "onaylayan teknik yöneticiden"] as const)),
-    ["diger", IMZA_KISI_ADI.diger, "tesis yetkilisi, kaşe, ıslak imza — sabit yazı ya da boş hücre"] as const,
+    /* 595 (madde 1): yalnız bölümde yeri olan kişinin bilgileri (ikinci uzman / tesis yetkilisi bölüm ayarında "İmza yerleri"nden eklenir) */
+    ...IMZA_YERLERI.filter((kim) => kim === "uzman" || kim === "teknik" || imzaSatirlari(b).some((s) => s.kim === kim)).flatMap((kim) => eksikImzaAlanlari(b, kim).map((a) =>
+      [`${kim}:${a}`, `${IMZA_KISI_ADI[kim]} · ${IMZA_ALAN_ADI[a]}`, IMZA_KAYNAGI[kim]] as const)),
+    ["diger", IMZA_KISI_ADI.diger, "kaşe, ıslak imza, not — sabit yazı ya da boş hücre"] as const,
   ];
   const imzaKoy = (i: number, x: string) => {
-    const [kim, alan] = x.split(":") as ["uzman" | "teknik" | "diger", ImzaAlani | undefined];
+    const [kim, alan] = x.split(":") as [ImzaYeri | "diger", ImzaAlani | undefined];
     const y = imzaSatiriEkle(t, i, kim, alan);
     if (!y.id) return;
     degis(y.t); setYeniId(y.id); bildir("İmza satırı eklendi (taslak); adını yazabilirsiniz.");
@@ -459,7 +462,9 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
     }
     const metin = s.kim === "uzman"
       ? s.alan === "imza" ? "güvenli elektronik imza · muayene uzmanı" : "raporu yazanın kaydından"
-      : s.alan === "zaman" ? "onay anı" : s.alan === "imza" ? "elektronik onay" : "onaylayan teknik yöneticinin kaydından";
+      : s.kim === "uzman2" ? s.alan === "imza" ? "boş hücre · ikinci uzmanın imzası" : "sahada seçilen ikinci uzmanın kaydından"
+        : s.kim === "tesis" ? s.alan === "imza" ? "boş hücre · ıslak imza" : "sahada yazılır"
+          : s.alan === "zaman" ? "onay anı" : s.alan === "imza" ? "elektronik onay" : "onaylayan teknik yöneticinin kaydından";
     return <span key={`${s.id}-d`} className={k.ornek}>{metin}</span>;
   };
 
@@ -832,18 +837,19 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
       </div>}
       {b.blok === "imza" && (() => {
         /* 595: kişi eklenince varsayılan satırlarıyla gelir, kaldırılınca bütün satırları çıkar; en az bir kişi kalır */
-        const kisiler = (["uzman", "teknik"] as const).filter((x) => imzaSatirlari(b).some((s) => s.kim === x));
+        const kisiler = IMZA_YERLERI.filter((x) => imzaSatirlari(b).some((s) => s.kim === x));
         return <>
           <div className={k.panelSatir} role="group" aria-label="İmza yerleri">
-            {(["uzman", "teknik"] as const).map((x) => (
+            {IMZA_YERLERI.map((x) => (
               <label key={x} className={k.panelKutu}>
                 <input type="checkbox" checked={kisiler.includes(x)} disabled={kisiler.length === 1 && kisiler.includes(x)}
                   onChange={(e) => degis(imzaKisisiYaz(t, i, x, e.target.checked))} />{IMZA_KISI_ADI[x]}
               </label>
             ))}
           </div>
-          <p className={k.panelIpucu}>Satırların adı, sırası ve varlığı kâğıtta; değerleri kişinin kaydından gelir ve imza anında rapora kopyalanır. Serbest satır
-            (tesis yetkilisi, kaşe) sabit yazı ya da boş hücre olur.</p>
+          <p className={k.panelIpucu}>Satırların adı, sırası ve varlığı kâğıtta; değerleri kişinin kaydından gelir ve imza anında rapora kopyalanır. İkinci
+            muayene uzmanını denetçi sahada plan ekibinden seçer; tesis yetkilisinin adını ve unvanını sahada yazar, imzası belgede boş hücredir. Serbest satır
+            (kaşe, not) sabit yazı ya da boş hücre olur.</p>
           <EimzaYeriAyari t={t} degis={degis} hucreVar={imzaSatirlari(b).some((s) => s.kim === "uzman" && s.alan === "imza")} />
         </>;
       })()}

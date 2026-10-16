@@ -485,6 +485,8 @@ export async function ekipmanSil(db: Sorgulayici, kim: Kisi, id: string, ekipman
 /* ── RAPORLAR İÇİN (modül 14 bu işlevlerle plana bakar; yetki burada: planı görebilen) ─────────────────────────────── */
 export interface RaporPlani {
   id: string; no: string; durum: PlanDurumu; tesisId: string; baslangic: string; atananlar: string[];
+  /** 595 (madde 1): planın ekibi (personel kimlikleri) — raporun ikinci muayene uzmanı bunlardan seçilir */
+  ekip: string[];
   /** isteyenin plandaki personeli (ekipte değilse null) */
   personelId: string | null;
   /** isteyenin gördüğü künye (Güncelle'ye basmadıysa eski) ve sürümü; ekipte değilse güncel künye */
@@ -511,7 +513,8 @@ export async function raporIcinPlan(db: Sorgulayici, kim: Kisi, planId: string):
   const { p, benim } = e;
   const guncelKunye: Kunye = { firma_adi: p.firma_adi, adres: p.adres, sgk: p.sgk, isg_no: benim?.isg_no ?? null };
   return {
-    id: p.id, no: p.no, durum: p.durum, tesisId: p.tesis_id, baslangic: p.baslangic, atananlar: e.atananlar, personelId: benim?.personel_id ?? null,
+    id: p.id, no: p.no, durum: p.durum, tesisId: p.tesis_id, baslangic: p.baslangic, atananlar: e.atananlar, ekip: e.ekip.map((x) => x.personel_id),
+    personelId: benim?.personel_id ?? null,
     kunye: benim?.gorulen ?? guncelKunye, kunyeSurum: benim && benim.gorulen ? benim.kunye_surum : p.kunye_surum, guncelKunye, guncelSurum: p.kunye_surum,
   };
 }

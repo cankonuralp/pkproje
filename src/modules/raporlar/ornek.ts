@@ -46,7 +46,7 @@ export function ornekSahaRaporu(tanim: FormatTanimi, tur: OrnekTur, bugun: strin
     plan: { id: ORNEK_KIMLIK, no: "P-ÖRNEK", tesisAd: "Örnek tesis", musteriKisa: "Örnek Sanayi" },
     ekipman: { id: ORNEK_KIMLIK, kod: "ÖRN-001", onceki: null },
     tur: { id: tur.id, ad: tur.ad, kod: tur.kod, brans: tur.brans, kontrolStd: tur.std, periyot: tur.periyot },
-    yazan: { ad: "Örnek Denetçi", meslek: "diger", meslekMetin: "Makine mühendisi", ekipnet: "ÖRNEK-0000" },
+    yazan: { ad: "Örnek Denetçi", meslek: "diger", meslekMetin: "Makine mühendisi", ekipnet: "ÖRNEK-0000" }, ekip: [{ id: "00000000-0000-4000-8000-000000000002", ad: "Örnek İkinci Uzman" }],
     kunye: {
       firmaAdi: "Örnek Sanayi A.Ş.", adres: "Örnek Mah. Deneme Sk. No: 1, Merkez / Ankara", sgk: "0000000000000000000000000", isgNo: "000000",
       eposta: "bilgi@ornek-sanayi.example", tel: "0312 000 00 00",

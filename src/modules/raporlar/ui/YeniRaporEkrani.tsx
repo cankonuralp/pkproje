@@ -42,7 +42,7 @@ function YeniIc({ p, e, onceki }: { p: YeniRaporPaketi; e: YeniRaporPaketi["ekip
   const t = p.turler[e.turId];
   const v = useMemo((): SahaRaporuVerisi => ({
     id, no: "Yeni rapor", durum: "taslak", surum: 0, olustu: new Date().toISOString(), degisti: new Date().toISOString(), gonderildi: null, bugun: p.bugun,
-    plan: p.plan, ekipman: { id: e.id, kod: e.kod, onceki: e.onceki }, tur: t.tur, yazan: p.yazan, kunye: p.kunye, kunyeFark: [],
+    plan: p.plan, ekipman: { id: e.id, kod: e.kod, onceki: e.onceki }, tur: t.tur, yazan: p.yazan, ekip: p.ekip ?? [], kunye: p.kunye, kunyeFark: [],
     ekipmanBilgi: e.ekipmanBilgi, tarih: { bas, bit: null, sonraki: null, takip: null, rapor: null },
     cevaplar: t.ilk, tanim: t.tanim, formatSira: t.formatSira, cihazlar: t.cihazlar, fotolar: [], secilebilir: {},
     kopyaKaynak: null, guncelFormat: null, mesaiDolu: false, geri: null, revize: null, imza: null, imzali: null,

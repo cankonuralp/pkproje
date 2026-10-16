@@ -9,7 +9,9 @@
    7. (429) Kontrol günü değişince o günün süresi denetlenmeseydi rapor dolu güne alınır, günün sınırı aşılırdı.
    8. (492) Sunucuda künye kilidi denetlenmeseydi formatın kilitli bilgisi (SGK, İSG-KATİP) elle kurulmuş istekle raporda değişirdi.
    9. (519) Sunucuda tamamlanmış plan denetimi olmasaydı (eski kural) tamamlanmış plana yeni rapor açılırdı — reisim 2026-10-12: "tamamlamayı geri
-      almadan yeni rapor oluşturulmasın". */
+      almadan yeni rapor oluşturulmasın".
+  10. (595 madde 1) Sunucu ikinci muayene uzmanının plan ekibinden ve yazan dışında olduğuna bakmasaydı elle kurulmuş istekle denetçi kendisini
+      (ya da ekip dışı birini) ikinci uzman yazardı — belgede iki imza yeri aynı kişinin olurdu. */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -256,3 +258,18 @@ test("sunucuda künye kilidi denetimi kalkınca kilitli SGK raporda değişir", 
   } finally { await h.end(); }
 });
 
+test("sunucuda ikinci uzman denetimi kalkınca denetçi kendisini ikinci muayene uzmanı yazar (595 madde 1)", async () => {
+  const m = await bozukModul<Raporlar>(RAPORLAR, "  const u = c.imzaci.uzman2;\n  if (!u) return {};", "  return {};");
+  const { h, den, id, ekipman, is } = await saglam(bugunTr());
+  try {
+    const r = await is(den, (db) => m.raporOlustur(db, den, id, ekipman));
+    assert.ok(r.durum === "tamam", JSON.stringify(r));
+    const ben = (await is(den, (db) => db.sorgu<{ p: string }>("SELECT personel_id::text AS p FROM rapor WHERE id = $1", [r.id]))).rows[0].p;
+    const kayit = {
+      ekipman: { marka: null, model: null, seri: null, imal: null, konum: null, amac: null, bolum: null },
+      tarih: { bas: `${bugunTr()}T09:00`, bit: null, sonraki: null, takip: null, rapor: null }, cevaplar: { imzaci: { uzman2: ben } },
+    };
+    const k = await is(den, (db) => m.raporKaydet(db, den, r.id, 0, kayit));
+    assert.equal(k.durum, "tamam", `kendisi ikinci uzman yazıldı: ${JSON.stringify(k)}`);
+  } finally { await h.end(); }
+});

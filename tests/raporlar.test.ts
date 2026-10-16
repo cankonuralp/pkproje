@@ -1034,3 +1034,22 @@ test("raporlar listesi: denetçi yalnız kendi raporlarını, branş yöneticisi
   assert.deepEqual([g.durum, g.geri], ["taslak", true]);
   assert.equal((await liste(FA.den2))!.find((r) => r.id === r2)!.geri, false);
 });
+
+/* 595 (madde 1 — "+ İmza yeri: ikinci uzman, tesis yetkilisi"): ikinci muayene uzmanı sahada plan ekibinden seçilir; istemciden gelen kimlik yetki
+   vermez — sunucu ekipte mi, raporu yazan mı diye bakar. Belge seçilenin kaydının bilgileriyle; tesis yetkilisinin adı / unvanı cevaplarda. */
+test("595 madde 1: ikinci muayene uzmanı yalnız plan ekibinden, raporu yazan dışında (sunucu denetler); saha seçenekleri ekip; belge kaydın bilgileriyle", async () => {
+  const id = await yeniPlan({ ekip: [FA.den1P, FA.den2P] });
+  const r = tamam(await olustur(FA.den1, id, FA.ekp["HT-A2"]));
+  const g = girdi();
+  const imzali = (imzaci: object) => ({ ...g, cevaplar: { ...g.cevaplar, imzaci } });
+  const v0 = (await sr(FA.den1, r.id))!;
+  assert.deepEqual(v0.ekip.map((p) => p.id), [FA.den2P], "seçenekler: ekip, yazan hariç");
+  const hata = { durum: "gecersiz", hatalar: { "cevaplar.imzaci.uzman2": "İkinci muayene uzmanı planın ekibinden, raporu yazan dışında biri olur." } };
+  assert.deepEqual(await kaydet(FA.den1, r.id, 0, imzali({ uzman2: FA.den1P })), hata, "yazan kendisi olamaz");
+  assert.deepEqual(await kaydet(FA.den1, r.id, 0, imzali({ uzman2: "00000000-0000-4000-8000-000000000099" })), hata, "ekipte olmayan seçilemez");
+  tamam(await kaydet(FA.den1, r.id, 0, imzali({ uzman2: FA.den2P, tesisAd: "Deneme Yetkili", tesisUnvan: "Tesis müdürü" })));
+  const v = (await sr(FA.den1, r.id))!;
+  assert.deepEqual(v.cevaplar.imzaci, { uzman2: FA.den2P, tesisAd: "Deneme Yetkili", tesisUnvan: "Tesis müdürü" });
+  const b = (await a(FA.den1, (db) => raporBelgesiVerisi(db, depo, FA.den1, r.id)))!;
+  assert.equal(b.belge.ikinci?.ad, v0.ekip[0].ad, "belge ikinci uzmanın kaydından");
+});

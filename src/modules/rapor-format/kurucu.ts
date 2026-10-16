@@ -9,7 +9,7 @@ import { kilitliKimlikler } from "../../format/motor.ts";
 import {
   basEtiketleri, basSatirlari, basSirasi, cihazSutunlari, ekipmanEtiketleri, ekipmanTamYap, firmaSatirlari, imzaSatirlari, imzaVarsayilani, listeBasliklari, olcumBasliklari, sonucMetinleri, testBasliklari,
 } from "../../format/duzen.ts";
-import { BAS_HUCRELERI, BAS_KAYNAK_ADI, BAS_KAYNAKLARI, type BasHucresi, type BasKaynagi, type BasSatiri, Bolum, EK_SUTUN_EN_COK, LISTE_SUTUN_ADI, LISTE_SUTUN_ALANLARI, TEST_SUTUN_ADI, TEST_SUTUN_TURLERI, type ListeSutunAlani, type TestSutunTuru, CIHAZ_ALAN_ADI, CIHAZ_ALANLARI, EIMZA_KUTU, EKIPMAN_ALAN_ADI, KUSUR_ALAN_ADI, KUSUR_ALANLARI, type CihazAlani, type KusurAlani, FIRMA_KAYNAK_ADI, FIRMA_KAYNAKLARI, FIRMA_ZORUNLU, IMZA_ALAN_ADI, imzaAlanlari, KUNYE_ALANLARI, KURAL_EN_COK, kurucudan, type Blok, type BolumOf, type EkipmanAlani, type FormatTanimi,
+import { BAS_HUCRELERI, BAS_KAYNAK_ADI, BAS_KAYNAKLARI, type BasHucresi, type BasKaynagi, type BasSatiri, Bolum, EK_SUTUN_EN_COK, LISTE_SUTUN_ADI, LISTE_SUTUN_ALANLARI, TEST_SUTUN_ADI, TEST_SUTUN_TURLERI, type ListeSutunAlani, type TestSutunTuru, CIHAZ_ALAN_ADI, CIHAZ_ALANLARI, EIMZA_KUTU, EKIPMAN_ALAN_ADI, KUSUR_ALAN_ADI, KUSUR_ALANLARI, type CihazAlani, type KusurAlani, FIRMA_KAYNAK_ADI, FIRMA_KAYNAKLARI, FIRMA_ZORUNLU, IMZA_ALAN_ADI, IMZA_KISI_ADI, type ImzaYeri, imzaAlanlari, KUNYE_ALANLARI, KURAL_EN_COK, kurucudan, type Blok, type BolumOf, type EkipmanAlani, type FormatTanimi,
   type FirmaKaynagi, type FirmaSatiri, type ImzaAlani, type ImzaKisisi, type ImzaSatiri, type KunyeAlani, type Sinir, type SonucKurali } from "../../format/tanim.ts";
 import { kilitliKunye } from "../../format/kunye.ts";
 import { FORMUL_EN_UZUN, formulAdDegistir, formulDuzelt } from "../../format/formul.ts";
@@ -421,11 +421,11 @@ function imzaYaz(t: FormatTanimi, i: number, l: readonly (Omit<ImzaSatiri, "id">
     ek.add(id);
     return { ...x, id };
   });
-  const kisiler = (["uzman", "teknik"] as const).filter((k) => satirlar.some((x) => x.kim === k));
+  const kisiler = (["uzman", "teknik"] as const).filter((k) => satirlar.some((x) => x.kim === k));   // eski alan imzalar: yalnız uzman / teknik
   return { ...t, bolumler: t.bolumler.map((x, j) => (j === i ? { ...b, satirlar, imzalar: kisiler.length ? kisiler : ["uzman"] } : x)) };
 }
 /** kişinin henüz eklenmemiş bilgileri ("+ Satır ekle" seçenekleri) */
-export function eksikImzaAlanlari(b: ImzaB, kim: "uzman" | "teknik"): ImzaAlani[] {
+export function eksikImzaAlanlari(b: ImzaB, kim: ImzaYeri): ImzaAlani[] {
   const l = imzaSatirlari(b);
   return imzaAlanlari(kim).filter((a) => !l.some((x) => x.kim === kim && x.alan === a));
 }
@@ -434,7 +434,7 @@ export function imzaSatiriEkle(t: FormatTanimi, i: number, kim: ImzaKisisi, alan
   const b = imzaBolumu(t, i);
   if (!b) return { t, id: null };
   if (kim !== "diger" && (!alan || !imzaAlanlari(kim).includes(alan))) return { t, id: null };
-  const varsayilan = kim === "diger" ? "Yeni satır" : kim === "teknik" && alan === "ad" ? "Onaylayan teknik yönetici" : IMZA_ALAN_ADI[alan!];
+  const varsayilan = kim === "diger" ? "Yeni satır" : alan === "ad" && kim !== "uzman" ? (kim === "teknik" ? "Onaylayan teknik yönetici" : IMZA_KISI_ADI[kim]) : IMZA_ALAN_ADI[alan!];
   const y = imzaYaz(t, i, [...imzaSatirlari(b), { kim, ...(kim === "diger" ? {} : { alan }), ad: (ad ?? varsayilan).trim().slice(0, 200) || varsayilan, ...(alan === "imza" ? { tam: true } : {}) }]);
   return { t: y, id: (imzaBolumu(y, i)?.satirlar ?? []).at(-1)?.id ?? null };
 }
@@ -464,7 +464,7 @@ export function imzaSatiriTasi(t: FormatTanimi, i: number, id: string, yon: -1 |
   return j < 0 || j + yon < 0 || j + yon >= l.length ? t : imzaYaz(t, i, tasi(l, j, j + yon));
 }
 /** kişiyi ekler (varsayılan satırlarıyla, sona) ya da bütün satırlarıyla çıkarır */
-export function imzaKisisiYaz(t: FormatTanimi, i: number, kim: "uzman" | "teknik", var_: boolean): FormatTanimi {
+export function imzaKisisiYaz(t: FormatTanimi, i: number, kim: ImzaYeri, var_: boolean): FormatTanimi {
   const b = imzaBolumu(t, i);
   if (!b) return t;
   const l = imzaSatirlari(b), simdi = l.some((x) => x.kim === kim);

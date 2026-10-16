@@ -166,6 +166,11 @@ pkproje/
                             basSirasi / BAS_GENISLIK (verilmemişse bugünkü dört satır ve sıra, birebir) · belge.ts basDegeri · kurucu.ts basSatiri* /
                             basHucreTasi / eksikBasKaynaklari (ilk değişiklikte satırlar k_h kimliğiyle tanıma; bas etiketleri satır adına) · Kagit.tsx
                             "+ Satır", ↑ ↓ ×, hücre ← → · motor Bakanlık özü · S.A.Y "bas_satiri" / "bas_hucre" · kilit tests/bas-tablosu, bozan bas-tablosu
+                            · 595 İMZA YERLERİ (madde 1): tanim.ts IMZA_YERLERI uzman · teknik · uzman2 (ikinci muayene uzmanı) · tesis (tesis yetkilisi:
+                            ad · unvan · imza) + Cevaplar.imzaci (uzman2 kimlik, tesisAd, tesisUnvan) · duzen.ts imzaVarsayilani / imzaGirisleri · belge.ts
+                            satirDegeri (BelgeVerisi.ikinci; imzaları boş hücre) · saha raporlar/ui/Bloklar ImzaBlok (SahaRaporu.ekip — plan ekibi, yazan
+                            hariç; imza bölümü yalnız bu satırlar varsa sahada) · sunucu raporlar.ts imzaciHatalari (ekipten, yazan dışında — kaydet ve
+                            format güncelle) · planlar raporIcinPlan.ekip · kilit tests/imza-yerleri + raporlar (PG), bozan imza-yerleri + raporlar
                             · 595 SAYFA ALTI (madde 14): duzen.ts altYazisi yer tutucuları {firma} {kod} {adres} {tel} {eposta} (tek geçiş, boş bilgi ayracıyla
                             düşer) · belge.ts belgeAltYazisi.format → pdf.ts raporAltBilgisi şeritte her sayfada (yalnız formatın kendi yazısı) · Firma ayarları
                             firma_bilgileri.tel (BelgeKunyesi.tel) · kilit tests/sayfa-alti, bozan sayfa-alti

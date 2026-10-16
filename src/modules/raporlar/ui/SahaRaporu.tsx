@@ -41,7 +41,7 @@ import { DegerYok, Kirinti, Kod, NesneBasi, Rozet, SeritKap } from "../../../com
 import { simdiIso, tarihNo } from "../../../components/secim/tarih";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
-import { ekipmanEtiketleri, firmaSatirlari, fotoKutulari, raporDuzeni, sabitEkipmanAlanlari } from "../../../format/duzen";
+import { ekipmanEtiketleri, firmaSatirlari, fotoKutulari, imzaGirisleri, raporDuzeni, sabitEkipmanAlanlari } from "../../../format/duzen";
 import { degerlendir } from "../../../format/motor";
 import { doldurma, EKIPMAN_ALAN_ADI, KUNYE_ALAN_ADI, KUNYE_ALANLARI, KUNYE_EN_COK, type Cevaplar, type FirmaSatiri, type KunyeAlani, type RaporSonucu } from "../../../format/tanim";
 import { gecerliKunye, kayitKunyesi, kilitliKunye, metotMetni } from "../../../format/kunye";
@@ -352,8 +352,10 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
   const bolumEksik = (id: string) => d.eksikler.some((e) => e.bolum === id && gecersiz(e.alan));
   const acik = (id: string) => acikSet.has(id);
   const degistir = (id: string) => (a: boolean) => { const y = new Set(acikSet); if (a) y.add(id); else y.delete(id); acikYaz(y); };
-  /* ekranda görünen bölümler (imza bölümü yalnız belgede — 447): "Tümünü aç / kapat" */
-  const gorunurBolumler = duzen.bolumler.filter(({ b }) => b.blok !== "imza");
+  /* ekranda görünen bölümler (imza bölümü yalnız belgede — 447; 595 madde 1: sahada doldurulan ikinci uzman / tesis yetkilisi varsa görünür):
+     "Tümünü aç / kapat" */
+  const imzaGiris = imzaGirisleri(v.tanim);
+  const gorunurBolumler = duzen.bolumler.filter(({ b }) => b.blok !== "imza" || imzaGiris.uzman2 || imzaGiris.tesis);
   const gorunenBolumler = [SABIT.firma, ...(duzen.ekipman ? [SABIT.ekipman] : []), ...(cihazEk ? [SABIT.cihaz] : []), ...gorunurBolumler.map(({ b }) => b.id)];
   const hepsiAcik = gorunenBolumler.every((id) => acikSet.has(id));
 

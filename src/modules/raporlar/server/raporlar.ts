@@ -246,6 +246,8 @@ export interface SahaRaporu {
   ekipman: { id: string; kod: string; onceki: { tarih: string; sonuc: string | null } | null };
   tur: { id: string; ad: string; kod: string; brans: "m" | "e"; kontrolStd: string[]; periyot: number };
   yazan: { ad: string; meslek: string; meslekMetin: string | null; ekipnet: string | null };
+  /** 595 (madde 1): ikinci muayene uzmanının seçenekleri — plan ekibi, raporu yazan hariç */
+  ekip: { id: string; ad: string }[];
   kunye: { firmaAdi: string; adres: string | null; sgk: string | null; isgNo: string | null; eposta: string | null; tel: string | null };
   /** planlamacı künyeyi değiştirdiyse farklı alanlar (yazan denetçi Güncelle ile alır) */
   kunyeFark: string[];
@@ -370,6 +372,7 @@ export async function sahaRaporu(db: Sorgulayici, kim: Kisi, id: string): Promis
     ekipman: { id: r.ekipman_id, kod: etiket?.kod ?? "—", onceki: etiket?.disKontrol ? { tarih: etiket.disKontrol, sonuc: etiket.disSonuc } : null },
     tur: { id: tur.id, ad: tur.ad, kod: tur.kod, brans: tur.brans, kontrolStd: tur.kontrolStd, periyot: tur.periyot },
     yazan: { ad: yazan?.ad ?? "—", meslek: yazan?.meslek ?? "diger", meslekMetin: yazan?.meslekMetin ?? null, ekipnet: yazan?.ekipnet ?? null },
+    ekip: await ikinciSecenekleri(db, plan?.ekip ?? [], r.personel_id),
     kunye: { firmaAdi: r.kunye.firma_adi, adres: r.kunye.adres, sgk: r.kunye.sgk, isgNo: r.kunye.isg_no, eposta: r.kunye.eposta ?? null, tel: r.kunye.tel ?? null },
     kunyeFark,
     ekipmanBilgi: r.ekipman_bilgi,
@@ -395,7 +398,7 @@ export async function sahaRaporu(db: Sorgulayici, kim: Kisi, id: string): Promis
    yetki aynen denetlenir), cihaz bekleyen işleri gerçek kimliğe bağlar. Burada hiçbir şey yazılmaz. */
 const YENI_EKIPMAN_EN_COK = 200;
 export interface YeniRaporPaketi {
-  plan: SahaRaporu["plan"]; yazan: SahaRaporu["yazan"]; kunye: SahaRaporu["kunye"]; bugun: string;
+  plan: SahaRaporu["plan"]; yazan: SahaRaporu["yazan"]; ekip: SahaRaporu["ekip"]; kunye: SahaRaporu["kunye"]; bugun: string;
   /** rapor açılamıyorsa nedeni (plan kabul edilmemiş, plan günü gelmemiş, günlük süre dolmuş) — ekran söyler, kuyruğa iş yazılmaz */
   neden: string | null;
   ekipmanlar: { id: string; kod: string; turId: string; ekipmanBilgi: EkipmanBilgisi; onceki: SahaRaporu["ekipman"]["onceki"] }[];
@@ -441,9 +444,22 @@ export async function yeniRaporPaketi(db: Sorgulayici, kim: Kisi, planId: string
   return {
     plan: { id: plan.id, no: plan.no, tesisAd: iletisim?.tesisAd ?? "—", musteriKisa: iletisim?.kisa ?? "—" },
     yazan: { ad: yazan?.ad ?? "—", meslek: yazan?.meslek ?? "diger", meslekMetin: yazan?.meslekMetin ?? null, ekipnet: yazan?.ekipnet ?? null },
+    ekip: await ikinciSecenekleri(db, plan.ekip, plan.personelId),
     kunye: { firmaAdi: plan.kunye.firma_adi, adres: plan.kunye.adres, sgk: plan.kunye.sgk, isgNo: plan.kunye.isg_no, eposta: iletisim?.eposta ?? null, tel: iletisim?.tel ?? null },
     bugun, neden, ekipmanlar, turler, standartlar: await raporStandartlari(db, kim),
   };
+}
+
+/** 595 (madde 1): ikinci muayene uzmanının seçenekleri — plan ekibi, raporu yazan hariç (adıyla) */
+async function ikinciSecenekleri(db: Sorgulayici, ekip: readonly string[], yazan: string): Promise<{ id: string; ad: string }[]> {
+  return (await personelOzetleri(db, ekip.filter((x) => x !== yazan))).map((p) => ({ id: p.id, ad: p.ad }));
+}
+/** 595 (madde 1): ikinci muayene uzmanı planın ekibinden, raporu yazan dışında biri — seçim ekrandan gelir, kimlik yetki vermez; sunucu denetler */
+async function imzaciHatalari(db: Sorgulayici, kim: Kisi, r: { plan_id: string; personel_id: string }, c: Cevaplar): Promise<Record<string, string>> {
+  const u = c.imzaci.uzman2;
+  if (!u) return {};
+  const plan = await raporIcinPlan(db, kim, r.plan_id);
+  return plan && u !== r.personel_id && plan.ekip.includes(u) ? {} : { "cevaplar.imzaci.uzman2": "İkinci muayene uzmanı planın ekibinden, raporu yazan dışında biri olur." };
 }
 
 /* ── YAZMA ───────────────────────────────────────────────────────────────────────────────────────────────────── */
@@ -531,7 +547,7 @@ async function kaydetIc(db: Sorgulayici, kim: Kisi, e: Erisim, surum: number, gi
   /* 492: formatın kilitli künye bilgisi (başlangıç SGK, İSG-KATİP) değiştirilmez — ekranda girdisi yok; yetki ve kural sunucuda */
   const format = await formatSurumuOku(db, e.r.format_id);
   if (!format) return { durum: "yok" };
-  const kilit = kunyeKilitHatalari(format.tanim, v.cevaplar.kunye);
+  const kilit = { ...kunyeKilitHatalari(format.tanim, v.cevaplar.kunye), ...(await imzaciHatalari(db, kim, e.r, v.cevaplar)) };
   if (Object.keys(kilit).length) return { durum: "gecersiz", hatalar: kilit };
   const gd = await gunDegisimi(db, e, v.tarih.bas);
   if (gd) return gd;
@@ -777,7 +793,7 @@ function formataUyarla(t: FormatTanimi, c: Cevaplar): { cevaplar: Cevaplar; ekle
     }
   }
   /* 492: künye değişiklikleri kalır — yeni sürümde kilitlenen bilgininki düşer (kayıttakine döner) */
-  return { cevaplar: { ...y, sonuc: c.sonuc, yorum: c.yorum, kunye: kunyeKilitTemizle(c.kunye, t) }, eklenen, dusen };
+  return { cevaplar: { ...y, sonuc: c.sonuc, yorum: c.yorum, kunye: kunyeKilitTemizle(c.kunye, t), imzaci: c.imzaci }, eklenen, dusen };
 }
 /** fotoğrafların yeri yeni sürümde yoksa (bölüm ya da madde kalktı) formatın ilk fotoğraf bölümüne taşınır — fotoğraf kaybolmaz, silinebilir kalır */
 function fotolariUyarla(t: FormatTanimi, l: RaporFoto[]): RaporFoto[] {
@@ -803,7 +819,7 @@ export async function raporFormatGuncelle(db: Sorgulayici, kim: Kisi, id: string
   if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
   const v = g.veri;
   /* 492: ekrandaki hâl raporun ŞİMDİKİ formatının kilidiyle denetlenir; yeni sürümde kilitlenen bilginin değişikliği formataUyarla'da düşer */
-  const kilit = kunyeKilitHatalari(eski.tanim, v.cevaplar.kunye);
+  const kilit = { ...kunyeKilitHatalari(eski.tanim, v.cevaplar.kunye), ...(await imzaciHatalari(db, kim, e.r, v.cevaplar)) };
   if (Object.keys(kilit).length) return { durum: "gecersiz", hatalar: kilit };
   const gd = await gunDegisimi(db, e, v.tarih.bas);
   if (gd) return gd;
@@ -901,6 +917,9 @@ export async function raporBelgesiVerisi(db: Sorgulayici, depo: Depo, kim: Kisi,
   /* 595: onaylayan teknik yöneticinin hesabı bir personele bağlıysa o kaydın bilgileri (imza bölümünün teknik satırları: meslek, diploma …) */
   const onayPersonel = r.onay && r.onay_hesap ? await hesabinPersoneli(db, r.onay_hesap) : null;
   const onayKisi = onayPersonel ? await personelBelgeBilgisi(db, onayPersonel) : null;
+  /* 595 (madde 1): ikinci muayene uzmanı — yalnız hâlâ plan ekibindeyse ve raporu yazan değilse (kaydının bilgileri) */
+  const u2 = cev.success ? cev.data.imzaci.uzman2 : undefined;
+  const ikinci = u2 && u2 !== r.personel_id && plan?.ekip.includes(u2) ? await personelBelgeBilgisi(db, u2) : null;
   /* 595 (madde 3): 1. bölümün e-posta / telefon satırları için tesisin müşterisinin iletişimi (saha ekranıyla aynı kaynak) */
   const iletisim = plan ? await tesisMusteriIletisim(db, plan.tesisId) : null;
   /* tamamlanan raporun önizlemesi "imzasız" demez: imza zamanı ve yolu imzalı sürümden */
@@ -926,6 +945,8 @@ export async function raporBelgesiVerisi(db: Sorgulayici, depo: Depo, kim: Kisi,
         kisi: onayKisi ? { meslek: onayKisi.meslek, meslekMetin: onayKisi.meslekMetin, ekipnet: onayKisi.ekipnet, diploma: onayKisi.diploma, oda: onayKisi.oda,
           eposta: onayKisi.eposta, tel: onayKisi.tel } : null } : null,
       imza: imzali ? { zaman: imzali.zaman, yontem: YONTEM_AD[imzali.yontem] ?? imzali.yontem } : null,
+      ikinci: ikinci ? { ad: ikinci.ad, meslek: ikinci.meslek, meslekMetin: ikinci.meslekMetin, ekipnet: ikinci.ekipnet, diploma: ikinci.diploma, oda: ikinci.oda,
+        eposta: ikinci.eposta, tel: ikinci.tel } : null,
     },
   };
 }

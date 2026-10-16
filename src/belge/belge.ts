@@ -202,6 +202,9 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
   const satirDegeri = (s: ImzaSatiri): ReactNode => {
     if (s.kim === "diger") return s.metin?.trim() ?? "";
     if (s.kim === "uzman") return s.alan === "ad" ? v.yazan.ad : s.alan === "imza" ? imzaHucresi() : kisiDegeri(v.yazan, s.alan);
+    /* 595 (madde 1): ikinci uzman sahada seçilen kişinin kaydından, tesis yetkilisi sahada yazılan; imzaları boş hücre (ıslak imza) */
+    if (s.kim === "uzman2") return s.alan === "imza" ? "" : !v.ikinci ? "-" : s.alan === "ad" ? v.ikinci.ad : kisiDegeri(v.ikinci, s.alan);
+    if (s.kim === "tesis") return s.alan === "ad" ? deger(c.imzaci.tesisAd) : s.alan === "unvan" ? deger(c.imzaci.tesisUnvan) : "";
     if (!v.onay) return "-";
     return s.alan === "ad" ? v.onay.ad : s.alan === "zaman" ? zamanNo(v.onay.zaman) : s.alan === "imza" ? `Elektronik onay · ${zamanNo(v.onay.zaman)}` : kisiDegeri(v.onay.kisi, s.alan);
   };

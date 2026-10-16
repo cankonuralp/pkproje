@@ -39,17 +39,24 @@ export const EKIPMAN_ALAN_ADI: Record<EkipmanAlani, string> = {
     adı, sırası, varlığı formatın; değeri kişinin kaydından (imza anında kopyalanır). kim: uzman (raporu yazan muayene uzmanı) · teknik (onaylayan
     teknik yönetici) · diger (serbest satır: tesis yetkilisi, kaşe …; değeri formatın sabit yazısı, boşsa boş hücre). alan: kişinin hangi bilgisi
     (imza: uzmanda elektronik imza hücresi, teknikte onay; zaman: teknikte onay zamanı). */
-export const IMZA_KISILERI = ["uzman", "teknik", "diger"] as const;
+export const IMZA_KISILERI = ["uzman", "teknik", "uzman2", "tesis", "diger"] as const;
 export type ImzaKisisi = (typeof IMZA_KISILERI)[number];
-export const IMZA_ALANLARI = ["ad", "meslek", "ekipnet", "diploma", "oda", "eposta", "tel", "imza", "zaman"] as const;
+/** 595 (madde 1 — "+ İmza yeri: uzman, teknik yönetici, ikinci uzman, tesis yetkilisi"): imza yeri olan kişiler (serbest satır kişi değil) */
+export const IMZA_YERLERI = ["uzman", "teknik", "uzman2", "tesis"] as const;
+export type ImzaYeri = (typeof IMZA_YERLERI)[number];
+export const IMZA_ALANLARI = ["ad", "meslek", "ekipnet", "diploma", "oda", "eposta", "tel", "imza", "zaman", "unvan"] as const;
 export type ImzaAlani = (typeof IMZA_ALANLARI)[number];
 export const IMZA_ALAN_ADI: Record<ImzaAlani, string> = {
   ad: "Adı soyadı", meslek: "Mesleği / unvanı", ekipnet: "Yetkili kişi kayıt no (EKİPNET)", diploma: "Diploma no", oda: "Oda sicil no", eposta: "E-posta",
-  tel: "Telefon", imza: "İmzası", zaman: "Onay zamanı",
+  tel: "Telefon", imza: "İmzası", zaman: "Onay zamanı", unvan: "Unvanı",
 };
-export const IMZA_KISI_ADI: Record<ImzaKisisi, string> = { uzman: "Muayene uzmanı", teknik: "Teknik yönetici", diger: "Serbest satır" };
-/** kişinin seçilebilen bilgileri (zaman yalnız teknik yöneticide — onay anı) */
-export const imzaAlanlari = (kim: ImzaKisisi): readonly ImzaAlani[] => (kim === "uzman" ? IMZA_ALANLARI.filter((x) => x !== "zaman") : kim === "teknik" ? IMZA_ALANLARI : []);
+export const IMZA_KISI_ADI: Record<ImzaKisisi, string> = {
+  uzman: "Muayene uzmanı", teknik: "Teknik yönetici", uzman2: "İkinci muayene uzmanı", tesis: "Tesis yetkilisi", diger: "Serbest satır",
+};
+/** kişinin seçilebilen bilgileri: zaman yalnız teknik yöneticide (onay anı); ikinci uzman muayene uzmanıyla aynı (sahada plan ekibinden seçilir);
+    tesis yetkilisinin adı ve unvanı sahada yazılır, imzası belgede boş hücre (ıslak imza) */
+export const imzaAlanlari = (kim: ImzaKisisi): readonly ImzaAlani[] => (kim === "uzman" || kim === "uzman2" ? IMZA_ALANLARI.filter((x) => x !== "zaman" && x !== "unvan")
+  : kim === "teknik" ? IMZA_ALANLARI.filter((x) => x !== "unvan") : kim === "tesis" ? ["ad", "unvan", "imza"] : []);
 /** 2026-10-16 (sunum 595 madde 3, K2 "serbest; SGK ve İSG-KATİP kilitli kalsın" — reisim: "firma bilgileri kısmında da [satır eklemek istedim
     ekleyemedim]"): 1. bölümün (Firma bilgileri) SATIRLARI — adı, sırası, varlığı formatın; değeri plandan / kayıttan / sahadan. kaynak: hangi bilgi
     (serbest: formatın sabit yazısı). Zorunlu satırlar (SGK, İSG-KATİP, başlangıç) çıkarılmaz. Verilmemişse bugünkü satırlar (format/duzen.ts
@@ -418,6 +425,12 @@ export const Cevaplar = z.object({
     adres: z.string().trim().max(KUNYE_EN_COK.adres).optional(), sgk: z.string().trim().max(KUNYE_EN_COK.sgk).optional(),
     isg: z.string().trim().max(KUNYE_EN_COK.isg).optional(), eposta: z.string().trim().max(KUNYE_EN_COK.eposta).optional(),
     tel: z.string().trim().max(KUNYE_EN_COK.tel).optional(), metot: z.string().trim().max(KUNYE_EN_COK.metot).optional(),
+  }).default({}),
+  /** 595 (madde 1): imza bölümünün sahada doldurulan yerleri — ikinci muayene uzmanı (plan ekibinden, raporu yazan dışında; sunucu denetler) ve
+      tesis yetkilisinin adı / unvanı */
+  imzaci: z.object({
+    uzman2: z.string().regex(/^[0-9a-f-]{36}$/, "Kişi seçin.").optional(),
+    tesisAd: z.string().trim().max(120).optional(), tesisUnvan: z.string().trim().max(120).optional(),
   }).default({}),
 });
 export type Cevaplar = z.output<typeof Cevaplar>;

@@ -61,7 +61,7 @@ const sinirMetni = (op?: Sinir, s?: number, birim?: string) => (op && s !== unde
 const EVET: readonly SecimSecenegi[] = [["evet", "Evet"], ["hayir", "Hayır"]];
 const DERECE: readonly SecimSecenegi[] = [["hafif", "Hafif kusur"], ["agir", "Ağır kusur"]];
 const SONUC: readonly SecimSecenegi[] = [["uygun", SONUC_AD.uygun], ["uygun_degil", SONUC_AD.uygun_degil]];
-const IMZA = { uzman: "Muayene uzmanı", teknik: "Teknik yönetici", diger: "Öteki satırlar" } as const;
+const IMZA = { uzman: "Muayene uzmanı", teknik: "Teknik yönetici", uzman2: "İkinci muayene uzmanı", tesis: "Tesis yetkilisi", diger: "Öteki satırlar" } as const;
 const etiketi = (l: readonly SecimSecenegi[], v: string) => l.find((o) => o[0] === v)?.[1] ?? "";
 
 export type Kaynak = NonNullable<BolumOf<"bilgi">["alanlar"][number]["kaynak"]>;
@@ -277,7 +277,7 @@ function BlokIcerik({ b, no, bag }: { b: Bolum; no: string | null; bag: Baglam }
     case "kusur": return <KusurBlok bag={bag} />;
     case "sonuc": return <SonucBlok b={b} bag={bag} />;
     case "not": return <NotBlok b={b} bag={bag} />;
-    case "imza": return <ImzaBlok b={b} v={bag.v} />;
+    case "imza": return <ImzaBlok b={b} bag={bag} />;
     /* 495: serbest metin — formatın sabit yazısı, sahada okunur */
     case "metin": return b.metin.trim() ? <div className={stil.serbestMetin}>{b.metin.trim()}</div> : <p className={stil.bosSatir}>-</p>;
     default: return null;
@@ -790,20 +790,46 @@ function NotBlok({ b, bag }: { b: BolumOf<"not">; bag: Baglam }) {
   );
 }
 
-/** yetkili kişi: raporu yazan denetçinin personel kaydından (değişmez); imza son imzada (maket S.yetkili) */
-function ImzaBlok({ b, v }: { b: BolumOf<"imza">; v: SahaRaporu }) {
+/** yetkili kişi: raporu yazan denetçinin personel kaydından (değişmez); imza son imzada (maket S.yetkili). 595 (madde 1): ikinci muayene uzmanı
+    plan ekibinden seçilir (sunucu ekipte mi diye yeniden bakar), tesis yetkilisinin adı ve unvanı yazılır — imzaları belgede boş hücre */
+function ImzaBlok({ b, bag }: { b: BolumOf<"imza">; bag: Baglam }) {
+  const v = bag.v, l = imzaSatirlari(b), im = bag.c.imzaci;
   const m = v.yazan.meslek === "diger" ? v.yazan.meslekMetin : meslek(v.yazan.meslek)?.ad;
+  const yazImza = (y: Partial<Cevaplar["imzaci"]>) => bag.yaz((c) => {
+    const x: Cevaplar["imzaci"] = { ...c.imzaci, ...y };
+    for (const k of ["uzman2", "tesisAd", "tesisUnvan"] as const) if (!x[k]) delete x[k];
+    return { ...c, imzaci: x };
+  });
+  const id = (k: string) => alanId(`${b.id}-${k}`);
+  const ikinciAd = v.ekip.find((p) => p.id === im.uzman2)?.ad;
   return (
     <>
       <Satirlar>
         <Satir etiket="Ad soyad">{v.yazan.ad}</Satir>
         <Satir etiket="Meslek">{m ?? <DegerYok>-</DegerYok>}</Satir>
         <Satir etiket="Yetkili kişi kayıt no">{v.yazan.ekipnet ? <Kod>{v.yazan.ekipnet}</Kod> : <span className={stil.uyari}>Yok</span>}</Satir>
+        {l.some((s) => s.kim === "uzman2") && <Satir etiket="İkinci muayene uzmanı" htmlFor={id("uzman2")}>
+          {bag.oku ? <OkuGirdi id={id("uzman2")} deger={ikinciAd ?? ""} />
+            : v.ekip.length ? <SecimAlani id={id("uzman2")} ad="İkinci muayene uzmanı" deger={im.uzman2 ?? ""} degistir={(x) => yazImza({ uzman2: x || undefined })}
+              secenekler={[["", "Seçilmedi"] as const, ...v.ekip.map((p) => [p.id, p.ad] as const)]} />
+              : <span className={stil.uyari}>Planın ekibinde başka muayene uzmanı yok.</span>}
+        </Satir>}
+        {l.some((s) => s.kim === "tesis") && <>
+          <Satir etiket="Tesis yetkilisinin adı" htmlFor={id("tesisAd")}>
+            {bag.oku ? <OkuGirdi id={id("tesisAd")} deger={im.tesisAd ?? ""} />
+              : <Girdi id={id("tesisAd")} value={im.tesisAd ?? ""} maxLength={120} autoComplete="off" onChange={(e) => yazImza({ tesisAd: e.target.value })} />}
+          </Satir>
+          <Satir etiket="Tesis yetkilisinin unvanı" htmlFor={id("tesisUnvan")}>
+            {bag.oku ? <OkuGirdi id={id("tesisUnvan")} deger={im.tesisUnvan ?? ""} />
+              : <Girdi id={id("tesisUnvan")} value={im.tesisUnvan ?? ""} maxLength={120} autoComplete="off" onChange={(e) => yazImza({ tesisUnvan: e.target.value })} />}
+          </Satir>
+        </>}
       </Satirlar>
       <ul className={stil.imzalar}>
         {/* 595: kişiler imza bölümünün satırlarından (format belirler); serbest satırlar belgede sabit yazı ya da boş hücre */}
-        {[...new Set(imzaSatirlari(b).map((s) => s.kim))].map((i) => <li key={i} className={stil.imza}><b>{IMZA[i]}</b><span className={stil.imzaKutu}>
-          {i === "diger" ? `Belgede: ${imzaSatirlari(b).filter((s) => s.kim === "diger").map((s) => s.ad).join(" · ")}` : "İmza son imzada atılır."}</span></li>)}
+        {[...new Set(l.map((s) => s.kim))].map((i) => <li key={i} className={stil.imza}><b>{IMZA[i]}</b><span className={stil.imzaKutu}>
+          {i === "diger" ? `Belgede: ${l.filter((s) => s.kim === "diger").map((s) => s.ad).join(" · ")}`
+            : i === "uzman2" || i === "tesis" ? "Belgede imza yeri boş hücre (ıslak imza)." : "İmza son imzada atılır."}</span></li>)}
       </ul>
     </>
   );

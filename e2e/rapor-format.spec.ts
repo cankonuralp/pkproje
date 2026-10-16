@@ -363,6 +363,10 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await eimza.getByRole("radio", { name: "Görünmez imza" }).check();
     await expect(soldan).toHaveCount(0);
     await eimza.getByRole("radio", { name: /^İmza hücresi/ }).check();
+    /* 595 (madde 1): "+ İmza yeri" — ikinci muayene uzmanı varsayılan satırlarıyla gelir (sahada plan ekibinden seçilir) */
+    await page.getByRole("group", { name: "İmza yerleri" }).getByRole("checkbox", { name: "İkinci muayene uzmanı" }).check();
+    await expect(imzaBolumu.getByRole("button", { name: "İkinci muayene uzmanı", exact: true })).toBeVisible();
+    await expect(imzaBolumu.getByText("sahada seçilen ikinci uzmanın kaydından").first()).toBeVisible();
     await expect(imzaBolumu.getByText("e-imza buraya işlenir · muayene uzmanı")).toBeVisible();
     await page.getByRole("button", { name: "Bölüm ayarlarını kapat" }).click();
     /* 595 (madde 4, 12): sabit başlıklar ve sözcükler yerinde yazılır — tablonun Sonuç başlığı, sonuç cümlesinin "uygundur"u */

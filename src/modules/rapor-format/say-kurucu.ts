@@ -318,11 +318,11 @@ export function formatIslemleri(t0: FormatTanimi, islemler: readonly FormatIslem
       const eylem = metin(x.eylem, 20);
       if (eylem === "ekle") {
         const kim = metin(x.kisi, 20);
-        if (kim !== "uzman" && kim !== "teknik" && kim !== "diger") { red("kisi: uzman, teknik ya da diger"); continue; }
+        if (kim !== "uzman" && kim !== "teknik" && kim !== "uzman2" && kim !== "tesis" && kim !== "diger") { red("kisi: uzman, teknik, uzman2, tesis ya da diger"); continue; }
         const bilgi = metin(x.bilgi, 20) as ImzaAlani;
         if (kim !== "diger" && !(IMZA_ALANLARI as readonly string[]).includes(bilgi)) { red(`bilgi şunlardan biri olmalı: ${IMZA_ALANLARI.join(", ")}`); continue; }
         const y = imzaSatiriEkle(t, i, kim, kim === "diger" ? undefined : bilgi, metin(x.ad) || undefined);
-        if (!y.id) { red("bu kişinin bu bilgisi olmaz (onay zamanı yalnız teknik yöneticide)"); continue; }
+        if (!y.id) { red("bu kişinin bu bilgisi olmaz (onay zamanı yalnız teknik yöneticide; tesis yetkilisinde ad, unvan, imza)"); continue; }
         t = y.t;
         if (kim === "diger" && typeof x.yazi === "string") t = imzaSatiriYaz(t, i, y.id, { metin: x.yazi });
         yapilan.push(`“${b.ad}” bölümüne imza satırı eklendi: ${metin(x.ad) || (kim === "diger" ? "Yeni satır" : IMZA_ALAN_ADI[bilgi])}`);
@@ -548,8 +548,10 @@ export const FORMAT_ARACI = {
     + "değişecek alanlar), oge_sil (oge), sonuc_kurali (ölçüm tablosunun satır sonucu: kurallar — her biri kosul: DOĞRU / YANLIŞ veren formül, ör. "
     + "[Direnç] > 50; neden: sağlanmazsa yazılan, \"=\" ile başlarsa formül; aciklama; agir — listenin tamamı yazılır, boş liste kuralları kaldırır; ya da "
     + "bakanlik: true Bakanlık kuralına döner; ZS([Açma eğrisi]; [In]) Zs'yi verir). Formül: aynı satırın / formatın sayılarıyla, örn. 480 / [RCd] — "
-    + "boşluklu ad köşeli parantezle. imza_satiri (imza bölümünün satırları: eylem ekle — kisi uzman | teknik | diger, bilgi ad | meslek | ekipnet | diploma | "
-    + "oda | eposta | tel | imza | zaman (zaman yalnız teknikte), ad, serbest satırda yazi —, degistir (oge + ad / yazi / tam), cikar, yukari, asagi). "
+    + "boşluklu ad köşeli parantezle. imza_satiri (imza bölümünün satırları: eylem ekle — kisi uzman | teknik | uzman2 (ikinci muayene uzmanı, sahada plan "
+    + "ekibinden seçilir) | tesis (tesis yetkilisi: ad, unvan, imza — sahada yazılır) | diger, bilgi ad | meslek | ekipnet | diploma | "
+    + "oda | eposta | tel | imza | zaman | unvan (zaman yalnız teknikte, unvan yalnız teside), ad, serbest satırda yazi —, degistir (oge + ad / yazi / tam), "
+    + "cikar, yukari, asagi). "
     + "eimza_yeri (e-imzanın imzaya hazırlanan PDF'teki yeri: yer hucre — İmza hücresi — | kutu — son sayfada; x soldan, y üstten, en, boy mm — | gorunmez). "
     + "firma_satiri (1. bölüm Firma bilgileri: eylem ekle — kaynak firma | adres | rapor_no | rapor_tarihi | isg | sgk | bas | bit | sonraki | takip | metot | "
     + "eposta | tel | plan_no | serbest, ad, serbestte yazi —, degistir (oge + ad / yazi / tam), cikar, yukari, asagi; SGK, İSG-KATİP, başlangıç çıkmaz). "
@@ -585,7 +587,7 @@ export const FORMAT_ARACI = {
             kurallar: { type: "array", maxItems: KURAL_EN_COK, items: { type: "object", properties: {
               kosul: { type: "string" }, neden: { type: "string" }, aciklama: { type: "string" }, agir: { type: "boolean" } }, required: ["kosul"] } },
             bakanlik: { type: "boolean" },
-            eylem: { type: "string", enum: ["ekle", "degistir", "cikar", "yukari", "asagi", "tablo", "liste"] }, dizilis: { type: "number" }, acik: { type: "boolean" }, kisi: { type: "string", enum: ["uzman", "teknik", "diger"] },
+            eylem: { type: "string", enum: ["ekle", "degistir", "cikar", "yukari", "asagi", "tablo", "liste"] }, dizilis: { type: "number" }, acik: { type: "boolean" }, kisi: { type: "string", enum: ["uzman", "teknik", "uzman2", "tesis", "diger"] },
             bilgi: { type: "string", enum: [...IMZA_ALANLARI] }, yazi: { type: "string" }, tam: { type: "boolean" },
             kaynak: { type: "string", enum: [...new Set<string>([...FIRMA_KAYNAKLARI, ...BAS_KAYNAKLARI])] },
             yer: { type: "string", enum: ["hucre", "kutu", "gorunmez", "son", "bas", "gizli"] }, alan: { type: "string" }, satir: { type: "number" }, x: { type: "number" }, y: { type: "number" }, en: { type: "number" }, boy: { type: "number" },

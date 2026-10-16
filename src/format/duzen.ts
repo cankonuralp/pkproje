@@ -19,7 +19,7 @@
      Ekran ve belge aynı listeden; Format kurucu formatın kendisini gösterir (sade: false). */
 import {
   BAS_HUCRELERI, type BasHucresi, type BasSatiri, CIHAZ_ALAN_ADI, EKIPMAN_ALAN_ADI, FIRMA_KAYNAK_ADI, type Bolum, type BolumOf, type CihazAlani, type CihazSutunu, type EkipmanAlani, type FirmaKaynagi, type FirmaSatiri,
-  type FormatTanimi, type ImzaSatiri,
+  type FormatTanimi, type ImzaSatiri, type ImzaYeri,
 } from "./tanim.ts";
 import { sonucKurallariniYaz } from "./sonuc.ts";
 
@@ -170,8 +170,23 @@ const UZMAN_SATIRLARI: readonly ImzaSatiri[] = [
 const TEKNIK_SATIRLARI: readonly ImzaSatiri[] = [
   { id: "imz_t_ad", ad: "Onaylayan teknik yönetici", kim: "teknik", alan: "ad" }, { id: "imz_t_zaman", ad: "Onay zamanı", kim: "teknik", alan: "zaman" },
 ];
+/* 595 (madde 1): ikinci muayene uzmanı ve tesis yetkilisi (bölüm ayarında "İmza yerleri"nden eklenir) */
+const UZMAN2_SATIRLARI: readonly ImzaSatiri[] = [
+  { id: "imz_u2_ad", ad: "İkinci muayene uzmanı", kim: "uzman2", alan: "ad" }, { id: "imz_u2_meslek", ad: "Mesleği", kim: "uzman2", alan: "meslek" },
+  { id: "imz_u2_ekipnet", ad: "Yetkili kişi kayıt no (EKİPNET)", kim: "uzman2", alan: "ekipnet" }, { id: "imz_u2_imza", ad: "İmzası", kim: "uzman2", alan: "imza", tam: true },
+];
+const TESIS_SATIRLARI: readonly ImzaSatiri[] = [
+  { id: "imz_ts_ad", ad: "Tesis yetkilisi", kim: "tesis", alan: "ad" }, { id: "imz_ts_unvan", ad: "Unvanı", kim: "tesis", alan: "unvan" },
+  { id: "imz_ts_imza", ad: "İmzası", kim: "tesis", alan: "imza", tam: true },
+];
 /** kişinin varsayılan satırları (bölüm ayarında kişi eklenince bunlar gelir) */
-export const imzaVarsayilani = (kim: "uzman" | "teknik"): readonly ImzaSatiri[] => (kim === "uzman" ? UZMAN_SATIRLARI : TEKNIK_SATIRLARI);
+export const imzaVarsayilani = (kim: ImzaYeri): readonly ImzaSatiri[] =>
+  (kim === "uzman" ? UZMAN_SATIRLARI : kim === "teknik" ? TEKNIK_SATIRLARI : kim === "uzman2" ? UZMAN2_SATIRLARI : TESIS_SATIRLARI);
+/** 595 (madde 1): sahada doldurulan imza yerleri — formatın imza bölümünde ikinci uzman / tesis yetkilisi satırı var mı */
+export function imzaGirisleri(t: Pick<FormatTanimi, "bolumler">): { uzman2: boolean; tesis: boolean } {
+  const l = t.bolumler.flatMap((b) => (b.blok === "imza" ? imzaSatirlari(b) : []));
+  return { uzman2: l.some((s) => s.kim === "uzman2"), tesis: l.some((s) => s.kim === "tesis") };
+}
 export function imzaSatirlari(b: BolumOf<"imza">): readonly ImzaSatiri[] {
   if (b.satirlar) return b.satirlar;
   return [...(b.imzalar.includes("uzman") ? UZMAN_SATIRLARI : []), ...(b.imzalar.includes("teknik") ? TEKNIK_SATIRLARI : [])];
