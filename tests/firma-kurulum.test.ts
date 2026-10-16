@@ -27,6 +27,7 @@ import { isBasla, isBitir } from "../src/server/db/is.ts";
 import { havuzKur, yonetimFirmadaIcinde, yonetimIcinde, type Havuz } from "../src/server/db/kiraci.ts";
 import { gocDosyalari } from "../src/server/db/goc.ts";
 import { firmaCoz } from "../src/server/db/merkez.ts";
+import { firmaSaglikOku } from "../src/server/db/saglik.ts";
 import { GOC_SAYISI, SON_GOC } from "../src/server/db/son-goc.ts";
 import { supabaseYonetimi } from "../src/server/dis/supabase-yonetim.ts";
 import { girisYap } from "../src/server/kimlik/oturum.ts";
@@ -107,8 +108,9 @@ test("baştan sona: proje açılır, göçler, rol, havuzcu, depo, deneme, firma
   const vt = (await yonetimFirmadaIcinde(fh, id, (db) => db.sorgu<{ s: { yz: { tanimli: boolean; son4: string }; yonetici: { eposta: string; durum: string } } }>(
     "SELECT firma_yonetim_ozet($1) AS s", [id]), { yoneticiEposta: YE })).rows[0]!.s;
   assert.deepEqual([vt.yz.tanimli, vt.yz.son4, vt.yonetici.eposta, vt.yonetici.durum], [true, "wxyz", "yonetici@kurulum-a.example", "ilk"]);
-  const goc = (await fh.query<{ son: string; n: number }>("SELECT max(ad) AS son, count(*)::int AS n FROM goc")).rows[0]!;
-  assert.deepEqual([goc.son, goc.n], [SON_GOC, GOC_SAYISI], "göçler API'yle uygulandı");
+  /* göç tablosu uygulama rolüne kapalı — sağlık denetimiyle (kiracı işleminde, vt_firma_dogrula) */
+  const goc = await firmaSaglikOku(fh, id, 5_000);
+  assert.deepEqual([goc.son_goc, Number(goc.goc_sayisi)], [SON_GOC, GOC_SAYISI], "göçler API'yle uygulandı");
   /* "Yöneticiye geçici parola" → o parolayla firmanın kendi veritabanında giriş */
   const p = await geciciParolaYonet(o, id);
   assert.equal(p.durum, "tamam", JSON.stringify(p));
@@ -166,6 +168,6 @@ test("yayının iki yanına düşen kurulum: göçler eski kodla (son göç yok)
   const cz = await firmaCoz(havuz, "kurulum-d");
   assert.equal(cz?.vt, "kendi");
   if (cz?.vt !== "kendi") return;
-  const goc = (await y.firmaHavuzu(cz.kayit).query<{ son: string; n: number }>("SELECT max(ad) AS son, count(*)::int AS n FROM goc")).rows[0]!;
-  assert.deepEqual([goc.son, goc.n], [SON_GOC, GOC_SAYISI], "son göç denemede uygulandı");
+  const goc = await firmaSaglikOku(y.firmaHavuzu(cz.kayit), id, 5_000);
+  assert.deepEqual([goc.son_goc, Number(goc.goc_sayisi)], [SON_GOC, GOC_SAYISI], "son göç denemede uygulandı");
 });
