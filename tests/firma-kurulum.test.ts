@@ -24,7 +24,7 @@ import { baglantiCoz } from "../src/server/db/baglanti.ts";
 import { yonlendiriciKur, type Yonlendirici } from "../src/server/db/firma-havuzu.ts";
 import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { isBasla, isBitir } from "../src/server/db/is.ts";
-import { havuzKur, yonetimFirmadaIcinde, yonetimIcinde, type Havuz } from "../src/server/db/kiraci.ts";
+import { havuzKur, kiraciIcinde, yonetimFirmadaIcinde, yonetimIcinde, type Havuz } from "../src/server/db/kiraci.ts";
 import { gocDosyalari } from "../src/server/db/goc.ts";
 import { firmaCoz } from "../src/server/db/merkez.ts";
 import { firmaSaglikOku } from "../src/server/db/saglik.ts";
@@ -122,7 +122,8 @@ test("baştan sona: proje açılır, göçler, rol, havuzcu, depo, deneme, firma
   assert.ok(!s.istekler.some((i) => i.govde.includes(parola)), "uygulama parolası API'ye gitmedi (SCRAM özeti gitti)");
   assert.ok(s.istekler.some((i) => /ALTER ROLE probata_uygulama LOGIN PASSWORD 'SCRAM-SHA-256\$4096:/.test(i.sql)));
   assert.ok(!s.istekler.some((i) => i.govde.includes(YZ)), "yapay zekâ anahtarı API'ye gitmedi");
-  const sr = (await fh.query<{ sifreli: string }>("SELECT sifreli FROM firma_sir WHERE ad = 'yapay_zeka_anahtari'")).rows[0]!;
+  /* firma_sir kiracı süzgeçli — kiracı işleminde okunur */
+  const sr = await kiraciIcinde(fh, id, async (db) => (await db.sorgu<{ sifreli: string }>("SELECT sifreli FROM firma_sir WHERE ad = 'yapay_zeka_anahtari'")).rows[0]!);
   assert.equal(coz(sr.sifreli, id, "yapay_zeka_anahtari", ANA), YZ);
 });
 
