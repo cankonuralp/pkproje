@@ -172,6 +172,9 @@ pkproje/
                             sütunlarla, uygunsuzluklar tablo (sutunlar varsa) · kurucu.ts tabloSutunuEkle / Yaz / Sil (cihazda en az bir) / Tasi, kusurTablosuYaz,
                             bilgiDizilisiYaz, ogeYaz tam · Kagit.tsx sütun başlığında ← → ×, "+ Sütun", bölüm ayarında diziliş / tablo · S.A.Y "tablo_sutunu" /
                             "dizilis" · kilit tests/tablo-sutunlari, bozan tablo-sutunlari
+                            · 595 HAZIR SATIRLAR (madde 5): tanim.ts olcum hazir (adlar) + HAZIR_AD ("_ad", satırda) · raporlar/ornek.ts ilkCevaplar satırları
+                            adlarıyla kurar · belge / saha sıra sütununda adı, motor kusur metninde · "sabit" + hazır: sahada satır eklenmez / çıkmaz ·
+                            kurucu.ts hazirSatirEkle / Yaz / Sil / Tasi · Kagit "+ Hazır satır ekle" · S.A.Y "hazir_satir" · kilit tests/hazir-satirlar, bozan
   src/modules/rapor-format/ RAPOR FORMATI (2026-10-04, 308): sürümlü tanım (rapor_format, göç 0022: taslak → yayında → eski; yayınlanan değişmez) ·
                             şablondan başlat · taslak kaydet · yayınla (kilitli Bakanlık öğesi ENGEL, öteki denetim uyarı) · yayındaki format;
                             ekran: tür sayfası "Rapor şablonu" + önizleme /ekipman-turleri/<tür>/sablon/<sürüm> · FORMAT KURUCU (338, K4):

@@ -14,7 +14,7 @@ import {
 import { gecerliKunye, kilitliKunye, metotMetni } from "../format/kunye.ts";
 import { formulUygula } from "../format/formul.ts";
 import { degerlendir } from "../format/motor.ts";
-import { EKIPMAN_ALAN_ADI, type Bolum, type BolumOf, type CihazAlani, type FirmaSatiri, type ImzaSatiri, type KusurAlani } from "../format/tanim.ts";
+import { EKIPMAN_ALAN_ADI, HAZIR_AD, type Bolum, type BolumOf, type CihazAlani, type FirmaSatiri, type ImzaSatiri, type KusurAlani } from "../format/tanim.ts";
 /* veri.ts: saf tanımlar (tanimlar.ts node:crypto kullanır — 451: Format kurucunun belge önizlemesi bu çiziciyi tarayıcıda koşar) */
 import { TANIMLAR } from "../tanim/veri.ts";
 import type { BelgeFotosu, BelgeVerisi, ImzaKisiBilgisi } from "./veri.ts";
@@ -241,7 +241,8 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
               /* 488: elle değiştirilen sonuçta kural sonucu da yazar ("Uygun değil (elle; kural: Uygun)"), gerekçe tablonun altında */
               const sonuc = not > 0 ? `Not-${not}` : r?.elle ? `${ad(r.uygun)} (elle; kural: ${ad(r.elle.kural)})` : ad(r?.uygun);
               const sonucHucresi = h("td", { key: "_sonuc" }, sonuc);
-              return h("tr", { key: i }, h("td", { className: "rb-orta" }, String(i + 1)), ...(yer === "bas" ? [sonucHucresi] : []),
+              /* 595 (madde 5): hazır satırın adı sıra sütununda */
+              return h("tr", { key: i }, h("td", { className: "rb-orta" }, s[HAZIR_AD] || String(i + 1)), ...(yer === "bas" ? [sonucHucresi] : []),
                 ...b.sutunlar.map((x) => h("td", { key: x.id }, deger(s[x.id]))), ...(yer === "son" ? [sonucHucresi] : []));
             }) : [h("tr", { key: 0 }, h("td", { colSpan: b.sutunlar.length + (yer === "gizli" ? 1 : 2) }, "-"))]))),
           b.notlar?.length ? h("ol", { className: "rb-notlar" }, ...b.notlar.map((n, i) => h("li", { key: i }, `Not-${i + 1}: ${n.metin}`))) : null,

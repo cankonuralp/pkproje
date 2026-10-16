@@ -4,7 +4,7 @@
    · ornekSahaRaporu (472; reisim 2026-10-10, maket kararları k1–k4): format kurucusunun "Saha ekranı" görünümü taslak formatı denetçinin
      göreceği ekranda gösterir — gerçek saha ekranı (SahaRaporu) bu UYDURMA raporla çizilir. Veritabanına hiçbir şey yazılmaz; kimlik "ornek",
      müşteri / tesis / cihaz adları uydurmadır. */
-import { Cevaplar, type FormatTanimi } from "../../format/tanim.ts";
+import { Cevaplar, HAZIR_AD, type FormatTanimi } from "../../format/tanim.ts";
 import type { StandartOzeti } from "../dokumanlar/eslestir.ts";
 import type { KriterBelgesi } from "../../tanim/kriterler.ts";
 import type { SahaRaporu } from "./server/raporlar.ts";
@@ -14,7 +14,10 @@ export function ilkCevaplar(t: FormatTanimi): Cevaplar {
   const madde: Cevaplar["madde"] = {};
   /* 556: formüllü maddenin cevabı formülden — başlangıçta yazılmaz (yazılsa formülü ezerdi) */
   for (const b of t.bolumler) if (b.blok === "liste") for (const g of b.gruplar) for (const m of g.maddeler) if (!m.formul?.trim()) madde[m.id] = { c: b.cevaplar[0] };
-  return Cevaplar.parse({ madde });
+  /* 595 (madde 5): ölçüm tablosunun hazır satırları — adlarıyla, değerleri boş */
+  const tablo: Cevaplar["tablo"] = {};
+  for (const b of t.bolumler) if (b.blok === "olcum" && b.hazir?.length) tablo[b.id] = b.hazir.map((ad) => ({ [HAZIR_AD]: ad }));
+  return Cevaplar.parse({ madde, tablo });
 }
 
 /** tanım değişince (kurucuda madde eklendi) denemenin cevapları: var olan cevap kalır, yeni maddeye ilk cevap; artık olmayan madde düşer */

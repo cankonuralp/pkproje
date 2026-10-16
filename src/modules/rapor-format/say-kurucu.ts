@@ -24,7 +24,7 @@ import {
 import { etkinKurallar } from "../../format/sonuc.ts";
 import { CIHAZ_ALANLARI, FIRMA_KAYNAK_ADI, FIRMA_KAYNAKLARI, KUSUR_ALANLARI, type CihazAlani, type KusurAlani, IMZA_ALAN_ADI, IMZA_ALANLARI, IMZA_KISI_ADI, KURAL_EN_COK, type Blok, type Bolum, type FormatTanimi, type ImzaAlani, type SonucKurali } from "../../format/tanim.ts";
 import {
-  bakanlikKuralinaDon, bilgiDizilisiYaz, bolumAdi, eksikTabloAlanlari, kusurTablosuYaz, tabloSutunuEkle, tabloSutunuSil, tabloSutunuTasi, tabloSutunuYaz, bolumBasligiYaz, bolumSil, eimzaYaz, gorunumBasligiYaz, notSatiriYaz, ogeTasi, sonucYeriYaz, type BolumBasligi,
+  bakanlikKuralinaDon, bilgiDizilisiYaz, hazirSatirEkle, hazirSatirSil, hazirSatirTasi, hazirSatirYaz, bolumAdi, eksikTabloAlanlari, kusurTablosuYaz, tabloSutunuEkle, tabloSutunuSil, tabloSutunuTasi, tabloSutunuYaz, bolumBasligiYaz, bolumSil, eimzaYaz, gorunumBasligiYaz, notSatiriYaz, ogeTasi, sonucYeriYaz, type BolumBasligi,
   type GorunumBasligi, firmaSatiriEkle, firmaSatiriSil, firmaSatiriTasi, firmaSatiriYaz, grupEkle, imzaSatiriEkle, imzaSatiriSil, imzaSatiriTasi, imzaSatiriYaz, maddeEkle, ogeEkle, ogeSil, ogeYaz,
   sonucKuraliYaz, yeniBolum, yeniKimlik, type OgeTuru, type OgeYamasi,
 } from "./kurucu.ts";
@@ -67,6 +67,7 @@ export function formatHaritasi(t: FormatTanimi): string {
       for (const s of b.sutunlar) {
         l.push(`- ${s.id} · ${s.ad} · sütun, ${s.giris === "sayi" ? "sayı" : s.giris === "secim" ? `seçim: ${(s.secenekler ?? []).join(" / ")}` : s.giris === "evet" ? "evet / hayır" : "yazı"}${s.birim ? ` (${s.birim})` : ""}${s.formul ? ` · formül ${s.formul}` : ""}${sinirMetni(s)}`);
       }
+      if (b.hazir?.length) l.push(`  hazır satırlar (${b.satir === "sabit" ? "sabit — denetçi eklemez" : "denetçi de ekler"}): ${b.hazir.map((x, j) => `${j + 1}) ${x}`).join(" · ")}`);
       const ob = olcumBasliklari(b);
       l.push(`  başlıklar: sıra “${ob.sira}”, uygunluk notu “${ob.not}”, sonuç “${ob.sonuc}” (belgede ${b.sonucYeri === "bas" ? "başta" : b.sonucYeri === "gizli" ? "gizli" : "sonda"})`);
       const k = etkinKurallar(t, b);
@@ -331,6 +332,29 @@ export function formatIslemleri(t0: FormatTanimi, islemler: readonly FormatIslem
       yapilan.push(`“${b.ad}” tablosunda “${s.ad}” ${eylem === "cikar" ? "çıkarıldı" : eylem === "degistir" ? "değişti" : "taşındı"}`);
       continue;
     }
+    if (islem === "hazir_satir") {
+      if (b.blok !== "olcum") { red("hazır satır yalnız ölçüm tablosunda"); continue; }
+      const eylem = metin(x.eylem, 20), l = b.hazir ?? [];
+      if (eylem === "ekle") {
+        const ad = metin(x.ad, 120);
+        if (!ad) { red("satırın adı yok"); continue; }
+        const once = t;
+        t = hazirSatirEkle(t, i, ad);
+        if (t === once) { red("en çok 100 hazır satır"); continue; }
+        yapilan.push(`“${b.ad}” tablosuna hazır satır eklendi: ${ad}`); continue;
+      }
+      const k = metin(x.oge, 120), n = Number(k);
+      const j = l.findIndex((y) => tr(y) === tr(k)) >= 0 ? l.findIndex((y) => tr(y) === tr(k)) : Number.isInteger(n) && n >= 1 && n <= l.length ? n - 1 : -1;
+      if (j < 0) { red(`hazır satır bulunamadı (${k || "—"})`); continue; }
+      const once = t;
+      if (eylem === "cikar") t = hazirSatirSil(t, i, j);
+      else if (eylem === "yukari" || eylem === "asagi") t = hazirSatirTasi(t, i, j, eylem === "yukari" ? -1 : 1);
+      else if (eylem === "degistir") t = hazirSatirYaz(t, i, j, metin(x.ad, 120));
+      else { red("eylem: ekle, degistir, cikar, yukari ya da asagi"); continue; }
+      if (JSON.stringify(t) === JSON.stringify(once)) { red(`“${l[j]}” değişmedi`); continue; }
+      yapilan.push(`“${b.ad}” tablosunda “${l[j]}” hazır satırı ${eylem === "cikar" ? "çıkarıldı" : eylem === "degistir" ? "değişti" : "taşındı"}`);
+      continue;
+    }
     if (islem === "dizilis") {
       const n = typeof x.dizilis === "number" ? x.dizilis : Number(x.dizilis);
       if (b.blok !== "bilgi" || (n !== 1 && n !== 2 && n !== 3)) { red("yalnız bilgi bölümünde; dizilis 1, 2 ya da 3"); continue; }
@@ -400,7 +424,7 @@ export function formatIslemleri(t0: FormatTanimi, islemler: readonly FormatIslem
       continue;
     }
     red("bilinmeyen işlem (bolum_ekle, bolum_sil, bolum_adi, grup_ekle, oge_ekle, oge_degistir, oge_sil, oge_tasi, sonuc_kurali, imza_satiri, eimza_yeri, firma_satiri, "
-      + "baslik, sonuc_yeri, not_satiri, tablo_sutunu, dizilis)");
+      + "baslik, sonuc_yeri, not_satiri, tablo_sutunu, dizilis, hazir_satir)");
   }
   return { t, yapilan, gecersiz };
 }
@@ -429,6 +453,8 @@ export const FORMAT_ARACI = {
     + "tablo_sutunu (ölçüm cihazları ya da uygunsuzluk bölümünün sütunları: eylem ekle — alan cihaz | tur | kod_seri | kod | seri | marka | model | kal_tarih | "
     + "kal_bitis | sertifika (cihaz) ya da sira | bolum | metin | agir | foto (uygunsuzluk), ad —, degistir (oge + ad), cikar, yukari (sola), asagi (sağa); "
     + "uygunsuzlukta eylem tablo | liste). dizilis (bilgi bölümü: dizilis 1 | 2 | 3 — belgede bir satırda kaç bilgi). Alanın belgede tam satırı oge_degistir tam. "
+    + "hazir_satir (ölçüm tablosunun hazır satırları — yeni raporda adlarıyla gelir: eylem ekle (ad, ör. L1-N), degistir (oge: adı ya da sırası + ad), cikar, "
+    + "yukari, asagi). "
     + "Değişiklik taslakta olur; kullanıcı Kaydet ve Yayınla der.",
   input_schema: {
     type: "object",
@@ -439,7 +465,7 @@ export const FORMAT_ARACI = {
           type: "object",
           properties: {
             islem: { type: "string", enum: ["bolum_ekle", "bolum_sil", "bolum_adi", "grup_ekle", "oge_ekle", "oge_degistir", "oge_sil", "oge_tasi", "sonuc_kurali", "imza_satiri", "eimza_yeri", "firma_satiri",
-              "baslik", "sonuc_yeri", "not_satiri", "tablo_sutunu", "dizilis"] },
+              "baslik", "sonuc_yeri", "not_satiri", "tablo_sutunu", "dizilis", "hazir_satir"] },
             bolum: { type: "string" }, oge: { type: "string" }, tur: { type: "string" }, ad: { type: "string" }, birim: { type: "string" },
             formul: { type: "string" }, secenekler: { type: "array", items: { type: "string" } }, op: { type: "string" }, sinir: { type: "number" },
             zorunlu: { type: "boolean" }, grup: { type: "string" }, sonra: { type: "string" },

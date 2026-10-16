@@ -18,6 +18,8 @@ export function satirKopyasi(s: Satir, ilkSutun: string | undefined): Satir {
   const k = { ...s };
   delete k._sonuc;
   delete k._gerekce;
+  /* 595 (madde 5): hazır satırın adı o satırındır — kopya numarasıyla yazar */
+  delete k._ad;
   if (ilkSutun && k[ilkSutun]) k[ilkSutun] = sonrakiKod(k[ilkSutun]);
   return k;
 }

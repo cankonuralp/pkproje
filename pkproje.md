@@ -2525,6 +2525,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-16 (595h): **ÖLÇÜM TABLOSUNDA HAZIR SATIRLAR** (sunum 595 madde 5): kâğıtta "+ Hazır satır ekle" — satırın adı yazılır (ör. L1-N, 1. kat), sırası
+  değişir, çıkarılır; yeni raporda satırlar adlarıyla gelir, sıra sütununda adı yazar (belgede de), kusur metninde adı geçer. "Satırları denetçi ekler"
+  işaretsizse (sabit) sahada satır eklenmez, çıkarılmaz; işaretliyse denetçi ayrıca ekler. Açık raporlar etkilenmez (satırlar yalnız yeni raporda).
 - 2026-10-16 (595g): **TABLO SÜTUNLARI VE BİLGİLERİN DİZİLİŞİ** (sunum 595 madde 2, 9, 10; reisim: *"satır sütun ekleyemiyorum"*, K3 *"evet"*): ölçüm cihazları
   tablosunun sütunları cihaz kaydından seçilir (cihaz, tür, kod / seri no, kod, seri no, marka, model, kalibrasyon tarihi, geçerlilik, sertifika no) —
   adı yerinde yazılır, sola / sağa taşınır, çıkarılır (en az bir sütun kalır); uygunsuzluklar bölüm ayarından tablo olarak basılır (No · Uygunsuzluk ·

@@ -46,7 +46,7 @@ import {
 } from "../../../format/tanim";
 import { kilitliKunye } from "../../../format/kunye";
 import {
-  ALT_TURLER, altBaslikEkle, bilgiDizilisiYaz, bolumAdi, eksikTabloAlanlari, kusurTablosuYaz, tabloSutunuEkle, tabloSutunuSil, tabloSutunuTasi, tabloSutunuYaz, eksikFirmaKaynaklari, eksikImzaAlanlari, FIRMA_ADI_SABIT, firmaSatiriEkle, firmaSatiriSil, firmaSatiriTasi,
+  ALT_TURLER, altBaslikEkle, bilgiDizilisiYaz, hazirSatirEkle, hazirSatirSil, hazirSatirTasi, hazirSatirYaz, bolumAdi, eksikTabloAlanlari, kusurTablosuYaz, tabloSutunuEkle, tabloSutunuSil, tabloSutunuTasi, tabloSutunuYaz, eksikFirmaKaynaklari, eksikImzaAlanlari, FIRMA_ADI_SABIT, firmaSatiriEkle, firmaSatiriSil, firmaSatiriTasi,
   firmaSatiriYaz, bolumBasligiYaz, gorunumBasligiYaz, notSatiriYaz, ogeTasi, sonucYeriYaz, type BolumBasligi, type GorunumBasligi, ekipmanBolumuGeriEkle, ekipmanBolumuKaldir, bolumDuzeni, ekipmanAlaniEkle, gorunumYaz, grupEkle, grupSil, grupYaz,
   imzaKisisiYaz, imzaSatiriEkle, imzaSatiriSil, imzaSatiriTasi, imzaSatiriYaz, kunyeKilitYaz, kurucudan, maddeEkle, ogeEkle, ogeSil, ogeYaz, satirlar, tasi,
   yeniBolum, yeniKimlik,
@@ -536,18 +536,34 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
               <th className={k.ekleSutun}><Ekle ad="Sütun" onClick={() => ogeKoy(i, "s", "Yeni sütun")} /></th>
             </tr></thead>
             <tbody>
-              {[1, 2].map((n) => (
-                <tr key={n}>
-                  <td className="rb-orta">{n}</td>
+              {/* 595 (madde 5): hazır satırlar — adı yerinde yazılır, ↑ ↓ ×; yoksa iki örnek satır */}
+              {(b.hazir?.length ? b.hazir : ["", ""]).map((h, n, l) => (
+                <tr key={b.hazir?.length ? `h${n}` : n}>
+                  <td className={b.hazir?.length ? undefined : "rb-orta"}>{b.hazir?.length
+                    ? <span className={k.satir}><Yazi deger={h} ad="Hazır satırın adı" ac={yeniId === `${b.id}#h${n}`} uzun={120} yaz={(x) => degis(hazirSatirYaz(t, i, n, x))} />
+                      <span className={k.ogeTus}>
+                        <Tus ikon="arrow-up" ad={`${h} · yukarı`} disabled={n === 0} onClick={() => degis(hazirSatirTasi(t, i, n, -1))} />
+                        <Tus ikon="arrow-down" ad={`${h} · aşağı`} disabled={n === l.length - 1} onClick={() => degis(hazirSatirTasi(t, i, n, 1))} />
+                        <Tus ikon="x" ad={`${h} · çıkar`} onClick={() => { degis(hazirSatirSil(t, i, n)); bildir(`“${h}” hazır satırı çıkarıldı (taslak).`); }} />
+                      </span></span>
+                    : n + 1}</td>
                   {b.sutunlar.map((s) => <td key={s.id}><span className={k.ornek}>{ornek(s)}</span></td>)}
                   {notlar.length > 0 && <td><span className={k.ornek}>Not-1 … Not-{notlar.length}</span></td>}
                   <td><span className={k.ornek}>Uygun / Uygun değil</span></td>
                   <td className={k.ekleSutun} />
                 </tr>
               ))}
+              <tr className={k.ekleSatir}><td colSpan={3 + b.sutunlar.length + (notlar.length ? 1 : 0)}>
+                <Ekle ad="Hazır satır ekle" erisimAdi={`${b.ad} · hazır satır ekle`} onClick={() => {
+                  const n = b.hazir?.length ?? 0;
+                  degis(hazirSatirEkle(t, i)); setYeniId(`${b.id}#h${n}`); bildir("Hazır satır eklendi (taslak); adını yazın (ör. L1-N, 1. kat).");
+                }} />
+              </td></tr>
             </tbody>
           </table>
-          <p className={k.altNot}>{b.satir === "ekle" ? "Satırları denetçi raporda ekler" : "Sabit satırlar"}{b.enAz > 0 ? ` · en az ${b.enAz} satır` : ""}.</p>
+          <p className={k.altNot}>{b.hazir?.length
+            ? `${b.hazir.length} hazır satır raporda gelir${b.satir === "ekle" ? "; denetçi satır da ekler" : "; denetçi satır eklemez, çıkarmaz (sabit)"}`
+            : b.satir === "ekle" ? "Satırları denetçi raporda ekler" : "Sabit satırlar"}{b.enAz > 0 ? ` · en az ${b.enAz} satır` : ""}.</p>
           {notlar.length > 0 && <ol className="rb-notlar">{notlar.map((x, j) => <li key={j}>Not-{j + 1}: {x.metin}</li>)}</ol>}
         </>;
       }

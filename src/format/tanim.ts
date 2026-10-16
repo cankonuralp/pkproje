@@ -64,6 +64,8 @@ export const FIRMA_KAYNAK_ADI: Record<FirmaKaynagi, string> = {
 };
 /** çıkarılamayan satırlar (Bakanlık: SGK ve İSG-KATİP kayıttan, kilitli; başlangıç rapor açılınca yazılır, zorunlu) */
 export const FIRMA_ZORUNLU: readonly FirmaKaynagi[] = ["isg", "sgk", "bas"];
+/** 595 (madde 5): ölçüm tablosu satırında hazır satırın adı (sıra sütununda yazar; sütun kimliği olamaz — "_" ile başlar, ELLE_SONUC gibi) */
+export const HAZIR_AD = "_ad";
 /** 2026-10-16 (sunum 595 madde 2, K3 "evet"): ölçüm cihazları tablosunun sütunları cihaz kaydından seçilir (satırlar türün cihazlarından); cihaz =
     türü + marka / model (bugünkü ilk sütun), kod_seri = kod / seri no (bugünkü ikinci sütun) */
 export const CIHAZ_ALANLARI = ["cihaz", "tur", "kod_seri", "kod", "seri", "marka", "model", "kal_tarih", "kal_bitis", "sertifika"] as const;
@@ -172,6 +174,9 @@ export const Bolum = z.discriminatedUnion("blok", [
     /* 595 (madde 4): sabit sütunların başlıkları; sonucYeri belgede Sonuç sütununun yeri (son · baş · gizli — sonuç kuralı yine çalışır; saha
        ekranında Sonuç sütunu hep sonda, elle sonuç orada) */
     basliklar: z.object({ sira: baslik, not: baslik, sonuc: baslik }).optional(), sonucYeri: z.enum(["son", "bas", "gizli"]).optional(),
+    /* 595 (madde 5): hazır satırlar — adları (ör. L1-N, 1. kat) yeni raporda satır olarak gelir, sıra sütununda yazar (satırın HAZIR_AD değeri);
+       "sabit" satırda denetçi satır eklemez / çıkarmaz */
+    hazir: z.array(z.string().trim().min(1).max(120)).max(100).optional(),
   }),
   z.object({ ...ortak, blok: z.literal("test"), degerler: z.array(Deger).max(40),
     basliklar: z.object({ olcum: baslik, deger: baslik, sinir: baslik, sonuc: baslik }).optional() }),

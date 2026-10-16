@@ -40,7 +40,7 @@ import { SINIR_ISARETI } from "../../../format/hesap";
 import { ELLE_GEREKCE, ELLE_GEREKCE_EN_AZ, ELLE_SONUC, satirAnahtari, sonucKurallari, type Degerlendirme, type SatirDegerlendirmesi } from "../../../format/motor";
 import { imzaSatirlari, olcumBasliklari, sonucMetinleri } from "../../../format/duzen";
 import { formulluAlan, formulluDeger, formulluMadde, formulluSutun, type FormulYeri } from "../../../format/formul";
-import { doldurma, type Bolum, type BolumOf, type Cevaplar, type Sinir } from "../../../format/tanim";
+import { doldurma, HAZIR_AD, type Bolum, type BolumOf, type Cevaplar, type Sinir } from "../../../format/tanim";
 import { meslek } from "../../personel/sema";
 import { SONUC_AD } from "../sema";
 import type { SahaRaporu } from "../server/raporlar";
@@ -491,6 +491,8 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
      satırı kopyala, Excel, S.A.Y, silme, Geri al) İLK DEĞİŞEN satırın sayfası, Onaya gönder'de en üstteki eksiğin sayfası açılır; silinince sayfa
      taşmaz. Belge / PDF bütün satırları basar (src/belge). data-satir: tablonun bütün satır sayısı (ekranda yalnız sayfa var) */
   const sy = useSayfa(satirlar.length, { deger: bag.bolumSayfasi(b.id), degistir: (n) => bag.bolumSayfaGit(b.id, n) });
+  /* 595 (madde 5): hazır satırlı "sabit" tabloda denetçi satır eklemez / çıkarmaz (formatın satırları) */
+  const sabit = b.satir === "sabit" && !!b.hazir?.length;
   return (
     <>
       {/* 447 (reisim: "satır eklemediğin sürece neyin nereye yazılacağı bile gözükmüyor tablo başlıkları gözükmüyor"): başlıklar her zaman */}
@@ -508,24 +510,24 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
                 ))}
                 {notlar.length > 0 && <th scope="col">{olcumBasliklari(b).not}</th>}
                 <th scope="col">{olcumBasliklari(b).sonuc}</th>
-                {!bag.oku && <th scope="col"><span className="gizli">İşlem</span></th>}
+                {!bag.oku && !sabit && <th scope="col"><span className="gizli">İşlem</span></th>}
               </tr>
             </thead>
             <tbody>
               {!satirlar.length && (
-                <tr><td className={stil.bosHucre} colSpan={2 + b.sutunlar.length + (notlar.length ? 1 : 0) + (bag.oku ? 0 : 1)}>
+                <tr><td className={stil.bosHucre} colSpan={2 + b.sutunlar.length + (notlar.length ? 1 : 0) + (bag.oku || sabit ? 0 : 1)}>
                   Satır yok{bag.oku ? "." : " — “Satır ekle” ile ekleyin; her satır bir ölçüm noktası."}</td></tr>
               )}
               {sy.dilim(satirlar).map((s, j) => {
                 const i = sy.bas + j, r = sonuclar[i], notAnahtar = satirAnahtari(b.id, i, "not");
                 return (
                   <tr key={i}>
-                    <td className={stil.satirNo}>{i + 1}</td>
+                    <td className={stil.satirNo}>{s[HAZIR_AD] || i + 1}</td>
                     {b.sutunlar.map((col) => {
                       /* 556: formüllü sütun öteki hücreler gibi; değeri aynı satırdan formülle (yazılan kalır) */
                       const f = formulluSutun(col);
                       const anahtar = satirAnahtari(b.id, i, col.id), id = alanId(anahtar), deger = (f ? bag.h.tablo[b.id]?.[i] : s)?.[col.id] ?? "";
-                      const ad = `${i + 1}. satır · ${col.ad}${col.birim ? ` (${col.birim})` : ""}`;
+                      const ad = `${i + 1}. satır${s[HAZIR_AD] ? ` (${s[HAZIR_AD]})` : ""} · ${col.ad}${col.birim ? ` (${col.birim})` : ""}`;
                       const saf = () => bag.hesap({ tur: "hucre", bolum: b.id, satir: i, sutun: col.id });
                       const hucreYaz = (x: string | null) => hucre(i, col.id, x);
                       if (bag.oku) return <td key={col.id}>{(col.giris === "evet" ? etiketi(EVET, deger) : deger) || <DegerYok />}</td>;
@@ -561,7 +563,7 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
                       {!bag.oku && !notlar.length && <ElleSonuc b={b} i={i} s={s} r={r} bag={bag} yaz={(y) => tablo((l) => l.map((x, j) => (j === i ? y(x) : x)))} />}
                       {r?.oneriNot && notlar.length > 0 ? <span className={stil.oneri}>Öneri: Not-{r.oneriNot}</span> : null}
                     </td>
-                    {!bag.oku && (
+                    {!bag.oku && !sabit && (
                       <td className={stil.islemHucre}>
                         <button className={stil.ikonTus} type="button" aria-label={`${i + 1}. satırı kaldır`} title="Kaldır"
                           onClick={() => tablo((l) => l.filter((_, j) => j !== i))}>
@@ -598,8 +600,9 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
            değeri boş var olan satıra ya da tablonun sonuna) */
         const ayar = doldurma(b);
         const tuslar = <>
-          <Tus tur="ikincil" ikon="plus" id={alanId(b.id)} onClick={() => tablo((l) => [...l, {}])}>Satır ekle</Tus>
-          {satirlar.length > 0 && <Tus tur="ikincil" ikon="copy" onClick={sonuKopyala}>Son satırı kopyala</Tus>}
+          {!sabit && <Tus tur="ikincil" ikon="plus" id={alanId(b.id)} onClick={() => tablo((l) => [...l, {}])}>Satır ekle</Tus>}
+          {!sabit && satirlar.length > 0 && <Tus tur="ikincil" ikon="copy" onClick={sonuKopyala}>Son satırı kopyala</Tus>}
+          {sabit && <span className={stil.ipucuMetin}>Satırlar formatta hazır: {b.hazir!.length} satır.</span>}
           {ayar.excel && <ExcelYukle tur="tablo" baslik={b.ad} sutunlar={b.sutunlar} mesgul={bag.islem.mesgul} uygula={(l) => tablo((m) => {
             const o = l.map((degerler) => ({ degerler })), h = okunanHedefleri(m, o);
             return okunanlariUygula(m, o.map((x, i) => ({ ...x, hedef: h[i] ?? null })));

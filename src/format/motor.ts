@@ -20,7 +20,7 @@ import { noktaHesap, sayiOku, SINIR_ISARETI, sinirSonucu } from "./hesap.ts";
 import { formulDenet, formulluAlan, formulluDeger, formulluMadde, formulluSutun, formulUygula, genelAdlar, satirHesabi, tabloAdlari, type Deger } from "./formul.ts";
 import { etkinKurallar, kuralOzu, kuralUygula } from "./sonuc.ts";
 import { cihazSutunlari, firmaSatirlari, imzaSatirlari } from "./duzen.ts";
-import { kurucudan, type Bolum, type BolumOf, type Cevaplar, type FormatTanimi, type SonucKurali } from "./tanim.ts";
+import { HAZIR_AD, kurucudan, type Bolum, type BolumOf, type Cevaplar, type FormatTanimi, type SonucKurali } from "./tanim.ts";
 
 export interface Eksik { bolum: string; alan: string; ad: string }
 /** kriter: kusurun ölçütü (madde metni, ölçüm satırının etiketi, test değerinin adı); metin "kriter: açıklama" ya da yalnız kriter — kriter ayrı
@@ -126,7 +126,7 @@ export function degerlendir(t: FormatTanimi, c0: Cevaplar): Degerlendirme {
           if (d.elle && d.elle.gerekce.length < ELLE_GEREKCE_EN_AZ) {
             eksikler.push({ bolum: b.id, alan: satirAnahtari(b.id, i, ELLE_GEREKCE), ad: `${b.ad} · ${i + 1}. satır · elle sonucun gerekçesi (en az ${ELLE_GEREKCE_EN_AZ} harf)` });
           }
-          const etiket = s[b.sutunlar[0]?.id ?? ""] || `${i + 1}. satır`;
+          const etiket = s[HAZIR_AD] || s[b.sutunlar[0]?.id ?? ""] || `${i + 1}. satır`;
           if (b.notlar?.length) {
             const n = Number(s.not);
             const not = Number.isInteger(n) && n >= 1 ? b.notlar[n - 1] : undefined;
@@ -223,7 +223,7 @@ const bolumOzu = (b: Bolum, t: FormatTanimi) => oz({
   ...(b.blok === "cihaz" ? { sutunlar: cihazSutunlari(b).map((s) => ({ ad: s.ad, alan: s.alan })) } : {}),
   ...(b.blok === "kusur" ? { sutunlar: b.sutunlar?.map((s) => ({ ad: s.ad, alan: s.alan })) } : {}),
   ...(b.blok === "bilgi" ? { dizilis: b.dizilis } : {}),
-  ...(b.blok === "olcum" ? { hesap: b.hesap, notlar: b.notlar, satir: b.satir, sonuc: kuralOzu(etkinKurallar(t, b)), basliklar: b.basliklar, sonucYeri: b.sonucYeri } : {}),
+  ...(b.blok === "olcum" ? { hesap: b.hesap, notlar: b.notlar, satir: b.satir, sonuc: kuralOzu(etkinKurallar(t, b)), basliklar: b.basliklar, sonucYeri: b.sonucYeri, hazir: b.hazir } : {}),
   ...(b.blok === "sonuc" ? { cumle: b.cumle, aciklama: b.aciklama, uygunMetin: b.uygunMetin, uygunDegilMetin: b.uygunDegilMetin } : {}),
   /* 595: imza bölümünün satırları (adı, kişisi, bilgisi, sabit yazısı, tam satır) — satırsız eski bölüm imzalar'dan aynı satırları verir */
   ...(b.blok === "imza" ? { imza: imzaSatirlari(b).map((x) => ({ ad: x.ad, kim: x.kim, alan: x.alan, metin: x.metin, tam: x.tam })) } : {}),

@@ -694,3 +694,29 @@ export function bilgiDizilisiYaz(t: FormatTanimi, i: number, n: 1 | 2 | 3): Form
   if (n === 2) delete y.dizilis; else y.dizilis = n;
   return { ...t, bolumler: t.bolumler.map((x, j) => (j === i ? y : x)) };
 }
+
+/* ── HAZIR SATIRLAR (595 madde 5): ölçüm tablosunun satırları formatta — adı (ilk hücre) yazılır, sırası değişir, çıkarılır; yeni raporda
+   satır olarak gelir. Son satır çıkınca liste kalkar (bugünkü boş tablo). ── */
+function hazirYaz(t: FormatTanimi, i: number, l: readonly string[]): FormatTanimi {
+  const b = t.bolumler[i];
+  if (b?.blok !== "olcum") return t;
+  const v = l.map((x) => x.trim().replace(/\s+/g, " ").slice(0, 120)).filter(Boolean).slice(0, 100), y = { ...b };
+  if (v.length) y.hazir = v; else delete y.hazir;
+  return { ...t, bolumler: t.bolumler.map((x, j) => (j === i ? y : x)) };
+}
+const hazirOf = (t: FormatTanimi, i: number): readonly string[] => { const b = t.bolumler[i]; return b?.blok === "olcum" ? b.hazir ?? [] : []; };
+export function hazirSatirEkle(t: FormatTanimi, i: number, ad = "Yeni satır"): FormatTanimi {
+  return hazirOf(t, i).length >= 100 ? t : hazirYaz(t, i, [...hazirOf(t, i), ad.trim() || "Yeni satır"]);
+}
+export function hazirSatirYaz(t: FormatTanimi, i: number, j: number, ad: string): FormatTanimi {
+  const l = hazirOf(t, i);
+  return !ad.trim() || j < 0 || j >= l.length ? t : hazirYaz(t, i, l.map((x, k) => (k === j ? ad : x)));
+}
+export function hazirSatirSil(t: FormatTanimi, i: number, j: number): FormatTanimi {
+  const l = hazirOf(t, i);
+  return j < 0 || j >= l.length ? t : hazirYaz(t, i, l.filter((_, k) => k !== j));
+}
+export function hazirSatirTasi(t: FormatTanimi, i: number, j: number, yon: -1 | 1): FormatTanimi {
+  const l = hazirOf(t, i);
+  return j < 0 || j + yon < 0 || j + yon >= l.length ? t : hazirYaz(t, i, tasi(l, j, j + yon));
+}

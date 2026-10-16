@@ -192,6 +192,13 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     const altBolum = kagit.getByRole("region", { name: /^\d+\.1 Deneme alt başlık$/ });
     await expect(altBolum).toBeVisible();
     await expect(altBolum.getByRole("columnheader", { name: /Yeni sütun/ })).toBeVisible();
+    /* 595 (madde 5): ölçüm tablosuna hazır satır — adı yerinde yazılır (yeni raporda bu adla satır gelir) */
+    await altBolum.getByRole("button", { name: "Deneme alt başlık · hazır satır ekle" }).click();
+    const hazirAdi = page.getByRole("textbox", { name: "Hazır satırın adı" });
+    await expect(hazirAdi).toBeFocused();
+    await hazirAdi.fill("L1-N");
+    await hazirAdi.press("Enter");
+    await expect(altBolum.getByRole("button", { name: "L1-N", exact: true })).toBeVisible();
     /* firma bilgileri: bölüm silinmez; 595 (madde 3, K2): satır eklenir (proje no), adı yazılır, çıkarılır; SGK / İSG-KATİP çıkarılmaz, adı değişmez */
     const firma = kagit.locator("#kb-firma");
     await expect(firma.getByRole("button", { name: /bölümü sil$/ })).toHaveCount(0);
