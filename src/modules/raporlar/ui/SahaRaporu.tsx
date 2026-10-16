@@ -41,7 +41,7 @@ import { DegerYok, Kirinti, Kod, NesneBasi, Rozet, SeritKap } from "../../../com
 import { simdiIso, tarihNo } from "../../../components/secim/tarih";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
-import { ekipmanEtiketleri, firmaSatirlari, raporDuzeni, sabitEkipmanAlanlari } from "../../../format/duzen";
+import { ekipmanEtiketleri, firmaSatirlari, fotoKutulari, raporDuzeni, sabitEkipmanAlanlari } from "../../../format/duzen";
 import { degerlendir } from "../../../format/motor";
 import { doldurma, EKIPMAN_ALAN_ADI, KUNYE_ALAN_ADI, KUNYE_ALANLARI, KUNYE_EN_COK, type Cevaplar, type FirmaSatiri, type KunyeAlani } from "../../../format/tanim";
 import { gecerliKunye, kayitKunyesi, kilitliKunye, metotMetni } from "../../../format/kunye";
@@ -251,8 +251,9 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
     /* sayılar sunucudaki gibi raporun kendi listesinden: bölüm başına ve madde başına fotoğraf */
     const foto: Record<string, number> = {}, mf: Record<string, number> = {};
     const yerler = [...v.fotolar, ...denemeFoto, ...bekleyenFotolar.map((x) => { const [bolum, m] = (x.yer ?? "|").split("|"); return { bolum, madde: m || null }; })];
-    /* 595 (madde 16): bölümün sayısı bütün fotoğraflarından (kutudakiler dahil) — sunucudaki sayiliCevaplar gibi */
-    for (const f of yerler) { if (f.madde) mf[f.madde] = (mf[f.madde] ?? 0) + 1; foto[f.bolum] = (foto[f.bolum] ?? 0) + 1; }
+    /* 595 (madde 16): kutudaki fotoğraf bölümün sayısına girer, maddeninki girmez — sunucudaki sayiliCevaplar gibi */
+    const kutular = fotoKutulari(v.tanim);
+    for (const f of yerler) { if (f.madde) mf[f.madde] = (mf[f.madde] ?? 0) + 1; if (!f.madde || kutular.has(f.madde)) foto[f.bolum] = (foto[f.bolum] ?? 0) + 1; }
     const madde = Object.fromEntries(Object.entries(cevaplar.madde).map(([k, x]) => [k, { ...x, foto: mf[k] ?? 0 }]));
     return degerlendir(v.tanim, { ...cevaplar, madde, cihaz: v.cihazlar.filter((x) => x.cihaz).length, foto });
   }, [v.tanim, v.cihazlar, v.fotolar, denemeFoto, bekleyenFotolar, cevaplar]);

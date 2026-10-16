@@ -216,3 +216,8 @@ export function altYazisi(t: Pick<FormatTanimi, "gorunum">, firma: string, kod: 
 const CIHAZ_VARSAYILAN: readonly CihazAlani[] = ["cihaz", "kod_seri", "kal_tarih", "kal_bitis", "sertifika"];
 export const cihazSutunlari = (b?: BolumOf<"cihaz"> | null): readonly CihazSutunu[] =>
   b?.sutunlar ?? CIHAZ_VARSAYILAN.map((a) => ({ id: `cs_${a}`, ad: CIHAZ_ALAN_ADI[a], alan: a }));
+
+/* 595 (madde 16): fotoğraf kutularının kimlikleri — kutudaki fotoğraf (RaporFoto.madde = kutu) bölümün sayısına girer; maddenin fotoğrafı girmez
+   (sunucu sayiliCevaplar, saha ekranı ve belge aynı sayım) */
+export const fotoKutulari = (t: Pick<FormatTanimi, "bolumler">): ReadonlySet<string> =>
+  new Set(t.bolumler.flatMap((b) => (b.blok === "foto" ? (b.kutular ?? []).map((k) => k.id) : [])));

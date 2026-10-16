@@ -9,7 +9,7 @@
 import { createElement as h, Fragment, type ReactNode } from "react";
 import { SINIR_ISARETI } from "../format/hesap.ts";
 import {
-  altYazisi, basEtiketleri, cihazSutunlari, ekipmanEtiketleri, firmaSatirlari, listeBasliklari, olcumBasliklari, raporDuzeni, sabitEkipmanAlanlari, sonucMetinleri, testBasliklari,
+  altYazisi, basEtiketleri, cihazSutunlari, fotoKutulari, ekipmanEtiketleri, firmaSatirlari, listeBasliklari, olcumBasliklari, raporDuzeni, sabitEkipmanAlanlari, sonucMetinleri, testBasliklari,
 } from "../format/duzen.ts";
 import { gecerliKunye, kilitliKunye, metotMetni } from "../format/kunye.ts";
 import { formulUygula } from "../format/formul.ts";
@@ -98,7 +98,8 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
   const t = v.tanim;
   /* sayılar raporun kendi listesinden (saha ekranı ve sunucuyla aynı) */
   const foto: Record<string, number> = {}, mf: Record<string, number> = {};
-  for (const f of v.fotolar) { if (f.madde) mf[f.madde] = (mf[f.madde] ?? 0) + 1; foto[f.bolum] = (foto[f.bolum] ?? 0) + 1; }
+  const kutular = fotoKutulari(t);
+  for (const f of v.fotolar) { if (f.madde) mf[f.madde] = (mf[f.madde] ?? 0) + 1; if (!f.madde || kutular.has(f.madde)) foto[f.bolum] = (foto[f.bolum] ?? 0) + 1; }
   const formKod = t.gorunum.formKodu || `${v.firma.kod}-FR-${v.tur.kod}-${v.formatSira}`;
   const no = v.revizyon ? `${v.no}-R${v.revizyon}` : v.no;
   /* 492: denetçinin raporda değiştirdiği künye bilgisi (formatın kilitli bilgisi hariç) — saha ekranıyla aynı işlev */

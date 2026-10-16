@@ -26,6 +26,7 @@ import { formulluSutun } from "../../../format/formul.ts";
 import { Cevaplar, doldurma, ekAnahtari, type BolumOf, type FormatTanimi } from "../../../format/tanim.ts";
 import { alanDegeri, type OkunacakAlan } from "../../../format/deger.ts";
 import { bilgiAlanlari, ekipmanAlanlari, testAlanlari } from "../doldur.ts";
+import { fotoKutulari } from "../../../format/duzen.ts";
 import { yzHazirMi } from "../../../server/yz/kullanim.ts";
 import { ekipmanEtiketi, ekipmanKilitle } from "../../ekipman/server/ekipman.ts";
 import { turRaporBilgisi } from "../../ekipman-turleri/server/turler.ts";
@@ -498,14 +499,18 @@ export async function alanOkunabilir(db: Sorgulayici, kim: Kisi, id: string, bol
 }
 
 /** cihaz ve fotoğraf sayıları raporun KENDİ listesinden (istemcinin sayısına güvenilmez): bölüm başına fotoğraf, madde başına fotoğraf */
-function sayiliCevaplar(c: Cevaplar, r: Pick<RaporSatiri, "cihazlar" | "fotolar">): Cevaplar {
+function sayiliCevaplar(c: Cevaplar, r: Pick<RaporSatiri, "cihazlar" | "fotolar">, kutular: ReadonlySet<string> = new Set()): Cevaplar {
   const bolum: Record<string, number> = {}, madde: Record<string, number> = {};
-  /* 595 (madde 16): bölümün sayısı bütün fotoğraflarından — fotoğraf kutusundaki fotoğraf (madde = kutu) bölümün en az / en çoğuna girer */
-  for (const f of r.fotolar) { if (f.okuma) continue; if (f.madde) madde[f.madde] = (madde[f.madde] ?? 0) + 1; bolum[f.bolum] = (bolum[f.bolum] ?? 0) + 1; }
+  /* 595 (madde 16): fotoğraf kutusundaki fotoğraf (madde = kutu) bölümün en az / en çoğuna girer; maddenin fotoğrafı girmez */
+  for (const f of r.fotolar) {
+    if (f.okuma) continue;
+    if (f.madde) madde[f.madde] = (madde[f.madde] ?? 0) + 1;
+    if (!f.madde || kutular.has(f.madde)) bolum[f.bolum] = (bolum[f.bolum] ?? 0) + 1;
+  }
   return { ...c, cihaz: r.cihazlar.length, foto: bolum, madde: Object.fromEntries(Object.entries(c.madde).map(([k, x]) => [k, { ...x, foto: madde[k] ?? 0 }])) };
 }
 function degerle(tanim: FormatTanimi, c: Cevaplar, r: Pick<RaporSatiri, "cihazlar" | "fotolar">): Degerlendirme {
-  return degerlendir(tanim, sayiliCevaplar(c, r));
+  return degerlendir(tanim, sayiliCevaplar(c, r, fotoKutulari(tanim)));
 }
 
 /** 429: kontrol başlangıcı başka güne alınıyorsa süre o güne sayılır — o günün süresi (bu rapor hariç) doluysa alınamaz (ENGEL 3; yeni rapor
@@ -662,7 +667,7 @@ export async function fotoEkle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: 
   const y = await dosyaYukle(db, depo, { firmaId, modul: DOSYA_MODULU, kayitId: id, ad: dosya.ad, bayt: dosya.bayt, izinli: ["jpeg", "png"], kim: kim.ad, yukleyen: kim.id });
   if (!y.tamam) return { durum: "gecersiz", hatalar: { foto: y.neden === "tur" ? "Yalnız JPEG ya da PNG fotoğraf." : y.neden === "buyuk" ? "Fotoğraf çok büyük (en çok 8 MB)." : "Fotoğraf okunamadı." } };
   const yeni = [...fotolar, { dosya: y.id, ad: y.ad, bolum: hedef.bolum, madde: hedef.madde }];
-  const cevaplar = sayiliCevaplar(cev.data, { cihazlar: e.r.cihazlar, fotolar: yeni });
+  const cevaplar = sayiliCevaplar(cev.data, { cihazlar: e.r.cihazlar, fotolar: yeni }, kutuIds);
   return sonuc(await guncelle(db, RAPOR, id, surum, { fotolar: jsonDizi(yeni), cevaplar }, { kim: kim.ad, ne: "rapor.foto_ekle", gerekce: `${gorunenNo(e.r.no, e.r.revizyon)} · ${y.ad}` }), id, `${y.ad} eklendi.`);
 }
 
@@ -801,7 +806,7 @@ export async function raporFormatGuncelle(db: Sorgulayici, kim: Kisi, id: string
   if (gd) return gd;
   const { cevaplar, eklenen, dusen } = formataUyarla(yeni.tanim, v.cevaplar);
   const fotolar = fotolariUyarla(yeni.tanim, e.r.fotolar);
-  const c = sayiliCevaplar(cevaplar, { cihazlar: e.r.cihazlar, fotolar });
+  const c = sayiliCevaplar(cevaplar, { cihazlar: e.r.cihazlar, fotolar }, fotoKutulari(yeni.tanim));
   const ilk = yeni.tanim.bolumler.find((b) => b.blok === "liste");
   const r = await guncelle(db, RAPOR, id, surum, {
     format_id: yeni.id, ekipman_bilgi: v.ekipman, bas: zamanYaz(v.tarih.bas), bit: zamanYaz(v.tarih.bit), sonraki: v.tarih.sonraki, takip: v.tarih.takip,
