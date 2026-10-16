@@ -150,7 +150,7 @@ test("yönetim: kendi veritabanlı firma — özet firmanın veritabanından; ya
   await expect(page.getByRole("heading", { level: 1, name: E2E_KENDI.firma.ad })).toBeVisible();
   /* yönetici merkezde değil, firmanın veritabanında — sayfada görünüyorsa özet oradan geldi */
   await expect(page.getByText(E2E_KENDI.yonetici.eposta, { exact: false })).toBeVisible();
-  const yz = page.locator("#y-b-yz");
+  const yz = page.getByRole("region", { name: "Yapay zekâ anahtarı" });   // Bolum: kimlik başlıkta, bölge başlıkla adlanır
   await expect(yz.getByText("Tanımlı değil")).toBeVisible();
   await yz.getByLabel("Anthropic API anahtarı").fill("anahtar-degil");
   await yz.getByRole("button", { name: "Anahtarı kaydet" }).click();
