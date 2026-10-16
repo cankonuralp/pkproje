@@ -158,8 +158,9 @@ test("yönetim: kendi veritabanlı firma — özet firmanın veritabanından; ya
   await yz.getByLabel("Anthropic API anahtarı").fill("sk-ant-uydurmaAnahtarDegil0123456789wxyz");
   await yz.getByRole("button", { name: "Anahtarı kaydet" }).click();
   await expect(page.getByText("Yapay zekâ anahtarı kaydedildi (…wxyz).").first()).toBeVisible({ timeout: 30_000 });
-  await expect(yz.getByText("Tanımlı", { exact: true })).toBeVisible();
+  /* "Tanımlı" ve son 4 aynı bilgi kutusunda (yazı "Tanımlı…wxyz") — son 4 görünür, "Tanımlı değil" yok */
   await expect(yz.getByText("…wxyz")).toBeVisible();
+  await expect(yz.getByText("Tanımlı değil")).toHaveCount(0);
   await expect(yz.getByLabel("Yeni anahtar")).toHaveValue("");
   await yz.getByRole("button", { name: "Kaldır" }).click();
   await page.locator("dialog[open]").getByRole("button", { name: "Kaldır" }).click();
