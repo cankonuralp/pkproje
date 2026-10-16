@@ -216,9 +216,9 @@ const oz = (o: Record<string, unknown>) => JSON.stringify(o, (_k, v) => (v === u
    2026-10-16: tablonun sonuç kuralları da öz (geçerli kurallar — tanımda yoksa Bakanlık kuralları; açıklama sayılmaz): Bakanlık kuralı değişince uyarı */
 const bolumOzu = (b: Bolum, t: FormatTanimi) => oz({
   blok: b.blok, ad: b.ad, ust: b.ust, numarasiz: b.numarasiz, alt: b.alt,
-  ...(b.blok === "liste" ? { cevaplar: b.cevaplar, basliklar: b.basliklar } : {}),
+  ...(b.blok === "liste" ? { cevaplar: b.cevaplar, basliklar: b.basliklar, ekSutunlar: b.ekSutunlar?.map((s) => ({ ad: s.ad, alan: s.alan })) } : {}),
   /* 595 (madde 4, 6, 7, 12): sabit başlıklar, Sonuç sütununun yeri, sonuç sözcükleri de Bakanlık formatının görünümü */
-  ...(b.blok === "test" ? { basliklar: b.basliklar } : {}),
+  ...(b.blok === "test" ? { basliklar: b.basliklar, ekSutunlar: b.ekSutunlar?.map((s) => ({ ad: s.ad, alan: s.alan, secenekler: s.secenekler })) } : {}),
   /* 595 (madde 2, 9, 10): cihaz / uygunsuzluk tablosunun sütunları, bilgi bölümünün dizilişi */
   ...(b.blok === "cihaz" ? { sutunlar: cihazSutunlari(b).map((s) => ({ ad: s.ad, alan: s.alan })) } : {}),
   ...(b.blok === "kusur" ? { sutunlar: b.sutunlar?.map((s) => ({ ad: s.ad, alan: s.alan })) } : {}),

@@ -23,7 +23,7 @@ import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { degerlendir, type Degerlendirme } from "../../../format/motor.ts";
 import { gecerliKunye, kilitliKunye, kunyeKilitHatalari, kunyeKilitTemizle, metotMetni } from "../../../format/kunye.ts";
 import { formulluSutun } from "../../../format/formul.ts";
-import { Cevaplar, doldurma, type BolumOf, type FormatTanimi } from "../../../format/tanim.ts";
+import { Cevaplar, doldurma, ekAnahtari, type BolumOf, type FormatTanimi } from "../../../format/tanim.ts";
 import { alanDegeri, type OkunacakAlan } from "../../../format/deger.ts";
 import { bilgiAlanlari, ekipmanAlanlari, testAlanlari } from "../doldur.ts";
 import { yzHazirMi } from "../../../server/yz/kullanim.ts";
@@ -759,6 +759,11 @@ function formataUyarla(t: FormatTanimi, c: Cevaplar): { cevaplar: Cevaplar; ekle
     if (b.blok === "bilgi") for (const a of b.alanlar) if (Object.hasOwn(c.alan, a.id)) y.alan[a.id] = c.alan[a.id];
     if (b.blok === "olcum" && Object.hasOwn(c.tablo, b.id)) y.tablo[b.id] = c.tablo[b.id];
     if (b.blok === "test") for (const d of b.degerler) if (Object.hasOwn(c.deger, d.id)) y.deger[d.id] = c.deger[d.id];
+    /* 595 (madde 6, 7): ek sütunlara yazılanlar — madde / değer ve sütun yeni sürümde de varsa */
+    if (b.blok === "liste" || b.blok === "test") {
+      const ogeler = b.blok === "liste" ? b.gruplar.flatMap((g) => g.maddeler.map((m) => m.id)) : b.degerler.map((d) => d.id);
+      for (const o of ogeler) for (const s of b.ekSutunlar ?? []) { const k = ekAnahtari(o, s.id); if (Object.hasOwn(c.ek, k)) y.ek[k] = c.ek[k]; }
+    }
   }
   /* 492: künye değişiklikleri kalır — yeni sürümde kilitlenen bilgininki düşer (kayıttakine döner) */
   return { cevaplar: { ...y, sonuc: c.sonuc, yorum: c.yorum, kunye: kunyeKilitTemizle(c.kunye, t) }, eklenen, dusen };

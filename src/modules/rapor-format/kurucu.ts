@@ -9,7 +9,7 @@ import { kilitliKimlikler } from "../../format/motor.ts";
 import {
   basEtiketleri, cihazSutunlari, ekipmanEtiketleri, ekipmanTamYap, firmaSatirlari, imzaSatirlari, imzaVarsayilani, listeBasliklari, olcumBasliklari, sonucMetinleri, testBasliklari,
 } from "../../format/duzen.ts";
-import { Bolum, CIHAZ_ALAN_ADI, CIHAZ_ALANLARI, EIMZA_KUTU, EKIPMAN_ALAN_ADI, KUSUR_ALAN_ADI, KUSUR_ALANLARI, type CihazAlani, type KusurAlani, FIRMA_KAYNAK_ADI, FIRMA_KAYNAKLARI, FIRMA_ZORUNLU, IMZA_ALAN_ADI, imzaAlanlari, KUNYE_ALANLARI, KURAL_EN_COK, kurucudan, type Blok, type BolumOf, type EkipmanAlani, type FormatTanimi,
+import { Bolum, EK_SUTUN_EN_COK, LISTE_SUTUN_ADI, LISTE_SUTUN_ALANLARI, TEST_SUTUN_ADI, TEST_SUTUN_TURLERI, type ListeSutunAlani, type TestSutunTuru, CIHAZ_ALAN_ADI, CIHAZ_ALANLARI, EIMZA_KUTU, EKIPMAN_ALAN_ADI, KUSUR_ALAN_ADI, KUSUR_ALANLARI, type CihazAlani, type KusurAlani, FIRMA_KAYNAK_ADI, FIRMA_KAYNAKLARI, FIRMA_ZORUNLU, IMZA_ALAN_ADI, imzaAlanlari, KUNYE_ALANLARI, KURAL_EN_COK, kurucudan, type Blok, type BolumOf, type EkipmanAlani, type FormatTanimi,
   type FirmaKaynagi, type FirmaSatiri, type ImzaAlani, type ImzaKisisi, type ImzaSatiri, type KunyeAlani, type Sinir, type SonucKurali } from "../../format/tanim.ts";
 import { kilitliKunye } from "../../format/kunye.ts";
 import { FORMUL_EN_UZUN, formulAdDegistir, formulDuzelt } from "../../format/formul.ts";
@@ -28,6 +28,7 @@ export function kimlikler(t: FormatTanimi): Set<string> {
     if (b.blok === "test") for (const d of b.degerler) s.add(d.id);
     if (b.blok === "imza") for (const x of b.satirlar ?? []) s.add(x.id);
     if (b.blok === "cihaz" || b.blok === "kusur") for (const x of b.sutunlar ?? []) s.add(x.id);
+    if (b.blok === "liste" || b.blok === "test") for (const x of b.ekSutunlar ?? []) s.add(x.id);
   }
   for (const x of t.gorunum.firma?.satirlar ?? []) s.add(x.id);
   return s;
@@ -719,4 +720,59 @@ export function hazirSatirSil(t: FormatTanimi, i: number, j: number): FormatTani
 export function hazirSatirTasi(t: FormatTanimi, i: number, j: number, yon: -1 | 1): FormatTanimi {
   const l = hazirOf(t, i);
   return j < 0 || j + yon < 0 || j + yon >= l.length ? t : hazirYaz(t, i, tasi(l, j, j + yon));
+}
+
+/* ── EK SÜTUNLAR (595 madde 6, 7): kontrol listesine (açıklama, standart maddesi, fotoğraf, serbest yazı) ve test bölümüne (yazı / sayı / seçim)
+   sütun — adı yazılır, sola / sağa, çıkar; sahada her madde / değerde doldurulur. Son sütun çıkınca liste kalkar (eski format aynı). ── */
+type EkAlani = ListeSutunAlani | TestSutunTuru;
+interface EkSutun { id: string; ad: string; alan: EkAlani; secenekler?: string[] }
+const ekSutunlari = (b: Bolum): readonly EkSutun[] => (b.blok === "liste" || b.blok === "test" ? b.ekSutunlar ?? [] : []);
+function ekYaz(t: FormatTanimi, i: number, l: readonly (Omit<EkSutun, "id"> & { id?: string })[]): FormatTanimi {
+  const b = t.bolumler[i];
+  if (!b || (b.blok !== "liste" && b.blok !== "test")) return t;
+  const bos = { ...t, bolumler: t.bolumler.map((x, j) => (j === i ? { ...b, ekSutunlar: [] } : x)) } as FormatTanimi;
+  const var_ = kimlikler(bos), ek = new Set<string>();
+  const sutunlar = l.slice(0, EK_SUTUN_EN_COK).map((x) => {
+    const id = x.id && !var_.has(x.id) && !ek.has(x.id) ? x.id : yeniKimlik({ ...t, bolumler: [] }, "t", new Set([...var_, ...ek]));
+    ek.add(id);
+    return { id, ad: x.ad, alan: x.alan, ...(x.secenekler?.length ? { secenekler: x.secenekler } : {}) };
+  });
+  const y = { ...b } as Record<string, unknown>;
+  if (sutunlar.length) y.ekSutunlar = sutunlar; else delete y.ekSutunlar;
+  return { ...t, bolumler: t.bolumler.map((x, j) => (j === i ? (y as Bolum) : x)) };
+}
+/** eklenebilecek ek sütunlar: kontrol listesinde olmayanlar (serbest yazı her zaman), testte üç tür; doluysa boş */
+export function eksikEkSutunlar(b: Bolum): EkAlani[] {
+  const l = ekSutunlari(b);
+  if (l.length >= EK_SUTUN_EN_COK) return [];
+  if (b.blok === "liste") return LISTE_SUTUN_ALANLARI.filter((a) => a === "yazi" || !l.some((s) => s.alan === a));
+  return b.blok === "test" ? [...TEST_SUTUN_TURLERI] : [];
+}
+export const ekSutunAdi = (b: Bolum, a: EkAlani) => (b.blok === "liste" ? LISTE_SUTUN_ADI[a as ListeSutunAlani] : TEST_SUTUN_ADI[a as TestSutunTuru]);
+export function ekSutunEkle(t: FormatTanimi, i: number, alan: EkAlani, ad?: string): { t: FormatTanimi; id: string | null } {
+  const b = t.bolumler[i];
+  if (!b || !eksikEkSutunlar(b).includes(alan)) return { t, id: null };
+  const v = ekSutunAdi(b, alan);
+  const y = ekYaz(t, i, [...ekSutunlari(b), { ad: (ad ?? v).trim().replace(/\s+/g, " ").slice(0, 200) || v, alan, ...(alan === "secim" ? { secenekler: ["Var", "Yok"] } : {}) }]);
+  return { t: y, id: ekSutunlari(y.bolumler[i]).at(-1)?.id ?? null };
+}
+export function ekSutunYaz(t: FormatTanimi, i: number, id: string, y: { ad?: string; secenekler?: string[] }): FormatTanimi {
+  const b = t.bolumler[i];
+  if (!b) return t;
+  const l = ekSutunlari(b), s = l.find((x) => x.id === id);
+  if (!s) return t;
+  const ad = y.ad !== undefined ? y.ad.trim().replace(/\s+/g, " ").slice(0, 200) : s.ad;
+  const sec = y.secenekler !== undefined && s.alan === "secim"
+    ? [...new Set(y.secenekler.map((x) => x.trim().slice(0, 60)).filter(Boolean))].slice(0, 20) : s.secenekler;
+  return !ad ? t : ekYaz(t, i, l.map((x) => (x.id === id ? { ...x, ad, secenekler: sec } : x)));
+}
+export function ekSutunSil(t: FormatTanimi, i: number, id: string): FormatTanimi {
+  const b = t.bolumler[i];
+  return b ? ekYaz(t, i, ekSutunlari(b).filter((x) => x.id !== id)) : t;
+}
+export function ekSutunTasi(t: FormatTanimi, i: number, id: string, yon: -1 | 1): FormatTanimi {
+  const b = t.bolumler[i];
+  if (!b) return t;
+  const l = ekSutunlari(b), j = l.findIndex((x) => x.id === id);
+  return j < 0 || j + yon < 0 || j + yon >= l.length ? t : ekYaz(t, i, tasi(l, j, j + yon));
 }

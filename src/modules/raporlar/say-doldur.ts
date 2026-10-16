@@ -24,7 +24,7 @@
 import type { SatirEkle } from "../../server/yz/say.ts";
 import { alanDegeri, type OkunacakAlan } from "../../format/deger.ts";
 import { ELLE_GEREKCE, ELLE_SONUC } from "../../format/motor.ts";
-import { KUNYE_ALAN_ADI, KUNYE_ALANLARI, KUNYE_EN_COK, TABLO_SATIR_EN_COK, doldurma, type BolumOf, type Cevaplar, type FormatTanimi, type KunyeAlani } from "../../format/tanim.ts";
+import { KUNYE_ALAN_ADI, KUNYE_ALANLARI, KUNYE_EN_COK, TABLO_SATIR_EN_COK, doldurma, ekAnahtari, type BolumOf, type Cevaplar, type FormatTanimi, type KunyeAlani } from "../../format/tanim.ts";
 import { doluSatir, okunanHedefleri, type Satir } from "./foto-eslestir.ts";
 import { bilgiAlanlari, ekipmanAlanlari, ekipmanAnahtari, testAlanlari } from "./doldur.ts";
 
@@ -36,7 +36,9 @@ export type Yer =
   /* 550: maddenin kusur açıklaması ve derecesi, uzman yorumu */
   | { tur: "madde_not"; id: string } | { tur: "derece"; id: string } | { tur: "yorum" }
   /* 557: künye bilgisi, kontrol tarihi, çoklu seçim alanı (değerleri satır satır) */
-  | { tur: "kunye"; id: KunyeAlani } | { tur: "tarih"; id: TarihAnahtari } | { tur: "coklu"; id: string };
+  | { tur: "kunye"; id: KunyeAlani } | { tur: "tarih"; id: TarihAnahtari } | { tur: "coklu"; id: string }
+  /* 595 (madde 6, 7): kontrol listesi / test bölümünün ek sütunu (id = ekAnahtari(öğe, sütun)) */
+  | { tur: "ek"; id: string };
 /** 557: raporun kontrol tarihleri (başlangıç / bitiş YYYY-AA-GGTSS:DD; ötekiler YYYY-AA-GG; boş "") */
 export const TARIH_ANAHTARLARI = ["bas", "bit", "sonraki", "takip", "rapor"] as const;
 export type TarihAnahtari = (typeof TARIH_ANAHTARLARI)[number];
@@ -85,6 +87,7 @@ function oku(d: Durum, y: Exclude<Yer, { tur: "hucre" }>): string {
   if (y.tur === "kunye") return d.cevaplar.kunye[y.id] ?? "\u0000";                  // anahtar yok: kayıttaki (geri alınca anahtar silinir)
   if (y.tur === "tarih") return d.tarih?.[y.id] ?? "";
   if (y.tur === "coklu") { const c = d.cevaplar.alan[y.id]; return Array.isArray(c) ? c.join("\n") : typeof c === "string" ? c : ""; }
+  if (y.tur === "ek") return d.cevaplar.ek[y.id] ?? "";
   const v = d.cevaplar.alan[y.id];
   return typeof v === "string" ? v : "";
 }
@@ -116,6 +119,7 @@ function yaz(d: Durum, y: Exclude<Yer, { tur: "hucre" }>, x: string): Durum {
   }
   if (y.tur === "tarih") return { ...d, tarih: { ...(d.tarih ?? {}), [y.id]: x } };
   if (y.tur === "coklu") return { ...d, cevaplar: { ...d.cevaplar, alan: { ...d.cevaplar.alan, [y.id]: x ? x.split("\n") : [] } } };
+  if (y.tur === "ek") { const e = { ...d.cevaplar.ek }; if (x) e[y.id] = x; else delete e[y.id]; return { ...d, cevaplar: { ...d.cevaplar, ek: e } }; }
   return { ...d, cevaplar: { ...d.cevaplar, alan: { ...d.cevaplar.alan, [y.id]: x } } };
 }
 
@@ -378,8 +382,19 @@ export function komutlariUygula(d: Durum, t: FormatTanimi, girisler: readonly Ra
       }
     } else if (b.blok === "test") {
       for (const a of testAlanlari(b, true)) kutular.set(`d:${a.id}`, { ad: `${b.ad} · ${a.ad}`, yer: { tur: "deger", id: a.id }, denetle: alanKutusu(a, { sayi: ELLE_EN_COK.degerSayi, metin: ELLE_EN_COK.degerMetin }) });
+      /* 595 (madde 6): ek sütunlar — x:<değer>:<sütun> */
+      for (const dg of b.degerler) for (const s of b.ekSutunlar ?? []) {
+        kutular.set(`x:${dg.id}:${s.id}`, { ad: `${dg.ad} · ${s.ad}`, yer: { tur: "ek", id: ekAnahtari(dg.id, s.id) },
+          denetle: (ham) => (s.alan === "sayi" ? sayiKutusu(ham, ELLE_EN_COK.degerSayi) : s.alan === "secim" ? secimKutusu(ham, s.secenekler ?? []) : metinKutusu(ham, 200)) });
+      }
     } else if (b.blok === "olcum") tablolar.set(b.id, b);
-    else if (b.blok === "liste") for (const g of b.gruplar) for (const m of g.maddeler) maddeler.set(m.id, { cevaplar: b.cevaplar, ad: m.metin.slice(0, 80), formul: !!m.formul?.trim() });
+    else if (b.blok === "liste") for (const g of b.gruplar) for (const m of g.maddeler) {
+      maddeler.set(m.id, { cevaplar: b.cevaplar, ad: m.metin.slice(0, 80), formul: !!m.formul?.trim() });
+      /* 595 (madde 7): serbest yazı sütunları — x:<madde>:<sütun> (açıklama sütunu m:<madde>#not) */
+      for (const s of b.ekSutunlar ?? []) if (s.alan === "yazi") {
+        kutular.set(`x:${m.id}:${s.id}`, { ad: `${m.metin.slice(0, 60)} · ${s.ad}`, yer: { tur: "ek", id: ekAnahtari(m.id, s.id) }, denetle: (ham) => metinKutusu(ham, 1000) });
+      }
+    }
     else if (b.blok === "sonuc") sonucVar = true;
     else if (b.blok === "not") notVar = true;
   }

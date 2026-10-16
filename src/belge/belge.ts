@@ -14,7 +14,7 @@ import {
 import { gecerliKunye, kilitliKunye, metotMetni } from "../format/kunye.ts";
 import { formulUygula } from "../format/formul.ts";
 import { degerlendir } from "../format/motor.ts";
-import { EKIPMAN_ALAN_ADI, HAZIR_AD, type Bolum, type BolumOf, type CihazAlani, type FirmaSatiri, type ImzaSatiri, type KusurAlani } from "../format/tanim.ts";
+import { EKIPMAN_ALAN_ADI, ekAnahtari, HAZIR_AD, type Bolum, type BolumOf, type CihazAlani, type FirmaSatiri, type ImzaSatiri, type KusurAlani } from "../format/tanim.ts";
 /* veri.ts: saf tanımlar (tanimlar.ts node:crypto kullanır — 451: Format kurucunun belge önizlemesi bu çiziciyi tarayıcıda koşar) */
 import { TANIMLAR } from "../tanim/veri.ts";
 import type { BelgeFotosu, BelgeVerisi, ImzaKisiBilgisi } from "./veri.ts";
@@ -218,16 +218,27 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
   const formatBolumu = (b: Bolum): ReactNode => {
     switch (b.blok) {
       case "bilgi": return bilgi(b);
-      case "liste": return h("table", null, kolonlar(["8%", "70%", "22%"]), baslikSatiri(...Object.values(listeBasliklari(b))),
-        h("tbody", null, ...b.gruplar.flatMap((g, gi) => [
-          ...(g.ad ? [h("tr", { key: `g-${g.id}` }, h("td", { colSpan: 3, className: "rb-grup" }, g.ad))] : []),
-          ...g.maddeler.map((m, mi) => {
-            const x = c.madde[m.id], olumsuz = !!x && x.c === b.cevaplar[1];
-            const derece = olumsuz && t.kurallar.derece ? (x.derece === "agir" ? " **" : " *") : "";
-            return h("tr", { key: m.id }, h("td", { className: "rb-orta" }, b.gruplar.length > 1 ? `${gi + 1}.${mi + 1}` : String(mi + 1)), h("td", null, m.metin),
-              h("td", null, x ? `${x.c}${derece}` : "-"));
-          }),
-        ])));
+      /* 595 (madde 7): ek sütunlar — açıklama (maddenin açıklaması), standart maddesi, fotoğraf adları, serbest yazı */
+      case "liste": {
+        const ek = b.ekSutunlar ?? [];
+        const genis = ek.length ? ["8%", `${100 - 8 - 18 - 14 * ek.length}%`, "18%", ...ek.map(() => "14%")] : ["8%", "70%", "22%"];
+        const ekDegeri = (m: BolumOf<"liste">["gruplar"][number]["maddeler"][number], s: (typeof ek)[number]): string => {
+          if (s.alan === "aciklama") return deger(c.madde[m.id]?.not);
+          if (s.alan === "std") return deger(m.std);
+          if (s.alan === "foto") return v.fotolar.filter((f) => f.madde === m.id).map((f) => f.ad).join(", ") || "-";
+          return deger(c.ek[ekAnahtari(m.id, s.id)]);
+        };
+        return h("table", null, kolonlar(genis), baslikSatiri(...Object.values(listeBasliklari(b)), ...ek.map((s) => s.ad)),
+          h("tbody", null, ...b.gruplar.flatMap((g, gi) => [
+            ...(g.ad ? [h("tr", { key: `g-${g.id}` }, h("td", { colSpan: 3 + ek.length, className: "rb-grup" }, g.ad))] : []),
+            ...g.maddeler.map((m, mi) => {
+              const x = c.madde[m.id], olumsuz = !!x && x.c === b.cevaplar[1];
+              const derece = olumsuz && t.kurallar.derece ? (x.derece === "agir" ? " **" : " *") : "";
+              return h("tr", { key: m.id }, h("td", { className: "rb-orta" }, b.gruplar.length > 1 ? `${gi + 1}.${mi + 1}` : String(mi + 1)), h("td", null, m.metin),
+                h("td", null, x ? `${x.c}${derece}` : "-"), ...ek.map((s) => h("td", { key: s.id }, ekDegeri(m, s))));
+            }),
+          ])));
+      }
       case "olcum": {
         const satirlar = c.tablo[b.id] ?? [], sonuclar = d.satirlar[b.id] ?? [];
         /* 595 (madde 4): sabit sütunların başlıkları formatın; Sonuç sütunu sonda (varsayılan), başta ya da gizli (sonuç kuralı yine çalışır) */
@@ -249,12 +260,13 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
           sonuclar.some((r) => r?.elle) ? h("ul", { className: "rb-notlar" }, ...sonuclar.flatMap((r, i) => (r?.elle
             ? [h("li", { key: i }, `${i + 1}. satırın sonucu muayene uzmanınca değiştirildi (kural: ${r.elle.kural === true ? "Uygun" : r.elle.kural === false ? "Uygun değil" : "-"}): ${r.elle.gerekce || "-"}`)] : []))) : null);
       }
-      case "test": return h("table", null, baslikSatiri(...Object.values(testBasliklari(b))), h("tbody", null, ...b.degerler.map((x) => {
+      /* 595 (madde 6): ek sütunlar sonda (sahada her değerde yazılan) */
+      case "test": return h("table", null, baslikSatiri(...Object.values(testBasliklari(b)), ...(b.ekSutunlar ?? []).map((s) => s.ad)), h("tbody", null, ...b.degerler.map((x) => {
         const s = c.deger[x.id], r = d.degerler[x.id];
         const sinir = x.op && x.sinir !== undefined ? `${SINIR_ISARETI[x.op]} ${String(x.sinir).replace(".", ",")}${x.birim ? ` ${x.birim}` : ""}`
           : x.olumsuz?.length ? (x.secenekler ?? []).filter((o) => !x.olumsuz!.includes(o)).join(" / ") || "-" : deger(x.not);
         return h("tr", { key: x.id }, h("td", null, x.ad), h("td", null, s && s.trim() ? `${s}${x.birim ? ` ${x.birim}` : ""}` : "-"), h("td", null, sinir),
-          h("td", null, r === true ? "Uygun" : r === false ? "Uygun değil" : "-"));
+          h("td", null, r === true ? "Uygun" : r === false ? "Uygun değil" : "-"), ...(b.ekSutunlar ?? []).map((s) => h("td", { key: s.id }, deger(c.ek[ekAnahtari(x.id, s.id)]))));
       })));
       case "cihaz": return cihazTablosu(b);
       case "foto": return fotolar(v.fotolar.filter((f) => !f.madde && f.bolum === b.id));

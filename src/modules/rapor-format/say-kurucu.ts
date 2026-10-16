@@ -24,7 +24,7 @@ import {
 import { etkinKurallar } from "../../format/sonuc.ts";
 import { CIHAZ_ALANLARI, FIRMA_KAYNAK_ADI, FIRMA_KAYNAKLARI, KUSUR_ALANLARI, type CihazAlani, type KusurAlani, IMZA_ALAN_ADI, IMZA_ALANLARI, IMZA_KISI_ADI, KURAL_EN_COK, type Blok, type Bolum, type FormatTanimi, type ImzaAlani, type SonucKurali } from "../../format/tanim.ts";
 import {
-  bakanlikKuralinaDon, bilgiDizilisiYaz, hazirSatirEkle, hazirSatirSil, hazirSatirTasi, hazirSatirYaz, bolumAdi, eksikTabloAlanlari, kusurTablosuYaz, tabloSutunuEkle, tabloSutunuSil, tabloSutunuTasi, tabloSutunuYaz, bolumBasligiYaz, bolumSil, eimzaYaz, gorunumBasligiYaz, notSatiriYaz, ogeTasi, sonucYeriYaz, type BolumBasligi,
+  bakanlikKuralinaDon, bilgiDizilisiYaz, ekSutunAdi, ekSutunEkle, ekSutunSil, ekSutunTasi, ekSutunYaz, eksikEkSutunlar, hazirSatirEkle, hazirSatirSil, hazirSatirTasi, hazirSatirYaz, bolumAdi, eksikTabloAlanlari, kusurTablosuYaz, tabloSutunuEkle, tabloSutunuSil, tabloSutunuTasi, tabloSutunuYaz, bolumBasligiYaz, bolumSil, eimzaYaz, gorunumBasligiYaz, notSatiriYaz, ogeTasi, sonucYeriYaz, type BolumBasligi,
   type GorunumBasligi, firmaSatiriEkle, firmaSatiriSil, firmaSatiriTasi, firmaSatiriYaz, grupEkle, imzaSatiriEkle, imzaSatiriSil, imzaSatiriTasi, imzaSatiriYaz, maddeEkle, ogeEkle, ogeSil, ogeYaz,
   sonucKuraliYaz, yeniBolum, yeniKimlik, type OgeTuru, type OgeYamasi,
 } from "./kurucu.ts";
@@ -76,6 +76,7 @@ export function formatHaritasi(t: FormatTanimi): string {
     } else if (b.blok === "test") {
       const tb = testBasliklari(b);
       l.push(`  başlıklar: ölçüm “${tb.olcum}”, değer “${tb.deger}”, sınır “${tb.sinir}”, sonuç “${tb.sonuc}”`);
+      if (b.ekSutunlar?.length) l.push(`  ek sütunlar (kimlik · ad · tür): ${b.ekSutunlar.map((s) => `${s.id} · ${s.ad} · ${s.alan}${s.secenekler?.length ? ` (${s.secenekler.join(" / ")})` : ""}`).join("; ")}`);
     }
     if (b.blok === "sonuc") { const m = sonucMetinleri(b); l.push(`  sözcükler: uygun “${m.uygun}”, uygun değil “${m.uygunDegil}”`); }
     if (b.blok === "not") l.push(`  yönlendirme: ${b.yonlendirme ? `“${b.yonlendirme.slice(0, 120)}”` : "yok"}${b.satir ? ` · belgede en az ${b.satir} satır` : ""}`);
@@ -89,6 +90,7 @@ export function formatHaritasi(t: FormatTanimi): string {
       l.push(`  cevaplar: ${b.cevaplar.join(" / ")}`);
       const lb = listeBasliklari(b);
       l.push(`  başlıklar: no “${lb.no}”, madde “${lb.madde}”, sonuç “${lb.sonuc}”`);
+      if (b.ekSutunlar?.length) l.push(`  ek sütunlar (kimlik · ad · bilgi): ${b.ekSutunlar.map((s) => `${s.id} · ${s.ad} · ${s.alan}`).join("; ")}`);
       for (const g of b.gruplar) {
         l.push(`  grup ${g.id} · ${g.ad || "(adsız)"}`);
         for (const m of g.maddeler) l.push(`- ${m.id} · ${m.metin.slice(0, 160)}${m.formul ? ` · formül ${m.formul}` : ""}`);
@@ -305,8 +307,32 @@ export function formatIslemleri(t0: FormatTanimi, islemler: readonly FormatIslem
       yapilan.push(`“${b.ad}” bölümünün ${a} başlığı değişti`);
       continue;
     }
+    /* 595 (madde 6, 7): kontrol listesi ve test bölümünün ek sütunları aynı işlemle */
+    if (islem === "tablo_sutunu" && (b.blok === "liste" || b.blok === "test")) {
+      const eylem = metin(x.eylem, 20);
+      if (eylem === "ekle") {
+        const a = metin(x.alan, 20), izinli = eksikEkSutunlar(b) as string[];
+        if (!izinli.includes(a)) { red(`alan şunlardan biri olmalı: ${izinli.join(", ") || "— (en çok 4 sütun)"}`); continue; }
+        const y = ekSutunEkle(t, i, a as Parameters<typeof ekSutunEkle>[2], metin(x.ad) || undefined);
+        if (!y.id) { red("sütun eklenemedi"); continue; }
+        t = Array.isArray(x.secenekler) && a === "secim" ? ekSutunYaz(y.t, i, y.id, { secenekler: x.secenekler.filter((o): o is string => typeof o === "string") }) : y.t;
+        yapilan.push(`“${b.ad}” bölümüne sütun eklendi: ${metin(x.ad) || ekSutunAdi(b, a as Parameters<typeof ekSutunAdi>[1])}`); continue;
+      }
+      const l = b.ekSutunlar ?? [], k = metin(x.oge);
+      const s = l.find((o) => o.id === k) ?? l.find((o) => tr(o.ad) === tr(k));
+      if (!s) { red(`sütun bulunamadı (${metin(x.oge, 60) || "—"})`); continue; }
+      const once = t;
+      if (eylem === "cikar") t = ekSutunSil(t, i, s.id);
+      else if (eylem === "yukari" || eylem === "asagi") t = ekSutunTasi(t, i, s.id, eylem === "yukari" ? -1 : 1);
+      else if (eylem === "degistir") t = ekSutunYaz(t, i, s.id, { ...(metin(x.ad) ? { ad: metin(x.ad) } : {}),
+        ...(Array.isArray(x.secenekler) ? { secenekler: x.secenekler.filter((o): o is string => typeof o === "string") } : {}) });
+      else { red("eylem: ekle, degistir, cikar, yukari (sola), asagi (sağa)"); continue; }
+      if (JSON.stringify(t) === JSON.stringify(once)) { red(`“${s.ad}” değişmedi`); continue; }
+      yapilan.push(`“${b.ad}” bölümünde “${s.ad}” sütunu ${eylem === "cikar" ? "çıkarıldı" : eylem === "degistir" ? "değişti" : "taşındı"}`);
+      continue;
+    }
     if (islem === "tablo_sutunu") {
-      if (b.blok !== "cihaz" && b.blok !== "kusur") { red("sütunlar yalnız ölçüm cihazları ve uygunsuzluk bölümünde"); continue; }
+      if (b.blok !== "cihaz" && b.blok !== "kusur") { red("sütunlar ölçüm cihazları, uygunsuzluk, kontrol listesi ve test bölümünde"); continue; }
       const eylem = metin(x.eylem, 20);
       if (b.blok === "kusur" && (eylem === "tablo" || eylem === "liste")) {
         t = kusurTablosuYaz(t, i, eylem === "tablo");
@@ -450,8 +476,9 @@ export const FORMAT_ARACI = {
     + "uygun | uygun_degil (sonuç bölümü), yonlendirme (yorum); bölümsüz alan bas_kod | bas_surum | bas_no | bas_tarih | alt_yazi ({firma}, {kod}) | ekipman_kod | "
     + "ekipman_tur; ad: yeni yazı, boş bugünküne döner), sonuc_yeri (ölçüm tablosu: yer son | bas | gizli — belgede), not_satiri (yorum: satir), "
     + "oge_tasi (bolum + oge + eylem yukari | asagi; sütunda sola / sağa; madde grubun ucundan komşu gruba). "
-    + "tablo_sutunu (ölçüm cihazları ya da uygunsuzluk bölümünün sütunları: eylem ekle — alan cihaz | tur | kod_seri | kod | seri | marka | model | kal_tarih | "
-    + "kal_bitis | sertifika (cihaz) ya da sira | bolum | metin | agir | foto (uygunsuzluk), ad —, degistir (oge + ad), cikar, yukari (sola), asagi (sağa); "
+    + "tablo_sutunu (ölçüm cihazları, uygunsuzluk, kontrol listesi ya da test bölümünün sütunları: eylem ekle — alan cihaz | tur | kod_seri | kod | seri | "
+    + "marka | model | kal_tarih | kal_bitis | sertifika (cihaz); sira | bolum | metin | agir | foto (uygunsuzluk); aciklama | std | foto | yazi (kontrol listesi, "
+    + "en çok 4); yazi | sayi | secim + secenekler (test, en çok 4); ad —, degistir (oge + ad / secenekler), cikar, yukari (sola), asagi (sağa); "
     + "uygunsuzlukta eylem tablo | liste). dizilis (bilgi bölümü: dizilis 1 | 2 | 3 — belgede bir satırda kaç bilgi). Alanın belgede tam satırı oge_degistir tam. "
     + "hazir_satir (ölçüm tablosunun hazır satırları — yeni raporda adlarıyla gelir: eylem ekle (ad, ör. L1-N), degistir (oge: adı ya da sırası + ad), cikar, "
     + "yukari, asagi). "

@@ -64,6 +64,18 @@ export const FIRMA_KAYNAK_ADI: Record<FirmaKaynagi, string> = {
 };
 /** çıkarılamayan satırlar (Bakanlık: SGK ve İSG-KATİP kayıttan, kilitli; başlangıç rapor açılınca yazılır, zorunlu) */
 export const FIRMA_ZORUNLU: readonly FirmaKaynagi[] = ["isg", "sgk", "bas"];
+/** 595 (madde 7): kontrol listesinin ek sütunları — aciklama (maddenin açıklaması: sahada her maddede yazılır, "Uygun değil"in kusur açıklamasıyla
+    aynı alan), std (standart maddesi — formattan), foto (maddenin fotoğrafları — sahada her maddede çekilir), yazi (serbest yazı, birden çok) */
+export const LISTE_SUTUN_ALANLARI = ["aciklama", "std", "foto", "yazi"] as const;
+export type ListeSutunAlani = (typeof LISTE_SUTUN_ALANLARI)[number];
+export const LISTE_SUTUN_ADI: Record<ListeSutunAlani, string> = { aciklama: "Açıklama", std: "Standart maddesi", foto: "Fotoğraf", yazi: "Not" };
+/** 595 (madde 6): test bölümünün ek sütunları — sahada her değerde yazılır (yazı / sayı / seçim) */
+export const TEST_SUTUN_TURLERI = ["yazi", "sayi", "secim"] as const;
+export type TestSutunTuru = (typeof TEST_SUTUN_TURLERI)[number];
+export const TEST_SUTUN_ADI: Record<TestSutunTuru, string> = { yazi: "Açıklama", sayi: "Sayı", secim: "Seçim" };
+export const EK_SUTUN_EN_COK = 4;
+/** ek sütunun cevap anahtarı (öğe: madde ya da test değeri) */
+export const ekAnahtari = (oge: string, sutun: string) => `${oge}|${sutun}`;
 /** 595 (madde 5): ölçüm tablosu satırında hazır satırın adı (sıra sütununda yazar; sütun kimliği olamaz — "_" ile başlar, ELLE_SONUC gibi) */
 export const HAZIR_AD = "_ad";
 /** 2026-10-16 (sunum 595 madde 2, K3 "evet"): ölçüm cihazları tablosunun sütunları cihaz kaydından seçilir (satırlar türün cihazlarından); cihaz =
@@ -117,6 +129,12 @@ const Deger = z.object({
 });
 /** tablo sütunu: adı formatın, değeri kayıttan (cihaz / uygunsuzluk) */
 const CihazSutunu = z.object({ id: kimlik, ad, alan: z.enum(CIHAZ_ALANLARI) });
+/** 595 (madde 6, 7): kontrol listesi / test bölümünün ek sütunu (en çok EK_SUTUN_EN_COK); sahada her madde / değerde yazılanın cevabı
+    Cevaplar.ek[ekAnahtari(öğe, sütun)] */
+const ListeSutunu = z.object({ id: kimlik, ad, alan: z.enum(LISTE_SUTUN_ALANLARI) });
+const TestSutunu = z.object({ id: kimlik, ad, alan: z.enum(TEST_SUTUN_TURLERI), secenekler: z.array(z.string().trim().min(1).max(60)).max(20).optional() });
+export type ListeSutunu = z.output<typeof ListeSutunu>;
+export type TestSutunu = z.output<typeof TestSutunu>;
 const KusurSutunu = z.object({ id: kimlik, ad, alan: z.enum(KUSUR_ALANLARI) });
 export type CihazSutunu = z.output<typeof CihazSutunu>;
 export type KusurSutunu = z.output<typeof KusurSutunu>;
@@ -164,7 +182,7 @@ export const Bolum = z.discriminatedUnion("blok", [
   /* 595 (madde 9): dizilis — belgede bir satırda kaç bilgi (1 · 2 · 3; verilmemişse 2) */
   z.object({ ...ortak, blok: z.literal("bilgi"), alanlar: z.array(Alan).max(60), tam: z.boolean().optional(), dizilis: z.union([z.literal(1), z.literal(2), z.literal(3)]).optional() }),
   z.object({ ...ortak, blok: z.literal("liste"), cevaplar: z.array(z.string().trim().min(1).max(40)).min(2).max(6), gruplar: z.array(Grup).max(40),
-    basliklar: z.object({ no: baslik, madde: baslik, sonuc: baslik }).optional() }),
+    basliklar: z.object({ no: baslik, madde: baslik, sonuc: baslik }).optional(), ekSutunlar: z.array(ListeSutunu).max(EK_SUTUN_EN_COK).optional() }),
   z.object({
     ...ortak, blok: z.literal("olcum"), satir: z.enum(["sabit", "ekle"]).default("ekle"), sutunlar: z.array(Sutun).max(20),
     hesap: z.enum(HESAPLAR).optional(), notlar: z.array(Not).max(20).optional(), enAz: z.number().int().min(0).max(200).default(0),
@@ -179,7 +197,7 @@ export const Bolum = z.discriminatedUnion("blok", [
     hazir: z.array(z.string().trim().min(1).max(120)).max(100).optional(),
   }),
   z.object({ ...ortak, blok: z.literal("test"), degerler: z.array(Deger).max(40),
-    basliklar: z.object({ olcum: baslik, deger: baslik, sinir: baslik, sonuc: baslik }).optional() }),
+    basliklar: z.object({ olcum: baslik, deger: baslik, sinir: baslik, sonuc: baslik }).optional(), ekSutunlar: z.array(TestSutunu).max(EK_SUTUN_EN_COK).optional() }),
   /* 595 (madde 2): sutunlar — verilmemişse bugünkü 5 sütun (format/duzen.ts cihazSutunlari) */
   z.object({ ...ortak, blok: z.literal("cihaz"), sutunlar: z.array(CihazSutunu).max(10).optional() }),
   z.object({ ...ortak, blok: z.literal("foto"), enAz: z.number().int().min(0).max(50).default(0), enCok: z.number().int().min(1).max(50).default(20) }),
@@ -306,6 +324,14 @@ export const FormatTanimi = z.object({
         bag.addIssue({ code: "custom", path: yol, message: `İmza satırının bilgisi kişiye uymuyor: ${s.ad}` });
       }
     });
+    if ((b.blok === "liste" || b.blok === "test") && b.ekSutunlar) {
+      const al = new Set<string>();
+      b.ekSutunlar.forEach((s, j) => {
+        tek(s.id, ["bolumler", i, "ekSutunlar", j, "id"]);
+        if (b.blok === "liste" && s.alan !== "yazi" && al.has(s.alan)) bag.addIssue({ code: "custom", path: ["bolumler", i, "ekSutunlar", j, "alan"], message: `Sütun iki kez: ${s.ad}` });
+        al.add(s.alan);
+      });
+    }
     if ((b.blok === "cihaz" || b.blok === "kusur") && b.sutunlar) {
       const al = new Set<string>();
       b.sutunlar.forEach((s, j) => {
@@ -341,6 +367,8 @@ export const Cevaplar = z.object({
   /* 2026-10-05 (313-314 çapraz inceleme): 312'den önce açılan raporda tek sayı yazılıydı — sayı gelirse boş kayıt sayılır (sunucu sayıları
      raporun kendi fotoğraf listesinden yeniden hesaplar, bilgi kaybı yok); yoksa eski satır şemadan geçmez, cevaplar boş görünürdü */
   foto: z.preprocess((x) => (typeof x === "number" ? {} : x), z.record(z.string(), z.number().int().min(0).max(200))).default({}),
+  /** 595 (madde 6, 7): kontrol listesi / test bölümünün ek sütunlarına sahada yazılanlar (ekAnahtari(öğe, sütun) → değer) */
+  ek: z.record(z.string(), z.string().max(1000)).default({}),
   cihaz: z.number().int().min(0).max(50).default(0),
   sonuc: z.enum(["", "uygun", "uygun_degil"]).default(""),
   yorum: z.string().max(4000).default(""),

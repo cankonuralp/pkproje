@@ -522,7 +522,9 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
     : y.tur === "sonuc" ? (sonucBolumu ? alanId(sonucBolumu) : "") : y.tur === "yorum" ? (notBolumu ? alanId(notBolumu) : "")
     /* 557: künye, kontrol tarihi */
     : y.tur === "kunye" ? alanId(`kunye.${y.id}`) : y.tur === "tarih" ? TID(y.id)
-    : y.tur === "madde_not" ? alanId(`${y.id}.not`) : y.tur === "derece" ? alanId(`${y.id}.derece`) : alanId(y.id));
+    : y.tur === "madde_not" ? alanId(`${y.id}.not`) : y.tur === "derece" ? alanId(`${y.id}.derece`)
+    /* 595 (madde 6, 7): ek sütun kutusu (Bloklar: alanId("ek.<öğe>.<sütun>")) */
+    : y.tur === "ek" ? alanId(`ek.${y.id.replace("|", ".")}`) : alanId(y.id));
   const isaretler = useRef(new Map<string, { yer: Yer; guven: Guven; deger: string }>());
   useEffect(() => {
     const d: Durum = { ekipman, cevaplar, tarih };
@@ -563,7 +565,8 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
     /* 2026-10-16: S.A.Y'ın işaretlediği madde başka sayfadaysa listenin o sayfası açılır (en üstteki); tablonun sayfası değişikliğinden (yukarıda:
        ilk değişen satır); işaret öteki sayfalarda da durur */
     sayfalariAc(u.isaretler.flatMap((i) => {
-      const y = i.yer.tur === "madde" || i.yer.tur === "madde_not" || i.yer.tur === "derece" ? maddeYerleri.get(i.yer.id) : undefined;
+      const y = i.yer.tur === "madde" || i.yer.tur === "madde_not" || i.yer.tur === "derece" ? maddeYerleri.get(i.yer.id)
+        : i.yer.tur === "ek" ? maddeYerleri.get(i.yer.id.split("|")[0]) : undefined;
       return y ? [y] : [];
     }));
     return u.isaretler.length;
@@ -675,6 +678,8 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
     const bolumu = (y: Yer) => (y.tur === "hucre" ? y.bolum : y.tur === "ekipman" ? "ekipman" : y.tur === "sonuc" ? sonucBolumu : y.tur === "yorum" ? notBolumu
       : y.tur === "kunye" || y.tur === "tarih" ? SABIT.firma
       : y.tur === "madde" || y.tur === "madde_not" || y.tur === "derece" ? v.tanim.bolumler.find((b) => b.blok === "liste" && b.gruplar.some((g) => g.maddeler.some((m) => m.id === y.id)))?.id ?? null
+      : y.tur === "ek" ? v.tanim.bolumler.find((b) => (b.blok === "liste" && b.gruplar.some((g) => g.maddeler.some((m) => y.id.startsWith(`${m.id}|`))))
+        || (b.blok === "test" && b.degerler.some((d) => y.id.startsWith(`${d.id}|`))))?.id ?? null
       : v.tanim.bolumler.find((b) => (b.blok === "bilgi" && b.alanlar.some((a) => a.id === y.id)) || (b.blok === "test" && b.degerler.some((d) => d.id === y.id)))?.id ?? "ekipman");
     const bolumler = [...new Set(u.isaretler.map((i) => bolumu(i.yer)).filter((b): b is string => !!b))];
     const sayi = uygula(u, bolumler);

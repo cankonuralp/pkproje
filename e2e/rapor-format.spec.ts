@@ -104,6 +104,14 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await madde.fill("Deneme maddesi");
     await madde.press("Enter");
     await expect(gozle.getByRole("button", { name: "Deneme maddesi", exact: true })).toBeVisible();
+    /* 595 (madde 7): kontrol listesine ek sütun — "+ Sütun" ile serbest yazı (sahada her maddede yazılır), adı başlıkta yazılır */
+    await gozle.getByRole("combobox", { name: /sütun ekle$/ }).click();
+    await page.getByRole("option", { name: /^Not/ }).click();
+    const ekAdi = page.getByRole("textbox", { name: "Sütun adı" });
+    await expect(ekAdi).toBeFocused();
+    await ekAdi.fill("Gözlem");
+    await ekAdi.press("Enter");
+    await expect(gozle.getByRole("button", { name: "Gözlem", exact: true })).toBeVisible();
     /* ölçüm tablosu TABLO gibi: başlıklar sütun; "+ Sütun" yerinde yeni sütun açar, adı başlıkta yazılır */
     const linye = kagit.getByRole("region", { name: /Pano sigortaları \(linye\)$/ });
     /* 484: sahada doldurma bölümün ayarı — tabloda varsayılan "Fotoğraf · Excel"; ayarda fotoğraf kapatılınca başlıkta yalnız Excel */
@@ -433,6 +441,8 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
       if ((await gozleBolum.getAttribute("aria-expanded")) !== "true") await gozleBolum.click();
       await expect(denemeMadde).toBeVisible({ timeout: 5_000 });
     }).toPass({ timeout: 45_000 });
+    /* 595 (madde 7): kâğıtta eklenen "Gözlem" sütunu sahada her maddede yazı kutusu */
+    await expect(saha.getByRole("textbox", { name: "Gözlem" }).first()).toBeVisible();
     await goz(page, "kurucu-saha", bilgi.project.name);
     await expect(page.getByRole("region", { name: "Kullanım" })).toContainText("Deneme:");
     /* 556 (reisim 2026-10-14: "görüntüdeki gibi değiştirilemez olmasın, olması gerekenin dışında bir şey olursa değiştirebilelim, dışarıdan diğer

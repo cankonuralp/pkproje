@@ -110,6 +110,10 @@ export function raporHaritasi(t: FormatTanimi, turAd: string, canli: CanliRapor,
     } else if (b.blok === "test") {
       l.push(`## ${b.ad}`);
       for (const a of testAlanlari(b, true)) l.push(satir(`d:${a.id}`, a, c.deger[a.id] ?? ""));
+      /* 595 (madde 6): ek sütunlar — x:<değer kimliği>:<sütun kimliği> */
+      for (const s of b.ekSutunlar ?? []) {
+        l.push(`Ek sütun ${s.ad} (${s.alan === "secim" ? `seçim: ${(s.secenekler ?? []).join(" / ")}` : s.alan === "sayi" ? "sayı" : "yazı"}): ${b.degerler.map((d) => `x:${d.id}:${s.id} (${d.ad.slice(0, 40)}) = ${tirnak(c.ek[`${d.id}|${s.id}`] ?? "")}`).join("; ")}`);
+      }
     } else if (b.blok === "olcum") {
       const sutunlar = b.sutunlar;
       l.push(`## ${b.ad} — tablo; hücre kimliği t:${b.id}:<satır no>:<sütun kimliği> (satır 1'den; son satırdan sonraki numara yeni satır açar)`);
@@ -131,7 +135,9 @@ export function raporHaritasi(t: FormatTanimi, turAd: string, canli: CanliRapor,
       l.push(`## ${b.ad} — kontrol listesi; madde cevabı m:<kimlik> (${b.cevaplar.join(" / ")}), kusur açıklaması m:<kimlik>#not, derecesi m:<kimlik>#derece (hafif / ağır)`);
       for (const gr of b.gruplar) for (const m of gr.maddeler) {
         const x = c.madde[m.id];
-        l.push(`- m:${m.id} · ${m.metin.slice(0, 200)} = ${x?.c ? tirnak(x.c) : "—"}${x?.derece ? ` (${x.derece === "agir" ? "ağır" : "hafif"} kusur)` : ""}${x?.not ? ` not ${tirnak(x.not)}` : ""}`);
+        /* 595 (madde 7): serbest yazı sütunları x:<madde>:<sütun> (açıklama sütunu m:<madde>#not) */
+        const ekler = (b.ekSutunlar ?? []).filter((s) => s.alan === "yazi").map((s) => `, x:${m.id}:${s.id} (${s.ad}) = ${tirnak(c.ek[`${m.id}|${s.id}`] ?? "")}`).join("");
+        l.push(`- m:${m.id} · ${m.metin.slice(0, 200)} = ${x?.c ? tirnak(x.c) : "—"}${x?.derece ? ` (${x.derece === "agir" ? "ağır" : "hafif"} kusur)` : ""}${x?.not ? ` not ${tirnak(x.not)}` : ""}${ekler}`);
       }
     } else if (b.blok === "sonuc") sonucVar = true;
     else if (b.blok === "not") notVar = true;

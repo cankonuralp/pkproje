@@ -175,6 +175,10 @@ pkproje/
                             · 595 HAZIR SATIRLAR (madde 5): tanim.ts olcum hazir (adlar) + HAZIR_AD ("_ad", satırda) · raporlar/ornek.ts ilkCevaplar satırları
                             adlarıyla kurar · belge / saha sıra sütununda adı, motor kusur metninde · "sabit" + hazır: sahada satır eklenmez / çıkmaz ·
                             kurucu.ts hazirSatirEkle / Yaz / Sil / Tasi · Kagit "+ Hazır satır ekle" · S.A.Y "hazir_satir" · kilit tests/hazir-satirlar, bozan
+                            · 595 EK SÜTUNLAR (madde 6, 7): tanim.ts liste / test ekSutunlar (LISTE_SUTUN_ALANLARI açıklama · standart · fotoğraf · yazı;
+                            TEST_SUTUN_TURLERI yazı · sayı · seçim; en çok 4) + Cevaplar.ek (ekAnahtari öğe|sütun) · belge sütunlar · saha (Bloklar Madde /
+                            TestBlok) her madde / değerde · kurucu.ts ekSutunEkle / Yaz / Sil / Tasi · Kagit "+ Sütun" · S.A.Y format "tablo_sutunu", rapora
+                            x:<öğe>:<sütun> (say-doldur Yer "ek") · formataUyarla ek'i taşır · kilit tests/ek-sutunlar, bozan
   src/modules/rapor-format/ RAPOR FORMATI (2026-10-04, 308): sürümlü tanım (rapor_format, göç 0022: taslak → yayında → eski; yayınlanan değişmez) ·
                             şablondan başlat · taslak kaydet · yayınla (kilitli Bakanlık öğesi ENGEL, öteki denetim uyarı) · yayındaki format;
                             ekran: tür sayfası "Rapor şablonu" + önizleme /ekipman-turleri/<tür>/sablon/<sürüm> · FORMAT KURUCU (338, K4):

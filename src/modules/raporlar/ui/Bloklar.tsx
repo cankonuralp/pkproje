@@ -40,7 +40,7 @@ import { SINIR_ISARETI } from "../../../format/hesap";
 import { ELLE_GEREKCE, ELLE_GEREKCE_EN_AZ, ELLE_SONUC, satirAnahtari, sonucKurallari, type Degerlendirme, type SatirDegerlendirmesi } from "../../../format/motor";
 import { imzaSatirlari, olcumBasliklari, sonucMetinleri } from "../../../format/duzen";
 import { formulluAlan, formulluDeger, formulluMadde, formulluSutun, type FormulYeri } from "../../../format/formul";
-import { doldurma, HAZIR_AD, type Bolum, type BolumOf, type Cevaplar, type Sinir } from "../../../format/tanim";
+import { doldurma, ekAnahtari, HAZIR_AD, type Bolum, type BolumOf, type Cevaplar, type Sinir } from "../../../format/tanim";
 import { meslek } from "../../personel/sema";
 import { SONUC_AD } from "../sema";
 import type { SahaRaporu } from "../server/raporlar";
@@ -399,6 +399,8 @@ function Madde({ m, numara, b, bag, grupStd }: { m: GrupT["maddeler"][number]; n
   const tusla = bag.v.tanim.gorunum.cevap === "tus" && !bag.oku;
   const yaz = (y: Partial<MaddeCevabi>) => bag.yaz((c) => ({ ...c, madde: { ...c.madde, [m.id]: { ...((c.madde[m.id] as MaddeCevabi | undefined) ?? { c: "" }), ...y } } }));
   const cevapYaz = (c: string) => yaz({ c: f && c === bag.hesap({ tur: "madde", id: m.id }) ? "" : c });
+  const ekSutunlar = b.ekSutunlar ?? [], ekler = ekSutunlar.filter((s) => s.alan === "yazi");
+  const aciklamaSutunu = ekSutunlar.find((s) => s.alan === "aciklama"), fotoSutunu = ekSutunlar.find((s) => s.alan === "foto");
   return (
     <div className={tusla ? `${stil.madde} ${stil.maddeTusla}` : stil.madde}>
       <div className={stil.maddeSol}>
@@ -419,6 +421,33 @@ function Madde({ m, numara, b, bag, grupStd }: { m: GrupT["maddeler"][number]; n
           : <SecimAlani id={id} ad={m.metin} etiketsiz deger={cevap} gecersiz={bag.gecersiz(m.id)} secenekler={b.cevaplar.map((c) => [c, c] as const)}
             degistir={cevapYaz} />}
       </div>
+      {/* 595 (madde 7): formatın ek sütunları — her maddede: açıklama (Uygun değil'de kusur açıklaması olarak aşağıda), fotoğraf, serbest yazı */}
+      {(ekler.length > 0 || (aciklamaSutunu && !kusurlu) || (fotoSutunu && !kusurlu)) && (
+        <div className={stil.maddeKusur}>
+          {aciklamaSutunu && !kusurlu && (
+            <div>
+              <label className={stil.etiket} htmlFor={notId}>{aciklamaSutunu.ad}</label>
+              <textarea id={notId} className={stil.metinAlan} maxLength={1000} value={x?.not ?? ""} readOnly={bag.oku} onChange={(e) => yaz({ not: e.target.value })} />
+            </div>
+          )}
+          {fotoSutunu && !kusurlu && (
+            <div>
+              <p className={stil.etiket}>{fotoSutunu.ad}</p>
+              {bag.foto(b.id, m.id)}
+            </div>
+          )}
+          {ekler.map((s) => {
+            const k = ekAnahtari(m.id, s.id), eid = alanId(`ek.${m.id}.${s.id}`);
+            return (
+              <div key={s.id}>
+                <label className={stil.etiket} htmlFor={eid}>{s.ad}</label>
+                <textarea id={eid} className={stil.metinAlan} maxLength={1000} rows={2} value={bag.c.ek[k] ?? ""} readOnly={bag.oku}
+                  onChange={(e) => bag.yaz((c) => { const ek = { ...c.ek }; if (e.target.value) ek[k] = e.target.value; else delete ek[k]; return { ...c, ek }; })} />
+              </div>
+            );
+          })}
+        </div>
+      )}
       {kusurlu && (
         <div className={stil.maddeKusur}>
           <div>
@@ -680,6 +709,20 @@ function TestBlok({ b, bag }: { b: BolumOf<"test">; bag: Baglam }) {
                   : <Girdi id={id} value={deger} {...ozellik} onChange={(e) => yaz(e.target.value)} />}
           </Alan>
         );
+      }).flatMap((alan, j) => {
+        /* 595 (madde 6): formatın ek sütunları — her değerin ardından (yazı / sayı / seçim) */
+        const d = b.degerler[j];
+        return [alan, ...(b.ekSutunlar ?? []).map((s) => {
+          const k = ekAnahtari(d.id, s.id), eid = alanId(`ek.${d.id}.${s.id}`), deger = bag.c.ek[k] ?? "", ad = `${d.ad} · ${s.ad}`;
+          const ekYaz = (x: string | null) => bag.yaz((c) => { const ek = { ...c.ek }; if (x) ek[k] = x; else delete ek[k]; return { ...c, ek }; });
+          return (
+            <Alan key={`${d.id}-${s.id}`} id={eid} etiket={ad}>
+              {bag.oku ? <OkuGirdi id={eid} deger={deger} />
+                : s.alan === "secim" ? <SecimAlani id={eid} ad={ad} deger={deger} degistir={ekYaz} secenekler={(s.secenekler ?? []).map((o) => [o, o] as const)} />
+                  : <Girdi id={eid} value={deger} maxLength={s.alan === "sayi" ? 12 : 200} inputMode={s.alan === "sayi" ? "decimal" : undefined} onChange={(e) => ekYaz(e.target.value)} />}
+            </Alan>
+          );
+        })];
       })}
     </FormIzgara>
     </>
