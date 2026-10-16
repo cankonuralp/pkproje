@@ -2525,6 +2525,35 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-17 (karar + İŞ PLANI — henüz yapılmadı; reisim: *"onaylıyorum ve ekliyorum, ekipmanlarda … en başta her ekipmanın satırının başında göz
+  işareti olacak ve tıklayınca geçen seneki (en sonki tamamlanmış imzalı rapor) rapor gözükecek, bu ve diğer bütün kalan işler için ne yapılacağını
+  kaydet şimdi yapmaya başlama"*). Sıra reisim "başla" deyince; her biri ayrı kalem (kod → test → olumsuz kanıt → deneme makinesi → deneme adresi).
+  **Bulgu (aynı gün, kod okundu):** 26 Eylül kararı (*"ilerleyen senelerde aynı raporları tekrar rapor oluştur diyerek oluşturup kullanabilmek"*,
+  §9 on dördüncü tur) kodda YARIM — Rapor oluştur ekipman KAYDINDAN açıyor (raporda düzeltilen bilgi kayda geri yazılmıyor; seri no ekipman
+  eklerken sorulmadığı için hep boş), maddeler sıfırdan "Uygun", "Önceki kontrol" yalnız Excel'deki sistem öncesi tarih (sistemdeki rapor görünmez).
+  **İ1 · GEÇEN YILIN RAPORUNDAN YENİ RAPOR (onaylı):** Rapor oluştur (çevrimiçi ve bağlantısız — 405 paketi) ekipmanın EN SON TAMAMLANMIŞ (imzalı)
+  raporundan açılır — aynı ekipman, başka plan, son revizyon, en yeni kontrol tarihli. Gelenler (kopyalama kuralı 206–207 gibi): ekipman bilgileri
+  (marka, model, seri no, imal yılı, kullanım yeri, amaç, bölüm), formatın kayıttan gelmeyen bilgi alanları (ekipman detayları, tespitler), madde
+  seçimleri (yeni format sürümünde aynı madde ve cevap varsa). Gelmeyenler: ölçüm / test değerleri, fotoğraflar, kusur açıklaması ve derecesi, ek
+  sütun yazıları, sonuç, yorum, ölçüm cihazları (zimmet / kalibrasyon kişiye bağlı), imza yerleri (ikinci uzman, tesis yetkilisi). Tamamlanmış raporu
+  yoksa bugünkü gibi ekipman kaydından. Rapor ekranında "Önceki rapordan açıldı: <no>" bilgisi. Künye her zaman plandaki künye (bugünkü kural).
+  **İ2 · "Önceki kontrol" sütunu:** sistemdeki son tamamlanmış raporun tarihi + sonucu (Uygun / Uygun değil / Şartlı uygun); yoksa Excel'deki sistem
+  öncesi kayıt; ikisi de yoksa "İlk kontrol". "Önceki kontrolde kusur" çipi buna göre (Uygun değil ya da Şartlı uygun). Rapor ekranındaki önceki
+  kontrol bilgisi aynı kaynaktan.
+  **İ3 · GÖZ İŞARETİ (onaylı):** plan içi Ekipmanlar tablosunda her satırın EN BAŞINDA göz simgesi (telefonda da tablo); tıklayınca ekipmanın en son
+  tamamlanmış raporunun imzalı PDF'i açılır (tek dosya ucundan, yetkiyle, kısa ömürlü — kalıcı bağlantı yok). Tamamlanmış raporu yoksa simge kapalı,
+  ipucu "Tamamlanmış raporu yok"; PDF saklama süresi dolduğu için silindiyse ipucu bunu söyler. Erişilebilir ad "<kod> · son tamamlanmış rapor".
+  Yetki: planın ekipman listesini gören, o ekipmanın son imzalı raporunu görür (salt okunur) — denetçinin "yalnız kendi raporları" kuralına bu
+  ekipman için açılan istisna; branş süzgeci aynı. Veri Raporlar modülünün dışa açtığı okuyucudan (Planlar rapor tablosuna dokunmaz).
+  **İ4 · Madde 2 (595):** ölçüm cihazları tablosuna "+ Sütun" ile "Kalibrasyon kuruluşu" (kalibrasyon kaydındaki laboratuvar — muayene gününde
+  geçerli kalibrasyonun) ve "Belirsizlik" (kalibrasyon kaydına isteğe bağlı yeni alan — göç; Ölçüm cihazları › kalibrasyon ekle formunda yazılır;
+  toplu içe aktarmada isteğe bağlı sütun). Belge, kâğıt, S.A.Y "tablo_sutunu" aynı; imza anının cihaz kopyası da taşır.
+  **İ5 · Madde 25 (595):** (a) e-imza kutusunun yeri "son sayfa" yanında "her sayfa" (aynı imzanın her sayfada görünen alanı); (b) teknik yönetici
+  için ikinci e-imza yeri (formatta seçilir; kesin PDF'te ikinci boş imza alanı). (b) imza sırasını değiştirir (uzman imzalar → teknik yönetici
+  ikinci kez imzalar → Tamamlandı): başlamadan önce kısa akış sunumu ve reisim onayı.
+  **İ6 · Madde 8 (595):** format yapıcının kâğıdında öğeler (alan, madde, sütun, test değeri, hazır satır, imza / firma / başlık satırları)
+  tutamaktan fareyle ve dokunmatikle SÜRÜKLENEREK taşınır; madde gruplar arasında; ↑ ↓ tuşları kalır (klavye); geri al / yinele ile.
+  **Kalkanlar:** FV12–FV15 (firma başına Supabase planı rafa kalktı — aşağıdaki karar).
 - 2026-10-17 (karar): **SUPABASE TEK, DENEME ADRESİ TEST ADRESİ** — reisim birebir: *"supabase benim kontrolümde olacak firma başı supabase açma
   fikri rafa kalktı, deneme.probata.com.tr uzantılı adres test adresi olacak yayınlarımız ilk orada olacak eğer onaylarsam orada geçerli olanlar
   diğer firmalarada yayınlanacak, şu an herhangi bir başka firma yok"*. Sonuç: (1) bütün firmalar reisim'in Supabase projesinde (ortak proje);
