@@ -7,6 +7,7 @@
 import { useSyncExternalStore } from "react";
 import type { Cevaplar } from "../../../format/tanim";
 import type { SohbetEksik } from "../../../server/yz/sohbet";
+import type { SatirEkle } from "../../../server/yz/say";
 
 /** okuyup girmenin özeti (S.A.Y'ın cevabını sunucu bundan kurar — sayılar ve formatın adları) */
 export interface SayOkumaOzeti {
@@ -54,8 +55,10 @@ export interface SayRaporBagi {
   /** 557: haritanın canlı ekleri — kontrol tarihleri, ölçüm cihazı satırları (seçilebilir cihazlarıyla); künyenin değeri gitmez */
   canliEk: () => { tarih: Record<string, string>; cihazlar: { turId: string; turAd: string; secili: string | null; secenekler: { id: string; kod: string; ad: string }[] }[] };
   /** 550 → 557: Haiku'nun "rapora_yaz" girişleri (raporlar/say-doldur.ts komutlariUygula) — elle ne giriliyorsa, ekranın denetimiyle; ekran yazar,
-      geri okuyup teyit eder, ölçüm cihazını sunucu işlemiyle seçer. Dönen: her girişin sonucu, girilen sayı, geri al */
-  yaz: (girisler: readonly { yer: string; deger: string }[]) => Promise<{ sayi: number; sonuclar: SayGirisSonucu[]; geriAl: SayGeriAl }>;
+      geri okuyup teyit eder, ölçüm cihazını sunucu işlemiyle seçer. 2026-10-15 (C): satirlar — satir_ekle (bir tabloya tek komutla N satır).
+      Dönen: her girişin sonucu, girilen sayı, eklenen satır, geri al. A: cevaplar / ekipman / canliEk bu yazmanın hemen ardından GÜNCEL hâli verir
+      (döngünün sonraki turu haritayı onunla kurar) */
+  yaz: (girisler: readonly { yer: string; deger: string }[], satirlar?: readonly SatirEkle[]) => Promise<{ sayi: number; sonuclar: SayGirisSonucu[]; geriAl: SayGeriAl; satir?: number }>;
 }
 
 /* ── 553 FORMAT YAPICI (reisim 2026-10-14: "konuşarak ilgili formatı yapabiliyo olalım"): taslak açıkken format yapıcı kendini bağlar — S.A.Y

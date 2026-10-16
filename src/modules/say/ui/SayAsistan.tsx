@@ -27,7 +27,15 @@
    döndürür — S.A.Y'ın cevabı ondan sonra ("yaptım" / nedeniyle "yapamadım"); alttaki bildirimler kalktı (her şey sohbette). Başlıkta Küçült (panel
    alta tek satır; bu cihazda kalır); sohbet yukarı kaydırılınca "En alta in".
    561 (reisim 2026-10-15: "chati yukarıdan tutup aşağıya doğru küçültmeyi yapamadım"): panelin boyu üst kenardaki tutamaktan ya da başlıktan
-   sürüklenerek değişir (S.A.Y Chat'le aynı ortak parça — components/pencere/PanelBoyu); boy bu cihazda kalır. */
+   sürüklenerek değişir (S.A.Y Chat'le aynı ortak parça — components/pencere/PanelBoyu); boy bu cihazda kalır.
+   2026-10-15 (pkproje §9 "S.A.Y CLAUDE GİBİ" — reisim: "yap işte yap dedim", "tekrar tekrar soruyor"): (A) İŞ DÖNGÜSÜ — S.A.Y'ın istediği işi ekran
+   yapar, sonucu döngünün bütün adımlarıyla ve raporun güncel hâliyle S.A.Y'a döner; S.A.Y yeni iş isterse yine yapılır, iş bitene kadar (tur
+   sınırı, Durdur tuşu, onay sorusu yok). Okuma ve geri alma da döngüde. Ara turlar sohbete yazılmaz; S.A.Y'ın son cevabı yazılır, bütün işin
+   "Geri al"ı onun altında. Bekleme balonu turda ne yapıldığını söyler (Rapora yazıyor / Okuyor / Düşünüyor). (C) rapora_yaz'ın satir_ekle'si ekranda
+   (raporlar/say-doldur.ts). (D) sahte "yaptım" sunucuda yakalanır — ekranda yeni kutu / tuş yok.
+   2026-10-16 (S.A.Y 1. adım incelemesi): döngünün hedefi başladığı rapor / taslak — iş sürerken başka rapora geçilirse oraya yazılmaz, S.A.Y'a
+   nedeni döner; sorunun ekleri her turda yeniden gider (saklanmaz); iş yarıda kesilirse (tur reddedildi ya da gönderilemedi) yapılanları sunucu
+   sayılarla yazar, bütün işin Geri al'ı o iletiye bağlanır; gönderilen soru yarıda kalan işte kutuya geri konmaz (iş iki kez yapılmasın). */
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from "react";
@@ -41,11 +49,12 @@ import { Serit } from "../../../components/serit/Serit";
 import type { SohbetEkAdi, SohbetEksik, SohbetIletisi } from "../../../server/yz/sohbet";
 import { EK_EN_COK_ADET, EK_EN_COK_BAYT } from "../ek-sinir";
 import type { SayDurum, SayYaniti } from "../server/say";
-import type { SayKomutu } from "../../../server/yz/say";
+import type { IsOzeti, SayAdimi, SayKomutu } from "../../../server/yz/say";
 import { Markdown } from "./Markdown";
 import { istekTani, type Istek } from "../istek";
-import { useSayFormatBagi, useSayRaporBagi, type SayGeriAl, type SayRaporBagi } from "./baglam";
-import { sayDurumEylemi, sayEkliSorEylemi, sayGecmisEylemi, sayIsSonucuEylemi, sayOneriEylemi, sayRaporEylemi, saySorEylemi, sayTemizleEylemi } from "./eylemler";
+import { useSayFormatBagi, useSayRaporBagi, type SayFormatBagi, type SayGeriAl, type SayRaporBagi } from "./baglam";
+import { sayDurumEylemi, sayEkliSorEylemi, sayGecmisEylemi, sayIsSonucuEkliEylemi, sayIsSonucuEylemi, sayIsYarimEylemi, sayOneriEylemi, sayRaporEylemi, saySorEylemi,
+  sayTemizleEylemi } from "./eylemler";
 import stil from "./say.module.css";
 
 const ACIK_ANAHTARI = "probata-say-acik";
@@ -59,6 +68,11 @@ const OKU = "Fotoğrafları oku ve gir";
 const SORU_EN_COK = 20_000;
 /** 542: S.A.Y'ın rapora yaptığı işin bu sayfadaki eylemleri (ileti kimliği → geri al / dolu alanları da değiştir) */
 interface IslemEylemi { geriAl?: SayGeriAl; ustune?: () => { sayi: number; geriAl: SayGeriAl } }
+/** A: döngüde bir araç çağrısını ekranın yapması — S.A.Y'a dönen özet, işin geri alması, dolu alanlar için "üstüne yaz" */
+interface KomutSonucu { ozet: IsOzeti; geriAl?: SayGeriAl; ustune?: IslemEylemi["ustune"] }
+/** 2026-10-16: döngünün hedefi — başladığı rapor / taslak (yalnız kimliği eşleşen bağ; başka rapora geçilince null) ve bu döngüde kullanılan eylemler */
+interface DonguHedefi { rapor: () => SayRaporBagi | null; taslak: () => SayFormatBagi | null; kullanilan: Set<string> }
+const yapilamadi = (ad: string, neden: string): KomutSonucu => ({ ozet: { yazildi: 0, ayni: 0, bekliyor: 0, yapilan: [], yazilamadi: [{ ad, neden }] } });
 const DAR = "(max-width: 767.98px)";
 
 function cevrimici(): boolean { return typeof navigator === "undefined" || navigator.onLine !== false; }
@@ -162,6 +176,9 @@ export function SayAsistan() {
   const onayla = useOnayla();
   const rb = useSayRaporBagi();
   const fb = useSayFormatBagi();
+  /* A: döngü süren bir işte ekranın GÜNCEL bağı (iş sırasında rapor ekranı kapanırsa ya da yeniden bağlanırsa) */
+  const rbRef = useRef(rb), fbRef = useRef(fb);
+  useEffect(() => { rbRef.current = rb; fbRef.current = fb; }, [rb, fb]);
   const [durum, setDurum] = useState<SayDurum | null>(null);
   const [acik, setAcik] = useState(false);
   const [iletiler, setIletiler] = useState<SohbetIletisi[] | null>(null);
@@ -285,8 +302,14 @@ export function SayAsistan() {
     }
     sonuc(y);
   };
-  /** en son, hâlâ kullanılabilen eylem (yazılan "üstüne yaz" / "geri al" için) */
-  const sonEylem = (ne: "geri" | "ustune") => [...islemler.entries()].reverse().find(([, e]) => (ne === "geri" ? e.geriAl : e.ustune));
+  /** en son, hâlâ kullanılabilen eylem (yazılan "üstüne yaz" / "geri al" için). 2026-10-16: yalnız açık raporun / taslağın iletilerindeki (başka
+      rapordan kalan geri alma bu rapora uygulanmaz) ve döngüde bu sırada kullanılmamış olan (haric — kapanıştaki islemler henüz güncellenmedi) */
+  const sonEylem = (ne: "geri" | "ustune", haric: ReadonlySet<string> = new Set(), yer: { rapor: string | null; format: string | null } = { rapor: rb?.id ?? null, format: fb?.id ?? null }) =>
+    [...islemler.entries()].reverse().find(([id, e]) => {
+      if (haric.has(id) || !(ne === "geri" ? e.geriAl : e.ustune)) return false;
+      const m = iletiler?.find((x) => x.id === id);
+      return !!m && ((!!yer.rapor && m.ek?.rapor === yer.rapor) || (!!yer.format && m.ek?.format === yer.format));
+    });
   /** işin kendisi (bekleme göstergesi çağıranda): okuma, geri al, dolu alanları da değiştir */
   const islemCalistir = async (istek: Istek, soru: string, ek: readonly { dosya: string; bolum: string }[] = []) => {
     if (!rb) return;
@@ -306,34 +329,127 @@ export function SayAsistan() {
     try { await islemCalistir(istek, soru, ek); }
     catch { setIlerleme(null); setHata("S.A.Y'a ulaşılamadı; bağlantıyı kontrol edip yeniden deneyin."); } finally { setBekliyor(false); setAsama(null); }
   };
-  /** 550 → 557: Haiku'nun istediği iş — ekran yapar ve geri okuyup teyit eder; rapora yazma / format işinin SONUCU S.A.Y'a döner, cevabını o yazar
-      (yapıldıysa "yaptım", yapılamayan nedeniyle); okuma / geri almanın sonucunu ekranın işlem kaydı yazar. "Geri al" S.A.Y'ın iletisinin altında */
-  const isleriYap = async (komutlar: readonly SayKomutu[]) => {
-    for (const k of komutlar) {
-      /* 553: format yapıcıda taslağa */
-      if (k.tur === "format") {
-        if (!fb) continue;
-        setAsama("Formata yazıyor");
-        const r = fb.uygula(k.islemler);
-        const ozet = { yazildi: r.yapilan.length, ayni: 0, bekliyor: 0, yapilan: r.yapilan.slice(0, 60),
-          yazilamadi: r.gecersiz.slice(0, 300).map((g) => { const i = g.indexOf(": "); return i > 0 ? { ad: g.slice(0, i), neden: g.slice(i + 2) } : { ad: g, neden: "" }; }) };
+  /** A: S.A.Y'ın bir araç çağrısını ekran yapar (557: geri okuyup teyit eder) — S.A.Y'a dönen özet; okuma ve geri alma da döngünün içinde
+      (sonuçlarını artık ayrı bir ileti yazmaz, S.A.Y'a döner) */
+  const komutYap = async (k: SayKomutu, geriler: SayGeriAl[], h: DonguHedefi): Promise<KomutSonucu> => {
+    /* 553: format yapıcıda taslağa (2026-10-16: döngünün başladığı taslağa — başka taslağa geçildiyse yazılmaz) */
+    if (k.tur === "format") {
+      const f = h.taslak();
+      if (!f) return yapilamadi("Format taslağı", "format yapıcı iş sırasında kapandı ya da başka bir taslağa geçildi");
+      setAsama("Formata yazıyor");
+      const r = f.uygula(k.islemler);
+      return { ozet: { yazildi: r.yapilan.length, ayni: 0, bekliyor: 0, yapilan: r.yapilan.slice(0, 1_000),
+        yazilamadi: r.gecersiz.slice(0, 5_000).map((g) => { const i = g.indexOf(": "); return i > 0 ? { ad: g.slice(0, i), neden: g.slice(i + 2) } : { ad: g, neden: "" }; }) },
+        ...(r.yapilan.length ? { geriAl: r.geriAl } : {}) };
+    }
+    const r = h.rapor();
+    if (!r) return yapilamadi("Rapor", "rapor ekranı iş sırasında kapandı ya da başka bir rapora geçildi");
+    if (k.tur === "yaz") {
+      setAsama("Rapora yazıyor");
+      const y = await r.yaz(k.girisler, k.satirlar);
+      const say = (d: string) => y.sonuclar.filter((s) => s.durum === d).length;
+      return { ozet: { yazildi: say("yazildi"), ayni: say("ayni"), bekliyor: say("bekliyor"), satir: y.satir ?? 0,
+        yapilan: y.sonuclar.filter((s) => s.durum === "yazildi").slice(0, 1_000).map((s) => s.ad),
+        yazilamadi: y.sonuclar.filter((s) => s.durum === "yazilamadi").slice(0, 5_000).map((s) => ({ ad: s.ad, neden: s.neden ?? "" })) },
+        ...(y.sayi || y.satir ? { geriAl: y.geriAl } : {}) };
+    }
+    if (k.tur === "oku") {
+      setAsama("Okuyor");
+      const y = await r.fotolariOku((x) => setIlerleme(x));
+      setIlerleme(null);
+      const o = y.ozet, girilen = o.bolumler.reduce((t, b) => t + b.alan + b.satir, 0);
+      return { ozet: { yazildi: girilen, ayni: 0, bekliyor: 0,
+        yapilan: o.bolumler.filter((b) => b.alan || b.satir).map((b) => `${b.ad}: ${[b.alan ? `${b.alan} alan` : "", b.satir ? `${b.satir} satır` : ""].filter(Boolean).join(", ")}${b.belirsiz ? ` (${b.belirsiz} değerden emin değil, sarı)` : ""}`),
+        yazilamadi: [...(!o.okunan && !o.okunamayan ? [{ ad: "Fotoğraf", neden: "okunacak fotoğraf yok (bölüm başlığındaki “Fotoğraf ekle” ile eklenir)" }] : []),
+          ...(o.okunamayan ? [{ ad: `${o.okunamayan} fotoğraf`, neden: o.neden ?? "okunamadı" }] : []),
+          ...o.dolu.map((d) => ({ ad: d, neden: "dolu olduğu için değiştirilmedi" }))] },
+        ...(girilen ? { geriAl: y.geriAl } : {}), ...(y.ustune ? { ustune: y.ustune } : {}) };
+    }
+    /* geri al: önce bu döngünün son işi, yoksa sohbetteki son işin geri alması (bir kez) */
+    setAsama("Geri alıyor");
+    let g = geriler.pop();
+    if (!g) {
+      const s = sonEylem("geri", h.kullanilan, { rapor: r.id, format: null });
+      if (s) { g = s[1].geriAl; h.kullanilan.add(s[0]); setIslemler((x) => new Map(x).set(s[0], {})); }
+    }
+    const sayi = g ? g() : 0;
+    return { ozet: { yazildi: sayi, ayni: 0, bekliyor: 0, yapilan: sayi ? [`${sayi} giriş geri alındı`] : [],
+      yazilamadi: sayi ? [] : [{ ad: "Geri al", neden: "geri alınacak giriş kalmadı (değerler sonradan değişmiş)" }] } };
+  };
+  /** 550 → 557 → A (2026-10-15): İŞ DÖNGÜSÜ — Haiku'nun istediği işleri ekran yapar, sonuç döngünün bütün adımlarıyla ve ekranın güncel hâliyle
+      S.A.Y'a döner (sayIsSonucuEylemi); S.A.Y yeni iş isterse yine yapılır, metinle bitirince cevabı sohbete yazılır. Tur sınırı yok (sonsuz döngü
+      önlemi sunucuda). Bütün işin "Geri al"ı (ve okumada dolu alan kaldıysa "Dolu alanları da değiştir") son iletinin altında */
+  const isleriYap = async (ilk: readonly SayKomutu[], dosyalar: readonly Ek[] = []) => {
+    /* 2026-10-16: hedef döngünün başladığı rapor / taslak — iş sürerken başka rapora geçilirse (aynı türde yer kimlikleri aynı) oraya yazılmaz;
+       aynı raporun yeniden bağlanması (kimlik aynı) sürer */
+    const ilkRapor = rbRef.current?.id ?? null, ilkTaslak = fbRef.current?.id ?? null;
+    const h: DonguHedefi = {
+      rapor: () => (ilkRapor && rbRef.current?.id === ilkRapor ? rbRef.current : null),
+      taslak: () => (ilkTaslak && fbRef.current?.id === ilkTaslak ? fbRef.current : null),
+      kullanilan: new Set(),
+    };
+    const adimlar: SayAdimi[][] = [], geriler: SayGeriAl[] = [];
+    let ustune: IslemEylemi["ustune"];
+    let komutlar = ilk;
+    /** bütün işin Geri al'ı (ve okumada dolu alan kaldıysa "Dolu alanları da değiştir") bu iletinin altında */
+    const bagla = (id: string) => {
+      if (!geriler.length && !ustune) return;
+      const hepsi = [...geriler].reverse(), u = ustune;
+      setIslemler((x) => new Map(x).set(id, { ...(hepsi.length ? { geriAl: () => hepsi.reduce((t, g) => t + g(), 0) } : {}), ...(u ? { ustune: u } : {}) }));
+    };
+    const turGirdisi = () => {
+      const r = h.rapor(), f = h.taslak();
+      return { adimlar, rapor: r?.id ?? null, format: f?.id ?? null, raporNo: r?.no ?? null,
+        canli: r ? { id: r.id, cevaplar: r.cevaplar(), ekipman: r.ekipman(), ...r.canliEk() } : null, kurucu: f ? { id: f.id, tanim: f.tanim() } : null };
+    };
+    /* yarıda kesildi (tur reddedildi ve sunucu iletiyi yazamadı, ya da tur gönderilemedi): sunucuya yazılmış son durum çekilir; soru cevapsız kalmadıysa
+       (S.A.Y'ın iletisi — bu işin) Geri al ona bağlanır */
+    const sonaBagla = async () => {
+      if (!geriler.length && !ustune) return;
+      try {
+        const l = await sayGecmisEylemi();
+        setIletiler(l);
+        const m = l.at(-1);
+        if (m?.kim === "say" && ((!!ilkRapor && m.ek?.rapor === ilkRapor) || (!!ilkTaslak && m.ek?.format === ilkTaslak))) bagla(m.id);
+      } catch { /* bağlantı yok — iş ekranda duruyor, kaydetmek kişide */ }
+    };
+    try {
+      while (komutlar.length) {
+        const adim: SayAdimi[] = [];
+        for (const k of komutlar) {
+          const r = await komutYap(k, geriler, h);
+          if (r.geriAl) geriler.push(r.geriAl);
+          if (r.ustune) ustune = r.ustune;
+          adim.push({ komut: k, ozet: r.ozet });
+        }
+        adimlar.push(adim);
         setAsama("Düşünüyor");
-        const y = await sayIsSonucuEylemi({ komut: { tur: "format", islemler: k.islemler }, ozet, rapor: null, format: fb.id }, yol);
-        if (sonuc(y) && y.durum === "tamam" && r.yapilan.length) { const m = y.iletiler.find((x) => x.kim === "say"); if (m) setIslemler((x) => new Map(x).set(m.id, { geriAl: r.geriAl })); }
-        continue;
+        let y: SayYaniti;
+        /* 2026-10-16: sorunun ekleri her turda yeniden (S.A.Y kaynağı görmeden yazmayı sürdürmesin; sunucu saklamaz) */
+        if (dosyalar.length) {
+          const fd = new FormData();
+          fd.set("girdi", JSON.stringify(turGirdisi())); fd.set("yol", yol);
+          for (const x of dosyalar) fd.append("ek", x.dosya, x.ad);
+          y = await sayIsSonucuEkliEylemi(fd);
+        } else y = await sayIsSonucuEylemi(turGirdisi(), yol);
+        if (y.durum !== "tamam") { setHata(y.neden); await sonaBagla(); return; }
+        komutlar = y.komutlar ?? [];
+        if (komutlar.length) continue;
+        sonuc(y);
+        const m = y.iletiler.find((x) => x.kim === "say");
+        if (m) bagla(m.id);
       }
-      if (!rb) continue;
-      if (k.tur === "yaz") {
-        setAsama("Rapora yazıyor");
-        const r = await rb.yaz(k.girisler);
-        const say = (d: string) => r.sonuclar.filter((s) => s.durum === d).length;
-        const ozet = { yazildi: say("yazildi"), ayni: say("ayni"), bekliyor: say("bekliyor"),
-          yapilan: r.sonuclar.filter((s) => s.durum === "yazildi").slice(0, 60).map((s) => s.ad),
-          yazilamadi: r.sonuclar.filter((s) => s.durum === "yazilamadi").slice(0, 300).map((s) => ({ ad: s.ad, neden: s.neden ?? "" })) };
-        setAsama("Düşünüyor");
-        const y = await sayIsSonucuEylemi({ komut: { tur: "yaz", girisler: k.girisler }, ozet, rapor: rb.id, format: null }, yol);
-        if (sonuc(y) && y.durum === "tamam" && r.sayi) { const m = y.iletiler.find((x) => x.kim === "say"); if (m) setIslemler((x) => new Map(x).set(m.id, { geriAl: r.geriAl })); }
-      } else { setAsama(k.tur === "oku" ? "Okuyor" : "Geri alıyor"); await islemCalistir(k.tur === "oku" ? "oku" : "geri", k.tur === "oku" ? OKU : "Geri al"); }
+    } catch {
+      setIlerleme(null);
+      setHata("S.A.Y'a ulaşılamadı; yapılanlar raporda duruyor. Bağlantıyı kontrol edip yeniden deneyin.");
+      /* tur gönderilemedi (bağlantı, işlev süresi): yapılanları sunucu sayılarla yazar ("İş yarıda kaldı"), bütün işin Geri al'ı ona */
+      try {
+        if (adimlar.length) {
+          const y = await sayIsYarimEylemi(turGirdisi(), yol);
+          if (y.durum === "tamam") { sonuc(y); setHata(null); const m = y.iletiler.find((x) => x.kim === "say"); if (m) bagla(m.id); return; }
+        }
+      } catch { /* aşağıda geçmiş çekilir */ }
+      await sonaBagla();
     }
   };
   /** iletinin altındaki "Geri al" / "Dolu alanları da değiştir" (ya da yazılan komut): bir kez çalışır; sonucu geçmişe */
@@ -427,8 +543,10 @@ export function SayAsistan() {
         return;
       }
     }
-    /* 557: mesaj HEMEN balon (kutu boşalır); sunucunun kaydettiği iletiyle yer değiştirir; gönderilemezse yazı kutuya geri döner */
+    /* 557: mesaj HEMEN balon (kutu boşalır); sunucunun kaydettiği iletiyle yer değiştirir; gönderilemezse yazı kutuya geri döner (2026-10-16: yalnız
+       sorunun kendisi gönderilemediyse — iş başladıysa geri konmaz, yeniden gönderilince iş iki kez yapılmasın) */
     const gid = `gecici-${++geciciSira.current}`, giden = ekler;
+    let gitti = false;
     setIletiler((l) => [...(l ?? []), { id: gid, kim: "ben", metin: v || (giden.length === 1 ? "Eki inceler misin?" : "Ekleri inceler misin?"), yer: l?.at(-1)?.yer ?? "",
       ek: giden.length ? { ekler: giden.map((x) => ({ ad: x.ad, boyut: x.boyut, tur: x.tur })) } : null, zaman: new Date().toISOString() }]);
     setSoru(""); setEkler([]);
@@ -446,19 +564,19 @@ export function SayAsistan() {
         for (const x of giden) fd.append("ek", x.dosya, x.ad);
         y = await sayEkliSorEylemi(fd);
       } else y = await saySorEylemi(v, yol, rb?.no, canli, kurucu);
+      gitti = true;
       if (y.durum === "tamam") {
         for (const x of giden) if (x.url) URL.revokeObjectURL(x.url);
         setIletiler((l) => (l ?? []).filter((x) => x.id !== gid));
         sonuc(y);
-        if (y.komutlar?.length) await isleriYap(y.komutlar);
+        if (y.komutlar?.length) await isleriYap(y.komutlar, giden);
       } else {
         /* soru geçmişe yazıldıysa (çağrı düştü) yeniden çekilir — geçmiş sunucudakiyle aynı kalsın */
         setHata(y.neden);
         setIletiler(await sayGecmisEylemi());
       }
     } catch {
-      setIletiler((l) => (l ?? []).filter((x) => x.id !== gid));
-      setSoru(v); setEkler(giden);
+      if (!gitti) { setIletiler((l) => (l ?? []).filter((x) => x.id !== gid)); setSoru(v); setEkler(giden); }
       setHata("S.A.Y'a ulaşılamadı; bağlantıyı kontrol edip yeniden deneyin.");
     } finally { setBekliyor(false); setAsama(null); girdi.current?.focus(); }
   };

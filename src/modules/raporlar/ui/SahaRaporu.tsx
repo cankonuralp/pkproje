@@ -73,6 +73,7 @@ import {
   raporKunyeGuncelleEylemi, raporSilEylemi, revizeIstegiGeriCekEylemi, raporOneriKapatEylemi, revizeIsteEylemi, type RaporYaniti,
 } from "./eylemler";
 import { sayRaporBagla, type SayGeriAl, type SayOkumaOzeti } from "../../say/ui/baglam";
+import type { SatirEkle } from "../../../server/yz/say";
 import stil from "./raporlar.module.css";
 
 type Gorunum = SahaRaporuVerisi;
@@ -635,8 +636,9 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
   };
   /* 550 → 557: Haiku'nun istediği girişler — elle ne giriliyorsa (ekranın denetimi); dolu alana da (kişi istedi); girilen yerlerin bölümleri açılır;
      yazıldıktan sonra geri okunup teyit edilir; ölçüm cihazı elle seçilir gibi sunucu işlemiyle */
-  const raporaYaz = async (girisler: readonly { yer: string; deger: string }[]) => {
-    const u = komutlariUygula(durumRef.current, v.tanim, girisler, { kunyeKilit, kunyeKayit: kayit, cihazlar: cihazSatirlari() });
+  /* 2026-10-15 (C — "aynı tabloya 50 satır ekle"): satirlar — satir_ekle, bir tabloya tek komutla N satır (aynı denetim; tablonun tek geri alması) */
+  const raporaYaz = async (girisler: readonly { yer: string; deger: string }[], satirlar: readonly SatirEkle[] = []) => {
+    const u = komutlariUygula(durumRef.current, v.tanim, girisler, { kunyeKilit, kunyeKayit: kayit, cihazlar: cihazSatirlari() }, satirlar);
     const bolumu = (y: Yer) => (y.tur === "hucre" ? y.bolum : y.tur === "ekipman" ? "ekipman" : y.tur === "sonuc" ? sonucBolumu : y.tur === "yorum" ? notBolumu
       : y.tur === "kunye" || y.tur === "tarih" ? SABIT.firma
       : y.tur === "madde" || y.tur === "madde_not" || y.tur === "derece" ? v.tanim.bolumler.find((b) => b.blok === "liste" && b.gruplar.some((g) => g.maddeler.some((m) => m.id === y.id)))?.id ?? null
@@ -652,7 +654,7 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
       const tamam = !!r?.tamam && (c.cihazId ? vRef.current.cihazlar.find((x) => x.turId === c.turId)?.cihaz?.id === c.cihazId : !vRef.current.cihazlar.find((x) => x.turId === c.turId)?.cihaz);
       if (j >= 0) sonuclar[j] = tamam ? { ...sonuclar[j], durum: "yazildi" } : { ...sonuclar[j], durum: "yazilamadi", neden: r ? (r.genel ?? Object.values(r.hatalar ?? {})[0] ?? "cihaz seçilemedi") : "bağlantı koptu" };
     }
-    return { sayi, sonuclar, geriAl: geriAlici(u.geri) };
+    return { sayi, sonuclar, geriAl: geriAlici(u.geri), satir: u.satir };
   };
   const sonucYap = (x: "uygun" | "uygun_degil") => {
     if (!sonucBolumu) return { var: false, sayi: 0, geriAl: () => 0 };
@@ -695,16 +697,17 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
       },
       sonucUygula: (x) => sayGuncel.current.yaz((c) => ({ ...c, sonuc: x })),
       git: (e) => sayGuncel.current.git({ bolum: e.bolum, alan: e.alan, ad: e.ad }),
-      cevaplar: () => sayGuncel.current.cevaplar,
+      /* 2026-10-15 (A): canlı hâl durumRef'ten — S.A.Y'ın yazdığı hemen orada (ekran yeniden çizilmeden); iş döngüsünün sonraki turu haritayı onunla kurar */
+      cevaplar: () => durumRef.current.cevaplar,
       fotoBolumleri: () => [...hedefler.values()].map((h) => ({ id: h.bolum, ad: h.ad })),
       okunmamis: () => sayGuncel.current.okunmamis().length,
       fotolariOku: (ilerle, ek) => sayGuncel.current.fotolariOku(ilerle, ek),
       maddeleriIsaretle: () => sayGuncel.current.maddeleriIsaretle(),
       sonucYap: (x) => sayGuncel.current.sonucYap(x),
       fotoEkle: (dosya, bolum) => sayGuncel.current.fotoEkle(dosya, bolum),
-      ekipman: () => ({ ...sayGuncel.current.ekipman }) as Record<string, string>,
-      canliEk: () => ({ tarih: { ...sayGuncel.current.tarih }, cihazlar: sayGuncel.current.cihazSatirlari() }),
-      yaz: (girisler) => sayGuncel.current.raporaYaz(girisler),
+      ekipman: () => ({ ...durumRef.current.ekipman }) as Record<string, string>,
+      canliEk: () => ({ tarih: Object.fromEntries(Object.entries(durumRef.current.tarih ?? sayGuncel.current.tarih).map(([k, x]) => [k, x ?? ""])), cihazlar: sayGuncel.current.cihazSatirlari() }),
+      yaz: (girisler, satirlar) => sayGuncel.current.raporaYaz(girisler, satirlar),
     });
   }, [oku, yeni, denemede, v.id, v.no, v.tanim, v.cihazlar, hedefler]);
 

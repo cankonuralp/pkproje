@@ -2461,6 +2461,31 @@ değiştirilir / kaldırılır, firma da değiştirir, iki taraf denetim izinde.
 probata.com.tr (reisim alacak; *"moda-enerji.probata.com.tr gibi urlleri atayabilecek miyim"* → evet: *.probata.com.tr joker, ad sunucuları Vercel'e,
 firma başına DNS işi yok). Tasarım ve kalemler: `FIRMA-VT.md` (FV1–FV15).
 
+**2026-10-15 akşam — S.A.Y CLAUDE GİBİ: SINIRSIZ, SAYFA GEZMEDEN, HER İŞİ YAPAR (sunum 584 REDDEDİLDİ)** (reisim birebir, sırasıyla: *"bunu yapmayı red
+etti aynı claud gibi çalıssın demiştim … claud ekranda istediği gibi gezebiliyor"*; *"sayfada gezinme vs ne demek zaten direk database den, backendden
+herşeyi görüpte yapıyor … adam zaten bizim kodun içinde"*; *"sik sik duruyor tekrar tekrar soruyor"*, *"yap işte yap dedim"*; *"saçma sapan sınırlar
+koyma, ben sana ne dedim aynı ben normal chatte kullanıyormuşum gibi kullanabileyim, sadece site ile alakasız sorulara cevap vermesin (kahve falına bak,
+ayılar ne yer, vb vb gibi.) tek sınırımız bu … nasıl ben chrome extension ile istediğim her şeyi yaptırabiliyorum clauda aynı şekilde yapabilsin"*;
+*"sunum 584 ü red ediyorum dediğme odaklan sik sok kurallar getirme"*; *"herhangi bir tabloda 20 den sonrası sayfalı olacak … diğer sayfalara doğru
+aksın"*; *"eğer yaptığı değişikliklerden sonra f5 yapılması gerekiyorsa vs claud bunu haber veriyor"*; *"onaylıyorum … sayfada gezme cart curta gerek
+kalmasın bu sayfa açık değil falan demesin"*). KARAR: (1) S.A.Y iş bitene kadar araç çağırmayı sürdürür, "devam edeyim mi" demez; tur / adım / giriş
+/ uzunluk sınırı YOK; tek komutla çok satır; aracı çağırmadan "yaptım" derse sunucu yakalar, işi yaptırır ya da nedenini söyletir. (2) Uygulamanın
+sunucu işlevleri (tuşların çağırdığı işlevler + sayfaların okuma işlevleri) S.A.Y'ın aracı olur; sayfa gezmez, "sayfa açık değil" demez — rapor
+ekranda açıksa forma yazar (istenirse kaydeder / onaya gönderir), açık değilse doğrudan kaydeder; kullanıcının oturumu ve sunucunun bugünkü denetimi
+aynen (ayrı kural yok); e-imza kullanıcının cihazında. İşten sonra açık sayfa kendiliğinden yenilenir; ekranda kaydedilmemiş değişiklik varsa S.A.Y
+söyler. (3) Bütün tablo ve listelerde 20 satırdan sonrası sayfalı (rapor ölçüm tabloları dahil), yeni satır sonraki sayfaya akar. Tek kural: site
+dışı soruya cevap yok. Sıra: (1) → (3) → (2); FV kalemleri arada sürer.
+
+**2026-10-16 — SONUÇ KURALI FORMAT YAPICIDA, HESAP LİSTESİ SADE** (reisim birebir, pano sigortaları (linye) tablosunun kurucu ekran görüntüsüyle:
+*"saha ekranında doldururken kurala göre otomatik uygun uygun değil diyor, ama ilgili ayar buradan yapılamıyor ? ben göremiyorum sanki o kısım koda
+gömülmüş gibi, eğer böyle bi özellik koyabileceksek format yapıcıya koyalım yoksa otomatik uygun uygun değil olayını kaldıralım, hesaplama tuşuna basınca
+bir sürü değer çıkıyor bunları şöyle yapalım, her birimin kendi tablosundaki değerler çıksın, diğer değerler diğer olarak gözüksün tıklayıp açılan
+listeden seçilebilsin"*; öneriye: *"onaylıyorum"*). KARAR: (1) ölçüm tablosunun Sonuç kuralı kurucuda tablonun ayarında "Sonuç kuralı" olarak görünür ve
+formül dilinde (EĞER, VE …) düzenlenir; bugün kodda duran Bakanlık hesapları (linye, RCD / selektivite, nokta Zs, PD, zemin — format/motor.ts
+satirDegerlendir, hesap.ts) aynı sonucu veren formüle çevrilip hazır gelir; formül silinirse o tabloda otomatik sonuç yok (denetçi elle seçer); sütun
+sınırları ve "seçilirse uygun değil" seçenekleri bugünkü gibi. (2) Hesap (formül) tuşunun listesinde yalnız o tablonun / bölümün kendi değerleri
+görünür; ötekiler "Diğer" açılır listesinde (aranabilir); işaretler ve işlevler aynen.
+
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa

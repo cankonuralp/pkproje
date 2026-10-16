@@ -39,11 +39,12 @@ export async function yzAyir(db: Sorgulayici, ay: string, sinir: number | null, 
 }
 
 /** ayırmayı kapat (çağrı cevapsız bitti): `ucretli` — sonucu bilinmiyor (zaman aşımı), ayrılan tutar harcamaya ve bir okuma (S.A.Y'da bir mesaj —
-    380) sayılır; değilse bırakılır */
-export async function yzAyirmaBirak(db: Sorgulayici, ay: string, ust: number, ucretli: boolean, sayac: "okuma" | "mesaj" = "okuma"): Promise<void> {
+    380) sayılır; değilse bırakılır. 2026-10-16: sayac "yok" — aynı mesajın ek çağrısı (S.A.Y iş döngüsünün turu, düzeltme turu): harcama yazılır,
+    sayaç artmaz (kişinin mesajı ilk çağrıda bir kez sayıldı) */
+export async function yzAyirmaBirak(db: Sorgulayici, ay: string, ust: number, ucretli: boolean, sayac: "okuma" | "mesaj" | "yok" = "okuma"): Promise<void> {
   const alan = sayac === "mesaj" ? "mesaj" : "okuma";
   await db.sorgu(`UPDATE yz_kullanim SET ayrilan = greatest(ayrilan - $2, 0), maliyet = maliyet + $3, ${alan} = ${alan} + $4 WHERE ${BEN} AND ay = $1`,
-    [ay, ust, ucretli ? ust : 0, ucretli ? 1 : 0]);
+    [ay, ust, ucretli ? ust : 0, ucretli && sayac !== "yok" ? 1 : 0]);
 }
 
 /** oturumdaki kişinin bu ayki harcaması + bekleyen ayırması (milyonda bir dolar; satır yoksa 0) — S.A.Y "sınırınız doldu" şeridi (380) */
@@ -68,12 +69,13 @@ export async function yzMesajSay(db: Sorgulayici, ay: string): Promise<void> {
   await db.sorgu("INSERT INTO yz_kullanim (ay, mesaj) VALUES ($1, 1) ON CONFLICT (firma_id, hesap_id, ay) DO UPDATE SET mesaj = yz_kullanim.mesaj + 1", [ay]);
 }
 
-/** S.A.Y (380): yapay zekâ cevabı — ayırma gerçek maliyetle kapanır, mesaj sayısı artar (aynı işlemde cevap geçmişe yazılır) */
-export async function yzSohbetKapat(db: Sorgulayici, o: { ay: string; ust: number; maliyet: number }): Promise<void> {
+/** S.A.Y (380): yapay zekâ cevabı — ayırma gerçek maliyetle kapanır, mesaj sayısı artar (aynı işlemde cevap geçmişe yazılır). 2026-10-16: mesaj 0 —
+    aynı mesajın iş döngüsü turu (kişinin mesajı ilk çağrıda bir kez sayıldı; N tur mesajı N+1 saymasın) */
+export async function yzSohbetKapat(db: Sorgulayici, o: { ay: string; ust: number; maliyet: number; mesaj?: 0 | 1 }): Promise<void> {
   await db.sorgu(
-    `INSERT INTO yz_kullanim (ay, mesaj, maliyet) VALUES ($1, 1, $2)
-     ON CONFLICT (firma_id, hesap_id, ay) DO UPDATE SET mesaj = yz_kullanim.mesaj + 1, maliyet = yz_kullanim.maliyet + EXCLUDED.maliyet,
-       ayrilan = greatest(yz_kullanim.ayrilan - $3, 0)`, [o.ay, o.maliyet, o.ust]);
+    `INSERT INTO yz_kullanim (ay, mesaj, maliyet) VALUES ($1, $4, $2)
+     ON CONFLICT (firma_id, hesap_id, ay) DO UPDATE SET mesaj = yz_kullanim.mesaj + EXCLUDED.mesaj, maliyet = yz_kullanim.maliyet + EXCLUDED.maliyet,
+       ayrilan = greatest(yz_kullanim.ayrilan - $3, 0)`, [o.ay, o.maliyet, o.ust, o.mesaj ?? 1]);
 }
 
 export interface YzKisiKullanimi { id: string; ad: string; okuma: number; mesaj: number; maliyet: number }

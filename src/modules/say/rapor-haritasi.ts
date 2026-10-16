@@ -11,7 +11,7 @@
    gitmez); kayıttan gelen formüllü alanın yeri var, değeri gitmez. */
 import { kilitliKunye } from "../../format/kunye.ts";
 import { formulUygula } from "../../format/formul.ts";
-import { Cevaplar, KUNYE_ALAN_ADI, KUNYE_ALANLARI, type FormatTanimi } from "../../format/tanim.ts";
+import { Cevaplar, KUNYE_ALAN_ADI, KUNYE_ALANLARI, TABLO_SATIR_EN_COK, type FormatTanimi } from "../../format/tanim.ts";
 import type { OkunacakAlan } from "../../format/deger.ts";
 import { ELLE_GEREKCE, ELLE_SONUC } from "../../format/motor.ts";
 import { bilgiAlanlari, ekipmanAlanlari, ekipmanAnahtari, testAlanlari } from "../raporlar/doldur.ts";
@@ -118,6 +118,8 @@ export function raporHaritasi(t: FormatTanimi, turAd: string, canli: CanliRapor)
         ? `Uygunluk notu: t:${b.id}:<satır no>:not (Not-1 … Not-${notlar.length}: ${notlar.map((x, i) => `Not-${i + 1} ${x.metin.slice(0, 60)}`).join("; ")})`
         : `Satır sonucu elle: t:${b.id}:<satır no>:sonuc (uygun / uygun değil / kurala göre) ve gerekçesi t:${b.id}:<satır no>:gerekce (yazı)`);
       l.push(`Satır silmek: t:${b.id}:<satır no> = sil`);
+      /* 2026-10-15 (C): çok satır tek komutla — rapora_yaz satir_ekle (tablo kimliği bu) */
+      l.push(`Çok satır eklemek: rapora_yaz satir_ekle — tablo ${b.id}, adet, degerler (sütun kimliğiyle), sira (artan sütun); tabloda en çok ${TABLO_SATIR_EN_COK} satır olur`);
       const satirlar = c.tablo[b.id] ?? [];
       if (!satirlar.length) l.push("- satır yok");
       satirlar.slice(0, TABLO_SATIR).forEach((s, i) => l.push(`- ${i + 1}. satır: ${sutunlar.map((x) => `${x.id}=${tirnak(s[x.id] ?? "")}`).join(", ")}${

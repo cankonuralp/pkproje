@@ -13,13 +13,27 @@
    komut gelsin, yapılsın, doğruluğunu teyit et, yapıldıysa yapıldı de, yapılamadıysa sebebi ile yaz", "geçmiş sorularda takılı kalıyor"): talimatta
    reisim'in istediği İKİ kural (konu sınırı; iş akışı — sonucu görmeden "yaptım" demez); kullanıcının ardışık mesajları BİRLEŞMEZ (araya
    CEVAPSIZ); işin sonucu ikinci çağrıyla (araç kullanımı ve düşünme kapalı, araç bloğu + sonucu konuşmanın sonunda); çağrı düşerse sonucu sunucu
-   sayılardan yazar (isSonucuMetni). */
+   sayılardan yazar (isSonucuMetni).
+   2026-10-15 (pkproje §9 "S.A.Y CLAUDE GİBİ" — reisim: "yap işte yap dedim", "saçma sapan sınırlar koyma"): (A) işin sonucu döngünün devamı —
+   S.A.Y yeniden araç çağırabilir (tool_choice yok), tek güvenlik aynı iş aynı girdiyle değişmeden yinelenince durmak; talimat "devam edeyim mi" demez;
+   (B) yanıt / giriş / satır sınırları işe engel değil, ekranla sunucu aynı; (C) satir_ekle çağrısı biçimiyle, kimlikli komut; (D) aracı çağırmadan
+   "yaptım" diyen cevap sahte sayılır, düzeltme turu. Olumsuz kanıt: tests/bozan/say-dongu.bozan.ts.
+   2026-10-16 (S.A.Y 1. adım incelemesi — kasıtlı beklenti değişiklikleri, gerekçeleri yerinde): satir_ekle raporun tablo sınırında (TABLO_SATIR_EN_COK;
+   5 000 satır açılabiliyordu, rapor kaydedilemiyordu); döngü turunun ayırması isteğin ölçülen boyundan, tabanı aşmadıkça ilk çağrıyla aynı
+   (taban 100 000 fiyat eşiğinde olduğundan her tur ~3 kat ayırıyordu); tek güvenlik değişiklik yapmayan A, B, A, B yinelenmesini de görür; sahte
+   "yaptım" denetimi yalnız istekte iş yapan araç varken. */
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { ANA_SAYFA, MODULLER } from "../src/modules/moduller.ts";
 import { raporGirdisi } from "../src/modules/say/server/say.ts";
 import { SAY_KILAVUZU, SAYFA_YARDIMI, sayfaBilgisi } from "../src/modules/say/yardim.ts";
-import { ARAMA_ARACI, CEVAP_SINIRI, CEVAPSIZ, GECMIS_HARF, isSonucuMetni, KONU_DISI, konusma, SAY_GECMIS, sayIstegi, saySistemi, sayYanitiCoz, SORU_SINIRI } from "../src/server/yz/say.ts";
+import { GIRIS_EN_COK, SATIR_EKLE_EN_COK as EKRAN_SATIR_EKLE_EN_COK } from "../src/modules/raporlar/say-doldur.ts";
+import { maliyetHesapla } from "../src/server/yz/okuma.ts";
+import { ARAMA_ARACI, CEVAP_SINIRI, CEVAPSIZ, DONGU_DURDU, donguTekrari, DUZELTME, duzeltmeIstegi, GECMIS_HARF, isAraciVar, isSonucuMetni, istekGirisi, isYapildi,
+  KOMUT_GIRIS_EN_COK, komutBlogu, komutDenetle, KONU_DISI, konusma, RAPOR_ARACLARI, SAHTE_YEDEK, sahteYapildi, SATIR_EKLE_EN_COK, SAY_GECMIS, SAY_GIRIS_UST,
+  SAY_YANIT_SINIRI, sayEnCokMaliyet, sayIstegi, saySistemi, sayYanitiCoz, SORU_SINIRI, toplamOzet, yapildiDiyor, type IsOzeti, type SayAdimi,
+  type SayKomutu } from "../src/server/yz/say.ts";
+import { TABLO_SATIR_EN_COK } from "../src/format/tanim.ts";
 
 test("konuşma: kullanıcıyla başlar, roller sırayla, kullanıcının ardışıkları birleşmez (557), en yeniler (ileti ve karakter sınırı), sınırlar", () => {
   /* 557 (reisim: "geçmiş sorularda takılı kalıyor"): cevapsız kalan "A" yeni soruyla birleşmez — araya CEVAPSIZ; S.A.Y'ın ardışıkları birleşir */
@@ -118,24 +132,65 @@ test("553 format: harita bağlamda, araç yalnız haritayla; formati_duzenle ça
   assert.deepEqual(c.komutlar, [{ tur: "format", islemler: [{ islem: "oge_ekle", bolum: "linye", ad: "RCa", formul: "480/RCd" }] }]);
 });
 
-/* 557: işin sonucu ikinci çağrıyla — araç bloğu ve sonucu konuşmanın sonunda; araç kullanımı ve düşünme kapalı; araç tanımı durur, arama yok */
-test("557 iş sonucu: ikinci çağrı (tool_use + tool_result, tool_choice none, düşünme kapalı); çağrı düşerse sonucu sunucu yazar", async () => {
+/* 557 → 2026-10-15 (A — pkproje §9 "S.A.Y CLAUDE GİBİ"; reisim: "sik sik duruyor tekrar tekrar soruyor", "yap işte yap dedim"; kasıtlı beklenti
+   değişikliği): işin sonucu artık DÖNGÜNÜN devamı — eski beklenti "ikinci çağrıda araç kullanımı kapalı (tool_choice none), arama yok, harita gitmez"
+   idi; S.A.Y sonucu görünce bir daha araç çağıramadığı için "kalanları da ekleyeyim mi?" diye soruyordu. Yeni: adımlar konuşmanın sonunda (araç
+   bloğu + sonucu, hizmetin kimliğiyle), düşünme kapalı, tool_choice YOK (auto), araçlar ve arama durur, bağlam (harita) her turda; yalnız aynı iş
+   aynı girdiyle hiçbir şey değiştirmeden yinelenirse tool_choice none + "döngü durdu" notu. Çağrı düşerse sonucu sunucu yazar (557 aynı). */
+test("A iş döngüsü: adımlar konuşmanın sonunda, düşünme kapalı, araç kullanımı AÇIK (tur sınırı yok); yalnız aynı iş değişmeden yinelenince durur", async () => {
   const { FORMAT_ARACI } = await import("../src/modules/rapor-format/say-kurucu.ts");
-  const g = sayIstegi({ model: "haiku", kilavuz: [], baglam: { roller: [], yer: "Rapor X", yardim: null, bekleyen: [] }, gecmis: [{ kim: "ben", metin: "eski" }], soru: "boşlara - gir",
-    devam: { arac: "rapora_yaz", girdi: { girisler: [{ yer: "t:linye:1:icu", deger: "-" }] }, sonuc: "{\"yazilan\":1}" } }).govde as
-    { messages: { role: string; content: unknown }[]; tools: { name: string }[]; tool_choice: unknown; thinking: unknown; system: { text: string }[] };
-  assert.deepEqual(g.tool_choice, { type: "none" });
+  const ozet = (yazildi: number, ek: Partial<IsOzeti> = {}): IsOzeti => ({ yazildi, ayni: 0, bekliyor: 0, yapilan: [], yazilamadi: [], ...ek });
+  const yaz: SayKomutu = { tur: "yaz", girisler: [], satirlar: [{ tablo: "linye", adet: 20, degerler: {}, sira: { sutun: "no" } }], id: "toolu_1" };
+  const adimlar: SayAdimi[][] = [[{ komut: yaz, ozet: ozet(0, { satir: 20, yapilan: ["Linye · 20 satır eklendi (1–20. satır)"] }) }],
+    [{ komut: { ...yaz, id: "toolu_2" }, ozet: ozet(0, { satir: 20 }) }, { komut: { tur: "geri", id: "toolu_3" }, ozet: ozet(1) }]];
+  const g = sayIstegi({ model: "haiku", kilavuz: [], baglam: { roller: [], yer: "Rapor X", yardim: null, bekleyen: [], rapor: "HARİTA" }, gecmis: [{ kim: "ben", metin: "eski" }],
+    soru: "linye tablosuna 50 satır ekle", adimlar }).govde as { messages: { role: string; content: unknown }[]; tools: { name: string }[]; tool_choice?: unknown; thinking: unknown; system: { text: string }[] };
+  assert.equal(g.tool_choice, undefined, "S.A.Y yeniden araç çağırabilir (auto) — döngü tek tura düşmez");
   assert.deepEqual(g.thinking, { type: "disabled" });
-  assert.deepEqual(g.tools.map((t) => t.name), ["rapora_yaz", "fotograflari_oku", "geri_al"], "araç tanımı durur, arama yok");
-  assert.ok(!g.system[1].text.includes("Açık rapor"), "harita ikinci çağrıda gitmez");
-  assert.deepEqual(g.messages.slice(-3), [
-    { role: "user", content: "boşlara - gir" },
-    { role: "assistant", content: [{ type: "tool_use", id: "say_is", name: "rapora_yaz", input: { girisler: [{ yer: "t:linye:1:icu", deger: "-" }] } }] },
-    { role: "user", content: [{ type: "tool_result", tool_use_id: "say_is", content: "{\"yazilan\":1}" }] }]);
+  assert.deepEqual(g.tools.map((t) => t.name), ["rapora_yaz", "fotograflari_oku", "geri_al", "web_search"]);
+  assert.ok(g.system[1].text.includes("Açık rapor (kullanıcının şu an yazdığı"), "bağlam her turda (güncel harita)");
+  assert.deepEqual(g.messages.slice(-5).map((m) => m.role), ["user", "assistant", "user", "assistant", "user"]);
+  assert.deepEqual(g.messages.at(-5), { role: "user", content: "linye tablosuna 50 satır ekle" });
+  assert.deepEqual(g.messages.at(-4), { role: "assistant", content: [{ type: "tool_use", id: "toolu_1", name: "rapora_yaz",
+    input: { girisler: [], satir_ekle: [{ tablo: "linye", adet: 20, degerler: {}, sira: { sutun: "no" } }] } }] });
+  const sonuc = g.messages.at(-1)!.content as { type: string; tool_use_id: string; content: string }[];
+  assert.deepEqual(sonuc.map((x) => [x.type, x.tool_use_id]), [["tool_result", "toolu_2"], ["tool_result", "toolu_3"]]);
+  assert.deepEqual(JSON.parse(sonuc[0].content), { yazilan: 0, zaten_oyle: 0, eklenen_satir: 20, yazilamayan: [] });
+  assert.ok(!sonuc[1].content.includes(DONGU_DURDU));
+  /* kimliksiz / tekrar eden kimlik: istek içinde tekil */
+  const t = sayIstegi({ model: "haiku", kilavuz: [], baglam: { roller: [], yer: "x", yardim: null, bekleyen: [] }, gecmis: [], soru: "s",
+    adimlar: [[{ komut: { tur: "oku" }, ozet: ozet(0) }], [{ komut: { tur: "oku" }, ozet: ozet(0) }, { komut: { tur: "geri", id: "say_2_1" }, ozet: ozet(0) }]] }).govde as { messages: { content: unknown }[] };
+  const kimlikler = t.messages.flatMap((m) => (Array.isArray(m.content) ? (m.content as { id?: string }[]).flatMap((b) => (b.id ? [b.id] : [])) : []));
+  assert.equal(kimlikler.length, 3);
+  assert.equal(new Set(kimlikler).size, kimlikler.length, kimlikler.join(","));
+  /* format: araç tanımı konuşmadaki çağrı için durur; arama da */
   const f = sayIstegi({ model: "haiku", kilavuz: [], baglam: { roller: [], yer: "x", yardim: null, bekleyen: [] }, gecmis: [], soru: "s", formatAraci: [FORMAT_ARACI],
-    devam: { arac: "formati_duzenle", girdi: { islemler: [] }, sonuc: "{}" } }).govde as { tools: { name: string }[] };
-  assert.deepEqual(f.tools.map((t) => t.name), ["formati_duzenle"]);
-  /* ilk çağrıda bunlar yok */
+    adimlar: [[{ komut: { tur: "format", islemler: [{ islem: "x" }] }, ozet: ozet(1) }]] }).govde as { tools: { name: string }[]; tool_choice?: unknown };
+  assert.deepEqual([f.tools.map((x) => x.name), f.tool_choice], [["formati_duzenle", "web_search"], undefined]);
+  /* tek güvenlik: aynı iş aynı girdiyle, hiçbir şey değişmedi → tool_choice none + not (kullanıcıya görünen bir sınır değil) */
+  const ayni: SayAdimi[][] = [[{ komut: { tur: "geri", id: "a" }, ozet: ozet(0) }], [{ komut: { tur: "geri", id: "b" }, ozet: ozet(0) }]];
+  assert.equal(donguTekrari(ayni), true);
+  const d = sayIstegi({ model: "haiku", kilavuz: [], baglam: { roller: [], yer: "x", yardim: null, bekleyen: [] }, gecmis: [], soru: "s", adimlar: ayni, durdur: true }).govde as
+    { tool_choice: unknown; messages: { content: unknown }[] };
+  assert.deepEqual(d.tool_choice, { type: "none" });
+  assert.ok(String((d.messages.at(-1)!.content as { content?: string }[]).at(-1)?.content).endsWith(DONGU_DURDU));
+  /* değişiklik yaptığı sürece aynı çağrı yinelenebilir (20'şer satır); tek adım; farklı girdi → durmaz */
+  assert.equal(donguTekrari(adimlar.slice(0, 1)), false);
+  assert.equal(donguTekrari([adimlar[0], [{ komut: { ...yaz, id: "x" }, ozet: ozet(0, { satir: 20 }) }]]), false, "20 satır eklendi — sürer");
+  assert.equal(donguTekrari([adimlar[0], [{ komut: { ...yaz, satirlar: [{ tablo: "linye", adet: 10, degerler: {} }] }, ozet: ozet(0) }]]), false, "girdi farklı");
+  assert.equal(donguTekrari([[{ komut: yaz, ozet: ozet(0, { satir: 20 }) }], [{ komut: yaz, ozet: ozet(0) }]]), true, "aynı girdi, eklenen yok — durur");
+  /* 2026-10-16: değişiklik yapmayan iki ayrı çağrı sırayla yinelenince (A, B, A, B) — art arda olmasalar da durur; değişiklik yapan yineleme sürer */
+  const A1: SayKomutu = { tur: "yaz", girisler: [{ yer: "t:linye:1:akim", deger: "1" }] }, B1: SayKomutu = { tur: "yaz", girisler: [{ yer: "t:linye:1:akim", deger: "bir" }] };
+  const yok = (k: SayKomutu, id: string): SayAdimi[] => [{ komut: { ...k, id }, ozet: ozet(0, { yazilamadi: [{ ad: "In", neden: "sayı olmalı" }] }) }];
+  assert.equal(donguTekrari([yok(A1, "a"), yok(B1, "b")]), false, "iki farklı deneme — sürer");
+  assert.equal(donguTekrari([yok(A1, "a"), yok(B1, "b"), yok(A1, "c")]), true, "A, B, A: A daha önce değişikliksizdi — durur");
+  assert.equal(donguTekrari([[{ komut: A1, ozet: ozet(1) }], yok(B1, "b"), yok(A1, "c")]), false, "A önce değişiklik yaptıydı, art arda değil — sürer");
+  assert.equal(donguTekrari([yok(A1, "a"), yok(B1, "b"), [{ komut: A1, ozet: ozet(1) }]]), false, "son adım değişiklik yaptı — sürer");
+  /* toplam ve "iş yapıldı mı" (D) */
+  assert.deepEqual(toplamOzet(adimlar), { yazildi: 1, ayni: 0, bekliyor: 0, satir: 40, yapilan: ["Linye · 20 satır eklendi (1–20. satır)"], yazilamadi: [] });
+  assert.equal(isYapildi(adimlar), true);
+  assert.equal(isYapildi(ayni), false);
+  /* ilk çağrıda bunlar yok (düşünme açık, araç seçimi verilmez) */
   const ilk = sayIstegi({ model: "haiku", kilavuz: [], baglam: { roller: [], yer: "x", yardim: null, bekleyen: [] }, gecmis: [], soru: "s" }).govde as Record<string, unknown>;
   assert.ok(!("tool_choice" in ilk) && !("thinking" in ilk));
   /* yedek cevap: yalnız sayılar ve nedenler */
@@ -144,4 +199,76 @@ test("557 iş sonucu: ikinci çağrı (tool_use + tool_result, tool_choice none,
     "Yapamadım:\n- SGK: bu formatta kilitli; elle de değiştirilemiyor");
   assert.equal(isSonucuMetni({ yazildi: 1, ayni: 0, bekliyor: 0, yapilan: ["RCa sütunu eklendi"], yazilamadi: [{ ad: "x", neden: "y" }] }), "Yaptım:\n- RCa sütunu eklendi\nYapamadıklarım:\n- x: y");
   assert.equal(isSonucuMetni({ yazildi: 0, ayni: 0, bekliyor: 0, yapilan: [], yazilamadi: [] }), "Bir değişiklik olmadı.");
+});
+
+/* 2026-10-15 (A + B + C): talimat "devam edeyim mi" demez; sınırlar işe engel değil; araç çağrıları kimlikleriyle komut, satir_ekle biçimiyle; ekranın
+   geri gönderdiği komut aynı denetimden geçer */
+test("A talimat · B sınırlar · C satir_ekle çağrısı: kimlikli komut, biçim denetimi; ekranın geri gönderdiği komut aynı denetimden", () => {
+  const t = saySistemi(SAY_KILAVUZU);
+  assert.ok(t.includes("İş bitene kadar araç çağırmayı sürdür; kullanıcıya devam edeyim mi diye sorma. Yalnız bilgi gerçekten eksikse sor."));
+  assert.ok(!t.includes("Cevabını yalnız bu sonuçla yaz"), "tek turluk ifade kalktı");
+  /* B: 8 000 / 300 / 100 → işe engel olmayacak kadar; ekranla sunucu aynı */
+  assert.ok(SAY_YANIT_SINIRI >= 32_000, String(SAY_YANIT_SINIRI));
+  assert.ok(KOMUT_GIRIS_EN_COK >= 5_000);
+  /* 2026-10-16 (kasıtlı beklenti değişikliği — eskisi "SATIR_EKLE_EN_COK >= 5 000"): satır sayısı raporun kendi tablo sınırı (Cevaplar.tablo);
+     5 000 satır açılabiliyordu, 300'ün üstündeki rapor kaydedilemiyordu */
+  assert.equal(SATIR_EKLE_EN_COK, TABLO_SATIR_EN_COK);
+  assert.equal(KOMUT_GIRIS_EN_COK, GIRIS_EN_COK);
+  assert.equal(SATIR_EKLE_EN_COK, EKRAN_SATIR_EKLE_EN_COK);
+  assert.ok(sayEnCokMaliyet("haiku") >= maliyetHesapla("haiku", 100_000, SAY_YANIT_SINIRI), "ayırma yanıt sınırıyla tutarlı");
+  /* 2026-10-16 (kasıtlı beklenti değişikliği — eskisi "50 000 ek giriş ayırmayı büyütür": tahmin sabit tabanın ÜSTÜNE ekleniyordu; taban fiyat
+     eşiğinde olduğundan her döngü turu üst fiyata çıkıp ~3 kat ayırıyordu): üçüncü değer isteğin ölçülen giriş tahmini — tabanı aşmadıkça ilk
+     çağrıyla aynı fiyat diliminde; aşınca büyür */
+  assert.equal(sayEnCokMaliyet("haiku", 0, 5_000), sayEnCokMaliyet("haiku"), "küçük döngü turu ilk çağrıyla aynı ayırma");
+  assert.equal(sayEnCokMaliyet("haiku", 0, SAY_GIRIS_UST), sayEnCokMaliyet("haiku"));
+  assert.ok(sayEnCokMaliyet("haiku", 0, 150_000) > sayEnCokMaliyet("haiku"), "isteğin boyu tabanı aşınca ayırma büyür");
+  assert.ok(sayEnCokMaliyet("haiku", 0, 150_000) >= maliyetHesapla("haiku", 150_000, SAY_YANIT_SINIRI));
+  /* isteğin boyu: ölçülür (JSON / 2), eklerin baytları sayılmaz — ekler sayısıyla girer */
+  const kucuk = sayIstegi({ model: "haiku", kilavuz: [], baglam: { roller: [], yer: "x", yardim: null, bekleyen: [] }, gecmis: [], soru: "s" }).govde;
+  const ekli = sayIstegi({ model: "haiku", kilavuz: [], baglam: { roller: [], yer: "x", yardim: null, bekleyen: [] }, gecmis: [], soru: "s",
+    ekler: [{ tur: "jpeg", bayt: new Uint8Array(600_000) }] }).govde;
+  assert.ok(istekGirisi(kucuk) > 100 && istekGirisi(kucuk) < SAY_GIRIS_UST, String(istekGirisi(kucuk)));
+  assert.ok(istekGirisi(ekli) < istekGirisi(kucuk) + 1_000, "fotoğrafın baytları tahmine girmez");
+  assert.ok(sayEnCokMaliyet("haiku", 1, istekGirisi(ekli)) > sayEnCokMaliyet("haiku"), "ek sayısıyla ayırma büyür");
+  const yaz = RAPOR_ARACLARI[0] as unknown as { input_schema: { properties: Record<string, { maxItems?: number }> } };
+  assert.equal(yaz.input_schema.properties.girisler.maxItems, KOMUT_GIRIS_EN_COK);
+  assert.ok(yaz.input_schema.properties.satir_ekle, "satir_ekle aracın şemasında");
+  const c = sayYanitiCoz({ content: [
+    { type: "tool_use", id: "toolu_01A", name: "rapora_yaz", input: { satir_ekle: [{ tablo: "linye", adet: 50, degerler: { tip: "B", akim: 16 }, sira: { sutun: "no", baslangic: "1", onek: "F" } },
+      { tablo: "", adet: 3 }, { tablo: "x", adet: 0 }, "bozuk"] } },
+    { type: "tool_use", id: "kimlik geçersiz!", name: "geri_al", input: {} }], stop_reason: "tool_use" });
+  assert.deepEqual(c.komutlar, [{ tur: "yaz", id: "toolu_01A", girisler: [], satirlar: [{ tablo: "linye", adet: 50, degerler: { tip: "B", akim: "16" }, sira: { sutun: "no", baslangic: 1, onek: "F" } }] },
+    { tur: "geri" }]);
+  assert.deepEqual(komutDenetle(c.komutlar[0]), c.komutlar[0], "ekranın geri gönderdiği komut aynı biçimde");
+  for (const kotu of [null, "x", { tur: "sil" }, { tur: "yaz", girisler: "x" }, { tur: "format", islemler: [] }]) assert.equal(komutDenetle(kotu), null, JSON.stringify(kotu));
+  assert.deepEqual(komutBlogu(c.komutlar[0]).input, { girisler: [], satir_ekle: [{ tablo: "linye", adet: 50, degerler: { tip: "B", akim: "16" }, sira: { sutun: "no", baslangic: 1, onek: "F" } }] });
+});
+
+/* 2026-10-15 (D — bir cevapta S.A.Y aracı çağırmadan "Yaptım" dedi; reisim "yap işte yap dedim"): yapılmış iş söyleyen Türkçe kalıplar saf bir
+   işlevde; araç çağrısı yoksa ve bu mesajın işinde yapılan bir şey yoksa cevap sahte sayılır, düzeltme turu konuşmaya eklenir */
+test("D sahte \"yaptım\": kalıplar; araç çağrısı ya da yapılmış iş varsa sahte değil; düzeltme turu", () => {
+  for (const m of ["Yaptım.", "50 satırı ekledim", "Seri no alanına **yazdım**.", "Maddeleri işaretledim ve sonucu değiştirdim.", "Tamam, giriyorum.", "Raporu kaydettim",
+    "Hepsini doldurduk!", "yaptim", "EKLEDİM", "Formatı güncelledim; tabloyu sildim."]) assert.equal(yapildiDiyor(m), true, m);
+  for (const m of ["Yapamadım: SGK kilitli.", "Ekleyemedim çünkü tablo yok.", "Hangi değeri yazayım?", "Raporu okudum.", "İnternette aradım ve buldum.",
+    "Hesapladım: 480 / 2 = 240.", "Satır eklendi mi kontrol edin.", "Plan tamamlandı.", "Ekledim mi?", "Rapor onaylandı; müşteriye açıldı.", "Bu alanı siz doldurun.", ""]) {
+    assert.equal(yapildiDiyor(m), false, m);
+  }
+  const metin = (text: string, ek: object[] = []) => ({ content: [{ type: "text", text }, ...ek], stop_reason: ek.length ? "tool_use" : "end_turn" });
+  assert.equal(sahteYapildi(metin("Ekledim."), false), true, "araçsız \"ekledim\" — sahte");
+  assert.equal(sahteYapildi(metin("Ekledim.", [{ type: "tool_use", id: "t", name: "rapora_yaz", input: {} }]), false), false, "araç çağrısı var");
+  assert.equal(sahteYapildi(metin("Yaptım: 50 satır eklendi."), true), false, "bu mesajın işinde yapılan var");
+  assert.equal(sahteYapildi(metin("Bunu yapamadım."), false), false);
+  assert.equal(sahteYapildi({ ...metin("Ekledim"), stop_reason: "refusal" }, false), false);
+  const istek = { govde: { model: "m", messages: [{ role: "user", content: "50 satır ekle" }] } };
+  const d = duzeltmeIstegi(istek, metin("Ekledim.")).govde as { messages: { role: string; content: string }[]; model: string };
+  assert.deepEqual(d.messages, [{ role: "user", content: "50 satır ekle" }, { role: "assistant", content: "Ekledim." }, { role: "user", content: DUZELTME }]);
+  assert.equal(d.model, "m");
+  assert.ok(DUZELTME.startsWith("Aracı çağırmadan yapıldı dedin; işi yap ya da yapamadığını nedeniyle söyle."));
+  assert.equal(istek.govde.messages.length, 1, "asıl istek değişmez");
+  assert.ok(!yapildiDiyor(SAHTE_YEDEK), "yedek cevap kendisi \"yaptım\" demez");
+  /* 2026-10-16: denetim yalnız istekte iş yapan araç varken — araçsız sayfada (yalnız internet araması) "taslağı yazdım" bilgi veren cevaptır */
+  const istekArac = (baglam: Parameters<typeof sayIstegi>[0]["baglam"]) => sayIstegi({ model: "haiku", kilavuz: [], baglam, gecmis: [], soru: "s" }).govde;
+  assert.equal(isAraciVar(istekArac({ roller: [], yer: "Planlar", yardim: null, bekleyen: [] })), false, "yalnız web_search");
+  assert.equal(isAraciVar(istekArac({ roller: [], yer: "Rapor X", yardim: null, bekleyen: [], rapor: "HARİTA" })), true, "rapora_yaz var");
+  assert.equal(isAraciVar(sayIstegi({ model: "haiku", kilavuz: [], baglam: { roller: [], yer: "x", yardim: null, bekleyen: [] }, gecmis: [], soru: "s", arama: false }).govde), false, "araç yok");
 });

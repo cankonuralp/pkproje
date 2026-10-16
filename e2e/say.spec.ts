@@ -238,6 +238,71 @@ test("S.A.Y rapor ekranında: sayfa kıpırdamaz; söylenen alana yazar (işaret
   await expect(liste.getByRole("listitem").filter({ hasText: /^Rapor YZ-[0-9]{4}-[0-9]{3}/ }).first()).toBeVisible();
 });
 
+/* 2026-10-15 (pkproje §9 "S.A.Y CLAUDE GİBİ" — reisim: "sik sik duruyor tekrar tekrar soruyor", "yap işte yap dedim"; "aynı tabloya 50 satır ekle" 17
+   satır ekleyip "kalanları da ekleyeyim mi?" diyordu): (A) İŞ DÖNGÜSÜ — taklit "[parça]" isteğinde satırları 20'şer ekler, sonucu görünce kalanını
+   ekler, bitince söyler (araya soru yok); bütün işin Geri al'ı son iletinin altında. (C) tek komutla 50 satır, No sütunu son sayıdan artarak. (D)
+   taklit "[sahte]" isteğine önce aracı çağırmadan "yazdım" der — kullanıcı bunu görmez; sunucunun düzeltme turunda iş yapılır, sonuç söylenir */
+test("S.A.Y iş döngüsü: satırlar parça parça ve tek komutla eklenir (No artarak), Geri al; aracı çağırmadan \"yazdım\" gösterilmez", async ({ page }, bilgi) => {
+  test.setTimeout(180_000);
+  const kod = E2E_YZ.ekipman[bilgi.project.name];
+  await page.goto(`${Y}/giris`);
+  await hazir(page);
+  await page.getByLabel("E-posta").fill(E2E_YZ.denetci.eposta);
+  await page.getByLabel("Parola", { exact: true }).fill(E2E_PAROLA);
+  await page.getByRole("button", { name: "Giriş yap" }).click();
+  await expect(page.locator("header")).toContainText(E2E_YZ.denetci.ad);
+  await page.goto(`${Y}/raporlar`);
+  await hazir(page);
+  await page.getByRole("searchbox", { name: "Ekipman kodu" }).fill(kod);
+  await page.getByRole("link", { name: /^YZ-/ }).first().click();
+  await expect(page).toHaveURL(/\/raporlar\/[0-9a-f-]{36}$/, { timeout: 30_000 });
+  await hazir(page);
+  await bolumleriAc(page);
+
+  const fab = page.getByRole("button", { name: "S.A.Y — saha asistanı" });
+  const panel = page.getByRole("dialog", { name: "S.A.Y" });
+  await expect(panel.or(fab)).toBeVisible({ timeout: 30_000 });
+  if (!(await panel.isVisible())) await fab.click();
+  await expect(panel).toBeVisible();
+  const liste = panel.getByRole("list").first(), son = liste.getByRole("listitem").last();
+  const sor = async (metin: string) => { await panel.getByLabel("S.A.Y'a sor").fill(metin); await panel.getByLabel("S.A.Y'a sor").press("Enter"); };
+
+  /* tablonun şimdiki satırları ve son No (başka testler kaydetmiş olabilir: "F3" → F4 …) */
+  const noKutulari = page.locator("#b-linye").getByLabel(/^\d+\. satır · No$/);
+  const once = await noKutulari.count();
+  const sonNo = /^(.*?)(\d+)$/.exec(once ? (await noKutulari.nth(once - 1).inputValue()).trim() : "");
+  const beklenen = (n: number) => (sonNo ? `${sonNo[1]}${Number(sonNo[2]) + n}` : String(n));
+
+  /* A: 20 + 10 satır iki turda, araya soru yok; son satırın No'su kesintisiz */
+  await sor("Pano sigortaları (linye) tablosuna 30 satır ekle [parça]");
+  await expect(son).toContainText("Yaptım: 30 satır eklendi.", { timeout: 60_000 });
+  await expect(noKutulari).toHaveCount(once + 30);
+  await expect(noKutulari.nth(once + 29)).toHaveValue(beklenen(30));
+  await expect(liste).not.toContainText("ekleyeyim mi");
+  await expect(panel.locator("[data-say-bekleme]")).toHaveCount(0);
+  /* bütün işin (iki turun) Geri al'ı son iletinin altında */
+  await panel.getByRole("button", { name: "Geri al" }).last().click();
+  await expect(noKutulari).toHaveCount(once);
+
+  /* C: tek komutla 50 satır */
+  await sor("Pano sigortaları (linye) tablosuna 50 satır ekle");
+  await expect(son).toContainText("Yaptım: 50 satır eklendi.", { timeout: 60_000 });
+  await expect(noKutulari).toHaveCount(once + 50);
+  await expect(noKutulari.nth(once + 49)).toHaveValue(beklenen(50));
+  await panel.getByRole("button", { name: "Geri al" }).last().click();
+  await expect(noKutulari).toHaveCount(once);
+
+  /* D: taklit önce aracı çağırmadan "yazdım" der — gösterilmez; düzeltme turunda alana yazar, sonucu söyler */
+  const seri = page.getByRole("textbox", { name: "Seri no", exact: true });
+  const onceki = await seri.inputValue();
+  await sor("Seri no alanına SN-SAHTE yaz [sahte]");
+  await expect(seri).toHaveValue("SN-SAHTE", { timeout: 60_000 });
+  await expect(son).toContainText(/Yaptım: .*Seri no\./, { timeout: 30_000 });
+  await expect(liste).not.toContainText("alanına yazdım");
+  await panel.getByRole("button", { name: "Geri al" }).last().click();
+  await expect(seri).toHaveValue(onceki);
+});
+
 /* 552–553 (reisim 2026-10-14: "elektrikte hesaplamalarda olsun … format yapıcıda formül kısmı olsun mesela (RCa=480/RCd) … konuşarak ilgili formatı
    yapabiliyo olalım"): format yapıcıda S.A.Y'a "<tablo> tablosuna <ad> sütunu ekle, formül …" → Haiku (taklit) haritadaki bölüm kimliğiyle
    formati_duzenle → sütun taslakta, formül köşeli parantezli; iletinin altındaki Geri al çıkarır; sayı sütununun "formül" tuşu formül alanını açar,

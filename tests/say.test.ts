@@ -13,7 +13,13 @@
      HARİTASI (yer kimlikleri, şu anki değerler) yalnız raporu yazanın Yeni raporunda ve adres o raporsa; künye gitmez; rapordayken Haiku'nun araç
      çağrıları komut olarak döner (rapor dışında araç ve komut yok); ayırma internet aramasını da kapsar, gerçek maliyete aramalar eklenir.
    · 522 ek: fotoğraf / PDF soruyla gider (adı gitmez), geçmişte yalnız adı / boyu / türü, dosya saklanmaz, ayırma ek sayısıyla büyür.
-   Olumsuz kanıt: tests/bozan/say.bozan.ts. */
+   · 2026-10-15 (pkproje §9 "S.A.Y CLAUDE GİBİ"): (A) işin sonucu döngünün devamı — adımlar konuşmada, S.A.Y yeniden araç çağırabilir (komut
+     döner, geçmişe yazılmaz), harita her turda; aynı iş değişmeden yinelenirse araçsız son tur; (D) düzeltme turu aynı mesaj: ek ayırma, iki
+     çağrının maliyeti toplanır, düzeltilemezse sahte cevap yerine yedek.
+   · 2026-10-16 (S.A.Y 1. adım incelemesi): döngü turu ve kapanış kişinin mesajını yeniden saymaz; döngü turunun ayırması isteğin boyundan (küçükse
+     ilk çağrıyla aynı); tur düşerse / reddedilirse işin yarıda kaldığı nedeniyle; ileti sunucunun doğruladığı rapora bağlanır; düşen düzeltme çağrısı
+     mesajı yeniden saymaz.
+   Olumsuz kanıt: tests/bozan/say.bozan.ts, tests/bozan/say-dongu.bozan.ts. */
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import { mkdtempSync, rmSync } from "node:fs";
@@ -25,7 +31,8 @@ import { bugunTr, planAc, type Kisi } from "../src/modules/planlar/server/planla
 import { taslakBaslat, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
 import { raporOlustur } from "../src/modules/raporlar/server/raporlar.ts";
 import { raporSayBilgisi, raporSayDurumu } from "../src/modules/raporlar/server/say-baglanti.ts";
-import { sayBirak, sayDurumu, sayGecmisi, sayIsSonucuHazirla, sayIsSonucuKaydet, sayOneri, sayRaporCevabi, saySorHazirla, saySorKaydet, sayTemizle } from "../src/modules/say/server/say.ts";
+import { sayBirak, sayDurumu, sayEkAyir, sayGecmisi, sayIsSonucuHazirla, sayIsSonucuKaydet, sayIsYarim, sayOneri, sayRaporCevabi, saySorHazirla, saySorKaydet,
+  sayTemizle } from "../src/modules/say/server/say.ts";
 import { sayEkleriOku } from "../src/modules/say/server/ek.ts";
 import { ayarOku, ayarYaz } from "../src/server/ayar/ayar.ts";
 import { sirYaz } from "../src/server/ayar/sir.ts";
@@ -33,7 +40,8 @@ import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde, type Havuz, type Sorgulayici } from "../src/server/db/kiraci.ts";
 import { klasorDepo } from "../src/server/dosya/depo.ts";
 import { yzAyi } from "../src/server/yz/kullanim.ts";
-import { ARAMA_MALIYETI, sayEnCokMaliyet, SORU_SINIRI } from "../src/server/yz/say.ts";
+import { maliyetHesapla } from "../src/server/yz/okuma.ts";
+import { ARAMA_MALIYETI, SAHTE_YEDEK, sayEnCokMaliyet, SORU_SINIRI } from "../src/server/yz/say.ts";
 import { sohbetYaz } from "../src/server/yz/sohbet.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
@@ -259,28 +267,103 @@ test("550 açık rapor haritası: yalnız raporu yazanın Yeni raporunda, adres 
   assert.deepEqual(k.komutlar, [{ tur: "yaz", girisler: [{ yer: "e:seri", deger: "SN-1" }] }]);
   assert.deepEqual(k.iletiler.map((m) => [m.kim, m.metin, m.ek?.rapor]), [["ben", "Seri no'ya SN-1 yaz", rapor]]);
   assert.equal((await ile(A, FA.den, (db) => sayGecmisi(db))).at(-1)?.kim, "ben", "\"Yazıyorum.\" geçmişe yazılmadı");
-  /* 557: ekran yaptı ve teyit etti → sonuç ikinci çağrıyla (araç kullanımı ve düşünme kapalı, harita gitmez); S.A.Y'ın cevabı rapora bağlı */
+  /* 557 → 2026-10-15 (A — pkproje §9 "S.A.Y CLAUDE GİBİ"; KASITLI beklenti değişikliği: eskiden ikinci çağrıda araç kullanımı kapalıydı
+     (tool_choice none) ve harita gitmiyordu — S.A.Y sonucu görünce bir daha araç çağıramıyor, "kalanları da ekleyeyim mi?" diyordu). Ekran yaptı ve
+     teyit etti → döngünün devamı: adımlar (araç bloğu hizmetin kimliğiyle + sonucu) konuşmanın sonunda, düşünme kapalı, araç kullanımı AÇIK, ekranın
+     canlı hâliyle harita güncel; S.A.Y yeni iş isterse komut döner (geçmişe yazılmaz), metinle bitirince cevabı rapora bağlı yazılır */
   const ozet = { yazildi: 1, ayni: 0, bekliyor: 0, yapilan: ["Ekipman bilgileri · Seri no"], yazilamadi: [{ ad: "Firma bilgileri · SGK", neden: "bu formatta kilitli; elle de değiştirilemiyor" }] };
-  const is = await ile(A, FA.den, (db) => sayIsSonucuHazirla(db, FA.den, { komut: { tur: "yaz", girisler: [{ yer: "e:seri", deger: "SN-1" }] }, ozet, rapor, format: null }, `/raporlar/${rapor}`));
+  const yazKomutu = { tur: "yaz", girisler: [{ yer: "e:seri", deger: "SN-1" }], id: "toolu_s1" };
+  const is = await ile(A, FA.den, (db) => sayIsSonucuHazirla(db, FA.den, { adimlar: [[{ komut: yazKomutu, ozet }]], rapor, format: null, raporNo: "SA-1026-001", canli },
+    `/raporlar/${rapor}`));
   if (is.durum !== "hazir") return assert.fail(JSON.stringify(is));
-  const ig = is.istek.govde as { tool_choice: unknown; thinking: unknown; system: { text: string }[]; messages: { role: string; content: unknown }[] };
-  assert.deepEqual([ig.tool_choice, ig.thinking], [{ type: "none" }, { type: "disabled" }]);
-  assert.ok(!ig.system[1].text.includes("Açık rapor"), "harita ikinci çağrıda gitmez");
+  const ig = is.istek.govde as { tool_choice?: unknown; thinking: unknown; system: { text: string }[]; messages: { role: string; content: unknown }[]; tools: { name: string }[] };
+  assert.deepEqual([ig.tool_choice, ig.thinking], [undefined, { type: "disabled" }], "A: S.A.Y yeniden araç çağırabilir");
+  assert.ok(ig.system[1].text.includes("Açık rapor (kullanıcının şu an yazdığı"), "harita her turda (işin ardından güncel)");
+  assert.deepEqual(ig.tools.map((t) => t.name), ["rapora_yaz", "fotograflari_oku", "geri_al", "web_search"]);
   assert.deepEqual(ig.messages.at(-3), { role: "user", content: "Seri no'ya SN-1 yaz" }, "cevaplanacak mesaj kişinin sorusu");
-  assert.match(JSON.stringify(ig.messages.at(-1)), /tool_result[\s\S]*yazilan[\s\S]*SGK[\s\S]*kilitli/);
-  const son = await ile(A, FA.den, (db) => sayIsSonucuKaydet(db, is, cevap("Yaptım: Seri no'ya SN-1 yazdım. SGK numarası kilitli olduğu için değiştiremedim.", 3_000, 40)));
+  assert.deepEqual(ig.messages.at(-2), { role: "assistant", content: [{ type: "tool_use", id: "toolu_s1", name: "rapora_yaz", input: { girisler: [{ yer: "e:seri", deger: "SN-1" }] } }] });
+  assert.match(JSON.stringify(ig.messages.at(-1)), /tool_result[\s\S]*toolu_s1[\s\S]*yazilan[\s\S]*SGK[\s\S]*kilitli/);
+  assert.doesNotMatch(JSON.stringify(is.istek.govde), /Gizli Sanayi|Gizli Tesis|Saklı Cad|sk-ant/, "künye ve anahtar gitmez");
+  assert.ok(!is.durdur && is.yapildi);
+  /* A: S.A.Y yeni iş isterse komut döner; ara tur geçmişe yazılmaz */
+  const devam = await ile(A, FA.den, (db) => sayIsSonucuKaydet(db, is, { content: [{ type: "tool_use", id: "toolu_s2", name: "rapora_yaz", input: { girisler: [{ yer: "e:marka", deger: "M" }] } }],
+    stop_reason: "tool_use", usage: { input_tokens: 5_000, output_tokens: 60 } }));
+  if (devam.durum !== "tamam") return assert.fail(JSON.stringify(devam));
+  assert.deepEqual(devam.komutlar, [{ tur: "yaz", id: "toolu_s2", girisler: [{ yer: "e:marka", deger: "M" }] }]);
+  assert.deepEqual(devam.iletiler, []);
+  assert.equal((await ile(A, FA.den, (db) => sayGecmisi(db))).at(-1)?.kim, "ben", "ara tur geçmişe yazılmadı");
+  /* ikinci tur: iki adım konuşmada; S.A.Y bitirince cevabı rapora bağlı */
+  const is2 = await ile(A, FA.den, (db) => sayIsSonucuHazirla(db, FA.den, { adimlar: [[{ komut: yazKomutu, ozet }], [{ komut: devam.komutlar![0], ozet: { yazildi: 1, ayni: 0, yazilamadi: [] } }]],
+    rapor, format: null, raporNo: "SA-1026-001", canli }, `/raporlar/${rapor}`));
+  if (is2.durum !== "hazir") return assert.fail(JSON.stringify(is2));
+  assert.equal((is2.istek.govde as { messages: { role: string; content: unknown }[] }).messages.filter((m) => m.role === "assistant" && Array.isArray(m.content)).length, 2);
+  const son = await ile(A, FA.den, (db) => sayIsSonucuKaydet(db, is2, cevap("Yaptım: Seri no'ya SN-1, Marka'ya M yazdım. SGK numarası kilitli olduğu için değiştiremedim.", 3_000, 40)));
   if (son.durum !== "tamam") return assert.fail(JSON.stringify(son));
-  assert.deepEqual(son.iletiler.map((x) => [x.kim, x.metin, x.ek?.rapor]), [["say", "Yaptım: Seri no'ya SN-1 yazdım. SGK numarası kilitli olduğu için değiştiremedim.", rapor]]);
-  /* sonucu yazılacak soru kalmadı (son ileti S.A.Y'ın) → red; çağrı düşerse sonucu sunucu sayılardan yazar */
-  assert.deepEqual(await ile(A, FA.den, (db) => sayIsSonucuHazirla(db, FA.den, { komut: { tur: "yaz", girisler: [] }, ozet, rapor, format: null }, "/")),
+  assert.deepEqual(son.iletiler.map((x) => [x.kim, x.metin, x.ek?.rapor]), [["say", "Yaptım: Seri no'ya SN-1, Marka'ya M yazdım. SGK numarası kilitli olduğu için değiştiremedim.", rapor]]);
+  /* sonucu yazılacak soru kalmadı (son ileti S.A.Y'ın) → red; eski (tek komutlu) biçim okunmaz */
+  assert.deepEqual(await ile(A, FA.den, (db) => sayIsSonucuHazirla(db, FA.den, { adimlar: [[{ komut: yazKomutu, ozet }]], rapor, format: null }, "/")),
     { durum: "red", neden: "Sonucu yazılacak mesaj bulunamadı." });
+  assert.deepEqual(await ile(A, FA.den, (db) => sayIsSonucuHazirla(db, FA.den, { komut: yazKomutu, ozet, rapor, format: null }, "/")), { durum: "red", neden: "İşin sonucu okunamadı." });
+  /* A güvenliği: aynı iş aynı girdiyle hiçbir şey değiştirmeden yinelendi → araçsız son tur; S.A.Y yine araç isterse komut dönmez, sonuç yazılır */
+  const hg = await ile(A, FA.den, (db) => saySorHazirla(db, FA.den, "Son girişi geri al", `/raporlar/${rapor}`, new Date(), "SA-1026-001", canli));
+  if (hg.durum !== "hazir") return assert.fail(JSON.stringify(hg));
+  await ile(A, FA.den, (db) => saySorKaydet(db, hg, { content: [{ type: "tool_use", id: "g1", name: "geri_al", input: {} }], stop_reason: "tool_use", usage: { input_tokens: 10, output_tokens: 1 } }));
+  const sifir = { yazildi: 0, ayni: 0, yazilamadi: [] };
+  const ig3 = await ile(A, FA.den, (db) => sayIsSonucuHazirla(db, FA.den, { adimlar: [[{ komut: { tur: "geri", id: "g1" }, ozet: sifir }], [{ komut: { tur: "geri", id: "g2" }, ozet: sifir }]],
+    rapor, format: null, canli }, `/raporlar/${rapor}`));
+  if (ig3.durum !== "hazir") return assert.fail(JSON.stringify(ig3));
+  assert.ok(ig3.durdur);
+  assert.deepEqual((ig3.istek.govde as { tool_choice?: unknown }).tool_choice, { type: "none" });
+  const dur = await ile(A, FA.den, (db) => sayIsSonucuKaydet(db, ig3, { content: [{ type: "tool_use", id: "g3", name: "geri_al", input: {} }], stop_reason: "tool_use", usage: { input_tokens: 10, output_tokens: 1 } }));
+  assert.ok(dur.durum === "tamam" && !dur.komutlar && dur.iletiler[0]?.metin === "Bir değişiklik olmadı.", JSON.stringify(dur));
   const h2 = await ile(A, FA.den, (db) => saySorHazirla(db, FA.den, "Seri no'yu sil", `/raporlar/${rapor}`, new Date(), "SA-1026-001", canli));
   if (h2.durum !== "hazir") return assert.fail(JSON.stringify(h2));
   await ile(A, FA.den, (db) => saySorKaydet(db, h2, { content: [{ type: "tool_use", name: "rapora_yaz", input: { girisler: [{ yer: "e:seri", deger: "" }] } }], stop_reason: "tool_use", usage: { input_tokens: 10, output_tokens: 1 } }));
-  const is2 = await ile(A, FA.den, (db) => sayIsSonucuHazirla(db, FA.den, { komut: { tur: "yaz", girisler: [{ yer: "e:seri", deger: "" }] }, ozet: { yazildi: 1, ayni: 0, yazilamadi: [] }, rapor, format: null }, "/"));
-  if (is2.durum !== "hazir") return assert.fail(JSON.stringify(is2));
-  const yedek = await ile(A, FA.den, (db) => sayIsSonucuKaydet(db, is2, null, "yok"));
+  const isSil = await ile(A, FA.den, (db) => sayIsSonucuHazirla(db, FA.den, { adimlar: [[{ komut: { tur: "yaz", girisler: [{ yer: "e:seri", deger: "" }] }, ozet: { yazildi: 1, ayni: 0, yazilamadi: [] } }]],
+    rapor, format: null }, "/"));
+  if (isSil.durum !== "hazir") return assert.fail(JSON.stringify(isSil));
+  const yedek = await ile(A, FA.den, (db) => sayIsSonucuKaydet(db, isSil, null, "yok"));
   assert.ok(yedek.durum === "tamam" && yedek.iletiler[0].metin === "Yaptım: 1 giriş rapora yazıldı.", JSON.stringify(yedek));
+  /* 2026-10-16: ileti ekranın gönderdiği rapor kimliğine değil, sunucunun bu turda doğruladığına bağlanır — adres raporun değilse bağsız */
+  assert.ok(yedek.durum === "tamam" && yedek.iletiler[0].ek?.rapor === undefined, JSON.stringify(yedek));
+  /* 2026-10-16 (S.A.Y 1. adım incelemesi): döngü turunda sahte "yaptım" düzeltilemezse komut dönmez, yedek yazılır (rapora bağlı); ara tur ve
+     kapanış kişinin mesajını yeniden saymaz; küçük döngü turunun ayırması ilk çağrıyla aynı; tur düştüyse yapılanlar + "İş yarıda kaldı: <neden>";
+     tur reddedildiyse sayIsYarim (yapay zekâ çağrısı yok; soru cevaplandıysa ikinci kez yazılmaz) */
+  const marka = { tur: "yaz", girisler: [{ yer: "e:marka", deger: "M2" }], id: "toolu_m1" };
+  const turu = (o: object) => ({ adimlar: [[{ komut: marka, ozet: o }]], rapor, format: null, raporNo: "SA-1026-001", canli });
+  const markaCagrisi = (id: string) => ({ content: [{ type: "tool_use", id, name: "rapora_yaz", input: { girisler: [{ yer: "e:marka", deger: "M2" }] } }], stop_reason: "tool_use",
+    usage: { input_tokens: 10, output_tokens: 1 } });
+  const yeniSoru = async (metin: string) => {
+    const x = await ile(A, FA.den, (db) => saySorHazirla(db, FA.den, metin, `/raporlar/${rapor}`, new Date(), "SA-1026-001", canli));
+    if (x.durum !== "hazir") throw new Error(JSON.stringify(x));
+    const y = await ile(A, FA.den, (db) => saySorKaydet(db, x, markaCagrisi("toolu_m1")));
+    assert.ok(y.durum === "tamam" && y.komutlar?.length === 1, JSON.stringify(y));
+  };
+  await yeniSoru("Marka'ya M2 yaz");
+  const m1 = (await kullanim(A, FA.den))!;
+  const isY = await ile(A, FA.den, (db) => sayIsSonucuHazirla(db, FA.den, turu({ yazildi: 0, ayni: 0, yazilamadi: [{ ad: "Marka", neden: "deneme" }] }), `/raporlar/${rapor}`));
+  if (isY.durum !== "hazir") return assert.fail(JSON.stringify(isY));
+  assert.ok(isY.komutRapor && !isY.yapildi && isY.rapor === rapor, JSON.stringify({ komutRapor: isY.komutRapor, yapildi: isY.yapildi, rapor: isY.rapor }));
+  assert.equal(isY.ust, sayEnCokMaliyet("haiku"), "küçük döngü turu ilk çağrıyla aynı ayırma (üst fiyata çıkmaz)");
+  const sy = await ile(A, FA.den, (db) => sayIsSonucuKaydet(db, isY, markaCagrisi("toolu_m2"), "yok", { onceki: [cevap("Marka'ya yazdım.", 10, 1)], ust: 0, yedek: SAHTE_YEDEK }));
+  assert.ok(sy.durum === "tamam" && !sy.komutlar && sy.iletiler[0]?.metin === SAHTE_YEDEK && sy.iletiler[0]?.ek?.rapor === rapor, JSON.stringify(sy));
+  assert.equal((await kullanim(A, FA.den))?.mesaj, m1.mesaj, "döngü turunun kapanışı mesajı yeniden saymaz");
+  await yeniSoru("Marka'ya M2 yaz (2)");
+  const isD = await ile(A, FA.den, (db) => sayIsSonucuHazirla(db, FA.den, turu({ yazildi: 1, ayni: 0, yazilamadi: [] }), `/raporlar/${rapor}`));
+  if (isD.durum !== "hazir") return assert.fail(JSON.stringify(isD));
+  const m2 = (await kullanim(A, FA.den))!;
+  const dus = await ile(A, FA.den, (db) => sayIsSonucuKaydet(db, isD, null, "bilinmiyor", { onceki: [], ust: 0 }, "Yapay zekâ zamanında yanıt vermedi; biraz sonra yeniden deneyin."));
+  assert.ok(dus.durum === "tamam" && dus.iletiler[0]?.metin === "Yaptım: 1 giriş rapora yazıldı.\n\nİş yarıda kaldı: Yapay zekâ zamanında yanıt vermedi; biraz sonra yeniden deneyin.",
+    JSON.stringify(dus));
+  assert.deepEqual(await kullanim(A, FA.den), { mesaj: m2.mesaj, maliyet: String(Number(m2.maliyet) + isD.ust), ayrilan: String(Number(m2.ayrilan) - isD.ust) },
+    "düşen tur: ayırma harcamaya, mesaj yeniden sayılmaz");
+  await yeniSoru("Marka'ya M2 yaz (3)");
+  const yr = await ile(A, FA.den, (db) => sayIsYarim(db, FA.den, turu({ yazildi: 1, ayni: 0, yazilamadi: [] }), `/raporlar/${rapor}`, "Bu ay yapay zekâ sınırınız doldu."));
+  assert.ok(yr.durum === "tamam" && yr.iletiler[0]?.metin === "Yaptım: 1 giriş rapora yazıldı.\n\nİş yarıda kaldı: Bu ay yapay zekâ sınırınız doldu." && yr.iletiler[0]?.ek?.rapor === rapor,
+    JSON.stringify(yr));
+  assert.deepEqual(await ile(A, FA.den, (db) => sayIsYarim(db, FA.den, turu({ yazildi: 1, ayni: 0, yazilamadi: [] }), `/raporlar/${rapor}`, "x")), { durum: "red", neden: "x" },
+    "soru cevaplandı — ikinci kez yazılmaz");
+  assert.deepEqual(await ile(A, FA.den, (db) => sayIsYarim(db, FA.den, { komut: marka }, `/raporlar/${rapor}`, "y")), { durum: "red", neden: "y" }, "okunamayan iş yazılmaz");
   /* adres başka sayfaysa ya da raporu yazmayan sorarsa harita ve rapor araçları yok; araç çağrısı gelse de komut dönmez. 2026-10-15 (561): "Açık
      rapor" haritanın başlığı — raporu görebilen yazmayanın bağlamında artık "Sayfada açık rapor: …" satırı var (aşağıdaki 561 testi), harita yok */
   for (const [kim, yol] of [[FA.den, "/planlar"], [FA.plan, `/raporlar/${rapor}`]] as const) {
@@ -351,10 +434,12 @@ test("553 format yapıcı: harita yalnız kurucu adresinde, formatı değiştire
   assert.deepEqual(k.komutlar, [{ tur: "format", islemler: [{ islem: "oge_ekle", bolum: "linye", ad: "RCa", formul: "480 / RCd" }] }]);
   /* 2026-10-14 (557): "formatta 1 değişiklik yapıyorum." kalktı — iletiyi işin sonucu yazar (format taslağına bağlı) */
   assert.deepEqual(k.iletiler.map((x) => x.kim), ["ben"]);
-  const fis = await ile(A, FA.yon, (db) => sayIsSonucuHazirla(db, FA.yon, { komut: { tur: "format", islemler: [{ islem: "oge_ekle", bolum: "linye", ad: "RCa", formul: "480 / RCd" }] },
-    ozet: { yazildi: 1, ayni: 0, yapilan: ["Pano sigortaları (linye): RCa sütunu eklendi"], yazilamadi: [] }, rapor: null, format: f.taslak }, yol));
+  /* 2026-10-15 (A): döngünün adımı biçiminde; araç tanımı konuşmadaki çağrı için durur, internet araması da (eskiden ikinci çağrıda arama yoktu) */
+  const fis = await ile(A, FA.yon, (db) => sayIsSonucuHazirla(db, FA.yon, { adimlar: [[{ komut: { tur: "format", islemler: [{ islem: "oge_ekle", bolum: "linye", ad: "RCa", formul: "480 / RCd" }] },
+    ozet: { yazildi: 1, ayni: 0, yapilan: ["Pano sigortaları (linye): RCa sütunu eklendi"], yazilamadi: [] } }]], rapor: null, format: f.taslak, kurucu }, yol));
   if (fis.durum !== "hazir") return assert.fail(JSON.stringify(fis));
-  assert.deepEqual((fis.istek.govde as { tools: { name: string }[] }).tools.map((t) => t.name), ["formati_duzenle"]);
+  assert.deepEqual((fis.istek.govde as { tools: { name: string }[] }).tools.map((t) => t.name), ["formati_duzenle", "web_search"]);
+  assert.ok((fis.istek.govde as { system: { text: string }[] }).system[1].text.includes("Açık format taslağı"), "taslağın haritası her turda");
   const fs = await ile(A, FA.yon, (db) => sayIsSonucuKaydet(db, fis, cevap("Yaptım: RCa sütununu ekledim.", 2_000, 20)));
   assert.ok(fs.durum === "tamam" && fs.iletiler[0].ek?.format === f.taslak && fs.iletiler[0].metin === "Yaptım: RCa sütununu ekledim.", JSON.stringify(fs));
   /* değiştiremeyen (denetçi: Ekipman türleri "gör"), başka adres, yayımlanmış sürüm: harita ve format aracı yok, komut dönmez */
@@ -435,4 +520,37 @@ test("561 açık rapor: durum ne olursa olsun bilinir, yazılamıyorsa nedeni; h
   /* başka firma raporu görmez (B'de yapay zekâ kapalı — S.A.Y'ın rapora baktığı tek yerden): yok */
   assert.equal(await ile(B, FB.den, (db) => raporSayDurumu(db, FB.den, rapor)), null, "başka firma görmez");
   assert.equal((await ile(A, FA.den, (db) => raporSayDurumu(db, FA.den, rapor)))?.durum, "onayda");
+});
+
+/* 2026-10-15 (D — bir cevapta S.A.Y aracı çağırmadan "Yaptım" dedi; reisim "yap işte yap dedim"): düzeltme turu AYNI mesajın ek çağrısı — ayırması
+   ayrı (sayEkAyir), kapanışta iki çağrının maliyeti toplanır, mesaj bir kez sayılır; sahte cevap geçmişe girmez. Düzeltilemezse (sınır, süre, çağrı
+   düştü) sahte cevap yerine doğru olan (SAHTE_YEDEK) yazılır */
+test("D düzeltme turu: ek ayırma, iki çağrının maliyeti toplanır; sahte cevap geçmişe girmez, düzeltilemezse yedek", async () => {
+  await yzAyari(A, FA.yon, { sinir: null });
+  const once = await kullanim(A, FA.plan);
+  const m0 = Number(once?.maliyet ?? 0), s0 = once?.mesaj ?? 0;
+  const h = await ile(A, FA.plan, (db) => saySorHazirla(db, FA.plan, "Planı kabul et", "/planlar"));
+  if (h.durum !== "hazir") return assert.fail(JSON.stringify(h));
+  const ek = await ile(A, FA.plan, (db) => sayEkAyir(db, h.ay, h.ust));
+  assert.equal(ek, h.ust, "düzeltme turu için ayrı ayırma");
+  assert.equal((await kullanim(A, FA.plan))?.ayrilan, String(2 * h.ust));
+  const sahte = cevap("Planı kabul ettim, ekipmanları ekledim.", 2_000, 50);
+  const k = await ile(A, FA.plan, (db) => saySorKaydet(db, h, cevap("Planı ben kabul edemem; Planlar › planı açın › Kabul et.", 2_500, 60), { onceki: [sahte], ust: ek! }));
+  if (k.durum !== "tamam") return assert.fail(JSON.stringify(k));
+  assert.deepEqual(k.iletiler.map((m) => [m.kim, m.metin]), [["ben", "Planı kabul et"], ["say", "Planı ben kabul edemem; Planlar › planı açın › Kabul et."]]);
+  assert.deepEqual(await kullanim(A, FA.plan), { mesaj: s0 + 1, maliyet: String(m0 + maliyetHesapla("haiku", 2_000, 50) + maliyetHesapla("haiku", 2_500, 60)), ayrilan: "0" });
+  /* düzeltilemedi: sahte metin yerine yedek */
+  const h2 = await ile(A, FA.plan, (db) => saySorHazirla(db, FA.plan, "Ekipman ekle", "/planlar"));
+  if (h2.durum !== "hazir") return assert.fail(JSON.stringify(h2));
+  const k2 = await ile(A, FA.plan, (db) => saySorKaydet(db, h2, sahte, { onceki: [], ust: 0, yedek: SAHTE_YEDEK }));
+  assert.ok(k2.durum === "tamam" && k2.iletiler.at(-1)?.metin === SAHTE_YEDEK, JSON.stringify(k2));
+  assert.ok(!(await ile(A, FA.plan, (db) => sayGecmisi(db))).some((m) => m.metin === "Planı kabul ettim, ekipmanları ekledim."), "sahte cevap geçmişe girmedi");
+  /* 2026-10-16: düşen düzeltme çağrısı (sonucu bilinmiyor) harcamaya yazılır ama mesajı yeniden saymaz — mesaj bir kez */
+  const h3 = await ile(A, FA.plan, (db) => saySorHazirla(db, FA.plan, "Ekipman ekle (2)", "/planlar"));
+  if (h3.durum !== "hazir") return assert.fail(JSON.stringify(h3));
+  const ek3 = await ile(A, FA.plan, (db) => sayEkAyir(db, h3.ay, h3.ust));
+  const k3 = (await kullanim(A, FA.plan))!;
+  await ile(A, FA.plan, (db) => sayBirak(db, { ay: h3.ay, ust: ek3! }, "bilinmiyor", "yok"));
+  await ile(A, FA.plan, (db) => saySorKaydet(db, h3, sahte, { onceki: [], ust: 0, yedek: SAHTE_YEDEK }));
+  assert.deepEqual(await kullanim(A, FA.plan), { mesaj: k3.mesaj + 1, maliyet: String(Number(k3.maliyet) + ek3! + maliyetHesapla("haiku", 2_000, 50)), ayrilan: "0" });
 });

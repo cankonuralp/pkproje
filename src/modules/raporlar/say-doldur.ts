@@ -14,10 +14,17 @@
    557 (sunum 557 · 2. tur — reisim 2026-10-14: "el ile girebildiğim değerleri say asistan ile giremiyor", "komut gelsin, yapılsın, doğruluğunu teyit
    et, yapıldıysa yapıldı de, yapılamadıysa sebebi ile yaz"): S.A.Y ELLE NE GİRİLİYORSA onu girer, ekrandaki denetimle (fotoğraf okumanın sıkı
    denetimiyle değil) — sayı kutusuna sayı olmayan yazı ("-"), künye (kilitli olmayan), kontrol tarihleri, çoklu seçim, uygunluk notu, satır sonucu
-   ve gerekçesi, satır silme, ölçüm cihazı; her giriş için sonuç (yazıldı · zaten öyleydi · yazılamadı + neden) — S.A.Y cevabını bununla yazar. */
+   ve gerekçesi, satır silme, ölçüm cihazı; her giriş için sonuç (yazıldı · zaten öyleydi · yazılamadı + neden) — S.A.Y cevabını bununla yazar.
+   2026-10-15 (pkproje §9 "S.A.Y CLAUDE GİBİ" — reisim: "saçma sapan sınırlar koyma"; "aynı tabloya 50 satır ekle" 17'de kalıyordu): (B) tek çağrıda
+   giriş ve tabloda yeni satır sınırı işe engel olmayacak kadar büyük; (C) satir_ekle — bir tabloya tek komutla N satır: her satıra aynı değerler,
+   artan sıra sütunu (No: 1, 2, 3 …; başlangıç verilmezse sütundaki son sayıdan), her hücre elle yazılır gibi denetlenir; sonuç "N satır eklendi"
+   + yazılamayanlar sütun başına nedeniyle; bütün iş tablonun tek geri alması.
+   2026-10-16 (S.A.Y 1. adım incelemesi): tablonun satırı raporun kendi sınırında (format/tanim.ts TABLO_SATIR_EN_COK — 300'ün üstündeki rapor
+   kaydedilemiyordu); toplu Geri al tablo için geri dönen hücreleri sayar. */
+import type { SatirEkle } from "../../server/yz/say.ts";
 import { alanDegeri, type OkunacakAlan } from "../../format/deger.ts";
 import { ELLE_GEREKCE, ELLE_SONUC } from "../../format/motor.ts";
-import { KUNYE_ALAN_ADI, KUNYE_ALANLARI, KUNYE_EN_COK, doldurma, type BolumOf, type Cevaplar, type FormatTanimi, type KunyeAlani } from "../../format/tanim.ts";
+import { KUNYE_ALAN_ADI, KUNYE_ALANLARI, KUNYE_EN_COK, TABLO_SATIR_EN_COK, doldurma, type BolumOf, type Cevaplar, type FormatTanimi, type KunyeAlani } from "../../format/tanim.ts";
 import { doluSatir, okunanHedefleri, type Satir } from "./foto-eslestir.ts";
 import { bilgiAlanlari, ekipmanAlanlari, ekipmanAnahtari, testAlanlari } from "./doldur.ts";
 
@@ -206,7 +213,19 @@ export function sonucuYap(d: Durum, x: "uygun" | "uygun_degil"): Uygulama {
   return { durum: yaz(d, yer, x), isaretler: [{ yer, guven: "emin" }], dolu: [], geri: [{ yer, onceki, yeni: x }] };
 }
 
-/** geri al: S.A.Y'ın girdiği değer hâlâ duruyorsa önceki hâline döner (kişi sonradan değiştirdiyse dokunulmaz); dönen: geri alınan sayısı */
+/** tablonun iki hâli arasındaki giriş farkı (2026-10-16 — toplu Geri al 50 satırı "1 giriş" sayıyordu): ortak satırlarda değişen hücreler, eklenen /
+    çıkan satırda dolu hücreler (boş satır 1) */
+function tabloFarki(a: readonly Satir[], b: readonly Satir[]): number {
+  let n = 0;
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    const x = a[i], y = b[i];
+    if (!x || !y) { const s = x ?? y ?? {}; n += Math.max(1, Object.values(s).filter((v) => v !== "").length); continue; }
+    for (const k of new Set([...Object.keys(x), ...Object.keys(y)])) if ((x[k] ?? "") !== (y[k] ?? "")) n++;
+  }
+  return n;
+}
+/** geri al: S.A.Y'ın girdiği değer hâlâ duruyorsa önceki hâline döner (kişi sonradan değiştirdiyse dokunulmaz); dönen: geri alınan giriş sayısı
+    (tablo: geri dönen hücreler — tabloFarki; tablo farklıysa en az 1) */
 export function geriAl(d: Durum, l: readonly Geri[]): { durum: Durum; sayi: number } {
   let durum = d, sayi = 0;
   for (const g of [...l].reverse()) {
@@ -214,7 +233,7 @@ export function geriAl(d: Durum, l: readonly Geri[]): { durum: Durum; sayi: numb
       const simdi = durum.cevaplar.tablo[g.tablo] ?? [];
       if (JSON.stringify(simdi) !== JSON.stringify(g.yeni)) continue;
       durum = { ...durum, cevaplar: { ...durum.cevaplar, tablo: { ...durum.cevaplar.tablo, [g.tablo]: g.onceki } } };
-      sayi++;
+      sayi += Math.max(1, tabloFarki(g.yeni, g.onceki));
       continue;
     }
     if (oku(durum, g.yer) !== g.yeni) continue;
@@ -227,9 +246,15 @@ export function geriAl(d: Durum, l: readonly Geri[]): { durum: Durum; sayi: numb
 /* ── 550 → 557 S.A.Y'IN İSTENEN GİRİŞLERİ ("rapora_yaz" aracı) — elle ne giriliyorsa, ekranın denetimiyle ── */
 /** Haiku'nun verdiği giriş: yer kimliği (raporun haritasındaki) + değer */
 export interface RaporGirisi { yer: string; deger: string }
-/** tek istekte en çok giriş ve tabloda en çok yeni satır */
-export const GIRIS_EN_COK = 300;
-const YENI_SATIR_EN_COK = 100;
+/** tek istekte en çok giriş. 2026-10-15 (B — reisim "saçma sapan sınırlar koyma"): 300 → 5 000 — işe engel değil, yalnız bozuk girişe karşı
+    koruma. GIRIS_EN_COK sunucudaki KOMUT_GIRIS_EN_COK ile aynı (src/server/yz/say.ts — testle kilitli) */
+export const GIRIS_EN_COK = 5_000;
+/** C: satir_ekle — tek kalemde en çok satır. 2026-10-16 (S.A.Y 1. adım incelemesi): tablonun satırı S.A.Y'a özgü bir sınırla değil, RAPORUN kendi
+    sınırıyla (format/tanim.ts TABLO_SATIR_EN_COK — Cevaplar.tablo): 5 000'e kadar satır açılabiliyordu, 300'ün üstündeki rapor kaydedilemiyor ve
+    S.A.Y'ın haritası kurulamıyordu. Hücre adresleri (t:<tablo>:<satır>) ve satir_ekle bu sınırın içinde kalır; aşan iş nedeniyle "yazılamadı"
+    döner, tabloya yarım yazılmaz. Sunucudaki SATIR_EKLE_EN_COK aynı (testle kilitli) */
+export const SATIR_EKLE_EN_COK = TABLO_SATIR_EN_COK;
+const TABLO_DOLU = `tabloda en çok ${TABLO_SATIR_EN_COK} satır olur (raporun sınırı)`;
 /** 557: sahadaki kutuların en çok uzunluğu — rapor ekranındakiyle aynı (ui/Bloklar.tsx, ui/SahaRaporu.tsx) */
 export const ELLE_EN_COK = { bilgiSayi: 20, bilgiMetin: 500, hucreSayi: 12, hucreMetin: 120, degerSayi: 12, degerMetin: 60, gerekce: 200, maddeNot: 1000, yorum: 4000 } as const;
 /** 557: girişin sonucu — S.A.Y cevabını bununla yazar (yazılmadan "yaptım" demez) */
@@ -288,10 +313,37 @@ const tarihYazimi = (x: string) => (x ? `${x.slice(8, 10)}.${x.slice(5, 7)}.${x.
 
 type Kutu = { ad: string; yer: Exclude<Yer, { tur: "hucre" }>; denetle: (ham: string) => { v: string } | { neden: string } };
 
+/** tablo hücresine yazılacak değer — elle yazılır gibi denetlenir (sütun türü, seçenek; uygunluk notu; satır sonucu ve gerekçesi). alan: sütun
+    kimliği ya da not / sonuc / gerekce. Dönen: satırdaki anahtar + değer, ya da nedeni (adi: hücrenin okunur adı) */
+function hucreDenetle(b: BolumOf<"olcum">, alan: string, ham: string): { anahtar: string; adi: string; sutun: boolean; v: string } | { adi: string; neden: string } {
+  const notlar = b.notlar ?? [];
+  const anahtar = alan === "sonuc" ? ELLE_SONUC : alan === "gerekce" ? ELLE_GEREKCE : alan;
+  const sutun = b.sutunlar.find((s) => s.id === anahtar);
+  const adi = sutun ? sutun.ad : anahtar === "not" ? "uygunluk notu" : anahtar === ELLE_SONUC ? "sonuç" : anahtar === ELLE_GEREKCE ? "sonucun gerekçesi" : alan;
+  let r: { v: string } | { neden: string };
+  if (sutun) {
+    r = !temizle(ham) ? { v: "" } : sutun.giris === "sayi" ? sayiKutusu(ham, ELLE_EN_COK.hucreSayi) : sutun.giris === "secim" ? secimKutusu(ham, sutun.secenekler ?? [])
+      : sutun.giris === "evet" ? evetKutusu(ham) : metinKutusu(ham, ELLE_EN_COK.hucreMetin);
+  } else if (anahtar === "not") {
+    if (!notlar.length) return { adi, neden: "bu tabloda uygunluk notu yok" };
+    const n = Number(temizle(ham).replace(/^not\s*-?\s*/i, ""));
+    r = !temizle(ham) ? { v: "" } : Number.isInteger(n) && n >= 1 && n <= notlar.length ? { v: String(n) } : { neden: `Not-1 ile Not-${notlar.length} arası olmalı` };
+  } else if (anahtar === ELLE_SONUC) {
+    if (notlar.length) return { adi, neden: "bu tabloda sonuç uygunluk notundan çıkar; elle de değiştirilemiyor" };
+    const x = kucukTr(ham).replace(/[_-]/g, " ");
+    r = !x || /kural/.test(x) ? { v: "" } : /uygun ?(değil|degil)|uygunsuz/.test(x) ? { v: "uygun_degil" } : /^uygun$/.test(x) ? { v: "uygun" } : { neden: "uygun, uygun değil ya da kurala göre olmalı" };
+  } else if (anahtar === ELLE_GEREKCE) {
+    if (notlar.length) return { adi, neden: "bu tabloda sonuç uygunluk notundan çıkar" };
+    r = metinKutusu(ham, ELLE_EN_COK.gerekce);
+  } else return { adi, neden: "tabloda böyle bir sütun yok" };
+  return "neden" in r ? { adi, neden: r.neden } : { anahtar, adi, sutun: !!sutun, v: r.v };
+}
+
 /** girişleri uygular — elle yapılabilen her şey, ekranın denetimiyle; her giriş için sonuç (yazıldı · zaten öyleydi · yazılamadı + neden ·
-    cihaz: ekranda bekliyor). Kişi istediği için dolu alana da yazılır. Satır silme yazmalardan sonra (büyük satırdan küçüğe). */
-export function komutlariUygula(d: Durum, t: FormatTanimi, girisler: readonly RaporGirisi[], ek: KomutEki = {}):
-  Uygulama & { gecersiz: string[]; sonuclar: GirisSonucu[]; cihaz: CihazIstegi[] } {
+    cihaz: ekranda bekliyor). Kişi istediği için dolu alana da yazılır. C: satirlar (satir_ekle) girişlerden sonra tablonun sonuna. Satır silme
+    yazmalardan sonra (büyük satırdan küçüğe). satir: tablolara eklenen satır sayısı (net). */
+export function komutlariUygula(d: Durum, t: FormatTanimi, girisler: readonly RaporGirisi[], ek: KomutEki = {}, satirlar: readonly SatirEkle[] = []):
+  Uygulama & { gecersiz: string[]; sonuclar: GirisSonucu[]; cihaz: CihazIstegi[]; satir: number } {
   const kutular = new Map<string, Kutu>();
   const alanKutusu = (a: Pick<OkunacakAlan, "tur" | "uzun" | "secenekler">, en: { sayi: number; metin: number }): Kutu["denetle"] => (ham) =>
     a.tur === "sayi" ? sayiKutusu(ham, en.sayi) : a.tur === "secim" ? secimKutusu(ham, a.secenekler ?? []) : a.tur === "evet" ? evetKutusu(ham)
@@ -413,42 +465,25 @@ export function komutlariUygula(d: Durum, t: FormatTanimi, girisler: readonly Ra
     if (h) {
       const b = tablolar.get(h[1]), satir = Number(h[2]) - 1;
       if (!b || satir < 0) { red("tabloda böyle bir yer yok"); continue; }
-      const notlar = b.notlar ?? [];
-      const anahtar = h[3] === "sonuc" ? ELLE_SONUC : h[3] === "gerekce" ? ELLE_GEREKCE : h[3];
-      const sutun = b.sutunlar.find((s) => s.id === anahtar);
-      const adi = sutun ? sutun.ad : anahtar === "not" ? "uygunluk notu" : anahtar === ELLE_SONUC ? "sonuç" : anahtar === ELLE_GEREKCE ? "sonucun gerekçesi" : h[3];
-      const ad = `${b.ad} · ${satir + 1}. satır · ${adi}`;
-      let r: { v: string } | { neden: string };
-      if (sutun) {
-        r = !temizle(ham) ? { v: "" } : sutun.giris === "sayi" ? sayiKutusu(ham, ELLE_EN_COK.hucreSayi) : sutun.giris === "secim" ? secimKutusu(ham, sutun.secenekler ?? [])
-          : sutun.giris === "evet" ? evetKutusu(ham) : metinKutusu(ham, ELLE_EN_COK.hucreMetin);
-      } else if (anahtar === "not") {
-        if (!notlar.length) { red("bu tabloda uygunluk notu yok", ad); continue; }
-        const n = Number(temizle(ham).replace(/^not\s*-?\s*/i, ""));
-        r = !temizle(ham) ? { v: "" } : Number.isInteger(n) && n >= 1 && n <= notlar.length ? { v: String(n) } : { neden: `Not-1 ile Not-${notlar.length} arası olmalı` };
-      } else if (anahtar === ELLE_SONUC) {
-        if (notlar.length) { red("bu tabloda sonuç uygunluk notundan çıkar; elle de değiştirilemiyor", ad); continue; }
-        const x = kucukTr(ham).replace(/[_-]/g, " ");
-        r = !x || /kural/.test(x) ? { v: "" } : /uygun ?(değil|degil)|uygunsuz/.test(x) ? { v: "uygun_degil" } : /^uygun$/.test(x) ? { v: "uygun" } : { neden: "uygun, uygun değil ya da kurala göre olmalı" };
-      } else if (anahtar === ELLE_GEREKCE) {
-        if (notlar.length) { red("bu tabloda sonuç uygunluk notundan çıkar", ad); continue; }
-        r = metinKutusu(ham, ELLE_EN_COK.gerekce);
-      } else { red("tabloda böyle bir sütun yok", ad); continue; }
+      const r = hucreDenetle(b, h[3], ham), ad = `${b.ad} · ${satir + 1}. satır · ${r.adi}`;
       if ("neden" in r) { red(r.neden, ad); continue; }
-      const v = r.v;
-      const l = (durum.cevaplar.tablo[b.id] ?? []).map((s) => ({ ...s }));
-      if (satir >= l.length + YENI_SATIR_EN_COK) { red("satır çok ileride", ad); continue; }
+      const { v, anahtar } = r;
+      /* 2026-10-15: yalnız değişen satır kopyalanır (çok girişte tablo her girişte baştan kopyalanmasın); önceki hâl tabloOnce'ta */
+      const l = [...(durum.cevaplar.tablo[b.id] ?? [])];
+      if (satir >= TABLO_SATIR_EN_COK) { red(TABLO_DOLU, ad); continue; }
       if (!tabloOnce.has(b.id)) tabloOnce.set(b.id, (durum.cevaplar.tablo[b.id] ?? []).map((s) => ({ ...s })));
       while (l.length <= satir) l.push({});
       if ((l[satir][anahtar] ?? "") === v) { sonuclar.push({ yer, ad, durum: "ayni" }); continue; }
-      if (v) l[satir][anahtar] = v; else delete l[satir][anahtar];
+      const yeni = { ...l[satir] };
+      if (v) yeni[anahtar] = v; else delete yeni[anahtar];
       /* sonuç "kurala göre"ye dönünce gerekçe de kalkar (ekrandaki gibi) */
-      if (anahtar === ELLE_SONUC && !v) delete l[satir][ELLE_GEREKCE];
+      if (anahtar === ELLE_SONUC && !v) delete yeni[ELLE_GEREKCE];
+      l[satir] = yeni;
       durum = { ...durum, cevaplar: { ...durum.cevaplar, tablo: { ...durum.cevaplar.tablo, [b.id]: l } } };
       /* teyit */
       if ((durum.cevaplar.tablo[b.id]?.[satir]?.[anahtar] ?? "") !== v) { red("yazıldıktan sonra okunan değer farklı", ad); continue; }
       sonuclar.push({ yer, ad, durum: "yazildi" });
-      if (sutun) { const k = tabloHucre.get(b.id) ?? new Set<string>(); k.add(`${satir}:${sutun.id}`); tabloHucre.set(b.id, k); }
+      if (r.sutun) { const k = tabloHucre.get(b.id) ?? new Set<string>(); k.add(`${satir}:${anahtar}`); tabloHucre.set(b.id, k); }
       continue;
     }
     const m = /^m:([^#]+)(?:#(not|derece))?$/.exec(yer);
@@ -491,6 +526,73 @@ export function komutlariUygula(d: Durum, t: FormatTanimi, girisler: readonly Ra
     }
     red("raporda böyle bir yer yok");
   }
+  /* C (2026-10-15 — "aynı tabloya 50 satır ekle"): satir_ekle — tablonun sonuna `adet` satır; degerler her satıra, sira sütununa artan değer
+     (önek + sayı; başlangıç verilmezse sütundaki son sayıdan devam). Her hücre elle yazılır gibi denetlenir: uymayan hücre boş kalır, nedeni sütun
+     başına bir kez döner; satırlar yine eklenir (elle "Satır ekle" gibi). Bütün iş tablonun tek geri alması (aşağıda) */
+  for (const s of satirlar) {
+    const tablo = typeof s?.tablo === "string" ? s.tablo : "", yer = `satir_ekle:${tablo}`.slice(0, 80);
+    const b = tablolar.get(tablo);
+    if (!b) { sonuclar.push({ yer, ad: tablo.slice(0, 60) || "satir_ekle", durum: "yazilamadi", neden: "raporda böyle bir tablo yok" }); continue; }
+    const adet = Number(s.adet);
+    if (!Number.isInteger(adet) || adet < 1 || adet > SATIR_EKLE_EN_COK) {
+      sonuclar.push({ yer, ad: b.ad, durum: "yazilamadi", neden: `satır sayısı 1 ile ${SATIR_EKLE_EN_COK} arası olmalı` });
+      continue;
+    }
+    const once = durum.cevaplar.tablo[b.id] ?? [];
+    /* 2026-10-16: raporun sınırını aşacak kalem yazılmaz (yarım tablo da yok) — nedeniyle, kaç satır daha eklenebileceğiyle */
+    if (once.length + adet > TABLO_SATIR_EN_COK) {
+      sonuclar.push({ yer, ad: b.ad, durum: "yazilamadi", neden: `${TABLO_DOLU}; tabloda ${once.length} satır var, en çok ${Math.max(0, TABLO_SATIR_EN_COK - once.length)} satır daha eklenebilir` });
+      continue;
+    }
+    if (!tabloOnce.has(b.id)) tabloOnce.set(b.id, once.map((x) => ({ ...x })));
+    const hatalar: { ad: string; neden: string }[] = [], sabit: [string, string][] = [];
+    for (const [alan, ham] of Object.entries(s.degerler ?? {})) {
+      if (alan === s.sira?.sutun || typeof ham !== "string") continue;
+      const r = hucreDenetle(b, alan, ham);
+      if ("neden" in r) hatalar.push({ ad: `${b.ad} · ${r.adi} (${adet} satır)`, neden: r.neden });
+      else if (r.v) sabit.push([r.anahtar, r.v]);
+    }
+    let sira: { anahtar: string; adi: string; onek: string; bas: number; artis: number } | null = null;
+    if (s.sira) {
+      const sutun = b.sutunlar.find((x) => x.id === s.sira?.sutun);
+      if (!sutun) hatalar.push({ ad: `${b.ad} · ${String(s.sira.sutun).slice(0, 60)}`, neden: "sıra için tabloda böyle bir sütun yok" });
+      else {
+        const artis = Number.isInteger(s.sira.artis) ? s.sira.artis! : 1;
+        let onek = s.sira.onek ?? "", bas = Number.isInteger(s.sira.baslangic) ? s.sira.baslangic! : null;
+        if (bas === null) {
+          const son = [...once].reverse().map((x) => /^(.*?)(\d+)$/.exec(String(x[sutun.id] ?? "").trim())).find((x) => !!x);
+          if (son && s.sira.onek === undefined) onek = son[1];
+          bas = son ? Number(son[2]) + artis : 1;
+        }
+        sira = { anahtar: sutun.id, adi: sutun.ad, onek, bas, artis };
+      }
+    }
+    const l = [...once], siraHatasi = new Map<string, number>();
+    for (let i = 0; i < adet; i++) {
+      const satir: Satir = Object.fromEntries(sabit);
+      if (sira) {
+        const r = hucreDenetle(b, sira.anahtar, `${sira.onek}${sira.bas + i * sira.artis}`);
+        if ("neden" in r) siraHatasi.set(r.neden, (siraHatasi.get(r.neden) ?? 0) + 1);
+        else if (r.v) satir[sira.anahtar] = r.v;
+      }
+      l.push(satir);
+    }
+    for (const [neden, n] of siraHatasi) hatalar.push({ ad: `${b.ad} · ${sira?.adi ?? ""} (${n} satır)`, neden });
+    durum = { ...durum, cevaplar: { ...durum.cevaplar, tablo: { ...durum.cevaplar.tablo, [b.id]: l } } };
+    /* teyit: tablo geri okunur — eklenen satır sayısı ve her yeni satırın sabit değerleri */
+    const sonra = durum.cevaplar.tablo[b.id] ?? [];
+    const yeniler = sonra.slice(once.length);
+    if (yeniler.length !== adet || !yeniler.every((x) => sabit.every(([k, v]) => x[k] === v))) {
+      sonuclar.push({ yer, ad: b.ad, durum: "yazilamadi", neden: "yazıldıktan sonra okunan tablo farklı" });
+      continue;
+    }
+    const ilk = once.length + 1, sonNo = once.length + adet;
+    sonuclar.push({ yer, ad: `${b.ad} · ${adet} satır eklendi (${adet === 1 ? `${ilk}. satır` : `${ilk}–${sonNo}. satır`})`, durum: "yazildi" });
+    for (const x of hatalar) sonuclar.push({ yer, ad: x.ad, durum: "yazilamadi", neden: x.neden });
+    const k = tabloHucre.get(b.id) ?? new Set<string>();
+    yeniler.forEach((x, i) => { for (const c of Object.keys(x)) if (b.sutunlar.some((y) => y.id === c)) k.add(`${once.length + i}:${c}`); });
+    tabloHucre.set(b.id, k);
+  }
   /* 557: satır silme — yazmalardan sonra, büyük satırdan küçüğe */
   for (const [b, l] of silinecek) {
     if (!tabloOnce.has(b)) tabloOnce.set(b, (durum.cevaplar.tablo[b] ?? []).map((s) => ({ ...s })));
@@ -514,7 +616,9 @@ export function komutlariUygula(d: Durum, t: FormatTanimi, girisler: readonly Ra
     }
   }
   const gecersiz = sonuclar.filter((s) => s.durum === "yazilamadi").map((s) => `${s.ad}: ${s.neden}`);
-  return { durum, isaretler, dolu: [], geri, gecersiz, sonuclar, cihaz };
+  /* C: eklenen satır (net — silinenler düşer); S.A.Y'a "eklenen_satir" olarak döner */
+  const eklenen = [...tabloOnce].reduce((t, [b, once]) => t + Math.max(0, (durum.cevaplar.tablo[b]?.length ?? 0) - once.length), 0);
+  return { durum, isaretler, dolu: [], geri, gecersiz, sonuclar, cihaz, satir: eklenen };
 }
 /** 557: sonucun okunur özeti (sayılar + yapılamayanlar nedeniyle) — S.A.Y'a ve geçmişe giden */
 export function sonucOzeti(l: readonly GirisSonucu[]): { yazildi: number; ayni: number; yazilamadi: { ad: string; neden: string }[]; bekliyor: number } {

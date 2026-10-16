@@ -13,7 +13,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createServer } from "node:http";
 import { ornekSayfa } from "../e2e/duyuru-ornek.ts";
-import { E2E_FIRMA, E2E_GORSEL, E2E_HESAPLAR, E2E_ILK, E2E_KAPI, E2E_KENDI_FIRMALAR, E2E_MUHASEBE, E2E_PAROLA, E2E_PLAN, E2E_SAHA, E2E_YONETIM, E2E_YONETIM_PROJELER, E2E_YZ, E2E_ZAMANLI_SIR, E2E_EPOSTA } from "../e2e/hesaplar.ts";
+import { E2E_FIRMA, E2E_GORSEL, E2E_HESAPLAR, E2E_ILK, E2E_KAPI, E2E_KENDI_FIRMALAR, E2E_MUHASEBE, E2E_PAROLA, E2E_PLAN, E2E_SAHA, E2E_YONETIM, E2E_YONETIM_PROJELER, E2E_YZ, E2E_ZAMANLI_SIR, E2E_SAGLIK_SIR, E2E_EPOSTA } from "../e2e/hesaplar.ts";
 import { planKabul, planIci } from "../src/modules/planlar/server/plan-ici.ts";
 import { planAc } from "../src/modules/planlar/server/planlar.ts";
 import { raporOlustur } from "../src/modules/raporlar/server/raporlar.ts";
@@ -250,21 +250,44 @@ const yzTaklit = createServer((istek, yanit) => {
         yanit.writeHead(400, { "content-type": "application/json" }).end(JSON.stringify({ type: "error", error: { type: "invalid_request_error", message: "taklit: S.A.Y isteğinde kişisel / müşteri bilgisi" } }));
         return;
       }
-      /* 557: işin sonucu (ikinci çağrı) — son ileti tool_result; araç kullanımı ve düşünme kapalı olmalı; cevap sonuçtan ("Yaptım" / "Yapamadım") */
+      const tamamYaz = (icerik: unknown[], stop: string, giris = 3000) => yanit.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({
+        content: icerik, stop_reason: stop, usage: { input_tokens: giris, output_tokens: 60 } }));
+      const ret = (ileti: string) => yanit.writeHead(400, { "content-type": "application/json" }).end(JSON.stringify({ type: "error", error: { type: "invalid_request_error", message: ileti } }));
+      const baglamMetni = Array.isArray(g.system) ? String((g.system[1] as { text?: unknown } | undefined)?.text ?? "") : "";
+      /* 2026-10-15 (C): haritadaki tablonun kimliği (adıyla) — "<ad> tablosuna N satır ekle" isteği satir_ekle'ye */
+      const tabloKimligi = (ad: string) => new RegExp(`^## ${ad.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} — tablo; hücre kimliği t:([^:]+):`, "m").exec(baglamMetni)?.[1];
+      const SATIR_ISTEGI = /^(.+?) tablosuna (\d+) satır ekle( \[parça\])?$/;
+      /* 557 → 2026-10-15 (A): işin sonucu = DÖNGÜNÜN DEVAMI — son ileti tool_result; düşünme kapalı olmalı, araç seçimi verilmez (auto; gerçek hizmet
+         gibi zorunlu seçim zaten reddedilir) — yalnız güvenlik durdurduysa "none" olur. "[parça]" isteğinde satırları 20'şer ekler (çok turlu döngü:
+         sonucu görünce kalanını ekler), bitince "Yaptım: N satır eklendi."; öteki istekte son turun sonuçlarından "Yaptım" / "Yapamadım" */
       const sonBloklar = g.messages?.at(-1)?.content;
-      const isSonucu = Array.isArray(sonBloklar) ? (sonBloklar as { type?: string; content?: unknown }[]).find((b) => b.type === "tool_result") : undefined;
-      if (isSonucu) {
+      const isSonuclari = Array.isArray(sonBloklar) ? (sonBloklar as { type?: string; content?: unknown }[]).filter((b) => b.type === "tool_result") : [];
+      if (isSonuclari.length) {
         const d = g as { tool_choice?: { type?: string }; thinking?: { type?: string } };
-        if (d.tool_choice?.type !== "none" || d.thinking?.type !== "disabled") {
-          yanit.writeHead(400, { "content-type": "application/json" }).end(JSON.stringify({ type: "error", error: { type: "invalid_request_error", message: "taklit: sonuç çağrısında araç ve düşünme kapalı olmalı" } }));
+        if (d.thinking?.type !== "disabled" || (d.tool_choice && d.tool_choice.type !== "none")) { ret("taklit: döngünün devamında düşünme kapalı, araç seçimi auto (ya da durunca none) olmalı"); return; }
+        type Sonuc = { yazilan?: number; eklenen_satir?: number; yapilan?: string[]; yazilamayan?: { ad: string; neden: string }[] };
+        const oku = (x: unknown): Sonuc => { try { return JSON.parse(String(x ?? "{}").split("\n\n")[0]) as Sonuc; } catch { return {}; } };
+        const butun = (g.messages ?? []).flatMap((m) => (Array.isArray(m.content) ? (m.content as { type?: string; content?: unknown }[]).filter((b) => b.type === "tool_result").map((b) => oku(b.content)) : []));
+        const istekMetni = String([...(g.messages ?? [])].reverse().find((m) => typeof m.content === "string" && (m as { role?: string }).role === "user")?.content ?? "");
+        const parca = SATIR_ISTEGI.exec(istekMetni.trim());
+        if (parca?.[3] && d.tool_choice?.type !== "none") {
+          const toplam = butun.reduce((t, r) => t + (r.eklenen_satir ?? 0), 0), hedef = Number(parca[2]), tablo = tabloKimligi(parca[1]);
+          if (!tablo) { ret("taklit: döngüde tablonun haritası yok (bağlam her turda gitmeli)"); return; }
+          if (toplam < hedef) {
+            tamamYaz([{ type: "tool_use", id: `taklit_p${butun.length + 1}`, name: "rapora_yaz",
+              input: { satir_ekle: [{ tablo, adet: Math.min(20, hedef - toplam), degerler: {}, sira: { sutun: "no" } }] } }], "tool_use");
+            return;
+          }
+          tamamYaz([{ type: "text", text: `Yaptım: ${toplam} satır eklendi.` }], "end_turn");
           return;
         }
-        let r: { yazilan?: number; yapilan?: string[]; yazilamayan?: { ad: string; neden: string }[] } = {};
-        try { r = JSON.parse(String(isSonucu.content ?? "{}")); } catch { r = {}; }
-        const l = [r.yazilan ? (r.yapilan?.length ? `Yaptım: ${r.yapilan.join(", ")}.` : `Yaptım: ${r.yazilan} giriş yazıldı.`) : "",
+        const sonTur = isSonuclari.map((b) => oku(b.content));
+        const r: Sonuc = { yazilan: sonTur.reduce((t, x) => t + (x.yazilan ?? 0) + (x.eklenen_satir ?? 0), 0), yapilan: sonTur.flatMap((x) => x.yapilan ?? []),
+          yazilamayan: sonTur.flatMap((x) => x.yazilamayan ?? []) };
+        const satirli = sonTur.reduce((t, x) => t + (x.eklenen_satir ?? 0), 0);
+        const l = [satirli ? `Yaptım: ${satirli} satır eklendi.` : r.yazilan ? (r.yapilan?.length ? `Yaptım: ${r.yapilan.join(", ")}.` : `Yaptım: ${r.yazilan} giriş yazıldı.`) : "",
           r.yazilamayan?.length ? `Yapamadım: ${r.yazilamayan.map((x) => `${x.ad}: ${x.neden}`).join("; ")}` : ""].filter(Boolean);
-        yanit.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({
-          content: [{ type: "text", text: l.join("\n") || "Bir değişiklik olmadı." }], stop_reason: "end_turn", usage: { input_tokens: 3000, output_tokens: 40 } }));
+        tamamYaz([{ type: "text", text: l.join("\n") || "Bir değişiklik olmadı." }], "end_turn");
         return;
       }
       /* 522: ekli soruda son ileti bloklar (fotoğraf / PDF + metin) — taklit eki sayar, sorunun metnini "Soru:"dan sonra alır */
@@ -275,6 +298,27 @@ const yzTaklit = createServer((istek, yanit) => {
       /* 384: bağlamda açık raporun özeti varsa söyler (uçtan uca: rapor ekranındaki serbest soru özeti taşıyor mu) */
       const baglam = Array.isArray(g.system) ? String((g.system[1] as { text?: unknown } | undefined)?.text ?? "") : "";
       const raporlu = baglam.includes("Açık rapor");
+      /* 2026-10-15 (D): düzeltme turu — son ileti sunucunun düzeltme metni (S.A.Y aracı çağırmadan "yazdım" demişti): asıl istek "[sahte]"ydi,
+         taklit bu kez işi yapar (aracı haritadaki yer kimliğiyle çağırır); yapamıyorsa nedenini söyler */
+      if (typeof sonIcerik === "string" && sonIcerik.startsWith("Aracı çağırmadan yapıldı dedin")) {
+        const asil = String(g.messages?.at(-3)?.content ?? "").replace(/ \[sahte\]$/, "").trim();
+        const y = /^(.+?) alanına (.+?) yaz$/.exec(asil);
+        const yer = y ? new RegExp(`^- (\\S+) · ${y[1].replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} \\(`, "m").exec(baglam)?.[1] : undefined;
+        if (!raporlu || !y || !yer) { tamamYaz([{ type: "text", text: "Yapamadım: bu işi yapacak aracı çağırmadım (taklit)." }], "end_turn"); return; }
+        tamamYaz([{ type: "tool_use", id: "taklit_d1", name: "rapora_yaz", input: { girisler: [{ yer, deger: y[2] }] } }], "tool_use");
+        return;
+      }
+      /* 2026-10-15 (D): "[sahte]" isteğine ilk cevap aracı ÇAĞIRMADAN "yazdım" — sunucu bunu kullanıcıya göstermeden düzeltme turu göndermeli */
+      if (son.includes("[sahte]")) { tamamYaz([{ type: "text", text: "**Seri no** alanına yazdım." }], "end_turn"); return; }
+      /* 2026-10-15 (C): "<tablo> tablosuna N satır ekle" → tek satir_ekle ile N satır; "[parça]" ile 20'şer (A döngüsü yukarıda sürer) */
+      const satirIstegi = SATIR_ISTEGI.exec(son.trim());
+      if (raporlu && satirIstegi) {
+        const tablo = tabloKimligi(satirIstegi[1]);
+        if (!tablo || !((g as { tools?: { name?: string }[] }).tools ?? []).some((a) => a.name === "rapora_yaz")) { ret("taklit: tablo haritası ya da rapora_yaz aracı yok"); return; }
+        const adet = satirIstegi[3] ? Math.min(20, Number(satirIstegi[2])) : Number(satirIstegi[2]);
+        tamamYaz([{ type: "tool_use", id: "taklit_s1", name: "rapora_yaz", input: { satir_ekle: [{ tablo, adet, degerler: {}, sira: { sutun: "no" } }] } }], "tool_use");
+        return;
+      }
       /* 553: format yapıcıda "<tablo adı> tablosuna <ad> sütunu ekle, formül <formül>" → haritadaki bölüm kimliğiyle formati_duzenle (araç / harita yoksa ret) */
       const formatIstegi = /^(.+?) tablosuna (\S+) sütunu ekle, formül (.+)$/.exec(son.trim());
       if (formatIstegi) {
@@ -529,6 +573,7 @@ const ortam: Record<string, string> = {
   PROBATA_YONETIM_ALAN: E2E_YONETIM.alan,   // 348: yönetim sayfası yalnız bu adreste
   PROBATA_YZ_UC: `http://127.0.0.1:${yzKapi}`,   // 351: yerel Anthropic taklidi
   CRON_SECRET: E2E_ZAMANLI_SIR,   // 378: gece işi ucu (uydurma sır)
+  PROBATA_SAGLIK_SIR: E2E_SAGLIK_SIR,   // FV7: proje sağlığı ucunun ayrı sırrı (uydurma; gece işini açmaz)
   PROBATA_DUYURU_UC: `http://127.0.0.1:${yzKapi}`,   // 379: duyuru sayfalarının yerel taklidi
   PROBATA_EPOSTA_UC: `http://127.0.0.1:${yzKapi}/emails`,   // 432 (536: anahtar firmanın — deneme firmasına tohumlanır)
 };

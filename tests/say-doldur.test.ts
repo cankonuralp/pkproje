@@ -12,9 +12,10 @@
 import assert from "node:assert/strict";
 import { ELLE_GEREKCE, ELLE_SONUC } from "../src/format/motor.ts";
 import { test } from "node:test";
-import { Cevaplar, FormatTanimi } from "../src/format/tanim.ts";
+import { Cevaplar, FormatTanimi, TABLO_SATIR_EN_COK } from "../src/format/tanim.ts";
 import { SABLONLAR } from "../src/format/sablonlar.ts";
-import { alanlariUygula, geriAl, komutlariUygula, maddeleriIsaretle, okumaHedefleri, sonucOzeti, sonucuYap, tabloyaUygula, yerDegeri, type Durum } from "../src/modules/raporlar/say-doldur.ts";
+import { alanlariUygula, geriAl, GIRIS_EN_COK, komutlariUygula, maddeleriIsaretle, okumaHedefleri, SATIR_EKLE_EN_COK, sonucOzeti, sonucuYap, tabloyaUygula, yerDegeri,
+  type Durum } from "../src/modules/raporlar/say-doldur.ts";
 import { istekTani } from "../src/modules/say/istek.ts";
 import { islemMetni, raporGirdisi } from "../src/modules/say/server/say.ts";
 
@@ -220,4 +221,73 @@ test("557 rapora_yaz: elle ne giriliyorsa — sayıya yazı, künye, tarih, çok
   assert.deepEqual(g.durum.cevaplar.tablo.linye.map((r) => r.icu), ["6", "10", "16"]);
   assert.equal(g.durum.cevaplar.kunye.firma, undefined);
   assert.equal(g.durum.tarih?.bit, "");
+});
+
+/* 2026-10-15 (C — pkproje §9 "S.A.Y CLAUDE GİBİ"; reisim "yap işte yap dedim"; "aynı tabloya 50 satır ekle" 17 satırda kalıyordu): satir_ekle — tek
+   komutla N satır: her satıra aynı değerler, artan sıra sütunu (başlangıç verilmezse sütundaki son sayıdan, önekiyle), her hücre elle yazılır gibi
+   denetlenir (uymayan değer boş kalır, nedeni sütun başına bir kez), girisler önce; bütün iş tablonun tek geri alması; bilinmeyen tablo ve sınır
+   dışı satır sayısı nedeniyle. (B) eski 300 giriş / 100 satır ileri sınırı kalktı (5 000 — yalnız bozuk girişe karşı). Olumsuz kanıt:
+   tests/bozan/say-dongu.bozan.ts (satır sayısı yok sayılırsa, tablo sınırı denetimi kalkarsa).
+   2026-10-16 (S.A.Y 1. adım incelemesi — kasıtlı beklenti değişikliği: eskisi 700 satırlık tabloyu "başarı" sayıyordu, ama raporun kendi şeması
+   (Cevaplar.tablo) en çok 300 satır kabul ediyor — böyle bir rapor kaydedilemez, S.A.Y'ın haritası da kurulamazdı): tablonun satırı raporun
+   sınırında (TABLO_SATIR_EN_COK); sınırı aşan satir_ekle kalemi nedeniyle "yazılamadı" (yarım yazılmaz), sınırın ötesindeki hücre nedeniyle; sonuç
+   her zaman Cevaplar şemasından geçer; toplu Geri al tablo için geri dönen hücreleri sayar */
+test("C satir_ekle: 50 satır tek komutla — sıra sütunu, değerler denetimli, girisler önce, geri al; B: büyük giriş", () => {
+  const t = FormatTanimi.parse(SABLONLAR.ZPKR02.tanim);
+  const d: Durum = { ...bos(), cevaplar: { ...Cevaplar.parse({}), tablo: { linye: [{ no: "F1" }, { no: "F2", devre: "Elle" }] } } };
+  const u = komutlariUygula(d, t, [{ yer: "t:linye:1:devre", deger: "Aydınlatma" }], {},
+    [{ tablo: "linye", adet: 50, degerler: { tip: "c", akim: "16", devre: "x".repeat(200), bilinmeyen: "1" }, sira: { sutun: "no" } }]);
+  const l = u.durum.cevaplar.tablo.linye;
+  assert.equal(l.length, 52);
+  assert.equal(u.satir, 50);
+  assert.deepEqual([l[2].no, l[3].no, l[51].no], ["F3", "F4", "F52"], "son sayıdan önekiyle devam");
+  assert.ok(l.slice(2).every((s) => s.tip === "C" && s.akim === "16" && !("devre" in s)), "her satıra aynı (seçenek seçenekten); uymayan boş kalır");
+  assert.equal(l[0].devre, "Aydınlatma", "girisler önce");
+  const s = u.sonuclar.filter((x) => x.yer === "satir_ekle:linye");
+  assert.deepEqual(s.filter((x) => x.durum === "yazildi").map((x) => x.ad), ["Pano sigortaları (linye) · 50 satır eklendi (3–52. satır)"]);
+  const red = s.filter((x) => x.durum === "yazilamadi").map((x) => `${x.ad}: ${x.neden}`);
+  assert.equal(red.length, 2, `sütun başına bir kez: ${red.join(" | ")}`);
+  assert.ok(red.some((x) => /Devre \(50 satır\): bu kutuya en çok 120 karakter/.test(x)) && red.some((x) => /bilinmeyen \(50 satır\): tabloda böyle bir sütun yok/.test(x)), red.join(" | "));
+  assert.equal(u.isaretler.filter((i) => i.yer.tur === "hucre" && i.yer.satir >= 2).length, 150, "eklenen hücreler işaretli (no, tip, In)");
+  /* geri al: tablo önceki hâline (tek iş) */
+  assert.deepEqual(geriAl(u.durum, u.geri).durum.cevaplar.tablo.linye, [{ no: "F1" }, { no: "F2", devre: "Elle" }]);
+  /* boş tablo 1'den; başlangıç, artış, önek verilirse onlar; iki kalem sırayla */
+  const b = komutlariUygula(bos(), t, [], {}, [{ tablo: "linye", adet: 3, degerler: {}, sira: { sutun: "no" } },
+    { tablo: "linye", adet: 2, degerler: {}, sira: { sutun: "no", baslangic: 10, artis: 5, onek: "S" } }]);
+  assert.deepEqual(b.durum.cevaplar.tablo.linye.map((x) => x.no), ["1", "2", "3", "S10", "S15"]);
+  assert.equal(b.satir, 5);
+  /* değersiz satır da eklenir (elle "Satır ekle" gibi) */
+  assert.equal(komutlariUygula(bos(), t, [], {}, [{ tablo: "linye", adet: 4, degerler: {} }]).durum.cevaplar.tablo.linye.length, 4);
+  /* bilinmeyen tablo, sınır dışı satır sayısı: nedeniyle, satır yok */
+  const k = komutlariUygula(bos(), t, [], {}, [{ tablo: "yok", adet: 5, degerler: {} }, { tablo: "linye", adet: 0, degerler: {} },
+    { tablo: "linye", adet: SATIR_EKLE_EN_COK + 1, degerler: {} }]);
+  assert.deepEqual(k.sonuclar.map((x) => x.durum), ["yazilamadi", "yazilamadi", "yazilamadi"]);
+  assert.ok(k.sonuclar.every((x) => x.neden), "her biri nedenli");
+  assert.equal(k.satir, 0);
+  /* B: 300'ün üstünde giriş (eskiden atılıyordu) ve 100 satırdan ileri yeni satır (eskiden "satır çok ileride") — raporun tablo sınırının içinde */
+  const N = TABLO_SATIR_EN_COK;
+  const cok = [...Array.from({ length: N }, (_, i) => ({ yer: `t:linye:${i + 1}:akim`, deger: String(i + 1) })),
+    ...Array.from({ length: N }, (_, i) => ({ yer: `t:linye:${i + 1}:tip`, deger: "c" })), ...Array.from({ length: 100 }, (_, i) => ({ yer: `t:linye:${i + 1}:devre`, deger: "D" }))];
+  assert.ok(cok.length > 300 && cok.length <= GIRIS_EN_COK);
+  const c = komutlariUygula(bos(), t, cok);
+  assert.equal(c.durum.cevaplar.tablo.linye.length, N);
+  assert.equal(c.sonuclar.filter((x) => x.durum === "yazildi").length, cok.length);
+  assert.equal(c.satir, N);
+  assert.ok(Cevaplar.safeParse(c.durum.cevaplar).success, "rapor kaydedilebilir (şemadan geçer)");
+  assert.equal(geriAl(c.durum, c.geri).sayi, cok.length, "toplu Geri al geri dönen hücreleri sayar (tablo tek giriş değil)");
+  assert.equal(komutlariUygula(bos(), t, [{ yer: "t:linye:250:akim", deger: "1" }]).durum.cevaplar.tablo.linye.length, 250);
+  assert.ok(GIRIS_EN_COK >= 5_000);
+  /* 2026-10-16: raporun tablo sınırı — sınırın ötesindeki hücre nedeniyle; sınırı aşan satir_ekle yazılmaz (yarım tablo yok), nedeninde kalan yer */
+  const s301 = komutlariUygula(bos(), t, [{ yer: `t:linye:${N + 1}:akim`, deger: "1" }]);
+  assert.deepEqual([s301.sonuclar[0].durum, s301.durum.cevaplar.tablo.linye], ["yazilamadi", undefined]);
+  assert.match(s301.sonuclar[0].neden ?? "", new RegExp(`en çok ${N} satır`));
+  const dolu: Durum = { ...bos(), cevaplar: { ...Cevaplar.parse({}), tablo: { linye: Array.from({ length: N - 10 }, (_, i) => ({ no: String(i + 1) })) } } };
+  const asan = komutlariUygula(dolu, t, [], {}, [{ tablo: "linye", adet: 11, degerler: {}, sira: { sutun: "no" } }]);
+  assert.equal(asan.durum.cevaplar.tablo.linye.length, N - 10, "yarım yazılmadı");
+  assert.deepEqual([asan.satir, asan.sonuclar.map((x) => x.durum)], [0, ["yazilamadi"]]);
+  assert.match(asan.sonuclar[0].neden ?? "", /en çok 10 satır daha eklenebilir/);
+  const sigan = komutlariUygula(dolu, t, [], {}, [{ tablo: "linye", adet: 10, degerler: {}, sira: { sutun: "no" } }]);
+  assert.deepEqual([sigan.durum.cevaplar.tablo.linye.length, sigan.durum.cevaplar.tablo.linye.at(-1)?.no, sigan.satir], [N, String(N), 10]);
+  assert.ok(Cevaplar.safeParse(sigan.durum.cevaplar).success);
+  assert.equal(geriAl(sigan.durum, sigan.geri).sayi, 10, "10 eklenen satır (her biri No) — 10 giriş");
 });
