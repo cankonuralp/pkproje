@@ -214,8 +214,15 @@ export interface KagitOzellik {
 export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik) {
   /* açık ayar: "b:<bölüm>" bölümün ayarları · "o:<bölüm>:<öğe>" öğenin ayrıntıları · "metot" */
   const [ayar, setAyar] = useState<string | null>(null);
-  /* yeni eklenen öğe / bölüm: adı yazma kipinde açılır */
+  /* yeni eklenen öğe / bölüm: adı yazma kipinde açılır. 2026-10-16 (d5f677a tablet): işaret açıldıktan hemen sonra temizlenir — kalırsa tablo
+     yeniden dizilince (ör. firma bilgilerinde satır çıkınca iki sütunlu eşleşme değişir) o öğenin yazı kutusu kendiliğinden yeniden açılıp sayfayı
+     kaydırıyordu */
   const [yeniId, setYeniId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!yeniId) return;
+    const z = setTimeout(() => setYeniId(null), 0);
+    return () => clearTimeout(z);
+  }, [yeniId]);
   const onayla = useOnayla();
   const duzen = raporDuzeni(t, false, false);   // 540: kurucu formatın kendisini (kayıttan alanlar dahil) gösterir
   const sira = (id: string) => t.bolumler.findIndex((b) => b.id === id);
