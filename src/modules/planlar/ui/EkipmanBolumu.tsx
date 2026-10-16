@@ -145,7 +145,8 @@ export function EkipmanBolumu({ v }: { v: PlanIci }) {
     });
   }
 
-  /* Rapor oluştur (311): sunucu numarayı verir, ilk rapor planı Denetimde yapar; başarıda saha rapor ekranına geçilir */
+  /* Rapor oluştur (311): sunucu numarayı verir, ilk rapor planı Denetimde yapar; başarıda plan içinde kalınır (maket rapor-olustur — bildirim
+     ve Raporlar satırındaki "Raporu düzenle" saha rapor ekranını açar) */
   function raporAc(e: PlanEkipmani) {
     if (v.izin.raporEngel) { uyar(v.izin.raporEngel); return; }
     if (cevrimdisiMi()) { yeniRapor(e); return; }

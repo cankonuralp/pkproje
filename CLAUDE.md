@@ -76,7 +76,9 @@ pkproje/
                             numaralar, ENGEL / UYARI kataloğu, yapım sırası K0–K7, kilit planı, yayın öncesi kararlar — KOD BAŞLARKEN TAM OKUNUR
   RAPOR-FORMAT.md           firmanın kendi rapor formatını kurduğu sistem (2026-10-02, AA10 — onaylı, §8.3)
   FIRMA-VT.md               her firmaya ayrı veritabanı + panelden kurulum (sunum 579, onaylı 2026-10-15): veri yerleşimi, yönlendirme, bağlantı, göç
-                            dağıtımı, kurulum makinesi, e-posta alan adı, kalemler FV1–FV15 — bu işe dokunurken TAM OKUNUR
+                            dağıtımı, kurulum makinesi, e-posta alan adı, kalemler FV1–FV15 — bu işe dokunurken TAM OKUNUR · ⛔ 2026-10-17 RAFA KALKTI (reisim:
+                            "supabase benim kontrolümde olacak firma başı supabase açma fikri rafa kalktı"): FV1–FV11 kodda, FV12–FV15 yapılmaz
+  YAYIN SIRASI (2026-10-17) deneme.probata.com.tr = TEST ADRESİ: yayın önce orada, reisim onaylarsa öteki firmalara; bugün başka firma yok (pkproje.md §11)
   ARKA-UC.md                arka uç kurgusu (2026-10-01; K1–K6 kabul, K7–K8 kabul edilmedi — 2026-10-02): veri, dosya, çevrimdışı, uygulama, yapay zekâ, yedek
   ANAYASA.md · TASARIM-KALIBI.md · 00–08-*.md · 09-SUNUCU-VE-VERI.md · EKSIKLER-VE-ONERILER.md
                             kural dosyaları (ANAYASA/KALIP'a madde yalnız reisim onayıyla eklenir)

@@ -2525,6 +2525,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-17 (karar): **SUPABASE TEK, DENEME ADRESİ TEST ADRESİ** — reisim birebir: *"supabase benim kontrolümde olacak firma başı supabase açma
+  fikri rafa kalktı, deneme.probata.com.tr uzantılı adres test adresi olacak yayınlarımız ilk orada olacak eğer onaylarsam orada geçerli olanlar
+  diğer firmalarada yayınlanacak, şu an herhangi bir başka firma yok"*. Sonuç: (1) bütün firmalar reisim'in Supabase projesinde (ortak proje);
+  FIRMA-VT'nin "kendi Supabase projesi" yolu RAFA KALKTI — FV1–FV11 kodda durur (ortam ayarı olmadan kapalı), FV12–FV15 yapılmaz. (2) Yayın
+  sırası: önce deneme.probata.com.tr (test adresi), reisim onaylarsa öteki firmalara. Bugün başka firma yok — ana dala giden her yayın yalnız deneme
+  adresinde görünür; ilk gerçek firma açılırken iki aşamalı yayının nasıl kurulacağı (deneme adresi ayrı yayın, öteki firmalar onaylı yayın) sunumla
+  reisim'e getirilir.
 - 2026-10-17 (595o): **İMZA YERLERİ — İKİNCİ UZMAN VE TESİS YETKİLİSİ** (sunum 595 madde 1; K1 *"Evet, hepsi"* — *"“+ İmza yeri” (uzman, teknik
   yönetici, ikinci uzman, tesis yetkilisi)"*). Format yapıcıda imza bölümünün ayarındaki "İmza yerleri"ne İkinci muayene uzmanı (adı, mesleği,
   EKİPNET, imzası; diploma, oda sicil, e-posta, telefon "+ Satır ekle"den) ve Tesis yetkilisi (adı, unvanı, imzası) eklendi. Sahada imza bölümü

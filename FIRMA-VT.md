@@ -1,4 +1,7 @@
-# FİRMA-VT — her firmaya ayrı veritabanı (sunum 579, onaylı 2026-10-15)
+# FİRMA-VT — her firmaya ayrı veritabanı (sunum 579, onaylı 2026-10-15) — ⛔ RAFA KALKTI (2026-10-17)
+
+> ⛔ **2026-10-17, reisim:** *"supabase benim kontrolümde olacak firma başı supabase açma fikri rafa kalktı"*. Bütün firmalar reisim'in Supabase
+> projesinde. FV1–FV11 kodda durur (kendi projeli firma yolu ortam ayarı olmadan kapalı); FV12–FV15 yapılmaz. Karar pkproje.md §11 (2026-10-17).
 
 > Reisim: *"supabase ve resend bağlantılarını firma açarken biz buradan panelden yapalım daha sonra müşteri uğraşmasın …
 > resend ve supabase ayarları firma ayarları kısmından değiştirilemesin"*. Sunum 579 onaylandı (2026-10-15 15:44 UTC); kararlar pkproje.md §9
