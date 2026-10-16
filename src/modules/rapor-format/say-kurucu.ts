@@ -554,7 +554,7 @@ export const FORMAT_ARACI = {
     + "firma_satiri (1. bölüm Firma bilgileri: eylem ekle — kaynak firma | adres | rapor_no | rapor_tarihi | isg | sgk | bas | bit | sonraki | takip | metot | "
     + "eposta | tel | plan_no | serbest, ad, serbestte yazi —, degistir (oge + ad / yazi / tam), cikar, yukari, asagi; SGK, İSG-KATİP, başlangıç çıkmaz). "
     + "baslik (sabit başlık / sözcük: bolum + alan sira | not | sonuc (ölçüm), olcum | deger | sinir | sonuc (test), no | madde | sonuc (kontrol listesi), "
-    + "uygun | uygun_degil | sartli (sonuç bölümü), yonlendirme (yorum); bölümsüz alan bas_kod | bas_surum | bas_no | bas_tarih | alt_yazi ({firma}, {kod}) | ekipman_kod | "
+    + "uygun | uygun_degil | sartli (sonuç bölümü), yonlendirme (yorum); bölümsüz alan bas_kod | bas_surum | bas_no | bas_tarih | alt_yazi ({firma}, {kod}, {adres}, {tel}, {eposta}; PDF'te her sayfanın altında — ör. gizlilik notu) | ekipman_kod | "
     + "ekipman_tur; ad: yeni yazı, boş bugünküne döner), sonuc_yeri (ölçüm tablosu: yer son | bas | gizli — belgede), not_satiri (yorum: satir), "
     + "oge_tasi (bolum + oge + eylem yukari | asagi; sütunda sola / sağa; madde grubun ucundan komşu gruba). "
     + "tablo_sutunu (ölçüm cihazları, uygunsuzluk, kontrol listesi ya da test bölümünün sütunları: eylem ekle — alan cihaz | tur | kod_seri | kod | seri | "

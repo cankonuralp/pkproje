@@ -57,7 +57,10 @@ export function raporAltBilgisi(v: BelgeVerisi): string {
   const adres = v.dogrulama ? `<br><span>Doğrulama: <a href="${kac(v.dogrulama)}" style="color:#000;text-decoration:none">${kac(v.dogrulama)}</a></span>` : "";
   return `<style>${altYaziTipi()}</style><div style="box-sizing:border-box;width:100%;padding:2mm 8mm 0;`
     + `font:7.5pt/1.3 Carlito,sans-serif;color:#000;display:flex;justify-content:space-between;gap:4mm">${kod}`
-    + `<span style="border-top:0.6pt solid #000;flex:1;overflow-wrap:anywhere">${kac(a.metin)}${adres}</span>`
+    + `<span style="border-top:0.6pt solid #000;flex:1;overflow-wrap:anywhere">`
+    /* 595 (madde 14): formatın sayfa altı yazısı en çok iki satır (bant 20 mm) */
+    + (a.format ? `<span style="display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden">${kac(a.format)}</span>` : "")
+    + `${kac(a.metin)}${adres}</span>`
     + `<span style="white-space:nowrap">${kac(a.no)} · Sayfa <span class="pageNumber"></span> / <span class="totalPages"></span></span></div>`;
 }
 /** formatın e-imza yeri (verilmemişse İmza hücresi; kutunun eksik ölçüsü başlangıç değerinden) */

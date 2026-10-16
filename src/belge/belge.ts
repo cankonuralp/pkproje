@@ -33,12 +33,18 @@ export const zamanNo = (iso: string) => saatliNo(ZAMAN.format(new Date(iso)).rep
 const nushaYazi = (n: number) => `Bu rapor ${SAYI_AD[n] ?? String(n)} (${n}) nüsha olarak hazırlanmıştır.`;
 /** 595 (madde 26): sayfa altındaki şeridin yazısı — imzaya hazırlanan (kesin) belgede e-imza cümlesi; imzalı raporun yeniden basılan kopyasında ve
     önizlemede ne olduğu. Sayfa numarası PDF motorunda (pdf.ts alt bilgi şablonu) eklenir. */
-export function belgeAltYazisi(v: Pick<BelgeVerisi, "kesin" | "imza" | "no" | "revizyon">): { metin: string; no: string } {
+/** belgenin doküman kodu: formatın kodu ya da <firma>-FR-<tür>-<sürüm> */
+export const belgeFormKodu = (v: Pick<BelgeVerisi, "tanim" | "firma" | "tur" | "formatSira">) => v.tanim.gorunum.formKodu || `${v.firma.kod}-FR-${v.tur.kod}-${v.formatSira}`;
+export function belgeAltYazisi(v: Pick<BelgeVerisi, "kesin" | "imza" | "no" | "revizyon"> & Partial<Pick<BelgeVerisi, "tanim" | "firma" | "tur" | "formatSira">>): { metin: string; no: string; format: string } {
   const no = v.revizyon ? `${v.no}-R${v.revizyon}` : v.no;
   const metin = v.kesin ? "Bu rapor 5070 sayılı Elektronik İmza Kanunu'na uygun güvenli elektronik imza ile imzalanmıştır."
     : v.imza ? "E-imzalı raporun basılı kopyasıdır; asıl belge e-imzalı PDF'tir."
       : "İmzasız önizleme — muayene uzmanının son imzasıyla geçerli olur.";
-  return { metin, no };
+  /* 595 (madde 14): formatın KENDİ sayfa altı yazısı (adres, telefon, gizlilik notu …) şeritte her sayfada, sayfa numarasının yanında; yazısız
+     formatta şerit bugünkü gibi */
+  const format = v.tanim?.gorunum.altYazi?.trim() && v.firma && v.tur && v.formatSira !== undefined
+    ? altYazisi(v.tanim, v.firma, belgeFormKodu({ tanim: v.tanim, firma: v.firma, tur: v.tur, formatSira: v.formatSira })) : "";
+  return { metin, no, format };
 }
 
 type Cift = readonly [etiket: string, deger: ReactNode, tam?: boolean];
@@ -100,7 +106,7 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
   const foto: Record<string, number> = {}, mf: Record<string, number> = {};
   const kutular = fotoKutulari(t);
   for (const f of v.fotolar) { if (f.madde) mf[f.madde] = (mf[f.madde] ?? 0) + 1; if (!f.madde || kutular.has(f.madde)) foto[f.bolum] = (foto[f.bolum] ?? 0) + 1; }
-  const formKod = t.gorunum.formKodu || `${v.firma.kod}-FR-${v.tur.kod}-${v.formatSira}`;
+  const formKod = belgeFormKodu(v);
   const no = v.revizyon ? `${v.no}-R${v.revizyon}` : v.no;
   /* 492: denetçinin raporda değiştirdiği künye bilgisi (formatın kilitli bilgisi hariç) — saha ekranıyla aynı işlev */
   const kunye = gecerliKunye(v.kunye, metotMetni(t, v.tur.kontrolStd), v.cevaplar.kunye, kilitliKunye(t));
@@ -381,5 +387,5 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
     ...duzen.bolumler.flatMap((x) => [x.ust ? ustBaslik(x.ust.no, x.ust.ad) : null, bolum(x.no, x.b.ad, formatBolumu(x.b))]),
     imzaVar ? null : bolum(duzen.sonraki, "Yetkili kişi", imza()),
     maddeFotolari.length ? bolum("Ek", "Kontrol maddelerinin fotoğrafları", fotolar(maddeFotolari, (f) => `${f.ad} · ${maddeAdi.get(f.madde!) ?? ""}`)) : null,
-    h("footer", { className: "rb-alt" }, altYazisi(t, v.firma.ad, formKod)));
+    h("footer", { className: "rb-alt" }, altYazisi(t, v.firma, formKod)));
 }

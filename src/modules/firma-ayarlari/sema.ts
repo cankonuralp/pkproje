@@ -32,6 +32,8 @@ export const FirmaBilgiGirdisi = z.object({
   ad: metin(120, "En çok 120 karakter."), adres: metin(200, "En çok 200 karakter."),
   eposta: metin(120, "En çok 120 karakter.").refine((e) => e === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e), "Geçerli bir e-posta yazın."),
   akr: metin(20, "En çok 20 karakter."), nusha: secim(NUSHA, "Nüsha sayısı seçin."),
+  /* 595 (madde 14): sayfa altı yazısının {tel}'i — verilmezse kayıttaki kalır */
+  tel: metin(30, "En çok 30 karakter.").refine((t) => /^[0-9+()\s-]*$/.test(t), "Telefon yalnız rakam, boşluk, + ( ) - içerir.").optional(),
 });
 export const ImzaGirdisi = z.object({ yontem: z.enum(["mobil", "e_imza"], { error: "İmza yöntemi seçin." }) });
 export const ZimmetGirdisi = z.object({ teslim_eden: z.preprocess((v) => (v === "" ? null : v), z.string().regex(/^[0-9a-f-]{36}$/, "Kişi seçin.").nullable()) });

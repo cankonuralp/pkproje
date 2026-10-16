@@ -1072,7 +1072,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
       })}
       {araEkle(t.bolumler.length, "Bölüm ekle", "kb-ekle", true, duzen.bolumler.length ? anaBolum(duzen.bolumler.length - 1) : null)}
       {/* 595 (madde 14): sayfa altı yazısı — {firma} ve {kod} firma adı ve doküman koduyla değişir */}
-      <footer className="rb-alt">{gbas("alt_yazi", t.gorunum.altYazi ?? "{firma} · {kod}", "Sayfa altı yazısı ({firma} ve {kod} yerine firma adı ve doküman kodu)", 300)}
+      <footer className="rb-alt">{gbas("alt_yazi", t.gorunum.altYazi ?? "{firma} · {kod}", "Sayfa altı yazısı ({firma}, {kod}, {adres}, {tel}, {eposta} yerine firma adı, doküman kodu ve Firma ayarlarındaki bilgiler; PDF'te her sayfanın altında)", 300)}
         <span className={k.ornek}> · {"{firma}"}: Firmanızın adı · {"{kod}"}: {t.gorunum.formKodu || `kendiliğinden (${tur.kod})`}</span></footer>
     </article>
   );

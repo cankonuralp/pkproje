@@ -42,6 +42,11 @@ test("firma ayarları: paneller ve pencere; kaydet, geçersiz değer, kayma yok,
   /* Firma bilgileri: pencerede yazılır, Kaydet → kaydedilir, pencere kapanır, yenilemede kalır */
   let firma = await ac(page, "firma", "Firma bilgileri");
   await firma.getByLabel("Adres").fill(adres);
+  /* 595 (madde 14): telefon — sayfa altı yazısının {tel}'i; harf reddedilir */
+  await firma.getByLabel("Telefon").fill("ara");
+  await firma.getByRole("button", { name: "Kaydet", exact: true }).click();
+  await expect(firma.getByText("Telefon yalnız rakam, boşluk, + ( ) - içerir.")).toBeVisible();
+  await firma.getByLabel("Telefon").fill("0212 000 00 00");
   await firma.getByRole("button", { name: "Kaydet", exact: true }).click();
   await expect(page.getByText(/^Firma bilgileri kaydedildi/).first()).toBeVisible({ timeout: 30_000 });
   await expect(firma).toHaveCount(0);
@@ -49,6 +54,7 @@ test("firma ayarları: paneller ve pencere; kaydet, geçersiz değer, kayma yok,
   await hazir(page);
   firma = await ac(page, "firma", "Firma bilgileri");
   await expect(firma.getByLabel("Adres")).toHaveValue(adres);
+  await expect(firma.getByLabel("Telefon")).toHaveValue("0212 000 00 00");
 
   /* logo: yükle (PNG), görünür; kaldır önce sorulur */
   const [fc] = await Promise.all([page.waitForEvent("filechooser"), firma.getByRole("button", { name: "Logo yükle" }).click()]);

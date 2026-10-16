@@ -40,7 +40,7 @@ type Surumlu<T> = { deger: T; surum: number };
 export interface FirmaAyarlari {
   yaz: boolean;
   kod: string;
-  firma: Surumlu<{ ad: string; adres: string; eposta: string; akr: string; nusha: number }> & { kayitAd: string };
+  firma: Surumlu<{ ad: string; adres: string; eposta: string; tel: string; akr: string; nusha: number }> & { kayitAd: string };
   imza: Surumlu<{ yontem: "mobil" | "e_imza" }>;
   zimmet: Surumlu<{ teslim_eden: string | null }>;
   saklama: Surumlu<{ yil: number }>;
@@ -104,7 +104,7 @@ export async function firmaAyarlari(db: Sorgulayici, kim: Kisi): Promise<FirmaAy
     await ayarOku(db, "mesai"), await ayarOku(db, "uyari_esikleri"), await ayarOku(db, "sabit_gider"), await ayarOku(db, "belge_sablon")];
   return {
     yaz: ayarlarYazar(kim), kod: k.kod,
-    firma: { deger: { ad: f.deger.ad, adres: f.deger.adres, eposta: f.deger.eposta, akr: f.deger.akr, nusha: f.deger.nusha }, surum: f.surum, kayitAd: k.ad },
+    firma: { deger: { ad: f.deger.ad, adres: f.deger.adres, eposta: f.deger.eposta, tel: f.deger.tel, akr: f.deger.akr, nusha: f.deger.nusha }, surum: f.surum, kayitAd: k.ad },
     imza: { deger: im.deger, surum: im.surum }, zimmet: { deger: zi.deger, surum: zi.surum }, saklama: { deger: sa.deger, surum: sa.surum },
     mesai: { deger: { acik: me.deger.acik, normal_dk: me.deger.normal_dk, mesai_dk: me.deger.mesai_dk, yillik_fazla_saat: me.deger.yillik_fazla_saat }, surum: me.surum },
     esik: { deger: es.deger, surum: es.surum }, sabit: { deger: sg.deger, surum: sg.surum },

@@ -17,12 +17,13 @@ export const VARSAYILAN_BEYAN = "Bu planı TS EN ISO/IEC 17020 kurallarına uygu
 
 export const AYAR_BOLUMLERI = {
   /** Firma bilgileri (334; maket firmaBilgiCiz): belge nüshası (2) · rapor başlığındaki künye — ticari ad (boşsa firma kaydındaki ad), adres,
-      rapor e-postası, akreditasyon no · logo (dosya; raporların ve belgelerin başlığına) */
+      rapor e-postası, akreditasyon no · logo (dosya; raporların ve belgelerin başlığına) · telefon (595 madde 14: sayfa altı yazısının {tel}'i) */
   firma_bilgileri: z.object({
     nusha: gun(1, 5).default(2),
     ad: z.string().trim().max(120).default(""),
     adres: z.string().trim().max(200).default(""),
     eposta: z.string().trim().max(120).refine((e) => e === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)).default(""),
+    tel: z.string().trim().max(30).default(""),
     akr: z.string().trim().max(20).default(""),
     logo: kimlik.default(null),
   }),
@@ -168,7 +169,7 @@ export async function firmaKunyesi(db: Sorgulayici): Promise<{ ad: string; kod: 
 
 /** belge başlığının künyesi (334; maket MB.logo / resmiBas): ticari ad (ayar; boşsa firma kaydı), rapor kodu, adres, e-posta, akreditasyon no,
     nüsha ve logo — logo veri adresi olarak gömülür (belge dış adrese gitmez) */
-export interface BelgeKunyesi { ad: string; kod: string; nusha: number; adres: string | null; eposta: string | null; akr: string | null; logo: string | null }
+export interface BelgeKunyesi { ad: string; kod: string; nusha: number; adres: string | null; eposta: string | null; tel: string | null; akr: string | null; logo: string | null }
 export async function firmaBelgeKunyesi(db: Sorgulayici, depo: Depo | null): Promise<BelgeKunyesi> {
   const f = await firmaKunyesi(db), b = (await ayarOku(db, "firma_bilgileri")).deger;
   let logo: string | null = null;
@@ -179,7 +180,7 @@ export async function firmaBelgeKunyesi(db: Sorgulayici, depo: Depo | null): Pro
       try { logo = `data:${d.tur};base64,${Buffer.from(await depo.oku(d.anahtar, db)).toString("base64")}`; } catch { logo = null; }
     }
   }
-  return { ad: b.ad || f.ad, kod: f.kod, nusha: b.nusha, adres: b.adres || null, eposta: b.eposta || null, akr: b.akr || null, logo };
+  return { ad: b.ad || f.ad, kod: f.kod, nusha: b.nusha, adres: b.adres || null, eposta: b.eposta || null, tel: b.tel || null, akr: b.akr || null, logo };
 }
 
 /** firma ayarlarının dosyaları (logo, ön bilgilendirme formu, bordro formatı): kayıt = firma */

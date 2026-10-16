@@ -2525,6 +2525,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-17 (595n): **SAYFA ALTI YAZISI** (sunum 595 madde 14; K1 *"Evet, hepsi"* — *"sayfa altı yazısı yazılır (adres, telefon, sayfa no, gizlilik
+  notu)"*). Format yapıcıda sayfa altı yazısında {firma}, {kod} yanında {adres}, {tel}, {eposta} — değerler Firma ayarlarından (Firma bilgilerine
+  "Telefon" eklendi; rakam, boşluk, + ( ) -). Boş kalan bilgi ayracıyla düşer. Formatın kendi yazısı PDF'te her sayfanın altındaki şeritte, rapor no ve
+  "Sayfa n / N"nin yanında (en çok iki satır); gizlilik notu serbest yazı olarak. Yazısı olmayan formatın belgesi ve şeridi değişmedi.
 - 2026-10-17 (595m): **BAŞLIK TABLOSU** (sunum 595 madde 13; K1 *"Evet, hepsi"* — *"başlık tablosuna satır eklenir — ör. revizyon, nüsha —; hücrelerin
   yeri değişir"*). Format yapıcıda kâğıdın başındaki tabloda: doküman bilgisi hücresine "+ Satır" (Revizyon, Nüsha sayısı, Sonraki kontrol, Doküman
   kodu / Format sürümü / Rapor no / Rapor tarihi çıkarılmışsa geri, Serbest satır — sabit yazı), satırın adı yerinde yazılır, ↑ ↓ ile sırası, × ile

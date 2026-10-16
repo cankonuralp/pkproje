@@ -215,10 +215,20 @@ export const basEtiketleri = (t: Pick<FormatTanimi, "gorunum">) => ({
   tarih: yazili(t.gorunum.bas?.tarih, "Rapor Tarihi"),
 });
 export const ekipmanEtiketleri = (t: Pick<FormatTanimi, "gorunum">) => ({ kod: yazili(t.gorunum.ekipmanAd?.kod, "Ekipman kodu"), tur: yazili(t.gorunum.ekipmanAd?.tur, "Ekipman türü") });
-/** sayfa altı (belgenin sonundaki çizgili satır): formatın yazısı ({firma}, {kod} yerine firma adı ve doküman kodu) ya da bugünkü "firma · kod" */
-export function altYazisi(t: Pick<FormatTanimi, "gorunum">, firma: string, kod: string): string {
+/** sayfa altı (belgenin sonundaki çizgili satır; formatın kendi yazısı PDF'te her sayfanın şeridinde de — src/belge/pdf.ts): formatın yazısı
+    ({firma}, {kod}, {adres}, {tel}, {eposta} yerine firma adı, doküman kodu, Firma ayarlarındaki adres / telefon / rapor e-postası — 595 madde 14;
+    boş kalan bilgi " · " ayracıyla birlikte düşer) ya da bugünkü "firma · kod" */
+export const ALT_YER_TUTUCULAR = ["{firma}", "{kod}", "{adres}", "{tel}", "{eposta}"] as const;
+export interface AltFirma { ad: string; adres?: string | null; tel?: string | null; eposta?: string | null }
+export function altYazisi(t: Pick<FormatTanimi, "gorunum">, f: AltFirma, kod: string): string {
   const y = t.gorunum.altYazi?.trim();
-  return y ? y.replaceAll("{firma}", firma).replaceAll("{kod}", kod) : `${firma} · ${kod}`;
+  if (!y) return `${f.ad} · ${kod}`;
+  const d: Record<(typeof ALT_YER_TUTUCULAR)[number], string> = {
+    "{firma}": f.ad, "{kod}": kod, "{adres}": f.adres?.trim() ?? "", "{tel}": f.tel?.trim() ?? "", "{eposta}": f.eposta?.trim() ?? "",
+  };
+  /* tek geçişte (değerin içindeki "{…}" yeniden çevrilmez); boş bilgi ayracıyla düşer */
+  const m = y.replace(/\{(?:firma|kod|adres|tel|eposta)\}/g, (x) => d[x as keyof typeof d]);
+  return m.split(/(?<=^|\s)·(?=\s|$)/).map((p) => p.trim()).filter(Boolean).join(" · ");
 }
 
 /* 595 (madde 2): ölçüm cihazları tablosunun sütunları — tanımdakiler; verilmemişse (ya da formatta cihaz bölümü yoksa) bugünkü 5 sütun */

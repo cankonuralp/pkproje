@@ -11,7 +11,7 @@ export interface ImzaKisiBilgisi { meslek: string; meslekMetin?: string | null; 
 
 export interface BelgeVerisi {
   /** muayene firması (belgenin sahibi): ad, rapor kodu, nüsha sayısı (firma ayarı); 334: adres, akreditasyon no ve logo (veri adresi) başlıkta */
-  firma: { ad: string; kod: string; nusha: number; adres?: string | null; akr?: string | null; logo?: string | null };
+  firma: { ad: string; kod: string; nusha: number; adres?: string | null; eposta?: string | null; tel?: string | null; akr?: string | null; logo?: string | null };
   no: string; revizyon: number; formatSira: number;
   durum: "taslak" | "onayda" | "onaylandi" | "imzada" | "imzali";
   tur: { ad: string; kod: string; kontrolStd: string[] };

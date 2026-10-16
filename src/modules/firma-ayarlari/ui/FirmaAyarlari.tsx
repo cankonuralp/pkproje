@@ -33,7 +33,7 @@ import { ayarDosyasiEylemi, ayarKaydetEylemi, belgeTuruEkleEylemi, belgeTuruKald
 import stil from "./firma-ayarlari.module.css";
 
 const ID = {
-  ad: "w-ay-ad", adres: "w-ay-adres", eposta: "w-ay-eposta", akr: "w-ay-akr", nusha: "w-ay-nusha", zeden: "w-ay-zeden", yil: "w-ay-yil",
+  ad: "w-ay-ad", adres: "w-ay-adres", eposta: "w-ay-eposta", tel: "w-ay-tel", akr: "w-ay-akr", nusha: "w-ay-nusha", zeden: "w-ay-zeden", yil: "w-ay-yil",
   normal: "w-ay-normal", mesai: "w-ay-mesai", yillik: "w-ay-yillik", kod: "w-ay-kod",
 } as const;
 const para = (k: number) => new Intl.NumberFormat("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(k / 100);
@@ -203,10 +203,10 @@ function DosyaAyari({ ne, dosya, surum, yaz, bos, kaldirSonu, resim = false }: {
 /* ── PENCERELER ── */
 function FirmaBilgileri({ v }: { v: Veri }) {
   const s = useKesim("firma", { ...v.firma.deger, nusha: String(v.firma.deger.nusha) }, v.firma.surum);
-  const g = (k: "ad" | "adres" | "eposta" | "akr", id: string, etiket: string, en: number, ek: { uyari?: string; genis?: boolean; tur?: string } = {}) => (
+  const g = (k: "ad" | "adres" | "eposta" | "tel" | "akr", id: string, etiket: string, en: number, ek: { uyari?: string; genis?: boolean; tur?: string } = {}) => (
     <Alan id={id} etiket={etiket} hata={s.h[k]} genis={ek.genis} uyari={!s.h[k] && !s.d[k].trim() ? ek.uyari : undefined}>
       <Girdi id={id} value={s.d[k]} maxLength={en} disabled={!v.yaz} hata={!!s.h[k]} mesajli={!!s.h[k] || (!s.d[k].trim() && !!ek.uyari)} type={ek.tur}
-        inputMode={ek.tur === "email" ? "email" : undefined} onChange={(e) => s.setD({ ...s.d, [k]: e.target.value })} />
+        inputMode={ek.tur === "email" ? "email" : ek.tur === "tel" ? "tel" : undefined} onChange={(e) => s.setD({ ...s.d, [k]: e.target.value })} />
     </Alan>
   );
   return (
@@ -216,6 +216,7 @@ function FirmaBilgileri({ v }: { v: Veri }) {
         {g("ad", ID.ad, "Ticari ad", 120, { genis: true, uyari: `Boş: kayıttaki ad çıkar (${v.firma.kayitAd}).` })}
         {g("adres", ID.adres, "Adres", 200, { genis: true, uyari: "Boş: raporda adres çıkmaz." })}
         {g("eposta", ID.eposta, "Rapor e-postası", 120, { tur: "email", uyari: "Boş: raporda e-posta çıkmaz." })}
+        {g("tel", ID.tel, "Telefon", 30, { tur: "tel" })}
         {g("akr", ID.akr, "Akreditasyon no", 20)}
         <Alan id={ID.nusha} etiket="Rapor nüsha sayısı" hata={s.h.nusha}>
           <SecimAlani id={ID.nusha} ad="Rapor nüsha sayısı" deger={s.d.nusha} kapali={!v.yaz} gecersiz={!!s.h.nusha} tanim={s.h.nusha ? ipucuId(ID.nusha) : undefined} secenekler={NUSHA.map((n) => [String(n), `${n} nüsha`] as const)}
