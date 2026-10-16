@@ -10,6 +10,8 @@
    4. müşteri ara sayfalı ("sonraki"); müşteri kaydet ekler / günceller (verilmeyen alan korunur), "gör" düzeyi yazamaz.
    2026-10-16 (2. adım a incelemesi): plan açılınca ekranın uyarıları sonuçta; beyan özeti olmadan kabul yok (tuş ve çevrimdışı yol gibi); ekranda açık,
    kaydedilmemiş rapor künye güncellemesiyle ezilmez; hiçbir şey değiştirmeyen rapor yazması "değişiklik yok" (iş sayılmaz).
+   2026-10-16 (2. adım b): 5–6 — kalan modüllerin her birinden yazma + okuma (tuşun işleviyle aynı sonuç) ve yetkisiz rolün modülün kendi reddi;
+   Firma ayarları okumasında anahtarın yalnız "tanımlı mı" bilgisi.
    Saf kilitler: tests/say-islem-katalog.test.ts, tests/say-islem-yurutucu.test.ts; olumsuz kanıt: tests/bozan/say-islem.bozan.ts. */
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
@@ -180,4 +182,80 @@ test("4. müşteri ara sayfalı (sonraki); müşteri kaydet ekler ve günceller 
   assert.equal(tamam(await isle(A, FA.muh, "musteri_ara", { ara: "İşlem Deneme" })).toplam, 1);
   assert.equal(neden(await isle(A, FA.muh, "musteri_kaydet", { alanlar: { unvan: "Muhasebe Ltd." } })), "Bu işlem için yetkiniz yok.");
   assert.equal(await say(A, "SELECT count(*) AS n FROM musteri WHERE unvan = 'Muhasebe Ltd.'"), 0);
+});
+
+/* ── 2026-10-16 (2. adım b): kalan modüller — her modülden bir yazma + bir okuma (tuşun işlevi, aynı sonuç) ve yetkisiz rolün modülün KENDİ reddi ── */
+test("5. Personel, Ölçüm cihazları, Zimmetler, Araçlar, Eğitimler, Ekipman türleri: yönetici yazar ve bulur; denetçi modülün kendi yetkisiyle reddedilir", async () => {
+  const YETKISIZ = "Bu işlem için yetkiniz yok.";
+  /* Personel */
+  const p = tamam(await isle(A, FA.yon, "personel_kaydet", { alanlar: { ad: "İşlem Personeli", basla: "2025-01-01", meslek: "mak-muh" } }));
+  assert.ok((tamam(await isle(A, FA.yon, "personel_ara", { ara: "İşlem Personeli" })).personel as { id: string }[]).some((x) => x.id === p.id));
+  assert.equal(neden(await isle(A, FA.den1, "personel_kaydet", { alanlar: { ad: "Yetkisiz Kişi", basla: "2025-01-01", meslek: "mak-muh" } })), YETKISIZ);
+  /* Ölçüm cihazları: yeni türle cihaz, kalibrasyon kaydı */
+  const c = tamam(await isle(A, FA.yon, "cihaz_kaydet", { alanlar: { kod: "OC-01", tur: "yeni", yeniTur: "İşlem test cihazı", marka: "Deneme" } }));
+  tamam(await isle(A, FA.yon, "kalibrasyon_ekle", { cihaz: c.id, kalibrasyon: { tarih: "2026-01-10", bitis: "2027-01-10", lab: "Deneme Lab", sertifika: "S-1", sonuc: "uygun" } }));
+  const cg = tamam(await isle(A, FA.yon, "cihaz_getir", { cihaz: c.id }));
+  assert.equal((cg.kalibrasyonlar as unknown[]).length, 1);
+  assert.equal(neden(await isle(A, FA.den1, "cihaz_kaydet", { alanlar: { kod: "OC-02", tur: "yeni", yeniTur: "Yetkisiz tür" } })), YETKISIZ);
+  /* Zimmetler: demirbaş, teslim */
+  const d = tamam(await isle(A, FA.yon, "demirbas_ekle", { kod: "DB-001", ad: "Deneme demirbaşı" }));
+  tamam(await isle(A, FA.yon, "zimmet_teslim", { varlik: `d:${d.id}`, alan: FA.den1P, zaman: `${bugun}T09:00`, notu: null }));
+  const z = tamam(await isle(A, FA.yon, "zimmet_ara", { ara: "DB-001" }));
+  assert.equal((z.varliklar as { yer: string; personel?: string }[])[0].personel, FA.den1P, "kimde: denetçi");
+  assert.equal(neden(await isle(A, FA.den1, "demirbas_ekle", { kod: "DB-002", ad: "Yetkisiz" })), YETKISIZ);
+  /* Araçlar: araç, haftalık kilometre (sayı da olur) */
+  const a = tamam(await isle(A, FA.yon, "arac_kaydet", { alanlar: { plaka: "06 ABC 123", tur: "Binek araç", marka: "Deneme", model: "D1", yil: "2022", yakit: "dizel" } }));
+  const km = await isle(A, FA.yon, "arac_km", { arac: a.id, km: 12500 });
+  assert.ok(km.tamam, JSON.stringify(km));
+  assert.equal(tamam(await isle(A, FA.yon, "arac_ara", { ara: "06 ABC" })).toplam, 1);
+  assert.equal(neden(await isle(A, FA.den1, "arac_kaydet", { alanlar: { plaka: "06 XYZ 999", tur: "Binek araç", marka: "X", model: "Y", yil: "2022", yakit: "dizel" } })), YETKISIZ);
+  /* Eğitimler: tür + kayıt */
+  const et = tamam(await isle(A, FA.yon, "egitim_turu_kaydet", { ad: "İşlem eğitimi", tekrar: 12 }));
+  tamam(await isle(A, FA.yon, "egitim_kaydet", { personel: FA.den1P, tur: et.id, tarih: "2026-01-05", kurum: "Firma içi" }));
+  assert.equal(tamam(await isle(A, FA.yon, "egitim_ara", { ara: "İşlem eğitimi" })).toplam, 1);
+  assert.equal(neden(await isle(A, FA.den1, "egitim_turu_kaydet", { ad: "Yetkisiz eğitim", tekrar: "6" })), YETKISIZ);
+  /* Ekipman türleri: yeni tür + Ek-III grubuna göre hazır format yayında (tuşun eylemi gibi) */
+  const t = tamam(await isle(A, FA.yon, "tur_kaydet", { alanlar: { ad: "İşlem tankı", kod: "IT", grup: "basincli", periyot: "12" } }));
+  assert.equal(await say(A, "SELECT count(*) AS n FROM rapor_format WHERE tur_id = $1 AND durum = 'yayinda'", [t.id]), 1, "hazır format yayında");
+  assert.ok((tamam(await isle(A, FA.yon, "format_surumleri", { tur: t.id })).surumler as unknown[]).length >= 1);
+  assert.equal(neden(await isle(A, FA.den1, "tur_kaydet", { alanlar: { ad: "Yetkisiz tür", kod: "YT", grup: "basincli", periyot: "12" } })), YETKISIZ);
+});
+
+test("6. Sözleşmeler, Muhasebe, Talepler, Firma ayarları, okumalar: tuşun işleviyle yazılır; yetkisiz / göremeyen modülün kendi iletisiyle", async () => {
+  const YETKISIZ = "Bu işlem için yetkiniz yok.";
+  const musteri = (await kiraciIcinde(havuz, A, (db) => db.sorgu<{ m: string }>("SELECT musteri_id::text AS m FROM tesis WHERE id = $1", [FA.tesis]))).rows[0].m;
+  /* Sözleşmeler: planlamacı hazırlar (numara sunucuda); muhasebe görür, hazırlayamaz */
+  const sg = { musteri, tesisler: [FA.tesis], baslangic: bugun, sure: "12", vade: "30", yenileme: "yok" };
+  const s = tamam(await isle(A, FA.plan, "sozlesme_hazirla", sg));
+  assert.match(String(s.no), /^IS-\d{4}-\d{3}$/);
+  assert.equal(neden(await isle(A, FA.muh, "sozlesme_hazirla", sg)), YETKISIZ);
+  /* Muhasebe: elle gider (ödendi) ve listesi; denetçi Muhasebe'yi göremez */
+  tamam(await isle(A, FA.muh, "gider_kaydet", { kayit: { tarih: bugun, tur: "yakit", tutar: "100,00", oran: 20, aciklama: "İşlem yakıtı", is: null, personel: null, odeme: "odendi" } }));
+  assert.equal(tamam(await isle(A, FA.muh, "gider_ara", {})).toplam, 1);
+  assert.match(neden(await isle(A, FA.den1, "gider_ara", {})), /göremiyor/);
+  /* Talepler: denetçi kendi adına izin ister; yönetici onay listesinde görür ve onaylar; öteki denetçi karar veremez */
+  tamam(await isle(A, FA.den1, "izin_gonder", { tur: "yillik", bas: "2026-12-01", bit: "2026-12-02", aciklama: null }));
+  const ot = tamam(await isle(A, FA.yon, "onay_talepleri", {}));
+  const izin = (ot.talepler as { tip: string; id: string; surum: number }[]).find((x) => x.tip === "izin")!;
+  assert.ok(izin, JSON.stringify(ot));
+  assert.equal(neden(await isle(A, FA.den2, "talep_karar", { tip: "izin", talep: izin.id, surum: izin.surum, karar: "onayla" })), YETKISIZ);
+  tamam(await isle(A, FA.yon, "talep_karar", { tip: "izin", talep: izin.id, surum: izin.surum, karar: "onayla" }));
+  assert.equal(await say(A, "SELECT count(*) AS n FROM izin_talebi WHERE id = $1 AND durum = 'onaylandi'", [izin.id]), 1);
+  /* Firma ayarları: okumada anahtar yalnız "tanımlı mı" (son 4 hane bile yok); bölüm kaydı sürümle; denetçi göremez */
+  const fa = tamam(await isle(A, FA.yon, "firma_ayarlari", {}));
+  assert.deepEqual(Object.keys((fa.yz as { anahtar: object }).anahtar), ["tanimli"]);
+  assert.ok(!JSON.stringify(fa).includes("son4"), "anahtarın son haneleri gitmez");
+  const sk = fa.saklama as { surum: number };
+  tamam(await isle(A, FA.yon, "firma_ayari_kaydet", { kesim: "saklama", surum: sk.surum, deger: { yil: 6 } }));
+  assert.equal((tamam(await isle(A, FA.yon, "firma_ayarlari", {})).saklama as { deger: { yil: number } }).deger.yil, 6);
+  assert.match(neden(await isle(A, FA.den1, "firma_ayarlari", {})), /göremiyor/);
+  /* okumalar: ana sayfa, bekleyen işler, uyarılar, performans */
+  for (const ad of ["ana_sayfa", "bekleyen_isler", "uyari_ara", "performans_panosu"]) assert.ok((await isle(A, FA.yon, ad, {})).tamam, ad);
+  /* Planlar: raporsuz planı yalnız yönetici siler */
+  const pl = tamam(await isle(A, FA.plan, "plan_ac", planGirdisi(FA)));
+  assert.equal(neden(await isle(A, FA.plan, "plan_sil", { plan: pl.id })), YETKISIZ);
+  tamam(await isle(A, FA.yon, "plan_sil", { plan: pl.id }));
+  assert.equal(await say(A, "SELECT count(*) AS n FROM plan WHERE id = $1", [pl.id]), 0);
+  /* başka firma: B'nin yöneticisi A'nın sözleşmesini göremez */
+  assert.equal(neden(await isle(B, FB.yon, "sozlesme_getir", { sozlesme: s.id })), GORUNMEZ);
 });

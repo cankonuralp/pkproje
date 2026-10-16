@@ -12,7 +12,7 @@ import { EKRAN_KAYDEDILMEMIS, ekranRaporuKirli, GORUNMEZ, islem, kirp, sayfaBilg
 import { KunyeGirdisi, NotGirdisi, PLAN_DURUM, PlanAcGirdisi, RedGirdisi, YeniEkipmanGirdisi } from "./sema.ts";
 import { planSayfasi } from "./server/liste.ts";
 import {
-  ekipmanPasif, ekipmanSil, kayitliEkle, kontrolListesi, kunyeDuzenle, kunyeGuncelle, notEkle, planIci, planKabul, planReddet, planTamamla,
+  ekipmanPasif, ekipmanSil, kayitliEkle, kontrolListesi, kunyeDuzenle, kunyeGuncelle, notEkle, planIci, planKabul, planReddet, planSil, planTamamla,
   tamamlamaGeriAl, yeniEkipman,
 } from "./server/plan-ici.ts";
 import { planAc, planAcVerisi, planKarti, tesisPlanBilgisi } from "./server/planlar.ts";
@@ -161,5 +161,11 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
     ad: "plan_tamamlama_geri_al", modul: MODUL, tur: "yaz", girdi: PLAN_SURUM, kaynak: [kimlik, surum], islev: tamamlamaGeriAl,
     tarif: "Tamamlanmış planı yeniden denetime açar.",
     calistir: async (b, v) => yazmaCevabi(await tamamlamaGeriAl(b.db, b.kim, v.plan, v.surum)),
+  }),
+  /* 2026-10-16 (2. adım b): planı sil — Planlar'ın "Planı sil" tuşunun işlevi */
+  islem({
+    ad: "plan_sil", modul: MODUL, tur: "yaz", girdi: PLAN_ID, kaynak: [kimlik], islev: planSil,
+    tarif: "Hiç raporu, faturası, gideri olmayan, tamamlanmamış planı kesin siler (yönetici; ekip, ekipman satırları, notlar birlikte; ekipmanlar tesiste kalır).",
+    calistir: async (b, v) => yazmaCevabi(await planSil(b.db, b.kim, v.plan)),
   }),
 ];

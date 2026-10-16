@@ -13,13 +13,18 @@
 import { kilitliKunye, kayitKunyesi, metotMetni } from "../../format/kunye.ts";
 import { kimlik, surum, z } from "../../sema/ortak.ts";
 import { SuzgecDurumuSemasi } from "../../server/liste/liste.ts";
-import { GORUNMEZ, islem, metinSayfasi, sayfaBilgisi, yazmaCevabi, type Islem, type IslemBaglami, type IslemCevabi } from "../../server/yz/islem.ts";
+import {
+  EKRAN_KAYDEDILMEMIS, ekranRaporuKirli, GORUNMEZ, islem, metinSayfasi, sayfaBilgisi, yazmaCevabi, type Islem, type IslemBaglami, type IslemCevabi,
+} from "../../server/yz/islem.ts";
 import { komutDenetle } from "../../server/yz/say.ts";
 import { raporHaritasi } from "../say/rapor-haritasi.ts";
 import { komutlariUygula, sonucOzeti, type Durum, type GirisSonucu } from "./say-doldur.ts";
-import { OlusturIslemGirdisi, RAPOR_DURUM } from "./sema.ts";
+import { KopyaGirdisi, OlusturIslemGirdisi, RAPOR_DURUM, RevizeGirdisi } from "./sema.ts";
 import { raporSayfasi } from "./server/liste.ts";
-import { cihazEkle, cihazKaldir, onayaGonder, raporKaydet, raporOlustur, raporSayDurumu, sahaRaporu, type SahaRaporu } from "./server/raporlar.ts";
+import {
+  cihazEkle, cihazKaldir, onayaGonder, raporFormatGuncelle, raporKaydet, raporKopyala, raporOlustur, raporSayDurumu, raporSil, revizeIste, revizeIstegiGeriCek, sahaRaporu,
+  type SahaRaporu,
+} from "./server/raporlar.ts";
 
 const MODUL = 14;
 const RAPOR_SURUM = z.object({ rapor: kimlik, surum });
@@ -102,6 +107,8 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
       return { tamam: true, sonuc: {
         id: s.id, no: s.no, durum: durumAdi(s.durum), surum: s.surum, plan: { id: s.plan.id, no: s.plan.no }, ekipman: s.ekipman, tur: { id: s.tur.id, ad: s.tur.ad },
         yazilabilir: s.izin.duzenle, ...(d?.neden ? { neden: d.neden } : {}), ekranda_acik: b.ekrandakiRapor === s.id,
+        /* 2. adım b: geri gönderme / revize bilgisi, yeni format sürümü (rapor_format_guncelle), revize isteği (revize_iste / revize_istegi_geri_cek) */
+        ...(s.geri ? { geri: s.geri } : {}), ...(s.revize ? { revize: s.revize } : {}), ...(s.guncelFormat ? { guncel_format_sira: s.guncelFormat } : {}),
         harita: harita.metin, harita_sayfa: harita.bilgi.sayfa, harita_sayfa_sayisi: harita.bilgi.sayfa_sayisi, sonraki: harita.bilgi.sonraki,
       } };
     },
@@ -130,5 +137,38 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
       if (!s) return { tamam: false, neden: GORUNMEZ };
       return yazmaCevabi(await onayaGonder(b.db, b.kim, v.rapor, v.surum, { ekipman: s.ekipmanBilgi, tarih: s.tarih, cevaplar: s.cevaplar }));
     },
+  }),
+  /* 2026-10-16 (2. adım b): sil, kopyala, formatı güncelle, revize iste / geri çek — rapor ekranının tuşlarının işlevleri */
+  islem({
+    ad: "rapor_sil", modul: MODUL, tur: "yaz", girdi: RAPOR_SURUM, kaynak: [kimlik, surum], islev: raporSil,
+    tarif: "Yeni raporu siler (yazan ya da teknik yönetici; \"silindi\" damgası, veri silinmez); gönderilmiş ya da revizyondaki rapor silinmez.",
+    calistir: async (b, v) => yazmaCevabi(await raporSil(b.db, b.kim, v.rapor, v.surum)),
+  }),
+  islem({
+    ad: "rapor_kopyala", modul: MODUL, tur: "yaz", girdi: RAPOR_SURUM.extend({ kopya: z.object(KopyaGirdisi.shape) }), kaynak: [KopyaGirdisi, kimlik, surum], islev: raporKopyala,
+    tarif: "Raporun kayıttaki bilgileriyle aynı plana YENİ ekipmanın raporunu açar (kopya): kopya { kod (yeni ekipmanın kodu — plan günü, günlük süre denetlenir), konum }.",
+    calistir: async (b, v, ham) => (ekranRaporuKirli(b, [v.rapor]) ? { tamam: false, neden: EKRAN_KAYDEDILMEMIS }
+      : yazmaCevabi(await raporKopyala(b.db, b.kim, v.rapor, v.surum, ham.kopya, null))),
+  }),
+  islem({
+    ad: "rapor_format_guncelle", modul: MODUL, tur: "yaz", girdi: RAPOR_SURUM, kaynak: [kimlik, surum], islev: raporFormatGuncelle,
+    tarif: "Ekranda açık OLMAYAN Yeni raporu türün yayındaki (yeni) format sürümüne geçirir; cevaplar kimlikle taşınır, yeni madde ilk cevapla.",
+    calistir: async (b, v) => {
+      if (b.ekrandakiRapor === v.rapor) return { tamam: false, neden: EKRANDA };
+      const s = await sahaRaporu(b.db, b.kim, v.rapor);
+      if (!s) return { tamam: false, neden: GORUNMEZ };
+      return yazmaCevabi(await raporFormatGuncelle(b.db, b.kim, v.rapor, v.surum, { ekipman: s.ekipmanBilgi, tarih: s.tarih, cevaplar: s.cevaplar }));
+    },
+  }),
+  islem({
+    ad: "revize_iste", modul: MODUL, tur: "yaz", girdi: RevizeGirdisi.extend({ rapor: kimlik }), kaynak: [RevizeGirdisi, kimlik], islev: revizeIste,
+    tarif: "Kendi tamamlanan raporu için teknik yöneticiden revize ister: rapor, gerekce (en az 10 karakter: neyin düzeltileceği).",
+    calistir: async (b, v, ham) => yazmaCevabi(await revizeIste(b.db, b.kim, v.rapor, { gerekce: ham.gerekce })),
+  }),
+  islem({
+    ad: "revize_istegi_geri_cek", modul: MODUL, tur: "yaz", girdi: z.object({ rapor: kimlik, istek: kimlik, istek_surum: surum }), kaynak: [kimlik, surum],
+    islev: revizeIstegiGeriCek,
+    tarif: "Kendi bekleyen revize isteğini geri çeker: rapor, istek, istek_surum (rapor_getir'deki revize isteği).",
+    calistir: async (b, v) => yazmaCevabi(await revizeIstegiGeriCek(b.db, b.kim, v.rapor, v.istek, v.istek_surum)),
   }),
 ];

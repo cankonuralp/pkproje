@@ -71,11 +71,20 @@ test("katalog: adlar tekil ve biçimli, tarif tek satır, tür oku / yaz, JSON �
   }
   assert.equal(katalogDizini(ISLEM_KATALOGU, modulAdi), ISLEM_DIZINI, "her çağrıda aynı metin");
   for (const ad of ["Planlar:", "Raporlar:", "Müşteriler:", "Teklifler:", "Onaylar:"]) assert.ok(ISLEM_DIZINI.includes(ad), ad);
+  /* 2026-10-16 (2. adım b): kalan modüller (ve Ana sayfa) — modül adıyla, "Modül N" değil */
+  for (const ad of ["Ana sayfa:", "Uyarılar:", "Sözleşmeler:", "Ölçüm cihazları:", "Zimmetler:", "Araçlar:", "Personel:", "Talepler:", "Muhasebe:", "Performans:",
+    "Ekipman türleri:", "Dökümanlar:", "Firma ayarları:"]) assert.ok(ISLEM_DIZINI.includes(ad), ad);
+  assert.doesNotMatch(ISLEM_DIZINI, /Modül \d+:/, "her işlemin modülü menüde");
   /* görevin ilk modülleri: Planlar (aç, ekipman ekle / çıkar, ekip, kabul / red, bul / getir), Raporlar (aç, getir, yaz, onaya gönder, bul),
      Müşteriler + tesis + ekipman kaydı, Teklifler (ara, taslak, gönder), Onaylar (kuyruk, onayla, geri gönder) */
   for (const ad of ["plan_ac", "plan_ekipman_ekle", "plan_kayitli_ekle", "plan_ekipman_pasif", "plan_kunye_duzenle", "plan_kabul", "plan_reddet", "plan_ara",
     "plan_getir", "tesis_ekipmanlari", "rapor_ac", "rapor_getir", "rapor_yaz", "rapor_onaya_gonder", "rapor_ara", "musteri_ara", "musteri_kaydet", "tesis_kaydet",
-    "teklif_ara", "teklif_kaydet", "teklif_gonder", "onay_kuyrugu", "rapor_onayla", "rapor_geri_gonder"]) {
+    "teklif_ara", "teklif_kaydet", "teklif_gonder", "onay_kuyrugu", "rapor_onayla", "rapor_geri_gonder",
+    /* 2026-10-16 (2. adım b): kalan modüllerin ve (a)'da eksik kalan tuşların işlemleri */
+    "plan_sil", "rapor_sil", "rapor_kopyala", "rapor_format_guncelle", "revize_iste", "revizeye_gonder", "revize_istegi_reddet", "teklif_musteri_kaydet", "teklif_sil",
+    "musteri_pasif", "tesis_sil", "personel_kaydet", "personel_ayrildi", "cihaz_kaydet", "kalibrasyon_ekle", "zimmet_teslim", "demirbas_ekle", "arac_kaydet", "arac_km",
+    "sozlesme_hazirla", "isg_katip_kaydet", "egitim_kaydet", "fatura_kaydet", "tahsilat_kaydet", "gider_kaydet", "izin_gonder", "masraf_gonder", "talep_karar",
+    "tur_kaydet", "sablondan_tur_ekle", "taslak_baslat", "format_taslak_duzenle", "format_yayinla", "firma_ayari_kaydet", "ana_sayfa", "uyari_ara", "performans_panosu"]) {
     assert.ok(ISLEM_KATALOGU.some((t) => t.ad === ad), `${ad} katalogda`);
   }
   /* kayıt bozuk girdiyi reddeder (uygulama açılmaz) */
@@ -180,8 +189,11 @@ test("islemler aracı: adlarla şemalarıyla (bilinmeyen söylenir); modül / s�
   assert.deepEqual(a.islemler.map((x) => x.ad), ["plan_ac"]);
   assert.ok(a.islemler[0].girdi?.properties && "tesis" in a.islemler[0].girdi.properties && "ekip" in a.islemler[0].girdi.properties);
   assert.deepEqual(a.bilinmeyen, ["yok_boyle"]);
-  const b = islemleriListele(ISLEM_KATALOGU, { modul: "Onaylar" }, modulAdi) as { islemler: { ad: string; modul: string; girdi?: unknown }[] };
-  assert.ok(b.islemler.length > 0 && b.islemler.every((x) => x.modul === "Onaylar" && x.girdi), "az: şemalı");
+  /* 2026-10-16 (2. adım b): Onaylar'ın işlemi 6'dan 11'e çıktı (revize istekleri, diğer belgeler) — "az" örneği 2 işlemli Performans; Onaylar artık "çok" */
+  const b = islemleriListele(ISLEM_KATALOGU, { modul: "Performans" }, modulAdi) as { islemler: { ad: string; modul: string; girdi?: unknown }[] };
+  assert.ok(b.islemler.length > 0 && b.islemler.every((x) => x.modul === "Performans" && x.girdi), "az: şemalı");
+  const o = islemleriListele(ISLEM_KATALOGU, { modul: "Onaylar" }, modulAdi) as { islemler: { modul: string; girdi?: unknown }[]; not?: string };
+  assert.ok(o.islemler.length > 8 && o.islemler.every((x) => x.modul === "Onaylar" && !x.girdi) && o.not, "çok: yalnız ad ve tarif");
   const c = islemleriListele(ISLEM_KATALOGU, {}, modulAdi) as { islemler: { girdi?: unknown }[]; not?: string };
   assert.equal(c.islemler.length, ISLEM_KATALOGU.length);
   assert.ok(c.islemler.every((x) => !x.girdi) && c.not, "süzgeçsiz: yalnız ad ve tarif");

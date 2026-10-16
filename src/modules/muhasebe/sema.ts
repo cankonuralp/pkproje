@@ -53,6 +53,8 @@ export const GIDER_TUR = {
 } as const;
 export type GiderTuru = keyof typeof GIDER_TUR;
 export const KDV_ORAN = [20, 10, 1, 0] as const;
+/** gelir-gider dönemi (ekrandaki seçici; 2026-10-16 S.A.Y da): "toplam" (son 13 ay) ya da ay YYYY-AA */
+export const DonemSecimi = z.string().regex(/^(toplam|\d{4}-\d{2})$/, "Dönem: toplam ya da YYYY-AA.");
 /** gider tutarının üst sınırı (KURUŞ; 1 milyar TL — 0040 CHECK ile aynı) */
 export const GIDER_TUTAR_UST = 100_000_000_000;
 /* 477 (Talepler–Onaylar kararları T2): masraf formunda "duzeltme" — onaylayan gerekçeyle geri gönderdi, talep eden düzeltip yeniden gönderir */

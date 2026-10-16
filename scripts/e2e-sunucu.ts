@@ -272,7 +272,8 @@ const yzTaklit = createServer((istek, yanit) => {
          plan_ac_secenekleri → plan_ac → "Yaptım: plan açıldı — <no>."; "[islem-ara]": musteri_ara → bulunan müşteri. İşlem araçları rapor açık
          değilken de istekte olmalı; sonuç tool_result'taki sunucunun JSON'undan okunur (işlemi SUNUCU yapar, taklit yalnız sonucu görür) */
       const islemIstegi = String([...(g.messages ?? [])].reverse().find((m) => typeof m.content === "string" && (m as { role?: string }).role === "user")?.content ?? "");
-      const islemSoru = /\[islem-(plan|ara)\]/.exec(islemIstegi)?.[1];
+      /* 2026-10-16 (2. adım b): "[islem-sozlesme]" — sozlesme_secenekleri → sozlesme_hazirla → "Yaptım: sözleşme hazırlandı — <no>." (kalan modül) */
+      const islemSoru = /\[islem-(plan|ara|sozlesme)\]/.exec(islemIstegi)?.[1];
       if (islemSoru) {
         const araclar = ((g as { tools?: { name?: string }[] }).tools ?? []).map((a) => a.name);
         if (!araclar.includes("islem") || !araclar.includes("islemler")) { ret("taklit: işlem araçları istekte yok"); return; }
@@ -285,6 +286,7 @@ const yzTaklit = createServer((istek, yanit) => {
         if (!is) {
           if (sonuclar.length) { ret("taklit: işlem sonucu tool_result'ta yok"); return; }
           if (islemSoru === "plan") cagir("islemler", { adlar: ["plan_ac_secenekleri", "plan_ac"] }, "taklit_i1");
+          else if (islemSoru === "sozlesme") cagir("sozlesme_secenekleri", { ara: "İşlem" }, "taklit_i1");
           else cagir("musteri_ara", { ara: "İşlem Deneme" }, "taklit_i1");
           return;
         }
@@ -304,6 +306,15 @@ const yzTaklit = createServer((istek, yanit) => {
           return;
         }
         if (is.islem === "plan_ac") { tamamYaz([{ type: "text", text: `Yaptım: plan açıldı — ${String(is.no)}.` }], "end_turn"); return; }
+        if (is.islem === "sozlesme_secenekleri") {
+          const m = ((is.musteriler as { id: string; unvan: string; tesisler: { id: string; ad: string }[] }[] | undefined) ?? []).find((x) => x.unvan === E2E_ISLEM.musteri);
+          const tesis = m?.tesisler.find((t) => t.ad === E2E_ISLEM.tesis)?.id;
+          if (!m || !tesis) { tamamYaz([{ type: "text", text: "Yapamadım: müşteri ya da tesis bulunamadı (taklit)." }], "end_turn"); return; }
+          const bugun = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul" }).format(new Date());
+          cagir("sozlesme_hazirla", { musteri: m.id, tesisler: [tesis], baslangic: bugun, sure: "12", vade: "30", yenileme: "yok" }, "taklit_i2");
+          return;
+        }
+        if (is.islem === "sozlesme_hazirla") { tamamYaz([{ type: "text", text: `Yaptım: sözleşme hazırlandı — ${String(is.no)}.` }], "end_turn"); return; }
         if (is.islem === "musteri_ara") {
           const m = (is.musteriler as { unvan: string; tesisler: unknown[] }[] | undefined) ?? [];
           tamamYaz([{ type: "text", text: m.length ? `Buldum: ${m.map((x) => `${x.unvan} (${x.tesisler.length} tesis)`).join(", ")}.` : "Bulamadım." }], "end_turn");

@@ -6,7 +6,9 @@ import { kimlik, surum, z } from "../../sema/ortak.ts";
 import { SuzgecDurumuSemasi } from "../../server/liste/liste.ts";
 import { GORUNMEZ, islem, kirp, sayfaBilgisi, sayfala, trIcerir, yazmaCevabi, type Islem } from "../../server/yz/islem.ts";
 import { para, RedGirdisi, TEKLIF_DURUM, TeklifGirdisi } from "./sema.ts";
-import { teklifGonder, teklifKabul, teklifKarti, teklifKaydet, teklifReddet, teklifSayfasi, teklifSecenekleri } from "./server/teklifler.ts";
+import {
+  teklifGonder, teklifKabul, teklifKarti, teklifKaydet, teklifMusteriBagla, teklifMusteriKaydet, teklifReddet, teklifSayfasi, teklifSecenekleri, teklifSil,
+} from "./server/teklifler.ts";
 
 const MODUL = 11;
 const TEKLIF_SURUM = z.object({ teklif: kimlik, surum });
@@ -70,5 +72,24 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
     ad: "teklif_reddet", modul: MODUL, tur: "yaz", girdi: RedGirdisi.extend({ teklif: kimlik, surum }), kaynak: [RedGirdisi, kimlik, surum], islev: teklifReddet,
     tarif: "Gönderilmiş teklifi müşteri reddetti olarak işaretler (müşterinin gerekçesi zorunlu).",
     calistir: async (b, v, ham) => yazmaCevabi(await teklifReddet(b.db, b.kim, v.teklif, v.surum, { gerekce: ham.gerekce })),
+  }),
+  /* 2026-10-16 (2. adım b): kabul edilen teklifin müşterisi ve taslak teklifin silinmesi — teklif kartının tuşlarının işlevleri */
+  islem({
+    ad: "teklif_musteri_kaydet", modul: MODUL, tur: "yaz", girdi: z.object({ teklif: kimlik, surum, onay: z.boolean().default(false) }), kaynak: [kimlik, surum],
+    islev: teklifMusteriKaydet,
+    tarif: "Kayıtlı olmayan müşterinin KABUL edilmiş teklifinden müşteriyi ve \"Merkez\" tesisini açar, teklifi bağlar; Müşteriler'in uyarısı (ör. aynı vergi no) "
+      + "dönerse onay: true ile kaydedilir; e-posta başka müşterideyse teklif_musteri_bagla.",
+    calistir: async (b, v) => yazmaCevabi(await teklifMusteriKaydet(b.db, b.kim, v.teklif, v.surum, v.onay)),
+  }),
+  islem({
+    ad: "teklif_musteri_bagla", modul: MODUL, tur: "yaz", girdi: z.object({ teklif: kimlik, surum, musteri: kimlik, tesis: kimlik }), kaynak: [kimlik, surum],
+    islev: teklifMusteriBagla,
+    tarif: "Kayıtlı olmayan müşterinin kabul edilmiş teklifini VAR OLAN müşteriye ve onun etkin tesisine bağlar (bir kez).",
+    calistir: async (b, v) => yazmaCevabi(await teklifMusteriBagla(b.db, b.kim, v.teklif, v.surum, { musteri: v.musteri, tesis: v.tesis }), { bildirim: "Teklif müşteriye bağlandı." }),
+  }),
+  islem({
+    ad: "teklif_sil", modul: MODUL, tur: "yaz", girdi: z.object({ teklif: kimlik }), kaynak: [kimlik], islev: teklifSil,
+    tarif: "Hiç gönderilmemiş taslak teklifi kesin siler (yönetici); gönderilmişse nedeni döner (kopyalanır).",
+    calistir: async (b, v) => yazmaCevabi(await teklifSil(b.db, b.kim, v.teklif), { bildirim: "Teklif silindi." }),
   }),
 ];

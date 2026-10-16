@@ -6,9 +6,10 @@
 import { kimlik, surum, z } from "../../sema/ortak.ts";
 import { SuzgecDurumuSemasi } from "../../server/liste/liste.ts";
 import { EKRAN_KAYDEDILMEMIS, ekranRaporuKirli, islem, sayfaBilgisi, sayfala, yazmaCevabi, type Islem } from "../../server/yz/islem.ts";
-import { RAPOR_DURUM } from "../raporlar/sema.ts";
-import { DurumGirdisi, GeriGirdisi } from "./sema.ts";
-import { durumDegistir, geriGonder, onayGeriAl, onayla, onayListeleri, tumRaporlarSayfasi, type OnaySatiri } from "./server/onaylar.ts";
+import { RAPOR_DURUM, RevizeGirdisi, RevizeRedGirdisi } from "../raporlar/sema.ts";
+import { BELGE_DURUM, BELGE_TUR, DurumGirdisi, GeriGirdisi } from "./sema.ts";
+import { belgeGeriGonder, digerBelgeler } from "./server/belgeler.ts";
+import { durumDegistir, geriGonder, onayGeriAl, onayla, onayListeleri, revizeIstegiReddet, revizeyeGonder, tumRaporlarSayfasi, type OnaySatiri } from "./server/onaylar.ts";
 
 const MODUL = 15;
 const RAPOR_SURUM = z.object({ rapor: kimlik, surum });
@@ -58,5 +59,41 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
     tarif: "Tamamlanmamış raporun durumunu değiştirir: degisiklik { hedef: taslak | onayda | onaylandi, gerekce (Yeni'ye alınırsa en az 10 karakter) }.",
     calistir: async (b, v, ham) => (ekranRaporuKirli(b, [v.rapor]) ? { tamam: false, neden: EKRAN_KAYDEDILMEMIS }
       : yazmaCevabi(await durumDegistir(b.db, b.kim, v.rapor, v.surum, ham.degisiklik))),
+  }),
+  /* 2026-10-16 (2. adım b): revize istekleri ve diğer belgeler — Onaylar › Revize istekleri / Diğer belgeler tuşlarının işlevleri */
+  islem({
+    ad: "revize_istekleri", modul: MODUL, tur: "oku", girdi: z.object({ sayfa: SuzgecDurumuSemasi.shape.sayfa }), kaynak: [SuzgecDurumuSemasi], islev: onayListeleri,
+    tarif: "Tamamlanan raporlardaki bekleyen revize istekleri (teknik yönetici, en yeni üstte): rapor, sürüm, isteğin kimliği / sürümü ve gerekçesi.",
+    calistir: async (b, v) => {
+      const l = await onayListeleri(b.db, b.kim);
+      if (!l) return { tamam: false, neden: "Bu kullanıcı Onaylar'ı göremiyor." };
+      const s = sayfala(l.istekler, v.sayfa);
+      return { tamam: true, sonuc: { ...s.bilgi, istekler: s.satirlar.map((r) => ({ ...satir(r), istek: r.istek })) } };
+    },
+  }),
+  islem({
+    ad: "revizeye_gonder", modul: MODUL, tur: "yaz", girdi: RevizeGirdisi.extend({ rapor: kimlik, surum }), kaynak: [RevizeGirdisi, kimlik, surum], islev: revizeyeGonder,
+    tarif: "Tamamlanan raporu revizeye gönderir (R+1 olarak denetçiye Yeni döner; tamamlanan sürüm ve imzalı PDF saklı): rapor, surum, gerekce (en az 10).",
+    calistir: async (b, v, ham) => yazmaCevabi(await revizeyeGonder(b.db, b.kim, v.rapor, v.surum, { gerekce: ham.gerekce })),
+  }),
+  islem({
+    ad: "revize_istegi_reddet", modul: MODUL, tur: "yaz", girdi: RevizeRedGirdisi.extend({ rapor: kimlik, istek: kimlik, istek_surum: surum }),
+    kaynak: [RevizeRedGirdisi, kimlik, surum], islev: revizeIstegiReddet,
+    tarif: "Bekleyen revize isteğini reddeder (denetçi raporunda görür, yeniden isteyebilir): rapor, istek, istek_surum (revize_istekleri), gerekce (isteğe bağlı).",
+    calistir: async (b, v, ham) => yazmaCevabi(await revizeIstegiReddet(b.db, b.kim, v.rapor, v.istek, v.istek_surum, { gerekce: ham.gerekce ?? "" })),
+  }),
+  islem({
+    ad: "diger_belgeler", modul: MODUL, tur: "oku", girdi: z.object({ sayfa: SuzgecDurumuSemasi.shape.sayfa }), kaynak: [SuzgecDurumuSemasi], islev: digerBelgeler,
+    tarif: "Kullanıcının imzasını bekleyen ve imzaladığı diğer belgeler (bordro, eğitim, zimmet formu, araç tutanağı): tür, durum, sürüm. İmzalı PDF ekrandan yüklenir.",
+    calistir: async (b, v) => {
+      const d = await digerBelgeler(b.db, b.kim);
+      const s = sayfala(d.belgeler.map(({ dosya: _d, imzaliDosya: _i, ...x }) => ({ ...x, tur: BELGE_TUR[x.tur], durum: BELGE_DURUM[x.durum][0] })), v.sayfa);
+      return { tamam: true, sonuc: { ...s.bilgi, bekleyen: d.bekleyen, belgeler: s.satirlar } };
+    },
+  }),
+  islem({
+    ad: "belge_geri_gonder", modul: MODUL, tur: "yaz", girdi: z.object({ belge: kimlik, surum }), kaynak: [kimlik, surum], islev: belgeGeriGonder,
+    tarif: "İmzası beklenen kendi belgesini gönderene geri gönderir (yanlışsa).",
+    calistir: async (b, v) => yazmaCevabi(await belgeGeriGonder(b.db, b.kim, v.belge, v.surum), { bildirim: "Belge geri gönderildi." }),
   }),
 ];

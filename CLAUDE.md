@@ -405,6 +405,12 @@ pkproje/
                             sonraki işlem bekler (SIRA_BEKLER), e-posta yazılınca devam, sunucu işinden sonra hata eylemi düşürmez (sayIsYarim); açık kirli
                             raporu ezen işlem önce kaydı ister (islem.ts EKRAN_KAYDEDILMEMIS); donguTekrari imzası sonucu da görür; rapor_getir haritası
                             sayfalı (metinSayfasi); denetimler tests/yardimci/denetimler.ts sayEylemDenetimi, islemAlanlariDenetimi (SAY_ELLE_ALANLAR)
+                            · 2026-10-16 (2b): BÜTÜN MODÜLLER kataloğda (148 işlem): Personel, Ölçüm cihazları, Zimmetler, Araçlar, Sözleşmeler, Dökümanlar,
+                            Eğitimler, Muhasebe, Talepler (+ Onaylar › Talepler kararı), Onaylar kalanı (revize, diğer belgeler), Ekipman türleri, Rapor formatı
+                            (taslak / yayın / geri dönüş; format_taslak_duzenle — kaydedilmiş taslağı formatIslemleri ile, sayfa açmadan), Firma ayarları
+                            (SIRSIZ bölümler; okumada anahtar yalnız "tanımlı mı"), okuma Ana sayfa / Uyarılar / Performans; (a)'nın eksikleri (plan / rapor /
+                            teklif sil, kopyala, formatı güncelle, revize, tekliften müşteri, pasif). Dosya isteyen yüklemeler (PDF, fotoğraf) ekrandan.
+                            Yürütücüde IslemGeriAl (çalıştırıcı işi geri aldırıp nedenini söyletir). Ana sayfa modül 0 (modulAdi)
   src/modules/say-chat/     S.A.Y CHAT (523–525; pkproje §3.10): sema.ts (saf: alan / başlık seçenekleri, hazır ayar, denetim, dağılım dagit) ·
                             server/ayar.ts (523 tür ayarı — sayChatAyari, sayChatAyarKaydet, chatTanimi; göç 0084 say_chat_ayar) · ui/ChatAyarlari.tsx
                             (529: kendi sayfası /ekipman-turleri/<tür>/say-chat — Format kurucunun tuşlarından ve tür sayfasındaki kısa bölümden) · ui/eylemler.ts · 524 server/kayitlar.ts (sayChatPaneli, chatKaydet / chatFoto /

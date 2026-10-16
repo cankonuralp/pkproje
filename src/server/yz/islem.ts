@@ -190,6 +190,12 @@ export function islemleriListele(l: readonly Islem[], s: { adlar?: readonly stri
 
 /* ── yürütücü ── */
 const BEKLENMEYEN = "Beklenmeyen bir sorun oldu; işlem yapılmadı (veritabanı işlemi geri alındı).";
+/** 2026-10-16 (2. adım b): çalıştırıcı işi GERİ ALDIRIP nedenini söyletmek isterse (modül işlevi yarıda kalınca hata fırlatıyorsa — ör. eski sürüme
+    geri dönüş yayınlanamadı: GeriDonusIptal) bunu fırlatır: veritabanı işlemi geri alınır, S.A.Y'a cevap olduğu gibi döner (hata kaydı yok) */
+export class IslemGeriAl extends Error {
+  cevap: IslemCevabi;
+  constructor(cevap: IslemCevabi) { super("işlem geri alındı"); this.cevap = cevap; }
+}
 /** bir işlemi çalıştırır: katalogda mı → girdi şemadan geçiyor mu (geçmezse çalıştırıcı çağrılmaz) → kiracı işleminde, ORTAMIN kişisi ve firmasıyla */
 export async function islemYurut(katalog: readonly Islem[], o: IslemOrtami, ad: string, girdi: unknown):
   Promise<{ islem: Islem | null; cevap: IslemCevabi; sema?: Record<string, unknown> }> {
@@ -205,6 +211,7 @@ export async function islemYurut(katalog: readonly Islem[], o: IslemOrtami, ad: 
       kaydedilmemis: o.kaydedilmemis === true, epostaGonder: o.epostaGonder }, g.data, girdi ?? {}));
     return { islem: t, cevap };
   } catch (e) {
+    if (e instanceof IslemGeriAl) return { islem: t, cevap: e.cevap };
     o.hata?.(e, t.ad);
     return { islem: t, cevap: { tamam: false, neden: BEKLENMEYEN } };
   }

@@ -6,6 +6,8 @@
       (plan_ac_secenekleri), planı açar (plan_ac) — hepsi SUNUCUDA, sayfa gezilmeden; cevap planın numarasıyla; açık Planlar listesi F5'siz yeni planı
       gösterir (iş veri değiştirdi → sayfa kendiliğinden yenilendi); plan gerçekten açıldı (planın sayfası).
    2. S.A.Y MÜŞTERİ ARAR: Ana sayfadayken (Müşteriler açık değil) müşteriyi sunucu işlemiyle bulur ve söyler.
+   3. (2026-10-16, 2. adım b — kalan modüller) S.A.Y SÖZLEŞME HAZIRLAR: Sözleşmeler listesindeyken seçenekleri okur (sozlesme_secenekleri), sözleşmeyi
+      hazırlar (sozlesme_hazirla — numara sunucuda); cevap numarayla; açık liste F5'siz yeni sözleşmeyi gösterir.
    Kişi, firma ve yetki oturumdan (yürütücü — kilitler tests/say-islem*.test.ts). */
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { E2E_ISLEM, E2E_KAPI, E2E_PAROLA, E2E_YZ } from "./hesaplar";
@@ -79,4 +81,19 @@ test("S.A.Y müşteri arar — Müşteriler sayfası açık değilken sunucu iş
   await sor(p, "İşlem Deneme müşterisini bul [islem-ara]");
   await expect(p.getByRole("listitem").filter({ hasText: `Buldum: ${E2E_ISLEM.musteri} (1 tesis).` })).toBeVisible({ timeout: 60_000 });
   await expect(p).not.toContainText("sayfa açık değil");
+});
+
+test("S.A.Y sözleşme hazırlar — kalan modülün sunucu işlemleriyle; açık Sözleşmeler listesi F5'siz yeni sözleşmeyi gösterir", async ({ page }) => {
+  test.setTimeout(120_000);
+  await giris(page);
+  await page.goto(`${Y}/sozlesmeler`);
+  await hazir(page);
+  const p = await panel(page);
+  await sor(p, `${E2E_ISLEM.musteri} için ${E2E_ISLEM.tesis} kapsamında 12 aylık sözleşme hazırla [islem-sozlesme]`);
+  const cevap = p.getByRole("listitem").filter({ hasText: /Yaptım: sözleşme hazırlandı — IS-\d{4}-\d{3}\./ });
+  await expect(cevap).toBeVisible({ timeout: 60_000 });
+  const no = /IS-\d{4}-\d{3}/.exec(await cevap.innerText())?.[0];
+  expect(no).toBeTruthy();
+  /* iş veri değiştirdi → açık Sözleşmeler listesi kendiliğinden yenilendi */
+  await expect(page.locator("main").getByText(no!, { exact: true }).first()).toBeVisible({ timeout: 30_000 });
 });

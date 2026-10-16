@@ -73,6 +73,8 @@ export const BelgeTuruGirdisi = z.object({
   kisisel: z.boolean(),
 });
 /** müşteriye açılabilecek sabit türler (maket MV.musteriBelgeTur): [anahtar, ad, kişisel veri] — eğitim sertifikaları ve firmanın türleri arada */
+/** firmanın eklediği özlük belge türünün anahtarı (ek1–ek999; 335) — kaldırırken (2026-10-16 S.A.Y da) */
+export const EkTurAnahtari = z.string().regex(/^ek\d{1,3}$/, "Belge türü bulunamadı.");
 export const MUSTERI_BELGE_BAS = [["ekipnet", "EKİPNET kayıt belgesi", false], ["diploma", "Diploma", false], ["oda", "Oda kaydı", false], ["atama", "Ekipman atama belgesi", false]] as const;
 export const MUSTERI_BELGE_SON = [["kimlik", "Kimlik belgesi", true], ["saglik", "Sağlık raporu", true], ["is", "İş sözleşmesi", true], ["diger", "Diğer", true]] as const;
 

@@ -6,7 +6,7 @@ import { kimlik, surum, z } from "../../sema/ortak.ts";
 import { SuzgecDurumuSemasi } from "../../server/liste/liste.ts";
 import { GORUNMEZ, islem, sayfala, trIcerir, yazmaCevabi, type Islem } from "../../server/yz/islem.ts";
 import { MusteriGirdisi, TesisGirdisi } from "./sema.ts";
-import { musteriKarti, musteriKaydet, musteriListesi, tesisKarti, tesisKaydet } from "./server/musteriler.ts";
+import { musteriKarti, musteriKaydet, musteriListesi, musteriPasif, musteriSil, tesisKarti, tesisKaydet, tesisPasif, tesisSil } from "./server/musteriler.ts";
 
 const MODUL = 3;
 const MUSTERI_ALAN = ["unvan", "kisa", "vd", "vno", "eposta", "tel", "ilgili"] as const;
@@ -70,5 +70,26 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
       const g = alanlar(TESIS_ALAN, mevcut, (ham.alanlar ?? {}) as Record<string, unknown>);
       return yazmaCevabi(await tesisKaydet(b.db, b.kim, v.musteri, v.tesis, v.surum, g, v.onay));
     },
+  }),
+  /* 2026-10-16 (2. adım b): pasif / etkin ve kesin sil — müşteri ve tesis kartının tuşlarının işlevleri */
+  islem({
+    ad: "musteri_pasif", modul: MODUL, tur: "yaz", girdi: z.object({ musteri: kimlik, surum, pasif: z.boolean() }), kaynak: [kimlik, surum], islev: musteriPasif,
+    tarif: "Müşteriyi pasife alır (pasif: true — etkin tesisleri de pasif olur) ya da etkinleştirir (pasif: false — onunla pasif olan tesisler döner).",
+    calistir: async (b, v) => yazmaCevabi(await musteriPasif(b.db, b.kim, v.musteri, v.surum, v.pasif), { bildirim: v.pasif ? "Müşteri pasife alındı." : "Müşteri etkinleştirildi." }),
+  }),
+  islem({
+    ad: "tesis_pasif", modul: MODUL, tur: "yaz", girdi: z.object({ tesis: kimlik, surum, pasif: z.boolean() }), kaynak: [kimlik, surum], islev: tesisPasif,
+    tarif: "Tesisi pasife alır ya da etkinleştirir (müşterisi pasifse önce müşteri etkinleştirilir).",
+    calistir: async (b, v) => yazmaCevabi(await tesisPasif(b.db, b.kim, v.tesis, v.surum, v.pasif), { bildirim: v.pasif ? "Tesis pasife alındı." : "Tesis etkinleştirildi." }),
+  }),
+  islem({
+    ad: "musteri_sil", modul: MODUL, tur: "yaz", girdi: z.object({ musteri: kimlik }), kaynak: [kimlik], islev: musteriSil,
+    tarif: "Hiç kullanılmamış müşteriyi (tesisleriyle) kesin siler (firma yöneticisi); kullanılmışsa nedeni döner (pasife alınır).",
+    calistir: async (b, v) => { const r = await musteriSil(b.db, b.kim, v.musteri); return yazmaCevabi(r, { bildirim: r.durum === "tamam" ? `${r.ad} silindi.` : undefined }); },
+  }),
+  islem({
+    ad: "tesis_sil", modul: MODUL, tur: "yaz", girdi: z.object({ tesis: kimlik }), kaynak: [kimlik], islev: tesisSil,
+    tarif: "Hiç kullanılmamış tesisi kesin siler (firma yöneticisi); kullanılmışsa nedeni döner.",
+    calistir: async (b, v) => { const r = await tesisSil(b.db, b.kim, v.tesis); return yazmaCevabi(r, { bildirim: r.durum === "tamam" ? `${r.ad} silindi.` : undefined }); },
   }),
 ];

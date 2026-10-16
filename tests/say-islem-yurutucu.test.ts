@@ -19,7 +19,7 @@ import { test } from "node:test";
 import { kimlik, z } from "../src/sema/ortak.ts";
 import type { Sorgulayici } from "../src/server/db/kiraci.ts";
 import {
-  EKRAN_KAYDEDILMEMIS, ekranRaporuKirli, islem, islemOzeti, islemYurut, metinSayfasi, sunucuKomutu, yazmaCevabi, type IslemBaglami, type IslemOrtami,
+  EKRAN_KAYDEDILMEMIS, ekranRaporuKirli, islem, IslemGeriAl, islemOzeti, islemYurut, metinSayfasi, sunucuKomutu, yazmaCevabi, type IslemBaglami, type IslemOrtami,
 } from "../src/server/yz/islem.ts";
 import { oku, sayEylemDenetimi } from "./yardimci/denetimler.ts";
 
@@ -149,4 +149,17 @@ test("6. değişiklik yapmayan yazma iş sayılmaz; ekranda açık, kaydedilmemi
   assert.equal(hepsi.join("\n"), metin, "hiçbir satır düşmez");
   assert.equal(metinSayfasi(metin, 999, 10_000).bilgi.sonraki, null, "son sayfa");
   assert.deepEqual(metinSayfasi("kısa", 1).bilgi, { sayfa: 1, sayfa_sayisi: 1, sonraki: null });
+});
+
+test("7. (2026-10-16, 2. adım b) çalıştırıcı işi geri aldırıp nedenini söyletebilir: IslemGeriAl — işlem (islet) fırlatmayla geri alınır, cevap olduğu gibi döner, hata kaydı yok", async () => {
+  const o = ortam();
+  let islenen = 0;
+  const geri = [islem({ ad: "deneme_geri", modul: 13, tarif: "Deneme.", tur: "yaz", girdi: z.object({}), kaynak: [kimlik], islev: () => undefined,
+    calistir: async () => { islenen++; throw new IslemGeriAl({ tamam: false, neden: "Yayınlanamadı: deneme engeli" }); } })];
+  /* islet fırlatmayı geri iletir (gerçekte kiracı işlemi ROLLBACK) */
+  let geriAlindi = 0;
+  const ortamGeri: IslemOrtami = { ...o, islet: async <T,>(is: (db: Sorgulayici) => Promise<T>) => { try { return await is(SAHTE_DB); } catch (e) { geriAlindi++; throw e; } } };
+  const y = await islemYurut(geri, ortamGeri, "deneme_geri", {});
+  assert.deepEqual(y.cevap, { tamam: false, neden: "Yayınlanamadı: deneme engeli" });
+  assert.deepEqual([islenen, geriAlindi, o.hatalar.length], [1, 1, 0], "çalıştı, işlem geri alındı, beklenmeyen hata sayılmadı");
 });
