@@ -183,6 +183,11 @@ pkproje/
                             raporlar.ts fotoEkle kutuya izin, bölüm sayısı bütün fotoğraflardan (sayiliCevaplar, SahaRaporu, belge aynı) · belge bölümde kutu
                             adıyla (ekteki madde fotoğraflarına girmez) · saha (Bloklar foto) kutu başına "Fotoğraf ekle" · kurucu.ts fotoKutusu* · yapboz
                             kopyada yeni kimlik · S.A.Y "foto_kutusu" · kilit tests/foto-kutulari, bozan
+                            · 595 K8 DOĞRULAMA KAREKODU: src/server/dogrulama.ts (kod = rapor · revizyon · HMAC — ana sır anahtarından, firmaya bağlı;
+                            veritabanına yazılmaz) · imzaHazirla firmanın adresiyle BelgeVerisi.dogrulama → src/belge/pdf.ts raporAltBilgisi şeritte karekod
+                            (yonetim/karekod.ts) + bağlantı · açık sayfa (acik)/dogrula/[kod] → raporlar/server/dogrula-sayfa.ts (src/server/kiraci/acik.ts
+                            acikOkuma: oturumsuz, READ ONLY) + dogrulama.ts (yalnız imzalı sürümün kimliği; müşteri, kişi, PDF yok) + ui/Dogrulama.tsx ·
+                            kilit tests/dogrulama + onaylar (PG), bozan dogrulama, e2e toplu-imza
   src/modules/rapor-format/ RAPOR FORMATI (2026-10-04, 308): sürümlü tanım (rapor_format, göç 0022: taslak → yayında → eski; yayınlanan değişmez) ·
                             şablondan başlat · taslak kaydet · yayınla (kilitli Bakanlık öğesi ENGEL, öteki denetim uyarı) · yayındaki format;
                             ekran: tür sayfası "Rapor şablonu" + önizleme /ekipman-turleri/<tür>/sablon/<sürüm> · FORMAT KURUCU (338, K4):

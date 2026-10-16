@@ -4,6 +4,7 @@
 import { refresh } from "next/cache";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
+import { firmaAdresi } from "../../../server/kiraci/istek";
 import { depo } from "../../../server/dosya/depo";
 import { belgePdf } from "../../../belge/pdf";
 import {
@@ -172,7 +173,7 @@ export async function raporFormatGuncelleEylemi(id: string, surum: number, kayit
 }
 /** İmzala (317): onaylanmış raporun kesin imzasız PDF'i sunucuda bir kez üretilir (başsız Chromium) ve saklanır */
 export async function imzaHazirlaEylemi(id: string): Promise<RaporYaniti> {
-  return islem((o) => oturumIslemi(o, (db) => imzaHazirla(db, depo(), o, o.kiraci.firmaId, metin(id), belgePdf)));
+  return islem((o) => oturumIslemi(o, (db) => imzaHazirla(db, depo(), o, o.kiraci.firmaId, metin(id), belgePdf, firmaAdresi(o.kiraci.kisaAd))));
 }
 /** imzalı PDF yükle (form: id, surum, dosya); önek, imza sözlüğü, yetki ve durum sunucuda */
 export async function imzaliYukleEylemi(form: FormData): Promise<RaporYaniti> {

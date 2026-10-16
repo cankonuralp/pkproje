@@ -49,6 +49,7 @@ import { TANIMLAR } from "../../../tanim/tanimlar.ts";
 import { firmaBelgeKunyesi } from "../../../server/ayar/ayar.ts";
 import { kayitDosyasi } from "../../../server/dosya/dosya.ts";
 import { createHash } from "node:crypto";
+import { dogrulamaAdresi, dogrulamaKodu } from "../../../server/dogrulama.ts";
 import { cihazKalibrasyonlari } from "../../olcum-cihazlari/server/cihazlar.ts";
 import { personelBelgeBilgisi } from "../../personel/server/personel.ts";
 import type { BelgeVerisi } from "../../../belge/veri.ts";
@@ -950,7 +951,7 @@ const IMZA_GECERSIZ = "Yüklenen PDF bu raporun imzaya hazırlanan PDF'i değil 
     bekleyen istek varsa onun PDF'i döner (yeniden üretilmez — imzalanacak bayt değişmesin). uret: belge → PDF (sunucuda başsız Chromium).
     Yanıtın dosyası imzasız PDF'in kimliği (596: toplu imzanın ZIP'i onu indirir — dosya ucu yetkiyi yeniden denetler). */
 export async function imzaHazirla(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, id: string,
-  uret: (v: BelgeVerisi) => Promise<Uint8Array>): Promise<RaporYazma> {
+  uret: (v: BelgeVerisi) => Promise<Uint8Array>, firmaAdresi?: string): Promise<RaporYazma> {
   const e = await erisim(db, kim, id, true);
   if (!e) return { durum: "yok" };
   if (!e.sahip || !canDoEylem(kim, "rapor_son_imza", { sahip: e.r.hesap_id })) return { durum: "yetkisiz" };
@@ -961,7 +962,10 @@ export async function imzaHazirla(db: Sorgulayici, depo: Depo, kim: Kisi, firmaI
   if (!v) return { durum: "yok" };
   /* PDF motoru düşerse rapor ekranı hata sayfasına dönmez: neden şeritte (315–317 incelemesi) */
   let pdf: Uint8Array;
-  try { pdf = await uret({ ...v.belge, kesin: true }); } catch { return { durum: "red", neden: "İmzasız PDF üretilemedi; biraz sonra yeniden deneyin." }; }
+  /* 595 K8: alt şeritteki doğrulama karekodu (firmanın adresi verildiyse; sır anahtarı yoksa karekodsuz — PDF yine üretilir) */
+  let dogrulama: string | null = null;
+  if (firmaAdresi) try { dogrulama = dogrulamaAdresi(firmaAdresi, dogrulamaKodu(firmaId, id, e.r.revizyon)); } catch { dogrulama = null; }
+  try { pdf = await uret({ ...v.belge, kesin: true, dogrulama }); } catch { return { durum: "red", neden: "İmzasız PDF üretilemedi; biraz sonra yeniden deneyin." }; }
   const y = await dosyaYukle(db, depo, { firmaId, modul: PDF_MODULU, kayitId: id, ad: `${gorunenNo(e.r.no, e.r.revizyon)}.pdf`, bayt: pdf, izinli: ["pdf"], kim: kim.ad, yukleyen: kim.id });
   if (!y.tamam) return { durum: "red", neden: "İmzasız PDF üretilemedi." };
   const kopya: IstekKopyasi = { yazan: v.belge.yazan, cihazlar: v.belge.cihazlar };

@@ -2525,6 +2525,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-16 (595k): **K8 — DOĞRULAMA KAREKODU** (reisim: *"Kanun cümlesi + rapor no + sayfa + doğrulama karekodu"*): imzaya hazırlanan PDF'in her sayfasının
+  altındaki şeritte karekod ve doğrulama adresi (firmanın adresi /dogrula/<kod>). Sayfa oturum istemez; kod tahmin edilemez (rapor + revizyon + firmaya bağlı
+  imza), başka firmanın adresinde açılmaz. Gösterilen: rapor no, muayene firması, ekipman türü ve kodu, kontrol tarihi, sonuç, e-imza zamanı; yeni revizyon
+  imzalandıysa "yeni revizyonu var" ve onun numarası; imzalı PDF yüklenmediyse "imza bekleniyor". Müşteri / tesis adı, kişi adı ve PDF gösterilmez (imzalı
+  kopya müşteri panelinde — herkese açık kalıcı dosya bağlantısı yok). Karekod yalnız yeni hazırlanan imzasız PDF'lerde (öncekiler aynı kalır).
 - 2026-10-16 (595j): **ADLI FOTOĞRAF KUTULARI** (sunum 595 madde 16): fotoğraf bölümüne kâğıtta "+ Fotoğraf kutusu ekle" — adı yazılır (ör. Etiket, Genel
   görünüm), sırası değişir, çıkarılır; sahada her kutunun kendi "Fotoğraf ekle"si, kutusuz fotoğraf "Diğer fotoğraflar"da; belgede fotoğraflar kutu
   sırasıyla, altında kutunun adı. En az / en çok bölümün bütün fotoğrafları. Kutu çıkarılır ya da format güncellenirse fotoğraf kaybolmaz (bölümde kalır).

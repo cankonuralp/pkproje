@@ -35,4 +35,6 @@ export interface BelgeVerisi {
   imza: { zaman: string; yontem: string } | null;
   /** imzaya hazırlanan KESİN belge (317): önizleme şeridi yok, imza hücresi elektronik imzayı söyler (imza PDF'in kendisinde) */
   kesin?: boolean;
+  /** 595 K8: doğrulama adresi (firmanın adresi /dogrula/<kod>) — imzaya hazırlanan kesin PDF'in alt şeridinde karekod + bağlantı */
+  dogrulama?: string | null;
 }

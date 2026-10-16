@@ -18,6 +18,7 @@ import { talepFormu, type TalepFormuVerisi } from "./talep.ts";
 import { teklifBelgesi, type TeklifBelgesiVerisi } from "./teklif.ts";
 import { zimmetFormu, type ZimmetFormuVerisi } from "./zimmet.ts";
 import { htmlYaz } from "./html.ts";
+import { karekod } from "../server/yonetim/karekod.ts";
 import type { BelgeVerisi } from "./veri.ts";
 
 /** belge dosyaları proje kökünden (Vercel'de next.config.ts outputFileTracingIncludes ile izlenir) */
@@ -48,8 +49,15 @@ const altYaziTipi = () => (altYazi ??= [...belgeCss().matchAll(/@font-face \{[^}
 /** her sayfanın altındaki şerit: yazı · rapor no · Sayfa n / N */
 export function raporAltBilgisi(v: BelgeVerisi): string {
   const a = belgeAltYazisi(v);
+  /* 595 K8 (reisim: "Kanun cümlesi + rapor no + sayfa + doğrulama karekodu"): doğrulama adresi verilmişse (imzaya hazırlanan kesin PDF —
+     raporlar imzaHazirla) şeridin solunda karekod (koyu modül beyaz zeminde, 14 mm — bant 20 mm), yazının altında adres bağlantısı */
+  const q = v.dogrulama ? karekod(v.dogrulama) : null;
+  const kod = q ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 ${q.boyut + 4} ${q.boyut + 4}" shape-rendering="crispEdges" style="width:14mm;height:14mm;flex:none">`
+    + `<rect x="-2" y="-2" width="${q.boyut + 4}" height="${q.boyut + 4}" fill="#fff"/><path d="${q.yol}" fill="#000"/></svg>` : "";
+  const adres = v.dogrulama ? `<br><span>Doğrulama: <a href="${kac(v.dogrulama)}" style="color:#000;text-decoration:none">${kac(v.dogrulama)}</a></span>` : "";
   return `<style>${altYaziTipi()}</style><div style="box-sizing:border-box;width:100%;padding:2mm 8mm 0;`
-    + `font:7.5pt/1.3 Carlito,sans-serif;color:#000;display:flex;justify-content:space-between;gap:4mm"><span style="border-top:0.6pt solid #000;flex:1">${kac(a.metin)}</span>`
+    + `font:7.5pt/1.3 Carlito,sans-serif;color:#000;display:flex;justify-content:space-between;gap:4mm">${kod}`
+    + `<span style="border-top:0.6pt solid #000;flex:1;overflow-wrap:anywhere">${kac(a.metin)}${adres}</span>`
     + `<span style="white-space:nowrap">${kac(a.no)} · Sayfa <span class="pageNumber"></span> / <span class="totalPages"></span></span></div>`;
 }
 /** formatın e-imza yeri (verilmemişse İmza hücresi; kutunun eksik ölçüsü başlangıç değerinden) */

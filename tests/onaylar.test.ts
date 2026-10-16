@@ -11,6 +11,7 @@
    596 TOPLU İMZA (reisim 2026-10-16: "imzalam sürecinde toplu imzalama için belge seçme vs olmalı"; kararlar: yalnız raporlar, tek ZIP, imzalı PDF
    içeriğinden eşleşir, en çok 50): imzalı PDF dosya adından değil içeriğinden rapora eşleşir, her biri ayrı denetlenir; "İmzaya hazır". */
 import assert from "node:assert/strict";
+import { randomBytes } from "node:crypto";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -31,6 +32,9 @@ import {
   durumDegistir, geriGonder, onayEkrani, onayGeriAl, onayla, onayListeleri, revizeIstegiReddet, revizeyeGonder, type OnayYazma,
 } from "../src/modules/onaylar/server/onaylar.ts";
 import { testKumesi } from "./yardimci/kume.ts";
+import { dogrulamaCoz } from "../src/server/dogrulama.ts";
+import { raporDogrulamaBilgisi, type RaporDogrulama } from "../src/modules/raporlar/server/dogrulama.ts";
+import type { BelgeVerisi } from "../src/belge/veri.ts";
 
 let kume: GomuluKume;
 let havuz: Havuz;
@@ -762,4 +766,51 @@ test("596 toplu imza: imzalı PDF dosya adından değil içeriğinden rapora eş
   assert.equal((await eslestir(FA.den, imzala(pdf[h2]))).sonuc.durum, "tamam");
   assert.equal((await eslestir(FA.mekDen, imzala(mPdf))).sonuc.durum, "tamam");
   assert.deepEqual([(await satir(h2)).durum, (await satir(m1)).durum], ["imzali", "imzali"]);
+});
+
+/* ── 595 K8 DOĞRULAMA (reisim: "Kanun cümlesi + rapor no + sayfa + doğrulama karekodu") ─────────────────────────────────────────────────── */
+test("595 K8 doğrulama: imzaya hazırlanan PDF'e firmanın adresiyle doğrulama adresi gider; kod oturumsuz, salt okunur okunur — imzasız, imzalı, yeni revizyonu imzalanan; başka firmanın adresinde okunmaz", async () => {
+  process.env.PROBATA_SIR_ANAHTARI ??= randomBytes(32).toString("base64");
+  const h = (await raporlar([[FA.den, "HT-2"]]))[0];
+  const kok = (await sql<{ no: string }>(A, "SELECT no FROM rapor WHERE id = $1", [h])).rows[0].no;
+  let gelen: BelgeVerisi | null = null;
+  const yakala = async (v: BelgeVerisi) => { gelen = v; return uret(); };
+  const onayVeHazirla = async () => {
+    const s = await surum(h);
+    tamam(await a(FA.mek, (db) => onayla(db, FA.mek, h, s)));
+    gelen = null;
+    tamam(await a(FA.den, (db) => imzaHazirla(db, depo, FA.den, A, h, yakala, "https://deneme-a.deneme.example")));
+    const adres = (gelen as BelgeVerisi | null)?.dogrulama ?? "";
+    assert.match(adres, /^https:\/\/deneme-a\.deneme\.example\/dogrula\/[0-9a-f-]{36}\.\d\.[\w-]{22}$/);
+    return adres.split("/dogrula/")[1];
+  };
+  /* oturumsuz (hesap bağlamı yok), salt okunur — doğrulama sayfasının okuması (src/server/kiraci/acik.ts gibi) */
+  const oku = (firma: string, kod: string) => kiraciIcinde(havuz, firma, async (db): Promise<RaporDogrulama> => {
+    await db.sorgu("SET TRANSACTION READ ONLY");
+    const c = dogrulamaCoz(kod, firma);
+    return c ? raporDogrulamaBilgisi(db, c.raporId, c.revizyon) : { durum: "yok" };
+  });
+  const k0 = await onayVeHazirla();
+  assert.equal((await oku(A, k0)).durum, "imzasiz", "imzalı PDF yüklenmeden");
+  assert.equal((await oku(B, k0)).durum, "yok", "başka firmanın adresinde");
+  tamam(await yukle(FA.den, h, await surum(h), imzala(await imzasizBayt(h))));
+  const d = await oku(A, k0);
+  assert.equal(d.durum, "gecerli");
+  if (d.durum !== "gecerli") return;
+  assert.deepEqual([d.no, d.ekipman, d.yeni, d.saklamaBitti], [kok, "HT-2", null, false]);
+  assert.ok(d.firma && d.tur !== "-" && /^\d{4}-\d{2}-\d{2}T/.test(d.imzalandi), JSON.stringify(d));
+  /* oturumsuz okuma hiçbir şey yazamaz */
+  await assert.rejects(kiraciIcinde(havuz, A, async (db) => { await db.sorgu("SET TRANSACTION READ ONLY"); await db.sorgu("UPDATE rapor SET sonuc = sonuc WHERE id = $1", [h]); }),
+    /read-only|salt okunur/i);
+  /* revize → R1 imzalanınca eski kod "yeni revizyonu var", yeni kod geçerli */
+  tamam(await revIste(FA.den, h, GEREKCE));
+  const s1 = await surum(h);
+  tamam(await a(FA.mek, (db) => revizeyeGonder(db, FA.mek, h, s1, { gerekce: GEREKCE })));
+  await sql(A, "UPDATE rapor SET durum = 'onayda', surum = surum + 1 WHERE id = $1", [h], FA.den.id);
+  const k1 = await onayVeHazirla();
+  assert.notEqual(k1, k0);
+  tamam(await yukle(FA.den, h, await surum(h), imzala(await imzasizBayt(h))));
+  const eski = await oku(A, k0), yeni = await oku(A, k1);
+  assert.deepEqual([eski.durum, eski.durum === "yenisi_var" ? eski.yeni : null], ["yenisi_var", `${kok}-R1`]);
+  assert.deepEqual([yeni.durum, yeni.durum === "gecerli" ? yeni.no : null], ["gecerli", `${kok}-R1`]);
 });
