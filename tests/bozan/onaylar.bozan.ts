@@ -13,7 +13,7 @@
    8. (0028 / 0031, 318 incelemesi) İmzalı sürüm yalnız bekleyen isteğin PDF'iyle yazılmasaydı imzaya hiç hazırlanmamış (ya da iptal edilmiş)
       bir PDF imzalı sürüm olurdu.
    9. (0031) İleri tarih kuralı olmasaydı imza gününden ileri tarihli rapor imzalanır, ekipmanın sonraki kusurlarını "giderildi" kapatırdı.
-  10. (0031) Eskimiş sürüm kuralı olmasaydı revizyonla düzeltilen yanlış (ileri) tarih başka raporun kusurunu giderilmiş doğururdu.
+  10. (0031, 0100) Eskimiş sürüm kuralı olmasaydı revizyonla düzeltilen yanlış (ileri) tarih başka raporun kusurunu giderilmiş doğururdu.
   11. (596 toplu imza) İçerik eşleşmesi (önekin SHA-256'sı) olmasaydı başka bir PDF'in imzalısı imzası bekleyen bir rapora eşleşirdi.
   12. (596) Adaylar yalnız kişinin kendi raporları olmasaydı raporu yazmayan kişi başkasının imzalı PDF'ini yükleyince raporun numarasını öğrenirdi.
    Akış ve hareket işlevlerini sonraki göçler (0027, 0029) yeniden yazdığından her kural geçtiği bütün göçlerden birlikte sökülür. */
@@ -66,6 +66,8 @@ const ESKIMIS = `        AND NOT EXISTS (SELECT 1 FROM rapor_surumu z WHERE z.fi
 /** göç → sökülecek kurallar (aynı işlevi yeniden yazan her göçten) */
 const SOK: Record<string, string[]> = {
   "0026_": [GEREKCE], "0027_": [GEREKCE, IMZA], "0028_": [IPTAL, KEMER], "0029_": [GEREKCE, IMZA, IPTAL, REVIZYON], "0031_": [KEMER, ILERI, ESKIMIS],
+  /* 2026-10-17: 0100 (şartlı uygun, sunum 595 madde 12) uygunsuzluk_koru'yu yeniden yazar — eskimiş sürüm kuralı oradan da sökülür */
+  "0100_": [ESKIMIS],
 };
 const ONAYLAR = "src/modules/onaylar/server/onaylar.ts";
 let kume: GomuluKume;
