@@ -17,7 +17,7 @@
      DEĞİŞTİRİLEBİLİR OLMALI EKİPMAN KODU HARİÇ"): tam ekipman bölümünde KAYITTAN gelen kopyalar çizilmez (tamAlanlari) — ekipman kodu ve türü
      2. bölümün sabit satırında zaten var; seri no ve kullanım yeri ekipman kaydına bağlı (raporda değiştirilebilir) alan olur, aynısı varsa çıkar.
      Ekran ve belge aynı listeden; Format kurucu formatın kendisini gösterir (sade: false). */
-import { EKIPMAN_ALAN_ADI, type Bolum, type BolumOf, type EkipmanAlani, type FormatTanimi } from "./tanim.ts";
+import { EKIPMAN_ALAN_ADI, type Bolum, type BolumOf, type EkipmanAlani, type FormatTanimi, type ImzaSatiri } from "./tanim.ts";
 import { sonucKurallariniYaz } from "./sonuc.ts";
 
 const kucuk = (s: string) => s.toLocaleLowerCase("tr");
@@ -156,3 +156,20 @@ export const altGrupSonu = (l: readonly DuzenBolumu[], v: number) => { const s =
 /** 486 (reisim 2026-10-10 ekran görüntüsü: linye tablosunda "No | No | Devre"): tablonun sıra sütununun başlığı — formatın kendi "No" sütunu varsa
     "Sıra", yoksa "No" (saha ekranı, kâğıt, belge aynı) */
 export const siraBasligi = (b: { sutunlar: readonly { ad: string }[] }) => (b.sutunlar.some((s) => /^\s*no\.?\s*$/iu.test(s.ad)) ? "Sıra" : "No");
+
+/* 595 (sunum 595 madde 1): imza bölümünün satırları — tanımdakiler; eski formatta (satirlar yok) imzalar'dan bugünkü satırlar, bugünkü sırayla ve
+   adlarıyla (belge aynı çizilir). Varsayılan satırların kimlikleri yalnız bu listede (tanıma kurucu yeni kimlikle yazar). */
+const UZMAN_SATIRLARI: readonly ImzaSatiri[] = [
+  { id: "imz_ad", ad: "Adı soyadı", kim: "uzman", alan: "ad" }, { id: "imz_meslek", ad: "Mesleği", kim: "uzman", alan: "meslek" },
+  { id: "imz_ekipnet", ad: "Yetkili kişi kayıt no (EKİPNET)", kim: "uzman", alan: "ekipnet" }, { id: "imz_diploma", ad: "Diploma no", kim: "uzman", alan: "diploma" },
+  { id: "imz_oda", ad: "Oda sicil no", kim: "uzman", alan: "oda" }, { id: "imz_imza", ad: "İmzası", kim: "uzman", alan: "imza", tam: true },
+];
+const TEKNIK_SATIRLARI: readonly ImzaSatiri[] = [
+  { id: "imz_t_ad", ad: "Onaylayan teknik yönetici", kim: "teknik", alan: "ad" }, { id: "imz_t_zaman", ad: "Onay zamanı", kim: "teknik", alan: "zaman" },
+];
+/** kişinin varsayılan satırları (bölüm ayarında kişi eklenince bunlar gelir) */
+export const imzaVarsayilani = (kim: "uzman" | "teknik"): readonly ImzaSatiri[] => (kim === "uzman" ? UZMAN_SATIRLARI : TEKNIK_SATIRLARI);
+export function imzaSatirlari(b: BolumOf<"imza">): readonly ImzaSatiri[] {
+  if (b.satirlar) return b.satirlar;
+  return [...(b.imzalar.includes("uzman") ? UZMAN_SATIRLARI : []), ...(b.imzalar.includes("teknik") ? TEKNIK_SATIRLARI : [])];
+}

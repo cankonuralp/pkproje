@@ -6,9 +6,9 @@
    yalnız "Bakanlık formatının parçası" işaretidir. Sabit kalanlar reisim'in kararı: ölçüm cihazları bölümü (459; firma bilgileri kâğıtta sabit). */
 import { SINIR_ISARETI } from "../../format/hesap.ts";
 import { kilitliKimlikler } from "../../format/motor.ts";
-import { ekipmanTamYap } from "../../format/duzen.ts";
-import { Bolum, EKIPMAN_ALAN_ADI, KUNYE_ALANLARI, KURAL_EN_COK, kurucudan, type Blok, type EkipmanAlani, type FormatTanimi, type KunyeAlani, type Sinir,
-  type SonucKurali } from "../../format/tanim.ts";
+import { ekipmanTamYap, imzaSatirlari, imzaVarsayilani } from "../../format/duzen.ts";
+import { Bolum, EKIPMAN_ALAN_ADI, IMZA_ALAN_ADI, imzaAlanlari, KUNYE_ALANLARI, KURAL_EN_COK, kurucudan, type Blok, type BolumOf, type EkipmanAlani, type FormatTanimi,
+  type ImzaAlani, type ImzaKisisi, type ImzaSatiri, type KunyeAlani, type Sinir, type SonucKurali } from "../../format/tanim.ts";
 import { kilitliKunye } from "../../format/kunye.ts";
 import { FORMUL_EN_UZUN, formulAdDegistir, formulDuzelt } from "../../format/formul.ts";
 import { varsayilanKurallar } from "../../format/sonuc.ts";
@@ -24,12 +24,13 @@ export function kimlikler(t: FormatTanimi): Set<string> {
     if (b.blok === "liste") for (const g of b.gruplar) { s.add(g.id); for (const m of g.maddeler) s.add(m.id); }
     if (b.blok === "olcum") for (const c of b.sutunlar) s.add(c.id);
     if (b.blok === "test") for (const d of b.degerler) s.add(d.id);
+    if (b.blok === "imza") for (const x of b.satirlar ?? []) s.add(x.id);
   }
   return s;
 }
 
 /** önek + en küçük kullanılmayan sayı (ör. "k_a3"): şablonların kimlikleriyle çakışmaz, tanımda tekil */
-export function yeniKimlik(t: FormatTanimi, onek: "b" | "a" | "g" | "m" | "s" | "d", ek: ReadonlySet<string> = new Set()): string {
+export function yeniKimlik(t: FormatTanimi, onek: "b" | "a" | "g" | "m" | "s" | "d" | "i", ek: ReadonlySet<string> = new Set()): string {
   const var_ = kimlikler(t);
   let n = 1;
   while (var_.has(`k_${onek}${n}`) || ek.has(`k_${onek}${n}`)) n++;
@@ -393,3 +394,69 @@ export function kunyeKilitYaz(t: FormatTanimi, a: KunyeAlani, kilitli: boolean):
   return { ...t, gorunum: { ...t.gorunum, kilitli: KUNYE_ALANLARI.filter((x) => k.has(x)) } };
 }
 
+/* ── İMZA BÖLÜMÜNÜN SATIRLARI (595; sunum 595 madde 1 — reisim: "mesela teknik yönetici için unvan diploma no gibi satırlar eklemek istedim
+   ekleyemedim"): satırın adı, sırası, varlığı formatın; değeri kişinin kaydından. Eski bölüm (satırsız) ilk değişiklikte bugünkü satırlarıyla
+   tanıma yazılır (yeni kimliklerle) — dokunulmayan format aynı kalır. imzalar satırlardaki kişilerin özeti (en az biri; hiç kişi satırı yoksa
+   uzman — şemanın en az bir kuralı, çizimde satırlar geçerli). ── */
+type ImzaB = BolumOf<"imza">;
+const imzaBolumu = (t: FormatTanimi, i: number): ImzaB | null => { const b = t.bolumler[i]; return b?.blok === "imza" ? b : null; };
+/** satırları yazar: kimliksiz (varsayılandan gelen) satıra yeni kimlik; imzalar özeti */
+function imzaYaz(t: FormatTanimi, i: number, l: readonly (Omit<ImzaSatiri, "id"> & { id?: string })[]): FormatTanimi {
+  const b = imzaBolumu(t, i);
+  if (!b) return t;
+  const ek = new Set<string>(), var_ = kimlikler({ ...t, bolumler: t.bolumler.map((x, j) => (j === i ? { ...b, satirlar: [] } : x)) });
+  const satirlar = l.slice(0, 40).map((x): ImzaSatiri => {
+    const id = x.id && !var_.has(x.id) && !ek.has(x.id) && !x.id.startsWith("imz_") ? x.id : yeniKimlik({ ...t, bolumler: [] }, "i", new Set([...var_, ...ek]));
+    ek.add(id);
+    return { ...x, id };
+  });
+  const kisiler = (["uzman", "teknik"] as const).filter((k) => satirlar.some((x) => x.kim === k));
+  return { ...t, bolumler: t.bolumler.map((x, j) => (j === i ? { ...b, satirlar, imzalar: kisiler.length ? kisiler : ["uzman"] } : x)) };
+}
+/** kişinin henüz eklenmemiş bilgileri ("+ Satır ekle" seçenekleri) */
+export function eksikImzaAlanlari(b: ImzaB, kim: "uzman" | "teknik"): ImzaAlani[] {
+  const l = imzaSatirlari(b);
+  return imzaAlanlari(kim).filter((a) => !l.some((x) => x.kim === kim && x.alan === a));
+}
+/** satır ekler (kişi bilgisi ya da serbest satır) — sona; kimliği döner (adı yazma kipinde açılsın) */
+export function imzaSatiriEkle(t: FormatTanimi, i: number, kim: ImzaKisisi, alan?: ImzaAlani, ad?: string): { t: FormatTanimi; id: string | null } {
+  const b = imzaBolumu(t, i);
+  if (!b) return { t, id: null };
+  if (kim !== "diger" && (!alan || !imzaAlanlari(kim).includes(alan))) return { t, id: null };
+  const varsayilan = kim === "diger" ? "Yeni satır" : kim === "teknik" && alan === "ad" ? "Onaylayan teknik yönetici" : IMZA_ALAN_ADI[alan!];
+  const y = imzaYaz(t, i, [...imzaSatirlari(b), { kim, ...(kim === "diger" ? {} : { alan }), ad: (ad ?? varsayilan).trim().slice(0, 200) || varsayilan, ...(alan === "imza" ? { tam: true } : {}) }]);
+  return { t: y, id: (imzaBolumu(y, i)?.satirlar ?? []).at(-1)?.id ?? null };
+}
+/** satırın adı, sabit yazısı (serbest satır), tam satırlığı */
+export function imzaSatiriYaz(t: FormatTanimi, i: number, id: string, y: { ad?: string; metin?: string; tam?: boolean }): FormatTanimi {
+  const b = imzaBolumu(t, i);
+  if (!b) return t;
+  const l = imzaSatirlari(b);
+  if (!l.some((x) => x.id === id)) return t;
+  return imzaYaz(t, i, l.map((x) => {
+    if (x.id !== id) return x;
+    const ad = y.ad === undefined ? x.ad : y.ad.trim().replace(/\s+/g, " ").slice(0, 200) || x.ad;
+    const metin = x.kim !== "diger" ? undefined : y.metin === undefined ? x.metin : y.metin.trim().slice(0, 400) || undefined;
+    const tam = y.tam === undefined ? x.tam : y.tam || undefined;
+    return { ...x, ad, metin, tam };
+  }));
+}
+export function imzaSatiriSil(t: FormatTanimi, i: number, id: string): FormatTanimi {
+  const b = imzaBolumu(t, i);
+  return b ? imzaYaz(t, i, imzaSatirlari(b).filter((x) => x.id !== id)) : t;
+}
+/** satırı bir yukarı (-1) ya da aşağı (1) taşır */
+export function imzaSatiriTasi(t: FormatTanimi, i: number, id: string, yon: -1 | 1): FormatTanimi {
+  const b = imzaBolumu(t, i);
+  if (!b) return t;
+  const l = imzaSatirlari(b), j = l.findIndex((x) => x.id === id);
+  return j < 0 || j + yon < 0 || j + yon >= l.length ? t : imzaYaz(t, i, tasi(l, j, j + yon));
+}
+/** kişiyi ekler (varsayılan satırlarıyla, sona) ya da bütün satırlarıyla çıkarır */
+export function imzaKisisiYaz(t: FormatTanimi, i: number, kim: "uzman" | "teknik", var_: boolean): FormatTanimi {
+  const b = imzaBolumu(t, i);
+  if (!b) return t;
+  const l = imzaSatirlari(b), simdi = l.some((x) => x.kim === kim);
+  if (var_ === simdi) return t;
+  return imzaYaz(t, i, var_ ? [...l, ...imzaVarsayilani(kim).map((x) => ({ ad: x.ad, kim: x.kim, alan: x.alan, tam: x.tam }))] : l.filter((x) => x.kim !== kim));
+}

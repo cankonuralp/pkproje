@@ -7,12 +7,16 @@
      (formül formulDuzelt'le köşeli parantezli biçime; adı değişen öğe formüllerde de değişir) — format yapıcının kendi tuşlarıyla aynı yol.
    Değişiklik ekranda TASLAKTA olur (geri al / Kaydet / Yayınla kişide); yapılamayan işlem nedeniyle döner.
    2026-10-16 (pkproje §9 "SONUÇ KURALI FORMAT YAPICIDA"): ölçüm tablosunun sonuç kuralı haritada ve "sonuc_kurali" işlemiyle (yaz / kaldır / Bakanlık
-   kuralına dön) — kurucunun tuşlarıyla aynı yol (kurucu.ts sonucKuraliYaz, bakanlikKuralinaDon). */
+   kuralına dön) — kurucunun tuşlarıyla aynı yol (kurucu.ts sonucKuraliYaz, bakanlikKuralinaDon).
+   595 (sunum 595 madde 1): imza bölümünün satırları haritada ve "imza_satiri" işlemiyle (ekle — kişinin bilgisi ya da serbest satır —, değiştir:
+   ad / sabit yazı / tam satır, çıkar, yukarı, aşağı) — kurucunun tuşlarıyla aynı yol (kurucu.ts imzaSatiri*). */
 import { SINIR_ISARETI } from "../../format/hesap.ts";
+import { imzaSatirlari } from "../../format/duzen.ts";
 import { etkinKurallar } from "../../format/sonuc.ts";
-import { KURAL_EN_COK, type Blok, type Bolum, type FormatTanimi, type SonucKurali } from "../../format/tanim.ts";
+import { IMZA_ALAN_ADI, IMZA_ALANLARI, IMZA_KISI_ADI, KURAL_EN_COK, type Blok, type Bolum, type FormatTanimi, type ImzaAlani, type SonucKurali } from "../../format/tanim.ts";
 import {
-  bakanlikKuralinaDon, bolumAdi, bolumSil, grupEkle, maddeEkle, ogeEkle, ogeSil, ogeYaz, sonucKuraliYaz, yeniBolum, yeniKimlik, type OgeTuru, type OgeYamasi,
+  bakanlikKuralinaDon, bolumAdi, bolumSil, grupEkle, imzaSatiriEkle, imzaSatiriSil, imzaSatiriTasi, imzaSatiriYaz, maddeEkle, ogeEkle, ogeSil, ogeYaz,
+  sonucKuraliYaz, yeniBolum, yeniKimlik, type OgeTuru, type OgeYamasi,
 } from "./kurucu.ts";
 
 /** haritanın en çok uzunluğu (karakter) */
@@ -42,6 +46,10 @@ export function formatHaritasi(t: FormatTanimi): string {
       k.forEach((x, j) => l.push(`  ${j + 1}) ${x.kosul || "(boş)"}${x.neden ? ` · neden ${x.neden}` : ""}${x.agir ? " · ağır kusur" : ""}`));
     } else if (b.blok === "test") for (const d of b.degerler) {
       l.push(`- ${d.id} · ${d.ad} · test değeri, ${d.secenekler?.length ? `seçim: ${d.secenekler.join(" / ")}` : d.metin ? "yazı" : "sayı"}${d.birim ? ` (${d.birim})` : ""}${d.formul ? ` · formül ${d.formul}` : ""}${sinirMetni(d)}`);
+    } else if (b.blok === "imza") {
+      for (const s of imzaSatirlari(b)) {
+        l.push(`- ${s.id} · ${s.ad} · imza satırı, ${IMZA_KISI_ADI[s.kim]}${s.alan ? ` · ${IMZA_ALAN_ADI[s.alan]}` : ""}${s.metin ? ` · yazı: ${s.metin.slice(0, 80)}` : ""}${s.tam ? " · tam satır" : ""}`);
+      }
     } else if (b.blok === "liste") {
       l.push(`  cevaplar: ${b.cevaplar.join(" / ")}`);
       for (const g of b.gruplar) {
@@ -60,6 +68,9 @@ export interface FormatIslemi {
   op?: unknown; sinir?: unknown; zorunlu?: unknown; grup?: unknown; sonra?: unknown;
   /** sonuc_kurali: kurallar (boş liste kaldırır) ya da bakanlik: true (Bakanlık kuralına dön) */
   kurallar?: unknown; bakanlik?: unknown;
+  /** imza_satiri (595): eylem (ekle | degistir | cikar | yukari | asagi), kisi (uzman | teknik | diger), bilgi (kişinin bilgisi), yazi (serbest
+      satırın sabit yazısı), tam (tam satır) */
+  eylem?: unknown; kisi?: unknown; bilgi?: unknown; yazi?: unknown; tam?: unknown;
 }
 const metin = (x: unknown, n = 200) => (typeof x === "string" ? x.trim().replace(/\s+/g, " ").slice(0, n) : "");
 const tr = (s: string) => s.trim().toLocaleLowerCase("tr");
@@ -159,6 +170,42 @@ export function formatIslemleri(t0: FormatTanimi, islemler: readonly FormatIslem
       yapilan.push(l.length ? `“${b.ad}” tablosunun sonuç kuralı yazıldı (${l.length} kural)` : `“${b.ad}” tablosunun sonuç kuralları kaldırıldı (Sonuç'u denetçi seçer)`);
       continue;
     }
+    if (islem === "imza_satiri") {
+      if (b.blok !== "imza") { red(`imza satırı yalnız imza bölümünde olur (“${b.ad}”)`); continue; }
+      const eylem = metin(x.eylem, 20);
+      if (eylem === "ekle") {
+        const kim = metin(x.kisi, 20);
+        if (kim !== "uzman" && kim !== "teknik" && kim !== "diger") { red("kisi: uzman, teknik ya da diger"); continue; }
+        const bilgi = metin(x.bilgi, 20) as ImzaAlani;
+        if (kim !== "diger" && !(IMZA_ALANLARI as readonly string[]).includes(bilgi)) { red(`bilgi şunlardan biri olmalı: ${IMZA_ALANLARI.join(", ")}`); continue; }
+        const y = imzaSatiriEkle(t, i, kim, kim === "diger" ? undefined : bilgi, metin(x.ad) || undefined);
+        if (!y.id) { red("bu kişinin bu bilgisi olmaz (onay zamanı yalnız teknik yöneticide)"); continue; }
+        t = y.t;
+        if (kim === "diger" && typeof x.yazi === "string") t = imzaSatiriYaz(t, i, y.id, { metin: x.yazi });
+        yapilan.push(`“${b.ad}” bölümüne imza satırı eklendi: ${metin(x.ad) || (kim === "diger" ? "Yeni satır" : IMZA_ALAN_ADI[bilgi])}`);
+        continue;
+      }
+      const k = metin(x.oge), l = imzaSatirlari(b);
+      const s = l.find((o) => o.id === k) ?? l.find((o) => tr(o.ad) === tr(k));
+      if (!s) { red(`imza satırı bulunamadı (${metin(x.oge, 60) || "—"})`); continue; }
+      if (eylem === "cikar") { t = imzaSatiriSil(t, i, s.id); yapilan.push(`“${s.ad}” imza satırı çıkarıldı`); continue; }
+      if (eylem === "yukari" || eylem === "asagi") {
+        const once = t;
+        t = imzaSatiriTasi(t, i, s.id, eylem === "yukari" ? -1 : 1);
+        if (t === once) { red(`“${s.ad}” ${eylem === "yukari" ? "en üstte" : "en altta"}`); continue; }
+        yapilan.push(`“${s.ad}” ${eylem === "yukari" ? "yukarı" : "aşağı"} taşındı`); continue;
+      }
+      if (eylem === "degistir") {
+        const y: { ad?: string; metin?: string; tam?: boolean } = {};
+        if (metin(x.ad)) y.ad = metin(x.ad);
+        if (typeof x.yazi === "string") y.metin = x.yazi;
+        if (typeof x.tam === "boolean") y.tam = x.tam;
+        if (!Object.keys(y).length) { red("değişecek bir şey yok"); continue; }
+        t = imzaSatiriYaz(t, i, s.id, y); yapilan.push(`“${s.ad}” imza satırı değişti`); continue;
+      }
+      red("eylem: ekle, degistir, cikar, yukari ya da asagi");
+      continue;
+    }
     if (islem === "grup_ekle") {
       if (b.blok !== "liste") { red("grup yalnız kontrol listesine eklenir"); continue; }
       const ad = metin(x.ad);
@@ -199,7 +246,7 @@ export function formatIslemleri(t0: FormatTanimi, islemler: readonly FormatIslem
       yapilan.push(`“${ad}” değişti`);
       continue;
     }
-    red("bilinmeyen işlem (bolum_ekle, bolum_sil, bolum_adi, grup_ekle, oge_ekle, oge_degistir, oge_sil, sonuc_kurali)");
+    red("bilinmeyen işlem (bolum_ekle, bolum_sil, bolum_adi, grup_ekle, oge_ekle, oge_degistir, oge_sil, sonuc_kurali, imza_satiri)");
   }
   return { t, yapilan, gecersiz };
 }
@@ -214,7 +261,9 @@ export const FORMAT_ARACI = {
     + "değişecek alanlar), oge_sil (oge), sonuc_kurali (ölçüm tablosunun satır sonucu: kurallar — her biri kosul: DOĞRU / YANLIŞ veren formül, ör. "
     + "[Direnç] > 50; neden: sağlanmazsa yazılan, \"=\" ile başlarsa formül; aciklama; agir — listenin tamamı yazılır, boş liste kuralları kaldırır; ya da "
     + "bakanlik: true Bakanlık kuralına döner; ZS([Açma eğrisi]; [In]) Zs'yi verir). Formül: aynı satırın / formatın sayılarıyla, örn. 480 / [RCd] — "
-    + "boşluklu ad köşeli parantezle. Değişiklik taslakta olur; kullanıcı Kaydet ve Yayınla der.",
+    + "boşluklu ad köşeli parantezle. imza_satiri (imza bölümünün satırları: eylem ekle — kisi uzman | teknik | diger, bilgi ad | meslek | ekipnet | diploma | "
+    + "oda | eposta | tel | imza | zaman (zaman yalnız teknikte), ad, serbest satırda yazi —, degistir (oge + ad / yazi / tam), cikar, yukari, asagi). "
+    + "Değişiklik taslakta olur; kullanıcı Kaydet ve Yayınla der.",
   input_schema: {
     type: "object",
     properties: {
@@ -223,13 +272,15 @@ export const FORMAT_ARACI = {
         items: {
           type: "object",
           properties: {
-            islem: { type: "string", enum: ["bolum_ekle", "bolum_sil", "bolum_adi", "grup_ekle", "oge_ekle", "oge_degistir", "oge_sil", "sonuc_kurali"] },
+            islem: { type: "string", enum: ["bolum_ekle", "bolum_sil", "bolum_adi", "grup_ekle", "oge_ekle", "oge_degistir", "oge_sil", "sonuc_kurali", "imza_satiri"] },
             bolum: { type: "string" }, oge: { type: "string" }, tur: { type: "string" }, ad: { type: "string" }, birim: { type: "string" },
             formul: { type: "string" }, secenekler: { type: "array", items: { type: "string" } }, op: { type: "string" }, sinir: { type: "number" },
             zorunlu: { type: "boolean" }, grup: { type: "string" }, sonra: { type: "string" },
             kurallar: { type: "array", maxItems: KURAL_EN_COK, items: { type: "object", properties: {
               kosul: { type: "string" }, neden: { type: "string" }, aciklama: { type: "string" }, agir: { type: "boolean" } }, required: ["kosul"] } },
             bakanlik: { type: "boolean" },
+            eylem: { type: "string", enum: ["ekle", "degistir", "cikar", "yukari", "asagi"] }, kisi: { type: "string", enum: ["uzman", "teknik", "diger"] },
+            bilgi: { type: "string", enum: [...IMZA_ALANLARI] }, yazi: { type: "string" }, tam: { type: "boolean" },
           },
           required: ["islem"],
         },

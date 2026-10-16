@@ -180,10 +180,14 @@ export async function denetciAdaylari(db: Sorgulayici): Promise<{ id: string; ad
 
 /** Planlar için (plan kartı): verilen kişilerin adı ve mesleki bilgisi — ayrılan personel dahil (eski planlarda adı görünsün). Yetki ÇAĞIRANDA. */
 /** Raporlar (belge, Yetkili kişi bölümü) için: ad, meslek, EKİPNET, diploma ve oda sicil no; yoksa null. Yetki ÇAĞIRANDA. */
-export async function personelBelgeBilgisi(db: Sorgulayici, id: string): Promise<{ ad: string; meslek: string; ekipnet: string | null; diploma: string | null; oda: string | null } | null> {
+/** belgedeki kişi bilgileri (595: imza bölümünün satırları — meslek adı "diğer"de, e-posta ve telefon da) */
+export async function personelBelgeBilgisi(db: Sorgulayici, id: string): Promise<{ ad: string; meslek: string; meslekMetin: string | null; ekipnet: string | null;
+  diploma: string | null; oda: string | null; eposta: string | null; tel: string | null } | null> {
   if (!/^[0-9a-f-]{36}$/.test(id)) return null;
-  return (await db.sorgu<{ ad: string; meslek: string; ekipnet: string | null; diploma: string | null; oda: string | null }>(
-    "SELECT ad, meslek, ekipnet, diploma, oda FROM personel WHERE id = $1", [id])).rows[0] ?? null;
+  const x = (await db.sorgu<{ ad: string; meslek: string; meslek_metin: string | null; ekipnet: string | null; diploma: string | null; oda: string | null;
+    eposta: string | null; imza_tel: string | null }>(
+    "SELECT ad, meslek, meslek_metin, ekipnet, diploma, oda, eposta, imza_tel FROM personel WHERE id = $1", [id])).rows[0];
+  return x ? { ad: x.ad, meslek: x.meslek, meslekMetin: x.meslek_metin, ekipnet: x.ekipnet, diploma: x.diploma, oda: x.oda, eposta: x.eposta, tel: x.imza_tel } : null;
 }
 
 /** 566 (sunucuda sayfalı listeler): öteki modüllerin liste sorgusunda birleştirdiği OKUMA PARÇASI — personelin firması, kimliği, adı. */

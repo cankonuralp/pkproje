@@ -38,7 +38,7 @@ import { tarihNo } from "../../../components/secim/tarih";
 import { Tus, tusSinifi } from "../../../components/tus/Tus";
 import { SINIR_ISARETI } from "../../../format/hesap";
 import { ELLE_GEREKCE, ELLE_GEREKCE_EN_AZ, ELLE_SONUC, satirAnahtari, sonucKurallari, type Degerlendirme, type SatirDegerlendirmesi } from "../../../format/motor";
-import { siraBasligi } from "../../../format/duzen";
+import { imzaSatirlari, siraBasligi } from "../../../format/duzen";
 import { formulluAlan, formulluDeger, formulluMadde, formulluSutun, type FormulYeri } from "../../../format/formul";
 import { doldurma, type Bolum, type BolumOf, type Cevaplar, type Sinir } from "../../../format/tanim";
 import { meslek } from "../../personel/sema";
@@ -61,7 +61,7 @@ const sinirMetni = (op?: Sinir, s?: number, birim?: string) => (op && s !== unde
 const EVET: readonly SecimSecenegi[] = [["evet", "Evet"], ["hayir", "Hayır"]];
 const DERECE: readonly SecimSecenegi[] = [["hafif", "Hafif kusur"], ["agir", "Ağır kusur"]];
 const SONUC: readonly SecimSecenegi[] = [["uygun", SONUC_AD.uygun], ["uygun_degil", SONUC_AD.uygun_degil]];
-const IMZA = { uzman: "Muayene uzmanı", teknik: "Teknik yönetici" } as const;
+const IMZA = { uzman: "Muayene uzmanı", teknik: "Teknik yönetici", diger: "Öteki satırlar" } as const;
 const etiketi = (l: readonly SecimSecenegi[], v: string) => l.find((o) => o[0] === v)?.[1] ?? "";
 
 export type Kaynak = NonNullable<BolumOf<"bilgi">["alanlar"][number]["kaynak"]>;
@@ -738,7 +738,9 @@ function ImzaBlok({ b, v }: { b: BolumOf<"imza">; v: SahaRaporu }) {
         <Satir etiket="Yetkili kişi kayıt no">{v.yazan.ekipnet ? <Kod>{v.yazan.ekipnet}</Kod> : <span className={stil.uyari}>Yok</span>}</Satir>
       </Satirlar>
       <ul className={stil.imzalar}>
-        {b.imzalar.map((i) => <li key={i} className={stil.imza}><b>{IMZA[i]}</b><span className={stil.imzaKutu}>İmza son imzada atılır.</span></li>)}
+        {/* 595: kişiler imza bölümünün satırlarından (format belirler); serbest satırlar belgede sabit yazı ya da boş hücre */}
+        {[...new Set(imzaSatirlari(b).map((s) => s.kim))].map((i) => <li key={i} className={stil.imza}><b>{IMZA[i]}</b><span className={stil.imzaKutu}>
+          {i === "diger" ? `Belgede: ${imzaSatirlari(b).filter((s) => s.kim === "diger").map((s) => s.ad).join(" · ")}` : "İmza son imzada atılır."}</span></li>)}
       </ul>
     </>
   );

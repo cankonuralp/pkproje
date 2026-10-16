@@ -36,7 +36,7 @@ import { TAMAMLANDI_RAPOR } from "../../planlar/sema.ts";
 import { denetimeBasla, ekipmanEklemeDurumu, kodDurumu, kunyeGuncelle, plandakiEkipman, plandakiEkipmanlar, raporIcinPlan, yeniEkipman, type Kunye, type RaporPlani } from "../../planlar/server/plan-ici.ts";
 import { formatSurumuOku, yayindakiFormat } from "../../rapor-format/server/formatlar.ts";
 import { kimdeHaritasi } from "../../zimmetler/server/zimmet.ts";
-import { roldekiHesapAdlari } from "../../../server/kimlik/hesap.ts";
+import { hesabinPersoneli, roldekiHesapAdlari } from "../../../server/kimlik/hesap.ts";
 import {
   ayEkle, gorunenNo, kalibrasyonGecti, KopyaGirdisi, RAPOR_DURUM, RaporKaydi, raporYazmaNedeni, RevizeGirdisi, SONUC_AD, EkipmanBilgisi, type RaporCihazi, type RaporDurumu, type RaporTarihleri,
 } from "../sema.ts";
@@ -878,6 +878,9 @@ export async function raporBelgesiVerisi(db: Sorgulayici, depo: Depo, kim: Kisi,
   }
   const cev = Cevaplar.safeParse(r.cevaplar);
   const onayAd = r.onay ? (await hesapAdlari(db, [r.onay_hesap])).get(r.onay_hesap ?? "") ?? "—" : null;
+  /* 595: onaylayan teknik yöneticinin hesabı bir personele bağlıysa o kaydın bilgileri (imza bölümünün teknik satırları: meslek, diploma …) */
+  const onayPersonel = r.onay && r.onay_hesap ? await hesabinPersoneli(db, r.onay_hesap) : null;
+  const onayKisi = onayPersonel ? await personelBelgeBilgisi(db, onayPersonel) : null;
   /* tamamlanan raporun önizlemesi "imzasız" demez: imza zamanı ve yolu imzalı sürümden */
   const imzali = r.durum === "imzali" ? await imzaliSurum(db, r.id, r.revizyon) : null;
   return {
@@ -893,8 +896,11 @@ export async function raporBelgesiVerisi(db: Sorgulayici, depo: Depo, kim: Kisi,
       ekipman: { kod: etiket?.kod ?? "—", ...r.ekipman_bilgi },
       tanim: format.tanim, cevaplar: cev.success ? cev.data : Cevaplar.parse({}), cihazlar, fotolar,
       sonuc: r.sonuc === "uygun" || r.sonuc === "uygun_degil" ? r.sonuc : null,
-      yazan: { ad: yazan?.ad ?? "—", meslek: yazan?.meslek ?? "diger", ekipnet: yazan?.ekipnet ?? null, diploma: yazan?.diploma ?? null, oda: yazan?.oda ?? null },
-      onay: r.onay && onayAd ? { ad: onayAd, zaman: r.onay.toISOString() } : null,
+      yazan: { ad: yazan?.ad ?? "—", meslek: yazan?.meslek ?? "diger", meslekMetin: yazan?.meslekMetin ?? null, ekipnet: yazan?.ekipnet ?? null,
+        diploma: yazan?.diploma ?? null, oda: yazan?.oda ?? null, eposta: yazan?.eposta ?? null, tel: yazan?.tel ?? null },
+      onay: r.onay && onayAd ? { ad: onayAd, zaman: r.onay.toISOString(),
+        kisi: onayKisi ? { meslek: onayKisi.meslek, meslekMetin: onayKisi.meslekMetin, ekipnet: onayKisi.ekipnet, diploma: onayKisi.diploma, oda: onayKisi.oda,
+          eposta: onayKisi.eposta, tel: onayKisi.tel } : null } : null,
       imza: imzali ? { zaman: imzali.zaman, yontem: YONTEM_AD[imzali.yontem] ?? imzali.yontem } : null,
     },
   };

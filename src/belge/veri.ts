@@ -6,6 +6,8 @@ import type { Cevaplar, FormatTanimi } from "../format/tanim.ts";
 export interface BelgeCihazi { turAd: string; kod: string; marka: string | null; model: string | null; seri: string | null;
   kalTarih: string | null; kalBitis: string | null; sertifika: string | null }
 export interface BelgeFotosu { ad: string; bolum: string; madde: string | null; src: string | null }
+/** 595: imza bölümünün kişi satırları için personel kaydının bilgileri (imza anında kopyalanır — eski kopyalarda yalnız ilk beşi var) */
+export interface ImzaKisiBilgisi { meslek: string; meslekMetin?: string | null; ekipnet: string | null; diploma: string | null; oda: string | null; eposta?: string | null; tel?: string | null }
 
 export interface BelgeVerisi {
   /** muayene firması (belgenin sahibi): ad, rapor kodu, nüsha sayısı (firma ayarı); 334: adres, akreditasyon no ve logo (veri adresi) başlıkta */
@@ -23,9 +25,10 @@ export interface BelgeVerisi {
   cihazlar: BelgeCihazi[];
   fotolar: BelgeFotosu[];
   sonuc: "uygun" | "uygun_degil" | null;
-  yazan: { ad: string; meslek: string; ekipnet: string | null; diploma: string | null; oda: string | null };
-  /** onaylayan teknik yönetici (yalnız formatın imza bloğunda "teknik" yeri varsa basılır — karar 105) */
-  onay: { ad: string; zaman: string } | null;
+  yazan: { ad: string } & ImzaKisiBilgisi;
+  /** onaylayan teknik yönetici (yalnız formatın imza bloğunda "teknik" yeri varsa basılır — karar 105); 595: hesabı bir personele bağlıysa o kaydın
+      bilgileri (imza bölümünde teknik yöneticinin meslek / diploma / oda sicil … satırları) */
+  onay: { ad: string; zaman: string; kisi?: ImzaKisiBilgisi | null } | null;
   /** son imza (imza kalemi); yoksa belge imzasızdır */
   imza: { zaman: string; yontem: string } | null;
   /** imzaya hazırlanan KESİN belge (317): önizleme şeridi yok, imza hücresi elektronik imzayı söyler (imza PDF'in kendisinde) */

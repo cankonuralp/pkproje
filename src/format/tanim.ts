@@ -34,6 +34,22 @@ export type EkipmanAlani = (typeof EKIPMAN_ALANLARI)[number];
 export const EKIPMAN_ALAN_ADI: Record<EkipmanAlani, string> = {
   marka: "Marka", model: "Model", seri: "Seri no", imal: "İmal yılı", konum: "Kullanım yeri", amac: "Kullanım amacı", bolum: "Ekipman bölümü",
 };
+/** 2026-10-16 (sunum 595 madde 1 — reisim: "format yapıcıda bu ve benzeri kısımlarda değişiklik yapamıyorum, tıklayıp değiştiremiyorum, satır
+    sütun ekleyemiyorum" · "mesela teknik yönetici için unvan diploma no gibi satırlar eklemek istedim ekleyemedim"): imza bölümünün SATIRLARI —
+    adı, sırası, varlığı formatın; değeri kişinin kaydından (imza anında kopyalanır). kim: uzman (raporu yazan muayene uzmanı) · teknik (onaylayan
+    teknik yönetici) · diger (serbest satır: tesis yetkilisi, kaşe …; değeri formatın sabit yazısı, boşsa boş hücre). alan: kişinin hangi bilgisi
+    (imza: uzmanda elektronik imza hücresi, teknikte onay; zaman: teknikte onay zamanı). */
+export const IMZA_KISILERI = ["uzman", "teknik", "diger"] as const;
+export type ImzaKisisi = (typeof IMZA_KISILERI)[number];
+export const IMZA_ALANLARI = ["ad", "meslek", "ekipnet", "diploma", "oda", "eposta", "tel", "imza", "zaman"] as const;
+export type ImzaAlani = (typeof IMZA_ALANLARI)[number];
+export const IMZA_ALAN_ADI: Record<ImzaAlani, string> = {
+  ad: "Adı soyadı", meslek: "Mesleği / unvanı", ekipnet: "Yetkili kişi kayıt no (EKİPNET)", diploma: "Diploma no", oda: "Oda sicil no", eposta: "E-posta",
+  tel: "Telefon", imza: "İmzası", zaman: "Onay zamanı",
+};
+export const IMZA_KISI_ADI: Record<ImzaKisisi, string> = { uzman: "Muayene uzmanı", teknik: "Teknik yönetici", diger: "Serbest satır" };
+/** kişinin seçilebilen bilgileri (zaman yalnız teknik yöneticide — onay anı) */
+export const imzaAlanlari = (kim: ImzaKisisi): readonly ImzaAlani[] => (kim === "uzman" ? IMZA_ALANLARI.filter((x) => x !== "zaman") : kim === "teknik" ? IMZA_ALANLARI : []);
 /** ölçüm tablosunun adıyla seçilen hesabı (hesap.ts) */
 export const HESAPLAR = ["nokta", "selektivite", "linye", "pd", "zi"] as const;
 /** 495: "metin" — serbest metin (belgeye basılan sabit yazı; sahada okunur, doldurulmaz) */
@@ -69,6 +85,10 @@ const Deger = z.object({
   secenekler: secenekListesi.optional(), olumsuz: secenekListesi.optional(), agir: z.boolean().default(false),
   op: z.enum(SINIRLAR).optional(), sinir: z.number().finite().optional(), not: z.string().max(120).optional(), formul,
 });
+const ImzaSatiri = z.object({
+  id: kimlik, ad, kim: z.enum(IMZA_KISILERI), alan: z.enum(IMZA_ALANLARI).optional(), metin: z.string().max(400).optional(), tam: z.boolean().optional(),
+});
+export type ImzaSatiri = z.output<typeof ImzaSatiri>;
 /** seçmeli uygunluk notu (ZPKR01 Not-1 … Not-11): kusur mu, ağır mı */
 const Not = z.object({ metin: z.string().trim().min(1).max(400), kusur: z.boolean(), agir: z.boolean().default(false) });
 /** 2026-10-16 (pkproje §9 "SONUÇ KURALI FORMAT YAPICIDA" — reisim: "kurala göre otomatik uygun uygun değil diyor, ama ilgili ayar buradan
@@ -115,7 +135,9 @@ export const Bolum = z.discriminatedUnion("blok", [
   /* aciklama (426): sonuç bölümünün sabit metni — Bakanlık formatlarındaki "Ağır kusurlar tanımı", "Açıklamalar" (PDF'e basılır) */
   z.object({ ...ortak, blok: z.literal("sonuc"), cumle: z.string().max(400).default(""), aciklama: z.string().max(4000).default("") }),
   z.object({ ...ortak, blok: z.literal("not"), zorunlu: z.boolean().default(false) }),
-  z.object({ ...ortak, blok: z.literal("imza"), imzalar: z.array(z.enum(["uzman", "teknik"])).min(1).max(2).default(["uzman"]) }),
+  /* satirlar (595): verilmemişse imzalar'dan bugünkü satırlar (format/duzen.ts imzaSatirlari) — eski formatlar aynı çizilir; verilmişse imzalar
+     satırlardaki kişilerin özetidir (kurucu.ts yazar) */
+  z.object({ ...ortak, blok: z.literal("imza"), imzalar: z.array(z.enum(["uzman", "teknik"])).min(1).max(2).default(["uzman"]), satirlar: z.array(ImzaSatiri).max(40).optional() }),
   /* 495 (hata listesi 29 + 46 maketi): serbest metin — belgeye basılan sabit yazı (açıklama, yöntem notu …); sahada okunur */
   z.object({ ...ortak, blok: z.literal("metin"), metin: z.string().max(4000).default("") }),
 ]);
@@ -194,6 +216,13 @@ export const FormatTanimi = z.object({
     if (b.blok === "test") b.degerler.forEach((d, j) => {
       tek(d.id, ["bolumler", i, "degerler", j, "id"]);
       if (d.olumsuz?.some((o) => !(d.secenekler ?? []).includes(o))) bag.addIssue({ code: "custom", path: ["bolumler", i, "degerler", j, "olumsuz"], message: `Olumsuz seçenek değerin seçeneklerinde yok: ${d.ad}` });
+    });
+    if (b.blok === "imza") b.satirlar?.forEach((s, j) => {
+      tek(s.id, ["bolumler", i, "satirlar", j, "id"]);
+      const yol = ["bolumler", i, "satirlar", j, "alan"];
+      if (s.kim === "diger" ? s.alan !== undefined : s.alan === undefined || !imzaAlanlari(s.kim).includes(s.alan)) {
+        bag.addIssue({ code: "custom", path: yol, message: `İmza satırının bilgisi kişiye uymuyor: ${s.ad}` });
+      }
     });
     if (b.blok === "foto" && b.enAz > b.enCok) bag.addIssue({ code: "custom", path: ["bolumler", i, "enAz"], message: "En az, en çoktan büyük olamaz." });
   });

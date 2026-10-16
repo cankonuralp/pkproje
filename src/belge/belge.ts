@@ -12,10 +12,10 @@ import { raporDuzeni, sabitEkipmanAlanlari, siraBasligi } from "../format/duzen.
 import { gecerliKunye, kilitliKunye, metotMetni } from "../format/kunye.ts";
 import { formulUygula } from "../format/formul.ts";
 import { degerlendir } from "../format/motor.ts";
-import { EKIPMAN_ALAN_ADI, type Bolum, type BolumOf } from "../format/tanim.ts";
+import { EKIPMAN_ALAN_ADI, type Bolum, type BolumOf, type ImzaSatiri } from "../format/tanim.ts";
 /* veri.ts: saf tanımlar (tanimlar.ts node:crypto kullanır — 451: Format kurucunun belge önizlemesi bu çiziciyi tarayıcıda koşar) */
 import { TANIMLAR } from "../tanim/veri.ts";
-import type { BelgeFotosu, BelgeVerisi } from "./veri.ts";
+import type { BelgeFotosu, BelgeVerisi, ImzaKisiBilgisi } from "./veri.ts";
 
 const tarihNo = (s: string | null | undefined) => (s ? `${s.slice(8, 10)}.${s.slice(5, 7)}.${s.slice(0, 4)}` : "-");
 const saatliNo = (s: string | null | undefined) => (s ? `${tarihNo(s)} ${s.slice(11, 16)}` : "-");
@@ -117,7 +117,33 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
     ? h("div", { className: "rb-fotolar" }, ...l.map((f, i) => h("figure", { key: i, className: "rb-foto" },
       f.src ? h("img", { src: f.src, alt: f.ad }) : h("div", { className: "rb-foto-bos" }, f.ad), h("figcaption", null, etiket(f)))))
     : kutu("Fotoğraf yok.");
+  /* 595 (sunum 595 madde 1): satırları tanımlı imza bölümü — her satırın adı ve sırası formatın, değeri kişinin kaydından (uzman: raporu yazan;
+     teknik: onaylayan teknik yönetici, hesabı bir personele bağlıysa onun kaydından; serbest satır: formatın sabit yazısı ya da boş hücre — ıslak
+     imza, kaşe). Ardışık aynı kişinin satırları tek tabloda (eski düzen gibi: uzman tablosu, teknik yönetici tablosu) */
+  const meslekAdi = (k: ImzaKisiBilgisi) => (k.meslek === "diger" && k.meslekMetin ? k.meslekMetin : TANIMLAR.meslekler.find((m) => m.k === k.meslek)?.ad ?? k.meslek);
+  const imzaYazisi = () => (v.imza ? `Güvenli elektronik imza (${v.imza.yontem}) · ${zamanNo(v.imza.zaman)}`
+    : v.kesin ? "Güvenli elektronik imza ile imzalanmıştır (imza bilgisi bu PDF'in elektronik imzasındadır)."
+      : "İmzasız — muayene uzmanı son imzayı atınca geçerli olur.");
+  const kisiDegeri = (k: ImzaKisiBilgisi | null | undefined, alan: ImzaSatiri["alan"]): string => {
+    if (!k) return "-";
+    if (alan === "meslek") return meslekAdi(k);
+    if (alan === "ekipnet" || alan === "diploma" || alan === "oda" || alan === "eposta" || alan === "tel") return deger(k[alan]);
+    return "-";
+  };
+  const satirDegeri = (s: ImzaSatiri): ReactNode => {
+    if (s.kim === "diger") return s.metin?.trim() ?? "";
+    if (s.kim === "uzman") return s.alan === "ad" ? v.yazan.ad : s.alan === "imza" ? imzaYazisi() : kisiDegeri(v.yazan, s.alan);
+    if (!v.onay) return "-";
+    return s.alan === "ad" ? v.onay.ad : s.alan === "zaman" ? zamanNo(v.onay.zaman) : s.alan === "imza" ? `Elektronik onay · ${zamanNo(v.onay.zaman)}` : kisiDegeri(v.onay.kisi, s.alan);
+  };
+  const imzaSatirli = (l: readonly ImzaSatiri[]) => {
+    const gruplar: ImzaSatiri[][] = [];
+    for (const s of l) { const son = gruplar.at(-1); if (son && son[0].kim === s.kim) son.push(s); else gruplar.push([s]); }
+    return h(Fragment, null, ...gruplar.map((g, i) => h(Fragment, { key: i }, bilgiTablosu(g.map((s) => [s.ad, satirDegeri(s), !!s.tam] as const)))),
+      h("p", { key: "n" }, nushaYazi(v.firma.nusha)));
+  };
   const imza = (b?: BolumOf<"imza">) => {
+    if (b?.satirlar) return imzaSatirli(b.satirlar);
     const yerler = b?.imzalar ?? ["uzman"];
     return h(Fragment, null,
       yerler.includes("uzman") ? h(Fragment, { key: "u" }, bilgiTablosu([

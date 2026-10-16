@@ -19,17 +19,25 @@
    sayfasında değişince burada da); cihaz bölümü silinmez, tektir. 461 (reisim: "üst başlık ekleme olayı kullanımı zorlaştırıyor alt başlık
    ekleme olayı olmadığı için anlamsız oluyor alt başlık ekleme olsun"): bölümün altına "Alt başlık ekle" (5 → 5.1, 5.2 …; 469: doğrudan — tür sordurmaz, ana bölümün türünde); şeritte "alt başlık
    yap / ana başlık yap"; üst başlık yazma kutusu kalktı (var olan üst başlık görünür, kaldırılır). Kâğıdın renkleri belgenin kendi renkleri —
-   açık / koyu temada aynı kâğıt. */
+   açık / koyu temada aynı kâğıt.
+   595 (2026-10-16; sunum 595 madde 1 — reisim: "format yapıcıda bu ve benzeri kısımlarda değişiklik yapamıyorum … satır sütun ekleyemiyorum" ·
+   "mesela teknik yönetici için unvan diploma no gibi satırlar eklemek istedim ekleyemedim"): imza bölümünün satırları kâğıtta — adı yazılır,
+   yukarı / aşağı taşınır, tam satır yapılır, çıkarılır; "+ Satır ekle" muayene uzmanının ya da teknik yöneticinin kaydından bilgi (meslek, EKİPNET,
+   diploma, oda sicil, e-posta, telefon, imza, onay zamanı) ya da serbest satır (tesis yetkilisi, kaşe — sabit yazı ya da boş hücre). */
 import { Fragment, useEffect, useRef, useState, type DragEvent, type ReactNode } from "react";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { useOnayla } from "../../../components/pencere/Onay";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { SINIR_ISARETI } from "../../../format/hesap";
-import { altBaslikAnasi, altGrupSonu, raporDuzeni, siraBasligi } from "../../../format/duzen";
-import { BLOKLAR, doldurma, DOLDURULUR, EKIPMAN_ALAN_ADI, EKIPMAN_ALANLARI, KUNYE_ALAN_ADI, KUNYE_ALANLARI, type Blok, type Bolum, type BolumOf, type FormatTanimi } from "../../../format/tanim";
+import { altBaslikAnasi, altGrupSonu, imzaSatirlari, raporDuzeni, siraBasligi } from "../../../format/duzen";
+import {
+  BLOKLAR, doldurma, DOLDURULUR, EKIPMAN_ALAN_ADI, EKIPMAN_ALANLARI, IMZA_ALAN_ADI, IMZA_KISI_ADI, KUNYE_ALAN_ADI, KUNYE_ALANLARI, type Blok, type Bolum, type BolumOf,
+  type FormatTanimi, type ImzaAlani, type ImzaSatiri,
+} from "../../../format/tanim";
 import { kilitliKunye } from "../../../format/kunye";
 import {
-  ALT_TURLER, altBaslikEkle, bolumAdi, ekipmanBolumuGeriEkle, ekipmanBolumuKaldir, bolumDuzeni, ekipmanAlaniEkle, gorunumYaz, grupEkle, grupSil, grupYaz, kunyeKilitYaz, kurucudan, maddeEkle, ogeEkle, ogeSil, ogeYaz, satirlar, tasi,
+  ALT_TURLER, altBaslikEkle, bolumAdi, eksikImzaAlanlari, ekipmanBolumuGeriEkle, ekipmanBolumuKaldir, bolumDuzeni, ekipmanAlaniEkle, gorunumYaz, grupEkle, grupSil, grupYaz,
+  imzaKisisiYaz, imzaSatiriEkle, imzaSatiriSil, imzaSatiriTasi, imzaSatiriYaz, kunyeKilitYaz, kurucudan, maddeEkle, ogeEkle, ogeSil, ogeYaz, satirlar, tasi,
   yeniBolum, yeniKimlik,
 } from "../kurucu";
 import { ListeDuzenleyici, NotDuzenleyici, OgeDuzenleyici, SonucAciklamasi, SonucKuraliDuzenleyici } from "./KurucuDuzenleyici";
@@ -182,7 +190,7 @@ function OneriIcerigi({ b }: { b: Bolum }) {
       return <table><tbody>{b.degerler.map((d) => <tr key={d.id}><td className="rb-ab">{birimli(d.ad, d.birim)}</td><td><span className={k.ornek}>{d.formul ? `= ${d.formul}` : "sayı"}{sinir(d)}</span></td></tr>)}</tbody></table>;
     case "foto": return <p className={k.ornek}>Fotoğraflar · en az {b.enAz}</p>;
     case "metin": return <p className={k.oneriMetin}>{b.metin || "—"}</p>;
-    case "imza": return <p className={k.ornek}>İmzalar: {b.imzalar.map((x) => (x === "uzman" ? "muayene uzmanı" : "teknik yönetici")).join(" · ")}</p>;
+    case "imza": return <p className={k.ornek}>İmza satırları: {imzaSatirlari(b).map((x) => x.ad).join(" · ")}</p>;
     default: return <p className={k.ornek}>{BLOK_ADI[b.blok]}</p>;
   }
 }
@@ -299,6 +307,53 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
       <Tus ikon="x" ad={`${ad} · çıkar`} onClick={() => void cikar(i, id, ad, kilit)} />
     </span>
   );
+
+  /* ── 595: imza bölümünün satırları ── */
+  const imzaSecenekleri = (b: BolumOf<"imza">) => [
+    ...(["uzman", "teknik"] as const).flatMap((kim) => eksikImzaAlanlari(b, kim).map((a) =>
+      [`${kim}:${a}`, `${IMZA_KISI_ADI[kim]} · ${IMZA_ALAN_ADI[a]}`, kim === "uzman" ? "raporu yazanın kaydından" : "onaylayan teknik yöneticiden"] as const)),
+    ["diger", IMZA_KISI_ADI.diger, "tesis yetkilisi, kaşe, ıslak imza — sabit yazı ya da boş hücre"] as const,
+  ];
+  const imzaKoy = (i: number, x: string) => {
+    const [kim, alan] = x.split(":") as ["uzman" | "teknik" | "diger", ImzaAlani | undefined];
+    const y = imzaSatiriEkle(t, i, kim, alan);
+    if (!y.id) return;
+    degis(y.t); setYeniId(y.id); bildir("İmza satırı eklendi (taslak); adını yazabilirsiniz.");
+  };
+  const imzaCikar = async (b: BolumOf<"imza">, i: number, s: ImzaSatiri) => {
+    if (b.kilit && !(await onayla({ baslik: "Bakanlık satırı çıkarılsın mı?", tus: "Çıkar", tehlike: true,
+      metin: `“${s.ad}” Bakanlık formatının imza bölümünde. Çıkarılırsa yayınlarken uyarı çıkar.` }))) return;
+    degis(imzaSatiriSil(t, i, s.id)); bildir(`“${s.ad}” çıkarıldı (taslak).`);
+  };
+  const imzaTasi = (i: number, s: ImzaSatiri, yon: -1 | 1) => {
+    const y = imzaSatiriTasi(t, i, s.id, yon);
+    degis(y);
+    /* taşınan satırın aynı yöndeki tuşuna odak (ilk değişiklikte satırlar yeni kimlik alır — adıyla bulunur) */
+    requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-imza-ad="${CSS.escape(s.ad)}"] [data-yon="${yon}"] button:not([disabled])`)?.focus());
+  };
+  const imzaEtiketi = (b: BolumOf<"imza">, i: number, s: ImzaSatiri, l: readonly ImzaSatiri[]) => {
+    const j = l.findIndex((x) => x.id === s.id);
+    return (
+      <span key={s.id} className={k.etiket} data-imza-ad={s.ad}>
+        <Yazi deger={s.ad} ad="İmza satırının adı" ac={yeniId === s.id} yaz={(x) => degis(imzaSatiriYaz(t, i, s.id, { ad: x }))} />
+        <span className={k.ogeTus}>
+          {b.kilit && <Kilit />}
+          <span data-yon="-1" className={k.yonKap}><Tus ikon="arrow-up" ad={`${s.ad} · yukarı`} disabled={j <= 0} onClick={() => imzaTasi(i, s, -1)} /></span>
+          <span data-yon="1" className={k.yonKap}><Tus ikon="arrow-down" ad={`${s.ad} · aşağı`} disabled={j < 0 || j >= l.length - 1} onClick={() => imzaTasi(i, s, 1)} /></span>
+          <Tus ikon="arrow-right-left" ad={`${s.ad} · tam satır`} basili={!!s.tam} onClick={() => degis(imzaSatiriYaz(t, i, s.id, { tam: !s.tam }))} />
+          <Tus ikon="x" ad={`${s.ad} · çıkar`} onClick={() => void imzaCikar(b, i, s)} />
+        </span>
+      </span>
+    );
+  };
+  const imzaDegeri = (i: number, s: ImzaSatiri): ReactNode => {
+    if (s.kim === "diger") return <Yazi key={`${s.id}-d`} deger={s.metin ?? ""} ad={`${s.ad} · sabit yazı`} bos="boş hücre (ıslak imza, kaşe)" uzun={400}
+      yaz={(x) => degis(imzaSatiriYaz(t, i, s.id, { metin: x }))} />;
+    const metin = s.kim === "uzman"
+      ? s.alan === "imza" ? "güvenli elektronik imza · muayene uzmanı" : "raporu yazanın kaydından"
+      : s.alan === "zaman" ? "onay anı" : s.alan === "imza" ? "elektronik onay" : "onaylayan teknik yöneticinin kaydından";
+    return <span key={`${s.id}-d`} className={k.ornek}>{metin}</span>;
+  };
 
   /* ── bölümün içeriği (bloğa göre; belgedeki gibi) ── */
   const icerik = (b: Bolum, i: number): ReactNode => {
@@ -444,12 +499,19 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
       case "metin":
         return <div className="rb-aciklama"><Yazi deger={b.metin} ad="Serbest metin" bos="Belgeye basılacak yazıyı yazın" cok uzun={4000}
           yaz={(s) => degis(bolumYaz(t, i, { metin: s.slice(0, 4000) }))} /></div>;
-      case "imza":
-        return <>
-          {b.imzalar.includes("uzman") && <BilgiTablosu l={[["Adı soyadı", "—"], ["Mesleği", "—"], ["Yetkili kişi kayıt no (EKİPNET)", "—"], ["Diploma no", "—"],
-            ["Oda sicil no", "—"], ["İmzası", <span key="i" className={k.ornek}>güvenli elektronik imza</span>, true]]} />}
-          {b.imzalar.includes("teknik") && <BilgiTablosu l={[["Onaylayan teknik yönetici", "—"], ["Onay zamanı", "—"]]} />}
-        </>;
+      case "imza": {
+        /* 595: satırlar formatın (adı, sırası, varlığı); ardışık aynı kişinin satırları tek tablo — belgedeki gibi */
+        const l = imzaSatirlari(b);
+        const gruplar: ImzaSatiri[][] = [];
+        for (const s of l) { const son = gruplar.at(-1); if (son && son[0].kim === s.kim) son.push(s); else gruplar.push([s]); }
+        const ekle = <span className={k.ekleSira}><span className={k.ekleSecim}>
+          <SecimAlani id={`kb-${b.id}-imza-ekle`} ad={`${b.ad} · satır ekle`} etiketsiz deger="" ipucu="+ Satır ekle" secenekler={imzaSecenekleri(b)}
+            degistir={(x) => imzaKoy(i, x)} />
+        </span></span>;
+        if (!gruplar.length) return <BilgiTablosu l={[]} son={ekle} />;
+        return <>{gruplar.map((g, gi) => <BilgiTablosu key={g[0].id} son={gi === gruplar.length - 1 ? ekle : undefined}
+          l={g.map((s): Hucre => [imzaEtiketi(b, i, s, l), imzaDegeri(i, s), !!s.tam])} />)}</>;
+      }
     }
   };
 
@@ -518,14 +580,22 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
       </>}
       {b.blok === "sonuc" && <SonucAciklamasi t={t} i={i} b={b} degis={degis} />}
       {b.blok === "not" && <label className={k.panelKutu}><input type="checkbox" checked={b.zorunlu} onChange={(e) => degis(bolumYaz(t, i, { zorunlu: e.target.checked }))} />Yorum zorunlu</label>}
-      {b.blok === "imza" && <div className={k.panelSatir} role="group" aria-label="İmza yerleri">
-        {([["uzman", "Muayene uzmanı"], ["teknik", "Teknik yönetici"]] as const).map(([x, ad]) => (
-          <label key={x} className={k.panelKutu}>
-            <input type="checkbox" checked={b.imzalar.includes(x)} disabled={b.imzalar.length === 1 && b.imzalar.includes(x)}
-              onChange={(e) => degis(bolumYaz(t, i, { imzalar: e.target.checked ? [...b.imzalar, x] : b.imzalar.filter((y) => y !== x) }))} />{ad}
-          </label>
-        ))}
-      </div>}
+      {b.blok === "imza" && (() => {
+        /* 595: kişi eklenince varsayılan satırlarıyla gelir, kaldırılınca bütün satırları çıkar; en az bir kişi kalır */
+        const kisiler = (["uzman", "teknik"] as const).filter((x) => imzaSatirlari(b).some((s) => s.kim === x));
+        return <>
+          <div className={k.panelSatir} role="group" aria-label="İmza yerleri">
+            {(["uzman", "teknik"] as const).map((x) => (
+              <label key={x} className={k.panelKutu}>
+                <input type="checkbox" checked={kisiler.includes(x)} disabled={kisiler.length === 1 && kisiler.includes(x)}
+                  onChange={(e) => degis(imzaKisisiYaz(t, i, x, e.target.checked))} />{IMZA_KISI_ADI[x]}
+              </label>
+            ))}
+          </div>
+          <p className={k.panelIpucu}>Satırların adı, sırası ve varlığı kâğıtta; değerleri kişinin kaydından gelir ve imza anında rapora kopyalanır. Serbest satır
+            (tesis yetkilisi, kaşe) sabit yazı ya da boş hücre olur.</p>
+        </>;
+      })()}
       {b.blok === "cihaz" && <p className={k.panelIpucu}>Sabit bölüm: satırları türün ölçüm cihazı türleri (tür sayfasında seçilir, burada kendiliğinden); denetçi raporda zimmetindeki cihazı ekler, kalibrasyonu denetlenir.</p>}
       {b.blok === "kusur" && <p className={k.panelIpucu}>Kendiliğinden dolar; ayarı yok.</p>}
     </div>

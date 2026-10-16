@@ -298,6 +298,26 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await alanAdi.fill("Model / tip");
     await alanAdi.press("Enter");
     await expect(ekip.getByRole("button", { name: "Model / tip", exact: true })).toBeVisible();
+    /* 595 (sunum 595 madde 1 — reisim: "teknik yönetici için unvan diploma no gibi satırlar eklemek istedim ekleyemedim"): imza bölümünün satırları
+       kâğıtta — teknik yöneticinin diploma no satırı ve serbest satır eklenir, adları yerinde yazılır; Bakanlık satırının adı da yazılır */
+    const imzaBolumu = kagit.getByRole("region", { name: /Periyodik kontrolleri yapmaya yetkili kişi bilgileri ve onay$/ });
+    const satirAdi = page.getByRole("textbox", { name: "İmza satırının adı" });
+    await imzaBolumu.getByRole("combobox", { name: /satır ekle$/ }).click();
+    await page.getByRole("option", { name: /^Teknik yönetici · Diploma no/ }).click();
+    await expect(satirAdi).toBeFocused();
+    await satirAdi.fill("Teknik yöneticinin diploma no");
+    await satirAdi.press("Enter");
+    await expect(imzaBolumu.getByRole("button", { name: "Teknik yöneticinin diploma no", exact: true })).toBeVisible();
+    await imzaBolumu.getByRole("combobox", { name: /satır ekle$/ }).click();
+    await page.getByRole("option", { name: /^Serbest satır/ }).click();
+    await expect(satirAdi).toBeFocused();
+    await satirAdi.fill("Tesis yetkilisi");
+    await satirAdi.press("Enter");
+    await expect(imzaBolumu.getByRole("button", { name: "Tesis yetkilisi", exact: true })).toBeVisible();
+    await imzaBolumu.getByRole("button", { name: "Adı soyadı", exact: true }).click();
+    await satirAdi.fill("Ad soyad");
+    await satirAdi.press("Enter");
+    await expect(imzaBolumu.getByRole("button", { name: "Ad soyad", exact: true })).toBeVisible();
     /* 459: standartlar ve cihazlar türden, kendiliğinden — ZPKR02'den başlatınca türün boş bağlantısı Bakanlık formatınkiyle doldu (440);
        ölçüm cihazları bölümü silinmez */
     await expect(firma.getByText(/TS HD 60364-6/).first()).toBeVisible();
@@ -311,6 +331,8 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     const belge = page.getByRole("region", { name: "Belge önizlemesi" });
     await expect(belge.getByText("Deneme sütunu")).toBeVisible();
     await expect(belge.getByText("Model / tip")).toBeVisible();
+    await expect(belge.getByText("Teknik yöneticinin diploma no")).toBeVisible();
+    await expect(belge.getByText("Tesis yetkilisi")).toBeVisible();
     await expect(belge.getByText(/^\d+\.1 Deneme alt başlık$/)).toBeVisible();
     await expect(belge.getByText("Deneme yorumu", { exact: false }).first()).toBeVisible();
     await goz(page, "kurucu-belge", bilgi.project.name);

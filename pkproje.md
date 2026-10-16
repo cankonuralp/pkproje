@@ -2525,6 +2525,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-16 (595c): **FORMAT YAPICI — İMZA BÖLÜMÜNÜN SATIRLARI** (sunum 595 madde 1; reisim: *"format yapıcıda bu ve benzeri kısımlarda değişiklik
+  yapamıyorum, tıklayıp değiştiremiyorum, satır sütun ekleyemiyorum"* · K6 *"mesela teknik yönetici için unvan diploma no gibi satırlar eklemek
+  istedim ekleyemedim"*): imza bölümünün satırları formatın — adı kâğıtta yerinde yazılır, yukarı / aşağı taşınır, tam satır yapılır, çıkarılır;
+  "+ Satır ekle" muayene uzmanının ya da onaylayan teknik yöneticinin kaydından bilgi (meslek / unvan, EKİPNET, diploma, oda sicil, e-posta, telefon,
+  imza, onay zamanı) ya da serbest satır (tesis yetkilisi, kaşe — sabit yazı ya da boş hücre). Değer kişinin kaydından; teknik yöneticinin bilgileri
+  hesabının bağlı olduğu personel kaydından. Eski formatlar birebir aynı çizilir; Bakanlık imza bölümünde değişiklik yayında uyarı (K5). S.A.Y da
+  aynı işlemi yapar ("imza_satiri"). Kilit tests/imza-satirlari.test.ts, olumsuz kanıt tests/bozan/imza-satirlari.bozan.ts, uçtan uca
+  e2e/rapor-format.spec.ts.
 - 2026-10-16 (596b): **TOPLU İMZA + TOPLU ONAY YAZILDI** (sunum 596 kararları — reisim cevapları: K1 yalnız raporlar · K2 tek ZIP · K3 imzalı PDF
   içeriğinden eşleşir · K4 toplu onay seçilen hepsi · K5 bir seferde en çok 50 · K6 araç e-İmzaTR): Onaylar › İmzamı bekleyen raporlar'da satır
   başında seçim kutusu, "Tümünü seç", altta havada "n rapor seçili · İmzaya hazırla"; imza penceresi: imzasız PDF'ler sunucuda tek tek hazırlanır

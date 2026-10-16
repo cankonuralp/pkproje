@@ -19,6 +19,7 @@
 import { noktaHesap, sayiOku, SINIR_ISARETI, sinirSonucu } from "./hesap.ts";
 import { formulDenet, formulluAlan, formulluDeger, formulluMadde, formulluSutun, formulUygula, genelAdlar, satirHesabi, tabloAdlari, type Deger } from "./formul.ts";
 import { etkinKurallar, kuralOzu, kuralUygula } from "./sonuc.ts";
+import { imzaSatirlari } from "./duzen.ts";
 import { kurucudan, type Bolum, type BolumOf, type Cevaplar, type FormatTanimi, type SonucKurali } from "./tanim.ts";
 
 export interface Eksik { bolum: string; alan: string; ad: string }
@@ -218,7 +219,8 @@ const bolumOzu = (b: Bolum, t: FormatTanimi) => oz({
   ...(b.blok === "liste" ? { cevaplar: b.cevaplar } : {}),
   ...(b.blok === "olcum" ? { hesap: b.hesap, notlar: b.notlar, satir: b.satir, sonuc: kuralOzu(etkinKurallar(t, b)) } : {}),
   ...(b.blok === "sonuc" ? { cumle: b.cumle, aciklama: b.aciklama } : {}),
-  ...(b.blok === "imza" ? { imzalar: b.imzalar } : {}),
+  /* 595: imza bölümünün satırları (adı, kişisi, bilgisi, sabit yazısı, tam satır) — satırsız eski bölüm imzalar'dan aynı satırları verir */
+  ...(b.blok === "imza" ? { imza: imzaSatirlari(b).map((x) => ({ ad: x.ad, kim: x.kim, alan: x.alan, metin: x.metin, tam: x.tam })) } : {}),
 });
 type AlanT = BolumOf<"bilgi">["alanlar"][number];
 type MaddeT = BolumOf<"liste">["gruplar"][number]["maddeler"][number];

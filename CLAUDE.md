@@ -145,6 +145,11 @@ pkproje/
                             KurucuDuzenleyici SonucKuraliDuzenleyici (kurucu.ts sonucKuraliYaz / bakanlikKuralinaDon); formül panelinde bölümün adları
                             tuş, öteki kutular "Diğer" (kurucu.ts formulAdGruplari); S.A.Y say-kurucu.ts "sonuc_kurali" · kilit tests/sonuc-kurali.test.ts
                             (eski hesapla satır satır eşdeğerlik) + bozan sonuc-kurali
+                            · 595 İMZA SATIRLARI (sunum 595 madde 1): tanim.ts imza bölümü satirlar (ImzaSatiri: ad, kim uzman / teknik / diger, alan —
+                            IMZA_ALANLARI —, metin, tam; verilmemişse imzalar'dan bugünkü satırlar: duzen.ts imzaSatirlari, eski format birebir aynı çizilir) ·
+                            belge.ts değerleri kişinin kaydından (teknik: onaylayanın personeli — veri.ts onay.kisi; raporlar raporBelgesiVerisi) · kurucu.ts
+                            imzaSatiri* / imzaKisisiYaz (ilk değişiklikte satırlar yeni kimlikle tanıma) · Kagit.tsx yerinde ad, yukarı / aşağı, tam satır,
+                            "+ Satır ekle" · motor bolumOzu satırlar (Bakanlık değişikliği uyarı) · S.A.Y say-kurucu "imza_satiri" · kilit tests/imza-satirlari
   src/modules/rapor-format/ RAPOR FORMATI (2026-10-04, 308): sürümlü tanım (rapor_format, göç 0022: taslak → yayında → eski; yayınlanan değişmez) ·
                             şablondan başlat · taslak kaydet · yayınla (kilitli Bakanlık öğesi ENGEL, öteki denetim uyarı) · yayındaki format;
                             ekran: tür sayfası "Rapor şablonu" + önizleme /ekipman-turleri/<tür>/sablon/<sürüm> · FORMAT KURUCU (338, K4):

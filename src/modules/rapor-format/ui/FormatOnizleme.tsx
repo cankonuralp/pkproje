@@ -3,7 +3,7 @@
    kurucu K4'te de kullanır). Kilitli (Bakanlık) öğe kilit simgesiyle. PDF çizimi PDF kaleminde aynı tanımdan. */
 import type { ReactNode } from "react";
 import { SINIR_ISARETI } from "../../../format/hesap";
-import { kayittanBolumMu, siraBasligi } from "../../../format/duzen";
+import { imzaSatirlari, kayittanBolumMu, siraBasligi } from "../../../format/duzen";
 import type { Bolum, FormatTanimi, Sinir } from "../../../format/tanim";
 import { etkinKurallar } from "../../../format/sonuc";
 import { Ikon } from "../../../components/ikon/Ikon";
@@ -13,7 +13,7 @@ import stil from "./format.module.css";
 
 const ALAN_TUR = { metin: "metin", sayi: "sayı", tarih: "tarih", secim: "seçim", coklu: "çoklu seçim", evet: "evet / hayır" } as const;
 const GIRIS = { sayi: "sayı", metin: "metin", secim: "seçim", evet: "evet / hayır" } as const;
-const IMZA = { uzman: "Muayene uzmanı", teknik: "Teknik yönetici" } as const;
+const IMZA = { uzman: "Muayene uzmanı", teknik: "Teknik yönetici", diger: "serbest satırlar" } as const;
 const virgul = (n: number) => String(n).replace(".", ",");
 const sinir = (op?: Sinir, s?: number, birim?: string) => (op && s !== undefined ? `${SINIR_ISARETI[op]} ${virgul(s)}${birim ? ` ${birim}` : ""}` : null);
 const olumsuz = (l?: readonly string[], agir?: boolean) => (l?.length ? `uygun değil: ${l.join(" / ")}${agir ? " (ağır)" : ""}` : null);
@@ -65,7 +65,7 @@ function Icerik({ b, t }: { b: Bolum; t: FormatTanimi }) {
     case "not":
       return <p className={stil.satir}>{b.zorunlu ? "Zorunlu" : "İsteğe bağlı"}</p>;
     case "imza":
-      return <p className={stil.satir}>{b.imzalar.map((i) => IMZA[i]).join(" · ")} · rapor ekranında görünmez, belgede (PDF) basılır</p>;
+      return <p className={stil.satir}>{[...new Set(imzaSatirlari(b).map((s) => s.kim))].map((i) => IMZA[i]).join(" · ")} · {imzaSatirlari(b).length} satır · rapor ekranında görünmez, belgede (PDF) basılır</p>;
     default:
       return null;
   }
