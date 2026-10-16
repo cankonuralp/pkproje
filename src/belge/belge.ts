@@ -9,12 +9,12 @@
 import { createElement as h, Fragment, type ReactNode } from "react";
 import { SINIR_ISARETI } from "../format/hesap.ts";
 import {
-  altYazisi, basEtiketleri, ekipmanEtiketleri, firmaSatirlari, listeBasliklari, olcumBasliklari, raporDuzeni, sabitEkipmanAlanlari, sonucMetinleri, testBasliklari,
+  altYazisi, basEtiketleri, cihazSutunlari, ekipmanEtiketleri, firmaSatirlari, listeBasliklari, olcumBasliklari, raporDuzeni, sabitEkipmanAlanlari, sonucMetinleri, testBasliklari,
 } from "../format/duzen.ts";
 import { gecerliKunye, kilitliKunye, metotMetni } from "../format/kunye.ts";
 import { formulUygula } from "../format/formul.ts";
 import { degerlendir } from "../format/motor.ts";
-import { EKIPMAN_ALAN_ADI, type Bolum, type BolumOf, type FirmaSatiri, type ImzaSatiri } from "../format/tanim.ts";
+import { EKIPMAN_ALAN_ADI, type Bolum, type BolumOf, type CihazAlani, type FirmaSatiri, type ImzaSatiri, type KusurAlani } from "../format/tanim.ts";
 /* veri.ts: saf tanımlar (tanimlar.ts node:crypto kullanır — 451: Format kurucunun belge önizlemesi bu çiziciyi tarayıcıda koşar) */
 import { TANIMLAR } from "../tanim/veri.ts";
 import type { BelgeFotosu, BelgeVerisi, ImzaKisiBilgisi } from "./veri.ts";
@@ -53,7 +53,27 @@ export function firmaAdresi(f: { adres?: string | null }): ReactNode[] {
   return f.adres ? [h("br", { key: "br" }), f.adres] : [];
 }
 
-function bilgiTablosu(l: readonly Cift[]): ReactNode {
+/** 595 (madde 9): n — bir satırda kaç bilgi (1 · 2 · 3); 2 bugünkü düzen (aynı çizim) */
+function bilgiTablosu(l: readonly Cift[], n: 1 | 2 | 3 = 2): ReactNode {
+  if (n === 1) return h("table", null, kolonlar(["30%", "70%"]), h("tbody", null, ...l.map(([e, d], i) => h("tr", { key: i }, h("td", { className: "rb-e" }, e), h("td", null, d)))));
+  if (n === 3) {
+    const satirlar: ReactNode[] = [];
+    let bekleyen: Cift[] = [];
+    const bosalt = () => {
+      if (!bekleyen.length) return;
+      const hucreler = bekleyen.flatMap(([e, d], j) => [h("td", { key: `e${j}`, className: "rb-e" }, e),
+        h("td", { key: `d${j}`, ...(j === bekleyen.length - 1 && bekleyen.length < 3 ? { colSpan: 1 + (3 - bekleyen.length) * 2 } : {}) }, d)]);
+      satirlar.push(h("tr", { key: satirlar.length }, ...hucreler));
+      bekleyen = [];
+    };
+    for (const c of l) {
+      if (c[2]) { bosalt(); satirlar.push(h("tr", { key: satirlar.length }, h("td", { className: "rb-e" }, c[0]), h("td", { colSpan: 5 }, c[1]))); continue; }
+      bekleyen.push(c);
+      if (bekleyen.length === 3) bosalt();
+    }
+    bosalt();
+    return h("table", null, kolonlar(["14%", "19.33%", "14%", "19.33%", "14%", "19.34%"]), h("tbody", null, ...satirlar));
+  }
   const satirlar: ReactNode[] = [];
   for (let i = 0; i < l.length; i++) {
     const [e, d, tam] = l[i], s = l[i + 1];
@@ -119,13 +139,31 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
     return s && s.trim() ? `${s}${a.birim ? ` ${a.birim}` : ""}` : "-";
   };
   /* katılan ekipman bölümünde kayıttan gelen alanlar (kod, seri, kullanım yeri …) sabit satırlarda zaten var — tekrar edilmez */
+  /* 595 (madde 9): alanın tam satırlığı formatta seçilebilir (verilmemişse çoklu seçim / uzun seçenek listesi tam); bölümün dizilişi 1 · 2 · 3 */
+  const tamMi = (a: BolumOf<"bilgi">["alanlar"][number]) => a.tam ?? (a.tur === "coklu" || (a.secenekler?.length ?? 0) > 3);
   const bilgi = (b: BolumOf<"bilgi">, kaynaksiz = false) => bilgiTablosu(b.alanlar.filter((a) => !(kaynaksiz && a.kaynak))
-    .map((a) => [a.ad, alanDegeri(a), a.tur === "coklu" || (a.secenekler?.length ?? 0) > 3] as const));
-  const cihazTablosu = () => h("table", null, baslikSatiri("Cihaz", "Kod / seri no", "Kalibrasyon tarihi", "Geçerlilik", "Sertifika no"),
-    h("tbody", null, ...(v.cihazlar.length ? v.cihazlar.map((x, i) => h("tr", { key: i },
-      h("td", null, `${x.turAd}${x.marka || x.model ? ` · ${[x.marka, x.model].filter(Boolean).join(" ")}` : ""}`), h("td", null, `${x.kod}${x.seri ? ` / ${x.seri}` : ""}`),
-      h("td", null, tarihNo(x.kalTarih)), h("td", null, tarihNo(x.kalBitis)), h("td", null, deger(x.sertifika))))
-      : [h("tr", { key: 0 }, h("td", { colSpan: 5 }, "-"))])));
+    .map((a) => [a.ad, alanDegeri(a), tamMi(a)] as const), b.dizilis ?? 2);
+  /* 595 (madde 2): sütunlar formatın (cihaz kaydından seçilir; verilmemişse bugünkü 5 sütun — duzen.ts cihazSutunlari) */
+  const cihazDegeri = (x: BelgeVerisi["cihazlar"][number], a: CihazAlani): string => {
+    switch (a) {
+      case "cihaz": return `${x.turAd}${x.marka || x.model ? ` · ${[x.marka, x.model].filter(Boolean).join(" ")}` : ""}`;
+      case "tur": return x.turAd;
+      case "kod_seri": return `${x.kod}${x.seri ? ` / ${x.seri}` : ""}`;
+      case "kod": return x.kod;
+      case "seri": return deger(x.seri);
+      case "marka": return deger(x.marka);
+      case "model": return deger(x.model);
+      case "kal_tarih": return tarihNo(x.kalTarih);
+      case "kal_bitis": return tarihNo(x.kalBitis);
+      case "sertifika": return deger(x.sertifika);
+    }
+  };
+  const cihazTablosu = (b?: BolumOf<"cihaz">) => {
+    const l = cihazSutunlari(b);
+    return h("table", null, baslikSatiri(...l.map((s) => s.ad)),
+      h("tbody", null, ...(v.cihazlar.length ? v.cihazlar.map((x, i) => h("tr", { key: i }, ...l.map((s) => h("td", { key: s.id }, cihazDegeri(x, s.alan)))))
+        : [h("tr", { key: 0 }, h("td", { colSpan: l.length }, "-"))])));
+  };
   const fotolar = (l: readonly BelgeFotosu[], etiket: (f: BelgeFotosu) => string = (f) => f.ad) => l.length
     ? h("div", { className: "rb-fotolar" }, ...l.map((f, i) => h("figure", { key: i, className: "rb-foto" },
       f.src ? h("img", { src: f.src, alt: f.ad }) : h("div", { className: "rb-foto-bos" }, f.ad), h("figcaption", null, etiket(f)))))
@@ -217,9 +255,24 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
         return h("tr", { key: x.id }, h("td", null, x.ad), h("td", null, s && s.trim() ? `${s}${x.birim ? ` ${x.birim}` : ""}` : "-"), h("td", null, sinir),
           h("td", null, r === true ? "Uygun" : r === false ? "Uygun değil" : "-"));
       })));
-      case "cihaz": return cihazTablosu();
+      case "cihaz": return cihazTablosu(b);
       case "foto": return fotolar(v.fotolar.filter((f) => !f.madde && f.bolum === b.id));
-      case "kusur": return d.kusurlar.length
+      /* 595 (madde 10): sütunları tanımlıysa tablo (No · Bölüm · Uygunluk · Ağırlık · Fotoğraf — formatın seçtikleri, adlarıyla) */
+      case "kusur": if (b.sutunlar?.length) {
+        const bolumAdi = new Map(t.bolumler.map((x) => [x.id, x.ad]));
+        const hucre = (k: (typeof d.kusurlar)[number], i: number, a: KusurAlani): string => {
+          if (a === "sira") return String(i + 1);
+          if (a === "bolum") return bolumAdi.get(k.bolum) ?? "-";
+          if (a === "metin") return k.metin;
+          if (a === "agir") return k.agir ? "Ağır" : "Hafif";
+          const fl = v.fotolar.filter((f) => f.madde && f.madde === k.ref).map((f) => f.ad);
+          return fl.length ? fl.join(", ") : "-";
+        };
+        return h("table", null, baslikSatiri(...b.sutunlar.map((s) => s.ad)), h("tbody", null, ...(d.kusurlar.length
+          ? d.kusurlar.map((k, i) => h("tr", { key: i }, ...b.sutunlar!.map((s) => h("td", { key: s.id, ...(s.alan === "sira" ? { className: "rb-orta" } : {}) }, hucre(k, i, s.alan)))))
+          : [h("tr", { key: 0 }, h("td", { colSpan: b.sutunlar.length }, "Kusur yok."))])));
+      }
+      return d.kusurlar.length
         ? h("ul", { className: "rb-kusurlar" }, ...d.kusurlar.map((k, i) => {
           const fl = v.fotolar.filter((f) => f.madde && f.madde === k.ref).map((f) => f.ad);
           return h("li", { key: i }, `${k.agir ? "** " : "* "}${k.metin}${fl.length ? ` (Fotoğraf: ${fl.join(", ")})` : ""}`);
@@ -269,7 +322,7 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
      kayıttan başlayan sabit satırlar (formatın aynı adlı alanı yoksa — saha ekranıyla aynı liste), "Ekipman bölümü", sonra formatın ekipman alanları */
   const ekipman: Cift[] = [
     [ekipmanEtiketleri(t).kod, v.ekipman.kod], [ekipmanEtiketleri(t).tur, v.tur.ad],
-    ...(duzen.tam ? duzen.tam.alanlar.map((a): Cift => [a.ad, alanDegeri(a), a.tur === "coklu" || (a.secenekler?.length ?? 0) > 3])
+    ...(duzen.tam ? duzen.tam.alanlar.map((a): Cift => [a.ad, alanDegeri(a), tamMi(a)])
       : [...sabitEkipmanAlanlari(t).map((k): Cift => [EKIPMAN_ALAN_ADI[k], deger(v.ekipman[k])]), ["Ekipman bölümü", deger(v.ekipman.bolum)] as Cift]),
   ];
   return h("article", { className: "rb-sayfa", "aria-label": `${no} rapor belgesi` },
@@ -288,7 +341,7 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
       /* 486: formatta ekipman bölümü kaldırıldıysa kod ve tür burada (rapor hangi ekipmanın — her belgede) */
       ...(duzen.ekipman ? [] : ekipman.slice(0, 2)),
     ])),
-    duzen.ekipman ? bolum("2", duzen.ekipmanBaslik, bilgiTablosu(ekipman), ...(duzen.tam ? [] : katilan).map((b) => h(Fragment, { key: b.id }, bilgi(b, true)))) : null,
+    duzen.ekipman ? bolum("2", duzen.ekipmanBaslik, bilgiTablosu(ekipman, duzen.tam?.dizilis ?? 2), ...(duzen.tam ? [] : katilan).map((b) => h(Fragment, { key: b.id }, bilgi(b, true)))) : null,
     duzen.cihazNo ? bolum(duzen.cihazNo, "Ölçüm cihazları", cihazTablosu()) : null,
     ...duzen.bolumler.flatMap((x) => [x.ust ? ustBaslik(x.ust.no, x.ust.ad) : null, bolum(x.no, x.b.ad, formatBolumu(x.b))]),
     imzaVar ? null : bolum(duzen.sonraki, "Yetkili kişi", imza()),

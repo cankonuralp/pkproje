@@ -17,7 +17,10 @@
      DEĞİŞTİRİLEBİLİR OLMALI EKİPMAN KODU HARİÇ"): tam ekipman bölümünde KAYITTAN gelen kopyalar çizilmez (tamAlanlari) — ekipman kodu ve türü
      2. bölümün sabit satırında zaten var; seri no ve kullanım yeri ekipman kaydına bağlı (raporda değiştirilebilir) alan olur, aynısı varsa çıkar.
      Ekran ve belge aynı listeden; Format kurucu formatın kendisini gösterir (sade: false). */
-import { EKIPMAN_ALAN_ADI, FIRMA_KAYNAK_ADI, type Bolum, type BolumOf, type EkipmanAlani, type FirmaKaynagi, type FirmaSatiri, type FormatTanimi, type ImzaSatiri } from "./tanim.ts";
+import {
+  CIHAZ_ALAN_ADI, EKIPMAN_ALAN_ADI, FIRMA_KAYNAK_ADI, type Bolum, type BolumOf, type CihazAlani, type CihazSutunu, type EkipmanAlani, type FirmaKaynagi, type FirmaSatiri,
+  type FormatTanimi, type ImzaSatiri,
+} from "./tanim.ts";
 import { sonucKurallariniYaz } from "./sonuc.ts";
 
 const kucuk = (s: string) => s.toLocaleLowerCase("tr");
@@ -208,3 +211,8 @@ export function altYazisi(t: Pick<FormatTanimi, "gorunum">, firma: string, kod: 
   const y = t.gorunum.altYazi?.trim();
   return y ? y.replaceAll("{firma}", firma).replaceAll("{kod}", kod) : `${firma} · ${kod}`;
 }
+
+/* 595 (madde 2): ölçüm cihazları tablosunun sütunları — tanımdakiler; verilmemişse (ya da formatta cihaz bölümü yoksa) bugünkü 5 sütun */
+const CIHAZ_VARSAYILAN: readonly CihazAlani[] = ["cihaz", "kod_seri", "kal_tarih", "kal_bitis", "sertifika"];
+export const cihazSutunlari = (b?: BolumOf<"cihaz"> | null): readonly CihazSutunu[] =>
+  b?.sutunlar ?? CIHAZ_VARSAYILAN.map((a) => ({ id: `cs_${a}`, ad: CIHAZ_ALAN_ADI[a], alan: a }));

@@ -167,6 +167,11 @@ pkproje/
                             kurucu.ts bolumBasligiYaz / gorunumBasligiYaz (bugünkü yazıyla aynı yazılan kalkar), sonucYeriYaz, notSatiriYaz, ogeTasi (madde
                             grubun ucundan komşu gruba) · Kagit.tsx yerinde yazı + öğe tuşlarında yukarı / aşağı (sütunda sola / sağa) · motor Bakanlık özü ·
                             S.A.Y "baslik" / "sonuc_yeri" / "not_satiri" / "oge_tasi" · kilit tests/basliklar, bozan basliklar
+                            · 595 TABLO SÜTUNLARI VE DİZİLİŞ (madde 2, 9, 10): tanim.ts cihaz / kusur sutunlar (CIHAZ_ALANLARI, KUSUR_ALANLARI — değer kayıttan,
+                            adı formatın), bilgi dizilis (1 · 2 · 3), alan tam · duzen.ts cihazSutunlari (verilmemişse bugünkü 5 sütun) · belge.ts cihaz tablosu
+                            sütunlarla, uygunsuzluklar tablo (sutunlar varsa) · kurucu.ts tabloSutunuEkle / Yaz / Sil (cihazda en az bir) / Tasi, kusurTablosuYaz,
+                            bilgiDizilisiYaz, ogeYaz tam · Kagit.tsx sütun başlığında ← → ×, "+ Sütun", bölüm ayarında diziliş / tablo · S.A.Y "tablo_sutunu" /
+                            "dizilis" · kilit tests/tablo-sutunlari, bozan tablo-sutunlari
   src/modules/rapor-format/ RAPOR FORMATI (2026-10-04, 308): sürümlü tanım (rapor_format, göç 0022: taslak → yayında → eski; yayınlanan değişmez) ·
                             şablondan başlat · taslak kaydet · yayınla (kilitli Bakanlık öğesi ENGEL, öteki denetim uyarı) · yayındaki format;
                             ekran: tür sayfası "Rapor şablonu" + önizleme /ekipman-turleri/<tür>/sablon/<sürüm> · FORMAT KURUCU (338, K4):

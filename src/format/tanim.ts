@@ -64,6 +64,18 @@ export const FIRMA_KAYNAK_ADI: Record<FirmaKaynagi, string> = {
 };
 /** çıkarılamayan satırlar (Bakanlık: SGK ve İSG-KATİP kayıttan, kilitli; başlangıç rapor açılınca yazılır, zorunlu) */
 export const FIRMA_ZORUNLU: readonly FirmaKaynagi[] = ["isg", "sgk", "bas"];
+/** 2026-10-16 (sunum 595 madde 2, K3 "evet"): ölçüm cihazları tablosunun sütunları cihaz kaydından seçilir (satırlar türün cihazlarından); cihaz =
+    türü + marka / model (bugünkü ilk sütun), kod_seri = kod / seri no (bugünkü ikinci sütun) */
+export const CIHAZ_ALANLARI = ["cihaz", "tur", "kod_seri", "kod", "seri", "marka", "model", "kal_tarih", "kal_bitis", "sertifika"] as const;
+export type CihazAlani = (typeof CIHAZ_ALANLARI)[number];
+export const CIHAZ_ALAN_ADI: Record<CihazAlani, string> = {
+  cihaz: "Cihaz", tur: "Cihaz türü", kod_seri: "Kod / seri no", kod: "Kod", seri: "Seri no", marka: "Marka", model: "Model",
+  kal_tarih: "Kalibrasyon tarihi", kal_bitis: "Geçerlilik", sertifika: "Sertifika no",
+};
+/** 595 (madde 10): uygunsuzluklar tablosunun sütunları (verilmemişse bugünkü madde listesi) */
+export const KUSUR_ALANLARI = ["sira", "bolum", "metin", "agir", "foto"] as const;
+export type KusurAlani = (typeof KUSUR_ALANLARI)[number];
+export const KUSUR_ALAN_ADI: Record<KusurAlani, string> = { sira: "No", bolum: "Bölüm", metin: "Uygunsuzluk", agir: "Ağırlık", foto: "Fotoğraf" };
 /** ölçüm tablosunun adıyla seçilen hesabı (hesap.ts) */
 export const HESAPLAR = ["nokta", "selektivite", "linye", "pd", "zi"] as const;
 /** 495: "metin" — serbest metin (belgeye basılan sabit yazı; sahada okunur, doldurulmaz) */
@@ -83,6 +95,8 @@ const Alan = z.object({
   id: kimlik, ad, tur: z.enum(ALAN_TURLERI), zorunlu: z.boolean().default(false), kilit: z.boolean().default(false),
   secenekler: z.array(z.string().trim().min(1).max(200)).max(40).optional(), birim: kisa.optional(), kaynak: z.enum(KAYNAKLAR).optional(),
   ekipman: z.enum(EKIPMAN_ALANLARI).optional(), formul,
+  /** 595 (madde 9): belgede tam satır (verilmemişse çoklu seçim / uzun seçenek listesi kendiliğinden tam) */
+  tam: z.boolean().optional(),
 });
 const Madde = z.object({ id: kimlik, metin: ad, aciklama: metin.optional(), std: z.string().max(200).optional(), talimat: talimat.optional(), kilit: z.boolean().default(false), formul });
 const Grup = z.object({ id: kimlik, ad: z.string().max(200), talimat: talimat.optional(), maddeler: z.array(Madde).max(200) });
@@ -99,6 +113,11 @@ const Deger = z.object({
   secenekler: secenekListesi.optional(), olumsuz: secenekListesi.optional(), agir: z.boolean().default(false),
   op: z.enum(SINIRLAR).optional(), sinir: z.number().finite().optional(), not: z.string().max(120).optional(), formul,
 });
+/** tablo sütunu: adı formatın, değeri kayıttan (cihaz / uygunsuzluk) */
+const CihazSutunu = z.object({ id: kimlik, ad, alan: z.enum(CIHAZ_ALANLARI) });
+const KusurSutunu = z.object({ id: kimlik, ad, alan: z.enum(KUSUR_ALANLARI) });
+export type CihazSutunu = z.output<typeof CihazSutunu>;
+export type KusurSutunu = z.output<typeof KusurSutunu>;
 const FirmaSatiri = z.object({
   id: kimlik, ad, kaynak: z.enum(FIRMA_KAYNAKLARI), metin: z.string().max(400).optional(), tam: z.boolean().optional(),
 });
@@ -140,7 +159,8 @@ export const Bolum = z.discriminatedUnion("blok", [
   /* tam (460; reisim 2026-10-09: "ekipman bilgileri kısmıda değiştirilebilir olsun zira yangın dolabı gibi ekipmanlarda farklı girdiler
      olabiliyor"): raporun 2. bölümü YALNIZ bu bölümün alanlarıdır — ekipman kodu ve türü dışında sabit satır yok; marka, model … ekipman
      kaydına bağlı alan olarak eklenir, çıkarılır, adı değişir. Tam bölümsüz (eski) formatlar eskisi gibi çizilir (format/duzen.ts). */
-  z.object({ ...ortak, blok: z.literal("bilgi"), alanlar: z.array(Alan).max(60), tam: z.boolean().optional() }),
+  /* 595 (madde 9): dizilis — belgede bir satırda kaç bilgi (1 · 2 · 3; verilmemişse 2) */
+  z.object({ ...ortak, blok: z.literal("bilgi"), alanlar: z.array(Alan).max(60), tam: z.boolean().optional(), dizilis: z.union([z.literal(1), z.literal(2), z.literal(3)]).optional() }),
   z.object({ ...ortak, blok: z.literal("liste"), cevaplar: z.array(z.string().trim().min(1).max(40)).min(2).max(6), gruplar: z.array(Grup).max(40),
     basliklar: z.object({ no: baslik, madde: baslik, sonuc: baslik }).optional() }),
   z.object({
@@ -155,9 +175,11 @@ export const Bolum = z.discriminatedUnion("blok", [
   }),
   z.object({ ...ortak, blok: z.literal("test"), degerler: z.array(Deger).max(40),
     basliklar: z.object({ olcum: baslik, deger: baslik, sinir: baslik, sonuc: baslik }).optional() }),
-  z.object({ ...ortak, blok: z.literal("cihaz") }),
+  /* 595 (madde 2): sutunlar — verilmemişse bugünkü 5 sütun (format/duzen.ts cihazSutunlari) */
+  z.object({ ...ortak, blok: z.literal("cihaz"), sutunlar: z.array(CihazSutunu).max(10).optional() }),
   z.object({ ...ortak, blok: z.literal("foto"), enAz: z.number().int().min(0).max(50).default(0), enCok: z.number().int().min(1).max(50).default(20) }),
-  z.object({ ...ortak, blok: z.literal("kusur") }),
+  /* 595 (madde 10): sutunlar — verilirse uygunsuzluklar tablo olarak (yoksa bugünkü madde listesi) */
+  z.object({ ...ortak, blok: z.literal("kusur"), sutunlar: z.array(KusurSutunu).max(6).optional() }),
   /* aciklama (426): sonuç bölümünün sabit metni — Bakanlık formatlarındaki "Ağır kusurlar tanımı", "Açıklamalar" (PDF'e basılır) */
   /* 595 (madde 12): sonuç cümlesinin bitişi — "uygundur" / "uygun değildir" yerine (ör. "KULLANIMA UYGUNDUR") */
   z.object({ ...ortak, blok: z.literal("sonuc"), cumle: z.string().max(400).default(""), aciklama: z.string().max(4000).default(""),
@@ -279,6 +301,14 @@ export const FormatTanimi = z.object({
         bag.addIssue({ code: "custom", path: yol, message: `İmza satırının bilgisi kişiye uymuyor: ${s.ad}` });
       }
     });
+    if ((b.blok === "cihaz" || b.blok === "kusur") && b.sutunlar) {
+      const al = new Set<string>();
+      b.sutunlar.forEach((s, j) => {
+        tek(s.id, ["bolumler", i, "sutunlar", j, "id"]);
+        if (al.has(s.alan)) bag.addIssue({ code: "custom", path: ["bolumler", i, "sutunlar", j, "alan"], message: `Sütun iki kez: ${s.ad}` });
+        al.add(s.alan);
+      });
+    }
     if (b.blok === "foto" && b.enAz > b.enCok) bag.addIssue({ code: "custom", path: ["bolumler", i, "enAz"], message: "En az, en çoktan büyük olamaz." });
   });
 });

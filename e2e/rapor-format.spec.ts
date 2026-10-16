@@ -368,6 +368,22 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     const cihaz = kagit.getByRole("region", { name: /Ölçüm cihazları$/ });
     await expect(cihaz.getByText("Tesisat test cihazı (çevrim empedansı / RCD)")).toBeVisible();
     await expect(cihaz.getByRole("button", { name: /bölümü sil$/ })).toHaveCount(0);
+    /* 595 (madde 2, K3 — reisim: "satır sütun ekleyemiyorum"): cihaz tablosunun sütunu cihaz kaydından eklenir, adı yazılır, sola taşınır;
+       madde 10: uygunsuzluklar tablo olarak (bölüm ayarı) */
+    await cihaz.getByRole("combobox", { name: /sütun ekle$/ }).click();
+    await page.getByRole("option", { name: /^Marka/ }).click();
+    const sutunAdi = page.getByRole("textbox", { name: "Sütun adı" });
+    await expect(sutunAdi).toBeFocused();
+    await sutunAdi.fill("Cihaz markası");
+    await sutunAdi.press("Enter");
+    await expect(cihaz.getByRole("button", { name: "Cihaz markası", exact: true })).toBeVisible();
+    await cihaz.getByRole("button", { name: "Cihaz markası · sola" }).click();
+    await expect(cihaz.getByRole("button", { name: "Cihaz markası · sağa" })).toBeEnabled();
+    const kusurBolumu = kagit.getByRole("region", { name: /Kusur açıklamaları$/ });
+    await kusurBolumu.getByRole("button", { name: "Kusur açıklamaları · bölüm ayarları" }).click();
+    await page.getByRole("checkbox", { name: /^Tablo olarak/ }).check();
+    await page.getByRole("button", { name: "Bölüm ayarlarını kapat" }).click();
+    await expect(kusurBolumu.getByRole("button", { name: "Uygunsuzluk", exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), "yana taşma yok").toBe(true);
     await goz(page, "kurucu-duzen", bilgi.project.name);
     /* belge önizlemesi: kesin belgenin çizicisinden, yazılanlarla */
@@ -376,6 +392,7 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await expect(belge.getByText("Deneme sütunu")).toBeVisible();
     await expect(belge.getByText("Model / tip")).toBeVisible();
     await expect(belge.getByText("Teknik yöneticinin diploma no")).toBeVisible();
+    await expect(belge.getByRole("columnheader", { name: "Cihaz markası" })).toBeVisible();
     await expect(belge.getByText("Tesis yetkilisi")).toBeVisible();
     await expect(belge.getByText("Proje numarası")).toBeVisible();
     await expect(belge.getByText("Değerlendirme").first()).toBeVisible();

@@ -37,16 +37,16 @@ import { useOnayla } from "../../../components/pencere/Onay";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { SINIR_ISARETI } from "../../../format/hesap";
 import {
-  altBaslikAnasi, altGrupSonu, basEtiketleri, ekipmanEtiketleri, firmaSatirlari, imzaSatirlari, listeBasliklari, olcumBasliklari, raporDuzeni, siraBasligi,
+  altBaslikAnasi, altGrupSonu, basEtiketleri, cihazSutunlari, ekipmanEtiketleri, firmaSatirlari, imzaSatirlari, listeBasliklari, olcumBasliklari, raporDuzeni, siraBasligi,
   sonucMetinleri, testBasliklari,
 } from "../../../format/duzen";
 import {
-  BLOKLAR, doldurma, DOLDURULUR, EKIPMAN_ALAN_ADI, EKIPMAN_ALANLARI, FIRMA_KAYNAK_ADI, FIRMA_ZORUNLU, IMZA_ALAN_ADI, IMZA_KISI_ADI, KUNYE_ALAN_ADI, KUNYE_ALANLARI,
+  BLOKLAR, CIHAZ_ALAN_ADI, doldurma, DOLDURULUR, EKIPMAN_ALAN_ADI, KUSUR_ALAN_ADI, type CihazAlani, type KusurAlani, EKIPMAN_ALANLARI, FIRMA_KAYNAK_ADI, FIRMA_ZORUNLU, IMZA_ALAN_ADI, IMZA_KISI_ADI, KUNYE_ALAN_ADI, KUNYE_ALANLARI,
   type Blok, type Bolum, type BolumOf, type FirmaKaynagi, type FirmaSatiri, type FormatTanimi, type ImzaAlani, type ImzaSatiri,
 } from "../../../format/tanim";
 import { kilitliKunye } from "../../../format/kunye";
 import {
-  ALT_TURLER, altBaslikEkle, bolumAdi, eksikFirmaKaynaklari, eksikImzaAlanlari, FIRMA_ADI_SABIT, firmaSatiriEkle, firmaSatiriSil, firmaSatiriTasi,
+  ALT_TURLER, altBaslikEkle, bilgiDizilisiYaz, bolumAdi, eksikTabloAlanlari, kusurTablosuYaz, tabloSutunuEkle, tabloSutunuSil, tabloSutunuTasi, tabloSutunuYaz, eksikFirmaKaynaklari, eksikImzaAlanlari, FIRMA_ADI_SABIT, firmaSatiriEkle, firmaSatiriSil, firmaSatiriTasi,
   firmaSatiriYaz, bolumBasligiYaz, gorunumBasligiYaz, notSatiriYaz, ogeTasi, sonucYeriYaz, type BolumBasligi, type GorunumBasligi, ekipmanBolumuGeriEkle, ekipmanBolumuKaldir, bolumDuzeni, ekipmanAlaniEkle, gorunumYaz, grupEkle, grupSil, grupYaz,
   imzaKisisiYaz, imzaSatiriEkle, imzaSatiriSil, imzaSatiriTasi, imzaSatiriYaz, kunyeKilitYaz, kurucudan, maddeEkle, ogeEkle, ogeSil, ogeYaz, satirlar, tasi,
   yeniBolum, yeniKimlik,
@@ -149,22 +149,42 @@ function AlanOrnegi({ a }: { a: BolumOf<"bilgi">["alanlar"][number] }) {
 }
 
 type Hucre = readonly [etiket: ReactNode, deger: ReactNode, tam?: boolean];
-/** belgedeki iki sütunlu etiket – değer tablosu (belge.ts bilgiTablosu ile aynı dizilim) */
-function BilgiTablosu({ l, son }: { l: readonly Hucre[]; son?: ReactNode }) {
-  const satir: ReactNode[] = [];
-  for (let i = 0; i < l.length; i++) {
-    const [e, d, tam] = l[i], s = l[i + 1];
-    if (tam || !s || s[2]) satir.push(<tr key={i}><td className="rb-e">{e}</td><td colSpan={3}>{d}</td></tr>);
-    else { satir.push(<tr key={i}><td className="rb-e">{e}</td><td>{d}</td><td className="rb-e">{s[0]}</td><td>{s[1]}</td></tr>); i++; }
+/** belgedeki etiket – değer tablosu (belge.ts bilgiTablosu ile aynı dizilim); 595 (madde 9): n — bir satırda kaç bilgi (1 · 2 · 3) */
+function BilgiTablosu({ l, son, n = 2 }: { l: readonly Hucre[]; son?: ReactNode; n?: 1 | 2 | 3 }) {
+  const satir: ReactNode[] = [], genis = n * 2;
+  if (n === 1) for (let i = 0; i < l.length; i++) satir.push(<tr key={i}><td className="rb-e">{l[i][0]}</td><td>{l[i][1]}</td></tr>);
+  else if (n === 3) {
+    let bekleyen: Hucre[] = [];
+    const bosalt = () => {
+      if (!bekleyen.length) return;
+      satir.push(<tr key={satir.length}>{bekleyen.flatMap(([e, d], j) => [<td key={`e${j}`} className="rb-e">{e}</td>,
+        <td key={`d${j}`} {...(j === bekleyen.length - 1 && bekleyen.length < 3 ? { colSpan: 1 + (3 - bekleyen.length) * 2 } : {})}>{d}</td>])}</tr>);
+      bekleyen = [];
+    };
+    for (const c of l) {
+      if (c[2]) { bosalt(); satir.push(<tr key={satir.length}><td className="rb-e">{c[0]}</td><td colSpan={5}>{c[1]}</td></tr>); continue; }
+      bekleyen.push(c);
+      if (bekleyen.length === 3) bosalt();
+    }
+    bosalt();
+  } else {
+    for (let i = 0; i < l.length; i++) {
+      const [e, d, tam] = l[i], s = l[i + 1];
+      if (tam || !s || s[2]) satir.push(<tr key={i}><td className="rb-e">{e}</td><td colSpan={3}>{d}</td></tr>);
+      else { satir.push(<tr key={i}><td className="rb-e">{e}</td><td>{d}</td><td className="rb-e">{s[0]}</td><td>{s[1]}</td></tr>); i++; }
+    }
   }
-  if (son) satir.push(<tr key="son" className={k.ekleSatir}><td colSpan={4}>{son}</td></tr>);
+  if (son) satir.push(<tr key="son" className={k.ekleSatir}><td colSpan={genis}>{son}</td></tr>);
+  const gen = n === 1 ? ["30%", "70%"] : n === 3 ? ["14%", "19.33%", "14%", "19.33%", "14%", "19.34%"] : ["22%", "28%", "22%", "28%"];
   return (
     <table>
-      <colgroup><col style={{ width: "22%" }} /><col style={{ width: "28%" }} /><col style={{ width: "22%" }} /><col style={{ width: "28%" }} /></colgroup>
+      <colgroup>{gen.map((w, j) => <col key={j} style={{ width: w }} />)}</colgroup>
       <tbody>{satir}</tbody>
     </table>
   );
 }
+/** 595 (madde 9): alanın belgede tam satırlığı (verilmemişse çoklu seçim / uzun seçenek listesi) — belge.ts tamMi ile aynı */
+const tamMi = (a: BolumOf<"bilgi">["alanlar"][number]) => a.tam ?? (a.tur === "coklu" || (a.secenekler?.length ?? 0) > 3);
 
 /** 494 (hata listesi 29 + 46 maketi; reisim 2026-10-11: "gelişmiş seçenekler tuşu olsun ve tıklayınca buraya gitsin"): GELİŞMİŞ görünümde kâğıdın
     yapboz bağı — parça kutusundan sürüklenen ya da tutulan (dokun-yerleştir) parça bölümler arasına (p: yeni bölümün yeri) ya da bilgi bölümünün
@@ -447,7 +467,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
         return <BilgiTablosu l={b.alanlar.map((a) => [
           <span key={a.id} className={k.etiket}><Yazi deger={a.ad} ad="Alan adı" ac={yeniId === a.id} yaz={(s) => degis(ogeYaz(t, i, a.id, { ad: s }))} />
             {ogeTuslari(b, i, a.id, a.ad, a.kilit)}</span>,
-          <AlanOrnegi key={`${a.id}-d`} a={a} />, a.tur === "coklu" || (a.secenekler?.length ?? 0) > 3] as const)}
+          <AlanOrnegi key={`${a.id}-d`} a={a} />, tamMi(a)] as const)} n={b.dizilis ?? 2}
           son={<Ekle ad="Alan ekle" onClick={() => ogeKoy(i, "a", "Yeni alan")} />} />;
       case "liste": {
         const cok = b.gruplar.length > 1;
@@ -554,19 +574,23 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
             </tbody>
           </table>
         );
-      case "cihaz":
-        /* 459: satırlar türün ölçüm cihazı türlerinden (tür sayfası); cihazın kendisi sahada zimmetten seçilir, kalibrasyonu denetlenir */
+      case "cihaz": {
+        /* 459: satırlar türün ölçüm cihazı türlerinden (tür sayfası); cihazın kendisi sahada zimmetten seçilir, kalibrasyonu denetlenir.
+           595 (madde 2, K3): sütunlar cihaz kaydından seçilir — adı yazılır, sola / sağa, çıkar (en az bir sütun), "+ Sütun" */
+        const l = cihazSutunlari(b);
         return (
           <table>
-            <thead><tr>{["Cihaz", "Kod / seri no", "Kalibrasyon tarihi", "Geçerlilik", "Sertifika no"].map((x) => <th key={x} className="rb-ab">{x}</th>)}</tr></thead>
+            <thead><tr>{l.map((s, j) => <th key={s.id} className="rb-ab">{tabloBasligi(b, i, s, j, l.length)}</th>)}
+              {eksikTabloAlanlari(b).length > 0 && <th className={k.ekleSutun}>{tabloSutunuSecimi(b, i)}</th>}</tr></thead>
             <tbody>
               {tur.cihaz.map((ad) => (
-                <tr key={ad}><td className={k.turdan}>{ad}</td><td colSpan={4}><span className={k.ornek}>sahada seçilir</span></td></tr>
+                <tr key={ad}><td className={k.turdan}>{ad}</td>{l.length > 1 && <td colSpan={l.length - 1}><span className={k.ornek}>sahada seçilir</span></td>}</tr>
               ))}
-              {!tur.cihaz.length && <tr><td colSpan={5}><span className={k.ornek}>Ölçüm cihazı türü seçilmemiş.</span></td></tr>}
+              {!tur.cihaz.length && <tr><td colSpan={l.length}><span className={k.ornek}>Ölçüm cihazı türü seçilmemiş.</span></td></tr>}
             </tbody>
           </table>
         );
+      }
       case "foto":
         return (
           <div className="rb-fotolar">
@@ -576,6 +600,17 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
           </div>
         );
       case "kusur":
+        /* 595 (madde 10): tablo olarak (bölüm ayarı) — sütunlar seçilir, adı yazılır, sırası değişir; son sütun çıkınca madde listesine döner */
+        if (b.sutunlar?.length) {
+          const l = b.sutunlar;
+          return (
+            <table>
+              <thead><tr>{l.map((s, j) => <th key={s.id} className="rb-ab">{tabloBasligi(b, i, s, j, l.length)}</th>)}
+                {eksikTabloAlanlari(b).length > 0 && <th className={k.ekleSutun}>{tabloSutunuSecimi(b, i)}</th>}</tr></thead>
+              <tbody><tr><td colSpan={l.length}><span className={k.ornek}>Uygunsuzluklar kendiliğinden yazılır (satır başına bir uygunsuzluk).</span></td></tr></tbody>
+            </table>
+          );
+        }
         return <p className="rb-kutu-metin"><span className={k.ornek}>Uygunsuzluklar kendiliğinden yazılır.</span></p>;
       case "sonuc":
         return <>
@@ -653,6 +688,38 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
       </div>
     );
   };
+  /* 595 (madde 9): bilgi bölümünde bir satırda kaç bilgi */
+  const dizilisAyari = (b: BolumOf<"bilgi">, i: number) => (
+    <div className={k.panelSatir} role="radiogroup" aria-label={`${b.ad} · bir satırda kaç bilgi`}>
+      {([[1, "Satırda bir bilgi"], [2, "İki bilgi"], [3, "Üç bilgi"]] as const).map(([n, ad]) => (
+        <label key={n} className={k.panelKutu}><input type="radio" name={`kb-${b.id}-dizilis`} checked={(b.dizilis ?? 2) === n}
+          onChange={() => degis(bilgiDizilisiYaz(t, i, n))} />{ad}</label>
+      ))}
+    </div>
+  );
+  /* 595 (madde 2, 10): cihaz / uygunsuzluk tablosunun sütun başlığı — adı yerinde yazılır, sola / sağa, çıkar */
+  const tabloBasligi = (b: Bolum, i: number, s: { id: string; ad: string }, j: number, n: number) => (
+    <span className={k.sutun}>
+      <Yazi deger={s.ad} ad="Sütun adı" ac={yeniId === s.id} uzun={60} yaz={(x) => degis(tabloSutunuYaz(t, i, s.id, x))} />
+      <span className={k.ogeTus}>
+        <Tus ikon="arrow-left" ad={`${s.ad} · sola`} disabled={j === 0} onClick={() => degis(tabloSutunuTasi(t, i, s.id, -1))} />
+        <Tus ikon="arrow-right" ad={`${s.ad} · sağa`} disabled={j === n - 1} onClick={() => degis(tabloSutunuTasi(t, i, s.id, 1))} />
+        {(b.blok === "kusur" || n > 1) && <Tus ikon="x" ad={`${s.ad} · çıkar`} onClick={() => { degis(tabloSutunuSil(t, i, s.id)); bildir(`“${s.ad}” sütunu çıkarıldı (taslak).`); }} />}
+      </span>
+    </span>
+  );
+  const tabloSutunuSecimi = (b: Bolum, i: number) => (
+    <span className={k.ekleSecim}>
+      <SecimAlani id={`kb-${b.id}-sutun-ekle`} ad={`${b.ad} · sütun ekle`} etiketsiz deger="" ipucu="+ Sütun"
+        secenekler={eksikTabloAlanlari(b).map((x) => [x, b.blok === "cihaz" ? CIHAZ_ALAN_ADI[x as CihazAlani] : KUSUR_ALAN_ADI[x as KusurAlani],
+          b.blok === "cihaz" ? "cihaz kaydından" : "kendiliğinden"] as const)}
+        degistir={(x) => {
+          const y = tabloSutunuEkle(t, i, x as CihazAlani | KusurAlani);
+          if (!y.id) return;
+          degis(y.t); setYeniId(y.id); bildir("Sütun eklendi (taslak); adını yazabilirsiniz.");
+        }} />
+    </span>
+  );
   const bolumAyari = (b: Bolum, i: number) => (
     <div className={k.panel} role="group" aria-label={`${b.ad} · bölüm ayarları`}>
       <div className={k.panelBas}><b>{b.ad} · bölüm ayarları</b><Tus ikon="x" ad="Bölüm ayarlarını kapat" onClick={() => setAyar(null)} /></div>
@@ -707,8 +774,13 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
           <EimzaYeriAyari t={t} degis={degis} hucreVar={imzaSatirlari(b).some((s) => s.kim === "uzman" && s.alan === "imza")} />
         </>;
       })()}
-      {b.blok === "cihaz" && <p className={k.panelIpucu}>Sabit bölüm: satırları türün ölçüm cihazı türleri (tür sayfasında seçilir, burada kendiliğinden); denetçi raporda zimmetindeki cihazı ekler, kalibrasyonu denetlenir.</p>}
-      {b.blok === "kusur" && <p className={k.panelIpucu}>Kendiliğinden dolar; ayarı yok.</p>}
+      {b.blok === "bilgi" && dizilisAyari(b, i)}
+      {b.blok === "cihaz" && <p className={k.panelIpucu}>Sabit bölüm: satırları türün ölçüm cihazı türleri (tür sayfasında seçilir, burada kendiliğinden); denetçi raporda zimmetindeki cihazı ekler, kalibrasyonu denetlenir. Sütunlar kâğıtta: adı yazılır, sola / sağa taşınır, çıkarılır, “+ Sütun” ile cihaz kaydından eklenir.</p>}
+      {b.blok === "kusur" && <div className={k.panelSatir}>
+        <label className={k.panelKutu}><input type="checkbox" checked={!!b.sutunlar?.length} onChange={(e) => degis(kusurTablosuYaz(t, i, e.target.checked))} />
+          Tablo olarak (No · Uygunsuzluk · Ağırlık; bölüm ve fotoğraf sütunu eklenebilir)</label>
+        <span className={k.panelIpucu}>Kendiliğinden dolar; işaretsizken madde listesi.</span>
+      </div>}
     </div>
   );
 
@@ -828,6 +900,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
         {ekip && ayar === "b:ekipman" && (
           <div className={k.panel} role="group" aria-label={`${ekip.ad} · bölüm ayarları`}>
             <div className={k.panelBas}><b>{ekip.ad} · bölüm ayarları</b><Tus ikon="x" ad="Bölüm ayarlarını kapat" onClick={() => setAyar(null)} /></div>
+            {dizilisAyari(ekip, ki)}
             {doldurmaAyari(ekip, ki)}
           </div>
         )}
@@ -839,8 +912,8 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
           ...(ekip ? ekip.alanlar.map((a): Hucre => [
             <span key={a.id} className={k.etiket} data-alan={a.id}><Yazi deger={a.ad} ad="Alan adı" ac={yeniId === a.id} yaz={(s) => degis(ogeYaz(t, ki, a.id, { ad: s }))} />
               {ogeTuslari(ekip, ki, a.id, a.ad, a.kilit)}</span>,
-            <AlanOrnegi key={`${a.id}-d`} a={a} />, a.tur === "coklu" || (a.secenekler?.length ?? 0) > 3]) : []),
-        ]}
+            <AlanOrnegi key={`${a.id}-d`} a={a} />, tamMi(a)]) : []),
+        ]} n={ekip?.dizilis ?? 2}
           son={ekip && <span className={k.ekleSira}>
             <Ekle ad="Alan ekle" onClick={() => ogeKoy(ki, "a", "Yeni alan")} />
             {eksikBagli.length > 0 && <span className={k.ekleSecim}>

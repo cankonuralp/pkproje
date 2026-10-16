@@ -78,6 +78,9 @@ export function OgeDuzenleyici({ t, i, b, id, degis }: { t: FormatTanimi; i: num
         {secmeli && <SatirAlani id={`${k}-sec`} etiket="Seçenekler" deger={(a.secenekler ?? []).join("\n")} ipucu="Her satıra bir seçenek." uygula={(s) => yaz({ secenekler: satirlar(s, 40, 200) })} />}
         <FormulAlani k={k} deger={a.formul} adlar={genelAdlar(t)} gruplar={formulAdGruplari(t, b, a.ad)} kendi={a.ad} yaz={(f) => yaz({ formul: f })} />
         {!a.formul && <label className={stil.secenek}><input type="checkbox" checked={a.zorunlu} onChange={(e) => yaz({ zorunlu: e.target.checked })} /><span>Zorunlu</span></label>}
+        {/* 595 (madde 9): belgede tam satır (verilmemişse çoklu seçim ve uzun seçenek listesi kendiliğinden tam) */}
+        <label className={stil.secenek}><input type="checkbox" checked={a.tam ?? (a.tur === "coklu" || (a.secenekler?.length ?? 0) > 3)}
+          onChange={(e) => yaz({ tam: e.target.checked })} /><span>Belgede tam satır</span></label>
       </div>
     );
   }

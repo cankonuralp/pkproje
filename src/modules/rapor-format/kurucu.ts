@@ -7,9 +7,9 @@
 import { SINIR_ISARETI } from "../../format/hesap.ts";
 import { kilitliKimlikler } from "../../format/motor.ts";
 import {
-  basEtiketleri, ekipmanEtiketleri, ekipmanTamYap, firmaSatirlari, imzaSatirlari, imzaVarsayilani, listeBasliklari, olcumBasliklari, sonucMetinleri, testBasliklari,
+  basEtiketleri, cihazSutunlari, ekipmanEtiketleri, ekipmanTamYap, firmaSatirlari, imzaSatirlari, imzaVarsayilani, listeBasliklari, olcumBasliklari, sonucMetinleri, testBasliklari,
 } from "../../format/duzen.ts";
-import { Bolum, EIMZA_KUTU, EKIPMAN_ALAN_ADI, FIRMA_KAYNAK_ADI, FIRMA_KAYNAKLARI, FIRMA_ZORUNLU, IMZA_ALAN_ADI, imzaAlanlari, KUNYE_ALANLARI, KURAL_EN_COK, kurucudan, type Blok, type BolumOf, type EkipmanAlani, type FormatTanimi,
+import { Bolum, CIHAZ_ALAN_ADI, CIHAZ_ALANLARI, EIMZA_KUTU, EKIPMAN_ALAN_ADI, KUSUR_ALAN_ADI, KUSUR_ALANLARI, type CihazAlani, type KusurAlani, FIRMA_KAYNAK_ADI, FIRMA_KAYNAKLARI, FIRMA_ZORUNLU, IMZA_ALAN_ADI, imzaAlanlari, KUNYE_ALANLARI, KURAL_EN_COK, kurucudan, type Blok, type BolumOf, type EkipmanAlani, type FormatTanimi,
   type FirmaKaynagi, type FirmaSatiri, type ImzaAlani, type ImzaKisisi, type ImzaSatiri, type KunyeAlani, type Sinir, type SonucKurali } from "../../format/tanim.ts";
 import { kilitliKunye } from "../../format/kunye.ts";
 import { FORMUL_EN_UZUN, formulAdDegistir, formulDuzelt } from "../../format/formul.ts";
@@ -27,13 +27,14 @@ export function kimlikler(t: FormatTanimi): Set<string> {
     if (b.blok === "olcum") for (const c of b.sutunlar) s.add(c.id);
     if (b.blok === "test") for (const d of b.degerler) s.add(d.id);
     if (b.blok === "imza") for (const x of b.satirlar ?? []) s.add(x.id);
+    if (b.blok === "cihaz" || b.blok === "kusur") for (const x of b.sutunlar ?? []) s.add(x.id);
   }
   for (const x of t.gorunum.firma?.satirlar ?? []) s.add(x.id);
   return s;
 }
 
 /** önek + en küçük kullanılmayan sayı (ör. "k_a3"): şablonların kimlikleriyle çakışmaz, tanımda tekil */
-export function yeniKimlik(t: FormatTanimi, onek: "b" | "a" | "g" | "m" | "s" | "d" | "i" | "f", ek: ReadonlySet<string> = new Set()): string {
+export function yeniKimlik(t: FormatTanimi, onek: "b" | "a" | "g" | "m" | "s" | "d" | "i" | "f" | "t", ek: ReadonlySet<string> = new Set()): string {
   const var_ = kimlikler(t);
   let n = 1;
   while (var_.has(`k_${onek}${n}`) || ek.has(`k_${onek}${n}`)) n++;
@@ -175,6 +176,8 @@ export interface OgeYamasi {
   op?: Sinir | ""; sinir?: number | null; std?: string; aciklama?: string; talimat?: string; not?: string; grup?: string;
   /** 495 → 556: formül (her türde — kayıttan gelen ve ekipman bilgisi dahil; boş = formül yok) */
   formul?: string;
+  /** 595 (madde 9): bilgi alanı belgede tam satır (null: kendiliğinden) */
+  tam?: boolean | null;
 }
 const kirp = (s: string, n: number) => s.trim().replace(/\s+/g, " ").slice(0, n);
 /** çok satırlı metinden seçenekler: kırpılmış, boşsuz, tekil, en çok `adet` tane, her biri en çok `uzun` karakter */
@@ -215,14 +218,16 @@ export function ogeYaz(t: FormatTanimi, i: number, id: string, y: OgeYamasi): Fo
   if (b.blok === "bilgi") {
     n = { ...b, alanlar: b.alanlar.map((a) => {
       if (a.id !== id) return a;
+      /* 595 (madde 9): tam satır her alanda */
+      const tamli = <A extends { tam?: boolean }>(x: A): A => { if (y.tam === undefined) return x; const z = { ...x }; if (y.tam === null) delete z.tam; else z.tam = y.tam; return z; };
       /* kayıttan gelen ve ekipman bilgisine bağlı alanın adı ve (556) formülü değişir */
-      if (a.kaynak || a.ekipman) return formulYaz(y.ad !== undefined ? { ...a, ad: kirp(y.ad, 200) || a.ad } : a, y);
+      if (a.kaynak || a.ekipman) return tamli(formulYaz(y.ad !== undefined ? { ...a, ad: kirp(y.ad, 200) || a.ad } : a, y));
       const tur = y.tur ?? a.tur, secmeli = tur === "secim" || tur === "coklu";
-      return formulYaz({
+      return tamli(formulYaz({
         ...a, ad: y.ad !== undefined ? kirp(y.ad, 200) || a.ad : a.ad, tur,
         secenekler: secmeli ? (y.secenekler ? y.secenekler.slice(0, 40).map((x) => kirp(x, 200)).filter(Boolean) : a.secenekler) : undefined,
         birim: y.birim !== undefined ? istege(kirp(y.birim, 40)) : a.birim, zorunlu: y.zorunlu ?? a.zorunlu,
-      }, y);
+      }, y));
     }) };
   } else if (b.blok === "liste") {
     const m = b.gruplar.flatMap((g) => g.maddeler).find((x) => x.id === id);
@@ -624,4 +629,68 @@ export function ogeTasi(t: FormatTanimi, i: number, id: string, yon: -1 | 1): Fo
     return yaz({ ...b, gruplar });
   }
   return t;
+}
+
+/* ── TABLO SÜTUNLARI (595): ölçüm cihazları (madde 2, K3 — cihaz kaydından seçilir, adı yazılır, sırası değişir; en az bir sütun) ve
+   uygunsuzluklar (madde 10 — tablo olarak; son sütun çıkınca bugünkü madde listesine döner) · bilgi bölümünün dizilişi (madde 9) ── */
+type TabloAlani = CihazAlani | KusurAlani;
+const tabloSutunlari = (b: Bolum): readonly { id: string; ad: string; alan: TabloAlani }[] =>
+  b.blok === "cihaz" ? cihazSutunlari(b) : b.blok === "kusur" ? b.sutunlar ?? [] : [];
+function tabloYaz(t: FormatTanimi, i: number, l: readonly { id?: string; ad: string; alan: TabloAlani }[]): FormatTanimi {
+  const b = t.bolumler[i];
+  if (!b || (b.blok !== "cihaz" && b.blok !== "kusur")) return t;
+  const bos = { ...t, bolumler: t.bolumler.map((x, j) => (j === i ? { ...b, sutunlar: [] } : x)) } as FormatTanimi;
+  const var_ = kimlikler(bos), ek = new Set<string>();
+  const sutunlar = l.slice(0, b.blok === "cihaz" ? 10 : 6).map((x) => {
+    const id = x.id && !var_.has(x.id) && !ek.has(x.id) && !x.id.startsWith("cs_") ? x.id : yeniKimlik({ ...t, bolumler: [] }, "t", new Set([...var_, ...ek]));
+    ek.add(id);
+    return { id, ad: x.ad, alan: x.alan };
+  });
+  const y = { ...b } as Record<string, unknown>;
+  if (b.blok === "kusur" && !sutunlar.length) delete y.sutunlar; else y.sutunlar = sutunlar;
+  return { ...t, bolumler: t.bolumler.map((x, j) => (j === i ? (y as Bolum) : x)) };
+}
+/** eklenebilecek sütunlar (bölümde olmayan bilgiler) */
+export function eksikTabloAlanlari(b: Bolum): TabloAlani[] {
+  const var_ = new Set(tabloSutunlari(b).map((s) => s.alan));
+  return (b.blok === "cihaz" ? [...CIHAZ_ALANLARI] : b.blok === "kusur" ? [...KUSUR_ALANLARI] : []).filter((a) => !var_.has(a));
+}
+export function tabloSutunuEkle(t: FormatTanimi, i: number, alan: TabloAlani, ad?: string): { t: FormatTanimi; id: string | null } {
+  const b = t.bolumler[i];
+  if (!b || !eksikTabloAlanlari(b).includes(alan)) return { t, id: null };
+  const varsayilan = b.blok === "cihaz" ? CIHAZ_ALAN_ADI[alan as CihazAlani] : KUSUR_ALAN_ADI[alan as KusurAlani];
+  const y = tabloYaz(t, i, [...tabloSutunlari(b), { ad: (ad ?? varsayilan).trim().slice(0, 200) || varsayilan, alan }]);
+  return { t: y, id: tabloSutunlari(y.bolumler[i]).at(-1)?.id ?? null };
+}
+export function tabloSutunuYaz(t: FormatTanimi, i: number, id: string, ad: string): FormatTanimi {
+  const b = t.bolumler[i];
+  if (!b) return t;
+  const l = tabloSutunlari(b), v = ad.trim().replace(/\s+/g, " ").slice(0, 200);
+  return !v || !l.some((s) => s.id === id) ? t : tabloYaz(t, i, l.map((s) => (s.id === id ? { ...s, ad: v } : s)));
+}
+export function tabloSutunuSil(t: FormatTanimi, i: number, id: string): FormatTanimi {
+  const b = t.bolumler[i];
+  if (!b) return t;
+  const l = tabloSutunlari(b).filter((s) => s.id !== id);
+  return b.blok === "cihaz" && !l.length ? t : tabloYaz(t, i, l);
+}
+export function tabloSutunuTasi(t: FormatTanimi, i: number, id: string, yon: -1 | 1): FormatTanimi {
+  const b = t.bolumler[i];
+  if (!b) return t;
+  const l = tabloSutunlari(b), j = l.findIndex((s) => s.id === id);
+  return j < 0 || j + yon < 0 || j + yon >= l.length ? t : tabloYaz(t, i, tasi(l, j, j + yon));
+}
+/** uygunsuzluklar tablo olarak (No · Uygunsuzluk · Ağırlık) ya da bugünkü madde listesi */
+export function kusurTablosuYaz(t: FormatTanimi, i: number, tablo: boolean): FormatTanimi {
+  const b = t.bolumler[i];
+  if (b?.blok !== "kusur" || tablo === !!b.sutunlar?.length) return t;
+  return tabloYaz(t, i, tablo ? (["sira", "metin", "agir"] as const).map((a) => ({ ad: KUSUR_ALAN_ADI[a], alan: a })) : []);
+}
+/** bilgi bölümünde bir satırda kaç bilgi (2 varsayılan — görünümden kalkar) */
+export function bilgiDizilisiYaz(t: FormatTanimi, i: number, n: 1 | 2 | 3): FormatTanimi {
+  const b = t.bolumler[i];
+  if (b?.blok !== "bilgi") return t;
+  const y = { ...b };
+  if (n === 2) delete y.dizilis; else y.dizilis = n;
+  return { ...t, bolumler: t.bolumler.map((x, j) => (j === i ? y : x)) };
 }

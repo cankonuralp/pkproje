@@ -19,7 +19,7 @@
 import { noktaHesap, sayiOku, SINIR_ISARETI, sinirSonucu } from "./hesap.ts";
 import { formulDenet, formulluAlan, formulluDeger, formulluMadde, formulluSutun, formulUygula, genelAdlar, satirHesabi, tabloAdlari, type Deger } from "./formul.ts";
 import { etkinKurallar, kuralOzu, kuralUygula } from "./sonuc.ts";
-import { firmaSatirlari, imzaSatirlari } from "./duzen.ts";
+import { cihazSutunlari, firmaSatirlari, imzaSatirlari } from "./duzen.ts";
 import { kurucudan, type Bolum, type BolumOf, type Cevaplar, type FormatTanimi, type SonucKurali } from "./tanim.ts";
 
 export interface Eksik { bolum: string; alan: string; ad: string }
@@ -219,6 +219,10 @@ const bolumOzu = (b: Bolum, t: FormatTanimi) => oz({
   ...(b.blok === "liste" ? { cevaplar: b.cevaplar, basliklar: b.basliklar } : {}),
   /* 595 (madde 4, 6, 7, 12): sabit başlıklar, Sonuç sütununun yeri, sonuç sözcükleri de Bakanlık formatının görünümü */
   ...(b.blok === "test" ? { basliklar: b.basliklar } : {}),
+  /* 595 (madde 2, 9, 10): cihaz / uygunsuzluk tablosunun sütunları, bilgi bölümünün dizilişi */
+  ...(b.blok === "cihaz" ? { sutunlar: cihazSutunlari(b).map((s) => ({ ad: s.ad, alan: s.alan })) } : {}),
+  ...(b.blok === "kusur" ? { sutunlar: b.sutunlar?.map((s) => ({ ad: s.ad, alan: s.alan })) } : {}),
+  ...(b.blok === "bilgi" ? { dizilis: b.dizilis } : {}),
   ...(b.blok === "olcum" ? { hesap: b.hesap, notlar: b.notlar, satir: b.satir, sonuc: kuralOzu(etkinKurallar(t, b)), basliklar: b.basliklar, sonucYeri: b.sonucYeri } : {}),
   ...(b.blok === "sonuc" ? { cumle: b.cumle, aciklama: b.aciklama, uygunMetin: b.uygunMetin, uygunDegilMetin: b.uygunDegilMetin } : {}),
   /* 595: imza bölümünün satırları (adı, kişisi, bilgisi, sabit yazısı, tam satır) — satırsız eski bölüm imzalar'dan aynı satırları verir */
@@ -228,7 +232,7 @@ type AlanT = BolumOf<"bilgi">["alanlar"][number];
 type MaddeT = BolumOf<"liste">["gruplar"][number]["maddeler"][number];
 type DegerT = BolumOf<"test">["degerler"][number];
 type SutunT = BolumOf<"olcum">["sutunlar"][number];
-const alanOzu = (a: AlanT) => oz({ ad: a.ad, tur: a.tur, secenekler: a.secenekler, kaynak: a.kaynak, ekipman: a.ekipman, birim: a.birim, formul: a.formul });
+const alanOzu = (a: AlanT) => oz({ ad: a.ad, tur: a.tur, secenekler: a.secenekler, kaynak: a.kaynak, ekipman: a.ekipman, birim: a.birim, formul: a.formul, tam: a.tam });
 const maddeOzu = (m: MaddeT) => oz({ metin: m.metin, std: m.std });
 const degerOzu = (d: DegerT) => oz({ ad: d.ad, birim: d.birim, metin: d.metin, op: d.op, sinir: d.sinir, secenekler: d.secenekler, olumsuz: d.olumsuz, agir: d.agir || undefined, formul: d.formul });
 const sutunOzu = (s: SutunT) => oz({ ad: s.ad, birim: s.birim, giris: s.giris, secenekler: s.secenekler, op: s.op, sinir: s.sinir, olumsuz: s.olumsuz, agir: s.agir || undefined, formul: s.formul });

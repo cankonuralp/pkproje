@@ -2525,6 +2525,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-16 (595g): **TABLO SÜTUNLARI VE BİLGİLERİN DİZİLİŞİ** (sunum 595 madde 2, 9, 10; reisim: *"satır sütun ekleyemiyorum"*, K3 *"evet"*): ölçüm cihazları
+  tablosunun sütunları cihaz kaydından seçilir (cihaz, tür, kod / seri no, kod, seri no, marka, model, kalibrasyon tarihi, geçerlilik, sertifika no) —
+  adı yerinde yazılır, sola / sağa taşınır, çıkarılır (en az bir sütun kalır); uygunsuzluklar bölüm ayarından tablo olarak basılır (No · Uygunsuzluk ·
+  Ağırlık; Bölüm ve Fotoğraf sütunu eklenir), işaret kalkınca bugünkü madde listesi. Bilgi bölümünde bir satırda kaç bilgi (1 · 2 · 3) seçilir; alanın
+  belgede tam satır olması alan ayarında. Dokunulmayan format aynı çizilir; Bakanlık formatında değişiklik yayında uyarı; S.A.Y da yapar.
 - 2026-10-16 (595f): **BAŞLIKLAR, SÖZCÜKLER VE ÖĞELERİN SIRASI** (sunum 595 madde 4, 6, 7, 8, 11–15; reisim: *"format yapıcıda bu ve benzeri kısımlarda değişiklik
   yapamıyorum, tıklayıp değiştiremiyorum"*): kâğıtta yerinde yazılır — ölçüm tablosunun "Sıra No / Uygunluk notu / Sonuç" başlıkları (Sonuç sütunu
   belgede sonda, başta ya da gizli — sonuç kuralı yine çalışır; sahada hep sonda), test bölümünün "Ölçüm / Değer / Sınır / Sonuç"u, kontrol

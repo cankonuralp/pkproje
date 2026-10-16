@@ -49,7 +49,8 @@ test("sonuç cümlesi seçilen sonuca bağlanmayınca belgede iki seçenek birde
 });
 
 test("kusur listesi motordan alınmayınca Uygun değil madde kusur açıklamalarına düşmez", async () => {
-  const m = await bozuk("case \"kusur\": return d.kusurlar.length", "case \"kusur\": return [].length");
+  /* 2026-10-16 (595 madde 10): kusur bölümünün başında tablo dalı var; madde listesinin satırı ayrı */
+  const m = await bozuk("      return d.kusurlar.length", "      return [].length");
   assert.ok(!metin(m).includes("Korozyon var"));
 });
 
