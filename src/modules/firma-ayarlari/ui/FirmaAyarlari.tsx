@@ -635,7 +635,7 @@ function Eposta({ v }: { v: Veri }) {
     <Kart genis yaz={v.yaz} kirli={s.kirli} mesgul={s.mesgul} kaydet={s.kaydet}>
       <Not>Kim gönder tuşuna basarsa e-posta onun adresinden gider. Bu ay gönderilen: {v.eposta.ay.toLocaleString("tr-TR")}.</Not>
       <dl className={stil.bilgi}>
-        <div><dt>Gönderen alan adı</dt><dd>{g ? <>{g.alan} {g.dogrulandi ? <Rozet tur="tamam">Doğrulandı</Rozet> : <Rozet tur="bekliyor">Doğrulanmadı</Rozet>}</> : <DegerYok />}</dd></div>
+        <div><dt>Gönderen alan adı</dt><dd>{g ? <><span>{g.alan}</span> {g.dogrulandi ? <Rozet tur="tamam">Doğrulandı</Rozet> : <Rozet tur="bekliyor">Doğrulanmadı</Rozet>}</> : <DegerYok />}</dd></div>
         <div><dt>Genel adres</dt><dd>{g ? g.genel : <DegerYok />}</dd></div>
         <div><dt>Otomatik e-postaların cevabı</dt><dd>{v.eposta.rapor || <DegerYok />}</dd></div>
       </dl>

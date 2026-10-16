@@ -10,7 +10,7 @@
    geçersiz anahtar alanın altında reddedilir; kaydet → tanımlı, son 4; kaldır (önce sorulur) → tanımlı değil. Dondurma bu firmada uçtan uçta
    denenmez (aynı sunucudaki öteki testler firmayı kullanır) — sıra ve kapalı yön tests/yonetim-firmada.test.ts'te. */
 import { expect, test, type Page } from "@playwright/test";
-import { E2E_FIRMA, E2E_KAPI, E2E_KENDI, E2E_KURULUM, E2E_PAROLA, E2E_YONETIM } from "./hesaplar";
+import { E2E_FIRMA, E2E_GONDERIM, E2E_KAPI, E2E_KENDI, E2E_KURULUM, E2E_PAROLA, E2E_YONETIM } from "./hesaplar";
 import { hazir } from "./yardimci";
 
 const Y = `http://${E2E_YONETIM.alan}:${E2E_KAPI}`;
@@ -194,6 +194,43 @@ test("yönetim: kendi Supabase projesi — Firma aç → kurulum adım adım →
   await kisi.getByRole("button", { name: "Giriş yap" }).click();
   await expect(kisi).toHaveURL(/\/giris\/parola$/);
   await kisi.context().close();
+});
+
+/* FIRMA-VT FV11 (2026-10-16; K2 — reisim: "resend için tek seçenek var ve o da firmaların kendi mail adresleri ile mail atılması"): firma sayfasında
+   "E-posta gönderimi" — geçersiz alan adı alanın altında reddedilir; alan adı eklenir (Resend Yönetim API taklidi), DNS kayıtları tabloda, "Doğrulanmadı";
+   "Doğrula" → "Doğrulandı" (gönderme anahtarı firma tarafına kilitli yazılır — sır ve kayıt: tests/eposta-gonderim.test.ts). */
+test("yönetim: e-posta gönderimi — alan adı ekle, DNS kayıtları, Doğrula → doğrulandı (FV11, K2)", async ({ page }, bilgi) => {
+  test.setTimeout(180_000);
+  const F = E2E_GONDERIM.firma(bilgi.project.name);
+  await parolaAdimi(page, E2E_YONETIM.proje(bilgi.project.name).etkin, E2E_PAROLA);
+  await expect(page).toHaveURL(/\/yonetim$/);
+  await hazir(page);
+  await page.getByRole("link", { name: "Firma aç" }).first().click();
+  await expect(page.getByRole("heading", { level: 1, name: "Firma aç" })).toBeVisible();
+  await page.getByLabel("Ticari ünvan").fill(F.unvan);
+  await page.getByLabel("Alt alan adı").fill(F.alt);
+  await page.getByLabel("Kısa kod (rapor no öneki)").fill(F.kod);
+  await page.getByLabel("Ad soyad").fill(F.yon);
+  await page.getByLabel("E-posta (giriş adı)").fill(F.eposta);
+  await page.getByRole("radio", { name: /^Ortak proje/ }).check();
+  await page.getByRole("button", { name: "Firmayı aç" }).click();
+  await page.locator("dialog[open]").getByRole("button", { name: "Firmayı aç" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: F.unvan })).toBeVisible({ timeout: 30_000 });
+  await page.getByRole("link", { name: "Firma sayfası" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: F.unvan })).toBeVisible();
+  const ep = page.getByRole("region", { name: "E-posta gönderimi" });
+  await ep.getByLabel("Gönderen alan adı").fill("kötü alan");
+  await ep.getByRole("button", { name: "Alan adını ekle" }).click();
+  await expect(ep.getByText("Alan adı okunamadı (ör. firmaniz.com.tr).")).toBeVisible({ timeout: 30_000 });
+  await ep.getByLabel("Gönderen alan adı").fill(F.alan);
+  await ep.getByRole("button", { name: "Alan adını ekle" }).click();
+  await expect(page.getByText("Alan adı eklendi: DNS kayıtlarını alan adı yönetimine girip “Doğrula”ya basın.").first()).toBeVisible({ timeout: 30_000 });
+  await expect(ep.getByText("Doğrulanmadı", { exact: true })).toBeVisible();
+  await expect(ep.getByText(`bilgi@${F.alan}`)).toBeVisible();
+  await expect(ep.getByRole("table", { name: "DNS kayıtları" }).getByRole("row")).toHaveCount(4);   // başlık + 3 kayıt
+  await ep.getByRole("button", { name: "Doğrula" }).click();
+  await expect(page.getByText("Alan adı doğrulandı; firmanın e-postaları artık gönderilir.").first()).toBeVisible({ timeout: 30_000 });
+  await expect(ep.getByText("Doğrulandı", { exact: true })).toBeVisible();
 });
 
 test("yönetim: kendi veritabanlı firma — özet firmanın veritabanından; yapay zekâ anahtarı kaydet / kaldır (FV9, K4)", async ({ page }, bilgi) => {

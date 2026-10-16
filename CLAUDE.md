@@ -443,10 +443,14 @@ pkproje/
   src/server/eposta/        E-POSTA (432; göç 0077): eposta.ts kuyruk (alıcı başına bir satır; metin değişmez, silinmez) · saglayici.ts tek bağdaştırıcı
                             (Resend biçimi HTTP; uç PROBATA_EPOSTA_UC — anahtar yoksa bekler) · gonder.ts bekleyenleriGonder · sonra.ts (after) ·
                             gece işi epostaIsi yeniden dener. İlk kullanım: plan açılınca ekip + bilgilendirme (planlar planAc, sema planEpostasi)
-                            · 536 HER FİRMA KENDİ RESEND HESABI: firma.ts firmaGonderimi (sır eposta_anahtari + ayar eposta: alan, kopya + Rapor e-postası) ·
-                            kimden.ts (saf: Kimden = tuşa basan kişi, alan adında değilse Rapor e-postasından kişinin adıyla, cevap kişiye; olmazsa bekler) ·
-                            gönderen kuyrukta (göç 0087 gonderen_ad / gonderen_eposta, değişmez; kimlik/hesap.ts hesapGonderen) · ekran Firma ayarları › E-posta
-                            (firma-ayarlari epostaAnahtarYaz, denemeEpostasi)
+                            · FV11 (2026-10-16, K2 + K3; 536'nın "her firma kendi Resend hesabı" yerine): probata'nın TEK Resend hesabı, firmanın alan adı
+                            Yönetim'den (modules/yonetim/server/eposta.ts + ui/GonderimBolumu.tsx: ekle AB, DNS kayıtları, Doğrula → alan adına bağlı
+                            sending_access anahtarı; istemci src/server/dis/resend-yonetim.ts, PROBATA_RESEND_ANAHTARI) · merkez eposta_alan, firmada kilitli
+                            firma_gonderim + sır eposta_anahtari (uygulama rolü yazamaz — göç 0099 K3 tetiği) · firma.ts firmaGonderimi (firma_gonderim'den) ·
+                            kimden.ts (saf: alan doğrulanmadıysa bekler; alan adındaki kişi kendisi, değilse genel adres <yerel>@alan kişinin adıyla, cevap
+                            kişiye; otomatikte cevap Rapor e-postası) · saglayici.ts User-Agent + Idempotency-Key (kuyruk satırı) · gönderen kuyrukta (göç 0087;
+                            kimlik/hesap.ts hesapGonderen) · Firma ayarları › E-posta yalnız gösterir + gizli kopya + denemeEpostasi · kilitler
+                            tests/eposta-gonderim.test.ts (PG), resend-yonetim.test.ts
   src/server/islem/         TEK SEFERLİK İŞLEM (392; 09-D2, çevrimdışı kuyruk): islem.ts tekSeferlik (kimliğe danışma kilidi, iş + sonuç aynı veritabanı
                             işleminde; göç 0076 islem) · yazan.ts (işi yazanın etiketi — kimlik tarayıcıya gitmez) · uç src/app/api/islem (köken, oturum,
                             yazan kapıları) · iş türleri modülde: raporlar/server/islem-baglanti.ts

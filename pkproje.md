@@ -2525,6 +2525,17 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-16 (596): **SUNUM 596 — TOPLU İMZALAMA** (reisim: *"ayrıca imzalam sürecinde toplu imzalama için belge seçme vs olmalı onu içim sunum yap"*):
+  İmzamı bekleyen raporlar ve Diğer belgelerde seçim, tek ZIP, e-imza aracında tek oturum, toplu yükleme (içerikten eşleştirme, her PDF ayrı
+  doğrulanır), sonuç tablosu; teknik yönetici toplu onayı (yalnız uyarısız raporlar). https://claude.ai/artifact/THU4YZorNkQkp6mTeBvV6J — onay bekliyor.
+- 2026-10-16 (595b): **SUNUM 595 — KİLİTLİ KALAN ALANLAR** (reisim: *"format yapıcıda bu ve benzeri kısımlarda değişiklik yapamıyorum, tıklayıp
+  değiştiremiyorum, satır sütun ekleyemiyorum … bu listeyi düzeltmeliyiz"* + *"format yapıcıda e imza yeri de seçilebilsin … bu rapor e imzalıdır diye
+  şerit gelecek … aşağıda boşluk bırakmayı unutmasınlar"*): format yapıcıda kodda sabit kalan 16 yer (imza bölümü, cihaz sütunları, tablo başlıkları,
+  öğe sırası …), e-imza yeri ve şeridi (25–26), öteki 8 belge (zimmet, saha formu, tutanak, teklif …: sitede düzenleyici yok) — tek kural: kâğıtta
+  görünen her yazı yazılır, her tabloda satır / sütun. https://claude.ai/artifact/M9doVLC1MCyqhRZU5ZhuS8 — onay bekliyor.
+- 2026-10-16 (595): **FV11 — E-POSTA GÖNDERİMİ YÖNETİM'DEN** (FIRMA-VT §5.8, K2 + K3): probata'nın tek Resend hesabına firmanın alan adı Yönetim'den
+  eklenir, DNS kayıtları, Doğrula, alan adına bağlı gönderme anahtarı firmada kilitli (göç 0099; uygulama rolü anahtara dokunamaz); Firma ayarlarında
+  yalnız gösterilir, gizli kopya firmada; Kimden doğrulanmadan bekler. Canlıda bölüm KAPALI: Vercel'e PROBATA_RESEND_ANAHTARI girilince açılır.
 - 2026-10-16 (594): **FV10 — KURULUM MAKİNESİ** (FIRMA-VT §5.12, K1 — reisim: *"supabase ve resend bağlantılarını firma açarken biz buradan panelden
   yapalım daha sonra müşteri uğraşmasın"*). Yönetim › Firma aç'ta veritabanı seçimi: "Kendi Supabase projesi" (probata örgütünde proje açılır,
   göçler Yönetim API'siyle, uygulama rolü SCRAM, havuzcu, Storage, deneme, firma + ilk yönetici — göç 0098) ya da "Ortak proje". Firma sayfasında

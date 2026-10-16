@@ -102,6 +102,15 @@ export const E2E_KURULUM = {
   },
 };
 export const E2E_KURULUM_EN_COK: number = E2E_YONETIM_PROJELER.length;
+/* FIRMA-VT FV11 (2026-10-16; e2e/yonetim.spec.ts "e-posta gönderimi"): proje (genişlik) başına Yönetim'den açılan ortak firma ve gönderen alan adı —
+   Resend Yönetim API'sinin yerel taklidi (scripts/e2e-sunucu.ts); alan adları .example (uydurma) */
+export const E2E_GONDERIM = {
+  firma: (p: string) => {
+    const ek = YONETIM_EK[p as keyof typeof YONETIM_EK] ?? "x";
+    return { unvan: "Gönderim Muayene Deneme A.Ş.", alt: `gonderim${ek}`, kod: `G${ek.toUpperCase()}`, yon: "Gönderim Deneme Yöneticisi", eposta: `yonetici@gonderim${ek}.example`,
+      alan: `gonderim${ek}.example` };
+  },
+};
 /* görsel karşılaştırma (411): AYRI uydurma firma — referans ekranın (Planlar + plan içi; CLAUDE.md §6, src/styles/kalip.ts) görüntüsü her koşuda
    aynı çıksın diye SABİT numara, tarih ve içerikle (bugünden bağımsız); başka test bu firmaya dokunmaz */
 export const E2E_GORSEL = {

@@ -8,6 +8,7 @@
 --     firma_yonetim_gonderim ile (yönetim — merkezde ortak firma, firma veritabanında yalnız kendi firması; firmanın denetim izi + merkezde yönetim izi).
 --   · firma_yonetim_sir artık 'eposta_anahtari'nı da yazar (anahtarı yönetim koyar).
 --   · K3 VERİTABANI KİLİDİ: uygulama rolü 'eposta_anahtari' sırrını yazamaz / değiştiremez / silemez (Firma ayarlarından değiştirilmez).
+--   · yonetim_firmada_iz (0097) 'ayar.eposta_gonderim' olayını da yazar (kendi projeli firmada merkezin izi).
 -- Kilit tests/eposta-gonderim.test.ts.
 
 -- ── merkez: firmanın gönderen alan adı ────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -154,6 +155,17 @@ BEGIN
       VALUES (v_kim, 'eposta.alan', p_firma, jsonb_build_object('alan', lower(p_alan), 'genel', lower(p_genel_yerel) || '@' || lower(p_alan), 'durum', p_durum));
   END IF;
   RETURN jsonb_build_object('durum', 'tamam');
+END $$;
+
+-- ── merkez: kendi projeli firmanın yönetim izi (0097) — e-posta gönderimi de (firma tarafı başarıdan sonra) ─────────────────────────────────
+CREATE OR REPLACE FUNCTION yonetim_firmada_iz(p_firma uuid, p_ne text, p_ayrinti jsonb) RETURNS void
+  LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public, pg_temp AS $$
+DECLARE v_kim text := yonetim_kim();
+BEGIN
+  IF EXISTS (SELECT 1 FROM vt_kimlik WHERE tur = 'firma') THEN RAISE EXCEPTION 'merkez değil' USING ERRCODE = '42501'; END IF;
+  IF NOT EXISTS (SELECT 1 FROM firma WHERE id = p_firma AND vt = 'kendi') THEN RAISE EXCEPTION 'kendi projeli firma değil' USING ERRCODE = '42501'; END IF;
+  IF p_ne NOT IN ('hesap.gecici_parola', 'ayar.yz_anahtari', 'ayar.eposta_gonderim') THEN RAISE EXCEPTION 'bilinmeyen iz' USING ERRCODE = '22023'; END IF;
+  INSERT INTO yonetim_izi (kim, ne, hedef_firma, ayrinti) VALUES (v_kim, p_ne, p_firma, coalesce(p_ayrinti, '{}'::jsonb));
 END $$;
 
 REVOKE ALL ON FUNCTION firma_sir_k3(), firma_yonetim_gonderim(uuid, text, text, boolean),
