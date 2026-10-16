@@ -70,32 +70,29 @@ test("proje sağlığı ucu: yalnız sırla; yalnız sayılar; sağlık sırrı 
 /* 378 (K5, 09-A5): gece işi ucu yalnız zamanlayıcının sırrıyla; sırsız / yanlış sırla 401 ve iş koşmaz; doğru sırla çöp temizliği ve saklama
    süresi işi (387) koşar, yanıt yalnız sayılar (firma / kişi bilgisi yok); ikinci koşu da "tamam" (iş bitince kilit kalkar). Uçtan uca: yol, ara
    katman, göç 0069 / 0073, veritabanı deposu
-   2026-10-15 (FIRMA-VT FV3, kasıtlı): uçtan uca sunucusunda kendi veritabanlı bir firma var (e2e/hesaplar.ts E2E_KENDI; e2e/firma-vt.spec.ts). Gece işi
-   firmaları henüz MERKEZ havuzunda dolaşıyor (firma başına havuz FV6'da) — o firmanın işlemi merkezde vt_firma_dogrula'ya takılır (42501: veri
-   karışmaz, yazılmaz), "hatali_firma" sayılır, öteki firmalar sürer, iş "hata" biter (yanıt 500). Beklenen TAM: hatalı firma sayısı = kendi
-   veritabanlı firma sayısı — ortak firmalardan biri de düşerse yakalanır. FV6 bu beklentiyi yeniden "tamam" / 200'e çevirir (FIRMA-VT.md §6.1). Sayı
-   e2e/hesaplar.ts E2E_KENDI_FIRMALAR'dan türer (uçtan uca sunucusu aynı listeyi tohumlar). */
-const GECE_DURUMU = KENDI_VT_FIRMA_SAYISI ? "hata" : "tamam";
-test("gece işi ucu: yalnız sırla; sayılar döner", async ({ request }) => {
+   2026-10-15 (FIRMA-VT FV3, kasıtlı): uçtan uca sunucusunda kendi veritabanlı bir firma var (e2e/hesaplar.ts E2E_KENDI; e2e/firma-vt.spec.ts) — gece
+   işi onu merkezde dolaşıyor, vt_firma_dogrula'ya takılıyordu ("hata", 500).
+   2026-10-16 (FV6): her firmanın adımı KENDİ havuzunda — iş yeniden "tamam" / 200, hatalı ve ulaşılamayan firma 0; kendi veritabanlı firma da
+   dolaşılır (firma sayısı ≥ ortak firmalar + kendi veritabanlılar). Özet "ulasilamayan" sayısını taşır. */
+test("gece işi ucu: yalnız sırla; sayılar döner; kendi veritabanlı firma da kendi veritabanında dolaşılır", async ({ request }) => {
   expect((await request.get("/api/is/gece")).status()).toBe(401);
   expect((await request.get("/api/is/gece", { headers: { Authorization: "Bearer yanlis-sir-yanlis-sir-yanlis-sir-00" } })).status()).toBe(401);
   expect((await request.get("/api/is/gece", { headers: { Authorization: E2E_ZAMANLI_SIR } })).status()).toBe(401);   // "Bearer " olmadan
   for (let i = 0; i < 2; i++) {
     const r = await request.get("/api/is/gece", { headers: { Authorization: `Bearer ${E2E_ZAMANLI_SIR}` } });
-    expect(r.status()).toBe(KENDI_VT_FIRMA_SAYISI ? 500 : 200);
+    expect(r.status()).toBe(200);
     expect(r.headers()["cache-control"]).toBe("no-store");
     const j = await r.json() as Record<string, unknown>;
     /* 2026-10-08 (387): saklama süresi işi aynı uçta, sayıları "saklama"da (süresi yaklaşan tohum raporu silinmez — 30 gün kala listede) */
     /* 2026-10-09 (432): bekleyen e-postaların yeniden denenmesi de aynı uçta, sayıları "eposta"da */
-    expect(Object.keys(j).sort()).toEqual(["bagli", "bayt", "durum", "eposta", "firma", "hatali_firma", "kalan", "oksuz", "saklama", "silinen"]);
-    expect(j.durum).toBe(GECE_DURUMU);
-    expect(j.hatali_firma).toBe(KENDI_VT_FIRMA_SAYISI);
-    expect(j.firma).toBeGreaterThanOrEqual(2);
+    expect(Object.keys(j).sort()).toEqual(["bagli", "bayt", "durum", "eposta", "firma", "hatali_firma", "kalan", "oksuz", "saklama", "silinen", "ulasilamayan"]);
+    expect([j.durum, j.hatali_firma, j.ulasilamayan]).toEqual(["tamam", 0, 0]);
+    expect(j.firma).toBeGreaterThanOrEqual(2 + KENDI_VT_FIRMA_SAYISI);
     const s = j.saklama as Record<string, unknown>;
-    expect(Object.keys(s).sort()).toEqual(["bayt", "dosya", "durum", "firma", "hatali_firma", "kalan", "silinen"]);
-    expect([s.durum, s.hatali_firma, s.silinen]).toEqual([GECE_DURUMU, KENDI_VT_FIRMA_SAYISI, 0]);
+    expect(Object.keys(s).sort()).toEqual(["bayt", "dosya", "durum", "firma", "hatali_firma", "kalan", "silinen", "ulasilamayan"]);
+    expect([s.durum, s.hatali_firma, s.ulasilamayan, s.silinen]).toEqual(["tamam", 0, 0, 0]);
     const e = j.eposta as Record<string, unknown>;
-    expect(Object.keys(e).sort()).toEqual(["bekleyen", "durum", "firma", "gonderilen", "hatali", "hatali_firma", "kalan"]);
-    expect([e.durum, e.hatali_firma]).toEqual([GECE_DURUMU, KENDI_VT_FIRMA_SAYISI]);
+    expect(Object.keys(e).sort()).toEqual(["bekleyen", "durum", "firma", "gonderilen", "hatali", "hatali_firma", "kalan", "ulasilamayan"]);
+    expect([e.durum, e.hatali_firma, e.ulasilamayan]).toEqual(["tamam", 0, 0]);
   }
 });

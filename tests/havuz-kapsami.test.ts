@@ -6,8 +6,8 @@
    1. merkez havuzunu içe aktaran dosyalar TAM OLARAK izin listesi (tests/yardimci/denetimler.ts MERKEZ_HAVUZU_IZNI, gerekçeleriyle) — statik, dinamik,
       yan etkili, yeniden dışa açma; göreli yol ve "@/" çözülür; yorumdaki söz sayılmaz; listeden düşen dosya da yakalanır;
    2. kiracının işi merkez havuzuyla açılmaz (kiraciIcinde(merkezHavuzu() …) yok); kimlik kapıları ve e-posta kiracının havuzunu kullanır; Ana sayfa
-      duyuru okumasını (merkezde) FV6'ya kadar yalnız ortak veritabanlı firmada tetikler (kendi veritabanlı firmada "tazele" hep doğru çıkardı —
-      her açılış Bakanlığa üç istek; 2026-10-15, FV3 incelemesi);
+      duyuru bölümünü MERKEZDEN okur, kiracının işleminde okumaz (kendi veritabanlı firmada duyuru kaydı yok — "tazele" hep doğru çıkar, her açılış
+      Bakanlığa üç istek; 2026-10-15 FV3 incelemesinde okuma yalnız ortak firmada tetikleniyordu, 2026-10-16 FV6'da bölüm merkezden okunur);
    3. yönetim eylemleri (firma aç, dondur, etkinleştir, geçici parola) başarıda kiracı kaydı önbelleğini boşaltır (2026-10-15, FV3 incelemesi —
       önce yalnız uçtan uca, zamanlamaya bağlı yakalanıyordu).
    Olumsuz kanıt: tests/bozan/havuz-kapsami.bozan.ts. */
@@ -37,8 +37,11 @@ test("kiracının işi merkez havuzuyla açılmaz; kimlik kapıları, giriş eyl
   assert.match(istek, /return kiraciIcinde\(kiraciHavuzu\(o\.kiraci\), o\.kiraci\.firmaId, is, \{ musteri: /);
   assert.match(istek, /await oturumOku\(kiraciHavuzu\(kiraci\), kiraci\.firmaId, belirtec\)/);
   assert.match(istek, /await musteriOturumOku\(kiraciHavuzu\(kiraci\), kiraci\.firmaId, belirtec\)/);
-  /* duyurular merkezde: kendi veritabanlı firmanın sayfası okumayı tetiklemez (FV6 merkezden okuyacak) */
-  assert.match(oku("src/app/(uygulama)/page.tsx"), /if \(v\.duyuru\.tazele && !o\.kiraci\.vt\) duyuruTazeleSonra\(\);/);
+  /* duyurular merkezde (FV6, 2026-10-16 — kasıtlı: önce "if (v.duyuru.tazele && !o.kiraci.vt)" — okumayı yalnız ortak firmanın sayfası tetikliyordu):
+     bölüm merkezden okunur, tazele ona göre; kiracının işleminde (anaSayfa) duyuru okunmaz */
+  assert.match(oku("src/app/(uygulama)/page.tsx"), /const duyuru = await duyuruBolumuMerkezden\(\);\n  if \(duyuru\.tazele\) duyuruTazeleSonra\(\);/);
+  assert.doesNotMatch(oku("src/modules/anasayfa/server/anasayfa.ts"), /\bduyuruBolumu\(/, "kiracının işleminde duyuru okunmaz");
+  assert.match(oku("src/server/duyuru/sonra.ts"), /merkezOku\(merkezHavuzu\(\), \(db\) => duyuruBolumu\(db\)\)/);
 });
 
 test("yönetim eylemleri başarıda kiracı kaydı önbelleğini boşaltır (firma aç, dondur, etkinleştir, geçici parola)", () => {

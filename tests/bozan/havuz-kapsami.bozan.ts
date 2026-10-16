@@ -8,7 +8,8 @@
    2026-10-15 (FV3 incelemesi) eklenenler:
    5. Yönetim eylemi önbelleği boşaltmayınca (eylem unut'tan geçmez, yenileyerek unut'a uğramaz, unut firmaKayitlariniUnut'u çağırmaz, yeni firma
       eylemi unut'suz) yakalanır.
-   6. Ana sayfa duyuru okumasını kendi veritabanlı firmada da tetikleyince test 2 yakalar. */
+   6. Ana sayfa duyuru bölümünü kiracının işleminde okuyunca (kendi veritabanlı firmada "tazele" hep doğru) ya da merkezden okumayı bırakınca test 2
+      yakalar (2026-10-16 FV6: önce "!o.kiraci.vt" koşulunun kalkmasını yakalıyordu — koşul FV6'da kasıtlı kalktı). */
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { dosyalar, merkezdeKiraciIsi, merkezHavuzuIceAktaranlar, MERKEZ_HAVUZU_IZNI, oku, yonetimOnbellekEksikleri } from "../yardimci/denetimler.ts";
@@ -81,11 +82,25 @@ test("5. yönetim eylemi kiracı kaydı önbelleğini boşaltmayınca yakalanır
   assert.ok(yonetimOnbellekEksikleri(ek).includes("firmaSilEylemi önbelleği boşaltmıyor"), "bozuk: yeni eylem yakalanmadı");
 });
 
-test("6. Ana sayfa duyuru okumasını kendi veritabanlı firmada da tetikleyince test 2 yakalar (kilidin koruduğu açık)", () => {
-  const ad = "src/app/(uygulama)/page.tsx";
-  const kalip = /if \(v\.duyuru\.tazele && !o\.kiraci\.vt\) duyuruTazeleSonra\(\);/;
-  const metin = oku(ad);
-  assert.match(metin, kalip, "sağlam");
-  assert.doesNotMatch(metin.replace("if (v.duyuru.tazele && !o.kiraci.vt) duyuruTazeleSonra();", "if (v.duyuru.tazele) duyuruTazeleSonra();"), kalip,
-    "bozuk: koşulsuz tetikleme yakalandı");
+test("6. Ana sayfa duyuruyu kiracının işleminde okuyunca ya da merkezden okumayı bırakınca test 2 yakalar (kilidin koruduğu açık)", () => {
+  /* test 2'nin üç kalıbı, aynen */
+  const sayfaKalip = /const duyuru = await duyuruBolumuMerkezden\(\);\n  if \(duyuru\.tazele\) duyuruTazeleSonra\(\);/;
+  const kiraciKalip = /\bduyuruBolumu\(/;
+  const merkezKalip = /merkezOku\(merkezHavuzu\(\), \(db\) => duyuruBolumu\(db\)\)/;
+  const sayfa = oku("src/app/(uygulama)/page.tsx"), ana = oku("src/modules/anasayfa/server/anasayfa.ts"), sonra = oku("src/server/duyuru/sonra.ts");
+  assert.match(sayfa, sayfaKalip, "sağlam");
+  assert.doesNotMatch(ana, kiraciKalip, "sağlam");
+  assert.match(sonra, merkezKalip, "sağlam");
+  /* kiracının işleminde okuma geri gelir */
+  const anaBozuk = ana.replace("belgeBekleyen: await bekleyenBelgeSayisi(db, kim) };", "belgeBekleyen: await bekleyenBelgeSayisi(db, kim), duyuru: await duyuruBolumu(db) };");
+  assert.notEqual(anaBozuk, ana, "bozulacak satır kaynakta");
+  assert.match(anaBozuk, kiraciKalip, "bozuk: kiracının işlemindeki okuma yakalandı");
+  /* sayfa merkezi bırakıp kiracının verisinden okur */
+  const sayfaBozuk = sayfa.replace("const duyuru = await duyuruBolumuMerkezden();\n  if (duyuru.tazele) duyuruTazeleSonra();", "const duyuru = v.duyuru;\n  if (duyuru.tazele) duyuruTazeleSonra();");
+  assert.notEqual(sayfaBozuk, sayfa, "bozulacak satır kaynakta");
+  assert.doesNotMatch(sayfaBozuk, sayfaKalip, "bozuk: merkezden okumayı bırakan sayfa yakalandı");
+  /* merkez okuması kiracının havuzuna döner */
+  const sonraBozuk = sonra.replace("merkezOku(merkezHavuzu(), (db) => duyuruBolumu(db))", "oturumIslemi(o, (db) => duyuruBolumu(db))");
+  assert.notEqual(sonraBozuk, sonra, "bozulacak satır kaynakta");
+  assert.doesNotMatch(sonraBozuk, merkezKalip, "bozuk: merkezden okumayan duyuru yakalandı");
 });

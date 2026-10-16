@@ -6,7 +6,7 @@ import { after, before, test } from "node:test";
 import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde, type Havuz, type Sorgulayici } from "../src/server/db/kiraci.ts";
 import { gunEkle } from "../src/modules/muhasebe/sema.ts";
-import { anaSayfa, bugunTr, type AnaSayfa, type Kisi } from "../src/modules/anasayfa/server/anasayfa.ts";
+import { anaSayfa, bugunTr, type AnaSayfaVerisi, type Kisi } from "../src/modules/anasayfa/server/anasayfa.ts";
 import { isgEksikTakip, menuTakip } from "../src/modules/anasayfa/server/takip.ts";
 import { onayListeleri } from "../src/modules/onaylar/server/onaylar.ts";
 import { taslakBaslat, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
@@ -27,7 +27,7 @@ async function hesap(firma: string, eposta: string, roller: string[], ad: string
   const id = await sahip("INSERT INTO hesap (firma_id, eposta, ad, roller, durum, personel_id) VALUES ($1, $2, $3, $4, 'etkin', $5) RETURNING id::text", [firma, eposta, ad, roller, personel]);
   return { id, ad, roller: roller as Kisi["roller"] };
 }
-const sayi = (v: AnaSayfa, rol: string, ad: string) => v.bolumler.find((b) => b.rol === rol)!.yuzler.find((y) => y.ad === ad)!.sayi;
+const sayi = (v: AnaSayfaVerisi, rol: string, ad: string) => v.bolumler.find((b) => b.rol === rol)!.yuzler.find((y) => y.ad === ad)!.sayi;
 
 before(async () => {
   kume = await testKumesi();

@@ -353,12 +353,15 @@ pkproje/
                             · alanlar.ts (484; 385'in etiket okumasının genel hâli — bölümün alanları: ekipman bilgileri / etiket, bilgi, test; istek + cevap
                             süzme, saf; değer denetimi src/format/deger.ts; 542: Türkçe olmayan etiket — anlam eşleşir) → raporlar/server/alan-oku.ts
   src/server/is/            ARKA PLAN İŞLERİ (378; K5): firmalar.ts (firmalardaKos — ortak çatı: firma başına kiracı işlemi, is_calisma kaydı,
-                            süre sınırı; 387) · gece.ts (geceIsleri: çöp temizliği) · yetki.ts (zamanliYetkili: "Bearer <CRON_SECRET>", sır ≥ 32) ·
+                            süre sınırı; 387; FV6 2026-10-16: liste + iş kaydı merkezde, adım firmanın KENDİ havuzunda — havuzBul = firma-havuzu.ts
+                            firmaHavuzuKimlikle; çözülmeyen / adımdan önce düşen firma "ulasilamayan", adımda düşen "hatali_firma", ikisi de "hata" —
+                            kilit tests/gece-firma-vt.test.ts) · gece.ts (geceIsleri: çöp temizliği) · yetki.ts (zamanliYetkili: "Bearer <CRON_SECRET>", sır ≥ 32) ·
                             uç src/app/api/is/gece (Vercel Cron, vercel.json crons; çöp + saklama süresi — raporlar/server/saklama.ts) ·
                             db/is.ts (isBasla / isBitir / geceFirmalari; göç 0069) · çöp temizliği src/server/dosya/cop.ts (30 gün, A5)
   src/server/duyuru/        DUYURULAR (379; K5): ayristir.ts (saf: İSGGM / İSGÜM / iş ekipmanları portalı HTML → başlık, tarih, Bakanlık
                             bağlantısı) · okuma.ts (duyurulariOku — üç kaynak, 10 sn / 3 MB, yönlendirme yok, is_calisma "duyuru_okuma";
-                            duyuruBolumu — Ana sayfa) · sonra.ts (after: Ana sayfa yanıtından sonra, son deneme 6 saatten eskiyse) · db/duyuru.ts
+                            duyuruBolumu — Ana sayfa) · sonra.ts (after: Ana sayfa yanıtından sonra, son deneme 6 saatten eskiyse; FV6: Ana sayfanın
+                            bölümü de buradan, merkezden — duyuruBolumuMerkezden, kiracının işleminde değil) · db/duyuru.ts
                             (göç 0070; 390 / 0074: okunamayan kaynağın adı — iş kaydı ozet.hatali, duyuru_durumu.hatali) · uydurma sayfalar
                             e2e/duyuru-ornek.ts (PROBATA_DUYURU_UC yalnız uçtan uca taklit)
   src/modules/say/          S.A.Y SAHA ASİSTANI (380; maket say.js BB6): yardim.ts (sayfa yardımı + yapay zekâ kılavuzu, adresten yer adı) ·

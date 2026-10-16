@@ -7,7 +7,7 @@
    Aylık arşiv yedeği henüz yok (yedek işi firmanın deposuyla, K7) — gelince aynı süreyle buraya eklenir. */
 import type { Havuz, Sorgulayici } from "../../../server/db/kiraci.ts";
 import type { Depo } from "../../../server/dosya/depo.ts";
-import { firmalardaKos, type IsOzeti } from "../../../server/is/firmalar.ts";
+import { firmalardaKos, type HavuzBul, type IsOzeti } from "../../../server/is/firmalar.ts";
 import { musteriOzetleri } from "../../musteriler/server/musteriler.ts";
 
 /** silinecekler bu kadar gün önce listelenir */
@@ -52,12 +52,12 @@ export async function saklamaTemizle(db: Sorgulayici, depo: Depo, adet = SAKLAMA
 
 export type SaklamaOzeti = IsOzeti<{ silinen: number; dosya: number; bayt: number }>;
 
-/** gece işi: bütün etkin firmalarda (her biri kendi işleminde), iş kaydı "saklama_silme" */
-export async function saklamaIsi(havuz: Havuz, depo: Depo, sure: number): Promise<SaklamaOzeti> {
+/** gece işi: bütün etkin firmalarda (her biri kendi işleminde — FV6: kendi havuzunda, havuzBul), iş kaydı "saklama_silme" */
+export async function saklamaIsi(havuz: Havuz, depo: Depo, sure: number, havuzBul?: HavuzBul): Promise<SaklamaOzeti> {
   return firmalardaKos(havuz, "saklama_silme", sure, { silinen: 0, dosya: 0, bayt: 0 }, async (db) => {
     const r = await saklamaTemizle(db, depo);
     return { sayilar: { silinen: r.silinen, dosya: r.dosya, bayt: r.bayt }, kalan: r.kalan };
-  });
+  }, havuzBul);
 }
 
 export interface SaklamaSatiri {

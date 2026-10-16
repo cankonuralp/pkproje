@@ -5,7 +5,7 @@
    Duyurular (İSGGM, İSGÜM, iş ekipmanları portalı; 379): okunan duyurular (src/server/duyuru — firma verisi değil) + kaynak bağlantıları. */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { ayarOku } from "../../../server/ayar/ayar.ts";
-import { duyuruBolumu, type DuyuruBolumu } from "../../../server/duyuru/okuma.ts";
+import type { DuyuruBolumu } from "../../../server/duyuru/okuma.ts";
 import { hesabinPersoneli } from "../../../server/kimlik/hesap.ts";
 import { duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { ROL_BRANS, type Rol } from "../../../server/yetki/tanim.ts";
@@ -47,7 +47,10 @@ export interface AnaBolum { rol: Rol; yuzler: AnaYuz[]; liste: AnaListe | null }
 /** duyuru (379): okunan Bakanlık duyuruları, son okuma, "alınamadı", tazele (sayfa okumayı arka planda başlatır) */
 export interface AnaSayfa { bugun: string; ad: string; planAc: boolean; bolumler: AnaBolum[]; belgeBekleyen: number; duyuru: DuyuruBolumu }
 
-export async function anaSayfa(db: Sorgulayici, kim: Kisi): Promise<AnaSayfa> {
+/** kiracının işleminde okunan kısım — duyuru merkezden, sayfa birleştirir (FIRMA-VT FV6, §5.9) */
+export type AnaSayfaVerisi = Omit<AnaSayfa, "duyuru">;
+
+export async function anaSayfa(db: Sorgulayici, kim: Kisi): Promise<AnaSayfaVerisi> {
   const bugun = bugunTr(), roller = new Set(kim.roller);
   const gor = (m: Parameters<typeof duzey>[1]) => duzey(kim, m) !== "yok";
   /* modülün HEPSİNİ gören düzey ("gör" / "değiştir"); "kendi" ve "branşı" kısıtlı (329–332 incelemesi: bölümler rolle açılıyor, veri düzeyle süzülür) */
@@ -169,5 +172,5 @@ export async function anaSayfa(db: Sorgulayici, kim: Kisi): Promise<AnaSayfa> {
       { ikon: "receipt", ad: "Onay bekleyen masraf", sayi: bek.sayi, href: "/onaylar/talepler", not: bek.sayi ? tl(bek.tutar) : "yok", uyari: bek.sayi > 0 },
     ], liste: null });
   }
-  return { bugun, ad: kim.ad, planAc: planAcabilir(kim), bolumler, belgeBekleyen: await bekleyenBelgeSayisi(db, kim), duyuru: await duyuruBolumu(db) };
+  return { bugun, ad: kim.ad, planAc: planAcabilir(kim), bolumler, belgeBekleyen: await bekleyenBelgeSayisi(db, kim) };
 }

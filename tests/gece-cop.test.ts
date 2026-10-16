@@ -65,7 +65,8 @@ test("30 günü dolan çöp silinir (satır + nesne); süresi dolmamış, canlı
 
   const o = await geceIsleri(havuz, vt);
   /* yalnız sayılar; A ve B (D, E boş; C dondurulmuş — listede yok) */
-  assert.deepEqual(o, { durum: "tamam", firma: 4, silinen: 2, bayt: a1.boyut + b1.boyut, bagli: 1, oksuz: 0, kalan: 0, hatali_firma: 0 });
+  /* 2026-10-16 (FIRMA-VT FV6): özet "ulasilamayan" sayısını da taşır (firma çözülmedi / bağlantı adımdan önce düştü) */
+  assert.deepEqual(o, { durum: "tamam", firma: 4, silinen: 2, bayt: a1.boyut + b1.boyut, bagli: 1, oksuz: 0, kalan: 0, hatali_firma: 0, ulasilamayan: 0 });
   for (const s of [a1, b1]) { assert.equal(await satirVar(s.id), false); assert.equal(await nesneVar(s.anahtar), false); }
   for (const s of [a2, a3, a4, c1]) { assert.equal(await satirVar(s.id), true); assert.equal(await nesneVar(s.anahtar), true); }
   /* bağlı dosyanın kaydı yerinde */
@@ -75,7 +76,7 @@ test("30 günü dolan çöp silinir (satır + nesne); süresi dolmamış, canlı
     "SELECT durum, ozet, bitti FROM is_calisma WHERE ad = 'cop_temizligi' ORDER BY basladi DESC LIMIT 1")).rows[0];
   assert.equal(k.durum, "tamam");
   assert.ok(k.bitti);
-  assert.deepEqual(k.ozet, { firma: 4, silinen: 2, bayt: a1.boyut + b1.boyut, bagli: 1, oksuz: 0, kalan: 0, hatali_firma: 0 });
+  assert.deepEqual(k.ozet, { firma: 4, silinen: 2, bayt: a1.boyut + b1.boyut, bagli: 1, oksuz: 0, kalan: 0, hatali_firma: 0, ulasilamayan: 0 });
 
   const o2 = await geceIsleri(havuz, vt);
   assert.deepEqual([o2.durum, o2.silinen, o2.bayt, o2.bagli], ["tamam", 0, 0, 1], "ikinci koşu bir şey silmez");
