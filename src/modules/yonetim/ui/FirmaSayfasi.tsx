@@ -14,7 +14,9 @@ import { AltSatir, Bolum, Kirinti, Kod, NesneBasi, SeritKap } from "../../../com
 import { Serit } from "../../../components/serit/Serit";
 import { Tus } from "../../../components/tus/Tus";
 import type { FirmaOzeti } from "../server/firma-tarafi";
+import type { GonderimGorunumu } from "../server/eposta";
 import type { KurulumGorunumu } from "../server/kurulum";
+import { GonderimBolumu } from "./GonderimBolumu";
 import { KurulumPaneli } from "./KurulumPaneli";
 import type { FirmaSatiri } from "../server/yonetim";
 import { firmaDondurEylemi, firmaEtkinlestirEylemi, geciciParolaVerEylemi, yzAnahtariKaldirEylemi, yzAnahtariKaydetEylemi } from "./eylemler";
@@ -30,8 +32,9 @@ const YZ_ALAN = "y-yz-anahtar";
 const BILGI = "y-b-bilgi";
 const dolar = (m: number) => `$${(m / 1e6).toFixed(2).replace(".", ",")}`;
 
-export function FirmaSayfasi({ firma: f, ozet, kurulum = null, anaAlan, depo }: {
-  firma: FirmaSatiri | null; ozet: FirmaOzeti | null; kurulum?: KurulumGorunumu | null; anaAlan: string; depo: DepoTuru;
+export function FirmaSayfasi({ firma: f, ozet, kurulum = null, gonderim = null, epostaAcik = false, anaAlan, depo }: {
+  firma: FirmaSatiri | null; ozet: FirmaOzeti | null; kurulum?: KurulumGorunumu | null; gonderim?: GonderimGorunumu | null; epostaAcik?: boolean;
+  anaAlan: string; depo: DepoTuru;
 }) {
   const onayla = useOnayla();
   const bildir = useBildir();
@@ -175,6 +178,7 @@ export function FirmaSayfasi({ firma: f, ozet, kurulum = null, anaAlan, depo }: 
           </>
         )}
       </Bolum>
+      <GonderimBolumu id={f.id} g={gonderim} acik={epostaAcik} />
       <SonrasiAdimlar />
     </>
   );

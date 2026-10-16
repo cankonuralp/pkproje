@@ -1,7 +1,6 @@
 /* FİRMA AYARLARI — form şemaları ve seçenekler (334; maket firma-ayarlari.html, maket-ayarlar.js; MV.ESIK, MV.IMZA_YONTEM, MV.YASAL). İstemci ve
    sunucu aynı şemayı kullanır; iletiler Türkçe. Değerler src/server/ayar/ayar.ts bölümlerine yazılır (tek kaynak, başlangıç değerleri orada). */
 import { tutar, z } from "../../sema/ortak.ts";
-import { ALAN_BICIMI, alanSadelestir } from "../../server/eposta/kimden.ts";
 
 /** bölümler (sol liste ve sayfa sırası — maket ayarCiz sırası; 334'te olanlar) */
 export const AYAR_BASLIK = {
@@ -120,22 +119,20 @@ export const BulutGirdisi = z.object({
 });
 
 /* ── 536 E-POSTA (maket postaCiz 535; reisim "A": her firma kendi Resend hesabı; "kim mail gönder tuşuna basarsa onun mailinden gitmeli") ── */
+/* 2026-10-16 (FIRMA-VT FV11, K2 + K3 — reisim: "resend için tek seçenek var ve o da firmaların kendi mail adresleri ile mail atılması … resend ve
+   supabase ayarları firma ayarları kısmından değiştirilemesin"): firmanın kendi Resend hesabı (536) KALKTI — probata'nın Resend hesabında firmanın alan
+   adını Yönetim ekler ve doğrular; Firma ayarlarında gönderim yalnız GÖSTERİLİR, gizli kopya firmada. */
 export const RESEND_ADIMLAR = [
-  "resend.com'da firma adına hesap açın (ayda 3.000, günde 100 e-postaya kadar ücretsiz).",
-  "Domains › Add domain: firmanızın alan adı (ör. firmaniz.com.tr).",
-  "Resend'in verdiği kayıtları alan adınızın yönetim paneline ekleyin (alan adını aldığınız firma); Resend “Verified” deyince hazır.",
-  "API Keys › Create API key: izin “Sending access”.",
-  "Anahtarı aşağıya yapıştırın, alan adını yazıp kaydedin; “Deneme e-postası gönder”e basın.",
+  "probata, Yönetim'de firmanızın alan adını (ör. firmaniz.com.tr) e-posta gönderimine ekler.",
+  "Verilen DNS kayıtları alan adınızın yönetim paneline (alan adını aldığınız firma) girilir.",
+  "probata “Doğrula”ya basar; doğrulanınca e-postalar firmanızın alan adıyla gider.",
+  "Kim gönder tuşuna basarsa e-posta onun adresinden gider; adresi başka yerdeyse firmanın genel adresinden, kişinin adıyla.",
+  "Gönderim bilgileri burada kilitli: değiştirilmez, anahtar gösterilmez.",
 ] as const;
-/** gönderen alan adı (Resend'de doğrulanmış; boş = bağlı değil) ve gönderene gizli kopya */
+/** gönderene gizli kopya — alan adı ve anahtar Yönetim'den (gelen başka alan atılır) */
 export const EpostaGirdisi = z.object({
-  alan: z.preprocess((v) => (typeof v === "string" ? alanSadelestir(v) : v),
-    z.string().max(100, "En çok 100 karakter.").refine((a) => a === "" || ALAN_BICIMI.test(a), "Alan adı okunamadı (ör. firmaniz.com.tr). Kaydedilmedi.")),
-  kopya: z.boolean(),
+  kopya: z.boolean({ error: "Açık ya da kapalı seçin." }),
 });
-/** Resend API anahtarı (re_ ile başlar); şifreli saklanır, ekranda son 4 hane */
-export const ResendAnahtarGirdisi = z.object({ anahtar: z.preprocess((v) => (typeof v === "string" ? v.trim() : v),
-  z.string({ error: "Anahtarı yapıştırın." }).min(1, "Anahtarı yapıştırın.").regex(/^re_[A-Za-z0-9_]{16,200}$/, "Geçerli bir Resend API anahtarı değil (re_ ile başlar).")) });
 
 /** dosya ayarları (logo, ön bilgilendirme formu, bordro formatı): ayar alanı, izinli türler, en çok boyut */
 export const AYAR_DOSYASI = {

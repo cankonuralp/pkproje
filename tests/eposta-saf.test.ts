@@ -7,7 +7,7 @@ import { createServer, type IncomingHttpHeaders } from "node:http";
 import { after, before, test } from "node:test";
 import { planEpostasi } from "../src/modules/planlar/sema.ts";
 import { adresler } from "../src/server/eposta/eposta.ts";
-import { ALAN_BICIMI, alanAdi, alanSadelestir, GENEL_ALAN_DISI, gonderenYolu, kimdenKur } from "../src/server/eposta/kimden.ts";
+import { ALAN_BICIMI, ALAN_DOGRULANMADI, alanAdi, alanSadelestir, gonderenYolu, kimdenKur } from "../src/server/eposta/kimden.ts";
 import { epostaSaglayicisi } from "../src/server/eposta/saglayici.ts";
 
 test("adres süzgeci: küçük harf, biçimi bozuk ve tekrarlı adres düşer, sıra korunur", () => {
@@ -57,6 +57,13 @@ test("sağlayıcı (536: firmanın kendi anahtarı): anahtar yoksa yok; 2xx gön
   assert.deepEqual(await s(429).gonder(e), { tamam: false, neden: "Sağlayıcı reddetti (HTTP 429).", kalici: false });
   assert.deepEqual(await s(503).gonder(e), { tamam: false, neden: "Sağlayıcı reddetti (HTTP 503).", kalici: false });
   assert.equal(gelen[0].baslik.authorization, "Bearer deneme-anahtar");
+  /* FV11 (§5.8): açık User-Agent; kuyruk satırının kimliğiyle Idempotency-Key (yeniden denemede ikinci kez gitmez) — kimlik yoksa başlık yok */
+  assert.equal(gelen[0].baslik["user-agent"], "probata");
+  assert.equal(gelen[0].baslik["idempotency-key"], undefined);
+  await s(200).gonder({ ...e, kimlik: "6f9619ff-8b86-4011-b42d-00c04fc964ff" });
+  assert.equal(gelen.at(-1)!.baslik["idempotency-key"], "eposta/6f9619ff-8b86-4011-b42d-00c04fc964ff");
+  await s(200).gonder({ ...e, kimlik: "kotu\r\nbaslik" });
+  assert.equal(gelen.at(-1)!.baslik["idempotency-key"], undefined, "biçimsiz kimlik başlığa girmez");
   assert.deepEqual(gelen[0].govde, { from: "\"Deneme Bir\" <bir@deneme.example>", to: ["ali@deneme.example"], subject: "Konu", text: "Metin" });
   await s(200).gonder({ ...e, cevap: "bir@kisisel.example", gizli: "bir@kisisel.example" });
   assert.deepEqual(gelen.at(-1)!.govde, { from: e.kimden, to: ["ali@deneme.example"], subject: "Konu", text: "Metin", reply_to: ["bir@kisisel.example"], bcc: ["bir@kisisel.example"] },
@@ -65,32 +72,39 @@ test("sağlayıcı (536: firmanın kendi anahtarı): anahtar yoksa yok; 2xx gön
   assert.deepEqual(await kapali.gonder(e), { tamam: false, neden: "Sağlayıcıya bağlanılamadı.", kalici: false });
 });
 
-/* NEREDEN GELDİ: 536 — reisim 2026-10-13: "kim mail gönder tuşuna basarsa onun mailinden gitmeli" → "A seçeneğini kabul ediyorum" → maket "onaylıyorum" */
-test("Kimden: alan adındaki kişi kendi adresinden; değilse Rapor e-postasından kişinin adıyla, cevap kişiye; otomatikte firma adıyla; Rapor e-postası alan dışındaysa bekler", () => {
-  const f = { alan: "deneme.example", genel: "Bilgi@Deneme.example", firmaAd: "Deneme Muayene", kopya: false };
+/* NEREDEN GELDİ: 536 — reisim 2026-10-13: "kim mail gönder tuşuna basarsa onun mailinden gitmeli" → "A seçeneğini kabul ediyorum" → maket "onaylıyorum";
+   FIRMA-VT FV11 (2026-10-16, K2): gönderim probata'nın Resend hesabından, Yönetim'in eklediği ve doğruladığı alan adıyla; kişisel adresli çalışan
+   firmanın GENEL adresinden (<yerel>@alan) kişinin adıyla; otomatik e-postanın cevabı Rapor e-postasına. Önceki "Rapor e-postası alan dışındaysa
+   bekler" kuralı kalktı (genel adres hep alan adında — 0099 CHECK); yerine "alan adı doğrulanmadıysa bekler". */
+test("Kimden: doğrulanmamış alan adı bekler; alan adındaki kişi kendi adresinden; değilse genel adresten kişinin adıyla, cevap kişiye; otomatikte firma adıyla, cevap Rapor e-postasına", () => {
+  const f = { alan: "deneme.example", genel: "Bilgi@Deneme.example", dogrulandi: true, firmaAd: "Deneme Muayene", kopya: false, rapor: "Rapor@Deneme.example" };
   assert.deepEqual(kimdenKur(f, { ad: "Deneme Bir", eposta: "Bir@Deneme.Example" }),
     { tamam: true, kimden: "\"Deneme Bir\" <bir@deneme.example>", cevap: null, gizli: null });
   assert.deepEqual(kimdenKur(f, { ad: "Deneme İki", eposta: "iki@kisisel.example" }),
     { tamam: true, kimden: "\"Deneme İki · Deneme Muayene\" <bilgi@deneme.example>", cevap: "iki@kisisel.example", gizli: null });
-  assert.deepEqual(kimdenKur(f, null), { tamam: true, kimden: "\"Deneme Muayene\" <bilgi@deneme.example>", cevap: null, gizli: null }, "otomatik e-posta");
+  assert.deepEqual(kimdenKur(f, null), { tamam: true, kimden: "\"Deneme Muayene\" <bilgi@deneme.example>", cevap: "rapor@deneme.example", gizli: null },
+    "otomatik e-posta: cevap Rapor e-postasına");
+  assert.equal((kimdenKur({ ...f, rapor: "bilgi@deneme.example" }, null) as { cevap: string | null }).cevap, null, "Rapor e-postası genel adresse ayrı cevap yok");
+  assert.equal((kimdenKur({ ...f, rapor: null }, null) as { cevap: string | null }).cevap, null);
+  assert.equal((kimdenKur({ ...f, rapor: "rapor@kisisel.example" }, null) as { cevap: string | null }).cevap, "rapor@kisisel.example", "cevap adresi alan dışında olabilir");
   const kopyali = { ...f, kopya: true };
   assert.deepEqual(kimdenKur(kopyali, { ad: "Deneme Bir", eposta: "bir@deneme.example" }),
     { tamam: true, kimden: "\"Deneme Bir\" <bir@deneme.example>", cevap: null, gizli: "bir@deneme.example" }, "gizli kopya gönderene");
   assert.deepEqual(kimdenKur(kopyali, { ad: "Deneme İki", eposta: "iki@kisisel.example" }),
     { tamam: true, kimden: "\"Deneme İki · Deneme Muayene\" <bilgi@deneme.example>", cevap: "iki@kisisel.example", gizli: "iki@kisisel.example" });
-  assert.deepEqual(kimdenKur(kopyali, null), { tamam: true, kimden: "\"Deneme Muayene\" <bilgi@deneme.example>", cevap: null, gizli: null }, "otomatikte kopya kimseye gitmez");
+  assert.equal((kimdenKur(kopyali, null) as { gizli: string | null }).gizli, null, "otomatikte kopya kimseye gitmez");
+  /* alan adı doğrulanmadı (ya da kayıt bozuk: genel adres alan dışında, alan biçimsiz) → herkes bekler, alan adındaki kişi de */
+  for (const bozuk of [{ dogrulandi: false }, { genel: "bilgi@baska.example" }, { alan: "" }, { alan: "Deneme.Example" }]) {
+    for (const g of [null, { ad: "Deneme Bir", eposta: "bir@deneme.example" }, { ad: "Deneme İki", eposta: "iki@kisisel.example" }]) {
+      assert.deepEqual(kimdenKur({ ...f, ...bozuk }, g), { tamam: false, neden: ALAN_DOGRULANMADI }, JSON.stringify([bozuk, g]));
+    }
+  }
   /* alt alan adı ayrı alan adıdır; benzer ad eşleşmez */
   assert.equal(gonderenYolu("bir@posta.deneme.example", "deneme.example"), "genel");
   assert.equal(gonderenYolu("bir@deneme.example.kotu.example", "deneme.example"), "genel");
   assert.equal(gonderenYolu("bir@xdeneme.example", "deneme.example"), "genel");
   assert.equal(gonderenYolu("", "deneme.example"), "yok");
   assert.equal(gonderenYolu("bir@deneme.example", ""), "genel", "alan adı yoksa kimse kendi adresinden göndermez");
-  /* Rapor e-postası alan adında değil (ya da yok) → kişisel adresli kişi ve otomatik e-posta bekler; alan adındaki kişi yine gönderir */
-  for (const genel of [null, "bilgi@baska.example"]) {
-    assert.deepEqual(kimdenKur({ ...f, genel }, { ad: "Deneme İki", eposta: "iki@kisisel.example" }), { tamam: false, neden: GENEL_ALAN_DISI });
-    assert.deepEqual(kimdenKur({ ...f, genel }, null), { tamam: false, neden: GENEL_ALAN_DISI });
-    assert.equal(kimdenKur({ ...f, genel }, { ad: "Deneme Bir", eposta: "bir@deneme.example" }).tamam, true);
-  }
   /* görünen ad başlığı bozamaz: tırnak, açılı ayraç, satır sonu atılır */
   const k = kimdenKur(f, { ad: "Kötü\"\r\nBcc: x@y.example <z>", eposta: "bir@deneme.example" });
   assert.ok(k.tamam && !/["<>\r\n]/.test(k.kimden.replace(/^"|" <[^>]+>$/g, "")) && k.kimden.endsWith("<bir@deneme.example>"), JSON.stringify(k));

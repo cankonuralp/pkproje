@@ -117,19 +117,20 @@ test("firma ayarları: paneller ve pencere; kaydet, geçersiz değer, kayma yok,
   await depo.getByRole("button", { name: "Kapat", exact: true }).last().click();
   await expect(depo).toHaveCount(0);
 
-  /* 536: firmanın Resend hesabı bağlı (tohum: uydurma anahtar, alan adı deneme.example) — anahtar yalnız son 4 · geçersiz alan adı kaydedilmez · deneme
-     e-postası tuşa basanın adresine, kendi adresinden (yerel sağlayıcı taklidi Kimden'i denetler) */
+  /* 536 → 2026-10-16 (FIRMA-VT FV11, K2 + K3 — kasıtlı): gönderim Yönetim'den, burada KİLİTLİ (tohum: deneme.example doğrulandı, uydurma gönderme anahtarı)
+     — alan adı ve genel adres yalnız gösterilir, anahtar hiç (eski "…0001 kayıtlı" ve "Gönderen alan adı" alanı kalktı); gizli kopya değişir; deneme
+     e-postası tuşa basanın adresine, kendi adresinden (yerel sağlayıcı taklidi Kimden'i ve anahtarı denetler) */
   await expect(page.locator('[data-panel="eposta"]')).toContainText("Bağlı · deneme.example");
   const posta = await ac(page, "eposta", "E-posta");
-  await expect(posta.getByText("…0001 kayıtlı")).toBeVisible();
-  await expect(posta.getByText(/Otomatik e-postalar Rapor e-postasından: bilgi@deneme\.example/)).toBeVisible();
-  await expect(posta.getByText(/alan adında değil/)).toHaveCount(0);
+  await expect(posta.getByText("deneme.example", { exact: true })).toBeVisible();
+  await expect(posta.getByText("Doğrulandı", { exact: true })).toBeVisible();
+  await expect(posta.getByText(/kayıtlı$/)).toHaveCount(0);
+  await expect(posta.getByLabel("Gönderen alan adı")).toHaveCount(0);
+  await expect(posta.getByText("Gönderimi probata yönetimi kurar; burada değiştirilmez, anahtar gösterilmez.")).toBeVisible();
+  await expect(posta.getByText(/Otomatik e-postalar bilgi@deneme\.example adresinden/)).toBeVisible();
   await posta.getByText("Çalışanların e-postası nereden gider?").click();
   await expect(posta.getByText(E2E_HESAPLAR.muhasebe.eposta).first()).toBeVisible();
   await expect(posta.getByText("Kendi adresinden", { exact: true }).first()).toBeVisible();
-  await posta.getByLabel("Gönderen alan adı").fill("kötü alan");
-  await posta.getByRole("button", { name: "Kaydet", exact: true }).click();
-  await expect(posta.getByText("Alan adı okunamadı (ör. firmaniz.com.tr). Kaydedilmedi.")).toBeVisible({ timeout: 30_000 });
   await posta.getByRole("button", { name: "Deneme e-postası gönder" }).click();
   await expect(page.getByText(`Deneme e-postası gönderildi: ${E2E_HESAPLAR.yonetici.eposta} — kendi adresinizden. Kutunuza bakın.`).first()).toBeVisible({ timeout: 30_000 });
   await soruluKapat(page, posta);

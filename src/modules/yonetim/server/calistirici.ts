@@ -6,9 +6,11 @@ import { anaAnahtar } from "../../../server/ayar/sir";
 import { merkezYerelMi } from "../../../server/db/baglanti";
 import { firmaHavuzu } from "../../../server/db/firma-havuzu";
 import { yonetimFirmadaIcinde } from "../../../server/db/kiraci";
+import { resendAyari, resendYonetimi } from "../../../server/dis/resend-yonetim";
 import { kurulumAyari, supabaseYonetimi } from "../../../server/dis/supabase-yonetim";
 import type { YoneticiOturumu } from "../../../server/yonetim/giris";
 import { yonetimGocKilidi, yonetimIslemi } from "../../../server/yonetim/istek";
+import type { EpostaOrtami } from "./eposta";
 import type { YonetimCalistirici } from "./firma-tarafi";
 import type { KurulumOrtami } from "./kurulum";
 
@@ -30,3 +32,11 @@ export function kurulumOrtami(o: YoneticiOturumu): KurulumOrtami | null {
 }
 /** "Kendi Supabase projesi" seçeneği açık mı (anahtar + örgüt ortamda) */
 export const kendiProjeAcik = (): boolean => kurulumAyari(process.env) !== null;
+
+/** FV11: e-posta gönderiminin ortamı — probata'nın Resend anahtarı ortamda yoksa null ("E-posta gönderimi" bölümü kapalı, açıklamalı) */
+export function epostaOrtami(o: YoneticiOturumu): EpostaOrtami | null {
+  const a = resendAyari(process.env);
+  return a ? { ...yonetimCalistirici(o), resend: resendYonetimi(a), anaAnahtar: anaAnahtar() } : null;
+}
+/** "E-posta gönderimi" açık mı (Resend anahtarı ortamda) */
+export const epostaAcik = (): boolean => { try { return resendAyari(process.env) !== null; } catch { return false; } };

@@ -10,13 +10,15 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, test } from "node:test";
 import type { GomuluKume } from "../src/server/db/gomulu.ts";
-import { havuzKur, kiraciIcinde, type Havuz, type Sorgulayici } from "../src/server/db/kiraci.ts";
+import { havuzKur, kiraciIcinde, yonetimIcinde, type Havuz, type Sorgulayici } from "../src/server/db/kiraci.ts";
 import { klasorDepo, type Depo } from "../src/server/dosya/depo.ts";
 import { raporNoAl } from "../src/server/numara/numara.ts";
 import { dosyaIndirilebilir } from "../src/server/dosya/dosya.ts";
 import { DOSYA_ERISIMI } from "../src/server/dosya/erisim.ts";
 import { ayarOku, firmaBelgeKunyesi, firmaKunyesi } from "../src/server/ayar/ayar.ts";
-import { ayarDosyasiYaz, ayarKaydet, belgeTuruEkle, belgeTuruKaldir, denemeEpostasi, epostaAnahtarYaz, firmaAyarlari, firmaKoduKaydet, yzAnahtarYaz, type Kisi } from "../src/modules/firma-ayarlari/server/ayarlar.ts";
+import { sifrele, sirYaz } from "../src/server/ayar/sir.ts";
+import { parolaOzeti } from "../src/server/kimlik/parola.ts";
+import { ayarDosyasiYaz, ayarKaydet, belgeTuruEkle, belgeTuruKaldir, denemeEpostasi, firmaAyarlari, firmaKoduKaydet, yzAnahtarYaz, type Kisi } from "../src/modules/firma-ayarlari/server/ayarlar.ts";
 import { ozlukEkle, ozlukKaldir, personelDosyasi } from "../src/modules/personel/server/dosyalar.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
@@ -288,61 +290,83 @@ test("firma sızıntısı: B kendi ayarlarını görür (başlangıç değerleri
   assert.deepEqual([v.yz.anahtar, v.yz.deger.acik, v.bulut.deger.saglayici, v.depolama.dosya], [{ tanimli: false, son4: null }, false, "", 0], "B'nin dosyası yok (A'nınkiler sayılmaz)");
 });
 
-/* NEREDEN GELDİ: 536 — reisim 2026-10-13: "kim mail gönder tuşuna basarsa onun mailinden gitmeli" → "A seçeneğini kabul ediyorum" (her firma kendi
-   Resend hesabı) → maket Firma ayarları › E-posta "onaylıyorum". Yerel sağlayıcı taklidiyle (gerçek hizmete istek gitmez). */
-test("536 e-posta: alan adı sadeleşir, bozuğu kaydedilmez; Resend anahtarı şifreli, ekranda son 4; yetki sunucuda; deneme e-postası tuşa basanın adresine, kendi adresinden", async () => {
+/* NEREDEN GELDİ: 536 — reisim 2026-10-13: "kim mail gönder tuşuna basarsa onun mailinden gitmeli"; FIRMA-VT FV11 (2026-10-16, K2 + K3 — reisim:
+   "resend ve supabase ayarları firma ayarları kısmından değiştirilemesin"): gönderim Yönetim'den (firma_gonderim + sır eposta_anahtari — yönetim
+   işleviyle); Firma ayarlarında yalnız GÖSTERİLİR, gizli kopya firmada. Eski "firma kendi Resend anahtarını ve alan adını girer" (536) kalktı.
+   Yerel sağlayıcı taklidiyle (gerçek hizmete istek gitmez). */
+test("FV11 e-posta: gönderim Yönetim'den, firmada kilitli (uygulama rolü anahtara ve kayda dokunamaz); yalnız gizli kopya kaydedilir; doğrulanmadan gönderilmez; deneme e-postası tuşa basanın adresine", async () => {
   process.env.PROBATA_SIR_ANAHTARI ??= randomBytes(32).toString("base64");
   const ANAHTAR = "re_Deneme0123456789_abcdWXYZ";
-  const gelen: { yetki?: string; govde: Record<string, unknown> }[] = [];
+  const gelen: { yetki?: string; ua?: string; tekil?: string; govde: Record<string, unknown> }[] = [];
   const taklit = createServer((i, y) => {
     let g = ""; i.on("data", (p) => { g += p; }).on("end", () => {
-      gelen.push({ yetki: i.headers.authorization, govde: JSON.parse(g || "{}") as Record<string, unknown> });
+      gelen.push({ yetki: i.headers.authorization, ua: i.headers["user-agent"], tekil: i.headers["idempotency-key"] as string | undefined, govde: JSON.parse(g || "{}") as Record<string, unknown> });
       y.writeHead(200, { "content-type": "application/json" }).end("{}");
     });
   });
   await new Promise<void>((c) => taklit.listen(0, "127.0.0.1", c));
   const eskiUc = process.env.PROBATA_EPOSTA_UC;
   process.env.PROBATA_EPOSTA_UC = `http://127.0.0.1:${(taklit.address() as { port: number }).port}/emails`;
+  /* yönetim işlemi (merkezde ortak firma — testin kümesi merkez gibi): uydurma yönetici */
+  const s = kume.sahipIstemci(); await s.connect();
+  const yid = (await s.query<{ id: string }>("INSERT INTO yonetici (eposta, ad, parola_ozeti, durum, totp_sir) VALUES ('yonetici@probata.example', 'Deneme Yönetici', $1, 'etkin', 'v1.uydurma-dogrulama-anahtari') RETURNING id::text",
+    [await parolaOzeti("yonetim-parola-2026")])).rows[0]!.id;
+  await s.end();
+  const yonetim = (is: (db: Sorgulayici) => Promise<unknown>) => yonetimIcinde(havuz, is, { yoneticiId: yid });
+  const gonderim = (dogrulandi: boolean) => yonetim((db) => db.sorgu("SELECT firma_yonetim_gonderim($1, 'deneme-a.example', 'bilgi@deneme-a.example', $2)", [A, dogrulandi]));
   try {
-    /* yetki sunucuda: denetçi ayar yazamaz, anahtar giremez, deneme gönderemez */
-    assert.equal((await a(DEN, (db) => ayarKaydet(db, DEN, "eposta", -1, { alan: "deneme-a.example", kopya: false }))).durum, "yetkisiz");
-    assert.equal((await a(DEN, (db) => epostaAnahtarYaz(db, DEN, { anahtar: ANAHTAR }))).durum, "yetkisiz");
+    /* yetki sunucuda: denetçi ayar yazamaz, deneme gönderemez */
+    assert.equal((await a(DEN, (db) => ayarKaydet(db, DEN, "eposta", -1, { kopya: true }))).durum, "yetkisiz");
     assert.equal((await a(DEN, (db) => denemeEpostasi(db, DEN))).durum, "yetkisiz");
-    /* ayar yokken deneme gönderilmez, kuyruğa da yazılmaz */
-    assert.deepEqual(await a(YON, (db) => denemeEpostasi(db, YON)), { durum: "red", neden: "Önce Resend anahtarını ve gönderen alan adını kaydedin." });
+    /* gönderim kurulmadan deneme gönderilmez, kuyruğa da yazılmaz */
+    assert.deepEqual(await a(YON, (db) => denemeEpostasi(db, YON)), { durum: "red", neden: "E-posta gönderimi kurulmadı: probata yönetimi firmanın alan adını ekleyip doğrular." });
     assert.equal(await sql(A, "SELECT id::text FROM eposta WHERE kaynak = 'eposta_deneme'"), undefined);
-    /* alan adı: bozuğu kaydedilmez (alanın altında), yazılanı sadeleşir */
-    assert.deepEqual(await a(YON, (db) => ayarKaydet(db, YON, "eposta", -1, { alan: "kötü alan", kopya: false })),
-      { durum: "gecersiz", hatalar: { alan: "Alan adı okunamadı (ör. firmaniz.com.tr). Kaydedilmedi." } });
-    tamam(await a(YON, (db) => ayarKaydet(db, YON, "eposta", -1, { alan: " https://www.Deneme-A.example/ayarlar ", kopya: false })));
-    assert.deepEqual((await a(YON, (db) => ayarOku(db, "eposta"))).deger, { alan: "deneme-a.example", kopya: false });
-    /* anahtar: biçim denetimi; şifreli, ekranda ve veritabanında düz metin yok */
-    assert.deepEqual(await a(YON, (db) => epostaAnahtarYaz(db, YON, { anahtar: "sk-ant-deneme-0123456789abcdef" })),
-      { durum: "gecersiz", hatalar: { anahtar: "Geçerli bir Resend API anahtarı değil (re_ ile başlar)." } });
-    tamam(await a(YON, (db) => epostaAnahtarYaz(db, YON, { anahtar: ANAHTAR })));
+    /* K3: Firma ayarları yalnız gizli kopyayı kaydeder (girdideki alan adı atılır) */
+    tamam(await a(YON, (db) => ayarKaydet(db, YON, "eposta", -1, { alan: "kotu.example", kopya: true })));
+    assert.deepEqual((await a(YON, (db) => ayarOku(db, "eposta"))).deger, { kopya: true });
+    const e1 = (await a(YON, (db) => firmaAyarlari(db, YON)))!.eposta;
+    tamam(await a(YON, (db) => ayarKaydet(db, YON, "eposta", e1.surum, { kopya: false })));
+    /* K3 veritabanı kilidi: uygulama rolü e-posta anahtarını yazamaz (yapay zekâ anahtarı yazabilir — K4), gönderim kaydına dokunamaz */
+    await assert.rejects(a(YON, (db) => sirYaz(db, "eposta_anahtari", ANAHTAR, { kim: "Deneme" })), /yönetiminden kurulur/);
+    await a(YON, (db) => sirYaz(db, "yapay_zeka_anahtari", "sk-ant-uydurmaAnahtarDegil0123456789wxyz", { kim: "Deneme" }));
+    await assert.rejects(sql(A, "INSERT INTO firma_gonderim (alan, genel, dogrulandi) VALUES ('kotu.example', 'bilgi@kotu.example', true)"), /permission denied/);
+    await assert.rejects(a(YON, (db) => db.sorgu("SELECT firma_yonetim_gonderim($1, 'kotu.example', 'bilgi@kotu.example', true)", [A])), /permission denied/,
+      "uygulama rolü yönetim işlevini çağıramaz");
+    /* Yönetim kurar: gönderim kaydı (doğrulanmadı) + şifreli gönderme anahtarı */
+    await gonderim(false);
+    await yonetim((db) => db.sorgu("SELECT firma_yonetim_sir($1, 'eposta_anahtari', $2, 'WXYZ')", [A, sifrele(ANAHTAR, A, "eposta_anahtari")]));
+    await assert.rejects(sql(A, "UPDATE firma_gonderim SET dogrulandi = true"), /permission denied/);
     const v = (await a(YON, (db) => firmaAyarlari(db, YON)))!;
-    assert.deepEqual(v.eposta.anahtar, { tanimli: true, son4: "WXYZ" });
-    assert.ok(!JSON.stringify(v).includes(ANAHTAR), "anahtar ekran verisinde yok");
+    assert.deepEqual(v.eposta.gonderim, { alan: "deneme-a.example", genel: "bilgi@deneme-a.example", dogrulandi: false, anahtar: true });
+    assert.ok(!JSON.stringify(v).includes(ANAHTAR) && !JSON.stringify(v).includes("WXYZ"), "anahtar (son 4 dahil) ekran verisinde yok");
     const satir = (await a(YON, (db) => db.sorgu<{ sifreli: string }>("SELECT sifreli FROM firma_sir WHERE ad = 'eposta_anahtari'"))).rows[0];
     assert.ok(!satir.sifreli.includes(ANAHTAR), "veritabanında düz metin yok");
     assert.equal(v.eposta.ben, "yon@deneme-a.example");
     assert.deepEqual(v.eposta.kisiler.filter((k) => k.eposta === "yon@deneme-a.example").map((k) => k.yol), ["kendi"]);
-    /* başka firma: A'nın ayarını ve anahtarını görmez, kullanamaz */
+    /* doğrulanmadan gönderilmez */
+    assert.deepEqual(await a(YON, (db) => denemeEpostasi(db, YON)), { durum: "red", neden: "Gönderen alan adı (deneme-a.example) henüz doğrulanmadı; e-postalar sırada bekliyor." });
+    assert.equal(gelen.length, 0);
+    /* başka firma: A'nın gönderimini görmez, kullanamaz */
     const vb = (await a(YON_B, (db) => firmaAyarlari(db, YON_B), B))!;
-    assert.deepEqual([vb.eposta.deger.alan, vb.eposta.anahtar], ["", { tanimli: false, son4: null }]);
+    assert.equal(vb.eposta.gonderim, null);
     assert.equal((await a(YON_B, (db) => denemeEpostasi(db, YON_B), B)).durum, "red");
-    /* deneme: tuşa basanın adresine, kendi adresinden (alan adında), firmanın anahtarıyla; satırda gönderen yazılı */
+    /* doğrulandı: deneme tuşa basanın adresine, kendi adresinden (alan adında), firmanın anahtarıyla; User-Agent + Idempotency-Key; satırda gönderen */
+    await gonderim(true);
     assert.deepEqual(await a(YON, (db) => denemeEpostasi(db, YON)),
       { durum: "tamam", bildirim: "Deneme e-postası gönderildi: yon@deneme-a.example — kendi adresinizden. Kutunuza bakın." });
     assert.equal(gelen.length, 1);
-    assert.equal(gelen[0].yetki, `Bearer ${ANAHTAR}`);
+    assert.deepEqual([gelen[0].yetki, gelen[0].ua], [`Bearer ${ANAHTAR}`, "probata"]);
+    const d = (await a(YON, (db) => db.sorgu<{ id: string; durum: string; gonderen_eposta: string }>("SELECT id::text, durum, gonderen_eposta FROM eposta WHERE kaynak = 'eposta_deneme'"))).rows;
+    assert.deepEqual(d.map((x) => [x.durum, x.gonderen_eposta]), [["gonderildi", "yon@deneme-a.example"]]);
+    assert.equal(gelen[0].tekil, `eposta/${d[0]!.id}`, "kuyruk satırının kimliğiyle Idempotency-Key");
     assert.deepEqual([gelen[0].govde.from, gelen[0].govde.to, gelen[0].govde.reply_to, gelen[0].govde.bcc],
       ["\"Deneme\" <yon@deneme-a.example>", ["yon@deneme-a.example"], undefined, undefined]);
-    const d = (await a(YON, (db) => db.sorgu<{ durum: string; gonderen_eposta: string }>("SELECT durum, gonderen_eposta FROM eposta WHERE kaynak = 'eposta_deneme'"))).rows;
-    assert.deepEqual(d, [{ durum: "gonderildi", gonderen_eposta: "yon@deneme-a.example" }]);
-    /* anahtar kaldırılınca yeniden "bağlı değil": deneme reddedilir */
-    tamam(await a(YON, (db) => epostaAnahtarYaz(db, YON, null)));
-    assert.deepEqual((await a(YON, (db) => firmaAyarlari(db, YON)))!.eposta.anahtar, { tanimli: false, son4: null });
+    /* iki tarafın izi: firmanın denetim izinde yönetimin değişikliği, yönetim izinde aynı iş (ortak firma — aynı veritabanı) */
+    const iz = await yonetim((db) => db.sorgu<{ ne: string }>("SELECT ne FROM yonetim_izi WHERE hedef_firma = $1 ORDER BY id", [A])) as { rows: { ne: string }[] };
+    assert.ok(iz.rows.some((x) => x.ne === "ayar.eposta_gonderim") && iz.rows.some((x) => x.ne === "ayar.eposta_anahtari"), JSON.stringify(iz.rows));
+    /* gönderim kaldırılınca yeniden "kurulmadı": deneme reddedilir, sağlayıcıya istek gitmez */
+    await yonetim((db) => db.sorgu("SELECT firma_yonetim_gonderim($1, NULL, NULL, NULL)", [A]));
+    assert.equal((await a(YON, (db) => firmaAyarlari(db, YON)))!.eposta.gonderim, null);
     assert.equal((await a(YON, (db) => denemeEpostasi(db, YON))).durum, "red");
     assert.equal(gelen.length, 1, "kaldırıldıktan sonra sağlayıcıya istek gitmez");
   } finally {

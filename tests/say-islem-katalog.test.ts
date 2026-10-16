@@ -26,7 +26,7 @@ import {
   ISLEM_ARACLARI, komutBlogu, komutDenetle, RAPOR_ARACLARI, sayIstegi, saySistemi, sayYanitiCoz, sonucIcerigi, sunucuKomutuMu, sunucuYazdi, type SayAdimi,
 } from "../src/server/yz/say.ts";
 import { sirYaz } from "../src/server/ayar/sir.ts";
-import { epostaAnahtarYaz, yzAnahtarYaz } from "../src/modules/firma-ayarlari/server/ayarlar.ts";
+import { yzAnahtarYaz } from "../src/modules/firma-ayarlari/server/ayarlar.ts";
 import { islemAlanlariDenetimi, SAY_ELLE_ALANLAR, zodAgaci as agac } from "./yardimci/denetimler.ts";
 
 const zodMu = (x: unknown): x is { _zod: { def: Record<string, unknown> } } => !!x && typeof x === "object" && "_zod" in x;
@@ -113,7 +113,8 @@ test("ŞEMA MODÜLDEN TÜRER: her işlemin kaynağı dışa açılmış bir mod�
 });
 
 test("ÇALIŞTIRICI MODÜL İŞLEVİNİ ÇAĞIRIR: islev modülün sunucu dosyasının işlevi ve say-islemleri.ts onu çağırır; ham SQL ve sır yazan işlev yok", async () => {
-  const sir = new Set<unknown>([sirYaz, yzAnahtarYaz, epostaAnahtarYaz]);
+  /* 2026-10-16 (FV11, K3): e-posta gönderim anahtarını yazan işlev kalktı (anahtarı Yönetim koyar; uygulama rolü yazamaz — 0099) */
+  const sir = new Set<unknown>([sirYaz, yzAnahtarYaz]);
   for (const m of KATALOG_MODULLERI) {
     const ihracat = await sunucuIhracati(m.modul);
     const kaynak = readFileSync(join("src/modules", m.modul, "say-islemleri.ts"), "utf8");

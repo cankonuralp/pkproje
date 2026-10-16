@@ -28,7 +28,7 @@ import {
 } from "../sema";
 import type { FirmaAyarlari as Veri } from "../server/ayarlar";
 import { IceAktarma } from "./IceAktarma";
-import { ayarDosyasiEylemi, ayarKaydetEylemi, belgeTuruEkleEylemi, belgeTuruKaldirEylemi, denemeEpostasiEylemi, epostaAnahtarEylemi, firmaKoduKaydetEylemi, yzAnahtarEylemi,
+import { ayarDosyasiEylemi, ayarKaydetEylemi, belgeTuruEkleEylemi, belgeTuruKaldirEylemi, denemeEpostasiEylemi, firmaKoduKaydetEylemi, yzAnahtarEylemi,
   type AyarYaniti } from "./eylemler";
 import stil from "./firma-ayarlari.module.css";
 
@@ -79,8 +79,8 @@ function ozet(k: PanelAdi, v: Veri): { metin: string; durum?: string } {
     case "yz": { const z = v.yz.deger;
       return { metin: z.acik ? `Açık · ${YZ_MODEL[0]} · kişi başı ${z.sinir ? `${String(z.sinir).replace(".", ",")} $ / ay` : "sınırsız"}` : "Kapalı",
         durum: z.acik && !v.yz.anahtar.tanimli ? "Anahtar yok" : undefined }; }
-    case "eposta": { const hazir = v.eposta.anahtar.tanimli && !!v.eposta.deger.alan;
-      return { metin: hazir ? `Bağlı · ${v.eposta.deger.alan}` : "E-postalar sırada bekliyor", durum: hazir ? undefined : "Bağlı değil" }; }
+    case "eposta": { const g = v.eposta.gonderim, hazir = !!g && g.dogrulandi && g.anahtar;
+      return { metin: hazir ? `Bağlı · ${g.alan}` : g ? `${g.alan} · doğrulanmadı` : "E-postalar sırada bekliyor", durum: hazir ? undefined : "Bağlı değil" }; }
     case "ice": return { metin: "Excel'den müşteri, ekipman, cihaz, personel, araç" };
   }
 }
@@ -609,40 +609,23 @@ function YapayZeka({ v }: { v: Veri }) {
   );
 }
 
-/* ── E-POSTA (536; maket 539 "E-posta"): Resend API anahtarı (bir kez yazılır, son 4 — kendi tuşuyla), gönderen alan adı, gönderene gizli kopya, deneme
-   e-postası (tuşa basanın adresine); kurulum, kimden gider ve çalışanların e-postası "Nasıl …?" başlıkları altında ── */
+/* ── E-POSTA (536; maket 539 "E-posta"; FIRMA-VT FV11 — 2026-10-16, K2 + K3): gönderim probata'nın Resend hesabından firmanın alan adıyla — alan adı,
+   genel adres ve doğrulama Yönetim'den, burada KİLİTLİ (yalnız gösterilir; anahtar hiç gösterilmez); gönderene gizli kopya firmada; deneme e-postası
+   (tuşa basanın adresine); kimden gider ve çalışanların e-postası "Nasıl …?" başlıkları altında ── */
 type EpostaKisi = Veri["eposta"]["kisiler"][number];
-const EID = { anahtar: "w-ay-ep-anahtar", alan: "w-ay-ep-alan" } as const;
 const epostaSutunlari: Sutun<EpostaKisi>[] = [
   { k: "kisi", genislik: "34%", baslik: "Kişi", kart: "ust", sira: 1, siralanmaz: true, hucre: (x) => <>{x.ad}<span className={stil.altSatir}>{x.roller}</span></> },
   { k: "adres", genislik: "36%", baslik: "E-posta", kart: "govde", sira: 2, siralanmaz: true, hucre: (x) => <><KartEtiket>E-posta</KartEtiket>{x.eposta}</> },
   { k: "yol", genislik: "30%", baslik: "E-postası nereden gider", kart: "rozet", sira: 1, siralanmaz: true, hucre: (x) => x.yol === "kendi"
     ? <Rozet tur="tamam">Kendi adresinden</Rozet>
-    : <><Rozet tur="bekliyor">Rapor e-postasından</Rozet><span className={stil.altSatir}>kişinin adıyla, cevap kişiye</span></> },
+    : <><Rozet tur="bekliyor">Genel adresten</Rozet><span className={stil.altSatir}>kişinin adıyla, cevap kişiye</span></> },
 ];
 function Eposta({ v }: { v: Veri }) {
   const router = useRouter();
   const bildir = useBildir();
-  const onayla = useOnayla();
   const [mesgulA, baslatA] = useTransition();
-  const s = useKesim("eposta", { alan: v.eposta.deger.alan, kopya: v.eposta.deger.kopya }, v.eposta.surum);
-  const [yeni, setYeni] = useState<null | { deger: string; hata: string | null }>(v.eposta.anahtar.tanimli ? null : { deger: "", hata: null });
-  const kayitli = v.eposta.deger.alan, hazir = v.eposta.anahtar.tanimli && !!kayitli;
-  const genelUygun = !!kayitli && v.eposta.genel.trim().toLowerCase().endsWith(`@${kayitli}`);
-  const anahtarKaydet = () => baslatA(async () => {
-    if (!yeni) return;
-    const r = await epostaAnahtarEylemi({ anahtar: yeni.deger });
-    if (!r.tamam) { setYeni({ deger: "", hata: r.hatalar?.anahtar ?? r.genel ?? "Kaydedilemedi." }); requestAnimationFrame(() => document.getElementById(EID.anahtar)?.focus()); return; }
-    setYeni(null); bildir(r.bildirim ?? "Resend API anahtarı kaydedildi."); router.refresh();
-    requestAnimationFrame(() => document.querySelector<HTMLElement>("[data-ep-degistir]")?.focus());
-  });
-  const anahtarKaldir = async () => {
-    if (!(await onayla({ baslik: "Resend API anahtarını kaldır", metin: "Yeni anahtar girilene kadar e-postalar gönderilmez, sırada bekler.", tus: "Kaldır", tehlike: true }))) return;
-    baslatA(async () => {
-      const r = await epostaAnahtarEylemi(null); bildir(r.tamam ? r.bildirim ?? "Kaldırıldı." : r.genel ?? "Kaldırılamadı.");
-      if (r.tamam) { setYeni({ deger: "", hata: null }); router.refresh(); requestAnimationFrame(() => document.getElementById(EID.anahtar)?.focus()); }
-    });
-  };
+  const s = useKesim("eposta", { kopya: v.eposta.deger.kopya }, v.eposta.surum);
+  const g = v.eposta.gonderim, hazir = !!g && g.dogrulandi && g.anahtar;
   const deneme = () => baslatA(async () => {
     const r = await denemeEpostasiEylemi();
     bildir(r.tamam ? r.bildirim ?? "Deneme e-postası gönderildi." : r.genel ?? "Deneme e-postası gönderilemedi.");
@@ -651,43 +634,31 @@ function Eposta({ v }: { v: Veri }) {
   return (
     <Kart genis yaz={v.yaz} kirli={s.kirli} mesgul={s.mesgul} kaydet={s.kaydet}>
       <Not>Kim gönder tuşuna basarsa e-posta onun adresinden gider. Bu ay gönderilen: {v.eposta.ay.toLocaleString("tr-TR")}.</Not>
-      {yeni === null ? <><p className={stil.etiketUst}>Resend API anahtarı</p><div className={stil.dosyaSatir}>
-        <span className={stil.anahtar}>…{v.eposta.anahtar.son4} kayıtlı</span>
-        {v.yaz && <><Tus tur="ikincil" ikon="pencil" disabled={mesgulA} data-ep-degistir="" onClick={() => { setYeni({ deger: "", hata: null }); requestAnimationFrame(() => document.getElementById(EID.anahtar)?.focus()); }}>Değiştir</Tus>
-          <Tus tur="ikincil" ikon="trash-2" disabled={mesgulA} onClick={anahtarKaldir} aria-label="Resend API anahtarını kaldır">Kaldır</Tus></>}
-      </div></> : v.yaz && <>
-        <Alan id={EID.anahtar} etiket="Resend API anahtarı" genis hata={yeni.hata ?? undefined} sonuc={yeni.hata ? undefined : "re_ ile başlar; şifreli saklanır, bir daha gösterilmez."}>
-          <Girdi id={EID.anahtar} type="password" value={yeni.deger} maxLength={210} spellCheck={false} hata={!!yeni.hata} mesajli onChange={(e) => setYeni({ deger: e.target.value, hata: null })} />
-        </Alan>
-        <div className={stil.tuslar}>
-          <Tus ikon="check" disabled={mesgulA} aria-busy={mesgulA || undefined} onClick={anahtarKaydet}>Anahtarı kaydet</Tus>
-          {v.eposta.anahtar.tanimli && <Tus tur="ikincil" disabled={mesgulA}
-            onClick={() => { setYeni(null); requestAnimationFrame(() => document.querySelector<HTMLElement>("[data-ep-degistir]")?.focus()); }}>Vazgeç</Tus>}
-        </div>
-      </>}
+      <dl className={stil.bilgi}>
+        <div><dt>Gönderen alan adı</dt><dd>{g ? <>{g.alan} {g.dogrulandi ? <Rozet tur="tamam">Doğrulandı</Rozet> : <Rozet tur="bekliyor">Doğrulanmadı</Rozet>}</> : <DegerYok />}</dd></div>
+        <div><dt>Genel adres</dt><dd>{g ? g.genel : <DegerYok />}</dd></div>
+        <div><dt>Otomatik e-postaların cevabı</dt><dd>{v.eposta.rapor || <DegerYok />}</dd></div>
+      </dl>
+      <Not>Gönderimi probata yönetimi kurar; burada değiştirilmez, anahtar gösterilmez.</Not>
       <FormIzgara>
-        <Alan id={EID.alan} etiket="Gönderen alan adı" hata={s.h.alan} sonuc={s.h.alan ? undefined : "Resend'de doğrulanmış alan adı."}>
-          <Girdi id={EID.alan} value={s.d.alan} maxLength={100} disabled={!v.yaz} hata={!!s.h.alan} mesajli spellCheck={false} placeholder="firmaniz.com.tr" inputMode="url"
-            onChange={(e) => s.setD({ ...s.d, alan: e.target.value })} />
-        </Alan>
         <Segment ad="Gönderene gizli kopya" deger={s.d.kopya ? "1" : "0"} kapali={!v.yaz} secenekler={[["0", "Kapalı"], ["1", "Açık"]] as const}
           degistir={(x) => s.setD({ ...s.d, kopya: x === "1" })} />
       </FormIzgara>
       {/* durum satırı hep yerinde */}
-      <p className={!v.eposta.anahtar.tanimli || (kayitli && !genelUygun) ? `${stil.durumSatir} ${stil.uyariSatir}` : stil.durumSatir}>
-        {!v.eposta.anahtar.tanimli ? <><Ikon ad="key-round" kucuk />Anahtar girilmedi: e-postalar sırada bekler, anahtar girilince gider.</>
-          : kayitli && !genelUygun ? <><Ikon ad="triangle-alert" kucuk />Rapor e-postası @{kayitli} alan adında değil: otomatik e-postalar sırada bekler.</>
-          : <>Otomatik e-postalar Rapor e-postasından: <b>{v.eposta.genel || "girilmedi"}</b></>}
+      <p className={hazir ? stil.durumSatir : `${stil.durumSatir} ${stil.uyariSatir}`}>
+        {!g ? <><Ikon ad="triangle-alert" kucuk />E-posta gönderimi kurulmadı: e-postalar sırada bekler; probata alan adınızı ekleyip doğrulayınca gider.</>
+          : !g.dogrulandi || !g.anahtar ? <><Ikon ad="triangle-alert" kucuk />@{g.alan} henüz doğrulanmadı: e-postalar sırada bekler, doğrulanınca gider.</>
+          : <>Otomatik e-postalar <b>{g.genel}</b> adresinden; cevaplar <b>{v.eposta.rapor || "Rapor e-postası girilmedi"}</b></>}
       </p>
       {v.yaz && <div className={stil.dosyaSatir}>
         <Tus tur="ikincil" ikon="send" disabled={!hazir || mesgulA} aria-busy={mesgulA || undefined} onClick={deneme}>Deneme e-postası gönder</Tus>
         {v.eposta.ben && <span className={stil.altSatir}>{v.eposta.ben}</span>}
       </div>}
-      <Yardim baslik="Resend hesabı nasıl açılır?"><ol className={stil.adimlar}>{RESEND_ADIMLAR.map((x) => <li key={x}>{x}</li>)}</ol></Yardim>
+      <Yardim baslik="E-posta gönderimi nasıl kurulur?"><ol className={stil.adimlar}>{RESEND_ADIMLAR.map((x) => <li key={x}>{x}</li>)}</ol></Yardim>
       <Yardim baslik="Çalışanların e-postası nereden gider?">
         <ul className={stil.adimlar}>
-          <li>Adresi {kayitli ? <b>@{kayitli}</b> : "firmanın alan adı"} ile biten çalışan: kendi adresinden; cevap ona gelir.</li>
-          <li>Kişisel adresli ya da adresi olmayan: Rapor e-postasından, kişinin adıyla; cevap kişiye gelir.</li>
+          <li>Adresi {g ? <b>@{g.alan}</b> : "firmanın alan adı"} ile biten çalışan: kendi adresinden; cevap ona gelir.</li>
+          <li>Kişisel adresli ya da adresi olmayan: firmanın genel adresinden, kişinin adıyla; cevap kişiye gelir.</li>
         </ul>
         <Liste baslik="Çalışanların e-postası nereden gider" sutunlar={epostaSutunlari} kayitlar={v.eposta.kisiler} anahtar={(x) => x.id} />
       </Yardim>

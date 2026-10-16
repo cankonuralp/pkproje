@@ -16,13 +16,13 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
   islem({
     ad: "firma_ayarlari", modul: MODUL, tur: "oku", girdi: z.object({ surum: surum.optional() }), kaynak: [surum], islev: firmaAyarlari,
     tarif: "Firma ayarlarının bütün bölümleri ve sürümleri (firma bilgileri, imza yöntemi, zimmet teslim eden, saklama süresi, mesai, uyarı eşikleri, sabit giderler, "
-      + "fiyat listesi, yapay zekâ açık / sınır, e-posta alanı, ikinci kopya, müşteriye açık belgeler, firma kodu); anahtarların yalnız tanımlı olup olmadığı.",
+      + "fiyat listesi, yapay zekâ açık / sınır, e-posta gönderimi (alan adı, doğrulandı mı — Yönetim kurar, burada değişmez; gizli kopya), ikinci kopya, müşteriye açık belgeler, firma kodu); anahtarların yalnız tanımlı olup olmadığı.",
     calistir: async (b) => {
       const a = await firmaAyarlari(b.db, b.kim);
       if (!a) return { tamam: false, neden: "Bu kullanıcı Firma ayarları'nı göremiyor." };
       const { dosyalar } = a;
       return { tamam: true, sonuc: { ...a, ice: undefined, ice_aktarim: a.ice.length,
-        yz: { ...a.yz, anahtar: { tanimli: a.yz.anahtar.tanimli } }, eposta: { ...a.eposta, anahtar: { tanimli: a.eposta.anahtar.tanimli } },
+        yz: { ...a.yz, anahtar: { tanimli: a.yz.anahtar.tanimli } },
         dosyalar: { logo: !!dosyalar.logo, on_bilgi: !!dosyalar.on_bilgi, bordro_format: !!dosyalar.bordro_format, surum: dosyalar.surum } } };
     },
   }),

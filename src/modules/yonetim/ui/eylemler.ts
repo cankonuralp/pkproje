@@ -9,7 +9,8 @@ import { anaAlan } from "../../../server/kiraci/istek";
 import { yonetimAlani } from "../../../server/yonetim/adres";
 import { yonetimAdresinde, yonetimIslemi, yonetimIstekOturumu } from "../../../server/yonetim/istek";
 import { yonetimEtiketi } from "../sema";
-import { kurulumOrtami, yonetimCalistirici } from "../server/calistirici";
+import { epostaOrtami, kurulumOrtami, yonetimCalistirici } from "../server/calistirici";
+import { gonderimAlaniEkle, gonderimDogrula, type EpostaOrtami, type GonderimGorunumu } from "../server/eposta";
 import { firmaDurumuYonet, geciciParolaYonet, yzAnahtariYonet } from "../server/firma-tarafi";
 import { kurulumBaslat, kurulumBastan, kurulumGorunumu, kurulumIlerlet, kurulumSurdur, type KurulumGorunumu } from "../server/kurulum";
 import { firmaAc, type YonetimSonucu } from "../server/yonetim";
@@ -18,8 +19,10 @@ export interface YonetimYaniti {
   tamam?: boolean; id?: string; parola?: string; eposta?: string; ad?: string; alt?: string; son4?: string | null; hatalar?: Record<string, string>; genel?: string;
   /** FV10: kendi projeli firmanın kurulumu başladı (Firma aç) / kurulumun şu anki görünümü */
   kurulum?: KurulumGorunumu | true;
+  /** FV11: e-posta gönderiminin güncel görünümü (ekle / doğrula) */
+  gorunum?: GonderimGorunumu;
 }
-type Alanlar = Partial<Pick<YonetimYaniti, "id" | "parola" | "eposta" | "ad" | "alt" | "son4">>;
+type Alanlar = Partial<Pick<YonetimYaniti, "id" | "parola" | "eposta" | "ad" | "alt" | "son4" | "gorunum">>;
 
 const cevir = (r: YonetimSonucu<Alanlar>): YonetimYaniti =>
   r.durum === "tamam" ? { ...r, tamam: true } : r.durum === "gecersiz" ? { hatalar: r.hatalar } : r.durum === "red" ? { genel: r.neden } : { genel: "Firma bulunamadı." };
@@ -98,4 +101,19 @@ export async function yzAnahtariKaydetEylemi(id: string, form: FormData): Promis
 
 export async function yzAnahtariKaldirEylemi(id: string): Promise<YonetimYaniti> {
   return yenileyerek(await islem((o) => yzAnahtariYonet(yonetimCalistirici(o), yazi(id), null, anaAnahtar())));
+}
+
+/* FV11 (K2): firmanın e-posta gönderimi — alan adı ekle / değiştir (form: alan, yerel) ve "Doğrula" (Resend'e denetletir; doğrulanınca gönderme anahtarı
+   firma tarafına kilitli yazılır). probata'nın Resend anahtarı ortamda yoksa kapalı. */
+async function gonderimIslemi(is: (k: EpostaOrtami) => Promise<YonetimSonucu<Alanlar>>): Promise<YonetimYaniti> {
+  return yenileyerek(await islem(async (o) => {
+    const k = epostaOrtami(o);
+    return k ? is(k) : ({ durum: "red", neden: "probata'nın Resend anahtarı bu sunucuda tanımlı değil; e-posta gönderimi kurulamaz." } as const);
+  }));
+}
+export async function gonderimAlaniEkleEylemi(id: string, form: FormData): Promise<YonetimYaniti> {
+  return gonderimIslemi((k) => gonderimAlaniEkle(k, yazi(id), { alan: yazi(form.get("alan")), yerel: yazi(form.get("yerel")) }));
+}
+export async function gonderimDogrulaEylemi(id: string): Promise<YonetimYaniti> {
+  return gonderimIslemi((k) => gonderimDogrula(k, yazi(id)));
 }

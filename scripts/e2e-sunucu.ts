@@ -30,6 +30,7 @@ import { havuzKur, kiraciIcinde } from "../src/server/db/kiraci.ts";
 import { parolaOzeti } from "../src/server/kimlik/parola.ts";
 import { bosKapi } from "../tests/yardimci/kume.ts";
 import { sahteDepoKur } from "../tests/yardimci/sahte-depo.ts";
+import { sahteResendKur } from "../tests/yardimci/sahte-resend.ts";
 import { pgProjesi, sahteYonetimKur } from "../tests/yardimci/sahte-supabase-yonetim.ts";
 import { nextCalistir } from "./next.ts";
 
@@ -99,16 +100,25 @@ for (const f of firmalar) {
   /* muhasebe (327): her proje için tamamlanmış bir plan ve imzalı raporu (imza zinciri e2e/saha-raporu'nda denenir; burada yalnız muhasebenin
      başlangıç durumu) — süper kullanıcıyla, tetiksiz, geçici veritabanı */
   if (f.kisa_ad !== E2E_FIRMA.kisaAd) continue;
-  /* 536: firmanın e-posta hesabı (Firma ayarları › E-posta) — uydurma Resend anahtarı (yerel taklit), gönderen alan adı = hesapların alan adı,
-     Rapor e-postası alan adında; Başka Muayene'de yok (e-postaları bekler) */
+  /* 536 → FIRMA-VT FV11 (2026-10-16, K2 + K3): firmanın e-posta gönderimi Yönetim'den, firmada KİLİTLİ (uygulama rolü anahtarı yazamaz — 0099) —
+     tohum, yönetimin bırakacağı hâlde (süper kullanıcıyla, geçici veritabanı): gönderim kaydı (alan adı = hesapların alan adı, genel adres, doğrulandı) +
+     şifreli gönderme anahtarı (uydurma; yerel taklit yalnız onu kabul eder); Rapor e-postası (otomatik e-postanın cevabı) uygulamanın kendi yazıcısıyla.
+     Başka Muayene'de yok (e-postaları bekler) */
   await kiraciIcinde(havuz, f.id, async (db) => {
-    const iz = { kim: E2E_HESAPLAR.yonetici.ad, ne: "ayar.eposta" };
-    const e = await ayarOku(db, "eposta");
-    if ((await ayarYaz(db, "eposta", e.surum, { alan: E2E_EPOSTA.alan, kopya: false }, iz)).durum !== "tamam") throw new Error("e-posta ayarı yazılamadı");
     const b = await ayarOku(db, "firma_bilgileri");
-    if ((await ayarYaz(db, "firma_bilgileri", b.surum, { ...b.deger, eposta: E2E_EPOSTA.genel }, iz)).durum !== "tamam") throw new Error("Rapor e-postası yazılamadı");
-    await sirYaz(db, "eposta_anahtari", E2E_EPOSTA.anahtar, { kim: E2E_HESAPLAR.yonetici.ad });
+    if ((await ayarYaz(db, "firma_bilgileri", b.surum, { ...b.deger, eposta: E2E_EPOSTA.genel }, { kim: E2E_HESAPLAR.yonetici.ad, ne: "ayar.eposta" })).durum !== "tamam") {
+      throw new Error("Rapor e-postası yazılamadı");
+    }
   }, { hesapId: tohum.yonetici });
+  const sp = kume.sahipIstemci();
+  await sp.connect();
+  try {
+    await sp.query("BEGIN");
+    await sp.query("INSERT INTO firma_gonderim (firma_id, alan, genel, dogrulandi) VALUES ($1, $2, $3, true)", [f.id, E2E_EPOSTA.alan, E2E_EPOSTA.genel]);
+    await sp.query("INSERT INTO firma_sir (firma_id, ad, sifreli, son4) VALUES ($1, 'eposta_anahtari', $2, $3)",
+      [f.id, sifrele(E2E_EPOSTA.anahtar, f.id, "eposta_anahtari", Buffer.from(sirAnahtari, "base64")), E2E_EPOSTA.anahtar.slice(-4)]);
+    await sp.query("COMMIT");
+  } finally { await sp.end(); }
   const s2 = kume.sahipIstemci();
   await s2.connect();
   try {
@@ -617,11 +627,16 @@ supabaseTaklit.projeKur = async () => {
     havuzcu: [{ db_host: "127.0.0.1", db_port: pk.uygulama.port, db_name: "proje_vt", pool_mode: "transaction" }] };
 };
 
+/* FIRMA-VT FV11 (2026-10-16; e2e/yonetim.spec.ts "e-posta gönderimi"): Resend Yönetim API'sinin yerel taklidi (tests/yardimci/sahte-resend.ts) — alan
+   adı ekle / doğrula / gönderme anahtarı; anahtar UYDURMA (her koşuda rastgele), gerçek Resend'e istek gitmez; doğrulama istenen alan "verified" döner. */
+const resendTaklit = await sahteResendKur();
+
 let kapaniyor = false;
 const kapat = async (kod: number) => {
   if (kapaniyor) return;
   kapaniyor = true;
   await supabaseTaklit.kapat().catch(() => {});
+  await resendTaklit.kapat().catch(() => {});
   await kume.durdur();
   process.exit(kod);
 };
@@ -675,6 +690,8 @@ const ortam: Record<string, string> = {
   /* FV10: Supabase Yönetim API'sinin yerel taklidi ("Kendi Supabase projesi" ile firma aç) — uydurma anahtar ve örgüt */
   PROBATA_SUPABASE_YONETIM_ANAHTARI: E2E_KURULUM.anahtar, PROBATA_SUPABASE_YONETIM_UC: supabaseTaklit.url, PROBATA_SUPABASE_ORGUT: E2E_KURULUM.orgut,
   PROBATA_SUPABASE_DEPO_UC: kurulumDepo.url,
+  /* FV11: Resend Yönetim API'sinin yerel taklidi (firmanın alan adı Yönetim'den) — uydurma anahtar */
+  PROBATA_RESEND_ANAHTARI: resendTaklit.anahtar, PROBATA_RESEND_YONETIM_UC: resendTaklit.url,
 };
 
 /* 489: yayın derlemesiyle — Next'in bağımsız sunucusu (output "standalone"; Vercel'deki gibi derlenmiş). Statik dosyalar ve public/ sunucunun

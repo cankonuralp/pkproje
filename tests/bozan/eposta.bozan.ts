@@ -3,7 +3,9 @@
    2. Sağlayıcının 4xx'i kalıcı saymaması: reddedilen e-posta (yanlış adres / gönderen) beş kez boşuna yeniden denenir.
    3. Plan e-postasında ekip / bilgilendirme ayrımı kalkınca bilgilendirilen kişiye (müşteri) "kabul ya da reddet" çağrısı gider.
    4. (536) Kimden'de alan adı denetimi kalkınca kişisel adresli kişi (alan adında değil) kendi adresinden gönderilir — Resend reddeder, e-posta gitmez.
-   5. (536) Rapor e-postası alan adı denetimi kalkınca alan dışındaki genel adresten gönderilir — Resend reddeder; e-posta beklemek yerine kalıcı hataya düşer. */
+   5. (FV11, 2026-10-16 — eski 5'in yerine: Rapor e-postası kuralı kalktı) doğrulama denetimi kalkınca doğrulanmamış alan adıyla gönderilir — Resend reddeder;
+      e-posta beklemek yerine kalıcı hataya düşer.
+   6. (FV11) Idempotency-Key kalkınca yanıtı kaybolan istek yeniden denenince e-posta iki kez gider. */
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
@@ -49,7 +51,7 @@ test("ekip / bilgilendirme ayrımı kalkınca bilgilendirilene kabul / red çağ
   assert.ok(e.govde.includes("kabul ya da reddetmek"), "bozuk: müşteriye kabul / red çağrısı");
 });
 
-const FIRMA = { alan: "deneme.example", genel: "bilgi@deneme.example", firmaAd: "Deneme Muayene", kopya: false };
+const FIRMA = { alan: "deneme.example", genel: "bilgi@deneme.example", dogrulandi: true, firmaAd: "Deneme Muayene", kopya: false, rapor: null };
 
 test("Kimden'de alan adı denetimi kalkınca kişisel adres kendi adresinden gönderilir", async () => {
   const m = await bozuk<typeof import("../../src/server/eposta/kimden.ts")>("src/server/eposta/kimden.ts",
@@ -58,9 +60,22 @@ test("Kimden'de alan adı denetimi kalkınca kişisel adres kendi adresinden gö
   assert.ok(k.tamam && k.kimden.endsWith("<iki@kisisel.example>"), "bozuk: alan dışı adres Kimden'de");
 });
 
-test("Rapor e-postası alan adı denetimi kalkınca alan dışındaki genel adresten gönderilir", async () => {
+test("doğrulama denetimi kalkınca doğrulanmamış alan adıyla gönderilir", async () => {
   const m = await bozuk<typeof import("../../src/server/eposta/kimden.ts")>("src/server/eposta/kimden.ts",
-    "if (!f.genel || !f.alan || alanAdi(f.genel) !== f.alan) return", "if (!f.genel) return");
-  const k = m.kimdenKur({ ...FIRMA, genel: "bilgi@baska.example" }, null);
-  assert.ok(k.tamam && k.kimden.endsWith("<bilgi@baska.example>"), "bozuk: alan dışı Rapor e-postası Kimden'de");
+    "if (!f.dogrulandi || !f.alan || !ALAN_BICIMI.test(f.alan) || alanAdi(genel) !== f.alan) return", "if (!f.alan) return");
+  const k = m.kimdenKur({ ...FIRMA, dogrulandi: false }, null);
+  assert.ok(k.tamam && k.kimden.endsWith("<bilgi@deneme.example>"), "bozuk: doğrulanmamış alan adıyla Kimden");
+});
+
+test("Idempotency-Key kalkınca yeniden denenen istek sağlayıcıya kimliksiz gider (iki kez gönderilir)", async () => {
+  const m = await bozuk<typeof import("../../src/server/eposta/saglayici.ts")>("src/server/eposta/saglayici.ts",
+    '...(e.kimlik && /^[0-9a-f-]{36}$/.test(e.kimlik) ? { "Idempotency-Key": `eposta/${e.kimlik}` } : {})', "");
+  const basliklar: (string | undefined)[] = [];
+  const s = createServer((i, y) => { basliklar.push(i.headers["idempotency-key"] as string | undefined); y.writeHead(200).end("{}"); });
+  await new Promise<void>((c) => s.listen(0, "127.0.0.1", c));
+  try {
+    const p = m.epostaSaglayicisi("k", { PROBATA_EPOSTA_UC: `http://127.0.0.1:${(s.address() as { port: number }).port}/` })!;
+    await p.gonder({ kimden: "g <g@b.example>", kime: "a@b.example", cevap: null, gizli: null, konu: "k", metin: "m", kimlik: "6f9619ff-8b86-4011-b42d-00c04fc964ff" });
+    assert.deepEqual(basliklar, [undefined], "bozuk: kimlik başlığı yok — sağlayıcı yinelemeyi tanıyamaz");
+  } finally { await new Promise<void>((c) => s.close(() => c())); }
 });

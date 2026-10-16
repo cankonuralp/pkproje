@@ -15,7 +15,7 @@ import { MATRIS_ONERI } from "../src/server/yetki/tanim.ts";
 import { planIci, planKabul } from "../src/modules/planlar/server/plan-ici.ts";
 import { bekleyenleriGonder } from "../src/server/eposta/gonder.ts";
 import { SAGLAYICI_YOK, type EpostaSaglayici } from "../src/server/eposta/saglayici.ts";
-import { GENEL_ALAN_DISI } from "../src/server/eposta/kimden.ts";
+import { ALAN_DOGRULANMADI } from "../src/server/eposta/kimden.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
 let kume: GomuluKume;
@@ -223,20 +223,21 @@ test("432 plan e-postası: ekip + bilgilendirme alıcı başına kuyrukta; bozuk
   assert.deepEqual((await sql<{ gonderen_ad: string; gonderen_eposta: string }>(A, "SELECT DISTINCT gonderen_ad, gonderen_eposta FROM eposta WHERE kaynak_id = $1", [r.id])).rows,
     [{ gonderen_ad: "Deneme", gonderen_eposta: "plan@deneme-a.example" }]);
   /* sağlayıcı yok: bekler, nedeni yazılır (bir kez) */
-  const ayar = (s: EpostaSaglayici, alan = "deneme-a.example") => ({ saglayici: s, firma: { alan, genel: null, firmaAd: "Deneme A", kopya: false } });
-  const gonder = (s: EpostaSaglayici | null, alan?: string) => kiraciIcinde(havuz, A, (db) => bekleyenleriGonder(db, s ? ayar(s, alan) : null, { kaynak: "plan", kaynakId: r.id }));
+  /* FV11 (2026-10-16): gönderim Yönetim'in eklediği alan adıyla — doğrulanmadıysa bekler */
+  const ayar = (s: EpostaSaglayici, dogrulandi = true) => ({ saglayici: s, firma: { alan: "deneme-a.example", genel: "bilgi@deneme-a.example", dogrulandi, firmaAd: "Deneme A", kopya: false, rapor: null } });
+  const gonder = (s: EpostaSaglayici | null, dogrulandi?: boolean) => kiraciIcinde(havuz, A, (db) => bekleyenleriGonder(db, s ? ayar(s, dogrulandi) : null, { kaynak: "plan", kaynakId: r.id }));
   assert.deepEqual(await gonder(null), { gonderilen: 0, bekleyen: 3, hatali: 0 });
   assert.ok((await sql<{ son_hata: string }>(A, "SELECT son_hata FROM eposta WHERE kaynak_id = $1", [r.id])).rows.every((x) => x.son_hata === SAGLAYICI_YOK));
-  /* 536: gönderenin adresi alan adında değil, Rapor e-postası da yok → Kimden kurulamaz: bekler (deneme sayılmaz), nedeni yazılır, sağlayıcıya gitmez */
+  /* FV11 (eski 536 "Rapor e-postası alan dışında" yerine): alan adı doğrulanmadı → Kimden kurulamaz: bekler (deneme sayılmaz), nedeni yazılır, sağlayıcıya gitmez */
   const giden: string[] = [], kimden: string[] = [];
   const sahte: EpostaSaglayici = { async gonder(e) {
     giden.push(e.kime); kimden.push(`${e.kimden}|${e.cevap ?? ""}`);
     return e.kime.startsWith("den1") ? { tamam: true } : e.kime.startsWith("den2") ? { tamam: false, neden: "Sağlayıcı reddetti (HTTP 422).", kalici: true }
       : { tamam: false, neden: "Sağlayıcı 10 sn'de yanıt vermedi.", kalici: false };
   } };
-  assert.deepEqual(await gonder(sahte, "baska.example"), { gonderilen: 0, bekleyen: 3, hatali: 0 });
+  assert.deepEqual(await gonder(sahte, false), { gonderilen: 0, bekleyen: 3, hatali: 0 });
   assert.equal(giden.length, 0, "Kimden kurulamayınca sağlayıcıya gitmez");
-  assert.ok((await sql<{ son_hata: string; deneme: number }>(A, "SELECT son_hata, deneme FROM eposta WHERE kaynak_id = $1", [r.id])).rows.every((x) => x.son_hata === GENEL_ALAN_DISI && x.deneme === 0));
+  assert.ok((await sql<{ son_hata: string; deneme: number }>(A, "SELECT son_hata, deneme FROM eposta WHERE kaynak_id = $1", [r.id])).rows.every((x) => x.son_hata === ALAN_DOGRULANMADI && x.deneme === 0));
   /* sahte sağlayıcı: den1 gider, den2 kalıcı ret, müşteri geçici hata → 5. denemede hata */
   assert.deepEqual(await gonder(sahte), { gonderilen: 1, bekleyen: 1, hatali: 1 });
   assert.deepEqual([...new Set(kimden)], ["\"Deneme\" <plan@deneme-a.example>|"], "Kimden = planı açan, kendi adresinden (alan adında)");

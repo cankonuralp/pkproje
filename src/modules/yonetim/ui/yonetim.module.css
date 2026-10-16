@@ -35,3 +35,5 @@
 .vtSecenek[data-kapali] { cursor: not-allowed; color: var(--yazi2); }
 .vtSecenek input { margin: 4px 0 0; flex: none; }
 .vtAciklama { display: block; margin-top: 2px; color: var(--yazi2); font-size: var(--boy-kucuk); font-weight: 400; }
+/* FIRMA-VT FV11 (2026-10-16): DNS kaydının adı / değeri uzun (DKIM anahtarı) — hücreden taşmaz, her yerden bölünür */
+.dnsDeger { overflow-wrap: anywhere; word-break: break-all; font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-size: var(--boy-kucuk); }

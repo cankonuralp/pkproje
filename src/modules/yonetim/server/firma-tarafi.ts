@@ -31,8 +31,8 @@ const ULASILAMADI = "Firmanın veritabanına ulaşılamadı; yeniden deneyin.";
 const YZ = "yapay_zeka_anahtari";
 
 /** firmanın yeri (merkezdeki kayıttan): ortak, kendi (bağlantı kaydıyla), kurulumda (bağlantı yok) ya da yok */
-type Yer = { vt: "ortak" } | { vt: "kendi"; kayit: FirmaVtKaydi } | { vt: "kurulum" } | null;
-async function yer(c: YonetimCalistirici, id: string): Promise<Yer> {
+export type Yer = { vt: "ortak" } | { vt: "kendi"; kayit: FirmaVtKaydi } | { vt: "kurulum" } | null;
+export async function yer(c: YonetimCalistirici, id: string): Promise<Yer> {
   const b = (await c.merkez((db) => db.sorgu<{ b: Record<string, unknown> | null }>("SELECT yonetim_firma_baglanti($1) AS b", [id]))).rows[0]?.b ?? null;
   if (!b) return null;
   if (b.vt === "ortak") return { vt: "ortak" };
@@ -40,8 +40,8 @@ async function yer(c: YonetimCalistirici, id: string): Promise<Yer> {
   try { cz = cozumOku(b); } catch { return { vt: "kurulum" }; }
   return cz?.vt === "kendi" ? { vt: "kendi", kayit: cz.kayit } : { vt: "kurulum" };
 }
-/** firma tarafındaki iş; ulaşılamazsa null (sırrı / iletiyi yazmadan) */
-async function firmada<T>(c: YonetimCalistirici, kayit: FirmaVtKaydi, id: string, is: (db: Sorgulayici) => Promise<T>): Promise<T | null> {
+/** firma tarafındaki iş; ulaşılamazsa null (sırrı / iletiyi yazmadan) — FV11 e-posta gönderimi de kullanır */
+export async function firmada<T>(c: YonetimCalistirici, kayit: FirmaVtKaydi, id: string, is: (db: Sorgulayici) => Promise<T>): Promise<T | null> {
   try { return await c.firmada(kayit, id, is); } catch (h) {
     console.error("[yönetim] firma veritabanında iş düştü:", (h as { code?: string }).code ?? "kodsuz");
     return null;

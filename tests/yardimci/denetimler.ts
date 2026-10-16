@@ -292,6 +292,8 @@ export const DIS_IZNI: Readonly<Record<string, string>> = {
   "src/modules/yonetim/server/calistirici.ts": "kurulumun ortamı: Yönetim API istemcisi ve kurulum ayarı (örgüt, yerel Storage) — yalnız yönetim oturumunda",
   "src/modules/yonetim/server/kurulum.ts": "kurulum makinesi: projeyi Yönetim API'siyle açar, göçleri uygular, bağlar",
   "src/modules/yonetim/server/kurulum-hata.ts": "kurulum hatasının sınıfı: Yönetim API istemcisinin hata türlerini tanır",
+  /* FV11 (2026-10-16): e-posta gönderimi — firmanın alan adı probata'nın Resend hesabına (yönetim oturumunda) */
+  "src/modules/yonetim/server/eposta.ts": "e-posta gönderimi: alan adını Resend'e ekler, doğrular, gönderme anahtarını açar — yalnız yönetim oturumunda",
 };
 const DIS_ORTAM = /\bPROBATA_(?:SUPABASE_YONETIM_(?:ANAHTARI|UC)|SUPABASE_ORGUT|SUPABASE_DEPO_UC|RESEND_(?:ANAHTARI|YONETIM_UC))\b/;
 export function yonetimAnahtariEksikleri(metinler: readonly { ad: string; metin: string }[]): string[] {

@@ -2,7 +2,7 @@
    (deneme + 1, neden) · kalıcı hata ya da 5 deneme dolunca "hata". Sağlayıcı yoksa satır bekler, neden yazılır (bir kez). Çağıran: plan açma
    eylemi yanıttan sonra (sonra.ts) ve gece işi (bekleyenleri yeniden dener). Kiracı bağlamında (çağıranın işlemi); yetki ÇAĞIRANDA.
    536: gönderim firmanın ayarıyla (firma.ts: firmanın Resend anahtarı, gönderen alan adı); Kimden satırdaki gönderen kişiden (kimden.ts) —
-   Kimden kurulamıyorsa (Rapor e-postası alan adında değil) satır bekler, nedeni yazılır, deneme sayılmaz (ayar düzelince gider). */
+   Kimden kurulamıyorsa (FV11: alan adı doğrulanmadı) satır bekler, nedeni yazılır, deneme sayılmaz (doğrulanınca gider). */
 import type { Sorgulayici } from "../db/kiraci.ts";
 import { guncelle } from "../db/yazici.ts";
 import { EPOSTA } from "./eposta.ts";
@@ -31,7 +31,7 @@ export async function bekleyenleriGonder(db: Sorgulayici, gonderim: FirmaGonderi
       o.bekleyen++;
       continue;
     }
-    const s = await gonderim.saglayici.gonder({ kimden: k.kimden, kime: e.kime, cevap: k.cevap, gizli: k.gizli, konu: e.konu, metin: e.govde });
+    const s = await gonderim.saglayici.gonder({ kimden: k.kimden, kime: e.kime, cevap: k.cevap, gizli: k.gizli, konu: e.konu, metin: e.govde, kimlik: e.id });
     if (s.tamam) {
       await guncelle(db, EPOSTA, e.id, e.surum, { durum: "gonderildi", gonderildi: new Date(), deneme: e.deneme + 1, son_hata: null }, IZ);
       o.gonderilen++;

@@ -2,7 +2,8 @@
    anahtarı (K4) ve firma özeti — kendi projeli firmada firmanın veritabanından. */
 import type { Metadata } from "next";
 import { depoTuru } from "../../../../../../modules/yonetim/ui/ortak";
-import { yonetimCalistirici } from "../../../../../../modules/yonetim/server/calistirici";
+import { epostaAcik, yonetimCalistirici } from "../../../../../../modules/yonetim/server/calistirici";
+import { gonderimGorunumu } from "../../../../../../modules/yonetim/server/eposta";
 import { firmaOzetiYonet } from "../../../../../../modules/yonetim/server/firma-tarafi";
 import { kurulumGorunumu } from "../../../../../../modules/yonetim/server/kurulum";
 import { firma } from "../../../../../../modules/yonetim/server/yonetim";
@@ -21,5 +22,7 @@ export default async function YonetimFirmaSayfasi({ params }: { params: Promise<
   /* FV10: kurulum sürüyorsa kurulumun görünümü (özet yok — firmanın veritabanı henüz hazır değil) */
   const kurulum = f?.durum === "kurulum" ? await kurulumGorunumu(c, f.id) : null;
   const ozet = f && f.durum !== "kurulum" ? await firmaOzetiYonet(c, f.id) : null;
-  return <FirmaSayfasi firma={f} ozet={ozet} kurulum={kurulum} anaAlan={anaAlan()} depo={depoTuru(process.env.PROBATA_DEPO)} />;
+  /* FV11: e-posta gönderimi (merkezdeki kayıt) */
+  const gonderim = f && f.durum !== "kurulum" ? await gonderimGorunumu(c, f.id) : null;
+  return <FirmaSayfasi firma={f} ozet={ozet} kurulum={kurulum} gonderim={gonderim} epostaAcik={epostaAcik()} anaAlan={anaAlan()} depo={depoTuru(process.env.PROBATA_DEPO)} />;
 }

@@ -1,5 +1,6 @@
 /* YÖNETİM › FİRMA AÇ ŞEMASI (348; maket yonetim.html denetle / oneri) — form ve sunucu aynı şemayı kullanır. Veritabanı işlevi (0050
    yonetim_firma_ac) biçimi ve ayrılmış adları AYRICA denetler; ayrılmış ad listesi ikisinde aynı (kilit testi). İletiler maketle aynı. */
+import { ALAN_BICIMI, alanSadelestir, YEREL_BICIMI } from "../../server/eposta/kimden.ts";
 import { z } from "../../sema/ortak.ts";
 
 /** firma adresi olamayacak adlar (bize ayrılmış) — 0050'deki listeyle aynı */
@@ -25,6 +26,15 @@ export const firmaAcSemasi = (ekAyrilmis: readonly string[] = []) => z.object({
     z.string().min(1, "E-posta yazılmalı.").max(120, "En çok 120 karakter.").pipe(z.email({ error: "Geçerli bir e-posta değil." }))),
 });
 export type FirmaAcGirdisi = z.output<ReturnType<typeof firmaAcSemasi>>;
+
+/* FIRMA-VT FV11 (2026-10-16, K2): firmanın gönderen alan adı (probata'nın Resend hesabına eklenir) ve genel adresin yerel kısmı (genel adres =
+   <yerel>@<alan>; kişisel adresli çalışanın e-postası buradan, kişinin adıyla gider). Biçimler 0099'un CHECK'leriyle aynı (eposta/kimden.ts). */
+export const gonderimSemasi = z.object({
+  alan: z.preprocess((v) => (typeof v === "string" ? alanSadelestir(v) : v),
+    z.string().min(1, "Alan adı yazılmalı.").max(100, "En çok 100 karakter.").regex(ALAN_BICIMI, "Alan adı okunamadı (ör. firmaniz.com.tr).")),
+  yerel: z.preprocess((v) => (typeof v === "string" ? (v.trim().toLowerCase() || "bilgi") : v),
+    z.string().regex(YEREL_BICIMI, "Yalnız a–z, 0–9, nokta, tire ve alt çizgi (ör. bilgi).")),
+});
 
 /* ünvandan öneri (maket oneri): alt alan adı ilk kelime (kısa ise ikinciyle), kısa kod ilk iki kelimenin baş harfleri. Türkçe harf → a–z
    tablodan (yerel ayara bağlı küçültme yok — anayasa 5.5) */
