@@ -227,7 +227,10 @@ test("yönetim: e-posta gönderimi — alan adı ekle, DNS kayıtları, Doğrula
   await expect(page.getByText("Alan adı eklendi: DNS kayıtlarını alan adı yönetimine girip “Doğrula”ya basın.").first()).toBeVisible({ timeout: 30_000 });
   await expect(ep.getByText("Doğrulanmadı", { exact: true })).toBeVisible();
   await expect(ep.getByText(`bilgi@${F.alan}`)).toBeVisible();
-  await expect(ep.getByRole("table", { name: "DNS kayıtları" }).getByRole("row")).toHaveCount(4);   // başlık + 3 kayıt
+  /* üç DNS kaydı, her birinin kopyala tuşu (telefonda liste kart görünümünde — tablo satırı sayılmaz) */
+  await expect(ep.getByText("resend._domainkey")).toBeVisible();
+  await expect(ep.getByText("feedback-smtp.eu-west-1.amazonses.com")).toBeVisible();
+  await expect(ep.getByRole("button", { name: /değerini kopyala$/ })).toHaveCount(3);
   await ep.getByRole("button", { name: "Doğrula" }).click();
   await expect(page.getByText("Alan adı doğrulandı; firmanın e-postaları artık gönderilir.").first()).toBeVisible({ timeout: 30_000 });
   await expect(ep.getByText("Doğrulandı", { exact: true })).toBeVisible();

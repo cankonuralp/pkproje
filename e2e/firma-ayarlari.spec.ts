@@ -133,6 +133,8 @@ test("firma ayarları: paneller ve pencere; kaydet, geçersiz değer, kayma yok,
   await expect(posta.getByText("Kendi adresinden", { exact: true }).first()).toBeVisible();
   await posta.getByRole("button", { name: "Deneme e-postası gönder" }).click();
   await expect(page.getByText(`Deneme e-postası gönderildi: ${E2E_HESAPLAR.yonetici.eposta} — kendi adresinizden. Kutunuza bakın.`).first()).toBeVisible({ timeout: 30_000 });
+  /* gizli kopya firmada (K3): değiştirilir; kaydedilmeden kapatınca sorulur (2026-10-16: eskiden alan adı alanı kirletiyordu — o alan kalktı) */
+  await posta.getByRole("radio", { name: "Açık" }).click();
   await soruluKapat(page, posta);
 
   /* 335: fiyat listesi (tohumdaki Hava tankı 900,00 — değiştirilmez: muhasebe testi bu fiyatla); belge türü ekle → listede → kaldır */
