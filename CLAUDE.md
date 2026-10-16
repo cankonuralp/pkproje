@@ -119,6 +119,12 @@ pkproje/
   src/belge/                RAPOR BELGESİ (2026-10-05, 315): belge.ts tek çizici (format tanımından; React createElement, kaçışlı; önizleme = PDF) ·
                             belge.css A4 Bakanlık görünümü (Carlito ./carlito-5.3.0, OFL) · veri.ts (BelgeVerisi; Raporlar raporBelgesiVerisi doldurur)
                             · html.ts (ağaç → HTML, React'le birebir) · pdf.ts kesin PDF (316: başsız Chromium — Vercel'de @sparticuz/chromium) · ornek.ts (uydurma)
+                            · 595 E-İMZA YERİ + ŞERİT: eimza.ts (pdf-lib 1.17.1; saf) imzaAlaniKoy — kesin PDF'te boş imza alanı: "hucre" (belge.ts İmza
+                            hücresine işaret bağlantısı probata-eimza:uzman koyar, Chromium yerini basar, işaret kalkar) · "kutu" son sayfada mm · "gorunmez";
+                            tanim.ts gorunum.eimza, kurucu.ts eimzaYaz, ui/EimzaYeri.tsx (imza bölümü ayarı, küçük A4'te sürüklenen kutu), S.A.Y "eimza_yeri" ·
+                            pdf.ts raporAltBilgisi: her sayfanın altında şerit (kesin: 5070 sayılı kanun cümlesi) + rapor no + Sayfa n / N, alt kenar 20 mm
+                            (RAPOR_SAYFA; kurucu.ts EIMZA_SERIT_MM) · imza-pdf.ts boş alanın doldurulması izinli (yalnız /V, /AP, /MK, /DA, /F) · kilit
+                            tests/eimza.test.ts + pdf.test.ts 595, bozan eimza
   src/format/               FORMAT MOTORU (2026-10-04, RAPOR-FORMAT.md): tanim.ts (şema) · hesap.ts (ZPKK formülleri, saf) · motor.ts (değerlendir,
                             yayın denetimi) · sablonlar.ts (ZPKR01–05, kompresör; 427; 467 mekanik ZPKR06 / ZPKR07 / ZPMR01 / ZYDR01) · duzen.ts (427: bölüm düzeni ve numaraları — üst
                             başlık N.1 / N.2, numarasız bölüm; belge ve saha ekranı ortak) — saha ekranı ve PDF aynı tanımdan

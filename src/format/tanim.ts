@@ -176,6 +176,14 @@ export const Gorunum = z.object({
   /** 492: sahada denetçinin DEĞİŞTİREMEDİĞİ künye bilgileri (öteki künye bilgisi raporun kendi kopyasında değişir). Verilmemişse SGK ve İSG-KATİP
       (VARSAYILAN_KILITLI); boş liste: hepsi değişir. */
   kilitli: z.array(z.enum(KUNYE_ALANLARI)).max(KUNYE_ALANLARI.length).optional(),
+  /** 2026-10-16 (sunum 595 madde 25 — reisim: "format yapıcıda e imza yeri de seçilebilsin e imza seçilen yere işlesin"; K7 "ikisi"): imzaya
+      hazırlanan PDF'teki boş imza alanının yeri — hucre: imza bölümünün İmza hücresi (verilmemişse bu) · kutu: son sayfada (mm, sayfanın sol
+      üstünden; A4 210 × 297) · gorunmez: alan yok (araç görünmez imza atar). src/belge/eimza.ts */
+  eimza: z.object({
+    yer: z.enum(["hucre", "kutu", "gorunmez"]),
+    x: z.number().min(0).max(200).optional(), y: z.number().min(0).max(287).optional(),
+    en: z.number().min(20).max(210).optional(), boy: z.number().min(10).max(100).optional(),
+  }).optional(),
 });
 
 export const FormatTanimi = z.object({
@@ -229,6 +237,8 @@ export const FormatTanimi = z.object({
 });
 export type FormatTanimi = z.output<typeof FormatTanimi>;
 export type FormatGirdisi = z.input<typeof FormatTanimi>;
+/** e-imza kutusunun başlangıç yeri (son sayfa, sağ alt — şeridin üstünde) */
+export const EIMZA_KUTU = { x: 120, y: 240, en: 80, boy: 25 } as const;
 
 /* ── CEVAPLAR (raporun içeriği; kimliklerle) ── */
 /** ölçüm tablosunda en çok satır — raporun kendi sınırı (Cevaplar.tablo); S.A.Y'ın rapora yazması da bununla (raporlar/say-doldur.ts — 2026-10-16:

@@ -7,7 +7,7 @@
 import { SINIR_ISARETI } from "../../format/hesap.ts";
 import { kilitliKimlikler } from "../../format/motor.ts";
 import { ekipmanTamYap, imzaSatirlari, imzaVarsayilani } from "../../format/duzen.ts";
-import { Bolum, EKIPMAN_ALAN_ADI, IMZA_ALAN_ADI, imzaAlanlari, KUNYE_ALANLARI, KURAL_EN_COK, kurucudan, type Blok, type BolumOf, type EkipmanAlani, type FormatTanimi,
+import { Bolum, EIMZA_KUTU, EKIPMAN_ALAN_ADI, IMZA_ALAN_ADI, imzaAlanlari, KUNYE_ALANLARI, KURAL_EN_COK, kurucudan, type Blok, type BolumOf, type EkipmanAlani, type FormatTanimi,
   type ImzaAlani, type ImzaKisisi, type ImzaSatiri, type KunyeAlani, type Sinir, type SonucKurali } from "../../format/tanim.ts";
 import { kilitliKunye } from "../../format/kunye.ts";
 import { FORMUL_EN_UZUN, formulAdDegistir, formulDuzelt } from "../../format/formul.ts";
@@ -459,4 +459,20 @@ export function imzaKisisiYaz(t: FormatTanimi, i: number, kim: "uzman" | "teknik
   const l = imzaSatirlari(b), simdi = l.some((x) => x.kim === kim);
   if (var_ === simdi) return t;
   return imzaYaz(t, i, var_ ? [...l, ...imzaVarsayilani(kim).map((x) => ({ ad: x.ad, kim: x.kim, alan: x.alan, tam: x.tam }))] : l.filter((x) => x.kim !== kim));
+}
+
+/* ── E-İMZANIN YERİ (595 madde 25): hücre (varsayılan — görünümden kalkar), kutu (son sayfada; ölçüler sınır içinde, şerit bandına girmez),
+   görünmez ── */
+/** her sayfanın altında şeride ayrılan bant (mm) — PDF motorunun alt kenar boşluğuyla aynı (src/belge/pdf.ts RAPOR_SAYFA) */
+export const EIMZA_SERIT_MM = 20;
+export function eimzaYaz(t: FormatTanimi, y: { yer: "hucre" | "kutu" | "gorunmez"; x?: number; y?: number; en?: number; boy?: number }): FormatTanimi {
+  const g = { ...t.gorunum };
+  delete g.eimza;
+  if (y.yer === "hucre") return { ...t, gorunum: g };
+  if (y.yer === "gorunmez") return { ...t, gorunum: { ...g, eimza: { yer: "gorunmez" } } };
+  const e = t.gorunum.eimza;
+  const sinir = (n: number, en: number, cok: number) => Math.round(Math.min(Math.max(Number.isFinite(n) ? n : en, en), cok));
+  const en = sinir(y.en ?? e?.en ?? EIMZA_KUTU.en, 20, 210), boy = sinir(y.boy ?? e?.boy ?? EIMZA_KUTU.boy, 10, 100);
+  const x = sinir(y.x ?? e?.x ?? EIMZA_KUTU.x, 0, 210 - en), ust = sinir(y.y ?? e?.y ?? EIMZA_KUTU.y, 0, 297 - EIMZA_SERIT_MM - boy);
+  return { ...t, gorunum: { ...g, eimza: { yer: "kutu", x, y: ust, en, boy } } };
 }

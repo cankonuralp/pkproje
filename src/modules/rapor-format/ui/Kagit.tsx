@@ -41,6 +41,7 @@ import {
   yeniBolum, yeniKimlik,
 } from "../kurucu";
 import { ListeDuzenleyici, NotDuzenleyici, OgeDuzenleyici, SonucAciklamasi, SonucKuraliDuzenleyici } from "./KurucuDuzenleyici";
+import { EimzaYeriAyari } from "./EimzaYeri";
 import { SURUKLE, type Parca } from "../yapboz";
 import { bolumeKaydir } from "./kaydir";
 import { BLOK_ADI } from "./ortak";
@@ -349,6 +350,10 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
   const imzaDegeri = (i: number, s: ImzaSatiri): ReactNode => {
     if (s.kim === "diger") return <Yazi key={`${s.id}-d`} deger={s.metin ?? ""} ad={`${s.ad} · sabit yazı`} bos="boş hücre (ıslak imza, kaşe)" uzun={400}
       yaz={(x) => degis(imzaSatiriYaz(t, i, s.id, { metin: x }))} />;
+    /* 595 (madde 25): e-imzanın yeri bu hücreyse kesik çerçeveyle */
+    if (s.kim === "uzman" && s.alan === "imza" && (t.gorunum.eimza?.yer ?? "hucre") === "hucre") {
+      return <span key={`${s.id}-d`} className={`${k.ornek} ${k.eimzaHucre}`}>e-imza buraya işlenir · muayene uzmanı</span>;
+    }
     const metin = s.kim === "uzman"
       ? s.alan === "imza" ? "güvenli elektronik imza · muayene uzmanı" : "raporu yazanın kaydından"
       : s.alan === "zaman" ? "onay anı" : s.alan === "imza" ? "elektronik onay" : "onaylayan teknik yöneticinin kaydından";
@@ -594,6 +599,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
           </div>
           <p className={k.panelIpucu}>Satırların adı, sırası ve varlığı kâğıtta; değerleri kişinin kaydından gelir ve imza anında rapora kopyalanır. Serbest satır
             (tesis yetkilisi, kaşe) sabit yazı ya da boş hücre olur.</p>
+          <EimzaYeriAyari t={t} degis={degis} hucreVar={imzaSatirlari(b).some((s) => s.kim === "uzman" && s.alan === "imza")} />
         </>;
       })()}
       {b.blok === "cihaz" && <p className={k.panelIpucu}>Sabit bölüm: satırları türün ölçüm cihazı türleri (tür sayfasında seçilir, burada kendiliğinden); denetçi raporda zimmetindeki cihazı ekler, kalibrasyonu denetlenir.</p>}

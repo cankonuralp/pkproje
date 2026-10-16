@@ -9,13 +9,14 @@
    2026-10-16 (pkproje §9 "SONUÇ KURALI FORMAT YAPICIDA"): ölçüm tablosunun sonuç kuralı haritada ve "sonuc_kurali" işlemiyle (yaz / kaldır / Bakanlık
    kuralına dön) — kurucunun tuşlarıyla aynı yol (kurucu.ts sonucKuraliYaz, bakanlikKuralinaDon).
    595 (sunum 595 madde 1): imza bölümünün satırları haritada ve "imza_satiri" işlemiyle (ekle — kişinin bilgisi ya da serbest satır —, değiştir:
-   ad / sabit yazı / tam satır, çıkar, yukarı, aşağı) — kurucunun tuşlarıyla aynı yol (kurucu.ts imzaSatiri*). */
+   ad / sabit yazı / tam satır, çıkar, yukarı, aşağı) — kurucunun tuşlarıyla aynı yol (kurucu.ts imzaSatiri*); e-imzanın yeri haritada ve
+   "eimza_yeri" işlemiyle (hücre / son sayfada kutu — mm — / görünmez; kurucu.ts eimzaYaz). */
 import { SINIR_ISARETI } from "../../format/hesap.ts";
 import { imzaSatirlari } from "../../format/duzen.ts";
 import { etkinKurallar } from "../../format/sonuc.ts";
 import { IMZA_ALAN_ADI, IMZA_ALANLARI, IMZA_KISI_ADI, KURAL_EN_COK, type Blok, type Bolum, type FormatTanimi, type ImzaAlani, type SonucKurali } from "../../format/tanim.ts";
 import {
-  bakanlikKuralinaDon, bolumAdi, bolumSil, grupEkle, imzaSatiriEkle, imzaSatiriSil, imzaSatiriTasi, imzaSatiriYaz, maddeEkle, ogeEkle, ogeSil, ogeYaz,
+  bakanlikKuralinaDon, bolumAdi, bolumSil, eimzaYaz, grupEkle, imzaSatiriEkle, imzaSatiriSil, imzaSatiriTasi, imzaSatiriYaz, maddeEkle, ogeEkle, ogeSil, ogeYaz,
   sonucKuraliYaz, yeniBolum, yeniKimlik, type OgeTuru, type OgeYamasi,
 } from "./kurucu.ts";
 
@@ -33,6 +34,9 @@ const sinirMetni = (o: { op?: string; sinir?: number }) => (o.op && o.sinir !== 
 
 export function formatHaritasi(t: FormatTanimi): string {
   const l: string[] = ["Format taslağının bölümleri (bölüm kimliği · tür · ad) ve öğeleri (öğe kimliği · ad · tür; formül = kendiliğinden hesaplanan):"];
+  const e = t.gorunum.eimza;
+  l.push(`E-imzanın yeri: ${!e || e.yer === "hucre" ? "imza bölümündeki İmza hücresi" : e.yer === "gorunmez" ? "görünmez imza"
+    : `son sayfada kutu (soldan ${e.x ?? "?"} mm, üstten ${e.y ?? "?"} mm, ${e.en ?? "?"} × ${e.boy ?? "?"} mm)`}`);
   for (const b of t.bolumler) {
     l.push(`## ${b.id} · ${BLOK_TR[b.blok]} · ${b.ad}${b.kilit ? " (Bakanlık bölümü)" : ""}`);
     if (b.blok === "bilgi") for (const a of b.alanlar) {
@@ -71,6 +75,8 @@ export interface FormatIslemi {
   /** imza_satiri (595): eylem (ekle | degistir | cikar | yukari | asagi), kisi (uzman | teknik | diger), bilgi (kişinin bilgisi), yazi (serbest
       satırın sabit yazısı), tam (tam satır) */
   eylem?: unknown; kisi?: unknown; bilgi?: unknown; yazi?: unknown; tam?: unknown;
+  /** eimza_yeri (595): yer (hucre | kutu | gorunmez); kutuda mm — x soldan, y üstten, en, boy */
+  yer?: unknown; x?: unknown; y?: unknown; en?: unknown; boy?: unknown;
 }
 const metin = (x: unknown, n = 200) => (typeof x === "string" ? x.trim().replace(/\s+/g, " ").slice(0, n) : "");
 const tr = (s: string) => s.trim().toLocaleLowerCase("tr");
@@ -138,6 +144,17 @@ export function formatIslemleri(t0: FormatTanimi, islemler: readonly FormatIslem
       const l = [...t.bolumler]; l.splice(p, 0, b);
       t = { ...t, bolumler: l };
       yapilan.push(`“${ad}” bölümü eklendi`);
+      continue;
+    }
+    if (islem === "eimza_yeri") {
+      const yer = metin(x.yer, 20);
+      if (yer !== "hucre" && yer !== "kutu" && yer !== "gorunmez") { red("yer: hucre, kutu ya da gorunmez"); continue; }
+      const sayi = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v
+        : typeof v === "string" && v.trim() && Number.isFinite(Number(v.replace(",", "."))) ? Number(v.replace(",", ".")) : undefined);
+      t = eimzaYaz(t, { yer, x: sayi(x.x), y: sayi(x.y), en: sayi(x.en), boy: sayi(x.boy) });
+      const g = t.gorunum.eimza;
+      yapilan.push(yer === "hucre" ? "E-imzanın yeri: İmza hücresi" : yer === "gorunmez" ? "E-imza görünmez atılır"
+        : `E-imzanın yeri: son sayfada kutu (soldan ${g?.x} mm, üstten ${g?.y} mm, ${g?.en} × ${g?.boy} mm)`);
       continue;
     }
     const i = bolumBul(t, x.bolum);
@@ -246,7 +263,7 @@ export function formatIslemleri(t0: FormatTanimi, islemler: readonly FormatIslem
       yapilan.push(`“${ad}” değişti`);
       continue;
     }
-    red("bilinmeyen işlem (bolum_ekle, bolum_sil, bolum_adi, grup_ekle, oge_ekle, oge_degistir, oge_sil, sonuc_kurali, imza_satiri)");
+    red("bilinmeyen işlem (bolum_ekle, bolum_sil, bolum_adi, grup_ekle, oge_ekle, oge_degistir, oge_sil, sonuc_kurali, imza_satiri, eimza_yeri)");
   }
   return { t, yapilan, gecersiz };
 }
@@ -263,6 +280,7 @@ export const FORMAT_ARACI = {
     + "bakanlik: true Bakanlık kuralına döner; ZS([Açma eğrisi]; [In]) Zs'yi verir). Formül: aynı satırın / formatın sayılarıyla, örn. 480 / [RCd] — "
     + "boşluklu ad köşeli parantezle. imza_satiri (imza bölümünün satırları: eylem ekle — kisi uzman | teknik | diger, bilgi ad | meslek | ekipnet | diploma | "
     + "oda | eposta | tel | imza | zaman (zaman yalnız teknikte), ad, serbest satırda yazi —, degistir (oge + ad / yazi / tam), cikar, yukari, asagi). "
+    + "eimza_yeri (e-imzanın imzaya hazırlanan PDF'teki yeri: yer hucre — İmza hücresi — | kutu — son sayfada; x soldan, y üstten, en, boy mm — | gorunmez). "
     + "Değişiklik taslakta olur; kullanıcı Kaydet ve Yayınla der.",
   input_schema: {
     type: "object",
@@ -272,7 +290,7 @@ export const FORMAT_ARACI = {
         items: {
           type: "object",
           properties: {
-            islem: { type: "string", enum: ["bolum_ekle", "bolum_sil", "bolum_adi", "grup_ekle", "oge_ekle", "oge_degistir", "oge_sil", "sonuc_kurali", "imza_satiri"] },
+            islem: { type: "string", enum: ["bolum_ekle", "bolum_sil", "bolum_adi", "grup_ekle", "oge_ekle", "oge_degistir", "oge_sil", "sonuc_kurali", "imza_satiri", "eimza_yeri"] },
             bolum: { type: "string" }, oge: { type: "string" }, tur: { type: "string" }, ad: { type: "string" }, birim: { type: "string" },
             formul: { type: "string" }, secenekler: { type: "array", items: { type: "string" } }, op: { type: "string" }, sinir: { type: "number" },
             zorunlu: { type: "boolean" }, grup: { type: "string" }, sonra: { type: "string" },
@@ -281,6 +299,7 @@ export const FORMAT_ARACI = {
             bakanlik: { type: "boolean" },
             eylem: { type: "string", enum: ["ekle", "degistir", "cikar", "yukari", "asagi"] }, kisi: { type: "string", enum: ["uzman", "teknik", "diger"] },
             bilgi: { type: "string", enum: [...IMZA_ALANLARI] }, yazi: { type: "string" }, tam: { type: "boolean" },
+            yer: { type: "string", enum: ["hucre", "kutu", "gorunmez"] }, x: { type: "number" }, y: { type: "number" }, en: { type: "number" }, boy: { type: "number" },
           },
           required: ["islem"],
         },

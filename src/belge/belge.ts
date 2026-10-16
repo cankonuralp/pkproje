@@ -16,6 +16,8 @@ import { EKIPMAN_ALAN_ADI, type Bolum, type BolumOf, type ImzaSatiri } from "../
 /* veri.ts: saf tanımlar (tanimlar.ts node:crypto kullanır — 451: Format kurucunun belge önizlemesi bu çiziciyi tarayıcıda koşar) */
 import { TANIMLAR } from "../tanim/veri.ts";
 import type { BelgeFotosu, BelgeVerisi, ImzaKisiBilgisi } from "./veri.ts";
+/* eimza.ts'nin işaret adresi burada da yazılı (eimza.ts pdf-lib'i içe aktarır; çizici tarayıcıda da koşar — kilit tests/eimza.test.ts aynılığı denetler) */
+const EIMZA_ISARETI = "probata-eimza:uzman";
 
 const tarihNo = (s: string | null | undefined) => (s ? `${s.slice(8, 10)}.${s.slice(5, 7)}.${s.slice(0, 4)}` : "-");
 const saatliNo = (s: string | null | undefined) => (s ? `${tarihNo(s)} ${s.slice(11, 16)}` : "-");
@@ -27,6 +29,15 @@ const ZAMAN = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", ye
 /** zaman damgası → "GG.AA.YYYY SS:DD" (Türkiye saati) */
 export const zamanNo = (iso: string) => saatliNo(ZAMAN.format(new Date(iso)).replace(", ", "T"));
 const nushaYazi = (n: number) => `Bu rapor ${SAYI_AD[n] ?? String(n)} (${n}) nüsha olarak hazırlanmıştır.`;
+/** 595 (madde 26): sayfa altındaki şeridin yazısı — imzaya hazırlanan (kesin) belgede e-imza cümlesi; imzalı raporun yeniden basılan kopyasında ve
+    önizlemede ne olduğu. Sayfa numarası PDF motorunda (pdf.ts alt bilgi şablonu) eklenir. */
+export function belgeAltYazisi(v: Pick<BelgeVerisi, "kesin" | "imza" | "no" | "revizyon">): { metin: string; no: string } {
+  const no = v.revizyon ? `${v.no}-R${v.revizyon}` : v.no;
+  const metin = v.kesin ? "Bu rapor 5070 sayılı Elektronik İmza Kanunu'na uygun güvenli elektronik imza ile imzalanmıştır."
+    : v.imza ? "E-imzalı raporun basılı kopyasıdır; asıl belge e-imzalı PDF'tir."
+      : "İmzasız önizleme — muayene uzmanının son imzasıyla geçerli olur.";
+  return { metin, no };
+}
 
 type Cift = readonly [etiket: string, deger: ReactNode, tam?: boolean];
 const kolonlar = (l: readonly string[]) => h("colgroup", null, ...l.map((w, i) => h("col", { key: i, style: { width: w } })));
@@ -124,6 +135,15 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
   const imzaYazisi = () => (v.imza ? `Güvenli elektronik imza (${v.imza.yontem}) · ${zamanNo(v.imza.zaman)}`
     : v.kesin ? "Güvenli elektronik imza ile imzalanmıştır (imza bilgisi bu PDF'in elektronik imzasındadır)."
       : "İmzasız — muayene uzmanı son imzayı atınca geçerli olur.");
+  /* 595 (madde 25): imzaya hazırlanan belgede, e-imzanın yeri İmza hücresiyse hücreye görünmez işaret — PDF motoru (eimza.ts) işaretin yerine boş
+     imza alanı koyar. Yalnız ilk İmza hücresine */
+  let isaretKondu = false;
+  const imzaHucresi = (): ReactNode => {
+    const yazi = imzaYazisi();
+    if (!v.kesin || isaretKondu || (t.gorunum.eimza?.yer ?? "hucre") !== "hucre") return yazi;
+    isaretKondu = true;
+    return h("a", { className: "rb-eimza", href: EIMZA_ISARETI }, yazi);
+  };
   const kisiDegeri = (k: ImzaKisiBilgisi | null | undefined, alan: ImzaSatiri["alan"]): string => {
     if (!k) return "-";
     if (alan === "meslek") return meslekAdi(k);
@@ -132,7 +152,7 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
   };
   const satirDegeri = (s: ImzaSatiri): ReactNode => {
     if (s.kim === "diger") return s.metin?.trim() ?? "";
-    if (s.kim === "uzman") return s.alan === "ad" ? v.yazan.ad : s.alan === "imza" ? imzaYazisi() : kisiDegeri(v.yazan, s.alan);
+    if (s.kim === "uzman") return s.alan === "ad" ? v.yazan.ad : s.alan === "imza" ? imzaHucresi() : kisiDegeri(v.yazan, s.alan);
     if (!v.onay) return "-";
     return s.alan === "ad" ? v.onay.ad : s.alan === "zaman" ? zamanNo(v.onay.zaman) : s.alan === "imza" ? `Elektronik onay · ${zamanNo(v.onay.zaman)}` : kisiDegeri(v.onay.kisi, s.alan);
   };
@@ -149,9 +169,7 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
       yerler.includes("uzman") ? h(Fragment, { key: "u" }, bilgiTablosu([
         ["Adı soyadı", v.yazan.ad], ["Mesleği", meslek], ["Yetkili kişi kayıt no (EKİPNET)", deger(v.yazan.ekipnet)], ["Diploma no", deger(v.yazan.diploma)],
         ["Oda sicil no", deger(v.yazan.oda)],
-        ["İmzası", v.imza ? `Güvenli elektronik imza (${v.imza.yontem}) · ${zamanNo(v.imza.zaman)}`
-          : v.kesin ? "Güvenli elektronik imza ile imzalanmıştır (imza bilgisi bu PDF'in elektronik imzasındadır)."
-            : "İmzasız — muayene uzmanı son imzayı atınca geçerli olur.", true],
+        ["İmzası", imzaHucresi(), true],
       ])) : null,
       yerler.includes("teknik") ? h(Fragment, { key: "t" }, bilgiTablosu([["Onaylayan teknik yönetici", v.onay ? v.onay.ad : "-"], ["Onay zamanı", v.onay ? zamanNo(v.onay.zaman) : "-"]])) : null,
       h("p", { key: "n" }, nushaYazi(v.firma.nusha)));

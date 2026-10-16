@@ -300,7 +300,7 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await expect(ekip.getByRole("button", { name: "Model / tip", exact: true })).toBeVisible();
     /* 595 (sunum 595 madde 1 — reisim: "teknik yönetici için unvan diploma no gibi satırlar eklemek istedim ekleyemedim"): imza bölümünün satırları
        kâğıtta — teknik yöneticinin diploma no satırı ve serbest satır eklenir, adları yerinde yazılır; Bakanlık satırının adı da yazılır */
-    const imzaBolumu = kagit.getByRole("region", { name: /Periyodik kontrolleri yapmaya yetkili kişi bilgileri ve onay$/ });
+    const imzaBolumu = kagit.getByRole("region", { name: /Yetkili kişiler ve imzalar$/ });
     const satirAdi = page.getByRole("textbox", { name: "İmza satırının adı" });
     await imzaBolumu.getByRole("combobox", { name: /satır ekle$/ }).click();
     await page.getByRole("option", { name: /^Teknik yönetici · Diploma no/ }).click();
@@ -318,6 +318,22 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await satirAdi.fill("Ad soyad");
     await satirAdi.press("Enter");
     await expect(imzaBolumu.getByRole("button", { name: "Ad soyad", exact: true })).toBeVisible();
+    /* 595 (madde 25 — reisim: "format yapıcıda e imza yeri de seçilebilsin"): e-imzanın yeri — kutu (ölçüler mm), görünmez, İmza hücresi (varsayılan) */
+    await expect(imzaBolumu.getByText("e-imza buraya işlenir · muayene uzmanı")).toBeVisible();
+    await imzaBolumu.getByRole("button", { name: "Yetkili kişiler ve imzalar · bölüm ayarları" }).click();
+    const eimza = page.getByRole("group", { name: "E-imzanın yeri" });
+    await eimza.getByRole("radio", { name: "Son sayfada kutu" }).check();
+    const soldan = eimza.getByRole("textbox", { name: "E-imza kutusu · Soldan (mm)" });
+    await expect(soldan).toHaveValue("120");
+    await soldan.fill("100");
+    await soldan.press("Enter");
+    await expect(soldan).toHaveValue("100");
+    await expect(imzaBolumu.getByText("e-imza buraya işlenir · muayene uzmanı")).toHaveCount(0);
+    await eimza.getByRole("radio", { name: "Görünmez imza" }).check();
+    await expect(soldan).toHaveCount(0);
+    await eimza.getByRole("radio", { name: /^İmza hücresi/ }).check();
+    await expect(imzaBolumu.getByText("e-imza buraya işlenir · muayene uzmanı")).toBeVisible();
+    await page.getByRole("button", { name: "Bölüm ayarlarını kapat" }).click();
     /* 459: standartlar ve cihazlar türden, kendiliğinden — ZPKR02'den başlatınca türün boş bağlantısı Bakanlık formatınkiyle doldu (440);
        ölçüm cihazları bölümü silinmez */
     await expect(firma.getByText(/TS HD 60364-6/).first()).toBeVisible();

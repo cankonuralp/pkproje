@@ -11,7 +11,10 @@
      (yalnız /Fields — eskiler kalarak — ve /SigFlags değişir) ve sayfadan dolaylı başvurulan Annots dizisi (yalnız öğe eklenir) de yeniden yazılabilir;
    · trailer sözlükleri sınırlı pencereyle okunur, ekte en çok 32 trailer (333 incelemesi: "trailer(" yığınıyla karesel süre);
    · yeni açıklama yalnız imza alanı (/Subtype /Widget) — metin, damga, serbest yazı vb. açıklama eklenemez;
-   · bir yeni nesne imza sözlüğüdür: /Type /Sig, /ByteRange dizisi, /Contents onaltılık dize.
+   · bir yeni nesne imza sözlüğüdür: /Type /Sig, /ByteRange dizisi, /Contents onaltılık dize;
+   · 595 (sunum 595 madde 25): imzasız PDF'teki BOŞ imza alanı (formatın e-imza yeri — src/belge/eimza.ts) imzalanınca yeniden yazılır: yalnız
+     değer (/V — yeni imza sözlüğüne başvuru), görünüm (/AP, /MK, /DA) ve bayrak (/F) eklenir / değişir; yeri (/Rect), sayfası (/P), adı (/T),
+     türü aynı. Yeni açıklamaya izinli görünümden fazlası değil.
    Kalan risk (kayıtta): imza alanının görünümü (/AP) sayfaya çizilir; kriptografik zincir ve görsel karşılaştırma sonraki fazda (K7). */
 
 type Deger = { t: "sozluk"; d: Map<string, Deger> } | { t: "dizi"; l: Deger[] } | { t: "ref"; n: number; g: number } | { t: "yalin"; v: string };
@@ -135,6 +138,7 @@ function kapsar(yeni: Deger | undefined, eski: Deger | undefined): boolean {
   return (eski?.t === "dizi" ? eski.l : []).every((x) => y.has(kanonik(x)));
 }
 const ACROFORM_SERBEST = new Set(["Fields", "SigFlags"]);
+const IMZA_ALANI_SERBEST = new Set(["V", "AP", "MK", "DA", "F"]);
 
 const latin1 = (b: Uint8Array) => Buffer.from(b.buffer, b.byteOffset, b.byteLength).toString("latin1");
 
@@ -202,6 +206,11 @@ export function imzaliPdfGecerli(imzasiz: Uint8Array, imzali: Uint8Array): boole
           if (kanonik(x.deger, new Set(["Annots"])) !== kanonik(eski.deger, new Set(["Annots"]))) return false;
         } else if (eskiTur === "/Catalog" && tur === "/Catalog") {
           if (kanonik(x.deger, KATALOG_SERBEST) !== kanonik(eski.deger, KATALOG_SERBEST)) return false;
+        } else if (adi(eski.deger, "FT") === "/Sig" && adi(eski.deger, "Subtype") === "/Widget" && !ad(eski.deger, "V")) {
+          /* 595: boş imza alanı dolduruldu — öteki anahtarlar aynı, değer yeni imza sözlüğüne başvuru */
+          if (kanonik(x.deger, IMZA_ALANI_SERBEST) !== kanonik(eski.deger, IMZA_ALANI_SERBEST)) return false;
+          const v = refNo(ad(x.deger, "V"));
+          if (v === null || ozgun.has(v) || !ek.has(v)) return false;
         } else return false;
         continue;
       }

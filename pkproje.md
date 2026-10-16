@@ -2525,6 +2525,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-16 (595d): **E-İMZANIN YERİ + "BU RAPOR E-İMZALIDIR" ŞERİDİ** (sunum 595 madde 25–26; reisim: *"format yapıcıda e imza yeri de seçilebilsin e imza
+  seçilen yere işlesin aşağıyada bu rapor e imzalıdır diye şerit gelecek ona göre format yapıcıda raporlar aşağıda boşluk bırakmayı unutmasınlar"*;
+  K7 "ikisi"): imzaya hazırlanan PDF'te BOŞ imza alanı formatın seçtiği yerde — İmza hücresi (varsayılan; sayfa kırılmasından sonraki gerçek yeri),
+  son sayfada kutu (format yapıcıda küçük A4 üstünde sürüklenir, ölçüleri mm) ya da görünmez; e-imza aracı imzayı o alana işler, imzalı PDF
+  denetimi alanın doldurulmasını kabul eder (yeri / adı değişirse reddeder). Her sayfanın altında şerit: imzaya hazırlanan belgede "Bu rapor 5070
+  sayılı Elektronik İmza Kanunu'na uygun güvenli elektronik imza ile imzalanmıştır." + rapor no + Sayfa n / N; önizlemede "İmzasız önizleme";
+  şeridin bandı (alt 20 mm) sayfa düzeninde her zaman ayrılır, firma unutamaz, içerik bandı geçmez. "Her sayfada imza kutusu" yapılmadı: e-imza
+  araçları bir imzanın görünümünü tek yere basar — her sayfada görünen şerittir. K8 "tam"ın doğrulama karekodu ayrı kalem (595e).
 - 2026-10-16 (595c): **FORMAT YAPICI — İMZA BÖLÜMÜNÜN SATIRLARI** (sunum 595 madde 1; reisim: *"format yapıcıda bu ve benzeri kısımlarda değişiklik
   yapamıyorum, tıklayıp değiştiremiyorum, satır sütun ekleyemiyorum"* · K6 *"mesela teknik yönetici için unvan diploma no gibi satırlar eklemek
   istedim ekleyemedim"*): imza bölümünün satırları formatın — adı kâğıtta yerinde yazılır, yukarı / aşağı taşınır, tam satır yapılır, çıkarılır;
