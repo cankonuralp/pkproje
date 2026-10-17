@@ -875,7 +875,7 @@ test("İ1–İ3 önceki rapor: yeni rapor önceki tamamlanmış raporun kayıtl�
   const satirP2 = async () => (await a(d3.k, (db) => planIci(db, d3.k, p2)))!.ekipman.find((x) => x.id === ekp)!;
   const once = await satirP2();
   assert.deepEqual(once.onceki, { tarih: bas, sonuc: "Uygun değil", no: s1.no });
-  assert.deepEqual(once.oncekiRapor, { no: s1.no, dosya: s1.dosya });
+  assert.deepEqual(once.oncekiRapor, { no: s1.no, dosya: s1.dosya, neden: null });
   const r2 = tamam(await a(d3.k, (db) => raporOlustur(db, d3.k, p2, ekp))).id;
   const v2 = (await a(d3.k, (db) => sahaRaporu(db, d3.k, r2)))!;
   assert.equal(v2.ekipmanBilgi.seri, "S-9");
@@ -885,12 +885,16 @@ test("İ1–İ3 önceki rapor: yeni rapor önceki tamamlanmış raporun kayıtl�
   assert.equal(v2.cevaplar.alan.hacim, "500", "kayıttan gelmeyen bilgi alanı gelir");
   assert.deepEqual([v2.cevaplar.yorum, v2.cevaplar.sonuc], ["", ""], "yorum ve sonuç gelmez");
   assert.deepEqual(v2.ekipman.onceki, { tarih: bas, sonuc: "Uygun değil", no: s1.no }, "rapor ekranında önceki kontrol");
-  assert.deepEqual((await satirP2()).oncekiRapor, { no: s1.no, dosya: s1.dosya }, "planın kendi raporu önceki sayılmaz");
+  assert.deepEqual((await satirP2()).oncekiRapor, { no: s1.no, dosya: s1.dosya, neden: null }, "planın kendi raporu önceki sayılmaz");
 
   /* İ3: imzalı PDF — r1'i yazmayan d3 planı gördüğü için açar (istisna); hiçbir planda HT-9'u görmeyen d4 açamaz */
   const indir = (k: Kisi) => a(k, (db) => dosyaIndirilebilir(db, k, s1.dosya, DOSYA_ERISIMI));
   assert.ok(await indir(d3.k), "planı gören öteki denetçi önceki raporu açar");
   assert.equal(await indir(d4.k), null, "planı görmeyen açamaz");
+  /* planı gören ama ekipte olmayan öteki branşın yöneticisi istisnadan yararlanmaz (plana tesisin bütün ekipmanı girer) */
+  assert.equal(await indir(FA.elk), null, "öteki branşın yöneticisi açamaz");
+  assert.deepEqual((await a(FA.elk, (db) => planIci(db, FA.elk, p2)))!.ekipman.find((x) => x.id === ekp)!.oncekiRapor,
+    { no: s1.no, dosya: null, neden: "bu raporu görme yetkiniz yok" });
   assert.equal((await a(d3.k, (db) => sahaRaporu(db, d3.k, r1))), null, "istisna yalnız PDF'te — raporun kendisi görünmez");
 
   /* r2 de imzalanır; d4'ün yeni planında önceki r2'dir — d4 r2'nin PDF'ini açar, ESKİ r1'inkini açamaz */

@@ -34,7 +34,7 @@ import { tesisMusteriIletisim } from "../../musteriler/server/musteriler.ts";
 import { raporCihazlari } from "../../olcum-cihazlari/server/cihazlar.ts";
 import { personelOzetleri } from "../../personel/server/personel.ts";
 import { TAMAMLANDI_RAPOR } from "../../planlar/sema.ts";
-import { denetimeBasla, ekipmanEklemeDurumu, ekipmaniGosterenPlanlar, kodDurumu, kunyeGuncelle, plandakiEkipman, plandakiEkipmanlar, raporIcinPlan, yeniEkipman, type Kunye, type RaporPlani } from "../../planlar/server/plan-ici.ts";
+import { denetimeBasla, ekipmanEklemeDurumu, ekipmanEkipPlanlari, kodDurumu, kunyeGuncelle, plandakiEkipman, plandakiEkipmanlar, raporIcinPlan, yeniEkipman, type Kunye, type RaporPlani } from "../../planlar/server/plan-ici.ts";
 import { oncekiKontrol, oncekiRaporIcerigi, oncekiRaporlar, surumluRaporEkipmani, type OncekiKontrol } from "./onceki.ts";
 import { formatSurumuOku, yayindakiFormat } from "../../rapor-format/server/formatlar.ts";
 import { kimdeHaritasi } from "../../zimmetler/server/zimmet.ts";
@@ -761,13 +761,14 @@ export async function fotoSil(db: Sorgulayici, kim: Kisi, id: string, surum: num
 export async function raporDosyasiGorulur(db: Sorgulayici, kisi: YetkiHesabi, raporId: string): Promise<boolean> {
   return !!(await erisim(db, { ...kisi, ad: "" }, raporId));
 }
-/** İ3 (2026-10-17, göz işareti): imzalı PDF'in istisnası — rapor, kişinin GÖRDÜĞÜ bir planda o ekipmanın "önceki raporu"ysa (o plan dışındaki son
-    tamamlanmış rapor) açılır; denetçinin "yalnız kendi raporları" kuralı bu tek rapor için esner. Eski sürümler, daha eski raporlar, taslak ve
+/** İ3 (2026-10-17, göz işareti): imzalı PDF'in istisnası — rapor, kişinin EKİBİNDE olduğu bir planda o ekipmanın "önceki raporu"ysa (o plan
+    dışındaki son tamamlanmış rapor) açılır; denetçinin "yalnız kendi raporları" kuralı bu tek rapor için esner. Raporlar'ı hiç göremeyen açamaz. Eski sürümler, daha eski raporlar, taslak ve
     imzaya hazırlanan PDF bu istisnaya girmez (yalnız IMZALI dosya ucunda kullanılır — src/server/dosya/erisim.ts). */
 export async function oncekiRaporGorulur(db: Sorgulayici, kisi: YetkiHesabi, raporId: string): Promise<boolean> {
+  if (duzey(kisi, MODUL) === "yok") return false;
   const ekipman = await surumluRaporEkipmani(db, raporId);
   if (!ekipman) return false;
-  for (const p of await ekipmaniGosterenPlanlar(db, { ...kisi, ad: "" }, ekipman)) {
+  for (const p of await ekipmanEkipPlanlari(db, { ...kisi, ad: "" }, ekipman)) {
     if ((await oncekiRaporlar(db, [ekipman], p)).get(ekipman)?.raporId === raporId) return true;
   }
   return false;

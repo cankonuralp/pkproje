@@ -33,7 +33,8 @@ import { Pencere } from "../../../components/pencere/Pencere";
 import { Rozet } from "../../../components/sayfa/Sayfa";
 import { SilTusu } from "../../../components/sil/SilTusu";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
-import { Tus, tusSinifi } from "../../../components/tus/Tus";
+import { DosyaAcTusu } from "../../../components/gizli-resim/GizliResim";
+import { Tus } from "../../../components/tus/Tus";
 import { KALIP } from "../../../styles/kalip";
 import { kodBicimi, kodNormal, tarihNo, type KodTuru } from "../sema";
 import type { PlanEkipmani, PlanIci } from "../server/plan-ici";
@@ -108,13 +109,13 @@ export function EkipmanBolumu({ v }: { v: PlanIci }) {
   const g = GENISLIK[v.izin.raporOlustur ? "rapor" : "sade"];
   const sutunlar: Sutun<PlanEkipmani>[] = [
     /* İ3 (2026-10-17): önceki (son tamamlanmış) raporun imzalı PDF'i */
-    { k: "goz", genislik: g.goz, baslik: "Önceki rapor", gizliBaslik: true, siralanmaz: true, kart: "ust", sira: 0, hucre: (e) => {
+    /* kartta (telefon) "Önceki kontrol"ün altında — sol üst köşe kodun (iki "ust" üst üste biner, 2026-10-17 görsel karşılaştırma) */
+    { k: "goz", genislik: g.goz, baslik: "Önceki rapor", gizliBaslik: true, siralanmaz: true, kart: "govde", sira: 6, hucre: (e) => {
       const ad = `${e.kod} · son tamamlanmış rapor`;
       if (e.oncekiRapor?.dosya) {
-        return <a className={`${tusSinifi("ikincil")} ${stil.gozTus}`} href={`/api/dosya/${e.oncekiRapor.dosya}`} target="_blank" rel="noopener"
-          aria-label={`${ad} (${e.oncekiRapor.no})`} title={`Son tamamlanmış rapor: ${e.oncekiRapor.no}`}><Ikon ad="eye" kucuk /></a>;
+        return <DosyaAcTusu dosyaId={e.oncekiRapor.dosya} sinif={stil.gozTus} etiket={`${ad} (${e.oncekiRapor.no})`} baslik={`Son tamamlanmış rapor: ${e.oncekiRapor.no}`}>{null}</DosyaAcTusu>;
       }
-      const neden = e.oncekiRapor ? `${e.oncekiRapor.no}: PDF saklama süresi dolduğu için silindi` : "Tamamlanmış raporu yok";
+      const neden = e.oncekiRapor ? `${e.oncekiRapor.no}: ${e.oncekiRapor.neden}` : "Tamamlanmış raporu yok";
       return <Tus tur="ikincil" ikon="eye" className={stil.gozTus} disabled aria-label={`${ad} — ${neden}`} title={neden}><span className="gizli">{neden}</span></Tus>;
     } },
     { k: "kod", genislik: g.kod, baslik: "Kod", kart: "ust", sira: 1, hucre: (e) => <><span className={stil.kod}>{e.kod}</span>{e.sonradan && <span className={stil.yeni}>Yeni</span>}</> },

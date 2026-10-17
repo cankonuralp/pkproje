@@ -78,8 +78,11 @@ export function GizliResim({ dosyaId, alt, className }: { dosyaId: string; alt: 
     'self'). Adres tek yerde üretilir (tests/dosya.test.ts TARAMA) */
 export const dosyaCerceveAdresi = (dosyaId: string) => (UUID.test(dosyaId) ? `/api/dosya/${dosyaId}` : null);
 
-export function DosyaAcTusu({ dosyaId, children, ikon = "eye", indir = false, etiket }: { dosyaId: string; children: ReactNode; ikon?: string; indir?: boolean; etiket?: string }) {
+/* 2026-10-17 (İ3): sinif — ek sınıf (ör. plan içindeki kare göz tuşu); baslik — üstüne gelince görünen ipucu */
+export function DosyaAcTusu({ dosyaId, children, ikon = "eye", indir = false, etiket, sinif, baslik }: { dosyaId: string; children: ReactNode; ikon?: string; indir?: boolean;
+  etiket?: string; sinif?: string; baslik?: string }) {
   if (!UUID.test(dosyaId)) return null;
-  if (indir) return <a className={tusSinifi("ikincil")} href={`/api/dosya/${dosyaId}?indir=1`} aria-label={etiket}><Ikon ad={ikon} kucuk />{children}</a>;
-  return <a className={tusSinifi("ikincil")} href={`/api/dosya/${dosyaId}`} target="_blank" rel="noopener" aria-label={etiket}><Ikon ad={ikon} kucuk />{children}</a>;
+  const c = sinif ? `${tusSinifi("ikincil")} ${sinif}` : tusSinifi("ikincil");
+  if (indir) return <a className={c} href={`/api/dosya/${dosyaId}?indir=1`} aria-label={etiket} title={baslik}><Ikon ad={ikon} kucuk />{children}</a>;
+  return <a className={c} href={`/api/dosya/${dosyaId}`} target="_blank" rel="noopener" aria-label={etiket} title={baslik}><Ikon ad={ikon} kucuk />{children}</a>;
 }

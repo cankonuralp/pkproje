@@ -279,7 +279,8 @@ test("saha raporu: yazan görür ve düzenler; başka denetçi, öteki branşın
   assert.ok(d);
   assert.deepEqual([d.durum, d.surum, d.bugun, d.gonderildi, d.formatSira], ["taslak", 0, bugun, null, 1]);
   assert.deepEqual(d.plan, { id, no: (await ici(FA.den1, id))!.kart.no, tesisAd: "Merkez", musteriKisa: "Deneme" });
-  assert.deepEqual(d.ekipman, { id: FA.ekp["HT-A1"], kod: "HT-A1", onceki: { tarih: "2025-09-01", sonuc: "Uygun" } });
+  /* 2026-10-17 (İ2): önceki kontrolün kaynağı rapor numarasıyla — sistem öncesi kayıtta no null */
+  assert.deepEqual(d.ekipman, { id: FA.ekp["HT-A1"], kod: "HT-A1", onceki: { tarih: "2025-09-01", sonuc: "Uygun", no: null } });
   assert.deepEqual(d.tur, { id: FA.tur, ad: "Hava tankı", kod: "HT", brans: "m", kontrolStd: [], periyot: 12 });
   assert.deepEqual(d.yazan, { ad: "Deneme Bir", meslek: "mak-muh", meslekMetin: null, ekipnet: "123" });
   assert.deepEqual(d.kunye, { firmaAdi: "Deneme Sanayi A.Ş.", adres: "Deneme Cad. 1, Çankaya / Ankara", sgk: SGK, isgNo: "ISG-1", eposta: "iletisim@deneme-a.example", tel: TEL });

@@ -159,8 +159,9 @@ export interface PlanEkipmani {
   sil: boolean;
   /** 2026-10-17 (İ2): önceki kontrol — bu plan dışındaki son tamamlanmış raporun tarihi + sonucu; yoksa sistem öncesi kayıt; ikisi de yoksa null */
   onceki: OncekiKontrol | null;
-  /** 2026-10-17 (İ3, göz): önceki raporun imzalı PDF'i — dosya null: saklama süresi dolduğu için silindi; önceki raporu yoksa null */
-  oncekiRapor: { no: string; dosya: string | null } | null;
+  /** 2026-10-17 (İ3, göz): önceki raporun imzalı PDF'i — dosya null ise neden (saklama süresi dolduğu için silindi · görme yetkisi yok); önceki
+      raporu yoksa null */
+  oncekiRapor: { no: string; dosya: string | null; neden: string | null } | null;
 }
 export interface PlanIci {
   kart: PlanKarti;
@@ -238,8 +239,12 @@ export async function planIci(db: Sorgulayici, kim: Kisi, id: string): Promise<P
   const onc = await oncekiRaporlar(db, ekp.map((x) => x.id), id);
   const ekipman: PlanEkipmani[] = ekp.map((x) => {
     const t = turBul.get(x.turId), r = onc.get(x.id);
+    /* göz: ekipteki denetçi (istisna — raporlar.ts oncekiRaporGorulur) ya da Raporlar'ın görme kuralı (kendi / branş / hepsi) */
+    const gorur = r && duzey(kim, RAPORLAR_MODULU) !== "yok" && (e.uye || canDo(kim, RAPORLAR_MODULU, "gor", { sahip: r.hesapId, brans: t?.brans ?? "m" }));
+    const oncekiRapor = !r ? null : !gorur ? { no: r.no, dosya: null, neden: "bu raporu görme yetkiniz yok" }
+      : { no: r.no, dosya: r.dosya, neden: r.dosya ? null : "PDF saklama süresi dolduğu için silindi" };
     return { id: x.id, kod: x.kod, turId: x.turId, tur: t?.ad ?? "—", brans: t?.brans ?? "m", konum: x.konum, seri: x.seri, pasif: x.pasif, surum: x.surum, sil: silinebilir.has(x.id),
-      sonradan: !!pe.find((y) => y.ekipman_id === x.id)?.sonradan, onceki: oncekiKontrol(r, x), oncekiRapor: r ? { no: r.no, dosya: r.dosya } : null };
+      sonradan: !!pe.find((y) => y.ekipman_id === x.id)?.sonradan, onceki: oncekiKontrol(r, x), oncekiRapor };
   });
   const teklif = new Map<string, PlanIci["teklif"][number]>();
   for (const x of ekipman) {
@@ -523,14 +528,16 @@ export async function raporIcinPlan(db: Sorgulayici, kim: Kisi, planId: string):
     kunye: benim?.gorulen ?? guncelKunye, kunyeSurum: benim && benim.gorulen ? benim.kunye_surum : p.kunye_surum, guncelKunye, guncelSurum: p.kunye_surum,
   };
 }
-/** 2026-10-17 (İ3): ekipmanı içeren ve kişinin GÖRDÜĞÜ planlar (kimlikler) — göz işaretinin imzalı PDF istisnası (raporlar.ts oncekiRaporGorulur)
-    bunlardan birinin "önceki raporu" mu diye bakar. Görme kuralı plan içiyle aynı (erisim). */
-export async function ekipmaniGosterenPlanlar(db: Sorgulayici, kim: Kisi, ekipmanId: string): Promise<string[]> {
+/** 2026-10-17 (İ3): ekipmanı içeren ve kişinin EKİBİNDE olduğu planlar (kimlikler) — göz işaretinin imzalı PDF istisnası (raporlar.ts
+    oncekiRaporGorulur) bunlardan birinin "önceki raporu" mu diye bakar. İstisna yalnız sahada o ekipmana bakacak denetçi içindir; planı yalnız
+    gören (planlama, yöneticiler) Raporlar'ın kendi görme kuralıyla açar — plana tesisin bütün ekipmanı girdiğinden "planı gören" öteki branşın
+    raporunu açardı (2026-10-17 deneme makinesi bulgusu). */
+export async function ekipmanEkipPlanlari(db: Sorgulayici, kim: Kisi, ekipmanId: string): Promise<string[]> {
   if (!UUID.test(ekipmanId) || duzey(kim, MODUL) === "yok") return [];
   const l = (await db.sorgu<{ plan_id: string }>("SELECT plan_id::text FROM plan_ekipman WHERE ekipman_id = $1 ORDER BY plan_id", [ekipmanId])).rows;
-  const gorulen: string[] = [];
-  for (const x of l) if (await erisim(db, kim, x.plan_id)) gorulen.push(x.plan_id);
-  return gorulen;
+  const ekipte: string[] = [];
+  for (const x of l) if ((await erisim(db, kim, x.plan_id))?.uye) ekipte.push(x.plan_id);
+  return ekipte;
 }
 /** planın ekipmanları (kimlikler; 405 bağlantısız yeni rapor paketi). Yetki ÇAĞIRANDA. */
 export async function plandakiEkipmanlar(db: Sorgulayici, planId: string): Promise<string[]> {

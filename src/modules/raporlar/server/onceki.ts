@@ -26,18 +26,21 @@ export interface OncekiRapor {
   dosya: string | null;
   /** PDF'in silindiği an (saklama süresi) */
   silindi: string | null;
+  /** raporu yazan hesap (Raporlar'ın görme kuralı — kendi / branş; plan içi göz yetkisi) */
+  hesapId: string | null;
 }
 
 /** ekipmanların önceki raporları (ekipman → rapor). haricPlan: bu planın raporları sayılmaz (plan içi, yeni rapor). Yetki ÇAĞIRANDA. */
 export async function oncekiRaporlar(db: Sorgulayici, ekipmanlar: readonly string[], haricPlan: string | null): Promise<Map<string, OncekiRapor>> {
   const l = ekipmanlar.filter((x) => UUID.test(x));
   if (!l.length || (haricPlan !== null && !UUID.test(haricPlan))) return new Map();
-  const r = await db.sorgu<{ ekipman: string; rapor: string; no: string; tarih: string | null; sonuc: string | null; dosya: string; silindi: Date | null }>(
+  const r = await db.sorgu<{ ekipman: string; rapor: string; no: string; tarih: string | null; sonuc: string | null; dosya: string; silindi: Date | null; hesap: string | null }>(
     `SELECT DISTINCT ON (s.ekipman_id) s.ekipman_id::text AS ekipman, s.rapor_id::text AS rapor, s.no, s.kontrol_tarihi::text AS tarih, s.sonuc,
-       s.imzali_dosya::text AS dosya, k.silindi ${SON_SURUMLER}`, [l, haricPlan]);
+       s.imzali_dosya::text AS dosya, k.silindi, (SELECT r.hesap_id::text FROM rapor r WHERE r.firma_id = s.firma_id AND r.id = s.rapor_id) AS hesap
+     ${SON_SURUMLER}`, [l, haricPlan]);
   return new Map(r.rows.map((x) => [x.ekipman, {
     raporId: x.rapor, no: x.no, tarih: x.tarih, sonuc: raporSonucuMu(x.sonuc) ? x.sonuc : null,
-    dosya: x.silindi ? null : x.dosya, silindi: x.silindi?.toISOString() ?? null,
+    dosya: x.silindi ? null : x.dosya, silindi: x.silindi?.toISOString() ?? null, hesapId: x.hesap,
   }]));
 }
 
