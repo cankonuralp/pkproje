@@ -5,6 +5,7 @@
    inemezse hepsi durur (eksik ZIP verilmez). */
 import { zipParcalari, type ZipDosyasi } from "../../../components/disa/zip.ts";
 import { klasorAdi } from "./ad.ts";
+import { raporDosyaAdi } from "../../raporlar/sema.ts";
 
 export const ZIP_SINIR = 300;
 export const ZIP_BAYT_SINIR = 500 * 1024 * 1024;
@@ -13,7 +14,8 @@ export const ZIP_BAYT_SINIR = 500 * 1024 * 1024;
 export class ZipSiniri extends Error {}
 
 /** boyut: imzalı PDF'in baytı (listeden; bilinmiyorsa 0 — inerken sayılır) */
-export interface ZipRaporu { dosya: string; no: string; tesis: string; boyut: number }
+/** ekipmanKod, turAd (2026-10-17): dosya adı rapor no - ekipman kodu - tür adı (raporlar/sema.ts raporDosyaAdi); verilmezse yalnız no */
+export interface ZipRaporu { dosya: string; no: string; tesis: string; boyut: number; ekipmanKod?: string; turAd?: string }
 
 const mb = (n: number) => `${Math.ceil(n / (1024 * 1024)).toLocaleString("tr-TR")} MB`;
 const asim = (n: number, sinir: number) => new ZipSiniri(`Seçili raporlar birlikte ${mb(n)}; en çok ${mb(sinir)} birlikte indirilir. Süzgeçle daraltın.`);
@@ -28,8 +30,9 @@ export async function raporZipi(l: readonly ZipRaporu[], ilerleme: (inen: number
   let inen = 0;
   for (const [i, r] of l.entries()) {
     ilerleme(i, l.length);
-    let ad = `${klasorAdi(r.tesis)}/${klasorAdi(r.no)}.pdf`;
-    for (let n = 2; adlar.has(ad); n++) ad = `${klasorAdi(r.tesis)}/${klasorAdi(r.no)} (${n}).pdf`;
+    const kok = raporDosyaAdi(r.no, r.ekipmanKod, r.turAd).replace(/\.pdf$/, "");
+    let ad = `${klasorAdi(r.tesis)}/${kok}.pdf`;
+    for (let n = 2; adlar.has(ad); n++) ad = `${klasorAdi(r.tesis)}/${kok} (${n}).pdf`;
     adlar.add(ad);
     const b = await al(r.dosya);
     inen += b.length;

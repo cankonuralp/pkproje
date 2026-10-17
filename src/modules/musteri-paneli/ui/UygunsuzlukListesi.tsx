@@ -82,7 +82,7 @@ export function PanelUygunsuzlukListesi({ v }: { v: PanelUygunsuzlukSayfasi }) {
     const su = await panelUygunsuzluklariSuzEylemi(s.durum);
     if (!su) { uyar("Uygunsuzluklar alınamadı; sayfayı yenileyip yeniden deneyin."); return; }
     const l: ZipRaporu[] = [], gorulen = new Set<string>();
-    for (const u of su) if (u.raporDosya && !gorulen.has(u.raporId)) { gorulen.add(u.raporId); l.push({ dosya: u.raporDosya, no: u.raporNo, tesis: u.tesis, boyut: u.raporBoyut }); }
+    for (const u of su) if (u.raporDosya && !gorulen.has(u.raporId)) { gorulen.add(u.raporId); l.push({ dosya: u.raporDosya, no: u.raporNo, tesis: u.tesis, boyut: u.raporBoyut, ekipmanKod: u.ekipmanKod, turAd: u.turAd }); }
     zip.indir(l, `${adParcasi(v.musteri?.kisa ?? "musteri")}-uygunsuz-raporlar-${dosyaGunu()}.zip`);
   };
   return (

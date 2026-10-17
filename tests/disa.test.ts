@@ -79,6 +79,10 @@ test("toplu indirme sınırları (320–323 incelemesi): en çok 300 rapor ve 50
   const z = zipAc(new Uint8Array(Buffer.concat(await raporZipi([r(1, 3), r(2, 3, "Depo"), r(1, 3)], (i) => ilerleme.push(i), x4.al, 10))));
   assert.deepEqual([...z.keys()].sort(), ["Depo/DA-0126-0002.pdf", "Merkez/DA-0126-0001 (2).pdf", "Merkez/DA-0126-0001.pdf"]);
   assert.equal(metin(z.get("Depo/DA-0126-0002.pdf")), "AAA");
+  /* 2026-10-17 (reisim: "rapor numarasından sonra - ekipman kodu- sonra da ekipmanın adı"): kod ve tür verilince dosya adında */
+  const x5 = alici(3);
+  const z5 = zipAc(new Uint8Array(Buffer.concat(await raporZipi([{ ...r(5, 3), ekipmanKod: "HT-1", turAd: "Kompresör hava tankı" }], () => {}, x5.al, 10))));
+  assert.deepEqual([...z5.keys()], ["Merkez/DA-0126-0005-HT-1-Kompresör hava tankı.pdf"]);
   assert.deepEqual(ilerleme, [0, 1, 2, 3]);
 });
 

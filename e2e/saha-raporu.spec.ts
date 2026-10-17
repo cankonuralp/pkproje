@@ -231,7 +231,8 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await expect(belge.getByRole("img", { name: "on.jpg" })).toBeVisible();
   /* 316 PDF indir: imzasız, kesin PDF motoruyla (başsız Chromium) */
   const [indirme] = await Promise.all([page.waitForEvent("download", { timeout: 60_000 }), page.getByRole("link", { name: "PDF indir" }).click()]);
-  expect(indirme.suggestedFilename()).toBe(`${raporNo}-imzasiz.pdf`);
+  /* 2026-10-17: rapor no - ekipman kodu - tür adı - imzasiz (raporlar/sema.ts raporDosyaAdi) */
+  expect(indirme.suggestedFilename()).toMatch(new RegExp(`^${raporNo}-.+-.+-imzasiz\\.pdf$`));
   expect(readFileSync((await indirme.path())!).subarray(0, 5).toString("latin1")).toBe("%PDF-");
   await page.getByRole("link", { name: "Rapora dön" }).click();
   await expect(page).toHaveURL(new RegExp(`${raporAdresi}$`), { timeout: 30_000 });

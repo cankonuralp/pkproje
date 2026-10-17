@@ -3,6 +3,7 @@
    imza kalemiyle dosya deposundan iner; tamamlanan raporda burası 409 (imzasız kopya imzalı gibi dolaşmasın — 315–317 incelemesi). */
 import { belgePdf } from "../../../../../belge/pdf";
 import { raporBelgesiVerisi } from "../../../../../modules/raporlar/server/raporlar";
+import { raporDosyaAdi } from "../../../../../modules/raporlar/sema";
 import { depo } from "../../../../../server/dosya/depo";
 import { istekOturumu, oturumIslemi } from "../../../../../server/kimlik/istek";
 
@@ -20,7 +21,8 @@ export async function GET(_istek: Request, { params }: { params: Promise<{ id: s
   /* saklama süresi dolup imzalı PDF silindiyse (387) imzasız kopyası da basılmaz */
   if (v.imzaliSilindi) return new Response("Rapor imzalı; saklama süresi dolduğu için PDF'i silindi.", { status: 409, headers: DUZ });
   const pdf = await belgePdf(v.belge);
-  const ad = `${v.no}-imzasiz.pdf`;
+  /* 2026-10-17: rapor no - ekipman kodu - tür adı (raporlar/sema.ts raporDosyaAdi) */
+  const ad = raporDosyaAdi(v.no, v.belge.ekipman.kod, v.belge.tur.ad, "imzasiz");
   return new Response(Buffer.from(pdf), { status: 200, headers: {
     "Content-Type": "application/pdf", "Content-Length": String(pdf.length), "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff",
     "Content-Disposition": `attachment; filename="${ad.replace(/[^\x20-\x7e]/g, "_")}"; filename*=UTF-8''${encodeURIComponent(ad)}`,

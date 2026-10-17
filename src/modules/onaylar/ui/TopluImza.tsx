@@ -19,6 +19,7 @@ import { Rozet } from "../../../components/sayfa/Sayfa";
 import { Tus, tusSinifi } from "../../../components/tus/Tus";
 import { imzaHazirlaEylemi, imzaliEslestirYukleEylemi, teknikImzaHazirlaEylemi, teknikImzaliEslestirYukleEylemi } from "../../raporlar/ui/eylemler";
 import type { OnaySatiri } from "../server/onaylar";
+import { raporDosyaAdi } from "../../raporlar/sema";
 import stil from "./onaylar.module.css";
 
 /** bir seferde en çok (karar K5); sunucudaki TOPLU_IMZA_EN_COK ile aynı */
@@ -69,7 +70,8 @@ export function SecimCubugu({ sayi, temizle, children }: { sayi: number; temizle
 }
 
 /* ── İMZA PENCERESİ ── */
-interface Hazir { id: string; no: string; dosya: string }
+/** ad (2026-10-17): ZIP'teki / indirilen PDF'in adı — rapor no - ekipman kodu - tür adı (raporDosyaAdi) */
+interface Hazir { id: string; no: string; dosya: string; ad: string }
 interface Sonuc { no: string | null; dosya: string; tamam: boolean; metin: string }
 const pdfMi = (b: Uint8Array) => b.length > 5 && b[0] === 0x25 && b[1] === 0x50 && b[2] === 0x44 && b[3] === 0x46 && b[4] === 0x2d;   // %PDF-
 const zipMi = (b: Uint8Array) => b.length > 4 && b[0] === 0x50 && b[1] === 0x4b && b[2] === 0x03 && b[3] === 0x04;
@@ -110,7 +112,7 @@ export function TopluImzaPenceresi({ raporlar, onKapat, kip = "uzman" }: { rapor
         if (kapandi.current) return;
         try {
           const y = await k.hazirla(r.id);
-          if (y.tamam && y.dosya) { l.push({ id: r.id, no: r.no, dosya: y.dosya }); degisti.current = true; } else h.push({ no: r.no, neden: y.genel ?? "İmzasız PDF hazırlanamadı." });
+          if (y.tamam && y.dosya) { l.push({ id: r.id, no: r.no, dosya: y.dosya, ad: raporDosyaAdi(r.no, r.ekipmanKod, r.turAd) }); degisti.current = true; } else h.push({ no: r.no, neden: y.genel ?? "İmzasız PDF hazırlanamadı." });
         } catch { h.push({ no: r.no, neden: AG }); }
         if (kapandi.current) return;
         setHazir([...l]); setHazirHata([...h]);
@@ -130,7 +132,7 @@ export function TopluImzaPenceresi({ raporlar, onKapat, kip = "uzman" }: { rapor
     setIndiriliyor(true); setHata(null);
     try {
       const dosyalar: [string, Uint8Array][] = [];
-      for (const p of hazir) dosyalar.push([`${p.no}.pdf`, await dosyaBaytlari(p.dosya)]);
+      for (const p of hazir) dosyalar.push([p.ad, await dosyaBaytlari(p.dosya)]);
       if (dosyalar.length === 1) baytIndir(dosyalar[0][0], dosyalar[0][1], "application/pdf");
       else baytIndir(`imzalanacak-raporlar-${dosyaGunu()}.zip`, zipParcalari(dosyalar), "application/zip");
       setIndirildi(true);

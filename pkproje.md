@@ -2527,6 +2527,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-17 (YAPILDI): **RAPOR DOSYA ADI: NO - EKİPMAN KODU - TÜR ADI** (reisim: *"rapor isimleri sadece rapor kodlarından oluşuyor bu şekilde klasörde
+  anlaması zor, rapor isimlerinde rapor numarasından sonra - ekipman kodu- sonra da ekipmanın adı "kompresör hava tankı" veeya "yangın dolapları" ne
+  ise artık o yazmalı"*). Raporun PDF adı `<rapor no>-<ekipman kodu>-<ekipman türünün adı>.pdf` (ör. DM-1026-003-cf59e-HT-1-Kompresör hava tankı.pdf):
+  imzaya hazırlanan PDF, imzalı PDF (sonunda "-imzali"), önizlemeden "PDF indir" ("-imzasiz"), teknik yöneticinin imzalısı, toplu imza ZIP'i (tek
+  raporda PDF) ve müşteri panelinin toplu ZIP'i (tesis klasörlerinde). Windows'un sorun çıkardığı karakterler boşluk olur; tek kaynak
+  raporlar/sema.ts raporDosyaAdi. Daha önce hazırlanmış / imzalanmış PDF'lerin adı değişmez (kayıtlı ad).
 - 2026-10-17 (YAPILDI): **TEKNİK YÖNETİCİ İMZASI** (reisim: *"firma ayarlarına ekleyebiliriz teknik yönetici imzalasın seçeneği olsun açıkken teknik
   yönetici onayına giden rapor teknik yönetici tarafından imzalansın, ondan sonra denetçiye gitsin, eğer açık değilse bu seçenek şu an ki kurgumuzdan
   devam edelim"* · önerinin ayrıntıları *"onaylıyorum"*). Firma ayarları › İmza yöntemi: **"Teknik yönetici raporu imzalasın"** (başlangıçta kapalı).

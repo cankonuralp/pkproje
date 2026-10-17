@@ -64,7 +64,7 @@ export function PanelRaporListesi({ v }: { v: PanelRaporSayfasi }) {
   /* saklama süresi dolup PDF'i silinen rapor (387) ZIP'e girmez */
   const topluIndir = async () => {
     const l = await suzulenler();
-    if (l) zip.indir(l.flatMap((r) => (r.dosya ? [{ dosya: r.dosya, no: r.no, tesis: r.tesis, boyut: r.boyut }] : [])), `${adParcasi(v.musteri?.kisa ?? "musteri")}-raporlar-${dosyaGunu()}.zip`);
+    if (l) zip.indir(l.flatMap((r) => (r.dosya ? [{ dosya: r.dosya, no: r.no, tesis: r.tesis, boyut: r.boyut, ekipmanKod: r.ekipmanKod, turAd: r.turAd }] : [])), `${adParcasi(v.musteri?.kisa ?? "musteri")}-raporlar-${dosyaGunu()}.zip`);
   };
   const bos = !s.sonuc.adet;
   return (

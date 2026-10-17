@@ -40,7 +40,7 @@ import { formatSurumuOku, yayindakiFormat } from "../../rapor-format/server/form
 import { kimdeHaritasi } from "../../zimmetler/server/zimmet.ts";
 import { hesabinPersoneli, roldekiHesapAdlari } from "../../../server/kimlik/hesap.ts";
 import {
-  ayEkle, gorunenNo, kalibrasyonGecti, KopyaGirdisi, RAPOR_DURUM, RaporKaydi, raporYazmaNedeni, RevizeGirdisi, SONUC_AD, EkipmanBilgisi, type RaporCihazi, type RaporDurumu, type RaporTarihleri,
+  ayEkle, gorunenNo, kalibrasyonGecti, raporDosyaAdi, KopyaGirdisi, RAPOR_DURUM, RaporKaydi, raporYazmaNedeni, RevizeGirdisi, SONUC_AD, EkipmanBilgisi, type RaporCihazi, type RaporDurumu, type RaporTarihleri,
 } from "../sema.ts";
 import { istekAc, istekKapat, revizeDurumu } from "./revize.ts";
 import { mesaiDurumu } from "./plan-baglanti.ts";
@@ -1031,7 +1031,8 @@ export async function imzaHazirla(db: Sorgulayici, depo: Depo, kim: Kisi, firmaI
   let dogrulama: string | null = null;
   if (firmaAdresi) try { dogrulama = dogrulamaAdresi(firmaAdresi, dogrulamaKodu(firmaId, id, e.r.revizyon)); } catch { dogrulama = null; }
   try { pdf = await uret({ ...v.belge, kesin: true, dogrulama }); } catch { return { durum: "red", neden: "İmzasız PDF üretilemedi; biraz sonra yeniden deneyin." }; }
-  const y = await dosyaYukle(db, depo, { firmaId, modul: PDF_MODULU, kayitId: id, ad: `${gorunenNo(e.r.no, e.r.revizyon)}.pdf`, bayt: pdf, izinli: ["pdf"], kim: kim.ad, yukleyen: kim.id });
+  const y = await dosyaYukle(db, depo, { firmaId, modul: PDF_MODULU, kayitId: id, ad: raporDosyaAdi(gorunenNo(e.r.no, e.r.revizyon), v.belge.ekipman.kod, v.belge.tur.ad),
+    bayt: pdf, izinli: ["pdf"], kim: kim.ad, yukleyen: kim.id });
   if (!y.tamam) return { durum: "red", neden: "İmzasız PDF üretilemedi." };
   const kopya: IstekKopyasi = { yazan: v.belge.yazan, cihazlar: v.belge.cihazlar };
   await ekle(db, ISTEK, { rapor_id: id, revizyon: e.r.revizyon, yontem: "dosya", durum: "bekliyor", pdf_dosya: y.id, pdf_sha256: createHash("sha256").update(pdf).digest("hex"),
@@ -1068,10 +1069,11 @@ export async function imzaliYukle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaI
     if (n) return { durum: "gecersiz", hatalar: { dosya: n } };
   }
   const gno = gorunenNo(e.r.no, e.r.revizyon);
-  const y = await dosyaYukle(db, depo, { firmaId, modul: IMZALI_MODULU, kayitId: id, ad: `${gno}-imzali.pdf`, bayt: b, izinli: ["pdf"], kim: kim.ad, yukleyen: kim.id });
-  if (!y.tamam) return { durum: "gecersiz", hatalar: { dosya: y.neden === "buyuk" ? "PDF çok büyük (en çok 25 MB)." : IMZA_GECERSIZ } };
   const v = await raporBelgesiVerisi(db, depo, kim, id);
   if (!v) return { durum: "yok" };
+  const y = await dosyaYukle(db, depo, { firmaId, modul: IMZALI_MODULU, kayitId: id, ad: raporDosyaAdi(gno, v.belge.ekipman.kod, v.belge.tur.ad, "imzali"), bayt: b,
+    izinli: ["pdf"], kim: kim.ad, yukleyen: kim.id });
+  if (!y.tamam) return { durum: "gecersiz", hatalar: { dosya: y.neden === "buyuk" ? "PDF çok büyük (en çok 25 MB)." : IMZA_GECERSIZ } };
   const iz: Iz = { kim: kim.ad, ne: "rapor.imza", gerekce: gno };
   /* imza anının kopyaları (§3.2-8): künye, yazan, cihazlar (kalibrasyonuyla), içerik — sonradan değişen kayıt imzalı raporu değiştirmez. Yazan ve
      cihazlar imzalanan PDF'in hazırlandığı andan (isteğin kopyası, 0028); içerik raporun kendisinden (onaylanmış rapor değişmez, onaydan
@@ -1188,7 +1190,8 @@ export async function teknikImzaHazirla(db: Sorgulayici, depo: Depo, kim: Kisi, 
   if (firmaAdresi) try { dogrulama = dogrulamaAdresi(firmaAdresi, dogrulamaKodu(firmaId, id, e.r.revizyon)); } catch { dogrulama = null; }
   let pdf: Uint8Array;
   try { pdf = await uret({ ...v.belge, kesin: true, dogrulama }); } catch { return { durum: "red", neden: "İmzasız PDF üretilemedi; biraz sonra yeniden deneyin." }; }
-  const y = await dosyaYukle(db, depo, { firmaId, modul: PDF_MODULU, kayitId: id, ad: `${gno}.pdf`, bayt: pdf, izinli: ["pdf"], kim: kim.ad, yukleyen: kim.id });
+  const y = await dosyaYukle(db, depo, { firmaId, modul: PDF_MODULU, kayitId: id, ad: raporDosyaAdi(gno, v.belge.ekipman.kod, v.belge.tur.ad), bayt: pdf,
+    izinli: ["pdf"], kim: kim.ad, yukleyen: kim.id });
   if (!y.tamam) return { durum: "red", neden: "İmzasız PDF üretilemedi." };
   const kopya: IstekKopyasi = { yazan: v.belge.yazan, cihazlar: v.belge.cihazlar };
   await ekle(db, ISTEK, { rapor_id: id, revizyon: e.r.revizyon, yontem: "dosya", durum: "bekliyor", pdf_dosya: y.id, pdf_sha256: createHash("sha256").update(pdf).digest("hex"),
@@ -1216,7 +1219,8 @@ export async function teknikImzaliYukle(db: Sorgulayici, depo: Depo, kim: Kisi, 
   if (n) return { durum: "gecersiz", hatalar: { dosya: n } };
   const gno = gorunenNo(e.r.no, e.r.revizyon);
   /* teknik yöneticinin imzalı PDF'i muayene uzmanının imzalayacağı PDF'tir (dosya modülü rapor_pdf — 0102) */
-  const y = await dosyaYukle(db, depo, { firmaId, modul: PDF_MODULU, kayitId: id, ad: `${gno}-teknik-imzali.pdf`, bayt: b, izinli: ["pdf"], kim: kim.ad, yukleyen: kim.id });
+  const y = await dosyaYukle(db, depo, { firmaId, modul: PDF_MODULU, kayitId: id, ad: raporDosyaAdi(gno, (await ekipmanEtiketi(db, e.r.ekipman_id))?.kod, e.tur.ad, "teknik-imzali"),
+    bayt: b, izinli: ["pdf"], kim: kim.ad, yukleyen: kim.id });
   if (!y.tamam) return { durum: "gecersiz", hatalar: { dosya: y.neden === "buyuk" ? "PDF çok büyük (en çok 25 MB)." : IMZA_GECERSIZ } };
   const iz: Iz = { kim: kim.ad, ne: "rapor.teknik_imza", gerekce: gno };
   const g = await guncelle(db, ISTEK, istek.id, istek.surum, { durum: "tamam", imzali_dosya: y.id }, iz);

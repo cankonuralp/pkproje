@@ -97,3 +97,15 @@ export const FotoIslemGirdisi = z.object({
 /* ── BAĞLANTISIZ YENİ RAPOR (405) ── kuyruktaki "rapor.olustur": hangi planda hangi ekipmana (kayıt = cihazın geçici kimliği; gerçek kimliği ve
    numarayı sunucu verir) */
 export const OlusturIslemGirdisi = z.object({ plan: kimlik, ekipman: kimlik });
+
+/** 2026-10-17 (reisim: "rapor isimleri sadece rapor kodlarından oluşuyor bu şekilde klasörde anlaması zor, rapor isimlerinde rapor numarasından sonra
+    - ekipman kodu- sonra da ekipmanın adı "kompresör hava tankı" veeya "yangın dolapları" ne ise artık o yazmalı"): raporun PDF dosya adı
+    "<rapor no>-<ekipman kodu>-<ekipman türünün adı>[-ek].pdf" (ör. DM-1026-003-cf59e-HT-1-Kompresör hava tankı.pdf). Windows'un ve ZIP'in sorun
+    çıkardığı karakterler (denetim, / \ : * ? " < > |) boşluk olur, boşluklar sadeleşir, baştaki / sondaki nokta ve boşluk atılır; parçalar sınırlı
+    (dosya kaydı en çok 200). Kod ya da tür yoksa o parça düşer. Saf — sunucu (hazırlanan / imzalı PDF) ve tarayıcı (ZIP'ler) aynı adı kurar. */
+const YASAK_KARAKTER = /[\u0000-\u001f\u007f\\/:*?"<>|]/g;
+const adParcasi = (s: string | null | undefined, en: number) =>
+  (s ?? "").replace(YASAK_KARAKTER, " ").replace(/\s+/g, " ").replace(/^[ .]+|[ .]+$/g, "").slice(0, en).replace(/[ .]+$/, "");
+export function raporDosyaAdi(no: string, ekipmanKod?: string | null, turAd?: string | null, ek?: string): string {
+  return `${[adParcasi(no, 40) || "rapor", adParcasi(ekipmanKod, 40), adParcasi(turAd, 90), adParcasi(ek, 20)].filter(Boolean).join("-")}.pdf`;
+}
