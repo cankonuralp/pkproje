@@ -31,6 +31,7 @@ import { saklamaGunleri, saklamaIsi, saklamaListesi, saklamaTemizle } from "../s
 import { saklamaSayfasi } from "../src/modules/firma-ayarlari/server/saklama.ts";
 import { uyariListesi } from "../src/modules/uyarilar/server/uyarilar.ts";
 import { testKumesi } from "./yardimci/kume.ts";
+import { imzaEki } from "./yardimci/gercek-imza.ts";
 
 let kume: GomuluKume, havuz: Havuz, sahip: pg.Client;
 let A: string, B: string;
@@ -80,7 +81,8 @@ after(async () => { await sahip?.end(); await havuz?.end(); await kume?.durdur()
 /* ── imzalı rapor (tests/muhasebe.test.ts ile aynı yapı) ── */
 let sayac = 0;
 const uret = async () => new TextEncoder().encode(`%PDF-1.4\n% deneme ${++sayac}\n1 0 obj << /Type /Catalog >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF\n`);
-const imzala = (b: Uint8Array) => Buffer.concat([Buffer.from(b), Buffer.from("\n9 0 obj << /Type /Sig /ByteRange [0 1 2 3] /Contents <00ff> >> endobj\ntrailer << /Root 1 0 R /Prev 0 >>\n%%EOF\n", "latin1")]);
+/* IMZA-SERVISI.md ES1: yükleme imzayı kriptografik olarak denetler — gerçek (uydurma kişili) imza (tests/yardimci/gercek-imza.ts) */
+const imzala = (b: Uint8Array) => Buffer.from(imzaEki(b));
 const rsurum = async (id: string) => (await sql<{ surum: number }>(A, "SELECT surum FROM rapor WHERE id = $1", [id])).rows[0].surum;
 let plan = "";
 async function imzaliRapor(kod: string): Promise<{ rapor: string; surum: string; imzali: string; imzasiz: string; anahtarlar: string[] }> {

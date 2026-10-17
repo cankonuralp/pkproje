@@ -28,6 +28,7 @@ import { teklifSayfasi } from "../src/modules/teklifler/server/teklifler.ts";
 import { teklifMusterileri, teklifTanim } from "../src/modules/teklifler/liste.ts";
 import { listele, yeniDurum, type SuzgecDurumu } from "../src/components/liste/suzgec.ts";
 import { testKumesi } from "./yardimci/kume.ts";
+import { imzaEki } from "./yardimci/gercek-imza.ts";
 
 let kume: GomuluKume;
 let havuz: Havuz;
@@ -374,7 +375,8 @@ test("324 incelemesi — raporlanan: her rapor TEK teklife (tesis × tür için 
 /* ── rapor imzalama (tests/musteri-paneli.test.ts ile aynı yapı) ── */
 let sayac = 0, planSira = 0;
 const uret = async () => new TextEncoder().encode(`%PDF-1.4\n% deneme ${++sayac}\n1 0 obj << /Type /Catalog >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF\n`);
-const imzala = (b: Uint8Array) => Buffer.concat([Buffer.from(b), Buffer.from("\n9 0 obj << /Type /Sig /ByteRange [0 1 2 3] /Contents <00ff> >> endobj\ntrailer << /Root 1 0 R /Prev 0 >>\n%%EOF\n", "latin1")]);
+/* IMZA-SERVISI.md ES1: yükleme imzayı kriptografik olarak denetler — gerçek (uydurma kişili) imza (tests/yardimci/gercek-imza.ts) */
+const imzala = (b: Uint8Array) => Buffer.from(imzaEki(b));
 const rsurum = async (id: string) => (await sql<{ surum: number }>(A, "SELECT surum FROM rapor WHERE id = $1", [id])).rows[0].surum;
 async function imzaliRapor(tesis: string, kod: string): Promise<string> {
   const bas = bugunTr();

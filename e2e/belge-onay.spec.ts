@@ -4,6 +4,7 @@
 import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import { girisli, hazir } from "./yardimci";
+import { imzaEki } from "../tests/yardimci/gercek-imza.ts";
 
 const AYLAR = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
 /** bugünden n ay önce, "Eylül 2026" (sunucunun Türkiye takvimiyle aynı; ay başında saat farkı olmasın diye ayın 15'i) */
@@ -58,7 +59,8 @@ test("belge onayı: muhasebe bordroyu imzaya gönderir, denetçi Diğer belgeler
   /* yanlış PDF reddedilir, pencere açık kalır */
   await w.getByLabel("İmzalı PDF'i yükle").setInputFiles({ name: "yanlis.pdf", mimeType: "application/pdf", buffer: ham });
   await expect(w.getByText("Yüklenen PDF bu belgenin gönderilen PDF'i değil ya da imza taşımıyor.")).toBeVisible({ timeout: 30_000 });
-  const imzali = Buffer.concat([ham, Buffer.from("9 0 obj << /Type /Sig /Filter /Adobe.PPKLite /ByteRange [0 10 20 30] /Contents <00ff> >> endobj\ntrailer << /Root 1 0 R /Prev 0 >>\n%%EOF\n", "latin1")]);
+  /* IMZA-SERVISI.md ES1 (yükleme denetimi): gerçek (uydurma kişili) imza — yükleme kriptografik olarak denetler */
+  const imzali = Buffer.from(imzaEki(ham));
   await w.getByLabel("İmzalı PDF'i yükle").setInputFiles({ name: "imzali.pdf", mimeType: "application/pdf", buffer: imzali });
   await expect(page.getByText(`${ad} onaylandı ve imzalandı.`).first()).toBeVisible({ timeout: 30_000 });
   await expect(w).toBeHidden();

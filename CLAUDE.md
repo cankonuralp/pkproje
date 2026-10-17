@@ -541,6 +541,11 @@ pkproje/
   src/server/islem/         TEK SEFERLİK İŞLEM (392; 09-D2, çevrimdışı kuyruk): islem.ts tekSeferlik (kimliğe danışma kilidi, iş + sonuç aynı veritabanı
                             işleminde; göç 0076 islem) · yazan.ts (işi yazanın etiketi — kimlik tarayıcıya gitmez) · uç src/app/api/islem (köken, oturum,
                             yazan kapıları) · iş türleri modülde: raporlar/server/islem-baglanti.ts
+  src/server/imza/          İMZA SERVİSİ KODU (2026-10-17, IMZA-SERVISI.md §9 Durum; saf, saldırganın girdisinde sınırlı): der.ts · sertifika.ts · cms.ts
+                            (imzalı sertifika bağı, damga sunucusu denetimi, SHA-1 yok) · pdf-imzalar.ts ÇÖZÜMLEYİCİ (beş katman, DSS yalnız kataloğun +
+                            iptal kanıtı, imzadan sonraki değişiklik, düzey) · yukleme.ts ekImzaNedeni — imzaliPdfGecerli çağıran her yükleme bunu da çağırır
+                            (kaynak kilidi) · YAZMA (bağlı değil): pdf-ek.ts artımlı ek + xref çözücü · yer-tutucu.ts · imzala.ts · cms-yaz.ts · ltv.ts (DSS
+                            + arşiv damgası) · zaman-damgasi.ts · iptal.ts · testlerde gerçek kriptografi: tests/yardimci/gercek-imza.ts (uydurma makam)
   src/server/saglik.ts      SAĞLIK (350; 09-G5): /api/saglik denetimleri (db/saglik.ts → saglik_denetimi + 383 is_denetimi — takılı iş, 0072; geçerli tanım 0053 — bağlanan rol, göç sayısı;
                             db/son-goc.ts SON_GOC + GOC_SAYISI — her yeni göçte ikisi güncellenir, testle kilitli) · canlı duman testi: node tools/duman.mjs (salt okunur, çıkış kodu)
                             · FV7 (2026-10-15) SAĞLIK HER PROJEDE: /api/saglik'e "firma_vt" — firma adresinde o firmanın veritabanı (kiraciHavuzu, kiracı

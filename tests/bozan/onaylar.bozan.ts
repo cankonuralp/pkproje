@@ -41,7 +41,7 @@ import { taslakBaslat, yayinla } from "../../src/modules/rapor-format/server/for
 import { imzaHazirla, imzaliYukle, raporOlustur } from "../../src/modules/raporlar/server/raporlar.ts";
 import { dosyaYukle } from "../../src/server/dosya/dosya.ts";
 import { testKumesi } from "../yardimci/kume.ts";
-import { sahteImzaSozlugu } from "../yardimci/sahte-imza.ts";
+import { imzaEki } from "../yardimci/gercek-imza.ts";
 import { ayarYaz } from "../../src/server/ayar/ayar.ts";
 import { supabaseBenzeri, type SupabaseBenzeri } from "../yardimci/supabase.ts";
 
@@ -154,7 +154,7 @@ async function imzalaTam(k: Kurulum, firma: string, rapor: string) {
   const pdf = new TextEncoder().encode(`%PDF-1.4\n% bozan ${pdfSira++}\n1 0 obj << /Type /Catalog >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF\n`);
   const h = await k.is(k.den, (db) => imzaHazirla(db, depo, k.den, firma, rapor, async () => pdf));
   assert.equal(h.durum, "tamam", JSON.stringify(h));
-  const imzali = new Uint8Array(Buffer.concat([Buffer.from(pdf), Buffer.from("\n9 0 obj << /Type /Sig /ByteRange [0 1 2 3] /Contents <00> >> endobj\ntrailer << /Root 1 0 R /Prev 0 >>\n%%EOF\n", "latin1")]));
+  const imzali = imzaEki(pdf);
   const surum = (await k.is(k.den, (db) => db.sorgu<{ surum: number }>("SELECT surum FROM rapor WHERE id = $1", [rapor]))).rows[0].surum;
   const y = await k.is(k.den, (db) => imzaliYukle(db, depo, k.den, firma, rapor, surum, { ad: "imzali.pdf", bayt: imzali }));
   assert.equal(y.durum, "tamam", JSON.stringify(y));
@@ -261,7 +261,7 @@ test("sunucuda rapor_revizeye_gonder denetimi kalkınca tamamlanan raporu yalnı
     await k.is(k.yon, (db) => db.sorgu("UPDATE rapor SET durum = 'onaylandi' WHERE id = $1", [k.rapor]));
     const pdf = new TextEncoder().encode("%PDF-1.4\n1 0 obj << /Type /Catalog >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF\n");
     assert.equal((await k.is(k.den, (db) => imzaHazirla(db, depo, k.den, C, k.rapor, async () => pdf))).durum, "tamam");
-    const imzali = new Uint8Array(Buffer.concat([Buffer.from(pdf), Buffer.from("\n9 0 obj << /Type /Sig /ByteRange [0 1 2 3] /Contents <00> >> endobj\ntrailer << /Root 1 0 R /Prev 0 >>\n%%EOF\n", "latin1")]));
+    const imzali = imzaEki(pdf);
     const surum = async () => (await k.is(k.den, (db) => db.sorgu<{ surum: number }>("SELECT surum FROM rapor WHERE id = $1", [k.rapor]))).rows[0].surum;
     const y = await k.is(k.den, async (db) => imzaliYukle(db, depo, k.den, C, k.rapor, await surum(), { ad: "imzali.pdf", bayt: imzali }));
     assert.equal(y.durum, "tamam", JSON.stringify(y));
@@ -328,8 +328,6 @@ test("0031'deki eskimiş sürüm kuralı kalkınca revizyonla düzeltilen yanlı
 /* 596 TOPLU İMZA: bozulan sunucu kodu (raporlar.ts imzaliEslestirYukle); göçler önemsiz — onaylanmış rapor, imzasız PDF'i hazır */
 type Raporlar = typeof import("../../src/modules/raporlar/server/raporlar.ts");
 const RAPORLAR = "src/modules/raporlar/server/raporlar.ts";
-const imzaEki = (b: Uint8Array) => new Uint8Array(Buffer.concat([Buffer.from(b),
-  Buffer.from("\n9 0 obj << /Type /Sig /ByteRange [0 1 2 3] /Contents <00> >> endobj\ntrailer << /Root 1 0 R /Prev 0 >>\n%%EOF\n", "latin1")]));
 async function hazirRapor(kisa: string, kod: string) {
   const F = await yeniFirma(kisa, kod);
   const k = await kur(havuz, F);
@@ -463,7 +461,7 @@ test("sunucuda imzalayanın adı denetlenmeyince teknik yöneticinin yerine dene
   const pdf = new TextEncoder().encode("%PDF-1.4\n% teknik\n1 0 obj << /Type /Catalog >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF\n");
   const h = await k.is(mek, (db) => m.teknikImzaHazirla(db, depo, mek, F, k.rapor, async () => pdf));
   assert.equal(h.durum, "tamam", JSON.stringify(h));
-  const imzali = new Uint8Array(Buffer.concat([Buffer.from(pdf), Buffer.from(`\n${sahteImzaSozlugu(9, "Deneme Bir")}trailer << /Root 1 0 R /Prev 0 >>\n%%EOF\n`, "latin1")]));
+  const imzali = imzaEki(pdf, "Deneme Bir");
   const y = await k.is(mek, (db) => m.teknikImzaliYukle(db, depo, mek, F, k.rapor, 1, { ad: "imzali.pdf", bayt: imzali }));
   assert.equal(y.durum, "tamam", `bozuk: denetçinin imzası teknik yöneticininki diye kabul edildi: ${JSON.stringify(y)}`);
 });

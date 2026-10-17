@@ -44,6 +44,7 @@ import { bugunTr, planAc, type Kisi } from "../src/modules/planlar/server/planla
 import { taslakBaslat, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
 import { imzaHazirla, imzaliYukle, raporListesi, raporOlustur } from "../src/modules/raporlar/server/raporlar.ts";
 import { testKumesi } from "./yardimci/kume.ts";
+import { imzaEki } from "./yardimci/gercek-imza.ts";
 
 let kume: GomuluKume;
 let havuz: Havuz;
@@ -93,7 +94,8 @@ const m = <T,>(musteriId: string, tesisler: string[] | null, is: (db: Sorgulayic
 /* imza: uydurma kesin PDF + artımlı imza eki (tests/onaylar.test.ts ile aynı yapı) */
 let sayac = 0;
 const uret = async () => new TextEncoder().encode(`%PDF-1.4\n% deneme ${++sayac}\n1 0 obj << /Type /Catalog >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF\n`);
-const imzala = (b: Uint8Array) => Buffer.concat([Buffer.from(b), Buffer.from("\n9 0 obj << /Type /Sig /ByteRange [0 1 2 3] /Contents <00ff> >> endobj\ntrailer << /Root 1 0 R /Prev 0 >>\n%%EOF\n", "latin1")]);
+/* IMZA-SERVISI.md ES1: yükleme imzayı kriptografik olarak denetler — gerçek (uydurma kişili) imza (tests/yardimci/gercek-imza.ts) */
+const imzala = (b: Uint8Array) => Buffer.from(imzaEki(b));
 const surum = async (id: string) => (await sql<{ surum: number }>(A, "SELECT surum FROM rapor WHERE id = $1", [id])).rows[0].surum;
 let planSira = 0;
 /** tesisin ekipmanına rapor: plan, kabul, oluştur, gönder (tetiğin geçişi), mekanik yönetici onaylar, denetçi imzalar → Tamamlandı */

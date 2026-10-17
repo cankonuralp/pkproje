@@ -16,6 +16,7 @@ import { bordroAylari, bordroGonder, bordroGonderimi } from "../src/modules/muha
 import { bekleyenBelgeSayisi, belgeGeriGonder, belgeImzaliYukle, digerBelgeler, type Kisi } from "../src/modules/onaylar/server/belgeler.ts";
 import { bordroKaldir, bordroOnayaGonder, bordroYukle, personelDosyasi } from "../src/modules/personel/server/dosyalar.ts";
 import { testKumesi } from "./yardimci/kume.ts";
+import { imzaEki } from "./yardimci/gercek-imza.ts";
 
 let kume: GomuluKume;
 let havuz: Havuz;
@@ -36,7 +37,6 @@ const b = (s: string) => new TextEncoder().encode(s);
 const OZGUN = "%PDF-1.4\n1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n"
   + "3 0 obj << /Type /Page /Parent 2 0 R /Contents 4 0 R /Resources << >> >> endobj\n4 0 obj << /Length 18 >> stream\nBT (Bordro) Tj ET\nendstream\nendobj\n"
   + "trailer << /Root 1 0 R >>\n%%EOF\n";
-const IMZA = "9 0 obj << /Type /Sig /Filter /Adobe.PPKLite /ByteRange [0 10 20 30] /Contents <00ff00ff> >> endobj\ntrailer << /Root 1 0 R /Prev 0 >>\n%%EOF\n";
 const PDF = { ad: "bordro.pdf", bayt: b(OZGUN) };
 const NESNE_AKISLI = { ad: "bordro.pdf", bayt: b(OZGUN.replace("4 0 obj << /Length 18 >>", "4 0 obj << /Type /ObjStm /N 1 /First 4 /Length 18 >>")) };
 
@@ -91,12 +91,12 @@ test("sızıntı: belgeyi yalnız imzalayacak kişi görür ve karar verir; öte
 
 test("Onayla ve imzala: imzalı PDF gönderilen PDF'in imzalanmış hâli olmalı; imzalanan belge değişmez, geri gönderilemez", async () => {
   const x = (await a(DEN, (db) => digerBelgeler(db, DEN))).belgeler[0];
-  const yanlis = await a(DEN, (db) => belgeImzaliYukle(db, depo, DEN, A, x.id, x.surum, { ad: "imzali.pdf", bayt: b(OZGUN.replace("Bordro", "Bordrx") + IMZA) }));
+  const yanlis = await a(DEN, (db) => belgeImzaliYukle(db, depo, DEN, A, x.id, x.surum, { ad: "imzali.pdf", bayt: imzaEki(b(OZGUN.replace("Bordro", "Bordrx"))) }));
   assert.equal(yanlis.durum, "gecersiz");
   const imzasiz = await a(DEN, (db) => belgeImzaliYukle(db, depo, DEN, A, x.id, x.surum, { ad: "imzali.pdf", bayt: b(OZGUN) }));
   assert.equal(imzasiz.durum, "gecersiz", "imza eklenmemiş");
-  assert.equal((await a(DEN, (db) => belgeImzaliYukle(db, depo, DEN, A, x.id, x.surum + 1, { ad: "imzali.pdf", bayt: b(OZGUN + IMZA) }))).durum, "cakisma");
-  tamam(await a(DEN, (db) => belgeImzaliYukle(db, depo, DEN, A, x.id, x.surum, { ad: "imzali.pdf", bayt: b(OZGUN + IMZA) })));
+  assert.equal((await a(DEN, (db) => belgeImzaliYukle(db, depo, DEN, A, x.id, x.surum + 1, { ad: "imzali.pdf", bayt: imzaEki(b(OZGUN)) }))).durum, "cakisma");
+  tamam(await a(DEN, (db) => belgeImzaliYukle(db, depo, DEN, A, x.id, x.surum, { ad: "imzali.pdf", bayt: imzaEki(b(OZGUN)) })));
   const y = (await a(DEN, (db) => digerBelgeler(db, DEN))).belgeler[0];
   assert.deepEqual([y.durum, !!y.karar, !!y.imzaliDosya, (await a(DEN, (db) => bekleyenBelgeSayisi(db, DEN)))], ["imzali", true, true, 0]);
   assert.deepEqual(await a(DEN, (db) => belgeGeriGonder(db, DEN, y.id, y.surum)), { durum: "red", neden: "Belge zaten imzalandı." });
@@ -150,12 +150,12 @@ test("333 incelemesi: durum bordro KAYDINA bağlı — aynı dönem yeniden yük
   assert.match(ikinci.bildirim ?? "", /bekleyen onayı iptal edildi/);
   const eski = (await a(DEN, (db) => digerBelgeler(db, DEN))).belgeler.find((x) => x.ad === "Haziran 2026 maaş bordrosu")!;
   assert.equal(eski.durum, "iptal");
-  assert.equal((await a(DEN, (db) => belgeImzaliYukle(db, depo, DEN, A, eski.id, eski.surum, { ad: "i.pdf", bayt: b(OZGUN + IMZA) }))).durum, "red");
+  assert.equal((await a(DEN, (db) => belgeImzaliYukle(db, depo, DEN, A, eski.id, eski.surum, { ad: "i.pdf", bayt: imzaEki(b(OZGUN)) }))).durum, "red");
   assert.equal((await satir()).onay, null);
   /* yenisi gönderilir ve imzalanır; sonra üçüncü yükleme imzalıyı bozmaz, üçüncü yeniden gönderilir */
   tamam(await a(YON, (db) => bordroOnayaGonder(db, depo, YON, A, ikinci.id)));
   const yeni = (await a(DEN, (db) => digerBelgeler(db, DEN))).belgeler.find((x) => x.ad === "Haziran 2026 maaş bordrosu" && x.durum === "bekliyor")!;
-  tamam(await a(DEN, (db) => belgeImzaliYukle(db, depo, DEN, A, yeni.id, yeni.surum, { ad: "i.pdf", bayt: b(OZGUN + IMZA) })));
+  tamam(await a(DEN, (db) => belgeImzaliYukle(db, depo, DEN, A, yeni.id, yeni.surum, { ad: "i.pdf", bayt: imzaEki(b(OZGUN)) })));
   const ucuncu = await yukle();
   assert.equal(ucuncu.bildirim, undefined, "imzalı belge iptal edilmez");
   assert.equal((await satir()).onay, null);

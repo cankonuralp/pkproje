@@ -23,6 +23,7 @@ import { belgeImzaliYukle, digerBelgeler } from "../src/modules/onaylar/server/b
 import { personelEkle } from "../src/modules/personel/server/personel.ts";
 import { demirbasEkle, teslimEt } from "../src/modules/zimmetler/server/zimmet.ts";
 import { testKumesi } from "./yardimci/kume.ts";
+import { imzaEki } from "./yardimci/gercek-imza.ts";
 
 let kume: GomuluKume;
 let havuz: Havuz;
@@ -170,7 +171,6 @@ test("YETKİ: denetçi kendi kartında atama + zimmet görür, özlük / bordro 
 const OZGUN = "%PDF-1.4\n1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n"
   + "3 0 obj << /Type /Page /Parent 2 0 R /Contents 4 0 R /Resources << >> >> endobj\n4 0 obj << /Length 18 >> stream\nBT (Zimmet) Tj ET\nendstream\nendobj\n"
   + "trailer << /Root 1 0 R >>\n%%EOF\n";
-const IMZA = "9 0 obj << /Type /Sig /Filter /Adobe.PPKLite /ByteRange [0 10 20 30] /Contents <00ff00ff> >> endobj\ntrailer << /Root 1 0 R /Prev 0 >>\n%%EOF\n";
 const bayt = (s: string) => new TextEncoder().encode(s);
 let sonVeri: ZimmetFormuVerisi | null = null;
 const SAHTE: ZimmetPdfUretici = async (v) => { sonVeri = v; return bayt(OZGUN); };
@@ -204,7 +204,7 @@ test("344 zimmet formu imzaya: numara ZF, kişinin Onaylar › Diğer'ine; yenis
   const d = await ha(DENETCI, (db) => digerBelgeler(db, DENETCI));
   const x = d.belgeler.find((y) => y.tur === "zimmet" && y.durum === "bekliyor")!;
   assert.equal(x.ad, `Zimmet teslim formu · ${no2}`);
-  tamam(await ha(DENETCI, (db) => belgeImzaliYukle(db, depo, DENETCI, A, x.id, x.surum, { ad: "imzali.pdf", bayt: bayt(OZGUN + IMZA) })));
+  tamam(await ha(DENETCI, (db) => belgeImzaliYukle(db, depo, DENETCI, A, x.id, x.surum, { ad: "imzali.pdf", bayt: imzaEki(bayt(OZGUN)) })));
   z = (await a((db) => personelDosyasi(db, YON, pDenetci)))!;
   assert.deepEqual([z.zimmetFormu?.id, z.zimmetFormu?.guncel, z.zimmetGonderimi], [r2.id, true, null], "imzalanan form imzalı zimmet formu");
   assert.ok(await a((db) => dosyaIndirilebilir(db, YON, z.zimmetFormu!.dosyaId!, DOSYA_ERISIMI)), "yönetici imzalı formu açar");

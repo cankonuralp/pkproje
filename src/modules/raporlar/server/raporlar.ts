@@ -56,6 +56,7 @@ import { personelBelgeBilgisi } from "../../personel/server/personel.ts";
 import type { BelgeVerisi } from "../../../belge/veri.ts";
 import { ekImzaIcerikleri, imzaliPdfGecerli } from "../imza-pdf.ts";
 import { imzaciNedeni } from "../imza-kimlik.ts";
+import { ekImzaNedeni } from "../../../server/imza/yukleme.ts";
 import { raporOnerileri, type RaporOnerisi } from "./oneri.ts";
 import { ilkCevaplar } from "../ornek.ts";
 import { raporStandartlari } from "../../dokumanlar/server/dokumanlar.ts";
@@ -1057,6 +1058,9 @@ export async function imzaliYukle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaI
   const imzasiz = await depo.oku(ham.anahtar, db), b = dosya.bayt;
   /* önek + bir nesnedeki imza sözlüğü + ek özgün içeriği değiştirmez (imza-pdf.ts) */
   if (!imzaliPdfGecerli(imzasiz, b)) return { durum: "gecersiz", hatalar: { dosya: IMZA_GECERSIZ } };
+  /* IMZA-SERVISI.md ES1 (yükleme denetimi): eklenen imza kriptografik olarak sağlam, belgenin tamamını kapsıyor, nitelikli ve imza anında geçerli */
+  const kripto = ekImzaNedeni(imzasiz, b);
+  if (kripto) return { durum: "gecersiz", hatalar: { dosya: kripto } };
   /* 2026-10-17 (teknik yönetici imzası): imzalanacak PDF teknik yöneticinin imzaladığıysa eklenen imza raporu YAZANIN olmalı (ad sertifikadan) —
      denetçi teknik yöneticinin yerine iki imzayı birden atamaz */
   if (await teknikImzali(db, id, e.r.revizyon, istek.pdf_dosya)) {
@@ -1206,6 +1210,8 @@ export async function teknikImzaliYukle(db: Sorgulayici, depo: Depo, kim: Kisi, 
   if (!ham) return { durum: "red", neden: "İmzaya hazırlanan PDF bulunamadı; yeniden hazırlayın." };
   const imzasiz = await depo.oku(ham.anahtar, db), b = dosya.bayt;
   if (!imzaliPdfGecerli(imzasiz, b)) return { durum: "gecersiz", hatalar: { dosya: IMZA_GECERSIZ } };
+  const kripto = ekImzaNedeni(imzasiz, b);
+  if (kripto) return { durum: "gecersiz", hatalar: { dosya: kripto } };
   const n = imzaciNedeni(ekImzaIcerikleri(imzasiz, b), await kisininAdi(db, kim));
   if (n) return { durum: "gecersiz", hatalar: { dosya: n } };
   const gno = gorunenNo(e.r.no, e.r.revizyon);

@@ -18,6 +18,7 @@ import type { EgitimFormuVerisi } from "../src/belge/egitim.ts";
 import { belgeImzaliYukle, digerBelgeler } from "../src/modules/onaylar/server/belgeler.ts";
 import { personelEkle } from "../src/modules/personel/server/personel.ts";
 import { testKumesi } from "./yardimci/kume.ts";
+import { imzaEki } from "./yardimci/gercek-imza.ts";
 
 let kume: GomuluKume;
 let havuz: Havuz;
@@ -127,7 +128,6 @@ test("KİRACI: B, A'nın kaydını ve sertifikasını göremez; veritabanı baş
 const OZGUN = "%PDF-1.4\n1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n"
   + "3 0 obj << /Type /Page /Parent 2 0 R /Contents 4 0 R /Resources << >> >> endobj\n4 0 obj << /Length 18 >> stream\nBT (Egitim) Tj ET\nendstream\nendobj\n"
   + "trailer << /Root 1 0 R >>\n%%EOF\n";
-const IMZA = "9 0 obj << /Type /Sig /Filter /Adobe.PPKLite /ByteRange [0 10 20 30] /Contents <00ff00ff> >> endobj\ntrailer << /Root 1 0 R /Prev 0 >>\n%%EOF\n";
 const bayt = (s: string) => new TextEncoder().encode(s);
 let sonVeri: EgitimFormuVerisi | null = null;
 const SAHTE: EgitimPdfUretici = async (v) => { sonVeri = v; return bayt(OZGUN); };
@@ -151,7 +151,7 @@ test("345 katılım formu: güncel kaydın katılanına gider (numara EF, tür /
   assert.deepEqual([y.form?.durum, y.form?.ad], ["bekliyor", `Yüksekte çalışma eğitimi katılım formu · ${sonVeri!.no}`]);
   /* katılan Onaylar › Diğer'de imzalar → kayıtta imzalı form; Eğitimler'i gören açar, görmeyen açamaz */
   const d = (await ha(DENETCI, (db) => digerBelgeler(db, DENETCI))).belgeler.find((z) => z.tur === "egitim" && z.durum === "bekliyor")!;
-  tamam(await ha(DENETCI, (db) => belgeImzaliYukle(db, depo, DENETCI, A, d.id, d.surum, { ad: "imzali.pdf", bayt: bayt(OZGUN + IMZA) })));
+  tamam(await ha(DENETCI, (db) => belgeImzaliYukle(db, depo, DENETCI, A, d.id, d.surum, { ad: "imzali.pdf", bayt: imzaEki(bayt(OZGUN)) })));
   y = (await a((db) => egitimListesi(db, YON)))!.kayitlar.find((z) => z.id === x.id)!;
   assert.equal(y.form?.durum, "imzali");
   assert.ok(await a((db) => dosyaIndirilebilir(db, PLAN, y.form!.imzaliDosya!, DOSYA_ERISIMI)), "Eğitimler'i gören (planlama) açar");

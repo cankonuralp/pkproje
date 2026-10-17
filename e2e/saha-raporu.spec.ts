@@ -22,6 +22,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 import { E2E_FIRMA, E2E_HESAPLAR, E2E_PLAN, E2E_SAHA } from "./hesaplar";
 import { bulguMetni, siteyiTara } from "./tarama";
 import { bolumleriAc, girisli, hazir } from "./yardimci";
+import { imzaEki } from "../tests/yardimci/gercek-imza.ts";
 
 const UUID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 /* uydurma JPEG (tests/dosya.test.ts ile aynı yapı) */
@@ -348,10 +349,9 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   const [imzasiz] = await Promise.all([page.waitForEvent("download", { timeout: 60_000 }), page.getByRole("link", { name: "İmzasız PDF'i indir" }).click()]);
   const ham = readFileSync((await imzasiz.path())!);
   expect(ham.subarray(0, 5).toString("latin1")).toBe("%PDF-");
-  /* imza sözlüğü YENİ bir nesnede (gerçek imza aracı gibi; özgün nesneler yeniden tanımlanmaz — src/modules/raporlar/imza-pdf.ts) */
-  /* artımlı güncellemenin trailer'ı özgünün kökünü gösterir (imza aracı gibi) */
-  const kok = [...ham.toString("latin1").matchAll(/\/Root\s+(\d+\s+\d+\s+R)/g)].at(-1)?.[1] ?? "1 0 R";
-  const imzali = Buffer.concat([ham, Buffer.from(`\n9999 0 obj << /Type /Sig /Filter /Adobe.PPKLite /ByteRange [0 10 20 30] /Contents <00ff> >> endobj\ntrailer << /Root ${kok} /Prev 0 >>\n%%EOF\n`, "latin1")]);
+  /* imza sözlüğü YENİ bir nesnede, trailer özgün kökü gösterir (gerçek imza aracı gibi — src/modules/raporlar/imza-pdf.ts); IMZA-SERVISI.md ES1: imza gerçek
+     (uydurma kişili, tests/yardimci/gercek-imza.ts) — yükleme kriptografik olarak denetler */
+  const imzali = Buffer.from(imzaEki(ham));
   await page.getByLabel("İmzalı PDF'i yükle").setInputFiles({ name: "imzali.pdf", mimeType: "application/pdf", buffer: imzali });
   await expect(page.getByText(`${raporNo} imzalandı, tamamlandı ve müşteriye açıldı.`).first()).toBeVisible({ timeout: 60_000 });
   await expect(page.getByRole("link", { name: "İmzalı PDF" })).toBeVisible({ timeout: 30_000 });

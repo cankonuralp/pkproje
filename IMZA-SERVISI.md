@@ -143,9 +143,10 @@ koyucaz"*.
 - **Kontör biterse imza bekler,** damgasız imza üretilmez.
 - **Bitmiş belge kendi doğrulayıcımızdan geçer;** tutmazsa "Tamamlandı" olmaz.
 
-**Bugünkü kod, motorun okuma tarafının başlangıcı:**
-- `src/modules/raporlar/server/imza-pdf.ts`: imzalı PDF eki denetimi.
-- `imza-kimlik.ts`: imzalayanın adı ve ad karşılaştırması.
+**Bugünkü kod (2026-10-17, `src/server/imza/`; ayrıntı §9 Durum):**
+- Okuma: `pdf-imzalar.ts` beş katmanı çözer (imza, damga, DSS, belge damgası, düzey B-B … B-LTA) + imzadan sonraki değişiklik.
+- Yazma: `imzala.ts` + `yer-tutucu.ts` + `pdf-ek.ts` kendi imzamızı belgeye işler; `ltv.ts` 4. ve 5. katmanı ekler.
+- Önceki yapı denetimi: `src/modules/raporlar/imza-pdf.ts` (imzalı PDF eki), `imza-kimlik.ts` (imzalayanın adı).
 
 ---
 
@@ -274,6 +275,21 @@ güven listesinde olup olmadığı teyit edilemedi. Doğrulama sayfası bu yüzd
 | **ES6** | Mac yardımcı programı | Talep olursa |
 
 **Kod beklemeden başlatılabilecek başvurular:** operatörler, KamuSM hesabı, kod imzalama sertifikası (karar §10-4).
+
+**Durum (2026-10-17, reisim: *"şimdilik bu kararları erteleyelim bizim kod açısından yapmamız gereken her ne var ise listele sırala ve o sıraya
+göre sırayla yapıp bitir"*):** kararlar ertelendi; kararsız yapılabilen kod yapıldı, testli, `src/server/imza/`.
+
+| Kalem | Kodda | Bağlı mı | Bekleyen |
+|---|---|---|---|
+| ES1 okuma | `pdf-imzalar.ts` (+ `cms.ts`, `sertifika.ts`, `der.ts`): her imza için bütünlük, imza değeri, imzalayan (imzalı sertifika bağıyla), 5070 nitelikli, imza anında geçerli, imza damgası (sunucusu denetlenir), belge damgası, DSS (yalnız kataloğun), DSS'teki iptal kanıtı, imzadan sonraki değişiklik, düzey. İncelenen gerçek belge: B-LTA, iki imza da tamam, iptal "geçerli", sonraki ekler izinli | — | Güvenilir kök listesi (resmî kaynaktan teyitle) |
+| ES1 yükleme denetimi | `yukleme.ts`: yüklenen imzalı PDF kriptografik olarak sağlam, nitelikli, bağlı, imza anında geçerli, sonradan değişmemiş olmalı | **Evet** — rapor imzası, teknik yönetici imzası, Onaylar › Diğer | — |
+| ES1 doğrulama sayfası | — | — | Maket (katmanlar + "Elinizdeki PDF bu mu?"), reisim onayı |
+| ES2 imza motoru | `imzala.ts` (hazırla → kart → tamamla; formatın boş e-imza alanını doldurur), `yer-tutucu.ts`, `pdf-ek.ts` (artımlı ek; klasik ve sıkıştırılmış xref) | Hayır | İmza yolu (eklenti / yardımcı program ya da mobil imza) |
+| ES2 uzun süreli doğrulama | `ltv.ts` (DSS + arşiv damgası, tazeleme), `zaman-damgasi.ts` (RFC 3161 istemcisi), `iptal.ts` (OCSP / iptal listesi) | Hayır — ayar yoksa hiç çalışmaz | KamuSM hesabı + kimlik doğrulama biçimi (§10-2) |
+
+**Bağımsız inceleme (2026-10-17):** çözümleyici kaydedilmeden önce düşmanca incelendi; 9 bulgu doğrulandı ve kapatıldı (kendi anahtarıyla basılan
+geriye tarihli damga, sertifika değiştirme, DSS'in metin taramasıyla okunması ve aşırı yavaşlama, imza sonrası değişikliğin görünmemesi, bozuk
+girdide çökme). Kilitler: `tests/imza-cozum.test.ts`, `tests/imza-ltv.test.ts`, `tests/imza-inceleme.test.ts` + `tests/bozan/` karşılıkları.
 
 ---
 

@@ -12,6 +12,7 @@ import { zipBayt } from "../src/components/disa/zip";
 import { readFileSync } from "node:fs";
 import { E2E_KAPI, E2E_PAROLA, E2E_TOPLU, E2E_YZ } from "./hesaplar";
 import { hazir } from "./yardimci";
+import { imzaEki } from "../tests/yardimci/gercek-imza.ts";
 
 const Y = `http://${E2E_YZ.firma.kisaAd}.localhost:${E2E_KAPI}`;
 async function giris(page: Page, h: { eposta: string; ad: string }) {
@@ -22,12 +23,8 @@ async function giris(page: Page, h: { eposta: string; ad: string }) {
   await page.getByRole("button", { name: "Giriş yap" }).click();
   await expect(page.locator("header")).toContainText(h.ad);
 }
-/** imzasız PDF + artımlı imza bölümü (yeni nesnede imza sözlüğü, trailer özgün kökü gösterir — e2e/saha-raporu.spec.ts ile aynı) */
-function imzala(ham: Uint8Array): Uint8Array {
-  const kok = [...Buffer.from(ham).toString("latin1").matchAll(/\/Root\s+(\d+\s+\d+\s+R)/g)].at(-1)?.[1] ?? "1 0 R";
-  return new Uint8Array(Buffer.concat([Buffer.from(ham),
-    Buffer.from(`\n9999 0 obj << /Type /Sig /Filter /Adobe.PPKLite /ByteRange [0 10 20 30] /Contents <00ff> >> endobj\ntrailer << /Root ${kok} /Prev 0 >>\n%%EOF\n`, "latin1")]));
-}
+/** imzasız PDF + artımlı gerçek imza bölümü (yeni nesnede imza sözlüğü, trailer özgün kökü gösterir — IMZA-SERVISI.md ES1: yükleme kriptografik denetler) */
+const imzala = (ham: Uint8Array): Uint8Array => imzaEki(ham);
 
 test("596 toplu imza: iki raporu seç → imzaya hazırla → tek ZIP → adları değişmiş imzalı PDF'ler tek ZIP'le yüklenir → ikisi tamamlanır", async ({ page }, bilgi) => {
   test.setTimeout(300_000);

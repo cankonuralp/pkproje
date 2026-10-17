@@ -29,7 +29,7 @@ import {
   teknikImzaHazirla, teknikImzaliEslestirYukle, teknikImzaliYukle,
 } from "../src/modules/raporlar/server/raporlar.ts";
 import { ayarOku, ayarYaz } from "../src/server/ayar/ayar.ts";
-import { sahteImzaSozlugu } from "./yardimci/sahte-imza.ts";
+import { imzaEki } from "./yardimci/gercek-imza.ts";
 import { dosyaIndirilebilir, dosyaYukle } from "../src/server/dosya/dosya.ts";
 import { DOSYA_ERISIMI } from "../src/server/dosya/erisim.ts";
 import {
@@ -328,8 +328,8 @@ test("KİRACI + ROL: B'nin yöneticisi A'nın raporunda hiçbir şey yapamaz; On
 let uretilen = 0;
 const uret = async () => new TextEncoder().encode(`%PDF-1.4\n% deneme belge ${++uretilen}\n1 0 obj << /Type /Catalog >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF\n`);
 /** imzasız PDF + artımlı imza bölümü (PAdES gibi: özgün baytlar korunur, sonuna imza sözlüğü eklenir) */
-const imzala = (b: Uint8Array) => Buffer.concat([Buffer.from(b),
-  Buffer.from("\n2 0 obj << /Type /Sig /Filter /Adobe.PPKLite /ByteRange [0 10 20 30] /Contents <00ff00ff> >> endobj\ntrailer << /Root 1 0 R /Prev 0 >>\n%%EOF\n", "latin1")]);
+/* IMZA-SERVISI.md ES1: yükleme imzayı kriptografik olarak denetler — gerçek (uydurma kişili) imza (tests/yardimci/gercek-imza.ts) */
+const imzala = (b: Uint8Array) => Buffer.from(imzaEki(b));
 const IMZA_GECERSIZ = "Yüklenen PDF bu raporun imzaya hazırlanan PDF'i değil ya da imza taşımıyor.";
 const imzasizBayt = async (raporId: string) => {
   const x = (await sql<{ anahtar: string }>(A, "SELECT d.anahtar FROM imza_istegi i JOIN dosya d ON d.id = i.pdf_dosya WHERE i.rapor_id = $1 AND i.durum = 'bekliyor'", [raporId])).rows[0];
@@ -388,6 +388,12 @@ test("imzalı PDF: önek ve imza sözlüğü şart; tamamlanınca imzalı sürü
   assert.deepEqual(await yukle(FA.den, h1, s0, imzala(await uret())), { durum: "gecersiz", hatalar: { dosya: IMZA_GECERSIZ } }, "başka PDF'in imzalısı");
   assert.deepEqual(await yukle(FA.den, h1, s0, Buffer.concat([Buffer.from(ham), Buffer.from("\n% imzasız ek\n")])), { durum: "gecersiz", hatalar: { dosya: IMZA_GECERSIZ } }, "imza sözlüğü yok");
   assert.deepEqual(await yukle(FA.den, h1, s0, ham), { durum: "gecersiz", hatalar: { dosya: IMZA_GECERSIZ } }, "imzasız PDF'in kendisi");
+  /* IMZA-SERVISI.md ES1 (yükleme denetimi): yapı doğru ama imza kriptografik olarak tutmuyor ya da nitelikli sertifikayla değil */
+  const degismis = Buffer.from(imzala(ham)), tarihYeri = degismis.lastIndexOf("(D:2026");
+  degismis.write("7", tarihYeri + 6, "latin1");
+  assert.deepEqual(await yukle(FA.den, h1, s0, degismis), { durum: "gecersiz", hatalar: { dosya: "PDF imzalandıktan sonra değiştirilmiş; imza bu belgeyi doğrulamıyor." } }, "imzadan sonra değişen PDF");
+  assert.deepEqual(await yukle(FA.den, h1, s0, Buffer.from(imzaEki(ham, "DENEME İMZACI", { nitelikli: false }))),
+    { durum: "gecersiz", hatalar: { dosya: "PDF'teki imza nitelikli elektronik sertifikayla atılmamış (5070 sayılı Kanun). Kartınızdaki nitelikli sertifikayla imzalayın." } }, "nitelikli olmayan sertifika");
   assert.equal((await yukle(FA.mek, h1, s0, imzala(ham))).durum, "yetkisiz");
   assert.equal((await yukle(FA.den, h1, s0 - 1, imzala(ham))).durum, "cakisma");
   assert.equal((await satir(h1)).durum, "onaylandi", "reddedilenler hiçbir şey yazmadı");
@@ -744,8 +750,11 @@ test("596 toplu imza: imzalı PDF dosya adından değil içeriğinden rapora eş
   assert.ok([h1, h2, h3, h4].every((x) => v.imzaHazir.includes(x)), JSON.stringify(v.imzaHazir));
   assert.equal(v.imzaHazir.includes(m1), false, "başkasının raporu listede yok");
   /* sıra ve dosya adı önemsiz */
+  /* gerçek imza her çağrıda farklı bayt (ECDSA) — "ikinci kez" denetimi için ilk yüklenen saklanır */
+  const yuklenen: Record<string, Uint8Array> = {};
   for (const id of [h3, h1]) {
-    const x = await eslestir(FA.den, imzala(pdf[id]));
+    yuklenen[id] = imzala(pdf[id]);
+    const x = await eslestir(FA.den, yuklenen[id]);
     assert.deepEqual([x.id, x.no, x.sonuc.durum], [id, await raporNo(id), "tamam"], JSON.stringify(x.sonuc));
     assert.equal((await satir(id)).durum, "imzali");
   }
@@ -756,7 +765,7 @@ test("596 toplu imza: imzalı PDF dosya adından değil içeriğinden rapora eş
   assert.deepEqual([y2b.id, y2b.sonuc], [h2, { durum: "gecersiz", hatalar: { dosya: IMZA_GECERSIZ } }]);
   assert.equal((await satir(h2)).durum, "onaylandi", "reddedilen hiçbir şey yazmadı");
   /* aynı imzalı PDF ikinci kez */
-  const y1 = await eslestir(FA.den, imzala(pdf[h1]));
+  const y1 = await eslestir(FA.den, yuklenen[h1]);
   assert.deepEqual([y1.id, y1.sonuc], [h1, { durum: "red", neden: "Bu imzalı PDF daha önce yüklendi; rapor zaten tamamlandı." }]);
   /* başkasının raporu aday bile olmaz — numarası da söylenmez: denetçide mekDen'in PDF'i, yöneticide denetçinin PDF'i */
   const yok = { id: null, no: null, sonuc: { durum: "gecersiz", hatalar: { dosya: ESLESMEDI } } };
@@ -934,9 +943,8 @@ const imzaAyari = async (teknik: boolean) => {
   const y = await a(FA.yon, (db) => ayarYaz(db, "imza", s.surum, { yontem: "mobil", teknik }, { kim: "Deneme", ne: "firma_ayar" }));
   assert.ok(y.durum === "tamam" || y.durum === "degisiklik_yok", JSON.stringify(y));
 };
-/** imzasız bayt + bu adla sahte imza (artımlı ek; her imza ayrı nesne numarasıyla — ikinci imza öncekini yeniden tanımlamaz) */
-let imzaNo = 50;
-const imzalaAdla = (b: Uint8Array, ad: string) => new Uint8Array(Buffer.concat([Buffer.from(b), Buffer.from(`\n${sahteImzaSozlugu(imzaNo++, ad)}trailer << /Root 1 0 R /Prev 0 >>\n%%EOF\n`, "latin1")]));
+/** imzasız bayt + bu adla gerçek imza (artımlı ek; her imza ayrı nesne numarasıyla — ikinci imza öncekini yeniden tanımlamaz) */
+const imzalaAdla = (b: Uint8Array, ad: string) => imzaEki(b, ad);
 const dosyaBayt = async (dosya: string) => depo.oku((await sql<{ anahtar: string }>(A, "SELECT anahtar FROM dosya WHERE id = $1", [dosya])).rows[0].anahtar);
 const istekler = async (id: string) => (await sql<{ asama: string; durum: string; pdf: string; imzali: string | null; h: string | null }>(A,
   "SELECT asama, durum, pdf_dosya::text AS pdf, imzali_dosya::text AS imzali, hesap_id::text AS h FROM imza_istegi WHERE rapor_id = $1 ORDER BY olustu", [id])).rows;
