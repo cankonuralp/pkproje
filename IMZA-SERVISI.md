@@ -213,6 +213,19 @@ güven listesinde olup olmadığı teyit edilemedi. Doğrulama sayfası bu yüzd
 - Eklenti ve yardımcı program ayrı klasörlerde: `araclar/imza-eklentisi/`, `araclar/imza-yardimci/`. Ayrı derlenir, ayrı imzalanır.
 - Karar §10-7.
 
+**Yardımcı programın derlenmesi, imzalanması, dağıtımı — GitHub'a bağlı değil** (reisim 2026-10-17: *"githubda değil artık supabase ve vercel ile
+çalışıyoruz … müşteriye çıktığımızda github ile işimiz bitecek orası sadece kaynak kodları güvenli sakladığım yer olacak"*):
+- Web uygulaması gibi her yayında derlenmez; yeni sürümü seyrek çıkar.
+- **Derleme:** bulut oturumunda (Linux'tan Windows için derlenebilir). Vercel'in derleme adımına konmaz: orası Linux, her yayında boşuna
+  çalışır, imzalama sırrını taşımak gerekir.
+- **İmzalama**, sertifika sağlayıcının bulut imzalamasıyla, iki yoldan biri:
+  - Sağlayıcının web panelinden dosya yükleyip imzalı hâlini indirmek (ör. SSL.com eSigner Express; çalıştırılabilir dosya için teyit edilecek).
+  - Bulut oturumunda sağlayıcının komut satırı aracı.
+- **Ya da USB anahtarla:** her sürümde reisim'in bilgisayarında.
+- **Dağıtım:** imzalı kurulum dosyası Supabase deposunda durur, `sign.probata.com.tr`'den indirilir; eklenti "Eklentiyi kur" adımında
+  oraya yönlendirir.
+- **Not:** 2026-03-01'den beri kod imzalama sertifikası en çok 458 gün geçerli; uzun süreli alımda da yeniden düzenlenir.
+
 **Güvenlik:**
 - API anahtarları şifreli sır, ekranda son 4.
 - Bildirimler HMAC imzalı.
