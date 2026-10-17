@@ -2541,6 +2541,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   adındaki rapor numarasıyla eşleşir. Teknik yönetici yüklemesi ve Onaylar › Diğer belgeler aynı kuralla. Desteklenmeyen (nedeniyle reddedilir):
   "yazdırarak yeniden PDF yapmak" gibi baştan çizilmiş belge. Gerçek imzayeri dosyasının yapısıyla PC'de denendi (dosya depoya girmedi);
   kilit uydurma PDF'le (tests/imza-esdeger.test.ts, bozan imza-esdeger 1–8, onaylar PG). Kod: raporlar/imza-esdeger.ts.
+  **Aynı gün 2. tur** (reisim'in imzayeri'yle imzaladığı rapor yine reddedildi — *"red ediyor"*): gerçek dosyada iki engel daha çıktı ve düzeltildi:
+  (1) imza aracı AcroForm'a varsayılan görünüm ve kaynakları (DA, DR) yazıyor — imzalı PDF denetimi (imza-pdf.ts) bunu reddediyordu, artık serbest
+  (NeedAppearances gibi öteki anahtarlar yine yasak); (2) mobil imzanın (nitelikli sertifika) imza değerinde özet algoritmasının parametresi yok —
+  OpenSSL reddediyordu, sağlam imza "bozuk" çıkıyordu; parametresiz biçim bayt bayt kabul (src/server/imza/cms.ts, esnek ayrıştırma yok). Gerçek
+  imzalı dosya, veritabanındaki imzaya hazırlanan PDF'le (sözlükler + akış özetleri) PC'de denendi: taban bulundu, içerik aynı, imza ve zaman
+  damgası sağlam — dosya depoya girmedi. Kilit tests/imza-cozum + imza-pdf + imza-esdeger (pdf-lib'in sardığı sayfa), bozan imza-cozum 8–9.
 - 2026-10-17 (YAPILDI): **RAPOR DOSYA ADI: NO - EKİPMAN KODU - TÜR ADI** (reisim: *"rapor isimleri sadece rapor kodlarından oluşuyor bu şekilde klasörde
   anlaması zor, rapor isimlerinde rapor numarasından sonra - ekipman kodu- sonra da ekipmanın adı "kompresör hava tankı" veeya "yangın dolapları" ne
   ise artık o yazmalı"*). Raporun PDF adı `<rapor no>-<ekipman kodu>-<ekipman türünün adı>.pdf` (ör. DM-1026-003-cf59e-HT-1-Kompresör hava tankı.pdf):

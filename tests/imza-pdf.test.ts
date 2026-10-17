@@ -133,7 +133,11 @@ test("dolaylı AcroForm ve Annots: imza aracı /Fields'e ve Annots dizisine ekle
     + "trailer << /Root 1 0 R /Prev 0 >>\n%%EOF\n");
   assert.equal(imzaliPdfGecerli(b(FORM), imzalaEk("5 0 obj << /Fields [7 0 R 10 0 R] /DA (/Helv 0 Tf 0 g) /SigFlags 3 >> endobj\n", "6 0 obj [7 0 R 10 0 R] endobj\n")), true);
   assert.equal(imzaliPdfGecerli(b(FORM), imzalaEk("5 0 obj << /Fields [10 0 R] /DA (/Helv 0 Tf 0 g) /SigFlags 3 >> endobj\n", "")), false, "eski alan düştü");
-  assert.equal(imzaliPdfGecerli(b(FORM), imzalaEk("5 0 obj << /Fields [7 0 R 10 0 R] /DA (/Helv 12 Tf 0 g) >> endobj\n", "")), false, "başka anahtar değişti");
+  /* 2026-10-17 (reisim'in imzayeri'yle imzaladığı rapor reddediliyordu): imza aracı AcroForm'un varsayılan görünümünü (DA) ve kaynaklarını (DR)
+     yazar — serbest; öteki anahtar (ör. NeedAppearances: alan görünümlerini görüntüleyiciye yeniden çizdirir) değişemez */
+  assert.equal(imzaliPdfGecerli(b(FORM), imzalaEk("5 0 obj << /Fields [7 0 R 10 0 R] /SigFlags 3 /DA (/Helv 12 Tf 0 g) /DR << /Font << /Helv 11 0 R >> >> >> endobj\n"
+    + "11 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj\n", "")), true, "DA ve DR yazıldı");
+  assert.equal(imzaliPdfGecerli(b(FORM), imzalaEk("5 0 obj << /Fields [7 0 R 10 0 R] /DA (/Helv 0 Tf 0 g) /NeedAppearances true >> endobj\n", "")), false, "başka anahtar değişti");
   assert.equal(imzaliPdfGecerli(b(FORM), imzalaEk("", "6 0 obj [10 0 R] endobj\n")), false, "eski açıklama düştü");
   assert.equal(imzaliPdfGecerli(b(FORM), imzalaEk("", "4 0 obj [10 0 R] endobj\n")), false, "dizi olarak yeniden tanımlanan başka nesne");
 });

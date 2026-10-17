@@ -28,7 +28,8 @@ export function pdfYaz(nesneler: Nesne[], kok: number): Uint8Array {
   return new Uint8Array(Buffer.concat(parcalar));
 }
 
-export interface OrnekSecenek { sayfa?: number; metin?: string; dogrulama?: string | null; imzaYeri?: boolean; resim?: Buffer }
+/** sarili: e-imza alanı konan sayfanın çizimi pdf-lib'in yaptığı gibi "q" … "Q" akışlarıyla sarılı (2026-10-17, gerçek imzasız PDF'teki düzen) */
+export interface OrnekSecenek { sayfa?: number; metin?: string; dogrulama?: string | null; imzaYeri?: boolean; resim?: Buffer; sarili?: boolean }
 /** uydurma rapor PDF'i (Chromium çıktısına benzer düzen) */
 export function ornekPdf(p: OrnekSecenek = {}): Uint8Array {
   const sayfa = p.sayfa ?? 2, metin = p.metin ?? "Rapor", imzaYeri = p.imzaYeri ?? true;
@@ -45,11 +46,13 @@ export function ornekPdf(p: OrnekSecenek = {}): Uint8Array {
     const cizim = `q 1 0 0 -1 0 841.89 cm\nq 0.75 0 0 0.75 0 0 cm\nBT /F1 12 Tf 1 0 0 -1 40 60 Tm (${metin} - Uygun - sayfa ${i + 1}) Tj ET\n`
       + `0 0 0 RG 1 w 30 30 m 560 30 l S\nq 120 0 0 -60 40 200 cm /Im1 Do Q\n/G1 gs\nQ\nQ\n`;
     const annots = [...(p.dogrulama ? [`${b} 0 R`] : []), ...(son && imzaYeri ? ["6 0 R"] : [])];
-    n.push({ no: s, sozluk: `<< /Type /Page /Parent 2 0 R /Contents ${c} 0 R /Resources << /Font << /F1 3 0 R >> /XObject << /Im1 4 0 R >> `
+    const sar = son && imzaYeri && !!p.sarili;
+    n.push({ no: s, sozluk: `<< /Type /Page /Parent 2 0 R /Contents ${sar ? `[7 0 R ${c} 0 R 8 0 R]` : `${c} 0 R`} /Resources << /Font << /F1 3 0 R >> /XObject << /Im1 4 0 R >> `
       + `/ExtGState << /G1 5 0 R >> /ProcSet [/PDF /Text /ImageC] >>${annots.length ? ` /Annots [${annots.join(" ")}]` : ""} >>` });
     n.push({ no: c, sozluk: "<< /Filter /FlateDecode >>", akis: deflateSync(L(cizim)) });
     if (p.dogrulama) n.push({ no: b, sozluk: `<< /Type /Annot /Subtype /Link /Rect [480 8 560 52] /Border [0 0 0] /A << /S /URI /URI (${p.dogrulama}) >> >>` });
   }
+  if (imzaYeri && p.sarili) n.push({ no: 7, sozluk: "<< /Filter /FlateDecode >>", akis: deflateSync(L("q\n")) }, { no: 8, sozluk: "<< /Filter /FlateDecode >>", akis: deflateSync(L("Q\n")) });
   if (imzaYeri) n.push({ no: 6, sozluk: `<< /Type /Annot /Subtype /Widget /FT /Sig /T (probata-eimza) /F 4 /Rect [380 120 560 180] /P ${sayfalar.at(-1)} 0 R >>` });
   n.push({ no: 2, sozluk: `<< /Type /Pages /Kids [${sayfalar.map((x) => `${x} 0 R`).join(" ")}] /Count ${sayfa} /MediaBox [0 0 595.27559 841.88976] >>` });
   n.push({ no: 1, sozluk: `<< /Type /Catalog /Pages 2 0 R /Lang (tr)${imzaYeri ? " /AcroForm << /Fields [6 0 R] >>" : ""} >>` });
@@ -101,7 +104,8 @@ export function yenidenYaz(a: Uint8Array, p: YenidenSecenek = {}): Uint8Array {
     if (no === kok) s = s.replace(/ ?\/AcroForm <<[^<>]*>>/, "");
     if (/\/Type \/Page\b/.test(s)) {
       const sira = sayfaSira++;
-      s = s.replace(/\/Contents (\d+) 0 R/, (_, c: string) => `/Contents [${onekNo + 10 * sira} 0 R ${c} 0 R ${sonekNo + 10 * sira} 0 R]`)
+      s = s.replace(/\/Contents (?:(\d+ \d+ R)|\[([^\]]*)\])/, (_, tek: string | undefined, dizi: string | undefined) =>
+        `/Contents [${onekNo + 10 * sira} 0 R ${(tek ?? dizi ?? "").trim()} ${sonekNo + 10 * sira} 0 R]`)
         .replace("/XObject <<", `/XObject << /Xi0 ${damgaNo} 0 R`);
       const at = (r: string) => atilan.has(Number(r.split(" ")[0]) - k);
       const eski = /\/Annots \[([^\]]*)\]/.exec(s)?.[1].trim().match(/\d+ \d+ R/g) ?? [];
@@ -111,7 +115,7 @@ export function yenidenYaz(a: Uint8Array, p: YenidenSecenek = {}): Uint8Array {
       nesneler.push({ no: sonekNo + 10 * sira, sozluk: "<< >>", akis: L(p.sonek ?? " Q\nq\nq 1 0 0 1 25 6 cm /Xi0 Do Q\nQ\n") });
     }
     if (p.icerik && cozulmus && !/\/Type/.test(s) && /\/FlateDecode/.test(s)) {
-      const sira = [...(o.yerler ?? new Map()).keys()].filter((x) => /\/Type \/Page\b/.test(tur(x))).findIndex((x) => tur(x).includes(`/Contents ${no} 0 R`));
+      const sira = [...(o.yerler ?? new Map()).keys()].filter((x) => /\/Type \/Page\b/.test(tur(x))).findIndex((x) => new RegExp(`/Contents (?:\\[[^\\]]*\\b)?${no} 0 R`).test(tur(x)));
       if (sira >= 0) akis = deflateSync(p.icerik(cozulmus, sira));
     }
     nesneler.push({ no: no + k, sozluk: p.sozluk ? p.sozluk(s, no) : s, akis });

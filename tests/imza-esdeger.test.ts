@@ -51,6 +51,15 @@ test("yeniden yazım biçimi önemsiz: numaralar, onaltılık dizgi, iki ondalı
   assert.equal(tabanNedeni({ onek: "", sonek: "" }), null, "damgasız yeniden yazım (boş sarma akışları)");
 });
 
+/* 2026-10-17 (reisim'in imzayeri'yle imzaladığı gerçek raporun düzeni): e-imza alanının konduğu sayfanın çizimi pdf-lib'ce "q" … "Q" akışlarıyla
+   sarılı; araç bunların da önüne / arkasına kendi akışını koyar — bizim üç akışımız tek parça kalır */
+test("pdf-lib'in sardığı sayfa (birden çok çizim akışı) yeniden yazılınca da kabul; sarmanın içindeki değişiklik reddedilir", () => {
+  const sarili = ornekPdf({ sarili: true, dogrulama: `https://deneme.probata.example/dogrula/${KOD}.0.AbCdEfGh` });
+  assert.equal(tabanNedeni({}, sarili), null);
+  assert.equal(tabanNedeni({ sonek: " Q\nq\nq 1 0 0 1 0 5 cm /Xi0 Do Q\nQ\n", damga: [0, 0, 45, 45] }, sarili), null, "köşede karekod");
+  assert.match(tabanNedeni({ icerik: (v, s) => (s === 1 ? Buffer.from(v.toString("latin1").replace("sayfa 2", "sayfa 9"), "latin1") : v) }, sarili)!, /2\. sayfasının içeriği/);
+});
+
 test("rapor değişmişse reddedilir: içerik, yazı tipi, resim, sayfa sayısı, boyut, bağlantı adresi", () => {
   assert.match(tabanNedeni({ icerik: (v) => Buffer.from(v.toString("latin1").replace("Uygun", "Kotuu"), "latin1") })!, /1\. sayfasının içeriği imzaya hazırlanan PDF'le aynı değil/);
   assert.match(tabanNedeni({ icerik: (v, s) => (s === 1 ? Buffer.from(v.toString("latin1").replace("sayfa 2", "sayfa 9"), "latin1") : v) })!, /2\. sayfasının içeriği/);

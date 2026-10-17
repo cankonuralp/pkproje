@@ -5,8 +5,8 @@
    kullanımı, damga anında geçerli, damganın sertifika bağı). Zincirin güvenilir köke bağlanması burada değil (kök listesi kararı ertelendi).
    2026-10-17 bağımsız inceleme: imzalayanın kendi anahtarıyla bastığı "damga", sertifika değiştirme (sid + küme), SHA-1, eksik alanlı yapıda
    kaçan TypeError — hepsi kapatıldı (tests/imza-cozum.test.ts). */
-import { constants, createHash, verify, type KeyObject } from "node:crypto";
-import { BozukDer, bekle, cocuklar, dugum, ic, oidOku, okuyucu, tamsayiHex, tum, zamanOku, type Dugum, type Okuyucu } from "./der.ts";
+import { constants, createHash, publicDecrypt, verify, type KeyObject } from "node:crypto";
+import { BozukDer, bekle, cocuklar, dugum, ic, oid, oidOku, okuyucu, oktet, sira, tamsayiHex, tum, zamanOku, type Dugum, type Okuyucu } from "./der.ts";
 import { gecerliMi, sertifikaOku, type Sertifika } from "./sertifika.ts";
 
 export const CMS_OID = {
@@ -182,11 +182,23 @@ export function algoritmaDenetle(imzaOid: string, param: Buffer | null, ozetOid:
       if (!p || (!sha1Izinli && !guvenliOzet(p.ozet))) return "desteklenmiyor";
       return verify(p.ozet, veri, { key: anahtar, padding: constants.RSA_PKCS1_PSS_PADDING, saltLength: p.tuz }, imza) ? "tamam" : "bozuk";
     }
-    if (a.tur === "rsa") return verify(ozet, veri, { key: anahtar, padding: constants.RSA_PKCS1_PADDING }, imza) ? "tamam" : "bozuk";
+    if (a.tur === "rsa") return verify(ozet, veri, { key: anahtar, padding: constants.RSA_PKCS1_PADDING }, imza) || rsaParametresiz(ozet, veri, anahtar, imza) ? "tamam" : "bozuk";
     return verify(ozet, veri, anahtar, imza) ? "tamam" : "bozuk";
   } catch {
     return "bozuk";
   }
+}
+
+/** 2026-10-17 (reisim'in gerçek mobil imzası — imzayeri, nitelikli sertifika): bazı imza üreticileri PKCS#1 v1.5 imzanın DigestInfo'sunda özet
+    algoritmasının parametresini (NULL) koymuyor (RFC 8017 §9.2 not 2: iki biçim de görülür); OpenSSL'in doğrulaması yalnız NULL'lıyı kabul ediyor ve
+    sağlam imza "bozuk" çıkıyordu. İmza değeri açılır (tip 1 dolguyu OpenSSL denetler) ve kalan BAYT BAYT parametresiz DigestInfo'ya eşit olmalı
+    (SEQUENCE { SEQUENCE { özet OID }, OCTET STRING özet }) — esnek ayrıştırma yok, artık bayt yok (Bleichenbacher türü sahtecilik kapalı). */
+function rsaParametresiz(ozet: string, veri: Uint8Array, anahtar: KeyObject, imza: Uint8Array): boolean {
+  const o = OZET_OID[ozet];
+  if (!o || anahtar.asymmetricKeyType !== "rsa") return false;
+  let acilan: Buffer;
+  try { acilan = publicDecrypt({ key: anahtar, padding: constants.RSA_PKCS1_PADDING }, imza); } catch { return false; }
+  return acilan.equals(sira(sira(oid(o)), oktet(createHash(ozet).update(veri).digest())));
 }
 
 /** RSASSA-PSS parametreleri: [0] özet (varsayılan SHA-1), [2] tuz uzunluğu (varsayılan 20) */

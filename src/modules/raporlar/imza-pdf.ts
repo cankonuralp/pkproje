@@ -157,7 +157,9 @@ function kapsar(yeni: Deger | undefined, eski: Deger | undefined): boolean {
   const y = new Set((yeni?.l ?? []).map((x) => kanonik(x)));
   return (eski?.t === "dizi" ? eski.l : []).every((x) => y.has(kanonik(x)));
 }
-const ACROFORM_SERBEST = new Set(["Fields", "SigFlags"]);
+/* 2026-10-17 (imzayeri): imza aracı AcroForm'a varsayılan görünüm (DA) ve kaynakları (DR — Helvetica, ZapfDingbats) da yazar; yalnız form
+   alanlarının görünümünü kurmakta kullanılır, sayfanın çizimine dokunmaz */
+const ACROFORM_SERBEST = new Set(["Fields", "SigFlags", "DA", "DR"]);
 const IMZA_ALANI_SERBEST = new Set(["V", "AP", "MK", "DA", "F"]);
 /** 2026-10-17 (İ5): çok parçalı imza alanının çocuk görünümünde değişebilenler (değer ebeveynde) */
 const IMZA_GORUNUMU_SERBEST = new Set(["AP", "MK", "DA", "F"]);

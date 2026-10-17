@@ -6,13 +6,17 @@
    4. DSS'in konumu aranmasaydı DSS'ten önce basılmış belge damgası arşiv düzeyi (B-LTA) sayılırdı.
    5. Boşluğun /Contents olduğu aranmasaydı imzanın dışında bırakılan başka bir onaltılık dize (imza sarmalama) imza sayılırdı.
    6. (yükleme denetimi) Yüklemede nitelikli işaret aranmasaydı Adobe'nin kendi ürettiği gibi işaretsiz sertifikayla atılan imza kabul edilirdi.
-   7. (yükleme denetimi) Yüklemede imza anı aranmasaydı süresi dolmuş sertifikayla atılan imza kabul edilirdi. */
+   7. (yükleme denetimi) Yüklemede imza anı aranmasaydı süresi dolmuş sertifikayla atılan imza kabul edilirdi.
+   8. (2026-10-17) Parametresiz DigestInfo kabul edilmeseydi gerçek mobil imza (imzayeri) bozuk sayılırdı.
+   9. (2026-10-17) DigestInfo esnek ayrıştırılsaydı başka yapının imzası sağlam sayılırdı. */
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { after, test } from "node:test";
+import { constants, createHash, privateEncrypt } from "node:crypto";
+import { oid, oktet, sira as dizi } from "../../src/server/imza/der.ts";
 import { TABAN_PDF, belgeDamgala, damgaYap, denemeKimlikleri, dssEkle, imzaEki, pdfImzala, sertifikaYap } from "../yardimci/gercek-imza.ts";
 
 const klasor = mkdtempSync(join(tmpdir(), "imza-cozum-bozan-"));
@@ -75,4 +79,20 @@ test("7: yüklemede imza anı aranmayınca süresi dolmuş sertifika kabul edili
   const m = await bozuk<Y>(YUK, "    if (gecerliMi(s, an) !== true) return ", "    if (gecerliMi(s, an) === null && false) return ");
   const eski = sertifikaYap({ cn: "ESKİ", veren: k.ara, bas: new Date("2024-01-01T00:00:00Z"), son: new Date("2025-01-01T00:00:00Z") });
   assert.equal(m.ekImzaNedeni(TABAN_PDF, imzaEki(TABAN_PDF, "ESKİ", { kisi: eski })), null, "bozuk: süresi dolmuş sertifika yakalandı");
+});
+
+/* 2026-10-17 (gerçek mobil imza): parametresiz DigestInfo kabulü kalkınca sağlam imza bozuk sayılır; kabul esnek ayrıştırmaya dönerse
+   (yalnız sondaki özete bakılırsa) başka yapının imzası sağlam sayılır */
+const veri8 = Buffer.from("imzalı öznitelikler (deneme)"), oz8 = createHash("sha256").update(veri8).digest();
+const imza8 = (govde: Buffer) => privateEncrypt({ key: k.kisi.anahtar, padding: constants.RSA_PKCS1_PADDING }, govde);
+test("8: parametresiz DigestInfo kabulü kalkınca gerçek mobil imza bozuk sayılır", async () => {
+  const m = await bozuk<C>(CMS, " || rsaParametresiz(ozet, veri, anahtar, imza) ?", " ?");
+  assert.equal(m.algoritmaDenetle("1.2.840.113549.1.1.1", null, "2.16.840.1.101.3.4.2.1", k.kisi.acik, veri8, imza8(dizi(dizi(oid("2.16.840.1.101.3.4.2.1")), oktet(oz8))), false),
+    "bozuk", "bozuk: parametresiz imza kabul edildi");
+});
+test("9: DigestInfo esnek ayrıştırılınca (yalnız sondaki özet) başka yapının imzası sağlam sayılır", async () => {
+  const m = await bozuk<C>(CMS, "  return acilan.equals(sira(sira(oid(o)), oktet(createHash(ozet).update(veri).digest())));",
+    "  const h = createHash(ozet).update(veri).digest(); return acilan.subarray(acilan.length - h.length).equals(h);");
+  assert.equal(m.algoritmaDenetle("1.2.840.113549.1.1.1", null, "2.16.840.1.101.3.4.2.1", k.kisi.acik, veri8, imza8(Buffer.concat([Buffer.from("çöp yapı"), oz8])), false),
+    "tamam", "bozuk: başka yapı yakalandı");
 });

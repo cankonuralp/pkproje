@@ -5,11 +5,13 @@
    çözümleyici B-LTA, her imza "tamam" verdi; DSS'in dolaylı dizileri o belgeden öğrenildi (dosya depoya girmedi). Olumsuz kanıt:
    tests/bozan/imza-cozum.bozan.ts. */
 import assert from "node:assert/strict";
-import { createHash, sign } from "node:crypto";
+import { constants, createHash, privateEncrypt, sign } from "node:crypto";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
+import { algoritmaDenetle } from "../src/server/imza/cms.ts";
 import { damgaOzniteligi, imzaliOznitelikler, imzaliVeriKur } from "../src/server/imza/cms-yaz.ts";
+import { oid, oktet, sira } from "../src/server/imza/der.ts";
 import { pdfImzalariniCozumle, pdfZamani } from "../src/server/imza/pdf-imzalar.ts";
 import { ekImzaNedeni } from "../src/server/imza/yukleme.ts";
 import { TABAN_PDF, belgeDamgala, damgaYap, denemeKimlikleri, dssEkle, imzaEkle, imzaEki, pdfImzala, sertifikaYap } from "./yardimci/gercek-imza.ts";
@@ -230,4 +232,21 @@ test("ES1 kaynak kilidi: imzalı PDF'i yapıca denetleyen her yükleme (imzaliPd
     const m = readFileSync(f, "utf8");
     assert.equal((m.match(DENETIM) ?? []).length, (m.match(/ekImzaNedeni\(/g) ?? []).length, `${f}: her yapı denetiminin ardından kriptografik denetim`);
   }
+});
+
+/* 2026-10-17 (reisim'in gerçek mobil imzası — imzayeri, nitelikli sertifika; site raporu reddetti): imza sağlamdı ama PKCS#1 v1.5 DigestInfo'sunda
+   özet algoritmasının parametresi (NULL) yoktu — OpenSSL'in doğrulaması bunu kabul etmiyor, imza "bozuk" çıkıyordu. Parametresiz biçim BAYT BAYT
+   kabul (src/server/imza/cms.ts rsaParametresiz); esnek ayrıştırma yok: yanlış özet, başka yapı, artık bayt, başka algoritma bozuk. */
+test("RSA PKCS#1 v1.5: DigestInfo'da parametresiz (NULL'suz) özet algoritması da sağlam; yanlış özet, başka yapı, artık bayt, başka algoritma bozuk", () => {
+  const veri = Buffer.from("imzalı öznitelikler (deneme)"), oz = createHash("sha256").update(veri).digest();
+  const RSA = "1.2.840.113549.1.1.1", RSA_SHA256 = "1.2.840.113549.1.1.11", SHA256 = "2.16.840.1.101.3.4.2.1", SHA512 = "2.16.840.1.101.3.4.2.3";
+  const imza = (govde: Buffer) => privateEncrypt({ key: k.kisi.anahtar, padding: constants.RSA_PKCS1_PADDING }, govde);
+  const denetle = (x: Buffer, alg = RSA) => algoritmaDenetle(alg, null, SHA256, k.kisi.acik, veri, x, false);
+  assert.equal(denetle(sign("sha256", veri, k.kisi.anahtar)), "tamam", "NULL'lı (olağan) biçim");
+  assert.equal(denetle(imza(sira(sira(oid(SHA256)), oktet(oz)))), "tamam", "parametresiz biçim");
+  assert.equal(denetle(imza(sira(sira(oid(SHA256)), oktet(oz))), RSA_SHA256), "tamam", "sha256WithRSAEncryption ile de");
+  assert.equal(denetle(imza(sira(sira(oid(SHA256)), oktet(createHash("sha256").update("başka").digest())))), "bozuk", "yanlış özet");
+  assert.equal(denetle(imza(Buffer.concat([sira(sira(oid(SHA256)), oktet(oz)), Buffer.from([0])]))), "bozuk", "artık bayt");
+  assert.equal(denetle(imza(Buffer.concat([Buffer.from("çöp yapı"), oz]))), "bozuk", "başka yapı + doğru özet");
+  assert.equal(denetle(imza(sira(sira(oid(SHA512)), oktet(createHash("sha512").update(veri).digest())))), "bozuk", "başka özet algoritması");
 });
