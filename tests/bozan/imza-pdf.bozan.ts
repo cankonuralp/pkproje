@@ -1,7 +1,9 @@
 /* OLUMSUZ KANIT — tests/imza-pdf.test.ts neyi koruyor (315–317 ve 318 çapraz incelemeleri). Kaynak diskte DEĞİŞTİRİLMEZ (anayasa 13.11): denetim
    bellekte bozulur, geçici klasörden içe aktarılır.
    1. Özgün nesnenin yeniden tanımlanması denetlenmeseydi onaylı raporun sayfa içeriği imza ekiyle değiştirilir, rapor yine "imzalı" sayılırdı.
-   2. Ekin trailer kökü denetlenmeseydi ek yeni bir katalog ve sayfa ağacıyla bambaşka bir belge gösterirdi. */
+   2. Ekin trailer kökü denetlenmeseydi ek yeni bir katalog ve sayfa ağacıyla bambaşka bir belge gösterirdi.
+   3. (2026-10-17) Sayfa ağacı düğümünün AYNEN kalması denetlenmeseydi imza eki ağaca sayfa ekler, onaylı rapora sayfa katılırdı.
+   4. (2026-10-17) Belge bilgisinin düz değerli kalması denetlenmeseydi bilgi sözlüğü başka nesnelere başvuru taşırdı. */
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -46,4 +48,18 @@ test("trailer penceresi ve sınırı kalkınca 'trailer(' yığınlı ek karesel
   const t = performance.now();
   assert.equal(m.imzaliPdfGecerli(b(OZGUN), b(OZGUN + "3 0 obj<</Type/Sig>>endobj\n" + "trailer(".repeat(25 * 1024))), false);
   assert.ok(performance.now() - t > 1000, `karesel süre görünmedi: ${Math.round(performance.now() - t)} ms`);
+});
+
+/* 2026-10-17 (gerçek imza aracı yapısı): sayfa ağacı düğümü yalnız AYNEN, belge bilgisi yalnız düz değerlerle yeniden yazılabilir */
+const BILGILI = OZGUN.replace("trailer << /Root 1 0 R >>", "5 0 obj << /Producer (probata) >> endobj\ntrailer << /Root 1 0 R /Info 5 0 R >>");
+const sonu = "trailer << /Root 1 0 R /Info 5 0 R /Prev 0 >>\n%%EOF\n";
+test("sayfa ağacı karşılaştırması kalkınca ek ağaca sayfa ekler ve kabul edilir", async () => {
+  const m = await bozuk("          if (kanonik(x.deger) !== kanonik(eski.deger)) return false;", "");
+  const ek = "2 0 obj << /Type /Pages /Kids [3 0 R 30 0 R] /Count 2 >> endobj\n" + IMZA + sonu;
+  assert.equal(m.imzaliPdfGecerli(b(BILGILI), b(BILGILI + ek)), true, "ağaca sayfa ekleyen ek kabul edildi");
+});
+test("belge bilgisinin düz değer denetimi kalkınca bilgiye başvuru girer ve kabul edilir", async () => {
+  const m = await bozuk("          if (!duzBilgi(x.deger)) return false;", "");
+  const ek = "5 0 obj << /Producer (x) /Gizli 4 0 R >> endobj\n" + IMZA + sonu;
+  assert.equal(m.imzaliPdfGecerli(b(BILGILI), b(BILGILI + ek)), true, "başvurulu bilgi kabul edildi");
 });

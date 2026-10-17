@@ -2527,6 +2527,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-17 (YAPILDI): **GERÇEK İMZA ARACININ DOSYASI DENETİMDEN GEÇİYOR** — bulgu: reisim'in gönderdiği, başka bir yazılımda gerçek imza aracıyla
+  imzalanmış PDF (nitelikli e-imza, görünmez imza + belge zaman damgası ve uzun süreli doğrulama bilgisi) imzalı PDF denetimimizden GEÇMİYORDU:
+  araç imzalarken sayfa ağacı düğümünü aynen yeniden yazıyor, belge bilgisini (üreten program, değiştirilme tarihi) güncelliyordu; denetim
+  ikisini de reddediyordu → toplu indir / yükle yolu gerçek imzayla çalışmayacaktı. Düzeltme (raporlar/imza-pdf.ts): sayfa ağacı düğümü yalnız
+  AYNEN, belge bilgisi yalnız düz değerlerle yeniden yazılabilir; öteki her kural aynı. Aynı dosya PC'de yeni denetimden geçti (yalnız imzalı ve
+  zaman damgalı hâli); dosya depoya girmedi, kilit testte aynı yapının uydurması var (tests/imza-pdf.test.ts, bozan 3–4).
 - 2026-10-17 (YAPILDI): **GERİ GÖNDERMEDE GEREKÇE İSTEĞE BAĞLI** (reisim: *"Rapor Yeni'ye düşer. En az 10 harflik gerekçe zorunlu … zorunlu
   açıklamayı kaldır"*). Teknik yönetici onaydaki raporu "Geri gönder"le ya da "Durumu değiştir"le Yeni'ye alırken gerekçe yazmak zorunlu değil
   (pencerede "Gerekçe (isteğe bağlı)", en çok 400 karakter); yazılırsa denetçi raporun üstünde görür, yazılmazsa "Geri gönderildi · kim · zaman".

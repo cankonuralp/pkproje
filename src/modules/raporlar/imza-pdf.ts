@@ -18,6 +18,11 @@
      (/FT /Sig, /Kids, değersiz, kendisi görünüm değil) yalnız aynı kuralla (/V yeni imza sözlüğüne), ÇOCUK görünüm (/Subtype /Widget, /FT yok,
      /Parent böyle bir ebeveyn) yalnız görünüm (/AP, /MK, /DA) ve bayrak (/F) değiştirir — çocuğa değer (/V) yazılamaz, yeri / sayfası aynı. İki
      e-imza yeri (onaylanan, onaylayan) ayrı ayrı ya da art arda iki imzayla doldurulabilir.
+   · 2026-10-17 (reisim'in gönderdiği, başka bir yazılımda gerçek imza aracıyla imzalanmış PDF'in YAPISI — dosya depoya girmedi; o yapı bu
+     denetimden geçmiyordu): imza aracı imzalarken sayfa ağacı düğümünü (/Type /Pages) AYNEN yeniden yazar ve belge bilgisi sözlüğünü (trailer
+     /Info — üreten program, değiştirilme tarihi) günceller. Sayfa ağacı düğümü yalnız anlamca AYNI kalarak; belge bilgisi (özgünde tür taşımayan,
+     yalnız düz değerli sözlük) yalnız düz değerlerle (yazı, ad, sayı, tarih — başvuru, dizi, sözlük, akış yok) yeniden tanımlanabilir. Uzun süreli
+     doğrulama eki (/DSS, belge zaman damgası /Type /DocTimeStamp) yeni nesne olarak zaten serbest.
    Kalan risk (kayıtta): imza alanının görünümü (/AP) sayfaya çizilir; kriptografik zincir ve görsel karşılaştırma sonraki fazda (K7). */
 
 type Deger = { t: "sozluk"; d: Map<string, Deger> } | { t: "dizi"; l: Deger[] } | { t: "ref"; n: number; g: number } | { t: "yalin"; v: string };
@@ -134,6 +139,14 @@ function kokler(s: string): string[] {
 /** son trailer'ın kökü (özgün PDF'in güncel kökü); yoksa undefined */
 const sonKok = (s: string) => { const i = s.lastIndexOf("trailer"); return i < 0 ? undefined : kokOku(s, i); };
 const refNo = (d: Deger | undefined) => (d?.t === "ref" ? d.n : null);
+/** son trailer'ın belge bilgisi (/Info) nesne numarası; yoksa null */
+function bilgiNo(s: string): number | null {
+  const i = s.lastIndexOf("trailer");
+  if (i < 0) return null;
+  try { return refNo(ad(ayristir(s.slice(i + 7, i + 7 + TRAILER_PENCERE)).deger, "Info")); } catch (e) { if (!(e instanceof Bozuk)) throw e; return null; }
+}
+/** belge bilgisi sözlüğü: tür yok, değerlerin hepsi düz (yazı, ad, sayı, tarih) — başvuru, dizi, iç sözlük yok */
+const duzBilgi = (d: Deger | null | undefined) => d?.t === "sozluk" && !d.d.has("Type") && [...d.d.values()].every((v) => v.t === "yalin");
 /** yeni dizi eskinin bütün öğelerini taşıyor mu (imza aracı yalnız ekler) */
 function kapsar(yeni: Deger | undefined, eski: Deger | undefined): boolean {
   if (yeni && yeni.t !== "dizi") return false;
@@ -190,6 +203,7 @@ export function imzaliPdfGecerli(imzasiz: Uint8Array, imzali: Uint8Array): boole
        yeniden yazar — yalnız ekleyerek: AcroForm'da /Fields (eskilerin hepsi kalır) ve /SigFlags, Annots dizisinde yeni öğe */
     const acroNo = refNo(ad(ozgun.get(Number(ozgunKok.split(" ")[0]))?.deger ?? null, "AcroForm"));
     const annotsNo = new Set([...ozgun.values()].filter((x) => adi(x.deger, "Type") === "/Page").map((x) => refNo(ad(x.deger, "Annots"))).filter((n): n is number => n !== null));
+    const bilgi = bilgiNo(ozgunMetin);
     let imza = false;
     for (const x of ek.values()) {
       if (x.deger?.t === "dizi" && annotsNo.has(x.n)) {
@@ -212,6 +226,12 @@ export function imzaliPdfGecerli(imzasiz: Uint8Array, imzali: Uint8Array): boole
         const eskiTur = adi(eski.deger, "Type");
         if (eskiTur === "/Page" && tur === "/Page") {
           if (kanonik(x.deger, new Set(["Annots"])) !== kanonik(eski.deger, new Set(["Annots"]))) return false;
+        } else if (eskiTur === "/Pages" && tur === "/Pages") {
+          /* 2026-10-17: imza aracı sayfa ağacı düğümünü aynen yeniden yazar — yalnız anlamca aynıysa */
+          if (kanonik(x.deger) !== kanonik(eski.deger)) return false;
+        } else if (x.n === bilgi && duzBilgi(eski.deger)) {
+          /* 2026-10-17: belge bilgisi (üreten program, değiştirilme tarihi) — yalnız düz değerlerle */
+          if (!duzBilgi(x.deger)) return false;
         } else if (eskiTur === "/Catalog" && tur === "/Catalog") {
           if (kanonik(x.deger, KATALOG_SERBEST) !== kanonik(eski.deger, KATALOG_SERBEST)) return false;
         } else if (adi(eski.deger, "FT") === "/Sig" && adi(eski.deger, "Subtype") === "/Widget" && !ad(eski.deger, "V")) {

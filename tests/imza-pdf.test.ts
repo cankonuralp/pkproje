@@ -93,6 +93,36 @@ test("süre: 'trailer(' yığınıyla 1 MB'lık özgün ve 4 MB'lık ek bir sani
   assert.ok(performance.now() - t < 1000, `imzaliPdfGecerli ${Math.round(performance.now() - t)} ms`);
 });
 
+/* 2026-10-17: reisim'in gönderdiği, başka bir yazılımda gerçek imza aracıyla imzalanmış (nitelikli e-imza + uzun süreli doğrulama) PDF bu denetimden
+   GEÇMİYORDU — araç sayfa ağacı düğümünü aynen, belge bilgisini (Producer, ModDate) yeniden yazıyor; ardından ikinci ekte /DSS + belge zaman damgası.
+   Aşağıdaki uydurma PDF o yapının aynısı (gerçek dosya depoya girmedi). */
+test("gerçek imza aracı yapısı: sayfa ağacı aynen + belge bilgisi güncellenir, ardından /DSS ve belge zaman damgası — kabul; ağaç değişirse ya da bilgiye düz olmayan değer girerse ret", () => {
+  const BILGILI = OZGUN.replace("trailer << /Root 1 0 R >>", "5 0 obj << /Producer (probata) /CreationDate (D:20261017120000+03'00') >> endobj\ntrailer << /Root 1 0 R /Info 5 0 R >>");
+  const AGAC = "2 0 obj <</Count 1/Kids[3 0 R]/Type/Pages>> endobj\n";
+  const BILGI = "5 0 obj << /Producer (probata; modified using imza araci) /CreationDate (D:20261017120000+03'00') /ModDate (D:20261017130000+03'00') >> endobj\n";
+  const IMZA_EKI = "1 0 obj << /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [10 0 R] /SigFlags 3 /DR << /Font << /Helv 12 0 R >> >> >> >> endobj\n"
+    + "3 0 obj << /Type /Page /Parent 2 0 R /Contents 4 0 R /Resources << >> /Annots [10 0 R] >> endobj\n"
+    + "10 0 obj << /Type /Annot /Subtype /Widget /FT /Sig /T (Signature1) /V 9 0 R /F 132 /Rect [0 0 0 0] /AP << /N 11 0 R >> >> endobj\n"
+    + "11 0 obj << /Length 0 >> stream\n\nendstream\nendobj\n12 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj\n" + IMZA;
+  const DSS_EKI = "1 0 obj << /Type /Catalog /Pages 2 0 R /DSS 20 0 R /AcroForm << /Fields [10 0 R 23 0 R] /SigFlags 3 /DR << /Font << /Helv 12 0 R >> >> >> >> endobj\n"
+    + "3 0 obj << /Type /Page /Parent 2 0 R /Contents 4 0 R /Resources << >> /Annots [10 0 R 23 0 R] >> endobj\n"
+    + "20 0 obj << /Certs [21 0 R] >> endobj\n21 0 obj << /Length 4 >> stream\n0000\nendstream\nendobj\n"
+    + "22 0 obj << /Type /DocTimeStamp /Filter /Adobe.PPKLite /SubFilter /ETSI.RFC3161 /ByteRange [0 10 20 30] /Contents <00ff> >> endobj\n"
+    + "23 0 obj << /Type /Annot /Subtype /Widget /FT /Sig /T (LTV-Timestamp) /V 22 0 R /F 132 /Rect [0 0 0 0] >> endobj\n";
+  const ek = (...l: string[]) => l.map((x) => x + "trailer << /Root 1 0 R /Info 5 0 R /Prev 0 >>\n%%EOF\n").join("");
+  assert.equal(imzayaUygun(b(BILGILI)), true);
+  assert.equal(imzaliPdfGecerli(b(BILGILI), b(BILGILI + ek(AGAC + BILGI + IMZA_EKI))), true, "imza eki");
+  assert.equal(imzaliPdfGecerli(b(BILGILI), b(BILGILI + ek(AGAC + BILGI + IMZA_EKI, AGAC + BILGI + DSS_EKI))), true, "imza + uzun süreli doğrulama eki");
+  assert.equal(imzaliPdfGecerli(b(BILGILI), b(BILGILI + ek(AGAC.replace("/Count 1", "/Count 2") + IMZA_EKI))), false, "sayfa ağacı değişti");
+  assert.equal(imzaliPdfGecerli(b(BILGILI), b(BILGILI + ek(AGAC.replace("[3 0 R]", "[3 0 R 30 0 R]") + IMZA_EKI))), false, "ağaca sayfa eklendi");
+  assert.equal(imzaliPdfGecerli(b(BILGILI), b(BILGILI + ek(BILGI.replace(" >> endobj", " /Gizli 4 0 R >> endobj") + IMZA_EKI))), false, "bilgide başvuru");
+  assert.equal(imzaliPdfGecerli(b(BILGILI), b(BILGILI + ek(BILGI.replace(" >> endobj", " /Ek [1 2] >> endobj") + IMZA_EKI))), false, "bilgide dizi");
+  assert.equal(imzaliPdfGecerli(b(BILGILI), b(BILGILI + ek(BILGI.replace(" >> endobj", " /Type /Page >> endobj") + IMZA_EKI))), false, "bilgiye tür girdi");
+  assert.equal(imzaliPdfGecerli(b(BILGILI), b(BILGILI + ek("5 0 obj << /Length 4 >> stream\nBT\nendstream\nendobj\n" + IMZA_EKI))), false, "bilgi akış oldu");
+  /* belge bilgisi olmayan PDF'te aynı numara yeni nesnedir; trailer'da /Info yoksa düz sözlük kuralı başka nesneye uygulanmaz */
+  assert.equal(imzaliPdfGecerli(b(OZGUN), imzali("4 0 obj << /Producer (x) >> endobj\n" + IMZA)), false, "içerik akışı düz sözlükle ezilemez");
+});
+
 test("dolaylı AcroForm ve Annots: imza aracı /Fields'e ve Annots dizisine ekler — kabul; eski alanı / açıklamayı düşürür ya da başka anahtarı değiştirirse ret", () => {
   const FORM = "%PDF-1.4\n1 0 obj << /Type /Catalog /Pages 2 0 R /AcroForm 5 0 R >> endobj\n2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n"
     + "3 0 obj << /Type /Page /Parent 2 0 R /Contents 4 0 R /Resources << >> /Annots 6 0 R >> endobj\n4 0 obj << /Length 18 >> stream\nBT (Bordro) Tj ET\nendstream\nendobj\n"
