@@ -52,8 +52,7 @@ test("17 modül, numaralar tekil; menüde olmayanlar 1 (Personel'in içinde), 6,
 /* 2026-10-04 (K1, giriş + oturum): rotalar üç grupta — (uygulama) oturum ister ve modül kaydıyla birebir; (acik) yalnız giriş; (gelistirme) yalnız
    vitrin (yayında 404). Oturumsuz açılan her rota adıyla burada: listeye eklenmeyen yeni bir açık rota testi düşürür (sızma kapısı). */
 /* 2026-10-16 (595 K8 — reisim: "Kanun cümlesi + rapor no + sayfa + doğrulama karekodu"): dogrula — e-imzalı raporun karekodunun açtığı doğrulama
-   sayfası; oturumsuz ama kapı HMAC'li kod (src/server/dogrulama.ts), okuma salt okunur ve yalnız imzalı sürümün kimliği (müşteri, kişi yok; 2026-10-17
-   imzalı PDF sayfanın içinde, kısa ömürlü jetonlu adresten — dogrula/[kod]/pdf) */
+   sayfası; oturumsuz ama kapı HMAC'li kod (src/server/dogrulama.ts), okuma salt okunur ve yalnız imzalı sürümün kimliği (müşteri, kişi, PDF yok) */
 const ACIK_ROTALAR = ["dogrula", "giris"];
 const GELISTIRME_ROTALARI = ["vitrin"];
 /* 2026-10-04 (K1, dosya ucu): api/ yalnız tanımlı uçları taşır — her uç oturumu ve yetkiyi kendisi denetler (09-A2).

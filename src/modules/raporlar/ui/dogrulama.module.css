@@ -1,7 +1,5 @@
 /* 595 K8 rapor doğrulama sayfası — giriş sayfasının kartı gibi (tek zemin, ortada kart) */
-.sayfa { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; justify-content: safe center; gap: 24px; padding: 32px var(--bosluk-sayfa); background: var(--zemin); }
-/* 2026-10-17: kartın altında imzalı raporun kendisi (PdfGorunumu A4'ü okunur genişlikte tutar) */
-.rapor { width: 100%; display: flex; justify-content: center; min-width: 0; }
+.sayfa { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 32px var(--bosluk-sayfa); background: var(--zemin); }
 .kart {
   width: min(100%, 520px); display: flex; flex-direction: column; align-items: flex-start; gap: 14px; padding: 28px;
   background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-buyuk); box-shadow: var(--golge-1); min-width: 0;

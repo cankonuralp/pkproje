@@ -1,7 +1,7 @@
 "use client";
 /* PDF GÖRÜNÜMÜ (2026-10-17; reisim: "müşteri tıklayınca direk raporu görmeli pdfi aç, tuşu falan ne alaka … burada tıkladığı gibi içeride raporu
    görmeli"): PDF'in sayfaları sayfanın İÇİNDE çizilir — pdf.js tarayıcıda (telefonda da; tarayıcının kendi PDF görüntüleyicisine ve çerçeveye bağlı
-   değil). Dosya verilen adresten (aynı köken; yetki sunucuda). Sayfalar kabın genişliğine sığar, sırayla çizilir. pdf.js: dizgi değerlendirme (eval)
+   değil). Dosya tek dosya ucundan (aynı köken; yetki sunucuda — müşteri rolünde kendi raporu). Sayfalar kabın genişliğine sığar, sırayla çizilir. pdf.js: dizgi değerlendirme (eval)
    kapalı, XFA kapalı, işçi kendi kökenimizden (CSP worker-src 'self'), yazı tipleri dosyanın içinden. */
 import { useEffect, useRef, useState } from "react";
 import { dosyaCerceveAdresi } from "../gizli-resim/GizliResim";
@@ -10,9 +10,9 @@ import stil from "./pdf.module.css";
 /** çizim çözünürlüğü sınırı (piksel genişlik; büyük ekranda ve çok sayfada bellek) */
 const EN_GENIS = 1800;
 
-/** dosyaId: depodaki dosya (adres tek dosya ucundan — GizliResim dosyaCerceveAdresi); adres: başka uç (doğrulama sayfasının jetonlu adresi) */
-export function PdfGorunumu({ dosyaId, adres: verilen, ad }: { dosyaId?: string; adres?: string; ad: string }) {
-  const adres = dosyaId ? dosyaCerceveAdresi(dosyaId) : verilen ?? null;
+/** dosyaId: depodaki dosya (adres tek dosya ucundan — GizliResim dosyaCerceveAdresi) */
+export function PdfGorunumu({ dosyaId, ad }: { dosyaId: string; ad: string }) {
+  const adres = dosyaCerceveAdresi(dosyaId);
   const kap = useRef<HTMLDivElement>(null);
   const [durum, setDurum] = useState<"yukleniyor" | "tamam" | "hata">("yukleniyor");
   useEffect(() => {

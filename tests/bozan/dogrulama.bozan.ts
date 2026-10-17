@@ -2,8 +2,7 @@
    klasörden içe aktarılır.
    1. Kod firmaya bağlı olmasaydı A firmasının karekodu B firmasının adresinde de açılırdı (başka firmanın rapor kimliğini sorgulatma).
    2. İmza karşılaştırılmasaydı rapor kimliğini bilen herkes uydurma kodla raporun durumunu okurdu (numaralandırma).
-   3. Alt şerit adresi kaçırmasaydı adrese gömülen HTML PDF'in alt bilgisine ham girerdi.
-   4. (2026-10-17) PDF jetonunun süresi denetlenmeseydi doğrulama sayfasındaki rapor bağlantısı kalıcı herkese açık dosya bağlantısı olurdu. */
+   3. Alt şerit adresi kaçırmasaydı adrese gömülen HTML PDF'in alt bilgisine ham girerdi. */
 import assert from "node:assert/strict";
 import { randomBytes, randomUUID } from "node:crypto";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -44,11 +43,4 @@ test("3: alt şerit adresi kaçırmayınca gömülen HTML ham girer", async () =
     "<a href=\"${kac(v.dogrulama)}\" style=\"color:#000;text-decoration:none\">${kac(v.dogrulama)}</a>", "<a>${v.dogrulama}</a>");
   const h = m.raporAltBilgisi({ ...ornekBelge("ZPKR02"), kesin: true, dogrulama: "https://deneme.example/<img src=x>" });
   assert.ok(h.includes("<img src=x>"), "bozuk: kaçırıldı");
-});
-
-/* 2026-10-17 (doğrulama sayfasında imzalı rapor): PDF jetonunun süresi denetlenmeseydi eski bağlantı kalıcı herkese açık dosya bağlantısı olurdu */
-test("4: PDF jetonunun süresi denetlenmeyince süresi geçmiş bağlantı açılır", async () => {
-  const m = await bozuk<D>("src/server/dogrulama.ts", "  if (bitis < dk || bitis > dk + PDF_JETON_DK) return false;\n", "");
-  const kod = m.dogrulamaKodu(randomUUID(), randomUUID(), 0, K), F = randomUUID(), simdi = Date.UTC(2026, 9, 17, 12, 0);
-  assert.equal(m.pdfJetonuGecerli(m.pdfJetonu(F, kod, simdi, K), F, kod, simdi + 24 * 60 * 60_000, K), true, "bozuk: süresi geçmiş jeton reddedildi");
 });

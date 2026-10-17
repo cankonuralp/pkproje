@@ -40,7 +40,7 @@ import {
 } from "../src/modules/onaylar/server/onaylar.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 import { dogrulamaCoz, dogrulamaKodu } from "../src/server/dogrulama.ts";
-import { raporDogrulamaBilgisi, raporDogrulamaPdf, type RaporDogrulama } from "../src/modules/raporlar/server/dogrulama.ts";
+import { raporDogrulamaBilgisi, type RaporDogrulama } from "../src/modules/raporlar/server/dogrulama.ts";
 import type { BelgeVerisi } from "../src/belge/veri.ts";
 
 let kume: GomuluKume;
@@ -820,15 +820,6 @@ test("595 K8 doğrulama: imzaya hazırlanan PDF'e firmanın adresiyle doğrulama
   if (d.durum !== "gecerli") return;
   assert.deepEqual([d.no, d.ekipman, d.yeni, d.saklamaBitti], [kok, "HT-2", null, false]);
   assert.ok(d.firma && d.tur !== "-" && /^\d{4}-\d{2}-\d{2}T/.test(d.imzalandi), JSON.stringify(d));
-  /* 2026-10-17 (reisim: "rapor doğrulama ekranında raporun kendisi de gözüksün"): oturumsuz, salt okunur işlemde imzalı PDF'in kendisi; başka firmada yok */
-  const imzaliBayt = async (firma: string, kod: string) => kiraciIcinde(havuz, firma, async (db) => {
-    await db.sorgu("SET TRANSACTION READ ONLY");
-    const c = dogrulamaCoz(kod, firma);
-    return c ? raporDogrulamaPdf(db, depo, c.raporId, c.revizyon) : null;
-  });
-  const surumDosyasi = (await sql<{ anahtar: string }>(A, "SELECT d.anahtar FROM rapor_surumu s JOIN dosya d ON d.id = s.imzali_dosya WHERE s.rapor_id = $1", [h])).rows[0];
-  assert.deepEqual(await imzaliBayt(A, k0), new Uint8Array(await depo.oku(surumDosyasi.anahtar)));
-  assert.equal(await imzaliBayt(B, k0), null, "başka firmanın adresinde");
   /* oturumsuz okuma hiçbir şey yazamaz */
   await assert.rejects(kiraciIcinde(havuz, A, async (db) => { await db.sorgu("SET TRANSACTION READ ONLY"); await db.sorgu("UPDATE rapor SET sonuc = sonuc WHERE id = $1", [h]); }),
     /read-only|salt okunur/i);

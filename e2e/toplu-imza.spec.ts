@@ -73,11 +73,6 @@ test("596 toplu imza: iki raporu seç → imzaya hazırla → tek ZIP → adlar�
   await expect(page.getByRole("heading", { level: 1, name: "Rapor doğrulama" })).toBeVisible();
   await expect(page.getByText("E-imzalı · geçerli")).toBeVisible();
   await expect(page.getByText(raporNoAdi(pdfler[0].ad), { exact: true })).toBeVisible();
-  /* 2026-10-17 (reisim: "rapor doğrulama ekranında raporun kendisi de gözüksün"): imzalı rapor sayfanın içinde (kısa ömürlü jetonlu adresten) */
-  await expect(page.getByRole("img", { name: new RegExp(`^${raporNoAdi(pdfler[0].ad)} — sayfa 1 / \\d+$`) })).toBeVisible({ timeout: 60_000 });
-  const pdfAdresi = await page.evaluate(() => performance.getEntriesByType("resource").map((x) => x.name).find((x) => /\/dogrula\/[^/]+\/pdf\?t=/.test(x)) ?? "");
-  expect(pdfAdresi, "PDF jetonlu adresten iner").not.toBe("");
-  expect((await page.request.get(pdfAdresi.replace(/\?t=.*/, "?t=1.AAAAAAAAAAAAAAAAAAAAAA"))).status(), "jetonsuz / uydurma jetonla açılmaz").toBe(404);
   await page.goto(`${Y}/dogrula/${kodlar[0].slice(0, -1)}${kodlar[0].endsWith("A") ? "B" : "A"}`);
   await expect(page.getByText("Bu doğrulama kodu bulunamadı.", { exact: false })).toBeVisible();
 });

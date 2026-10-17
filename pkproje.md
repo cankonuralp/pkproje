@@ -2531,12 +2531,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   alaka … indir tuşu neyse de burada tıkladığı gibi içeride raporu görmeli"* · *"rapor doğrulama ekranında raporun kendisi de gözüksün lütfen"* ·
   *"excelde ekipman kullanım yeri de olmalı … ekipman bilgileri kısmında kullanım yeri yazar oradan alınacak … yoksa veya girilmemişse "-""*).
   (1) Müşteri paneli › rapor: imzalı rapor sayfanın içinde görünür (sayfalar ekrana sığar; telefonda da); "PDF'i aç" kalktı, "PDF indir" kaldı.
-  (2) Rapor doğrulama sayfası: kartın altında imzalı raporun kendisi. Karekodu okutan herkes raporu görür (kâğıttaki raporun sahibi); PDF'in
-  adresi 10 dakikalık (kalıcı herkese açık dosya bağlantısı yok — anayasa 5.1); saklama süresi dolup silinen raporda görüntü yok. (3) Müşteri
+  (2) Rapor doğrulama sayfasına rapor görüntüsü eklenmişti — AYNI GÜN GERİ ALINDI (reisim: *"rapor doğrulama sayfası işi komple iptal, e imza süreci
+  ayrı bir süreç imzayı doğrulama süreci de öyle … benim rapor gözüksün diye söylediğim yer müşterinin gözünden bakıldığında rapora tıklayınca
+  çıkan ekran"*): doğrulama sayfası 16 Ekim hâlinde, jetonlu PDF ucu yok. (3) Müşteri
   panelinin Excel'inde "Kullanım yeri" sütunu (Ekipman türü'nden sonra): imzalı raporun ekipman bilgilerindeki kullanım yeri; yoksa "-".
-  Görüntüleyici components/pdf/PdfGorunumu (pdf.js 5.4.149, paket; dizgi değerlendirme kapalı). Kilit e2e saha-raporu (müşteri paneli) + toplu-imza
-  (doğrulama sayfası, jetonsuz 404), tests/dogrulama (jeton) + bozan 4, musteri-paneli (PG). Doğrulama sayfasının öteki oturumdaki maketi (imzalar,
-  açılır bölümler, "Elinizdeki PDF bu mu?") ayrı; onaylanınca bu görüntüleyici onun içine taşınır.
+  Görüntüleyici components/pdf/PdfGorunumu (pdf.js 5.4.149, paket; dizgi değerlendirme kapalı). Kilit e2e saha-raporu (müşteri paneli),
+  musteri-paneli (PG). E-imza ve imza doğrulama ayrı süreç (imza servisi projesi) — bu kalemin dışında.
 - 2026-10-17 (YAPILDI): **PROBATA DOĞRULAMA BAĞLANTISI OLMAYAN İMZALI RAPOR KABUL EDİLMEZ** (reisim: *"şeridi yukarı alma ama probata linki olmayan
   raporu kabul etme … sorun oymuş yani diğer raporda varmış link bir diğerinde yokmuş"*). Bulgu: iki rapordan birinin imzaya hazırlanan PDF'i
   doğrulama karekodu / bağlantısı gelmeden (16 Ekim) hazırlanmıştı; imzalısı da bağlantısızdı ve kabul edildi. Artık: imzalı PDF bu raporun BU
