@@ -1981,6 +1981,8 @@ raporun **durumunu değiştirebilir**; **imzalı (Tamamlandı) raporu revizeye g
 **177, 179, 180a, 184, 187, 188** öneriler karar oldu: iki imza yolu da bizde (mobil imza operatöre doğrudan, e-imza AKİS + kendi imza aracımız,
 toplu imzada tek PIN), önce mobil; firma seçer; operatör sözleşmesini probata yapar; iç belgelerde ıslak imza + tarama yedek yol; ilk sürümde
 14 tür; §3.2 öneri maddeleri (7–10, 2c uyarı) karar, otomatik saat dağıtımı çıktı; zimmette çoklu cihazda inspector seçer.
+⚠️ **2026-10-17 DEĞİŞTİ** (§11 "İMZA YOLLARI"): imza yolları toplu indir → imzala → yükle + servis sağlayıcı API'si (firma seçmez, probata kurulumda
+kurar, firma başına farklı servis); operatöre doğrudan mobil imza ve kendi e-imza aracımız sonraya, aynı yapıya bir sağlayıcı olarak.
 Maket sırası: (V1) teknik yönetici durum değiştir + revizeye gönder · (V2) son imza: mobil / e-imza (firma yöntemi) · (V3) iç belgelerde imza ·
 (V4) önceki raporun giderilmemiş hafif kusurları sonraki raporda · meslek uyarısı.
 
@@ -2525,6 +2527,23 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-17 (karar — **İMZA YOLLARI**; henüz yapılmadı, önce maket + onay). Reisim birebir: *"toplu indirip toplu yükleyerek imzalanabilsin
+  raporlar bu 1 seçenek, e imza ve mobil imza için apı bağlayıp o apı üzerinden servis sağlayıcı ile imzalamak bi seçenek … eğer yapabileceksek
+  kendimiz bir imzalama servisi de kurabiliriz bunu da diğer seçenekler ile kıyasla"* → kıyas sunuldu → *"kullanıcı aracı kuruluş seçerek oradan
+  hizmet alamasın, şirket kurulumunda biz kuralım onu çünkü bu üyeliklerin ücretlendirilmeleri var , öyle seçmeli bir şey olmasın ama kodlama
+  kısmında farklı şirketlere farklı hizmetler verebiliyo olalım yeter"*. **Kararlar:** (1) İki yol: **toplu indir → imzala → toplu yükle** (596,
+  bugün var; her firmada açık, yedek yol) ve **imza servisi** — e-imza + mobil imza bir servis sağlayıcının API'si üzerinden: Onaylar › İmzamı
+  bekleyen raporlar'da seçilenler "İmza için indir" ya da "İmzaya gönder" (yalnız servisi kurulu firmada); imzacılar muayene uzmanı + formatta
+  onaylayan yeri varsa teknik yönetici (aynı anda); imzalı PDF bizim denetimimizden (imza-pdf.ts) + imzalayanın kimliğinden geçince Tamamlandı; aynı
+  yol iç belgelerde. (2) Servisi **FİRMA SEÇMEZ**: probata firma kurulumunda Yönetim'den kurar (üyelikler ücretli); Firma ayarlarında seçim yok.
+  Kodda **firma başına farklı servis** — sağlayıcı bağlantısı firma başına kayıt, her sağlayıcı ayrı bağlantı dosyası (gönder · durum · indir ·
+  doğrula); ekran, durumlar, denetim ortak. (3) **Kendi imza servisimiz** (mobil imza operatörlere doğrudan — probata sözleşmesi, sabit sunucu
+  adresi; kart için kendi programımız + program imzalama sertifikası; zaman damgası kontörü) SONRA, aynı yapıya bir sağlayıcı olarak — §9 otuz
+  altıncı tur 177'deki "aracı site yok" bununla değişti: aracı servis bir yol, kendi servisimiz sonraki yol. İlk aday **Etikimza** (API 2026-10-17
+  okundu: kullanıcı + parola → 6 saatlik anahtar; belge yükle, süreç başlat — imzacılar sıralı / aynı anda, sayfa "her" / "son" + kutu yeri, zaman
+  damgası —, durum sorgula, indir, doğrula; imza bitince haber VERMİYOR → yoklama; süreç iptali yok; API yalnız kurumsal pakette, fiyat teklifle;
+  imzacı sağlayıcının sayfasında mobil imza / e-imza seçer). Sıra: maket → Etikimza deneme hesabı (reisim açar; bilgiler git dışı dosyada) → uydurma
+  belgeyle bağlantı denemesi (imzalı PDF denetimimizden geçiyor mu) → kod.
 - 2026-10-17 (İ6 YAPILDI): **SÜRÜKLEYEREK TAŞIMA** (sunum 595 madde 8 — *"her öğede tutamak (sürükle)"*). Format yapıcının kâğıdında her öğenin
   tuşlarının başında tutamak: alan, madde, ölçüm sütunu, test değeri, hazır satır, firma / imza / başlık satırları, fotoğraf kutusu, cihaz /
   uygunsuzluk tablosu sütunu, ek sütun. Fareyle, parmakla ya da kalemle sürüklenir (işaretçi olayları); bırakılacak yer çizgiyle görünür (satırın
