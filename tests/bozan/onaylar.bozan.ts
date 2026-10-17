@@ -453,8 +453,9 @@ test("sunucuda 'teknik yönetici imzası açıkken imzasız onay yok' denetimi k
   assert.equal(r.durum, "tamam", `bozuk: imzasız onaylandı: ${JSON.stringify(r)}`);
 });
 
+/* 2026-10-17 (yeniden yazılmış imzalı PDF): eklenen imzalar tabandan sonra okunur (imzaliTaban — önek ya da içerikçe eşdeğer sürüm) */
 test("sunucuda imzalayanın adı denetlenmeyince teknik yöneticinin yerine denetçinin imzası kabul edilir", async () => {
-  const m = await bozukModul<Raporlar>(RAPORLAR, `  const n = imzaciNedeni(ekImzaIcerikleri(imzasiz, b), await kisininAdi(db, kim));
+  const m = await bozukModul<Raporlar>(RAPORLAR, `  const n = imzaciNedeni(ekImzaIcerikleri(tb.taban, b), await kisininAdi(db, kim));
   if (n) return { durum: "gecersiz", hatalar: { dosya: n } };
   const gno`, "  const gno");
   const { F, k, mek } = await teknikKur("deneme-k4", "DN");

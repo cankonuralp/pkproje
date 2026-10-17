@@ -54,7 +54,8 @@ import { dogrulamaAdresi, dogrulamaKodu } from "../../../server/dogrulama.ts";
 import { cihazKalibrasyonlari } from "../../olcum-cihazlari/server/cihazlar.ts";
 import { personelBelgeBilgisi } from "../../personel/server/personel.ts";
 import type { BelgeVerisi } from "../../../belge/veri.ts";
-import { ekImzaIcerikleri, imzaliPdfGecerli } from "../imza-pdf.ts";
+import { ekImzaIcerikleri } from "../imza-pdf.ts";
+import { dogrulamaRaporlari, imzaliTaban } from "../imza-esdeger.ts";
 import { imzaciNedeni } from "../imza-kimlik.ts";
 import { ekImzaNedeni } from "../../../server/imza/yukleme.ts";
 import { raporOnerileri, type RaporOnerisi } from "./oneri.ts";
@@ -1057,15 +1058,17 @@ export async function imzaliYukle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaI
   const ham = await kayitDosyasi(db, PDF_MODULU, id, istek.pdf_dosya);
   if (!ham) return { durum: "red", neden: "İmzaya hazırlanan PDF bulunamadı; yeniden hazırlayın." };
   const imzasiz = await depo.oku(ham.anahtar, db), b = dosya.bayt;
-  /* önek + bir nesnedeki imza sözlüğü + ek özgün içeriği değiştirmez (imza-pdf.ts) */
-  if (!imzaliPdfGecerli(imzasiz, b)) return { durum: "gecersiz", hatalar: { dosya: IMZA_GECERSIZ } };
+  /* taban: önek (artımlı imza — imza-pdf.ts: bir nesnedeki imza sözlüğü, ek özgün içeriği değiştirmez) ya da imza programının yeniden yazdığı,
+     içerikçe aynı sürüm (2026-10-17, imza-esdeger.ts — imzayeri gibi damga koyan araçlar) */
+  const t = imzaliTaban(imzasiz, b);
+  if ("neden" in t) return { durum: "gecersiz", hatalar: { dosya: t.neden } };
   /* IMZA-SERVISI.md ES1 (yükleme denetimi): eklenen imza kriptografik olarak sağlam, belgenin tamamını kapsıyor, nitelikli ve imza anında geçerli */
-  const kripto = ekImzaNedeni(imzasiz, b);
+  const kripto = ekImzaNedeni(t.taban, b);
   if (kripto) return { durum: "gecersiz", hatalar: { dosya: kripto } };
   /* 2026-10-17 (teknik yönetici imzası): imzalanacak PDF teknik yöneticinin imzaladığıysa eklenen imza raporu YAZANIN olmalı (ad sertifikadan) —
      denetçi teknik yöneticinin yerine iki imzayı birden atamaz */
   if (await teknikImzali(db, id, e.r.revizyon, istek.pdf_dosya)) {
-    const n = imzaciNedeni(ekImzaIcerikleri(imzasiz, b), (await personelBelgeBilgisi(db, e.r.personel_id))?.ad ?? kim.ad);
+    const n = imzaciNedeni(ekImzaIcerikleri(t.taban, b), (await personelBelgeBilgisi(db, e.r.personel_id))?.ad ?? kim.ad);
     if (n) return { durum: "gecersiz", hatalar: { dosya: n } };
   }
   const gno = gorunenNo(e.r.no, e.r.revizyon);
@@ -1110,7 +1113,8 @@ export const TOPLU_IMZA_EN_COK = 50;
 export interface TopluImzaSonucu { id: string | null; no: string | null; sonuc: RaporYazma }
 const ESLESMEDI = "Bu PDF, imzanızı bekleyen raporlarınızdan birinin imzaya hazırlanan PDF'i değil (başka bir PDF ya da rapor bu arada geri alınmış).";
 /** kişinin imzasını bekleyen raporlarından (onaylanmış, şimdiki revizyonda bekleyen imza isteği olan) imzalı PDF'in hangisine ait olduğu: imzalı PDF
-    imzaya hazırlanan PDF'in baytlarıyla başlar (PAdES artımlı imza) — önekin SHA-256'sı isteğin pdf_sha256'sı. Aynı boydaki adaylar için özet bir kez. */
+    imzaya hazırlanan PDF'in baytlarıyla başlar (PAdES artımlı imza) — önekin SHA-256'sı isteğin pdf_sha256'sı. Aynı boydaki adaylar için özet bir kez.
+    Önek tutmazsa (imza programı yeniden yazmış) doğrulama bağlantısı / dosya adındaki numarayla aday, içerik yüklemede denetlenir (icerikleEslestir). */
 export async function imzaliEslestirYukle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, dosya: { ad: string; bayt: Uint8Array }): Promise<TopluImzaSonucu> {
   const b = dosya.bayt;
   const adaylar = (await db.sorgu<{ id: string; no: string; revizyon: number; surum: number; boyut: string; sha: string }>(
@@ -1136,7 +1140,24 @@ export async function imzaliEslestirYukle(db: Sorgulayici, depo: Depo, kim: Kisi
     `SELECT r.id::text, s.no, s.revizyon FROM rapor_surumu s JOIN rapor r ON r.id = s.rapor_id
      WHERE s.imzali_sha256 = $1 AND r.hesap_id = $2 LIMIT 1`, [createHash("sha256").update(b).digest("hex"), kim.id])).rows[0];
   if (once) return { id: once.id, no: gorunenNo(once.no, once.revizyon), sonuc: { durum: "red", neden: "Bu imzalı PDF daha önce yüklendi; rapor zaten tamamlandı." } };
-  return { id: null, no: null, sonuc: { durum: "gecersiz", hatalar: { dosya: ESLESMEDI } } };
+  return (await icerikleEslestir(adaylar, dosya, (x) => imzaliYukle(db, depo, kim, firmaId, x.id, x.surum, dosya)))
+    ?? { id: null, no: null, sonuc: { durum: "gecersiz", hatalar: { dosya: ESLESMEDI } } };
+}
+
+/** 2026-10-17 (imza-esdeger.ts): önek tutmadı — imza programı belgeyi yeniden yazmış olabilir. Adaylar (kişinin kendi bekleyenleri): önce PDF'teki
+    doğrulama bağlantısının raporu, sonra dosya adında numarası geçen; en çok 3'ü yüklemeyle denenir (bütün denetimler — içerik eşdeğerliği dahil —
+    yüklemede; başarısız deneme yazmaz). Tamamlanan döner; hiçbiri olmazsa ilk adayın nedeni; aday yoksa null. */
+async function icerikleEslestir<T extends { id: string; no: string; revizyon: number }>(adaylar: T[], dosya: { ad: string; bayt: Uint8Array },
+  yukle: (x: T) => Promise<RaporYazma>): Promise<TopluImzaSonucu | null> {
+  const baglanti = new Set(dogrulamaRaporlari(dosya.bayt)), ad = dosya.ad.normalize("NFC");
+  const l = [...adaylar.filter((x) => baglanti.has(x.id)), ...adaylar.filter((x) => !baglanti.has(x.id) && ad.includes(x.no))].slice(0, 3);
+  let ilk: TopluImzaSonucu | null = null;
+  for (const x of l) {
+    const r: TopluImzaSonucu = { id: x.id, no: gorunenNo(x.no, x.revizyon), sonuc: await yukle(x) };
+    if (r.sonuc.durum === "tamam") return r;
+    ilk ??= r;
+  }
+  return ilk;
 }
 
 /* ── TEKNİK YÖNETİCİ İMZASI (2026-10-17, göç 0102; reisim: "firma ayarlarına ekleyebiliriz teknik yönetici imzalasın seçeneği olsun açıkken
@@ -1212,10 +1233,11 @@ export async function teknikImzaliYukle(db: Sorgulayici, depo: Depo, kim: Kisi, 
   const ham = await kayitDosyasi(db, PDF_MODULU, id, istek.pdf_dosya);
   if (!ham) return { durum: "red", neden: "İmzaya hazırlanan PDF bulunamadı; yeniden hazırlayın." };
   const imzasiz = await depo.oku(ham.anahtar, db), b = dosya.bayt;
-  if (!imzaliPdfGecerli(imzasiz, b)) return { durum: "gecersiz", hatalar: { dosya: IMZA_GECERSIZ } };
-  const kripto = ekImzaNedeni(imzasiz, b);
+  const tb = imzaliTaban(imzasiz, b);
+  if ("neden" in tb) return { durum: "gecersiz", hatalar: { dosya: tb.neden } };
+  const kripto = ekImzaNedeni(tb.taban, b);
   if (kripto) return { durum: "gecersiz", hatalar: { dosya: kripto } };
-  const n = imzaciNedeni(ekImzaIcerikleri(imzasiz, b), await kisininAdi(db, kim));
+  const n = imzaciNedeni(ekImzaIcerikleri(tb.taban, b), await kisininAdi(db, kim));
   if (n) return { durum: "gecersiz", hatalar: { dosya: n } };
   const gno = gorunenNo(e.r.no, e.r.revizyon);
   /* teknik yöneticinin imzalı PDF'i muayene uzmanının imzalayacağı PDF'tir (dosya modülü rapor_pdf — 0102) */
@@ -1248,7 +1270,8 @@ export async function teknikImzaliEslestirYukle(db: Sorgulayici, depo: Depo, kim
     return h;
   };
   const a = adaylar.find((x) => Number(x.boyut) <= b.length && onek(Number(x.boyut)) === x.sha);
-  if (!a) return { id: null, no: null, sonuc: { durum: "gecersiz", hatalar: { dosya: "Bu PDF, imzaya hazırladığınız onay bekleyen raporlardan birinin PDF'i değil (başka bir PDF ya da rapor bu arada geri gönderilmiş)." } } };
+  if (!a) return (await icerikleEslestir(adaylar, dosya, (x) => teknikImzaliYukle(db, depo, kim, firmaId, x.id, x.surum, dosya)))
+    ?? { id: null, no: null, sonuc: { durum: "gecersiz", hatalar: { dosya: "Bu PDF, imzaya hazırladığınız onay bekleyen raporlardan birinin PDF'i değil (başka bir PDF ya da rapor bu arada geri gönderilmiş)." } } };
   const no = gorunenNo(a.no, a.revizyon);
   if (Number(a.boyut) === b.length) return { id: a.id, no, sonuc: { durum: "gecersiz", hatalar: { dosya: "PDF'te imza yok (imzalanmamış dosya yüklendi)." } } };
   return { id: a.id, no, sonuc: await teknikImzaliYukle(db, depo, kim, firmaId, a.id, a.surum, dosya) };

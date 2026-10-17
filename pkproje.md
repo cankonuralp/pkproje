@@ -2527,6 +2527,20 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-17 (YAPILDI): **HER İMZA PROGRAMININ İMZALI RAPORU KABUL** (reisim: *"imzayeri ile mobil imza attım, o şeritler imzayerinde imzalanınca
+  geliyor ne demek kalsın mı kalacak tabiki bizim kontrolümüzde değil"* · *"sistemimiz her hangi bir imzalı raporu kabul etmeli zaten bu
+  müşterilerden çokca dönüş almamıza sabep olabilir"*). Bulgu: imzayeri gibi servisler imzadan önce PDF'i baştan yeniden yazıyor (alttaki şerit,
+  karekod, kendi doğrulama bağlantısı; bizim boş imza alanı atılıyor), imzayı sonra ekliyor → "imzalı PDF hazırlanan PDF'le başlar" kuralı
+  tutmuyor, site "Eşleşmedi" diyordu. Artık kural: **imzalı dosyadaki rapor, imzaya hazırlanan raporla İÇERİKÇE aynı olmalı ve imza sağlam
+  olmalı.** Aynılık: sayfa sayısı, boyut ve yön; her sayfada bizim çizimimiz aynen (araç önüne / arkasına yalnız damga çizebilir); yazı tipleri ve
+  resimler aynı; doğrulama bağlantımız aynı adresle ya da atılmış. Programın eklediği damga / imza kutusu / bağlantı **yalnız sayfa kenarında**
+  (raporun kendi boşlukları: üst 10, yan 8, alt 20 mm — alttaki şeridin üstüne gelebilir) ya da bizim e-imza yerimizde. Reddedilen (nedeniyle
+  ekranda): içerik değişmiş, raporun ortasına damga, sayfaya yazı / şekil eklenmiş, rapor küçültülmüş / saydamlaştırılmış / gizlenmiş, not
+  eklenmiş, belge açılınca çalışan eylem eklenmiş; teknik yöneticinin imzaladığı PDF'i yeniden yazan program (önceki imzayı bozar — "Belgeyi
+  değiştirmeden imzalayan bir programla imzalayın"). Toplu yüklemede dosya önce eski yolla, olmazsa PDF'teki doğrulama bağlantısıyla ya da dosya
+  adındaki rapor numarasıyla eşleşir. Teknik yönetici yüklemesi ve Onaylar › Diğer belgeler aynı kuralla. Desteklenmeyen (nedeniyle reddedilir):
+  "yazdırarak yeniden PDF yapmak" gibi baştan çizilmiş belge. Gerçek imzayeri dosyasının yapısıyla PC'de denendi (dosya depoya girmedi);
+  kilit uydurma PDF'le (tests/imza-esdeger.test.ts, bozan imza-esdeger 1–8, onaylar PG). Kod: raporlar/imza-esdeger.ts.
 - 2026-10-17 (YAPILDI): **RAPOR DOSYA ADI: NO - EKİPMAN KODU - TÜR ADI** (reisim: *"rapor isimleri sadece rapor kodlarından oluşuyor bu şekilde klasörde
   anlaması zor, rapor isimlerinde rapor numarasından sonra - ekipman kodu- sonra da ekipmanın adı "kompresör hava tankı" veeya "yangın dolapları" ne
   ise artık o yazmalı"*). Raporun PDF adı `<rapor no>-<ekipman kodu>-<ekipman türünün adı>.pdf` (ör. DM-1026-003-cf59e-HT-1-Kompresör hava tankı.pdf):

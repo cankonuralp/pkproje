@@ -25,7 +25,7 @@
      doğrulama eki (/DSS, belge zaman damgası /Type /DocTimeStamp) yeni nesne olarak zaten serbest.
    Kalan risk (kayıtta): imza alanının görünümü (/AP) sayfaya çizilir; kriptografik zincir ve görsel karşılaştırma sonraki fazda (K7). */
 
-type Deger = { t: "sozluk"; d: Map<string, Deger> } | { t: "dizi"; l: Deger[] } | { t: "ref"; n: number; g: number } | { t: "yalin"; v: string };
+export type Deger = { t: "sozluk"; d: Map<string, Deger> } | { t: "dizi"; l: Deger[] } | { t: "ref"; n: number; g: number } | { t: "yalin"; v: string };
 interface Nesne { n: number; govde: string; deger: Deger | null; akis: boolean }
 
 const EK_SINIR = 4 * 1024 * 1024, NESNE_SINIR = 500;
@@ -98,6 +98,10 @@ function kanonik(d: Deger, haric?: Set<string>): string {
 }
 const ad = (d: Deger | null, k: string) => (d?.t === "sozluk" ? d.d.get(k) : undefined);
 const adi = (d: Deger | null, k: string) => { const x = ad(d, k); return x?.t === "yalin" ? x.v : null; };
+/** 2026-10-17 (imza-esdeger.ts — yeniden yazılmış imzalı PDF): PDF değerini ayrıştırır; bozuksa null (sözdizimi aynı: yinelenen anahtar, derinlik) */
+export function degerAyristir(s: string): Deger | null {
+  try { return ayristir(s).deger; } catch (e) { if (e instanceof Bozuk) return null; throw e; }
+}
 
 /** metindeki nesneler (tek geçiş): başlık … endobj. Ekte (katı) iç içe başlık ya da kapanmamış nesne → Bozuk; özgünde (kendi ürettiğimiz PDF)
     iç içe başlık öncekini kapatır. Aynı numara sonra tanımlanırsa sonuncusu geçerli. */

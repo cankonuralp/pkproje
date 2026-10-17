@@ -221,10 +221,13 @@ test("ES1 kaynak kilidi: imzalı PDF'i yapıca denetleyen her yükleme (imzaliPd
   const dosyalar: string[] = [];
   const gez = (d: string) => { for (const e of readdirSync(d, { withFileTypes: true })) { const y = join(d, e.name); if (e.isDirectory()) gez(y); else if (/\.tsx?$/.test(e.name)) dosyalar.push(y); } };
   gez("src");
-  const yukleyen = dosyalar.filter((f) => !f.endsWith("imza-pdf.ts") && /imzaliPdfGecerli\(/.test(readFileSync(f, "utf8")));
+  /* 2026-10-17 (yeniden yazılmış imzalı PDF — imza-esdeger.ts): yüklemeler yapı denetimini imzaliTaban üzerinden yapar (önek ya da içerikçe eşdeğer
+     taban; içinde imzaliPdfGecerli). Kilit aynı: her yapı denetimi (imzaliPdfGecerli ya da imzaliTaban) çağrısına bir kriptografik denetim. */
+  const DENETIM = /imzaliPdfGecerli\(|imzaliTaban\(/g;
+  const yukleyen = dosyalar.filter((f) => !/[\\/]imza-(?:pdf|esdeger)\.ts$/.test(f) && /imzaliPdfGecerli\(|imzaliTaban\(/.test(readFileSync(f, "utf8")));
   assert.ok(yukleyen.length >= 2, `yükleme yolları bulunamadı: ${yukleyen.join(", ")}`);
   for (const f of yukleyen) {
     const m = readFileSync(f, "utf8");
-    assert.equal((m.match(/imzaliPdfGecerli\(/g) ?? []).length, (m.match(/ekImzaNedeni\(/g) ?? []).length, `${f}: her yapı denetiminin ardından kriptografik denetim`);
+    assert.equal((m.match(DENETIM) ?? []).length, (m.match(/ekImzaNedeni\(/g) ?? []).length, `${f}: her yapı denetiminin ardından kriptografik denetim`);
   }
 });

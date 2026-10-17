@@ -12,7 +12,7 @@ import { hesabinPersoneli, hesapAdlari } from "../../../server/kimlik/hesap.ts";
 import { canDo, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { personelKartiGorur } from "../../personel/server/kart-baglanti.ts";
 import { ekImzaNedeni } from "../../../server/imza/yukleme.ts";
-import { imzaliPdfGecerli } from "../../raporlar/imza-pdf.ts";
+import { ESLESMEDI_TABAN, imzaliTaban } from "../../raporlar/imza-esdeger.ts";
 import type { BelgeDurumu, BelgeTuru } from "../sema.ts";
 
 /** dosya modülleri: gönderilen (imzasız) PDF ve imzalı PDF — kayıt = belge */
@@ -94,9 +94,11 @@ export async function belgeImzaliYukle(db: Sorgulayici, depo: Depo, kim: Kisi, f
   const ham = await kayitDosyasi(db, BELGE_DOSYA, id, b.dosya);
   if (!ham) return { durum: "red", neden: "Gönderilen PDF bulunamadı." };
   const imzasiz = await depo.oku(ham.anahtar, db);
-  if (!imzaliPdfGecerli(imzasiz, dosya.bayt)) return { durum: "gecersiz", hatalar: { dosya: IMZA_GECERSIZ } };
+  /* taban: önek (artımlı imza) ya da imza programının yeniden yazdığı, içerikçe aynı sürüm (2026-10-17, imza-esdeger.ts) */
+  const t = imzaliTaban(imzasiz, dosya.bayt);
+  if ("neden" in t) return { durum: "gecersiz", hatalar: { dosya: t.neden === ESLESMEDI_TABAN ? IMZA_GECERSIZ : t.neden } };
   /* IMZA-SERVISI.md ES1 (yükleme denetimi): eklenen imza kriptografik olarak sağlam, nitelikli, imza anında geçerli */
-  const kripto = ekImzaNedeni(imzasiz, dosya.bayt);
+  const kripto = ekImzaNedeni(t.taban, dosya.bayt);
   if (kripto) return { durum: "gecersiz", hatalar: { dosya: kripto } };
   const y = await dosyaYukle(db, depo, { firmaId, modul: BELGE_IMZALI, kayitId: id, ad: `${b.ad}-imzali.pdf`, bayt: dosya.bayt, izinli: ["pdf"], kim: kim.ad, yukleyen: kim.id });
   if (!y.tamam) return { durum: "gecersiz", hatalar: { dosya: y.neden === "buyuk" ? "PDF çok büyük (en çok 25 MB)." : IMZA_GECERSIZ } };
