@@ -2539,11 +2539,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   Kodda **firma başına farklı servis** — sağlayıcı bağlantısı firma başına kayıt, her sağlayıcı ayrı bağlantı dosyası (gönder · durum · indir ·
   doğrula); ekran, durumlar, denetim ortak. (3) **Kendi imza servisimiz** (mobil imza operatörlere doğrudan — probata sözleşmesi, sabit sunucu
   adresi; kart için kendi programımız + program imzalama sertifikası; zaman damgası kontörü) SONRA, aynı yapıya bir sağlayıcı olarak — §9 otuz
-  altıncı tur 177'deki "aracı site yok" bununla değişti: aracı servis bir yol, kendi servisimiz sonraki yol. İlk aday **Etikimza** (API 2026-10-17
-  okundu: kullanıcı + parola → 6 saatlik anahtar; belge yükle, süreç başlat — imzacılar sıralı / aynı anda, sayfa "her" / "son" + kutu yeri, zaman
-  damgası —, durum sorgula, indir, doğrula; imza bitince haber VERMİYOR → yoklama; süreç iptali yok; API yalnız kurumsal pakette, fiyat teklifle;
-  imzacı sağlayıcının sayfasında mobil imza / e-imza seçer). Sıra: maket → Etikimza deneme hesabı (reisim açar; bilgiler git dışı dosyada) → uydurma
-  belgeyle bağlantı denemesi (imzalı PDF denetimimizden geçiyor mu) → kod.
+  altıncı tur 177'deki "aracı site yok" bununla değişti: aracı servis bir yol, kendi servisimiz sonraki yol. (4) **Belirli bir sağlayıcı YOK**
+  (reisim: *"etikimzayı kafandan sil, müşteri hangi sağlayıcıyı isterse onu kuracaz"*): yapı sağlayıcıdan bağımsız; müşteri hangi sağlayıcıyı
+  isterse onun bağlantı dosyası yazılır ve o firmaya Yönetim'den kurulur. Sağlayıcı bitince haber vermiyorsa durumu biz sorarız; imzalı PDF her
+  sağlayıcıda bizim denetimimizden geçer. Sıra: maket + onay → ortak yapı (Yönetim bölümü, tuşlar, durum, denetim; testlerde taklit sağlayıcı) →
+  ilk müşterinin istediği sağlayıcının bağlantısı (o sağlayıcının deneme hesabıyla, imzalı PDF denetimimizden geçiyor mu).
 - 2026-10-17 (İ6 YAPILDI): **SÜRÜKLEYEREK TAŞIMA** (sunum 595 madde 8 — *"her öğede tutamak (sürükle)"*). Format yapıcının kâğıdında her öğenin
   tuşlarının başında tutamak: alan, madde, ölçüm sütunu, test değeri, hazır satır, firma / imza / başlık satırları, fotoğraf kutusu, cihaz /
   uygunsuzluk tablosu sütunu, ek sütun. Fareyle, parmakla ya da kalemle sürüklenir (işaretçi olayları); bırakılacak yer çizgiyle görünür (satırın

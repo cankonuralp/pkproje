@@ -72,7 +72,7 @@ paketleri) seçilmez ya da Windows'ta ölçülmeden eklenmez. Sunucuda PDF için
 | Tanım JSON'ları | sabit tanımlar, sürümlü, karma adlı, çevrimdışı pakete girer (§8) | ARKA-UC §2.1 |
 | Format motoru | tanımdan saha ekranı + PDF; doğrulama, otomatik sonuç, kusur listesi | `RAPOR-FORMAT.md` |
 | PDF | sunucuda; maketin A4 "kâğıt" düzeni birebir (Bakanlık görünümü); imzalı PDF değişmez, SHA-256 | §8.3 · 09-F1 · §11 108, 235 |
-| İmza bağdaştırıcısı | mobil imza (operatör), e-imza (kendi imza aracımız + AKİS), indir-imzala-yükle yedek; istek süresi · ⚠️ 2026-10-17: önce servis sağlayıcı API'si (firma başına, probata Yönetim'den kurar; ilk aday Etikimza), operatör + kendi aracımız sonra aynı yapıya | §9 otuz altıncı tur · 09-F2 · pkproje §11 "İMZA YOLLARI" |
+| İmza bağdaştırıcısı | mobil imza (operatör), e-imza (kendi imza aracımız + AKİS), indir-imzala-yükle yedek; istek süresi · ⚠️ 2026-10-17: önce servis sağlayıcı API'si (firma başına, probata Yönetim'den kurar; sağlayıcı müşterinin istediği — belirli bir sağlayıcı yok), operatör + kendi aracımız sonra aynı yapıya | §9 otuz altıncı tur · 09-F2 · pkproje §11 "İMZA YOLLARI" |
 | İş kuyruğu | pg-boss, kiracı bağlamıyla, idempotent (§9 işler) | 09-G1 |
 | E-posta bağdaştırıcısı | ek yok, kalıcı bağlantı yok, sonuç kayıtlı | 09-G4 |
 | Yapay zekâ bağdaştırıcısı | yalnız sunucudan, firmanın anahtarıyla, maskeli, kişi başı sayaç | ARKA-UC §5 · 09-G3 |
