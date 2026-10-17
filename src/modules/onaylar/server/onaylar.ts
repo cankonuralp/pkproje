@@ -210,7 +210,7 @@ export async function onayla(db: Sorgulayici, kim: Kisi, id: string, surum: numb
   return { durum: "tamam", sonraki: s, bildirim: `${r.no} onaylandı; muayene uzmanı imzasında, ${r.denetci} imzalayınca tamamlanır.${s ? " Sıradaki rapor açıldı." : " Kuyruk boş."}` };
 }
 
-/** Geri gönder (onayda → Yeni): gerekçe zorunlu; denetçi raporun üstünde görür; sıradaki rapor açılır */
+/** Geri gönder (onayda → Yeni): gerekçe isteğe bağlı (0101); yazıldıysa denetçi raporun üstünde görür; sıradaki rapor açılır */
 export async function geriGonder(db: Sorgulayici, kim: Kisi, id: string, surum: number, girdi: unknown): Promise<OnayYazma> {
   const r = await bul(db, kim, id);
   if (!r) return { durum: "yok" };
@@ -219,9 +219,10 @@ export async function geriGonder(db: Sorgulayici, kim: Kisi, id: string, surum: 
   const g = dogrula(GeriGirdisi, girdi);
   if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
   const s = await sonrakiRapor(db, kim, id);
-  const y = await yaz(db, kim, r, surum, "taslak", g.veri.gerekce, "rapor.geri_gonder");
+  const y = await yaz(db, kim, r, surum, "taslak", g.veri.gerekce || null, "rapor.geri_gonder");
   if (y !== "tamam") return { durum: y };
-  return { durum: "tamam", sonraki: s, bildirim: `${r.no} geri gönderildi; ${r.denetci} raporun üstünde gerekçeyi görür.` };
+  return { durum: "tamam", sonraki: s,
+    bildirim: `${r.no} geri gönderildi; ${r.denetci} ${g.veri.gerekce ? "raporun üstünde gerekçeyi görür" : "raporu Yeni olarak görür"}.` };
 }
 
 /** Onayı geri al (onaylandı → onayda; 102): rapor yeniden kuyrukta */
@@ -235,7 +236,7 @@ export async function onayGeriAl(db: Sorgulayici, kim: Kisi, id: string, surum: 
   return { durum: "tamam", sonraki: null, bildirim: `${r.no} onayı geri alındı; rapor yeniden kuyrukta.` };
 }
 
-/** Durumu değiştir (190): tamamlanmamış rapor Yeni / onayda / onaylandı arasında; Yeni'ye gerekçe zorunlu; Onaylandı'ya almak onaydır (191) */
+/** Durumu değiştir (190): tamamlanmamış rapor Yeni / onayda / onaylandı arasında; gerekçe isteğe bağlı (0101); Onaylandı'ya almak onaydır (191) */
 export async function durumDegistir(db: Sorgulayici, kim: Kisi, id: string, surum: number, girdi: unknown): Promise<OnayYazma> {
   const r = await bul(db, kim, id);
   if (!r) return { durum: "yok" };

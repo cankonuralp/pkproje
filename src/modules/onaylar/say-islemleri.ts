@@ -45,7 +45,7 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
   }),
   islem({
     ad: "rapor_geri_gonder", modul: MODUL, tur: "yaz", girdi: GeriGirdisi.extend({ rapor: kimlik, surum }), kaynak: [GeriGirdisi, kimlik, surum], islev: geriGonder,
-    tarif: "Onaydaki raporu denetçiye geri gönderir (gerekçe en az 10 karakter: neyin düzeltileceği).",
+    tarif: "Onaydaki raporu denetçiye geri gönderir (gerekçe isteğe bağlı: neyin düzeltileceği; yazılırsa denetçi raporun üstünde görür).",
     calistir: async (b, v, ham) => yazmaCevabi(await geriGonder(b.db, b.kim, v.rapor, v.surum, { gerekce: ham.gerekce })),
   }),
   islem({
@@ -56,7 +56,7 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
   islem({
     ad: "rapor_durum_degistir", modul: MODUL, tur: "yaz", girdi: RAPOR_SURUM.extend({ degisiklik: DurumGirdisi }), kaynak: [DurumGirdisi, kimlik, surum],
     islev: durumDegistir,
-    tarif: "Tamamlanmamış raporun durumunu değiştirir: degisiklik { hedef: taslak | onayda | onaylandi, gerekce (Yeni'ye alınırsa en az 10 karakter) }.",
+    tarif: "Tamamlanmamış raporun durumunu değiştirir: degisiklik { hedef: taslak | onayda | onaylandi, gerekce (isteğe bağlı) }.",
     calistir: async (b, v, ham) => (ekranRaporuKirli(b, [v.rapor]) ? { tamam: false, neden: EKRAN_KAYDEDILMEMIS }
       : yazmaCevabi(await durumDegistir(b.db, b.kim, v.rapor, v.surum, ham.degisiklik))),
   }),

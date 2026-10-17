@@ -598,7 +598,8 @@ test("veritabanı: rapor Yeni açılır, türün yayındaki formatıyla, plandak
   assert.deepEqual((await hareketler(x)).map((y) => y.slice(0, 3)), [["olustur", null, "taslak"], ["gonder", "taslak", "onayda"]]);
   await assert.rejects(deg("ekipman_bilgi = '{\"marka\": \"x\"}'::jsonb"), /yalnız Yeni rapor düzenlenir/);
   await assert.rejects(deg("durum = 'imzali'"), /onayda durumundan imzali durumuna geçemez/);
-  await assert.rejects(deg("durum = 'taslak'"), /gerekçe en az 10/, "Yeni'ye dönüş gerekçesiz olmaz (0026)");
+  /* 2026-10-17 (göç 0101; reisim "zorunlu açıklamayı kaldır"): Yeni'ye dönüş gerekçesiz de olur — önceki beklenti "gerekçesiz olmaz (0026)" idi */
+  await deg("durum = 'taslak'");
   /* tamamlanan (imzalı) rapor değişmez (ENGEL 6): o duruma geçiş sonraki kalemlerde — burada tetiksiz verilir */
   const su = kume.sahipIstemci(); await su.connect();
   try {

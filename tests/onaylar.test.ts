@@ -1,5 +1,5 @@
 /* NEREDEN GELDİ: maket onaylar.html M9 (kuyruk branşın onaydaki raporları, en yeni üstte; onay ekranı gözden geçirme; Onayla → sıradaki rapor;
-   Geri gönder gerekçe ≥ 10, denetçi raporun üstünde görür; Onayı geri al 102; Tüm raporlar ve Durumu değiştir 190, Onaylandı'ya almak onay 191;
+   Geri gönder gerekçesi isteğe bağlı (2026-10-17, 0101 — önceden ≥ 10), yazıldıysa denetçi raporun üstünde görür; Onayı geri al 102; Tüm raporlar ve Durumu değiştir 190, Onaylandı'ya almak onay 191;
    N7 vekil yok) · KOD-GECIS §4 (rapor_onayla / rapor_geri_gonder / rapor_durum_degistir; Onaylar düzeyi: branş yöneticisi branşı, firma
    yöneticisi görür, denetçi / planlama / muhasebe yok) · pkproje §1 (reisim: "hazırlayanın kendi raporunu onaylaması da engellenmez" — C1) ·
    reisim 2026-10-04: "rol değiştirme, sızma, veri çalma; yetki her zaman sunucuda". GERÇEK PostgreSQL, iki firma (314; göç 0026).
@@ -194,16 +194,13 @@ test("onayla: yalnız türün branş yöneticisi; kendi raporunu da onaylar (C1)
   assert.deepEqual([d.durum, d.izin.duzenle], ["onaylandi", false]);
 });
 
-test("geri gönder: gerekçe ≥ 10 (sunucu ve veritabanı); rapor Yeni'ye döner, gönderim zamanı boşalır, ilk gönderim kalır; hareket gerekçesiyle; denetçi raporun üstünde görür ve yeniden düzenler", async () => {
+/* 2026-10-17 (göç 0101; reisim: "En az 10 harflik gerekçe zorunlu … zorunlu açıklamayı kaldır"): gerekçe artık İSTEĞE BAĞLI — önceki "≥ 10, sunucu
+   ve veritabanı" ret beklentileri (kısa, boşluk, kod noktası) kalktı; gerekçesiz geri gönderme ve en çok 400 karakter aşağıda */
+test("geri gönder: gerekçe isteğe bağlı (en çok 400); rapor Yeni'ye döner, gönderim zamanı boşalır, ilk gönderim kalır; hareket gerekçesiyle; denetçi raporun üstünde görür ve yeniden düzenler", async () => {
   const [h1] = await raporlar([[FA.den, "HT-1"]]);
   const ilk = (await satir(h1)).ilk_gonderim;
-  assert.deepEqual(await a(FA.mek, (db) => geriGonder(db, FA.mek, h1, 1, { gerekce: "kısa" })),
-    { durum: "gecersiz", hatalar: { gerekce: "Gerekçe en az 10 karakter olmalı: denetçi neyi düzelteceğini bilmeli." } });
-  assert.equal((await a(FA.mek, (db) => geriGonder(db, FA.mek, h1, 1, { gerekce: "         x          " }))).durum, "gecersiz", "boşluklar sayılmaz");
-  /* 2026-10-05 (çapraz inceleme): karakter veritabanı gibi kod noktasıyla sayılır — UTF-16'da 11, gerçekte 9 karakter: sunucu reddeder (yakalanmamış
-     veritabanı hatası yerine) */
-  assert.deepEqual(await a(FA.mek, (db) => geriGonder(db, FA.mek, h1, 1, { gerekce: "Fotoyok\u{1F4F7}\u{1F4F7}" })),
-    { durum: "gecersiz", hatalar: { gerekce: "Gerekçe en az 10 karakter olmalı: denetçi neyi düzelteceğini bilmeli." } });
+  assert.deepEqual(await a(FA.mek, (db) => geriGonder(db, FA.mek, h1, 1, { gerekce: "x".repeat(401) })),
+    { durum: "gecersiz", hatalar: { gerekce: "En çok 400 karakter." } });
   assert.equal((await a(FA.yon, (db) => geriGonder(db, FA.yon, h1, 1, { gerekce: "Test değerleri eksik" }))).durum, "yetkisiz");
   const r = tamam(await a(FA.mek, (db) => geriGonder(db, FA.mek, h1, 1, { gerekce: "  Test değerleri   eksik  " })));
   assert.match(r.bildirim, /^DA-\S+ geri gönderildi; Deneme Bir raporun üstünde gerekçeyi görür\.$/);
@@ -220,16 +217,19 @@ test("geri gönder: gerekçe ≥ 10 (sunucu ve veritabanı); rapor Yeni'ye döne
     ekipman: { marka: "Deneme", model: null, seri: null, imal: null, konum: null, amac: null, bolum: null },
     tarih: { bas: `${bugunTr()}T09:00`, bit: null, sonraki: null, takip: null, rapor: null }, cevaplar: {},
   }))).durum, "tamam");
-  /* veritabanı da ister: kısa gerekçeyle doğrudan geri gönderilemez */
+  /* 0101: gerekçesiz geri gönderme — sunucuda da veritabanında da; denetçi "Geri gönderildi"yi gerekçesiz görür */
   await sql(A, "UPDATE rapor SET durum = 'onayda' WHERE id = $1", [h1], FA.den.id);
-  await assert.rejects(sql(A, "UPDATE rapor SET durum = 'taslak' WHERE id = $1", [h1], FA.mek.id), /gerekçe en az 10/);
-  await assert.rejects(kiraciIcinde(havuz, A, async (db) => {
-    await db.sorgu("SELECT set_config('app.gerekce', 'kısa', true)");
-    await db.sorgu("UPDATE rapor SET durum = 'taslak' WHERE id = $1", [h1]);
-  }), /gerekçe en az 10/);
+  const g = tamam(await a(FA.mek, async (db) => geriGonder(db, FA.mek, h1, (await satir(h1)).surum, {})));
+  assert.match(g.bildirim, /^DA-\S+ geri gönderildi; Deneme Bir raporu Yeni olarak görür\.$/);
+  assert.deepEqual((await hareketler(h1)).at(-1), ["geri", null, FA.mek.id]);
+  const d2 = (await a(FA.den, (db) => sahaRaporu(db, FA.den, h1)))!;
+  assert.deepEqual([d2.durum, d2.geri?.kim, d2.geri?.gerekce], ["taslak", "Deneme mek", null]);
+  await sql(A, "UPDATE rapor SET durum = 'onayda' WHERE id = $1", [h1], FA.den.id);
+  await sql(A, "UPDATE rapor SET durum = 'taslak' WHERE id = $1", [h1], FA.mek.id);
+  assert.equal((await satir(h1)).durum, "taslak", "veritabanı gerekçesiz Yeni'ye dönüşü kabul eder (0101)");
 });
 
-test("onayı geri al ve durumu değiştir: onaylandı → onayda; Yeni / onayda / onaylandı arası; Yeni'ye gerekçe zorunlu; Onaylandı'ya almak onay sayılır; aynı durum ve imzalı rapor reddedilir", async () => {
+test("onayı geri al ve durumu değiştir: onaylandı → onayda; Yeni / onayda / onaylandı arası; Yeni'ye gerekçe isteğe bağlı (0101); Onaylandı'ya almak onay sayılır; aynı durum ve imzalı rapor reddedilir", async () => {
   const [h1, h2] = await raporlar([[FA.den, "HT-1"], [FA.den, "HT-2"]]);
   tamam(await a(FA.mek, (db) => onayla(db, FA.mek, h1, 1)));
   assert.equal((await a(FA.elk, (db) => onayGeriAl(db, FA.elk, h1, 2))).durum, "yok");
@@ -240,8 +240,7 @@ test("onayı geri al ve durumu değiştir: onaylandı → onayda; Yeni / onayda 
   /* durumu değiştir */
   assert.deepEqual(await a(FA.mek, (db) => durumDegistir(db, FA.mek, h1, s.surum, { hedef: "onayda", gerekce: "" })), { durum: "gecersiz", hatalar: { hedef: "Rapor zaten bu durumda." } });
   assert.deepEqual(await a(FA.mek, (db) => durumDegistir(db, FA.mek, h1, s.surum, {})), { durum: "gecersiz", hatalar: { hedef: "Yeni durumu seçin." } });
-  assert.deepEqual(await a(FA.mek, (db) => durumDegistir(db, FA.mek, h1, s.surum, { hedef: "taslak", gerekce: "kısa" })),
-    { durum: "gecersiz", hatalar: { gerekce: "Yeni'ye alınan rapor denetçiye döner: gerekçe en az 10 karakter olmalı." } });
+  /* 2026-10-17 (0101): Yeni'ye almada kısa gerekçe artık reddedilmez — gerekçesiz Yeni'ye alma testin sonunda (h2) */
   assert.equal((await a(FA.mek, (db) => durumDegistir(db, FA.mek, h1, s.surum, { hedef: "imzali", gerekce: "" }))).durum, "gecersiz", "Tamamlandı'ya yalnız imzayla");
   assert.equal((await a(FA.yon, (db) => durumDegistir(db, FA.yon, h1, s.surum, { hedef: "onaylandi", gerekce: "" }))).durum, "yetkisiz");
   const r = tamam(await a(FA.mek, (db) => durumDegistir(db, FA.mek, h1, s.surum, { hedef: "onaylandi", gerekce: "" })));
@@ -255,6 +254,9 @@ test("onayı geri al ve durumu değiştir: onaylandı → onayda; Yeni / onayda 
   s = await satir(h1);
   assert.ok(s.gonderildi, "Yeni'den onaya alınınca gönderim zamanı yazılır");
   assert.deepEqual((await hareketler(h1)).map((x) => x[0]), ["olustur", "gonder", "onay", "onay_geri", "onay", "geri", "gonder"]);
+  /* 2026-10-17 (0101): Yeni'ye gerekçesiz alınır; hareketin gerekçesi boş */
+  tamam(await a(FA.mek, (db) => durumDegistir(db, FA.mek, h1, s.surum, { hedef: "taslak", gerekce: "" })));
+  assert.deepEqual((await hareketler(h1)).at(-1), ["geri", null, FA.mek.id]);
   /* imzalı rapor (imza kalemi gelene kadar elle): durumu değişmez — sunucu ve veritabanı */
   const sahip = kume.sahipIstemci(); await sahip.connect();
   try {
@@ -281,13 +283,15 @@ test("veritabanı: tanımsız geçiş reddedilir; durum değişirken içerik de�
   const s = await satir(h1);
   assert.equal(s.onay_hesap, FA.mek.id, "onaylayan bağlamdaki hesap");
   assert.ok(s.onay!.getTime() > Date.parse("2025-01-01"), "onay zamanı veritabanından");
-  /* aynı işlemde: gerekçeli geri gönderme ayarı silinir, sonraki gerekçesiz geçişe taşınmaz */
-  await assert.rejects(kiraciIcinde(havuz, A, async (db) => {
+  /* aynı işlemde: gerekçeli geri gönderme ayarı silinir, sonraki gerekçesiz geçişe taşınmaz — 2026-10-17 (0101): gerekçesiz geçiş artık reddedilmediği
+     için ret yerine hareketlerin gerekçesine bakılır (ikinci "geri" boş) */
+  await kiraciIcinde(havuz, A, async (db) => {
     await db.sorgu("SELECT set_config('app.gerekce', 'Kriterler yeniden bakılmalı', true)");
     await db.sorgu("UPDATE rapor SET durum = 'taslak' WHERE id = $1", [h1]);
     await db.sorgu("UPDATE rapor SET durum = 'onayda' WHERE id = $1", [h1]);
     await db.sorgu("UPDATE rapor SET durum = 'taslak' WHERE id = $1", [h1]);
-  }, { hesapId: FA.mek.id }), /gerekçe en az 10/);
+  }, { hesapId: FA.mek.id });
+  assert.deepEqual((await hareketler(h1)).filter((x) => x[0] === "geri").map((x) => x[1]), ["Kriterler yeniden bakılmalı", null]);
   /* hareket elle yazılmaz */
   await assert.rejects(yaz("INSERT INTO rapor_hareket (rapor_id, ne, gerekce) VALUES ($1, 'onay', 'sahte')"), /elle yazılmaz/);
   /* başka firma */

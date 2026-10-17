@@ -296,9 +296,8 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
     if (!(await geri.isVisible())) await page.getByRole("button", { name: "Geri gönder" }).click();
     await expect(geri).toBeVisible({ timeout: 3_000 });
   }).toPass({ timeout: 45_000 });
-  await geri.getByRole("textbox", { name: /^Gerekçe/ }).fill("kısa");
-  await geri.getByRole("button", { name: "Geri gönder" }).click();
-  await expect(geri).toContainText("en az 10 karakter", { timeout: 30_000 });
+  /* 2026-10-17 (göç 0101; reisim "zorunlu açıklamayı kaldır"): gerekçe isteğe bağlı — "kısa gerekçe reddedilir" adımı kalktı */
+  await expect(geri.getByRole("textbox", { name: "Gerekçe (isteğe bağlı)" })).toBeVisible();
   await geri.getByRole("textbox", { name: /^Gerekçe/ }).fill("Test değerleri yeniden yazılmalı");
   await geri.getByRole("button", { name: "Geri gönder" }).click();
   await expect(page.getByText(`${raporNo} geri gönderildi; `, { exact: false }).first()).toBeVisible({ timeout: 30_000 });

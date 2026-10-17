@@ -1,8 +1,9 @@
 /* OLUMSUZ KANIT — tests/onaylar.test.ts neyi koruyor (314). Kaynak diskte DEĞİŞTİRİLMEZ (anayasa 13.11): göçler / modül dosyası geçici klasöre
    kopyalanır, bellekte bozulur, kopyadan koşulur.
    1. Sunucuda rapor_onayla denetimi olmasaydı raporu gören ama onay yetkisi olmayan firma yöneticisi (Onaylar "gör") raporu onaylardı.
-   2. 0026'daki gerekçe kuralı olmasaydı rapor gerekçesiz Yeni'ye döner, denetçi neyi düzelteceğini bilmezdi (sunucu dışından yazılan durum).
-      (0027 akış işlevini yeniden yazdığı için kural iki göçten birlikte sökülür.)
+   2. (2026-10-17, 0101) Revizedeki gerekçe kuralı olmasaydı tamamlanan rapor gerekçesiz revizeye (Yeni'ye) döner, denetçi neyi düzelteceğini
+      bilmezdi. Onaydaki raporu geri göndermede gerekçe artık isteğe bağlı (reisim: "zorunlu açıklamayı kaldır") — kilit yalnız revizeyi korur.
+      (Akış işlevini 0027, 0029, 0101 yeniden yazdığı için kural bütün göçlerden birlikte sökülür.)
    3. (317) 0027'deki imza kuralı olmasaydı onaylanmış rapor imzalı sürüm olmadan Tamamlandı'ya geçer, müşteriye imzasız açılırdı.
    4. (318, C5) Sunucuda yönetici düzeyi denetimi olmasaydı Onaylar'da yalnız imzasını bekleyenleri gören denetçi kendi raporunun onay ekranını
       açardı.
@@ -41,6 +42,10 @@ const GEREKCE = `    IF NEW.durum = 'taslak' AND length(btrim(coalesce(current_s
       RAISE EXCEPTION 'denetçiye dönen raporda gerekçe en az 10 karakter' USING ERRCODE = '23514';
     END IF;
 `;
+const GEREKCE_REVIZE = `    IF revize AND length(btrim(coalesce(current_setting('app.gerekce', true), ''))) < 10 THEN
+      RAISE EXCEPTION 'revizeye gönderilen raporda gerekçe en az 10 karakter' USING ERRCODE = '23514';
+    END IF;
+`;
 const IMZA = `    IF NEW.durum = 'imzali' AND NOT EXISTS (SELECT 1 FROM rapor_surumu s WHERE s.firma_id = NEW.firma_id AND s.rapor_id = NEW.id AND s.revizyon = NEW.revizyon) THEN
       RAISE EXCEPTION 'imzalı sürüm olmadan rapor tamamlanmaz' USING ERRCODE = '23514';
     END IF;
@@ -70,6 +75,8 @@ const SOK: Record<string, string[]> = {
   "0026_": [GEREKCE], "0027_": [GEREKCE, IMZA], "0028_": [IPTAL, KEMER], "0029_": [GEREKCE, IMZA, IPTAL, REVIZYON], "0031_": [KEMER, ILERI, ESKIMIS],
   /* 2026-10-17: 0100 (şartlı uygun, sunum 595 madde 12) uygunsuzluk_koru'yu yeniden yazar — eskimiş sürüm kuralı oradan da sökülür */
   "0100_": [ESKIMIS],
+  /* 2026-10-17: 0101 (geri göndermede gerekçe isteğe bağlı) rapor_akis'i yeniden yazar — revize gerekçesi, imza ve revizyon kuralları oradan da */
+  "0101_": [GEREKCE_REVIZE, IMZA, REVIZYON],
 };
 const ONAYLAR = "src/modules/onaylar/server/onaylar.ts";
 let kume: GomuluKume;
@@ -154,12 +161,15 @@ before(async () => {
 });
 after(async () => { await havuz?.end(); await supa?.kapat(); await kume?.durdur(); rmSync(gecici, { recursive: true, force: true }); });
 
-test("0026'daki gerekçe kuralı kalkınca rapor gerekçesiz Yeni'ye döner (kilidin koruduğu açık)", async () => {
+test("0101'deki revize gerekçesi kuralı kalkınca tamamlanan rapor gerekçesiz revizeye (Yeni'ye) döner (kilidin koruduğu açık)", async () => {
   const k = await kur(havuz, A);
-  await k.is(k.yon, (db) => db.sorgu("UPDATE rapor SET durum = 'taslak' WHERE id = $1", [k.rapor]));
-  const r = (await supa.sahip.query<{ durum: string; g: string | null }>(
-    "SELECT r.durum, (SELECT gerekce FROM rapor_hareket h WHERE h.rapor_id = r.id AND h.ne = 'geri') AS g FROM rapor r WHERE r.id = $1", [k.rapor])).rows[0];
-  assert.deepEqual([r.durum, r.g], ["taslak", null], "rapor gerekçesiz geri döndü");
+  await k.is(k.yon, (db) => db.sorgu("UPDATE rapor SET durum = 'onaylandi' WHERE id = $1", [k.rapor]));
+  await imzalaTam(k, A, k.rapor);
+  await k.is(k.yon, (db) => db.sorgu("UPDATE rapor SET durum = 'taslak', revizyon = revizyon + 1 WHERE id = $1", [k.rapor]));
+  const r = (await supa.sahip.query<{ durum: string; rev: number; g: string | null }>(
+    "SELECT r.durum, r.revizyon AS rev, (SELECT gerekce FROM rapor_hareket h WHERE h.rapor_id = r.id AND h.ne = 'revize') AS g FROM rapor r WHERE r.id = $1",
+    [k.rapor])).rows[0];
+  assert.deepEqual([r.durum, r.rev, r.g], ["taslak", 1, null], "tamamlanan rapor gerekçesiz revizeye döndü");
 });
 
 test("0027'deki imza kuralı kalkınca onaylanmış rapor imzalı sürüm olmadan Tamamlandı'ya geçer", async () => {

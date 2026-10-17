@@ -2527,6 +2527,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-17 (YAPILDI): **GERİ GÖNDERMEDE GEREKÇE İSTEĞE BAĞLI** (reisim: *"Rapor Yeni'ye düşer. En az 10 harflik gerekçe zorunlu … zorunlu
+  açıklamayı kaldır"*). Teknik yönetici onaydaki raporu "Geri gönder"le ya da "Durumu değiştir"le Yeni'ye alırken gerekçe yazmak zorunlu değil
+  (pencerede "Gerekçe (isteğe bağlı)", en çok 400 karakter); yazılırsa denetçi raporun üstünde görür, yazılmazsa "Geri gönderildi · kim · zaman".
+  Veritabanında da (göç 0101: rapor akışında gerekçe kuralı yalnız revizede). Tamamlanan raporu revizeye göndermede ve denetçinin revize isteğinde
+  gerekçe ≥ 10 aynen. S.A.Y'ın işlem tarifleri aynı.
 - 2026-10-17 (karar — **İMZA YOLLARI**; henüz yapılmadı, önce maket + onay). Reisim birebir: *"toplu indirip toplu yükleyerek imzalanabilsin
   raporlar bu 1 seçenek, e imza ve mobil imza için apı bağlayıp o apı üzerinden servis sağlayıcı ile imzalamak bi seçenek … eğer yapabileceksek
   kendimiz bir imzalama servisi de kurabiliriz bunu da diğer seçenekler ile kıyasla"* → kıyas sunuldu → *"kullanıcı aracı kuruluş seçerek oradan

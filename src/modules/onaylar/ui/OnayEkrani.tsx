@@ -4,7 +4,8 @@
    onaylandı Durumu değiştir · Onayı geri al; Yeni Durumu değiştir; Tamamlandı'da Revizeye gönder (+ denetçinin bekleyen isteği varsa İsteği
    reddet ve "Revize isteği" şeridi — 318). Gözden geçirme özeti (uyarılar engel
    değil) ve raporun tamamına bağlantı. Onaylayınca ya da geri gönderince sıradaki rapor açılır (kuyruk boşsa kuyruğa dönülür). Geri gönder ve
-   Yeni'ye alma gerekçe ister (≥ 10). Yetki, kural ve geçiş sunucuda ve veritabanında; buradaki tuşlar yalnız izinli olanı gösterir. */
+   Yeni'ye almada gerekçe isteğe bağlı (2026-10-17, göç 0101 — önceden ≥ 10 zorunluydu). Yetki, kural ve geçiş sunucuda ve veritabanında;
+   buradaki tuşlar yalnız izinli olanı gösterir. */
 import { useRouter } from "next/navigation";
 import { useState, useTransition, type ReactNode } from "react";
 import { Kosullar } from "../../../components/bilgi/Bilgi";
@@ -50,7 +51,6 @@ export function OnayEkrani({ v, belge }: { v: Veri; belge: ReactNode }) {
     if (pen.tur === "geri") bitti(await geriGonderEylemi(r.id, r.surum, { gerekce: pen.gerekce }), true);
     else bitti(await durumDegistirEylemi(r.id, r.surum, { hedef: pen.hedef ?? undefined, gerekce: pen.gerekce }), false);
   });
-  const zorunlu = pen?.tur === "geri" || pen?.hedef === "taslak";
 
   const tuslar = <>
     {r.izin.durumDegistir && <Tus tur="ikincil" ikon="refresh-cw" disabled={bekliyor} onClick={() => setPen({ tur: "durum", hedef: null, gerekce: "", hatalar: {} })}>Durumu değiştir</Tus>}
@@ -101,7 +101,7 @@ export function OnayEkrani({ v, belge }: { v: Veri; belge: ReactNode }) {
             {pen.hatalar.hedef && <p className={stil.hata} id={ipucuId(ID.hedef)}>{pen.hatalar.hedef}</p>}
           </fieldset>
         )}
-        <Alan id={ID.gerekce} etiket="Gerekçe" zorunlu={zorunlu} hata={pen?.hatalar.gerekce}>
+        <Alan id={ID.gerekce} etiket="Gerekçe (isteğe bağlı)" hata={pen?.hatalar.gerekce}>
           <textarea id={ID.gerekce} className={stil.gerekce} maxLength={400} value={pen?.gerekce ?? ""} aria-invalid={!!pen?.hatalar.gerekce || undefined}
             aria-describedby={pen?.hatalar.gerekce ? ipucuId(ID.gerekce) : undefined} placeholder="Hangi bölümde ne eksik ya da yanlış"
             readOnly={bekliyor} onChange={(e) => { const g = e.target.value; setPen((p) => (p ? { ...p, gerekce: g, hatalar: { ...p.hatalar, gerekce: "" } } : p)); }} />
