@@ -37,6 +37,22 @@ test("2. src/server/imza/ içine imza üreten işlev geri gelince yakalanır (ki
   ] as const) {
     assert.ok(imzaAyrimiEksikleri(ekle(ad, satir)).includes(`${ad}: imza üreten işlev (${isim}) — imza üretimi probata-sign'da`), `bozuk: ${ad}`);
   }
+  /* CMS öznitelik kurucu ve yer tutucunun içerik yazıcısı geri gelince (2026-10-17 denetim bulgusu: eski ad listesinde yoktu) */
+  for (const [ad, satir, isim] of [
+    ["src/server/imza/cms.ts", "export function imzaliOznitelikler(): Buffer { return Buffer.alloc(0); }", "imzaliOznitelikler"],
+    ["src/server/imza/cms.ts", "export const damgaOzniteligi = (t: Buffer) => t;", "damgaOzniteligi"],
+    ["src/server/imza/pdf-imzalar.ts", "export function icerikYaz(): void {}", "icerikYaz"],
+  ] as const) {
+    assert.ok(imzaAyrimiEksikleri(ekle(ad, satir)).includes(`${ad}: imza üreten işlev (${isim}) — imza üretimi probata-sign'da`), `bozuk: ${isim}`);
+  }
+  /* artımlı ek yazıcısı genel adla ("ekle") geri gelince: adıyla değil İZİYLE yakalanır */
+  const yazici = [...temel, { ad: "src/server/imza/pdf-ek-yaz.ts", metin: oku("tests/yardimci/imza-uret/pdf-ek-yaz.ts").replace(/^\/\*[\s\S]*?\*\//, "/* ek yazıcı */") }];
+  const iz = imzaAyrimiEksikleri(yazici).filter((b) => b.startsWith("src/server/imza/pdf-ek-yaz.ts: PDF yazıcısı izi"));
+  assert.equal(iz.length, 3, `bozuk: artımlı ek yazıcısı (${iz.join(" · ")})`);
+  const tekSatir = imzaAyrimiEksikleri(ekle("src/server/imza/pdf-ek.ts", 'const son = (n: number) => `startxref\\n${n}\\n%%EOF\\n`;'));
+  assert.ok(tekSatir.includes("src/server/imza/pdf-ek.ts: PDF yazıcısı izi (dosya sonu yazımı (%%EOF)) — artımlı ek yazımı probata-sign'da"), "bozuk: dosya sonu yazımı");
+  /* yorumdaki söz sayılmaz */
+  assert.deepEqual(imzaAyrimiEksikleri(ekle("src/server/imza/pdf-ek.ts", '/* yazıcı "\\nendobj\\n" yazardı */')), [], "yorum sayılmaz");
   /* taşınan dosyanın kendisi geri konunca (başlığı ne olursa olsun) */
   const geri = [...temel, { ad: "src/server/imza/ltv.ts", metin: oku("tests/yardimci/imza-uret/ltv.ts") }];
   const b = imzaAyrimiEksikleri(geri);

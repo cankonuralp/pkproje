@@ -9,7 +9,7 @@
    Olumsuz kanıt: tests/bozan/imza-ayrim.bozan.ts. */
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { dosyalar, IMZA_URETEN_ADLAR, imzaAyrimiEksikleri, oku } from "./yardimci/denetimler.ts";
+import { dosyalar, IMZA_URETEN_ADLAR, IMZA_YAZICI_IZLERI, imzaAyrimiEksikleri, oku } from "./yardimci/denetimler.ts";
 
 const UZANTI = [".ts", ".tsx", ".mts", ".cts", ".js", ".mjs", ".cjs"];
 const kaynaklar = () => [...dosyalar("src", UZANTI), ...dosyalar("tests/yardimci/imza-uret", UZANTI)].map((ad) => ({ ad, metin: oku(ad) }));
@@ -26,6 +26,11 @@ test("yasak adlar gerçek: üretici (tests/yardimci/imza-uret/) bu işlevleri d�
   const uretici = dosyalar("tests/yardimci/imza-uret", [".ts"]).map(oku).join("\n");
   /* zaman damgası istemcisi (damgaAl) ve iptal kanıtının ağdan alınması (iptalKaniti) test verisine gerekmez — probata'dan tümüyle çıktı */
   for (const ad of IMZA_URETEN_ADLAR.filter((a) => a !== "damgaAl" && a !== "iptalKaniti")) {
-    assert.match(uretici, new RegExp(`export (?:async )?function ${ad}\\b`), ad);
+    assert.match(uretici, new RegExp(`export (?:(?:async )?function ${ad}\\b|const ${ad} =)`), ad);
   }
+});
+
+test("yazıcı izleri gerçek: artımlı ek yazıcısında (pdf-ek-yaz.ts) var, okuyucuda (src/server/imza/) yok — iz listesi bayat değil", () => {
+  const yazici = oku("tests/yardimci/imza-uret/pdf-ek-yaz.ts");
+  for (const [ne, iz] of IMZA_YAZICI_IZLERI) assert.match(yazici, iz, ne);
 });

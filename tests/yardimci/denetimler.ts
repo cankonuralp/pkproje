@@ -932,12 +932,22 @@ export function islemAlanlariDenetimi(islemler: readonly { ad: string; girdi: un
     kurarız" — imza platformu ayrı proje probata-sign; probata'da yalnız yüklenen imzalı PDF'in okunması / denetimi, IMZA-SERVISI.md):
     · src/** hiçbir dosya tests/ altını içe aktarmaz (statik, yan etkili, dinamik, yeniden dışa açma, require; göreli ya da "@/") — testlerin imza
       verisi üreticisi (tests/yardimci/imza-uret/) ürüne giremez;
-    · src/server/imza/** içinde imza ÜRETEN işlevlerin adları geçmez (yorum dahil);
+    · src/server/imza/** içinde imza ÜRETEN işlevlerin adları geçmez (yorum dahil) — CMS öznitelik kurucu (imzaliOznitelikler, damgaOzniteligi),
+      yer tutucunun içerik yazıcısı (icerikYaz), artımlı ekin sözlük / akış yazıcıları (degerYaz, akisGovdesi) dahil;
+    · artımlı ek yazıcısının adı genel ("ekle") — onu adıyla değil İZİYLE yakalarız: nesne, çapraz başvuru ve dosya sonu YAZIMI (okuyucu bunları
+      yalnız arar, yazmaz; 2026-10-17 denetim bulgusu: eski kilit yazıcının geri gelişini görmüyordu);
     · tests/yardimci/imza-uret/** her dosya bu kuralı başında söyler.
     Dönen: bulgu listesi. Kilit tests/imza-ayrim.test.ts · olumsuz kanıt tests/bozan/imza-ayrim.bozan.ts. */
 export const IMZA_URETEN_ADLAR = [
   "imzaHazirla", "imzaTamamla", "ltvEkle", "dssEkle", "belgeDamgasiEkle", "damgaAl", "iptalKaniti", "yerTutucuEkle", "imzaliVeriKur",
+  "imzaliOznitelikler", "damgaOzniteligi", "icerikYaz", "degerYaz", "akisGovdesi",
 ] as const;
+/** PDF yazıcısının kaynaktaki izleri (yorumsuz metinde): "\nendobj\n" yazmak, boş xref girdisi "65535 f", "%%EOF\n" yazmak */
+export const IMZA_YAZICI_IZLERI: readonly (readonly [string, RegExp])[] = [
+  ["nesne yazımı (endobj)", /endobj\\n/],
+  ["çapraz başvuru yazımı (65535 f)", /65535 f/],
+  ["dosya sonu yazımı (%%EOF)", /%%EOF\\n/],
+];
 export const IMZA_URET_BASLIGI = "/* YALNIZ TEST VERİSİ ÜRETİR; ürün kodu bu klasörü import edemez — imza üretimi probata-sign'da";
 export function imzaAyrimiEksikleri(metinler: readonly { ad: string; metin: string }[]): string[] {
   const hata: string[] = [];
@@ -952,6 +962,8 @@ export function imzaAyrimiEksikleri(metinler: readonly { ad: string; metin: stri
     }
     if (ad.startsWith("src/server/imza/")) {
       for (const a of new Set([...metin.matchAll(adlar)].map((m) => m[0]))) hata.push(`${ad}: imza üreten işlev (${a}) — imza üretimi probata-sign'da`);
+      const kod = yorumsuz(metin);
+      for (const [ne, iz] of IMZA_YAZICI_IZLERI) if (iz.test(kod)) hata.push(`${ad}: PDF yazıcısı izi (${ne}) — artımlı ek yazımı probata-sign'da`);
     }
     if (ad.startsWith("tests/yardimci/imza-uret/") && !metin.startsWith(IMZA_URET_BASLIGI)) hata.push(`${ad}: başında "yalnız test verisi" kuralı yok`);
   }
