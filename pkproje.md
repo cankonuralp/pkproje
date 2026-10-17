@@ -2542,8 +2542,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   altıncı tur 177'deki "aracı site yok" bununla değişti: aracı servis bir yol, kendi servisimiz sonraki yol. (4) **Belirli bir sağlayıcı YOK**
   (reisim: *"etikimzayı kafandan sil, müşteri hangi sağlayıcıyı isterse onu kuracaz"*): yapı sağlayıcıdan bağımsız; müşteri hangi sağlayıcıyı
   isterse onun bağlantı dosyası yazılır ve o firmaya Yönetim'den kurulur. Sağlayıcı bitince haber vermiyorsa durumu biz sorarız; imzalı PDF her
-  sağlayıcıda bizim denetimimizden geçer. Sıra: maket + onay → ortak yapı (Yönetim bölümü, tuşlar, durum, denetim; testlerde taklit sağlayıcı) →
-  ilk müşterinin istediği sağlayıcının bağlantısı (o sağlayıcının deneme hesabıyla, imzalı PDF denetimimizden geçiyor mu).
+  sağlayıcıda bizim denetimimizden geçer. Yeni sağlayıcı KODLA eklenir (bir kez: bağlantı dosyası — dene · gönder · durum · al · iptal + ne
+  yapabildiğinin beyanı), firmaya kurmak Yönetim'den kodsuz. (5) **ŞİMDİLİK YAPILMAZ** (reisim aynı gün: *"sen e imza sağlayıcısı işini şimdilik
+  görmezden gel ileride müşteri bir sağlayıcı isterse ekleriz"*): ilk müşteri bir sağlayıcı isteyince maket → ortak yapı → o sağlayıcı. Bugün imza
+  yolu yalnız toplu indir → imzala → toplu yükle (596). Açık nokta: bu yol gerçek bir e-imza aracının dosyasıyla henüz hiç tamamlanmadı (canlı
+  2026-10-17: imzalı sürüm 0) — testler kendi ürettiğimiz imza ekiyle; ilk gerçek imzada denetim sonucu izlenir.
 - 2026-10-17 (İ6 YAPILDI): **SÜRÜKLEYEREK TAŞIMA** (sunum 595 madde 8 — *"her öğede tutamak (sürükle)"*). Format yapıcının kâğıdında her öğenin
   tuşlarının başında tutamak: alan, madde, ölçüm sütunu, test değeri, hazır satır, firma / imza / başlık satırları, fotoğraf kutusu, cihaz /
   uygunsuzluk tablosu sütunu, ek sütun. Fareyle, parmakla ya da kalemle sürüklenir (işaretçi olayları); bırakılacak yer çizgiyle görünür (satırın
