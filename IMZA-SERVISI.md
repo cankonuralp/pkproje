@@ -18,7 +18,7 @@
 | Kalemler ES1–ES6, adresler, veri ve kiracılık, yasal / ticari ön koşullar, açık kararlar | **probata-sign `TASARIM.md`** |
 | İmza üreten kod (CMS kurulumu, yer tutucu, artımlı ek, DSS + belge damgası, zaman damgası istemcisi, iptal kanıtının ağdan alınması) | **probata-sign** — probata'dan 2026-10-17'de çıktı |
 | Yüklenen imzalı PDF'in kriptografik denetimi | **probata** (§2) |
-| Doğrulama sayfası (karekod, 16 Ekim hâli) — probata'nın kendi raporları için; 2026-10-17 maketi iptal | **probata** (§4) |
+| Rapor doğrulama (karekod, doğrulama sayfası) — probata'dan 2026-10-17'de KALKTI | **probata-sign** (§4) |
 
 **probata ile bağ:** probata ileride platforma **sıradan bir API müşterisi** olarak bağlanır (`pkproje.md` §11 İMZA YOLLARI (4)'teki sağlayıcı
 arayüzüyle: dene · gönder · durum · al · iptal). O güne kadar probata platformun kodunu içe aktarmaz, platform probata'nın kodunu içe aktarmaz.
@@ -57,16 +57,13 @@ Kod içi başvurular bu kalemi "IMZA-SERVISI.md ES1" diye anar.
 
 ---
 
-## 4 · Doğrulama sayfası (probata'nın kendi raporları için)
+## 4 · Rapor doğrulama — probata'dan kalktı (2026-10-17)
 
-Raporun alt şeridindeki karekod ve doğrulama bağlantısı (595 K8) kalır → `<firma adresi>/dogrula/<kod>`, **16 Ekim hâliyle**: rapor no, muayene
-firması, ekipman türü ve kodu, kontrol tarihi, sonuç, e-imza zamanı; "yeni revizyonu var" / "imza bekleniyor". Müşteri / tesis adı, kişi adı ve PDF
-gösterilmez (595 K8 kuralı aynen).
-
-- **2026-10-17 doğrulama sayfası maketi İPTAL** (iki tur: imzalar, güvence katmanları, "Elinizdeki PDF bu mu?", raporun görüntüsü). Reisim: *"rapor
-  doğrulama sayfası işi komple iptal, e imza süreci ayrı bir süreç imzayı doğrulama süreci de öyle"*. Maket dosyaları (`docs/maket/dogrula.html`,
-  `docs/assets/maket-dogrula.js`, `maket.css` `.a-dgr-*`) kaldırıldı; eski §10-3 / §10-9 kararları geçersiz.
-- İmzanın katman katman doğrulanması (imzalar, güvence katmanları, PDF karşılaştırma) **platformun genel doğrulayıcısı**: probata-sign `TASARIM.md`.
+Reisim: *"tamam bu olay komple iptal kaldır, sign.probata kurucaz eğer imza hizmetini bizden alan olursa oradan suncaz"*. probata'dan kalkanlar:
+imzaya hazırlanan PDF'in şeridindeki karekod ve doğrulama bağlantısı (şerit kalır: kanun cümlesi + rapor no + sayfa), oturumsuz `/dogrula/<kod>`
+sayfası, "probata doğrulama bağlantısı olmayan imzalı rapor kabul edilmez" kuralı; aynı gün doğrulama sayfası maketi de (iki tur) kaldırıldı.
+Kalır: her imza programının içerikçe aynı imzalı raporu kabul (`imza-esdeger.ts`, çizimden tanır). İmzanın katman katman doğrulanması, karekod ve
+doğrulama sayfası **probata-sign**'ın işi (`TASARIM.md`, genel doğrulayıcı).
 
 ---
 

@@ -80,7 +80,7 @@ pkproje/
                             "supabase benim kontrolümde olacak firma başı supabase açma fikri rafa kalktı"): FV1–FV11 kodda, FV12–FV15 yapılmaz
   IMZA-SERVISI.md           YÖNLENDİRME (2026-10-17, reisim: "probatanın kaynak kodlarına bunları bulaştırma"): e-imza platformu AYRI PROJE probata-sign
                             (cankonuralp/probata-sign, özel; tasarımın tek kaynağı orada TASARIM.md — imza yolları, eklenti, operatörler, adresler, API);
-                            probata'da kalan: yüklenen imzalı PDF'in kriptografik denetimi + doğrulama sayfası; probata ileride API müşterisi
+                            probata'da kalan: yüklenen imzalı PDF'in kriptografik denetimi (rapor doğrulama / karekod probata'dan kalktı); probata ileride API müşterisi
   YAYIN SIRASI (2026-10-17) deneme.probata.com.tr = TEST ADRESİ: yayın önce orada, reisim onaylarsa öteki firmalara; bugün başka firma yok (pkproje.md §11)
   ARKA-UC.md                arka uç kurgusu (2026-10-01; K1–K6 kabul, K7–K8 kabul edilmedi — 2026-10-02): veri, dosya, çevrimdışı, uygulama, yapay zekâ, yedek
   ANAYASA.md · TASARIM-KALIBI.md · 00–08-*.md · 09-SUNUCU-VE-VERI.md · EKSIKLER-VE-ONERILER.md
