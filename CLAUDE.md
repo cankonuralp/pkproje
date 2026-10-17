@@ -293,6 +293,13 @@ pkproje/
                             ondan: ekipman bilgileri + kopyaCevaplari; bağlantısız paket ekipmanlar[].cevaplar) · oncekiRaporGorulur (dosya ucu IMZALI istisnası:
                             planlar ekipmaniGosterenPlanlar) · plan içi PlanEkipmani.onceki / oncekiRapor → EkipmanBolumu göz sütunu · kilit onaylar (PG) +
                             bozan onaylar 13–14, e2e saha-raporu (kapalı göz)
+                            · 2026-10-17 TEKNİK YÖNETİCİ İMZASI (göç 0102 — imza_istegi.asama uzman / teknik): firma ayarı imza.teknik (raporlar.ts teknikImzaAcik)
+                            → teknikImzaHazirla / teknikImzaliYukle / teknikImzaliEslestirYukle (onaylanmamış raporun PDF'i raporBelgesiVerisi onaylayan ile;
+                            yüklenince onay + uzmanın isteği o imzalı PDF'le) · imza-kimlik.ts (saf: imzalayanın adı CMS'ten — SignerInfo veren + seri no, adUyuyor)
+                            + imza-pdf.ts ekImzaIcerikleri — teknik akışta iki yüklemede de eklenen imza o kişinin · Onaylar: izin imzala / teknik, onayla ve
+                            durumu değiştir → Onaylandı reddedilir, "İmzala ve onayla" (onaylar/ui/TopluImza.tsx kip teknik; tek raporda PDF) · imza-pdf.ts gerçek
+                            imza aracı: sayfa ağacı aynen + belge bilgisi düz değerle yeniden yazılabilir · kilit onaylar (PG) + imza-kimlik + imza-pdf, bozan
+                            onaylar 15–18 + imza-kimlik + imza-pdf 3–4 (tests/yardimci/sahte-imza.ts uydurma sertifika)
                             · SAKLAMA SÜRESİ (387, göç 0073; ENGEL 11): server/saklama.ts (gece işi saklamaIsi — süresi dolan imzalı sürümün PDF'leri
                             saklama_sil ile, liste, Uyarılar günleri); okuyucular uyari-baglanti.ts, ayar-baglanti.ts; koruma veritabanında (dosya_saklama_koru)
   src/modules/onaylar/      ONAYLAR (2026-10-05, 314; modül 15): kuyruk, onay ekranı (gözden geçirme), Onayla / Geri gönder / Onayı geri al /

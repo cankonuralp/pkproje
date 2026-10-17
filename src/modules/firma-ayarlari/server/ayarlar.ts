@@ -41,7 +41,7 @@ export interface FirmaAyarlari {
   yaz: boolean;
   kod: string;
   firma: Surumlu<{ ad: string; adres: string; eposta: string; tel: string; akr: string; nusha: number }> & { kayitAd: string };
-  imza: Surumlu<{ yontem: "mobil" | "e_imza" }>;
+  imza: Surumlu<{ yontem: "mobil" | "e_imza"; teknik: boolean }>;
   zimmet: Surumlu<{ teslim_eden: string | null }>;
   saklama: Surumlu<{ yil: number }>;
   mesai: Surumlu<{ acik: boolean; normal_dk: number; mesai_dk: number; yillik_fazla_saat: number }>;
@@ -172,7 +172,9 @@ export async function ayarKaydet(db: Sorgulayici, kim: Kisi, kesim: string, suru
     }
     case "imza": {
       const g = dogrula(ImzaGirdisi, girdi);
-      return g.tamam ? yaz("imza", g.veri, "İmza yöntemi kaydedildi; raporlar ve iç belgeler bu yöntemle imzalanır.") : { durum: "gecersiz", hatalar: g.hatalar };
+      return g.tamam ? yaz("imza", g.veri, g.veri.teknik
+        ? "İmza ayarı kaydedildi; teknik yönetici onaydaki raporu imzalayarak onaylar, sonra muayene uzmanı imzalar."
+        : "İmza yöntemi kaydedildi; raporlar ve iç belgeler bu yöntemle imzalanır.") : { durum: "gecersiz", hatalar: g.hatalar };
     }
     case "zimmet": {
       const g = dogrula(ZimmetGirdisi, girdi);

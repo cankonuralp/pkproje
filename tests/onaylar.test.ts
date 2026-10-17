@@ -9,7 +9,8 @@
    318 REVİZYON (göç 0029; pkproje §11 131 V1, 141 W4, 142 W5; KOD-GECIS §4 rapor_revize_iste / rapor_revizeye_gonder): Revize iste (yazan) · geri çek ·
    Reddet · Revizeye gönder (türün branş yöneticisi) → R1 Yeni, imzalı sürüm saklı, yeniden onay ve imzayla no-R1.
    596 TOPLU İMZA (reisim 2026-10-16: "imzalam sürecinde toplu imzalama için belge seçme vs olmalı"; kararlar: yalnız raporlar, tek ZIP, imzalı PDF
-   içeriğinden eşleşir, en çok 50): imzalı PDF dosya adından değil içeriğinden rapora eşleşir, her biri ayrı denetlenir; "İmzaya hazır". */
+   içeriğinden eşleşir, en çok 50): imzalı PDF dosya adından değil içeriğinden rapora eşleşir, her biri ayrı denetlenir; "İmzaya hazır".
+   2026-10-17 TEKNİK YÖNETİCİ İMZASI (göç 0102; dosyanın sonunda). */
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import { mkdtempSync, rmSync } from "node:fs";
@@ -25,7 +26,10 @@ import { bugunTr, planAc, type Kisi } from "../src/modules/planlar/server/planla
 import { taslakBaslat, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
 import {
   IMZALI_MODULU, imzaHazirla, imzaliEslestirYukle, imzaliYukle, raporKaydet, raporListesi, raporOlustur, raporSil, revizeIste, revizeIstegiGeriCek, sahaRaporu,
+  teknikImzaHazirla, teknikImzaliEslestirYukle, teknikImzaliYukle,
 } from "../src/modules/raporlar/server/raporlar.ts";
+import { ayarOku, ayarYaz } from "../src/server/ayar/ayar.ts";
+import { sahteImzaSozlugu } from "./yardimci/sahte-imza.ts";
 import { dosyaIndirilebilir, dosyaYukle } from "../src/server/dosya/dosya.ts";
 import { DOSYA_ERISIMI } from "../src/server/dosya/erisim.ts";
 import {
@@ -916,4 +920,105 @@ test("İ1–İ3 önceki rapor: yeni rapor önceki tamamlanmış raporun kayıtl�
   /* r3 (3. yıl) r2'den açılır — kaynak hep en son tamamlanmış rapor */
   const r3 = tamam(await a(d4.k, (db) => raporOlustur(db, d4.k, p3, ekp))).id;
   assert.equal((await a(d4.k, (db) => sahaRaporu(db, d4.k, r3)))!.ekipmanBilgi.seri, "S-9");
+});
+
+/* ── 2026-10-17 TEKNİK YÖNETİCİ İMZASI (göç 0102; reisim: "firma ayarlarına ekleyebiliriz teknik yönetici imzalasın seçeneği olsun açıkken teknik
+   yönetici onayına giden rapor teknik yönetici tarafından imzalansın, ondan sonra denetçiye gitsin, eğer açık değilse bu seçenek şu an ki
+   kurgumuzdan devam edelim" · önerinin ayrıntıları "onaylıyorum") ── ayar açıkken imzasız onay yok; teknik yönetici hazırlar (onay satırı onun),
+   imzalar, yükler (eklenen imza ONUN — ad sertifikadan) → rapor onaylanır, muayene uzmanının isteği o imzalı PDF'le açılır (veritabanı başka PDF'e
+   izin vermez); uzman yüklerken eklenen imza YAZANIN; geri gönderilen raporun teknik isteği iptal; toplu yükleme içerikten eşleşir; ayar kapalıyken
+   bugünkü akış. Uydurma sertifikalar tests/yardimci/sahte-imza.ts. */
+const imzaAyari = async (teknik: boolean) => {
+  const s = await a(FA.yon, (db) => ayarOku(db, "imza"));
+  const y = await a(FA.yon, (db) => ayarYaz(db, "imza", s.surum, { yontem: "mobil", teknik }, { kim: "Deneme", ne: "firma_ayar" }));
+  assert.ok(y.durum === "tamam" || y.durum === "degisiklik_yok", JSON.stringify(y));
+};
+/** imzasız bayt + bu adla sahte imza (artımlı ek; her imza ayrı nesne numarasıyla — ikinci imza öncekini yeniden tanımlamaz) */
+let imzaNo = 50;
+const imzalaAdla = (b: Uint8Array, ad: string) => new Uint8Array(Buffer.concat([Buffer.from(b), Buffer.from(`\n${sahteImzaSozlugu(imzaNo++, ad)}trailer << /Root 1 0 R /Prev 0 >>\n%%EOF\n`, "latin1")]));
+const dosyaBayt = async (dosya: string) => depo.oku((await sql<{ anahtar: string }>(A, "SELECT anahtar FROM dosya WHERE id = $1", [dosya])).rows[0].anahtar);
+const istekler = async (id: string) => (await sql<{ asama: string; durum: string; pdf: string; imzali: string | null; h: string | null }>(A,
+  "SELECT asama, durum, pdf_dosya::text AS pdf, imzali_dosya::text AS imzali, hesap_id::text AS h FROM imza_istegi WHERE rapor_id = $1 ORDER BY olustu", [id])).rows;
+
+test("teknik yönetici imzası (0102): ayar açıkken imzasız onay yok; teknik yönetici imzalayıp onaylar, sonra muayene uzmanı aynı PDF'e kendi imzasını ekler; imzalayanın adı denetlenir", async () => {
+  await imzaAyari(true);
+  try {
+    const [h1, h2, h3] = await raporlar([[FA.den, "HT-1"], [FA.den, "HT-2"], [FA.den, "HT-3"]]);
+    /* imzasız onay yok: Onayla ve Durumu değiştir → Onaylandı */
+    const TEKNIK_ONAY = "Bu firmada teknik yönetici raporu imzalayarak onaylar: İmzala ve onayla.";
+    assert.deepEqual(await a(FA.mek, async (db) => onayla(db, FA.mek, h1, await surum(h1))), { durum: "red", neden: TEKNIK_ONAY });
+    assert.deepEqual(await a(FA.mek, async (db) => durumDegistir(db, FA.mek, h1, await surum(h1), { hedef: "onaylandi", gerekce: "" })),
+      { durum: "gecersiz", hatalar: { hedef: TEKNIK_ONAY } });
+    const l = (await a(FA.mek, (db) => onayListeleri(db, FA.mek)))!;
+    const s1 = l.kuyruk.find((x) => x.id === h1)!;
+    assert.deepEqual([l.teknikImza, s1.izin.onayla, s1.izin.imzala, s1.izin.teknik], [true, false, true, true]);
+    /* yetki: başka branşın yöneticisi raporu görmez, firma yöneticisi ve denetçi onaylayamaz */
+    let pdf: Uint8Array = new Uint8Array();
+    let onayAdi: string | null = null;
+    const tUret = async (v: BelgeVerisi) => { onayAdi = v.onay?.ad ?? null; pdf = await uret(); return pdf; };
+    const tHazirla = (k: Kisi, id: string) => a(k, (db) => teknikImzaHazirla(db, depo, k, A, id, tUret));
+    assert.equal((await tHazirla(FA.elk, h1)).durum, "yok");
+    assert.equal((await tHazirla(FA.yon, h1)).durum, "yetkisiz");
+    assert.equal((await tHazirla(FA.den, h1)).durum, "yetkisiz");
+    /* hazırla: PDF bir kez, onay satırında teknik yönetici */
+    const t1 = tamam(await tHazirla(FA.mek, h1));
+    assert.equal(onayAdi, "Deneme mek", "PDF'in onay satırı imzalayacak teknik yönetici");
+    const ilkPdf = pdf;
+    assert.equal(tamam(await tHazirla(FA.mek, h1)).dosya, t1.dosya, "yeniden üretilmez");
+    assert.deepEqual((await a(FA.mek, (db) => onayListeleri(db, FA.mek)))!.teknikHazir, [h1]);
+    /* yanlış kişinin imzası reddedilir; imzasız dosya reddedilir */
+    const tYukle = (k: Kisi, id: string, bayt: Uint8Array) => a(k, async (db) => teknikImzaliYukle(db, depo, k, A, id, await surum(id), { ad: "imzali.pdf", bayt }));
+    assert.deepEqual(await tYukle(FA.mek, h1, imzalaAdla(ilkPdf, "DENEME BİR")),
+      { durum: "gecersiz", hatalar: { dosya: "PDF'teki imza DENEME BİR adına; bu raporu Deneme mek imzalamalı." } });
+    assert.equal((await tYukle(FA.mek, h1, ilkPdf)).durum, "gecersiz");
+    assert.equal((await satir(h1)).durum, "onayda", "reddedilen yükleme onaylamaz");
+    /* doğru imza: onaylanır (damga veritabanında), uzmanın isteği teknik yöneticinin imzalı PDF'iyle */
+    const tPdf = imzalaAdla(ilkPdf, "DENEME MEK");
+    const y1 = tamam(await tYukle(FA.mek, h1, tPdf));
+    assert.match(y1.bildirim, /imzalandı ve onaylandı; muayene uzmanının son imzasına gitti\.$/);
+    const s = await satir(h1);
+    assert.deepEqual([s.durum, s.onay_hesap], ["onaylandi", FA.mek.id]);
+    const i1 = await istekler(h1);
+    assert.deepEqual(i1.map((x) => [x.asama, x.durum]), [["teknik", "tamam"], ["uzman", "bekliyor"]]);
+    assert.equal(i1[1].pdf, i1[0].imzali, "uzman teknik yöneticinin imzalı PDF'ini imzalar");
+    assert.deepEqual(new Uint8Array(await dosyaBayt(i1[1].pdf)), tPdf);
+    /* veritabanı: bu onaydan sonra uzman isteği başka PDF'le açılamaz */
+    const baska = await a(FA.den, async (db) => dosyaYukle(db, depo, { firmaId: A, modul: "rapor_pdf", kayitId: h1, ad: "x.pdf", bayt: await uret(), izinli: ["pdf"], kim: "Deneme", yukleyen: FA.den.id }));
+    assert.ok(baska.tamam);
+    await sql(A, "UPDATE imza_istegi SET durum = 'iptal', surum = surum + 1 WHERE rapor_id = $1 AND asama = 'uzman' AND durum = 'bekliyor'", [h1], FA.den.id);
+    await assert.rejects(sql(A, "INSERT INTO imza_istegi (rapor_id, revizyon, pdf_dosya, pdf_sha256) SELECT $1, 0, d.id, d.sha256 FROM dosya d WHERE d.id = $2",
+      [h1, baska.tamam ? baska.id : ""], FA.den.id), /yalnız o imzalı PDF/);
+    await sql(A, "INSERT INTO imza_istegi (rapor_id, revizyon, pdf_dosya, pdf_sha256) SELECT $1, 0, d.id, d.sha256 FROM dosya d WHERE d.id = $2", [h1, i1[0].imzali], FA.den.id);
+    /* muayene uzmanı: hazırla aynı PDF'i verir; teknik yöneticinin adıyla imza reddedilir, kendi imzasıyla tamamlanır */
+    assert.equal(tamam(await hazirla(FA.den, h1)).dosya, i1[0].imzali);
+    assert.deepEqual(await yukle(FA.den, h1, await surum(h1), imzalaAdla(tPdf, "DENEME MEK")),
+      { durum: "gecersiz", hatalar: { dosya: "PDF'teki imza DENEME MEK adına; bu raporu Deneme Bir imzalamalı." } });
+    tamam(await yukle(FA.den, h1, await surum(h1), imzalaAdla(tPdf, "Deneme Bir")));
+    assert.equal((await satir(h1)).durum, "imzali");
+    const sv = (await sql<{ imzasiz: string }>(A, "SELECT imzasiz_dosya::text AS imzasiz FROM rapor_surumu WHERE rapor_id = $1", [h1])).rows[0];
+    assert.equal(sv.imzasiz, i1[0].imzali, "imzalı sürümün imzasızı teknik yöneticinin imzaladığı PDF");
+    /* geri gönderilen raporun bekleyen teknik isteği iptal; veritabanı onaydaki olmayan rapora teknik istek açmaz */
+    tamam(await tHazirla(FA.mek, h2));
+    tamam(await a(FA.mek, async (db) => geriGonder(db, FA.mek, h2, await surum(h2), {})));
+    assert.deepEqual((await istekler(h2)).map((x) => [x.asama, x.durum]), [["teknik", "iptal"]]);
+    await assert.rejects(sql(A, "INSERT INTO imza_istegi (rapor_id, revizyon, pdf_dosya, pdf_sha256, asama) SELECT $1, 0, pdf_dosya, pdf_sha256, 'teknik' FROM imza_istegi WHERE rapor_id = $1",
+      [h2], FA.mek.id), /yalnız onaydaki rapora/);
+    /* başka bir teknik yönetici (mekanik yönetici + denetçi) hazırlarsa öncekinin isteği iptal olur, PDF onun adıyla yeniden */
+    tamam(await tHazirla(FA.mek, h3));
+    tamam(await tHazirla(FA.mekDen, h3));
+    assert.deepEqual((await istekler(h3)).map((x) => [x.asama, x.durum, x.h]), [["teknik", "iptal", FA.mek.id], ["teknik", "bekliyor", FA.mekDen.id]]);
+    assert.deepEqual(await tYukle(FA.mek, h3, imzalaAdla(pdf, "DENEME MEK")),
+      { durum: "red", neden: "Bu raporun imzasız PDF'ini başka bir teknik yönetici hazırladı; yeniden hazırlayıp imzalayın." });
+    /* toplu yükleme: hangi rapora ait olduğu içerikten (yalnız kişinin hazırladıkları); personeli olan yöneticinin adı personel kaydından */
+    assert.equal((await a(FA.mek, (db) => teknikImzaliEslestirYukle(db, depo, FA.mek, A, { ad: "x.pdf", bayt: imzalaAdla(pdf, "DENEME MEK") }))).id, null, "başkasının hazırladığı eşleşmez");
+    const e = await a(FA.mekDen, (db) => teknikImzaliEslestirYukle(db, depo, FA.mekDen, A, { ad: "belge (1).pdf", bayt: imzalaAdla(pdf, "Deneme Mekanik") }));
+    assert.equal(e.id, h3);
+    tamam(e.sonuc);
+  } finally { await imzaAyari(false); }
+  /* ayar kapalı: bugünkü akış — teknik imza işlevleri kapalı, Onayla açık, uzmanın yüklemesinde ad denetimi yok (imza sözlüğü yeter) */
+  const [h4] = await raporlar([[FA.den, "HT-4"]]);
+  assert.deepEqual(await a(FA.mek, (db) => teknikImzaHazirla(db, depo, FA.mek, A, h4, uret)), { durum: "red", neden: "Bu firmada teknik yönetici imzası kapalı (Firma ayarları › İmza yöntemi)." });
+  tamam(await a(FA.mek, async (db) => onayla(db, FA.mek, h4, await surum(h4))));
+  tamam(await hazirla(FA.den, h4));
+  tamam(await yukle(FA.den, h4, await surum(h4), imzala(await imzasizBayt(h4))));
 });

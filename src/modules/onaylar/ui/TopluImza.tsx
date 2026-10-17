@@ -4,7 +4,9 @@
    (imzaHazirlaEylemi, imzaliEslestirYukleEylemi, onaylaEylemi) — yetki, durum ve imza denetimi her biri için yeniden; biri düşerse yalnız o.
    İmza penceresi: 1) seçilenlerin imzasız PDF'leri sunucuda hazırlanır (hazırlanan kalır — listede "İmzaya hazır"), 2) tek ZIP (adlar rapor no),
    3) e-imza aracında birlikte imzalanır, 4) imzalı PDF'ler ya da ZIP bırakılır: hangi rapora ait olduğu sunucuda içerikten bulunur (dosya adı
-   değişse de), 5) sonuç listesi. */
+   değişse de), 5) sonuç listesi. 2026-10-17 (teknik yönetici imzası, göç 0102): kip "teknik" — teknik yönetici onay kuyruğundaki raporları aynı
+   pencereyle imzalar (teknikImzaHazirlaEylemi, teknikImzaliEslestirYukleEylemi); geçen rapor onaylanır, muayene uzmanının imzasına gider. Tek
+   raporda ZIP yerine PDF iner. */
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { useUyar } from "../../../components/bildirim/Bildirim";
 import { TabloHatasi, zipAc } from "../../../components/disa/oku";
@@ -15,7 +17,7 @@ import { Ikon } from "../../../components/ikon/Ikon";
 import { Pencere, pencereMetinSinifi } from "../../../components/pencere/Pencere";
 import { Rozet } from "../../../components/sayfa/Sayfa";
 import { Tus, tusSinifi } from "../../../components/tus/Tus";
-import { imzaHazirlaEylemi, imzaliEslestirYukleEylemi } from "../../raporlar/ui/eylemler";
+import { imzaHazirlaEylemi, imzaliEslestirYukleEylemi, teknikImzaHazirlaEylemi, teknikImzaliEslestirYukleEylemi } from "../../raporlar/ui/eylemler";
 import type { OnaySatiri } from "../server/onaylar";
 import stil from "./onaylar.module.css";
 
@@ -72,9 +74,19 @@ interface Sonuc { no: string | null; dosya: string; tamam: boolean; metin: strin
 const pdfMi = (b: Uint8Array) => b.length > 5 && b[0] === 0x25 && b[1] === 0x50 && b[2] === 0x44 && b[3] === 0x46 && b[4] === 0x2d;   // %PDF-
 const zipMi = (b: Uint8Array) => b.length > 4 && b[0] === 0x50 && b[1] === 0x4b && b[2] === 0x03 && b[3] === 0x04;
 
+/** imzalayan: muayene uzmanı (son imza — tamamlanır, müşteriye açılır) ya da teknik yönetici (imzalayarak onaylar) */
+export type ImzaKipi = "uzman" | "teknik";
+const KIP = {
+  uzman: { hazirla: imzaHazirlaEylemi, yukle: imzaliEslestirYukleEylemi, tamam: "İmzalandı · müşteriye açıldı",
+    sonra: "Geçenler hemen tamamlanır ve müşteriye açılır." },
+  teknik: { hazirla: teknikImzaHazirlaEylemi, yukle: teknikImzaliEslestirYukleEylemi, tamam: "İmzalandı · onaylandı, muayene uzmanının imzasına gitti",
+    sonra: "Geçenler hemen onaylanır ve muayene uzmanının son imzasına gider." },
+} as const;
+
 /** raporlar: imzaya hazırlanacaklar (boşsa yalnız yükleme — daha önce hazırlanmış PDF'lerin imzalı hâlleri). onKapat(degisti): bir şey
     hazırlandı ya da imzalandıysa liste yenilenir. */
-export function TopluImzaPenceresi({ raporlar, onKapat }: { raporlar: readonly OnaySatiri[]; onKapat: (degisti: boolean) => void }) {
+export function TopluImzaPenceresi({ raporlar, onKapat, kip = "uzman" }: { raporlar: readonly OnaySatiri[]; onKapat: (degisti: boolean) => void; kip?: ImzaKipi }) {
+  const k = KIP[kip];
   const [hazir, setHazir] = useState<Hazir[]>([]);
   const [hazirHata, setHazirHata] = useState<{ no: string; neden: string }[]>([]);
   const [hazirlaniyor, setHazirlaniyor] = useState(raporlar.length > 0);
@@ -97,7 +109,7 @@ export function TopluImzaPenceresi({ raporlar, onKapat }: { raporlar: readonly O
       for (const r of raporlar) {
         if (kapandi.current) return;
         try {
-          const y = await imzaHazirlaEylemi(r.id);
+          const y = await k.hazirla(r.id);
           if (y.tamam && y.dosya) { l.push({ id: r.id, no: r.no, dosya: y.dosya }); degisti.current = true; } else h.push({ no: r.no, neden: y.genel ?? "İmzasız PDF hazırlanamadı." });
         } catch { h.push({ no: r.no, neden: AG }); }
         if (kapandi.current) return;
@@ -105,7 +117,7 @@ export function TopluImzaPenceresi({ raporlar, onKapat }: { raporlar: readonly O
       }
       setHazirlaniyor(false);
     })();
-  }, [raporlar]);
+  }, [raporlar, k]);
 
   const kapat = () => {
     if (yukleme) return;   // yükleme sürerken kapanmaz (yarıda kalan dosya sonuçsuz kalmasın)
@@ -113,13 +125,14 @@ export function TopluImzaPenceresi({ raporlar, onKapat }: { raporlar: readonly O
     onKapat(degisti.current);
   };
 
-  /* 2) tek ZIP: hazırlanan PDF'ler oturumlu tek dosya ucundan (GizliResim dosyaBaytlari — yetki uçta yeniden), adları rapor no */
+  /* 2) tek ZIP: hazırlanan PDF'ler oturumlu tek dosya ucundan (GizliResim dosyaBaytlari — yetki uçta yeniden), adları rapor no; tek raporda PDF */
   const indir = async () => {
     setIndiriliyor(true); setHata(null);
     try {
       const dosyalar: [string, Uint8Array][] = [];
       for (const p of hazir) dosyalar.push([`${p.no}.pdf`, await dosyaBaytlari(p.dosya)]);
-      baytIndir(`imzalanacak-raporlar-${dosyaGunu()}.zip`, zipParcalari(dosyalar), "application/zip");
+      if (dosyalar.length === 1) baytIndir(dosyalar[0][0], dosyalar[0][1], "application/pdf");
+      else baytIndir(`imzalanacak-raporlar-${dosyaGunu()}.zip`, zipParcalari(dosyalar), "application/zip");
       setIndirildi(true);
     } catch { setHata("PDF'ler indirilemedi; yeniden deneyin."); } finally { setIndiriliyor(false); }
   };
@@ -153,9 +166,9 @@ export function TopluImzaPenceresi({ raporlar, onKapat }: { raporlar: readonly O
       const f = new FormData();
       f.set("dosya", new File([p.bayt as BlobPart], p.ad, { type: "application/pdf" }));
       try {
-        const y = await imzaliEslestirYukleEylemi(f);
+        const y = await k.yukle(f);
         if (y.tamam) degisti.current = true;
-        l.push({ no: y.no ?? null, dosya: p.ad, tamam: !!y.tamam, metin: y.tamam ? "İmzalandı · müşteriye açıldı" : y.hatalar?.dosya ?? y.genel ?? "Yüklenemedi." });
+        l.push({ no: y.no ?? null, dosya: p.ad, tamam: !!y.tamam, metin: y.tamam ? k.tamam : y.hatalar?.dosya ?? y.genel ?? "Yüklenemedi." });
       } catch { l.push({ no: null, dosya: p.ad, tamam: false, metin: AG }); }
       setYukleme({ biten: i + 1, toplam: pdfler.length });
     }
@@ -170,7 +183,7 @@ export function TopluImzaPenceresi({ raporlar, onKapat }: { raporlar: readonly O
   if (sonuclar) {
     const tamam = sonuclar.filter((x) => x.tamam).length, red = sonuclar.length - tamam;
     return (
-      <Pencere acik genis baslik={`${tamam} rapor imzalandı${red ? ` · ${red} dosya reddedildi` : ""}`} onKapat={kapat}
+      <Pencere acik genis baslik={`${tamam} rapor imzalandı${kip === "teknik" && tamam ? " ve onaylandı" : ""}${red ? ` · ${red} dosya reddedildi` : ""}`} onKapat={kapat}
         alt={<>
           <Tus tur="ikincil" onClick={() => setSonuclar(null)}>Başka PDF yükle</Tus>
           <Tus onClick={kapat} data-ilk-odak="">Tamam</Tus>
@@ -205,7 +218,7 @@ export function TopluImzaPenceresi({ raporlar, onKapat }: { raporlar: readonly O
   );
 
   return (
-    <Pencere acik genis baslik={n ? `${n} raporu imzala` : "İmzalı PDF'leri yükle"} onKapat={kapat}
+    <Pencere acik genis baslik={n ? (kip === "teknik" ? `${n === 1 ? raporlar[0].no : `${n} raporu`} imzala ve onayla` : `${n} raporu imzala`) : "İmzalı PDF'leri yükle"} onKapat={kapat}
       alt={<>
         <Tus tur="ikincil" disabled={yukleniyor} onClick={kapat} data-ilk-odak="">Sonra devam et</Tus>
         <label className={`${tusSinifi("birincil")} ${stil.dosyaSec}`} aria-disabled={bekle || undefined}>
@@ -220,13 +233,14 @@ export function TopluImzaPenceresi({ raporlar, onKapat }: { raporlar: readonly O
         </>)}
         {n > 0 && adim(2, indirildi ? "tamam" : hazirlaniyor ? "sira" : "simdi", "İndirin", <div className={stil.indir}>
           <Tus tur="ikincil" ikon="download" disabled={bekle || !hazir.length} onClick={() => void indir()}>
-            {indiriliyor ? "İndiriliyor…" : `ZIP indir (${hazir.length} PDF)`}
+            {indiriliyor ? "İndiriliyor…" : hazir.length === 1 ? "PDF'i indir" : `ZIP indir (${hazir.length} PDF)`}
           </Tus>
           {indirildi && <span className={stil.adimMetin}>İndirildi.</span>}
         </div>)}
-        {adim(n ? 3 : 1, "sira", "e-İmzaTR'de birlikte imzalayın", <p className={stil.adimMetin}>
-          ZIP&apos;i açın, PDF&apos;lerin hepsini birlikte seçip imzalayın; kart takılıyken PIN bir kez sorulur. İmza türü PDF imzası (PAdES) olmalı —
-          imzalı dosya yine .pdf olur; ayrı .imz dosyası kabul edilmez. Dosya adlarını değiştirmeniz sorun değil.
+        {adim(n ? 3 : 1, "sira", n === 1 ? "e-İmzaTR'de imzalayın" : "e-İmzaTR'de birlikte imzalayın", <p className={stil.adimMetin}>
+          {n === 1 ? <>PDF&apos;i imzalayın.</> : <>ZIP&apos;i açın, PDF&apos;lerin hepsini birlikte seçip imzalayın; kart takılıyken PIN bir kez sorulur.</>} İmza türü PDF
+          imzası (PAdES) olmalı — imzalı dosya yine .pdf olur; ayrı .imz dosyası kabul edilmez. Dosya adlarını değiştirmeniz sorun değil.
+          {kip === "teknik" && <> İmza kendi adınıza olmalı (sertifikadaki ad sizin adınızla karşılaştırılır).</>}
         </p>)}
         {adim(n ? 4 : 2, yukleniyor ? "simdi" : "sira", "İmzalı PDF'leri yükleyin", <>
           <label className={stil.birak} htmlFor={girdiId} data-ustunde={ustunde || undefined} aria-disabled={bekle || undefined}
@@ -235,8 +249,7 @@ export function TopluImzaPenceresi({ raporlar, onKapat }: { raporlar: readonly O
             {yukleme ? <span role="status">{yukleme.biten} / {yukleme.toplam} PDF yüklendi…</span>
               : <span>PDF&apos;leri ya da ZIP&apos;i buraya bırakın · ya da dosya seçin (en çok {TOPLU_EN_COK} PDF)</span>}
           </label>
-          <p className={stil.adimMetin}>Her PDF ayrı denetlenir: imzaya hazırlanan PDF&apos;in kendisiyle başlamalı ve imza taşımalı. Geçenler hemen tamamlanır ve
-            müşteriye açılır.</p>
+          <p className={stil.adimMetin}>Her PDF ayrı denetlenir: imzaya hazırlanan PDF&apos;in kendisiyle başlamalı ve imza taşımalı. {k.sonra}</p>
         </>)}
       </ol>
       {hata && <p className={stil.hata} id={hataId} role="alert">{hata}</p>}

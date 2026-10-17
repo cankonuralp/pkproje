@@ -9,7 +9,7 @@ import { depo } from "../../../server/dosya/depo";
 import { belgePdf } from "../../../belge/pdf";
 import {
   cihazEkle, cihazKaldir, fotoEkle, fotoSil, imzaHazirla, imzaliEslestirYukle, imzaliYukle, onayaGonder, raporFormatGuncelle, raporKaydet, raporKopyala, raporKunyeGuncelle, raporOlustur,
-  raporSil, revizeIste, revizeIstegiGeriCek, type RaporYazma,
+  raporSil, revizeIste, revizeIstegiGeriCek, teknikImzaHazirla, teknikImzaliEslestirYukle, teknikImzaliYukle, type RaporYazma,
 } from "../server/raporlar";
 import { anthropicCagir, type OkunanSatir } from "../../../server/yz/okuma";
 import { FOTO_OKU_EN_BUYUK, fotoOkuBirak, fotoOkuHazirla, fotoOkuKaydet, fotoOkuKullanimYaz, okumaFotografiSakla, type OkunacakFoto } from "../server/foto-oku";
@@ -194,6 +194,31 @@ export async function imzaliEslestirYukleEylemi(form: FormData): Promise<RaporYa
   if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
   const bayt = new Uint8Array(await dosya.arrayBuffer());
   const s = await oturumIslemi(o, (db) => imzaliEslestirYukle(db, depo(), o, o.kiraci.firmaId, { ad: dosya.name, bayt }));
+  return { ...yanit(s.sonuc), no: s.no, rapor: s.id };
+}
+/* 2026-10-17 TEKNİK YÖNETİCİ İMZASI (göç 0102): firma ayarı açıkken onaydaki raporu teknik yönetici imzalayarak onaylar — yetki, ayar, durum,
+   imza denetimi ve imzalayanın adı sunucuda (raporlar.ts teknikImza…) */
+export async function teknikImzaHazirlaEylemi(id: string): Promise<RaporYaniti> {
+  return islem((o) => oturumIslemi(o, (db) => teknikImzaHazirla(db, depo(), o, o.kiraci.firmaId, metin(id), belgePdf, firmaAdresi(o.kiraci.kisaAd))));
+}
+/** teknik yöneticinin imzalı PDF'i (form: id, surum, dosya) */
+export async function teknikImzaliYukleEylemi(form: FormData): Promise<RaporYaniti> {
+  const dosya = form.get("dosya");
+  if (!(dosya instanceof File) || dosya.size === 0) return { hatalar: { dosya: "İmzalı PDF seçilmeli." } };
+  if (dosya.size > 25 << 20) return { hatalar: { dosya: "PDF çok büyük (en çok 25 MB)." } };
+  const bayt = new Uint8Array(await dosya.arrayBuffer());
+  return islem((o) => oturumIslemi(o, (db) => teknikImzaliYukle(db, depo(), o, o.kiraci.firmaId, metin(form.get("id")), Number(form.get("surum")), { ad: dosya.name, bayt })));
+}
+/** teknik yöneticinin toplu yüklemesi: tek imzalı PDF (form: dosya) — hangi rapora ait olduğu sunucuda içerikten */
+export async function teknikImzaliEslestirYukleEylemi(form: FormData): Promise<RaporYaniti & { no?: string | null; rapor?: string | null }> {
+  const dosya = form.get("dosya");
+  if (!(dosya instanceof File) || dosya.size === 0) return { hatalar: { dosya: "İmzalı PDF seçilmeli." } };
+  if (dosya.size > 25 << 20) return { hatalar: { dosya: "PDF çok büyük (en çok 25 MB)." } };
+  if (!(await ayniKoken())) return { genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };
+  const o = await istekOturumu();
+  if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
+  const bayt = new Uint8Array(await dosya.arrayBuffer());
+  const s = await oturumIslemi(o, (db) => teknikImzaliEslestirYukle(db, depo(), o, o.kiraci.firmaId, { ad: dosya.name, bayt }));
   return { ...yanit(s.sonuc), no: s.no, rapor: s.id };
 }
 /* revize isteği (318): yalnız raporu yazan, tamamlanan raporda */

@@ -35,7 +35,11 @@ export const FirmaBilgiGirdisi = z.object({
   /* 595 (madde 14): sayfa altı yazısının {tel}'i — verilmezse kayıttaki kalır */
   tel: metin(30, "En çok 30 karakter.").refine((t) => /^[0-9+()\s-]*$/.test(t), "Telefon yalnız rakam, boşluk, + ( ) - içerir.").optional(),
 });
-export const ImzaGirdisi = z.object({ yontem: z.enum(["mobil", "e_imza"], { error: "İmza yöntemi seçin." }) });
+export const ImzaGirdisi = z.object({
+  yontem: z.enum(["mobil", "e_imza"], { error: "İmza yöntemi seçin." }),
+  /* 2026-10-17: teknik yönetici raporu imzalayarak onaylar (verilmezse kapalı) */
+  teknik: z.boolean().default(false),
+});
 export const ZimmetGirdisi = z.object({ teslim_eden: z.preprocess((v) => (v === "" ? null : v), z.string().regex(/^[0-9a-f-]{36}$/, "Kişi seçin.").nullable()) });
 export const SaklamaGirdisi = z.object({ yil: secim(SAKLAMA_YIL, "Saklama süresi seçin.") });
 const dk = (en: number, enCok: number, ileti: string) => z.preprocess((v) => (typeof v === "string" ? v.trim() : v),

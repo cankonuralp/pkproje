@@ -31,8 +31,9 @@ export const AYAR_BOLUMLERI = {
   zimmet: z.object({ teslim_eden: kimlik.default(null) }),
   /** firmanın belge şablonları (334): ön bilgilendirme formu (N1; yoksa temel format <firma kodu>-FR-OBF-01) ve bordro formatı (BB5) — dosya kimlikleri */
   belge_sablon: z.object({ on_bilgi: kimlik.default(null), bordro_format: kimlik.default(null) }),
-  /** İmza yöntemi (mobil / e-imza) */
-  imza: z.object({ yontem: z.enum(["mobil", "e_imza"]).default("mobil") }),
+  /** İmza yöntemi (mobil / e-imza) · 2026-10-17 teknik: teknik yönetici onaydaki raporu imzalayarak onaylar, sonra muayene uzmanı imzalar (göç 0102;
+      kapalıyken bugünkü akış — raporlar/server/raporlar.ts teknikImzaAcik) */
+  imza: z.object({ yontem: z.enum(["mobil", "e_imza"]).default("mobil"), teknik: z.boolean().default(false) }),
   /** Mesai takibi (212, AA2): normal 480 dk, mesai 180 dk, yıllık fazla çalışma ≤ 270 saat, günlük ≤ 660 dk. Normal 1–1440, mesai 0–1440
       (onaylı maket: 660'ı aşan toplam uyarıdır, engel değil — 334 incelemesi; günlük üst sınır gunluk_ust_dk hakkı keser) */
   mesai: z.object({

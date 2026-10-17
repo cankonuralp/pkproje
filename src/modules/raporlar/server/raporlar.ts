@@ -47,14 +47,15 @@ import { mesaiDurumu } from "./plan-baglanti.ts";
 import { raporOzetleri, sonGeriGonderme, type RaporOzeti } from "./onay-baglanti.ts";
 import { hesapAdlari } from "../../../server/kimlik/hesap.ts";
 import { TANIMLAR } from "../../../tanim/tanimlar.ts";
-import { firmaBelgeKunyesi } from "../../../server/ayar/ayar.ts";
+import { ayarOku, firmaBelgeKunyesi } from "../../../server/ayar/ayar.ts";
 import { kayitDosyasi } from "../../../server/dosya/dosya.ts";
 import { createHash } from "node:crypto";
 import { dogrulamaAdresi, dogrulamaKodu } from "../../../server/dogrulama.ts";
 import { cihazKalibrasyonlari } from "../../olcum-cihazlari/server/cihazlar.ts";
 import { personelBelgeBilgisi } from "../../personel/server/personel.ts";
 import type { BelgeVerisi } from "../../../belge/veri.ts";
-import { imzaliPdfGecerli } from "../imza-pdf.ts";
+import { ekImzaIcerikleri, imzaliPdfGecerli } from "../imza-pdf.ts";
+import { imzaciNedeni } from "../imza-kimlik.ts";
 import { raporOnerileri, type RaporOnerisi } from "./oneri.ts";
 import { ilkCevaplar } from "../ornek.ts";
 import { raporStandartlari } from "../../dokumanlar/server/dokumanlar.ts";
@@ -923,8 +924,9 @@ export interface RaporBelgesiSayfasi {
   imzaliSilindi: string | null;
 }
 /** raporu görebilene belgenin verisi: raporun kendi kayıtları + açıldığı format sürümü; fotoğraflar raporun kendi dosyalarından okunup veri
-    adresi olarak gömülür (yalnız JPEG / PNG — sunucuda denetlenmiş türler). Göremeyene null. */
-export async function raporBelgesiVerisi(db: Sorgulayici, depo: Depo, kim: Kisi, id: string): Promise<RaporBelgesiSayfasi | null> {
+    adresi olarak gömülür (yalnız JPEG / PNG — sunucuda denetlenmiş türler). Göremeyene null. onaylayan (2026-10-17, teknik yönetici imzası):
+    henüz onaylanmamış raporun PDF'i onu imzalayıp onaylayacak teknik yönetici için hazırlanırken — onay satırı bu hesapla, şimdiki zamanla. */
+export async function raporBelgesiVerisi(db: Sorgulayici, depo: Depo, kim: Kisi, id: string, onaylayan?: string): Promise<RaporBelgesiSayfasi | null> {
   const e = await erisim(db, kim, id);
   if (!e) return null;
   const { r, tur } = e;
@@ -948,9 +950,10 @@ export async function raporBelgesiVerisi(db: Sorgulayici, depo: Depo, kim: Kisi,
     fotolar.push({ ad: f.ad, bolum: f.bolum, madde: f.madde, src });
   }
   const cev = Cevaplar.safeParse(r.cevaplar);
-  const onayAd = r.onay ? (await hesapAdlari(db, [r.onay_hesap])).get(r.onay_hesap ?? "") ?? "—" : null;
+  const onayZaman = r.onay ?? (onaylayan ? new Date() : null), onayHesap = r.onay ? r.onay_hesap : onaylayan ?? null;
+  const onayAd = onayZaman ? (await hesapAdlari(db, [onayHesap])).get(onayHesap ?? "") ?? "—" : null;
   /* 595: onaylayan teknik yöneticinin hesabı bir personele bağlıysa o kaydın bilgileri (imza bölümünün teknik satırları: meslek, diploma …) */
-  const onayPersonel = r.onay && r.onay_hesap ? await hesabinPersoneli(db, r.onay_hesap) : null;
+  const onayPersonel = onayZaman && onayHesap ? await hesabinPersoneli(db, onayHesap) : null;
   const onayKisi = onayPersonel ? await personelBelgeBilgisi(db, onayPersonel) : null;
   /* 595 (madde 1): ikinci muayene uzmanı — yalnız hâlâ plan ekibindeyse ve raporu yazan değilse (kaydının bilgileri) */
   const u2 = cev.success ? cev.data.imzaci.uzman2 : undefined;
@@ -976,7 +979,7 @@ export async function raporBelgesiVerisi(db: Sorgulayici, depo: Depo, kim: Kisi,
       sonuc: raporSonucuMu(r.sonuc) ? r.sonuc : null,
       yazan: { ad: yazan?.ad ?? "—", meslek: yazan?.meslek ?? "diger", meslekMetin: yazan?.meslekMetin ?? null, ekipnet: yazan?.ekipnet ?? null,
         diploma: yazan?.diploma ?? null, oda: yazan?.oda ?? null, eposta: yazan?.eposta ?? null, tel: yazan?.tel ?? null },
-      onay: r.onay && onayAd ? { ad: onayAd, zaman: r.onay.toISOString(),
+      onay: onayZaman && onayAd ? { ad: onayAd, zaman: onayZaman.toISOString(),
         kisi: onayKisi ? { meslek: onayKisi.meslek, meslekMetin: onayKisi.meslekMetin, ekipnet: onayKisi.ekipnet, diploma: onayKisi.diploma, oda: onayKisi.oda,
           eposta: onayKisi.eposta, tel: onayKisi.tel } : null } : null,
       imza: imzali ? { zaman: imzali.zaman, yontem: YONTEM_AD[imzali.yontem] ?? imzali.yontem } : null,
@@ -987,15 +990,17 @@ export async function raporBelgesiVerisi(db: Sorgulayici, depo: Depo, kim: Kisi,
 }
 
 /* ── SON İMZA — indir, imzala, yükle (317; göç 0027; karar 99, 104, 114, 187; araştırma §8) ───────────────────────────────────────── */
-const ISTEK = tablo({ ad: "imza_istegi", sutunlar: ["rapor_id", "revizyon", "yontem", "durum", "pdf_dosya", "pdf_sha256", "imzali_dosya", "kopya"] });
+const ISTEK = tablo({ ad: "imza_istegi", sutunlar: ["rapor_id", "revizyon", "yontem", "durum", "pdf_dosya", "pdf_sha256", "imzali_dosya", "kopya", "asama"] });
 const YONTEM_AD: Record<string, string> = { dosya: "e-imzalı PDF", mobil: "mobil imza", e_imza: "e-imza" };
 /** hazırlık anının kopyası (0028): imzalanan PDF'le aynı kaynaktan yazan ve cihazlar — imzalı sürüm bundan yazılır */
 interface IstekKopyasi { yazan?: BelgeVerisi["yazan"]; cihazlar?: BelgeVerisi["cihazlar"] }
 const SURUM = tablo({ ad: "rapor_surumu", sutunlar: ["rapor_id", "revizyon", "no", "imzasiz_dosya", "imzali_dosya", "imzali_sha256", "imza_yontem", "kunye", "personel", "cihazlar", "icerik"] });
 const UYGUNSUZLUK = tablo({ ad: "uygunsuzluk", sutunlar: ["surum_id", "kaynak", "ref", "kriter", "metin", "agir"] });
-async function bekleyenIstek(db: Sorgulayici, raporId: string, revizyon: number) {
-  return (await db.sorgu<{ id: string; pdf_dosya: string; pdf_sha256: string; surum: number; kopya: IstekKopyasi }>(
-    "SELECT id::text, pdf_dosya::text, pdf_sha256, surum, kopya FROM imza_istegi WHERE rapor_id = $1 AND revizyon = $2 AND durum = 'bekliyor'", [raporId, revizyon])).rows[0] ?? null;
+/** bekleyen imza isteği: muayene uzmanının (uzman) ya da 2026-10-17'den beri teknik yöneticinin (teknik — göç 0102) */
+async function bekleyenIstek(db: Sorgulayici, raporId: string, revizyon: number, asama: "uzman" | "teknik" = "uzman") {
+  return (await db.sorgu<{ id: string; pdf_dosya: string; pdf_sha256: string; surum: number; kopya: IstekKopyasi; hesap_id: string | null }>(
+    "SELECT id::text, pdf_dosya::text, pdf_sha256, surum, kopya, hesap_id::text FROM imza_istegi WHERE rapor_id = $1 AND revizyon = $2 AND durum = 'bekliyor' AND asama = $3",
+    [raporId, revizyon, asama])).rows[0] ?? null;
 }
 /** imzalı sürüm; PDF'i saklama süresi dolduğu için silindiyse (387, 0073 saklama_silme) dosya null + silinme anı */
 async function imzaliSurum(db: Sorgulayici, raporId: string, revizyon: number) {
@@ -1029,7 +1034,7 @@ export async function imzaHazirla(db: Sorgulayici, depo: Depo, kim: Kisi, firmaI
   if (!y.tamam) return { durum: "red", neden: "İmzasız PDF üretilemedi." };
   const kopya: IstekKopyasi = { yazan: v.belge.yazan, cihazlar: v.belge.cihazlar };
   await ekle(db, ISTEK, { rapor_id: id, revizyon: e.r.revizyon, yontem: "dosya", durum: "bekliyor", pdf_dosya: y.id, pdf_sha256: createHash("sha256").update(pdf).digest("hex"),
-    kopya },
+    kopya, asama: "uzman" },
     { kim: kim.ad, ne: "rapor.imza_hazirla", gerekce: gorunenNo(e.r.no, e.r.revizyon) });
   return { durum: "tamam", id, bildirim: "İmzasız PDF hazır; indirip imzalayın, imzalı PDF'i yükleyin.", dosya: y.id };
 }
@@ -1052,6 +1057,12 @@ export async function imzaliYukle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaI
   const imzasiz = await depo.oku(ham.anahtar, db), b = dosya.bayt;
   /* önek + bir nesnedeki imza sözlüğü + ek özgün içeriği değiştirmez (imza-pdf.ts) */
   if (!imzaliPdfGecerli(imzasiz, b)) return { durum: "gecersiz", hatalar: { dosya: IMZA_GECERSIZ } };
+  /* 2026-10-17 (teknik yönetici imzası): imzalanacak PDF teknik yöneticinin imzaladığıysa eklenen imza raporu YAZANIN olmalı (ad sertifikadan) —
+     denetçi teknik yöneticinin yerine iki imzayı birden atamaz */
+  if (await teknikImzali(db, id, e.r.revizyon, istek.pdf_dosya)) {
+    const n = imzaciNedeni(ekImzaIcerikleri(imzasiz, b), (await personelBelgeBilgisi(db, e.r.personel_id))?.ad ?? kim.ad);
+    if (n) return { durum: "gecersiz", hatalar: { dosya: n } };
+  }
   const gno = gorunenNo(e.r.no, e.r.revizyon);
   const y = await dosyaYukle(db, depo, { firmaId, modul: IMZALI_MODULU, kayitId: id, ad: `${gno}-imzali.pdf`, bayt: b, izinli: ["pdf"], kim: kim.ad, yukleyen: kim.id });
   if (!y.tamam) return { durum: "gecersiz", hatalar: { dosya: y.neden === "buyuk" ? "PDF çok büyük (en çok 25 MB)." : IMZA_GECERSIZ } };
@@ -1098,7 +1109,7 @@ export async function imzaliEslestirYukle(db: Sorgulayici, depo: Depo, kim: Kisi
   const b = dosya.bayt;
   const adaylar = (await db.sorgu<{ id: string; no: string; revizyon: number; surum: number; boyut: string; sha: string }>(
     `SELECT r.id::text, r.no, r.revizyon, r.surum, d.boyut, i.pdf_sha256 AS sha FROM rapor r
-       JOIN imza_istegi i ON i.rapor_id = r.id AND i.revizyon = r.revizyon AND i.durum = 'bekliyor'
+       JOIN imza_istegi i ON i.rapor_id = r.id AND i.revizyon = r.revizyon AND i.durum = 'bekliyor' AND i.asama = 'uzman'
        JOIN dosya d ON d.id = i.pdf_dosya AND d.cop IS NULL
      WHERE r.silindi IS NULL AND r.durum = 'onaylandi' AND r.hesap_id = $1 ORDER BY r.olustu LIMIT 500`, [kim.id])).rows;
   const ozetler = new Map<number, string>();
@@ -1120,6 +1131,117 @@ export async function imzaliEslestirYukle(db: Sorgulayici, depo: Depo, kim: Kisi
      WHERE s.imzali_sha256 = $1 AND r.hesap_id = $2 LIMIT 1`, [createHash("sha256").update(b).digest("hex"), kim.id])).rows[0];
   if (once) return { id: once.id, no: gorunenNo(once.no, once.revizyon), sonuc: { durum: "red", neden: "Bu imzalı PDF daha önce yüklendi; rapor zaten tamamlandı." } };
   return { id: null, no: null, sonuc: { durum: "gecersiz", hatalar: { dosya: ESLESMEDI } } };
+}
+
+/* ── TEKNİK YÖNETİCİ İMZASI (2026-10-17, göç 0102; reisim: "firma ayarlarına ekleyebiliriz teknik yönetici imzalasın seçeneği olsun açıkken
+   teknik yönetici onayına giden rapor teknik yönetici tarafından imzalansın, ondan sonra denetçiye gitsin, eğer açık değilse bu seçenek şu an ki
+   kurgumuzdan devam edelim" · önerinin ayrıntıları "onaylıyorum") ─────────────────────────────────────────────────────────────────────────
+   Firma ayarı (imza.teknik) açıkken onaydaki raporu türün branş yöneticisi (rapor_onayla) İMZALAYARAK onaylar: 1) PDF bir kez hazırlanır (onay satırı
+   onun adıyla — raporBelgesiVerisi onaylayan), 2) e-imza aracıyla imzalar, 3) imzalı PDF'i yükler: denetim (imza-pdf.ts) + eklenen imza ONUN (ad
+   sertifikadan, imza-kimlik.ts) → aynı işlemde istek kapanır, rapor onaylanır (onay damgası veritabanında), muayene uzmanının isteği o imzalı PDF'le
+   açılır (0102: başka PDF'le açılamaz). Uzman bugünkü yoldan imzalar; eklenen imza yazanın olmalı. Ayar kapalıyken bugünkü akış. Ayar ONAY anında
+   okunur (açıkken imzasız onay yok — Onaylar onayla / durumu değiştir). İmza yeri formattaki onaylayan yeri (eimza2); "Yok"sa araç kendi yerini koyar. */
+const TEKNIK_KAPALI = "Bu firmada teknik yönetici imzası kapalı (Firma ayarları › İmza yöntemi).";
+/** firma ayarı: teknik yönetici raporu imzalayarak onaylar mı */
+export const teknikImzaAcik = async (db: Sorgulayici) => (await ayarOku(db, "imza")).deger.teknik;
+/** imzalanacak PDF teknik yöneticinin imzaladığı PDF mi (bu revizyonda kapanmış teknik isteğin imzalı dosyası) */
+async function teknikImzali(db: Sorgulayici, raporId: string, revizyon: number, dosya: string): Promise<boolean> {
+  return ((await db.sorgu("SELECT 1 FROM imza_istegi WHERE rapor_id = $1 AND revizyon = $2 AND asama = 'teknik' AND durum = 'tamam' AND imzali_dosya = $3",
+    [raporId, revizyon, dosya])).rowCount ?? 0) > 0;
+}
+/** kişinin adı (imzası karşılaştırılır): hesabın personel kaydındaki ad; personeli yoksa hesabın adı */
+async function kisininAdi(db: Sorgulayici, kim: Kisi): Promise<string> {
+  const p = await hesabinPersoneli(db, kim.id);
+  return (p ? (await personelBelgeBilgisi(db, p))?.ad : null) ?? (await hesapAdlari(db, [kim.id])).get(kim.id) ?? kim.ad;
+}
+/** teknik yönetici onaylayabilir mi (yetki + ayar + durum); olursa erişim */
+async function teknikErisim(db: Sorgulayici, kim: Kisi, id: string): Promise<{ e: Erisim } | { y: RaporYazma }> {
+  const e = await erisim(db, kim, id, true);
+  if (!e) return { y: { durum: "yok" } };
+  if (!canDoEylem(kim, "rapor_onayla", { sahip: e.r.hesap_id, brans: e.tur.brans })) return { y: { durum: "yetkisiz" } };
+  if (!(await teknikImzaAcik(db))) return { y: { durum: "red", neden: TEKNIK_KAPALI } };
+  if (e.r.durum !== "onayda") return { y: { durum: "red", neden: `Rapor onay kuyruğunda değil (şu an: ${RAPOR_DURUM[e.r.durum][0]}).` } };
+  return { e };
+}
+
+/** teknik yönetici için imzaya hazırla: PDF bir kez üretilir; başka bir teknik yöneticinin hazırladığı bekleyen istek iptal edilip bu kişi için
+    yeniden hazırlanır (PDF'in onay satırında imzalayanın adı olsun). Yanıtın dosyası imzasız PDF. */
+export async function teknikImzaHazirla(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, id: string,
+  uret: (v: BelgeVerisi) => Promise<Uint8Array>, firmaAdresi?: string): Promise<RaporYazma> {
+  const t = await teknikErisim(db, kim, id);
+  if ("y" in t) return t.y;
+  const { e } = t, gno = gorunenNo(e.r.no, e.r.revizyon);
+  const bildirim = "İmzasız PDF hazır; indirip imzalayın, imzalı PDF'i yükleyin — yükleyince rapor onaylanır.";
+  const hazir = await bekleyenIstek(db, id, e.r.revizyon, "teknik");
+  if (hazir && hazir.hesap_id === kim.id) return { durum: "tamam", id, bildirim, dosya: hazir.pdf_dosya };
+  if (hazir) {
+    const g = await guncelle(db, ISTEK, hazir.id, hazir.surum, { durum: "iptal" }, { kim: kim.ad, ne: "rapor.teknik_imza_iptal", gerekce: gno });
+    if (g.durum !== "tamam") return { durum: "cakisma" };
+  }
+  const v = await raporBelgesiVerisi(db, depo, kim, id, kim.id);
+  if (!v) return { durum: "yok" };
+  let dogrulama: string | null = null;
+  if (firmaAdresi) try { dogrulama = dogrulamaAdresi(firmaAdresi, dogrulamaKodu(firmaId, id, e.r.revizyon)); } catch { dogrulama = null; }
+  let pdf: Uint8Array;
+  try { pdf = await uret({ ...v.belge, kesin: true, dogrulama }); } catch { return { durum: "red", neden: "İmzasız PDF üretilemedi; biraz sonra yeniden deneyin." }; }
+  const y = await dosyaYukle(db, depo, { firmaId, modul: PDF_MODULU, kayitId: id, ad: `${gno}.pdf`, bayt: pdf, izinli: ["pdf"], kim: kim.ad, yukleyen: kim.id });
+  if (!y.tamam) return { durum: "red", neden: "İmzasız PDF üretilemedi." };
+  const kopya: IstekKopyasi = { yazan: v.belge.yazan, cihazlar: v.belge.cihazlar };
+  await ekle(db, ISTEK, { rapor_id: id, revizyon: e.r.revizyon, yontem: "dosya", durum: "bekliyor", pdf_dosya: y.id, pdf_sha256: createHash("sha256").update(pdf).digest("hex"),
+    kopya, asama: "teknik" }, { kim: kim.ad, ne: "rapor.teknik_imza_hazirla", gerekce: gno });
+  return { durum: "tamam", id, bildirim, dosya: y.id };
+}
+
+/** teknik yöneticinin imzalı PDF'i: denetim + eklenen imza onun → istek kapanır, rapor onaylanır, muayene uzmanının isteği bu PDF'le açılır */
+export async function teknikImzaliYukle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, id: string, surum: number,
+  dosya: { ad: string; bayt: Uint8Array }): Promise<RaporYazma> {
+  const t = await teknikErisim(db, kim, id);
+  if ("y" in t) return t.y;
+  const { e } = t;
+  if (surum !== e.r.surum) return { durum: "cakisma" };
+  const istek = await bekleyenIstek(db, id, e.r.revizyon, "teknik");
+  if (!istek) return { durum: "red", neden: "Önce imzasız PDF'i hazırlayıp indirin; imzalı PDF onun imzalanmış hâli olmalı." };
+  if (istek.hesap_id !== kim.id) return { durum: "red", neden: "Bu raporun imzasız PDF'ini başka bir teknik yönetici hazırladı; yeniden hazırlayıp imzalayın." };
+  const ham = await kayitDosyasi(db, PDF_MODULU, id, istek.pdf_dosya);
+  if (!ham) return { durum: "red", neden: "İmzaya hazırlanan PDF bulunamadı; yeniden hazırlayın." };
+  const imzasiz = await depo.oku(ham.anahtar, db), b = dosya.bayt;
+  if (!imzaliPdfGecerli(imzasiz, b)) return { durum: "gecersiz", hatalar: { dosya: IMZA_GECERSIZ } };
+  const n = imzaciNedeni(ekImzaIcerikleri(imzasiz, b), await kisininAdi(db, kim));
+  if (n) return { durum: "gecersiz", hatalar: { dosya: n } };
+  const gno = gorunenNo(e.r.no, e.r.revizyon);
+  /* teknik yöneticinin imzalı PDF'i muayene uzmanının imzalayacağı PDF'tir (dosya modülü rapor_pdf — 0102) */
+  const y = await dosyaYukle(db, depo, { firmaId, modul: PDF_MODULU, kayitId: id, ad: `${gno}-teknik-imzali.pdf`, bayt: b, izinli: ["pdf"], kim: kim.ad, yukleyen: kim.id });
+  if (!y.tamam) return { durum: "gecersiz", hatalar: { dosya: y.neden === "buyuk" ? "PDF çok büyük (en çok 25 MB)." : IMZA_GECERSIZ } };
+  const iz: Iz = { kim: kim.ad, ne: "rapor.teknik_imza", gerekce: gno };
+  const g = await guncelle(db, ISTEK, istek.id, istek.surum, { durum: "tamam", imzali_dosya: y.id }, iz);
+  if (g.durum !== "tamam") return { durum: "cakisma" };
+  const o = await guncelle(db, RAPOR, id, surum, { durum: "onaylandi" }, iz);
+  if (o.durum !== "tamam") return sonuc(o, id, "");
+  await ekle(db, ISTEK, { rapor_id: id, revizyon: e.r.revizyon, yontem: "dosya", durum: "bekliyor", pdf_dosya: y.id, pdf_sha256: createHash("sha256").update(b).digest("hex"),
+    kopya: istek.kopya, asama: "uzman" }, iz);
+  return { durum: "tamam", id, bildirim: `${gno} imzalandı ve onaylandı; muayene uzmanının son imzasına gitti.` };
+}
+
+/** teknik yöneticinin toplu yüklemesi: imzalı PDF hangi rapora ait — onun hazırladığı bekleyen teknik isteklerden önek özetiyle (uzmanınkiyle aynı
+    yöntem); bulunursa teknikImzaliYukle (bütün denetimler orada yeniden). İstemciden rapor kimliği alınmaz. */
+export async function teknikImzaliEslestirYukle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, dosya: { ad: string; bayt: Uint8Array }): Promise<TopluImzaSonucu> {
+  const b = dosya.bayt;
+  const adaylar = (await db.sorgu<{ id: string; no: string; revizyon: number; surum: number; boyut: string; sha: string }>(
+    `SELECT r.id::text, r.no, r.revizyon, r.surum, d.boyut, i.pdf_sha256 AS sha FROM rapor r
+       JOIN imza_istegi i ON i.rapor_id = r.id AND i.revizyon = r.revizyon AND i.durum = 'bekliyor' AND i.asama = 'teknik' AND i.hesap_id = $1
+       JOIN dosya d ON d.id = i.pdf_dosya AND d.cop IS NULL
+     WHERE r.silindi IS NULL AND r.durum = 'onayda' ORDER BY r.olustu LIMIT 500`, [kim.id])).rows;
+  const ozetler = new Map<number, string>();
+  const onek = (n: number) => {
+    let h = ozetler.get(n);
+    if (h === undefined) { h = createHash("sha256").update(b.subarray(0, n)).digest("hex"); ozetler.set(n, h); }
+    return h;
+  };
+  const a = adaylar.find((x) => Number(x.boyut) <= b.length && onek(Number(x.boyut)) === x.sha);
+  if (!a) return { id: null, no: null, sonuc: { durum: "gecersiz", hatalar: { dosya: "Bu PDF, imzaya hazırladığınız onay bekleyen raporlardan birinin PDF'i değil (başka bir PDF ya da rapor bu arada geri gönderilmiş)." } } };
+  const no = gorunenNo(a.no, a.revizyon);
+  if (Number(a.boyut) === b.length) return { id: a.id, no, sonuc: { durum: "gecersiz", hatalar: { dosya: "PDF'te imza yok (imzalanmamış dosya yüklendi)." } } };
+  return { id: a.id, no, sonuc: await teknikImzaliYukle(db, depo, kim, firmaId, a.id, a.surum, dosya) };
 }
 
 /* ── RAPORLAR LİSTESİ (modül 14 ana sayfası; maket raporlar.html #/ — 318) ─────────────────────────────────────────────────────────────── */

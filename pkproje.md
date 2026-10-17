@@ -2527,6 +2527,17 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-17 (YAPILDI): **TEKNİK YÖNETİCİ İMZASI** (reisim: *"firma ayarlarına ekleyebiliriz teknik yönetici imzalasın seçeneği olsun açıkken teknik
+  yönetici onayına giden rapor teknik yönetici tarafından imzalansın, ondan sonra denetçiye gitsin, eğer açık değilse bu seçenek şu an ki kurgumuzdan
+  devam edelim"* · önerinin ayrıntıları *"onaylıyorum"*). Firma ayarları › İmza yöntemi: **"Teknik yönetici raporu imzalasın"** (başlangıçta kapalı).
+  Açıkken: Onaylar'da "Onayla" yerine **"İmzala ve onayla"** — tek raporda onay ekranından (PDF'i indir · e-imzayla imzala · yükle), kuyrukta seçip
+  toplu (tek ZIP; imzalılar içerikten eşleşir, "İmzaya hazır" rozeti). Yüklenen PDF imza denetiminden geçer ve **imzanın sertifikasındaki ad teknik
+  yöneticinin adı** olmalı (personel kaydındaki ad, yoksa hesap adı; büyük / küçük, Türkçe harf ve ikinci ad farkı sayılmaz) → rapor onaylanır,
+  muayene uzmanının imzasına gider; uzman teknik yöneticinin imzaladığı PDF'e kendi imzasını ekler (eklenen imza raporu yazanın olmalı) → Tamamlandı.
+  İmzasız onay yok (Onayla ve Durumu değiştir → Muayene uzmanı imzası reddedilir); geri gönderilen raporun hazırlanmış teknik isteği iptal; başka
+  bir teknik yönetici hazırlarsa PDF onun adıyla yeniden üretilir. PDF'in onay satırında imzalayacak teknik yönetici; imza yeri formattaki
+  "Onaylayanın e-imza yeri", "Yok"sa imza aracı kendi yerini koyar. Ayar ONAY anında okunur; kapalıyken bugünkü akış (ad denetimi de yok).
+  Veritabanında (göç 0102): imza isteğinin aşaması (uzman / teknik), teknik yöneticinin imzasıyla onaylanan raporda uzman başka PDF'le imzalayamaz.
 - 2026-10-17 (YAPILDI): **GERÇEK İMZA ARACININ DOSYASI DENETİMDEN GEÇİYOR** — bulgu: reisim'in gönderdiği, başka bir yazılımda gerçek imza aracıyla
   imzalanmış PDF (nitelikli e-imza, görünmez imza + belge zaman damgası ve uzun süreli doğrulama bilgisi) imzalı PDF denetimimizden GEÇMİYORDU:
   araç imzalarken sayfa ağacı düğümünü aynen yeniden yazıyor, belge bilgisini (üreten program, değiştirilme tarihi) güncelliyordu; denetim

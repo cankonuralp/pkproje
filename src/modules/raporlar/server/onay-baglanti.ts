@@ -32,8 +32,17 @@ export async function imzaHazirOlanlar(db: Sorgulayici, idler: readonly string[]
   const l = idler.filter((x) => UUID.test(x));
   if (!l.length) return [];
   return (await db.sorgu<{ id: string }>(
-    `SELECT r.id::text FROM rapor r JOIN imza_istegi i ON i.rapor_id = r.id AND i.revizyon = r.revizyon AND i.durum = 'bekliyor'
+    `SELECT r.id::text FROM rapor r JOIN imza_istegi i ON i.rapor_id = r.id AND i.revizyon = r.revizyon AND i.durum = 'bekliyor' AND i.asama = 'uzman'
      WHERE r.id = ANY ($1::uuid[]) AND r.silindi IS NULL`, [l])).rows.map((x) => x.id);
+}
+/** 2026-10-17 (teknik yönetici imzası, göç 0102): verilen onaydaki raporlardan bu kişinin imzaya hazırladığı (teknik isteği bekleyen) — onay kuyruğunda
+    "İmzaya hazır". Yalnız kimlikler; görme ve onay yetkisi çağıranda. */
+export async function teknikHazirOlanlar(db: Sorgulayici, idler: readonly string[], hesapId: string): Promise<string[]> {
+  const l = idler.filter((x) => UUID.test(x));
+  if (!l.length || !UUID.test(hesapId)) return [];
+  return (await db.sorgu<{ id: string }>(
+    `SELECT r.id::text FROM rapor r JOIN imza_istegi i ON i.rapor_id = r.id AND i.revizyon = r.revizyon AND i.durum = 'bekliyor' AND i.asama = 'teknik'
+       AND i.hesap_id = $2 WHERE r.id = ANY ($1::uuid[]) AND r.silindi IS NULL AND r.durum = 'onayda'`, [l, hesapId])).rows.map((x) => x.id);
 }
 
 /** etkin (silinmemiş) raporların özetleri: durum süzgeci ya da tek rapor. Yetki ÇAĞIRANDA (Onaylar kayıt kayıt canDo ile süzer). */
@@ -67,8 +76,8 @@ export async function raporOzetleri(db: Sorgulayici, s: { durumlar?: readonly Ra
 
 /** Onaylar'ın açtığı geçişler (gönder, onayla, geri gönder, onayı geri al, durumu değiştir) */
 export type OnayGecisi = "taslak" | "onayda" | "onaylandi";
-/** raporun durumunu yazar (istemcinin gördüğü sürümle). Gerekçe yalnız bu işlem için tetiğe verilir (Yeni'ye dönüşte en az 10 karakter —
-    veritabanı da ister) ve hareket kaydına gerekçesiyle düşer. Yetki ÇAĞIRANDA. */
+/** raporun durumunu yazar (istemcinin gördüğü sürümle). Gerekçe yalnız bu işlem için tetiğe verilir (isteğe bağlı — 0101; revizede ≥ 10
+    raporRevizeYaz) ve hareket kaydına gerekçesiyle düşer. Yetki ÇAĞIRANDA. */
 export async function raporDurumYaz(db: Sorgulayici, iz: Iz, id: string, surum: number, durum: OnayGecisi, gerekce: string | null): Promise<GuncelleSonucu> {
   await db.sorgu("SELECT set_config('app.gerekce', $1, true)", [gerekce ?? ""]);
   const r = await guncelle(db, RAPOR, id, surum, { durum }, gerekce ? { ...iz, gerekce } : iz);

@@ -64,7 +64,7 @@ function ozet(k: PanelAdi, v: Veri): { metin: string; durum?: string } {
     case "firma": return { metin: `${v.firma.deger.ad || v.firma.kayitAd} · ${v.firma.deger.nusha} nüsha · logo ${v.dosyalar.logo ? "var" : "yok"}`,
       durum: !v.firma.deger.adres.trim() || !v.firma.deger.eposta.trim() ? "Eksik" : undefined };
     case "kod": return { metin: `${v.kod}-AAYY-SIRA (ör. ${v.kod}-2610-0001)` };
-    case "imza": return { metin: `${IMZA_YONTEM[v.imza.deger.yontem][0]} · ${IMZA_YONTEM[v.imza.deger.yontem][1]}` };
+    case "imza": return { metin: `${IMZA_YONTEM[v.imza.deger.yontem][0]} · ${v.imza.deger.teknik ? "önce teknik yönetici imzalar" : IMZA_YONTEM[v.imza.deger.yontem][1]}` };
     case "belge": return { metin: `Ön bilgilendirme: ${v.dosyalar.on_bilgi ? "firma formatı" : "temel format"} · bordro: ${v.dosyalar.bordro_format ? "var" : "yok"}` };
     case "mesai": { const m = v.mesai.deger; return { metin: m.acik ? `Açık · ${m.normal_dk} + ${m.mesai_dk} dk / gün` : "Kapalı" }; }
     case "esik": { const e = v.esik.deger; return { metin: `Kalibrasyon ${e.kalibrasyon} · tesis ${e.kontrolu_yaklasan_tesis} · eğitim ${e.egitim} gün` }; }
@@ -238,11 +238,17 @@ function ImzaYontemi({ v }: { v: Veri }) {
       <div role="radiogroup" aria-label="İmza yöntemi" className={stil.secenekler}>
         {(Object.keys(IMZA_YONTEM) as (keyof typeof IMZA_YONTEM)[]).map((k) => (
           <label key={k} className={stil.secenek}>
-            <input type="radio" name="w-ay-imza" value={k} checked={s.d.yontem === k} disabled={!v.yaz} onChange={() => s.setD({ yontem: k })} />
+            <input type="radio" name="w-ay-imza" value={k} checked={s.d.yontem === k} disabled={!v.yaz} onChange={() => s.setD({ ...s.d, yontem: k })} />
             <span><b>{IMZA_YONTEM[k][0]}</b><span className={stil.altSatir}>{IMZA_YONTEM[k][1]}</span></span>
           </label>
         ))}
       </div>
+      {/* 2026-10-17 (göç 0102): açıkken onaydaki raporu teknik yönetici imzalayarak onaylar, sonra muayene uzmanı imzalar; kapalıyken bugünkü akış */}
+      <label className={stil.secenek}>
+        <input type="checkbox" checked={s.d.teknik} disabled={!v.yaz} onChange={(e) => s.setD({ ...s.d, teknik: e.target.checked })} />
+        <span><b>Teknik yönetici raporu imzalasın</b><span className={stil.altSatir}>Onaydaki raporu teknik yönetici e-imzayla imzalayarak onaylar;
+          ardından muayene uzmanı aynı PDF&apos;e kendi imzasını ekler. Kapalıyken teknik yönetici yalnız onaylar.</span></span>
+      </label>
     </Kart>
   );
 }

@@ -5,7 +5,8 @@
    reddet ve "Revize isteği" şeridi — 318). Gözden geçirme özeti (uyarılar engel
    değil) ve raporun tamamına bağlantı. Onaylayınca ya da geri gönderince sıradaki rapor açılır (kuyruk boşsa kuyruğa dönülür). Geri gönder ve
    Yeni'ye almada gerekçe isteğe bağlı (2026-10-17, göç 0101 — önceden ≥ 10 zorunluydu). Yetki, kural ve geçiş sunucuda ve veritabanında;
-   buradaki tuşlar yalnız izinli olanı gösterir. */
+   buradaki tuşlar yalnız izinli olanı gösterir. 2026-10-17 (göç 0102): firma ayarı "teknik yönetici imzalasın" açıkken Onayla yerine "İmzala ve
+   onayla" (TopluImzaPenceresi kip teknik — tek rapor: PDF'i indir, imzala, yükle; yüklenince onaylanır) ve Durumu değiştir'de Onaylandı yok. */
 import { useRouter } from "next/navigation";
 import { useState, useTransition, type ReactNode } from "react";
 import { Kosullar } from "../../../components/bilgi/Bilgi";
@@ -22,6 +23,7 @@ import type { OnayEkrani as Veri } from "../server/onaylar";
 import { durumDegistirEylemi, geriGonderEylemi, onayGeriAlEylemi, onaylaEylemi, type OnayYaniti } from "./eylemler";
 import { zamanYaz } from "./OnayListesi";
 import { RevizePenceresi, type RevizeTuru } from "./RevizePenceresi";
+import { TopluImzaPenceresi } from "./TopluImza";
 import stil from "./onaylar.module.css";
 
 const ID = { gerekce: "onay-gerekce", hedef: "onay-hedef" } as const;
@@ -35,6 +37,7 @@ export function OnayEkrani({ v, belge }: { v: Veri; belge: ReactNode }) {
   const [pen, setPen] = useState<Pen | null>(null);
   const [genel, setGenel] = useState<string | null>(null);
   const [rev, setRev] = useState<RevizeTuru | null>(null);
+  const [imza, setImza] = useState(false);
   const { r } = v;
   const [durumAd, rozet] = RAPOR_DURUM[r.durum];
 
@@ -57,6 +60,7 @@ export function OnayEkrani({ v, belge }: { v: Veri; belge: ReactNode }) {
     {r.izin.geriGonder && <Tus tur="ikincil" ikon="undo-2" disabled={bekliyor} onClick={() => setPen({ tur: "geri", hedef: null, gerekce: "", hatalar: {} })}>Geri gönder</Tus>}
     {r.izin.onayGeriAl && <Tus tur="ikincil" ikon="undo-2" disabled={bekliyor} onClick={geriAl}>Onayı geri al</Tus>}
     {r.izin.onayla && <Tus ikon="check" disabled={bekliyor} onClick={onayla}>Onayla</Tus>}
+    {r.izin.imzala && <Tus ikon="file-signature" disabled={bekliyor} onClick={() => { setGenel(null); setImza(true); }}>İmzala ve onayla</Tus>}
     {r.izin.revize && v.istek && <Tus tur="ikincil" disabled={bekliyor} onClick={() => setRev("red")}>İsteği reddet</Tus>}
     {r.izin.revize && <Tus ikon="file-pen-line" disabled={bekliyor} onClick={() => setRev("revize")}>Revizeye gönder</Tus>}
   </>;
@@ -81,6 +85,7 @@ export function OnayEkrani({ v, belge }: { v: Veri; belge: ReactNode }) {
         {belge}
       </Bolum>
 
+      {imza && <TopluImzaPenceresi raporlar={[r]} kip="teknik" onKapat={(degisti) => { setImza(false); if (degisti) router.refresh(); }} />}
       {rev && <RevizePenceresi tur={rev} r={r} istek={v.istek} onKapat={() => setRev(null)}
         bitti={(s) => { setRev(null); setGenel(s.genel ?? null); if (!s.genel) router.refresh(); }} />}
 
@@ -92,7 +97,7 @@ export function OnayEkrani({ v, belge }: { v: Veri; belge: ReactNode }) {
         {pen?.tur === "durum" && (
           <fieldset className={stil.hedefler} id={ID.hedef} aria-describedby={pen.hatalar.hedef ? ipucuId(ID.hedef) : undefined}>
             <legend>Şu an: {durumAd}</legend>
-            {DURUM_HEDEF.filter((d) => d !== r.durum).map((d) => (
+            {DURUM_HEDEF.filter((d) => d !== r.durum && !(d === "onaylandi" && r.izin.teknik)).map((d) => (
               <label key={d} className={stil.secim}>
                 <input type="radio" name={ID.hedef} value={d} checked={pen.hedef === d} disabled={bekliyor} onChange={() => setPen((p) => (p ? { ...p, hedef: d, hatalar: {} } : p))} />
                 <span>{RAPOR_DURUM[d][0]}</span>

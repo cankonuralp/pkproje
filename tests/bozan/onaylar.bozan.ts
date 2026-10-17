@@ -19,6 +19,11 @@
   12. (596) Adaylar yalnız kişinin kendi raporları olmasaydı raporu yazmayan kişi başkasının imzalı PDF'ini yükleyince raporun numarasını öğrenirdi.
   13. (2026-10-17, İ1) Yeni rapor önceki tamamlanmış raporun kayıtlı bilgilerinden başlamasaydı seneye seri no ve ekipman bilgileri yeniden yazılırdı.
   14. (2026-10-17, İ3) Göz işaretinin PDF istisnası rapor kimliğine bakmasaydı planı gören denetçi ekipmanın ESKİ raporlarını da açardı.
+  15. (2026-10-17, 0102 teknik yönetici imzası) Uzmanın isteği teknik yöneticinin imzaladığı PDF'e bağlanmasaydı teknik yöneticinin imzası atlanır,
+      uzman imzasız bir PDF'i imzalayıp raporu tamamlardı.
+  16. (0102) Onaydan çıkan raporun bekleyen teknik isteği iptal edilmeseydi geri gönderilen raporun eski PDF'i imzalanıp onaylanırdı.
+  17. (0102) Sunucuda "teknik yönetici imzası açıkken imzasız onay yok" denetimi olmasaydı rapor imzasız onaylanırdı.
+  18. (0102) İmzalayanın adı denetlenmeseydi teknik yöneticinin yerine başkasının (ör. denetçinin) imzası kabul edilirdi.
    Akış ve hareket işlevlerini sonraki göçler (0027, 0029) yeniden yazdığından her kural geçtiği bütün göçlerden birlikte sökülür. */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -36,6 +41,8 @@ import { taslakBaslat, yayinla } from "../../src/modules/rapor-format/server/for
 import { imzaHazirla, imzaliYukle, raporOlustur } from "../../src/modules/raporlar/server/raporlar.ts";
 import { dosyaYukle } from "../../src/server/dosya/dosya.ts";
 import { testKumesi } from "../yardimci/kume.ts";
+import { sahteImzaSozlugu } from "../yardimci/sahte-imza.ts";
+import { ayarYaz } from "../../src/server/ayar/ayar.ts";
 import { supabaseBenzeri, type SupabaseBenzeri } from "../yardimci/supabase.ts";
 
 const GEREKCE = `    IF NEW.durum = 'taslak' AND length(btrim(coalesce(current_setting('app.gerekce', true), ''))) < 10 THEN
@@ -70,6 +77,16 @@ const ILERI = `  IF r.rapor_tarihi IS NOT NULL AND r.rapor_tarihi > (now() AT TI
 `;
 const ESKIMIS = `        AND NOT EXISTS (SELECT 1 FROM rapor_surumu z WHERE z.firma_id = y.firma_id AND z.rapor_id = y.rapor_id AND z.revizyon > y.revizyon)
 `;
+/* 2026-10-17 (0102, teknik yönetici imzası) */
+const TEKNIK_PDF = `      IF t IS NOT NULL AND NEW.pdf_dosya IS DISTINCT FROM t THEN
+        RAISE EXCEPTION 'teknik yöneticinin imzaladığı rapor yalnız o imzalı PDF''le imzalanır' USING ERRCODE = '23514';
+      END IF;
+`;
+const TEKNIK_IPTAL = `    IF OLD.durum = 'onayda' AND NEW.durum <> 'onayda' THEN
+      UPDATE imza_istegi SET durum = 'iptal', surum = surum + 1, degisti = now()
+        WHERE firma_id = NEW.firma_id AND rapor_id = NEW.id AND revizyon = NEW.revizyon AND asama = 'teknik' AND durum = 'bekliyor';
+    END IF;
+`;
 /** göç → sökülecek kurallar (aynı işlevi yeniden yazan her göçten) */
 const SOK: Record<string, string[]> = {
   "0026_": [GEREKCE], "0027_": [GEREKCE, IMZA], "0028_": [IPTAL, KEMER], "0029_": [GEREKCE, IMZA, IPTAL, REVIZYON], "0031_": [KEMER, ILERI, ESKIMIS],
@@ -77,6 +94,8 @@ const SOK: Record<string, string[]> = {
   "0100_": [ESKIMIS],
   /* 2026-10-17: 0101 (geri göndermede gerekçe isteğe bağlı) rapor_akis'i yeniden yazar — revize gerekçesi, imza ve revizyon kuralları oradan da */
   "0101_": [GEREKCE_REVIZE, IMZA, REVIZYON],
+  /* 0102 (teknik yönetici imzası) rapor_hareket_yaz'ı yeniden yazar — iptal kuralı oradan da; kendi iki kuralı (15, 16) */
+  "0102_": [IPTAL, TEKNIK_PDF, TEKNIK_IPTAL],
 };
 const ONAYLAR = "src/modules/onaylar/server/onaylar.ts";
 let kume: GomuluKume;
@@ -384,4 +403,67 @@ test("İ3: PDF istisnası rapor kimliğine bakmayınca planı gören denetçi ek
   await yeniPlan(per2, d2);
   const g = await k.is(d2, (db) => m.oncekiRaporGorulur(db, d2, k.rapor));
   assert.equal(g, true, "bozuk: eski rapor açılmadı");
+});
+
+/* 2026-10-17 (0102) TEKNİK YÖNETİCİ İMZASI: 15–16 bozuk göçler (havuz), 17–18 bozulan sunucu kodu */
+async function teknikKur(kisa: string, kod: string, ayar = true) {
+  const F = await yeniFirma(kisa, kod);
+  const k = await kur(havuz, F);
+  const q = (sql: string, p: unknown[]) => kiraciIcinde(havuz, F, async (db) => (await db.sorgu<{ id: string }>(sql, p)).rows[0].id);
+  const mek: Kisi = { id: await q("INSERT INTO hesap (eposta, ad, roller, durum) VALUES ('m@deneme.example', 'Deneme Mek', $1, 'etkin') RETURNING id::text",
+    [["mekanik_yonetici"]]), ad: "Deneme Mek", roller: ["mekanik_yonetici"] };
+  if (ayar) {
+    const y = await k.is(k.yon, (db) => ayarYaz(db, "imza", -1, { yontem: "mobil", teknik: true }, { kim: "Deneme", ne: "firma_ayar" }));
+    assert.equal(y.durum, "tamam", JSON.stringify(y));
+  }
+  const pdf = (ad: string) => k.is(mek, async (db) => {
+    const y = await dosyaYukle(db, depo, { firmaId: F, modul: "rapor_pdf", kayitId: k.rapor, ad: `${ad}.pdf`, izinli: ["pdf"], kim: "Deneme", yukleyen: mek.id,
+      bayt: new TextEncoder().encode(`%PDF-1.4\n% ${kisa} ${ad}\n%%EOF\n`) });
+    assert.ok(y.tamam);
+    return y.id;
+  });
+  return { F, k, mek, pdf };
+}
+
+test("0102'deki 'uzman yalnız teknik yöneticinin imzaladığı PDF'le' kuralı kalkınca teknik yöneticinin imzası atlanır", async () => {
+  const { k, mek, pdf } = await teknikKur("deneme-k1", "DK", false);
+  const [d1, d2] = [await pdf("imzasiz"), await pdf("teknik-imzali")];
+  const ac = (kisi: Kisi, dosya: string, asama: string) => k.is(kisi, (db) => db.sorgu(
+    "INSERT INTO imza_istegi (rapor_id, revizyon, pdf_dosya, pdf_sha256, asama) SELECT $1, 0, d.id, d.sha256, $3 FROM dosya d WHERE d.id = $2", [k.rapor, dosya, asama]));
+  await ac(mek, d1, "teknik");
+  await k.is(mek, (db) => db.sorgu("UPDATE imza_istegi SET durum = 'tamam', imzali_dosya = $2, surum = surum + 1 WHERE rapor_id = $1", [k.rapor, d2]));
+  await k.is(mek, (db) => db.sorgu("UPDATE rapor SET durum = 'onaylandi' WHERE id = $1", [k.rapor]));
+  await ac(k.den, d1, "uzman");
+  const r = (await supa.sahip.query<{ pdf: string }>("SELECT pdf_dosya::text AS pdf FROM imza_istegi WHERE rapor_id = $1 AND asama = 'uzman'", [k.rapor])).rows;
+  assert.deepEqual(r.map((x) => x.pdf), [d1], "bozuk: uzman teknik yöneticinin imzalamadığı PDF'le istek açtı");
+});
+
+test("0102'deki iptal kuralı kalkınca geri gönderilen raporun teknik imza isteği bekler kalır", async () => {
+  const { k, mek, pdf } = await teknikKur("deneme-k2", "DL", false);
+  const d1 = await pdf("imzasiz");
+  await k.is(mek, (db) => db.sorgu("INSERT INTO imza_istegi (rapor_id, revizyon, pdf_dosya, pdf_sha256, asama) SELECT $1, 0, d.id, d.sha256, 'teknik' FROM dosya d WHERE d.id = $2",
+    [k.rapor, d1]));
+  await k.is(mek, (db) => db.sorgu("UPDATE rapor SET durum = 'taslak' WHERE id = $1", [k.rapor]));
+  const d = (await supa.sahip.query<{ durum: string }>("SELECT durum FROM imza_istegi WHERE rapor_id = $1", [k.rapor])).rows.map((x) => x.durum);
+  assert.deepEqual(d, ["bekliyor"], "bozuk: geri gönderilen raporun teknik isteği iptal edilmedi");
+});
+
+test("sunucuda 'teknik yönetici imzası açıkken imzasız onay yok' denetimi kalkınca rapor imzasız onaylanır", async () => {
+  const m = await bozukModul<Onaylar>(ONAYLAR, "  if (await teknikImzaAcik(db)) return { durum: \"red\", neden: TEKNIK_ONAY };\n", "");
+  const { k, mek } = await teknikKur("deneme-k3", "DM");
+  const r = await k.is(mek, (db) => m.onayla(db, mek, k.rapor, 1));
+  assert.equal(r.durum, "tamam", `bozuk: imzasız onaylandı: ${JSON.stringify(r)}`);
+});
+
+test("sunucuda imzalayanın adı denetlenmeyince teknik yöneticinin yerine denetçinin imzası kabul edilir", async () => {
+  const m = await bozukModul<Raporlar>(RAPORLAR, `  const n = imzaciNedeni(ekImzaIcerikleri(imzasiz, b), await kisininAdi(db, kim));
+  if (n) return { durum: "gecersiz", hatalar: { dosya: n } };
+  const gno`, "  const gno");
+  const { F, k, mek } = await teknikKur("deneme-k4", "DN");
+  const pdf = new TextEncoder().encode("%PDF-1.4\n% teknik\n1 0 obj << /Type /Catalog >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF\n");
+  const h = await k.is(mek, (db) => m.teknikImzaHazirla(db, depo, mek, F, k.rapor, async () => pdf));
+  assert.equal(h.durum, "tamam", JSON.stringify(h));
+  const imzali = new Uint8Array(Buffer.concat([Buffer.from(pdf), Buffer.from(`\n${sahteImzaSozlugu(9, "Deneme Bir")}trailer << /Root 1 0 R /Prev 0 >>\n%%EOF\n`, "latin1")]));
+  const y = await k.is(mek, (db) => m.teknikImzaliYukle(db, depo, mek, F, k.rapor, 1, { ad: "imzali.pdf", bayt: imzali }));
+  assert.equal(y.durum, "tamam", `bozuk: denetçinin imzası teknik yöneticininki diye kabul edildi: ${JSON.stringify(y)}`);
 });

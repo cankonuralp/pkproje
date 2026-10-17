@@ -183,6 +183,23 @@ export function imzayaUygun(pdf: Uint8Array): boolean {
   }
 }
 
+/** 2026-10-17 (teknik yönetici imzası — imza-kimlik.ts): EKTEKİ (imzasız önekten sonra eklenen) imza sözlüklerinin /Contents'i (onaltılık; belge
+    zaman damgası /DocTimeStamp sayılmaz). Önceki imzalar (önekte) dönmez. Okunamayan ek → boş liste. */
+export function ekImzaIcerikleri(imzasiz: Uint8Array, imzali: Uint8Array): string[] {
+  if (imzali.length <= imzasiz.length || imzali.length - imzasiz.length > EK_SINIR) return [];
+  try {
+    const l: string[] = [];
+    for (const x of nesneler(latin1(imzali.subarray(imzasiz.length)), true).values()) {
+      const c = ad(x.deger, "Contents");
+      if (adi(x.deger, "Type") === "/Sig" && c?.t === "yalin" && c.v.startsWith("<")) l.push(c.v.slice(1, -1));
+    }
+    return l;
+  } catch (e) {
+    if (e instanceof Bozuk) return [];
+    throw e;
+  }
+}
+
 /** imzalı PDF, imzasız PDF'in beyaz listeye uyan artımlı imzalanmış hâli mi */
 export function imzaliPdfGecerli(imzasiz: Uint8Array, imzali: Uint8Array): boolean {
   if (imzali.length <= imzasiz.length || imzali.length - imzasiz.length > EK_SINIR) return false;

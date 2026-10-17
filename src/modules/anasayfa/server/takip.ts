@@ -88,7 +88,7 @@ export async function menuTakip(db: Sorgulayici, kim: Kisi & YetkiHesabi): Promi
   /* 565: yalnız süreçteki raporlar (bütün raporlar okunmaz) */
   const o = gor(15) ? await onayTakibi(db, kim) : null;
   if (o) {
-    const kuyruk = o.kuyruk.filter((x) => x.izin.onayla);
+    const kuyruk = o.kuyruk.filter((x) => x.izin.onayla || x.izin.imzala);   // 2026-10-17: teknik yönetici imzası açıkken onay imzayla
     /* her bölümün 24 saati geçeni kırmızı, kalanı sarı (sebep kendi sekmesine götürür) */
     const iki = (l: readonly unknown[], gec: number, metin: string, yer: string) =>
       [...ne("kirmizi", gec, `${metin} (24 saati geçti)`, yer, true), ...ne("sari", l.length - gec, metin, yer, true)];

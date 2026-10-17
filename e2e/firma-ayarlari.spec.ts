@@ -88,6 +88,15 @@ test("firma ayarları: paneller ve pencere; kaydet, geçersiz değer, kayma yok,
   await soruluKapat(page, mesai);
   await expect(page.locator('[data-panel="mesai"]')).toContainText("Kapalı");
 
+  /* 2026-10-17 (göç 0102): İmza yöntemi penceresinde "Teknik yönetici raporu imzalasın" (başlangıçta kapalı); işaretlenince kaydedilmemiş sayılır,
+     Vazgeç → sorulur, ayar değişmez (kayıt ve akış tests/onaylar.test.ts'te) */
+  const imza = await ac(page, "imza", "İmza yöntemi");
+  const teknik = imza.getByRole("checkbox", { name: /Teknik yönetici raporu imzalasın/ });
+  await expect(teknik).not.toBeChecked();
+  await teknik.check();
+  await soruluKapat(page, imza);
+  await expect(page.locator('[data-panel="imza"]')).not.toContainText("önce teknik yönetici imzalar");
+
   /* yapay zekâ: tek model Claude Haiku 5.5; açılınca yurt dışı satırı; kapatınca sorulur */
   const yz = await ac(page, "yz", "Yapay zekâ");
   await yz.getByRole("radio", { name: "Açık" }).click();

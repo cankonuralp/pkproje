@@ -3,7 +3,8 @@
    24 saatten eski, seçiciler Denetçi ve Tesis; sütunlar Rapor no · Ekipman · Denetçi · Gönderildi · Sonuç) ve Tüm raporlar (branşın bütün
    raporları; rapor no ve tesis ayrı aranır, seçiciler Durum ve Denetçi). Satır onay ekranını açar. Bekleme sunucuda hesaplanır (az önce /
    N saattir / N gündür). Yetki sunucuda: liste yalnız görülebilen raporları taşır. 318: İmzamı bekleyen raporlar (C5) ve Revize istekleri.
-   596: İmzamı bekleyen raporlarda seçip birlikte imzalama, Onay kuyruğunda seçip birlikte onaylama (TopluImza.tsx). */
+   596: İmzamı bekleyen raporlarda seçip birlikte imzalama, Onay kuyruğunda seçip birlikte onaylama (TopluImza.tsx). 2026-10-17 (göç 0102):
+   teknik yönetici imzası açıkken kuyrukta seçip birlikte İMZALAYIP onaylama (TopluImzaPenceresi kip teknik), hazırlananlar "İmzaya hazır". */
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition, type ReactNode } from "react";
@@ -45,14 +46,17 @@ function secNoHucre(sec: Secim, secilir: (r: OnaySatiri) => boolean, ic: (r: Ona
     return secilir(r) ? <div className={stil.secHucre}><SecimKutusu s={sec} id={r.id} ad={r.no} /><div className={stil.secIc}>{ic(r)}</div></div> : ic(r);
   };
 }
+/** gönderildi hücresi; hazir (2026-10-17, teknik yönetici imzası): imzasız PDF'i hazırlanmış rapor "İmzaya hazır" */
+const gonderildiHucre = (r: OnaySatiri, hazir?: ReadonlySet<string>) => (
+  <><KartEtiket>Gönderildi</KartEtiket><span><span className={stil.sayi}>{r.gonderildi ? zamanYaz(r.gonderildi) : "—"}</span>
+    {r.bekleme && <span className={r.eski ? stil.eski : stil.bekleme}>{r.bekleme} bekliyor</span>}
+    {hazir?.has(r.id) && <AltSatir><Rozet tur="kabul">İmzaya hazır</Rozet></AltSatir>}</span></>
+);
 const KUYRUK_SUTUN: Sutun<OnaySatiri>[] = [
   { k: "no", genislik: "24%", baslik: "Rapor no", kart: "ust", sira: 1, hucre: noHucre },
   { k: "ekipman", genislik: "24%", baslik: "Ekipman", kart: "govde", sira: 2, hucre: ekipmanHucre },
   { k: "denetci", genislik: "18%", baslik: "Denetçi", kart: "govde", sira: 3, hucre: denetciHucre },
-  { k: "gonderildi", genislik: "20%", baslik: "Gönderildi", kart: "govde", sira: 4, hucre: (r) => (
-    <><KartEtiket>Gönderildi</KartEtiket><span><span className={stil.sayi}>{r.gonderildi ? zamanYaz(r.gonderildi) : "—"}</span>
-      {r.bekleme && <span className={r.eski ? stil.eski : stil.bekleme}>{r.bekleme} bekliyor</span>}</span></>
-  ) },
+  { k: "gonderildi", genislik: "20%", baslik: "Gönderildi", kart: "govde", sira: 4, hucre: (r) => gonderildiHucre(r) },
   { k: "sonuc", genislik: "14%", baslik: "Sonuç", kart: "rozet", sira: 1, hucre: (r) => {
     const s = r.sonuc ? SONUC_ROZET[r.sonuc] : null;
     return s ? <Rozet tur={s[1]}>{s[0]}</Rozet> : <Rozet tur="notr">Seçilmedi</Rozet>;
@@ -139,10 +143,15 @@ export function OnayKuyrugu({ v }: { v: OnayListeleri }) {
   const [mesgul, baslat] = useTransition();
   const [ilerleme, setIlerleme] = useState<string | null>(null);
   const [red, setRed] = useState<string[]>([]);
-  const secilir = (r: OnaySatiri) => r.izin.onayla;
+  /* 2026-10-17 (göç 0102): teknik yönetici imzası açıkken onay imzayla — seçilenler imza penceresine */
+  const teknik = v.teknikImza, hazir = new Set(v.teknikHazir);
+  const [pen, setPen] = useState<OnaySatiri[] | null>(null);
+  const secilir = (r: OnaySatiri) => (teknik ? r.izin.imzala : r.izin.onayla);
   const secilen = v.kuyruk.filter((r) => secilir(r) && sec.secili.includes(r.id));
   const onaylanir = s.sonuc.liste.filter(secilir);
-  const sutunlar: Sutun<OnaySatiri>[] = [{ ...KUYRUK_SUTUN[0], hucre: secNoHucre(sec, secilir, noHucre) }, ...KUYRUK_SUTUN.slice(1)];
+  const hazirSayi = v.kuyruk.filter((r) => hazir.has(r.id)).length;
+  const sutunlar: Sutun<OnaySatiri>[] = [{ ...KUYRUK_SUTUN[0], hucre: secNoHucre(sec, secilir, noHucre) }, KUYRUK_SUTUN[1], KUYRUK_SUTUN[2],
+    { ...KUYRUK_SUTUN[3], hucre: (r) => gonderildiHucre(r, hazir) }, KUYRUK_SUTUN[4]];
   const topluOnay = async () => {
     const l = secilen, kusurlu = l.filter((r) => r.sonuc === "uygun_degil").length, sartli = l.filter((r) => r.sonuc === "sartli").length;
     const sonucsuz = l.filter((r) => !r.sonuc).length;
@@ -169,13 +178,17 @@ export function OnayKuyrugu({ v }: { v: OnayListeleri }) {
     <>
       <SayfaBasi baslik="Onaylar" sayac={<Sayac s={s} />} />
       <Sekmeler ad="Onaylar bölümleri" ogeler={onaySekmeleri(v)} secili="/onaylar" />
-      {(ilerleme || red.length > 0 || onaylanir.length > 1) && (
+      {(ilerleme || red.length > 0 || onaylanir.length > 1 || (teknik && hazirSayi > 0)) && (
         <SeritKap>
           {ilerleme && <Serit tur="bilgi" ikon="list-checks"><span role="status">{ilerleme}</span></Serit>}
           {red.length > 0 && <Serit tur="hata" ikon="circle-alert"><b>{red.length} rapor onaylanamadı</b> · {red.join(" · ")}</Serit>}
-          {!ilerleme && onaylanir.length > 1 && (
-            <Serit tur="bilgi" ikon="list-checks" eylem={<Tus tur="ikincil" disabled={mesgul} onClick={() => sec.hepsi(onaylanir.map((r) => r.id))}>Tümünü seç</Tus>}>
-              Raporları seçip birlikte onaylayabilirsiniz.
+          {!ilerleme && (onaylanir.length > 1 || (teknik && hazirSayi > 0)) && (
+            <Serit tur="bilgi" ikon={teknik ? "file-signature" : "list-checks"} eylem={<>
+              {onaylanir.length > 1 && <Tus tur="ikincil" disabled={mesgul} onClick={() => sec.hepsi(onaylanir.map((r) => r.id))}>Tümünü seç</Tus>}
+              {teknik && hazirSayi > 0 && <Tus tur="ikincil" ikon="upload" onClick={() => setPen([])}>İmzalı PDF&apos;leri yükle</Tus>}
+            </>}>
+              {teknik ? <>Bu firmada teknik yönetici raporu <b>imzalayarak</b> onaylar · raporları seçip birlikte imzalayabilirsiniz.
+                {hazirSayi > 0 && <> {hazirSayi} raporun imzasız PDF&apos;i hazır.</>}</> : <>Raporları seçip birlikte onaylayabilirsiniz.</>}
             </Serit>
           )}
         </SeritKap>
@@ -183,8 +196,10 @@ export function OnayKuyrugu({ v }: { v: OnayListeleri }) {
       <SuzgecliListe s={s} on="o" baslik="Onay kuyruğu" sutunlar={sutunlar} anahtar={(r) => r.id} href={(r) => `/onaylar/${r.id}`}
         bosVeri={{ ikon: "circle-check", baslik: "Onay bekleyen rapor yok", metin: "Denetçi raporu onaya gönderince burada görünür." }} />
       <SecimCubugu sayi={secilen.length} temizle={sec.temizle}>
-        <Tus ikon="circle-check" disabled={mesgul} onClick={() => void topluOnay()}>Seçilenleri onayla</Tus>
+        {teknik ? <Tus ikon="file-signature" onClick={() => setPen(secilen)}>İmzala ve onayla</Tus>
+          : <Tus ikon="circle-check" disabled={mesgul} onClick={() => void topluOnay()}>Seçilenleri onayla</Tus>}
       </SecimCubugu>
+      {pen && <TopluImzaPenceresi raporlar={pen} kip="teknik" onKapat={(degisti) => { setPen(null); if (degisti) { sec.temizle(); router.refresh(); } }} />}
     </>
   );
 }
