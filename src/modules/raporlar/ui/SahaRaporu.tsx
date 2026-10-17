@@ -1035,7 +1035,7 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
             {duzen.tam ? duzen.tam.alanlar.map((a) => <BilgiAlani key={a.id} a={a} bag={bag} />)
               : sabit.map((k) => metinSatiri(k, EKIPMAN_ALAN_ADI[k], EN[k], k === "imal"))}
             <Satir etiket="Önceki kontrol">
-              {onceki ? `${tarihNo(onceki.tarih)} · ${onceki.sonuc ?? "-"} · eski kayıt (Excel)` : "İlk kontrol"}
+              {onceki ? `${tarihNo(onceki.tarih)} · ${onceki.sonuc ?? "-"} · ${onceki.no ? `rapor ${onceki.no}` : "sistem öncesi kayıt"}` : "İlk kontrol"}
             </Satir>
           </Satirlar>
           {!duzen.tam && katilan.map((b) => <BilgiBlok key={b.id} b={b} bag={bag} />)}

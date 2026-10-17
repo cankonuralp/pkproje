@@ -86,6 +86,8 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await page.getByRole("button", { name: "Kabul et" }).click();
   await expect(page.getByText("Plan kabul edildi.")).toBeVisible();
   await expect(page.getByRole("region", { name: "Raporlar", exact: true })).toContainText("Bu planda rapor yok.");
+  /* 2026-10-17 (İ3): satır başındaki göz — ekipmanın tamamlanmış raporu yok: kapalı, nedeni adında */
+  await expect(page.getByRole("button", { name: `${E2E_SAHA.ekipman} · son tamamlanmış rapor — Tamamlanmış raporu yok` })).toBeDisabled();
   await page.getByRole("button", { name: `${E2E_SAHA.ekipman} için rapor oluştur` }).click();
   await expect(page.getByText(/^Rapor oluşturuldu: /).first()).toBeVisible({ timeout: 30_000 });
   await page.getByRole("region", { name: "Raporlar", exact: true }).getByRole("link", { name: "Raporu düzenle" }).click();

@@ -8,6 +8,9 @@ import { turSureleri } from "../../ekipman-turleri/server/turler.ts";
 import { kunyeFarkTemizle } from "../../../format/kunye.ts";
 import { Cevaplar, type RaporSonucu } from "../../../format/tanim.ts";
 
+/* 2026-10-17 (İ2, İ3): önceki rapor — plan içi "Önceki kontrol" sütunu ve göz işareti */
+export { oncekiKontrol, oncekiRaporlar, type OncekiKontrol, type OncekiRapor } from "./onceki.ts";
+
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const KUNYE = tablo({ ad: "rapor", sutunlar: ["kunye", "kunye_surum", "cevaplar"] });
 

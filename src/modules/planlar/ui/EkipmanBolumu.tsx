@@ -14,7 +14,11 @@
    "BURADA SERİ NO SORMASIN ETİKETTEN OKUMA VS YAPILACAK SONUÇTA"): seri no sorulmaz — raporun ekipman bilgilerinde girilir. Liste en son
    eklenen ekipman üstte (sunucu sırası, plan-ici.ts).
    2026-10-12 (reisim: "tamamlamayı geri almadan yeni rapor oluşturulmasın, uyarı çıksın rapor oluştur diyince"): tamamlanmış planda Rapor oluştur
-   görünür; basınca rapor açılmaz, üstte kısa uyarı nedeni ve ne yapılacağını söyler (izin.raporEngel; sunucu da reddeder). */
+   görünür; basınca rapor açılmaz, üstte kısa uyarı nedeni ve ne yapılacağını söyler (izin.raporEngel; sunucu da reddeder).
+   2026-10-17 (iş planı İ2, İ3; reisim: "her ekipmanın satırının başında göz işareti olacak ve tıklayınca geçen seneki (en sonki tamamlanmış imzalı
+   rapor) rapor gözükecek"): satırın başında GÖZ — ekipmanın bu plan dışındaki son tamamlanmış raporunun imzalı PDF'i yeni sekmede (tek dosya ucu,
+   yetkiyle; raporu yoksa ya da PDF saklama süresi dolduğu için silindiyse kapalı, nedeni ipucunda). "Önceki kontrol" o raporun tarihi + sonucu
+   (yoksa sistem öncesi kayıt, o da yoksa "İlk kontrol"). */
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore, useTransition } from "react";
 import { useBildir, useUyar } from "../../../components/bildirim/Bildirim";
@@ -29,7 +33,7 @@ import { Pencere } from "../../../components/pencere/Pencere";
 import { Rozet } from "../../../components/sayfa/Sayfa";
 import { SilTusu } from "../../../components/sil/SilTusu";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
-import { Tus } from "../../../components/tus/Tus";
+import { Tus, tusSinifi } from "../../../components/tus/Tus";
 import { KALIP } from "../../../styles/kalip";
 import { kodBicimi, kodNormal, tarihNo, type KodTuru } from "../sema";
 import type { PlanEkipmani, PlanIci } from "../server/plan-ici";
@@ -46,8 +50,8 @@ export const ERKEN_ID = "plan-erken-sebep";
 export const MESAI_ID = "plan-mesai-sebep";
 /* sütun genişlikleri: Rapor oluştur varken işlem sütunu Rapor sütunundan pay alır (maket .a-tablo-ekipman, 2026-10-03) */
 const GENISLIK = {
-  sade: { kod: "14%", tur: "22%", konum: "18%", brans: "11%", onceki: "14%", rapor: "8%", eylem: "13%" },
-  rapor: { kod: "10%", tur: "15%", konum: "14%", brans: "10.5%", onceki: "17%", rapor: "8%", eylem: "25.5%" },
+  sade: { goz: "5%", kod: "13%", tur: "21%", konum: "17%", brans: "10%", onceki: "15%", rapor: "7%", eylem: "12%" },
+  rapor: { goz: "5%", kod: "9%", tur: "14%", konum: "13%", brans: "10%", onceki: "16%", rapor: "7%", eylem: "26%" },
 } as const;
 const ayYil = (iso: string) => `${iso.slice(5, 7)}.${iso.slice(0, 4)}`;
 
@@ -103,13 +107,24 @@ export function EkipmanBolumu({ v }: { v: PlanIci }) {
 
   const g = GENISLIK[v.izin.raporOlustur ? "rapor" : "sade"];
   const sutunlar: Sutun<PlanEkipmani>[] = [
+    /* İ3 (2026-10-17): önceki (son tamamlanmış) raporun imzalı PDF'i */
+    { k: "goz", genislik: g.goz, baslik: "Önceki rapor", gizliBaslik: true, siralanmaz: true, kart: "ust", sira: 0, hucre: (e) => {
+      const ad = `${e.kod} · son tamamlanmış rapor`;
+      if (e.oncekiRapor?.dosya) {
+        return <a className={`${tusSinifi("ikincil")} ${stil.gozTus}`} href={`/api/dosya/${e.oncekiRapor.dosya}`} target="_blank" rel="noopener"
+          aria-label={`${ad} (${e.oncekiRapor.no})`} title={`Son tamamlanmış rapor: ${e.oncekiRapor.no}`}><Ikon ad="eye" kucuk /></a>;
+      }
+      const neden = e.oncekiRapor ? `${e.oncekiRapor.no}: PDF saklama süresi dolduğu için silindi` : "Tamamlanmış raporu yok";
+      return <Tus tur="ikincil" ikon="eye" className={stil.gozTus} disabled aria-label={`${ad} — ${neden}`} title={neden}><span className="gizli">{neden}</span></Tus>;
+    } },
     { k: "kod", genislik: g.kod, baslik: "Kod", kart: "ust", sira: 1, hucre: (e) => <><span className={stil.kod}>{e.kod}</span>{e.sonradan && <span className={stil.yeni}>Yeni</span>}</> },
     { k: "tur", genislik: g.tur, baslik: "Ekipman türü", kart: "govde", sira: 2, hucre: (e) => <Kirp>{e.tur}</Kirp> },
     { k: "konum", genislik: g.konum, baslik: "Konum", kart: "govde", sira: 3, hucre: (e) => <span className={stil.hucreSatir}><Ikon ad="map-pin" kucuk /><Kirp>{e.konum ?? "—"}</Kirp></span> },
     { k: "brans", genislik: g.brans, baslik: "Branş", kart: "govde", sira: 4, hucre: (e) => <span className={stil.hucreSatir}><Ikon ad={e.brans === "m" ? "cog" : "zap"} kucuk />{bransAd(e.brans)}</span> },
     { k: "onceki", genislik: g.onceki, baslik: "Önceki kontrol", kart: "govde", sira: 5, hucre: (e) => !e.onceki ? <span className={stil.ilk}>İlk kontrol</span> : (
-      <><KartEtiket>Önceki kontrol</KartEtiket><span className={e.onceki.sonuc === "Kusurlu" ? stil.sonucHata : e.onceki.sonuc && e.onceki.sonuc !== "Uygun" ? stil.sonucUyari : undefined}
-        title="eski kayıt (Excel)">{ayYil(e.onceki.tarih)}{e.onceki.sonuc && ` · ${e.onceki.sonuc}`}</span></>
+      <><KartEtiket>Önceki kontrol</KartEtiket><span className={e.onceki.sonuc === "Kusurlu" || e.onceki.sonuc === "Uygun değil" ? stil.sonucHata
+        : e.onceki.sonuc && e.onceki.sonuc !== "Uygun" ? stil.sonucUyari : undefined}
+        title={e.onceki.no ? `Rapor ${e.onceki.no}` : "sistem öncesi kayıt"}>{ayYil(e.onceki.tarih)}{e.onceki.sonuc && ` · ${e.onceki.sonuc}`}</span></>
     ) },
     { k: "rapor", genislik: g.rapor, baslik: "Rapor", kart: "rozet", sira: 1, hucre: (e) => e.pasif ? <Rozet tur="notr">Pasif</Rozet>
       : raporlu.has(e.id) ? <span className={stil.raporTik} title="Raporu var"><Ikon ad="circle-check" /><span className="gizli">Raporu var</span></span> : null },

@@ -282,6 +282,11 @@ pkproje/
                             fotoEkle; S.A.Y Chat okumaları açılışta boş alanlara, kaydedilince kapanır) · okunan fotoğraf göç 0089 yz_okuma.dosya (okunanFotolar)
                             · STANDART PENCERESİ (428): ui/Kaynaklar.tsx (önce sorar; kütüphanedeki PDF çerçevede / kriter belgesi metni) ·
                             eşleme dokumanlar/eslestir.ts (saf) · kütüphane dokumanlar raporStandartlari · formatKriterleri src/tanim/kriterler.ts
+                            · 2026-10-17 ÖNCEKİ RAPOR (İ1–İ3): server/onceki.ts (oncekiRaporlar — ekipmanın bu plan dışındaki son tamamlanmış raporu: son
+                            revizyon, en yeni kontrol; oncekiRaporIcerigi — rapor_surumu.icerik, PDF değil; oncekiKontrol) · raporlar.ts oncekiKaynak (yeni rapor
+                            ondan: ekipman bilgileri + kopyaCevaplari; bağlantısız paket ekipmanlar[].cevaplar) · oncekiRaporGorulur (dosya ucu IMZALI istisnası:
+                            planlar ekipmaniGosterenPlanlar) · plan içi PlanEkipmani.onceki / oncekiRapor → EkipmanBolumu göz sütunu · kilit onaylar (PG) +
+                            bozan onaylar 13–14, e2e saha-raporu (kapalı göz)
                             · SAKLAMA SÜRESİ (387, göç 0073; ENGEL 11): server/saklama.ts (gece işi saklamaIsi — süresi dolan imzalı sürümün PDF'leri
                             saklama_sil ile, liste, Uyarılar günleri); okuyucular uyari-baglanti.ts, ayar-baglanti.ts; koruma veritabanında (dosya_saklama_koru)
   src/modules/onaylar/      ONAYLAR (2026-10-05, 314; modül 15): kuyruk, onay ekranı (gözden geçirme), Onayla / Geri gönder / Onayı geri al /

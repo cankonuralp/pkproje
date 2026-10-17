@@ -2525,6 +2525,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-17 (İ1–İ3 YAPILDI; reisim: *"tamam reisim güzel, elindeki tüm işleri yeni verdiğim işler ile birlikte sırala başla durmadan bitir"*):
+  **Önceki rapor.** Rapor oluştur (çevrimiçi ve bağlantısız) ekipmanın bu plan dışındaki EN SON TAMAMLANMIŞ raporunun imza anındaki KAYITLI
+  içeriğinden açılır (PDF okunmaz): ekipman bilgileri (boş olan ekipman kaydından), kayıttan gelmeyen bilgi alanları, madde seçimleri; ölçüm /
+  test değerleri, fotoğraflar, kusur açıklaması, ek sütunlar, sonuç, yorum, cihazlar, imza yerleri gelmez. Plan içinde "Önceki kontrol" o raporun
+  tarihi + sonucu (Uygun / Uygun değil / Şartlı uygun; yoksa sistem öncesi kayıt, o da yoksa "İlk kontrol"), "Önceki kontrolde kusur" çipi buna
+  göre; rapor ekranında da. Satırın başında GÖZ: o raporun imzalı PDF'i yeni sekmede; raporu yoksa ya da PDF saklama süresi dolduğu için silindiyse
+  kapalı, nedeni ipucunda. PDF'i planın ekipmanını gören açar (denetçinin "yalnız kendi raporları" kuralına bu tek rapor için istisna; eski raporlar
+  ve raporun kendisi açılmaz). Göç yok (imzalı sürüm tablosunun dizini vardı).
 - 2026-10-17 (karar + İŞ PLANI — henüz yapılmadı; reisim: *"onaylıyorum ve ekliyorum, ekipmanlarda … en başta her ekipmanın satırının başında göz
   işareti olacak ve tıklayınca geçen seneki (en sonki tamamlanmış imzalı rapor) rapor gözükecek, bu ve diğer bütün kalan işler için ne yapılacağını
   kaydet şimdi yapmaya başlama"*). Sıra reisim "başla" deyince; her biri ayrı kalem (kod → test → olumsuz kanıt → deneme makinesi → deneme adresi).

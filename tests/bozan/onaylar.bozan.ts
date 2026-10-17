@@ -16,6 +16,8 @@
   10. (0031, 0100) Eskimiş sürüm kuralı olmasaydı revizyonla düzeltilen yanlış (ileri) tarih başka raporun kusurunu giderilmiş doğururdu.
   11. (596 toplu imza) İçerik eşleşmesi (önekin SHA-256'sı) olmasaydı başka bir PDF'in imzalısı imzası bekleyen bir rapora eşleşirdi.
   12. (596) Adaylar yalnız kişinin kendi raporları olmasaydı raporu yazmayan kişi başkasının imzalı PDF'ini yükleyince raporun numarasını öğrenirdi.
+  13. (2026-10-17, İ1) Yeni rapor önceki tamamlanmış raporun kayıtlı bilgilerinden başlamasaydı seneye seri no ve ekipman bilgileri yeniden yazılırdı.
+  14. (2026-10-17, İ3) Göz işaretinin PDF istisnası rapor kimliğine bakmasaydı planı gören denetçi ekipmanın ESKİ raporlarını da açardı.
    Akış ve hareket işlevlerini sonraki göçler (0027, 0029) yeniden yazdığından her kural geçtiği bütün göçlerden birlikte sökülür. */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -322,4 +324,54 @@ test("596: adaylar yalnız kişinin kendi raporları olmasaydı raporu yazmayan 
   const { F, k, pdf } = await hazirRapor("deneme-t2", "DU");
   const x = await k.is(k.yon, (db) => m.imzaliEslestirYukle(db, depo, k.yon, F, { ad: "imzali.pdf", bayt: imzaEki(pdf) }));
   assert.ok(x.no !== null && x.id === k.rapor, `yazmayan kişiye numara söylendi: ${JSON.stringify(x)}`);
+});
+
+/* 2026-10-17 (İ1, İ3): önceki rapor — bozulan sunucu kodu (raporlar.ts oncekiKaynak, oncekiRaporGorulur); göçler önemsiz */
+async function imzaliEkipman(kisa: string, kod: string) {
+  const F = await yeniFirma(kisa, kod);
+  const k = await kur(havuz, F);
+  await k.is(k.yon, (db) => db.sorgu("UPDATE rapor SET durum = 'taslak' WHERE id = $1", [k.rapor]));
+  await k.is(k.den, (db) => db.sorgu(`UPDATE rapor SET ekipman_bilgi = ekipman_bilgi || '{"seri": "S-9"}'::jsonb, rapor_tarihi = (now() AT TIME ZONE 'Europe/Istanbul')::date
+    WHERE id = $1`, [k.rapor]));
+  await k.is(k.yon, (db) => db.sorgu("UPDATE rapor SET durum = 'onaylandi' WHERE id = $1", [k.rapor]));
+  await imzalaTam(k, F, k.rapor);
+  /* yeni plan (aynı denetçi) */
+  const yeniPlan = async (personel: string, kabul: Kisi) => {
+    const p = await k.is(k.plan, (db) => planAc(db, depo, k.plan, F, { tesis: k.tesis, baslangic: bugunTr(), bitis: bugunTr(), ekip: [{ personel }] }));
+    assert.ok(p.durum === "tamam", JSON.stringify(p));
+    const s = (await k.is(kabul, (db) => db.sorgu<{ surum: number }>("SELECT surum FROM plan WHERE id = $1", [p.id]))).rows[0].surum;
+    assert.equal((await k.is(kabul, (db) => planKabul(db, kabul, p.id, s, true))).durum, "tamam");
+    return p.id;
+  };
+  return { F, k, yeniPlan };
+}
+
+test("İ1: yeni rapor önceki tamamlanmış rapordan başlamayınca seneye seri no yeniden yazılır", async () => {
+  const m = await bozukModul<Raporlar>(RAPORLAR, "  const o = await oncekiRaporIcerigi(db, e.id, planId);\n  if (!o) return { ekipmanBilgi: kayit, cevaplar: null };",
+    "  return { ekipmanBilgi: kayit, cevaplar: null };");
+  const { k, yeniPlan } = await imzaliEkipman("deneme-o1", "DO");
+  const p2 = await yeniPlan(k.per, k.den);
+  const r = await k.is(k.den, (db) => m.raporOlustur(db, k.den, p2, k.ekipman));
+  assert.ok(r.durum === "tamam", JSON.stringify(r));
+  const seri = (await k.is(k.den, (db) => db.sorgu<{ s: string | null }>("SELECT ekipman_bilgi->>'seri' AS s FROM rapor WHERE id = $1", [r.id]))).rows[0].s;
+  assert.equal(seri, null, "bozuk: seri no önceki rapordan geldi");
+});
+
+test("İ3: PDF istisnası rapor kimliğine bakmayınca planı gören denetçi ekipmanın eski raporunu da açar", async () => {
+  const m = await bozukModul<Raporlar>(RAPORLAR, "    if ((await oncekiRaporlar(db, [ekipman], p)).get(ekipman)?.raporId === raporId) return true;", "    return true;");
+  const { F, k, yeniPlan } = await imzaliEkipman("deneme-o2", "DP");
+  /* ikinci yılın raporu da imzalanır (daha yeni); üçüncü planın denetçisi için önceki rapor o — ilk rapor eski */
+  const p2 = await yeniPlan(k.per, k.den);
+  const r2 = await k.is(k.den, (db) => raporOlustur(db, k.den, p2, k.ekipman));
+  assert.ok(r2.durum === "tamam", JSON.stringify(r2));
+  await k.is(k.den, (db) => db.sorgu("UPDATE rapor SET rapor_tarihi = (now() AT TIME ZONE 'Europe/Istanbul')::date WHERE id = $1", [r2.id]));
+  await k.is(k.yon, (db) => db.sorgu("UPDATE rapor SET durum = 'onaylandi' WHERE id = $1", [r2.id]));
+  await imzalaTam(k, F, r2.id);
+  const q = (sql: string, p: unknown[]) => kiraciIcinde(havuz, F, async (db) => (await db.sorgu<{ id: string }>(sql, p)).rows[0].id);
+  const per2 = await q("INSERT INTO personel (ad, basla, meslek) VALUES ('Deneme İki', '2024-01-01', 'mak-muh') RETURNING id::text", []);
+  const d2: Kisi = { id: await q("INSERT INTO hesap (eposta, ad, roller, durum, personel_id) VALUES ('d2@deneme.example', 'Deneme', $1, 'etkin', $2) RETURNING id::text",
+    [["denetci"], per2]), ad: "Deneme", roller: ["denetci"] };
+  await yeniPlan(per2, d2);
+  const g = await k.is(d2, (db) => m.oncekiRaporGorulur(db, d2, k.rapor));
+  assert.equal(g, true, "bozuk: eski rapor açılmadı");
 });

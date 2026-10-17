@@ -834,3 +834,78 @@ test("595 madde 12 şartlı uygun: rapor ve imzalı sürüm 'sartli' taşır, im
   const u = (await sql<{ metin: string; agir: boolean; kapanis: string | null }>(A, "SELECT metin, agir, kapanis FROM uygunsuzluk WHERE rapor_id = $1", [r.id])).rows;
   assert.ok(u.length >= 1 && u.some((x) => /Hafif korozyon/.test(x.metin)) && u.every((x) => x.kapanis === null), JSON.stringify(u));
 });
+
+/* 2026-10-17 (iş planı İ1–İ3; reisim: "ilerleyen senelerde aynı raporları tekrar rapor oluştur diyerek oluşturup kullanabilmek" · "her ekipmanın
+   satırının başında göz işareti olacak ve tıklayınca geçen seneki (en sonki tamamlanmış imzalı rapor) rapor gözükecek" · "pdfden bilgi almamız
+   gerekir hazır sisteme girili rapor bilgileri varken"): yeni plandaki rapor önceki TAMAMLANMIŞ raporun KAYITLI bilgileriyle açılır (ekipman
+   bilgileri, kayıttan gelmeyen bilgi alanı, madde seçimi — açıklama, sonuç, yorum gelmez); plan içinde "Önceki kontrol" ve göz o raporu gösterir
+   (planın kendi raporu sayılmaz); imzalı PDF'i planı gören öteki denetçi açar (istisna), planı görmeyen açamaz; daha yeni rapor imzalanınca yeni
+   plandaki önceki o olur, ESKİSİ istisnayla açılmaz. */
+test("İ1–İ3 önceki rapor: yeni rapor önceki tamamlanmış raporun kayıtlı bilgileriyle açılır; Önceki kontrol ve göz onu gösterir; imzalı PDF'i yalnız planı gören açar, eskisi açılmaz", async () => {
+  const bas = bugunTr();
+  const tur = (await sql<{ t: string }>(A, "SELECT tur_id::text AS t FROM ekipman WHERE id = $1", [FA.ekp["HT-1"]])).rows[0].t;
+  const ekp = (await sql<{ id: string }>(A, "INSERT INTO ekipman (tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, 'HT-9', 'x') RETURNING id::text", [FA.tesis, tur], FA.yon.id)).rows[0].id;
+  const yeniKisi = async (ad: string, eposta: string) => {
+    const p = (await sql<{ id: string }>(A, "INSERT INTO personel (ad, basla, meslek, ekipnet) VALUES ($1, '2024-01-01', 'mak-muh', '123') RETURNING id::text", [ad], FA.yon.id)).rows[0].id;
+    const h = (await sql<{ id: string }>(A, "INSERT INTO hesap (eposta, ad, roller, durum, personel_id) VALUES ($1, $2, $3, 'etkin', $4) RETURNING id::text",
+      [eposta, ad, ["denetci"], p], FA.yon.id)).rows[0].id;
+    return { k: { ...kisi(h, "denetci"), ad }, p };
+  };
+  const d3 = await yeniKisi("Deneme Üç", "den3@deneme-a.example"), d4 = await yeniKisi("Deneme Dört", "den4@deneme-a.example");
+  const planla = async (personeller: string[], kabul: Kisi) => {
+    const id = tamam(await a(FA.plan, (db) => planAc(db, depo, FA.plan, A, { tesis: FA.tesis, baslangic: bas, bitis: bas,
+      ekip: personeller.map((p, i) => ({ personel: p, isgNo: `ISG-O${planSira++}-${i}`, kaydet: false })) }))).id;
+    tamam(await a(kabul, async (db) => planKabul(db, kabul, id, (await planIci(db, kabul, id))!.surum, true)));
+    return id;
+  };
+  /* 1. yıl: den yazar — seri no, imal yılı, bilgi alanı (hacim), kusurlu madde + açıklama, yorum, sonuç; onaylanır ve imzalanır */
+  const p1 = await planla([FA.denP], FA.den);
+  const r1 = tamam(await a(FA.den, (db) => raporOlustur(db, FA.den, p1, ekp))).id;
+  await sql(A, `UPDATE rapor SET ekipman_bilgi = ekipman_bilgi || '{"marka": "Deneme Marka", "seri": "S-9", "imal": "2015"}'::jsonb,
+    cevaplar = jsonb_set(jsonb_set(cevaplar, '{madde,k1}', '{"c": "Uygun değil", "not": "Korozyon"}'::jsonb), '{alan,hacim}', '"500"'::jsonb) || '{"yorum": "Eski yorum"}'::jsonb,
+    sonuc = 'uygun_degil', rapor_tarihi = $2, surum = surum + 1 WHERE id = $1`, [r1, bas], FA.den.id);
+  await sql(A, "UPDATE rapor SET durum = 'onayda', surum = surum + 1 WHERE id = $1", [r1], FA.den.id);
+  tamam(await a(FA.mek, async (db) => onayla(db, FA.mek, r1, await surum(r1))));
+  tamam(await hazirla(FA.den, r1));
+  tamam(await yukle(FA.den, r1, await surum(r1), imzala(await imzasizBayt(r1))));
+  const s1 = (await sql<{ no: string; dosya: string }>(A, "SELECT no, imzali_dosya::text AS dosya FROM rapor_surumu WHERE rapor_id = $1", [r1])).rows[0];
+
+  /* 2. yıl: d3'ün planı — "Önceki kontrol" ve göz r1'i gösterir; rapor r1'in kayıtlı bilgileriyle açılır */
+  const p2 = await planla([d3.p], d3.k);
+  const satirP2 = async () => (await a(d3.k, (db) => planIci(db, d3.k, p2)))!.ekipman.find((x) => x.id === ekp)!;
+  const once = await satirP2();
+  assert.deepEqual(once.onceki, { tarih: bas, sonuc: "Uygun değil", no: s1.no });
+  assert.deepEqual(once.oncekiRapor, { no: s1.no, dosya: s1.dosya });
+  const r2 = tamam(await a(d3.k, (db) => raporOlustur(db, d3.k, p2, ekp))).id;
+  const v2 = (await a(d3.k, (db) => sahaRaporu(db, d3.k, r2)))!;
+  assert.equal(v2.ekipmanBilgi.seri, "S-9");
+  assert.equal(v2.ekipmanBilgi.imal, "2015");
+  assert.equal(v2.ekipmanBilgi.marka, "Deneme Marka");
+  assert.deepEqual(v2.cevaplar.madde.k1, { c: "Uygun değil" }, "madde seçimi gelir, açıklama gelmez");
+  assert.equal(v2.cevaplar.alan.hacim, "500", "kayıttan gelmeyen bilgi alanı gelir");
+  assert.deepEqual([v2.cevaplar.yorum, v2.cevaplar.sonuc], ["", ""], "yorum ve sonuç gelmez");
+  assert.deepEqual(v2.ekipman.onceki, { tarih: bas, sonuc: "Uygun değil", no: s1.no }, "rapor ekranında önceki kontrol");
+  assert.deepEqual((await satirP2()).oncekiRapor, { no: s1.no, dosya: s1.dosya }, "planın kendi raporu önceki sayılmaz");
+
+  /* İ3: imzalı PDF — r1'i yazmayan d3 planı gördüğü için açar (istisna); hiçbir planda HT-9'u görmeyen d4 açamaz */
+  const indir = (k: Kisi) => a(k, (db) => dosyaIndirilebilir(db, k, s1.dosya, DOSYA_ERISIMI));
+  assert.ok(await indir(d3.k), "planı gören öteki denetçi önceki raporu açar");
+  assert.equal(await indir(d4.k), null, "planı görmeyen açamaz");
+  assert.equal((await a(d3.k, (db) => sahaRaporu(db, d3.k, r1))), null, "istisna yalnız PDF'te — raporun kendisi görünmez");
+
+  /* r2 de imzalanır; d4'ün yeni planında önceki r2'dir — d4 r2'nin PDF'ini açar, ESKİ r1'inkini açamaz */
+  await sql(A, "UPDATE rapor SET rapor_tarihi = $2, sonuc = 'uygun', surum = surum + 1 WHERE id = $1", [r2, bas], d3.k.id);
+  await sql(A, "UPDATE rapor SET durum = 'onayda', surum = surum + 1 WHERE id = $1", [r2], d3.k.id);
+  tamam(await a(FA.mek, async (db) => onayla(db, FA.mek, r2, await surum(r2))));
+  tamam(await a(d3.k, (db) => imzaHazirla(db, depo, d3.k, A, r2, uret)));
+  tamam(await a(d3.k, async (db) => imzaliYukle(db, depo, d3.k, A, r2, await surum(r2), { ad: "imzali.pdf", bayt: imzala(await imzasizBayt(r2)) })));
+  const s2 = (await sql<{ no: string; dosya: string }>(A, "SELECT no, imzali_dosya::text AS dosya FROM rapor_surumu WHERE rapor_id = $1", [r2])).rows[0];
+  const p3 = await planla([d4.p], d4.k);
+  const satirP3 = (await a(d4.k, (db) => planIci(db, d4.k, p3)))!.ekipman.find((x) => x.id === ekp)!;
+  assert.deepEqual([satirP3.onceki?.no, satirP3.onceki?.sonuc, satirP3.oncekiRapor?.dosya], [s2.no, "Uygun", s2.dosya]);
+  assert.ok(await a(d4.k, (db) => dosyaIndirilebilir(db, d4.k, s2.dosya, DOSYA_ERISIMI)), "yeni plandaki önceki rapor açılır");
+  assert.equal(await indir(d4.k), null, "eski rapor istisnaya girmez");
+  /* r3 (3. yıl) r2'den açılır — kaynak hep en son tamamlanmış rapor */
+  const r3 = tamam(await a(d4.k, (db) => raporOlustur(db, d4.k, p3, ekp))).id;
+  assert.equal((await a(d4.k, (db) => sahaRaporu(db, d4.k, r3)))!.ekipmanBilgi.seri, "S-9");
+});

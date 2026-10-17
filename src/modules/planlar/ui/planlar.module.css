@@ -144,6 +144,8 @@
 .zaman { font-variant-numeric: tabular-nums; }
 /* simge tuşu (Pasife al, Sil): kare, adı aria-label'da; iki sınıf — Tus'un kendi dolgusunun önüne geçer */
 .eylemTuslar .ikonTus { width: var(--tus-y); padding: 0; }
+/* 2026-10-17 (İ3): satır başındaki göz — kare simge tuşu (bağlantı ya da kapalı tuş); iki sınıf — tuşun kendi dolgusunun önüne geçer */
+.gozTus.gozTus { width: var(--tus-y); min-width: var(--tus-y); padding: 0; justify-content: center; }
 .eylemTuslar .silTus { color: var(--hata-yazi); }
 /* 432: plan e-postaları — alıcı, durum rozeti, zaman / neden */
 .epostalar { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }

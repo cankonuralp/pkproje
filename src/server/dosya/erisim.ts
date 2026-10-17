@@ -21,7 +21,7 @@ import { DOSYA_MODULU as TUR_DOSYASI, turDosyasiGorulur } from "../../modules/ek
 import { DOSYA_MODULU as CIHAZ_DOSYASI, cihazDosyasiGorulur } from "../../modules/olcum-cihazlari/server/cihazlar.ts";
 import { DOSYA as SOZ_DOSYA, isgDosyasiGorulur, sablonDosyasiGorulur, sozlesmeDosyasiGorulur } from "../../modules/sozlesmeler/server/sozlesmeler.ts";
 import { DOSYA_MODULU as ZIMMET_DOSYASI, zimmetDosyasiGorulur } from "../../modules/zimmetler/server/zimmet.ts";
-import { DOSYA_MODULU as RAPOR_DOSYASI, IMZALI_MODULU, PDF_MODULU, raporDosyasiGorulur } from "../../modules/raporlar/server/raporlar.ts";
+import { DOSYA_MODULU as RAPOR_DOSYASI, IMZALI_MODULU, oncekiRaporGorulur, PDF_MODULU, raporDosyasiGorulur } from "../../modules/raporlar/server/raporlar.ts";
 import { DOSYA_SAHA, sahaDosyasiGorulur } from "../../modules/planlar/server/plan-ici.ts";
 import { chatDosyasiGorulur, DOSYA_SAY_CHAT } from "../../modules/say-chat/server/kayitlar.ts";
 import type { YetkiHesabi } from "../yetki/canDo.ts";
@@ -44,7 +44,8 @@ export const DOSYA_ERISIMI: ErisimKaydi = Object.freeze({
   [RAPOR_DOSYASI]: (db, kisi, kayitId) => raporDosyasiGorulur(db, kisi as YetkiHesabi, kayitId),
   /* 317: imzaya hazırlanan ve imzalı PDF — raporu gören (müşteri erişimi müşteri paneli kalemiyle) */
   [PDF_MODULU]: (db, kisi, kayitId) => raporDosyasiGorulur(db, kisi as YetkiHesabi, kayitId),
-  [IMZALI_MODULU]: (db, kisi, kayitId) => raporDosyasiGorulur(db, kisi as YetkiHesabi, kayitId),
+  /* 2026-10-17 (İ3, göz işareti): imzalı PDF ayrıca planın ekipmanını gören kişiye — o ekipmanın önceki (son tamamlanmış) raporuysa */
+  [IMZALI_MODULU]: async (db, kisi, kayitId) => (await raporDosyasiGorulur(db, kisi as YetkiHesabi, kayitId)) || oncekiRaporGorulur(db, kisi as YetkiHesabi, kayitId),
   [GIDER_DOSYA]: (db, kisi, kayitId) => giderDosyasiGorulur(db, kisi as YetkiHesabi, kayitId),
   [IZIN_DOSYA]: (db, kisi, kayitId) => izinDosyasiGorulur(db, kisi as YetkiHesabi, kayitId),
   [BELGE_DOSYA]: (db, kisi, kayitId) => belgeDosyasiGorulur(db, kisi as YetkiHesabi, kayitId),

@@ -29,7 +29,7 @@ import { kullanimMetni } from "../../../components/sil/metin.ts";
 import { turOzetleri } from "../../ekipman-turleri/server/turler.ts";
 import { musteriOzetleri } from "../../musteriler/server/musteriler.ts";
 import { personelOzetleri } from "../../personel/server/personel.ts";
-import { ekipmanRaporuVar, mesaiDurumu, planRaporlari, raporKunyeleriniYaz, type PlanRaporu } from "../../raporlar/server/plan-baglanti.ts";
+import { ekipmanRaporuVar, mesaiDurumu, oncekiKontrol, oncekiRaporlar, planRaporlari, raporKunyeleriniYaz, type OncekiKontrol, type PlanRaporu } from "../../raporlar/server/plan-baglanti.ts";
 import { KunyeGirdisi, kodBicimi, kodNormal, NotGirdisi, RedGirdisi, TAMAMLANDI_RAPOR, YeniEkipmanGirdisi, type KodTuru, type PlanDurumu } from "../sema.ts";
 import { bugunTr, EKIP, MODUL, PLAN, PLAN_EKIPMAN, planAcabilir, planKarti, UUID, type Kisi, type PlanKarti } from "./planlar.ts";
 import { kaynakEpostalari, type EpostaDurumu } from "../../../server/eposta/eposta.ts";
@@ -157,8 +157,10 @@ export interface PlanEkipmani {
   id: string; kod: string; turId: string; tur: string; brans: "m" | "e"; konum: string | null; seri: string | null; sonradan: boolean; pasif: boolean; surum: number;
   /** 360: silebilen (yönetici) için kullanılmamış — "Sil" çizilir */
   sil: boolean;
-  /** önceki kontrol: sistem öncesi (Excel) — sistemdeki raporlar Raporlar kalemiyle */
-  onceki: { tarih: string; sonuc: string | null } | null;
+  /** 2026-10-17 (İ2): önceki kontrol — bu plan dışındaki son tamamlanmış raporun tarihi + sonucu; yoksa sistem öncesi kayıt; ikisi de yoksa null */
+  onceki: OncekiKontrol | null;
+  /** 2026-10-17 (İ3, göz): önceki raporun imzalı PDF'i — dosya null: saklama süresi dolduğu için silindi; önceki raporu yoksa null */
+  oncekiRapor: { no: string; dosya: string | null } | null;
 }
 export interface PlanIci {
   kart: PlanKarti;
@@ -232,10 +234,12 @@ export async function planIci(db: Sorgulayici, kim: Kisi, id: string): Promise<P
   /* 360: silebilene (yönetici) hiç kullanılmamış ekipman — "Sil" (tanım veritabanında, göç 0056) */
   const kullanim = izin.ekipmanSil ? await ekipmanKullanimi(db, ekp.map((x) => x.id)) : null;
   const silinebilir = new Set(kullanim ? ekp.filter((x) => !kullanim.has(x.id)).map((x) => x.id) : []);
+  /* 2026-10-17 (İ2, İ3): ekipmanın bu plan dışındaki son tamamlanmış raporu (Raporlar'ın okuyucusu) */
+  const onc = await oncekiRaporlar(db, ekp.map((x) => x.id), id);
   const ekipman: PlanEkipmani[] = ekp.map((x) => {
-    const t = turBul.get(x.turId);
+    const t = turBul.get(x.turId), r = onc.get(x.id);
     return { id: x.id, kod: x.kod, turId: x.turId, tur: t?.ad ?? "—", brans: t?.brans ?? "m", konum: x.konum, seri: x.seri, pasif: x.pasif, surum: x.surum, sil: silinebilir.has(x.id),
-      sonradan: !!pe.find((y) => y.ekipman_id === x.id)?.sonradan, onceki: x.disKontrol ? { tarih: x.disKontrol, sonuc: x.disSonuc } : null };
+      sonradan: !!pe.find((y) => y.ekipman_id === x.id)?.sonradan, onceki: oncekiKontrol(r, x), oncekiRapor: r ? { no: r.no, dosya: r.dosya } : null };
   });
   const teklif = new Map<string, PlanIci["teklif"][number]>();
   for (const x of ekipman) {
@@ -243,8 +247,9 @@ export async function planIci(db: Sorgulayici, kim: Kisi, id: string): Promise<P
     s.planda++; if (!x.sonradan) s.planlanan++;
     teklif.set(x.turId, s);
   }
-  const kayitli = izin.ekipmanEkle ? (await tesisEkipmanlari(db, p.tesis_id)).filter((x) => !x.pasif && !pe.some((y) => y.ekipman_id === x.id))
-    .map((x) => ({ id: x.id, kod: x.kod, tur: turBul.get(x.turId)?.ad ?? "—", konum: x.konum, onceki: x.disKontrol })) : [];
+  const kayitliEkp = izin.ekipmanEkle ? (await tesisEkipmanlari(db, p.tesis_id)).filter((x) => !x.pasif && !pe.some((y) => y.ekipman_id === x.id)) : [];
+  const kayitliOnc = await oncekiRaporlar(db, kayitliEkp.map((x) => x.id), id);
+  const kayitli = kayitliEkp.map((x) => ({ id: x.id, kod: x.kod, tur: turBul.get(x.turId)?.ad ?? "—", konum: x.konum, onceki: oncekiKontrol(kayitliOnc.get(x.id), x)?.tarih ?? null }));
   const notlar = izin.not ? (await db.sorgu<{ id: string; metin: string; yazan: string; olustu: Date }>(
     "SELECT id::text, metin, yazan, olustu FROM plan_not WHERE plan_id = $1 ORDER BY olustu DESC, id", [id])).rows
     .map((n) => ({ id: n.id, metin: n.metin, yazan: n.yazan, zaman: n.olustu.toISOString() })) : null;
@@ -517,6 +522,15 @@ export async function raporIcinPlan(db: Sorgulayici, kim: Kisi, planId: string):
     personelId: benim?.personel_id ?? null,
     kunye: benim?.gorulen ?? guncelKunye, kunyeSurum: benim && benim.gorulen ? benim.kunye_surum : p.kunye_surum, guncelKunye, guncelSurum: p.kunye_surum,
   };
+}
+/** 2026-10-17 (İ3): ekipmanı içeren ve kişinin GÖRDÜĞÜ planlar (kimlikler) — göz işaretinin imzalı PDF istisnası (raporlar.ts oncekiRaporGorulur)
+    bunlardan birinin "önceki raporu" mu diye bakar. Görme kuralı plan içiyle aynı (erisim). */
+export async function ekipmaniGosterenPlanlar(db: Sorgulayici, kim: Kisi, ekipmanId: string): Promise<string[]> {
+  if (!UUID.test(ekipmanId) || duzey(kim, MODUL) === "yok") return [];
+  const l = (await db.sorgu<{ plan_id: string }>("SELECT plan_id::text FROM plan_ekipman WHERE ekipman_id = $1 ORDER BY plan_id", [ekipmanId])).rows;
+  const gorulen: string[] = [];
+  for (const x of l) if (await erisim(db, kim, x.plan_id)) gorulen.push(x.plan_id);
+  return gorulen;
 }
 /** planın ekipmanları (kimlikler; 405 bağlantısız yeni rapor paketi). Yetki ÇAĞIRANDA. */
 export async function plandakiEkipmanlar(db: Sorgulayici, planId: string): Promise<string[]> {

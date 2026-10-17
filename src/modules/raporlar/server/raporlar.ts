@@ -34,7 +34,8 @@ import { tesisMusteriIletisim } from "../../musteriler/server/musteriler.ts";
 import { raporCihazlari } from "../../olcum-cihazlari/server/cihazlar.ts";
 import { personelOzetleri } from "../../personel/server/personel.ts";
 import { TAMAMLANDI_RAPOR } from "../../planlar/sema.ts";
-import { denetimeBasla, ekipmanEklemeDurumu, kodDurumu, kunyeGuncelle, plandakiEkipman, plandakiEkipmanlar, raporIcinPlan, yeniEkipman, type Kunye, type RaporPlani } from "../../planlar/server/plan-ici.ts";
+import { denetimeBasla, ekipmanEklemeDurumu, ekipmaniGosterenPlanlar, kodDurumu, kunyeGuncelle, plandakiEkipman, plandakiEkipmanlar, raporIcinPlan, yeniEkipman, type Kunye, type RaporPlani } from "../../planlar/server/plan-ici.ts";
+import { oncekiKontrol, oncekiRaporIcerigi, oncekiRaporlar, surumluRaporEkipmani, type OncekiKontrol } from "./onceki.ts";
 import { formatSurumuOku, yayindakiFormat } from "../../rapor-format/server/formatlar.ts";
 import { kimdeHaritasi } from "../../zimmetler/server/zimmet.ts";
 import { hesabinPersoneli, roldekiHesapAdlari } from "../../../server/kimlik/hesap.ts";
@@ -140,8 +141,26 @@ function kopyaCevaplari(t: FormatTanimi, kaynak: unknown): Cevaplar {
   return c;
 }
 
+/** İ1 (2026-10-17, reisim: "ilerleyen senelerde aynı raporları tekrar rapor oluştur diyerek oluşturup kullanabilmek … tekrar tekrar rapor yazma
+    ile vakit kaybetmemek için" · "pdfden bilgi almamız gerekir hazır sisteme girili rapor bilgileri varken"): yeni raporun başlangıcı — ekipmanın bu
+    plan dışındaki SON TAMAMLANMIŞ raporunun imza anındaki KAYITLI içeriğinden (PDF okunmaz; onceki.ts). Gelenler kopyalama kuralıyla (206–207):
+    ekipman bilgileri (boş olan ekipman kaydından), kayıttan gelmeyen bilgi alanları, madde seçimleri (bu formatın cevap setindeyse). Gelmeyenler:
+    ölçüm / test değerleri, fotoğraflar, kusur açıklaması / derecesi, ek sütunlar, sonuç, yorum, cihazlar, imza yerleri. Önceki raporu yoksa ekipman
+    kaydı + ilk cevaplar (cevaplar null). */
+async function oncekiKaynak(db: Sorgulayici, e: NonNullable<Awaited<ReturnType<typeof ekipmanEtiketi>>>, planId: string, t: FormatTanimi):
+  Promise<{ ekipmanBilgi: EkipmanBilgisi; cevaplar: Cevaplar | null }> {
+  const kayit: EkipmanBilgisi = { marka: e.marka, model: e.model, seri: e.seri, imal: e.imal ? String(e.imal) : null, konum: e.konum, amac: null, bolum: null };
+  const o = await oncekiRaporIcerigi(db, e.id, planId);
+  if (!o) return { ekipmanBilgi: kayit, cevaplar: null };
+  const b = EkipmanBilgisi.safeParse(o.ekipmanBilgi);
+  const ekipmanBilgi = b.success
+    ? Object.fromEntries(Object.entries(kayit).map(([k, v]) => [k, b.data[k as keyof EkipmanBilgisi] ?? v])) as EkipmanBilgisi : kayit;
+  return { ekipmanBilgi, cevaplar: kopyaCevaplari(t, o.cevaplar) };
+}
+
 /** raporu açar (oluştur ve kopya ortak): ekipman planda ve etkin, bu planda etkin raporu yok (203), türün YAYINDA formatı var; ilk rapor planı
-    Denetimde yapar. Kopyada ekipman bilgileri, cihazlar ve cevaplar kaynaktan; künye her zaman denetçinin plandaki gördüğü künye. */
+    Denetimde yapar. Kopyada ekipman bilgileri, cihazlar ve cevaplar kaynaktan; oluşturmada önceki tamamlanmış rapordan (İ1, oncekiKaynak) ya da
+    ekipman kaydından; künye her zaman denetçinin plandaki gördüğü künye. */
 async function raporAc(db: Sorgulayici, kim: Kisi, plan: AcilanPlan, ekipmanId: string, kopya: { r: RaporSatiri; konum: string | null } | null,
   bildirim: (no: string, kod: string) => string): Promise<RaporYazma> {
   if (!(await plandakiEkipman(db, plan.id, ekipmanId))) return { durum: "yok" };
@@ -162,6 +181,7 @@ async function raporAc(db: Sorgulayici, kim: Kisi, plan: AcilanPlan, ekipmanId: 
   const ortak = { no, plan_id: plan.id, ekipman_id: ekipmanId, tur_id: tur.id, format_id: format.id, personel_id: plan.personelId, durum: "taslak" };
   /* künye her zaman denetçinin plandaki GÖRDÜĞÜ künye (kopyada da): kaynağın eski künyesi taşınmaz, Güncelle tutarlı kalır (çapraz inceleme) */
   const kunye = { ...plan.kunye, eposta: null, tel: null, ...(await iletisimi(db, plan.tesisId)) };
+  const onc = k ? null : await oncekiKaynak(db, e, plan.id, format.tanim);
   const r = k ? await ekle(db, RAPOR, {
     ...ortak, kunye, kunye_surum: plan.kunyeSurum,
     /* ekipman bilgileri kaynaktan; seri no yeni ekipmanın (sorulmaz, raporda yazılır), kullanım yeri pencereden (boşsa kaynaktaki) */
@@ -169,8 +189,8 @@ async function raporAc(db: Sorgulayici, kim: Kisi, plan: AcilanPlan, ekipmanId: 
     cevaplar: kopyaCevaplari(format.tanim, k.cevaplar), cihazlar: jsonDizi(k.cihazlar), kopya_kaynak: k.id,
   }, iz) : await ekle(db, RAPOR, {
     ...ortak, kunye, kunye_surum: plan.kunyeSurum,
-    ekipman_bilgi: { marka: e.marka, model: e.model, seri: e.seri, imal: e.imal ? String(e.imal) : null, konum: e.konum, amac: null, bolum: null } satisfies EkipmanBilgisi,
-    cevaplar: ilkCevaplar(format.tanim),
+    ekipman_bilgi: onc!.ekipmanBilgi satisfies EkipmanBilgisi,
+    cevaplar: onc!.cevaplar ?? ilkCevaplar(format.tanim),
   }, iz);
   await denetimeBasla(db, kim.ad, plan.id);
   return { durum: "tamam", id: r.id, bildirim: bildirim(no, e.kod) };
@@ -243,7 +263,8 @@ export interface CihazSatiri {
 export interface SahaRaporu {
   id: string; no: string; durum: RaporDurumu; surum: number; olustu: string; degisti: string; gonderildi: string | null; bugun: string;
   plan: { id: string; no: string; tesisAd: string; musteriKisa: string };
-  ekipman: { id: string; kod: string; onceki: { tarih: string; sonuc: string | null } | null };
+  /** onceki (İ2, 2026-10-17): bu plan dışındaki son tamamlanmış rapor (no) ya da sistem öncesi kayıt */
+  ekipman: { id: string; kod: string; onceki: OncekiKontrol | null };
   tur: { id: string; ad: string; kod: string; brans: "m" | "e"; kontrolStd: string[]; periyot: number };
   yazan: { ad: string; meslek: string; meslekMetin: string | null; ekipnet: string | null };
   /** 595 (madde 1): ikinci muayene uzmanının seçenekleri — plan ekibi, raporu yazan hariç */
@@ -369,7 +390,7 @@ export async function sahaRaporu(db: Sorgulayici, kim: Kisi, id: string): Promis
   return {
     id: r.id, no: gorunenNo(r.no, r.revizyon), durum: r.durum, surum: r.surum, olustu: r.olustu.toISOString(), degisti: r.degisti.toISOString(), gonderildi: r.gonderildi?.toISOString() ?? null, bugun,
     plan: { id: r.plan_id, no: plan?.no ?? "—", tesisAd: iletisim?.tesisAd ?? "—", musteriKisa: iletisim?.kisa ?? "—" },
-    ekipman: { id: r.ekipman_id, kod: etiket?.kod ?? "—", onceki: etiket?.disKontrol ? { tarih: etiket.disKontrol, sonuc: etiket.disSonuc } : null },
+    ekipman: { id: r.ekipman_id, kod: etiket?.kod ?? "—", onceki: oncekiKontrol((await oncekiRaporlar(db, [r.ekipman_id], r.plan_id)).get(r.ekipman_id), etiket) },
     tur: { id: tur.id, ad: tur.ad, kod: tur.kod, brans: tur.brans, kontrolStd: tur.kontrolStd, periyot: tur.periyot },
     yazan: { ad: yazan?.ad ?? "—", meslek: yazan?.meslek ?? "diger", meslekMetin: yazan?.meslekMetin ?? null, ekipnet: yazan?.ekipnet ?? null },
     ekip: await ikinciSecenekleri(db, plan?.ekip ?? [], r.personel_id),
@@ -401,7 +422,8 @@ export interface YeniRaporPaketi {
   plan: SahaRaporu["plan"]; yazan: SahaRaporu["yazan"]; ekip: SahaRaporu["ekip"]; kunye: SahaRaporu["kunye"]; bugun: string;
   /** rapor açılamıyorsa nedeni (plan kabul edilmemiş, plan günü gelmemiş, günlük süre dolmuş) — ekran söyler, kuyruğa iş yazılmaz */
   neden: string | null;
-  ekipmanlar: { id: string; kod: string; turId: string; ekipmanBilgi: EkipmanBilgisi; onceki: SahaRaporu["ekipman"]["onceki"] }[];
+  /** cevaplar (İ1, 2026-10-17): önceki raporu olan ekipmanda ondan kurulan ilk cevaplar (yoksa türün ilk cevapları — turler.ilk); eski pakette yok */
+  ekipmanlar: { id: string; kod: string; turId: string; ekipmanBilgi: EkipmanBilgisi; onceki: SahaRaporu["ekipman"]["onceki"]; cevaplar?: Cevaplar }[];
   turler: Record<string, { tur: SahaRaporu["tur"]; tanim: FormatTanimi; formatSira: number; ilk: Cevaplar; cihazlar: CihazSatiri[]; kriterler: KriterBelgesi[] }>;
   /** 428: firmanın güncel standartları (Dökümanlar'ı görmeyene null) — bağlantısız da standart penceresi listeyi bilir */
   standartlar: StandartOzeti[] | null;
@@ -433,10 +455,11 @@ export async function yeniRaporPaketi(db: Sorgulayici, kim: Kisi, planId: string
         cihazlar: tur.cihazTurleri.map((turId) => ({ turId, turAd: turAdi.get(turId) ?? "Ölçüm cihazı", cihaz: null })),
       };
     }
+    /* İ1 (2026-10-17): bağlantısız açılan rapor da önceki raporun kayıtlı bilgileriyle başlar (sunucuda açılan raporAc ile aynı kural) */
+    const kaynak = await oncekiKaynak(db, e, plan.id, turler[e.turId].tanim);
     ekipmanlar.push({
-      id: e.id, kod: e.kod, turId: e.turId,
-      ekipmanBilgi: { marka: e.marka, model: e.model, seri: e.seri, imal: e.imal ? String(e.imal) : null, konum: e.konum, amac: null, bolum: null },
-      onceki: e.disKontrol ? { tarih: e.disKontrol, sonuc: e.disSonuc } : null,
+      id: e.id, kod: e.kod, turId: e.turId, ekipmanBilgi: kaynak.ekipmanBilgi,
+      onceki: oncekiKontrol((await oncekiRaporlar(db, [e.id], plan.id)).get(e.id), e), ...(kaynak.cevaplar ? { cevaplar: kaynak.cevaplar } : {}),
     });
   }
   const yazan = (await personelOzetleri(db, [plan.personelId]))[0];
@@ -737,6 +760,17 @@ export async function fotoSil(db: Sorgulayici, kim: Kisi, id: string, surum: num
 /** dosya erişim kaydı için: bu kişi bu raporu görebilir mi (Raporlar düzeyi; başka firmanınki RLS altında yok) */
 export async function raporDosyasiGorulur(db: Sorgulayici, kisi: YetkiHesabi, raporId: string): Promise<boolean> {
   return !!(await erisim(db, { ...kisi, ad: "" }, raporId));
+}
+/** İ3 (2026-10-17, göz işareti): imzalı PDF'in istisnası — rapor, kişinin GÖRDÜĞÜ bir planda o ekipmanın "önceki raporu"ysa (o plan dışındaki son
+    tamamlanmış rapor) açılır; denetçinin "yalnız kendi raporları" kuralı bu tek rapor için esner. Eski sürümler, daha eski raporlar, taslak ve
+    imzaya hazırlanan PDF bu istisnaya girmez (yalnız IMZALI dosya ucunda kullanılır — src/server/dosya/erisim.ts). */
+export async function oncekiRaporGorulur(db: Sorgulayici, kisi: YetkiHesabi, raporId: string): Promise<boolean> {
+  const ekipman = await surumluRaporEkipmani(db, raporId);
+  if (!ekipman) return false;
+  for (const p of await ekipmaniGosterenPlanlar(db, { ...kisi, ad: "" }, ekipman)) {
+    if ((await oncekiRaporlar(db, [ekipman], p)).get(ekipman)?.raporId === raporId) return true;
+  }
+  return false;
 }
 
 /* ── KAYDET VE KOPYALA (204–209; maket kopyala, pencereKaydet) ───────────────────────────────────────────────────── */
