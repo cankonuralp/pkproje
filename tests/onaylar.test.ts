@@ -129,7 +129,8 @@ test("kuyruk: branş yöneticisi yalnız kendi branşının onaydaki raporların
   assert.deepEqual(benim.map((r) => r.id), [h2, h1], "mekanik: yalnız mekanik, en yeni üstte");
   assert.deepEqual([benim[0].ekipmanKod, benim[0].turAd, benim[0].denetci, benim[0].durum, benim[0].bekleme], ["HT-2", "Hava tankı", "Deneme Bir", "onayda", "az önce"]);
   /* 2026-10-05 (318): izne "revize" eklendi (Revizeye gönder — yalnız tamamlanan raporda) */
-  assert.deepEqual(benim[0].izin, { onayla: true, geriGonder: true, onayGeriAl: false, durumDegistir: true, revize: false });
+  /* 2026-10-17 (göç 0102, teknik yönetici imzası): izne imzala ve teknik eklendi — ayar kapalıyken imzala false, onayla true (davranış aynı) */
+  assert.deepEqual(benim[0].izin, { onayla: true, imzala: false, teknik: false, geriGonder: true, onayGeriAl: false, durumDegistir: true, revize: false });
   assert.equal("hesapId" in benim[0], false, "yazan hesabın kimliği ekrana gitmez");
   assert.deepEqual(mek.branslar, ["m"]);
   const elk = (await a(FA.elk, (db) => onayListeleri(db, FA.elk)))!;
