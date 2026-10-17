@@ -5,7 +5,7 @@
    Başka müşterinin ya da imzasız rapor: "Rapor bulunamadı" — var olduğu bile söylenmez. */
 import type { Metadata } from "next";
 import { BosDurum } from "../../../../../components/bos/BosDurum";
-import { DosyaAcTusu, dosyaCerceveAdresi } from "../../../../../components/gizli-resim/GizliResim";
+import { DosyaAcTusu } from "../../../../../components/gizli-resim/GizliResim";
 import { PdfGorunumu } from "../../../../../components/pdf/PdfGorunumu";
 import { SayfaliListe } from "../../../../../components/liste/Sayfalayici";
 import { Bolum, Kirinti, Kod, NesneBasi, SeritKap } from "../../../../../components/sayfa/Sayfa";
@@ -47,9 +47,10 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
           {acik.length > 0 && <Serit tur="uyari" ikon="triangle-alert">Açık uygunsuzluk: {acik.length}. Ağır kusurlu ekipman giderilene kadar kullanılamaz; giderilince ikinci kontrol istenir.</Serit>}
         </SeritKap>
       )}
-      {r.dosya && dosyaCerceveAdresi(r.dosya) && (
+      {r.dosya && (
         <Bolum id="p-rapor" baslik="Rapor">
-          <PdfGorunumu adres={dosyaCerceveAdresi(r.dosya)!} ad={r.no} />
+          {/* dosya kimliği veritabanından (sunucu bileşeni istemci modülünün işlevini çağıramaz — adres burada) */}
+          <PdfGorunumu adres={`/api/dosya/${r.dosya}`} ad={r.no} />
         </Bolum>
       )}
       <Bolum id="p-ozet" baslik="Özet">
