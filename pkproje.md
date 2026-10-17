@@ -2532,8 +2532,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   §9 on dördüncü tur) kodda YARIM — Rapor oluştur ekipman KAYDINDAN açıyor (raporda düzeltilen bilgi kayda geri yazılmıyor; seri no ekipman
   eklerken sorulmadığı için hep boş), maddeler sıfırdan "Uygun", "Önceki kontrol" HİÇ dolmuyor (ekipman.dis_kontrol'ü yazan yol yok — Excel'den toplu
   aktarma da yazmıyor; yalnız deneme verisinde dolu) → her ekipmanda "İlk kontrol".
-  **İ1 · GEÇEN YILIN RAPORUNDAN YENİ RAPOR (onaylı):** Rapor oluştur (çevrimiçi ve bağlantısız — 405 paketi) ekipmanın EN SON TAMAMLANMIŞ (imzalı)
-  raporundan açılır — aynı ekipman, başka plan, son revizyon, en yeni kontrol tarihli. Gelenler (kopyalama kuralı 206–207 gibi): ekipman bilgileri
+  **İ1 · GEÇEN YILIN RAPORUNDAN YENİ RAPOR (onaylı):** (reisim 2026-10-17: *"illa imzalı rapordan bilgi mi almalıyız … pdfden bilgi almamız
+  gerekir hazır sisteme girili rapor bilgileri varken"* → PDF OKUNMAZ; bilgiler sistemde kayıtlı rapor verisinden — "tamamlanmış" yalnız HANGİ
+  raporun alınacağını seçer: onaylanıp imzalanmış son hâl.) Rapor oluştur (çevrimiçi ve bağlantısız — 405 paketi) ekipmanın EN SON TAMAMLANMIŞ
+  raporunun kayıtlı verisinden açılır — aynı ekipman, başka plan, son revizyon, en yeni kontrol tarihli. Gelenler (kopyalama kuralı 206–207 gibi): ekipman bilgileri
   (marka, model, seri no, imal yılı, kullanım yeri, amaç, bölüm), formatın kayıttan gelmeyen bilgi alanları (ekipman detayları, tespitler), madde
   seçimleri (yeni format sürümünde aynı madde ve cevap varsa). Gelmeyenler: ölçüm / test değerleri, fotoğraflar, kusur açıklaması ve derecesi, ek
   sütun yazıları, sonuç, yorum, ölçüm cihazları (zimmet / kalibrasyon kişiye bağlı), imza yerleri (ikinci uzman, tesis yetkilisi). Tamamlanmış raporu
@@ -2547,13 +2549,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   ipucu "Tamamlanmış raporu yok"; PDF saklama süresi dolduğu için silindiyse ipucu bunu söyler. Erişilebilir ad "<kod> · son tamamlanmış rapor".
   Yetki: planın ekipman listesini gören, o ekipmanın son imzalı raporunu görür (salt okunur) — denetçinin "yalnız kendi raporları" kuralına bu
   ekipman için açılan istisna; branş süzgeci aynı. Veri Raporlar modülünün dışa açtığı okuyucudan (Planlar rapor tablosuna dokunmaz).
-  **İ4 · Madde 2 (595):** ölçüm cihazları tablosuna "+ Sütun" ile "Kalibrasyon kuruluşu" (kalibrasyon kaydındaki laboratuvar — muayene gününde
-  geçerli kalibrasyonun; göç yok). Belge, kâğıt, S.A.Y "tablo_sutunu" aynı; imza anının cihaz kopyası da taşır. "Belirsizlik" ÇIKTI (reisim
-  2026-10-17: "belirsizliğe gerek yok isteyen firma sütun olarak ekleyebilir") — not: cihaz tablosunda bugün yalnız kayıttan gelen sütun var, serbest
-  (sahada yazılan) sütun yok; firma kendisi ekleyecekse o ayrı bir iş olur (planda değil).
-  **İ5 · Madde 25 (595):** (a) e-imza kutusunun yeri "son sayfa" yanında "her sayfa" (aynı imzanın her sayfada görünen alanı); (b) teknik yönetici
-  için ikinci e-imza yeri (formatta seçilir; kesin PDF'te ikinci boş imza alanı). (b) imza sırasını değiştirir (uzman imzalar → teknik yönetici
-  ikinci kez imzalar → Tamamlandı): başlamadan önce kısa akış sunumu ve reisim onayı.
+  **İ4 · Madde 2 — ÇIKTI** (reisim 2026-10-17: *"gerek yok belli başlı, bakanlık formatındaki gibi olsun müşteriye göre sonra düzenlenebilsin yeter"*):
+  ölçüm cihazları tablosu Bakanlık formatındaki gibi kalır; firma bugünkü sütunları yeniden adlandırır / çıkarır / sıralar / kayıttan ekler (yapıldı).
+  **İ5 · Madde 25 (595) — İKİ E-İMZA YERİ, AKIŞ YOK** (reisim 2026-10-17: *"akışa gerek yok e imza yerleri onanan ve onaylayan olarak olsun bu
+  sayede her türlü belgede bu kullanışlı olur"*): format yapıcıda iki e-imza yeri — "Onaylanan" (belgeyi hazırlayan; raporda muayene uzmanı) ve
+  "Onaylayan" (raporda teknik yönetici); her birinin yeri ayrı seçilir (imza hücresi · son sayfada kutu · her sayfada kutu · görünmez). Kesin PDF'te
+  iki boş imza alanı. Uygulama imza sırası yönetmez: bugünkü akış aynı; yüklenen imzalı PDF'te bir ya da iki imza olabilir (denetim ikisini de kabul
+  eder). Yapı her belge formatında aynı kullanılacak şekilde genel (öteki belgelerin format yapıcısı K4 "sonra").
   **İ6 · Madde 8 (595):** format yapıcının kâğıdında öğeler (alan, madde, sütun, test değeri, hazır satır, imza / firma / başlık satırları)
   tutamaktan fareyle ve dokunmatikle SÜRÜKLENEREK taşınır; madde gruplar arasında; geri al / yinele ile.
   **Kalkanlar:** FV12–FV15 (firma başına Supabase planı rafa kalktı — aşağıdaki karar).
