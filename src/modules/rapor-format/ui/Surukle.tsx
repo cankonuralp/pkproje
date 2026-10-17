@@ -1,8 +1,8 @@
 "use client";
 /* SÜRÜKLE-BIRAK TUTAMAĞI (İ6, 2026-10-17; sunum 595 madde 8 — "her öğede tutamak (sürükle)"; iş planı: "fareyle ve dokunmatikle SÜRÜKLENEREK
    taşınır; madde gruplar arasında; geri al / yinele ile"). İşaretçi olaylarıyla (fare, dokunma, kalem — HTML sürükle-bırakı dokunmada çalışmaz):
-   tutamağa basılınca aynı listedeki öteki tutamakların satırları hedeftir; işaretçinin en yakın olduğu satırın önüne / arkasına (yatay listede
-   soluna / sağına) bırakılır — satırda çizgi gösterilir. Bırakınca birak çağrılır; taşımayı kâğıt bugünkü bir adımlık işlevlerle yapar
+   tutamağa basılınca aynı listedeki öteki tutamakların satırları hedeftir; işaretçinin en yakın olduğu satırın önüne / arkasına (üst / alt yarı;
+   yatay listede soluna / sağına) bırakılır — satırda çizgi gösterilir. Bırakınca birak çağrılır; taşımayı kâğıt bugünkü bir adımlık işlevlerle yapar
    (kurucu.ts ogeyeTasi / siraya). Klavye: tutamak odak almaz — aynı iş öğenin ↑ ↓ (← →) tuşlarıyla. Satır = tutamağın içinde olduğu öğe
    tuşlarının (ogeTus) kapsayıcısı. */
 import { useRef, type PointerEvent } from "react";
@@ -42,8 +42,9 @@ export function SurukleTutamak({ liste, sira, id, ad, yatay = false, birak }: { 
       const dx = Math.max(r.left - e.clientX, 0, e.clientX - r.right), dy = Math.max(r.top - e.clientY, 0, e.clientY - r.bottom), d = dx * dx + dy * dy;
       if (!en || d < en.d) en = { el, t, d };
     }
-    const once = (r: DOMRect) => (yatay ? e.clientX < r.left + r.width / 2
-      : e.clientY < r.top + r.height / 4 || (e.clientY <= r.bottom - r.height / 4 && e.clientX < r.left + r.width / 2));
+    /* dikey listede satırın üst yarısı önü, alt yarısı arkası; yatayda sol / sağ yarı (tutamağın yatay yeri karar vermez — dar etiket hücresinde
+       tuşlar hücrenin sol yarısına düşebilir; 2026-10-17 deneme makinesi bulgusu) */
+    const once = (r: DOMRect) => (yatay ? e.clientX < r.left + r.width / 2 : e.clientY < r.top + r.height / 2);
     if (!en) return;
     const o = once(en.el.getBoundingClientRect());
     if (hedef.current?.el !== en.el) isaretle(hedef.current?.el, null);

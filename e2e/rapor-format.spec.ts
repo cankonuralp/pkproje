@@ -229,7 +229,9 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     const firmaTutamak = firma.locator('[data-surukle-liste="firma"]');
     const basliklar = () => firmaTutamak.evaluateAll((l) => l.map((x) => (x as HTMLElement).title));
     const sira0 = await basliklar();
-    await firmaTutamak.nth(0).dragTo(firmaTutamak.nth(2));
+    /* hedef satırın alt kenarına yakın (alt yarı = arkası); satır = tutamağın öğe tuşlarının kapsayıcısı */
+    const hedefTutamak = (await firmaTutamak.nth(2).boundingBox())!, hedefSatir = (await firmaTutamak.nth(2).locator("xpath=../..").boundingBox())!;
+    await firmaTutamak.nth(0).dragTo(firmaTutamak.nth(2), { targetPosition: { x: 4, y: hedefSatir.y + hedefSatir.height - 3 - hedefTutamak.y } });
     await expect.poll(basliklar).toEqual([sira0[1], sira0[2], sira0[0], ...sira0.slice(3)]);
     /* 492 (hata listesi 9: "sadece sgk no ve isg katip no değiştirilemez olsun ve format yapıcıda bu belirlenebilir olsun"): sahada kilit — başlangıçta
        SGK ve İSG-KATİP basılı; basınca açılır, yeniden basınca kilitlenir */
