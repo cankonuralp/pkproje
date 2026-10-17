@@ -393,13 +393,12 @@ const ONCEKI_IMZA_BOZULUR = "Yüklenen PDF, imzalanacak PDF'in üstüne artıml�
 export function imzaliTaban(imzasiz: Uint8Array, imzali: Uint8Array): { taban: Uint8Array } | { neden: string } {
   if (imzaliPdfGecerli(imzasiz, imzali)) return { taban: imzasiz };
   const onek = imzali.length > imzasiz.length && Buffer.from(imzali.subarray(0, imzasiz.length)).equals(Buffer.from(imzasiz));
-  /* ayrıntılı neden yalnız dosya BU belgenin (yeniden yazılmış) hâliyse: hazırladığımız PDF'in doğrulama bağlantısı imzalıda da var; başka dosyada
-     (yanlış rapor, başka belge) genel neden — "okunamadı" ya da "içeriği aynı değil" yanıltır */
-  const bizim = new Set(dogrulamaRaporlari(imzasiz));
-  const tanidik = bizim.size > 0 && dogrulamaRaporlari(imzali).some((x) => bizim.has(x));
+  /* ayrıntılı neden yalnız dosya BU belgenin (yeniden yazılmış) hâliyse — hazırladığımız PDF'in en az bir sayfasının çizimi imzalının aynı
+     sayfasında aynen var; başka dosyada (yanlış rapor, başka belge) genel neden: "okunamadı" ya da "içeriği aynı değil" yanıltır */
+  const tanidik = () => bizimCizimVar(imzasiz, imzali);
   IMZA_SOZLUGU.lastIndex = 0;
   /* hazırladığımız PDF imzalıysa (teknik yönetici) yalnız artımlı ek kabul: yeniden yazmak önceki imzayı bozar */
-  if (!onek && IMZA_SOZLUGU.test(latin1(imzasiz))) return { neden: tanidik ? ONCEKI_IMZA_BOZULUR : ESLESMEDI_TABAN };
+  if (!onek && IMZA_SOZLUGU.test(latin1(imzasiz))) return { neden: tanidik() ? ONCEKI_IMZA_BOZULUR : ESLESMEDI_TABAN };
   let neden: string | null = null;
   for (const e of tabanAdaylari(latin1(imzali), onek ? imzasiz.length : 0)) {
     const taban = imzali.subarray(0, e);
@@ -407,23 +406,21 @@ export function imzaliTaban(imzasiz: Uint8Array, imzali: Uint8Array): { taban: U
     neden = esdegerNedeni(imzasiz, taban);
     if (neden === null) return { taban };
   }
-  /* okunamayan / karşılaştırılamayan dosyada ayrıntı yanıltır (aynı raporun eski hazırlığı da aynı bağlantıyı taşır) — genel neden */
-  return { neden: neden !== null && (tanidik || onek) && !/^İmzalı PDF (?:okunamadı|karşılaştırılamadı)/.test(neden) ? neden : ESLESMEDI_TABAN };
+  /* okunamayan / karşılaştırılamayan dosyada ayrıntı yanıltır — genel neden */
+  return { neden: neden !== null && !/^İmzalı PDF (?:okunamadı|karşılaştırılamadı)/.test(neden) && (onek || tanidik()) ? neden : ESLESMEDI_TABAN };
 }
 
-/** PDF'in bağlantılarındaki (URI eylemi) doğrulama kodları — rapor · revizyon · imza (595 K8, src/server/dogrulama.ts); adres düz ya da onaltılık
-    dizgide (yeniden yazan araç dizgiyi onaltılık yazabilir). 2026-10-17 (reisim: "probata linki olmayan raporu kabul etme"): yükleme bu raporun
-    kodunu arar (raporlar.ts dogrulamaBagli); toplu yüklemede eşleştirme de buradan. */
-export function dogrulamaKodlari(pdf: Uint8Array): string[] {
-  const s = latin1(pdf), l = new Set<string>();
-  let n = 0;
-  for (const m of s.matchAll(/\/URI[\x00\t\n\f\r ]*(\((?:[^()\\]|\\[^]){1,4000}\)|<[0-9A-Fa-f\x00\t\n\f\r ]{2,8000}>)/g)) {
-    const h = dizgiBayt(m[1]);
-    const adres = h === null ? "" : Buffer.from(h, "hex").toString("latin1");
-    for (const k of adres.matchAll(/\/dogrula\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.\d{1,3}\.[A-Za-z0-9_-]{8,64})/g)) l.add(k[1]);
-    if (++n >= 500 || l.size >= 20) break;
+/** imzalı dosya bu belgeden mi türemiş: hazırladığımız PDF'in bir sayfasının çizimi (çözülmüş akışlar) imzalının aynı sıradaki sayfasında aynen
+    var (okunamazsa hayır) */
+function bizimCizimVar(imzasiz: Uint8Array, imzali: Uint8Array): boolean {
+  try {
+    const A = belge(imzasiz), B = belge(imzali), pa = sayfalar(A), pb = sayfalar(B);
+    return pa.some((s, i) => {
+      const c = i < pb.length ? cizim(A, s) : "";
+      return c.trim().length >= 16 && cizim(B, pb[i]).includes(c);
+    });
+  } catch (e) {
+    if (e instanceof Esdegersiz || e instanceof RangeError || e instanceof PdfHatasi) return false;
+    throw e;
   }
-  return [...l];
 }
-/** imzalı PDF'teki doğrulama bağlantılarından rapor kimlikleri (toplu yüklemede eşleştirme — yeniden yazılmış dosyada bayt öneki tutmaz) */
-export const dogrulamaRaporlari = (pdf: Uint8Array): string[] => [...new Set(dogrulamaKodlari(pdf).map((k) => k.split(".")[0]))];

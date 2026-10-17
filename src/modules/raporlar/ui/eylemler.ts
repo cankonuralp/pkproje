@@ -4,7 +4,6 @@
 import { refresh } from "next/cache";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
-import { firmaAdresi } from "../../../server/kiraci/istek";
 import { depo } from "../../../server/dosya/depo";
 import { belgePdf } from "../../../belge/pdf";
 import {
@@ -173,7 +172,7 @@ export async function raporFormatGuncelleEylemi(id: string, surum: number, kayit
 }
 /** İmzala (317): onaylanmış raporun kesin imzasız PDF'i sunucuda bir kez üretilir (başsız Chromium) ve saklanır */
 export async function imzaHazirlaEylemi(id: string): Promise<RaporYaniti> {
-  return islem((o) => oturumIslemi(o, (db) => imzaHazirla(db, depo(), o, o.kiraci.firmaId, metin(id), belgePdf, firmaAdresi(o.kiraci.kisaAd))));
+  return islem((o) => oturumIslemi(o, (db) => imzaHazirla(db, depo(), o, o.kiraci.firmaId, metin(id), belgePdf)));
 }
 /** imzalı PDF yükle (form: id, surum, dosya); önek, imza sözlüğü, yetki ve durum sunucuda */
 export async function imzaliYukleEylemi(form: FormData): Promise<RaporYaniti> {
@@ -199,7 +198,7 @@ export async function imzaliEslestirYukleEylemi(form: FormData): Promise<RaporYa
 /* 2026-10-17 TEKNİK YÖNETİCİ İMZASI (göç 0102): firma ayarı açıkken onaydaki raporu teknik yönetici imzalayarak onaylar — yetki, ayar, durum,
    imza denetimi ve imzalayanın adı sunucuda (raporlar.ts teknikImza…) */
 export async function teknikImzaHazirlaEylemi(id: string): Promise<RaporYaniti> {
-  return islem((o) => oturumIslemi(o, (db) => teknikImzaHazirla(db, depo(), o, o.kiraci.firmaId, metin(id), belgePdf, firmaAdresi(o.kiraci.kisaAd))));
+  return islem((o) => oturumIslemi(o, (db) => teknikImzaHazirla(db, depo(), o, o.kiraci.firmaId, metin(id), belgePdf)));
 }
 /** teknik yöneticinin imzalı PDF'i (form: id, surum, dosya) */
 export async function teknikImzaliYukleEylemi(form: FormData): Promise<RaporYaniti> {

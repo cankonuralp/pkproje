@@ -1,5 +1,5 @@
 /* DENEME PDF YAZICISI (2026-10-17, src/modules/raporlar/imza-esdeger.ts): uydurma rapor PDF'i — sayfalar (boyut sayfa ağacından miras), sıkıştırılmış
-   çizim akışları, yazı tipi, resim, grafik durumu, sayfa başına doğrulama bağlantısı, son sayfada boş e-imza alanı; çapraz başvuru tablosu ve
+   çizim akışları, yazı tipi, resim, grafik durumu, sayfa başına bağlantı (http), son sayfada boş e-imza alanı; çapraz başvuru tablosu ve
    trailer doğru — ve imza servisinin (imzayeri — OpenPDF) yaptığı gibi YENİDEN YAZIM: nesneler yeniden numaralanır, dizgiler onaltılık, uzun
    ondalıklar iki basamak, sıkıştırılmış akışlar yeniden sıkıştırılır, her sayfanın çizimi "q" … "Q q 1 0 0 1 25 6 cm /Xi0 Do Q Q" ile sarılır,
    damga formu ve servisin bağlantısı eklenir, boş imza alanı atılır. Olumsuz denemeler için her adım değiştirilebilir. Gerçek veri yok. */
@@ -29,7 +29,7 @@ export function pdfYaz(nesneler: Nesne[], kok: number): Uint8Array {
 }
 
 /** sarili: e-imza alanı konan sayfanın çizimi pdf-lib'in yaptığı gibi "q" … "Q" akışlarıyla sarılı (2026-10-17, gerçek imzasız PDF'teki düzen) */
-export interface OrnekSecenek { sayfa?: number; metin?: string; dogrulama?: string | null; imzaYeri?: boolean; resim?: Buffer; sarili?: boolean }
+export interface OrnekSecenek { sayfa?: number; metin?: string; baglanti?: string | null; imzaYeri?: boolean; resim?: Buffer; sarili?: boolean }
 /** uydurma rapor PDF'i (Chromium çıktısına benzer düzen) */
 export function ornekPdf(p: OrnekSecenek = {}): Uint8Array {
   const sayfa = p.sayfa ?? 2, metin = p.metin ?? "Rapor", imzaYeri = p.imzaYeri ?? true;
@@ -45,12 +45,12 @@ export function ornekPdf(p: OrnekSecenek = {}): Uint8Array {
     sayfalar.push(s);
     const cizim = `q 1 0 0 -1 0 841.89 cm\nq 0.75 0 0 0.75 0 0 cm\nBT /F1 12 Tf 1 0 0 -1 40 60 Tm (${metin} - Uygun - sayfa ${i + 1}) Tj ET\n`
       + `0 0 0 RG 1 w 30 30 m 560 30 l S\nq 120 0 0 -60 40 200 cm /Im1 Do Q\n/G1 gs\nQ\nQ\n`;
-    const annots = [...(p.dogrulama ? [`${b} 0 R`] : []), ...(son && imzaYeri ? ["6 0 R"] : [])];
+    const annots = [...(p.baglanti ? [`${b} 0 R`] : []), ...(son && imzaYeri ? ["6 0 R"] : [])];
     const sar = son && imzaYeri && !!p.sarili;
     n.push({ no: s, sozluk: `<< /Type /Page /Parent 2 0 R /Contents ${sar ? `[7 0 R ${c} 0 R 8 0 R]` : `${c} 0 R`} /Resources << /Font << /F1 3 0 R >> /XObject << /Im1 4 0 R >> `
       + `/ExtGState << /G1 5 0 R >> /ProcSet [/PDF /Text /ImageC] >>${annots.length ? ` /Annots [${annots.join(" ")}]` : ""} >>` });
     n.push({ no: c, sozluk: "<< /Filter /FlateDecode >>", akis: deflateSync(L(cizim)) });
-    if (p.dogrulama) n.push({ no: b, sozluk: `<< /Type /Annot /Subtype /Link /Rect [480 8 560 52] /Border [0 0 0] /A << /S /URI /URI (${p.dogrulama}) >> >>` });
+    if (p.baglanti) n.push({ no: b, sozluk: `<< /Type /Annot /Subtype /Link /Rect [480 8 560 52] /Border [0 0 0] /A << /S /URI /URI (${p.baglanti}) >> >>` });
   }
   if (imzaYeri && p.sarili) n.push({ no: 7, sozluk: "<< /Filter /FlateDecode >>", akis: deflateSync(L("q\n")) }, { no: 8, sozluk: "<< /Filter /FlateDecode >>", akis: deflateSync(L("Q\n")) });
   if (imzaYeri) n.push({ no: 6, sozluk: `<< /Type /Annot /Subtype /Widget /FT /Sig /T (probata-eimza) /F 4 /Rect [380 120 560 180] /P ${sayfalar.at(-1)} 0 R >>` });
@@ -126,12 +126,4 @@ export function yenidenYaz(a: Uint8Array, p: YenidenSecenek = {}): Uint8Array {
   nesneler.push({ no: servisNo, sozluk: "<< /Subtype /Link /H /T /Border [0 0 0] /Rect [49 6 546 49] /A << /S /URI /URI (https://imza.example/d/DENEME1) >> >>" });
   nesneler.push(...(p.ekNesne ?? []));
   return pdfYaz(nesneler, kok + k);
-}
-
-/** 2026-10-17 (yüklemede raporun doğrulama bağlantısı şart — raporlar.ts dogrulamaBagli): testlerin uydurma imzasız PDF'ine bağlantı (URI eylemi)
-    eklenir; adres imzaHazirla'nın verdiği (BelgeVerisi.dogrulama). Bağlantının adresi testlerde bu firma adresiyle kurulur. */
-export const DENEME_ADRESI = "https://deneme-a.deneme.example";
-export function baglantiliPdf(metin: string, dogrulama?: string | null): Uint8Array {
-  const i = metin.includes("trailer") ? metin.lastIndexOf("trailer") : metin.lastIndexOf("%%EOF");
-  return new TextEncoder().encode(`${metin.slice(0, i)}9999 0 obj << /S /URI /URI (${dogrulama ?? ""}) >> endobj\n${metin.slice(i)}`);
 }

@@ -2527,6 +2527,15 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-17 (YAPILDI): **RAPOR DOĞRULAMA KOMPLE KALKTI — sign.probata'ya** (reisim: *"tamam bu olay komple iptal kaldır, sign.probata kurucaz eğer
+  imza hizmetini bizden alan olursa oradan suncaz ve o işleri ayrı yerden ilerletiyorum sen elindeki işlere odaklan ve bitir"*). Kalkanlar:
+  imzaya hazırlanan PDF'in alt şeridindeki doğrulama karekodu ve "Doğrulama:" bağlantısı (şerit kalır: kanun cümlesi + rapor no + Sayfa n / N),
+  oturumsuz /dogrula/<kod> sayfası ve kod üreticisi, "probata doğrulama bağlantısı olmayan imzalı rapor kabul edilmez" kuralı (bağlantıya
+  dayanıyordu; bağlantısız eski PDF'i yeniden hazırlama da kalktı). Kalanlar: her imza programının içerikçe aynı imzalı raporu kabul (imzayeri);
+  "bu belgeden mi türemiş" artık bağlantıdan değil çizimden (bir sayfanın çizimi aynı sırada aynen — değilse genel neden); toplu yüklemede önek
+  tutmayan dosya adındaki rapor numarasıyla eşleşir. Yayında bekleyen hazırlık yoktu (imza isteklerinin ikisi de tamam); daha önce imzalanmış
+  karekodlu rapor değiştirilemez — karekodu artık bir sayfa açmaz.
+  Rapor doğrulama ve imza hizmeti ayrı üründe (IMZA-SERVISI.md, sign.probata.com.tr) — bu projede yapılmaz.
 - 2026-10-17 (YAPILDI): **RAPOR SAYFANIN İÇİNDE + EXCEL'DE KULLANIM YERİ** (reisim: *"müşteri tıklayınca direk raporu görmeli pdfi aç, tuşu falan ne
   alaka … indir tuşu neyse de burada tıkladığı gibi içeride raporu görmeli"* · *"rapor doğrulama ekranında raporun kendisi de gözüksün lütfen"* ·
   *"excelde ekipman kullanım yeri de olmalı … ekipman bilgileri kısmında kullanım yeri yazar oradan alınacak … yoksa veya girilmemişse "-""*).
@@ -2537,7 +2546,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   panelinin Excel'inde "Kullanım yeri" sütunu (Ekipman türü'nden sonra): imzalı raporun ekipman bilgilerindeki kullanım yeri; yoksa "-".
   Görüntüleyici components/pdf/PdfGorunumu (pdf.js 5.4.149, paket; dizgi değerlendirme kapalı). Kilit e2e saha-raporu (müşteri paneli),
   musteri-paneli (PG). E-imza ve imza doğrulama ayrı süreç (imza servisi projesi) — bu kalemin dışında.
-- 2026-10-17 (YAPILDI): **PROBATA DOĞRULAMA BAĞLANTISI OLMAYAN İMZALI RAPOR KABUL EDİLMEZ** (reisim: *"şeridi yukarı alma ama probata linki olmayan
+- 2026-10-17 (YAPILDI → AYNI GÜN KALKTI, yukarıdaki "RAPOR DOĞRULAMA KOMPLE KALKTI"): **PROBATA DOĞRULAMA BAĞLANTISI OLMAYAN İMZALI RAPOR KABUL EDİLMEZ** (reisim: *"şeridi yukarı alma ama probata linki olmayan
   raporu kabul etme … sorun oymuş yani diğer raporda varmış link bir diğerinde yokmuş"*). Bulgu: iki rapordan birinin imzaya hazırlanan PDF'i
   doğrulama karekodu / bağlantısı gelmeden (16 Ekim) hazırlanmıştı; imzalısı da bağlantısızdı ve kabul edildi. Artık: imzalı PDF bu raporun BU
   revizyonunun doğrulama bağlantısını taşımalı (kod imzalı — başka raporun bağlantısı sayılmaz), yoksa "İmzalı PDF'te bu raporun probata doğrulama
@@ -2702,7 +2711,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   değil gibi; sonraki imzalı muayeneyle kapanır), müşteri panelinde "Şartlı uygun" (ayrı çip), onay listesinde sarı rozet ve "Kusurlu" çipinde.
   Öneri: kusur dereceleri soruluyorsa ve ağır kusur yoksa "Şartlı uygun", ağır varsa "Uygun değil". Seçeneği olmayan formattaki rapor şartlı
   uygunla onaya gönderilmez; ağır kusur varken şartlı uygun seçilirse uyarı (engel değil). Veritabanı göçü 0100 (sonuç CHECK'leri, uygunsuzluk tetiği).
-- 2026-10-16 (595k): **K8 — DOĞRULAMA KAREKODU** (reisim: *"Kanun cümlesi + rapor no + sayfa + doğrulama karekodu"*): imzaya hazırlanan PDF'in her sayfasının
+- 2026-10-16 (595k; 2026-10-17 KALKTI — "RAPOR DOĞRULAMA KOMPLE KALKTI"): **K8 — DOĞRULAMA KAREKODU** (reisim: *"Kanun cümlesi + rapor no + sayfa + doğrulama karekodu"*): imzaya hazırlanan PDF'in her sayfasının
   altındaki şeritte karekod ve doğrulama adresi (firmanın adresi /dogrula/<kod>). Sayfa oturum istemez; kod tahmin edilemez (rapor + revizyon + firmaya bağlı
   imza), başka firmanın adresinde açılmaz. Gösterilen: rapor no, muayene firması, ekipman türü ve kodu, kontrol tarihi, sonuç, e-imza zamanı; yeni revizyon
   imzalandıysa "yeni revizyonu var" ve onun numarası; imzalı PDF yüklenmediyse "imza bekleniyor". Müşteri / tesis adı, kişi adı ve PDF gösterilmez (imzalı

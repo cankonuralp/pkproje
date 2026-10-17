@@ -6,7 +6,7 @@
    kanıt: tests/bozan/imza-esdeger.bozan.ts. */
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { dogrulamaKodlari, dogrulamaRaporlari, esdegerNedeni, imzaliTaban } from "../src/modules/raporlar/imza-esdeger.ts";
+import { esdegerNedeni, imzaliTaban } from "../src/modules/raporlar/imza-esdeger.ts";
 import { ekImzaIcerikleri } from "../src/modules/raporlar/imza-pdf.ts";
 import { imzaciNedeni } from "../src/modules/raporlar/imza-kimlik.ts";
 import { ekImzaNedeni } from "../src/server/imza/yukleme.ts";
@@ -14,8 +14,8 @@ import { imzaEki } from "./yardimci/gercek-imza.ts";
 import { ekle } from "./yardimci/imza-uret/pdf-ek-yaz.ts";
 import { ornekPdf, yenidenYaz, type YenidenSecenek } from "./yardimci/pdf-yaz.ts";
 
-const KOD = "0b6c6a41-6f8e-4c55-9d1f-2b3c4d5e6f70";
-const A = ornekPdf({ dogrulama: `https://deneme.probata.example/dogrula/${KOD}.0.AbCdEfGh`, metin: "DN-1026-001-ab12c" });
+const BAGLANTI = "https://deneme.probata.example/bilgi";
+const A = ornekPdf({ baglanti: BAGLANTI, metin: "DN-1026-001-ab12c" });
 /** yeniden yaz + gerçek imza (artımlı) → taban ya da neden */
 const tabanNedeni = (p: YenidenSecenek = {}, imzasiz: Uint8Array = A) => {
   const r = imzaliTaban(imzasiz, imzaEki(yenidenYaz(imzasiz, p), "DENEME İMZACI"));
@@ -38,7 +38,7 @@ test("yeniden yazılmış imzalı PDF: içerik aynı, damga kenarda → taban ye
 test("yeniden yazım biçimi önemsiz: numaralar, onaltılık dizgi, iki ondalık, yeniden sıkıştırma; bağlantımız ve imza alanımız atılabilir", () => {
   assert.equal(tabanNedeni(), null);
   assert.equal(tabanNedeni({ kaydir: 3000 }), null);
-  assert.equal(tabanNedeni({ baglantiAt: true }), null, "doğrulama bağlantısı atıldı");
+  assert.equal(tabanNedeni({ baglantiAt: true }), null, "bağlantı atıldı");
   assert.equal(tabanNedeni({ imzaAlaniKalsin: true }), null, "boş imza alanı kaldı");
   assert.equal(tabanNedeni({ onek: "q 1 0 0 1 0 0 cm\n" }), null, "birim dönüşüm");
   assert.equal(tabanNedeni({ sonek: " Q\nq\nq 1 0 0 1 550 10 cm /Xi0 Do Q\nq 1 0 0 1 0 5 cm /Xi0 Do Q\nQ\n", damga: [0, 0, 40, 40] }), null, "köşelerde karekod");
@@ -54,14 +54,15 @@ test("yeniden yazım biçimi önemsiz: numaralar, onaltılık dizgi, iki ondalı
 /* 2026-10-17 (reisim'in imzayeri'yle imzaladığı gerçek raporun düzeni): e-imza alanının konduğu sayfanın çizimi pdf-lib'ce "q" … "Q" akışlarıyla
    sarılı; araç bunların da önüne / arkasına kendi akışını koyar — bizim üç akışımız tek parça kalır */
 test("pdf-lib'in sardığı sayfa (birden çok çizim akışı) yeniden yazılınca da kabul; sarmanın içindeki değişiklik reddedilir", () => {
-  const sarili = ornekPdf({ sarili: true, dogrulama: `https://deneme.probata.example/dogrula/${KOD}.0.AbCdEfGh` });
+  const sarili = ornekPdf({ sarili: true, baglanti: BAGLANTI });
   assert.equal(tabanNedeni({}, sarili), null);
   assert.equal(tabanNedeni({ sonek: " Q\nq\nq 1 0 0 1 0 5 cm /Xi0 Do Q\nQ\n", damga: [0, 0, 45, 45] }, sarili), null, "köşede karekod");
   assert.match(tabanNedeni({ icerik: (v, s) => (s === 1 ? Buffer.from(v.toString("latin1").replace("sayfa 2", "sayfa 9"), "latin1") : v) }, sarili)!, /2\. sayfasının içeriği/);
 });
 
 test("rapor değişmişse reddedilir: içerik, yazı tipi, resim, sayfa sayısı, boyut, bağlantı adresi", () => {
-  assert.match(tabanNedeni({ icerik: (v) => Buffer.from(v.toString("latin1").replace("Uygun", "Kotuu"), "latin1") })!, /1\. sayfasının içeriği imzaya hazırlanan PDF'le aynı değil/);
+  assert.match(tabanNedeni({ icerik: (v, s) => (s === 0 ? Buffer.from(v.toString("latin1").replace("Uygun", "Kotuu"), "latin1") : v) })!,
+    /1\. sayfasının içeriği imzaya hazırlanan PDF'le aynı değil/);
   assert.match(tabanNedeni({ icerik: (v, s) => (s === 1 ? Buffer.from(v.toString("latin1").replace("sayfa 2", "sayfa 9"), "latin1") : v) })!, /2\. sayfasının içeriği/);
   assert.match(tabanNedeni({ icerik: (v, s) => (s === 1 ? Buffer.concat([v, Buffer.from("BT /F1 9 Tf (ek) Tj ET\n")]) : v) })!, /izin dışı bir çizim eklemiş \(BT\)/, "sona yazı");
   assert.match(tabanNedeni({ sozluk: (s, no) => (no === 3 ? s.replace("/Helvetica", "/Courier") : s) })!, /yazı tipi farklı \(F1\)/);
@@ -123,10 +124,13 @@ test("imzasız / başka belge / bozuk girdi: genel neden; ağır girdi sınırl�
   const baska = ornekPdf({ metin: "DN-1026-002-cd34e" });
   assert.equal(tabanNedeni({}, baska), null);
   assert.deepEqual(imzaliTaban(A, imzaEki(yenidenYaz(baska))), { neden: "Yüklenen PDF bu raporun imzaya hazırlanan PDF'i değil ya da imza taşımıyor." },
-    "başka raporun imzalısı: genel neden (doğrulama bağlantısı bizimki değil)");
-  assert.match(tabanNedeni({ icerik: (v) => Buffer.from(v.toString("latin1").replace("Uygun", "Kotuu"), "latin1") })!, /aynı değil/, "bizim bağlantımızla: ayrıntılı neden");
+    "başka raporun imzalısı: genel neden (çizimi bizimki değil)");
+  assert.match(tabanNedeni({ icerik: (v, s) => (s === 1 ? Buffer.from(v.toString("latin1").replace("Uygun", "Kotuu"), "latin1") : v) })!, /2\. sayfasının içeriği/,
+    "1. sayfası bizimki: ayrıntılı neden");
+  assert.equal(tabanNedeni({ icerik: (v) => Buffer.from(v.toString("latin1").replace("Uygun", "Kotuu"), "latin1") }),
+    "Yüklenen PDF bu raporun imzaya hazırlanan PDF'i değil ya da imza taşımıyor.", "hiçbir sayfası bizimki değil: genel neden");
   assert.equal(tabanNedeni({ baglantiAt: true, icerik: (v) => Buffer.from(v.toString("latin1").replace("Uygun", "Kotuu"), "latin1") }),
-    "Yüklenen PDF bu raporun imzaya hazırlanan PDF'i değil ya da imza taşımıyor.", "bağlantısı atılmış değişik belge: genel neden");
+    "Yüklenen PDF bu raporun imzaya hazırlanan PDF'i değil ya da imza taşımıyor.", "bağlantısı atılmış değişik belge de genel neden");
   assert.equal(esdegerNedeni(A, new TextEncoder().encode("%PDF-1.4\nbozuk")), "İmzalı PDF okunamadı.");
   /* çok sayfalı belge: 150 sayfa sınırlı sürede */
   const buyuk = ornekPdf({ sayfa: 150 });
@@ -136,20 +140,4 @@ test("imzasız / başka belge / bozuk girdi: genel neden; ağır girdi sınırl�
   /* çizime karışık çok belirteç: sınır aşılınca neden (çökmez) */
   const sisik = yenidenYaz(A, { sonek: ` Q\n${"q Q ".repeat(800_000)}\n` });
   assert.match(esdegerNedeni(A, sisik) ?? "", /çok büyük|karşılaştırılamadı/);
-});
-
-test("doğrulama bağlantısından rapor kimliği (toplu yüklemede eşleştirme): düz ve onaltılık dizgide", () => {
-  assert.deepEqual(dogrulamaRaporlari(A), [KOD]);
-  assert.deepEqual(dogrulamaRaporlari(imzaEki(yenidenYaz(A))), [KOD], "yeniden yazımda adres onaltılık dizgi");
-  assert.deepEqual(dogrulamaRaporlari(ornekPdf()), []);
-});
-
-/* 2026-10-17 (reisim: "probata linki olmayan raporu kabul etme"): yükleme bu raporun kodunu arar — kod yalnız bağlantının (URI eylemi) adresinden;
-   düz metin, yorum ya da başka bir anahtarın değeri sayılmaz */
-test("doğrulama kodları: bağlantının adresinden tam kod (rapor · revizyon · imza); bağlantı değilse sayılmaz", () => {
-  assert.deepEqual(dogrulamaKodlari(A), [`${KOD}.0.AbCdEfGh`]);
-  assert.deepEqual(dogrulamaKodlari(imzaEki(yenidenYaz(A))), [`${KOD}.0.AbCdEfGh`], "onaltılık dizgide");
-  assert.deepEqual(dogrulamaKodlari(imzaEki(yenidenYaz(A, { baglantiAt: true }))), [], "bağlantı atılmış");
-  const metinde = new TextEncoder().encode(`%PDF-1.4\n% /dogrula/${KOD}.0.AbCdEfGh\n1 0 obj << /Title (https://x.example/dogrula/${KOD}.0.AbCdEfGh) >> endobj\n%%EOF\n`);
-  assert.deepEqual(dogrulamaKodlari(metinde), [], "yorumda ya da başka anahtarda");
 });

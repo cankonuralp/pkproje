@@ -24,7 +24,6 @@
   16. (0102) Onaydan çıkan raporun bekleyen teknik isteği iptal edilmeseydi geri gönderilen raporun eski PDF'i imzalanıp onaylanırdı.
   17. (0102) Sunucuda "teknik yönetici imzası açıkken imzasız onay yok" denetimi olmasaydı rapor imzasız onaylanırdı.
   18. (0102) İmzalayanın adı denetlenmeseydi teknik yöneticinin yerine başkasının (ör. denetçinin) imzası kabul edilirdi.
-  19. (2026-10-17) Yüklemede raporun doğrulama bağlantısı aranmasaydı probata bağlantısı olmayan imzalı PDF kabul edilirdi.
    Akış ve hareket işlevlerini sonraki göçler (0027, 0029) yeniden yazdığından her kural geçtiği bütün göçlerden birlikte sökülür. */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -43,10 +42,6 @@ import { imzaHazirla, imzaliYukle, raporOlustur } from "../../src/modules/raporl
 import { dosyaYukle } from "../../src/server/dosya/dosya.ts";
 import { testKumesi } from "../yardimci/kume.ts";
 import { imzaEki } from "../yardimci/gercek-imza.ts";
-import { randomBytes } from "node:crypto";
-import { DENEME_ADRESI, baglantiliPdf } from "../yardimci/pdf-yaz.ts";
-/* 2026-10-17 (yüklemede raporun doğrulama bağlantısı şart — raporlar.ts dogrulamaBagli): imzaya hazırlama adres + sır anahtarı ister */
-process.env.PROBATA_SIR_ANAHTARI ??= randomBytes(32).toString("base64");
 import { ayarYaz } from "../../src/server/ayar/ayar.ts";
 import { supabaseBenzeri, type SupabaseBenzeri } from "../yardimci/supabase.ts";
 
@@ -156,10 +151,8 @@ type Kurulum = Awaited<ReturnType<typeof kur>>;
 /** onaylanmış raporu imzalar: imzasız PDF (her çağrı ayrı bayt) + artımlı imza bölümü */
 let pdfSira = 0;
 async function imzalaTam(k: Kurulum, firma: string, rapor: string) {
-  const sira = pdfSira++;
-  let pdf: Uint8Array = new Uint8Array();
-  const h = await k.is(k.den, (db) => imzaHazirla(db, depo, k.den, firma, rapor,
-    async (v) => (pdf = baglantiliPdf(`%PDF-1.4\n% bozan ${sira}\n1 0 obj << /Type /Catalog >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF\n`, v.dogrulama)), DENEME_ADRESI));
+  const pdf = new TextEncoder().encode(`%PDF-1.4\n% bozan ${pdfSira++}\n1 0 obj << /Type /Catalog >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF\n`);
+  const h = await k.is(k.den, (db) => imzaHazirla(db, depo, k.den, firma, rapor, async () => pdf));
   assert.equal(h.durum, "tamam", JSON.stringify(h));
   const imzali = imzaEki(pdf);
   const surum = (await k.is(k.den, (db) => db.sorgu<{ surum: number }>("SELECT surum FROM rapor WHERE id = $1", [rapor]))).rows[0].surum;
@@ -240,8 +233,8 @@ test("0028'deki iptal kuralı kalkınca onaydan çıkan raporun imza isteği bek
   const A3 = (await supa.sahip.query<{ id: string }>("INSERT INTO firma (kisa_ad, ad, rapor_kodu) VALUES ('deneme-a3', 'Deneme A3', 'DF') RETURNING id")).rows[0].id;
   const k = await kur(havuz, A3);
   await k.is(k.yon, (db) => db.sorgu("UPDATE rapor SET durum = 'onaylandi' WHERE id = $1", [k.rapor]));
-  const uret = async (v: { dogrulama?: string | null }) => baglantiliPdf("%PDF-1.4\n% deneme\n%%EOF\n", v.dogrulama);
-  const h = await k.is(k.den, (db) => imzaHazirla(db, depo, k.den, A3, k.rapor, uret, DENEME_ADRESI));
+  const uret = async () => new TextEncoder().encode("%PDF-1.4\n% deneme\n%%EOF\n");
+  const h = await k.is(k.den, (db) => imzaHazirla(db, depo, k.den, A3, k.rapor, uret));
   assert.equal(h.durum, "tamam", JSON.stringify(h));
   await k.is(k.yon, (db) => db.sorgu("UPDATE rapor SET durum = 'onayda' WHERE id = $1", [k.rapor]));
   const d = (await supa.sahip.query<{ durum: string }>("SELECT durum FROM imza_istegi WHERE rapor_id = $1", [k.rapor])).rows.map((x) => x.durum);
@@ -266,9 +259,8 @@ test("sunucuda rapor_revizeye_gonder denetimi kalkınca tamamlanan raporu yalnı
     const k = await kur(h, C);
     /* tamamla: onay (veritabanı rol bilmez), imzasız PDF, imzalı PDF */
     await k.is(k.yon, (db) => db.sorgu("UPDATE rapor SET durum = 'onaylandi' WHERE id = $1", [k.rapor]));
-    let pdf: Uint8Array = new Uint8Array();
-    assert.equal((await k.is(k.den, (db) => imzaHazirla(db, depo, k.den, C, k.rapor,
-      async (v) => (pdf = baglantiliPdf("%PDF-1.4\n1 0 obj << /Type /Catalog >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF\n", v.dogrulama)), DENEME_ADRESI))).durum, "tamam");
+    const pdf = new TextEncoder().encode("%PDF-1.4\n1 0 obj << /Type /Catalog >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF\n");
+    assert.equal((await k.is(k.den, (db) => imzaHazirla(db, depo, k.den, C, k.rapor, async () => pdf))).durum, "tamam");
     const imzali = imzaEki(pdf);
     const surum = async () => (await k.is(k.den, (db) => db.sorgu<{ surum: number }>("SELECT surum FROM rapor WHERE id = $1", [k.rapor]))).rows[0].surum;
     const y = await k.is(k.den, async (db) => imzaliYukle(db, depo, k.den, C, k.rapor, await surum(), { ad: "imzali.pdf", bayt: imzali }));
@@ -340,9 +332,8 @@ async function hazirRapor(kisa: string, kod: string) {
   const F = await yeniFirma(kisa, kod);
   const k = await kur(havuz, F);
   await k.is(k.yon, (db) => db.sorgu("UPDATE rapor SET durum = 'onaylandi' WHERE id = $1", [k.rapor]));
-  let pdf: Uint8Array = new Uint8Array();
-  const h = await k.is(k.den, (db) => imzaHazirla(db, depo, k.den, F, k.rapor,
-    async (v) => (pdf = baglantiliPdf(`%PDF-1.4\n% toplu ${kisa}\n1 0 obj << /Type /Catalog >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF\n`, v.dogrulama)), DENEME_ADRESI));
+  const pdf = new TextEncoder().encode(`%PDF-1.4\n% toplu ${kisa}\n1 0 obj << /Type /Catalog >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF\n`);
+  const h = await k.is(k.den, (db) => imzaHazirla(db, depo, k.den, F, k.rapor, async () => pdf));
   assert.equal(h.durum, "tamam", JSON.stringify(h));
   return { F, k, pdf };
 }
@@ -468,26 +459,10 @@ test("sunucuda imzalayanın adı denetlenmeyince teknik yöneticinin yerine dene
   if (n) return { durum: "gecersiz", hatalar: { dosya: n } };
   const gno`, "  const gno");
   const { F, k, mek } = await teknikKur("deneme-k4", "DN");
-  let pdf: Uint8Array = new Uint8Array();
-  const h = await k.is(mek, (db) => m.teknikImzaHazirla(db, depo, mek, F, k.rapor,
-    async (v) => (pdf = baglantiliPdf("%PDF-1.4\n% teknik\n1 0 obj << /Type /Catalog >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF\n", v.dogrulama)), DENEME_ADRESI));
+  const pdf = new TextEncoder().encode("%PDF-1.4\n% teknik\n1 0 obj << /Type /Catalog >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF\n");
+  const h = await k.is(mek, (db) => m.teknikImzaHazirla(db, depo, mek, F, k.rapor, async () => pdf));
   assert.equal(h.durum, "tamam", JSON.stringify(h));
   const imzali = imzaEki(pdf, "Deneme Bir");
   const y = await k.is(mek, (db) => m.teknikImzaliYukle(db, depo, mek, F, k.rapor, 1, { ad: "imzali.pdf", bayt: imzali }));
   assert.equal(y.durum, "tamam", `bozuk: denetçinin imzası teknik yöneticininki diye kabul edildi: ${JSON.stringify(y)}`);
-});
-
-/* 2026-10-17 (reisim: "probata linki olmayan raporu kabul etme"): yüklemede raporun doğrulama bağlantısı aranmasaydı bağlantısız imzalı PDF tamamlanırdı */
-test("yüklemede doğrulama bağlantısı aranmayınca probata bağlantısı olmayan imzalı PDF kabul edilir", async () => {
-  const m = await bozukModul<Raporlar>(RAPORLAR, '  if (!dogrulamaBagli(b, firmaId, id, e.r.revizyon)) return { durum: "gecersiz", hatalar: { dosya: DOGRULAMA_YOK } };\n', "");
-  const F = await yeniFirma("deneme-l1", "DP");
-  const k = await kur(havuz, F);
-  await k.is(k.yon, (db) => db.sorgu("UPDATE rapor SET durum = 'onaylandi' WHERE id = $1", [k.rapor]));
-  const pdf = new TextEncoder().encode("%PDF-1.4\n% bağlantısız\n1 0 obj << /Type /Catalog >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF\n");
-  const d = await k.is(k.den, (db) => dosyaYukle(db, depo, { firmaId: F, modul: "rapor_pdf", kayitId: k.rapor, ad: "eski.pdf", bayt: pdf, izinli: ["pdf"], kim: "Deneme", yukleyen: k.den.id }));
-  if (!d.tamam) throw new Error(JSON.stringify(d));
-  await k.is(k.den, (db) => db.sorgu("INSERT INTO imza_istegi (rapor_id, revizyon, pdf_dosya, pdf_sha256) SELECT $1, 0, d.id, d.sha256 FROM dosya d WHERE d.id = $2", [k.rapor, d.id]));
-  const surum = (await k.is(k.den, (db) => db.sorgu<{ surum: number }>("SELECT surum FROM rapor WHERE id = $1", [k.rapor]))).rows[0].surum;
-  const y = await k.is(k.den, (db) => m.imzaliYukle(db, depo, k.den, F, k.rapor, surum, { ad: "imzali.pdf", bayt: imzaEki(pdf) }));
-  assert.equal(y.durum, "tamam", `bozuk: bağlantısız imzalı PDF reddedildi: ${JSON.stringify(y)}`);
 });

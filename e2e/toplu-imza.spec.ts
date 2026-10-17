@@ -52,9 +52,6 @@ test("596 toplu imza: iki raporu seç → imzaya hazırla → tek ZIP → adlar�
     expect(x.ad).toMatch(new RegExp(`^${E2E_YZ.firma.raporKodu}-\\d{4}-\\d{3,}-[0-9a-f]{5}-.+-.+\\.pdf$`));
     expect(Buffer.from(x.bayt.subarray(0, 5)).toString("latin1")).toBe("%PDF-");
   }
-  /* 595 K8: her imzasız PDF'in alt şeridinde doğrulama adresi (karekod + bağlantı — firmanın adresi /dogrula/<kod>) */
-  const kodlar = pdfler.map((x) => /\/dogrula\/([0-9a-f-]{36}\.\d+\.[\w-]{22})/.exec(Buffer.from(x.bayt).toString("latin1"))?.[1] ?? "");
-  expect(kodlar.every(Boolean), "doğrulama adresi PDF'te").toBe(true);
   await expect(pen.getByText("İndirildi.")).toBeVisible();
   /* adları değişmiş, ters sırada, tek ZIP: eşleşme içerikten */
   const zip = zipBayt([...pdfler].reverse().map((x, i) => [`imzali/belge (${i + 1}).pdf`, imzala(x.bayt)] as const));
@@ -67,14 +64,6 @@ test("596 toplu imza: iki raporu seç → imzaya hazırla → tek ZIP → adlar�
   await expect(liste.getByText("İmzalandı · müşteriye açıldı")).toHaveCount(2);
   await sonuc.getByRole("button", { name: "Tamam" }).click();
   await expect(page.getByText("İmzanızı bekleyen rapor yok")).toBeVisible({ timeout: 30_000 });
-  /* 595 K8: karekodun açtığı doğrulama sayfası OTURUMSUZ — imzalı sürümün kimliği; bozuk kod "bulunamadı" */
-  await page.context().clearCookies();
-  await page.goto(`${Y}/dogrula/${kodlar[0]}`);
-  await expect(page.getByRole("heading", { level: 1, name: "Rapor doğrulama" })).toBeVisible();
-  await expect(page.getByText("E-imzalı · geçerli")).toBeVisible();
-  await expect(page.getByText(raporNoAdi(pdfler[0].ad), { exact: true })).toBeVisible();
-  await page.goto(`${Y}/dogrula/${kodlar[0].slice(0, -1)}${kodlar[0].endsWith("A") ? "B" : "A"}`);
-  await expect(page.getByText("Bu doğrulama kodu bulunamadı.", { exact: false })).toBeVisible();
 });
 
 test("596 toplu onay: teknik yönetici iki raporu seçer → Seçilenleri onayla → soru → ikisi onaylanır, kuyruktan düşer", async ({ page }, bilgi) => {

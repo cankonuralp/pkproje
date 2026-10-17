@@ -204,11 +204,8 @@ pkproje/
                             raporlar.ts fotoEkle kutuya izin, bölüm sayısı bütün fotoğraflardan (sayiliCevaplar, SahaRaporu, belge aynı) · belge bölümde kutu
                             adıyla (ekteki madde fotoğraflarına girmez) · saha (Bloklar foto) kutu başına "Fotoğraf ekle" · kurucu.ts fotoKutusu* · yapboz
                             kopyada yeni kimlik · S.A.Y "foto_kutusu" · kilit tests/foto-kutulari, bozan
-                            · 595 K8 DOĞRULAMA KAREKODU: src/server/dogrulama.ts (kod = rapor · revizyon · HMAC — ana sır anahtarından, firmaya bağlı;
-                            veritabanına yazılmaz) · imzaHazirla firmanın adresiyle BelgeVerisi.dogrulama → src/belge/pdf.ts raporAltBilgisi şeritte karekod
-                            (yonetim/karekod.ts) + bağlantı · açık sayfa (acik)/dogrula/[kod] → raporlar/server/dogrula-sayfa.ts (src/server/kiraci/acik.ts
-                            acikOkuma: oturumsuz, READ ONLY) + dogrulama.ts (yalnız imzalı sürümün kimliği; müşteri, kişi, PDF yok) + ui/Dogrulama.tsx ·
-                            kilit tests/dogrulama + onaylar (PG), bozan dogrulama, e2e toplu-imza
+                            · 595 K8 DOĞRULAMA KAREKODU — 2026-10-17 KALKTI (reisim: "bu olay komple iptal kaldır, sign.probata kurucaz"): şeritte karekod /
+                            doğrulama bağlantısı, /dogrula sayfası ve "probata bağlantısı şart" yükleme kuralı yok; rapor doğrulama ayrı üründe (IMZA-SERVISI.md)
                             · 595 ŞARTLI UYGUN (madde 12): tanim.ts RAPOR_SONUCLARI (uygun · uygun_degil · sartli) + sonuç bölümü sartli / sartliMetin ·
                             duzen.ts sonucSozcugu, sartliAcik · motor öneri (dereceli + şartlı açık + ağır yok → sartli) · göç 0100 (CHECK'ler, uygunsuzluk
                             Uygun değil VE Şartlı uygun sürüme) · raporlar onayaGonder seçeneği formatta ister, imzalıda uygunsuzluk · rozet / müşteri paneli /
@@ -306,8 +303,8 @@ pkproje/
                             · 2026-10-17 HER İMZA PROGRAMI: imza-esdeger.ts (saf) imzaliTaban — imzalı PDF'in tabanı önek (artımlı imza) ya da imza programının
                             yeniden yazdığı, İÇERİKÇE aynı ilk sürüm (esdegerNedeni: sayfa / boyut / bizim çizimimiz aynen, eklenen yalnız damga işlemleri, damga
                             ve yeni açıklama kenarda — KENAR — ya da e-imza yerimizde, kaynaklar aynı, katalogda eylem yok; önceden imzalı PDF'in yeniden yazımı
-                            red); kripto ve ad tabana göre · toplu eşleştirmede icerikleEslestir (doğrulama bağlantısı — dogrulamaRaporlari — ya da dosya adındaki
-                            numara) · Onaylar › Diğer belgeler aynı · kilit imza-esdeger (tests/yardimci/pdf-yaz.ts uydurma PDF + yeniden yazım), onaylar (PG),
+                            red); ayrıntılı neden yalnız dosya bu belgeden türemişse (bizimCizimVar: bir sayfanın çizimi aynı sırada aynen), yoksa genel neden; kripto
+                            ve ad tabana göre · toplu eşleştirmede icerikleEslestir (dosya adındaki numara) · Onaylar › Diğer belgeler aynı · kilit imza-esdeger (tests/yardimci/pdf-yaz.ts uydurma PDF + yeniden yazım), onaylar (PG),
                             bozan imza-esdeger 1–8
                             · SAKLAMA SÜRESİ (387, göç 0073; ENGEL 11): server/saklama.ts (gece işi saklamaIsi — süresi dolan imzalı sürümün PDF'leri
                             saklama_sil ile, liste, Uyarılar günleri); okuyucular uyari-baglanti.ts, ayar-baglanti.ts; koruma veritabanında (dosya_saklama_koru)
