@@ -49,8 +49,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
       )}
       {r.dosya && (
         <Bolum id="p-rapor" baslik="Rapor">
-          {/* dosya kimliği veritabanından (sunucu bileşeni istemci modülünün işlevini çağıramaz — adres burada) */}
-          <PdfGorunumu adres={`/api/dosya/${r.dosya}`} ad={r.no} />
+          <PdfGorunumu dosyaId={r.dosya} ad={r.no} />
         </Bolum>
       )}
       <Bolum id="p-ozet" baslik="Özet">

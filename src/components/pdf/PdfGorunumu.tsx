@@ -4,17 +4,20 @@
    değil). Dosya verilen adresten (aynı köken; yetki sunucuda). Sayfalar kabın genişliğine sığar, sırayla çizilir. pdf.js: dizgi değerlendirme (eval)
    kapalı, XFA kapalı, işçi kendi kökenimizden (CSP worker-src 'self'), yazı tipleri dosyanın içinden. */
 import { useEffect, useRef, useState } from "react";
+import { dosyaCerceveAdresi } from "../gizli-resim/GizliResim";
 import stil from "./pdf.module.css";
 
 /** çizim çözünürlüğü sınırı (piksel genişlik; büyük ekranda ve çok sayfada bellek) */
 const EN_GENIS = 1800;
 
-export function PdfGorunumu({ adres, ad }: { adres: string; ad: string }) {
+/** dosyaId: depodaki dosya (adres tek dosya ucundan — GizliResim dosyaCerceveAdresi); adres: başka uç (doğrulama sayfasının jetonlu adresi) */
+export function PdfGorunumu({ dosyaId, adres: verilen, ad }: { dosyaId?: string; adres?: string; ad: string }) {
+  const adres = dosyaId ? dosyaCerceveAdresi(dosyaId) : verilen ?? null;
   const kap = useRef<HTMLDivElement>(null);
   const [durum, setDurum] = useState<"yukleniyor" | "tamam" | "hata">("yukleniyor");
   useEffect(() => {
     const k = kap.current;
-    if (!k) return;
+    if (!k || !adres) return;
     let bitti = false;
     let birak: (() => void) | null = null;
     setDurum("yukleniyor");
