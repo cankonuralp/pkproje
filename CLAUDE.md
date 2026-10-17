@@ -78,6 +78,8 @@ pkproje/
   FIRMA-VT.md               her firmaya ayrı veritabanı + panelden kurulum (sunum 579, onaylı 2026-10-15): veri yerleşimi, yönlendirme, bağlantı, göç
                             dağıtımı, kurulum makinesi, e-posta alan adı, kalemler FV1–FV15 — bu işe dokunurken TAM OKUNUR · ⛔ 2026-10-17 RAFA KALKTI (reisim:
                             "supabase benim kontrolümde olacak firma başı supabase açma fikri rafa kalktı"): FV1–FV11 kodda, FV12–FV15 yapılmaz
+  IMZA-SERVISI.md           probata'nın kendi e-imza + doğrulama servisi, ayrı ürün olarak da (2026-10-17, TASARIM, kod yok): mobil imza, USB e-imza
+                            (eklenti + yardımcı program), başka sitelere gömülü imza penceresi, beş katmanlı motor, sign.probata.com.tr — ES1–ES6
   YAYIN SIRASI (2026-10-17) deneme.probata.com.tr = TEST ADRESİ: yayın önce orada, reisim onaylarsa öteki firmalara; bugün başka firma yok (pkproje.md §11)
   ARKA-UC.md                arka uç kurgusu (2026-10-01; K1–K6 kabul, K7–K8 kabul edilmedi — 2026-10-02): veri, dosya, çevrimdışı, uygulama, yapay zekâ, yedek
   ANAYASA.md · TASARIM-KALIBI.md · 00–08-*.md · 09-SUNUCU-VE-VERI.md · EKSIKLER-VE-ONERILER.md

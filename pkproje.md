@@ -2568,7 +2568,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   yapabildiğinin beyanı), firmaya kurmak Yönetim'den kodsuz. (5) **ŞİMDİLİK YAPILMAZ** (reisim aynı gün: *"sen e imza sağlayıcısı işini şimdilik
   görmezden gel ileride müşteri bir sağlayıcı isterse ekleriz"*): ilk müşteri bir sağlayıcı isteyince maket → ortak yapı → o sağlayıcı. Bugün imza
   yolu yalnız toplu indir → imzala → toplu yükle (596). Açık nokta: bu yol gerçek bir e-imza aracının dosyasıyla henüz hiç tamamlanmadı (canlı
-  2026-10-17: imzalı sürüm 0) — testler kendi ürettiğimiz imza ekiyle; ilk gerçek imzada denetim sonucu izlenir.
+  2026-10-17: imzalı sürüm 0) — testler kendi ürettiğimiz imza ekiyle; ilk gerçek imzada denetim sonucu izlenir. (6) **KENDİ İMZA SERVİSİMİZ
+  BİR YANDAN, AYRI ÜRÜN** (reisim aynı gün: *"ayrı bir dosya açalım, bu dosyada e imza servisi ve doğrulama servisini bir yandan geliştirelim …
+  sadece e imza servisi almak isteyenler tarafından da kullanılabilsin … sitelerinden çıkmak zorunda kalmasın … sign.probata.com.tr"*): (3)'teki
+  servis yalnız imza almak isteyen firmalara da satılacak; tasarım **`IMZA-SERVISI.md`** (TASARIM, kod yok; kalemler ES1–ES6, kararlar §10).
 - 2026-10-17 (İ6 YAPILDI): **SÜRÜKLEYEREK TAŞIMA** (sunum 595 madde 8 — *"her öğede tutamak (sürükle)"*). Format yapıcının kâğıdında her öğenin
   tuşlarının başında tutamak: alan, madde, ölçüm sütunu, test değeri, hazır satır, firma / imza / başlık satırları, fotoğraf kutusu, cihaz /
   uygunsuzluk tablosu sütunu, ek sütun. Fareyle, parmakla ya da kalemle sürüklenir (işaretçi olayları); bırakılacak yer çizgiyle görünür (satırın
