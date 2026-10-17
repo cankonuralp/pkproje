@@ -2525,6 +2525,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-17 (İ6 YAPILDI): **SÜRÜKLEYEREK TAŞIMA** (sunum 595 madde 8 — *"her öğede tutamak (sürükle)"*). Format yapıcının kâğıdında her öğenin
+  tuşlarının başında tutamak: alan, madde, ölçüm sütunu, test değeri, hazır satır, firma / imza / başlık satırları, fotoğraf kutusu, cihaz /
+  uygunsuzluk tablosu sütunu, ek sütun. Fareyle, parmakla ya da kalemle sürüklenir (işaretçi olayları); bırakılacak yer çizgiyle görünür (satırın
+  önü / arkası, sütunda solu / sağı); madde grup sınırını geçip bırakıldığı maddenin grubuna girer. Taşıma bugünkü tek adımlık işlevlerle adım adım
+  yapılır (kurallar aynı), ekranda tek değişiklik — Geri al tek adımda geri alır. Klavyeyle aynı iş öğenin ↑ ↓ (← →) tuşlarıyla.
 - 2026-10-17 (İ5 YAPILDI): **İKİ E-İMZA YERİ — ONAYLANAN VE ONAYLAYAN, AKIŞ YOK** (reisim: *"akışa gerek yok e imza yerleri onanan ve onaylayan
   olarak olsun bu sayede her türlü belgede bu kullanışlı olur"*). Format yapıcıda imza bölümünün ayarında iki seçim: "E-imzanın yeri · Onaylanan"
   (belgeyi hazırlayan; raporda muayene uzmanı — İmza hücresi · Son sayfada kutu · Her sayfada kutu · Görünmez) ve "Onaylayanın e-imza yeri" (raporda

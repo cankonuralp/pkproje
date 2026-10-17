@@ -169,3 +169,12 @@ td:hover > .basYer, .basYer:focus-within { opacity: 1; }
 /* belge.css ".rb-dok span" etiket genişliğini (84 px) kâğıdın tuşlarına ve örnek değerine uygulamasın */
 :global(.rb-dok) .basSatir span, :global(.rb-dok) .basYer span, :global(.rb-dok) .ekleSecim span { width: auto; }
 :global(.rb-dok) .basSatir .basEtiket { width: 84px; }
+/* İ6 (2026-10-17): öğe tutamağı (fare, dokunma, kalem — Surukle.tsx) — sürüklenen satır soluk; bırakılacak yer çizgiyle (önü / arkası; yatay listede solu / sağı) */
+.surukle { display: inline-flex; align-items: center; justify-content: center; width: 22px; min-height: 26px; color: #3d3d3d; cursor: grab; touch-action: none; user-select: none; }
+.surukle:active { cursor: grabbing; }
+@media (pointer: coarse) { .surukle { width: 32px; min-height: 36px; } }
+.kagit [data-surukleniyor] { opacity: .45; }
+.kagit [data-surukle-ust] { box-shadow: inset 0 3px 0 #137050; }
+.kagit [data-surukle-alt] { box-shadow: inset 0 -3px 0 #137050; }
+.kagit [data-surukle-sol] { box-shadow: inset 3px 0 0 #137050; }
+.kagit [data-surukle-sag] { box-shadow: inset -3px 0 0 #137050; }

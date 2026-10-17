@@ -225,6 +225,12 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await expect(firma.getByRole("button", { name: "SGK sicil numarası", exact: true })).toHaveCount(0);   // adı yazılmaz
     await firma.getByRole("button", { name: "Takip kontrol tarihi · çıkar" }).click();
     await expect(firma.getByText("Takip kontrol tarihi")).toHaveCount(0);
+    /* İ6 (2026-10-17): sürükle-bırak — ilk satır tutamaktan (fare; işaretçi olayları) üçüncü satırın arkasına */
+    const firmaTutamak = firma.locator('[data-surukle-liste="firma"]');
+    const basliklar = () => firmaTutamak.evaluateAll((l) => l.map((x) => (x as HTMLElement).title));
+    const sira0 = await basliklar();
+    await firmaTutamak.nth(0).dragTo(firmaTutamak.nth(2));
+    await expect.poll(basliklar).toEqual([sira0[1], sira0[2], sira0[0], ...sira0.slice(3)]);
     /* 492 (hata listesi 9: "sadece sgk no ve isg katip no değiştirilemez olsun ve format yapıcıda bu belirlenebilir olsun"): sahada kilit — başlangıçta
        SGK ve İSG-KATİP basılı; basınca açılır, yeniden basınca kilitlenir */
     const kilitler = firma.getByRole("group", { name: "Sahada denetçinin değiştiremediği bilgiler" });

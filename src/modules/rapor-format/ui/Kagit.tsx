@@ -46,13 +46,14 @@ import {
 } from "../../../format/tanim";
 import { kilitliKunye } from "../../../format/kunye";
 import {
-  ALT_TURLER, altBaslikEkle, basHucreTasi, basSatiriEkle, basSatiriSil, basSatiriTasi, basSatiriYaz, eksikBasKaynaklari, bilgiDizilisiYaz, sartliYaz, fotoKutusuEkle, fotoKutusuSil, fotoKutusuTasi, fotoKutusuYaz, ekSutunAdi, ekSutunEkle, ekSutunSil, ekSutunTasi, ekSutunYaz, eksikEkSutunlar, hazirSatirEkle, hazirSatirSil, hazirSatirTasi, hazirSatirYaz, bolumAdi, eksikTabloAlanlari, kusurTablosuYaz, tabloSutunuEkle, tabloSutunuSil, tabloSutunuTasi, tabloSutunuYaz, eksikFirmaKaynaklari, eksikImzaAlanlari, FIRMA_ADI_SABIT, firmaSatiriEkle, firmaSatiriSil, firmaSatiriTasi,
+  ALT_TURLER, altBaslikEkle, basHucreTasi, hedefSirasi, ogeyeTasi, siraya, basSatiriEkle, basSatiriSil, basSatiriTasi, basSatiriYaz, eksikBasKaynaklari, bilgiDizilisiYaz, sartliYaz, fotoKutusuEkle, fotoKutusuSil, fotoKutusuTasi, fotoKutusuYaz, ekSutunAdi, ekSutunEkle, ekSutunSil, ekSutunTasi, ekSutunYaz, eksikEkSutunlar, hazirSatirEkle, hazirSatirSil, hazirSatirTasi, hazirSatirYaz, bolumAdi, eksikTabloAlanlari, kusurTablosuYaz, tabloSutunuEkle, tabloSutunuSil, tabloSutunuTasi, tabloSutunuYaz, eksikFirmaKaynaklari, eksikImzaAlanlari, FIRMA_ADI_SABIT, firmaSatiriEkle, firmaSatiriSil, firmaSatiriTasi,
   firmaSatiriYaz, bolumBasligiYaz, gorunumBasligiYaz, notSatiriYaz, ogeTasi, sonucYeriYaz, type BolumBasligi, type GorunumBasligi, ekipmanBolumuGeriEkle, ekipmanBolumuKaldir, bolumDuzeni, ekipmanAlaniEkle, gorunumYaz, grupEkle, grupSil, grupYaz,
   imzaKisisiYaz, imzaSatiriEkle, imzaSatiriSil, imzaSatiriTasi, imzaSatiriYaz, kunyeKilitYaz, kurucudan, maddeEkle, ogeEkle, ogeSil, ogeYaz, satirlar, tasi,
   yeniBolum, yeniKimlik,
 } from "../kurucu";
 import { ListeDuzenleyici, NotDuzenleyici, OgeDuzenleyici, SatirAlani, SonucAciklamasi, SonucKuraliDuzenleyici } from "./KurucuDuzenleyici";
 import { EimzaYeriAyari } from "./EimzaYeri";
+import { SurukleTutamak, type Birakma } from "./Surukle";
 import { SURUKLE, type Parca } from "../yapboz";
 import { bolumeKaydir } from "./kaydir";
 import { BLOK_ADI } from "./ortak";
@@ -345,7 +346,25 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
   const ogeUclari = (b: Bolum, id: string) => {
     const l = b.blok === "bilgi" ? b.alanlar : b.blok === "olcum" ? b.sutunlar : b.blok === "test" ? b.degerler : b.blok === "liste" ? b.gruplar.flatMap((g) => g.maddeler) : [];
     const j = l.findIndex((x) => x.id === id);
-    return { ilk: j <= 0, son: j < 0 || j >= l.length - 1 };
+    return { ilk: j <= 0, son: j < 0 || j >= l.length - 1, j };
+  };
+  /* İ6 (2026-10-17): sürükle-bırak — liste anahtarına göre bugünkü bir adımlık taşıma, adım adım (kurucu.ts ogeyeTasi / siraya); tek değişiklik */
+  const surukleBirak = (s: Birakma) => {
+    const [tur, no] = s.liste.split(":"), i = Number(no);
+    const sira = (adim: (y: FormatTanimi, p: number, yon: -1 | 1) => FormatTanimi) => siraya(t, s.kaynak, hedefSirasi(s.kaynak, s.hedef, s.once), adim);
+    const y = tur === "oge" ? ogeyeTasi(t, i, s.kaynakId, s.hedefId, s.once)
+      : tur === "firma" ? sira((x, p, yon) => firmaSatiriTasi(x, firmaSatirlari(x)[p]?.id ?? "", yon))
+      : tur === "bas" ? sira((x, p, yon) => basSatiriTasi(x, basSatirlari(x)[p]?.id ?? "", yon))
+      : tur === "imza" ? sira((x, p, yon) => { const b = x.bolumler[i]; return b?.blok === "imza" ? imzaSatiriTasi(x, i, imzaSatirlari(b)[p]?.id ?? "", yon) : x; })
+      : tur === "hazir" ? sira((x, p, yon) => hazirSatirTasi(x, i, p, yon))
+      : tur === "foto" ? sira((x, p, yon) => { const b = x.bolumler[i]; return b?.blok === "foto" ? fotoKutusuTasi(x, i, b.kutular?.[p]?.id ?? "", yon) : x; })
+      : tur === "tsutun" ? sira((x, p, yon) => {
+        const b = x.bolumler[i], l = b?.blok === "cihaz" ? cihazSutunlari(b) : b?.blok === "kusur" ? b.sutunlar ?? [] : [];
+        return tabloSutunuTasi(x, i, l[p]?.id ?? "", yon);
+      })
+      : tur === "ek" ? sira((x, p, yon) => { const b = x.bolumler[i]; return b?.blok === "liste" || b?.blok === "test" ? ekSutunTasi(x, i, b.ekSutunlar?.[p]?.id ?? "", yon) : x; })
+      : t;
+    if (y !== t) degis(y);
   };
   const ogeyiTasi = (b: Bolum, i: number, id: string, ad: string, yon: -1 | 1) => {
     degis(ogeTasi(t, i, id, yon));
@@ -353,6 +372,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
   };
   const ogeTuslari = (b: Bolum, i: number, id: string, ad: string, kilit: boolean) => (
     <span className={k.ogeTus}>
+      <SurukleTutamak liste={`oge:${i}`} sira={ogeUclari(b, id).j} id={id} ad={ad} yatay={b.blok === "olcum"} birak={surukleBirak} />
       {kilit && <Kilit />}
       {(() => {
         const u = ogeUclari(b, id), sutun = b.blok === "olcum";
@@ -393,6 +413,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
       <span key={s.id} className={k.etiket} data-firma-ad={s.ad}>
         {sabitAd ? <span>{s.ad}</span> : <Yazi deger={s.ad} ad="Firma bilgisi satırının adı" ac={yeniId === s.id} yaz={(x) => degis(firmaSatiriYaz(t, s.id, { ad: x }))} />}
         <span className={k.ogeTus}>
+          <SurukleTutamak liste="firma" sira={j} id={s.id} ad={s.ad} birak={surukleBirak} />
           {zorunlu && <Kilit ad={sabitAd ? "Kayıttan · Bakanlık" : "Zorunlu · çıkarılmaz"} not={sabitAd ? "adı ve yeri kayıtta; çıkarılmaz" : "adı yazılır, çıkarılmaz"} />}
           <span data-yon="-1" className={k.yonKap}><Tus ikon="arrow-up" ad={`${s.ad} · yukarı`} disabled={j <= 0} onClick={() => firmaTasi(s, -1)} /></span>
           <span data-yon="1" className={k.yonKap}><Tus ikon="arrow-down" ad={`${s.ad} · aşağı`} disabled={j >= l.length - 1} onClick={() => firmaTasi(s, 1)} /></span>
@@ -444,6 +465,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
       <span key={s.id} className={k.etiket} data-imza-ad={s.ad}>
         <Yazi deger={s.ad} ad="İmza satırının adı" ac={yeniId === s.id} yaz={(x) => degis(imzaSatiriYaz(t, i, s.id, { ad: x }))} />
         <span className={k.ogeTus}>
+          <SurukleTutamak liste={`imza:${i}`} sira={j} id={s.id} ad={s.ad} birak={surukleBirak} />
           {b.kilit && <Kilit />}
           <span data-yon="-1" className={k.yonKap}><Tus ikon="arrow-up" ad={`${s.ad} · yukarı`} disabled={j <= 0} onClick={() => imzaTasi(i, s, -1)} /></span>
           <span data-yon="1" className={k.yonKap}><Tus ikon="arrow-down" ad={`${s.ad} · aşağı`} disabled={j < 0 || j >= l.length - 1} onClick={() => imzaTasi(i, s, 1)} /></span>
@@ -558,6 +580,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
                   <td className={b.hazir?.length ? undefined : "rb-orta"}>{b.hazir?.length
                     ? <span className={k.satir}><Yazi deger={h} ad="Hazır satırın adı" ac={yeniId === `${b.id}#h${n}`} uzun={120} yaz={(x) => degis(hazirSatirYaz(t, i, n, x))} />
                       <span className={k.ogeTus}>
+                        <SurukleTutamak liste={`hazir:${i}`} sira={n} id={`h${n}`} ad={h} birak={surukleBirak} />
                         <Tus ikon="arrow-up" ad={`${h} · yukarı`} disabled={n === 0} onClick={() => degis(hazirSatirTasi(t, i, n, -1))} />
                         <Tus ikon="arrow-down" ad={`${h} · aşağı`} disabled={n === l.length - 1} onClick={() => degis(hazirSatirTasi(t, i, n, 1))} />
                         <Tus ikon="x" ad={`${h} · çıkar`} onClick={() => { degis(hazirSatirSil(t, i, n)); bildir(`“${h}” hazır satırı çıkarıldı (taslak).`); }} />
@@ -635,6 +658,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
                 <div key={x.id} className={`rb-foto ${k.foto}`}>
                   <div className="rb-foto-bos"><Yazi deger={x.ad} ad="Fotoğraf kutusunun adı" ac={yeniId === x.id} uzun={120} yaz={(s) => degis(fotoKutusuYaz(t, i, x.id, s))} /></div>
                   <span className={k.ogeTus}>
+                    <SurukleTutamak liste={`foto:${i}`} sira={j} id={x.id} ad={x.ad} yatay birak={surukleBirak} />
                     <Tus ikon="arrow-left" ad={`${x.ad} · sola`} disabled={j === 0} onClick={() => degis(fotoKutusuTasi(t, i, x.id, -1))} />
                     <Tus ikon="arrow-right" ad={`${x.ad} · sağa`} disabled={j === l.length - 1} onClick={() => degis(fotoKutusuTasi(t, i, x.id, 1))} />
                     <Tus ikon="x" ad={`${x.ad} · çıkar`} onClick={() => { degis(fotoKutusuSil(t, i, x.id)); bildir(`“${x.ad}” fotoğraf kutusu çıkarıldı (taslak).`); }} />
@@ -756,6 +780,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
     <span className={k.sutun}>
       <Yazi deger={s.ad} ad="Sütun adı" ac={yeniId === s.id} uzun={60} yaz={(x) => degis(tabloSutunuYaz(t, i, s.id, x))} />
       <span className={k.ogeTus}>
+        <SurukleTutamak liste={`tsutun:${i}`} sira={j} id={s.id} ad={s.ad} yatay birak={surukleBirak} />
         <Tus ikon="arrow-left" ad={`${s.ad} · sola`} disabled={j === 0} onClick={() => degis(tabloSutunuTasi(t, i, s.id, -1))} />
         <Tus ikon="arrow-right" ad={`${s.ad} · sağa`} disabled={j === n - 1} onClick={() => degis(tabloSutunuTasi(t, i, s.id, 1))} />
         {(b.blok === "kusur" || n > 1) && <Tus ikon="x" ad={`${s.ad} · çıkar`} onClick={() => { degis(tabloSutunuSil(t, i, s.id)); bildir(`“${s.ad}” sütunu çıkarıldı (taslak).`); }} />}
@@ -767,6 +792,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
     <span className={k.sutun}>
       <Yazi deger={s.ad} ad="Sütun adı" ac={yeniId === s.id} uzun={60} yaz={(x) => degis(ekSutunYaz(t, i, s.id, { ad: x }))} />
       <span className={k.ogeTus}>
+        <SurukleTutamak liste={`ek:${i}`} sira={j} id={s.id} ad={s.ad} yatay birak={surukleBirak} />
         <Tus ikon="arrow-left" ad={`${s.ad} · sola`} disabled={j === 0} onClick={() => degis(ekSutunTasi(t, i, s.id, -1))} />
         <Tus ikon="arrow-right" ad={`${s.ad} · sağa`} disabled={j === n - 1} onClick={() => degis(ekSutunTasi(t, i, s.id, 1))} />
         <Tus ikon="x" ad={`${s.ad} · çıkar`} onClick={() => { degis(ekSutunSil(t, i, s.id)); bildir(`“${s.ad}” sütunu çıkarıldı (taslak).`); }} />
@@ -964,6 +990,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
                       : s.kaynak === "serbest" ? <Yazi deger={s.metin ?? ""} ad={`${s.ad} · sabit yazı`} bos="yazı" uzun={200} yaz={(v) => degis(basSatiriYaz(t, s.id, { metin: v }))} />
                       : <span className={k.ornek}>{s.kaynak === "surum" ? "taslak" : s.kaynak === "nusha" ? "Firma ayarlarından" : "—"}</span>}
                     <span className={k.ogeTus}>
+                      <SurukleTutamak liste="bas" sira={n} id={s.id} ad={s.ad} birak={surukleBirak} />
                       <Tus ikon="arrow-up" ad={`${s.ad} · yukarı`} disabled={n === 0} onClick={() => degis(basSatiriTasi(t, s.id, -1))} />
                       <Tus ikon="arrow-down" ad={`${s.ad} · aşağı`} disabled={n === bl.length - 1} onClick={() => degis(basSatiriTasi(t, s.id, 1))} />
                       {bl.length > 1 && <Tus ikon="x" ad={`${s.ad} · çıkar`} onClick={() => { degis(basSatiriSil(t, s.id)); bildir(`“${s.ad}” başlık bilgisi çıkarıldı (taslak).`); }} />}

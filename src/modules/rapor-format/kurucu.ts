@@ -881,3 +881,39 @@ export function basHucreTasi(t: FormatTanimi, h: BasHucresi, yon: -1 | 1): Forma
   if (yeni.every((x, k) => x === BAS_HUCRELERI[k])) delete g.basSira; else g.basSira = yeni;
   return { ...t, gorunum: g };
 }
+
+/* ── SÜRÜKLE-BIRAK (İ6, 2026-10-17; sunum 595 madde 8 — "her öğede tutamak (sürükle)"; reisim: "tüm işleri … sırala başla durmadan bitir"):
+   bırakılan yer bugünkü BİR ADIMLIK taşıma işlevleriyle adım adım kurulur — kurallar aynı (madde grup ucundan komşu gruba geçer; satırları
+   varsayılandan gelen liste ilk değişiklikte tanıma yazılır); ekranda tek değişiklik (geri al tek adım) ── */
+/** kaynağın sırası a, bırakılan öğenin sırası x, önüne mi: taşınan öğenin varacağı sıra */
+export const hedefSirasi = (a: number, x: number, once: boolean) => (once ? (a < x ? x - 1 : x) : (a < x ? x : x + 1));
+/** sıralı listede (satır / sütun / kutu) a'dan b'ye — adim her seferinde O ANKİ sıradaki öğeyi bir adım taşır (ilk değişiklikte kimlik
+    değişebilir); adım bir şey değiştirmezse durur */
+export function siraya(t: FormatTanimi, a: number, b: number, adim: (y: FormatTanimi, sira: number, yon: -1 | 1) => FormatTanimi): FormatTanimi {
+  let y = t;
+  const yon = b > a ? 1 : -1;
+  for (let p = a; p !== b; p += yon) { const o = y; y = adim(y, p, yon); if (y === o) break; }
+  return y;
+}
+/** öğe (alan, sütun, test değeri, madde) bırakılan öğenin önüne / arkasına — kontrol listesinde onun grubuna (ogeTasi adımlarıyla) */
+export function ogeyeTasi(t: FormatTanimi, i: number, id: string, hedef: string, once: boolean): FormatTanimi {
+  if (id === hedef) return t;
+  const sira = (y: FormatTanimi): { id: string; g: number }[] => {
+    const b = y.bolumler[i];
+    if (!b) return [];
+    if (b.blok === "bilgi") return b.alanlar.map((x) => ({ id: x.id, g: 0 }));
+    if (b.blok === "olcum") return b.sutunlar.map((x) => ({ id: x.id, g: 0 }));
+    if (b.blok === "test") return b.degerler.map((x) => ({ id: x.id, g: 0 }));
+    return b.blok === "liste" ? b.gruplar.flatMap((gr, g) => gr.maddeler.map((m) => ({ id: m.id, g }))) : [];
+  };
+  let y = t;
+  for (let n = 0, son = 2 * sira(t).length + 4; n < son; n++) {
+    const l = sira(y), a = l.findIndex((z) => z.id === id), x = l.findIndex((z) => z.id === hedef);
+    if (a < 0 || x < 0) return t;
+    if (l[a].g === l[x].g && a === (once ? x - 1 : x + 1)) return y;
+    const o = y;
+    y = ogeTasi(y, i, id, once ? (a < x ? 1 : -1) : (a > x ? -1 : 1));
+    if (y === o) return y;
+  }
+  return y;
+}

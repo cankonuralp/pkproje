@@ -244,6 +244,9 @@ pkproje/
                             · 496 PARÇA KİTAPLIĞI: hazır formatların bölümleri (kitaplik.ts hazirParcalar — sunucuda; şablon dosyası tarayıcıya gitmez) +
                             firmanın parçaları (server/parcalar.ts; göç 0080 format_parca — RLS, değişmez, kesin silme silici.ts); yapboz.ts parcaHazirla
                             (Bakanlık işareti / üst-alt başlık kalkar; cihaz, ekipman, kayıttan bölüm parça olmaz), parcaKopyasi (yeni kimlik)
+                            · İ6 (2026-10-17) SÜRÜKLE-BIRAK: ui/Surukle.tsx SurukleTutamak (işaretçi olayları — fare / dokunma / kalem; aynı listenin en yakın
+                            satırı, önü / arkası çizgiyle) → Kagit surukleBirak → kurucu.ts ogeyeTasi (öğe; madde hedefin grubuna) / siraya + hedefSirasi
+                            (satır / sütun / kutu listeleri; her adımda o anki sıradaki öğe) · kilit tests/surukle, bozan surukle, e2e rapor-format (firma satırı)
                             · 493 GERİ AL / YİNELE: gecmis.ts (saf; adım, geri al, yinele, kısayol — en çok 100 adım) → FormatKurucu araç çubuğu
                             "Taslak araçları" (Ctrl+Z / Ctrl+Y; yazı alanında yok)
                             · 553 S.A.Y FORMAT YAPICIDA: say-kurucu.ts (saf: formatHaritasi, formatIslemleri, FORMAT_ARACI "formati_duzenle") · FormatKurucu
