@@ -927,3 +927,33 @@ export function islemAlanlariDenetimi(islemler: readonly { ad: string; girdi: un
   }
   return b;
 }
+
+/** 2026-10-17 İMZA ÜRETİMİ ÜRÜN KODUNDA YOK (reisim: "probatanın kaynak kodlarına bunları bulaştırma ileride probata ile bağ kurmamız gerekirse
+    kurarız" — imza platformu ayrı proje probata-sign; probata'da yalnız yüklenen imzalı PDF'in okunması / denetimi, IMZA-SERVISI.md):
+    · src/** hiçbir dosya tests/ altını içe aktarmaz (statik, yan etkili, dinamik, yeniden dışa açma, require; göreli ya da "@/") — testlerin imza
+      verisi üreticisi (tests/yardimci/imza-uret/) ürüne giremez;
+    · src/server/imza/** içinde imza ÜRETEN işlevlerin adları geçmez (yorum dahil);
+    · tests/yardimci/imza-uret/** her dosya bu kuralı başında söyler.
+    Dönen: bulgu listesi. Kilit tests/imza-ayrim.test.ts · olumsuz kanıt tests/bozan/imza-ayrim.bozan.ts. */
+export const IMZA_URETEN_ADLAR = [
+  "imzaHazirla", "imzaTamamla", "ltvEkle", "dssEkle", "belgeDamgasiEkle", "damgaAl", "iptalKaniti", "yerTutucuEkle", "imzaliVeriKur",
+] as const;
+export const IMZA_URET_BASLIGI = "/* YALNIZ TEST VERİSİ ÜRETİR; ürün kodu bu klasörü import edemez — imza üretimi probata-sign'da";
+export function imzaAyrimiEksikleri(metinler: readonly { ad: string; metin: string }[]): string[] {
+  const hata: string[] = [];
+  const kalip = /\b(?:from|import)\s*\(?\s*["']([^"']+)["']|\brequire\s*\(\s*["']([^"']+)["']/g;
+  const adlar = new RegExp(`\\b(?:${IMZA_URETEN_ADLAR.join("|")})\\b`, "g");
+  for (const { ad, metin } of metinler) {
+    if (ad.startsWith("src/")) {
+      for (const m of yorumsuz(metin).matchAll(kalip)) {
+        const yol = iceAktarilan(ad, m[1] ?? m[2]!);
+        if (yol !== null && posix.normalize(yol).startsWith("tests/")) hata.push(`${ad}: test klasörünü içe aktarıyor (${m[1] ?? m[2]})`);
+      }
+    }
+    if (ad.startsWith("src/server/imza/")) {
+      for (const a of new Set([...metin.matchAll(adlar)].map((m) => m[0]))) hata.push(`${ad}: imza üreten işlev (${a}) — imza üretimi probata-sign'da`);
+    }
+    if (ad.startsWith("tests/yardimci/imza-uret/") && !metin.startsWith(IMZA_URET_BASLIGI)) hata.push(`${ad}: başında "yalnız test verisi" kuralı yok`);
+  }
+  return hata;
+}

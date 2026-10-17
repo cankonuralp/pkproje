@@ -1,9 +1,11 @@
-/* İMZA YER TUTUCUSU (IMZA-SERVISI.md ES2 — imza motoru, 2026-10-17). Saf. Belgeye artımlı ekle imza sözlüğü (/Type /Sig ya da /DocTimeStamp) + onu
-   gösteren imza alanı yazılır; sözlükte sabit genişlikli /ByteRange ve sıfır dolu /Contents yer tutucusu. Ek yazıldıktan SONRA kapsam
-   hesaplanır, aynı genişlikle yerine yazılır, kapsanan baytların özeti imzalanır, imza (CMS ya da zaman damgası) /Contents'e sığdırılır —
-   çapraz başvurudaki konumlar değişmez. Boş imza alanı varsa (src/belge/eimza.ts — formatın e-imza yeri) o doldurulur, yoksa görünmez alan
-   eklenir. */
-import { anahtarlar, basvuru, degerOku, degerYaz, ekle, nesneOkuyucu, sonDurum, PdfHatasi, type YeniNesne } from "./pdf-ek.ts";
+/* YALNIZ TEST VERİSİ ÜRETİR; ürün kodu bu klasörü import edemez — imza üretimi probata-sign'da (reisim 2026-10-17: "probatanın kaynak kodlarına
+   bunları bulaştırma"; kilit tests/imza-ayrim.test.ts). İMZA YER TUTUCUSU: belgeye artımlı ekle imza sözlüğü (/Type /Sig ya da /DocTimeStamp) + onu
+   gösteren imza alanı yazılır; sözlükte sabit genişlikli /ByteRange ve sıfır dolu /Contents yer tutucusu. Ek yazıldıktan SONRA kapsam hesaplanır,
+   aynı genişlikle yerine yazılır; imza (CMS ya da zaman damgası) /Contents'e sığdırılır — çapraz başvurudaki konumlar değişmez. Boş imza alanı
+   varsa (src/belge/eimza.ts — formatın e-imza yeri) o doldurulur, yoksa görünmez alan eklenir: gerçek imza araçlarının yaptığı gibi; testler
+   probata'nın yükleme denetiminin (imza-pdf.ts, yukleme.ts) bunları kabul ettiğini sınar. src/server/imza/yer-tutucu.ts'ten taşındı (davranış aynı). */
+import { anahtarlar, basvuru, degerOku, nesneOkuyucu, sonDurum, PdfHatasi } from "../../../src/server/imza/pdf-ek.ts";
+import { degerYaz, ekle, type YeniNesne } from "./pdf-ek-yaz.ts";
 
 type Oku = (no: number) => string | null;
 

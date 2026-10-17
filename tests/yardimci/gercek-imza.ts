@@ -1,11 +1,13 @@
 /* GERÇEK (KRİPTOGRAFİK) DENEME İMZASI (2026-10-17, IMZA-SERVISI.md ES1): uydurma sertifika makamı, 5070 işaretli uydurma imzalayan sertifikası,
-   uydurma zaman damgası sunucusu; imzalar ve damgalar GERÇEKTEN doğrulanır (node:crypto). Gerçek kişi / kurum / sertifika yok. PDF ekleri ham
-   metindir (çözümleyici tarar; xref doğruluğu burada aranmaz — artımlı yazıcı ES2'de). */
+   uydurma zaman damgası, OCSP cevabı ve iptal listesi; imzalar ve damgalar GERÇEKTEN doğrulanır (node:crypto). Gerçek kişi / kurum / sertifika yok.
+   PDF ekleri ham metindir (çözümleyici tarar; xref doğruluğu burada aranmaz — artımlı yazıcı tests/yardimci/imza-uret/pdf-ek-yaz.ts). YALNIZ TEST
+   VERİSİ: CMS kurulumu tests/yardimci/imza-uret/'ten (ürün kodu bu klasörleri içe aktaramaz — imza üretimi probata-sign'da; kilit
+   tests/imza-ayrim.test.ts). */
 import { createHash, generateKeyPairSync, sign, type KeyObject } from "node:crypto";
-import { acik, cocuklar, dugum, genelZaman, ic, kume, mantiksal, oid, oidOku, okuyucu, oktet, sira, tamsayi, tlv, utcZaman } from "../../src/server/imza/der.ts";
+import { acik, cocuklar, dugum, genelZaman, ic, kume, mantiksal, oid, okuyucu, oktet, sira, tamsayi, tlv, utcZaman } from "../../src/server/imza/der.ts";
 import { CMS_OID } from "../../src/server/imza/cms.ts";
-import { damgaOzniteligi, imzaliOznitelikler, imzaliVeriKur, type OzetAdi } from "../../src/server/imza/cms-yaz.ts";
 import { OID, sertifikaOku } from "../../src/server/imza/sertifika.ts";
+import { damgaOzniteligi, imzaliOznitelikler, imzaliVeriKur, type OzetAdi } from "./imza-uret/cms-yaz.ts";
 
 export type AnahtarTuru = "rsa" | "ecdsa";
 export interface Kimlik { der: Buffer; anahtar: KeyObject; acik: KeyObject; tur: AnahtarTuru; ad: Buffer }
@@ -115,36 +117,6 @@ export function crlYap(veren: Kimlik, iptaller: Kimlik[] = [], zaman = new Date(
   const tbs = sira(tamsayi(1), imzaAlg(imzalayan.tur), veren.ad, utcZaman(zaman), utcZaman(new Date(zaman.getTime() + 7 * 864e5)),
     ...(iptaller.length ? [sira(...iptaller.map((k) => sira(tamsayi(seriOf(k)), utcZaman(zaman))))] : []));
   return sira(tbs, imzaAlg(imzalayan.tur), tlv(0x03, Buffer.from([0]), sign("sha256", tbs, imzalayan.anahtar)));
-}
-
-/** uydurma ağ (zaman damgası, OCSP, iptal listesi sunucuları) — istekleri sayar; adres → cevap üreticisi */
-export function sahteAg(yollar: Record<string, (govde: Buffer | undefined) => Buffer | number>) {
-  const istekler: { adres: string; method: string; basliklar: Record<string, string>; govde?: Buffer }[] = [];
-  const getir = async (adres: string, istek: { method: "POST" | "GET"; headers: Record<string, string>; body?: Buffer }) => {
-    istekler.push({ adres, method: istek.method, basliklar: istek.headers, govde: istek.body });
-    const y = yollar[adres];
-    const c = y ? y(istek.body) : 404;
-    const b = typeof c === "number" ? Buffer.alloc(0) : c;
-    return { ok: typeof c !== "number", status: typeof c === "number" ? c : 200, arrayBuffer: async () => b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength) as ArrayBuffer };
-  };
-  return { getir, istekler };
-}
-
-/** uydurma zaman damgası sunucusu: TimeStampReq'in izine ve tek kullanımlık sayısına damga (TimeStampResp) */
-export function damgaSunucusu(tsa: Kimlik, zincir: Kimlik[], p: { zaman?: Date; nonceBoz?: boolean; izBoz?: boolean; durum?: number } = {}) {
-  return (govde: Buffer | undefined): Buffer => {
-    if (p.durum) return sira(sira(tamsayi(p.durum)));
-    const o = okuyucu(new Uint8Array(govde!));
-    const q = cocuklar(o, dugum(o, 0));
-    const mi = cocuklar(o, q[1]);
-    const ozetOid = oidOku(o, cocuklar(o, mi[0])[0]);
-    const ozet = (Object.entries(OZET_NO).find(([, v]) => v === ozetOid)?.[0] ?? "sha256") as OzetAdi;
-    let iz = Buffer.from(ic(o, mi[1]));
-    if (p.izBoz) { iz = Buffer.from(iz); iz[0] ^= 1; }
-    let nonce = Buffer.from(ic(o, q.find((d, i) => i > 1 && d.tag === 0x02)!));
-    if (p.nonceBoz) { nonce = Buffer.from(nonce); nonce[nonce.length - 1] ^= 1; }
-    return sira(sira(tamsayi(0)), damgaIzYap(iz, ozet, tsa, zincir, p.zaman, nonce));
-  };
 }
 
 /* ── PDF ── */

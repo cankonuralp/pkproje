@@ -1,12 +1,13 @@
-/* KENDİ İMZAMIZ — SUNUCU TARAFI (IMZA-SERVISI.md ES2 — imza motoru, 2026-10-17). İki adım, arada kart:
+/* YALNIZ TEST VERİSİ ÜRETİR; ürün kodu bu klasörü import edemez — imza üretimi probata-sign'da (reisim 2026-10-17: "probatanın kaynak kodlarına
+   bunları bulaştırma"; kilit tests/imza-ayrim.test.ts). ARTIMLI PAdES İMZASI, iki adım (gerçek imza araçlarının yaptığı gibi):
    1. imzaHazirla: belgeye imza yer tutucusu (boş e-imza alanı varsa o), kapsanan baytların özeti, imzalayanın sertifikasıyla imzalı öznitelikler
-      (CAdES-B) → karta / mobil imzaya gidecek bayt dizisi ("imzalanacak") ve onun özeti. Dosya bilgisayardan dışarı çıkmaz; karta yalnız bu gider.
-   2. imzaTamamla: karttan dönen imza değeri → SignedData (sertifika zinciriyle) → /Contents. İstenirse imza zaman damgası (imzasız öznitelik).
-   Bitmiş belge çözümleyiciden (pdf-imzalar.ts) geçmeden kullanılmaz — çağıran denetler (ES1 yükleme denetimiyle aynı). Uzun süreli doğrulama
-   eki ayrı (ltv.ts). Hazırlık durumunu (yer tutuculu belge, imzalı öznitelikler) saklamak çağıranın işi; hiçbir şey veritabanına yazılmaz. */
+      (CAdES-B) → imzalanacak bayt dizisi ve onun özeti;
+   2. imzaTamamla: imza değeri (testte yazılım anahtarıyla) → SignedData (sertifika zinciriyle) → /Contents; istenirse imza zaman damgası.
+   Testler bununla imzalı deneme PDF'i üretir; probata'nın okuyucusu (src/server/imza/pdf-imzalar.ts) ve yükleme denetimleri (src/modules/raporlar/
+   imza-pdf.ts yapı + src/server/imza/yukleme.ts kriptografi) onları doğrular. src/server/imza/imzala.ts'ten taşındı (davranış aynı). */
 import { createHash } from "node:crypto";
+import { sertifikaOku } from "../../../src/server/imza/sertifika.ts";
 import { damgaOzniteligi, imzaliOznitelikler, imzaliVeriKur, type OzetAdi } from "./cms-yaz.ts";
-import { sertifikaOku } from "./sertifika.ts";
 import { icerikYaz, yerTutucuEkle, type YerTutucu } from "./yer-tutucu.ts";
 
 export interface ImzaHazirligi {

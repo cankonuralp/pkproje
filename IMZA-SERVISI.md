@@ -1,329 +1,85 @@
-# İMZA SERVİSİ — probata'nın kendi e-imza ve doğrulama servisi (açılış 2026-10-17, TASARIM)
+# İMZA SERVİSİ — YÖNLENDİRME (2026-10-17)
 
-> Reisim (2026-10-17): *"ayrı bir dosya açalım, bu dosyada e imza servisi ve doğrulama servisini bir yandan geliştirelim, bu iş ayrı bir iş
-> olarak sadece e imza servisi almak isteyenler tarafından da kullanılabilsin ve imzalama sürecinde insanlar sitelerinden çıkmak zorunda
-> kalmasın bir eklenti indirterek ve veya api bağlayarak hizmeti insanlara sunalım, mobil imzada bu iş basit ama e imza da nasıl yaparız
-> bilemiyorum … bu sistemi sign.probata.com.tr de paylaşmak istiyorum şirketlerde eğer e imza hizmeti satın alırlarsa örneğin [firma];
-> sign.[firma].probata.com.tr adresinde olsun imzalı dosyaları ve doğrulamalar bu adresteki onlara ait raporlara göndertip doğrulamaları
-> yaptırtsın"* (örnekteki firma adı buraya yazılmadı).
+> **E-imza platformu ayrı proje: `probata-sign`** (GitHub `cankonuralp/probata-sign`, **özel** depo). Platformun tasarımının tek kaynağı orada
+> **`TASARIM.md`**. Bu dosya yalnız yönlendirme ve probata'da kalanın kaydı.
+>
+> Reisim (2026-10-17): *"bu ayrı bir çalışma gibi düşün evet sign.probatadan yayınlayacağız ama probatanın kaynak kodlarına bunları bulaştırma
+> ileride probata ile bağ kurmamız gerekirse kurarız"*. Aynı gün önce: *"ayrı bir dosya açalım, bu dosyada e imza servisi ve doğrulama servisini
+> bir yandan geliştirelim …"* — o tasarım (bu dosyanın eski hâli) probata-sign'a taşındı.
 
-**Bağlam (`pkproje.md` §11, 2026-10-17):**
+---
 
-| Karar | Bu dosyayla ilişkisi |
+## 1 · Ne nerede
+
+| Konu | Yeri |
 |---|---|
-| **İMZA YOLLARI** (3): "kendi imza servisimiz SONRA, aynı yapıya bir sağlayıcı olarak" | **Bu dosya o servisin kendisi.** Aynı gün reisim bu servisin ayrı ürün olarak, bir yandan tasarlanmasını istedi. |
-| İMZA YOLLARI (5): üçüncü taraf sağlayıcı bağlantısı şimdilik yapılmaz | Değişmedi. Bugünkü yol: toplu indir → imzala → toplu yükle (596). |
-| Teknik yönetici imzası (Firma ayarları `imza.teknik`) | Yapıldı. |
-| Formatta iki e-imza yeri, onaylanan / onaylayan (İ5) | Yapıldı. |
-| Firma başına Supabase | Rafa kalktı. Veri ortak projede, kiracı süzgeçli. |
+| İmza platformu: belge yükle → imzala → indir, API + bildirim, başka sitelere gömülü imza penceresi, `sign.probata.com.tr` | **probata-sign `TASARIM.md`** |
+| İmza yolları (USB e-imza eklentisi + yardımcı program, mobil imza operatörleri), beş katmanlı imza motoru (PAdES, zaman damgası, DSS, arşiv damgası, tazeleme) | **probata-sign `TASARIM.md`** |
+| Kalemler ES1–ES6, adresler, veri ve kiracılık, yasal / ticari ön koşullar, açık kararlar | **probata-sign `TASARIM.md`** |
+| İmza üreten kod (CMS kurulumu, yer tutucu, artımlı ek, DSS + belge damgası, zaman damgası istemcisi, iptal kanıtının ağdan alınması) | **probata-sign** — probata'dan 2026-10-17'de çıktı |
+| Yüklenen imzalı PDF'in kriptografik denetimi | **probata** (§2) |
+| Doğrulama sayfası (karekod, 16 Ekim hâli) — probata'nın kendi raporları için; 2026-10-17 maketi iptal | **probata** (§4) |
 
-İmzanın gücü için ölçüt, reisim'in gönderdiği aracı firma çıktısı. Açılıp incelendi: **beş katman** (§3). Reisim: *"eğer bu belgede varsa bizde
-koyucaz"*.
-
-> **Durum: TASARIM; kararsız yapılabilen kod yapıldı (§9 Durum).** Bu dosya bu işin tek kaynağı. Her karar alındıkça `pkproje.md`'ye işlenir. Görsel her parça önce maket. Kalem adları
-> **ES1–ES6** (E-imza Servisi; İ1–İ6 başka iş için kullanılıyor).
+**probata ile bağ:** probata ileride platforma **sıradan bir API müşterisi** olarak bağlanır (`pkproje.md` §11 İMZA YOLLARI (4)'teki sağlayıcı
+arayüzüyle: dene · gönder · durum · al · iptal). O güne kadar probata platformun kodunu içe aktarmaz, platform probata'nın kodunu içe aktarmaz.
 
 ---
 
-## 0 · Kısa cevap: ne yapılabilir
+## 2 · probata'da kalan: yüklenen imzalı PDF'in denetimi (ES1)
 
-| İstek | Yapılabilir mi | Not |
-|---|---|---|
-| Ayrı ürün: yalnız imza almak isteyen firmalar da kullansın | **Evet** | probata'nın kiracı yapısı aynen; "yalnız İmza modülü açık firma" (§6) |
-| Mobil imza, kullanıcı siteden çıkmadan | **Evet** | İstek operatörden telefona düşer. Şart: üç operatörle "mobil imza uygulama sağlayıcı" sözleşmesi + sabit çıkış IP'si (§2.1) |
-| USB e-imza (kart), kullanıcı siteden çıkmadan | **Evet, bir kez kurulumla** | Tarayıcı karta kendi başına erişemez; eklenti + küçük yardımcı program şart. İmza siteleri de böyle çalışıyor (§2.2) |
-| Kurulumsuz USB e-imza | **Hayır** | Bugünkü tarayıcılarda yolu yok (§2.2) |
-| Telefonda / tablette USB e-imza | **Hayır (pratikte)** | Sahada mobil imza |
-| Başka firmaların kendi sitelerine bağlanma (API + eklenti) | **Evet** | Bizim imza penceremiz onların sayfasına gömülür; kullanıcı siteden çıkmaz (§2.3) |
-| `sign.probata.com.tr` + firma başına adres | **Evet** | Reisim'in biçimi `sign.<firma>.probata.com.tr`; firma açılırken adres kendiliğinden eklenir (§5) |
-| İmzalı dosyalar ve doğrulama firmanın adresinde, firmanın raporlarında | **Evet** | Kiracı yapısı hazır; firmanın verisi yalnız onun adresinde açılır |
-| İncelenen aracı firma çıktısıyla aynı güçte imza | **Evet** | Beş katman + arşiv tazeleme (§3) |
-| Başka sağlayıcıların e-imzalı PDF'lerini de doğrulama | **Evet** | Doğrulama servisi tek başına da ürün olur (§4) |
+Kod içi başvurular bu kalemi "IMZA-SERVISI.md ES1" diye anar.
 
----
-
-## 1 · Ürün: kim, ne alır
-
-**probata firmaları:**
-- Raporların imzaları: muayene uzmanı ve, ayar açıksa, teknik yönetici. Formatın iki imza yerine atılır.
-- İç belgeler: zimmet, saha formu, izin / masraf formu, bordro.
-- Onaylar › İmzamı bekleyen raporlar ve Onaylar › Diğer bu servisi "İmzaya gönder" ile kullanır. İMZA YOLLARI'ndaki sağlayıcı yapısına
-  probata'nın kendi servisi olarak takılır (§6).
-
-**Yalnız imza alan firmalar:**
-- Kendi adreslerinde panel: belge yükle, imzacı ekle, sıra ver, takip et, imzalı belgeyi indir, doğrula.
-- Kendi yazılımları için **API + bildirim (webhook)**.
-- Kendi sayfalarına gömülen **imza penceresi**.
-
-**İmzalayan:** firmanın çalışanı (giriş yapmış) ya da dışarıdan imzacı (müşteri yetkilisi gibi; e-posta / SMS bağlantısıyla gelir).
-
-**Doğrulayan:** herkes — karekod, doğrulama sayfası, API.
+- **`src/server/imza/` — yalnız okuma / denetim** (saf; saldırganın girdisinde sınırlı):
+  - `der.ts` DER / BER okuyucu · `sertifika.ts` X.509 (5070 nitelikli işareti, zincir) · `cms.ts` CMS doğrulama (imzalı sertifika bağı, damga
+    sunucusu denetimi, SHA-1 yok) · `pdf-ek.ts` PDF nesne okuyucu (xref zinciri, nesne akışı, onarım) · `iptal.ts` OCSP / iptal listesi
+    çözümlemesi (ağ yok).
+  - `pdf-imzalar.ts` çözümleyici: her imza için bütünlük, imza değeri, imzalayan, imza / belge zaman damgası, DSS (yalnız kataloğun) ve içindeki
+    iptal kanıtı, imzadan sonraki değişiklik, düzey B-B … B-LTA.
+  - `yukleme.ts` `ekImzaNedeni`: eklenen imza sağlam, belgenin tamamını kapsıyor, sertifikaya bağlı, 5070 nitelikli, imza anında geçerli, sonradan
+    değişmemiş olmalı. **Bağlı:** rapor imzası, teknik yönetici imzası, Onaylar › Diğer. Yapı denetimini (`imzaliPdfGecerli` / `imzaliTaban`)
+    çağıran her yükleme bunu da çağırır (kaynak kilidi `tests/imza-cozum.test.ts`).
+- Yapı denetimi `src/modules/raporlar/`: `imza-pdf.ts` (imzalı PDF eki beyaz listede), `imza-esdeger.ts` (imza programının yeniden yazdığı ama
+  içerikçe aynı PDF), `imza-kimlik.ts` (imzalayanın adı).
+- **Güvenilir kök listesi yok** (resmî kaynaktan teyitle eklenecek): uydurma ama "nitelikli" işaretli bir zinciri bu denetim tek başına ayırt etmez.
+- **Bağımsız inceleme (2026-10-17):** çözümleyici kaydedilmeden önce düşmanca incelendi; 9 bulgu kapatıldı (kendi anahtarıyla basılan geriye
+  tarihli damga, sertifika değiştirme, DSS'in metin taramasıyla okunması ve aşırı yavaşlama, imza sonrası değişikliğin görünmemesi, bozuk girdide
+  çökme).
 
 ---
 
-## 2 · İmza yolları
+## 3 · İmza yolları (probata'da, özet)
 
-### 2.1 Mobil imza
-1. Kullanıcı "İmzaya gönder"e basar.
-2. Sunucumuz belgenin **özetini** operatöre yollar (dosya gitmez).
-3. Telefona onay isteği düşer, kişi PIN'i girer.
-4. İmza sunucumuza döner; motor (§3) belgeye gömer, damgalar, doğrular.
-
-**Gerekenler:**
-- Turkcell, Vodafone, Türk Telekom ile ayrı ayrı "mobil imza uygulama sağlayıcı" sözleşmesi. Sözleşmeyi probata yapar; başvuru, test ortamı
-  ve süre her operatörde ayrı.
-- **Sabit çıkış IP'si** (operatörler IP yetkisi istiyor). Vercel'in Static IPs özelliği yalnız Pro / Enterprise planda ve ücretli; deneme
-  yayını bugün Hobby planda. Alternatif: sabit adresli küçük bir geçit sunucusu.
-- Personel kartında mobil imza telefonu var (195).
-- Her belge ayrı onay; toplu imzada tek onay imkânı operatöre sorulacak.
-
-### 2.2 USB e-imza (kart) — siteden çıkmadan
-
-**Neden eklenti şart:**
-- Normal bir web sitesi karta doğrudan erişemez.
-- Chrome'un akıllı kart arabirimi (Web Smart Card API) normal sitelere açık değil.
-- WebUSB akıllı kart okuyucularını korumalı sınıf sayıp engelliyor.
-- Bilgisayarda yerel adresten çalışan bir program da tek başına yetmiyor: Chrome 141'den beri genel bir sitenin yerel adrese isteği izin
-  penceresine bağlı, her site için ayrı ve kırılgan.
-- Bu yüzden yerleşik yol: **tarayıcı eklentisi + eklentinin konuştuğu yerel program** (Chrome'un "native messaging" yolu).
-
-**Parçalar:**
-
-| Parça | Ne yapar | Not |
-|---|---|---|
-| **probata imza eklentisi** | Chrome, Edge (Firefox sonra). Yalnız bizim adreslerimizle (`sign.probata.com.tr` ve firma adresleri) konuşur; başka siteye kendini açmaz. | Chrome / Edge mağazasında yayın |
-| **Yardımcı program** | Windows kurulum dosyası. AKİS'in kart kütüphanesiyle kartı kullanır. **PIN'i kendi penceresinde sorar** (web sayfası PIN'i hiç görmez), imzalanacak belgenin adını gösterir. | **Kod imzalama sertifikası** şart (yoksa Windows ve Uygulama Denetimi engeller) |
-| **İmza penceresi** | `sign.probata.com.tr`'den gelen küçük pencere. probata ekranlarında doğrudan açılır; başka sitelerde o sitenin sayfasına gömülür. | Kullanıcı siteden çıkmaz |
-
-**Akış:**
-1. Site belgeyi (ya da yalnız özetini) API'mize gönderir.
-2. İmza penceresi açılır, eklenti yardımcı programla konuşur.
-3. Yardımcı program sertifikayı okur; sunucu **PIN'den önce** denetler (nitelikli mi, iptal mi, doğru kişi mi — `imza-kimlik.ts`'in ad karşılaştırması).
-4. Yardımcı program PIN'i sorar, kart imzalar.
-5. Motor (§3) imzayı gömer.
-6. Siteye bildirim gider, imzalı PDF indirilir.
-
-**Toplu imza:** PIN bir kez girilir, her belge ayrı imzalanır (karar 99).
-
-**Kurulum:** bir kez yapılır. Eklenti yoksa pencere "Eklentiyi kur" der ve yolu gösterir.
-
-**Mac / Linux:** AKİS'in Mac sürümü var. Yardımcı programın Mac sürümü ayrı iş (Apple geliştirici hesabı, noter onayı); sonraki faz.
-
-### 2.3 Başka sitelere bağlanma (API + imza penceresi)
-1. Firmanın sunucusu API anahtarıyla belgeyi gönderir ve imzacıyı bildirir.
-2. Firmanın sayfasına bir satırlık bizim betiğimiz konur; imza penceresi orada açılır.
-3. İmza bitince firmanın sunucusuna **imzalı bildirim** (HMAC) gider; imzalı PDF API'den alınır.
-4. Doğrulama karekodu firmanın imza adresine (§5) gider.
-
-### 2.4 Yedek yol: toplu indir → imzala → toplu yükle (596, bugün var)
-- Her firmada açık kalır.
-- Yüklenen belgeye doğrulama bilgileri ve arşiv damgasını yüklemede biz ekleriz; çıktı aynı güce gelir (ES2).
+- **Bugün:** toplu indir → kendi e-imza aracıyla imzala → toplu yükle (596). Her firmada açık. Yüklenen PDF §2'nin denetiminden geçer; imza
+  programının yeniden yazdığı belge de içerikçe aynıysa kabul (`imza-esdeger.ts`).
+- **İki e-imza yeri** (İ5): onaylanan (muayene uzmanı) + onaylayan (teknik yönetici; firma ayarı `imza.teknik`). Art arda iki imza denetimden geçer.
+- **Üçüncü taraf sağlayıcı:** şimdilik yapılmaz (`pkproje.md` §11 İMZA YOLLARI (5)).
+- **probata-sign:** hazır olunca probata ona API müşterisi olarak bağlanır (§1); ayrıntı probata-sign `TASARIM.md`'de.
 
 ---
 
-## 3 · İmza motoru (sunucu) — beş katman
+## 4 · Doğrulama sayfası (probata'nın kendi raporları için)
 
-| Katman | Ne kanıtlar | Kimden |
-|---|---|---|
-| 1. Nitelikli sertifika + kart | İmzalayan kim | Kişinin kartı (sertifika hizmet sağlayıcıları) |
-| 2. Belgeye gömülü imza (PAdES) | Belge değişti mi | Kart imzalar, motor gömer |
-| 3. İmza zaman damgası | Ne zaman imzalandı | KamuSM (RFC 3161), imza başına 1 kontör |
-| 4. Doğrulama bilgileri | O gün sertifika iptal değildi | Sertifika sağlayıcının iptal sunucusu (OCSP / CRL) + zincir; **imza anında** alınır |
-| 5. Arşiv zaman damgası | Yıllar sonra da sağlam | KamuSM, son imzadan sonra belgenin tamamına |
+Raporun alt şeridindeki karekod ve doğrulama bağlantısı (595 K8) kalır → `<firma adresi>/dogrula/<kod>`, **16 Ekim hâliyle**: rapor no, muayene
+firması, ekipman türü ve kodu, kontrol tarihi, sonuç, e-imza zamanı; "yeni revizyonu var" / "imza bekleniyor". Müşteri / tesis adı, kişi adı ve PDF
+gösterilmez (595 K8 kuralı aynen).
 
-**İncelenen örnek:** iki imzacının 1 yıllık sertifikalarının süresi dolmuştu. Belge katmanlar tam olduğu için yine doğrulanıyordu.
-
-**Ek kurallar:**
-- **Tazeleme:** damga sunucusunun sertifikası da bitiyor. Saklama süresi boyunca (5–20 yıl) süre dolmadan yeni arşiv damgası basılır; gece
-  işi yapar.
-- **Görünür şerit + karekod imzadan önce** konur; imzadan sonra sayfaya hiçbir şey çizilmez.
-- **İki imza yeri** (onaylanan / onaylayan, İ5): imzalar sırayla eklenir, her imza öncekini bozmaz. Bugünkü yükleme denetimi de art arda iki
-  imzayı kabul ediyor.
-- **İmza saati KamuSM damgasından** alınır; ne kişinin bilgisayarından ne bizim sunucumuzdan.
-- **Kontör biterse imza bekler,** damgasız imza üretilmez.
-- **Bitmiş belge kendi doğrulayıcımızdan geçer;** tutmazsa "Tamamlandı" olmaz.
-
-**Bugünkü kod (2026-10-17, `src/server/imza/`; ayrıntı §9 Durum):**
-- Okuma: `pdf-imzalar.ts` beş katmanı çözer (imza, damga, DSS, belge damgası, düzey B-B … B-LTA) + imzadan sonraki değişiklik.
-- Yazma: `imzala.ts` + `yer-tutucu.ts` + `pdf-ek.ts` kendi imzamızı belgeye işler; `ltv.ts` 4. ve 5. katmanı ekler.
-- Önceki yapı denetimi: `src/modules/raporlar/imza-pdf.ts` (imzalı PDF eki), `imza-kimlik.ts` (imzalayanın adı).
+- **2026-10-17 doğrulama sayfası maketi İPTAL** (iki tur: imzalar, güvence katmanları, "Elinizdeki PDF bu mu?", raporun görüntüsü). Reisim: *"rapor
+  doğrulama sayfası işi komple iptal, e imza süreci ayrı bir süreç imzayı doğrulama süreci de öyle"*. Maket dosyaları (`docs/maket/dogrula.html`,
+  `docs/assets/maket-dogrula.js`, `maket.css` `.a-dgr-*`) kaldırıldı; eski §10-3 / §10-9 kararları geçersiz.
+- İmzanın katman katman doğrulanması (imzalar, güvence katmanları, PDF karşılaştırma) **platformun genel doğrulayıcısı**: probata-sign `TASARIM.md`.
 
 ---
 
-## 4 · Doğrulama servisi
+## 5 · Test verisi ve kilitler
 
-**Karekod / sayfa:** `<firmanın imza adresi>/dogrula/<rastgele kod>`. Maket `docs/maket/dogrula.html` (2. tur 2026-10-17, reisim: *"imzalayanların adı
-gözüksün, elimdeki pdf bu mu ? sorusu ve pdf yükleme alanı altında pdf in görüntüsü olsun ve bu ekrandaki şeyler açılır kapanır olsun"*; örnek
-olarak incelenen aracı firmanın doğrulama sitesi):
-- **Açılış:** doğrulama kodu (karekoddan dolu gelir; kâğıttaki kod elle de yazılır) + bilgilendirme ("raporu elinde bulunduran ya da ilgilisi
-  olanlar için; yetkisiz görüntüleme yasal sorumluluk doğurabilir") + onay kutusu + "Belgeyi doğrula". Kutu işaretlenmeden basılırsa neden yazılır.
-- **Sonuç:** geçerli · yeni revizyonu var · imza bekleniyor · bulunamadı.
-- **Bölümler açılır kapanır** (kapalıyken başlıkta özet, ör. "5 / 5 sağlam"; "Hepsini aç / kapat"):
-  - Rapor: no, muayene firması, ekipman, kontrol tarihi, sonuç, e-imza zamanı.
-  - İmzalar: imzalayanın **adı**, görevi, mesleği, imza saati (zaman damgasından), nitelikli sertifika, sağlayıcı.
-  - Güvence katmanları: kimlik · bütünlük · imza saati · iptal denetimi · arşiv damgası; teknik adlar yalnız "Ayrıntılar"da.
-  - Elinizdeki PDF bu mu?: parmak izi tarayıcıda çıkarılır, dosya gönderilmez; eski kopya (arşiv damgası tazelenmeden önceki) de tanınır.
-  - Raporun görüntüsü: e-imzalı raporun sayfaları; Küçült · Büyüt · Sola / sağa döndür · Sığdır. Telefonda genişliğe sığar.
-
-**Belgenin kendisi:**
-- Sayfa raporun **görüntüsünü** gösterir (§10-3 kapandı): kod raporun üstünde yazılı — sayfayı açan raporu zaten elinde tutuyor; bilgilendirme
-  onayından sonra. Bu sayfa için 595 K8'deki "kişi adı ve PDF gösterilmez" değişti: adlar ve görüntü var.
-- PDF **dosyası** indirilmez, kalıcı açık dosya bağlantısı verilmez (anayasa 5.1); imzalı PDF müşteri girişinden.
-
-**Genel doğrulayıcı:**
-- `sign.probata.com.tr/dogrula`: herhangi bir e-imzalı PDF bırakılır, katman katman sonuç verilir (başka sağlayıcıların belgeleri de).
-- Dosya saklanmaz.
-- Tanıtım için ücretsiz olabilir.
-
-**API:** `POST /api/imza/v1/dogrula` (PDF) → katman katman sonuç.
-
-**Adobe:** Türk kök sertifikaları bilgisayarda tanımlı değilse Adobe imzayı "geçerliliği bilinmiyor" gösterebilir. Türk sağlayıcıların Adobe'nin
-güven listesinde olup olmadığı teyit edilemedi. Doğrulama sayfası bu yüzden de gerekli.
-
----
-
-## 5 · Adresler
-
-| Adres | Ne |
-|---|---|
-| `sign.probata.com.tr` | Servisin ana adresi: tanıtım, genel doğrulayıcı, giriş, API kökü, imza penceresi |
-| `sign.<firma>.probata.com.tr` | **Reisim'in biçimi.** Firmanın imza paneli, imzalı belgeleri, doğrulama sayfaları |
-
-**Firma adresinin kurulumu:**
-- `sign.<firma>.probata.com.tr` iki seviye derin olduğu için `*.probata.com.tr` joker sertifikası kapsamaz.
-- Firma açılırken (Yönetim › Firma aç) adres Vercel'e ayrıca eklenir, sertifikası kendiliğinden çıkar. Kuruluma bir adım.
-- **Alternatif:** `<firma>.sign.probata.com.tr`. Tek joker sertifika (`*.sign.probata.com.tr`) hepsini kapsar; Vercel'de alt alan için doğrulama
-  kaydı yeterli. Daha az parça, ama adres biçimi farklı → karar §10-1.
-
-**Test:** yayın önce test adresinde (2026-10-17 kararı) → `sign.deneme.probata.com.tr`.
-
-**Firmanın kendi alan adı** (ör. `imza.firma.com.tr`): sonra, yönlendirme kaydıyla olur.
-
----
-
-## 6 · Veri, kiracılık, kod yeri
-
-**Firmalar:**
-- probata firması zaten kiracı; imza servisi aynı firmanın içinde bir modül.
-- Yalnız imza alan firma = modül kaydında yalnız **İmza** açık firma; Yönetim › Firma aç'ta seçilir.
-
-**Veri:**
-- Ortak projede, kiracı süzgeçli (RLS). Firma başına Supabase rafa kalktı.
-- İmzalı belgeler firmanın saklama ayarına göre tutulur, tazeleme süresince arşiv damgasıyla.
-
-**probata içinde bağlantı:**
-- İMZA YOLLARI (4)'teki sağlayıcı arayüzüne (dene · gönder · durum · al · iptal + yetenek beyanı) **probata'nın kendi servisi** olarak takılır.
-- Ekranlar ve durumlar sağlayıcıdan bağımsız kalır.
-- Başka bir sağlayıcı istenirse o da aynı arayüzle eklenir.
-
-**Kod yeri:**
-- Aynı depo, ayrı modül: `src/modules/imza/` (motor, akış, panel) + `src/app/(imza)/` (yalnız imza adreslerinde) + `/api/imza/v1/`.
-- Eklenti ve yardımcı program ayrı klasörlerde: `araclar/imza-eklentisi/`, `araclar/imza-yardimci/`. Ayrı derlenir, ayrı imzalanır.
-- Karar §10-7.
-
-**Yardımcı programın derlenmesi, imzalanması, dağıtımı — GitHub'a bağlı değil** (reisim 2026-10-17: *"githubda değil artık supabase ve vercel ile
-çalışıyoruz … müşteriye çıktığımızda github ile işimiz bitecek orası sadece kaynak kodları güvenli sakladığım yer olacak"*):
-- Web uygulaması gibi her yayında derlenmez; yeni sürümü seyrek çıkar.
-- **Derleme:** bulut oturumunda (Linux'tan Windows için derlenebilir). Vercel'in derleme adımına konmaz: orası Linux, her yayında boşuna
-  çalışır, imzalama sırrını taşımak gerekir.
-- **İmzalama**, sertifika sağlayıcının bulut imzalamasıyla, iki yoldan biri:
-  - Sağlayıcının web panelinden dosya yükleyip imzalı hâlini indirmek (ör. SSL.com eSigner Express; çalıştırılabilir dosya için teyit edilecek).
-  - Bulut oturumunda sağlayıcının komut satırı aracı.
-- **Ya da USB anahtarla:** her sürümde reisim'in bilgisayarında.
-- **Dağıtım:** imzalı kurulum dosyası Supabase deposunda durur, `sign.probata.com.tr`'den indirilir; eklenti "Eklentiyi kur" adımında
-  oraya yönlendirir.
-- **Not:** 2026-03-01'den beri kod imzalama sertifikası en çok 458 gün geçerli; uzun süreli alımda da yeniden düzenlenir.
-
-**Güvenlik:**
-- API anahtarları şifreli sır, ekranda son 4.
-- Bildirimler HMAC imzalı.
-- Her istek kaydı denetim izinde.
-- Eklenti yalnız bizim kökenlerimize açık.
-
-**Kişisel veri:**
-- Dış firmaların belgelerinde probata **veri işleyen** olur; satıştan önce sözleşme şablonu gerekir.
-- 2026-10-03'teki "KVKK hukukçu işi yapılmaz" kararı probata firmaları içindi; dışa satışta yeniden bakılmalı.
-
----
-
-## 7 · Yasal ve ticari ön koşullar
-
-| Ne | Durum | Not |
-|---|---|---|
-| probata sertifika vermez (sertifika hizmet sağlayıcı değil), imza platformudur | — | Platform için BTK izni gerekmediği düşünülüyor — **teyit edilecek** |
-| Operatör sözleşmeleri (3 operatör) | başvurulmadı | Uzun sürer; başlangıç zamanı karar §10-4 |
-| KamuSM zaman damgası hesabı | fiyat biliniyor (10.000 kontör 7.200 TL … 1.000.000 kontör 96.000 TL, KDV dahil) | "1 damga = 1 kontör" ve kontörün başka firmaların belgelerinde kullanılması KamuSM'ye **sorulacak** |
-| Kod imzalama sertifikası | alınmadı | Yıllık ücretli |
-| Chrome / Edge geliştirici hesapları | açılmadı | Eklenti yayını |
-| Vercel Pro + Static IPs | deneme Hobby'de | Ücret Vercel'den teyit edilecek; ya da sabit adresli geçit |
-| Güvenlik denetimi (sızma testi) | — | Dışa satıştan önce |
-
----
-
-## 8 · Sınırlar
-
-- USB e-imza kurulumsuz olmaz; bir kez eklenti + yardımcı program.
-- Telefonda / tablette USB e-imza yok; mobil imza.
-- Mac ve Linux ek iş.
-- Mobil imzada toplu tek onay operatöre bağlı.
-- Operatör ve KamuSM süreçlerinin süresi bizim elimizde değil.
-
----
-
-## 9 · Yapım sırası (öneri; her ekran önce maket)
-
-| Kalem | İş | Neden bu sırada |
-|---|---|---|
-| **ES1** | Doğrulama servisi: motorun okuma tarafı, her PDF için katman raporu, doğrulama sayfası + API, karekod | En kısa; hemen değer; `imza-pdf.ts` + `imza-kimlik.ts` üstüne |
-| **ES2** | İmza motoru: PAdES, KamuSM damgası, doğrulama bilgileri, arşiv damgası, tazeleme işi; toplu yükleme yoluna arşiv katmanları | İmzanın kendisi |
-| **ES3** | USB e-imza: yardımcı program (Windows) + eklenti + imza penceresi; probata'ya sağlayıcı arayüzüyle bağlanır | probata firmalarına ilk değer |
-| **ES4** | Mobil imza: operatör bağdaştırıcıları, sabit IP | Sözleşme süresine bağlı |
-| **ES5** | Dış ürün: `sign.probata.com.tr`, yalnız imza firması, panel, API + bildirim, gömülü pencere, fiyat / kontör | Servis olgunlaşınca |
-| **ES6** | Mac yardımcı programı | Talep olursa |
-
-**Kod beklemeden başlatılabilecek başvurular:** operatörler, KamuSM hesabı, kod imzalama sertifikası (karar §10-4).
-
-**Durum (2026-10-17, reisim: *"şimdilik bu kararları erteleyelim bizim kod açısından yapmamız gereken her ne var ise listele sırala ve o sıraya
-göre sırayla yapıp bitir"*):** kararlar ertelendi; kararsız yapılabilen kod yapıldı, testli, `src/server/imza/`.
-
-| Kalem | Kodda | Bağlı mı | Bekleyen |
-|---|---|---|---|
-| ES1 okuma | `pdf-imzalar.ts` (+ `cms.ts`, `sertifika.ts`, `der.ts`): her imza için bütünlük, imza değeri, imzalayan (imzalı sertifika bağıyla), 5070 nitelikli, imza anında geçerli, imza damgası (sunucusu denetlenir), belge damgası, DSS (yalnız kataloğun), DSS'teki iptal kanıtı, imzadan sonraki değişiklik, düzey. İncelenen gerçek belge: B-LTA, iki imza da tamam, iptal "geçerli", sonraki ekler izinli | — | Güvenilir kök listesi (resmî kaynaktan teyitle) |
-| ES1 yükleme denetimi | `yukleme.ts`: yüklenen imzalı PDF kriptografik olarak sağlam, nitelikli, bağlı, imza anında geçerli, sonradan değişmemiş olmalı | **Evet** — rapor imzası, teknik yönetici imzası, Onaylar › Diğer | — |
-| ES1 doğrulama sayfası | Maket `docs/maket/dogrula.html` (ONAY BEKLİYOR, 2. tur): açılış (kod + bilgilendirme onayı), sonuç, açılır kapanır bölümler — rapor, imzalar (adlarıyla), güvence katmanları, "Elinizdeki PDF bu mu?", raporun görüntüsü (yakınlaştır, döndür); hâller geçerli · yeni revizyon · imza bekleniyor · bulunamadı | — | Reisim onayı |
-| ES2 imza motoru | `imzala.ts` (hazırla → kart → tamamla; formatın boş e-imza alanını doldurur), `yer-tutucu.ts`, `pdf-ek.ts` (artımlı ek; klasik ve sıkıştırılmış xref) | Hayır | İmza yolu (eklenti / yardımcı program ya da mobil imza) |
-| ES2 uzun süreli doğrulama | `ltv.ts` (DSS + arşiv damgası, tazeleme), `zaman-damgasi.ts` (RFC 3161 istemcisi), `iptal.ts` (OCSP / iptal listesi) | Hayır — ayar yoksa hiç çalışmaz | KamuSM hesabı + kimlik doğrulama biçimi (§10-2) |
-
-**Bağımsız inceleme (2026-10-17):** çözümleyici kaydedilmeden önce düşmanca incelendi; 9 bulgu doğrulandı ve kapatıldı (kendi anahtarıyla basılan
-geriye tarihli damga, sertifika değiştirme, DSS'in metin taramasıyla okunması ve aşırı yavaşlama, imza sonrası değişikliğin görünmemesi, bozuk
-girdide çökme). Kilitler: `tests/imza-cozum.test.ts`, `tests/imza-ltv.test.ts`, `tests/imza-inceleme.test.ts` + `tests/bozan/` karşılıkları.
-
----
-
-## 10 · Karar bekleyenler
-
-1. **Firma adresi:** `sign.<firma>.probata.com.tr` (reisim'in biçimi; firma başına adres kaydı) mı, `<firma>.sign.probata.com.tr` (tek joker
-   sertifika) mı?
-2. **Zaman damgası kontörü:** servis olarak satılacağı için probata toplu alıp kullanıma göre yansıtsın (öneri) mı, her firma kendi mi?
-3. ~~**Doğrulama sayfası belgeyi gösterir mi?**~~ **KAPANDI 2026-10-17** (reisim: *"pdf yükleme alanı altında pdf in görüntüsü olsun"*): gösterir —
-   kod + bilgilendirme onayından sonra sayfaların görüntüsü; dosya indirilmez (§4).
-4. **Başvurular ne zaman:** operatör sözleşmeleri, KamuSM, kod imzalama sertifikası. Öneri: uzun sürdükleri için hemen.
-5. **Mac kullanan var mı?** Yoksa önce Windows.
-6. **Dış ürün fiyatı:** imza başı mı, paket mi? Sonra.
-7. **Kod yeri:** aynı depo, ayrı modül (öneri) mi, ayrı depo mu?
-8. **Sıra:** probata'nın genel kodlama sırasında bu iş nerede? "Bir yandan" — öneri ES1 (doğrulama) ilk, çünkü bugünkü toplu yükleme yoluna da
-   değer katıyor.
-9. ~~**Doğrulama sayfasında imzacının adı**~~ **KAPANDI 2026-10-17** (reisim: *"imzalayanların adı gözüksün"*): tam ad, görevi ve mesleğiyle (§4).
-
----
-
-## 11 · Kaynaklar (2026-10-16/17 araştırması)
-
-- İncelenen örnek: reisim'in gönderdiği aracı firma çıktısı (PDF). İmza yapısı açıldı; kişi ve firma bilgisi hiçbir yere yazılmadı, kopyalar silindi.
-- KamuSM fiyatları: reisim'in paylaştığı fiyat ekranı (2026-10-16).
-- Vercel Static IPs: https://vercel.com/docs/connectivity/static-ips (Pro ve Enterprise).
-- Vercel alt alan joker sertifikası: https://vercel.com/kb/guide/wildcard-domain-without-vercel-nameservers.
-- Chrome yerel ağ erişimi izni: https://developer.chrome.com/blog/local-network-access.
-- Web Smart Card API: https://github.com/WICG/web-smart-card.
-- Yasal dayanak: 5070 m.5 · HMK m.205/2 · İş Ekipmanları Yönetmeliği m.7/2-c (`pkproje.md` §4.3).
-- Görsel sunum: "probata e-imza süreci" (2026-10-16, reisim'e özel artifact).
+- İmzalı deneme PDF'i **yalnız test verisi üreticisinden:** `tests/yardimci/imza-uret/` (CMS kurulumu, yer tutucu + artımlı imza, artımlı ek
+  yazıcısı, DSS + belge damgası eki) + `tests/yardimci/gercek-imza.ts` (uydurma makam / kişi / damga / OCSP / iptal listesi; gerçek kişi ve kurum
+  yok). Her üretici dosyanın başında: *yalnız test verisi üretir; ürün kodu bu klasörü import edemez — imza üretimi probata-sign'da*.
+- **Ayrım kilidi** `tests/imza-ayrim.test.ts` (+ `tests/bozan/imza-ayrim.bozan.ts`): `src/` hiçbir dosya `tests/`'i içe aktarmaz; `src/server/imza/`
+  içinde imza üreten işlev adı (imza hazırlama / tamamlama, LTV / DSS / belge damgası eki, zaman damgası alma, iptal kanıtı alma, yer tutucu, CMS
+  kurulumu) geçmez.
+- **Okuyucu kilitleri:** `tests/imza-cozum.test.ts`, `tests/imza-inceleme.test.ts`, `tests/imza-ltv.test.ts` (artımlı / LTV ekli belgede okuyucu),
+  `tests/imza-esdeger.test.ts`, `tests/imza-pdf.test.ts`, `tests/imza-kimlik.test.ts` + `tests/bozan/` karşılıkları.
+- 2026-10-17 probata'dan çıkan testler (konusu yalnız taşınan yazıcı / ağ kodu; probata-sign'da): DSS ekinin "eksik" listesi, zaman damgası
+  istemcisi, iptal kanıtının ağdan alınması; olumsuz kanıtta ek yazıcının konumu, damga istemcisinin tek kullanımlık sayısı ve izi, yer tutucunun
+  boş alanı bulması, tazelemede önceki DSS'in okunması.

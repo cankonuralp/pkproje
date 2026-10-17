@@ -15,17 +15,19 @@ import { createHash, sign } from "node:crypto";
 import { test } from "node:test";
 import { PDFDocument, rgb } from "pdf-lib";
 import { CMS_OID, algoritmaDenetle, damgaDenetle, imzaliVeriOku, ozetDenetle } from "../src/server/imza/cms.ts";
-import { imzaliOznitelikler, imzaliVeriKur } from "../src/server/imza/cms-yaz.ts";
 import { oid, oktet, sira, tamsayi } from "../src/server/imza/der.ts";
-import { imzaHazirla, imzaTamamla } from "../src/server/imza/imzala.ts";
-import { belgeDamgasiEkle, ltvEkle } from "../src/server/imza/ltv.ts";
-import { ekle, nesneOkuyucu, sonDurum } from "../src/server/imza/pdf-ek.ts";
+import { nesneOkuyucu, sonDurum } from "../src/server/imza/pdf-ek.ts";
 import { pdfImzalariniCozumle } from "../src/server/imza/pdf-imzalar.ts";
 import { sertifikaOku, vereniBul, zincirKur } from "../src/server/imza/sertifika.ts";
 import { ekImzaNedeni } from "../src/server/imza/yukleme.ts";
 import {
   TABAN_PDF, crlYap, damgaYap, denemeKimlikleri, dssEkle, imzaEkle, ocspCevabiYap, pdfImzala, sertifikaYap, uzanti, type Kimlik,
 } from "./yardimci/gercek-imza.ts";
+/* imza / DSS / belge damgası / artımlı ek YALNIZ test verisi üreticisinden (imza üretimi probata-sign'da; sınanan probata'nın okuyucusu) */
+import { imzaliOznitelikler, imzaliVeriKur } from "./yardimci/imza-uret/cms-yaz.ts";
+import { imzaHazirla, imzaTamamla } from "./yardimci/imza-uret/imzala.ts";
+import { belgeDamgasiEkle, ltvEkle } from "./yardimci/imza-uret/ltv.ts";
+import { ekle } from "./yardimci/imza-uret/pdf-ek-yaz.ts";
 
 const k = denemeKimlikleri("ecdsa");
 const SIMDI = new Date("2026-10-17T12:00:00Z");

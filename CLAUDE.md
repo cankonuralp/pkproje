@@ -78,8 +78,9 @@ pkproje/
   FIRMA-VT.md               her firmaya ayrı veritabanı + panelden kurulum (sunum 579, onaylı 2026-10-15): veri yerleşimi, yönlendirme, bağlantı, göç
                             dağıtımı, kurulum makinesi, e-posta alan adı, kalemler FV1–FV15 — bu işe dokunurken TAM OKUNUR · ⛔ 2026-10-17 RAFA KALKTI (reisim:
                             "supabase benim kontrolümde olacak firma başı supabase açma fikri rafa kalktı"): FV1–FV11 kodda, FV12–FV15 yapılmaz
-  IMZA-SERVISI.md           probata'nın kendi e-imza + doğrulama servisi, ayrı ürün olarak da (2026-10-17, TASARIM, kod yok): mobil imza, USB e-imza
-                            (eklenti + yardımcı program), başka sitelere gömülü imza penceresi, beş katmanlı motor, sign.probata.com.tr — ES1–ES6
+  IMZA-SERVISI.md           YÖNLENDİRME (2026-10-17, reisim: "probatanın kaynak kodlarına bunları bulaştırma"): e-imza platformu AYRI PROJE probata-sign
+                            (cankonuralp/probata-sign, özel; tasarımın tek kaynağı orada TASARIM.md — imza yolları, eklenti, operatörler, adresler, API);
+                            probata'da kalan: yüklenen imzalı PDF'in kriptografik denetimi + doğrulama sayfası; probata ileride API müşterisi
   YAYIN SIRASI (2026-10-17) deneme.probata.com.tr = TEST ADRESİ: yayın önce orada, reisim onaylarsa öteki firmalara; bugün başka firma yok (pkproje.md §11)
   ARKA-UC.md                arka uç kurgusu (2026-10-01; K1–K6 kabul, K7–K8 kabul edilmedi — 2026-10-02): veri, dosya, çevrimdışı, uygulama, yapay zekâ, yedek
   ANAYASA.md · TASARIM-KALIBI.md · 00–08-*.md · 09-SUNUCU-VE-VERI.md · EKSIKLER-VE-ONERILER.md
@@ -547,11 +548,14 @@ pkproje/
   src/server/islem/         TEK SEFERLİK İŞLEM (392; 09-D2, çevrimdışı kuyruk): islem.ts tekSeferlik (kimliğe danışma kilidi, iş + sonuç aynı veritabanı
                             işleminde; göç 0076 islem) · yazan.ts (işi yazanın etiketi — kimlik tarayıcıya gitmez) · uç src/app/api/islem (köken, oturum,
                             yazan kapıları) · iş türleri modülde: raporlar/server/islem-baglanti.ts
-  src/server/imza/          İMZA SERVİSİ KODU (2026-10-17, IMZA-SERVISI.md §9 Durum; saf, saldırganın girdisinde sınırlı): der.ts · sertifika.ts · cms.ts
-                            (imzalı sertifika bağı, damga sunucusu denetimi, SHA-1 yok) · pdf-imzalar.ts ÇÖZÜMLEYİCİ (beş katman, DSS yalnız kataloğun +
-                            iptal kanıtı, imzadan sonraki değişiklik, düzey) · yukleme.ts ekImzaNedeni — imzaliPdfGecerli çağıran her yükleme bunu da çağırır
-                            (kaynak kilidi) · YAZMA (bağlı değil): pdf-ek.ts artımlı ek + xref çözücü · yer-tutucu.ts · imzala.ts · cms-yaz.ts · ltv.ts (DSS
-                            + arşiv damgası) · zaman-damgasi.ts · iptal.ts · testlerde gerçek kriptografi: tests/yardimci/gercek-imza.ts (uydurma makam)
+  src/server/imza/          İMZALI PDF DENETİMİ — YALNIZ OKUMA / DENETİM (2026-10-17, IMZA-SERVISI.md; saf, saldırganın girdisinde sınırlı): der.ts ·
+                            sertifika.ts · cms.ts (imzalı sertifika bağı, damga sunucusu denetimi, SHA-1 yok) · pdf-ek.ts nesne okuyucu (xref zinciri, nesne
+                            akışı, onarım) · iptal.ts OCSP / iptal listesi ÇÖZÜMLEMESİ (ağ yok) · pdf-imzalar.ts ÇÖZÜMLEYİCİ (beş katman, DSS yalnız kataloğun
+                            + iptal kanıtı, imzadan sonraki değişiklik, düzey) · yukleme.ts ekImzaNedeni — imzaliPdfGecerli çağıran her yükleme bunu da çağırır
+                            (kaynak kilidi) · İMZA ÜRETİMİ probata-sign'da (yazıcılar, zaman damgası / iptal kanıtı istemcisi probata'dan çıktı) · test verisi
+                            üreticisi tests/yardimci/imza-uret/ (CMS kurulumu, yer tutucu, artımlı ek, DSS + belge damgası; yalnız testler) + gerçek kriptografi
+                            tests/yardimci/gercek-imza.ts (uydurma makam) · kilit tests/imza-ayrim.test.ts (src tests/'i içe aktarmaz; src/server/imza/'de imza
+                            üreten işlev adı yok) + bozan
   src/server/saglik.ts      SAĞLIK (350; 09-G5): /api/saglik denetimleri (db/saglik.ts → saglik_denetimi + 383 is_denetimi — takılı iş, 0072; geçerli tanım 0053 — bağlanan rol, göç sayısı;
                             db/son-goc.ts SON_GOC + GOC_SAYISI — her yeni göçte ikisi güncellenir, testle kilitli) · canlı duman testi: node tools/duman.mjs (salt okunur, çıkış kodu)
                             · FV7 (2026-10-15) SAĞLIK HER PROJEDE: /api/saglik'e "firma_vt" — firma adresinde o firmanın veritabanı (kiraciHavuzu, kiracı

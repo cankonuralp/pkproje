@@ -1,6 +1,7 @@
-/* DER / BER — İMZA SERVİSİNİN ORTAK OKUYUCU VE YAZICISI (IMZA-SERVISI.md ES1, 2026-10-17). Saf. Saldırganın denetlediği girdi (yüklenen imzalı PDF'in
+/* DER / BER — İMZA DENETİMİNİN ORTAK OKUYUCUSU (IMZA-SERVISI.md ES1, 2026-10-17). Saf. Saldırganın denetlediği girdi (yüklenen imzalı PDF'in
    CMS'i, zaman damgası, sertifika): derinlik ve düğüm sayısı sınırlı, tek geçiş, uzunluk dosyayı aşamaz. Okuyucu kısa / uzun / belirsiz (BER)
-   uzunluğu açar; yazıcı yalnız DER üretir (zaman damgası isteği, CMS kurulumu — ES2). Kriptografi yok. */
+   uzunluğu açar; küçük DER yazıcısı yalnız DER üretir (cms.ts DigestInfo karşılaştırması; testlerin imza verisi tests/yardimci/imza-uret/ — imza
+   üretimi probata-sign'da). Kriptografi yok. */
 
 export interface Dugum { tag: number; bas: number; ic: number; icSon: number; son: number }
 export class BozukDer extends Error {}

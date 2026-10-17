@@ -1,30 +1,33 @@
-/* NEREDEN GELDİ: IMZA-SERVISI.md ES2 — imza motoru (2026-10-17; reisim: "şimdilik bu kararları erteleyelim bizim kod açısından yapmamız gereken her ne
-   var ise listele sırala ve o sıraya göre sırayla yapıp bitir"). Zaman damgası hesabı ve sertifika makamı kararları ertelendi — motorlar bağlanmadı;
-   burada uydurma makam / kişi / damga sunucusu / OCSP / iptal listesiyle (tests/yardimci/gercek-imza.ts, gerçek kurum yok) uçtan uca:
-   · artımlı yazıcı (src/server/imza/pdf-ek.ts): klasik xref'li ve xref akışlı (nesne akışlı) tabanda nesne çözümü, ek, her xref girdisi doğru;
-   · kendi imzamız (imzala.ts + yer-tutucu.ts): yazılım anahtarıyla — hazırlık → imza değeri → tamamlama; boş e-imza alanını (src/belge/eimza.ts)
-     doldurur; çözümleyici (pdf-imzalar.ts) tamam, yükleme denetimleri (imza-pdf.ts yapı + yukleme.ts kriptografi) geçer;
-   · uzun süreli doğrulama (ltv.ts, zaman-damgasi.ts, iptal.ts): DSS + belge zaman damgası → B-LTA, tazeleme; damga istemcisi ve iptal kanıtı
-     her bozulmayı reddeder. Olumsuz kanıt: tests/bozan/imza-ltv.bozan.ts. */
+/* NEREDEN GELDİ: IMZA-SERVISI.md (2026-10-17; reisim: "şimdilik bu kararları erteleyelim bizim kod açısından yapmamız gereken her ne var ise listele
+   sırala ve o sıraya göre sırayla yapıp bitir"). 2026-10-17 aynı gün (reisim: "probatanın kaynak kodlarına bunları bulaştırma"): imza ÜRETİMİ
+   probata-sign'a gitti; burada sınanan yalnız probata'nın OKUYUCUSU ve yükleme denetimleri — gerçek imza araçlarının ürettiği türde belgeyle
+   (artımlı imza, görünmez ya da formatın alanı, xref akışı, DSS + belge damgası). Belgeyi test verisi üreticisi kurar (tests/yardimci/imza-uret/ —
+   imzala, yer tutucu, artımlı ek, LTV eki; uydurma makam / kişi / damga / OCSP / iptal listesi tests/yardimci/gercek-imza.ts, gerçek kurum yok):
+   · nesne okuyucu (src/server/imza/pdf-ek.ts): klasik xref'li ve xref akışlı (nesne akışlı) tabanda nesne çözümü, artımlı ekten sonra son tanım ve
+     önceki bölüm (/Prev); şifreli / bozuk trailer reddedilir;
+   · çözümleyici (pdf-imzalar.ts) ve yükleme denetimleri (src/modules/raporlar/imza-pdf.ts yapı + src/server/imza/yukleme.ts kriptografi): imza
+     tamam, formatın boş e-imza alanının (src/belge/eimza.ts) doldurulması kabul, imzalanmamış yer tutucu "imzalı" görünmez, DSS + belge damgası
+     B-LTA ve tazelemesi okunur;
+   · iptal kanıtının denetimi (iptal.ts): OCSP imzası, yetkili imzacı, CertID izleri, iptal listesi.
+   2026-10-17 çıkarılanlar (konusu yalnız taşınan yazıcı / ağ kodu — probata-sign'da): DSS ekinin "eksik" listesi, zaman damgası istemcisi, iptal
+   kanıtının ağdan alınması. Olumsuz kanıt: tests/bozan/imza-ltv.bozan.ts. */
 import assert from "node:assert/strict";
 import { createHash, sign } from "node:crypto";
 import { test } from "node:test";
 import { PDFDocument } from "pdf-lib";
 import { EIMZA_ALAN_ADI, EIMZA_ALAN_ADI_2, imzaAlaniKoy } from "../src/belge/eimza.ts";
 import { imzaliPdfGecerli } from "../src/modules/raporlar/imza-pdf.ts";
-import { damgaDenetle } from "../src/server/imza/cms.ts";
-import { imzaHazirla, imzaTamamla } from "../src/server/imza/imzala.ts";
-import { crlDenetle, iptalKaniti, IptalHatasi, ocspCevabi, ocspIstegi } from "../src/server/imza/iptal.ts";
-import { belgeDamgasiEkle, dssEkle, ltvEkle, type LtvKaynaklari } from "../src/server/imza/ltv.ts";
-import { ekle, nesneOkuyucu, nesneYerleri, PdfHatasi, sonDurum } from "../src/server/imza/pdf-ek.ts";
+import { crlDenetle, IptalHatasi, ocspCevabi } from "../src/server/imza/iptal.ts";
+import { nesneOkuyucu, nesneYerleri, PdfHatasi, sonDurum } from "../src/server/imza/pdf-ek.ts";
 import { pdfImzalariniCozumle } from "../src/server/imza/pdf-imzalar.ts";
 import { sertifikaOku, type Sertifika } from "../src/server/imza/sertifika.ts";
-import { icerikYaz } from "../src/server/imza/yer-tutucu.ts";
-import { damgaAl, DamgaHatasi } from "../src/server/imza/zaman-damgasi.ts";
 import { ekImzaNedeni } from "../src/server/imza/yukleme.ts";
-import {
-  crlYap, damgaSunucusu, damgaYap, denemeKimlikleri, ocspCevabiYap, ocspImzacisiYap, sahteAg, sertifikaYap, type Kimlik,
-} from "./yardimci/gercek-imza.ts";
+import { crlYap, damgaYap, denemeKimlikleri, ocspCevabiYap, ocspImzacisiYap, sertifikaYap, type Kimlik } from "./yardimci/gercek-imza.ts";
+/* belge YALNIZ test verisi üreticisinden (imza üretimi probata-sign'da) */
+import { imzaHazirla, imzaTamamla } from "./yardimci/imza-uret/imzala.ts";
+import { belgeDamgasiEkle, ltvEkle, type LtvKaynaklari } from "./yardimci/imza-uret/ltv.ts";
+import { ekle } from "./yardimci/imza-uret/pdf-ek-yaz.ts";
+import { icerikYaz } from "./yardimci/imza-uret/yer-tutucu.ts";
 
 const k = denemeKimlikleri("rsa");
 const ke = denemeKimlikleri("ecdsa", "ZEYNEP DENEME");
@@ -48,7 +51,7 @@ function xrefSaglam(pdf: Buffer) {
   assert.ok(n > 0);
 }
 
-/** kendi imzamız: hazırlık → (kart yerine) yazılım anahtarı → tamamlama */
+/** artımlı imza (test verisi üreticisi): hazırlık → (kart yerine) yazılım anahtarı → tamamlama */
 function imzala(pdf: Buffer, kim: ReturnType<typeof denemeKimlikleri>, p: { alan?: string; damga?: boolean; ozet?: "sha256" | "sha384" } = {}): Buffer {
   const h = imzaHazirla(pdf, { sertifikaDer: kim.kisi.der, ozet: p.ozet, alan: p.alan, zaman: ZAMAN, neden: "Deneme imzası" });
   assert.deepEqual(h.imzalanacakOzeti, createHash(h.ozet).update(h.imzalanacak).digest());
@@ -59,18 +62,17 @@ function imzala(pdf: Buffer, kim: ReturnType<typeof denemeKimlikleri>, p: { alan
 const alanAdlari = async (pdf: Buffer) => (await PDFDocument.load(pdf)).getForm().getFields().map((f) => f.getName()).sort();
 
 /* uydurma iptal kaynağı: kişi OCSP, öteki sertifikalar iptal listesi (verenin anahtarıyla) */
-function iptalKaynagi(kim: ReturnType<typeof denemeKimlikleri>, p: { iptal?: Kimlik[]; hata?: Kimlik } = {}): LtvKaynaklari["iptal"] {
+function iptalKaynagi(kim: ReturnType<typeof denemeKimlikleri>, p: { iptal?: Kimlik[] } = {}): LtvKaynaklari["iptal"] {
   const hepsi = [kim.kok, kim.ara, kim.kisi, kim.tsa];
   const bul = (s: Sertifika) => hepsi.find((x) => x.der.equals(s.der))!;
   return async (s, v) => {
     const ks = bul(s), kv = bul(v);
-    if (p.hata === ks) throw new Error("sunucu cevap vermedi");
     return ks === kim.kisi ? { ocsp: ocspCevabiYap(ks, kv, { durum: p.iptal?.includes(ks) ? "iptal" : "gecerli" }) } : { crl: crlYap(kv, p.iptal ?? []) };
   };
 }
 const damgaKaynagi = (kim: ReturnType<typeof denemeKimlikleri>): LtvKaynaklari["damga"] => async (veri) => damgaYap(veri.map((x) => Buffer.from(x)), kim.tsa, [kim.ara]);
 
-test("artımlı yazıcı: klasik xref'li ve xref akışlı (nesne akışlı) tabanda nesne çözümü; ek özgündeki türde xref yazar, her girdi doğru", async () => {
+test("nesne okuyucu: klasik xref'li ve xref akışlı (nesne akışlı) tabanda nesne çözümü; artımlı ekten sonra son tanım ve önceki bölüm (/Prev), her girdi doğru", async () => {
   for (const akis of [false, true]) {
     const t = await taban({ akis });
     const d = sonDurum(t);
@@ -96,7 +98,7 @@ test("artımlı yazıcı: klasik xref'li ve xref akışlı (nesne akışlı) tab
   }
 });
 
-test("artımlı yazıcı: şifreli, startxref'siz, kök göstermeyen PDF reddedilir; imzasız belgeye uzun süreli doğrulama eki yazılmaz", async () => {
+test("son durum: şifreli, startxref'siz, kök göstermeyen PDF reddedilir (imzasız belgeye uzun süreli doğrulama eki de kurulmaz)", async () => {
   const t = await taban();
   const sifreli = Buffer.from(t.toString("latin1").replace(/trailer\s*<</, "trailer\n<< /Encrypt 99 0 R "), "latin1");
   assert.throws(() => sonDurum(sifreli), PdfHatasi);
@@ -105,7 +107,7 @@ test("artımlı yazıcı: şifreli, startxref'siz, kök göstermeyen PDF reddedi
   await assert.rejects(ltvEkle(t, { damga: damgaKaynagi(k), iptal: iptalKaynagi(k) }), PdfHatasi);
 });
 
-test("ES2 kendi imzamız (RSA ve ECDSA, SHA-256 / SHA-384): görünmez alan ilk sayfada; çözümleyici tamam, B-T; yapı + kriptografi yükleme denetimleri geçer", async () => {
+test("artımlı imza (RSA ve ECDSA, SHA-256 / SHA-384), görünmez alan ilk sayfada: çözümleyici tamam, B-T; yapı + kriptografi yükleme denetimleri geçer", async () => {
   for (const [kim, ozet] of [[k, "sha256"], [ke, "sha384"]] as const) {
     const t = await taban({ sayfa: 2 });
     const p = imzala(t, kim, { damga: true, ozet });
@@ -129,7 +131,7 @@ test("ES2 kendi imzamız (RSA ve ECDSA, SHA-256 / SHA-384): görünmez alan ilk 
   }
 });
 
-test("ES2 xref akışlı (nesne akışlı) tabanda da imza: ek xref akışıyla, çözümleyici tamam", async () => {
+test("xref akışlı (nesne akışlı) tabanda imza: ek xref akışıyla, çözümleyici tamam", async () => {
   const t = await taban({ akis: true });
   const p = imzala(t, ke);
   assert.equal(sonDurum(p).akis, true);
@@ -139,7 +141,7 @@ test("ES2 xref akışlı (nesne akışlı) tabanda da imza: ek xref akışıyla,
   assert.deepEqual(await alanAdlari(p), ["Imza"]);
 });
 
-test("ES2 formatın boş e-imza alanı doldurulur (tek parça, her sayfada parçalı, iki yer art arda): yeni alan eklenmez, yapı denetimi geçer", async () => {
+test("formatın boş e-imza alanına imza (tek parça, her sayfada parçalı, iki yer art arda): yeni alan yok, yapı + kriptografi denetimi geçer", async () => {
   const kutu = { yer: "kutu" as const, x: 20, y: 240, en: 60, boy: 25 };
   for (const yeri of [kutu, { ...kutu, sayfa: "her" as const }]) {
     const t = Buffer.from(await imzaAlaniKoy(await taban({ sayfa: 2 }), yeri));
@@ -167,7 +169,7 @@ test("ES2 formatın boş e-imza alanı doldurulur (tek parça, her sayfada parç
   assert.deepEqual(await alanAdlari(imzala(t, k, { alan: "Olmayan alan" })), [EIMZA_ALAN_ADI, EIMZA_ALAN_ADI_2, "Imza"].sort());
 });
 
-test("ES2 yer tutucu: kapsamın boşluğu tam /Contents, imza sığmazsa hata; desteklenmeyen sertifika reddedilir", async () => {
+test("imzalanmamış yer tutucu imzalı görünmez (çözümleyici imza saymaz ya da okunamadı der); test verisinin kapsamı tam /Contents, sığmayan imza ve okunmayan sertifika durur", async () => {
   const t = await taban();
   const h = imzaHazirla(t, { sertifikaDer: k.kisi.der, zaman: ZAMAN });
   const s = h.yer.pdf.toString("latin1");
@@ -182,7 +184,7 @@ test("ES2 yer tutucu: kapsamın boşluğu tam /Contents, imza sığmazsa hata; d
   assert.equal(c.duzey, "yok");
 });
 
-test("ES2 uzun süreli doğrulama: DSS (sertifikalar + OCSP + iptal listesi) + belge zaman damgası → B-LTA; imza bozulmaz; tazelemede yalnız yeniler eklenir", async () => {
+test("uzun süreli doğrulama eki: DSS (sertifikalar + OCSP + iptal listesi) + belge zaman damgası → B-LTA okunur; yükleme denetimleri geçer; tazelenmiş belge de", async () => {
   const t = await taban();
   const p = imzala(t, k, { damga: true });
   const r = await ltvEkle(p, { damga: damgaKaynagi(k), iptal: iptalKaynagi(k) });
@@ -220,7 +222,7 @@ test("ES2 uzun süreli doğrulama: DSS (sertifikalar + OCSP + iptal listesi) + b
   xrefSaglam(r2.pdf);
 });
 
-test("ES2 imza damgası olmayan imza: belge damgası imzayı kapsadığı için B-T sayılır, DSS + damga B-LTA; damgasız B-B", async () => {
+test("imza damgası olmayan imza: belge damgası imzayı kapsadığı için B-T sayılır, DSS + damga B-LTA; damgasız B-B; imzadan önceki belge damgası sayılmaz", async () => {
   const p = imzala(await taban(), ke);
   assert.equal(pdfImzalariniCozumle(p).duzey, "B-B");
   const r = await ltvEkle(p, { damga: damgaKaynagi(ke), iptal: iptalKaynagi(ke) });
@@ -233,45 +235,7 @@ test("ES2 imza damgası olmayan imza: belge damgası imzayı kapsadığı için 
   assert.equal(c.duzey, "B-B");
 });
 
-test("ES2 DSS: kanıtı alınamayan sertifika 'eksik' listesinde (belge yine yazılır); belgede vereni olmayan sertifika da", async () => {
-  const p = imzala(await taban(), k, { damga: true });
-  const r = await dssEkle(p, { iptal: iptalKaynagi(k, { hata: k.tsa }) });
-  assert.equal(r.eksik.length, 1);
-  assert.match(r.eksik[0], /Deneme Zaman Damgası Sunucusu: sunucu cevap vermedi/);
-  assert.equal(pdfImzalariniCozumle(r.pdf).dss.var, true);
-  /* zincirsiz imza: kişinin vereni belgede yok */
-  const h = imzaHazirla(await taban(), { sertifikaDer: k.kisi.der, zaman: ZAMAN });
-  const zincirsiz = imzaTamamla(h, { imzaDegeri: sign("sha256", h.imzalanacak, k.kisi.anahtar) });
-  const r2 = await dssEkle(zincirsiz, { iptal: iptalKaynagi(k) });
-  assert.deepEqual(r2.eksik, ["AYŞE DENEME: veren sertifika belgede yok"]);
-});
-
-test("ES2 zaman damgası istemcisi: istek (iz, tek kullanımlık sayı), kimlik başlığı, cevap doğrulanır; yanlış iz / sayı / durum / HTTP hatası reddedilir", async () => {
-  const UC = "http://tsa.ornek.test/damga";
-  const veri = [Buffer.from("deneme verisi")];
-  const ag = sahteAg({ [UC]: damgaSunucusu(k.tsa, [k.ara]) });
-  const token = await damgaAl(veri, { uc: UC, kullanici: "deneme", parola: "deneme-parola", getir: ag.getir });
-  const d = damgaDenetle(token, veri);
-  assert.deepEqual([d.iz, d.imza, d.ozet], ["tamam", "tamam", "tamam"]);
-  assert.equal(ag.istekler[0].method, "POST");
-  assert.equal(ag.istekler[0].basliklar["content-type"], "application/timestamp-query");
-  assert.equal(ag.istekler[0].basliklar.authorization, `Basic ${Buffer.from("deneme:deneme-parola").toString("base64")}`);
-  const ek = await damgaAl(veri, { uc: UC, getir: ag.getir, basliklar: (istek) => ({ "x-deneme": createHash("sha256").update(istek).digest("hex") }) });
-  assert.ok(ek.length > 0);
-  assert.equal(ag.istekler[1].basliklar["x-deneme"], createHash("sha256").update(ag.istekler[1].govde!).digest("hex"));
-  assert.equal(ag.istekler[1].basliklar.authorization, undefined);
-  for (const [ad, sunucu] of [
-    ["tek kullanımlık sayı", damgaSunucusu(k.tsa, [k.ara], { nonceBoz: true })],
-    ["iz", damgaSunucusu(k.tsa, [k.ara], { izBoz: true })],
-    ["durum", damgaSunucusu(k.tsa, [k.ara], { durum: 2 })],
-    ["HTTP", () => 503],
-    ["bozuk cevap", () => Buffer.from("damga değil")],
-  ] as const) {
-    await assert.rejects(damgaAl(veri, { uc: UC, getir: sahteAg({ [UC]: sunucu }).getir }), DamgaHatasi, ad);
-  }
-});
-
-test("ES2 iptal kanıtı: OCSP imzası (veren ya da yetkili OCSP imzacısı) ve CertID izleri denetlenir; iptal listesi; ağdan önce OCSP sonra liste", async () => {
+test("iptal kanıtının denetimi: OCSP imzası (veren ya da yetkili OCSP imzacısı) ve CertID izleri denetlenir; iptal listesi", () => {
   const sk = sertifikaOku(k.kisi.der)!, sv = sertifikaOku(k.ara.der)!;
   const ocsp = (b: Buffer) => { const r = ocspCevabi(b, sk, sv); return `${r.durum}/${r.imza}`; };
   assert.equal(ocsp(ocspCevabiYap(k.kisi, k.ara)), "gecerli/tamam");
@@ -296,14 +260,4 @@ test("ES2 iptal kanıtı: OCSP imzası (veren ya da yetkili OCSP imzacısı) ve 
   assert.equal(crl(crlYap(k.ara, [], undefined, k.kok)), "gecerli/bozuk", "listeyi veren imzalamamış");
   assert.equal(crl(crlYap(k.kok)), "bilinmiyor/bozuk", "başka verenin listesi");
   assert.throws(() => crlDenetle(Buffer.from("liste değil"), sk, sv), IptalHatasi);
-
-  /* ağ: önce sertifikadaki OCSP adresi, olmazsa iptal listesi adresi */
-  const OCSP = "http://ocsp.ornek.test", CRL = "http://depo.ornek.test/nes.crl";
-  const ag = sahteAg({ [OCSP]: (g) => { assert.ok(g!.equals(ocspIstegi(sk, sv)), "istek bu sertifikanın"); return ocspCevabiYap(k.kisi, k.ara); }, [CRL]: () => crlYap(k.ara, [k.kisi]) });
-  const r = await iptalKaniti(sk, sv, ag.getir);
-  assert.deepEqual([r.durum, !!r.ocsp, !!r.crl], ["gecerli", true, false]);
-  assert.equal(ag.istekler[0].basliklar["content-type"], "application/ocsp-request");
-  const r2 = await iptalKaniti(sk, sv, sahteAg({ [OCSP]: () => 500, [CRL]: () => crlYap(k.ara, [k.kisi]) }).getir);
-  assert.deepEqual([r2.durum, !!r2.ocsp, !!r2.crl], ["iptal", false, true]);
-  await assert.rejects(iptalKaniti(sk, sv, sahteAg({ [OCSP]: () => 500, [CRL]: () => crlYap(k.kok) }).getir), IptalHatasi);
 });

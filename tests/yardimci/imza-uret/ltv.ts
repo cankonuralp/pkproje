@@ -1,14 +1,17 @@
-/* UZUN SÜRELİ DOĞRULAMA EKİ — DSS + BELGE ZAMAN DAMGASI (IMZA-SERVISI.md ES2 — imza motoru, 2026-10-17). İmzalı belgeye iki artımlı ek:
+/* YALNIZ TEST VERİSİ ÜRETİR; ürün kodu bu klasörü import edemez — imza üretimi probata-sign'da (reisim 2026-10-17: "probatanın kaynak kodlarına
+   bunları bulaştırma"; kilit tests/imza-ayrim.test.ts). UZUN SÜRELİ DOĞRULAMA EKİ — DSS + BELGE ZAMAN DAMGASI: imzalı belgeye iki artımlı ek:
    1. DSS: belgedeki her imzanın ve zaman damgasının sertifika zinciri + her uç / ara sertifika için iptal kanıtı (OCSP cevabı ya da iptal listesi)
       — kataloğa /DSS (önceki DSS'in kanıtları korunur: tazelemede yenileri eklenir);
    2. belge zaman damgası (ETSI.RFC3161) DSS'i de kapsar → B-LTA.
-   Tazeleme: aynı işlem yeniden — yeni DSS (önceki damganın sunucu sertifikası için de kanıt) + yeni damga. Zaman damgası ve iptal kanıtı
-   dışarıdan (zaman-damgasi.ts, iptal.ts — ağ); hesap kararı ertelendi: ayar yoksa bu ek hiç çalışmaz. Saf düzen: kaynaklar enjekte edilir. */
-import { BozukDer } from "./der.ts";
-import { imzaliVeriOku, CMS_OID } from "./cms.ts";
-import { akisGovdesi, basvuru, degerOku, degerYaz, ekle, nesneOkuyucu, sonDurum, latin1, PdfHatasi, type YeniNesne } from "./pdf-ek.ts";
-import { imzaYerleri, imzaIcerigi } from "./pdf-imzalar.ts";
-import { kendindenImzali, vereniBul, type Sertifika } from "./sertifika.ts";
+   Kaynaklar (damga, iptal kanıtı) enjekte edilir — testte uydurma makamdan (tests/yardimci/gercek-imza.ts). Testler bununla B-LT / B-LTA belge
+   kurar; probata'nın çözümleyicisi (src/server/imza/pdf-imzalar.ts) düzeyi, DSS'i, imza sonrası ekleri okur. src/server/imza/ltv.ts'ten taşındı
+   (davranış aynı). */
+import { BozukDer } from "../../../src/server/imza/der.ts";
+import { imzaliVeriOku, CMS_OID } from "../../../src/server/imza/cms.ts";
+import { basvuru, degerOku, nesneOkuyucu, sonDurum, latin1, PdfHatasi } from "../../../src/server/imza/pdf-ek.ts";
+import { imzaYerleri, imzaIcerigi } from "../../../src/server/imza/pdf-imzalar.ts";
+import { kendindenImzali, vereniBul, type Sertifika } from "../../../src/server/imza/sertifika.ts";
+import { akisGovdesi, degerYaz, ekle, type YeniNesne } from "./pdf-ek-yaz.ts";
 import { icerikYaz, yerTutucuEkle } from "./yer-tutucu.ts";
 
 export interface LtvKaynaklari {

@@ -1,6 +1,7 @@
 /* X.509 SERTİFİKA BİLGİSİ (IMZA-SERVISI.md ES1). Saf. İmzalayanın / zaman damgası sunucusunun sertifikasından kimlik, geçerlilik ve 5070
    işaretleri: nitelikli sertifika = qcStatements içinde QcCompliance (0.4.0.1862.1.1) ya da Türkiye'nin 5070 NES beyanı (2.16.792.1.61.0.1.5070.1.1)
-   — incelenen gerçek bir nitelikli sertifikada ikisi de vardı (2026-10-17, depoya girmedi). İptal adresleri (OCSP, CRL) ES2 için (uzun süreli doğrulama). */
+   — incelenen gerçek bir nitelikli sertifikada ikisi de vardı (2026-10-17, depoya girmedi). İptal adresleri (OCSP, CRL) bilgi olarak okunur (kanıtı ağdan
+   almak imza üretiminin işi — probata-sign'da). */
 import { X509Certificate, type KeyObject } from "node:crypto";
 import { bekle, cocuklar, dugum, ic, oidOku, okuyucu, tamsayiHex, tum, zamanOku, type Dugum, type Okuyucu } from "./der.ts";
 

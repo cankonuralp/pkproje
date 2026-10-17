@@ -1,6 +1,7 @@
 /* NEREDEN GELDİ: IMZA-SERVISI.md ES1 (2026-10-17; reisim: "şimdilik bu kararları erteleyelim bizim kod açısından yapmamız gereken her ne var ise
    listele sırala ve o sıraya göre sırayla yapıp bitir"; beş katman — reisim: "eğer bu belgede varsa bizde koyucaz"). Saf çözümleyici
-   src/server/imza/pdf-imzalar.ts: GERÇEK kriptografik imzalarla (tests/yardimci/gercek-imza.ts — uydurma makam / kişi / damga sunucusu) her katman
+   src/server/imza/pdf-imzalar.ts: GERÇEK kriptografik imzalarla (tests/yardimci/gercek-imza.ts — uydurma makam / kişi / damga sunucusu; CMS kurulumu
+   yalnız test verisi üreticisinde, tests/yardimci/imza-uret/ — imza üretimi probata-sign'da) her katman
    ve her bozulma. Reisim'in gönderdiği, gerçek bir imza aracıyla imzalanmış belgede (iki nitelikli imza + KamuSM damgaları + DSS + belge damgası)
    çözümleyici B-LTA, her imza "tamam" verdi; DSS'in dolaylı dizileri o belgeden öğrenildi (dosya depoya girmedi). Olumsuz kanıt:
    tests/bozan/imza-cozum.bozan.ts. */
@@ -10,11 +11,11 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
 import { algoritmaDenetle } from "../src/server/imza/cms.ts";
-import { damgaOzniteligi, imzaliOznitelikler, imzaliVeriKur } from "../src/server/imza/cms-yaz.ts";
 import { oid, oktet, sira } from "../src/server/imza/der.ts";
 import { pdfImzalariniCozumle, pdfZamani } from "../src/server/imza/pdf-imzalar.ts";
 import { ekImzaNedeni } from "../src/server/imza/yukleme.ts";
 import { TABAN_PDF, belgeDamgala, damgaYap, denemeKimlikleri, dssEkle, imzaEkle, imzaEki, pdfImzala, sertifikaYap } from "./yardimci/gercek-imza.ts";
+import { damgaOzniteligi, imzaliOznitelikler, imzaliVeriKur } from "./yardimci/imza-uret/cms-yaz.ts";
 
 const k = denemeKimlikleri("rsa");
 

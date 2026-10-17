@@ -9,9 +9,9 @@ import { test } from "node:test";
 import { dogrulamaKodlari, dogrulamaRaporlari, esdegerNedeni, imzaliTaban } from "../src/modules/raporlar/imza-esdeger.ts";
 import { ekImzaIcerikleri } from "../src/modules/raporlar/imza-pdf.ts";
 import { imzaciNedeni } from "../src/modules/raporlar/imza-kimlik.ts";
-import { ekle } from "../src/server/imza/pdf-ek.ts";
 import { ekImzaNedeni } from "../src/server/imza/yukleme.ts";
 import { imzaEki } from "./yardimci/gercek-imza.ts";
+import { ekle } from "./yardimci/imza-uret/pdf-ek-yaz.ts";
 import { ornekPdf, yenidenYaz, type YenidenSecenek } from "./yardimci/pdf-yaz.ts";
 
 const KOD = "0b6c6a41-6f8e-4c55-9d1f-2b3c4d5e6f70";

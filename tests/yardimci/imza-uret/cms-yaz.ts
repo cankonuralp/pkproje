@@ -1,11 +1,11 @@
-/* CMS SignedData KURULUMU (IMZA-SERVISI.md ES2 — kendi imzamız; ES1 kilit testleri de bunu kullanır). Saf. Kart (ya da mobil imza) yalnız
-   İMZALI ÖZNİTELİKLERİN özetini imzalar; özniteliklerin kendisi (içerik türü, belge özeti, imzalayanın sertifikasına bağ — ETSI EN 319 122
-   CAdES-B) sunucuda kurulur, karttan dönen imza değeriyle SignedData'ya dizilir. PAdES: imza zamanı (signingTime) imzalı öznitelikte YOK —
-   zaman /M ve zaman damgasından. */
+/* YALNIZ TEST VERİSİ ÜRETİR; ürün kodu bu klasörü import edemez — imza üretimi probata-sign'da (reisim 2026-10-17: "probatanın kaynak kodlarına
+   bunları bulaştırma"; kilit tests/imza-ayrim.test.ts). CMS SignedData KURULUMU: imzalı öznitelikler (içerik türü, belge özeti, imzalayanın
+   sertifikasına bağ — ETSI EN 319 122 CAdES-B) ve SignedData (ayrık PAdES imzası ya da kapsüllü zaman damgası). Testler bununla GERÇEK
+   kriptografik imza / damga kurar; probata'nın okuyucusu (src/server/imza/) onları doğrular. src/server/imza/cms-yaz.ts'ten taşındı (davranış aynı). */
 import { createHash } from "node:crypto";
-import { acik, kume, oid, oktet, sira, tamsayi, tlv } from "./der.ts";
-import { CMS_OID, OZET_OID } from "./cms.ts";
-import { sertifikaOku } from "./sertifika.ts";
+import { acik, kume, oid, oktet, sira, tamsayi, tlv } from "../../../src/server/imza/der.ts";
+import { CMS_OID, OZET_OID } from "../../../src/server/imza/cms.ts";
+import { sertifikaOku } from "../../../src/server/imza/sertifika.ts";
 
 export type OzetAdi = "sha256" | "sha384" | "sha512";
 const IMZA_OID: Record<"rsa" | "ecdsa", Record<OzetAdi, string>> = {
@@ -16,7 +16,7 @@ const IMZA_OID: Record<"rsa" | "ecdsa", Record<OzetAdi, string>> = {
 const algId = (o: string, param = true) => (param ? sira(oid(o), Buffer.from([0x05, 0x00])) : sira(oid(o)));
 const oznitelik = (o: string, deger: Buffer) => sira(oid(o), kume(deger));
 
-/** imzalı öznitelikler — SET OF (DER, 0x31 etiketli; karta imzalatılacak bayt dizisi bunun kendisi) */
+/** imzalı öznitelikler — SET OF (DER, 0x31 etiketli; imzalanan bayt dizisi bunun kendisi) */
 export function imzaliOznitelikler(p: { belgeOzeti: Buffer; sertifikaDer: Buffer; ozet: OzetAdi; icerikTuru?: string }): Buffer {
   const s = sertifikaOku(p.sertifikaDer);
   if (!s) throw new Error("imzalayanın sertifikası okunamadı");

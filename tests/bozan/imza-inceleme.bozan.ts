@@ -17,10 +17,12 @@ import { dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { after, test } from "node:test";
 import { PDFDocument, rgb } from "pdf-lib";
-import { imzaliOznitelikler, imzaliVeriKur } from "../../src/server/imza/cms-yaz.ts";
-import { imzaHazirla, imzaTamamla } from "../../src/server/imza/imzala.ts";
-import { ekle, nesneOkuyucu, sonDurum } from "../../src/server/imza/pdf-ek.ts";
+import { nesneOkuyucu, sonDurum } from "../../src/server/imza/pdf-ek.ts";
 import { TABAN_PDF, damgaYap, denemeKimlikleri, dssEkle, imzaEkle, pdfImzala, sertifikaYap, type Kimlik } from "../yardimci/gercek-imza.ts";
+/* imza / artımlı ek YALNIZ test verisi üreticisinden (imza üretimi probata-sign'da; bozulan probata'nın okuyucusu) */
+import { imzaliOznitelikler, imzaliVeriKur } from "../yardimci/imza-uret/cms-yaz.ts";
+import { imzaHazirla, imzaTamamla } from "../yardimci/imza-uret/imzala.ts";
+import { ekle } from "../yardimci/imza-uret/pdf-ek-yaz.ts";
 
 const klasor = mkdtempSync(join(tmpdir(), "imza-inceleme-bozan-"));
 let sira = 0;

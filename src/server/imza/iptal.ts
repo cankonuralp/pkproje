@@ -1,18 +1,14 @@
-/* İPTAL DURUMU — OCSP (RFC 6960) VE İPTAL LİSTESİ (CRL, RFC 5280) (IMZA-SERVISI.md ES2 — imza motoru, 2026-10-17). İmza anında sertifikanın iptal edilmediğinin
-   kanıtı belgeye (DSS) gömülür; sonradan sorulduğunda süresi biten sertifika için bu cevap alınamayabilir. Saf çözümleme + enjekte edilen ağ
-   çağrısı: istek kurulur, cevabın imzası (verenin ya da verence yetkilendirilmiş OCSP imzacısının anahtarıyla) ve sertifikanın durumu denetlenir.
-   Ham cevap DER'i olduğu gibi saklanır (DSS'e o girer). */
+/* İPTAL DURUMU — OCSP (RFC 6960) VE İPTAL LİSTESİ (CRL, RFC 5280) ÇÖZÜMLEMESİ (2026-10-17; IMZA-SERVISI.md — yükleme denetimi). Saf; ağ yok. İmzalı
+   belgenin DSS'indeki kanıt (pdf-imzalar.ts) okunur: cevabın imzası (verenin ya da verence yetkilendirilmiş OCSP imzacısının anahtarıyla), CertID'nin
+   veren izleri ve sertifikanın durumu denetlenir. Kanıtı ağdan ALMAK (OCSP isteği, iptal listesi indirme) imza üretiminin parçası — probata-sign'da. */
 import { createHash } from "node:crypto";
 import { BozukDer, bekle, cocuklar, dugum, ic, oidOku, okuyucu, tamsayiHex, tum, zamanOku, type Dugum, type Okuyucu } from "./der.ts";
-import { oktet, oid, sira, tamsayi } from "./der.ts";
 import { algoritmaDenetle } from "./cms.ts";
 import { sertifikaOku, type Sertifika } from "./sertifika.ts";
-import type { Getir } from "./zaman-damgasi.ts";
 
 export type IptalDurumu = "gecerli" | "iptal" | "bilinmiyor";
 export class IptalHatasi extends Error {}
 const OCSP_TEMEL = "1.3.6.1.5.5.7.48.1.1", OCSP_IMZA_KULLANIMI = "1.3.6.1.5.5.7.3.9", SHA1 = "1.3.14.3.2.26";
-const OCSP_SINIR = 256 * 1024, CRL_SINIR = 32 * 1024 * 1024;
 const ID_OZET: Record<string, string> = { [SHA1]: "sha1", "2.16.840.1.101.3.4.2.1": "sha256", "2.16.840.1.101.3.4.2.2": "sha384", "2.16.840.1.101.3.4.2.3": "sha512" };
 
 /** sertifikanın açık anahtarının bit dizisi (SubjectPublicKeyInfo'nun BIT STRING'i, kullanılmayan bit baytı hariç) */
@@ -21,18 +17,6 @@ function anahtarBitleri(s: Sertifika): Buffer {
   const o = okuyucu(new Uint8Array(spki));
   const p = cocuklar(o, bekle(dugum(o, 0), 0x30));
   return Buffer.from(ic(o, bekle(p[1], 0x03)).subarray(1));
-}
-const seriBayt = (hex: string) => Buffer.from(hex.length % 2 ? `0${hex}` : hex, "hex");
-
-/** OCSPRequest DER (SHA-1 CertID — sunucuların ortak beklentisi) */
-export function ocspIstegi(s: Sertifika, veren: Sertifika): Buffer {
-  const certId = sira(
-    sira(oid(SHA1), Buffer.from([0x05, 0x00])),
-    oktet(createHash("sha1").update(s.verenDer).digest()),
-    oktet(createHash("sha1").update(anahtarBitleri(veren)).digest()),
-    tamsayi(seriBayt(s.seri)),
-  );
-  return sira(sira(sira(sira(certId))));
 }
 
 export interface OcspSonucu { durum: IptalDurumu; zaman: string | null; sonraki: string | null; imza: "tamam" | "bozuk" | "desteklenmiyor" }
@@ -123,32 +107,4 @@ export function crlDenetle(der: Uint8Array, s: Sertifika, veren: Sertifika): Crl
     if (e instanceof BozukDer || e instanceof RangeError) throw new IptalHatasi("iptal listesi okunamadı");
     throw e;
   }
-}
-
-/** ağdan: önce OCSP, olmazsa iptal listesi — dönen ham DER'ler DSS'e girer. Hiçbiri doğrulanamazsa hata. */
-export async function iptalKaniti(s: Sertifika, veren: Sertifika, getir: Getir = globalThis.fetch as unknown as Getir, sure = 15_000):
-  Promise<{ ocsp?: Buffer; crl?: Buffer; durum: IptalDurumu }> {
-  const oku = async (adres: string, istek: Parameters<Getir>[1], sinir: number) => {
-    if (!/^https?:\/\//i.test(adres)) throw new IptalHatasi("desteklenmeyen adres");
-    const c = await getir(adres, { ...istek, signal: AbortSignal.timeout(sure) });
-    if (!c.ok) throw new IptalHatasi(`${adres} ${c.status}`);
-    const b = Buffer.from(await c.arrayBuffer());
-    if (b.length > sinir) throw new IptalHatasi("cevap çok büyük");
-    return b;
-  };
-  for (const adres of s.bilgi.ocsp) {
-    try {
-      const der = await oku(adres, { method: "POST", headers: { "content-type": "application/ocsp-request" }, body: ocspIstegi(s, veren) }, OCSP_SINIR);
-      const r = ocspCevabi(der, s, veren);
-      if (r.imza === "tamam" && r.durum !== "bilinmiyor") return { ocsp: der, durum: r.durum };
-    } catch { /* sıradaki yol */ }
-  }
-  for (const adres of s.bilgi.crl) {
-    try {
-      const der = await oku(adres, { method: "GET", headers: {} }, CRL_SINIR);
-      const r = crlDenetle(der, s, veren);
-      if (r.imza === "tamam") return { crl: der, durum: r.durum };
-    } catch { /* sıradaki yol */ }
-  }
-  throw new IptalHatasi(`${s.bilgi.ad ?? "sertifika"} için iptal kanıtı alınamadı`);
 }
