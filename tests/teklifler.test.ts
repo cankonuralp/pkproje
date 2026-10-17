@@ -29,6 +29,10 @@ import { teklifMusterileri, teklifTanim } from "../src/modules/teklifler/liste.t
 import { listele, yeniDurum, type SuzgecDurumu } from "../src/components/liste/suzgec.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 import { imzaEki } from "./yardimci/gercek-imza.ts";
+import { randomBytes } from "node:crypto";
+import { DENEME_ADRESI, baglantiliPdf } from "./yardimci/pdf-yaz.ts";
+/* 2026-10-17 (yüklemede raporun doğrulama bağlantısı şart — raporlar.ts dogrulamaBagli): imzaya hazırlama adres + sır anahtarı ister */
+process.env.PROBATA_SIR_ANAHTARI ??= randomBytes(32).toString("base64");
 
 let kume: GomuluKume;
 let havuz: Havuz;
@@ -374,7 +378,7 @@ test("324 incelemesi — raporlanan: her rapor TEK teklife (tesis × tür için 
 
 /* ── rapor imzalama (tests/musteri-paneli.test.ts ile aynı yapı) ── */
 let sayac = 0, planSira = 0;
-const uret = async () => new TextEncoder().encode(`%PDF-1.4\n% deneme ${++sayac}\n1 0 obj << /Type /Catalog >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF\n`);
+const uret = async (v?: { dogrulama?: string | null }) => baglantiliPdf(`%PDF-1.4\n% deneme ${++sayac}\n1 0 obj << /Type /Catalog >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF\n`, v?.dogrulama);
 /* IMZA-SERVISI.md ES1: yükleme imzayı kriptografik olarak denetler — gerçek (uydurma kişili) imza (tests/yardimci/gercek-imza.ts) */
 const imzala = (b: Uint8Array) => Buffer.from(imzaEki(b));
 const rsurum = async (id: string) => (await sql<{ surum: number }>(A, "SELECT surum FROM rapor WHERE id = $1", [id])).rows[0].surum;
@@ -385,7 +389,7 @@ async function imzaliRapor(tesis: string, kod: string): Promise<string> {
   const h = tamam(await a(DEN, (db) => raporOlustur(db, DEN, p, ekp[kod]))).id;
   await sql(A, "UPDATE rapor SET durum = 'onayda', surum = surum + 1 WHERE id = $1", [h], DEN.id);
   tamam(await a(MEK, async (db) => onayla(db, MEK, h, await rsurum(h))));
-  tamam(await a(DEN, (db) => imzaHazirla(db, depo, DEN, A, h, uret)));
+  tamam(await a(DEN, (db) => imzaHazirla(db, depo, DEN, A, h, uret, DENEME_ADRESI)));
   const ham = (await sql<{ anahtar: string }>(A, "SELECT d.anahtar FROM imza_istegi i JOIN dosya d ON d.id = i.pdf_dosya WHERE i.rapor_id = $1 AND i.durum = 'bekliyor'", [h])).rows[0];
   const s2 = await rsurum(h);
   tamam(await a(DEN, async (db) => imzaliYukle(db, depo, DEN, A, h, s2, { ad: "imzali.pdf", bayt: imzala(await depo.oku(ham.anahtar)) })));

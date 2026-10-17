@@ -2527,6 +2527,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-17 (YAPILDI): **PROBATA DOĞRULAMA BAĞLANTISI OLMAYAN İMZALI RAPOR KABUL EDİLMEZ** (reisim: *"şeridi yukarı alma ama probata linki olmayan
+  raporu kabul etme … sorun oymuş yani diğer raporda varmış link bir diğerinde yokmuş"*). Bulgu: iki rapordan birinin imzaya hazırlanan PDF'i
+  doğrulama karekodu / bağlantısı gelmeden (16 Ekim) hazırlanmıştı; imzalısı da bağlantısızdı ve kabul edildi. Artık: imzalı PDF bu raporun BU
+  revizyonunun doğrulama bağlantısını taşımalı (kod imzalı — başka raporun bağlantısı sayılmaz), yoksa "İmzalı PDF'te bu raporun probata doğrulama
+  bağlantısı yok" ile reddedilir; muayene uzmanı ve teknik yönetici yüklemesi, toplu yükleme aynı. Bağlantısız hazırlanmış eski PDF "İmzaya
+  hazırla"da kendiliğinden yeniden üretilir; doğrulama adresi kurulamazsa PDF hazırlanmaz. Şerit yerinde kaldı (reisim: *"şeridi yukarı alma"*).
+  Kod raporlar.ts dogrulamaBagli + imza-esdeger.ts dogrulamaKodlari; kilit onaylar (PG) + imza-esdeger, bozan onaylar 19.
 - 2026-10-17 (YAPILDI): **HER İMZA PROGRAMININ İMZALI RAPORU KABUL** (reisim: *"imzayeri ile mobil imza attım, o şeritler imzayerinde imzalanınca
   geliyor ne demek kalsın mı kalacak tabiki bizim kontrolümüzde değil"* · *"sistemimiz her hangi bir imzalı raporu kabul etmeli zaten bu
   müşterilerden çokca dönüş almamıza sabep olabilir"*). Bulgu: imzayeri gibi servisler imzadan önce PDF'i baştan yeniden yazıyor (alttaki şerit,

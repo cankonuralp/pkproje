@@ -410,20 +410,19 @@ export function imzaliTaban(imzasiz: Uint8Array, imzali: Uint8Array): { taban: U
   return { neden: neden !== null && (tanidik || onek) ? neden : ESLESMEDI_TABAN };
 }
 
-/** imzalı PDF'teki doğrulama bağlantılarından rapor kimlikleri (toplu yüklemede eşleştirme — yeniden yazılmış dosyada bayt öneki tutmaz) */
-export function dogrulamaRaporlari(imzali: Uint8Array): string[] {
-  const s = latin1(imzali), l = new Set<string>(), metinler = [s];
+/** PDF'in bağlantılarındaki (URI eylemi) doğrulama kodları — rapor · revizyon · imza (595 K8, src/server/dogrulama.ts); adres düz ya da onaltılık
+    dizgide (yeniden yazan araç dizgiyi onaltılık yazabilir). 2026-10-17 (reisim: "probata linki olmayan raporu kabul etme"): yükleme bu raporun
+    kodunu arar (raporlar.ts dogrulamaBagli); toplu yüklemede eşleştirme de buradan. */
+export function dogrulamaKodlari(pdf: Uint8Array): string[] {
+  const s = latin1(pdf), l = new Set<string>();
   let n = 0;
-  /* yeniden yazan araç adresi onaltılık dizgiyle yazabilir */
-  for (const m of s.matchAll(/\/URI[\x00\t\n\f\r ]*<([0-9A-Fa-f\x00\t\n\f\r ]{20,4000})>/g)) {
-    metinler.push(Buffer.from(m[1].replace(/[\x00\t\n\f\r ]/g, ""), "hex").toString("latin1"));
-    if (++n >= 200) break;
-  }
-  for (const t of metinler) {
-    for (const m of t.matchAll(/\/dogrula\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.\d{1,3}\./g)) {
-      l.add(m[1]);
-      if (l.size >= 10) return [...l];
-    }
+  for (const m of s.matchAll(/\/URI[\x00\t\n\f\r ]*(\((?:[^()\\]|\\[^]){1,4000}\)|<[0-9A-Fa-f\x00\t\n\f\r ]{2,8000}>)/g)) {
+    const h = dizgiBayt(m[1]);
+    const adres = h === null ? "" : Buffer.from(h, "hex").toString("latin1");
+    for (const k of adres.matchAll(/\/dogrula\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.\d{1,3}\.[A-Za-z0-9_-]{8,64})/g)) l.add(k[1]);
+    if (++n >= 500 || l.size >= 20) break;
   }
   return [...l];
 }
+/** imzalı PDF'teki doğrulama bağlantılarından rapor kimlikleri (toplu yüklemede eşleştirme — yeniden yazılmış dosyada bayt öneki tutmaz) */
+export const dogrulamaRaporlari = (pdf: Uint8Array): string[] => [...new Set(dogrulamaKodlari(pdf).map((k) => k.split(".")[0]))];

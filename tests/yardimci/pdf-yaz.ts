@@ -127,3 +127,11 @@ export function yenidenYaz(a: Uint8Array, p: YenidenSecenek = {}): Uint8Array {
   nesneler.push(...(p.ekNesne ?? []));
   return pdfYaz(nesneler, kok + k);
 }
+
+/** 2026-10-17 (yüklemede raporun doğrulama bağlantısı şart — raporlar.ts dogrulamaBagli): testlerin uydurma imzasız PDF'ine bağlantı (URI eylemi)
+    eklenir; adres imzaHazirla'nın verdiği (BelgeVerisi.dogrulama). Bağlantının adresi testlerde bu firma adresiyle kurulur. */
+export const DENEME_ADRESI = "https://deneme-a.deneme.example";
+export function baglantiliPdf(metin: string, dogrulama?: string | null): Uint8Array {
+  const i = metin.includes("trailer") ? metin.lastIndexOf("trailer") : metin.lastIndexOf("%%EOF");
+  return new TextEncoder().encode(`${metin.slice(0, i)}9999 0 obj << /S /URI /URI (${dogrulama ?? ""}) >> endobj\n${metin.slice(i)}`);
+}

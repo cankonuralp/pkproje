@@ -6,7 +6,7 @@
    kanıt: tests/bozan/imza-esdeger.bozan.ts. */
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { dogrulamaRaporlari, esdegerNedeni, imzaliTaban } from "../src/modules/raporlar/imza-esdeger.ts";
+import { dogrulamaKodlari, dogrulamaRaporlari, esdegerNedeni, imzaliTaban } from "../src/modules/raporlar/imza-esdeger.ts";
 import { ekImzaIcerikleri } from "../src/modules/raporlar/imza-pdf.ts";
 import { imzaciNedeni } from "../src/modules/raporlar/imza-kimlik.ts";
 import { ekle } from "../src/server/imza/pdf-ek.ts";
@@ -142,4 +142,14 @@ test("doğrulama bağlantısından rapor kimliği (toplu yüklemede eşleştirme
   assert.deepEqual(dogrulamaRaporlari(A), [KOD]);
   assert.deepEqual(dogrulamaRaporlari(imzaEki(yenidenYaz(A))), [KOD], "yeniden yazımda adres onaltılık dizgi");
   assert.deepEqual(dogrulamaRaporlari(ornekPdf()), []);
+});
+
+/* 2026-10-17 (reisim: "probata linki olmayan raporu kabul etme"): yükleme bu raporun kodunu arar — kod yalnız bağlantının (URI eylemi) adresinden;
+   düz metin, yorum ya da başka bir anahtarın değeri sayılmaz */
+test("doğrulama kodları: bağlantının adresinden tam kod (rapor · revizyon · imza); bağlantı değilse sayılmaz", () => {
+  assert.deepEqual(dogrulamaKodlari(A), [`${KOD}.0.AbCdEfGh`]);
+  assert.deepEqual(dogrulamaKodlari(imzaEki(yenidenYaz(A))), [`${KOD}.0.AbCdEfGh`], "onaltılık dizgide");
+  assert.deepEqual(dogrulamaKodlari(imzaEki(yenidenYaz(A, { baglantiAt: true }))), [], "bağlantı atılmış");
+  const metinde = new TextEncoder().encode(`%PDF-1.4\n% /dogrula/${KOD}.0.AbCdEfGh\n1 0 obj << /Title (https://x.example/dogrula/${KOD}.0.AbCdEfGh) >> endobj\n%%EOF\n`);
+  assert.deepEqual(dogrulamaKodlari(metinde), [], "yorumda ya da başka anahtarda");
 });
