@@ -20,7 +20,7 @@
 İmzanın gücü için ölçüt, reisim'in gönderdiği aracı firma çıktısı. Açılıp incelendi: **beş katman** (§3). Reisim: *"eğer bu belgede varsa bizde
 koyucaz"*.
 
-> **Durum: TASARIM. Kod yok.** Bu dosya bu işin tek kaynağı. Her karar alındıkça `pkproje.md`'ye işlenir. Görsel her parça önce maket. Kalem adları
+> **Durum: TASARIM; kararsız yapılabilen kod yapıldı (§9 Durum).** Bu dosya bu işin tek kaynağı. Her karar alındıkça `pkproje.md`'ye işlenir. Görsel her parça önce maket. Kalem adları
 > **ES1–ES6** (E-imza Servisi; İ1–İ6 başka iş için kullanılıyor).
 
 ---
@@ -152,16 +152,23 @@ koyucaz"*.
 
 ## 4 · Doğrulama servisi
 
-**Karekod / sayfa:** `<firmanın imza adresi>/dogrula/<rastgele kod>` adresinde şunlar görünür:
-- Sonuç: geçerli · yeni sürümü var · dosya tutmuyor.
-- İmzalayanlar ve imza saatleri (damgadan), sertifika sağlayıcı.
-- Revizyon durumu.
-- "Elinizdeki PDF bu mu?" karşılaştırması. Dosyanın parmak izi tarayıcıda çıkarılır, dosya gönderilmez.
+**Karekod / sayfa:** `<firmanın imza adresi>/dogrula/<rastgele kod>`. Maket `docs/maket/dogrula.html` (2. tur 2026-10-17, reisim: *"imzalayanların adı
+gözüksün, elimdeki pdf bu mu ? sorusu ve pdf yükleme alanı altında pdf in görüntüsü olsun ve bu ekrandaki şeyler açılır kapanır olsun"*; örnek
+olarak incelenen aracı firmanın doğrulama sitesi):
+- **Açılış:** doğrulama kodu (karekoddan dolu gelir; kâğıttaki kod elle de yazılır) + bilgilendirme ("raporu elinde bulunduran ya da ilgilisi
+  olanlar için; yetkisiz görüntüleme yasal sorumluluk doğurabilir") + onay kutusu + "Belgeyi doğrula". Kutu işaretlenmeden basılırsa neden yazılır.
+- **Sonuç:** geçerli · yeni revizyonu var · imza bekleniyor · bulunamadı.
+- **Bölümler açılır kapanır** (kapalıyken başlıkta özet, ör. "5 / 5 sağlam"; "Hepsini aç / kapat"):
+  - Rapor: no, muayene firması, ekipman, kontrol tarihi, sonuç, e-imza zamanı.
+  - İmzalar: imzalayanın **adı**, görevi, mesleği, imza saati (zaman damgasından), nitelikli sertifika, sağlayıcı.
+  - Güvence katmanları: kimlik · bütünlük · imza saati · iptal denetimi · arşiv damgası; teknik adlar yalnız "Ayrıntılar"da.
+  - Elinizdeki PDF bu mu?: parmak izi tarayıcıda çıkarılır, dosya gönderilmez; eski kopya (arşiv damgası tazelenmeden önceki) de tanınır.
+  - Raporun görüntüsü: e-imzalı raporun sayfaları; Küçült · Büyüt · Sola / sağa döndür · Sığdır. Telefonda genişliğe sığar.
 
 **Belgenin kendisi:**
-- Kalıcı açık bağlantıyla verilmez (anayasa 5.1).
-- Rapor, müşteri girişinden açılır.
-- İncelenen aracı firma belgeyi girişsiz açıyor; bizde bu karar §10-3.
+- Sayfa raporun **görüntüsünü** gösterir (§10-3 kapandı): kod raporun üstünde yazılı — sayfayı açan raporu zaten elinde tutuyor; bilgilendirme
+  onayından sonra. Bu sayfa için 595 K8'deki "kişi adı ve PDF gösterilmez" değişti: adlar ve görüntü var.
+- PDF **dosyası** indirilmez, kalıcı açık dosya bağlantısı verilmez (anayasa 5.1); imzalı PDF müşteri girişinden.
 
 **Genel doğrulayıcı:**
 - `sign.probata.com.tr/dogrula`: herhangi bir e-imzalı PDF bırakılır, katman katman sonuç verilir (başka sağlayıcıların belgeleri de).
@@ -283,7 +290,7 @@ göre sırayla yapıp bitir"*):** kararlar ertelendi; kararsız yapılabilen kod
 |---|---|---|---|
 | ES1 okuma | `pdf-imzalar.ts` (+ `cms.ts`, `sertifika.ts`, `der.ts`): her imza için bütünlük, imza değeri, imzalayan (imzalı sertifika bağıyla), 5070 nitelikli, imza anında geçerli, imza damgası (sunucusu denetlenir), belge damgası, DSS (yalnız kataloğun), DSS'teki iptal kanıtı, imzadan sonraki değişiklik, düzey. İncelenen gerçek belge: B-LTA, iki imza da tamam, iptal "geçerli", sonraki ekler izinli | — | Güvenilir kök listesi (resmî kaynaktan teyitle) |
 | ES1 yükleme denetimi | `yukleme.ts`: yüklenen imzalı PDF kriptografik olarak sağlam, nitelikli, bağlı, imza anında geçerli, sonradan değişmemiş olmalı | **Evet** — rapor imzası, teknik yönetici imzası, Onaylar › Diğer | — |
-| ES1 doğrulama sayfası | Maket `docs/maket/dogrula.html` (ONAY BEKLİYOR): sonuç, rapor, imzalar, güvence katmanları, "Elinizdeki PDF bu mu?"; hâller geçerli · yeni revizyon · imza bekleniyor · bulunamadı | — | Reisim onayı + §10-9 (imzacının adı) |
+| ES1 doğrulama sayfası | Maket `docs/maket/dogrula.html` (ONAY BEKLİYOR, 2. tur): açılış (kod + bilgilendirme onayı), sonuç, açılır kapanır bölümler — rapor, imzalar (adlarıyla), güvence katmanları, "Elinizdeki PDF bu mu?", raporun görüntüsü (yakınlaştır, döndür); hâller geçerli · yeni revizyon · imza bekleniyor · bulunamadı | — | Reisim onayı |
 | ES2 imza motoru | `imzala.ts` (hazırla → kart → tamamla; formatın boş e-imza alanını doldurur), `yer-tutucu.ts`, `pdf-ek.ts` (artımlı ek; klasik ve sıkıştırılmış xref) | Hayır | İmza yolu (eklenti / yardımcı program ya da mobil imza) |
 | ES2 uzun süreli doğrulama | `ltv.ts` (DSS + arşiv damgası, tazeleme), `zaman-damgasi.ts` (RFC 3161 istemcisi), `iptal.ts` (OCSP / iptal listesi) | Hayır — ayar yoksa hiç çalışmaz | KamuSM hesabı + kimlik doğrulama biçimi (§10-2) |
 
@@ -298,15 +305,15 @@ girdide çökme). Kilitler: `tests/imza-cozum.test.ts`, `tests/imza-ltv.test.ts`
 1. **Firma adresi:** `sign.<firma>.probata.com.tr` (reisim'in biçimi; firma başına adres kaydı) mı, `<firma>.sign.probata.com.tr` (tek joker
    sertifika) mı?
 2. **Zaman damgası kontörü:** servis olarak satılacağı için probata toplu alıp kullanıma göre yansıtsın (öneri) mı, her firma kendi mi?
-3. **Doğrulama sayfası belgeyi gösterir mi?** Öneri göstermesin, yalnız sonuç; rapor müşteri girişinden.
+3. ~~**Doğrulama sayfası belgeyi gösterir mi?**~~ **KAPANDI 2026-10-17** (reisim: *"pdf yükleme alanı altında pdf in görüntüsü olsun"*): gösterir —
+   kod + bilgilendirme onayından sonra sayfaların görüntüsü; dosya indirilmez (§4).
 4. **Başvurular ne zaman:** operatör sözleşmeleri, KamuSM, kod imzalama sertifikası. Öneri: uzun sürdükleri için hemen.
 5. **Mac kullanan var mı?** Yoksa önce Windows.
 6. **Dış ürün fiyatı:** imza başı mı, paket mi? Sonra.
 7. **Kod yeri:** aynı depo, ayrı modül (öneri) mi, ayrı depo mu?
 8. **Sıra:** probata'nın genel kodlama sırasında bu iş nerede? "Bir yandan" — öneri ES1 (doğrulama) ilk, çünkü bugünkü toplu yükleme yoluna da
    değer katıyor.
-9. **Doğrulama sayfasında imzacının adı** (maket `docs/maket/dogrula.html`, "İmzacı adı" seçeneği): bugünkü sayfa kişi göstermiyor (595 K8).
-   Öneri: görevi + baş harfler (A\*\*\* D\*\*\*); tam ad gerekirse açılır. Karar reisim'in.
+9. ~~**Doğrulama sayfasında imzacının adı**~~ **KAPANDI 2026-10-17** (reisim: *"imzalayanların adı gözüksün"*): tam ad, görevi ve mesleğiyle (§4).
 
 ---
 
