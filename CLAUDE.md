@@ -124,6 +124,9 @@ pkproje/
                             · 595 E-İMZA YERİ + ŞERİT: eimza.ts (pdf-lib 1.17.1; saf) imzaAlaniKoy — kesin PDF'te boş imza alanı: "hucre" (belge.ts İmza
                             hücresine işaret bağlantısı probata-eimza:uzman koyar, Chromium yerini basar, işaret kalkar) · "kutu" son sayfada mm · "gorunmez";
                             tanim.ts gorunum.eimza, kurucu.ts eimzaYaz, ui/EimzaYeri.tsx (imza bölümü ayarı, küçük A4'te sürüklenen kutu), S.A.Y "eimza_yeri" ·
+                            2026-10-17 İ5: İKİ YER — eimza (onaylanan, muayene uzmanı) + eimza2 (onaylayan, teknik yönetici; yoksa yok) · kutu sayfa "her"
+                            (ebeveyn /FT /Sig + /Kids parçalar) · EIMZA_ISARETI_2 teknik İmza hücresi · imza-pdf.ts çok parçalı alan (ebeveyn /V, parça yalnız
+                            görünüm) · ui/EimzaYeri kim onaylanan / onaylayan · S.A.Y eimza_yeri kisi teknik, sayfa · kilit eimza.test, bozan eimza 4–5 ·
                             pdf.ts raporAltBilgisi: her sayfanın altında şerit (kesin: 5070 sayılı kanun cümlesi) + rapor no + Sayfa n / N, alt kenar 20 mm
                             (RAPOR_SAYFA; kurucu.ts EIMZA_SERIT_MM) · imza-pdf.ts boş alanın doldurulması izinli (yalnız /V, /AP, /MK, /DA, /F) · kilit
                             tests/eimza.test.ts + pdf.test.ts 595, bozan eimza

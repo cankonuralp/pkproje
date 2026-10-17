@@ -14,7 +14,10 @@
    · bir yeni nesne imza sözlüğüdür: /Type /Sig, /ByteRange dizisi, /Contents onaltılık dize;
    · 595 (sunum 595 madde 25): imzasız PDF'teki BOŞ imza alanı (formatın e-imza yeri — src/belge/eimza.ts) imzalanınca yeniden yazılır: yalnız
      değer (/V — yeni imza sözlüğüne başvuru), görünüm (/AP, /MK, /DA) ve bayrak (/F) eklenir / değişir; yeri (/Rect), sayfası (/P), adı (/T),
-     türü aynı. Yeni açıklamaya izinli görünümden fazlası değil.
+     türü aynı. Yeni açıklamaya izinli görünümden fazlası değil. 2026-10-17 (İ5, "her sayfada kutu"): çok parçalı boş imza alanı — EBEVEYN
+     (/FT /Sig, /Kids, değersiz, kendisi görünüm değil) yalnız aynı kuralla (/V yeni imza sözlüğüne), ÇOCUK görünüm (/Subtype /Widget, /FT yok,
+     /Parent böyle bir ebeveyn) yalnız görünüm (/AP, /MK, /DA) ve bayrak (/F) değiştirir — çocuğa değer (/V) yazılamaz, yeri / sayfası aynı. İki
+     e-imza yeri (onaylanan, onaylayan) ayrı ayrı ya da art arda iki imzayla doldurulabilir.
    Kalan risk (kayıtta): imza alanının görünümü (/AP) sayfaya çizilir; kriptografik zincir ve görsel karşılaştırma sonraki fazda (K7). */
 
 type Deger = { t: "sozluk"; d: Map<string, Deger> } | { t: "dizi"; l: Deger[] } | { t: "ref"; n: number; g: number } | { t: "yalin"; v: string };
@@ -139,6 +142,11 @@ function kapsar(yeni: Deger | undefined, eski: Deger | undefined): boolean {
 }
 const ACROFORM_SERBEST = new Set(["Fields", "SigFlags"]);
 const IMZA_ALANI_SERBEST = new Set(["V", "AP", "MK", "DA", "F"]);
+/** 2026-10-17 (İ5): çok parçalı imza alanının çocuk görünümünde değişebilenler (değer ebeveynde) */
+const IMZA_GORUNUMU_SERBEST = new Set(["AP", "MK", "DA", "F"]);
+/** boş, çok parçalı imza alanının ebeveyni: /FT /Sig, /Kids dizisi, kendisi görünüm değil, değeri yok */
+const bosImzaEbeveyni = (d: Deger | null | undefined) =>
+  !!d && adi(d, "FT") === "/Sig" && !adi(d, "Subtype") && ad(d, "Kids")?.t === "dizi" && !ad(d, "V");
 
 const latin1 = (b: Uint8Array) => Buffer.from(b.buffer, b.byteOffset, b.byteLength).toString("latin1");
 
@@ -211,6 +219,14 @@ export function imzaliPdfGecerli(imzasiz: Uint8Array, imzali: Uint8Array): boole
           if (kanonik(x.deger, IMZA_ALANI_SERBEST) !== kanonik(eski.deger, IMZA_ALANI_SERBEST)) return false;
           const v = refNo(ad(x.deger, "V"));
           if (v === null || ozgun.has(v) || !ek.has(v)) return false;
+        } else if (bosImzaEbeveyni(eski.deger)) {
+          /* İ5: her sayfadaki parçaların ebeveyni dolduruldu — tek parçalıyla aynı kural */
+          if (kanonik(x.deger, IMZA_ALANI_SERBEST) !== kanonik(eski.deger, IMZA_ALANI_SERBEST)) return false;
+          const v = refNo(ad(x.deger, "V"));
+          if (v === null || ozgun.has(v) || !ek.has(v)) return false;
+        } else if (adi(eski.deger, "Subtype") === "/Widget" && !ad(eski.deger, "FT") && bosImzaEbeveyni(ozgun.get(refNo(ad(eski.deger, "Parent")) ?? -1)?.deger)) {
+          /* İ5: çocuk görünüm — yalnız görünüm ve bayrak */
+          if (kanonik(x.deger, IMZA_GORUNUMU_SERBEST) !== kanonik(eski.deger, IMZA_GORUNUMU_SERBEST)) return false;
         } else return false;
         continue;
       }

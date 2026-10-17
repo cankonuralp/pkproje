@@ -9,7 +9,7 @@ import { kilitliKimlikler } from "../../format/motor.ts";
 import {
   basEtiketleri, basSatirlari, basSirasi, cihazSutunlari, ekipmanEtiketleri, ekipmanTamYap, firmaSatirlari, imzaSatirlari, imzaVarsayilani, listeBasliklari, olcumBasliklari, sonucMetinleri, testBasliklari,
 } from "../../format/duzen.ts";
-import { BAS_HUCRELERI, BAS_KAYNAK_ADI, BAS_KAYNAKLARI, type BasHucresi, type BasKaynagi, type BasSatiri, Bolum, EK_SUTUN_EN_COK, LISTE_SUTUN_ADI, LISTE_SUTUN_ALANLARI, TEST_SUTUN_ADI, TEST_SUTUN_TURLERI, type ListeSutunAlani, type TestSutunTuru, CIHAZ_ALAN_ADI, CIHAZ_ALANLARI, EIMZA_KUTU, EKIPMAN_ALAN_ADI, KUSUR_ALAN_ADI, KUSUR_ALANLARI, type CihazAlani, type KusurAlani, FIRMA_KAYNAK_ADI, FIRMA_KAYNAKLARI, FIRMA_ZORUNLU, IMZA_ALAN_ADI, IMZA_KISI_ADI, type ImzaYeri, imzaAlanlari, KUNYE_ALANLARI, KURAL_EN_COK, kurucudan, type Blok, type BolumOf, type EkipmanAlani, type FormatTanimi,
+import { BAS_HUCRELERI, BAS_KAYNAK_ADI, BAS_KAYNAKLARI, type BasHucresi, type BasKaynagi, type BasSatiri, Bolum, EK_SUTUN_EN_COK, LISTE_SUTUN_ADI, LISTE_SUTUN_ALANLARI, TEST_SUTUN_ADI, TEST_SUTUN_TURLERI, type ListeSutunAlani, type TestSutunTuru, CIHAZ_ALAN_ADI, CIHAZ_ALANLARI, EIMZA_KUTU, EIMZA_KUTU_2, EKIPMAN_ALAN_ADI, KUSUR_ALAN_ADI, KUSUR_ALANLARI, type CihazAlani, type KusurAlani, FIRMA_KAYNAK_ADI, FIRMA_KAYNAKLARI, FIRMA_ZORUNLU, IMZA_ALAN_ADI, IMZA_KISI_ADI, type ImzaYeri, imzaAlanlari, KUNYE_ALANLARI, KURAL_EN_COK, kurucudan, type Blok, type BolumOf, type EkipmanAlani, type FormatTanimi,
   type FirmaKaynagi, type FirmaSatiri, type ImzaAlani, type ImzaKisisi, type ImzaSatiri, type KunyeAlani, type Sinir, type SonucKurali } from "../../format/tanim.ts";
 import { kilitliKunye } from "../../format/kunye.ts";
 import { FORMUL_EN_UZUN, formulAdDegistir, formulDuzelt } from "../../format/formul.ts";
@@ -476,16 +476,25 @@ export function imzaKisisiYaz(t: FormatTanimi, i: number, kim: ImzaYeri, var_: b
    görünmez ── */
 /** her sayfanın altında şeride ayrılan bant (mm) — PDF motorunun alt kenar boşluğuyla aynı (src/belge/pdf.ts RAPOR_SAYFA) */
 export const EIMZA_SERIT_MM = 20;
-export function eimzaYaz(t: FormatTanimi, y: { yer: "hucre" | "kutu" | "gorunmez"; x?: number; y?: number; en?: number; boy?: number }): FormatTanimi {
+/** 2026-10-17 (İ5): e-imza yerinin sahibi — onaylanan (gorunum.eimza; belgeyi hazırlayan, raporda muayene uzmanı) · onaylayan (gorunum.eimza2;
+    raporda teknik yönetici — "yok" ikinci alanı kaldırır) */
+export type EimzaKisi = "onaylanan" | "onaylayan";
+export function eimzaYaz(t: FormatTanimi, y: { yer: "hucre" | "kutu" | "gorunmez" | "yok"; x?: number; y?: number; en?: number; boy?: number; sayfa?: "son" | "her" },
+  kim: EimzaKisi = "onaylanan"): FormatTanimi {
   const g = { ...t.gorunum };
-  delete g.eimza;
-  if (y.yer === "hucre") return { ...t, gorunum: g };
+  const e = kim === "onaylanan" ? g.eimza : g.eimza2;
+  if (kim === "onaylanan") delete g.eimza; else delete g.eimza2;
+  /* onaylananın varsayılanı hücre (görünümden kalkar); onaylayanın "yok" ya da "görünmez"i ikinci alanın olmaması */
+  if (kim === "onaylanan" ? y.yer === "hucre" || y.yer === "yok" : y.yer === "yok" || y.yer === "gorunmez") return { ...t, gorunum: g };
   if (y.yer === "gorunmez") return { ...t, gorunum: { ...g, eimza: { yer: "gorunmez" } } };
-  const e = t.gorunum.eimza;
+  if (y.yer === "hucre") return { ...t, gorunum: { ...g, eimza2: { yer: "hucre" } } };
+  const v = kim === "onaylanan" ? EIMZA_KUTU : EIMZA_KUTU_2;
   const sinir = (n: number, en: number, cok: number) => Math.round(Math.min(Math.max(Number.isFinite(n) ? n : en, en), cok));
-  const en = sinir(y.en ?? e?.en ?? EIMZA_KUTU.en, 20, 210), boy = sinir(y.boy ?? e?.boy ?? EIMZA_KUTU.boy, 10, 100);
-  const x = sinir(y.x ?? e?.x ?? EIMZA_KUTU.x, 0, 210 - en), ust = sinir(y.y ?? e?.y ?? EIMZA_KUTU.y, 0, 297 - EIMZA_SERIT_MM - boy);
-  return { ...t, gorunum: { ...g, eimza: { yer: "kutu", x, y: ust, en, boy } } };
+  const en = sinir(y.en ?? e?.en ?? v.en, 20, 210), boy = sinir(y.boy ?? e?.boy ?? v.boy, 10, 100);
+  const x = sinir(y.x ?? e?.x ?? v.x, 0, 210 - en), ust = sinir(y.y ?? e?.y ?? v.y, 0, 297 - EIMZA_SERIT_MM - boy);
+  const sayfa = (y.sayfa ?? (e?.yer === "kutu" ? e.sayfa : undefined)) === "her" ? { sayfa: "her" as const } : {};
+  const kutu = { yer: "kutu" as const, x, y: ust, en, boy, ...sayfa };
+  return { ...t, gorunum: kim === "onaylanan" ? { ...g, eimza: kutu } : { ...g, eimza2: kutu } };
 }
 
 /* ── FİRMA BİLGİLERİ (595 madde 3, K2 — reisim: "firma bilgileri kısmında da [satır eklemek istedim ekleyemedim]"): 1. bölümün satırları

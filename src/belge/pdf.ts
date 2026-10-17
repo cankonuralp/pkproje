@@ -11,7 +11,7 @@ import { aracTutanagi, type AracTutanagiVerisi } from "./arac.ts";
 import { egitimFormu, type EgitimFormuVerisi } from "./egitim.ts";
 import { belgeAltYazisi, raporBelgesi } from "./belge.ts";
 import { imzaAlaniKoy, type EimzaYeri } from "./eimza.ts";
-import { EIMZA_KUTU, type FormatTanimi } from "../format/tanim.ts";
+import { EIMZA_KUTU, EIMZA_KUTU_2, type FormatTanimi } from "../format/tanim.ts";
 import { sahaFormu, type SahaFormuVerisi } from "./saha.ts";
 import { faturaBelgesi, type FaturaBelgesiVerisi } from "./fatura.ts";
 import { talepFormu, type TalepFormuVerisi } from "./talep.ts";
@@ -63,12 +63,19 @@ export function raporAltBilgisi(v: BelgeVerisi): string {
     + `${kac(a.metin)}${adres}</span>`
     + `<span style="white-space:nowrap">${kac(a.no)} · Sayfa <span class="pageNumber"></span> / <span class="totalPages"></span></span></div>`;
 }
-/** formatın e-imza yeri (verilmemişse İmza hücresi; kutunun eksik ölçüsü başlangıç değerinden) */
+/** formatın e-imza yeri — onaylanan (verilmemişse İmza hücresi; kutunun eksik ölçüsü başlangıç değerinden) */
 export function eimzaYeri(t: FormatTanimi): EimzaYeri {
   const e = t.gorunum.eimza;
   if (!e || e.yer === "hucre") return { yer: "hucre" };
   if (e.yer === "gorunmez") return { yer: "gorunmez" };
-  return { yer: "kutu", x: e.x ?? EIMZA_KUTU.x, y: e.y ?? EIMZA_KUTU.y, en: e.en ?? EIMZA_KUTU.en, boy: e.boy ?? EIMZA_KUTU.boy };
+  return { yer: "kutu", x: e.x ?? EIMZA_KUTU.x, y: e.y ?? EIMZA_KUTU.y, en: e.en ?? EIMZA_KUTU.en, boy: e.boy ?? EIMZA_KUTU.boy, ...(e.sayfa === "her" ? { sayfa: "her" as const } : {}) };
+}
+/** 2026-10-17 (İ5): onaylayanın e-imza yeri (teknik yönetici); verilmemişse null — ikinci alan yok */
+export function eimzaYeri2(t: FormatTanimi): EimzaYeri | null {
+  const e = t.gorunum.eimza2;
+  if (!e) return null;
+  if (e.yer === "hucre") return { yer: "hucre" };
+  return { yer: "kutu", x: e.x ?? EIMZA_KUTU_2.x, y: e.y ?? EIMZA_KUTU_2.y, en: e.en ?? EIMZA_KUTU_2.en, boy: e.boy ?? EIMZA_KUTU_2.boy, ...(e.sayfa === "her" ? { sayfa: "her" as const } : {}) };
 }
 
 /* 454 (canlıda, araç teslim tutanağı PDF'i: "spawn ETXTBSY"): aynı sunucu örneğinde iki PDF aynı anda istenince @sparticuz/chromium ikili
@@ -100,7 +107,7 @@ async function tarayici(): Promise<Browser> {
     şerit (595 madde 26); imzaya hazırlanan (kesin) belgede formatın yerinde boş imza alanı (madde 25, eimza.ts). */
 export async function belgePdf(v: BelgeVerisi): Promise<Uint8Array> {
   const pdf = await htmlPdf(belgeHtml(v), raporAltBilgisi(v));
-  return v.kesin ? imzaAlaniKoy(pdf, eimzaYeri(v.tanim)) : pdf;
+  return v.kesin ? imzaAlaniKoy(pdf, eimzaYeri(v.tanim), eimzaYeri2(v.tanim)) : pdf;
 }
 /** teklif belgesinin PDF'i (325) — aynı motor, aynı CSS */
 export const teklifPdf = (v: TeklifBelgesiVerisi) => htmlPdf(sayfaHtml(v.no, teklifBelgesi(v)));

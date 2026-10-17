@@ -460,6 +460,10 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
     if (s.kim === "uzman" && s.alan === "imza" && (t.gorunum.eimza?.yer ?? "hucre") === "hucre") {
       return <span key={`${s.id}-d`} className={`${k.ornek} ${k.eimzaHucre}`}>e-imza buraya işlenir · muayene uzmanı</span>;
     }
+    /* İ5: onaylayanın e-imza yeri teknik yöneticinin İmza hücresiyse */
+    if (s.kim === "teknik" && s.alan === "imza" && t.gorunum.eimza2?.yer === "hucre") {
+      return <span key={`${s.id}-d`} className={`${k.ornek} ${k.eimzaHucre}`}>e-imza buraya işlenir · onaylayan</span>;
+    }
     const metin = s.kim === "uzman"
       ? s.alan === "imza" ? "güvenli elektronik imza · muayene uzmanı" : "raporu yazanın kaydından"
       : s.kim === "uzman2" ? s.alan === "imza" ? "boş hücre · ikinci uzmanın imzası" : "sahada seçilen ikinci uzmanın kaydından"
@@ -851,6 +855,8 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
             muayene uzmanını denetçi sahada plan ekibinden seçer; tesis yetkilisinin adını ve unvanını sahada yazar, imzası belgede boş hücredir. Serbest satır
             (kaşe, not) sabit yazı ya da boş hücre olur.</p>
           <EimzaYeriAyari t={t} degis={degis} hucreVar={imzaSatirlari(b).some((s) => s.kim === "uzman" && s.alan === "imza")} />
+          {/* İ5 (2026-10-17): ikinci e-imza yeri — onaylayan (teknik yönetici) */}
+          <EimzaYeriAyari t={t} degis={degis} kim="onaylayan" hucreVar={imzaSatirlari(b).some((s) => s.kim === "teknik" && s.alan === "imza")} />
         </>;
       })()}
       {b.blok === "bilgi" && dizilisAyari(b, i)}

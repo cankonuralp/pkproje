@@ -2525,6 +2525,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-17 (İ5 YAPILDI): **İKİ E-İMZA YERİ — ONAYLANAN VE ONAYLAYAN, AKIŞ YOK** (reisim: *"akışa gerek yok e imza yerleri onanan ve onaylayan
+  olarak olsun bu sayede her türlü belgede bu kullanışlı olur"*). Format yapıcıda imza bölümünün ayarında iki seçim: "E-imzanın yeri · Onaylanan"
+  (belgeyi hazırlayan; raporda muayene uzmanı — İmza hücresi · Son sayfada kutu · Her sayfada kutu · Görünmez) ve "Onaylayanın e-imza yeri" (raporda
+  teknik yönetici — Yok · İmza hücresi · Son sayfada kutu · Her sayfada kutu). İmzaya hazırlanan PDF'te iki ayrı boş imza alanı; uygulama imza sırası
+  yönetmez — yüklenen imzalı PDF'te bir ya da iki imza olabilir (art arda iki imza denetimden geçer). "Her sayfada kutu": tek imza alanının her
+  sayfada birer görünür parçası (PDF standardı; parçanın görünümü imza aracına bağlı) — denetim parçaya yalnız görünüm, ebeveyne değer yazdırır.
+  Eski formatlar aynı (ikinci alan yok).
 - 2026-10-17 (İ1–İ3 YAPILDI; reisim: *"tamam reisim güzel, elindeki tüm işleri yeni verdiğim işler ile birlikte sırala başla durmadan bitir"*):
   **Önceki rapor.** Rapor oluştur (çevrimiçi ve bağlantısız) ekipmanın bu plan dışındaki EN SON TAMAMLANMIŞ raporunun imza anındaki KAYITLI
   içeriğinden açılır (PDF okunmaz): ekipman bilgileri (boş olan ekipman kaydından), kayıttan gelmeyen bilgi alanları, madde seçimleri; ölçüm /

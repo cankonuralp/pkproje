@@ -54,8 +54,11 @@ export function formatHaritasi(t: FormatTanimi): string {
   for (const s of basSatirlari(t)) l.push(`- ${s.id} · ${s.ad} · ${s.kaynak === "serbest" ? `serbest${s.metin ? `, yazı: ${s.metin.slice(0, 80)}` : ""}` : BAS_KAYNAK_ADI[s.kaynak]}`);
   l.push(`Ekipman satırları: “${ee.kod}”, “${ee.tur}” · sayfa altı: “${t.gorunum.altYazi ?? "{firma} · {kod}"}”`);
   const e = t.gorunum.eimza;
+  const e2 = t.gorunum.eimza2;
+  if (e2) l.push(`Onaylayanın e-imza yeri: ${e2.yer === "hucre" ? "teknik yöneticinin İmza hücresi"
+    : `${e2.sayfa === "her" ? "her" : "son"} sayfada kutu (soldan ${e2.x ?? "?"} mm, üstten ${e2.y ?? "?"} mm, ${e2.en ?? "?"} × ${e2.boy ?? "?"} mm)`}`);
   l.push(`E-imzanın yeri: ${!e || e.yer === "hucre" ? "imza bölümündeki İmza hücresi" : e.yer === "gorunmez" ? "görünmez imza"
-    : `son sayfada kutu (soldan ${e.x ?? "?"} mm, üstten ${e.y ?? "?"} mm, ${e.en ?? "?"} × ${e.boy ?? "?"} mm)`}`);
+    : `${e.sayfa === "her" ? "her" : "son"} sayfada kutu (soldan ${e.x ?? "?"} mm, üstten ${e.y ?? "?"} mm, ${e.en ?? "?"} × ${e.boy ?? "?"} mm)`}`);
   for (const b of t.bolumler) {
     l.push(`## ${b.id} · ${BLOK_TR[b.blok]} · ${b.ad}${b.kilit ? " (Bakanlık bölümü)" : ""}`);
     if (b.blok === "bilgi") {
@@ -119,8 +122,9 @@ export interface FormatIslemi {
   /** imza_satiri (595): eylem (ekle | degistir | cikar | yukari | asagi), kisi (uzman | teknik | diger), bilgi (kişinin bilgisi), yazi (serbest
       satırın sabit yazısı), tam (tam satır) */
   eylem?: unknown; kisi?: unknown; bilgi?: unknown; yazi?: unknown; tam?: unknown;
-  /** eimza_yeri (595): yer (hucre | kutu | gorunmez); kutuda mm — x soldan, y üstten, en, boy */
-  yer?: unknown; x?: unknown; y?: unknown; en?: unknown; boy?: unknown;
+  /** eimza_yeri (595): yer (hucre | kutu | gorunmez; onaylayanda yok | hucre | kutu); kutuda mm — x soldan, y üstten, en, boy; sayfa son | her;
+      kisi teknik → onaylayanın yeri (İ5, 2026-10-17) */
+  yer?: unknown; x?: unknown; y?: unknown; en?: unknown; boy?: unknown; sayfa?: unknown;
   /** firma_satiri (595): eylem; ekle'de kaynak (FIRMA_KAYNAKLARI), ad, serbestte yazi; öteki eylemlerde oge (satırın kimliği ya da adı) */
   kaynak?: unknown;
   /** baslik (595): alan (hangi başlık / sözcük) + ad (yeni yazı; boş: bugünkü yazı); not_satiri: satir */
@@ -274,13 +278,18 @@ export function formatIslemleri(t0: FormatTanimi, islemler: readonly FormatIslem
     }
     if (islem === "eimza_yeri") {
       const yer = metin(x.yer, 20);
-      if (yer !== "hucre" && yer !== "kutu" && yer !== "gorunmez") { red("yer: hucre, kutu ya da gorunmez"); continue; }
+      /* İ5 (2026-10-17): kisi teknik → onaylayanın yeri (yok · hucre · kutu); sayfa her → kutu her sayfada */
+      const kim = metin(x.kisi, 20) === "teknik" ? "onaylayan" as const : "onaylanan" as const;
+      if (kim === "onaylanan" ? yer !== "hucre" && yer !== "kutu" && yer !== "gorunmez" : yer !== "hucre" && yer !== "kutu" && yer !== "yok") {
+        red(kim === "onaylanan" ? "yer: hucre, kutu ya da gorunmez" : "onaylayan (kisi teknik) için yer: yok, hucre ya da kutu"); continue;
+      }
       const sayi = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v
         : typeof v === "string" && v.trim() && Number.isFinite(Number(v.replace(",", "."))) ? Number(v.replace(",", ".")) : undefined);
-      t = eimzaYaz(t, { yer, x: sayi(x.x), y: sayi(x.y), en: sayi(x.en), boy: sayi(x.boy) });
-      const g = t.gorunum.eimza;
-      yapilan.push(yer === "hucre" ? "E-imzanın yeri: İmza hücresi" : yer === "gorunmez" ? "E-imza görünmez atılır"
-        : `E-imzanın yeri: son sayfada kutu (soldan ${g?.x} mm, üstten ${g?.y} mm, ${g?.en} × ${g?.boy} mm)`);
+      const sayfa = metin(x.sayfa, 10) === "her" ? "her" as const : metin(x.sayfa, 10) === "son" ? "son" as const : undefined;
+      t = eimzaYaz(t, { yer: yer as "hucre" | "kutu" | "gorunmez" | "yok", x: sayi(x.x), y: sayi(x.y), en: sayi(x.en), boy: sayi(x.boy), sayfa }, kim);
+      const g = kim === "onaylanan" ? t.gorunum.eimza : t.gorunum.eimza2, ad = kim === "onaylanan" ? "E-imzanın yeri" : "Onaylayanın e-imza yeri";
+      yapilan.push(yer === "yok" ? "Onaylayanın e-imza yeri kaldırıldı" : yer === "hucre" ? `${ad}: İmza hücresi` : yer === "gorunmez" ? "E-imza görünmez atılır"
+        : `${ad}: ${g?.yer === "kutu" && g.sayfa === "her" ? "her" : "son"} sayfada kutu (soldan ${g?.x} mm, üstten ${g?.y} mm, ${g?.en} × ${g?.boy} mm)`);
       continue;
     }
     const i = bolumBul(t, x.bolum);
@@ -552,7 +561,8 @@ export const FORMAT_ARACI = {
     + "ekibinden seçilir) | tesis (tesis yetkilisi: ad, unvan, imza — sahada yazılır) | diger, bilgi ad | meslek | ekipnet | diploma | "
     + "oda | eposta | tel | imza | zaman | unvan (zaman yalnız teknikte, unvan yalnız teside), ad, serbest satırda yazi —, degistir (oge + ad / yazi / tam), "
     + "cikar, yukari, asagi). "
-    + "eimza_yeri (e-imzanın imzaya hazırlanan PDF'teki yeri: yer hucre — İmza hücresi — | kutu — son sayfada; x soldan, y üstten, en, boy mm — | gorunmez). "
+    + "eimza_yeri (e-imzanın imzaya hazırlanan PDF'teki yeri: yer hucre — İmza hücresi — | kutu — x soldan, y üstten, en, boy mm; sayfa son | her — | "
+    + "gorunmez; ikinci yer ONAYLAYAN için kisi teknik ile yer yok | hucre | kutu — PDF'te ikinci boş imza alanı, imza sırası yok). "
     + "firma_satiri (1. bölüm Firma bilgileri: eylem ekle — kaynak firma | adres | rapor_no | rapor_tarihi | isg | sgk | bas | bit | sonraki | takip | metot | "
     + "eposta | tel | plan_no | serbest, ad, serbestte yazi —, degistir (oge + ad / yazi / tam), cikar, yukari, asagi; SGK, İSG-KATİP, başlangıç çıkmaz). "
     + "baslik (sabit başlık / sözcük: bolum + alan sira | not | sonuc (ölçüm), olcum | deger | sinir | sonuc (test), no | madde | sonuc (kontrol listesi), "
@@ -590,7 +600,7 @@ export const FORMAT_ARACI = {
             eylem: { type: "string", enum: ["ekle", "degistir", "cikar", "yukari", "asagi", "tablo", "liste"] }, dizilis: { type: "number" }, acik: { type: "boolean" }, kisi: { type: "string", enum: ["uzman", "teknik", "uzman2", "tesis", "diger"] },
             bilgi: { type: "string", enum: [...IMZA_ALANLARI] }, yazi: { type: "string" }, tam: { type: "boolean" },
             kaynak: { type: "string", enum: [...new Set<string>([...FIRMA_KAYNAKLARI, ...BAS_KAYNAKLARI])] },
-            yer: { type: "string", enum: ["hucre", "kutu", "gorunmez", "son", "bas", "gizli"] }, alan: { type: "string" }, satir: { type: "number" }, x: { type: "number" }, y: { type: "number" }, en: { type: "number" }, boy: { type: "number" },
+            yer: { type: "string", enum: ["hucre", "kutu", "gorunmez", "yok", "son", "bas", "gizli"] }, sayfa: { type: "string", enum: ["son", "her"] }, alan: { type: "string" }, satir: { type: "number" }, x: { type: "number" }, y: { type: "number" }, en: { type: "number" }, boy: { type: "number" },
           },
           required: ["islem"],
         },

@@ -296,6 +296,17 @@ export const Gorunum = z.object({
     yer: z.enum(["hucre", "kutu", "gorunmez"]),
     x: z.number().min(0).max(200).optional(), y: z.number().min(0).max(287).optional(),
     en: z.number().min(20).max(210).optional(), boy: z.number().min(10).max(100).optional(),
+    /** 2026-10-17 (İ5): kutu her sayfada (aynı imzanın her sayfada görünen parçası); verilmemişse son sayfada */
+    sayfa: z.literal("her").optional(),
+  }).optional(),
+  /** 2026-10-17 (İ5 — reisim: "akışa gerek yok e imza yerleri onanan ve onaylayan olarak olsun bu sayede her türlü belgede bu kullanışlı olur"):
+      ikinci e-imza yeri — ONAYLAYAN (raporda teknik yönetici); eimza = ONAYLANAN (belgeyi hazırlayan; raporda muayene uzmanı). Verilmemişse ikinci
+      alan yok (eski formatlar aynı). hucre: imza bölümündeki teknik yöneticinin İmza satırı · kutu: son ya da her sayfada (mm). İmza sırası yok. */
+  eimza2: z.object({
+    yer: z.enum(["hucre", "kutu"]),
+    x: z.number().min(0).max(200).optional(), y: z.number().min(0).max(287).optional(),
+    en: z.number().min(20).max(210).optional(), boy: z.number().min(10).max(100).optional(),
+    sayfa: z.literal("her").optional(),
   }).optional(),
 });
 
@@ -393,6 +404,8 @@ export type FormatTanimi = z.output<typeof FormatTanimi>;
 export type FormatGirdisi = z.input<typeof FormatTanimi>;
 /** e-imza kutusunun başlangıç yeri (son sayfa, sağ alt — şeridin üstünde) */
 export const EIMZA_KUTU = { x: 120, y: 240, en: 80, boy: 25 } as const;
+/** 2026-10-17 (İ5): onaylayanın kutusunun başlangıç yeri (onaylananınkinin solunda — üst üste binmesin) */
+export const EIMZA_KUTU_2 = { x: 15, y: 240, en: 80, boy: 25 } as const;
 
 /* ── CEVAPLAR (raporun içeriği; kimliklerle) ── */
 /** ölçüm tablosunda en çok satır — raporun kendi sınırı (Cevaplar.tablo); S.A.Y'ın rapora yazması da bununla (raporlar/say-doldur.ts — 2026-10-16:

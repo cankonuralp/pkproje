@@ -363,6 +363,12 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await eimza.getByRole("radio", { name: "Görünmez imza" }).check();
     await expect(soldan).toHaveCount(0);
     await eimza.getByRole("radio", { name: /^İmza hücresi/ }).check();
+    /* İ5 (2026-10-17): ikinci e-imza yeri — onaylayan (teknik yönetici): her sayfada kutu, başlangıç ölçüsü; "Yok" kaldırır */
+    const onaylayan = page.getByRole("group", { name: "Onaylayanın e-imza yeri" });
+    await onaylayan.getByRole("radio", { name: "Her sayfada kutu" }).check();
+    await expect(onaylayan.getByRole("textbox", { name: "Onaylayan e-imza kutusu · Soldan (mm)" })).toHaveValue("15");
+    await onaylayan.getByRole("radio", { name: "Yok", exact: true }).check();
+    await expect(onaylayan.getByRole("textbox", { name: /Soldan/ })).toHaveCount(0);
     /* 595 (madde 1): "+ İmza yeri" — ikinci muayene uzmanı varsayılan satırlarıyla gelir (sahada plan ekibinden seçilir) */
     await page.getByRole("group", { name: "İmza yerleri" }).getByRole("checkbox", { name: "İkinci muayene uzmanı" }).check();
     await expect(imzaBolumu.getByRole("button", { name: "İkinci muayene uzmanı", exact: true })).toBeVisible();

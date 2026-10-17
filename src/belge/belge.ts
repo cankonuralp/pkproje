@@ -20,6 +20,8 @@ import { TANIMLAR } from "../tanim/veri.ts";
 import type { BelgeFotosu, BelgeVerisi, ImzaKisiBilgisi } from "./veri.ts";
 /* eimza.ts'nin işaret adresi burada da yazılı (eimza.ts pdf-lib'i içe aktarır; çizici tarayıcıda da koşar — kilit tests/eimza.test.ts aynılığı denetler) */
 const EIMZA_ISARETI = "probata-eimza:uzman";
+/** 2026-10-17 (İ5): onaylayanın (teknik yönetici) İmza hücresinin işareti — eimza.ts EIMZA_ISARETI_2 ile aynı */
+const EIMZA_ISARETI_2 = "probata-eimza:teknik";
 
 const tarihNo = (s: string | null | undefined) => (s ? `${s.slice(8, 10)}.${s.slice(5, 7)}.${s.slice(0, 4)}` : "-");
 const saatliNo = (s: string | null | undefined) => (s ? `${tarihNo(s)} ${s.slice(11, 16)}` : "-");
@@ -193,6 +195,14 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
     isaretKondu = true;
     return h("a", { className: "rb-eimza", href: EIMZA_ISARETI }, yazi);
   };
+  /* İ5 (2026-10-17): onaylayanın e-imza yeri teknik yöneticinin İmza hücresiyse aynı işaret düzeni (ikinci boş imza alanı) */
+  let isaret2Kondu = false;
+  const teknikImzaHucresi = (zaman: string): ReactNode => {
+    const yazi = `Elektronik onay · ${zamanNo(zaman)}`;
+    if (!v.kesin || isaret2Kondu || t.gorunum.eimza2?.yer !== "hucre") return yazi;
+    isaret2Kondu = true;
+    return h("a", { className: "rb-eimza", href: EIMZA_ISARETI_2 }, yazi);
+  };
   const kisiDegeri = (k: ImzaKisiBilgisi | null | undefined, alan: ImzaSatiri["alan"]): string => {
     if (!k) return "-";
     if (alan === "meslek") return meslekAdi(k);
@@ -206,7 +216,7 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
     if (s.kim === "uzman2") return s.alan === "imza" ? "" : !v.ikinci ? "-" : s.alan === "ad" ? v.ikinci.ad : kisiDegeri(v.ikinci, s.alan);
     if (s.kim === "tesis") return s.alan === "ad" ? deger(c.imzaci.tesisAd) : s.alan === "unvan" ? deger(c.imzaci.tesisUnvan) : "";
     if (!v.onay) return "-";
-    return s.alan === "ad" ? v.onay.ad : s.alan === "zaman" ? zamanNo(v.onay.zaman) : s.alan === "imza" ? `Elektronik onay · ${zamanNo(v.onay.zaman)}` : kisiDegeri(v.onay.kisi, s.alan);
+    return s.alan === "ad" ? v.onay.ad : s.alan === "zaman" ? zamanNo(v.onay.zaman) : s.alan === "imza" ? teknikImzaHucresi(v.onay.zaman) : kisiDegeri(v.onay.kisi, s.alan);
   };
   const imzaSatirli = (l: readonly ImzaSatiri[]) => {
     const gruplar: ImzaSatiri[][] = [];
