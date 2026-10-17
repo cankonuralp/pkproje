@@ -385,15 +385,21 @@ function tabanAdaylari(s: string, bas: number): number[] {
 
 /** bayt öneki de içerik de tutmadı */
 export const ESLESMEDI_TABAN = "Yüklenen PDF bu raporun imzaya hazırlanan PDF'i değil ya da imza taşımıyor.";
+const ONCEKI_IMZA_BOZULUR = "Yüklenen PDF, imzalanacak PDF'in üstüne artımlı imzalanmamış: imza programı belgeyi yeniden yazmış olabilir, bu da belgedeki "
+  + "önceki imzayı (teknik yöneticinin imzası) bozar. Belgeyi değiştirmeden imzalayan bir programla imzalayın.";
 /** imzalı PDF'in TABANI: hazırladığımız PDF'in kendisi (bayt öneki — artımlı imza) ya da imza programının imzadan önceki sürümü (yeniden yazılmış
     ya da üstüne artımlı damga eklenmiş), içerikçe eşdeğer. Tabandan sonrası beyaz listeye uymalı (imza, uzun süreli doğrulama). Olmazsa nedeni.
     Kripto ve imzalayanın adı tabana göre ayrıca (ekImzaNedeni(taban, imzali), ekImzaIcerikleri(taban, imzali)). */
 export function imzaliTaban(imzasiz: Uint8Array, imzali: Uint8Array): { taban: Uint8Array } | { neden: string } {
   if (imzaliPdfGecerli(imzasiz, imzali)) return { taban: imzasiz };
   const onek = imzali.length > imzasiz.length && Buffer.from(imzali.subarray(0, imzasiz.length)).equals(Buffer.from(imzasiz));
+  /* ayrıntılı neden yalnız dosya BU belgenin (yeniden yazılmış) hâliyse: hazırladığımız PDF'in doğrulama bağlantısı imzalıda da var; başka dosyada
+     (yanlış rapor, başka belge) genel neden — "okunamadı" ya da "içeriği aynı değil" yanıltır */
+  const bizim = new Set(dogrulamaRaporlari(imzasiz));
+  const tanidik = bizim.size > 0 && dogrulamaRaporlari(imzali).some((x) => bizim.has(x));
   IMZA_SOZLUGU.lastIndex = 0;
   /* hazırladığımız PDF imzalıysa (teknik yönetici) yalnız artımlı ek kabul: yeniden yazmak önceki imzayı bozar */
-  if (!onek && IMZA_SOZLUGU.test(latin1(imzasiz))) return { neden: "Yüklenen PDF, imzalanacak PDF'in üstüne artımlı imzalanmamış: imza programı belgeyi yeniden yazmış olabilir, bu da belgedeki önceki imzayı (teknik yöneticinin imzası) bozar. Belgeyi değiştirmeden imzalayan bir programla imzalayın." };
+  if (!onek && IMZA_SOZLUGU.test(latin1(imzasiz))) return { neden: tanidik ? ONCEKI_IMZA_BOZULUR : ESLESMEDI_TABAN };
   let neden: string | null = null;
   for (const e of tabanAdaylari(latin1(imzali), onek ? imzasiz.length : 0)) {
     const taban = imzali.subarray(0, e);
@@ -401,7 +407,7 @@ export function imzaliTaban(imzasiz: Uint8Array, imzali: Uint8Array): { taban: U
     neden = esdegerNedeni(imzasiz, taban);
     if (neden === null) return { taban };
   }
-  return { neden: neden ?? ESLESMEDI_TABAN };
+  return { neden: neden !== null && (tanidik || onek) ? neden : ESLESMEDI_TABAN };
 }
 
 /** imzalı PDF'teki doğrulama bağlantılarından rapor kimlikleri (toplu yüklemede eşleştirme — yeniden yazılmış dosyada bayt öneki tutmaz) */

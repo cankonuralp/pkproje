@@ -113,8 +113,11 @@ test("imzasız / başka belge / bozuk girdi: genel neden; ağır girdi sınırl�
   assert.deepEqual(imzaliTaban(A, yenidenYaz(A)), { neden: "Yüklenen PDF bu raporun imzaya hazırlanan PDF'i değil ya da imza taşımıyor." }, "imzasız yeniden yazım");
   const baska = ornekPdf({ metin: "DN-1026-002-cd34e" });
   assert.equal(tabanNedeni({}, baska), null);
-  const r = imzaliTaban(A, imzaEki(yenidenYaz(baska)));
-  assert.ok("neden" in r && /içeriği imzaya hazırlanan PDF'le aynı değil/.test(r.neden), "başka raporun imzalısı");
+  assert.deepEqual(imzaliTaban(A, imzaEki(yenidenYaz(baska))), { neden: "Yüklenen PDF bu raporun imzaya hazırlanan PDF'i değil ya da imza taşımıyor." },
+    "başka raporun imzalısı: genel neden (doğrulama bağlantısı bizimki değil)");
+  assert.match(tabanNedeni({ icerik: (v) => Buffer.from(v.toString("latin1").replace("Uygun", "Kotuu"), "latin1") })!, /aynı değil/, "bizim bağlantımızla: ayrıntılı neden");
+  assert.equal(tabanNedeni({ baglantiAt: true, icerik: (v) => Buffer.from(v.toString("latin1").replace("Uygun", "Kotuu"), "latin1") }),
+    "Yüklenen PDF bu raporun imzaya hazırlanan PDF'i değil ya da imza taşımıyor.", "bağlantısı atılmış değişik belge: genel neden");
   assert.equal(esdegerNedeni(A, new TextEncoder().encode("%PDF-1.4\nbozuk")), "İmzalı PDF okunamadı.");
   /* çok sayfalı belge: 150 sayfa sınırlı sürede */
   const buyuk = ornekPdf({ sayfa: 150 });

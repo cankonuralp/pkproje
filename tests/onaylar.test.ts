@@ -1057,7 +1057,7 @@ test("yeniden yazılmış imzalı PDF: içerik aynıysa tek ve toplu yükleme ta
   const p2 = await imzasizBayt(h2), ad2 = `${no2}-HT-2-Hava tankı (1).pdf`;
   const t = (ad: string, bayt: Uint8Array) => a(FA.den, (db) => imzaliEslestirYukle(db, depo, FA.den, A, { ad, bayt }));
   assert.deepEqual(await t(ad2, imzaEki(yenidenYaz(p2, { baglantiAt: true, icerik: degistir }))),
-    { id: h2, no: no2, sonuc: { durum: "gecersiz", hatalar: { dosya: ICERIK } } });
+    { id: h2, no: no2, sonuc: { durum: "gecersiz", hatalar: { dosya: IMZA_GECERSIZ } } }, "adla eşleşti; bağlantısız değişik belgede genel neden");
   assert.equal((await t("imzali.pdf", imzaEki(yenidenYaz(p2, { baglantiAt: true })))).id, null, "ne bağlantı ne numara: eşleşmez");
   const e2 = await t(ad2, imzaEki(yenidenYaz(p2, { baglantiAt: true })));
   assert.equal(e2.id, h2);

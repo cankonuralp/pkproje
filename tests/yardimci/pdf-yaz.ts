@@ -85,9 +85,15 @@ export function yenidenYaz(a: Uint8Array, p: YenidenSecenek = {}): Uint8Array {
     .replace(/(\d+) (\d+) R/g, (_, n: string, g: string) => `${Number(n) + k} ${g} R`)
     .replace(/\d+\.\d{3,}/g, (m) => Number(m).toFixed(2)).replace(/\/Length \d+ ?/, "");
   const tur = (no: number) => o(no) ?? "";
+  /* atılan açıklamalar (boş imza alanı, bizim bağlantılarımız) dosyaya hiç yazılmaz — araç başvurulmayan nesneyi taşımaz */
+  const atilan = new Set<number>();
+  for (const [no, y] of o.yerler ?? new Map()) {
+    const g = y.tur === "duz" ? tur(no) : "";
+    if ((!p.imzaAlaniKalsin && /\/FT \/Sig/.test(g)) || (!!p.baglantiAt && /\/Subtype \/Link/.test(g))) atilan.add(no);
+  }
   let sayfaSira = 0;
   for (const [no, y] of o.yerler ?? new Map()) {
-    if (y.tur !== "duz" || no === 0) continue;
+    if (y.tur !== "duz" || no === 0 || atilan.has(no)) continue;
     const ham = o.ham(no), cozulmus = o.akis(no);
     let s = donustur(tur(no));
     let akis = ham ?? undefined;
@@ -97,10 +103,7 @@ export function yenidenYaz(a: Uint8Array, p: YenidenSecenek = {}): Uint8Array {
       const sira = sayfaSira++;
       s = s.replace(/\/Contents (\d+) 0 R/, (_, c: string) => `/Contents [${onekNo + 10 * sira} 0 R ${c} 0 R ${sonekNo + 10 * sira} 0 R]`)
         .replace("/XObject <<", `/XObject << /Xi0 ${damgaNo} 0 R`);
-      const at = (r: string) => {
-        const g = tur(Number(r.split(" ")[0]) - k);
-        return (!p.imzaAlaniKalsin && /\/FT \/Sig/.test(g)) || (!!p.baglantiAt && /\/Subtype \/Link/.test(g));
-      };
+      const at = (r: string) => atilan.has(Number(r.split(" ")[0]) - k);
       const eski = /\/Annots \[([^\]]*)\]/.exec(s)?.[1].trim().match(/\d+ \d+ R/g) ?? [];
       const yeni = [...eski.filter((r) => !at(r)), `${servisNo} 0 R`, ...(p.ekAciklama ?? [])];
       s = /\/Annots \[/.test(s) ? s.replace(/\/Annots \[[^\]]*\]/, `/Annots [${yeni.join(" ")}]`) : s.replace(/>>\s*$/, `/Annots [${yeni.join(" ")}] >>`);
