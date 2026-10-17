@@ -7,7 +7,7 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { test } from "node:test";
 import { ornekBelge } from "../src/belge/ornek.ts";
 import { raporAltBilgisi } from "../src/belge/pdf.ts";
-import { dogrulamaAdresi, dogrulamaCoz, dogrulamaKodu } from "../src/server/dogrulama.ts";
+import { PDF_JETON_DK, dogrulamaAdresi, dogrulamaCoz, dogrulamaKodu, pdfJetonu, pdfJetonuGecerli } from "../src/server/dogrulama.ts";
 
 const K = randomBytes(32), F = randomUUID(), R = randomUUID();
 
@@ -24,6 +24,22 @@ test("kod: aynı firma ve revizyonda çözülür; başka firma, başka revizyon,
     assert.equal(dogrulamaCoz(k, F, K), null, k);
   }
   assert.equal(dogrulamaAdresi("https://deneme.example", kod), `https://deneme.example/dogrula/${kod}`);
+});
+
+/* 2026-10-17 (reisim: "rapor doğrulama ekranında raporun kendisi de gözüksün"): sayfadaki PDF'in adresi kısa ömürlü jetonla (anayasa 5.1) */
+test("PDF jetonu: süresi içinde, aynı firma ve kodla geçer; süresi geçmiş, ileri tarihli, başka firma / kod / anahtar ya da değiştirilmiş jeton geçmez", () => {
+  const kod = dogrulamaKodu(F, R, 0, K), simdi = Date.UTC(2026, 9, 17, 12, 0);
+  const j = pdfJetonu(F, kod, simdi, K);
+  assert.match(j, /^\d+\.[A-Za-z0-9_-]{22}$/);
+  assert.equal(pdfJetonuGecerli(j, F, kod, simdi, K), true);
+  assert.equal(pdfJetonuGecerli(j, F, kod, simdi + (PDF_JETON_DK - 1) * 60_000, K), true, "süresi içinde");
+  assert.equal(pdfJetonuGecerli(j, F, kod, simdi + (PDF_JETON_DK + 1) * 60_000, K), false, "süresi geçmiş");
+  assert.equal(pdfJetonuGecerli(pdfJetonu(F, kod, simdi + 60 * 60_000, K), F, kod, simdi, K), false, "ileri tarihli");
+  assert.equal(pdfJetonuGecerli(j, randomUUID(), kod, simdi, K), false, "başka firma");
+  assert.equal(pdfJetonuGecerli(j, F, dogrulamaKodu(F, randomUUID(), 0, K), simdi, K), false, "başka kod");
+  assert.equal(pdfJetonuGecerli(j, F, kod, simdi, randomBytes(32)), false, "başka anahtar");
+  assert.equal(pdfJetonuGecerli(`${Number(j.split(".")[0]) + 5}.${j.split(".")[1]}`, F, kod, simdi, K), false, "bitişi uzatılmış");
+  for (const x of ["", "x", "1.2", `${j}.x`]) assert.equal(pdfJetonuGecerli(x, F, kod, simdi, K), false, x);
 });
 
 test("alt şerit: adres verilince karekod (SVG) ve kaçışlı adres; verilmeyince yok", () => {

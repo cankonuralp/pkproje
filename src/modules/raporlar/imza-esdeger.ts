@@ -407,7 +407,8 @@ export function imzaliTaban(imzasiz: Uint8Array, imzali: Uint8Array): { taban: U
     neden = esdegerNedeni(imzasiz, taban);
     if (neden === null) return { taban };
   }
-  return { neden: neden !== null && (tanidik || onek) ? neden : ESLESMEDI_TABAN };
+  /* okunamayan / karşılaştırılamayan dosyada ayrıntı yanıltır (aynı raporun eski hazırlığı da aynı bağlantıyı taşır) — genel neden */
+  return { neden: neden !== null && (tanidik || onek) && !/^İmzalı PDF (?:okunamadı|karşılaştırılamadı)/.test(neden) ? neden : ESLESMEDI_TABAN };
 }
 
 /** PDF'in bağlantılarındaki (URI eylemi) doğrulama kodları — rapor · revizyon · imza (595 K8, src/server/dogrulama.ts); adres düz ya da onaltılık

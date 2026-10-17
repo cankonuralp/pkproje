@@ -620,7 +620,7 @@ pkproje/
                             sayfa bilgisi) · SayfaliListe; hesap liste/sayfa.ts, boy kalip.ts sayfa.tablo 20; Liste kendisi sayfalar (sayfa / sayfaDegistir,
                             alt: sayfalanmayan toplam satırı); saha raporu ölçüm tablosu + kontrol listesi sayfası SahaRaporu'nda, tek kural
                             raporlar/sayfa-yeri.ts — tablo değişince ilk değişen satırın, eksiğe git / S.A.Y'ın işaretlediği madde en üstteki yerin sayfası;
-                            belge / PDF bütün satırlar; kaynak kilidi tests/sayfalama.test.ts + tests/yardimci/sayfalama.ts) · kaydir/useSurukleKaydir.ts (548: yana kayan kap fareyle sürüklenir; ölçüm tablosu) · FOTOĞRAF TUŞU foto/FotoTusu.tsx (527 / 531: Fotoğraf çek · Galeriden /
+                            belge / PDF bütün satırlar; kaynak kilidi tests/sayfalama.test.ts + tests/yardimci/sayfalama.ts) · kaydir/useSurukleKaydir.ts (548: yana kayan kap fareyle sürüklenir; ölçüm tablosu) · PDF GÖRÜNÜMÜ pdf/PdfGorunumu.tsx (2026-10-17: sayfalar sayfanın içinde, pdf.js 5.4.149 — müşteri paneli raporu, doğrulama sayfası) · FOTOĞRAF TUŞU foto/FotoTusu.tsx (527 / 531: Fotoğraf çek · Galeriden /
                             bilgisayardan seç; S.A.Y Chat, araç teslim tutanağı, zimmet teslimi — capture yalnız burada ve S.A.Y ataçta, kilit tests/foto-tusu.test.ts)
                             + foto/secim.ts (saf: JPEG / PNG, bayt sınırı, yer) · YÜZEN KATMAN secim/yuzen.ts (452: seçim listesi, süzgeç seçicisi, takvim,
                             saat önerileri üst katmanda — sayfayı / pencereyi itmez, kesilmez; tarama açılır katman denetimi; 486: konum satır içi biçemde,

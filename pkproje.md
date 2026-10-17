@@ -2527,6 +2527,16 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-17 (YAPILDI): **RAPOR SAYFANIN İÇİNDE + EXCEL'DE KULLANIM YERİ** (reisim: *"müşteri tıklayınca direk raporu görmeli pdfi aç, tuşu falan ne
+  alaka … indir tuşu neyse de burada tıkladığı gibi içeride raporu görmeli"* · *"rapor doğrulama ekranında raporun kendisi de gözüksün lütfen"* ·
+  *"excelde ekipman kullanım yeri de olmalı … ekipman bilgileri kısmında kullanım yeri yazar oradan alınacak … yoksa veya girilmemişse "-""*).
+  (1) Müşteri paneli › rapor: imzalı rapor sayfanın içinde görünür (sayfalar ekrana sığar; telefonda da); "PDF'i aç" kalktı, "PDF indir" kaldı.
+  (2) Rapor doğrulama sayfası: kartın altında imzalı raporun kendisi. Karekodu okutan herkes raporu görür (kâğıttaki raporun sahibi); PDF'in
+  adresi 10 dakikalık (kalıcı herkese açık dosya bağlantısı yok — anayasa 5.1); saklama süresi dolup silinen raporda görüntü yok. (3) Müşteri
+  panelinin Excel'inde "Kullanım yeri" sütunu (Ekipman türü'nden sonra): imzalı raporun ekipman bilgilerindeki kullanım yeri; yoksa "-".
+  Görüntüleyici components/pdf/PdfGorunumu (pdf.js 5.4.149, paket; dizgi değerlendirme kapalı). Kilit e2e saha-raporu (müşteri paneli) + toplu-imza
+  (doğrulama sayfası, jetonsuz 404), tests/dogrulama (jeton) + bozan 4, musteri-paneli (PG). Doğrulama sayfasının öteki oturumdaki maketi (imzalar,
+  açılır bölümler, "Elinizdeki PDF bu mu?") ayrı; onaylanınca bu görüntüleyici onun içine taşınır.
 - 2026-10-17 (YAPILDI): **PROBATA DOĞRULAMA BAĞLANTISI OLMAYAN İMZALI RAPOR KABUL EDİLMEZ** (reisim: *"şeridi yukarı alma ama probata linki olmayan
   raporu kabul etme … sorun oymuş yani diğer raporda varmış link bir diğerinde yokmuş"*). Bulgu: iki rapordan birinin imzaya hazırlanan PDF'i
   doğrulama karekodu / bağlantısı gelmeden (16 Ekim) hazırlanmıştı; imzalısı da bağlantısızdı ve kabul edildi. Artık: imzalı PDF bu raporun BU

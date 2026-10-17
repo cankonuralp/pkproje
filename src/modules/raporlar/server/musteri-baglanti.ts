@@ -20,6 +20,8 @@ export interface MusteriRaporu {
   /** ekipmanPasif: ekipman pasife alınmış — planlanan kontrolde sonraki tarihi sayılmaz (firma tarafındaki kapsam hesabı gibi) */
   ekipmanId: string; ekipmanKod: string; ekipmanPasif: boolean; turAd: string; tesisId: string; tesis: string;
   kontrol: string | null; sonraki: string | null; sonuc: RaporSonucu | null; imzalandi: string;
+  /** kullanım yeri: imzalı sürümün ekipman bilgisinden (raporun "Kullanım yeri"; 2026-10-17 — Excel'de sütun); girilmemişse null */
+  konum: string | null;
   /** imza günü — Türkiye takvimi (gece imzalanan rapor bir gün önce görünmesin — 319 incelemesi) */
   imzaGunu: string;
   /** imzalı PDF dosyasının kimliği (tek indirme ucundan, müşteri rolünde — kendi raporu); boyut: bayt (toplu indirmenin sınırı). null: saklama
@@ -36,8 +38,9 @@ export async function musteriRaporlari(db: Sorgulayici, s: { id?: string } = {})
   if (s.id !== undefined && !UUID.test(s.id)) return [];
   const l = (await db.sorgu<{
     rapor_id: string; no: string; revizyon: number; ekipman_id: string; tur_id: string; tesis_id: string; kontrol_tarihi: string | null; sonraki: string | null;
-    sonuc: MusteriRaporu["sonuc"]; imzalandi: Date; imza_gunu: string; imzali_dosya: string; boyut: string | null;
+    sonuc: MusteriRaporu["sonuc"]; imzalandi: Date; imza_gunu: string; imzali_dosya: string; boyut: string | null; konum: string | null;
   }>(`SELECT s.rapor_id::text, s.no, s.revizyon, s.ekipman_id::text, s.tur_id::text, s.tesis_id::text, s.kontrol_tarihi, s.sonraki, s.sonuc, s.imzalandi,
+        s.icerik -> 'ekipman_bilgi' ->> 'konum' AS konum,
         (s.imzalandi AT TIME ZONE 'Europe/Istanbul')::date::text AS imza_gunu, s.imzali_dosya::text, d.boyut::text AS boyut
       FROM rapor_surumu s LEFT JOIN dosya d ON d.firma_id = s.firma_id AND d.id = s.imzali_dosya
       ${s.id ? "WHERE s.rapor_id = $1 " : ""}ORDER BY s.imzalandi DESC`, s.id ? [s.id] : [])).rows;
@@ -50,6 +53,7 @@ export async function musteriRaporlari(db: Sorgulayici, s: { id?: string } = {})
     ekipmanId: x.ekipman_id, ekipmanKod: ek.get(x.ekipman_id)?.kod ?? "—", ekipmanPasif: ek.get(x.ekipman_id)?.pasif ?? false, turAd: tur.get(x.tur_id) ?? "—",
     tesisId: x.tesis_id, tesis: tesis.get(x.tesis_id) ?? "—",
     kontrol: x.kontrol_tarihi, sonraki: x.sonraki, sonuc: x.sonuc, imzalandi: x.imzalandi.toISOString(), imzaGunu: x.imza_gunu,
+    konum: x.konum?.trim() || null,
     dosya: x.boyut === null ? null : x.imzali_dosya,
     boyut: Number(x.boyut ?? 0),
   }));

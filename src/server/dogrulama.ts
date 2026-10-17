@@ -25,3 +25,24 @@ export function dogrulamaCoz(kod: string, firmaId: string, anahtar: Buffer = ana
 
 /** firmanın adresi (kiraci/istek.ts firmaAdresi) + kod */
 export const dogrulamaAdresi = (firmaAdresi: string, kod: string) => `${firmaAdresi}/dogrula/${kod}`;
+
+/* 2026-10-17 (reisim: "rapor doğrulama ekranında raporun kendisi de gözüksün"): doğrulama sayfası imzalı raporu gösterir; PDF'in adresi KISA
+   ÖMÜRLÜ (anayasa 5.1 — kalıcı herkese açık dosya bağlantısı yok): sayfa her açılışta PDF_JETON_DK dakikalık jeton üretir (bitiş dakikası + HMAC —
+   firmaya ve koda bağlı). Kapı yine doğrulama kodu: kodu olan sayfayı açar, sayfa jetonu verir; bağlantının kendisi dakikalar sonra geçmez. */
+export const PDF_JETON_DK = 10;
+const pdfMac = (anahtar: Buffer, firmaId: string, kod: string, bitis: number) =>
+  createHmac("sha256", anahtar).update(`probata-dogrulama-pdf:${firmaId}:${kod}:${bitis}`).digest("base64url").slice(0, MAC_UZUNLUK);
+/** doğrulama sayfasındaki PDF'in jetonu (bitiş dakikası · imza) */
+export function pdfJetonu(firmaId: string, kod: string, simdi: number = Date.now(), anahtar: Buffer = anaAnahtar()): string {
+  const bitis = Math.floor(simdi / 60_000) + PDF_JETON_DK;
+  return `${bitis}.${pdfMac(anahtar, firmaId, kod, bitis)}`;
+}
+/** jeton bu firmanın bu kodu için ve süresi içinde mi */
+export function pdfJetonuGecerli(jeton: string, firmaId: string, kod: string, simdi: number = Date.now(), anahtar: Buffer = anaAnahtar()): boolean {
+  const p = jeton.split(".");
+  if (p.length !== 2 || !/^\d{1,12}$/.test(p[0]) || p[1].length !== MAC_UZUNLUK) return false;
+  const bitis = Number(p[0]), dk = Math.floor(simdi / 60_000);
+  if (bitis < dk || bitis > dk + PDF_JETON_DK) return false;
+  const beklenen = Buffer.from(pdfMac(anahtar, firmaId, kod, bitis)), gelen = Buffer.from(p[1]);
+  return gelen.length === beklenen.length && timingSafeEqual(gelen, beklenen);
+}

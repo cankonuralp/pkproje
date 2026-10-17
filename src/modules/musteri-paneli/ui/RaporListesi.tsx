@@ -43,10 +43,11 @@ const SUTUNLAR: Sutun<MusteriRaporu>[] = [
 const tanim = (sec: Record<string, Secenek[]>) => raporTanim(sec);
 
 const SONUC_AD = { uygun: "Uygun", uygun_degil: "Uygun değil", sartli: "Şartlı uygun" } as const;
-/** süzgeçteki raporlar → .xlsx (maket rapor-excel sütunları) */
+/** süzgeçteki raporlar → .xlsx (maket rapor-excel sütunları; 2026-10-17 reisim: "excelde ekipman kullanım yeri de olmalı … yoksa veya girilmemişse
+    "-" olarak çıkar" — raporun ekipman bilgilerindeki kullanım yeri) */
 export function raporExceli(l: readonly MusteriRaporu[]): Uint8Array {
-  return xlsxBayt("Raporlar", [["Rapor", "Rapor no", "Ekipman kodu", "Ekipman türü", "Tesis", "Kontrol tarihi", "Sonraki kontrol", "Sonuç"],
-    ...l.map((r) => [{ metin: "Rapor", url: raporAdresi(r.id) }, r.no, r.ekipmanKod, r.turAd, r.tesis, r.kontrol ? tarihNo(r.kontrol) : "",
+  return xlsxBayt("Raporlar", [["Rapor", "Rapor no", "Ekipman kodu", "Ekipman türü", "Kullanım yeri", "Tesis", "Kontrol tarihi", "Sonraki kontrol", "Sonuç"],
+    ...l.map((r) => [{ metin: "Rapor", url: raporAdresi(r.id) }, r.no, r.ekipmanKod, r.turAd, r.konum ?? "-", r.tesis, r.kontrol ? tarihNo(r.kontrol) : "",
       r.sonraki ? tarihNo(r.sonraki) : "", r.sonuc ? SONUC_AD[r.sonuc] : ""])]);
 }
 

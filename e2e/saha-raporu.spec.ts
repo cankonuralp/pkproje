@@ -413,6 +413,9 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await page.getByRole("link", { name: raporNo }).first().click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(raporNo, { timeout: 30_000 });
   await hazir(page);
+  /* 2026-10-17 (reisim: "müşteri tıklayınca direk raporu görmeli"): imzalı rapor sayfanın içinde çizilir (pdf.js); "PDF'i aç" tuşu yok */
+  await expect(page.getByRole("img", { name: new RegExp(`^${raporNo} — sayfa 1 / \\d+$`) })).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByRole("link", { name: "PDF'i aç" })).toHaveCount(0);
   const [imzaliPdf] = await Promise.all([page.waitForEvent("download", { timeout: 60_000 }), page.getByRole("link", { name: "PDF indir" }).click()]);
   expect(readFileSync((await imzaliPdf.path())!).subarray(0, 5).toString("latin1")).toBe("%PDF-");
   await page.goto("/raporlar");

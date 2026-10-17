@@ -1,0 +1,5 @@
+/* PDF GÖRÜNÜMÜ (PdfGorunumu.tsx): sayfalar kabın genişliğine sığar; A4 okunur genişlikte kalır (geniş ekranda ortada) */
+.dis { width: 100%; max-width: 920px; }
+.kap { display: grid; gap: 12px; }
+.sayfa { display: block; width: 100%; height: auto; background: #fff; border: 1px solid var(--kenar); border-radius: var(--r-kucuk); box-shadow: var(--golge-1); }
+.durum { margin: 0 0 8px; color: var(--yazi2); font-size: var(--boy-kucuk); }

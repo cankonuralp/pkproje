@@ -269,6 +269,8 @@ test("İKİNCİ KATMAN (09-E5): müşteri rolü yalnız kendi müşterisinin, ke
   assert.equal(await m(FA.m2, null, (db) => panelRaporu(db, r1)), null, "başka müşterinin raporu yok sayılır");
   const v = (await m(FA.m1, null, (db) => panelRaporu(db, r1)))!;
   assert.match(v.r.no, /^DA-/);
+  /* 2026-10-17: kullanım yeri imzalı sürümün ekipman bilgisinden (Excel'de sütun; girilmemişse "-") — burada ekipmanın kullanım yeri yok */
+  assert.equal(v.r.konum, null);
   /* 387: dosya null yalnız saklama süresi dolup PDF silinince — burada var */
   const pdf = v.r.dosya;
   assert.ok(pdf, "imzalı PDF var");
