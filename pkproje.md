@@ -2544,6 +2544,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   bağlantısı yok" ile reddedilir; muayene uzmanı ve teknik yönetici yüklemesi, toplu yükleme aynı. Bağlantısız hazırlanmış eski PDF "İmzaya
   hazırla"da kendiliğinden yeniden üretilir; doğrulama adresi kurulamazsa PDF hazırlanmaz. Şerit yerinde kaldı (reisim: *"şeridi yukarı alma"*).
   Kod raporlar.ts dogrulamaBagli + imza-esdeger.ts dogrulamaKodlari; kilit onaylar (PG) + imza-esdeger, bozan onaylar 19.
+  Aynı gün: alt şeritteki karekod da bağlantı da KALIR (reisim önce *"karekodu biz eklemeyelim imza servisi ekliyorsa eklesin"*, açıklamadan sonra
+  *"karekodu kaldırmanı da istemiyorum"*) — kural bu bağlantıya dayanır. 003 bu kuraldan önce bağlantısız kabul edildi; bağlantılı olması için
+  revize + yeniden imza gerekir (geriye dönük işlem yapılmadı).
 - 2026-10-17 (YAPILDI): **HER İMZA PROGRAMININ İMZALI RAPORU KABUL** (reisim: *"imzayeri ile mobil imza attım, o şeritler imzayerinde imzalanınca
   geliyor ne demek kalsın mı kalacak tabiki bizim kontrolümüzde değil"* · *"sistemimiz her hangi bir imzalı raporu kabul etmeli zaten bu
   müşterilerden çokca dönüş almamıza sabep olabilir"*). Bulgu: imzayeri gibi servisler imzadan önce PDF'i baştan yeniden yazıyor (alttaki şerit,
