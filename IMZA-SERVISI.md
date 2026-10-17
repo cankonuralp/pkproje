@@ -283,7 +283,7 @@ göre sırayla yapıp bitir"*):** kararlar ertelendi; kararsız yapılabilen kod
 |---|---|---|---|
 | ES1 okuma | `pdf-imzalar.ts` (+ `cms.ts`, `sertifika.ts`, `der.ts`): her imza için bütünlük, imza değeri, imzalayan (imzalı sertifika bağıyla), 5070 nitelikli, imza anında geçerli, imza damgası (sunucusu denetlenir), belge damgası, DSS (yalnız kataloğun), DSS'teki iptal kanıtı, imzadan sonraki değişiklik, düzey. İncelenen gerçek belge: B-LTA, iki imza da tamam, iptal "geçerli", sonraki ekler izinli | — | Güvenilir kök listesi (resmî kaynaktan teyitle) |
 | ES1 yükleme denetimi | `yukleme.ts`: yüklenen imzalı PDF kriptografik olarak sağlam, nitelikli, bağlı, imza anında geçerli, sonradan değişmemiş olmalı | **Evet** — rapor imzası, teknik yönetici imzası, Onaylar › Diğer | — |
-| ES1 doğrulama sayfası | — | — | Maket (katmanlar + "Elinizdeki PDF bu mu?"), reisim onayı |
+| ES1 doğrulama sayfası | Maket `docs/maket/dogrula.html` (ONAY BEKLİYOR): sonuç, rapor, imzalar, güvence katmanları, "Elinizdeki PDF bu mu?"; hâller geçerli · yeni revizyon · imza bekleniyor · bulunamadı | — | Reisim onayı + §10-9 (imzacının adı) |
 | ES2 imza motoru | `imzala.ts` (hazırla → kart → tamamla; formatın boş e-imza alanını doldurur), `yer-tutucu.ts`, `pdf-ek.ts` (artımlı ek; klasik ve sıkıştırılmış xref) | Hayır | İmza yolu (eklenti / yardımcı program ya da mobil imza) |
 | ES2 uzun süreli doğrulama | `ltv.ts` (DSS + arşiv damgası, tazeleme), `zaman-damgasi.ts` (RFC 3161 istemcisi), `iptal.ts` (OCSP / iptal listesi) | Hayır — ayar yoksa hiç çalışmaz | KamuSM hesabı + kimlik doğrulama biçimi (§10-2) |
 
@@ -305,6 +305,8 @@ girdide çökme). Kilitler: `tests/imza-cozum.test.ts`, `tests/imza-ltv.test.ts`
 7. **Kod yeri:** aynı depo, ayrı modül (öneri) mi, ayrı depo mu?
 8. **Sıra:** probata'nın genel kodlama sırasında bu iş nerede? "Bir yandan" — öneri ES1 (doğrulama) ilk, çünkü bugünkü toplu yükleme yoluna da
    değer katıyor.
+9. **Doğrulama sayfasında imzacının adı** (maket `docs/maket/dogrula.html`, "İmzacı adı" seçeneği): bugünkü sayfa kişi göstermiyor (595 K8).
+   Öneri: görevi + baş harfler (A\*\*\* D\*\*\*); tam ad gerekirse açılır. Karar reisim'in.
 
 ---
 
