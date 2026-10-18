@@ -33,7 +33,8 @@ test("saklama süresi: firma yöneticisi Uyarılar'da görür, listeyi açar; ra
   await expect(page).toHaveURL(/\/firma-ayarlari\/saklama$/, { timeout: 30_000 });
   await hazir(page);
   await expect(page.getByRole("heading", { level: 1, name: "Saklama süresi dolacak raporlar" })).toBeVisible();
-  await expect(page.getByText("Saklama süresi 5 yıl.", { exact: false })).toBeVisible();
+  /* 2026-10-18 (reisim: "bu ve benzeri, yaratıcıyı hedef alan açıklamaları kaldır, çok fazla ai ürünü olduğu belli oluyor"): açıklama kısaldı */
+  await expect(page.getByText("Saklama süresi 5 yıl;", { exact: false })).toBeVisible();
   /* tam ad: aynı satırdaki "PDF indir" bağlantısının adı da rapor no ile başlar */
   const rapor = page.getByRole("link", { name: E2E_YZ.saklama.rapor, exact: true });
   await expect(rapor).toBeVisible();

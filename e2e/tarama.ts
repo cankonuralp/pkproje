@@ -189,7 +189,10 @@ async function katmanlariDene(page: Page, kok: Locator, kokSecici: string, yer: 
   }
   for (const t of denenecek) {
     if (!(await t.isVisible().catch(() => false))) continue;
-    await t.scrollIntoViewIfNeeded({ timeout: 2000 }).catch(() => undefined);
+    /* 2026-10-18: alta yaslı kaydırmada (scrollIntoViewIfNeeded) tetik telefonda alttaki sabit tuşların altına denk gelebiliyordu; tıklama onu
+       açmak için sayfayı yeniden kaydırınca "öğeler yerinden oynadı" sanılıyordu (açıklama yazıları kalkıp sayfa kısalınca görüldü). Tetik
+       ölçmeden önce ekranın ortasına alınır — denetlenen aynı: katman açılınca sayfadaki öğeler yerinden oynamaz */
+    await t.evaluate((e) => e.scrollIntoView({ block: "center", inline: "nearest" })).catch(() => undefined);
     const ad = ((await t.getAttribute("aria-label")) ?? (await t.innerText().catch(() => ""))).trim().replace(/\s+/g, " ").slice(0, 40);
     const once = await page.evaluate(yerler, kokSecici);
     if (!(await t.click({ timeout: 3000 }).then(() => true, () => false))) continue;

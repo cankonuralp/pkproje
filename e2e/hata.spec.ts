@@ -13,7 +13,8 @@ test("beklenmeyen hata: yol gösteren ekran, iç ayrıntı sızmaz", async ({ pa
   /* 397: bağlantı kesilince "Bağlantı yok" (yol gösterir: Planlar; çevrimdışı çalışanlar söylenir); gelince eski ekran */
   await page.context().setOffline(true);
   await expect(ana.getByText("Bağlantı yok")).toBeVisible();
-  await expect(ana.getByText("Kaydet ve Onaya gönder bağlantısız da çalışır", { exact: false })).toBeVisible();
+  /* 2026-10-18 (reisim: "bu ve benzeri, yaratıcıyı hedef alan açıklamaları kaldır, çok fazla ai ürünü olduğu belli oluyor"): açıklama kısaldı */
+  await expect(ana.getByText("Bu işlem internet bağlantısı gerektirir", { exact: false })).toBeVisible();
   await expect(ana.getByRole("link", { name: "Planlar" })).toHaveAttribute("href", "/planlar");
   await page.context().setOffline(false);
   await expect(ana.getByText("Bu sayfa açılamadı")).toBeVisible();

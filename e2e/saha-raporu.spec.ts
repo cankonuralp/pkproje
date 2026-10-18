@@ -275,7 +275,7 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await expect(page).toHaveURL(new RegExp(`/raporlar/${UUID}$`));
   expect(new URL(page.url()).pathname).not.toBe(raporAdresi);
   /* 2026-10-18 (reisim: "bu ve benzeri, yaratıcıyı hedef alan açıklamaları kaldır, çok fazla ai ürünü olduğu belli oluyor"): açıklama kısaldı */
-  await expect(page.getByText(/raporundan kopyalandı\./)).toBeVisible();
+  await expect(page.getByText(/^Bilgiler .+ raporundan kopyalandı\.$/)).toBeVisible();
   await expect(asama(page)).toContainText("Yeni");
   await expect(page.getByRole("button", { name: "Onaya gönder" }).first()).toBeVisible();
 

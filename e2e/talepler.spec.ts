@@ -80,7 +80,8 @@ test("talepler: masraf formu ve izin talebi; karar Onaylar'da — düzeltmeye ge
   await page.getByRole("link", { name: /\d+ talep \(izin \/ masraf formu\) kararınızı bekliyor/ }).click();
   await expect(page).toHaveURL(/\/onaylar\/talepler$/, { timeout: 30_000 });
   await talebiAc(page, no);
-  await expect(page.getByText("Talep salt okunur")).toBeVisible();
+  /* 2026-10-18 (reisim: "bu ve benzeri, yaratıcıyı hedef alan açıklamaları kaldır, çok fazla ai ürünü olduğu belli oluyor"): "Talep salt okunur" yazısı kalktı — karar tuşları görünür */
+  await expect(page.getByRole("button", { name: "Düzeltmeye geri gönder" })).toBeVisible();
   /* yeni ekran: erişilebilirlik taraması (410 ile aynı kurallar; ciddi / kritik 0) */
   const ax = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).exclude("nextjs-portal").analyze();
   expect(ax.violations.filter((v) => v.impact === "serious" || v.impact === "critical").map((v) => `${v.id}: ${v.nodes.slice(0, 3).map((n) => n.target.join(" ")).join(" | ")}`)).toEqual([]);

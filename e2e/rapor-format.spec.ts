@@ -582,7 +582,8 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
      kurucu; açık taslak varken yeniden Düzenle → "Taslağa devam et" aynı taslağa götürür */
   await page.getByRole("button", { name: "Sürüm 3 · Düzenle" }).click();
   const d = page.getByRole("dialog", { name: "Sürüm 3 · düzenle" });
-  await expect(d).toContainText("Yayınlanmış sürüm değişmez");
+  /* 2026-10-18 (reisim: "bu ve benzeri, yaratıcıyı hedef alan açıklamaları kaldır, çok fazla ai ürünü olduğu belli oluyor"): açıklama kısaldı */
+  await expect(d).toContainText("bir taslağa kopyalanır");
   await d.getByRole("button", { name: "Taslak aç ve düzenle" }).click();
   await expect(page).toHaveURL(/\/sablon\/[0-9a-f-]{36}\/kurucu$/, { timeout: 30_000 });
   await expect(page.getByRole("heading", { level: 1, name: /^Format kurucu · / })).toBeVisible();

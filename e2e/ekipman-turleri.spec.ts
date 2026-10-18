@@ -30,7 +30,8 @@ test("ekipman türü: ekle, rapor formatı yükle, elektrik sekmesi; denetçi ya
      olacak"): rapor formatı hazır ve yayında — kaldırma grubunun maddeleri; PDF istenmez (isteğe bağlı) */
   await expect(page.getByRole("link", { name: /Rapor formatı\s*Sürüm 1/ })).toBeVisible();
   await expect(page.getByText("Ek-III grubuna göre hazır format").first()).toBeVisible();
-  await expect(page.getByText("PDF gerekmez", { exact: false })).toBeVisible();
+  /* 2026-10-18 (reisim: "bu ve benzeri, yaratıcıyı hedef alan açıklamaları kaldır, çok fazla ai ürünü olduğu belli oluyor"): açıklama kısaldı */
+  await expect(page.getByRole("region", { name: "Basılı format PDF'i" }).getByText("İsteğe bağlı.")).toBeVisible();
   await expect(page.getByText("yüklenmedi", { exact: false })).toHaveCount(0);
 
   await hazir(page);
