@@ -342,7 +342,9 @@ export function esdegerNedeni(a: Uint8Array, b: Uint8Array): string | null {
         const r = kutu(A, d.get("Rect"));
         if (acikTuru(A, d) === "/Link" && r) bizimBaglantilar.push(r);
         const j = aB.findIndex((e, n) => !eslesen.has(n) && acikTuru(B, e) === acikTuru(A, d) && esit(g, d.get("Rect"), e.get("Rect"))
-          && esit(g, d.get("A") ?? null, e.get("A") ?? null) && esit(g, d.get("Dest") ?? null, e.get("Dest") ?? null));
+          && esit(g, d.get("A") ?? null, e.get("A") ?? null) && esit(g, d.get("Dest") ?? null, e.get("Dest") ?? null)
+          /* 2026-10-18: görünümü de aynı — bağlantıya sonradan eklenen görünüm (/AP) sayfaya çizilir */
+          && esit(g, d.get("AP") ?? null, e.get("AP") ?? null));
         if (j >= 0) eslesen.add(j);
       }
       for (const [n, e] of aB.entries()) {
@@ -354,7 +356,7 @@ export function esdegerNedeni(a: Uint8Array, b: Uint8Array): string | null {
           continue;
         }
         if (tur === "/Link" && baglantiAdresi(B, e) && izinli(r, gorunen, imzaYerleri)) {
-          if (bizimBaglantilar.some((x) => x.every((y, j) => Math.abs(y - r[j]) <= 1))) return `İmzalı PDF'in ${no}. sayfasındaki bağlantının adresi değiştirilmiş.`;
+          if (bizimBaglantilar.some((x) => x.every((y, j) => Math.abs(y - r[j]) <= 1))) return `İmzalı PDF'in ${no}. sayfasındaki bağlantı değiştirilmiş (adresi ya da görünümü).`;
           continue;
         }
         return `İmza programı ${no}. sayfaya izin dışı bir açıklama eklemiş (${tur.slice(1) || "?"}).`;
@@ -391,7 +393,16 @@ const ONCEKI_IMZA_BOZULUR = "Yüklenen PDF, imzalanacak PDF'in üstüne artıml�
     ya da üstüne artımlı damga eklenmiş), içerikçe eşdeğer. Tabandan sonrası beyaz listeye uymalı (imza, uzun süreli doğrulama). Olmazsa nedeni.
     Kripto ve imzalayanın adı tabana göre ayrıca (ekImzaNedeni(taban, imzali), ekImzaIcerikleri(taban, imzali)). */
 export function imzaliTaban(imzasiz: Uint8Array, imzali: Uint8Array): { taban: Uint8Array } | { neden: string } {
-  if (imzaliPdfGecerli(imzasiz, imzali)) return { taban: imzasiz };
+  if (imzaliPdfGecerli(imzasiz, imzali)) {
+    /* 2026-10-18 (probata-sign incelemesinin uyarısı: "aynı bulgu probata'daki imzalı PDF denetiminde de var"): yapı denetimi imza ekindeki
+       yeni görünümü (imza alanı ya da başka bir Widget — /AP) sınırlamıyordu; imzadan önce ya da SONRA eklenen bir kutu raporun üstüne istediğini
+       çizebiliyordu ("UYGUN DEĞİL"). Artımlı imzada da dosyanın SON hâli (görüntüleyicinin gösterdiği — imzadan sonraki ekler dahil) hazırladığımız
+       PDF'le içerikçe eşdeğer olmalı: eklenen görünüm yalnız kenarda ya da e-imza yerimizde. Hazırladığımız PDF'in kendisi çözümlenemiyorsa
+       (yalnız deneme belgeleri — kendi PDF'imiz her zaman çözülür; saldırgan imzasız PDF'i değiştiremez) bu ek denetim uygulanamaz. */
+    if (!cozulur(imzasiz)) return { taban: imzasiz };
+    const n = esdegerNedeni(imzasiz, imzali);
+    return n === null ? { taban: imzasiz } : { neden: n };
+  }
   const onek = imzali.length > imzasiz.length && Buffer.from(imzali.subarray(0, imzasiz.length)).equals(Buffer.from(imzasiz));
   /* ayrıntılı neden yalnız dosya BU belgenin (yeniden yazılmış) hâliyse — hazırladığımız PDF'in en az bir sayfasının çizimi imzalının aynı
      sayfasında aynen var; başka dosyada (yanlış rapor, başka belge) genel neden: "okunamadı" ya da "içeriği aynı değil" yanıltır */
@@ -408,6 +419,18 @@ export function imzaliTaban(imzasiz: Uint8Array, imzali: Uint8Array): { taban: U
   }
   /* okunamayan / karşılaştırılamayan dosyada ayrıntı yanıltır — genel neden */
   return { neden: neden !== null && !/^İmzalı PDF (?:okunamadı|karşılaştırılamadı)/.test(neden) && (onek || tanidik()) ? neden : ESLESMEDI_TABAN };
+}
+
+/** PDF'in sayfaları çözümlenebiliyor mu (katalog, sayfa ağacı, çizim) */
+function cozulur(pdf: Uint8Array): boolean {
+  try {
+    const D = belge(pdf);
+    for (const s of sayfalar(D)) cizim(D, s);
+    return true;
+  } catch (e) {
+    if (e instanceof Esdegersiz || e instanceof RangeError || e instanceof PdfHatasi) return false;
+    throw e;
+  }
 }
 
 /** imzalı dosya bu belgeden mi türemiş: hazırladığımız PDF'in bir sayfasının çizimi (çözülmüş akışlar) imzalının aynı sıradaki sayfasında aynen

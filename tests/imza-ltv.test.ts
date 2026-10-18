@@ -222,6 +222,19 @@ test("uzun süreli doğrulama eki: DSS (sertifikalar + OCSP + iptal listesi) + b
   xrefSaglam(r2.pdf);
 });
 
+/* 2026-10-18 (probata-sign incelemesinin uyarısı: "aynı bulgu probata'daki imzalı PDF denetiminde de var"): belgedeki doğrulanmış iptal kanıtı
+   "iptal" dediği hâlde yükleme kabul ediliyordu */
+test("iptal edilmiş sertifika: DSS'teki doğrulanmış OCSP cevabı 'iptal' diyorsa yükleme reddedilir; 'geçerli' diyorsa geçer", async () => {
+  const t = await taban();
+  const p = imzala(t, k, { damga: true });
+  const iptalli = await ltvEkle(p, { damga: damgaKaynagi(k), iptal: iptalKaynagi(k, { iptal: [k.kisi] }) });
+  assert.equal(pdfImzalariniCozumle(iptalli.pdf).imzalar[0].iptal, "iptal");
+  assert.equal(ekImzaNedeni(t, iptalli.pdf), "PDF'teki imzanın sertifikası iptal edilmiş (belgedeki iptal kanıtına göre).");
+  const gecerli = await ltvEkle(p, { damga: damgaKaynagi(k), iptal: iptalKaynagi(k) });
+  assert.equal(pdfImzalariniCozumle(gecerli.pdf).imzalar[0].iptal, "gecerli");
+  assert.equal(ekImzaNedeni(t, gecerli.pdf), null);
+});
+
 test("imza damgası olmayan imza: belge damgası imzayı kapsadığı için B-T sayılır, DSS + damga B-LTA; damgasız B-B; imzadan önceki belge damgası sayılmaz", async () => {
   const p = imzala(await taban(), ke);
   assert.equal(pdfImzalariniCozumle(p).duzey, "B-B");

@@ -8,7 +8,9 @@
    6. (yükleme denetimi) Yüklemede nitelikli işaret aranmasaydı Adobe'nin kendi ürettiği gibi işaretsiz sertifikayla atılan imza kabul edilirdi.
    7. (yükleme denetimi) Yüklemede imza anı aranmasaydı süresi dolmuş sertifikayla atılan imza kabul edilirdi.
    8. (2026-10-17) Parametresiz DigestInfo kabul edilmeseydi gerçek mobil imza (imzayeri) bozuk sayılırdı.
-   9. (2026-10-17) DigestInfo esnek ayrıştırılsaydı başka yapının imzası sağlam sayılırdı. */
+   9. (2026-10-17) DigestInfo esnek ayrıştırılsaydı başka yapının imzası sağlam sayılırdı.
+   10. (2026-10-18) Yüklemede damganın zamanı imza anı sayılsaydı geriye tarihli damgayla süresi dolmuş sertifika kabul edilirdi.
+   11. (2026-10-18) Yüklemede iptal kanıtına bakılmasaydı belgenin kendisi "iptal" dediği hâlde imza kabul edilirdi. */
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -17,7 +19,7 @@ import { pathToFileURL } from "node:url";
 import { after, test } from "node:test";
 import { constants, createHash, privateEncrypt } from "node:crypto";
 import { oid, oktet, sira as dizi } from "../../src/server/imza/der.ts";
-import { TABAN_PDF, belgeDamgala, damgaYap, denemeKimlikleri, dssEkle, imzaEki, pdfImzala, sertifikaYap } from "../yardimci/gercek-imza.ts";
+import { TABAN_PDF, belgeDamgala, damgaYap, denemeKimlikleri, dssEkle, imzaEki, ocspCevabiYap, pdfImzala, sertifikaYap } from "../yardimci/gercek-imza.ts";
 
 const klasor = mkdtempSync(join(tmpdir(), "imza-cozum-bozan-"));
 let sira = 0;
@@ -95,4 +97,22 @@ test("9: DigestInfo esnek ayrıştırılınca (yalnız sondaki özet) başka yap
     "  const h = createHash(ozet).update(veri).digest(); return acilan.subarray(acilan.length - h.length).equals(h);");
   assert.equal(m.algoritmaDenetle("1.2.840.113549.1.1.1", null, "2.16.840.1.101.3.4.2.1", k.kisi.acik, veri8, imza8(Buffer.concat([Buffer.from("çöp yapı"), oz8])), false),
     "tamam", "bozuk: başka yapı yakalandı");
+});
+
+/* 2026-10-18 (probata-sign incelemesinin uyarısı: "aynı bulgu probata'daki imzalı PDF denetiminde de var") */
+test("10: yüklemede damganın zamanı imza anı sayılınca geriye tarihli damgayla süresi dolmuş sertifika kabul edilir", async () => {
+  const m = await bozuk<Y>(YUK, "    const an = simdi.toISOString();", "    const an = i.damga?.zaman ?? simdi.toISOString();");
+  const eski = sertifikaYap({ cn: "ESKİ", veren: k.ara, bas: new Date("2024-01-01T00:00:00Z"), son: new Date("2025-01-01T00:00:00Z") });
+  const k24 = { ...k, tsa: sertifikaYap({ cn: "Deneme Zaman Damgası Sunucusu", o: "Deneme ESHS", damga: true, veren: k.ara, tur: "ecdsa", bas: new Date("2023-01-01T00:00:00Z") }) };
+  const p = pdfImzala(TABAN_PDF, 10, k24, { kisi: eski, damga: true, damgaZamani: new Date("2024-06-01T00:00:00Z") });
+  assert.equal(m.ekImzaNedeni(TABAN_PDF, p), null, "bozuk: geriye tarihli damga yakalandı");
+});
+
+test("11: yüklemede iptal kanıtına bakılmayınca iptal edilmiş sertifika kabul edilir", async () => {
+  const m = await bozuk<Y>(YUK, '    if (i.iptal === "iptal") return ', '    if (false as boolean) return ');
+  const p = pdfImzala(TABAN_PDF, 10, k);
+  const ocsp = ocspCevabiYap(k.kisi, k.ara, { durum: "iptal" });
+  const iptalli = Buffer.concat([p, Buffer.from("30 0 obj\n<< /OCSPs [31 0 R] /CRLs [] /Certs [] >>\nendobj\n31 0 obj\n<< /Length " + ocsp.length + " >>\nstream\n", "latin1"),
+    ocsp, Buffer.from("\nendstream\nendobj\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R /DSS 30 0 R >>\nendobj\n%%EOF\n", "latin1")]);
+  assert.equal(m.ekImzaNedeni(TABAN_PDF, iptalli), null, "bozuk: iptal edilmiş sertifika yakalandı");
 });

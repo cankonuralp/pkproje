@@ -7,7 +7,9 @@
    5. Kaynaklar içerikçe karşılaştırılmasaydı yazı tipi / resim değiştirilebilirdi.
    6. Yeni açıklamalar sınırlanmasaydı rapora not (FreeText) eklenebilirdi.
    7. Önceki imzayı taşıyan PDF'in yeniden yazımı reddedilmeseydi teknik yöneticinin imzası bozuk bir belge kabul edilirdi.
-   8. Katalog korunmasaydı belge açılınca çalışan eylem eklenebilirdi. */
+   8. Katalog korunmasaydı belge açılınca çalışan eylem eklenebilirdi.
+   9. (2026-10-18) Artımlı imzada son hâl karşılaştırılmasaydı imzadan sonra eklenen kutu raporun üstüne "UYGUN DEĞİL" yazabilirdi.
+   10. (2026-10-18) Açıklamanın görünümü karşılaştırılmasaydı bağlantımıza eklenen görünüm raporun üstüne çizebilirdi. */
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -16,6 +18,8 @@ import { pathToFileURL } from "node:url";
 import { after, test } from "node:test";
 import { imzaEki } from "../yardimci/gercek-imza.ts";
 import { ornekPdf, yenidenYaz, type YenidenSecenek } from "../yardimci/pdf-yaz.ts";
+import { akisGovdesi, ekle } from "../yardimci/imza-uret/pdf-ek-yaz.ts";
+import { nesneOkuyucu } from "../../src/server/imza/pdf-ek.ts";
 
 const KAYNAK = "src/modules/raporlar/imza-esdeger.ts";
 const klasor = mkdtempSync(join(tmpdir(), "imza-esdeger-bozan-"));
@@ -72,4 +76,23 @@ test("önceki imza denetimi kalkınca imzası bozulmuş belge kabul edilir", asy
 test("katalog korunmayınca belge açılınca çalışan eylem eklenir", async () => {
   const m = await bozuk("for (const k of KATALOG_KORUNAN) if", "for (const k of [] as string[]) if");
   assert.equal(kabul(m, { sozluk: (s, no) => (no === 1 ? s.replace(/>>\s*$/, "/OpenAction << /S /JavaScript /JS (x) >> >>") : s) }), true, "bozuk: eylemli belge kabul");
+});
+
+/* 2026-10-18 (probata-sign incelemesinin uyarısı) */
+const sayfaUstu = (annots: string) => nesneOkuyucu(A)(10)!.replace(/>>\s*$/, ` /Annots [${annots}] >>`);
+const gorunum = akisGovdesi(Buffer.from("BT /F1 30 Tf 10 10 Td (UYGUN DEGIL) Tj ET"), "/Type /XObject /Subtype /Form /BBox [0 0 200 50] ");
+test("9: artımlı imzada son hâl karşılaştırılmayınca imzadan sonra eklenen kutu raporun üstüne yazar", async () => {
+  const m = await bozuk("    const n = esdegerNedeni(imzasiz, imzali);\n    return n === null ? { taban: imzasiz } : { neden: n };", "    return { taban: imzasiz };");
+  const b = ekle(imzaEki(A), [{ no: 10, govde: sayfaUstu("9300 0 R") },
+    { no: 9300, govde: "<< /Type /Annot /Subtype /Widget /FT /Sig /T (x) /Rect [100 400 300 450] /F 4 /P 10 0 R /AP << /N 9301 0 R >> >>" },
+    { no: 9301, govde: gorunum }]).pdf;
+  assert.equal("taban" in m.imzaliTaban(A, b), true, "bozuk: üstüne yazılmış belge kabul");
+});
+
+test("10: açıklamanın görünümü karşılaştırılmayınca bağlantımıza eklenen görünüm raporun üstüne çizer", async () => {
+  const m = await bozuk('\n          && esit(g, d.get("AP") ?? null, e.get("AP") ?? null)', "");
+  const L = ornekPdf({ baglanti: "https://deneme.probata.example/bilgi" });
+  const ap = (s: string, no: number) => (no === 12 ? s.replace(/>>\s*$/, " /AP << /N 9301 0 R >> >>") : s);
+  assert.equal(kabul(m, { sozluk: ap, ekNesne: [{ no: 9301, sozluk: "<< /Type /XObject /Subtype /Form /BBox [0 0 80 44] >>", akis: Buffer.from("0 0 0 rg 0 0 80 44 re f") }] }, L), true,
+    "bozuk: görünümü eklenmiş bağlantı kabul");
 });

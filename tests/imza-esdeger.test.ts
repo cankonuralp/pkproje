@@ -11,7 +11,8 @@ import { ekImzaIcerikleri } from "../src/modules/raporlar/imza-pdf.ts";
 import { imzaciNedeni } from "../src/modules/raporlar/imza-kimlik.ts";
 import { ekImzaNedeni } from "../src/server/imza/yukleme.ts";
 import { imzaEki } from "./yardimci/gercek-imza.ts";
-import { ekle } from "./yardimci/imza-uret/pdf-ek-yaz.ts";
+import { akisGovdesi, ekle } from "./yardimci/imza-uret/pdf-ek-yaz.ts";
+import { nesneOkuyucu } from "../src/server/imza/pdf-ek.ts";
 import { ornekPdf, yenidenYaz, type YenidenSecenek } from "./yardimci/pdf-yaz.ts";
 
 const BAGLANTI = "https://deneme.probata.example/bilgi";
@@ -73,7 +74,7 @@ test("rapor değişmişse reddedilir: içerik, yazı tipi, resim, sayfa sayısı
     /sayfa sayısı farklı \(1; imzaya hazırlanan PDF 2 sayfa\)/);
   assert.match(tabanNedeni({ sozluk: (s, no) => (no === 2 ? s.replace(/\/MediaBox \[[^\]]*\]/, "/MediaBox [0 0 612 792]") : s) })!, /boyutu farklı/);
   assert.match(tabanNedeni({ sozluk: (s, no) => (no === 12 ? s.replace(/<[0-9a-f]+>/, `<${Buffer.from("https://sahte.example/x").toString("hex")}>`) : s) })!,
-    /bağlantının adresi değiştirilmiş/);
+    /bağlantı değiştirilmiş \(adresi ya da görünümü\)/);
 });
 
 test("imza programının ekledikleri sınırlı: damga içerikte, yazı / şekil / küçültme / saydamlık / gizleme, izin dışı açıklama ve eylem reddedilir", () => {
@@ -95,6 +96,40 @@ test("imza programının ekledikleri sınırlı: damga içerikte, yazı / şekil
   assert.match(tabanNedeni({ sozluk: (s, no) => (no === 1 ? s.replace(/>>\s*$/, "/OpenAction << /S /JavaScript /JS (x) >> >>") : s) })!, /izin dışı bir özellik eklemiş \(OpenAction\)/);
   assert.match(tabanNedeni({ sozluk: (s, no) => (no === 1 ? s.replace(/>>\s*$/, "/Names << /JavaScript << /Names [] >> >> >>") : s) })!, /\(JavaScript\)/);
   assert.match(tabanNedeni({ sozluk: (s, no) => (no === 10 ? s.replace(/>>\s*$/, "/UserUnit 2 >>") : s) })!, /\(UserUnit\)/);
+});
+
+/* 2026-10-18 (probata-sign incelemesinin uyarısı: "aynı bulgu probata'daki imzalı PDF denetiminde de var"): ARTIMLI imzada yapı denetimi yeni
+   görünümü (Widget — /AP) sınırlamıyordu; imzadan önce ya da sonra eklenen bir kutu raporun üstüne "UYGUN DEĞİL" çizebiliyordu ve yükleme kabul
+   ediyordu (deneme bu üç durumu kabul edilir buldu). Artık artımlı imzada da son hâl içerikçe eşdeğer olmalı. */
+const sayfaUstu = (A: Uint8Array, annots: string) => nesneOkuyucu(A)(10)!.replace(/>>\s*$/, ` /Annots [${annots}] >>`);
+const gorunum = akisGovdesi(Buffer.from("BT /F1 30 Tf 10 10 Td (UYGUN DEGIL) Tj ET"), "/Type /XObject /Subtype /Form /BBox [0 0 200 50] ");
+const kutu = (A: Uint8Array, rect: string, imzaAlani = true) => [
+  { no: 10, govde: sayfaUstu(A, "9300 0 R") },
+  { no: 9300, govde: `<< /Type /Annot /Subtype /Widget ${imzaAlani ? "/FT /Sig /T (x) " : ""}/Rect [${rect}] /F 4 /P 10 0 R /AP << /N 9301 0 R >> >>` },
+  { no: 9301, govde: gorunum },
+];
+test("artımlı imzada eklenen görünüm: raporun üstüne çizen kutu (imzadan önce ya da sonra, imza alanı olsun olmasın) reddedilir; kenardaki, görünmez ve kendi e-imza yerimiz kabul", () => {
+  const A = ornekPdf({ metin: "DN-1026-001-ab12c" });
+  const neden = (b: Uint8Array) => { const r = imzaliTaban(A, b); return "neden" in r ? r.neden : null; };
+  const ICINDE = "İmza programı 1. sayfada imza kutusunu belgenin içeriğinin üstüne koymuş; imzayı imza yerine ya da sayfa kenarına koyun.";
+  assert.equal(neden(imzaEki(ekle(A, kutu(A, "100 400 300 450")).pdf)), ICINDE, "imzadan önce, imza alanı");
+  assert.equal(neden(imzaEki(ekle(A, kutu(A, "100 400 300 450", false)).pdf)), "İmza programı 1. sayfaya izin dışı bir açıklama eklemiş (Widget).", "imza alanı olmayan Widget");
+  assert.equal(neden(ekle(imzaEki(A), kutu(A, "100 400 300 450")).pdf), ICINDE, "imzadan SONRA");
+  /* kabul: kenarda görünür imza kutusu, görünmez kutu, kendi boş e-imza alanımızın doldurulması */
+  assert.equal(neden(imzaEki(ekle(A, kutu(A, "400 10 560 50")).pdf)), null, "alt kenarda");
+  assert.equal(neden(imzaEki(ekle(A, kutu(A, "0 0 0 0")).pdf)), null, "görünmez");
+  const alan = nesneOkuyucu(A)(6)!.replace(/>>\s*$/, " /V 9500 0 R /AP << /N 9301 0 R >> >>");
+  const dolu = imzaEki(ekle(A, [{ no: 6, govde: alan }, { no: 9301, govde: gorunum }]).pdf, "DENEME İMZACI", { no: 9500 });
+  const r = imzaliTaban(A, dolu);
+  assert.ok("taban" in r && r.taban === A, JSON.stringify(r));
+  assert.equal(ekImzaNedeni(A, dolu), null);
+});
+
+test("yeniden yazımda bağlantımıza görünüm (/AP) eklenirse reddedilir", () => {
+  const A = ornekPdf({ baglanti: BAGLANTI, metin: "DN-1026-001-ab12c" });
+  const ap = (s: string, no: number) => (no === 12 ? s.replace(/>>\s*$/, " /AP << /N 9301 0 R >> >>") : s);
+  assert.match(tabanNedeni({ sozluk: ap, ekNesne: [{ no: 9301, sozluk: "<< /Type /XObject /Subtype /Form /BBox [0 0 80 44] >>", akis: Buffer.from("0 0 0 rg 0 0 80 44 re f") }] }, A)!,
+    /1\. sayfasındaki bağlantı değiştirilmiş \(adresi ya da görünümü\)/);
 });
 
 test("önceki imzayı taşıyan PDF (teknik yönetici): yeniden yazım reddedilir, üstüne ARTIMLI damga + imza kabul", () => {

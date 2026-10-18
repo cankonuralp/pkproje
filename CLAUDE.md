@@ -303,7 +303,8 @@ pkproje/
                             · 2026-10-17 HER İMZA PROGRAMI: imza-esdeger.ts (saf) imzaliTaban — imzalı PDF'in tabanı önek (artımlı imza) ya da imza programının
                             yeniden yazdığı, İÇERİKÇE aynı ilk sürüm (esdegerNedeni: sayfa / boyut / bizim çizimimiz aynen, eklenen yalnız damga işlemleri, damga
                             ve yeni açıklama kenarda — KENAR — ya da e-imza yerimizde, kaynaklar aynı, katalogda eylem yok; önceden imzalı PDF'in yeniden yazımı
-                            red); ayrıntılı neden yalnız dosya bu belgeden türemişse (bizimCizimVar: bir sayfanın çizimi aynı sırada aynen), yoksa genel neden; kripto
+                            red); 2026-10-18 artımlı imzada da son hâl esdegerNedeni'nden geçer (eklenen görünüm yalnız kenarda / e-imza yerinde; bağlantının
+                            /AP'si de karşılaştırılır); ayrıntılı neden yalnız dosya bu belgeden türemişse (bizimCizimVar: bir sayfanın çizimi aynı sırada aynen), yoksa genel neden; kripto
                             ve ad tabana göre · toplu eşleştirmede icerikleEslestir (dosya adındaki numara) · Onaylar › Diğer belgeler aynı · kilit imza-esdeger (tests/yardimci/pdf-yaz.ts uydurma PDF + yeniden yazım), onaylar (PG),
                             bozan imza-esdeger 1–8
                             · SAKLAMA SÜRESİ (387, göç 0073; ENGEL 11): server/saklama.ts (gece işi saklamaIsi — süresi dolan imzalı sürümün PDF'leri
@@ -549,7 +550,7 @@ pkproje/
                             sertifika.ts · cms.ts (imzalı sertifika bağı, damga sunucusu denetimi, SHA-1 yok) · pdf-ek.ts nesne okuyucu (xref zinciri, nesne
                             akışı, onarım) · iptal.ts OCSP / iptal listesi ÇÖZÜMLEMESİ (ağ yok) · pdf-imzalar.ts ÇÖZÜMLEYİCİ (beş katman, DSS yalnız kataloğun
                             + iptal kanıtı, imzadan sonraki değişiklik, düzey) · yukleme.ts ekImzaNedeni — imzaliPdfGecerli çağıran her yükleme bunu da çağırır
-                            (kaynak kilidi) · İMZA ÜRETİMİ probata-sign'da (yazıcılar, zaman damgası / iptal kanıtı istemcisi probata'dan çıktı) · test verisi
+                            (kaynak kilidi; 2026-10-18: sertifika YÜKLEME ANINDA geçerli olmalı — damga zamanı kullanılmaz; DSS iptal kanıtı "iptal" ise red) · İMZA ÜRETİMİ probata-sign'da (yazıcılar, zaman damgası / iptal kanıtı istemcisi probata'dan çıktı) · test verisi
                             üreticisi tests/yardimci/imza-uret/ (CMS kurulumu, yer tutucu, artımlı ek, DSS + belge damgası; yalnız testler) + gerçek kriptografi
                             tests/yardimci/gercek-imza.ts (uydurma makam) · kilit tests/imza-ayrim.test.ts (src tests/'i içe aktarmaz; src/server/imza/'de imza
                             üreten işlev adı yok) + bozan

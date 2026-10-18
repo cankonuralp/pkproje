@@ -143,6 +143,9 @@ test("sertifikanın süresi imza anında dolmuşsa anında geçerli değil; damg
   const k24 = { ...k, tsa: sertifikaYap({ cn: "Deneme Zaman Damgası Sunucusu", o: "Deneme ESHS", damga: true, veren: k.ara, tur: "ecdsa", bas: new Date("2023-01-01T00:00:00Z") }) };
   const damgali = pdfImzala(TABAN_PDF, 10, k24, { kisi: eski, damga: true, damgaZamani: new Date("2024-06-01T00:00:00Z"), m: "D:20261017120000+03'00'" });
   assert.equal(pdfImzalariniCozumle(damgali).imzalar[0].anindaGecerli, true, "damga sertifika geçerliyken");
+  /* 2026-10-18 (probata-sign incelemesinin uyarısı): çözümleyici damganın zamanını bilgi olarak gösterir, ama yükleme kararı ona dayanmaz — damga
+     sunucusu güvenilir listeye bağlı değil, geriye tarihli damgayla süresi dolmuş sertifika kabul ediliyordu */
+  assert.match(ekImzaNedeni(TABAN_PDF, damgali) ?? "", /sertifikası geçerli değil/, "geriye tarihli damgayla süresi dolmuş sertifika yüklemeden geçmez");
   const sunucusuGecersiz = pdfImzalariniCozumle(pdfImzala(TABAN_PDF, 10, k, { kisi: eski, damga: true, damgaZamani: new Date("2024-06-01T00:00:00Z") })).imzalar[0];
   assert.equal(sunucusuGecersiz.damga?.imza, "bozuk", "damga sunucusunun sertifikası 2026'da başlıyor");
   assert.equal(sunucusuGecersiz.anindaGecerli, false, "geçersiz damganın zamanı kullanılmaz");
@@ -212,7 +215,8 @@ test("ES1 yükleme denetimi: sağlam nitelikli imza geçer; değişmiş belge, b
   assert.equal(ekImzaNedeni(TABAN_PDF, degismis), "PDF imzalandıktan sonra değiştirilmiş; imza bu belgeyi doğrulamıyor.");
   assert.match(ekImzaNedeni(TABAN_PDF, imzaEki(TABAN_PDF, "X", { nitelikli: false })) ?? "", /nitelikli elektronik sertifikayla atılmamış/);
   const eski = sertifikaYap({ cn: "ESKİ DENEME", veren: k.ara, bas: new Date("2024-01-01T00:00:00Z"), son: new Date("2025-01-01T00:00:00Z") });
-  assert.match(ekImzaNedeni(TABAN_PDF, imzaEki(TABAN_PDF, "ESKİ DENEME", { kisi: eski })) ?? "", /imza anında geçerli değil/);
+  /* 2026-10-18: ileti "imza anında" demez — karar yükleme anına göre (aşağıdaki geriye tarihli damga testi) */
+  assert.match(ekImzaNedeni(TABAN_PDF, imzaEki(TABAN_PDF, "ESKİ DENEME", { kisi: eski })) ?? "", /sertifikası geçerli değil/);
   assert.match(ekImzaNedeni(TABAN_PDF, Buffer.concat([TABAN_PDF, Buffer.from("9 0 obj << /Type /Sig /ByteRange [0 1 2 3] /Contents <00ff> >> endobj\n")])) ?? "",
     /doğrulanabilir bir e-imza bulunamadı/, "sahte imza sözlüğü");
   /* önceki (önekteki) imza sayılmaz: yalnız eklenen */

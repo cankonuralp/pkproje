@@ -2527,6 +2527,17 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-18 (YAPILDI): **İMZALI RAPOR YÜKLEMESİNDE ÜÇ AÇIK KAPANDI** (reisim, probata-sign oturumunun uyarısını iletti: *"Bu yüksek bulgunun aynısı
+  probata'daki imzalı PDF denetiminde de var, çünkü motor oradan taşındı"* — *"bir kontrol eder misin"*). Öteki oturumun bulgusunun metni bu oturuma
+  gelmedi; probata'daki denetim baştan incelendi, deneme dosyalarıyla kanıtlanan üç açık kapandı: (1) artımlı imzada yapı denetimi imza ekindeki
+  yeni görünümü (Widget — /AP) sınırlamıyordu: imzadan önce ya da SONRA eklenen bir kutu raporun üstüne "UYGUN DEĞİL" çizebiliyordu ve yükleme
+  kabul ediyordu — artık artımlı imzada da dosyanın son hâli hazırlanan PDF'le içerikçe eşdeğer olmalı (eklenen görünüm yalnız sayfa kenarında,
+  e-imza yerimizde ya da görünmez; imza programı kutuyu raporun içeriğinin üstüne koyarsa "imzayı imza yerine ya da sayfa kenarına koyun" ile
+  reddedilir); yeniden yazılmış dosyada bağlantıya eklenen görünüm de. (2) Zaman damgası sunucusu güvenilir listeye bağlı değil — geriye tarihli
+  damgayla süresi dolmuş sertifika "imza anında geçerli" sayılıyordu: sertifika artık yükleme anında geçerli olmalı. (3) Belgedeki doğrulanmış
+  iptal kanıtı "iptal" dediğinde de kabul ediliyordu: artık red. Kalan (karar bekliyor, kod değil): güvenilir kök listesi — uydurma ama "nitelikli"
+  işaretli sertifikayı bu denetim tek başına ayırt edemez (IMZA-SERVISI.md; probata-sign'da güven listeli doğrulayıcı). Kilit imza-esdeger,
+  imza-cozum, imza-ltv; bozan imza-esdeger 9–10, imza-cozum 10–11.
 - 2026-10-17 (YAPILDI): **RAPOR DOĞRULAMA KOMPLE KALKTI — sign.probata'ya** (reisim: *"tamam bu olay komple iptal kaldır, sign.probata kurucaz eğer
   imza hizmetini bizden alan olursa oradan suncaz ve o işleri ayrı yerden ilerletiyorum sen elindeki işlere odaklan ve bitir"*). Kalkanlar:
   imzaya hazırlanan PDF'in alt şeridindeki doğrulama karekodu ve "Doğrulama:" bağlantısı (şerit kalır: kanun cümlesi + rapor no + Sayfa n / N),
