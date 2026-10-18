@@ -79,7 +79,7 @@ function Duyurular({ d }: { d: Veri["duyuru"] }) {
         ? <Kosullar ogeler={d.liste.map((x) => ({ tur: "bilgi" as const, ikon: "scroll-text", metin: <>
             <a className={stil.baglanti} href={x.url} target="_blank" rel="noopener noreferrer">{x.baslik}</a>
             <AltSatir>{tarihNo(x.tarih)} · {KAYNAK_AD[x.kaynak]}</AltSatir></> }))} />
-        : <p className={stil.bos}>{d.guncellendi ? "Kaynaklarda duyuru yok." : "Duyurular henüz alınmadı; kaynaklara yukarıdaki bağlantılardan ulaşılır."}</p>}
+        : <p className={stil.bos}>{d.guncellendi ? "Kaynaklarda duyuru yok." : "Duyurular henüz alınmadı."}</p>}
     </Bolum>
   );
 }
@@ -91,7 +91,7 @@ export function AnaSayfaGorunumu({ v }: { v: Veri }) {
         tuslar={v.planAc ? <TusBaglanti tur="birincil" ikon="calendar-check" href="/planlar/ac">Plan aç</TusBaglanti> : undefined} />
       {v.belgeBekleyen > 0 && <SeritKap>
         <Serit tur="uyari" ikon="file-signature" eylem={<TusBaglanti ikon="arrow-right" href="/onaylar/diger">Diğer belgeler</TusBaglanti>}>
-          <b>{v.belgeBekleyen} belge imzanızı bekliyor</b> · bordro, eğitim ve zimmet formları Onaylar › Diğer belgeler&apos;de imzalanır.
+          <b>{v.belgeBekleyen} belge imzanızı bekliyor</b>
         </Serit>
       </SeritKap>}
       {v.bolumler.map((b) => <RolBolumu key={b.rol} b={b} cok={v.bolumler.length > 1} />)}

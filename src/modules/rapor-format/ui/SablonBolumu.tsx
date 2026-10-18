@@ -131,8 +131,7 @@ export function SurumDuzenleTusu({ turId, surum, taslak }:
           {taslak && <TusBaglanti ikon="pencil" href={`/ekipman-turleri/${turId}/sablon/${taslak.id}/kurucu`}>Taslağa devam et</TusBaglanti>}
           <Tus ikon="pencil" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={ac}>{taslak ? "Bu sürümden yeniden başla" : "Taslak aç ve düzenle"}</Tus>
         </>}>
-        <p className={pencereMetinSinifi}>Yayınlanmış sürüm değişmez; açılmış ve imzalanmış raporlar onu kullanır. {ad} bir taslağa kopyalanır, Format
-          kurucuda değiştirip yayınlayınca yeni sürüm olur.</p>
+        <p className={pencereMetinSinifi}>{ad} bir taslağa kopyalanır.</p>
         {taslak && <Serit tur="uyari" ikon="triangle-alert">Açık bir taslak var ({tarihYaz(taslak.degisti)}). “Bu sürümden yeniden başla” o taslağın
           yerine geçer; taslaktaki değişiklikleri korumak için “Taslağa devam et”.</Serit>}
         {genel && <Serit tur="hata" ikon="circle-alert">{genel}</Serit>}
@@ -172,8 +171,7 @@ export function GeriDonTusu({ turId, surum, taslak, yayinda, git = false }: {
       {acik && <Pencere acik baslik={`${ad} · geri dön`} onKapat={() => setAcik(false)} odak={`#${GERI_NOT_ID}`}
         alt={<><Tus tur="ikincil" onClick={() => setAcik(false)}>Vazgeç</Tus>
           <Tus ikon="rotate-ccw" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={don}>Geri dön</Tus></>}>
-        <p className={pencereMetinSinifi}>{ad} içeriği yeni sürüm olarak yayınlanır{yayinda ? `; yayındaki ${surumAdi(yayinda)} eskiye düşer` : ""}. Hiçbir sürüm
-          silinmez: açık raporlar kendi sürümünde kalır, yeni raporlar bu içerikle açılır. Vazgeçerseniz eskiye düşen sürümde de bu tuş vardır.</p>
+        <p className={pencereMetinSinifi}>{ad} içeriği yeni sürüm olarak yayınlanır{yayinda ? `; yayındaki ${surumAdi(yayinda)} eskiye düşer` : ""}.</p>
         {taslak && <Serit tur="uyari" ikon="triangle-alert">Açık bir taslak var ({tarihYaz(taslak.degisti)}). Geri dönünce taslağın yerine geçer, taslaktaki
           değişiklikler kalmaz. Korumak için önce taslağı yayınlayın.</Serit>}
         {genel && <Serit tur="hata" ikon="circle-alert">{genel}</Serit>}
@@ -239,7 +237,7 @@ export function YayinlaTusu({ format }: { format: Pick<FormatOzeti, "id" | "suru
       <Tus ikon="upload" onClick={() => { setDenetim(null); setNotu(""); setH({}); setGenel(null); setAcik(true); }}>Yayınla</Tus>
       {acik && <Pencere acik baslik="Rapor şablonunu yayınla" onKapat={() => setAcik(false)} odak={`#${NOT_ID}`}
         alt={<><Tus tur="ikincil" onClick={() => setAcik(false)}>Vazgeç</Tus><Tus ikon="upload" disabled={bekliyor || !denetim} aria-busy={bekliyor || !denetim || undefined} onClick={yayinla}>Yayınla</Tus></>}>
-        <p className={pencereMetinSinifi}>Yeni raporlar bu sürümle açılır; açık raporlar kendi sürümünde kalır.</p>
+        <p className={pencereMetinSinifi}>Yeni raporlar bu sürümle açılır.</p>
         {genel && <Serit tur="hata" ikon="circle-alert">{genel}</Serit>}
         {denetim && denetim.engeller.length > 0 && <>
           <Serit tur="hata" ikon="lock">Yayınlanamaz: Bakanlık formatının zorunlu öğeleri korunmalı.</Serit>

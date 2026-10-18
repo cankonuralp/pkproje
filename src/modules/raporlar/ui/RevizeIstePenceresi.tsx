@@ -24,7 +24,7 @@ export function RevizeIstePenceresi({ no, mesgul, onKapat, gonder }: {
         <Tus tur="ikincil" disabled={mesgul} onClick={onKapat}>Vazgeç</Tus>
         <Tus ikon="file-pen-line" disabled={mesgul} onClick={() => void yolla()}>İsteği gönder</Tus>
       </>}>
-      <p className={pencereMetinSinifi}>İstek teknik yöneticiye gider; revizeye o gönderir. Rapor revize edilirse yeni sürümle yeniden onay ve imzadan geçer.</p>
+      <p className={pencereMetinSinifi}>İstek teknik yöneticiye gider.</p>
       <Alan id={ID} etiket="Gerekçe" zorunlu hata={hata}>
         <textarea id={ID} className={stil.metinAlan} maxLength={400} value={gerekce} readOnly={mesgul} aria-invalid={!!hata || undefined}
           aria-describedby={hata ? ipucuId(ID) : undefined} placeholder="Raporda neyin düzeltilmesi gerektiği"

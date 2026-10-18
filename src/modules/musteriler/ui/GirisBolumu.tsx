@@ -143,7 +143,7 @@ export function GirisBolumu({ musteriId, kisa, b }: { musteriId: string; kisa: s
         {/* parola yalnız pencere açıkken DOM'da (kapanınca silinir) */}
         {parola && <p className={stil.geciciParola} id="mg-parola"><Kod>{parola.deger}</Kod></p>}
         {kopya.durum}
-        <Serit tur="uyari" ikon="triangle-alert">Bu parola yalnız şimdi gösterilir; müşteriye siz iletin. Müşteri bu adresin giriş ekranından girer ve yalnız kendi raporlarını görür; ilk girişte parolasını değiştirebilir.</Serit>
+        <Serit tur="uyari" ikon="triangle-alert">Bu parola yalnız şimdi gösterilir.</Serit>
       </Pencere>
     </Bolum>
   );

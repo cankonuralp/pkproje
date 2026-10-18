@@ -451,7 +451,7 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
   const sohbet = (
     <>
       <div className={stil.govdeP} data-sc-govde="">
-        {cevrimdisi && <Serit tur="uyari" ikon="wifi-off">Çevrimdışı · {bekleyenSayisi ? `${bekleyenSayisi} kayıt cihazda bekliyor; bağlantı gelince gider.` : "kayıtlar cihazda birikir, bağlantı gelince gider."}</Serit>}
+        {cevrimdisi && <Serit tur="uyari" ikon="wifi-off">Çevrimdışı · {bekleyenSayisi ? `${bekleyenSayisi} kayıt cihazda bekliyor; bağlantı gelince gider.` : "kayıtlar bağlantı gelince gider."}</Serit>}
         {gorunenler.length ? (
           <>
             <ol className={stil.liste} aria-label="Kayıtlar">
@@ -659,10 +659,10 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
           {veri.rapor.engel ? <li className={stil.kosulEksik}><Ikon ad="circle-alert" kucuk />{veri.rapor.engel}</li>
             : <li className={stil.kosulTamam}><Ikon ad="circle-check" kucuk />Plan günü geldi</li>}
           {veri.rapor.mesai && <li className={stil.kosulBilgi}><Ikon ad="clock" kucuk />{veri.rapor.mesai}</li>}
-          {cevrimdisi ? <li className={stil.kosulEksik}><Ikon ad="wifi-off" kucuk />İnternet gerekli: rapor numarası sunucuda verilir</li>
-            : <li className={stil.kosulTamam}><Ikon ad="circle-check" kucuk />İnternet var: rapor numarası sunucuda verilir</li>}
+          {cevrimdisi ? <li className={stil.kosulEksik}><Ikon ad="wifi-off" kucuk />İnternet gerekli</li>
+            : <li className={stil.kosulTamam}><Ikon ad="circle-check" kucuk />İnternet var</li>}
           {toplamOkuma > 0 && <li className={stil.kosulBilgi}><Ikon ad="sparkles" kucuk />{veri.yz.hazir
-            ? `Yapay zekâ ${toplamOkuma} fotoğraf okuyacak: firmanın kotasından harcar (${veri.yz.kota})`
+            ? `Yapay zekâ ${toplamOkuma} fotoğraf okuyacak (${veri.yz.kota})`
             : `Yapay zekâ kapalı: ${toplamOkuma} fotoğraf raporda saklanır, açılınca okunur`}</li>}
         </ul>
         {yaziyor && <p className={stil.not} role="status">Oluşturuluyor: {yaziyor}</p>}

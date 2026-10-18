@@ -44,7 +44,8 @@ test("plan aç: engel, canlı uyarılar, proje no ve künye; denetçi yalnız ke
 
   /* 432: bilgilendirme — ekibe e-posta kendiliğinden; başkası elle yazılır (biçim denetlenir) ya da listeden seçilir */
   const bilgiEposta = `bilgi-${bilgi.project.name}-${bilgi.retry}@deneme.example`;
-  await expect(page.getByText("Plan açılınca ekipteki denetçilere e-posta kendiliğinden gider (1 kişi).", { exact: false })).toBeVisible();
+  /* 2026-10-18 (reisim: "bu ve benzeri, yaratıcıyı hedef alan açıklamaları kaldır, çok fazla ai ürünü olduğu belli oluyor"): açıklama kısaldı */
+  await expect(page.getByText("Ekipteki denetçilere e-posta gider (1 kişi).", { exact: false })).toBeVisible();
   const epostaGirdi = page.getByRole("textbox", { name: "E-posta ekle" });
   await epostaGirdi.fill("yanlis-adres");
   await page.getByRole("button", { name: "Ekle", exact: true }).click();
@@ -106,7 +107,7 @@ test("plan aç: elle ekipman satırı plana ve tesise girer; seçilen denetçini
   await page.getByRole("option", { name: /Plan Deneme/ }).click();
   await page.getByRole("combobox", { name: "Tesis" }).click();
   await page.getByRole("option", { name: new RegExp(E2E_PLAN.tesisElle) }).click();
-  await expect(page.getByText("Tesiste kayıtlı ekipman yok; elle ekleyin ya da denetçi sahada ekler")).toBeVisible();
+  await expect(page.getByText("Tesiste kayıtlı ekipman yok", { exact: true })).toBeVisible();
   await page.getByRole("checkbox", { name: E2E_HESAPLAR.denetci.ad }).check();
   const liste = page.getByRole("list", { name: "Bilgilendirilecekler" });
   await expect(liste).toContainText(E2E_HESAPLAR.denetci.eposta);

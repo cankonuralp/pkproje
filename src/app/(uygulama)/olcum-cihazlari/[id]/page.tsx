@@ -44,10 +44,10 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
           {yaz && <CihazTuslari cihaz={{ id: c.id, surum: c.surum, kod: c.kod, turId: c.turId, marka: c.marka, model: c.model, seri: c.seri, aralik: c.aralik }} turler={turler} konum={c.konum} baslik={baslik} sil={silme.sil} zimmette={zimmette}
             pasif={!!c.pasif} kullanim={silme.kullanim ? kullanimMetni(silme.kullanim) : null} />}
         </>} />
-      {c.pasif && <SeritKap><Serit tur="bilgi" ikon="ban">Pasif ({tarihYaz(c.pasif)}): listeden, rapor seçiminden, Zimmetler&apos;den ve uyarılardan kalktı; kalibrasyon geçmişi ve raporları duruyor.</Serit></SeritKap>}
+      {c.pasif && <SeritKap><Serit tur="bilgi" ikon="ban">Pasif ({tarihYaz(c.pasif)}).</Serit></SeritKap>}
       {!c.pasif && c.durum === "gecti" && <SeritKap><Serit tur="hata" ikon="circle-x">{c.bitis ? `Kalibrasyonu ${tarihYaz(c.bitis)} tarihinde bitti.` : "Geçerli kalibrasyon kaydı yok."} Bu cihazla hazırlanan raporlar yönetici onayına gönderilemez.</Serit></SeritKap>}
       {!c.pasif && c.durum === "yakin" && <SeritKap><Serit tur="uyari" ikon="triangle-alert">Kalibrasyon {tarihYaz(c.bitis)} tarihinde bitiyor ({k} gün). Bitince bu cihazla hazırlanan raporlar onaya gönderilemez.</Serit></SeritKap>}
-      {!c.pasif && c.durum === "lab" && <SeritKap><Serit tur="bilgi" ikon="flask-conical">Kalibrasyonda. Yeni sertifika gelince kalibrasyon kaydı eklenir, cihaz depoya döner.</Serit></SeritKap>}
+      {!c.pasif && c.durum === "lab" && <SeritKap><Serit tur="bilgi" ikon="flask-conical">Kalibrasyonda.</Serit></SeritKap>}
       <Yuzler>
         <Yuz ikon={c.konum === "lab" ? "flask-conical" : "warehouse"} ad="Konum" sayi={KONUM_AD[c.konum]} href={zimmetKarti ?? undefined}
           not={zimmette ? "bir personelin zimmetinde · Zimmetler'de" : "kişi zimmeti Zimmetler'de"} />

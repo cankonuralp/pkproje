@@ -36,7 +36,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
       <NesneBasi baslik={ad} rozet={s.guncel ? <Rozet tur="tamam">Güncel</Rozet> : <Rozet tur="notr">Önceki sürüm</Rozet>} altIkon="book-open" alt={s.konu}
         tuslar={<StandartTuslari s={s} yaz={dokumanDegistirir(o)} guncelListe={s.surumler} />} />
       {!s.guncel && <SeritKap><Serit tur="bilgi" ikon="history">Önceki sürüm: {tarihYaz(s.bitti)} tarihinde {guncel
-        ? <>yerine <Link href={`/dokumanlar/standart/${guncel.id}`}>{guncel.no}:{guncel.surumAdi}</Link> geçti</> : "yerine yenisi geçti"}. O tarihe kadar yazılan raporlar bu sürümü gösterir; dosya saklanır.</Serit></SeritKap>}
+        ? <>yerine <Link href={`/dokumanlar/standart/${guncel.id}`}>{guncel.no}:{guncel.surumAdi}</Link> geçti</> : "yerine yenisi geçti"}.</Serit></SeritKap>}
       <Yuzler>
         <Yuz ikon="file-text" ad="Dosya" sayi={boyutYaz(s.boyut)} not="PDF" />
         <Yuz ikon="user" ad="Yükleyen" sayi={s.yukleyen} not={tarihYaz(s.tarih)} />
@@ -45,7 +45,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
       </Yuzler>
       <Bolum id="b-std-tur" baslik="Kullanan ekipman türleri" sayac={<><b>{turler.length}</b> tür</>}>
         {turler.length ? <ul className={stil.surumler}>{turler.map((t) => <li key={t.id}><Link href={`/ekipman-turleri/${t.id}`}>{t.ad}</Link></li>)}</ul>
-          : <p className={stil.not}>Bu standart henüz hiçbir türde kontrol metodu değil. Atama tür sayfasından yapılır (Ekipman türleri).</p>}
+          : <p className={stil.not}>Bu standart henüz hiçbir türde kontrol metodu değil.</p>}
       </Bolum>
       <Bolum id="b-std-surum" baslik="Sürümler" sayac={<><b>{s.surumler.length}</b> sürüm</>}>
         <ol className={stil.surumler}>{s.surumler.map((x) => (

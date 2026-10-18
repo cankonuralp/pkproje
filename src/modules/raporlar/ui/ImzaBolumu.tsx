@@ -62,7 +62,7 @@ export function ImzaBolumu({ v, mesgul, baslat, yenile, hata }: {
       </label>
     </> : <Tus ikon="file-signature" disabled={mesgul} onClick={hazirla}>İmzala</Tus>}>
       {v.imza.pdf
-        ? <>Muayene uzmanı imzası · imzasız PDF&apos;i indirin, e-imza aracınızla imzalayın, imzalı PDF&apos;i yükleyin. Her rapor ayrı imzalanır.</>
+        ? <>Muayene uzmanı imzası · imzasız PDF&apos;i indirin, imzalayın, imzalı PDF&apos;i yükleyin.</>
         : <>Muayene uzmanı imzası · imzanız bekleniyor.</>}
     </Serit>
   );

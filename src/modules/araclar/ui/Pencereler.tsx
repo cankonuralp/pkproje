@@ -64,7 +64,7 @@ export function AracPenceresi({ kapat, arac }: { kapat: () => void; arac?: AracD
     </Alan>
   );
   const T = (k: "muayene" | "sigorta" | "kasko", etiket: string) => (
-    <Alan id={AID[k]} etiket={etiket} hata={h[k]} sonuc="İsteğe bağlı; boşsa takip edilmez.">
+    <Alan id={AID[k]} etiket={etiket} hata={h[k]} sonuc="İsteğe bağlı.">
       <TarihAlani id={AID[k]} ad={etiket} deger={d[k]} degistir={(x) => setD({ ...d, [k]: x })} tanim={ipucuId(AID[k])} />
     </Alan>
   );
@@ -86,8 +86,8 @@ export function AracPenceresi({ kapat, arac }: { kapat: () => void; arac?: AracD
           <SecimAlani id={AID.yakit} ad="Yakıt" deger={d.yakit} secenekler={YAKITLAR} ipucu="Yakıt seçin" gecersiz={!!h.yakit}
             tanim={h.yakit ? ipucuId(AID.yakit) : undefined} degistir={(x) => setD({ ...d, yakit: x })} />
         </Alan>
-        {!arac && G("ilkKm", "Kilometre (kayıt anında)", { sonuc: "İsteğe bağlı; haftalık kilometre bundan küçük yazılamaz.", tip: sayisal })}
-        {G("bakimKm", "Sonraki bakım kilometresi", { sonuc: "İsteğe bağlı; 1.000 km kala uyarır.", tip: sayisal })}
+        {!arac && G("ilkKm", "Kilometre (kayıt anında)", { sonuc: "İsteğe bağlı.", tip: sayisal })}
+        {G("bakimKm", "Sonraki bakım kilometresi", { sonuc: "İsteğe bağlı.", tip: sayisal })}
         {T("muayene", "Muayene bitişi")}
         {T("sigorta", "Trafik sigortası bitişi")}
         {T("kasko", "Kasko bitişi")}
@@ -200,9 +200,9 @@ export function TutanakPenceresi({ kapat, araclar, kisiler, arac = "", surucu = 
             );
           })}
         </ul>
-        {fotosuz > 0 && <p className={stil.ipucu}>{fotosuz} açı fotoğrafsız; tutanak yine kaydedilir.</p>}
+        {fotosuz > 0 && <p className={stil.ipucu}>{fotosuz} açı fotoğrafsız.</p>}
       </form>
-      {d.alan && d.alan !== "depo" && <Serit tur="bilgi" ikon="info">Kaydedince zimmet kaydı oluşur; tutanak imzaya gider: {kisiler.find((k) => k.id === d.alan)?.ad ?? ""} › Onaylar › Diğer belgeler.</Serit>}
+      {d.alan && d.alan !== "depo" && <Serit tur="bilgi" ikon="info">Tutanak {kisiler.find((k) => k.id === d.alan)?.ad ?? ""} kişisinin imzasına gider.</Serit>}
     </Pencere>
   );
 }

@@ -124,11 +124,9 @@ test("firma ayarları: paneller ve pencere; kaydet, geçersiz değer, kayma yok,
   await expect(depo.getByRole("combobox")).toHaveCount(0);
   /* 2026-10-16 (FIRMA-VT FV10, K1 / K3): "Kendi hesabınızı nasıl bağlarsınız?" kalktı — proje panelden kurulur, bağlantı kilitli */
   await expect(depo.getByText("probata ortak projesi (Supabase, Frankfurt)")).toBeVisible();
-  await depo.getByText("Veritabanınız nasıl kurulur?").click();
-  await expect(depo.getByText(/Bağlantı bilgileri Firma ayarlarında kilitli/)).toBeVisible();
-  await depo.getByText("Raporlar ne kadar durur?").click();
-  /* 515: 7 gün raporların ömrü değil (geri sarma yedeği) */
-  await expect(depo.getByText(/raporlar 7 gün sonra silinmez/)).toBeVisible();
+  /* 2026-10-18 (reisim: "bu ve benzeri, yaratıcıyı hedef alan açıklamaları kaldır, çok fazla ai ürünü olduğu belli oluyor"): kurulum anlatımı ve paket bilgisi firmaya gösterilmez */
+  await expect(depo.getByText("Veritabanınız nasıl kurulur?")).toHaveCount(0);
+  await expect(depo.getByText(/Supabase Pro/)).toHaveCount(0);
   await depo.getByRole("button", { name: "Kapat", exact: true }).last().click();
   await expect(depo).toHaveCount(0);
 
@@ -141,7 +139,9 @@ test("firma ayarları: paneller ve pencere; kaydet, geçersiz değer, kayma yok,
   await expect(posta.getByText("Doğrulandı", { exact: true })).toBeVisible();
   await expect(posta.getByText(/kayıtlı$/)).toHaveCount(0);
   await expect(posta.getByLabel("Gönderen alan adı")).toHaveCount(0);
-  await expect(posta.getByText("Gönderimi probata yönetimi kurar; burada değiştirilmez, anahtar gösterilmez.")).toBeVisible();
+  /* 2026-10-18 (reisim: "bu ve benzeri, yaratıcıyı hedef alan açıklamaları kaldır, çok fazla ai ürünü olduğu belli oluyor"): açıklama kısaldı */
+  await expect(posta.getByText(/Gönderimi probata yönetimi kurar/)).toHaveCount(0);
+  await expect(posta.getByText("E-posta gönderimi nasıl kurulur?")).toHaveCount(0);
   await expect(posta.getByText(/Otomatik e-postalar bilgi@deneme\.example adresinden/)).toBeVisible();
   await posta.getByText("Çalışanların e-postası nereden gider?").click();
   await expect(posta.getByText(E2E_HESAPLAR.muhasebe.eposta).first()).toBeVisible();

@@ -699,7 +699,7 @@ export function SayAsistan() {
             <button className={stil.basTus} id="say-kapat" type="button" onClick={kapat} aria-label="S.A.Y'ı kapat"><Ikon ad="x" /></button>
           </div>
           <div className={stil.govde} ref={govde} id="say-govde" onScroll={kaydirildi} hidden={kucuk}>
-            {!bagli && <Serit tur="uyari" ikon="wifi-off">Bağlantı yok: S.A.Y bağlantı gelince çalışır.{raporda ? " Raporu yazmaya devam edebilirsiniz." : ""}</Serit>}
+            {!bagli && <Serit tur="uyari" ikon="wifi-off">Bağlantı yok.{raporda ? " Raporu yazmaya devam edebilirsiniz." : ""}</Serit>}
             {bagli && !durum.anahtar && <Serit tur="uyari" ikon="key-round">API anahtarı girilmedi (Firma ayarları › Yapay zekâ): S.A.Y cevap veremez.</Serit>}
             {hazir && durum.sinirDoldu && <Serit tur="uyari" ikon="triangle-alert">Bu ay kişi başı sınırınız doldu; yönetici Firma ayarları&apos;ndan artırabilir.</Serit>}
             <ol className={stil.liste} aria-live="polite" aria-busy={bekliyor || !iletiler || undefined}>

@@ -31,7 +31,8 @@ test("tür bağlantısı: ölçüm cihazı türü seç; denetçi yalnız görür
   await p.getByLabel("Periyot (ay)").fill("12");
   await p.getByRole("button", { name: "Kaydet" }).click();
   await expect(page).toHaveURL(/\/ekipman-turleri\/[0-9a-f-]{36}$/, { timeout: 30_000 });
-  await expect(page.getByText("Ölçüm cihazı seçilmemiş; raporda cihaz şartı aranmaz.")).toBeVisible();
+  /* 2026-10-18 (reisim: "bu ve benzeri, yaratıcıyı hedef alan açıklamaları kaldır, çok fazla ai ürünü olduğu belli oluyor"): açıklama kısaldı */
+  await expect(page.getByText("Ölçüm cihazı seçilmemiş.")).toBeVisible();
 
   await hazir(page);
   await page.getByRole("button", { name: "Metot ve cihazlar" }).click();

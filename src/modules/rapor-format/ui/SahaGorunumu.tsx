@@ -94,7 +94,7 @@ export function SahaGorunumu({ turId, formatId, t }: { turId: string; formatId: 
         {!dar && secici("Aygıt", aygit, [["tablet", AYGIT.tablet.ad, AYGIT.tablet.ikon], ["telefon", AYGIT.telefon.ad, AYGIT.telefon.ikon]] as const, setAygit)}
         <Tus tur="ikincil" ikon="rotate-ccw" onClick={() => setTemizle((x) => x + 1)}>Denemeyi temizle</Tus>
       </div>
-      <p className={stil.bosMetin}>Denetçinin sahada göreceği ekran: denetçi gibi deneyebilirsiniz, hiçbir şey kaydedilmez. Format kâğıtta düzenlenir.</p>
+      <p className={stil.bosMetin}>Önizleme; kaydedilmez.</p>
       <div className={dar ? stil.sahaSahneTek : stil.sahaSahne}>
         <div ref={kap} className={stil.sahaKap}>
           <div className={stil.sahaAygit} style={{ width: a.en * olcek, height: a.boy * olcek }}>
@@ -114,7 +114,7 @@ export function SahaGorunumu({ turId, formatId, t }: { turId: string; formatId: 
               {k.foto > 0 && <><dt>Zorunlu fotoğraf</dt><dd>{k.foto} bölüm</dd></>}
             </dl>
             <div>
-              <p className={stil.kullanimEtiket}>Cevap dokunuşu (maddeler hepsi “Uygun” gelir; değiştirmek)</p>
+              <p className={stil.kullanimEtiket}>Cevap dokunuşu</p>
               <dl className={stil.olcu}>
                 <dt>Açılır liste{t.gorunum.cevap === "acilir" ? " · seçili" : ""}</dt><dd>{k.acilir}</dd>
                 <dt>Yan yana tuş{t.gorunum.cevap === "tus" ? " · seçili" : ""}</dt><dd>{k.tus}</dd>

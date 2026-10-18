@@ -20,7 +20,7 @@ export function BeklenmeyenHata({ kod, yeniden, ag = false }: { kod?: string; ye
   if (cevrimdisi || ag) {
     return (
       <BosDurum ikon="wifi-off" baslik="Bağlantı yok"
-        metin="Bu işlem internet bağlantısı gerektirir; bağlantı gelince yeniden deneyin. Raporda Kaydet ve Onaya gönder bağlantısız da çalışır (cihaza kaydedilir); daha önce açtığınız saha sayfaları bağlantısız açılır."
+        metin="Bu işlem internet bağlantısı gerektirir; bağlantı gelince yeniden deneyin."
         eylemTus={<div className={stil.tuslar}><Tus tur="birincil" ikon="rotate-ccw" onClick={yeniden}>Yeniden dene</Tus><TusBaglanti tur="ikincil" href="/planlar" ikon="calendar-check">Planlar</TusBaglanti></div>} />
     );
   }

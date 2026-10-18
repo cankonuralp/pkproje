@@ -202,7 +202,7 @@ export function TopluImzaPenceresi({ raporlar, onKapat, kip = "uzman" }: { rapor
             </li>
           ))}
         </ul>
-        {red > 0 && <p className={pencereMetinSinifi}>Reddedilen raporlar listede kalır; imzalı hâllerini yeniden yükleyebilirsiniz.</p>}
+        {red > 0 && <p className={pencereMetinSinifi}>Reddedilen raporlar listede kalır.</p>}
       </Pencere>
     );
   }
@@ -240,9 +240,9 @@ export function TopluImzaPenceresi({ raporlar, onKapat, kip = "uzman" }: { rapor
           {indirildi && <span className={stil.adimMetin}>İndirildi.</span>}
         </div>)}
         {adim(n ? 3 : 1, "sira", n === 1 ? "e-İmzaTR'de imzalayın" : "e-İmzaTR'de birlikte imzalayın", <p className={stil.adimMetin}>
-          {n === 1 ? <>PDF&apos;i imzalayın.</> : <>ZIP&apos;i açın, PDF&apos;lerin hepsini birlikte seçip imzalayın; kart takılıyken PIN bir kez sorulur.</>} İmza türü PDF
-          imzası (PAdES) olmalı — imzalı dosya yine .pdf olur; ayrı .imz dosyası kabul edilmez. Dosya adlarını değiştirmeniz sorun değil.
-          {kip === "teknik" && <> İmza kendi adınıza olmalı (sertifikadaki ad sizin adınızla karşılaştırılır).</>}
+          {n === 1 ? <>PDF&apos;i imzalayın.</> : <>ZIP&apos;i açın, PDF&apos;lerin hepsini birlikte seçip imzalayın.</>} İmza türü PDF
+          imzası (PAdES) olmalı; ayrı .imz dosyası kabul edilmez.
+          {kip === "teknik" && <> İmza kendi adınıza olmalı.</>}
         </p>)}
         {adim(n ? 4 : 2, yukleniyor ? "simdi" : "sira", "İmzalı PDF'leri yükleyin", <>
           <label className={stil.birak} htmlFor={girdiId} data-ustunde={ustunde || undefined} aria-disabled={bekle || undefined}
@@ -251,11 +251,11 @@ export function TopluImzaPenceresi({ raporlar, onKapat, kip = "uzman" }: { rapor
             {yukleme ? <span role="status">{yukleme.biten} / {yukleme.toplam} PDF yüklendi…</span>
               : <span>PDF&apos;leri ya da ZIP&apos;i buraya bırakın · ya da dosya seçin (en çok {TOPLU_EN_COK} PDF)</span>}
           </label>
-          <p className={stil.adimMetin}>Her PDF ayrı denetlenir: imzaya hazırlanan PDF&apos;in kendisiyle başlamalı ve imza taşımalı. {k.sonra}</p>
+          <p className={stil.adimMetin}>{k.sonra}</p>
         </>)}
       </ol>
       {hata && <p className={stil.hata} id={hataId} role="alert">{hata}</p>}
-      {n > 0 && <p className={pencereMetinSinifi}>Pencereyi kapatırsanız hazırlananlar kalır; listede “İmzaya hazır” olarak görünür, yükleme sonra yapılır.</p>}
+      {n > 0 && <p className={pencereMetinSinifi}>Pencereyi kapatırsanız hazırlananlar listede “İmzaya hazır” olarak kalır.</p>}
     </Pencere>
   );
 }

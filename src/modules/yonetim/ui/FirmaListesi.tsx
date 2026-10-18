@@ -7,8 +7,7 @@ import { Ikon } from "../../../components/ikon/Ikon";
 import { KartEtiket, Kirp, type Sutun } from "../../../components/liste/Liste";
 import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
 import type { SuzgecTanimi } from "../../../components/liste/suzgec";
-import { AltSatir, Kod, SayfaBasi, SeritKap } from "../../../components/sayfa/Sayfa";
-import { Serit } from "../../../components/serit/Serit";
+import { AltSatir, Kod, SayfaBasi } from "../../../components/sayfa/Sayfa";
 import { TusBaglanti } from "../../../components/tus/Tus";
 import type { FirmaSatiri } from "../server/yonetim";
 import { DEPO_AD, DurumRozeti, firmaAdresi, tarihYaz, type DepoTuru } from "./ortak";
@@ -48,9 +47,8 @@ export function FirmaListesi({ kayitlar, anaAlan, depo }: { kayitlar: FirmaSatir
           <TusBaglanti tur="ikincil" ikon="triangle-alert" href="/yonetim/hatalar">Hata kaydı</TusBaglanti>
           <TusBaglanti tur="birincil" ikon="plus" href="/yonetim/yeni">Firma aç</TusBaglanti>
         </>} />
-      <SeritKap><Serit tur="bilgi" ikon="shield-check">Bu sayfa yalnız probata ekibine açık; firmalar ve müşteriler görmez.</Serit></SeritKap>
       <SuzgecliListe s={s} on="y" baslik="Firmalar" sutunlar={sutunlar} anahtar={(f) => f.id} href={(f) => `/yonetim/f/${f.id}`}
-        bosVeri={{ ikon: "building-2", baslik: "Firma yok", metin: "“Firma aç” ile ilk firma ve yöneticisinin hesabı açılır.", eylem: { href: "/yonetim/yeni", etiket: "Firma aç", ikon: "plus" } }} />
+        bosVeri={{ ikon: "building-2", baslik: "Firma yok", eylem: { href: "/yonetim/yeni", etiket: "Firma aç", ikon: "plus" } }} />
     </>
   );
 }

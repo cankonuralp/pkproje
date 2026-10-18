@@ -111,7 +111,7 @@ export function TeklifFormu({ secenekler, deger, id, surum, no, kopyaKaynak, dus
     <form onSubmit={(e) => { e.preventDefault(); kaydet(); }} noValidate>
       <Kirinti ogeler={no ? [["Teklifler", "/teklifler"], [no, `/teklifler/${id}`], ["Düzenle"]] : [["Teklifler", "/teklifler"], ["Yeni teklif"]]} />
       <SayfaBasi baslik={baslik} />
-      {kopyaKaynak && <Serit tur="bilgi" ikon="copy">{kopyaKaynak.no} teklifinden kopyalanıyor; yeni numarayla taslak açılır.</Serit>}
+      {kopyaKaynak && <Serit tur="bilgi" ikon="copy">{kopyaKaynak.no} teklifinden kopyalanıyor.</Serit>}
       {dusen.length > 0 && <Serit tur="uyari" ikon="circle-alert">{dusen.join(", ")} pasif; teklife alınmadı.</Serit>}
       {(hataSayisi > 0 || genel) && <Serit tur="hata" ikon="circle-alert" id={OZET}>{genel ?? `Kaydedilmedi: ${hataSayisi} eksik düzeltilmeli.`}</Serit>}
       <FormSayfa>
@@ -222,7 +222,7 @@ export function TeklifFormu({ secenekler, deger, id, surum, no, kopyaKaynak, dus
                 : f.tip === "kayitli" && tesisEkipmani > 0 ? { getir: () => teklifEkipmanlariEylemi(seciliTesisler), ne: "tesisteki kayıtlı ekipman" }
                 : { ne: "", kapali: true, sebep: "Excel'e aktarılacak ekipman yok: tesis seçin ya da Excel'den yükleyin." })} />
           </div>
-          {f.ekipmanlar.length > 0 && <p className={stil.ipucu}>Excel&apos;den yüklenen ekipman listesi: <b>{f.ekipmanlar.length}</b> ekipman; teklifle saklanır.</p>}
+          {f.ekipmanlar.length > 0 && <p className={stil.ipucu}>Excel&apos;den yüklenen ekipman listesi: <b>{f.ekipmanlar.length}</b> ekipman.</p>}
           <dl className={stil.toplam} aria-live="polite">
             <div><dt>Ara toplam</dt><dd>{para(ara)}</dd></div>
             <div><dt>KDV %{oran}</dt><dd>{para(kdvli(ara, oran) - ara)}</dd></div>

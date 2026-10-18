@@ -55,7 +55,7 @@ export function StandartPenceresi({ kapat, guncel, guncelListe, oneri, brans = "
           <Alan id={SID.surum} etiket="Sürüm" zorunlu hata={h.surum} sonuc={guncel ? `Kütüphanedeki: ${guncel.surumAdi}` : "Yıl ve tadil"}>
             <Girdi id={SID.surum} value={d.surum} maxLength={20} hata={!!h.surum} mesajli onChange={(e) => setD({ ...d, surum: e.target.value })} />
           </Alan>
-          <Alan id={SID.konu} etiket="Konu" zorunlu genis hata={h.konu} sonuc="Raporun metot alanında numarayla birlikte yazılır.">
+          <Alan id={SID.konu} etiket="Konu" zorunlu genis hata={h.konu}>
             <Girdi id={SID.konu} value={d.konu} maxLength={120} hata={!!h.konu} mesajli onChange={(e) => setD({ ...d, konu: e.target.value })} />
           </Alan>
           <Alan id={SID.brans} etiket="Branş" zorunlu hata={h.brans} sonuc={guncel ? "Sürümler aynı branşta kalır." : "Standartlar'da bu sekmede görünür."}>
@@ -67,7 +67,7 @@ export function StandartPenceresi({ kapat, guncel, guncelListe, oneri, brans = "
           </Alan>
         </FormIzgara>
       </form>
-      {ayni && <Serit tur="uyari" ikon="history">{guncel ? "" : `Bu numara kütüphanede var (${ayni.no}:${ayni.surumAdi}). `}Yüklenince {ayni.no}:{ayni.surumAdi} önceki sürüm olur. Yazılmış raporlar eski sürümü göstermeye devam eder.</Serit>}
+      {ayni && <Serit tur="uyari" ikon="history">{guncel ? "" : `Bu numara kütüphanede var (${ayni.no}:${ayni.surumAdi}). `}Yüklenince {ayni.no}:{ayni.surumAdi} önceki sürüm olur.</Serit>}
     </Pencere>
   );
 }

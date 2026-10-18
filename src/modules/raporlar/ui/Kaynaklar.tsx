@@ -60,7 +60,7 @@ function Atif({ atif, kaynak }: { atif: string; kaynak: RaporKaynaklari }) {
     <section className={stil.stdBolum}>
       <h3>{atif}</h3>
       <p className={stil.stdNot}>{kaynak.standartlar
-        ? "Bu standart firmanın standart kütüphanesinde yok. PDF'i Dökümanlar › Standartlar'a yüklenince buradan açılır."
+        ? "Bu standart firmanın standart kütüphanesinde yok."
         : "Standartları görme yetkiniz yok."}</p>
     </section>
   );
@@ -97,7 +97,7 @@ export function TalimatTusu({ ad, baslik, parcalar, buyuk = false }: { ad: strin
               {p.baslik && <h3>{p.baslik}</h3>}
               {p.metin.trim().split("\n").filter(Boolean).map((s, j) => <p key={j}>{s}</p>)}
             </section>
-          )) : <p className={stil.stdNot}>Bu kontrol için talimat yazılmamış. Talimat rapor formatında yazılır (Ekipman türleri › Rapor şablonu › Format kurucu).</p>}
+          )) : <p className={stil.stdNot}>Bu kontrol için talimat yazılmamış.</p>}
         </Pencere>, document.body)}
     </>
   );

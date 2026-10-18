@@ -45,10 +45,8 @@ export function EimzaYeriAyari({ t, degis, hucreVar, kim = "onaylanan" }: { t: F
   return (
     <div className={k.eimzaAyar} role="group" aria-label={kim === "onaylanan" ? "E-imzanın yeri" : "Onaylayanın e-imza yeri"}>
       {kim === "onaylanan"
-        ? <span className={k.panelIpucu}><b>E-imzanın yeri · Onaylanan</b> (belgeyi hazırlayan; raporda muayene uzmanı) · imzaya hazırlanan PDF&apos;te bu yerde
-          boş imza alanı olur; e-imza aracı imzayı oraya işler.</span>
-        : <span className={k.panelIpucu}><b>Onaylayanın e-imza yeri</b> (raporda teknik yönetici) · seçilirse PDF&apos;te ikinci boş imza alanı olur; iki imza
-          herhangi bir sırayla atılabilir.</span>}
+        ? <span className={k.panelIpucu}><b>E-imzanın yeri · Onaylanan</b> (raporda muayene uzmanı)</span>
+        : <span className={k.panelIpucu}><b>Onaylayanın e-imza yeri</b> (raporda teknik yönetici)</span>}
       <div className={k.panelSatir}>
         {SECENEK[kim].map(([x, ad]) => (
           <label key={x} className={k.panelKutu}>
@@ -73,7 +71,7 @@ export function EimzaYeriAyari({ t, degis, hucreVar, kim = "onaylanan" }: { t: F
             {olcu("Üstten (mm)", "y", 0, 297 - EIMZA_SERIT_MM - kutu.boy)}
             {olcu("Genişlik (mm)", "en", 20, 210)}
             {olcu("Yükseklik (mm)", "boy", 10, 100)}
-            <p className={k.panelIpucu}>Kutuyu küçük sayfada sürükleyin ya da ölçüleri yazın. Alttaki bant her sayfanın “Bu rapor e-imzalıdır” şeridine ayrılmıştır.</p>
+            <p className={k.panelIpucu}>Kutuyu küçük sayfada sürükleyin ya da ölçüleri yazın.</p>
           </div>
         </div>
       )}

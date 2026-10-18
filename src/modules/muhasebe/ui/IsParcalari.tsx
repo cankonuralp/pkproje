@@ -127,7 +127,7 @@ export function FaturaKaydet({ planId, isNo, musteri, tek, toplu, bugun }: { pla
           <p className={pencereMetinSinifi}><b>{o.raporSayisi}</b> imzalı rapor{acik === "toplu" && ` · ${o.isler.map((x) => x.no).join(", ")}`}</p>
           <KalemListesi kalemler={o.kalemler} baslik="Faturaya girecek kalemler" />
           <Toplamlar ara={o.ara} kdv={o.kdv} kdvTutar={o.kdvTutar} toplam={o.toplam} />
-          {o.surec > 0 && <Serit tur="uyari" ikon="history">{o.surec} rapor imza sürecinde; bu faturaya girmez, imzalanınca sonraki faturaya kalır.</Serit>}
+          {o.surec > 0 && <Serit tur="uyari" ikon="history">{o.surec} rapor imza sürecinde; bu faturaya girmez.</Serit>}
           {o.fiyatsiz > 0 && <Serit id={FID.fiyatsiz} tur="hata" ikon="circle-alert">{o.fiyatsiz} raporun birim fiyatı yok (teklifte ya da fiyat listesinde değil); fiyat listesine ekleyin.</Serit>}
           {genel && <Serit tur="hata" ikon="circle-alert">{genel}</Serit>}
           <div className={stil.form}>
@@ -184,7 +184,7 @@ export function TahsilatEkle({ fatura, bugun, birincil = true }: { fatura: { id:
           <Alan id={TID.tarih} etiket="Tahsilat tarihi" zorunlu hata={h.tarih}>
             <TarihAlani id={TID.tarih} ad="Tahsilat tarihi" deger={d.tarih} degistir={(x) => setD({ ...d, tarih: x })} tanim={h.tarih ? ipucuId(TID.tarih) : undefined} />
           </Alan>
-          <Alan id={TID.tutar} etiket="Tutar (TL)" zorunlu hata={h.tutar} sonuc={h.tutar ? undefined : "Kısmi tahsilat olabilir; en çok kalan kadar."}>
+          <Alan id={TID.tutar} etiket="Tutar (TL)" zorunlu hata={h.tutar} sonuc={h.tutar ? undefined : "En çok kalan kadar."}>
             <Girdi id={TID.tutar} value={d.tutar} inputMode="decimal" maxLength={16} hata={!!h.tutar} mesajli onChange={(e) => setD({ ...d, tutar: e.target.value })} />
           </Alan>
           <Alan id={TID.yontem} etiket="Yöntem" zorunlu hata={h.yontem}>

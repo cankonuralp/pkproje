@@ -98,7 +98,7 @@ export function FirmaAcFormu({ anaAlan, depo, kendiProje = false }: { anaAlan: s
         <Kirinti ogeler={[["Firmalar", "/yonetim"], ["Firma açıldı"]]} />
         <SayfaBasi baslik={acilan.unvan} tuslar={<TusBaglanti ikon="building-2" href={`/yonetim/f/${acilan.id}`}>Firma sayfası</TusBaglanti>} />
         <Bolum id="ya-b-giris" baslik="İlk giriş bilgileri">
-          <SeritKap><Serit tur="uyari" ikon="triangle-alert">Geçici parola yalnız şimdi görünür; sayfadan çıkınca bir daha gösterilmez. Firma yöneticisine iletin; ilk girişte kendi parolasını belirler.</Serit></SeritKap>
+          <SeritKap><Serit tur="uyari" ikon="triangle-alert">Geçici parola yalnız şimdi görünür.</Serit></SeritKap>
           <BilgiListesi>
             <Bilgi etiket="Adres" genis="cift"><span className={stil.adresKod}>{`https://${adres}`}</span></Bilgi>
             <Bilgi etiket="Giriş adı" genis="cift">{acilan.eposta}</Bilgi>
@@ -147,8 +147,8 @@ export function FirmaAcFormu({ anaAlan, depo, kendiProje = false }: { anaAlan: s
                 <input type="radio" name="vt" value="kendi" checked={vt === "kendi"} disabled={!kendiProje} onChange={() => setVt("kendi")} />
                 <span>Kendi Supabase projesi (önerilen)
                   <span className={stil.vtAciklama}>{kendiProje
-                    ? "Firmanın veritabanı ve dosyaları ayrı Supabase projesinde (Frankfurt); probata panelden açar ve kurar, firma bir şey yapmaz."
-                    : "Şu an kapalı: Supabase yönetim anahtarı ve örgütü bu sunucuda tanımlı değil (yayına çıkışta tanımlanır)."}</span>
+                    ? "Firmanın veritabanı ve dosyaları ayrı Supabase projesinde (Frankfurt)."
+                    : "Şu an kapalı: Supabase yönetim anahtarı tanımlı değil."}</span>
                 </span>
               </label>
               <label className={stil.vtSecenek}>

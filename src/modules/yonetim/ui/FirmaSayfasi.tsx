@@ -128,10 +128,10 @@ export function FirmaSayfasi({ firma: f, ozet, kurulum = null, gonderim = null, 
           : <Tus tur="ikincil" ikon="ban" disabled={bekliyor} onClick={() => void dondur()}>Dondur</Tus>}
       </>} />
       {hata && <SeritKap><Serit tur="hata" ikon="circle-alert">{hata}</Serit></SeritKap>}
-      {dondu && <SeritKap><Serit tur="uyari" ikon="triangle-alert">Dondurulmuş: firmanın kullanıcıları ve müşterileri giriş yapamaz; veriler silinmedi.</Serit></SeritKap>}
+      {dondu && <SeritKap><Serit tur="uyari" ikon="triangle-alert">Dondurulmuş: giriş kapalı.</Serit></SeritKap>}
       {parola && (
         <Bolum id="yf-b-giris" baslik="İlk giriş bilgileri">
-          <SeritKap><Serit tur="uyari" ikon="triangle-alert">Geçici parola yalnız şimdi görünür; sayfadan çıkınca bir daha gösterilmez. Firma yöneticisine iletin; ilk girişte kendi parolasını belirler.</Serit></SeritKap>
+          <SeritKap><Serit tur="uyari" ikon="triangle-alert">Geçici parola yalnız şimdi görünür.</Serit></SeritKap>
           <BilgiListesi>
             <Bilgi etiket="Adres" genis="cift"><span className={stil.adresKod}>{`https://${adres}`}</span></Bilgi>
             <Bilgi etiket="Giriş adı" genis="cift">{parola.eposta}</Bilgi>

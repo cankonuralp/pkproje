@@ -57,7 +57,7 @@ export function SozlesmeFormu({ musteriler, teklifler = [], baslangicDegeri }: {
                 secenekler={musteriler.map((x) => [x.id, x.kisa] as const)}
                 degistir={(x) => { if (x !== d.musteri) { setTesisler([]); setD({ ...d, musteri: x, teklif: "" }); } }} />
             </Alan>
-            <Alan id={ID.teklif} etiket="Dayanak teklif" genis hata={h.teklif} sonuc={h.teklif ? undefined : "Kabul edilen teklif; fiyatlar oradan. Yoksa boş (sistem öncesi)."}>
+            <Alan id={ID.teklif} etiket="Dayanak teklif" genis hata={h.teklif} sonuc={h.teklif ? undefined : "İsteğe bağlı."}>
               {m ? <SecimAlani id={ID.teklif} ad="Dayanak teklif" deger={d.teklif} ipucu={mTeklifleri.length ? "Teklif seçin" : "Kabul edilmiş teklif yok"} gecersiz={!!h.teklif}
                   tanim={ipucuId(ID.teklif)} kapali={!mTeklifleri.length}
                   secenekler={[["", "Yok (sistem öncesi)"], ...mTeklifleri.map((t) => [t.id, t.no, t.tarih.split("-").reverse().join(".")] as const)]}

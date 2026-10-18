@@ -88,7 +88,7 @@ export function YonetimGirisFormu({ neden, adres, ikiAdim }: { neden?: "oturum" 
       {neden === "oturum" && !durum.hata && <Serit tur="bilgi" ikon="clock">Oturumunuz kapandı. Devam etmek için yeniden giriş yapın.</Serit>}
       {neden === "cikis" && !durum.hata && <Serit tur="onay">Çıkış yaptınız; oturumunuz kapatıldı.</Serit>}
       {/* 572: kurulum yarıda kaldı — yeni parola sanılıp denenmesin (kilide düşülüyordu) */}
-      {neden === "kurulum" && !durum.hata && <Serit tur="uyari" ikon="circle-alert">İlk giriş kurulumu tamamlanmadan süresi doldu; <b>yeni parolanız kaydedilmedi</b>. Size verilen geçici parolayla yeniden girin; yeni bir karekod verilir (doğrulama uygulamasındaki eski “probata yönetim” kaydını silebilirsiniz).</Serit>}
+      {neden === "kurulum" && !durum.hata && <Serit tur="uyari" ikon="circle-alert">İlk giriş kurulumu tamamlanmadan süresi doldu; <b>yeni parolanız kaydedilmedi</b>. Size verilen geçici parolayla yeniden girin.</Serit>}
       {durum.hata && <Serit tur="hata" ikon="circle-alert">{durum.hata}</Serit>}
       <div className={stil.alan}>
         <label className={stil.etiket} htmlFor="y-eposta">E-posta</label>
@@ -99,7 +99,6 @@ export function YonetimGirisFormu({ neden, adres, ikiAdim }: { neden?: "oturum" 
       <div className={stil.tuslar}>
         <Tus type="submit" ikon="log-in" disabled={gonderiyor || !!durum.yonlendir} aria-busy={gonderiyor || undefined}>{ikiAdim ? "Devam" : "Giriş yap"}</Tus>
       </div>
-      <p className={stil.ayrac}>Bu sayfa yalnız probata ekibine açık{ikiAdim ? "; giriş iki adımlıdır (parola + doğrulama kodu)" : ""}.</p>
     </Kart>
   );
 }
@@ -136,7 +135,7 @@ export function YonetimKurulumFormu({ eposta, anahtar, adres, karekod, sure }: {
   return (
     <Kart baslik="İki adımlı giriş kurulumu" alt={eposta} action={eylem}>
       <Serit tur="bilgi" ikon="shield-check">İlk girişiniz: telefonunuzdaki doğrulama uygulamasını bağlayın ve kendi parolanızı belirleyin. Bu adımı {sure} dakika
-        içinde tamamlayın; “Kurulumu tamamla” başarılı olana kadar yeni parola kaydedilmez, geçici parolanız geçerlidir.</Serit>
+        içinde tamamlayın.</Serit>
       {h.genel && <Serit tur="hata" ikon="circle-alert">{h.genel}</Serit>}
       <div className={stil.alan}>
         <p className={stil.etiket}>1. Anahtarı uygulamaya ekleyin</p>

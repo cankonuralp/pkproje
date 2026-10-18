@@ -10,12 +10,12 @@ import stil from "./BosDurum.module.css";
 export interface BosDurumEylemi { href: string; etiket: string; ikon?: string }
 
 export function BosDurum({ ikon, baslik, metin, eylem, eylemTus }:
-  { ikon: string; baslik: string; metin: string; eylem?: BosDurumEylemi; eylemTus?: ReactNode }) {
+  { ikon: string; baslik: string; metin?: string; eylem?: BosDurumEylemi; eylemTus?: ReactNode }) {
   return (
     <div className={stil.bos} role="status">
       <div className={stil.ikon}><Ikon ad={ikon} /></div>
       <p className={stil.baslik}>{baslik}</p>
-      <p className={stil.metin}>{metin}</p>
+      {metin && <p className={stil.metin}>{metin}</p>}
       {eylem && (
         <Link className={stil.eylem} href={eylem.href}>
           {eylem.ikon && <Ikon ad={eylem.ikon} kucuk />}

@@ -42,7 +42,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
           {(yaz || v.benim) && <AracTuslari arac={v} yaz={yaz} araclar={l.araclar} kisiler={l.kisiler} sil={silme.sil} kullanim={silme.kullanim ? kullanimMetni(silme.kullanim) : null}
             deger={{ id: v.id, surum: v.surum, plaka: v.plaka, tur: v.tur, marka: v.marka, model: v.model, yil: v.yil, yakit: v.yakit, bakimKm: v.bakimKm, muayene: v.muayene, sigorta: v.sigorta, kasko: v.kasko }} />}
         </>} />
-      {v.pasif && <SeritKap><Serit tur="bilgi" ikon="ban">Pasif ({tarihYaz(v.pasif)}): listeden, teslimden, kilometreden ve uyarılardan kalktı; tutanakları ve kilometre geçmişi duruyor.</Serit></SeritKap>}
+      {v.pasif && <SeritKap><Serit tur="bilgi" ikon="ban">Pasif ({tarihYaz(v.pasif)}).</Serit></SeritKap>}
       {!v.pasif && v.belgeler.some((b) => b.durum === "gecti" || b.durum === "yakin") && <SeritKap>{v.belgeler.filter((b) => b.durum === "gecti" || b.durum === "yakin").map((b) =>
         b.durum === "gecti"
           ? <Serit key={b.ad} tur="hata" ikon="circle-x">{b.ad} süresi geçti ({tarihYaz(b.tarih)}); araç bu hâliyle trafiğe çıkmamalı.</Serit>

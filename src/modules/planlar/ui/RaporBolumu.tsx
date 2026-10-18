@@ -90,7 +90,7 @@ export function RaporBolumu({ v }: { v: PlanIci }) {
     <section className={stil.planBolum} aria-labelledby={baslikId}>
       <div className={stil.altBas}><h3 id={baslikId} tabIndex={-1}>Raporlar</h3><Sayac s={s} /></div>
       <SuzgecliListe s={s} on="r" baslik="Bu plandaki raporlar" sutunlar={sutunlar} anahtar={(r) => r.id}
-        bosVeri={{ ikon: "file-text", baslik: "Bu planda rapor yok.", metin: v.izin.raporOlustur ? "Rapor ekipman satırındaki “Rapor oluştur” ile açılır." : "Denetçi sahada rapor oluşturur." }} />
+        bosVeri={{ ikon: "file-text", baslik: "Bu planda rapor yok." }} />
     </section>
   );
 }

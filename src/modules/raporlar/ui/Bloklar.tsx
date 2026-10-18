@@ -554,7 +554,7 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
             <tbody>
               {!satirlar.length && (
                 <tr><td className={stil.bosHucre} colSpan={2 + b.sutunlar.length + (notlar.length ? 1 : 0) + (bag.oku || sabit ? 0 : 1)}>
-                  Satır yok{bag.oku ? "." : " — “Satır ekle” ile ekleyin; her satır bir ölçüm noktası."}</td></tr>
+                  Satır yok.</td></tr>
               )}
               {sy.dilim(satirlar).map((s, j) => {
                 const i = sy.bas + j, r = sonuclar[i], notAnahtar = satirAnahtari(b.id, i, "not");
@@ -621,11 +621,9 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
       <details className={stil.notlar}>
         <summary>Sonuç neye göre çıkar?</summary>
         {kurallar.length
-          ? <><p className={stil.kuralBas}>Sonuç ölçülen değerlerden kendiliğinden çıkar — kural sağlanırsa Uygun, biri sağlanmazsa Uygun değil (nedeni satırda
-            yazar); değeri boş olan kural değerlendirilmez.{!notlar.length && " Gerekirse satırın “Elle değiştir”iyle gerekçe yazarak değiştirilir; belgede kural sonucu da yazar."}</p>
+          ? <><p className={stil.kuralBas}>Kurallar sağlanırsa Uygun, biri sağlanmazsa Uygun değil.</p>
             <ul>{kurallar.map((k, j) => <li key={j}>{k}</li>)}</ul></>
-          : <p className={stil.kuralBas}>Bu tabloda sonuç kuralı yok (formatta sonuç kuralı, sütun sınırı ya da olumsuz seçenek tanımlanmamış): Sonuç boş kalır
-            {!notlar.length && "; satırın “Elle değiştir”iyle gerekçe yazarak seçilir"}.</p>}
+          : <p className={stil.kuralBas}>Bu tabloda sonuç kuralı yok.</p>}
       </details>
       {notlar.length > 0 && (
         <details className={stil.notlar}>

@@ -541,7 +541,8 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     expect(sahaYanit.headers()["content-security-policy"]).toContain("frame-ancestors 'self'");
     expect(sahaYanit.headers()["x-frame-options"]).toBe("SAMEORIGIN");
   } else {
-    await expect(page.getByText("Format kurucu masaüstünde düzenlenir; burada belge önizlemesi ve saha ekranı (denetçi gibi dene) açılır.")).toBeVisible();
+    /* 2026-10-18 (reisim: "bu ve benzeri, yaratıcıyı hedef alan açıklamaları kaldır, çok fazla ai ürünü olduğu belli oluyor"): açıklama kısaldı */
+    await expect(page.getByText("Format kurucu masaüstünde düzenlenir.")).toBeVisible();
     await expect(page.getByRole("region", { name: "Belge önizlemesi" }).getByText("Kablo şebeke tarafı").first()).toBeVisible();
     /* 473 (maket): telefonda saha ekranı — telefon genişliğinde, yalnız denetçi gibi dene (düzenleme / kip seçici yok) */
     await page.getByRole("button", { name: "Saha ekranı" }).click();

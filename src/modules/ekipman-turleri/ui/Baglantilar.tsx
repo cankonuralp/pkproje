@@ -49,13 +49,13 @@ export function BaglantiTusu({ turId, surum, standartlar, cihazTurleri, secenekl
           </fieldset>
         )) : <fieldset className={stil.kutular}>
           <legend className={stil.etiket}>Kontrol metodu standartları</legend>
-          <p className={stil.altMetin}>Kütüphanede standart yok; Dökümanlar › Standartlar’dan yüklenir.</p>
+          <p className={stil.altMetin}>Kütüphanede standart yok.</p>
         </fieldset>}
         <fieldset className={stil.kutular}>
           <legend className={stil.etiket}>Kullanılacak ölçüm cihazları</legend>
           {secenekler.cihazTurleri.length ? secenekler.cihazTurleri.map((c) => (
             <label key={c.id} className={stil.kutu}><input type="checkbox" checked={ct.includes(c.id)} onChange={(e) => setCt(isle(ct, c.id, e.target.checked))} /><span>{c.ad}</span></label>
-          )) : <p className={stil.altMetin}>Cihaz türü yok; Ölçüm cihazları’ndan cihaz eklerken tür tanımlanır.</p>}
+          )) : <p className={stil.altMetin}>Cihaz türü yok.</p>}
         </fieldset>
       </Pencere>}
     </>

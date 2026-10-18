@@ -233,8 +233,7 @@ export function PlanAcFormu({ veri, baslangic }: { veri: PlanAcVerisi; baslangic
           </>}
         </FormBolum>
         <FormBolum baslik="4 · Bilgilendirme (e-posta)" id="pa-b5">
-          <p className={stil.bosSatir}>Plan açılınca ekipteki denetçilere e-posta kendiliğinden gider{ekipEposta ? ` (${ekipEposta} kişi)` : ""}. Başkalarını da
-            bilgilendirmek için e-posta yazın ya da listeden seçin.</p>
+          <p className={stil.bosSatir}>Ekipteki denetçilere e-posta gider{ekipEposta ? ` (${ekipEposta} kişi)` : ""}.</p>
           <FormIzgara>
             <Alan id={ID.bilgilendirme} etiket="E-posta ekle" hata={epostaHata ?? h.bilgilendirme ?? Object.entries(h).find(([k]) => k.startsWith("bilgilendirme."))?.[1]}>
               <div className={stil.epostaEkle}>
@@ -267,8 +266,7 @@ export function PlanAcFormu({ veri, baslangic }: { veri: PlanAcVerisi; baslangic
         </FormBolum>
         <FormBolum baslik="5 · Ekipmanlar" id="pa-b6" kaydir={!!d.tesis}>
           {!d.tesis ? <p className={stil.bosSatir}>Önce tesis seçin.</p> : <>
-            <p className={stil.bosSatir}>Tesiste kayıtlı ekipman kendiliğinden plana girer{tesisteki.length ? ` (${alinan.length} / ${tesisteki.length})` : ""}; bu planda
-              kontrol edilmeyecek olanı çıkarın (tesiste kalır). Kayıtlı olmayanı aşağıya satır satır ya da Excel&apos;den ekleyin: plan açılınca tesise de kaydedilir.</p>
+            <p className={stil.bosSatir}>Tesiste kayıtlı ekipman{tesisteki.length ? ` (${alinan.length} / ${tesisteki.length})` : ""}.</p>
             {tesisteki.length > 0 && <div className={stil.ekleSatiri}>
               {yakinDegil.some((e) => !haric.has(e.id)) && <Tus tur="ikincil" ikon="filter-x"
                 onClick={() => setHaric((s) => new Set([...s, ...yakinDegil.map((e) => e.id)]))}>Kontrolü yakın olmayanları çıkar ({yakinDegil.filter((e) => !haric.has(e.id)).length})</Tus>}
@@ -324,7 +322,7 @@ export function PlanAcFormu({ veri, baslangic }: { veri: PlanAcVerisi; baslangic
               <Bilgi etiket="Ekip" genis>{ekipAday.length ? ekipAday.map((a) => a.ad).join(", ") : <DegerYok>Seçilmedi</DegerYok>}</Bilgi>
               <Bilgi etiket="E-posta" genis>{ekipAday.length || bilgi_.length ? `Ekip${bilgi_.length ? ` + ${bilgi_.length} bilgilendirme` : ""}` : <DegerYok>Ekip seçilince</DegerYok>}</Bilgi>
               <Bilgi etiket="Ekipman" genis>{toplam ? `${toplam} ekipman · ${kapsam.length} tür plana girer${elleTam.length ? ` (${elleTam.length} elle eklendi)` : ""}${cikarilan ? ` · ${cikarilan} çıkarıldı` : ""}`
-                : <DegerYok>Tesiste kayıtlı ekipman yok; elle ekleyin ya da denetçi sahada ekler</DegerYok>}</Bilgi>
+                : <DegerYok>Tesiste kayıtlı ekipman yok</DegerYok>}</Bilgi>
             </BilgiListesi>
             {kapsam.length > 0 && <div className={stil.tablo}><KapsamTablosu kapsam={kapsam} ekip={ekipAday} /></div>}
             {uyarilar.length > 0 && <div className={stil.tablo}><Kosullar ogeler={uyarilar} /></div>}

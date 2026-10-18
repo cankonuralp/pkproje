@@ -50,7 +50,7 @@ export function CihazPenceresi({ kapat, turler, cihaz }: { kapat: () => void; tu
       alt={<><Tus tur="ikincil" onClick={kapat}>Vazgeç</Tus><Tus ikon="check" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={kaydet}>Kaydet</Tus></>}>
       {genel && <Serit tur="hata" ikon="circle-alert">{genel}</Serit>}
       <FormIzgara>
-        {G("kod", "Cihaz kodu", { zorunlu: true, sonuc: "Firmanın etiketi; 3–12 hane (A–Z, 0–9, tire).", tip: { maxLength: 12, autoCapitalize: "characters" } })}
+        {G("kod", "Cihaz kodu", { zorunlu: true, sonuc: "3–12 hane (A–Z, 0–9, tire).", tip: { maxLength: 12, autoCapitalize: "characters" } })}
         <Alan id={CID.tur} etiket="Cihaz türü" zorunlu hata={h.tur}>
           <SecimAlani id={CID.tur} ad="Cihaz türü" deger={d.tur} secenekler={[...turler.map((t) => [t.id, t.ad] as const), [YENI_TUR, "Yeni tür…"] as const]}
             ipucu="Tür seçin" gecersiz={!!h.tur} tanim={h.tur ? ipucuId(CID.tur) : undefined} degistir={(v) => setD({ ...d, tur: v })} />

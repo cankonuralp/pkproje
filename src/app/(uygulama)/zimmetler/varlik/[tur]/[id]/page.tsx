@@ -40,7 +40,7 @@ export default async function Sayfa({ params }: { params: Promise<{ tur: string;
             zimmette={v.kimde.tip === "kisi"} />}
           {yaz && v.tur !== "a" && v.kimde.tip !== "lab" && !v.pasif && l && <TeslimTusu varlik={v.anahtar} varliklar={l.varliklar} kisiler={l.kisiler} bugun={bugun} />}
         </>} />
-      {v.pasif && <SeritKap><Serit tur="bilgi" ikon="ban">Pasif: Zimmetler listesinden ve teslimden kalktı; teslim geçmişi duruyor.</Serit></SeritKap>}
+      {v.pasif && <SeritKap><Serit tur="bilgi" ikon="ban">Pasif.</Serit></SeritKap>}
       {!v.pasif && kalGecti(v, bugun) && v.kimde.tip === "kisi" &&
         <SeritKap><Serit tur="hata" ikon="circle-x">Kalibrasyonu geçmiş cihaz {v.kimde.ad} zimmetinde: raporları onaya gönderilemez. Depoya alın ya da kalibrasyona gönderin.</Serit></SeritKap>}
       <Yuzler>

@@ -62,13 +62,13 @@ export function IsgPenceresi({ kapat, sozlesme, sozNo, tesisler, kisiler, mevcut
             <SecimAlani id={IID.personel} ad="Denetçi" deger={d.personel} ipucu="Kişi seçin" gecersiz={!!h.personel} tanim={h.personel ? ipucuId(IID.personel) : undefined} kapali={!!kayit}
               secenekler={kayit ? [[kayit.personelId, kayit.personel] as const] : kisiler.map((k) => [k.id, k.ad] as const)} degistir={(x) => setD({ ...d, personel: x })} />
           </Alan>
-          <Alan id={IID.no} etiket="İSG-KATİP SÖZLEŞME ID" zorunlu genis hata={h.no} sonuc="İSG-KATİP'teki sözleşme numarası; raporlara buradan geçer.">
+          <Alan id={IID.no} etiket="İSG-KATİP SÖZLEŞME ID" zorunlu genis hata={h.no} sonuc="İSG-KATİP'teki sözleşme numarası.">
             <Girdi id={IID.no} value={d.no} maxLength={30} hata={!!h.no} mesajli onChange={(e) => setD({ ...d, no: e.target.value })} />
           </Alan>
-          <Alan id={IID.onay} etiket="Onay tarihi" hata={h.onay} sonuc="İsteğe bağlı; kontrolden sonraki onayda uyarı çıkar.">
+          <Alan id={IID.onay} etiket="Onay tarihi" hata={h.onay} sonuc="İsteğe bağlı.">
             <TarihAlani id={IID.onay} ad="Onay tarihi" deger={d.onay} degistir={(x) => setD({ ...d, onay: x })} tanim={ipucuId(IID.onay)} />
           </Alan>
-          <Alan id={IID.bitis} etiket="Bitiş tarihi" hata={h.bitis} sonuc="İsteğe bağlı; plan günü bitişten sonraysa plan açarken uyarı çıkar.">
+          <Alan id={IID.bitis} etiket="Bitiş tarihi" hata={h.bitis} sonuc="İsteğe bağlı.">
             <TarihAlani id={IID.bitis} ad="Bitiş tarihi" deger={d.bitis} degistir={(x) => setD({ ...d, bitis: x })} tanim={ipucuId(IID.bitis)} />
           </Alan>
           <Alan id={IID.dosya} etiket="İSG-KATİP sözleşmesi (PDF)" genis hata={h.dosya} sonuc={kayit?.dosyaId && !pdfKaldir ? "Yüklü PDF var; yeni seçilirse değişir." : "İsteğe bağlı."}>
@@ -78,7 +78,7 @@ export function IsgPenceresi({ kapat, sozlesme, sozNo, tesisler, kisiler, mevcut
         {kayit?.dosyaId && !pdfKaldir && <div className={stil.secenekler}><DosyaAcTusu dosyaId={kayit.dosyaId}>Yüklü PDF’i aç</DosyaAcTusu>
           <Tus tur="ikincil" ikon="x" onClick={() => setPdfKaldir(true)}>PDF’i kaldır</Tus></div>}
       </form>
-      {onceki && <Serit tur="uyari" ikon="history">{onceki.personel} için bu tesiste {onceki.no} var; yenisi kaydedilince o önceki kayıt olur.</Serit>}
+      {onceki && <Serit tur="uyari" ikon="history">{onceki.personel} için bu tesiste {onceki.no} var; yenisi onun yerine geçer.</Serit>}
     </Pencere>
   );
 }
@@ -102,7 +102,7 @@ export function ImzaliPenceresi({ kapat, id, surum, no, var: yuklu }: { kapat: (
       alt={<><Tus tur="ikincil" onClick={kapat}>Vazgeç</Tus><Tus ikon="check" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={kaydet}>Yükle</Tus></>}>
       {genel && <Serit tur="hata" ikon="circle-alert">{genel}</Serit>}
       <form ref={form} onSubmit={(e) => { e.preventDefault(); kaydet(); }}>
-        <Alan id={IMZALI_ID} etiket="İmzalı sözleşme (PDF)" zorunlu hata={h.dosya} sonuc="Müşterinin imzaladığı tarama; yükleyince sözleşme yürürlüğe girer.">
+        <Alan id={IMZALI_ID} etiket="İmzalı sözleşme (PDF)" zorunlu hata={h.dosya} sonuc="Müşterinin imzaladığı tarama.">
           <input id={IMZALI_ID} className={stil.dosya} name="dosya" type="file" accept="application/pdf" aria-describedby={ipucuId(IMZALI_ID)} />
         </Alan>
       </form>

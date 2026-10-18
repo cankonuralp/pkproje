@@ -4,8 +4,7 @@
 import { KartEtiket, Kirp, type Sutun } from "../../../components/liste/Liste";
 import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
 import type { SuzgecTanimi } from "../../../components/liste/suzgec";
-import { AltSatir, Rozet, SayfaBasi, SeritKap } from "../../../components/sayfa/Sayfa";
-import { Serit } from "../../../components/serit/Serit";
+import { AltSatir, Rozet, SayfaBasi } from "../../../components/sayfa/Sayfa";
 import { TusBaglanti } from "../../../components/tus/Tus";
 import type { HataSatiri } from "../server/hatalar";
 import stil from "./yonetim.module.css";
@@ -55,9 +54,8 @@ export function HataListesi({ kayitlar }: { kayitlar: HataSatiri[] }) {
   return (
     <>
       <SayfaBasi baslik="Hata kaydı" sayac={<Sayac s={s} />} tuslar={<TusBaglanti tur="ikincil" ikon="building-2" href="/yonetim">Firmalar</TusBaglanti>} />
-      <SeritKap><Serit tur="bilgi" ikon="shield-check">Yalnız probata ekibine açık. Kişi adı ve sorgu yazılmaz; e-posta, uzun sayı ve anahtarlar maskelenir. Hatalar 30 gün (en çok 2000) tutulur.</Serit></SeritKap>
       <SuzgecliListe s={s} on="h" baslik="Hatalar" sutunlar={SUTUN} anahtar={(h) => h.id}
-        bosVeri={{ ikon: "circle-check", baslik: "Hata yok", metin: "Tarayıcıda ya da sunucuda yakalanan hata burada görünür." }} />
+        bosVeri={{ ikon: "circle-check", baslik: "Hata yok" }} />
     </>
   );
 }

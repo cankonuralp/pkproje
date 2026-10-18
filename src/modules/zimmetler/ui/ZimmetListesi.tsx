@@ -59,7 +59,7 @@ export function KimdeListesi({ varliklar, kisiler, bugun, yaz }: { varliklar: Va
       </>} />
       <Sekmeler ad="Zimmet bölümleri" ogeler={SEKMELER} secili="/zimmetler" />
       <SuzgecliListe s={s} on="z" baslik="Kimde" sutunlar={sutunlar} anahtar={(v) => v.anahtar} href={(v) => adres(v.anahtar)}
-        bosVeri={{ ikon: "package", baslik: "Varlık yok", metin: "Ölçüm cihazları ve demirbaşlar eklenince burada kimde oldukları görünür." }} />
+        bosVeri={{ ikon: "package", baslik: "Varlık yok" }} />
       {p === "teslim" && <TeslimPenceresi kapat={() => setP(null)} varliklar={varliklar} kisiler={kisiler} bugun={bugun} />}
       {p === "demirbas" && <DemirbasPenceresi kapat={() => setP(null)} />}
     </>

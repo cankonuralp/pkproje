@@ -48,7 +48,7 @@ export function IsListesi({ ilk, uyari, bordro = false }: { ilk: SunucuListe<IsS
       <MuhasebeSekmeleri secili="/muhasebe" />
       <UyariSeridi uyari={uyari} />
       <SuzgecliListe s={s} on="i" baslik="İşler" sutunlar={IS_SUTUN} anahtar={(x) => x.id} href={(x) => `/muhasebe/is/${x.id}`}
-        bosVeri={{ ikon: "wallet", baslik: "İş yok", metin: "Planın ilk raporu yazılınca iş burada görünür." }} />
+        bosVeri={{ ikon: "wallet", baslik: "İş yok" }} />
     </>
   );
 }
@@ -78,7 +78,7 @@ export function FaturaListesi({ ilk, uyari, durum, bordro = false }: { ilk: Sunu
       <MuhasebeSekmeleri secili="/muhasebe/faturalar" />
       <UyariSeridi uyari={uyari} />
       <SuzgecliListe s={s} on="f" baslik="Faturalar" sutunlar={FATURA_SUTUN} anahtar={(f) => f.id} href={(f) => `/muhasebe/f/${f.id}`}
-        bosVeri={{ ikon: "file-text", baslik: "Fatura yok", metin: "Faturaya hazır bir işin sayfasından “Fatura kaydet” ile eklenir." }} />
+        bosVeri={{ ikon: "file-text", baslik: "Fatura yok" }} />
     </>
   );
 }

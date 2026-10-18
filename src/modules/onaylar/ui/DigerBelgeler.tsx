@@ -95,7 +95,7 @@ export function DigerBelgeler({ v, sekmeler }: { v: Veri; sekmeler: OnayListeler
       {!v.personel && <SeritKap><Serit tur="bilgi" ikon="info">Hesabınız bir personel kaydına bağlı değil; size belge gönderilemez.</Serit></SeritKap>}
       {v.bekleyen > 0 && <SeritKap><Serit tur="uyari" ikon="file-signature"><b>{v.bekleyen} belge imzanızı bekliyor</b> · her belge ayrı imzalanır.</Serit></SeritKap>}
       <SuzgecliListe s={s} on="dgr" baslik="Diğer belgeler" sutunlar={sutunlar} anahtar={(x) => x.id}
-        bosVeri={{ ikon: "circle-check", baslik: "Onayınızı bekleyen belge yok", metin: "Bordro, eğitim ve zimmet formları onayınıza gönderildikçe burada görünür." }} />
+        bosVeri={{ ikon: "circle-check", baslik: "Onayınızı bekleyen belge yok" }} />
       {imza && <Pencere acik baslik="Onayla ve imzala" onKapat={() => { if (!bekliyorMu) setImza(null); }} odak="[data-belge-indir] a"
         alt={<>
           <Tus tur="ikincil" disabled={bekliyorMu} onClick={() => setImza(null)}>Vazgeç</Tus>
@@ -108,8 +108,8 @@ export function DigerBelgeler({ v, sekmeler }: { v: Veri; sekmeler: OnayListeler
         <p className={pencereMetinSinifi}><b>{imza.x.ad}</b> · {imza.x.gonderen} gönderdi.</p>
         <ol className={stil.adimlar}>
           <li>PDF&apos;i indirin.</li>
-          <li>E-imza aracınızla imzalayın (PDF&apos;in kendisi değişmeden imza eklenir).</li>
-          <li>İmzalı PDF&apos;i yükleyin; gönderen imzalandığını görür.</li>
+          <li>E-imza aracınızla imzalayın.</li>
+          <li>İmzalı PDF&apos;i yükleyin.</li>
         </ol>
         <div className={stil.indir} data-belge-indir>
           <DosyaAcTusu dosyaId={imza.x.dosya} ikon="download" indir>PDF&apos;i indir</DosyaAcTusu>

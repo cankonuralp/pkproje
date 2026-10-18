@@ -40,12 +40,12 @@ export function SozlesmeListesi({ ilk, yaz, sablonlar, isgEksik = [] }:
         <TusBaglanti tur="birincil" ikon="plus" href="/sozlesmeler/yeni">Yeni sözleşme</TusBaglanti>
       </>} />
       {isgEksik.length > 0 && <SeritKap><Serit tur="hata" ikon="triangle-alert">
-        <span>Açık planda İSG-KATİP SÖZLEŞME ID&apos;si eksik ya da bitmiş (yan menüdeki kırmızı sayı):{" "}
+        <span>Açık planda İSG-KATİP SÖZLEŞME ID&apos;si eksik ya da bitmiş:{" "}
           {isgEksik.map((p, i) => <span key={p.id}>{i > 0 && ", "}<Link href={`/planlar/${p.id}`}>{p.no}</Link> · {p.firmaAdi} · {tarihYaz(p.baslangic)}{p.eksik > 1 ? ` (${p.eksik} kişi)` : ""}</span>)}.
           {" "}Planın ekibine ID&apos;yi yazın ya da tesisin iş sözleşmesine ekleyin.</span>
       </Serit></SeritKap>}
       <SuzgecliListe s={s} on="s" baslik="İş sözleşmeleri" sutunlar={sutunlar} anahtar={(x) => x.id} href={(x) => `/sozlesmeler/${x.id}`}
-        bosVeri={{ ikon: "file-signature", baslik: "İş sözleşmesi yok", metin: "“Yeni sözleşme” ile müşteri ve tesisler seçilerek hazırlanır." }} />
+        bosVeri={{ ikon: "file-signature", baslik: "İş sözleşmesi yok" }} />
       {sablon && <SablonPenceresi kapat={() => setSablon(false)} sablonlar={sablonlar} />}
     </>
   );

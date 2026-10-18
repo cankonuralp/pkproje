@@ -51,7 +51,7 @@ export function PanelPersonelListesi({ v }: { v: PanelPersoneli }) {
       <p className={stil.alt}>{v.musteri?.unvan ?? "—"}</p>
       <PanelSekmeleri acikUygunsuz={v.acikUygunsuz} secili="/portal/personel" />
       <SuzgecliListe s={s} on="pps" baslik="Muayene personeli" sutunlar={SUTUNLAR} anahtar={(x) => x.id}
-        bosVeri={{ ikon: "users", baslik: "Henüz personel yok", metin: "Tesislerinize kontrole gelen muayene personeli burada görünür." }} />
+        bosVeri={{ ikon: "users", baslik: "Henüz personel yok" }} />
     </>
   );
 }

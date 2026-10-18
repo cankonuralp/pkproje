@@ -107,7 +107,7 @@ export function GiderListesi({ ilk, secenekler, bugun, bordro = false }: { ilk: 
           <Tus tur="ikincil" onClick={() => goster("belgesiz")}>Göster</Tus></Serit>}
       </SeritKap>}
       <SuzgecliListe s={s} on="g" baslik="Giderler" sutunlar={sutunlar((g) => setP({ g }), false)} anahtar={(g) => g.id}
-        bosVeri={{ ikon: "receipt", baslik: "Gider yok", metin: "“Gider ekle” ile fişi ya da faturası eklenir." }} />
+        bosVeri={{ ikon: "receipt", baslik: "Gider yok" }} />
       {s.sonuc.adet > 0 && <Toplam ek={ek} />}
       {p && <GiderPenceresi g={p.g} sabitIs={p.is} secenekler={secenekler} bugun={bugun} kapat={() => setP(null)} />}
     </>
@@ -191,8 +191,7 @@ function GiderPenceresi({ g, sabitIs, sabitIsNo, secenekler, bugun, kapat }: {
       {g && <p className={pencereMetinSinifi}><Rozet tur={GIDER_DURUM[g.durum][1]}>{GIDER_DURUM[g.durum][0]}</Rozet>{" "}
         {g.kaynak === "form" ? `Masraf formu${g.personel ? ` · ${g.personel.ad}` : ""}` : "Muhasebe kaydı"}{g.durum === "odendi" && g.odeme && ` · ödendi ${tarihNo(g.odeme)}`}
         {g.red && <><br /><span className={stil.uyari}>Red gerekçesi: {g.red}</span></>}
-        {g.durum === "duzeltme" && g.geri && <><br /><span className={stil.uyari}>Düzeltme isteği: {g.geri}</span></>}
-        {form && <><br />Masraf formunu Muhasebe değiştirmez: karar Onaylar&apos;da, düzeltilecekse gönderene geri gönderilir.</>}</p>}
+        {g.durum === "duzeltme" && g.geri && <><br /><span className={stil.uyari}>Düzeltme isteği: {g.geri}</span></>}</p>}
       {genel && <Serit tur="hata" ikon="circle-alert">{genel}</Serit>}
       {!yaz && g ? <BilgiListesi>
         <Bilgi etiket="Tarih">{tarihNo(g.tarih)}</Bilgi>
@@ -234,7 +233,7 @@ function GiderPenceresi({ g, sabitIs, sabitIsNo, secenekler, bugun, kapat }: {
         </Alan>
         <div className={stil.genis}>
           <Alan id={GID.belge} etiket={belge === "var" ? "Belgeyi değiştir (PDF ya da fotoğraf)" : "Belge (PDF ya da fotoğraf)"} hata={h.belge}
-            sonuc={h.belge ? undefined : "Fiş ya da fatura; yoksa gider yine kaydedilir, listede “Belge yok” görünür."}>
+            sonuc={h.belge ? undefined : "Fiş ya da fatura; isteğe bağlı."}>
             <input ref={dosya} id={GID.belge} className={stil.dosya} type="file" accept="application/pdf,image/jpeg,image/png" aria-describedby={ipucuId(GID.belge)}
               aria-invalid={!!h.belge || undefined} />
           </Alan>
@@ -274,7 +273,7 @@ function GiderExcelAktar({ durum, adet, toplam }: { durum: SuzgecDurumu; adet: n
       <Pencere acik={acik} baslik="Excel'e aktar · Giderler" onKapat={() => setAcik(false)} odak="#w-gider-indir"
         alt={<><Tus tur="ikincil" onClick={() => setAcik(false)}>Kapat</Tus><Tus id="w-gider-indir" ikon="download" disabled={!adet || bekliyor} aria-busy={bekliyor || undefined} onClick={indir}>İndir</Tus></>}>
         <p className={pencereMetinSinifi}><b>{adet} gider</b> · {ad} · {para(toplam)}</p>
-        <p className={stil.ozet}>Listede süzülen satırlar aktarılır: gider no, tarih, tür, tutar, KDV, açıklama, proje no, personel, durum, ödeme tarihi, belge.</p>
+        <p className={stil.ozet}>Listede süzülen satırlar aktarılır.</p>
       </Pencere>
     </>
   );

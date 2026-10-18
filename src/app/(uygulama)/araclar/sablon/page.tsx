@@ -24,7 +24,7 @@ export default async function Sayfa() {
     <>
       <SayfaBasi baslik="Araçlar" />
       <Sekmeler ad="Araç bölümleri" ogeler={aracSekmeleri(true, false)} secili="/araclar/sablon" />
-      <SeritKap><Serit tur="bilgi" ikon="info">Örnek şablon: kontrol kalemleri ({ARAC_KONTROL.length}) ve fotoğraf açıları ({ARAC_FOTO.length}) öneri. Teslimde doldurulan tutanak bu düzenle çıkar.</Serit></SeritKap>
+      <SeritKap><Serit tur="bilgi" ikon="info">Kontrol kalemleri ({ARAC_KONTROL.length}) ve fotoğraf açıları ({ARAC_FOTO.length}).</Serit></SeritKap>
       <Bolum id="b-arac-alan" baslik="Tutanak alanları">
         <ul className={stil.sablonKalemleri}>
           <li><Ikon ad="car" kucuk />Araç, teslim eden (kendiliğinden), teslim alan (kişi ya da depo), tarih ve saat</li>

@@ -52,7 +52,7 @@ export function SuzgecliListe<K>({ s, on, baslik, sutunlar, anahtar, href, bosVe
   anahtar: (kayit: K) => string;
   href?: (kayit: K) => string | undefined;
   /** hiç kayıt yokken (ilk kullanım) */
-  bosVeri: { ikon: string; baslik: string; metin: string; eylem?: BosDurumEylemi };
+  bosVeri: { ikon: string; baslik: string; metin?: string; eylem?: BosDurumEylemi };
   /** sütun başlığı sıralar (tanımda siralama seçicisi ve siraAnahtari olmalı) */
   siralanir?: boolean;
 }) {
@@ -68,14 +68,13 @@ export function SuzgecliListe<K>({ s, on, baslik, sutunlar, anahtar, href, bosVe
   let ic: ReactNode;
   switch (sonuc.hal) {
     case "veri-yok": ic = <BosDurum {...bosVeri} />; break;
-    case "gorunum-bos": ic = <BosDurum ikon="inbox" baslik={`Bu görünümde ${tanim.birim} yok`} metin="Görünüm değiştirilince liste yeniden dolar." />; break;
+    case "gorunum-bos": ic = <BosDurum ikon="inbox" baslik={`Bu görünümde ${tanim.birim} yok`} />; break;
     case "imkansiz": ic = (
       <BosDurum ikon="circle-alert" baslik={tanim.imkansiz}
-        metin="“ve” seçiliyken aynı gruptan iki çip birlikte hiçbir kayda uymaz. “veya” ile ikisine uyanlar birlikte listelenir."
         eylemTus={<Tus tur="ikincil" onClick={() => degistir({ ...durum, kip: "veya", sayfa: 1 })}>“veya”ya geç</Tus>} />
     ); break;
     case "suzgec-bos": ic = (
-      <BosDurum ikon="search" baslik={`Filtreye uyan ${tanim.birim} yok`} metin="Arama ya da filtre değiştirilince liste yeniden dolar."
+      <BosDurum ikon="search" baslik={`Filtreye uyan ${tanim.birim} yok`}
         eylemTus={<Tus tur="ikincil" onClick={() => degistir(temizle(tanim, durum))}>Süzgeci temizle</Tus>} />
     ); break;
     default: ic = <Liste baslik={baslik} sutunlar={sutunlar} kayitlar={sonuc.gorunen} anahtar={anahtar} href={href} siralama={siralama} kipDegisti={kipDegisti} />;

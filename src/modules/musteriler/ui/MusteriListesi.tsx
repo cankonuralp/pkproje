@@ -61,7 +61,7 @@ export function MusteriListesi({ kayitlar, ekleyebilir }: { kayitlar: MusteriSat
       <SayfaBasi baslik="Müşteriler" sayac={<Sayac s={s} />}
         tuslar={ekleyebilir && <Tus ikon="plus" onClick={() => setPencere(true)}>Müşteri ekle</Tus>} />
       <SuzgecliListe s={s} on="m" baslik="Müşteriler" sutunlar={SUTUNLAR} anahtar={(m) => m.id} href={(m) => `/musteriler/${m.id}`}
-        bosVeri={{ ikon: "building-2", baslik: "Müşteri yok", metin: "“Müşteri ekle” ile ilk müşteri ve tesisi kaydedilir." }} />
+        bosVeri={{ ikon: "building-2", baslik: "Müşteri yok" }} />
       {pencere && <MusteriPenceresi acik kapat={() => setPencere(false)} />}
     </>
   );

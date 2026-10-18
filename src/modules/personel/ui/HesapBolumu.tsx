@@ -47,7 +47,7 @@ function RolListesi({ secili, degistir, kapali, meslekAdi, yetkiliOlabilir, onEk
               <span className={stil.secimMetin}>
                 <span className={stil.rolAd}>{ROL_ADI[r]}</span>
                 <span className={uyar ? stil.uyari : stil.altSatir}>
-                  {uyar ? `Uyarı: meslek (${meslekAdi}) yetkili kişi meslekleri arasında değil. Verilebilir; kartta uyarı görünür.` : ROL_ACIKLAMA[r]}
+                  {uyar ? `Uyarı: meslek (${meslekAdi}) yetkili kişi meslekleri arasında değil.` : ROL_ACIKLAMA[r]}
                 </span>
               </span>
             </label>
@@ -159,7 +159,7 @@ export function HesapBolumu({ personelId, ad, meslekAdi, eposta, personelEtkin, 
         {/* parola yalnız pencere açıkken DOM'da (kapanınca silinir) */}
         {parola && <p className={stil.geciciParola} id="h-parola"><Kod>{parola.deger}</Kod></p>}
         {kopya.durum}
-        <Serit tur="uyari" ikon="triangle-alert">Bu parola yalnız şimdi gösterilir; kişiye siz iletin. Kişi ilk girişten sonra parolasını değiştirebilir. Unutulursa yeni geçici parola verilir.</Serit>
+        <Serit tur="uyari" ikon="triangle-alert">Bu parola yalnız şimdi gösterilir.</Serit>
       </Pencere>
     </Bolum>
   );

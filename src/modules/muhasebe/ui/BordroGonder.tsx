@@ -94,7 +94,7 @@ export function BordroGonderTusu() {
       {d && <Pencere acik baslik="Maaş bordrosu gönder" genis onKapat={() => { if (!bekliyor) setD(null); }} odak={`#${ID.ay}`}
         alt={<><Tus tur="ikincil" disabled={bekliyor} onClick={() => setD(null)}>Vazgeç</Tus>
           <Tus ikon="send" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={gonder}>{gidecek.length ? `İmzaya gönder (${gidecek.length})` : "İmzaya gönder"}</Tus></>}>
-        <p className={pencereMetinSinifi}>Seçilen personelin bordrosu imzasına gider; Onaylar › Diğer belgeler&apos;de e-imzayla imzalar ve Personel kartındaki bordrolara yazılır.</p>
+        <p className={pencereMetinSinifi}>Seçilen personelin bordrosu imzasına gider.</p>
         <Alan id={ID.ay} etiket="Dönem" zorunlu>
           <SecimAlani id={ID.ay} ad="Dönem" deger={d.veri.ay} secenekler={d.veri.aylar.map((a) => [a, donemAd(a)] as const)}
             degistir={(a) => { if (a !== d.veri.ay) yukle(a, d); }} />

@@ -69,9 +69,9 @@ export function IzinTalepleri({ l }: { l: IzinSatiri[] }) {
       <SayfaBasi baslik="Personel" sayac={<Sayac s={s} />} />
       <PersonelSekmeleri secili="/personel/izinler" izinler />
       {bek > 0 && <SeritKap><Serit tur="uyari" ikon="inbox" eylem={<TusBaglanti tur="ikincil" href="/onaylar/talepler">Onaylar&apos;da aç</TusBaglanti>}>
-        <b>{bek} izin talebi onayınızı bekliyor.</b> Karar Onaylar&apos;da verilir.</Serit></SeritKap>}
+        <b>{bek} izin talebi onayınızı bekliyor.</b></Serit></SeritKap>}
       <SuzgecliListe s={s} on="izn" baslik="İzin talepleri" sutunlar={sutunlar} anahtar={(x) => x.id}
-        bosVeri={{ ikon: "inbox", baslik: "İzin talebi yok", metin: "Personel izin talebini Talepler'den gönderir." }} />
+        bosVeri={{ ikon: "inbox", baslik: "İzin talebi yok" }} />
     </>
   );
 }

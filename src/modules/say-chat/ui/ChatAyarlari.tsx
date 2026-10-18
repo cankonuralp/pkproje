@@ -80,14 +80,13 @@ export function ChatAyarlari({ ayar }: { ayar: SayChatAyari }) {
     <div className={stil.sayfa}>
       <p className={stil.sayac} id="sca-durum" tabIndex={-1}><b>{a.satirlar.length}</b> satır · <b>{acikSay}</b> okunacak fotoğraf
         {taslak ? " · kaydedilmedi" : ayar.kayitli ? ` · sürüm ${ayar.kayitli.surum + 1}` : " · formattan hazır"}</p>
-      {!ayar.formatVar && <Serit tur="bilgi" ikon="info">Türün yayında rapor formatı yok: satırlar yalnız ekipman bilgilerine ve uzman yorumuna yazılır; okunacak fotoğraf başlığı yok.</Serit>}
+      {!ayar.formatVar && <Serit tur="bilgi" ikon="info">Türün yayında rapor formatı yok.</Serit>}
       {ayar.dusen > 0 && !taslak && <Serit tur="uyari" ikon="triangle-alert">Rapor formatında artık olmayan {ayar.dusen} satır / başlık ayardan düştü; gözden geçirip Kaydet&apos;e basın.</Serit>}
       {genel && <Serit tur="hata" ikon="circle-alert">{genel}</Serit>}
       <div className={stil.govde}>
         <div className={stil.sol}>
           <FormBolum id="sca-satirlar" baslik="Mesaj satırları (etiket bilgileri)">
             <div className={stil.ic}>
-              <p className={stil.ipucu}>Denetçinin mesajında her satır sırayla bir alana yazılır. Satır adını, sırasını, rapordaki alanını ve hazır değerini değiştirin; satır ekleyin ya da silin.</p>
               <ol className={stil.satirlar} aria-label="Mesaj satırları">
                 {a.satirlar.map((s, i) => (
                   <li key={i} className={stil.satir}>
@@ -115,12 +114,10 @@ export function ChatAyarlari({ ayar }: { ayar: SayChatAyari }) {
                 ))}
               </ol>
               {yaz && <Tus tur="ikincil" ikon="plus" id="sca-ekle" onClick={ekle}>Satır ekle</Tus>}
-              <p className={stil.ipucu}>Hazır değerli satır mesaj kutusunda dolu gelir; denetçi üstüne yazıp değiştirir. Yönergeden fazla yazılan satırlar nota eklenir. Değişiklik yeni kayıtlarda geçerli; gönderilmiş kayıtlar gönderildikleri andaki sırayla okunur.</p>
             </div>
           </FormBolum>
           <FormBolum id="sca-oklar" baslik="Okunacak fotoğraflar (yapay zekâ)">
             <div className={stil.ic}>
-              <p className={stil.ipucu}>Kayıtta bu başlıklar altında fotoğraf eklenir (test tablosu, linye, ölçüm ekranı). Rapor yazılırken yapay zekâ okur, o bölümün boş alanlarına girer. Başlıklar, rapor formatında fotoğraftan doldurması açık bölümlerden seçilir.</p>
               {ok.length ? (
                 <ul className={stil.oklar}>
                   {ok.map((o) => { const b = basAd.get(o.k)!; return (

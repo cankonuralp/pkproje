@@ -52,8 +52,7 @@ export function PlanExcelYukle({ turler, tesiste, listede, bos, onEkle }: {
             {dosya ? `Listeye ekle (${gecerli.length})` : "Listeye ekle"}
           </Tus>
         </>}>
-        <p className={pencereMetinSinifi}>Tesiste kayıtlı olmayan ekipmanlar. Sütunlar: Kod · Ekipman türü · Konum; kod ve tür zorunlu. Plan açılınca tesise de
-          kaydedilir.</p>
+        <p className={pencereMetinSinifi}>Sütunlar: Kod · Ekipman türü · Konum; kod ve tür zorunlu.</p>
         <div className={stil.dosyaSec}>
           <Tus tur="ikincil" ikon="file-spreadsheet" onClick={() => baytIndir("plan-ekipman-sablonu.xlsx", planSablonExceli(turler[0]?.ad), XLSX_TURU)}>Şablonu indir</Tus>
           <Tus id="pa-excel-sec" tur="ikincil" ikon="upload" disabled={okunuyor} aria-busy={okunuyor || undefined} onClick={() => girdi.current?.click()}>

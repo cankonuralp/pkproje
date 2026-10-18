@@ -36,8 +36,8 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
         tuslar={musteriDegistirir(o) && <TesisTuslari tesis={{ id: t.id, surum: t.surum, ad: t.ad, adres: t.adres, il: t.il, ilce: t.ilce, sgk: t.sgk }}
           musteriId={t.musteri.id} unvan={t.musteri.unvan} ad={`${t.musteri.kisa} / ${t.ad}`} pasif={!!t.pasif}
           sil={silme.sil} kullanim={silme.kullanim ? kullanimMetni(silme.kullanim) : null} />} />
-      {t.pasif && <SeritKap><Serit tur="bilgi" ikon="ban"><b>Pasif</b> · {tarihYaz(t.pasif)} · Tesis listelerden kalktı; raporları ve arşivi duruyor.{t.musteri.pasif ? " Müşteri pasif; önce müşteri etkinleştirilir." : " “Etkinleştir” ile geri gelir."}</Serit></SeritKap>}
-      {e.length > 0 && <SeritKap><Serit tur="uyari" ikon="triangle-alert">Eksik bilgi: {e.join(" · ")}. Kayıt engellenmez; raporun işyeri bölümünde gerekir, rapor imzalanırken yeniden hatırlatılır.</Serit></SeritKap>}
+      {t.pasif && <SeritKap><Serit tur="bilgi" ikon="ban"><b>Pasif</b> · {tarihYaz(t.pasif)}{t.musteri.pasif ? " Müşteri pasif; önce müşteri etkinleştirilir." : " “Etkinleştir” ile geri gelir."}</Serit></SeritKap>}
+      {e.length > 0 && <SeritKap><Serit tur="uyari" ikon="triangle-alert">Eksik bilgi: {e.join(" · ")}.</Serit></SeritKap>}
       <Bolum id="b-tbilgi" baslik="Tesis bilgileri">
         <BilgiListesi>
           <Bilgi etiket="İşyeri ünvanı" genis>{t.musteri.unvan}</Bilgi>

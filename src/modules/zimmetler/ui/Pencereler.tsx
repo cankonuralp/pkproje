@@ -121,7 +121,7 @@ export function DemirbasPenceresi({ kapat }: { kapat: () => void }) {
       alt={<><Tus tur="ikincil" onClick={kapat}>Vazgeç</Tus><Tus ikon="check" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={kaydet}>Kaydet</Tus></>}>
       {genel && <Serit tur="hata" ikon="circle-alert">{genel}</Serit>}
       <FormIzgara>
-        <Alan id={DID.kod} etiket="Kod" zorunlu hata={h.kod} sonuc="Firmanın etiketi; 3–12 hane.">
+        <Alan id={DID.kod} etiket="Kod" zorunlu hata={h.kod} sonuc="3–12 hane.">
           <Girdi id={DID.kod} value={d.kod} maxLength={12} hata={!!h.kod} mesajli onChange={(e) => setD({ ...d, kod: e.target.value })} />
         </Alan>
         <Alan id={DID.ad} etiket="Ad" zorunlu genis hata={h.ad} sonuc="Ör. emniyet kemeri, merdiven, baret.">

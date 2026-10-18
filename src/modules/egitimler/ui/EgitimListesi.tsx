@@ -77,7 +77,7 @@ export function EgitimListesi({ kayitlar, turler, kisiler, esik, bugun, yaz, kis
         {yak.length > 0 && `${yak.length} eğitimin tekrarı ${esik} gün içinde.`}</Serit></div>}
       {yaz && turler.length === 0 && <div className={stil.seritler}><Serit tur="bilgi" ikon="info">Önce “Eğitim türleri” sekmesinden eğitim türü ve tekrar süresi ekleyin.</Serit></div>}
       <SuzgecliListe s={s} on="egt" baslik="Eğitim kayıtları" sutunlar={sutunlar} anahtar={(x) => x.id}
-        bosVeri={{ ikon: "graduation-cap", baslik: "Eğitim kaydı yok", metin: "“Eğitim kaydı ekle” ile kişi, eğitim ve tarih girilir; tekrar tarihi türden hesaplanır." }} />
+        bosVeri={{ ikon: "graduation-cap", baslik: "Eğitim kaydı yok" }} />
       {p?.tip === "ekle" && <KayitPenceresi kapat={() => setP(null)} turler={turler} kisiler={kisiler} kayitlar={kayitlar} bugun={bugun} personel={p.personel} tur={p.tur} />}
       {p?.tip === "kayit" && <KayitGorunumu x={p.x} kayitlar={kayitlar} bugun={bugun} yaz={yaz} kapat={() => setP(null)}
         tekrar={() => setP({ tip: "ekle", personel: p.x.personelId, tur: p.x.turId })} />}
@@ -108,7 +108,7 @@ function KayitPenceresi({ kapat, turler, kisiler, kayitlar, bugun, personel = ""
     <Pencere acik baslik={personel && tur ? "Tekrarı kaydet" : "Eğitim kaydı ekle"} onKapat={kapat} odak={`#${personel ? KID.tarih : KID.personel}`} genis
       alt={<><Tus tur="ikincil" onClick={kapat}>Vazgeç</Tus><Tus ikon="check" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={kaydet}>Kaydet</Tus></>}>
       {genel && <Serit tur="hata" ikon="circle-alert">{genel}</Serit>}
-      {eski && <Serit tur="bilgi" ikon="history">Güncel kayıt {tarihYaz(eski.tarih)}; kaydedince önceki olur.</Serit>}
+      {eski && <Serit tur="bilgi" ikon="history">Güncel kayıt {tarihYaz(eski.tarih)}.</Serit>}
       <form ref={form} onSubmit={(e) => { e.preventDefault(); kaydet(); }}>
         <FormIzgara>
           <Alan id={KID.personel} etiket="Personel" zorunlu hata={h.personel}>
@@ -144,7 +144,7 @@ function KatilimFormu({ x, yaz, kapat }: { x: EgitimKaydi; yaz: boolean; kapat: 
   const [bekliyor, baslat] = useTransition();
   const f = x.form;
   const gonder = async () => {
-    if (!(await onayla({ baslik: "Katılım formunu imzaya gönder", metin: <>{x.tur} katılım formu {x.personel} kişisinin imzasına gider (Onaylar › Diğer belgeler).{f?.durum === "bekliyor" ? " Bekleyen form iptal olur." : ""}</>, tus: "İmzaya gönder" }))) return;
+    if (!(await onayla({ baslik: "Katılım formunu imzaya gönder", metin: <>{x.tur} katılım formu {x.personel} kişisinin imzasına gider.{f?.durum === "bekliyor" ? " Bekleyen form iptal olur." : ""}</>, tus: "İmzaya gönder" }))) return;
     baslat(async () => {
       const r = await katilimFormuGonderEylemi(x.id);
       if (!r.tamam) { bildir(r.genel ?? "Gönderilemedi."); return; }
@@ -238,7 +238,7 @@ export function TurListesi({ turler, yaz, kayitSayisi }: { turler: EgitimTuru[];
       <Sekmeler ad="Döküman bölümleri" ogeler={DOKUMAN_SEKMELERI} secili="/dokumanlar/egitimler" />
       <Sekmeler alt ad="Eğitim bölümleri" ogeler={egitimAltSekmeleri(kayitSayisi, turler.length)} secili="/dokumanlar/egitimler/turler" />
       <SuzgecliListe s={s} on="egtt" baslik="Eğitim türleri" sutunlar={sutunlar} anahtar={(t) => t.id}
-        bosVeri={{ ikon: "graduation-cap", baslik: "Eğitim türü yok", metin: "Firmanın eğitimlerini ve tekrar sürelerini “Eğitim türü ekle” ile ekleyin." }} />
+        bosVeri={{ ikon: "graduation-cap", baslik: "Eğitim türü yok" }} />
       {p && <TurPenceresi kapat={() => setP(null)} t={p.t} />}
     </>
   );
@@ -263,7 +263,7 @@ function TurPenceresi({ kapat, t }: { kapat: () => void; t?: EgitimTuru }) {
       {genel && <Serit tur="hata" ikon="circle-alert">{genel}</Serit>}
       <FormIzgara>
         <Alan id={TID.ad} etiket="Eğitim" zorunlu genis hata={h.ad}><Girdi id={TID.ad} value={d.ad} maxLength={60} hata={!!h.ad} onChange={(e) => setD({ ...d, ad: e.target.value })} /></Alan>
-        <Alan id={TID.tekrar} etiket="Tekrar süresi (ay)" zorunlu hata={h.tekrar} sonuc={t ? "Yeni kayıtlarda geçerli; geçmiş kayıtların tekrar tarihi değişmez." : undefined}>
+        <Alan id={TID.tekrar} etiket="Tekrar süresi (ay)" zorunlu hata={h.tekrar}>
           <Girdi id={TID.tekrar} value={d.tekrar} inputMode="numeric" maxLength={3} hata={!!h.tekrar} mesajli={!!t} onChange={(e) => setD({ ...d, tekrar: e.target.value })} />
         </Alan>
       </FormIzgara>

@@ -49,7 +49,7 @@ export function PanelPlanListesi({ v }: { v: PanelPlanlari }) {
       <p className={stil.alt}>{v.musteri?.unvan ?? "—"}</p>
       <PanelSekmeleri acikUygunsuz={v.acikUygunsuz} secili="/portal/plan" />
       <SuzgecliListe s={s} on="ppl" baslik="Planlanan kontroller" sutunlar={SUTUNLAR} anahtar={(x) => x.tesisId}
-        bosVeri={{ ikon: "calendar", baslik: "Planlanan kontrol yok", metin: "Tesisleriniz eklendiğinde planlanan kontroller burada görünür." }} />
+        bosVeri={{ ikon: "calendar", baslik: "Planlanan kontrol yok" }} />
     </>
   );
 }

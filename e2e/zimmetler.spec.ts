@@ -113,7 +113,8 @@ test("demirbaş: kullanılmamış silinir; kullanılmış pasife alınır, etkin
   await page.getByRole("button", { name: "Pasife al" }).click();
   await page.locator("dialog[open]").getByRole("button", { name: "Pasife al" }).click();
   await expect(page.getByText(`${kod} pasife alındı; geçmişi duruyor.`).first()).toBeVisible();
-  await expect(page.getByText(/Pasif: Zimmetler listesinden ve teslimden kalktı/)).toBeVisible();
+  /* 2026-10-18 (reisim: "bu ve benzeri, yaratıcıyı hedef alan açıklamaları kaldır, çok fazla ai ürünü olduğu belli oluyor"): açıklama kısaldı */
+  await expect(page.getByText("Pasif.", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Teslim et" })).toHaveCount(0);
   const adres = page.url();
 

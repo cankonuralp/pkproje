@@ -228,7 +228,8 @@ test("S.A.Y Chat ayarları: formattan hazır, satır ekle, hata, kaydet, sürüm
   /* tür sayfasında kısa bölüm: ne olduğu, satır sırası; Düzenle → kendi sayfası */
   const turBolum = page.getByRole("region", { name: "S.A.Y Chat ayarları" });
   await expect(turBolum).toContainText("formattan hazır");
-  await expect(turBolum).toContainText("Denetçinin sahada S.A.Y Chat'e yazdığı mesajın satır sırası");
+  /* 2026-10-18 (reisim: "bu ve benzeri, yaratıcıyı hedef alan açıklamaları kaldır, çok fazla ai ürünü olduğu belli oluyor"): açıklama kısaldı */
+  await expect(turBolum).toContainText("Mesaj satırları");
   await expect(turBolum).toContainText("1. Marka");
   await turBolum.getByRole("link", { name: "Düzenle" }).click();
   await expect(page).toHaveURL(/\/ekipman-turleri\/[0-9a-f-]{36}\/say-chat$/, { timeout: 30_000 });

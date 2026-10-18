@@ -33,8 +33,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
       <Kirinti ogeler={[[`Ekipman türleri · ${bransAd(t.brans)}`, t.brans === "e" ? "/ekipman-turleri?brans=e" : "/ekipman-turleri"],
         [t.ad, `/ekipman-turleri/${t.id}`], ["S.A.Y Chat ayarları"]]} />
       <NesneBasi baslik={`S.A.Y Chat ayarları · ${t.ad}`} altIkon="message-square-text"
-        alt={`Denetçinin sahada S.A.Y Chat'e yazdığı mesajın satırları ve yapay zekânın okuyacağı fotoğraflar · alanlar ${yayinda
-          ? `yayındaki rapor formatından (${surumAdi(yayinda)})` : "için yayında rapor formatı yok"}`}
+        alt={yayinda ? `Rapor formatı ${surumAdi(yayinda)}` : "Yayında rapor formatı yok"}
         tuslar={taslak && formatDegistirir(o)
           ? <TusBaglanti tur="ikincil" ikon="pencil" href={`/ekipman-turleri/${t.id}/sablon/${taslak.id}/kurucu`}>Format kurucu</TusBaglanti> : undefined} />
       <ChatAyarlari ayar={chat} />

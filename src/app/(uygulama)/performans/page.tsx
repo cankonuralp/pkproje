@@ -21,6 +21,6 @@ export default async function Sayfa({ searchParams }: { searchParams: Promise<Re
     return { pano: p };
   });
   if ("pano" in v) return v.pano ? <PanoGorunumu v={v.pano} /> : <Yetkisiz />;
-  if (!v.kendi) return <BosDurum ikon="user" baslik="Personel kaydı yok" metin="Hesabınız bir personel kaydına bağlı değil; performansınız burada görünmez." />;
+  if (!v.kendi) return <BosDurum ikon="user" baslik="Personel kaydı yok" metin="Hesabınız bir personel kaydına bağlı değil." />;
   return <KisiGorunumu v={v.kendi} personelGor={modulGorur(o, 2)} isGor={modulGorur(o, 18)} />;
 }

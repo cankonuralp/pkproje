@@ -106,7 +106,7 @@ export function TaleplerSayfasi({ v, bugun }: { v: Taleplerim; bugun: string }) 
         <Yuz ikon="inbox" ad="Onay bekleyen talep" sayi={bek} />
       </Yuzler>
       <SuzgecliListe s={s} on="t" baslik="Taleplerim" sutunlar={sutunlar} anahtar={(t) => `${t.tip}|${t.x.id}`}
-        bosVeri={{ ikon: "inbox", baslik: "Talep yok", metin: "İzin talebi ya da masraf formu “İzin talebi” ve “Masraf formu” ile gönderilir." }} />
+        bosVeri={{ ikon: "inbox", baslik: "Talep yok" }} />
       {p?.tip === "izin" && <IzinPenceresi ozet={o} gelecek={v.gelecekOzet} duzelt={p.duzelt} kapat={() => setP(null)} />}
       {p?.tip === "masraf" && <MasrafPenceresi v={v} bugun={bugun} duzelt={p.duzelt} kapat={() => setP(null)} />}
       {p?.tip === "talep" && <TalepPenceresi t={p.t} kapat={() => setP(null)} duzelt={() => duzelt(p.t)} />}
@@ -164,7 +164,7 @@ function IzinPenceresi({ ozet: buYil, gelecek, duzelt, kapat }: { ozet: Talepler
         </div>
         {d.tur === "rapor" && <div className={stil.genis}>
           <Alan id={IID.belge} etiket={duzelt?.belge ? "Sağlık raporunu değiştir (PDF ya da fotoğraf)" : "Sağlık raporu (PDF ya da fotoğraf)"} hata={h.belge}
-            sonuc={h.belge ? undefined : duzelt?.belge ? "Seçmezseniz eklenmiş belge kalır." : "İsteğe bağlı; sonra da eklenebilir."}>
+            sonuc={h.belge ? undefined : duzelt?.belge ? "Seçmezseniz eklenmiş belge kalır." : "İsteğe bağlı."}>
             <input ref={dosya} id={IID.belge} className={stil.dosya} type="file" accept="application/pdf,image/jpeg,image/png" aria-describedby={ipucuId(IID.belge)}
               aria-invalid={!!h.belge || undefined} />
           </Alan>
@@ -237,7 +237,7 @@ function MasrafPenceresi({ v, bugun, duzelt, kapat }: { v: Taleplerim; bugun: st
         </div>
         <div className={stil.genis}>
           <Alan id={MID.belge} etiket={duzelt?.belge ? "Fişi değiştir (PDF ya da fotoğraf)" : "Fiş (PDF ya da fotoğraf)"} hata={h.belge}
-            sonuc={h.belge ? undefined : duzelt?.belge ? "Seçmezseniz eklenmiş fiş kalır." : "İsteğe bağlı; yoksa muhasebe “Belge yok” görür."}>
+            sonuc={h.belge ? undefined : duzelt?.belge ? "Seçmezseniz eklenmiş fiş kalır." : "İsteğe bağlı."}>
             {/* capture yok: telefonda PDF fiş de seçilebilsin (seçici "kamera / dosya" sunar — 329–332 incelemesi) */}
             <input ref={dosya} id={MID.belge} className={stil.dosya} type="file" accept="application/pdf,image/jpeg,image/png"
               aria-describedby={ipucuId(MID.belge)} aria-invalid={!!h.belge || undefined} />

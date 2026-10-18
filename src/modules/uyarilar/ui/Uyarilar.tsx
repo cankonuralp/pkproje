@@ -58,7 +58,7 @@ export function UyariListesi({ l, tur }: { l: Uyari[]; tur?: UyariTuru }) {
     <>
       <SayfaBasi baslik="Uyarılar" sayac={<Sayac s={s} />} />
       <SuzgecliListe s={s} on="u" baslik="Uyarılar" sutunlar={SUTUN} anahtar={(u) => u.id} href={(u) => u.href}
-        bosVeri={{ ikon: "circle-check", baslik: "Uyarı yok", metin: "Yaklaşan kalibrasyon, eğitim tekrarı ya da araç belgesi yok." }} />
+        bosVeri={{ ikon: "circle-check", baslik: "Uyarı yok" }} />
     </>
   );
 }

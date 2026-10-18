@@ -81,7 +81,7 @@ export function RaporListesi({ ilk, imza, imzaGor }: { ilk: SunucuListe<RaporLis
         </SeritKap>
       )}
       <SuzgecliListe s={s} on="r" baslik="Raporlar" sutunlar={SUTUNLAR} anahtar={(r) => r.id} href={(r) => `/raporlar/${r.id}`}
-        bosVeri={{ ikon: "file-text", baslik: "Rapor yok", metin: "Raporlar plan içinde ekipmanın satırından oluşturulur." }} />
+        bosVeri={{ ikon: "file-text", baslik: "Rapor yok" }} />
     </>
   );
 }

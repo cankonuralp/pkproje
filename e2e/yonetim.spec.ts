@@ -38,7 +38,8 @@ test("yönetim: ayrı adres; ilk kurulum; firma aç → geçici parolayla yeni f
   await expect(page).toHaveURL(/\/yonetim\/giris$/);
 
   /* 393: iki adım kapalı — giriş sayfası iki adım demez; kod ve kurulum sayfaları girişe döner */
-  await expect(page.getByText("Bu sayfa yalnız probata ekibine açık.")).toBeVisible();
+  /* 2026-10-18 (reisim: "bu ve benzeri, yaratıcıyı hedef alan açıklamaları kaldır, çok fazla ai ürünü olduğu belli oluyor"): "yalnız probata ekibine açık" yazısı kalktı; iki adım kapalıyken tuş "Giriş yap" */
+  await expect(page.getByRole("button", { name: "Giriş yap" })).toBeVisible();
   for (const y of ["kod", "kurulum"]) {
     await page.goto(`${Y}/yonetim/giris/${y}`);
     await expect(page).toHaveURL(/\/yonetim\/giris$/);
@@ -53,7 +54,6 @@ test("yönetim: ayrı adres; ilk kurulum; firma aç → geçici parolayla yeni f
   await hazir(page);
   await expect(page.getByRole("heading", { level: 1, name: "Firmalar" })).toBeVisible();
   await expect(page.locator("header")).toContainText("Yönetim");
-  await expect(page.getByText("Bu sayfa yalnız probata ekibine açık")).toBeVisible();
   await expect(page.getByRole("link", { name: E2E_FIRMA.ad }).first()).toBeVisible();
 
   /* firma aç: boş form → alan hataları; ünvandan öneri; ayrılmış ad; başka firmanın kodu sunucuda reddedilir */
@@ -109,7 +109,8 @@ test("yönetim: ayrı adres; ilk kurulum; firma aç → geçici parolayla yeni f
   await expect(page.getByText("Etkin", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Dondur" }).click();
   await page.locator("dialog[open]").getByRole("button", { name: "Dondur" }).click();
-  await expect(page.getByText("Dondurulmuş: firmanın kullanıcıları ve müşterileri giriş yapamaz", { exact: false })).toBeVisible();
+  /* 2026-10-18 (reisim: "bu ve benzeri, yaratıcıyı hedef alan açıklamaları kaldır, çok fazla ai ürünü olduğu belli oluyor"): açıklama kısaldı */
+  await expect(page.getByText("Dondurulmuş: giriş kapalı.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Yöneticiye yeni geçici parola" })).toBeDisabled();
   await kisi.goto(`${firmaAdresi}/giris`);
   await expect(kisi.getByText("Bu adreste kayıtlı bir firma yok.", { exact: false })).toBeVisible();

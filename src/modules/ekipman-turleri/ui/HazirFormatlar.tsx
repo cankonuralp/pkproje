@@ -35,10 +35,6 @@ export function HazirFormatlar({ formatlar, brans, ekleyebilir }: { formatlar: H
   const bakanlik = formatlar.some((f) => f.bakanlik);
   return (
     <Bolum id={`b-hazir-${brans}`} baslik={bakanlik ? "Bakanlık rapor formatları" : "Hazır rapor formatları"} sayac={<><b>{formatlar.length}</b> format</>}>
-      <p className={stil.altMetin}>
-        {bakanlik ? "Bakanlığın zorunlu formatları hazır: türü eklerken rapor şablonu bu formattan taslak olarak hazırlanır; önizleyip yayınlarsınız. Bakanlık alanları kilitli."
-          : "probata'nın hazır şablonları: türü eklerken rapor şablonu bu formattan taslak olarak hazırlanır."}
-      </p>
       <Liste baslik={bakanlik ? "Bakanlık rapor formatları" : "Hazır rapor formatları"} sutunlar={sutunlar} kayitlar={formatlar} anahtar={(f) => f.anahtar} />
       {sec && <TurPenceresi kapat={() => setSec(null)} sablon={{ anahtar: sec.anahtar, ad: sec.formKodu || sec.ad, tur: sec.tur }} />}
     </Bolum>

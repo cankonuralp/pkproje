@@ -78,7 +78,7 @@ export function KurulumPaneli({ id, ilk }: { id: string; ilk: KurulumGorunumu | 
           {g.kod === "init_failed" && <Tus tur="ikincil" ikon="trash-2" disabled={bekliyor} onClick={() => void bastan()}>Projeyi kaldır ve yeniden dene</Tus>}
         </div>
       )}
-      <p className={stil.etiketUst}>Kurulum yalnız bu sayfa açıkken ilerler; sayfadan çıkarsanız döndüğünüzde kaldığı yerden sürer.</p>
+      <p className={stil.etiketUst}>Kurulum yalnız bu sayfa açıkken ilerler.</p>
     </Bolum>
   );
 }

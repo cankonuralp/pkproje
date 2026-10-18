@@ -26,7 +26,7 @@ export function YeniRaporEkrani({ p }: { p: YeniRaporPaketi }) {
   const e = p.ekipmanlar.find((x) => x.id === ekipmanId);
   if (!e || !p.turler[e.turId]) {
     return <BosDurum ikon="file-question-mark" baslik="Bu ekipmana cihazda rapor açılamaz"
-      metin="Ekipmanın bu planda raporu var, ekipman pasif ya da plan bu cihaza indirildiğinden beri değişti. Bağlantı gelince plandan açın." eylemTus={geri} />;
+      metin="Bağlantı gelince plandan açın." eylemTus={geri} />;
   }
   if (p.neden) return <BosDurum ikon="calendar" baslik="Rapor açılamaz" metin={p.neden} eylemTus={geri} />;
   /* bu ekipmana cihazda daha önce açılmış (sunucuya gitmemiş) rapor: aynı geçici kimlikle devam */

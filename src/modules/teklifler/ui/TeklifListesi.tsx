@@ -39,7 +39,7 @@ export function TeklifListesi({ ilk, yaz }: { ilk: SunucuListe<TeklifSatiri>; ya
     <>
       <SayfaBasi baslik="Teklifler" sayac={<Sayac s={s} />} tuslar={yaz ? <TusBaglanti tur="birincil" ikon="plus" href="/teklifler/yeni">Teklif hazırla</TusBaglanti> : undefined} />
       <SuzgecliListe s={s} on="t" baslik="Teklifler" sutunlar={SUTUNLAR} anahtar={(t) => t.id} href={(t) => `/teklifler/${t.id}`}
-        bosVeri={{ ikon: "file-text", baslik: "Teklif yok", metin: "“Teklif hazırla” ile müşteri, tesis ve kalemler seçilir." }} />
+        bosVeri={{ ikon: "file-text", baslik: "Teklif yok" }} />
     </>
   );
 }

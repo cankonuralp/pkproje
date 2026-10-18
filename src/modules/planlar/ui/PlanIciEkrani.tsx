@@ -236,7 +236,7 @@ export function PlanIciEkrani({ v }: { v: PlanIci }) {
         <h3 className={stil.teklifBaslik} id={`teklif-${k.id}`}>Teklif içeriği</h3>
         {v.teklif.some((t) => t.planlanan) ? (
           <TeklifTablosu satirlar={v.teklif.filter((t) => t.planlanan)} />
-        ) : <div className={stil.teklifKap}><p className={stil.bosSatir}>Plan açılırken tesiste kayıtlı ekipman yoktu; denetçi sahada ekler.</p></div>}
+        ) : <div className={stil.teklifKap}><p className={stil.bosSatir}>Planda ekipman yok.</p></div>}
       </section>
       {/* 452: kabulden önce de plandaki ekipmanlar görünür (kod · tür · konum; elle eklenenler dahil) — kabulden sonra Denetim adımında listelenir */}
       {(d === "bekliyor" || d === "reddedildi") && v.ekipman.length > 0 && (
@@ -287,7 +287,7 @@ export function PlanIciEkrani({ v }: { v: PlanIci }) {
   const a3 = (
     <Adim no={3} durum={adim[2]} baslik="Denetim" ozet={a3ozet}>
       {d === "reddedildi" && <p className={stil.adimNot}>Plan reddedildi; denetim yok.</p>}
-      {d === "kabul" && <p className={stil.adimNot}>İlk rapor oluşturulunca denetim başlar.</p>}
+      {d === "kabul" && <p className={stil.adimNot}>Denetim başlamadı.</p>}
       {calisir && v.erken && (
         <Serit tur="uyari" ikon="calendar" id={ERKEN_ID}>
           Plan günü {tarihNo(k.baslangic)} henüz gelmedi (bugün {tarihNo(v.bugun)}). Rapor plan gününden itibaren oluşturulur; geçmiş günlere açık, ileri tarihe kapalı.
@@ -312,9 +312,9 @@ export function PlanIciEkrani({ v }: { v: PlanIci }) {
 
   /* ── 4 · Tamamlama ── */
   /* adımın içeriği yoksa içerik kutusu hiç çizilmez (Adim: children boşsa kutu yok — donmuş referans ekranın ölçüsü; görsel karşılaştırma) */
-  const a4Eylem = kt ? eylemKutusu("Planı tamamlayın; plan Tamamlandı olur. Saha formu plan tamamlanınca buradan oluşturulur.")
-    : d === "denetimde" ? <p className={stil.adimNot}>Kontrol listesi tamamlanınca plan buradan tamamlanır; saha formu da tamamlanınca oluşturulur.</p>
-    : d === "tamamlandi" ? eylemKutusu(v.sahaFormlari.length ? null : "Saha formu: yapılan ekipmanlar ve firma onayı imza yerleriyle; istediğiniz kadar oluşturun.") : null;
+  const a4Eylem = kt ? eylemKutusu("Planı tamamlayın.")
+    : d === "denetimde" ? null
+    : d === "tamamlandi" ? eylemKutusu(null) : null;
   const a4Saha = v.sahaFormlari.length > 0 && <SahaFormlari planId={k.id} formlar={v.sahaFormlari} yaz={v.izin.sahaFormu} />;
   const a4 = (
     <Adim no={4} durum={adim[3]} baslik="Tamamlama" ozet={d === "tamamlandi" && v.bitti ? gunNo(v.bitti) : null}>

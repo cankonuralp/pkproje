@@ -78,7 +78,7 @@ export function CihazListesi({ kayitlar, turler, esik, bugun, ekleyebilir, turSa
         </div>
       )}
       <SuzgecliListe s={s} on="c" baslik="Ölçüm cihazları" sutunlar={sutunlar} anahtar={(c) => c.id} href={(c) => `/olcum-cihazlari/${c.id}`}
-        bosVeri={{ ikon: "gauge", baslik: "Ölçüm cihazı yok", metin: "“Cihaz ekle” ile ilk cihaz ve kalibrasyon bilgisi kaydedilir." }} />
+        bosVeri={{ ikon: "gauge", baslik: "Ölçüm cihazı yok" }} />
       {pencere && <CihazPenceresi kapat={() => setPencere(false)} turler={turler} />}
     </>
   );

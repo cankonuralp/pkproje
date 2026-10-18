@@ -25,7 +25,7 @@ export function MusteriTuslari({ musteri, pasif, sil = false, kullanim = null }:
       {p === "duzenle" && <MusteriPenceresi acik kapat={() => setP(null)} musteri={musteri} />}
       <PasifPenceresi acik={p === "pasif"} kapat={() => setP(null)} ad={musteri.unvan} pasif={pasif} neden={kullanim ? `${kullanim} kullanıldı; silinemez.` : null}
         kosullar={[...KOSUL, "Müşteri girişi kapanır; bütün tesisleri de pasif olur.", "Etkinleştir ile geri gelir."]}
-        geriMetni="Kayıt listelere geri döner; yeniden plan ve teklif açılabilir. Müşteriyle birlikte pasif olan tesisler de döner."
+        geriMetni="Müşteriyle birlikte pasif olan tesisler de etkinleşir."
         uygula={() => musteriPasifEylemi(musteri.id, musteri.surum, !pasif)} />
     </>
   );
@@ -54,7 +54,7 @@ export function TesisTuslari({ tesis, musteriId, unvan, ad, pasif, sil = false, 
       <Tus tur="ikincil" ikon="pencil" onClick={() => setP("duzenle")}>Düzenle</Tus>
       {p === "duzenle" && <TesisPenceresi acik kapat={() => setP(null)} musteriId={musteriId} unvan={unvan} tesis={tesis} />}
       <PasifPenceresi acik={p === "pasif"} kapat={() => setP(null)} ad={ad} pasif={pasif} neden={kullanim ? `${kullanim} kullanıldı; silinemez.` : null}
-        kosullar={[...KOSUL, "Etkinleştir ile geri gelir."]} geriMetni="Tesis listelere geri döner; yeniden plan ve teklif açılabilir."
+        kosullar={[...KOSUL, "Etkinleştir ile geri gelir."]} geriMetni="Tesis etkinleşir."
         uygula={() => tesisPasifEylemi(tesis.id, tesis.surum, !pasif)} />
     </>
   );

@@ -5,7 +5,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Bilgi, BilgiListesi, Yuz, Yuzler } from "../../../components/bilgi/Bilgi";
+import { Yuz, Yuzler } from "../../../components/bilgi/Bilgi";
 import { baytIndir, dosyaGunu } from "../../../components/disa/indir";
 import { XLSX_TURU, xlsxBayt } from "../../../components/disa/xlsx";
 import { Alan, ipucuId } from "../../../components/form/Form";
@@ -209,7 +209,6 @@ export function KisiGorunumu({ v, personelGor, isGor }: { v: KisiPerformansi; pe
         {v.gunluk.length ? <Liste baslik="Günlük iş" sutunlar={gunlukSutunlari(v.kazanc, isGor)} kayitlar={v.gunluk} anahtar={(g) => `${g.gun}|${g.tesis}|${g.musteri}`} />
           : <p className={stil.ozet}>Bu dönemde rapor yok.</p>}
       </Bolum>
-      {v.kendi && <BilgiListesi><Bilgi etiket="Not" genis>Kendi sayılarınız; kazanç ve öteki personel yöneticinizin ekranında.</Bilgi></BilgiListesi>}
     </>
   );
 }

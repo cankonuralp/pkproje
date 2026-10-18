@@ -321,12 +321,7 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
           </> : <YayinlaTusu format={format} />}
         </>} />
       <div className={stil.seritKap}>
-        <Serit tur="bilgi" ikon="info">
-          <span className={stil.yalnizGenis}>Raporun kendisini düzenliyorsunuz: başlığa, maddeye, sütun başlığına basıp yazın; “+” ile ekleyin, “×” ile çıkarın,
-            ayrıntılar ayar tuşunda. Kilit simgeli yerler Bakanlık formatının; onlar da değişir, yayınlarken uyarı çıkar. Firma bilgilerinde SGK, İSG-KATİP ve başlangıç çıkarılmaz.
-            Açık raporlar başladıkları sürümle kalır, yeni raporlar yayındaki sürümle açılır.</span>
-          <span className={stil.yalnizDar}>Format kurucu masaüstünde düzenlenir; burada belge önizlemesi ve saha ekranı (denetçi gibi dene) açılır.</span>
-        </Serit>
+        <div className={stil.yalnizDar}><Serit tur="bilgi" ikon="info">Format kurucu masaüstünde düzenlenir.</Serit></div>
         {hatalar.length > 0 && <div id="kb-hatalar" tabIndex={-1}><Serit tur="hata" ikon="circle-alert">Taslak kaydedilmedi: {hatalar.join(" · ")}</Serit></div>}
         {bakilacak.length > 0 && <Serit tur="uyari" ikon="triangle-alert">Yayından önce bakılacak: {bakilacak.join(" · ")}</Serit>}
       </div>
@@ -340,7 +335,7 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
           </div>
           {/* 483: sahaya özgü ayar kâğıtta (saha ekranı salt önizleme) — madde cevabının biçimi; belgeye (PDF) etkisi yok */}
           <fieldset className={stil.secenekler}>
-            <legend className={stil.kullanimEtiket}>Saha ekranında madde cevabı (belgeye etkisi yok)</legend>
+            <legend className={stil.kullanimEtiket}>Saha ekranında madde cevabı</legend>
             {([["acilir", "Açılır liste", "cevap listeden seçilir"], ["tus", "Yan yana tuşlar", "tek dokunuşla — sahada daha hızlı"]] as const).map(([k, ad, alt]) => (
               <label key={k} className={stil.secenek}>
                 <input type="radio" name="kb-cevap" checked={t.gorunum.cevap === k} onChange={() => degis(gorunumYaz(t, { cevap: k }))} />
@@ -348,8 +343,7 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
               </label>
             ))}
           </fieldset>
-          <SatirAlani id="kb-talimat" etiket="Genel muayene talimatı" deger={t.gorunum.talimat} satir={4}
-            ipucu="Rapor ekranının sağ üstündeki ünlemden açılır; belgeye (PDF) basılmaz." uygula={(s) => degis(gorunumYaz(t, { talimat: s }))} />
+          <SatirAlani id="kb-talimat" etiket="Genel muayene talimatı" deger={t.gorunum.talimat} satir={4} uygula={(s) => degis(gorunumYaz(t, { talimat: s }))} />
         </div>
       </details>
       {/* 493: araç çubuğu (geniş ekranda; telefonda kurucu yok) */}

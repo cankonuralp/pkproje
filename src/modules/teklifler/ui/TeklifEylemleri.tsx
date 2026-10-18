@@ -79,7 +79,7 @@ export function TeklifEylemleri({ t, pdf, musteriler = [] }: { t: TeklifKarti; p
           <Tus tur="ikincil" disabled={bekliyor} onClick={() => setRed(null)}>Vazgeç</Tus>
           <Tus ikon="ban" disabled={bekliyor} onClick={redKaydet}>Reddedildi olarak kaydet</Tus>
         </>}>
-        <Alan id={GEREKCE} etiket="Müşterinin gerekçesi" zorunlu hata={red?.hata ?? undefined} sonuc={red?.hata ? undefined : "Kayıtta kalır; sonraki teklifte görülür."}>
+        <Alan id={GEREKCE} etiket="Müşterinin gerekçesi" zorunlu hata={red?.hata ?? undefined}>
           <textarea id={GEREKCE} className={stil.gerekce} maxLength={300} value={red?.gerekce ?? ""} placeholder="ör. fiyat, zamanlama, başka firma"
             aria-invalid={!!red?.hata || undefined} aria-describedby={ipucuId(GEREKCE)} onChange={(e) => setRed((x) => (x ? { gerekce: e.target.value, hata: null } : x))} />
         </Alan>
@@ -89,7 +89,7 @@ export function TeklifEylemleri({ t, pdf, musteriler = [] }: { t: TeklifKarti; p
           <Tus tur="ikincil" disabled={bekliyor} onClick={() => setBag(null)}>Vazgeç</Tus>
           <Tus ikon="building-2" disabled={bekliyor} onClick={bagla}>Bağla</Tus>
         </>}>
-        <p className={pencereMetinSinifi}>{t.aday?.unvan ?? "—"} zaten müşteri olarak kayıtlıysa teklifi o müşteriye ve tesisine bağlayın; teklifteki bilgiler olduğu gibi kalır.</p>
+        <p className={pencereMetinSinifi}>{t.aday?.unvan ?? "—"} zaten müşteri olarak kayıtlıysa teklifi o müşteriye ve tesisine bağlayın.</p>
         <Alan id={BID.musteri} etiket="Müşteri" zorunlu hata={bag?.hatalar.musteri}>
           <SecimAlani id={BID.musteri} ad="Müşteri" deger={bag?.musteri ?? ""} ipucu="Müşteri seçin" gecersiz={!!bag?.hatalar.musteri} tanim={ipucuId(BID.musteri)}
             secenekler={musteriler.map((m) => [m.id, m.kisa] as const)} degistir={(v) => setBag((x) => (x ? { musteri: v, tesis: "", hatalar: {} } : x))} />

@@ -71,7 +71,6 @@ function BelgePenceresi({ ne, personelId, turler, ozlukTurleri, bugun, kapat }: 
     <Pencere acik baslik={BASLIK[ne]} onKapat={kapat} odak={`#${ne === "zimmet" ? ID.dosya : ne === "bordro" ? ID.ay : ID.tur}`} genis
       alt={<><Tus tur="ikincil" onClick={kapat}>Vazgeç</Tus><Tus ikon="upload" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={kaydet}>Yükle</Tus></>}>
       {genel && <Serit tur="hata" ikon="circle-alert">{genel}</Serit>}
-      {ne === "zimmet" && <Serit tur="bilgi" ikon="info">Form, şu an zimmetindeki varlıklar için kaydedilir; zimmet sonradan değişirse “eskidi” görünür.</Serit>}
       <form ref={form} onSubmit={(e) => { e.preventDefault(); kaydet(); }}>
         <FormIzgara>
           {ne === "ozluk" && <>
@@ -160,7 +159,7 @@ export function AtamaBolumu({ personelId, etkin, dosya, bugun }: { personelId: s
           ? <SatirTuslari ne="atama" id={a.id} surum={a.surum} dosyaId={a.dosyaId} ad={`${a.tur} ataması`} />
           : a.dosyaId ? <DosyaAcTusu dosyaId={a.dosyaId}>Atama belgesi</DosyaAcTusu> : <DegerYok /> },
       ]} />
-        : <Serit tur="uyari" ikon="triangle-alert">Hiçbir ekipman türüne atanmamış. Plan ve rapor açılabilir; uyarı görünür.</Serit>}
+        : <Serit tur="uyari" ikon="triangle-alert">Hiçbir ekipman türüne atanmamış.</Serit>}
       {p.ne && <BelgePenceresi ne={p.ne} personelId={personelId} turler={dosya.turler} ozlukTurleri={dosya.ozlukTurleri} bugun={bugun} kapat={p.kapat} />}
     </Bolum>
   );
@@ -173,7 +172,7 @@ function ZimmetGonderTusu({ personelId, kisi, adet }: { personelId: string; kisi
   const onayla = useOnayla();
   const [bekliyor, baslat] = useTransition();
   const gonder = async () => {
-    if (!(await onayla({ baslik: "Zimmet formunu imzaya gönder", metin: <>Zimmet teslim formu ({adet} varlık) {kisi} kişisinin imzasına gider (Onaylar › Diğer belgeler). Bekleyen önceki form iptal olur.</>, tus: "İmzaya gönder" }))) return;
+    if (!(await onayla({ baslik: "Zimmet formunu imzaya gönder", metin: <>Zimmet teslim formu ({adet} varlık) {kisi} kişisinin imzasına gider. Bekleyen önceki form iptal olur.</>, tus: "İmzaya gönder" }))) return;
     baslat(async () => {
       const r = await zimmetFormuGonderEylemi(personelId);
       if (!r.tamam) { bildir(r.genel ?? "Gönderilemedi."); return; }
@@ -244,7 +243,7 @@ function OnayaGonderTusu({ b, kisi }: { b: BordroSatiri; kisi: string }) {
   const onayla = useOnayla();
   const [bekliyor, baslat] = useTransition();
   const gonder = async () => {
-    if (!(await onayla({ baslik: "Bordroyu onaya gönder", metin: <><b>{ayAd(b.ay)}</b> bordrosu {kisi} kişisinin onayına gider; e-imzayla onaylar (Onaylar › Diğer belgeler).</>, tus: "Onaya gönder" }))) return;
+    if (!(await onayla({ baslik: "Bordroyu onaya gönder", metin: <><b>{ayAd(b.ay)}</b> bordrosu {kisi} kişisinin onayına gider.</>, tus: "Onaya gönder" }))) return;
     baslat(async () => {
       const r = await bordroOnayaGonderEylemi(b.id);
       if (!r.tamam) { bildir(r.genel ?? "Gönderilemedi."); return; }

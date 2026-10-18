@@ -71,7 +71,7 @@ export function TalepOnaylari({ v, sec }: { v: OnayListeleri; sec: string | null
         {secili && <TalepAyrinti key={anahtar(secili)} t={secili} />}
         <div className={stil.talepListe}>
           <SuzgecliListe s={s} on="tlp" baslik="Karar bekleyen talepler" sutunlar={SUTUNLAR} anahtar={anahtar} href={(t) => `${ADRES}?sec=${anahtar(t)}`}
-            bosVeri={{ ikon: "circle-check", baslik: "Karar bekleyen talep yok", metin: "İzin talebi ya da masraf formu gönderilince burada görünür." }} />
+            bosVeri={{ ikon: "circle-check", baslik: "Karar bekleyen talep yok" }} />
         </div>
       </div>
     </>
@@ -105,11 +105,10 @@ function TalepAyrinti({ t }: { t: OnayTalebiSatiri }) {
         {t.alanlar.map(([ad, deger]) => <Bilgi key={ad} etiket={ad}>{deger}</Bilgi>)}
         <Bilgi etiket={t.tip === "izin" ? "Belge" : "Fiş"}>{t.belge ? <DosyaAcTusu dosyaId={t.belge} ikon="file-text">{t.tip === "izin" ? "Belge" : "Fiş"}</DosyaAcTusu> : "Yok"}</Bilgi>
       </BilgiListesi>
-      <p className={stil.talepNot}>Talep salt okunur: değiştirilmesi gerekiyorsa “Düzeltmeye geri gönder”.</p>
       {kip ? (
         <div className={stil.talepGerekce}>
           <Alan id={GID} etiket={kip === "geri" ? "Düzeltme isteği" : "Ret gerekçesi"} zorunlu hata={hata ?? undefined}
-            sonuc={hata ? undefined : "En az 10 karakter; talep eden Talepler'inde görür."}>
+            sonuc={hata ? undefined : "En az 10 karakter."}>
             <textarea id={GID} className={stil.gerekce} maxLength={200} value={gerekce} aria-invalid={!!hata || undefined} aria-describedby={ipucuId(GID)}
               onChange={(e) => setGerekce(e.target.value)} />
           </Alan>

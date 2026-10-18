@@ -81,7 +81,7 @@ export function StandartListesi({ standartlar, yaz, brans }: { standartlar: Stan
       <Sekmeler alt ad="Branşlar" ogeler={[[`Mekanik (${sayi("m")})`, SEKME.m], [`Elektrik (${sayi("e")})`, SEKME.e]]} secili={SEKME[brans]} />
       <SuzgecliListe key={brans} s={s} on="std" baslik={`Standartlar · ${brans === "e" ? "Elektrik" : "Mekanik"}`} sutunlar={sutunlar} anahtar={(x) => x.anahtar}
         href={(x) => x.kayit ? `/dokumanlar/standart/${x.kayit.id}` : undefined}
-        bosVeri={{ ikon: "book-open", baslik: "Kütüphane boş", metin: `“Standart yükle” ile firmanın ${brans === "e" ? "elektrik" : "mekanik"} standart kopyası (PDF) eklenir; ekipman türlerinde kontrol metodu buradan seçilir.` }} />
+        bosVeri={{ ikon: "book-open", baslik: "Kütüphane boş" }} />
       {pencere && <StandartPenceresi kapat={() => setPencere(null)} guncelListe={standartlar} oneri={pencere === true ? undefined : pencere} brans={brans} />}
     </>
   );
@@ -112,8 +112,7 @@ export function KriterListesi({ belgeler: tum, brans }: { belgeler: readonly Kri
       <Sekmeler alt ad="Branşlar" ogeler={[[`Mekanik (${sayi("m")})`, KRITER_SEKME.m], [`Elektrik (${sayi("e")})`, KRITER_SEKME.e]]} secili={KRITER_SEKME[brans]} />
       <SuzgecliListe key={brans} s={s} on="krt" baslik={`Muayene kriterleri · ${brans === "e" ? "Elektrik" : "Mekanik"}`} sutunlar={sutunlar} anahtar={(x) => x.kod}
         href={(x) => `/dokumanlar/kriterler/${x.kod}`}
-        bosVeri={{ ikon: "list-checks", baslik: `${brans === "e" ? "Elektrik" : "Mekanik"} muayene kriteri belgesi yok`,
-          metin: "Bakanlığın bu branşta yayımladığı periyodik kontrol kriterleri belgesi henüz yok; yayımlandıkça burada görünür." }} />
+        bosVeri={{ ikon: "list-checks", baslik: `${brans === "e" ? "Elektrik" : "Mekanik"} muayene kriteri belgesi yok`, }} />
     </>
   );
 }
@@ -166,7 +165,7 @@ export function DokumanListesi({ dokumanlar, yaz }: { dokumanlar: DokumanSatiri[
       <SayfaBasi baslik="Dökümanlar" sayac={<Sayac s={s} />} tuslar={yaz && <Tus ikon="file-plus" onClick={() => setAcik(true)}>Döküman yükle</Tus>} />
       <Sekmeler ad="Döküman bölümleri" ogeler={DOKUMAN_SEKMELERI} secili="/dokumanlar/diger" />
       <SuzgecliListe s={s} on="dok" baslik="Diğer dökümanlar" sutunlar={sutunlar} anahtar={(d) => d.id}
-        bosVeri={{ ikon: "file-text", baslik: "Döküman yok", metin: "Kalite el kitabı, prosedür, talimat gibi firma belgeleri burada tutulur." }} />
+        bosVeri={{ ikon: "file-text", baslik: "Döküman yok" }} />
       {acik && <DokumanPenceresi kapat={() => setAcik(false)} />}
     </>
   );

@@ -202,8 +202,9 @@ test("S.A.Y Chat: bekleyenler için rapor yaz — kod, koşullar, taslak, rapord
 
   await panel.getByRole("button", { name: /Bekleyenler için rapor yaz/ }).click();
   await expect(panel.getByRole("heading", { name: "Bekleyenler için rapor yaz" })).toBeVisible();
-  await expect(panel).toContainText("İnternet var: rapor numarası sunucuda verilir");
-  await expect(panel).toContainText("firmanın kotasından harcar");
+  /* 2026-10-18 (reisim: "bu ve benzeri, yaratıcıyı hedef alan açıklamaları kaldır, çok fazla ai ürünü olduğu belli oluyor"): açıklama kısaldı */
+  await expect(panel).toContainText("İnternet var");
+  await expect(panel).toContainText("fotoğraf okuyacak");
   const kayitlar = panel.getByRole("list", { name: "Rapora dönüşecek kayıtlar" }).getByRole("listitem");
   /* 2026-10-16 (reisim: "herhangi bir liste tablo … 20 den fazlası sayfalı olsun"; beklenti değişikliği — önceki hâli bütün kayıtları tek ekranda
      görüyordu): liste 20'şer sayfalı — bu kişide eski kayıt birikmişse yeni kayıt sonraki sayfada olabilir: kod isteyen kayıtlar sayfa sayfa doldurulur

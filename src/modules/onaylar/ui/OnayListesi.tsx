@@ -194,7 +194,7 @@ export function OnayKuyrugu({ v }: { v: OnayListeleri }) {
         </SeritKap>
       )}
       <SuzgecliListe s={s} on="o" baslik="Onay kuyruğu" sutunlar={sutunlar} anahtar={(r) => r.id} href={(r) => `/onaylar/${r.id}`}
-        bosVeri={{ ikon: "circle-check", baslik: "Onay bekleyen rapor yok", metin: "Denetçi raporu onaya gönderince burada görünür." }} />
+        bosVeri={{ ikon: "circle-check", baslik: "Onay bekleyen rapor yok" }} />
       <SecimCubugu sayi={secilen.length} temizle={sec.temizle}>
         {teknik ? <Tus ikon="file-signature" onClick={() => setPen(secilen)}>İmzala ve onayla</Tus>
           : <Tus ikon="circle-check" disabled={mesgul} onClick={() => void topluOnay()}>Seçilenleri onayla</Tus>}
@@ -261,7 +261,7 @@ export function ImzaBekleyen({ v }: { v: OnayListeleri }) {
         </SeritKap>
       )}
       <SuzgecliListe s={s} on="i" baslik="İmzamı bekleyen raporlar" sutunlar={imzaSutunlari(sec, hazir)} anahtar={(r) => r.id} href={(r) => `/raporlar/${r.id}`}
-        bosVeri={{ ikon: "circle-check", baslik: "İmzanızı bekleyen rapor yok", metin: "Teknik yönetici raporunuzu onaylayınca son imza için burada görünür." }} />
+        bosVeri={{ ikon: "circle-check", baslik: "İmzanızı bekleyen rapor yok" }} />
       <SecimCubugu sayi={secilen.length} temizle={sec.temizle}>
         <Tus ikon="file-signature" onClick={() => setPen(secilen)}>İmzaya hazırla</Tus>
       </SecimCubugu>
@@ -304,7 +304,7 @@ export function RevizeIstekleri({ v }: { v: OnayListeleri }) {
       <Sekmeler ad="Onaylar bölümleri" ogeler={onaySekmeleri(v)} secili="/onaylar/istekler" />
       {genel && <SeritKap><Serit tur="hata" ikon="circle-alert">{genel}</Serit></SeritKap>}
       <SuzgecliListe s={s} on="v" baslik="Revize istekleri" sutunlar={istekSutunlari((r, tur) => { setGenel(null); setPen({ r, tur }); })} anahtar={(r) => r.id}
-        href={(r) => `/onaylar/${r.id}`} bosVeri={{ ikon: "circle-check", baslik: "Revize isteği yok", metin: "Muayene uzmanı tamamlanan raporunda revize isterse burada görünür." }} />
+        href={(r) => `/onaylar/${r.id}`} bosVeri={{ ikon: "circle-check", baslik: "Revize isteği yok" }} />
       {pen && <RevizePenceresi tur={pen.tur} r={pen.r} istek={pen.r.istek} onKapat={() => setPen(null)}
         bitti={(x) => { setPen(null); setGenel(x.genel ?? null); if (!x.genel) router.refresh(); }} />}
     </>

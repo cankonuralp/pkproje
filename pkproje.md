@@ -2527,6 +2527,16 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-18 (YAPILDI): **AÇIKLAMA CÜMLELERİ KALKTI** (reisim, giriş ekranının görüntüsüyle: *"bu ve benzeri, yaratıcıyı hedef alan açıklamaları
+  kaldır, çok fazla ai ürünü olduğu belli oluyor"*). Ekrana basılan bütün uzun metinler tarandı (535); ~230 yerde işleyişi anlatan cümle kaldırıldı ya da
+  kısaltıldı: giriş ekranının "Tarayıcı kapanınca oturum kapanır" / "Müşteriler de aynı adresten girer…" yazıları, boş listelerin "… burada görünür /
+  … ile eklenir" açıklamaları (boş durumda yalnız başlık — BosDurum metin isteğe bağlı), "Pasif: listelerden kalktı; geçmişi duruyor" türü sonuç
+  anlatımları, alan ipuçlarındaki işleyiş (ör. "raporun işyeri bölümünde yazar"), format kurucunun anlatım şeridi ve ipuçları, S.A.Y Chat ayar
+  anlatımları, toplu imza penceresinin ayrıntıları, Firma ayarlarında firmaya gösterilmemesi gereken bize yönelik bilgiler ("Veritabanınız nasıl
+  kurulur?", "E-posta gönderimi nasıl kurulur?", "Supabase Pro · 25 $/ay", "probata yönetimi kurar…"), Yönetim'deki "(yayına çıkışta tanımlanır)",
+  "Bu sayfa yalnız probata ekibine açık" notları. Kalanlar: hata, işi engelleyen uyarı (kalibrasyon, İSG-KATİP, araç belgesi), durum, alan biçim
+  kuralı, seçim yer tutucusu, silme / pasife alma onaylarındaki sonuç, KVKK bildirimi (Anthropic'e giden veri, Drive / OneDrive yurt dışı), Bakanlık
+  kuralı (ZPKK01). Uçtan uca testlerdeki 14 metin beklentisi yeni metne göre güncellendi (tarihli not). Yeni ekranlarda da böyle (kalıcı not).
 - 2026-10-18 (YAPILDI): **İMZALI RAPOR YÜKLEMESİNDE ÜÇ AÇIK KAPANDI** (reisim, probata-sign oturumunun uyarısını iletti: *"Bu yüksek bulgunun aynısı
   probata'daki imzalı PDF denetiminde de var, çünkü motor oradan taşındı"* — *"bir kontrol eder misin"*). Öteki oturumun bulgusunun metni bu oturuma
   gelmedi; probata'daki denetim baştan incelendi, deneme dosyalarıyla kanıtlanan üç açık kapandı: (1) artımlı imzada yapı denetimi imza ekindeki

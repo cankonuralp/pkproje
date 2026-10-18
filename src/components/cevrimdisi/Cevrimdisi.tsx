@@ -151,13 +151,12 @@ function KuyrukPenceresi({ acik, kapat, cevrimdisi }: { acik: boolean; kapat: ()
         {!cevrimdisi && bekleyen > 0 && <Tus ikon="cloud-upload" disabled={k.gonderiliyor} onClick={() => void gonder()}>Şimdi gönder</Tus>}
         <Tus tur="ikincil" data-ilk-odak onClick={kapat}>Kapat</Tus>
       </>}>
-      {cevrimdisi && <Serit tur="bilgi" ikon="wifi-off">İnternet yok. Yaptıklarınız bu cihaza kaydedilir (uygulama kapansa da kaybolmaz) ve bağlantı gelince sırayla gönderilir.</Serit>}
+      {cevrimdisi && <Serit tur="bilgi" ikon="wifi-off">İnternet yok. Yaptıklarınız bu cihaza kaydedilir, bağlantı gelince gönderilir.</Serit>}
       {k.depoYok && <Serit tur="uyari" ikon="triangle-alert">Bu tarayıcı cihaz deposuna izin vermiyor (gizli pencere ya da kapalı site verisi): bekleyenler yalnız bu sayfa açıkken durur.</Serit>}
       {k.oturum && <Serit tur="uyari" ikon="log-in">Oturumunuz kapandı; yeniden giriş yapınca bekleyenler gönderilir.</Serit>}
-      {k.saatFarkiDk !== null && <Serit tur="uyari" ikon="clock">Cihazınızın saati sunucudan {Math.abs(k.saatFarkiDk)} dakika {k.saatFarkiDk > 0 ? "ileri" : "geri"}. Rapordaki resmî tarihler sunucu saatinden yazılır; cihaz saatini düzeltin.</Serit>}
+      {k.saatFarkiDk !== null && <Serit tur="uyari" ikon="clock">Cihazınızın saati sunucudan {Math.abs(k.saatFarkiDk)} dakika {k.saatFarkiDk > 0 ? "ileri" : "geri"}. Cihaz saatini düzeltin.</Serit>}
       {hazir && <p className={stil.ipucu}>Çevrimdışı hazır: <b>{hazir.plan} plan</b> · son eşitleme {ZAMAN.format(new Date(hazir.zaman)).replace(",", "")}</p>}
       {sayfa !== null && <p className={stil.ipucu}>Bu cihazda bağlantısız açılabilen sayfa: <b>{sayfa}</b> (Planlar, plan içi ve raporlar).</p>}
-      {cevrimdisi && <p className={stil.ipucu}>Bağlantı gerektirenler: son imza, onay, fotoğraftan okuma, S.A.Y. Fotoğraflar cihaza kaydedilir, rapordan önce gider.</p>}
       {k.isler.length ? (
         <>
           <p className={stil.baslik}>Bekleyen işler ({k.isler.length})</p>

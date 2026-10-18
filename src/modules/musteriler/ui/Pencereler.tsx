@@ -71,11 +71,11 @@ export function MusteriPenceresi({ acik, kapat, musteri }: { acik: boolean; kapa
       {k.genel && <Serit tur="hata" ikon="circle-alert">{k.genel}</Serit>}
       {k.uyariVar && <UyariSeridi />}
       <FormIzgara>
-        {A("unvan", "Ünvan", { zorunlu: true, genis: true, sonuc: "Resmî ünvan; raporun işyeri bölümünde yazar.", tip: { maxLength: 160 } })}
-        {A("kisa", "Kısa ad", { sonuc: "Listelerde görünür; boşsa ünvanın ilk iki sözcüğü.", tip: { maxLength: 40 } })}
+        {A("unvan", "Ünvan", { zorunlu: true, genis: true, tip: { maxLength: 160 } })}
+        {A("kisa", "Kısa ad", { tip: { maxLength: 40 } })}
         {A("vd", "Vergi dairesi", { tip: { maxLength: 40 } })}
-        {A("vno", "Vergi no", { sonuc: "Boşsa kayıt olur, müşteri sayfasında hatırlatılır.", tip: { inputMode: "numeric", maxLength: 11 } })}
-        {A("eposta", "E-posta", { genis: true, sonuc: musteri ? "Müşteri girişinin kullanıcı adı (değişirse giriş sıfırlanır); faturalar da bu adrese." : "Müşteri girişinin kullanıcı adı; geçici parolayı müşteri kartından verip müşteriye siz iletirsiniz.",
+        {A("vno", "Vergi no", { tip: { inputMode: "numeric", maxLength: 11 } })}
+        {A("eposta", "E-posta", { genis: true, sonuc: "Müşteri girişinin kullanıcı adı.",
           tip: { type: "email", inputMode: "email", maxLength: 120 } })}
         {A("tel", "Telefon", { tip: { type: "tel", inputMode: "tel", maxLength: 20 } })}
         {A("ilgili", "İlgili kişi", { genis: true, sonuc: "Ad ve görev.", tip: { maxLength: 80 } })}
@@ -113,7 +113,7 @@ export function TesisPenceresi({ acik, kapat, musteriId, unvan, tesis }: { acik:
       {k.genel && <Serit tur="hata" ikon="circle-alert">{k.genel}</Serit>}
       {k.uyariVar && <UyariSeridi />}
       <FormIzgara>
-        {A("ad", "Tesis adı", { zorunlu: true, sonuc: "Müşterinin kendi kullandığı ad (ör. Merkez Fabrika).", tip: { maxLength: 80 } })}
+        {A("ad", "Tesis adı", { zorunlu: true, sonuc: "Ör. Merkez Fabrika.", tip: { maxLength: 80 } })}
         {A("adres", "Adres", { sonuc: "Raporda yazar.", tip: { maxLength: 160 } })}
         <Alan id={TID.il} etiket="İl" hata={k.hata.il}>
           <SecimAlani id={TID.il} ad="İl" deger={k.d.il} secenekler={IL_SECENEK} ipucu="İl seçin" gecersiz={!!k.hata.il} tanim={k.hata.il ? ipucuId(TID.il) : undefined}
@@ -125,7 +125,7 @@ export function TesisPenceresi({ acik, kapat, musteriId, unvan, tesis }: { acik:
                 tanim={k.hata.ilce ? ipucuId(TID.ilce) : undefined} degistir={(v) => k.yaz("ilce", v)} />
             : <Girdi id={TID.ilce} readOnly value="Önce il seçin" />}
         </Alan>
-        {A("sgk", "SGK DETSİS NO", { sonuc: "26 hane. Boşsa kayıt olur; rapor imzalanırken hatırlatılır.", tip: { inputMode: "numeric", maxLength: 26 } })}
+        {A("sgk", "SGK DETSİS NO", { sonuc: "26 hane.", tip: { inputMode: "numeric", maxLength: 26 } })}
       </FormIzgara>
     </Pencere>
   );

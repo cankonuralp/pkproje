@@ -66,8 +66,7 @@ function AyrildiPenceresi({ id, ad, surum, kapat }: { id: string; ad: string; su
         <Tus ikon="log-out" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={kaydet}>Ayrıldı olarak kaydet</Tus>
       </>}>
       {genel && <Serit tur="hata" ikon="circle-alert">{genel}</Serit>}
-      <p><b>{ad}</b> silinmez: zimmetleri, raporları, özlük dosyası ve geçmişi durur. Listede &quot;Ayrılanlar&quot;da görünür; giriş hesabı kapanır,
-        yeni plana atanamaz.</p>
+      <p><b>{ad}</b> silinmez; giriş hesabı kapanır, yeni plana atanamaz.</p>
       <Alan id={TARIH_ID} etiket="Ayrılış tarihi" zorunlu hata={hata ?? undefined}>
         <TarihAlani id={TARIH_ID} ad="Ayrılış tarihi" deger={tarih} degistir={setTarih} tanim={hata ? ipucuId(TARIH_ID) : undefined} />
       </Alan>

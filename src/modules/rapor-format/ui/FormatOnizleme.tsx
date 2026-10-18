@@ -65,7 +65,7 @@ function Icerik({ b, t }: { b: Bolum; t: FormatTanimi }) {
     case "not":
       return <p className={stil.satir}>{b.zorunlu ? "Zorunlu" : "İsteğe bağlı"}</p>;
     case "imza":
-      return <p className={stil.satir}>{[...new Set(imzaSatirlari(b).map((s) => s.kim))].map((i) => IMZA[i]).join(" · ")} · {imzaSatirlari(b).length} satır · rapor ekranında görünmez, belgede (PDF) basılır</p>;
+      return <p className={stil.satir}>{[...new Set(imzaSatirlari(b).map((s) => s.kim))].map((i) => IMZA[i]).join(" · ")} · {imzaSatirlari(b).length} satır</p>;
     default:
       return null;
   }

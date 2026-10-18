@@ -65,8 +65,8 @@ export function AracListesi({ araclar, kisiler, yaz, kendi }: { araclar: AracSat
         <Bolum id="b-surucu-km" baslik="Haftalık kilometre">{araclar.map((v) => <KmFormu key={v.id} arac={v} etiketli />)}</Bolum>}
       <SuzgecliListe s={s} on="a" baslik="Araçlar" sutunlar={sutunlar} anahtar={(v) => v.id} href={(v) => `/araclar/${v.id}`}
         bosVeri={kendi
-          ? { ikon: "car", baslik: "Üzerinizde araç yok", metin: "Size bir araç teslim edilince burada görünür." }
-          : { ikon: "car", baslik: "Araç yok", metin: "Araç ekleyince depoda başlar; teslim tutanağıyla kişiye verilir." }} />
+          ? { ikon: "car", baslik: "Üzerinizde araç yok" }
+          : { ikon: "car", baslik: "Araç yok" }} />
       {p === "ekle" && <AracPenceresi kapat={() => setP(null)} />}
       {p === "tutanak" && <TutanakPenceresi kapat={() => setP(null)} araclar={araclar.filter((v) => !v.pasif)} kisiler={kisiler} surucu={kendi} />}
     </>
@@ -168,7 +168,7 @@ export function TutanakSayfasi({ tutanaklar, baslik, sekmeler }: { tutanaklar: T
       <SayfaBasi baslik={baslik} sayac={<Sayac s={s} />} />
       <Sekmeler ad="Araç bölümleri" ogeler={sekmeler} secili="/araclar/tutanaklar" />
       <SuzgecliListe s={s} on="ttn" baslik="Teslim tutanakları" sutunlar={tutanakSutunlari(true, setGoster)} anahtar={(t) => t.id}
-        bosVeri={{ ikon: "file-text", baslik: "Tutanak yok", metin: "Her teslim alma ve teslim etme bir tutanak olarak burada birikir." }} />
+        bosVeri={{ ikon: "file-text", baslik: "Tutanak yok" }} />
       {goster && <TutanakGorunumu t={goster} kapat={() => setGoster(null)} />}
     </>
   );

@@ -127,14 +127,8 @@ export const BulutGirdisi = z.object({
 /* ── 536 E-POSTA (maket postaCiz 535; reisim "A": her firma kendi Resend hesabı; "kim mail gönder tuşuna basarsa onun mailinden gitmeli") ── */
 /* 2026-10-16 (FIRMA-VT FV11, K2 + K3 — reisim: "resend için tek seçenek var ve o da firmaların kendi mail adresleri ile mail atılması … resend ve
    supabase ayarları firma ayarları kısmından değiştirilemesin"): firmanın kendi Resend hesabı (536) KALKTI — probata'nın Resend hesabında firmanın alan
-   adını Yönetim ekler ve doğrular; Firma ayarlarında gönderim yalnız GÖSTERİLİR, gizli kopya firmada. */
-export const RESEND_ADIMLAR = [
-  "probata, Yönetim'de firmanızın alan adını (ör. firmaniz.com.tr) e-posta gönderimine ekler.",
-  "Verilen DNS kayıtları alan adınızın yönetim paneline (alan adını aldığınız firma) girilir.",
-  "probata “Doğrula”ya basar; doğrulanınca e-postalar firmanızın alan adıyla gider.",
-  "Kim gönder tuşuna basarsa e-posta onun adresinden gider; adresi başka yerdeyse firmanın genel adresinden, kişinin adıyla.",
-  "Gönderim bilgileri burada kilitli: değiştirilmez, anahtar gösterilmez.",
-] as const;
+   adını Yönetim ekler ve doğrular; Firma ayarlarında gönderim yalnız GÖSTERİLİR, gizli kopya firmada. 2026-10-18: kurulum anlatımı (RESEND_ADIMLAR)
+   firmaya gösterilmez — kalktı (reisim: "yaratıcıyı hedef alan açıklamaları kaldır"). */
 /** gönderene gizli kopya — alan adı ve anahtar Yönetim'den (gelen başka alan atılır) */
 export const EpostaGirdisi = z.object({
   kopya: z.boolean({ error: "Açık ya da kapalı seçin." }),

@@ -816,7 +816,7 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
       return (
         <Satir key={id} etiket={etiket} genis={o.genis}>
           {goster}
-          {kilitli && !oku && <span className={stil.kunyeKilit} title="Bu formatta sahada değiştirilmez (format yapıcıdan açılır)"><Ikon ad="lock" kucuk /><span className="gizli">sahada değiştirilmez</span></span>}
+          {kilitli && !oku && <span className={stil.kunyeKilit} title="Sahada değiştirilmez"><Ikon ad="lock" kucuk /><span className="gizli">sahada değiştirilmez</span></span>}
         </Satir>
       );
     }
@@ -886,7 +886,7 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
           <TarihKutusu id={id} ad={etiket} saat={saat} deger={gorunen(k)} degistir={(x) => tarihYaz(k, x)} gecersiz={gec}
             tanim={h || u || oto ? ipucuId(id) : undefined} />
           {(h || u) && <p className={h ? stil.alanHata : stil.alanUyari} id={ipucuId(id)}>{h ?? u}</p>}
-          {oto && <p className={stil.ipucuMetin} id={ipucuId(id)}>Şimdi · onaya gönderilince o anın saati yazılır; değiştirmek için seçin.</p>}
+          {oto && <p className={stil.ipucuMetin} id={ipucuId(id)}>Şimdi · onaya gönderilince o anın saati yazılır.</p>}
         </>}
       </Satir>
     );
@@ -900,12 +900,12 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
   const seritler: ReactNode[] = [];
   if (deneme) {
     seritler.push(<Serit key="deneme" tur="bilgi" ikon="flask-conical">
-      Örnek rapor · denetçinin sahada göreceği ekran. Format kâğıtta düzenlenir; burada yazdıklarınız kaydedilmez, müşteri, tesis ve cihazlar uydurmadır.</Serit>);
+      Örnek rapor; kaydedilmez.</Serit>);
   }
   if (genel) seritler.push(<Serit key="hata" tur="hata" ikon="circle-alert">{genel}</Serit>);
   /* 405: yeni rapor cihazda — numara ve kimlik sunucuda, bağlantı gelince */
-  else if (acildi) seritler.push(<Serit key="acildi" tur="onay" ikon="circle-check" eylem={<TusBaglanti tur="ikincil" href={`/raporlar/${acildi}`}>Raporu aç</TusBaglanti>}>Rapor sunucuda açıldı; cihazda bekleyen kaydı gidince raporun sayfasına geçilir.</Serit>);
-  else if (yeni) seritler.push(<Serit key="yeni" tur="bilgi" ikon="wifi-off">Bu rapor bu cihazda açıldı; bağlantı gelince sunucuda açılır ve numarası verilir. Ölçüm cihazı ve fotoğraftan okuma o zaman eklenir.</Serit>);
+  else if (acildi) seritler.push(<Serit key="acildi" tur="onay" ikon="circle-check" eylem={<TusBaglanti tur="ikincil" href={`/raporlar/${acildi}`}>Raporu aç</TusBaglanti>}>Rapor sunucuda açıldı.</Serit>);
+  else if (yeni) seritler.push(<Serit key="yeni" tur="bilgi" ikon="wifi-off">Bu rapor bu cihazda açıldı; bağlantı gelince numarası verilir.</Serit>);
   /* 402: cihazda gönderilemeyen iş (çakışma, yapılamadı) sayfa yenilense de söylenir — anlık bildirim kaybolsa da kullanıcı bilir */
   else if (cihazdaki && formBekliyor) seritler.push(<Serit key="cihazdaki" tur="bilgi" ikon="wifi-off">Bu ekranda cihazda bekleyen kaydınız gösteriliyor; bağlantı gelince gönderilecek.</Serit>);
   else if (sorunluIs) seritler.push(<Serit key="kuyruk" tur="hata" ikon="circle-alert">{v.no}: cihazda bekleyen iş gönderilemedi{sorunluIs.ileti ? ` — ${sorunluIs.ileti}` : ""}. Üst çubuktaki bekleyen işlemlerden seçin.</Serit>);
@@ -961,7 +961,7 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
   if (v.durum === "taslak" && v.kopyaKaynak) {
     seritler.push(
       <Serit key="kopya" tur="bilgi" ikon="copy">
-        Bilgiler <Kod>{v.kopyaKaynak}</Kod> raporundan kopyalandı; test değerleri, fotoğraflar ve sonuç bu ekipman için girilir.
+        Bilgiler <Kod>{v.kopyaKaynak}</Kod> raporundan kopyalandı.
       </Serit>,
     );
   }
@@ -973,7 +973,7 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
     /* 394 (maket Z4): Onaya gönder cihazda bekliyor — gidene kadar rapor değişmez */
     seritler.push(<Serit key="kilit" tur="uyari" ikon="wifi-off">Onaya gönderim bu cihazda bekliyor: bağlantı gelince gider. O zamana kadar rapor değiştirilemez.</Serit>);
   } else if (!duzenle) {
-    seritler.push(<Serit key="kilit" tur="bilgi" ikon="lock">Rapor yazılıyor; yalnız raporu yazan muayene uzmanı düzenler.</Serit>);
+    seritler.push(<Serit key="kilit" tur="bilgi" ikon="lock">Rapor yazılıyor.</Serit>);
   }
 
   const [durumAd, rozet] = RAPOR_DURUM[v.durum];

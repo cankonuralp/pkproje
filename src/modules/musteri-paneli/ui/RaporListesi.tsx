@@ -81,7 +81,7 @@ export function PanelRaporListesi({ v }: { v: PanelRaporSayfasi }) {
       <PanelSekmeleri acikUygunsuz={v.acikUygunsuz} secili="/portal" />
       {zip.hata && <SeritKap><Serit tur="hata" ikon="circle-alert">{zip.hata}</Serit></SeritKap>}
       <SuzgecliListe s={s} on="p" baslik="Raporlarınız" sutunlar={SUTUNLAR} anahtar={(r) => r.id} href={(r) => `/portal/r/${r.id}`}
-        bosVeri={{ ikon: "file-text", baslik: "Henüz rapor yok", metin: "Raporlar imzalandığında burada görünür ve indirilebilir." }} />
+        bosVeri={{ ikon: "file-text", baslik: "Henüz rapor yok" }} />
     </>
   );
 }

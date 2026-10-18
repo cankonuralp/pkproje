@@ -81,8 +81,8 @@ export function PlanListesi({ ilk, acabilir }: { ilk: SunucuListe<PlanSatir>; ac
     <>
       <SayfaBasi baslik="Planlar" sayac={<Sayac s={s} />} tuslar={acabilir && <TusBaglanti tur="birincil" ikon="plus" href="/planlar/ac">Plan aç</TusBaglanti>} />
       <SuzgecliListe s={s} on="l" baslik="Planlar" sutunlar={SUTUNLAR} anahtar={(p) => p.id} href={(p) => `/planlar/${p.id}`} siralanir
-        bosVeri={acabilir ? { ikon: "inbox", baslik: "Plan yok", metin: "“Plan aç” ile ilk plan açılır; denetçinin Planlar ekranına düşer." }
-          : { ikon: "inbox", baslik: "Atanmış plan yok", metin: "Planlama ekibi plan açınca burada görünür." }} />
+        bosVeri={acabilir ? { ikon: "inbox", baslik: "Plan yok" }
+          : { ikon: "inbox", baslik: "Atanmış plan yok" }} />
     </>
   );
 }

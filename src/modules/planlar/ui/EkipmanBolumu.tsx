@@ -199,7 +199,7 @@ export function EkipmanBolumu({ v }: { v: PlanIci }) {
         {v.izin.ekipmanEkle && <div className={stil.bolumTuslar}><Tus tur="ikincil" ikon="plus" onClick={() => { setEkle({ ...BOS }); setKd(null); }}>Ekipman ekle</Tus></div>}
       </div>
       <SuzgecliListe s={s} on="e" baslik="Plandaki ekipmanlar" sutunlar={sutunlar} anahtar={(e) => e.id}
-        bosVeri={{ ikon: "inbox", baslik: "Bu planda ekipman yok", metin: v.izin.ekipmanEkle ? "“Ekipman ekle” ile tesisteki ekipman plana eklenir." : "Denetçi sahada ekler." }} />
+        bosVeri={{ ikon: "inbox", baslik: "Bu planda ekipman yok", }} />
       {ekle && (
         <Pencere acik baslik="Ekipman ekle" genis onKapat={() => setEkle(null)} odak={ekle.sekme === "yeni" ? `#${ID.kod}` : undefined}
           alt={<>

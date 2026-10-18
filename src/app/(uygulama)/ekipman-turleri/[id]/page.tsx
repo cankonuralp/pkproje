@@ -67,12 +67,12 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
         </>}>
         {surumler.length ? <SablonTablosu turId={t.id} surumler={surumler} yaz={sablonYaz} silinebilir={surumSilme} raporlar={raporlar} />
           : <SeritKap><Serit tur="uyari" ikon="layout-list">Rapor şablonu yayınlanmadı.</Serit></SeritKap>}
-        {surumler.length > 0 && !yayinda && <SeritKap><Serit tur="uyari" ikon="layout-list">Rapor şablonu yayınlanmadı; yayınlanınca bu türde rapor yazılır.</Serit></SeritKap>}
+        {surumler.length > 0 && !yayinda && <SeritKap><Serit tur="uyari" ikon="layout-list">Rapor şablonu yayınlanmadı.</Serit></SeritKap>}
       </Bolum>
       <Bolum id="b-tur-cihaz" baslik="Kullanılacak ölçüm cihazları" sayac={<><b>{t.cihazTurleri.length}</b> cihaz türü</>}
         tuslar={yaz && sec && <BaglantiTusu turId={t.id} surum={t.surum} standartlar={t.standartlar.map((x) => x.no)} cihazTurleri={t.cihazTurleri.map((x) => x.id)} secenekler={sec} brans={t.brans} />}>
         {t.cihazTurleri.length ? <ul className={stil.bagListe}>{t.cihazTurleri.map((c) => <li key={c.id}>{c.ad}</li>)}</ul>
-          : <SeritKap><Serit tur="uyari" ikon="gauge">Ölçüm cihazı seçilmemiş; raporda cihaz şartı aranmaz.</Serit></SeritKap>}
+          : <SeritKap><Serit tur="uyari" ikon="gauge">Ölçüm cihazı seçilmemiş.</Serit></SeritKap>}
       </Bolum>
       {chat && (() => {
         const bas = new Map(chat.basliklar.map((b) => [b[0], b[1]])), ok = chat.tanim.okunacak.filter((x) => x.acik && bas.has(x.k));
@@ -81,9 +81,9 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
             sayac={<><b>{chat.tanim.satirlar.length}</b> satır · <b>{ok.length}</b> okunacak fotoğraf · {chat.kayitli ? `sürüm ${chat.kayitli.surum + 1}` : "formattan hazır"}</>}
             tuslar={<TusBaglanti tur="ikincil" ikon={chat.yaz ? "pencil" : "eye"} href={`/ekipman-turleri/${t.id}/say-chat`}>{chat.yaz ? "Düzenle" : "Görüntüle"}</TusBaglanti>}>
             <ul className={stil.bagListe}>
-              <li><span>Denetçinin sahada S.A.Y Chat&apos;e yazdığı mesajın satır sırası
+              <li><span>Mesaj satırları
                 <span className={stil.altMetin}>{chat.tanim.satirlar.map((x, i) => `${i + 1}. ${x.ad}${x.hazir ? ` (${x.hazir})` : ""}`).join(" · ")}</span></span></li>
-              <li><span>Yapay zekânın rapor yazılırken okuyacağı fotoğraflar
+              <li><span>Okunacak fotoğraflar
                 <span className={stil.altMetin}>{ok.length ? ok.map((x) => bas.get(x.k)).join(" · ") : "Yok"}</span></span></li>
             </ul>
           </Bolum>
@@ -91,13 +91,12 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
       })()}
       <Bolum id="b-tur-std" baslik="Kontrol metodu standartları" sayac={<><b>{t.standartlar.length}</b> standart</>}>
         {t.standartlar.length ? <ul className={stil.bagListe}>{t.standartlar.map((s) => <li key={s.no}><span>{s.id ? `${s.no}:${s.surumAdi}` : s.no}
-          <span className={stil.altMetin}>{s.konu ?? "Kütüphanede güncel sürüm yok — Dökümanlar › Standartlar’dan yüklenir"}</span></span></li>)}</ul>
-          : <SeritKap><Serit tur="uyari" ikon="triangle-alert">Standart seçilmemiş; raporda kontrol metodu “Üretici talimatı” yazar.</Serit></SeritKap>}
+          <span className={stil.altMetin}>{s.konu ?? "Kütüphanede güncel sürüm yok"}</span></span></li>)}</ul>
+          : <SeritKap><Serit tur="uyari" ikon="triangle-alert">Standart seçilmemiş.</Serit></SeritKap>}
       </Bolum>
       <Bolum id="b-format" baslik="Basılı format PDF'i" sayac={p ? <><b>{t.formatlar.length}</b> sürüm</> : undefined}>
         {p ? <FormatTablosu formatlar={t.formatlar} kaldirabilir={yaz} />
-          : <SeritKap><Serit tur="bilgi" ikon="info">İsteğe bağlı. Raporlar yukarıdaki rapor şablonundan, Bakanlık rapor görünümünde çizilir; PDF gerekmez.
-            Firmanın kendi basılı formatı varsa başvuru için buraya yüklenir.</Serit></SeritKap>}
+          : <SeritKap><Serit tur="bilgi" ikon="info">İsteğe bağlı.</Serit></SeritKap>}
       </Bolum>
       <Bolum id="b-kural" baslik="Kontrol kuralları">
         <BilgiListesi>

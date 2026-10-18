@@ -74,7 +74,7 @@ export function OnayEkrani({ v, belge }: { v: Veri; belge: ReactNode }) {
       {(genel || r.durum === "taslak" || v.istek) && (
         <SeritKap>
           {genel && <Serit tur="hata" ikon="circle-alert">{genel}</Serit>}
-          {r.durum === "taslak" && <Serit tur="bilgi" ikon="info">Yeni: rapor denetçide; onaya gönderilince kuyruğa düşer.</Serit>}
+          {r.durum === "taslak" && <Serit tur="bilgi" ikon="info">Rapor henüz onaya gönderilmedi.</Serit>}
           {v.istek && <Serit tur="uyari" ikon="file-pen-line"><b>Revize isteği</b> · {v.istek.kim} · {zamanYaz(v.istek.zaman)}: “{v.istek.gerekce}”</Serit>}
         </SeritKap>
       )}

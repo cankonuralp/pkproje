@@ -48,7 +48,8 @@ test("plan içi: liste, kabul (beyan), ekipman ekle / pasif, proje notu, künye 
   await expect(page.getByText("Plan kabul edildi.")).toBeVisible();
   await expect(page.getByText("Kabul edildi", { exact: true })).toBeVisible();
   await expect(page.getByText("Tarafsızlık beyanı onaylandı · beyanı gör")).toBeVisible();
-  await expect(page.getByText("İlk rapor oluşturulunca denetim başlar.")).toBeVisible();
+  /* 2026-10-18 (reisim: "bu ve benzeri, yaratıcıyı hedef alan açıklamaları kaldır, çok fazla ai ürünü olduğu belli oluyor"): açıklama kısaldı */
+  await expect(page.getByText("Denetim başlamadı.")).toBeVisible();
 
   /* Ekipman ekle: kod yazarken denetlenir */
   await page.getByRole("button", { name: "Ekipman ekle" }).click();

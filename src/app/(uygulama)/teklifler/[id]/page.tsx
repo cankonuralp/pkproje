@@ -49,7 +49,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
         <SeritKap>
           {t.durum === "red" && t.sonuc && <Serit tur="hata" ikon="ban">Reddedildi {tarihNo(t.sonuc)}: “{t.gerekce}”</Serit>}
           {t.durum === "suresi" && t.bitis && <Serit tur="uyari" ikon="clock">Geçerlilik {tarihNo(t.bitis)} tarihinde doldu.</Serit>}
-          {kabul && t.sonuc && <Serit tur="onay" ikon="circle-check">Kabul edildi {tarihNo(t.sonuc)}.{t.musteriKart ? "" : " Müşteri kayıtlı değil: “Müşteri olarak kaydet” ile müşteri ve tesis açılır (ya da “Var olan müşteriye bağla”), sonra iş sözleşmesi ve plan."}</Serit>}
+          {kabul && t.sonuc && <Serit tur="onay" ikon="circle-check">Kabul edildi {tarihNo(t.sonuc)}.{t.musteriKart ? "" : " Müşteri kayıtlı değil."}</Serit>}
           {t.kopyaKaynak && <Serit tur="bilgi" ikon="copy">{t.kopyaKaynak} teklifinden kopyalandı.</Serit>}
         </SeritKap>
       )}

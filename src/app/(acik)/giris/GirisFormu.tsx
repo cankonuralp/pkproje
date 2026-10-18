@@ -62,12 +62,10 @@ export function GirisFormu({ neden, donus, adres, firmaVar }: { neden?: "oturum"
             <input type="checkbox" name="hatirla" value="1" checked={hatirla} onChange={(e) => setHatirla(e.target.checked)} />
             <span>Beni hatırla</span>
           </label>
-          <p className={stil.ipucu} id="g-hatirla-ipucu">{hatirla ? "Bu cihazda 14 güne kadar açık kalır. Ortak bilgisayarda işaretlemeyin." : "Tarayıcı kapanınca oturum kapanır."}</p>
           {donus && <input type="hidden" name="donus" value={donus} />}
           <div className={stil.tuslar}>
             <Tus type="submit" ikon="log-in" disabled={gonderiyor || !firmaVar || !!durum.yonlendir} aria-busy={gonderiyor || undefined}>Giriş yap</Tus>
           </div>
-          <p className={stil.ayrac}>Müşteriler de aynı adresten girer; geçici parolalarını muayene firması verir.</p>
         </form>
       </div>
     </main>

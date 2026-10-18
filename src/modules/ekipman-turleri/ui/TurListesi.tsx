@@ -48,7 +48,7 @@ export function TurListesi({ kayitlar, brans, sayilar, ekleyebilir, yayinda, haz
       <Sekmeler ad="Branşlar" ogeler={[[`Mekanik (${sayilar.m})`, "/ekipman-turleri"], [`Elektrik (${sayilar.e})`, "/ekipman-turleri?brans=e"]]}
         secili={brans === "e" ? "/ekipman-turleri?brans=e" : "/ekipman-turleri"} />
       <SuzgecliListe s={s} on="t" baslik="Ekipman türleri" sutunlar={sutunlar(yayinda)} anahtar={(t) => t.id} href={(t) => `/ekipman-turleri/${t.id}`}
-        bosVeri={{ ikon: "layers", baslik: "Ekipman türü yok", metin: hazir.length ? "“Tür ekle” ile ya da aşağıdaki hazır rapor formatlarından tür eklenir." : "“Tür ekle” ile ilk tür eklenir; rapor formatı Ek-III grubuna göre hazır gelir." }} />
+        bosVeri={{ ikon: "layers", baslik: "Ekipman türü yok" }} />
       <HazirFormatlar formatlar={hazir} brans={brans} ekleyebilir={sablondanEkler} />
       {pencere && <TurPenceresi kapat={() => setPencere(false)} brans={brans} />}
     </>

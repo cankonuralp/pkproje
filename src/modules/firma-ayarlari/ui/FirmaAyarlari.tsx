@@ -23,7 +23,7 @@ import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus } from "../../../components/tus/Tus";
 import {
-  AYAR_DOSYASI, BULUT_DUZEN, ESIK, IMZA_YONTEM, NUSHA, RESEND_ADIMLAR, SAKLAMA_YIL, SUPABASE_ADIMLAR, YASAL, YZ_MODEL, kodBuyut, onBilgiFormKodu,
+  AYAR_DOSYASI, BULUT_DUZEN, ESIK, IMZA_YONTEM, NUSHA, SAKLAMA_YIL, YASAL, YZ_MODEL, kodBuyut, onBilgiFormKodu,
   type AyarDosyasi, type AyarKesimi, type EsikAdi,
 } from "../sema";
 import type { FirmaAyarlari as Veri } from "../server/ayarlar";
@@ -234,7 +234,6 @@ function ImzaYontemi({ v }: { v: Veri }) {
   const s = useKesim("imza", v.imza.deger, v.imza.surum);
   return (
     <Kart yaz={v.yaz} kirli={s.kirli} mesgul={s.mesgul} kaydet={s.kaydet}>
-      <Not>Raporun son imzası ve iç belgeler bu yöntemle.</Not>
       <div role="radiogroup" aria-label="İmza yöntemi" className={stil.secenekler}>
         {(Object.keys(IMZA_YONTEM) as (keyof typeof IMZA_YONTEM)[]).map((k) => (
           <label key={k} className={stil.secenek}>
@@ -246,8 +245,7 @@ function ImzaYontemi({ v }: { v: Veri }) {
       {/* 2026-10-17 (göç 0102): açıkken onaydaki raporu teknik yönetici imzalayarak onaylar, sonra muayene uzmanı imzalar; kapalıyken bugünkü akış */}
       <label className={stil.secenek}>
         <input type="checkbox" checked={s.d.teknik} disabled={!v.yaz} onChange={(e) => s.setD({ ...s.d, teknik: e.target.checked })} />
-        <span><b>Teknik yönetici raporu imzalasın</b><span className={stil.altSatir}>Onaydaki raporu teknik yönetici e-imzayla imzalayarak onaylar;
-          ardından muayene uzmanı aynı PDF&apos;e kendi imzasını ekler. Kapalıyken teknik yönetici yalnız onaylar.</span></span>
+        <span><b>Teknik yönetici raporu imzalasın</b></span>
       </label>
     </Kart>
   );
@@ -282,7 +280,7 @@ function Saklama({ v }: { v: Veri }) {
   const s = useKesim("saklama", { yil: String(v.saklama.deger.yil) }, v.saklama.surum);
   return (
     <Kart yaz={v.yaz} kirli={s.kirli} mesgul={s.mesgul} kaydet={s.kaydet}>
-      <Alan id={ID.yil} etiket="Saklama süresi" hata={s.h.yil} sonuc={s.h.yil ? undefined : "Süre dolunca imzalı raporlar silinir; 30 gün önce listelenir."}>
+      <Alan id={ID.yil} etiket="Saklama süresi" hata={s.h.yil} sonuc={s.h.yil ? undefined : "Süre dolunca imzalı raporlar silinir."}>
         <SecimAlani id={ID.yil} ad="Saklama süresi" deger={s.d.yil} kapali={!v.yaz} gecersiz={!!s.h.yil} tanim={ipucuId(ID.yil)}
           secenekler={SAKLAMA_YIL.map((y) => [String(y), `${y} yıl${y === 5 ? " (yasal en az)" : ""}`] as const)} degistir={(x) => s.setD({ yil: x })} />
       </Alan>
@@ -304,7 +302,6 @@ function Mesai({ v }: { v: Veri }) {
   );
   return (
     <Kart yaz={v.yaz} kirli={s.kirli} mesgul={s.mesgul} kaydet={s.kaydet}>
-      <Not>Günlük süre dolunca yeni rapor oluşturulamaz.</Not>
       <Segment ad="Mesai takibi" deger={s.d.acik ? "1" : "0"} kapali={!v.yaz} secenekler={[["0", "Kapalı"], ["1", "Açık"]] as const}
         degistir={(x) => s.setD({ ...s.d, acik: x === "1" })} />
       <FormIzgara>
@@ -346,7 +343,7 @@ function RaporNumarasi({ v }: { v: Veri }) {
   const s = useKesim("kod", { kod: v.kod }, 0, (d) => firmaKoduKaydetEylemi({ kod: d.kod, gorulen: v.kod }));
   return (
     <Kart yaz={v.yaz} kirli={s.kirli} mesgul={s.mesgul} kaydet={s.kaydet}>
-      <Alan id={ID.kod} etiket="Firma kodu" hata={s.h.kod ?? s.h.gorulen} sonuc={s.h.kod ? undefined : `Yeni rapor: ${/^[A-Z]{2}$/.test(kodBuyut(s.d.kod)) ? kodBuyut(s.d.kod) : v.kod}-2610-0001. Açılmış raporların numarası değişmez.`}>
+      <Alan id={ID.kod} etiket="Firma kodu" hata={s.h.kod ?? s.h.gorulen} sonuc={s.h.kod ? undefined : `Yeni rapor: ${/^[A-Z]{2}$/.test(kodBuyut(s.d.kod)) ? kodBuyut(s.d.kod) : v.kod}-2610-0001`}>
         <Girdi id={ID.kod} value={s.d.kod} maxLength={2} autoCapitalize="characters" disabled={!v.yaz} hata={!!(s.h.kod ?? s.h.gorulen)} mesajli className={stil.kod}
           onChange={(e) => s.setD({ kod: e.target.value.toUpperCase() })} />
       </Alan>
@@ -361,7 +358,7 @@ function SabitGiderler({ v }: { v: Veri }) {
   const toplam = v.sabit.deger.kalemler.reduce((n, x) => n + x.aylik, 0);
   return (
     <Kart genis yaz={v.yaz} kirli={s.kirli} mesgul={s.mesgul} kaydet={s.kaydet}>
-      <Not>Aylık; Muhasebe&apos;nin gelir-gider özetine gider olarak düşer. Kayıtlı toplam {para(toplam)} TL.</Not>
+      <Not>Aylık. Kayıtlı toplam {para(toplam)} TL.</Not>
       {l.map((x, i) => (
         <div key={i} className={stil.kalem}>
           <Alan id={`w-ay-sg-ad-${i}`} etiket="Gider" hata={s.h[`kalemler.${i}.ad`]}>
@@ -392,7 +389,7 @@ function FiyatListesi({ v }: { v: Veri }) {
   const s = useKesim("fiyat", ilk, 0, (d) => ayarKaydetEylemi("fiyat", 0, { fiyatlar: d.fiyatlar, gorulen: ilk.fiyatlar }));
   return (
     <Kart genis yaz={v.yaz} kirli={s.kirli} mesgul={s.mesgul} kaydet={s.kaydet}>
-      <Not>KDV hariç birim fiyat; yeni teklifler bu listeden dolar. Kabul edilmiş tekliflerin fiyatı değişmez.</Not>
+      <Not>KDV hariç birim fiyat.</Not>
       {v.fiyat.turler.length ? <div className={stil.fiyatlar}>
         {v.fiyat.turler.map((t) => {
           const id = `w-ay-fiyat-${t.id}`;
@@ -403,7 +400,7 @@ function FiyatListesi({ v }: { v: Veri }) {
             </Alan>
           );
         })}
-      </div> : <p className={stil.not}>Ekipman türü yok; türler Ekipman türleri&apos;nden eklenir.</p>}
+      </div> : <p className={stil.not}>Ekipman türü yok.</p>}
     </Kart>
   );
 }
@@ -505,7 +502,7 @@ function Yedek({ v }: { v: Veri }) {
             degistir={(x) => s.setD({ ...s.d, duzen: x as typeof s.d.duzen })} />
         </Alan>
       </FormIzgara>
-      <p className={stil.durumSatir}>Google Drive ve OneDrive veriyi Türkiye dışında saklayabilir. Hesap bağlantısı yayına çıkışta açılır.</p>
+      <p className={stil.durumSatir}>Google Drive ve OneDrive veriyi Türkiye dışında saklayabilir.</p>
     </Kart>
   );
 }
@@ -518,17 +515,7 @@ function Depolama({ v }: { v: Veri }) {
       <dl className={stil.bilgi}>
         <div><dt>Hesap</dt><dd>{v.depolama.proje === "kendi" ? "Firmanın kendi Supabase projesi (Frankfurt)" : "probata ortak projesi (Supabase, Frankfurt)"}</dd></div>
         <div><dt>Dosyalar</dt><dd>{v.depolama.dosya.toLocaleString("tr-TR")} dosya · {megabayt(v.depolama.bayt)} MB</dd></div>
-        <div><dt>Paket</dt><dd>Supabase Pro · 25 $/ay</dd></div>
       </dl>
-      <Not>Bağlantıyı probata yönetimi kurar; burada değiştirilmez ve gösterilmez.</Not>
-      <Yardim baslik="Veritabanınız nasıl kurulur?"><ol className={stil.adimlar}>{SUPABASE_ADIMLAR.map((x) => <li key={x}>{x}</li>)}</ol></Yardim>
-      <Yardim baslik="Raporlar ne kadar durur?">
-        <ul className={stil.adimlar}>
-          <li>İmzalanan her rapor saklama süresi ({v.saklama.deger.yil} yıl) boyunca durur; süre dolmadan silinmez, silinecekler 30 gün önce listelenir.</li>
-          <li>Günlük yedek yalnız geri sarma içindir (son 7 gün): raporlar 7 gün sonra silinmez.</li>
-          <li>Supabase hesabınızda dosyaları ya da projeyi kendiniz silerseniz geri getirilemez; ek yedek bunun içindir.</li>
-        </ul>
-      </Yardim>
     </Kart>
   );
 }
@@ -592,7 +579,7 @@ function YapayZeka({ v }: { v: Veri }) {
         {v.yaz && <><Tus tur="ikincil" ikon="pencil" disabled={mesgulA} data-yz-degistir="" onClick={() => { setYeni({ deger: "", hata: null }); requestAnimationFrame(() => document.getElementById(ZID.anahtar)?.focus()); }}>Değiştir</Tus>
           <Tus tur="ikincil" ikon="trash-2" disabled={mesgulA} onClick={anahtarKaldir} aria-label="API anahtarını kaldır">Kaldır</Tus></>}
       </div></> : v.yaz && <>
-        <Alan id={ZID.anahtar} etiket="API anahtarı" genis hata={yeni.hata ?? undefined} sonuc={yeni.hata ? undefined : "sk-ant- ile başlar; şifreli saklanır, bir daha gösterilmez."}>
+        <Alan id={ZID.anahtar} etiket="API anahtarı" genis hata={yeni.hata ?? undefined} sonuc={yeni.hata ? undefined : "sk-ant- ile başlar."}>
           <Girdi id={ZID.anahtar} type="password" value={yeni.deger} maxLength={210} spellCheck={false} hata={!!yeni.hata} mesajli disabled={kapali}
             onChange={(e) => setYeni({ deger: e.target.value, hata: null })} />
         </Alan>
@@ -640,33 +627,27 @@ function Eposta({ v }: { v: Veri }) {
   });
   return (
     <Kart genis yaz={v.yaz} kirli={s.kirli} mesgul={s.mesgul} kaydet={s.kaydet}>
-      <Not>Kim gönder tuşuna basarsa e-posta onun adresinden gider. Bu ay gönderilen: {v.eposta.ay.toLocaleString("tr-TR")}.</Not>
+      <Not>Bu ay gönderilen: {v.eposta.ay.toLocaleString("tr-TR")}.</Not>
       <dl className={stil.bilgi}>
         <div><dt>Gönderen alan adı</dt><dd>{g ? <><span>{g.alan}</span> {g.dogrulandi ? <Rozet tur="tamam">Doğrulandı</Rozet> : <Rozet tur="bekliyor">Doğrulanmadı</Rozet>}</> : <DegerYok />}</dd></div>
         <div><dt>Genel adres</dt><dd>{g ? g.genel : <DegerYok />}</dd></div>
         <div><dt>Otomatik e-postaların cevabı</dt><dd>{v.eposta.rapor || <DegerYok />}</dd></div>
       </dl>
-      <Not>Gönderimi probata yönetimi kurar; burada değiştirilmez, anahtar gösterilmez.</Not>
       <FormIzgara>
         <Segment ad="Gönderene gizli kopya" deger={s.d.kopya ? "1" : "0"} kapali={!v.yaz} secenekler={[["0", "Kapalı"], ["1", "Açık"]] as const}
           degistir={(x) => s.setD({ ...s.d, kopya: x === "1" })} />
       </FormIzgara>
       {/* durum satırı hep yerinde */}
       <p className={hazir ? stil.durumSatir : `${stil.durumSatir} ${stil.uyariSatir}`}>
-        {!g ? <><Ikon ad="triangle-alert" kucuk />E-posta gönderimi kurulmadı: e-postalar sırada bekler; probata alan adınızı ekleyip doğrulayınca gider.</>
-          : !g.dogrulandi || !g.anahtar ? <><Ikon ad="triangle-alert" kucuk />@{g.alan} henüz doğrulanmadı: e-postalar sırada bekler, doğrulanınca gider.</>
+        {!g ? <><Ikon ad="triangle-alert" kucuk />E-posta gönderimi kurulmadı; e-postalar sırada bekler.</>
+          : !g.dogrulandi || !g.anahtar ? <><Ikon ad="triangle-alert" kucuk />@{g.alan} henüz doğrulanmadı; e-postalar sırada bekler.</>
           : <>Otomatik e-postalar <b>{g.genel}</b> adresinden; cevaplar <b>{v.eposta.rapor || "Rapor e-postası girilmedi"}</b></>}
       </p>
       {v.yaz && <div className={stil.dosyaSatir}>
         <Tus tur="ikincil" ikon="send" disabled={!hazir || mesgulA} aria-busy={mesgulA || undefined} onClick={deneme}>Deneme e-postası gönder</Tus>
         {v.eposta.ben && <span className={stil.altSatir}>{v.eposta.ben}</span>}
       </div>}
-      <Yardim baslik="E-posta gönderimi nasıl kurulur?"><ol className={stil.adimlar}>{RESEND_ADIMLAR.map((x) => <li key={x}>{x}</li>)}</ol></Yardim>
       <Yardim baslik="Çalışanların e-postası nereden gider?">
-        <ul className={stil.adimlar}>
-          <li>Adresi {g ? <b>@{g.alan}</b> : "firmanın alan adı"} ile biten çalışan: kendi adresinden; cevap ona gelir.</li>
-          <li>Kişisel adresli ya da adresi olmayan: firmanın genel adresinden, kişinin adıyla; cevap kişiye gelir.</li>
-        </ul>
         <Liste baslik="Çalışanların e-postası nereden gider" sutunlar={epostaSutunlari} kayitlar={v.eposta.kisiler} anahtar={(x) => x.id} />
       </Yardim>
     </Kart>
@@ -690,7 +671,7 @@ export function FirmaAyarlari({ v }: { v: Veri }) {
   return (
     <>
       <SayfaBasi baslik="Firma ayarları" />
-      {!v.yaz && <Serit tur="bilgi" ikon="info">Ayarları görüyorsunuz; değiştirmek için Firma ayarlarında &quot;değiştirir&quot; yetkisi gerekir.</Serit>}
+      {!v.yaz && <Serit tur="bilgi" ikon="info">Yalnız görüntüleme yetkiniz var.</Serit>}
       <div className={stil.gruplar}>
         {GRUPLAR.map((g) => (
           <section key={g.k} className={stil.grup} aria-labelledby={`ay-g-${g.k}`}>

@@ -57,11 +57,11 @@ export function TurPenceresi({ kapat, tur, brans, sablon }: { kapat: () => void;
   return (
     <Pencere acik baslik={tur ? `${tur.ad} · düzenle` : sablon ? `Tür ekle · ${sablon.ad}` : "Tür ekle"} onKapat={kapat} odak={`#${ID.ad}`} genis
       alt={<><Tus tur="ikincil" onClick={kapat}>Vazgeç</Tus><Tus ikon="check" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={kaydet}>Kaydet</Tus></>}>
-      {sablon && <p className={pencereMetinSinifi}>Tür eklenir ve rapor şablonu <b>{sablon.ad}</b> formatından taslak olarak hazırlanır; önizleyip yayınlarsınız.</p>}
+      {sablon && <p className={pencereMetinSinifi}>Tür eklenir ve rapor şablonu <b>{sablon.ad}</b> formatından taslak olarak hazırlanır.</p>}
       {genel && <Serit tur="hata" ikon="circle-alert">{genel}</Serit>}
       <FormIzgara>
         {G("ad", "Tür adı", { zorunlu: true, genis: true, tip: { maxLength: 60 } })}
-        {G("kod", "Kod", { zorunlu: true, sonuc: tur ? "Kod değişmez (ekipman kodlarında kullanılıyor)." : "2–3 harf; ekipman kodu öneki.", tip: { maxLength: 3, readOnly: !!tur, autoCapitalize: "characters" } })}
+        {G("kod", "Kod", { zorunlu: true, sonuc: tur ? "Kod değişmez." : "2–3 harf; ekipman kodu öneki.", tip: { maxLength: 3, readOnly: !!tur, autoCapitalize: "characters" } })}
         <Alan id={ID.grup} etiket="Ek-III grubu" zorunlu genis hata={h.grup} sonuc={ekdisi ? "Ek-III dışı: meslek kuralı uygulanmaz." : "Branş ve onaylayan yönetici gruptan gelir."}>
           <SecimAlani id={ID.grup} ad="Ek-III grubu" deger={d.grup} secenekler={GRUP_SEC} ipucu="Grup seçin" gecersiz={!!h.grup} tanim={ipucuId(ID.grup)}
             degistir={(v) => setD({ ...d, grup: v })} />
@@ -73,7 +73,7 @@ export function TurPenceresi({ kapat, tur, brans, sablon }: { kapat: () => void;
           </Alan>
         )}
         {G("periyot", "Periyot (ay)", { zorunlu: true, sonuc: "Sonraki kontrol önerisi bununla hesaplanır.", tip: { inputMode: "numeric", maxLength: 3, placeholder: "ör. 12" } })}
-        {G("sure", "Tahmini kontrol süresi (dk)", { sonuc: "İsteğe bağlı; plan saat önerisinde kullanılır.", tip: { inputMode: "numeric", maxLength: 3 } })}
+        {G("sure", "Tahmini kontrol süresi (dk)", { sonuc: "İsteğe bağlı.", tip: { inputMode: "numeric", maxLength: 3 } })}
       </FormIzgara>
     </Pencere>
   );

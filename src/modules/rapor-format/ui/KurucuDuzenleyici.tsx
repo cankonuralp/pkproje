@@ -100,7 +100,7 @@ export function OgeDuzenleyici({ t, i, b, id, degis }: { t: FormatTanimi; i: num
           </FormIzgara>
           <SatirAlani id={`${k}-ack`} etiket="Açıklama (raporda madde bilgisi)" deger={m.aciklama ?? ""} satir={2} uygula={(s) => yaz({ aciklama: s })} />
         </>
-        <SatirAlani id={`${k}-tal`} etiket="Talimat (kontrol nasıl yapılır)" deger={m.talimat ?? ""} ipucu="Saha ekranında maddenin yanındaki ünlemden açılır; PDF'e basılmaz." uygula={(s) => yaz({ talimat: s })} />
+        <SatirAlani id={`${k}-tal`} etiket="Talimat (kontrol nasıl yapılır)" deger={m.talimat ?? ""} uygula={(s) => yaz({ talimat: s })} />
         {/* 556: maddenin cevabı da formülle (ör. EĞER(MİN([Direnç]) >= 50; "Uygun"; "Uygun değil")) */}
         <FormulAlani k={k} deger={m.formul} adlar={genelAdlar(t)} gruplar={formulAdGruplari(t, b, m.metin)} kendi={m.metin} yaz={(f) => yaz({ formul: f })} />
       </div>
@@ -249,9 +249,7 @@ export function SonucKuraliDuzenleyici({ t, i, b, degis }: { t: FormatTanimi; i:
   return (
     <div className={stil.duzenleyici} role="group" aria-label={`${b.ad} · sonuç kuralı`}>
       <p className={stil.etiket}>Sonuç kuralı ({kurallar.length}){b.hesap ? (bakanlik ? " — Bakanlık kuralı" : " — Bakanlık kuralı değiştirildi") : ""}</p>
-      <p className={stil.satir}>Satırın Sonuç sütunu bu kurallarla kendiliğinden çıkar: kural DOĞRU ise sağlanır, YANLIŞ ise satır “Uygun değil” olur
-        (nedeni satırda ve kusurlarda yazar). Kural “Uygun” ya da “Uygun değil: neden” de yazabilir. Değeri boş olan (ölçülmemiş) kural değerlendirilmez;
-        sayı sütununa yazılan yazı boş sayılır. Kural yoksa Sonuç’u denetçi seçer; sütun sınırları ve “uygun değil” seçenekleri yine geçerli.
+      <p className={stil.satir}>Kural DOĞRU ise satır uygun, YANLIŞ ise “Uygun değil” olur. Kural yoksa Sonuç’u denetçi seçer.
         {b.notlar?.length ? " Bu tabloda uygunluk notu var: kusuru satırda seçilen not belirler." : ""}</p>
       {kurallar.length > 0 && (
         <ol className={stil.kurucuOgeler}>
@@ -322,7 +320,7 @@ export function ListeDuzenleyici({ t, i, b, degis }: { t: FormatTanimi; i: numbe
                   <Girdi id={`kb-${g.id}-ad`} value={g.ad} maxLength={200} mesajli={resmi} onChange={(e) => degis(grupYaz(t, i, g.id, { ad: e.target.value }))} />
                 </Alan>
               </FormIzgara>
-              <SatirAlani id={`kb-${g.id}-tal`} etiket={`${j + 1}. grup talimatı`} deger={g.talimat ?? ""} satir={2} ipucu="Grup başlığındaki ünlemden açılır." uygula={(s) => degis(grupYaz(t, i, g.id, { talimat: s }))} />
+              <SatirAlani id={`kb-${g.id}-tal`} etiket={`${j + 1}. grup talimatı`} deger={g.talimat ?? ""} satir={2} uygula={(s) => degis(grupYaz(t, i, g.id, { talimat: s }))} />
               {!g.maddeler.length && b.gruplar.length > 1 && <Tus tur="ikincil" ikon="trash-2" onClick={() => degis(grupSil(t, i, g.id))}>Boş grubu sil</Tus>}
             </li>
           );
@@ -367,7 +365,7 @@ export function NotDuzenleyici({ t, i, b, degis }: { t: FormatTanimi; i: number;
 /** sonuç bölümünün sabit metni (ağır kusurlar tanımı, açıklamalar) — 470: Bakanlık bölümünde de yazılır, yayında uyarı */
 export function SonucAciklamasi({ t, i, b, degis }: { t: FormatTanimi; i: number; b: BolumOf<"sonuc">; degis: (y: FormatTanimi) => void }) {
   return <SatirAlani id={`kb-${b.id}-aciklama`} etiket="Sonuç açıklaması (ağır kusurlar tanımı, açıklamalar)" deger={b.aciklama} satir={5}
-    ipucu={b.kilit ? "Bakanlık bölümü: değiştirirseniz yayında uyarı çıkar. PDF'te sonuç cümlesinin altında." : "PDF'te sonuç cümlesinin altında, satır satır."}
+    ipucu={b.kilit ? "Bakanlık bölümü: değiştirirseniz yayında uyarı çıkar." : undefined}
     uygula={(s) => degis({ ...t, bolumler: t.bolumler.map((x, j) => (j === i && x.blok === "sonuc" ? { ...x, aciklama: s.slice(0, 4000) } : x)) })} />;
 }
 
@@ -385,8 +383,8 @@ export function GorunumDuzenleyici({ t, degis }: { t: FormatTanimi; degis: (y: F
           <Girdi id={GID.baslik} value={t.gorunum.baslik} maxLength={200} mesajli={resmi} onChange={(e) => degis(gorunumYaz(t, { baslik: e.target.value }))} />
         </Alan>
       </FormIzgara>
-      <SatirAlani id="kb-dayanak" etiket="Periyodik kontrol metodu ve kapsamı" deger={t.gorunum.dayanak.join("\n")} ipucu="Her satıra bir standart / yönetmelik (PDF'te 1. bölümde)." uygula={(s) => degis(gorunumYaz(t, { dayanak: satirlar(s, 20, 300) }))} />
-      <SatirAlani id="kb-genel" etiket="Genel muayene talimatı" deger={t.gorunum.talimat} satir={5} ipucu="Rapor ekranının sağ üstündeki ünlemden açılır; PDF'e basılmaz." uygula={(s) => degis(gorunumYaz(t, { talimat: s }))} />
+      <SatirAlani id="kb-dayanak" etiket="Periyodik kontrol metodu ve kapsamı" deger={t.gorunum.dayanak.join("\n")} ipucu="Her satıra bir standart / yönetmelik." uygula={(s) => degis(gorunumYaz(t, { dayanak: satirlar(s, 20, 300) }))} />
+      <SatirAlani id="kb-genel" etiket="Genel muayene talimatı" deger={t.gorunum.talimat} satir={5} uygula={(s) => degis(gorunumYaz(t, { talimat: s }))} />
     </div>
   );
 }

@@ -52,8 +52,7 @@ export function ExcelYukle({ turler, mevcut, onEkle }: { turler: readonly ExcelT
             {dosya ? `Kalemlere ekle (${gecerli.length})` : "Kalemlere ekle"}
           </Tus>
         </>}>
-        <p className={pencereMetinSinifi}>Müşterinin ekipman listesi. Sütunlar: Kod · Ekipman türü · Konum · Seri no; yalnız tür zorunlu. Geçerli satırlar tür başına
-          adetle kalemlere eklenir, fiyat fiyat listesinden.</p>
+        <p className={pencereMetinSinifi}>Sütunlar: Kod · Ekipman türü · Konum · Seri no; yalnız tür zorunlu.</p>
         <div className={stil.dosyaSec}>
           <Tus tur="ikincil" ikon="file-spreadsheet" onClick={() => baytIndir("teklif-ekipman-sablonu.xlsx", sablonExceli(turler[0]?.ad), XLSX_TURU)}>Şablonu indir</Tus>
           <Tus id="tk-excel-sec" tur="ikincil" ikon="upload" disabled={okunuyor} aria-busy={okunuyor || undefined} onClick={() => girdi.current?.click()}>

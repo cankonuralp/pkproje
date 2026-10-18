@@ -51,10 +51,9 @@ export function SaklamaListesi({ v }: { v: SaklamaSayfasi }) {
       <SayfaBasi baslik="Saklama süresi dolacak raporlar" sayac={<Sayac s={s} />} />
       <SeritKap>
         <Serit tur="bilgi" ikon="archive">
-          Saklama süresi {v.yil} yıl. Süresi dolan imzalı rapor PDF&apos;leri ilk gece işinde firmanızın deposundan silinir; rapor kayıtları kalır.
-          Süresi {v.onceGun} gün içinde dolacaklar burada. Saklamak istediklerinizi önceden indirin ya da <Link href="/firma-ayarlari#ay-b-saklama">süreyi uzatın</Link>.
+          Saklama süresi {v.yil} yıl; süresi dolan imzalı rapor PDF&apos;leri silinir. Saklamak istediklerinizi önceden indirin ya da <Link href="/firma-ayarlari#ay-b-saklama">süreyi uzatın</Link>.
         </Serit>
-        {v.fazla && <Serit tur="uyari" ikon="triangle-alert">Listede en erken dolan {v.liste.length.toLocaleString("tr-TR")} rapor var; ötekiler sırası gelince görünür.</Serit>}
+        {v.fazla && <Serit tur="uyari" ikon="triangle-alert">Listede en erken dolan {v.liste.length.toLocaleString("tr-TR")} rapor var.</Serit>}
       </SeritKap>
       <SuzgecliListe s={s} on="sk" baslik="Saklama süresi dolacak raporlar" sutunlar={SUTUN} anahtar={(x) => x.surumId}
         bosVeri={{ ikon: "circle-check", baslik: "Silinecek rapor yok", metin: `Saklama süresi ${v.onceGun} gün içinde dolacak imzalı rapor yok.` }} />

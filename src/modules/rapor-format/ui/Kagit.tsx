@@ -737,9 +737,9 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
     return (
       <div className={k.panelSatir} role="group" aria-label={`${b.ad} · sahada doldurma`}>
         <label className={k.panelKutu}><input type="checkbox" checked={d.foto} onChange={(e) => yaz({ foto: e.target.checked })} />
-          Fotoğraftan doldur (S.A.Y okur, boş alanlara girer; fotoğraf belgede görünmez)</label>
+          Fotoğraftan doldur</label>
         <label className={k.panelKutu}><input type="checkbox" checked={d.excel} onChange={(e) => yaz({ excel: e.target.checked })} />
-          Excel&apos;den yükle (sütun başlıkları ya da “Alan | Değer” satırlarıyla)</label>
+          Excel&apos;den yükle</label>
       </div>
     );
   };
@@ -829,7 +829,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
       <div className={k.panelBas}><b>{b.ad} · bölüm ayarları</b><Tus ikon="x" ad="Bölüm ayarlarını kapat" onClick={() => setAyar(null)} /></div>
       {<div className={k.panelSatir}>
         <label className={k.panelKutu}><input type="checkbox" checked={!!b.alt} onChange={(e) => degis(bolumDuzeni(t, i, { alt: e.target.checked }))} />
-          Alt başlık (üstündeki bölümün altında 5.1, 5.2 … diye numaralanır)</label>
+          Alt başlık</label>
         {!b.alt && <label className={k.panelKutu}><input type="checkbox" checked={!!b.numarasiz} onChange={(e) => degis(bolumDuzeni(t, i, { numarasiz: e.target.checked }))} />
           Numarasız bölüm (belgede numara almaz)</label>}
         {b.ust && <span className={k.panelIpucu}>Üst başlık: <b>{b.ust}</b>{" "}
@@ -857,7 +857,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
       </>}
       {b.blok === "sonuc" && <div className={k.panelSatir}>
         <label className={k.panelKutu}><input type="checkbox" checked={!!b.sartli} onChange={(e) => degis(sartliYaz(t, i, e.target.checked))} />
-          Üçüncü seçenek: şartlı uygun (hafif kusurla kullanılabilir; uygunsuzluk kaydı açılır)</label>
+          Üçüncü seçenek: şartlı uygun</label>
       </div>}
       {b.blok === "sonuc" && <SonucAciklamasi t={t} i={i} b={b} degis={degis} />}
       {b.blok === "not" && <div className={k.panelSatir}>
@@ -877,9 +877,6 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
               </label>
             ))}
           </div>
-          <p className={k.panelIpucu}>Satırların adı, sırası ve varlığı kâğıtta; değerleri kişinin kaydından gelir ve imza anında rapora kopyalanır. İkinci
-            muayene uzmanını denetçi sahada plan ekibinden seçer; tesis yetkilisinin adını ve unvanını sahada yazar, imzası belgede boş hücredir. Serbest satır
-            (kaşe, not) sabit yazı ya da boş hücre olur.</p>
           <EimzaYeriAyari t={t} degis={degis} hucreVar={imzaSatirlari(b).some((s) => s.kim === "uzman" && s.alan === "imza")} />
           {/* İ5 (2026-10-17): ikinci e-imza yeri — onaylayan (teknik yönetici) */}
           <EimzaYeriAyari t={t} degis={degis} kim="onaylayan" hucreVar={imzaSatirlari(b).some((s) => s.kim === "teknik" && s.alan === "imza")} />
@@ -892,11 +889,10 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
             uygula={(x) => degis(ekSutunYaz(t, i, s.id, { secenekler: x.split("\n") }))} satir={3} />
         </div>
       ))}
-      {b.blok === "cihaz" && <p className={k.panelIpucu}>Sabit bölüm: satırları türün ölçüm cihazı türleri (tür sayfasında seçilir, burada kendiliğinden); denetçi raporda zimmetindeki cihazı ekler, kalibrasyonu denetlenir. Sütunlar kâğıtta: adı yazılır, sola / sağa taşınır, çıkarılır, “+ Sütun” ile cihaz kaydından eklenir.</p>}
+      {b.blok === "cihaz" && <p className={k.panelIpucu}>Sabit bölüm.</p>}
       {b.blok === "kusur" && <div className={k.panelSatir}>
         <label className={k.panelKutu}><input type="checkbox" checked={!!b.sutunlar?.length} onChange={(e) => degis(kusurTablosuYaz(t, i, e.target.checked))} />
-          Tablo olarak (No · Uygunsuzluk · Ağırlık; bölüm ve fotoğraf sütunu eklenebilir)</label>
-        <span className={k.panelIpucu}>Kendiliğinden dolar; işaretsizken madde listesi.</span>
+          Tablo olarak</label>
       </div>}
     </div>
   );
@@ -1111,7 +1107,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
       })}
       {araEkle(t.bolumler.length, "Bölüm ekle", "kb-ekle", true, duzen.bolumler.length ? anaBolum(duzen.bolumler.length - 1) : null)}
       {/* 595 (madde 14): sayfa altı yazısı — {firma} ve {kod} firma adı ve doküman koduyla değişir */}
-      <footer className="rb-alt">{gbas("alt_yazi", t.gorunum.altYazi ?? "{firma} · {kod}", "Sayfa altı yazısı ({firma}, {kod}, {adres}, {tel}, {eposta} yerine firma adı, doküman kodu ve Firma ayarlarındaki bilgiler; PDF'te her sayfanın altında)", 300)}
+      <footer className="rb-alt">{gbas("alt_yazi", t.gorunum.altYazi ?? "{firma} · {kod}", "Sayfa altı yazısı ({firma}, {kod}, {adres}, {tel}, {eposta})", 300)}
         <span className={k.ornek}> · {"{firma}"}: Firmanızın adı · {"{kod}"}: {t.gorunum.formKodu || `kendiliğinden (${tur.kod})`}</span></footer>
     </article>
   );
@@ -1138,6 +1134,6 @@ function SayiGirdi({ deger, en, enCok, ad, yaz }: { deger: number; en: number; e
 function DoldurmaIsareti({ b }: { b: Bolum }) {
   const d = doldurma(b);
   if (!d.foto && !d.excel) return null;
-  return <span className={k.tur} title="Sahada bu bölüm fotoğraftan ya da Excel'den doldurulur (bölüm ayarı)">
+  return <span className={k.tur} title="Fotoğraftan ya da Excel'den doldurulur">
     <Ikon ad={d.foto ? "camera" : "file-spreadsheet"} kucuk />{[d.foto && "Fotoğraf", d.excel && "Excel"].filter(Boolean).join(" · ")}</span>;
 }

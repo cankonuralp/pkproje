@@ -38,7 +38,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
           <DosyaAcTusu dosyaId={s.dosya} ikon="download" indir>PDF indir</DosyaAcTusu>
         </> : undefined} />
       {s.durum === "imza" && (
-        <SeritKap><Serit tur="bilgi" ikon="file-pen-line">Sözleşme imzanızı bekliyor. İmzalı sözleşmeyi muayene firmasına iletin; firma yükleyince burada görünür.</Serit></SeritKap>
+        <SeritKap><Serit tur="bilgi" ikon="file-pen-line">Sözleşme imzanızı bekliyor. İmzalı sözleşmeyi muayene firmasına iletin.</Serit></SeritKap>
       )}
       <Bolum id="s-ozet" baslik="Sözleşme">
         <BilgiListesi>

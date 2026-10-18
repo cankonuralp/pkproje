@@ -68,12 +68,12 @@ export function GonderimBolumu({ id, g, acik }: { id: string; g: GonderimGorunum
 
   return (
     <Bolum id="y-b-eposta" baslik="E-posta gönderimi">
-      {!acik && <SeritKap><Serit tur="bilgi" ikon="info">Şu an kapalı: probata&apos;nın Resend anahtarı bu sunucuda tanımlı değil (yayına çıkışta tanımlanır).</Serit></SeritKap>}
+      {!acik && <SeritKap><Serit tur="bilgi" ikon="info">Şu an kapalı: Resend anahtarı tanımlı değil.</Serit></SeritKap>}
       {genel && <SeritKap><Serit tur="hata" ikon="circle-alert">{genel}</Serit></SeritKap>}
       {g && (
         <BilgiListesi>
           <Bilgi etiket="Gönderen alan adı">{g.alan}<AltSatir><Rozet tur={DURUM[g.durum].tur}>{DURUM[g.durum].ad}</Rozet></AltSatir></Bilgi>
-          <Bilgi etiket="Genel adres">{g.genel}<AltSatir>alan adı dışındaki adresli çalışanın e-postası buradan, kişinin adıyla</AltSatir></Bilgi>
+          <Bilgi etiket="Genel adres">{g.genel}</Bilgi>
         </BilgiListesi>
       )}
       {g && g.kayitlar.length > 0 && (
@@ -104,8 +104,6 @@ export function GonderimBolumu({ id, g, acik }: { id: string; g: GonderimGorunum
           </div>
         </>
       )}
-      <p className={stil.etiketUst}>E-postalar probata&apos;nın Resend hesabından, firmanın alan adıyla gider: tuşa basan çalışanın adresi bu alan adındaysa kendi
-        adresinden, değilse genel adresten kişinin adıyla. Gönderme anahtarı yalnız bu alan adıyla gönderir; firmada şifreli ve kilitli.</p>
     </Bolum>
   );
 }

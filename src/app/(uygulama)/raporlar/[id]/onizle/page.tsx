@@ -29,7 +29,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
     <>
       <Kirinti ogeler={[["Planlar", "/planlar"], [v.plan.no, `/planlar/${v.plan.id}`], [v.no, `/raporlar/${v.id}`], ["Ön izleme"]]} />
       <NesneBasi baslik={`${v.no} · ön izleme`} altIkon="file-text"
-        alt={v.imzaliSilindi ? "Saklama süresi dolduğu için imzalı PDF silindi." : "Kesin PDF bu belgeyle aynı çiziciden üretilir."}
+        alt={v.imzaliSilindi ? "Saklama süresi dolduğu için imzalı PDF silindi." : undefined}
         tuslar={<>
           <TusBaglanti ikon="arrow-left" href={`/raporlar/${v.id}`}>Rapora dön</TusBaglanti>
           {/* PDF indir (reisim 2026-09-28: "ön izle halinde PDF halini indirebilmeliyim"): imzasız, kesin PDF motoruyla; düz bağlantı (indirme) */}
