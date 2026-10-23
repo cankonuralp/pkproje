@@ -2527,7 +2527,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
-- 2026-10-23 (YAPILDI — dalda, CI ve yayın bekliyor): **S.A.Y BAŞTAN KURULDU** (reisim: *"yapay zeka sitede bağlı olan asistanda normalde claude da
+- 2026-10-23 (YAPILDI — YAYINDA main 0a7b4f2; deneme makinesi 13/13, göç 0103 Supabase'te goc kaydıyla, canlı denetim 11/11; gerçek modelle canlı deneme yapılmadı — giriş reisim'de): **S.A.Y BAŞTAN KURULDU** (reisim: *"yapay zeka sitede bağlı olan asistanda normalde claude da
   kullandığım gibi verimli ve iyi çalışmıyor … sebebi nedir nasıl düzeltebiliriz"* → teşhis: konuşma kırpılıyor / dosya ve yapılan iş unutuluyor, iş
   adımlarında düşünme kapalı, 45 sn akışsız, 4 MB ek, talimat yamaları; *"say asistanı direk claude da haiku nasıl çalışıyor ise direk o şekilde
   çalıştıramaz mıyız"*; onay *"tamam onaylıyorum … baştan kurarken herhangi bir kısıt kurma tamamen temiz kurulum yap, hiç bir kısıtı olmasın"*).
