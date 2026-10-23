@@ -8,8 +8,10 @@
    · imzalayanın sertifikası iptal edilmemiş (2026-10-18 ilk hâli; 2026-10-23 probata-sign denetimi 2026-10-18, YÜKSEK — kanıtın zamanı): DSS'teki
      sağlam kanıtların hepsi zamanlarıyla (pdf-imzalar.ts iptalKanitlari) iptal.ts iptalKarari'na YÜKLEME ANINA göre verilir — damga anına
      güvenilmez (yukarıdaki gerekçe): yükleme anında ya da önce "iptal" diyen kanıt (iptal anı okunamasa da) ret, "geçerli" diyen başka kanıt
-     bunu ezemez; çözümleyicinin damga anına göre kararı (i.iptal) "iptal" ise de ret. Kanıtı olmayan imza (DSS yok ya da kanıt o anı
-     kanıtlamıyor) bugünkü gibi kabul — kanıtı ağdan almak probata'da yok (imza üretimiyle birlikte probata-sign'da);
+     bunu ezemez. Çözümleyicinin damga anına göre kararı (i.iptal) "iptal" ise de ret — bu halka yalnız İLERİ tarihli damgada ek ret getirir
+     (damga anı yükleme anından sonra, kanıtın iptal anı ikisinin arasında: kanıt imzanın iptalden sonra atıldığını söylüyor; damga anı yükleme
+     anından önceyse yükleme anına göre karar zaten "iptal"dir). Kanıtı olmayan imza (DSS yok ya da kanıt o anı kanıtlamıyor) bugünkü gibi kabul —
+     kanıtı ağdan almak probata'da yok (imza üretimiyle birlikte probata-sign'da);
    · imzadan sonra belgede izinsiz değişiklik yok (pdf-imzalar.ts sonrakiEkler — yapı denetimi de ayrıca bakar).
    Güvenilir kök listesi henüz yok (resmî kaynaktan teyitle eklenecek): uydurma ama "nitelikli" işaretli sertifikayı bu denetim tek başına
    yakalamaz; Adobe'nin kendi ürettiği kimlik gibi işaretsiz sertifikayı yakalar. Ret nedeni ekranda gösterilir (Türkçe, kısa). */
@@ -22,6 +24,7 @@ const tarih = (iso: string | null) => (iso ? new Intl.DateTimeFormat("tr-TR", { 
 
 /** eklenen imzalar sağlam mı: değilse ekranda gösterilecek neden, sağlamsa null */
 export function ekImzaNedeni(imzasiz: Uint8Array, imzali: Uint8Array, simdi: Date = new Date()): string | null {
+  /* çözümleyici ve kapı aynı anı görür (damgasız imzada çözümleyicinin anı da bu); yüklemelerde simdi verilmez (şu an), testte verilir */
   const c = pdfImzalariniCozumle(imzali, { simdi });
   const ek = c.imzalar.filter((i) => i.kapsamSon > imzasiz.length);
   const imzalar = ek.filter((i) => i.tur === "imza");
@@ -42,7 +45,8 @@ export function ekImzaNedeni(imzasiz: Uint8Array, imzali: Uint8Array, simdi: Dat
        ŞİMDİ geçerli olmalı */
     const an = simdi.toISOString();
     /* 2026-10-18 (probata-sign incelemesinin uyarısı) + 2026-10-23 (kanıtın zamanı): belgedeki iptal kanıtı (DSS — imzası ve bu sertifikaya ait
-       olduğu doğrulanmış) yükleme anında ya da önce "iptal" diyorsa kabul yok; aynı gerekçeyle karar damga anına değil yükleme anına göre */
+       olduğu doğrulanmış) yükleme anında ya da önce "iptal" diyorsa kabul yok; aynı gerekçeyle karar damga anına değil yükleme anına göre.
+       i.iptal (damga anına göre) halkası ileri tarihli damga için — kilit tests/iptal-zamani.test.ts "kapı: damga anına göre karar …" */
     if (i.iptal === "iptal" || iptalKarari(i.iptalKanitlari, an) === "iptal") return "PDF'teki imzanın sertifikası iptal edilmiş (belgedeki iptal kanıtına göre).";
     if (gecerliMi(s, an) !== true) return `İmzanın sertifikası geçerli değil (geçerlilik ${tarih(s.gecerlilikBas)} – ${tarih(s.gecerlilikSon)}).`;
   }

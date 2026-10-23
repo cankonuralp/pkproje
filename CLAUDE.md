@@ -553,12 +553,14 @@ pkproje/
                             (kaynak kilidi; 2026-10-18: sertifika YÜKLEME ANINDA geçerli olmalı — damga zamanı kullanılmaz; DSS iptal kanıtı "iptal" ise red) · İMZA ÜRETİMİ probata-sign'da (yazıcılar, zaman damgası / iptal kanıtı istemcisi probata'dan çıktı) · test verisi
                             üreticisi tests/yardimci/imza-uret/ (CMS kurulumu, yer tutucu, artımlı ek, DSS + belge damgası; yalnız testler) + gerçek kriptografi
                             tests/yardimci/gercek-imza.ts (uydurma makam) · kilit tests/imza-ayrim.test.ts (src tests/'i içe aktarmaz; src/server/imza/'de imza
-                            üreten işlev adı yok) + bozan · 2026-10-23 İPTAL ANI (probata-sign denetimi 2026-10-18, YÜKSEK): DSS'teki bütün sağlam OCSP / iptal
+                            üreten işlev adı yok; 2026-10-23 ağa da çıkmaz — ağ istemcisi adı IMZA_AG_ADLARI ve ağ izi: fetch, node:http / https / net / tls /
+                            dns, WebSocket) + bozan · 2026-10-23 İPTAL ANI (probata-sign denetimi 2026-10-18, YÜKSEK): DSS'teki bütün sağlam OCSP / iptal
                             listesi kanıtı zamanlarıyla toplanır (pdf-imzalar.ts iptalKanitlari), karar imza ANINA göre (iptal.ts iptalKarari, saf: imza anında
                             ya da önce "iptal" — iptal anı okunamazsa da — iptaldir, "geçerli" diyen ezemez; "geçerli" yalnız thisUpdate ≥ an ve nextUpdate ≥ an
                             ise; an = sağlam imza damgası → imzayı kapsayan belge damgası → çözüm anı, pdfImzalariniCozumle { simdi }); yükleme kapısı
                             (yukleme.ts) damgaya güvenmez (2026-10-18: damga sunucusu güvenilir listeye bağlı değil) — kanıtları YÜKLEME ANINA göre yeniden
-                            karara verir, "iptal" ise ret · kilit tests/iptal-zamani.test.ts (örnekler tests/yardimci/iptal-zamani.ts) + bozan iptal-zamani
+                            karara verir, "iptal" ise ret (damga anına göre "iptal" de ret — ileri tarihli damga) · imzası tutmayan kanıt sayılmaz · kilit
+                            tests/iptal-zamani.test.ts (örnekler tests/yardimci/iptal-zamani.ts; 2026-10-23 denetimi: süzgeç, an koşulları, halka) + bozan iptal-zamani
   src/server/saglik.ts      SAĞLIK (350; 09-G5): /api/saglik denetimleri (db/saglik.ts → saglik_denetimi + 383 is_denetimi — takılı iş, 0072; geçerli tanım 0053 — bağlanan rol, göç sayısı;
                             db/son-goc.ts SON_GOC + GOC_SAYISI — her yeni göçte ikisi güncellenir, testle kilitli) · canlı duman testi: node tools/duman.mjs (salt okunur, çıkış kodu)
                             · FV7 (2026-10-15) SAĞLIK HER PROJEDE: /api/saglik'e "firma_vt" — firma adresinde o firmanın veritabanı (kiraciHavuzu, kiracı

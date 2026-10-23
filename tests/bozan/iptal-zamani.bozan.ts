@@ -15,14 +15,23 @@
    11. yükleme kapısı iptal durumuna bakmazsa imza anında iptal edilmiş sertifikanın PDF'i kabul edilir (c — eski hâl);
    12. kapı kendi yükleme anını çözümleyiciye vermezse damgasız imzanın iptal kararı başka bir ana göre verilir;
    13. kapı damga anına göre karara (yalnız i.iptal) güvenirse iptalden sonra yüklenen belge kabul edilir (d — damga güvenilir listeye bağlı
-       değil, geriye tarihli basılabilir; 2026-10-18). */
+       değil, geriye tarihli basılabilir; 2026-10-18).
+   2026-10-23 denetim bulguları (her biri önceden kilitsizdi — bozulunca bütün imza kilitleri fail 0 veriyordu):
+   14. iptal listesinin imza süzgeci (r.imza === "tamam") kalkarsa verenin adıyla başka anahtarın "geçerli" listesi B-LT, "iptal" listesi ret (g, g3);
+   15. OCSP cevabının imza süzgeci kalkarsa yetkisiz imzacının "geçerli" cevabı B-LT saydırır (g2);
+   16. imza damgasının sağlamlığı aranmazsa izi bozuk damga imza anı olur;
+   17. belge damgasının sağlamlığı aranmazsa izi bozuk belge damgası imza anı olur;
+   18. belge damgasının imzayı kapsaması (boslukBas ≥ kapsamSon) aranmazsa imzadan önce basılmış belge damgası imza anı olur;
+   19. imzayı kapsayan İLK belge damgası yerine sonuncusu alınırsa imza anı ileri kayar;
+   20. belge damgası imza damgasından önce gelirse imza anı ileri kayar;
+   21. kapı damga anına göre kararı (i.iptal) bırakırsa ileri tarihli damgalı, kanıtı "iptal" diyen belge kabul edilir. */
 import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { after, test } from "node:test";
-import { IPTAL_RET, SIMDI, T, dk, imzaliDss, iptalK, kanitliBelge, senaryo } from "../yardimci/iptal-zamani.ts";
+import { IMZA_ANI, IPTAL_RET, SIMDI, T, dk, imzaliDss, iptalK, kanitliBelge, senaryo } from "../yardimci/iptal-zamani.ts";
 
 const IPTAL = "src/server/imza/iptal.ts", PDF = "src/server/imza/pdf-imzalar.ts", YUKLEME = "src/server/imza/yukleme.ts";
 const ZINCIR = [IPTAL, PDF, YUKLEME];
@@ -61,6 +70,10 @@ test("zincir sağlamken (bozulmamış kopya) senaryolar kilitteki gibi — olums
   assert.deepEqual(["a", "b", "c", "c2", "d", "e", "e2", "f"].map((s) => iptalDurumu(m, senaryo(s).pdf())),
     [null, "gecerli", "iptal", "iptal", "gecerli", null, null, "iptal"]);
   assert.equal(kapi(m, senaryo("c").pdf()), IPTAL_RET);
+  assert.deepEqual(["g", "g2", "g3"].map((s) => iptalDurumu(m, senaryo(s).pdf())), [null, null, null]);
+  assert.deepEqual([IMZA_ANI.bozukImzaDamgasi(), IMZA_ANI.bozukBelgeDamgasi(), IMZA_ANI.oncekiBelgeDamgasi(), IMZA_ANI.ikiBelgeDamgasi(),
+    IMZA_ANI.imzaVeBelgeDamgasi()].map((pdf) => iptalDurumu(m, pdf)), [null, null, null, "gecerli", "gecerli"]);
+  assert.equal(kapi(m, IMZA_ANI.ileriDamga()), IPTAL_RET);
 });
 
 test("1: üretim zamanı aranmazsa bayat OCSP ve süresi dolmuş liste 'gecerli' yapar", async () => {
@@ -134,4 +147,48 @@ test("12: kapı yükleme anını çözümleyiciye vermezse damgasız imzanın ip
 test("13: kapı damga anına göre karara güvenirse iptalden sonra yüklenen belge kabul edilir", async () => {
   const m = await bozuk(YUKLEME, "i.iptal === \"iptal\" || iptalKarari(i.iptalKanitlari, an) === \"iptal\"", "i.iptal === \"iptal\"");
   assert.equal(kapi(m, senaryo("d").pdf()), null, "bozuk: yükleme anına göre karar yine verildi");
+});
+
+const duzey = (m: { p: P }, pdf: Buffer) => m.p.pdfImzalariniCozumle(pdf, { simdi: SIMDI }).duzey;
+
+test("14: iptal listesinin imza süzgeci kalkarsa başka anahtarın 'geçerli' listesi B-LT saydırır, 'iptal' listesi reddettirir", async () => {
+  const m = await bozuk(PDF, 'if (r.imza === "tamam" && r.durum !== "bilinmiyor") l.push({ tur: "crl"', 'if (r.durum !== "bilinmiyor") l.push({ tur: "crl"');
+  assert.deepEqual([iptalDurumu(m, senaryo("g").pdf()), duzey(m, senaryo("g").pdf())], ["gecerli", "B-LT"], "bozuk: imzası tutmayan liste yine düştü");
+  assert.equal(kapi(m, senaryo("g3").pdf()), IPTAL_RET, "bozuk: imzası tutmayan iptal listesi yine sayılmadı");
+});
+
+test("15: OCSP cevabının imza süzgeci kalkarsa yetkisiz imzacının 'geçerli' cevabı B-LT saydırır", async () => {
+  const m = await bozuk(PDF, 'if (r.imza === "tamam" && r.durum !== "bilinmiyor") l.push({ tur: "ocsp"', 'if (r.durum !== "bilinmiyor") l.push({ tur: "ocsp"');
+  assert.deepEqual([iptalDurumu(m, senaryo("g2").pdf()), duzey(m, senaryo("g2").pdf())], ["gecerli", "B-LT"], "bozuk: yetkisiz cevap yine düştü");
+});
+
+test("16: imza damgasının sağlamlığı aranmazsa izi bozuk damga imza anı olur", async () => {
+  const m = await bozuk(PDF, "(damgaSaglam(bilgi.damga) ? bilgi.damga!.zaman : null)", "(bilgi.damga?.zaman ?? null)");
+  assert.equal(iptalDurumu(m, IMZA_ANI.bozukImzaDamgasi()), "gecerli", "bozuk: bozuk damga yine an sayılmadı");
+});
+
+test("17: belge damgasının sağlamlığı aranmazsa izi bozuk belge damgası imza anı olur", async () => {
+  const m = await bozuk(PDF, 'd.tur === "belge_damgasi" && saglam(d) && d.boslukBas >= bilgi.kapsamSon', 'd.tur === "belge_damgasi" && d.boslukBas >= bilgi.kapsamSon');
+  assert.equal(iptalDurumu(m, IMZA_ANI.bozukBelgeDamgasi()), "gecerli", "bozuk: bozuk belge damgası yine an sayılmadı");
+});
+
+test("18: belge damgasının imzayı kapsaması aranmazsa imzadan önce basılmış belge damgası imza anı olur", async () => {
+  const m = await bozuk(PDF, "saglam(d) && d.boslukBas >= bilgi.kapsamSon && d.damga?.zaman", "saglam(d) && d.damga?.zaman");
+  assert.equal(iptalDurumu(m, IMZA_ANI.oncekiBelgeDamgasi()), "gecerli", "bozuk: önceki belge damgası yine an sayılmadı");
+});
+
+test("19: imzayı kapsayan ilk belge damgası yerine sonuncusu alınırsa imza anı ileri kayar", async () => {
+  const m = await bozuk(PDF, "const belgeDamgasi = imzalar.find((d) =>", "const belgeDamgasi = imzalar.findLast((d) =>");
+  assert.equal(iptalDurumu(m, IMZA_ANI.ikiBelgeDamgasi()), null, "bozuk: ilk belge damgası yine an sayıldı");
+});
+
+test("20: belge damgası imza damgasından önce gelirse imza anı ileri kayar", async () => {
+  const m = await bozuk(PDF, "const an = (damgaSaglam(bilgi.damga) ? bilgi.damga!.zaman : null) ?? belgeDamgasi ?? cozumAni;",
+    "const an = belgeDamgasi ?? (damgaSaglam(bilgi.damga) ? bilgi.damga!.zaman : null) ?? cozumAni;");
+  assert.equal(iptalDurumu(m, IMZA_ANI.imzaVeBelgeDamgasi()), null, "bozuk: imza damgası yine önce geldi");
+});
+
+test("21: kapı damga anına göre kararı bırakırsa ileri tarihli damgalı, kanıtı 'iptal' diyen belge kabul edilir", async () => {
+  const m = await bozuk(YUKLEME, 'if (i.iptal === "iptal" || iptalKarari(', "if (iptalKarari(");
+  assert.equal(kapi(m, IMZA_ANI.ileriDamga()), null, "bozuk: damga anına göre karar yine reddetti");
 });

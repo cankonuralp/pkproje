@@ -936,12 +936,28 @@ export function islemAlanlariDenetimi(islemler: readonly { ad: string; girdi: un
       yer tutucunun içerik yazıcısı (icerikYaz), artımlı ekin sözlük / akış yazıcıları (degerYaz, akisGovdesi) dahil;
     · artımlı ek yazıcısının adı genel ("ekle") — onu adıyla değil İZİYLE yakalarız: nesne, çapraz başvuru ve dosya sonu YAZIMI (okuyucu bunları
       yalnız arar, yazmaz; 2026-10-17 denetim bulgusu: eski kilit yazıcının geri gelişini görmüyordu);
+    · src/server/imza/** AĞA ÇIKMAZ (2026-10-23 denetim bulgusu: kilit ağdan kanıt alan ya da istek kuran işlevi görmüyordu — iptal.ts'e
+      `ocspIstegi` + fetch eklenince fail 0): probata-sign'ın ağ istemcilerinin adları (IMZA_AG_ADLARI — yorum dahil) ve ağ İZİ (yorumsuz metinde
+      fetch, ağ modülü içe aktarması, XMLHttpRequest / WebSocket / EventSource) geçmez. Kanıtı ve damgayı ağdan almak imza üretiminin parçası;
     · tests/yardimci/imza-uret/** her dosya bu kuralı başında söyler.
     Dönen: bulgu listesi. Kilit tests/imza-ayrim.test.ts · olumsuz kanıt tests/bozan/imza-ayrim.bozan.ts. */
 export const IMZA_URETEN_ADLAR = [
-  "imzaHazirla", "imzaTamamla", "ltvEkle", "dssEkle", "belgeDamgasiEkle", "damgaAl", "iptalKaniti", "yerTutucuEkle", "imzaliVeriKur",
+  "imzaHazirla", "imzaTamamla", "ltvEkle", "dssEkle", "belgeDamgasiEkle", "yerTutucuEkle", "imzaliVeriKur",
   "imzaliOznitelikler", "damgaOzniteligi", "icerikYaz", "degerYaz", "akisGovdesi",
 ] as const;
+/** probata-sign'ın ağ istemcileri (2026-10-23 okundu: src/imza/iptal.ts ocspIstegi · iptalKaniti; zaman-damgasi.ts damgaIstegi · damgaCevabi ·
+    damgaAl · damgaAgHatasi; kamusm.ts kimlikBasligi · kamusmDamgaAyari · kontorSor) — test verisi bunlara gerekmez, probata'da hiç yok.
+    damgaAl ve iptalKaniti 2026-10-17'den beri IMZA_URETEN_ADLAR'daydı, buraya taşındı (yakalanmaları aynı, ileti "ağ istemcisi") */
+export const IMZA_AG_ADLARI = [
+  "ocspIstegi", "iptalKaniti", "damgaIstegi", "damgaCevabi", "damgaAl", "damgaAgHatasi", "kimlikBasligi", "kamusmDamgaAyari", "kontorSor",
+] as const;
+/** ağa çıkışın kaynaktaki izleri (yorumsuz metinde): fetch (çağrı, globalThis.fetch, varsayılan değer), ağ modülü içe aktarması (node: önekli ya da
+    öneksiz http · https · http2 · net · tls · dns · dgram; undici · node-fetch · axios — statik, yan etkili, dinamik, require), tarayıcı ağ nesneleri */
+export const IMZA_AG_IZLERI: readonly (readonly [string, RegExp])[] = [
+  ["fetch", /\bfetch\b/],
+  ["ağ modülü içe aktarması", /\b(?:from|import|require)\s*\(?\s*["'](?:node:)?(?:https?|http2|net|tls|dns|dgram|undici|node-fetch|axios)(?:\/[^"']*)?["']/],
+  ["tarayıcı ağ nesnesi", /\b(?:XMLHttpRequest|WebSocket|EventSource)\b/],
+];
 /** PDF yazıcısının kaynaktaki izleri (yorumsuz metinde): "\nendobj\n" yazmak, boş xref girdisi "65535 f", "%%EOF\n" yazmak */
 export const IMZA_YAZICI_IZLERI: readonly (readonly [string, RegExp])[] = [
   ["nesne yazımı (endobj)", /endobj\\n/],
@@ -953,6 +969,7 @@ export function imzaAyrimiEksikleri(metinler: readonly { ad: string; metin: stri
   const hata: string[] = [];
   const kalip = /\b(?:from|import)\s*\(?\s*["']([^"']+)["']|\brequire\s*\(\s*["']([^"']+)["']/g;
   const adlar = new RegExp(`\\b(?:${IMZA_URETEN_ADLAR.join("|")})\\b`, "g");
+  const agAdlari = new RegExp(`\\b(?:${IMZA_AG_ADLARI.join("|")})\\b`, "g");
   for (const { ad, metin } of metinler) {
     if (ad.startsWith("src/")) {
       for (const m of yorumsuz(metin).matchAll(kalip)) {
@@ -962,8 +979,10 @@ export function imzaAyrimiEksikleri(metinler: readonly { ad: string; metin: stri
     }
     if (ad.startsWith("src/server/imza/")) {
       for (const a of new Set([...metin.matchAll(adlar)].map((m) => m[0]))) hata.push(`${ad}: imza üreten işlev (${a}) — imza üretimi probata-sign'da`);
+      for (const a of new Set([...metin.matchAll(agAdlari)].map((m) => m[0]))) hata.push(`${ad}: ağ istemcisi (${a}) — kanıtı / damgayı ağdan almak probata-sign'da`);
       const kod = yorumsuz(metin);
       for (const [ne, iz] of IMZA_YAZICI_IZLERI) if (iz.test(kod)) hata.push(`${ad}: PDF yazıcısı izi (${ne}) — artımlı ek yazımı probata-sign'da`);
+      for (const [ne, iz] of IMZA_AG_IZLERI) if (iz.test(kod)) hata.push(`${ad}: ağ izi (${ne}) — imza denetimi ağa çıkmaz, ağ istemcisi probata-sign'da`);
     }
     if (ad.startsWith("tests/yardimci/imza-uret/") && !metin.startsWith(IMZA_URET_BASLIGI)) hata.push(`${ad}: başında "yalnız test verisi" kuralı yok`);
   }

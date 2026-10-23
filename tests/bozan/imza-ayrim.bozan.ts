@@ -3,7 +3,10 @@
    1. Ürün kodu test verisi üreticisini içe aktarınca (göreli statik, dinamik, "@/", require, yeniden dışa açma) yakalanır; yorumdaki söz sayılmaz.
    2. src/server/imza/ içine imza üreten işlev geri gelince (var olan dosyaya ya da taşınan dosya geri konunca) yakalanır; aynı ad imza klasörü
       dışında (raporlar'ın kendi imzaHazirla'sı) sayılmaz.
-   3. Test verisi üreticisinin başındaki kural silinince yakalanır. */
+   3. Test verisi üreticisinin başındaki kural silinince yakalanır.
+   4. (2026-10-23 denetim bulgusu) src/server/imza/ ağa çıkınca yakalanır: probata-sign'ın ağ istemcisi adı (ocspIstegi, iptalKaniti …) ya da ağ izi
+      (fetch çağrısı, globalThis.fetch, node:https / net / tls / dns içe aktarması — statik, dinamik, require —, XMLHttpRequest / WebSocket); yorumdaki
+      söz izi saydırmaz; imza klasörü dışındaki ağ istemcisi (e-posta sağlayıcısı) sayılmaz. */
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { dosyalar, imzaAyrimiEksikleri, oku } from "../yardimci/denetimler.ts";
@@ -32,7 +35,6 @@ test("1. ürün kodu test verisi üreticisini içe aktarınca yakalanır (kilidi
 test("2. src/server/imza/ içine imza üreten işlev geri gelince yakalanır (kilidin koruduğu açık)", () => {
   for (const [ad, satir, isim] of [
     ["src/server/imza/pdf-imzalar.ts", "export function imzaTamamla(): void {}", "imzaTamamla"],
-    ["src/server/imza/iptal.ts", "export async function iptalKaniti(): Promise<void> {}", "iptalKaniti"],
     ["src/server/imza/pdf-ek.ts", "export const dssEkle = () => null;", "dssEkle"],
   ] as const) {
     assert.ok(imzaAyrimiEksikleri(ekle(ad, satir)).includes(`${ad}: imza üreten işlev (${isim}) — imza üretimi probata-sign'da`), `bozuk: ${ad}`);
@@ -66,4 +68,39 @@ test("3. test verisi üreticisinin başındaki kural silinince yakalanır (kilid
   const bozuk = temel.map((d) => (d.ad === ad ? { ...d, metin: d.metin.replace(/^\/\* YALNIZ TEST VERİSİ ÜRETİR;/, "/* TEST VERİSİ;") } : d));
   assert.notDeepEqual(bozuk.find((d) => d.ad === ad)!.metin, temel.find((d) => d.ad === ad)!.metin, "bozulacak satır kaynakta");
   assert.ok(imzaAyrimiEksikleri(bozuk).includes(`${ad}: başında "yalnız test verisi" kuralı yok`), "bozuk: kural silindi");
+});
+
+test("4. src/server/imza/ ağa çıkınca yakalanır: ağ istemcisi adı ya da ağ izi (kilidin koruduğu açık — 2026-10-23 denetim bulgusu)", () => {
+  /* denetçinin örneği: istek kurucu + fetch — iki bulgu birden */
+  const ornek = imzaAyrimiEksikleri(ekle("src/server/imza/iptal.ts", 'export function ocspIstegi(): Promise<unknown> { return fetch("http://ornek.invalid"); }'));
+  assert.ok(ornek.includes("src/server/imza/iptal.ts: ağ istemcisi (ocspIstegi) — kanıtı / damgayı ağdan almak probata-sign'da"), "bozuk: ocspIstegi");
+  assert.ok(ornek.includes("src/server/imza/iptal.ts: ağ izi (fetch) — imza denetimi ağa çıkmaz, ağ istemcisi probata-sign'da"), "bozuk: fetch");
+  /* ağ istemcilerinin adları (2026-10-17'de "imza üreten" listesindeydi: iptalKaniti, damgaAl) */
+  for (const [ad, satir, isim] of [
+    ["src/server/imza/iptal.ts", "export async function iptalKaniti(): Promise<void> {}", "iptalKaniti"],
+    ["src/server/imza/cms.ts", "export const damgaAl = async () => null;", "damgaAl"],
+    ["src/server/imza/cms.ts", "export function damgaIstegi(): Buffer { return Buffer.alloc(0); }", "damgaIstegi"],
+    ["src/server/imza/pdf-imzalar.ts", "/* kontorSor eklenecek */", "kontorSor"],
+  ] as const) {
+    assert.ok(imzaAyrimiEksikleri(ekle(ad, satir)).includes(`${ad}: ağ istemcisi (${isim}) — kanıtı / damgayı ağdan almak probata-sign'da`), `bozuk: ${isim}`);
+  }
+  /* ağ izi, genel adlı işlevde */
+  for (const [satir, ne] of [
+    ["const getir = globalThis.fetch;", "fetch"],
+    ["export async function al(u: string) { return (await fetch(u)).arrayBuffer(); }", "fetch"],
+    ['import { request } from "node:https";', "ağ modülü içe aktarması"],
+    ['import "node:tls";', "ağ modülü içe aktarması"],
+    ['const n = await import("node:net");', "ağ modülü içe aktarması"],
+    ['const d = require("dns/promises");', "ağ modülü içe aktarması"],
+    ['import { request as r } from "undici";', "ağ modülü içe aktarması"],
+    ["const s = new WebSocket(adres);", "tarayıcı ağ nesnesi"],
+    ["const x = new XMLHttpRequest();", "tarayıcı ağ nesnesi"],
+  ] as const) {
+    const b = imzaAyrimiEksikleri(ekle("src/server/imza/yukleme.ts", satir));
+    assert.ok(b.includes(`src/server/imza/yukleme.ts: ağ izi (${ne}) — imza denetimi ağa çıkmaz, ağ istemcisi probata-sign'da`), `bozuk: ${satir}`);
+  }
+  /* yorumdaki söz iz saydırmaz; imza klasörü dışındaki ağ istemcisi sayılmaz */
+  assert.deepEqual(imzaAyrimiEksikleri(ekle("src/server/imza/iptal.ts", "/* kanıtı fetch ile almak probata-sign'da */")), [], "yorum sayılmaz");
+  assert.ok(/\bfetch\b/.test(oku("src/server/eposta/saglayici.ts")), "imza klasörü dışında gerçek ağ istemcisi yerinde");
+  assert.deepEqual(imzaAyrimiEksikleri(ekle("src/server/eposta/saglayici.ts", 'import { request } from "node:https";')), [], "imza klasörü dışında sayılmaz");
 });

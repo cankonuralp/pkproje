@@ -32,18 +32,22 @@ Kod içi başvurular bu kalemi "IMZA-SERVISI.md ES1" diye anar.
 - **`src/server/imza/` — yalnız okuma / denetim** (saf; saldırganın girdisinde sınırlı):
   - `der.ts` DER / BER okuyucu · `sertifika.ts` X.509 (5070 nitelikli işareti, zincir) · `cms.ts` CMS doğrulama (imzalı sertifika bağı, damga
     sunucusu denetimi, SHA-1 yok) · `pdf-ek.ts` PDF nesne okuyucu (xref zinciri, nesne akışı, onarım) · `iptal.ts` OCSP / iptal listesi
-    çözümlemesi (ağ yok).
+    çözümlemesi (ağ yok — ayrım kilidi `tests/imza-ayrim.test.ts` ağ istemcisinin adını ve ağ izini de yakalar: fetch, `node:http` / `https` /
+    `net` / `tls` / `dns`; 2026-10-23).
   - `pdf-imzalar.ts` çözümleyici: her imza için bütünlük, imza değeri, imzalayan, imza / belge zaman damgası, DSS (yalnız kataloğun) ve içindeki
     iptal kanıtı, imzadan sonraki değişiklik, düzey B-B … B-LTA.
-  - `yukleme.ts` `ekImzaNedeni`: eklenen imza sağlam, belgenin tamamını kapsıyor, sertifikaya bağlı, 5070 nitelikli, imza anında geçerli, imza
-    anında iptal edilmemiş, sonradan değişmemiş olmalı. **Bağlı:** rapor imzası, teknik yönetici imzası, Onaylar › Diğer. Yapı denetimini
-    (`imzaliPdfGecerli` / `imzaliTaban`) çağıran her yükleme bunu da çağırır (kaynak kilidi `tests/imza-cozum.test.ts`).
+  - `yukleme.ts` `ekImzaNedeni`: eklenen imza sağlam, belgenin tamamını kapsıyor, sertifikaya bağlı, 5070 nitelikli, YÜKLEME ANINDA geçerli ve
+    yükleme anında iptal edilmemiş (damga anına güvenilmez — aşağıda "İptal anı"), sonradan değişmemiş olmalı. **Bağlı:** rapor imzası, teknik
+    yönetici imzası, Onaylar › Diğer. Yapı denetimini (`imzaliPdfGecerli` / `imzaliTaban`) çağıran her yükleme bunu da çağırır (kaynak kilidi
+    `tests/imza-cozum.test.ts`).
   - **İptal anı (2026-10-23; probata-sign denetimi 2026-10-18, YÜKSEK — aynı hata probata'da da vardı):** DSS'teki kanıtların hepsi zamanlarıyla
     toplanır, karar imza anına göre verilir (`iptal.ts` `iptalKarari`): imza anında ya da önce "iptal" diyen sağlam kanıt — iptal anı okunamasa
     da — iptaldir, "geçerli" diyen başka kanıt bunu ezemez; "geçerli" yalnız imza anından sonra üretilmiş ve süresi dolmamışsa sayılır.
     Çözümleyici kararı damga anına göre verir; **yükleme kapısı damgaya güvenmez** (2026-10-18: damga sunucusu güvenilir listeye bağlı değil,
-    geriye tarihli damga basılabilir) ve kanıtları yükleme anına göre yeniden değerlendirir — "iptal" ise ret. Kanıtı olmayan imza bugünkü gibi
-    kabul (kanıtı ağdan almak probata'da yok). Kilit `tests/iptal-zamani.test.ts` + bozan.
+    geriye tarihli damga basılabilir) ve kanıtları yükleme anına göre yeniden değerlendirir — "iptal" ise ret; damga anına göre karar "iptal" ise
+    de ret (yalnız ileri tarihli damgada ek ret getirir). İmza anı: sağlam imza damgası, yoksa imzayı kapsayan ilk sağlam belge damgası, yoksa
+    çözüm anı; imzası tutmayan kanıt sayılmaz. Kanıtı olmayan imza bugünkü gibi kabul (kanıtı ağdan almak probata'da yok). Kilit
+    `tests/iptal-zamani.test.ts` + bozan (2026-10-23 denetimi: kanıtın imza süzgeci, imza anı koşulları ve bu halka da kilitli).
 - Yapı denetimi `src/modules/raporlar/`: `imza-pdf.ts` (imzalı PDF eki beyaz listede), `imza-esdeger.ts` (imza programının yeniden yazdığı ama
   içerikçe aynı PDF), `imza-kimlik.ts` (imzalayanın adı).
 - **Güvenilir kök listesi yok** (resmî kaynaktan teyitle eklenecek): uydurma ama "nitelikli" işaretli bir zinciri bu denetim tek başına ayırt etmez.

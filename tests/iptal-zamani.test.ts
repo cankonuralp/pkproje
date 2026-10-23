@@ -13,7 +13,11 @@
       2026-10-18, geriye tarihli damga basılabilir) ve kararı yükleme anına göre verir: iptal yükleme anından önceyse ret, sonraysa kabul;
    e. süresi (nextUpdate) imzadan önce biten liste → kanıt yok;
    f. iptal anı okunamayan kanıt → iptal (her an iptal sayılır);
-   çözümleyicide imza anı: sağlam imza damgası, yoksa imzayı kapsayan sağlam belge damgası, yoksa çözüm anı (simdi); kapıda yükleme anı.
+   g. imzası tutmayan kanıt (verenin adıyla başka anahtarın listesi, yetkisiz imzacının OCSP cevabı) sayılmaz — "geçerli" B-LT saydırmaz, "iptal"
+      reddettirmez (2026-10-23 denetim bulgusu: iptalKanitlariBul'un `r.imza === "tamam"` süzgeci kilitsizdi);
+   çözümleyicide imza anı: SAĞLAM imza damgası, yoksa imzayı KAPSAYAN (imzadan sonra basılmış) ilk sağlam belge damgası, yoksa çözüm anı (simdi) —
+   bozuk damga, imzadan önceki belge damgası, sonraki belge damgası an olmaz; imza damgası belge damgasından önce gelir (2026-10-23 denetim bulgusu:
+   bu koşullar kilitsizdi); kapıda yükleme anı — damga anına göre karar "iptal" ise de ret (ileri tarihli damga; 2026-10-23 denetim bulgusu).
    Gerçek kriptografi: uydurma makam / kişi / damga sunucusu / OCSP / iptal listesi (tests/yardimci/gercek-imza.ts; imza üretimi probata-sign'da,
    burada yalnız test verisi). Olumsuz kanıt: tests/bozan/iptal-zamani.bozan.ts. */
 import assert from "node:assert/strict";
@@ -23,7 +27,7 @@ import { pdfImzalariniCozumle } from "../src/server/imza/pdf-imzalar.ts";
 import { sertifikaOku } from "../src/server/imza/sertifika.ts";
 import { ekImzaNedeni } from "../src/server/imza/yukleme.ts";
 import { TABAN_PDF, kanitliDss, pdfImzala } from "./yardimci/gercek-imza.ts";
-import { IPTAL_RET, IPTAL_SENARYOLARI, SIMDI, T, dk, imzaliDss, iptalK, kanitliBelge } from "./yardimci/iptal-zamani.ts";
+import { IMZA_ANI, IPTAL_RET, IPTAL_SENARYOLARI, SIMDI, T, dk, imzaliDss, iptalK, kanitliBelge } from "./yardimci/iptal-zamani.ts";
 
 const cozum = (pdf: Buffer, simdi = SIMDI) => pdfImzalariniCozumle(pdf, { simdi }).imzalar[0];
 
@@ -83,6 +87,35 @@ test("kapı damgaya güvenmez: iptalden sonra yüklenen belgeyi geriye tarihli (
     { ocsp: [iptalK.ocsp({ durum: "iptal", zaman: dk(65), iptalZamani: dk(60) })] });
   assert.equal(cozum(geriTarihli).iptal, "gecerli");
   assert.equal(ekImzaNedeni(iptalK.taban, geriTarihli, SIMDI), IPTAL_RET);
+});
+
+test("imza anı yalnız SAĞLAM damgadan: izi bozuk imza damgası ve izi bozuk belge damgası an olmaz (an çözüm anına düşer)", () => {
+  const bi = pdfImzalariniCozumle(IMZA_ANI.bozukImzaDamgasi(), { simdi: SIMDI }).imzalar.find((x) => x.tur === "imza")!;
+  assert.deepEqual([bi.damga?.zaman, bi.damga?.iz, bi.damga?.imza], [T.toISOString(), "bozuk", "tamam"], "damganın zamanı T, izi bozuk");
+  assert.equal(bi.iptal, null, "bozuk imza damgası imza anı sayılmadı");
+  assert.equal(cozum(IMZA_ANI.bozukImzaDamgasi(), dk(1)).iptal, "gecerli", "an çözüm anı (simdi)");
+  const c = pdfImzalariniCozumle(IMZA_ANI.bozukBelgeDamgasi(), { simdi: SIMDI });
+  const bd = c.imzalar.find((x) => x.tur === "belge_damgasi")!;
+  assert.deepEqual([bd.damga?.zaman, bd.butunluk], [T.toISOString(), "bozuk"], "belge damgasının zamanı T, izi bozuk");
+  assert.equal(c.imzalar.find((x) => x.tur === "imza")!.iptal, null, "bozuk belge damgası imza anı sayılmadı");
+});
+
+test("imza anı yalnız imzayı KAPSAYAN belge damgasından, ilkinden; imza damgası belge damgasından önce gelir", () => {
+  /* tabanda (imzadan önce) T anlı belge damgası: imzayı kapsamaz */
+  const once = pdfImzalariniCozumle(IMZA_ANI.oncekiBelgeDamgasi(), { simdi: SIMDI });
+  assert.deepEqual(once.imzalar.map((x) => x.tur), ["belge_damgasi", "imza"], "belge damgası imzadan önce");
+  assert.equal(once.imzalar[1].iptal, null, "imzadan önceki belge damgası imza anı sayılmadı");
+  /* imzadan sonra T ve T + 10 dk belge damgaları: an ilki (T) — T + 5 dk kanıt imza anını kanıtlar */
+  assert.equal(cozum(IMZA_ANI.ikiBelgeDamgasi()).iptal, "gecerli", "imzayı kapsayan ilk belge damgası");
+  /* damgalı imza (T) + T + 10 dk belge damgası: an imza damgası */
+  assert.equal(cozum(IMZA_ANI.imzaVeBelgeDamgasi()).iptal, "gecerli", "imza damgası önce");
+});
+
+test("kapı: damga anına göre karar 'iptal' ise de ret — ileri tarihli damga (iptal anı yükleme ile damga arasında)", () => {
+  const pdf = IMZA_ANI.ileriDamga();
+  assert.equal(cozum(pdf).iptal, "iptal", "damga anına (13:00) göre iptal (12:20)");
+  assert.equal(iptalKarari(cozum(pdf).iptalKanitlari, SIMDI.toISOString()), "gecerli", "yükleme anına (12:00) göre iptal değil");
+  assert.equal(ekImzaNedeni(iptalK.taban, pdf, SIMDI), IPTAL_RET, "kanıtlardan biri imzanın iptalden sonra atıldığını söylüyor");
 });
 
 test("iptalKarari (saf): saniye sınırı, okunamayan iptal anı, nextUpdate, 'bilinmiyor', 'iptal' önceliği", () => {

@@ -157,8 +157,10 @@ export function imzaEkle(pdf: Buffer, no: number, icerik: (parcalar: Buffer[]) =
   return sonuc;
 }
 
-/** PAdES imzası: kişinin anahtarıyla; istenirse imza zaman damgası */
-export function pdfImzala(pdf: Buffer, no: number, k: ReturnType<typeof denemeKimlikleri>, p: { ozet?: OzetAdi; damga?: boolean; damgaZamani?: Date; m?: string; kisi?: Kimlik } = {}): Buffer {
+/** izi bozuk damga için: damgalanan, kapsanması gereken veri değil */
+const BASKA_VERI = Buffer.from("damgalanan başka veri", "utf8");
+/** PAdES imzası: kişinin anahtarıyla; istenirse imza zaman damgası (damgaBozuk: damganın izi imza değerini tutmaz — 2026-10-23 imza anı kilidi) */
+export function pdfImzala(pdf: Buffer, no: number, k: ReturnType<typeof denemeKimlikleri>, p: { ozet?: OzetAdi; damga?: boolean; damgaZamani?: Date; damgaBozuk?: boolean; m?: string; kisi?: Kimlik } = {}): Buffer {
   const ozet = p.ozet ?? "sha256", kisi = p.kisi ?? k.kisi;
   return imzaEkle(pdf, no, (parcalar) => {
     const h = createHash(ozet); for (const x of parcalar) h.update(x);
@@ -166,14 +168,14 @@ export function pdfImzala(pdf: Buffer, no: number, k: ReturnType<typeof denemeKi
     const imza = sign(ozet, oz, kisi.anahtar);
     return imzaliVeriKur({
       imzaliOz: oz, imzaDegeri: imza, sertifikaDer: kisi.der, ekSertifikalar: [k.ara.der, k.kok.der], ozet, anahtarTuru: kisi.tur,
-      imzasizOz: p.damga ? [damgaOzniteligi(damgaYap([imza], k.tsa, [k.ara], p.damgaZamani))] : [],
+      imzasizOz: p.damga ? [damgaOzniteligi(damgaYap([p.damgaBozuk ? BASKA_VERI : imza], k.tsa, [k.ara], p.damgaZamani))] : [],
     });
   }, { m: p.m ?? "D:20261017120000+03'00'" });
 }
 
-/** belge zaman damgası (ETSI.RFC3161) */
-export const belgeDamgala = (pdf: Buffer, no: number, k: ReturnType<typeof denemeKimlikleri>, zaman?: Date) =>
-  imzaEkle(pdf, no, (parcalar) => damgaYap(parcalar, k.tsa, [k.ara], zaman), { tur: "DocTimeStamp" });
+/** belge zaman damgası (ETSI.RFC3161); p.bozuk: damganın izi kapsanan baytları tutmaz (2026-10-23 imza anı kilidi) */
+export const belgeDamgala = (pdf: Buffer, no: number, k: ReturnType<typeof denemeKimlikleri>, zaman?: Date, p: { bozuk?: boolean } = {}) =>
+  imzaEkle(pdf, no, (parcalar) => damgaYap(p.bozuk ? [BASKA_VERI] : parcalar, k.tsa, [k.ara], zaman), { tur: "DocTimeStamp" });
 
 /** DSS sözlüğü + kataloğun güncel hâli: kişinin OCSP cevabı (verenin imzası) ve verenin iptal listesi, gerçek akışlar olarak */
 export function dssEkle(pdf: Buffer, no: number, k: ReturnType<typeof denemeKimlikleri>, ocsp = 1, crl = 1): Buffer {
