@@ -2527,7 +2527,24 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
-- 2026-10-23 (SUNUM 597, onay bekliyor; kod yok): **BASILI FORMDAN RAPOR ŞABLONU** — https://claude.ai/artifact/HqXHBznKMmbeDPWUPLKYdP. Reisim:
+- 2026-10-23 (YAPILDI — yayın aşağıdaki satırda): **BASILI FORMDAN RAPOR ŞABLONU** — reisim (sunum 597'nin ikinci hâline): *"bakanlık formatından farklı,
+  ben bunu yükleyince format buna dönüşsün format düzenleyicide bundan düzenleme yapabileyim istiyorum anlamak çok mu zor"*, *"pdfi yüklüyorum düzenle
+  diyorum rapor şablonunu aynı eski pdfden sürüm 1 den devam ediyor sürüm 2 ne işe yarıyor"*, *"işin içine say asistanı falan neden katıyosun zaten bu
+  artık başka bi konu"* → karar (sunumun K1–K4'ünün yerine): yükleme penceresinde "Rapor şablonunu bu PDF'e göre kur" İŞARETLİ gelir; yükleyince
+  PDF tek seferlik yapay zekâ okumasıyla (S.A.Y sohbeti DEĞİL) formatın tamamına çevrilir, türün TASLAĞI olur, Format kurucu açılır — düzenlenir,
+  Yayınla ile geçer (yayındaki sürüm o ana kadar değişmez); basılı format satırında "Şablonu bundan kur" (eski sürümden ya da yeniden). Belge FORMUN
+  görünümünde: format tanımına görünüm (gorunum.basTuru tablo / yalnız ad; gorunum.stil bölüm başlığı zemini pembe / gri / yok, hizası sol / orta,
+  etiket mavi / kalın) ve kontrol listesine yanYana (belgede iki sütun) + numara (grup / baştan sona) — belge, kâğıt, saha ekranı ortak (duzen.ts
+  belgeStilSiniflari, basTuru, maddeNumaralari); kurucuda "Belge görünümü" bölümü, listenin bölüm ayarında iki sütun + numara. Çeviri: istek
+  src/server/yz/basili.ts (Haiku 5.5, düşünme açık, derinlik yüksek, PDF + türün adı; şema bütün alanları zorunlu, birleşik türsüz), çeviri
+  rapor-format/basili.ts (her parça şemadan; formda yoksa numarasız "Kullanılan cihazlar" ve sonda numarasız "Fotoğraflar"; zorunlu firma satırları
+  eklenir; uzmanın imza hücresi eklenir; değerler formdan alınmaz), sunucu rapor-format/server/basili.ts (ayırma → çağrı işlem dışında → taslak:
+  formatlar.ts taslakYaz), PDF ekipman-turleri basiliPdf; tür sayfası işlev süresi 300 sn. AYRICA BULUNDU: format yapıcının "Yapay zekâya anlat" /
+  "Belgeden başlat" şemasında 21 birleşik türlü alan vardı (hizmetin sınırı 16 — Anthropic yapılandırılmış çıktı belgesi; canlı günlük Hobby'de 1 saat,
+  ölçemedim) → birleşik türsüz (boş değer boş yazı / 0); kilit tests/yz-format.test.ts semaKarmasikligi. Kilitler: tests/basili-format.test.ts,
+  tests/yz-basili.test.ts, olumsuz kanıt tests/bozan/basili-format.bozan.ts (5), e2e/format-yz.spec.ts (taklit uydurma vinç formuyla: yükle → kurucu
+  formun görünümünde, numaralar 3 tespit / 4 notlar, belgede liste 6 sütun). Reisim'in formu gerçek firmanın — depoya, teste girmedi.
+- 2026-10-23 (SUNUM 597 — reisim'in yukarıdaki kararıyla aşıldı; kod yok): **BASILI FORMDAN RAPOR ŞABLONU** — https://claude.ai/artifact/HqXHBznKMmbeDPWUPLKYdP. Reisim:
   *"yeni pdf yükledim düzenle dedim ama eski sürümden düzenlemeye devam etti … tip olarak ekteki pdf i attım ama ona göre şekillenmedi format yapıcı"*
   (Asılı erişim donanımı türüne basılı format PDF'i sürüm 2; ardından yayındaki ZPKR07 sürümünde Düzenle — veritabanında 19:11 UTC'de ZPKR07 kaynaklı
   taslak; S.A.Y kullanılmadı). Teşhis: basılı format PDF'i yalnız saklanıyor, şablona bağlı değil; Düzenle her zaman yayındaki sürümden; "Belgeden

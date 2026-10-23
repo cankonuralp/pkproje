@@ -211,6 +211,12 @@ pkproje/
                             Uygun değil VE Şartlı uygun sürüme) · raporlar onayaGonder seçeneği formatta ister, imzalıda uygunsuzluk · rozet / müşteri paneli /
                             doğrulama / S.A.Y ("sartli_secenek", rapora "şartlı uygun") · kilit tests/sartli-uygun, onaylar + raporlar (PG), bozan
   src/modules/rapor-format/ RAPOR FORMATI (2026-10-04, 308): sürümlü tanım (rapor_format, göç 0022: taslak → yayında → eski; yayınlanan değişmez) ·
+                            2026-10-23 BASILI FORMDAN ŞABLON (reisim: "ben bunu yükleyince format buna dönüşsün"): tür sayfasında PDF yüklenince ("Rapor
+                            şablonunu bu PDF'e göre kur" işaretli) ya da satırdaki "Şablonu bundan kur" → server/basili.ts (ayırma, çağrı işlem dışında —
+                            src/server/yz/basili.ts istek / cevap, şema birleşik türsüz) → basili.ts saf çeviri → formatlar.ts taslakYaz → Format kurucu ·
+                            PDF ekipman-turleri basiliPdf · belge görünümü tanim.ts gorunum.basTuru / stil, liste yanYana / numara (duzen.ts belgeStilSiniflari,
+                            basTuru, maddeNumaralari; belge, kâğıt, saha ortak); kurucuda "Belge görünümü" · kilit tests/basili-format, yz-basili, bozan
+                            basili-format, e2e format-yz ·
                             şablondan başlat · taslak kaydet · yayınla (kilitli Bakanlık öğesi ENGEL, öteki denetim uyarı) · yayındaki format;
                             ekran: tür sayfası "Rapor şablonu" + önizleme /ekipman-turleri/<tür>/sablon/<sürüm> · FORMAT KURUCU (338, K4):
                             …/sablon/<taslak>/kurucu (ui/FormatKurucu.tsx; saf düzenleme kurucu.ts — yeni kimlik tekil, kilitli bölüm / öğe silinmez) · 370 taslak sil (0065) → 504 surumSil: taslak +

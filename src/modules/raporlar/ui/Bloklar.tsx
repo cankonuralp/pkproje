@@ -38,7 +38,7 @@ import { tarihNo } from "../../../components/secim/tarih";
 import { Tus, tusSinifi } from "../../../components/tus/Tus";
 import { SINIR_ISARETI } from "../../../format/hesap";
 import { ELLE_GEREKCE, ELLE_GEREKCE_EN_AZ, ELLE_SONUC, satirAnahtari, sonucKurallari, type Degerlendirme, type SatirDegerlendirmesi } from "../../../format/motor";
-import { imzaSatirlari, olcumBasliklari, sonucMetinleri, sonucSozcugu } from "../../../format/duzen";
+import { imzaSatirlari, maddeNumaralari, olcumBasliklari, sonucMetinleri, sonucSozcugu } from "../../../format/duzen";
 import { formulluAlan, formulluDeger, formulluMadde, formulluSutun, type FormulYeri } from "../../../format/formul";
 import { doldurma, ekAnahtari, HAZIR_AD, raporSonucuMu, type Bolum, type BolumOf, type Cevaplar, type Sinir } from "../../../format/tanim";
 import { meslek } from "../../personel/sema";
@@ -373,6 +373,8 @@ const ortakStd = (g: GrupT) => {
 function ListeBlok({ b, no, bag }: { b: BolumOf<"liste">; no: string | null; bag: Baglam }) {
   const on = no ? `${no}.` : "";
   const gruplu = b.gruplar.length > 1 || b.gruplar.some((g) => g.ad);
+  /* 2026-10-23 (basılı formdan şablon): numara baştan sona (1, 2, 3 …) — belge ve kâğıtla aynı (duzen.ts maddeNumaralari); grup başlığı numarasız */
+  const surekli = b.numara === "surekli" ? maddeNumaralari(b) : null;
   const sy = useSayfa(b.gruplar.reduce((n, g) => n + g.maddeler.length, 0), { deger: bag.bolumSayfasi(b.id), degistir: (n) => bag.bolumSayfaGit(b.id, n) });
   return (
     <>
@@ -382,12 +384,12 @@ function ListeBlok({ b, no, bag }: { b: BolumOf<"liste">; no: string | null; bag
           <div key={g.id} className={stil.grup}>
             {g.ad && (
               <div className={stil.grupBas}>
-                <h3 className={stil.grupBaslik}>{on}{gi + 1} · {g.ad}</h3>
-                <TalimatTusu ad={g.ad} baslik={`Talimat · ${on}${gi + 1} ${g.ad}`} parcalar={grupTalimati(g, (m, mi) => `${on}${gi + 1}.${mi + 1} ${m.metin}`)} />
+                <h3 className={stil.grupBaslik}>{surekli ? g.ad : <>{on}{gi + 1} · {g.ad}</>}</h3>
+                <TalimatTusu ad={g.ad} baslik={`Talimat · ${on}${gi + 1} ${g.ad}`} parcalar={grupTalimati(g, (m, mi) => `${surekli ? `${on}${surekli.get(m.id)}` : `${on}${gi + 1}.${mi + 1}`} ${m.metin}`)} />
               </div>
             )}
             {std && <div className={stil.grupStd}><StandartTusu std={std} kaynak={bag.v.kaynak} /></div>}
-            {maddeler.map(({ m, mi }) => <Madde key={m.id} m={m} numara={gruplu ? `${on}${gi + 1}.${mi + 1}` : `${on}${mi + 1}`} b={b} bag={bag} grupStd={std} />)}
+            {maddeler.map(({ m, mi }) => <Madde key={m.id} m={m} numara={surekli ? `${on}${surekli.get(m.id)}` : gruplu ? `${on}${gi + 1}.${mi + 1}` : `${on}${mi + 1}`} b={b} bag={bag} grupStd={std} />)}
           </div>
         );
       })}

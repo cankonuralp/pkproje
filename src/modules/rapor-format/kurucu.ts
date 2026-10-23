@@ -385,8 +385,15 @@ export function notlarYaz(t: FormatTanimi, i: number, l: readonly NotGirdisi[]):
 /** görünüm: form kodu, başlık, metot ve kapsam (dayanak), genel muayene talimatı. resmiFormat: Bakanlık formatı mı (kilitli öğesi ve form kodu
     var) — 470'ten beri yalnız işaret: kod ve başlık da değişir, yayın denetimi uyarır */
 export const resmiFormat = (t: FormatTanimi) => kilitliKimlikler(t).size > 0 && !!t.gorunum.formKodu;
-export function gorunumYaz(t: FormatTanimi, y: { formKodu?: string; baslik?: string; dayanak?: string[]; talimat?: string; cevap?: "acilir" | "tus" }): FormatTanimi {
-  return { ...t, gorunum: {
+/** belgenin Bakanlık görünümü (stil verilmemiş hâli) */
+const STIL_VARSAYILAN: Readonly<Record<string, string>> = { zemin: "pembe", hiza: "sol", etiket: "mavi" };
+export function gorunumYaz(t: FormatTanimi, y: { formKodu?: string; baslik?: string; dayanak?: string[]; talimat?: string; cevap?: "acilir" | "tus";
+  basTuru?: FormatTanimi["gorunum"]["basTuru"]; stil?: NonNullable<FormatTanimi["gorunum"]["stil"]> }): FormatTanimi {
+  /* 2026-10-23 (basılı formdan şablon): belgenin başı ve görünümü — Bakanlık görünümüne dönen değer yazılmaz (eski formatla aynı tanım) */
+  const stil = y.stil ? { ...t.gorunum.stil, ...y.stil } : t.gorunum.stil;
+  const sade = stil && Object.fromEntries(Object.entries(stil).filter(([a, x]) => x !== undefined && x !== STIL_VARSAYILAN[a]));
+  const basTuru = y.basTuru !== undefined ? (y.basTuru === "tablo" ? undefined : y.basTuru) : t.gorunum.basTuru;
+  const g: FormatTanimi["gorunum"] = {
     ...t.gorunum,
     formKodu: y.formKodu !== undefined ? kirp(y.formKodu, 20) : t.gorunum.formKodu,
     baslik: y.baslik !== undefined ? kirp(y.baslik, 200) : t.gorunum.baslik,
@@ -394,7 +401,11 @@ export function gorunumYaz(t: FormatTanimi, y: { formKodu?: string; baslik?: str
     talimat: y.talimat !== undefined ? y.talimat.slice(0, 8000) : t.gorunum.talimat,
     /* 472: madde cevabının saha ekranındaki biçimi (açılır liste / yan yana tuşlar) */
     cevap: y.cevap === "acilir" || y.cevap === "tus" ? y.cevap : t.gorunum.cevap,
-  } };
+  };
+  /* tanımda yalnız Bakanlık görünümünden farklı olan (anahtarsız = bugünkü tanımla birebir) */
+  if (basTuru) g.basTuru = basTuru; else delete g.basTuru;
+  if (sade && Object.keys(sade).length) g.stil = sade; else delete g.stil;
+  return { ...t, gorunum: g };
 }
 
 /** 492 (reisim 2026-10-11, hata listesi 9: "sadece sgk no ve isg katip no değiştirilemez olsun ve format yapıcıda bu belirlenebilir olsun"): künye

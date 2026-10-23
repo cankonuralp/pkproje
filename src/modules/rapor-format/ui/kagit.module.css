@@ -89,6 +89,11 @@
 .bolum { position: relative; }
 .bolumBas { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 0 0 -1px; padding: 1px 3px; border: 1px solid #000; background: #f1dbdb; }
 .altBas { background: #f8eded; }
+/* 2026-10-23 (basılı formdan şablon): belgenin görünümü kâğıtta da (belge.css .rb-z-* / .rb-h-orta ile aynı) */
+:global(.rb-z-gri) .bolumBas { background: #d9d9d9; }
+:global(.rb-z-gri) .altBas { background: #ededed; }
+:global(.rb-z-yok) .bolumBas { background: none; }
+:global(.rb-h-orta) .bolumBas h2 { text-align: center; }
 .kagit .bolumBas h2 { flex: 1 1 14rem; min-width: 0; margin: 0; padding: 0; border: 0; background: none; }
 .bolumBas + table, .bolumBas + :global(.rb-kutu-metin), .bolumBas + :global(.rb-fotolar) { margin-top: 0; }
 .no { font-variant-numeric: tabular-nums; }

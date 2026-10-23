@@ -226,6 +226,21 @@ export async function taslakBaslat(db: Sorgulayici, kim: Kisi, turId: string, gi
     if (!r || !t) return { durum: "gecersiz", hatalar: { baslangic: "Sürüm bulunamadı." } };
     tanim = t; kaynak = r.kaynak; nereden = `sürüm ${r.sira}`;
   }
+  return taslakYerine(db, kim, turId, tanim, kaynak, nereden, taslakSurumu);
+}
+
+/** 2026-10-23 (basılı formdan şablon — reisim: "ben bunu yükleyince format buna dönüşsün"): verilen tanım türün taslağı olur (kaynak yok — kilitli
+    öğe yok); taslak varsa onun yerine geçer, istemcinin gördüğü taslak sürümüyle. Tanım şemadan geçer. */
+export async function taslakYaz(db: Sorgulayici, kim: Kisi, turId: string, tanimGirdisi: unknown, nereden: string, taslakSurumu: number | null): Promise<Yazma> {
+  if (!degistirir(kim)) return { durum: "yetkisiz" };
+  if (!(await turOzeti(db, turId, { kilitle: true }))) return { durum: "yok" };
+  const t = FormatTanimi.safeParse(tanimGirdisi);
+  if (!t.success) return { durum: "gecersiz", hatalar: hatalar(t.error) };
+  if (Buffer.byteLength(JSON.stringify(t.data)) > TANIM_EN_COK) return { durum: "gecersiz", hatalar: { tanim: "Tanım çok büyük." } };
+  return taslakYerine(db, kim, turId, t.data, null, nereden, taslakSurumu);
+}
+
+async function taslakYerine(db: Sorgulayici, kim: Kisi, turId: string, tanim: FormatTanimi, kaynak: string | null, nereden: string, taslakSurumu: number | null): Promise<Yazma> {
   const mevcut = (await db.sorgu<{ id: string; surum: number }>("SELECT id::text, surum FROM rapor_format WHERE tur_id = $1 AND durum = 'taslak' FOR UPDATE", [turId])).rows[0];
   const iz = { kim: kim.ad, ne: "rapor_format.taslak_baslat", gerekce: nereden };
   if (!mevcut) {

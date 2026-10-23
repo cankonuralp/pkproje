@@ -37,8 +37,8 @@ import { useOnayla } from "../../../components/pencere/Onay";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { SINIR_ISARETI } from "../../../format/hesap";
 import {
-  altBaslikAnasi, altGrupSonu, BAS_GENISLIK, basSatirlari, basSirasi, cihazSutunlari, ekipmanEtiketleri, firmaSatirlari, imzaSatirlari, listeBasliklari, olcumBasliklari, raporDuzeni, siraBasligi,
-  sonucMetinleri, testBasliklari,
+  altBaslikAnasi, altGrupSonu, BAS_GENISLIK, basSatirlari, basSirasi, basTuru, belgeStilSiniflari, cihazSutunlari, ekipmanEtiketleri, firmaSatirlari, imzaSatirlari, listeBasliklari, olcumBasliklari, raporDuzeni, siraBasligi,
+  maddeNumaralari, sonucMetinleri, testBasliklari,
 } from "../../../format/duzen";
 import {
   BAS_KAYNAK_ADI, type BasHucresi, type BasKaynagi, BLOKLAR, CIHAZ_ALAN_ADI, doldurma, DOLDURULUR, EKIPMAN_ALAN_ADI, KUSUR_ALAN_ADI, type CihazAlani, type KusurAlani, EKIPMAN_ALANLARI, FIRMA_KAYNAK_ADI, FIRMA_ZORUNLU, IMZA_ALAN_ADI, IMZA_KISI_ADI, IMZA_YERLERI, type ImzaYeri, KUNYE_ALAN_ADI, KUNYE_ALANLARI,
@@ -504,7 +504,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
           <AlanOrnegi key={`${a.id}-d`} a={a} />, tamMi(a)] as const)} n={b.dizilis ?? 2}
           son={<Ekle ad="Alan ekle" onClick={() => ogeKoy(i, "a", "Yeni alan")} />} />;
       case "liste": {
-        const cok = b.gruplar.length > 1, ekl = b.ekSutunlar ?? [];
+        const cok = b.gruplar.length > 1, ekl = b.ekSutunlar ?? [], no = maddeNumaralari(b);
         return <>
           <table>
             <colgroup>{(ekl.length ? ["8%", `${100 - 8 - 18 - 14 * ekl.length}%`, "18%", ...ekl.map(() => "14%")] : ["8%", "62%", "30%"])
@@ -524,9 +524,9 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
                       {cok && !g.maddeler.length && <Tus ikon="x" ad={`${g.ad || `${gi + 1}. grup`} · boş grubu çıkar`} onClick={() => degis(grupSil(t, i, g.id))} />}
                     </span>
                   </td></tr>}
-                  {g.maddeler.map((m, mi) => (
+                  {g.maddeler.map((m) => (
                     <tr key={m.id}>
-                      <td className="rb-orta">{cok ? `${gi + 1}.${mi + 1}` : mi + 1}</td>
+                      <td className="rb-orta">{no.get(m.id)}</td>
                       <td><span className={k.satir}><Yazi deger={m.metin} ad="Madde metni" ac={yeniId === m.id} yaz={(s) => degis(ogeYaz(t, i, m.id, { ad: s }))} />
                         {ogeTuslari(b, i, m.id, m.metin, m.kilit)}</span></td>
                       <td><Secenekler l={b.cevaplar} />{m.formul?.trim() && <span className={k.ornek}> = {m.formul}</span>}</td>
@@ -837,6 +837,17 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
       </div>}
       {doldurmaAyari(b, i)}
       {b.blok === "liste" && <ListeDuzenleyici t={t} i={i} b={b} degis={degis} />}
+      {/* 2026-10-23 (basılı formdan şablon): belgede iki sütun yan yana; numara grup içinde ya da baştan sona */}
+      {b.blok === "liste" && <div className={k.panelSatir}>
+        <label className={k.panelKutu}><input type="checkbox" checked={!!b.yanYana} disabled={!!b.ekSutunlar?.length}
+          onChange={(e) => degis(bolumYaz(t, i, { yanYana: e.target.checked || undefined }))} />Belgede iki sütun yan yana</label>
+        <span role="radiogroup" aria-label={`${b.ad} · madde numarası`} className={k.panelSatir}>
+          {([["grup", "Numara grup içinde (1.1, 1.2)"], ["surekli", "Baştan sona (1, 2, 3)"]] as const).map(([x, ad]) => (
+            <label key={x} className={k.panelKutu}><input type="radio" name={`kb-${b.id}-numara`} checked={(b.numara ?? "grup") === x}
+              onChange={() => degis(bolumYaz(t, i, { numara: x === "grup" ? undefined : x }))} />{ad}</label>
+          ))}
+        </span>
+      </div>}
       {b.blok === "olcum" && <>
         {<div className={k.panelSatir}>
           <label className={k.panelKutu}><input type="checkbox" checked={b.satir === "ekle"} onChange={(e) => degis(bolumYaz(t, i, { satir: e.target.checked ? "ekle" : "sabit" }))} />
@@ -956,7 +967,11 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
   };
 
   return (
-    <article className={`rb-sayfa ${k.kagit}`} aria-label="Rapor formatı · düzenlenebilir belge">
+    <article className={[`rb-sayfa ${k.kagit}`, belgeStilSiniflari(t)].filter(Boolean).join(" ")} aria-label="Rapor formatı · düzenlenebilir belge">
+      {/* 2026-10-23 (basılı formdan şablon): belgenin başı yalnız belge adı — tek satır, yerinde yazılır */}
+      {basTuru(t) === "ad" ? <table className="rb-bas rb-bas-yalniz"><tbody><tr><td className="rb-bas-ad">
+        <Yazi deger={t.gorunum.baslik} ad="Belge başlığı" bos={`${tur.ad} periyodik kontrol raporu`} yaz={(s) => degis(gorunumYaz(t, { baslik: s }))} />
+      </td></tr></tbody></table> : <>
       {/* başlık tablosu (belge.ts): logo · firma · akreditasyon · belge adı · doküman bilgisi */}
       {/* 595 (madde 13): hücreler sola / sağa taşınır; doküman bilgisi satırları — adı yerinde, ↑ ↓ ×, "+ Satır" */}
       <table className="rb-bas">
@@ -1003,7 +1018,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
             );
           })}
         </tr></tbody>
-      </table>
+      </table></>}
 
       {/* 1 · Firma bilgileri — 595 (madde 3): satırlar formatın (adı, sırası, tam satır, çıkar, "+ Satır ekle"); SGK, İSG-KATİP, başlangıç çıkmaz */}
       <section className={`rb-bolum ${k.bolum}`} id="kb-firma" aria-label="1 Firma bilgileri">

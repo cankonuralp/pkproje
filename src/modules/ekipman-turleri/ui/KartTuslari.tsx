@@ -10,7 +10,9 @@ import { Tus } from "../../../components/tus/Tus";
 import { formatKaldirEylemi, turSilEylemi } from "./eylemler";
 import { FormatPenceresi, TurPenceresi, type TurDegeri } from "./Pencereler";
 
-export function TurTuslari({ tur, kullanimda, sil = false }: { tur: TurDegeri; kullanimda: number | null; sil?: boolean }) {
+/** sablon (2026-10-23): rapor şablonunu değiştirebilen kişide yükleme penceresi şablonu da kurar — açık taslak (yerine geçer) */
+export function TurTuslari({ tur, kullanimda, sil = false, sablon = null }: { tur: TurDegeri; kullanimda: number | null; sil?: boolean;
+  sablon?: { taslak: { surum: number; degisti: string } | null } | null }) {
   const [p, setP] = useState<null | "duzenle" | "format">(null);
   return (
     <>
@@ -19,7 +21,7 @@ export function TurTuslari({ tur, kullanimda, sil = false }: { tur: TurDegeri; k
       {sil && <SilTusu ad={`${tur.kod} · ${tur.ad}`} baslik="Ekipman türünü sil" yanEtki="rapor formatı, yüklenen PDF'ler ve fiyatı da silinir, kodu yeniden kullanılabilir"
         sil={() => turSilEylemi(tur.id)} donus={tur.brans === "e" ? "/ekipman-turleri?brans=e" : "/ekipman-turleri"} />}
       {p === "duzenle" && <TurPenceresi kapat={() => setP(null)} tur={tur} />}
-      {p === "format" && <FormatPenceresi kapat={() => setP(null)} turId={tur.id} turAd={tur.ad} kod={tur.kod} kullanimda={kullanimda} />}
+      {p === "format" && <FormatPenceresi kapat={() => setP(null)} turId={tur.id} turAd={tur.ad} kod={tur.kod} kullanimda={kullanimda} sablon={sablon} />}
     </>
   );
 }

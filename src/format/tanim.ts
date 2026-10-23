@@ -158,6 +158,13 @@ export const BAS_KAYNAK_ADI: Record<BasKaynagi, string> = {
   serbest: "Serbest satır",
 };
 export const BAS_HUCRELERI = ["logo", "firma", "akr", "ad", "dok"] as const;
+/** 2026-10-23 (basılı formdan şablon): belgenin başı — tablo (logo · firma · akreditasyon · belge adı · doküman bilgisi; verilmemişse bu) ya da
+    yalnız belge adı (tek satır) */
+export const BAS_TURLERI = ["tablo", "ad"] as const;
+/** belgenin görünümü: bölüm başlığının zemini (pembe Bakanlık görünümü · gri · yok) ve hizası, etiket hücresi (mavi zemin · kalın yazı) */
+export const BELGE_ZEMINLERI = ["pembe", "gri", "yok"] as const;
+export const BELGE_HIZALARI = ["sol", "orta"] as const;
+export const BELGE_ETIKETLERI = ["mavi", "kalin"] as const;
 export type BasHucresi = (typeof BAS_HUCRELERI)[number];
 const BasSatiri = z.object({ id: kimlik, ad, kaynak: z.enum(BAS_KAYNAKLARI), metin: z.string().trim().max(200).optional() });
 export type BasSatiri = z.output<typeof BasSatiri>;
@@ -204,8 +211,11 @@ export const Bolum = z.discriminatedUnion("blok", [
      kaydına bağlı alan olarak eklenir, çıkarılır, adı değişir. Tam bölümsüz (eski) formatlar eskisi gibi çizilir (format/duzen.ts). */
   /* 595 (madde 9): dizilis — belgede bir satırda kaç bilgi (1 · 2 · 3; verilmemişse 2) */
   z.object({ ...ortak, blok: z.literal("bilgi"), alanlar: z.array(Alan).max(60), tam: z.boolean().optional(), dizilis: z.union([z.literal(1), z.literal(2), z.literal(3)]).optional() }),
+  /* 2026-10-23 (basılı formdan şablon — reisim: "ben bunu yükleyince format buna dönüşsün"): yanYana — belgede maddeler iki sütunda yan yana
+     (ek sütunsuz listede); numara — grup (birden çok grupta 1.1, 1.2; verilmemişse bu) · surekli (gruplar boyunca 1, 2, 3 …) */
   z.object({ ...ortak, blok: z.literal("liste"), cevaplar: z.array(z.string().trim().min(1).max(40)).min(2).max(6), gruplar: z.array(Grup).max(40),
-    basliklar: z.object({ no: baslik, madde: baslik, sonuc: baslik }).optional(), ekSutunlar: z.array(ListeSutunu).max(EK_SUTUN_EN_COK).optional() }),
+    basliklar: z.object({ no: baslik, madde: baslik, sonuc: baslik }).optional(), ekSutunlar: z.array(ListeSutunu).max(EK_SUTUN_EN_COK).optional(),
+    yanYana: z.boolean().optional(), numara: z.enum(["grup", "surekli"]).optional() }),
   z.object({
     ...ortak, blok: z.literal("olcum"), satir: z.enum(["sabit", "ekle"]).default("ekle"), sutunlar: z.array(Sutun).max(20),
     hesap: z.enum(HESAPLAR).optional(), notlar: z.array(Not).max(20).optional(), enAz: z.number().int().min(0).max(200).default(0),
@@ -288,6 +298,9 @@ export const Gorunum = z.object({
       akreditasyon · belge adı · doküman bilgisi) */
   basSatirlar: z.array(BasSatiri).max(10).optional(),
   basSira: z.array(z.enum(BAS_HUCRELERI)).length(5).optional(),
+  /** 2026-10-23 (basılı formdan şablon — reisim: "bu pdfine bi bak nasıl gözüküyor"): belgenin başı ve görünümü (verilmemişse Bakanlık görünümü) */
+  basTuru: z.enum(BAS_TURLERI).optional(),
+  stil: z.object({ zemin: z.enum(BELGE_ZEMINLERI).optional(), hiza: z.enum(BELGE_HIZALARI).optional(), etiket: z.enum(BELGE_ETIKETLERI).optional() }).optional(),
   altYazi: z.string().trim().max(300).optional(),
   ekipmanAd: z.object({ kod: baslik, tur: baslik }).optional(),
   /** 595 (madde 3): 1. bölümün satırları (FirmaSatiri); verilmemişse bugünkü satırlar */

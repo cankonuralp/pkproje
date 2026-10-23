@@ -5,11 +5,14 @@ import { DosyaAcTusu } from "../../../components/gizli-resim/GizliResim";
 import { KartEtiket, Kirp, Liste, type Sutun } from "../../../components/liste/Liste";
 import { AltSatir, Rozet } from "../../../components/sayfa/Sayfa";
 import type { FormatSurumu } from "../server/turler";
+import { BasilidanKurTusu } from "../../rapor-format/ui/SablonBolumu";
 import { FormatKaldirTusu } from "./KartTuslari";
 import { tarihYaz } from "./ortak";
 import stil from "./turler.module.css";
 
-export function FormatTablosu({ formatlar, kaldirabilir }: { formatlar: FormatSurumu[]; kaldirabilir: boolean }) {
+/** kur (2026-10-23 — basılı formdan şablon): rapor şablonunu değiştirebilen kişide her sürümde "Şablonu bundan kur" */
+export function FormatTablosu({ formatlar, kaldirabilir, kur = null }: { formatlar: FormatSurumu[]; kaldirabilir: boolean;
+  kur?: { turId: string; taslak: { surum: number; degisti: string } | null } | null }) {
   const p = formatlar[0];
   const sutunlar: Sutun<FormatSurumu>[] = [
     { k: "surum", genislik: "34%", baslik: "Sürüm", kart: "ust", sira: 1, hucre: (x) => <><b>Sürüm {x.sira}</b><AltSatir><Kirp>{x.dosyaAd}</Kirp></AltSatir></> },
@@ -18,6 +21,7 @@ export function FormatTablosu({ formatlar, kaldirabilir }: { formatlar: FormatSu
     { k: "eylem", genislik: "26%", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: (x) => (
       <span className={stil.tuslar}>
         <DosyaAcTusu dosyaId={x.dosyaId}>PDF&apos;i aç</DosyaAcTusu>
+        {kur && <BasilidanKurTusu turId={kur.turId} formatId={x.id} sira={x.sira} taslak={kur.taslak} />}
         {kaldirabilir && <FormatKaldirTusu id={x.id} surum={x.surum} sira={x.sira} />}
       </span>
     ) },

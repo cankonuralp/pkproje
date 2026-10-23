@@ -6,7 +6,7 @@ import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { kesinSil, kullanimlar, type Kullanim } from "../../../server/db/silici.ts";
 import { ekle, guncelle, tablo } from "../../../server/db/yazici.ts";
 import type { Depo } from "../../../server/dosya/depo.ts";
-import { dosyaYukle } from "../../../server/dosya/dosya.ts";
+import { dosyaYukle, kayitDosyasi } from "../../../server/dosya/dosya.ts";
 import { canDo, canDoEylem, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { kullanimMetni } from "../../../components/sil/metin.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
@@ -163,6 +163,18 @@ export async function formatYukle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaI
   const sira = ((await db.sorgu<{ s: number | null }>("SELECT max(sira) AS s FROM tur_format WHERE tur_id = $1", [turId])).rows[0]?.s ?? 0) + 1;
   await ekle(db, FORMAT, { tur_id: turId, sira, dosya_id: y.id, notu: n || null }, { kim: kim.ad, ne: "ekipman_turu.format_yukle" });
   return { durum: "tamam", sira };
+}
+
+/** 2026-10-23 (basılı formdan şablon — rapor-format/server/basili.ts): türün basılı format PDF'i — verilen sürüm ya da kullanımdaki (kaldırılmamış
+    en yeni). YETKİ DENETİMİ YOK — çağıran "değiştirir" düzeyini denetler. Yoksa null. */
+export async function basiliPdf(db: Sorgulayici, depo: Depo, turId: string, formatId: string | null): Promise<{ id: string; sira: number; ad: string; bayt: Uint8Array } | null> {
+  if (!UUID.test(turId) || (formatId !== null && !UUID.test(formatId))) return null;
+  const r = (await db.sorgu<{ id: string; sira: number; dosya_id: string }>(
+    `SELECT id::text, sira, dosya_id::text FROM tur_format WHERE tur_id = $1 AND kaldirildi IS NULL ${formatId ? "AND id = $2" : ""} ORDER BY sira DESC LIMIT 1`,
+    formatId ? [turId, formatId] : [turId])).rows[0];
+  const d = r ? await kayitDosyasi(db, DOSYA_MODULU, turId, r.dosya_id) : null;
+  if (!r || !d) return null;
+  return { id: r.id, sira: r.sira, ad: d.ad, bayt: await depo.oku(d.anahtar, db) };
 }
 
 /** format sürümünü kaldır (silinmez; kullanımdaki kaldırılınca bir önceki kullanıma girer — maket 2026-09-28) */

@@ -72,6 +72,14 @@
 .rb-eimza { display: block; min-height: 16mm; color: inherit; text-decoration: none; break-inside: avoid; }
 tr:has(.rb-eimza) { break-inside: avoid; }
 .rb-taslak { margin: 0 0 8px; padding: 2px 4px; border: 1px dashed #000; font-size: 11px; text-align: center; }
+/* 2026-10-23 (basılı formdan şablon — reisim: "bu pdfine bi bak nasıl gözüküyor"): formatın görünümü (format/duzen.ts belgeStilSiniflari) — sınıfsız
+   belge Bakanlık görünümüdür. Belgenin başı yalnız belge adı; bölüm başlığının zemini gri / yok, hizası orta; etiket hücresi zeminsiz kalın */
+.rb-sayfa .rb-bas-yalniz td { height: auto; padding: 4px 3px; }
+.rb-z-gri .rb-bolum h2 { background: #d9d9d9; }
+.rb-z-gri .rb-bolum h3 { background: #ededed; }
+.rb-z-yok .rb-bolum h2, .rb-z-yok .rb-bolum h3 { background: none; }
+.rb-h-orta .rb-bolum h2, .rb-h-orta .rb-bolum h3 { text-align: center; }
+.rb-sayfa.rb-e-kalin .rb-e { background: none; font-weight: 700; }
 
 @media print {
   .rb-onizleme { overflow: visible; padding: 0; }

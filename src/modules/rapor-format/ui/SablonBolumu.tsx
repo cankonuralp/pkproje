@@ -20,7 +20,7 @@ import { Serit } from "../../../components/serit/Serit";
 import { SilTusu } from "../../../components/sil/SilTusu";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
 import type { FormatOzeti } from "../server/formatlar";
-import { surumeGeriDonEylemi, surumSilEylemi, taslakBaslatEylemi, yayinDenetleEylemi, yayinlaEylemi } from "./eylemler";
+import { basilidanKurEylemi, surumeGeriDonEylemi, surumSilEylemi, taslakBaslatEylemi, yayinDenetleEylemi, yayinlaEylemi } from "./eylemler";
 import { DURUM_ROZET, surumAdi, tarihYaz } from "./ortak";
 import stil from "./format.module.css";
 
@@ -203,6 +203,36 @@ export function SifirdanTusu({ turId, turAd, taslak }: { turId: string; turAd: s
         bildir("Boş taslak hazırlandı; Format kurucuda düzenleyin."); router.push(`/ekipman-turleri/${turId}/sablon/${r.id}/kurucu`);
       });
     }}>Sıfırdan oluştur</Tus>
+  );
+}
+
+/** 2026-10-23 (basılı formdan şablon — reisim: "ben bunu yükleyince format buna dönüşsün format düzenleyicide bundan düzenleme yapabileyim
+    istiyorum"): türün basılı format PDF'inden taslak; bitince Format kurucu açılır. Dönen: hata iletisi (yoksa null). Tür sayfasının yükleme
+    penceresi ve basılı format satırı ortak. */
+export function useBasilidanKur(turId: string) {
+  const router = useRouter();
+  const bildir = useBildir();
+  return async (formatId: string | null, taslakSurumu: number | null): Promise<string | null> => {
+    const r = await basilidanKurEylemi(turId, formatId, taslakSurumu);
+    if (!r.tamam || !r.id) return r.genel ?? "Şablon kurulamadı.";
+    bildir(["Şablon basılı formdan kuruldu (taslak).", ...(r.uyarilar ?? [])].join(" "));
+    router.push(`/ekipman-turleri/${turId}/sablon/${r.id}/kurucu`);
+    return null;
+  };
+}
+
+/** basılı format satırındaki "Şablonu bundan kur" — onaylanınca o PDF'ten taslak (açık taslağın yerine geçer) */
+export function BasilidanKurTusu({ turId, formatId, sira, taslak }: { turId: string; formatId: string; sira: number; taslak: { surum: number; degisti: string } | null }) {
+  const bildir = useBildir();
+  const onayla = useOnayla();
+  const kur = useBasilidanKur(turId);
+  const [bekliyor, baslat] = useTransition();
+  return (
+    <Tus tur="ikincil" ikon="scan-text" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={async () => {
+      if (!(await onayla({ baslik: `Şablonu sürüm ${sira}'den kur`, tus: "Kur",
+        metin: `Rapor şablonu bu basılı forma göre yeni taslak olarak kurulur; yayındaki sürüm değişmez.${taslak ? ` Taslak (${tarihYaz(taslak.degisti)}) bununla değiştirilir.` : ""}` }))) return;
+      baslat(async () => { const h = await kur(formatId, taslak?.surum ?? null); if (h) bildir(h); });
+    }}>{bekliyor ? "Kuruluyor…" : "Şablonu bundan kur"}</Tus>
   );
 }
 

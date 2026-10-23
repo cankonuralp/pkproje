@@ -34,6 +34,7 @@ import { NesneBasi, Rozet } from "../../../components/sayfa/Sayfa";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
 import { yayinDenetimi } from "../../../format/motor";
+import { basTuru } from "../../../format/duzen";
 import type { FormatTanimi } from "../../../format/tanim";
 import { bolumSil, gorunumYaz } from "../kurucu";
 import { adimEkle, bosGecmis, geriAl, kisayol, yinele, type Gecmis } from "../gecmis";
@@ -344,6 +345,29 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
             ))}
           </fieldset>
           <SatirAlani id="kb-talimat" etiket="Genel muayene talimatı" deger={t.gorunum.talimat} satir={4} uygula={(s) => degis(gorunumYaz(t, { talimat: s }))} />
+        </div>
+      </details>
+      {/* 2026-10-23 (basılı formdan şablon — reisim: "bu pdfine bi bak nasıl gözüküyor"): belgenin başı ve görünümü; kâğıtta ve belgede aynı */}
+      <details className={`${stil.bolum} ${stil.kurallar} ${stil.yalnizGenis}`}>
+        <summary className={stil.kurallarBas}>Belge görünümü</summary>
+        <div className={stil.kurallarIc}>
+          {([
+            ["bas", "Belgenin başı", [["tablo", "Logo, firma ve doküman bilgisi tablosu"], ["ad", "Yalnız belge adı"]], basTuru(t)],
+            ["zemin", "Bölüm başlığının zemini", [["pembe", "Pembe"], ["gri", "Gri"], ["yok", "Zeminsiz"]], t.gorunum.stil?.zemin ?? "pembe"],
+            ["hiza", "Bölüm başlığının yeri", [["sol", "Sola"], ["orta", "Ortaya"]], t.gorunum.stil?.hiza ?? "sol"],
+            ["etiket", "Etiket hücreleri", [["mavi", "Mavi zeminli"], ["kalin", "Zeminsiz, kalın yazı"]], t.gorunum.stil?.etiket ?? "mavi"],
+          ] as const).map(([k, ad, l, secili]) => (
+            <fieldset key={k} className={stil.secenekler}>
+              <legend className={stil.kullanimEtiket}>{ad}</legend>
+              {l.map(([x, xad]) => (
+                <label key={x} className={stil.secenek}>
+                  <input type="radio" name={`kb-gorunum-${k}`} checked={secili === x}
+                    onChange={() => degis(k === "bas" ? gorunumYaz(t, { basTuru: x as "tablo" | "ad" }) : gorunumYaz(t, { stil: { [k]: x } }))} />
+                  <span>{xad}</span>
+                </label>
+              ))}
+            </fieldset>
+          ))}
         </div>
       </details>
       {/* 493: araç çubuğu (geniş ekranda; telefonda kurucu yok) */}

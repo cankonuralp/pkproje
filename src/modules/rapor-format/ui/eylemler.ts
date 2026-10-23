@@ -12,6 +12,10 @@ import { bakanlikTamamla } from "../server/kurulum";
 import { parcaKaydet, parcaSil } from "../server/parcalar";
 import { BELGE_EN_BUYUK, formatBelgesi, formatYzBirak, formatYzHazirla, formatYzKapat, type FormatYzSonucu } from "../server/yz";
 import { anthropicCagir } from "../../../server/yz/okuma";
+import { basiliBirak, basiliHazirla, basiliKapat } from "../server/basili";
+
+/** basılı formun okunması en çok (tür sayfasının işlev süresi 300 sn; iki veritabanı işlemine pay) */
+const BASILI_ZAMAN_MS = 270_000;
 import type { FirmaParcasi } from "../yapboz";
 
 export interface FormatDurumuYaniti { tamam?: boolean; id?: string; sira?: number; uyarilar?: string[]; engeller?: string[]; hatalar?: Record<string, string>; genel?: string }
@@ -147,6 +151,25 @@ export async function formatBelgeEylemi(form: FormData): Promise<FormatYzSonucu>
   let tanim: unknown = null;
   try { tanim = JSON.parse(String(form.get("tanim") ?? "null")); } catch { tanim = null; }
   return yzCagir({ istek: "", tanim, turAd: form.get("turAd"), belge });
+}
+
+/** 2026-10-23 (basılı formdan şablon — reisim: "ben bunu yükleyince format buna dönüşsün format düzenleyicide bundan düzenleme yapabileyim
+    istiyorum"): türün basılı format PDF'i (formatId yoksa kullanımdaki) türün TASLAĞI olur — kurucuda açılır. Okuma veritabanı işleminin DIŞINDA;
+    süresi tür sayfasının işlev süresinin (300 sn) içinde. uyarilar: yapay zekânın notu ve şablona alınamayan bölümler. */
+export async function basilidanKurEylemi(turId: string, formatId: string | null, taslakSurumu: number | null): Promise<FormatDurumuYaniti> {
+  const o = await oturum(); if (typeof o === "string") return { genel: o };
+  const ts = taslakSurumu === null ? null : Number(taslakSurumu);
+  const h = await oturumIslemi(o, (db) => basiliHazirla(db, depo(), o, metin(turId), formatId === null ? null : metin(formatId)));
+  if (h.durum !== "hazir") return { genel: h.neden };
+  const y = await anthropicCagir(h.istek, h.anahtar, BASILI_ZAMAN_MS);
+  if (y.durum === "hata") {
+    await oturumIslemi(o, (db) => basiliBirak(db, h, y.ucret));
+    return { genel: y.neden };
+  }
+  const r = await oturumIslemi(o, (db) => basiliKapat(db, o, h, y.govde, ts));
+  if (r.durum === "cakisma") return { genel: SONUC.cakisma };
+  if (r.durum === "red") return { genel: r.neden };
+  return { tamam: true, id: r.id, sira: r.sira, uyarilar: [r.cevap, ...(r.atilan.length ? [`Şablona alınamayan bölüm: ${r.atilan.join(", ")}.`] : [])].filter(Boolean) };
 }
 
 async function yzCagir(p: Parameters<typeof formatYzHazirla>[2]): Promise<FormatYzSonucu> {

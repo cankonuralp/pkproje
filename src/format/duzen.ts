@@ -263,3 +263,21 @@ export const basSatirlari = (t: Pick<FormatTanimi, "gorunum">): readonly BasSati
 export const basSirasi = (t: Pick<FormatTanimi, "gorunum">): readonly BasHucresi[] => t.gorunum.basSira ?? BAS_HUCRELERI;
 /** hücrenin belgedeki genişliği (%) — bugünkü tablo 11 · 27 · 10 · 27 · 25 */
 export const BAS_GENISLIK: Record<BasHucresi, string> = { logo: "11%", firma: "27%", akr: "10%", ad: "27%", dok: "25%" };
+
+/* ── 2026-10-23 (basılı formdan şablon — reisim: "bu pdfine bi bak nasıl gözüküyor"): belgenin görünümü ve kontrol listesinin numaraları; belge,
+   kâğıt ve saha ekranı ortak ── */
+/** belgenin görünüm sınıfları (belge.css): bölüm başlığının zemini / hizası, etiket hücresi — verilmemişse Bakanlık görünümü (sınıf yok) */
+export function belgeStilSiniflari(t: Pick<FormatTanimi, "gorunum">): string {
+  const s = t.gorunum.stil;
+  return [s?.zemin && s.zemin !== "pembe" ? `rb-z-${s.zemin}` : "", s?.hiza === "orta" ? "rb-h-orta" : "", s?.etiket === "kalin" ? "rb-e-kalin" : ""]
+    .filter(Boolean).join(" ");
+}
+/** belgenin başı: logo · firma · doküman bilgisi tablosu ya da yalnız belge adı */
+export const basTuru = (t: Pick<FormatTanimi, "gorunum">) => t.gorunum.basTuru ?? "tablo";
+/** kontrol listesinin madde numaraları (madde kimliği → numara): grup içinde (birden çok grupta 1.1, 1.2) ya da baştan sona (1, 2, 3 …) */
+export function maddeNumaralari(b: BolumOf<"liste">): ReadonlyMap<string, string> {
+  const m = new Map<string, string>(), cok = b.gruplar.length > 1;
+  let n = 0;
+  b.gruplar.forEach((g, gi) => g.maddeler.forEach((x, mi) => m.set(x.id, b.numara === "surekli" ? String(++n) : cok ? `${gi + 1}.${mi + 1}` : String(mi + 1))));
+  return m;
+}

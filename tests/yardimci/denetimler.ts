@@ -989,3 +989,28 @@ export function imzaAyrimiEksikleri(metinler: readonly { ad: string; metin: stri
   }
   return hata;
 }
+
+/** 2026-10-23 (basılı formdan şablon): yapılandırılmış çıktı şemasının karmaşıklığı — Anthropic sınırları: isteğe bağlı alan (required'da olmayan)
+    toplam ≤ 24, birleşik türlü alan (anyOf ya da tür dizisi) toplam ≤ 16; aşan şema hizmette 400 ile düşer (taklit görmez). ekAlanli: ek alana
+    kapalı olmayan nesne */
+export function semaKarmasikligi(sema: unknown): { istegeBagli: number; birlesik: number; ekAlanli: number } {
+  const k = { istegeBagli: 0, birlesik: 0, ekAlanli: 0 };
+  const yuru = (x: unknown) => {
+    if (!x || typeof x !== "object") return;
+    const s = x as { type?: unknown; properties?: Record<string, unknown>; required?: unknown; additionalProperties?: unknown; items?: unknown; anyOf?: unknown[] };
+    if (s.type === "object" || s.properties) {
+      const ozellik = s.properties ?? {}, gerekli = new Set(Array.isArray(s.required) ? s.required : []);
+      k.istegeBagli += Object.keys(ozellik).filter((a) => !gerekli.has(a)).length;
+      if (s.additionalProperties !== false) k.ekAlanli++;
+      for (const v of Object.values(ozellik)) {
+        const o = v as { anyOf?: unknown; type?: unknown };
+        if (Array.isArray(o?.anyOf) || Array.isArray(o?.type)) k.birlesik++;
+        yuru(v);
+      }
+    }
+    if (s.items) yuru(s.items);
+    if (Array.isArray(s.anyOf)) s.anyOf.forEach(yuru);
+  };
+  yuru(sema);
+  return k;
+}

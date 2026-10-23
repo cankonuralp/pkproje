@@ -100,3 +100,66 @@ test("yapay zekâya anlat: öneri kâğıtta kesik çizgiyle; Ekle ve Uygula tas
   await expect(kagit.getByRole("region", { name: /^\d+ Mast ve kaldırma sistemi$/ })).toBeVisible();
   await expect(page.getByText("Kaydedilmedi")).toBeVisible();
 });
+
+/* 2026-10-23 BASILI FORMDAN ŞABLON — reisim: "ben bunu yükleyince format buna dönüşsün format düzenleyicide bundan düzenleme yapabileyim
+   istiyorum", "sürüm 2 ne işe yarıyor orda o zaman yüklemem ne işe yaradı". Tür sayfasında basılı format PDF'i yüklenir ("Rapor şablonunu bu PDF'e
+   göre kur" işaretli gelir) → yerel Anthropic taklidi uydurma vinç formuyla cevap verir (tests/yardimci/basili-ornek.ts) → şablon taslak olarak
+   kurulur, Format kurucu açılır: kâğıt formun görünümünde (yalnız belge adı, gri ortalı bölüm başlığı), numaralar formdaki gibi; belge önizlemesinde
+   kontrol listesi iki sütun yan yana; tür sayfasında satırda "Şablonu bundan kur". */
+test("basılı formdan şablon: PDF yüklenince şablon forma göre kurulur, kurucu ve belge formun görünümünde", async ({ page }, bilgi) => {
+  test.skip(bilgi.project.name === "telefon", "format kurucu masaüstü / tablet işi (telefonda yalnız önizleme)");
+  test.setTimeout(180_000);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const kod = `B${{ masaustu: "M", tablet: "T" }[bilgi.project.name] ?? "X"}${"ABCDEFGH"[bilgi.retry]}`;
+  await page.goto(`${Y}/giris`);
+  await hazir(page);
+  await page.getByLabel("E-posta").fill(E2E_YZ.yonetici.eposta);
+  await page.getByLabel("Parola", { exact: true }).fill(E2E_PAROLA);
+  await page.getByRole("button", { name: "Giriş yap" }).click();
+  await expect(page.locator("header")).toContainText(E2E_YZ.yonetici.ad);
+  await page.goto(`${Y}/ekipman-turleri?brans=e`);
+  await hazir(page);
+  await page.getByRole("button", { name: "Tür ekle" }).click();
+  const p = page.getByRole("dialog", { name: "Tür ekle" });
+  await p.getByLabel("Tür adı").fill(`Deneme Vinç ${kod}`);
+  await p.getByLabel("Kod").fill(kod);
+  await p.getByRole("combobox", { name: "Ek-III grubu" }).click();
+  await p.getByRole("option", { name: /Elektrik tesisatları/ }).click();
+  await p.getByLabel("Periyot (ay)").fill("12");
+  await p.getByRole("button", { name: "Kaydet" }).click();
+  await expect(page).toHaveURL(/\/ekipman-turleri\/[0-9a-f-]{36}$/, { timeout: 30_000 });
+  const turAdresi = new URL(page.url()).pathname;
+  await hazir(page);
+
+  /* yükle: şablonu kur işaretli gelir → kurucu açılır */
+  await page.getByRole("button", { name: /^(Format PDF'i yükle|Yeni PDF yükle)$/ }).click();
+  const y = page.getByRole("dialog", { name: /^(Format PDF'i yükle|Yeni PDF yükle)$/ });
+  await y.getByLabel("Format PDF'i").setInputFiles({ name: "vinc-formu.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4 %%EOF") });
+  await expect(y.getByLabel("Rapor şablonunu bu PDF'e göre kur")).toBeChecked();
+  await y.getByRole("button", { name: "Yükle" }).click();
+  await expect(page).toHaveURL(/\/sablon\/[0-9a-f-]{36}\/kurucu$/, { timeout: 60_000 });
+  const kagit = page.getByRole("article", { name: "Rapor formatı · düzenlenebilir belge" });
+  await expect(kagit.getByRole("button", { name: "VİNÇ MUAYENE FORMU", exact: true })).toBeVisible();
+  await expect(kagit).toHaveClass(/rb-z-gri/);
+  await expect(kagit.locator("table.rb-bas-yalniz")).toHaveCount(1);
+  await expect(kagit.getByRole("region", { name: /^3 TESPİT VE DEĞERLENDİRMELER/ })).toBeVisible();
+  await expect(kagit.getByRole("region", { name: /^4 NOTLAR \/ UYGUNSUZLUKLAR$/ })).toBeVisible();
+  await expect(kagit.getByRole("button", { name: "*Dinamik yük deneyi (1,1 x P)", exact: true })).toBeVisible();
+  /* belge görünümü kurucuda değişir */
+  await page.getByText("Belge görünümü", { exact: true }).click();
+  await expect(page.getByRole("radio", { name: "Yalnız belge adı" })).toBeChecked();
+  await expect(page.getByRole("radio", { name: "Gri", exact: true })).toBeChecked();
+  await goz(page, "basili-kurucu", bilgi.project.name);
+  /* belge önizlemesi: kontrol listesi iki sütun yan yana (6 sütun), numaralar baştan sona */
+  await page.getByRole("button", { name: "Belge önizlemesi" }).click();
+  const belge = page.getByRole("region", { name: "Belge önizlemesi" });
+  await expect(belge.locator("article.rb-sayfa.rb-z-gri.rb-h-orta.rb-e-kalin")).toBeVisible();
+  const liste = belge.locator("section.rb-bolum", { has: page.getByRole("heading", { name: /^3\. TESPİT/ }) }).locator("table");
+  await expect(liste.locator("col")).toHaveCount(6);
+  await expect(liste.getByRole("cell", { name: "*Dinamik yük deneyi (1,1 x P)" })).toBeVisible();
+  await goz(page, "basili-belge", bilgi.project.name);
+  /* tür sayfası: taslak var; basılı format satırında "Şablonu bundan kur" */
+  await page.goto(turAdresi);
+  await hazir(page);
+  await expect(page.getByRole("button", { name: "Şablonu bundan kur" }).first()).toBeVisible();
+});

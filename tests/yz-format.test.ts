@@ -17,6 +17,7 @@ import { FormatTanimi, type BolumOf } from "../src/format/tanim.ts";
 import { kimlikler } from "../src/modules/rapor-format/kurucu.ts";
 import { hamdanBolum, oneriEkle, onerileriKur, oneriUygula, oneriYeri, type Oneri } from "../src/modules/rapor-format/yz-oneri.ts";
 import { FORMAT_SEMASI, formatIstegi, formatOzeti, formatYanitiCoz } from "../src/server/yz/format.ts";
+import { semaKarmasikligi } from "./yardimci/denetimler.ts";
 import { BELGE_EN_BUYUK, formatBelgesi } from "../src/modules/rapor-format/server/yz.ts";
 import { zipBayt } from "../src/components/disa/zip.ts";
 
@@ -46,6 +47,9 @@ function semaDenetle(s: unknown, yol = "kök"): void {
 
 test("istek: yalnız formatın adları ve sayıları + istek; şema yapılandırılmış çıktıya uygun; belge ayrı blokta", () => {
   semaDenetle(FORMAT_SEMASI);
+  /* 2026-10-23: hizmetin şema karmaşıklığı sınırları (isteğe bağlı ≤ 24, birleşik türlü ≤ 16) — eski şemada 21 birleşik alan vardı */
+  const k = semaKarmasikligi(FORMAT_SEMASI);
+  assert.ok(k.istegeBagli <= 24 && k.birlesik <= 16, JSON.stringify(k));
   const ozet = formatOzeti(Z, "Elektrik iç tesisatı");
   for (const b of Z.bolumler) assert.ok(ozet.includes(`- ${b.id} · `), `bölüm kimliği özette: ${b.id}`);
   assert.match(ozet, /Pano sigortaları \(linye\) · ölçüm tablosu · sütunlar: /);

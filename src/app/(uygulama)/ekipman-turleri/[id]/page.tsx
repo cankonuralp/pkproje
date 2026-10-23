@@ -5,7 +5,9 @@
    formatı, başvuru için); yeni türe şablon kendiliğinden gelir. "Rapor formatı" yüzü yayındaki şablonu gösterir. Görmeyen / başka firmanın kaydı:
    bulunamadı. 523 (pkproje §3.10 m.13–16): "S.A.Y Chat ayarları" (src/modules/say-chat; yazma ekipman türünü düzenleyebilende) — 529 (reisim
    2026-10-13: "burda kötü durmuş görüpte anlamadım bile ne olduğunu"): burada öteki bölümler gibi kısa bölüm (ne olduğu + satırlar + okunacak
-   fotoğraflar), tuşu düzenleme sayfasına (…/say-chat) götürür; düzenleme orada. */
+   fotoğraflar), tuşu düzenleme sayfasına (…/say-chat) götürür; düzenleme orada. 2026-10-23 (reisim: "ben bunu yükleyince format buna dönüşsün"):
+   basılı format PDF'i yüklenince ("Rapor şablonunu bu PDF'e göre kur") ya da satırdaki "Şablonu bundan kur" ile şablon o forma göre taslak olarak
+   kurulur, Format kurucu açılır (rapor-format/server/basili.ts). */
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Bilgi, BilgiListesi, Yuz, Yuzler } from "../../../../components/bilgi/Bilgi";
@@ -32,6 +34,8 @@ import { modulOturumu, oturumIslemi } from "../../../../server/kimlik/istek";
 const MODUL = modulBul("ekipman-turleri")!;
 const SABLON_SECENEKLERI = Object.entries(SABLONLAR).map(([k, s]) => [k, s.ad] as const);
 export const metadata: Metadata = { title: "Ekipman türü" };
+/* 2026-10-23 (basılı formdan şablon): PDF'i okuyan yapay zekâ çağrısı bu sayfanın eyleminde (rapor-format basilidanKurEylemi, en çok 270 sn) */
+export const maxDuration = 300;
 
 export default async function Sayfa({ params }: { params: Promise<{ id: string }> }) {
   const o = await modulOturumu(MODUL.no);
@@ -51,7 +55,8 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
     <>
       <Kirinti ogeler={[[`Ekipman türleri · ${bransAd(t.brans)}`, t.brans === "e" ? "/ekipman-turleri?brans=e" : "/ekipman-turleri"], [t.ad]]} />
       <NesneBasi baslik={t.ad} altIkon="layers" alt={`Kod ${t.kod} · ${g?.ad ?? t.grup}`}
-        tuslar={yaz && <TurTuslari tur={{ id: t.id, surum: t.surum, kod: t.kod, ad: t.ad, grup: t.grup, brans: t.brans, periyot: t.periyot, sure: t.sure }} kullanimda={p?.sira ?? null} sil={silme.sil} />} />
+        tuslar={yaz && <TurTuslari tur={{ id: t.id, surum: t.surum, kod: t.kod, ad: t.ad, grup: t.grup, brans: t.brans, periyot: t.periyot, sure: t.sure }} kullanimda={p?.sira ?? null} sil={silme.sil}
+          sablon={sablonYaz ? { taslak: taslak ? { surum: taslak.surum, degisti: taslak.degisti } : null } : null} />} />
       <Yuzler>
         <Yuz ikon="layout-list" ad="Rapor formatı" sayi={yayinda ? surumAdi(yayinda) : "Yok"} href="#b-sablon" uyari={!yayinda}
           not={yayinda ? `yayınlandı ${sablonTarihi(yayinda.yayin)}${taslak ? " · taslak var" : ""}` : taslak ? "taslak var, yayınlanmadı" : "yayınlanmadı"} />
@@ -95,7 +100,8 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
           : <SeritKap><Serit tur="uyari" ikon="triangle-alert">Standart seçilmemiş.</Serit></SeritKap>}
       </Bolum>
       <Bolum id="b-format" baslik="Basılı format PDF'i" sayac={p ? <><b>{t.formatlar.length}</b> sürüm</> : undefined}>
-        {p ? <FormatTablosu formatlar={t.formatlar} kaldirabilir={yaz} />
+        {p ? <FormatTablosu formatlar={t.formatlar} kaldirabilir={yaz}
+          kur={sablonYaz ? { turId: t.id, taslak: taslak ? { surum: taslak.surum, degisti: taslak.degisti } : null } : null} />
           : <SeritKap><Serit tur="bilgi" ikon="info">İsteğe bağlı.</Serit></SeritKap>}
       </Bolum>
       <Bolum id="b-kural" baslik="Kontrol kuralları">

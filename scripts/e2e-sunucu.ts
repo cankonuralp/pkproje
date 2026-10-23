@@ -29,6 +29,7 @@ import { gocleriUygula } from "../src/server/db/goc.ts";
 import { gomuluBaslat } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde } from "../src/server/db/kiraci.ts";
 import { parolaOzeti } from "../src/server/kimlik/parola.ts";
+import { HAM as BASILI_HAM } from "../tests/yardimci/basili-ornek.ts";
 import { bosKapi } from "../tests/yardimci/kume.ts";
 import { sahteDepoKur } from "../tests/yardimci/sahte-depo.ts";
 import { sahteResendKur } from "../tests/yardimci/sahte-resend.ts";
@@ -473,6 +474,20 @@ const yzTaklit = createServer((istek, yanit) => {
       return;
     }
     const sema = g.output_config.format.schema?.properties;
+    /* 2026-10-23 basılı formdan şablon (şemada "firmaSatirlari"): istekte PDF belge bloğu + türün adı, düşünme açık; kişisel / müşteri bilgisi ya da
+       anahtar varsa reddeder. Cevap uydurma vinç formu (tests/yardimci/basili-ornek.ts — birim testleriyle aynı) */
+    if (sema && "firmaSatirlari" in sema) {
+      const icerik = (g.messages?.[0]?.content ?? []) as { type?: string; text?: string }[];
+      const d = g as { thinking?: { type?: string } };
+      const ret = (ileti: string) => yanit.writeHead(400, { "content-type": "application/json" }).end(JSON.stringify({ type: "error", error: { type: "invalid_request_error", message: ileti } }));
+      if (/sk-ant|@yzdeneme\.example|YZ Tesisi|YZ Denetçi|YZ Yönetici|YZ Planlama/.test(govde)) { ret("taklit: basılı form isteğinde kişisel / müşteri bilgisi"); return; }
+      if (icerik[0]?.type !== "document" || !/^Ekipman türü: .+/.test(icerik[1]?.text ?? "") || d.thinking?.type !== "adaptive") { ret("taklit: basılı form isteği eksik"); return; }
+      yanit.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({
+        content: [{ type: "thinking", thinking: "", signature: "taklit" }, { type: "text", text: JSON.stringify(BASILI_HAM) }],
+        stop_reason: "end_turn", usage: { input_tokens: 4200, output_tokens: 6800 },
+      }));
+      return;
+    }
     /* 497 / 498: format yapıcı önerisi (şemada "oneriler") — istekte kişi / müşteri bilgisi ya da anahtar varsa reddeder (yalnız formatın adları
        gider). İstek: zincir uzaması tablosu (ekle) + formattaki ilk fotoğraf bölümüne "en az 1" (değiştir); belgeyle: belgeden bir kontrol listesi */
     if (sema && "oneriler" in sema) {

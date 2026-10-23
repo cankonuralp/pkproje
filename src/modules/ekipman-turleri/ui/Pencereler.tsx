@@ -11,6 +11,7 @@ import { Serit } from "../../../components/serit/Serit";
 import { Tus } from "../../../components/tus/Tus";
 import { bransAd, GRUPLAR, grupBul } from "../sema";
 import { sablondanTurEkleEylemi } from "../../rapor-format/ui/eylemler";
+import { useBasilidanKur } from "../../rapor-format/ui/SablonBolumu";
 import { formatYukleEylemi, turKaydetEylemi } from "./eylemler";
 import stil from "./turler.module.css";
 
@@ -18,7 +19,7 @@ const ALAN = ["ad", "kod", "grup", "brans", "periyot", "sure"] as const;
 type Alan_ = (typeof ALAN)[number];
 /* alan kimlikleri tek yerde (etiket for= ile girdi id= aynı sabitten — çift id kilidi) */
 const ID = Object.fromEntries(ALAN.map((k) => [k, `ew-${k}`])) as Record<Alan_, string>;
-const DOSYA_ID = "fw-dosya", NOT_ID = "fw-not";
+const DOSYA_ID = "fw-dosya", NOT_ID = "fw-not", KUR_ID = "fw-kur";
 const GRUP_SEC = GRUPLAR.map((g) => [g.k, g.ad, g.b ? bransAd(g.b) : "branş seçilir"] as const);
 const BRANS_SEC = [["m", "Mekanik"], ["e", "Elektrik"]] as const;
 
@@ -79,27 +80,48 @@ export function TurPenceresi({ kapat, tur, brans, sablon }: { kapat: () => void;
   );
 }
 
-export function FormatPenceresi({ kapat, turId, turAd, kod, kullanimda }: { kapat: () => void; turId: string; turAd: string; kod: string; kullanimda: number | null }) {
+/** sablon (2026-10-23 — reisim: "ben bunu yükleyince format buna dönüşsün format düzenleyicide bundan düzenleme yapabileyim istiyorum"): rapor
+    şablonunu değiştirebilen kişide "Rapor şablonunu bu PDF'e göre kur" (işaretli gelir) — yükleme bitince PDF okunur, şablon yeni taslak olarak kurulur,
+    Format kurucu açılır. Kurulamazsa PDF yüklenmiş kalır, neden pencerede; "Yeniden dene". taslak: açık taslak (yerine geçer) */
+export function FormatPenceresi({ kapat, turId, turAd, kod, kullanimda, sablon = null }: {
+  kapat: () => void; turId: string; turAd: string; kod: string; kullanimda: number | null; sablon?: { taslak: { surum: number; degisti: string } | null } | null;
+}) {
   const router = useRouter();
   const bildir = useBildir();
+  const kurFn = useBasilidanKur(turId);
   const [bekliyor, baslat] = useTransition();
   const [h, setH] = useState<Record<string, string>>({});
   const [genel, setGenel] = useState<string | null>(null);
+  const [kur, setKur] = useState(!!sablon);
+  /* yükleme bitti, şablon kuruluyor / kurulamadı (yüklenen sürüm) */
+  const [yuklenen, setYuklenen] = useState<number | null>(null);
+  const [kurHata, setKurHata] = useState<string | null>(null);
   const form = useRef<HTMLFormElement>(null);
+  const kurBaslat = async () => {
+    setKurHata(null);
+    const e = await kurFn(null, sablon?.taslak?.surum ?? null);
+    if (e) { setKurHata(e); router.refresh(); }
+  };
   const yukle = () => baslat(async () => {
     const f = new FormData(form.current!);
     f.set("tur", turId);
     const r = await formatYukleEylemi(f);
     setH(r.hatalar ?? {}); setGenel(r.genel ?? null);
     if (!r.tamam) return;
+    if (kur && sablon) { setYuklenen(r.sira ?? null); await kurBaslat(); return; }
     kapat(); bildir(`Format PDF'i yüklendi: sürüm ${r.sira}.`); router.refresh();
   });
+  const tuslar = yuklenen !== null
+    ? <><Tus tur="ikincil" disabled={bekliyor} onClick={kapat}>Kapat</Tus>
+      {kurHata && <Tus ikon="scan-text" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={() => baslat(kurBaslat)}>Yeniden dene</Tus>}</>
+    : <><Tus tur="ikincil" disabled={bekliyor} onClick={kapat}>Vazgeç</Tus><Tus ikon="upload" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={yukle}>Yükle</Tus></>;
   return (
-    <Pencere acik baslik={kullanimda ? "Yeni PDF yükle" : "Format PDF'i yükle"} onKapat={kapat} odak={`#${DOSYA_ID}`}
-      alt={<><Tus tur="ikincil" onClick={kapat}>Vazgeç</Tus><Tus ikon="upload" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={yukle}>Yükle</Tus></>}>
+    <Pencere acik baslik={kullanimda ? "Yeni PDF yükle" : "Format PDF'i yükle"} onKapat={bekliyor ? () => {} : kapat} odak={`#${DOSYA_ID}`} alt={tuslar}>
       <p className={pencereMetinSinifi}><b>{turAd}</b> · kod {kod}{kullanimda ? <><br />Son yüklenen sürüm {kullanimda}; öncekiler saklanır.</> : null}</p>
       {genel && <Serit tur="hata" ikon="circle-alert">{genel}</Serit>}
-      <form ref={form} onSubmit={(e) => { e.preventDefault(); yukle(); }}>
+      {yuklenen !== null && !kurHata && <Serit tur="bilgi" ikon="scan-text">PDF yüklendi (sürüm {yuklenen}). Şablon kuruluyor…</Serit>}
+      {yuklenen !== null && kurHata && <Serit tur="hata" ikon="circle-alert">PDF yüklendi (sürüm {yuklenen}). Şablon kurulamadı: {kurHata}</Serit>}
+      {yuklenen === null && <form ref={form} onSubmit={(e) => { e.preventDefault(); yukle(); }}>
         <FormIzgara>
           <Alan id={DOSYA_ID} etiket="Format PDF'i" zorunlu genis hata={h.dosya} sonuc="En çok 25 MB.">
             <input id={DOSYA_ID} className={stil.dosya} name="dosya" type="file" accept="application/pdf,.pdf" aria-invalid={!!h.dosya || undefined} aria-describedby={ipucuId(DOSYA_ID)} />
@@ -108,7 +130,11 @@ export function FormatPenceresi({ kapat, turId, turAd, kod, kullanimda }: { kapa
             <Girdi id={NOT_ID} name="not" maxLength={120} hata={!!h.not} mesajli />
           </Alan>
         </FormIzgara>
-      </form>
+        {sablon && <label className={stil.kutu}>
+          <input id={KUR_ID} type="checkbox" checked={kur} onChange={(e) => setKur(e.target.checked)} />
+          <span>Rapor şablonunu bu PDF&apos;e göre kur{sablon.taslak ? " · açık taslak bununla değiştirilir" : ""}</span>
+        </label>}
+      </form>}
     </Pencere>
   );
 }

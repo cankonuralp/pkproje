@@ -9,7 +9,8 @@
 import { createElement as h, Fragment, type ReactNode } from "react";
 import { SINIR_ISARETI } from "../format/hesap.ts";
 import {
-  altYazisi, BAS_GENISLIK, basSatirlari, basSirasi, cihazSutunlari, fotoKutulari, sonucSozcugu, ekipmanEtiketleri, firmaSatirlari, listeBasliklari, olcumBasliklari, raporDuzeni, sabitEkipmanAlanlari, testBasliklari,
+  altYazisi, BAS_GENISLIK, basSatirlari, basSirasi, basTuru, belgeStilSiniflari, cihazSutunlari, fotoKutulari, sonucSozcugu, ekipmanEtiketleri, firmaSatirlari, listeBasliklari,
+  maddeNumaralari, olcumBasliklari, raporDuzeni, sabitEkipmanAlanlari, testBasliklari,
 } from "../format/duzen.ts";
 import { gecerliKunye, kilitliKunye, metotMetni } from "../format/kunye.ts";
 import { formulUygula } from "../format/formul.ts";
@@ -250,15 +251,30 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
           if (s.alan === "foto") return v.fotolar.filter((f) => f.madde === m.id).map((f) => f.ad).join(", ") || "-";
           return deger(c.ek[ekAnahtari(m.id, s.id)]);
         };
+        /* 2026-10-23: numara grup içinde ya da baştan sona (duzen.ts maddeNumaralari — kâğıt ve saha ekranı aynı) */
+        const no = maddeNumaralari(b);
+        const cevap = (m: BolumOf<"liste">["gruplar"][number]["maddeler"][number]) => {
+          const x = c.madde[m.id], olumsuz = !!x && x.c === b.cevaplar[1];
+          const derece = olumsuz && t.kurallar.derece ? (x.derece === "agir" ? " **" : " *") : "";
+          return x ? `${x.c}${derece}` : "-";
+        };
+        /* 2026-10-23 (basılı formdan şablon): iki sütun yan yana — satırlar (grup başlıkları dahil) sırayla ikiye bölünür, sol yarı önce dolar */
+        if (b.yanYana && !ek.length) {
+          type Gir = { g: string; ad: string } | { m: BolumOf<"liste">["gruplar"][number]["maddeler"][number] };
+          const l: Gir[] = b.gruplar.flatMap((g) => [...(g.ad ? [{ g: g.id, ad: g.ad }] : []), ...g.maddeler.map((m) => ({ m }))]);
+          const yari = Math.ceil(l.length / 2), sol = l.slice(0, yari), sag = l.slice(yari);
+          const hucreler = (x: Gir | undefined, s: string): ReactNode[] => !x ? [h("td", { key: `${s}0` }), h("td", { key: `${s}1` }), h("td", { key: `${s}2` })]
+            : "g" in x ? [h("td", { key: `${s}g`, colSpan: 3, className: "rb-grup" }, x.ad)]
+              : [h("td", { key: `${s}0`, className: "rb-orta" }, no.get(x.m.id) ?? ""), h("td", { key: `${s}1` }, x.m.metin), h("td", { key: `${s}2` }, cevap(x.m))];
+          const bas = Object.values(listeBasliklari(b));
+          return h("table", null, kolonlar(["5%", "34%", "11%", "5%", "34%", "11%"]), baslikSatiri(...bas, ...bas),
+            h("tbody", null, ...sol.map((x, i) => h("tr", { key: i }, ...hucreler(x, "a"), ...hucreler(sag[i], "b")))));
+        }
         return h("table", null, kolonlar(genis), baslikSatiri(...Object.values(listeBasliklari(b)), ...ek.map((s) => s.ad)),
-          h("tbody", null, ...b.gruplar.flatMap((g, gi) => [
+          h("tbody", null, ...b.gruplar.flatMap((g) => [
             ...(g.ad ? [h("tr", { key: `g-${g.id}` }, h("td", { colSpan: 3 + ek.length, className: "rb-grup" }, g.ad))] : []),
-            ...g.maddeler.map((m, mi) => {
-              const x = c.madde[m.id], olumsuz = !!x && x.c === b.cevaplar[1];
-              const derece = olumsuz && t.kurallar.derece ? (x.derece === "agir" ? " **" : " *") : "";
-              return h("tr", { key: m.id }, h("td", { className: "rb-orta" }, b.gruplar.length > 1 ? `${gi + 1}.${mi + 1}` : String(mi + 1)), h("td", null, m.metin),
-                h("td", null, x ? `${x.c}${derece}` : "-"), ...ek.map((s) => h("td", { key: s.id }, ekDegeri(m, s))));
-            }),
+            ...g.maddeler.map((m) => h("tr", { key: m.id }, h("td", { className: "rb-orta" }, no.get(m.id) ?? ""), h("td", null, m.metin),
+              h("td", null, cevap(m)), ...ek.map((s) => h("td", { key: s.id }, ekDegeri(m, s))))),
           ])));
       }
       case "olcum": {
@@ -379,14 +395,17 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
     ...(duzen.tam ? duzen.tam.alanlar.map((a): Cift => [a.ad, alanDegeri(a), tamMi(a)])
       : [...sabitEkipmanAlanlari(t).map((k): Cift => [EKIPMAN_ALAN_ADI[k], deger(v.ekipman[k])]), ["Ekipman bölümü", deger(v.ekipman.bolum)] as Cift]),
   ];
-  return h("article", { className: "rb-sayfa", "aria-label": `${no} rapor belgesi` },
+  const belgeAdi = t.gorunum.baslik || `${v.tur.ad} periyodik kontrol raporu`;
+  /* 2026-10-23 (basılı formdan şablon): görünüm sınıfları (bölüm başlığı zemini / hizası, etiket hücresi) ve belgenin başı formatın */
+  return h("article", { className: ["rb-sayfa", belgeStilSiniflari(t)].filter(Boolean).join(" "), "aria-label": `${no} rapor belgesi` },
+    basTuru(t) === "ad" ? h("table", { className: "rb-bas rb-bas-yalniz" }, h("tbody", null, h("tr", null, h("td", { className: "rb-bas-ad" }, belgeAdi))))
     /* 595 (madde 13): hücrelerin sırası ve doküman bilgisi satırları formatın (verilmemişse bugünkü tablo) */
-    h("table", { className: "rb-bas" }, kolonlar(basSirasi(t).map((x) => BAS_GENISLIK[x])), h("tbody", null, h("tr", null,
+    : h("table", { className: "rb-bas" }, kolonlar(basSirasi(t).map((x) => BAS_GENISLIK[x])), h("tbody", null, h("tr", null,
       ...basSirasi(t).map((x) => x === "logo" ? h("td", { key: x, className: "rb-logo" }, firmaLogosu(v.firma))
         : x === "firma" ? h("td", { key: x, className: "rb-firma" }, h("b", null, v.firma.ad), ...firmaAdresi(v.firma))
         /* akreditasyon (TÜRKAK) numarası Firma ayarlarından; yoksa hücre boş (458: "AKR." yer tutucusu anlaşılmıyordu) */
         : x === "akr" ? h("td", { key: x, className: "rb-logo" }, v.firma.akr ? `AKR. ${v.firma.akr}` : "")
-        : x === "ad" ? h("td", { key: x, className: "rb-bas-ad" }, t.gorunum.baslik || `${v.tur.ad} periyodik kontrol raporu`)
+        : x === "ad" ? h("td", { key: x, className: "rb-bas-ad" }, belgeAdi)
         : h("td", { key: x, className: "rb-dok" }, ...basSatirlari(t).map((s) => h("div", { key: s.id }, h("span", null, s.ad), `: ${basDegeri(s)}`))))))),
     v.imza || v.kesin ? null : h("p", { className: "rb-taslak" }, "İmzasız önizleme — muayene uzmanının son imzasıyla geçerli olur."),
     /* 595 (madde 3): satırlar formatın (adı, sırası, varlığı — format/duzen.ts firmaSatirlari; verilmemişse bugünkü 11 satır), değer kayıttan */
