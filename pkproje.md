@@ -2527,6 +2527,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-23 (YAPILDI): **NEXT.JS GÜVENLİK GÜNCELLEMESİ** (reisim: *"veri güvenliği site güvenliği ne durumda"* — durum taraması). Üretim
+  bağımlılıklarında 1 kritik: next 16.3.8 (görsel en iyileyicide SVG ile oturumsuz kod çalıştırma, sunucu eylemlerinde hizmet engelleme) →
+  next + eslint-config-next 16.4.2; npm audit (üretim) 0. YAYINDA main 836a980 (deneme makinesi 13/13, canlı denetim 11/11). Aynı taramada:
+  Supabase güvenlik önerileri yalnız bilgi düzeyinde (politikasız RLS — duyuru, goc, is_calisma API rollerine kapalı, bilerek); son 7 günde
+  hata kaydı 0; gece işleri her gece tamam; duyuru okumada bir kaynak (iş ekipmanları portalı) okunamıyor.
 - 2026-10-18 (YAPILDI): **AÇIKLAMA CÜMLELERİ KALKTI** (reisim, giriş ekranının görüntüsüyle: *"bu ve benzeri, yaratıcıyı hedef alan açıklamaları
   kaldır, çok fazla ai ürünü olduğu belli oluyor"*). Ekrana basılan bütün uzun metinler tarandı (535); ~230 yerde işleyişi anlatan cümle kaldırıldı ya da
   kısaltıldı: giriş ekranının "Tarayıcı kapanınca oturum kapanır" / "Müşteriler de aynı adresten girer…" yazıları, boş listelerin "… burada görünür /
