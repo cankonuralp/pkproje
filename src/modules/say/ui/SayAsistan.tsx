@@ -40,7 +40,11 @@
    gerekiyorsa … haber veriyor"): S.A.Y'ın uygulama işlemleri (islem) SUNUCUDA çalışır — ekran yalnız sonucu görür: sunucunun yaptığı adımlar
    (adimlar) ve aynı cevaptaki işlemlerin sonuçları (hazir) döngünün adımlarına girer, "devam"da yeni tur hemen gider. Açık raporu S.A.Y ekranın
    Kaydet / Onaya gönder'iyle kaydeder (raporu_kaydet / onaya_gonder). D: veri değiştiren işlem çalıştıysa iş bitince açık sayfa yenilenir
-   (router.refresh); ekranda kaydedilmemiş değişiklik varsa yenilenmez — sunucu S.A.Y'ın cevabına söyler (kaydedilmemis her turda gider). */
+   (router.refresh); ekranda kaydedilmemiş değişiklik varsa yenilenmez — sunucu S.A.Y'ın cevabına söyler (kaydedilmemis her turda gider).
+   2026-10-23 BAŞTAN (reisim: "say asistanı direk claude da haiku nasıl çalışıyor ise direk o şekilde çalıştıramaz mıyız", "hiç bir kısıtı olmasın"):
+   soru, ekranın sonucu ve devam akışlı uçta (/api/say — server/dongu.ts); düşünme özeti ve cevap yazıldıkça balonda; konuşma sunucuda olduğu gibi
+   saklanır (ekran adımları göndermez, yalnız bekleyen araç çağrılarının sonucunu); ekler önce parça parça yüklenir (/api/say/ek) ve konuşmada kalır;
+   ek sayısı, boyu, soru uzunluğu sınırı yok; Excel bütün sayfalarıyla metne çevrilir. */
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from "react";
@@ -52,14 +56,15 @@ import { useGorunurAlan } from "../../../components/pencere/gorunurAlan";
 import { usePanelBoyu } from "../../../components/pencere/PanelBoyu";
 import { Serit } from "../../../components/serit/Serit";
 import type { SohbetEkAdi, SohbetEksik, SohbetIletisi } from "../../../server/yz/sohbet";
-import { EK_EN_COK_ADET, EK_EN_COK_BAYT } from "../ek-sinir";
-import type { SayDurum, SayYaniti } from "../server/say";
-import type { IsOzeti, SayAdimi, SayKomutu } from "../../../server/yz/say";
+import { xlsxSayfalari } from "../../../components/disa/oku";
+import { EK_PARCA_BAYT, KAYDEDILMEMIS } from "../sabitler";
+import type { SayDurum } from "../server/say";
+import type { SayOlayi } from "../server/dongu";
+import type { IsOzeti, SayKomutu } from "../../../server/yz/say";
 import { Markdown } from "./Markdown";
 import { istekTani, type Istek } from "../istek";
 import { kaydedilmemisVar, useSayFormatBagi, useSayRaporBagi, type SayFormatBagi, type SayGeriAl, type SayRaporBagi } from "./baglam";
-import { sayDurumEylemi, sayEkliSorEylemi, sayGecmisEylemi, sayIsSonucuEkliEylemi, sayIsSonucuEylemi, sayIsYarimEylemi, sayOneriEylemi, sayRaporEylemi, saySorEylemi,
-  sayTemizleEylemi } from "./eylemler";
+import { sayDurumEylemi, sayGecmisEylemi, sayOneriEylemi, sayRaporEylemi, sayTemizleEylemi } from "./eylemler";
 import stil from "./say.module.css";
 
 const ACIK_ANAHTARI = "probata-say-acik";
@@ -69,8 +74,6 @@ const KUCUK_ANAHTARI = "probata-say-kucuk";
 const BOY_ANAHTARI = "probata-say-boy";
 /** 550: tek hazır tuş (reisim: "sadece fotoğrafları oku ve gir kalsın başka bir şey olmasın") */
 const OKU = "Fotoğrafları oku ve gir";
-/** yazı kutusunun en çok uzunluğu (sunucu SORU_SINIRI ile aynı) */
-const SORU_EN_COK = 20_000;
 /** 542: S.A.Y'ın rapora yaptığı işin bu sayfadaki eylemleri (ileti kimliği → geri al / dolu alanları da değiştir) */
 interface IslemEylemi { geriAl?: SayGeriAl; ustune?: () => { sayi: number; geriAl: SayGeriAl } }
 /** A: döngüde bir araç çağrısını ekranın yapması — S.A.Y'a dönen özet, işin geri alması, dolu alanlar için "üstüne yaz" */
@@ -79,27 +82,70 @@ interface KomutSonucu { ozet: IsOzeti; geriAl?: SayGeriAl; ustune?: IslemEylemi[
 interface DonguHedefi { rapor: () => SayRaporBagi | null; taslak: () => SayFormatBagi | null; kullanilan: Set<string> }
 const yapilamadi = (ad: string, neden: string): KomutSonucu => ({ ozet: { yazildi: 0, ayni: 0, bekliyor: 0, yapilan: [], yazilamadi: [{ ad, neden }] } });
 const DAR = "(max-width: 767.98px)";
-/** 2026-10-16 (2. adım a): sunucunun çalıştırdığı komut (uygulamanın işlemi) — ekran yapmaz, sonucu sunucudan (src/server/yz/say.ts sunucuKomutuMu) */
-const sunucuKomutu = (k: SayKomutu) => k.tur === "islem" || k.tur === "islemler";
-type SayTamam = Extract<SayYaniti, { durum: "tamam" }>;
+type SayRed = { durum: "red"; neden: string };
 
 function cevrimici(): boolean { return typeof navigator === "undefined" || navigator.onLine !== false; }
 
-/* 522: ek — gönderilmeden önce yalnız bu ekranda (görüntüsü blob: adresiyle); sunucu türü içerikten yeniden denetler */
+/* 522: ek — gönderilmeden önce yalnız bu ekranda (görüntüsü blob: adresiyle); sunucu türü içerikten yeniden denetler. 2026-10-23 (S.A.Y baştan —
+   reisim: "hiç bir kısıtı olmasın"): adet ve boy sınırı yok; her dosya parça parça yüklenir (/api/say/ek) ve konuşmada kalır; Excel ekranda bütün
+   sayfalarıyla metne çevrilir */
 interface Ek extends SohbetEkAdi { id: number; dosya: File; url: string | null }
 const WORD = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-const BELGE_TURLERI = `.pdf,.docx,application/pdf,${WORD}`;
 function boyutYaz(b: number): string {
   return b >= 1048576 ? `${String(Math.round(b / 104857.6) / 10).replace(".", ",")} MB` : `${Math.max(1, Math.round(b / 1024))} KB`;
 }
-function ekTuru(f: File): SohbetEkAdi["tur"] | null {
+function ekTuru(f: File): SohbetEkAdi["tur"] {
   const ad = f.name.toLocaleLowerCase("tr");
-  if (/^image\//.test(f.type) || /\.(jpe?g|png|webp|heic|heif)$/.test(ad)) return "foto";
+  if (/^image\//.test(f.type) || /\.(jpe?g|png|webp|gif|heic|heif)$/.test(ad)) return "foto";
   if (f.type === "application/pdf" || ad.endsWith(".pdf")) return "pdf";
   if (f.type === WORD || ad.endsWith(".docx")) return "word";
-  return null;
+  if (ad.endsWith(".xlsx")) return "tablo";
+  return "metin";
 }
-const TUR_AD: Record<SohbetEkAdi["tur"], string> = { foto: "Fotoğraf", pdf: "PDF", word: "Word" };
+const TUR_AD: Record<SohbetEkAdi["tur"], string> = { foto: "Fotoğraf", pdf: "PDF", word: "Word", metin: "Dosya", tablo: "Excel" };
+/** Excel'in bütün sayfaları metin: her sayfa başlığıyla, hücreler noktalı virgülle (CSV) */
+async function excelMetni(f: File): Promise<File> {
+  const sayfalar = await xlsxSayfalari(new Uint8Array(await f.arrayBuffer()));
+  const hucre = (x: string) => (/[;"\n\r]/.test(x) ? `"${x.replace(/"/g, '""')}"` : x);
+  const metin = sayfalar.map((s) => [`## Sayfa: ${s.ad || "(adsız)"}`, ...s.satirlar.map((r) => r.map(hucre).join(";"))].join("\n")).join("\n\n");
+  return new File([metin], `${f.name}.csv`, { type: "text/plain" });
+}
+/** bir eki parça parça yükler (barındırmanın istek boyu sınırı); dönen: konuşmadaki ekin kimliği */
+async function ekYukle(e: Ek, ilerle: (s: string) => void): Promise<{ id: string } | SayRed> {
+  let dosya = e.dosya;
+  if (e.tur === "tablo") {
+    try { dosya = await excelMetni(e.dosya); } catch { return { durum: "red", neden: `${e.ad}: Excel okunamadı (bozuk ya da .xlsx değil).` }; }
+  }
+  const b = new Uint8Array(await dosya.arrayBuffer()), adet = Math.max(1, Math.ceil(b.length / EK_PARCA_BAYT)), yukleme = crypto.randomUUID();
+  for (let i = 0; i < adet; i++) {
+    if (adet > 1) ilerle(`${e.ad} yükleniyor · %${Math.round((i / adet) * 100)}`);
+    const r = await fetch("/api/say/ek", { method: "POST", body: b.subarray(i * EK_PARCA_BAYT, (i + 1) * EK_PARCA_BAYT),
+      headers: { "content-type": "application/octet-stream", "x-yukleme": yukleme, "x-sira": String(i), "x-adet": String(adet), "x-ad": encodeURIComponent(e.ad),
+        ...(e.tur === "tablo" ? { "x-tablo": "1" } : {}) } });
+    const y = await r.json().catch(() => null) as { durum?: string; neden?: string; ek?: { id: string } } | null;
+    if (!r.ok || !y) return { durum: "red", neden: `${e.ad}: yüklenemedi; bağlantıyı kontrol edip yeniden deneyin.` };
+    if (y.durum === "red") return { durum: "red", neden: y.neden ?? `${e.ad}: yüklenemedi.` };
+    if (y.durum === "tamam" && y.ek) return { id: y.ek.id };
+  }
+  return { durum: "red", neden: `${e.ad}: yüklenemedi.` };
+}
+/** akışlı yanıtın satırları (her satır bir olay); dönen: okunan olay sayısı */
+async function olaylariOku(govde: ReadableStream<Uint8Array>, olay: (x: SayOlayi) => void): Promise<number> {
+  const okuyucu = govde.getReader(), cozucu = new TextDecoder();
+  let kalan = "", n = 0;
+  for (;;) {
+    const { done, value } = await okuyucu.read();
+    kalan += done ? cozucu.decode() : cozucu.decode(value, { stream: true });
+    let i: number;
+    while ((i = kalan.indexOf("\n")) >= 0) {
+      const satir = kalan.slice(0, i).trim();
+      kalan = kalan.slice(i + 1);
+      if (!satir) continue;
+      try { olay(JSON.parse(satir) as SayOlayi); n++; } catch { /* bozuk satır atlanır */ }
+    }
+    if (done) return n;
+  }
+}
 
 function EkListesi({ ekler, cikar }: { ekler: readonly (SohbetEkAdi & { url?: string | null })[]; cikar?: (i: number) => void }) {
   return (
@@ -203,11 +249,12 @@ export function SayAsistan() {
   const [bolumSor, setBolumSor] = useState<{ fotolar: File[]; soru: string } | null>(null);
   /* 557: bekleme balonundaki yazı ("Düşünüyor" / "Rapora yazıyor" …), küçük hâl, sohbetin sonunda mı (en alta in tuşu) */
   const [asama, setAsama] = useState<string | null>(null);
+  /* 2026-10-23: S.A.Y'ın yazmakta olduğu cevap ve düşünme özeti (akışla gelir; ileti kaydedilince boşalır) */
+  const [canli, setCanli] = useState("");
+  const [dusunce, setDusunce] = useState("");
   const [kucuk, setKucuk] = useState(false);
   const [altta, setAltta] = useState(true);
   const alttaRef = useRef(true);
-  /* 2026-10-16 (2. adım a — D): bu işte veri değiştiren sunucu işlemi çalıştı — iş bitince açık sayfa yenilenir (kaydedilmemiş değişiklik yoksa) */
-  const yenileGerek = useRef(false);
   const geciciSira = useRef(0);
   const ekSira = useRef(0);
   const atac = useRef<HTMLButtonElement>(null);
@@ -297,7 +344,7 @@ export function SayAsistan() {
     try { localStorage.setItem(ACIK_ANAHTARI, "0"); } catch { /* saklama yok */ }
     requestAnimationFrame(() => fab.current?.focus());
   };
-  const sonuc = (y: SayYaniti) => {
+  const sonuc = (y: { durum: "tamam"; iletiler: SohbetIletisi[] } | SayRed) => {
     if (y.durum === "tamam") { setIletiler((l) => [...(l ?? []), ...y.iletiler.filter((m) => !(l ?? []).some((x) => x.id === m.id))]); setHata(null); return true; }
     setHata(y.neden);
     return false;
@@ -403,90 +450,70 @@ export function SayAsistan() {
     return { ozet: { yazildi: sayi, ayni: 0, bekliyor: 0, yapilan: sayi ? [`${sayi} giriş geri alındı`] : [],
       yazilamadi: sayi ? [] : [{ ad: "Geri al", neden: "geri alınacak giriş kalmadı (değerler sonradan değişmiş)" }] } };
   };
-  /** 550 → 557 → A (2026-10-15): İŞ DÖNGÜSÜ — Haiku'nun istediği işleri ekran yapar, sonuç döngünün bütün adımlarıyla ve ekranın güncel hâliyle
-      S.A.Y'a döner (sayIsSonucuEylemi); S.A.Y yeni iş isterse yine yapılır, metinle bitirince cevabı sohbete yazılır. Tur sınırı yok (sonsuz döngü
-      önlemi sunucuda). Bütün işin "Geri al"ı (ve okumada dolu alan kaldıysa "Dolu alanları da değiştir") son iletinin altında */
-  const isleriYap = async (ilkYanit: SayTamam, dosyalar: readonly Ek[] = []) => {
-    /* 2026-10-16: hedef döngünün başladığı rapor / taslak — iş sürerken başka rapora geçilirse (aynı türde yer kimlikleri aynı) oraya yazılmaz;
-       aynı raporun yeniden bağlanması (kimlik aynı) sürer */
+  /** 2026-10-23 (S.A.Y baştan — reisim: "direk claude da haiku nasıl çalışıyor ise direk o şekilde"): İŞ — akışlı uç (/api/say). S.A.Y'ın düşünme
+      özeti ve cevabı yazıldıkça balonda; S.A.Y'ın istediği ekran işlerini ekran yapar (557: geri okuyup teyit eder), sonucu aynı işe döndürür; uç
+      "devam" derse (işlev süresi) iş yeni istekle sürer. Tur, adım, süre sınırı yok. Bütün işin "Geri al"ı (ve okumada dolu alan kaldıysa "Dolu
+      alanları da değiştir") S.A.Y'ın son iletisinin altında. Veri değiştiren işlem çalıştıysa iş bitince açık sayfa yenilenir (ekranda kaydedilmemiş
+      değişiklik yoksa; varsa söylenir) */
+  const ekranGirdisi = (h?: DonguHedefi) => {
+    const r = h ? h.rapor() : rbRef.current, f = h ? h.taslak() : fbRef.current;
+    return { yol, raporNo: r?.no ?? null, canli: r ? { id: r.id, cevaplar: r.cevaplar(), ekipman: r.ekipman(), ...r.canliEk() } : undefined,
+      kurucu: f ? { id: f.id, tanim: f.tanim() } : undefined, kaydedilmemis: kaydedilmemisVar() };
+  };
+  const isYap = async (ilk: Record<string, unknown>): Promise<void> => {
+    /* hedef işin başladığı rapor / taslak — iş sürerken başka rapora geçilirse oraya yazılmaz; aynı raporun yeniden bağlanması sürer */
     const ilkRapor = rbRef.current?.id ?? null, ilkTaslak = fbRef.current?.id ?? null;
     const h: DonguHedefi = {
       rapor: () => (ilkRapor && rbRef.current?.id === ilkRapor ? rbRef.current : null),
       taslak: () => (ilkTaslak && fbRef.current?.id === ilkTaslak ? fbRef.current : null),
       kullanilan: new Set(),
     };
-    /* 2. adım a: sunucunun bu işte yaptığı tam adımlar döngünün adımlarına; aynı cevaptaki işlemlerin sonuçları (hazir) komutlarla aynı sırada */
-    const adimlar: SayAdimi[][] = [...(ilkYanit.adimlar ?? [])], geriler: SayGeriAl[] = [];
-    let ustune: IslemEylemi["ustune"];
-    let komutlar = ilkYanit.komutlar ?? [], hazir = ilkYanit.hazir ?? [], devam = !!ilkYanit.devam;
-    yenileGerek.current ||= !!ilkYanit.yenile;
-    /** bütün işin Geri al'ı (ve okumada dolu alan kaldıysa "Dolu alanları da değiştir") bu iletinin altında */
-    const bagla = (id: string) => {
-      if (!geriler.length && !ustune) return;
-      const hepsi = [...geriler].reverse(), u = ustune;
-      setIslemler((x) => new Map(x).set(id, { ...(hepsi.length ? { geriAl: () => hepsi.reduce((t, g) => t + g(), 0) } : {}), ...(u ? { ustune: u } : {}) }));
-    };
-    const turGirdisi = () => {
-      const r = h.rapor(), f = h.taslak();
-      return { adimlar, rapor: r?.id ?? null, format: f?.id ?? null, raporNo: r?.no ?? null,
-        canli: r ? { id: r.id, cevaplar: r.cevaplar(), ekipman: r.ekipman(), ...r.canliEk() } : null, kurucu: f ? { id: f.id, tanim: f.tanim() } : null,
-        kaydedilmemis: kaydedilmemisVar() };
-    };
-    /* yarıda kesildi (tur reddedildi ve sunucu iletiyi yazamadı, ya da tur gönderilemedi): sunucuya yazılmış son durum çekilir; soru cevapsız kalmadıysa
-       (S.A.Y'ın iletisi — bu işin) Geri al ona bağlanır */
-    const sonaBagla = async () => {
-      if (!geriler.length && !ustune) return;
-      try {
-        const l = await sayGecmisEylemi();
-        setIletiler(l);
-        const m = l.at(-1);
-        if (m?.kim === "say" && ((!!ilkRapor && m.ek?.rapor === ilkRapor) || (!!ilkTaslak && m.ek?.format === ilkTaslak))) bagla(m.id);
-      } catch { /* bağlantı yok — iş ekranda duruyor, kaydetmek kişide */ }
-    };
-    try {
-      while (komutlar.length || devam) {
-        if (komutlar.length) {
-          const adim: SayAdimi[] = [];
-          for (const [i, k] of komutlar.entries()) {
-            /* 2. adım a: işlemi sunucu yaptı — sonucu hazir'da (aynı sıra); ekran komutunu ekran yapar */
-            if (sunucuKomutu(k)) { adim.push({ komut: k, ozet: hazir[i] ?? yapilamadi(k.tur === "islem" ? k.ad || "İşlem" : "İşlemler", "işlemin sonucu sunucudan gelmedi").ozet }); continue; }
-            const r = await komutYap(k, geriler, h);
-            if (r.geriAl) geriler.push(r.geriAl);
-            if (r.ustune) ustune = r.ustune;
-            adim.push({ komut: k, ozet: r.ozet });
-          }
-          adimlar.push(adim);
+    const is = crypto.randomUUID(), geriler: SayGeriAl[] = [];
+    let ustune: IslemEylemi["ustune"], sonSay: string | null = null, yenile = false, govde: Record<string, unknown> = { ...ilk, is }, bos = 0;
+    for (;;) {
+      /* geri çağırmada yazılır (nesne — denetleyici daraltmasın) */
+      const d: { ekran: Extract<SayOlayi, { t: "ekran" }> | null; son: "bitti" | "devam" | "hata" | null } = { ekran: null, son: null };
+      const r = await fetch("/api/say", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(govde) });
+      if (!r.ok || !r.body) { setHata(r.status === 401 ? "Oturumunuz kapandı. Sayfayı yenileyip yeniden giriş yapın." : "S.A.Y'a ulaşılamadı; bağlantıyı kontrol edip yeniden deneyin."); break; }
+      const n = await olaylariOku(r.body, (x) => {
+        if (x.t === "ileti") {
+          setIletiler((l) => [...(l ?? []).filter((m) => !(x.ileti.kim === "ben" && m.id.startsWith("gecici-"))), x.ileti]);
+          if (x.ileti.kim === "say") { sonSay = x.ileti.id; setCanli(""); setDusunce(""); }
+        } else if (x.t === "metin") setCanli((c) => c + x.d);
+        else if (x.t === "dusunce") setDusunce((c) => c + x.d);
+        else if (x.t === "asama") setAsama(x.ad);
+        else {
+          yenile ||= x.yenile;
+          if (x.t === "ekran") d.ekran = x;
+          else { d.son = x.t; if (x.t === "hata") setHata(x.neden); }
+        }
+      });
+      setCanli(""); setDusunce("");
+      const e = d.ekran, son = d.son;
+      if (e) {
+        const sonuclar: { id: string; ozet: IsOzeti }[] = [];
+        for (const a of e.araclar) {
+          const k = a.komut ? await komutYap(a.komut, geriler, h) : yapilamadi(a.ad, "aracın girdisi okunamadı");
+          if (k.geriAl) geriler.push(k.geriAl);
+          if (k.ustune) ustune = k.ustune;
+          sonuclar.push({ id: a.id, ozet: k.ozet });
         }
         setAsama("Düşünüyor");
-        let y: SayYaniti;
-        /* 2026-10-16: sorunun ekleri her turda yeniden (S.A.Y kaynağı görmeden yazmayı sürdürmesin; sunucu saklamaz) */
-        if (dosyalar.length) {
-          const fd = new FormData();
-          fd.set("girdi", JSON.stringify(turGirdisi())); fd.set("yol", yol);
-          for (const x of dosyalar) fd.append("ek", x.dosya, x.ad);
-          y = await sayIsSonucuEkliEylemi(fd);
-        } else y = await sayIsSonucuEylemi(turGirdisi(), yol);
-        if (y.durum !== "tamam") { setHata(y.neden); await sonaBagla(); return; }
-        adimlar.push(...(y.adimlar ?? []));
-        yenileGerek.current ||= !!y.yenile;
-        komutlar = y.komutlar ?? []; hazir = y.hazir ?? []; devam = !!y.devam;
-        if (komutlar.length || devam) continue;
-        sonuc(y);
-        const m = y.iletiler.find((x) => x.kim === "say");
-        if (m) bagla(m.id);
+        govde = { tur: "sonuc", is, sonuclar, ...ekranGirdisi(h) };
+        bos = 0;
+        continue;
       }
-    } catch {
-      setIlerleme(null);
-      setHata("S.A.Y'a ulaşılamadı; yapılanlar raporda duruyor. Bağlantıyı kontrol edip yeniden deneyin.");
-      /* tur gönderilemedi (bağlantı, işlev süresi): yapılanları sunucu sayılarla yazar ("İş yarıda kaldı"), bütün işin Geri al'ı ona */
-      try {
-        if (adimlar.length) {
-          const y = await sayIsYarimEylemi(turGirdisi(), yol);
-          if (y.durum === "tamam") { sonuc(y); setHata(null); yenileGerek.current ||= !!y.yenile; const m = y.iletiler.find((x) => x.kim === "say"); if (m) bagla(m.id); return; }
-        }
-      } catch { /* aşağıda geçmiş çekilir */ }
-      await sonaBagla();
+      /* uç "devam" dedi ya da akış olaysız kesildi (işlev süresi): iş kaldığı yerden sürer — üst üste iki boş akışta durur */
+      if (son === "devam" || (son === null && (bos = n ? 0 : bos + 1) < 2)) { govde = { tur: "devam", is, ...ekranGirdisi(h) }; continue; }
+      if (son === null) setHata("S.A.Y'a ulaşılamadı; bağlantıyı kontrol edip yeniden deneyin.");
+      break;
     }
+    const id: string | null = sonSay;
+    if (id && (geriler.length || ustune)) {
+      const hepsi = [...geriler].reverse(), u = ustune;
+      setIslemler((x) => new Map(x).set(id, { ...(hepsi.length ? { geriAl: () => hepsi.reduce((t, g) => t + g(), 0) } : {}), ...(u ? { ustune: u } : {}) }));
+    }
+    if (yenile) { if (kaydedilmemisVar()) setHata(KAYDEDILMEMIS); else router.refresh(); }
   };
   /** iletinin altındaki "Geri al" / "Dolu alanları da değiştir" (ya da yazılan komut): bir kez çalışır; sonucu geçmişe */
   const eylemCalistir = async (id: string | null, ne: "geri" | "ustune", soru: string) => {
@@ -540,10 +567,7 @@ export function SayAsistan() {
     requestAnimationFrame(() => girdi.current?.focus());
     if (!f) return;
     const tur = ekTuru(f);
-    if (!tur) { bildir("Yalnız fotoğraf, PDF ya da Word (.docx) eklenir."); return; }
-    if (ekler.length >= EK_EN_COK_ADET) { bildir(`Bir soruya en çok ${EK_EN_COK_ADET} ek konur.`); return; }
     const dosya = tur === "foto" ? await fotografiKucult(f) : f;
-    if (ekler.reduce((t, x) => t + x.boyut, 0) + dosya.size > EK_EN_COK_BAYT) { bildir(`${f.name} ${boyutYaz(dosya.size)}: ekler toplam en çok 4 MB olabilir.`); return; }
     let url: string | null = null;
     if (tur === "foto") { try { url = URL.createObjectURL(dosya); } catch { url = null; } }
     setEkler((l) => [...l, { id: ++ekSira.current, dosya, ad: f.name, boyut: dosya.size, tur, url }]);
@@ -587,41 +611,23 @@ export function SayAsistan() {
       ek: giden.length ? { ekler: giden.map((x) => ({ ad: x.ad, boyut: x.boyut, tur: x.tur })) } : null, zaman: new Date().toISOString() }]);
     setSoru(""); setEkler([]);
     alttaRef.current = true; setAltta(true);
-    setBekliyor(true); setAsama("Düşünüyor"); setMenu(false);
-    yenileGerek.current = false;
+    setBekliyor(true); setAsama(giden.length ? "Ekler yükleniyor" : "Düşünüyor"); setMenu(false); setHata(null);
     try {
-      const canli = rb ? { id: rb.id, cevaplar: rb.cevaplar(), ekipman: rb.ekipman(), ...rb.canliEk() } : undefined;
-      const kurucu = fb ? { id: fb.id, tanim: fb.tanim() } : undefined;
-      const kirli = kaydedilmemisVar();
-      let y: SayYaniti;
-      if (giden.length) {
-        const fd = new FormData();
-        fd.set("soru", v); fd.set("yol", yol);
-        if (rb) { fd.set("raporNo", rb.no); fd.set("canli", JSON.stringify(canli)); }
-        if (kurucu) fd.set("kurucu", JSON.stringify(kurucu));
-        if (kirli) fd.set("kaydedilmemis", "1");
-        for (const x of giden) fd.append("ek", x.dosya, x.ad);
-        y = await sayEkliSorEylemi(fd);
-      } else y = await saySorEylemi(v, yol, rb?.no, canli, kurucu, kirli);
-      gitti = true;
-      if (y.durum === "tamam") {
-        for (const x of giden) if (x.url) URL.revokeObjectURL(x.url);
-        setIletiler((l) => (l ?? []).filter((x) => x.id !== gid));
-        sonuc(y);
-        yenileGerek.current ||= !!y.yenile;
-        if (y.komutlar?.length || y.devam) await isleriYap(y, giden);
-        /* D: veri değiştiren işlem çalıştıysa açık sayfa kendiliğinden yenilenir — ekranda kaydedilmemiş değişiklik varsa yenilenmez (S.A.Y söyledi) */
-        if (yenileGerek.current && !kaydedilmemisVar()) router.refresh();
-        yenileGerek.current = false;
-      } else {
-        /* soru geçmişe yazıldıysa (çağrı düştü) yeniden çekilir — geçmiş sunucudakiyle aynı kalsın */
-        setHata(y.neden);
-        setIletiler(await sayGecmisEylemi());
+      /* 2026-10-23: ekler önce yüklenir (parça parça, konuşmada kalır); biri yüklenemezse soru gitmez, yazı ve ekler geri döner */
+      const idler: string[] = [];
+      for (const x of giden) {
+        const y = await ekYukle(x, (m) => setIlerleme(m));
+        if ("durum" in y) { setIlerleme(null); setHata(y.neden); setIletiler((l) => (l ?? []).filter((m) => m.id !== gid)); setSoru(v); setEkler(giden); return; }
+        idler.push(y.id);
       }
+      setIlerleme(null); setAsama("Düşünüyor");
+      gitti = true;
+      for (const x of giden) if (x.url) URL.revokeObjectURL(x.url);
+      await isYap({ tur: "soru", soru: v, ekler: idler, ...ekranGirdisi() });
     } catch {
       if (!gitti) { setIletiler((l) => (l ?? []).filter((x) => x.id !== gid)); setSoru(v); setEkler(giden); }
       setHata("S.A.Y'a ulaşılamadı; bağlantıyı kontrol edip yeniden deneyin.");
-    } finally { setBekliyor(false); setAsama(null); girdi.current?.focus(); }
+    } finally { setBekliyor(false); setAsama(null); setIlerleme(null); setCanli(""); setDusunce(""); girdi.current?.focus(); }
   };
   /* 557: küçült — panel alta tek satır; yeniden basınca aynı boyla açılır (sohbet ve yazılan kaybolmaz) */
   const kucult = (k: boolean) => {
@@ -724,6 +730,9 @@ export function SayAsistan() {
               <div className={`${stil.mesaj} ${stil.o} ${stil.bekleme}`} role="status" aria-live="polite" data-say-bekleme="">
                 {asama === "Düşünüyor" || !asama ? <span className={stil.noktalar} aria-hidden="true"><i /><i /><i /></span> : <span className={stil.donen} aria-hidden="true" />}
                 {asama ?? "Düşünüyor"}{ilerleme ? ` · ${ilerleme}` : ""}
+                {/* 2026-10-23: düşünme özeti ve yazılmakta olan cevap akışla */}
+                {dusunce && !canli && <p className={stil.dusunce}>{dusunce.slice(-600)}</p>}
+                {canli && <div className={stil.canli}><Markdown metin={canli} /></div>}
               </div>
             )}
             {hata && <Serit tur="hata" ikon="circle-alert">{hata}</Serit>}
@@ -749,12 +758,12 @@ export function SayAsistan() {
                     <Ikon ad="camera" kucuk />Fotoğraf çek</label>
                   <label className={stil.ekOge}><input className={stil.gizli} type="file" accept="image/*" onChange={(e) => void ekSec(e)} />
                     <Ikon ad="image" kucuk />Galeriden seç</label>
-                  <label className={stil.ekOge}><input className={stil.gizli} type="file" accept={BELGE_TURLERI} onChange={(e) => void ekSec(e)} />
-                    <Ikon ad="file-text" kucuk />Belge ekle<small>PDF, Word</small></label>
+                  <label className={stil.ekOge}><input className={stil.gizli} type="file" onChange={(e) => void ekSec(e)} />
+                    <Ikon ad="file-text" kucuk />Belge ekle<small>PDF, Word, Excel, metin</small></label>
                 </div>
               </div>
               <label className={stil.gizli} htmlFor="say-girdi">S.A.Y&apos;a sor</label>
-              <textarea ref={girdi} className={stil.girdi} id="say-girdi" autoComplete="off" rows={1} maxLength={SORU_EN_COK}
+              <textarea ref={girdi} className={stil.girdi} id="say-girdi" autoComplete="off" rows={1}
                 placeholder="S.A.Y'a yazın" value={soru} disabled={!hazir}
                 onChange={(e) => { setSoru(e.target.value); boyla(e.target); }} onKeyDown={tusla} />
               <button className={stil.gonder} type="submit" aria-label="Gönder" disabled={!hazir || bekliyor}><Ikon ad="send" /></button>

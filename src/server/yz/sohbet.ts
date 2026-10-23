@@ -1,6 +1,7 @@
 /* S.A.Y SOHBET GEÇMİŞİ (380; göç 0071 yz_sohbet) — kişinin kendi geçmişi (RLS: firma + hesap), kalıcı (reisim 2026-10-03: "geçmiş silinmez, geçmiş
    olayı önemli"). Yazma ve temizleme tanımlayıcı-yetkili işlevlerle (uygulama rolünün tabloya yazma / silme hakkı yok; kişi işlemin bağlamından);
-   kişi başı en yeni 200 ileti. Çekirdek: modül (src/modules/say) buradan çağırır. */
+   2026-10-23 (S.A.Y baştan — reisim: "hiç bir kısıtı olmasın"): 200 ileti sınırı kalktı, geçmişin tamamı kalır (göç 0103).
+   Yapay zekâya giden konuşma ayrı: src/server/yz/konusma.ts. Çekirdek: modül (src/modules/say) buradan çağırır. */
 import type { RaporSonucu } from "../../format/tanim.ts";
 import type { Sorgulayici } from "../db/kiraci.ts";
 
@@ -10,8 +11,8 @@ export interface SohbetBekleyen { ad: string; href: string; kirmizi: number; sar
 export interface SohbetEksik { ad: string; bolum: string; bolumAd: string; alan: string }
 /** rapor ekranında "Sonuç ne olmalı?" öneri kartı (382): yalnız o rapor açıkken uygulanır; sonucu bir kez işaretlenir */
 export interface SohbetOnerisi { alan: "sonuc"; deger: RaporSonucu; ad: string; durum: "" | "uygulandi" | "vazgecildi" }
-/** 522: soruya eklenen dosyanın yalnız adı, boyu ve türü (dosya saklanmaz) */
-export interface SohbetEkAdi { ad: string; boyut: number; tur: "foto" | "pdf" | "word" }
+/** 522: soruya eklenen dosyanın adı, boyu ve türü (2026-10-23: dosyanın kendisi konuşmada kalır — yz_ek) */
+export interface SohbetEkAdi { ad: string; boyut: number; tur: "foto" | "pdf" | "word" | "metin" | "tablo" }
 /** 542: S.A.Y'ın rapora yaptığı iş (ne istendi, dolu kalan alan sayısı) — "Geri al" / "Dolu alanları da değiştir" yalnız o sayfada, işi yapan ekranda */
 export interface SohbetIslemi { istek: string; dolu: number }
 /** rapor: iletinin sorulduğu rapor (kimlik — "Git" ve "Uygula" yalnız o rapor açıkken) */
@@ -19,14 +20,12 @@ export interface SohbetIslemi { istek: string; dolu: number }
 export interface SohbetEki { bekleyen?: SohbetBekleyen[]; eksik?: SohbetEksik[]; oneri?: SohbetOnerisi; rapor?: string; format?: string; ekler?: SohbetEkAdi[]; islem?: SohbetIslemi }
 export interface SohbetIletisi { id: string; kim: "ben" | "say"; metin: string; yer: string; ek: SohbetEki | null; zaman: string }
 
-export const GECMIS_ADET = 100;
-
-/** son `adet` ileti, eskiden yeniye. Sıra TABLONUN zamanıyla (x.zaman — mikro saniye); çıktıdaki "zaman" milisaniyelik METİN, ona göre sıralanırsa
+/** geçmişin tamamı (adet verilirse son `adet` ileti), eskiden yeniye. Sıra TABLONUN zamanıyla (x.zaman — mikro saniye); çıktıdaki "zaman" milisaniyelik METİN, ona göre sıralanırsa
     aynı milisaniyede yazılan soru ve cevap yer değiştirebiliyordu (CI 715bd6f say.test) */
-export async function sohbetGecmisi(db: Sorgulayici, adet = GECMIS_ADET): Promise<SohbetIletisi[]> {
+export async function sohbetGecmisi(db: Sorgulayici, adet: number | null = null): Promise<SohbetIletisi[]> {
   return (await db.sorgu<SohbetIletisi>(
     `SELECT x.id::text, x.kim, x.metin, x.yer, x.ek, to_char(x.zaman AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS zaman FROM (
-       SELECT * FROM yz_sohbet ORDER BY zaman DESC, id DESC LIMIT $1) x ORDER BY x.zaman, x.id`, [adet])).rows;
+       SELECT * FROM yz_sohbet ORDER BY zaman DESC, id DESC LIMIT $1) x ORDER BY x.zaman, x.id`, [adet ?? null])).rows;
 }
 
 export async function sohbetYaz(db: Sorgulayici, m: { kim: "ben" | "say"; metin: string; yer: string; ek?: SohbetEki | null }): Promise<string> {

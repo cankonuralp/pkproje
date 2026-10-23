@@ -60,7 +60,10 @@
 .bekleyen { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; }
 .bekleyen a { display: inline-flex; align-items: center; min-height: var(--tus-y); color: var(--onay-yazi); font-weight: 600; }
 /* 557 (sunum 557 · 2. tur — reisim: "düşünüyor kısmında bir görsel"): bekleme balonu — hareket eden üç nokta ya da dönen işaret + ne yaptığı */
-.bekleme { display: inline-flex; align-items: center; gap: 10px; color: var(--yazi2); }
+.bekleme { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 10px; color: var(--yazi2); }
+/* 2026-10-23 (S.A.Y baştan): akışla gelen düşünme özeti (soluk, son kısmı) ve yazılmakta olan cevap — balonun altında tam satır */
+.dusunce { flex-basis: 100%; margin: 0; font-size: var(--boy-kucuk); white-space: pre-wrap; overflow-wrap: anywhere; }
+.canli { flex-basis: 100%; color: var(--yazi); }
 .noktalar { display: inline-flex; gap: 4px; }
 .noktalar i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: zipla 1.1s infinite ease-in-out; }
 .noktalar i:nth-child(2) { animation-delay: .15s; }

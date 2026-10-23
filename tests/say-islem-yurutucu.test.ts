@@ -9,7 +9,7 @@
    4. sonucun özeti: yaz başarısı iş sayılır (yazildi 1, bildirim), okuma değişiklik sayılmaz, hata yazılamayan + neden; modül sonuçları (yetkisiz,
       çakışma, yok, uyarı, eksik) tuşların iletileriyle aynı anlamda;
    5. ekranın gönderdiği adımlar sunucuda YENİDEN ÇALIŞTIRILMAZ: yürütücü yalnız eylemin döngüsünde, yapay zekâ hizmetinin bu çağrıda döndürdüğü
-      komutlarla çağrılır (src/modules/say/ui/eylemler.ts surdur); ortam oturumdan; ekran komutundan sonraki işlem ekranın işini bekler (sıra) —
+      komutlarla çağrılır (2026-10-23 S.A.Y baştan: src/modules/say/server/dongu.ts — eski eylemler.ts surdur); ortam oturumdan; ekran komutundan sonraki işlem ekranın işini bekler (sıra) —
       denetim tests/yardimci/denetimler.ts sayEylemDenetimi (olumsuz kanıtı aynı işlevle).
    2026-10-16 (2. adım a incelemesi): 6. hiçbir şey değiştirmeyen yazma (degisiklik: false) iş sayılmaz; uyarı S.A.Y'ı soru sormaya yöneltmez;
       ekranda açık, kaydedilmemiş rapor korunur (ekranRaporuKirli); uzun metin sayfa sayfa, hepsi okunur (metinSayfasi — sınır değil).
@@ -123,7 +123,7 @@ test("4. özet: yaz başarısı iş, okuma değişiklik değil, hata nedeniyle; 
 });
 
 test("5. ekranın adımları yeniden çalıştırılmaz: yürütücüyü yalnız eylemin döngüsü, yapay zekânın bu çağrıdaki komutlarıyla çağırır; ortam oturumdan; sıra", () => {
-  assert.deepEqual(sayEylemDenetimi(oku("src/modules/say/ui/eylemler.ts"), oku("src/modules/say/server/say.ts")), []);
+  assert.deepEqual(sayEylemDenetimi(oku("src/modules/say/server/dongu.ts"), oku("src/modules/say/server/say.ts")), []);
 });
 
 test("6. değişiklik yapmayan yazma iş sayılmaz; ekranda açık, kaydedilmemiş rapor korunur; uzun metin sayfa sayfa (hepsi okunur)", async () => {

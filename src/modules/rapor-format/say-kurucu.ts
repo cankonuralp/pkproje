@@ -31,10 +31,8 @@ import {
   sonucKuraliYaz, yeniBolum, yeniKimlik, type OgeTuru, type OgeYamasi,
 } from "./kurucu.ts";
 
-/** haritanın en çok uzunluğu (karakter) */
-export const FORMAT_HARITA_SINIRI = 40_000;
-/** tek istekte en çok işlem */
-export const FORMAT_ISLEM_EN_COK = 100;
+/* 2026-10-23 (S.A.Y baştan — reisim: "hiç bir kısıtı olmasın"): haritanın 40 000 karakter sınırı, metinlerin kısaltılması ve tek istekteki 100
+   işlem sınırı kalktı — harita formatın tamamı, işlemler olduğu gibi */
 /** S.A.Y'ın ekleyebildiği bölüm türleri (ölçüm cihazları, imza, kusur bölümleri formatta tektir — kurucu kendi ekler) */
 export const EKLENIR_BLOK = ["olcum", "test", "bilgi", "liste", "foto", "not", "metin", "sonuc"] as const;
 const BLOK_TR: Record<Blok, string> = {
@@ -46,12 +44,12 @@ const sinirMetni = (o: { op?: string; sinir?: number }) => (o.op && o.sinir !== 
 export function formatHaritasi(t: FormatTanimi): string {
   const l: string[] = ["Format taslağının bölümleri (bölüm kimliği · tür · ad) ve öğeleri (öğe kimliği · ad · tür; formül = kendiliğinden hesaplanan):"];
   l.push("## firma · 1. bölüm · Firma bilgileri (satırlar — kimlik · ad · bilgi):");
-  for (const s of firmaSatirlari(t)) l.push(`- ${s.id} · ${s.ad} · ${s.kaynak === "serbest" ? `serbest${s.metin ? `, yazı: ${s.metin.slice(0, 80)}` : ""}` : FIRMA_KAYNAK_ADI[s.kaynak]}${s.tam ? " · tam satır" : ""}`);
+  for (const s of firmaSatirlari(t)) l.push(`- ${s.id} · ${s.ad} · ${s.kaynak === "serbest" ? `serbest${s.metin ? `, yazı: ${s.metin}` : ""}` : FIRMA_KAYNAK_ADI[s.kaynak]}${s.tam ? " · tam satır" : ""}`);
   const ee = ekipmanEtiketleri(t);
   /* 595 (madde 13): başlık tablosu — hücrelerin sırası ve doküman bilgisi satırları */
   l.push(`## Başlık tablosu (sayfa başı) · hücreler soldan sağa: ${basSirasi(t).join(" · ")} (logo · firma · akr = akreditasyon · ad = belge adı · dok = doküman bilgisi)`);
   l.push("Doküman bilgisi satırları (kimlik · ad · bilgi):");
-  for (const s of basSatirlari(t)) l.push(`- ${s.id} · ${s.ad} · ${s.kaynak === "serbest" ? `serbest${s.metin ? `, yazı: ${s.metin.slice(0, 80)}` : ""}` : BAS_KAYNAK_ADI[s.kaynak]}`);
+  for (const s of basSatirlari(t)) l.push(`- ${s.id} · ${s.ad} · ${s.kaynak === "serbest" ? `serbest${s.metin ? `, yazı: ${s.metin}` : ""}` : BAS_KAYNAK_ADI[s.kaynak]}`);
   l.push(`Ekipman satırları: “${ee.kod}”, “${ee.tur}” · sayfa altı: “${t.gorunum.altYazi ?? "{firma} · {kod}"}”`);
   const e = t.gorunum.eimza;
   const e2 = t.gorunum.eimza2;
@@ -91,12 +89,12 @@ export function formatHaritasi(t: FormatTanimi): string {
       const m = sonucMetinleri(b);
       l.push(`  sözcükler: uygun “${m.uygun}”, uygun değil “${m.uygunDegil}”${b.sartli ? `, şartlı uygun “${m.sartli}”` : " · şartlı uygun seçeneği kapalı"}`);
     }
-    if (b.blok === "not") l.push(`  yönlendirme: ${b.yonlendirme ? `“${b.yonlendirme.slice(0, 120)}”` : "yok"}${b.satir ? ` · belgede en az ${b.satir} satır` : ""}`);
+    if (b.blok === "not") l.push(`  yönlendirme: ${b.yonlendirme ? `“${b.yonlendirme}”` : "yok"}${b.satir ? ` · belgede en az ${b.satir} satır` : ""}`);
     if (b.blok === "test") for (const d of b.degerler) {
       l.push(`- ${d.id} · ${d.ad} · test değeri, ${d.secenekler?.length ? `seçim: ${d.secenekler.join(" / ")}` : d.metin ? "yazı" : "sayı"}${d.birim ? ` (${d.birim})` : ""}${d.formul ? ` · formül ${d.formul}` : ""}${sinirMetni(d)}`);
     } else if (b.blok === "imza") {
       for (const s of imzaSatirlari(b)) {
-        l.push(`- ${s.id} · ${s.ad} · imza satırı, ${IMZA_KISI_ADI[s.kim]}${s.alan ? ` · ${IMZA_ALAN_ADI[s.alan]}` : ""}${s.metin ? ` · yazı: ${s.metin.slice(0, 80)}` : ""}${s.tam ? " · tam satır" : ""}`);
+        l.push(`- ${s.id} · ${s.ad} · imza satırı, ${IMZA_KISI_ADI[s.kim]}${s.alan ? ` · ${IMZA_ALAN_ADI[s.alan]}` : ""}${s.metin ? ` · yazı: ${s.metin}` : ""}${s.tam ? " · tam satır" : ""}`);
       }
     } else if (b.blok === "liste") {
       l.push(`  cevaplar: ${b.cevaplar.join(" / ")}`);
@@ -105,12 +103,12 @@ export function formatHaritasi(t: FormatTanimi): string {
       if (b.ekSutunlar?.length) l.push(`  ek sütunlar (kimlik · ad · bilgi): ${b.ekSutunlar.map((s) => `${s.id} · ${s.ad} · ${s.alan}`).join("; ")}`);
       for (const g of b.gruplar) {
         l.push(`  grup ${g.id} · ${g.ad || "(adsız)"}`);
-        for (const m of g.maddeler) l.push(`- ${m.id} · ${m.metin.slice(0, 160)}${m.formul ? ` · formül ${m.formul}` : ""}`);
+        for (const m of g.maddeler) l.push(`- ${m.id} · ${m.metin}${m.formul ? ` · formül ${m.formul}` : ""}`);
       }
     }
   }
   const m = l.join("\n");
-  return m.length > FORMAT_HARITA_SINIRI ? `${m.slice(0, FORMAT_HARITA_SINIRI)}\n… (format uzun; geri kalanı kısaltıldı)` : m;
+  return m;
 }
 
 /** Haiku'nun verdiği işlem (biçimi gevşek — her alan denetlenir) */
@@ -186,7 +184,7 @@ export interface FormatIslemSonucu { t: FormatTanimi; yapilan: string[]; gecersi
 export function formatIslemleri(t0: FormatTanimi, islemler: readonly FormatIslemi[]): FormatIslemSonucu {
   let t = t0;
   const yapilan: string[] = [], gecersiz: string[] = [];
-  for (const x of islemler.slice(0, FORMAT_ISLEM_EN_COK)) {
+  for (const x of islemler) {
     const islem = metin(x?.islem, 40);
     const red = (neden: string) => { gecersiz.push(`${islem || "işlem"}: ${neden}`); };
     if (islem === "bolum_ekle") {
@@ -585,7 +583,7 @@ export const FORMAT_ARACI = {
     type: "object",
     properties: {
       islemler: {
-        type: "array", maxItems: FORMAT_ISLEM_EN_COK,
+        type: "array",
         items: {
           type: "object",
           properties: {

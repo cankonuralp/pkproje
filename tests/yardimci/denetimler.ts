@@ -841,27 +841,28 @@ export function fotoTuslari(kaynaklar: readonly { ad: string; metin: string }[],
 
 /* ── S.A.Y İŞLEM YÜRÜTÜCÜSÜNÜN ÇAĞRI YERİ (2026-10-16; pkproje §9 "S.A.Y CLAUDE GİBİ" 2. adım a, B — "sunucu araçları istemciden gelen bilgiye
    güvenmez") ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-   src/modules/say/ui/eylemler.ts uzantısız içe aktarmalar yüzünden node'da yüklenemez; kilit kaynak metninden: yürütücü TEK yerden, yalnız yapay zekâ
-   hizmetinin BU eylemde döndürdüğü komutlarla çağrılır (ekranın gönderdiği adımlar — d.onceki — yeniden çalıştırılmaz); işlemin ortamı oturumdan
-   (girdiden değil); aynı cevapta ekran komutundan sonraki işlem ekranın işini bekler; hazırlık (server/say.ts) yürütücüye dokunmaz. Dönen: bulgular
-   (boş = tamam). Olumsuz kanıt: tests/bozan/say-islem.bozan.ts. */
-export function sayEylemDenetimi(eylem: string, sunucu: string): string[] {
+   2026-10-23 (S.A.Y baştan — reisim: "direk claude da haiku nasıl çalışıyor ise direk o şekilde"): döngü src/modules/say/server/dongu.ts'te (eski
+   eylemler.ts surdur); özellikler AYNI. Kilit kaynak metninden: yürütücü TEK yerden, yalnız yapay zekâ hizmetinin BU cevabındaki araç çağrılarıyla
+   (ekranın getirdiği sonuçlar yürütücüden geçmez); işlemin ortamı oturumdan (ekranın ya da yapay zekânın girdisinden değil); aynı cevapta ekran
+   aracından sonraki işlem ekranın işini bekler; hazırlık (server/say.ts) yürütücüye dokunmaz. Dönen: bulgular (boş = tamam). Olumsuz kanıt:
+   tests/bozan/say-islem.bozan.ts. */
+export function sayEylemDenetimi(dongu: string, sunucu: string): string[] {
   const b: string[] = [];
-  const n = [...eylem.matchAll(/sunucuKomutu\(/g)].length;
-  if (n !== 1) b.push(`eylemler.ts: yürütücü ${n} yerden çağrılıyor (tek yer olmalı)`);
-  if (!eylem.includes("const komutlar = r.komutlar ?? [];")) b.push("eylemler.ts: komutlar yapay zekâ hizmetinin bu çağrıdaki cevabından değil");
-  if (!/for \(const k of komutlar\) \{[\s\S]{0,400}?await sunucuKomutu\(ISLEM_KATALOGU, ortam, k, modulAdi\)/.test(eylem)) {
-    b.push("eylemler.ts: yürütücü yalnız bu çağrının komutlarıyla çağrılmıyor (ekranın adımları yeniden çalışabilir)");
+  const n = [...dongu.matchAll(/sunucuKomutu\(/g)].length;
+  if (n !== 1) b.push(`dongu.ts: yürütücü ${n} yerden çağrılıyor (tek yer olmalı)`);
+  if (!dongu.includes("const komutlar = aracCagrilari(icerik);")) b.push("dongu.ts: komutlar yapay zekâ hizmetinin bu çağrıdaki cevabından değil");
+  if (!/for \(const c of komutlar\) \{[\s\S]{0,1200}?await sunucuKomutu\(ISLEM_KATALOGU, ortam, k, modulAdi\)/.test(dongu)) {
+    b.push("dongu.ts: yürütücü yalnız bu çağrının komutlarıyla çağrılmıyor (ekranın sonuçları yeniden çalışabilir)");
   }
-  if (/sunucuKomutu\([^)]*onceki/.test(eylem) || /islemYurut\(/.test(eylem)) b.push("eylemler.ts: yürütücü başka yoldan / ekranın adımlarıyla çağrılıyor");
-  const ortam = /function islemOrtami\([^]*?\n\}\n/.exec(eylem)?.[0] ?? "";
-  if (!ortam) b.push("eylemler.ts: islemOrtami yok");
+  if (/sunucuKomutu\([^)]*(sonuclar|ham|govde)/.test(dongu) || /islemYurut\(/.test(dongu)) b.push("dongu.ts: yürütücü başka yoldan / ekranın sonuçlarıyla çağrılıyor");
+  const ortam = /function islemOrtami\([^]*?\n\}\n/.exec(dongu)?.[0] ?? "";
+  if (!ortam) b.push("dongu.ts: islemOrtami yok");
   else {
-    if (!ortam.includes("kim: o, firmaId: o.kiraci.firmaId, depo, kok: firmaAdresi(o.kiraci.kisaAd),")) b.push("eylemler.ts: işlemin kişisi / firması oturumdan değil");
-    if (/\bgirdi\b|\btaban\b|\bonceki\b/.test(ortam)) b.push("eylemler.ts: işlemin ortamı ekranın / yapay zekânın girdisinden okunuyor");
+    if (!ortam.includes("kim: o, firmaId: o.kiraci.firmaId, depo, kok: firmaAdresi(o.kiraci.kisaAd),")) b.push("dongu.ts: işlemin kişisi / firması oturumdan değil");
+    if (/\bham\b|\bv\.|\bsonuclar\b|\bgirdi\b/.test(ortam)) b.push("dongu.ts: işlemin ortamı ekranın / yapay zekânın girdisinden okunuyor");
   }
-  if (!/ekranda && k\.tur === "islem" \? islemOzeti\(/.test(eylem)) b.push("eylemler.ts: ekran komutundan sonraki işlem ekranın işini beklemiyor (sıra)");
-  if (/sunucuKomutu\(|islemYurut\(|from "[^"]*(islem-katalogu|yz\/islem)/.test(sunucu)) b.push("server/say.ts: hazırlık (ekranın adımlarını okuyan) yürütücüye dokunuyor");
+  if (!/if \(ekranda\) \{ sonuclar\[c\.id\] = sonucIcerigi\(islemOzeti\(/.test(dongu)) b.push("dongu.ts: ekran aracından sonraki işlem ekranın işini beklemiyor (sıra)");
+  if (/sunucuKomutu\(|islemYurut\(|from "[^"]*(islem-katalogu|yz\/islem)/.test(sunucu)) b.push("server/say.ts: hazırlık yürütücüye dokunuyor");
   return b;
 }
 

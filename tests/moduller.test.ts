@@ -64,7 +64,9 @@ const GELISTIRME_ROTALARI = ["vitrin"];
    oturumdan / adresten (aşağıdaki test)
    2026-10-15 (FIRMA-VT FV7): saglik/projeler — proje sağlığı; oturumsuz ama YALNIZ PROBATA_SAGLIK_SIR ya da CRON_SECRET'le, ilk iş zamanliYetkili;
    saglik altında başka dosya yok — her düzey (tests/saglik-coklu-saf.test.ts, tests/yardimci/denetimler.ts saglikKlasoruEksikleri) */
-const API_UCLARI = ["dosya", "hata", "is", "islem", "olcum", "saglik", "surum", "tanim"];
+/* 2026-10-23 (S.A.Y baştan — reisim: "direk claude da haiku nasıl çalışıyor ise direk o şekilde"): say — S.A.Y'ın akışlı ucu (soru, ekranın sonucu,
+   devam) ve say/ek (ekin parçaları); ilk iş aynı köken, oturum işten önce, yalnız POST (aşağıdaki test) */
+const API_UCLARI = ["dosya", "hata", "is", "islem", "olcum", "saglik", "say", "surum", "tanim"];
 const klasorlerOf = (yol: string) => readdirSync(yol).filter((ad) => statSync(join(yol, ad)).isDirectory()).sort();
 
 test("her modülün rota klasörü var ve src/app'te modül dışı rota yok", () => {
@@ -168,6 +170,19 @@ test("api/islem: ilk iş aynı köken; oturum ve hesap denetimi işten önce; i�
   const sira = ["istekOturumu()", "b.yazan !== yazanEtiketi(o.id)", "oturumIslemi(o, async (db) => {", "await tekSeferlik(db,"].map((x) => govde.indexOf(x));
   assert.ok(sira.every((i, n) => i > 0 && (n === 0 || i > sira[n - 1])), `sıra: ${sira.join(", ")}`);
   assert.doesNotMatch(kaynak, /export (async )?function (GET|PUT|PATCH|DELETE)/);
+});
+
+test("api/say ve api/say/ek: ilk iş aynı köken; oturum işten önce; iş modülde (oturumla); yalnız POST", () => {
+  const dosyalar = { "say/route.ts": "await sayAkisi(o, ham, yaz, bitis)", "say/ek/route.ts": "await sayEkParcasi(o, p, " };
+  for (const [yol, is] of Object.entries(dosyalar)) {
+    const kaynak = readFileSync(join(KOK, "src", "app", "api", ...yol.split("/")), "utf8");
+    const govde = kaynak.slice(kaynak.indexOf("export async function POST"));
+    assert.match(govde, /^export async function POST\(istek: Request\) \{\n {2}if \(!\(await ayniKoken\(\)\)\) return yanit\(\{ hata: "koken" \}, 403\);/, yol);
+    const sira = ["istekOturumu()", "if (!o) return yanit({ hata: \"oturum\" }, 401);", is].map((x) => govde.indexOf(x));
+    assert.ok(sira.every((i, n) => i > 0 && (n === 0 || i > sira[n - 1])), `${yol} sıra: ${sira.join(", ")}`);
+    assert.doesNotMatch(kaynak, /export (async )?function (GET|PUT|PATCH|DELETE)/, yol);
+  }
+  assert.deepEqual(klasorlerOf(join(KOK, "src", "app", "api", "say")), ["ek"]);
 });
 
 /* 2026-10-15 (567): tarayıcı hatası ucu — ilk iş aynı köken (başka kökenden kayıt yok); gövde sınırlı ve biçimli; her dönüş 204 (yazıldı mı söylenmez);

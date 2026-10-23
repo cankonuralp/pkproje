@@ -15,7 +15,8 @@ import type { ModulAnahtari } from "../../server/yetki/tanim";
 /** sahada çalışan roller (denetime çıkar, rapor yazar) */
 const SAHA_ROLLERI: readonly Rol[] = ["denetci", "mekanik_yonetici", "elektrik_yonetici"];
 
-/* 550: S.A.Y her sayfada (sunucu eylemi o sayfanın işlevinde koşar) — Haiku'nun uzun cevabı için işlev süresi 55 sn (çağrı 45 sn sınırlı).
+/* 550: S.A.Y her sayfada (sunucu eylemi o sayfanın işlevinde koşar) — işlev süresi 55 sn. 2026-10-23 (S.A.Y baştan): S.A.Y'ın sorusu ve işi artık
+   akışlı uçta (src/app/api/say, kendi süresi 300 sn); burada kalan eylemler kısa (durum, geçmiş, ekranın kuralla yaptığı iş).
    ⛔ 60 DEĞİL: Vercel aynı ayarlı işlevleri tek pakette toplar — PDF basan uçlar 60 (Chromium yalnız onlarda, tests/pdf-paket.test.ts); sayfalar
    60 olursa Chromium bütün sayfalara paketlenebilirdi. Kendi süresini veren sayfa (60) onu kullanır. */
 export const maxDuration = 55;

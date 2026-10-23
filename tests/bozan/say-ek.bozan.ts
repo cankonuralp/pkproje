@@ -1,14 +1,16 @@
-/* OLUMSUZ KANIT — tests/say-ek.test.ts (522, S.A.Y'a fotoğraf ve belge eki) neyi koruyor. Kaynak diskte DEĞİŞTİRİLMEZ (anayasa 13.11): ek.ts bellekte
-   bozulup geçici klasörden içe aktarılır (göreli içe aktarmalar kök adrese çevrilir). O zaman:
+/* OLUMSUZ KANIT — tests/say-ek.test.ts (522; 2026-10-23 S.A.Y baştan: ek konuşmada kalır, sınır yok) neyi koruyor. Kaynak diskte DEĞİŞTİRİLMEZ
+   (anayasa 13.11): ek.ts bellekte bozulup geçici klasörden içe aktarılır (göreli içe aktarmalar kök adrese çevrilir). O zaman:
    1) fotoğraf temizlenmeseydi konum bilgisi (EXIF) yapay zekâya giderdi;
-   2) toplam boy denetimi kalkınca 4 MB'ı aşan ekler istek gövdesi sınırına takılır (soru sessizce düşer) ya da kotadan habersiz harcar;
-   3) adet denetimi kalkınca bir soruya sınırsız ek konur. */
+   2) Word'ün metni yeniden kısaltılırsa (eski 20 000 / 40 000 karakter) uzun belgenin sonu S.A.Y'a hiç gitmez — reisim'in "verdiğim dosyaya göre"
+      şikâyetinin bir nedeni;
+   3) ekin adı yapay zekâya giderse (başlıkta) dosya adındaki müşteri / kişi adı da gider. */
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { after, test } from "node:test";
+import { zipBayt } from "../../src/components/disa/zip.ts";
 
 const gecici = mkdtempSync(join(tmpdir(), "say-ek-bozan-"));
 after(() => rmSync(gecici, { recursive: true, force: true }));
@@ -23,23 +25,22 @@ async function bozuk(eski: string, yeni: string): Promise<Ek> {
   return import(pathToFileURL(yol).href) as Promise<Ek>;
 }
 const JPEG = new Uint8Array([0xff, 0xd8, 0xff, 0xe1, 0x00, 0x08, 0x45, 0x78, 0x69, 0x66, 0x00, 0x00, 0xff, 0xdb, 0x00, 0x03, 0x01, 0xff, 0xda, 0x00, 0x02, 0x01, 0x02, 0x03, 0xff, 0xd9]);
-const PDF = new Uint8Array(Buffer.from("%PDF-1.4\n%%EOF"));
 
 test("1. fotoğraf temizlenmeyince EXIF yapay zekâya gider (kilidin koruduğu açık)", async () => {
-  const m = await bozuk('const bayt = tur === "jpeg" ? jpegTemizle(b) : pngTemizle(b);', "const bayt = b;");
-  const e = m.sayEkiOku(JPEG, "etiket.jpg");
-  assert.ok(!("durum" in e) && e.icerik.tur === "jpeg" && Buffer.from(e.icerik.bayt).includes(Buffer.from("Exif")), "bozuk: EXIF duruyor");
+  const m = await bozuk("bayt: tur === \"jpeg\" ? jpegTemizle(b) : pngTemizle(b)", "bayt: b");
+  const e = m.sayEkiHazirla(JPEG, "etiket.jpg");
+  assert.ok(!("durum" in e) && Buffer.from(e.bayt).includes(Buffer.from("Exif")), "bozuk: EXIF duruyor");
 });
 
-test("2. toplam boy denetimi kalkınca 4 MB'ı aşan ekler kabul edilir (kilidin koruduğu açık)", async () => {
-  const m = await bozuk("  if (l.reduce((t, x) => t + x.bayt.length, 0) > EK_EN_COK_BAYT) return { durum: \"red\", neden: EK_BOY_HATASI };\n", "");
-  const yari = new Uint8Array((4 << 20) / 2 + 1); yari.set(PDF);
-  const l = m.sayEkleriOku([{ bayt: yari, ad: "1.pdf" }, { bayt: yari, ad: "2.pdf" }]);
-  assert.ok(Array.isArray(l) && l.length === 2, "bozuk: toplam 4 MB üstü geçti");
+test("2. Word'ün metni yeniden kısaltılırsa uzun belgenin sonu gitmez (kilidin koruduğu açık)", async () => {
+  const m = await bozuk("wordMetni(b, Number.POSITIVE_INFINITY)", "wordMetni(b)");
+  const uzun = "Topraklama 0,4 Ω ".repeat(10_000);
+  const e = m.sayEkiHazirla(zipBayt([["word/document.xml", `<w:document><w:body><w:p><w:r><w:t>${uzun}</w:t></w:r></w:p></w:body></w:document>`]]), "u.docx");
+  assert.ok(!("durum" in e) && new TextDecoder().decode(e.bayt).length < uzun.trim().length, "bozuk: metin kısaltıldı");
 });
 
-test("3. adet denetimi kalkınca bir soruya sınırsız ek konur (kilidin koruduğu açık)", async () => {
-  const m = await bozuk("  if (l.length > EK_EN_COK_ADET) return", "  if (false) return");
-  const l = m.sayEkleriOku(Array.from({ length: 9 }, () => ({ bayt: PDF, ad: "p.pdf" })));
-  assert.ok(Array.isArray(l) && l.length === 9, "bozuk: 9 ek geçti");
+test("3. ekin adı yapay zekâya giderse dosya adındaki bilgi de gider (kilidin koruduğu açık)", async () => {
+  const m = await bozuk("title: `Ek ${i + 1}` });", "title: (e as { ad?: string }).ad ?? \"\" });");
+  const l = m.ekBloklari([{ dosya: "file_1", tur: "pdf", ad: "Gizli Sanayi sözleşmesi.pdf" } as never], "s");
+  assert.match(JSON.stringify(l), /Gizli Sanayi/, "bozuk: ad gitti");
 });

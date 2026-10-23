@@ -23,8 +23,9 @@ import { test } from "node:test";
 import { ISLEM_DIZINI, ISLEM_KATALOGU, KATALOG_MODULLERI, modulAdi } from "../src/modules/say/islem-katalogu.ts";
 import { islemleriListele, islemSemasi, katalogDizini, katalogKur, type Islem } from "../src/server/yz/islem.ts";
 import {
-  ISLEM_ARACLARI, komutBlogu, komutDenetle, RAPOR_ARACLARI, sayIstegi, saySistemi, sayYanitiCoz, sonucIcerigi, sunucuKomutuMu, sunucuYazdi, type SayAdimi,
+  aracCagrilari, aracCagrisi, EKRAN_ARAC_ADLARI, ISLEM_ARACLARI, komutDenetle, RAPOR_ARACLARI, sayAraclari, sayIstegi, saySistemi, sonucIcerigi, sunucuKomutuMu,
 } from "../src/server/yz/say.ts";
+import { FORMAT_ARACI } from "../src/modules/rapor-format/say-kurucu.ts";
 import { sirYaz } from "../src/server/ayar/sir.ts";
 import { yzAnahtarYaz } from "../src/modules/firma-ayarlari/server/ayarlar.ts";
 import { islemAlanlariDenetimi, SAY_ELLE_ALANLAR, zodAgaci as agac } from "./yardimci/denetimler.ts";
@@ -136,53 +137,41 @@ test("ÇALIŞTIRICI MODÜL İŞLEVİNİ ÇAĞIRIR: islev modülün sunucu dosyas
   assert.equal(ISLEM_KATALOGU.length, KATALOG_MODULLERI.reduce((n, m) => n + m.islemler.length, 0));
 });
 
-test("araçlar: dizin verilince islemler / islem her istekte en önde ve sabit, talimatta dizin; dizinsiz istek değişmez", () => {
-  const baglam = { roller: [], yer: "Planlar", yardim: null, bekleyen: [] };
-  const g = sayIstegi({ model: "haiku", kilavuz: [], baglam, gecmis: [], soru: "s", islemDizini: ISLEM_DIZINI }).govde as { tools: { name: string }[]; system: { text: string }[] };
-  assert.deepEqual(g.tools.map((t) => t.name), ["islemler", "islem", "web_search"]);
+/* 2026-10-23 (S.A.Y baştan — reisim: "direk claude da haiku nasıl çalışıyor ise direk o şekilde"): araçların HEPSİ her istekte aynı sırayla (düşünme
+   blokları araç listesi değişmedikçe geçerli); sayfa bilgisi talimatta değil, konuşmada — önceki "sayfaya göre değişen araçlar" testi bu yüzden değişti */
+test("araçlar: bütün araçlar her istekte aynı sırayla, işlem araçları önde; talimatta dizin; talimat her çağrıda aynı", () => {
+  const g = sayIstegi({ model: "haiku", sistem: saySistemi([], ISLEM_DIZINI), araclar: sayAraclari(FORMAT_ARACI), mesajlar: [{ role: "user", content: "s" }] })
+    .govde as { tools: { name: string }[]; system: { text: string }[] };
+  assert.deepEqual(g.tools.map((t) => t.name), ["islemler", "islem", "ekran_durumu", "rapora_yaz", "fotograflari_oku", "geri_al", "raporu_kaydet", "onaya_gonder",
+    "formati_duzenle", "web_search"]);
   assert.ok(g.system[0].text.includes(ISLEM_DIZINI) && g.system[0].text.includes("islem aracıyla"), "dizin önbellekli talimatta");
-  const r = sayIstegi({ model: "haiku", kilavuz: [], baglam: { ...baglam, rapor: "HARİTA" }, gecmis: [], soru: "s", islemDizini: ISLEM_DIZINI }).govde as { tools: { name: string }[] };
-  assert.deepEqual(r.tools.map((t) => t.name), ["islemler", "islem", "rapora_yaz", "fotograflari_oku", "geri_al", "raporu_kaydet", "onaya_gonder", "web_search"],
-    "işlem araçları önde — sayfaya göre değişen araçlar arkada");
-  assert.deepEqual(JSON.stringify(g.tools.slice(0, 2)), JSON.stringify(r.tools.slice(0, 2)), "tanımlar aynı (önbellek öneki)");
-  const yok = sayIstegi({ model: "haiku", kilavuz: [], baglam, gecmis: [], soru: "s" }).govde as { tools: { name: string }[]; system: { text: string }[] };
-  assert.deepEqual(yok.tools.map((t) => t.name), ["web_search"]);
-  assert.ok(!yok.system[0].text.includes("sunucu işlemleri"));
+  assert.equal(JSON.stringify(sayAraclari(FORMAT_ARACI)), JSON.stringify(sayAraclari(FORMAT_ARACI)), "araç tanımları her çağrıda aynı");
   assert.equal(saySistemi([], ISLEM_DIZINI), saySistemi([], ISLEM_DIZINI), "talimat her çağrıda aynı");
   assert.deepEqual(ISLEM_ARACLARI.map((t) => t.name), ["islemler", "islem"]);
   assert.ok(RAPOR_ARACLARI.some((t) => t.name === "raporu_kaydet") && RAPOR_ARACLARI.some((t) => t.name === "onaya_gonder"));
-  /* konu sınırı tek kural olarak kalır; e-imza yalnız söylenir */
   assert.ok(saySistemi([], ISLEM_DIZINI).includes("E-imzayı kullanıcı kendi cihazında atar"));
 });
 
 test("çağrılar: islem / islemler sunucu komutu (biçimiyle), Kaydet / Onaya gönder ekran komutu; ekranın gönderdiği aynı denetimden; sonuç olduğu gibi", () => {
-  const c = sayYanitiCoz({ content: [
+  const icerik = [
     { type: "tool_use", id: "t1", name: "islem", input: { ad: "plan_ac", girdi: { tesis: "x" } } },
     { type: "tool_use", id: "t2", name: "islem", input: { ad: 5, girdi: [1, 2] } },
     { type: "tool_use", id: "t3", name: "islemler", input: { adlar: ["plan_ac", 7, ""], modul: "Planlar", ara: "" } },
     { type: "tool_use", id: "t4", name: "raporu_kaydet", input: {} }, { type: "tool_use", id: "t5", name: "onaya_gonder", input: {} },
-  ], stop_reason: "tool_use" });
-  assert.deepEqual(c.komutlar, [
+    { type: "server_tool_use", id: "s1", name: "web_search", input: { query: "x" } },
+  ];
+  assert.deepEqual(aracCagrilari(icerik).map((c) => c.id), ["t1", "t2", "t3", "t4", "t5"], "sunucu aracı (internet araması) hizmette çalışır");
+  const komutlar = aracCagrilari(icerik).map((c) => aracCagrisi({ type: "tool_use", ...c }));
+  assert.deepEqual(komutlar, [
     { tur: "islem", ad: "plan_ac", girdi: { tesis: "x" }, id: "t1" }, { tur: "islem", ad: "5", girdi: {}, id: "t2" },
     { tur: "islemler", adlar: ["plan_ac"], modul: "Planlar", id: "t3" }, { tur: "kaydet", id: "t4" }, { tur: "gonder", id: "t5" },
   ]);
-  assert.deepEqual(c.komutlar.map(sunucuKomutuMu), [true, true, true, false, false]);
-  for (const k of c.komutlar) assert.deepEqual(komutDenetle(k), k, `${k.tur}: ekranın geri gönderdiği komut aynı`);
-  assert.deepEqual(komutBlogu(c.komutlar[0]), { type: "tool_use", id: "t1", name: "islem", input: { ad: "plan_ac", girdi: { tesis: "x" } } });
-  assert.deepEqual(komutBlogu(c.komutlar[2]).input, { adlar: ["plan_ac"], modul: "Planlar" });
-  /* sunucunun sonucu tool_result'a olduğu gibi; döngüde işlem araçları tanımlı kalır, rapor araçları yalnız rapor komutu varsa */
+  assert.deepEqual(komutlar.map((k) => sunucuKomutuMu(k!)), [true, true, true, false, false]);
+  for (const k of komutlar) assert.deepEqual(komutDenetle(k), k, `${k!.tur}: ekranın geri gönderdiği komut aynı`);
+  assert.deepEqual(aracCagrilari(icerik).map((c) => EKRAN_ARAC_ADLARI.has(c.name)), [false, false, false, true, true]);
+  /* sunucunun sonucu tool_result'a olduğu gibi */
   const sonuc = JSON.stringify({ islem: "plan_ara", durum: "tamam", toplam: 0 });
-  const ozet = { yazildi: 0, ayni: 0, bekliyor: 0, yapilan: [], yazilamadi: [], sonuc };
-  assert.equal(sonucIcerigi(ozet), sonuc);
-  const adimlar: SayAdimi[][] = [[{ komut: { tur: "islem", ad: "plan_ara", girdi: {}, id: "t9" }, ozet }]];
-  const g = sayIstegi({ model: "haiku", kilavuz: [], baglam: { roller: [], yer: "Planlar", yardim: null, bekleyen: [] }, gecmis: [], soru: "planları bul", adimlar,
-    islemDizini: ISLEM_DIZINI }).govde as { tools: { name: string }[]; messages: { role: string; content: unknown }[] };
-  assert.deepEqual(g.tools.map((t) => t.name), ["islemler", "islem", "web_search"], "işlem adımı rapor araçlarını açmaz");
-  assert.deepEqual(g.messages.at(-1), { role: "user", content: [{ type: "tool_result", tool_use_id: "t9", content: sonuc }] });
-  /* D: yalnız başarılı YAZ işlemi "yenile" */
-  assert.equal(sunucuYazdi(adimlar), false, "okuma yenilemez");
-  assert.equal(sunucuYazdi([[{ komut: { tur: "islem", ad: "plan_ac", girdi: {} }, ozet: { ...ozet, yazildi: 1 } }]]), true);
-  assert.equal(sunucuYazdi([[{ komut: { tur: "yaz", girisler: [] }, ozet: { ...ozet, yazildi: 3 } }]]), false, "ekrana yazmak sayfayı yenilemez");
+  assert.equal(sonucIcerigi({ yazildi: 0, ayni: 0, bekliyor: 0, yapilan: [], yazilamadi: [], sonuc }), sonuc);
 });
 
 test("islemler aracı: adlarla şemalarıyla (bilinmeyen söylenir); modül / söz az işlem bulursa şemalarıyla, çoksa yalnız tarif", () => {

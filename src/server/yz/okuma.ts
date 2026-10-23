@@ -46,6 +46,12 @@ export function maliyetHesapla(model: YzModel, giris: number, cikis: number): nu
   const f = FIYAT[model], u = f.ust && giris > f.ust.esik ? f.ust : f;
   return Math.ceil((giris * u.giris + cikis * u.cikis) / 10);
 }
+/** 2026-10-23 (S.A.Y konuşması önbellekte): önbellekten okunan giriş tabanın 0,1 katı, önbelleğe yazılan 1,25 katı; fiyat kartı istemin toplam
+    boyuyla (önbellekli dahil) seçilir */
+export function onbellekliMaliyet(model: YzModel, u: { giris: number; okunan: number; yazilan: number; cikis: number }): number {
+  const f = FIYAT[model], toplam = u.giris + u.okunan + u.yazilan, k = f.ust && toplam > f.ust.esik ? f.ust : f;
+  return Math.ceil((u.giris * k.giris * 100 + u.okunan * k.giris * 10 + u.yazilan * k.giris * 125 + u.cikis * k.cikis * 100) / 1000);
+}
 /** bir okumanın olabilecek en yüksek maliyeti (ayırma) */
 export const enCokMaliyet = (model: YzModel) => maliyetHesapla(model, GIRIS_UST, YANIT_SINIRI);
 
@@ -153,16 +159,22 @@ export const anthropicCagir: YzCagirici = async (istek, anahtar, zamanMs = ZAMAN
   if (!r.ok) {
     let tur = "", ileti = "";
     try { const e = (await r.json() as { error?: { type?: unknown; message?: unknown } }).error; tur = String(e?.type ?? ""); ileti = String(e?.message ?? ""); } catch { /* gövde yok */ }
-    console.error(`[yapay zekâ] ${r.status} ${tur}: ${ileti.replace(/sk-ant-[A-Za-z0-9_-]+/g, "sk-ant-…").slice(0, 300)}`);
-    const neden =
-      r.status === 401 || r.status === 403 ? "API anahtarı geçersiz ya da yetkisiz (Firma ayarları › Yapay zekâ)."
-      : r.status === 429 || r.status === 529 ? "Yapay zekâ hizmeti şu an yoğun; biraz sonra yeniden deneyin."
-      : r.status === 413 ? "Fotoğraf çok büyük."
-      : r.status === 400 && /image/i.test(ileti) ? "Fotoğraf okunamadı (biçim ya da boyut)."
-      : r.status === 400 ? "Yapay zekâ isteği kabul edilmedi; firma yöneticisine bildirin."
-      : "Yapay zekâ hizmeti yanıt vermedi; biraz sonra yeniden deneyin.";
-    /* kod + iletinin ilk kısmı (anahtarsız): çağıran 400'de isteği daraltıp yeniden deneyebilir (S.A.Y internet araması) */
-    return { durum: "hata", neden, ucret: "yok", kod: r.status, ileti: ileti.replace(/sk-ant-[A-Za-z0-9_-]+/g, "sk-ant-…").slice(0, 300) };
+    console.error(`[yapay zekâ] ${r.status} ${tur}: ${anahtarsiz(ileti).slice(0, 300)}`);
+    /* kod + iletinin ilk kısmı (anahtarsız): çağıran 400'de isteği daraltıp yeniden deneyebilir */
+    return { durum: "hata", neden: hizmetNedeni(r.status, ileti), ucret: "yok", kod: r.status, ileti: anahtarsiz(ileti).slice(0, 300) };
   }
   try { return { durum: "tamam", govde: await r.json() }; } catch { return { durum: "hata", neden: "Yapay zekâ yanıtı okunamadı.", ucret: "bilinmiyor" }; }
 };
+
+/** hizmetin hata iletisinde anahtar kalmasın */
+export const anahtarsiz = (s: string) => s.replace(/sk-ant-[A-Za-z0-9_-]+/g, "sk-ant-…");
+/** hizmetin hata kodundan kullanıcıya gösterilen neden (2026-10-23: S.A.Y'ın akışlı çağrısı da kullanır — src/server/yz/akis.ts) */
+export function hizmetNedeni(kod: number, ileti: string): string {
+  return kod === 401 || kod === 403 ? "API anahtarı geçersiz ya da yetkisiz (Firma ayarları › Yapay zekâ)."
+    : kod === 429 || kod === 529 ? "Yapay zekâ hizmeti şu an yoğun; biraz sonra yeniden deneyin."
+    : kod === 413 ? "Gönderilen dosya hizmetin kabul ettiğinden büyük."
+    : kod === 400 && /image/i.test(ileti) ? "Fotoğraf okunamadı (biçim ya da boyut)."
+    : kod === 400 && /prompt is too long|too many tokens|context/i.test(ileti) ? "Sohbet modelin okuyabileceğinden uzun; yeni konu için Sohbeti temizle."
+    : kod === 400 ? "Yapay zekâ isteği kabul edilmedi; firma yöneticisine bildirin."
+    : "Yapay zekâ hizmeti yanıt vermedi; biraz sonra yeniden deneyin.";
+}

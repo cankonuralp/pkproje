@@ -15,7 +15,11 @@
    kilitli SGK için nedenli "Yapamadım …"), alttaki bildirim yok.
    561 (reisim 2026-10-15: "rapor teknik yönetici onayında olduğu için değiştiremiyordu ama açıkta rapor göremiyorum dedi ayrıca chati yukarıdan tutup
    aşağıya doğru küçültmeyi yapamadım"): panel üstteki tutamaktan ve başlıktan sürüklenerek kısalır, Home tam boy; yazamadığı raporda (yönetici,
-   denetçinin raporunda) S.A.Y raporu bilir ("Rapor <no>") ve nedenini söyler. */
+   denetçinin raporunda) S.A.Y raporu bilir ("Rapor <no>") ve nedenini söyler.
+   2026-10-23 S.A.Y BAŞTAN (reisim: "direk claude da haiku nasıl çalışıyor ise direk o şekilde", "hiç bir kısıtı olmasın"): cevap AKIŞLA (taklit
+   her istekte denetler: konuşma olduğu gibi geri gelir, her adımda düşünme açık, bütün araçlar aynı sırayla, sayfa notu yerinde); ek konuşmada kalır
+   (sonraki soruda da görülür — "[ek-hatirla]"), her dosya türü eklenir (metin dosyası da); rapora / formata yazmadan önce S.A.Y ekranın hâlini
+   ekran_durumu ile alır. Eski "aracı çağırmadan yazdım" düzeltme turu kalktı (kasıtlı). */
 import { expect, test } from "@playwright/test";
 import { E2E_KAPI, E2E_PAROLA, E2E_YZ } from "./hesaplar";
 import { bolumleriAc, girisli, hazir, panelBoyunuDene } from "./yardimci";
@@ -82,15 +86,16 @@ test("S.A.Y: düğme, hızlı soru, serbest soru, sayfa değişince ve yenileyin
   /* 561: üstten tutup sürükleyince kısalır (tutamak ve başlık), Home tam boy */
   await panelBoyunuDene(page, panel, /^S\.A\.Y'ın boyu/, "S.A.Y");
 
-  /* 522 ek: ataç → menü (Fotoğraf çek · Galeriden seç · Belge ekle); desteklenmeyen dosya söylenir; eklenen kutunun üstünde, × çıkarır; soruyla
-     gider (taklit eki sayar), gönderilen soruda adı görünür, kutu boşalır */
+  /* 522 ek: ataç → menü (Fotoğraf çek · Galeriden seç · Belge ekle); 2026-10-23: her dosya türü eklenir (metin dosyası da — sınır yok); eklenen
+     kutunun üstünde, × çıkarır; soruyla gider (taklit eki sayar), gönderilen soruda adı görünür, kutu boşalır; ek konuşmada kalır */
   const atac = panel.getByRole("button", { name: "Ek ekle: fotoğraf ya da belge" });
   await atac.click();
   await expect(atac).toHaveAttribute("aria-expanded", "true");
   for (const ad of ["Fotoğraf çek", "Galeriden seç", "Belge ekle"]) await expect(panel.getByText(ad).first()).toBeVisible();
   await panel.getByLabel(/Belge ekle/).setInputFiles({ name: "notlar.txt", mimeType: "text/plain", buffer: Buffer.from("deneme") });
-  await expect(page.getByText("Yalnız fotoğraf, PDF ya da Word (.docx) eklenir.").first()).toBeVisible();
   await expect(atac).toHaveAttribute("aria-expanded", "false");
+  await expect(panel.getByRole("list", { name: "Ekler" })).toContainText("notlar.txt");
+  await panel.getByRole("button", { name: "notlar.txt ekini çıkar" }).click();
   await atac.click();
   await panel.getByLabel(/Belge ekle/).setInputFiles({ name: "kilavuz.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4\n%%EOF") });
   await atac.click();
@@ -110,6 +115,10 @@ test("S.A.Y: düğme, hızlı soru, serbest soru, sayfa değişince ve yenileyin
   await expect(liste).toContainText("1 eki okudum.");
   await expect(liste.getByRole("listitem").filter({ hasText: "Bu etikette ne yazıyor?" }).first()).toContainText("etiket.png");
   await expect(panel.getByRole("list", { name: "Ekler" })).toHaveCount(1, { timeout: 5_000 });   // yalnız gönderilen sorudaki
+  /* 2026-10-23: ek konuşmada kalır — sonraki soruda S.A.Y onu yine görür (taklit konuşmanın bütün eklerini sayar) */
+  await panel.getByLabel("S.A.Y'a sor").fill("Az önceki etiketi hatırlıyor musun? [ek-hatirla]");
+  await panel.getByLabel("S.A.Y'a sor").press("Enter");
+  await expect(liste).toContainText("Konuşmada 1 ek var.", { timeout: 30_000 });
   expect(await page.evaluate(TASMA), "yana taşma yok").toBe(true);
 
   /* başka sayfaya geçince panel açık, geçmiş duruyor; yeni yer ayracı */
@@ -240,9 +249,9 @@ test("S.A.Y rapor ekranında: sayfa kıpırdamaz; söylenen alana yazar (işaret
 
 /* 2026-10-15 (pkproje §9 "S.A.Y CLAUDE GİBİ" — reisim: "sik sik duruyor tekrar tekrar soruyor", "yap işte yap dedim"; "aynı tabloya 50 satır ekle" 17
    satır ekleyip "kalanları da ekleyeyim mi?" diyordu): (A) İŞ DÖNGÜSÜ — taklit "[parça]" isteğinde satırları 20'şer ekler, sonucu görünce kalanını
-   ekler, bitince söyler (araya soru yok); bütün işin Geri al'ı son iletinin altında. (C) tek komutla 50 satır, No sütunu son sayıdan artarak. (D)
-   taklit "[sahte]" isteğine önce aracı çağırmadan "yazdım" der — kullanıcı bunu görmez; sunucunun düzeltme turunda iş yapılır, sonuç söylenir */
-test("S.A.Y iş döngüsü: satırlar parça parça ve tek komutla eklenir (No artarak), Geri al; aracı çağırmadan \"yazdım\" gösterilmez", async ({ page }, bilgi) => {
+   ekler, bitince söyler (araya soru yok); bütün işin Geri al'ı son iletinin altında. (C) tek komutla 50 satır, No sütunu son sayıdan artarak.
+   2026-10-23 (S.A.Y baştan): (D) sahte "yaptım" düzeltme turu kalktı (kasıtlı) — taklit her adımda düşünmenin açık olduğunu denetler */
+test("S.A.Y iş döngüsü: satırlar parça parça ve tek komutla eklenir (No artarak), Geri al", async ({ page }, bilgi) => {
   test.setTimeout(180_000);
   const kod = E2E_YZ.ekipman[bilgi.project.name];
   await page.goto(`${Y}/giris`);
@@ -306,16 +315,6 @@ test("S.A.Y iş döngüsü: satırlar parça parça ve tek komutla eklenir (No a
   await expect(await sonSatir()).toHaveValue(beklenen(50));
   await panel.getByRole("button", { name: "Geri al" }).last().click();
   await expect(tabloBolgesi).toHaveAttribute("data-satir", String(once));
-
-  /* D: taklit önce aracı çağırmadan "yazdım" der — gösterilmez; düzeltme turunda alana yazar, sonucu söyler */
-  const seri = page.getByRole("textbox", { name: "Seri no", exact: true });
-  const onceki = await seri.inputValue();
-  await sor("Seri no alanına SN-SAHTE yaz [sahte]");
-  await expect(seri).toHaveValue("SN-SAHTE", { timeout: 60_000 });
-  await expect(son).toContainText(/Yaptım: .*Seri no\./, { timeout: 30_000 });
-  await expect(liste).not.toContainText("alanına yazdım");
-  await panel.getByRole("button", { name: "Geri al" }).last().click();
-  await expect(seri).toHaveValue(onceki);
 });
 
 /* 552–553 (reisim 2026-10-14: "elektrikte hesaplamalarda olsun … format yapıcıda formül kısmı olsun mesela (RCa=480/RCd) … konuşarak ilgili formatı

@@ -133,9 +133,10 @@ const TARIH_KODLARI = new Set([14, 15, 16, 17, 18, 19, 20, 21, 22, 27, 30, 36, 4
 /** biçim kodu tarih mi: tırnak / köşeli parantez içi dışında d, m, y */
 const tarihBicimi = (kod: string) => /[dmy]/i.test(kod.replace(/"[^"]*"|\[[^\]]*\]|\\./g, ""));
 
-async function xlsxOku(z: Uint8Array): Promise<string[][]> {
+/** çalışma kitabının ortak parçaları: dosya okuyucu (açılan parçaların toplamı sınırlı ya da sınırsız), ortak metinler, tarih biçimli stiller, sayfalar */
+async function xlsxKitabi(z: Uint8Array, parcaSiniri: number) {
   const d = zipDizini(z), td = new TextDecoder();
-  let kalan: number = OKU_SINIR.parca;   // açılan bütün parçalar birlikte
+  let kalan = parcaSiniri;   // açılan bütün parçalar birlikte
   const oku = async (ad: string) => {
     const g = d.get(ad);
     if (!g) return null;
@@ -143,18 +144,16 @@ async function xlsxOku(z: Uint8Array): Promise<string[][]> {
     kalan -= b.length;
     return td.decode(b);
   };
-  /* ilk sayfa: çalışma kitabındaki ilk <sheet>'in ilişkisi; yoksa sheet1 */
-  let sayfaYolu = "xl/worksheets/sheet1.xml";
+  /* sayfalar: çalışma kitabındaki <sheet>'lerin adı ve ilişkisi; ilişkisi bulunamayan ilk sayfa sheet1 */
   const kitap = await oku("xl/workbook.xml"), iliski = await oku("xl/_rels/workbook.xml.rels");
-  const ilk = kitap ? etiketler(kitap, "sheet").next().value?.oz : undefined;
-  const rid = ilk && /\s[a-zA-Z0-9]+:id="([^"]*)"/.exec(` ${ilk}`)?.[1];
-  if (rid && iliski) {
-    const r = [...etiketler(iliski, "Relationship")].map((e) => ` ${e.oz}`).find((x) => ozellik(x, "Id") === rid);
+  const sayfalar = (kitap ? [...etiketler(kitap, "sheet")] : []).map((e) => {
+    const oz = ` ${e.oz}`, rid = /\s[a-zA-Z0-9]+:id="([^"]*)"/.exec(oz)?.[1];
+    const r = rid && iliski ? [...etiketler(iliski, "Relationship")].map((x) => ` ${x.oz}`).find((x) => ozellik(x, "Id") === rid) : undefined;
     const hedef = r && ozellik(r, "Target");
-    if (hedef) sayfaYolu = hedef.startsWith("/") ? hedef.slice(1) : `xl/${hedef.replace(/^\.\//, "")}`;
-  }
-  const sayfa = await oku(sayfaYolu);
-  if (sayfa === null) throw new TabloHatasi("Dosyada sayfa bulunamadı.");
+    return { ad: xmlCoz(ozellik(oz, "name") ?? ""), yol: hedef ? (hedef.startsWith("/") ? hedef.slice(1) : `xl/${hedef.replace(/^\.\//, "")}`) : null as string | null };
+  });
+  if (!sayfalar.length) sayfalar.push({ ad: "", yol: null });
+  if (!sayfalar[0].yol) sayfalar[0].yol = "xl/worksheets/sheet1.xml";
   const ortak = [...etiketler((await oku("xl/sharedStrings.xml")) ?? "", "si")].map((e) => metinler(e.ic ?? ""));
   /* tarih biçimli stiller (cellXfs sırası) */
   const stil = (await oku("xl/styles.xml")) ?? "";
@@ -164,16 +163,21 @@ async function xlsxOku(z: Uint8Array): Promise<string[][]> {
     const k = Number(ozellik(` ${e.oz}`, "numFmtId") ?? 0);
     return TARIH_KODLARI.has(k) || (ozel.has(k) && tarihBicimi(ozel.get(k)!));
   });
+  return { oku, ortak, tarihStil, sayfalar };
+}
+
+/** bir sayfanın satırları; sinir verilirse satır / sütun sınırlı (içe aktarma), verilmezse bütün sayfa (S.A.Y'ın eki) */
+function satirlariOku(sayfa: string, ortak: readonly string[], tarihStil: readonly boolean[], sinir: { satir: number; sutun: number } | null): string[][] {
   const satirlar: string[][] = [];
   for (const sm of etiketler(sayfa, "row")) {
     const no = Number(ozellik(` ${sm.oz}`, "r") ?? satirlar.length + 1) - 1;
-    if (no >= OKU_SINIR.satir) throw new TabloHatasi(`Dosyada en çok ${OKU_SINIR.satir.toLocaleString("tr-TR")} satır okunur.`);
+    if (sinir && no >= sinir.satir) throw new TabloHatasi(`Dosyada en çok ${OKU_SINIR.satir.toLocaleString("tr-TR")} satır okunur.`);
     const satir: string[] = [];
     let sira = 0;
     for (const cm of etiketler(sm.ic ?? "", "c")) {
       const oz = ` ${cm.oz}`, r = ozellik(oz, "r"), i = r ? sutunNo(r) : sira;
       sira = i + 1;
-      if (i < 0 || i >= OKU_SINIR.sutun) continue;
+      if (i < 0 || (sinir && i >= sinir.sutun)) continue;
       const t = ozellik(oz, "t"), s = Number(ozellik(oz, "s") ?? 0), ic = cm.ic ?? "";
       const v = ilkIc(ic, "v") ?? undefined;
       let deger = "";
@@ -189,6 +193,25 @@ async function xlsxOku(z: Uint8Array): Promise<string[][]> {
     satirlar[no] = satir;
   }
   return satirlar;
+}
+
+/* ilk sayfa, içe aktarma sınırlarıyla */
+async function xlsxOku(z: Uint8Array): Promise<string[][]> {
+  const k = await xlsxKitabi(z, OKU_SINIR.parca);
+  const sayfa = await k.oku(k.sayfalar[0].yol!);
+  if (sayfa === null) throw new TabloHatasi("Dosyada sayfa bulunamadı.");
+  return satirlariOku(sayfa, k.ortak, k.tarihStil, OKU_SINIR);
+}
+
+/** 2026-10-23 (S.A.Y'ın eki — reisim: "hiç bir kısıtı olmasın"): .xlsx'in BÜTÜN sayfaları, sınırsız (boyut, satır, sütun) */
+export async function xlsxSayfalari(z: Uint8Array): Promise<{ ad: string; satirlar: string[][] }[]> {
+  const k = await xlsxKitabi(z, Number.POSITIVE_INFINITY), l: { ad: string; satirlar: string[][] }[] = [];
+  for (const s of k.sayfalar) {
+    const x = s.yol ? await k.oku(s.yol) : null;
+    if (x !== null) l.push({ ad: s.ad, satirlar: satirlariOku(x, k.ortak, k.tarihStil, null) });
+  }
+  if (!l.length) throw new TabloHatasi("Dosyada sayfa bulunamadı.");
+  return l;
 }
 
 /** CSV: ayraç ilk satırdan (; Türkçe Excel'in varsayılanı, yoksa , ya da sekme); tırnaklı alan, "" kaçışı, satır içi satır sonu */

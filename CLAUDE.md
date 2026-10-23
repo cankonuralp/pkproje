@@ -471,6 +471,13 @@ pkproje/
                             (göç 0070; 390 / 0074: okunamayan kaynağın adı — iş kaydı ozet.hatali, duyuru_durumu.hatali) · uydurma sayfalar
                             e2e/duyuru-ornek.ts (PROBATA_DUYURU_UC yalnız uçtan uca taklit)
   src/modules/say/          S.A.Y SAHA ASİSTANI (380; maket say.js BB6): yardim.ts (sayfa yardımı + yapay zekâ kılavuzu, adresten yer adı) ·
+                            · 2026-10-23 BAŞTAN (reisim: "direk claude da haiku nasıl çalışıyor ise direk o şekilde", "hiç bir kısıtı olmasın"; göç 0103):
+                            konuşma OLDUĞU GİBİ (src/server/yz/konusma.ts — yz_konusma, yalnız sona eklenir; düşünme + imzası, araç çağrıları, sonuçlar) ·
+                            akış src/server/yz/akis.ts (SSE ayrıştırıcı + birikim, Dosya API) · döngü server/dongu.ts ← uç src/app/api/say (satır satır olay;
+                            300 sn, dolunca "devam") · ek server/ek-yukle.ts ← src/app/api/say/ek (parça parça; yz_ek, konuşmada kalır) · her adımda düşünme
+                            (adaptive + özet + drop_block), effort high, 128 000; talimat ve BÜTÜN araçlar konuşma boyunca aynı; sayfa sistem notuyla, ekranın
+                            hâli ekran_durumu aracıyla · aşağıdaki eski maddelerin sınırları (tur güvenliği, düzeltme turu, 150 000 karakter, 4 ek / 4 MB,
+                            45 sn) KALKTI · kilit tests/say-saf, say-akis, say-ek, say (PG), bozan say, say-dongu, say-ek, say-islem; e2e say.spec (SSE taklit)
                             server/say.ts (sayDurumu, saySorHazirla / saySorKaydet / sayBirak — ayırma, işlem dışı çağrı,
                             sayTemizle; 382 sayRaporCevabi / sayOneri — rapor ekranı, metni sunucu kurar) · ui/SayAsistan.tsx (uygulama düzeninde tek
                             bileşen; düğme + panel) · ui/baglam.ts (382: saha raporu ekranı kendini bağlar — canlı eksikler, sonuç, Uygula, Git; 384 canlı

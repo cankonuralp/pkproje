@@ -2527,6 +2527,18 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-23 (YAPILDI — dalda, CI ve yayın bekliyor): **S.A.Y BAŞTAN KURULDU** (reisim: *"yapay zeka sitede bağlı olan asistanda normalde claude da
+  kullandığım gibi verimli ve iyi çalışmıyor … sebebi nedir nasıl düzeltebiliriz"* → teşhis: konuşma kırpılıyor / dosya ve yapılan iş unutuluyor, iş
+  adımlarında düşünme kapalı, 45 sn akışsız, 4 MB ek, talimat yamaları; *"say asistanı direk claude da haiku nasıl çalışıyor ise direk o şekilde
+  çalıştıramaz mıyız"*; onay *"tamam onaylıyorum … baştan kurarken herhangi bir kısıt kurma tamamen temiz kurulum yap, hiç bir kısıtı olmasın"*).
+  Konuşma olduğu gibi saklanır ve her istekte geri gider (göç 0103 yz_konusma; düşünme + imza, araç çağrısı / sonucu, ekler Dosya API kimliğiyle);
+  her adımda düşünme (özeti ekranda canlı), derinlik high, cevap 128 000; akışlı uç /api/say (300 sn, dolarsa kaldığı yerden "devam"); ekler parça
+  parça yüklenir, konuşmada kalır, "Sohbeti temizle" ile silinir (522'deki "ek saklanmaz" kararı reisim onayıyla değişti); Excel bütün sayfalarıyla,
+  Word metni kısaltmasız, her dosya türü; talimatta yalnız reisim'in iki kuralı (konu sınırı; yap → teyit → söyle, devam edeyim mi sormaz) — eski
+  "son mesajı cevapla", "araç çağırırken metin yazma", tur güvenliği, sahte "yaptım" düzeltme turu, 150 000 karakter, 200 ileti, 4 ek / 4 MB,
+  arama sayısı, format haritası 40 000 / 100 işlem sınırları kalktı. Bütün araçlar her istekte (sayfa bilgisi sistem notuyla, ekranın hâli
+  ekran_durumu aracıyla) — düşünmeler konuşma boyunca geçerli. Kalan: firmanın kendi aylık yapay zekâ sınırı (Firma ayarları), raporun / formatın
+  kendi veri sınırları (tablo satırı, sonuç kuralı), yetki her işlemde sunucuda. "Sonra eğitelim" sorusuna öneri sunuldu (firmanın bilgi bankası + S.A.Y'ın kalıcı notları; reisim kararı bekliyor).
 - 2026-10-23 (YAPILDI): **NEXT.JS GÜVENLİK GÜNCELLEMESİ** (reisim: *"veri güvenliği site güvenliği ne durumda"* — durum taraması). Üretim
   bağımlılıklarında 1 kritik: next 16.3.8 (görsel en iyileyicide SVG ile oturumsuz kod çalıştırma, sunucu eylemlerinde hizmet engelleme) →
   next + eslint-config-next 16.4.2; npm audit (üretim) 0. YAYINDA main 836a980 (deneme makinesi 13/13, canlı denetim 11/11). Aynı taramada:

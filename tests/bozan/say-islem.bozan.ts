@@ -4,8 +4,9 @@
    1. yürütücü şema doğrulamasını atlarsa şemaya uymayan girdi modül işlevine gider (çalıştırıcı çağrılır);
    2. yürütücü oturum yerine girdideki kimliğe güvenirse yapay zekânın (ya da istemcinin) yazdığı kişi / firma işlemi yapar;
    3. sunucu işleminin sonucu tool_result'a konmazsa S.A.Y bulduğu kayıtları (kimlikler, sürümler) göremez — yalnız sayılar gider;
-   4. işlem araçları yalnız rapor açıkken giderse S.A.Y başka sayfada iş yapamaz ("bu sayfa açık değil" — reisim'in şikâyeti).
-   2026-10-16 (2. adım a incelemesi — src/modules/say/ui/eylemler.ts node'da yüklenemez; kaynak bellekte bozulur, kilidin AYNI denetimi
+   4. işlem araçları yalnız rapor açıkken giderse S.A.Y başka sayfada iş yapamaz ("bu sayfa açık değil" — reisim'in şikâyeti). 2026-10-23 (S.A.Y
+      baştan): araçların hepsi her istekte (sayAraclari) — işlem araçları düşerse kilit düşer.
+   2026-10-16 (2. adım a incelemesi; 2026-10-23: döngü src/modules/say/server/dongu.ts — kaynak bellekte bozulur, kilidin AYNI denetimi
    tests/yardimci/denetimler.ts sayEylemDenetimi uygulanır):
    5. işlemin ortamı oturum yerine girdiden kurulursa (kim: girdideki) denetim düşer;
    6. ekranın gönderdiği adımlar (d.onceki) yürütücüden yeniden geçerse denetim düşer — iş iki kez yapılır;
@@ -73,14 +74,14 @@ test("3. işlemin sonucu tool_result'a konmazsa S.A.Y kayıtları göremez (yaln
   assert.doesNotMatch(m.sonucIcerigi({ yazildi: 0, ayni: 0, bekliyor: 0, yapilan: [], yazilamadi: [], sonuc }), /P-1026-001/, "bozuk: bulunan plan S.A.Y'a gitmedi");
 });
 
-test("4. işlem araçları yalnız rapor açıkken giderse başka sayfada iş yapılamaz", async () => {
-  const m = await bozuk<Say>(SAY, "...(p.islemDizini ? ISLEM_ARACLARI : [])", "...(p.islemDizini && b.rapor ? ISLEM_ARACLARI : [])");
-  const g = m.sayIstegi({ model: "haiku", kilavuz: [], baglam: { roller: [], yer: "Planlar", yardim: null, bekleyen: [] }, gecmis: [], soru: "plan aç",
-    islemDizini: "Planlar:\n- plan_ac (yaz): Plan açar." }).govde as { tools: { name: string }[] };
-  assert.deepEqual(g.tools.map((t) => t.name), ["web_search"], "bozuk: Planlar sayfasında işlem aracı yok");
+test("4. işlem araçları her istekte değilse başka sayfada iş yapılamaz (2026-10-23: araçların hepsi her istekte — sayAraclari)", async () => {
+  const m = await bozuk<Say>(SAY, "[...ISLEM_ARACLARI, EKRAN_ARACI, ...RAPOR_ARACLARI, formatAraci, ARAMA_ARACI]", "[EKRAN_ARACI, ...RAPOR_ARACLARI, formatAraci, ARAMA_ARACI]");
+  const g = m.sayIstegi({ model: "haiku", sistem: "s", araclar: m.sayAraclari({ name: "formati_duzenle" }), mesajlar: [{ role: "user", content: "plan aç" }] })
+    .govde as { tools: { name: string }[] };
+  assert.ok(!g.tools.some((t) => t.name === "islem"), "bozuk: işlem aracı yok");
 });
 
-const EYLEM = oku("src/modules/say/ui/eylemler.ts"), SUNUCU = oku("src/modules/say/server/say.ts");
+const EYLEM = oku("src/modules/say/server/dongu.ts"), SUNUCU = oku("src/modules/say/server/say.ts");
 const eylemBozuk = (eski: string, yeni: string) => {
   assert.ok(EYLEM.includes(eski), `bozulacak satır kaynakta yok: ${eski}`);
   assert.deepEqual(sayEylemDenetimi(EYLEM, SUNUCU), [], "bozulmamış kaynak geçer");
@@ -88,17 +89,17 @@ const eylemBozuk = (eski: string, yeni: string) => {
 };
 
 test("5. işlemin ortamı oturum yerine girdiden kurulursa denetim düşer", () => {
-  const b = eylemBozuk("kim: o, firmaId: o.kiraci.firmaId,", "kim: (girdi as never as { kim?: never })?.kim ?? o, firmaId: o.kiraci.firmaId,");
+  const b = eylemBozuk("kim: o, firmaId: o.kiraci.firmaId,", "kim: (ham as never as { kim?: never })?.kim ?? o, firmaId: o.kiraci.firmaId,");
   assert.ok(b.some((x) => /oturumdan değil|girdisinden/.test(x)), `bozuk: girdideki kişi kullanıldı — ${b.join(" | ")}`);
 });
 
-test("6. ekranın gönderdiği adımlar yürütücüden yeniden geçerse denetim düşer", () => {
-  const b = eylemBozuk("      for (const k of komutlar) {", "      for (const k of [...(d.onceki as never[]), ...komutlar]) {");
-  assert.ok(b.some((x) => /ekranın adımları yeniden/.test(x)), `bozuk: ekranın adımları yeniden çalıştı — ${b.join(" | ")}`);
+test("6. ekranın getirdiği sonuçlar yürütücüden geçerse denetim düşer", () => {
+  const b = eylemBozuk("  for (const c of komutlar) {", "  for (const c of [...(sonuclarEkran as never[]), ...komutlar]) {");
+  assert.ok(b.some((x) => /ekranın sonuçları yeniden/.test(x)), `bozuk: ekranın sonuçları yeniden çalıştı — ${b.join(" | ")}`);
 });
 
-test("7. ekran komutundan sonraki işlem beklemeden çalışırsa (sıra) denetim düşer", () => {
-  const b = eylemBozuk("ekranda && k.tur === \"islem\" ? islemOzeti(", "false ? islemOzeti(");
+test("7. ekran aracından sonraki işlem beklemeden çalışırsa (sıra) denetim düşer", () => {
+  const b = eylemBozuk("if (ekranda) { sonuclar[c.id] = sonucIcerigi(islemOzeti(", "if (false) { sonuclar[c.id] = sonucIcerigi(islemOzeti(");
   assert.ok(b.some((x) => /sıra/.test(x)), `bozuk: S.A.Y'ın sırası bozuldu — ${b.join(" | ")}`);
 });
 

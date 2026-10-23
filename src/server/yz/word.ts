@@ -44,8 +44,8 @@ const coz = (s: string) => s.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (t, v: str
   return VARLIK[v.toLowerCase()] ?? t;
 });
 
-/** .docx'in metni; Word belgesi değilse ya da okunamazsa null */
-export function wordMetni(b: Uint8Array): string | null {
+/** .docx'in metni; Word belgesi değilse ya da okunamazsa null. sinir: en çok karakter (2026-10-23: S.A.Y'ın eki sınırsız — Infinity) */
+export function wordMetni(b: Uint8Array, sinir = METIN_SINIRI): string | null {
   const x = zipGirdisi(b, "word/document.xml");
   if (!x) return null;
   const xml = Buffer.from(x).toString("utf8");
@@ -61,10 +61,10 @@ export function wordMetni(b: Uint8Array): string | null {
     else if (t === "</w:tc>") { hucre = Math.max(0, hucre - 1); metin += " | "; }
     else if (t === "</w:p>" && hucre) metin += " ";
     else metin += "\n";
-    if (metin.length > METIN_SINIRI * 2) break;
+    if (metin.length > sinir * 2) break;
   }
   const temiz = coz(metin)
     .replace(/[\u0002-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "")
     .split("\n").map((s) => s.replace(/[ \t]+/g, " ").replace(/^\s*\|\s*|\s*\|\s*$/g, "").trim()).filter(Boolean).join("\n");
-  return temiz.slice(0, METIN_SINIRI);
+  return temiz.slice(0, sinir);
 }

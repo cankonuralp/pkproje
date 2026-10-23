@@ -1,38 +1,26 @@
-/* OLUMSUZ KANIT — 2026-10-15 (pkproje §9 "S.A.Y CLAUDE GİBİ": A iş döngüsü, C satir_ekle, D sahte "yaptım") — tests/say-saf.test.ts ve
-   tests/say-doldur.test.ts neyi koruyor. Kaynak diskte DEĞİŞTİRİLMEZ: src/server/yz/say.ts ve src/modules/raporlar/say-doldur.ts bellekte bozulur,
-   göreli içe aktarmalar mutlak yola çevrilip geçici klasörden içe aktarılır. O zaman:
-   1. döngünün devamında araç kullanımı kapanırsa (557'deki gibi tool_choice none) S.A.Y sonucu görünce bir daha araç çağıramaz — döngü tek tura
-      düşer ("kalanları da ekleyeyim mi?");
-   2. güvenlik değişikliğe bakmazsa 20'şer satır ekleyen aynı çağrı ikinci turda durdurulur (iş yarım kalır);
-   3. ekran satır sayısını yok sayarsa "50 satır ekle" tek satır ekler;
-   4. araç çağrısı çözülürken satır sayısı atılırsa (1'e inerse) "50 satır ekle" tek satıra döner;
-   5. sahte "yaptım" denetimi kalkarsa aracı çağırmadan "Ekledim." diyen cevap kullanıcıya gider.
-   2026-10-16 (S.A.Y 1. adım incelemesi — döngünün tek durma güvencesinin olumsuz kanıtı; istemcide başka durma yok):
-   6. güvenlik hiç durmazsa ya da imzaya araç kimliği girerse (her turda yeni kimlik) aynı iş değişmeden yinelense de döngü sürer;
-   7. güvenlik yalnız art arda iki adıma bakarsa değişiklik yapmayan A, B, A, B … hiç durmaz;
-   8. durdurulmuş turda S.A.Y yine araç isterse komut ekrana dönerse (src/modules/say/server/say.ts "!h.durdur") döngü sürer;
-   9. raporun tablo sınırı denetimi kalkarsa satir_ekle 300'ün üstüne çıkar — rapor kaydedilemez (Cevaplar şeması reddeder);
-   10. sahte "yaptım" denetimi araçsız istekte de çalışırsa bilgi veren cevap ("taslağı yazdım") düzeltme turuna düşer (dizinsiz istek — 2. adım
-       a'dan beri eylem dizini her istekte verir, iş araçları her sayfada);
-   2026-10-16 (S.A.Y 2. adım a incelemesi):
-   11. güvenliğin imzası sunucu işleminin sonucunu görmezse araya yazma giren aynı okuma (plan_getir → plan_kabul → plan_getir) yineleme sayılır —
-       "planı kabul et, sonra rapor aç" üçüncü adımda durur. */
+/* OLUMSUZ KANIT — tests/say-saf.test.ts ve tests/say-akis.test.ts (2026-10-23 S.A.Y BAŞTAN — reisim: "say asistanı direk claude da haiku nasıl
+   çalışıyor ise direk o şekilde çalıştıramaz mıyız", "hiç bir kısıtı olmasın") neyi koruyor. Eski kanıtlar (tur güvenliği, sahte "yaptım" düzeltme
+   turu, döngüde araç seçimi) çekirdekle birlikte KASITLI olarak kalktı. Kaynak diskte DEĞİŞTİRİLMEZ (anayasa 13.11): src/server/yz/say.ts ve
+   src/server/yz/akis.ts bellekte bozulup geçici klasörden içe aktarılır. O zaman:
+   1) iş adımlarında düşünme yeniden kapatılırsa (eski "thinking disabled") S.A.Y akıl yürütmeden çalışır — reisim'in "aptal davranıyor" şikâyetinin
+      ana nedeni;
+   2) konuşma yeniden kırpılırsa (eski "son 150 000 karakter" / son N ileti) S.A.Y verilen dosyayı ve yaptığı işi unutur; düşünme blokları da geçersiz;
+   3) araç listesi sayfaya göre değişirse konuşmanın düşünmeleri geçersiz olur (talimat / araçlar konuşma boyunca aynı olmalı);
+   4) düşünmenin imzası biriktirilmezse düşünme bloğu geri gönderilemez (hizmet reddeder ya da düşürür);
+   5) araç girdisinin parçaları birleştirilmezse (yalnız son parça) çağrının girdisi bozulur;
+   6) bilinmeyen blok ya da parça atılırsa konuşma olduğu gibi geri gönderilmez. */
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { after, test } from "node:test";
-import { Cevaplar, FormatTanimi } from "../../src/format/tanim.ts";
-import { SABLONLAR } from "../../src/format/sablonlar.ts";
 
 const klasor = mkdtempSync(join(tmpdir(), "say-dongu-bozan-"));
 after(() => rmSync(klasor, { recursive: true, force: true }));
 const kaynak = (yol: string) => readFileSync(resolve(yol), "utf8")
   .replace(/from "(\.\.?\/[^"]+)"/g, (_, y: string) => `from "${pathToFileURL(resolve(resolve(yol, ".."), y)).href}"`);
-const SAY = kaynak("src/server/yz/say.ts"), DOLDUR = kaynak("src/modules/raporlar/say-doldur.ts");
-/* sunucu modülü: göreli içe aktarmalara ek olarak çıplak "zod" projenin node_modules'undan (geçici klasörde bulunamaz) */
-const SUNUCU = kaynak("src/modules/say/server/say.ts").replace(/from "zod"/g, `from "${import.meta.resolve("zod")}"`);
+const SAY = kaynak("src/server/yz/say.ts"), AKIS = kaynak("src/server/yz/akis.ts");
 let sira = 0;
 async function bozuk<T>(k: string, eski: string, yeni: string): Promise<T> {
   assert.ok(k.includes(eski), `bozulacak satır kaynakta yok: ${eski}`);
@@ -41,90 +29,57 @@ async function bozuk<T>(k: string, eski: string, yeni: string): Promise<T> {
   return import(pathToFileURL(yol).href) as Promise<T>;
 }
 type Say = typeof import("../../src/server/yz/say.ts");
-type Doldur = typeof import("../../src/modules/raporlar/say-doldur.ts");
-const ozet = (yazildi: number, satir = 0) => ({ yazildi, ayni: 0, bekliyor: 0, yapilan: [], yazilamadi: [], satir });
-const baglam = { roller: [], yer: "Rapor X", yardim: null, bekleyen: [], rapor: "HARİTA" };
+type Akis = typeof import("../../src/server/yz/akis.ts");
+const MESAJLAR = Array.from({ length: 40 }, (_, i) => ({ role: i % 2 ? "assistant" : "user", content: `ileti ${i}` }));
+const istek = (m: Say, araclar: readonly object[] = m.sayAraclari({ name: "formati_duzenle" })) =>
+  m.sayIstegi({ model: "haiku", sistem: "s", araclar, mesajlar: MESAJLAR }).govde as { thinking: { type: string }; messages: unknown[]; tools: { name: string }[] };
 
-test("1) döngünün devamında araç kullanımı kapanırsa döngü tek tura düşer", async () => {
-  const m = await bozuk<Say>(SAY, "      ...(devam && p.durdur ? { tool_choice: { type: \"none\" } } : {}),", "      ...(devam ? { tool_choice: { type: \"none\" } } : {}),");
-  const g = m.sayIstegi({ model: "haiku", kilavuz: [], baglam, gecmis: [], soru: "linye tablosuna 50 satır ekle",
-    adimlar: [[{ komut: { tur: "yaz", girisler: [], satirlar: [{ tablo: "linye", adet: 17, degerler: {} }] }, ozet: ozet(0, 17) }]] }).govde as { tool_choice?: unknown };
-  assert.deepEqual(g.tool_choice, { type: "none" }, "bozuk: S.A.Y sonucu görünce araç çağıramaz");
+test("1) iş adımlarında düşünme kapatılırsa S.A.Y akıl yürütmeden çalışır", async () => {
+  const m = await bozuk<Say>(SAY, "        : { type: \"adaptive\", display: \"summarized\", block_binding: { prefix_mismatch_behavior: \"drop_block\" } },",
+    "        : { type: \"disabled\" },");
+  assert.equal(istek(m).thinking.type, "disabled", "bozuk: düşünme kapalı");
 });
 
-test("2) güvenlik değişikliğe bakmazsa 20'şer satır ekleyen aynı çağrı durdurulur", async () => {
-  const m = await bozuk<Say>(SAY, "  if (degisen(son) !== 0) return false;\n", "");
-  const komut = { tur: "yaz" as const, girisler: [], satirlar: [{ tablo: "linye", adet: 20, degerler: {} }] };
-  assert.equal(m.donguTekrari([[{ komut, ozet: ozet(0, 20) }], [{ komut, ozet: ozet(0, 20) }]]), true, "bozuk: iş sürerken döngü durdu");
+test("2) konuşma kırpılırsa S.A.Y dosyayı ve yaptığı işi unutur", async () => {
+  const m = await bozuk<Say>(SAY, "      messages: p.mesajlar,", "      messages: p.mesajlar.slice(-12),");
+  assert.notDeepEqual(istek(m).messages, MESAJLAR, "bozuk: konuşmanın başı gitti");
 });
 
-test("3) ekran satır sayısını yok sayarsa \"50 satır ekle\" tek satır ekler", async () => {
-  const m = await bozuk<Doldur>(DOLDUR, "    for (let i = 0; i < adet; i++) {", "    for (let i = 0; i < 1; i++) {");
-  const u = m.komutlariUygula({ ekipman: {}, cevaplar: Cevaplar.parse({}) }, FormatTanimi.parse(SABLONLAR.ZPKR02.tanim), [], {},
-    [{ tablo: "linye", adet: 50, degerler: {}, sira: { sutun: "no" } }]);
-  assert.equal(u.durum.cevaplar.tablo.linye?.length, 1, "bozuk: 50 yerine 1 satır");
+test("3) araç listesi sayfaya göre değişirse düşünmeler geçersiz olur", async () => {
+  const m = await bozuk<Say>(SAY, "export const sayAraclari = (formatAraci: object): readonly object[] => [...ISLEM_ARACLARI, EKRAN_ARACI, ...RAPOR_ARACLARI, formatAraci, ARAMA_ARACI];",
+    "export const sayAraclari = (formatAraci: object, rapor = false): readonly object[] => [...ISLEM_ARACLARI, EKRAN_ARACI, ...(rapor ? RAPOR_ARACLARI : []), formatAraci, ARAMA_ARACI];");
+  assert.ok(!istek(m).tools.some((t) => t.name === "rapora_yaz"), "bozuk: rapor araçları yalnız rapordayken");
 });
 
-test("4) araç çağrısı çözülürken satır sayısı atılırsa tek satıra döner", async () => {
-  const m = await bozuk<Say>(SAY, "  return [{ tablo, adet, degerler, ...(sira ? { sira } : {}) }];", "  return [{ tablo, adet: 1, degerler, ...(sira ? { sira } : {}) }];");
-  const c = m.sayYanitiCoz({ content: [{ type: "tool_use", id: "t1", name: "rapora_yaz", input: { satir_ekle: [{ tablo: "linye", adet: 50 }] } }] });
-  assert.deepEqual(c.komutlar, [{ tur: "yaz", id: "t1", girisler: [], satirlar: [{ tablo: "linye", adet: 1, degerler: {} }] }], "bozuk: satır sayısı atıldı");
+const birik = (m: Akis, metin: string) => {
+  const b = new m.AkisBirikimi(), t = { kalan: "" };
+  for (const o of m.sseAyir(t, metin)) b.olay(o.olay, JSON.parse(o.veri));
+  return b.icerik();
+};
+const olay = (tur: string, veri: object) => `event: ${tur}\ndata: ${JSON.stringify({ type: tur, ...veri })}\n\n`;
+const BAS = olay("message_start", { message: { id: "m", model: "x", content: [], usage: {} } });
+
+test("4) düşünmenin imzası biriktirilmezse düşünme bloğu geri gönderilemez", async () => {
+  const m = await bozuk<Akis>(AKIS, "      if (p.type === \"signature_delta\") { b.signature = String(b.signature ?? \"\") + String(p.signature ?? \"\"); return; }\n",
+    "      if (p.type === \"signature_delta\") return;\n");
+  const l = birik(m, BAS + olay("content_block_start", { index: 0, content_block: { type: "thinking", thinking: "" } })
+    + olay("content_block_delta", { index: 0, delta: { type: "signature_delta", signature: "imza" } }));
+  assert.equal((l[0] as { signature?: string }).signature, undefined, "bozuk: imza yok");
 });
 
-test("5) sahte \"yaptım\" denetimi kalkarsa aracı çağırmadan \"Ekledim.\" diyen cevap geçer", async () => {
-  const m = await bozuk<Say>(SAY, "  return c.durum === \"tamam\" && yapildiDiyor(c.metin);", "  return false;");
-  assert.equal(m.sahteYapildi({ content: [{ type: "text", text: "50 satırı ekledim." }], stop_reason: "end_turn" }, false), false, "bozuk: sahte cevap yakalanmadı");
+test("5) araç girdisinin parçaları birleştirilmezse girdi bozulur", async () => {
+  const m = await bozuk<Akis>(AKIS, "this.json.set(i, (this.json.get(i) ?? \"\") + String(p.partial_json ?? \"\"));", "this.json.set(i, String(p.partial_json ?? \"\"));");
+  const l = birik(m, BAS + olay("content_block_start", { index: 0, content_block: { type: "tool_use", id: "t", name: "islem", input: {} } })
+    + olay("content_block_delta", { index: 0, delta: { type: "input_json_delta", partial_json: "{\"ad\": " } })
+    + olay("content_block_delta", { index: 0, delta: { type: "input_json_delta", partial_json: "\"plan_ac\"}" } })
+    + olay("content_block_stop", { index: 0 }));
+  assert.deepEqual(l[0].input, {}, "bozuk: girdi kayboldu");
 });
 
-const ayni = [[{ komut: { tur: "geri" as const, id: "a" }, ozet: ozet(0) }], [{ komut: { tur: "geri" as const, id: "b" }, ozet: ozet(0) }]];
-test("6) güvenlik hiç durmazsa ya da imzaya araç kimliği girerse aynı iş değişmeden yinelense de döngü sürer", async () => {
-  const hic = await bozuk<Say>(SAY, "  if (degisen(son) !== 0) return false;\n", "  return false;\n");
-  assert.equal(hic.donguTekrari(ayni), false, "bozuk: güvenlik hiç durmuyor");
-  /* 2026-10-16 (2. adım a incelemesi): imzada sunucu işleminin sonucu da var — bozulan satır onunla */
-  const kimlikli = await bozuk<Say>(SAY, "const b = komutBlogu(x.komut); return [b.name, b.input, x.ozet.sonuc ?? null];",
-    "const b = komutBlogu(x.komut); return [b.id, b.name, b.input, x.ozet.sonuc ?? null];");
-  assert.equal(kimlikli.donguTekrari(ayni), false, "bozuk: her turda yeni kimlik — aynı iş hiç eşleşmez");
-});
-
-test("7) güvenlik yalnız art arda iki adıma bakarsa değişiklik yapmayan A, B, A … hiç durmaz", async () => {
-  const m = await bozuk<Say>(SAY, " || adimlar.slice(0, -2).some((a) => degisen(a) === 0 && imza(a) === s)", "");
-  const k = (deger: string, id: string) => [{ komut: { tur: "yaz" as const, girisler: [{ yer: "t:linye:1:akim", deger }], id }, ozet: ozet(0) }];
-  assert.equal(m.donguTekrari([k("1", "a"), k("bir", "b"), k("1", "c"), k("bir", "d")]), false, "bozuk: A, B, A, B sürdü");
-});
-
-test("8) durdurulmuş turda S.A.Y yine araç isterse komut ekrana döner — döngü sürer", async () => {
-  type Sunucu = typeof import("../../src/modules/say/server/say.ts");
-  const m = await bozuk<Sunucu>(SUNUCU, "    if (!h.durdur && !ek.yedek && komutlar.length && c.durum !== \"ret\") return", "    if (!ek.yedek && komutlar.length && c.durum !== \"ret\") return");
-  /* veritabanı taklidi: kapanış kaydı yazılır gibi (komut dönüşü sohbete yazmadan olur) */
-  const db = { sorgu: async () => ({ rows: [], rowCount: 0 }) } as unknown as Parameters<Sunucu["sayIsSonucuKaydet"]>[0];
-  const h = { durum: "hazir", istek: { govde: {} }, anahtar: "", model: "haiku", ay: "2026-10", ust: 0, yer: "Rapor X", rapor: null, format: null,
-    komutRapor: true, komutFormat: false, ozet: ozet(0), durdur: true, yapildi: false } as Parameters<Sunucu["sayIsSonucuKaydet"]>[1];
-  const y = await m.sayIsSonucuKaydet(db, h, { content: [{ type: "tool_use", id: "g3", name: "geri_al", input: {} }], stop_reason: "tool_use",
-    usage: { input_tokens: 10, output_tokens: 1 } });
-  assert.ok(y.durum === "tamam" && y.komutlar?.length === 1, "bozuk: durdurulmuş turda komut döndü");
-});
-
-test("9) raporun tablo sınırı denetimi kalkarsa satir_ekle 300'ün üstüne çıkar — rapor kaydedilemez", async () => {
-  const m = await bozuk<Doldur>(DOLDUR, "    if (once.length + adet > TABLO_SATIR_EN_COK) {", "    if (false) {");
-  const t = FormatTanimi.parse(SABLONLAR.ZPKR02.tanim);
-  const d = { ekipman: {}, cevaplar: { ...Cevaplar.parse({}), tablo: { linye: Array.from({ length: 290 }, (_, i) => ({ no: String(i + 1) })) } } };
-  const u = m.komutlariUygula(d, t, [], {}, [{ tablo: "linye", adet: 20, degerler: {}, sira: { sutun: "no" } }]);
-  assert.equal(u.durum.cevaplar.tablo.linye.length, 310);
-  assert.equal(Cevaplar.safeParse(u.durum.cevaplar).success, false, "bozuk: rapor şemadan geçmiyor");
-});
-
-test("10) sahte \"yaptım\" denetimi araçsız istekte de çalışırsa bilgi veren cevap düzeltme turuna düşer", async () => {
-  const m = await bozuk<Say>(SAY, "  Array.isArray(govde.tools) && (govde.tools as { name?: unknown }[]).some((t) => !!t && typeof t === \"object\" && t.name !== ARAMA_ARACI.name);",
-    "  true;");
-  const g = m.sayIstegi({ model: "haiku", kilavuz: [], baglam: { roller: [], yer: "Planlar", yardim: null, bekleyen: [] }, gecmis: [], soru: "kontrol listesi" }).govde;
-  assert.equal(m.isAraciVar(g) && m.sahteYapildi({ content: [{ type: "text", text: "Size bir kontrol listesi oluşturdum:" }], stop_reason: "end_turn" }, false), true,
-    "bozuk: araçsız bilgi veren cevap sahte sayıldı");
-});
-
-test("11) güvenliğin imzası sunucu işleminin sonucunu görmezse getir → yaz → getir döngüsü durur", async () => {
-  const m = await bozuk<Say>(SAY, "return [b.name, b.input, x.ozet.sonuc ?? null];", "return [b.name, b.input];");
-  const getir = { tur: "islem" as const, ad: "plan_getir", girdi: { plan: "p1" } };
-  const okuma = (sonuc: string, id: string) => [{ komut: { ...getir, id }, ozet: { ...ozet(0), sonuc } }];
-  const yazma = [{ komut: { tur: "islem" as const, ad: "plan_kabul", girdi: { plan: "p1", surum: 3 } }, ozet: { ...ozet(1), sonuc: "tamam" } }];
-  assert.equal(m.donguTekrari([okuma("surum 3", "g1"), yazma, okuma("surum 4", "g2")]), true, "bozuk: yeni sürümü gören okuma döngüyü durdurdu");
+test("6) bilinmeyen parça atılırsa konuşma olduğu gibi geri gönderilmez", async () => {
+  const eski = "      for (const [k, x] of Object.entries(p)) {\n        if (k === \"type\") continue;\n        b[k] = typeof x === \"string\" && typeof b[k] === \"string\" ? (b[k] as string) + x : x;\n      }\n";
+  const m = await bozuk<Akis>(AKIS, eski, "");
+  const l = birik(m, BAS + olay("content_block_start", { index: 0, content_block: { type: "yeni", veri: "a" } })
+    + olay("content_block_delta", { index: 0, delta: { type: "yeni_delta", veri: "b" } }));
+  assert.equal(l[0].veri, "a", "bozuk: parça atıldı");
 });
