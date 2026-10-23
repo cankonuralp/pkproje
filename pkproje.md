@@ -2527,6 +2527,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-23 (KARAR, kod yok): reisim *"ekranda tuşlarda olabilir her ekranda o ekrana özel tuşlar olur"* — S.A.Y panelinde her ekrana özel hazır tuşlar
+  (2026-10-14 "yalnız Fotoğrafları oku ve gir" kararının yerine; liste maketle). *"rapor formatı yüklemek vs verilen işlemleri ayırt edebilmeli … formatta
+  yükleyebilme özelliğimizide kullanmalı"* — S.A.Y verilen dosyayla ne istendiğini ayırır (formatı kurmak / türe basılı format PDF'i olarak yüklemek /
+  ikisi); bunun için ekin kopyası firmanın gizli deposunda tutulmalı (bugün yalnız Anthropic'te — geri indirilemiyor) ve dosya isteyen yüklemeler S.A.Y'ın
+  işlemlerine eklenmeli (ekipman-turleri formatYukle; Dökümanlar, özlük …). Doğrulandı: format değiştirilebilir (yayındaki sürümde Düzenle; Bakanlık öğesi
+  silinirse yalnız uyarı — 470); firma kendi formatını kurabilir (Sıfırdan oluştur · Belgeden başlat · S.A.Y ile konuşarak; basılı format PDF'i yüklenebilir).
 - 2026-10-23 (KARAR + ÖNERİ, kod yok): **S.A.Y EĞİTİM / OPTİMİZASYON** — reisim: *"panelde bir belgelerim klasörü olmasın, diğerlerinide değerlendiricem
   final kararımı vericem ama sen önerilerini söyle ne yapabiliriz optimizasyon için ben de eğitim için neler kurgulanabilir ekleyeceğim"*. Karar: panelde
   "Belgelerim" listesi YOK. Karar bekleyen önerilerim: (1) belgeler gizli kitaplıkta, sohbette taşınmaz — S.A.Y listeyi görür, gerekince açar (sayfa
