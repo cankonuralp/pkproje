@@ -2527,17 +2527,21 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
-- 2026-10-23 (YAPILDI — yayın aşağıdaki satırda): **BASILI FORMDAN RAPOR ŞABLONU** — reisim (sunum 597'nin ikinci hâline): *"bakanlık formatından farklı,
+- 2026-10-23 (YAPILDI — YAYINDA main f8c4203; deneme makinesi 13/13 (önceki koşunun 3 düşüşü düzeltildi: yapay zekâsı kapalı firmada kutu, e2e adresi),
+  canlı denetim 11/11, son yarım saatte çalışma hatası yok; gözle: deneme makinesinin masaüstü / tablet görüntülerinde kâğıt ve belge formun düzeninde —
+  gerçek modelle canlı deneme yapılmadı, giriş reisim'de): **BASILI FORMDAN RAPOR ŞABLONU** — reisim (sunum 597'nin ikinci hâline): *"bakanlık formatından farklı,
   ben bunu yükleyince format buna dönüşsün format düzenleyicide bundan düzenleme yapabileyim istiyorum anlamak çok mu zor"*, *"pdfi yüklüyorum düzenle
   diyorum rapor şablonunu aynı eski pdfden sürüm 1 den devam ediyor sürüm 2 ne işe yarıyor"*, *"işin içine say asistanı falan neden katıyosun zaten bu
-  artık başka bi konu"* → karar (sunumun K1–K4'ünün yerine): yükleme penceresinde "Rapor şablonunu bu PDF'e göre kur" İŞARETLİ gelir; yükleyince
+  artık başka bi konu"* → karar (sunumun K1–K4'ünün yerine): yükleme penceresinde "Rapor şablonunu bu PDF'e göre kur" İŞARETLİ gelir (yalnız firmada
+  yapay zekâ hazırken; kapalıysa yükleme yalnız saklar, satırdaki tuş nedenini söyler); yükleyince
   PDF tek seferlik yapay zekâ okumasıyla (S.A.Y sohbeti DEĞİL) formatın tamamına çevrilir, türün TASLAĞI olur, Format kurucu açılır — düzenlenir,
   Yayınla ile geçer (yayındaki sürüm o ana kadar değişmez); basılı format satırında "Şablonu bundan kur" (eski sürümden ya da yeniden). Belge FORMUN
   görünümünde: format tanımına görünüm (gorunum.basTuru tablo / yalnız ad; gorunum.stil bölüm başlığı zemini pembe / gri / yok, hizası sol / orta,
   etiket mavi / kalın) ve kontrol listesine yanYana (belgede iki sütun) + numara (grup / baştan sona) — belge, kâğıt, saha ekranı ortak (duzen.ts
   belgeStilSiniflari, basTuru, maddeNumaralari); kurucuda "Belge görünümü" bölümü, listenin bölüm ayarında iki sütun + numara. Çeviri: istek
   src/server/yz/basili.ts (Haiku 5.5, düşünme açık, derinlik yüksek, PDF + türün adı; şema bütün alanları zorunlu, birleşik türsüz), çeviri
-  rapor-format/basili.ts (her parça şemadan; formda yoksa numarasız "Kullanılan cihazlar" ve sonda numarasız "Fotoğraflar"; zorunlu firma satırları
+  rapor-format/basili.ts (her parça şemadan; formda yoksa numarasız "Kullanılan cihazlar" — teknik bilgilerin numarasız alt tablolarından sonra — ve
+  sonda numarasız "Fotoğraflar"; zorunlu firma satırları
   eklenir; uzmanın imza hücresi eklenir; değerler formdan alınmaz), sunucu rapor-format/server/basili.ts (ayırma → çağrı işlem dışında → taslak:
   formatlar.ts taslakYaz), PDF ekipman-turleri basiliPdf; tür sayfası işlev süresi 300 sn. AYRICA BULUNDU: format yapıcının "Yapay zekâya anlat" /
   "Belgeden başlat" şemasında 21 birleşik türlü alan vardı (hizmetin sınırı 16 — Anthropic yapılandırılmış çıktı belgesi; canlı günlük Hobby'de 1 saat,
