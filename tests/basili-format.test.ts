@@ -33,8 +33,8 @@ test("basılı formun okunanı formatın tamamına çevrilir ve şemadan geçer"
   assert.deepEqual(fs.map((s) => s.kaynak), ["firma", "rapor_no", "adres", "bas", "sgk", "serbest", "isg"]);
   assert.equal(fs.find((s) => s.kaynak === "serbest")?.metin, "Sabit not");
   assert.equal(fs.find((s) => s.kaynak === "adres")?.tam, true);
-  /* sıra: firma (kayıttan) · ekipman · cihaz (numarasız) · formun bölümleri · sonuç · imza · fotoğraf (numarasız) */
-  assert.deepEqual(t.bolumler.map((b) => b.blok), ["bilgi", "bilgi", "cihaz", "bilgi", "liste", "kusur", "sonuc", "imza", "foto"]);
+  /* sıra: firma (kayıttan) · ekipman · numarasız alt tablo · cihaz (numarasız, alt tablolardan sonra) · formun bölümleri · sonuç · imza · fotoğraf (numarasız) */
+  assert.deepEqual(t.bolumler.map((b) => b.blok), ["bilgi", "bilgi", "bilgi", "cihaz", "liste", "kusur", "sonuc", "imza", "foto"]);
   const ekip = t.bolumler[1] as BolumOf<"bilgi">;
   assert.equal(ekip.tam, true);
   assert.equal(ekip.ad, "TEKNİK ÖZELLİKLER");
@@ -43,7 +43,7 @@ test("basılı formun okunanı formatın tamamına çevrilir ve şemadan geçer"
     [["Marka / Yapımcı", "marka", "metin"], ["Seri no", "seri", "metin"], ["Kapasite", null, "sayi"], ["Statik test yükü", null, "sayi"], ["İkinci marka", null, "metin"], ["Vinç tipi", null, "metin"]]);
   assert.equal(ekip.alanlar[3].formul, "[Kapasite] * 1,25");
   assert.equal(ekip.alanlar[2].birim, "kg");
-  const halat = t.bolumler[3] as BolumOf<"bilgi">;
+  const halat = t.bolumler[2] as BolumOf<"bilgi">;
   assert.equal(halat.numarasiz, true);
   assert.deepEqual(halat.alanlar.map((a) => a.tam ?? false), [false, true]);
   const liste = t.bolumler[4] as BolumOf<"liste">;
@@ -69,7 +69,7 @@ test("basılı formun okunanı formatın tamamına çevrilir ve şemadan geçer"
 test("numaralar formdaki gibi: numarasız cihaz ve alt tablo sayılmaz — 3 tespit, 4 notlar, 5 sonuç; maddeler baştan sona", () => {
   const t = basilidanTanim(structuredClone(HAM), "Vinç")!.tanim;
   const d = raporDuzeni(t, false);
-  assert.deepEqual(d.bolumler.map((x) => `${x.no ?? "-"} ${x.b.ad.split(" ")[0]}`), ["- Kullanılan", "- Halat", "3 TESPİT", "4 NOTLAR", "5 SONUÇ", "- KONTROLÜ", "- Fotoğraflar"]);
+  assert.deepEqual(d.bolumler.map((x) => `${x.no ?? "-"} ${x.b.ad.split(" ")[0]}`), ["- Halat", "- Kullanılan", "3 TESPİT", "4 NOTLAR", "5 SONUÇ", "- KONTROLÜ", "- Fotoğraflar"]);
   const liste = t.bolumler.find((b) => b.blok === "liste") as BolumOf<"liste">;
   assert.deepEqual([...maddeNumaralari(liste).values()], ["1", "2", "3"]);
   assert.deepEqual([...maddeNumaralari({ ...liste, numara: undefined }).values()], ["1.1", "1.2", "2.1"]);

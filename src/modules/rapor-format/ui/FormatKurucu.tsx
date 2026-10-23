@@ -350,7 +350,7 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
       {/* 2026-10-23 (basılı formdan şablon — reisim: "bu pdfine bi bak nasıl gözüküyor"): belgenin başı ve görünümü; kâğıtta ve belgede aynı */}
       <details className={`${stil.bolum} ${stil.kurallar} ${stil.yalnizGenis}`}>
         <summary className={stil.kurallarBas}>Belge görünümü</summary>
-        <div className={stil.kurallarIc}>
+        <div className={`${stil.kurallarIc} ${stil.gorunumSecenek}`}>
           {([
             ["bas", "Belgenin başı", [["tablo", "Logo, firma ve doküman bilgisi tablosu"], ["ad", "Yalnız belge adı"]], basTuru(t)],
             ["zemin", "Bölüm başlığının zemini", [["pembe", "Pembe"], ["gri", "Gri"], ["yok", "Zeminsiz"]], t.gorunum.stil?.zemin ?? "pembe"],

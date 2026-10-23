@@ -12,7 +12,7 @@ import { FormatPenceresi, TurPenceresi, type TurDegeri } from "./Pencereler";
 
 /** sablon (2026-10-23): rapor şablonunu değiştirebilen kişide yükleme penceresi şablonu da kurar — açık taslak (yerine geçer) */
 export function TurTuslari({ tur, kullanimda, sil = false, sablon = null }: { tur: TurDegeri; kullanimda: number | null; sil?: boolean;
-  sablon?: { taslak: { surum: number; degisti: string } | null } | null }) {
+  sablon?: { taslak: { surum: number; degisti: string } | null; yz: boolean } | null }) {
   const [p, setP] = useState<null | "duzenle" | "format">(null);
   return (
     <>

@@ -46,7 +46,7 @@ test("uzmanın imza hücresi eklenmezse e-imzanın yeri yok", async () => {
 });
 
 test("numarasız cihaz bölümü eklenmezse formda cihaz bölümü yok (kurucu numaralı ekler, numaralar kayar)", async () => {
-  const m = await ceviri(`if (!bolumler.some((b) => b.blok === "cihaz")) bolumler.splice(`, "if (false) bolumler.splice(");
+  const m = await ceviri(`if (!bolumler.some((b) => b.blok === "cihaz")) {`, "if (false) {");
   const t = m.basilidanTanim(structuredClone(HAM), "Vinç")!.tanim;
   assert.ok(!t.bolumler.some((b) => b.blok === "cihaz"), "bozuk: cihaz bölümü yok");
   /* kurucu açılışta numaralı ekler: tespit 4 olur */

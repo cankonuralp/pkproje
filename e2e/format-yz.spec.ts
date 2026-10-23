@@ -159,7 +159,7 @@ test("basılı formdan şablon: PDF yüklenince şablon forma göre kurulur, kur
   await expect(liste.getByRole("cell", { name: "*Dinamik yük deneyi (1,1 x P)" })).toBeVisible();
   await goz(page, "basili-belge", bilgi.project.name);
   /* tür sayfası: taslak var; basılı format satırında "Şablonu bundan kur" */
-  await page.goto(turAdresi);
+  await page.goto(`${Y}${turAdresi}`);
   await hazir(page);
   await expect(page.getByRole("button", { name: "Şablonu bundan kur" }).first()).toBeVisible();
 });

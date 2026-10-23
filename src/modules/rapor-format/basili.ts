@@ -107,8 +107,13 @@ export function basilidanTanim(ham: Ham, turAd: string): BasiliCeviri | null {
     const r = Bolum.safeParse({ ...b, ...duzen });
     if (r.success) bolumler.push(r.data); else atilan.push(ad);
   }
-  /* ölçüm cihazları bölümü formda yoksa numarasız, ekipman bölümünün hemen ardından (kurucu numaralı eklemesin) */
-  if (!bolumler.some((b) => b.blok === "cihaz")) bolumler.splice(ekipmanVar ? 2 : 1, 0, { id: "cihaz", ad: "Kullanılan cihazlar", blok: "cihaz", kilit: false, numarasiz: true });
+  /* ölçüm cihazları bölümü formda yoksa numarasız, ekipman bölümünün ve onun numarasız alt tablolarının (ör. halat bilgileri) ardından — formlarda
+     "kullanılan cihazlar" teknik bilgilerin sonunda; kurucu numaralı eklemesin */
+  if (!bolumler.some((b) => b.blok === "cihaz")) {
+    let p = ekipmanVar ? 2 : 1;
+    while (bolumler[p]?.numarasiz && bolumler[p].blok === "bilgi") p++;
+    bolumler.splice(p, 0, { id: "cihaz", ad: "Kullanılan cihazlar", blok: "cihaz", kilit: false, numarasiz: true });
+  }
 
   /* sonuç: cümle sözcükten önceki kısım; olumlu / olumsuz bitiş formun yazımıyla */
   const hs = nesne(ham.sonuc);

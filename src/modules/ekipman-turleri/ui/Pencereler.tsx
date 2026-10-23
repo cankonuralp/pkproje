@@ -82,9 +82,10 @@ export function TurPenceresi({ kapat, tur, brans, sablon }: { kapat: () => void;
 
 /** sablon (2026-10-23 — reisim: "ben bunu yükleyince format buna dönüşsün format düzenleyicide bundan düzenleme yapabileyim istiyorum"): rapor
     şablonunu değiştirebilen kişide "Rapor şablonunu bu PDF'e göre kur" (işaretli gelir) — yükleme bitince PDF okunur, şablon yeni taslak olarak kurulur,
-    Format kurucu açılır. Kurulamazsa PDF yüklenmiş kalır, neden pencerede; "Yeniden dene". taslak: açık taslak (yerine geçer) */
+    Format kurucu açılır. Kurulamazsa PDF yüklenmiş kalır, neden pencerede; "Yeniden dene". taslak: açık taslak (yerine geçer) · yz: firmada yapay
+    zekâ hazır (kapalıysa kutu yok — yükleme yalnız saklar; satırdaki "Şablonu bundan kur" nedenini söyler) */
 export function FormatPenceresi({ kapat, turId, turAd, kod, kullanimda, sablon = null }: {
-  kapat: () => void; turId: string; turAd: string; kod: string; kullanimda: number | null; sablon?: { taslak: { surum: number; degisti: string } | null } | null;
+  kapat: () => void; turId: string; turAd: string; kod: string; kullanimda: number | null; sablon?: { taslak: { surum: number; degisti: string } | null; yz: boolean } | null;
 }) {
   const router = useRouter();
   const bildir = useBildir();
@@ -92,7 +93,7 @@ export function FormatPenceresi({ kapat, turId, turAd, kod, kullanimda, sablon =
   const [bekliyor, baslat] = useTransition();
   const [h, setH] = useState<Record<string, string>>({});
   const [genel, setGenel] = useState<string | null>(null);
-  const [kur, setKur] = useState(!!sablon);
+  const [kur, setKur] = useState(!!sablon?.yz);
   /* yükleme bitti, şablon kuruluyor / kurulamadı (yüklenen sürüm) */
   const [yuklenen, setYuklenen] = useState<number | null>(null);
   const [kurHata, setKurHata] = useState<string | null>(null);
@@ -108,7 +109,7 @@ export function FormatPenceresi({ kapat, turId, turAd, kod, kullanimda, sablon =
     const r = await formatYukleEylemi(f);
     setH(r.hatalar ?? {}); setGenel(r.genel ?? null);
     if (!r.tamam) return;
-    if (kur && sablon) { setYuklenen(r.sira ?? null); await kurBaslat(); return; }
+    if (kur && sablon?.yz) { setYuklenen(r.sira ?? null); await kurBaslat(); return; }
     kapat(); bildir(`Format PDF'i yüklendi: sürüm ${r.sira}.`); router.refresh();
   });
   const tuslar = yuklenen !== null
@@ -130,7 +131,7 @@ export function FormatPenceresi({ kapat, turId, turAd, kod, kullanimda, sablon =
             <Girdi id={NOT_ID} name="not" maxLength={120} hata={!!h.not} mesajli />
           </Alan>
         </FormIzgara>
-        {sablon && <label className={stil.kutu}>
+        {sablon?.yz && <label className={stil.kutu}>
           <input id={KUR_ID} type="checkbox" checked={kur} onChange={(e) => setKur(e.target.checked)} />
           <span>Rapor şablonunu bu PDF&apos;e göre kur{sablon.taslak ? " · açık taslak bununla değiştirilir" : ""}</span>
         </label>}

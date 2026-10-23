@@ -73,6 +73,8 @@
 .kurallar { margin-top: 12px; padding: 0; }
 .kurallarBas { display: flex; align-items: center; min-height: var(--tus-y); padding: 6px 14px; font-weight: 600; cursor: pointer; }
 .kurallarIc { display: grid; gap: 12px; padding: 0 14px 14px; }
+/* 2026-10-23: belge görünümünün seçenek grupları yan yana (dar ekranda alt alta) */
+.gorunumSecenek { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 12px 16px; align-items: start; }
 .belgeKap { min-width: 0; margin-top: 12px; }
 /* 472–474: saha ekranı görünümü — araç çubuğu, kullanım özeti, aygıt çerçevesi (gerçek genişlikte çizilir, sayfaya sığacak kadar küçülür) */
 .saha { display: grid; gap: 12px; min-width: 0; margin-top: 12px; }
