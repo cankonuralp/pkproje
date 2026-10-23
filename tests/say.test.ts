@@ -133,8 +133,9 @@ test("soru: görünen geçmişe + konuşmaya (ekler, yazı) + sayfa notu; cevaps
   assert.equal(s3.ileti.metin, "Eki inceler misin?");
   assert.deepEqual(s3.ileti.ek?.ekler, [{ ad: "Gizli Sanayi etiketi.jpg", boyut: 1234, tur: "foto" }], "görünen geçmişte yalnız kişinin kendi eki");
   k = await ile(A, FA.den, (db) => konusmaOku(db));
-  assert.deepEqual(k.map((m) => m.rol), ["user", "user", "assistant", "user", "system"]);
-  assert.deepEqual(k[3].icerik, [
+  /* ikinci sorunun notu kalır: ardından S.A.Y cevap verdi (not cevaplanmış soruya aittir) */
+  assert.deepEqual(k.map((m) => m.rol), ["user", "user", "system", "assistant", "user", "system"]);
+  assert.deepEqual(k[4].icerik, [
     { type: "tool_result", tool_use_id: "t1", content: "{\"islem\":\"plan_ara\",\"durum\":\"tamam\"}" },
     { type: "tool_result", tool_use_id: "t2", content: YARIDA, is_error: true },
     { type: "text", text: "Ek 1 (fotoğraf):" }, { type: "image", source: { type: "file", file_id: "file_den_1" } },
@@ -242,13 +243,14 @@ test("550 / 561 / 553 ekran: rapor haritası yalnız raporu yazanın Yeni raporu
   const rapor = tamam(await ile(A, FA.den, (db) => raporOlustur(db, FA.den, plan, f.ekp))).id;
   const bilgi = (await ile(A, FA.den, (db) => raporSayBilgisi(db, FA.den, rapor)))!;
   const madde = bilgi.tanim.bolumler.flatMap((b) => (b.blok === "liste" ? b.gruplar.flatMap((x) => x.maddeler) : []))[0];
-  const uzun = "Kapak kırık; ".repeat(200);
+  const uzun = "Kapak kırık; ".repeat(60);
   const canli = { id: rapor, cevaplar: { alan: { kurulus: "Örnek Kuruluş" }, madde: { [madde.id]: { c: "Uygun değil", not: uzun } }, yorum: "Uzman notu",
     kunye: { firma_adi: "Gizli Sanayi A.Ş." } }, ekipman: { marka: "Örnek Marka" } };
   const yol = `/raporlar/${rapor}`;
   const b = await ile(A, FA.den, (db) => sayBaglami(db, FA.den, { yol, raporNo: "SA-1", canli, kurucu: null }));
   assert.equal(b.raporId, rapor);
   assert.ok(b.rapor?.includes('- e:marka · Marka (yazı) = "Örnek Marka"') && b.rapor.includes(`- m:${madde.id} · ${madde.metin} = "Uygun değil"`), b.rapor ?? "");
+  assert.ok(b.rapor?.includes(uzun.trim()), "uzun not kısaltılmaz (eski 300 karakter sınırı kalktı)");
   assert.doesNotMatch(b.rapor ?? "", /Gizli Sanayi|Gizli Tesis|Saklı Cad/, "künye gitmez");
   assert.match(b.acikRapor ?? "", /Sayfada açık rapor: .+ \(Elektrik panosu\) · durum: /);
   assert.doesNotMatch(sayfaNotu(b), /m:|e:marka/, "sayfa notunda harita yok");
@@ -271,13 +273,14 @@ test("550 / 561 / 553 ekran: rapor haritası yalnız raporu yazanın Yeni raporu
 
 test("maliyet: ayırma kişinin aylık sınırıyla (boşsa sınırsız), kapanış gerçek maliyetle; mesaj yalnız ilk çağrıda", async () => {
   await yzAyari(A, FA.yon, { sinir: null });
+  const ilk = await kullanim(A, FA.yon);
   const a = await ile(A, FA.yon, (db) => cagriAyir(db, "haiku", null, 20_000));
   assert.ok(a && a.ust > 0);
   await ile(A, FA.yon, (db) => cagriKapat(db, a!, 1_234, 1));
   const b = await ile(A, FA.yon, (db) => cagriAyir(db, "haiku", null, 20_000));
   await ile(A, FA.yon, (db) => cagriKapat(db, b!, 1_000, 0));
   const k = await kullanim(A, FA.yon);
-  assert.deepEqual([k?.mesaj, Number(k?.maliyet), Number(k?.ayrilan)], [1, 2_234, 0]);
+  assert.deepEqual([(k?.mesaj ?? 0) - (ilk?.mesaj ?? 0), Number(k?.maliyet) - Number(ilk?.maliyet ?? 0), Number(k?.ayrilan)], [1, 2_234, 0]);
   /* sınır doluysa ayrılmaz */
   assert.equal(await ile(A, FA.yon, (db) => cagriAyir(db, "haiku", 0.001, 20_000)), null);
 });

@@ -37,7 +37,8 @@ export function acikRaporMetni(d: { no: string; turAd: string; durumAd: string; 
 /** haritanın en çok uzunluğu (karakter) ve tablo başına gösterilen satır */
 export const HARITA_SINIRI = 60_000;
 const TABLO_SATIR = 120;
-const tirnak = (s: string) => (s ? `"${s.replace(/\s+/g, " ").slice(0, 300)}"` : "—");
+/* 2026-10-23 (S.A.Y baştan — reisim: "hiç bir kısıtı olmasın"): değerler, madde metni ve sütun adları kısaltılmaz */
+const tirnak = (s: string) => (s ? `"${s.replace(/\s+/g, " ")}"` : "—");
 const tur = (a: Pick<OkunacakAlan, "tur" | "secenekler" | "birim">) => a.tur === "secim" ? `seçim: ${(a.secenekler ?? []).join(" / ")}`
   : a.tur === "evet" ? "evet / hayır" : a.tur === "tarih" ? "tarih" : a.tur === "yil" ? "yıl" : a.tur === "sayi" ? `sayı${a.birim ? `, ${a.birim}` : ""}` : "yazı";
 
@@ -112,7 +113,7 @@ export function raporHaritasi(t: FormatTanimi, turAd: string, canli: CanliRapor,
       for (const a of testAlanlari(b, true)) l.push(satir(`d:${a.id}`, a, c.deger[a.id] ?? ""));
       /* 595 (madde 6): ek sütunlar — x:<değer kimliği>:<sütun kimliği> */
       for (const s of b.ekSutunlar ?? []) {
-        l.push(`Ek sütun ${s.ad} (${s.alan === "secim" ? `seçim: ${(s.secenekler ?? []).join(" / ")}` : s.alan === "sayi" ? "sayı" : "yazı"}): ${b.degerler.map((d) => `x:${d.id}:${s.id} (${d.ad.slice(0, 40)}) = ${tirnak(c.ek[`${d.id}|${s.id}`] ?? "")}`).join("; ")}`);
+        l.push(`Ek sütun ${s.ad} (${s.alan === "secim" ? `seçim: ${(s.secenekler ?? []).join(" / ")}` : s.alan === "sayi" ? "sayı" : "yazı"}): ${b.degerler.map((d) => `x:${d.id}:${s.id} (${d.ad}) = ${tirnak(c.ek[`${d.id}|${s.id}`] ?? "")}`).join("; ")}`);
       }
     } else if (b.blok === "olcum") {
       const sutunlar = b.sutunlar;
@@ -137,7 +138,7 @@ export function raporHaritasi(t: FormatTanimi, turAd: string, canli: CanliRapor,
         const x = c.madde[m.id];
         /* 595 (madde 7): serbest yazı sütunları x:<madde>:<sütun> (açıklama sütunu m:<madde>#not) */
         const ekler = (b.ekSutunlar ?? []).filter((s) => s.alan === "yazi").map((s) => `, x:${m.id}:${s.id} (${s.ad}) = ${tirnak(c.ek[`${m.id}|${s.id}`] ?? "")}`).join("");
-        l.push(`- m:${m.id} · ${m.metin.slice(0, 200)} = ${x?.c ? tirnak(x.c) : "—"}${x?.derece ? ` (${x.derece === "agir" ? "ağır" : "hafif"} kusur)` : ""}${x?.not ? ` not ${tirnak(x.not)}` : ""}${ekler}`);
+        l.push(`- m:${m.id} · ${m.metin} = ${x?.c ? tirnak(x.c) : "—"}${x?.derece ? ` (${x.derece === "agir" ? "ağır" : "hafif"} kusur)` : ""}${x?.not ? ` not ${tirnak(x.not)}` : ""}${ekler}`);
       }
     } else if (b.blok === "sonuc") { sonucVar = true; if (b.sartli) sartliVar = true; }
     else if (b.blok === "not") notVar = true;

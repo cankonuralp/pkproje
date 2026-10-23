@@ -79,7 +79,7 @@ export async function isAl(db: Sorgulayici, isId: string, saniye: number): Promi
   const r = await db.sorgu(
     `INSERT INTO yz_konusma_is (is_id, bitis) VALUES ($1, now() + make_interval(secs => $2))
      ON CONFLICT (firma_id, hesap_id) DO UPDATE SET is_id = EXCLUDED.is_id, bitis = EXCLUDED.bitis
-       WHERE yz_konusma_is.is_id = EXCLUDED.is_id OR yz_konusma_is.bitis < now()`, [isId, saniye]);
+       WHERE yz_konusma_is.is_id = EXCLUDED.is_id OR yz_konusma_is.bitis <= now()`, [isId, saniye]);
   return (r.rowCount ?? 0) > 0;
 }
 /** iş bitti (ya da ekranın işini bekliyor): başka pencere yazabilir; bekleyen sonuçlar kalır */
