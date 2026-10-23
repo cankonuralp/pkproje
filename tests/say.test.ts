@@ -253,7 +253,7 @@ test("550 / 561 / 553 ekran: rapor haritası yalnız raporu yazanın Yeni raporu
   assert.ok(b.rapor?.includes(uzun.trim()), "uzun not kısaltılmaz (eski 300 karakter sınırı kalktı)");
   assert.doesNotMatch(b.rapor ?? "", /Gizli Sanayi|Gizli Tesis|Saklı Cad/, "künye gitmez");
   assert.match(b.acikRapor ?? "", /Sayfada açık rapor: .+ \(Elektrik panosu\) · durum: /);
-  assert.doesNotMatch(sayfaNotu(b), /m:|e:marka/, "sayfa notunda harita yok");
+  assert.doesNotMatch(sayfaNotu(b), /- m:|- e:marka/, "sayfa notunda harita yok");
   /* raporu yazmayan, başka adres, başka firma: harita yok */
   assert.equal((await ile(A, FA.plan, (db) => sayBaglami(db, FA.plan, { yol, raporNo: null, canli, kurucu: null }))).rapor, null);
   assert.equal((await ile(A, FA.den, (db) => sayBaglami(db, FA.den, { yol: "/planlar", raporNo: null, canli, kurucu: null }))).rapor, null);
