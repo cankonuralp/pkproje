@@ -2527,6 +2527,27 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-23 (SUNUM 597, onay bekliyor; kod yok): **BASILI FORMDAN RAPOR ŞABLONU** — https://claude.ai/artifact/HqXHBznKMmbeDPWUPLKYdP. Reisim:
+  *"yeni pdf yükledim düzenle dedim ama eski sürümden düzenlemeye devam etti … tip olarak ekteki pdf i attım ama ona göre şekillenmedi format yapıcı"*
+  (Asılı erişim donanımı türüne basılı format PDF'i sürüm 2; ardından yayındaki ZPKR07 sürümünde Düzenle — veritabanında 19:11 UTC'de ZPKR07 kaynaklı
+  taslak; S.A.Y kullanılmadı). Teşhis: basılı format PDF'i yalnız saklanıyor, şablona bağlı değil; Düzenle her zaman yayındaki sürümden; "Belgeden
+  başlat" (498) gizli ve dar — en çok 8 "ekle" önerisi var olan şablonun üstüne, başlık / firma / imza satırları ve sonuç cümlesi değişmez; S.A.Y sonuç
+  cümlesini yazamıyor, yüklenmiş basılı PDF'i göremiyor. Benim önceki cevabımdaki "basılı format PDF'i de yüklenebilir" iki ayrı işi bir gibi gösterdi.
+  İlk hâlde öneri işi S.A.Y'a bağlıyordu; reisim aynı akşam: *"say olmadan bu işi yapamaz mıyız ? format pdf imi yüklesem sonra format tasarımcısında
+  istedğim gibi formatı kendim düzenlesem olmaz mı ?"* → sunum 2. sürüm: **elle yol asıl** (bugün de var: PDF'i yükle → Düzenle ya da Sıfırdan oluştur →
+  kâğıtta her şey elle — bölüm, alan, dizilim, alt bölüm, liste grupları ve cevapları, formül, başlık tablosu, firma / imza satırları, sonuç cümlesi →
+  Yayınla; onu bozan iki şey: harf harf dizilme hatası — düzeltildi — ve basılı PDF'in kurucuda görünmemesi). Öneri: kurucuda türün güncel basılı PDF'i
+  kâğıdın yanında (açılır, kapanır, büyür); yükleme şablonu değiştirmez; aynı panelde isteğe bağlı "S.A.Y'a kurdur" (Belgeden başlat bu tuşa bağlanır,
+  8 öneri sınırı kalkar; değerler formdan alınmaz, satırlar plandan / kayıttan / sahadan). Sıra: dar sütun düzeltmesi (yapıldı) → basılı form yanında →
+  S.A.Y'ın eksik elleri (Cowork notundaki ilk adım) → S.A.Y'a kurdur. Karar soruları K1 yan panel / ayrı görünüm · K2 "S.A.Y'a kurdur" tuşu olsun mu ·
+  K3 S.A.Y kurarsa taslakta / hemen yayında · K4 S.A.Y Bakanlık şablonunda baştan / üstüne. Reisim'in gönderdiği form gerçek bir firmanın — makete,
+  depoya, testlere girmez (maketteki "VN-01 Vinç Muayene Formu" uydurma).
+- 2026-10-23 (YAPILDI — YAYINDA main a385582; deneme makinesi 13/13, canlı denetim 11/11; gözle: deneme makinesinin tablet / masaüstü kurucu-ilk
+  görüntüsünde etiketler yatay, tuşlar altlarında — gerçek firmada ölçemedim, giriş reisim'de): **FORMAT KURUCU: DAR SÜTUNDA YAZI HARF HARF DİZİLMEZ** (reisim: *"format yapıcı
+  aşırı kayık ve kullanışsız"* — ekran görüntüsünde bilgi bölümünün etiketleri, satırda iki bilgi, harf harf alt alta). Neden: kâğıtta öğe tuşları ~190 px,
+  etiket sütunu ~190 px — yazıya ~10 px kalıyordu (ekipman bilgileri, bilgi bölümleri, ölçüm tablosunun hazır satır sütunu). Düzeltme kagit.module.css:
+  .satir / .etiket sarar, yazı en az 7em, sığmayan tuşlar alt satıra iner, yine sığmazsa kendi içinde sarar. Kilit e2e/tarama.ts sikisanYazilar (en az üç
+  satıra bölünmüş, genişliği üç harfi geçmeyen yazı) — e2e/rapor-format kurucu-ilk adımında kâğıtta boş liste.
 - 2026-10-23 (KARAR, kod yok): reisim *"ekranda tuşlarda olabilir her ekranda o ekrana özel tuşlar olur"* — S.A.Y panelinde her ekrana özel hazır tuşlar
   (2026-10-14 "yalnız Fotoğrafları oku ve gir" kararının yerine; liste maketle). *"rapor formatı yüklemek vs verilen işlemleri ayırt edebilmeli … formatta
   yükleyebilme özelliğimizide kullanmalı"* — S.A.Y verilen dosyayla ne istendiğini ayırır (formatı kurmak / türe basılı format PDF'i olarak yüklemek /
