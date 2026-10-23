@@ -15,6 +15,7 @@
    taşı / alt başlık / kip seçicisi yok; madde cevabının biçimi kâğıtta ("Kurallar, saha ekranı ve genel muayene talimatı"). */
 import { mkdirSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
+import { sikisanYazilar } from "./tarama";
 import { girisli, hazir } from "./yardimci";
 
 /** gözle bakılacak görüntü (deneme makinesi e2e-goz/ klasörünü her koşuda yükler) */
@@ -89,6 +90,9 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await expect(kagit.getByRole("combobox", { name: "Firma bilgileri · satır ekle" })).toBeVisible();
     await expect(kagit.getByText("Kablo şebeke tarafı").first()).toBeVisible();
     await goz(page, "kurucu-ilk", bilgi.project.name);
+    /* 2026-10-23 (reisim: "format yapıcı aşırı kayık ve kullanışsız"): dar etiket sütununda (ekipman bilgileri, satırda iki bilgi) yazı harf harf
+       alt alta dizilmez — öğe tuşları sığmayınca alt satıra iner */
+    expect(await page.evaluate(sikisanYazilar, '[aria-label="Rapor formatı · düzenlenebilir belge"]')).toEqual([]);
     /* 470 (reisim hata listesi 38: "biraz daha serbestlik"): Bakanlık bölümü işaretli ama silinir — önce sorulur (burada Vazgeç) */
     const gozle = kagit.getByRole("region", { name: /Gözle kontrol$/ });
     await expect(gozle.getByText("Bakanlık bölümü").first()).toBeVisible();

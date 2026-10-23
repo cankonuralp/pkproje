@@ -62,9 +62,10 @@
 }
 @media (pointer: coarse) { .sahaTus { min-height: 40px; } }
 
-/* satır içinde yazı + tuşlar */
+/* satır içinde yazı + tuşlar; .satir / .etiket sarar (aşağıda 2026-10-23 düzeltmesi) */
 .satir, .etiket, .grupSatir, .sutun { display: flex; align-items: flex-start; gap: 4px; min-width: 0; }
-.satir > :first-child, .etiket > :first-child { flex: 1 1 auto; min-width: 0; }
+.satir, .etiket { flex-wrap: wrap; }
+.satir > :first-child, .etiket > :first-child { flex: 1 1 7em; min-width: 0; }
 .grupSatir { justify-content: flex-start; align-items: center; }
 .sutun { flex-wrap: wrap; align-items: center; }
 .ogeTus { display: inline-flex; flex: none; gap: 0; margin-left: auto; opacity: .55; }
@@ -75,6 +76,10 @@
    odaktaki başlık öne çıkar. */
 .sutun > .ogeTus { flex: 0 1 auto; flex-wrap: wrap; min-width: 0; }
 .sutun:hover, .sutun:focus-within { position: relative; z-index: 1; }
+/* 2026-10-23 düzeltmesi (reisim: "format yapıcı aşırı kayık ve kullanışsız"): dar sütunda (bilgi bölümünün satırında 2–3 bilgi, ölçüm tablosunun
+   sıra sütunu) öğe tuşları ~190 px tutup yazıyı harf harf alt alta itiyordu. Yazı en az 7em'lik yer alır; sığmayan tuşlar alt satıra iner, yine
+   sığmazsa kendi içinde sarar (kilit e2e/rapor-format sikisanYazilar) */
+.satir > .ogeTus, .etiket > .ogeTus { flex: 0 1 auto; flex-wrap: wrap; justify-content: flex-end; min-width: 0; }
 @media (pointer: coarse) { .ogeTus { opacity: 1; } }
 .metot { display: flex; flex-direction: column; gap: 2px; white-space: pre-line; }
 .foto { width: 160px; }

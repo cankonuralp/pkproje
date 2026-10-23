@@ -150,6 +150,25 @@ export function tasanHucreler(): string[] {
   return sonuc;
 }
 
+/** 2026-10-23 (reisim: "format yapıcı aşırı kayık ve kullanışsız"): dar sütunda sıkışıp harf harf alt alta dizilen yazı (tarayıcıda koşar) — format
+    kurucunun kâğıdında öğe tuşları etiketi itiyordu. En az üç satıra bölünmüş ve genişliği üç harfi geçmeyen yazı; ilk beşi */
+export function sikisanYazilar(kokSecici: string): string[] {
+  const kok = document.querySelector(kokSecici);
+  if (!kok) return [`${kokSecici} bulunamadı`];
+  const sonuc: string[] = [];
+  const yuru = document.createTreeWalker(kok, NodeFilter.SHOW_TEXT);
+  for (let n = yuru.nextNode(); n && sonuc.length < 5; n = yuru.nextNode()) {
+    const metin = n.textContent?.trim() ?? "", ust = n.parentElement;
+    if (metin.length < 4 || !ust?.checkVisibility()) continue;
+    const a = document.createRange();
+    a.selectNodeContents(n);
+    const satir = new Set([...a.getClientRects()].filter((r) => r.width > 0).map((r) => Math.round(r.top))).size;
+    const genislik = a.getBoundingClientRect().width, harf = parseFloat(getComputedStyle(ust).fontSize) || 12;
+    if (satir >= 3 && genislik < 3 * harf) sonuc.push(`"${metin.replace(/\s+/g, " ").slice(0, 40)}" ${satir} satır, ${Math.round(genislik)} px`);
+  }
+  return sonuc;
+}
+
 /** 452: kökteki (pencere ya da sayfa) basılabilir öğelerin yerleri — açılır katman açılınca kıyaslanır (katmanın kendi içi hariç) */
 function yerler(kokSecici: string): [string, number, number][] {
   const kok = document.querySelector(kokSecici) ?? document.body;
