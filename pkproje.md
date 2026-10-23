@@ -2527,6 +2527,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-23 (KARAR + ÖNERİ, kod yok): **S.A.Y EĞİTİM / OPTİMİZASYON** — reisim: *"panelde bir belgelerim klasörü olmasın, diğerlerinide değerlendiricem
+  final kararımı vericem ama sen önerilerini söyle ne yapabiliriz optimizasyon için ben de eğitim için neler kurgulanabilir ekleyeceğim"*. Karar: panelde
+  "Belgelerim" listesi YOK. Karar bekleyen önerilerim: (1) belgeler gizli kitaplıkta, sohbette taşınmaz — S.A.Y listeyi görür, gerekince açar (sayfa
+  sayfa); (2) okunan belgenin önemli bilgileri not olarak kalır, yeniden okunmaz; (3) eski ekran dökümleri ve araç sonuçları konuşmadan düşer; (4) uzun
+  sohbet fiyat eşiğinden (Haiku: istem 100 000 token) önce özetlenir; (5) sabit kısım 1 saatlik önbellekte; (6) S.A.Y'ın içinde hazır yöntemler
+  (ekranda tuş değil); (7) iş bitince sonucu kaynağıyla karşılaştırma (format önizlemesi); (8) kalıcı hafıza; (9) firma bilgi bankası (kurallar her
+  mesajda, belgeler gerekince); (10) isteğe bağlı danışman model; (11) mesaj / iş başı maliyet görünümü. Reisim eğitim fikirlerini ekleyecek.
 - 2026-10-23 (YAPILDI — YAYINDA main 0a7b4f2; deneme makinesi 13/13, göç 0103 Supabase'te goc kaydıyla, canlı denetim 11/11; gerçek modelle canlı deneme yapılmadı — giriş reisim'de): **S.A.Y BAŞTAN KURULDU** (reisim: *"yapay zeka sitede bağlı olan asistanda normalde claude da
   kullandığım gibi verimli ve iyi çalışmıyor … sebebi nedir nasıl düzeltebiliriz"* → teşhis: konuşma kırpılıyor / dosya ve yapılan iş unutuluyor, iş
   adımlarında düşünme kapalı, 45 sn akışsız, 4 MB ek, talimat yamaları; *"say asistanı direk claude da haiku nasıl çalışıyor ise direk o şekilde
