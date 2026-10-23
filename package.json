@@ -23,7 +23,7 @@
     "@formulajs/formulajs": "4.6.1",
     "@sparticuz/chromium": "153.0.0",
     "embedded-postgres": "18.4.0-beta.17",
-    "next": "16.3.8",
+    "next": "16.4.2",
     "pdf-lib": "1.17.1",
     "pdfjs-dist": "5.4.149",
     "pg": "8.23.0",
@@ -43,7 +43,7 @@
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "eslint": "9.39.5",
-    "eslint-config-next": "16.3.8",
+    "eslint-config-next": "16.4.2",
     "jsqr": "1.4.0",
     "typescript": "6.0.3"
   },
