@@ -35,9 +35,15 @@ Kod içi başvurular bu kalemi "IMZA-SERVISI.md ES1" diye anar.
     çözümlemesi (ağ yok).
   - `pdf-imzalar.ts` çözümleyici: her imza için bütünlük, imza değeri, imzalayan, imza / belge zaman damgası, DSS (yalnız kataloğun) ve içindeki
     iptal kanıtı, imzadan sonraki değişiklik, düzey B-B … B-LTA.
-  - `yukleme.ts` `ekImzaNedeni`: eklenen imza sağlam, belgenin tamamını kapsıyor, sertifikaya bağlı, 5070 nitelikli, imza anında geçerli, sonradan
-    değişmemiş olmalı. **Bağlı:** rapor imzası, teknik yönetici imzası, Onaylar › Diğer. Yapı denetimini (`imzaliPdfGecerli` / `imzaliTaban`)
-    çağıran her yükleme bunu da çağırır (kaynak kilidi `tests/imza-cozum.test.ts`).
+  - `yukleme.ts` `ekImzaNedeni`: eklenen imza sağlam, belgenin tamamını kapsıyor, sertifikaya bağlı, 5070 nitelikli, imza anında geçerli, imza
+    anında iptal edilmemiş, sonradan değişmemiş olmalı. **Bağlı:** rapor imzası, teknik yönetici imzası, Onaylar › Diğer. Yapı denetimini
+    (`imzaliPdfGecerli` / `imzaliTaban`) çağıran her yükleme bunu da çağırır (kaynak kilidi `tests/imza-cozum.test.ts`).
+  - **İptal anı (2026-10-23; probata-sign denetimi 2026-10-18, YÜKSEK — aynı hata probata'da da vardı):** DSS'teki kanıtların hepsi zamanlarıyla
+    toplanır, karar imza anına göre verilir (`iptal.ts` `iptalKarari`): imza anında ya da önce "iptal" diyen sağlam kanıt — iptal anı okunamasa
+    da — iptaldir, "geçerli" diyen başka kanıt bunu ezemez; "geçerli" yalnız imza anından sonra üretilmiş ve süresi dolmamışsa sayılır.
+    Çözümleyici kararı damga anına göre verir; **yükleme kapısı damgaya güvenmez** (2026-10-18: damga sunucusu güvenilir listeye bağlı değil,
+    geriye tarihli damga basılabilir) ve kanıtları yükleme anına göre yeniden değerlendirir — "iptal" ise ret. Kanıtı olmayan imza bugünkü gibi
+    kabul (kanıtı ağdan almak probata'da yok). Kilit `tests/iptal-zamani.test.ts` + bozan.
 - Yapı denetimi `src/modules/raporlar/`: `imza-pdf.ts` (imzalı PDF eki beyaz listede), `imza-esdeger.ts` (imza programının yeniden yazdığı ama
   içerikçe aynı PDF), `imza-kimlik.ts` (imzalayanın adı).
 - **Güvenilir kök listesi yok** (resmî kaynaktan teyitle eklenecek): uydurma ama "nitelikli" işaretli bir zinciri bu denetim tek başına ayırt etmez.

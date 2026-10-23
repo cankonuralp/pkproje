@@ -109,7 +109,8 @@ test("10: yüklemede damganın zamanı imza anı sayılınca geriye tarihli damg
 });
 
 test("11: yüklemede iptal kanıtına bakılmayınca iptal edilmiş sertifika kabul edilir", async () => {
-  const m = await bozuk<Y>(YUK, '    if (i.iptal === "iptal") return ', '    if (false as boolean) return ');
+  /* 2026-10-23: satır kanıtların yükleme anındaki kararını da taşır (iptal.ts iptalKarari) — ikisi birden kalkar */
+  const m = await bozuk<Y>(YUK, '    if (i.iptal === "iptal" || iptalKarari(i.iptalKanitlari, an) === "iptal") return ', '    if (false as boolean) return ');
   const p = pdfImzala(TABAN_PDF, 10, k);
   const ocsp = ocspCevabiYap(k.kisi, k.ara, { durum: "iptal" });
   const iptalli = Buffer.concat([p, Buffer.from("30 0 obj\n<< /OCSPs [31 0 R] /CRLs [] /Certs [] >>\nendobj\n31 0 obj\n<< /Length " + ocsp.length + " >>\nstream\n", "latin1"),

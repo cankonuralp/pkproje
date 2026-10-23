@@ -106,8 +106,9 @@ test("5: akış verisi karşılaştırılmayınca aynı sözlükle değişen iç
 });
 
 test("6: kanıtın bu sertifikaya ait olduğu aranmayınca başka makamın OCSP cevabı B-LT saydırır", async () => {
-  const m = await bozuk<P>(PDF, 'try { const r = ocspCevabi(der, s, veren); if (r.imza === "tamam" && r.durum !== "bilinmiyor") return r.durum; } catch { /* sıradaki */ }',
-    'return "gecerli";');
+  /* 2026-10-23: kanıtlar zamanlarıyla toplanıyor (iptalKanitlariBul) — bozuk hâl: cevap bu sertifikanınki mi bakılmadan imza anından sonraki "geçerli" */
+  const m = await bozuk<P>(PDF, "      const r = ocspCevabi(der, s, veren);\n",
+    '      const r = { ...ocspCevabi(der, s, veren), imza: "tamam", durum: "gecerli", zaman: "2026-10-17T09:05:00.000Z", sonraki: null } as const;\n');
   const p = dssEkle(pdfImzala(TABAN_PDF, 10, k, { damga: true }), 11, denemeKimlikleri("ecdsa", "BAŞKA DENEME"));
   assert.equal(m.pdfImzalariniCozumle(p).duzey, "B-LT", "bozuk: başkasının kanıtı yakalandı");
 });

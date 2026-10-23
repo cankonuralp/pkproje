@@ -8,7 +8,10 @@
    · imza zaman damgası (imza değerinin damgası) ve belge zaman damgası (ETSI.RFC3161 — kapsanan baytların damgası): iz, damganın imzası,
      damga sunucusunun sertifikası (cms.ts);
    · uzun süreli doğrulama sözlüğü: YALNIZ son kataloğun /DSS'i (çapraz başvurudan — yorum ya da dize sayılmaz), içindeki OCSP / iptal listesi
-     akışları; imzalayanın iptal durumu DSS'teki kanıttan (iptal.ts — kanıtın imzası ve bu sertifikaya ait olduğu doğrulanır);
+     akışları; imzalayanın iptal kanıtları DSS'ten (iptal.ts — kanıtın imzası ve bu sertifikaya ait olduğu doğrulanır) ZAMANLARIYLA, HEPSİ toplanır
+     (iptalKanitlari); karar imza ANINA göre (iptal.ts iptalKarari — 2026-10-23, probata-sign denetimi 2026-10-18 YÜKSEK: kanıtın zamanı imza anıyla
+     karşılaştırılmıyor, ilk sağlam kanıtta duruluyordu). İmza anı: sağlam imza damgası, yoksa imzayı kapsayan en erken sağlam belge damgası, yoksa
+     çözüm anı (simdi);
    · imzanın kapsamından SONRA belgede ne var (sonrakiEkler): yalnız imza / damga / DSS / imza alanının doldurulması / belge bilgisi "izinli";
      sayfa, içerik, kaynak … değişmişse "değişiklik" (Adobe'nin imza sonrası değişiklik denetiminin karşılığı);
    · düzey: B-B · B-T · B-LT · B-LTA (ETSI EN 319 142).
@@ -17,7 +20,7 @@
    taramasıyla ve aşırı geri izlemeyle okunması, imza sonrası değişikliğin görünmemesi, kaçan TypeError, sertifika değiştirme) kapatıldı. */
 import { dugum, okuyucu, BozukDer } from "./der.ts";
 import { damgaDenetle, imzaciSertifikasi, imzaDenetle, imzaliVeriOku, imzaSertifikasiTutar, ozetAdi, ozetDenetle, CMS_OID, type Sonuc } from "./cms.ts";
-import { crlDenetle, ocspCevabi, type IptalDurumu } from "./iptal.ts";
+import { crlDenetle, iptalKarari, ocspCevabi, type IptalDurumu, type IptalKaniti } from "./iptal.ts";
 import { anahtarlar, basvuru, degerOku, nesneOkuyucu, sonDurum, PdfHatasi, type NesneOkuyucu } from "./pdf-ek.ts";
 import { gecerliMi, sertifikaOku, vereniBul, yeniButce, zincirKur, type Sertifika, type SertifikaBilgisi } from "./sertifika.ts";
 
@@ -59,8 +62,11 @@ export interface ImzaBilgisi {
   /** imza sözlüğündeki zaman (/M — imzalayanın bilgisayar saati; güvenilmez) */
   sozlukZamani: string | null;
   damga: DamgaBilgisi | null;
-  /** imzalayanın iptal durumu: belgedeki DSS'te bu sertifika için doğrulanmış OCSP cevabı ya da iptal listesi; kanıt yoksa null */
+  /** imzalayanın İMZA ANINDAKİ iptal durumu (iptal.ts iptalKarari; an: sağlam imza damgası, yoksa imzayı kapsayan en erken sağlam belge damgası,
+      yoksa çözüm anı) — DSS'te kanıt yoksa ya da kanıt imza anını kanıtlamıyorsa (imzadan önce üretilmiş, süresi imzadan önce bitmiş) null */
   iptal: IptalDurumu | null;
+  /** DSS'teki, imzası doğrulanmış ve bu sertifikaya ait iptal kanıtları (zamanlarıyla; "bilinmiyor" diyen alınmaz) */
+  iptalKanitlari: IptalKaniti[];
   /** imzanın kapsamından sonra belgede ne var */
   sonrakiEkler: SonrakiEkler;
 }
@@ -143,20 +149,29 @@ export function imzaIcerigi(pdf: Uint8Array, y: ImzaYeri): Buffer | null {
   return tum.subarray(der.length).some((x) => x !== 0) ? null : der;
 }
 
-/** PDF'teki imzalar ve belge zaman damgaları — kapsadıkları bölüm sırasıyla */
-export function pdfImzalariniCozumle(pdf: Uint8Array): ImzaCozumu {
+/** PDF'teki imzalar ve belge zaman damgaları — kapsadıkları bölüm sırasıyla; simdi: damgasız imzada iptal kararının anı (verilmezse şu an) */
+export function pdfImzalariniCozumle(pdf: Uint8Array, p: { simdi?: Date } = {}): ImzaCozumu {
   const bos: ImzaCozumu = { imzalar: [], dss: { var: false, ocsp: 0, crl: 0, sertifika: 0, konum: null }, duzey: "yok", sonuTamami: false, degisiklikYok: true };
   if (pdf.length > PDF_SINIR || pdf.length < 16) return bos;
   const yerler = imzaYerleri(pdf);
   const s = Buffer.from(pdf.buffer, pdf.byteOffset, pdf.byteLength).toString("latin1");
   const oku = nesneOkuyucu(s);
   const dss = dssOku(s, oku);
-  const imzalar = yerler.map((h) => {
-    const { bilgi, sert, havuz } = imzaCozumle(pdf, h);
-    if (sert && bilgi.tur === "imza") bilgi.iptal = iptalBul(sert, [...havuz, ...dss.sertifikalar], dss);
-    bilgi.sonrakiEkler = sonrakiEkler(s, bilgi.kapsamSon, oku);
-    return bilgi;
+  const cozulen = yerler.map((h) => {
+    const c = imzaCozumle(pdf, h);
+    c.bilgi.sonrakiEkler = sonrakiEkler(s, c.bilgi.kapsamSon, oku);
+    return c;
   });
+  const imzalar = cozulen.map((c) => c.bilgi);
+  /* iptal kararı imza anına göre — an: sağlam imza damgası, yoksa imzayı kapsayan en erken sağlam belge damgası, yoksa çözüm anı */
+  const cozumAni = (p.simdi ?? new Date()).toISOString();
+  for (const { bilgi, sert, havuz } of cozulen) {
+    if (!sert || bilgi.tur !== "imza") continue;
+    bilgi.iptalKanitlari = iptalKanitlariBul(sert, [...havuz, ...dss.sertifikalar], dss);
+    const belgeDamgasi = imzalar.find((d) => d.tur === "belge_damgasi" && saglam(d) && d.boslukBas >= bilgi.kapsamSon && d.damga?.zaman)?.damga?.zaman;
+    const an = (damgaSaglam(bilgi.damga) ? bilgi.damga!.zaman : null) ?? belgeDamgasi ?? cozumAni;
+    bilgi.iptal = iptalKarari(bilgi.iptalKanitlari, an);
+  }
   const sonuTamami = imzalar.length > 0 && imzalar[imzalar.length - 1].tamami;
   const degisiklikYok = imzalar.every((i) => i.sonrakiEkler.durum === "yok" || i.sonrakiEkler.durum === "izinli");
   return { imzalar, dss: dss.ozet, duzey: duzeyBul(imzalar, dss.ozet), sonuTamami, degisiklikYok };
@@ -171,7 +186,7 @@ function imzaCozumle(pdf: Uint8Array, h: ImzaYeri): { bilgi: ImzaBilgisi; sert: 
   const sonuc: ImzaBilgisi = {
     tur: belgeDamgasi ? "belge_damgasi" : "imza", altFiltre, boslukBas: h.a, kapsamSon: h.b + h.c, tamami: h.b + h.c === pdf.length,
     butunluk: "okunamadi", imzaDegeri: "okunamadi", ozet: null, imzalayan: null, zincir: [], sertifikaBagi: null, anindaGecerli: null,
-    sozlukZamani: zm ? pdfZamani(zm) : null, damga: null, iptal: null, sonrakiEkler: { durum: "yok", nesneler: [] },
+    sozlukZamani: zm ? pdfZamani(zm) : null, damga: null, iptal: null, iptalKanitlari: [], sonrakiEkler: { durum: "yok", nesneler: [] },
   };
   try {
     return imzaDoldur(sonuc, pdf, h, belgeDamgasi, parcalar);
@@ -266,18 +281,26 @@ function dssOku(s: string, oku: NesneOkuyucu): Dss {
   }
 }
 
-/** imzalayanın iptal durumu: DSS'teki OCSP cevapları, sonra iptal listeleri — kanıtın imzası (veren ya da yetkili OCSP imzacısı) ve CertID /
-    listenin vereni bu sertifikayı tutmalı */
-function iptalBul(s: Sertifika, havuz: Sertifika[], dss: Dss): IptalDurumu | null {
+/** imzalayanın DSS'teki iptal kanıtları (OCSP cevapları ve iptal listeleri, her türden en çok IPTAL_DENEME) — kanıtın imzası (veren ya da yetkili
+    OCSP imzacısı) ve CertID / listenin vereni bu sertifikayı tutmalı; "bilinmiyor" ve imzası tutmayan kanıt alınmaz. HEPSİ döner (ilk sağlam kanıtta
+    durulmaz — 2026-10-23): aynı DSS'teki "iptal" diyen liste "geçerli" diyen bir OCSP cevabıyla ezilemesin (iptal.ts iptalKarari). */
+function iptalKanitlariBul(s: Sertifika, havuz: Sertifika[], dss: Dss): IptalKaniti[] {
   const veren = vereniBul(s, havuz, yeniButce(16));
-  if (!veren) return null;
+  if (!veren) return [];
+  const l: IptalKaniti[] = [];
   for (const der of dss.ocsp.slice(0, IPTAL_DENEME)) {
-    try { const r = ocspCevabi(der, s, veren); if (r.imza === "tamam" && r.durum !== "bilinmiyor") return r.durum; } catch { /* sıradaki */ }
+    try {
+      const r = ocspCevabi(der, s, veren);
+      if (r.imza === "tamam" && r.durum !== "bilinmiyor") l.push({ tur: "ocsp", durum: r.durum, zaman: r.zaman, sonraki: r.sonraki, iptalZamani: r.iptalZamani });
+    } catch { /* sıradaki */ }
   }
   for (const der of dss.crl.slice(0, IPTAL_DENEME)) {
-    try { const r = crlDenetle(der, s, veren); if (r.imza === "tamam") return r.durum; } catch { /* sıradaki */ }
+    try {
+      const r = crlDenetle(der, s, veren);
+      if (r.imza === "tamam" && r.durum !== "bilinmiyor") l.push({ tur: "crl", durum: r.durum, zaman: r.zaman, sonraki: r.sonraki, iptalZamani: r.iptalZamani });
+    } catch { /* sıradaki */ }
   }
-  return null;
+  return l;
 }
 
 /* ── imzadan sonraki ekler ── */
@@ -383,7 +406,7 @@ const damgaSaglam = (d: DamgaBilgisi | null) => !!d && d.iz === "tamam" && d.imz
 
 /** ETSI EN 319 142 düzeyi: imzaların hepsi sağlamsa (sertifika bağı tutan) B-B; her imzanın zamanı damgalıysa B-T — imza damgası ya da imzayı
     kapsayan sağlam belge damgası (EN 319 142-1 §5.3: "signature time-stamp" ya da "document time-stamp"); DSS'te her imzalayan için doğrulanmış
-    iptal kanıtı B-LT; DSS'ten sonra sağlam belge damgası B-LTA. Bozuk imza varsa "yok". */
+    iptal kanıtı — imza anını kanıtlayan (iptal null değil; 2026-10-23) — B-LT; DSS'ten sonra sağlam belge damgası B-LTA. Bozuk imza varsa "yok". */
 function duzeyBul(imzalar: ImzaBilgisi[], dss: ImzaCozumu["dss"]): Duzey {
   const imza = imzalar.filter((i) => i.tur === "imza");
   if (!imza.length || !imza.every(saglam) || imzalar.some((i) => i.tur === "belge_damgasi" && !saglam(i))) return "yok";

@@ -1,6 +1,9 @@
 /* İPTAL DURUMU — OCSP (RFC 6960) VE İPTAL LİSTESİ (CRL, RFC 5280) ÇÖZÜMLEMESİ (2026-10-17; IMZA-SERVISI.md — yükleme denetimi). Saf; ağ yok. İmzalı
    belgenin DSS'indeki kanıt (pdf-imzalar.ts) okunur: cevabın imzası (verenin ya da verence yetkilendirilmiş OCSP imzacısının anahtarıyla), CertID'nin
-   veren izleri ve sertifikanın durumu denetlenir. Kanıtı ağdan ALMAK (OCSP isteği, iptal listesi indirme) imza üretiminin parçası — probata-sign'da. */
+   veren izleri ve sertifikanın durumu denetlenir. Kanıtı ağdan ALMAK (OCSP isteği, iptal listesi indirme) imza üretiminin parçası — probata-sign'da.
+   2026-10-23 (probata-sign denetimi 2026-10-18, YÜKSEK — aynı hata burada da vardı): kanıtın ZAMANI imza anıyla karşılaştırılır (iptalKarari). Her
+   kanıtın üretim anı (thisUpdate), süresi (nextUpdate) ve iptal anı (OCSP RevokedInfo revocationTime, iptal listesinde revocationDate) okunur;
+   karar saf, ağ yok. Kaynak: probata-sign src/imza/iptal.ts (aynı kural, bu deponun kendi kodu — içe aktarma yok). */
 import { createHash } from "node:crypto";
 import { BozukDer, bekle, cocuklar, dugum, ic, oidOku, okuyucu, tamsayiHex, tum, zamanOku, type Dugum, type Okuyucu } from "./der.ts";
 import { algoritmaDenetle } from "./cms.ts";
@@ -19,7 +22,8 @@ function anahtarBitleri(s: Sertifika): Buffer {
   return Buffer.from(ic(o, bekle(p[1], 0x03)).subarray(1));
 }
 
-export interface OcspSonucu { durum: IptalDurumu; zaman: string | null; sonraki: string | null; imza: "tamam" | "bozuk" | "desteklenmiyor" }
+/** zaman: thisUpdate (durumun bilindiği an) · sonraki: nextUpdate · iptalZamani: "iptal"de revocationTime (okunamazsa null — iptal her an sayılır) */
+export interface OcspSonucu { durum: IptalDurumu; zaman: string | null; sonraki: string | null; iptalZamani: string | null; imza: "tamam" | "bozuk" | "desteklenmiyor" }
 
 /** OCSPResponse DER → bu sertifikanın durumu (cevabın imzası denetlenir) */
 export function ocspCevabi(der: Uint8Array, s: Sertifika, veren: Sertifika): OcspSonucu {
@@ -60,13 +64,21 @@ export function ocspCevabi(der: Uint8Array, s: Sertifika, veren: Sertifika): Ocs
       const durumEtiketi = sp[1].tag;
       const durum: IptalDurumu = durumEtiketi === 0x80 ? "gecerli" : durumEtiketi === 0xa1 ? "iptal" : "bilinmiyor";
       const sonraki = sp[3]?.tag === 0xa0 ? zamanOku(t, cocuklar(t, sp[3])[0]) : null;
-      return { durum, zaman: zamanOku(t, sp[2]), sonraki, imza: imzaSonuc };
+      /* RevokedInfo ::= [1] IMPLICIT SEQUENCE { revocationTime GeneralizedTime, revocationReason [0] OPTIONAL } */
+      let iptalZamani: string | null = null;
+      if (durumEtiketi === 0xa1) iptalZamani = zamanYoksaNull(() => zamanOku(t, cocuklar(t, sp[1])[0]));
+      return { durum, zaman: zamanOku(t, sp[2]), sonraki, iptalZamani, imza: imzaSonuc };
     }
-    return { durum: "bilinmiyor", zaman: null, sonraki: null, imza: imzaSonuc };
+    return { durum: "bilinmiyor", zaman: null, sonraki: null, iptalZamani: null, imza: imzaSonuc };
   } catch (e) {
     if (e instanceof BozukDer || e instanceof RangeError) throw new IptalHatasi("OCSP cevabı okunamadı");
     throw e;
   }
+}
+
+/** okunamayan iptal anı null (iptalKarari onu "iptal her an" sayar) — bozuk yapı kanıtı düşürmez */
+function zamanYoksaNull(oku: () => string | null): string | null {
+  try { return oku(); } catch (e) { if (e instanceof BozukDer || e instanceof RangeError || e instanceof TypeError) return null; throw e; }
 }
 
 /** sertifika OCSP imzası için yetkilendirilmiş mi (genişletilmiş anahtar kullanımı id-kp-OCSPSigning) */
@@ -84,7 +96,8 @@ function ocspImzacisi(s: Sertifika): boolean {
   return false;
 }
 
-export interface CrlSonucu { durum: IptalDurumu; zaman: string | null; sonraki: string | null; imza: "tamam" | "bozuk" | "desteklenmiyor" }
+/** zaman: thisUpdate · sonraki: nextUpdate · iptalZamani: listede ise revocationDate (okunamazsa null) */
+export interface CrlSonucu { durum: IptalDurumu; zaman: string | null; sonraki: string | null; iptalZamani: string | null; imza: "tamam" | "bozuk" | "desteklenmiyor" }
 
 /** CertificateList DER → bu sertifikanın durumu (listenin imzası verenin anahtarıyla) */
 export function crlDenetle(der: Uint8Array, s: Sertifika, veren: Sertifika): CrlSonucu {
@@ -97,14 +110,67 @@ export function crlDenetle(der: Uint8Array, s: Sertifika, veren: Sertifika): Crl
     let i = t[0].tag === 0x02 ? 1 : 0;
     i++; /* algoritma */
     const verenAdi = Buffer.from(tum(o, bekle(t[i++], 0x30)));
-    if (!verenAdi.equals(s.verenDer)) return { durum: "bilinmiyor", zaman: null, sonraki: null, imza: imzaSonuc === "desteklenmiyor" ? "desteklenmiyor" : "bozuk" };
+    if (!verenAdi.equals(s.verenDer)) return { durum: "bilinmiyor", zaman: null, sonraki: null, iptalZamani: null, imza: imzaSonuc === "desteklenmiyor" ? "desteklenmiyor" : "bozuk" };
     const zaman = zamanOku(o, t[i++]);
     const sonraki = t[i] && (t[i].tag === 0x17 || t[i].tag === 0x18) ? zamanOku(o, t[i++]) : null;
-    let durum: IptalDurumu = "gecerli";
-    if (t[i]?.tag === 0x30) for (const r of cocuklar(o, t[i])) if (tamsayiHex(o, cocuklar(o, r)[0]) === s.seri) { durum = "iptal"; break; }
-    return { durum, zaman, sonraki, imza: imzaSonuc === "tamam" ? "tamam" : imzaSonuc === "desteklenmiyor" ? "desteklenmiyor" : "bozuk" };
+    let durum: IptalDurumu = "gecerli", iptalZamani: string | null = null;
+    if (t[i]?.tag === 0x30) {
+      for (const r of cocuklar(o, t[i])) {
+        const g = cocuklar(o, r);
+        if (tamsayiHex(o, g[0]) !== s.seri) continue;
+        /* revokedCertificates: SEQUENCE { userCertificate, revocationDate Time, crlEntryExtensions OPTIONAL } */
+        durum = "iptal";
+        iptalZamani = zamanYoksaNull(() => zamanOku(o, g[1]));
+        break;
+      }
+    }
+    return { durum, zaman, sonraki, iptalZamani, imza: imzaSonuc === "tamam" ? "tamam" : imzaSonuc === "desteklenmiyor" ? "desteklenmiyor" : "bozuk" };
   } catch (e) {
     if (e instanceof BozukDer || e instanceof RangeError) throw new IptalHatasi("iptal listesi okunamadı");
     throw e;
   }
+}
+
+/** belgedeki (DSS) imzası doğrulanmış, bu sertifikaya ait bir iptal kanıtı: ne dediği ve ne zaman (pdf-imzalar.ts toplar) */
+export interface IptalKaniti {
+  tur: "ocsp" | "crl";
+  durum: IptalDurumu;
+  /** kanıtın üretildiği an: OCSP cevabının / iptal listesinin thisUpdate'i */
+  zaman: string | null;
+  /** nextUpdate (yoksa null) */
+  sonraki: string | null;
+  /** "iptal"de iptal anı (okunamazsa null) */
+  iptalZamani: string | null;
+}
+
+/** ISO zaman → saniyeye indirilmiş ms (DER zamanları saniyelik); okunamazsa null */
+const saniye = (iso: string | null): number | null => { if (!iso) return null; const t = Date.parse(iso); return Number.isNaN(t) ? null : Math.floor(t / 1000) * 1000; };
+
+/** İMZA ANINDA İPTAL DURUMU (2026-10-23; probata-sign denetimi 2026-10-18, YÜKSEK: kanıtın zamanı imza anıyla hiç karşılaştırılmıyordu — imzadan aylar
+    önceki "geçerli" OCSP cevabı ya da süresi imzadan önce biten iptal listesi iptal edilmiş sertifikayı "geçerli" gösteriyordu; aynı DSS'teki iptal
+    listesinin "iptal" kararı ilk sağlam OCSP cevabıyla eziliyordu). `an`: imza anı (pdf-imzalar.ts seçer: sağlam imza damgası, yoksa imzayı kapsayan
+    en erken sağlam belge damgası, yoksa çözüm anı). Zamanlar saniyeye indirilir. Kural:
+    1. sağlam herhangi bir kanıt "iptal" diyor ve iptal anı imza anından önce ya da ona eşitse (ya da iptal anı okunamıyorsa) → "iptal";
+       "geçerli" diyen başka bir kanıt bunu EZEMEZ;
+    2. iptal anı imza anından SONRA olan "iptal" kanıtı imza anında iptal olmadığını gösterir → "gecerli";
+    3. "geçerli" diyen kanıt yalnız imza anında ya da SONRA üretilmişse (thisUpdate ≥ an) ve süresi imza anından önce bitmemişse (nextUpdate yoksa
+       ya da ≥ an) sayılır — daha önce üretilmiş kanıt imza anını kanıtlamaz (ETSI EN 319 102-1: imza anından sonra üretilmiş iptal bilgisi) →
+       "gecerli";
+    4. hiçbiri yoksa null (kanıt yok). "bilinmiyor" diyen kanıt sayılmaz; imza anı okunamazsa null. */
+export function iptalKarari(kanitlar: readonly IptalKaniti[], an: string): "gecerli" | "iptal" | null {
+  const A = saniye(an);
+  if (A === null) return null;
+  let gecerli = false;
+  for (const k of kanitlar) {
+    if (k.durum !== "iptal") continue;
+    const ia = saniye(k.iptalZamani);
+    if (ia === null || ia <= A) return "iptal";
+    gecerli = true;
+  }
+  for (const k of kanitlar) {
+    if (k.durum !== "gecerli") continue;
+    const z = saniye(k.zaman), s = saniye(k.sonraki);
+    if (z !== null && z >= A && (k.sonraki === null || (s !== null && s >= A))) gecerli = true;
+  }
+  return gecerli ? "gecerli" : null;
 }

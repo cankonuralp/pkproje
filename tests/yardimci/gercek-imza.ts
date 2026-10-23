@@ -99,23 +99,32 @@ const anahtarBitleri = (k: Kimlik) => {
 };
 /** OCSP imzacısı sertifikası (genişletilmiş anahtar kullanımı id-kp-OCSPSigning) */
 export const ocspImzacisiYap = (veren: Kimlik) => sertifikaYap({ cn: "Deneme OCSP İmzacısı", o: "Deneme ESHS", veren, tur: "ecdsa", ocsp: true });
+/** zaman: thisUpdate · sonraki: nextUpdate (verilmezse zaman + 7 gün) · iptalZamani: "iptal"de revocationTime (verilmezse zaman; "bozuk" → okunamayan
+    zaman — 2026-10-23 iptal anı kilidi) */
 export function ocspCevabiYap(s: Kimlik, veren: Kimlik, p: {
-  durum?: "gecerli" | "iptal" | "bilinmiyor"; zaman?: Date; imzalayan?: Kimlik; ekSertifika?: Kimlik[]; idVeren?: Kimlik; seri?: Buffer; basariKodu?: number;
+  durum?: "gecerli" | "iptal" | "bilinmiyor"; zaman?: Date; sonraki?: Date; iptalZamani?: Date | "bozuk"; imzalayan?: Kimlik; ekSertifika?: Kimlik[];
+  idVeren?: Kimlik; seri?: Buffer; basariKodu?: number;
 } = {}): Buffer {
   if (p.basariKodu) return sira(tlv(0x0a, Buffer.from([p.basariKodu])));
   const zaman = p.zaman ?? new Date("2026-10-17T09:05:00Z"), imzalayan = p.imzalayan ?? veren, idv = p.idVeren ?? veren;
   const certId = sira(sira(oid("1.3.14.3.2.26"), Buffer.from([5, 0])), oktet(createHash("sha1").update(idv.ad).digest()),
     oktet(createHash("sha1").update(anahtarBitleri(idv)).digest()), tamsayi(p.seri ?? seriOf(s)));
-  const durum = p.durum === "iptal" ? tlv(0xa1, genelZaman(zaman)) : p.durum === "bilinmiyor" ? Buffer.from([0x82, 0]) : Buffer.from([0x80, 0]);
-  const tbs = sira(acik(1, imzalayan.ad), genelZaman(zaman), sira(sira(certId, durum, genelZaman(zaman), acik(0, genelZaman(new Date(zaman.getTime() + 7 * 864e5))))));
+  const iptalAni = p.iptalZamani === "bozuk" ? BOZUK_ZAMAN : genelZaman(p.iptalZamani ?? zaman);
+  const durum = p.durum === "iptal" ? tlv(0xa1, iptalAni) : p.durum === "bilinmiyor" ? Buffer.from([0x82, 0]) : Buffer.from([0x80, 0]);
+  const tbs = sira(acik(1, imzalayan.ad), genelZaman(zaman), sira(sira(certId, durum, genelZaman(zaman), acik(0, genelZaman(p.sonraki ?? new Date(zaman.getTime() + 7 * 864e5))))));
   const imza = sign("sha256", tbs, imzalayan.anahtar);
   const temel = sira(tbs, imzaAlg(imzalayan.tur), tlv(0x03, Buffer.from([0]), imza), ...(p.ekSertifika?.length ? [acik(0, sira(...p.ekSertifika.map((k) => k.der)))] : []));
   return sira(tlv(0x0a, Buffer.from([0])), acik(0, sira(oid("1.3.6.1.5.5.7.48.1.1"), oktet(temel))));
 }
-/** iptal listesi (CRL v2) — verenin anahtarıyla; iptaller listede */
-export function crlYap(veren: Kimlik, iptaller: Kimlik[] = [], zaman = new Date("2026-10-17T08:00:00Z"), imzalayan: Kimlik = veren): Buffer {
-  const tbs = sira(tamsayi(1), imzaAlg(imzalayan.tur), veren.ad, utcZaman(zaman), utcZaman(new Date(zaman.getTime() + 7 * 864e5)),
-    ...(iptaller.length ? [sira(...iptaller.map((k) => sira(tamsayi(seriOf(k)), utcZaman(zaman))))] : []));
+/** biçimi tutmayan GeneralizedTime (okunamayan iptal anı) */
+const BOZUK_ZAMAN = tlv(0x18, Buffer.from("bozuk-zaman", "latin1"));
+/** iptal listesi (CRL v2) — verenin anahtarıyla; iptaller listede. p.sonraki: nextUpdate (verilmezse zaman + 7 gün) · p.iptalZamani: revocationDate
+    (verilmezse zaman; "bozuk" → okunamayan zaman) */
+export function crlYap(veren: Kimlik, iptaller: Kimlik[] = [], zaman = new Date("2026-10-17T08:00:00Z"), imzalayan: Kimlik = veren,
+  p: { sonraki?: Date; iptalZamani?: Date | "bozuk" } = {}): Buffer {
+  const iptalAni = p.iptalZamani === "bozuk" ? BOZUK_ZAMAN : utcZaman(p.iptalZamani ?? zaman);
+  const tbs = sira(tamsayi(1), imzaAlg(imzalayan.tur), veren.ad, utcZaman(zaman), utcZaman(p.sonraki ?? new Date(zaman.getTime() + 7 * 864e5)),
+    ...(iptaller.length ? [sira(...iptaller.map((k) => sira(tamsayi(seriOf(k)), iptalAni)))] : []));
   return sira(tbs, imzaAlg(imzalayan.tur), tlv(0x03, Buffer.from([0]), sign("sha256", tbs, imzalayan.anahtar)));
 }
 
@@ -168,7 +177,12 @@ export const belgeDamgala = (pdf: Buffer, no: number, k: ReturnType<typeof denem
 
 /** DSS sözlüğü + kataloğun güncel hâli: kişinin OCSP cevabı (verenin imzası) ve verenin iptal listesi, gerçek akışlar olarak */
 export function dssEkle(pdf: Buffer, no: number, k: ReturnType<typeof denemeKimlikleri>, ocsp = 1, crl = 1): Buffer {
-  const akislar = [...Array.from({ length: ocsp }, () => ocspCevabiYap(k.kisi, k.ara)), ...Array.from({ length: crl }, () => crlYap(k.ara))];
+  return kanitliDss(pdf, no, { ocsp: Array.from({ length: ocsp }, () => ocspCevabiYap(k.kisi, k.ara)), crl: Array.from({ length: crl }, () => crlYap(k.ara)) });
+}
+/** DSS sözlüğü verilen kanıtlarla (OCSP cevapları, iptal listeleri — sırasıyla; 2026-10-23 iptal anı kilidi) */
+export function kanitliDss(pdf: Buffer, no: number, kanit: { ocsp?: Buffer[]; crl?: Buffer[] }): Buffer {
+  const o = kanit.ocsp ?? [], c = kanit.crl ?? [], ocsp = o.length, crl = c.length;
+  const akislar = [...o, ...c];
   const ref = (n: number, s: number) => Array.from({ length: s }, (_, i) => `${n + i} 0 R`).join(" ");
   const parcalar: Buffer[] = [pdf, Buffer.from(`${no} 0 obj\n<< /OCSPs [${ref(no + 1, ocsp)}] /CRLs [${ref(no + 1 + ocsp, crl)}] /Certs [] >>\nendobj\n`, "latin1")];
   akislar.forEach((b, i) => parcalar.push(Buffer.from(`${no + 1 + i} 0 obj\n<< /Length ${b.length} >>\nstream\n`, "latin1"), b, Buffer.from("\nendstream\nendobj\n", "latin1")));
