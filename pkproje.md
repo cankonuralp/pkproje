@@ -2527,6 +2527,24 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-24 (MAKET, kod yok — ONAY BEKLİYOR): **FORMAT KURUCU SERBEST DÜZEN** — https://claude.ai/artifact/VWWhTtQb8CkgQq6FGPpDnb · depoda
+  `docs/maket/format-serbest.html` (tek başına sayfa; uydurma "VN-01 Vinç Muayene Formu"). Reisim: *"hangi firmanın hangi PDF formunu yüklersem yükleyeyim
+  şablon o forma dönüşsün ve format kurucuda İSTEDİĞİM GİBİ düzenleyebileyim"*. Makette: kâğıt satırlardan, her satır yan yana bölümlerden oluşur (bölüm
+  tutamağından sürüklenip başka bölümün soluna / sağına bırakılınca yan yana, üstüne / altına bırakılınca ayrı satır; aradaki tutamakla genişlik; Bölüm
+  sekmesinde Yukarı / Aşağı / Sola / Sağa / Üstteki satırın yanına / Ayrı satıra al). Her bölüm bir tablo: hücre seçimi (sürükle, Shift, telefonda "Aralık
+  seç"), Birleştir / Ayır, satır ve sütun ekle / sil, sütun genişliği tutamakla ya da %, satır yüksekliği, "bu satır sahada çoğalır" (ölçüm satırı). Hücrenin
+  içeriği dokuz türden biri: yazı (çift tıkla yerinde) · sahada doldurulur (yazı / uzun yazı / sayı / tarih / seçim, birim, sahadaki adı, zorunlu) · kayıttan
+  gelir · kontrol cevabı (U / UD / X düzenlenir) · formül · sıra no (önceki bölümden sürebilir) · imza yeri (kimin, e-imza yeri) · logo / görsel · fotoğraf
+  kutusu. Görünüm hücre başına: yazı tipi (Tinos, Arimo, Carlito, Sora — kendi sunucumuzdan), boy pt, kalın / eğik / altı çizili, yatay ve dikey hiza, yazı
+  rengi, zemin, kenarlar (bütün / dış / iç / yok / tek kenar, ince / kalın). Belge sekmesi: A4 dikey / yatay, varsayılan yazı tipi ve boy, kenar boşluğu,
+  bölümler arası, hücre iç boşluğu, çizgi rengi / kalınlığı, sayfa altı. Ekle: Word gibi satır × sütun ızgarası, hazır parçalar (bilgi tablosu, kontrol
+  listesi, iki sütunlu liste, ölçüm tablosu, imza tablosu, başlık, sonuç cümlesi, fotoğraflar, serbest yazı), firmanın parçaları. Kâğıt · Saha ekranı ·
+  Belge aynı tanımdan (saha: künye kayıttan, alanın adı soldaki / üstteki yazıdan, cevaplı satır madde, çoğalan satır tablo + Satır ekle; yan yana bölümler
+  masaüstünde yan yana, telefonda alt alta). "Basılı form" yüklenen PDF'i yanda açar, "Formdan yeniden kur". Geri al / yinele, A4 sayfa sonu çizgisi.
+  Telefon ayrı: ayarlar ve ekle alttan levha, alt çubukta seçim özeti + Aralık seç + Ayarlar, kâğıt %75; tablet 768–1279 Ekle çekmece. Ölçüldü (kendi
+  tarayıcı bölmemde): 1920 · 1080 · 375, açık + koyu, sayfa taşması 0, saha ekranında 38 px altı dokunma hedefi 0; birleştir / ayır / ekle / geri al / renk /
+  sürükleyip yan yana / genişlik / yerinde yazı denendi. Gerçek formun (reisim'in masaüstündeki) düzenine yalnız bakıldı; depoya / makete girmedi.
+  Onaylanınca kod: format tanımına düzen katmanı (satır → bölüm → tablo hücreleri), belge / kâğıt / saha çizicisi ve basılı form okuması bu düzene.
 - 2026-10-24 (İHTİYAÇ, kod yok): **FORMAT KURUCU GENEL ARAÇ OLACAK** — reisim: *"sanki ben tek form için bir iş istemişim gibi … ben sana istediğim pdf i
   attığımda istediğim gibi düzenleyebileceğim bir araç istediğimi söyledim ne alaka formattan şunu girersin bunu giremessin diyosun"*. Basılı formdan
   şablonda kalan sınırlar (bölümler yalnız alt alta, imza bloğunun sabit yapısı, tek yazı tipi) aracın sınırı — kapatılacak. Sıradaki iş: format
