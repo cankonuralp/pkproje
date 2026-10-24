@@ -46,6 +46,9 @@
 .secenek { display: flex; align-items: flex-start; gap: 8px; min-height: var(--tus-y); padding: 4px 0; cursor: pointer; }
 .secenek input { width: 18px; height: 18px; margin: 2px 0 0; flex: none; accent-color: var(--birincil); }
 .secenek > span { display: flex; flex-direction: column; }
+/* 2026-10-24 (serbest düzen): belgenin yazısı — sayı ve renk kutusu (radyo boyunda değil) */
+.secenek input.sayiKutu { width: 80px; height: 30px; margin: 0; padding: 0 8px; border: 1px solid var(--kenar-alan); border-radius: var(--r-kucuk); background: var(--kart); color: var(--yazi); font-size: var(--boy-girdi); }
+.secenek input[type="color"] { width: 40px; height: 28px; margin: 0; padding: 0 2px; border: 1px solid var(--kenar-alan); border-radius: var(--r-kucuk); background: var(--kart); }
 .kaydetNot { align-self: center; color: var(--uyari-yazi); font-size: var(--boy-kucuk); font-weight: 600; }
 .seritKap { display: grid; gap: 8px; margin-top: 12px; }
 .seritKap > div:focus { outline: none; }

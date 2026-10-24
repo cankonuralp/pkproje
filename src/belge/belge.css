@@ -22,6 +22,41 @@
 @font-face { font-family: "Carlito"; font-style: normal; font-display: block; font-weight: 700;
   src: url("./carlito-5.3.0/carlito-latin-700-normal.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
 
+/* 2026-10-24 (serbest düzen): Tinos (Times ölçüsü) ve Arimo (Arial ölçüsü) — @fontsource 5.3.0, SIL OFL 1.1 (./tinos-5.3.0/OFL.txt,
+   ./arimo-5.3.0/OFL.txt), kendi kökenimizden; PDF'te veri adresi (pdf.ts belgeCss) */
+@font-face { font-family: "Tinos"; font-style: normal; font-weight: 400; font-display: block;
+  src: url("./tinos-5.3.0/tinos-latin-ext-400-normal.woff2") format("woff2"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: "Tinos"; font-style: normal; font-weight: 400; font-display: block;
+  src: url("./tinos-5.3.0/tinos-latin-400-normal.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "Tinos"; font-style: italic; font-weight: 400; font-display: block;
+  src: url("./tinos-5.3.0/tinos-latin-ext-400-italic.woff2") format("woff2"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: "Tinos"; font-style: italic; font-weight: 400; font-display: block;
+  src: url("./tinos-5.3.0/tinos-latin-400-italic.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "Tinos"; font-style: normal; font-weight: 700; font-display: block;
+  src: url("./tinos-5.3.0/tinos-latin-ext-700-normal.woff2") format("woff2"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: "Tinos"; font-style: normal; font-weight: 700; font-display: block;
+  src: url("./tinos-5.3.0/tinos-latin-700-normal.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "Tinos"; font-style: italic; font-weight: 700; font-display: block;
+  src: url("./tinos-5.3.0/tinos-latin-ext-700-italic.woff2") format("woff2"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: "Tinos"; font-style: italic; font-weight: 700; font-display: block;
+  src: url("./tinos-5.3.0/tinos-latin-700-italic.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "Arimo"; font-style: normal; font-weight: 400; font-display: block;
+  src: url("./arimo-5.3.0/arimo-latin-ext-400-normal.woff2") format("woff2"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: "Arimo"; font-style: normal; font-weight: 400; font-display: block;
+  src: url("./arimo-5.3.0/arimo-latin-400-normal.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "Arimo"; font-style: italic; font-weight: 400; font-display: block;
+  src: url("./arimo-5.3.0/arimo-latin-ext-400-italic.woff2") format("woff2"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: "Arimo"; font-style: italic; font-weight: 400; font-display: block;
+  src: url("./arimo-5.3.0/arimo-latin-400-italic.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "Arimo"; font-style: normal; font-weight: 700; font-display: block;
+  src: url("./arimo-5.3.0/arimo-latin-ext-700-normal.woff2") format("woff2"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: "Arimo"; font-style: normal; font-weight: 700; font-display: block;
+  src: url("./arimo-5.3.0/arimo-latin-700-normal.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "Arimo"; font-style: italic; font-weight: 700; font-display: block;
+  src: url("./arimo-5.3.0/arimo-latin-ext-700-italic.woff2") format("woff2"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: "Arimo"; font-style: italic; font-weight: 700; font-display: block;
+  src: url("./arimo-5.3.0/arimo-latin-700-italic.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+
 /* önizleme: kâğıt ekranda ortalanır; dar ekranda kendi içinde kayar (sayfa kaymaz) */
 .rb-onizleme { overflow-x: auto; padding: 8px 0; -webkit-overflow-scrolling: touch; }
 .rb-sayfa { box-sizing: border-box; width: 794px; min-height: 1123px; margin: 0 auto; padding: 18px 22px 12px; background: #fff; color: #000;
@@ -80,6 +115,15 @@ tr:has(.rb-eimza) { break-inside: avoid; }
 .rb-z-yok .rb-bolum h2, .rb-z-yok .rb-bolum h3 { background: none; }
 .rb-h-orta .rb-bolum h2, .rb-h-orta .rb-bolum h3 { text-align: center; }
 .rb-sayfa.rb-e-kalin .rb-e { background: none; font-weight: 700; }
+
+/* 2026-10-24 (serbest düzen): serbest tablo — çizgi, iç boşluk, yazı hücrenin kendi biçeminde (belge.ts hucreStili); yan yana bölümler */
+.rb-sayfa table.rb-tablo { margin: 0; }
+.rb-sayfa .rb-tablo td { line-height: 1.2; }
+.rb-tablo-bolum { margin: 0 0 3mm; break-inside: avoid; }
+.rb-yan { display: flex; align-items: flex-start; gap: 3mm; margin: 0 0 3mm; }
+.rb-yan > .rb-bolum, .rb-yan > div > .rb-bolum, .rb-yan .rb-tablo-bolum { margin-bottom: 0; }
+.rb-hucre-foto { display: flex; flex-wrap: wrap; gap: 2px; }
+.rb-hucre-foto img { display: block; max-width: 100%; max-height: 60mm; object-fit: contain; }
 
 @media print {
   .rb-onizleme { overflow: visible; padding: 0; }

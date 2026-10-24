@@ -105,7 +105,12 @@ export const KUSUR_ALAN_ADI: Record<KusurAlani, string> = { sira: "No", bolum: "
 /** ölçüm tablosunun adıyla seçilen hesabı (hesap.ts) */
 export const HESAPLAR = ["nokta", "selektivite", "linye", "pd", "zi"] as const;
 /** 495: "metin" — serbest metin (belgeye basılan sabit yazı; sahada okunur, doldurulmaz) */
-export const BLOKLAR = ["bilgi", "liste", "olcum", "test", "cihaz", "foto", "kusur", "sonuc", "not", "imza", "metin"] as const;
+/** 2026-10-24 (format kurucu serbest düzen — reisim: "hangi firmanın hangi PDF formunu yüklersem yükleyeyim şablon o forma dönüşsün ve format
+    kurucuda istediğim gibi düzenleyebileyim"; maket docs/maket/format-serbest.html onaylı): "tablo" — satır / sütun / hücre birleştirmesi elde
+    olan serbest tablo; hücre içeriği yazı, sahada doldurulan alan, kayıttan gelen bilgi, kontrol cevabı, sıra no, imza yeri, logo, fotoğraf
+    kutusu ya da raporun sonucu; görünümü hücre başına (yazı tipi, boy, renk, zemin, kenar, hiza). Cevapları mevcut alan / madde / tablo
+    cevaplarıdır (src/format/tablo.ts sanalBolumler — motor, saha ekranı ve formül aynı yoldan). */
+export const BLOKLAR = ["bilgi", "liste", "olcum", "test", "cihaz", "foto", "kusur", "sonuc", "not", "imza", "metin", "tablo"] as const;
 /** sınır kuralı (426: kesin küçük / büyük eklendi — ZPKR05 "RB < 2 Ω"): en çok · en az · küçük · büyük */
 export const SINIRLAR = ["<=", ">=", "<", ">"] as const;
 export type Sinir = (typeof SINIRLAR)[number];
@@ -201,10 +206,69 @@ export const KURAL_EN_COK = 20;
 /* 2026-10-16 (sunum 595 madde 4, 6, 7, 11–15 — reisim: "format yapıcıda bu ve benzeri kısımlarda değişiklik yapamıyorum, tıklayıp değiştiremiyorum"):
    kâğıtta görünen sabit başlıklar ve sözcükler de formatın — boş / verilmemiş = bugünkü yazı (format/duzen.ts …Basliklari) */
 const baslik = z.string().trim().max(60).optional();
+/* 2026-10-24 (serbest düzen): yan — bölüm bir öncekinin YANINDA (aynı satırda); oran — satırdaki genişlik payı (verilmemişse eşit) */
 const ortak = {
   id: kimlik, ad, kilit: z.boolean().default(false), ust: z.string().max(200).optional(), numarasiz: z.boolean().optional(), alt: z.boolean().optional(),
   doldur: z.object({ foto: z.boolean(), excel: z.boolean() }).optional(),
+  yan: z.boolean().optional(), oran: z.number().min(5).max(100).optional(),
 };
+
+/* ── 2026-10-24 SERBEST TABLO (blok "tablo") ── */
+/** belgenin yazı tipleri — kendi kökenimizden (src/belge/belge.css): Carlito (Calibri ölçüsü), Tinos (Times ölçüsü), Arimo (Arial ölçüsü) */
+export const YAZI_TIPLERI = ["carlito", "tinos", "arimo"] as const;
+export type YaziTipi = (typeof YAZI_TIPLERI)[number];
+export const YAZI_TIPI_ADI: Record<YaziTipi, string> = { carlito: "Carlito (Calibri ölçüsü)", tinos: "Tinos (Times ölçüsü)", arimo: "Arimo (Arial ölçüsü)" };
+export const HUCRE_TURLERI = ["yazi", "alan", "kayit", "cevap", "sira", "imza", "gorsel", "foto", "sonuc"] as const;
+export type HucreTuru = (typeof HUCRE_TURLERI)[number];
+/** sahada doldurulan hücrenin değer türü (bilgi alanının türleriyle aynı adlar) */
+export const HUCRE_ALAN_TURLERI = ["metin", "sayi", "tarih", "secim", "evet"] as const;
+export type HucreAlanTuru = (typeof HUCRE_ALAN_TURLERI)[number];
+/** kayıttan gelen hücrenin bilgisi — plandan, künyeden, ekipmandan, formattan, raporu yazandan / onaylayandan, muayene firmasından */
+export const TABLO_KAYNAKLARI = [
+  "firma", "adres", "sgk", "isg", "eposta", "tel", "metot", "rapor_no", "rapor_tarihi", "bas", "bit", "sonraki", "takip", "plan_no",
+  "ekipman_kod", "ekipman_tur", "marka", "model", "seri", "imal", "konum", "amac",
+  "form_kod", "surum", "revizyon", "nusha",
+  "uzman_ad", "uzman_meslek", "uzman_ekipnet", "uzman_diploma", "uzman_oda", "teknik_ad", "teknik_meslek", "onay_zamani",
+  "uzman2_ad", "tesis_ad", "tesis_unvan", "muayene_firmasi", "muayene_adres", "akr_no",
+] as const;
+export type TabloKaynagi = (typeof TABLO_KAYNAKLARI)[number];
+export const TABLO_KAYNAK_ADI: Record<TabloKaynagi, string> = {
+  firma: "Firma unvanı", adres: "Periyodik kontrol adresi", sgk: "SGK sicil no", isg: "İSG-KATİP sözleşme ID", eposta: "Firmanın e-postası", tel: "Firmanın telefonu",
+  metot: "Kontrol metodu ve kapsamı", rapor_no: "Rapor no", rapor_tarihi: "Rapor tarihi", bas: "Kontrol başlangıcı", bit: "Kontrol bitişi",
+  sonraki: "Sonraki kontrol tarihi", takip: "Takip kontrol tarihi", plan_no: "Proje no",
+  ekipman_kod: "Ekipman kodu", ekipman_tur: "Ekipman türü", marka: "Marka", model: "Model", seri: "Seri no", imal: "İmal yılı", konum: "Kullanım yeri",
+  amac: "Kullanım amacı",
+  form_kod: "Doküman kodu", surum: "Format sürümü", revizyon: "Revizyon", nusha: "Nüsha sayısı",
+  uzman_ad: "Muayene uzmanının adı", uzman_meslek: "Muayene uzmanının mesleği", uzman_ekipnet: "Uzmanın EKİPNET no", uzman_diploma: "Uzmanın diploma no",
+  uzman_oda: "Uzmanın oda sicil no", teknik_ad: "Teknik yöneticinin adı", teknik_meslek: "Teknik yöneticinin mesleği", onay_zamani: "Onay zamanı",
+  uzman2_ad: "İkinci uzmanın adı", tesis_ad: "Tesis yetkilisinin adı", tesis_unvan: "Tesis yetkilisinin unvanı",
+  muayene_firmasi: "Muayene firmasının adı", muayene_adres: "Muayene firmasının adresi", akr_no: "Akreditasyon no",
+};
+const renk = z.string().regex(/^#[0-9a-fA-F]{6}$/, "Renk #RRGGBB.");
+const kenarKalinligi = z.union([z.literal(0), z.literal(1), z.literal(2)]);
+/** hücrenin görünümü: f yazı tipi · b boy (pt) · k kalın · i eğik · u altı çizili · a yatay hiza (sol / orta / sağ / iki yana) · d dikey hiza
+    (üst / orta / alt) · r yazı rengi · z zemin · kn kenarlar (üst / alt / sol / sağ: 0 yok, 1 ince, 2 kalın; verilmemişse belgenin çizgisi) */
+export const HucreStili = z.object({
+  f: z.enum(YAZI_TIPLERI).optional(), b: z.number().min(5).max(40).optional(), k: z.boolean().optional(), i: z.boolean().optional(), u: z.boolean().optional(),
+  a: z.enum(["s", "o", "g", "y"]).optional(), d: z.enum(["u", "o", "a"]).optional(), r: renk.optional(), z: renk.optional(),
+  kn: z.object({ u: kenarKalinligi, a: kenarKalinligi, s: kenarKalinligi, g: kenarKalinligi }).optional(),
+});
+export type HucreStili = z.output<typeof HucreStili>;
+/** hücre: r, c sol üst köşesi; rs, cs kapladığı satır / sütun. Türüne göre: m (yazı; kontrol cevabında maddenin metni — boşsa satırın yazıları),
+    id (alan, cevap, fotoğraf kutusu — cevabın anahtarı, bütün tanımda tekil), ad (sahadaki adı — boşsa soldaki / üstteki yazı), alan (değer türü),
+    secenekler (seçim; sonuç hücresinde "uygundur / uygun değildir / şartlı uygundur" sözcükleri), birim, zorunlu, formul, kaynak, kim (imza
+    yeri), eimza (e-imza bu hücrede), gorsel (logo / akreditasyon) */
+export const Hucre = z.object({
+  r: z.number().int().min(0).max(199), c: z.number().int().min(0).max(39), rs: z.number().int().min(1).max(200).optional(), cs: z.number().int().min(1).max(40).optional(),
+  tur: z.enum(HUCRE_TURLERI), m: z.string().max(2000).optional(), id: kimlik.optional(), ad: z.string().trim().max(200).optional(),
+  alan: z.enum(HUCRE_ALAN_TURLERI).optional(), secenekler: z.array(z.string().trim().min(1).max(200)).max(40).optional(), birim: kisa.optional(),
+  zorunlu: z.boolean().optional(), formul, kaynak: z.enum(TABLO_KAYNAKLARI).optional(), kim: z.enum(["uzman", "teknik", "uzman2", "tesis"]).optional(),
+  eimza: z.boolean().optional(), gorsel: z.enum(["logo", "akr"]).optional(), s: HucreStili.optional(),
+});
+export type Hucre = z.output<typeof Hucre>;
+/** satır: y en az yükseklik (mm); tekrar — sahada çoğalan satır (ölçüm satırı; cevabı Cevaplar.tablo[id]; id tekrar satırında zorunlu) */
+export const TabloSatiri = z.object({ y: z.number().min(0).max(250).optional(), tekrar: z.boolean().optional(), id: kimlik.optional() });
+export type TabloSatiri = z.output<typeof TabloSatiri>;
 export const Bolum = z.discriminatedUnion("blok", [
   /* tam (460; reisim 2026-10-09: "ekipman bilgileri kısmıda değiştirilebilir olsun zira yangın dolabı gibi ekipmanlarda farklı girdiler
      olabiliyor"): raporun 2. bölümü YALNIZ bu bölümün alanlarıdır — ekipman kodu ve türü dışında sabit satır yok; marka, model … ekipman
@@ -253,6 +317,11 @@ export const Bolum = z.discriminatedUnion("blok", [
   z.object({ ...ortak, blok: z.literal("imza"), imzalar: z.array(z.enum(["uzman", "teknik"])).min(1).max(2).default(["uzman"]), satirlar: z.array(ImzaSatiri).max(40).optional() }),
   /* 495 (hata listesi 29 + 46 maketi): serbest metin — belgeye basılan sabit yazı (açıklama, yöntem notu …); sahada okunur */
   z.object({ ...ortak, blok: z.literal("metin"), metin: z.string().max(4000).default("") }),
+  /* 2026-10-24: serbest tablo — sutun oranlar (%; çizimde toplamı 100'e çekilir); cevaplar kontrol cevabı hücrelerinin seçenekleri (2. öğe
+     "uygun değil"); siraDevam sıra no önceki bölümden sürer */
+  z.object({ ...ortak, blok: z.literal("tablo"), sutun: z.array(z.number().min(1).max(100)).min(1).max(40), satirlar: z.array(TabloSatiri).min(1).max(200),
+    hucreler: z.array(Hucre).max(4000), cevaplar: z.array(z.string().trim().min(1).max(40)).min(2).max(6).default(["U", "UD", "X"]),
+    siraDevam: z.boolean().optional() }),
 ]);
 export type Bolum = z.output<typeof Bolum>;
 export type BolumOf<B extends Blok> = Extract<Bolum, { blok: B }>;
@@ -303,6 +372,13 @@ export const Gorunum = z.object({
   stil: z.object({ zemin: z.enum(BELGE_ZEMINLERI).optional(), hiza: z.enum(BELGE_HIZALARI).optional(), etiket: z.enum(BELGE_ETIKETLERI).optional() }).optional(),
   altYazi: z.string().trim().max(300).optional(),
   ekipmanAd: z.object({ kod: baslik, tur: baslik }).optional(),
+  /** 2026-10-24 (serbest düzen): true — belge YALNIZ formatın bölümlerinden (başlık tablosu, 1 Firma bilgileri, 2 Ekipman bilgileri, Yetkili kişi
+      sabit parçaları yok; hepsi formatın tablolarında); verilmemişse bugünkü düzen */
+  serbest: z.boolean().optional(),
+  /** belgenin yazısı ve çizgisi (serbest tablolarda; verilmemişse Carlito 9 pt, siyah ince çizgi): tip, boy (pt), cizgi rengi, kalin (1 ince · 2
+      kalın), ara bölümler arası (mm), ic hücre iç boşluğu (mm) */
+  yazi: z.object({ tip: z.enum(YAZI_TIPLERI).optional(), boy: z.number().min(6).max(16).optional(), cizgi: renk.optional(),
+    kalin: z.union([z.literal(1), z.literal(2)]).optional(), ara: z.number().min(0).max(10).optional(), ic: z.number().min(0).max(4).optional() }).optional(),
   /** 595 (madde 3): 1. bölümün satırları (FirmaSatiri); verilmemişse bugünkü satırlar */
   firma: z.object({ satirlar: z.array(FirmaSatiri).max(40) }).optional(),
   eimza: z.object({
@@ -410,6 +486,31 @@ export const FormatTanimi = z.object({
       });
     }
     if (b.blok === "foto") b.kutular?.forEach((k, j) => tek(k.id, ["bolumler", i, "kutular", j, "id"]));
+    /* 2026-10-24: serbest tablo — hücre tablonun içinde, üst üste binmez; cevaplı hücrenin kimliği var ve tekil; tekrar satırının kimliği var */
+    if (b.blok === "tablo") {
+      const R = b.satirlar.length, C = b.sutun.length, dolu = new Set<string>();
+      b.satirlar.forEach((x, j) => {
+        if (x.tekrar && !x.id) bag.addIssue({ code: "custom", path: ["bolumler", i, "satirlar", j, "id"], message: "Sahada çoğalan satırın kimliği yok." });
+        if (x.id) tek(x.id, ["bolumler", i, "satirlar", j, "id"]);
+      });
+      b.hucreler.forEach((h, j) => {
+        const yol = ["bolumler", i, "hucreler", j];
+        const rs = h.rs ?? 1, cs = h.cs ?? 1;
+        if (h.r + rs > R || h.c + cs > C) { bag.addIssue({ code: "custom", path: yol, message: "Hücre tablonun dışına taşıyor." }); return; }
+        for (let a = 0; a < rs; a++) for (let e = 0; e < cs; e++) {
+          const k = `${h.r + a},${h.c + e}`;
+          if (dolu.has(k)) { bag.addIssue({ code: "custom", path: yol, message: "Hücreler üst üste biniyor." }); return; }
+          dolu.add(k);
+        }
+        if (h.tur === "alan" || h.tur === "cevap" || h.tur === "foto") {
+          if (!h.id) bag.addIssue({ code: "custom", path: yol, message: "Cevaplı hücrenin kimliği yok." });
+          else tek(h.id, [...yol, "id"]);
+        }
+        if (h.tur === "alan" && h.alan === "secim" && !h.secenekler?.length) bag.addIssue({ code: "custom", path: yol, message: "Seçim hücresinin seçenekleri yok." });
+        if (h.tur === "kayit" && !h.kaynak) bag.addIssue({ code: "custom", path: yol, message: "Kayıttan gelen hücrenin bilgisi seçilmemiş." });
+        if (h.tur === "imza" && !h.kim) bag.addIssue({ code: "custom", path: yol, message: "İmza hücresinin kişisi seçilmemiş." });
+      });
+    }
     if (b.blok === "foto" && b.enAz > b.enCok) bag.addIssue({ code: "custom", path: ["bolumler", i, "enAz"], message: "En az, en çoktan büyük olamaz." });
   });
 });

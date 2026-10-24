@@ -100,7 +100,7 @@ export function cihazBolumuEkle(t: FormatTanimi): FormatTanimi {
 }
 /** Format kurucu açılırken: ekipman bölümü serbest (460), ölçüm cihazları bölümü var (459), hesaplı tablonun Bakanlık kuralları tablonun sonuç
     kuralı olarak görünür ve değişir (2026-10-16 — ./sonuc.ts; sonuç aynı) */
-export const kurucuyaHazirla = (t: FormatTanimi): FormatTanimi => sonucKurallariniYaz(cihazBolumuEkle(ekipmanTamYap(t)));
+export const kurucuyaHazirla = (t: FormatTanimi): FormatTanimi => (t.gorunum.serbest ? sonucKurallariniYaz(t) : sonucKurallariniYaz(cihazBolumuEkle(ekipmanTamYap(t))));
 
 /* 540: tam ekipman bölümünde kayıttan gelen alanın karşılığı — null: 2. bölümün sabit satırında var (çizilmez) */
 const KAYITTAN_EKIPMAN: Partial<Record<string, EkipmanAlani | null>> = { ekipman_kodu: null, ekipman_adi: null, seri_no: "seri", kullanim_yeri: "konum" };
@@ -120,6 +120,8 @@ export function tamAlanlari(b: BolumOf<"bilgi">): BolumOf<"bilgi">["alanlar"] {
 /** cihazEk: formatta cihaz bölümü yok ama rapora cihaz eklendi (sabit "Ölçüm cihazları" bölümü) · sade (540): tam ekipman bölümü raporda çizildiği
     gibi (tamAlanlari) — rapor ekranı, belge, doldurma; Format kurucu formatın kendisini düzenler (false) */
 export function raporDuzeni(t: FormatTanimi, cihazEk: boolean, sade = true): RaporDuzeni {
+  /* 2026-10-24 (serbest düzen): sabit bölüm yok, numara yok — formatın bölümleri sırasıyla */
+  if (t.gorunum.serbest) return { ekipman: false, ekipmanBaslik: "", katilan: [], tam: null, cihazNo: null, bolumler: t.bolumler.map((b) => ({ b, no: null, ust: null })), sonraki: "" };
   const ekipman = ekipmanBolumuVar(t);
   const tamHam = ekipman ? tamBolum(t) : null;
   const tam = tamHam && sade ? { ...tamHam, alanlar: tamAlanlari(tamHam) } : tamHam;
@@ -129,7 +131,8 @@ export function raporDuzeni(t: FormatTanimi, cihazEk: boolean, sade = true): Rap
   const sabit = (ekipman ? 2 : 1) + (cihazEk ? 1 : 0);
   let n = sabit, alt = 0, sonUst: string | null = null, anaVar = false;
   const bolumler = kalan.map((b): DuzenBolumu => {
-    if (b.numarasiz) { sonUst = null; anaVar = false; return { b, no: null, ust: null }; }
+    /* 2026-10-24: serbest tablo numara almaz (başlığı kendi hücrelerinde) */
+    if (b.numarasiz || b.blok === "tablo") { sonUst = null; anaVar = false; return { b, no: null, ust: null }; }
     const ust = b.ust?.trim() || null;
     if (ust && ust === sonUst) { alt++; return { b, no: `${n}.${alt}`, ust: null }; }
     if (!ust && b.alt && anaVar) { alt++; return { b, no: `${n}.${alt}`, ust: null }; }
@@ -224,7 +227,8 @@ export const sonucSozcugu = (b: BolumOf<"sonuc">, s: string | null | undefined):
   return s === "uygun" ? m.uygun : s === "uygun_degil" ? m.uygunDegil : s === "sartli" ? m.sartli : null;
 };
 /** 595 (madde 12): formatta üçüncü seçenek (şartlı uygun) açık mı */
-export const sartliAcik = (t: Pick<FormatTanimi, "bolumler">) => t.bolumler.some((b) => b.blok === "sonuc" && !!b.sartli);
+export const sartliAcik = (t: Pick<FormatTanimi, "bolumler">) => t.bolumler.some((b) => (b.blok === "sonuc" && !!b.sartli)
+  || (b.blok === "tablo" && b.hucreler.some((h) => h.tur === "sonuc" && (h.secenekler?.length ?? 0) >= 3)));
 export const basEtiketleri = (t: Pick<FormatTanimi, "gorunum">) => ({
   kod: yazili(t.gorunum.bas?.kod, "Doküman Kodu"), surum: yazili(t.gorunum.bas?.surum, "Format sürümü"), no: yazili(t.gorunum.bas?.no, "Rapor No"),
   tarih: yazili(t.gorunum.bas?.tarih, "Rapor Tarihi"),
@@ -254,7 +258,7 @@ export const cihazSutunlari = (b?: BolumOf<"cihaz"> | null): readonly CihazSutun
 /* 595 (madde 16): fotoğraf kutularının kimlikleri — kutudaki fotoğraf (RaporFoto.madde = kutu) bölümün sayısına girer; maddenin fotoğrafı girmez
    (sunucu sayiliCevaplar, saha ekranı ve belge aynı sayım) */
 export const fotoKutulari = (t: Pick<FormatTanimi, "bolumler">): ReadonlySet<string> =>
-  new Set(t.bolumler.flatMap((b) => (b.blok === "foto" ? (b.kutular ?? []).map((k) => k.id) : [])));
+  new Set(t.bolumler.flatMap((b) => (b.blok === "foto" ? (b.kutular ?? []).map((k) => k.id) : b.blok === "tablo" ? b.hucreler.flatMap((h) => (h.tur === "foto" && h.id ? [h.id] : [])) : [])));
 
 /* 595 (madde 13): başlık tablosu — doküman bilgisi satırları (verilmemişse bugünkü dört satır, adları basEtiketleri'nden; kimlik bs_*) ve hücre sırası */
 const BAS_VARSAYILAN: readonly ("kod" | "surum" | "no" | "tarih")[] = ["kod", "surum", "no", "tarih"];

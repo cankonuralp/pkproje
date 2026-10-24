@@ -20,6 +20,7 @@ import { TAMAMLANDI_RAPOR } from "../../planlar/sema.ts";
 import { bugunTr } from "../../planlar/server/planlar.ts";
 import { yeniEkipman } from "../../planlar/server/plan-ici.ts";
 import { formatSurumuOku } from "../../rapor-format/server/formatlar.ts";
+import { sahaTanimi } from "../../../format/tablo.ts";
 import { raporOneriYaz } from "../../raporlar/server/oneri.ts";
 import { mesaiDurumu } from "../../raporlar/server/plan-baglanti.ts";
 import { chatRaporuDoldur, raporOlustur } from "../../raporlar/server/raporlar.ts";
@@ -81,7 +82,9 @@ export async function chatRaporYaz(db: Sorgulayici, depo: Depo, kim: Kisi, firma
     return hata(r.durum === "red" ? r.neden : r.durum === "gecersiz" ? Object.values(r.hatalar)[0] ?? "Rapor açılamadı." : r.durum === "yetkisiz" ? "Rapor açma yetkiniz yok." : "Rapor açılamadı.");
   }
   const format = (await db.sorgu<{ format_id: string; no: string }>("SELECT format_id::text, no FROM rapor WHERE id = $1", [r.id])).rows[0];
-  const tanim = format ? (await formatSurumuOku(db, format.format_id))?.tanim ?? null : null;
+  /* 2026-10-24: serbest tablo sanal bölümlerine açık (raporlar ile aynı) */
+  const ham = format ? (await formatSurumuOku(db, format.format_id))?.tanim ?? null : null;
+  const tanim = ham ? sahaTanimi(ham) : null;
   const bolumler = tanim?.bolumler ?? [];
   /* fotoğraflar: kaydın dosyaları okunur, rapora kopyalanır (tür, EXIF, sınır yine raporun fotoğraf yolunda) */
   const oku = async (f: ChatFoto) => {

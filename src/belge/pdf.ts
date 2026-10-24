@@ -25,7 +25,8 @@ const KOK = join(process.cwd(), "src", "belge");
 let css: string | null = null;
 /** belge.css; yazı tipi adresleri veri adresine çevrilmiş (PDF sayfası dışarıya gitmez) */
 export function belgeCss(): string {
-  css ??= readFileSync(join(KOK, "belge.css"), "utf8").replace(/url\("\.\/(carlito-5\.3\.0\/[a-z0-9-]+\.woff2)"\)/g,
+  /* 2026-10-24: Tinos ve Arimo da (serbest tablonun yazı tipleri) */
+  css ??= readFileSync(join(KOK, "belge.css"), "utf8").replace(/url\("\.\/((?:carlito|tinos|arimo)-5\.3\.0\/[a-z0-9-]+\.woff2)"\)/g,
     (_t, ad: string) => `url("data:font/woff2;base64,${readFileSync(join(KOK, ad)).toString("base64")}")`);
   return css;
 }
@@ -44,7 +45,7 @@ export const belgeHtml = (v: BelgeVerisi) => sayfaHtml(v.no, raporBelgesi(v), RA
 /** alt bilgi şablonunun yazı tipi: belge.css'in Carlito Latin / Latin genişletilmiş 400 alt kümeleri (şablon ayrı belgede çizilir; sunucusuz
     Chromium'da sistem yazı tipi yok) */
 let altYazi: string | null = null;
-const altYaziTipi = () => (altYazi ??= [...belgeCss().matchAll(/@font-face \{[^}]*font-weight: 400;[^}]*\}/g)].map((m) => m[0]).join(""));
+const altYaziTipi = () => (altYazi ??= [...belgeCss().matchAll(/@font-face \{ font-family: "Carlito";[^}]*font-weight: 400;[^}]*\}/g)].map((m) => m[0]).join(""));
 /** her sayfanın altındaki şerit: yazı · rapor no · Sayfa n / N */
 export function raporAltBilgisi(v: BelgeVerisi): string {
   const a = belgeAltYazisi(v);

@@ -1,109 +1,122 @@
-/* NEREDEN GELDİ: 2026-10-23 — reisim: "ben bunu yükleyince format buna dönüşsün format düzenleyicide bundan düzenleme yapabileyim istiyorum",
-   "bu pdfine bi bak nasıl gözüküyor", "sürüm 2 ne işe yarıyor orda o zaman yüklemem ne işe yaradı". Basılı format PDF'i yapay zekâyla okunur,
-   formatın tamamına çevrilir (src/modules/rapor-format/basili.ts) ve belge forma benzer çizilir (belgenin başı yalnız ad, bölüm başlığı gri ve ortalı,
-   etiket zeminsiz kalın, kontrol listesi iki sütun yan yana, numaralar baştan sona). Saf (veritabanısız); form UYDURMA (gerçek firmanın formu depoya
-   girmez). Olumsuz kanıt: tests/bozan/basili-format.bozan.ts. */
+/* NEREDEN GELDİ: 2026-10-23 — reisim: "ben bunu yükleyince format buna dönüşsün format düzenleyicide bundan düzenleme yapabileyim istiyorum".
+   2026-10-24 (format kurucu serbest düzen) — reisim: "hangi firmanın hangi PDF formunu yüklersem yükleyeyim şablon o forma dönüşsün ve format
+   kurucuda istediğim gibi düzenleyebileyim": basılı format PDF'inin okunanı SERBEST DÜZENE çevrilir (src/modules/rapor-format/basili.ts) — sabit
+   iskelet yok, her tablo bir serbest tablo bölümü (birleşik hücreler, yan yana tablolar, hücrenin türü / kaynağı / görünümü, sahada çoğalan satır),
+   belgenin yazı tipi; raporun yürümesi için gerekenler (sonuç, uzmanın imza yeri, fotoğraflar) formda yoksa sona. Belge formun ızgarasını çizer.
+   Saf (veritabanısız); form UYDURMA (tests/yardimci/basili-ornek.ts). Olumsuz kanıt: tests/bozan/basili-format.bozan.ts. */
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { raporBelgesi } from "../src/belge/belge.ts";
 import { ornekBelge } from "../src/belge/ornek.ts";
-import { maddeNumaralari, raporDuzeni } from "../src/format/duzen.ts";
+import { raporDuzeni } from "../src/format/duzen.ts";
+import { sahaTanimi } from "../src/format/tablo.ts";
 import { SABLONLAR } from "../src/format/sablonlar.ts";
 import { FormatTanimi, type BolumOf } from "../src/format/tanim.ts";
 import { basilidanTanim } from "../src/modules/rapor-format/basili.ts";
 import { gorunumYaz } from "../src/modules/rapor-format/kurucu.ts";
 import { HAM } from "./yardimci/basili-ornek.ts";
 
-test("basılı formun okunanı formatın tamamına çevrilir ve şemadan geçer", () => {
-  const r = basilidanTanim(structuredClone(HAM), "Vinç");
-  assert.ok(r, "çeviri null");
+const kur = () => basilidanTanim(structuredClone(HAM), "Vinç")!;
+const tablo = (t: FormatTanimi, ad: string) => t.bolumler.find((b) => b.ad === ad) as BolumOf<"tablo">;
+
+test("basılı formun okunanı serbest düzene çevrilir ve şemadan geçer", () => {
+  const r = kur();
   const t = FormatTanimi.parse(r.tanim);
-  assert.deepEqual(r.atilan, ["Olmayan bölüm türü"]);
+  assert.deepEqual(r.atilan, ["Bozuk bölüm"]);
   assert.equal(r.cevap, HAM.cevap);
-  /* görünüm */
+  assert.equal(t.gorunum.serbest, true);
   assert.equal(t.gorunum.baslik, "VİNÇ MUAYENE FORMU");
   assert.equal(t.gorunum.formKodu, "FR.099");
-  assert.equal(t.gorunum.basTuru, "ad");
-  assert.deepEqual(t.gorunum.stil, { zemin: "gri", hiza: "orta", etiket: "kalin" });
   assert.equal(t.gorunum.altYazi, "FR.099 · 01.01.2026 · REV00");
-  assert.deepEqual(t.gorunum.ekipmanAd, { kod: "Ekipman no / yeri" });
-  /* firma satırları: sırası formun, kaynak bir kez, zorunlu (İSG-KATİP) eksikse sona */
-  const fs = t.gorunum.firma!.satirlar;
-  assert.deepEqual(fs.map((s) => s.kaynak), ["firma", "rapor_no", "adres", "bas", "sgk", "serbest", "isg"]);
-  assert.equal(fs.find((s) => s.kaynak === "serbest")?.metin, "Sabit not");
-  assert.equal(fs.find((s) => s.kaynak === "adres")?.tam, true);
-  /* sıra: firma (kayıttan) · ekipman · numarasız alt tablo · cihaz (numarasız, alt tablolardan sonra) · formun bölümleri · sonuç · imza · fotoğraf (numarasız) */
-  assert.deepEqual(t.bolumler.map((b) => b.blok), ["bilgi", "bilgi", "bilgi", "cihaz", "liste", "kusur", "sonuc", "imza", "foto"]);
-  const ekip = t.bolumler[1] as BolumOf<"bilgi">;
-  assert.equal(ekip.tam, true);
-  assert.equal(ekip.ad, "TEKNİK ÖZELLİKLER");
-  assert.equal(ekip.dizilis, 3);
-  assert.deepEqual(ekip.alanlar.map((a) => [a.ad, a.ekipman ?? null, a.tur]),
-    [["Marka / Yapımcı", "marka", "metin"], ["Seri no", "seri", "metin"], ["Kapasite", null, "sayi"], ["Statik test yükü", null, "sayi"], ["İkinci marka", null, "metin"], ["Vinç tipi", null, "metin"]]);
-  assert.equal(ekip.alanlar[3].formul, "[Kapasite] * 1,25");
-  assert.equal(ekip.alanlar[2].birim, "kg");
-  const halat = t.bolumler[2] as BolumOf<"bilgi">;
-  assert.equal(halat.numarasiz, true);
-  assert.deepEqual(halat.alanlar.map((a) => a.tam ?? false), [false, true]);
-  const liste = t.bolumler[4] as BolumOf<"liste">;
-  assert.deepEqual(liste.cevaplar, ["U", "UD", "X"]);
-  assert.equal(liste.yanYana, true);
-  assert.equal(liste.numara, "surekli");
-  assert.deepEqual(liste.gruplar.map((g) => [g.ad, g.maddeler.map((m) => m.metin)]),
-    [["GENEL KONTROLLER", ["Bakım kayıtları", "*Ray bağlantıları"]], ["YÜK TESTLERİ", ["*Dinamik yük deneyi (1,1 x P)"]]]);
-  const sonuc = t.bolumler[6] as BolumOf<"sonuc">;
-  assert.equal(sonuc.ad, "SONUÇ");
-  assert.equal(sonuc.uygunMetin, "UYGUNDUR");
-  assert.match(sonuc.cumle, /kullanılması$/);
-  /* imza: kişiye uymayan satır düşer, uzmanın imza hücresi eklenir (e-imzanın yeri), onaylayan varsa iki kişi */
-  const imza = t.bolumler[7] as BolumOf<"imza">;
-  assert.deepEqual(imza.satirlar!.map((s) => [s.ad, s.kim, s.alan ?? null]),
-    [["Ad Soyad", "uzman", "ad"], ["Diploma No", "uzman", "diploma"], ["Firma onayı", "teknik", "imza"], ["Kaşe", "diger", null], ["İmza", "uzman", "imza"]]);
-  assert.deepEqual(imza.imzalar, ["uzman", "teknik"]);
-  assert.equal(imza.numarasiz, true);
-  /* kimlikler kurucunun (k_) ve tekil — şema zaten denetler */
-  assert.ok(liste.gruplar.flatMap((g) => g.maddeler).every((m) => m.id.startsWith("k_")));
+  assert.deepEqual(t.gorunum.yazi, { tip: "tinos", boy: 8 });
+  /* bölümler formun sırasıyla; sonuç ve imza formda var — eklenmez; fotoğraf formda yok — sonda */
+  assert.deepEqual(t.bolumler.map((b) => `${b.blok}:${b.ad}`), [
+    "tablo:Başlık", "tablo:1. Firma bilgileri", "tablo:2. Teknik özellikler", "tablo:Halat bilgileri", "tablo:Kanca bloğu", "tablo:Genel kontroller",
+    "tablo:Halat ve kanca", "tablo:Ölçümler", "kusur:NOTLAR / UYGUNSUZLUKLAR", "tablo:Sonuç", "tablo:İmzalar", "foto:Fotoğraflar",
+  ]);
+  /* yan yana: ikinci tablo öncekinin yanında, oranıyla */
+  const kanca = tablo(t, "Kanca bloğu"), halat = tablo(t, "Halat bilgileri");
+  assert.equal(kanca.yan, true);
+  assert.equal(kanca.oran, 50);
+  assert.equal(halat.yan, undefined, "ilk tablo satırı açar (oran yalnız yan olanda yazılır)");
 });
 
-test("numaralar formdaki gibi: numarasız cihaz ve alt tablo sayılmaz — 3 tespit, 4 notlar, 5 sonuç; maddeler baştan sona", () => {
-  const t = basilidanTanim(structuredClone(HAM), "Vinç")!.tanim;
+test("ızgara: birleşik hücreler HTML tablosu gibi yerleşir, görünüm ve türler formdan", () => {
+  const t = kur().tanim;
+  const bas = tablo(t, "Başlık");
+  assert.deepEqual(bas.sutun, [16, 52, 14, 18]);
+  assert.equal(bas.satirlar.length, 3);
+  /* 2. ve 3. satırın hücreleri birleşik logo ve adın sağına yerleşir */
+  assert.deepEqual(bas.hucreler.map((h) => `${h.r},${h.c}:${h.tur}${h.rs ? `:rs${h.rs}` : ""}`),
+    ["0,0:gorsel:rs3", "0,1:yazi:rs3", "0,2:yazi", "0,3:kayit", "1,2:yazi", "1,3:kayit", "2,2:yazi", "2,3:kayit"]);
+  assert.deepEqual(bas.hucreler[1].s, { k: true, a: "o", b: 14 });
+  const firma = tablo(t, "1. Firma bilgileri");
+  assert.deepEqual(firma.hucreler[0], { r: 0, c: 0, cs: 4, tur: "yazi", m: "1. FİRMA BİLGİLERİ", s: { k: true, a: "o", z: "#F2DCDB" } });
+  assert.deepEqual(firma.hucreler.filter((h) => h.tur === "kayit").map((h) => h.kaynak), ["firma", "bas", "adres", "sgk", "isg"]);
+  assert.equal(firma.hucreler.find((h) => h.kaynak === "adres")?.cs, 3);
+  /* sahada doldurulan: tür, birim, formül, seçenekler; kimlik kurucunun ve tekil */
+  const teknik = tablo(t, "2. Teknik özellikler");
+  const alanlar = teknik.hucreler.filter((h) => h.tur === "alan");
+  assert.deepEqual(alanlar.map((h) => [h.ad, h.alan, h.birim ?? null]), [["Kapasite", "sayi", "kg"], ["Statik test yükü", "sayi", "kg"], ["Vinç tipi", "secim", null]]);
+  assert.equal(alanlar[1].formul, "[Kapasite] * 1,25");
+  assert.ok(alanlar.every((h) => h.id?.startsWith("k_c")));
+  /* taşan birleşme tabloya sığdırılır */
+  const hk = tablo(t, "Halat ve kanca");
+  assert.deepEqual(hk.hucreler.filter((h) => h.r === 2).map((h) => [h.m, h.cs ?? 1, h.rs ?? 1]), [["taşan", 3, 1]]);
+  assert.deepEqual(hk.cevaplar, ["U", "UD", "X"]);
+  /* sahada çoğalan satır: kimliği var, hücreleri cevaplı */
+  const olc = tablo(t, "Ölçümler");
+  assert.equal(olc.satirlar[1].tekrar, true);
+  assert.match(olc.satirlar[1].id ?? "", /^k_r\d+$/);
+  /* imza: uzman ve teknik yer, e-imza */
+  const imza = tablo(t, "İmzalar");
+  assert.deepEqual(imza.hucreler.filter((h) => h.tur === "imza").map((h) => [h.kim, h.eimza]), [["uzman", true], ["teknik", true]]);
+});
+
+test("sanal bölümler: alanlar bilgi, cevap hücreleri madde, çoğalan satır ölçüm tablosu, sonuç ve imza — numarasız düzen", () => {
+  const t = kur().tanim;
+  const s = sahaTanimi(t);
+  const bloklar = s.bolumler.map((b) => b.blok);
+  assert.ok(bloklar.includes("sonuc") && bloklar.includes("imza") && bloklar.includes("olcum") && bloklar.includes("liste"));
+  const genel = s.bolumler.find((b) => b.blok === "liste" && b.ad === "Genel kontroller") as BolumOf<"liste">;
+  assert.deepEqual(genel.gruplar[0].maddeler.map((m) => m.metin), ["Bakım kayıtları", "*Ray bağlantıları"]);
+  const olc = s.bolumler.find((b) => b.blok === "olcum") as BolumOf<"olcum">;
+  assert.equal(olc.id, tablo(t, "Ölçümler").satirlar[1].id);
+  assert.deepEqual(olc.sutunlar.map((x) => [x.ad, x.giris, x.olumsuz ?? null]), [["Ölçüm", "metin", null], ["Değer", "sayi", null], ["Sonuç", "secim", ["UD"]]]);
+  /* serbest düzen: sabit bölüm yok, numara yok */
   const d = raporDuzeni(t, false);
-  assert.deepEqual(d.bolumler.map((x) => `${x.no ?? "-"} ${x.b.ad.split(" ")[0]}`), ["- Halat", "- Kullanılan", "3 TESPİT", "4 NOTLAR", "5 SONUÇ", "- KONTROLÜ", "- Fotoğraflar"]);
-  const liste = t.bolumler.find((b) => b.blok === "liste") as BolumOf<"liste">;
-  assert.deepEqual([...maddeNumaralari(liste).values()], ["1", "2", "3"]);
-  assert.deepEqual([...maddeNumaralari({ ...liste, numara: undefined }).values()], ["1.1", "1.2", "2.1"]);
+  assert.equal(d.ekipman, false);
+  assert.ok(d.bolumler.every((x) => x.no === null));
 });
 
-test("boş ya da bozuk okuma da geçerli bir iskelet verir (yapay zekânın cevabı şemaya uymasa da kurucu açılır)", () => {
-  for (const ham of [{}, { bolumler: "x", ekipman: 5, firmaSatirlari: [null, 3], imza: { satirlar: [{}] } }]) {
+test("boş ya da bozuk okuma da geçerli bir şablon verir: sonuç, uzmanın imza yeri ve fotoğraflar eklenir", () => {
+  for (const ham of [{}, { bolumler: "x", yazi: 5 }, { bolumler: [null, { tur: "tablo", sutunlar: [50, 50], satirlar: [{ hucreler: [{ tur: "imza", kim: "teknik" }] }] }] }]) {
     const r = basilidanTanim(ham as Record<string, unknown>, "Vinç");
     assert.ok(r);
     FormatTanimi.parse(r.tanim);
     assert.equal(r.tanim.gorunum.baslik, "Vinç Periyodik Kontrol Raporu");
-    assert.equal(r.tanim.gorunum.firma, undefined, "firma satırları yoksa bugünkü satırlar");
-    assert.ok(r.tanim.bolumler.some((b) => b.blok === "cihaz") && r.tanim.bolumler.some((b) => b.blok === "foto"));
+    assert.equal(r.tanim.gorunum.serbest, true);
+    const h = r.tanim.bolumler.flatMap((b) => (b.blok === "tablo" ? b.hucreler : []));
+    assert.ok(h.some((x) => x.tur === "sonuc"), "sonuç hücresi");
+    assert.ok(h.some((x) => x.tur === "imza" && x.kim === "uzman" && x.eimza), "uzmanın imza yeri");
+    assert.ok(r.tanim.bolumler.some((b) => b.blok === "foto"));
   }
-  /* teknik bölüm yoksa ekipman bölümü kalkar (kod ve tür 1. bölümde) */
-  const r = basilidanTanim({ ...structuredClone(HAM), ekipman: { var: false, ad: "", dizilis: 2, alanlar: [] } }, "Vinç")!;
-  assert.equal(r.tanim.gorunum.ekipman, false);
-  assert.ok(!r.tanim.bolumler.some((b) => b.blok === "bilgi" && b.tam));
 });
 
-test("belge formun görünümünde: yalnız ad başlığı, gri ortalı bölüm başlığı, kalın etiket, iki sütun yan yana liste", () => {
-  const t = basilidanTanim(structuredClone(HAM), "Vinç")!.tanim;
+test("belge formun ızgarasında: sabit parça yok, birleşik hücre, yan yana tablolar, yazı tipi ve şerit zemini", () => {
+  const t = kur().tanim;
   const h = renderToStaticMarkup(raporBelgesi({ ...ornekBelge("ZPKR02"), tanim: t }) as never);
-  assert.match(h, /<article class="rb-sayfa rb-z-gri rb-h-orta rb-e-kalin"/);
-  assert.match(h, /<table class="rb-bas rb-bas-yalniz"><tbody><tr><td class="rb-bas-ad">VİNÇ MUAYENE FORMU<\/td><\/tr><\/tbody><\/table>/);
-  assert.doesNotMatch(h, /rb-logo/, "logo / firma / doküman tablosu yok");
-  /* iki sütun: 6 sütun, başlıklar iki kez; 5 satır (2 grup + 3 madde) → solda 3, sağda 2 */
-  const liste = /<h2>3\. TESPİT[^<]*<\/h2><table>(.*?)<\/table>/.exec(h)?.[1] ?? "";
-  assert.equal((liste.match(/<col /g) ?? []).length, 6);
-  assert.equal((liste.match(/<th /g) ?? []).length, 6);
-  assert.equal((liste.match(/<tr>/g) ?? []).length, 4, "başlık + 3 satır");
-  assert.match(liste, /<td [^>]*class="rb-grup"[^>]*>GENEL KONTROLLER<\/td>.*<td class="rb-orta">2<\/td><td>\*Ray bağlantıları<\/td>/);
-  assert.match(liste, /<td class="rb-orta">3<\/td><td>\*Dinamik yük deneyi \(1,1 x P\)<\/td>/);
-  /* Bakanlık görünümünde (stilsiz format) sınıf yok, tablo başlık — eski formatlar aynı çizilir */
+  assert.match(h, /<article class="rb-sayfa rb-serbest"/);
+  assert.doesNotMatch(h, /class="rb-bas"/, "başlık tablosu yok");
+  assert.doesNotMatch(h, /Firma bilgileri<\/h2>/, "sabit firma bölümü yok");
+  assert.match(h, /<td rowSpan="3"[^>]*>VİNÇ MUAYENE FORMU<\/td>/i);
+  assert.match(h, /<td colSpan="4" style="[^"]*font-family:Tinos[^"]*font-size:8pt;font-weight:700[^"]*text-align:center[^"]*background-color:#F2DCDB">1\. FİRMA BİLGİLERİ<\/td>/);
+  /* yan yana: tek satırda iki bölüm, oranlarıyla */
+  assert.match(h, /<div class="rb-yan"[^>]*><section class="rb-bolum rb-tablo-bolum" style="flex:50 1 0;min-width:0[^"]*">.*HALAT BİLGİLERİ.*<section class="rb-bolum rb-tablo-bolum" style="flex:50 1 0/);
+  /* kayıttan gelen değer: müşterinin unvanı (örnek belge künyesi) */
+  assert.ok(h.includes(ornekBelge("ZPKR02").kunye.firmaAdi));
+  /* Bakanlık formatı (serbest değil) aynen: başlık tablosu, numaralı bölümler */
   const z = renderToStaticMarkup(raporBelgesi({ ...ornekBelge("ZPKR02"), tanim: FormatTanimi.parse(SABLONLAR.ZPKR02.tanim) }) as never);
   assert.match(z, /<article class="rb-sayfa" /);
   assert.match(z, /<table class="rb-bas"><colgroup>/);

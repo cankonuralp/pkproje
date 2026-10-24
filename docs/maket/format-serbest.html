@@ -359,6 +359,7 @@ textarea.fs-girdi { height: auto; min-height: 56px; padding: 6px 8px; resize: ve
   var IK = "../vendor/lucide-1.47.0/ikonlar.svg#i-";
   var q = new URLSearchParams(location.search);
   if (q.get("telefon") === "1") document.documentElement.classList.add("fs-cerceve");
+  var K = "fs-ikon-k";
   function ikon(ad, s) { return '<svg class="fs-ikon' + (s ? " " + s : "") + '" aria-hidden="true"><use href="' + IK + ad + '"/></svg>'; }
   function kacis(t) { return String(t == null ? "" : t).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function $(s, k) { return (k || document).querySelector(s); }
@@ -698,7 +699,7 @@ textarea.fs-girdi { height: auto; min-height: 56px; padding: 6px 8px; resize: ve
       sat.bolumler.forEach(function (B, j) {
         if (j) o += '<div class="fs-arali" data-arali="' + si + ":" + j + '" style="width:' + Math.max(D.belge.ara * 3.78, 6) + 'px" aria-hidden="true"></div>';
         o += '<section class="fs-bolum' + (kip === "kagit" && S.bolum === B.id ? " fs-secili" : "") + '" data-bolum="' + B.id + '" style="flex:' + B.oran + ' 1 0">' +
-          (kip === "kagit" ? '<span class="fs-bolum-et"><button class="fs-tutamak" type="button" data-tutamak="' + B.id + '" aria-label="' + kacis(B.ad) + ' bölümünü taşı">' + ikon("grip-vertical", "fs-ikon-k") + "</button>" + kacis(B.ad) + "</span>" : "") +
+          (kip === "kagit" ? '<span class="fs-bolum-et"><button class="fs-tutamak" type="button" data-tutamak="' + B.id + '" aria-label="' + kacis(B.ad) + ' bölümünü taşı">' + ikon("grip-vertical", K) + "</button>" + kacis(B.ad) + "</span>" : "") +
           tabloHtml(B, kip, siralar);
         if (kip === "kagit" && S.bolum === B.id) {
           var t = 0; for (var c = 0; c < B.sutun.length - 1; c++) { t += B.sutun[c]; o += '<span class="fs-sutun-tut" data-sutun-tut="' + c + '" style="left:' + t + '%" aria-hidden="true"></span>'; }
@@ -790,17 +791,17 @@ textarea.fs-girdi { height: auto; min-height: 56px; padding: 6px 8px; resize: ve
       '<button class="fs-tus fs-tus-kucuk" type="button" data-eylem="ayir"' + ((h.rs > 1 || h.cs > 1) || !tek ? "" : " disabled") + ">Ayır</button></div>" +
       '<div class="fs-satirlar"><span class="fs-yakin">Satır</span>' +
       '<button class="fs-tus fs-tus-kucuk" type="button" data-eylem="satir-ust">Üste ekle</button><button class="fs-tus fs-tus-kucuk" type="button" data-eylem="satir-alt">Alta ekle</button>' +
-      '<button class="fs-tus fs-tus-kucuk fs-tus-ikon fs-tus-sil" type="button" data-eylem="satir-sil" aria-label="Satırı sil" title="Satırı sil"' + (B.satir.length > 1 ? "" : " disabled") + ">" + ikon("trash-2", "fs-ikon-k") + "</button></div>" +
+      '<button class="fs-tus fs-tus-kucuk fs-tus-ikon fs-tus-sil" type="button" data-eylem="satir-sil" aria-label="Satırı sil" title="Satırı sil"' + (B.satir.length > 1 ? "" : " disabled") + ">" + ikon("trash-2", K) + "</button></div>" +
       '<div class="fs-satirlar"><span class="fs-yakin">Sütun</span>' +
       '<button class="fs-tus fs-tus-kucuk" type="button" data-eylem="sutun-sol">Sola ekle</button><button class="fs-tus fs-tus-kucuk" type="button" data-eylem="sutun-sag">Sağa ekle</button>' +
-      '<button class="fs-tus fs-tus-kucuk fs-tus-ikon fs-tus-sil" type="button" data-eylem="sutun-sil" aria-label="Sütunu sil" title="Sütunu sil"' + (B.sutun.length > 1 ? "" : " disabled") + ">" + ikon("trash-2", "fs-ikon-k") + "</button></div>" +
+      '<button class="fs-tus fs-tus-kucuk fs-tus-ikon fs-tus-sil" type="button" data-eylem="sutun-sil" aria-label="Sütunu sil" title="Sütunu sil"' + (B.sutun.length > 1 ? "" : " disabled") + ">" + ikon("trash-2", K) + "</button></div>" +
       '<div class="fs-iki"><div class="fs-alan"><label for="fs-sg">Sütun genişliği %</label><input class="fs-girdi" id="fs-sg" type="number" min="3" max="95" step="1" value="' + Math.round(B.sutun[a.c1]) + '" data-girdi="sutun-gen"></div>' +
       '<div class="fs-alan"><label for="fs-sy">Satır yüksekliği px</label><input class="fs-girdi" id="fs-sy" type="number" min="0" max="400" step="2" value="' + (B.satir[a.r1].y || "") + '" placeholder="kendiliğinden" data-girdi="satir-y"></div></div>' +
       '<label class="fs-onay-kutu"><input type="checkbox" data-girdi="tekrar"' + (B.satir[a.r1].tekrar ? " checked" : "") + ">Bu satır sahada çoğalır (ölçüm satırı)</label></div>";
 
     if (tek) {
       o += '<div class="fs-ayrac"></div><div class="fs-grup"><p class="fs-etiket">İçerik</p><div class="fs-tur-liste">' + Object.keys(TUR).map(function (t) {
-        return '<button type="button" data-tur="' + t + '" aria-pressed="' + (h.t === t) + '">' + ikon(TUR[t].ikon, "fs-ikon-k") + TUR[t].ad + "</button>"; }).join("") + "</div>";
+        return '<button type="button" data-tur="' + t + '" aria-pressed="' + (h.t === t) + '">' + ikon(TUR[t].ikon, K) + TUR[t].ad + "</button>"; }).join("") + "</div>";
       o += turAyar(h) + "</div>";
     }
 
@@ -856,10 +857,10 @@ textarea.fs-girdi { height: auto; min-height: 56px; padding: 6px 8px; resize: ve
     var y = bolumBul(B.id), yanyana = D.satirlar[y.s].bolumler.length > 1;
     var o = '<div class="fs-alan"><label for="fs-bad">Bölümün adı</label><input class="fs-girdi" id="fs-bad" data-girdi="bolum-ad" value="' + kacis(B.ad) + '"></div>';
     o += '<div class="fs-grup"><p class="fs-etiket">Yerleşim</p><div class="fs-satirlar">' +
-      '<button class="fs-tus fs-tus-kucuk" type="button" data-tasi="yukari"' + (y.s > 0 || y.j > 0 ? "" : " disabled") + ">" + ikon("arrow-up", "fs-ikon-k") + "Yukarı</button>" +
-      '<button class="fs-tus fs-tus-kucuk" type="button" data-tasi="asagi"' + (y.s < D.satirlar.length - 1 || yanyana ? "" : " disabled") + ">" + ikon("arrow-down", "fs-ikon-k") + "Aşağı</button>" +
-      '<button class="fs-tus fs-tus-kucuk" type="button" data-tasi="sol"' + (y.j > 0 ? "" : " disabled") + ">" + ikon("arrow-left", "fs-ikon-k") + "Sola</button>" +
-      '<button class="fs-tus fs-tus-kucuk" type="button" data-tasi="sag"' + (y.j < D.satirlar[y.s].bolumler.length - 1 ? "" : " disabled") + ">" + ikon("arrow-right", "fs-ikon-k") + "Sağa</button></div>" +
+      '<button class="fs-tus fs-tus-kucuk" type="button" data-tasi="yukari"' + (y.s > 0 || y.j > 0 ? "" : " disabled") + ">" + ikon("arrow-up", K) + "Yukarı</button>" +
+      '<button class="fs-tus fs-tus-kucuk" type="button" data-tasi="asagi"' + (y.s < D.satirlar.length - 1 || yanyana ? "" : " disabled") + ">" + ikon("arrow-down", K) + "Aşağı</button>" +
+      '<button class="fs-tus fs-tus-kucuk" type="button" data-tasi="sol"' + (y.j > 0 ? "" : " disabled") + ">" + ikon("arrow-left", K) + "Sola</button>" +
+      '<button class="fs-tus fs-tus-kucuk" type="button" data-tasi="sag"' + (y.j < D.satirlar[y.s].bolumler.length - 1 ? "" : " disabled") + ">" + ikon("arrow-right", K) + "Sağa</button></div>" +
       '<div class="fs-satirlar"><button class="fs-tus fs-tus-kucuk" type="button" data-tasi="ust-yanina"' + (y.s > 0 ? "" : " disabled") + ">Üstteki satırın yanına</button>" +
       '<button class="fs-tus fs-tus-kucuk" type="button" data-tasi="ayri"' + (yanyana ? "" : " disabled") + ">Ayrı satıra al</button></div>" +
       (yanyana ? '<div class="fs-alan"><label for="fs-oran">Genişlik % (satırın)</label><input class="fs-girdi" id="fs-oran" type="number" min="10" max="90" value="' + Math.round(B.oran) + '" data-girdi="oran"></div>' : "") + "</div>";
@@ -867,9 +868,9 @@ textarea.fs-girdi { height: auto; min-height: 56px; padding: 6px 8px; resize: ve
       '<label class="fs-onay-kutu"><input type="checkbox" data-girdi="bolunmesin"' + (B.bolunmesin !== false ? " checked" : "") + ">Sayfa sonunda bölünmesin</label>" +
       '<label class="fs-onay-kutu"><input type="checkbox" data-girdi="bas-tekrar"' + (B.basTekrar ? " checked" : "") + ">İlk satırı her sayfada tekrarla</label>" +
       '<label class="fs-onay-kutu"><input type="checkbox" data-girdi="sahada"' + (B.sahada !== false ? " checked" : "") + ">Saha ekranında göster</label></div>";
-    o += '<div class="fs-satirlar"><button class="fs-tus fs-tus-kucuk" type="button" data-eylem="bolum-kopya">' + ikon("copy", "fs-ikon-k") + "Kopyala</button>" +
-      '<button class="fs-tus fs-tus-kucuk" type="button" data-eylem="parca-kaydet">' + ikon("bookmark-plus", "fs-ikon-k") + "Parça olarak kaydet</button>" +
-      '<button class="fs-tus fs-tus-kucuk fs-tus-sil" type="button" data-eylem="bolum-sil">' + ikon("trash-2", "fs-ikon-k") + "Sil</button></div>";
+    o += '<div class="fs-satirlar"><button class="fs-tus fs-tus-kucuk" type="button" data-eylem="bolum-kopya">' + ikon("copy", K) + "Kopyala</button>" +
+      '<button class="fs-tus fs-tus-kucuk" type="button" data-eylem="parca-kaydet">' + ikon("bookmark-plus", K) + "Parça olarak kaydet</button>" +
+      '<button class="fs-tus fs-tus-kucuk fs-tus-sil" type="button" data-eylem="bolum-sil">' + ikon("trash-2", K) + "Sil</button></div>";
     return o;
   }
   function belgeAyarHtml() {
@@ -891,9 +892,9 @@ textarea.fs-girdi { height: auto; min-height: 56px; padding: 6px 8px; resize: ve
     var asil = D; D = baslangic();
     var k = kagitHtml("sablon").replace('id="fs-kagit"', 'id="fs-kagit-form"').replace("fs-kagit fs-kip-sablon", "fs-kagit fs-kip-belge fs-kagit-sablon");
     D = asil;
-    return '<div class="fs-form-bas"><b title="VN-01 Vinç Muayene Formu.pdf">' + ikon("file-text", "fs-ikon-k") + ' VN-01 Vinç Muayene Formu.pdf · 1 sayfa</b>' +
-      '<button class="fs-tus fs-tus-kucuk" type="button" data-eylem="yeniden-kur">' + ikon("rotate-ccw", "fs-ikon-k") + "Formdan yeniden kur</button>" +
-      '<button class="fs-tus fs-tus-kucuk fs-tus-ikon" type="button" data-eylem="form" aria-label="Kapat">' + ikon("x", "fs-ikon-k") + "</button></div>" +
+    return '<div class="fs-form-bas"><b title="VN-01 Vinç Muayene Formu.pdf">' + ikon("file-text", K) + ' VN-01 Vinç Muayene Formu.pdf · 1 sayfa</b>' +
+      '<button class="fs-tus fs-tus-kucuk" type="button" data-eylem="yeniden-kur">' + ikon("rotate-ccw", K) + "Formdan yeniden kur</button>" +
+      '<button class="fs-tus fs-tus-kucuk fs-tus-ikon" type="button" data-eylem="form" aria-label="Kapat">' + ikon("x", K) + "</button></div>" +
       '<div class="fs-form-kagit" id="fs-form-kagit">' + k + "</div>";
   }
   function formOlcekle() {
@@ -911,7 +912,7 @@ textarea.fs-girdi { height: auto; min-height: 56px; padding: 6px 8px; resize: ve
     var id = "fs-s-" + Math.random().toString(36).slice(2, 8);
     if (h.t === "cevap" || (h.t === "alan" && h.a === "secim")) return '<div class="fs-salan' + ((h.sec || []).join("").length > 18 ? " fs-genis" : "") + '"><span>' + kacis(ad) + '</span><span class="fs-segment" role="group" aria-label="' + kacis(ad) + '">' +
       (h.sec || []).map(function (s, i) { return '<button type="button" data-saha-sec aria-pressed="' + (h.t === "alan" ? s === h.o : false) + '">' + kacis(s) + "</button>"; }).join("") + "</span></div>";
-    if (h.t === "formul") return '<div class="fs-salan"><span>' + kacis(ad) + '</span><span class="fs-hesap">' + ikon("calculator", "fs-ikon-k") + kacis(h.o || "—") + "</span></div>";
+    if (h.t === "formul") return '<div class="fs-salan"><span>' + kacis(ad) + '</span><span class="fs-hesap">' + ikon("calculator", K) + kacis(h.o || "—") + "</span></div>";
     if (h.a === "metin") return '<div class="fs-salan"><label for="' + id + '"><span>' + kacis(ad) + '</span></label><textarea class="fs-girdi" id="' + id + '" rows="2"></textarea></div>';
     var tip = h.a === "sayi" ? ' inputmode="decimal"' : (h.a === "tarih" ? ' placeholder="gg.aa.yyyy" inputmode="numeric"' : "");
     return '<div class="fs-salan"><label for="' + id + '"><span>' + kacis(ad) + (h.zorunlu ? " *" : "") + '</span></label><span class="fs-birimli"><input class="fs-girdi" id="' + id + '"' + tip + ">" + (h.b ? "<small>" + kacis(h.b) + "</small>" : "") + "</span></div>";
@@ -932,9 +933,9 @@ textarea.fs-girdi { height: auto; min-height: 56px; padding: 6px 8px; resize: ve
             ic += '<div class="fs-stablo-kap"><table class="fs-stablo"><thead><tr>' + anahtar.map(function (x, i) { var hb = bas[i]; return "<th>" + kacis((hb && hb.t === "yazi" && hb.m) || x[1].ad || "") + "</th>"; }).join("") + "</tr></thead><tbody>" +
               (st.ornek || [[]]).map(function () { return "<tr>" + anahtar.map(function (x) { var hh = x[1];
                 if (hh.t === "cevap") return '<td><span class="fs-segment fs-segment-k">' + hh.sec.map(function (s) { return '<button type="button" data-saha-sec aria-pressed="false">' + kacis(s) + "</button>"; }).join("") + "</span></td>";
-                if (hh.t === "formul") return '<td><span class="fs-hesap">' + ikon("calculator", "fs-ikon-k") + "hesap</span></td>";
+                if (hh.t === "formul") return '<td><span class="fs-hesap">' + ikon("calculator", K) + "hesap</span></td>";
                 return '<td><input class="fs-girdi" aria-label="' + kacis(hh.ad || "") + '"' + (hh.a === "sayi" ? ' inputmode="decimal"' : "") + "></td>"; }).join("") + "</tr>"; }).join("") +
-              '</tbody></table></div><div class="fs-stablo-alt"><button class="fs-tus fs-tus-kucuk" type="button">' + ikon("plus", "fs-ikon-k") + "Satır ekle</button></div>";
+              '</tbody></table></div><div class="fs-stablo-alt"><button class="fs-tus fs-tus-kucuk" type="button">' + ikon("plus", K) + "Satır ekle</button></div>";
             maddeVar = true; return;
           }
           var cevap = anahtar.filter(function (x) { return x[1].t === "cevap"; })[0];
@@ -967,7 +968,7 @@ textarea.fs-girdi { height: auto; min-height: 56px; padding: 6px 8px; resize: ve
     document.querySelectorAll("[data-kip]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.kip === S.kip)); });
     $("#fs-govde").setAttribute("data-form", S.form ? "acik" : "kapali");
     document.querySelectorAll('[data-eylem="form"]').forEach(function (b) { b.setAttribute("aria-pressed", String(S.form)); });
-    $("#fs-kaynak").innerHTML = ikon("scan-text", "fs-ikon-k") + "Basılı formdan kuruldu · VN-01 Vinç Muayene Formu.pdf";
+    $("#fs-kaynak").innerHTML = ikon("scan-text", K) + "Basılı formdan kuruldu · VN-01 Vinç Muayene Formu.pdf";
     if (S.kip === "saha") { $("#fs-saha").innerHTML = sahaHtml(); return; }
     $("#fs-kagit-kap").innerHTML = kagitHtml(S.kip === "belge" ? "belge" : "kagit");
     $("#fs-yakinlik").innerHTML = yakinlikHtml();

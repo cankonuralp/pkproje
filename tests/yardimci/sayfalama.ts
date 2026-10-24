@@ -15,6 +15,8 @@
 export const SAYFASIZ_TABLOLAR: Readonly<Record<string, string>> = {
   "modules/rapor-format/ui/Kagit.tsx": "format kurucusunun kâğıdı: şablonun sütunları ve örnek satırı (veri satırı yok)",
   "modules/rapor-format/ui/FormatOnizleme.tsx": "kurucunun Belge önizlemesi: belge bütün satırları basar",
+  /* 2026-10-24 (serbest düzen) */
+  "modules/rapor-format/ui/TabloDuzenleyici.tsx": "format kurucusunun serbest tablosu: formatın ızgarası (veri satırı yok; belgede olduğu gibi bütün satırlar)",
   "components/grafik/Grafik.tsx": "grafiğin ekran okuyucu karşılığı (gizli): grafikteki çubuklarla aynı satırlar",
 };
 

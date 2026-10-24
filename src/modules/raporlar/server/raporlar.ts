@@ -36,7 +36,8 @@ import { personelOzetleri } from "../../personel/server/personel.ts";
 import { TAMAMLANDI_RAPOR } from "../../planlar/sema.ts";
 import { denetimeBasla, ekipmanEklemeDurumu, ekipmanEkipPlanlari, kodDurumu, kunyeGuncelle, plandakiEkipman, plandakiEkipmanlar, raporIcinPlan, yeniEkipman, type Kunye, type RaporPlani } from "../../planlar/server/plan-ici.ts";
 import { oncekiKontrol, oncekiRaporIcerigi, oncekiRaporlar, surumluRaporEkipmani, type OncekiKontrol } from "./onceki.ts";
-import { formatSurumuOku, yayindakiFormat } from "../../rapor-format/server/formatlar.ts";
+import { formatSurumuOku as formatSurumuHam, yayindakiFormat as yayindakiHam } from "../../rapor-format/server/formatlar.ts";
+import { sahaTanimi } from "../../../format/tablo.ts";
 import { kimdeHaritasi } from "../../zimmetler/server/zimmet.ts";
 import { hesabinPersoneli, roldekiHesapAdlari } from "../../../server/kimlik/hesap.ts";
 import {
@@ -80,6 +81,11 @@ const RAPOR = tablo({
     "sonraki", "takip", "rapor_tarihi", "cevaplar", "cihazlar", "fotolar", "sonuc", "sonuc_oto", "kopya_kaynak", "silindi"],
   gizli: ["cevaplar"],
 });
+/* 2026-10-24 (serbest düzen): raporun kullandığı tanım — serbest tablo bölümleri cevaplarının sanal bölümlerine açık (format/tablo.ts sahaTanimi):
+   saha ekranı, kaydetme denetimleri, değerlendirme, fotoğraf bölümleri aynı yoldan; belge ızgarayı özgün tanımdan çizer (raporBelgesiVerisi) */
+const sahaFormatu = <F extends { tanim: FormatTanimi }>(f: F | null): F | null => (f ? { ...f, tanim: sahaTanimi(f.tanim) } : null);
+const formatSurumuOku = async (db: Sorgulayici, id: string) => sahaFormatu(await formatSurumuHam(db, id));
+const yayindakiFormat = async (db: Sorgulayici, turId: string) => sahaFormatu(await yayindakiHam(db, turId));
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const GUN = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit" });
 const ZAMAN = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
@@ -931,7 +937,8 @@ export async function raporBelgesiVerisi(db: Sorgulayici, depo: Depo, kim: Kisi,
   const e = await erisim(db, kim, id);
   if (!e) return null;
   const { r, tur } = e;
-  const format = await formatSurumuOku(db, r.format_id);
+  /* 2026-10-24: belge serbest tablonun ızgarasını ÖZGÜN tanımdan çizer (sanal bölümlere açılmamış) */
+  const format = await formatSurumuHam(db, r.format_id);
   if (!format) return null;
   const plan = await raporIcinPlan(db, kim, r.plan_id);
   const etiket = await ekipmanEtiketi(db, r.ekipman_id);
@@ -1086,7 +1093,7 @@ export async function imzaliYukle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaI
   /* uygunsuzluk: imzalı ve "Uygun" olmayan rapordan (Uygun değil · 595 Şartlı uygun — hafif kusurlar takip edilir), motorun kusur listesinden */
   if (e.r.sonuc === "uygun_degil" || e.r.sonuc === "sartli") {
     const d = degerle(v.belge.tanim, v.belge.cevaplar, e.r);
-    const blok = new Map(v.belge.tanim.bolumler.map((x) => [x.id, x.blok]));
+    const blok = new Map(sahaTanimi(v.belge.tanim).bolumler.map((x) => [x.id, x.blok]));
     for (const k of d.kusurlar) {
       const tur = blok.get(k.bolum);
       /* kriter ayrı (müşteri listesinde ve Excel'de Kriter / Açıklama sütunları — 0036); metnin başı değilse (kırpılmış) yazılmaz */

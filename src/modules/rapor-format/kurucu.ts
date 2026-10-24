@@ -30,6 +30,8 @@ export function kimlikler(t: FormatTanimi): Set<string> {
     if (b.blok === "cihaz" || b.blok === "kusur") for (const x of b.sutunlar ?? []) s.add(x.id);
     if (b.blok === "liste" || b.blok === "test") for (const x of b.ekSutunlar ?? []) s.add(x.id);
     if (b.blok === "foto") for (const x of b.kutular ?? []) s.add(x.id);
+    /* 2026-10-24: serbest tablonun cevaplı hücreleri ve çoğalan satırları */
+    if (b.blok === "tablo") { for (const x of b.hucreler) if (x.id) s.add(x.id); for (const x of b.satirlar) if (x.id) s.add(x.id); }
   }
   for (const x of t.gorunum.firma?.satirlar ?? []) s.add(x.id);
   for (const x of t.gorunum.basSatirlar ?? []) s.add(x.id);
@@ -37,7 +39,7 @@ export function kimlikler(t: FormatTanimi): Set<string> {
 }
 
 /** önek + en küçük kullanılmayan sayı (ör. "k_a3"): şablonların kimlikleriyle çakışmaz, tanımda tekil */
-export function yeniKimlik(t: FormatTanimi, onek: "b" | "a" | "g" | "m" | "s" | "d" | "i" | "f" | "t" | "k" | "h", ek: ReadonlySet<string> = new Set()): string {
+export function yeniKimlik(t: FormatTanimi, onek: "b" | "a" | "g" | "m" | "s" | "d" | "i" | "f" | "t" | "k" | "h" | "c" | "r", ek: ReadonlySet<string> = new Set()): string {
   const var_ = kimlikler(t);
   let n = 1;
   while (var_.has(`k_${onek}${n}`) || ek.has(`k_${onek}${n}`)) n++;
@@ -52,6 +54,8 @@ export function yeniBolum(t: FormatTanimi, blok: Blok, ad: string): Bolum {
     liste: { cevaplar: ["Uygun", "Uygun değil", "Uygulanamaz"], gruplar: [{ id: yeniKimlik(t, "g", new Set([id])), ad: "", maddeler: [] }] },
     olcum: { satir: "ekle", sutunlar: [] }, test: { degerler: [] }, cihaz: {}, foto: { enAz: 0, enCok: 20 }, kusur: {}, sonuc: { cumle: "" },
     not: { zorunlu: false }, imza: { imzalar: ["uzman"] }, metin: { metin: "" },
+    /* 2026-10-24: 3 × 4 boş serbest tablo */
+    tablo: { sutun: [25, 25, 25, 25], satirlar: [{}, {}, {}], hucreler: [0, 1, 2].flatMap((r) => [0, 1, 2, 3].map((c) => ({ r, c, tur: "yazi", m: "" }))) },
   };
   return Bolum.parse({ id, ad, blok, ...ek[blok] });
 }
@@ -405,6 +409,19 @@ export function gorunumYaz(t: FormatTanimi, y: { formKodu?: string; baslik?: str
   /* tanımda yalnız Bakanlık görünümünden farklı olan (anahtarsız = bugünkü tanımla birebir) */
   if (basTuru) g.basTuru = basTuru; else delete g.basTuru;
   if (sade && Object.keys(sade).length) g.stil = sade; else delete g.stil;
+  return { ...t, gorunum: g };
+}
+
+/** 2026-10-24 (serbest düzen): sabit bölümler (başlık tablosu, 1 Firma bilgileri, 2 Ekipman bilgileri) var / yok ve belgenin yazısı, çizgisi,
+    aralıkları (undefined kaldırır — anahtarsız = bugünkü görünüm) */
+export function belgeYazisiYaz(t: FormatTanimi, y: { serbest?: boolean } & Partial<NonNullable<FormatTanimi["gorunum"]["yazi"]>>): FormatTanimi {
+  const { serbest, ...yz } = y;
+  const g: FormatTanimi["gorunum"] = { ...t.gorunum };
+  if (serbest !== undefined) { if (serbest) g.serbest = true; else delete g.serbest; }
+  if (Object.keys(yz).length) {
+    const yazi = Object.fromEntries(Object.entries({ ...t.gorunum.yazi, ...yz }).filter(([, x]) => x !== undefined)) as NonNullable<FormatTanimi["gorunum"]["yazi"]>;
+    if (Object.keys(yazi).length) g.yazi = yazi; else delete g.yazi;
+  }
   return { ...t, gorunum: g };
 }
 

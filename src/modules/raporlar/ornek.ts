@@ -5,6 +5,7 @@
      göreceği ekranda gösterir — gerçek saha ekranı (SahaRaporu) bu UYDURMA raporla çizilir. Veritabanına hiçbir şey yazılmaz; kimlik "ornek",
      müşteri / tesis / cihaz adları uydurmadır. */
 import { Cevaplar, HAZIR_AD, type FormatTanimi } from "../../format/tanim.ts";
+import { sahaTanimi } from "../../format/tablo.ts";
 import type { StandartOzeti } from "../dokumanlar/eslestir.ts";
 import type { KriterBelgesi } from "../../tanim/kriterler.ts";
 import type { SahaRaporu } from "./server/raporlar.ts";
@@ -39,8 +40,10 @@ export interface OrnekTur {
 
 /** uydurma saha raporu: bugün (YYYY-AA-GG, Türkiye) kontrol başlangıcı; türün ölçüm cihazı türlerinin her biri için kalibrasyonu geçerli bir
     uydurma cihaz; yazan uydurma denetçi; düzenlenebilir, silinmez, kopyalanmaz; fotoğraftan okuma kapalı */
-export function ornekSahaRaporu(tanim: FormatTanimi, tur: OrnekTur, bugun: string, kaynak: { standartlar: StandartOzeti[] | null; kriterler: KriterBelgesi[] }): SahaRaporu {
+export function ornekSahaRaporu(tanim0: FormatTanimi, tur: OrnekTur, bugun: string, kaynak: { standartlar: StandartOzeti[] | null; kriterler: KriterBelgesi[] }): SahaRaporu {
   const yil = ayEkle(bugun, 12);
+  /* 2026-10-24: serbest tablo sanal bölümlerine açılır (rapordaki gibi — format/tablo.ts) */
+  const tanim = sahaTanimi(tanim0);
   return {
     id: ORNEK_KIMLIK, no: "ÖRNEK", durum: "taslak", surum: 0, olustu: `${bugun}T09:00:00+03:00`, degisti: `${bugun}T09:00:00+03:00`, gonderildi: null, bugun,
     plan: { id: ORNEK_KIMLIK, no: "P-ÖRNEK", tesisAd: "Örnek tesis", musteriKisa: "Örnek Sanayi" },

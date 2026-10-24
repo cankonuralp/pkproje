@@ -210,10 +210,22 @@ pkproje/
                             duzen.ts sonucSozcugu, sartliAcik · motor öneri (dereceli + şartlı açık + ağır yok → sartli) · göç 0100 (CHECK'ler, uygunsuzluk
                             Uygun değil VE Şartlı uygun sürüme) · raporlar onayaGonder seçeneği formatta ister, imzalıda uygunsuzluk · rozet / müşteri paneli /
                             doğrulama / S.A.Y ("sartli_secenek", rapora "şartlı uygun") · kilit tests/sartli-uygun, onaylar + raporlar (PG), bozan
+                            · 2026-10-24 SERBEST DÜZEN (reisim: "hangi firmanın hangi PDF formunu yüklersem yükleyeyim şablon o forma dönüşsün ve format
+                            kurucuda istediğim gibi düzenleyebileyim"; maket docs/maket/format-serbest.html onaylı): blok "tablo" (tanim.ts Hucre / TabloSatiri
+                            / HucreStili — satır × sütun, hücre birleştirme rs / cs, hücre türü yazı · alan · kayıt (TABLO_KAYNAKLARI) · cevap · sıra · imza ·
+                            görsel · foto · sonuç, görünüm yazı tipi / boy / kalın / eğik / hiza / renk / zemin / kenar) · tablo.ts (saf: kapsama, birlestir,
+                            ayir, satır / sütun ekle-sil, sutunGenisligi, kenarYaz, hucreBicemi; sanalBolumler / sahaTanimi — cevaplar mevcut alan / madde /
+                            tablo[satır kimliği]: motor, formül, saha ekranı, raporlar sunucusu açılmış tanımla; belge ızgarayı özgün tanımdan çizer;
+                            yerlesimSatirlari) · her bölümde yan (öncekinin yanında) / oran · gorunum.serbest (sabit başlık / firma / ekipman yok) +
+                            gorunum.yazi (tip Carlito / Tinos / Arimo — src/belge/{tinos,arimo}-5.3.0, OFL; boy, çizgi, aralık) · kâğıtta
+                            rapor-format/ui/TabloDuzenleyici.tsx (seçim, birleştir, satır / sütun, tür, görünüm, sütun tutamağı) · kilit tests/serbest-tablo,
+                            basili-format, bozan serbest-tablo, basili-format, e2e format-yz
   src/modules/rapor-format/ RAPOR FORMATI (2026-10-04, 308): sürümlü tanım (rapor_format, göç 0022: taslak → yayında → eski; yayınlanan değişmez) ·
                             2026-10-23 BASILI FORMDAN ŞABLON (reisim: "ben bunu yükleyince format buna dönüşsün"): tür sayfasında PDF yüklenince ("Rapor
                             şablonunu bu PDF'e göre kur" işaretli) ya da satırdaki "Şablonu bundan kur" → server/basili.ts (ayırma, çağrı işlem dışında —
                             src/server/yz/basili.ts istek / cevap, şema birleşik türsüz) → basili.ts saf çeviri → formatlar.ts taslakYaz → Format kurucu ·
+                            2026-10-24: form IZGARA olarak okunur, şablon serbest düzende kurulur (serbest tablolar, yan yana, birleşik hücre; sonuç / uzmanın
+                            imza yeri / fotoğraflar formda yoksa sona) ·
                             PDF ekipman-turleri basiliPdf · belge görünümü tanim.ts gorunum.basTuru / stil, liste yanYana / numara (duzen.ts belgeStilSiniflari,
                             basTuru, maddeNumaralari; belge, kâğıt, saha ortak); kurucuda "Belge görünümü" · kilit tests/basili-format, yz-basili, bozan
                             basili-format, e2e format-yz ·

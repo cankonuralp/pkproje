@@ -37,7 +37,7 @@ import {
 export const EKLENIR_BLOK = ["olcum", "test", "bilgi", "liste", "foto", "not", "metin", "sonuc"] as const;
 const BLOK_TR: Record<Blok, string> = {
   bilgi: "bilgi alanları", liste: "kontrol listesi", olcum: "ölçüm tablosu", test: "test değerleri", cihaz: "ölçüm cihazları", foto: "fotoğraflar",
-  kusur: "kusur açıklamaları", sonuc: "sonuç", not: "not / yorum", imza: "imza", metin: "serbest metin",
+  kusur: "kusur açıklamaları", sonuc: "sonuç", not: "not / yorum", imza: "imza", metin: "serbest metin", tablo: "serbest tablo",
 };
 const sinirMetni = (o: { op?: string; sinir?: number }) => (o.op && o.sinir !== undefined ? `, sınır ${SINIR_ISARETI[o.op as keyof typeof SINIR_ISARETI] ?? o.op} ${o.sinir}` : "");
 

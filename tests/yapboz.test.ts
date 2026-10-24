@@ -30,7 +30,7 @@ test("parça kutusu: bölümler (cihaz bölümü varsa yok), altı tek alan, on 
   assert.equal(g[3].parcalar.length, 0);
   assert.ok(T.bolumler.some((b) => b.blok === "cihaz"));
   assert.ok(!g[0].parcalar.some((p) => p.k === "b:cihaz"), "ölçüm cihazları bölümü tektir");
-  assert.equal(g[0].parcalar.length, 10, "495: serbest metin bölümü eklendi (2026-10-12)");
+  assert.equal(g[0].parcalar.length, 11, "495: serbest metin bölümü eklendi (2026-10-12); 2026-10-24: serbest tablo bölümü eklendi (format kurucu serbest düzen)");
   const cihazsiz = { ...T, bolumler: T.bolumler.filter((b) => b.blok !== "cihaz") };
   assert.ok(parcaGruplari(cihazsiz)[0].parcalar.some((p) => p.k === "b:cihaz"));
   assert.equal(g[1].parcalar.length, 6);

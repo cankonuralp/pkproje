@@ -35,8 +35,9 @@ import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
 import { yayinDenetimi } from "../../../format/motor";
 import { basTuru } from "../../../format/duzen";
-import type { FormatTanimi } from "../../../format/tanim";
-import { bolumSil, gorunumYaz } from "../kurucu";
+import { YAZI_TIPI_ADI, YAZI_TIPLERI, type FormatTanimi } from "../../../format/tanim";
+import { belgeYazisiYaz, bolumSil, gorunumYaz } from "../kurucu";
+import { YAZI_AILESI } from "../../../format/tablo";
 import { adimEkle, bosGecmis, geriAl, kisayol, yinele, type Gecmis } from "../gecmis";
 import { alanaParcaEkle, bolumKopyala, bolumuTasi, parcaBul, parcaYerlestir, type FirmaParcasi, type HazirParca } from "../yapboz";
 import { Parcalar, SeciliBolum } from "./Yapboz";
@@ -368,6 +369,48 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
               ))}
             </fieldset>
           ))}
+          {/* 2026-10-24 (serbest düzen): sabit bölümler var / yok; belgenin yazısı ve çizgisi (serbest tablolarda) */}
+          <fieldset className={stil.secenekler}>
+            <legend className={stil.kullanimEtiket}>Sabit bölümler</legend>
+            {([[false, "Başlık tablosu, firma ve ekipman bilgileri belgede"], [true, "Yok — belge yalnız benim bölümlerimden"]] as const).map(([x, xad]) => (
+              <label key={String(x)} className={stil.secenek}>
+                <input type="radio" name="kb-gorunum-serbest" checked={!!t.gorunum.serbest === x} onChange={() => degis(belgeYazisiYaz(t, { serbest: x }))} />
+                <span>{xad}</span>
+              </label>
+            ))}
+          </fieldset>
+          <fieldset className={stil.secenekler}>
+            <legend className={stil.kullanimEtiket}>Tabloların yazı tipi</legend>
+            {YAZI_TIPLERI.map((x) => (
+              <label key={x} className={stil.secenek}>
+                <input type="radio" name="kb-gorunum-yazi" checked={(t.gorunum.yazi?.tip ?? "carlito") === x}
+                  onChange={() => degis(belgeYazisiYaz(t, { tip: x === "carlito" ? undefined : x }))} />
+                <span style={{ fontFamily: YAZI_AILESI[x] }}>{YAZI_TIPI_ADI[x]}</span>
+              </label>
+            ))}
+          </fieldset>
+          <fieldset className={stil.secenekler}>
+            <legend className={stil.kullanimEtiket}>Tabloların yazısı ve çizgisi</legend>
+            {([["boy", "Yazı boyu (pt)", t.gorunum.yazi?.boy ?? 9, 6, 16], ["ara", "Bölümler arası (mm)", t.gorunum.yazi?.ara ?? 3, 0, 10],
+              ["ic", "Hücre iç boşluğu (mm)", t.gorunum.yazi?.ic ?? 0.6, 0, 4]] as const).map(([a, ad, d, en, enCok]) => (
+              <label key={a} className={stil.secenek}>
+                <span>{ad}</span>
+                <input type="number" className={stil.sayiKutu} step={a === "boy" ? 0.5 : 0.2} min={en} max={enCok} defaultValue={d} key={`${a}-${d}`}
+                  onBlur={(e) => { const n = Number(e.target.value); if (Number.isFinite(n) && n >= en && n <= enCok && n !== d) degis(belgeYazisiYaz(t, { [a]: n })); }} />
+              </label>
+            ))}
+            {([[1, "İnce çizgi"], [2, "Kalın çizgi"]] as const).map(([x, xad]) => (
+              <label key={x} className={stil.secenek}>
+                <input type="radio" name="kb-gorunum-kalin" checked={(t.gorunum.yazi?.kalin ?? 1) === x} onChange={() => degis(belgeYazisiYaz(t, { kalin: x === 1 ? undefined : x }))} />
+                <span>{xad}</span>
+              </label>
+            ))}
+            <label className={stil.secenek}>
+              <span>Çizgi rengi</span>
+              <input type="color" value={(t.gorunum.yazi?.cizgi ?? "#000000").toLowerCase()} aria-label="Çizgi rengi"
+                onChange={(e) => degis(belgeYazisiYaz(t, { cizgi: e.target.value.toUpperCase() === "#000000" ? undefined : e.target.value.toUpperCase() }))} />
+            </label>
+          </fieldset>
         </div>
       </details>
       {/* 493: araç çubuğu (geniş ekranda; telefonda kurucu yok) */}

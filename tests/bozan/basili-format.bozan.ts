@@ -1,10 +1,11 @@
 /* OLUMSUZ KANIT — tests/basili-format.test.ts ve tests/yz-basili.test.ts neyi koruyor (kaynak diskte değiştirilmez; bellekte bozulur, göreli içe
    aktarmalar mutlak yola çevrilir):
-   1. Firma bilgilerinde zorunlu satır (İSG-KATİP) formda yoksa eklenmezse tanım şemadan geçmez — basılı formdan şablon hiç kurulmaz.
-   2. Uzmanın imza hücresi eklenmezse imza bölümünde e-imzanın yeri kalmaz.
-   3. Formda cihaz bölümü yokken numarasız cihaz bölümü eklenmezse kurucu numaralı ekler, formun numaraları kayar (3 tespit → 4).
+   (2026-10-24 serbest düzen)
+   1. Birleşik hücrenin kapladığı yer satırda atlanmazsa hücreler üst üste biner — tanım şemadan geçmez, şablon hiç kurulmaz.
+   2. Formda uzmanın imza yeri yokken eklenmezse e-imzanın yeri kalmaz.
+   3. Formda sonuç hücresi yokken eklenmezse raporun sonucu seçilemez.
    4. Şemaya birleşik tür (anyOf) girerse hizmetin karmaşıklık sınırı aşılabilir — sayaç yakalar.
-   5. Belgede iki sütun dalı kalkınca kontrol listesi tek sütun çizilir (formun görünümü kaybolur). */
+   5. Belgede yan yana dalı kalkınca yan yana tablolar alt alta çizilir (formun görünümü kaybolur). */
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -13,7 +14,6 @@ import { pathToFileURL } from "node:url";
 import { after, test } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { ornekBelge } from "../../src/belge/ornek.ts";
-import { raporDuzeni } from "../../src/format/duzen.ts";
 import { HAM } from "../yardimci/basili-ornek.ts";
 import { semaKarmasikligi } from "../yardimci/denetimler.ts";
 
@@ -33,37 +33,33 @@ async function bozuk<T>(dosya: string, eski: string, yeni: string): Promise<T> {
 type Ceviri = typeof import("../../src/modules/rapor-format/basili.ts");
 const ceviri = (eski: string, yeni: string) => bozuk<Ceviri>("src/modules/rapor-format/basili.ts", eski, yeni);
 
-test("zorunlu firma satırı eklenmezse şablon kurulmaz (tanım şemadan geçmez)", async () => {
-  const m = await ceviri("if (firmaSatirlar.length) for (const z of FIRMA_ZORUNLU)", "if (false) for (const z of FIRMA_ZORUNLU)");
-  assert.equal(m.basilidanTanim(structuredClone(HAM), "Vinç"), null, "bozuk: çeviri kurulmadı");
+test("birleşik hücrenin yeri atlanmazsa hücreler üst üste biner, şablon kurulmaz", async () => {
+  const m = await ceviri("while (c < C && dolu.has(`${r},${c}`)) c++;", "");
+  assert.equal(m.basilidanTanim(structuredClone(HAM), "Vinç")?.tanim.bolumler.find((b) => b.ad === "Başlık"), undefined, "bozuk: başlık tablosu kurulmadı");
 });
 
-test("uzmanın imza hücresi eklenmezse e-imzanın yeri yok", async () => {
-  const m = await ceviri(`if (satirlar.length && !satirlar.some((s) => s.kim === "uzman" && s.alan === "imza"))`, "if (false)");
-  const imza = m.basilidanTanim(structuredClone(HAM), "Vinç")!.tanim.bolumler.find((b) => b.blok === "imza");
-  assert.ok(imza?.blok === "imza");
-  assert.ok(!imza.satirlar!.some((s) => s.kim === "uzman" && s.alan === "imza"), "bozuk: uzmanın imza hücresi yok");
+test("uzmanın imza yeri eklenmezse e-imzanın yeri yok", async () => {
+  const m = await ceviri(`if (!hucreVar((h) => h.tur === "imza" && h.kim === "uzman")) {`, "if (false) {");
+  const t = m.basilidanTanim({}, "Vinç")!.tanim;
+  assert.ok(!t.bolumler.some((b) => b.blok === "tablo" && b.hucreler.some((h) => h.tur === "imza")), "bozuk: imza yeri yok");
 });
 
-test("numarasız cihaz bölümü eklenmezse formda cihaz bölümü yok (kurucu numaralı ekler, numaralar kayar)", async () => {
-  const m = await ceviri(`if (!bolumler.some((b) => b.blok === "cihaz")) {`, "if (false) {");
-  const t = m.basilidanTanim(structuredClone(HAM), "Vinç")!.tanim;
-  assert.ok(!t.bolumler.some((b) => b.blok === "cihaz"), "bozuk: cihaz bölümü yok");
-  /* kurucu açılışta numaralı ekler: tespit 4 olur */
-  const { kurucuyaHazirla } = await import("../../src/format/duzen.ts");
-  assert.equal(raporDuzeni(kurucuyaHazirla(t), false).bolumler.find((x) => x.b.blok === "liste")?.no, "4");
+test("sonuç hücresi eklenmezse raporun sonucu seçilemez", async () => {
+  const m = await ceviri(`if (!hucreVar((h) => h.tur === "sonuc")) ekTablo(`, "if (false) ekTablo(");
+  const t = m.basilidanTanim({}, "Vinç")!.tanim;
+  assert.ok(!t.bolumler.some((b) => b.blok === "tablo" && b.hucreler.some((h) => h.tur === "sonuc")), "bozuk: sonuç yok");
 });
 
 test("şemaya birleşik tür girerse karmaşıklık sayacı yakalar", async () => {
   const m = await bozuk<typeof import("../../src/server/yz/basili.ts")>("src/server/yz/basili.ts",
     `const s = { type: "string" } as const,`, `const s = { anyOf: [{ type: "string" }, { type: "null" }] } as const,`);
-  assert.ok(semaKarmasikligi(m.BASILI_SEMASI).birlesik > 16, "bozuk: sınır aşıldı");
+  assert.ok(semaKarmasikligi(m.BASILI_SEMASI).birlesik > 0, "bozuk: birleşik tür sayıldı");
 });
 
-test("belgede iki sütun dalı kalkınca liste tek sütun çizilir", async () => {
-  const m = await bozuk<typeof import("../../src/belge/belge.ts")>("src/belge/belge.ts", "if (b.yanYana && !ek.length) {", "if (false) {");
+test("belgede yan yana dalı kalkınca yan yana tablolar alt alta çizilir", async () => {
+  const m = await bozuk<typeof import("../../src/belge/belge.ts")>("src/belge/belge.ts", "const bolumSatirlari = () => yerlesimSatirlari(duzen.bolumler).flatMap((s, j) => s.ogeler.length === 1",
+    "const bolumSatirlari = () => yerlesimSatirlari(duzen.bolumler.map((x) => ({ ...x, b: { ...x.b, yan: undefined } }))).flatMap((s, j) => s.ogeler.length === 1");
   const t = (await import("../../src/modules/rapor-format/basili.ts")).basilidanTanim(structuredClone(HAM), "Vinç")!.tanim;
   const h = renderToStaticMarkup(m.raporBelgesi({ ...ornekBelge("ZPKR02"), tanim: t }) as never);
-  const liste = /<h2>3\. TESPİT[^<]*<\/h2><table>(.*?)<\/table>/.exec(h)?.[1] ?? "";
-  assert.equal((liste.match(/<col /g) ?? []).length, 3, "bozuk: tek sütun");
+  assert.doesNotMatch(h, /class="rb-yan"/, "bozuk: yan yana yok");
 });

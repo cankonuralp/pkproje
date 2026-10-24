@@ -19,6 +19,8 @@
 import { excelCagir, islevAdi, islevYazimi } from "./excel.ts";
 import { EGRI_KAT, UO } from "./hesap.ts";
 import type { BolumOf, Cevaplar, FormatTanimi } from "./tanim.ts";
+/* 2026-10-24: serbest tablonun formüllü hücreleri sanal bölümlerinden (alan, çoğalan satır sütunu) */
+import { sahaTanimi } from "./tablo.ts";
 
 /** formülün en çok uzunluğu (tanim.ts şeması ile aynı) */
 export const FORMUL_EN_UZUN = 2_000;
@@ -326,13 +328,15 @@ export const formulluAlan = (a: Alan) => var_(a.formul);
 export const formulluDeger = (d: DegerT) => var_(d.formul);
 export const formulluSutun = (s: Sutun) => var_(s.formul);
 export const formulluMadde = (m: Madde) => var_(m.formul);
-export function formulVar(t: FormatTanimi): boolean {
+export function formulVar(t0: FormatTanimi): boolean {
+  const t = sahaTanimi(t0);
   return t.bolumler.some((b) => (b.blok === "bilgi" && b.alanlar.some(formulluAlan)) || (b.blok === "test" && b.degerler.some(formulluDeger))
     || (b.blok === "olcum" && b.sutunlar.some(formulluSutun)) || (b.blok === "liste" && b.gruplar.some((g) => g.maddeler.some(formulluMadde))));
 }
 
 /** formatın genel adları — tablo dışındaki formüllerin başvurabildiği: bilgi alanları, test değerleri, madde metinleri, tablo adları ve sütunları */
-export function genelAdlar(t: FormatTanimi): string[] {
+export function genelAdlar(t0: FormatTanimi): string[] {
+  const t = sahaTanimi(t0);
   return t.bolumler.flatMap((b) => b.blok === "bilgi" ? b.alanlar.map((a) => a.ad) : b.blok === "test" ? b.degerler.map((d) => d.ad)
     : b.blok === "liste" ? b.gruplar.flatMap((g) => g.maddeler.map((m) => m.metin)) : b.blok === "olcum" ? [b.ad, ...b.sutunlar.map((s) => s.ad)] : []);
 }
@@ -375,8 +379,9 @@ const degerTuru = (d: DegerT): "sayi" | "metin" | "secim" => (d.secenekler?.leng
 
 /** cevaplara formüllerin değerini yazar — yalnız kutunun kendi değeri BOŞSA (elle yazılan kalır); yeni nesne, formül yoksa aynısı. Kayıttan gelen
     kutunun formülü kayıttaki değerden önce gelir; ekipman bilgisinin formülü yalnız ekipman bilgisi boşsa. Hesaplanamayan kutu boş. */
-export function formulUygula(t: FormatTanimi, c: Cevaplar, ek: FormulEki = {}): Cevaplar {
-  if (!formulVar(t)) return c;
+export function formulUygula(t0: FormatTanimi, c: Cevaplar, ek: FormulEki = {}): Cevaplar {
+  if (!formulVar(t0)) return c;
+  const t = sahaTanimi(t0);
   const { formulle } = ortamKur(t, c, ek, false);
   /* yalnız boş kutulara yazılır */
   const alan = { ...c.alan }, deger = { ...c.deger }, tablo = { ...c.tablo }, madde = { ...c.madde };
@@ -417,7 +422,7 @@ export function formulUygula(t: FormatTanimi, c: Cevaplar, ek: FormulEki = {}): 
 /** 2026-10-16 (sonuç kuralı — src/format/sonuc.ts): ölçüm tablosu SATIRININ bağlamında formül hesaplayıcısı (aynı satırın sütunları, formatın
     kutuları; kati — sayı kutusunda sayı olmayan yazı boş). c: formüllerin değeri yazılmış cevaplar (formulUygula). Hesaplanamayan formül null. */
 export function satirHesabi(t: FormatTanimi, c: Cevaplar, ek: FormulEki = {}): (b: BolumOf<"olcum">, i: number, ifade: string) => Deger {
-  const { bagi } = ortamKur(t, c, ek, true);
+  const { bagi } = ortamKur(sahaTanimi(t), c, ek, true);
   return (b, i, ifade) => {
     if (!ifade.trim()) return null;
     try { return hesapla(cozulen(ifade), bagi(i, b)); } catch { return null; }

@@ -2527,6 +2527,20 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-24 (YAPILDI — kod; dal kalem/toplu-maket-plani-yfxvp3, CI'da): **FORMAT KURUCU SERBEST DÜZEN** — reisim maketi onayladı: *"Maketi onaylıyorum, koda
+  geç."* Format tanımına "Serbest tablo" bölümü (satır × sütun, hücre birleştirme, hücre içeriği: yazı · sahada doldurulur · kayıttan gelir · kontrol cevabı ·
+  sıra no · imza yeri (e-imza) · logo / akreditasyon · fotoğraf kutusu · raporun sonucu; görünüm hücre başına: yazı tipi, boy, kalın / eğik / altı çizili,
+  yatay / dikey hiza, yazı rengi, zemin, kenarlar), her bölümde yan yana yerleşim (öncekinin yanında + genişlik payı), belgede sabit bölümleri kaldırma
+  ("Sabit bölümler: yok") ve tabloların yazı tipi / boyu / çizgisi / aralıkları (Belge görünümü). Yazı tipleri Carlito · Tinos (Times ölçüsü) · Arimo (Arial
+  ölçüsü), kendi kökenimizden (PDF'e gömülü). Tablonun cevapları mevcut cevaplardır (alan, madde, ölçüm satırı, fotoğraf kutusu, imza yeri, sonuç): onaya
+  gönder eksikleri, kusur listesi, uygunsuzluk kaydı, formül, saha ekranı aynı motorla; belge ızgarayı çizer. Basılı formdan şablon artık formu ızgara olarak
+  okur ve şablonu serbest düzende kurar (sonuç / uzmanın imza yeri / fotoğraflar formda yoksa sona eklenir, kurucuda değişir). Kurucuda kâğıtta tablo
+  düzenleyicisi: hücreye bas / sürükle / Shift ile aralık, çift tıklayıp yaz, birleştir / ayır, satır / sütun ekle-sil, sütun genişliği tutamağı, satır
+  yüksekliği, "sahada çoğalır", hücre türü ve görünüm paneli. Doğrulama: tip + lint temiz; veritabanısız testler (yeni tests/serbest-tablo 9/9, basili-format
+  6/6, yz-basili 3/3, olumsuz kanıt 5/5 + 5/5, değişen kilitler ikonlar / kalıp / sayfalama / yapboz) PC'de geçti; uydurma vinç formunun belgesi tarayıcı
+  bölmemde gözle (yan yana tablolar, birleşik başlık, şeritler, Tinos). Kurucunun kendisini gözle ÖLÇEMEDİM (PC'de veritabanı yok, giriş reisim'de) —
+  uçtan uca test (e2e/format-yz: kurulur, yan yana, iki hücre birleştirilir, belge) deneme makinesinde. Telefonda kurucu bugün de açılmıyor (masaüstü / tablet
+  işi) — maketteki telefon düzeni sonraki adım.
 - 2026-10-24 (MAKET, kod yok — ONAY BEKLİYOR): **FORMAT KURUCU SERBEST DÜZEN** — https://claude.ai/artifact/VWWhTtQb8CkgQq6FGPpDnb · depoda
   `docs/maket/format-serbest.html` (tek başına sayfa; uydurma "VN-01 Vinç Muayene Formu"). Reisim: *"hangi firmanın hangi PDF formunu yüklersem yükleyeyim
   şablon o forma dönüşsün ve format kurucuda İSTEDİĞİM GİBİ düzenleyebileyim"*. Makette: kâğıt satırlardan, her satır yan yana bölümlerden oluşur (bölüm

@@ -43,9 +43,9 @@ export const KAYNAK_ADI: Record<Kaynak, string> = {
 const BOLUM_ACIK: Record<Blok, string> = {
   bilgi: "etiket + değer", liste: "maddeler · Uygun / Uygun değil", olcum: "satır × sütun, sınır", test: "tek tek değer, sınır", cihaz: "kullanılan cihazlar",
   foto: "fotoğraf kutuları", kusur: "kendiliğinden dolar", sonuc: "uygundur / değildir", not: "uzmanın yorumu", imza: "belgede imza yerleri",
-  metin: "belgeye basılan sabit yazı",
+  metin: "belgeye basılan sabit yazı", tablo: "satır, sütun, birleşik hücre",
 };
-const BOLUM_SIRASI: readonly Blok[] = ["bilgi", "liste", "olcum", "test", "foto", "metin", "not", "kusur", "sonuc", "imza", "cihaz"];
+const BOLUM_SIRASI: readonly Blok[] = ["tablo", "bilgi", "liste", "olcum", "test", "foto", "metin", "not", "kusur", "sonuc", "imza", "cihaz"];
 
 /** parça olabilen bölüm mü: ölçüm cihazları (tektir, türden), kayıttan gelen alanlı bilgi bölümü (1. bölümün kopyası) ve ekipman bilgileri
     (formatta tek; şablonun "Ekipman bilgileri"si kurucuda tam bölüm olur — duzen.ts ekipmanBolumuMu; ekipman kaydına bağlı alanlar yalnız

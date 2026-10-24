@@ -100,6 +100,13 @@
 .araclar { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 2px 4px; margin-left: auto; font-size: 11px; text-transform: none; }
 .sabit { display: inline-flex; align-items: center; gap: 4px; padding: 0 6px; color: #1f4b3a; font-weight: 700; }
 .tur { padding: 0 6px; color: #3d3d3d; }
+/* 2026-10-24 (serbest düzen): serbest tablonun şeridi belgeye basılmaz — kesik çizgili, sade (başlığı tablonun kendi hücrelerinde); yan yana bölümler
+   aynı satırda, genişlikleri oranlarıyla; dar kapta alt alta */
+.bolumBas.tabloSerit { margin: 0 0 4px; border: 1px dashed #6d88b8; background: #f4f7fb; font-size: 11px; }
+.kagit .tabloSerit h2 { font-size: 11px; font-weight: 700; text-transform: none; }
+.yanYana { display: flex; align-items: flex-start; gap: 8px; }
+.yanOge { min-width: 0; }
+@media (max-width: 767px) { .yanYana { flex-direction: column; } .yanOge { width: 100%; } }
 
 /* bölümler arası "Bölüm ekle": ince, kâğıdın ortasında; sondaki belirgin */
 .araEkle { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 8px; margin: -4px 0 6px; opacity: .55; }

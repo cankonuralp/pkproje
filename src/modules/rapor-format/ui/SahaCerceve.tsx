@@ -9,6 +9,7 @@
    İletiler YALNIZ aynı kökenden ve yalnız üst pencereden alınır / üst pencereye gönderilir. */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FormatTanimi } from "../../../format/tanim";
+import { sahaTanimi } from "../../../format/tablo";
 import { SahaRaporu } from "../../raporlar/ui/SahaRaporu";
 import type { SahaRaporu as SahaRaporuVerisi } from "../../raporlar/server/raporlar";
 import { ilkCevaplar } from "../../raporlar/ornek";
@@ -38,6 +39,7 @@ export function SahaCerceve({ v }: { v: SahaRaporuVerisi }) {
     if (window.parent !== window) window.parent.postMessage({ tur: "probata-durum", ...x }, location.origin);
   }, []);
   /* başlangıç cevapları güncel tanımdan ("Denemeyi temizle" ekranı yeniden kurar — kâğıtta eklenen maddeler de "Uygun" gelir) */
-  const gorunum = useMemo(() => ({ ...v, tanim, cevaplar: ilkCevaplar(tanim) }), [v, tanim]);
+  /* 2026-10-24: serbest tablo sanal bölümlerine açılır (rapordaki gibi — format/tablo.ts) */
+  const gorunum = useMemo(() => { const s = sahaTanimi(tanim); return { ...v, tanim: s, cevaplar: ilkCevaplar(s) }; }, [v, tanim]);
   return <SahaRaporu key={temiz} v={gorunum} deneme={{ durum }} />;
 }

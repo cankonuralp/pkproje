@@ -53,6 +53,8 @@ import {
 } from "../kurucu";
 import { ListeDuzenleyici, NotDuzenleyici, OgeDuzenleyici, SatirAlani, SonucAciklamasi, SonucKuraliDuzenleyici } from "./KurucuDuzenleyici";
 import { EimzaYeriAyari } from "./EimzaYeri";
+import { TabloDuzenleyici } from "./TabloDuzenleyici";
+import { yerlesimSatirlari } from "../../../format/tablo";
 import { SurukleTutamak, type Birakma } from "./Surukle";
 import { SURUKLE, type Parca } from "../yapboz";
 import { bolumeKaydir } from "./kaydir";
@@ -63,7 +65,7 @@ import k from "./kagit.module.css";
 const BLOK_KISA: Record<Blok, string> = {
   bilgi: "etiket + değer", liste: "maddeler · Uygun / Uygun değil", olcum: "satır satır ölçüm", test: "tek tek değer, sınır", cihaz: "kullanılan cihazlar",
   foto: "fotoğraf kutuları", kusur: "kendiliğinden dolar", sonuc: "uygundur / değildir", not: "uzmanın yorumu", imza: "belgede imza yerleri",
-  metin: "belgeye basılan sabit yazı",
+  metin: "belgeye basılan sabit yazı", tablo: "satır, sütun, birleşik hücre — her şey serbest",
 };
 const BOLUM_SECENEK = BLOKLAR.map((b) => [b, BLOK_ADI[b], BLOK_KISA[b]] as const);
 /** 486: alt başlığın türleri — ana bölümün türü alt başlık olabiliyorsa önce ("ana bölümle aynı"), sonra ötekiler */
@@ -724,6 +726,9 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
         return <>{gruplar.map((g, gi) => <BilgiTablosu key={g[0].id} son={gi === gruplar.length - 1 ? ekle : undefined}
           l={g.map((s): Hucre => [imzaEtiketi(b, i, s, l), imzaDegeri(i, s), !!s.tam])} />)}</>;
       }
+      /* 2026-10-24: serbest tablo — hücreler, birleştirme, görünüm kâğıtta (TabloDuzenleyici) */
+      case "tablo":
+        return <TabloDuzenleyici t={t} i={i} b={b} degis={degis} bildir={bildir} />;
     }
   };
 
@@ -835,6 +840,13 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
         {b.ust && <span className={k.panelIpucu}>Üst başlık: <b>{b.ust}</b>{" "}
           <button type="button" className={k.ekle} onClick={() => degis(bolumDuzeni(t, i, { ust: "" }))}>Üst başlığı kaldır</button></span>}
       </div>}
+      {/* 2026-10-24 (serbest düzen): yerleşim — öncekinin yanında (aynı satırda) ve satırdaki genişlik payı */}
+      <div className={k.panelSatir} role="group" aria-label={`${b.ad} · yerleşim`}>
+        <label className={k.panelKutu}><input type="checkbox" checked={!!b.yan} disabled={sira(b.id) === 0}
+          onChange={(e) => degis(bolumYaz(t, i, { yan: e.target.checked || undefined }))} />Önceki bölümün yanında</label>
+        <label className={k.panelAlan}>Satırdaki genişlik payı (%)
+          <SayiGirdi deger={Math.round(b.oran ?? 50)} en={5} enCok={100} ad="Satırdaki genişlik payı" yaz={(n) => degis(bolumYaz(t, i, { oran: n }))} /></label>
+      </div>
       {doldurmaAyari(b, i)}
       {b.blok === "liste" && <ListeDuzenleyici t={t} i={i} b={b} degis={degis} />}
       {/* 2026-10-23 (basılı formdan şablon): belgede iki sütun yan yana; numara grup içinde ya da baştan sona */}
@@ -966,10 +978,52 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
     requestAnimationFrame(() => document.getElementById("kb-ekipman")?.querySelector<HTMLElement>(`[data-alan="${id}"] button`)?.focus());
   };
 
+  const serbest = !!t.gorunum.serbest;
+  /** bir bölümün kâğıttaki kutusu (şerit + ayar + içerik); v: görünen sıradaki yeri */
+  const bolumCiz = (x: (typeof duzen.bolumler)[number], v: number) => {
+    const b = x.b, i = sira(b.id), anahtar = `b:${b.id}`;
+    return (
+      <Fragment key={b.id}>
+        {x.ust && <section className="rb-bolum rb-ust"><h2>{x.ust.no}. {x.ust.ad}</h2></section>}
+        <section className={bolumSinifi(b)} id={`kb-${b.id}`} aria-label={`${x.no ? `${x.no} ` : ""}${b.ad}`}
+          onClickCapture={yapboz ? () => yapboz.sec(b.id) : undefined} {...alanHedefi(b, i)}>
+          <div className={[k.bolumBas, x.no?.includes(".") && k.altBas, b.blok === "tablo" && k.tabloSerit].filter(Boolean).join(" ")}>
+            <h2>{x.no && <span className={k.no}>{x.no.includes(".") ? `${x.no} ` : `${x.no}. `}</span>}
+              <Yazi deger={b.ad} ad="Bölüm adı" bos="Bölüm adı" ac={yeniId === b.id} yaz={(s) => degis(bolumAdi(t, i, s))} /></h2>
+            <span className={k.araclar}>
+              {tutamak(b)}
+              {b.kilit && <span className={k.sabit}><Ikon ad="lock" kucuk />Bakanlık bölümü</span>}
+              {!b.kilit && b.blok === "cihaz" && <span className={k.sabit}><Ikon ad="lock" kucuk />Sabit · türün cihazları</span>}
+              <span className={k.tur}>{BLOK_ADI[b.blok]}</span>
+              <DoldurmaIsareti b={b} />
+              <span data-yon="-1" className={k.yonKap}><Tus ikon="arrow-up" ad={`${b.ad} · yukarı`} disabled={v === 0} onClick={() => tasiGorunen(b.id, -1)} /></span>
+              <span data-yon="1" className={k.yonKap}><Tus ikon="arrow-down" ad={`${b.ad} · aşağı`} disabled={v === gorunen.length - 1} onClick={() => tasiGorunen(b.id, 1)} /></span>
+              {v > 0 && <Tus ikon="arrow-right-left" ad={`${b.ad} · ${b.yan ? "ayrı satıra al" : "önceki bölümün yanına al"}`} basili={!!b.yan}
+                onClick={() => { degis(bolumYaz(t, i, { yan: b.yan ? undefined : true })); bildir(b.yan ? `${b.ad} ayrı satıra alındı (taslak).` : `${b.ad} önceki bölümün yanına alındı (taslak).`); }} />}
+              {(b.alt && x.no?.includes(".")
+                ? <Tus ikon="chevron-left" ad={`${b.ad} · ana başlık yap`} onClick={() => degis(bolumDuzeni(t, i, { alt: false }))} />
+                : v > 0 && b.blok !== "tablo" && !serbest && anaBolum(v - 1) && <Tus ikon="chevron-right" ad={`${b.ad} · alt başlık yap (${anaBolum(v - 1)!.ad} altına)`}
+                  onClick={() => degis(bolumDuzeni(t, i, { alt: true }))} />)}
+              <Tus ikon="settings" ad={`${b.ad} · bölüm ayarları`} basili={ayar === anahtar} onClick={() => ac(anahtar)} />
+              {b.blok !== "cihaz" && <Tus ikon="trash-2" ad={`${b.ad} · bölümü sil`} onClick={() => bolumuSil(i)} />}
+            </span>
+          </div>
+          {ayar === anahtar && bolumAyari(b, i)}
+          {icerik(b, i)}
+          {buBolumeEkle(b, i)}
+          {sahaTuslari(b, i)}
+          {ogePaneli(b, i)}
+        </section>
+      </Fragment>
+    );
+  };
+
   return (
-    <article className={[`rb-sayfa ${k.kagit}`, belgeStilSiniflari(t)].filter(Boolean).join(" ")} aria-label="Rapor formatı · düzenlenebilir belge">
+    <article className={[`rb-sayfa ${k.kagit}`, serbest ? "rb-serbest" : belgeStilSiniflari(t)].filter(Boolean).join(" ")} aria-label="Rapor formatı · düzenlenebilir belge">
+      {/* 2026-10-24 (serbest düzen): sabit parçalar (başlık tablosu, 1 Firma bilgileri, 2 Ekipman bilgileri) yok — hepsi formatın tablolarında */}
+      {!serbest && <>
       {/* 2026-10-23 (basılı formdan şablon): belgenin başı yalnız belge adı — tek satır, yerinde yazılır */}
-      {basTuru(t) === "ad" ? <table className="rb-bas rb-bas-yalniz"><tbody><tr><td className="rb-bas-ad">
+      {basTuru(t) === "ad" ?<table className="rb-bas rb-bas-yalniz"><tbody><tr><td className="rb-bas-ad">
         <Yazi deger={t.gorunum.baslik} ad="Belge başlığı" bos={`${tur.ad} periyodik kontrol raporu`} yaz={(s) => degis(gorunumYaz(t, { baslik: s }))} />
       </td></tr></tbody></table> : <>
       {/* başlık tablosu (belge.ts): logo · firma · akreditasyon · belge adı · doküman bilgisi */}
@@ -1082,41 +1136,18 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
         {ekip && sahaTuslari(ekip, ki)}
         {ekip && ogePaneli(ekip, ki)}
       </section>}
+      </>}
 
-      {araEkle(duzen.bolumler.length ? sira(duzen.bolumler[0].b.id) : t.bolumler.length, "Buraya bölüm ekle (ekipman bilgilerinden sonra)", "kb-ekle-0")}
-      {duzen.bolumler.map((x, v) => {
-        const b = x.b, i = sira(b.id), anahtar = `b:${b.id}`;
+      {araEkle(duzen.bolumler.length ? sira(duzen.bolumler[0].b.id) : t.bolumler.length, serbest ? "Buraya bölüm ekle (en başa)" : "Buraya bölüm ekle (ekipman bilgilerinden sonra)", "kb-ekle-0")}
+      {/* 2026-10-24 (serbest düzen): yan yana bölümler aynı satırda (oranlarıyla); ekleme yeri satırın ardında */}
+      {yerlesimSatirlari(duzen.bolumler.map((x, v) => ({ ...x, v }))).map((satir) => {
+        const son = satir.ogeler[satir.ogeler.length - 1];
+        const ciz = (x: (typeof satir.ogeler)[number]) => bolumCiz(x, x.v);
         return (
-          <Fragment key={b.id}>
-            {x.ust && <section className="rb-bolum rb-ust"><h2>{x.ust.no}. {x.ust.ad}</h2></section>}
-            <section className={bolumSinifi(b)} id={`kb-${b.id}`} aria-label={`${x.no ? `${x.no} ` : ""}${b.ad}`}
-              onClickCapture={yapboz ? () => yapboz.sec(b.id) : undefined} {...alanHedefi(b, i)}>
-              <div className={x.no?.includes(".") ? `${k.bolumBas} ${k.altBas}` : k.bolumBas}>
-                <h2>{x.no && <span className={k.no}>{x.no.includes(".") ? `${x.no} ` : `${x.no}. `}</span>}
-                  <Yazi deger={b.ad} ad="Bölüm adı" bos="Bölüm adı" ac={yeniId === b.id} yaz={(s) => degis(bolumAdi(t, i, s))} /></h2>
-                <span className={k.araclar}>
-                  {tutamak(b)}
-                  {b.kilit && <span className={k.sabit}><Ikon ad="lock" kucuk />Bakanlık bölümü</span>}
-                  {!b.kilit && b.blok === "cihaz" && <span className={k.sabit}><Ikon ad="lock" kucuk />Sabit · türün cihazları</span>}
-                  <span className={k.tur}>{BLOK_ADI[b.blok]}</span>
-                  <DoldurmaIsareti b={b} />
-                  <span data-yon="-1" className={k.yonKap}><Tus ikon="arrow-up" ad={`${b.ad} · yukarı`} disabled={v === 0} onClick={() => tasiGorunen(b.id, -1)} /></span>
-                  <span data-yon="1" className={k.yonKap}><Tus ikon="arrow-down" ad={`${b.ad} · aşağı`} disabled={v === gorunen.length - 1} onClick={() => tasiGorunen(b.id, 1)} /></span>
-                  {(b.alt && x.no?.includes(".")
-                    ? <Tus ikon="chevron-left" ad={`${b.ad} · ana başlık yap`} onClick={() => degis(bolumDuzeni(t, i, { alt: false }))} />
-                    : v > 0 && anaBolum(v - 1) && <Tus ikon="chevron-right" ad={`${b.ad} · alt başlık yap (${anaBolum(v - 1)!.ad} altına)`}
-                      onClick={() => degis(bolumDuzeni(t, i, { alt: true }))} />)}
-                  <Tus ikon="settings" ad={`${b.ad} · bölüm ayarları`} basili={ayar === anahtar} onClick={() => ac(anahtar)} />
-                  {b.blok !== "cihaz" && <Tus ikon="trash-2" ad={`${b.ad} · bölümü sil`} onClick={() => bolumuSil(i)} />}
-                </span>
-              </div>
-              {ayar === anahtar && bolumAyari(b, i)}
-              {icerik(b, i)}
-              {buBolumeEkle(b, i)}
-              {sahaTuslari(b, i)}
-              {ogePaneli(b, i)}
-            </section>
-            {v < duzen.bolumler.length - 1 && araEkle(i + 1, `Buraya bölüm ekle (${b.ad} bölümünden sonra)`, `kb-ekle-${b.id}`, false, grupSonu(v) ? anaBolum(v) : null)}
+          <Fragment key={satir.ogeler[0].b.id}>
+            {satir.ogeler.length === 1 ? ciz(son)
+              : <div className={k.yanYana}>{satir.ogeler.map((x, j) => <div key={x.b.id} className={k.yanOge} style={{ flex: `${satir.oranlar[j]} 1 0` }}>{ciz(x)}</div>)}</div>}
+            {son.v < duzen.bolumler.length - 1 && araEkle(sira(son.b.id) + 1, `Buraya bölüm ekle (${son.b.ad} bölümünden sonra)`, `kb-ekle-${son.b.id}`, false, grupSonu(son.v) ? anaBolum(son.v) : null)}
           </Fragment>
         );
       })}

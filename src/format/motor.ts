@@ -20,6 +20,7 @@ import { noktaHesap, sayiOku, SINIR_ISARETI, sinirSonucu } from "./hesap.ts";
 import { formulDenet, formulluAlan, formulluDeger, formulluMadde, formulluSutun, formulUygula, genelAdlar, satirHesabi, tabloAdlari, type Deger } from "./formul.ts";
 import { etkinKurallar, kuralOzu, kuralUygula } from "./sonuc.ts";
 import { basSatirlari, basSirasi, cihazSutunlari, firmaSatirlari, imzaSatirlari, sartliAcik } from "./duzen.ts";
+import { sahaTanimi } from "./tablo.ts";
 import { HAZIR_AD, kurucudan, type RaporSonucu, type Bolum, type BolumOf, type Cevaplar, type FormatTanimi, type SonucKurali } from "./tanim.ts";
 
 export interface Eksik { bolum: string; alan: string; ad: string }
@@ -91,7 +92,9 @@ export function sonucKurallari(b: BolumOf<"olcum">, t: FormatTanimi | null = nul
   return l;
 }
 
-export function degerlendir(t: FormatTanimi, c0: Cevaplar): Degerlendirme {
+export function degerlendir(t0: FormatTanimi, c0: Cevaplar): Degerlendirme {
+  /* 2026-10-24: serbest tablo bölümleri cevaplarının sanal bölümlerine açılır (alan · madde · çoğalan satır · sonuç — ./tablo.ts) */
+  const t = sahaTanimi(t0);
   /* 495: formüllerin değeri (kaydedilen cevaplarda yok — her değerlendirmede yeniden) */
   const c = formulUygula(t, c0);
   const eksikler: Eksik[] = [], kusurlar: Kusur[] = [], satirlar: Record<string, SatirDegerlendirmesi[]> = {}, degerler: Record<string, boolean | null> = {};
@@ -321,9 +324,12 @@ export function kilitDenetimi(t: FormatTanimi, kaynak: FormatTanimi): string[] {
 }
 
 /** yayın öncesi denetim (RAPOR-FORMAT §5) — boşsa yayınlanır. kaynak: kilitli alanların geldiği önceki sürüm / hazır şablon */
-export function yayinDenetimi(t: FormatTanimi, kaynak?: FormatTanimi | null): string[] {
+export function yayinDenetimi(t0: FormatTanimi, kaynak?: FormatTanimi | null): string[] {
   const l: string[] = [];
   const bosBolum = (b: Bolum) => l.push(`“${b.ad}” bölümü boş.`);
+  /* 2026-10-24: boş serbest tablo (hücrelerinin hepsi boş yazı); öteki denetimler tablonun sanal bölümleriyle */
+  for (const b of t0.bolumler) if (b.blok === "tablo" && b.hucreler.every((h) => h.tur === "yazi" && !(h.m ?? "").trim())) bosBolum(b);
+  const t = sahaTanimi(t0);
   for (const b of t.bolumler) {
     if (b.blok === "bilgi" && !b.alanlar.length) bosBolum(b);
     if (b.blok === "liste" && !b.gruplar.some((g) => g.maddeler.length)) bosBolum(b);
@@ -358,6 +364,6 @@ export function yayinDenetimi(t: FormatTanimi, kaynak?: FormatTanimi | null): st
   }
   if (!t.bolumler.some((b) => b.blok === "sonuc")) l.push("Sonuç ve kanaat bölümü yok.");
   if (!t.bolumler.some((b) => b.blok === "imza")) l.push("İmza alanları bölümü yok.");
-  if (kaynak) l.push(...kilitDenetimi(t, kaynak));
+  if (kaynak) l.push(...kilitDenetimi(t0, kaynak));
   return l;
 }

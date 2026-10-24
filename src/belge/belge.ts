@@ -6,7 +6,7 @@
    saha ekranındakiyle aynı. Sonuç cümlesi yalnız seçilen sonuçla biter (§3.8-2). Onaylayan teknik yönetici yalnız imza bölümünde "teknik" yeri
    varsa basılır (karar 105). SAF ve React'in kaçışıyla (ham HTML yok): aynı veri → aynı belge — önizleme ve PDF aynı çiziciden.
    JSX değil createElement: düğüm test koşucusu (node --test) bu dosyayı doğrudan yükler (tests/belge.test.ts). */
-import { createElement as h, Fragment, type ReactNode } from "react";
+import { createElement as h, Fragment, type CSSProperties, type ReactNode } from "react";
 import { SINIR_ISARETI } from "../format/hesap.ts";
 import {
   altYazisi, BAS_GENISLIK, basSatirlari, basSirasi, basTuru, belgeStilSiniflari, cihazSutunlari, fotoKutulari, sonucSozcugu, ekipmanEtiketleri, firmaSatirlari, listeBasliklari,
@@ -15,7 +15,8 @@ import {
 import { gecerliKunye, kilitliKunye, metotMetni } from "../format/kunye.ts";
 import { formulUygula } from "../format/formul.ts";
 import { degerlendir } from "../format/motor.ts";
-import { EKIPMAN_ALAN_ADI, ekAnahtari, HAZIR_AD, type BasSatiri, type Bolum, type BolumOf, type CihazAlani, type FirmaSatiri, type ImzaSatiri, type KusurAlani } from "../format/tanim.ts";
+import { EKIPMAN_ALAN_ADI, ekAnahtari, HAZIR_AD, type BasSatiri, type Bolum, type BolumOf, type CihazAlani, type FirmaSatiri, type Hucre, type ImzaSatiri, type KusurAlani, type TabloKaynagi } from "../format/tanim.ts";
+import { hucreBicemi, kapsama, siraNumaralari, sutunYuzdeleri, yerlesimSatirlari } from "../format/tablo.ts";
 /* veri.ts: saf tanımlar (tanimlar.ts node:crypto kullanır — 451: Format kurucunun belge önizlemesi bu çiziciyi tarayıcıda koşar) */
 import { TANIMLAR } from "../tanim/veri.ts";
 import type { BelgeFotosu, BelgeVerisi, ImzaKisiBilgisi } from "./veri.ts";
@@ -34,6 +35,8 @@ const ZAMAN = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", ye
 /** zaman damgası → "GG.AA.YYYY SS:DD" (Türkiye saati) */
 export const zamanNo = (iso: string) => saatliNo(ZAMAN.format(new Date(iso)).replace(", ", "T"));
 const nushaYazi = (n: number) => `Bu rapor ${SAYI_AD[n] ?? String(n)} (${n}) nüsha olarak hazırlanmıştır.`;
+/** sonuç hücresinin varsayılan sözcükleri (uygun · uygun değil · şartlı uygun) */
+export const SONUC_SOZCUKLERI = ["UYGUNDUR", "UYGUN DEĞİLDİR", "ŞARTLI UYGUNDUR"] as const;
 /** 595 (madde 26): sayfa altındaki şeridin yazısı — imzaya hazırlanan (kesin) belgede e-imza cümlesi; imzalı raporun yeniden basılan kopyasında ve
     önizlemede ne olduğu. Sayfa numarası PDF motorunda (pdf.ts alt bilgi şablonu) eklenir. */
 /** belgenin doküman kodu: formatın kodu ya da <firma>-FR-<tür>-<sürüm> */
@@ -238,8 +241,109 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
       h("p", { key: "n" }, nushaYazi(v.firma.nusha)));
   };
 
+  /* ── 2026-10-24 SERBEST TABLO: ızgara formatın; değerler cevaplardan (alan / madde / çoğalan satır), künyeden, ekipmandan, kişilerden ── */
+  const yz = t.gorunum.yazi ?? {};
+  const siralar = siraNumaralari(t);
+  const kaynakDegeri = (k: TabloKaynagi): string => {
+    switch (k) {
+      case "firma": return kunye.firma;
+      case "adres": return kunye.adres ?? "";
+      case "sgk": return kunye.sgk ?? "";
+      case "isg": return kunye.isg ?? "";
+      case "eposta": return kunye.eposta ?? "";
+      case "tel": return kunye.tel ?? "";
+      case "metot": return kunye.metot ?? "";
+      case "rapor_no": return no;
+      case "rapor_tarihi": return v.tarih.rapor ? tarihNo(v.tarih.rapor) : "";
+      case "bas": return v.tarih.bas ? saatliNo(v.tarih.bas) : "";
+      case "bit": return v.tarih.bit ? saatliNo(v.tarih.bit) : "";
+      case "sonraki": return v.tarih.sonraki ? tarihNo(v.tarih.sonraki) : "";
+      case "takip": return v.tarih.takip ? tarihNo(v.tarih.takip) : "";
+      case "plan_no": return v.planNo ?? "";
+      case "ekipman_kod": return v.ekipman.kod;
+      case "ekipman_tur": return v.tur.ad;
+      case "marka": case "model": case "seri": case "imal": case "konum": case "amac": return v.ekipman[k] ?? "";
+      case "form_kod": return formKod;
+      case "surum": return String(v.formatSira);
+      case "revizyon": return String(v.revizyon);
+      case "nusha": return String(v.firma.nusha);
+      case "uzman_ad": return v.yazan.ad;
+      case "uzman_meslek": return meslekAdi(v.yazan);
+      case "uzman_ekipnet": return v.yazan.ekipnet ?? "";
+      case "uzman_diploma": return v.yazan.diploma ?? "";
+      case "uzman_oda": return v.yazan.oda ?? "";
+      case "teknik_ad": return v.onay?.ad ?? "";
+      case "teknik_meslek": return v.onay?.kisi ? meslekAdi(v.onay.kisi) : "";
+      case "onay_zamani": return v.onay ? zamanNo(v.onay.zaman) : "";
+      case "uzman2_ad": return v.ikinci?.ad ?? "";
+      case "tesis_ad": return c.imzaci.tesisAd ?? "";
+      case "tesis_unvan": return c.imzaci.tesisUnvan ?? "";
+      case "muayene_firmasi": return v.firma.ad;
+      case "muayene_adres": return v.firma.adres ?? "";
+      case "akr_no": return v.firma.akr ?? "";
+    }
+  };
+  const hucreStili = (x: Hucre) => hucreBicemi(x, yz) as CSSProperties;
+  const satirSatir = (s: string) => s.split("\n").flatMap((p, i) => (i ? [h("br", { key: i }), p] : [p]));
+  const alanYazisi = (x: Hucre, deger: string | string[] | undefined): string => {
+    const d = Array.isArray(deger) ? deger.join(", ") : (deger ?? "").trim();
+    if (!d) return "";
+    if (x.alan === "tarih") return tarihNo(d);
+    return `${d}${x.birim ? ` ${x.birim}` : ""}`;
+  };
+  const tabloIcerik = (b: BolumOf<"tablo">, x: Hucre, satir: Record<string, string> | null, sira: number | null): ReactNode => {
+    switch (x.tur) {
+      case "yazi": return satirSatir(x.m ?? "");
+      case "kayit": return x.kaynak ? kaynakDegeri(x.kaynak) : "";
+      case "alan": return alanYazisi(x, satir ? satir[x.id ?? ""] : c.alan[x.id ?? ""]);
+      case "cevap": {
+        if (satir) return satir[x.id ?? ""] ?? "";
+        const m = c.madde[x.id ?? ""];
+        if (!m) return "";
+        return `${m.c}${m.c === b.cevaplar[1] && t.kurallar.derece ? (m.derece === "agir" ? " **" : " *") : ""}`;
+      }
+      case "sira": return sira !== null ? String(sira) : String(siralar.get(`${b.id}:${x.r},${x.c}`) ?? "");
+      case "imza": return x.kim === "uzman" ? imzaHucresi() : x.kim === "teknik" ? (v.onay ? teknikImzaHucresi(v.onay.zaman) : "") : "";
+      case "gorsel": return x.gorsel === "akr" ? (v.firma.akr ? `AKR. ${v.firma.akr}` : "") : firmaLogosu(v.firma);
+      case "foto": {
+        const l = v.fotolar.filter((f) => f.madde && f.madde === x.id);
+        return l.length ? h("span", { className: "rb-hucre-foto" }, ...l.map((f, i) => (f.src ? h("img", { key: i, src: f.src, alt: f.ad }) : h("span", { key: i }, f.ad)))) : "";
+      }
+      case "sonuc": {
+        const l = x.secenekler?.length ? x.secenekler : SONUC_SOZCUKLERI;
+        return v.sonuc === "uygun" ? l[0] ?? "" : v.sonuc === "uygun_degil" ? l[1] ?? "" : v.sonuc === "sartli" ? l[2] ?? l[0] ?? "" : "";
+      }
+    }
+  };
+  const tabloBolumu = (b: BolumOf<"tablo">): ReactNode => {
+    const g = kapsama(b), yuzde = sutunYuzdeleri(b);
+    /* çoğalan satırın kopya sayısı (en az bir boş satır); onu kapsayan üst hücrelerin satır sayısı o kadar büyür */
+    const kez = b.satirlar.map((s) => (s.tekrar && s.id ? Math.max(1, c.tablo[s.id]?.length ?? 0) : 1));
+    const satirlar: ReactNode[] = [];
+    b.satirlar.forEach((s, r) => {
+      for (let i = 0; i < kez[r]; i++) {
+        const veri = s.tekrar && s.id ? (c.tablo[s.id]?.[i] ?? {}) : null;
+        const hucreler: ReactNode[] = [];
+        for (let col = 0; col < b.sutun.length; col++) {
+          const n = g[r]?.[col];
+          if (n === null || n === undefined) { if (i === 0 || s.tekrar) hucreler.push(h("td", { key: `b${col}`, style: hucreStili({ r, c: col, tur: "yazi" }) })); continue; }
+          const x = b.hucreler[n];
+          if (x.r !== r || x.c !== col) continue;
+          /* çoğalan satırın hücresi her kopyada; üstten gelen birleşik hücre yalnız ilk kopyada, kapsadığı kopyalar kadar uzun */
+          if (!s.tekrar && i > 0) continue;
+          const rs = s.tekrar ? 1 : Array.from({ length: x.rs ?? 1 }, (_, j) => kez[r + j] ?? 1).reduce((a, e) => a + e, 0);
+          hucreler.push(h("td", { key: n, ...(rs > 1 ? { rowSpan: rs } : {}), ...((x.cs ?? 1) > 1 ? { colSpan: x.cs } : {}), style: hucreStili(x) },
+            tabloIcerik(b, x, veri, s.tekrar ? i + 1 : null)));
+        }
+        satirlar.push(h("tr", { key: `${r}-${i}`, ...(s.y ? { style: { height: `${s.y}mm` } } : {}) }, ...hucreler));
+      }
+    });
+    return h("table", { className: "rb-tablo" }, kolonlar(yuzde.map((x) => `${x}%`)), h("tbody", null, ...satirlar));
+  };
+
   const formatBolumu = (b: Bolum): ReactNode => {
     switch (b.blok) {
+      case "tablo": return tabloBolumu(b);
       case "bilgi": return bilgi(b);
       /* 595 (madde 7): ek sütunlar — açıklama (maddenin açıklaması), standart maddesi, fotoğraf adları, serbest yazı */
       case "liste": {
@@ -396,6 +500,23 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
       : [...sabitEkipmanAlanlari(t).map((k): Cift => [EKIPMAN_ALAN_ADI[k], deger(v.ekipman[k])]), ["Ekipman bölümü", deger(v.ekipman.bolum)] as Cift]),
   ];
   const belgeAdi = t.gorunum.baslik || `${v.tur.ad} periyodik kontrol raporu`;
+  /* 2026-10-24 (serbest düzen): bölümler satır satır — yan yana bölümler aynı satırda, genişlikleri oranlarıyla; serbest tablo başlıksız (başlığı
+     kendi hücrelerinde); bölümler arası formatın aralığı */
+  const ara = t.gorunum.yazi?.ara;
+  const bolumKutusu = (x: (typeof duzen.bolumler)[number], stil?: CSSProperties) => x.b.blok === "tablo"
+    ? h("section", { className: "rb-bolum rb-tablo-bolum", key: x.b.id, ...(stil || ara !== undefined ? { style: { ...stil, ...(ara !== undefined ? { marginBottom: `${ara}mm` } : {}) } } : {}) }, formatBolumu(x.b))
+    : stil ? h("div", { key: x.b.id, style: stil }, bolum(x.no, x.b.ad, formatBolumu(x.b))) : bolum(x.no, x.b.ad, formatBolumu(x.b));
+  const bolumSatirlari = () => yerlesimSatirlari(duzen.bolumler).flatMap((s, j) => s.ogeler.length === 1
+    ? [s.ogeler[0].ust ? ustBaslik(s.ogeler[0].ust.no, s.ogeler[0].ust.ad) : null, bolumKutusu(s.ogeler[0])]
+    : [h("div", { className: "rb-yan", key: `yan-${j}`, ...(ara !== undefined ? { style: { gap: `${ara}mm`, marginBottom: `${ara}mm` } } : {}) },
+      ...s.ogeler.map((x, i) => bolumKutusu(x, { flex: `${s.oranlar[i]} 1 0`, minWidth: "0" })))]);
+  if (t.gorunum.serbest) {
+    return h("article", { className: "rb-sayfa rb-serbest", "aria-label": `${no} rapor belgesi` },
+      v.imza || v.kesin ? null : h("p", { className: "rb-taslak" }, "İmzasız önizleme — muayene uzmanının son imzasıyla geçerli olur."),
+      ...bolumSatirlari(),
+      maddeFotolari.length ? bolum("Ek", "Kontrol maddelerinin fotoğrafları", fotolar(maddeFotolari, (f) => `${f.ad} · ${maddeAdi.get(f.madde!) ?? ""}`)) : null,
+      h("footer", { className: "rb-alt" }, altYazisi(t, v.firma, formKod)));
+  }
   /* 2026-10-23 (basılı formdan şablon): görünüm sınıfları (bölüm başlığı zemini / hizası, etiket hücresi) ve belgenin başı formatın */
   return h("article", { className: ["rb-sayfa", belgeStilSiniflari(t)].filter(Boolean).join(" "), "aria-label": `${no} rapor belgesi` },
     basTuru(t) === "ad" ? h("table", { className: "rb-bas rb-bas-yalniz" }, h("tbody", null, h("tr", null, h("td", { className: "rb-bas-ad" }, belgeAdi))))
@@ -416,7 +537,7 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
     ])),
     duzen.ekipman ? bolum("2", duzen.ekipmanBaslik, bilgiTablosu(ekipman, duzen.tam?.dizilis ?? 2), ...(duzen.tam ? [] : katilan).map((b) => h(Fragment, { key: b.id }, bilgi(b, true)))) : null,
     duzen.cihazNo ? bolum(duzen.cihazNo, "Ölçüm cihazları", cihazTablosu()) : null,
-    ...duzen.bolumler.flatMap((x) => [x.ust ? ustBaslik(x.ust.no, x.ust.ad) : null, bolum(x.no, x.b.ad, formatBolumu(x.b))]),
+    ...bolumSatirlari(),
     imzaVar ? null : bolum(duzen.sonraki, "Yetkili kişi", imza()),
     maddeFotolari.length ? bolum("Ek", "Kontrol maddelerinin fotoğrafları", fotolar(maddeFotolari, (f) => `${f.ad} · ${maddeAdi.get(f.madde!) ?? ""}`)) : null,
     h("footer", { className: "rb-alt" }, altYazisi(t, v.firma, formKod)));

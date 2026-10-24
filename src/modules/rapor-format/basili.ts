@@ -1,20 +1,21 @@
 /* BASILI FORMDAN ŞABLON — yapay zekânın okuduğu formun format tanımına çevrilmesi, saf (2026-10-23; reisim: "ben bunu yükleyince format buna
-   dönüşsün format düzenleyicide bundan düzenleme yapabileyim istiyorum"). İstek ve cevabın çözümü src/server/yz/basili.ts. Her parça ŞEMADAN
-   geçer; geçmeyen bölüm atılır (adı söylenir), tanımın bütünü yine şemadan geçer. Sabit iskelet sıfırdan oluşturulan formatınki (sablonlar.ts
-   bosFormat): 1. bölüm (Firma bilgileri) satırları formdan, ekipman bölümü formun teknik bilgileri (ekipman kaydına bağlı alanlar dahil), sonra
-   formun bölümleri sırasıyla, sonuç, imza. Formda ölçüm cihazı bölümü yoksa numarasız "Kullanılan cihazlar" (kurucu bu bölümü zaten ekler —
-   numaralı eklemesin), fotoğraf bölümü yoksa en sonda numarasız "Fotoğraflar" (rapor başına en az bir fotoğraf). Kimlikler kurucunun ("k_"). */
+   dönüşsün format düzenleyicide bundan düzenleme yapabileyim istiyorum"). İstek ve cevabın çözümü src/server/yz/basili.ts.
+   2026-10-24 (format kurucu serbest düzen — reisim: "hangi firmanın hangi PDF formunu yüklersem yükleyeyim şablon o forma dönüşsün ve format
+   kurucuda istediğim gibi düzenleyebileyim"; maket docs/maket/format-serbest.html onaylı): form SERBEST DÜZENE kurulur (gorunum.serbest — sabit
+   başlık / firma / ekipman bölümü yok): her tablo bir serbest tablo bölümü (src/format/tablo.ts), satırlar HTML tablosu gibi (hücre o satırda
+   başlar, yukarıdan birleşik gelen yer atlanır), hücrenin türü / kaynağı / görünümü formdan; yan yana tablolar aynı satırda. Her parça ŞEMADAN
+   geçer; geçmeyen bölüm atılır (adı söylenir). Raporun yürümesi için gerekenler formda yoksa sona eklenir, kurucuda düzenlenir: raporun sonucu
+   (sonuç hücresi), muayene uzmanının imza yeri, fotoğraflar. Kimlikler kurucunun ("k_"). */
 import { bosFormat } from "../../format/sablonlar.ts";
+import { onar } from "../../format/tablo.ts";
 import {
-  BAS_KAYNAKLARI, Bolum, EKIPMAN_ALANLARI, FIRMA_KAYNAK_ADI, FIRMA_KAYNAKLARI, FIRMA_ZORUNLU, FormatTanimi, imzaAlanlari, IMZA_ALANLARI, IMZA_KISILERI,
-  type BasSatiri, type EkipmanAlani, type FirmaSatiri, type ImzaSatiri,
+  Bolum, FormatTanimi, HUCRE_ALAN_TURLERI, HUCRE_TURLERI, TABLO_KAYNAKLARI, YAZI_TIPLERI, type Hucre, type HucreStili, type TabloSatiri,
 } from "../../format/tanim.ts";
 import { yeniKimlik } from "./kurucu.ts";
-import { hamdanBolum } from "./yz-oneri.ts";
 
 export interface BasiliCeviri {
   tanim: FormatTanimi;
-  /** yapay zekânın kullanıcıya notu (formdan aynen alınamayanlar) */
+  /** yapay zekânın kullanıcıya notu */
   cevap: string;
   /** şemaya uymadığı için atılan bölümlerin adları */
   atilan: string[];
@@ -24,156 +25,134 @@ type Ham = Record<string, unknown>;
 const nesne = (x: unknown): Ham => (x && typeof x === "object" && !Array.isArray(x) ? (x as Ham) : {});
 const dizi = (x: unknown, n: number): unknown[] => (Array.isArray(x) ? x.slice(0, n) : []);
 const yazi = (x: unknown, n: number) => (typeof x === "string" ? x.replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, n) : "");
-/** satır sonlarını koruyan yazı (serbest metin) */
+/** satır sonlarını koruyan yazı (hücre metni) */
 const uzunYazi = (x: unknown, n: number) => (typeof x === "string" ? x.replace(/\r\n?/g, "\n").replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, " ").trim().slice(0, n) : "");
 const evet = (x: unknown) => x === true;
 const bir = <T extends string>(l: readonly T[], x: unknown): T | undefined => l.find((y) => y === x);
-const dizilis = (x: unknown): 1 | 2 | 3 => (x === 1 || x === 3 ? x : 2);
-const CEVAPLAR = ["Uygun", "Uygun değil", "Uygulanamaz"];
+const tamSayi = (x: unknown, en: number, enCok: number, d: number) => (typeof x === "number" && Number.isFinite(x) ? Math.max(en, Math.min(enCok, Math.round(x))) : d);
+const RENK = /^#[0-9a-fA-F]{6}$/;
+const CEVAPLAR = ["U", "UD", "X"];
+const SATIR_EN_COK = 200, SUTUN_EN_COK = 40;
 
-/** yapay zekânın alanı → hamdanBolum'un beklediği sade alan (boş yazı → yok) */
-const sadeAlan = (a: Ham) => ({
-  ad: yazi(a.ad, 200), tur: a.tur, birim: yazi(a.birim, 40) || null, zorunlu: false, formul: yazi(a.formul, 2000) || null,
-  secenekler: dizi(a.secenekler, 40).map((x) => yazi(x, 200)).filter(Boolean),
-});
-const sadeSinir = (o: Ham) => (bir(["<=", ">=", "<", ">"] as const, o.op) && typeof o.sinir === "number" ? { op: o.op, sinir: o.sinir } : { op: null, sinir: null });
+/** ham hücrenin görünümü (boş görünüm: undefined) */
+function stil(h: Ham, belgeBoy: number): HucreStili | undefined {
+  const s: HucreStili = {};
+  if (evet(h.kalin)) s.k = true;
+  if (evet(h.egik)) s.i = true;
+  if (h.hiza === "orta") s.a = "o"; else if (h.hiza === "sag") s.a = "g";
+  if (typeof h.zemin === "string" && RENK.test(h.zemin) && h.zemin.toUpperCase() !== "#FFFFFF") s.z = h.zemin.toUpperCase();
+  if (typeof h.boy === "number" && h.boy >= 5 && h.boy <= 40 && Math.abs(h.boy - belgeBoy) >= 0.5) s.b = Math.round(h.boy * 2) / 2;
+  return Object.keys(s).length ? s : undefined;
+}
 
 /** ham (src/server/yz/basili.ts BASILI_SEMASI) → format tanımı; tanım şemadan geçmezse null */
 export function basilidanTanim(ham: Ham, turAd: string): BasiliCeviri | null {
   const baslik = yazi(ham.baslik, 200) || `${turAd} Periyodik Kontrol Raporu`;
   const iskelet = bosFormat(baslik);
-  const firma = iskelet.bolumler.find((b) => b.id === "firma")!;
+  const hy = nesne(ham.yazi);
+  const tip = bir(YAZI_TIPLERI, hy.tip);
+  const boy = typeof hy.boy === "number" && hy.boy >= 6 && hy.boy <= 16 ? Math.round(hy.boy * 2) / 2 : 9;
   /* kimlikler o ana kadar kurulanlara göre tekil (yeniKimlik çalışan tanıma bakar; ek: bu çeviride verilenler) */
   const ek = new Set<string>();
-  const bolumler: Bolum[] = [firma];
+  const bolumler: Bolum[] = [];
   const calisan = (): FormatTanimi => ({ ...iskelet, bolumler });
-  const yeni = (onek: "b" | "a" | "i" | "f" | "h") => { const x = yeniKimlik(calisan(), onek, ek); ek.add(x); return x; };
+  const yeni = (onek: "b" | "c" | "r") => { const x = yeniKimlik(calisan(), onek, ek); ek.add(x); return x; };
   const atilan: string[] = [];
 
-  /* ekipman / teknik bilgiler (2. bölüm): ekipman kaydına bağlı alan (marka, seri …) yazı alanıdır ve bir kez; öteki alanlar formun */
-  const he = nesne(ham.ekipman);
-  const ekipmanVar = he.var !== false;
-  if (ekipmanVar) {
-    const kullanilan = new Set<EkipmanAlani>();
-    const alanlar = dizi(he.alanlar, 60).map(nesne).filter((a) => yazi(a.ad, 200)).flatMap((a) => {
-      const e = bir(EKIPMAN_ALANLARI, a.ekipman);
-      if (e && !kullanilan.has(e)) {
-        kullanilan.add(e);
-        return [{ id: yeni("a"), ad: yazi(a.ad, 200), tur: "metin" as const, zorunlu: false, kilit: false, ekipman: e, ...(evet(a.tam) ? { tam: true } : {}) }];
-      }
-      const b = hamdanBolum(calisan(), { blok: "bilgi", ad: "x", alanlar: [sadeAlan(a)] }, ek);
-      const x = b?.blok === "bilgi" ? b.alanlar[0] : undefined;
-      if (!x) return [];
-      ek.add(x.id);
-      return [{ ...x, ...(evet(a.tam) ? { tam: true } : {}) }];
-    });
-    const b = Bolum.safeParse({ id: "ekipman", ad: yazi(he.ad, 200) || "Ekipman bilgileri", blok: "bilgi", kilit: false, tam: true, dizilis: dizilis(he.dizilis), alanlar });
-    if (b.success) bolumler.push(b.data); else atilan.push(yazi(he.ad, 200) || "Ekipman bilgileri");
-  }
-
-  /* formun bölümleri sırasıyla */
-  for (const x of dizi(ham.bolumler, 36).map(nesne)) {
-    const ad = yazi(x.ad, 200), blok = x.blok;
-    if (!ad) continue;
-    let b: Bolum | null = null;
-    if (blok === "cihaz") {
-      if (bolumler.some((y) => y.blok === "cihaz")) continue;
-      b = { id: "cihaz", ad, blok: "cihaz", kilit: false };
-    } else if (blok === "bilgi") {
-      const alanlar = dizi(x.alanlar, 60).map(nesne).filter((a) => yazi(a.ad, 200));
-      b = hamdanBolum(calisan(), { blok, ad, alanlar: alanlar.map(sadeAlan) }, ek);
-      if (b?.blok === "bilgi") b = { ...b, dizilis: dizilis(x.dizilis), alanlar: b.alanlar.map((a, j) => (evet(alanlar[j]?.tam) ? { ...a, tam: true } : a)) };
-    } else if (blok === "liste") {
-      b = hamdanBolum(calisan(), { blok, ad, gruplar: dizi(x.gruplar, 40).map(nesne).map((g) => ({ ad: g.ad, maddeler: g.maddeler })) }, ek);
-      const cevaplar = [...new Set(dizi(x.cevaplar, 6).map((c) => yazi(c, 40)).filter(Boolean))];
-      if (b?.blok === "liste") {
-        b = { ...b, cevaplar: cevaplar.length >= 2 ? cevaplar : CEVAPLAR, ...(evet(x.yanYana) ? { yanYana: true } : {}), ...(x.numara === "surekli" ? { numara: "surekli" as const } : {}) };
-      }
-    } else if (blok === "test") {
-      b = hamdanBolum(calisan(), { blok, ad, degerler: dizi(x.degerler, 40).map(nesne).map((d) => ({ ad: d.ad, birim: yazi(d.birim, 40) || null, formul: yazi(d.formul, 2000) || null, ...sadeSinir(d) })) }, ek);
-    } else if (blok === "olcum") {
-      b = hamdanBolum(calisan(), { blok, ad, sutunlar: dizi(x.sutunlar, 20).map(nesne).map((c) => ({ ...sadeAlan(c), giris: c.giris, ...sadeSinir(c) })) }, ek);
-    } else if (blok === "metin") {
-      b = Bolum.safeParse({ id: yeni("b"), ad, blok, kilit: false, metin: uzunYazi(x.metin, 4000) }).data ?? null;
-    } else if (blok === "foto") {
-      b = Bolum.safeParse({ id: yeni("b"), ad, blok, kilit: false, enAz: 1, enCok: 20 }).data ?? null;
-    } else if (blok === "not" || blok === "kusur") {
-      b = Bolum.safeParse({ id: yeni("b"), ad, blok, kilit: false }).data ?? null;
+  for (const [n, x] of dizi(ham.bolumler, 40).map(nesne).entries()) {
+    const ad = yazi(x.ad, 200) || `Bölüm ${n + 1}`;
+    const yan = bolumler.length > 0 && evet(x.yan);
+    const oran = typeof x.oran === "number" && x.oran >= 5 && x.oran <= 100 ? Math.round(x.oran) : undefined;
+    const yer = { ...(yan ? { yan: true } : {}), ...(yan && oran ? { oran } : {}) };
+    if (x.tur === "cihaz" || x.tur === "foto" || x.tur === "kusur") {
+      if (x.tur === "cihaz" && bolumler.some((y) => y.blok === "cihaz")) continue;
+      const govde = x.tur === "foto" ? { enAz: 1, enCok: 20 } : {};
+      const b = Bolum.safeParse({ id: x.tur === "cihaz" ? "cihaz" : yeni("b"), ad, blok: x.tur, kilit: false, ...govde, ...yer });
+      if (b.success) bolumler.push(b.data); else atilan.push(ad);
+      continue;
     }
-    if (!b) { atilan.push(ad); continue; }
-    ek.add(b.id);
-    /* numarasız bölüm (formda numarası yok) ya da önceki bölümün alt başlığı (2.1, 2.2) */
-    const duzen = evet(x.numarasiz) ? { numarasiz: true } : evet(x.alt) && bolumler.length > 1 ? { alt: true } : {};
-    const r = Bolum.safeParse({ ...b, ...duzen });
-    if (r.success) bolumler.push(r.data); else atilan.push(ad);
+    /* serbest tablo: sütun oranları, satırlar soldan sağa yerleşir; taşan hücre sığdırılır, boş kalan yer boş yazı hücresi */
+    const sutun = dizi(x.sutunlar, SUTUN_EN_COK).map((w) => (typeof w === "number" && w > 0 ? Math.min(100, Math.max(1, w)) : 0)).filter((w) => w > 0);
+    const C = sutun.length || 1;
+    const hamSatirlar = dizi(x.satirlar, SATIR_EN_COK).map(nesne);
+    if (!hamSatirlar.length) { atilan.push(ad); continue; }
+    const R = hamSatirlar.length;
+    const dolu = new Set<string>(), hucreler: Hucre[] = [], satirlar: TabloSatiri[] = [];
+    const cevaplar = [...new Set(dizi(x.cevaplar, 6).map((c) => yazi(c, 40)).filter(Boolean))];
+    hamSatirlar.forEach((hs, r) => {
+      const tekrar = evet(hs.tekrar);
+      const y = typeof hs.yukseklik === "number" && hs.yukseklik > 0 ? Math.min(250, Math.round(hs.yukseklik)) : 0;
+      satirlar.push({ ...(y ? { y } : {}), ...(tekrar ? { tekrar: true, id: yeni("r") } : {}) });
+      let c = 0;
+      for (const h of dizi(hs.hucreler, SUTUN_EN_COK).map(nesne)) {
+        while (c < C && dolu.has(`${r},${c}`)) c++;
+        if (c >= C) break;
+        let cs = tamSayi(h.sutunBirlesim, 1, C - c, 1);
+        /* tekrar satırında birleşme yalnız yana (çoğalan satır tek satır) */
+        let rs = tekrar ? 1 : tamSayi(h.satirBirlesim, 1, R - r, 1);
+        /* sağa doğru dolu yere çarpan birleşme kısalır; aşağı doğru da */
+        for (let e = 1; e < cs; e++) if (dolu.has(`${r},${c + e}`)) { cs = e; break; }
+        for (let a = 1; a < rs; a++) if (hamSatirlar[r + a] && evet(hamSatirlar[r + a].tekrar)) { rs = a; break; }
+        for (let a = 0; a < rs; a++) for (let e = 0; e < cs; e++) dolu.add(`${r + a},${c + e}`);
+        const tur = bir(HUCRE_TURLERI, h.tur) ?? "yazi";
+        const st = stil(h, boy), metin = uzunYazi(h.metin, 2000);
+        const ortak = { r, c, ...(rs > 1 ? { rs } : {}), ...(cs > 1 ? { cs } : {}), ...(st ? { s: st } : {}) };
+        const secenekler = dizi(h.secenekler, 40).map((o) => yazi(o, 200)).filter(Boolean);
+        let hucre: Hucre;
+        switch (tur) {
+          case "alan": {
+            const alan = bir(HUCRE_ALAN_TURLERI, h.alan) ?? "metin";
+            const secimli = alan === "secim" && secenekler.length > 0;
+            hucre = { ...ortak, tur, id: yeni("c"), alan: alan === "secim" && !secimli ? "metin" : alan, ...(yazi(metin, 200) ? { ad: yazi(metin, 200) } : {}),
+              ...(secimli ? { secenekler } : {}), ...(yazi(h.birim, 40) ? { birim: yazi(h.birim, 40) } : {}), ...(yazi(h.formul, 2000) ? { formul: yazi(h.formul, 2000) } : {}) };
+            break;
+          }
+          case "kayit": {
+            const kaynak = bir(TABLO_KAYNAKLARI, h.kaynak);
+            hucre = kaynak ? { ...ortak, tur, kaynak } : { ...ortak, tur: "alan", id: yeni("c"), alan: "metin", ...(yazi(metin, 200) ? { ad: yazi(metin, 200) } : {}) };
+            break;
+          }
+          case "cevap": hucre = { ...ortak, tur, id: yeni("c") }; break;
+          case "sira": hucre = { ...ortak, tur }; break;
+          case "imza": {
+            const kim = bir(["uzman", "teknik", "uzman2", "tesis"] as const, h.kim) ?? "uzman";
+            hucre = { ...ortak, tur, kim, ...(kim === "uzman" || kim === "teknik" ? { eimza: true } : {}) };
+            break;
+          }
+          case "gorsel": hucre = { ...ortak, tur, gorsel: h.gorsel === "akr" ? "akr" : "logo" }; break;
+          case "foto": hucre = { ...ortak, tur, id: yeni("c"), ad: yazi(metin, 200) || "Fotoğraf" }; break;
+          case "sonuc": hucre = { ...ortak, tur, secenekler: secenekler.length >= 2 ? secenekler.slice(0, 3) : ["UYGUNDUR", "UYGUN DEĞİLDİR"] }; break;
+          default: hucre = { ...ortak, tur: "yazi", m: metin };
+        }
+        hucreler.push(hucre);
+        c += cs;
+      }
+    });
+    const tablo = onar({ id: yeni("b"), ad, blok: "tablo", kilit: false, sutun: sutun.length ? sutun : [100], satirlar, hucreler,
+      cevaplar: cevaplar.length >= 2 ? cevaplar : CEVAPLAR, ...yer });
+    const b = Bolum.safeParse(tablo);
+    if (b.success) bolumler.push(b.data); else atilan.push(ad);
   }
-  /* ölçüm cihazları bölümü formda yoksa numarasız, ekipman bölümünün ve onun numarasız alt tablolarının (ör. halat bilgileri) ardından — formlarda
-     "kullanılan cihazlar" teknik bilgilerin sonunda; kurucu numaralı eklemesin */
-  if (!bolumler.some((b) => b.blok === "cihaz")) {
-    let p = ekipmanVar ? 2 : 1;
-    while (bolumler[p]?.numarasiz && bolumler[p].blok === "bilgi") p++;
-    bolumler.splice(p, 0, { id: "cihaz", ad: "Kullanılan cihazlar", blok: "cihaz", kilit: false, numarasiz: true });
-  }
 
-  /* sonuç: cümle sözcükten önceki kısım; olumlu / olumsuz bitiş formun yazımıyla */
-  const hs = nesne(ham.sonuc);
-  const sonuc = Bolum.safeParse({
-    id: "sonuc", ad: yazi(hs.ad, 200) || "Sonuç", blok: "sonuc", kilit: false, cumle: yazi(hs.cumle, 400), aciklama: "",
-    ...(yazi(hs.uygunMetin, 120) ? { uygunMetin: yazi(hs.uygunMetin, 120) } : {}), ...(yazi(hs.uygunDegilMetin, 120) ? { uygunDegilMetin: yazi(hs.uygunDegilMetin, 120) } : {}),
-    ...(evet(hs.numarasiz) ? { numarasiz: true } : {}),
-  });
-  bolumler.push(sonuc.success ? sonuc.data : iskelet.bolumler.find((b) => b.blok === "sonuc")!);
-
-  /* imza: satırlar kişinin bilgisiyle (kişiye uymayan atılır); muayene uzmanının imza hücresi her zaman (e-imzanın yeri) */
-  const hi = nesne(ham.imza);
-  const satirlar: ImzaSatiri[] = dizi(hi.satirlar, 40).map(nesne).flatMap((s): ImzaSatiri[] => {
-    const ad = yazi(s.ad, 200), kim = bir(IMZA_KISILERI, s.kim), alan = bir(IMZA_ALANLARI, s.bilgi);
-    if (!ad || !kim) return [];
-    if (kim === "diger") return [{ id: yeni("i"), ad, kim, ...(yazi(s.metin, 400) ? { metin: yazi(s.metin, 400) } : {}), ...(evet(s.tam) ? { tam: true } : {}) }];
-    if (!alan || !imzaAlanlari(kim).includes(alan)) return [];
-    return [{ id: yeni("i"), ad, kim, alan, ...(evet(s.tam) ? { tam: true } : {}) }];
-  });
-  if (satirlar.length && !satirlar.some((s) => s.kim === "uzman" && s.alan === "imza")) satirlar.push({ id: yeni("i"), ad: "İmza", kim: "uzman", alan: "imza" });
-  const imzaAd = yazi(hi.ad, 200) || "Yetkili kişiler ve imzalar";
-  const imza = Bolum.safeParse(satirlar.length
-    ? { id: "imza", ad: imzaAd, blok: "imza", kilit: false, imzalar: satirlar.some((s) => s.kim === "teknik") ? ["uzman", "teknik"] : ["uzman"], satirlar, ...(evet(hi.numarasiz) ? { numarasiz: true } : {}) }
-    : { id: "imza", ad: imzaAd, blok: "imza", kilit: false, imzalar: ["uzman", "teknik"], ...(evet(hi.numarasiz) ? { numarasiz: true } : {}) });
-  bolumler.push(imza.success ? imza.data : iskelet.bolumler.find((b) => b.blok === "imza")!);
-  /* fotoğraf bölümü formda yoksa en sonda numarasız (rapor başına en az bir fotoğraf) */
-  if (!bolumler.some((b) => b.blok === "foto")) bolumler.push({ id: yeni("b"), ad: "Fotoğraflar", blok: "foto", kilit: false, enAz: 1, enCok: 20, numarasiz: true });
-
-  /* görünüm: belgenin başı, doküman bilgisi satırları, sayfa altı, ekipman satırlarının adı, firma bilgisi satırları, görünüm */
-  const basTuru = ham.basTuru === "ad" ? "ad" as const : undefined;
-  const gorulenBas = new Set<string>();
-  const basSatirlar: BasSatiri[] = basTuru ? [] : dizi(ham.basSatirlari, 10).map(nesne).flatMap((s): BasSatiri[] => {
-    const ad = yazi(s.ad, 200), kaynak = bir(BAS_KAYNAKLARI, s.kaynak);
-    if (!ad || !kaynak || (kaynak !== "serbest" && gorulenBas.has(kaynak))) return [];
-    gorulenBas.add(kaynak);
-    return [{ id: yeni("h"), ad, kaynak, ...(kaynak === "serbest" && yazi(s.metin, 200) ? { metin: yazi(s.metin, 200) } : {}) }];
-  });
-  const gorulenFirma = new Set<string>();
-  const firmaSatirlar: FirmaSatiri[] = dizi(ham.firmaSatirlari, 40).map(nesne).flatMap((s): FirmaSatiri[] => {
-    const ad = yazi(s.ad, 200), kaynak = bir(FIRMA_KAYNAKLARI, s.kaynak);
-    if (!ad || !kaynak || (kaynak !== "serbest" && gorulenFirma.has(kaynak))) return [];
-    gorulenFirma.add(kaynak);
-    return [{ id: yeni("f"), ad, kaynak, ...(kaynak === "serbest" && yazi(s.metin, 400) ? { metin: yazi(s.metin, 400) } : {}), ...(evet(s.tam) ? { tam: true } : {}) }];
-  });
-  /* zorunlu satırlar (SGK, İSG-KATİP, başlangıç) formda yoksa sona */
-  if (firmaSatirlar.length) for (const z of FIRMA_ZORUNLU) if (!gorulenFirma.has(z)) firmaSatirlar.push({ id: yeni("f"), ad: FIRMA_KAYNAK_ADI[z], kaynak: z });
-  const hst = nesne(ham.stil);
-  const stil = {
-    ...(hst.zemin === "gri" || hst.zemin === "yok" ? { zemin: hst.zemin } : {}), ...(hst.hiza === "orta" ? { hiza: "orta" as const } : {}),
-    ...(hst.etiket === "kalin" ? { etiket: "kalin" as const } : {}),
+  /* raporun yürümesi için gerekenler formda yoksa sona: sonuç (sonuç hücresi), muayene uzmanının imza yeri, fotoğraflar */
+  const hucreVar = (f: (h: Hucre) => boolean) => bolumler.some((b) => b.blok === "tablo" && b.hucreler.some(f));
+  const ekTablo = (ad: string, l: Omit<Hucre, "r" | "c">[]) => {
+    const t = Bolum.parse({ id: yeni("b"), ad, blok: "tablo", kilit: false, sutun: l.map(() => 100 / l.length), satirlar: [{}],
+      hucreler: l.map((h, c) => ({ ...h, r: 0, c })) });
+    bolumler.push(t);
   };
-  const kodAdi = yazi(ham.ekipmanKodAdi, 60), turAdi = yazi(ham.ekipmanTurAdi, 60);
+  if (!hucreVar((h) => h.tur === "sonuc")) ekTablo("Sonuç", [{ tur: "yazi", m: "SONUÇ", s: { k: true } }, { tur: "sonuc", secenekler: ["UYGUNDUR", "UYGUN DEĞİLDİR"], s: { k: true } }]);
+  if (!hucreVar((h) => h.tur === "imza" && h.kim === "uzman")) {
+    ekTablo("Muayene uzmanı", [{ tur: "yazi", m: "Muayene uzmanı", s: { k: true } }, { tur: "kayit", kaynak: "uzman_ad" }, { tur: "imza", kim: "uzman", eimza: true }]);
+  }
+  if (!bolumler.some((b) => b.blok === "foto") && !hucreVar((h) => h.tur === "foto")) bolumler.push({ id: yeni("b"), ad: "Fotoğraflar", blok: "foto", kilit: false, enAz: 1, enCok: 20 });
+
   const gorunum = {
-    ...iskelet.gorunum, formKodu: yazi(ham.formKodu, 20), baslik,
-    ...(basTuru ? { basTuru } : {}), ...(Object.keys(stil).length ? { stil } : {}), ...(basSatirlar.length ? { basSatirlar } : {}),
+    ...iskelet.gorunum, formKodu: yazi(ham.formKodu, 20), baslik, serbest: true,
+    yazi: { ...(tip && tip !== "carlito" ? { tip } : {}), ...(boy !== 9 ? { boy } : {}) },
     ...(yazi(ham.altYazi, 300) ? { altYazi: yazi(ham.altYazi, 300) } : {}),
-    ...(kodAdi || turAdi ? { ekipmanAd: { ...(kodAdi ? { kod: kodAdi } : {}), ...(turAdi ? { tur: turAdi } : {}) } } : {}),
-    ...(firmaSatirlar.length ? { firma: { satirlar: firmaSatirlar } } : {}),
-    ...(ekipmanVar ? {} : { ekipman: false }),
   };
+  if (!Object.keys(gorunum.yazi).length) delete (gorunum as { yazi?: unknown }).yazi;
   const t = FormatTanimi.safeParse({ ...iskelet, bolumler, gorunum });
   if (!t.success) return null;
   return { tanim: t.data, cevap: yazi(ham.cevap, 1000), atilan };

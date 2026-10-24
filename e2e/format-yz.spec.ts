@@ -104,8 +104,9 @@ test("yapay zekâya anlat: öneri kâğıtta kesik çizgiyle; Ekle ve Uygula tas
 /* 2026-10-23 BASILI FORMDAN ŞABLON — reisim: "ben bunu yükleyince format buna dönüşsün format düzenleyicide bundan düzenleme yapabileyim
    istiyorum", "sürüm 2 ne işe yarıyor orda o zaman yüklemem ne işe yaradı". Tür sayfasında basılı format PDF'i yüklenir ("Rapor şablonunu bu PDF'e
    göre kur" işaretli gelir) → yerel Anthropic taklidi uydurma vinç formuyla cevap verir (tests/yardimci/basili-ornek.ts) → şablon taslak olarak
-   kurulur, Format kurucu açılır: kâğıt formun görünümünde (yalnız belge adı, gri ortalı bölüm başlığı), numaralar formdaki gibi; belge önizlemesinde
-   kontrol listesi iki sütun yan yana; tür sayfasında satırda "Şablonu bundan kur". */
+   kurulur, Format kurucu açılır; tür sayfasında satırda "Şablonu bundan kur". 2026-10-24 (serbest düzen — reisim: "hangi firmanın hangi PDF
+   formunu yüklersem yükleyeyim şablon o forma dönüşsün ve format kurucuda istediğim gibi düzenleyebileyim"): şablon formun ızgarası (sabit parça
+   yok), yan yana tablolar aynı satırda; kâğıtta iki hücre seçilip birleştirilir; belge önizlemesi aynı ızgara. */
 test("basılı formdan şablon: PDF yüklenince şablon forma göre kurulur, kurucu ve belge formun görünümünde", async ({ page }, bilgi) => {
   test.skip(bilgi.project.name === "telefon", "format kurucu masaüstü / tablet işi (telefonda yalnız önizleme)");
   test.setTimeout(180_000);
@@ -139,24 +140,33 @@ test("basılı formdan şablon: PDF yüklenince şablon forma göre kurulur, kur
   await y.getByRole("button", { name: "Yükle" }).click();
   await expect(page).toHaveURL(/\/sablon\/[0-9a-f-]{36}\/kurucu$/, { timeout: 60_000 });
   const kagit = page.getByRole("article", { name: "Rapor formatı · düzenlenebilir belge" });
-  await expect(kagit.getByRole("button", { name: "VİNÇ MUAYENE FORMU", exact: true })).toBeVisible();
-  await expect(kagit).toHaveClass(/rb-z-gri/);
-  await expect(kagit.locator("table.rb-bas-yalniz")).toHaveCount(1);
-  await expect(kagit.getByRole("region", { name: /^3 TESPİT VE DEĞERLENDİRMELER/ })).toBeVisible();
-  await expect(kagit.getByRole("region", { name: /^4 NOTLAR \/ UYGUNSUZLUKLAR$/ })).toBeVisible();
-  await expect(kagit.getByRole("button", { name: "*Dinamik yük deneyi (1,1 x P)", exact: true })).toBeVisible();
-  /* belge görünümü kurucuda değişir */
+  /* 2026-10-24 (serbest düzen): sabit parça yok — form ızgara olarak kuruldu; yan yana tablolar aynı satırda */
+  await expect(kagit).toHaveClass(/rb-serbest/);
+  await expect(kagit.locator("table.rb-bas")).toHaveCount(0);
+  await expect(kagit.getByRole("region", { name: "1. Firma bilgileri" })).toBeVisible();
+  await expect(kagit.getByRole("cell", { name: "*Dinamik yük deneyi (1,1 x P)" })).toBeVisible();
+  const halat = await kagit.getByRole("region", { name: "Halat bilgileri" }).boundingBox();
+  const kanca = await kagit.getByRole("region", { name: "Kanca bloğu" }).boundingBox();
+  expect(halat && kanca && Math.abs(halat.y - kanca.y) < 4 && kanca.x > halat.x).toBeTruthy();
+  /* kâğıtta hücre seçimi ve birleştirme: başlık satırının ilk iki hücresi */
+  const genel = kagit.getByRole("region", { name: "Genel kontroller" });
+  await genel.getByRole("cell", { name: "No", exact: true }).click();
+  await genel.getByRole("cell", { name: "GENEL KONTROLLER", exact: true }).click({ modifiers: ["Shift"] });
+  const secim = page.getByRole("group", { name: "Genel kontroller · seçili hücreler" });
+  await expect(secim).toBeVisible();
+  await secim.getByRole("button", { name: "Birleştir" }).click();
+  await expect(genel.locator("td[colspan='2']")).toHaveText("No");
+  /* belge görünümü kurucuda: sabit bölüm yok, yazı tipi formun */
   await page.getByText("Belge görünümü", { exact: true }).click();
-  await expect(page.getByRole("radio", { name: "Yalnız belge adı" })).toBeChecked();
-  await expect(page.getByRole("radio", { name: "Gri", exact: true })).toBeChecked();
+  await expect(page.getByRole("radio", { name: "Yok — belge yalnız benim bölümlerimden" })).toBeChecked();
+  await expect(page.getByRole("radio", { name: "Tinos (Times ölçüsü)" })).toBeChecked();
   await goz(page, "basili-kurucu", bilgi.project.name);
-  /* belge önizlemesi: kontrol listesi iki sütun yan yana (6 sütun), numaralar baştan sona */
+  /* belge önizlemesi: formun ızgarası, yan yana tablolar */
   await page.getByRole("button", { name: "Belge önizlemesi" }).click();
   const belge = page.getByRole("region", { name: "Belge önizlemesi" });
-  await expect(belge.locator("article.rb-sayfa.rb-z-gri.rb-h-orta.rb-e-kalin")).toBeVisible();
-  const liste = belge.locator("section.rb-bolum", { has: page.getByRole("heading", { name: /^3\. TESPİT/ }) }).locator("table");
-  await expect(liste.locator("col")).toHaveCount(6);
-  await expect(liste.getByRole("cell", { name: "*Dinamik yük deneyi (1,1 x P)" })).toBeVisible();
+  await expect(belge.locator("article.rb-sayfa.rb-serbest")).toBeVisible();
+  await expect(belge.locator(".rb-yan").first()).toBeVisible();
+  await expect(belge.getByRole("cell", { name: "*Dinamik yük deneyi (1,1 x P)" })).toBeVisible();
   await goz(page, "basili-belge", bilgi.project.name);
   /* tür sayfası: taslak var; basılı format satırında "Şablonu bundan kur" */
   await page.goto(`${Y}${turAdresi}`);
