@@ -214,8 +214,9 @@ test("basılı formdan şablon: PDF yüklenince şablon forma göre kurulur, kur
   await expect(bolumu("KANCA")).toHaveCount(1);
   const halat = await bolumu("HALAT").boundingBox(), kanca = await bolumu("KANCA").boundingBox();
   expect(halat && kanca && Math.abs(halat.y - kanca.y) < 4 && kanca.x >= halat.x + halat.width - 4).toBeTruthy();
-  /* kâğıtta hücre seçimi ve birleştirme: liste başlığının ilk iki hücresi */
-  const liste = bolumu("Madde");
+  /* kâğıtta hücre seçimi ve birleştirme: liste başlığının ilk iki hücresi (bölüm kimliğiyle — birleşince "Madde" hücresi kalmaz) */
+  const listeId = await bolumu("Madde").getAttribute("id");
+  const liste = kagit.locator(`section[id='${listeId}']`);
   await liste.getByRole("cell", { name: "No", exact: true }).click();
   await liste.getByRole("cell", { name: "Madde", exact: true }).click({ modifiers: ["Shift"] });
   const secim = page.getByRole("group", { name: / · seçili hücreler$/ });

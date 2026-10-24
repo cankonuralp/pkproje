@@ -16,7 +16,10 @@ export async function pdfdenHam(veri: ArrayBuffer | Uint8Array): Promise<BasiliH
   const gorev = pdfjs.getDocument({ data, ...PDF_ACMA });
   try {
     const belge = await gorev.promise;
-    return pdfIzgara(await pdfSayfalari(belge, pdfjs));
+    const sayfalar = await pdfSayfalari(belge, pdfjs);
+    /* yazısız PDF (taranmış sayfa görüntüsü): formun ızgarası çıkmaz — boş şablon kurulmaz, nedeni söylenir */
+    if (!sayfalar.some((x) => x.yazilar.some((y) => y.s.trim()))) throw Object.assign(new Error("PDF'te yazı yok"), { name: "YazisizPdf" });
+    return pdfIzgara(sayfalar);
   } finally {
     await gorev.destroy();
   }
@@ -27,5 +30,6 @@ export function pdfOkumaHatasi(h: unknown): string {
   const ad = h && typeof h === "object" && "name" in h ? String((h as { name: unknown }).name) : "";
   if (ad === "PasswordException") return "PDF parolalı; parolasız sürümünü yükleyin.";
   if (ad === "InvalidPDFException") return "PDF okunamadı: dosya bozuk ya da PDF değil.";
+  if (ad === "YazisizPdf") return "PDF'te okunacak yazı yok (taranmış görüntü olabilir). Formun bilgisayarda kaydedilmiş PDF'ini yükleyin.";
   return "PDF okunamadı.";
 }

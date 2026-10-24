@@ -14,7 +14,7 @@
    483 (reisim 2026-10-10: "rapor düzenlemede sadece saha ekranı gözüksün o ekranda düzenleme yapılamasın"): saha ekranı SALT ÖNİZLEME — kalem /
    taşı / alt başlık / kip seçicisi yok; madde cevabının biçimi kâğıtta ("Kurallar, saha ekranı ve genel muayene talimatı"). */
 import { mkdirSync } from "node:fs";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Browser, type BrowserContext, type Page } from "@playwright/test";
 import { sikisanYazilar } from "./tarama";
 import { girisli, hazir } from "./yardimci";
 
@@ -54,6 +54,20 @@ async function yayinla(page: Page, notu: string, sira: number) {
   await y.getByRole("button", { name: "Yayınla" }).click();
   await expect(page.getByText(`Rapor şablonu sürüm ${sira} yayınlandı.`)).toBeVisible();
   await expect(page.getByRole("heading", { level: 1, name: `Rapor şablonu · Sürüm ${sira}` })).toBeVisible();
+}
+
+/* 2026-10-24 (reisim: "telefonda format düzenleyici açılmasın bu ekran masaüstü için uygundur desin"): telefonda kurucu açılmaz — yayın aynı
+   oturumla geniş ekranlı ayrı bir tarayıcı bağlamında yapılır (mobil öykünmede pencereyi büyütmek düzeni değiştirmiyor — CI 1981f80d), akış
+   telefonda sürüm sayfasından sürer */
+async function masaustundeYayinla(page: Page, browser: Browser, context: BrowserContext, notu: string, sira: number) {
+  const masa = await browser.newContext({ viewport: { width: 1280, height: 900 }, storageState: await context.storageState() });
+  const mp = await masa.newPage();
+  await mp.goto(page.url());
+  await yayinla(mp, notu, sira);
+  const surumAdresi = mp.url();
+  await masa.close();
+  await page.goto(surumAdresi);
+  await hazir(page);
 }
 
 test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eskisi düşer; denetçi yalnız görür", async ({ page, context, browser }, bilgi) => {
@@ -553,16 +567,7 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await expect(page.getByRole("region", { name: "Belge önizlemesi" })).toBeHidden();
     await expect(page.getByRole("button", { name: "Yayınla" })).toBeHidden();
     await goz(page, "kurucu-telefon", bilgi.project.name);
-    /* yayın masaüstünden: aynı oturumla geniş ekranlı ayrı bir tarayıcı bağlamında yayınlanır (mobil öykünmede pencereyi büyütmek düzeni
-       değiştirmiyor — CI 1981f80d), akış telefonda sürüm sayfasından sürer */
-    const masa = await browser.newContext({ viewport: { width: 1280, height: 900 }, storageState: await context.storageState() });
-    const mp = await masa.newPage();
-    await mp.goto(page.url());
-    await yayinla(mp, "ilk sürüm", 2);
-    const surumAdresi = mp.url();
-    await masa.close();
-    await page.goto(surumAdresi);
-    await hazir(page);
+    await masaustundeYayinla(page, browser, context, "ilk sürüm", 2);
   }
   if (bilgi.project.name !== "telefon") {
     await yayinla(page, "ilk sürüm", 2);
@@ -587,7 +592,8 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
 
   /* yayındaki sürümden yeni taslak → Sürüm 3; Sürüm 2 eskiye düşer */
   await basla(page, /Sürüm 2 · yayında/);
-  await yayinla(page, "ikinci sürüm", 3);
+  if (bilgi.project.name === "telefon") await masaustundeYayinla(page, browser, context, "ikinci sürüm", 3);
+  else await yayinla(page, "ikinci sürüm", 3);
   await page.goto(turAdresi);
   await hazir(page);
   await expect(page.getByText("Eski", { exact: true }).first()).toBeVisible();
