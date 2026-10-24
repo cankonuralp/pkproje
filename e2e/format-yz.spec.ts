@@ -240,6 +240,8 @@ test("basılı formdan şablon: PDF yüklenince şablon forma göre kurulur, kur
   await page.getByRole("button", { name: "Şablonu bundan kur" }).first().click();
   await page.getByRole("dialog", { name: /^Şablonu sürüm \d+'den kur$/ }).getByRole("button", { name: "Kur", exact: true }).click();
   await expect(page).toHaveURL(/\/sablon\/[0-9a-f-]{36}\/kurucu$/, { timeout: 60_000 });
+  /* aynı taslak: görünüm bu sekmede taslak başına hatırlanır (486) — yukarıda Belge önizlemesi seçildi, Kâğıt'a dönülür */
+  await page.getByRole("button", { name: "Kâğıt", exact: true }).click();
   await expect(kagit).toHaveClass(/rb-serbest/);
   await expect(kagit.getByRole("cell", { name: "1. FIRMA BILGILERI", exact: true })).toBeVisible();
 });
