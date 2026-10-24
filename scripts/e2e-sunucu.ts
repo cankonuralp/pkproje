@@ -474,9 +474,9 @@ const yzTaklit = createServer((istek, yanit) => {
       return;
     }
     const sema = g.output_config.format.schema?.properties;
-    /* 2026-10-23 basılı formdan şablon (şemada "firmaSatirlari"): istekte PDF belge bloğu + türün adı, düşünme açık; kişisel / müşteri bilgisi ya da
+    /* 2026-10-23 basılı formdan şablon (şemada "bolumler" + "yazi" — 2026-10-24 ızgara şeması): istekte PDF belge bloğu + türün adı, düşünme açık; kişisel / müşteri bilgisi ya da
        anahtar varsa reddeder. Cevap uydurma vinç formu (tests/yardimci/basili-ornek.ts — birim testleriyle aynı) */
-    if (sema && "firmaSatirlari" in sema) {
+    if (sema && "bolumler" in sema && "yazi" in sema) {
       const icerik = (g.messages?.[0]?.content ?? []) as { type?: string; text?: string }[];
       const d = g as { thinking?: { type?: string } };
       const ret = (ileti: string) => yanit.writeHead(400, { "content-type": "application/json" }).end(JSON.stringify({ type: "error", error: { type: "invalid_request_error", message: ileti } }));

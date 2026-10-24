@@ -37,7 +37,7 @@ test("üst başlık yok sayılınca 5.1 / 5.2 düz numara olur", async () => {
 });
 
 test("numarasız bölüm numara alınca Fotoğraflar numaralanır, Notlar kayar", async () => {
-  const m = await bozuk("if (b.numarasiz) { sonUst = null; anaVar = false; return { b, no: null, ust: null }; }", "");
+  const m = await bozuk("if (b.numarasiz || b.blok === \"tablo\") { sonUst = null; anaVar = false; return { b, no: null, ust: null }; }", "");
   assert.equal(no(m, "Fotoğraflar"), "7", "bozuk: fotoğraf numaralı");
   assert.equal(no(m, "Notlar"), "8");
 });
