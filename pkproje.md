@@ -2527,7 +2527,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
-- 2026-10-24 (YAPILDI — kod; dal kalem/toplu-maket-plani-yfxvp3, CI'da): **FORMAT KURUCU SERBEST DÜZEN** — reisim maketi onayladı: *"Maketi onaylıyorum, koda
+- 2026-10-24 (YAPILDI — YAYINDA main fb90a8c; deneme makinesi yeşil (denetim + 12 uçtan uca), Vercel yayını başarılı, canlı denetim 11/11; ilk koşunun düşüşleri — e2e taklidinin eski şema anahtarı, iki olumsuz kanıt satırı — düzeltildi): **FORMAT KURUCU SERBEST DÜZEN** — reisim maketi onayladı: *"Maketi onaylıyorum, koda
   geç."* Format tanımına "Serbest tablo" bölümü (satır × sütun, hücre birleştirme, hücre içeriği: yazı · sahada doldurulur · kayıttan gelir · kontrol cevabı ·
   sıra no · imza yeri (e-imza) · logo / akreditasyon · fotoğraf kutusu · raporun sonucu; görünüm hücre başına: yazı tipi, boy, kalın / eğik / altı çizili,
   yatay / dikey hiza, yazı rengi, zemin, kenarlar), her bölümde yan yana yerleşim (öncekinin yanında + genişlik payı), belgede sabit bölümleri kaldırma
