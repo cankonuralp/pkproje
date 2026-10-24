@@ -2527,6 +2527,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-24 (İHTİYAÇ, kod yok): **FORMAT KURUCU GENEL ARAÇ OLACAK** — reisim: *"sanki ben tek form için bir iş istemişim gibi … ben sana istediğim pdf i
+  attığımda istediğim gibi düzenleyebileceğim bir araç istediğimi söyledim ne alaka formattan şunu girersin bunu giremessin diyosun"*. Basılı formdan
+  şablonda kalan sınırlar (bölümler yalnız alt alta, imza bloğunun sabit yapısı, tek yazı tipi) aracın sınırı — kapatılacak. Sıradaki iş: format
+  kurucunun SERBEST DÜZENİ (bölümler yan yana, her bölüm satır / sütun / hücre birleştirilebilen tablo, imza bloğu da tablo, yazı tipi ve renk ayar;
+  PDF okuması bu düzene kurar, hangi form gelirse gelsin) — önce tıklanır maket (masaüstü + telefon) + onay, sonra kod.
 - 2026-10-23 (YAPILDI — YAYINDA main f8c4203; deneme makinesi 13/13 (önceki koşunun 3 düşüşü düzeltildi: yapay zekâsı kapalı firmada kutu, e2e adresi),
   canlı denetim 11/11, son yarım saatte çalışma hatası yok; gözle: deneme makinesinin masaüstü / tablet görüntülerinde kâğıt ve belge formun düzeninde —
   gerçek modelle canlı deneme yapılmadı, giriş reisim'de): **BASILI FORMDAN RAPOR ŞABLONU** — reisim (sunum 597'nin ikinci hâline): *"bakanlık formatından farklı,
