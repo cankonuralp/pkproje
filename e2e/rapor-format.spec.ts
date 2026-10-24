@@ -545,17 +545,23 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     expect(sahaYanit.headers()["content-security-policy"]).toContain("frame-ancestors 'self'");
     expect(sahaYanit.headers()["x-frame-options"]).toBe("SAMEORIGIN");
   } else {
-    /* 2026-10-18 (reisim: "bu ve benzeri, yaratıcıyı hedef alan açıklamaları kaldır, çok fazla ai ürünü olduğu belli oluyor"): açıklama kısaldı */
-    await expect(page.getByText("Format kurucu masaüstünde düzenlenir.")).toBeVisible();
-    await expect(page.getByRole("region", { name: "Belge önizlemesi" }).getByText("Kablo şebeke tarafı").first()).toBeVisible();
-    /* 473 (maket): telefonda saha ekranı — telefon genişliğinde, yalnız denetçi gibi dene (düzenleme / kip seçici yok) */
-    await page.getByRole("button", { name: "Saha ekranı" }).click();
-    await expect(page.frameLocator('iframe[title="Saha ekranı · telefon"]').getByRole("button", { name: "Onaya gönder" })).toBeVisible({ timeout: 60_000 });
-    await expect(page.getByRole("button", { name: "Denetçi gibi dene" })).toHaveCount(0);
-    await page.getByRole("button", { name: "Belge", exact: true }).click();
+    /* 2026-10-24 (reisim: "telefonda format düzenleyici açılmasın bu ekran masaüstü için uygundur desin"): telefonda yalnız yazı ve türe dönüş —
+       kâğıt, belge önizlemesi, saha ekranı ve tuşlar yok */
+    await expect(page.getByText("Bu ekran masaüstü için uygundur.")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Ekipman türüne dön" })).toBeVisible();
+    await expect(kagit).toBeHidden();
+    await expect(page.getByRole("region", { name: "Belge önizlemesi" })).toBeHidden();
+    await expect(page.getByRole("button", { name: "Yayınla" })).toBeHidden();
     await goz(page, "kurucu-telefon", bilgi.project.name);
+    /* yayın masaüstünden: aynı taslak geniş ekranda yayınlanır, akış telefonda sürer */
+    const telefon = page.viewportSize()!;
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await yayinla(page, "ilk sürüm", 2);
+    await page.setViewportSize(telefon);
   }
-  await yayinla(page, "ilk sürüm", 2);
+  if (bilgi.project.name !== "telefon") {
+    await yayinla(page, "ilk sürüm", 2);
+  }
   await expect(page.getByRole("button", { name: "Yayınla" })).toHaveCount(0);
   /* 471 (k5): sürüm sayfası — Sürüm 1'e göre değişenler (Ek-III hazır formattan ZPKR02'ye), rapor sayısı, sürüm notu, önizleme, öteki sürümler */
   const fark = page.getByRole("region", { name: "Sürüm 1 ile karşılaştırma — değişenler" });

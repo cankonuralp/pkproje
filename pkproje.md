@@ -2527,6 +2527,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-24 (YAPILDI — dalda, CI'da): **TELEFONDA FORMAT KURUCU AÇILMAZ** — reisim: *"telefonda format düzenleyici açılmasın bu ekran masaüstü için uygundur
+  desin"*. Telefonda (768 px altı) kurucunun yerinde yalnız başlık, "Bu ekran masaüstü için uygundur." ve "Ekipman türüne dön"; kâğıt, belge önizlemesi, saha
+  ekranı ve tuşlar (Kaydet, Yayınla, Sürüm sayfası, S.A.Y Chat ayarları) yok — telefondaki Belge / Saha seçicisi kalktı. Tablet ve masaüstü aynı. (Bir önceki
+  kaydın "telefon düzeni sonraki adım" notu bu kararla kapandı.) e2e rapor-format / ekipman-turleri telefon dalları buna uyduruldu (telefonda yayın geniş
+  ekrana geçilerek).
 - 2026-10-24 (YAPILDI — YAYINDA main fb90a8c; deneme makinesi yeşil (denetim + 12 uçtan uca), Vercel yayını başarılı, canlı denetim 11/11; ilk koşunun düşüşleri — e2e taklidinin eski şema anahtarı, iki olumsuz kanıt satırı — düzeltildi): **FORMAT KURUCU SERBEST DÜZEN** — reisim maketi onayladı: *"Maketi onaylıyorum, koda
   geç."* Format tanımına "Serbest tablo" bölümü (satır × sütun, hücre birleştirme, hücre içeriği: yazı · sahada doldurulur · kayıttan gelir · kontrol cevabı ·
   sıra no · imza yeri (e-imza) · logo / akreditasyon · fotoğraf kutusu · raporun sonucu; görünüm hücre başına: yazı tipi, boy, kalın / eğik / altı çizili,

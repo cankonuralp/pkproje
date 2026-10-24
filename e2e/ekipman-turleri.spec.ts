@@ -196,9 +196,14 @@ test("Bakanlık türleri hazır: resmî PDF ve yayındaki şablon; sıfırdan ra
   await onay.getByRole("button", { name: "Oluştur" }).click();
   await expect(page).toHaveURL(/\/sablon\/[0-9a-f-]{36}\/kurucu$/, { timeout: 30_000 });
   await expect(page.getByRole("heading", { level: 1, name: /^Format kurucu · / })).toBeVisible();
+  /* 2026-10-24 (reisim: "telefonda format düzenleyici açılmasın bu ekran masaüstü için uygundur desin"): telefonda yalnız yazı */
+  if (bilgi.project.name === "telefon") {
+    await expect(page.getByText("Bu ekran masaüstü için uygundur.")).toBeVisible();
+    return;
+  }
   /* 529: kurucunun tuşlarında "S.A.Y Chat ayarları" — kendi sayfasına */
   await expect(page.getByRole("link", { name: "S.A.Y Chat ayarları" })).toHaveAttribute("href", /^\/ekipman-turleri\/[0-9a-f-]{36}\/say-chat$/);
-  /* 451: kâğıtta (geniş ekran) ya da belge önizlemesinde (telefon) — görünen ilk eşleşme */
+  /* 451: kâğıtta — görünen ilk eşleşme */
   await expect(page.getByText("Kontrol maddeleri").filter({ visible: true }).first()).toBeVisible();
 });
 

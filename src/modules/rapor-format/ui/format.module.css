@@ -53,6 +53,13 @@
 .seritKap { display: grid; gap: 8px; margin-top: 12px; }
 .seritKap > div:focus { outline: none; }
 .yalnizDar { display: none; margin: 0; color: var(--yazi2); }
+/* 2026-10-24 (reisim: "telefonda format düzenleyici açılmasın bu ekran masaüstü için uygundur desin"): telefonda yalnız kapı yazısı */
+.telefonKapi { display: none; }
+.telefonDon { margin-top: 12px; }
+@media (max-width: 767.98px) {
+  .telefonKapi { display: block; }
+  .kurucuGovde { display: none; }
+}
 @media (min-width: 768px) {
   .kurucu { grid-template-columns: 260px minmax(0, 1fr); }
   .kurucuSag { grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -69,9 +76,6 @@
 .gorunumSecici { display: inline-flex; flex-wrap: wrap; gap: 4px; }
 /* telefonda kurucu yok — görünüm seçici de yok (yalnizGenis'ten SONRA tanımlandığı için ayrıca gizlenir) */
 @media (max-width: 767.98px) { .gorunumSecici { display: none; } }
-/* 473: telefonda görünüm seçici (Belge · Saha ekranı — maket) */
-.darSecici { display: none; }
-@media (max-width: 767.98px) { .darSecici { display: inline-flex; flex-wrap: wrap; gap: 4px; } }
 .gizliHer { display: none; }
 .kurallar { margin-top: 12px; padding: 0; }
 .kurallarBas { display: flex; align-items: center; min-height: var(--tus-y); padding: 6px 14px; font-weight: 600; cursor: pointer; }

@@ -5,7 +5,7 @@
    aynı taslağı kesin belgenin çizicisiyle (src/belge/belge.ts — PDF'le aynı) boş bir raporda gösterir. Kurallar ve genel muayene talimatı üstte.
    Değişiklik "Taslağı kaydet" ile yazılır (Kaydedilmedi · Vazgeç · Kaydet — kalıp Z1); kaydedilmemiş taslak yayınlanmaz; kaydedilmemiş taslakla
    sayfadan çıkarken sorulur. 470: Bakanlık öğesi de değişir ve silinir (sorarak) — sunucu yayında kaynak şablondan ayrılanları UYARI olarak
-   listeler. Telefonda kurucu açılmaz
+   listeler. Telefonda kurucu açılmaz (2026-10-24: yalnız "Bu ekran masaüstü için uygundur." ve türe dönüş — önizleme de yok)
    (masaüstü işi): belge önizlemesi görünür. Karar ve şema sunucuda.
    472–474 (reisim 2026-10-10, maket kararları k1–k4): üç görünüm — Kâğıt (açılışta) · Saha ekranı (denetçinin tabletinde / telefonunda göreceği
    gerçek ekran, örnek raporla; orada da yerinde düzenlenir — SahaGorunumu.tsx) · Belge önizlemesi. Üçü aynı taslağı gösterir: birinde yapılan
@@ -301,6 +301,14 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
 
   return (
     <>
+      {/* 2026-10-24 (reisim: "telefonda format düzenleyici açılmasın bu ekran masaüstü için uygundur desin"): telefonda kurucu yok — yalnız bu yazı
+          ve türe dönüş; düzenleyici, belge önizlemesi ve saha ekranı açılmaz (kurucuGovde telefonda gizli, çizilmez) */}
+      <div className={stil.telefonKapi}>
+        <NesneBasi baslik={`Format kurucu · ${turAd}`} altIkon="layout-list" alt={kaynakAd ?? "Firma formatı"} />
+        <Serit tur="bilgi" ikon="info">Bu ekran masaüstü için uygundur.</Serit>
+        <div className={stil.telefonDon}><TusBaglanti tur="ikincil" ikon="arrow-left" href={`/ekipman-turleri/${turId}`}>Ekipman türüne dön</TusBaglanti></div>
+      </div>
+      <div className={stil.kurucuGovde}>
       <NesneBasi baslik={`Format kurucu · ${turAd}`} rozet={<Rozet tur="bekliyor">Taslak</Rozet>} altIkon="layout-list"
         alt={`${t.bolumler.length} bölüm · ${kaynakAd ?? "Firma formatı"}`}
         tuslar={<>
@@ -308,10 +316,6 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
             <Tus tur={gorunum === "duzen" ? "birincil" : "ikincil"} ikon="pencil" aria-pressed={gorunum === "duzen"} onClick={() => setGorunum("duzen")}>Kâğıt</Tus>
             <Tus tur={gorunum === "saha" ? "birincil" : "ikincil"} ikon="tablet-smartphone" aria-pressed={gorunum === "saha"} onClick={() => setGorunum("saha")}>Saha ekranı</Tus>
             <Tus tur={gorunum === "belge" ? "birincil" : "ikincil"} ikon="file-text" aria-pressed={gorunum === "belge"} onClick={() => setGorunum("belge")}>Belge önizlemesi</Tus>
-          </span>
-          <span className={stil.darSecici} role="group" aria-label="Görünüm">
-            <Tus tur={gorunum !== "saha" ? "birincil" : "ikincil"} ikon="file-text" aria-pressed={gorunum !== "saha"} onClick={() => setGorunum("belge")}>Belge</Tus>
-            <Tus tur={gorunum === "saha" ? "birincil" : "ikincil"} ikon="smartphone" aria-pressed={gorunum === "saha"} onClick={() => setGorunum("saha")}>Saha ekranı</Tus>
           </span>
           <TusBaglanti tur="ikincil" ikon="eye" href={`/ekipman-turleri/${turId}/sablon/${format.id}`}>Sürüm sayfası</TusBaglanti>
           {/* 529 (reisim 2026-10-13: "diğer tuşların yanına koy tuşa basınca ilgili sayfaya gitsin"): S.A.Y Chat ayarları kendi sayfasında */}
@@ -323,7 +327,6 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
           </> : <YayinlaTusu format={format} />}
         </>} />
       <div className={stil.seritKap}>
-        <div className={stil.yalnizDar}><Serit tur="bilgi" ikon="info">Format kurucu masaüstünde düzenlenir.</Serit></div>
         {hatalar.length > 0 && <div id="kb-hatalar" tabIndex={-1}><Serit tur="hata" ikon="circle-alert">Taslak kaydedilmedi: {hatalar.join(" · ")}</Serit></div>}
         {bakilacak.length > 0 && <Serit tur="uyari" ikon="triangle-alert">Yayından önce bakılacak: {bakilacak.join(" · ")}</Serit>}
       </div>
@@ -447,6 +450,7 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
       <div className={gorunum === "belge" ? stil.belgeKap : gorunum === "saha" ? stil.gizliHer : `${stil.belgeKap} ${stil.yalnizDar}`}>
         {/* kayan öğe belgenin kendisi (telefonda A4 yana kayar): klavyeyle kaydırılsın diye odak ve ad onda (rapor önizlemesi gibi) */}
         <div className="rb-onizleme" aria-label="Belge önizlemesi" role="region" tabIndex={0}>{belge}</div>
+      </div>
       </div>
     </>
   );
