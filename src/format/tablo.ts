@@ -218,12 +218,36 @@ export function hucreEtiketi(b: TabloBolumu, h: Hucre, g: (number | null)[][] = 
   }
   return "";
 }
-/** kontrol cevabı hücresinin maddesi: kendi metni; yoksa satırındaki yazılar (sıra no hariç) */
+/** kontrol cevabı hücresinin maddesi: kendi metni; yoksa satırındaki yazılar (sıra no hariç) — soldaki komşu cevaptan (yoksa satırın başından) bu
+    cevaba kadarki yazılar, solda yazı yoksa sağdaki komşu cevaba kadarkiler (2026-10-24: yan yana iki listede bir maddeye ötekinin yazısı karışmaz) */
 export function maddeMetni(b: TabloBolumu, h: Hucre): string {
   if (h.m?.trim()) return h.m.trim();
-  return b.hucreler.filter((x) => x.r === h.r && x !== h && yaziMi(x)).sort((x, y) => x.c - y.c).map((x) => x.m!.trim()).join(" · ");
+  const satir = b.hucreler.filter((x) => x.r === h.r && x !== h).sort((x, y) => x.c - y.c);
+  const cevaplar = satir.filter((x) => x.tur === "cevap");
+  const yaz = (l: Hucre[]) => l.filter(yaziMi).map((x) => x.m!.trim()).join(" · ");
+  const sol = Math.max(-1, ...cevaplar.filter((x) => x.c < h.c).map((x) => x.c + (x.cs ?? 1) - 1));
+  const sag = Math.min(Infinity, ...cevaplar.filter((x) => x.c > h.c).map((x) => x.c));
+  return yaz(satir.filter((x) => x.c > sol && x.c < h.c)) || yaz(satir.filter((x) => x.c > h.c && x.c < sag));
 }
-/** sıra no hücrelerinin numarası — okuma sırasıyla (satır, sütun); siraDevam'lı tablo öncekinden sürer. Anahtar "<bölüm>:<r>,<c>" */
+/** hücrelerin sütun dizisi sırası (2026-10-24 — basılı formun iki sütunlu kontrol listesi: solda 1–13, sağda 14–25): aynı sütunda alt alta, arası
+    açık olmayan hücreler bir dizi; satır aralıkları örtüşen diziler bir bant; bantlar yukarıdan aşağı, bandın dizileri soldan sağa. Tek sütunlu
+    listede okuma sırasıyla (satır, sütun) aynıdır. */
+export function diziSirasi(l: readonly Hucre[]): Hucre[] {
+  const diziler: Hucre[][] = [];
+  for (const h of [...l].sort((x, y) => x.c - y.c || x.r - y.r)) {
+    const d = diziler[diziler.length - 1], o = d?.[d.length - 1];
+    if (d && o && o.c === h.c && h.r === o.r + (o.rs ?? 1)) d.push(h); else diziler.push([h]);
+  }
+  const son = (d: Hucre[]) => d[d.length - 1].r + (d[d.length - 1].rs ?? 1);
+  diziler.sort((x, y) => x[0].r - y[0].r || x[0].c - y[0].c);
+  const bantlar: Hucre[][][] = [];
+  let alt = -1;
+  for (const d of diziler) {
+    if (bantlar.length && d[0].r < alt) { bantlar[bantlar.length - 1].push(d); alt = Math.max(alt, son(d)); } else { bantlar.push([d]); alt = son(d); }
+  }
+  return bantlar.flatMap((b) => b.sort((x, y) => x[0].c - y[0].c || x[0].r - y[0].r).flat());
+}
+/** sıra no hücrelerinin numarası — sütun dizisi sırasıyla (diziSirasi); siraDevam'lı tablo öncekinden sürer. Anahtar "<bölüm>:<r>,<c>" */
 export function siraNumaralari(t: Pick<FormatTanimi, "bolumler">): ReadonlyMap<string, number> {
   const m = new Map<string, number>();
   let n = 0;
@@ -232,7 +256,7 @@ export function siraNumaralari(t: Pick<FormatTanimi, "bolumler">): ReadonlyMap<s
     if (!b.siraDevam) n = 0;
     /* çoğalan satırın sırası kendi kopyalarında (1, 2, 3 …) — sayıma girmez */
     const tekrar = new Set(b.satirlar.flatMap((s, r) => (s.tekrar ? [r] : [])));
-    for (const h of [...b.hucreler].sort((x, y) => x.r - y.r || x.c - y.c)) if (h.tur === "sira" && !tekrar.has(h.r)) m.set(`${b.id}:${h.r},${h.c}`, ++n);
+    for (const h of diziSirasi(b.hucreler.filter((h) => h.tur === "sira" && !tekrar.has(h.r)))) m.set(`${b.id}:${h.r},${h.c}`, ++n);
   }
   return m;
 }
@@ -269,7 +293,8 @@ export function sanalBolumler(b: TabloBolumu): Bolum[] {
     ...(h.secenekler?.length ? { secenekler: h.secenekler } : {}), ...(h.birim ? { birim: h.birim } : {}), ...(h.formul ? { formul: h.formul } : {}),
   }));
   if (alanlar.length) l.push({ id: sanalKimlik(b, "a"), ad: b.ad, blok: "bilgi", ...ortak, alanlar, dizilis: 2 });
-  const maddeler = duz.filter((h) => h.tur === "cevap" && h.id).map((h) => ({ id: h.id!, metin: maddeMetni(b, h) || "Madde", kilit: false, ...(h.formul ? { formul: h.formul } : {}) }));
+  /* maddeler sıra numaralarıyla aynı sırada (sütun dizisi — iki sütunlu listede önce sol sütun) */
+  const maddeler = diziSirasi(duz.filter((h) => h.tur === "cevap" && h.id)).map((h) => ({ id: h.id!, metin: maddeMetni(b, h) || "Madde", kilit: false, ...(h.formul ? { formul: h.formul } : {}) }));
   if (maddeler.length) l.push({ id: sanalKimlik(b, "l"), ad: b.ad, blok: "liste", ...ortak, cevaplar: b.cevaplar, numara: "surekli",
     gruplar: [{ id: `${b.id}_vg`, ad: "", maddeler }] });
   b.satirlar.forEach((s, r) => {
@@ -324,13 +349,14 @@ export function yerlesimSatirlari<T extends { b: Pick<Bolum, "yan" | "oran"> }>(
 /** yazı tiplerinin aileleri (belge.css @font-face — kendi kökenimizden) */
 export const YAZI_AILESI: Record<YaziTipi, string> = { carlito: "Carlito, Calibri, sans-serif", tinos: "Tinos, 'Times New Roman', serif", arimo: "Arimo, Arial, sans-serif" };
 /** hücrenin satır içi biçemi (değerler yazı — React ve belge HTML yazıcısı aynı yazar): kenarlar hücrenin ya da belgenin çizgisi, iç boşluk,
-    yazı tipi / boy (hücrenin, yoksa belgenin; yoksa Carlito 9 pt), kalın / eğik / altı çizili, hizalar, renkler */
-export function hucreBicemi(x: Pick<Hucre, "s">, yazi: FormatTanimi["gorunum"]["yazi"] = {}): Record<string, string> {
+    yazı tipi / boy (hücrenin, yoksa belgenin; yoksa Carlito 9 pt), kalın / eğik / altı çizili, hizalar, renkler. satirYuksek: hücrenin satırının
+    yüksekliği formdan (TabloSatiri.y) — üst / alt iç boşluk yok (2026-10-24: Word'ün hücresi gibi; basılı formun satırı belgede uzamaz) */
+export function hucreBicemi(x: Pick<Hucre, "s">, yazi: FormatTanimi["gorunum"]["yazi"] = {}, satirYuksek = false): Record<string, string> {
   const s = x.s ?? {}, y = yazi ?? {}, kal = y.kalin ?? 1, renk = y.cizgi ?? "#000000", ic = y.ic ?? 0.6;
   const kenar = (k: "u" | "a" | "s" | "g") => { const n = s.kn ? s.kn[k] : kal; return n ? `${n}px solid ${renk}` : "0"; };
   return {
     borderTop: kenar("u"), borderBottom: kenar("a"), borderLeft: kenar("s"), borderRight: kenar("g"),
-    padding: `${(ic * 0.6).toFixed(2)}mm ${ic.toFixed(2)}mm`, fontFamily: YAZI_AILESI[s.f ?? y.tip ?? "carlito"], fontSize: `${s.b ?? y.boy ?? 9}pt`,
+    padding: `${(satirYuksek ? 0 : ic * 0.6).toFixed(2)}mm ${ic.toFixed(2)}mm`, fontFamily: YAZI_AILESI[s.f ?? y.tip ?? "carlito"], fontSize: `${s.b ?? y.boy ?? 9}pt`,
     fontWeight: s.k ? "700" : "400", ...(s.i ? { fontStyle: "italic" } : {}), ...(s.u ? { textDecoration: "underline" } : {}),
     textAlign: ({ s: "left", o: "center", g: "right", y: "justify" } as const)[s.a ?? "s"],
     verticalAlign: ({ u: "top", o: "middle", a: "bottom" } as const)[s.d ?? "o"],

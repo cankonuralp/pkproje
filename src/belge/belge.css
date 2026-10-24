@@ -116,9 +116,10 @@ tr:has(.rb-eimza) { break-inside: avoid; }
 .rb-h-orta .rb-bolum h2, .rb-h-orta .rb-bolum h3 { text-align: center; }
 .rb-sayfa.rb-e-kalin .rb-e { background: none; font-weight: 700; }
 
-/* 2026-10-24 (serbest düzen): serbest tablo — çizgi, iç boşluk, yazı hücrenin kendi biçeminde (belge.ts hucreStili); yan yana bölümler */
+/* 2026-10-24 (serbest düzen): serbest tablo — çizgi, iç boşluk, yazı hücrenin kendi biçeminde (belge.ts hucreStili); yan yana bölümler.
+   Satır aralığı 1,1 (Word'ün tek satır aralığına yakın): basılı formun 4 mm'lik satırı belgede uzamaz, tek sayfalık form tek sayfa kalır */
 .rb-sayfa table.rb-tablo { margin: 0; }
-.rb-sayfa .rb-tablo td { line-height: 1.2; }
+.rb-sayfa .rb-tablo td { line-height: 1.1; }
 .rb-tablo-bolum { margin: 0 0 3mm; break-inside: avoid; }
 .rb-yan { display: flex; align-items: flex-start; gap: 3mm; margin: 0 0 3mm; }
 .rb-yan > .rb-bolum, .rb-yan > div > .rb-bolum, .rb-yan .rb-tablo-bolum { margin-bottom: 0; }

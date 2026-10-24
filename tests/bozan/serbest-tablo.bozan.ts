@@ -3,7 +3,8 @@
    2. Araya satır eklenince birleşik hücre büyümezse ızgarada boşluk kalır / satırı kayar.
    3. Cevap hücresi sanal maddeye dönmezse "Uygun değil" cevabı kusur listesine girmez (uygunsuzluk kaybolur — sessiz iyimserlik).
    4. Şemada üst üste binme denetimi kalkınca iki hücre aynı yere yazılabilir.
-   5. Belgede çoğalan satır kopyalanmazsa sahada eklenen ikinci ölçüm satırı belgeye basılmaz. */
+   5. Belgede çoğalan satır kopyalanmazsa sahada eklenen ikinci ölçüm satırı belgeye basılmaz.
+   6. (2026-10-24) Sıra numaraları satır sırasıyla verilirse iki sütunlu listede sol 1, 3, 5 · sağ 2, 4, 6 olur (formda sol 1–3, sağ 4–6). */
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -45,7 +46,8 @@ test("araya satır eklenince birleşik hücre büyümezse ızgara bozulur", asyn
 });
 
 test("cevap hücresi sanal maddeye dönmezse 'Uygun değil' kusur olmaz", async () => {
-  const m = await tablo(`const maddeler = duz.filter((h) => h.tur === "cevap" && h.id)`, `const maddeler = duz.filter((h) => h.tur === "cevap" && h.id && false)`);
+  /* 2026-10-24: maddeler sütun dizisi sırasıyla (diziSirasi) — bozulan satır onunla */
+  const m = await tablo(`const maddeler = diziSirasi(duz.filter((h) => h.tur === "cevap" && h.id))`, `const maddeler = diziSirasi(duz.filter((h) => h.tur === "cevap" && h.id && false))`);
   const b: TabloBolumu = { id: "k", ad: "K", blok: "tablo", kilit: false, sutun: [70, 30], cevaplar: ["U", "UD"], satirlar: [{}],
     hucreler: [h(0, 0, { tur: "yazi", m: "Fren" }), h(0, 1, { tur: "cevap", id: "m1" })] };
   const t = FormatTanimi.parse({ sema: 1, bolumler: [b] });
@@ -71,4 +73,16 @@ test("belgede çoğalan satır kopyalanmazsa ikinci ölçüm satırı basılmaz"
   const t = FormatTanimi.parse({ sema: 1, bolumler: [b], gorunum: { formKodu: "", baslik: "", dayanak: [], talimat: "", cevap: "acilir", serbest: true } });
   const html = renderToStaticMarkup(m.raporBelgesi({ ...ornekBelge("ZPKR02"), tanim: t, cevaplar: Cevaplar.parse({ tablo: { olc: [{ yuk: "500" }, { yuk: "600" }] } }) }) as never);
   assert.ok(html.includes(">500<") && !html.includes(">600<"), "bozuk: ikinci satır yok");
+});
+
+test("sıra numaraları satır sırasıyla verilirse iki sütunlu listede sol sütun 1, 3, 5 olur", async () => {
+  const h = (r: number, c: number, o: Omit<Hucre, "r" | "c">): Hucre => ({ r, c, ...o });
+  const hucreler: Hucre[] = [];
+  for (let r = 0; r < 3; r++) hucreler.push(h(r, 0, { tur: "sira" }), h(r, 1, { tur: "yazi", m: "Sol" }), h(r, 2, { tur: "sira" }), h(r, 3, { tur: "yazi", m: "Sag" }));
+  const t = FormatTanimi.parse({ sema: 1, bolumler: [{ id: "k", ad: "K", blok: "tablo", kilit: false, sutun: [10, 40, 10, 40], satirlar: [{}, {}, {}], hucreler }] });
+  const sol = (m: Tablo) => [0, 1, 2].map((r) => m.siraNumaralari(t).get(`k:${r},0`));
+  assert.deepEqual(sol(await import("../../src/format/tablo.ts")), [1, 2, 3], "sağlam: sol sütun 1–3");
+  const m = await bozuk<Tablo>("src/format/tablo.ts", "for (const h of diziSirasi(b.hucreler.filter((h) => h.tur === \"sira\" && !tekrar.has(h.r))))",
+    "for (const h of [...b.hucreler].sort((x, y) => x.r - y.r || x.c - y.c).filter((h) => h.tur === \"sira\" && !tekrar.has(h.r)))");
+  assert.deepEqual(sol(m), [1, 3, 5], "bozuk: satır sırası");
 });

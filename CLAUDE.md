@@ -222,13 +222,16 @@ pkproje/
                             basili-format, bozan serbest-tablo, basili-format, e2e format-yz
   src/modules/rapor-format/ RAPOR FORMATI (2026-10-04, 308): sürümlü tanım (rapor_format, göç 0022: taslak → yayında → eski; yayınlanan değişmez) ·
                             2026-10-23 BASILI FORMDAN ŞABLON (reisim: "ben bunu yükleyince format buna dönüşsün"): tür sayfasında PDF yüklenince ("Rapor
-                            şablonunu bu PDF'e göre kur" işaretli) ya da satırdaki "Şablonu bundan kur" → server/basili.ts (ayırma, çağrı işlem dışında —
-                            src/server/yz/basili.ts istek / cevap, şema birleşik türsüz) → basili.ts saf çeviri → formatlar.ts taslakYaz → Format kurucu ·
-                            2026-10-24: form IZGARA olarak okunur, şablon serbest düzende kurulur (serbest tablolar, yan yana, birleşik hücre; sonuç / uzmanın
-                            imza yeri / fotoğraflar formda yoksa sona) ·
-                            PDF ekipman-turleri basiliPdf · belge görünümü tanim.ts gorunum.basTuru / stil, liste yanYana / numara (duzen.ts belgeStilSiniflari,
-                            basTuru, maddeNumaralari; belge, kâğıt, saha ortak); kurucuda "Belge görünümü" · kilit tests/basili-format, yz-basili, bozan
-                            basili-format, e2e format-yz ·
+                            şablonunu bu PDF'e göre kur" işaretli) ya da satırdaki "Şablonu bundan kur" → 2026-10-24 YAPAY ZEKÂSIZ (reisim: "en baştan beri
+                            bunu istedim"): PDF TARAYICIDA kendi içeriğinden okunur — ui/pdfOku.ts (components/pdf/pdfjs.ts) → pdf-sayfa.ts (pdf.js işlem
+                            listesi + metin → PdfSayfasi; görünen sayfaya kırpılı) → pdf-izgara.ts (kurallar: çizgiler, çerçeve / çift çizgi, ızgara, tek parça
+                            formun bantları ve yan yana yarıları, hücre türleri, sayfa altı, sayfa devamı, bölüm sınırı) → BASILI ham (pdf-tipler.ts) →
+                            eylem basilidanKurEylemi: server/basili.ts basiliHazirla (yetki, tür, PDF sürümü — ekipman-turleri basiliSurumVar) → basili.ts
+                            saf çeviri (işlemin DIŞINDA) → basiliYaz → formatlar.ts taslakYaz → Format kurucu · şablon serbest düzende (serbest tablolar, yan
+                            yana, birleşik hücre; sonuç / uzmanın imza yeri / fotoğraflar formda yoksa sona; bitişik bantlar yazi.ara 0) ·
+                            belge görünümü tanim.ts gorunum.basTuru / stil, liste yanYana / numara (duzen.ts belgeStilSiniflari,
+                            basTuru, maddeNumaralari; belge, kâğıt, saha ortak); kurucuda "Belge görünümü" · kilit tests/basili-format, pdf-sayfa, pdf-izgara,
+                            bozan basili-format, pdf-sayfa, pdf-izgara, e2e format-yz ·
                             şablondan başlat · taslak kaydet · yayınla (kilitli Bakanlık öğesi ENGEL, öteki denetim uyarı) · yayındaki format;
                             ekran: tür sayfası "Rapor şablonu" + önizleme /ekipman-turleri/<tür>/sablon/<sürüm> · FORMAT KURUCU (338, K4):
                             …/sablon/<taslak>/kurucu (ui/FormatKurucu.tsx; saf düzenleme kurucu.ts — yeni kimlik tekil, kilitli bölüm / öğe silinmez) · 370 taslak sil (0065) → 504 surumSil: taslak +

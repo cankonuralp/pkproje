@@ -2,9 +2,11 @@
 /* PDF GÖRÜNÜMÜ (2026-10-17; reisim: "müşteri tıklayınca direk raporu görmeli pdfi aç, tuşu falan ne alaka … burada tıkladığı gibi içeride raporu
    görmeli"): PDF'in sayfaları sayfanın İÇİNDE çizilir — pdf.js tarayıcıda (telefonda da; tarayıcının kendi PDF görüntüleyicisine ve çerçeveye bağlı
    değil). Dosya tek dosya ucundan (aynı köken; yetki sunucuda — müşteri rolünde kendi raporu). Sayfalar kabın genişliğine sığar, sırayla çizilir. pdf.js: dizgi değerlendirme (eval)
-   kapalı, XFA kapalı, işçi kendi kökenimizden (CSP worker-src 'self'), yazı tipleri dosyanın içinden. */
+   kapalı, XFA kapalı, işçi kendi kökenimizden (CSP worker-src 'self'), yazı tipleri dosyanın içinden. 2026-10-24: yükleyici ve açma seçenekleri
+   ortak (pdfjs.ts — basılı formun okunması da onunla). */
 import { useEffect, useRef, useState } from "react";
 import { dosyaCerceveAdresi } from "../gizli-resim/GizliResim";
+import { PDF_ACMA, pdfjsYukle } from "./pdfjs";
 import stil from "./pdf.module.css";
 
 /** çizim çözünürlüğü sınırı (piksel genişlik; büyük ekranda ve çok sayfada bellek) */
@@ -23,13 +25,10 @@ export function PdfGorunumu({ dosyaId, ad }: { dosyaId: string; ad: string }) {
     setDurum("yukleniyor");
     (async () => {
       try {
-        const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
-        if (!pdfjs.GlobalWorkerOptions.workerPort) {
-          pdfjs.GlobalWorkerOptions.workerPort = new Worker(new URL("pdfjs-dist/legacy/build/pdf.worker.min.mjs", import.meta.url), { type: "module" });
-        }
+        const pdfjs = await pdfjsYukle();
         const y = await fetch(adres, { credentials: "same-origin" });
         if (!y.ok) throw new Error(`PDF alınamadı (${y.status})`);
-        const gorev = pdfjs.getDocument({ data: new Uint8Array(await y.arrayBuffer()), isEvalSupported: false, enableXfa: false, verbosity: 0 });
+        const gorev = pdfjs.getDocument({ data: new Uint8Array(await y.arrayBuffer()), ...PDF_ACMA });
         birak = () => { void gorev.destroy(); };
         const belge = await gorev.promise;
         k.replaceChildren();

@@ -2527,6 +2527,27 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-24 (YAPILDI — dalda, commit / yayın yok; saf kilitler PC'de 105/105, tip + lint temiz; uçtan uca CI'da doğrulanacak): **BASILI FORMDAN ŞABLON
+  YAPAY ZEKÂSIZ** — reisim: *"ben şablon yükledim bu şablondan başlat dedim neden yapay zeka çalışıyor ?"*, *"en baştan beri bunu istedim"*. PDF
+  tarayıcıda KENDİ İÇERİĞİNDEN okunur (yazılar, tablo çizgileri — çizilen ya da Word'deki gibi ince dolgu —, zeminler, resimler): ui/pdfOku.ts → pdf-sayfa.ts
+  (pdf.js işlem listesi; görünen sayfa — CropBox — dışındaki çizim okunmaz) → pdf-izgara.ts (kurallarla BASILI ham) → sunucuda basili.ts çevirisi →
+  taslak → Format kurucu. Yapay zekâ ayırması / anahtarı / maliyeti yok; src/server/yz/basili.ts, tests/yz-basili.test.ts, turler.ts basiliPdf ve tür
+  sayfasının 300 sn işlev süresi kalktı. Denetimde (gerçek formla — yalnız yapı sayıları — ve uydurma sayfalarla) bulunanlar düzeltildi: sayfa kenarlığı
+  / çift dış kenar tabloyu tek hücreye indiriyordu (iç çizgisiz dış kutu atılır, sıkı sarıyorsa dış kenar kalın); çift çizgi ve kayık sınırlar 1 mm'lik
+  satır / %1'lik sütun açıyordu (≤ 5 pt, yazısız → tek kalın çizgi); tek parça çizilmiş form tek 40 × 20 tablo oluyordu (başlık şeritlerinden ve başlık
+  satırlarından bantlara, HALAT | KANCA gibi yarılar yan yana; bitişik bantlar ortak çizgiyi bir kez çizer, bölümler arası 0); firmanın "Unvanı" alttaki
+  imza bloğu yüzünden uzmanın mesleği oluyordu; iki sütunlu kontrol listesinin numaraları ve sahadaki madde sırası satır satırdı (format/tablo.ts
+  diziSirasi — sütun sütun; maddeye yan listenin yazısı karışmaz); sayfa altındaki kod / tarih / revizyon satırı yasal metinle gövdeye düşüyordu
+  (satır satır; önceksiz form kodu sayfa altından); notlar kutusundaki hazır cümle sabit yazıydı (alanın hazır değeri — formül, sahada değişir); tarih +
+  saat hücresinde aynı kayıt iki kez; iki kayıt bilgisi soran etiket (eğik çizgi ya da tireyle) hücreyi ikiye böler; pdf.js'in birleştirdiği "1
+  Madde 1" hücre çizgisinde bölünür, taşan yazı komşusunu alan yapmaz; madde yazısı imza başlığı sanılmaz; çok satırlı listenin sütun başlığı (ölçüm
+  cihazları) ekipmanın kaydı değil, numaralı alan; iki sayfaya bölünen tablo tek tablo; çok bölümlü form (45 paragraf, dikey çizgisiz liste)
+  çeviriden geçer (37 hedef, çeviride yer yoksa sondaki atılır ve adı söylenir); çevirinin ilk yan bölümünün oranı yazılır (70 / 30), satır yüksekliği
+  yarım mm, kimlikler sayaçla (32 000 cevap hücresi 55 sn → 0,13 sn), çeviri veritabanı işleminin dışında, PDF sürümü sunucuda doğrulanır; eylem hata
+  fırlatınca pencere / tuş "kuruluyor"da takılmaz; formdan gelen satırda hücrenin üst / alt iç boşluğu yok, satır aralığı 1,1 — gerçek formun tabloları
+  belgede 235 mm (formda 234 mm; önce 255 mm, iki sayfa). Kilitler tests/pdf-sayfa, pdf-izgara, basili-format, serbest-tablo + olumsuz kanıtları. Açık:
+  tarih + saat hücresinin ilk yarısı kayıttan tarih + saat basar (dar hücrede iki satır); dikey çizgisiz tablolar kenarsız tabloya döner; taranmış PDF'te
+  bölüm çıkmaz. Reisim'in formu gerçek firmanın — yazısı depoya, teste, kayda girmedi.
 - 2026-10-24 (YAPILDI — dalda, CI'da): **TELEFONDA FORMAT KURUCU AÇILMAZ** — reisim: *"telefonda format düzenleyici açılmasın bu ekran masaüstü için uygundur
   desin"*. Telefonda (768 px altı) kurucunun yerinde yalnız başlık, "Bu ekran masaüstü için uygundur." ve "Ekipman türüne dön"; kâğıt, belge önizlemesi, saha
   ekranı ve tuşlar (Kaydet, Yayınla, Sürüm sayfası, S.A.Y Chat ayarları) yok — telefondaki Belge / Saha seçicisi kalktı. Tablet ve masaüstü aynı. (Bir önceki
@@ -2585,7 +2606,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   rapor-format/basili.ts (her parça şemadan; formda yoksa numarasız "Kullanılan cihazlar" — teknik bilgilerin numarasız alt tablolarından sonra — ve
   sonda numarasız "Fotoğraflar"; zorunlu firma satırları
   eklenir; uzmanın imza hücresi eklenir; değerler formdan alınmaz), sunucu rapor-format/server/basili.ts (ayırma → çağrı işlem dışında → taslak:
-  formatlar.ts taslakYaz), PDF ekipman-turleri basiliPdf; tür sayfası işlev süresi 300 sn. AYRICA BULUNDU: format yapıcının "Yapay zekâya anlat" /
+  formatlar.ts taslakYaz), PDF ekipman-turleri basiliPdf; tür sayfası işlev süresi 300 sn (2026-10-24: yapay zekâ okuması, src/server/yz/basili.ts,
+  tests/yz-basili.test.ts, basiliPdf ve 300 sn kalktı — PDF tarayıcıda kurallarla okunur; bkz. §11 2026-10-24 YAPAY ZEKÂSIZ). AYRICA BULUNDU: format yapıcının "Yapay zekâya anlat" /
   "Belgeden başlat" şemasında 21 birleşik türlü alan vardı (hizmetin sınırı 16 — Anthropic yapılandırılmış çıktı belgesi; canlı günlük Hobby'de 1 saat,
   ölçemedim) → birleşik türsüz (boş değer boş yazı / 0); kilit tests/yz-format.test.ts semaKarmasikligi. Kilitler: tests/basili-format.test.ts,
   tests/yz-basili.test.ts, olumsuz kanıt tests/bozan/basili-format.bozan.ts (5), e2e/format-yz.spec.ts (taklit uydurma vinç formuyla: yükle → kurucu

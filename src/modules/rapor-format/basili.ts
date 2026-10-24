@@ -1,28 +1,39 @@
-/* BASILI FORMDAN ŞABLON — yapay zekânın okuduğu formun format tanımına çevrilmesi, saf (2026-10-23; reisim: "ben bunu yükleyince format buna
-   dönüşsün format düzenleyicide bundan düzenleme yapabileyim istiyorum"). İstek ve cevabın çözümü src/server/yz/basili.ts.
+/* BASILI FORMDAN ŞABLON — okunan formun format tanımına çevrilmesi, saf (2026-10-23; reisim: "ben bunu yükleyince format buna dönüşsün format
+   düzenleyicide bundan düzenleme yapabileyim istiyorum").
+   2026-10-24 YAPAY ZEKÂSIZ (reisim: "ben şablon yükledim bu şablondan başlat dedim neden yapay zeka çalışıyor ?", "en baştan beri bunu istedim"):
+   girdi PDF okuyucusunun çıktısı — PDF tarayıcıda kendi içeriğinden (yazılar, çizgiler, dolgular, resimler) okunur (ui/pdfOku.ts: pdf-sayfa.ts →
+   pdf-izgara.ts), biçimi pdf-tipler.ts BasiliHam. İstemciden geldiği için girdi unknown kabul edilir, her alan burada denetlenir.
    2026-10-24 (format kurucu serbest düzen — reisim: "hangi firmanın hangi PDF formunu yüklersem yükleyeyim şablon o forma dönüşsün ve format
    kurucuda istediğim gibi düzenleyebileyim"; maket docs/maket/format-serbest.html onaylı): form SERBEST DÜZENE kurulur (gorunum.serbest — sabit
    başlık / firma / ekipman bölümü yok): her tablo bir serbest tablo bölümü (src/format/tablo.ts), satırlar HTML tablosu gibi (hücre o satırda
    başlar, yukarıdan birleşik gelen yer atlanır), hücrenin türü / kaynağı / görünümü formdan; yan yana tablolar aynı satırda. Her parça ŞEMADAN
    geçer; geçmeyen bölüm atılır (adı söylenir). Raporun yürümesi için gerekenler formda yoksa sona eklenir, kurucuda düzenlenir: raporun sonucu
-   (sonuç hücresi), muayene uzmanının imza yeri, fotoğraflar. Kimlikler kurucunun ("k_"). */
+   (sonuç hücresi), muayene uzmanının imza yeri, fotoğraflar. Kimlikler kurucunun ("k_").
+   2026-10-24: sonuç hücresinde cümlenin sözcükten önceki kısmı m (belge "m SÖZCÜK" basar); hücrenin kenarı (HamHucre.kenar) her yanda belgenin
+   çizgisi (ince — çeviri belgenin kalınlığını değiştirmez) değilse görünümün kn'si.
+   2026-10-24 (denetim): yan yana satırın İLK bölümünün oranı da yazılır (yoksa belgede pay bozulur — 70/30 → 62,5/37,5); satır yüksekliği yarım
+   mm'ye (formun ölçüsü); kimlikler sayaçla (çeviri hücre sayısıyla doğrusal — her kimlikte tanımın yeniden taranması karesel büyüyordu); bölümler
+   arası aralık (yazi.ara) okumadan; formda yoksa eklenecekler (sonuç, uzmanın imzası, fotoğraflar) için yer yoksa sondaki bölümler atılır (adı
+   söylenir) — tanım 40 bölümü aşıp hiç kurulamamazlık olmaz. */
 import { bosFormat } from "../../format/sablonlar.ts";
 import { onar } from "../../format/tablo.ts";
 import {
   Bolum, FormatTanimi, HUCRE_ALAN_TURLERI, HUCRE_TURLERI, TABLO_KAYNAKLARI, YAZI_TIPLERI, type Hucre, type HucreStili, type TabloSatiri,
 } from "../../format/tanim.ts";
-import { yeniKimlik } from "./kurucu.ts";
+import { kimlikler } from "./kurucu.ts";
+import type { BasiliHam, HamBolum, HamHucre, HamKenar, HamSatir } from "./pdf-tipler.ts";
 
 export interface BasiliCeviri {
   tanim: FormatTanimi;
-  /** yapay zekânın kullanıcıya notu */
+  /** okumanın kullanıcıya notu (BasiliHam.cevap) */
   cevap: string;
   /** şemaya uymadığı için atılan bölümlerin adları */
   atilan: string[];
 }
 
-type Ham = Record<string, unknown>;
-const nesne = (x: unknown): Ham => (x && typeof x === "object" && !Array.isArray(x) ? (x as Ham) : {});
+/** istemciden gelen nesne: alan adları sözleşmeden (pdf-tipler.ts), değerleri denetlenmemiş */
+type Gelen<T> = { [K in keyof T]?: unknown };
+const nesne = <T>(x: unknown): Gelen<T> => (x && typeof x === "object" && !Array.isArray(x) ? (x as Gelen<T>) : {});
 const dizi = (x: unknown, n: number): unknown[] => (Array.isArray(x) ? x.slice(0, n) : []);
 const yazi = (x: unknown, n: number) => (typeof x === "string" ? x.replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, n) : "");
 /** satır sonlarını koruyan yazı (hücre metni) */
@@ -32,38 +43,58 @@ const bir = <T extends string>(l: readonly T[], x: unknown): T | undefined => l.
 const tamSayi = (x: unknown, en: number, enCok: number, d: number) => (typeof x === "number" && Number.isFinite(x) ? Math.max(en, Math.min(enCok, Math.round(x))) : d);
 const RENK = /^#[0-9a-fA-F]{6}$/;
 const CEVAPLAR = ["U", "UD", "X"];
-const SATIR_EN_COK = 200, SUTUN_EN_COK = 40;
+const SATIR_EN_COK = 200, SUTUN_EN_COK = 40, BOLUM_EN_COK = 40;
+const yarimMm = (x: number) => Math.round(x * 2) / 2;
+
+/** hücrenin kenarı: her yanda belgenin çizgisiyse (1) undefined — tanımda kn yokken belge kendi çizgisini çizer; okunamayan yan belgenin çizgisi */
+function kenar(x: unknown): HucreStili["kn"] {
+  const k = nesne<NonNullable<HamHucre["kenar"]>>(x);
+  const y = (v: unknown): HamKenar => (v === 0 || v === 1 || v === 2 ? v : 1);
+  const kn = { u: y(k.u), a: y(k.a), s: y(k.s), g: y(k.g) };
+  return kn.u === 1 && kn.a === 1 && kn.s === 1 && kn.g === 1 ? undefined : kn;
+}
 
 /** ham hücrenin görünümü (boş görünüm: undefined) */
-function stil(h: Ham, belgeBoy: number): HucreStili | undefined {
+function stil(h: Gelen<HamHucre>, belgeBoy: number): HucreStili | undefined {
   const s: HucreStili = {};
   if (evet(h.kalin)) s.k = true;
   if (evet(h.egik)) s.i = true;
   if (h.hiza === "orta") s.a = "o"; else if (h.hiza === "sag") s.a = "g";
   if (typeof h.zemin === "string" && RENK.test(h.zemin) && h.zemin.toUpperCase() !== "#FFFFFF") s.z = h.zemin.toUpperCase();
   if (typeof h.boy === "number" && h.boy >= 5 && h.boy <= 40 && Math.abs(h.boy - belgeBoy) >= 0.5) s.b = Math.round(h.boy * 2) / 2;
+  const kn = kenar(h.kenar);
+  if (kn) s.kn = kn;
   return Object.keys(s).length ? s : undefined;
 }
 
-/** ham (src/server/yz/basili.ts BASILI_SEMASI) → format tanımı; tanım şemadan geçmezse null */
-export function basilidanTanim(ham: Ham, turAd: string): BasiliCeviri | null {
+/** okunan form (BasiliHam biçiminde; istemciden — denetlenmemiş) → format tanımı; tanım şemadan geçmezse null */
+export function basilidanTanim(girdi: unknown, turAd: string): BasiliCeviri | null {
+  const ham = nesne<BasiliHam>(girdi);
   const baslik = yazi(ham.baslik, 200) || `${turAd} Periyodik Kontrol Raporu`;
   const iskelet = bosFormat(baslik);
-  const hy = nesne(ham.yazi);
+  const hy = nesne<BasiliHam["yazi"]>(ham.yazi);
   const tip = bir(YAZI_TIPLERI, hy.tip);
-  const boy = typeof hy.boy === "number" && hy.boy >= 6 && hy.boy <= 16 ? Math.round(hy.boy * 2) / 2 : 9;
-  /* kimlikler o ana kadar kurulanlara göre tekil (yeniKimlik çalışan tanıma bakar; ek: bu çeviride verilenler) */
-  const ek = new Set<string>();
+  const boy = typeof hy.boy === "number" && hy.boy >= 6 && hy.boy <= 16 ? yarimMm(hy.boy) : 9;
+  const ara = typeof hy.ara === "number" && hy.ara >= 0 && hy.ara <= 10 ? yarimMm(hy.ara) : undefined;
+  /* kimlikler iskeletinkilerle çakışmaz, bu çeviride tekil: önek başına sayaç (çeviride verilenler hiç tekrar edilmez) */
+  const varolan = kimlikler(iskelet), sayac = new Map<string, number>();
+  const yeni = (onek: "b" | "c" | "r") => {
+    let n = sayac.get(onek) ?? 1;
+    while (varolan.has(`k_${onek}${n}`)) n++;
+    sayac.set(onek, n + 1);
+    return `k_${onek}${n}`;
+  };
   const bolumler: Bolum[] = [];
-  const calisan = (): FormatTanimi => ({ ...iskelet, bolumler });
-  const yeni = (onek: "b" | "c" | "r") => { const x = yeniKimlik(calisan(), onek, ek); ek.add(x); return x; };
   const atilan: string[] = [];
+  const hamBolumler = dizi(ham.bolumler, BOLUM_EN_COK).map((o) => nesne<HamBolum>(o));
 
-  for (const [n, x] of dizi(ham.bolumler, 40).map(nesne).entries()) {
+  for (const [n, x] of hamBolumler.entries()) {
     const ad = yazi(x.ad, 200) || `Bölüm ${n + 1}`;
     const yan = bolumler.length > 0 && evet(x.yan);
+    /* oran yan yana satırın her bölümünde — ilk bölümünde de (ardından yan bölüm geliyorsa) */
     const oran = typeof x.oran === "number" && x.oran >= 5 && x.oran <= 100 ? Math.round(x.oran) : undefined;
-    const yer = { ...(yan ? { yan: true } : {}), ...(yan && oran ? { oran } : {}) };
+    const satirAcar = !yan && n + 1 < hamBolumler.length && evet(hamBolumler[n + 1].yan);
+    const yer = { ...(yan ? { yan: true } : {}), ...((yan || satirAcar) && oran ? { oran } : {}) };
     if (x.tur === "cihaz" || x.tur === "foto" || x.tur === "kusur") {
       if (x.tur === "cihaz" && bolumler.some((y) => y.blok === "cihaz")) continue;
       const govde = x.tur === "foto" ? { enAz: 1, enCok: 20 } : {};
@@ -74,17 +105,17 @@ export function basilidanTanim(ham: Ham, turAd: string): BasiliCeviri | null {
     /* serbest tablo: sütun oranları, satırlar soldan sağa yerleşir; taşan hücre sığdırılır, boş kalan yer boş yazı hücresi */
     const sutun = dizi(x.sutunlar, SUTUN_EN_COK).map((w) => (typeof w === "number" && w > 0 ? Math.min(100, Math.max(1, w)) : 0)).filter((w) => w > 0);
     const C = sutun.length || 1;
-    const hamSatirlar = dizi(x.satirlar, SATIR_EN_COK).map(nesne);
+    const hamSatirlar = dizi(x.satirlar, SATIR_EN_COK).map((o) => nesne<HamSatir>(o));
     if (!hamSatirlar.length) { atilan.push(ad); continue; }
     const R = hamSatirlar.length;
     const dolu = new Set<string>(), hucreler: Hucre[] = [], satirlar: TabloSatiri[] = [];
     const cevaplar = [...new Set(dizi(x.cevaplar, 6).map((c) => yazi(c, 40)).filter(Boolean))];
     hamSatirlar.forEach((hs, r) => {
       const tekrar = evet(hs.tekrar);
-      const y = typeof hs.yukseklik === "number" && hs.yukseklik > 0 ? Math.min(250, Math.round(hs.yukseklik)) : 0;
+      const y = typeof hs.yukseklik === "number" && hs.yukseklik > 0 ? Math.min(250, yarimMm(hs.yukseklik)) : 0;
       satirlar.push({ ...(y ? { y } : {}), ...(tekrar ? { tekrar: true, id: yeni("r") } : {}) });
       let c = 0;
-      for (const h of dizi(hs.hucreler, SUTUN_EN_COK).map(nesne)) {
+      for (const h of dizi(hs.hucreler, SUTUN_EN_COK).map((o) => nesne<HamHucre>(o))) {
         while (c < C && dolu.has(`${r},${c}`)) c++;
         if (c >= C) break;
         let cs = tamSayi(h.sutunBirlesim, 1, C - c, 1);
@@ -121,7 +152,7 @@ export function basilidanTanim(ham: Ham, turAd: string): BasiliCeviri | null {
           }
           case "gorsel": hucre = { ...ortak, tur, gorsel: h.gorsel === "akr" ? "akr" : "logo" }; break;
           case "foto": hucre = { ...ortak, tur, id: yeni("c"), ad: yazi(metin, 200) || "Fotoğraf" }; break;
-          case "sonuc": hucre = { ...ortak, tur, secenekler: secenekler.length >= 2 ? secenekler.slice(0, 3) : ["UYGUNDUR", "UYGUN DEĞİLDİR"] }; break;
+          case "sonuc": hucre = { ...ortak, tur, ...(metin ? { m: metin } : {}), secenekler: secenekler.length >= 2 ? secenekler.slice(0, 3) : ["UYGUNDUR", "UYGUN DEĞİLDİR"] }; break;
           default: hucre = { ...ortak, tur: "yazi", m: metin };
         }
         hucreler.push(hucre);
@@ -134,8 +165,12 @@ export function basilidanTanim(ham: Ham, turAd: string): BasiliCeviri | null {
     if (b.success) bolumler.push(b.data); else atilan.push(ad);
   }
 
-  /* raporun yürümesi için gerekenler formda yoksa sona: sonuç (sonuç hücresi), muayene uzmanının imza yeri, fotoğraflar */
+  /* raporun yürümesi için gerekenler formda yoksa sona: sonuç (sonuç hücresi), muayene uzmanının imza yeri, fotoğraflar — yer yoksa sondaki
+     bölümler atılır (eklenenler raporun yürümesi için şart; atılanın adı söylenir) */
   const hucreVar = (f: (h: Hucre) => boolean) => bolumler.some((b) => b.blok === "tablo" && b.hucreler.some(f));
+  const eksik = () => [!hucreVar((h) => h.tur === "sonuc"), !hucreVar((h) => h.tur === "imza" && h.kim === "uzman"),
+    !bolumler.some((b) => b.blok === "foto") && !hucreVar((h) => h.tur === "foto")].filter(Boolean).length;
+  while (bolumler.length && bolumler.length + eksik() > BOLUM_EN_COK) atilan.push(bolumler.pop()!.ad);
   const ekTablo = (ad: string, l: Omit<Hucre, "r" | "c">[]) => {
     const t = Bolum.parse({ id: yeni("b"), ad, blok: "tablo", kilit: false, sutun: l.map(() => 100 / l.length), satirlar: [{}],
       hucreler: l.map((h, c) => ({ ...h, r: 0, c })) });
@@ -149,7 +184,7 @@ export function basilidanTanim(ham: Ham, turAd: string): BasiliCeviri | null {
 
   const gorunum = {
     ...iskelet.gorunum, formKodu: yazi(ham.formKodu, 20), baslik, serbest: true,
-    yazi: { ...(tip && tip !== "carlito" ? { tip } : {}), ...(boy !== 9 ? { boy } : {}) },
+    yazi: { ...(tip && tip !== "carlito" ? { tip } : {}), ...(boy !== 9 ? { boy } : {}), ...(ara !== undefined ? { ara } : {}) },
     ...(yazi(ham.altYazi, 300) ? { altYazi: yazi(ham.altYazi, 300) } : {}),
   };
   if (!Object.keys(gorunum.yazi).length) delete (gorunum as { yazi?: unknown }).yazi;

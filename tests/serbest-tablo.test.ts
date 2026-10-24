@@ -3,7 +3,9 @@
    koda geç"). Format tanımının serbest tablo bölümü (src/format/tablo.ts, tanim.ts blok "tablo"): birleştir / ayır, satır ve sütun ekle / sil (birleşik
    hücre büyür / küçülür), sütun genişliği, kenarlar, görünüm; şema (taşma, üst üste binme, cevaplı hücrenin kimliği); sanal bölümler — cevaplar
    mevcut alan / madde / tablo cevaplarıdır: motor kusuru ve eksiği aynı yoldan bulur; belge değerleri ızgarada basar; yan yana yerleşim; kurucunun
-   belge yazısı ayarı. Saf (veritabanısız). Olumsuz kanıt: tests/bozan/serbest-tablo.bozan.ts. */
+   belge yazısı ayarı. Saf (veritabanısız). Olumsuz kanıt: tests/bozan/serbest-tablo.bozan.ts.
+   2026-10-24 (denetim — basılı formun iki sütunlu kontrol listesi): sıra numaraları ve sahadaki madde sırası sütun sütun (önce sol sütun, alt
+   başlıkla bölünen sütun dizisi sırasıyla); yan yana iki listede maddeye ötekinin yazısı karışmaz. */
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -11,7 +13,7 @@ import { raporBelgesi } from "../src/belge/belge.ts";
 import { ornekBelge } from "../src/belge/ornek.ts";
 import { degerlendir } from "../src/format/motor.ts";
 import {
-  ayir, birlestir, genislet, hucreBicemi, kapsama, kenarYaz, sahaTanimi, satirEkle, satirSil, siraNumaralari, stilYaz, sutunEkle, sutunGenisligi, sutunSil,
+  ayir, birlestir, diziSirasi, genislet, hucreBicemi, kapsama, kenarYaz, maddeMetni, sahaTanimi, satirEkle, satirSil, siraNumaralari, stilYaz, sutunEkle, sutunGenisligi, sutunSil,
   sutunYuzdeleri, yerlesimSatirlari, yeniTablo, type TabloBolumu,
 } from "../src/format/tablo.ts";
 import { Bolum, Cevaplar, FormatTanimi, type Hucre } from "../src/format/tanim.ts";
@@ -158,4 +160,28 @@ test("kurucu: sabit bölümler ve belgenin yazısı yazılır; varsayılana dön
   y = belgeYazisiYaz(y, { serbest: false, tip: undefined, boy: undefined });
   assert.ok(!("serbest" in y.gorunum) && !("yazi" in y.gorunum));
   FormatTanimi.parse(y);
+});
+
+test("iki sütunlu liste: sıra numaraları ve madde sırası sütun dizisiyle (sol 1–3, sağ 4–5; sağdaki alt başlık diziyi böler); madde kendi yanının yazısı", () => {
+  const h = (r: number, c: number, o: Omit<Hucre, "r" | "c">): Hucre => ({ r, c, ...o });
+  /* No | Madde | Cevap || No | Madde | Cevap; sağda 2. satır alt başlık */
+  const hucreler: Hucre[] = [h(0, 0, { tur: "yazi", m: "No" }), h(0, 1, { tur: "yazi", m: "Madde" }), h(0, 2, { tur: "yazi", m: "S" }), h(0, 3, { tur: "yazi", m: "No" }),
+    h(0, 4, { tur: "yazi", m: "Madde" }), h(0, 5, { tur: "yazi", m: "S" })];
+  for (let r = 1; r <= 3; r++) {
+    hucreler.push(h(r, 0, { tur: "sira" }), h(r, 1, { tur: "yazi", m: `Sol ${r}` }), h(r, 2, { tur: "cevap", id: `l${r}` }));
+    if (r === 2) hucreler.push(h(r, 3, { tur: "yazi", m: "No" }), h(r, 4, { tur: "yazi", m: "Alt baslik" }), h(r, 5, { tur: "yazi", m: "S" }));
+    else hucreler.push(h(r, 3, { tur: "sira" }), h(r, 4, { tur: "yazi", m: `Sag ${r}` }), h(r, 5, { tur: "cevap", id: `s${r}` }));
+  }
+  const b: TabloBolumu = { id: "k", ad: "K", blok: "tablo", kilit: false, sutun: [5, 35, 10, 5, 35, 10], cevaplar: ["U", "UD"], satirlar: [{}, {}, {}, {}], hucreler };
+  const t = FormatTanimi.parse({ sema: 1, bolumler: [b] });
+  assert.deepEqual([...siraNumaralari(t).entries()], [["k:1,0", 1], ["k:2,0", 2], ["k:3,0", 3], ["k:1,3", 4], ["k:3,3", 5]]);
+  assert.deepEqual(diziSirasi(hucreler.filter((x) => x.tur === "cevap")).map((x) => x.id), ["l1", "l2", "l3", "s1", "s3"]);
+  const liste = sahaTanimi(t).bolumler.find((x) => x.blok === "liste");
+  assert.ok(liste && liste.blok === "liste");
+  assert.deepEqual(liste.gruplar[0].maddeler.map((m) => m.metin), ["Sol 1", "Sol 2", "Sol 3", "Sag 1", "Sag 3"]);
+  /* alt başlık satırındaki sol madde: sağdaki alt başlığın yazısı karışmaz */
+  assert.equal(maddeMetni(b, hucreler.find((x) => x.id === "l2")!), "Sol 2");
+  /* tek sütunlu liste: okuma sırası aynı */
+  const tek = FormatTanimi.parse({ sema: 1, bolumler: [{ id: "t", ad: "T", blok: "tablo", kilit: false, sutun: [10, 90], satirlar: [{}, {}], hucreler: [h(0, 0, { tur: "sira" }), h(0, 1, { tur: "yazi", m: "a" }), h(1, 0, { tur: "sira" }), h(1, 1, { tur: "yazi", m: "b" })] }] });
+  assert.deepEqual([...siraNumaralari(tek).entries()], [["t:0,0", 1], ["t:1,0", 2]]);
 });

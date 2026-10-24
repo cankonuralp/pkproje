@@ -1,6 +1,6 @@
-/* Basılı formdan şablon (2026-10-23; 2026-10-24 serbest düzen) testlerinin UYDURMA okuması — yapay zekânın cevabı biçiminde bir vinç formu ızgara
-   olarak (gerçek firmanın formu depoya girmez). tests/basili-format.test.ts, olumsuz kanıtı tests/bozan/basili-format.bozan.ts ve uçtan uca taklit
-   (scripts/e2e-sunucu.ts) ortak. */
+/* Basılı formdan şablon (2026-10-23; 2026-10-24 serbest düzen) testlerinin UYDURMA okuması — PDF okuyucusunun çıktısı biçiminde (BASILI ham,
+   src/modules/rapor-format/pdf-tipler.ts; 2026-10-24'ten beri yapay zekâ yok) bir vinç formu ızgara olarak (gerçek firmanın formu depoya girmez).
+   tests/basili-format.test.ts ve olumsuz kanıtı tests/bozan/basili-format.bozan.ts ortak. */
 const h = (metin: string, ek: Record<string, unknown> = {}) => ({
   metin, tur: "yazi", sutunBirlesim: 1, satirBirlesim: 1, kaynak: "yok", alan: "metin", birim: "", secenekler: [], formul: "", kim: "yok", gorsel: "logo",
   kalin: false, egik: false, hiza: "sol", zemin: "", boy: 0, ...ek,
@@ -55,4 +55,14 @@ export const HAM = {
       [et("İmza"), h("", { tur: "imza", kim: "uzman" }), h("", { tur: "imza", kim: "teknik" })],
     ]),
   ],
+};
+
+/* 2026-10-24 (yapay zekâsız okuma): sonuç hücresinin cümlesi (metin — sözcükten önceki kısım) ve hücre kenarları (kenar: 0 yok · 1 ince · 2 kalın;
+   okunamayan yan belgenin çizgisi). Hepsi uydurma. */
+export const HAM_SONUC_KENAR = {
+  cevap: "", baslik: "", formKodu: "", altYazi: "", yazi: { tip: "carlito", boy: 9 },
+  bolumler: [tablo("Sonuç cümlesi", [60, 40], [
+    [h("Kenarsız", { kenar: { u: 0, a: 0, s: 0, g: 0 } }), h("Ekipman kullanıma", { tur: "sonuc", secenekler: ["UYGUNDUR", "UYGUN DEĞİLDİR"], kenar: { u: 1, a: 1, s: 1, g: 1 } })],
+    [h("Kalın üst", { kenar: { u: 2, a: 1, s: 1, g: 9 } }), h("Belgenin çizgisi")],
+  ])],
 };

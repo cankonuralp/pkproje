@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { Kosullar } from "../../../components/bilgi/Bilgi";
 import { useBildir } from "../../../components/bildirim/Bildirim";
+import { dosyaBaytlari } from "../../../components/gizli-resim/GizliResim";
 import { Alan, FormIzgara, Girdi, ipucuId } from "../../../components/form/Form";
 import { KartEtiket, Liste, type Sutun } from "../../../components/liste/Liste";
 import { Pencere, pencereMetinSinifi } from "../../../components/pencere/Pencere";
@@ -19,9 +20,11 @@ import { useOnayla } from "../../../components/pencere/Onay";
 import { Serit } from "../../../components/serit/Serit";
 import { SilTusu } from "../../../components/sil/SilTusu";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
+import type { BasiliHam } from "../pdf-tipler";
 import type { FormatOzeti } from "../server/formatlar";
 import { basilidanKurEylemi, surumeGeriDonEylemi, surumSilEylemi, taslakBaslatEylemi, yayinDenetleEylemi, yayinlaEylemi } from "./eylemler";
 import { DURUM_ROZET, surumAdi, tarihYaz } from "./ortak";
+import { pdfdenHam, pdfOkumaHatasi } from "./pdfOku";
 import stil from "./format.module.css";
 
 const BASLA_ID = "sb-baslangic", NOT_ID = "sb-not", GERI_NOT_ID = "sb-geri-not";
@@ -208,12 +211,15 @@ export function SifirdanTusu({ turId, turAd, taslak }: { turId: string; turAd: s
 
 /** 2026-10-23 (basılı formdan şablon — reisim: "ben bunu yükleyince format buna dönüşsün format düzenleyicide bundan düzenleme yapabileyim
     istiyorum"): türün basılı format PDF'inden taslak; bitince Format kurucu açılır. Dönen: hata iletisi (yoksa null). Tür sayfasının yükleme
-    penceresi ve basılı format satırı ortak. */
+    penceresi ve basılı format satırı ortak. 2026-10-24 yapay zekâsız (reisim: "en baştan beri bunu istedim"): PDF tarayıcıda okunur (pdfOku.ts),
+    okunan ızgara (ham) ve PDF'in sürümü (sira) sunucuya gider. 2026-10-24 (denetim): eylem hata fırlatırsa (ağ, veritabanı, işlev süresi) de
+    ileti döner — çağıranın "kuruluyor" aşaması takılı kalmaz (pencere kapanır, tuş yeniden basılır). */
 export function useBasilidanKur(turId: string) {
   const router = useRouter();
   const bildir = useBildir();
-  return async (formatId: string | null, taslakSurumu: number | null): Promise<string | null> => {
-    const r = await basilidanKurEylemi(turId, formatId, taslakSurumu);
+  return async (sira: number, ham: BasiliHam, taslakSurumu: number | null): Promise<string | null> => {
+    let r: Awaited<ReturnType<typeof basilidanKurEylemi>>;
+    try { r = await basilidanKurEylemi(turId, sira, ham, taslakSurumu); } catch { return "Şablon kurulamadı."; }
     if (!r.tamam || !r.id) return r.genel ?? "Şablon kurulamadı.";
     bildir(["Şablon basılı formdan kuruldu (taslak).", ...(r.uyarilar ?? [])].join(" "));
     router.push(`/ekipman-turleri/${turId}/sablon/${r.id}/kurucu`);
@@ -221,18 +227,26 @@ export function useBasilidanKur(turId: string) {
   };
 }
 
-/** basılı format satırındaki "Şablonu bundan kur" — onaylanınca o PDF'ten taslak (açık taslağın yerine geçer) */
-export function BasilidanKurTusu({ turId, formatId, sira, taslak }: { turId: string; formatId: string; sira: number; taslak: { surum: number; degisti: string } | null }) {
+/** basılı format satırındaki "Şablonu bundan kur" — onaylanınca o sürümün PDF'i (dosyaId; oturumlu tek dosya ucundan — GizliResim dosyaBaytlari)
+    tarayıcıda okunur, şablon taslak olarak kurulur (açık taslağın yerine geçer). Aşama tuşta: okunuyor → kuruluyor. Aşama ayrı durumda (geçiş
+    — useTransition — değil): geçişin ilk adımındaki durum ancak iş bitince görünürdü. */
+export function BasilidanKurTusu({ turId, dosyaId, sira, taslak }: { turId: string; dosyaId: string; sira: number; taslak: { surum: number; degisti: string } | null }) {
   const bildir = useBildir();
   const onayla = useOnayla();
   const kur = useBasilidanKur(turId);
-  const [bekliyor, baslat] = useTransition();
+  const [asama, setAsama] = useState<"okunuyor" | "kuruluyor" | null>(null);
   return (
-    <Tus tur="ikincil" ikon="scan-text" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={async () => {
+    <Tus tur="ikincil" ikon="scan-text" disabled={asama !== null} aria-busy={asama !== null || undefined} onClick={async () => {
       if (!(await onayla({ baslik: `Şablonu sürüm ${sira}'den kur`, tus: "Kur",
         metin: `Rapor şablonu bu basılı forma göre yeni taslak olarak kurulur; yayındaki sürüm değişmez.${taslak ? ` Taslak (${tarihYaz(taslak.degisti)}) bununla değiştirilir.` : ""}` }))) return;
-      baslat(async () => { const h = await kur(formatId, taslak?.surum ?? null); if (h) bildir(h); });
-    }}>{bekliyor ? "Kuruluyor…" : "Şablonu bundan kur"}</Tus>
+      setAsama("okunuyor");
+      let ham: BasiliHam;
+      try { ham = await pdfdenHam(await dosyaBaytlari(dosyaId)); } catch (e) { setAsama(null); bildir(pdfOkumaHatasi(e)); return; }
+      setAsama("kuruluyor");
+      /* kurulunca kurucu açılır — tuş o ana dek "Kuruluyor…" (ikinci basış görmediği taslağı ezmeye kalkmasın) */
+      const h = await kur(sira, ham, taslak?.surum ?? null);
+      if (h) { setAsama(null); bildir(h); }
+    }}>{asama === "okunuyor" ? "Okunuyor…" : asama === "kuruluyor" ? "Kuruluyor…" : "Şablonu bundan kur"}</Tus>
   );
 }
 

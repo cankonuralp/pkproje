@@ -139,7 +139,11 @@ export function TabloDuzenleyici({ t, i, b, degis, bildir }: {
       case "imza": return isaret("file-signature", `İmza · ${h.kim ? KISI_ADI[h.kim] : "kişi seçin"}${h.eimza ? " · e-imza" : ""}`);
       case "gorsel": return <span className={s.gorsel}>{h.gorsel === "akr" ? "AKR." : "LOGO"}</span>;
       case "foto": return isaret("camera", h.ad || "Fotoğraf");
-      case "sonuc": return isaret("circle-check", (h.secenekler?.length ? h.secenekler : ["UYGUNDUR", "UYGUN DEĞİLDİR"]).join(" / "));
+      /* 2026-10-24: cümle (m — sözcükten önceki kısım) varsa önünde; belge "m SÖZCÜK" basar */
+      case "sonuc": return <>
+        {h.m?.trim() && <>{h.m.trimEnd().split("\n").map((p, j) => <span key={j}>{j > 0 && <br />}{p}</span>)} </>}
+        {isaret("circle-check", (h.secenekler?.length ? h.secenekler : ["UYGUNDUR", "UYGUN DEĞİLDİR"]).join(" / "))}
+      </>;
     }
   };
 
@@ -163,12 +167,12 @@ export function TabloDuzenleyici({ t, i, b, degis, bildir }: {
                 <tr key={r} className={tekrarSatirlari.has(r) ? s.tekrar : undefined} style={x.y ? { height: `${x.y}mm` } : undefined}>
                   {b.sutun.map((_, c) => {
                     const n = g[r]?.[c];
-                    if (n === null || n === undefined) return <td key={c} data-r={r} data-c={c} style={hucreBicemi({}, t.gorunum.yazi) as CSSProperties} className={a && r >= a.r1 && r <= a.r2 && c >= a.c1 && c <= a.c2 ? s.secili : undefined} />;
+                    if (n === null || n === undefined) return <td key={c} data-r={r} data-c={c} style={hucreBicemi({}, t.gorunum.yazi, !!x.y) as CSSProperties} className={a && r >= a.r1 && r <= a.r2 && c >= a.c1 && c <= a.c2 ? s.secili : undefined} />;
                     const h = b.hucreler[n];
                     if (h.r !== r || h.c !== c) return null;
                     const sec_ = !!a && r >= a.r1 && r <= a.r2 && c >= a.c1 && c <= a.c2;
                     return (
-                      <td key={c} data-r={r} data-c={c} rowSpan={h.rs} colSpan={h.cs} style={hucreBicemi(h, t.gorunum.yazi) as CSSProperties}
+                      <td key={c} data-r={r} data-c={c} rowSpan={h.rs} colSpan={h.cs} style={hucreBicemi(h, t.gorunum.yazi, !!x.y) as CSSProperties}
                         className={sec_ ? s.secili : undefined} title={HUCRE_TURU_ADI[h.tur]}>
                         {icerik(h, n)}
                       </td>
@@ -322,9 +326,14 @@ function TurAyari({ b, h, yaz, bolum }: { b: TabloBolumu; h: Hucre; yaz: (o: Par
   );
   if (h.tur === "foto") return <div className={k.panelSatir}><label className={k.panelAlan}>Kutunun adı
     <MetinKutu id={`${id}-fa`} deger={h.ad ?? ""} yaz={(v) => yaz({ ad: v || undefined })} /></label></div>;
-  if (h.tur === "sonuc") return <div className={k.panelSatir}><label className={k.panelAlan}>Sözcükler: uygun · uygun değil · (isteğe bağlı) şartlı uygun — satır başına bir
-    <MetinKutu id={`${id}-so`} deger={(h.secenekler ?? ["UYGUNDUR", "UYGUN DEĞİLDİR"]).join("\n")} cok
-      yaz={(v) => yaz({ secenekler: v.split("\n").map((x) => x.trim()).filter(Boolean).slice(0, 3) })} /></label></div>;
+  if (h.tur === "sonuc") return (
+    <div className={k.panelSatir}>
+      <label className={k.panelAlan}>Cümle<MetinKutu id={`${id}-sm`} deger={h.m ?? ""} cok yaz={(v) => yaz({ m: v.trim() ? v : undefined })} /></label>
+      <label className={k.panelAlan}>Sözcükler: uygun · uygun değil · (isteğe bağlı) şartlı uygun — satır başına bir
+        <MetinKutu id={`${id}-so`} deger={(h.secenekler ?? ["UYGUNDUR", "UYGUN DEĞİLDİR"]).join("\n")} cok
+          yaz={(v) => yaz({ secenekler: v.split("\n").map((x) => x.trim()).filter(Boolean).slice(0, 3) })} /></label>
+    </div>
+  );
   if (h.tur === "sira") return (
     <div className={k.panelSatir}><label className={k.panelKutu}><input type="checkbox" checked={!!b.siraDevam} onChange={(e) => bolum({ siraDevam: e.target.checked || undefined })} />Numara önceki tablodan sürer</label></div>
   );

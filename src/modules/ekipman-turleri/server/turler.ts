@@ -6,7 +6,7 @@ import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { kesinSil, kullanimlar, type Kullanim } from "../../../server/db/silici.ts";
 import { ekle, guncelle, tablo } from "../../../server/db/yazici.ts";
 import type { Depo } from "../../../server/dosya/depo.ts";
-import { dosyaYukle, kayitDosyasi } from "../../../server/dosya/dosya.ts";
+import { dosyaYukle } from "../../../server/dosya/dosya.ts";
 import { canDo, canDoEylem, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { kullanimMetni } from "../../../components/sil/metin.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
@@ -165,16 +165,12 @@ export async function formatYukle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaI
   return { durum: "tamam", sira };
 }
 
-/** 2026-10-23 (basılı formdan şablon — rapor-format/server/basili.ts): türün basılı format PDF'i — verilen sürüm ya da kullanımdaki (kaldırılmamış
-    en yeni). YETKİ DENETİMİ YOK — çağıran "değiştirir" düzeyini denetler. Yoksa null. */
-export async function basiliPdf(db: Sorgulayici, depo: Depo, turId: string, formatId: string | null): Promise<{ id: string; sira: number; ad: string; bayt: Uint8Array } | null> {
-  if (!UUID.test(turId) || (formatId !== null && !UUID.test(formatId))) return null;
-  const r = (await db.sorgu<{ id: string; sira: number; dosya_id: string }>(
-    `SELECT id::text, sira, dosya_id::text FROM tur_format WHERE tur_id = $1 AND kaldirildi IS NULL ${formatId ? "AND id = $2" : ""} ORDER BY sira DESC LIMIT 1`,
-    formatId ? [turId, formatId] : [turId])).rows[0];
-  const d = r ? await kayitDosyasi(db, DOSYA_MODULU, turId, r.dosya_id) : null;
-  if (!r || !d) return null;
-  return { id: r.id, sira: r.sira, ad: d.ad, bayt: await depo.oku(d.anahtar, db) };
+/** 2026-10-23 (basılı formdan şablon — rapor-format/server/basili.ts): türün basılı format PDF'inin sürümü (sira) türde yüklü ve kaldırılmamış mı —
+    şablonun kaynağı notunda bu sürüm yazılır. 2026-10-24: PDF artık tarayıcıda okunur (yapay zekâsız), sunucu yalnız sürümü doğrular. YETKİ
+    DENETİMİ YOK — çağıran "değiştirir" düzeyini denetler. */
+export async function basiliSurumVar(db: Sorgulayici, turId: string, sira: number): Promise<boolean> {
+  if (!UUID.test(turId) || !Number.isSafeInteger(sira) || sira < 1) return false;
+  return !!(await db.sorgu("SELECT 1 FROM tur_format WHERE tur_id = $1 AND sira = $2 AND kaldirildi IS NULL", [turId, sira])).rowCount;
 }
 
 /** format sürümünü kaldır (silinmez; kullanımdaki kaldırılınca bir önceki kullanıma girer — maket 2026-09-28) */

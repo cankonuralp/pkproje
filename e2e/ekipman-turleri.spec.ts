@@ -39,6 +39,9 @@ test("ekipman türü: ekle, rapor formatı yükle, elektrik sekmesi; denetçi ya
   const f = page.getByRole("dialog", { name: "Format PDF'i yükle" });
   await f.getByLabel("Format PDF'i").setInputFiles({ name: "vinc-formati.pdf", mimeType: "application/pdf", buffer: PDF });
   await f.getByLabel("Sürüm notu").fill("ilk sürüm");
+  /* 2026-10-24 (basılı formdan şablon yapay zekâsız — kutu her firmada, işaretli gelir): burada yalnız saklama denenir; şablonun kurulması
+     e2e/format-yz.spec.ts */
+  await f.getByLabel("Rapor şablonunu bu PDF'e göre kur").uncheck();
   await f.getByRole("button", { name: "Yükle" }).click();
   await expect(page.getByText("Format PDF'i yüklendi: sürüm 1.")).toBeVisible();
   await expect(page.getByText("Güncel", { exact: true })).toBeVisible();

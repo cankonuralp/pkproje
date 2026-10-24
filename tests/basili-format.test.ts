@@ -3,19 +3,24 @@
    kurucuda istediğim gibi düzenleyebileyim": basılı format PDF'inin okunanı SERBEST DÜZENE çevrilir (src/modules/rapor-format/basili.ts) — sabit
    iskelet yok, her tablo bir serbest tablo bölümü (birleşik hücreler, yan yana tablolar, hücrenin türü / kaynağı / görünümü, sahada çoğalan satır),
    belgenin yazı tipi; raporun yürümesi için gerekenler (sonuç, uzmanın imza yeri, fotoğraflar) formda yoksa sona. Belge formun ızgarasını çizer.
-   Saf (veritabanısız); form UYDURMA (tests/yardimci/basili-ornek.ts). Olumsuz kanıt: tests/bozan/basili-format.bozan.ts. */
+   2026-10-24 (yapay zekâsız okuma — reisim: "en baştan beri bunu istedim"): girdi PDF okuyucusunun çıktısı (pdf-tipler.ts BasiliHam); sonuç
+   hücresinin cümlesi (m) belgede "m SÖZCÜK", formdaki hücre kenarı (0 yok · 1 ince · 2 kalın) her yanda belgenin çizgisi değilse görünümde (kn).
+   Saf (veritabanısız); form UYDURMA (tests/yardimci/basili-ornek.ts). Olumsuz kanıt: tests/bozan/basili-format.bozan.ts.
+   2026-10-24 (denetim): yan yana satırın ilk bölümünün oranı (70/30 belgede 70/30), satır yüksekliği yarım mm, bölümler arası aralık okumadan,
+   eklenecek bölümlere yer (40 bölümlük okuma şablona çevrilir, sondaki atılır ve adı söylenir), kimlik üretimi hücre sayısıyla doğrusal (büyük
+   okuma işlemde bekletmez); satırının yüksekliği formdan gelen hücrede üst / alt iç boşluk yok (formun satırı belgede uzamaz). */
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { raporBelgesi } from "../src/belge/belge.ts";
 import { ornekBelge } from "../src/belge/ornek.ts";
 import { raporDuzeni } from "../src/format/duzen.ts";
-import { sahaTanimi } from "../src/format/tablo.ts";
+import { hucreBicemi, sahaTanimi, yerlesimSatirlari } from "../src/format/tablo.ts";
 import { SABLONLAR } from "../src/format/sablonlar.ts";
 import { FormatTanimi, type BolumOf } from "../src/format/tanim.ts";
 import { basilidanTanim } from "../src/modules/rapor-format/basili.ts";
 import { gorunumYaz } from "../src/modules/rapor-format/kurucu.ts";
-import { HAM } from "./yardimci/basili-ornek.ts";
+import { HAM, HAM_SONUC_KENAR } from "./yardimci/basili-ornek.ts";
 
 const kur = () => basilidanTanim(structuredClone(HAM), "Vinç")!;
 const tablo = (t: FormatTanimi, ad: string) => t.bolumler.find((b) => b.ad === ad) as BolumOf<"tablo">;
@@ -39,7 +44,8 @@ test("basılı formun okunanı serbest düzene çevrilir ve şemadan geçer", ()
   const kanca = tablo(t, "Kanca bloğu"), halat = tablo(t, "Halat bilgileri");
   assert.equal(kanca.yan, true);
   assert.equal(kanca.oran, 50);
-  assert.equal(halat.yan, undefined, "ilk tablo satırı açar (oran yalnız yan olanda yazılır)");
+  /* 2026-10-24 (denetim): satırı açan ilk tablonun oranı da yazılır — önce atılıyordu, belgede pay bozuluyordu (70/30 → 62,5/37,5) */
+  assert.deepEqual([halat.yan, halat.oran], [undefined, 50], "ilk tablo satırı açar, oranıyla");
 });
 
 test("ızgara: birleşik hücreler HTML tablosu gibi yerleşir, görünüm ve türler formdan", () => {
@@ -132,4 +138,69 @@ test("kurucu: görünüm yazılır; Bakanlık görünümüne dönen değer tanı
   assert.deepEqual(JSON.parse(JSON.stringify(y.gorunum)), JSON.parse(JSON.stringify(t.gorunum)));
   assert.ok(!("stil" in y.gorunum) && !("basTuru" in y.gorunum));
   FormatTanimi.parse(y);
+});
+
+test("sonuç hücresinin cümlesi belgede sözcükle birlikte; formdaki kenarsız / kalın kenar görünüme geçer, belgenin çizgisi yazılmaz", () => {
+  const t = basilidanTanim(structuredClone(HAM_SONUC_KENAR), "Vinç")!.tanim;
+  const b = tablo(t, "Sonuç cümlesi");
+  const hucre = (r: number, c: number) => b.hucreler.find((x) => x.r === r && x.c === c)!;
+  assert.deepEqual(hucre(0, 1), { r: 0, c: 1, tur: "sonuc", m: "Ekipman kullanıma", secenekler: ["UYGUNDUR", "UYGUN DEĞİLDİR"] });
+  assert.deepEqual(hucre(0, 0).s, { kn: { u: 0, a: 0, s: 0, g: 0 } });
+  assert.deepEqual(hucre(1, 0).s, { kn: { u: 2, a: 1, s: 1, g: 1 } }, "okunamayan yan belgenin çizgisi");
+  assert.equal(hucre(1, 1).s, undefined);
+  /* formda sonuç var: sona ayrıca sonuç tablosu eklenmez */
+  assert.equal(t.bolumler.filter((x) => x.blok === "tablo" && x.hucreler.some((y) => y.tur === "sonuc")).length, 1);
+  const h = renderToStaticMarkup(raporBelgesi({ ...ornekBelge("ZPKR02"), tanim: t }) as never);
+  assert.match(h, />Ekipman kullanıma UYGUNDUR<\/td>/);
+  assert.match(h, /<td style="border-top:0;border-bottom:0;border-left:0;border-right:0;[^"]*">Kenarsız<\/td>/);
+  assert.match(h, /<td style="border-top:2px solid #000000;border-bottom:1px solid #000000;[^"]*">Kalın üst<\/td>/);
+});
+
+/* ── 2026-10-24 DENETİM KİLİTLERİ ── */
+const paragraf = (ad: string, ek: Record<string, unknown> = {}) => ({ ad, tur: "tablo", yan: false, oran: 100, sutunlar: [100], cevaplar: [],
+  satirlar: [{ tekrar: false, yukseklik: 0, hucreler: [{ metin: ad, tur: "yazi", sutunBirlesim: 1, satirBirlesim: 1 }] }], ...ek });
+
+test("yan yana satırın ilk bölümünün oranı da yazılır: formun 70 / 30'u belgede 70 / 30", () => {
+  const t = basilidanTanim({ bolumler: [paragraf("Sol", { oran: 70 }), paragraf("Sag", { yan: true, oran: 30 })] }, "Vinç")!.tanim;
+  assert.deepEqual(t.bolumler.slice(0, 2).map((b) => [b.ad, b.yan ?? false, b.oran]), [["Sol", false, 70], ["Sag", true, 30]]);
+  assert.deepEqual(yerlesimSatirlari(t.bolumler.slice(0, 2).map((b) => ({ b }))).map((x) => x.oranlar), [[70, 30]]);
+  /* tek başına satır oran almaz */
+  assert.equal(basilidanTanim({ bolumler: [paragraf("Tek", { oran: 70 })] }, "Vinç")!.tanim.bolumler[0].oran, undefined);
+});
+
+test("satır yüksekliği yarım mm'ye (formun ölçüsü); bölümler arası aralık okumadan", () => {
+  const ham = { yazi: { tip: "arimo", boy: 8, ara: 0 }, bolumler: [paragraf("A", { satirlar: [4.5, 6.5, 4].map((yukseklik) => ({ tekrar: false, yukseklik, hucreler: [{ metin: "x", tur: "yazi" }] })) })] };
+  const t = basilidanTanim(ham, "Vinç")!.tanim;
+  assert.deepEqual((t.bolumler[0] as BolumOf<"tablo">).satirlar.map((s) => s.y), [4.5, 6.5, 4]);
+  assert.deepEqual(t.gorunum.yazi, { tip: "arimo", boy: 8, ara: 0 });
+});
+
+test("40 bölümlük okuma da şablona çevrilir: eklenecekler (sonuç, uzmanın imzası, fotoğraflar) için sondaki bölümler atılır, adı söylenir", () => {
+  const r = basilidanTanim({ bolumler: Array.from({ length: 40 }, (_, i) => paragraf(`Paragraf ${i + 1}`)) }, "Vinç");
+  assert.ok(r, "çeviri null");
+  assert.equal(r.tanim.bolumler.length, 40);
+  assert.deepEqual(r.atilan, ["Paragraf 40", "Paragraf 39", "Paragraf 38"]);
+  assert.deepEqual(r.tanim.bolumler.slice(-3).map((b) => b.ad), ["Sonuç", "Muayene uzmanı", "Fotoğraflar"]);
+});
+
+test("kimlik üretimi hücre sayısıyla doğrusal: 32 000 cevap hücreli okuma kısa sürede çevrilir", () => {
+  const C = 20, R = 200;
+  const bolum = (n: number) => ({ ad: `Liste ${n}`, tur: "tablo", yan: false, oran: 100, sutunlar: Array.from({ length: C }, () => 5), cevaplar: [],
+    satirlar: Array.from({ length: R }, () => ({ tekrar: false, yukseklik: 4, hucreler: Array.from({ length: C }, () => ({ tur: "cevap", sutunBirlesim: 1, satirBirlesim: 1 })) })) });
+  const bas = performance.now();
+  const r = basilidanTanim({ bolumler: Array.from({ length: 8 }, (_, i) => bolum(i + 1)) }, "Vinç");
+  const sure = performance.now() - bas;
+  assert.ok(r && r.atilan.length === 0);
+  const id = r.tanim.bolumler.flatMap((b) => (b.blok === "tablo" ? b.hucreler.map((h) => h.id) : [])).filter(Boolean);
+  assert.equal(id.length, 32_000);
+  assert.equal(new Set(id).size, id.length, "kimlikler tekil");
+  assert.ok(sure < 8000, `çeviri ${Math.round(sure)} ms`);
+});
+
+test("satırının yüksekliği formdan gelen hücrede üst / alt iç boşluk yok; elle kurulan satırda var", () => {
+  assert.equal(hucreBicemi({}, {}, true).padding, "0.00mm 0.60mm");
+  assert.equal(hucreBicemi({}, {}).padding, "0.36mm 0.60mm");
+  const t = basilidanTanim({ bolumler: [paragraf("A", { satirlar: [{ tekrar: false, yukseklik: 4, hucreler: [{ metin: "Formdan", tur: "yazi" }] }] })] }, "Vinç")!.tanim;
+  const h = renderToStaticMarkup(raporBelgesi({ ...ornekBelge("ZPKR02"), tanim: t }) as never);
+  assert.match(h, /<td style="[^"]*padding:0\.00mm 0\.60mm[^"]*">Formdan<\/td>/);
 });

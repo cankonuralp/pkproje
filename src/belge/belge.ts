@@ -283,7 +283,8 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
       case "akr_no": return v.firma.akr ?? "";
     }
   };
-  const hucreStili = (x: Hucre) => hucreBicemi(x, yz) as CSSProperties;
+  /* satırının yüksekliği formdan gelen hücre (basılı formdan kurulan tablo) üst / alt iç boşluksuz — kâğıtla aynı (TabloDuzenleyici) */
+  const hucreStili = (x: Hucre, b: BolumOf<"tablo">) => hucreBicemi(x, yz, !!b.satirlar[x.r]?.y) as CSSProperties;
   const satirSatir = (s: string) => s.split("\n").flatMap((p, i) => (i ? [h("br", { key: i }), p] : [p]));
   const alanYazisi = (x: Hucre, deger: string | string[] | undefined): string => {
     const d = Array.isArray(deger) ? deger.join(", ") : (deger ?? "").trim();
@@ -311,7 +312,9 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
       }
       case "sonuc": {
         const l = x.secenekler?.length ? x.secenekler : SONUC_SOZCUKLERI;
-        return v.sonuc === "uygun" ? l[0] ?? "" : v.sonuc === "uygun_degil" ? l[1] ?? "" : v.sonuc === "sartli" ? l[2] ?? l[0] ?? "" : "";
+        const sozcuk = v.sonuc === "uygun" ? l[0] ?? "" : v.sonuc === "uygun_degil" ? l[1] ?? "" : v.sonuc === "sartli" ? l[2] ?? l[0] ?? "" : "";
+        /* 2026-10-24 (basılı formdan şablon): hücrede cümle varsa (m — sözcükten önceki kısım) "m SÖZCÜK" */
+        return x.m?.trim() ? satirSatir([x.m.trimEnd(), sozcuk].filter(Boolean).join(" ")) : sozcuk;
       }
     }
   };
@@ -326,13 +329,13 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
         const hucreler: ReactNode[] = [];
         for (let col = 0; col < b.sutun.length; col++) {
           const n = g[r]?.[col];
-          if (n === null || n === undefined) { if (i === 0 || s.tekrar) hucreler.push(h("td", { key: `b${col}`, style: hucreStili({ r, c: col, tur: "yazi" }) })); continue; }
+          if (n === null || n === undefined) { if (i === 0 || s.tekrar) hucreler.push(h("td", { key: `b${col}`, style: hucreStili({ r, c: col, tur: "yazi" }, b) })); continue; }
           const x = b.hucreler[n];
           if (x.r !== r || x.c !== col) continue;
           /* çoğalan satırın hücresi her kopyada; üstten gelen birleşik hücre yalnız ilk kopyada, kapsadığı kopyalar kadar uzun */
           if (!s.tekrar && i > 0) continue;
           const rs = s.tekrar ? 1 : Array.from({ length: x.rs ?? 1 }, (_, j) => kez[r + j] ?? 1).reduce((a, e) => a + e, 0);
-          hucreler.push(h("td", { key: n, ...(rs > 1 ? { rowSpan: rs } : {}), ...((x.cs ?? 1) > 1 ? { colSpan: x.cs } : {}), style: hucreStili(x) },
+          hucreler.push(h("td", { key: n, ...(rs > 1 ? { rowSpan: rs } : {}), ...((x.cs ?? 1) > 1 ? { colSpan: x.cs } : {}), style: hucreStili(x, b) },
             tabloIcerik(b, x, veri, s.tekrar ? i + 1 : null)));
         }
         satirlar.push(h("tr", { key: `${r}-${i}`, ...(s.y ? { style: { height: `${s.y}mm` } } : {}) }, ...hucreler));

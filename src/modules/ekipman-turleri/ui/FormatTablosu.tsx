@@ -10,7 +10,8 @@ import { FormatKaldirTusu } from "./KartTuslari";
 import { tarihYaz } from "./ortak";
 import stil from "./turler.module.css";
 
-/** kur (2026-10-23 — basılı formdan şablon): rapor şablonunu değiştirebilen kişide her sürümde "Şablonu bundan kur" */
+/** kur (2026-10-23 — basılı formdan şablon): rapor şablonunu değiştirebilen kişide her sürümde "Şablonu bundan kur" (2026-10-24: o sürümün PDF'i
+    tarayıcıda okunur — dosyaId) */
 export function FormatTablosu({ formatlar, kaldirabilir, kur = null }: { formatlar: FormatSurumu[]; kaldirabilir: boolean;
   kur?: { turId: string; taslak: { surum: number; degisti: string } | null } | null }) {
   const p = formatlar[0];
@@ -21,7 +22,7 @@ export function FormatTablosu({ formatlar, kaldirabilir, kur = null }: { formatl
     { k: "eylem", genislik: "26%", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: (x) => (
       <span className={stil.tuslar}>
         <DosyaAcTusu dosyaId={x.dosyaId}>PDF&apos;i aç</DosyaAcTusu>
-        {kur && <BasilidanKurTusu turId={kur.turId} formatId={x.id} sira={x.sira} taslak={kur.taslak} />}
+        {kur && <BasilidanKurTusu turId={kur.turId} dosyaId={x.dosyaId} sira={x.sira} taslak={kur.taslak} />}
         {kaldirabilir && <FormatKaldirTusu id={x.id} surum={x.surum} sira={x.sira} />}
       </span>
     ) },
