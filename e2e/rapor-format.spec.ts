@@ -56,7 +56,7 @@ async function yayinla(page: Page, notu: string, sira: number) {
   await expect(page.getByRole("heading", { level: 1, name: `Rapor şablonu · Sürüm ${sira}` })).toBeVisible();
 }
 
-test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eskisi düşer; denetçi yalnız görür", async ({ page, context }, bilgi) => {
+test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eskisi düşer; denetçi yalnız görür", async ({ page, context, browser }, bilgi) => {
   /* 2026-10-10 (475): 471–473 saha ekranı (çerçeve sayfası ilk açılışta derlenir) ve sürüm sayfası adımları eklendi — tablette toplam 120 sn'lik
      test süresi aşıldı (beklemeler ve beklentiler aynı; yalnız bu uzun akışın toplam süresi) */
   test.setTimeout(300_000);
@@ -553,11 +553,16 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await expect(page.getByRole("region", { name: "Belge önizlemesi" })).toBeHidden();
     await expect(page.getByRole("button", { name: "Yayınla" })).toBeHidden();
     await goz(page, "kurucu-telefon", bilgi.project.name);
-    /* yayın masaüstünden: aynı taslak geniş ekranda yayınlanır, akış telefonda sürer */
-    const telefon = page.viewportSize()!;
-    await page.setViewportSize({ width: 1280, height: 900 });
-    await yayinla(page, "ilk sürüm", 2);
-    await page.setViewportSize(telefon);
+    /* yayın masaüstünden: aynı oturumla geniş ekranlı ayrı bir tarayıcı bağlamında yayınlanır (mobil öykünmede pencereyi büyütmek düzeni
+       değiştirmiyor — CI 1981f80d), akış telefonda sürüm sayfasından sürer */
+    const masa = await browser.newContext({ viewport: { width: 1280, height: 900 }, storageState: await context.storageState() });
+    const mp = await masa.newPage();
+    await mp.goto(page.url());
+    await yayinla(mp, "ilk sürüm", 2);
+    const surumAdresi = mp.url();
+    await masa.close();
+    await page.goto(surumAdresi);
+    await hazir(page);
   }
   if (bilgi.project.name !== "telefon") {
     await yayinla(page, "ilk sürüm", 2);
