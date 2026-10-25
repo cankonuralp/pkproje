@@ -2527,6 +2527,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-25 (YAYINDA — main 290b1ab6; CI 13 + 2 atlanan yeşil, göç 0105 Supabase'de (106 göç)): **BELGE DOLDURMA + SÖZLEŞME + ÖN BİLGİLENDİRME
+  E-POSTASI** — reisim: *"Sözleşmeyi belge formatlarına bağla ve ön bilgilendirme formunu plan açılınca müşteriye e-postayla gönder"*, *"sözleşme vb
+  işleri de yüklediğimde, el ile değiştirilebilir ve doldurulabilir olmalı, bir müşteri için sözleşme açtığımda el ile girilmesi gereken yerleri
+  girip öyle gönderebilmeliyim"*. Belge kurucusunda "Elle doldurulur" hücresi; her belgede (sözleşme, teklif, zimmet, araç tutanağı, eğitim, izin,
+  masraf, fatura, saha formu, ön bilgilendirme) firmanın formatında elle yer varsa "Belgeyi doldur" (form + önizleme; değerler o belgeye saklanır,
+  PDF'e basılır). Sözleşme belge formatlarına bağlandı (temel sözleşme belgesi; format → yüklenen şablon → temel); kartta PDF, doldur, "Müşteriye
+  gönder" (PDF ekli e-posta, gönderilenler kartta). E-postaya PDF eki (göç 0105). Plan açılınca ön bilgilendirme formu müşterinin e-postasına
+  ekli gider; plan içinden yeniden gönderilir. Açık: bordro (program üretmiyor). Canlıda gözle bakılamadı (giriş isteyen ekranlar) — uçtan uca CI'da.
 - 2026-10-25 (YAYINDA — main cd53d02c; CI 15/15, göç 0104 Supabase'de (105 göç), canlı duman 11/11): **BELGE FORMATLARI — BÜTÜN BELGELER AYNI ARACA BAĞLANDI** — reisim: *"ama sadece zimmet ve bilgilendirme formu
   değil herhangi bir form ekleme mekaniği bu şekilde çalışmalı aynı araca bağlamalıyız zaten araç yapılı sadece bağlama işi yapılacak … kısa sürede
   bitir"* (maket istenmedi — araç onaylı maketiyle aynı). Firma ayarları › Belge formatları: zimmet teslim formu, araç teslim tutanağı, eğitim katılım

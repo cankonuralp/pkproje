@@ -285,6 +285,15 @@ pkproje/
                             tablo / metin bölümü, yazı / kayıt / sıra / logo hücresi) · sayfalar /firma-ayarlari/belgeler(/[sid]/kurucu) · ön bilgilendirme
                             src/belge/onbilgi.ts + /planlar/<id>/on-bilgilendirme/pdf (firmanın formatı → yüklenen PDF → temel) · kilit tests/belge-katalog,
                             belge-format(-saf), bozan belge-katalog, belge-format, e2e belge-format
+                            · 2026-10-25 BELGE DOLDURMA (reisim: "bir müşteri için sözleşme açtığımda el ile girilmesi gereken yerleri girip öyle
+                            gönderebilmeliyim"): kurucuda belge kipinde "Elle doldurulur" (alan) hücresi · göç 0105 belge_doldurma (belge × kayıt başına
+                            değerler, format_id; silinmez) · src/belge/doldurma.ts (saf: elleAlanlari, elleDegerleriDenetle) · rapor-format/server/doldurma.ts
+                            (belgeDoldurmasi, belgeDoldurmaKaydet — yetkisiz, modül yetkisini önce denetler) · ui/BelgeDoldurma.tsx BelgeDoldurmaTusu (form +
+                            önizleme) — sözleşme, teklif, zimmet, araç tutanağı, eğitim, izin / masraf, fatura, saha formu, ön bilgilendirme · SÖZLEŞME: katalog
+                            "sozlesme", temel src/belge/sozlesme.ts, /sozlesmeler/<id>/pdf (format → yüklenen şablon → temel), sozlesmeler/ui/BelgeTuslari.tsx
+                            (PDF · Belgeyi doldur · Müşteriye gönder) + SozlesmeEpostalari · E-POSTA EKİ: eposta ek_dosya / ek_ad (göç 0105, tetikle değişmez),
+                            gonder.ts / saglayici.ts ekli gönderim, server/eposta/belge-gonder.ts belgeEpostala · ÖN BİLGİLENDİRME: planlar/server/onbilgi.ts
+                            (onBilgiPdfBaytlari — rota ve gönderim aynı); plan açılınca müşteriye ekli e-posta (Plan aç sayfası Chromium, maxDuration 60)
   src/modules/planlar/      PLANLAR (2026-10-04, 309–310; modül 13): plan + plan ekibi (göç 0023; proje no sunucuda, değişmez; künye kayıttan) ·
                             Plan aç /planlar/ac (uyarılar sema.ts'te saf, engel değil) · liste /planlar · plan içi /planlar/<id> (server/plan-ici.ts:
                             akış kabul/red/kontrol/tamamla, künye düzenle/güncelle, plan ekipmanı, proje notları; geçişler göç 0024 tetiğinde) · 372 planSil
