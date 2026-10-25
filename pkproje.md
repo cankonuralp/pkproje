@@ -2527,7 +2527,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
-- 2026-10-24 (YAPILDI — dalda, commit / yayın yok; saf kilitler PC'de 105/105, tip + lint temiz; uçtan uca CI'da doğrulanacak): **BASILI FORMDAN ŞABLON
+- 2026-10-24 (YAYINDA — main 92e16215; CI 15/15 yeşil, canlı duman 11/11; saf kilitler 105/105): **BASILI FORMDAN ŞABLON
   YAPAY ZEKÂSIZ** — reisim: *"ben şablon yükledim bu şablondan başlat dedim neden yapay zeka çalışıyor ?"*, *"en baştan beri bunu istedim"*. PDF
   tarayıcıda KENDİ İÇERİĞİNDEN okunur (yazılar, tablo çizgileri — çizilen ya da Word'deki gibi ince dolgu —, zeminler, resimler): ui/pdfOku.ts → pdf-sayfa.ts
   (pdf.js işlem listesi; görünen sayfa — CropBox — dışındaki çizim okunmaz) → pdf-izgara.ts (kurallarla BASILI ham) → sunucuda basili.ts çevirisi →
@@ -2547,7 +2547,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   fırlatınca pencere / tuş "kuruluyor"da takılmaz; formdan gelen satırda hücrenin üst / alt iç boşluğu yok, satır aralığı 1,1 — gerçek formun tabloları
   belgede 235 mm (formda 234 mm; önce 255 mm, iki sayfa). Kilitler tests/pdf-sayfa, pdf-izgara, basili-format, serbest-tablo + olumsuz kanıtları. Açık:
   tarih + saat hücresinin ilk yarısı kayıttan tarih + saat basar (dar hücrede iki satır); dikey çizgisiz tablolar kenarsız tabloya döner; taranmış PDF'te
-  bölüm çıkmaz. Reisim'in formu gerçek firmanın — yazısı depoya, teste, kayda girmedi.
+  bölüm çıkmaz. Reisim'in formu gerçek firmanın — yazısı depoya, teste, kayda girmedi. Yazısız (taranmış) PDF'te boş şablon kurulmaz, neden söylenir
+  (528b25f9). İKİNCİ DENETİM (uydurma PDF'lerle, düzeltilmedi — reisim: "yap bitir şu işi"; sonraki iş): alt başlıklı (A. / B.) kontrol listesinde
+  cevaplar kaybolur; "… uygundur" ile biten madde sonuç sanılır; satır etiketli ölçüm çizelgesinde sütun başlığının birimi düşer; hücre çizgisine
+  değen küçük onay kutusu ızgarayı bozar; "☐ Uygun ☐ Uygun Değil" yazılı hücrede cevap kurulmaz; renkli zeminli tabloda beyaz ayraç çizgi sayılmaz;
+  tablo dışı "Etiket: [kutu]" alan olmaz; sayfa no'lu başlık her sayfada tekrar girer; bölünen listede numara 1'den başlar (siraDevam üretilmez);
+  sayfa kenarlığına değen çizgi sayfayı tek tablo yapar; ilk sayfanın sayfa numarası alt yazıya girer; 20 sayfa / 40 bölüm sınırı aşılınca söylenmez.
 - 2026-10-24 (YAPILDI — dalda, CI'da): **TELEFONDA FORMAT KURUCU AÇILMAZ** — reisim: *"telefonda format düzenleyici açılmasın bu ekran masaüstü için uygundur
   desin"*. Telefonda (768 px altı) kurucunun yerinde yalnız başlık, "Bu ekran masaüstü için uygundur." ve "Ekipman türüne dön"; kâğıt, belge önizlemesi, saha
   ekranı ve tuşlar (Kaydet, Yayınla, Sürüm sayfası, S.A.Y Chat ayarları) yok — telefondaki Belge / Saha seçicisi kalktı. Tablet ve masaüstü aynı. (Bir önceki
