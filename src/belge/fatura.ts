@@ -4,6 +4,7 @@
    2 İşler, 3 Kalemler (tür × adet × birim fiyat × tutar; teklif dışı işaretli; ara toplam, KDV, genel toplam), 4 Tahsilatlar (tahsil edilen,
    kalan). Rapor ve teklif belgesiyle aynı görünüm (belge.css .rb- sınıfları). SAF, React'in kaçışıyla (ham HTML yok). Tutarlar KURUŞ. */
 import { createElement as h, type ReactNode } from "react";
+import type { FormatTanimi } from "../format/tanim.ts";
 import { firmaAdresi, firmaLogosu } from "./belge.ts";
 
 export interface FaturaBelgesiVerisi {
@@ -16,6 +17,8 @@ export interface FaturaBelgesiVerisi {
   ara: number; kdv: number; kdvTutar: number; toplam: number;
   tahsilatlar: { tarih: string; yontem: string; tutar: number; aciklama: string | null }[];
   tahsil: number; kalan: number;
+  /** 2026-10-25 (belge formatları): firmanın yayınladığı fatura özeti formatı (yoksa temel format) */
+  format?: FormatTanimi | null;
 }
 
 const tarihNo = (s: string | null | undefined) => (s ? `${s.slice(8, 10)}.${s.slice(5, 7)}.${s.slice(0, 4)}` : "-");

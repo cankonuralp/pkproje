@@ -2527,6 +2527,15 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-25 (YAPILDI — dalda; CI'da): **BELGE FORMATLARI — BÜTÜN BELGELER AYNI ARACA BAĞLANDI** — reisim: *"ama sadece zimmet ve bilgilendirme formu
+  değil herhangi bir form ekleme mekaniği bu şekilde çalışmalı aynı araca bağlamalıyız zaten araç yapılı sadece bağlama işi yapılacak … kısa sürede
+  bitir"* (maket istenmedi — araç onaylı maketiyle aynı). Firma ayarları › Belge formatları: zimmet teslim formu, araç teslim tutanağı, eğitim katılım
+  formu, izin talep formu, masraf formu, teklif, fatura özeti, saha formu, ön bilgilendirme formu — her birinde "PDF'ten kur" (rapor şablonundaki
+  yapay zekâsız okuyucu), "Boş başla", "Düzenle", "Temel formata dön"; kurucu rapor kurucusunun kâğıdı (serbest tablolar), kayıt hücresi belgenin
+  bilgisine bağlanır (teslim alan, varlık listesi, teklif kalemleri …; liste çoğalan satırla). Yayınlanınca belge PDF'i firmanın formatından çizilir;
+  yayında format yoksa bugünkü temel format aynen. Ön bilgilendirme formu ilk kez üretiliyor: plan içinde "Ön bilgilendirme formu" (firmanın formatı →
+  Firma ayarları'na yüklenen PDF → temel). Göç 0104 belge_format. Açık: bordro formatı (yüklenen dosya, belge üretilmiyor) ve sözleşme şablonu bu
+  yola bağlanmadı; ön bilgilendirmenin müşteriye e-postayla gönderimi yok.
 - 2026-10-24 (YAYINDA — main 92e16215; CI 15/15 yeşil, canlı duman 11/11; saf kilitler 105/105; ikinci denetimin düzeltmesi YAYINDA main 8519a628, CI 15/15, duman 11/11): **BASILI FORMDAN ŞABLON
   YAPAY ZEKÂSIZ** — reisim: *"ben şablon yükledim bu şablondan başlat dedim neden yapay zeka çalışıyor ?"*, *"en baştan beri bunu istedim"*. PDF
   tarayıcıda KENDİ İÇERİĞİNDEN okunur (yazılar, tablo çizgileri — çizilen ya da Word'deki gibi ince dolgu —, zeminler, resimler): ui/pdfOku.ts → pdf-sayfa.ts

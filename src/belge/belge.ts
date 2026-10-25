@@ -15,17 +15,22 @@ import {
 import { gecerliKunye, kilitliKunye, metotMetni } from "../format/kunye.ts";
 import { formulUygula } from "../format/formul.ts";
 import { degerlendir } from "../format/motor.ts";
-import { EKIPMAN_ALAN_ADI, ekAnahtari, HAZIR_AD, type BasSatiri, type Bolum, type BolumOf, type CihazAlani, type FirmaSatiri, type Hucre, type ImzaSatiri, type KusurAlani, type TabloKaynagi } from "../format/tanim.ts";
+import {
+  Cevaplar, EKIPMAN_ALAN_ADI, ekAnahtari, HAZIR_AD, type BasSatiri, type Bolum, type BolumOf, type CihazAlani, type FirmaSatiri, type FormatTanimi, type Hucre, type ImzaSatiri,
+  type KusurAlani, type TabloKaynagi,
+} from "../format/tanim.ts";
 import { hucreBicemi, kapsama, siraNumaralari, sutunYuzdeleri, yerlesimSatirlari } from "../format/tablo.ts";
 /* veri.ts: saf tanımlar (tanimlar.ts node:crypto kullanır — 451: Format kurucunun belge önizlemesi bu çiziciyi tarayıcıda koşar) */
 import { TANIMLAR } from "../tanim/veri.ts";
+import type { BelgeDegerleri } from "./katalog.ts";
 import type { BelgeFotosu, BelgeVerisi, ImzaKisiBilgisi } from "./veri.ts";
 /* eimza.ts'nin işaret adresi burada da yazılı (eimza.ts pdf-lib'i içe aktarır; çizici tarayıcıda da koşar — kilit tests/eimza.test.ts aynılığı denetler) */
 const EIMZA_ISARETI = "probata-eimza:uzman";
 /** 2026-10-17 (İ5): onaylayanın (teknik yönetici) İmza hücresinin işareti — eimza.ts EIMZA_ISARETI_2 ile aynı */
 const EIMZA_ISARETI_2 = "probata-eimza:teknik";
 
-const tarihNo = (s: string | null | undefined) => (s ? `${s.slice(8, 10)}.${s.slice(5, 7)}.${s.slice(0, 4)}` : "-");
+/** "YYYY-AA-GG…" → "GG.AA.YYYY" (yoksa "-"); 2026-10-25: belge kataloğu da (katalog.ts) */
+export const tarihNo = (s: string | null | undefined) => (s ? `${s.slice(8, 10)}.${s.slice(5, 7)}.${s.slice(0, 4)}` : "-");
 const saatliNo = (s: string | null | undefined) => (s ? `${tarihNo(s)} ${s.slice(11, 16)}` : "-");
 const deger = (s: string | null | undefined) => (s && s.trim() ? s : "-");
 const SAYI_AD = ["sıfır", "bir", "iki", "üç", "dört", "beş"];
@@ -194,6 +199,8 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
      imza alanı koyar. Yalnız ilk İmza hücresine */
   let isaretKondu = false;
   const imzaHucresi = (): ReactNode => {
+    /* 2026-10-25 (belge formatları): programın belgesinde imza yeri boş — imza kâğıtta ya da imzalı PDF'in kendisinde */
+    if (v.belge) return "";
     const yazi = imzaYazisi();
     if (!v.kesin || isaretKondu || (t.gorunum.eimza?.yer ?? "hucre") !== "hucre") return yazi;
     isaretKondu = true;
@@ -202,6 +209,7 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
   /* İ5 (2026-10-17): onaylayanın e-imza yeri teknik yöneticinin İmza hücresiyse aynı işaret düzeni (ikinci boş imza alanı) */
   let isaret2Kondu = false;
   const teknikImzaHucresi = (zaman: string): ReactNode => {
+    if (v.belge) return "";
     const yazi = `Elektronik onay · ${zamanNo(zaman)}`;
     if (!v.kesin || isaret2Kondu || t.gorunum.eimza2?.yer !== "hucre") return yazi;
     isaret2Kondu = true;
@@ -292,10 +300,17 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
     if (x.alan === "tarih") return tarihNo(d);
     return `${d}${x.birim ? ` ${x.birim}` : ""}`;
   };
-  const tabloIcerik = (b: BolumOf<"tablo">, x: Hucre, satir: Record<string, string> | null, sira: number | null): ReactNode => {
+  /* 2026-10-25 (belge formatları): kayıt hücresinin veri'si — belgenin alanı ("alan") ya da çoğalan satırda o satırın liste öğesinin kolonu
+     ("liste.kolon"); çoğalan satırın dışındaki liste kolonu boş */
+  const belgeDegeri = (veri: string, oge: Record<string, string> | null): ReactNode => {
+    const n = veri.indexOf(".");
+    const d = n < 0 ? v.belge?.alanlar[veri] : oge?.[veri.slice(n + 1)];
+    return d ? satirSatir(d) : "";
+  };
+  const tabloIcerik = (b: BolumOf<"tablo">, x: Hucre, satir: Record<string, string> | null, sira: number | null, oge: Record<string, string> | null = null): ReactNode => {
     switch (x.tur) {
       case "yazi": return satirSatir(x.m ?? "");
-      case "kayit": return x.kaynak ? kaynakDegeri(x.kaynak) : "";
+      case "kayit": return x.veri ? belgeDegeri(x.veri, oge) : x.kaynak ? kaynakDegeri(x.kaynak) : "";
       case "alan": return alanYazisi(x, satir ? satir[x.id ?? ""] : c.alan[x.id ?? ""]);
       case "cevap": {
         if (satir) return satir[x.id ?? ""] ?? "";
@@ -322,10 +337,15 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
     const g = kapsama(b), yuzde = sutunYuzdeleri(b);
     /* çoğalan satırın kopya sayısı (en az bir boş satır); onu kapsayan üst hücrelerin satır sayısı o kadar büyür */
     const kez = b.satirlar.map((s) => (s.tekrar && s.id ? Math.max(1, c.tablo[s.id]?.length ?? 0) : 1));
+    /* 2026-10-25 (belge formatları): programın belgesinde çoğalan satırın kayıt hücreleri bir listeyi okuyorsa ("liste.kolon") satır o listenin her
+       öğesi için bir kez (boş listede bir boş satır) */
+    const liste = b.satirlar.map((s, r) => (v.belge && s.tekrar ? b.hucreler.find((x) => x.r === r && x.tur === "kayit" && x.veri?.includes("."))?.veri?.split(".")[0] ?? null : null));
+    liste.forEach((l, r) => { if (l) kez[r] = Math.max(1, v.belge?.listeler[l]?.length ?? 0); });
     const satirlar: ReactNode[] = [];
     b.satirlar.forEach((s, r) => {
       for (let i = 0; i < kez[r]; i++) {
         const veri = s.tekrar && s.id ? (c.tablo[s.id]?.[i] ?? {}) : null;
+        const oge = liste[r] ? (v.belge?.listeler[liste[r]!]?.[i] ?? {}) : null;
         const hucreler: ReactNode[] = [];
         for (let col = 0; col < b.sutun.length; col++) {
           const n = g[r]?.[col];
@@ -336,7 +356,7 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
           if (!s.tekrar && i > 0) continue;
           const rs = s.tekrar ? 1 : Array.from({ length: x.rs ?? 1 }, (_, j) => kez[r + j] ?? 1).reduce((a, e) => a + e, 0);
           hucreler.push(h("td", { key: n, ...(rs > 1 ? { rowSpan: rs } : {}), ...((x.cs ?? 1) > 1 ? { colSpan: x.cs } : {}), style: hucreStili(x, b) },
-            tabloIcerik(b, x, veri, s.tekrar ? i + 1 : null)));
+            tabloIcerik(b, x, veri, s.tekrar ? i + 1 : null, oge)));
         }
         satirlar.push(h("tr", { key: `${r}-${i}`, ...(s.y ? { style: { height: `${s.y}mm` } } : {}) }, ...hucreler));
       }
@@ -520,7 +540,7 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
         ...s.ogeler.map((x, i) => bolumKutusu(x, { flex: `${s.oranlar[i]} 1 0`, minWidth: "0" })))];
   });
   if (t.gorunum.serbest) {
-    return h("article", { className: "rb-sayfa rb-serbest", "aria-label": `${no} rapor belgesi` },
+    return h("article", { className: "rb-sayfa rb-serbest", "aria-label": v.belge ? [v.tur.ad, no].filter(Boolean).join(" · ") : `${no} rapor belgesi` },
       v.imza || v.kesin ? null : h("p", { className: "rb-taslak" }, "İmzasız önizleme — muayene uzmanının son imzasıyla geçerli olur."),
       ...bolumSatirlari(),
       maddeFotolari.length ? bolum("Ek", "Kontrol maddelerinin fotoğrafları", fotolar(maddeFotolari, (f) => `${f.ad} · ${maddeAdi.get(f.madde!) ?? ""}`)) : null,
@@ -550,4 +570,22 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
     imzaVar ? null : bolum(duzen.sonraki, "Yetkili kişi", imza()),
     maddeFotolari.length ? bolum("Ek", "Kontrol maddelerinin fotoğrafları", fotolar(maddeFotolari, (f) => `${f.ad} · ${maddeAdi.get(f.madde!) ?? ""}`)) : null,
     h("footer", { className: "rb-alt" }, altYazisi(t, v.firma, formKod)));
+}
+
+/** 2026-10-25 (belge formatları; reisim: "herhangi bir form ekleme mekaniği bu şekilde çalışmalı aynı araca bağlamalıyız"): programın belgesi
+    (zimmet, araç tutanağı, eğitim, talep, teklif, fatura özeti, saha, ön bilgilendirme) firmanın o belge için yayınladığı formatla — rapor
+    çizicisinin serbest düzeninden: yalnız formatın bölümleri (rapora özgü başlık, künye, ekipman, imzasız şeridi yok); kayıt hücresi belgenin
+    bilgisinden (veri), çoğalan satır belgenin listesinden; imza hücresi boş. Doküman kodu formatta yoksa temel formatınki (form_kod). */
+export function belgeFormu(t: FormatTanimi, firma: { ad: string; kod: string; adres?: string | null; logo?: string | null }, degerler: BelgeDegerleri, baslik: string): ReactNode {
+  return raporBelgesi({
+    firma: { ad: firma.ad, kod: firma.kod, nusha: 1, adres: firma.adres ?? null, logo: firma.logo ?? null },
+    no: degerler.alanlar.belge_no ?? "", revizyon: 0, formatSira: 1, durum: "imzali",
+    tur: { ad: baslik, kod: "", kontrolStd: [] },
+    kunye: { firmaAdi: "", adres: null, sgk: null, isgNo: null },
+    tarih: { bas: null, bit: null, sonraki: null, takip: null, rapor: null },
+    ekipman: { kod: "", marka: null, model: null, seri: null, imal: null, konum: null, amac: null, bolum: null },
+    tanim: { ...t, gorunum: { ...t.gorunum, serbest: true, formKodu: t.gorunum.formKodu || degerler.alanlar.form_kod || "" } },
+    cevaplar: Cevaplar.parse({}), cihazlar: [], fotolar: [], sonuc: null,
+    yazan: { ad: "", meslek: "", ekipnet: null, diploma: null, oda: null }, onay: null, imza: null, kesin: true, belge: degerler,
+  });
 }

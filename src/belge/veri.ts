@@ -2,6 +2,7 @@
    gitmez, saf: aynı veri → aynı belge (önizleme ve kesin PDF aynı çiziciden, pkproje §4.2, RAPOR-FORMAT §1 "Görünüm"). Değerler raporun kendi
    kayıtlarından ve açıldığı format sürümünden; fotoğraflar sunucuda okunup veri adresi olarak gömülür (dış adres yok). */
 import type { Cevaplar, FormatTanimi, RaporSonucu } from "../format/tanim.ts";
+import type { BelgeDegerleri } from "./katalog.ts";
 
 export interface BelgeCihazi { turAd: string; kod: string; marka: string | null; model: string | null; seri: string | null;
   kalTarih: string | null; kalBitis: string | null; sertifika: string | null }
@@ -37,4 +38,8 @@ export interface BelgeVerisi {
   imza: { zaman: string; yontem: string } | null;
   /** imzaya hazırlanan KESİN belge (317): önizleme şeridi yok, imza hücresi elektronik imzayı söyler (imza PDF'in kendisinde) */
   kesin?: boolean;
+  /** 2026-10-25 (belge formatları; reisim: "herhangi bir form ekleme mekaniği bu şekilde çalışmalı aynı araca bağlamalıyız"): rapor değil, programın
+      belgesi (zimmet, araç tutanağı, eğitim, talep, teklif, fatura özeti, saha, ön bilgilendirme) firmanın formatıyla — kayıt hücresinin veri'si bu
+      değerlerden okunur (src/belge/katalog.ts; belge.ts belgeFormu kurar) */
+  belge?: BelgeDegerleri;
 }

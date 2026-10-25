@@ -4,6 +4,7 @@
    imzalar (Talep eden · Onaylayan: gönderildi / onaylandı / reddedildi, zamanıyla; karar yoksa "Tarih · imza"). Rapor, teklif ve fatura özeti
    belgesiyle aynı görünüm (belge.css .rb- sınıfları). SAF, React'in kaçışıyla (ham HTML yok). E-posta ile iletme K5 (iş kuyruğu). */
 import { createElement as h, type ReactNode } from "react";
+import type { FormatTanimi } from "../format/tanim.ts";
 import { firmaAdresi, firmaLogosu } from "./belge.ts";
 
 export type TalepTipi = "izin" | "masraf";
@@ -17,6 +18,8 @@ export interface TalepFormuVerisi {
   red: string | null;
   /** karar: onaylayan (ad), zaman ISO, sonuç; karar yoksa null */
   karar: { ad: string; zaman: string; sonuc: "onaylandi" | "reddedildi" } | null;
+  /** 2026-10-25 (belge formatları): firmanın o talep tipi için yayınladığı format (yoksa temel format) */
+  format?: FormatTanimi | null;
 }
 
 export const TALEP_FORMAT: Record<TalepTipi, { kod: string; baslik: string; alt: string; onaylayan: string; metin: string }> = {

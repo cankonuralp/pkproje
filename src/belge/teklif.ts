@@ -4,6 +4,7 @@
    tutar; ara toplam, KDV, genel toplam), 3 Koşullar (geçerlilik, KDV hariç fiyat, not), 4 Hazırlayan. Rapor belgesiyle aynı görünüm (belge.css,
    .rb- sınıfları). SAF, React'in kaçışıyla (ham HTML yok); createElement (düğüm test koşucusu doğrudan yükler — tests/teklif-belgesi.test.ts). */
 import { createElement as h, type ReactNode } from "react";
+import type { FormatTanimi } from "../format/tanim.ts";
 import { firmaAdresi, firmaLogosu } from "./belge.ts";
 
 export interface TeklifBelgesiVerisi {
@@ -14,10 +15,18 @@ export interface TeklifBelgesiVerisi {
   musteri: { unvan: string; vergi: string | null; eposta: string | null; tel: string | null; ilgili: string | null; yerler: { ad: string | null; adres: string | null }[] };
   /** fiyat KURUŞ, KDV hariç */
   kalemler: { turAd: string; brans: "m" | "e" | null; periyot: number | null; adet: number; fiyat: number }[];
+  /** 2026-10-25 (belge formatları): firmanın yayınladığı teklif formatı (yoksa temel format) */
+  format?: FormatTanimi | null;
 }
 
 const tarihNo = (s: string | null | undefined) => (s ? `${s.slice(8, 10)}.${s.slice(5, 7)}.${s.slice(0, 4)}` : "-");
-const para = (kurus: number) => `${(kurus / 100).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`;
+/** kuruş → "1.234,56 TL" (2026-10-25: belge kataloğu da — katalog.ts) */
+export const para = (kurus: number) => `${(kurus / 100).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`;
+/** 3. bölümün metni: geçerlilik, KDV, not (2026-10-25: belge kataloğu da) */
+export const teklifKosullari = (v: Pick<TeklifBelgesiVerisi, "bitis" | "gecerlilik" | "kdv" | "notlar">) =>
+  `Bu teklif ${v.bitis ? `${tarihNo(v.bitis)} tarihine kadar` : `gönderildiği tarihten itibaren ${v.gecerlilik} gün`} geçerlidir. Birim fiyatlara KDV dahil değildir; `
+  + `KDV %${v.kdv} oranıyla ayrıca gösterilmiştir.`
+  + (v.notlar ? `\n${v.notlar}` : "");
 const deger = (s: string | null | undefined) => (s && s.trim() ? s : "-");
 const kolonlar = (l: readonly string[]) => h("colgroup", null, ...l.map((w, i) => h("col", { key: i, style: { width: w } })));
 const bolum = (no: number, ad: string, ...icerik: ReactNode[]) => h("section", { className: "rb-bolum", key: ad }, h("h2", null, `${no}. ${ad}`), ...icerik);
@@ -56,10 +65,7 @@ export function teklifBelgesi(v: TeklifBelgesiVerisi): ReactNode {
         h("tr", { key: "ara" }, h("td", { colSpan: 5, className: "rb-e rb-sag" }, "Ara toplam (KDV hariç)"), h("td", { className: "rb-sag" }, para(ara))),
         h("tr", { key: "kdv" }, h("td", { colSpan: 5, className: "rb-e rb-sag" }, `KDV %${v.kdv}`), h("td", { className: "rb-sag" }, para(genel - ara))),
         h("tr", { key: "genel" }, h("td", { colSpan: 5, className: "rb-ab rb-sag" }, "Genel toplam"), h("td", { className: "rb-sag" }, h("b", null, para(genel))))))),
-    bolum(3, "Koşullar", h("p", { className: "rb-kutu-metin" },
-      `Bu teklif ${v.bitis ? `${tarihNo(v.bitis)} tarihine kadar` : `gönderildiği tarihten itibaren ${v.gecerlilik} gün`} geçerlidir. Birim fiyatlara KDV dahil değildir; `
-      + `KDV %${v.kdv} oranıyla ayrıca gösterilmiştir.`
-      + (v.notlar ? `\n${v.notlar}` : ""))),
+    bolum(3, "Koşullar", h("p", { className: "rb-kutu-metin" }, teklifKosullari(v))),
     bolum(4, "Hazırlayan", h("table", null, kolonlar(["28%", "40%", "32%"]), h("tbody", null,
       h("tr", null, h("td", { className: "rb-e" }, "Ad soyad"), h("td", null, v.hazirlayan), h("td", { rowSpan: 2, className: "rb-imza" }, "İmza / kaşe")),
       h("tr", null, h("td", { className: "rb-e" }, "Tarih"), h("td", null, tarihNo(v.tarih)))))),

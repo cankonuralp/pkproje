@@ -5,6 +5,7 @@
    Teslim alan: "Tarih · imza" — imza, imzalı PDF'in kendisinde). Eski tutanakta yazılmamış bilgi "kayıtta yok". Rapor, teklif, fatura özeti ve talep
    formuyla aynı görünüm (belge.css .rb- sınıfları). SAF, React'in kaçışıyla (ham HTML yok). */
 import { createElement as h, type ReactNode } from "react";
+import type { FormatTanimi } from "../format/tanim.ts";
 import { firmaAdresi, firmaLogosu } from "./belge.ts";
 
 export interface AracTutanagiVerisi {
@@ -27,6 +28,8 @@ export interface AracTutanagiVerisi {
   hasar: string | null;
   /** açı başına fotoğraf çekildi mi */
   fotolar: readonly (readonly [aci: string, var_: boolean])[];
+  /** 2026-10-25 (belge formatları): firmanın yayınladığı araç teslim tutanağı formatı (yoksa temel format) */
+  format?: FormatTanimi | null;
 }
 
 export const aracTutanakFormKodu = (firmaKod: string) => `${firmaKod}-FR-ARC-01`;

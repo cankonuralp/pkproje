@@ -5,6 +5,7 @@
    soyad · unvan, "Tarih · imza · kaşe" — ıslak imza ve kaşe kâğıtta; Muayene uzmanı: plan ekibi, "Tarih · imza"). Öteki belgelerle aynı görünüm
    (belge.css .rb-). SAF, React'in kaçışıyla. */
 import { createElement as h, type ReactNode } from "react";
+import type { FormatTanimi } from "../format/tanim.ts";
 import { firmaAdresi, firmaLogosu } from "./belge.ts";
 
 export interface SahaFormuVerisi {
@@ -19,6 +20,8 @@ export interface SahaFormuVerisi {
   ekipmanlar: readonly { kod: string; tur: string; konum: string | null }[];
   /** plan ekibi (muayene uzmanları) */
   uzmanlar: readonly string[];
+  /** 2026-10-25 (belge formatları): firmanın yayınladığı saha formu formatı (yoksa temel format) */
+  format?: FormatTanimi | null;
 }
 
 export const sahaFormKodu = (firmaKod: string) => `${firmaKod}-FR-SAH-01`;

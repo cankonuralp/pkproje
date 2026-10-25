@@ -23,6 +23,7 @@ import { canDoEylem, duzey, type YetkiHesabi } from "../../../server/yetki/canDo
 import { kullanimMetni } from "../../../components/sil/metin.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { belgeGonder, kaynakBelgeDurumlari } from "../../onaylar/server/belge-baglanti.ts";
+import { yayindakiBelgeFormati } from "../../rapor-format/server/belgeler.ts";
 import type { BelgeDurumu as ImzaDurumu } from "../../onaylar/sema.ts";
 import { meslek } from "../../personel/sema.ts";
 import { personelOzetleri, personelSecenekleri } from "../../personel/server/personel.ts";
@@ -272,6 +273,8 @@ export async function tutanakBelgesiVerisi(db: Sorgulayici, kim: Kisi, hareketId
     km: x.km != null ? `${kmYaz(x.km)} km` : null, yakit: x.yakit ? seviyeAd(x.yakit) : null,
     kontrol: kontrol ? ARAC_KONTROL.map(([kk, ad]) => [ad, kontrol.has(kk)] as const) : null, hasar: x.hasar,
     fotolar: ARAC_FOTO.map(([a, ad]) => [ad, fotolar.has(a)] as const),
+    /* 2026-10-25 (belge formatları): firmanın yayınladığı tutanak formatı; yoksa temel format */
+    format: await yayindakiBelgeFormati(db, "arac"),
   };
 }
 

@@ -26,6 +26,7 @@ import { ayarOku, belgeTurKilidi, firmaBelgeKunyesi } from "../../../server/ayar
 import { personelOzetleri } from "./personel.ts";
 import { personelKartiGorur } from "./kart-baglanti.ts";
 import { personelHesaplari } from "../../../server/kimlik/hesap.ts";
+import { yayindakiBelgeFormati } from "../../rapor-format/server/belgeler.ts";
 
 /** firmanın eklediği özlük türleri (Firma ayarları; 335) */
 export const ekTurler = async (db: Sorgulayici): Promise<EkTur[]> => (await ayarOku(db, "belge_tur_ek")).deger.turler.map(({ k, ad }) => ({ k, ad }));
@@ -272,6 +273,8 @@ async function zimmetVerisi(db: Sorgulayici, personelId: string, z: VarlikSatiri
     alan: kisiler.get(personelId) ?? { ad: "—", meslek: "—" }, eden: eden ? kisiler.get(eden) ?? null : null,
     varliklar: z.map((v) => ({ kod: v.kod, ad: v.ad, tur: VARLIK_TUR[v.tur], teslim: v.son ? GUN_TR.format(new Date(v.son.zaman)) : null,
       not: v.tur === "c" && v.bitis ? `kalibrasyon ${tarihNo(v.bitis)}` : null })),
+    /* 2026-10-25 (belge formatları): firmanın yayınladığı zimmet formu formatı (Rapor formatı › Belgeler); yoksa temel format */
+    format: await yayindakiBelgeFormati(db, "zimmet"),
   };
 }
 

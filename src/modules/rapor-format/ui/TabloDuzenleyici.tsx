@@ -5,8 +5,12 @@
    satır ve sütun ekle / sil, sütun genişliği, satır yüksekliği, "sahada çoğalır", hücrenin içeriği (yazı, sahada doldurulur, kayıttan, kontrol
    cevabı, sıra no, imza yeri, logo, fotoğraf kutusu, sonuç) ve görünümü (yazı tipi, boy, kalın / eğik / altı çizili, hiza, yazı rengi, zemin,
    kenarlar). Sütun sınırındaki tutamak sürüklenir. İşlemler saf (src/format/tablo.ts); kâğıt ve belge aynı biçemden (hucreBicemi). Kâğıt
-   belgenin renkleriyle (açık / koyu temada aynı); panel uygulamanın renkleriyle. */
-import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as RPointerEvent } from "react";
+   belgenin renkleriyle (açık / koyu temada aynı); panel uygulamanın renkleriyle.
+   2026-10-25 (belge formatları; reisim: "herhangi bir form ekleme mekaniği bu şekilde çalışmalı aynı araca bağlamalıyız"): belge kurucusunda
+   (BelgeKatalogBaglami — belgeBaglam.ts) kayıt hücresinin bilgisi belgenin katalogundan: "Belgeden gelen bilgi" (alanlar; çoğalan satırda
+   listelerin kolonları), seçim hücreye veri yazar, kaynak'ı siler; kâğıtta bilginin adı. Bağlam yoksa (rapor kurucusu) davranış aynen. */
+import { useContext, useEffect, useRef, useState, type CSSProperties, type PointerEvent as RPointerEvent } from "react";
+import type { BelgeKatalogu } from "../../../belge/katalog";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
 import {
@@ -18,6 +22,7 @@ import {
   type HucreStili, type HucreTuru, type TabloKaynagi, type YaziTipi,
 } from "../../../format/tanim";
 import { yeniKimlik } from "../kurucu";
+import { BelgeKatalogBaglami, ilkVeri, veriAdi, veriSecenekleri } from "./belgeBaglam";
 import k from "./kagit.module.css";
 import s from "./tablo.module.css";
 
@@ -58,6 +63,7 @@ export function TabloDuzenleyici({ t, i, b, degis, bildir }: {
   const [kalin, setKalin] = useState<1 | 2>(1);
   const surukle = useRef<{ r: number; c: number } | null>(null);
   const tabloRef = useRef<HTMLTableElement>(null);
+  const katalog = useContext(BelgeKatalogBaglami);
   const g = kapsama(b), yuzde = sutunYuzdeleri(b), siralar = siraNumaralari(t);
   /* tablo küçülünce dışarıda kalan seçim yok sayılır (genislet köşeleri tabloya sığdırır) */
   const a = sec && sec.r1 < b.satirlar.length && sec.c1 < b.sutun.length ? genislet(b, sec) : null;
@@ -109,7 +115,11 @@ export function TabloDuzenleyici({ t, i, b, degis, bildir }: {
       switch (tur) {
         case "yazi": return { ...ortak, tur, m: h.m ?? "" };
         case "alan": return { ...ortak, tur, id: yeni("c"), alan: "metin" as const };
-        case "kayit": return { ...ortak, tur, kaynak: "firma" as const };
+        case "kayit": {
+          if (!katalog) return { ...ortak, tur, kaynak: "firma" as const };
+          const v = ilkVeri(katalog, !!b.satirlar[h.r]?.tekrar);
+          return { ...ortak, tur, ...(v ? { veri: v } : {}) };
+        }
         case "cevap": return { ...ortak, tur, id: yeni("c") };
         case "sira": return { ...ortak, tur };
         case "imza": return { ...ortak, tur, kim: "uzman" as const, eimza: true };
@@ -133,7 +143,7 @@ export function TabloDuzenleyici({ t, i, b, degis, bildir }: {
     switch (h.tur) {
       case "yazi": return (h.m ?? "").split("\n").map((p, j) => <span key={j}>{j > 0 && <br />}{p}</span>);
       case "alan": return isaret(h.formul ? "calculator" : "pencil", `${h.ad || ALAN_TURU_ADI[h.alan ?? "metin"]}${h.birim ? ` · ${h.birim}` : ""}`);
-      case "kayit": return isaret("tag", h.kaynak ? TABLO_KAYNAK_ADI[h.kaynak] : "Kaynak seçin");
+      case "kayit": return isaret("tag", katalog ? (h.veri ? veriAdi(katalog, h.veri) : "Bilgi seçin") : h.kaynak ? TABLO_KAYNAK_ADI[h.kaynak] : "Kaynak seçin");
       case "cevap": return isaret("list-checks", b.cevaplar.join(" / "));
       case "sira": return <span>{siralar.get(`${b.id}:${h.r},${h.c}`) ?? ""}</span>;
       case "imza": return isaret("file-signature", `İmza · ${h.kim ? KISI_ADI[h.kim] : "kişi seçin"}${h.eimza ? " · e-imza" : ""}`);
@@ -223,18 +233,19 @@ export function TabloDuzenleyici({ t, i, b, degis, bildir }: {
                   const id = x.id ?? yeniKimlik(t, "r", al); al.add(id);
                   return { ...x, tekrar: true, id };
                 }) }, e.target.checked ? "Satır sahada çoğalır" : "Satır sabit");
-              }} />Bu satır sahada çoğalır (ölçüm satırı)</label>
+              }} />{katalog ? "Bu satır listedeki her öğe için çoğalır" : "Bu satır sahada çoğalır (ölçüm satırı)"}</label>
           </div>
 
           {secili.length >= 1 && (
             <div className={s.grup} role="radiogroup" aria-label="Hücrenin içeriği">
-              {HUCRE_TURLERI.map((x) => (
+              {/* belge kipinde rapora özgü türler (sahada doldurulan, kontrol cevabı, imza kişisi, fotoğraf, raporun sonucu) yok */}
+              {HUCRE_TURLERI.filter((x) => !katalog || x === "yazi" || x === "kayit" || x === "sira" || x === "gorsel").map((x) => (
                 <button key={x} type="button" role="radio" aria-checked={secili.every((n) => b.hucreler[n].tur === x)} className={s.turTus} onClick={() => turDegis(x)}>
                   <Ikon ad={HUCRE_IKON[x]} kucuk />{HUCRE_TURU_ADI[x]}</button>
               ))}
             </div>
           )}
-          {secili.length === 1 && <TurAyari b={b} h={ilk} yaz={hucreYaz} bolum={(o, ileti) => yaz({ ...b, ...o }, ileti)} />}
+          {secili.length === 1 && <TurAyari b={b} h={ilk} katalog={katalog} yaz={hucreYaz} bolum={(o, ileti) => yaz({ ...b, ...o }, ileti)} />}
 
           <div className={s.grup} role="group" aria-label="Yazı">
             <span className={s.secimKap}>
@@ -283,7 +294,9 @@ export function TabloDuzenleyici({ t, i, b, degis, bildir }: {
 }
 
 /** seçili tek hücrenin içeriğe göre ayarları */
-function TurAyari({ b, h, yaz, bolum }: { b: TabloBolumu; h: Hucre; yaz: (o: Partial<Hucre>, ileti?: string) => void; bolum: (o: Partial<TabloBolumu>, ileti?: string) => void }) {
+function TurAyari({ b, h, katalog, yaz, bolum }: {
+  b: TabloBolumu; h: Hucre; katalog: BelgeKatalogu | null; yaz: (o: Partial<Hucre>, ileti?: string) => void; bolum: (o: Partial<TabloBolumu>, ileti?: string) => void;
+}) {
   const id = `kb-${b.id}-${h.r}-${h.c}`;
   if (h.tur === "yazi") return <div className={k.panelSatir}><label className={k.panelAlan}>Yazı
     <MetinKutu id={`${id}-m`} deger={h.m ?? ""} cok yaz={(v) => yaz({ m: v })} /></label></div>;
@@ -300,6 +313,17 @@ function TurAyari({ b, h, yaz, bolum }: { b: TabloBolumu; h: Hucre; yaz: (o: Par
       <label className={k.panelKutu}><input type="checkbox" checked={!!h.zorunlu} onChange={(e) => yaz({ zorunlu: e.target.checked || undefined })} />Zorunlu</label>
     </div>
   );
+  if (h.tur === "kayit" && katalog) {
+    const l = veriSecenekleri(katalog, !!b.satirlar[h.r]?.tekrar);
+    /* satırın çoğalması kaldırılınca listenin kolonu seçeneklerde yok — seçili bilgi yine adıyla görünür */
+    const secenekler = h.veri && !l.some((x) => x[0] === h.veri) ? [[h.veri, veriAdi(katalog, h.veri), ""] as const, ...l] : l;
+    return (
+      <div className={k.panelSatir}><span className={s.secimKap}>
+        <SecimAlani id={`${id}-bv`} ad="Belgeden gelen bilgi" deger={h.veri ?? ""} etiketsiz ipucu="Bilgi seçin" secenekler={secenekler}
+          degistir={(v) => yaz({ veri: v, kaynak: undefined }, "Hücrenin bilgisi değişti")} />
+      </span></div>
+    );
+  }
   if (h.tur === "kayit") return (
     <div className={k.panelSatir}><span className={s.secimKap}>
       <SecimAlani id={`${id}-ka`} ad="Kayıttan gelen bilgi" deger={h.kaynak ?? ""} etiketsiz ipucu="Bilgi seçin"

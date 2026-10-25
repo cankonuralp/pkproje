@@ -275,6 +275,16 @@ pkproje/
                             sayFormatBagla (say/ui/baglam.ts) · say/server/say.ts harita yalnız kurucu adresi + formatDegistirir + taslak · Kâğıt "formül" tuşu (552)
                             · 471 SÜRÜM SAYFASI: fark.ts (önceki sürüme göre değişenler, saf) · ui/SurumOnizleme.tsx (Belge ↔ Saha) · rapor sayısı
                             raporlar/server/format-baglanti.ts formatRaporSayilari
+  BELGE FORMATLARI          2026-10-25 (reisim: "herhangi bir form ekleme mekaniği bu şekilde çalışmalı aynı araca bağlamalıyız"): programın ürettiği
+                            belgeler (zimmet, araç tutanağı, eğitim katılım, izin, masraf, teklif, fatura özeti, saha formu, ön bilgilendirme) rapor formatının
+                            aracına bağlı — src/belge/katalog.ts (BELGE_TURLERI, belge başına alanlar + listeler, <belge>Degerleri, ornekDegerler) · Hucre.veri
+                            (kayıt hücresinin belgeden gelen bilgisi; çoğalan satırda "liste.kolon") · belge.ts belgeFormu (firmanın formatıyla; yoksa temel
+                            format) · pdf.ts her *Pdf v.format · göç 0104 belge_format (rapor_format'ın aynısı, tür yerine belge) · rapor-format/server/belgeler.ts
+                            (liste, taslak aç / yaz / kaydet, yayınla, temele dön, yayindakiBelgeFormati — belgenin verisini kuran modül çağırır) ·
+                            ui/belge-eylemler.ts · ui/BelgeFormatlari.tsx + BelgeKurucu.tsx (Kagit + TabloDuzenleyici, BelgeKatalogBaglami — belge kipinde yalnız
+                            tablo / metin bölümü, yazı / kayıt / sıra / logo hücresi) · sayfalar /firma-ayarlari/belgeler(/[sid]/kurucu) · ön bilgilendirme
+                            src/belge/onbilgi.ts + /planlar/<id>/on-bilgilendirme/pdf (firmanın formatı → yüklenen PDF → temel) · kilit tests/belge-katalog,
+                            belge-format(-saf), bozan belge-katalog, belge-format, e2e belge-format
   src/modules/planlar/      PLANLAR (2026-10-04, 309–310; modül 13): plan + plan ekibi (göç 0023; proje no sunucuda, değişmez; künye kayıttan) ·
                             Plan aç /planlar/ac (uyarılar sema.ts'te saf, engel değil) · liste /planlar · plan içi /planlar/<id> (server/plan-ici.ts:
                             akış kabul/red/kontrol/tamamla, künye düzenle/güncelle, plan ekipmanı, proje notları; geçişler göç 0024 tetiğinde) · 372 planSil

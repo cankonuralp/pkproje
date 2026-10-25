@@ -18,6 +18,7 @@ import { numaraAl } from "../../../server/numara/numara.ts";
 import { canDoEylem, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { belgeGonder, kaynakBelgeleri, kaynakBelgesiniIptal } from "../../onaylar/server/belge-baglanti.ts";
+import { yayindakiBelgeFormati } from "../../rapor-format/server/belgeler.ts";
 import { personelHesaplari } from "../../../server/kimlik/hesap.ts";
 import type { BelgeDurumu } from "../../onaylar/sema.ts";
 import { meslek } from "../../personel/sema.ts";
@@ -190,6 +191,8 @@ export async function katilimFormuGonder(db: Sorgulayici, depo: Depo, kim: Kisi,
     firma: { ad: firma.ad, kod: firma.kod, adres: firma.adres, logo: firma.logo }, no,
     katilan: { ad: p.ad, meslek: p.meslek === "diger" ? p.meslekMetin ?? "Diğer meslek" : meslek(p.meslek)?.ad ?? p.meslek },
     egitim: x.tur, kurum: x.kurum, tarih: x.tarih, tekrar: x.tekrar,
+    /* 2026-10-25 (belge formatları): firmanın yayınladığı katılım formu formatı; yoksa temel format */
+    format: await yayindakiBelgeFormati(db, "egitim"),
   };
   let pdf: Uint8Array;
   try { pdf = await uret(v); } catch { throw new DosyaHatasi("Formun PDF'i üretilemedi; biraz sonra yeniden deneyin."); }

@@ -257,13 +257,15 @@ export type HucreStili = z.output<typeof HucreStili>;
 /** hücre: r, c sol üst köşesi; rs, cs kapladığı satır / sütun. Türüne göre: m (yazı; kontrol cevabında maddenin metni — boşsa satırın yazıları),
     id (alan, cevap, fotoğraf kutusu — cevabın anahtarı, bütün tanımda tekil), ad (sahadaki adı — boşsa soldaki / üstteki yazı), alan (değer türü),
     secenekler (seçim; sonuç hücresinde "uygundur / uygun değildir / şartlı uygundur" sözcükleri), birim, zorunlu, formul, kaynak, kim (imza
-    yeri), eimza (e-imza bu hücrede), gorsel (logo / akreditasyon) */
+    yeri), eimza (e-imza bu hücrede), gorsel (logo / akreditasyon); veri (2026-10-25, belge formatları — src/belge/katalog.ts): kayıt hücresinin
+    belgeden gelen bilgisi ("alan_adi" ya da çoğalan satırda "liste.kolon") */
 export const Hucre = z.object({
   r: z.number().int().min(0).max(199), c: z.number().int().min(0).max(39), rs: z.number().int().min(1).max(200).optional(), cs: z.number().int().min(1).max(40).optional(),
   tur: z.enum(HUCRE_TURLERI), m: z.string().max(2000).optional(), id: kimlik.optional(), ad: z.string().trim().max(200).optional(),
   alan: z.enum(HUCRE_ALAN_TURLERI).optional(), secenekler: z.array(z.string().trim().min(1).max(200)).max(40).optional(), birim: kisa.optional(),
   zorunlu: z.boolean().optional(), formul, kaynak: z.enum(TABLO_KAYNAKLARI).optional(), kim: z.enum(["uzman", "teknik", "uzman2", "tesis"]).optional(),
   eimza: z.boolean().optional(), gorsel: z.enum(["logo", "akr"]).optional(), s: HucreStili.optional(),
+  veri: z.string().regex(/^[a-z][a-z0-9_]{0,39}(\.[a-z][a-z0-9_]{0,39})?$/).optional(),
 });
 export type Hucre = z.output<typeof Hucre>;
 /** satır: y en az yükseklik (mm); tekrar — sahada çoğalan satır (ölçüm satırı; cevabı Cevaplar.tablo[id]; id tekrar satırında zorunlu) */
@@ -508,7 +510,8 @@ export const FormatTanimi = z.object({
           else tek(h.id, [...yol, "id"]);
         }
         if (h.tur === "alan" && h.alan === "secim" && !h.secenekler?.length) bag.addIssue({ code: "custom", path: yol, message: "Seçim hücresinin seçenekleri yok." });
-        if (h.tur === "kayit" && !h.kaynak) bag.addIssue({ code: "custom", path: yol, message: "Kayıttan gelen hücrenin bilgisi seçilmemiş." });
+        /* 2026-10-25 (belge formatları): belgenin bilgisini okuyan (veri) kayıt hücresinde kaynak yok */
+        if (h.tur === "kayit" && !h.kaynak && !h.veri) bag.addIssue({ code: "custom", path: yol, message: "Kayıttan gelen hücrenin bilgisi seçilmemiş." });
         if (h.tur === "imza" && !h.kim) bag.addIssue({ code: "custom", path: yol, message: "İmza hücresinin kişisi seçilmemiş." });
       });
     }

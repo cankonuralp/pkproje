@@ -30,6 +30,7 @@ import type { TeklifBelgesiVerisi } from "../../../belge/teklif.ts";
 import type { ExcelTuru, TeklifEkipmani } from "../excel.ts";
 import { bitisGunu, RedGirdisi, TeklifGirdisi, type Aday, type TeklifDurumu } from "../sema.ts";
 import { raporBaglari } from "./rapor-bagi.ts";
+import { yayindakiBelgeFormati } from "../../rapor-format/server/belgeler.ts";
 
 const MODUL = 11;
 const TEKLIF = tablo({ ad: "teklif", sutunlar: ["no", "musteri_id", "aday", "durum", "gerekce", "gecerlilik", "kdv", "notlar", "ekipmanlar", "kopya_kaynak"] });
@@ -384,6 +385,8 @@ export async function teklifBelgesiVerisi(db: Sorgulayici, kim: Kisi, id: string
       : { unvan: t.aday?.unvan ?? "—", vergi: [t.aday?.vd, t.aday?.vno].filter(Boolean).join(" · ") || null, eposta: t.aday?.eposta ?? null, tel: t.aday?.tel ?? null,
           ilgili: t.aday?.yetkili ?? null, yerler: t.aday ? [{ ad: null, adres: [t.aday.adres, [t.aday.ilce, t.aday.il].filter(Boolean).join(" / ")].filter(Boolean).join(", ") }] : [] },
     kalemler: t.kalemler.map((k) => ({ turAd: k.turAd, brans: k.brans, periyot: k.periyot, adet: k.adet, fiyat: k.fiyat })),
+    /* 2026-10-25 (belge formatları): firmanın yayınladığı teklif formatı; yoksa temel format */
+    format: await yayindakiBelgeFormati(db, "teklif"),
   };
 }
 

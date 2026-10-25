@@ -10,6 +10,8 @@ import type { ReactNode } from "react";
 import { aracTutanagi, type AracTutanagiVerisi } from "./arac.ts";
 import { egitimFormu, type EgitimFormuVerisi } from "./egitim.ts";
 import { belgeAltYazisi, raporBelgesi } from "./belge.ts";
+import { aracDegerleri, belgeCizimi, egitimDegerleri, faturaDegerleri, onBilgiDegerleri, sahaDegerleri, talepDegerleri, teklifDegerleri, zimmetDegerleri } from "./katalog.ts";
+import { onBilgiFormu, type OnBilgiVerisi } from "./onbilgi.ts";
 import { imzaAlaniKoy, type EimzaYeri } from "./eimza.ts";
 import { EIMZA_KUTU, EIMZA_KUTU_2, type FormatTanimi } from "../format/tanim.ts";
 import { sahaFormu, type SahaFormuVerisi } from "./saha.ts";
@@ -103,20 +105,24 @@ export async function belgePdf(v: BelgeVerisi): Promise<Uint8Array> {
   const pdf = await htmlPdf(belgeHtml(v), raporAltBilgisi(v));
   return v.kesin ? imzaAlaniKoy(pdf, eimzaYeri(v.tanim), eimzaYeri2(v.tanim)) : pdf;
 }
+/* 2026-10-25 (belge formatları; reisim: "herhangi bir form ekleme mekaniği bu şekilde çalışmalı aynı araca bağlamalıyız"): her belge firmanın o belge
+   için yayınladığı formatla (v.format — katalog.ts belgeCizimi → belge.ts belgeFormu), yoksa temel formatla */
 /** teklif belgesinin PDF'i (325) — aynı motor, aynı CSS */
-export const teklifPdf = (v: TeklifBelgesiVerisi) => htmlPdf(sayfaHtml(v.no, teklifBelgesi(v)));
+export const teklifPdf = (v: TeklifBelgesiVerisi) => htmlPdf(sayfaHtml(v.no, belgeCizimi("teklif", v, teklifDegerleri, teklifBelgesi)));
 /** fatura özeti (340): fatura e-Fatura programında kesilir; bu belge kalemleri, KDV'yi ve tahsilatı özetler */
-export const faturaPdf = (v: FaturaBelgesiVerisi) => htmlPdf(sayfaHtml(`${v.no} fatura özeti`, faturaBelgesi(v)));
-/** talep formu (341): izin talep formu ya da masraf formu, temel format */
-export const talepPdf = (v: TalepFormuVerisi) => htmlPdf(sayfaHtml(v.no, talepFormu(v)));
-/** araç teslim tutanağı (342): temel format; teslim alan kişiyse imzasına gider (Onaylar › Diğer) */
-export const aracTutanagiPdf = (v: AracTutanagiVerisi) => htmlPdf(sayfaHtml(v.no, aracTutanagi(v)));
-/** zimmet teslim formu (344): temel format; imzaya gönderilince kişinin Onaylar › Diğer'ine */
-export const zimmetPdf = (v: ZimmetFormuVerisi) => htmlPdf(sayfaHtml(v.no ?? "Zimmet teslim formu", zimmetFormu(v)));
-/** eğitim katılım formu (345): temel format; katılanın imzasına (Onaylar › Diğer) */
-export const egitimPdf = (v: EgitimFormuVerisi) => htmlPdf(sayfaHtml(v.no, egitimFormu(v)));
+export const faturaPdf = (v: FaturaBelgesiVerisi) => htmlPdf(sayfaHtml(`${v.no} fatura özeti`, belgeCizimi("fatura", v, faturaDegerleri, faturaBelgesi)));
+/** talep formu (341): izin talep formu ya da masraf formu */
+export const talepPdf = (v: TalepFormuVerisi) => htmlPdf(sayfaHtml(v.no, belgeCizimi(v.tip, v, talepDegerleri, talepFormu)));
+/** araç teslim tutanağı (342): teslim alan kişiyse imzasına gider (Onaylar › Diğer) */
+export const aracTutanagiPdf = (v: AracTutanagiVerisi) => htmlPdf(sayfaHtml(v.no, belgeCizimi("arac", v, aracDegerleri, aracTutanagi)));
+/** zimmet teslim formu (344): imzaya gönderilince kişinin Onaylar › Diğer'ine */
+export const zimmetPdf = (v: ZimmetFormuVerisi) => htmlPdf(sayfaHtml(v.no ?? "Zimmet teslim formu", belgeCizimi("zimmet", v, zimmetDegerleri, zimmetFormu)));
+/** eğitim katılım formu (345): katılanın imzasına (Onaylar › Diğer) */
+export const egitimPdf = (v: EgitimFormuVerisi) => htmlPdf(sayfaHtml(v.no, belgeCizimi("egitim", v, egitimDegerleri, egitimFormu)));
 /** saha formu (2026-10-12): tamamlanan planda; yapılan ekipmanlar + firma onayı imza yerleri — müşterinin ıslak imzalı taraması plana yüklenir */
-export const sahaPdf = (v: SahaFormuVerisi) => htmlPdf(sayfaHtml(v.no, sahaFormu(v)));
+export const sahaPdf = (v: SahaFormuVerisi) => htmlPdf(sayfaHtml(v.no, belgeCizimi("saha", v, sahaDegerleri, sahaFormu)));
+/** ön bilgilendirme formu (2026-10-25): planın bilgisiyle (Firma ayarları'na yüklenen PDF'in kendisi ucunda — bu yalnız format ya da temel format) */
+export const onBilgiPdf = (v: OnBilgiVerisi) => htmlPdf(sayfaHtml(`${v.projeNo} ön bilgilendirme formu`, belgeCizimi("onbilgi", v, onBilgiDegerleri, onBilgiFormu)));
 
 async function htmlPdf(html: string, altBilgi?: string): Promise<Uint8Array> {
   const b = await tarayici();

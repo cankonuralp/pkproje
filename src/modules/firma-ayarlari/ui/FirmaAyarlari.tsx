@@ -687,6 +687,16 @@ export function FirmaAyarlari({ v }: { v: Veri }) {
                   </button>
                 );
               })}
+              {/* 2026-10-25 (belge formatları; reisim: "herhangi bir form ekleme mekaniği bu şekilde çalışmalı aynı araca bağlamalıyız"): programın
+                  ürettiği belgelerin formatları kendi sayfasında (rapor şablonunun aracıyla) — pencere değil, sayfaya gider */}
+              {g.k === "firma" && (
+                <Link href="/firma-ayarlari/belgeler" className={stil.panel} style={{ textDecoration: "none" }} data-baglanti="belgeler">
+                  <span className={stil.panelIkon}><Ikon ad="layout-list" /></span>
+                  <span className={stil.panelYazi}><span className={stil.panelAd}>Belge formatları</span>
+                    <span className={stil.panelOzet}>Zimmet, araç, eğitim, izin, masraf, teklif, fatura, saha, ön bilgilendirme</span></span>
+                  <span className={stil.panelSag}><Ikon ad="chevron-right" kucuk /></span>
+                </Link>
+              )}
             </div>
           </section>
         ))}

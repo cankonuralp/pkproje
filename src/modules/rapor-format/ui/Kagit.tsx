@@ -31,7 +31,7 @@
    değer, sınır, sonuç; kontrol listesi: no, madde, sonuç), sonuç cümlesinin "uygundur / uygun değildir"i, yorumun yönlendirme yazısı (satır sayısı
    bölüm ayarında), başlık tablosunun etiketleri, sayfa altı yazısı, ekipman kodu / türü satırlarının adı yerinde yazılır; öğeler (alan, madde,
    sütun, değer) yukarı / aşağı (sütun sola / sağa) taşınır, madde grubun ucundan komşu gruba geçer. */
-import { Fragment, useEffect, useRef, useState, type DragEvent, type ReactNode } from "react";
+import { Fragment, useContext, useEffect, useRef, useState, type DragEvent, type ReactNode } from "react";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { useOnayla } from "../../../components/pencere/Onay";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
@@ -59,6 +59,7 @@ import { SurukleTutamak, type Birakma } from "./Surukle";
 import { SURUKLE, type Parca } from "../yapboz";
 import { bolumeKaydir } from "./kaydir";
 import { BLOK_ADI } from "./ortak";
+import { BelgeKatalogBaglami } from "./belgeBaglam";
 import k from "./kagit.module.css";
 
 /** bölüm türünün kısa açıklaması (Bölüm ekle listesinde sağda) */
@@ -257,6 +258,8 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
     return () => clearTimeout(z);
   }, [yeniId]);
   const onayla = useOnayla();
+  /* 2026-10-25 (belge formatları): belge kurucusunda kâğıt yalnız belgeye uyan bölümleri sunar (tablo, metin); sahada doldurma ayarı yok */
+  const belgeKipi = !!useContext(BelgeKatalogBaglami);
   const duzen = raporDuzeni(t, false, false);   // 540: kurucu formatın kendisini (kayıttan alanlar dahil) gösterir
   const sira = (id: string) => t.bolumler.findIndex((b) => b.id === id);
   const ac = (key: string) => setAyar(ayar === key ? null : key);
@@ -737,7 +740,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
      bilgilerinde de olsun bunu istediğim başlığa da ekleyebiliyim rapor tasarımcısında da olsun"): bilgi / ölçüm tablosu / test bölümünde sahada
      fotoğraftan (yapay zekâ okur, fotoğraf belgede görünmez) ve Excel'den doldurma — bölümün ayarı (tanim.ts doldur / doldurma) */
   const doldurmaAyari = (b: Bolum, i: number) => {
-    if (!DOLDURULUR.includes(b.blok)) return null;
+    if (belgeKipi || !DOLDURULUR.includes(b.blok)) return null;
     const d = doldurma(b), yaz = (y: Partial<typeof d>) => degis(bolumYaz(t, i, { doldur: { ...d, ...y } }));
     return (
       <div className={k.panelSatir} role="group" aria-label={`${b.ad} · sahada doldurma`}>
@@ -753,7 +756,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
      tuşun × işaretiyle kaldırılır (484'te yalnız bölüm ayarının içindeydi, görünmüyordu). Belgeye (PDF) basılmaz. 542: sahada tuşun adı "Fotoğraf
      ekle" — fotoğraf okunmadan eklenir, S.A.Y "fotoğrafları oku ve gir" ile okur. */
   const sahaTuslari = (b: Bolum, i: number) => {
-    if (!DOLDURULUR.includes(b.blok)) return null;
+    if (belgeKipi || !DOLDURULUR.includes(b.blok)) return null;
     const d = doldurma(b);
     const yaz = (y: Partial<typeof d>, metin: string) => { degis(bolumYaz(t, i, { doldur: { ...d, ...y } })); bildir(`${b.ad}: ${metin} (taslak).`); };
     return (
@@ -941,7 +944,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
     </section>
   ));
   const araEkle = (p: number, ad: string, id: string, son = false, ana: Bolum | null = null) => {
-    const secenekler = cihazVar ? BOLUM_SECENEK.filter(([b]) => b !== "cihaz") : BOLUM_SECENEK;
+    const secenekler = belgeKipi ? BOLUM_SECENEK.filter(([b]) => b === "tablo" || b === "metin") : cihazVar ? BOLUM_SECENEK.filter(([b]) => b !== "cihaz") : BOLUM_SECENEK;
     return (
       <>{oneriKutulari(p)}
       <div className={[k.araEkle, son && k.sonEkle, hedef === `y:${p}` && k.hedef].filter(Boolean).join(" ")} {...yuva(p)}>
@@ -1019,7 +1022,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
   };
 
   return (
-    <article className={[`rb-sayfa ${k.kagit}`, serbest ? "rb-serbest" : belgeStilSiniflari(t)].filter(Boolean).join(" ")} aria-label="Rapor formatı · düzenlenebilir belge">
+    <article className={[`rb-sayfa ${k.kagit}`, serbest ? "rb-serbest" : belgeStilSiniflari(t)].filter(Boolean).join(" ")} aria-label={belgeKipi ? "Belge formatı · düzenlenebilir belge" : "Rapor formatı · düzenlenebilir belge"}>
       {/* 2026-10-24 (serbest düzen): sabit parçalar (başlık tablosu, 1 Firma bilgileri, 2 Ekipman bilgileri) yok — hepsi formatın tablolarında */}
       {!serbest && <>
       {/* 2026-10-23 (basılı formdan şablon): belgenin başı yalnız belge adı — tek satır, yerinde yazılır */}

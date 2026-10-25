@@ -27,6 +27,7 @@ import { meslek } from "../../personel/sema.ts";
 import type { TalepFormuVerisi, TalepTipi } from "../../../belge/talep.ts";
 import { izinHaklari } from "../../personel/server/talep-baglanti.ts";
 import { personelinPlanlari } from "../../planlar/server/talep-baglanti.ts";
+import { yayindakiBelgeFormati } from "../../rapor-format/server/belgeler.ts";
 import { GerekceGirdisi, isGunu, IzinGirdisi, IZIN_DURUM, IZIN_TUR, TALEP_KARARLARI, type IzinDurumu, type IzinTuru, type TalepKarari } from "../sema.ts";
 
 const MODUL = 21;
@@ -339,6 +340,8 @@ export async function talepFormuVerisi(db: Sorgulayici, kim: Kisi, tip: string, 
     personel: { ad: p?.ad ?? "—", meslek: p ? (p.meslek === "diger" ? p.meslekMetin ?? "Diğer meslek" : meslek(p.meslek)?.ad ?? p.meslek) : "—" },
     durum, alanlar, red,
     karar: karar && karar.zaman ? { ad: ad ?? "—", zaman: karar.zaman, sonuc: karar.sonuc } : null,
+    /* 2026-10-25 (belge formatları): firmanın o talep tipi için yayınladığı format; yoksa temel format */
+    format: await yayindakiBelgeFormati(db, tip as TalepTipi),
   };
 }
 

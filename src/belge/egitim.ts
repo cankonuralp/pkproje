@@ -3,6 +3,7 @@
    eğitim tarihi), katılan (ad · meslek), eğitim (tür), eğitimi veren kurum, eğitim tarihi, tekrar tarihi; 1 Beyan; imzalar (Eğitimi veren · Katılan:
    "Tarih · imza" — imza, imzalı PDF'in kendisinde). Öteki belgelerle aynı görünüm (belge.css .rb-). SAF, React'in kaçışıyla (ham HTML yok). */
 import { createElement as h, type ReactNode } from "react";
+import type { FormatTanimi } from "../format/tanim.ts";
 import { firmaAdresi, firmaLogosu } from "./belge.ts";
 
 export interface EgitimFormuVerisi {
@@ -15,6 +16,8 @@ export interface EgitimFormuVerisi {
   /** YYYY-AA-GG */
   tarih: string;
   tekrar: string;
+  /** 2026-10-25 (belge formatları): firmanın yayınladığı katılım formu formatı (yoksa temel format) */
+  format?: FormatTanimi | null;
 }
 
 export const egitimFormKodu = (firmaKod: string) => `${firmaKod}-FR-EGT-01`;

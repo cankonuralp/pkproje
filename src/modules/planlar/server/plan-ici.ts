@@ -16,11 +16,12 @@ import { createHash } from "node:crypto";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { kesinSil, kullanimlar } from "../../../server/db/silici.ts";
 import { ekle, guncelle, tablo, type GuncelleSonucu, type Iz } from "../../../server/db/yazici.ts";
-import { ayarOku, firmaBelgeKunyesi } from "../../../server/ayar/ayar.ts";
+import { AYAR_DOSYA, ayarOku, firmaBelgeKunyesi } from "../../../server/ayar/ayar.ts";
 import type { Depo } from "../../../server/dosya/depo.ts";
 import { dosyaCope, dosyaYukle } from "../../../server/dosya/dosya.ts";
 import type { YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import type { SahaFormuVerisi } from "../../../belge/saha.ts";
+import type { OnBilgiVerisi } from "../../../belge/onbilgi.ts";
 import { personelHesaplari } from "../../../server/kimlik/hesap.ts";
 import { canDo, canDoEylem, duzey } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
@@ -29,6 +30,8 @@ import { kullanimMetni } from "../../../components/sil/metin.ts";
 import { turOzetleri } from "../../ekipman-turleri/server/turler.ts";
 import { musteriOzetleri } from "../../musteriler/server/musteriler.ts";
 import { personelOzetleri } from "../../personel/server/personel.ts";
+import { meslek } from "../../personel/sema.ts";
+import { yayindakiBelgeFormati } from "../../rapor-format/server/belgeler.ts";
 import { ekipmanRaporuVar, mesaiDurumu, oncekiKontrol, oncekiRaporlar, planRaporlari, raporKunyeleriniYaz, type OncekiKontrol, type PlanRaporu } from "../../raporlar/server/plan-baglanti.ts";
 import { KunyeGirdisi, kodBicimi, kodNormal, NotGirdisi, RedGirdisi, TAMAMLANDI_RAPOR, YeniEkipmanGirdisi, type KodTuru, type PlanDurumu } from "../sema.ts";
 import { bugunTr, EKIP, MODUL, PLAN, PLAN_EKIPMAN, planAcabilir, planKarti, UUID, type Kisi, type PlanKarti } from "./planlar.ts";
@@ -613,6 +616,32 @@ export async function sahaFormuVerisi(db: Sorgulayici, kim: Kisi, planId: string
     no: f.no, projeNo: kart.no, baslangic: kart.baslangic, bitis: kart.bitis, musteri: kart.musteri.unvan, tesis: kart.tesis.ad, adres: e.p.adres,
     ekipmanlar: tekil.map((x) => { const k = ekp.get(x.ekipmanId); return { kod: k?.kod ?? "—", tur: turAd.get(x.turId) ?? "—", konum: k?.konum ?? null }; }),
     uzmanlar: kart.ekip.map((x) => x.ad),
+    /* 2026-10-25 (belge formatları): firmanın yayınladığı saha formu formatı; yoksa temel format */
+    format: await yayindakiBelgeFormati(db, "saha"),
+  };
+}
+
+/* ── ÖN BİLGİLENDİRME FORMU (2026-10-25, belge formatları; reisim: "herhangi bir form ekleme mekaniği bu şekilde çalışmalı aynı araca
+   bağlamalıyız"; N1 — "ön bilgilendirme formu her firmanın kendi formatına göre değişir"): planı gören indirir. İçerik plandan: müşteri, tesis,
+   adres, başlangıç / bitiş, proje no, ekip, plandaki ekipmanlar (koda göre; pasif hariç). Firmanın yayınladığı format (Rapor formatı › Belgeler)
+   önce; yoksa Firma ayarları'na yüklenen PDF (yuklu — uç dosyanın kendisini verir); o da yoksa temel format (src/belge/onbilgi.ts). ── */
+export async function onBilgiVerisi(db: Sorgulayici, kim: Kisi, planId: string, depo: Depo | null): Promise<(OnBilgiVerisi & { yuklu: { anahtar: string; ad: string } | null }) | null> {
+  const e = await erisim(db, kim, planId);
+  const kart = e ? await planKarti(db, kim, planId) : null;
+  if (!e || !kart) return null;
+  const pe = (await db.sorgu<{ ekipman_id: string }>("SELECT ekipman_id::text FROM plan_ekipman WHERE plan_id = $1", [planId])).rows;
+  const turAd = new Map((await turOzetleri(db)).map((t) => [t.id, t.ad] as const));
+  const format = await yayindakiBelgeFormati(db, "onbilgi");
+  const dosyaId = format ? null : (await ayarOku(db, "belge_sablon")).deger.on_bilgi;
+  const yuklu = dosyaId ? (await db.sorgu<{ anahtar: string; ad: string }>(
+    "SELECT anahtar, ad FROM dosya WHERE id = $1 AND modul = $2 AND tur = 'application/pdf' AND cop IS NULL", [dosyaId, AYAR_DOSYA])).rows[0] ?? null : null;
+  const firma = await firmaBelgeKunyesi(db, depo);
+  return {
+    firma: { ad: firma.ad, kod: firma.kod, adres: firma.adres, logo: firma.logo },
+    projeNo: kart.no, tarih: bugunTr(), musteri: kart.musteri.unvan, tesis: kart.tesis.ad, adres: e.p.adres, baslangic: kart.baslangic, bitis: kart.bitis,
+    uzmanlar: kart.ekip.map((x) => ({ ad: x.ad, meslek: meslek(x.meslek)?.ad ?? x.meslek })),
+    ekipmanlar: (await ekipmanlar(db, pe.map((x) => x.ekipman_id))).filter((x) => !x.pasif).map((x) => ({ kod: x.kod, tur: turAd.get(x.turId) ?? "—", konum: x.konum })),
+    format, yuklu,
   };
 }
 

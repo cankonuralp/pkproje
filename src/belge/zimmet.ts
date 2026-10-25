@@ -4,6 +4,7 @@
    alındığı gün, ölçüm cihazında kalibrasyon bitişi), 2 Taahhüt, imzalar (Teslim eden · Teslim alan: "Tarih · imza" — imza, imzalı PDF'in
    kendisinde). İmzaya gönderilmeden indirilen formda numara yok ("—"). Öteki belgelerle aynı görünüm (belge.css .rb-). SAF, React'in kaçışıyla. */
 import { createElement as h, type ReactNode } from "react";
+import type { FormatTanimi } from "../format/tanim.ts";
 import { firmaAdresi, firmaLogosu } from "./belge.ts";
 
 export interface ZimmetFormuVerisi {
@@ -16,6 +17,8 @@ export interface ZimmetFormuVerisi {
   /** Firma ayarları › Zimmet teslim eden; seçilmediyse null ("Firma adına") */
   eden: { ad: string; meslek: string } | null;
   varliklar: readonly { kod: string; ad: string; tur: string; teslim: string | null; not: string | null }[];
+  /** 2026-10-25 (belge formatları): firmanın yayınladığı zimmet formu formatı (yoksa temel format) */
+  format?: FormatTanimi | null;
 }
 
 export const zimmetFormKodu = (firmaKod: string) => `${firmaKod}-FR-ZMT-01`;

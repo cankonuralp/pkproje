@@ -25,6 +25,7 @@ import { donemGelirGider, isKarlilik, sonAylar, type DonemGelirGider, type IsKar
 import { faturaTanim, isTanim, musteriSecenekleri } from "../liste.ts";
 import { bellekteListele } from "../../../server/liste/liste.ts";
 import type { SunucuListe } from "../../../components/liste/suzgec.ts";
+import { yayindakiBelgeFormati } from "../../rapor-format/server/belgeler.ts";
 import { FaturaGirdisi, gunEkle, kdvTutari, para, TahsilatGirdisi, YONTEM, type FaturaDurumu, type IsDurumu, type Yontem } from "../sema.ts";
 
 const MODUL = 18;
@@ -328,6 +329,8 @@ export async function faturaBelgesiVerisi(db: Sorgulayici, kim: Kisi, id: string
     ara: f.ara, kdv: f.kdv, kdvTutar: f.kdvTutar, toplam: f.toplam,
     tahsilatlar: [...f.tahsilatlar].sort((a, b) => a.tarih.localeCompare(b.tarih)).map((t) => ({ tarih: t.tarih, yontem: t.yontem, tutar: t.tutar, aciklama: t.aciklama })),
     tahsil: f.tahsil, kalan: f.kalan,
+    /* 2026-10-25 (belge formatları): firmanın yayınladığı fatura özeti formatı; yoksa temel format */
+    format: await yayindakiBelgeFormati(db, "fatura"),
   };
 }
 

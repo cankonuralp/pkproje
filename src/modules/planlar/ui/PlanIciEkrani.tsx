@@ -20,7 +20,7 @@ import { TabloSayfalari, useSayfa } from "../../../components/liste/Sayfalayici"
 import { Pencere } from "../../../components/pencere/Pencere";
 import { DegerYok, Kod } from "../../../components/sayfa/Sayfa";
 import { Serit } from "../../../components/serit/Serit";
-import { Tus } from "../../../components/tus/Tus";
+import { Tus, tusSinifi } from "../../../components/tus/Tus";
 import { meslek } from "../../personel/sema";
 import { akisAdimlari, gunNo, tarihNo, type AdimDurumu } from "../sema";
 import type { PlanIci } from "../server/plan-ici";
@@ -203,12 +203,14 @@ export function PlanIciEkrani({ v }: { v: PlanIci }) {
   );
   const a1 = (
     <Adim no={1} durum={adim[0]} baslik="Planlandı" ozet={gunNo(k.olustu)}>
-      {v.kunyeGuncel && !duzenle && (
+      {!duzenle && (
         <div className={stil.kunyeBas}>
-          <Tus tur="ikincil" ikon="pencil" onClick={() => {
+          {/* 2026-10-25 (belge formatları): ön bilgilendirme formu — firmanın formatı, Firma ayarları'na yüklenen PDF ya da temel format (uçta) */}
+          <a className={tusSinifi("ikincil")} href={`/planlar/${k.id}/on-bilgilendirme/pdf`} download><Ikon ad="download" kucuk />Ön bilgilendirme formu</a>
+          {v.kunyeGuncel && <Tus tur="ikincil" ikon="pencil" onClick={() => {
             const gk = v.kunyeGuncel!;
             setDuzenle({ firmaAdi: gk.firmaAdi, adres: gk.adres ?? "", sgk: gk.sgk ?? "", isg: Object.fromEntries(gk.isg.map((x) => [x.personelId, x.no ?? ""])) });
-          }}>Düzenle</Tus>
+          }}>Düzenle</Tus>}
         </div>
       )}
       {v.izin.kunyeGuncelle && v.kunyeFark.length > 0 && (
