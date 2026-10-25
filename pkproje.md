@@ -2527,7 +2527,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
-- 2026-10-25 (YAPILDI — dalda; CI'da): **BELGE FORMATLARI — BÜTÜN BELGELER AYNI ARACA BAĞLANDI** — reisim: *"ama sadece zimmet ve bilgilendirme formu
+- 2026-10-25 (YAYINDA — main cd53d02c; CI 15/15, göç 0104 Supabase'de (105 göç), canlı duman 11/11): **BELGE FORMATLARI — BÜTÜN BELGELER AYNI ARACA BAĞLANDI** — reisim: *"ama sadece zimmet ve bilgilendirme formu
   değil herhangi bir form ekleme mekaniği bu şekilde çalışmalı aynı araca bağlamalıyız zaten araç yapılı sadece bağlama işi yapılacak … kısa sürede
   bitir"* (maket istenmedi — araç onaylı maketiyle aynı). Firma ayarları › Belge formatları: zimmet teslim formu, araç teslim tutanağı, eğitim katılım
   formu, izin talep formu, masraf formu, teklif, fatura özeti, saha formu, ön bilgilendirme formu — her birinde "PDF'ten kur" (rapor şablonundaki
