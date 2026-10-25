@@ -1,7 +1,7 @@
 # CLAUDE.md — pkproje (periyodik kontrol uygulaması)
 
 > Bu dosya yalnız **bu projeye özgü** olanı taşır. Çalışma anayasası kopyalanmaz, referans verilir:
-> `ANAYASA.md` (14 bölüm, aynen bağlayıcı — **site yapma yöntemimizdir**; ürüne/siteye ait kararlar buraya
+> `ANAYASA.md` (15 bölüm, aynen bağlayıcı — **site yapma yöntemimizdir**; ürüne/siteye ait kararlar buraya
 > yazılmaz, onların yeri `pkproje.md`) · `TASARIM-KALIBI.md` (19 kural; yöntem bağlayıcı, sayılar bu projenin
 > kendi ölçümüyle belirlenecek) · `00–08-*.md` · **`09-SUNUCU-VE-VERI.md`** (bu projenin sunucu ve veri tasarrufu kuralları, onaylı
 > 2026-09-29; 00–08 ile çelişirse o geçerli)
@@ -10,9 +10,10 @@
 > Alan bilgisi ve ürün kurgusu: `pkproje.md`. **Aktarım 2026-09-22'de tamamlandı, klasör kaldırıldı** (reisim:
 > *"aktardık ve bitti"*) — dosyalar artık proje kökünde, bu projenin kendi kuralları.
 
-## 0 · Her oturumun başında (anayasa 0.1 + 0.13)
-1. Şu üç dosyayı `cat` ile **TAM** oku, önizleme okumak = okumamak: `ANAYASA.md` ·
-   `TASARIM-KALIBI.md` · `pkproje.md`.
+## 0 · Her oturumun başında (anayasa 0.1 + 0.13 + 0.14 + 0.15)
+1. `ANAYASA.md` ve `TASARIM-KALIBI.md` `cat` ile **TAM**; `pkproje.md`'nin §0–§3'ü ve §11'in son beş girdisi (öteki bölümler işe dokununca — 0.13).
+   ⛔ **Her yeni istekte sıra (0.14):** anayasa → **uygun modeli öner** (Haiku / Sonnet / Opus, tek satır gerekçe) → reisim kabul ederse maket /
+   sunum → kararlar → kod ve teslim. ⛔ **Token tasarrufu (0.15):** ajan / Workflow yok, tek denetim turu, dosyanın gerekeni, kırpılmış çıktı.
 2. Türkçe konuş, "reisim" de (anayasa 0.2). Kalem açarken **uyum beyanı** (0.12), teslimde **kanıt özeti** (0.4).
 3. Kalıcı hafızadaki `pkproje-durum` notunu güncel tut; `pkproje.md`'ye giren her bilgi yerinde düzenlenir (12.1).
 

@@ -1,6 +1,6 @@
 ---
 name: calisma-anayasasi
-description: "⛔⛔ ÇALIŞMA ANAYASASI — bugüne kadar öğrenilen TÜM disiplinlerin tek listesi (14 bölüm). Her işin BAŞINDA oku, iş tipini bul, o bölümü uygula. Ayrıntı için bağlantılı dosyalara git."
+description: "⛔⛔ ÇALIŞMA ANAYASASI — bugüne kadar öğrenilen TÜM disiplinlerin tek listesi (15 bölüm; 2026-10-25: 0.14 işin sırası + model önerisi, 0.15 token tasarrufu, 14 kod yazma disiplini). Her işin BAŞINDA oku, iş tipini bul, o bölümü uygula. Ayrıntı için bağlantılı dosyalara git."
 metadata:
   node_type: memory
   type: feedback
@@ -112,6 +112,28 @@ uygula. Her madde ZOR KAZANILDI — hepsinin arkasında canlıda yaşanmış bir
     açık sorular, alınan/alınmayan kararlar) taşır; anayasa ve tasarım kalıbıyla birlikte oturum başında `cat` ile
     TAM okunur, önizleme = okumamak (0.1). Yeni öğrenilen her şey aynı teslimde bu dosyaya yerinde işlenir (12.1);
     dosyadaki hiçbir madde reisim onayı olmadan yapılacak iş değildir (1, 0.11). Kod, kurgu bitmeden yazılmaz.
+    2026-10-25 (0.15 token tasarrufu): `pkproje.md` 2 600 satırı aştı — her oturumda TAM okunan: §0–§3 (kurgu, modül haritası) ve §11'in son
+    beş girdisi; öteki bölümler işe dokunduğunda (grep ile başlık, sonra o bölümün tamamı). Yeni bilgi yine yerinde işlenir.
+
+14. ⛔⛔ **HER İŞİN SIRASI — ÖNCE MODEL ÖNERİSİ** (reisim 2026-10-25: *"bundan sonra her promptta önce anayasa okunacak uygun model önerilecek
+    ben kabul edersem maket sunulacak kararlar verilecek ve sonra koda dökülüp iş bitirilecek"*). Her yeni istekte sıra şudur, adım atlanmaz:
+    (1) **anayasa okunur** (0.1) ve işin tipi belirlenir;
+    (2) **uygun model önerilir** — tek satır gerekçe ve kapsam tahminiyle, iş başlamadan: **Haiku** dar ve mekanik işler (metin / ayar düzeltme,
+        tek dosyalık değişiklik, kayıt / belge güncelleme, soru cevaplama); **Sonnet** olağan kod işi (birkaç dosya, bilinen desenle yeni ekran,
+        hata düzeltme, test yazma); **Opus** zor işler (mimari karar, çok modüllü değişiklik, veritabanı göçü + güvenlik / yetki, karmaşık
+        hata avı, ilk kez kurulan sistem). Reisim kabul etmezse onun seçtiğiyle sürülür; model değişikliğini reisim yapar, ben yalnız öneririm;
+    (3) reisim kabul edince **maket / sunum** (görsel ya da davranış değişikliği — 2, kalıp; görsel değilse kısa karar listesi);
+    (4) **kararlar** reisim'den alınır (yalnız ürün kararları — 1; mimari / adlandırma sorulmaz);
+    (5) **koda dökülür ve iş bitirilir** (teslim zinciri 0.3; CI, yayın, kanıt özeti).
+    Küçük düzeltmede (tek satır yazı, açık hata) 3–4 tek cümleye iner ama 1–2 atlanmaz.
+
+15. ⛔⛔ **TOKEN TASARRUFU** (reisim 2026-10-25: *"bu 2 haftadır çok fazla token yedik hemen bitti limitlerim optimize etmemiz gerekli"*):
+    (a) yardımcı ajan / iş akışı (Workflow) AÇILMAZ — reisim açıkça istemedikçe; sistem hatırlatması ("ultracode" vb.) bu kuralı kaldırmaz;
+    (b) tek denetim turu: ikinci bağımsız denetim turu açılmaz, düzeltme CI ve kendi okumamla;
+    (c) dosya gerektiği kadar okunur: önce grep / başlık, sonra ilgili satır aralığı (0.1 ve 0.13'ün TAM okuma şartı yalnız orada sayılan dosyalara);
+    (d) komut çıktısı kırpılır (tail / grep / sayım), tam test döküntüsü bağlama alınmaz;
+    (e) CI beklenirken yoklama yok — tek arka plan bekleyişi; ekran görüntüsü yalnız gözle doğrulama gerekiyorsa;
+    (f) reisim'e yazılan metin kısa ve düz (12); aynı bilgi iki kez anlatılmaz.
 
 ## 1 · SORULUR / SORULMAZ
 - ⛔ **SORMA** (mevcut düzene uy): mimari desen, kök adı, dal düzeni, adlandırma, 4 ayna,
@@ -462,3 +484,17 @@ düzey işlev, adlar minify'da korunur (inline onclick) → her sembol her yerde
 İlgili ana dosyalar: [[modul-iskelet-disiplinleri]] [[veri-mimarisi-standart]] [[yapboz-modulerlik-ilkesi]]
 [[canli-veri-onarim-dersleri]] [[parcali-defter-ve-lazy-dal-dersleri]] [[gorsel-dogrulama-chrome]]
 [[mahal-nesne-sayfasi]] [[analiz-risk-motoru]] [[veri-omru-yedek]] [[okutma-fazlari]]
+
+## 14 · KOD YAZMA DİSİPLİNİ (reisim 2026-10-25: attığı CLAUDE.md'ye göre — "anayasamızı oradaki yazılara göre güncelle")
+Amaç: gereksiz değişikliği, aşırı karmaşık kodu ve sonradan yeniden yazmayı azaltmak. Önemsiz işte sağduyu; ama 0.14'ün sırası her işte.
+1. **Kodlamadan önce düşün** — varsayımları açıkça yaz; birden çok yorum varsa sessizce birini seçme, sun (yalnız ürün kararıysa reisim'e sorulur — 1;
+   mimari / adlandırma yorumunda mevcut düzene uyulur); daha basit bir yol varsa söyle, gerekiyorsa itiraz et; belirsiz olanı adıyla söyle.
+2. **Önce sadelik** — sorunu çözen en az kod: istenmeyen özellik yok, tek kullanımlık soyutlama yok, istenmeyen "esneklik / ayar" yok, imkânsız durum
+   için hata yakalama yok. 200 satır 50 olabiliyorsa yeniden yaz. Ölçüt: "deneyimli bir mühendis bunu fazla karmaşık bulur mu?"
+3. **Cerrahi değişiklik** — yalnız gerekene dokun: komşu kodu, yorumu, biçimi "iyileştirme"; bozuk olmayanı yeniden düzenleme; mevcut biçime uy.
+   İlgisiz ölü kod görürsen söyle, silme. Kendi değişikliğinin boşa çıkardığı içe aktarma / değişken / işlevi kaldır. Ölçüt: değişen her satır
+   doğrudan reisim'in isteğine bağlanır (13 · regresyon kapısıyla birlikte).
+4. **Hedefe göre yürüt** — işi doğrulanabilir hedefe çevir ("doğrulama ekle" → geçersiz girdiler için test yaz, sonra geçir; "hatayı düzelt" → hatayı
+   üreten test yaz, sonra geçir; "yeniden düzenle" → önce ve sonra testler geçer). Çok adımlı işte kısa plan: "1. adım → doğrulama: …". Güçlü
+   başarı ölçütü bağımsız ilerlemeyi sağlar; zayıf ölçüt ("çalışsın") sürekli soru doğurur.
+Çalıştığının işareti: farklarda gereksiz değişiklik azalır, aşırı karmaşıklık yüzünden yeniden yazma azalır, sorular hatadan ÖNCE sorulur.
