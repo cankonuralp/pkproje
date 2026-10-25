@@ -251,7 +251,7 @@ test("yönetim: kendi veritabanlı firma — özet firmanın veritabanından; ya
   const yz = page.getByRole("region", { name: "Yapay zekâ" });   // Bolum: kimlik başlıkta, bölge başlıkla adlanır
   await expect(yz.getByRole("radio", { name: "Kapalı" })).toHaveAttribute("aria-checked", "true");
   await expect(yz.getByLabel("Kişi başı aylık sınır ($)")).toHaveValue("5");
-  await expect(yz.getByText(/^1 milyon token: giriş $0,10, çıkış $0,50/)).toBeVisible();
+  await expect(yz.getByText("1 milyon token: giriş $0,10, çıkış $0,50", { exact: false })).toBeVisible();
   await expect(yz.getByText(/Haiku|Sonnet|Opus|Claude/)).toHaveCount(0);
   await yz.getByRole("radio", { name: "Açık" }).click();
   await yz.getByLabel("Kişi başı aylık sınır ($)").fill("abc");

@@ -152,7 +152,11 @@ test("yapay zekâ ayarı (0106): yönetim yazar, iz; özet açık / sınır / ki
     assert.ok(await tek(f.sahip, "SELECT 1 FROM denetim_izi WHERE firma_id = $1 AND ne = 'ayar.yapay_zeka' AND kim = $2", [f.id, `probata yönetim (${YE})`]), "firmanın izi");
     assert.ok(await tek(v.merkezSahip, "SELECT 1 FROM yonetim_izi WHERE hedef_firma = $1 AND ne = 'ayar.yz' AND (ayrinti->>'acik')::boolean", [f.id]), "merkezin izi");
     const h = (await tek<{ id: string }>(f.sahip, "SELECT id::text FROM hesap WHERE firma_id = $1 LIMIT 1", [f.id]))!;
+    /* kullanım satırını oturumdaki kişi yazar (0053 yz_koru) — işlemin bağlamı kurulur */
+    await f.sahip.query("BEGIN");
+    await f.sahip.query("SELECT set_config('app.firma_id', $1, true), set_config('app.hesap_id', $2, true)", [f.id, h.id]);
     await f.sahip.query("INSERT INTO yz_kullanim (firma_id, hesap_id, ay, okuma, mesaj, maliyet) VALUES ($1, $2, to_char(now() AT TIME ZONE 'Europe/Istanbul', 'YYYY-MM'), 3, 2, 4500) ON CONFLICT DO NOTHING", [f.id, h.id]);
+    await f.sahip.query("COMMIT");
     const oz = await firmaOzetiYonet(c, f.id);
     assert.deepEqual([oz?.yz.acik, oz?.yz.sinir, oz?.yz.kisiler.map((k) => [k.okuma, k.mesaj, k.maliyet])], [true, 7.5, [[3, 2, 4500]]]);
     assert.deepEqual(await yzAyarYonet(c, f.id, { acik: false, sinir: "" }), { durum: "tamam" });

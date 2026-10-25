@@ -242,9 +242,9 @@ test("6. Sözleşmeler, Muhasebe, Talepler, Firma ayarları, okumalar: tuşun i�
   assert.equal(neden(await isle(A, FA.den2, "talep_karar", { tip: "izin", talep: izin.id, surum: izin.surum, karar: "onayla" })), YETKISIZ);
   tamam(await isle(A, FA.yon, "talep_karar", { tip: "izin", talep: izin.id, surum: izin.surum, karar: "onayla" }));
   assert.equal(await say(A, "SELECT count(*) AS n FROM izin_talebi WHERE id = $1 AND durum = 'onaylandi'", [izin.id]), 1);
-  /* Firma ayarları: okumada anahtar yalnız "tanımlı mı" (son 4 hane bile yok); bölüm kaydı sürümle; denetçi göremez */
+  /* Firma ayarları: anahtarın son haneleri gitmez; bölüm kaydı sürümle; denetçi göremez. 2026-10-25 (göç 0106): yapay zekâ Yönetim'de — okumada da yok */
   const fa = tamam(await isle(A, FA.yon, "firma_ayarlari", {}));
-  assert.deepEqual(Object.keys((fa.yz as { anahtar: object }).anahtar), ["tanimli"]);
+  assert.ok(!("yz" in fa), "yapay zekâ ayarı S.A.Y'ın firma ayarları okumasında yok");
   assert.ok(!JSON.stringify(fa).includes("son4"), "anahtarın son haneleri gitmez");
   /* hiç kaydedilmemiş bölümün sürümü -1 (2026-10-16 ilk koşu: katalog ortak "surum"la -1'i reddediyordu — S.A.Y yeni bölümü kaydedemezdi) */
   const sk = fa.saklama as { surum: number };

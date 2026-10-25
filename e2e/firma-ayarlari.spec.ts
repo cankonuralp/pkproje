@@ -35,7 +35,7 @@ test("firma ayarları: paneller ve pencere; kaydet, geçersiz değer, kayma yok,
   await hazir(page);
   await expect(page.getByRole("heading", { level: 1, name: "Firma ayarları" })).toBeVisible();
   for (const g of ["Firma", "Çalışma", "Fiyat ve gider", "Veri ve yedek", "Bağlantılar", "Araçlar"]) await expect(page.getByRole("heading", { level: 2, name: g, exact: true })).toBeVisible();
-  await expect(page.locator("[data-panel]")).toHaveCount(16);
+  await expect(page.locator("[data-panel]")).toHaveCount(15);   // 2026-10-25 (göç 0106): Yapay zekâ paneli Yönetim'e taşındı (16 → 15)
   /* eski bölüm adları yok (raporların ikinci kopyası → Yedek'te Ek yedek; Supabase → Depolama) */
   await expect(page.getByText("Raporların ikinci kopyası")).toHaveCount(0);
 
