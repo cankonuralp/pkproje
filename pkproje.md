@@ -2527,7 +2527,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
-- 2026-10-25 (YAPILDI — dalda, CI'da; 060a51a6): **MODEL ADI HİÇBİR YERDE GÖRÜNMESİN (İŞ 1)** — reisim: *"Claude Haiku 5.5 ve hiçbir model adı ekranda, e-postada,
+- 2026-10-25 (YAPILDI — dalda, CI'da): **CI HIZLANDIRMA (1. adım)** — reisim: *"CI bekliyoruz sürekli … önerilerini kabul ediyorum"*. ci.yml push tetiğine
+  paths-ignore: ANAYASA.md, pkproje.md, CLAUDE.md, TASARIM-KALIBI.md — yalnız bunlar değişen push'ta 15 iş koşmaz (hiçbir test bunları okumaz; tests/
+  KOD-GECIS.md'yi okur, o ve docs/ listede YOK). Yapılmadı: derlemeyi bir kez yapıp 12 işe paylaşmak (derleme çıktısı büyük, indirme süresi ölçülmeden
+  kazanç belirsiz; ayrı kalem, önce ölçüm). Not: gh bu makinede yok — CI durumu GitHub API'sinden (PowerShell Invoke-RestMethod, check-runs) okunur.
+- 2026-10-25 (YAYINDA — main 6e9971ad; CI 15/15 yeşil, canlı sağlık tamam, duman 11/11): **MODEL ADI HİÇBİR YERDE GÖRÜNMESİN (İŞ 1)** — reisim: *"Claude Haiku 5.5 ve hiçbir model adı ekranda, e-postada,
   PDF'te yazmasın"*. S.A.Y başlığının alt satırı kalktı; Firma ayarları yapay zekâ panelinde "Model" yerine "Ücret" (yalnız fiyat; YZ_MODEL → YZ_FIYAT),
   özet satırında ad yok; S.A.Y sistem istemi model adı yerine "model adını söyleme" der (kod içi model kimliği kalır). Kilit tests/arayuz-model-adi.test.ts
   (src, yorum dışı kodda Haiku / Sonnet / Opus / Claude yok) + bozan; e2e say / firma-ayarlari adın görünmediğini yoklar. Anayasaya 0.16 "Projeye ve

@@ -9,6 +9,14 @@ name: ci
 on:
   push:
     branches: ["**"]
+    # 2026-10-25 (reisim: "CI bekliyoruz sürekli"): yalnız bu dört kural / kayıt dosyası değişen push'ta 15 iş koşmaz — hiçbir test bunları okumaz
+    # (grep: tests / e2e / scripts / src yalnız KOD-GECIS.md'yi okur, o listede YOK; docs/ Pages yayınını tetiklediği için YOK). Bu dosyaları okuyan
+    # yeni bir test eklenirse o dosya buradan çıkarılır.
+    paths-ignore:
+      - "ANAYASA.md"
+      - "pkproje.md"
+      - "CLAUDE.md"
+      - "TASARIM-KALIBI.md"
   workflow_dispatch:
 
 permissions:
