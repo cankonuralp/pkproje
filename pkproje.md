@@ -2527,7 +2527,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
-- 2026-10-24 (YAYINDA — main 92e16215; CI 15/15 yeşil, canlı duman 11/11; saf kilitler 105/105; ikinci denetimin düzeltmesi ayrı teslim): **BASILI FORMDAN ŞABLON
+- 2026-10-24 (YAYINDA — main 92e16215; CI 15/15 yeşil, canlı duman 11/11; saf kilitler 105/105; ikinci denetimin düzeltmesi YAYINDA main 8519a628, CI 15/15, duman 11/11): **BASILI FORMDAN ŞABLON
   YAPAY ZEKÂSIZ** — reisim: *"ben şablon yükledim bu şablondan başlat dedim neden yapay zeka çalışıyor ?"*, *"en baştan beri bunu istedim"*. PDF
   tarayıcıda KENDİ İÇERİĞİNDEN okunur (yazılar, tablo çizgileri — çizilen ya da Word'deki gibi ince dolgu —, zeminler, resimler): ui/pdfOku.ts → pdf-sayfa.ts
   (pdf.js işlem listesi; görünen sayfa — CropBox — dışındaki çizim okunmaz) → pdf-izgara.ts (kurallarla BASILI ham) → sunucuda basili.ts çevirisi →
