@@ -249,30 +249,47 @@ test("S.A.Y Chat: plan ekibinde olmayan (yönetici) görmez", async ({ page }) =
   await expect(page.getByRole("button", { name: "S.A.Y Chat — planın sohbeti" })).toHaveCount(0);
 });
 
-/* 2026-10-25 (reisim: "say chat neden gözükmüyor"): S.A.Y asistanın paneli açık ya da küçültülmüşken S.A.Y Chat düğmesi sağ alta düşüp asistan
-   panelinin altında kalıyordu. Düğme görünür, panelle çakışmaz ve tıklanan nokta düğmenin kendisidir. */
-test("S.A.Y Chat düğmesi S.A.Y asistanın açık / küçültülmüş panelinin altında kalmaz", async ({ page }) => {
+/* 2026-10-25 (reisim: "say chat neden gözükmüyor", "bu sefer de say chat say asistanı kapatıyor reisim küçülünce"): iki asistanın düğmesi de sağ altta;
+   birinin paneli açık ya da küçültülmüşken öteki düğme panelin altında kalıyordu (components/pencere/fabKonumu.ts). Düğme görünür, panelle çakışmaz,
+   tıklanan nokta düğmenin kendisidir — iki yönde. */
+async function ustteDene(page: Page, dugme: ReturnType<Page["getByRole"]>, panel: ReturnType<Page["getByRole"]>, secici: string) {
+  await expect(dugme).toBeVisible();
+  await expect.poll(async () => {
+    const [a, b] = [await dugme.boundingBox(), await panel.boundingBox()];
+    if (!a || !b) return "kutu yok";
+    const cakisir = a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+    const ust = await page.evaluate(([x, y, k]) => !!document.elementFromPoint(x as number, y as number)?.closest(k as string), [a.x + a.width / 2, a.y + a.height / 2, secici]);
+    return cakisir ? "çakışıyor" : ust ? "tamam" : "örtülü";
+  }).toBe("tamam");
+}
+async function planAc(page: Page) {
   await giris(page, E2E_YZ.denetci);
   const adres = await planAdresi(page);
   await page.goto(`${Y}${adres}`);
   await hazir(page);
-  const fab = page.getByRole("button", { name: "S.A.Y Chat — planın sohbeti" });
+}
+const CHAT = "S.A.Y Chat — planın sohbeti", SAY = "S.A.Y — saha asistanı";
+
+test("S.A.Y Chat düğmesi S.A.Y asistanın açık / küçültülmüş panelinin altında kalmaz", async ({ page }) => {
+  await planAc(page);
+  const fab = page.getByRole("button", { name: CHAT });
   await expect(fab).toBeVisible({ timeout: 30_000 });
-  await page.getByRole("button", { name: "S.A.Y — saha asistanı" }).click();
+  await page.getByRole("button", { name: SAY }).click();
   const asistan = page.getByRole("dialog", { name: "S.A.Y", exact: true });
   await expect(asistan).toBeVisible();
-  const dene = async () => {
-    await expect(fab).toBeVisible();
-    await expect.poll(async () => {
-      const [a, b] = [await fab.boundingBox(), await asistan.boundingBox()];
-      if (!a || !b) return "kutu yok";
-      const cakisir = a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
-      const ust = await page.evaluate(([x, y]) => !!document.elementFromPoint(x, y)?.closest("[data-saychat-fab]"), [a.x + a.width / 2, a.y + a.height / 2]);
-      return cakisir ? "çakışıyor" : ust ? "tamam" : "örtülü";
-    }).toBe("tamam");
-  };
   /* telefonda açık panel ekranı kaplar — yalnız küçültülmüş hâli denenir */
-  if (page.viewportSize()!.width >= 768) await dene();
+  if (page.viewportSize()!.width >= 768) await ustteDene(page, fab, asistan, "[data-saychat-fab]");
   await asistan.getByRole("button", { name: "Küçült" }).click();
-  await dene();
+  await ustteDene(page, fab, asistan, "[data-saychat-fab]");
+});
+
+test("S.A.Y asistan düğmesi S.A.Y Chat'in açık / küçültülmüş panelinin altında kalmaz", async ({ page }) => {
+  await planAc(page);
+  await page.getByRole("button", { name: CHAT }).click({ timeout: 30_000 });
+  const chat = page.getByRole("dialog", { name: "S.A.Y Chat" });
+  await expect(chat).toBeVisible();
+  const fab = page.getByRole("button", { name: SAY });
+  if (page.viewportSize()!.width >= 768) await ustteDene(page, fab, chat, "[data-say-fab]");
+  await chat.getByRole("button", { name: "Küçült" }).click();
+  await ustteDene(page, fab, chat, "[data-say-fab]");
 });

@@ -52,6 +52,7 @@ import { fotografiKucult } from "../../../components/foto/kucult";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { useOnayla } from "../../../components/pencere/Onay";
+import { useFabKonumu } from "../../../components/pencere/fabKonumu";
 import { useGorunurAlan } from "../../../components/pencere/gorunurAlan";
 import { usePanelBoyu } from "../../../components/pencere/PanelBoyu";
 import { Serit } from "../../../components/serit/Serit";
@@ -236,6 +237,8 @@ export function SayAsistan() {
   useEffect(() => { rbRef.current = rb; fbRef.current = fb; }, [rb, fb]);
   const [durum, setDurum] = useState<SayDurum | null>(null);
   const [acik, setAcik] = useState(false);
+  /* 2026-10-25 (reisim: "say chat say asistanı kapatıyor … küçülünce"): S.A.Y Chat paneli açık / küçükken düğme panelin yanında — components/pencere/fabKonumu.ts */
+  const konum = useFabKonumu(null, "sc-panel");
   const [iletiler, setIletiler] = useState<SohbetIletisi[] | null>(null);
   const [soru, setSoru] = useState("");
   const [bekliyor, setBekliyor] = useState(false);
@@ -677,7 +680,7 @@ export function SayAsistan() {
     <>
       {!acik && (
         <button ref={fab} className={stil.fab} type="button" data-say-fab="" onClick={() => ac()} aria-haspopup="dialog" aria-controls="say-panel" aria-expanded={false}
-          aria-label="S.A.Y — saha asistanı">
+          aria-label="S.A.Y — saha asistanı" style={konum ? { right: konum.right, bottom: konum.bottom } : undefined}>
           <span className={stil.fabIkon}><Ikon ad="sparkles" /></span>
           <span className={stil.fabYazi}>S.A.Y<small>Asistan</small></span>
         </button>

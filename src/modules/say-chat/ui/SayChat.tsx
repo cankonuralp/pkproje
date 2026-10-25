@@ -29,6 +29,7 @@ import { fotografiKucult } from "../../../components/foto/kucult";
 import { fotolariSec, fotoSecimiUyarisi } from "../../../components/foto/secim";
 import { GizliResim, gizliGorselDosyasi } from "../../../components/gizli-resim/GizliResim";
 import { SayfaliListe, TabloSayfalari, useSayfa } from "../../../components/liste/Sayfalayici";
+import { useFabKonumu } from "../../../components/pencere/fabKonumu";
 import { useGorunurAlan } from "../../../components/pencere/gorunurAlan";
 import { usePanelBoyu } from "../../../components/pencere/PanelBoyu";
 import { Ikon } from "../../../components/ikon/Ikon";
@@ -190,7 +191,6 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
     if (g) g.scrollTop = g.scrollHeight;
     setAsagi(null);
   };
-  const [konum, setKonum] = useState<{ right: number; bottom: number } | null>(null);
   /* 525: rapor yaz ekranı — ekipman kodları (yeni ekipman), kayıt başına hata, oluşan raporlar */
   const [raporEkrani, setRaporEkrani] = useState(false);
   const [kodlar, setKodlar] = useState<Record<string, string>>({});
@@ -253,26 +253,8 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
     document.documentElement.setAttribute("data-saychat", "var");
     return () => document.documentElement.removeAttribute("data-saychat");
   }, []);
-  /* düğme S.A.Y düğmesinin solunda (S.A.Y yoksa sağ altta). 2026-10-25 (reisim: "say chat neden gözükmüyor"): S.A.Y asistanın paneli açık ya da
-     küçültülmüşken düğmesi yok — Chat düğmesi sağ alta düşüp asistan panelinin (z 70) altında kalıyordu; artık açık panelin solunda, solunda yer
-     yoksa (telefon) üstünde */
-  useEffect(() => {
-    const olc = () => {
-      const f = document.querySelector<HTMLElement>("[data-say-fab]"), p = f ? null : document.getElementById("say-panel");
-      const s = f ?? p;
-      if (!s) { setKonum(null); return; }
-      const r = s.getBoundingClientRect(), yanda = !p || r.left >= 220;
-      const right = Math.round(yanda ? window.innerWidth - r.left + 10 : window.innerWidth - r.right);
-      const bottom = Math.round(yanda ? window.innerHeight - r.bottom : window.innerHeight - r.top + 10);
-      /* aynı konumda durum değişmez (her DOM değişikliğinde yeniden çizilmesin) */
-      setKonum((k) => (k && k.right === right && k.bottom === bottom ? k : { right, bottom }));
-    };
-    olc();
-    const g = new MutationObserver(olc);
-    g.observe(document.body, { childList: true, subtree: true });
-    window.addEventListener("resize", olc);
-    return () => { g.disconnect(); window.removeEventListener("resize", olc); };
-  }, []);
+  /* düğme S.A.Y düğmesinin solunda (S.A.Y yoksa sağ altta); S.A.Y asistanın paneli açık / küçükken panelin yanında — components/pencere/fabKonumu.ts */
+  const konum = useFabKonumu("[data-say-fab]", "say-panel");
 
   const gorunenler: Gorunen[] = useMemo(() => {
     const silinen = new Set(chatIsleri.filter((x) => x.tur === "saychat.sil").map((x) => x.kayit));
