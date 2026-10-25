@@ -2527,6 +2527,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-25 (YAYINDA — main c6fab914; CI 17/17 yeşil): **CI HIZLANDIRMA (2. adım)** — reisim: *"yap"*. Denetim üç işte aynı anda (tip + lint + derleme · test ·
+  olumsuz kanıt; her biri 2,2–2,8 dk — önce tek işte 7,7 dk). Koşu 6,7–7,7 → **6,2 dk**; artık kritik yol uçtan uca (en uzun masaüstü 3, 6,2 dk). Uçtan
+  uca dört parça denendi (c3881d41, 5,6 dk) ama e2e/say.spec.ts'te sohbet geçmişine / rapor durumuna dayanan testler başka parçaya düşünce üç genişlikte
+  4. parça düştü → üç parçaya geri alındı; testler bağımsız olunca dört parça (~5,5 dk) — ayrı iş. Derleme paylaşımı yapılmadı (kritik yolu uzatır).
 - 2026-10-25 (YAYINDA — main 5fefd9ea; CI 15/15 yeşil 7,7 dk, göç 0106 Supabase'de (107 göç), canlı sağlık tamam, duman 11/11): **YAPAY ZEKÂ AYARLARI
   YALNIZ YÖNETİM'DE (İŞ 2)** — reisim: *"Yapay zekâ ayarları Firma ayarlarından kalksın, yalnız Yönetim panelinden yönetilsin; firmalar kendileri
   değiştiremesin"*; maket onaylı (K1–K7; reisim: *"kişi başı sınırı 5 dolar olsun default, onun dışında dediklerini onaylıyorum"*). Firma ayarlarında
