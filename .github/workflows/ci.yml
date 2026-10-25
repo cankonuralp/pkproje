@@ -33,12 +33,19 @@ env:
   NEXT_TELEMETRY_DISABLED: "1"
 
 jobs:
+  # 2026-10-25 (reisim: "CI bekliyoruz sürekli … işi sağlıklı hızlı az tokenla"): Denetim ÜÇ İŞTE aynı anda — ölçüldü (4 koşu): tek işte sırayla
+  # tip 23 sn · lint 39 · test 141 · olumsuz kanıt 144 · derleme 83 = 430 sn, koşunun kritik yolu buydu. Parçalar: tip + lint + derleme · test ·
+  # olumsuz kanıt. Yayın şartı aynı: bütün koşunun yeşili (main'e yalnız yeşil commit ileri sarılır, Pages aynı SHA'nın başarılı koşusunu ister).
   denetim:
-    name: Denetim
+    name: Denetim (${{ matrix.is }})
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
-    # 413: takılan iş 6 saatlik varsayılanı beklemesin (0f1ee47: tarayıcı kurulumunda 71 dk asılı kaldı); olağan süre 5–8 dk
+    # 413: takılan iş 6 saatlik varsayılanı beklemesin (0f1ee47: tarayıcı kurulumunda 71 dk asılı kaldı); olağan süre 2–4 dk
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        is: [tip, test, negatif]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -50,12 +57,18 @@ jobs:
       # 413 devamı: sistem paketi (apt) KURULMAZ — eksik olanlar yalnız yazı tipleri (makinede kütüphaneler hazır; PDF Carlito'yu gömer). GitHub'ın
       # paket sunucusu yavaşlayınca kurulum dakikalarca sürüyor, yarıda kesilince kilit sonraki denemeyi de düşürüyordu (60547a0)
       - run: npx playwright install chromium
+        if: matrix.is != 'tip'
         timeout-minutes: 8
       - run: npm run check
+        if: matrix.is == 'tip'
       - run: npm run lint
+        if: matrix.is == 'tip'
       - run: npm test
+        if: matrix.is == 'test'
       - run: npm run test:negatif
+        if: matrix.is == 'negatif'
       - run: node scripts/next.ts build
+        if: matrix.is == 'tip'
 
   # uçtan uca (K0, 2026-10-03): masaüstü · tablet · telefon. 2026-10-06: her genişlik KENDİ sunucusu ve geçici veritabanıyla — tek geliştirme
   # sunucusu ~200 testin sonunda bellek eşiğine dayanıp kendini yeniden başlatıyor, o an koşan telefon testi düşüyordu (3dda074, 661004b,
@@ -73,6 +86,9 @@ jobs:
   # uzun ve en ağır test) her genişlikte KENDİ işinde; parçalar onu dışarıda bırakır (PROBATA_E2E_TARAMA=haric, playwright.config.ts). On iki iş
   # aynı anda. Sunucu dakikada bir "[bellek]" satırı yazar (scripts/e2e-sunucu.ts) — derlenen sayfaları bellekte tutmak ölçüldü: 13 GB, makine
   # (16 GB) kapanıyordu; kullanılmaz (next.config.ts notu).
+  # 2026-10-25 (reisim: "CI bekliyoruz sürekli"): DÖRT PARÇA — ölçüldü (4 koşu): parça işi 2,9–6,3 dk (derleme 86 sn + test en çok 243 sn); on beş iş
+  # aynı anda. Derleme işler arasında PAYLAŞILMAZ: her iş kendi derlemesini paralel yapar; paylaşım işleri bir derleme işinin bitmesini beklemeye zorlar,
+  # kritik yolu uzatır.
   uctan_uca:
     name: Uçtan uca (${{ matrix.proje }} ${{ matrix.parca }})
     if: github.ref != 'refs/heads/main'
@@ -84,7 +100,7 @@ jobs:
       fail-fast: false
       matrix:
         proje: [masaustu, tablet, telefon]
-        parca: [1, 2, 3, tarama]
+        parca: [1, 2, 3, 4, tarama]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -117,7 +133,7 @@ jobs:
         env:
           PROBATA_E2E_TARAMA: ${{ matrix.parca == 'tarama' && 'yalniz' || 'haric' }}
           PROBATA_E2E_YAYIN: "1"
-        run: npm run test:e2e -- --project=${{ matrix.proje }} ${{ matrix.parca != 'tarama' && format('--shard={0}/3', matrix.parca) || '' }}
+        run: npm run test:e2e -- --project=${{ matrix.proje }} ${{ matrix.parca != 'tarama' && format('--shard={0}/4', matrix.parca) || '' }}
       - if: ${{ !cancelled() && steps.e2e.outcome == 'failure' }}
         uses: actions/upload-artifact@v7
         # 411: görsel karşılaştırmanın o koşuda yazdığı (eksik ya da farklı) görüntüler de — yeni kayıt buradan alınır, gözden geçirilip commit'e girer

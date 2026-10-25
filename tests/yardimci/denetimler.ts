@@ -416,6 +416,11 @@ export function testKapisiEksikleri(paketJson: string, ciYml: string): string[] 
   const testSatiri = ciYml.indexOf("run: npm test");
   const derleSatiri = ciYml.indexOf("run: node scripts/next.ts build");
   if (testSatiri < 0) eksik.push("CI'da npm test yok");
+  /* 2026-10-25: Denetim üç işte (tip · test · negatif) — biri matristen düşerse o denetim hiç koşmaz, koşu yine yeşil görünür */
+  const isler = /\bis:\s*\[([^\]]*)\]/.exec(ciYml)?.[1].split(",").map((x) => x.trim()) ?? [];
+  for (const [is, satir] of [["tip", "run: npm run check"], ["tip", "run: npm run lint"], ["test", "run: npm test"], ["negatif", "run: npm run test:negatif"]] as const) {
+    if (!isler.includes(is) || !ciYml.includes(satir)) eksik.push(`CI'da ${satir.slice(5)} yok`);
+  }
   if (derleSatiri >= 0 && testSatiri > derleSatiri) eksik.push("CI'da derleme testten önce");
   /* 2026-10-06 (reisim: "githubdan hala bir sürü gereksiz yayınlar da gidiyor onlarıda durdur"): main'de denetim yeniden koşmaz (main'e yalnız kalem
      dalında yeşil geçmiş commit ileri sarılır); yayın işi "needs: denetim" yerine aynı SHA'nın BAŞARILI ci koşusunu GitHub'dan sorar, yoksa düşer.
