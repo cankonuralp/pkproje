@@ -405,7 +405,8 @@ pkproje/
                             · 387 Saklama süresi dolacak raporlar /firma-ayarlari/saklama (server/saklama.ts, ui/SaklamaListesi.tsx; yalnız firma yöneticisi)
                             · 513 "Supabase hesabı ve yedek" (ui SupabaseYedek: bağlama akışı sema.ts SUPABASE_ADIMLAR — Yönetim › Firma aç da gösterir —,
                             dosya kullanımı, yedekte ayar yok) · "Raporların ikinci kopyası" (ui IkinciKopya; ayar bulut: "" kapalı | gdrive | onedrive)
-                            · 512 → 538 yapay zekâ TEK MODEL Claude Haiku 5.5 (seçim yok; eski Sonnet / Opus kaydı okumada Haiku) — fiyat src/server/yz/okuma.ts
+                            · 512 → 538 yapay zekâ TEK MODEL (seçim yok; eski Sonnet / Opus kaydı okumada Haiku) — fiyat src/server/yz/okuma.ts · 2026-10-25 (göç 0106):
+                            yapay zekâ paneli KALKTI — ayar ve anahtar yalnız Yönetim'de (aşağıda yonetim/ui/YapayZekaBolumu.tsx); firma uygulama rolü yazamaz
                             · TOPLU İÇE AKTARMA (337, göç 0047 ice_aktarim + ice_aktarim_geri_al): ice-aktar.ts (saf: türler, şablon, satır denetimi) ·
                             server/ice-aktar.ts (denetle, içe aktar — tek işlem, geri al) · ui/IceAktarma.tsx · bağlantılar <modül>/server/ice-aktar-baglanti.ts
                             (musteriler, ekipman, olcum-cihazlari — ilk_bitis, personel, araclar)
@@ -428,7 +429,9 @@ pkproje/
   src/modules/yonetim/      probata YÖNETİM (2026-10-06, 348; KOD-GECIS Y1): firmalar, firma aç (ilk yönetici + geçici parola), dondur / etkinleştir,
                             yeni geçici parola — server/yonetim.ts yalnız 0050 işlevleriyle (yönetim rolü); sema.ts (ayrılmış adlar göçle aynı) · ui/ ·
                             FV9 (2026-10-16): server/firma-tarafi.ts — kendi projeli firmada iş firmanın veritabanında (göç 0097 firma_yonetim_*), sıra kapalı
-                            yönde (dondur: önce firma; etkinleştir: önce merkez); K4 yapay zekâ anahtarı kaydet / kaldır + bu ay (firma sayfası); özet;
+                            yönde (dondur: önce firma; etkinleştir: önce merkez); K4 yapay zekâ anahtarı kaydet / kaldır + bu ay (firma sayfası); 2026-10-25 (göç 0106): ui/YapayZekaBolumu.tsx — aç / kapa, kişi başı sınır (başlangıç 5 $),
+                            ücret, anahtar, kişi kişi kullanım (yzAyarYonet → firma_yonetim_yz; firma_ayar_yz_kilidi + firma_sir_k3 firmanın yazmasını reddeder;
+                            testler ve e2e tohumu tests/yardimci/yz-kur.ts sahip bağlantısıyla); özet;
                             server/calistirici.ts (merkez: yonetimIslemi, firmada: kiraci.ts yonetimFirmadaIcinde) — kilit tests/yonetim-firmada.test.ts ·
                             FV10 (2026-10-16) KURULUM MAKİNESİ: Firma aç → "Kendi Supabase projesi" (PAT + örgüt ortamda değilse kapalı) → server/kurulum.ts
                             (14 adım: proje · hazır · TLS · göç · kimlik · rol SCRAM · havuzcu · depo · deneme · firma_kur + ilk yönetici (0098) · e-posta (FV11) ·

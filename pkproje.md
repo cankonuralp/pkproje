@@ -2527,6 +2527,20 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-25 (YAYINDA — main 5fefd9ea; CI 15/15 yeşil 7,7 dk, göç 0106 Supabase'de (107 göç), canlı sağlık tamam, duman 11/11): **YAPAY ZEKÂ AYARLARI
+  YALNIZ YÖNETİM'DE (İŞ 2)** — reisim: *"Yapay zekâ ayarları Firma ayarlarından kalksın, yalnız Yönetim panelinden yönetilsin; firmalar kendileri
+  değiştiremesin"*; maket onaylı (K1–K7; reisim: *"kişi başı sınırı 5 dolar olsun default, onun dışında dediklerini onaylıyorum"*). Firma ayarlarında
+  Yapay zekâ paneli, yz bölüm kaydı ve anahtar eylemi kalktı; S.A.Y kataloğunda okuma / kayıt yok. Yönetim › Firma'da tek "Yapay zekâ" bölümü: Kapalı /
+  Açık, kişi başı sınır, ücret (model adı yok), anahtar, bu ay + kişi kişi kullanım. Göç 0106: uygulama rolü 'yapay_zeka' ayarını ve anahtarını yazamaz /
+  silemez (tetik), yönetim firma_yonetim_yz ile yazar (firmanın denetim izi + yönetim izi), özet kişi kişi kullanım. Başlangıç sınırı 20 → 5 $ (kayıtlı
+  değer korunur — deneme firmasında açık, 10 $, anahtar tanımlı). Yurt dışı bilgisi yalnız Yönetim'de (K4: firmaya sözleşmeyle). İlk CI dört test
+  hatasıyla düştü (uygulama kodu değil), düzeltildi. Gözle ölçülemedi: Yönetim ve Firma ayarları girişli — uçtan uca CI'da.
+- 2026-10-25 (YAYINDA — 4b58acef + 5fefd9ea): **S.A.Y CHAT / S.A.Y ASİSTAN DÜĞMELERİ BİRBİRİNİN PANELİ ALTINDA KALMIYOR** — reisim: *"say chat neden
+  gözükmüyor"*, *"bu sefer de say chat say asistanı kapatıyor reisim küçülünce"*. Neden: iki düğme de sağ altta; birinin paneli açık / küçükken öteki
+  düğme panelin (z 70) altında kalıyordu (sunucu tarafı doğruydu — plan denetimde, kişi ekipte). Ortak kanca components/pencere/fabKonumu.ts: komşu
+  düğmenin solunda, yoksa komşu panelin yanında, telefonda üstünde. Kilit e2e/say-chat.spec.ts iki yönde.
+- 2026-10-25 (CI ölçümü, 4 koşu): toplam 6,7–7,7 dk; kritik yol "Denetim" (check 23 sn · lint 39 · npm test 141 · olumsuz kanıt 144 · derleme 83 —
+  sırayla 430 sn); uçtan uca işleri 2,9–6,3 dk (derleme 86 sn + test 2–4 dk). Öneriler İŞ 2 sonunda reisim'e verildi.
 - 2026-10-25 (YAYINDA — main 81545775; CI 15/15 yeşil, canlı sağlık tamam): **CI HIZLANDIRMA (1. adım)** — reisim: *"CI bekliyoruz sürekli … önerilerini kabul ediyorum"*. ci.yml push tetiğine
   paths-ignore: ANAYASA.md, pkproje.md, CLAUDE.md, TASARIM-KALIBI.md — yalnız bunlar değişen push'ta 15 iş koşmaz (hiçbir test bunları okumaz; tests/
   KOD-GECIS.md'yi okur, o ve docs/ listede YOK). Yapılmadı: derlemeyi bir kez yapıp 12 işe paylaşmak (derleme çıktısı büyük, indirme süresi ölçülmeden
