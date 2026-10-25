@@ -248,3 +248,31 @@ test("S.A.Y Chat: plan ekibinde olmayan (yönetici) görmez", async ({ page }) =
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(page.getByRole("button", { name: "S.A.Y Chat — planın sohbeti" })).toHaveCount(0);
 });
+
+/* 2026-10-25 (reisim: "say chat neden gözükmüyor"): S.A.Y asistanın paneli açık ya da küçültülmüşken S.A.Y Chat düğmesi sağ alta düşüp asistan
+   panelinin altında kalıyordu. Düğme görünür, panelle çakışmaz ve tıklanan nokta düğmenin kendisidir. */
+test("S.A.Y Chat düğmesi S.A.Y asistanın açık / küçültülmüş panelinin altında kalmaz", async ({ page }) => {
+  await giris(page, E2E_YZ.denetci);
+  const adres = await planAdresi(page);
+  await page.goto(`${Y}${adres}`);
+  await hazir(page);
+  const fab = page.getByRole("button", { name: "S.A.Y Chat — planın sohbeti" });
+  await expect(fab).toBeVisible({ timeout: 30_000 });
+  await page.getByRole("button", { name: "S.A.Y — saha asistanı" }).click();
+  const asistan = page.getByRole("dialog", { name: "S.A.Y", exact: true });
+  await expect(asistan).toBeVisible();
+  const dene = async () => {
+    await expect(fab).toBeVisible();
+    await expect.poll(async () => {
+      const [a, b] = [await fab.boundingBox(), await asistan.boundingBox()];
+      if (!a || !b) return "kutu yok";
+      const cakisir = a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+      const ust = await page.evaluate(([x, y]) => !!document.elementFromPoint(x, y)?.closest("[data-saychat-fab]"), [a.x + a.width / 2, a.y + a.height / 2]);
+      return cakisir ? "çakışıyor" : ust ? "tamam" : "örtülü";
+    }).toBe("tamam");
+  };
+  /* telefonda açık panel ekranı kaplar — yalnız küçültülmüş hâli denenir */
+  if (page.viewportSize()!.width >= 768) await dene();
+  await asistan.getByRole("button", { name: "Küçült" }).click();
+  await dene();
+});

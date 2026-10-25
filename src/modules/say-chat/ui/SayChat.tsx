@@ -253,12 +253,17 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
     document.documentElement.setAttribute("data-saychat", "var");
     return () => document.documentElement.removeAttribute("data-saychat");
   }, []);
-  /* düğme S.A.Y düğmesinin solunda (S.A.Y yoksa sağ altta) */
+  /* düğme S.A.Y düğmesinin solunda (S.A.Y yoksa sağ altta). 2026-10-25 (reisim: "say chat neden gözükmüyor"): S.A.Y asistanın paneli açık ya da
+     küçültülmüşken düğmesi yok — Chat düğmesi sağ alta düşüp asistan panelinin (z 70) altında kalıyordu; artık açık panelin solunda, solunda yer
+     yoksa (telefon) üstünde */
   useEffect(() => {
     const olc = () => {
-      const s = document.querySelector<HTMLElement>("[data-say-fab]");
+      const f = document.querySelector<HTMLElement>("[data-say-fab]"), p = f ? null : document.getElementById("say-panel");
+      const s = f ?? p;
       if (!s) { setKonum(null); return; }
-      const r = s.getBoundingClientRect(), right = Math.round(window.innerWidth - r.left + 10), bottom = Math.round(window.innerHeight - r.bottom);
+      const r = s.getBoundingClientRect(), yanda = !p || r.left >= 220;
+      const right = Math.round(yanda ? window.innerWidth - r.left + 10 : window.innerWidth - r.right);
+      const bottom = Math.round(yanda ? window.innerHeight - r.bottom : window.innerHeight - r.top + 10);
       /* aynı konumda durum değişmez (her DOM değişikliğinde yeniden çizilmesin) */
       setKonum((k) => (k && k.right === right && k.bottom === bottom ? k : { right, bottom }));
     };
