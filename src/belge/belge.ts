@@ -506,13 +506,19 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
   /* 2026-10-24 (serbest düzen): bölümler satır satır — yan yana bölümler aynı satırda, genişlikleri oranlarıyla; serbest tablo başlıksız (başlığı
      kendi hücrelerinde); bölümler arası formatın aralığı */
   const ara = t.gorunum.yazi?.ara;
-  const bolumKutusu = (x: (typeof duzen.bolumler)[number], stil?: CSSProperties) => x.b.blok === "tablo"
-    ? h("section", { className: "rb-bolum rb-tablo-bolum", key: x.b.id, ...(stil || ara !== undefined ? { style: { ...stil, ...(ara !== undefined ? { marginBottom: `${ara}mm` } : {}) } } : {}) }, formatBolumu(x.b))
+  /* bitişik bölüm (basılı formun bandı / yarısı): önceki satırla arası ve yan yana yarıların arası 0 */
+  const bitisik = (x: (typeof duzen.bolumler)[number] | undefined) => x?.b.blok === "tablo" && !!x.b.bitisik;
+  const bolumKutusu = (x: (typeof duzen.bolumler)[number], stil?: CSSProperties, alt = ara) => x.b.blok === "tablo"
+    ? h("section", { className: "rb-bolum rb-tablo-bolum", key: x.b.id, ...(stil || alt !== undefined ? { style: { ...stil, ...(alt !== undefined ? { marginBottom: `${alt}mm` } : {}) } } : {}) }, formatBolumu(x.b))
     : stil ? h("div", { key: x.b.id, style: stil }, bolum(x.no, x.b.ad, formatBolumu(x.b))) : bolum(x.no, x.b.ad, formatBolumu(x.b));
-  const bolumSatirlari = () => yerlesimSatirlari(duzen.bolumler).flatMap((s, j) => s.ogeler.length === 1
-    ? [s.ogeler[0].ust ? ustBaslik(s.ogeler[0].ust.no, s.ogeler[0].ust.ad) : null, bolumKutusu(s.ogeler[0])]
-    : [h("div", { className: "rb-yan", key: `yan-${j}`, ...(ara !== undefined ? { style: { gap: `${ara}mm`, marginBottom: `${ara}mm` } } : {}) },
-      ...s.ogeler.map((x, i) => bolumKutusu(x, { flex: `${s.oranlar[i]} 1 0`, minWidth: "0" })))]);
+  const yerlesim = yerlesimSatirlari(duzen.bolumler);
+  const bolumSatirlari = () => yerlesim.flatMap((s, j) => {
+    const alt = bitisik(yerlesim[j + 1]?.ogeler[0]) ? 0 : ara, ara2 = s.ogeler.slice(1).some(bitisik) ? 0 : ara;
+    return s.ogeler.length === 1
+      ? [s.ogeler[0].ust ? ustBaslik(s.ogeler[0].ust.no, s.ogeler[0].ust.ad) : null, bolumKutusu(s.ogeler[0], undefined, alt)]
+      : [h("div", { className: "rb-yan", key: `yan-${j}`, ...(ara2 !== undefined || alt !== undefined ? { style: { ...(ara2 !== undefined ? { gap: `${ara2}mm` } : {}), ...(alt !== undefined ? { marginBottom: `${alt}mm` } : {}) } } : {}) },
+        ...s.ogeler.map((x, i) => bolumKutusu(x, { flex: `${s.oranlar[i]} 1 0`, minWidth: "0" })))];
+  });
   if (t.gorunum.serbest) {
     return h("article", { className: "rb-sayfa rb-serbest", "aria-label": `${no} rapor belgesi` },
       v.imza || v.kesin ? null : h("p", { className: "rb-taslak" }, "İmzasız önizleme — muayene uzmanının son imzasıyla geçerli olur."),

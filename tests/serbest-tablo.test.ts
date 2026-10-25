@@ -185,3 +185,20 @@ test("iki sütunlu liste: sıra numaraları ve madde sırası sütun dizisiyle (
   const tek = FormatTanimi.parse({ sema: 1, bolumler: [{ id: "t", ad: "T", blok: "tablo", kilit: false, sutun: [10, 90], satirlar: [{}, {}], hucreler: [h(0, 0, { tur: "sira" }), h(0, 1, { tur: "yazi", m: "a" }), h(1, 0, { tur: "sira" }), h(1, 1, { tur: "yazi", m: "b" })] }] });
   assert.deepEqual([...siraNumaralari(tek).entries()], [["t:0,0", 1], ["t:1,0", 2]]);
 });
+
+test("madde metni: solda cevapsız not / alt başlık sağdaki maddeye karışmaz; iki cevaplı madde ('Madde | Sol | Sağ') ikisinde de adıyla, satır satır (2026-10-24, ikinci denetim)", () => {
+  const h = (r: number, c: number, o: Omit<Hucre, "r" | "c">): Hucre => ({ r, c, ...o });
+  /* sol liste 2. satırda biter, yerinde not; sağ liste sürer */
+  const l: Hucre[] = [];
+  for (let r = 0; r < 3; r++) {
+    l.push(r < 2 ? h(r, 0, { tur: "sira" }) : h(r, 0, { tur: "yazi", m: "" }), h(r, 1, { tur: "yazi", m: r < 2 ? `Sol ${r}` : "Not: uydurma" }),
+      r < 2 ? h(r, 2, { tur: "cevap", id: `l${r}` }) : h(r, 2, { tur: "yazi", m: "" }), h(r, 3, { tur: "sira" }), h(r, 4, { tur: "yazi", m: `Sag ${r}` }), h(r, 5, { tur: "cevap", id: `s${r}` }));
+  }
+  const b: TabloBolumu = { id: "k", ad: "K", blok: "tablo", kilit: false, sutun: [5, 35, 10, 5, 35, 10], cevaplar: ["U", "UD"], satirlar: [{}, {}, {}], hucreler: l };
+  assert.equal(maddeMetni(b, l.find((x) => x.id === "s2")!), "Sag 2");
+  /* iki cevaplı madde */
+  const m: Hucre[] = [1, 2, 3].flatMap((r) => [h(r - 1, 0, { tur: "yazi", m: `Fren ${r}` }), h(r - 1, 1, { tur: "cevap", id: `a${r}` }), h(r - 1, 2, { tur: "cevap", id: `b${r}` })]);
+  const ic: TabloBolumu = { id: "m", ad: "M", blok: "tablo", kilit: false, sutun: [60, 20, 20], cevaplar: ["U", "UD"], satirlar: [{}, {}, {}], hucreler: m };
+  assert.equal(maddeMetni(ic, m.find((x) => x.id === "b2")!), "Fren 2");
+  assert.deepEqual(diziSirasi(m.filter((x) => x.tur === "cevap")).map((x) => x.id), ["a1", "b1", "a2", "b2", "a3", "b3"]);
+});

@@ -4,7 +4,9 @@
    3. Cevap hücresi sanal maddeye dönmezse "Uygun değil" cevabı kusur listesine girmez (uygunsuzluk kaybolur — sessiz iyimserlik).
    4. Şemada üst üste binme denetimi kalkınca iki hücre aynı yere yazılabilir.
    5. Belgede çoğalan satır kopyalanmazsa sahada eklenen ikinci ölçüm satırı belgeye basılmaz.
-   6. (2026-10-24) Sıra numaraları satır sırasıyla verilirse iki sütunlu listede sol 1, 3, 5 · sağ 2, 4, 6 olur (formda sol 1–3, sağ 4–6). */
+   6. (2026-10-24) Sıra numaraları satır sırasıyla verilirse iki sütunlu listede sol 1, 3, 5 · sağ 2, 4, 6 olur (formda sol 1–3, sağ 4–6).
+   7. (2026-10-24, ikinci denetim) Madde metni bitişik öteki cevabı geçmezse iki cevaplı maddenin ikinci cevabı adsız ("Madde") kalır;
+      bitişik cevap dizileri birleşmezse sahada önce bütün sol cevaplar, sonra bütün sağ cevaplar gelir. */
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -85,4 +87,17 @@ test("sıra numaraları satır sırasıyla verilirse iki sütunlu listede sol s�
   const m = await bozuk<Tablo>("src/format/tablo.ts", "for (const h of diziSirasi(b.hucreler.filter((h) => h.tur === \"sira\" && !tekrar.has(h.r))))",
     "for (const h of [...b.hucreler].sort((x, y) => x.r - y.r || x.c - y.c).filter((h) => h.tur === \"sira\" && !tekrar.has(h.r)))");
   assert.deepEqual(sol(m), [1, 3, 5], "bozuk: satır sırası");
+});
+
+test("madde metni bitişik öteki cevabı geçmezse iki cevaplı maddenin ikinci cevabı adsız kalır; diziler birleşmezse sıra sütun sütun olur", async () => {
+  const m: Hucre[] = [1, 2].flatMap((r) => [h(r - 1, 0, { tur: "yazi", m: `Fren ${r}` }), h(r - 1, 1, { tur: "cevap", id: `a${r}` }), h(r - 1, 2, { tur: "cevap", id: `b${r}` })]);
+  const b: TabloBolumu = { id: "m", ad: "M", blok: "tablo", kilit: false, sutun: [60, 20, 20], cevaplar: ["U", "UD"], satirlar: [{}, {}], hucreler: m };
+  const gercek = await import("../../src/format/tablo.ts");
+  assert.equal(gercek.maddeMetni(b, m[2]), "Fren 1", "sağlam: adıyla");
+  const x = await tablo("for (let x = yeri(c); x?.tur === \"cevap\"; x = yeri(c)) c = adim < 0 ? x.c - 1 : x.c + (x.cs ?? 1);", "");
+  assert.equal(x.maddeMetni(b, m[2]), "", "bozuk: adsız");
+  const ids = (t: Tablo) => t.diziSirasi(m.filter((y) => y.tur === "cevap")).map((y) => y.id);
+  assert.deepEqual(ids(gercek), ["a1", "b1", "a2", "b2"], "sağlam: satır satır");
+  const y = await tablo("    if (g) g.push(d); else diziler.push([d]);", "    diziler.push([d]);");
+  assert.deepEqual(ids(y), ["a1", "a2", "b1", "b2"], "bozuk: sütun sütun");
 });

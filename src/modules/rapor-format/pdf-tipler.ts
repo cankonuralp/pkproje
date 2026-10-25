@@ -58,10 +58,12 @@ export interface HamBolum {
   /** öncekinin yanında · satırdaki genişlik payı (%) · sütun genişlikleri (%) · kontrol cevapları (2. "uygun değil") */
   yan: boolean; oran: number; sutunlar: number[]; cevaplar: string[];
   satirlar: HamSatir[];
+  /** 2026-10-24 (ikinci denetim): sıra no önceki listeden sürer · önceki bölümle bitişik (tek parça çizilmiş formun bandı / yarısı) */
+  siraDevam?: boolean; bitisik?: boolean;
 }
 export interface BasiliHam {
   cevap: string; baslik: string; formKodu: string; altYazi: string;
-  /** belgenin yazı tipi ve boyu; ara — bölümler arası (mm; 2026-10-24: tek parça çizilmiş formun bantları bitişik — 0) */
+  /** belgenin yazı tipi ve boyu; ara — bölümler arası (mm; okuyucu vermez — bantların bitişikliği bölümde: HamBolum.bitisik) */
   yazi: { tip: YaziTipi; boy: number; ara?: number };
   bolumler: HamBolum[];
 }

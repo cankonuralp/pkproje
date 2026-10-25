@@ -318,10 +318,11 @@ export const Bolum = z.discriminatedUnion("blok", [
   /* 495 (hata listesi 29 + 46 maketi): serbest metin — belgeye basılan sabit yazı (açıklama, yöntem notu …); sahada okunur */
   z.object({ ...ortak, blok: z.literal("metin"), metin: z.string().max(4000).default("") }),
   /* 2026-10-24: serbest tablo — sutun oranlar (%; çizimde toplamı 100'e çekilir); cevaplar kontrol cevabı hücrelerinin seçenekleri (2. öğe
-     "uygun değil"); siraDevam sıra no önceki bölümden sürer */
+     "uygun değil"); siraDevam sıra no önceki bölümden sürer; bitisik (2026-10-24, basılı formun tek parça çizilmiş tablosunun bandı / yan yana yarısı)
+     önceki bölümle arasında boşluk yok — ortak çizgiyi önceki çizer */
   z.object({ ...ortak, blok: z.literal("tablo"), sutun: z.array(z.number().min(1).max(100)).min(1).max(40), satirlar: z.array(TabloSatiri).min(1).max(200),
     hucreler: z.array(Hucre).max(4000), cevaplar: z.array(z.string().trim().min(1).max(40)).min(2).max(6).default(["U", "UD", "X"]),
-    siraDevam: z.boolean().optional() }),
+    siraDevam: z.boolean().optional(), bitisik: z.boolean().optional() }),
 ]);
 export type Bolum = z.output<typeof Bolum>;
 export type BolumOf<B extends Blok> = Extract<Bolum, { blok: B }>;

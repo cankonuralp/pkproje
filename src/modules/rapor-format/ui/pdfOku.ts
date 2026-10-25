@@ -4,7 +4,7 @@
    formun ızgarasını çıkarır. Çıktı (BASILI ham) sunucuya gider (eylemler.ts basilidanKurEylemi), orada şemadan geçer ve türün taslağı olur.
    Ağ yok, dosya bu işte başka yere gitmez. Yalnız tarayıcıda. */
 import { PDF_ACMA, pdfjsYukle } from "../../../components/pdf/pdfjs";
-import { pdfIzgara } from "../pdf-izgara";
+import { formBos, pdfIzgara, sayfaNotu } from "../pdf-izgara";
 import { pdfSayfalari } from "../pdf-sayfa";
 import type { BasiliHam } from "../pdf-tipler";
 
@@ -16,10 +16,11 @@ export async function pdfdenHam(veri: ArrayBuffer | Uint8Array): Promise<BasiliH
   const gorev = pdfjs.getDocument({ data, ...PDF_ACMA });
   try {
     const belge = await gorev.promise;
-    const sayfalar = await pdfSayfalari(belge, pdfjs);
-    /* yazısız PDF (taranmış sayfa görüntüsü): formun ızgarası çıkmaz — boş şablon kurulmaz, nedeni söylenir */
-    if (!sayfalar.some((x) => x.yazilar.some((y) => y.s.trim()))) throw Object.assign(new Error("PDF'te yazı yok"), { name: "YazisizPdf" });
-    return pdfIzgara(sayfalar);
+    const sayfalar = await pdfSayfalari(belge, pdfjs), ham = pdfIzgara(sayfalar);
+    /* yazısız PDF (taranmış sayfa görüntüsü) ya da formdan hiç bölüm çıkmadı: boş şablon kurulmaz, nedeni söylenir */
+    if (formBos(sayfalar, ham)) throw Object.assign(new Error("PDF'te yazı yok"), { name: "YazisizPdf" });
+    const not = sayfaNotu(belge.numPages);
+    return not ? { ...ham, cevap: [ham.cevap, not].filter(Boolean).join(" ") } : ham;
   } finally {
     await gorev.destroy();
   }

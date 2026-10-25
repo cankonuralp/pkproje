@@ -225,10 +225,11 @@ pkproje/
                             şablonunu bu PDF'e göre kur" işaretli) ya da satırdaki "Şablonu bundan kur" → 2026-10-24 YAPAY ZEKÂSIZ (reisim: "en baştan beri
                             bunu istedim"): PDF TARAYICIDA kendi içeriğinden okunur — ui/pdfOku.ts (components/pdf/pdfjs.ts) → pdf-sayfa.ts (pdf.js işlem
                             listesi + metin → PdfSayfasi; görünen sayfaya kırpılı) → pdf-izgara.ts (kurallar: çizgiler, çerçeve / çift çizgi, ızgara, tek parça
-                            formun bantları ve yan yana yarıları, hücre türleri, sayfa altı, sayfa devamı, bölüm sınırı) → BASILI ham (pdf-tipler.ts) →
+                            formun bantları ve yan yana yarıları, hücre türleri, sayfa altı, sayfa devamı, bölüm sınırı; ikinci denetim: onay kutusu ayıklama, beyaz ayraç,
+                            alt başlıklı liste, seçenek yazılı cevap, ölçüm çizelgesi, Etiket: [kutu], siraDevam, bitişik bölüm) → BASILI ham (pdf-tipler.ts) →
                             eylem basilidanKurEylemi: server/basili.ts basiliHazirla (yetki, tür, PDF sürümü — ekipman-turleri basiliSurumVar) → basili.ts
                             saf çeviri (işlemin DIŞINDA) → basiliYaz → formatlar.ts taslakYaz → Format kurucu · şablon serbest düzende (serbest tablolar, yan
-                            yana, birleşik hücre; sonuç / uzmanın imza yeri / fotoğraflar formda yoksa sona; bitişik bantlar yazi.ara 0) ·
+                            yana, birleşik hücre; sonuç / uzmanın imza yeri / fotoğraflar formda yoksa sona; bitişik bant / yarı tanım tablo.bitisik) ·
                             belge görünümü tanim.ts gorunum.basTuru / stil, liste yanYana / numara (duzen.ts belgeStilSiniflari,
                             basTuru, maddeNumaralari; belge, kâğıt, saha ortak); kurucuda "Belge görünümü" · kilit tests/basili-format, pdf-sayfa, pdf-izgara,
                             bozan basili-format, pdf-sayfa, pdf-izgara, e2e format-yz ·

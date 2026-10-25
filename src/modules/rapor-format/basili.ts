@@ -43,7 +43,8 @@ const bir = <T extends string>(l: readonly T[], x: unknown): T | undefined => l.
 const tamSayi = (x: unknown, en: number, enCok: number, d: number) => (typeof x === "number" && Number.isFinite(x) ? Math.max(en, Math.min(enCok, Math.round(x))) : d);
 const RENK = /^#[0-9a-fA-F]{6}$/;
 const CEVAPLAR = ["U", "UD", "X"];
-const SATIR_EN_COK = 200, SUTUN_EN_COK = 40, BOLUM_EN_COK = 40;
+/* okumadan en çok 200 bölüm alınır (kötüye kullanıma karşı); tanıma 40 sığar — fazlası sondan atılır, adı söylenir */
+const SATIR_EN_COK = 200, SUTUN_EN_COK = 40, BOLUM_EN_COK = 40, OKUNAN_EN_COK = 200;
 const yarimMm = (x: number) => Math.round(x * 2) / 2;
 
 /** hücrenin kenarı: her yanda belgenin çizgisiyse (1) undefined — tanımda kn yokken belge kendi çizgisini çizer; okunamayan yan belgenin çizgisi */
@@ -86,7 +87,7 @@ export function basilidanTanim(girdi: unknown, turAd: string): BasiliCeviri | nu
   };
   const bolumler: Bolum[] = [];
   const atilan: string[] = [];
-  const hamBolumler = dizi(ham.bolumler, BOLUM_EN_COK).map((o) => nesne<HamBolum>(o));
+  const hamBolumler = dizi(ham.bolumler, OKUNAN_EN_COK).map((o) => nesne<HamBolum>(o));
 
   for (const [n, x] of hamBolumler.entries()) {
     const ad = yazi(x.ad, 200) || `Bölüm ${n + 1}`;
@@ -160,7 +161,7 @@ export function basilidanTanim(girdi: unknown, turAd: string): BasiliCeviri | nu
       }
     });
     const tablo = onar({ id: yeni("b"), ad, blok: "tablo", kilit: false, sutun: sutun.length ? sutun : [100], satirlar, hucreler,
-      cevaplar: cevaplar.length >= 2 ? cevaplar : CEVAPLAR, ...yer });
+      cevaplar: cevaplar.length >= 2 ? cevaplar : CEVAPLAR, ...yer, ...(evet(x.siraDevam) ? { siraDevam: true } : {}), ...(evet(x.bitisik) ? { bitisik: true } : {}) });
     const b = Bolum.safeParse(tablo);
     if (b.success) bolumler.push(b.data); else atilan.push(ad);
   }
@@ -170,7 +171,9 @@ export function basilidanTanim(girdi: unknown, turAd: string): BasiliCeviri | nu
   const hucreVar = (f: (h: Hucre) => boolean) => bolumler.some((b) => b.blok === "tablo" && b.hucreler.some(f));
   const eksik = () => [!hucreVar((h) => h.tur === "sonuc"), !hucreVar((h) => h.tur === "imza" && h.kim === "uzman"),
     !bolumler.some((b) => b.blok === "foto") && !hucreVar((h) => h.tur === "foto")].filter(Boolean).length;
-  while (bolumler.length && bolumler.length + eksik() > BOLUM_EN_COK) atilan.push(bolumler.pop()!.ad);
+  const sondan: string[] = [];
+  while (bolumler.length && bolumler.length + eksik() > BOLUM_EN_COK) sondan.unshift(bolumler.pop()!.ad);
+  atilan.push(...sondan);
   const ekTablo = (ad: string, l: Omit<Hucre, "r" | "c">[]) => {
     const t = Bolum.parse({ id: yeni("b"), ad, blok: "tablo", kilit: false, sutun: l.map(() => 100 / l.length), satirlar: [{}],
       hucreler: l.map((h, c) => ({ ...h, r: 0, c })) });

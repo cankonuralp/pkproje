@@ -15,7 +15,8 @@
    13. Hazır cümle kuralı kalkınca kutudaki cümle sabit yazı kalır.
    14. Sayfa altı satır satır değerlendirilmezse kod satırı gövdeye düşer, form kodu bulunmaz.
    15. Bölüm birleştirme kalkınca 45 paragraf 45 bölüm olur.
-   16. Sayfa devamı kalkınca iki sayfaya bölünen tablo iki tablo olur. */
+   16. Sayfa devamı kalkınca iki sayfaya bölünen tablo iki tablo olur.
+   17–28: 2026-10-24 ikinci denetim kilitleri (dosyanın sonunda). */
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -158,7 +159,7 @@ test("aynı kayıt bir satırda iki kez verilince saat hücresi tarih + saat bas
 test("taşan yazının üstünden geçtiği hücre alan olur", async () => {
   const s = sayfa(izgara([40, 200, 300, 555], [200, 218]), [yazi("Cok uzun bir aciklama metni iki hucreye tasar", 43, 204)]);
   assert.equal(turler(await gercek(), s)[0][1], "yazi", "sağlam: yazı");
-  const m = await bozuk("if (b.kapli || dar) {", "if (dar) {");
+  const m = await bozuk("if (b.kapli || dar || baslikBosu(b)) {", "if (dar || baslikBosu(b)) {");
   assert.equal(turler(m, s)[0][1], "alan", "bozuk: alan");
 });
 
@@ -192,6 +193,135 @@ test("sayfa devamı kalkınca iki sayfaya bölünen tablo iki tablo olur", async
     return sayfa(izgara([40, 80, 555], ys), l);
   };
   assert.equal((await gercek()).pdfIzgara([sf(1, 100), sf(25, 40)]).bolumler.length, 1, "sağlam: tek tablo");
-  const m = await bozuk("      && devamEkle(o.bolum,", "      && false && devamEkle(o.bolum,");
+  const m = await bozuk("      if (devamEkle(o.bolum, devam,", "      if (false && devamEkle(o.bolum, devam,");
   assert.equal(m.pdfIzgara([sf(1, 100), sf(25, 40)]).bolumler.length, 2, "bozuk: iki tablo");
+});
+
+/* ── 2026-10-24 ikinci denetim kilitleri ──
+   17. Küçük kutu ayıklanmazsa hücre çizgisine yapışık onay kutuları U | UD | X sütunlarını böler.
+   18. Grup alt başlığı listeyi bölünce alt başlıktan sonraki maddelerin cevabı kaybolur.
+   19. Seçenek yazısı tanınmazsa "☐ Uygun ☐ Uygun Değil" sabit yazı kalır.
+   20. Ölçüm çizelgesi kuralı kalkınca satırın bütün değerleri satır etiketinin adını alır.
+   21. Renkli zeminin üstündeki beyaz ince dolgu çizgi sayılmazsa tablo dağılır.
+   22. Çerçeve kuralı kalkınca kenarlığa değen ayırma çizgisi kenarlığı tabloya çevirir.
+   23. Sayfa numarası izden atılmazsa başlık her sayfada yeniden girer.
+   24. Sürekli numara kuralı kalkınca ikinci liste 1'den başlar.
+   25. Etiketin sağındaki boş kutular birleşmezse her kutu ayrı alan olur.
+   26. Tablo dışı "Etiket: [kutu]" birleşmezse kutu boş kalır.
+   27. Madde satırında sonuç cümlesi aranınca "… uygundur" maddesi raporun sonucu olur.
+   28. Sayfa numarası sayfa altından atılmazsa alt yazıya girer. */
+const kareC = (x: number, y: number, s: number): PdfCizgi[] => [
+  { x1: x, y1: y, x2: x + s, y2: y, kalinlik: 0.5 }, { x1: x, y1: y + s, x2: x + s, y2: y + s, kalinlik: 0.5 },
+  { x1: x, y1: y, x2: x, y2: y + s, kalinlik: 0.5 }, { x1: x + s, y1: y, x2: x + s, y2: y + s, kalinlik: 0.5 },
+];
+const listeSayfasi = (cevap: string, madde2 = "Madde 2"): PdfSayfasi => {
+  const ys = [100, 116, 132, 148, 164];
+  return sayfa(izgara([40, 70, 380, 555], ys), [sol("No", 40, 100, 116), sol("Kontrol maddesi", 70, 100, 116), sol("Sonuc", 380, 100, 116),
+    ...[1, 2, 3].flatMap((r) => [sol(String(r), 40, ys[r], ys[r + 1]), sol(r === 2 ? madde2 : `Madde ${r}`, 70, ys[r], ys[r + 1]), ...(cevap ? [sol(cevap, 380, ys[r], ys[r + 1])] : [])])]);
+};
+
+test("küçük kutu ayıklanmazsa yapışık onay kutuları U | UD | X sütunlarını böler", async () => {
+  const xs = [40, 70, 300, 330, 360, 390], ys = [100, 112, 124, 136, 148];
+  const s = sayfa([...izgara(xs, ys), ...[1, 2, 3].flatMap((r) => [300, 330, 360].flatMap((x) => kareC(x + 10.5, ys[r] + 1.5, 9)))], [
+    sol("No", 40, 100, 112), sol("Madde", 70, 100, 112), sol("U", 300, 100, 112), sol("UD", 330, 100, 112), sol("X", 360, 100, 112),
+    ...[1, 2, 3].flatMap((r) => [sol(String(r), 40, ys[r], ys[r + 1]), sol(`Madde ${r}`, 70, ys[r], ys[r + 1])]),
+  ]);
+  assert.equal((await gercek()).pdfIzgara([s]).bolumler[0].sutunlar.length, 5, "sağlam: 5 sütun");
+  const m = await bozuk("const [yHat, dHat] = kutulariAyikla(hatlar(d.yatay), hatlar(d.dikey), d.yazilar);", "const [yHat, dHat] = [hatlar(d.yatay), hatlar(d.dikey)];");
+  assert.ok(m.pdfIzgara([s]).bolumler[0].sutunlar.length > 5, "bozuk: sütunlar bölündü");
+});
+
+test("grup alt başlığı listeyi bölünce liste iki tabloya ayrılır", async () => {
+  const xs = [40, 70, 400, 480], ys = [100, 116, 132, 148, 164, 180];
+  const s: PdfSayfasi = { ...sayfa(izgara(xs, ys, ["d:1:1", "d:1:2"]), [sol("No", 40, 100, 116, true), sol("Kontrol maddesi", 70, 100, 116, true), sol("Sonuc", 400, 100, 116, true),
+    sol("A. MEKANIK AKSAM", 40, 116, 132, true), sol("1", 40, 132, 148), sol("Fren 1", 70, 132, 148), sol("2", 40, 148, 164), sol("Fren 2", 70, 148, 164),
+    sol("3", 40, 164, 180), sol("Fren 3", 70, 164, 180)]), dolgular: [{ x: 40, y: 116, g: 440, h: 16, renk: "#D9D9D9" }] };
+  assert.equal((await gercek()).pdfIzgara([s]).bolumler.length, 1, "sağlam: tek liste");
+  const m = await bozuk("|| (serit(k) && listeIci(k))) continue;", ") continue;");
+  assert.equal(m.pdfIzgara([s]).bolumler.length, 2, "bozuk: iki tablo");
+});
+
+test("seçenek yazısı tanınmazsa '☐ Uygun ☐ Uygun Değil' sabit yazı kalır", async () => {
+  const s = listeSayfasi("☐ Uygun ☐ Uygun Değil");
+  assert.deepEqual(turler(await gercek(), s)[1][2], "cevap", "sağlam: cevap");
+  const m = await bozuk("const l = b.durum === \"yazi\" && !b.sira && !b.secenekBasligi ? secenekYazisi(b.metin) : null;", "const l = null as string[] | null;");
+  assert.equal(turler(m, s)[1][2], "yazi", "bozuk: yazı");
+});
+
+test("ölçüm çizelgesi kuralı kalkınca satırın değerleri satır etiketinin adını alır", async () => {
+  const s = sayfa(izgara([40, 200, 320, 440], [100, 116, 132]), [sol("Olcum Noktasi", 40, 100, 116), sol("Kesit (mm2)", 200, 100, 116), sol("In (A)", 320, 100, 116), sol("Pano 1", 40, 116, 132)]);
+  const adlar = (m: Izgara) => m.pdfIzgara([s]).bolumler[0].satirlar[1].hucreler.slice(1).map((h) => h.metin);
+  assert.deepEqual(adlar(await gercek()), ["Pano 1 · Kesit", "Pano 1 · In"], "sağlam: satır · sütun");
+  const m = await bozuk("        if (olcum) {", "        if (false) {");
+  assert.deepEqual(adlar(m), ["Pano 1", "Pano 1"], "bozuk: aynı ad");
+});
+
+test("renkli zeminin üstündeki beyaz ince dolgu çizgi sayılmazsa tablo dağılır", async () => {
+  const xs = [40, 70, 400], ys = [100, 116, 132, 148];
+  const beyaz = [...ys.map((y) => ({ x: 40, y: y - 0.25, g: 360, h: 0.5, renk: "#FFFFFF" })), ...xs.map((x) => ({ x: x - 0.25, y: 100, g: 0.5, h: 48, renk: "#FFFFFF" }))];
+  const s: PdfSayfasi = { ...sayfa([], [sol("No", 40, 100, 116), sol("Madde", 70, 100, 116), sol("1", 40, 116, 132), sol("Fren", 70, 116, 132), sol("2", 40, 132, 148), sol("Halat", 70, 132, 148)]),
+    dolgular: [{ x: 40, y: 100, g: 360, h: 48, renk: "#DDEBF7" }, ...beyaz] };
+  assert.equal((await gercek()).pdfIzgara([s]).bolumler.length, 1, "sağlam: tek tablo");
+  const m = await bozuk("if (zeminUstunde(w.yatay, w.p, renkli.filter((z) => z.n < w.n)))", "if (false)");
+  assert.ok(m.pdfIzgara([s]).bolumler.length > 1, "bozuk: dağıldı");
+});
+
+test("çerçeve kuralı kalkınca kenarlığa değen ayırma çizgisi kenarlığı tabloya çevirir", async () => {
+  const s = sayfa([...izgara([20, 575], [20, 822]), { x1: 20, y1: 80, x2: 575, y2: 80, kalinlik: 0.5 }, ...izgara([60, 200, 340], [200, 230, 260])],
+    [yazi("BASLIK", 250, 40), yazi("A", 63, 210), yazi("B", 203, 210), yazi("C", 63, 240)]);
+  const say = (m: Izgara) => m.pdfIzgara([s]).bolumler.find((b) => b.satirlar.some((r) => r.hucreler.some((h) => h.metin === "A")))!.satirlar.length;
+  assert.equal(say(await gercek()), 2, "sağlam: içteki tablo ayrı");
+  const m = await bozuk("if ((!icY.length || !icD.length) && !ic.some(deger)) { atilan.add(a); continue; }", "void deger;");
+  assert.ok(say(m) > 2, "bozuk: kenarlık tablo oldu");
+});
+
+test("sayfa numarası izden atılmazsa başlık her sayfada yeniden girer", async () => {
+  const sf = (n: number) => sayfa([...izgara([40, 400, 555], [40, 60]), ...izgara([40, 80, 555], [120, 140, 160, 180])],
+    [sol("FORM", 40, 40, 60, true), sol(`Sayfa ${n}/2`, 400, 40, 60), sol("No", 40, 120, 140), sol("Madde", 80, 120, 140), sol(String(n * 2 - 1), 40, 140, 160), sol("M", 80, 140, 160), sol(String(n * 2), 40, 160, 180), sol("N", 80, 160, 180)]);
+  const say = (m: Izgara) => m.pdfIzgara([sf(1), sf(2)]).bolumler.filter((b) => b.ad === "FORM").length;
+  assert.equal(say(await gercek()), 1, "sağlam: bir kez");
+  const m = await bozuk("const m = b.t.bolgeler.map((x) => x.metin.replace(SAYFA_NO, \"#\")).join(\"|\");", "const m = b.t.bolgeler.map((x) => x.metin).join(\"|\");");
+  assert.equal(say(m), 2, "bozuk: iki kez");
+});
+
+test("sürekli numara kuralı kalkınca ara yazıyla bölünen ikinci liste devam işaretini almaz", async () => {
+  const lst = (y0: number, bas: number) => {
+    const ys = [y0, y0 + 16, y0 + 32, y0 + 48];
+    return { c: izgara([40, 70, 480], ys), y: [sol("No", 40, ys[0], ys[1]), sol("Madde", 70, ys[0], ys[1]), ...[0, 1].flatMap((i) => [sol(String(bas + i), 40, ys[i + 1], ys[i + 2]), sol(`Madde ${bas + i}`, 70, ys[i + 1], ys[i + 2])])] };
+  };
+  const a = lst(100, 1), b = lst(220, 3);
+  const s = sayfa([...a.c, ...b.c], [...a.y, yazi("B. ELEKTRIK", 40, 190), ...b.y]);
+  const devam = (m: Izgara) => m.pdfIzgara([s]).bolumler.map((x) => !!x.siraDevam);
+  assert.deepEqual(devam(await gercek()), [false, true, true], "sağlam: sürer");
+  const m = await bozuk("if (sonSira !== null && v.ilk === sonSira + 1)", "if (false)");
+  assert.deepEqual(devam(m), [false, false, false], "bozuk: sıfırlanır");
+});
+
+test("etiketin sağındaki boş kutular birleşmezse her kutu ayrı alan olur", async () => {
+  const s = sayfa(izgara([40, 150, 200, 250, 300], [300, 316]), [sol("Firma Unvani", 40, 300, 316)]);
+  assert.equal(turler(await gercek(), s)[0].length, 2, "sağlam: tek değer hücresi");
+  const m = await bozuk("if (x.r !== b.r || x.rs !== b.rs || x.durum !== \"bos\" || x.resim || x.secenek || baslikHucresi(x)) break;", "break;");
+  assert.ok(turler(m, s)[0].length > 2, "bozuk: ayrı kutular");
+});
+
+test("tablo dışı 'Etiket: [kutu]' birleşmezse kutu boş kalır", async () => {
+  const s = sayfa(izgara([200, 400], [120, 136]), [yazi("Kontrol Tarihi:", 40, 123)]);
+  const k = (m: Izgara) => m.pdfIzgara([s]).bolumler.flatMap((b) => b.satirlar.flatMap((r) => r.hucreler)).some((h) => h.tur === "kayit" && h.kaynak === "bas");
+  assert.ok(k(await gercek()), "sağlam: kayıt");
+  const m = await bozuk("if (b.tur === \"metin\" && sonraki?.tur === \"tablo\" && etiketKutusu(b, sonraki)) {", "if (false) {");
+  assert.ok(!k(m), "bozuk: kayıt yok");
+});
+
+test("madde satırında sonuç cümlesi aranınca '… uygundur' maddesi raporun sonucu olur", async () => {
+  const s = listeSayfasi("", "Kanca mandali mevcut ve uygundur");
+  assert.equal(turler(await gercek(), s)[2][1], "yazi", "sağlam: madde");
+  const m = await bozuk("const s = b.secenekBasligi || listeSatiri(b.r) ? null : sonucAyir(b.metin);", "const s = b.secenekBasligi ? null : sonucAyir(b.metin);");
+  assert.equal(turler(m, s)[2][1], "sonuc", "bozuk: sonuç");
+});
+
+test("sayfa numarası sayfa altından atılmazsa alt yazıya girer", async () => {
+  const s = sayfa(izgara([40, 555], [100, 120]), [yazi("Tablo", 43, 104), { ...yazi("FR-305 Rev.02 - Sayfa 1/2", 40, 805), boy: 8 }]);
+  assert.equal((await gercek()).pdfIzgara([s]).altYazi, "FR-305 Rev.02", "sağlam: numarasız");
+  const m = await bozuk("altSatirlar.map((s) => sayfaNosuz(s.metin))", "altSatirlar.map((s) => s.metin)");
+  assert.match(m.pdfIzgara([s]).altYazi, /Sayfa 1\/2/, "bozuk: numara alt yazıda");
 });

@@ -218,31 +218,51 @@ export function hucreEtiketi(b: TabloBolumu, h: Hucre, g: (number | null)[][] = 
   }
   return "";
 }
-/** kontrol cevabı hücresinin maddesi: kendi metni; yoksa satırındaki yazılar (sıra no hariç) — soldaki komşu cevaptan (yoksa satırın başından) bu
-    cevaba kadarki yazılar, solda yazı yoksa sağdaki komşu cevaba kadarkiler (2026-10-24: yan yana iki listede bir maddeye ötekinin yazısı karışmaz) */
+/** kontrol cevabı hücresinin maddesi: kendi metni; yoksa satırındaki yazılar (sıra no hariç). 2026-10-24: yan yana iki listede bir maddeye ötekinin
+    yazısı karışmaz — sola doğru, aynı maddenin bitişik öteki cevapları geçilerek, tablonun bir sıra ya da cevap sütununa (bütün satırlardan) dek
+    toplanır; solda yazı yoksa sağa doğru aynı kuralla (ikinci denetim: solda cevapsız not / alt başlık, "Madde | Sol | Sağ" gibi iki cevaplı madde) */
 export function maddeMetni(b: TabloBolumu, h: Hucre): string {
   if (h.m?.trim()) return h.m.trim();
-  const satir = b.hucreler.filter((x) => x.r === h.r && x !== h).sort((x, y) => x.c - y.c);
-  const cevaplar = satir.filter((x) => x.tur === "cevap");
-  const yaz = (l: Hucre[]) => l.filter(yaziMi).map((x) => x.m!.trim()).join(" · ");
-  const sol = Math.max(-1, ...cevaplar.filter((x) => x.c < h.c).map((x) => x.c + (x.cs ?? 1) - 1));
-  const sag = Math.min(Infinity, ...cevaplar.filter((x) => x.c > h.c).map((x) => x.c));
-  return yaz(satir.filter((x) => x.c > sol && x.c < h.c)) || yaz(satir.filter((x) => x.c > h.c && x.c < sag));
+  const satir = b.hucreler.filter((x) => x.r === h.r && x !== h);
+  const cevapSut = new Set<number>(), siraSut = new Set<number>();
+  for (const x of b.hucreler) for (let c = x.c; c < x.c + (x.cs ?? 1); c++) { if (x.tur === "cevap") cevapSut.add(c); else if (x.tur === "sira") siraSut.add(c); }
+  const yeri = (c: number) => satir.find((x) => c >= x.c && c < x.c + (x.cs ?? 1));
+  const topla = (bas: number, adim: 1 | -1): string => {
+    const l: Hucre[] = [];
+    let c = bas;
+    /* aynı maddenin bitişik öteki cevapları */
+    for (let x = yeri(c); x?.tur === "cevap"; x = yeri(c)) c = adim < 0 ? x.c - 1 : x.c + (x.cs ?? 1);
+    while (c >= 0 && c < b.sutun.length && !siraSut.has(c) && !cevapSut.has(c)) {
+      const x = yeri(c);
+      if (x && yaziMi(x) && !l.includes(x)) l.push(x);
+      c = !x ? c + adim : adim < 0 ? x.c - 1 : x.c + (x.cs ?? 1);
+    }
+    return l.sort((x, y) => x.c - y.c).map((x) => x.m!.trim()).join(" · ");
+  };
+  return topla(h.c - 1, -1) || topla(h.c + (h.cs ?? 1), 1);
 }
 /** hücrelerin sütun dizisi sırası (2026-10-24 — basılı formun iki sütunlu kontrol listesi: solda 1–13, sağda 14–25): aynı sütunda alt alta, arası
     açık olmayan hücreler bir dizi; satır aralıkları örtüşen diziler bir bant; bantlar yukarıdan aşağı, bandın dizileri soldan sağa. Tek sütunlu
-    listede okuma sırasıyla (satır, sütun) aynıdır. */
+    listede okuma sırasıyla (satır, sütun) aynıdır. Bitişik sütunlarda aynı satırlardaki diziler (bir maddenin iki cevabı: "Madde | Sol | Sağ") tek
+    dizi, satır satır (2026-10-24, ikinci denetim). */
 export function diziSirasi(l: readonly Hucre[]): Hucre[] {
-  const diziler: Hucre[][] = [];
+  const tekler: Hucre[][] = [];
   for (const h of [...l].sort((x, y) => x.c - y.c || x.r - y.r)) {
-    const d = diziler[diziler.length - 1], o = d?.[d.length - 1];
-    if (d && o && o.c === h.c && h.r === o.r + (o.rs ?? 1)) d.push(h); else diziler.push([h]);
+    const d = tekler[tekler.length - 1], o = d?.[d.length - 1];
+    if (d && o && o.c === h.c && h.r === o.r + (o.rs ?? 1)) d.push(h); else tekler.push([h]);
   }
-  const son = (d: Hucre[]) => d[d.length - 1].r + (d[d.length - 1].rs ?? 1);
-  diziler.sort((x, y) => x[0].r - y[0].r || x[0].c - y[0].c);
+  /* bitişik sütunun aynı satırlı dizisi öncekine katılır (sütunlar: kaç dizinin birleştiği) */
+  const diziler: Hucre[][][] = [];
+  for (const d of tekler) {
+    const g = diziler.find((x) => { const a = x[x.length - 1]; return d[0].c === a[0].c + (a[0].cs ?? 1) && d.length === a.length && d.every((h, i) => h.r === a[i].r && (h.rs ?? 1) === (a[i].rs ?? 1)); });
+    if (g) g.push(d); else diziler.push([d]);
+  }
+  const sirali = diziler.map((g) => g[0].flatMap((_, i) => g.map((d) => d[i])));
+  const son = (d: Hucre[]) => Math.max(...d.map((h) => h.r + (h.rs ?? 1)));
+  sirali.sort((x, y) => x[0].r - y[0].r || x[0].c - y[0].c);
   const bantlar: Hucre[][][] = [];
   let alt = -1;
-  for (const d of diziler) {
+  for (const d of sirali) {
     if (bantlar.length && d[0].r < alt) { bantlar[bantlar.length - 1].push(d); alt = Math.max(alt, son(d)); } else { bantlar.push([d]); alt = son(d); }
   }
   return bantlar.flatMap((b) => b.sort((x, y) => x[0].c - y[0].c || x[0].r - y[0].r).flat());

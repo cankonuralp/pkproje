@@ -52,7 +52,7 @@ const KENARSIZ = { u: 0, a: 0, s: 0, g: 0 } as const;
 
 interface Kutu { x0: number; y0: number; x1: number; y1: number }
 interface Yazi extends PdfYazi { p: number }
-interface Zemin extends Kutu { renk: string }
+interface Zemin extends Kutu { renk: string; /** çizim sırası */ n: number }
 interface Resim extends Kutu { p: number }
 /** çizgi parçası: c sabit koordinat (yatayda y, dikeyde x), a–b boyunca, k kalınlık */
 interface Parca { c: number; a: number; b: number; k: number }
@@ -74,6 +74,8 @@ interface Tablo {
   kutu: Kutu; p: number; xs: number[]; ys: number[]; yp: Parca[][]; dp: Parca[][]; bolgeler: Bolge[]; sahip: number[][];
   /** bitişik bandın altında (üst çizgiyi üstteki çizer) · yan yana yarının sağdakisi (sol çizgiyi soldaki çizer) */
   ustBitisik: boolean; solBitisik: boolean;
+  /** iki bilgi soran etiket için bölünen sütunlar (bölünmeden önceki koordinatlar · bölünen sütunlar, büyükten küçüğe) — sayfa devamı aynı bölünür */
+  xs0?: number[]; bolunen?: number[];
 }
 interface Paragraf { satirlar: YaziSatiri[]; kutu: Kutu; p: number; boy: number; sonTaban: number }
 type Blok = { kutu: Kutu; p: number } & ({ tur: "tablo"; t: Tablo } | { tur: "metin"; par: Paragraf; zemin: string } | { tur: "resim" });
@@ -188,8 +190,10 @@ const SAYI_KOKLERI = ["kapasite", "yuk", "cap", "uzunlu", "yuksekli", "mesafe", 
 interface Duz { sayfalar: Sayfa[]; yazilar: Yazi[]; yatay: Parca[]; dikey: Parca[]; zeminler: Zemin[]; resimler: Resim[] }
 function duzle(girdi: readonly PdfSayfasi[]): Duz {
   const d: Duz = { sayfalar: [], yazilar: [], yatay: [], dikey: [], zeminler: [], resimler: [] };
-  let ust = 0, yol = 0;
+  let ust = 0, yol = 0, sira = 0;
   for (const [p, s] of girdi.slice(0, PDF_SINIR.sayfa).entries()) {
+    /* beyaz ince dolgu (Word'ün koyu ızgara stillerinde hücre ayracı): renkli zeminin üstündeyse çizgi */
+    const beyaz: { yatay: boolean; p: Parca; n: number }[] = [], zemin0 = d.zeminler.length;
     if (!s || typeof s !== "object") continue;
     const en = sonlu(s.en) && s.en > 0 ? s.en : 595, boy = sonlu(s.boy) && s.boy > 0 ? s.boy : 842;
     d.sayfalar.push({ ust, en, boy });
@@ -208,9 +212,14 @@ function duzle(girdi: readonly PdfSayfasi[]): Duz {
       const x = Math.min(f.x, f.x + f.g), y = Math.min(f.y, f.y + f.h) + ust, g = Math.abs(f.g), h = Math.abs(f.h);
       const renk = typeof f.renk === "string" && RENK.test(f.renk) ? f.renk.toUpperCase() : "#000000";
       if (Math.min(g, h) <= INCE) {
-        if (Math.max(g, h) < KISA || acikRenk(renk)) continue;
-        if (g >= h) d.yatay.push({ c: y + h / 2, a: x, b: x + g, k: h }); else d.dikey.push({ c: x + g / 2, a: y, b: y + h, k: g });
-      } else d.zeminler.push({ x0: x, y0: y, x1: x + g, y1: y + h, renk });
+        if (Math.max(g, h) < KISA) continue;
+        const parca = g >= h ? { c: y + h / 2, a: x, b: x + g, k: h } : { c: x + g / 2, a: y, b: y + h, k: g };
+        if (acikRenk(renk)) beyaz.push({ yatay: g >= h, p: parca, n: sira++ }); else (g >= h ? d.yatay : d.dikey).push(parca);
+      } else d.zeminler.push({ x0: x, y0: y, x1: x + g, y1: y + h, renk, n: sira++ });
+    }
+    const renkli = d.zeminler.slice(zemin0).filter((z) => !acikRenk(z.renk));
+    if (beyaz.length && renkli.length && beyaz.length * renkli.length <= 4_000_000) {
+      for (const w of beyaz) if (zeminUstunde(w.yatay, w.p, renkli.filter((z) => z.n < w.n))) (w.yatay ? d.yatay : d.dikey).push(w.p);
     }
     for (const c of Array.isArray(s.cizgiler) ? s.cizgiler : []) {
       if (yol++ >= PDF_SINIR.yol) break;
@@ -230,6 +239,18 @@ function duzle(girdi: readonly PdfSayfasi[]): Duz {
     ust += boy;
   }
   return d;
+}
+/** çizginin bir yanını (1,5 pt'lik şerit) uzunluğunun yarısından çoğu boyunca renkli zemin örtüyor mu */
+function zeminUstunde(yatay: boolean, p: Parca, l: Zemin[]): boolean {
+  const yan = (bas: number, son: number) => {
+    const ar = l.filter((z) => (yatay ? z.y0 < son && z.y1 > bas : z.x0 < son && z.x1 > bas))
+      .map((z) => (yatay ? [Math.max(p.a, z.x0), Math.min(p.b, z.x1)] : [Math.max(p.a, z.y0), Math.min(p.b, z.y1)])).filter(([u, v]) => v > u).sort((x, y) => x[0] - y[0]);
+    let t = 0, e = -Infinity;
+    for (const [u, v] of ar) { const b = Math.max(u, e); if (v > b) t += v - b; e = Math.max(e, v); }
+    return t / Math.max(0.1, p.b - p.a);
+  };
+  const c0 = p.c - p.k / 2, c1 = p.c + p.k / 2;
+  return yan(c0 - 1.5, c0 + 0.01) >= 0.5 || yan(c1 - 0.01, c1 + 1.5) >= 0.5;
 }
 const sayfaBul = (l: Sayfa[], y: number) => { let p = 0; for (let i = 0; i < l.length; i++) if (y >= l[i].ust) p = i; return p; };
 
@@ -254,6 +275,37 @@ function hatlar(l: Parca[]): Hat[] {
     i = j;
   }
   return out;
+}
+/** küçük kapalı kutular (çizilmiş onay kutusu, kenarlı form alanı — iki dikey kenarı ≤ 20 pt, aralarında ≤ 20 pt, iki ucunda yatay hat, içi
+    yazısız) ızgaraya katılmaz: kutunun dikey kenarları hücre çizgisine değince sütun sınırı oluyordu (2026-10-24, ikinci denetim). Kutunun üstü
+    hücre çizgisine yapışıp onunla tek hatta birleşmişse o hat kalır; yalnız kutunun kendi kısa hatları atılır */
+function kutulariAyikla(H: Hat[], V: Hat[], yazilar: readonly Yazi[]): [Hat[], Hat[]] {
+  const K = 20, T = 1.2;
+  const kv = V.filter((v) => v.b - v.a <= K && v.b - v.a >= 3).sort((x, y) => x.a - y.a || x.c - y.c);
+  if (kv.length < 2 || kv.length > 20_000) return [H, V];
+  const hs = [...H].sort((x, y) => x.c - y.c);
+  /* kutunun kendi kısa kenarı; ya da kenarı yapıştığı hücre çizgisiyle tek hatta birleşmiş (hattın yeri ≤ 2 pt kayar) — ama dikey kenarın ucu uzun
+     hatta tam değiyorsa o bir hücredir (dar sütunlu tek satırlık tablo), kutu değil */
+  const yatay = (y: number, x0: number, x1: number) => {
+    for (let j = altSinir(hs, y - YAKIN); j < hs.length && hs[j].c <= y + YAKIN; j++) {
+      const h = hs[j], kisa = h.b - h.a <= x1 - x0 + 2 * T + 0.5;
+      if (h.a <= x0 + T && h.b >= x1 - T && (kisa ? Math.abs(h.c - y) <= T : Math.abs(h.c - y) >= 0.5)) return h;
+    }
+    return null;
+  };
+  const atH = new Set<Hat>(), atV = new Set<Hat>();
+  for (let i = 0; i < kv.length; i++) {
+    for (let j = i + 1; j < kv.length && kv[j].a - kv[i].a <= T; j++) {
+      const [sol, sag] = kv[j].c > kv[i].c ? [kv[i], kv[j]] : [kv[j], kv[i]];
+      const en = sag.c - sol.c;
+      if (en < 3 || en > K || Math.abs(sag.b - sol.b) > T || atV.has(sol) || atV.has(sag)) continue;
+      const ust = yatay(sol.a, sol.c, sag.c), alt = yatay(sol.b, sol.c, sag.c);
+      if (!ust || !alt || yazilar.some((y) => { const cx = y.x + y.g / 2, cy = y.y + y.h / 2; return cx > sol.c && cx < sag.c && cy > sol.a && cy < sol.b; })) continue;
+      atV.add(sol); atV.add(sag);
+      for (const h of [ust, alt]) if (h.b - h.a <= en + 2 * T) atH.add(h);
+    }
+  }
+  return atV.size ? [H.filter((h) => !atH.has(h)), V.filter((v) => !atV.has(v))] : [H, V];
 }
 function birlesim(n: number) {
   const ana = Array.from({ length: n }, (_, i) => i);
@@ -308,6 +360,12 @@ function tablolariBul(H: Hat[], dikey: Hat[]): TabloAday[] {
       const b = ic.length === 1 ? ic[0].kutu : null;
       if (b && b.x0 - a.kutu.x0 <= SIKI && a.kutu.x1 - b.x1 <= SIKI && b.y0 - a.kutu.y0 <= SIKI && a.kutu.y1 - b.y1 <= SIKI) disKalin(ic[0]);
     } else {
+      /* iç çizgileri yalnız bir doğrultuda ve hiçbiri içteki tablolara değmiyorsa (sayfa kenarlığı + başlık ayırma çizgisi) yine çerçeve */
+      const icY = a.yatay.filter((h) => Math.abs(h.c - a.kutu.y0) > YAKIN && Math.abs(h.c - a.kutu.y1) > YAKIN);
+      const icD = a.dikey.filter((v) => Math.abs(v.c - a.kutu.x0) > YAKIN && Math.abs(v.c - a.kutu.x1) > YAKIN);
+      const deger = (b: TabloAday) => icY.some((h) => h.c >= b.kutu.y0 - YAKIN && h.c <= b.kutu.y1 + YAKIN && h.a <= b.kutu.x1 + YAKIN && h.b >= b.kutu.x0 - YAKIN)
+        || icD.some((v) => v.c >= b.kutu.x0 - YAKIN && v.c <= b.kutu.x1 + YAKIN && v.a <= b.kutu.y1 + YAKIN && v.b >= b.kutu.y0 - YAKIN);
+      if ((!icY.length || !icD.length) && !ic.some(deger)) { atilan.add(a); continue; }
       for (const b of ic) { a.yatay.push(...b.yatay); a.dikey.push(...b.dikey); atilan.add(b); }
     }
   }
@@ -451,9 +509,13 @@ function bantlaraBol(t: Tablo, zeminler: Zemin[]): Tablo[] {
   const sinirlar = (r: number) => s[r].flatMap((i, c) => (c > 0 && i !== s[r][c - 1] ? [c] : [])).join(",");
   const tamCizgi = (k: number) => s[k].every((i, c) => i !== s[k - 1][c]);
   const yaziVar = (r0: number, r1: number) => { for (let r = r0; r < r1; r++) if (s[r].some((i) => t.bolgeler[i].durum === "yazi")) return true; return false; };
+  /* numaralı listenin grup alt başlığı ("A. MEKANİK AKSAM"): şeridin üstü ve altı aynı sütun düzeninde, aynı sütunda sıra numaralı — liste bölünmez */
+  const numara = (r: number) => s[r].findIndex((i) => { const b = t.bolgeler[i]; return b.durum === "yazi" && tamSayiMi(b.metin); });
+  const listeIci = (k: number) => k > 0 && k + 1 < R && sinirlar(k - 1) === sinirlar(k + 1) && numara(k + 1) >= 0
+    && (numara(k - 1) === numara(k + 1) || baslikSatiri(k - 1));
   const kesim = [0];
   for (let k = 1; k + 1 < R; k++) {
-    if (!tamCizgi(k) || serit(k + 1)) continue;
+    if (!tamCizgi(k) || serit(k + 1) || (serit(k) && listeIci(k))) continue;
     if (!serit(k) && !(baslikSatiri(k) && !baslikSatiri(k - 1) && sinirlar(k) !== sinirlar(k - 1))) continue;
     if (yaziVar(kesim[kesim.length - 1], k) && yaziVar(k, R)) kesim.push(k);
   }
@@ -646,6 +708,8 @@ function tabloHazirla(t: Tablo): string[] {
     const k = dizi.length, birlesen = new Set<Bolge>(), yeni: Bolge[] = [];
     for (let r = h.r + h.rs; r < R;) {
       const l = Array.from({ length: k }, (_, e) => t.bolgeler[t.sahip[r][h.c + e]]);
+      /* grup alt başlığı (seçenek sütunlarını da kaplayan şerit) atlanır */
+      if (l.every((x) => x === l[0]) && l[0].cs > 1 && l[0].r === r && l[0].durum === "yazi") { r += l[0].rs; continue; }
       if (l.every((x) => x.r === r && x.cs === 1 && x.rs === l[0].rs && bosMu(x))) {
         if (maddeli(r, (c) => c >= h.c && c < h.c + k)) {
           l.forEach((x) => birlesen.add(x));
@@ -676,7 +740,37 @@ function tabloHazirla(t: Tablo): string[] {
     }
     bitir();
   }
+  /* seçenekleri yazılı cevap hücresi ("☐ Uygun ☐ Uygun Değil", her satırda "UYGUNDUR / UYGUN DEĞİLDİR"): madde satırında (sıra no'lu ya da sütunda
+     birden çok); altı boş olan başlıktır (altındaki cevap hücrelerinin) */
+  const adaylar = t.bolgeler.flatMap((b) => { const l = b.durum === "yazi" && !b.sira && !b.secenekBasligi ? secenekYazisi(b.metin) : null; return l ? [{ b, l }] : []; });
+  for (const { b, l } of adaylar) {
+    const alt = b.r + b.rs < R ? t.bolgeler[t.sahip[b.r + b.rs][b.c]] : null;
+    if (alt && bosMu(alt)) continue;
+    const siraSatiri = t.sahip[b.r].some((i) => t.bolgeler[i].sira);
+    if (!(siraSatiri || adaylar.filter((x) => x.b.c === b.c).length >= 2) || !maddeli(b.r, (c) => c >= b.c && c < b.c + b.cs)) continue;
+    b.secenek = true;
+    if (!kodlar.length) kodlar = l.map((x) => x.slice(0, 40));
+  }
   return kodlar;
+}
+/** kutu işaretleri (çizilmiş kutunun yazı karşılığı: ☐ □ ❑, "[ ]", ZapfDingbats'ın "q" / "o" / "n", Wingdings'in özel alanı) */
+const KUTU_ISARETI = /[☐☑☒□▢■◻◼❑❒○◯●✓✔✗✘\uf000-\uf0ff]|\[\s*[xX✓]?\s*\]|\(\s*\)/gu;
+const SECENEK_IFADELERI = ["sartli uygundur", "uygun degildir", "uygun degil", "uygundur", "uygunsuz", "uygun", "kusursuz", "kusurlu", "uymaz", "gecmez", "gecer",
+  "evet", "hayir", "var", "yok", "nok", "ok", "ud", "na", "u", "x", "e", "h"];
+/** hücre yalnız kontrol seçeneklerinden oluşuyorsa (kutu işaretleri, ayraçlar, "veya" atılır) seçenekler — formun yazımıyla; en az iki farklı */
+function secenekYazisi(metin: string): string[] | null {
+  const temiz = metin.replace(/\n/g, " ").replace(KUTU_ISARETI, " ").replace(/(^|\s)[qon¨](?=\s|$)/g, "$1 ");
+  const k = katlaKonumlu(temiz), l: string[] = [];
+  for (let i = 0; i < k.length;) {
+    if (k[i] === " ") { i++; continue; }
+    const dolgu = ["veya", "ya da", "ile"].find((x) => k.startsWith(x, i) && (k[i + x.length] ?? " ") === " ");
+    if (dolgu) { i += dolgu.length; continue; }
+    const x = SECENEK_IFADELERI.find((f) => k.startsWith(f, i) && (k[i + f.length] ?? " ") === " ");
+    if (!x) return null;
+    l.push(temiz.slice(i, i + x.length).replace(/\s+/g, " "));
+    i += x.length;
+  }
+  return l.length >= 2 && new Set(l.map(katla)).size === l.length ? l : null;
 }
 /** sonucu saklanan işlev (tablonun çevirisi boyunca aynı girdiye aynı sonuç — satır / sütun taramaları bir kez) */
 function ezber<K, V>(f: (k: K) => V): (k: K) => V {
@@ -701,11 +795,13 @@ function sutunBol(t: Tablo, c: number): void {
 function tabloyaCevir(t: Tablo, belge: Belge, ad: string, secenekKodlari: string[], bolundu = false): HamBolum {
   const R = t.ys.length - 1, C = t.xs.length - 1, bl = t.bolgeler, sahip = t.sahip;
   const yazili = (x: Bolge) => x.durum === "yazi" && !x.sira;
-  /** sütunun başlık hücresi: yukarıdaki ilk yazılı hücre; tablonun bütün genişliğindeki şerit bir bölüm başlığıdır, sütunun başlığı değil */
+  /** sütunun başlık hücresi: yukarıdaki ilk yazılı hücre; tablonun bütün genişliğindeki şerit ve soldaki en az iki sütunu da kaplayan grup alt
+      başlığı ("No | Madde"nin üstündeki "A. MEKANİK AKSAM") sütunun başlığı değildir — geçilir (2026-10-24, ikinci denetim); etiket + değer
+      sütunlarını kaplayan başlık ("KONTROLÜ YAPAN" imza tablosunda) başlıktır */
   const baslikHucresi = ezber((b: Bolge): Bolge | null => {
     for (let r = b.r - 1; r >= 0;) {
       const x = bl[sahip[r][b.c]];
-      if (yazili(x)) return x.cs >= C && C > 1 ? null : x;
+      if (yazili(x) && !((x.cs >= C && C > 1) || (x.cs > b.cs && b.c - x.c >= 2))) return x;
       r = x.r - 1;
     }
     return null;
@@ -714,7 +810,17 @@ function tabloyaCevir(t: Tablo, belge: Belge, ad: string, secenekKodlari: string
   const satirEtiketi = (b: Bolge) => { for (let c = 0; c < C; c++) { const x = bl[sahip[b.r][c]]; if (yazili(x)) return x.metin; } return ""; };
   const soldakiEtiket = ezber((b: Bolge) => { for (let c = b.c - 1; c >= 0; c--) { const x = bl[sahip[b.r][c]]; if (yazili(x)) return x.metin; } return ""; });
   const maddeli = ezber((r: number) => sahip[r].some((i) => bl[i].durum === "yazi" && !bl[i].sira && !tamSayiMi(bl[i].metin)));
-  const cevapSutunu = ezber((b: Bolge) => b.durum === "bos" && maddeli(b.r) && CEVAP_BASLIGI.test(katla(sutunBasligi(b))));
+  /** kontrol cevabı sütununun başlığı ("Sonuç", "U / UD"): sütunda yukarı doğru, şeritler ve soldaki sütunları da kaplayan grup alt başlıkları
+      geçilerek; başka bir başlıkta durulur */
+  const cevapBasligiBul = ezber((b: Bolge): string => {
+    for (let r = b.r - 1; r >= 0;) {
+      const x = bl[sahip[r][b.c]], serit = (x.cs >= C && C > 1) || (x.cs > b.cs && x.c < b.c);
+      if (yazili(x)) { if (!serit && CEVAP_BASLIGI.test(katla(x.metin))) return x.metin; if (!serit) return ""; }
+      r = x.r - 1;
+    }
+    return "";
+  });
+  const cevapSutunu = ezber((b: Bolge) => b.durum === "bos" && maddeli(b.r) && !!cevapBasligiBul(b));
   /** madde / cevap satırı: sıra no ya da kontrol cevabı hücresi var — yazıları başlık sayılmaz (imza tablosu da sanılmaz) */
   const listeSatiri = ezber((r: number) => sahip[r].some((i) => bl[i].sira || bl[i].secenek || cevapSutunu(bl[i])));
   /** imza / kişi için sütun başlığı (katlanmış): madde satırındaki yazı başlık değildir */
@@ -738,36 +844,71 @@ function tabloyaCevir(t: Tablo, belge: Belge, ad: string, secenekKodlari: string
     return !!ust && yazili(ust) && (kalinMi(ust) || !!zeminBul(ust.kutu, zeminler)) && !kalinMi(b) && yk * MM >= 10 && yaziYuk < 0.4 * yk
       && b.metin.length >= 15 && !listeSatiri(b.r) && sahip[b.r].every((i) => bl[i] === b || bl[i].durum !== "yazi");
   };
+  /** başlık satırı: hücreleri yazılı ya da boş, yazılılar en az iki ve boşlardan çok (sol üst köşe ya da grup sütunu boş olabilir) */
+  const baslikSatiri = ezber((r: number) => {
+    const l = [...new Set(sahip[r])].map((i) => bl[i]), y = l.filter(yazili).length;
+    return y >= 2 && y > l.length - y && l.every((x) => x.r === r && (yazili(x) || (x.durum === "bos" && !x.resim)));
+  });
+  /** başlık satırındaki boş hücre (öteki en az üç hücre kalın / zeminli yazı): sahada doldurulmaz */
+  const baslikBosu = (b: Bolge) => {
+    const l = [...new Set(sahip[b.r])].map((i) => bl[i]).filter((x) => x !== b);
+    return l.length >= 3 && l.every((x) => x.r === b.r && yazili(x) && (kalinMi(x) || !!zeminBul(x.kutu, zeminler)));
+  };
+  /* Excel'in "tüm kenarlıklar" ızgarası: etiketin hemen sağındaki art arda boş hücreler (sütun başlığı yok) tek değer hücresi — iki bilgi / saat
+     isteyen etiket bugünkü gibi bölünür (2026-10-24, ikinci denetim) */
+  const emilen = new Set<Bolge>(), uzat = new Map<Bolge, Bolge>();
+  if (!imzaTablosu) for (const b of bl) {
+    if (emilen.has(b) || b.c === 0 || b.durum !== "bos" || b.resim || b.secenek || b.kapli || listeSatiri(b.r) || baslikHucresi(b)) continue;
+    const sol = bl[sahip[b.r][b.c - 1]];
+    if (!yazili(sol) || /\bsaat/.test(katla(sol.metin)) || ikiBilgi(sol.metin, kayitKaynagi)) continue;
+    let son = b;
+    for (let c = b.c + b.cs; c < C;) {
+      const x = bl[sahip[b.r][c]];
+      if (x.r !== b.r || x.rs !== b.rs || x.durum !== "bos" || x.resim || x.secenek || baslikHucresi(x)) break;
+      emilen.add(x); son = x; c = x.c + x.cs;
+    }
+    if (son !== b) uzat.set(b, son);
+  }
   const kullanilan = new Map<number, Set<TabloKaynagi>>(), bolunecek = new Set<number>();
   let cevapBasligi = "";
 
   const satirlarOut: HamSatir[] = t.ys.slice(0, R).map((y, r) => ({ tekrar: false, yukseklik: mm(t.ys[r + 1] - y), hucreler: [] }));
   for (const b of bl) {
-    const h: HamHucre = { ...bosHucre(), sutunBirlesim: b.cs, satirBirlesim: b.rs, kenar: kenarlar(t, b), zemin: zeminBul(b.kutu, zeminler) };
+    if (emilen.has(b)) continue;
+    const son = uzat.get(b);
+    const h: HamHucre = { ...bosHucre(), sutunBirlesim: son ? son.c + son.cs - b.c : b.cs, satirBirlesim: b.rs,
+      kenar: son ? { ...kenarlar(t, b), g: kenarlar(t, son).g } : kenarlar(t, b), zemin: zeminBul(b.kutu, zeminler) };
     if (b.satirlar.length) Object.assign(h, gorunum(b.satirlar, b.kutu.x0, b.kutu.x1, belge.boy));
     let ikinci: HamHucre | null = null;
     if (b.resim) Object.assign(h, { tur: "gorsel", gorsel: "logo" });
     else if (b.sira) h.tur = "sira";
+    else if (b.secenek) h.tur = "cevap";
     else if (b.durum === "yazi") {
-      const s = b.secenekBasligi ? null : sonucAyir(b.metin);
+      /* madde / cevap satırındaki "… uygundur" maddedir, raporun sonucu değil (2026-10-24, ikinci denetim) */
+      const s = b.secenekBasligi || listeSatiri(b.r) ? null : sonucAyir(b.metin);
       if (s) Object.assign(h, { tur: "sonuc", metin: s.onceki, secenekler: s.secenekler });
       else if (notKutusu(b)) Object.assign(h, { tur: "alan", alan: "metin", metin: "", formul: `"${b.metin.replace(/["“”„]/g, "'").replace(/\s+/g, " ").trim()}"` });
       else h.metin = b.metin;
     } else if (b.durum === "isaret") h.metin = b.metin.trim();
-    else if (b.secenek) h.tur = "cevap";
     else {
       const bas = sutunBasligi(b), kb = katla(bas), kis = kisiBasligi(b), kse = katla(satirEtiketi(b));
       /* gövde yazısından alçak / dar hücre (çift çizginin arası, kayık sınır şeridi) sahada doldurulmaz; taşan yazının üstünden geçtiği hücre de */
       const dar = b.kutu.y1 - b.kutu.y0 < 0.8 * govde || b.kutu.x1 - b.kutu.x0 < govde;
       /* imza tablosunda birkaç satırlık boş kutu (imza / kaşe yeri) da imza; kişi sütunun başlığından */
       const kutuImza = imzaTablosu && !!kis && (b.rs >= 3 || (b.kutu.y1 - b.kutu.y0) * MM >= 20);
-      if (b.kapli || dar) { /* boş yazı */ }
+      if (b.kapli || dar || baslikBosu(b)) { /* boş yazı */ }
       else if (/^((kase|muhur) )?imza/.test(kse) || /imza/.test(kis) || kutuImza) Object.assign(h, { tur: "imza", kim: kimBul(kis) ?? kimBul(kse) ?? "uzman" });
-      else if (maddeli(b.r) && CEVAP_BASLIGI.test(kb)) { h.tur = "cevap"; cevapBasligi ||= bas; }
+      else if (cevapSutunu(b)) { h.tur = "cevap"; cevapBasligi ||= cevapBasligiBul(b); }
       else if (maddeli(b.r) && SIRA_BASLIGI.test(kb)) h.tur = "sira";
       else {
-        const sol = soldakiEtiket(b), et = sol || bas;
-        if (et) {
+        const sol = soldakiEtiket(b), et = sol || bas, bh = baslikHucresi(b);
+        /* ölçüm çizelgesi (satır etiketi × birimli sütun başlığı): ad "satır · sütun", değer türü ve birim sütun başlığından (2026-10-24, ikinci
+           denetim — satır etiketi öncelikliydi, bir satırın bütün değerleri aynı adı alıyordu) */
+        const olcum = !!sol && !!bh && !imzaTablosu && !IMZA_TABLOSU.test(kis) && !listeSatiri(bh.r) && baslikSatiri(bh.r) && !kayitKaynagi(sol);
+        if (olcum) {
+          const as = alanBilgisi(sol), ab = alanBilgisi(bas), tur = ab.alan !== "metin" || ab.birim ? ab : as;
+          Object.assign(h, { tur: "alan", metin: `${as.metin} · ${ab.metin}`, alan: tur.alan, birim: tur.birim });
+        } else if (et) {
           /* imza bilgisi (adı, unvanı …) yalnız imza başlığının altındaki hücrede; kişi o başlıktan */
           const imzaAlti = IMZA_TABLOSU.test(kis);
           const bul = (e: string) => { const x = imzaAlti ? imzaKaynagi(e, kimBul(kis) ?? "uzman") : null; return x?.kaynak ?? (x?.bulundu ? null : kayitKaynagi(e)); };
@@ -775,7 +916,7 @@ function tabloyaCevir(t: Tablo, belge: Belge, ad: string, secenekKodlari: string
           const liste = !sol ? listeYeri(b) : { n: 1, i: 1 };
           const iki = liste.n === 1 ? ikiBilgi(et, bul) : null;
           /* tek sütunluk hücre ikiye bölünecekse önce sütunu bölünür, tablo yeniden çevrilir */
-          if (iki && b.cs === 1 && !bolundu) bolunecek.add(b.c);
+          if (iki && b.cs === 1 && !bolundu && !t.bolunen) bolunecek.add(b.c);
           const kul = kullanilan.get(b.r) ?? new Set<TabloKaynagi>();
           kullanilan.set(b.r, kul);
           const kaynak = liste.n > 1 ? null : bul(et);
@@ -798,7 +939,9 @@ function tabloyaCevir(t: Tablo, belge: Belge, ad: string, secenekKodlari: string
     satirlarOut[b.r].hucreler.push(h, ...(ikinci ? [ikinci] : []));
   }
   if (bolunecek.size && C + bolunecek.size <= SUTUN_EN_COK) {
-    for (const c of [...bolunecek].sort((a, b) => b - a)) sutunBol(t, c);
+    t.xs0 ??= [...t.xs];
+    t.bolunen = [...bolunecek].sort((a, b) => b - a);
+    for (const c of t.bolunen) sutunBol(t, c);
     return tabloyaCevir(t, belge, ad, secenekKodlari, true);
   }
   const cevapVar = bl.some((b) => b.secenek) || satirlarOut.some((s) => s.hucreler.some((h) => h.tur === "cevap"));
@@ -809,11 +952,17 @@ function tabloyaCevir(t: Tablo, belge: Belge, ad: string, secenekKodlari: string
       : basliktaki.length >= 2 && basliktaki.every((x) => /^[A-ZÇĞİÖŞÜ]{1,3}$/.test(x)) ? kodSirala(basliktaki, belge.aciklama)
         : belge.aciklama?.kodlar ?? ["U", "UD", "X"];
   const en = t.xs[C] - t.xs[0] || 1;
-  return {
+  const bolum: HamBolum = {
     ad, tur: "tablo", yan: false, oran: 100, cevaplar,
     sutunlar: t.xs.slice(0, C).map((x, c) => Math.round(((t.xs[c + 1] - x) / en) * 10000) / 100), satirlar: satirlarOut,
+    ...(t.ustBitisik || t.solBitisik ? { bitisik: true } : {}),
   };
+  const sira = bl.filter((b) => b.sira).map((b) => parseInt(b.metin, 10)).filter(Number.isFinite);
+  if (sira.length) siraDegeri.set(bolum, { ilk: enAz(sira), son: enCok(sira) });
+  return bolum;
 }
+/** tablonun sıra numaralarının ilki ve sonu (sürekli numaralı listenin bölümleri — siraDevam) */
+const siraDegeri = new WeakMap<HamBolum, { ilk: number; son: number }>();
 
 /* ── 5. TABLO DIŞI: satır parçaları, sayfa altı, paragraflar ── */
 /** satırın çok açık aralıkları (2,5 boydan geniş) ayrı parça: "Form No: …" solda, "Tarih: …" sağda */
@@ -842,13 +991,19 @@ function paragraflar(l: YaziSatiri[]): Paragraf[] {
   }
   return out;
 }
-/** blokların kimliği: sonraki sayfaların başında birinci sayfanın başındakilerin aynısı (tekrarlanan sayfa başlığı) atılır */
+/** sayfa numarası ("Sayfa No: 1/3", "Sayfa 2 / 3", "Page 1 of 2", "1/3") */
+const SAYFA_NO = /(?:sayfa|page)?\s*(?:no)?\s*[:.]?\s*\d{1,3}\s*(?:\/|of)\s*\d{1,3}/gi;
+/** blokların kimliği: sonraki sayfaların başında birinci sayfanın başındakilerin aynısı (tekrarlanan sayfa başlığı) atılır — sayfa numarası
+    karşılaştırılmaz (2026-10-24, ikinci denetim: başlık kutusundaki "Sayfa n / N" başlığı her sayfada yeniden şablona sokuyordu) */
 function blokIzi(b: Blok): string {
   if (b.tur === "resim") return `R${Math.round(b.kutu.x1 - b.kutu.x0)}x${Math.round(b.kutu.y1 - b.kutu.y0)}`;
-  if (b.tur === "metin") return `M${b.par.satirlar.map((s) => s.metin).join("\n")}`;
-  const m = b.t.bolgeler.map((x) => x.metin).join("|");
+  if (b.tur === "metin") return `M${b.par.satirlar.map((s) => s.metin).join("\n").replace(SAYFA_NO, "#")}`;
+  const m = b.t.bolgeler.map((x) => x.metin.replace(SAYFA_NO, "#")).join("|");
   return m.replace(/\|/g, "").trim() ? `T${b.t.xs.length}x${b.t.ys.length}|${m}` : "";
 }
+/** sayfa altı parçasından sayfa numarası atılır ("FR-305 Rev.02 - Sayfa 1/2" → "FR-305 Rev.02"); kalan ayraçlar temizlenir */
+const sayfaNosuz = (s: string) => s.replace(/(?:sayfa|page)\s*(?:no)?\s*[:.]?\s*\d{1,3}(?:\s*(?:\/|of|-)\s*\d{1,3})?/gi, " ")
+  .replace(/(^|\s)\d{1,3}\s*\/\s*\d{1,3}(?=\s|$)/g, " ").replace(/\s+/g, " ").replace(/^[\s\-–—|·:,;]+|[\s\-–—|·:,;]+$/g, "").trim();
 const KOD = /(?:^|[^A-Za-z0-9ÇĞİÖŞÜçğıöşü])((?:[A-ZÇĞİÖŞÜ]{2,6}[.-])*(?:FRM|FR|F)[.-] ?(?:[A-Z0-9]{1,8}[.-])*\d{1,5}(?:[.-][A-Z0-9]{1,6})*)/;
 const KOD_ETIKETI = /(?<!\p{L})(?:form|d[oö]k[uü]man|dok)\.?\s*(?:no|kod[uü]?|numaras[ıi])\s*[:.]?\s*([^\s,;|]+)/iu;
 /** sayfa altındaki önceksiz kod ("ABC.021", "SEM-12"); yalnız sayfa altının kısa parçalarında aranır (gövdedeki kısaltmalar yakalanmasın) */
@@ -927,6 +1082,8 @@ function paragraflariBirlestir(l: HamBolum[], hedef: number): HamBolum[] {
   for (let i = 0; i + 1 < birimler.length;) {
     const a = birimSatirlari(birimler[i]), b = birimSatirlari(birimler[i + 1]);
     const m = a && b && a.length + b.length <= SATIR_EN_COK ? satirlardanBolum(birimler[i][0].ad, [...a, ...b]) : null;
+    /* sürekli numaralı listenin arasındaki paragraf sayacı sıfırlamaz — bayrak birleşende kalır */
+    if (m && [...birimler[i], ...birimler[i + 1]].some((x) => x.siraDevam)) m.siraDevam = true;
     if (m) birimler.splice(i, 2, [m]); else i++;
   }
   return birimler.flat();
@@ -945,9 +1102,36 @@ function devamEkle(a: HamBolum, b: HamBolum, sayfaSonunda: boolean): boolean {
   return true;
 }
 
+/** tablo dışı kısa etiket + hemen sağındaki boş tek hücreli kutu (doldurulabilir PDF'in kenarlı metin alanı, çizilmiş kutu) */
+function etiketKutusu(m: Extract<Blok, { tur: "metin" }>, k: Extract<Blok, { tur: "tablo" }>): boolean {
+  const l = k.t.bolgeler, metin = m.par.satirlar.map((s) => s.metin).join(" ").trim(), ara = k.kutu.x0 - m.kutu.x1;
+  return m.par.satirlar.length === 1 && metin.length <= 60 && !sonucAyir(metin) && l.length === 1 && l[0].durum === "bos" && !l[0].resim && ara >= -YAKIN && ara <= 150;
+}
+function etiketliKutu(m: Extract<Blok, { tur: "metin" }>, k: Extract<Blok, { tur: "tablo" }>, belge: Belge): HamBolum {
+  const et = m.par.satirlar.map((s) => s.metin).join(" ").trim(), kaynak = kayitKaynagi(et), a = alanBilgisi(et);
+  const etiket: HamHucre = { ...bosHucre(), ...gorunum(m.par.satirlar, m.kutu.x0, k.kutu.x0, belge.boy), kenar: { ...KENARSIZ }, metin: et, zemin: m.zemin };
+  const kutu: HamHucre = { ...bosHucre(), kenar: kenarlar(k.t, k.t.bolgeler[0]), zemin: zeminBul(k.kutu, belge.zeminler),
+    ...(kaynak ? { tur: "kayit", kaynak, metin: a.metin } : { tur: "alan", metin: a.metin, alan: a.alan, birim: a.birim }) };
+  const g1 = Math.max(1, k.kutu.x0 - m.kutu.x0), g2 = Math.max(1, k.kutu.x1 - k.kutu.x0), en = g1 + g2;
+  const yuz = Math.round((g1 / en) * 10000) / 100;
+  return { ad: a.metin || et, tur: "tablo", yan: false, oran: 100, sutunlar: [yuz, Math.round((100 - yuz) * 100) / 100], cevaplar: [],
+    satirlar: [{ tekrar: false, yukseklik: mm(k.kutu.y1 - k.kutu.y0), hucreler: [etiket, kutu] }] };
+}
+
+/** okunan formdan şablon kurulmaz: PDF'te yazı yok ya da hiç bölüm çıkmadı (taranmış sayfa; yalnız sayfa altı yazısı) */
+export function formBos(sayfalar: readonly PdfSayfasi[], ham: BasiliHam): boolean {
+  return !sayfalar.some((x) => x.yazilar.some((y) => y.s.trim())) || !ham.bolumler.length;
+}
+/** sayfa sınırını aşan PDF'in notu (kurulunca kullanıcıya söylenir) */
+export function sayfaNotu(toplam: number): string {
+  const n = PDF_SINIR.sayfa;
+  return toplam > n ? `Formun ilk ${n} sayfası okundu; ${n + 1}${toplam > n + 1 ? `–${toplam}.` : "."} sayfa${toplam > n + 1 ? "lar" : ""} şablona alınmadı.` : "";
+}
+
 export function pdfIzgara(sayfalar: readonly PdfSayfasi[]): BasiliHam {
   const d = duzle(Array.isArray(sayfalar) ? sayfalar : []);
-  const tamlar = tablolariBul(hatlar(d.yatay), hatlar(d.dikey)).map((a) => tabloKur(a, d.sayfalar, d.yazilar)).filter((t): t is Tablo => !!t);
+  const [yHat, dHat] = kutulariAyikla(hatlar(d.yatay), hatlar(d.dikey), d.yazilar);
+  const tamlar = tablolariBul(yHat, dHat).map((a) => tabloKur(a, d.sayfalar, d.yazilar)).filter((t): t is Tablo => !!t);
   const tablosu = (x: number, y: number) => tamlar.find((t) => x >= t.kutu.x0 - 0.5 && x <= t.kutu.x1 + 0.5 && y >= t.kutu.y0 - 0.5 && y <= t.kutu.y1 + 0.5);
   const hucresi = (t: Tablo, x: number, y: number) => t.bolgeler[t.sahip[aralik(t.ys, y)][aralik(t.xs, x)]];
   /* yazılar ve resimler hücrelere (merkezi hücrenin içindeyse); hücre çizgisini aşan birleşik yazı bölünür, taşan yazı komşusunu kaplar */
@@ -989,6 +1173,7 @@ export function pdfIzgara(sayfalar: readonly PdfSayfasi[]): BasiliHam {
     for (const par of paragraflar(l).sort((a, b) => a.kutu.y0 - b.kutu.y0 || a.kutu.x0 - b.kutu.x0)) {
       const m = par.satirlar[0].metin;
       if (kisaMi(par) && p !== ilkAlt) continue;
+      if (kisaMi(par) && !sayfaNosuz(m)) continue;
       if (kisaMi(par) && toplam + 3 + m.length <= 250) { altSatirlar.push(par.satirlar[0]); toplam += 3 + m.length; continue; }
       govde.push(...par.satirlar);
     }
@@ -1044,18 +1229,36 @@ export function pdfIzgara(sayfalar: readonly PdfSayfasi[]): BasiliHam {
   for (const [gi, g] of gruplar.entries()) {
     g.sort((a, b) => a.kutu.x0 - b.kutu.x0);
     const tt = tekTablo(g), o = onceki;
+    const oxs = o ? o.t.xs0 ?? o.t.xs : [];
     if (tt && o && sayfaBasi.get(g[0].p) === gi && o.p === g[0].p - 1 && sayfaSonu.get(o.p) === o.i && sayfadaYer(tt.kutu.y0, g[0].p) <= 0.35
-      && o.t.xs.length === tt.xs.length && o.t.xs.every((x, i) => Math.abs(x - tt.xs[i]) <= 3)
-      && devamEkle(o.bolum, tabloyaCevir(tt, belge, "", secenekler.get(tt) ?? []), sayfadaYer(o.t.kutu.y1, o.p) >= 0.75)) {
-      onceki = { bolum: o.bolum, t: tt, p: g[0].p, i: gi };
-      continue;
+      && oxs.length === tt.xs.length && oxs.every((x, i) => Math.abs(x - tt.xs[i]) <= 3)) {
+      /* öncekinin iki bilgi için bölünen sütunları devamda da bölünür (sütun sayıları tutsun) */
+      if (o.t.bolunen && !tt.bolunen) { tt.xs0 = [...tt.xs]; for (const c of o.t.bolunen) sutunBol(tt, c); tt.bolunen = o.t.bolunen; }
+      const devam = tabloyaCevir(tt, belge, "", secenekler.get(tt) ?? []);
+      if (devamEkle(o.bolum, devam, sayfadaYer(o.t.kutu.y1, o.p) >= 0.75)) {
+        const v0 = siraDegeri.get(o.bolum), v1 = siraDegeri.get(devam);
+        if (v1) siraDegeri.set(o.bolum, { ilk: v0?.ilk ?? v1.ilk, son: v1.son });
+        onceki = { bolum: o.bolum, t: tt, p: g[0].p, i: gi };
+        continue;
+      }
     }
     onceki = null;
-    for (const [i, b] of g.entries()) {
+    const cikti: { bolum: HamBolum; yuva0: number; yuva1: number }[] = [];
+    for (let i = 0; i < g.length; i++) {
+      const b = g[i];
       /* yuva: komşu blokların arasının ortası; ilk / son çerçevenin ucu */
-      const yuva0 = i === 0 ? fx0 : (g[i - 1].kutu.x1 + b.kutu.x0) / 2, yuva1 = i === g.length - 1 ? fx1 : (b.kutu.x1 + g[i + 1].kutu.x0) / 2;
-      const n = bolumler.length + 1;
+      const yuva0 = i === 0 ? fx0 : (g[i - 1].kutu.x1 + b.kutu.x0) / 2;
+      const yuva = (k: number) => (k === g.length - 1 ? fx1 : (g[k].kutu.x1 + g[k + 1].kutu.x0) / 2);
+      const n = bolumler.length + cikti.length + 1;
       let bolum: HamBolum;
+      const sonraki = g[i + 1];
+      if (b.tur === "metin" && sonraki?.tur === "tablo" && etiketKutusu(b, sonraki)) {
+        /* tablo dışındaki "Etiket: [kutu]": iki hücreli tek satır — solda kenarsız etiket, sağda kutunun kaydı / alanı */
+        bolum = etiketliKutu(b, sonraki, belge);
+        cikti.push({ bolum, yuva0, yuva1: yuva(i + 1) });
+        i++;
+        continue;
+      }
       if (b.tur === "tablo") {
         const ilkYazi = b.t.bolgeler.find((x) => x.durum === "yazi" && !x.sira);
         bolum = tabloyaCevir(b.t, belge, (ilkYazi && ilkSatir(ilkYazi.metin)) || `Tablo ${n}`, secenekler.get(b.t) ?? []);
@@ -1066,16 +1269,26 @@ export function pdfIzgara(sayfalar: readonly PdfSayfasi[]): BasiliHam {
         if (b.tur === "resim") Object.assign(h, { tur: "gorsel", gorsel: "logo" });
         else {
           const metin = b.par.satirlar.map((s) => s.metin).join("\n"), s = sonucAyir(metin);
-          Object.assign(h, gorunum(b.par.satirlar, yuva0, yuva1, belgeBoy), { zemin: b.zemin }, s ? { tur: "sonuc", metin: s.onceki, secenekler: s.secenekler } : { metin });
+          Object.assign(h, gorunum(b.par.satirlar, yuva0, yuva(i), belgeBoy), { zemin: b.zemin }, s ? { tur: "sonuc", metin: s.onceki, secenekler: s.secenekler } : { metin });
           ad = ilkSatir(metin) || ad;
           if (!b.zemin) yukseklik = 0;
         }
         bolum = { ad, tur: "tablo", yan: false, oran: 100, sutunlar: [100], cevaplar: [], satirlar: [{ tekrar: false, yukseklik, hucreler: [h] }] };
       }
-      if (g.length > 1) Object.assign(bolum, { yan: i > 0, oran: Math.max(5, Math.min(100, Math.round(((yuva1 - yuva0) / fen) * 100))) });
-      bolumler.push(bolum);
+      cikti.push({ bolum, yuva0, yuva1: yuva(i) });
     }
+    if (cikti.length > 1) cikti.forEach((x, i) => Object.assign(x.bolum, { yan: i > 0, oran: Math.max(5, Math.min(100, Math.round(((x.yuva1 - x.yuva0) / fen) * 100))) }));
+    bolumler.push(...cikti.map((x) => x.bolum));
   }
+  /* sürekli numaralı liste ayrı tablolara bölündüyse (grup başlığı, sayfa başlığı, ara yazı): numarası öncekinin bir fazlasıyla başlayan bölüm ve
+     arasındakiler siraDevam — sayaç sıfırlanmaz (2026-10-24, ikinci denetim) */
+  let sonSira: number | null = null, sonIndeks = -1;
+  bolumler.forEach((b, i) => {
+    const v = siraDegeri.get(b);
+    if (!v) return;
+    if (sonSira !== null && v.ilk === sonSira + 1) for (let j = sonIndeks + 1; j <= i; j++) if (bolumler[j].tur === "tablo") bolumler[j].siraDevam = true;
+    sonSira = v.son; sonIndeks = i;
+  });
 
   /* başlık: en büyük boylu satır (gövde yazısından en az 1 pt büyükse; eşitse üstteki); aynı kapta hemen altındaki aynı boy satırlar da */
   const kaplar: YaziSatiri[][] = [...tablolar.flatMap((t) => t.bolgeler.map((b) => b.satirlar)), ...herkes.flatMap((b) => (b.tur === "metin" ? [b.par.satirlar] : []))];
@@ -1110,10 +1323,8 @@ export function pdfIzgara(sayfalar: readonly PdfSayfasi[]): BasiliHam {
   if (!formKodu) for (const s of altSatirlar) { const x = s.metin.trim(); if (KOD_ALT.test(x)) { formKodu = x; break; } }
 
   const aile = enSik(d.yazilar.map((y): [string, number] => [y.aile, y.s.length])) ?? "";
-  /* bitişik bantlar ortak çizgiyi bir kez çizer — aralarında boşluk olmamalı */
-  const bitisik = tablolar.some((t) => t.ustBitisik || t.solBitisik);
   return {
-    cevap: "", baslik, formKodu: formKodu.slice(0, 20), altYazi: altSatirlar.map((s) => s.metin).join(" · "),
-    yazi: { tip: yaziTipi(aile), boy: d.yazilar.length ? govdeBoy : 9, ...(bitisik ? { ara: 0 } : {}) }, bolumler: paragraflariBirlestir(bolumler, BOLUM_HEDEF),
+    cevap: "", baslik, formKodu: formKodu.slice(0, 20), altYazi: altSatirlar.map((s) => sayfaNosuz(s.metin)).filter(Boolean).join(" · "),
+    yazi: { tip: yaziTipi(aile), boy: d.yazilar.length ? govdeBoy : 9 }, bolumler: paragraflariBirlestir(bolumler, BOLUM_HEDEF),
   };
 }

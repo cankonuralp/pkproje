@@ -59,8 +59,8 @@ test("sonuç hücresi eklenmezse raporun sonucu seçilemez", async () => {
 });
 
 test("belgede yan yana dalı kalkınca yan yana tablolar alt alta çizilir", async () => {
-  const m = await bozuk<typeof import("../../src/belge/belge.ts")>("src/belge/belge.ts", "const bolumSatirlari = () => yerlesimSatirlari(duzen.bolumler).flatMap((s, j) => s.ogeler.length === 1",
-    "const bolumSatirlari = () => yerlesimSatirlari(duzen.bolumler.map((x) => ({ ...x, b: { ...x.b, yan: undefined } }))).flatMap((s, j) => s.ogeler.length === 1");
+  const m = await bozuk<typeof import("../../src/belge/belge.ts")>("src/belge/belge.ts", "const yerlesim = yerlesimSatirlari(duzen.bolumler);",
+    "const yerlesim = yerlesimSatirlari(duzen.bolumler.map((x) => ({ ...x, b: { ...x.b, yan: undefined } })));");
   const t = (await import("../../src/modules/rapor-format/basili.ts")).basilidanTanim(structuredClone(HAM), "Vinç")!.tanim;
   const h = renderToStaticMarkup(m.raporBelgesi({ ...ornekBelge("ZPKR02"), tanim: t }) as never);
   assert.doesNotMatch(h, /class="rb-yan"/, "bozuk: yan yana yok");
@@ -115,7 +115,7 @@ test("satır yüksekliği tam mm'ye yuvarlanırsa 4,5 mm'lik satır 5 mm olur", 
 test("eklenecek bölümlere yer bırakılmazsa 40 bölümlük okuma şablona çevrilemez", async () => {
   const ham = { bolumler: Array.from({ length: 40 }, (_, i) => paragraf(`P${i}`)) };
   assert.ok((await import("../../src/modules/rapor-format/basili.ts")).basilidanTanim(structuredClone(ham), "Vinç"), "sağlam: çevrildi");
-  const m = await ceviri("while (bolumler.length && bolumler.length + eksik() > BOLUM_EN_COK) atilan.push(bolumler.pop()!.ad);", "");
+  const m = await ceviri("while (bolumler.length && bolumler.length + eksik() > BOLUM_EN_COK) sondan.unshift(bolumler.pop()!.ad);", "");
   assert.equal(m.basilidanTanim(structuredClone(ham), "Vinç"), null, "bozuk: çevrilemedi");
 });
 

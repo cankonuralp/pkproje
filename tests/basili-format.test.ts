@@ -179,7 +179,8 @@ test("40 bölümlük okuma da şablona çevrilir: eklenecekler (sonuç, uzmanın
   const r = basilidanTanim({ bolumler: Array.from({ length: 40 }, (_, i) => paragraf(`Paragraf ${i + 1}`)) }, "Vinç");
   assert.ok(r, "çeviri null");
   assert.equal(r.tanim.bolumler.length, 40);
-  assert.deepEqual(r.atilan, ["Paragraf 40", "Paragraf 39", "Paragraf 38"]);
+  /* 2026-10-24 (ikinci denetim): atılanlar formun sırasıyla (önce sondan başa yazılıyordu) */
+  assert.deepEqual(r.atilan, ["Paragraf 38", "Paragraf 39", "Paragraf 40"]);
   assert.deepEqual(r.tanim.bolumler.slice(-3).map((b) => b.ad), ["Sonuç", "Muayene uzmanı", "Fotoğraflar"]);
 });
 

@@ -18,7 +18,7 @@ import { formulUygula } from "../src/format/formul.ts";
 import { sahaTanimi, siraNumaralari } from "../src/format/tablo.ts";
 import { Cevaplar, FormatTanimi, TABLO_KAYNAKLARI, type BolumOf } from "../src/format/tanim.ts";
 import { basilidanTanim } from "../src/modules/rapor-format/basili.ts";
-import { IMZA_ETIKETLERI, KAYIT_ETIKETLERI, katla, kayitKaynagi, pdfIzgara, yaziTipi } from "../src/modules/rapor-format/pdf-izgara.ts";
+import { formBos, IMZA_ETIKETLERI, KAYIT_ETIKETLERI, katla, kayitKaynagi, pdfIzgara, sayfaNotu, yaziTipi } from "../src/modules/rapor-format/pdf-izgara.ts";
 import type { BasiliHam, HamBolum, HamHucre, PdfCizgi, PdfDolgu, PdfSayfasi, PdfYazi } from "../src/modules/rapor-format/pdf-tipler.ts";
 
 /* ── uydurma sayfa kurucuları ── */
@@ -129,7 +129,8 @@ test("bloklar formun sırasıyla: tablo dışı başlık, tablolar, açıklama; 
   ]);
   assert.equal(h.baslik, "VINC PERIYODIK KONTROL FORMU");
   assert.equal(h.formKodu, "FR.099");
-  assert.equal(h.altYazi, "FR.099 Rev.00 01.01.2026 · Sayfa 1/1");
+  /* 2026-10-24 (ikinci denetim): sayfa numarası alt yazıya girmez — rapor her sayfasında kendi "Sayfa n / N"sini basar */
+  assert.equal(h.altYazi, "FR.099 Rev.00 01.01.2026");
   assert.deepEqual(h.yazi, { tip: "arimo", boy: 9 });
   assert.equal(h.cevap, "");
   for (const b of h.bolumler) assert.ok(kapsamaTam(b), `yerleşim tam değil: ${b.ad}`);
@@ -444,7 +445,9 @@ test("tek parça çizilmiş form bantlara bölünür: şeritler, yan yana yarıl
     ["UYDURMA KONTROL FORMU", false], ["1. FIRMA BILGILERI", false], ["HALAT", false], ["KANCA", true], ["KISI", false],
   ]);
   for (const b of h.bolumler) assert.ok(kapsamaTam(b), `yerleşim tam değil: ${b.ad}`);
-  assert.equal(h.yazi.ara, 0, "bitişik bantlar arasında boşluk yok");
+  /* 2026-10-24 (ikinci denetim): bitişiklik bölümde (genel aralık bütün bölümleri yapıştırıyordu) — bantlar ve sağ yarı bitişik, ilk bant değil */
+  assert.equal(h.yazi.ara, undefined);
+  assert.deepEqual(h.bolumler.map((b) => !!b.bitisik), [false, true, true, true, true]);
   const [baslik, firma, halat, kanca, imza] = h.bolumler;
   assert.deepEqual([baslik.sutunlar, baslik.satirlar.length], [[100], 1]);
   /* firma: sütunlar yalnız bandın kullandıkları; üst kenar üstteki bandın (0), alt kenar çizili */
@@ -459,7 +462,8 @@ test("tek parça çizilmiş form bantlara bölünür: şeritler, yan yana yarıl
   assert.deepEqual(ozetle(imza), [["yazi", "yazi", "yazi"], ["yazi", "k:uzman_ad", "k:teknik_ad"], ["yazi", "k:uzman_meslek", "k:teknik_meslek"], ["yazi", "imza:uzman", "imza:teknik"]]);
   const r = basilidanTanim(structuredClone(h), "Vinç");
   assert.ok(r && r.atilan.length === 0);
-  assert.equal(r.tanim.gorunum.yazi?.ara, 0);
+  assert.equal(r.tanim.gorunum.yazi?.ara, undefined);
+  assert.deepEqual(r.tanim.bolumler.filter((b) => b.blok === "tablo" && b.bitisik).map((b) => b.ad), ["1. FIRMA BILGILERI", "HALAT", "KANCA", "KISI"]);
   assert.deepEqual(r.tanim.bolumler.filter((b) => b.yan || b.oran).map((b) => [b.ad, !!b.yan, b.oran]), [["HALAT", false, 50], ["KANCA", true, 50]]);
 });
 
@@ -589,4 +593,144 @@ test("çok bölümlü form çeviriden geçer: 45 paragraf, dikey çizgisiz 25 sa
   const liste = pdfIzgara([sayfa({ ...yatay, yazilar: Array.from({ length: 25 }, (_, r) => [yazi(`Etiket ${r + 1}`, 63, 46 + r * 26), yazi(`Deger ${r + 1}`, 343, 46 + r * 26)]).flat() })]);
   const r2 = basilidanTanim(structuredClone(liste), "Vinç");
   assert.ok(r2 && r2.tanim.bolumler.length <= 40 && JSON.stringify(r2.tanim).includes("Deger 25"));
+});
+
+/* ── 2026-10-24 İKİNCİ DENETİM (uydurma PDF'lerle bulunan kusurlar; reisim: "düzelt") ── */
+const listeMaddeleri = (h: BasiliHam) => {
+  const r = basilidanTanim(structuredClone(h), "Vinç");
+  assert.ok(r, "çeviri null");
+  return { r, maddeler: sahaTanimi(r.tanim).bolumler.flatMap((b) => (b.blok === "liste" ? b.gruplar.flatMap((g) => g.maddeler.map((m) => m.metin)) : [])) };
+};
+/** çizilmiş kare (re + S): dört çizgi */
+const kare = (x: number, y: number, s: number): PdfCizgi[] => [
+  { x1: x, y1: y, x2: x + s, y2: y, kalinlik: 0.5 }, { x1: x, y1: y + s, x2: x + s, y2: y + s, kalinlik: 0.5 },
+  { x1: x, y1: y, x2: x, y2: y + s, kalinlik: 0.5 }, { x1: x + s, y1: y, x2: x + s, y2: y + s, kalinlik: 0.5 },
+];
+
+test("grup alt başlıklı kontrol listesi (kalın şerit, Sonuç sütunu): liste bölünmez, alt başlıktan sonraki maddelerin cevabı kaybolmaz", () => {
+  const xs = [40, 70, 400, 480], ys = [100, 116, 132, 148, 164, 180, 196, 212];
+  const serit = [1, 4].flatMap((r) => [`d:${r}:1`, `d:${r}:2`]);
+  const k = { kalin: true };
+  const h = pdfIzgara([sayfa({ ...izgara(xs, ys, { bos: serit }), dolgular: [zemin(40, 116, 440, 16), zemin(40, 164, 440, 16)], yazilar: [
+    sol("No", 40, 100, 116, k), sol("Kontrol maddesi", 70, 100, 116, k), sol("Sonuc", 400, 100, 116, k),
+    sol("A. MEKANIK AKSAM", 40, 116, 132, k), sol("1", 40, 132, 148), sol("Fren 1", 70, 132, 148), sol("2", 40, 148, 164), sol("Fren 2", 70, 148, 164),
+    sol("B. ELEKTRIK AKSAMI", 40, 164, 180, k), sol("3", 40, 180, 196), sol("Pano 3", 70, 180, 196), sol("4", 40, 196, 212), sol("Pano 4", 70, 196, 212),
+  ] })]);
+  assert.equal(h.bolumler.length, 1);
+  assert.deepEqual(listeMaddeleri(h).maddeler, ["Fren 1", "Fren 2", "Pano 3", "Pano 4"]);
+});
+
+test("madde satırındaki '… uygundur' maddedir; her satırda yazılı 'UYGUNDUR / UYGUN DEĞİLDİR' ve '☐ Uygun ☐ Uygun Değil' satırın cevabıdır", () => {
+  const xs = [40, 70, 380, 555], ys = [100, 116, 132, 148, 164];
+  const liste = (cevap: string) => pdfIzgara([sayfa({ ...izgara(xs, ys), yazilar: [
+    sol("No", 40, 100, 116), sol("Kontrol maddesi", 70, 100, 116), sol("Sonuc", 380, 100, 116),
+    ...[1, 2, 3].flatMap((r) => [sol(String(r), 40, ys[r], ys[r + 1]), sol(r === 2 ? "Kanca mandali mevcut ve uygundur" : `Madde ${r}`, 70, ys[r], ys[r + 1]),
+      ...(cevap ? [sol(cevap, 380, ys[r], ys[r + 1])] : [])]),
+  ] })]);
+  const a = listeMaddeleri(liste(""));
+  assert.deepEqual(a.maddeler, ["Madde 1", "Kanca mandali mevcut ve uygundur", "Madde 3"]);
+  assert.ok(a.r.tanim.bolumler.some((b) => b.ad === "Sonuç"), "raporun sonucu ayrıca eklenir");
+  const b = liste("UYGUNDUR / UYGUN DEĞİLDİR");
+  assert.deepEqual(b.bolumler[0].cevaplar, ["UYGUNDUR", "UYGUN DEĞİLDİR"]);
+  assert.equal(listeMaddeleri(b).maddeler.length, 3);
+  const c = liste("☐ Uygun ☐ Uygun Değil");
+  assert.deepEqual(c.bolumler[0].cevaplar, ["Uygun", "Uygun Değil"]);
+  assert.deepEqual(ozetle(c.bolumler[0]).slice(1).map((s) => s[2]), ["cevap", "cevap", "cevap"]);
+});
+
+test("hücre çizgisine yapışık küçük onay kutusu ızgaraya katılmaz (1,5 pt): U | UD | X sütunları bölünmez", () => {
+  const xs = [40, 70, 300, 330, 360, 390], ys = [100, 112, 124, 136, 148];
+  const kutular = [1, 2, 3].flatMap((r) => [300, 330, 360].flatMap((x) => kare(x + 10.5, ys[r] + 1.5, 9)));
+  const h = pdfIzgara([sayfa({ cizgiler: [...izgara(xs, ys).cizgiler, ...kutular], yazilar: [
+    sol("No", 40, 100, 112), sol("Madde", 70, 100, 112), orta("U", 300, 330, 100, 112), orta("UD", 330, 360, 100, 112), orta("X", 360, 390, 100, 112),
+    ...[1, 2, 3].flatMap((r) => [sol(String(r), 40, ys[r], ys[r + 1]), sol(`Madde ${r}`, 70, ys[r], ys[r + 1])]),
+  ] })]);
+  assert.equal(h.bolumler[0].sutunlar.length, 5);
+  assert.deepEqual(h.bolumler[0].cevaplar, ["U", "UD", "X"]);
+  assert.equal(listeMaddeleri(h).maddeler.length, 3);
+});
+
+test("ölçüm çizelgesi: ad 'satır · sütun', tür ve birim sütun başlığından; Excel'in ayrı kutuları tek değer hücresi; başlık satırındaki boş hücre alan olmaz", () => {
+  const xs = [40, 200, 320, 440, 555], ys = [100, 116, 132, 148];
+  const h = pdfIzgara([sayfa({ ...izgara(xs, ys), yazilar: [
+    sol("Olcum Noktasi", 40, 100, 116), sol("Kesit (mm2)", 200, 100, 116), sol("In (A)", 320, 100, 116), sol("Ra (ohm)", 440, 100, 116),
+    sol("Pano 1", 40, 116, 132), sol("Pano 2", 40, 132, 148),
+  ] })]);
+  const b = h.bolumler[0];
+  assert.deepEqual(ozetle(b)[1], ["yazi", "a:Pano 1 · Kesit", "a:Pano 1 · In", "a:Pano 1 · Ra"]);
+  assert.deepEqual([hucre(b, 1, 1).alan, hucre(b, 1, 1).birim, hucre(b, 2, 2).birim], ["sayi", "mm2", "A"]);
+  const ex = pdfIzgara([sayfa({ ...izgara([40, 150, 200, 250, 300, 350, 400], [300, 316]), yazilar: [sol("Firma Unvani", 40, 300, 316)] })]);
+  assert.deepEqual(ex.bolumler[0].satirlar[0].hucreler.map((x) => [x.tur, x.kaynak, x.sutunBirlesim]), [["yazi", "yok", 1], ["kayit", "firma", 5]]);
+  const k = { kalin: true };
+  const bs = pdfIzgara([sayfa({ ...izgara([40, 70, 100, 300, 420, 555], [100, 116, 132]), yazilar: [
+    sol("No", 40, 100, 116, k), sol("Olcum Noktasi", 100, 100, 116, k), sol("Kesit (mm2)", 300, 100, 116, k), sol("In (A)", 420, 100, 116, k),
+    sol("1", 40, 116, 132), sol("Priz 1", 100, 116, 132),
+  ] })]);
+  assert.equal(hucre(bs.bolumler[0], 0, 1).tur, "yazi");
+});
+
+test("Word'ün koyu ızgara stili: renkli zeminin üstündeki beyaz ince dolgu ayraç çizgidir", () => {
+  const xs = [40, 70, 400, 480], ys = [100, 116, 132, 148];
+  const beyaz = izgara(xs, ys, { dolgu: true }).dolgular.map((d) => ({ ...d, renk: "#FFFFFF" }));
+  const zeminler = ys.slice(0, -1).map((y, r) => ({ x: 40, y, g: 440, h: 16, renk: r === 0 ? "#1F4E79" : "#DDEBF7" }));
+  const yazilar = [
+    sol("No", 40, 100, 116), sol("Kontrol maddesi", 70, 100, 116), sol("Sonuc", 400, 100, 116),
+    sol("1", 40, 116, 132), sol("Madde 1", 70, 116, 132), sol("2", 40, 132, 148), sol("Madde 2", 70, 132, 148),
+  ];
+  const h = pdfIzgara([sayfa({ dolgular: [...zeminler, ...beyaz], yazilar })]);
+  assert.equal(h.bolumler.length, 1);
+  assert.deepEqual(listeMaddeleri(h).maddeler, ["Madde 1", "Madde 2"]);
+  /* beyaz sayfadaki beyaz ince dolgu çizgi değildir */
+  assert.ok(pdfIzgara([sayfa({ dolgular: beyaz, yazilar })]).bolumler.every((x) => x.sutunlar.length === 1));
+});
+
+test("sayfa kenarlığına değen başlık ayırma çizgisi kenarlığı tabloya çevirmez; tablo dışı 'Etiket: [kutu]' kayıt / alan olur", () => {
+  const kenarlik = izgara([20, 575], [20, 822]).cizgiler, ayirma: PdfCizgi = { x1: 20, y1: 80, x2: 575, y2: 80, kalinlik: 0.5 };
+  const h = pdfIzgara([sayfa({ cizgiler: [...kenarlik, ayirma, ...izgara([40, 70, 400, 480], [200, 216, 232, 248]).cizgiler,
+    ...izgara([200, 400], [120, 136]).cizgiler, ...izgara([200, 300], [150, 166]).cizgiler], yazilar: [
+    orta("PERIYODIK KONTROL RAPORU", 20, 575, 40, 70, { boy: 14 }),
+    yazi("Kontrol Tarihi:", 40, 123), yazi("Kapasite (kg):", 40, 153),
+    sol("No", 40, 200, 216), sol("Madde", 70, 200, 216), sol("Sonuc", 400, 200, 216), sol("1", 40, 216, 232), sol("Halat", 70, 216, 232),
+    sol("2", 40, 232, 248), sol("Kanca", 70, 232, 248),
+  ] })]);
+  const tarih = bolum(h, "Kontrol Tarihi"), kap = bolum(h, "Kapasite");
+  assert.deepEqual([hucre(tarih, 0, 1).tur, hucre(tarih, 0, 1).kaynak], ["kayit", "bas"]);
+  assert.deepEqual([hucre(kap, 0, 1).tur, hucre(kap, 0, 1).alan, hucre(kap, 0, 1).birim, hucre(kap, 0, 0).kenar], ["alan", "sayi", "kg", { u: 0, a: 0, s: 0, g: 0 }]);
+  assert.deepEqual(listeMaddeleri(h).maddeler, ["Halat", "Kanca"]);
+});
+
+test("başlık kutusunda 'Sayfa n / N' olan çok sayfalı form: başlık bir kez, liste tek; ara yazıyla bölünen sürekli liste numarası sürer (siraDevam)", () => {
+  const sf = (n: number, bas: number) => {
+    const ys = Array.from({ length: 11 }, (_, i) => 120 + i * 20);
+    return sayfa({ cizgiler: [...izgara([40, 400, 555], [40, 60]).cizgiler, ...izgara([40, 70, 480, 555], ys).cizgiler], yazilar: [
+      sol("FORKLIFT KONTROL LISTESI", 40, 40, 60, { kalin: true }), sol(`Sayfa No: ${n}/2`, 400, 40, 60),
+      sol("No", 40, 120, 140, { kalin: true }), sol("Kontrol Maddesi", 70, 120, 140, { kalin: true }), sol("Sonuc", 480, 120, 140, { kalin: true }),
+      ...Array.from({ length: 9 }, (_, i) => [sol(String(bas + i), 40, ys[i + 1], ys[i + 2]), sol(`Madde ${bas + i}`, 70, ys[i + 1], ys[i + 2])]).flat(),
+    ] });
+  };
+  const h = pdfIzgara([sf(1, 1), sf(2, 10)]);
+  assert.equal(h.bolumler.filter((b) => b.ad === "FORKLIFT KONTROL LISTESI").length, 1);
+  assert.equal(listeMaddeleri(h).maddeler.length, 18);
+  /* iki ayrı liste, arada yazı: 1–3 ve 4–6 */
+  const lst = (y0: number, bas: number) => {
+    const ys = [y0, y0 + 16, y0 + 32, y0 + 48, y0 + 64];
+    return { ...izgara([40, 70, 480, 555], ys), yazilar: [sol("No", 40, ys[0], ys[1]), sol("Madde", 70, ys[0], ys[1]), sol("Sonuc", 480, ys[0], ys[1]),
+      ...[0, 1, 2].flatMap((i) => [sol(String(bas + i), 40, ys[i + 1], ys[i + 2]), sol(`Madde ${bas + i}`, 70, ys[i + 1], ys[i + 2])])] };
+  };
+  const a = lst(100, 1), b = lst(220, 4);
+  const iki = pdfIzgara([sayfa({ cizgiler: [...a.cizgiler, ...b.cizgiler], yazilar: [...a.yazilar, yazi("B. ELEKTRIK KONTROLLERI", 40, 190, { kalin: true }), ...b.yazilar] })]);
+  const r = basilidanTanim(structuredClone(iki), "Vinç");
+  assert.ok(r);
+  assert.deepEqual([...siraNumaralari(r.tanim).values()], [1, 2, 3, 4, 5, 6]);
+});
+
+test("ilk sayfanın sayfa altındaki sayfa numarası alt yazıya girmez; yazısı ya da bölümü olmayan form boş sayılır; sayfa sınırı söylenir", () => {
+  const h = pdfIzgara([sayfa({ ...izgara([40, 555], [100, 120]), yazilar: [sol("Tablo", 40, 100, 120), yazi("FR-305 Rev.02  -  Sayfa 1/2", 40, 805, { boy: 8 })] })]);
+  assert.equal(h.altYazi, "FR-305 Rev.02");
+  const yalnizAlt = [sayfa({ yazilar: [yazi("Sayfa 1 / 1", 280, 810, { boy: 8 })] })];
+  assert.ok(formBos(yalnizAlt, pdfIzgara(yalnizAlt)), "yalnız sayfa altı yazısı: boş");
+  assert.ok(formBos([sayfa()], pdfIzgara([sayfa()])), "yazısız: boş");
+  assert.ok(!formBos([sayfa({ yazilar: [sol("Tablo", 40, 100, 120)] })], h));
+  assert.equal(sayfaNotu(20), "");
+  assert.equal(sayfaNotu(25), "Formun ilk 20 sayfası okundu; 21–25. sayfalar şablona alınmadı.");
 });
