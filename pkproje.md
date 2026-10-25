@@ -2527,7 +2527,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
-- 2026-10-25 (YAPILDI — dalda, CI'da): **CI HIZLANDIRMA (1. adım)** — reisim: *"CI bekliyoruz sürekli … önerilerini kabul ediyorum"*. ci.yml push tetiğine
+- 2026-10-25 (YAYINDA — main 81545775; CI 15/15 yeşil, canlı sağlık tamam): **CI HIZLANDIRMA (1. adım)** — reisim: *"CI bekliyoruz sürekli … önerilerini kabul ediyorum"*. ci.yml push tetiğine
   paths-ignore: ANAYASA.md, pkproje.md, CLAUDE.md, TASARIM-KALIBI.md — yalnız bunlar değişen push'ta 15 iş koşmaz (hiçbir test bunları okumaz; tests/
   KOD-GECIS.md'yi okur, o ve docs/ listede YOK). Yapılmadı: derlemeyi bir kez yapıp 12 işe paylaşmak (derleme çıktısı büyük, indirme süresi ölçülmeden
   kazanç belirsiz; ayrı kalem, önce ölçüm). Not: gh bu makinede yok — CI durumu GitHub API'sinden (PowerShell Invoke-RestMethod, check-runs) okunur.
