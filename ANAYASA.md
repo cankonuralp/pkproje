@@ -1,6 +1,6 @@
 ---
 name: calisma-anayasasi
-description: "⛔⛔ ÇALIŞMA ANAYASASI — bugüne kadar öğrenilen TÜM disiplinlerin tek listesi (15 bölüm; 2026-10-25: 0.14 işin sırası + model önerisi, 0.15 token tasarrufu, 14 kod yazma disiplini). Her işin BAŞINDA oku, iş tipini bul, o bölümü uygula. Ayrıntı için bağlantılı dosyalara git."
+description: "⛔⛔ ÇALIŞMA ANAYASASI — bugüne kadar öğrenilen TÜM disiplinlerin tek listesi (15 bölüm; 2026-10-25: 0.14 işin sırası + model önerisi, 0.15 token tasarrufu, 0.16 projeye ve ortama hakimiyet, 14 kod yazma disiplini). Her işin BAŞINDA oku, iş tipini bul, o bölümü uygula. Ayrıntı için bağlantılı dosyalara git."
 metadata:
   node_type: memory
   type: feedback
@@ -134,6 +134,15 @@ uygula. Her madde ZOR KAZANILDI — hepsinin arkasında canlıda yaşanmış bir
     (d) komut çıktısı kırpılır (tail / grep / sayım), tam test döküntüsü bağlama alınmaz;
     (e) CI beklenirken yoklama yok — tek arka plan bekleyişi; ekran görüntüsü yalnız gözle doğrulama gerekiyorsa;
     (f) reisim'e yazılan metin kısa ve düz (12); aynı bilgi iki kez anlatılmaz.
+
+16. ⛔⛔ **PROJEYE VE ORTAMA HAKİM OL — DENEME YANILMA YOK** (reisim 2026-10-25: *"koda ve yazılıma hakim olman gerekirdi … projeye hakim
+    olmak zorundasın"*; olay: Windows makinesinde var olmayan Python'u denedim, sonra Node'a döndüm — CLAUDE.md'de ortam yazılıydı).
+    (a) Araç seçmeden önce CLAUDE.md §2 ve §4–5 ile çalıştığın ortam bilinir: işletim sistemi Windows (PowerShell / Git Bash), betik dili
+    **Node 24 + TypeScript** (`node --test`, `scripts/*.ts`), Python / Docker / yerel PostgreSQL / localhost YOK; toplu dosya değişikliği
+    Node betiğiyle ya da Edit ile yapılır, başka araç "belki vardır" diye denenmez;
+    (b) bir kod parçasına dokunmadan önce o modülün yeri CLAUDE.md §3 haritasından, mevcut üretici / yardımcı / test deseni dosyadan
+    öğrenilir (grep + ilgili aralık); tahminle yazılmaz, aynı işi yapan ikinci yardımcı açılmaz;
+    (c) bilmediğim bir şey çıkarsa deneme yerine önce bu dosyalara bakılır; yine de yoksa reisim'e açıkça "bilmiyorum" denir.
 
 ## 1 · SORULUR / SORULMAZ
 - ⛔ **SORMA** (mevcut düzene uy): mimari desen, kök adı, dal düzeni, adlandırma, 4 ayna,

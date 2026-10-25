@@ -2527,6 +2527,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-25 (YAPILDI — dalda, CI'da; 060a51a6): **MODEL ADI HİÇBİR YERDE GÖRÜNMESİN (İŞ 1)** — reisim: *"Claude Haiku 5.5 ve hiçbir model adı ekranda, e-postada,
+  PDF'te yazmasın"*. S.A.Y başlığının alt satırı kalktı; Firma ayarları yapay zekâ panelinde "Model" yerine "Ücret" (yalnız fiyat; YZ_MODEL → YZ_FIYAT),
+  özet satırında ad yok; S.A.Y sistem istemi model adı yerine "model adını söyleme" der (kod içi model kimliği kalır). Kilit tests/arayuz-model-adi.test.ts
+  (src, yorum dışı kodda Haiku / Sonnet / Opus / Claude yok) + bozan; e2e say / firma-ayarlari adın görünmediğini yoklar. Anayasaya 0.16 "Projeye ve
+  ortama hakim ol" eklendi (reisim: Windows'ta olmayan Python'u denemem üzerine). Anthropic sağlayıcı adı kaldı (model adı değil; anahtar etiketi, yurt dışı
+  uyarısı) — İŞ 2'de Firma ayarlarından zaten kalkıyor. Ekran gözle ölçülemedi (giriş isteyen ekran).
 - 2026-10-25 (YAYINDA — main 290b1ab6; CI 13 + 2 atlanan yeşil, göç 0105 Supabase'de (106 göç)): **BELGE DOLDURMA + SÖZLEŞME + ÖN BİLGİLENDİRME
   E-POSTASI** — reisim: *"Sözleşmeyi belge formatlarına bağla ve ön bilgilendirme formunu plan açılınca müşteriye e-postayla gönder"*, *"sözleşme vb
   işleri de yüklediğimde, el ile değiştirilebilir ve doldurulabilir olmalı, bir müşteri için sözleşme açtığımda el ile girilmesi gereken yerleri
