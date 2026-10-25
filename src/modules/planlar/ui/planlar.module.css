@@ -64,7 +64,7 @@
 .beyanBaslik { margin: 0 0 4px; font-weight: 700; }
 .ayrinti summary { display: inline-flex; align-items: center; min-height: var(--tus-y); cursor: pointer; color: var(--onay-yazi); font-size: var(--boy-kucuk); font-weight: 600; }
 .ayrinti[open] summary { margin-bottom: 4px; }
-.kunyeBas { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+.kunyeBas { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
 .satirlar { margin: 0; background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-orta); }
 .satirlar > div { display: grid; grid-template-columns: minmax(0, 16rem) minmax(0, 1fr); gap: 12px; padding: 9px 12px; }
 .satirlar > div + div { border-top: 1px solid var(--kenar); }
