@@ -86,9 +86,9 @@ jobs:
   # uzun ve en ağır test) her genişlikte KENDİ işinde; parçalar onu dışarıda bırakır (PROBATA_E2E_TARAMA=haric, playwright.config.ts). On iki iş
   # aynı anda. Sunucu dakikada bir "[bellek]" satırı yazar (scripts/e2e-sunucu.ts) — derlenen sayfaları bellekte tutmak ölçüldü: 13 GB, makine
   # (16 GB) kapanıyordu; kullanılmaz (next.config.ts notu).
-  # 2026-10-25 (reisim: "CI bekliyoruz sürekli"): DÖRT PARÇA — ölçüldü (4 koşu): parça işi 2,9–6,3 dk (derleme 86 sn + test en çok 243 sn); on beş iş
-  # aynı anda. Derleme işler arasında PAYLAŞILMAZ: her iş kendi derlemesini paralel yapar; paylaşım işleri bir derleme işinin bitmesini beklemeye zorlar,
-  # kritik yolu uzatır.
+  # 2026-10-25 (reisim: "CI bekliyoruz sürekli"): dört parça denendi (c3881d41, koşu 5,6 dk) — e2e/say.spec.ts'te sohbet geçmişine ve rapor durumuna
+  # dayanan testler başka parçaya düşünce üç genişlikte de 4. parça düştü; testler bağımsız olana kadar ÜÇ PARÇA. Derleme işler arasında PAYLAŞILMAZ:
+  # her iş kendi derlemesini paralel yapar; paylaşım işleri bir derleme işinin bitmesini beklemeye zorlar, kritik yolu uzatır.
   uctan_uca:
     name: Uçtan uca (${{ matrix.proje }} ${{ matrix.parca }})
     if: github.ref != 'refs/heads/main'
@@ -100,7 +100,7 @@ jobs:
       fail-fast: false
       matrix:
         proje: [masaustu, tablet, telefon]
-        parca: [1, 2, 3, 4, tarama]
+        parca: [1, 2, 3, tarama]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -133,7 +133,7 @@ jobs:
         env:
           PROBATA_E2E_TARAMA: ${{ matrix.parca == 'tarama' && 'yalniz' || 'haric' }}
           PROBATA_E2E_YAYIN: "1"
-        run: npm run test:e2e -- --project=${{ matrix.proje }} ${{ matrix.parca != 'tarama' && format('--shard={0}/4', matrix.parca) || '' }}
+        run: npm run test:e2e -- --project=${{ matrix.proje }} ${{ matrix.parca != 'tarama' && format('--shard={0}/3', matrix.parca) || '' }}
       - if: ${{ !cancelled() && steps.e2e.outcome == 'failure' }}
         uses: actions/upload-artifact@v7
         # 411: görsel karşılaştırmanın o koşuda yazdığı (eksik ya da farklı) görüntüler de — yeni kayıt buradan alınır, gözden geçirilip commit'e girer

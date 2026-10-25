@@ -156,7 +156,7 @@ test("test kapısı: derleme betiği testsiz kalınca, yayın denetimden kopunca
   /* 2026-10-25: Denetim üç işte — olumsuz kanıt işi matristen düşerse yakalanır */
   assert.deepEqual(testKapisiEksikleri(paket, ci.replace("is: [tip, test, negatif]", "is: [tip, test]")), ["CI'da npm run test:negatif yok"]);
   /* 468: site taraması parçalardan çıkarılıp kendi işi kalkınca yakalanır */
-  assert.deepEqual(testKapisiEksikleri(paket, ci.replace("parca: [1, 2, 3, 4, tarama]", "parca: [1, 2, 3, 4]")), ["CI'da site taraması parçalardan çıkarılmış ama kendi işi yok"]);
+  assert.deepEqual(testKapisiEksikleri(paket, ci.replace("parca: [1, 2, 3, tarama]", "parca: [1, 2, 3]")), ["CI'da site taraması parçalardan çıkarılmış ama kendi işi yok"]);
 });
 
 test("pdf paketi: Chromium eklenen bir sayfadan maxDuration kalkınca yakalanır (Chromium bütün sayfalara düşerdi)", () => {
