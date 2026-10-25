@@ -11,7 +11,7 @@ import { yonetimAdresinde, yonetimIslemi, yonetimIstekOturumu } from "../../../s
 import { yonetimEtiketi } from "../sema";
 import { epostaOrtami, kurulumOrtami, yonetimCalistirici } from "../server/calistirici";
 import { gonderimAlaniEkle, gonderimDogrula, type EpostaOrtami, type GonderimGorunumu } from "../server/eposta";
-import { firmaDurumuYonet, geciciParolaYonet, yzAnahtariYonet } from "../server/firma-tarafi";
+import { firmaDurumuYonet, geciciParolaYonet, yzAnahtariYonet, yzAyarYonet } from "../server/firma-tarafi";
 import { kurulumBaslat, kurulumBastan, kurulumGorunumu, kurulumIlerlet, kurulumSurdur, type KurulumGorunumu } from "../server/kurulum";
 import { firmaAc, type YonetimSonucu } from "../server/yonetim";
 
@@ -101,6 +101,11 @@ export async function yzAnahtariKaydetEylemi(id: string, form: FormData): Promis
 
 export async function yzAnahtariKaldirEylemi(id: string): Promise<YonetimYaniti> {
   return yenileyerek(await islem((o) => yzAnahtariYonet(yonetimCalistirici(o), yazi(id), null, anaAnahtar())));
+}
+
+/** 2026-10-25 (göç 0106): yapay zekâ aç / kapa ve kişi başı aylık sınır — girdi { acik, sinir } (sinir metin; boş = sınırsız) */
+export async function yzAyarKaydetEylemi(id: string, girdi: { acik: unknown; sinir: unknown }): Promise<YonetimYaniti> {
+  return yenileyerek(await islem((o) => yzAyarYonet(yonetimCalistirici(o), yazi(id), { acik: girdi?.acik, sinir: girdi?.sinir })));
 }
 
 /* FV11 (K2): firmanın e-posta gönderimi — alan adı ekle / değiştir (form: alan, yerel) ve "Doğrula" (Resend'e denetletir; doğrulanınca gönderme anahtarı

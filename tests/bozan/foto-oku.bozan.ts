@@ -15,8 +15,6 @@ import { planKabul, planIci } from "../../src/modules/planlar/server/plan-ici.ts
 import { bugunTr, planAc, type Kisi } from "../../src/modules/planlar/server/planlar.ts";
 import { taslakBaslat, yayinla } from "../../src/modules/rapor-format/server/formatlar.ts";
 import { raporOlustur } from "../../src/modules/raporlar/server/raporlar.ts";
-import { ayarOku, ayarYaz } from "../../src/server/ayar/ayar.ts";
-import { sirYaz } from "../../src/server/ayar/sir.ts";
 import { GOC_KLASORU } from "../../src/server/db/goc.ts";
 import type { GomuluKume } from "../../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde, type Havuz } from "../../src/server/db/kiraci.ts";
@@ -24,6 +22,7 @@ import { klasorDepo } from "../../src/server/dosya/depo.ts";
 import { yzAyi } from "../../src/server/yz/kullanim.ts";
 import { enCokMaliyet } from "../../src/server/yz/okuma.ts";
 import { testKumesi } from "../yardimci/kume.ts";
+import { yzKur } from "../yardimci/yz-kur.ts";
 import { supabaseBenzeri } from "../yardimci/supabase.ts";
 
 type Modul = typeof import("../../src/modules/raporlar/server/foto-oku.ts");
@@ -73,11 +72,8 @@ before(async () => {
   const v = (await kiraciIcinde(havuz, A, (db) => planIci(db, den1, plan), { hesapId: den1.id }))!;
   tamam(await kiraciIcinde(havuz, A, (db) => planKabul(db, den1, plan, v.surum, true), { hesapId: den1.id }));
   rapor = tamam(await kiraciIcinde(havuz, A, (db) => raporOlustur(db, den1, plan, f.ekp), { hesapId: den1.id })).id;
-  await kiraciIcinde(havuz, A, async (db) => {
-    const m = await ayarOku(db, "yapay_zeka");
-    tamam(await ayarYaz(db, "yapay_zeka", m.surum, { ...m.deger, acik: true, sinir: 1 }, { kim: "Deneme", ne: "ayar.yapay_zeka" }));
-    await sirYaz(db, "yapay_zeka_anahtari", "sk-ant-deneme-anahtar-0123456789", { kim: "Deneme" });
-  }, { hesapId: yon.id });
+  /* 2026-10-25 (göç 0106): yapay zekâyı firma yazamaz — kurulum sahip bağlantısıyla */
+  await yzKur(kume, A, { acik: true, sinir: 1, anahtar: "sk-ant-deneme-anahtar-0123456789" });
 });
 after(async () => { await havuz?.end(); await kume?.durdur(); rmSync(gecici, { recursive: true, force: true }); });
 

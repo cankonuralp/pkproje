@@ -181,7 +181,7 @@ test("yönetim: kendi Supabase projesi — Firma aç → kurulum adım adım →
   await expect(page.getByText("Etkin", { exact: true })).toBeVisible();
   await expect(page.getByText("Firmanın kendi Supabase projesi (Frankfurt)")).toBeVisible();
   await expect(page.getByText(F.eposta, { exact: false }).first()).toBeVisible();
-  await expect(page.getByRole("region", { name: "Yapay zekâ anahtarı" }).getByText("…wxyz")).toBeVisible();
+  await expect(page.getByRole("region", { name: "Yapay zekâ" }).getByText("…wxyz").first()).toBeVisible();
   await page.getByRole("button", { name: "Yöneticiye yeni geçici parola" }).click();
   await page.locator("dialog[open]").getByRole("button", { name: "Oluştur" }).click();
   await expect(page.locator("#yf-parola")).toBeVisible({ timeout: 30_000 });
@@ -237,7 +237,9 @@ test("yönetim: e-posta gönderimi — alan adı ekle, DNS kayıtları, Doğrula
   await expect(ep.getByText("Doğrulandı", { exact: true })).toBeVisible();
 });
 
-test("yönetim: kendi veritabanlı firma — özet firmanın veritabanından; yapay zekâ anahtarı kaydet / kaldır (FV9, K4)", async ({ page }, bilgi) => {
+/* 2026-10-25 (göç 0106; reisim: "Yapay zekâ ayarları … yalnız Yönetim panelinden yönetilsin"): "Yapay zekâ" bölümü — Kapalı / Açık + kişi başı sınır
+   (başlangıç kapalı, 5 $; sayı olmayan sınır alanın altında reddedilir) ve anahtar; ücret yazar, model adı yazmaz */
+test("yönetim: kendi veritabanlı firma — özet firmanın veritabanından; yapay zekâ aç / sınır, anahtar kaydet / kaldır (FV9, K4, 0106)", async ({ page }, bilgi) => {
   test.setTimeout(120_000);
   await parolaAdimi(page, E2E_YONETIM.proje(bilgi.project.name).etkin, E2E_PAROLA);
   await expect(page).toHaveURL(/\/yonetim$/);
@@ -246,20 +248,32 @@ test("yönetim: kendi veritabanlı firma — özet firmanın veritabanından; ya
   await expect(page.getByRole("heading", { level: 1, name: E2E_KENDI.firma.ad })).toBeVisible();
   /* yönetici merkezde değil, firmanın veritabanında — sayfada görünüyorsa özet oradan geldi */
   await expect(page.getByText(E2E_KENDI.yonetici.eposta, { exact: false })).toBeVisible();
-  const yz = page.getByRole("region", { name: "Yapay zekâ anahtarı" });   // Bolum: kimlik başlıkta, bölge başlıkla adlanır
-  await expect(yz.getByText("Tanımlı değil")).toBeVisible();
-  await yz.getByLabel("Anthropic API anahtarı").fill("anahtar-degil");
+  const yz = page.getByRole("region", { name: "Yapay zekâ" });   // Bolum: kimlik başlıkta, bölge başlıkla adlanır
+  await expect(yz.getByRole("radio", { name: "Kapalı" })).toHaveAttribute("aria-checked", "true");
+  await expect(yz.getByLabel("Kişi başı aylık sınır ($)")).toHaveValue("5");
+  await expect(yz.getByText(/^1 milyon token: giriş $0,10, çıkış $0,50/)).toBeVisible();
+  await expect(yz.getByText(/Haiku|Sonnet|Opus|Claude/)).toHaveCount(0);
+  await yz.getByRole("radio", { name: "Açık" }).click();
+  await yz.getByLabel("Kişi başı aylık sınır ($)").fill("abc");
+  await yz.getByRole("button", { name: "Kaydet", exact: true }).click();
+  await expect(yz.getByText("Sayı yazılmalı", { exact: false })).toBeVisible({ timeout: 30_000 });
+  await yz.getByLabel("Kişi başı aylık sınır ($)").fill("7,5");
+  await yz.getByRole("button", { name: "Kaydet", exact: true }).click();
+  await expect(page.getByText("Yapay zekâ ayarları kaydedildi (açık).").first()).toBeVisible({ timeout: 30_000 });
+  await expect(yz.getByText("Anahtar girilmedi", { exact: false })).toBeVisible();
+  await yz.getByLabel("Anahtar", { exact: true }).fill("anahtar-degil");
   await yz.getByRole("button", { name: "Anahtarı kaydet" }).click();
   await expect(yz.getByText("Geçerli bir Anthropic API anahtarı değil", { exact: false })).toBeVisible({ timeout: 30_000 });
-  await yz.getByLabel("Anthropic API anahtarı").fill("sk-ant-uydurmaAnahtarDegil0123456789wxyz");
+  await yz.getByLabel("Anahtar", { exact: true }).fill("sk-ant-uydurmaAnahtarDegil0123456789wxyz");
   await yz.getByRole("button", { name: "Anahtarı kaydet" }).click();
   await expect(page.getByText("Yapay zekâ anahtarı kaydedildi (…wxyz).").first()).toBeVisible({ timeout: 30_000 });
-  /* "Tanımlı" ve son 4 aynı bilgi kutusunda (yazı "Tanımlı…wxyz") — son 4 görünür, "Tanımlı değil" yok */
-  await expect(yz.getByText("…wxyz")).toBeVisible();
-  await expect(yz.getByText("Tanımlı değil")).toHaveCount(0);
+  await expect(yz.getByText("…wxyz").first()).toBeVisible();
   await expect(yz.getByLabel("Yeni anahtar")).toHaveValue("");
   await yz.getByRole("button", { name: "Kaldır" }).click();
   await page.locator("dialog[open]").getByRole("button", { name: "Kaldır" }).click();
   await expect(page.getByText("Yapay zekâ anahtarı kaldırıldı.").first()).toBeVisible({ timeout: 30_000 });
-  await expect(yz.getByText("Tanımlı değil")).toBeVisible();
+  await expect(yz.getByLabel("Anahtar", { exact: true })).toBeVisible();
+  await yz.getByRole("radio", { name: "Kapalı" }).click();
+  await yz.getByRole("button", { name: "Kaydet", exact: true }).click();
+  await expect(page.getByText("Yapay zekâ kapatıldı", { exact: false }).first()).toBeVisible({ timeout: 30_000 });
 });

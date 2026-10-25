@@ -1,11 +1,9 @@
 "use client";
 /* YÖNETİM › FİRMA (348; maket yonetim.html firmaCiz): kimlik + durum rozeti + adres; "Yöneticiye yeni geçici parola" (önce sorulur; dondurulmuşta
    kapalı) ve Dondur (önce sorulur; veri silinmez) / Etkinleştir. Yeni geçici parola YALNIZ bu ekranda bir kez gösterilir. Karar sunucuda.
-   FV9 (2026-10-16, K4): "Yapay zekâ anahtarı" — tanımlı mı (son 4), bu ayın kullanımı; değiştir (anahtar yalnız gönderilir, bir daha gösterilmez) /
-   kaldır (önce sorulur). Kullanıcı ve yönetici bilgisi özetten (kendi projeli firmada firmanın veritabanından); özet okunamazsa söylenir. */
+   FV9 (2026-10-16, K4) → 2026-10-25 (göç 0106): "Yapay zekâ" bölümü — aç / kapa, sınır, anahtar, kullanım (YapayZekaBolumu). Kullanıcı ve yönetici bilgisi özetten (kendi projeli firmada firmanın veritabanından); özet okunamazsa söylenir. */
 import { useState, useTransition } from "react";
 import { Bilgi, BilgiListesi } from "../../../components/bilgi/Bilgi";
-import { Alan, Girdi } from "../../../components/form/Form";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { BosDurum } from "../../../components/bos/BosDurum";
 import { useKopyala } from "../../../components/pencere/Kopyala";
@@ -19,18 +17,16 @@ import type { KurulumGorunumu } from "../server/kurulum";
 import { GonderimBolumu } from "./GonderimBolumu";
 import { KurulumPaneli } from "./KurulumPaneli";
 import type { FirmaSatiri } from "../server/yonetim";
-import { firmaDondurEylemi, firmaEtkinlestirEylemi, geciciParolaVerEylemi, yzAnahtariKaldirEylemi, yzAnahtariKaydetEylemi } from "./eylemler";
+import { firmaDondurEylemi, firmaEtkinlestirEylemi, geciciParolaVerEylemi } from "./eylemler";
 import { DEPO_AD, DEPO_NOT, DurumRozeti, firmaAdresi, tarihYaz, type DepoTuru } from "./ortak";
 import { SonrasiAdimlar } from "./SonrasiAdimlar";
+import { YapayZekaBolumu } from "./YapayZekaBolumu";
 import stil from "./yonetim.module.css";
 
 const YON_DURUM = { ilk: "geçici parolayla ilk giriş bekleniyor", etkin: "etkin", pasif: "hesap kapalı" } as const;
 
-/** yapay zekâ anahtarı alanının kimliği (etiket + girdi) */
-const YZ_ALAN = "y-yz-anahtar";
 /** firma bilgileri bölümü (kurulum sürerken de, bitince de aynı kimlik — ikisi aynı anda çizilmez) */
 const BILGI = "y-b-bilgi";
-const dolar = (m: number) => `$${(m / 1e6).toFixed(2).replace(".", ",")}`;
 
 export function FirmaSayfasi({ firma: f, ozet, kurulum = null, gonderim = null, epostaAcik = false, anaAlan, depo }: {
   firma: FirmaSatiri | null; ozet: FirmaOzeti | null; kurulum?: KurulumGorunumu | null; gonderim?: GonderimGorunumu | null; epostaAcik?: boolean;
@@ -40,8 +36,6 @@ export function FirmaSayfasi({ firma: f, ozet, kurulum = null, gonderim = null, 
   const bildir = useBildir();
   const [bekliyor, baslat] = useTransition();
   const [hata, setHata] = useState<string | null>(null);
-  const [anahtar, setAnahtar] = useState("");
-  const [anahtarHata, setAnahtarHata] = useState<string | null>(null);
   const [parola, setParola] = useState<{ deger: string; eposta: string } | null>(null);
   const kopya = useKopyala(parola?.deger ?? null, "yf-parola");
 
@@ -101,23 +95,6 @@ export function FirmaSayfasi({ firma: f, ozet, kurulum = null, gonderim = null, 
     if (!r.tamam) { setHata(r.genel ?? "Firma etkinleştirilemedi."); return; }
     setHata(null); bildir(`Firma etkinleştirildi: ${adres}`);
   });
-  const yz = ozet?.yz ?? null;
-  const anahtarKaydet = () => baslat(async () => {
-    const form = new FormData();
-    form.set("anahtar", anahtar);
-    const r = await yzAnahtariKaydetEylemi(f.id, form);
-    if (!r.tamam) { setAnahtarHata(r.hatalar?.anahtar ?? null); setHata(r.hatalar?.anahtar ? null : (r.genel ?? "Anahtar kaydedilemedi.")); return; }
-    setAnahtar(""); setAnahtarHata(null); setHata(null); bildir(`Yapay zekâ anahtarı kaydedildi (…${r.son4 ?? ""}).`);
-  });
-  const anahtarKaldir = async () => {
-    if (!(await onayla({ baslik: "Yapay zekâ anahtarı kaldırılsın mı?", metin: `${f.ad} firmasında fotoğraftan okuma ve S.A.Y çalışmaz; firma ya da siz yeni anahtar girene dek.`, tus: "Kaldır", tehlike: true }))) return;
-    baslat(async () => {
-      const r = await yzAnahtariKaldirEylemi(f.id);
-      if (!r.tamam) { setHata(r.genel ?? "Anahtar kaldırılamadı."); return; }
-      setHata(null); bildir("Yapay zekâ anahtarı kaldırıldı.");
-    });
-  };
-
   return (
     <>
       <Kirinti ogeler={[["Firmalar", "/yonetim"], [f.ad]]} />
@@ -155,29 +132,7 @@ export function FirmaSayfasi({ firma: f, ozet, kurulum = null, gonderim = null, 
           <Bilgi etiket="Veritabanı" genis="cift">{f.vt === "kendi" ? "Firmanın kendi Supabase projesi (Frankfurt)" : DEPO_AD[depo]}<AltSatir>{DEPO_NOT}</AltSatir></Bilgi>
         </BilgiListesi>
       </Bolum>
-      <Bolum id="y-b-yz" baslik="Yapay zekâ anahtarı">
-        {!ozet && <SeritKap><Serit tur="uyari" ikon="triangle-alert">Firmanın veritabanına ulaşılamadı; anahtar durumu ve kullanım okunamadı.</Serit></SeritKap>}
-        {yz && (
-          <BilgiListesi>
-            <Bilgi etiket="Anahtar">{yz.tanimli ? <>Tanımlı<AltSatir>…{yz.son4}</AltSatir></> : "Tanımlı değil"}</Bilgi>
-            <Bilgi etiket={`Bu ay (${yz.ay})`}>{`${yz.okuma} okuma · ${yz.mesaj} mesaj`}<AltSatir>{dolar(yz.maliyet)}</AltSatir></Bilgi>
-          </BilgiListesi>
-        )}
-        {ozet && (
-          <>
-            <Alan id={YZ_ALAN} etiket={yz?.tanimli ? "Yeni anahtar" : "Anthropic API anahtarı"} hata={anahtarHata}>
-              <Girdi id={YZ_ALAN} type="password" value={anahtar} hata={!!anahtarHata} mesajli={!!anahtarHata} placeholder="sk-ant-…"
-                onChange={(e) => { setAnahtar(e.target.value); setAnahtarHata(null); }} />
-            </Alan>
-            <div className={stil.eylemSol}>
-              <Tus ikon="key-round" disabled={bekliyor || !anahtar.trim()} onClick={anahtarKaydet}>{yz?.tanimli ? "Anahtarı değiştir" : "Anahtarı kaydet"}</Tus>
-              {yz?.tanimli && <Tus tur="ikincil" ikon="trash-2" disabled={bekliyor} onClick={() => void anahtarKaldir()}>Kaldır</Tus>}
-            </div>
-            <p className={stil.etiketUst}>Anahtar şifreli saklanır, bir daha gösterilmez — yalnız son 4 hanesi. Firma da Firma ayarlarından değiştirebilir;
-              iki tarafın değişikliği de firmanın denetim izinde.</p>
-          </>
-        )}
-      </Bolum>
+      <YapayZekaBolumu id={f.id} firmaAd={f.ad} yz={ozet?.yz ?? null} />
       <GonderimBolumu id={f.id} g={gonderim} acik={epostaAcik} />
       <SonrasiAdimlar />
     </>

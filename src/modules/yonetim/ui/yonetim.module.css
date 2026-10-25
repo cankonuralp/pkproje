@@ -10,6 +10,7 @@
 .sayi { font-variant-numeric: tabular-nums; font-weight: 600; }
 .sayacEk { color: var(--yazi2); font-size: var(--boy-kucuk); }
 .etiketUst { margin: 16px 0 6px; font-size: var(--boy-kucuk); font-weight: 600; }
+.not { margin: 6px 0 0; color: var(--yazi2); font-size: var(--boy-kucuk); }   /* 2026-10-25: yapay zekâ bölümünün kısa değer satırları */
 .geciciParola {
   margin: 0 0 12px; padding: 12px 14px; border: 1px dashed var(--kenar-alan); border-radius: var(--r-orta); background: var(--zemin2);
   font-size: var(--boy-baslik); letter-spacing: .06em; overflow-wrap: anywhere;

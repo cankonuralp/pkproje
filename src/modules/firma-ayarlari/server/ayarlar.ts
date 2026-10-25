@@ -16,8 +16,7 @@ import { turOzetleri } from "../../ekipman-turleri/server/turler.ts";
 import { egitimTurAdlari } from "../../egitimler/server/ayar-baglanti.ts";
 import { ozlukTurKullanimi } from "../../personel/server/dosyalar.ts";
 import { tutar } from "../../../sema/ortak.ts";
-import { sirDurumu, sirYaz } from "../../../server/ayar/sir.ts";
-import { yzAyi, yzAyKullanimi, type YzKisiKullanimi } from "../../../server/yz/kullanim.ts";
+import { sirDurumu } from "../../../server/ayar/sir.ts";
 import { epostaKuyruga } from "../../../server/eposta/eposta.ts";
 import { firmaGonderimi, gonderimKaydi } from "../../../server/eposta/firma.ts";
 import { bekleyenleriGonder } from "../../../server/eposta/gonder.ts";
@@ -25,7 +24,7 @@ import { gonderenYolu, type GonderenYolu } from "../../../server/eposta/kimden.t
 import { gonderenListesi, hesapGonderen } from "../../../server/kimlik/hesap.ts";
 import { ROL_ADI } from "../../../server/yetki/tanim.ts";
 import {
-  AnahtarGirdisi, BulutGirdisi, EpostaGirdisi, YzGirdisi,
+  BulutGirdisi, EpostaGirdisi,
   BelgeTuruGirdisi, FiyatGirdisi, MUSTERI_BELGE_BAS, MUSTERI_BELGE_SON, MusteriBelgeGirdisi,
   AYAR_DOSYASI, EsikGirdisi, FirmaBilgiGirdisi, ImzaGirdisi, KodGirdisi, MesaiGirdisi, SabitGiderGirdisi, SaklamaGirdisi, ZimmetGirdisi, type AyarDosyasi,
 } from "../sema.ts";
@@ -54,9 +53,7 @@ export interface FirmaAyarlari {
   fiyat: { turler: { id: string; ad: string; kod: string; brans: "m" | "e"; fiyat: number | null }[] };
   /** müşteriye açık personel belgeleri (335): türler ve seçililer */
   mbelge: Surumlu<{ secili: string[] }> & { turler: MusteriBelgeTuru[]; ekSurum: number };
-  /** 336: yapay zekâ (anahtar yalnız "tanımlı + son 4"; değer asla), raporların ikinci kopyası (bulut); saklama süresi (aylık arşiv) */
-  /** kullanim: bu ayın kişi başı kullanımı (354; maket Y1 "Bu ay kullanım (kişi başına)") — maliyet milyonda bir dolar */
-  yz: Surumlu<{ acik: boolean; sinir: number | null }> & { anahtar: { tanimli: boolean; son4: string | null }; kullanim: YzKisiKullanimi[] };
+  /** 336: raporların ikinci kopyası (bulut); saklama süresi (aylık arşiv). 2026-10-25: yapay zekâ Yönetim'de (göç 0106; yonetim/server/firma-tarafi.ts) */
   bulut: Surumlu<{ saglayici: "" | "gdrive" | "onedrive"; kok: string; duzen: "mt" | "mty" | "my" }>;
   /** 536 E-posta: gönderen alan adı + gizli kopya; Resend anahtarı yalnız "tanımlı + son 4"; genel adres (Firma bilgileri › Rapor e-postası);
       ben: oturumdaki kişinin adresi (deneme e-postası); kisiler: açık hesaplar ve e-postalarının nereden gideceği (kayıtlı alan adına göre); ay: bu ay gönderilen */
@@ -114,11 +111,6 @@ export async function firmaAyarlari(db: Sorgulayici, kim: Kisi): Promise<FirmaAy
     fiyat: await (async () => {
       const f = await fiyatListesi(db);
       return { turler: (await turOzetleri(db)).map((t) => ({ id: t.id, ad: t.ad, kod: t.kod, brans: t.brans, fiyat: f.get(t.id) ?? null })) };
-    })(),
-    yz: await (async () => {
-      const y = await ayarOku(db, "yapay_zeka");
-      return { deger: { acik: y.deger.acik, sinir: y.deger.sinir }, surum: y.surum, anahtar: await sirDurumu(db, "yapay_zeka_anahtari"),
-        kullanim: await yzAyKullanimi(db, yzAyi()) };
     })(),
     bulut: await (async () => { const b = await ayarOku(db, "bulut"); return { deger: b.deger, surum: b.surum }; })(),
     eposta: await (async () => {
@@ -232,12 +224,6 @@ export async function ayarKaydet(db: Sorgulayici, kim: Kisi, kesim: string, suru
       if (n === "cakisma") return { durum: "cakisma" };
       return n ? { durum: "tamam", bildirim: `Fiyat listesi kaydedildi (${n} tür); yeni teklifler bu fiyatlarla dolar.` } : { durum: "tamam", bildirim: "Fiyat listesinde değişiklik yok.", degismedi: true };
     }
-    case "yz": {
-      const g = dogrula(YzGirdisi, girdi);
-      if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
-      const eski = (await ayarOku(db, "yapay_zeka")).deger;
-      return yaz("yapay_zeka", { ...eski, ...g.veri }, g.veri.acik ? "Yapay zekâ ayarları kaydedildi (açık)." : "Yapay zekâ kapatıldı; fotoğraftan okuma ve S.A.Y görünmez.");
-    }
     case "eposta": {
       /* FV11 (K3): yalnız gizli kopya — alan adı ve anahtar Yönetim'den (girdideki başka alan atılır) */
       const g = dogrula(EpostaGirdisi, girdi);
@@ -263,35 +249,6 @@ export async function ayarKaydet(db: Sorgulayici, kim: Kisi, kesim: string, suru
     }
   }
   return { durum: "gecersiz", hatalar: { genel: "Bilinmeyen ayar bölümü." } };
-}
-
-/** yapay zekâ API anahtarı (maket Y1): bir kez yazılır, şifreli saklanır (sir.ts), bir daha gösterilmez — yalnız son 4. null: kaldır.
-    ac: ekranda "Açık" seçiliyken anahtar girildi (maket Z1: "anahtarı giren yapay zekâyı açmak istiyor") — bölümün gördüğü sürüm; yapay zekâ da
-    açılır (sürüm tutmazsa hiçbir şey yazılmaz) */
-export async function yzAnahtarYaz(db: Sorgulayici, kim: Kisi, girdi: unknown | null, ac: number | null = null): Promise<AyarYazma> {
-  if (!ayarlarYazar(kim)) return { durum: "yetkisiz" };
-  let anahtar: string | null = null;
-  if (girdi !== null) {
-    const g = dogrula(AnahtarGirdisi, girdi);
-    if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
-    anahtar = g.veri.anahtar;
-  }
-  const y = await ayarOku(db, "yapay_zeka");
-  const acilacak = anahtar !== null && ac !== null && !y.deger.acik;
-  if (acilacak && (!Number.isSafeInteger(ac) || (y.id === null ? -1 : y.surum) !== ac)) return { durum: "cakisma" };
-  try {
-    await sirYaz(db, "yapay_zeka_anahtari", anahtar, { kim: kim.ad });
-  } catch (h) {
-    /* ana şifreleme anahtarı ortamda yoksa sır düz metne düşmez: yazılmaz, söylenir (kaldırma ana anahtarsız olur) */
-    if (h instanceof Error && /Sır anahtarı tanımlı değil/.test(h.message)) return { durum: "red", neden: "Sunucuda sır şifreleme anahtarı tanımlı değil; anahtar kaydedilemedi (yönetim ayarı)." };
-    throw h;
-  }
-  if (acilacak) {
-    const r = await ayarYaz(db, "yapay_zeka", ac!, { ...y.deger, acik: true }, { kim: kim.ad, ne: "firma_ayar.yz", gerekce: "anahtarla birlikte açıldı" });
-    if (r.durum !== "tamam" && r.durum !== "degisiklik_yok") throw new Error("yapay zekâ açılamadı");
-    return { durum: "tamam", bildirim: "API anahtarı kaydedildi; yapay zekâ açık." };
-  }
-  return { durum: "tamam", bildirim: anahtar ? "API anahtarı kaydedildi." : "API anahtarı kaldırıldı." };
 }
 
 /** 536: deneme e-postası — tuşa basanın KENDİ adresine (oturumdaki hesap; istemciden adres gelmez), hemen gönderilir; sonucu söylenir. Ayar

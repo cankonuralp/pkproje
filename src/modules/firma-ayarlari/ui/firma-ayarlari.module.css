@@ -20,15 +20,6 @@
 .pencere { display: grid; gap: 12px; min-width: 0; }
 .pencere > * { margin-top: 0; margin-bottom: 0; }
 .not { margin: 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
-.segmentKap { min-width: 0; }
-.segment { display: inline-flex; flex-wrap: wrap; max-width: 100%; gap: 2px; padding: 3px; border: 1px solid var(--kenar-alan); border-radius: calc(var(--tus-y) / 2 + 4px); background: var(--kart); }
-.segmentTus {
-  min-height: var(--tus-y); padding: 0 14px; display: inline-flex; align-items: center; border: 0; border-radius: var(--r-tam); background: transparent;
-  color: var(--yazi2); font: inherit; font-weight: 600; white-space: nowrap; cursor: pointer;
-}
-.segmentTus[aria-checked="true"] { background: var(--zemin2); color: var(--yazi); }
-.segmentTus:focus-visible { outline: 3px solid var(--odak); outline-offset: 1px; }
-.segmentTus:disabled { cursor: default; opacity: .6; }
 .durumSatir { display: flex; align-items: flex-start; gap: 6px; min-height: 1.5em; color: var(--yazi2); font-size: var(--boy-kucuk); }
 .uyariSatir { color: var(--uyari-yazi); font-weight: 600; }
 .soluk { opacity: .55; }

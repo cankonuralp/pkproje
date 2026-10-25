@@ -33,7 +33,7 @@ import { maskele } from "../../../server/hata/maske.ts";
 import { parolaOzeti } from "../../../server/kimlik/parola.ts";
 import { hataMetni, KURULUM, kurulumProjeAdi, sonrakiAdim, type KurulumAdimi, type KurulumDurumu } from "../kurulum-adim.ts";
 import { hataSinifi } from "./kurulum-hata.ts";
-import { AnahtarGirdisi } from "../../firma-ayarlari/sema.ts";
+import { AnahtarGirdisi } from "../sema.ts";
 import { firmaAcSemasi } from "../sema.ts";
 import type { YonetimSonucu } from "./yonetim.ts";
 import type { YonetimCalistirici } from "./firma-tarafi.ts";

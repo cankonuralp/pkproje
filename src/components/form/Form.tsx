@@ -4,7 +4,7 @@
    · alan: etiket (+ "zorunlu"), girdi, altında YALNIZ hata, kaydı durdurmayan uyarı ya da canlı sonuç (reisim 2026-09-26: "alt tarafa
      yazılmış küçük mesajlar istemiyorum" — açıklayıcı ipucu yok); mesaj girdiye aria-describedby ile bağlı (id-ipucu);
    · eylem çubuğu: sağa yaslı; telefonda altta yapışkan (kalıp 2). */
-import type { InputHTMLAttributes, ReactNode } from "react";
+import { useId, type InputHTMLAttributes, type ReactNode } from "react";
 import stil from "./Form.module.css";
 
 export function FormSayfa({ children }: { children: ReactNode }) {
@@ -64,4 +64,22 @@ export function Girdi({ id, hata = false, mesajli = false, className, ...ozellik
 export function FormEylem({ children, not }: { children: ReactNode; not?: ReactNode }) {
   /* data-alt-cubuk (380): telefonda altta yapışkan — S.A.Y düğmesi onun üstünde durur */
   return <div className={stil.eylem} data-alt-cubuk="telefon">{not && <span className={stil.eylemNot}>{not}</span>}{children}</div>;
+}
+
+/** iki / üç seçenekli seçim (Kapalı · Açık …): yerinde düğmeler, seçilen basılı; seçim yeni alan açmaz (maket a-pk-segment). 2026-10-25: Firma
+    ayarlarından ortak bileşene (Yönetim › Firma'nın yapay zekâ bölümü de kullanır) */
+export function Segment<K extends string>({ ad, deger, secenekler, kapali, degistir }: {
+  ad: string; deger: K; secenekler: readonly (readonly [K, string])[]; kapali: boolean; degistir: (x: K) => void;
+}) {
+  const id = useId();
+  return (
+    <div className={stil.segmentKap}>
+      <p className={stil.etiket} id={id}>{ad}</p>
+      <div className={stil.segment} role="radiogroup" aria-labelledby={id}>
+        {secenekler.map(([k, a]) => (
+          <button key={k || "bos"} type="button" role="radio" aria-checked={deger === k} className={stil.segmentTus} disabled={kapali} onClick={() => degistir(k)}>{a}</button>
+        ))}
+      </div>
+    </div>
+  );
 }

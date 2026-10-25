@@ -144,11 +144,12 @@ test("kendi projeli firma: firma tarafı FİRMANIN veritabanında; firma tarafı
   assert.deepEqual([g.firma.alan, g.firma.dogrulandi], ["kendi-a.example", true]);
 });
 
-test("K3 veritabanında: uygulama rolü e-posta anahtarını yazamaz, gönderim kaydına ve yönetim işlevlerine dokunamaz, merkez kaydını okuyamaz (yapay zekâ anahtarı serbest — K4)", async () => {
+test("K3 veritabanında: uygulama rolü e-posta anahtarını yazamaz, gönderim kaydına ve yönetim işlevlerine dokunamaz, merkez kaydını okuyamaz (2026-10-25: yapay zekâ anahtarını da — 0106)", async () => {
   for (const [h, id] of [[v.merkez, v.O.id], [hA, v.A.id]] as const) {
     await assert.rejects(kiraciIcinde(h, id, (db) => sirYaz(db, "eposta_anahtari", "re_uydurmaAnahtarDegil0123456789", { kim: "Deneme" })), /yönetiminden kurulur/);
     await assert.rejects(kiraciIcinde(h, id, (db) => sirYaz(db, "eposta_anahtari", null, { kim: "Deneme" })), /yönetiminden kurulur/, "kaldıramaz da");
-    await kiraciIcinde(h, id, (db) => sirYaz(db, "yapay_zeka_anahtari", "sk-ant-uydurmaAnahtarDegil0123456789wxyz", { kim: "Deneme" }));
+    /* 2026-10-25 (göç 0106): yapay zekâ anahtarını da yazamaz — yalnız Yönetim */
+    await assert.rejects(kiraciIcinde(h, id, (db) => sirYaz(db, "yapay_zeka_anahtari", "sk-ant-uydurmaAnahtarDegil0123456789wxyz", { kim: "Deneme" })), /yönetiminden kurulur/);
     await assert.rejects(kiraciIcinde(h, id, (db) => db.sorgu("UPDATE firma_gonderim SET dogrulandi = false")), /permission denied/);
     await assert.rejects(kiraciIcinde(h, id, (db) => db.sorgu("SELECT firma_yonetim_gonderim($1, NULL, NULL, NULL)", [id])), /permission denied/);
   }

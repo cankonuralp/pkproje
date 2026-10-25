@@ -16,7 +16,7 @@ import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import { after, before, test } from "node:test";
 import type pg from "pg";
-import { firmaDurumuYonet, firmaOzetiYonet, geciciParolaYonet, yzAnahtariYonet, type YonetimCalistirici } from "../src/modules/yonetim/server/firma-tarafi.ts";
+import { firmaDurumuYonet, firmaOzetiYonet, geciciParolaYonet, yzAnahtariYonet, yzAyarYonet, type YonetimCalistirici } from "../src/modules/yonetim/server/firma-tarafi.ts";
 import { coz } from "../src/server/ayar/sir.ts";
 import { havuzKur, kiraciIcinde, yonetimFirmadaIcinde, yonetimIcinde, type Havuz } from "../src/server/db/kiraci.ts";
 import { parolaOzeti } from "../src/server/kimlik/parola.ts";
@@ -135,4 +135,33 @@ test("yapay zekâ anahtarı (K4): kendi projelide firma veritabanında şifreli,
   const g = await yzAnahtariYonet(c, v.A.id, "anahtar-degil", ANA);
   assert.equal(g.durum, "gecersiz");
   assert.equal((await firmaOzetiYonet(c, v.A.id))?.yz.tanimli, false, "geçersiz anahtar yazılmadı");
+});
+
+/* 2026-10-25 (reisim: "Yapay zekâ ayarları Firma ayarlarından kalksın, yalnız Yönetim panelinden yönetilsin; firmalar kendileri değiştiremesin" —
+   göç 0106): Yönetim aç / kapa ve kişi başı sınırı yazar (kendi projelide firma veritabanında, ortakta merkezde), izler iki tarafta; özet ayarı
+   (başlangıç kapalı, 5 $) ve kişi kişi kullanımı döndürür; uygulama rolü yazdığı satırı değiştiremez, silemez. */
+test("yapay zekâ ayarı (0106): yönetim yazar, iz; özet açık / sınır / kişi kişi kullanım; uygulama rolü değiştiremez, silemez", async () => {
+  for (const f of [v.A, v.O]) {
+    const once = await firmaOzetiYonet(c, f.id);
+    assert.deepEqual([once?.yz.acik, once?.yz.sinir, once?.yz.kisiler], [false, 5, []], `${f.kisaAd}: başlangıç kapalı, 5 $`);
+    const g = await yzAyarYonet(c, f.id, { acik: true, sinir: "abc" });
+    assert.equal(g.durum, "gecersiz", "sayı olmayan sınır yazılmaz");
+    assert.deepEqual(await yzAyarYonet(c, f.id, { acik: true, sinir: "7,5" }), { durum: "tamam" });
+    const a = (await tek<{ d: { acik: boolean; sinir: number; model: string } }>(f.sahip, "SELECT deger AS d FROM firma_ayar WHERE firma_id = $1 AND bolum = 'yapay_zeka'", [f.id]))!;
+    assert.deepEqual([a.d.acik, a.d.sinir, a.d.model], [true, 7.5, "haiku"]);
+    assert.ok(await tek(f.sahip, "SELECT 1 FROM denetim_izi WHERE firma_id = $1 AND ne = 'ayar.yapay_zeka' AND kim = $2", [f.id, `probata yönetim (${YE})`]), "firmanın izi");
+    assert.ok(await tek(v.merkezSahip, "SELECT 1 FROM yonetim_izi WHERE hedef_firma = $1 AND ne = 'ayar.yz' AND (ayrinti->>'acik')::boolean", [f.id]), "merkezin izi");
+    const h = (await tek<{ id: string }>(f.sahip, "SELECT id::text FROM hesap WHERE firma_id = $1 LIMIT 1", [f.id]))!;
+    await f.sahip.query("INSERT INTO yz_kullanim (firma_id, hesap_id, ay, okuma, mesaj, maliyet) VALUES ($1, $2, to_char(now() AT TIME ZONE 'Europe/Istanbul', 'YYYY-MM'), 3, 2, 4500) ON CONFLICT DO NOTHING", [f.id, h.id]);
+    const oz = await firmaOzetiYonet(c, f.id);
+    assert.deepEqual([oz?.yz.acik, oz?.yz.sinir, oz?.yz.kisiler.map((k) => [k.okuma, k.mesaj, k.maliyet])], [true, 7.5, [[3, 2, 4500]]]);
+    assert.deepEqual(await yzAyarYonet(c, f.id, { acik: false, sinir: "" }), { durum: "tamam" });
+    assert.deepEqual([(await firmaOzetiYonet(c, f.id))?.yz.acik, (await firmaOzetiYonet(c, f.id))?.yz.sinir], [false, null], "boş sınır = sınırsız");
+  }
+  /* K5: firmanın uygulama rolü yönetimin yazdığı satıra dokunamaz (kendi projeli firmanın veritabanında ve merkezde) */
+  for (const [h, id] of [[hA, v.A.id], [v.merkez, v.O.id]] as const) {
+    await assert.rejects(kiraciIcinde(h, id, (db) => db.sorgu("UPDATE firma_ayar SET deger = deger || '{\"acik\": true}'::jsonb WHERE bolum = 'yapay_zeka'")), yetkisiz);
+    await assert.rejects(kiraciIcinde(h, id, (db) => db.sorgu("DELETE FROM firma_ayar WHERE bolum = 'yapay_zeka'")), yetkisiz);
+    await assert.rejects(kiraciIcinde(h, id, (db) => db.sorgu("SELECT firma_yonetim_yz($1, true, 5)", [id])), /permission denied/);
+  }
 });

@@ -15,10 +15,10 @@ import { klasorDepo, type Depo } from "../src/server/dosya/depo.ts";
 import { raporNoAl } from "../src/server/numara/numara.ts";
 import { dosyaIndirilebilir } from "../src/server/dosya/dosya.ts";
 import { DOSYA_ERISIMI } from "../src/server/dosya/erisim.ts";
-import { ayarOku, firmaBelgeKunyesi, firmaKunyesi } from "../src/server/ayar/ayar.ts";
+import { ayarCoz, ayarOku, ayarYaz, firmaBelgeKunyesi, firmaKunyesi } from "../src/server/ayar/ayar.ts";
 import { sifrele, sirYaz } from "../src/server/ayar/sir.ts";
 import { parolaOzeti } from "../src/server/kimlik/parola.ts";
-import { ayarDosyasiYaz, ayarKaydet, belgeTuruEkle, belgeTuruKaldir, denemeEpostasi, firmaAyarlari, firmaKoduKaydet, yzAnahtarYaz, type Kisi } from "../src/modules/firma-ayarlari/server/ayarlar.ts";
+import { ayarDosyasiYaz, ayarKaydet, belgeTuruEkle, belgeTuruKaldir, denemeEpostasi, firmaAyarlari, firmaKoduKaydet, type Kisi } from "../src/modules/firma-ayarlari/server/ayarlar.ts";
 import { ozlukEkle, ozlukKaldir, personelDosyasi } from "../src/modules/personel/server/dosyalar.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
@@ -222,44 +222,21 @@ test("müşteriye açık belgeler ve belge türü ekle: seçim ayara yazılır; 
 /* 336: yapay zekâ (anahtar şifreli sırda — değer ekrana ve yanıta dönmez, yalnız son 4), bulut kaydı, yedek. 2026-10-12 (sunum D1–D3 kabul — reisim:
    "önerilerini kabul ediyorum, hayata geçir"): bulut kaydı = raporların ikinci kopyası, yalnız Google Drive / OneDrive (eski Dropbox / Yandex / SFTP
    değeri kapalıya döner); yedek ayarı kalktı (Supabase'in günlük yedeği + aylık arşiv yedeği kendiliğinden); Supabase bölümü firmanın dosya kullanımını gösterir */
-test("yapay zekâ, ikinci kopya, Supabase bölümü: anahtar biçimi denetlenir, şifreli saklanır, yalnız son 4 görünür; sınır $, klasör adı, hizmet; yedek ayarı yok", async () => {
+/* 2026-10-25 (reisim: "Yapay zekâ ayarları Firma ayarlarından kalksın, yalnız Yönetim panelinden yönetilsin; firmalar kendileri değiştiremesin" —
+   göç 0106, maket K1–K7): Firma ayarlarında yapay zekâ bölümü yok; uygulama rolü ayarı ve anahtarı yazamaz / değiştiremez / silemez (yalnız okur:
+   fotoğraftan okuma ve S.A.Y); başlangıç kapalı, kişi başı 5 $; eski kayıttaki Sonnet / Opus okumada Haiku. Yönetim'in yazması tests/yonetim-firmada. */
+test("yapay zekâ firmada yazılamaz (0106), ikinci kopya, Supabase bölümü: klasör adı, hizmet; yedek ayarı yok", async () => {
   process.env.PROBATA_SIR_ANAHTARI ??= randomBytes(32).toString("base64");
-  const ANAHTAR = "sk-ant-deneme-0123456789abcdefWXYZ";
-  assert.deepEqual(await a(YON, (db) => yzAnahtarYaz(db, YON, { anahtar: "sk-deneme" })), { durum: "gecersiz", hatalar: { anahtar: "Geçerli bir Anthropic API anahtarı değil (sk-ant- ile başlar)." } });
-  assert.equal((await a(DEN, (db) => yzAnahtarYaz(db, DEN, { anahtar: ANAHTAR }))).durum, "yetkisiz");
-  tamam(await a(YON, (db) => yzAnahtarYaz(db, YON, { anahtar: ANAHTAR })));
   const v = (await a(YON, (db) => firmaAyarlari(db, YON)))!;
-  assert.deepEqual(v.yz.anahtar, { tanimli: true, son4: "WXYZ" });
-  assert.ok(!JSON.stringify(v).includes(ANAHTAR), "anahtar ekran verisinde yok");
-  const satir = (await a(YON, (db) => db.sorgu<{ sifreli: string }>("SELECT sifreli FROM firma_sir WHERE ad = 'yapay_zeka_anahtari'"))).rows[0];
-  assert.ok(!satir.sifreli.includes(ANAHTAR), "veritabanında düz metin yok");
-  /* 2026-10-14 (reisim: "tek seçenek claude haiku 5.5 olsun"): tek model Claude Haiku 5.5 — ekranda seçim yok, istemciden gelen model yazılmaz,
-     eski kayıttaki Sonnet / Opus okumada Haiku'ya döner (öteki alanlar kalır) */
-  assert.ok(!("model" in v.yz.deger), "ekran verisinde model seçimi yok");
-  assert.equal((await a(YON, (db) => ayarOku(db, "yapay_zeka"))).deger.model, "haiku", "tek model Haiku 5.5");
-  assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "yz", v.yz.surum, { acik: true, sinir: "abc" }))).durum, "gecersiz");
-  tamam(await a(YON, (db) => ayarKaydet(db, YON, "yz", v.yz.surum, { acik: true, model: "opus", sinir: "12,5" })));
-  const y = (await a(YON, (db) => ayarOku(db, "yapay_zeka"))).deger;
-  assert.deepEqual([y.acik, y.model, y.sinir], [true, "haiku", 12.5], "istemciden gelen model yazılmaz");
-  await a(YON, (db) => db.sorgu(`UPDATE firma_ayar SET deger = deger || '{"model": "sonnet"}'::jsonb WHERE bolum = 'yapay_zeka'`));
-  const eski = (await a(YON, (db) => ayarOku(db, "yapay_zeka"))).deger;
-  assert.deepEqual([eski.acik, eski.model, eski.sinir], [true, "haiku", 12.5], "eski kayıttaki Sonnet okumada Haiku");
-  tamam(await a(YON, (db) => yzAnahtarYaz(db, YON, null)));
-  assert.deepEqual((await a(YON, (db) => firmaAyarlari(db, YON)))!.yz.anahtar, { tanimli: false, son4: null });
-  /* 335 incelemesi: ekranda "Açık" seçiliyken anahtar girilince yapay zekâ da açılır (eski sürümle değil); ana şifreleme anahtarı olmadan
-     anahtar kaldırılabilir */
-  const ys = (await a(YON, (db) => ayarOku(db, "yapay_zeka"))).surum;
-  tamam(await a(YON, (db) => ayarKaydet(db, YON, "yz", ys, { acik: false, sinir: "12,5" })));
-  assert.equal((await a(YON, (db) => yzAnahtarYaz(db, YON, { anahtar: ANAHTAR }, ys))).durum, "cakisma", "eski sürüm");
-  assert.deepEqual(await a(YON, (db) => yzAnahtarYaz(db, YON, { anahtar: ANAHTAR }, ys + 1)), { durum: "tamam", bildirim: "API anahtarı kaydedildi; yapay zekâ açık." });
-  assert.equal((await a(YON, (db) => ayarOku(db, "yapay_zeka"))).deger.acik, true);
-  const ana = process.env.PROBATA_SIR_ANAHTARI;
-  delete process.env.PROBATA_SIR_ANAHTARI;
-  try {
-    assert.equal((await a(YON, (db) => yzAnahtarYaz(db, YON, { anahtar: ANAHTAR }))).durum, "red", "ana anahtarsız yazılmaz");
-    tamam(await a(YON, (db) => yzAnahtarYaz(db, YON, null)));
-  } finally { process.env.PROBATA_SIR_ANAHTARI = ana; }
-  assert.deepEqual((await a(YON, (db) => firmaAyarlari(db, YON)))!.yz.anahtar, { tanimli: false, son4: null }, "ana anahtarsız kaldırıldı");
+  assert.ok(!("yz" in v), "Firma ayarları ekran verisinde yapay zekâ yok");
+  assert.notEqual((await a(YON, (db) => ayarKaydet(db, YON, "yz", -1, { acik: true, sinir: "5" }))).durum, "tamam", "yz bölümü kaydedilmez");
+  const y = await a(YON, (db) => ayarOku(db, "yapay_zeka"));
+  assert.deepEqual([y.deger.acik, y.deger.model, y.deger.sinir], [false, "haiku", 5], "okuma serbest; başlangıç kapalı, 5 $");
+  await assert.rejects(a(YON, (db) => ayarYaz(db, "yapay_zeka", y.surum, { ...y.deger, acik: true }, { kim: "Deneme", ne: "ayar.yapay_zeka" })), /yönetiminden değiştirilir/);
+  await assert.rejects(a(YON, (db) => sirYaz(db, "yapay_zeka_anahtari", "sk-ant-uydurmaAnahtarDegil0123456789wxyz", { kim: "Deneme" })), /yönetiminden kurulur/);
+  await assert.rejects(a(YON, (db) => db.sorgu("SELECT firma_yonetim_yz($1, true, 5)", [A])), /permission denied/, "uygulama rolü yönetim işlevini çağıramaz");
+  /* 2026-10-14 (reisim: "tek seçenek claude haiku 5.5 olsun"): eski kayıttaki Sonnet / Opus okumada Haiku'ya döner (öteki alanlar kalır) */
+  assert.deepEqual(ayarCoz("yapay_zeka", { acik: true, model: "sonnet", sinir: 12.5 }), { acik: true, kisi_aylik_sinir: 200, model: "haiku", sinir: 12.5 });
   /* raporların ikinci kopyası (bulut) */
   assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "bulut", -1, { saglayici: "gdrive", kok: "Rapor/2026", duzen: "mt" }))).durum, "gecersiz", "klasör adında /");
   assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "bulut", -1, { saglayici: "baska", kok: "Raporlar", duzen: "mt" }))).durum, "gecersiz");
@@ -287,7 +264,7 @@ test("firma sızıntısı: B kendi ayarlarını görür (başlangıç değerleri
   assert.deepEqual([v.kod, v.firma.deger.ad, v.firma.deger.nusha, v.esik.deger.kalibrasyon, v.sabit.deger.kalemler, v.kisiler.map((k) => k.ad)],
     ["DB", "", 2, 30, [], ["Deneme B Kişi"]]);
   assert.deepEqual([v.mbelge.deger.secili, v.mbelge.turler.filter((t) => t.ek || t.k.startsWith("eg:")).length, v.fiyat.turler.map((t) => t.fiyat)], [["ekipnet"], 0, [null]]);
-  assert.deepEqual([v.yz.anahtar, v.yz.deger.acik, v.bulut.deger.saglayici, v.depolama.dosya], [{ tanimli: false, son4: null }, false, "", 0], "B'nin dosyası yok (A'nınkiler sayılmaz)");
+  assert.deepEqual([v.bulut.deger.saglayici, v.depolama.dosya], ["", 0], "B'nin dosyası yok (A'nınkiler sayılmaz)");
 });
 
 /* NEREDEN GELDİ: 536 — reisim 2026-10-13: "kim mail gönder tuşuna basarsa onun mailinden gitmeli"; FIRMA-VT FV11 (2026-10-16, K2 + K3 — reisim:
@@ -326,9 +303,8 @@ test("FV11 e-posta: gönderim Yönetim'den, firmada kilitli (uygulama rolü anah
     assert.deepEqual((await a(YON, (db) => ayarOku(db, "eposta"))).deger, { kopya: true });
     const e1 = (await a(YON, (db) => firmaAyarlari(db, YON)))!.eposta;
     tamam(await a(YON, (db) => ayarKaydet(db, YON, "eposta", e1.surum, { kopya: false })));
-    /* K3 veritabanı kilidi: uygulama rolü e-posta anahtarını yazamaz (yapay zekâ anahtarı yazabilir — K4), gönderim kaydına dokunamaz */
+    /* K3 veritabanı kilidi: uygulama rolü e-posta anahtarını (2026-10-25, 0106: yapay zekâ anahtarını da) yazamaz, gönderim kaydına dokunamaz */
     await assert.rejects(a(YON, (db) => sirYaz(db, "eposta_anahtari", ANAHTAR, { kim: "Deneme" })), /yönetiminden kurulur/);
-    await a(YON, (db) => sirYaz(db, "yapay_zeka_anahtari", "sk-ant-uydurmaAnahtarDegil0123456789wxyz", { kim: "Deneme" }));
     await assert.rejects(sql(A, "INSERT INTO firma_gonderim (alan, genel, dogrulandi) VALUES ('kotu.example', 'bilgi@kotu.example', true)"), /permission denied/);
     await assert.rejects(a(YON, (db) => db.sorgu("SELECT firma_yonetim_gonderim($1, 'kotu.example', 'bilgi@kotu.example', true)", [A])), /permission denied/,
       "uygulama rolü yönetim işlevini çağıramaz");

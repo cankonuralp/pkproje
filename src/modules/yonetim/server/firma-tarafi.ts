@@ -7,10 +7,12 @@
      merkez düşerse firma kapalı kalır, yeniden denenir;
    · etkinleştir: önce merkez, sonra firma tarafı; firma tarafı düşerse firma kapalı kalır, yeniden denenir;
    · geçici parola: firma tarafında değişir, merkezin izi ANCAK sonra;
+   · yapay zekâ aç / kapa + kişi başı sınır (2026-10-25, göç 0106 firma_yonetim_yz; firma yazamaz): firma tarafına yazılır, merkezin izi sonra;
    · yapay zekâ anahtarı (K4): uygulamada şifrelenir (sir.ts sifrele — firma + ad ek verisi; ana anahtar ortamdan), firma tarafına yazılır, merkezin izi
      sonra (ortak firmada aynı işlevin içinde). Değer hiçbir ize, yanıta düşmez — yalnız son 4.
    Aynı duruma ikinci çağrı hata değil (yeniden denemede kalan adım tamamlanır). */
-import { AnahtarGirdisi } from "../../firma-ayarlari/sema.ts";
+import { AnahtarGirdisi, YzGirdisi } from "../sema.ts";
+import { ayarCoz } from "../../../server/ayar/ayar.ts";
 import { sifrele } from "../../../server/ayar/sir.ts";
 import type { FirmaVtKaydi } from "../../../server/db/baglanti.ts";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
@@ -102,17 +104,41 @@ export async function geciciParolaYonet(c: YonetimCalistirici, id: string): Prom
 export interface FirmaOzeti {
   durum: string; kullanici: number;
   yonetici: { ad: string; eposta: string; durum: "ilk" | "etkin" | "pasif" } | null;
-  /** yapay zekâ: anahtar tanımlı mı, son 4, bu ay (YYYY-AA) okuma / mesaj / maliyet (milyonda bir $) */
-  yz: { tanimli: boolean; son4: string | null; ay: string; okuma: number; mesaj: number; maliyet: number };
+  /** yapay zekâ: açık mı, kişi başı aylık sınır ($; null sınırsız), anahtar tanımlı mı, son 4, bu ay (YYYY-AA) okuma / mesaj / maliyet (milyonda bir $)
+      ve kişi kişi kullanım (2026-10-25, göç 0106 — Firma ayarlarından taşındı) */
+  yz: { acik: boolean; sinir: number | null; tanimli: boolean; son4: string | null; ay: string; okuma: number; mesaj: number; maliyet: number;
+    kisiler: { id: string; ad: string; okuma: number; mesaj: number; maliyet: number }[] };
 }
+type HamOzet = Omit<FirmaOzeti, "yz"> & { yz: Omit<FirmaOzeti["yz"], "acik" | "sinir"> & { ayar: Record<string, unknown> } };
 /** firma özeti (kendi projelide firmanın veritabanından; ortakta merkezden) — ulaşılamazsa null */
 export async function firmaOzetiYonet(c: YonetimCalistirici, id: string): Promise<FirmaOzeti | null> {
   if (!UUID.test(id)) return null;
   const y = await yer(c, id);
   if (!y || y.vt === "kurulum") return null;
-  const oku = (db: Sorgulayici) => db.sorgu<{ s: FirmaOzeti }>("SELECT firma_yonetim_ozet($1) AS s", [id]).then((r) => r.rows[0]?.s ?? null);
+  const oku = (db: Sorgulayici) => db.sorgu<{ s: HamOzet }>("SELECT firma_yonetim_ozet($1) AS s", [id]).then((r) => r.rows[0]?.s ?? null);
   const s = y.vt === "ortak" ? await c.merkez(oku) : await firmada(c, y.kayit, id, oku);
-  return s ? { ...s, yz: { ...s.yz, maliyet: Number(s.yz.maliyet) } } : null;
+  if (!s) return null;
+  /* kayıtlı ayar başlangıçla birleşir (kayıtsız firmada kapalı, kişi başı 5 $ — ayar.ts tek kaynak) */
+  const { ayar, ...yz } = s.yz, a = ayarCoz("yapay_zeka", ayar ?? {});
+  return { ...s, yz: { ...yz, acik: a.acik, sinir: a.sinir, maliyet: Number(yz.maliyet),
+    kisiler: (yz.kisiler ?? []).map((k) => ({ ...k, maliyet: Number(k.maliyet) })) } };
+}
+
+/** 2026-10-25 (göç 0106): yapay zekâyı aç / kapa ve kişi başı aylık sınırı yazar — yalnız yönetim (firmanın uygulama rolü yazamaz) */
+export async function yzAyarYonet(c: YonetimCalistirici, id: string, girdi: unknown): Promise<YonetimSonucu> {
+  if (!UUID.test(id)) return { durum: "yok" };
+  const g = YzGirdisi.safeParse(girdi);
+  if (!g.success) return { durum: "gecersiz", hatalar: Object.fromEntries(g.error.issues.map((i) => [String(i.path[0] ?? "genel"), i.message])) };
+  const y = await yer(c, id);
+  if (!y) return { durum: "yok" };
+  if (y.vt === "kurulum") return { durum: "red", neden: "Firmanın kurulumu bitmedi." };
+  const yaz = (db: Sorgulayici) => db.sorgu<{ s: { durum?: string; hata?: string } }>("SELECT firma_yonetim_yz($1, $2, $3) AS s",
+    [id, g.data.acik, g.data.sinir]).then((r) => r.rows[0]!.s);
+  const r = y.vt === "ortak" ? await c.merkez(yaz) : await firmada(c, y.kayit, id, yaz);
+  if (!r) return { durum: "red", neden: ULASILAMADI };
+  if (r.hata || r.durum !== "tamam") return { durum: "red", neden: "Yapay zekâ ayarı kaydedilemedi." };
+  if (y.vt === "kendi") await c.merkez((db) => db.sorgu("SELECT yonetim_firmada_iz($1, 'ayar.yz', $2::jsonb)", [id, JSON.stringify(g.data)]));
+  return { durum: "tamam" };
 }
 
 /** K4: yapay zekâ anahtarını yönetimden yazar (duz) ya da kaldırır (null). Anahtar şemadan (Anthropic: sk-ant-…); şifreleme uygulamada. */

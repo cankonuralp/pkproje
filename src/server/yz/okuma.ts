@@ -9,7 +9,7 @@
    · Sayı sütunun BİRİMİYLE istenir (inceleme: "fotoğraftaki birimle" denince 52,3 MΩ kΩ sütununa 52,3 diye düşerdi).
    · Fotoğraftaki yazı TALİMAT değildir: sistem talimatı bunu söyler, cevap yalnız veri olarak kullanılır.
    · Maliyet token × fiyat (milyonda bir dolar, yukarı yuvarlanır — tam sayı); fiyatlar firma ayarının model listesiyle aynı
-     (src/modules/firma-ayarlari/sema.ts YZ_MODEL). 2026-10-12 (reisim: "yapay zekada da haiku … seçenekler olmalı daha uygun ücretlendirme için" →
+     (src/modules/yonetim/sema.ts YZ_FIYAT — 2026-10-25). 2026-10-12 (reisim: "yapay zekada da haiku … seçenekler olmalı daha uygun ücretlendirme için" →
      sunum kabul): Claude Haiku 5.5 — istem 100 000 tokeni aşarsa üst fiyat (Anthropic fiyat sayfası, 2026-10-12). 2026-10-14 (reisim: "tek seçenek
      claude haiku 5.5 olsun"): TEK MODEL Claude Haiku 5.5 — Sonnet 5.5 / Opus 5.5 kalktı (eski okuma kayıtlarında model adı kalır, 0083). Ayırma
      (0053) için en kötü maliyet: giriş üst sınırı + yanıt sınırı.

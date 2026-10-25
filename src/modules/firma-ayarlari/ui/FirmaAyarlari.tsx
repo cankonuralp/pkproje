@@ -10,9 +10,9 @@
    pencereler salt okunur. Karar ve doğrulama sunucuda (server/ayarlar.ts). */
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createContext, useContext, useId, useRef, useState, useTransition, type ReactNode } from "react";
+import { createContext, useContext, useRef, useState, useTransition, type ReactNode } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
-import { Alan, FormIzgara, Girdi, ipucuId } from "../../../components/form/Form";
+import { Alan, FormIzgara, Girdi, ipucuId, Segment } from "../../../components/form/Form";
 import { DosyaAcTusu, GizliResim } from "../../../components/gizli-resim/GizliResim";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { useOnayla } from "../../../components/pencere/Onay";
@@ -23,12 +23,12 @@ import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus } from "../../../components/tus/Tus";
 import {
-  AYAR_DOSYASI, BULUT_DUZEN, ESIK, IMZA_YONTEM, NUSHA, SAKLAMA_YIL, YASAL, YZ_FIYAT, kodBuyut, onBilgiFormKodu,
+  AYAR_DOSYASI, BULUT_DUZEN, ESIK, IMZA_YONTEM, NUSHA, SAKLAMA_YIL, YASAL, kodBuyut, onBilgiFormKodu,
   type AyarDosyasi, type AyarKesimi, type EsikAdi,
 } from "../sema";
 import type { FirmaAyarlari as Veri } from "../server/ayarlar";
 import { IceAktarma } from "./IceAktarma";
-import { ayarDosyasiEylemi, ayarKaydetEylemi, belgeTuruEkleEylemi, belgeTuruKaldirEylemi, denemeEpostasiEylemi, firmaKoduKaydetEylemi, yzAnahtarEylemi,
+import { ayarDosyasiEylemi, ayarKaydetEylemi, belgeTuruEkleEylemi, belgeTuruKaldirEylemi, denemeEpostasiEylemi, firmaKoduKaydetEylemi,
   type AyarYaniti } from "./eylemler";
 import stil from "./firma-ayarlari.module.css";
 
@@ -40,21 +40,21 @@ const para = (k: number) => new Intl.NumberFormat("tr-TR", { minimumFractionDigi
 const megabayt = (bayt: number) => (bayt / 1e6).toLocaleString("tr-TR", { maximumFractionDigits: 1 });
 
 /* ── PANELLER (maket 539 GRUPLAR / PANEL) ── */
-type PanelAdi = "firma" | "kod" | "imza" | "belge" | "mesai" | "esik" | "zimmet" | "mbelge" | "fiyat" | "sabit" | "yedek" | "depolama" | "saklama" | "yz" | "eposta" | "ice";
+type PanelAdi = "firma" | "kod" | "imza" | "belge" | "mesai" | "esik" | "zimmet" | "mbelge" | "fiyat" | "sabit" | "yedek" | "depolama" | "saklama" | "eposta" | "ice";
 const PANEL: Record<PanelAdi, { ad: string; ikon: string; genis?: boolean }> = {
   firma: { ad: "Firma bilgileri", ikon: "building-2" }, kod: { ad: "Rapor numarası", ikon: "list-ordered" }, imza: { ad: "İmza yöntemi", ikon: "file-signature" },
   belge: { ad: "Belge şablonları", ikon: "file-text" }, mesai: { ad: "Mesai takibi", ikon: "clock" }, esik: { ad: "Uyarı eşikleri", ikon: "alarm-clock" },
   zimmet: { ad: "Zimmet teslim formu", ikon: "package" }, mbelge: { ad: "Müşteriye açık personel belgeleri", ikon: "id-card", genis: true },
   fiyat: { ad: "Fiyat listesi", ikon: "calculator", genis: true }, sabit: { ad: "Sabit giderler", ikon: "receipt", genis: true },
   yedek: { ad: "Yedek", ikon: "archive" }, depolama: { ad: "Depolama", ikon: "warehouse" }, saklama: { ad: "Rapor saklama süresi", ikon: "history" },
-  yz: { ad: "Yapay zekâ", ikon: "sparkles", genis: true }, eposta: { ad: "E-posta", ikon: "mail", genis: true }, ice: { ad: "Toplu içe aktarma", ikon: "file-spreadsheet", genis: true },
+  eposta: { ad: "E-posta", ikon: "mail", genis: true }, ice: { ad: "Toplu içe aktarma", ikon: "file-spreadsheet", genis: true },
 };
 const GRUPLAR: { k: string; ad: string; p: PanelAdi[] }[] = [
   { k: "firma", ad: "Firma", p: ["firma", "kod", "imza", "belge"] },
   { k: "calisma", ad: "Çalışma", p: ["mesai", "esik", "zimmet", "mbelge"] },
   { k: "para", ad: "Fiyat ve gider", p: ["fiyat", "sabit"] },
   { k: "veri", ad: "Veri ve yedek", p: ["yedek", "depolama", "saklama"] },
-  { k: "baglanti", ad: "Bağlantılar", p: ["yz", "eposta"] },
+  { k: "baglanti", ad: "Bağlantılar", p: ["eposta"] },   // 2026-10-25: yapay zekâ Yönetim'de (göç 0106)
   { k: "arac", ad: "Araçlar", p: ["ice"] },
 ];
 const BULUT_AD = { "": "kapalı", gdrive: "Google Drive", onedrive: "OneDrive" } as const;
@@ -76,9 +76,6 @@ function ozet(k: PanelAdi, v: Veri): { metin: string; durum?: string } {
     case "yedek": return { metin: `Günlük + aylık yedek · ek yedek ${BULUT_AD[v.bulut.deger.saglayici]}` };
     case "depolama": return { metin: `Deneme projesi · ${v.depolama.dosya.toLocaleString("tr-TR")} dosya · ${megabayt(v.depolama.bayt)} MB` };
     case "saklama": return { metin: `${v.saklama.deger.yil} yıl${v.saklama.deger.yil === 5 ? " (yasal en az)" : ""}` };
-    case "yz": { const z = v.yz.deger;
-      return { metin: z.acik ? `Açık · kişi başı ${z.sinir ? `${String(z.sinir).replace(".", ",")} $ / ay` : "sınırsız"}` : "Kapalı",
-        durum: z.acik && !v.yz.anahtar.tanimli ? "Anahtar yok" : undefined }; }
     case "eposta": { const g = v.eposta.gonderim, hazir = !!g && g.dogrulandi && g.anahtar;
       return { metin: hazir ? `Bağlı · ${g.alan}` : g ? `${g.alan} · doğrulanmadı` : "E-postalar sırada bekliyor", durum: hazir ? undefined : "Bağlı değil" }; }
     case "ice": return { metin: "Excel'den müşteri, ekipman, cihaz, personel, araç" };
@@ -137,22 +134,6 @@ function useKesim<T>(kesim: AyarKesimi, ilk: T, surum: number, gonder?: (d: T) =
   return { d, setD, h, setH, kirli, mesgul, kaydet };
 }
 
-/** iki / üç seçenekli seçim (Kapalı · Açık …): yerinde düğmeler, seçilen basılı; seçim yeni alan açmaz (maket a-pk-segment) */
-function Segment<K extends string>({ ad, deger, secenekler, kapali, degistir }: {
-  ad: string; deger: K; secenekler: readonly (readonly [K, string])[]; kapali: boolean; degistir: (x: K) => void;
-}) {
-  const id = useId();
-  return (
-    <div className={stil.segmentKap}>
-      <p className={stil.etiketUst} id={id}>{ad}</p>
-      <div className={stil.segment} role="radiogroup" aria-labelledby={id}>
-        {secenekler.map(([k, a]) => (
-          <button key={k || "bos"} type="button" role="radio" aria-checked={deger === k} className={stil.segmentTus} disabled={kapali} onClick={() => degistir(k)}>{a}</button>
-        ))}
-      </div>
-    </div>
-  );
-}
 const Not = ({ children }: { children: ReactNode }) => <p className={stil.not}>{children}</p>;
 const Yardim = ({ baslik, children }: { baslik: string; children: ReactNode }) => (
   <details className={stil.yardim}><summary><Ikon ad="info" kucuk />{baslik}</summary>{children}</details>
@@ -520,87 +501,6 @@ function Depolama({ v }: { v: Veri }) {
   );
 }
 
-/* ── YAPAY ZEKÂ (336; maket 539 "Yapay zekâ"): Kapalı · Açık (kapalıyken alanlar soluk, yerinde), tek model (538), API anahtarı (bir kez yazılır, son 4 —
-   kendi tuşuyla kaydedilir), kişi başı aylık sınır; bu ayın kullanımı "Bu ay kim ne kadar kullandı?" altında ── */
-type YzKullanim = Veri["yz"]["kullanim"][number];
-const dolarYaz = (m: number) => `$${(m / 1e6).toFixed(2).replace(".", ",")}`;
-const yzSutunlari = (sinir: number | null): Sutun<YzKullanim>[] => [
-  { k: "kisi", genislik: "32%", baslik: "Kişi", kart: "ust", sira: 1, siralanmaz: true, hucre: (x) => x.ad },
-  { k: "okuma", genislik: "18%", baslik: "Fotoğraftan okuma", kart: "govde", sira: 2, siralanmaz: true, hucre: (x) => <><KartEtiket>Fotoğraftan okuma</KartEtiket>{x.okuma}</> },
-  { k: "mesaj", genislik: "16%", baslik: "S.A.Y mesajı", kart: "govde", sira: 3, siralanmaz: true, hucre: (x) => <><KartEtiket>S.A.Y mesajı</KartEtiket>{x.mesaj}</> },
-  { k: "usd", genislik: "16%", baslik: "Harcama", kart: "govde", sira: 4, siralanmaz: true, hucre: (x) => <><KartEtiket>Harcama</KartEtiket>{dolarYaz(x.maliyet)}</> },
-  { k: "durum", genislik: "18%", baslik: "Sınır", kart: "rozet", sira: 1, siralanmaz: true, hucre: (x) => {
-    if (sinir === null || sinir <= 0) return <DegerYok>sınırsız</DegerYok>;
-    const o = x.maliyet / (sinir * 1e6);
-    return o >= 1 ? <Rozet tur="red">Doldu</Rozet> : <Rozet tur={o >= 0.8 ? "bekliyor" : "tamam"}>%{Math.round(o * 100)}</Rozet>;
-  } },
-];
-const ZID = { anahtar: "w-ay-yz-anahtar", sinir: "w-ay-yz-sinir" } as const;
-function YapayZeka({ v }: { v: Veri }) {
-  const router = useRouter();
-  const bildir = useBildir();
-  const onayla = useOnayla();
-  const [mesgulA, baslatA] = useTransition();
-  const s = useKesim("yz", { acik: v.yz.deger.acik, sinir: v.yz.deger.sinir === null ? "" : String(v.yz.deger.sinir).replace(".", ",") }, v.yz.surum);
-  const kapali = !s.d.acik;
-  const [yeni, setYeni] = useState<null | { deger: string; hata: string | null }>(v.yz.anahtar.tanimli ? null : { deger: "", hata: null });
-  const anahtarKaydet = () => baslatA(async () => {
-    if (!yeni) return;
-    /* ekranda "Açık" seçili ama kayıtlı değilse anahtarla birlikte açılır (maket Z1: anahtarı giren yapay zekâyı açmak istiyor) */
-    const r = await yzAnahtarEylemi({ anahtar: yeni.deger }, s.d.acik && !v.yz.deger.acik ? v.yz.surum : null);
-    if (!r.tamam) { setYeni({ deger: "", hata: r.hatalar?.anahtar ?? r.genel ?? "Kaydedilemedi." }); requestAnimationFrame(() => document.getElementById(ZID.anahtar)?.focus()); return; }
-    setYeni(null); bildir(r.bildirim ?? "API anahtarı kaydedildi."); router.refresh();
-    requestAnimationFrame(() => document.querySelector<HTMLElement>("[data-yz-degistir]")?.focus());
-  });
-  const anahtarKaldir = async () => {
-    if (!(await onayla({ baslik: "API anahtarını kaldır", metin: "Fotoğraftan okuma ve S.A.Y, yeni anahtar girilene kadar çalışmaz.", tus: "Kaldır", tehlike: true }))) return;
-    baslatA(async () => {
-      const r = await yzAnahtarEylemi(null); bildir(r.tamam ? r.bildirim ?? "Kaldırıldı." : r.genel ?? "Kaldırılamadı.");
-      if (r.tamam) { setYeni({ deger: "", hata: null }); router.refresh(); requestAnimationFrame(() => document.getElementById(ZID.anahtar)?.focus()); }
-    });
-  };
-  return (
-    <Kart genis yaz={v.yaz} kirli={s.kirli} mesgul={s.mesgul} kaydet={s.kaydet}>
-      <Segment ad="Fotoğraftan okuma ve S.A.Y" deger={s.d.acik ? "1" : "0"} kapali={!v.yaz} secenekler={[["0", "Kapalı"], ["1", "Açık"]] as const}
-        degistir={(x) => s.setD({ ...s.d, acik: x === "1" })} />
-      <FormIzgara>
-        {/* 2026-10-14 (reisim: "tek seçenek claude haiku 5.5 olsun"): tek model — seçim yok, yalnız fiyat yazar; model adı görünmez */}
-        <div className={kapali ? stil.soluk : undefined}>
-          <p className={stil.etiketUst}>Ücret</p>
-          <span className={stil.altSatir}>{YZ_FIYAT}</span>
-        </div>
-        <Alan id={ZID.sinir} etiket="Kişi başı aylık sınır ($)" hata={s.h.sinir} sonuc={s.h.sinir ? undefined : "Boş: sınırsız."}>
-          <Girdi id={ZID.sinir} value={s.d.sinir} inputMode="decimal" maxLength={8} disabled={!v.yaz || kapali} hata={!!s.h.sinir} mesajli onChange={(e) => s.setD({ ...s.d, sinir: e.target.value })} />
-        </Alan>
-      </FormIzgara>
-      {yeni === null ? <><p className={stil.etiketUst}>Anthropic API anahtarı</p><div className={stil.dosyaSatir}>
-        <span className={stil.anahtar}>…{v.yz.anahtar.son4} kayıtlı</span>
-        {v.yaz && <><Tus tur="ikincil" ikon="pencil" disabled={mesgulA} data-yz-degistir="" onClick={() => { setYeni({ deger: "", hata: null }); requestAnimationFrame(() => document.getElementById(ZID.anahtar)?.focus()); }}>Değiştir</Tus>
-          <Tus tur="ikincil" ikon="trash-2" disabled={mesgulA} onClick={anahtarKaldir} aria-label="API anahtarını kaldır">Kaldır</Tus></>}
-      </div></> : v.yaz && <>
-        <Alan id={ZID.anahtar} etiket="API anahtarı" genis hata={yeni.hata ?? undefined} sonuc={yeni.hata ? undefined : "sk-ant- ile başlar."}>
-          <Girdi id={ZID.anahtar} type="password" value={yeni.deger} maxLength={210} spellCheck={false} hata={!!yeni.hata} mesajli disabled={kapali}
-            onChange={(e) => setYeni({ deger: e.target.value, hata: null })} />
-        </Alan>
-        <div className={stil.tuslar}>
-          <Tus ikon="check" disabled={mesgulA || kapali} aria-busy={mesgulA || undefined} onClick={anahtarKaydet}>Anahtarı kaydet</Tus>
-          {v.yz.anahtar.tanimli && <Tus tur="ikincil" disabled={mesgulA}
-            onClick={() => { setYeni(null); requestAnimationFrame(() => document.querySelector<HTMLElement>("[data-yz-degistir]")?.focus()); }}>Vazgeç</Tus>}
-        </div>
-      </>}
-      {/* uyarı satırı hep yerinde */}
-      <p className={!kapali && !v.yz.anahtar.tanimli ? `${stil.durumSatir} ${stil.uyariSatir}` : stil.durumSatir}>
-        {!kapali && !v.yz.anahtar.tanimli ? <><Ikon ad="key-round" kucuk />Anahtar girilmedi: fotoğraftan okuma ve S.A.Y çalışmaz.</>
-          : "Fotoğraf ve maskelenmiş rapor bilgisi Anthropic'e (ABD) gider."}
-      </p>
-      <Yardim baslik="Bu ay kim ne kadar kullandı?">
-        {v.yz.kullanim.length
-          ? <Liste baslik="Yapay zekâ kullanımı" sutunlar={yzSutunlari(v.yz.deger.sinir)} kayitlar={v.yz.kullanim} anahtar={(x) => x.id} />
-          : <p className={stil.not}>Bu ay henüz yapay zekâ kullanılmadı.</p>}
-      </Yardim>
-    </Kart>
-  );
-}
 
 /* ── E-POSTA (536; maket 539 "E-posta"; FIRMA-VT FV11 — 2026-10-16, K2 + K3): gönderim probata'nın Resend hesabından firmanın alan adıyla — alan adı,
    genel adres ve doğrulama Yönetim'den, burada KİLİTLİ (yalnız gösterilir; anahtar hiç gösterilmez); gönderene gizli kopya firmada; deneme e-postası
@@ -659,7 +559,7 @@ function IceAktarmaPenceresi({ v }: { v: Veri }) {
 
 const ICERIK: Record<PanelAdi, (p: { v: Veri }) => ReactNode> = {
   firma: FirmaBilgileri, kod: RaporNumarasi, imza: ImzaYontemi, belge: BelgeSablonlari, mesai: Mesai, esik: Esikler, zimmet: ZimmetFormu,
-  mbelge: MusteriBelgeleri, fiyat: FiyatListesi, sabit: SabitGiderler, yedek: Yedek, depolama: Depolama, saklama: Saklama, yz: YapayZeka, eposta: Eposta,
+  mbelge: MusteriBelgeleri, fiyat: FiyatListesi, sabit: SabitGiderler, yedek: Yedek, depolama: Depolama, saklama: Saklama, eposta: Eposta,
   ice: IceAktarmaPenceresi,
 };
 

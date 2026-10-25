@@ -97,14 +97,9 @@ test("firma ayarları: paneller ve pencere; kaydet, geçersiz değer, kayma yok,
   await soruluKapat(page, imza);
   await expect(page.locator('[data-panel="imza"]')).not.toContainText("önce teknik yönetici imzalar");
 
-  /* yapay zekâ: tek model, adı görünmez; açılınca yurt dışı satırı; kapatınca sorulur */
-  const yz = await ac(page, "yz", "Yapay zekâ");
-  await yz.getByRole("radio", { name: "Açık" }).click();
-  await expect(yz.getByText(/Anthropic'e \(ABD\) gider|Anahtar girilmedi/)).toBeVisible();
-  await expect(yz.getByRole("combobox", { name: "Model" })).toHaveCount(0);
-  await expect(yz.getByText("Claude Haiku 5.5")).toHaveCount(0);
-  await expect(yz.getByText(/^1 milyon token: giriş \$0,10, çıkış \$0,50/)).toBeVisible();
-  await soruluKapat(page, yz);
+  /* 2026-10-25 (göç 0106; reisim: "Yapay zekâ ayarları Firma ayarlarından kalksın"): yapay zekâ paneli yok — Bağlantılar'da yalnız E-posta */
+  await expect(page.locator('[data-panel="yz"]')).toHaveCount(0);
+  await expect(page.locator('[data-panel="eposta"]')).toHaveCount(1);
 
   /* Yedek (reisim: "yedek olarak görülmeli"): günlük + aylık yedek kendiliğinden; Ek yedek Kapalı → Google Drive: alanlar açılır, boy aynı */
   const yedek = await ac(page, "yedek", "Yedek");

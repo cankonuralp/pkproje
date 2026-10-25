@@ -28,8 +28,6 @@ import { raporOlustur } from "../src/modules/raporlar/server/raporlar.ts";
 import { raporSayBilgisi } from "../src/modules/raporlar/server/say-baglanti.ts";
 import { cagriAyir, cagriKapat, sayBaglami, sayDurumu, sayfaNotu, sayGecmisi, sayKapisi, sayOneri, sayRaporCevabi, sayTemizle, soruyuEkle, YARIDA,
 } from "../src/modules/say/server/say.ts";
-import { ayarOku, ayarYaz } from "../src/server/ayar/ayar.ts";
-import { sirYaz } from "../src/server/ayar/sir.ts";
 import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde, type Havuz, type Sorgulayici } from "../src/server/db/kiraci.ts";
 import { klasorDepo } from "../src/server/dosya/depo.ts";
@@ -37,6 +35,8 @@ import { bekleyenAl, bekleyenYaz, ekKaydet, isAl, isBirak, konusmaEkle, konusmaO
 import { yzAyi } from "../src/server/yz/kullanim.ts";
 import { sohbetYaz } from "../src/server/yz/sohbet.ts";
 import { testKumesi } from "./yardimci/kume.ts";
+import { yzKur, type YzKurulumu } from "./yardimci/yz-kur.ts";
+
 
 
 let kume: GomuluKume, havuz: Havuz, A = "", B = "";
@@ -63,10 +63,8 @@ async function firmaKur(firma: string, ek: string): Promise<Firma> {
   return { yon: f.yon, plan: f.plan, den: f.den };
 }
 const ile = <T,>(firma: string, k: Kisi, is: (db: Sorgulayici) => Promise<T>) => kiraciIcinde(havuz, firma, is, { hesapId: k.id });
-const yzAyari = (firma: string, k: Kisi, d: object) => ile(firma, k, async (db) => {
-  const m = await ayarOku(db, "yapay_zeka");
-  return ayarYaz(db, "yapay_zeka", m.surum, { ...m.deger, ...d }, { kim: "Deneme", ne: "ayar.yapay_zeka" });
-});
+/* 2026-10-25 (göç 0106): yapay zekâyı firma yazamaz — kurulum sahip bağlantısıyla (yönetimin karşılığı) */
+const yzAyari = (firma: string, _k: Kisi, d: YzKurulumu) => yzKur(kume, firma, d);
 /* kişinin KENDİ satırı (RLS yalnız firmayı süzer — firmadaki herkesin satırı görünür; 2026-10-08 CI 715bd6f: süzgeçsiz ilk satır planlamacınındı) */
 const kullanim = async (firma: string, k: Kisi) => (await ile(firma, k, (db) => db.sorgu<{ mesaj: number; maliyet: string; ayrilan: string }>(
   "SELECT mesaj, maliyet::text, ayrilan::text FROM yz_kullanim WHERE ay = $1 AND hesap_id = $2", [yzAyi(), k.id]))).rows[0] ?? null;
@@ -92,7 +90,7 @@ test("kapalıyken ve anahtarsızken soru konuşmaya girmez (söylenir); açık +
   assert.deepEqual(await ile(A, FA.den, (db) => soruyuEkle(db, FA.den, { metin: "Soru", ekler: [], ekran })), { durum: "red", neden: "S.A.Y firmada kapalı (Firma ayarları › Yapay zekâ)." });
   await yzAyari(A, FA.yon, { acik: true, sinir: null });
   assert.match(JSON.stringify(await ile(A, FA.den, (db) => soruyuEkle(db, FA.den, { metin: "Soru", ekler: [], ekran }))), /API anahtarı girilmedi/);
-  await ile(A, FA.yon, (db) => sirYaz(db, "yapay_zeka_anahtari", ANAHTAR, { kim: "Deneme" }));
+  await yzAyari(A, FA.yon, { anahtar: ANAHTAR });
   assert.deepEqual(await ile(A, FA.den, (db) => sayDurumu(db)), { acik: true, anahtar: true, sinirDoldu: false });
   const k = await ile(A, FA.den, (db) => sayKapisi(db));
   assert.ok(k.durum === "acik" && k.anahtar === ANAHTAR && k.model === "haiku");

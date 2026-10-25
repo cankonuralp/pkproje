@@ -61,7 +61,8 @@ export const AYAR_BOLUMLERI = {
     /* 2026-10-14 (reisim: "tek seçenek claude haiku 5.5 olsun"): tek model Haiku 5.5 — eski kayıttaki Sonnet / Opus okumada Haiku'ya döner (ayarOku
        alan alan kurtarır), ilk kayıtta Haiku yazılır */
     model: z.enum(["haiku"]).default("haiku"),
-    sinir: z.number().min(0).max(10000).nullable().default(20),
+    /* 2026-10-25 (reisim: "kişi başı sınırı 5 dolar olsun default"): başlangıç 5 $ (önce 20); kayıtlı değer olduğu gibi kalır */
+    sinir: z.number().min(0).max(10000).nullable().default(5),
   }),
   /** Raporların ikinci kopyası (336 "Bulut kaydı"; 2026-10-12 sunum D3): hizmet ("" = kapalı), ana klasör, klasör düzeni — imzalı raporlar ve aylık
       yedek firmanın Google Drive / OneDrive'ına; hesap bağlantısı ve kendiliğinden kopya yayına çıkışta (K7). Eski Dropbox / Yandex / SFTP değeri kapalıya döner. */
@@ -120,17 +121,20 @@ export const baslangic = <B extends AyarBolumu>(b: B): Ayar<B> => AYAR_BOLUMLERI
 export async function ayarOku<B extends AyarBolumu>(db: Sorgulayici, b: B): Promise<{ deger: Ayar<B>; surum: number; id: string | null }> {
   if (!Object.hasOwn(AYAR_BOLUMLERI, b)) throw new Error("Bilinmeyen ayar bölümü");
   const r = (await db.sorgu<{ id: string; deger: Record<string, unknown>; surum: number }>("SELECT id::text, deger, surum FROM firma_ayar WHERE bolum = $1", [b])).rows[0];
+  return { deger: ayarCoz(b, r?.deger ?? {}), surum: r?.surum ?? -1, id: r?.id ?? null };
+}
+
+/** kayıtlı değer → bölüm: başlangıçla birleşir; şemaya uymayan alan başlangıç değerine döner (alan alan kurtarılır). 2026-10-25: Yönetim'in firma
+    özeti (göç 0106 firma_yonetim_ozet — ham yapay zekâ ayarı) de buradan geçer */
+export function ayarCoz<B extends AyarBolumu>(b: B, kayitli: Record<string, unknown>): Ayar<B> {
   const sema = AYAR_BOLUMLERI[b];
-  const kayitli = r?.deger ?? {};
   const tam = sema.safeParse(kayitli);
-  if (tam.success) return { deger: tam.data as Ayar<B>, surum: r?.surum ?? -1, id: r?.id ?? null };
-  /* alan alan kurtar: geçerli alan kalır, bozuk alan başlangıca döner */
+  if (tam.success) return tam.data as Ayar<B>;
   const bas = baslangic(b) as Record<string, unknown>;
-  const kurtarilan = Object.fromEntries(Object.keys(bas).map((k) => {
+  return Object.fromEntries(Object.keys(bas).map((k) => {
     const deneme = sema.safeParse({ ...bas, [k]: kayitli[k] });
     return [k, deneme.success ? (deneme.data as Record<string, unknown>)[k] : bas[k]];
-  }));
-  return { deger: kurtarilan as Ayar<B>, surum: r?.surum ?? -1, id: r?.id ?? null };
+  })) as Ayar<B>;
 }
 
 export type AyarYazSonucu = GuncelleSonucu | { durum: "gecersiz"; hatalar: Record<string, string> };

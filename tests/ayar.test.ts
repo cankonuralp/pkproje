@@ -62,22 +62,23 @@ test("bozuk kayıt uygulamayı düşürmez: geçersiz alan başlangıca döner, 
   assert.equal(o.deger.egitim, 60);
 });
 
+/* 2026-10-25 (göç 0106): yapay zekâ anahtarını uygulama rolü yazamaz — sır mekanizması kilitsiz sırlarla (bulut erişimi, imza sağlayıcı) */
 test("SIR: veritabanında düz metin yok; firma + ada bağlı (kopyalanan satır çözülmez); yanlış anahtar çözemez; iz değeri taşımaz", async () => {
-  await kiraciIcinde(havuz, A, (db) => sirYaz(db, "yapay_zeka_anahtari", SIR, { kim: "Deneme Yönetici" }, ANAHTAR));
-  const satir = (await kiraciIcinde(havuz, A, (db) => db.sorgu<{ sifreli: string }>("SELECT sifreli FROM firma_sir WHERE ad = 'yapay_zeka_anahtari'"))).rows[0]!;
+  await kiraciIcinde(havuz, A, (db) => sirYaz(db, "bulut_erisimi", SIR, { kim: "Deneme Yönetici" }, ANAHTAR));
+  const satir = (await kiraciIcinde(havuz, A, (db) => db.sorgu<{ sifreli: string }>("SELECT sifreli FROM firma_sir WHERE ad = 'bulut_erisimi'"))).rows[0]!;
   assert.ok(!satir.sifreli.includes(SIR) && !Buffer.from(satir.sifreli.split(".")[3]!, "base64url").toString("utf8").includes("uydurma"));
-  assert.deepEqual(await kiraciIcinde(havuz, A, (db) => sirDurumu(db, "yapay_zeka_anahtari")), { tanimli: true, son4: "1234" });
-  assert.equal(await kiraciIcinde(havuz, A, (db) => sirKullan(db, "yapay_zeka_anahtari", ANAHTAR)), SIR);
+  assert.deepEqual(await kiraciIcinde(havuz, A, (db) => sirDurumu(db, "bulut_erisimi")), { tanimli: true, son4: "1234" });
+  assert.equal(await kiraciIcinde(havuz, A, (db) => sirKullan(db, "bulut_erisimi", ANAHTAR)), SIR);
   /* B'ye kopyalanan şifreli satır B'de çözülmez; başka ada kopyalanan da */
-  await kiraciIcinde(havuz, B, (db) => db.sorgu("INSERT INTO firma_sir (ad, sifreli, son4) VALUES ('yapay_zeka_anahtari', $1, '1234'), ('bulut_erisimi', $1, '1234')", [satir.sifreli]));
-  await assert.rejects(kiraciIcinde(havuz, B, (db) => sirKullan(db, "yapay_zeka_anahtari", ANAHTAR)));
-  await assert.rejects(kiraciIcinde(havuz, A, async (db) => { await db.sorgu("UPDATE firma_sir SET ad = 'bulut_erisimi' WHERE ad = 'yapay_zeka_anahtari'"); return sirKullan(db, "bulut_erisimi", ANAHTAR); }));
-  await assert.rejects(kiraciIcinde(havuz, A, (db) => sirKullan(db, "yapay_zeka_anahtari", randomBytes(32))), "başka ana anahtar çözemez");
-  assert.equal(await kiraciIcinde(havuz, B, (db) => sirKullan(db, "imza_saglayici", ANAHTAR)), null);
+  await kiraciIcinde(havuz, B, (db) => db.sorgu("INSERT INTO firma_sir (ad, sifreli, son4) VALUES ('bulut_erisimi', $1, '1234'), ('imza_saglayici', $1, '1234')", [satir.sifreli]));
+  await assert.rejects(kiraciIcinde(havuz, B, (db) => sirKullan(db, "bulut_erisimi", ANAHTAR)));
+  await assert.rejects(kiraciIcinde(havuz, A, async (db) => { await db.sorgu("UPDATE firma_sir SET ad = 'imza_saglayici' WHERE ad = 'bulut_erisimi'"); return sirKullan(db, "imza_saglayici", ANAHTAR); }));
+  await assert.rejects(kiraciIcinde(havuz, A, (db) => sirKullan(db, "bulut_erisimi", randomBytes(32))), "başka ana anahtar çözemez");
+  assert.equal(await kiraciIcinde(havuz, B, (db) => sirKullan(db, "eposta_anahtari", ANAHTAR)), null);
   const iz = await kiraciIcinde(havuz, A, (db) => db.sorgu("SELECT ayrinti, eski, yeni FROM denetim_izi WHERE nesne = 'firma_sir'"));
   assert.ok(iz.rows.length >= 1 && !JSON.stringify(iz.rows).includes("uydurma"), "iz sırrın değerini taşımaz");
-  await kiraciIcinde(havuz, A, (db) => sirYaz(db, "yapay_zeka_anahtari", null, { kim: "Deneme Yönetici" }, ANAHTAR));
-  assert.deepEqual(await kiraciIcinde(havuz, A, (db) => sirDurumu(db, "yapay_zeka_anahtari")), { tanimli: false, son4: null });
+  await kiraciIcinde(havuz, A, (db) => sirYaz(db, "bulut_erisimi", null, { kim: "Deneme Yönetici" }, ANAHTAR));
+  assert.deepEqual(await kiraciIcinde(havuz, A, (db) => sirDurumu(db, "bulut_erisimi")), { tanimli: false, son4: null });
   await assert.rejects(kiraciIcinde(havuz, A, (db) => sirYaz(db, "baska_sir" as never, "x", { kim: "x" }, ANAHTAR)), /Bilinmeyen sır/);
 });
 

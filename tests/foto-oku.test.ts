@@ -27,14 +27,15 @@ import { taslakBaslat, yayinla } from "../src/modules/rapor-format/server/format
 import { fotoOkuBirak, fotoOkuHazirla, fotoOkuKaydet, fotoOkuKullanimYaz, KAYITSIZ_FOTO, okumaFotografiSakla, type FotoOkuHazir } from "../src/modules/raporlar/server/foto-oku.ts";
 import { alanOkuHazirla, alanOkuKullanimYaz, alanOkuSonuc } from "../src/modules/raporlar/server/alan-oku.ts";
 import { raporBelgesiVerisi, raporOlustur, raporSil, sahaRaporu } from "../src/modules/raporlar/server/raporlar.ts";
-import { ayarOku, ayarYaz } from "../src/server/ayar/ayar.ts";
-import { sirYaz } from "../src/server/ayar/sir.ts";
+import { ayarOku } from "../src/server/ayar/ayar.ts";
 import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde, type Havuz, type Sorgulayici } from "../src/server/db/kiraci.ts";
 import { klasorDepo } from "../src/server/dosya/depo.ts";
 import { yzAyi, yzAyir, yzAyKullanimi } from "../src/server/yz/kullanim.ts";
 import { enCokMaliyet } from "../src/server/yz/okuma.ts";
 import { testKumesi } from "./yardimci/kume.ts";
+import { yzKur, type YzKurulumu } from "./yardimci/yz-kur.ts";
+
 
 let kume: GomuluKume, havuz: Havuz, A: string, B: string;
 const klasor = mkdtempSync(join(tmpdir(), "foto-oku-depo-"));
@@ -81,7 +82,8 @@ async function firmaKur(firma: string, ek: string): Promise<Firma> {
 
 const a = <T,>(k: Kisi, is: (db: Sorgulayici) => Promise<T>) => kiraciIcinde(havuz, A, is, { hesapId: k.id });
 const hazirla = (k: Kisi, rapor = FA.rapor, bolum = "linye", foto = JPEG) => a(k, (db) => fotoOkuHazirla(db, depo, k, rapor, bolum, { bayt: foto }));
-const yzAyari = (d: object) => a(FA.yon, async (db) => { const m = await ayarOku(db, "yapay_zeka"); return ayarYaz(db, "yapay_zeka", m.surum, { ...m.deger, ...d }, { kim: "Deneme", ne: "ayar.yapay_zeka" }); });
+/* 2026-10-25 (göç 0106): yapay zekâyı firma yazamaz — kurulum sahip bağlantısıyla (yönetimin karşılığı); sonuç eski biçimde */
+const yzAyari = (d: YzKurulumu) => yzKur(kume, A, d).then(() => ({ durum: "tamam" as const }));
 
 before(async () => {
   process.env.PROBATA_SIR_ANAHTARI ??= randomBytes(32).toString("base64");
@@ -100,7 +102,7 @@ test("açık değilken ve anahtarsızken okunmaz; açık + anahtar: istek yalnı
   assert.match(JSON.stringify(await hazirla(FA.den1)), /firmada kapalı/);
   tamam(await yzAyari({ acik: true }));
   assert.match(JSON.stringify(await hazirla(FA.den1)), /anahtarı girilmedi/);
-  await a(FA.yon, (db) => sirYaz(db, "yapay_zeka_anahtari", "sk-ant-deneme-anahtar-0123456789", { kim: "Deneme" }));
+  await yzAyari({ anahtar: "sk-ant-deneme-anahtar-0123456789" });
   assert.equal((await a(FA.den1, (db) => sahaRaporu(db, FA.den1, FA.rapor)))!.yz, true);
   assert.equal((await a(FA.den2, (db) => sahaRaporu(db, FA.den2, FA.rapor))), null, "başka denetçi raporu görmez");
   const h = await hazirla(FA.den1);

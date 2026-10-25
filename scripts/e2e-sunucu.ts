@@ -19,7 +19,6 @@ import { planKabul, planIci } from "../src/modules/planlar/server/plan-ici.ts";
 import { planAc } from "../src/modules/planlar/server/planlar.ts";
 import { raporOlustur } from "../src/modules/raporlar/server/raporlar.ts";
 import { ayarOku, ayarYaz } from "../src/server/ayar/ayar.ts";
-import { sirYaz } from "../src/server/ayar/sir.ts";
 import { klasorDepo } from "../src/server/dosya/depo.ts";
 import { ekipmanTamYap } from "../src/format/duzen.ts";
 import { formatAyrintisi, taslakBaslat, taslakKaydet, yayinla, type Kisi } from "../src/modules/rapor-format/server/formatlar.ts";
@@ -33,6 +32,7 @@ import { bosKapi } from "../tests/yardimci/kume.ts";
 import { sahteDepoKur } from "../tests/yardimci/sahte-depo.ts";
 import { sahteResendKur } from "../tests/yardimci/sahte-resend.ts";
 import { pgProjesi, sahteYonetimKur } from "../tests/yardimci/sahte-supabase-yonetim.ts";
+import { yzKur } from "../tests/yardimci/yz-kur.ts";
 import { nextCalistir } from "./next.ts";
 
 /* firmaların şifreli sırları (yapay zekâ anahtarı 351, Resend anahtarı 536, yönetim doğrulama anahtarı 348) bu sunucunun ana anahtarıyla — tohumdan önce */
@@ -179,10 +179,9 @@ for (const f of firmalar) {
     if (!tanim) throw new Error("ZPKR02 taslak okunamadı");
     const k = kesin(await taslakKaydet(db, yon, f.id, f.surum, ekipmanTamYap(tanim)), "ZPKR02 tam ekipman bölümü");
     kesin(await yayinla(db, yon, k.id, k.surum, ""), "ZPKR02 yayın");
-    const y = await ayarOku(db, "yapay_zeka");
-    kesin(await ayarYaz(db, "yapay_zeka", y.surum, { ...y.deger, acik: true, sinir: null }, { kim: yon.ad, ne: "ayar.yapay_zeka" }), "yapay zekâ ayarı");
-    await sirYaz(db, "yapay_zeka_anahtari", E2E_YZ.anahtar, { kim: yon.ad });
   }, { hesapId: yon.id });
+  /* 2026-10-25 (göç 0106): yapay zekâyı firma yazamaz (yalnız Yönetim) — tohum sahip bağlantısıyla */
+  await yzKur(kume, yzFirma, { acik: true, sinir: null, anahtar: E2E_YZ.anahtar });
   const bugun = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
   const depoYz = klasorDepo(mkdtempSync(join(tmpdir(), "probata-e2e-yz-depo-")));
   const plan = kesin(await kiraciIcinde(havuz, yzFirma, (db) => planAc(db, depoYz, pl, yzFirma,

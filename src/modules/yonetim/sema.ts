@@ -53,3 +53,17 @@ export function yonetimEtiketi(yonetimAlani: string | null, anaAlan: string): st
   const on = yonetimAlani.slice(0, -(anaAlan.length + 1));
   return on.includes(".") ? [] : [on];
 }
+
+/* ── YAPAY ZEKÂ (2026-10-25; reisim: "Yapay zekâ ayarları Firma ayarlarından kalksın, yalnız Yönetim panelinden yönetilsin" — maket onaylı K1–K7):
+   Firma ayarlarından taşındı (336 / 538). Tek model, seçim yok; ekranda yalnız fiyat yazar, model adı hiçbir yerde görünmez. Değer firma_ayar
+   'yapay_zeka' bölümünde (başlangıç src/server/ayar/ayar.ts — kişi başı 5 $); yazan yalnız göç 0106 firma_yonetim_yz. ── */
+export const YZ_FIYAT = "1 milyon token: giriş $0,10, çıkış $0,50 · bir fotoğraftan okuma ≈ $0,0015";
+export const YzGirdisi = z.object({
+  acik: z.boolean(),
+  sinir: z.preprocess((v) => (typeof v === "string" ? v.trim().replace(",", ".") : v),
+    z.string().regex(/^(\d{1,5}(\.\d{1,2})?)?$/, "Sayı yazılmalı (ör. 5). Kaydedilmedi.")).transform((s) => (s === "" ? null : Number(s)))
+    .refine((n) => n === null || n <= 10000, "En çok 10.000 $."),
+});
+/** Anthropic API anahtarı (sk-ant- ile başlar); şifreli saklanır, ekranda son 4 hane */
+export const AnahtarGirdisi = z.object({ anahtar: z.preprocess((v) => (typeof v === "string" ? v.trim() : v),
+  z.string({ error: "Anahtarı yapıştırın." }).min(1, "Anahtarı yapıştırın.").regex(/^sk-ant-[A-Za-z0-9_-]{16,200}$/, "Geçerli bir Anthropic API anahtarı değil (sk-ant- ile başlar).")) });

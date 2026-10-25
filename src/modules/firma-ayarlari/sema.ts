@@ -7,7 +7,7 @@ export const AYAR_BASLIK = {
   firma: "Firma bilgileri", imza: "İmza yöntemi", zimmet: "Zimmet teslim formu", saklama: "Rapor saklama süresi", onbilgi: "Ön bilgilendirme formu",
   bordro: "Bordro formatı", mesai: "Mesai takibi", esik: "Uyarı eşikleri", kod: "Rapor numarası", sabit: "Sabit giderler",
   fiyat: "Fiyat listesi", mbelge: "Müşteriye açık personel belgeleri",
-  bulut: "Raporların ikinci kopyası", depo: "Supabase hesabı ve yedek", yz: "Yapay zekâ", eposta: "E-posta", ice: "Toplu içe aktarma (ilk kurulum)",
+  bulut: "Raporların ikinci kopyası", depo: "Supabase hesabı ve yedek", eposta: "E-posta", ice: "Toplu içe aktarma (ilk kurulum)",
 } as const;
 export type AyarKesimi = keyof typeof AYAR_BASLIK;
 
@@ -85,11 +85,7 @@ export const AyarSurumu = z.number().int().min(-1);
 export const MUSTERI_BELGE_BAS = [["ekipnet", "EKİPNET kayıt belgesi", false], ["diploma", "Diploma", false], ["oda", "Oda kaydı", false], ["atama", "Ekipman atama belgesi", false]] as const;
 export const MUSTERI_BELGE_SON = [["kimlik", "Kimlik belgesi", true], ["saglik", "Sağlık raporu", true], ["is", "İş sözleşmesi", true], ["diger", "Diğer", true]] as const;
 
-/* ── 336: yapay zekâ, bulut kaydı (2026-10-12: raporların ikinci kopyası), Supabase hesabı ve yedek (maket MV.YZ_MODEL, MV.BULUT_SAGLAYICI, MV.BULUT_DUZEN) ── */
-/* 2026-10-12 (reisim: "yapay zekada da haiku … seçenekler olmalı daha uygun ücretlendirme için" → sunum Y1–Y4 kabul): Haiku 5.5 eklendi.
-   2026-10-14 (reisim: "tek seçenek claude haiku 5.5 olsun"): TEK MODEL, seçim yok; ekranda yalnız fiyat yazar, model adı hiçbir yerde görünmez (2026-10-25)
-   (bütün yapay zekâ işleri bu modelle; fiyat src/server/yz/okuma.ts). */
-export const YZ_FIYAT = "1 milyon token: giriş $0,10, çıkış $0,50 · bir fotoğraftan okuma ≈ $0,0015";
+/* ── 336: bulut kaydı (2026-10-12: raporların ikinci kopyası), Supabase hesabı ve yedek (2026-10-25: yapay zekâ Yönetim'e taşındı — yonetim/sema.ts; maket MV.BULUT_SAGLAYICI, MV.BULUT_DUZEN) ── */
 /** [ad, verileri Türkiye dışında saklayabilir] — 2026-10-12 (sunum D3 kabul): "Raporların ikinci kopyası" ilk yayında yalnız Google Drive ve OneDrive;
     Dropbox, Yandex Disk ve kendi sunucusu istek gelirse */
 export const BULUT_SAGLAYICI = {
@@ -108,15 +104,6 @@ export const SUPABASE_ADIMLAR = [
   "İsteyen firmaya proje sonradan devredilir (Supabase'te proje devri); fatura o zaman doğrudan firmaya gelir.",
   "Günlük yedeği Supabase alır; aylık arşiv yedeğini probata alır.",
 ] as const;
-export const YzGirdisi = z.object({
-  acik: z.boolean(),
-  sinir: z.preprocess((v) => (typeof v === "string" ? v.trim().replace(",", ".") : v),
-    z.string().regex(/^(\d{1,5}(\.\d{1,2})?)?$/, "Sayı yazılmalı (ör. 20). Kaydedilmedi.")).transform((s) => (s === "" ? null : Number(s)))
-    .refine((n) => n === null || n <= 10000, "En çok 10.000 $."),
-});
-/** Anthropic API anahtarı (sk-ant- ile başlar); şifreli saklanır, ekranda son 4 hane */
-export const AnahtarGirdisi = z.object({ anahtar: z.preprocess((v) => (typeof v === "string" ? v.trim() : v),
-  z.string({ error: "Anahtarı yapıştırın." }).min(1, "Anahtarı yapıştırın.").regex(/^sk-ant-[A-Za-z0-9_-]{16,200}$/, "Geçerli bir Anthropic API anahtarı değil (sk-ant- ile başlar).")) });
 export const BulutGirdisi = z.object({
   saglayici: z.enum(["", "gdrive", "onedrive"], { error: "Hizmet seçin." }),
   kok: z.preprocess((v) => (typeof v === "string" ? v.trim() : v), z.string().min(1, "Ana klasör adı yazın.").max(80, "En çok 80 karakter.")

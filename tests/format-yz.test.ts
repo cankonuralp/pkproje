@@ -10,22 +10,20 @@ import { after, before, test } from "node:test";
 import { SABLONLAR } from "../src/format/sablonlar.ts";
 import { formatBelgesi, formatYzBirak, formatYzDurumu, formatYzHazirla, formatYzKapat, YZ_ANAHTARSIZ, YZ_KAPALI } from "../src/modules/rapor-format/server/yz.ts";
 import { formatEnCokMaliyet, type FormatBelgesi } from "../src/server/yz/format.ts";
-import { ayarOku, ayarYaz } from "../src/server/ayar/ayar.ts";
-import { sirYaz } from "../src/server/ayar/sir.ts";
 import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde, type Havuz, type Sorgulayici } from "../src/server/db/kiraci.ts";
 import type { YetkiHesabi } from "../src/server/yetki/canDo.ts";
 import { yzAyi } from "../src/server/yz/kullanim.ts";
 import { testKumesi } from "./yardimci/kume.ts";
+import { yzKur, type YzKurulumu } from "./yardimci/yz-kur.ts";
+
 
 let kume: GomuluKume, havuz: Havuz, A = "";
 let MEK: YetkiHesabi, DEN: YetkiHesabi;
 const T = SABLONLAR.KOMPRESOR.tanim;
 const ile = <R,>(k: YetkiHesabi, is: (db: Sorgulayici) => Promise<R>) => kiraciIcinde(havuz, A, is, { hesapId: k.id });
-const yzAyari = (d: object) => ile(MEK, async (db) => {
-  const m = await ayarOku(db, "yapay_zeka");
-  return ayarYaz(db, "yapay_zeka", m.surum, { ...m.deger, ...d }, { kim: "Deneme", ne: "ayar.yapay_zeka" });
-});
+/* 2026-10-25 (göç 0106): yapay zekâyı firma yazamaz — kurulum sahip bağlantısıyla (yönetimin karşılığı) */
+const yzAyari = (d: YzKurulumu) => yzKur(kume, A, d);
 const kullanim = async (k: YetkiHesabi) => (await ile(k, (db) => db.sorgu<{ mesaj: number; maliyet: string; ayrilan: string }>(
   "SELECT mesaj, maliyet::text, ayrilan::text FROM yz_kullanim WHERE ay = $1 AND hesap_id = $2", [yzAyi(), k.id]))).rows[0] ?? { mesaj: 0, maliyet: "0", ayrilan: "0" };
 const cevap = (x: unknown) => ({ content: [{ type: "text", text: JSON.stringify(x) }], stop_reason: "end_turn", usage: { input_tokens: 4_000, output_tokens: 600 } });
@@ -50,7 +48,7 @@ test("kapalı / anahtarsız / yetkisiz / geçersiz istek: neden söylenir, ayır
   await yzAyari({ acik: true, sinir: null });   // 2026-10-14: tek model Haiku 5.5 (önceden bu deneme Sonnet'le)
   assert.equal(await ile(MEK, (db) => formatYzDurumu(db)), "anahtarsiz");
   assert.deepEqual(await ile(MEK, (db) => formatYzHazirla(db, MEK, { istek: "tablo ekle", tanim: T, turAd: "" })), { durum: "red", neden: YZ_ANAHTARSIZ });
-  await ile(MEK, (db) => sirYaz(db, "yapay_zeka_anahtari", "sk-ant-deneme-anahtar-0123456789", { kim: "Deneme" }));
+  await yzAyari({ anahtar: "sk-ant-deneme-anahtar-0123456789" });
   assert.equal(await ile(MEK, (db) => formatYzDurumu(db)), "hazir");
   assert.deepEqual(await ile(DEN, (db) => formatYzHazirla(db, DEN, { istek: "tablo ekle", tanim: T, turAd: "" })), { durum: "red", neden: "Bu işlem için yetkiniz yok." });
   for (const [istek, tanim] of [["", T], ["x".repeat(501), T], ["tablo ekle", { bolumler: "bozuk" }], ["tablo ekle", null]] as const) {
