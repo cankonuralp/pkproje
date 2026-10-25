@@ -28,7 +28,7 @@ import { SABLONLAR } from "../src/format/sablonlar.ts";
 const SISTEM = saySistemi(SAY_KILAVUZU, "Planlar:\n- plan_ac (yaz): Plan açar.");
 
 test("talimat: reisim'in iki kuralı; eski yamalar yok; sayfa ve ekran talimatta değil (konuşmada); her çağrıda aynı", () => {
-  assert.ok(SISTEM.startsWith("Sen S.A.Y'sın: Claude Haiku 5.5."));
+  assert.ok(SISTEM.startsWith("Sen S.A.Y'sın."));
   assert.ok(SISTEM.includes(KONU_DISI), "konu sınırı");
   assert.match(SISTEM, /Sonucu görmeden "yaptım" deme/, "yap → teyit → söyle");
   assert.match(SISTEM, /devam edeyim mi diye sorma/, "sormadan sürdürür");

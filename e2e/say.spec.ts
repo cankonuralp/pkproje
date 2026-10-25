@@ -51,7 +51,7 @@ test("S.A.Y: düğme, hızlı soru, serbest soru, sayfa değişince ve yenileyin
   }
   /* 555: boş sohbette açıklama yok; alt yazı yalnız model adı */
   await expect(panel.getByRole("listitem")).toHaveCount(0);
-  await expect(panel.getByText("Claude Haiku 5.5", { exact: true })).toBeVisible();
+  await expect(panel.getByText("Claude Haiku 5.5")).toHaveCount(0);
   for (const metin of ["Merhaba", "Her konuda", "Sohbeti yalnız siz görürsünüz", "Ekler en çok", "Bu rapordayım", "ne yazayım"]) await expect(panel).not.toContainText(metin);
   /* 550 + 555: tek hazır tuş, rapor dışında yok; eski hazır sorular yok */
   await expect(panel.getByRole("button", { name: "Fotoğrafları oku ve gir" })).toHaveCount(0);

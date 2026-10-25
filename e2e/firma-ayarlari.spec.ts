@@ -97,12 +97,12 @@ test("firma ayarları: paneller ve pencere; kaydet, geçersiz değer, kayma yok,
   await soruluKapat(page, imza);
   await expect(page.locator('[data-panel="imza"]')).not.toContainText("önce teknik yönetici imzalar");
 
-  /* yapay zekâ: tek model Claude Haiku 5.5; açılınca yurt dışı satırı; kapatınca sorulur */
+  /* yapay zekâ: tek model, adı görünmez; açılınca yurt dışı satırı; kapatınca sorulur */
   const yz = await ac(page, "yz", "Yapay zekâ");
   await yz.getByRole("radio", { name: "Açık" }).click();
   await expect(yz.getByText(/Anthropic'e \(ABD\) gider|Anahtar girilmedi/)).toBeVisible();
   await expect(yz.getByRole("combobox", { name: "Model" })).toHaveCount(0);
-  await expect(yz.getByText("Claude Haiku 5.5", { exact: true })).toBeVisible();
+  await expect(yz.getByText("Claude Haiku 5.5")).toHaveCount(0);
   await expect(yz.getByText(/^1 milyon token: giriş \$0,10, çıkış \$0,50/)).toBeVisible();
   await soruluKapat(page, yz);
 

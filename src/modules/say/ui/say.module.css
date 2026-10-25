@@ -25,7 +25,6 @@
 .bas { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: linear-gradient(135deg, var(--vurgu-2), var(--vurgu)); color: var(--vurgu-uzeri); }
 .kimlik { flex: 1 1 auto; min-width: 0; }
 .kimlik h2 { margin: 0; font-size: var(--boy-bolum); font-weight: var(--kal-baslik); }
-.altYazi { margin: 2px 0 0; font-size: var(--boy-kucuk); opacity: .85; }
 .basTus {
   display: inline-grid; place-items: center; flex: none; width: var(--tus-y); height: var(--tus-y); padding: 0;
   border: 0; border-radius: var(--r-orta); background: transparent; color: inherit; cursor: pointer;

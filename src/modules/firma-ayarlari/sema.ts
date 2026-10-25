@@ -87,9 +87,9 @@ export const MUSTERI_BELGE_SON = [["kimlik", "Kimlik belgesi", true], ["saglik",
 
 /* ── 336: yapay zekâ, bulut kaydı (2026-10-12: raporların ikinci kopyası), Supabase hesabı ve yedek (maket MV.YZ_MODEL, MV.BULUT_SAGLAYICI, MV.BULUT_DUZEN) ── */
 /* 2026-10-12 (reisim: "yapay zekada da haiku … seçenekler olmalı daha uygun ücretlendirme için" → sunum Y1–Y4 kabul): Haiku 5.5 eklendi.
-   2026-10-14 (reisim: "tek seçenek claude haiku 5.5 olsun"): TEK MODEL — Sonnet 5.5 ve Opus 5.5 kalktı, seçim yok; ekranda model adı ve fiyatı yazar
+   2026-10-14 (reisim: "tek seçenek claude haiku 5.5 olsun"): TEK MODEL, seçim yok; ekranda yalnız fiyat yazar, model adı hiçbir yerde görünmez (2026-10-25)
    (bütün yapay zekâ işleri bu modelle; fiyat src/server/yz/okuma.ts). */
-export const YZ_MODEL = ["Claude Haiku 5.5", "1 milyon token: giriş $0,10, çıkış $0,50 · bir fotoğraftan okuma ≈ $0,0015"] as const;
+export const YZ_FIYAT = "1 milyon token: giriş $0,10, çıkış $0,50 · bir fotoğraftan okuma ≈ $0,0015";
 /** [ad, verileri Türkiye dışında saklayabilir] — 2026-10-12 (sunum D3 kabul): "Raporların ikinci kopyası" ilk yayında yalnız Google Drive ve OneDrive;
     Dropbox, Yandex Disk ve kendi sunucusu istek gelirse */
 export const BULUT_SAGLAYICI = {

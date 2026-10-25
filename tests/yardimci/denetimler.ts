@@ -1014,3 +1014,10 @@ export function semaKarmasikligi(sema: unknown): { istegeBagli: number; birlesik
   yuru(sema);
   return k;
 }
+
+/* 2026-10-25 (reisim: "model adı hiçbir yerde görünmesin"): yorumlar çıkarıldıktan sonra kalan koddaki (dizge, JSX metni) model adı geçişleri.
+   Model kimliği küçük harfli ve tireli ("claude-haiku-5-5") olduğundan yalnız büyük harfle başlayan ad sayılır. */
+export function modelAdiBulgulari(metin: string): string[] {
+  const kod = metin.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[\s;{},(])\/\/.*$/gm, "$1");
+  return kod.split("\n").map((s, i) => ({ s, i: i + 1 })).filter((x) => /\b(Haiku|Sonnet|Opus|Claude)\b/.test(x.s)).map((x) => `${x.i}: ${x.s.trim().slice(0, 80)}`);
+}

@@ -23,7 +23,7 @@ import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus } from "../../../components/tus/Tus";
 import {
-  AYAR_DOSYASI, BULUT_DUZEN, ESIK, IMZA_YONTEM, NUSHA, SAKLAMA_YIL, YASAL, YZ_MODEL, kodBuyut, onBilgiFormKodu,
+  AYAR_DOSYASI, BULUT_DUZEN, ESIK, IMZA_YONTEM, NUSHA, SAKLAMA_YIL, YASAL, YZ_FIYAT, kodBuyut, onBilgiFormKodu,
   type AyarDosyasi, type AyarKesimi, type EsikAdi,
 } from "../sema";
 import type { FirmaAyarlari as Veri } from "../server/ayarlar";
@@ -77,7 +77,7 @@ function ozet(k: PanelAdi, v: Veri): { metin: string; durum?: string } {
     case "depolama": return { metin: `Deneme projesi · ${v.depolama.dosya.toLocaleString("tr-TR")} dosya · ${megabayt(v.depolama.bayt)} MB` };
     case "saklama": return { metin: `${v.saklama.deger.yil} yıl${v.saklama.deger.yil === 5 ? " (yasal en az)" : ""}` };
     case "yz": { const z = v.yz.deger;
-      return { metin: z.acik ? `Açık · ${YZ_MODEL[0]} · kişi başı ${z.sinir ? `${String(z.sinir).replace(".", ",")} $ / ay` : "sınırsız"}` : "Kapalı",
+      return { metin: z.acik ? `Açık · kişi başı ${z.sinir ? `${String(z.sinir).replace(".", ",")} $ / ay` : "sınırsız"}` : "Kapalı",
         durum: z.acik && !v.yz.anahtar.tanimli ? "Anahtar yok" : undefined }; }
     case "eposta": { const g = v.eposta.gonderim, hazir = !!g && g.dogrulandi && g.anahtar;
       return { metin: hazir ? `Bağlı · ${g.alan}` : g ? `${g.alan} · doğrulanmadı` : "E-postalar sırada bekliyor", durum: hazir ? undefined : "Bağlı değil" }; }
@@ -564,11 +564,10 @@ function YapayZeka({ v }: { v: Veri }) {
       <Segment ad="Fotoğraftan okuma ve S.A.Y" deger={s.d.acik ? "1" : "0"} kapali={!v.yaz} secenekler={[["0", "Kapalı"], ["1", "Açık"]] as const}
         degistir={(x) => s.setD({ ...s.d, acik: x === "1" })} />
       <FormIzgara>
-        {/* 2026-10-14 (reisim: "tek seçenek claude haiku 5.5 olsun"): tek model — seçim yok, adı ve fiyatı yazar */}
+        {/* 2026-10-14 (reisim: "tek seçenek claude haiku 5.5 olsun"): tek model — seçim yok, yalnız fiyat yazar; model adı görünmez */}
         <div className={kapali ? stil.soluk : undefined}>
-          <p className={stil.etiketUst}>Model</p>
-          <span className={stil.anahtar}>{YZ_MODEL[0]}</span>
-          <span className={stil.altSatir}>{YZ_MODEL[1]}</span>
+          <p className={stil.etiketUst}>Ücret</p>
+          <span className={stil.altSatir}>{YZ_FIYAT}</span>
         </div>
         <Alan id={ZID.sinir} etiket="Kişi başı aylık sınır ($)" hata={s.h.sinir} sonuc={s.h.sinir ? undefined : "Boş: sınırsız."}>
           <Girdi id={ZID.sinir} value={s.d.sinir} inputMode="decimal" maxLength={8} disabled={!v.yaz || kapali} hata={!!s.h.sinir} mesajli onChange={(e) => s.setD({ ...s.d, sinir: e.target.value })} />
