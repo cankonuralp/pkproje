@@ -20,8 +20,10 @@ import { atamaHaritasi } from "../../personel/server/dosyalar.ts";
 import { denetciAdaylari, personelOzetleri } from "../../personel/server/personel.ts";
 import { epostaRehberi, hesapGonderen, personelHesaplari } from "../../../server/kimlik/hesap.ts";
 import { firmaBelgeKunyesi } from "../../../server/ayar/ayar.ts";
-import { epostaKuyruga } from "../../../server/eposta/eposta.ts";
+import { adresler, epostaKuyruga } from "../../../server/eposta/eposta.ts";
 import { tesisMusteriIletisim } from "../../musteriler/server/musteriler.ts";
+import { eksikElleAlanlar } from "../../../belge/doldurma.ts";
+import { yayindakiBelgeFormati } from "../../rapor-format/server/belgeler.ts";
 import { isgKaydet, isgKullanildi, sozlesmeDegistirir, tesisIsgKayitlari, tesisSozlesmeleri } from "../../sozlesmeler/server/sozlesmeler.ts";
 import {
   adayUyarilari, isgDurumu, kapsamHesapla, PlanAcGirdisi, planEpostasi, sozlesmeUyarisi, turUyarilari,
@@ -43,7 +45,9 @@ export interface Kisi extends YetkiHesabi { ad: string }
 export const planAcabilir = (kim: YetkiHesabi) => canDoEylem(kim, "plan_ac");
 
 export type Yazma =
-  | { durum: "tamam"; id: string; no: string; eposta?: number }
+  /* onBilgi (2026-10-25): müşterinin e-postası varsa ön bilgilendirme formu — "gonder": yanıttan sonra basılıp gönderilir; "doldur": firmanın
+     formatında elle doldurulacak yer var, kendiliğinden gönderilmez (plan içinde doldurulup gönderilir) */
+  | { durum: "tamam"; id: string; no: string; eposta?: number; onBilgi?: "gonder" | "doldur" }
   | { durum: "gecersiz"; hatalar: DogrulamaHatalari }
   | { durum: "yetkisiz" };
 
@@ -175,7 +179,13 @@ export async function planAc(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: st
   await epostaKuyruga(db, { kime: ekipEposta, konu: e1.konu, govde: e1.govde, kaynak: "plan", kaynakId: p.id, gonderen }, iz);
   const e2 = planEpostasi({ ...ortak, ekipten: false });
   const bilgi = await epostaKuyruga(db, { kime: v.bilgilendirme.filter((x) => !ekipEposta.includes(x)), konu: e2.konu, govde: e2.govde, kaynak: "plan", kaynakId: p.id, gonderen }, iz);
-  return { durum: "tamam", id: p.id, no, eposta: ekipEposta.length + bilgi.length };
+  /* 2026-10-25 (belge doldurma; reisim: "bir müşteri için sözleşme açtığımda el ile girilmesi gereken yerleri girip öyle gönderebilmeliyim"): ön
+     bilgilendirme formu müşterinin e-postasına yanıttan sonra (PDF basılır — plan açan beklemez; onbilgi.ts). Firmanın yayındaki formatında
+     zorunlu (varsayılanı olmayan) elle doldurulacak yer varsa kendiliğinden gönderilmez: plan içinde doldurulup "Ön bilgilendirme formunu gönder" ile gider. */
+  const musteriEposta = adresler([(await tesisMusteriIletisim(db, v.tesis))?.eposta]);
+  const obf = musteriEposta.length ? await yayindakiBelgeFormati(db, "onbilgi") : null;
+  const onBilgi = !musteriEposta.length ? undefined : obf && eksikElleAlanlar(obf, null).length ? "doldur" as const : "gonder" as const;
+  return { durum: "tamam", id: p.id, no, eposta: ekipEposta.length + bilgi.length, onBilgi };
 }
 
 export interface PlanKarti {

@@ -20,6 +20,8 @@ export interface TalepFormuVerisi {
   karar: { ad: string; zaman: string; sonuc: "onaylandi" | "reddedildi" } | null;
   /** 2026-10-25 (belge formatları): firmanın o talep tipi için yayınladığı format (yoksa temel format) */
   format?: FormatTanimi | null;
+  /** 2026-10-25 (belge doldurma): formatın elle doldurulan yerlerinin değerleri (hücre kimliği → değer; src/belge/doldurma.ts) */
+  elle?: Record<string, string> | null;
 }
 
 export const TALEP_FORMAT: Record<TalepTipi, { kod: string; baslik: string; alt: string; onaylayan: string; metin: string }> = {

@@ -8,7 +8,7 @@ import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { BelgeHatasi } from "../../muhasebe/server/giderler";
 import {
   izinBelgesi, izinDuzelt, izinGeriCek, izinGonder, masrafFormuBelgesi, masrafFormuDuzelt, masrafFormuGeriCek, masrafFormuGonder, TalepBelgeHatasi,
-  type TalepBelgesi, type Yazma,
+  talepDoldur, talepDoldurmaVerisi, type TalepBelgesi, type TalepDoldurmaVerisi, type Yazma,
 } from "../server/talepler";
 
 export interface TalepYaniti { tamam?: boolean; id?: string; no?: string; bildirim?: string; hatalar?: Record<string, string>; genel?: string }
@@ -80,4 +80,23 @@ export async function masrafDuzeltEylemi(form: FormData): Promise<TalepYaniti> {
   const girdi = { is: yazi(form.get("is")), tarih: yazi(form.get("tarih")), tur: yazi(form.get("tur")), tutar: yazi(form.get("tutar")), oran: yazi(form.get("oran")),
     aciklama: yazi(form.get("aciklama")) };
   return islem((o) => oturumIslemi(o, (db) => masrafFormuDuzelt(db, depo(), o, o.kiraci.firmaId, yazi(form.get("id")), Number(form.get("surum")), girdi, b)));
+}
+
+/* 2026-10-25 (belge doldurma; reisim: "sözleşme vb işleri de yüklediğimde, el ile değiştirilebilir ve doldurulabilir olmalı …"): talep formunun elle
+   doldurulan yerleri — talep penceresi açılınca verisi istenir; yetki talepler.ts'te (talepDoldurmaDurumu) */
+const DOLDURMA = { ...SONUC, cakisma: "Belge bu arada değişti. Sayfayı yenileyip yeniden deneyin.", formatsiz: "Belgenin yayında formatı yok; doldurulacak yer kalmadı." } as const;
+export async function talepDoldurmaVerisiEylemi(tip: string, id: string): Promise<TalepDoldurmaVerisi | null> {
+  if (!(await ayniKoken())) return null;
+  const o = await istekOturumu();
+  if (!o) return null;
+  return oturumIslemi(o, (db) => talepDoldurmaVerisi(db, o, yazi(tip), yazi(id), depo()));
+}
+export async function talepDoldurEylemi(tip: string, id: string, degerler: unknown, surum: unknown): Promise<TalepYaniti> {
+  if (!(await ayniKoken())) return { genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };
+  const o = await istekOturumu();
+  if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
+  const s = typeof surum === "number" && Number.isSafeInteger(surum) && surum >= 0 ? surum : null;
+  const r = await oturumIslemi(o, (db) => talepDoldur(db, o, yazi(tip), yazi(id), degerler, s));
+  return r.durum === "tamam" ? { tamam: true } : r.durum === "gecersiz" ? { hatalar: r.hatalar } : r.durum === "red" ? { genel: r.neden }
+    : { genel: DOLDURMA[r.durum] };
 }

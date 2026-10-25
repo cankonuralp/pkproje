@@ -280,14 +280,17 @@ const yzTaklit = createServer((istek, yanit) => {
   let govde = ""; istek.on("data", (p) => { govde += p; }).on("end", () => {
     /* 432: e-posta sağlayıcısının taklidi (Resend biçimi) — yalnız uydurma anahtarla ve yalnız .example alıcıya; gerçek adrese gitmez */
     if (istek.url === "/emails") {
-      let e: { from?: unknown; to?: unknown; subject?: unknown; text?: unknown; reply_to?: unknown; bcc?: unknown } = {};
+      let e: { from?: unknown; to?: unknown; subject?: unknown; text?: unknown; reply_to?: unknown; bcc?: unknown; attachments?: unknown } = {};
       try { e = JSON.parse(govde); } catch { /* boş kalır → 422 */ }
+      /* 2026-10-25 (belge doldurma): ek varsa tek PDF — adı yazı, içeriği base64 ve "%PDF-" ile başlar (eksiz ya da bozuk ek reddedilir) */
+      const ekGecerli = e.attachments === undefined || (Array.isArray(e.attachments) && e.attachments.length === 1 && e.attachments.every((x: { filename?: unknown; content?: unknown }) =>
+        typeof x?.filename === "string" && x.filename.endsWith(".pdf") && typeof x.content === "string" && Buffer.from(x.content, "base64").subarray(0, 5).toString() === "%PDF-"));
       /* 536: Kimden = tuşa basan kişi ("Ad" <kisi@alan>) ya da Rapor e-postası — firmanın alan adında; cevap / gizli kopya varsa yalnız .example */
       const ekler = [e.reply_to, e.bcc].filter((x) => x !== undefined);
       const tamam = istek.headers.authorization === `Bearer ${E2E_EPOSTA.anahtar}` && typeof e.from === "string" && KIMDEN.test(e.from)
         && Array.isArray(e.to) && e.to.length === 1 && e.to.every((x) => typeof x === "string" && x.endsWith(".example"))
         && ekler.every((x) => Array.isArray(x) && x.length === 1 && typeof x[0] === "string" && x[0].endsWith(".example"))
-        && typeof e.subject === "string" && typeof e.text === "string";
+        && typeof e.subject === "string" && typeof e.text === "string" && ekGecerli;
       yanit.writeHead(tamam ? 200 : 422, { "content-type": "application/json" }).end(JSON.stringify(tamam ? { id: "e2e" } : { message: "taklit: geçersiz istek" }));
       return;
     }

@@ -12,7 +12,11 @@ import { havuzKur, kiraciIcinde, type Havuz, type Sorgulayici } from "../src/ser
 import { klasorDepo } from "../src/server/dosya/depo.ts";
 import { bugunTr, planAc, planAcVerisi, planKarti, tesisPlanBilgisi, type Kisi } from "../src/modules/planlar/server/planlar.ts";
 import { MATRIS_ONERI } from "../src/server/yetki/tanim.ts";
-import { planIci, planKabul } from "../src/modules/planlar/server/plan-ici.ts";
+import { DOSYA_ONBILGI, MUSTERI_EPOSTASI_YOK, onBilgiDoldur, onBilgiVerisi, planBelgeleri, planIci, planKabul } from "../src/modules/planlar/server/plan-ici.ts";
+import { onBilgiGonder } from "../src/modules/planlar/server/onbilgi.ts";
+import { dosyaIndirilebilir } from "../src/server/dosya/dosya.ts";
+import { DOSYA_ERISIMI } from "../src/server/dosya/erisim.ts";
+import { epostaKuyruga } from "../src/server/eposta/eposta.ts";
 import { bekleyenleriGonder } from "../src/server/eposta/gonder.ts";
 import { SAGLAYICI_YOK, type EpostaSaglayici } from "../src/server/eposta/saglayici.ts";
 import { ALAN_DOGRULANMADI } from "../src/server/eposta/kimden.ts";
@@ -306,4 +310,75 @@ test("465 plan aç: çıkarılan tesis ekipmanı plana girmez, tesiste kalır; b
   /* şema: kimlik değilse geçmez */
   const g = await a(FA.plan, (db) => planAc(db, depo, FA.plan, A, { tesis: FA.tesis2, baslangic: bugun, bitis: bugun, ekip: [{ personel: FA.den1P }], haric: ["x"] }));
   assert.equal(g.durum, "gecersiz");
+});
+
+/* 2026-10-25 (belge doldurma; reisim: "sözleşme vb işleri de yüklediğimde, el ile değiştirilebilir ve doldurulabilir olmalı, bir müşteri için sözleşme
+   açtığımda el ile girilmesi gereken yerleri girip öyle gönderebilmeliyim"; "ön bilgilendirme formunu plan açılınca müşteriye e-postayla gönder"; göç
+   0105): müşterinin e-postası varsa plan açılınca ön bilgilendirme formu gönderilecek ("gonder"; formatında zorunlu elle yer varsa "doldur"); gönderim
+   PDF'i tek dosya yolundan saklar (modül plan_onbilgi, kayıt = plan; planı gören açar, başka kimse açamaz) ve alıcı başına EKLİ e-posta yazar
+   (kaynak "onbilgi", gönderen tuşa basan); plan içi e-posta listesinde ekiyle görünür; gönderimde ek baytları aynen sağlayıcıya gider; ek değişmez
+   (tetik). Yalnız planı değiştirebilen gönderir ve doldurur; müşterinin e-postası yoksa gönderilmez; yayında format yoksa doldurma "format yok". */
+test("ön bilgilendirme formu: plan açılınca gönderilecek; PDF tek dosya yolunda, alıcı başına ekli e-posta; listede ekiyle; ek aynen gider; yetki", async () => {
+  const mId = (await sql<{ id: string }>(A, "INSERT INTO musteri (unvan, kisa, eposta) VALUES ('Deneme Bilgi A.Ş.', 'Bilgi', 'bilgi-musteri@deneme-a.example') RETURNING id::text")).rows[0].id;
+  const tId = (await sql<{ id: string }>(A, "INSERT INTO tesis (musteri_id, ad, adres, il) VALUES ($1, 'Bilgi Tesisi', 'Bilgi Cad. 3', 'Ankara') RETURNING id::text", [mId])).rows[0].id;
+  const r = tamam(await a(FA.plan, (db) => planAc(db, depo, FA.plan, A, { tesis: tId, baslangic: bugun, bitis: gunEkle(1), ekip: [{ personel: FA.den1P }] })));
+  assert.equal(r.onBilgi, "gonder", "müşterinin e-postası var, formatta zorunlu elle yer yok");
+  const r0 = tamam(await a(FA.plan, (db) => planAc(db, depo, FA.plan, A, { tesis: FA.tesis, baslangic: bugun, bitis: bugun, ekip: [{ personel: FA.den1P }] })));
+  assert.equal(r0.onBilgi, undefined, "müşterinin e-postası yok: gönderilmez");
+
+  const islem = (k: Kisi) => <T,>(is: (db: Sorgulayici) => Promise<T>) => a(k, is);
+  const pdf = new TextEncoder().encode("%PDF-1.7\n% deneme ön bilgilendirme formu\n%%EOF\n");
+  const sahtePdf = async () => pdf;
+  /* yetki ve alıcı */
+  assert.equal((await onBilgiGonder(islem(FA.den1), depo, FA.den1, A, r.id, sahtePdf)).durum, "yetkisiz", "denetçi göndermez");
+  assert.equal((await onBilgiGonder(islem(FA.muh), depo, FA.muh, A, r.id, sahtePdf)).durum, "yok", "planı görmeyen için plan yok");
+  const y0 = await onBilgiGonder(islem(FA.plan), depo, FA.plan, A, r0.id, sahtePdf);
+  assert.deepEqual(y0, { durum: "red", neden: MUSTERI_EPOSTASI_YOK });
+  assert.equal((await sql(A, "SELECT 1 FROM eposta WHERE kaynak = 'onbilgi' AND kaynak_id = $1", [r0.id])).rowCount, 0);
+
+  const y = await onBilgiGonder(islem(FA.plan), depo, FA.plan, A, r.id, sahtePdf);
+  assert.equal(y.durum, "tamam", JSON.stringify(y));
+  const e = (await sql<{ kime: string; konu: string; govde: string; ek_dosya: string; ek_ad: string; gonderen_eposta: string; durum: string }>(A,
+    "SELECT kime, konu, govde, ek_dosya::text, ek_ad, gonderen_eposta, durum FROM eposta WHERE kaynak = 'onbilgi' AND kaynak_id = $1", [r.id])).rows;
+  assert.equal(e.length, 1);
+  assert.equal(e[0].kime, "bilgi-musteri@deneme-a.example");
+  assert.equal(e[0].ek_ad, `${r.no}-on-bilgilendirme-formu.pdf`);
+  assert.equal(e[0].gonderen_eposta, "plan@deneme-a.example", "gönderen tuşa basan");
+  assert.match(e[0].konu, /: Bilgi Tesisi periyodik kontrol ön bilgilendirme formu$/);
+  assert.ok(e[0].govde.includes(`Proje no: ${r.no}`) && e[0].durum === "bekliyor");
+  const d = (await sql<{ modul: string; kayit_id: string; tur: string; ad: string }>(A, "SELECT modul, kayit_id::text, tur, ad FROM dosya WHERE id = $1", [e[0].ek_dosya])).rows[0];
+  assert.deepEqual(d, { modul: DOSYA_ONBILGI, kayit_id: r.id, tur: "application/pdf", ad: `${r.no}-on-bilgilendirme-formu.pdf` });
+  /* dosyayı planı gören açar (planlama, ekipteki denetçi); muhasebe ve başka firma açamaz */
+  assert.ok(await a(FA.plan, (db) => dosyaIndirilebilir(db, FA.plan, e[0].ek_dosya, DOSYA_ERISIMI)));
+  assert.ok(await a(FA.den1, (db) => dosyaIndirilebilir(db, FA.den1, e[0].ek_dosya, DOSYA_ERISIMI)));
+  assert.equal(await a(FA.muh, (db) => dosyaIndirilebilir(db, FA.muh, e[0].ek_dosya, DOSYA_ERISIMI)), null);
+  assert.equal(await b(FB.plan, (db) => dosyaIndirilebilir(db, FB.plan, e[0].ek_dosya, DOSYA_ERISIMI)), null, "başka firma");
+  /* plan içi listesinde ekiyle (plan e-postalarıyla birlikte); denetçi listeyi görmez */
+  const liste = (await a(FA.plan, (db) => planIci(db, FA.plan, r.id)))!.epostalar!;
+  const ob = liste.find((x) => x.kaynak === "onbilgi");
+  assert.deepEqual(ob?.ek, { dosyaId: e[0].ek_dosya, ad: `${r.no}-on-bilgilendirme-formu.pdf` });
+  assert.ok(liste.some((x) => x.kaynak === "plan"), "plan e-postaları da listede");
+  /* plan içi tuşları: planlamacıya gönderim (alıcıyla), denetçiye yok; format yoksa doldurma yok */
+  assert.deepEqual((await a(FA.plan, (db) => planBelgeleri(db, FA.plan, r.id, depo)))!.onBilgiGonder, { alicilar: ["bilgi-musteri@deneme-a.example"], eksik: [] });
+  assert.equal((await a(FA.plan, (db) => planBelgeleri(db, FA.plan, r.id, depo)))!.onBilgiDoldur, null);
+  assert.equal((await a(FA.den1, (db) => planBelgeleri(db, FA.den1, r.id, depo)))!.onBilgiGonder, null);
+  assert.equal((await a(FA.plan, (db) => planBelgeleri(db, FA.plan, r0.id, depo)))!.onBilgiGonder, null, "müşterinin e-postası yok");
+  /* doldurma: denetçi yetkisiz; yayında format yoksa kaydedilecek yer yok */
+  assert.equal((await a(FA.den1, (db) => onBilgiDoldur(db, FA.den1, r.id, {}, null))).durum, "yetkisiz");
+  assert.equal((await a(FA.plan, (db) => onBilgiDoldur(db, FA.plan, r.id, {}, null))).durum, "red");
+  assert.equal((await a(FA.plan, (db) => onBilgiVerisi(db, FA.plan, r.id, depo)))!.elle, null);
+
+  /* gönderim: ek baytları depodan aynen sağlayıcıya; ek sonradan değişmez */
+  const giden: { kime: string; ek: Uint8Array | null; ad: string | null }[] = [];
+  const s: EpostaSaglayici = { async gonder(x) { giden.push({ kime: x.kime, ek: x.ek?.icerik ?? null, ad: x.ek?.ad ?? null }); return { tamam: true }; } };
+  const ayar = { saglayici: s, firma: { alan: "deneme-a.example", genel: "bilgi@deneme-a.example", dogrulandi: true, firmaAd: "Deneme A", kopya: false, rapor: null } };
+  assert.deepEqual(await kiraciIcinde(havuz, A, (db) => bekleyenleriGonder(db, ayar, { kaynak: "onbilgi", kaynakId: r.id, depo })), { gonderilen: 1, bekleyen: 0, hatali: 0 });
+  assert.equal(giden.length, 1);
+  assert.deepEqual([giden[0].kime, giden[0].ad, Buffer.from(giden[0].ek!).equals(Buffer.from(pdf))], ["bilgi-musteri@deneme-a.example", `${r.no}-on-bilgilendirme-formu.pdf`, true]);
+  await assert.rejects(sql(A, "UPDATE eposta SET ek_ad = 'baska.pdf' WHERE kaynak = 'onbilgi' AND kaynak_id = $1", [r.id]), /değişmez/, "ek değişmez");
+  await assert.rejects(sql(A, "UPDATE eposta SET ek_dosya = NULL, ek_ad = NULL WHERE kaynak = 'onbilgi' AND kaynak_id = $1", [r.id]), /değişmez/, "ek kaldırılamaz");
+  /* yalnız ek adı ya da yalnız kimlik yazılamaz (CHECK); geçersiz ek kuyruğa hiç girmez */
+  await assert.rejects(sql(A, "INSERT INTO eposta (kime, konu, govde, kaynak, ek_ad) VALUES ('x@deneme.example', 'k', 'g', 'deneme', 'a.pdf')"), /eposta_ek_bicim/);
+  await assert.rejects(a(FA.plan, (db) => epostaKuyruga(db, { kime: ["x@deneme.example"], konu: "k", govde: "g", kaynak: "deneme", kaynakId: null, ek: { dosyaId: "kotu", ad: "a.pdf" } },
+    { kim: "Deneme", ne: "deneme" })), /eki geçersiz/);
 });

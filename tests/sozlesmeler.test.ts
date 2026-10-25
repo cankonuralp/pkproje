@@ -1,24 +1,32 @@
 /* NEREDEN GELDİ: maket sozlesmeler.html (M5 + M13 2. tur, reisim 2026-09-26: "pk firma ile fabrika arasındaki sözleşme … isg katip sözleşmesi pdf
    olarak isteğe bağlı … sözleşme id denetçiye göre değişir"; F herkes girer · G kullanılmamış ID silinir, kullanılmış yalnız düzeltilir) ·
    KOD-GECIS §3 (kullanılmış ID silinmez) · §4 (Sözleşmeler: planlama ve yönetici değiştirir, denetçi kendi, muhasebe görür) · reisim 2026-10-04:
-   "rol değiştirme sızma veri çalma". GERÇEK PostgreSQL, iki firma. */
+   "rol değiştirme sızma veri çalma". GERÇEK PostgreSQL, iki firma.
+   2026-10-25 (belge doldurma; reisim: "sözleşme vb işleri de yüklediğimde, el ile değiştirilebilir ve doldurulabilir olmalı, bir müşteri için sözleşme
+   açtığımda el ile girilmesi gereken yerleri girip öyle gönderebilmeliyim"): sözleşme belgesi ("gör" / "yaz"; şablon → temel → firmanın formatı),
+   elle doldurulan yerler (yalnız "yaz", formatın yerlerine göre, sürüm kilidi), müşteriye gönder (PDF tek dosya yolundan, alıcı başına ekli e-posta,
+   gönderen tuşa basan). Saf parçalar: tests/sozlesme-belge-saf.test.ts. */
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, test } from "node:test";
 import type { GomuluKume } from "../src/server/db/gomulu.ts";
-import { havuzKur, kiraciIcinde, type Havuz } from "../src/server/db/kiraci.ts";
+import { havuzKur, kiraciIcinde, type Havuz, type Sorgulayici } from "../src/server/db/kiraci.ts";
 import { klasorDepo } from "../src/server/dosya/depo.ts";
 import { dosyaIndirilebilir } from "../src/server/dosya/dosya.ts";
 import { DOSYA_ERISIMI } from "../src/server/dosya/erisim.ts";
+import { kaynakEpostalari } from "../src/server/eposta/eposta.ts";
+import type { SozlesmeBelgesiVerisi } from "../src/belge/sozlesme.ts";
+import type { Hucre } from "../src/format/tanim.ts";
+import { belgeFormatiOku, belgeTaslakAc, belgeTaslakKaydet, belgeYayinla } from "../src/modules/rapor-format/server/belgeler.ts";
 import { musteriKaydet, tesisKaydet, tesisPasif } from "../src/modules/musteriler/server/musteriler.ts";
 import { personelEkle } from "../src/modules/personel/server/personel.ts";
 import { bitisHesapla } from "../src/modules/sozlesmeler/sema.ts";
 import { imzaliYukle, isgIdBul, isgKaldir, isgKaydet, sablonKaldir, sablonlar, sablonYukle, sozlesmeHazirla, sozlesmeKarti, sozlesmeListesi, sozlesmeSecenekleri,
   type Kisi }
   from "../src/modules/sozlesmeler/server/sozlesmeler.ts";
-import { sozlesmeSayfasi } from "../src/modules/sozlesmeler/server/sozlesmeler.ts";
+import { DosyaHatasi, sozlesmeBelgeBolumu, sozlesmeBelgesiVerisi, sozlesmeDoldur, sozlesmeGonder, sozlesmeSayfasi } from "../src/modules/sozlesmeler/server/sozlesmeler.ts";
 import { sozlesmeListeSecenekleri, sozlesmeTanim } from "../src/modules/sozlesmeler/liste.ts";
 import { listele, yeniDurum, type SuzgecDurumu } from "../src/components/liste/suzgec.ts";
 import { testKumesi } from "./yardimci/kume.ts";
@@ -224,4 +232,89 @@ test("570 Sözleşmeler sunucuda sayfalı: ekranın süzgeciyle birebir; denetç
   }
   assert.deepEqual((await a((db) => sozlesmeSayfasi(db, DENETCI, {})))!.gorunen.map((x) => x.no), (await a((db) => sozlesmeListesi(db, DENETCI)))!.map((x) => x.no).slice(0, 20));
   assert.equal((await b((db) => sozlesmeSayfasi(db, YON_B, {})))!.kayitSayisi, 0, "başka firma");
+});
+
+/* 2026-10-25 (belge doldurma; reisim: "sözleşme vb işleri de yüklediğimde, el ile değiştirilebilir ve doldurulabilir olmalı, bir müşteri için sözleşme
+   açtığımda el ile girilmesi gereken yerleri girip öyle gönderebilmeliyim") */
+test("SÖZLEŞME BELGESİ: yalnız 'gör' / 'yaz'; şablon → temel → firmanın formatı; elle yerler yalnız 'yaz' ve formatın yerleri; müşteriye gönder: tek PDF, alıcı başına ekli e-posta, gönderen tuşa basan", async () => {
+  const k = (kisi_: Kisi) => <T,>(is: (db: Sorgulayici) => Promise<T>) => kiraciIcinde(havuz, A, is, { hesapId: kisi_.id });
+  const sayim = async () => (await a((db) => db.sorgu<{ e: number; d: number }>(
+    "SELECT (SELECT count(*)::int FROM eposta WHERE kaynak = 'sozlesme') AS e, (SELECT count(*)::int FROM dosya WHERE modul = 'sozlesme_gonderim') AS d"))).rows[0];
+  /* görme: denetçinin "kendi" düzeyi ve başka firma görmez; muhasebe ("gör") görür */
+  assert.equal(await a((db) => sozlesmeBelgesiVerisi(db, DENETCI, soz)), null, "denetçi sözleşme belgesini görmez");
+  assert.equal(await b((db) => sozlesmeBelgesiVerisi(db, YON_B, soz)), null, "başka firma");
+  const v = (await a((db) => sozlesmeBelgesiVerisi(db, MUH, soz)))!;
+  assert.deepEqual([v.no, v.musteri.unvan, v.tesisler.map((t) => t.ad), v.format, v.elle, v.teklifNo, v.sablon?.surumNo],
+    ["IS-1026-001", "Deneme Makina San. A.Ş.", ["İkinci Tesis", "Merkez Fabrika"], null, null, null, 1], "format yok: kullanımdaki şablon (v1)");
+
+  /* gönder: yetki ve alıcı denetimi PDF'ten önce */
+  let basilan = 0;
+  const BASILAN = new TextEncoder().encode("%PDF-1.4\n%basilan\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n");
+  const uret = async () => { basilan++; return BASILAN; };
+  for (const kisi_ of [MUH, DENETCI]) assert.deepEqual(await k(kisi_)((db) => sozlesmeGonder(db, depo, kisi_, A, soz, { kime: ["m@deneme.example"] }, uret)), { durum: "yetkisiz" });
+  for (const kime of [[], Array.from({ length: 6 }, (_, i) => `k${i}@deneme.example`), ["a@deneme.example", "A@deneme.example"], ["yanlis"]]) {
+    assert.equal((await k(PLAN)((db) => sozlesmeGonder(db, depo, PLAN, A, soz, { kime }, uret))).durum, "gecersiz", JSON.stringify(kime));
+  }
+  assert.deepEqual(await b((db) => sozlesmeGonder(db, depo, YON_B, B, soz, { kime: ["m@deneme.example"] }, uret)), { durum: "yok" }, "başka firma");
+  assert.deepEqual([basilan, (await sayim()).e], [0, 0]);
+
+  /* şablon varken ek şablonun kendisi (PDF basılmaz); alıcı başına e-posta, tek dosya; gönderen tuşa basan */
+  const r1 = tamam(await k(PLAN)((db) => sozlesmeGonder(db, depo, PLAN, A, soz, { kime: ["Musteri@Deneme.example", "ikinci@deneme.example"] }, uret)));
+  assert.deepEqual([r1.adet, basilan], [2, 0]);
+  const e = (await a((db) => db.sorgu<{ kime: string; konu: string; govde: string; ek_ad: string; ek_dosya: string; gonderen_eposta: string; durum: string }>(
+    "SELECT kime, konu, govde, ek_ad, ek_dosya::text, gonderen_eposta, durum FROM eposta WHERE kaynak = 'sozlesme' AND kaynak_id = $1 ORDER BY kime", [soz]))).rows;
+  assert.deepEqual(e.map((x) => [x.kime, x.ek_ad, x.gonderen_eposta, x.durum]),
+    [["ikinci@deneme.example", "IS-1026-001.pdf", "planlama@deneme.example", "bekliyor"], ["musteri@deneme.example", "IS-1026-001.pdf", "planlama@deneme.example", "bekliyor"]]);
+  assert.equal(e[0].ek_dosya, e[1].ek_dosya, "tek dosya");
+  assert.equal(e[0].konu, "Deneme A · IS-1026-001 hizmet sözleşmesi");
+  assert.ok(e[0].govde.startsWith("Sayın Deneme Makina San. A.Ş.,") && !e[0].govde.includes("İmzalı nüshayı"), "imzalı sözleşmede imzalı nüsha istenmez");
+  const d = (await a((db) => db.sorgu<{ modul: string; kayit_id: string; sha256: string }>("SELECT modul, kayit_id::text, sha256 FROM dosya WHERE id = $1", [e[0].ek_dosya]))).rows[0];
+  const sablonDosya = (await a((db) => db.sorgu<{ sha256: string }>(
+    "SELECT d.sha256 FROM dosya d JOIN sozlesme_sablon s ON s.dosya_id = d.id WHERE s.kaldirildi IS NULL ORDER BY s.surum_no DESC LIMIT 1"))).rows[0];
+  assert.deepEqual([d.modul, d.kayit_id, d.sha256], ["sozlesme_gonderim", soz, sablonDosya.sha256]);
+  assert.ok(await a((db) => dosyaIndirilebilir(db, MUH, e[0].ek_dosya, DOSYA_ERISIMI)), "giden PDF'i sözleşmeyi gören açar");
+  assert.equal(await a((db) => dosyaIndirilebilir(db, DENETCI, e[0].ek_dosya, DOSYA_ERISIMI)), null, "denetçi açamaz");
+  assert.equal(await b((db) => dosyaIndirilebilir(db, YON_B, e[0].ek_dosya, DOSYA_ERISIMI)), null, "başka firma açamaz");
+  assert.deepEqual((await a((db) => kaynakEpostalari(db, "sozlesme", soz))).map((x) => x.kime).sort(), ["ikinci@deneme.example", "musteri@deneme.example"]);
+
+  /* şablon kaldırılınca temel format basılır; basım düşerse hiçbir şey yazılmaz */
+  for (const x of await a((db) => sablonlar(db, PLAN))) tamam(await a((db) => sablonKaldir(db, PLAN, x.id, x.surum)));
+  assert.equal((await a((db) => sozlesmeBelgesiVerisi(db, PLAN, soz)))!.sablon, null);
+  const gelen: SozlesmeBelgesiVerisi[] = [];
+  tamam(await k(PLAN)((db) => sozlesmeGonder(db, depo, PLAN, A, soz, { kime: ["musteri@deneme.example"] }, async (x) => { gelen.push(x); return PDF; })));
+  assert.deepEqual([gelen.length, gelen[0].no, gelen[0].format, gelen[0].musteriImza !== null], [1, "IS-1026-001", null, true]);
+  const once = await sayim();
+  await assert.rejects(k(PLAN)((db) => sozlesmeGonder(db, depo, PLAN, A, soz, { kime: ["musteri@deneme.example"] }, async () => { throw new Error("basılamadı"); })), DosyaHatasi);
+  assert.deepEqual(await sayim(), once);
+
+  /* elle doldurma: yalnız "yaz"; yayında format yokken red */
+  assert.deepEqual(await k(MUH)((db) => sozlesmeDoldur(db, MUH, soz, {}, null)), { durum: "yetkisiz" });
+  assert.deepEqual(await k(PLAN)((db) => sozlesmeDoldur(db, PLAN, soz, {}, null)), { durum: "red", neden: "Yayında sözleşme formatı yok." });
+  /* firmanın sözleşme formatı: serbest tabloda iki elle yer (yazı + zorunlu sayı), yayında (Rapor formatı › Belgeler; yönetici) */
+  const t = tamam(await k(YON)((db) => belgeTaslakAc(db, YON, "sozlesme", "bos", null)));
+  const f = (await k(YON)((db) => belgeFormatiOku(db, YON, t.id)))!;
+  const tanim = structuredClone(f.tanim), tb = tanim.bolumler[0];
+  assert.ok(tb.blok === "tablo");
+  const yer: Record<string, Hucre> = { "1:0": { r: 1, c: 0, tur: "yazi", m: "Özel koşul" }, "1:1": { r: 1, c: 1, tur: "alan", id: "h_kosul", alan: "metin" },
+    "2:0": { r: 2, c: 0, tur: "yazi", m: "Yıllık bedel" }, "2:1": { r: 2, c: 1, tur: "alan", id: "h_bedel", alan: "sayi", zorunlu: true } };
+  tb.hucreler = tb.hucreler.map((h) => yer[`${h.r}:${h.c}`] ?? h);
+  const kt = tamam(await k(YON)((db) => belgeTaslakKaydet(db, YON, t.id, f.surum, tanim)));
+  assert.equal((await k(YON)((db) => belgeYayinla(db, YON, t.id, kt.surum, ""))).durum, "tamam");
+  const bolum = (await k(PLAN)(async (db) => sozlesmeBelgeBolumu(db, PLAN, (await sozlesmeKarti(db, PLAN, soz))!, depo)))!;
+  assert.deepEqual([bolum.kaynak, bolum.doldurma?.toplam, bolum.doldurma?.bos.length, bolum.doldurma?.surum, bolum.epostalar.length, bolum.baslik],
+    ["format", 2, 2, null, 3, "Sözleşme"]);
+  assert.equal(await k(DENETCI)(async (db) => sozlesmeBelgeBolumu(db, DENETCI, (await sozlesmeKarti(db, DENETCI, soz))!, depo)), null);
+  assert.equal((await k(PLAN)((db) => sozlesmeDoldur(db, PLAN, soz, { h_bedel: "on bin" }, null))).durum, "gecersiz", "sayı yerine yazı");
+  assert.equal((await k(PLAN)((db) => sozlesmeDoldur(db, PLAN, soz, { h_yok: "x" }, null))).durum, "gecersiz", "formatta olmayan yer");
+  tamam(await k(PLAN)((db) => sozlesmeDoldur(db, PLAN, soz, { h_kosul: "Deneme özel koşul", h_bedel: "1250,5" }, null)));
+  assert.deepEqual(await k(PLAN)((db) => sozlesmeDoldur(db, PLAN, soz, { h_kosul: "ezme" }, null)), { durum: "cakisma" }, "görmediği doldurmayı ezmez");
+  assert.deepEqual(await b((db) => sozlesmeDoldur(db, YON_B, soz, { h_kosul: "x" }, null)), { durum: "yok" }, "başka firma");
+  const v2 = (await a((db) => sozlesmeBelgesiVerisi(db, PLAN, soz)))!;
+  assert.deepEqual([v2.elle?.h_kosul, !!v2.format, v2.sablon], ["Deneme özel koşul", true, null]);
+  const b2 = (await k(PLAN)(async (db) => sozlesmeBelgeBolumu(db, PLAN, (await sozlesmeKarti(db, PLAN, soz))!, depo)))!;
+  assert.deepEqual([b2.doldurma?.bos, typeof b2.doldurma?.surum], [[], "number"]);
+  /* gönderilen PDF firmanın formatından, elle değerlerle */
+  gelen.length = 0;
+  tamam(await k(PLAN)((db) => sozlesmeGonder(db, depo, PLAN, A, soz, { kime: ["musteri@deneme.example"] }, async (x) => { gelen.push(x); return PDF; })));
+  assert.deepEqual([!!gelen[0].format, gelen[0].elle?.h_kosul], [true, "Deneme özel koşul"]);
 });

@@ -3,7 +3,9 @@
    Gönderildi olarak işaretle; gönderildi: Reddedildi (müşterinin gerekçesi, pencere) · Kabul edildi (onay); kabul edildi: kayıtlı olmayan
    müşteride "Müşteri olarak kaydet" (Müşteriler'in uyarısı gösterilir, onaylanırsa kaydedilir) ve "Var olan müşteriye bağla" (pencere), kayıtlı
    müşteride İş sözleşmesi · Plan aç (hedef modülün yetkisiyle); red ya da süresi doldu: Yeni teklif (kopyala). Teklif müşteriye elle iletilir
-   (121). Karar sunucuda; sonuç bildirimle. 368: kullanılmamış taslakta yöneticiye Sil. */
+   (121). Karar sunucuda; sonuç bildirimle. 368: kullanılmamış taslakta yöneticiye Sil.
+   2026-10-25 (belge doldurma; reisim: "sözleşme vb işleri de yüklediğimde, el ile değiştirilebilir ve doldurulabilir olmalı …"): PDF'in yanında
+   "Belgeyi doldur" — firmanın yayındaki teklif formatında elle doldurulan yer varsa, taslakta ve değiştirebilene (doldur: sunucudan). */
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
@@ -13,17 +15,19 @@ import { useOnayla } from "../../../components/pencere/Onay";
 import { Pencere, pencereMetinSinifi } from "../../../components/pencere/Pencere";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { SilTusu } from "../../../components/sil/SilTusu";
+import { BelgeDoldurmaTusu } from "../../rapor-format/ui/BelgeDoldurma";
 import { Tus, TusBaglanti, tusSinifi } from "../../../components/tus/Tus";
-import type { TeklifKarti } from "../server/teklifler";
-import { teklifGonderEylemi, teklifKabulEylemi, teklifSilEylemi, teklifMusteriBaglaEylemi, teklifMusteriKaydetEylemi, teklifReddetEylemi, type TeklifYaniti } from "./eylemler";
+import type { TeklifDoldurmaVerisi, TeklifKarti } from "../server/teklifler";
+import { teklifDoldurEylemi, teklifGonderEylemi, teklifKabulEylemi, teklifSilEylemi, teklifMusteriBaglaEylemi, teklifMusteriKaydetEylemi, teklifReddetEylemi, type TeklifYaniti } from "./eylemler";
 import stil from "./teklifler.module.css";
 
 const GEREKCE = "w-gerekce";
 const BID = { musteri: "w-bagla-musteri", tesis: "w-bagla-tesis" } as const;
 export interface BaglaMusterisi { id: string; kisa: string; tesisler: { id: string; ad: string; yer: string }[] }
 
-/** pdf: teklif belgesinin adresi (oturumlu uç; dosya iner — maket "PDF"); musteriler: "Var olan müşteriye bağla"nın seçenekleri (yalnız yetkiliye) */
-export function TeklifEylemleri({ t, pdf, musteriler = [] }: { t: TeklifKarti; pdf: string; musteriler?: readonly BaglaMusterisi[] }) {
+/** pdf: teklif belgesinin adresi (oturumlu uç; dosya iner — maket "PDF"); musteriler: "Var olan müşteriye bağla"nın seçenekleri (yalnız yetkiliye);
+    doldur: belgenin elle doldurulan yerleri (teklifDoldurmaVerisi — yoksa null) */
+export function TeklifEylemleri({ t, pdf, musteriler = [], doldur = null }: { t: TeklifKarti; pdf: string; musteriler?: readonly BaglaMusterisi[]; doldur?: TeklifDoldurmaVerisi | null }) {
   const router = useRouter();
   const bildir = useBildir();
   const onayla = useOnayla();
@@ -61,9 +65,12 @@ export function TeklifEylemleri({ t, pdf, musteriler = [] }: { t: TeklifKarti; p
     if (sonuc(r)) setBag(null);
   });
   const { izin } = t;
+  const belgeKaydet = (degerler: Record<string, string>, surum: number | null) => teklifDoldurEylemi(t.id, degerler, surum);
   return (
     <>
       <a className={tusSinifi("ikincil")} href={pdf} download><Ikon ad="file-text" kucuk />PDF</a>
+      {doldur && <BelgeDoldurmaTusu belge="teklif" baslik={doldur.baslik} tanim={doldur.tanim} degerler={doldur.degerler} surum={doldur.surum}
+        onizlemeVerisi={doldur.onizleme} kaydet={belgeKaydet} />}
       {izin.duzenle && <TusBaglanti ikon="pencil" href={`/teklifler/${t.id}/duzenle`}>Düzenle</TusBaglanti>}
       {izin.duzenle && <Tus ikon="send" disabled={bekliyor || !izin.gonder} onClick={gonder}>Gönderildi olarak işaretle</Tus>}
       {izin.sil && <SilTusu ad={t.no} baslik="Teklif taslağını sil" yanEtki="kalemleri ve tesisleri de silinir" sil={() => teklifSilEylemi(t.id)} donus="/teklifler" />}

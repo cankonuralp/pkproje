@@ -2,7 +2,8 @@
    yer; red / süresi doldu / kabul şeritleri; Hazırlanan · Gönderildi · Geçerlilik · İlgili kişi; kayıtlı olmayan müşterinin bilgileri; Kalemler
    (tür × adet × birim fiyat × tutar; kabul edilmişte "Raporlanan" — her rapor tek teklife bağlanır, §3.2 madde 5), ara toplam, KDV, genel toplam,
    raporlanan tutar. PDF (teklif belgesi, sunucuda — 325) ve "Excel'e aktar" (yüklenen liste, yoksa tesislerin kayıtlı ekipmanı). Görmeyen:
-   bulunamadı. Kalem tablosu istemci bileşeninde (sütun işlevleri sunucudan geçirilemez — 324 incelemesi). */
+   bulunamadı. Kalem tablosu istemci bileşeninde (sütun işlevleri sunucudan geçirilemez — 324 incelemesi).
+   2026-10-25 (belge doldurma): PDF'in yanında "Belgeyi doldur" (teklifDoldurmaVerisi — yetki ve taslak kuralı modülde). */
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -13,10 +14,11 @@ import { tarihNo } from "../../../../components/secim/tarih";
 import { Serit } from "../../../../components/serit/Serit";
 import { modulBul } from "../../../../modules/moduller";
 import { kdvli, para, TEKLIF_DURUM } from "../../../../modules/teklifler/sema";
-import { teklifExcelVerisi, teklifKarti, teklifSecenekleri } from "../../../../modules/teklifler/server/teklifler";
+import { teklifDoldurmaVerisi, teklifExcelVerisi, teklifKarti, teklifSecenekleri } from "../../../../modules/teklifler/server/teklifler";
 import { ExcelAktar } from "../../../../modules/teklifler/ui/EkipmanExcel";
 import { KalemTablosu } from "../../../../modules/teklifler/ui/KalemTablosu";
 import { TeklifEylemleri, type BaglaMusterisi } from "../../../../modules/teklifler/ui/TeklifEylemleri";
+import { depo } from "../../../../server/dosya/depo";
 import { modulOturumu, oturumIslemi } from "../../../../server/kimlik/istek";
 
 const MODUL = modulBul("teklifler")!;
@@ -33,10 +35,10 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
     const bagla: BaglaMusterisi[] = t.izin.bagla ? ((await teklifSecenekleri(db, o))?.musteriler ?? []).map((m) => ({
       id: m.id, kisa: m.kisa, tesisler: m.tesisler.map((y) => ({ id: y.id, ad: y.ad, yer: [y.ilce, y.il].filter(Boolean).join(" / ") })),
     })) : [];
-    return { t, excel: await teklifExcelVerisi(db, o, t), bagla };
+    return { t, excel: await teklifExcelVerisi(db, o, t), bagla, doldur: t.izin.duzenle ? await teklifDoldurmaVerisi(db, o, t.id, depo()) : null };
   });
   if (!v) notFound();
-  const { t, excel, bagla } = v;
+  const { t, excel, bagla, doldur } = v;
   const kabul = t.durum === "kabul";
   return (
     <>
@@ -44,7 +46,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
       <NesneBasi baslik={t.no} rozet={<Rozet tur={TEKLIF_DURUM[t.durum][1]}>{TEKLIF_DURUM[t.durum][0]}</Rozet>} altIkon="building-2"
         alt={<>{t.musteriKart ? <Link href={`/musteriler/${t.musteriKart.id}`}>{t.musteriKart.unvan}</Link> : <>{t.aday?.unvan ?? "—"} <Rozet tur="bekliyor">Kayıtlı değil</Rozet></>}
           {" · "}{t.musteriKart ? t.tesis : [t.aday?.ilce, t.aday?.il].filter(Boolean).join(" / ")}</>}
-        tuslar={<TeklifEylemleri t={t} pdf={`/teklifler/${t.id}/pdf`} musteriler={bagla} />} />
+        tuslar={<TeklifEylemleri t={t} pdf={`/teklifler/${t.id}/pdf`} musteriler={bagla} doldur={doldur} />} />
       {(t.durum === "red" || t.durum === "suresi" || kabul || t.kopyaKaynak) && (
         <SeritKap>
           {t.durum === "red" && t.sonuc && <Serit tur="hata" ikon="ban">Reddedildi {tarihNo(t.sonuc)}: “{t.gerekce}”</Serit>}

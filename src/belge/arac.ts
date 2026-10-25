@@ -30,6 +30,8 @@ export interface AracTutanagiVerisi {
   fotolar: readonly (readonly [aci: string, var_: boolean])[];
   /** 2026-10-25 (belge formatları): firmanın yayınladığı araç teslim tutanağı formatı (yoksa temel format) */
   format?: FormatTanimi | null;
+  /** 2026-10-25 (belge doldurma): formatın elle doldurulan yerlerinin değerleri (hücre kimliği → değer; src/belge/doldurma.ts) */
+  elle?: Record<string, string> | null;
 }
 
 export const aracTutanakFormKodu = (firmaKod: string) => `${firmaKod}-FR-ARC-01`;

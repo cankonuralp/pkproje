@@ -4,7 +4,8 @@ import { egitimPdf } from "../../../belge/pdf";
 import { depo } from "../../../server/dosya/depo";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
-import { DosyaHatasi, egitimKaydet, egitimKaydiSil, egitimTuruKaydet, egitimTuruSil, katilimFormuGonder, sertifikaYukle, type Yazma } from "../server/egitimler";
+import { DosyaHatasi, egitimKaydet, egitimKaydiSil, egitimTuruKaydet, egitimTuruSil, katilimDoldur, katilimDoldurmaVerisi, katilimFormuGonder, sertifikaYukle,
+  type KatilimDoldurmaVerisi, type Yazma } from "../server/egitimler";
 
 export interface PencereDurumu { tamam?: boolean; id?: string; hatalar?: Record<string, string>; genel?: string }
 
@@ -68,4 +69,18 @@ export async function egitimTuruSilEylemi(id: string): Promise<PencereDurumu> {
 export async function egitimKaydiSilEylemi(id: string): Promise<PencereDurumu> {
   const o = await oturum(); if (typeof o === "string") return { genel: o };
   return cevir(await oturumIslemi(o, (db) => egitimKaydiSil(db, o, yazi(id))));
+}
+
+/* 2026-10-25 (belge doldurma; reisim: "sözleşme vb işleri de yüklediğimde, el ile değiştirilebilir ve doldurulabilir olmalı …"): katılım formunun elle
+   doldurulan yerleri — kayıt penceresi açılınca verisi istenir (liste satırı başına yüklenmez); yetki egitimler.ts'te (katilimDoldurmaDurumu) */
+const DOLDURMA = { ...SONUC, cakisma: "Belge bu arada değişti. Sayfayı yenileyip yeniden deneyin.", formatsiz: "Belgenin yayında formatı yok; doldurulacak yer kalmadı." } as const;
+export async function katilimDoldurmaVerisiEylemi(kayitId: string): Promise<KatilimDoldurmaVerisi | null> {
+  const o = await oturum(); if (typeof o === "string") return null;
+  return oturumIslemi(o, (db) => katilimDoldurmaVerisi(db, o, yazi(kayitId), depo()));
+}
+export async function katilimDoldurEylemi(kayitId: string, degerler: unknown, surum: unknown): Promise<PencereDurumu> {
+  const o = await oturum(); if (typeof o === "string") return { genel: o };
+  const s = typeof surum === "number" && Number.isSafeInteger(surum) && surum >= 0 ? surum : null;
+  const r = await oturumIslemi(o, (db) => katilimDoldur(db, o, yazi(kayitId), degerler, s));
+  return r.durum === "tamam" ? { tamam: true } : r.durum === "gecersiz" ? { hatalar: r.hatalar } : r.durum === "red" ? { genel: r.neden } : { genel: DOLDURMA[r.durum] };
 }

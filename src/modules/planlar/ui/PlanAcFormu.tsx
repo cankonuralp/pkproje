@@ -142,7 +142,9 @@ export function PlanAcFormu({ veri, baslangic }: { veri: PlanAcVerisi; baslangic
       if (ek) { yeniSayfa.satiraGit(Number(ek[1])); window.setTimeout(odakla, 60); } else requestAnimationFrame(odakla);
       return;
     }
-    bildir(`${r.no} açıldı.${r.eposta ? ` ${r.eposta} kişiye e-posta gönderiliyor.` : ""}`);
+    /* 2026-10-25 (belge doldurma): ön bilgilendirme formu müşteriye gönderiliyor ya da elle doldurulacak yeri olduğu için bekliyor */
+    bildir(`${r.no} açıldı.${r.eposta ? ` ${r.eposta} kişiye e-posta gönderiliyor.` : ""}${r.onBilgi === "gonder" ? " Ön bilgilendirme formu müşteriye gönderiliyor."
+      : r.onBilgi === "doldur" ? " Ön bilgilendirme formu gönderilmedi: elle doldurulacak yerleri var." : ""}`);
     router.push(`/planlar/${r.id}`);
   });
   const hataSayisi = Object.keys(h).length;

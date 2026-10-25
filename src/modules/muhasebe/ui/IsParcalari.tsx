@@ -19,8 +19,9 @@ import { Serit } from "../../../components/serit/Serit";
 import { Tus } from "../../../components/tus/Tus";
 import { RAPOR_DURUM } from "../../raporlar/sema";
 import { FIYAT_KAYNAK, gunEkle, para, YONTEM } from "../sema";
-import type { FaturaKalemi, FaturaOnizleme, FaturaSatiri, IsRaporu } from "../server/muhasebe";
-import { faturaKaydetEylemi, tahsilatKaydetEylemi, type MuhasebeYaniti } from "./eylemler";
+import type { FaturaDoldurmaVerisi, FaturaKalemi, FaturaOnizleme, FaturaSatiri, IsRaporu } from "../server/muhasebe";
+import { BelgeDoldurmaTusu } from "../../rapor-format/ui/BelgeDoldurma";
+import { faturaDoldurEylemi, faturaKaydetEylemi, tahsilatKaydetEylemi, type MuhasebeYaniti } from "./eylemler";
 import { FATURA_SUTUN } from "./Listeler";
 import stil from "./muhasebe.module.css";
 
@@ -148,6 +149,13 @@ export function FaturaKaydet({ planId, isNo, musteri, tek, toplu, bugun }: { pla
 /* ── TAHSİLAT EKLE ── */
 const TID = { tarih: "w-tahsilat-tarih", tutar: "w-tahsilat-tutar", yontem: "w-tahsilat-yontem", aciklama: "w-tahsilat-aciklama" } as const;
 const tlYaz = (kurus: number) => (kurus / 100).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+/** 2026-10-25 (belge doldurma; reisim: "sözleşme vb işleri de yüklediğimde, el ile değiştirilebilir ve doldurulabilir olmalı …"): fatura özetinin elle
+    doldurulan yerleri (muhasebe.ts faturaDoldurmaVerisi) */
+export function FaturaDoldurma({ faturaId, v }: { faturaId: string; v: FaturaDoldurmaVerisi }) {
+  const kaydet = (degerler: Record<string, string>, surum: number | null) => faturaDoldurEylemi(faturaId, degerler, surum);
+  return <BelgeDoldurmaTusu belge="fatura" baslik={v.baslik} tanim={v.tanim} degerler={v.degerler} surum={v.surum} onizlemeVerisi={v.onizleme} kaydet={kaydet} />;
+}
+
 export function TahsilatEkle({ fatura, bugun, birincil = true }: { fatura: { id: string; no: string; musteri: string; toplam: number; kalan: number }; bugun: string; birincil?: boolean }) {
   const router = useRouter();
   const bildir = useBildir();

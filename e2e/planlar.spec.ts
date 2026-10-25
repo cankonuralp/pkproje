@@ -68,12 +68,17 @@ test("plan aç: engel, canlı uyarılar, proje no ve künye; denetçi yalnız ke
   await expect(page.getByText(isgNo)).toBeVisible();
   await expect(page.getByRole("row", { name: /Hava tankı\s+Periyodik kontrol\s+2/ })).toBeVisible();
   /* 432: e-postalar yanıttan sonra gönderilir (sağlayıcı taklidi) — plan sayfasında alıcı başına durum */
+  /* 2026-10-25 (belge doldurma; reisim: "ön bilgilendirme formunu plan açılınca müşteriye e-postayla gönder"): müşterinin e-postası var — ön
+     bilgilendirme formu yanıttan sonra basılır, PDF ekiyle müşteriye gider; aynı listede ekiyle (ek planı görene açılır) */
   const epostalar = page.getByRole("region", { name: "Bilgilendirme e-postaları" });
   await expect(async () => {
     await page.reload();
     await expect(epostalar).toContainText(bilgiEposta, { timeout: 5_000 });
-    await expect(epostalar).toContainText("2 / 2 gönderildi", { timeout: 5_000 });
-  }).toPass({ timeout: 60_000 });
+    await expect(epostalar).toContainText(E2E_PLAN.musteriEposta, { timeout: 5_000 });
+    await expect(epostalar).toContainText("3 / 3 gönderildi", { timeout: 5_000 });
+  }).toPass({ timeout: 90_000 });
+  await expect(epostalar.getByRole("link", { name: /e-postasının eki: P-\d{4}-\d{3,6}-on-bilgilendirme-formu\.pdf$/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Ön bilgilendirme formunu gönder" })).toBeVisible();
 
   /* denetçi: Plan aç yok, form yetkisiz, içinde olduğu planı görür */
   await context.clearCookies();

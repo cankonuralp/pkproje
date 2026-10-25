@@ -5,10 +5,13 @@
 import assert from "node:assert/strict";
 import { createServer, type IncomingHttpHeaders } from "node:http";
 import { after, before, test } from "node:test";
-import { planEpostasi } from "../src/modules/planlar/sema.ts";
-import { adresler } from "../src/server/eposta/eposta.ts";
+import { onBilgiDosyaAdi, onBilgiEpostasi, planEpostasi } from "../src/modules/planlar/sema.ts";
+import { adresler, ekAdi } from "../src/server/eposta/eposta.ts";
+import { bekleyenleriGonder, EK_BOZUK, EK_OKUNAMADI, EK_YOK } from "../src/server/eposta/gonder.ts";
 import { ALAN_BICIMI, ALAN_DOGRULANMADI, alanAdi, alanSadelestir, gonderenYolu, kimdenKur } from "../src/server/eposta/kimden.ts";
-import { epostaSaglayicisi } from "../src/server/eposta/saglayici.ts";
+import { epostaSaglayicisi, istekGovdesi } from "../src/server/eposta/saglayici.ts";
+import { oku } from "./yardimci/denetimler.ts";
+import { ozet, sahteDepo, sahteGonderim, sahteKuyruk, satir } from "./yardimci/sahte-eposta-vt.ts";
 
 test("adres süzgeci: küçük harf, biçimi bozuk ve tekrarlı adres düşer, sıra korunur", () => {
   assert.deepEqual(adresler([" Ali@Deneme.Example ", "ali@deneme.example", "yanlis", "a b@c.example", "veli@deneme", null, undefined, "", "ayse@x.example"]),
@@ -116,4 +119,74 @@ test("alan adı: sadeleştirme (http, www, yol, büyük harf) ve biçim", () => 
   assert.equal(alanAdi("bozuk"), "");
   for (const iyi of ["deneme.example", "a-b.deneme.example", "x1.co"]) assert.ok(ALAN_BICIMI.test(iyi), iyi);
   for (const kotu of ["deneme", "-a.example", "a..example", "a_b.example", "ÖRNEK.example", "a.example.", `${"a".repeat(64)}.example`]) assert.ok(!ALAN_BICIMI.test(kotu), kotu);
+});
+
+/* NEREDEN GELDİ: 2026-10-25 (belge doldurma; reisim: "sözleşme vb işleri de yüklediğimde, el ile değiştirilebilir ve doldurulabilir olmalı, bir müşteri
+   için sözleşme açtığımda el ile girilmesi gereken yerleri girip öyle gönderebilmeliyim"; "ön bilgilendirme formunu plan açılınca müşteriye e-postayla
+   gönder"; göç 0105). Kilitlenenler: sağlayıcıya ek Resend biçiminde (attachments: filename + base64) yalnız varsa; ekli e-postada ekin baytları
+   depodan okunup özeti kayıttakiyle aynıysa gider — dosya kaydı yoksa "hata", depo okunamaz ya da içerik bozuksa bekler (deneme + 1, 5'te "hata");
+   hiçbir durumda sağlayıcıya EKSİZ gitmez; ekin adı denetim karakteri / tırnak / yol ayracı taşımaz; ön bilgilendirme e-postasının metni.
+   Olumsuz kanıt: tests/bozan/eposta.bozan.ts 7–8. */
+test("sağlayıcı: ek Resend biçiminde (attachments: filename + base64) yalnız varsa; ekli istekte bekleme 30 sn", async () => {
+  const e = { kimden: "\"Deneme\" <bilgi@deneme.example>", kime: "ali@deneme.example", cevap: null, gizli: null, konu: "Konu", metin: "Metin" };
+  assert.deepEqual(istekGovdesi(e), { from: e.kimden, to: ["ali@deneme.example"], subject: "Konu", text: "Metin" }, "eksiz istekte attachments yok");
+  const icerik = new TextEncoder().encode("%PDF-1.7 deneme");
+  assert.deepEqual(istekGovdesi({ ...e, ek: { ad: "P-1026-001-on-bilgilendirme-formu.pdf", icerik } }).attachments,
+    [{ filename: "P-1026-001-on-bilgilendirme-formu.pdf", content: Buffer.from(icerik).toString("base64") }]);
+  const s = epostaSaglayicisi("deneme-anahtar", { PROBATA_EPOSTA_UC: `${uc}/emails/200` })!;
+  assert.deepEqual(await s.gonder({ ...e, ek: { ad: "form.pdf", icerik } }), { tamam: true });
+  const g = gelen.at(-1)!.govde as { attachments: { filename: string; content: string }[] };
+  assert.equal(Buffer.from(g.attachments[0].content, "base64").toString(), "%PDF-1.7 deneme", "sağlayıcıya giden ek baytları aynen");
+  assert.match(oku("src/server/eposta/saglayici.ts"), /const sn = e\.ek \? 30 : 10;/);
+});
+
+test("ekin adı: denetim karakteri, tırnak ve yol ayracı atılır, en çok 200 karakter", () => {
+  assert.equal(ekAdi(" a/b\\c\"d\r\ne.pdf "), "a b c d e.pdf");
+  assert.equal(ekAdi("x".repeat(300)).length, 200);
+  assert.equal(ekAdi(" \u0000 "), "");
+});
+
+test("ekli e-posta: ek depodan okunup özeti tutarsa gider; kayıt yoksa hata, depo okunamaz / bozuksa bekler; sağlayıcıya EKSİZ gitmez", async () => {
+  const pdf = new TextEncoder().encode("%PDF-1.7 ön bilgilendirme");
+  const D = (n: number) => `00000000-0000-4000-8000-00000000000${n}`;
+  const satirlar = [
+    satir(D(1), { dosya: D(1), ad: "form.pdf" }),   // ek tamam
+    satir(D(2), { dosya: D(2), ad: "form.pdf" }),   // dosya kaydı yok
+    satir(D(3), { dosya: D(3), ad: "form.pdf" }),   // depo okunamaz
+    satir(D(4), { dosya: D(4), ad: "form.pdf" }),   // özet tutmaz
+    satir(D(5), { dosya: D(3), ad: "form.pdf" }, 4),   // depo okunamaz, 5. deneme
+    satir(D(6), null),                               // eksiz e-posta
+  ];
+  const k = sahteKuyruk(satirlar, {
+    [D(1)]: { anahtar: "a1", sha256: ozet(pdf) }, [D(3)]: { anahtar: "a3", sha256: ozet(pdf) }, [D(4)]: { anahtar: "a4", sha256: ozet(pdf) },
+  });
+  const g = sahteGonderim();
+  const o = await bekleyenleriGonder(k.db, g.ayar, { depo: sahteDepo({ a1: pdf, a4: new TextEncoder().encode("%PDF-1.7 başka") }) });
+  assert.deepEqual(o, { gonderilen: 2, bekleyen: 2, hatali: 2 });
+  assert.deepEqual(g.giden.map((x) => [x.kime.slice(0, 4), x.ek ? new TextDecoder().decode(x.ek.icerik) : null, x.ek?.ad ?? null]),
+    [["0000", "%PDF-1.7 ön bilgilendirme", "form.pdf"], ["0000", null, null]], "yalnız eki okunan ve eksiz e-posta sağlayıcıya gider");
+  assert.equal(g.giden.length, 2);
+  assert.equal(k.son(D(1))?.durum, "gonderildi");
+  assert.deepEqual(k.son(D(2)), { durum: "hata", deneme: 1, son_hata: EK_YOK });
+  assert.deepEqual(k.son(D(3)), { deneme: 1, son_hata: EK_OKUNAMADI }, "bekler (durum değişmez), deneme sayılır");
+  assert.deepEqual(k.son(D(4)), { deneme: 1, son_hata: EK_BOZUK });
+  assert.deepEqual(k.son(D(5)), { durum: "hata", deneme: 5, son_hata: EK_OKUNAMADI }, "5. denemede hata");
+  assert.equal(k.son(D(6))?.durum, "gonderildi");
+  /* yalnız ek adı ya da yalnız kimlik (veritabanı CHECK'i izin vermez; yine de eksiz gitmez) */
+  const k2 = sahteKuyruk([{ ...satir(D(7), null), ek_ad: "form.pdf" }], {});
+  const g2 = sahteGonderim();
+  assert.deepEqual(await bekleyenleriGonder(k2.db, g2.ayar, { depo: sahteDepo({}) }), { gonderilen: 0, bekleyen: 0, hatali: 1 });
+  assert.equal(g2.giden.length, 0);
+});
+
+test("ön bilgilendirme e-postası: konu firma + tesis, gövdede proje no, tarih aralığı, adres; düz metin, kimlik ve bağlantı yok", () => {
+  const e = onBilgiEpostasi({ firma: "Deneme Muayene", musteri: "Deneme Sanayi A.Ş.", tesis: "Merkez", no: "P-1026-007", adres: "Deneme Cad. 1, Çankaya / Ankara",
+    baslangic: "2026-10-12", bitis: "2026-10-13" });
+  assert.equal(e.konu, "Deneme Muayene: Merkez periyodik kontrol ön bilgilendirme formu");
+  assert.ok(e.govde.startsWith("Sayın Deneme Sanayi A.Ş.,") && e.govde.includes("ön bilgilendirme formu ektedir"));
+  assert.ok(e.govde.includes("Proje no: P-1026-007") && e.govde.includes("Tarih: 12.10.2026 – 13.10.2026") && e.govde.includes("Adres: Deneme Cad. 1"));
+  assert.ok(!/<|https?:/.test(e.govde), "düz metin, bağlantı yok");
+  const t = onBilgiEpostasi({ firma: "F", musteri: "M", tesis: "T", no: "P-1", adres: null, baslangic: "2026-10-12", bitis: "2026-10-12" });
+  assert.ok(t.govde.includes("Tarih: 12.10.2026\n") && !t.govde.includes("Adres:"));
+  assert.equal(onBilgiDosyaAdi("P-1026-007"), "P-1026-007-on-bilgilendirme-formu.pdf");
 });

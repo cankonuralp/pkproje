@@ -18,6 +18,8 @@ export interface EgitimFormuVerisi {
   tekrar: string;
   /** 2026-10-25 (belge formatları): firmanın yayınladığı katılım formu formatı (yoksa temel format) */
   format?: FormatTanimi | null;
+  /** 2026-10-25 (belge doldurma): formatın elle doldurulan yerlerinin değerleri (hücre kimliği → değer; src/belge/doldurma.ts) */
+  elle?: Record<string, string> | null;
 }
 
 export const egitimFormKodu = (firmaKod: string) => `${firmaKod}-FR-EGT-01`;

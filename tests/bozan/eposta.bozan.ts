@@ -5,7 +5,9 @@
    4. (536) Kimden'de alan adı denetimi kalkınca kişisel adresli kişi (alan adında değil) kendi adresinden gönderilir — Resend reddeder, e-posta gitmez.
    5. (FV11, 2026-10-16 — eski 5'in yerine: Rapor e-postası kuralı kalktı) doğrulama denetimi kalkınca doğrulanmamış alan adıyla gönderilir — Resend reddeder;
       e-posta beklemek yerine kalıcı hataya düşer.
-   6. (FV11) Idempotency-Key kalkınca yanıtı kaybolan istek yeniden denenince e-posta iki kez gider. */
+   6. (FV11) Idempotency-Key kalkınca yanıtı kaybolan istek yeniden denenince e-posta iki kez gider.
+   7. (2026-10-25, belge doldurma) Sağlayıcının gövdesinden ek düşünce e-posta "gönderildi" olur ama müşteriye PDF'siz gider.
+   8. (2026-10-25) Ek okunamadığında durma kalkınca e-posta sağlayıcıya EKSİZ gider (sessiz eksik ek). */
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
@@ -13,6 +15,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { after, test } from "node:test";
+import { ozet, sahteDepo, sahteGonderim, sahteKuyruk, satir } from "../yardimci/sahte-eposta-vt.ts";
 
 const klasor = mkdtempSync(join(tmpdir(), "eposta-bozan-"));
 after(() => rmSync(klasor, { recursive: true, force: true }));
@@ -78,4 +81,21 @@ test("Idempotency-Key kalkınca yeniden denenen istek sağlayıcıya kimliksiz g
     await p.gonder({ kimden: "g <g@b.example>", kime: "a@b.example", cevap: null, gizli: null, konu: "k", metin: "m", kimlik: "6f9619ff-8b86-4011-b42d-00c04fc964ff" });
     assert.deepEqual(basliklar, [undefined], "bozuk: kimlik başlığı yok — sağlayıcı yinelemeyi tanıyamaz");
   } finally { await new Promise<void>((c) => s.close(() => c())); }
+});
+
+test("sağlayıcının gövdesinden ek düşünce PDF'siz gider", async () => {
+  const m = await bozuk<typeof import("../../src/server/eposta/saglayici.ts")>("src/server/eposta/saglayici.ts",
+    '    ...(e.ek ? { attachments: [{ filename: e.ek.ad, content: Buffer.from(e.ek.icerik).toString("base64") }] } : {}),\n', "");
+  const g = m.istekGovdesi({ kimden: "g <g@b.example>", kime: "a@b.example", cevap: null, gizli: null, konu: "k", metin: "m", ek: { ad: "form.pdf", icerik: new Uint8Array([37, 80]) } });
+  assert.equal(g.attachments, undefined, "bozuk: ek gövdede yok");
+});
+
+test("ek okunamadığında durma kalkınca e-posta sağlayıcıya eksiz gider", async () => {
+  const m = await bozuk<typeof import("../../src/server/eposta/gonder.ts")>("src/server/eposta/gonder.ts", "      if (!r.tamam) {\n", "      if (!r.tamam && false) {\n");
+  const D = "00000000-0000-4000-8000-000000000003";
+  const k = sahteKuyruk([satir(D, { dosya: D, ad: "form.pdf" })], { [D]: { anahtar: "a3", sha256: ozet(new Uint8Array([1])) } });
+  const g = sahteGonderim();
+  await m.bekleyenleriGonder(k.db, g.ayar, { depo: sahteDepo({}) });
+  assert.equal(g.giden.length, 1, "bozuk: depo okunamadı ama e-posta gitti");
+  assert.ok(!g.giden[0].ek, "bozuk: müşteriye eksiz");
 });

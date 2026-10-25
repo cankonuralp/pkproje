@@ -1,6 +1,7 @@
 /* MUHASEBE › FATURA SAYFASI (maket muhasebe.html #/f/<no> — faturaCiz; 327): başlık (fatura no, durum; Tahsilat ekle), şeritler (vadesi geçti,
    ödendi), fatura (alıcı, tarih, vade, iş(ler), kaydeden), kalemler (tür × adet × birim fiyat; teklif dışı işaretli), toplamlar, tahsilatlar.
-   Fatura özeti (PDF) (340; fatura e-Fatura programında kesilir — bu belge özettir): oturumlu uç …/pdf, dosya iner.
+   Fatura özeti (PDF) (340; fatura e-Fatura programında kesilir — bu belge özettir): oturumlu uç …/pdf, dosya iner. 2026-10-25 (belge doldurma):
+   yanında "Belgeyi doldur" (faturaDoldurmaVerisi — yetki modülde).
    Görmeyen: bulunamadı. */
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -14,9 +15,10 @@ import { tarihNo } from "../../../../../components/secim/tarih";
 import { Serit } from "../../../../../components/serit/Serit";
 import { modulBul } from "../../../../../modules/moduller";
 import { FATURA_DURUM, para } from "../../../../../modules/muhasebe/sema";
-import { bugunTr, faturaKarti } from "../../../../../modules/muhasebe/server/muhasebe";
-import { KalemListesi, TahsilatEkle, TahsilatListesi, Toplamlar } from "../../../../../modules/muhasebe/ui/IsParcalari";
+import { bugunTr, faturaDoldurmaVerisi, faturaKarti } from "../../../../../modules/muhasebe/server/muhasebe";
+import { FaturaDoldurma, KalemListesi, TahsilatEkle, TahsilatListesi, Toplamlar } from "../../../../../modules/muhasebe/ui/IsParcalari";
 import { gunFarki } from "../../../../../modules/muhasebe/ui/ortak";
+import { depo } from "../../../../../server/dosya/depo";
 import { modulOturumu, oturumIslemi } from "../../../../../server/kimlik/istek";
 
 const MODUL = modulBul("muhasebe")!;
@@ -26,8 +28,12 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
   const o = await modulOturumu(MODUL.no);
   if (!o) return <Yetkisiz />;
   const { id } = await params;
-  const f = await oturumIslemi(o, (db) => faturaKarti(db, o, id));
-  if (!f) notFound();
+  const v = await oturumIslemi(o, async (db) => {
+    const f = await faturaKarti(db, o, id);
+    return f ? { f, doldur: await faturaDoldurmaVerisi(db, o, f.id, depo()) } : null;
+  });
+  if (!v) notFound();
+  const { f, doldur } = v;
   return (
     <>
       <Kirinti ogeler={[["Muhasebe", "/muhasebe"], ["Faturalar", "/muhasebe/faturalar"], [f.no]]} />
@@ -35,6 +41,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
         alt={<>{f.unvan} · {f.isler.map((x, i) => <span key={x.id}>{i > 0 && ", "}<Link href={`/muhasebe/is/${x.id}`}>{x.no}</Link></span>)}</>}
         tuslar={<>
           <a className={tusSinifi("ikincil")} href={`/muhasebe/f/${f.id}/pdf`} download><Ikon ad="file-text" kucuk />Fatura özeti (PDF)</a>
+          {doldur && <FaturaDoldurma faturaId={f.id} v={doldur} />}
           {f.izin.tahsilat && <TahsilatEkle fatura={{ id: f.id, no: f.no, musteri: f.musteri, toplam: f.toplam, kalan: f.kalan }} bugun={bugunTr()} />}
         </>} />
       {(f.durum === "gecikti" || f.durum === "odendi") && (

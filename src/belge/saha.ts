@@ -22,6 +22,8 @@ export interface SahaFormuVerisi {
   uzmanlar: readonly string[];
   /** 2026-10-25 (belge formatları): firmanın yayınladığı saha formu formatı (yoksa temel format) */
   format?: FormatTanimi | null;
+  /** 2026-10-25 (belge doldurma): formatın elle doldurulan yerlerinin değerleri (hücre kimliği → değer; src/belge/doldurma.ts) */
+  elle?: Record<string, string> | null;
 }
 
 export const sahaFormKodu = (firmaKod: string) => `${firmaKod}-FR-SAH-01`;

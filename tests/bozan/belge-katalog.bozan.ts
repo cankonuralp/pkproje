@@ -2,7 +2,8 @@
    1. Çoğalan satır belgenin listesinden kopyalanmazsa firmanın formunda yalnız ilk varlık basılır (3 öğe → 1 satır).
    2. Kayıt hücresinin veri'si okunmazsa belgenin bilgisi (teslim alan) boş basılır.
    3. Eşleme işlevi bir alanı vermezse katalogdaki alan değerlerde yok (kurucuda seçilen hücre sessizce boş kalırdı).
-   4. Şema veri'li kayıt hücresini kaynak istediği için reddederse firmanın belge formatı kaydedilemez. */
+   4. Şema veri'li kayıt hücresini kaynak istediği için reddederse firmanın belge formatı kaydedilemez.
+   5. (2026-10-25, belge doldurma) Sözleşmenin eşlemesi bir alanı vermezse sözleşme formatında seçilen hücre boş kalır. */
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -56,6 +57,14 @@ test("eşleme işlevi bir alanı vermezse katalogla değerler ayrışır", async
   const d = m.zimmetDegerleri(ornekZimmetFormu());
   const eksik = BELGE_KATALOGU.zimmet.alanlar.map((x) => x.anahtar).filter((k) => !(k in d.alanlar));
   assert.deepEqual(eksik, ["alan_meslek"], "bozuk: katalogdaki alan değerlerde yok");
+});
+
+/* 2026-10-25 (belge doldurma): sözleşme belgesi de katalogda — eşlemesi bir alanı vermezse kurucuda seçilen hücre sessizce boş kalırdı */
+test("sözleşmenin eşlemesi bir alanı vermezse katalogla değerler ayrışır", async () => {
+  const m = await bozuk<typeof import("../../src/belge/katalog.ts")>("src/belge/katalog.ts", `musteri_vd: m.vd ?? "", `, "");
+  const d = m.ornekDegerler("sozlesme");
+  const eksik = BELGE_KATALOGU.sozlesme.alanlar.map((x) => x.anahtar).filter((k) => !(k in d.alanlar));
+  assert.deepEqual(eksik, ["musteri_vd"], "bozuk: katalogdaki alan değerlerde yok");
 });
 
 test("şema veri'li kayıt hücresinde kaynak isterse belge formatı reddedilir", async () => {

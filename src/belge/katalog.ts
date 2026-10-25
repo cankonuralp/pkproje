@@ -1,10 +1,12 @@
 /* BELGE KATALOĞU (2026-10-25, belge formatları; reisim: "herhangi bir form ekleme mekaniği bu şekilde çalışmalı aynı araca bağlamalıyız"): programın
    ürettiği belgeler — zimmet teslim formu, araç teslim tutanağı, eğitim katılım formu, izin talep formu, masraf formu, teklif, fatura özeti, saha formu,
-   ön bilgilendirme formu — rapor şablonunun aracına (basılı PDF → şablon → Format kurucu → belge o formattan) bağlanır. Her belgenin BİLGİLERİ:
+   ön bilgilendirme formu; 2026-10-25 belge doldurma: sözleşme — rapor şablonunun aracına (basılı PDF → şablon → Format kurucu → belge o formattan) bağlanır. Her belgenin BİLGİLERİ:
    alan (tek değer) ve liste (çoğalan satırın kolonları), belgenin verisinden (src/belge/<belge>.ts …Verisi) — serbest tablonun kayıt hücresi
    veri = "alan" ya da çoğalan satırda "liste.kolon" ile okur (format/tanim.ts Hucre.veri; çizim belge.ts belgeFormu). <belge>Degerleri(v):
    verinin belgede görünen değerleri (tarih GG.AA.YYYY, tutar "1.234,56 TL"; yok olan bilgi boş). Firmanın formatı yoksa temel format aynen
-   (belgeCizimi). SAF (veritabanısız; kurucunun önizlemesi tarayıcıda da koşar). Kilit tests/belge-katalog.test.ts. */
+   (belgeCizimi). 2026-10-25 (belge doldurma; reisim: "sözleşme vb işleri de yüklediğimde, el ile değiştirilebilir ve doldurulabilir olmalı"):
+   formatın elle doldurulan yerlerinin değerleri (v.elle — ./doldurma.ts) belgeFormu'na geçer. SAF (veritabanısız; kurucunun önizlemesi
+   tarayıcıda da koşar). Kilit tests/belge-katalog.test.ts, tests/belge-doldurma.test.ts. */
 import type { ReactNode } from "react";
 import type { FormatTanimi } from "../format/tanim.ts";
 import { aracTutanakFormKodu, TAAHHUT as ARAC_TAAHHUT, type AracTutanagiVerisi } from "./arac.ts";
@@ -13,11 +15,13 @@ import { EGITIM_BEYAN, egitimFormKodu, type EgitimFormuVerisi } from "./egitim.t
 import { faturaOzetiFormKodu, type FaturaBelgesiVerisi } from "./fatura.ts";
 import { ON_BILGI_METIN, onBilgiFormKodu, onBilgiTarihi, type OnBilgiVerisi } from "./onbilgi.ts";
 import { SAHA_ONAY, sahaFormKodu, type SahaFormuVerisi } from "./saha.ts";
+import { ilIlce, sozlesmeFormKodu, YENILEME_AD, type SozlesmeBelgesiVerisi } from "./sozlesme.ts";
 import { TALEP_FORMAT, talepFormKodu, type TalepFormuVerisi, type TalepTipi } from "./talep.ts";
 import { para, teklifFormKodu, teklifKosullari, type TeklifBelgesiVerisi } from "./teklif.ts";
 import { ZIMMET_TAAHHUT, zimmetFormKodu, type ZimmetFormuVerisi } from "./zimmet.ts";
 
-export const BELGE_TURLERI = ["zimmet", "arac", "egitim", "izin", "masraf", "teklif", "fatura", "saha", "onbilgi"] as const;
+/** göçün belge listesiyle aynı sırada (en son göç 0105 — tests/belge-format-saf.test.ts) */
+export const BELGE_TURLERI = ["zimmet", "arac", "egitim", "izin", "masraf", "teklif", "fatura", "saha", "onbilgi", "sozlesme"] as const;
 export type BelgeTuru = (typeof BELGE_TURLERI)[number];
 export interface BelgeAlani { anahtar: string; ad: string }
 export interface BelgeListesi { anahtar: string; ad: string; kolonlar: BelgeAlani[] }
@@ -99,6 +103,14 @@ export const BELGE_KATALOGU: Record<BelgeTuru, BelgeKatalogu> = {
       a("baslangic", "Başlangıç"), a("bitis", "Bitiş"), a("uzmanlar", "Muayene uzmanları"), a("metin", "Bilgilendirme metni")],
     listeler: [l("ekipman", "Kontrol edilecek ekipmanlar", a("kod", "Kod"), a("tur", "Ekipman"), a("konum", "Konum")),
       l("uzman", "Muayene uzmanları", a("ad", "Ad soyad"), a("meslek", "Meslek"))],
+  },
+  /* 2026-10-25 (belge doldurma): iş sözleşmesi — kayıttaki bilgiler; sözleşmenin metni ve elle doldurulan yerleri firmanın formatında */
+  sozlesme: {
+    anahtar: "sozlesme", ad: "Sözleşme",
+    alanlar: [...ortak("Sözleşme no", "Sözleşme tarihi"), a("musteri_unvan", "Müşteri ünvanı"), a("musteri_vd", "Vergi dairesi"), a("musteri_vno", "Vergi no"),
+      a("musteri_adres", "Müşteri adresi"), a("tesisler", "Tesisler (hepsi)"), a("baslangic", "Başlangıç"), a("bitis", "Bitiş"), a("vade", "Ödeme vadesi"),
+      a("yenileme", "Yenileme"), a("teklif_no", "Dayanak teklif"), a("firma_imza", "Firmanın imza tarihi"), a("musteri_imza", "Müşterinin imza tarihi")],
+    listeler: [l("tesis", "Tesisler", a("ad", "Tesis"), a("il", "İl"), a("ilce", "İlçe"), a("il_ilce", "İlçe / il"), a("sgk", "SGK sicil no"))],
   },
 };
 
@@ -195,9 +207,21 @@ export function onBilgiDegerleri(v: OnBilgiVerisi): BelgeDegerleri {
   };
 }
 
-/** belgenin ağacı: firmanın o belge için yayınladığı format varsa ondan (belge.ts belgeFormu), yoksa temel format aynen */
-export function belgeCizimi<V extends { firma: Firma; format?: FormatTanimi | null }>(belge: BelgeTuru, v: V, degerler: (v: V) => BelgeDegerleri, temel: (v: V) => ReactNode): ReactNode {
-  return v.format ? belgeFormu(v.format, v.firma, degerler(v), BELGE_KATALOGU[belge].ad) : temel(v);
+export function sozlesmeDegerleri(v: SozlesmeBelgesiVerisi): BelgeDegerleri {
+  const m = v.musteri;
+  return {
+    alanlar: { ...ortakDeger(v.firma, sozlesmeFormKodu(v.firma.kod), v.no, gun(v.tarih)), musteri_unvan: m.unvan, musteri_vd: m.vd ?? "", musteri_vno: m.vno ?? "",
+      musteri_adres: m.adres ?? "", tesisler: v.tesisler.map((x) => [x.ad, ilIlce(x)].filter(Boolean).join(" — ")).join("\n"), baslangic: gun(v.baslangic),
+      bitis: gun(v.bitis), vade: `${v.vade} gün`, yenileme: YENILEME_AD[v.yenileme], teklif_no: v.teklifNo ?? "", firma_imza: gun(v.firmaImza),
+      musteri_imza: gun(v.musteriImza) },
+    listeler: { tesis: v.tesisler.map((x) => ({ ad: x.ad, il: x.il ?? "", ilce: x.ilce ?? "", il_ilce: ilIlce(x), sgk: x.sgk ?? "" })) },
+  };
+}
+
+/** belgenin ağacı: firmanın o belge için yayınladığı format varsa ondan (belge.ts belgeFormu — elle doldurulan yerleriyle), yoksa temel format aynen */
+export function belgeCizimi<V extends { firma: Firma; format?: FormatTanimi | null; elle?: Readonly<Record<string, string>> | null }>(belge: BelgeTuru, v: V,
+  degerler: (v: V) => BelgeDegerleri, temel: (v: V) => ReactNode): ReactNode {
+  return v.format ? belgeFormu(v.format, v.firma, degerler(v), BELGE_KATALOGU[belge].ad, v.elle) : temel(v);
 }
 
 /* ── ÖRNEK DEĞERLER (kurucunun önizlemesi; uydurma) ── */
@@ -238,6 +262,10 @@ const ORNEK: { [K in BelgeTuru]: () => BelgeDegerleri } = {
   onbilgi: () => onBilgiDegerleri({ firma: F, projeNo: "P-1026-001", tarih: "2026-10-01", musteri: "Deneme Bir Sanayi A.Ş.", tesis: "Merkez",
     adres: "Deneme Cad. 1, Gebze / Kocaeli", baslangic: "2026-10-05", bitis: "2026-10-06", uzmanlar: [KISI, { ad: "Deneme İkinci", meslek: "Elektrik mühendisi" }],
     ekipmanlar: [{ kod: "HT-1", tur: "Hava tankı", konum: "Kazan dairesi" }, { kod: "HT-2", tur: "Hava tankı", konum: null }, { kod: "FK-1", tur: "Forklift", konum: "Depo" }] }),
+  sozlesme: () => sozlesmeDegerleri({ firma: F, no: "S-1026-001", tarih: "2026-10-01",
+    musteri: { unvan: "Deneme Bir Sanayi A.Ş.", vd: "Merkez", vno: "1234567890", adres: "Deneme Cad. 1, Gebze / Kocaeli" },
+    tesisler: [{ ad: "Merkez", il: "Kocaeli", ilce: "Gebze", sgk: "0000000000000000000000000" }, { ad: "Depo", il: "Kocaeli", ilce: "Gebze", sgk: null }],
+    baslangic: "2026-10-01", bitis: "2027-09-30", vade: 30, yenileme: "otomatik", teklifNo: "T-1026-001", firmaImza: "2026-10-01", musteriImza: "2026-10-03" }),
 };
 /** kurucunun önizlemesinde kayıt hücrelerinin uydurma değerleri (katalogla aynı anahtarlar) */
 export const ornekDegerler = (belge: BelgeTuru): BelgeDegerleri => ORNEK[belge]();

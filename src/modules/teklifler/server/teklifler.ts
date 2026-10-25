@@ -31,6 +31,10 @@ import type { ExcelTuru, TeklifEkipmani } from "../excel.ts";
 import { bitisGunu, RedGirdisi, TeklifGirdisi, type Aday, type TeklifDurumu } from "../sema.ts";
 import { raporBaglari } from "./rapor-bagi.ts";
 import { yayindakiBelgeFormati } from "../../rapor-format/server/belgeler.ts";
+import { belgeDoldurmaKaydet, belgeDoldurmasi } from "../../rapor-format/server/doldurma.ts";
+import { elleAlanlari } from "../../../belge/doldurma.ts";
+import { BELGE_KATALOGU, teklifDegerleri, type BelgeDegerleri } from "../../../belge/katalog.ts";
+import type { FormatTanimi } from "../../../format/tanim.ts";
 
 const MODUL = 11;
 const TEKLIF = tablo({ ad: "teklif", sutunlar: ["no", "musteri_id", "aday", "durum", "gerekce", "gecerlilik", "kdv", "notlar", "ekipmanlar", "kopya_kaynak"] });
@@ -387,7 +391,38 @@ export async function teklifBelgesiVerisi(db: Sorgulayici, kim: Kisi, id: string
     kalemler: t.kalemler.map((k) => ({ turAd: k.turAd, brans: k.brans, periyot: k.periyot, adet: k.adet, fiyat: k.fiyat })),
     /* 2026-10-25 (belge formatları): firmanın yayınladığı teklif formatı; yoksa temel format */
     format: await yayindakiBelgeFormati(db, "teklif"),
+    /* 2026-10-25 (belge doldurma): formatın elle doldurulan yerleri */
+    elle: (await belgeDoldurmasi(db, "teklif", id))?.degerler ?? null,
   };
+}
+
+/* ── BELGE DOLDURMA (2026-10-25, belge doldurma; reisim: "sözleşme vb işleri de yüklediğimde, el ile değiştirilebilir ve doldurulabilir olmalı, bir
+   müşteri için sözleşme açtığımda el ile girilmesi gereken yerleri girip öyle gönderebilmeliyim"): firmanın yayındaki teklif formatının "alan"
+   hücreleri teklif başına elle doldurulur (rapor-format/server/doldurma.ts; değerler belgede o hücrelere). Teklifin içeriği gibi yalnız TASLAKTA ve
+   yalnız teklifi değiştirebilen ("yaz") doldurur — gönderilmiş teklifin belgesi değişmez. ── */
+export interface TeklifDoldurmaVerisi {
+  baslik: string; tanim: FormatTanimi; degerler: Record<string, string>; surum: number | null;
+  onizleme: { firma: TeklifBelgesiVerisi["firma"]; degerler: BelgeDegerleri };
+}
+export type DoldurmaSonucu = Awaited<ReturnType<typeof belgeDoldurmaKaydet>> | { durum: "yetkisiz" | "yok" } | { durum: "red"; neden: string };
+/** "Belgeyi doldur"un verisi: taslak teklifte, değiştirebilene; yayındaki formatta elle doldurulan yer yoksa null */
+export async function teklifDoldurmaVerisi(db: Sorgulayici, kim: Kisi, id: string, depo: Depo | null = null): Promise<TeklifDoldurmaVerisi | null> {
+  if (!yazar(kim)) return null;
+  const f = await yayindakiBelgeFormati(db, "teklif");
+  if (!f || !elleAlanlari(f).length) return null;
+  const v = await teklifBelgesiVerisi(db, kim, id, depo);
+  if (!v?.format || v.durum !== "taslak") return null;
+  const d = await belgeDoldurmasi(db, "teklif", id);
+  return { baslik: BELGE_KATALOGU.teklif.ad, tanim: v.format, degerler: d?.degerler ?? {}, surum: d?.surum ?? null, onizleme: { firma: v.firma, degerler: teklifDegerleri(v) } };
+}
+/** elle doldurulan yerleri kaydet: yalnız "yaz" ve yalnız taslak teklif (satır paylaşımlı kilitli — aynı anda gönderilen teklifle sıraya girer) */
+export async function teklifDoldur(db: Sorgulayici, kim: Kisi, id: string, degerler: unknown, surum: number | null): Promise<DoldurmaSonucu> {
+  if (!yazar(kim)) return { durum: "yetkisiz" };
+  if (!UUID.test(id)) return { durum: "yok" };
+  const x = (await db.sorgu<{ durum: string }>("SELECT durum FROM teklif WHERE id = $1 FOR SHARE", [id])).rows[0];
+  if (!x) return { durum: "yok" };
+  if (x.durum !== "taslak") return { durum: "red", neden: "Teklif gönderildi; belgesi değiştirilmez." };
+  return belgeDoldurmaKaydet(db, { ad: kim.ad }, "teklif", id, degerler, surum);
 }
 
 /* ── KESİN SİLME (368; reisim 2026-10-07 "eklenebilen şeyler silinemiyor"; §9 elli üçüncü tur) — yalnız yönetici (kayit_sil, modül 11) ve yalnız hiç

@@ -24,6 +24,8 @@ export interface OnBilgiVerisi {
   ekipmanlar: readonly { kod: string; tur: string; konum: string | null }[];
   /** firmanın yayınladığı ön bilgilendirme formu formatı (yoksa yüklenen PDF ya da temel format) */
   format?: FormatTanimi | null;
+  /** 2026-10-25 (belge doldurma): formatın elle doldurulan yerlerinin değerleri (hücre kimliği → değer; src/belge/doldurma.ts) */
+  elle?: Record<string, string> | null;
 }
 
 export { onBilgiFormKodu };

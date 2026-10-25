@@ -22,20 +22,25 @@ import { dosyaCope, dosyaYukle } from "../../../server/dosya/dosya.ts";
 import type { YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import type { SahaFormuVerisi } from "../../../belge/saha.ts";
 import type { OnBilgiVerisi } from "../../../belge/onbilgi.ts";
-import { personelHesaplari } from "../../../server/kimlik/hesap.ts";
+import { hesapGonderen, personelHesaplari } from "../../../server/kimlik/hesap.ts";
 import { canDo, canDoEylem, duzey } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { ekipmanEkle as ekipmanKaydet, ekipmanKilitle, ekipmanKullanimi, ekipmanlar, ekipmanPasif as ekipmanPasifYaz, ekipmanSil as ekipmanSilYaz, koduKullanan, tesisEkipmanlari, type EkipmanOzeti } from "../../ekipman/server/ekipman.ts";
 import { kullanimMetni } from "../../../components/sil/metin.ts";
 import { turOzetleri } from "../../ekipman-turleri/server/turler.ts";
-import { musteriOzetleri } from "../../musteriler/server/musteriler.ts";
+import { musteriOzetleri, tesisMusteriIletisim } from "../../musteriler/server/musteriler.ts";
 import { personelOzetleri } from "../../personel/server/personel.ts";
 import { meslek } from "../../personel/sema.ts";
 import { yayindakiBelgeFormati } from "../../rapor-format/server/belgeler.ts";
 import { ekipmanRaporuVar, mesaiDurumu, oncekiKontrol, oncekiRaporlar, planRaporlari, raporKunyeleriniYaz, type OncekiKontrol, type PlanRaporu } from "../../raporlar/server/plan-baglanti.ts";
-import { KunyeGirdisi, kodBicimi, kodNormal, NotGirdisi, RedGirdisi, TAMAMLANDI_RAPOR, YeniEkipmanGirdisi, type KodTuru, type PlanDurumu } from "../sema.ts";
+import { KunyeGirdisi, kodBicimi, kodNormal, NotGirdisi, onBilgiDosyaAdi, onBilgiEpostasi, RedGirdisi, TAMAMLANDI_RAPOR, YeniEkipmanGirdisi, type KodTuru, type PlanDurumu } from "../sema.ts";
 import { bugunTr, EKIP, MODUL, PLAN, PLAN_EKIPMAN, planAcabilir, planKarti, UUID, type Kisi, type PlanKarti } from "./planlar.ts";
-import { kaynakEpostalari, type EpostaDurumu } from "../../../server/eposta/eposta.ts";
+import { adresler, kaynakEpostalari, type EpostaDurumu } from "../../../server/eposta/eposta.ts";
+import { belgeEpostala } from "../../../server/eposta/belge-gonder.ts";
+import { belgeDoldurmaKaydet, belgeDoldurmasi, type DoldurmaSonucu } from "../../rapor-format/server/doldurma.ts";
+import { eksikElleAlanlar, elleAlanlari } from "../../../belge/doldurma.ts";
+import { onBilgiDegerleri, sahaDegerleri, type BelgeDegerleri, type BelgeTuru } from "../../../belge/katalog.ts";
+import type { FormatTanimi } from "../../../format/tanim.ts";
 
 const NOT = tablo({ ad: "plan_not", sutunlar: ["plan_id", "metin", "yazan"] });
 const EKIPMAN_MODULU = 7;
@@ -198,7 +203,8 @@ export interface PlanIci {
   mesai: { normal: number; mesai: number } | null;
   /** proje notları; göremeyene null */
   notlar: { id: string; metin: string; yazan: string; zaman: string }[] | null;
-  /** 432: plan açılınca giden e-postalar (alıcı, durum) — yalnız plan açabilene (planlama, yönetici); öteki null */
+  /** 432: plan açılınca giden e-postalar (alıcı, durum) — yalnız plan açabilene (planlama, yönetici); öteki null. 2026-10-25: müşteriye giden ön
+      bilgilendirme formu e-postaları da (kaynak "onbilgi", PDF ekiyle) */
   epostalar: EpostaDurumu[] | null;
   /** 2026-10-12: oluşturulan saha formları, en yeni üstte (planı gören görür) */
   sahaFormlari: SahaFormuSatiri[];
@@ -280,7 +286,7 @@ export async function planIci(db: Sorgulayici, kim: Kisi, id: string): Promise<P
       .filter((r) => canDo(kim, RAPORLAR_MODULU, "gor", { sahip: r.hesapId, brans: turBul.get(r.turId)?.brans ?? null }))
       .map(({ hesapId, personelId: _p, ...r }) => ({ ...r, benim: !!hesapId && hesapId === kim.id })),
     raporluEkipman: [...new Set(tumRaporlar.map((r) => r.ekipmanId))], erken: p.baslangic > bugunTr(), mesai: m?.dolu ? { normal: m.normal, mesai: m.mesai } : null, notlar,
-    epostalar: planAcabilir(kim) ? await kaynakEpostalari(db, "plan", p.id) : null, sahaFormlari: await sahaFormlari(db, id), izin,
+    epostalar: planAcabilir(kim) ? await kaynakEpostalari(db, ["plan", ONBILGI_KAYNAK], p.id) : null, sahaFormlari: await sahaFormlari(db, id), izin,
   };
 }
 
@@ -598,22 +604,16 @@ export async function sahaFormuOlustur(db: Sorgulayici, kim: Kisi, id: string): 
   return { durum: "tamam", bildirim: `${no} oluşturuldu. PDF'ini açıp yazdırın; müşterinin imzalı taramasını buraya yükleyin.`, id: r.id };
 }
 
-/** formun belgesi (PDF ucu); planı göremeyene ya da başka planın formuna null */
-export async function sahaFormuVerisi(db: Sorgulayici, kim: Kisi, planId: string, formId: string, depo: Depo | null): Promise<SahaFormuVerisi | null> {
-  if (!UUID.test(formId)) return null;
-  const e = await erisim(db, kim, planId);
-  if (!e) return null;
-  const f = (await db.sorgu<{ no: string }>("SELECT no FROM saha_formu WHERE id = $1 AND plan_id = $2", [formId, planId])).rows[0];
-  const kart = f ? await planKarti(db, kim, planId) : null;
-  if (!f || !kart) return null;
-  const sirali = [...(await planRaporlari(db, planId))].sort((a, b) => a.no.localeCompare(b.no, "tr"));
+/** saha formunun plandan gelen içeriği (form numarası hariç) — yetki ÇAĞIRANDA */
+async function sahaIcerigi(db: Sorgulayici, e: Erisim, kart: PlanKarti, depo: Depo | null): Promise<Omit<SahaFormuVerisi, "no">> {
+  const sirali = [...(await planRaporlari(db, e.p.id))].sort((a, b) => a.no.localeCompare(b.no, "tr"));
   const tekil = [...new Map(sirali.map((x) => [x.ekipmanId, x] as const)).values()];
   const ekp = new Map((await ekipmanlar(db, tekil.map((x) => x.ekipmanId))).map((x) => [x.id, x] as const));
   const turAd = new Map((await turOzetleri(db)).map((t) => [t.id, t.ad] as const));
   const firma = await firmaBelgeKunyesi(db, depo);
   return {
     firma: { ad: firma.ad, kod: firma.kod, adres: firma.adres, logo: firma.logo },
-    no: f.no, projeNo: kart.no, baslangic: kart.baslangic, bitis: kart.bitis, musteri: kart.musteri.unvan, tesis: kart.tesis.ad, adres: e.p.adres,
+    projeNo: kart.no, baslangic: kart.baslangic, bitis: kart.bitis, musteri: kart.musteri.unvan, tesis: kart.tesis.ad, adres: e.p.adres,
     ekipmanlar: tekil.map((x) => { const k = ekp.get(x.ekipmanId); return { kod: k?.kod ?? "—", tur: turAd.get(x.turId) ?? "—", konum: k?.konum ?? null }; }),
     uzmanlar: kart.ekip.map((x) => x.ad),
     /* 2026-10-25 (belge formatları): firmanın yayınladığı saha formu formatı; yoksa temel format */
@@ -621,15 +621,35 @@ export async function sahaFormuVerisi(db: Sorgulayici, kim: Kisi, planId: string
   };
 }
 
+/** formun belgesi (PDF ucu); planı göremeyene ya da başka planın formuna null. 2026-10-25 (belge doldurma): formun elle doldurulan yerleri
+    (Rapor formatı › Belgeler'deki formatın "alan" hücreleri; belge_doldurma, kayıt = form) */
+export async function sahaFormuVerisi(db: Sorgulayici, kim: Kisi, planId: string, formId: string, depo: Depo | null): Promise<SahaFormuVerisi | null> {
+  if (!UUID.test(formId)) return null;
+  const e = await erisim(db, kim, planId);
+  if (!e) return null;
+  const f = (await db.sorgu<{ no: string }>("SELECT no FROM saha_formu WHERE id = $1 AND plan_id = $2", [formId, planId])).rows[0];
+  const kart = f ? await planKarti(db, kim, planId) : null;
+  if (!f || !kart) return null;
+  const v = await sahaIcerigi(db, e, kart, depo);
+  return { ...v, no: f.no, elle: v.format ? (await belgeDoldurmasi(db, "saha", formId))?.degerler ?? null : null };
+}
+
 /* ── ÖN BİLGİLENDİRME FORMU (2026-10-25, belge formatları; reisim: "herhangi bir form ekleme mekaniği bu şekilde çalışmalı aynı araca
    bağlamalıyız"; N1 — "ön bilgilendirme formu her firmanın kendi formatına göre değişir"): planı gören indirir. İçerik plandan: müşteri, tesis,
    adres, başlangıç / bitiş, proje no, ekip, plandaki ekipmanlar (koda göre; pasif hariç). Firmanın yayınladığı format (Rapor formatı › Belgeler)
-   önce; yoksa Firma ayarları'na yüklenen PDF (yuklu — uç dosyanın kendisini verir); o da yoksa temel format (src/belge/onbilgi.ts). ── */
-export async function onBilgiVerisi(db: Sorgulayici, kim: Kisi, planId: string, depo: Depo | null): Promise<(OnBilgiVerisi & { yuklu: { anahtar: string; ad: string } | null }) | null> {
-  const e = await erisim(db, kim, planId);
-  const kart = e ? await planKarti(db, kim, planId) : null;
-  if (!e || !kart) return null;
-  const pe = (await db.sorgu<{ ekipman_id: string }>("SELECT ekipman_id::text FROM plan_ekipman WHERE plan_id = $1", [planId])).rows;
+   önce; yoksa Firma ayarları'na yüklenen PDF (yuklu — uç dosyanın kendisini verir); o da yoksa temel format (src/belge/onbilgi.ts).
+   2026-10-25 (belge doldurma; reisim: "sözleşme vb işleri de yüklediğimde, el ile değiştirilebilir ve doldurulabilir olmalı, bir müşteri için sözleşme
+   açtığımda el ile girilmesi gereken yerleri girip öyle gönderebilmeliyim"): formatın elle doldurulan yerleri planı değiştirebilen doldurur
+   (onBilgiDoldur; belge_doldurma, kayıt = plan); form müşterinin e-postasına PDF ekiyle gider (plan açılınca yanıttan sonra ve "Ön bilgilendirme
+   formunu gönder" ile — onbilgi.ts). Gönderilen PDF tek dosya yolunda saklanır (modül DOSYA_ONBILGI, kayıt = plan; planı gören açar). ── */
+export type OnBilgiBelgesi = OnBilgiVerisi & { yuklu: { anahtar: string; ad: string } | null };
+export const DOSYA_ONBILGI = "plan_onbilgi";
+/** ön bilgilendirme formu e-postalarının kaynağı (plan içi listesi "plan" ile birlikte okur) */
+export const ONBILGI_KAYNAK = "onbilgi";
+
+/** planın ön bilgilendirme formu içeriği — yetki ÇAĞIRANDA */
+async function onBilgiIcerigi(db: Sorgulayici, e: Erisim, kart: PlanKarti, depo: Depo | null): Promise<OnBilgiBelgesi> {
+  const pe = (await db.sorgu<{ ekipman_id: string }>("SELECT ekipman_id::text FROM plan_ekipman WHERE plan_id = $1", [e.p.id])).rows;
   const turAd = new Map((await turOzetleri(db)).map((t) => [t.id, t.ad] as const));
   const format = await yayindakiBelgeFormati(db, "onbilgi");
   const dosyaId = format ? null : (await ayarOku(db, "belge_sablon")).deger.on_bilgi;
@@ -641,8 +661,135 @@ export async function onBilgiVerisi(db: Sorgulayici, kim: Kisi, planId: string, 
     projeNo: kart.no, tarih: bugunTr(), musteri: kart.musteri.unvan, tesis: kart.tesis.ad, adres: e.p.adres, baslangic: kart.baslangic, bitis: kart.bitis,
     uzmanlar: kart.ekip.map((x) => ({ ad: x.ad, meslek: meslek(x.meslek)?.ad ?? x.meslek })),
     ekipmanlar: (await ekipmanlar(db, pe.map((x) => x.ekipman_id))).filter((x) => !x.pasif).map((x) => ({ kod: x.kod, tur: turAd.get(x.turId) ?? "—", konum: x.konum })),
-    format, yuklu,
+    format, elle: format ? (await belgeDoldurmasi(db, "onbilgi", e.p.id))?.degerler ?? null : null, yuklu,
   };
+}
+
+export async function onBilgiVerisi(db: Sorgulayici, kim: Kisi, planId: string, depo: Depo | null): Promise<OnBilgiBelgesi | null> {
+  const e = await erisim(db, kim, planId);
+  const kart = e ? await planKarti(db, kim, planId) : null;
+  if (!e || !kart) return null;
+  return onBilgiIcerigi(db, e, kart, depo);
+}
+
+/** dosya erişim kaydı: gönderilen ön bilgilendirme formunu (e-posta eki) planı gören açar */
+export async function onBilgiDosyasiGorulur(db: Sorgulayici, kisi: YetkiHesabi, planId: string): Promise<boolean> {
+  return !!(await erisim(db, { ...kisi, ad: "" }, planId));
+}
+
+/* ── BELGE DOLDURMA (2026-10-25) — plan içinde "Belgeyi doldur": firmanın yayındaki formatında elle doldurulacak yer ("alan" hücresi) varsa.
+   Ön bilgilendirme formu: planı değiştirebilen (Planlar "yaz"). Saha formu: saha formunu yazabilen (plandaki denetçi ya da Planlar "yaz"). Değerler
+   Rapor formatı modülünün doldurma kaydında (rapor-format/server/doldurma.ts; format sürümü ve iyimser kilitle). ── */
+export interface BelgeDoldurmaPaneli {
+  tanim: FormatTanimi;
+  /** kayıtlı elle değerler (hücre kimliği → değer) ve sürümü (henüz doldurulmadıysa null) */
+  degerler: Record<string, string>; surum: number | null;
+  /** önizlemenin verisi (kayıttan gelen değerler; elle değerler pencerede girildikçe) */
+  onizleme: { firma: { ad: string; kod: string; adres?: string | null; logo?: string | null }; degerler: BelgeDegerleri };
+  /** zorunlu olup doldurulmamış (varsayılanı da olmayan) elle yerlerin adları — gönderimde uyarı, engel değil */
+  eksik: string[];
+}
+export interface PlanBelgeleri {
+  /** ön bilgilendirme formunun doldurma paneli — planı değiştirebilene, formatında elle yer varsa */
+  onBilgiDoldur: BelgeDoldurmaPaneli | null;
+  /** "Ön bilgilendirme formunu gönder" — planı değiştirebilene, müşterinin e-postası varsa: alıcılar ve doldurulmamış yerler */
+  onBilgiGonder: { alicilar: string[]; eksik: string[] } | null;
+  /** saha formlarının doldurma paneli (form kimliği → panel) — saha formunu yazabilene, formatında elle yer varsa */
+  sahaDoldur: Record<string, BelgeDoldurmaPaneli>;
+}
+
+async function doldurmaPaneli(db: Sorgulayici, belge: BelgeTuru, kayitId: string, tanim: FormatTanimi,
+  v: { firma: BelgeDoldurmaPaneli["onizleme"]["firma"] }, degerler: BelgeDegerleri): Promise<BelgeDoldurmaPaneli> {
+  const d = await belgeDoldurmasi(db, belge, kayitId);
+  const elle = d?.degerler ?? {};
+  return {
+    tanim, degerler: elle, surum: d?.surum ?? null, onizleme: { firma: v.firma, degerler },
+    eksik: eksikElleAlanlar(tanim, elle).map((a) => a.ad),
+  };
+}
+
+/** plan içi ekranın belge tuşlarının verisi (doldurma, gönderim); göremeyene null */
+export async function planBelgeleri(db: Sorgulayici, kim: Kisi, planId: string, depo: Depo | null): Promise<PlanBelgeleri | null> {
+  const e = await erisim(db, kim, planId);
+  if (!e) return null;
+  const sonuc: PlanBelgeleri = { onBilgiDoldur: null, onBilgiGonder: null, sahaDoldur: {} };
+  let kart: PlanKarti | null | undefined;
+  const kartAl = async () => (kart === undefined ? (kart = await planKarti(db, kim, planId)) : kart);
+  if (e.yazar) {
+    const f = await yayindakiBelgeFormati(db, "onbilgi");
+    if (f && elleAlanlari(f).length && (await kartAl())) {
+      const v = await onBilgiIcerigi(db, e, kart!, depo);
+      sonuc.onBilgiDoldur = await doldurmaPaneli(db, "onbilgi", planId, f, v, onBilgiDegerleri(v));
+    }
+    const alicilar = adresler([(await tesisMusteriIletisim(db, e.p.tesis_id))?.eposta]);
+    if (alicilar.length) sonuc.onBilgiGonder = { alicilar, eksik: sonuc.onBilgiDoldur?.eksik ?? [] };
+  }
+  if (isci(e)) {
+    const formlar = await sahaFormlari(db, planId);
+    const f = formlar.length ? await yayindakiBelgeFormati(db, "saha") : null;
+    if (f && elleAlanlari(f).length && (await kartAl())) {
+      const v = await sahaIcerigi(db, e, kart!, depo);
+      for (const s of formlar) {
+        const sv = { ...v, no: s.no };
+        sonuc.sahaDoldur[s.id] = await doldurmaPaneli(db, "saha", s.id, f, sv, sahaDegerleri(sv));
+      }
+    }
+  }
+  return sonuc;
+}
+
+const doldurmaYazmasi = (r: DoldurmaSonucu, ad: string): PlanYazma =>
+  r.durum === "tamam" ? { durum: "tamam", bildirim: `${ad} kaydedildi.` }
+    : r.durum === "gecersiz" ? { durum: "gecersiz", hatalar: r.hatalar }
+    : r.durum === "cakisma" ? { durum: "red", neden: `${ad} siz açtıktan sonra başkası tarafından dolduruldu. Sayfayı yenileyip yeniden deneyin.` }
+    : { durum: "red", neden: `${ad} için yayında format yok; doldurulacak yer yok.` };
+/** istemciden gelen sürüm: yalnız "hangi sürümü gördüm" (null: henüz doldurulmamıştı; bozuk değer hiçbir sürüme uymaz → çakışma) */
+const doldurmaSurumu = (s: unknown) => (s === null || s === undefined ? null : Number.isSafeInteger(s) ? (s as number) : -1);
+
+/** ön bilgilendirme formunun elle yerlerini kaydeder — planı değiştirebilen */
+export async function onBilgiDoldur(db: Sorgulayici, kim: Kisi, planId: string, girdi: unknown, surum: unknown): Promise<PlanYazma> {
+  const e = await erisim(db, kim, planId);
+  if (!e) return { durum: "yok" };
+  if (!e.yazar) return { durum: "yetkisiz" };
+  return doldurmaYazmasi(await belgeDoldurmaKaydet(db, { ad: kim.ad }, "onbilgi", planId, girdi, doldurmaSurumu(surum)), "Ön bilgilendirme formu");
+}
+
+/** saha formunun elle yerlerini kaydeder — saha formunu yazabilen (plandaki denetçi ya da Planlar "yaz"); form bu planın olmalı */
+export async function sahaFormuDoldur(db: Sorgulayici, kim: Kisi, planId: string, formId: string, girdi: unknown, surum: unknown): Promise<PlanYazma> {
+  const e = await erisim(db, kim, planId);
+  if (!e || !UUID.test(formId)) return { durum: "yok" };
+  if (!isci(e)) return { durum: "yetkisiz" };
+  if (!(await db.sorgu("SELECT 1 FROM saha_formu WHERE id = $1 AND plan_id = $2", [formId, planId])).rowCount) return { durum: "yok" };
+  return doldurmaYazmasi(await belgeDoldurmaKaydet(db, { ad: kim.ad }, "saha", formId, girdi, doldurmaSurumu(surum)), "Saha formu");
+}
+
+/* ── ÖN BİLGİLENDİRME FORMUNU GÖNDER — üç adım (onbilgi.ts onBilgiGonder): hazırla (yetki, alıcı, içerik; işlem) → PDF bas (işlem dışında) →
+   kuyruğa yaz (belge tek dosya yolundan + alıcı başına ekli e-posta; işlem). Alıcı: müşterinin e-postası (Müşteriler'in kaydı); yoksa gönderilmez.
+   Gönderen tuşa basan / planı açan kişi (hesapGonderen). ── */
+export interface OnBilgiGonderimi { v: OnBilgiBelgesi; alicilar: string[]; gonderen: { ad: string; eposta: string } | null; konu: string; govde: string; dosyaAdi: string }
+export const MUSTERI_EPOSTASI_YOK = "Müşterinin e-posta adresi yok; müşteri kaydına e-posta ekleyin.";
+
+export async function onBilgiGonderHazirla(db: Sorgulayici, kim: Kisi, planId: string, depo: Depo | null):
+  Promise<{ durum: "hazir"; g: OnBilgiGonderimi } | Exclude<PlanYazma, { durum: "tamam" }>> {
+  const e = await erisim(db, kim, planId);
+  if (!e) return { durum: "yok" };
+  if (!e.yazar) return { durum: "yetkisiz" };
+  const alicilar = adresler([(await tesisMusteriIletisim(db, e.p.tesis_id))?.eposta]);
+  if (!alicilar.length) return { durum: "red", neden: MUSTERI_EPOSTASI_YOK };
+  const kart = await planKarti(db, kim, planId);
+  if (!kart) return { durum: "yok" };
+  const v = await onBilgiIcerigi(db, e, kart, depo);
+  const m = onBilgiEpostasi({ firma: v.firma.ad, musteri: kart.musteri.unvan, tesis: kart.tesis.ad, no: kart.no, adres: e.p.adres, baslangic: kart.baslangic, bitis: kart.bitis });
+  return { durum: "hazir", g: { v, alicilar, gonderen: await hesapGonderen(db, kim.id), konu: m.konu, govde: m.govde, dosyaAdi: onBilgiDosyaAdi(kart.no) } };
+}
+
+export async function onBilgiKuyruga(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, planId: string, g: OnBilgiGonderimi, pdf: Uint8Array): Promise<PlanYazma> {
+  const e = await erisim(db, kim, planId);
+  if (!e) return { durum: "yok" };
+  if (!e.yazar) return { durum: "yetkisiz" };
+  await belgeEpostala(db, depo, { ad: kim.ad, id: kim.id }, firmaId, { pdf, dosyaAdi: g.dosyaAdi, modul: DOSYA_ONBILGI, kayitId: planId, kime: g.alicilar,
+    konu: g.konu, govde: g.govde, kaynak: ONBILGI_KAYNAK, kaynakId: planId, gonderen: g.gonderen });
+  return { durum: "tamam", bildirim: `Ön bilgilendirme formu ${g.alicilar.join(", ")} adresine gönderiliyor.` };
 }
 
 /** taramanın formu (yazma öncesi; satır kilitlenir, gördüğü sürüm denetlenir — dosya yüklenmeden önce) */

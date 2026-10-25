@@ -26,6 +26,10 @@ import { faturaTanim, isTanim, musteriSecenekleri } from "../liste.ts";
 import { bellekteListele } from "../../../server/liste/liste.ts";
 import type { SunucuListe } from "../../../components/liste/suzgec.ts";
 import { yayindakiBelgeFormati } from "../../rapor-format/server/belgeler.ts";
+import { belgeDoldurmaKaydet, belgeDoldurmasi } from "../../rapor-format/server/doldurma.ts";
+import { elleAlanlari } from "../../../belge/doldurma.ts";
+import { BELGE_KATALOGU, faturaDegerleri, type BelgeDegerleri } from "../../../belge/katalog.ts";
+import type { FormatTanimi } from "../../../format/tanim.ts";
 import { FaturaGirdisi, gunEkle, kdvTutari, para, TahsilatGirdisi, YONTEM, type FaturaDurumu, type IsDurumu, type Yontem } from "../sema.ts";
 
 const MODUL = 18;
@@ -331,7 +335,35 @@ export async function faturaBelgesiVerisi(db: Sorgulayici, kim: Kisi, id: string
     tahsil: f.tahsil, kalan: f.kalan,
     /* 2026-10-25 (belge formatları): firmanın yayınladığı fatura özeti formatı; yoksa temel format */
     format: await yayindakiBelgeFormati(db, "fatura"),
+    /* 2026-10-25 (belge doldurma): formatın elle doldurulan yerleri */
+    elle: (await belgeDoldurmasi(db, "fatura", id))?.degerler ?? null,
   };
+}
+
+/* ── BELGE DOLDURMA (2026-10-25, belge doldurma; reisim: "sözleşme vb işleri de yüklediğimde, el ile değiştirilebilir ve doldurulabilir olmalı, bir
+   müşteri için sözleşme açtığımda el ile girilmesi gereken yerleri girip öyle gönderebilmeliyim"): firmanın yayındaki fatura özeti formatının
+   "alan" hücreleri fatura başına elle doldurulur (rapor-format/server/doldurma.ts). Faturayı kaydedebilen (Muhasebe "yaz") doldurur; faturanın
+   kendisi değişmez (0039), yalnız özet belgesinin elle yerleri. ── */
+export interface FaturaDoldurmaVerisi {
+  baslik: string; tanim: FormatTanimi; degerler: Record<string, string>; surum: number | null;
+  onizleme: { firma: FaturaBelgesiVerisi["firma"]; degerler: BelgeDegerleri };
+}
+export type DoldurmaSonucu = Awaited<ReturnType<typeof belgeDoldurmaKaydet>> | { durum: "yetkisiz" | "yok" };
+/** "Belgeyi doldur"un verisi: "yaz" düzeyine; yayındaki formatta elle doldurulan yer yoksa null */
+export async function faturaDoldurmaVerisi(db: Sorgulayici, kim: Kisi, id: string, depo: Depo | null = null): Promise<FaturaDoldurmaVerisi | null> {
+  if (!yazar(kim)) return null;
+  const f = await yayindakiBelgeFormati(db, "fatura");
+  if (!f || !elleAlanlari(f).length) return null;
+  const v = await faturaBelgesiVerisi(db, kim, id, depo);
+  if (!v?.format) return null;
+  const d = await belgeDoldurmasi(db, "fatura", id);
+  return { baslik: BELGE_KATALOGU.fatura.ad, tanim: v.format, degerler: d?.degerler ?? {}, surum: d?.surum ?? null, onizleme: { firma: v.firma, degerler: faturaDegerleri(v) } };
+}
+/** elle doldurulan yerleri kaydet: yalnız "yaz", var olan faturada */
+export async function faturaDoldur(db: Sorgulayici, kim: Kisi, id: string, degerler: unknown, surum: number | null): Promise<DoldurmaSonucu> {
+  if (!yazar(kim)) return { durum: "yetkisiz" };
+  if (!UUID.test(id) || !(await db.sorgu("SELECT 1 FROM fatura WHERE id = $1", [id])).rowCount) return { durum: "yok" };
+  return belgeDoldurmaKaydet(db, { ad: kim.ad }, "fatura", id, degerler, surum);
 }
 
 /* ── GELİR-GİDER (328; maket #/gelir-gider): ay ya da "toplam" (ilk işin ayından bu aya; en çok 36 ay) ──────────────────────────────── */

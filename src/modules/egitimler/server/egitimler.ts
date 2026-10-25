@@ -19,6 +19,10 @@ import { canDoEylem, duzey, type YetkiHesabi } from "../../../server/yetki/canDo
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { belgeGonder, kaynakBelgeleri, kaynakBelgesiniIptal } from "../../onaylar/server/belge-baglanti.ts";
 import { yayindakiBelgeFormati } from "../../rapor-format/server/belgeler.ts";
+import { belgeDoldurmaKaydet, belgeDoldurmasi } from "../../rapor-format/server/doldurma.ts";
+import { elleAlanlari } from "../../../belge/doldurma.ts";
+import { BELGE_KATALOGU, egitimDegerleri, type BelgeDegerleri } from "../../../belge/katalog.ts";
+import type { FormatTanimi } from "../../../format/tanim.ts";
 import { personelHesaplari } from "../../../server/kimlik/hesap.ts";
 import type { BelgeDurumu } from "../../onaylar/sema.ts";
 import { meslek } from "../../personel/sema.ts";
@@ -165,6 +169,21 @@ export async function sertifikaYukle(db: Sorgulayici, depo: Depo, kim: Kisi, fir
 }
 
 export type EgitimPdfUretici = (v: EgitimFormuVerisi) => Promise<Uint8Array>;
+type Katilan = { ad: string; meslek: string; meslekMetin: string | null };
+/** katılım formunun verisi (imzaya giden form ve "Belgeyi doldur"un önizlemesi aynı işlevden) */
+async function katilimVerisi(db: Sorgulayici, x: { id: string; tur: string; kurum: string; tarih: string; tekrar: string }, p: Katilan, no: string,
+  depo: Depo | null): Promise<EgitimFormuVerisi> {
+  const firma = await firmaBelgeKunyesi(db, depo);
+  return {
+    firma: { ad: firma.ad, kod: firma.kod, adres: firma.adres, logo: firma.logo }, no,
+    katilan: { ad: p.ad, meslek: p.meslek === "diger" ? p.meslekMetin ?? "Diğer meslek" : meslek(p.meslek)?.ad ?? p.meslek },
+    egitim: x.tur, kurum: x.kurum, tarih: x.tarih, tekrar: x.tekrar,
+    /* 2026-10-25 (belge formatları): firmanın yayınladığı katılım formu formatı; yoksa temel format */
+    format: await yayindakiBelgeFormati(db, "egitim"),
+    /* 2026-10-25 (belge doldurma): formatın elle doldurulan yerleri */
+    elle: (await belgeDoldurmasi(db, "egitim", x.id))?.degerler ?? null,
+  };
+}
 /** katılım formunu katılanın imzasına gönder (345): yalnız "yaz"; güncel kayıt (önceki değil), katılan etkin; kayıt başına tek etkin form. Numara,
     PDF (uret: belge → PDF, sunucuda) ve belge AYNI işlemde (PDF düşerse hiçbiri yazılmaz — DosyaHatasi). Kayıt başına sıraya girer. */
 export async function katilimFormuGonder(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, kayitId: string, uret: EgitimPdfUretici): Promise<Yazma> {
@@ -186,20 +205,58 @@ export async function katilimFormuGonder(db: Sorgulayici, depo: Depo, kim: Kisi,
   /* bekleyen form: yeniden gönderilir — öncekini iptal eder (kişi eski formu imzalamaz) */
   if (once === "bekliyor") await kaynakBelgesiniIptal(db, kim, x.id);
   const no = await numaraAl(db, "egitim");
-  const firma = await firmaBelgeKunyesi(db, depo);
-  const v: EgitimFormuVerisi = {
-    firma: { ad: firma.ad, kod: firma.kod, adres: firma.adres, logo: firma.logo }, no,
-    katilan: { ad: p.ad, meslek: p.meslek === "diger" ? p.meslekMetin ?? "Diğer meslek" : meslek(p.meslek)?.ad ?? p.meslek },
-    egitim: x.tur, kurum: x.kurum, tarih: x.tarih, tekrar: x.tekrar,
-    /* 2026-10-25 (belge formatları): firmanın yayınladığı katılım formu formatı; yoksa temel format */
-    format: await yayindakiBelgeFormati(db, "egitim"),
-  };
+  const v = await katilimVerisi(db, x, p, no, depo);
   let pdf: Uint8Array;
   try { pdf = await uret(v); } catch { throw new DosyaHatasi("Formun PDF'i üretilemedi; biraz sonra yeniden deneyin."); }
   const ad = `${x.tur} katılım formu · ${no}`.slice(-120);
   const g = await belgeGonder(db, depo, kim, firmaId, { tur: "egitim", ad, personelId: x.personel_id, kaynakId: x.id, ay: null, pdf: { ad: `${no}.pdf`, bayt: pdf } });
   if (g.durum !== "tamam") throw new DosyaHatasi(g.durum === "uygunsuz" ? g.neden : "Form imzaya gönderilemedi.");
   return { durum: "tamam", id: x.id };
+}
+
+/* ── BELGE DOLDURMA (2026-10-25, belge doldurma; reisim: "sözleşme vb işleri de yüklediğimde, el ile değiştirilebilir ve doldurulabilir olmalı, bir
+   müşteri için sözleşme açtığımda el ile girilmesi gereken yerleri girip öyle gönderebilmeliyim"): firmanın yayındaki katılım formu formatının
+   "alan" hücreleri eğitim kaydı başına elle doldurulur (rapor-format/server/doldurma.ts); imzaya giden form bu değerlerle. Formu gönderebilen
+   ("yaz") doldurur: güncel kayıtta, form imzalanmadıysa. ── */
+export interface KatilimDoldurmaVerisi {
+  baslik: string; tanim: FormatTanimi; degerler: Record<string, string>; surum: number | null;
+  onizleme: { firma: EgitimFormuVerisi["firma"]; degerler: BelgeDegerleri };
+}
+export type DoldurmaSonucu = Awaited<ReturnType<typeof belgeDoldurmaKaydet>> | { durum: "yetkisiz" | "yok" } | { durum: "red"; neden: string };
+/** firmanın yayındaki katılım formu formatında elle doldurulan yer var mı ve kişi formu gönderebilir mi (kayıt penceresi "Belgeyi doldur"u ister) */
+export async function katilimDoldurulur(db: Sorgulayici, kim: YetkiHesabi): Promise<boolean> {
+  if (!degistirir(kim)) return false;
+  const f = await yayindakiBelgeFormati(db, "egitim");
+  return !!f && elleAlanlari(f).length > 0;
+}
+async function katilimDoldurmaDurumu(db: Sorgulayici, kim: YetkiHesabi, kayitId: string):
+  Promise<{ x: KayitDb & { tur: string } } | { durum: "yetkisiz" | "yok" } | { durum: "red"; neden: string }> {
+  if (!degistirir(kim)) return { durum: "yetkisiz" };
+  if (!UUID.test(kayitId)) return { durum: "yok" };
+  const x = (await db.sorgu<KayitDb & { tur: string }>(
+    `SELECT k.id::text, k.personel_id::text, k.tur_id::text, k.tarih::text, k.tekrar::text, k.kurum, k.dosya_id::text, k.onceki, k.surum, t.ad AS tur
+       FROM egitim_kaydi k JOIN egitim_turu t ON t.id = k.tur_id AND t.firma_id = k.firma_id WHERE k.id = $1`, [kayitId])).rows[0];
+  if (!x) return { durum: "yok" };
+  if (x.onceki) return { durum: "red", neden: "Önceki kaydın formu doldurulmaz; güncel kayıttan doldurun." };
+  if ((await kaynakBelgeleri(db, [x.id])).get(x.id)?.durum === "imzali") return { durum: "red", neden: "Bu kaydın katılım formu imzalandı; belgesi değiştirilmez." };
+  return { x };
+}
+/** "Belgeyi doldur"un verisi: formu gönderebilene, güncel ve imzalanmamış kayıtta; yayındaki formatta elle doldurulan yer yoksa null */
+export async function katilimDoldurmaVerisi(db: Sorgulayici, kim: Kisi, kayitId: string, depo: Depo | null = null): Promise<KatilimDoldurmaVerisi | null> {
+  if (!(await katilimDoldurulur(db, kim))) return null;
+  const d = await katilimDoldurmaDurumu(db, kim, kayitId);
+  if (!("x" in d)) return null;
+  const [p] = await personelOzetleri(db, [d.x.personel_id]);
+  const v = await katilimVerisi(db, d.x, p ?? { ad: "Ayrılan personel", meslek: "diger", meslekMetin: "—" }, "", depo);
+  if (!v.format) return null;
+  const k = await belgeDoldurmasi(db, "egitim", d.x.id);
+  return { baslik: BELGE_KATALOGU.egitim.ad, tanim: v.format, degerler: k?.degerler ?? {}, surum: k?.surum ?? null, onizleme: { firma: v.firma, degerler: egitimDegerleri(v) } };
+}
+/** elle doldurulan yerleri kaydet (yetki katilimDoldurmaDurumu) */
+export async function katilimDoldur(db: Sorgulayici, kim: Kisi, kayitId: string, degerler: unknown, surum: number | null): Promise<DoldurmaSonucu> {
+  const d = await katilimDoldurmaDurumu(db, kim, kayitId);
+  if (!("x" in d)) return d;
+  return belgeDoldurmaKaydet(db, { ad: kim.ad }, "egitim", d.x.id, degerler, surum);
 }
 
 /** dosya erişimi: kaydı gören (denetçi yalnız kendi sertifikasını) açar */

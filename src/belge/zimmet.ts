@@ -19,6 +19,8 @@ export interface ZimmetFormuVerisi {
   varliklar: readonly { kod: string; ad: string; tur: string; teslim: string | null; not: string | null }[];
   /** 2026-10-25 (belge formatları): firmanın yayınladığı zimmet formu formatı (yoksa temel format) */
   format?: FormatTanimi | null;
+  /** 2026-10-25 (belge doldurma): formatın elle doldurulan yerlerinin değerleri (hücre kimliği → değer; src/belge/doldurma.ts) */
+  elle?: Record<string, string> | null;
 }
 
 export const zimmetFormKodu = (firmaKod: string) => `${firmaKod}-FR-ZMT-01`;

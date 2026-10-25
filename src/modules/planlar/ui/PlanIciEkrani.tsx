@@ -8,7 +8,10 @@
    Altta Proje notları (hareket listesi gösterilmez — 5. tur). Yetki ve geçiş kuralı sunucuda; buradaki tuşlar yalnız izinli olanı gösterir.
    400 (ARKA-UC §4.1 "plan kabul / red (kuyruğa)"): bağlantı yokken (ya da istek ağda düşerse) Kabul et / Reddet cihaz kuyruğuna yazılır (beyan
    onayı ve okunan metnin özeti, gerekçe); bekleyen iş varken kabul adımında "bu cihazda bekliyor" yazar, tuşlar kalkar; bağlantı gelince gider
-   ve sayfa tazelenir (sonuç olmadıysa nedeni şeritte). */
+   ve sayfa tazelenir (sonuç olmadıysa nedeni şeritte).
+   2026-10-25 (belge doldurma; reisim: "bir müşteri için sözleşme açtığımda el ile girilmesi gereken yerleri girip öyle gönderebilmeliyim"): künyenin
+   tuşlarında ön bilgilendirme formunun "Belgeyi doldur"u (firmanın formatında elle doldurulacak yer varsa; Rapor formatı modülünün bileşeni) ve "Ön
+   bilgilendirme formunu gönder" (müşterinin e-postası varsa; sorulur — doldurulmamış yer uyarıdır, engel değil). Veri planBelgeleri'nden. */
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore, useTransition, type ReactNode } from "react";
 import { Kosullar } from "../../../components/bilgi/Bilgi";
@@ -17,16 +20,19 @@ import { kuyrugaEkle, kuyrukAbone, kuyrukAnlik, kuyrukSunucuAnlik, type KuyrukSo
 import { Alan, FormIzgara, Girdi, ipucuId } from "../../../components/form/Form";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { TabloSayfalari, useSayfa } from "../../../components/liste/Sayfalayici";
+import { useOnayla } from "../../../components/pencere/Onay";
 import { Pencere } from "../../../components/pencere/Pencere";
 import { DegerYok, Kod } from "../../../components/sayfa/Sayfa";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus, tusSinifi } from "../../../components/tus/Tus";
 import { meslek } from "../../personel/sema";
 import { akisAdimlari, gunNo, tarihNo, type AdimDurumu } from "../sema";
-import type { PlanIci } from "../server/plan-ici";
+import type { PlanBelgeleri, PlanIci } from "../server/plan-ici";
+import { BelgeDoldurmaTusu } from "../../rapor-format/ui/BelgeDoldurma";
 import { EkipmanBolumu, ERKEN_ID, MESAI_ID } from "./EkipmanBolumu";
 import {
-  kontrolListesiEylemi, kunyeDuzenleEylemi, kunyeGuncelleEylemi, planKabulEylemi, planReddetEylemi, planTamamlaEylemi, sahaFormuOlusturEylemi, tamamlamaGeriAlEylemi, type PlanYaniti,
+  kontrolListesiEylemi, kunyeDuzenleEylemi, kunyeGuncelleEylemi, onBilgiDoldurEylemi, onBilgiGonderEylemi, planKabulEylemi, planReddetEylemi, planTamamlaEylemi,
+  sahaFormuOlusturEylemi, tamamlamaGeriAlEylemi, type PlanYaniti,
 } from "./eylemler";
 import { ProjeNotlari } from "./ProjeNotlari";
 import { SahaFormlari } from "./SahaFormlari";
@@ -89,9 +95,10 @@ function PlanEkipmanTablosu({ ekipman, etiket }: { ekipman: PlanIci["ekipman"]; 
   </>;
 }
 
-export function PlanIciEkrani({ v }: { v: PlanIci }) {
+export function PlanIciEkrani({ v, belgeler = null }: { v: PlanIci; belgeler?: PlanBelgeleri | null }) {
   const router = useRouter();
   const bildir = useBildir();
+  const onayla = useOnayla();
   const [bekliyor, baslat] = useTransition();
   const [beyanOk, setBeyanOk] = useState(false);
   const [red, setRed] = useState<{ gerekce: string; hata: string | null } | null>(null);
@@ -166,6 +173,22 @@ export function PlanIciEkrani({ v }: { v: PlanIci }) {
     <div className={stil.adimEylem}>{not && <p className={stil.adimNot}>{not}</p>}{eylem && <div className={stil.adimTuslar}>{eylem}</div>}</div>
   );
 
+  /* 2026-10-25 (belge doldurma): ön bilgilendirme formu — elle yerlerin kaydı (sonra sayfa tazelenir: yeni sürüm) ve müşteriye gönderim */
+  const obDoldur = belgeler?.onBilgiDoldur ?? null, obGonder = belgeler?.onBilgiGonder ?? null;
+  const onBilgiKaydet = async (degerler: Record<string, string>, surum: number | null) => {
+    const r = await onBilgiDoldurEylemi(k.id, degerler, surum);
+    if (r.tamam) router.refresh();
+    return r;
+  };
+  const onBilgiGonder = async () => {
+    if (!obGonder) return;
+    const evet = await onayla({ baslik: "Ön bilgilendirme formunu gönder", tus: "Gönder", metin: <>
+      Alıcı: <b>{obGonder.alicilar.join(", ")}</b>.
+      {obGonder.eksik.length > 0 && <> Doldurulmamış yerler: <b>{obGonder.eksik.join(", ")}</b>.</>}
+    </> });
+    if (evet) calistir(() => onBilgiGonderEylemi(k.id));
+  };
+
   /* ── 1 · Planlandı: künye + teklif içeriği ── */
   const K = v.kunye;
   const kunyeKaydet = () => duzenle && baslat(async () => {
@@ -207,6 +230,9 @@ export function PlanIciEkrani({ v }: { v: PlanIci }) {
         <div className={stil.kunyeBas}>
           {/* 2026-10-25 (belge formatları): ön bilgilendirme formu — firmanın formatı, Firma ayarları'na yüklenen PDF ya da temel format (uçta) */}
           <a className={tusSinifi("ikincil")} href={`/planlar/${k.id}/on-bilgilendirme/pdf`} download><Ikon ad="download" kucuk />Ön bilgilendirme formu</a>
+          {obDoldur && <BelgeDoldurmaTusu belge="onbilgi" baslik="Ön bilgilendirme formu" tanim={obDoldur.tanim} degerler={obDoldur.degerler} surum={obDoldur.surum}
+            kaydet={onBilgiKaydet} onizlemeVerisi={obDoldur.onizleme} />}
+          {obGonder && <Tus tur="ikincil" ikon="send" disabled={bekliyor} onClick={onBilgiGonder}>Ön bilgilendirme formunu gönder</Tus>}
           {v.kunyeGuncel && <Tus tur="ikincil" ikon="pencil" onClick={() => {
             const gk = v.kunyeGuncel!;
             setDuzenle({ firmaAdi: gk.firmaAdi, adres: gk.adres ?? "", sgk: gk.sgk ?? "", isg: Object.fromEntries(gk.isg.map((x) => [x.personelId, x.no ?? ""])) });
@@ -317,7 +343,7 @@ export function PlanIciEkrani({ v }: { v: PlanIci }) {
   const a4Eylem = kt ? eylemKutusu("Planı tamamlayın.")
     : d === "denetimde" ? null
     : d === "tamamlandi" ? eylemKutusu(null) : null;
-  const a4Saha = v.sahaFormlari.length > 0 && <SahaFormlari planId={k.id} formlar={v.sahaFormlari} yaz={v.izin.sahaFormu} />;
+  const a4Saha = v.sahaFormlari.length > 0 && <SahaFormlari planId={k.id} formlar={v.sahaFormlari} yaz={v.izin.sahaFormu} doldur={belgeler?.sahaDoldur ?? {}} />;
   const a4 = (
     <Adim no={4} durum={adim[3]} baslik="Tamamlama" ozet={d === "tamamlandi" && v.bitti ? gunNo(v.bitti) : null}>
       {a4Eylem || a4Saha ? <>{a4Eylem}{a4Saha}</> : null}

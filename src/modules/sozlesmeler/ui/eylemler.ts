@@ -7,7 +7,8 @@ import { DosyaHatasi, imzaliYukle, isgKaldir, isgKaydet, sablonKaldir, sablonYuk
   from "../server/sozlesmeler";
 import type { SunucuListe } from "../../../components/liste/suzgec";
 
-export interface PencereDurumu { tamam?: boolean; id?: string; no?: string; hatalar?: Record<string, string>; genel?: string }
+/** adet: müşteriye gönderimde e-posta yazılan alıcı sayısı (./belge-eylemler.ts) */
+export interface PencereDurumu { tamam?: boolean; id?: string; no?: string; adet?: number; hatalar?: Record<string, string>; genel?: string }
 
 const SONUC = { yetkisiz: "Bu işlem için yetkiniz yok.", yok: "Kayıt bulunamadı.", cakisma: "Kayıt bu arada değişti. Sayfayı yenileyip yeniden deneyin." } as const;
 async function oturum() {

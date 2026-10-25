@@ -11,7 +11,7 @@ import { depo } from "../../../server/dosya/depo";
 import type { Sorgulayici } from "../../../server/db/kiraci";
 import {
   atamaBelgeDegistir, atamaEkle, atamaKaldir, bordroKaldir, bordroOnayaGonder, bordroYukle, DosyaHatasi, ozlukBelgeDegistir, ozlukEkle, ozlukKaldir, zimmetFormuGonder,
-  zimmetFormuKaldir, zimmetFormuYukle,
+  zimmetFormuKaldir, zimmetFormuYukle, zimmetDoldur,
   type Yazma as DosyaYazma,
 } from "../server/dosyalar";
 import { hesapAc, hesapKapat, hesapYenidenAc, rolleriKaydet, yeniGeciciParola, type HesapSonucu } from "../../../server/kimlik/hesapYonetimi";
@@ -166,6 +166,19 @@ export async function zimmetFormuGonderEylemi(personelId: string): Promise<Dosya
     if (h instanceof DosyaHatasi) return { genel: h.message };
     throw h;
   }
+}
+
+/* 2026-10-25 (belge doldurma; reisim: "sözleşme vb işleri de yüklediğimde, el ile değiştirilebilir ve doldurulabilir olmalı …"): zimmet teslim formunun
+   elle doldurulan yerleri (yetki dosyalar.ts zimmetDoldur'da; değerlerin denetimi formatın elle alanlarına göre) */
+const DOLDURMA = { ...SONUC, cakisma: "Belge bu arada değişti. Sayfayı yenileyip yeniden deneyin.", formatsiz: "Belgenin yayında formatı yok; doldurulacak yer kalmadı." } as const;
+export async function zimmetDoldurEylemi(personelId: string, degerler: unknown, surum: unknown): Promise<DosyaDurumu & { bildirim?: string }> {
+  if (!(await ayniKoken())) return { genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };
+  const o = await istekOturumu();
+  if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
+  if (typeof personelId !== "string") return { genel: SONUC.yok };
+  const s = typeof surum === "number" && Number.isSafeInteger(surum) && surum >= 0 ? surum : null;
+  const r = await oturumIslemi(o, (db) => zimmetDoldur(db, o, personelId, degerler, s));
+  return r.durum === "tamam" ? { tamam: true } : r.durum === "gecersiz" ? { hatalar: r.hatalar } : { genel: DOLDURMA[r.durum] };
 }
 
 /* ── 366: Ayrıldı · ayrılışı geri al · kesin sil (karar personel.ts'te) ── */

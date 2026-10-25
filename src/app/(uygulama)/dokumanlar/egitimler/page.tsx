@@ -1,8 +1,8 @@
 /* DÖKÜMANLAR › Eğitimler (maket egitimler.html #/) — personel eğitim kayıtları ve tekrar tarihleri. Kapı sunucuda (modül 10, Eğitimler);
-   denetçi ("kendi") yalnız kendi kayıtlarını görür. */
+   denetçi ("kendi") yalnız kendi kayıtlarını görür. 2026-10-25 (belge doldurma): katılım formunda "Belgeyi doldur" (katilimDoldurulur). */
 import type { Metadata } from "next";
 import { Yetkisiz } from "../../../../components/hata/Hata";
-import { bugunTr, egitimDegistirir, egitimListesi } from "../../../../modules/egitimler/server/egitimler";
+import { bugunTr, egitimDegistirir, egitimListesi, katilimDoldurulur } from "../../../../modules/egitimler/server/egitimler";
 import { EgitimListesi } from "../../../../modules/egitimler/ui/EgitimListesi";
 import { modulOturumu, oturumIslemi } from "../../../../server/kimlik/istek";
 
@@ -15,9 +15,9 @@ export const maxDuration = 60;
 export default async function Sayfa({ searchParams }: { searchParams: Promise<{ kisi?: string | string[] }> }) {
   const o = await modulOturumu(MODUL.no);
   if (!o) return <Yetkisiz />;
-  const l = await oturumIslemi(o, (db) => egitimListesi(db, o));
+  const [l, doldur] = await oturumIslemi(o, async (db) => [await egitimListesi(db, o), await katilimDoldurulur(db, o)] as const);
   if (!l) return <Yetkisiz />;
   const { kisi } = await searchParams;
   return <EgitimListesi kayitlar={l.kayitlar} turler={l.turler} kisiler={l.kisiler} esik={l.esik} bugun={bugunTr()} yaz={egitimDegistirir(o)}
-    kisi={typeof kisi === "string" ? kisi : undefined} />;
+    kisi={typeof kisi === "string" ? kisi : undefined} doldur={doldur} />;
 }

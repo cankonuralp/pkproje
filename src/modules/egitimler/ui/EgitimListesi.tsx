@@ -1,9 +1,11 @@
 "use client";
 /* EĞİTİMLER (maket egitimler.html #/ kayıtlar · #/turler): süzgeç (durum çipleri aynı grupta, kişi / eğitim seçicisi, Görünüm güncel / önceki),
    en yeni üstte, sayfalı. Tekrarı geçen / yaklaşan için şerit (eşik firma ayarı). "Eğitim kaydı ekle", "Tekrarı kaydet", sertifika ve eğitim türü
-   yalnız "değiştirir" düzeyine; karar sunucuda. 345: kayıt penceresinde katılım formu — imzaya gönder (güncel kayıt), bekleyen / imzalı durumu. */
+   yalnız "değiştirir" düzeyine; karar sunucuda. 345: kayıt penceresinde katılım formu — imzaya gönder (güncel kayıt), bekleyen / imzalı durumu.
+   2026-10-25 (belge doldurma; reisim: "sözleşme vb işleri de yüklediğimde, el ile değiştirilebilir ve doldurulabilir olmalı …"): gönder tuşunun
+   yanında "Belgeyi doldur" — firmanın yayındaki katılım formu formatında elle doldurulan yer varsa (doldur); verisi pencere açılınca sunucudan. */
 import { useRouter } from "next/navigation";
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Alan, FormIzgara, Girdi, ipucuId } from "../../../components/form/Form";
 import { DosyaAcTusu } from "../../../components/gizli-resim/GizliResim";
@@ -19,8 +21,12 @@ import { Serit } from "../../../components/serit/Serit";
 import { SilTusu } from "../../../components/sil/SilTusu";
 import { Tus } from "../../../components/tus/Tus";
 import { ayEkle, kalanGun, KURUMLAR } from "../sema";
-import type { EgitimKaydi, EgitimTuru } from "../server/egitimler";
-import { egitimKaydetEylemi, egitimTuruKaydetEylemi, katilimFormuGonderEylemi, sertifikaYukleEylemi, egitimKaydiSilEylemi, egitimTuruSilEylemi } from "./eylemler";
+import type { EgitimKaydi, EgitimTuru, KatilimDoldurmaVerisi } from "../server/egitimler";
+import { BelgeDoldurmaTusu } from "../../rapor-format/ui/BelgeDoldurma";
+import {
+  egitimKaydetEylemi, egitimTuruKaydetEylemi, katilimDoldurEylemi, katilimDoldurmaVerisiEylemi, katilimFormuGonderEylemi, sertifikaYukleEylemi, egitimKaydiSilEylemi,
+  egitimTuruSilEylemi,
+} from "./eylemler";
 import { DOKUMAN_SEKMELERI } from "../../dokumanlar/ui/ortak";
 import { egitimAltSekmeleri, tarihYaz } from "./ortak";
 import stil from "./egitimler.module.css";
@@ -50,8 +56,9 @@ function tanim(l: readonly EgitimKaydi[], esik: number): SuzgecTanimi<EgitimKayd
   };
 }
 
-export function EgitimListesi({ kayitlar, turler, kisiler, esik, bugun, yaz, kisi }:
-  { kayitlar: EgitimKaydi[]; turler: EgitimTuru[]; kisiler: { id: string; ad: string }[]; esik: number; bugun: string; yaz: boolean; kisi?: string }) {
+/** doldur: katılım formunun elle doldurulan yeri var ve kişi formu gönderebilir (egitimler.ts katilimDoldurulur) */
+export function EgitimListesi({ kayitlar, turler, kisiler, esik, bugun, yaz, kisi, doldur = false }:
+  { kayitlar: EgitimKaydi[]; turler: EgitimTuru[]; kisiler: { id: string; ad: string }[]; esik: number; bugun: string; yaz: boolean; kisi?: string; doldur?: boolean }) {
   /* Uyarılar'dan gelen ?kisi= listeyi o kişiyle süzülü açar (maket egitimler.html "?kisi= … Uyarılar'dan"; 329–332 incelemesi) */
   const t = tanim(kayitlar, esik);
   const s = useSuzgec(t, kayitlar, kisi && kayitlar.some((x) => x.personelId === kisi) ? { sec: { ...yeniDurum(t).sec, kisi } } : undefined);
@@ -79,7 +86,7 @@ export function EgitimListesi({ kayitlar, turler, kisiler, esik, bugun, yaz, kis
       <SuzgecliListe s={s} on="egt" baslik="Eğitim kayıtları" sutunlar={sutunlar} anahtar={(x) => x.id}
         bosVeri={{ ikon: "graduation-cap", baslik: "Eğitim kaydı yok" }} />
       {p?.tip === "ekle" && <KayitPenceresi kapat={() => setP(null)} turler={turler} kisiler={kisiler} kayitlar={kayitlar} bugun={bugun} personel={p.personel} tur={p.tur} />}
-      {p?.tip === "kayit" && <KayitGorunumu x={p.x} kayitlar={kayitlar} bugun={bugun} yaz={yaz} kapat={() => setP(null)}
+      {p?.tip === "kayit" && <KayitGorunumu x={p.x} kayitlar={kayitlar} bugun={bugun} yaz={yaz} doldur={doldur} kapat={() => setP(null)}
         tekrar={() => setP({ tip: "ekle", personel: p.x.personelId, tur: p.x.turId })} />}
     </>
   );
@@ -136,8 +143,26 @@ function KayitPenceresi({ kapat, turler, kisiler, kayitlar, bugun, personel = ""
   );
 }
 
+/** katılım formunun elle doldurulan yerleri: verisi açılınca istenir, kaydedilince yeniden okunur (sürüm ve değerler güncel kalır) */
+function KatilimDoldurma({ kayitId }: { kayitId: string }) {
+  const [v, setV] = useState<KatilimDoldurmaVerisi | null>(null);
+  const [okuma, setOkuma] = useState(0);
+  useEffect(() => {
+    let gecerli = true;
+    katilimDoldurmaVerisiEylemi(kayitId).then((x) => { if (gecerli) setV(x); }, () => { if (gecerli) setV(null); });
+    return () => { gecerli = false; };
+  }, [kayitId, okuma]);
+  if (!v) return null;
+  const kaydet = async (degerler: Record<string, string>, surum: number | null) => {
+    const r = await katilimDoldurEylemi(kayitId, degerler, surum);
+    if (r.tamam) setOkuma((n) => n + 1);
+    return r;
+  };
+  return <BelgeDoldurmaTusu belge="egitim" baslik={v.baslik} tanim={v.tanim} degerler={v.degerler} surum={v.surum} onizlemeVerisi={v.onizleme} kaydet={kaydet} />;
+}
+
 /* katılım formu (345; Onaylar › Diğer belgeler): imzalıysa imzalı PDF, bekliyorsa durum, geri gönderildiyse uyarı; "değiştirir" güncel kayıtta gönderir */
-function KatilimFormu({ x, yaz, kapat }: { x: EgitimKaydi; yaz: boolean; kapat: () => void }) {
+function KatilimFormu({ x, yaz, doldur, kapat }: { x: EgitimKaydi; yaz: boolean; doldur: boolean; kapat: () => void }) {
   const router = useRouter();
   const bildir = useBildir();
   const onayla = useOnayla();
@@ -158,13 +183,15 @@ function KatilimFormu({ x, yaz, kapat }: { x: EgitimKaydi; yaz: boolean; kapat: 
           : f?.durum === "geri" ? <Serit tur="uyari" ikon="triangle-alert">{f.ad}: katılan geri gönderdi; düzeltip yeniden gönderin.</Serit> : null}
       <div className={stil.tuslar}>
         {f?.durum === "imzali" && f.imzaliDosya && <DosyaAcTusu dosyaId={f.imzaliDosya}>İmzalı katılım formu</DosyaAcTusu>}
+        {yaz && doldur && !x.onceki && f?.durum !== "imzali" && <KatilimDoldurma key={x.id} kayitId={x.id} />}
         {yaz && !x.onceki && f?.durum !== "imzali" && <Tus tur="ikincil" ikon="send" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={gonder}>{f?.durum === "bekliyor" ? "Formu yeniden gönder" : "Katılım formunu imzaya gönder"}</Tus>}
       </div>
     </div>
   );
 }
 
-function KayitGorunumu({ x, kayitlar, bugun, yaz, kapat, tekrar }: { x: EgitimKaydi; kayitlar: EgitimKaydi[]; bugun: string; yaz: boolean; kapat: () => void; tekrar: () => void }) {
+function KayitGorunumu({ x, kayitlar, bugun, yaz, doldur, kapat, tekrar }:
+  { x: EgitimKaydi; kayitlar: EgitimKaydi[]; bugun: string; yaz: boolean; doldur: boolean; kapat: () => void; tekrar: () => void }) {
   const router = useRouter();
   const bildir = useBildir();
   const [bekliyor, baslat] = useTransition();
@@ -193,7 +220,7 @@ function KayitGorunumu({ x, kayitlar, bugun, yaz, kapat, tekrar }: { x: EgitimKa
         { k: "durum", genislik: "20%", baslik: "Durum", kart: "rozet", sira: 1, hucre: (y) => y.onceki ? <Rozet tur="notr">Önceki</Rozet> : <Rozet tur={DURUM[y.durum][0]}>{DURUM[y.durum][1]}</Rozet> },
         { k: "belge", genislik: "25%", baslik: "Sertifika", kart: "eylem", sira: 9, hucre: (y) => y.dosyaId ? <DosyaAcTusu dosyaId={y.dosyaId}>Sertifika</DosyaAcTusu> : <DegerYok>Yüklenmedi</DegerYok> },
       ]} />
-      <KatilimFormu x={x} yaz={yaz} kapat={kapat} />
+      <KatilimFormu x={x} yaz={yaz} doldur={doldur} kapat={kapat} />
       {yaz && <form ref={form} onSubmit={(e) => { e.preventDefault(); yukle(); }}>
         <Alan id={SERTIFIKA_ID} etiket={x.dosyaId ? "Sertifikayı değiştir (PDF)" : "Sertifika yükle (PDF)"} hata={h ?? undefined}>
           <input id={SERTIFIKA_ID} className={stil.dosya} name="dosya" type="file" accept="application/pdf" aria-describedby={h ? ipucuId(SERTIFIKA_ID) : undefined} />

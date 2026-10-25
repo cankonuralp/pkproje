@@ -24,6 +24,10 @@ import { kullanimMetni } from "../../../components/sil/metin.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { belgeGonder, kaynakBelgeDurumlari } from "../../onaylar/server/belge-baglanti.ts";
 import { yayindakiBelgeFormati } from "../../rapor-format/server/belgeler.ts";
+import { belgeDoldurmaKaydet, belgeDoldurmasi } from "../../rapor-format/server/doldurma.ts";
+import { elleAlanlari } from "../../../belge/doldurma.ts";
+import { aracDegerleri, BELGE_KATALOGU, type BelgeDegerleri } from "../../../belge/katalog.ts";
+import type { FormatTanimi } from "../../../format/tanim.ts";
 import type { BelgeDurumu as ImzaDurumu } from "../../onaylar/sema.ts";
 import { meslek } from "../../personel/sema.ts";
 import { personelOzetleri, personelSecenekleri } from "../../personel/server/personel.ts";
@@ -275,7 +279,51 @@ export async function tutanakBelgesiVerisi(db: Sorgulayici, kim: Kisi, hareketId
     fotolar: ARAC_FOTO.map(([a, ad]) => [ad, fotolar.has(a)] as const),
     /* 2026-10-25 (belge formatları): firmanın yayınladığı tutanak formatı; yoksa temel format */
     format: await yayindakiBelgeFormati(db, "arac"),
+    /* 2026-10-25 (belge doldurma): formatın elle doldurulan yerleri */
+    elle: (await belgeDoldurmasi(db, "arac", x.id))?.degerler ?? null,
   };
+}
+
+/* ── BELGE DOLDURMA (2026-10-25, belge doldurma; reisim: "sözleşme vb işleri de yüklediğimde, el ile değiştirilebilir ve doldurulabilir olmalı, bir
+   müşteri için sözleşme açtığımda el ile girilmesi gereken yerleri girip öyle gönderebilmeliyim"): firmanın yayındaki tutanak formatının "alan"
+   hücreleri tutanak (zimmet hareketi) başına elle doldurulur (rapor-format/server/doldurma.ts). Tutanağı yazabilen doldurur: "yaz" her tutanakta,
+   sürücü ("kendi") yalnız kendisinin teslim ettiği tutanakta; "gör" düzeyi tutanak yazmaz. Teslim alanın imzaladığı tutanak değişmez. ── */
+export interface TutanakDoldurmaVerisi {
+  baslik: string; tanim: FormatTanimi; degerler: Record<string, string>; surum: number | null;
+  onizleme: { firma: AracTutanagiVerisi["firma"]; degerler: BelgeDegerleri };
+}
+export type DoldurmaSonucu = Awaited<ReturnType<typeof belgeDoldurmaKaydet>> | { durum: "yetkisiz" | "yok" } | { durum: "red"; neden: string };
+/** firmanın yayındaki tutanak formatında elle doldurulan yer var mı ve kişi tutanak yazabilir mi (tutanak penceresi "Belgeyi doldur"u ister) */
+export async function tutanakDoldurulur(db: Sorgulayici, kim: YetkiHesabi): Promise<boolean> {
+  const d = duzey(kim, MODUL);
+  if (d !== "yaz" && d !== "kendi") return false;
+  const f = await yayindakiBelgeFormati(db, "arac");
+  return !!f && elleAlanlari(f).length > 0;
+}
+async function tutanakDoldurmaDurumu(db: Sorgulayici, kim: YetkiHesabi, hareketId: string): Promise<"tamam" | "yok" | "yetkisiz" | "imzali"> {
+  if (!UUID.test(hareketId)) return "yok";
+  const k = await kendiKisi(db, kim);
+  if (k === false || (k === null && !degistirir(kim))) return "yetkisiz";
+  const x = (await db.sorgu<{ eden: string | null }>(
+    `SELECT h.eden_personel::text AS eden FROM zimmet_hareket h JOIN arac_tutanagi t ON t.hareket_id = h.id AND t.firma_id = h.firma_id
+      WHERE h.id = $1 AND t.no IS NOT NULL`, [hareketId])).rows[0];
+  if (!x || (k !== null && x.eden !== k)) return "yok";
+  return (await kaynakBelgeDurumlari(db, [hareketId])).get(hareketId) === "imzali" ? "imzali" : "tamam";
+}
+/** "Belgeyi doldur"un verisi: tutanağı doldurabilene ve imzalanmamış tutanakta; yayındaki formatta elle doldurulan yer yoksa null */
+export async function tutanakDoldurmaVerisi(db: Sorgulayici, kim: Kisi, hareketId: string, depo: Depo | null = null): Promise<TutanakDoldurmaVerisi | null> {
+  if (!(await tutanakDoldurulur(db, kim)) || (await tutanakDoldurmaDurumu(db, kim, hareketId)) !== "tamam") return null;
+  const v = await tutanakBelgesiVerisi(db, kim, hareketId, depo);
+  if (!v?.format) return null;
+  const d = await belgeDoldurmasi(db, "arac", hareketId);
+  return { baslik: BELGE_KATALOGU.arac.ad, tanim: v.format, degerler: d?.degerler ?? {}, surum: d?.surum ?? null, onizleme: { firma: v.firma, degerler: aracDegerleri(v) } };
+}
+/** elle doldurulan yerleri kaydet (yetki tutanakDoldurmaDurumu) */
+export async function tutanakDoldur(db: Sorgulayici, kim: Kisi, hareketId: string, degerler: unknown, surum: number | null): Promise<DoldurmaSonucu> {
+  const d = await tutanakDoldurmaDurumu(db, kim, hareketId);
+  if (d === "imzali") return { durum: "red", neden: "Teslim alan tutanağı imzaladı; belgesi değiştirilmez." };
+  if (d !== "tamam") return { durum: d };
+  return belgeDoldurmaKaydet(db, { ad: kim.ad }, "arac", hareketId, degerler, surum);
 }
 
 /** tutanağın PDF'i üretilemedi: bütün tutanak geri alınır (teslim alanın imzasına gitmeyen teslim kalmaz); eylem iletiye çevirir */

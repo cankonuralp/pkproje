@@ -6,7 +6,8 @@ import { aracTutanagiPdf } from "../../../belge/pdf";
 import { depo } from "../../../server/dosya/depo";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
-import { aracKaydet, aracPasif, aracSil, FotoHatasi, kmKaydet, tutanakKaydet, TutanakPdfHatasi } from "../server/araclar";
+import { aracKaydet, aracPasif, aracSil, FotoHatasi, kmKaydet, tutanakDoldur, tutanakDoldurmaVerisi, tutanakKaydet, TutanakPdfHatasi, type TutanakDoldurmaVerisi }
+  from "../server/araclar";
 
 export interface PencereDurumu { tamam?: boolean; id?: string; hatalar?: Record<string, string>; genel?: string; ileti?: string; imzaya?: boolean }
 
@@ -70,4 +71,19 @@ export async function aracPasifEylemi(id: string, surum: number, pasif: boolean)
   const o = await oturum(); if (typeof o === "string") return { genel: o };
   const r = await oturumIslemi(o, (db) => aracPasif(db, o, yazi(id), Number(surum), pasif === true));
   return r.durum === "tamam" ? { tamam: true } : r.durum === "red" ? { genel: r.neden } : { genel: SONUC[r.durum] };
+}
+
+/* 2026-10-25 (belge doldurma; reisim: "sözleşme vb işleri de yüklediğimde, el ile değiştirilebilir ve doldurulabilir olmalı …"): tutanağın elle
+   doldurulan yerleri — tutanak penceresi açılınca verisi istenir (liste satırı başına yüklenmez); yetki araclar.ts'te (tutanakDoldurmaDurumu) */
+const DOLDURMA = { ...SONUC, cakisma: "Belge bu arada değişti. Sayfayı yenileyip yeniden deneyin.", formatsiz: "Belgenin yayında formatı yok; doldurulacak yer kalmadı." } as const;
+export async function tutanakDoldurmaVerisiEylemi(hareketId: string): Promise<TutanakDoldurmaVerisi | null> {
+  const o = await oturum(); if (typeof o === "string") return null;
+  return oturumIslemi(o, (db) => tutanakDoldurmaVerisi(db, o, yazi(hareketId), depo()));
+}
+export async function tutanakDoldurEylemi(hareketId: string, degerler: unknown, surum: unknown): Promise<PencereDurumu> {
+  const o = await oturum(); if (typeof o === "string") return { genel: o };
+  const s = typeof surum === "number" && Number.isSafeInteger(surum) && surum >= 0 ? surum : null;
+  const r = await oturumIslemi(o, (db) => tutanakDoldur(db, o, yazi(hareketId), degerler, s));
+  return r.durum === "tamam" ? { tamam: true } : r.durum === "gecersiz" ? { hatalar: r.hatalar } : r.durum === "red" ? { genel: r.neden }
+    : { genel: DOLDURMA[r.durum] };
 }

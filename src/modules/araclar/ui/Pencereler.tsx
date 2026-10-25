@@ -5,9 +5,12 @@
    Teslim eden sunucuda o anki "kimde"den. Karar sunucuda. Teslim alan kişiyse tutanağın PDF'i onun imzasına gider (Onaylar › Diğer belgeler,
    342); tutanak görünümünde imzanın durumu ve PDF. 531 (reisim 2026-10-13: "araçlar ve zimmetlerde de galeriden fotoğraf ekleme seçeneği ekle"): açı
    fotoğrafı components/foto/FotoTusu — Fotoğraf çek · Galeriden / bilgisayardan seç; seçilen küçültülür (09-A4), küçük görüntüsü × ile çıkar,
-   "Değiştir" yenisini koyar; uymayan (JPEG / PNG değil, 8 MB üstü) açının altında söylenir. */
+   "Değiştir" yenisini koyar; uymayan (JPEG / PNG değil, 8 MB üstü) açının altında söylenir.
+   2026-10-25 (belge doldurma; reisim: "sözleşme vb işleri de yüklediğimde, el ile değiştirilebilir ve doldurulabilir olmalı …"): tutanak görünümünde
+   PDF'in yanında "Belgeyi doldur" — firmanın yayındaki tutanak formatında elle doldurulan yer varsa (doldur), imzalanmamış tutanakta; verisi pencere
+   açılınca sunucudan (tutanağı doldurabilen değilse gelmez). */
 import { useRouter } from "next/navigation";
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Alan, FormIzgara, Girdi, ipucuId } from "../../../components/form/Form";
 import { FotoKucuk, FotoKucukler, FotoTusu } from "../../../components/foto/FotoTusu";
@@ -24,8 +27,9 @@ import { Ikon } from "../../../components/ikon/Ikon";
 import { Tus, tusSinifi } from "../../../components/tus/Tus";
 import { BELGE_DURUM } from "../../onaylar/sema";
 import { ARAC_FOTO, ARAC_KONTROL, ARAC_TURLERI, kmYaz, seviyeAd, YAKIT_SEVIYE, YAKITLAR } from "../sema";
-import type { AracSatiri, TutanakSatiri } from "../server/araclar";
-import { aracKaydetEylemi, tutanakKaydetEylemi } from "./eylemler";
+import type { AracSatiri, TutanakDoldurmaVerisi, TutanakSatiri } from "../server/araclar";
+import { BelgeDoldurmaTusu } from "../../rapor-format/ui/BelgeDoldurma";
+import { aracKaydetEylemi, tutanakDoldurEylemi, tutanakDoldurmaVerisiEylemi, tutanakKaydetEylemi } from "./eylemler";
 import { kimdeAd, zamanYaz } from "./ortak";
 import stil from "./araclar.module.css";
 
@@ -207,11 +211,32 @@ export function TutanakPenceresi({ kapat, araclar, kisiler, arac = "", surucu = 
   );
 }
 
-export function TutanakGorunumu({ t, kapat }: { t: TutanakSatiri; kapat: () => void }) {
+/** tutanağın elle doldurulan yerleri: verisi açılınca istenir, kaydedilince yeniden okunur (sürüm ve değerler güncel kalır) */
+function TutanakDoldurma({ hareketId }: { hareketId: string }) {
+  const [v, setV] = useState<TutanakDoldurmaVerisi | null>(null);
+  const [okuma, setOkuma] = useState(0);
+  useEffect(() => {
+    let gecerli = true;
+    tutanakDoldurmaVerisiEylemi(hareketId).then((x) => { if (gecerli) setV(x); }, () => { if (gecerli) setV(null); });
+    return () => { gecerli = false; };
+  }, [hareketId, okuma]);
+  if (!v) return null;
+  const kaydet = async (degerler: Record<string, string>, surum: number | null) => {
+    const r = await tutanakDoldurEylemi(hareketId, degerler, surum);
+    if (r.tamam) setOkuma((n) => n + 1);
+    return r;
+  };
+  return <BelgeDoldurmaTusu belge="arac" baslik={v.baslik} tanim={v.tanim} degerler={v.degerler} surum={v.surum} onizlemeVerisi={v.onizleme} kaydet={kaydet} />;
+}
+
+/** doldur: firmanın tutanak formatında elle doldurulan yer var ve kişi tutanak yazabilir (araclar.ts tutanakDoldurulur) */
+export function TutanakGorunumu({ t, kapat, doldur = false }: { t: TutanakSatiri; kapat: () => void; doldur?: boolean }) {
   const kontrol = t.kontrol ? new Set(t.kontrol) : null;
   return (
     <Pencere acik baslik={`Araç teslim tutanağı · ${t.plaka}${t.no ? ` · ${t.no}` : ""}`} onKapat={kapat} genis
-      alt={<>{t.no && <a className={tusSinifi("ikincil")} href={`/araclar/tutanak/${t.hareketId}/pdf`} download><Ikon ad="file-text" kucuk />PDF</a>}<Tus tur="ikincil" onClick={kapat}>Kapat</Tus></>}>
+      alt={<>{t.no && <a className={tusSinifi("ikincil")} href={`/araclar/tutanak/${t.hareketId}/pdf`} download><Ikon ad="file-text" kucuk />PDF</a>}
+        {t.no && doldur && t.imza !== "imzali" && <TutanakDoldurma key={t.hareketId} hareketId={t.hareketId} />}
+        <Tus tur="ikincil" onClick={kapat}>Kapat</Tus></>}>
       <BilgiListesi>
         <Bilgi etiket="Tarih">{zamanYaz(t.zaman)}</Bilgi>
         <Bilgi etiket="Teslim eden → alan" genis>{t.eden} → {t.alan}</Bilgi>

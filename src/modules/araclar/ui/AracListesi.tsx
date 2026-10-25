@@ -131,13 +131,13 @@ function tutanakSutunlari(aracli: boolean, setGoster: (t: TutanakSatiri) => void
   ];
 }
 
-/** aracın kartındaki tutanakları (yalnız o araç) */
-export function TutanakTablosu({ tutanaklar }: { tutanaklar: TutanakSatiri[] }) {
+/** aracın kartındaki tutanakları (yalnız o araç); doldur: tutanak penceresinde "Belgeyi doldur" (araclar.ts tutanakDoldurulur) */
+export function TutanakTablosu({ tutanaklar, doldur = false }: { tutanaklar: TutanakSatiri[]; doldur?: boolean }) {
   const [goster, setGoster] = useState<TutanakSatiri | null>(null);
   return (
     <>
       <Liste baslik="Teslim tutanakları" sutunlar={tutanakSutunlari(false, setGoster)} kayitlar={tutanaklar} anahtar={(t) => t.id} />
-      {goster && <TutanakGorunumu t={goster} kapat={() => setGoster(null)} />}
+      {goster && <TutanakGorunumu t={goster} kapat={() => setGoster(null)} doldur={doldur} />}
     </>
   );
 }
@@ -160,7 +160,8 @@ function tutanakTanimi(l: readonly TutanakSatiri[]): SuzgecTanimi<TutanakSatiri>
 }
 
 /** 481 (site taraması, kalıp 14–15): Araçlar › Tutanaklar — süzgeçli (arama · imza çipleri · ve/veya · Araç · Kişi), boşken de görünür */
-export function TutanakSayfasi({ tutanaklar, baslik, sekmeler }: { tutanaklar: TutanakSatiri[]; baslik: string; sekmeler: readonly (readonly [string, string])[] }) {
+export function TutanakSayfasi({ tutanaklar, baslik, sekmeler, doldur = false }:
+  { tutanaklar: TutanakSatiri[]; baslik: string; sekmeler: readonly (readonly [string, string])[]; doldur?: boolean }) {
   const [goster, setGoster] = useState<TutanakSatiri | null>(null);
   const s = useSuzgec(tutanakTanimi(tutanaklar), tutanaklar);
   return (
@@ -169,7 +170,7 @@ export function TutanakSayfasi({ tutanaklar, baslik, sekmeler }: { tutanaklar: T
       <Sekmeler ad="Araç bölümleri" ogeler={sekmeler} secili="/araclar/tutanaklar" />
       <SuzgecliListe s={s} on="ttn" baslik="Teslim tutanakları" sutunlar={tutanakSutunlari(true, setGoster)} anahtar={(t) => t.id}
         bosVeri={{ ikon: "file-text", baslik: "Tutanak yok" }} />
-      {goster && <TutanakGorunumu t={goster} kapat={() => setGoster(null)} />}
+      {goster && <TutanakGorunumu t={goster} kapat={() => setGoster(null)} doldur={doldur} />}
     </>
   );
 }

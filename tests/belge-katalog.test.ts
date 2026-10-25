@@ -13,8 +13,9 @@ import { belgeFormu, raporBelgesi } from "../src/belge/belge.ts";
 import { htmlYaz } from "../src/belge/html.ts";
 import {
   aracDegerleri, BELGE_KATALOGU, BELGE_TURLERI, belgeCizimi, belgeTuruMu, egitimDegerleri, faturaDegerleri, onBilgiDegerleri, ornekDegerler, sahaDegerleri,
-  TALEP_ALANLARI, talepDegerleri, teklifDegerleri, zimmetDegerleri, type BelgeDegerleri, type BelgeKatalogu, type BelgeTuru,
+  sozlesmeDegerleri, TALEP_ALANLARI, talepDegerleri, teklifDegerleri, zimmetDegerleri, type BelgeDegerleri, type BelgeKatalogu, type BelgeTuru,
 } from "../src/belge/katalog.ts";
+import { sozlesmeBelgesi, type SozlesmeBelgesiVerisi } from "../src/belge/sozlesme.ts";
 import { onBilgiFormu, type OnBilgiVerisi } from "../src/belge/onbilgi.ts";
 import { ornekAracTutanagi, ornekBelge, ornekEgitimFormu, ornekFatura, ornekTalep, ornekTeklif, ornekZimmetFormu } from "../src/belge/ornek.ts";
 import type { SahaFormuVerisi } from "../src/belge/saha.ts";
@@ -31,13 +32,20 @@ const ON_BILGI: OnBilgiVerisi = {
   tesis: "Merkez", adres: "Deneme Cad. 2, Gebze / Kocaeli", baslangic: "2026-10-05", bitis: "2026-10-05", uzmanlar: [{ ad: "Deneme Bir", meslek: "Makine mühendisi" }],
   ekipmanlar: [{ kod: "HT-1", tur: "Hava tankı", konum: "Kazan dairesi" }, { kod: "FK-1", tur: "Forklift", konum: null }],
 };
-const IZIN: TalepFormuVerisi = { ...ornekTalep(), tip: "izin", no: "IZ-1026-001", karar: null,
+/* 2026-10-25 (belge doldurma): iş sözleşmesi — uydurma */
+const SOZLESME: SozlesmeBelgesiVerisi = {
+  firma: { ad: "Deneme Muayene A.Ş.", kod: "DA", adres: "Deneme Cad. 1" }, no: "S-1026-004", tarih: "2026-10-02",
+  musteri: { unvan: "Deneme <i>Sanayi</i> A.Ş.", vd: "Merkez", vno: null, adres: null },
+  tesisler: [{ ad: "Merkez", il: "Kocaeli", ilce: "Gebze", sgk: "123" }, { ad: "Depo", il: null, ilce: null, sgk: null }],
+  baslangic: "2026-10-05", bitis: "2027-10-04", vade: 45, yenileme: "yok", teklifNo: null, firmaImza: "2026-10-02", musteriImza: null,
+};
+const IZIN: TalepFormuVerisi ={ ...ornekTalep(), tip: "izin", no: "IZ-1026-001", karar: null,
   alanlar: [["İzin türü", "Yıllık izin"], ["Başlangıç", "12.10.2026"], ["Bitiş", "16.10.2026"], ["Süre", "5 iş günü"], ["Açıklama", ""], ["Ek belge", "-"]] };
 /** her belge türünün gerçek veri biçimindeki örneği → eşleme çıktısı */
 const ESLEME: Record<BelgeTuru, () => BelgeDegerleri> = {
   zimmet: () => zimmetDegerleri(ornekZimmetFormu()), arac: () => aracDegerleri(ornekAracTutanagi()), egitim: () => egitimDegerleri(ornekEgitimFormu()),
   izin: () => talepDegerleri(IZIN), masraf: () => talepDegerleri(ornekTalep()), teklif: () => teklifDegerleri(ornekTeklif()), fatura: () => faturaDegerleri(ornekFatura()),
-  saha: () => sahaDegerleri(SAHA), onbilgi: () => onBilgiDegerleri(ON_BILGI),
+  saha: () => sahaDegerleri(SAHA), onbilgi: () => onBilgiDegerleri(ON_BILGI), sozlesme: () => sozlesmeDegerleri(SOZLESME),
 };
 /** katalogla değerlerin anahtar farkı (boşsa birebir) */
 function fark(k: BelgeKatalogu, d: BelgeDegerleri): string[] {
@@ -174,4 +182,24 @@ test("temel ön bilgilendirme formu: form kodu (DA-FR-OBF-01), proje no, tarih, 
   assert.ok(html.includes("Deneme &lt;b&gt;Sanayi&lt;/b&gt; &amp; Ort.") && !html.includes("<b>Sanayi"), "kaçış");
   assert.ok(html.includes(">05.10.2026<"), "tek günlük plan tek tarih");
   assert.ok(renderToStaticMarkup(onBilgiFormu({ ...ON_BILGI, ekipmanlar: [] }) as never).includes("Planda ekipman yok."));
+});
+
+/* 2026-10-25 (belge doldurma; reisim: "sözleşme vb işleri de yüklediğimde, el ile değiştirilebilir ve doldurulabilir olmalı") */
+test("sözleşme: değerler (tarih, vade, yenileme, tesisler satır satır; yok olan boş) ve temel format (taraflar, kapsam, süre; hukuki metin yok); kaçış", () => {
+  const d = sozlesmeDegerleri(SOZLESME);
+  assert.deepEqual([d.alanlar.form_kod, d.alanlar.belge_no, d.alanlar.tarih, d.alanlar.baslangic, d.alanlar.bitis, d.alanlar.vade, d.alanlar.yenileme,
+    d.alanlar.teklif_no, d.alanlar.musteri_vno, d.alanlar.musteri_imza, d.alanlar.firma_imza],
+  ["DA-FR-SZL-01", "S-1026-004", "02.10.2026", "05.10.2026", "04.10.2027", "45 gün", "Yenilenmez", "", "", "", "02.10.2026"]);
+  assert.equal(d.alanlar.tesisler, "Merkez — Gebze / Kocaeli\nDepo");
+  assert.deepEqual(d.listeler.tesis.map((x) => [x.ad, x.il_ilce, x.sgk]), [["Merkez", "Gebze / Kocaeli", "123"], ["Depo", "", ""]]);
+  assert.equal(sozlesmeDegerleri({ ...SOZLESME, yenileme: "otomatik", teklifNo: "T-1026-001" }).alanlar.teklif_no, "T-1026-001");
+
+  const agac = sozlesmeBelgesi(SOZLESME), html = renderToStaticMarkup(agac as never);
+  assert.equal(htmlYaz(agac), html, "kesin PDF'in HTML'i React'le birebir");
+  for (const x of ["DA-FR-SZL-01", "S-1026-004", "02.10.2026", "Taraflar", "Kapsam", "Süre ve ödeme", ">Merkez<", "Gebze / Kocaeli", "45 gün", "Yenilenmez",
+    "Hizmet veren", "Hizmet alan", "Merkez / -", "temel format"]) assert.ok(html.includes(x), x);
+  assert.ok(html.includes("Deneme &lt;i&gt;Sanayi&lt;/i&gt; A.Ş.") && !html.includes("<i>Sanayi"), "kaçış");
+  assert.ok(renderToStaticMarkup(sozlesmeBelgesi({ ...SOZLESME, tesisler: [] }) as never).includes("Tesis yok."));
+  /* format yoksa temel format; varsa firmanın formatı */
+  assert.equal(renderToStaticMarkup(belgeCizimi("sozlesme", SOZLESME, sozlesmeDegerleri, sozlesmeBelgesi) as never), html);
 });

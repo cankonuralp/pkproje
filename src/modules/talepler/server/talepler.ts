@@ -28,6 +28,10 @@ import type { TalepFormuVerisi, TalepTipi } from "../../../belge/talep.ts";
 import { izinHaklari } from "../../personel/server/talep-baglanti.ts";
 import { personelinPlanlari } from "../../planlar/server/talep-baglanti.ts";
 import { yayindakiBelgeFormati } from "../../rapor-format/server/belgeler.ts";
+import { belgeDoldurmaKaydet, belgeDoldurmasi } from "../../rapor-format/server/doldurma.ts";
+import { elleAlanlari } from "../../../belge/doldurma.ts";
+import { BELGE_KATALOGU, talepDegerleri, type BelgeDegerleri } from "../../../belge/katalog.ts";
+import type { FormatTanimi } from "../../../format/tanim.ts";
 import { GerekceGirdisi, isGunu, IzinGirdisi, IZIN_DURUM, IZIN_TUR, TALEP_KARARLARI, type IzinDurumu, type IzinTuru, type TalepKarari } from "../sema.ts";
 
 const MODUL = 21;
@@ -342,6 +346,58 @@ export async function talepFormuVerisi(db: Sorgulayici, kim: Kisi, tip: string, 
     karar: karar && karar.zaman ? { ad: ad ?? "—", zaman: karar.zaman, sonuc: karar.sonuc } : null,
     /* 2026-10-25 (belge formatları): firmanın o talep tipi için yayınladığı format; yoksa temel format */
     format: await yayindakiBelgeFormati(db, tip as TalepTipi),
+    /* 2026-10-25 (belge doldurma): formatın elle doldurulan yerleri */
+    elle: (await belgeDoldurmasi(db, tip as TalepTipi, id))?.degerler ?? null,
   };
+}
+
+/* ── BELGE DOLDURMA (2026-10-25, belge doldurma; reisim: "sözleşme vb işleri de yüklediğimde, el ile değiştirilebilir ve doldurulabilir olmalı, bir
+   müşteri için sözleşme açtığımda el ile girilmesi gereken yerleri girip öyle gönderebilmeliyim"): firmanın yayındaki izin talep formu / masraf formu
+   formatının "alan" hücreleri talep başına elle doldurulur (rapor-format/server/doldurma.ts). Talebi değiştirebilen doldurur: talep eden, kendi
+   talebinde, karar verilmeden (onay bekliyor ya da düzeltmede) — onaylayan talebi değiştirmez (0079). ── */
+export interface TalepDoldurmaVerisi {
+  baslik: string; tanim: FormatTanimi; degerler: Record<string, string>; surum: number | null;
+  onizleme: { firma: TalepFormuVerisi["firma"]; degerler: BelgeDegerleri };
+}
+export type DoldurmaSonucu = Awaited<ReturnType<typeof belgeDoldurmaKaydet>> | { durum: "yetkisiz" | "yok" } | { durum: "red"; neden: string };
+const KARARSIZ = new Set(["bekliyor", "duzeltme"]);
+/** talep tipi başına: firmanın yayındaki formatında elle doldurulan yer var mı (talep penceresi "Belgeyi doldur"u ister) */
+export async function talepDoldurulur(db: Sorgulayici, kim: YetkiHesabi): Promise<Record<TalepTipi, boolean>> {
+  const var_ = async (tip: TalepTipi) => {
+    const f = girer(kim) ? await yayindakiBelgeFormati(db, tip) : null;
+    return !!f && elleAlanlari(f).length > 0;
+  };
+  return { izin: await var_("izin"), masraf: await var_("masraf") };
+}
+async function talepDoldurmaDurumu(db: Sorgulayici, kim: Kisi, tip: string, id: string):
+  Promise<{ tip: TalepTipi } | { durum: "yetkisiz" | "yok" } | { durum: "red"; neden: string }> {
+  if (tip !== "izin" && tip !== "masraf") return { durum: "yok" };
+  if (!UUID.test(id)) return { durum: "yok" };
+  const ben = await benimPersonelim(db, kim);
+  if (!ben) return { durum: "yetkisiz" };
+  /* izin talebinin satırı paylaşımlı kilitli: aynı anda verilen kararla sıraya girer */
+  const x = tip === "izin"
+    ? (await db.sorgu<{ personel_id: string; durum: string }>("SELECT personel_id::text, durum FROM izin_talebi WHERE id = $1 FOR SHARE", [id])).rows[0]
+    : await masrafFormuKaydi(db, id).then((g) => (g ? { personel_id: g.personelId, durum: g.durum as string } : undefined));
+  if (!x || x.personel_id !== ben) return { durum: "yok" };
+  if (!KARARSIZ.has(x.durum)) return { durum: "red", neden: "Talep karara bağlandı; formu değiştirilmez." };
+  return { tip };
+}
+/** "Belgeyi doldur"un verisi: talep edene, karar verilmemiş kendi talebinde; yayındaki formatta elle doldurulan yer yoksa null */
+export async function talepDoldurmaVerisi(db: Sorgulayici, kim: Kisi, tip: string, id: string, depo: Depo | null = null): Promise<TalepDoldurmaVerisi | null> {
+  const d = await talepDoldurmaDurumu(db, kim, tip, id);
+  if (!("tip" in d)) return null;
+  const f = await yayindakiBelgeFormati(db, d.tip);
+  if (!f || !elleAlanlari(f).length) return null;
+  const v = await talepFormuVerisi(db, kim, d.tip, id, depo);
+  if (!v?.format) return null;
+  const k = await belgeDoldurmasi(db, d.tip, id);
+  return { baslik: BELGE_KATALOGU[d.tip].ad, tanim: v.format, degerler: k?.degerler ?? {}, surum: k?.surum ?? null, onizleme: { firma: v.firma, degerler: talepDegerleri(v) } };
+}
+/** elle doldurulan yerleri kaydet (yetki talepDoldurmaDurumu) */
+export async function talepDoldur(db: Sorgulayici, kim: Kisi, tip: string, id: string, degerler: unknown, surum: number | null): Promise<DoldurmaSonucu> {
+  const d = await talepDoldurmaDurumu(db, kim, tip, id);
+  if (!("tip" in d)) return d;
+  return belgeDoldurmaKaydet(db, { ad: kim.ad }, d.tip, id, degerler, surum);
 }
 

@@ -22,3 +22,11 @@
 .sablonlar { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; }
 .sablonlar li { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; justify-content: space-between; }
 .secenekler { display: flex; flex-wrap: wrap; gap: 8px; }
+/* 2026-10-25 (belge doldurma): Müşteriye gönder — alıcı satırları (girdi + Kaldır) · gönderilen e-postalar */
+.alicilar { display: grid; gap: 12px; margin: 0 0 12px; }
+.alici { display: flex; gap: 8px; min-width: 0; }
+.alici > :first-child { flex: 1 1 auto; min-width: 0; }
+.epostalar { display: grid; gap: 6px; margin: 12px 0 0; padding: 0; list-style: none; }
+.epostalar li { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 12px; padding: 8px 12px; background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-orta); }
+.epostaKime { flex: 1 1 14rem; min-width: 0; overflow-wrap: anywhere; font-weight: 600; }
+.epostaZaman { color: var(--yazi2); font-size: var(--boy-kucuk); font-variant-numeric: tabular-nums; }

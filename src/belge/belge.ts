@@ -22,6 +22,7 @@ import {
 import { hucreBicemi, kapsama, siraNumaralari, sutunYuzdeleri, yerlesimSatirlari } from "../format/tablo.ts";
 /* veri.ts: saf tanımlar (tanimlar.ts node:crypto kullanır — 451: Format kurucunun belge önizlemesi bu çiziciyi tarayıcıda koşar) */
 import { TANIMLAR } from "../tanim/veri.ts";
+import { elleCevaplari } from "./doldurma.ts";
 import type { BelgeDegerleri } from "./katalog.ts";
 import type { BelgeFotosu, BelgeVerisi, ImzaKisiBilgisi } from "./veri.ts";
 /* eimza.ts'nin işaret adresi burada da yazılı (eimza.ts pdf-lib'i içe aktarır; çizici tarayıcıda da koşar — kilit tests/eimza.test.ts aynılığı denetler) */
@@ -298,6 +299,8 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
     const d = Array.isArray(deger) ? deger.join(", ") : (deger ?? "").trim();
     if (!d) return "";
     if (x.alan === "tarih") return tarihNo(d);
+    /* 2026-10-25 (belge doldurma): programın belgesinde elle doldurulan evet / hayır yeri okunur sözcükle (saklanan "evet" · "hayir") */
+    if (v.belge && x.alan === "evet") return d === "evet" ? "Evet" : d === "hayir" ? "Hayır" : d;
     return `${d}${x.birim ? ` ${x.birim}` : ""}`;
   };
   /* 2026-10-25 (belge formatları): kayıt hücresinin veri'si — belgenin alanı ("alan") ya da çoğalan satırda o satırın liste öğesinin kolonu
@@ -575,8 +578,11 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
 /** 2026-10-25 (belge formatları; reisim: "herhangi bir form ekleme mekaniği bu şekilde çalışmalı aynı araca bağlamalıyız"): programın belgesi
     (zimmet, araç tutanağı, eğitim, talep, teklif, fatura özeti, saha, ön bilgilendirme) firmanın o belge için yayınladığı formatla — rapor
     çizicisinin serbest düzeninden: yalnız formatın bölümleri (rapora özgü başlık, künye, ekipman, imzasız şeridi yok); kayıt hücresi belgenin
-    bilgisinden (veri), çoğalan satır belgenin listesinden; imza hücresi boş. Doküman kodu formatta yoksa temel formatınki (form_kod). */
-export function belgeFormu(t: FormatTanimi, firma: { ad: string; kod: string; adres?: string | null; logo?: string | null }, degerler: BelgeDegerleri, baslik: string): ReactNode {
+    bilgisinden (veri), çoğalan satır belgenin listesinden; imza hücresi boş. Doküman kodu formatta yoksa temel formatınki (form_kod).
+    2026-10-25 (belge doldurma; reisim: "bir müşteri için sözleşme açtığımda el ile girilmesi gereken yerleri girip öyle gönderebilmeliyim"): elle —
+    formatın elle doldurulan yerlerinin ("alan" hücresi; hücre kimliği → değer, ./doldurma.ts) değerleri hücreye basılır; boş yerde formülün değeri. */
+export function belgeFormu(t: FormatTanimi, firma: { ad: string; kod: string; adres?: string | null; logo?: string | null }, degerler: BelgeDegerleri, baslik: string,
+  elle?: Readonly<Record<string, string>> | null): ReactNode {
   return raporBelgesi({
     firma: { ad: firma.ad, kod: firma.kod, nusha: 1, adres: firma.adres ?? null, logo: firma.logo ?? null },
     no: degerler.alanlar.belge_no ?? "", revizyon: 0, formatSira: 1, durum: "imzali",
@@ -585,7 +591,7 @@ export function belgeFormu(t: FormatTanimi, firma: { ad: string; kod: string; ad
     tarih: { bas: null, bit: null, sonraki: null, takip: null, rapor: null },
     ekipman: { kod: "", marka: null, model: null, seri: null, imal: null, konum: null, amac: null, bolum: null },
     tanim: { ...t, gorunum: { ...t.gorunum, serbest: true, formKodu: t.gorunum.formKodu || degerler.alanlar.form_kod || "" } },
-    cevaplar: Cevaplar.parse({}), cihazlar: [], fotolar: [], sonuc: null,
+    cevaplar: { ...Cevaplar.parse({}), alan: elleCevaplari(t, elle) }, cihazlar: [], fotolar: [], sonuc: null,
     yazan: { ad: "", meslek: "", ekipnet: null, diploma: null, oda: null }, onay: null, imza: null, kesin: true, belge: degerler,
   });
 }

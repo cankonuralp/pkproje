@@ -8,7 +8,10 @@
    belgenin renkleriyle (açık / koyu temada aynı); panel uygulamanın renkleriyle.
    2026-10-25 (belge formatları; reisim: "herhangi bir form ekleme mekaniği bu şekilde çalışmalı aynı araca bağlamalıyız"): belge kurucusunda
    (BelgeKatalogBaglami — belgeBaglam.ts) kayıt hücresinin bilgisi belgenin katalogundan: "Belgeden gelen bilgi" (alanlar; çoğalan satırda
-   listelerin kolonları), seçim hücreye veri yazar, kaynak'ı siler; kâğıtta bilginin adı. Bağlam yoksa (rapor kurucusu) davranış aynen. */
+   listelerin kolonları), seçim hücreye veri yazar, kaynak'ı siler; kâğıtta bilginin adı. Bağlam yoksa (rapor kurucusu) davranış aynen.
+   2026-10-25 (belge doldurma; reisim: "sözleşme vb işleri de yüklediğimde, el ile değiştirilebilir ve doldurulabilir olmalı"): belge kurucusunda
+   "alan" hücresi de sunulur — adı "Elle doldurulur" (belge açılınca kişinin doldurduğu yer, src/belge/doldurma.ts); ayarları rapordakiyle aynı
+   (değer türü, adı, birim, seçenekler, formül, zorunlu). */
 import { useContext, useEffect, useRef, useState, type CSSProperties, type PointerEvent as RPointerEvent } from "react";
 import type { BelgeKatalogu } from "../../../belge/katalog";
 import { Ikon } from "../../../components/ikon/Ikon";
@@ -30,6 +33,10 @@ export const HUCRE_TURU_ADI: Record<HucreTuru, string> = {
   yazi: "Yazı", alan: "Sahada doldurulur", kayit: "Kayıttan gelir", cevap: "Kontrol cevabı", sira: "Sıra no", imza: "İmza yeri", gorsel: "Logo / görsel",
   foto: "Fotoğraf kutusu", sonuc: "Raporun sonucu",
 };
+/** belge kurucusunda türün adı (alan hücresi belgede elle doldurulur; öteki türler aynı) */
+const turAdi = (x: HucreTuru, belge: boolean) => (belge && x === "alan" ? "Elle doldurulur" : HUCRE_TURU_ADI[x]);
+/** belge kurucusunda sunulan türler (rapora özgü kontrol cevabı, imza kişisi, fotoğraf, raporun sonucu yok) */
+const BELGE_TURLERI_HUCRE: readonly HucreTuru[] = ["yazi", "alan", "kayit", "sira", "gorsel"];
 const HUCRE_IKON: Record<HucreTuru, string> = {
   yazi: "type", alan: "pencil", kayit: "tag", cevap: "list-checks", sira: "list-ordered", imza: "file-signature", gorsel: "image", foto: "camera", sonuc: "circle-check",
 };
@@ -127,7 +134,7 @@ export function TabloDuzenleyici({ t, i, b, degis, bildir }: {
         case "foto": return { ...ortak, tur, id: yeni("c"), ad: "Fotoğraf" };
         case "sonuc": return { ...ortak, tur, secenekler: ["UYGUNDUR", "UYGUN DEĞİLDİR"] };
       }
-    }), `Hücre: ${HUCRE_TURU_ADI[tur]}`);
+    }), `Hücre: ${turAdi(tur, !!katalog)}`);
   };
   const hucreYaz = (o: Partial<Hucre>, ileti?: string) => sec && yaz(hucreleriYaz(b, sec, (h) => {
     const y = { ...h, ...o } as Hucre;
@@ -142,7 +149,8 @@ export function TabloDuzenleyici({ t, i, b, degis, bildir }: {
     if (yazilan === n && h.tur === "yazi") return <YerindeYazi deger={h.m ?? ""} bitir={(m) => { setYazilan(null); if (m !== (h.m ?? "")) yaz({ ...b, hucreler: b.hucreler.map((x, j) => (j === n ? { ...x, m } : x)) }); }} />;
     switch (h.tur) {
       case "yazi": return (h.m ?? "").split("\n").map((p, j) => <span key={j}>{j > 0 && <br />}{p}</span>);
-      case "alan": return isaret(h.formul ? "calculator" : "pencil", `${h.ad || ALAN_TURU_ADI[h.alan ?? "metin"]}${h.birim ? ` · ${h.birim}` : ""}`);
+      case "alan": return isaret(h.formul ? "calculator" : "pencil",
+        `${h.ad || (katalog ? `Elle doldurulur · ${ALAN_TURU_ADI[h.alan ?? "metin"]}` : ALAN_TURU_ADI[h.alan ?? "metin"])}${h.birim ? ` · ${h.birim}` : ""}`);
       case "kayit": return isaret("tag", katalog ? (h.veri ? veriAdi(katalog, h.veri) : "Bilgi seçin") : h.kaynak ? TABLO_KAYNAK_ADI[h.kaynak] : "Kaynak seçin");
       case "cevap": return isaret("list-checks", b.cevaplar.join(" / "));
       case "sira": return <span>{siralar.get(`${b.id}:${h.r},${h.c}`) ?? ""}</span>;
@@ -183,7 +191,7 @@ export function TabloDuzenleyici({ t, i, b, degis, bildir }: {
                     const sec_ = !!a && r >= a.r1 && r <= a.r2 && c >= a.c1 && c <= a.c2;
                     return (
                       <td key={c} data-r={r} data-c={c} rowSpan={h.rs} colSpan={h.cs} style={hucreBicemi(h, t.gorunum.yazi, !!x.y) as CSSProperties}
-                        className={sec_ ? s.secili : undefined} title={HUCRE_TURU_ADI[h.tur]}>
+                        className={sec_ ? s.secili : undefined} title={turAdi(h.tur, !!katalog)}>
                         {icerik(h, n)}
                       </td>
                     );
@@ -198,7 +206,7 @@ export function TabloDuzenleyici({ t, i, b, degis, bildir }: {
       {a && ilk && (
         <div className={k.panel} role="group" aria-label={`${b.ad} · seçili hücreler`}>
           <div className={k.panelBas}>
-            <b>{harf(a.c1)}{a.r1 + 1}{(a.r2 > a.r1 || a.c2 > a.c1) && `:${harf(a.c2)}${a.r2 + 1}`} · {secili.length > 1 ? `${secili.length} hücre` : HUCRE_TURU_ADI[ilk.tur]}</b>
+            <b>{harf(a.c1)}{a.r1 + 1}{(a.r2 > a.r1 || a.c2 > a.c1) && `:${harf(a.c2)}${a.r2 + 1}`} · {secili.length > 1 ? `${secili.length} hücre` : turAdi(ilk.tur, !!katalog)}</b>
             <button type="button" className={k.tus} aria-label="Seçimi kapat" onClick={() => setSec(null)}><Ikon ad="x" kucuk /></button>
           </div>
 
@@ -238,10 +246,10 @@ export function TabloDuzenleyici({ t, i, b, degis, bildir }: {
 
           {secili.length >= 1 && (
             <div className={s.grup} role="radiogroup" aria-label="Hücrenin içeriği">
-              {/* belge kipinde rapora özgü türler (sahada doldurulan, kontrol cevabı, imza kişisi, fotoğraf, raporun sonucu) yok */}
-              {HUCRE_TURLERI.filter((x) => !katalog || x === "yazi" || x === "kayit" || x === "sira" || x === "gorsel").map((x) => (
+              {/* belge kipinde rapora özgü türler (kontrol cevabı, imza kişisi, fotoğraf, raporun sonucu) yok; alan hücresi "Elle doldurulur" */}
+              {HUCRE_TURLERI.filter((x) => !katalog || BELGE_TURLERI_HUCRE.includes(x)).map((x) => (
                 <button key={x} type="button" role="radio" aria-checked={secili.every((n) => b.hucreler[n].tur === x)} className={s.turTus} onClick={() => turDegis(x)}>
-                  <Ikon ad={HUCRE_IKON[x]} kucuk />{HUCRE_TURU_ADI[x]}</button>
+                  <Ikon ad={HUCRE_IKON[x]} kucuk />{turAdi(x, !!katalog)}</button>
               ))}
             </div>
           )}
@@ -305,7 +313,7 @@ function TurAyari({ b, h, katalog, yaz, bolum }: {
       <span className={s.secimKap}><SecimAlani id={`${id}-at`} ad="Değer türü" deger={h.alan ?? "metin"} etiketsiz
         secenekler={HUCRE_ALAN_TURLERI.map((x) => [x, ALAN_TURU_ADI[x], ""] as const)}
         degistir={(v) => yaz({ alan: v as HucreAlanTuru, ...(v === "secim" && !h.secenekler?.length ? { secenekler: ["Seçenek 1", "Seçenek 2"] } : {}) })} /></span>
-      <label className={k.panelAlan}>Sahadaki adı<MetinKutu id={`${id}-ad`} deger={h.ad ?? ""} ipucu="soldaki ya da üstteki yazı" yaz={(v) => yaz({ ad: v || undefined })} /></label>
+      <label className={k.panelAlan}>{katalog ? "Doldururken adı" : "Sahadaki adı"}<MetinKutu id={`${id}-ad`} deger={h.ad ?? ""} ipucu="soldaki ya da üstteki yazı" yaz={(v) => yaz({ ad: v || undefined })} /></label>
       <label className={k.panelAlan}>Birim<MetinKutu id={`${id}-bi`} deger={h.birim ?? ""} yaz={(v) => yaz({ birim: v || undefined })} /></label>
       {h.alan === "secim" && <label className={k.panelAlan}>Seçenekler (satır başına bir)
         <MetinKutu id={`${id}-se`} deger={(h.secenekler ?? []).join("\n")} cok yaz={(v) => yaz({ secenekler: v.split("\n").map((x) => x.trim()).filter(Boolean) })} /></label>}

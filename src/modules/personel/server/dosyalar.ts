@@ -27,6 +27,10 @@ import { personelOzetleri } from "./personel.ts";
 import { personelKartiGorur } from "./kart-baglanti.ts";
 import { personelHesaplari } from "../../../server/kimlik/hesap.ts";
 import { yayindakiBelgeFormati } from "../../rapor-format/server/belgeler.ts";
+import { belgeDoldurmaKaydet, belgeDoldurmasi } from "../../rapor-format/server/doldurma.ts";
+import { elleAlanlari } from "../../../belge/doldurma.ts";
+import { BELGE_KATALOGU, zimmetDegerleri, type BelgeDegerleri } from "../../../belge/katalog.ts";
+import type { FormatTanimi } from "../../../format/tanim.ts";
 
 /** firmanın eklediği özlük türleri (Firma ayarları; 335) */
 export const ekTurler = async (db: Sorgulayici): Promise<EkTur[]> => (await ayarOku(db, "belge_tur_ek")).deger.turler.map(({ k, ad }) => ({ k, ad }));
@@ -275,6 +279,8 @@ async function zimmetVerisi(db: Sorgulayici, personelId: string, z: VarlikSatiri
       not: v.tur === "c" && v.bitis ? `kalibrasyon ${tarihNo(v.bitis)}` : null })),
     /* 2026-10-25 (belge formatları): firmanın yayınladığı zimmet formu formatı (Rapor formatı › Belgeler); yoksa temel format */
     format: await yayindakiBelgeFormati(db, "zimmet"),
+    /* 2026-10-25 (belge doldurma): formatın elle doldurulan yerleri — kişinin formu (indirilen de imzaya giden de) */
+    elle: (await belgeDoldurmasi(db, "zimmet", personelId))?.degerler ?? null,
   };
 }
 
@@ -283,6 +289,32 @@ export async function zimmetFormuVerisi(db: Sorgulayici, kim: Kisi, personelId: 
   if (!yazar(kim) || !(await kartGorur(db, kim, personelId))) return null;
   const z = await kisininVarliklari(db, personelId);
   return z.length ? zimmetVerisi(db, personelId, z, null, depo) : null;
+}
+
+/* ── BELGE DOLDURMA (2026-10-25, belge doldurma; reisim: "sözleşme vb işleri de yüklediğimde, el ile değiştirilebilir ve doldurulabilir olmalı, bir
+   müşteri için sözleşme açtığımda el ile girilmesi gereken yerleri girip öyle gönderebilmeliyim"): firmanın yayındaki zimmet formu formatının "alan"
+   hücreleri kişi başına elle doldurulur (rapor-format/server/doldurma.ts; kayıt = personel); indirilen ve imzaya gönderilen form bu değerlerle.
+   Formu indirip gönderebilen ("yaz") doldurur. ── */
+export interface ZimmetDoldurmaVerisi {
+  baslik: string; tanim: FormatTanimi; degerler: Record<string, string>; surum: number | null;
+  onizleme: { firma: ZimmetFormuVerisi["firma"]; degerler: BelgeDegerleri };
+}
+export type DoldurmaSonucu = Awaited<ReturnType<typeof belgeDoldurmaKaydet>> | { durum: "yetkisiz" | "yok" };
+/** "Belgeyi doldur"un verisi: "yaz" ve zimmeti olan kişide; yayındaki formatta elle doldurulan yer yoksa null */
+export async function zimmetDoldurmaVerisi(db: Sorgulayici, kim: Kisi, personelId: string, depo: Depo | null = null): Promise<ZimmetDoldurmaVerisi | null> {
+  if (!yazar(kim)) return null;
+  const f = await yayindakiBelgeFormati(db, "zimmet");
+  if (!f || !elleAlanlari(f).length) return null;
+  const v = await zimmetFormuVerisi(db, kim, personelId, depo);
+  if (!v?.format) return null;
+  const d = await belgeDoldurmasi(db, "zimmet", personelId);
+  return { baslik: BELGE_KATALOGU.zimmet.ad, tanim: v.format, degerler: d?.degerler ?? {}, surum: d?.surum ?? null, onizleme: { firma: v.firma, degerler: zimmetDegerleri(v) } };
+}
+/** elle doldurulan yerleri kaydet: yalnız "yaz", kartı görülen kişide */
+export async function zimmetDoldur(db: Sorgulayici, kim: Kisi, personelId: string, degerler: unknown, surum: number | null): Promise<DoldurmaSonucu> {
+  if (!yazar(kim)) return { durum: "yetkisiz" };
+  if (!UUID.test(personelId) || !(await kartGorur(db, kim, personelId))) return { durum: "yok" };
+  return belgeDoldurmaKaydet(db, { ad: kim.ad }, "zimmet", personelId, degerler, surum);
 }
 
 export type ZimmetPdfUretici = (v: ZimmetFormuVerisi) => Promise<Uint8Array>;

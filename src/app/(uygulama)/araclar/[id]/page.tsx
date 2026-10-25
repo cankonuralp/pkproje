@@ -1,6 +1,7 @@
 /* ARAÇ SAYFASI (maket araclar.html #/a/<id>): başlık (plaka · tür, durum) + işlemler · belge şeritleri · yüzler (kimde, kilometre, belgeler) ·
    araç bilgileri · haftalık kilometre (giriş + geçmiş) · teslim tutanakları. Sürücü yalnız kendi zimmetindeki aracı görür; başkasınınki: bulunamadı.
-   363: pasif araç açılır (Pasif rozeti + şerit; teslim, kilometre ve belge uyarısı yok); Sil (yönetici, kullanılmamış) ya da Pasife al / Etkinleştir. */
+   363: pasif araç açılır (Pasif rozeti + şerit; teslim, kilometre ve belge uyarısı yok); Sil (yönetici, kullanılmamış) ya da Pasife al / Etkinleştir.
+   2026-10-25 (belge doldurma): tutanak penceresinde "Belgeyi doldur" (tutanakDoldurulur). */
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Bilgi, BilgiListesi, Yuz, Yuzler } from "../../../../components/bilgi/Bilgi";
@@ -11,7 +12,7 @@ import { TusBaglanti } from "../../../../components/tus/Tus";
 import { modulBul } from "../../../../modules/moduller";
 import { kmYaz, yakitAd } from "../../../../modules/araclar/sema";
 import { kullanimMetni } from "../../../../components/sil/metin";
-import { aracDegistirir, aracKarti, aracListesi, aracSilmeDurumu } from "../../../../modules/araclar/server/araclar";
+import { aracDegistirir, aracKarti, aracListesi, aracSilmeDurumu, tutanakDoldurulur } from "../../../../modules/araclar/server/araclar";
 import { KmFormu, KmGecmisi, TutanakTablosu } from "../../../../modules/araclar/ui/AracListesi";
 import { AracTuslari } from "../../../../modules/araclar/ui/KartParcalari";
 import { AracDurumu, kimdeAd, KmRozeti, tarihYaz } from "../../../../modules/araclar/ui/ortak";
@@ -28,7 +29,8 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
   const o = await modulOturumu(MODUL.no);
   if (!o) return <Yetkisiz />;
   const { id } = await params;
-  const [v, l, silme] = await oturumIslemi(o, async (db) => [await aracKarti(db, o, id), await aracListesi(db, o), await aracSilmeDurumu(db, o, id)] as const);
+  const [v, l, silme, doldur] = await oturumIslemi(o, async (db) => [await aracKarti(db, o, id), await aracListesi(db, o), await aracSilmeDurumu(db, o, id),
+    await tutanakDoldurulur(db, o)] as const);
   if (!v || !l) notFound();
   const yaz = aracDegistirir(o);
   const sonTeslim = v.tutanaklar[0]?.zaman;
@@ -70,7 +72,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
         <KmGecmisi satirlar={v.kmGecmisi} />
       </Bolum>
       <Bolum id="b-arac-tutanak" baslik="Teslim tutanakları" sayac={<><b>{v.tutanaklar.length}</b> tutanak</>}>
-        {v.tutanaklar.length ? <TutanakTablosu tutanaklar={v.tutanaklar} /> : <p className={stil.bosSatir}>Bu aracın tutanağı yok; depoda.</p>}
+        {v.tutanaklar.length ? <TutanakTablosu tutanaklar={v.tutanaklar} doldur={doldur} /> : <p className={stil.bosSatir}>Bu aracın tutanağı yok; depoda.</p>}
       </Bolum>
     </>
   );

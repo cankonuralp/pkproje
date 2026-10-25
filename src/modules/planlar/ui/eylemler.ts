@@ -1,22 +1,24 @@
 "use server";
 /* PLANLAR SUNUCU EYLEMLERİ — kişi ve kiracı oturumdan; yetki, doğrulama ve uyarılar modül işlevinde (planlar.ts). İstemciden gelen kimlikler yalnız
    "hangi tesis, hangi denetçi" bilgisidir; tesisin, denetçinin ve İSG-KATİP kaydının bu firmada olduğu sunucuda denetlenir. */
+import { after } from "next/server";
 import { depo } from "../../../server/dosya/depo";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { firmaAdresi } from "../../../server/kiraci/istek";
-import { epostalariSonraGonder } from "../../../server/eposta/sonra";
+import { epostalariGonder, epostalariSonraGonder } from "../../../server/eposta/sonra";
 import {
-  ekipmanPasif, ekipmanSil, kayitliEkle, kodDurumu, kontrolListesi, kunyeDuzenle, kunyeGuncelle, notEkle, planKabul, planReddet, planSil, planTamamla,
-  sahaFormuOlustur, sahaTaramaKaldir, sahaTaramaYukle, tamamlamaGeriAl, yeniEkipman, type KodDurumu, type PlanYazma,
+  ekipmanPasif, ekipmanSil, kayitliEkle, kodDurumu, kontrolListesi, kunyeDuzenle, kunyeGuncelle, notEkle, ONBILGI_KAYNAK, onBilgiDoldur, planKabul, planReddet,
+  planSil, planTamamla, sahaFormuDoldur, sahaFormuOlustur, sahaTaramaKaldir, sahaTaramaYukle, tamamlamaGeriAl, yeniEkipman, type KodDurumu, type PlanYazma,
 } from "../server/plan-ici";
+import { onBilgiGonder } from "../server/onbilgi";
 import { cevrimdisiPaketi, type CevrimdisiPaketi } from "../server/cevrimdisi";
 import { bugunTr, planAc, tesisPlanBilgisi, type TesisPlanBilgisi } from "../server/planlar";
 import { planSayfasi } from "../server/liste";
 import type { PlanSatir } from "../server/plan-ici";
 import type { SunucuListe } from "../../../components/liste/suzgec";
 
-export interface PlanAcYaniti { tamam?: boolean; id?: string; no?: string; eposta?: number; hatalar?: Record<string, string>; genel?: string }
+export interface PlanAcYaniti { tamam?: boolean; id?: string; no?: string; eposta?: number; onBilgi?: "gonder" | "doldur"; hatalar?: Record<string, string>; genel?: string }
 
 async function oturum() {
   if (!(await ayniKoken())) return "İstek reddedildi. Sayfayı yenileyip yeniden deneyin.";
@@ -43,10 +45,27 @@ export async function tesisPlanBilgisiEylemi(tesisId: string): Promise<TesisPlan
 export async function planAcEylemi(girdi: unknown): Promise<PlanAcYaniti> {
   const o = await oturum(); if (typeof o === "string") return { genel: o };
   const r = await oturumIslemi(o, (db) => planAc(db, depo(), o, o.kiraci.firmaId, girdi, { kok: firmaAdresi(o.kiraci.kisaAd) }));
-  /* 432: kuyruğa yazılan e-postalar yanıttan sonra gönderilir (plan açan beklemez) */
-  if (r.durum === "tamam") { if (r.eposta) epostalariSonraGonder(o.kiraci, "plan", r.id); return { tamam: true, id: r.id, no: r.no, eposta: r.eposta ?? 0 }; }
+  /* 432: kuyruğa yazılan e-postalar yanıttan sonra gönderilir (plan açan beklemez). 2026-10-25: ön bilgilendirme formu da (PDF yanıttan sonra
+     basılır, müşteriye ekli gider) — formatında elle doldurulacak yer varsa kendiliğinden gitmez (planlar.ts) */
+  if (r.durum === "tamam") {
+    if (r.eposta) epostalariSonraGonder(o.kiraci, "plan", r.id);
+    if (r.onBilgi === "gonder") onBilgiSonraGonder(o, r.id);
+    return { tamam: true, id: r.id, no: r.no, eposta: r.eposta ?? 0, ...(r.onBilgi ? { onBilgi: r.onBilgi } : {}) };
+  }
   if (r.durum === "gecersiz") return { hatalar: r.hatalar };
   return { genel: "Plan açma yetkiniz yok." };
+}
+
+/** plan açılınca ön bilgilendirme formu: yanıttan sonra PDF basılır, kuyruğa yazılır, gönderilir. Düşerse günlüğe yazılır; plan içinden yeniden
+    gönderilir ("Ön bilgilendirme formunu gönder"). */
+function onBilgiSonraGonder(o: Exclude<Awaited<ReturnType<typeof oturum>>, string>, planId: string): void {
+  after(async () => {
+    try {
+      const r = await onBilgiGonder((is) => oturumIslemi(o, is), depo(), o, o.kiraci.firmaId, planId);
+      if (r.durum === "tamam") await epostalariGonder(o.kiraci, ONBILGI_KAYNAK, planId);
+      else console.error("[onbilgi] ön bilgilendirme formu gönderilmedi:", r.durum);
+    } catch (h) { console.error("[onbilgi] ön bilgilendirme formu gönderimi düştü:", (h as Error).message); }
+  });
 }
 
 /* ── PLAN İÇİ (310) — yetki ve geçiş kuralları plan-ici.ts'te; burada yalnız oturum ve yanıtın biçimi ── */
@@ -127,4 +146,22 @@ export async function sahaTaramaYukleEylemi(form: FormData): Promise<PlanYaniti>
 }
 export async function sahaTaramaKaldirEylemi(id: string, formId: string, surum: number): Promise<PlanYaniti> {
   return planIslemi((o) => oturumIslemi(o, (db) => sahaTaramaKaldir(db, o, metin(id), metin(formId), Number(surum))));
+}
+
+/* ── BELGE DOLDURMA VE GÖNDERİM (2026-10-25, belge doldurma; reisim: "sözleşme vb işleri de yüklediğimde, el ile değiştirilebilir ve doldurulabilir
+   olmalı, bir müşteri için sözleşme açtığımda el ile girilmesi gereken yerleri girip öyle gönderebilmeliyim") — yetki, format ve değer denetimi
+   plan-ici.ts'te (Rapor formatı modülünün doldurma kaydıyla); burada yalnız oturum ve yanıt ── */
+export async function onBilgiDoldurEylemi(id: string, degerler: unknown, surum: number | null): Promise<PlanYaniti> {
+  return planIslemi((o) => oturumIslemi(o, (db) => onBilgiDoldur(db, o, metin(id), degerler, surum)));
+}
+export async function sahaFormuDoldurEylemi(id: string, formId: string, degerler: unknown, surum: number | null): Promise<PlanYaniti> {
+  return planIslemi((o) => oturumIslemi(o, (db) => sahaFormuDoldur(db, o, metin(id), metin(formId), degerler, surum)));
+}
+/** ön bilgilendirme formunu müşteriye (yeniden) gönderir: PDF burada basılır ve kuyruğa yazılır, gönderim yanıttan sonra */
+export async function onBilgiGonderEylemi(id: string): Promise<PlanYaniti> {
+  return planIslemi(async (o) => {
+    const r = await onBilgiGonder((is) => oturumIslemi(o, is), depo(), o, o.kiraci.firmaId, metin(id));
+    if (r.durum === "tamam") epostalariSonraGonder(o.kiraci, ONBILGI_KAYNAK, metin(id));
+    return r;
+  });
 }

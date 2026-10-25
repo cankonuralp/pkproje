@@ -224,3 +224,20 @@ export function planEpostasi(p: PlanEpostaBilgisi): { konu: string; govde: strin
   ];
   return { konu: `${p.ekipten ? "Yeni plan" : "Bilgi: yeni plan"} ${p.no} · ${p.tesis} · ${tarihler}`.slice(0, 300), govde: satirlar.join("\n") };
 }
+
+/* ── ÖN BİLGİLENDİRME E-POSTASI (2026-10-25, belge doldurma; reisim: "Sözleşmeyi belge formatlarına bağla ve ön bilgilendirme formunu plan açılınca
+   müşteriye e-postayla gönder"; saf) — müşteriye giden kısa düz metin; form PDF eki. Konu "<Firma>: <tesis> periyodik kontrol ön bilgilendirme formu";
+   gövdede proje no, plan tarihleri, adres. İç bilgi (kimlik) yok, bağlantı yok (müşterinin firma hesabı yok). */
+export interface OnBilgiEpostaBilgisi { firma: string; musteri: string; tesis: string; no: string; adres: string | null; baslangic: string; bitis: string }
+export function onBilgiEpostasi(p: OnBilgiEpostaBilgisi): { konu: string; govde: string } {
+  const tarihler = p.baslangic === p.bitis ? tarihNo(p.baslangic) : `${tarihNo(p.baslangic)} – ${tarihNo(p.bitis)}`;
+  const satirlar = [
+    `Sayın ${p.musteri},`, "",
+    `${p.tesis} için planlanan periyodik kontrolün ön bilgilendirme formu ektedir.`, "",
+    `Proje no: ${p.no}`, `Tarih: ${tarihler}`, ...(p.adres ? [`Adres: ${p.adres}`] : []), "",
+    p.firma,
+  ];
+  return { konu: `${p.firma}: ${p.tesis} periyodik kontrol ön bilgilendirme formu`.slice(0, 300), govde: satirlar.join("\n") };
+}
+/** ön bilgilendirme formunun dosya adı (rota ve e-posta eki aynı) */
+export const onBilgiDosyaAdi = (projeNo: string) => `${projeNo}-on-bilgilendirme-formu.pdf`;

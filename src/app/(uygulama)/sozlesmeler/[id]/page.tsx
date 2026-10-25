@@ -1,5 +1,8 @@
-/* SÖZLEŞME SAYFASI (maket sozlesmeler.html #/s/<no>): başlık (no, durum) + imzalı sözleşme tuşları · taraflar ve koşullar · kapsam · İSG-KATİP
-   (tesis başına denetçi → ID) · geçmiş. Dayanak teklif (326: teklif sayfasına bağlantı; yoksa "Sistem öncesi"). Hizmet sözleşmesi için uyarı yok; yalnız "Müşteri imzası bekleniyor" bilgisi. Görmeyen: bulunamadı. */
+/* SÖZLEŞME SAYFASI (maket sozlesmeler.html #/s/<no>): başlık (no, durum) + imzalı sözleşme tuşları · taraflar ve koşullar · sözleşme belgesi · kapsam ·
+   İSG-KATİP (tesis başına denetçi → ID) · geçmiş. Dayanak teklif (326: teklif sayfasına bağlantı; yoksa "Sistem öncesi"). Hizmet sözleşmesi için uyarı yok; yalnız "Müşteri imzası bekleniyor" bilgisi. Görmeyen: bulunamadı.
+   2026-10-25 (belge doldurma; reisim: "sözleşme vb işleri de yüklediğimde, el ile değiştirilebilir ve doldurulabilir olmalı, bir müşteri için sözleşme
+   açtığımda el ile girilmesi gereken yerleri girip öyle gönderebilmeliyim"): Sözleşme belgesi — PDF, elle doldurulan yerler, müşteriye gönder, giden
+   e-postalar. Gönder eylemi PDF basar (başsız Chromium): maxDuration 60, next.config.ts PDF listesinde. */
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -8,19 +11,26 @@ import { Yetkisiz } from "../../../../components/hata/Hata";
 import { AltSatir, Bolum, DegerYok, Kirinti, NesneBasi, SeritKap } from "../../../../components/sayfa/Sayfa";
 import { Serit } from "../../../../components/serit/Serit";
 import { modulBul } from "../../../../modules/moduller";
-import { sozlesmeDegistirir, sozlesmeKarti, sozlesmeSecenekleri, sozlesmeSilinir } from "../../../../modules/sozlesmeler/server/sozlesmeler";
+import { sozlesmeBelgeBolumu, sozlesmeDegistirir, sozlesmeKarti, sozlesmeSecenekleri, sozlesmeSilinir } from "../../../../modules/sozlesmeler/server/sozlesmeler";
+import { BelgeTuslari } from "../../../../modules/sozlesmeler/ui/BelgeTuslari";
 import { ImzaliTuslari, IsgBolumu } from "../../../../modules/sozlesmeler/ui/KartParcalari";
 import { DurumRozeti, tarihYaz } from "../../../../modules/sozlesmeler/ui/ortak";
+import { SozlesmeEpostalari } from "../../../../modules/sozlesmeler/ui/SozlesmeEpostalari";
+import { depo } from "../../../../server/dosya/depo";
 import { modulGorur, modulOturumu, oturumIslemi } from "../../../../server/kimlik/istek";
 
 const MODUL = modulBul("sozlesmeler")!;
 export const metadata: Metadata = { title: "Sözleşme" };
+export const maxDuration = 60;
 
 export default async function Sayfa({ params }: { params: Promise<{ id: string }> }) {
   const o = await modulOturumu(MODUL.no);
   if (!o) return <Yetkisiz />;
   const { id } = await params;
-  const [x, sec, silinir] = await oturumIslemi(o, async (db) => [await sozlesmeKarti(db, o, id), await sozlesmeSecenekleri(db, o), await sozlesmeSilinir(db, o, id)] as const);
+  const [x, sec, silinir, belge] = await oturumIslemi(o, async (db) => {
+    const k = await sozlesmeKarti(db, o, id);
+    return [k, await sozlesmeSecenekleri(db, o), await sozlesmeSilinir(db, o, id), k ? await sozlesmeBelgeBolumu(db, o, k, depo()) : null] as const;
+  });
   if (!x) notFound();
   const yaz = sozlesmeDegistirir(o);
   const gecmis: [string, string, string][] = [[x.firmaImza, "Firma imzaladı", x.firma]];
@@ -47,6 +57,21 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
             : <DegerYok>Sistem öncesi</DegerYok>}</Bilgi>
         </BilgiListesi>
       </Bolum>
+      {belge && (
+        <Bolum id="b-soz-belge" baslik="Sözleşme belgesi" tuslar={<BelgeTuslari id={x.id} no={x.no} unvan={x.unvan} yaz={yaz} baslik={belge.baslik}
+          onizleme={yaz && belge.doldurma ? belge.onizleme : null}
+          doldurma={yaz ? belge.doldurma : null} alici={belge.alici} konu={belge.konu} />}>
+          <BilgiListesi>
+            <Bilgi etiket="Belge formatı">{belge.kaynak === "format" ? "Firmanın sözleşme formatı" : belge.kaynak === "sablon" ? `Yüklenen şablon v${belge.sablonNo}` : "Temel format"}</Bilgi>
+            {belge.doldurma && belge.doldurma.toplam > 0 && (
+              <Bilgi etiket="Elle doldurulan">{belge.doldurma.toplam - belge.doldurma.bos.length} / {belge.doldurma.toplam} yer
+                {belge.doldurma.bos.length > 0 && <AltSatir uyari>Boş: {belge.doldurma.bos.join(", ")}</AltSatir>}</Bilgi>
+            )}
+            <Bilgi etiket="Müşteriye gönderim">{belge.epostalar.length ? `${belge.epostalar.length} e-posta` : <DegerYok>Gönderilmedi</DegerYok>}</Bilgi>
+          </BilgiListesi>
+          {belge.epostalar.length > 0 && <SozlesmeEpostalari epostalar={belge.epostalar} />}
+        </Bolum>
+      )}
       <Bolum id="b-soz-kapsam" baslik="Kapsam" sayac={<><b>{x.kapsam.length}</b> tesis</>}>
         <BilgiListesi>{x.kapsam.map((t) => <Bilgi key={t.id} etiket={t.ad} genis>{[t.ilce, t.il].filter(Boolean).join(" / ") || "—"}</Bilgi>)}</BilgiListesi>
       </Bolum>

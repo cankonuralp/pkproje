@@ -10,11 +10,14 @@ import type { ReactNode } from "react";
 import { aracTutanagi, type AracTutanagiVerisi } from "./arac.ts";
 import { egitimFormu, type EgitimFormuVerisi } from "./egitim.ts";
 import { belgeAltYazisi, raporBelgesi } from "./belge.ts";
-import { aracDegerleri, belgeCizimi, egitimDegerleri, faturaDegerleri, onBilgiDegerleri, sahaDegerleri, talepDegerleri, teklifDegerleri, zimmetDegerleri } from "./katalog.ts";
+import {
+  aracDegerleri, belgeCizimi, egitimDegerleri, faturaDegerleri, onBilgiDegerleri, sahaDegerleri, sozlesmeDegerleri, talepDegerleri, teklifDegerleri, zimmetDegerleri,
+} from "./katalog.ts";
 import { onBilgiFormu, type OnBilgiVerisi } from "./onbilgi.ts";
 import { imzaAlaniKoy, type EimzaYeri } from "./eimza.ts";
 import { EIMZA_KUTU, EIMZA_KUTU_2, type FormatTanimi } from "../format/tanim.ts";
 import { sahaFormu, type SahaFormuVerisi } from "./saha.ts";
+import { sozlesmeBelgesi, type SozlesmeBelgesiVerisi } from "./sozlesme.ts";
 import { faturaBelgesi, type FaturaBelgesiVerisi } from "./fatura.ts";
 import { talepFormu, type TalepFormuVerisi } from "./talep.ts";
 import { teklifBelgesi, type TeklifBelgesiVerisi } from "./teklif.ts";
@@ -106,7 +109,8 @@ export async function belgePdf(v: BelgeVerisi): Promise<Uint8Array> {
   return v.kesin ? imzaAlaniKoy(pdf, eimzaYeri(v.tanim), eimzaYeri2(v.tanim)) : pdf;
 }
 /* 2026-10-25 (belge formatları; reisim: "herhangi bir form ekleme mekaniği bu şekilde çalışmalı aynı araca bağlamalıyız"): her belge firmanın o belge
-   için yayınladığı formatla (v.format — katalog.ts belgeCizimi → belge.ts belgeFormu), yoksa temel formatla */
+   için yayınladığı formatla (v.format — katalog.ts belgeCizimi → belge.ts belgeFormu), yoksa temel formatla; 2026-10-25 (belge doldurma): formatın
+   elle doldurulan yerleri v.elle'den */
 /** teklif belgesinin PDF'i (325) — aynı motor, aynı CSS */
 export const teklifPdf = (v: TeklifBelgesiVerisi) => htmlPdf(sayfaHtml(v.no, belgeCizimi("teklif", v, teklifDegerleri, teklifBelgesi)));
 /** fatura özeti (340): fatura e-Fatura programında kesilir; bu belge kalemleri, KDV'yi ve tahsilatı özetler */
@@ -123,6 +127,8 @@ export const egitimPdf = (v: EgitimFormuVerisi) => htmlPdf(sayfaHtml(v.no, belge
 export const sahaPdf = (v: SahaFormuVerisi) => htmlPdf(sayfaHtml(v.no, belgeCizimi("saha", v, sahaDegerleri, sahaFormu)));
 /** ön bilgilendirme formu (2026-10-25): planın bilgisiyle (Firma ayarları'na yüklenen PDF'in kendisi ucunda — bu yalnız format ya da temel format) */
 export const onBilgiPdf = (v: OnBilgiVerisi) => htmlPdf(sayfaHtml(`${v.projeNo} ön bilgilendirme formu`, belgeCizimi("onbilgi", v, onBilgiDegerleri, onBilgiFormu)));
+/** sözleşme (2026-10-25, belge doldurma): firmanın formatıyla (elle doldurulan yerleriyle) ya da temel formatla — müşteriye e-postayla gider */
+export const sozlesmePdf = (v: SozlesmeBelgesiVerisi) => htmlPdf(sayfaHtml(`${v.no} sözleşme`, belgeCizimi("sozlesme", v, sozlesmeDegerleri, sozlesmeBelgesi)));
 
 async function htmlPdf(html: string, altBilgi?: string): Promise<Uint8Array> {
   const b = await tarayici();

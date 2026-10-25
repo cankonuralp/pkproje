@@ -1,0 +1,11 @@
+/* Belge doldurma penceresi (2026-10-25, belge doldurma): elle doldurulan yerlerin formu, altında belgenin önizlemesi (kâğıt A4 genişliğinde —
+   kendi kutusunda kayar). Renk / ölçü yalnız tokens.css değişkenlerinden. */
+.form { display: grid; gap: 12px; }
+.yazi {
+  width: 100%; min-height: 72px; padding: 8px 10px; border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart);
+  color: var(--yazi); font: inherit; resize: vertical;
+}
+.yazi[aria-invalid="true"] { border-color: var(--hata-yazi); }
+.onizlemeBas { margin: 16px 0 6px; font-size: var(--boy-kucuk); font-weight: 600; color: var(--yazi2); }
+.onizleme { max-height: 480px; overflow: auto; border: 1px solid var(--kenar); border-radius: var(--r-orta); background: var(--zemin2); }
+.onizleme:focus-visible { outline: 2px solid var(--odak); outline-offset: 2px; }

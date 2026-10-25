@@ -19,6 +19,8 @@ export interface FaturaBelgesiVerisi {
   tahsil: number; kalan: number;
   /** 2026-10-25 (belge formatları): firmanın yayınladığı fatura özeti formatı (yoksa temel format) */
   format?: FormatTanimi | null;
+  /** 2026-10-25 (belge doldurma): formatın elle doldurulan yerlerinin değerleri (hücre kimliği → değer; src/belge/doldurma.ts) */
+  elle?: Record<string, string> | null;
 }
 
 const tarihNo = (s: string | null | undefined) => (s ? `${s.slice(8, 10)}.${s.slice(5, 7)}.${s.slice(0, 4)}` : "-");

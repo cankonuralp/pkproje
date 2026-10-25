@@ -6,7 +6,7 @@ import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { BelgeHatasi, giderExcelListesi, giderExceliYukle, giderKaydet, giderOdendi, giderSayfasi, type GiderBelgesi, type GiderSatiri, type GiderSonra }
   from "../server/giderler";
-import { faturaKaydet, faturaSayfasi, isSayfasi, tahsilatKaydet, type FaturaSatiri, type IsSatiri, type Yazma } from "../server/muhasebe";
+import { faturaDoldur, faturaKaydet, faturaSayfasi, isSayfasi, tahsilatKaydet, type FaturaSatiri, type IsSatiri, type Yazma } from "../server/muhasebe";
 import type { SunucuListe } from "../../../components/liste/suzgec";
 import { bordroGonder, bordroGonderimi, type BordroGonderimi } from "../server/bordro-gonder";
 
@@ -29,6 +29,18 @@ export async function faturaKaydetEylemi(planId: string, girdi: unknown): Promis
 }
 export async function tahsilatKaydetEylemi(faturaId: string, girdi: unknown): Promise<MuhasebeYaniti> {
   return islem((o) => oturumIslemi(o, (db) => tahsilatKaydet(db, o, yazi(faturaId), girdi)));
+}
+
+/* 2026-10-25 (belge doldurma; reisim: "sözleşme vb işleri de yüklediğimde, el ile değiştirilebilir ve doldurulabilir olmalı …"): fatura özetinin elle
+   doldurulan yerleri (yetki muhasebe.ts faturaDoldur'da; değerlerin denetimi formatın elle alanlarına göre) */
+const DOLDURMA = { ...SONUC, cakisma: "Belge bu arada değişti. Sayfayı yenileyip yeniden deneyin.", formatsiz: "Belgenin yayında formatı yok; doldurulacak yer kalmadı." } as const;
+export async function faturaDoldurEylemi(faturaId: string, degerler: unknown, surum: unknown): Promise<MuhasebeYaniti> {
+  if (!(await ayniKoken())) return { genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };
+  const o = await istekOturumu();
+  if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
+  const s = typeof surum === "number" && Number.isSafeInteger(surum) && surum >= 0 ? surum : null;
+  const r = await oturumIslemi(o, (db) => faturaDoldur(db, o, yazi(faturaId), degerler, s));
+  return r.durum === "tamam" ? { tamam: true } : r.durum === "gecersiz" ? { hatalar: r.hatalar } : { genel: DOLDURMA[r.durum] };
 }
 
 /* ── GİDERLER (328) ── */

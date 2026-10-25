@@ -4,9 +4,12 @@
    onay beklerken eklenir / değiştirilir / kaldırılır, "Talebi geri çek"). Karar sunucuda; talep yalnız kişinin kendi adına.
    477 (reisim 2026-10-10, Talepler–Onaylar kararları T1 · T3): Talepler = YALNIZ KENDİ TALEPLERİM — onaylayana gelen talepler Onaylar'da (456'nın
    "onayınızı bekleyen" şeridi kalktı; Talepler'de balon yok). Düzeltmeye geri gönderilen talep: şerit + gerekçe; "Düzelt ve yeniden gönder" aynı
-   pencereyi talebin değerleriyle açar (ya da geri çekilir). */
+   pencereyi talebin değerleriyle açar (ya da geri çekilir).
+   2026-10-25 (belge doldurma; reisim: "sözleşme vb işleri de yüklediğimde, el ile değiştirilebilir ve doldurulabilir olmalı …"): talep penceresinde
+   PDF'in yanında "Belgeyi doldur" — firmanın yayındaki formatında elle doldurulan yer varsa (doldur), karar verilmemiş talepte; verisi pencere
+   açılınca sunucudan. */
 import { useRouter } from "next/navigation";
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { Bilgi, BilgiListesi, Yuz, Yuzler } from "../../../components/bilgi/Bilgi";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Alan, Girdi, ipucuId } from "../../../components/form/Form";
@@ -27,10 +30,11 @@ import { tutar as tutarSema } from "../../../sema/ortak";
 import { GIDER_DURUM, GIDER_TUR, giderKdv, KDV_ORAN, para, type GiderTuru } from "../../muhasebe/sema";
 import type { MasrafFormu } from "../../muhasebe/server/talep-baglanti";
 import { isGunu, IZIN_DURUM, IZIN_TUR, type IzinTuru } from "../sema";
-import type { IzinTalebi, Taleplerim } from "../server/talepler";
+import type { IzinTalebi, TalepDoldurmaVerisi, Taleplerim } from "../server/talepler";
+import { BelgeDoldurmaTusu } from "../../rapor-format/ui/BelgeDoldurma";
 import {
   izinBelgesiEylemi, izinDuzeltEylemi, izinGeriCekEylemi, izinGonderEylemi, masrafBelgesiEylemi, masrafDuzeltEylemi, masrafGeriCekEylemi, masrafGonderEylemi,
-  type TalepYaniti,
+  talepDoldurEylemi, talepDoldurmaVerisiEylemi, type TalepYaniti,
 } from "./eylemler";
 import stil from "./talepler.module.css";
 
@@ -72,7 +76,8 @@ function tanim(l: readonly Talep[]): SuzgecTanimi<Talep> {
 }
 
 type Pen = null | { tip: "izin"; duzelt?: IzinTalebi } | { tip: "masraf"; duzelt?: MasrafFormu } | { tip: "talep"; t: Talep };
-export function TaleplerSayfasi({ v, bugun }: { v: Taleplerim; bugun: string }) {
+/** doldur: talep tipi başına formun elle doldurulan yeri var mı (talepler.ts talepDoldurulur) */
+export function TaleplerSayfasi({ v, bugun, doldur = { izin: false, masraf: false } }: { v: Taleplerim; bugun: string; doldur?: Record<Talep["tip"], boolean> }) {
   const l: Talep[] = [...v.izinler.map((x) => ({ tip: "izin" as const, x })), ...v.masraflar.map((x) => ({ tip: "masraf" as const, x }))];
   const s = useSuzgec(tanim(l), l);
   const [p, setP] = useState<Pen>(null);
@@ -109,7 +114,7 @@ export function TaleplerSayfasi({ v, bugun }: { v: Taleplerim; bugun: string }) 
         bosVeri={{ ikon: "inbox", baslik: "Talep yok" }} />
       {p?.tip === "izin" && <IzinPenceresi ozet={o} gelecek={v.gelecekOzet} duzelt={p.duzelt} kapat={() => setP(null)} />}
       {p?.tip === "masraf" && <MasrafPenceresi v={v} bugun={bugun} duzelt={p.duzelt} kapat={() => setP(null)} />}
-      {p?.tip === "talep" && <TalepPenceresi t={p.t} kapat={() => setP(null)} duzelt={() => duzelt(p.t)} />}
+      {p?.tip === "talep" && <TalepPenceresi t={p.t} kapat={() => setP(null)} duzelt={() => duzelt(p.t)} doldur={doldur[p.t.tip]} />}
     </>
   );
 }
@@ -248,9 +253,27 @@ function MasrafPenceresi({ v, bugun, duzelt, kapat }: { v: Taleplerim; bugun: st
   );
 }
 
+/** talep formunun elle doldurulan yerleri: verisi açılınca istenir, kaydedilince yeniden okunur (sürüm ve değerler güncel kalır) */
+function TalepDoldurma({ tip, id }: { tip: Talep["tip"]; id: string }) {
+  const [v, setV] = useState<TalepDoldurmaVerisi | null>(null);
+  const [okuma, setOkuma] = useState(0);
+  useEffect(() => {
+    let gecerli = true;
+    talepDoldurmaVerisiEylemi(tip, id).then((x) => { if (gecerli) setV(x); }, () => { if (gecerli) setV(null); });
+    return () => { gecerli = false; };
+  }, [tip, id, okuma]);
+  if (!v) return null;
+  const kaydet = async (degerler: Record<string, string>, surum: number | null) => {
+    const r = await talepDoldurEylemi(tip, id, degerler, surum);
+    if (r.tamam) setOkuma((n) => n + 1);
+    return r;
+  };
+  return <BelgeDoldurmaTusu belge={tip} baslik={v.baslik} tanim={v.tanim} degerler={v.degerler} surum={v.surum} onizlemeVerisi={v.onizleme} kaydet={kaydet} />;
+}
+
 /* ── TALEP (görünüm; onay beklerken belge ve geri çekme) ── */
 const BELGE_ID = "w-talep-belge";
-function TalepPenceresi({ t, kapat, duzelt }: { t: Talep; kapat: () => void; duzelt: () => void }) {
+function TalepPenceresi({ t, kapat, duzelt, doldur }: { t: Talep; kapat: () => void; duzelt: () => void; doldur: boolean }) {
   const router = useRouter();
   const bildir = useBildir();
   const [bekliyorMu, baslat] = useTransition();
@@ -275,6 +298,7 @@ function TalepPenceresi({ t, kapat, duzelt }: { t: Talep; kapat: () => void; duz
         {duzeltmede(t) && <Tus ikon="pencil" disabled={bekliyorMu} onClick={duzelt}>Düzelt ve yeniden gönder</Tus>}
         {/* 341: talebin formu (temel format) PDF iner — maket "PDF · e-posta" (e-posta K5) */}
         <a className={tusSinifi("ikincil")} href={`/talepler/pdf/${t.tip}/${x.id}`} download><Ikon ad="file-text" kucuk />PDF</a>
+        {doldur && bek && <TalepDoldurma key={`${t.tip}:${x.id}`} tip={t.tip} id={x.id} />}
         <Tus disabled={bekliyorMu} onClick={kapat}>Kapat</Tus>
       </>}>
       <BilgiListesi>

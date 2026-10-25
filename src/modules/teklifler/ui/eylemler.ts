@@ -5,7 +5,7 @@ import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import type { TeklifEkipmani } from "../excel";
 import { teklifEkipmanListesi, teklifGonder, teklifKabul, teklifKaydet, teklifMusteriBagla, teklifMusteriKaydet, teklifReddet, type Yazma, teklifSil, teklifSayfasi,
-  type TeklifSatiri } from "../server/teklifler";
+  type TeklifSatiri, teklifDoldur } from "../server/teklifler";
 import type { SunucuListe } from "../../../components/liste/suzgec";
 
 /** uyarilar: Müşteriler'in uyarısı (Müşteri olarak kaydet — kişi görür, onaylarsa onay=true ile yeniden) */
@@ -64,4 +64,19 @@ export async function teklifSayfasiEylemi(durum: unknown): Promise<SunucuListe<T
   const o = await istekOturumu();
   if (!o) return null;
   return oturumIslemi(o, (db) => teklifSayfasi(db, o, durum));
+}
+
+/* 2026-10-25 (belge doldurma; reisim: "sözleşme vb işleri de yüklediğimde, el ile değiştirilebilir ve doldurulabilir olmalı, bir müşteri için sözleşme
+   açtığımda el ile girilmesi gereken yerleri girip öyle gönderebilmeliyim"): teklif belgesinin elle doldurulan yerleri (yetki ve taslak kuralı
+   teklifler.ts teklifDoldur'da; değerlerin denetimi formatın elle alanlarına göre) */
+const DOLDURMA = { yetkisiz: SONUC.yetkisiz, yok: SONUC.yok, cakisma: "Belge bu arada değişti. Sayfayı yenileyip yeniden deneyin.",
+  formatsiz: "Belgenin yayında formatı yok; doldurulacak yer kalmadı." } as const;
+export async function teklifDoldurEylemi(id: string, degerler: unknown, surum: unknown): Promise<TeklifYaniti> {
+  if (!(await ayniKoken())) return { genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };
+  const o = await istekOturumu();
+  if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
+  const s = typeof surum === "number" && Number.isSafeInteger(surum) && surum >= 0 ? surum : null;
+  const r = await oturumIslemi(o, (db) => teklifDoldur(db, o, yazi(id), degerler, s));
+  return r.durum === "tamam" ? { tamam: true } : r.durum === "gecersiz" ? { hatalar: r.hatalar } : r.durum === "red" ? { genel: r.neden }
+    : { genel: DOLDURMA[r.durum] };
 }

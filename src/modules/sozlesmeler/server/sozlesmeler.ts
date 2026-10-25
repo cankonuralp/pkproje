@@ -7,22 +7,32 @@
 import { bellekteListele } from "../../../server/liste/liste.ts";
 import type { SunucuListe } from "../../../components/liste/suzgec.ts";
 import { sozlesmeListeSecenekleri, sozlesmeTanim } from "../liste.ts";
+import { elleAlanlari } from "../../../belge/doldurma.ts";
+import { BELGE_KATALOGU, sozlesmeDegerleri, type BelgeDegerleri } from "../../../belge/katalog.ts";
+import type { SozlesmeBelgesiVerisi } from "../../../belge/sozlesme.ts";
+import type { FormatTanimi } from "../../../format/tanim.ts";
+import { firmaBelgeKunyesi } from "../../../server/ayar/ayar.ts";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { kesinSil, kullanimlar } from "../../../server/db/silici.ts";
 import { ekle, guncelle, tablo } from "../../../server/db/yazici.ts";
 import type { Depo } from "../../../server/dosya/depo.ts";
-import { dosyaYukle } from "../../../server/dosya/dosya.ts";
-import { hesabinPersoneli } from "../../../server/kimlik/hesap.ts";
+import { dosyaYukle, kayitDosyasi } from "../../../server/dosya/dosya.ts";
+import { belgeEpostala } from "../../../server/eposta/belge-gonder.ts";
+import { adresler, kaynakEpostalari, type EpostaDurumu } from "../../../server/eposta/eposta.ts";
+import { hesabinPersoneli, hesapGonderen } from "../../../server/kimlik/hesap.ts";
 import { numaraAl } from "../../../server/numara/numara.ts";
 import { canDoEylem, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
-import { musteriOzetleri } from "../../musteriler/server/musteriler.ts";
+import { musteriIletisim, musteriOzetleri } from "../../musteriler/server/musteriler.ts";
 import { personelSecenekleri } from "../../personel/server/personel.ts";
+import { yayindakiBelgeFormati } from "../../rapor-format/server/belgeler.ts";
+import { belgeDoldurmaKaydet, belgeDoldurmasi } from "../../rapor-format/server/doldurma.ts";
 import { kabulTeklifleri, teklifNumaralari } from "../../teklifler/server/sozlesme-baglanti.ts";
-import { bitisHesapla, IsgGirdisi, SozlesmeGirdisi, sozlesmeDurumu, type SozlesmeDurumu } from "../sema.ts";
+import { bitisHesapla, GonderGirdisi, IsgGirdisi, SozlesmeGirdisi, sozlesmeDurumu, sozlesmeEpostasi, type SozlesmeDurumu } from "../sema.ts";
 
 const MODUL = 12;
-export const DOSYA = { sozlesme: "is_sozlesmesi", isg: "isg_katip", sablon: "sozlesme_sablon" } as const;
+/** gonderim: müşteriye e-postayla gönderilen sözleşme PDF'i (e-postanın eki; kayıt = sözleşme — 2026-10-25, belge doldurma) */
+export const DOSYA = { sozlesme: "is_sozlesmesi", isg: "isg_katip", sablon: "sozlesme_sablon", gonderim: "sozlesme_gonderim" } as const;
 const SOZ = tablo({ ad: "is_sozlesmesi", sutunlar: ["no", "musteri_id", "baslangic", "bitis", "vade", "yenileme", "musteri_imza", "imzali_dosya", "teklif_id"] });
 const KAPSAM = tablo({ ad: "is_sozlesmesi_tesis", sutunlar: ["sozlesme_id", "tesis_id"] });
 const ISG = tablo({ ad: "isg_katip", sutunlar: ["tesis_id", "personel_id", "no", "onay", "bitis", "dosya_id", "onceki", "kaldirildi", "kullanildi"] });
@@ -44,8 +54,9 @@ export interface SozlesmeKarti extends SozlesmeSatiri {
 }
 export interface SablonSatiri { id: string; surumNo: number; dosyaId: string; olustu: string; surum: number }
 
+/** adet: müşteriye gönderimde e-posta yazılan alıcı sayısı */
 export type Yazma =
-  | { durum: "tamam"; id: string; no?: string }
+  | { durum: "tamam"; id: string; no?: string; adet?: number }
   | { durum: "gecersiz"; hatalar: DogrulamaHatalari }
   | { durum: "red"; neden: string }
   | { durum: "cakisma" } | { durum: "yok" } | { durum: "yetkisiz" };
@@ -319,6 +330,118 @@ export async function sablonKaldir(db: Sorgulayici, kim: Kisi, id: string, surum
   const r = await guncelle(db, SABLON, id, surum, { kaldirildi: new Date().toISOString() }, { kim: kim.ad, ne: "sozlesme.sablon_kaldir" });
   if (r.durum === "cakisma" || r.durum === "yok") return { durum: r.durum };
   return { durum: "tamam", id };
+}
+
+/* ── SÖZLEŞME BELGESİ (2026-10-25, belge doldurma; reisim: "sözleşme vb işleri de yüklediğimde, el ile değiştirilebilir ve doldurulabilir olmalı,
+   bir müşteri için sözleşme açtığımda el ile girilmesi gereken yerleri girip öyle gönderebilmeliyim") — sözleşmenin PDF'i: firmanın yayınladığı
+   sözleşme formatı (Rapor formatı › Belgeler) önce, elle doldurulan yerleriyle (formatın "alan" hücreleri — rapor-format belge doldurma, göç 0105);
+   format yoksa en son yüklenen sözleşme şablonu PDF'i (olduğu gibi, doldurulmamış); o da yoksa temel format (src/belge/sozlesme.ts). Belgeyi "gör" ve
+   "yaz" düzeyi görür (imzalı sözleşme gibi — denetçinin "kendi" düzeyi görmez; elle yerler ticari bilgi taşıyabilir). Doldurmak ve müşteriye
+   göndermek "yaz": PDF ekli e-posta alıcı başına kuyruğa (src/server/eposta/belge-gonder.ts; kaynak "sozlesme"), gönderen tuşa basan kişi. ── */
+const belgeGorur = (kim: YetkiHesabi) => ["gor", "yaz"].includes(duzey(kim, MODUL));
+export const sozlesmeBelgesiGorur = belgeGorur;
+
+/** en son yüklenen (kaldırılmamış) sözleşme şablonu PDF'i */
+export interface SablonDosyasi { anahtar: string; ad: string; surumNo: number }
+async function sonSablon(db: Sorgulayici): Promise<SablonDosyasi | null> {
+  const s = (await db.sorgu<{ dosya_id: string; surum_no: number; firma: string }>(
+    "SELECT dosya_id::text, surum_no, gecerli_firma()::text AS firma FROM sozlesme_sablon WHERE kaldirildi IS NULL ORDER BY surum_no DESC LIMIT 1")).rows[0];
+  const d = s ? await kayitDosyasi(db, DOSYA.sablon, s.firma, s.dosya_id) : null;
+  return s && d && d.tur === "application/pdf" ? { anahtar: d.anahtar, ad: d.ad, surumNo: s.surum_no } : null;
+}
+
+/** kartın belge verisi + belgenin kaynağı (şablon yalnız format yokken) + elle doldurma kaydı */
+async function belgeVerisi(db: Sorgulayici, x: SozlesmeKarti, depo: Depo | null) {
+  const firma = await firmaBelgeKunyesi(db, depo);
+  const format = await yayindakiBelgeFormati(db, "sozlesme");
+  const doldurma = await belgeDoldurmasi(db, "sozlesme", x.id);
+  const v: SozlesmeBelgesiVerisi = {
+    firma: { ad: firma.ad, kod: firma.kod, adres: firma.adres, logo: firma.logo },
+    no: x.no, tarih: x.firmaImza, musteri: { unvan: x.unvan, vd: x.vd, vno: x.vno },
+    tesisler: x.kapsam.map((t) => ({ ad: t.ad, il: t.il, ilce: t.ilce, sgk: t.sgk })),
+    baslangic: x.baslangic, bitis: x.bitis, vade: x.vade, yenileme: x.yenileme, teklifNo: x.teklif?.no ?? null,
+    firmaImza: x.firmaImza, musteriImza: x.musteriImza, format, elle: doldurma?.degerler ?? null,
+  };
+  return { v, sablon: format ? null : await sonSablon(db), doldurma };
+}
+
+/** sözleşmenin belgesi (PDF ucu): "gör" / "yaz" düzeyi, sözleşmeyi görebildiği kayıtta; değilse null. sablon: format yokken en son yüklenen şablon PDF'i
+    (uç dosyanın kendisini verir); ikisi de yoksa temel format. */
+export async function sozlesmeBelgesiVerisi(db: Sorgulayici, kim: Kisi, id: string, depo: Depo | null = null):
+  Promise<(SozlesmeBelgesiVerisi & { sablon: SablonDosyasi | null }) | null> {
+  if (!belgeGorur(kim)) return null;
+  const x = await sozlesmeKarti(db, kim, id);
+  if (!x) return null;
+  const { v, sablon } = await belgeVerisi(db, x, depo);
+  return { ...v, sablon };
+}
+
+export interface SozlesmeBelgeBolumu {
+  kaynak: "format" | "sablon" | "temel"; sablonNo: number | null;
+  /** yayındaki sözleşme formatı ve elle doldurulan yerleri (format yoksa null); bos: boş kalan elle yerlerin adları */
+  doldurma: { tanim: FormatTanimi; degerler: Record<string, string>; surum: number | null; toplam: number; bos: string[] } | null;
+  /** belgenin adı (katalog) ve doldurma penceresinin önizlemesi (girilen değerler pencerede eklenir) */
+  baslik: string;
+  onizleme: { firma: SozlesmeBelgesiVerisi["firma"]; degerler: BelgeDegerleri };
+  epostalar: EpostaDurumu[];
+  /** gönder penceresinin ilk alıcısı: müşterinin e-postası */
+  alici: string | null;
+  konu: string;
+}
+/** sözleşme sayfasının "Sözleşme belgesi" bölümü (kart sayfada okundu); belgeyi göremeyene null */
+export async function sozlesmeBelgeBolumu(db: Sorgulayici, kim: Kisi, x: SozlesmeKarti, depo: Depo | null): Promise<SozlesmeBelgeBolumu | null> {
+  if (!belgeGorur(kim)) return null;
+  const { v, sablon, doldurma } = await belgeVerisi(db, x, depo);
+  const degerler = doldurma?.degerler ?? {};
+  const alanlar = v.format ? elleAlanlari(v.format) : [];
+  return {
+    kaynak: v.format ? "format" : sablon ? "sablon" : "temel", sablonNo: sablon?.surumNo ?? null,
+    doldurma: v.format ? { tanim: v.format, degerler, surum: doldurma?.surum ?? null, toplam: alanlar.length,
+      bos: alanlar.filter((a) => !degerler[a.id]?.trim() && !a.varsayilan?.trim()).map((a) => a.ad) } : null,
+    baslik: BELGE_KATALOGU.sozlesme.ad, onizleme: { firma: v.firma, degerler: sozlesmeDegerleri(v) },
+    epostalar: await kaynakEpostalari(db, "sozlesme", x.id),
+    alici: (await musteriIletisim(db, x.musteriId))?.eposta ?? null,
+    konu: sozlesmeEpostasi({ firma: v.firma.ad, no: x.no, unvan: x.unvan, baslangic: x.baslangic, bitis: x.bitis, tesisler: [], imzaBekliyor: false, gonderen: "" }).konu,
+  };
+}
+
+/** elle doldurulan yerleri kaydet: yalnız "yaz"; yayındaki sözleşme formatının elle yerlerine göre denetlenir (rapor-format belgeDoldurmaKaydet),
+    surum: istemcinin gördüğü doldurma sürümü (hiç doldurulmamışsa null) */
+export async function sozlesmeDoldur(db: Sorgulayici, kim: Kisi, id: string, girdi: unknown, surum: number | null): Promise<Yazma> {
+  if (!degistirir(kim)) return { durum: "yetkisiz" };
+  if (!UUID.test(id) || !(await db.sorgu("SELECT 1 FROM is_sozlesmesi WHERE id = $1 FOR SHARE", [id])).rowCount) return { durum: "yok" };
+  if (surum !== null && !surumGecerli(surum)) return { durum: "cakisma" };
+  const r = await belgeDoldurmaKaydet(db, { ad: kim.ad }, "sozlesme", id, girdi, surum);
+  if (r.durum === "tamam") return { durum: "tamam", id };
+  if (r.durum === "gecersiz") return { durum: "gecersiz", hatalar: r.hatalar };
+  if (r.durum === "formatsiz") return { durum: "red", neden: "Yayında sözleşme formatı yok." };
+  return { durum: "cakisma" };
+}
+
+/** sözleşme belgesinin PDF'ini basan işlev (src/belge/pdf.ts sozlesmePdf; testte sahtesi) */
+export type SozlesmePdfUretici = (v: SozlesmeBelgesiVerisi) => Promise<Uint8Array>;
+/** müşteriye gönder: yalnız "yaz"; alıcılar en çok 5 (GonderGirdisi). PDF (format / şablon / temel — PDF ucuyla aynı seçim) tek dosya yolundan
+    saklanır, alıcı başına ekli e-posta kuyruğa (kaynak "sozlesme"); gönderen oturumdaki hesap. Gönderimi çağıran tetikler (yanıttan sonra). */
+export async function sozlesmeGonder(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, id: string, girdi: unknown, uret: SozlesmePdfUretici): Promise<Yazma> {
+  if (!degistirir(kim)) return { durum: "yetkisiz" };
+  const g = dogrula(GonderGirdisi, girdi);
+  if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
+  const kime = adresler(g.veri.kime);
+  if (kime.length !== g.veri.kime.length) return { durum: "gecersiz", hatalar: { kime: "Geçerli bir e-posta adresi yazılmalı." } };
+  /* sözleşme paylaşımlı kilitli: aynı anda koşan kesin silme (0064, FOR UPDATE) ile sıraya girer — silinmiş sözleşmeye e-posta gitmez */
+  if (!UUID.test(id) || !(await db.sorgu("SELECT 1 FROM is_sozlesmesi WHERE id = $1 FOR SHARE", [id])).rowCount) return { durum: "yok" };
+  const x = await sozlesmeKarti(db, kim, id);
+  if (!x) return { durum: "yok" };
+  const { v, sablon } = await belgeVerisi(db, x, depo);
+  let pdf: Uint8Array;
+  try { pdf = sablon ? await depo.oku(sablon.anahtar, db) : await uret(v); }
+  catch { throw new DosyaHatasi("Sözleşmenin PDF'i üretilemedi; biraz sonra yeniden deneyin."); }
+  const gonderen = await hesapGonderen(db, kim.id);
+  const e = sozlesmeEpostasi({ firma: v.firma.ad, no: x.no, unvan: x.unvan, baslangic: x.baslangic, bitis: x.bitis, tesisler: x.kapsam.map((t) => t.ad),
+    imzaBekliyor: !x.musteriImza, gonderen: gonderen?.ad ?? kim.ad });
+  const r = await belgeEpostala(db, depo, { ad: kim.ad, id: kim.id }, firmaId, { pdf, dosyaAdi: `${x.no}.pdf`, modul: DOSYA.gonderim, kayitId: x.id, kime,
+    konu: e.konu, govde: e.govde, kaynak: "sozlesme", kaynakId: x.id, gonderen });
+  return { durum: "tamam", id: x.id, no: x.no, adet: r.kuyruk.length };
 }
 
 /** dosya erişimi (src/server/dosya/erisim.ts) */

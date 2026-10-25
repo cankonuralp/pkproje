@@ -2,7 +2,9 @@
 /* SAHA FORMLARI (2026-10-12; reisim: "görselde saha takip formu üretme işi yok ? neden ? geri gelsin." — maket planlarim.html sahaListe, 197):
    plan içinde Tamamlama adımının altında oluşturulan formlar, en yeni üstte: numara · oluşturan ve zaman · müşterinin imzalı taraması (yüklü / yok)
    · "PDF indir" (yazdırılıp müşteriye imzalatılır, kaşelenir) · tarama: "İmzalı taramayı yükle" ya da "Taramayı aç" + "Değiştir" + "Kaldır"
-   (sorulur). "Saha formu oluştur" tuşu Tamamlama adımında (PlanIciEkrani). Yetki ve dosya türü sunucuda; buradaki tuşlar yalnız izinli olana. */
+   (sorulur). "Saha formu oluştur" tuşu Tamamlama adımında (PlanIciEkrani). Yetki ve dosya türü sunucuda; buradaki tuşlar yalnız izinli olana.
+   2026-10-25 (belge doldurma; reisim: "sözleşme vb işleri de yüklediğimde, el ile değiştirilebilir ve doldurulabilir olmalı"): firmanın saha formu
+   formatında elle doldurulacak yer varsa formun "Belgeyi doldur"u (Rapor formatı modülünün bileşeni; değerler formun PDF'ine girer). */
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
@@ -11,8 +13,9 @@ import { Ikon } from "../../../components/ikon/Ikon";
 import { useOnayla } from "../../../components/pencere/Onay";
 import { AltSatir, Kod, Rozet } from "../../../components/sayfa/Sayfa";
 import { Tus, tusSinifi } from "../../../components/tus/Tus";
-import type { SahaFormuSatiri } from "../server/plan-ici";
-import { sahaTaramaKaldirEylemi, sahaTaramaYukleEylemi } from "./eylemler";
+import type { BelgeDoldurmaPaneli, SahaFormuSatiri } from "../server/plan-ici";
+import { BelgeDoldurmaTusu } from "../../rapor-format/ui/BelgeDoldurma";
+import { sahaFormuDoldurEylemi, sahaTaramaKaldirEylemi, sahaTaramaYukleEylemi } from "./eylemler";
 import stil from "./planlar.module.css";
 
 const zamanYaz = (iso: string) => {
@@ -21,16 +24,16 @@ const zamanYaz = (iso: string) => {
   return `${p.day}.${p.month}.${p.year} ${p.hour}:${p.minute}`;
 };
 
-export function SahaFormlari({ planId, formlar, yaz }: { planId: string; formlar: SahaFormuSatiri[]; yaz: boolean }) {
+export function SahaFormlari({ planId, formlar, yaz, doldur = {} }: { planId: string; formlar: SahaFormuSatiri[]; yaz: boolean; doldur?: Record<string, BelgeDoldurmaPaneli> }) {
   if (!formlar.length) return null;
   return (
     <ul className={stil.sahaListe} aria-label="Saha formları">
-      {formlar.map((f) => <SahaFormu key={f.id} planId={planId} f={f} yaz={yaz} />)}
+      {formlar.map((f) => <SahaFormu key={f.id} planId={planId} f={f} yaz={yaz} doldur={doldur[f.id] ?? null} />)}
     </ul>
   );
 }
 
-function SahaFormu({ planId, f, yaz }: { planId: string; f: SahaFormuSatiri; yaz: boolean }) {
+function SahaFormu({ planId, f, yaz, doldur }: { planId: string; f: SahaFormuSatiri; yaz: boolean; doldur: BelgeDoldurmaPaneli | null }) {
   const router = useRouter();
   const bildir = useBildir();
   const onayla = useOnayla();
@@ -52,6 +55,11 @@ function SahaFormu({ planId, f, yaz }: { planId: string; f: SahaFormuSatiri; yaz
       setHata(r.genel ?? "Kaldırılamadı.");
     });
   };
+  const doldurKaydet = async (degerler: Record<string, string>, surum: number | null) => {
+    const r = await sahaFormuDoldurEylemi(planId, f.id, degerler, surum);
+    if (r.tamam) router.refresh();
+    return r;
+  };
   const dosyaTusu = (ad: string, ikon: string, etiket: string) => (
     <label className={`${tusSinifi("ikincil")} ${stil.sahaDosya}`} aria-disabled={bekliyor || undefined}>
       <input type="file" accept="application/pdf,image/jpeg,image/png" className="gizli" disabled={bekliyor} aria-label={etiket}
@@ -68,6 +76,8 @@ function SahaFormu({ planId, f, yaz }: { planId: string; f: SahaFormuSatiri; yaz
       {f.tarama ? <Rozet tur="tamam">Müşteri imzalı tarama yüklü</Rozet> : <Rozet tur="bekliyor">Müşteri taraması yok</Rozet>}
       <span className={stil.sahaTuslar}>
         <a className={tusSinifi("ikincil")} href={`/planlar/${planId}/saha-formu/${f.id}/pdf`} download aria-label={`${f.no} PDF indir`}><Ikon ad="download" kucuk />PDF indir</a>
+        {doldur && <BelgeDoldurmaTusu belge="saha" baslik={`Saha formu ${f.no}`} tanim={doldur.tanim} degerler={doldur.degerler} surum={doldur.surum}
+          kaydet={doldurKaydet} onizlemeVerisi={doldur.onizleme} />}
         {f.tarama && <DosyaAcTusu dosyaId={f.tarama} etiket={`${f.no} imzalı taramayı aç`}>Taramayı aç</DosyaAcTusu>}
         {yaz && (f.tarama
           ? <>{dosyaTusu("Değiştir", "upload", `${f.no} imzalı taramayı değiştir`)}

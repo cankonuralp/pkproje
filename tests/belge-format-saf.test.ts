@@ -2,9 +2,11 @@
    parçalar: göç 0104'ün belge listesi src/belge/katalog.ts BELGE_TURLERI ile aynı (yeni belge eklenip göç unutulursa düşer); basılı formdan belge
    şablonu (server/belgeler.ts basiliBelgeye): basili.ts'in rapor için eklediği bölümler (Sonuç, Muayene uzmanı, Fotoğraflar) ve raporun cihaz /
    uygunsuzluk / fotoğraf bölümleri belgeye girmez; başlık belgenin adı; raporun kayıt bilgisi belgenin ortak alanına bağlanır; serbest düzen.
-   Veritabanı kısmı: tests/belge-format.test.ts. */
+   Veritabanı kısmı: tests/belge-format.test.ts.
+   2026-10-25 (belge doldurma; reisim: "sözleşme vb işleri de yüklediğimde, el ile değiştirilebilir ve doldurulabilir olmalı"): belge listesi
+   SON göçün kısıtından (0105 "sozlesme"yi ekledi; yeni belge her seferinde yeni göçle) — belge_format ve belge_doldurma kısıtları ikisi de. */
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { BELGE_TURLERI } from "../src/belge/katalog.ts";
@@ -12,11 +14,25 @@ import { FormatTanimi, type Hucre } from "../src/format/tanim.ts";
 import { basilidanTanim } from "../src/modules/rapor-format/basili.ts";
 import { basiliBelgeye } from "../src/modules/rapor-format/server/belgeler.ts";
 
-test("göç 0104: belge listesi BELGE_TURLERI ile aynı", () => {
-  const sql = readFileSync(fileURLToPath(new URL("../src/server/db/gocler/0104_belge_format.sql", import.meta.url)), "utf8");
-  const m = /CONSTRAINT belge_format_belge_check\s+CHECK \(belge IN \(([^)]*)\)\)/.exec(sql);
-  assert.ok(m, "belge kısıtı bulunamadı");
-  assert.deepEqual(m[1].split(",").map((x) => x.trim().replace(/^'|'$/g, "")), [...BELGE_TURLERI]);
+/** kısıtı kuran SON göçün belge listesi (göçler sırayla uygulanır — en son kuran geçerli) */
+function sonListe(kisit: string): { goc: string; liste: string[] } | null {
+  const klasor = fileURLToPath(new URL("../src/server/db/gocler/", import.meta.url));
+  const desen = new RegExp(`CONSTRAINT ${kisit}` + String.raw`\s+CHECK \(belge IN \(([^)]*)\)\)`);
+  let son: { goc: string; liste: string[] } | null = null;
+  for (const goc of readdirSync(klasor).filter((x) => x.endsWith(".sql")).sort()) {
+    const m = desen.exec(readFileSync(`${klasor}${goc}`, "utf8"));
+    if (m) son = { goc, liste: m[1].split(",").map((x) => x.trim().replace(/^'|'$/g, "")) };
+  }
+  return son;
+}
+
+test("son göçün belge listesi BELGE_TURLERI ile aynı (belge_format ve belge_doldurma)", () => {
+  for (const kisit of ["belge_format_belge_check", "belge_doldurma_belge_check"]) {
+    const s = sonListe(kisit);
+    assert.ok(s, `${kisit} bulunamadı`);
+    assert.deepEqual(s.liste, [...BELGE_TURLERI], `${kisit} (${s.goc})`);
+  }
+  assert.ok(BELGE_TURLERI.includes("sozlesme"), "sözleşme belgesi");
 });
 
 const hucre = (metin: string, ek: Partial<Record<string, unknown>> = {}) => ({ metin, tur: "yazi", sutunBirlesim: 1, satirBirlesim: 1, kaynak: "yok", ...ek });

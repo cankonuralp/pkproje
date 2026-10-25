@@ -20,9 +20,10 @@ import { Serit } from "../../../components/serit/Serit";
 import { Tus, tusSinifi } from "../../../components/tus/Tus";
 import type { EgitimKaydi } from "../../egitimler/server/egitimler";
 
-import type { AtamaSatiri, BordroSatiri, OzlukSatiri, PersonelDosyasi } from "../server/dosyalar";
+import type { AtamaSatiri, BordroSatiri, OzlukSatiri, PersonelDosyasi, ZimmetDoldurmaVerisi } from "../server/dosyalar";
+import { BelgeDoldurmaTusu } from "../../rapor-format/ui/BelgeDoldurma";
 import { BELGE_DURUM, belgeEtkin } from "../../onaylar/sema";
-import { bordroOnayaGonderEylemi, personelBelgeDegistirEylemi, personelBelgeEkleEylemi, personelBelgeKaldirEylemi, zimmetFormuGonderEylemi } from "./eylemler";
+import { bordroOnayaGonderEylemi, personelBelgeDegistirEylemi, personelBelgeEkleEylemi, personelBelgeKaldirEylemi, zimmetDoldurEylemi, zimmetFormuGonderEylemi } from "./eylemler";
 import { bransAd, tarihYaz } from "./ortak";
 import stil from "./personel.module.css";
 
@@ -182,8 +183,17 @@ function ZimmetGonderTusu({ personelId, kisi, adet }: { personelId: string; kisi
   return <Tus tur="ikincil" ikon="send" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={gonder}>İmzaya gönder</Tus>;
 }
 
-/* ── ZİMMETİNDEKİLER + İMZALI ZİMMET FORMU (hareketler ve teslim Zimmetler modülünde; 344: form PDF'i ve imzaya gönderme) ── */
-export function ZimmetBolumu({ personelId, kisi, etkin, dosya, bugun }: { personelId: string; kisi: string; etkin: boolean; dosya: PersonelDosyasi; bugun: string }) {
+/* 2026-10-25 (belge doldurma; reisim: "sözleşme vb işleri de yüklediğimde, el ile değiştirilebilir ve doldurulabilir olmalı …"): formun elle doldurulan
+   yerleri (indirilen ve imzaya giden form bu değerlerle) */
+function ZimmetDoldurma({ personelId, v }: { personelId: string; v: ZimmetDoldurmaVerisi }) {
+  const kaydet = (degerler: Record<string, string>, surum: number | null) => zimmetDoldurEylemi(personelId, degerler, surum);
+  return <BelgeDoldurmaTusu belge="zimmet" baslik={v.baslik} tanim={v.tanim} degerler={v.degerler} surum={v.surum} onizlemeVerisi={v.onizleme} kaydet={kaydet} />;
+}
+
+/* ── ZİMMETİNDEKİLER + İMZALI ZİMMET FORMU (hareketler ve teslim Zimmetler modülünde; 344: form PDF'i ve imzaya gönderme) ──
+   doldur: formun elle doldurulan yerleri (dosyalar.ts zimmetDoldurmaVerisi — yoksa null) */
+export function ZimmetBolumu({ personelId, kisi, etkin, dosya, bugun, doldur = null }:
+  { personelId: string; kisi: string; etkin: boolean; dosya: PersonelDosyasi; bugun: string; doldur?: ZimmetDoldurmaVerisi | null }) {
   const p = useBelgePenceresi();
   const z = dosya.zimmet, f = dosya.zimmetFormu, g = dosya.zimmetGonderimi;
   /* imzaya gönderilmiş, bekleyen form varken "imzaya gönderin" denmez (340–345 incelemesi: yeniden göndermek bekleyeni iptal eder) */
@@ -193,6 +203,7 @@ export function ZimmetBolumu({ personelId, kisi, etkin, dosya, bugun }: { person
     <Bolum id="b-per-zimmet" baslik="Zimmetindekiler" sayac={<><b>{z.length}</b> varlık</>}
       tuslar={dosya.yaz && z.length > 0 && <>
         <a className={tusSinifi("ikincil")} href={`/personel/${personelId}/zimmet-formu/pdf`} download><Ikon ad="file-text" kucuk />Formu indir</a>
+        {doldur && <ZimmetDoldurma personelId={personelId} v={doldur} />}
         {etkin && <ZimmetGonderTusu personelId={personelId} kisi={kisi} adet={z.length} />}
         <Tus tur="ikincil" ikon="file-signature" onClick={() => p.ac("zimmet")}>İmzalı formu yükle</Tus>
       </>}>
