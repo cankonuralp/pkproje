@@ -342,7 +342,7 @@ test("yeni rapor paketi: planın raporu olmayan etkin ekipmanları, türün yay�
   tamam(await a(DEN, (db) => raporOlustur(db, DEN, p, ekp["HT-1"])));
   const k = (await a(DEN, (db) => yeniRaporPaketi(db, DEN, p)))!;
   assert.equal(k.neden, null);
-  assert.equal(k.planDurum, "kabul");
+  assert.equal(k.planDurum, "denetimde", "ilk rapor planı Denetimde yapar");
   assert.deepEqual(k.ekipmanlar.map((x) => x.kod).sort(), ["HT-2", "HT-3", "HT-4", "HT-5", "HT-6"], "raporu olan ekipman yok");
   assert.deepEqual(Object.keys(k.turler), [ht]);
   assert.equal(k.turler[ht].tanim.bolumler.length, KOMP.bolumler.length);
