@@ -73,3 +73,30 @@ test("pencere: odak ilk alanda, Kaydet kapatır ve bildirir", async ({ page }) =
   await expect(pencere).toHaveCount(0);
   await expect(page.locator("[data-bildirim]")).toContainText("Not eklendi.");
 });
+
+/* 2026-10-26 (reisim: "uzun cümlelerde … olsun tıklayınca açılsın"): kısalan metin tıklanınca tam metin balonu (components/liste/Kirp.tsx) — sayfayı
+   itmez, ekranın içinde kalır; Esc yalnız balonu kapatır; sığan metin tıklanmaz */
+test("uzun metin: kısalan metin tıklanınca tam metin balonu açılır, sayfa itilmez, Esc kapatır; sığan metin tıklanmaz", async ({ page }) => {
+  const bolum = page.getByRole("region", { name: "Uzun metin" });
+  const uzun = bolum.getByRole("button", { name: /^Halat ve kanca/ });
+  await uzun.scrollIntoViewIfNeeded();
+  await expect(uzun).toHaveAttribute("aria-expanded", "false");
+  await expect(bolum.getByText("Kısa not", { exact: true })).not.toHaveAttribute("role", "button");
+  const once = await page.evaluate(() => document.documentElement.scrollHeight);
+  await uzun.click();
+  await expect(uzun).toHaveAttribute("aria-expanded", "true");
+  const balon = page.getByRole("tooltip");
+  await expect(balon).toBeVisible();
+  await expect(balon).toContainText("yük sınırı etiketi okunmuyor.");
+  const k = (await balon.boundingBox())!, ekran = page.viewportSize()!;
+  expect(k.x).toBeGreaterThanOrEqual(0);
+  expect(k.x + k.width).toBeLessThanOrEqual(ekran.width);
+  expect(await page.evaluate(() => document.documentElement.scrollHeight), "sayfa itilmedi").toBe(once);
+  await page.keyboard.press("Escape");
+  await expect(balon).toHaveCount(0);
+  await expect(uzun).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(balon).toBeVisible();
+  await page.mouse.click(2, 2);
+  await expect(balon).toHaveCount(0);
+});

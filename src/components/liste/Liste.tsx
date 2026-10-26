@@ -77,7 +77,7 @@ export function Liste<K>({ baslik, sutunlar, kayitlar, anahtar, href, siralama, 
   }, [siralama?.deger]);
 
   const satiraGir = (e: React.MouseEvent, adres: string) => {
-    if ((e.target as HTMLElement).closest("a, button, label, input, select, textarea")) return;
+    if ((e.target as HTMLElement).closest("a, button, label, input, select, textarea, [data-kirpik]")) return;
     router.push(adres);
   };
 
@@ -127,7 +127,5 @@ export function KartEtiket({ children }: { children: ReactNode }) {
   return <span className={stil.kartEtiket}>{children}</span>;
 }
 
-/** kırpma zinciri (kalıp 4): tek satır + üç nokta, tam metin title'da */
-export function Kirp({ children, baslik }: { children: ReactNode; baslik?: string }) {
-  return <span className={stil.kirp} title={baslik ?? (typeof children === "string" ? children : undefined)}>{children}</span>;
-}
+/** kırpma zinciri (kalıp 4): tek satır + üç nokta; kısalmışsa tıklayınca / dokununca tam metin balonu (Kirp.tsx), bağlantı içinde title'da */
+export { Kirp } from "./Kirp";

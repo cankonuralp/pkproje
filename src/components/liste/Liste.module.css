@@ -31,6 +31,13 @@
 .tablo th[aria-sort] .sirala { color: var(--yazi); }
 .tablo th[aria-sort] .sirala > svg { opacity: 1; }
 .kirp { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kirpik { cursor: pointer; border-radius: var(--r-kucuk); }
+.kirpik:hover { background: var(--zemin2); }
+.kirpik:focus-visible { outline: 3px solid var(--odak); outline-offset: 1px; }
+/* tam metin balonu (Kirp.tsx): üst katman — konumu secim/yuzen.ts yazar; tarayıcının popover kalıbı ezilir */
+.balon { position: fixed; inset: auto; z-index: 1000; margin: 0; min-width: 220px; max-width: min(460px, calc(100vw - 16px)); padding: 10px 12px;
+  background: var(--kart); color: var(--yazi); border: 1px solid var(--kenar); border-radius: var(--r-orta); box-shadow: var(--golge-2);
+  font-weight: 400; white-space: normal; overflow: auto; overflow-wrap: anywhere; text-overflow: clip; cursor: auto; text-align: left; }
 .kartEtiket { display: none; color: var(--yazi3); font-size: var(--boy-etiket); font-weight: var(--kal-etiket); }
 
 @container liste (min-width: 600px) and (max-width: 959.98px) {

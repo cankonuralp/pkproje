@@ -19,3 +19,4 @@
 .hata { margin: 0; font-size: var(--boy-etiket); color: var(--hata-yazi); font-weight: 600; }
 .degerler { margin: 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
 .metin { margin: 0 0 8px; color: var(--yazi2); }
+.kirpKap { display: grid; gap: 8px; width: 280px; max-width: 100%; }

@@ -12,7 +12,7 @@ import { Tus, TusBaglanti } from "../../../components/tus/Tus";
 import stil from "./vitrin.module.css";
 import { VitrinBilgi } from "./VitrinBilgi";
 import { VitrinForm } from "./VitrinForm";
-import { VitrinListe } from "./VitrinListe";
+import { VitrinKirp, VitrinListe } from "./VitrinListe";
 
 export function VitrinIcerik() {
   const bildir = useBildir();
@@ -62,6 +62,7 @@ export function VitrinIcerik() {
       <VitrinBilgi />
 
       <VitrinListe />
+      <VitrinKirp />
 
       <Pencere acik={pencere} baslik="Not ekle" onKapat={() => setPencere(false)}
         alt={<><Tus tur="ikincil" onClick={() => setPencere(false)}>Vazgeç</Tus><Tus onClick={() => { setPencere(false); bildir("Not eklendi."); }}>Kaydet</Tus></>}>

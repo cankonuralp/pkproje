@@ -62,3 +62,16 @@ export function VitrinListe() {
     </section>
   );
 }
+
+/** 2026-10-26: kısalan metin tıklanınca tam metin balonu (components/liste/Kirp.tsx) — e2e/bilesenler.spec.ts ölçer. Dar kap: uzun metin kısalır, kısa sığar */
+export function VitrinKirp() {
+  return (
+    <section className={stil.bolum} aria-labelledby="v-kirp">
+      <h2 id="v-kirp">Uzun metin</h2>
+      <div className={stil.kirpKap}>
+        <Kirp>Halat ve kanca çevresinde korozyon; kanca emniyet mandalı yerinde değil, yük sınırı etiketi okunmuyor.</Kirp>
+        <Kirp>Kısa not</Kirp>
+      </div>
+    </section>
+  );
+}
