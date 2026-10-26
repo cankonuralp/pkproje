@@ -112,7 +112,7 @@ test("elle standart: listede olmayan eklenir (türün branşıyla), seçeneklerd
   let kart = (await a((db) => turKarti(db, YON, tur)))!;
   tamam(await a((db) => baglantiKaydet(db, YON, tur, kart.surum, { standartlar: [...kart.standartlar.map((x) => x.no), "TS EN 99999-2"], cihazTurleri: kart.cihazTurleri.map((x) => x.id) })));
   assert.equal((await b((db) => db.sorgu("SELECT 1 FROM standart_tanim"))).rowCount, 0, "B, A'nın elle eklediğini görmez");
-  await assert.rejects(a((db) => db.sorgu("UPDATE standart_tanim SET konu = 'değişti'")), /değişmez/);
+  await assert.rejects(a((db) => db.sorgu("UPDATE standart_tanim SET konu = 'değişti'")), /permission denied|değişmez/, "uygulama rolü değiştiremez");
   const id = (await a((db) => elleStandartlar(db)))[0].id;
   const sil = () => kiraciIcinde(havuz, A, (db) => elleStandartSil(db, YON, id), { hesapId: YON.id });
   assert.deepEqual(await sil(), { durum: "red", neden: "Standart silinemez: 1 ekipman türünün kontrol metodunda seçili." });

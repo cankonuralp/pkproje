@@ -17,6 +17,7 @@ import stil from "./turler.module.css";
 
 export interface BaglantiSecenekleri { standartlar: { no: string; konu: string; brans: "m" | "e"; yuklu: boolean }[]; cihazTurleri: { id: string; ad: string }[] }
 const BRANS_AD = { m: "Mekanik standartlar", e: "Elektrik standartlar" } as const;
+const STD_NO = "bag-std-no", STD_KONU = "bag-std-konu";
 
 export function BaglantiTusu({ turId, surum, standartlar, cihazTurleri, secenekler, brans }:
   { turId: string; surum: number; standartlar: string[]; cihazTurleri: string[]; secenekler: BaglantiSecenekleri; brans: "m" | "e" }) {
@@ -73,12 +74,12 @@ export function BaglantiTusu({ turId, surum, standartlar, cihazTurleri, secenekl
         <fieldset className={stil.kutular}>
           <legend className={stil.etiket}>Listede olmayan standart</legend>
           <FormIzgara>
-            <Alan id="bag-std-no" etiket="Standart no" hata={yeniHata.no} sonuc="ör. TS EN 12817">
-              <Girdi id="bag-std-no" value={yeni.no} maxLength={40} hata={!!yeniHata.no} mesajli onChange={(e) => setYeni({ ...yeni, no: e.target.value })}
+            <Alan id={STD_NO} etiket="Standart no" hata={yeniHata.no} sonuc="ör. TS EN 12817">
+              <Girdi id={STD_NO} value={yeni.no} maxLength={40} hata={!!yeniHata.no} mesajli onChange={(e) => setYeni({ ...yeni, no: e.target.value })}
                 onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); elleEkle(); } }} />
             </Alan>
-            <Alan id="bag-std-konu" etiket="Adı" hata={yeniHata.konu}>
-              <Girdi id="bag-std-konu" value={yeni.konu} maxLength={120} hata={!!yeniHata.konu} onChange={(e) => setYeni({ ...yeni, konu: e.target.value })}
+            <Alan id={STD_KONU} etiket="Adı" hata={yeniHata.konu}>
+              <Girdi id={STD_KONU} value={yeni.konu} maxLength={120} hata={!!yeniHata.konu} onChange={(e) => setYeni({ ...yeni, konu: e.target.value })}
                 onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); elleEkle(); } }} />
             </Alan>
           </FormIzgara>
