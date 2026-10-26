@@ -9,7 +9,8 @@
    çeviri ARADA, veritabanı işleminin DIŞINDA (eylem: ui/eylemler.ts basilidanKurEylemi) — işlemci işi bağlantıyı açık tutmaz (işlemde boşta
    bekleme sınırı). */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
-import { basiliSurumVar, turOzeti } from "../../ekipman-turleri/server/turler.ts";
+import { basiliSurumVar, formatStandartlariniBagla, turOzeti } from "../../ekipman-turleri/server/turler.ts";
+import { metindenStandartlar } from "../../dokumanlar/eslestir.ts";
 import type { BasiliCeviri } from "../basili.ts";
 import { formatDegistirir, taslakYaz, type Kisi } from "./formatlar.ts";
 
@@ -20,6 +21,21 @@ export type BasiliHazirlik = { durum: "hazir"; turAd: string } | { durum: "red";
 export type BasiliSonucu = { durum: "tamam"; id: string; cevap: string; atilan: string[] } | { durum: "red"; neden: string } | { durum: "cakisma" };
 
 const red = (neden: string): { durum: "red"; neden: string } => ({ durum: "red", neden });
+
+/** 2026-10-26 (reisim: "verilen formatta yazanlara göre standart ekleme", "kütüphanede yok ise el ile ekleme yöntemi ile eklenecek otomatik
+    olarak"): basılı formun yazılarında geçen standartlar türün kontrol metoduna bağlanır (Ekipman türleri'nin işlevi; kütüphanede olmayan elle
+    eklenir). Dönen: yeni bağlanan numaralar. Şablon kurulduktan sonra, aynı işlemde. */
+export async function basiliStandartlari(db: Sorgulayici, kim: Kisi, turId: string, ham: unknown): Promise<string[]> {
+  const metinler: string[] = [];
+  const topla = (x: unknown, derin: number) => {
+    if (derin > 40 || metinler.length > 20_000) return;
+    if (typeof x === "string") { if (/\d/.test(x)) metinler.push(x); return; }
+    if (Array.isArray(x)) { for (const y of x) topla(y, derin + 1); return; }
+    if (x && typeof x === "object") for (const y of Object.values(x)) topla(y, derin + 1);
+  };
+  topla(ham, 0);
+  return formatStandartlariniBagla(db, kim, turId, metindenStandartlar(metinler));
+}
 
 /** çeviriden önce: yetki, tür ve sira (okunan basılı format PDF'inin sürümü) türün yüklü, kaldırılmamış sürümlerinden biri mi */
 export async function basiliHazirla(db: Sorgulayici, kim: Kisi, turId: string, sira: number): Promise<BasiliHazirlik> {

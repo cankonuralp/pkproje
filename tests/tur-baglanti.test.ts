@@ -9,8 +9,8 @@ import { after, before, test } from "node:test";
 import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde, type Havuz } from "../src/server/db/kiraci.ts";
 import { klasorDepo } from "../src/server/dosya/depo.ts";
-import { standartYukle } from "../src/modules/dokumanlar/server/dokumanlar.ts";
-import { baglantiKaydet, baglantiSecenekleri, standardiKullananTurler, turKaydet, turKarti, type Kisi } from "../src/modules/ekipman-turleri/server/turler.ts";
+import { elleStandartlar, elleStandartSil, standartYukle } from "../src/modules/dokumanlar/server/dokumanlar.ts";
+import { baglantiKaydet, baglantiSecenekleri, formatStandartlariniBagla, standardiKullananTurler, standartElleEkle, turKaydet, turKarti, type Kisi } from "../src/modules/ekipman-turleri/server/turler.ts";
 import { cihazKaydet } from "../src/modules/olcum-cihazlari/server/cihazlar.ts";
 import { BAKANLIK_STANDARTLARI } from "../src/tanim/standartlar.ts";
 import { testKumesi } from "./yardimci/kume.ts";
@@ -96,4 +96,39 @@ test("440 bağlantı: Bakanlık standardı yüklenmeden seçilir; seçenekler br
   k = (await a((db) => turKarti(db, YON, tur)))!;
   assert.deepEqual(await a((db) => baglantiKaydet(db, YON, tur, k.surum, { standartlar: ["TS EN 999", "TS EN 998"], cihazTurleri: [] })),
     { durum: "gecersiz", hatalar: { standartlar: "Standart kütüphanede yok." } });
+});
+
+/* 2026-10-26 (göç 0107 — reisim: "bu ekranda sadece dökümanlarda ekli olan standartlar gözüküyor burada el ile ekleme olmalı", "PDF'ten şablon
+   kurulunca formatta yazan standartlar da türe kendiliğinden eklenecek eğer standartlar kütüphanede yok ise el ile ekleme yöntemi ile eklenecek") */
+test("elle standart: listede olmayan eklenir (türün branşıyla), seçeneklerde ve bağlantıda geçerli; kütüphanedeki yeniden eklenmez; değişmez; B görmez; kullanılan silinmez", async () => {
+  const e = tamam(await a((db) => standartElleEkle(db, YON, tur, { no: " ts en 99999-2 ", konu: "Deneme elle standart" })));
+  assert.deepEqual(e.secenek, { no: "TS EN 99999-2", konu: "Deneme elle standart", brans: "m", yuklu: false });
+  assert.equal((await a((db) => standartElleEkle(db, DENETCI, tur, { no: "TS EN 99998", konu: "x y" }))).durum, "yetkisiz");
+  assert.equal((await a((db) => standartElleEkle(db, YON, tur, { no: "12", konu: "x y" }))).durum, "gecersiz");
+  const k = tamam(await a((db) => standartElleEkle(db, YON, tur, { no: "TS EN 280", konu: "Başka ad" })));
+  assert.deepEqual(k.secenek, { no: "TS EN 280", konu: "Deneme konu", brans: "m", yuklu: true }, "kütüphanedeki olduğu gibi döner");
+  assert.deepEqual((await a((db) => elleStandartlar(db))).map((x) => x.no), ["TS EN 99999-2"]);
+  assert.ok((await a((db) => baglantiSecenekleri(db, YON)))!.standartlar.some((x) => x.no === "TS EN 99999-2" && !x.yuklu));
+  let kart = (await a((db) => turKarti(db, YON, tur)))!;
+  tamam(await a((db) => baglantiKaydet(db, YON, tur, kart.surum, { standartlar: [...kart.standartlar.map((x) => x.no), "TS EN 99999-2"], cihazTurleri: kart.cihazTurleri.map((x) => x.id) })));
+  assert.equal((await b((db) => db.sorgu("SELECT 1 FROM standart_tanim"))).rowCount, 0, "B, A'nın elle eklediğini görmez");
+  await assert.rejects(a((db) => db.sorgu("UPDATE standart_tanim SET konu = 'değişti'")), /değişmez/);
+  const id = (await a((db) => elleStandartlar(db)))[0].id;
+  const sil = () => kiraciIcinde(havuz, A, (db) => elleStandartSil(db, YON, id), { hesapId: YON.id });
+  assert.deepEqual(await sil(), { durum: "red", neden: "Standart silinemez: 1 ekipman türünün kontrol metodunda seçili." });
+  kart = (await a((db) => turKarti(db, YON, tur)))!;
+  tamam(await a((db) => baglantiKaydet(db, YON, tur, kart.surum, { standartlar: kart.standartlar.map((x) => x.no).filter((n) => n !== "TS EN 99999-2"), cihazTurleri: kart.cihazTurleri.map((x) => x.id) })));
+  assert.deepEqual(await sil(), { durum: "tamam", ad: "TS EN 99999-2" });
+  assert.deepEqual(await a((db) => elleStandartlar(db)), []);
+});
+
+test("formattaki standartlar türe bağlanır: kütüphanedeki ve Bakanlık'taki olduğu gibi, olmayan elle eklenir (adı yoksa numarası); var olan kalır; yetkisiz kişide hiçbir şey", async () => {
+  const bak = BAKANLIK_STANDARTLARI[0];
+  const once = (await a((db) => turKarti(db, YON, tur)))!.standartlar.map((x) => x.no);
+  assert.deepEqual(await a((db) => formatStandartlariniBagla(db, DENETCI, tur, [{ no: "TS EN 77777", konu: "" }])), []);
+  const yeni = await a((db) => formatStandartlariniBagla(db, YON, tur, [{ no: "TS EN 280", konu: "" }, { no: bak.no, konu: "" }, { no: "TS EN 77777", konu: "" }, { no: "TS EN 77777", konu: "x" }]));
+  assert.deepEqual(yeni, ["TS EN 280", bak.no, "TS EN 77777"].filter((n) => !once.includes(n)));
+  assert.deepEqual((await a((db) => turKarti(db, YON, tur)))!.standartlar.map((x) => x.no), [...once, ...yeni]);
+  assert.deepEqual((await a((db) => elleStandartlar(db))).map((x) => [x.no, x.konu]), [["TS EN 77777", "TS EN 77777"]]);
+  assert.deepEqual(await a((db) => formatStandartlariniBagla(db, YON, tur, [{ no: "TS EN 77777", konu: "" }])), [], "ikinci kez bağlanmaz");
 });

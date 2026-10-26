@@ -34,3 +34,24 @@ export function standartBul<T extends { no: string }>(atif: string, liste: reado
   }
   return en;
 }
+
+/* 2026-10-26 (reisim: "verilen formatta yazanlara göre standart ekleme", "PDF'ten şablon kurulunca formatta yazan standartlar da türe kendiliğinden
+   eklenecek"): basılı formun yazılarındaki standart atıfları — "TS EN 12817", "TS EN ISO 9927-1", "TS ISO 4309", "TS 1446", "TS HD 60364-6",
+   "EN 13445-5:2014" (yıl atılır). Ad: numaradan sonra aynı yazıda gelen metin (ayraç, "·", ";" ya da sonraki numaraya kadar); yoksa boş. Numara
+   tekil, ilk görülen adla. */
+const STD_ATIF = /(?<![A-ZÇĞİÖŞÜa-zçğıöşü0-9])((?:(?:TS|EN|ISO|IEC|HD|CEN|CLC)(?: ?\/ ?| ))*(?:TS|EN|ISO|IEC|HD)) ?(\d{2,6}(?:[-.]\d{1,4})*)(?::\d{4}(?:\+[A-Z]\d{1,2}(?::\d{4})?)*)?(?![0-9A-Za-z])/g;
+export function metindenStandartlar(metinler: readonly string[]): { no: string; konu: string }[] {
+  const gor = new Map<string, string>();
+  for (const ham of metinler) {
+    const m = ham.replace(/\s+/g, " ");
+    const l = [...m.matchAll(STD_ATIF)];
+    l.forEach((x, i) => {
+      const no = `${x[1].replace(/ ?\/ ?/g, "/").trim()} ${x[2]}`;
+      if (!/^(TS|EN|ISO|IEC|HD)\b/.test(no)) return;
+      const bas = (x.index ?? 0) + x[0].length, son = i + 1 < l.length ? l[i + 1].index ?? m.length : m.length;
+      const konu = m.slice(bas, son).split(/\s+·\s+|;/)[0].replace(/^[\s:–—,.-]+/, "").replace(/[\s,;:–—-]+$/, "").trim().slice(0, 120);
+      if (!gor.has(no) || (!gor.get(no) && konu.length >= 2)) gor.set(no, konu.length >= 2 ? konu : "");
+    });
+  }
+  return [...gor].map(([no, konu]) => ({ no, konu }));
+}

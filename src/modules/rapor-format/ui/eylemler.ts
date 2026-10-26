@@ -13,7 +13,7 @@ import { parcaKaydet, parcaSil } from "../server/parcalar";
 import { BELGE_EN_BUYUK, formatBelgesi, formatYzBirak, formatYzHazirla, formatYzKapat, type FormatYzSonucu } from "../server/yz";
 import { anthropicCagir } from "../../../server/yz/okuma";
 import { basilidanTanim } from "../basili";
-import { BASILI_HAM_EN_COK, basiliHazirla, basiliYaz } from "../server/basili";
+import { BASILI_HAM_EN_COK, basiliHazirla, basiliStandartlari, basiliYaz } from "../server/basili";
 import type { FirmaParcasi } from "../yapboz";
 
 export interface FormatDurumuYaniti { tamam?: boolean; id?: string; sira?: number; uyarilar?: string[]; engeller?: string[]; hatalar?: Record<string, string>; genel?: string }
@@ -168,10 +168,14 @@ export async function basilidanKurEylemi(turId: string, sira: number, ham: unkno
   if (h.durum === "red") return { genel: h.neden };
   const ceviri = basilidanTanim(ham, h.turAd);
   if (!ceviri) return { genel: "Form şablona çevrilemedi." };
-  const r = await oturumIslemi(o, (db) => basiliYaz(db, o, metin(turId), s, ceviri, ts));
+  const r = await oturumIslemi(o, async (db) => {
+    const y = await basiliYaz(db, o, metin(turId), s, ceviri, ts);
+    return y.durum === "tamam" ? { ...y, std: await basiliStandartlari(db, o, metin(turId), ham) } : y;
+  });
   if (r.durum === "cakisma") return { genel: SONUC.cakisma };
   if (r.durum === "red") return { genel: r.neden };
-  return { tamam: true, id: r.id, sira: s, uyarilar: [r.cevap, ...(r.atilan.length ? [`Şablona alınamayan bölüm: ${r.atilan.join(", ")}.`] : [])].filter(Boolean) };
+  return { tamam: true, id: r.id, sira: s, uyarilar: [r.cevap, ...(r.atilan.length ? [`Şablona alınamayan bölüm: ${r.atilan.join(", ")}.`] : []),
+    ...(r.std.length ? [`Formattaki standartlar türe bağlandı: ${r.std.join(", ")}.`] : [])].filter(Boolean) };
 }
 
 async function yzCagir(p: Parameters<typeof formatYzHazirla>[2]): Promise<FormatYzSonucu> {

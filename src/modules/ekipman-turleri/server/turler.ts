@@ -11,7 +11,7 @@ import { canDo, canDoEylem, duzey, type YetkiHesabi } from "../../../server/yetk
 import { kullanimMetni } from "../../../components/sil/metin.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { BAKANLIK_STANDARTLARI } from "../../../tanim/standartlar.ts";
-import { guncelStandartlar } from "../../dokumanlar/server/dokumanlar.ts";
+import { elleStandartlar, guncelStandartlar, standartTanimla } from "../../dokumanlar/server/dokumanlar.ts";
 import { cihazTuruOzetleri } from "../../olcum-cihazlari/server/cihazlar.ts";
 import { BaglantiGirdisi, TurGirdisi, turBransi } from "../sema.ts";
 
@@ -191,6 +191,8 @@ export async function baglantiSecenekleri(db: Sorgulayici, kim: Kisi): Promise<{
   const kut = await guncelStandartlar(db), var_ = new Set(kut.map((x) => x.no));
   const standartlar: StandartSecenegi[] = [...kut.map(({ no, konu, brans }) => ({ no, konu, brans, yuklu: true })),
     ...BAKANLIK_STANDARTLARI.filter((h) => !var_.has(h.no)).map(({ no, konu, brans }) => ({ no, konu, brans, yuklu: false }))];
+  /* 2026-10-26 (göç 0107): firmanın elle eklediği standartlar — kütüphanede ve Bakanlık listesinde olmayanlar */
+  for (const e of await elleStandartlar(db)) if (!standartlar.some((x) => x.no === e.no)) standartlar.push({ no: e.no, konu: e.konu, brans: e.brans, yuklu: false });
   return { standartlar: standartlar.sort((a, b) => a.no.localeCompare(b.no, "tr", { numeric: true })), cihazTurleri: await cihazTuruOzetleri(db) };
 }
 
@@ -202,7 +204,8 @@ export async function baglantiKaydet(db: Sorgulayici, kim: Kisi, id: string, sur
   const g = dogrula(BaglantiGirdisi, girdi);
   if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
   /* 440: kütüphanedeki güncel standart, Bakanlık listesindeki (henüz yüklenmemiş olabilir) ya da türde zaten seçili olan */
-  const nolar = new Set([...(await guncelStandartlar(db)).map((x) => x.no), ...BAKANLIK_STANDARTLARI.map((h) => h.no), ...mevcut.kontrol_std]);
+  const nolar = new Set([...(await guncelStandartlar(db)).map((x) => x.no), ...BAKANLIK_STANDARTLARI.map((h) => h.no), ...(await elleStandartlar(db)).map((x) => x.no),
+    ...mevcut.kontrol_std]);
   const turler = new Set((await cihazTuruOzetleri(db)).map((x) => x.id));
   if (g.veri.standartlar.some((n) => !nolar.has(n))) return { durum: "gecersiz", hatalar: { standartlar: "Standart kütüphanede yok." } };
   if (g.veri.cihazTurleri.some((c) => !turler.has(c))) return { durum: "gecersiz", hatalar: { cihazTurleri: "Cihaz türü bulunamadı." } };
@@ -215,6 +218,39 @@ export async function baglantiKaydet(db: Sorgulayici, kim: Kisi, id: string, sur
   const r = await guncelle(db, TUR, id, surum, { kontrol_std: g.veri.standartlar, cihaz_turleri: g.veri.cihazTurleri }, { kim: kim.ad, ne: "ekipman_turu.baglanti" });
   if (r.durum === "cakisma" || r.durum === "yok") return { durum: r.durum };
   return { durum: "tamam", id, surum: r.surum };
+}
+
+/** 2026-10-26 (reisim: "bu ekranda sadece dökümanlarda ekli olan standartlar gözüküyor burada el ile ekleme olmalı"): bağlantı penceresinde listede
+    olmayan standardı elle ekle — Dökümanlar'a "Yüklenmedi" olarak tanımlanır (branş türünkü); pencerede seçilir, Kaydet'le türe bağlanır */
+export async function standartElleEkle(db: Sorgulayici, kim: Kisi, turId: string, girdi: unknown): Promise<
+  { durum: "tamam"; secenek: StandartSecenegi } | { durum: "gecersiz"; hatalar: DogrulamaHatalari } | { durum: "yok" | "yetkisiz" }> {
+  if (!degistirir(kim)) return { durum: "yetkisiz" };
+  const t = UUID.test(turId) ? (await db.sorgu<{ brans: "m" | "e" }>("SELECT brans FROM ekipman_turu WHERE id = $1", [turId])).rows[0] : undefined;
+  if (!t) return { durum: "yok" };
+  const g = (girdi && typeof girdi === "object" ? girdi : {}) as Record<string, unknown>;
+  const r = await standartTanimla(db, kim, { no: g.no, konu: g.konu, brans: t.brans });
+  if (r.durum !== "tamam") return r;
+  const yuklu = (await guncelStandartlar(db)).some((x) => x.no === r.no);
+  return { durum: "tamam", secenek: { no: r.no, konu: r.konu, brans: r.brans, yuklu } };
+}
+
+/** 2026-10-26 (reisim: "PDF'ten şablon kurulunca formatta yazan standartlar da türe kendiliğinden eklenecek eğer standartlar kütüphanede yok ise el ile
+    ekleme yöntemi ile eklenecek otomatik olarak"): formatta geçen standartlar türün kontrol metoduna eklenir (var olanlar kalır, en çok 20); kütüphanede
+    ve Bakanlık listesinde olmayan elle eklenir. Türün bağlantısını değiştiremeyen kişide hiçbir şey yapılmaz. Dönen: türe yeni bağlanan numaralar. */
+export async function formatStandartlariniBagla(db: Sorgulayici, kim: Kisi, turId: string, liste: readonly { no: string; konu: string }[]): Promise<string[]> {
+  if (!degistirir(kim) || !liste.length || !UUID.test(turId)) return [];
+  const t = (await db.sorgu<{ brans: "m" | "e"; kontrol_std: string[]; surum: number }>(
+    "SELECT brans, kontrol_std, surum FROM ekipman_turu WHERE id = $1 FOR UPDATE", [turId])).rows[0];
+  if (!t) return [];
+  const yeni: string[] = [];
+  for (const s of liste) {
+    if (t.kontrol_std.length + yeni.length >= 20) break;
+    const r = await standartTanimla(db, kim, { no: s.no, konu: s.konu.length >= 2 ? s.konu : s.no, brans: t.brans });
+    if (r.durum === "tamam" && !t.kontrol_std.includes(r.no) && !yeni.includes(r.no)) yeni.push(r.no);
+  }
+  if (!yeni.length) return [];
+  const g = await guncelle(db, TUR, turId, t.surum, { kontrol_std: [...t.kontrol_std, ...yeni] }, { kim: kim.ad, ne: "ekipman_turu.format_standart" });
+  return g.durum === "tamam" ? yeni : [];
 }
 
 /** Dökümanlar için: standardı (numarayla) kontrol metodu olarak kullanan türler. Yetki ÇAĞIRANDA. */

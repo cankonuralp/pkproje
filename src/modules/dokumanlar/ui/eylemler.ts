@@ -4,7 +4,7 @@ import { refresh } from "next/cache";
 import { depo } from "../../../server/dosya/depo";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
-import { dokumanKaldir, dokumanKaydet, DosyaHatasi, standartKaldir, standartYukle, type Yazma } from "../server/dokumanlar";
+import { dokumanKaldir, dokumanKaydet, DosyaHatasi, elleStandartSil, standartKaldir, standartYukle, type Yazma } from "../server/dokumanlar";
 
 export interface PencereDurumu { tamam?: boolean; id?: string; guncel?: string | null; hatalar?: Record<string, string>; genel?: string }
 
@@ -41,6 +41,14 @@ export async function standartKaldirEylemi(id: string, surum: number): Promise<P
   const y = cevir(await oturumIslemi(o, (db) => standartKaldir(db, o, yazi(id), Number(surum))));
   if (y.tamam) refresh();   // 486: yukarıdaki not
   return y;
+}
+
+/** 2026-10-26 (göç 0107): elle eklenen standardı sil — kontrol metodu olarak seçen tür yoksa */
+export async function elleStandartSilEylemi(id: string): Promise<PencereDurumu> {
+  const o = await oturum(); if (typeof o === "string") return { genel: o };
+  const r = await oturumIslemi(o, (db) => elleStandartSil(db, o, yazi(id)));
+  if (r.durum === "tamam") { refresh(); return { tamam: true }; }
+  return { genel: r.durum === "red" ? r.neden : SONUC[r.durum] };
 }
 
 export async function dokumanKaydetEylemi(form: FormData): Promise<PencereDurumu> {

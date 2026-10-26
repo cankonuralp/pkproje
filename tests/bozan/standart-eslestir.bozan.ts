@@ -29,3 +29,14 @@ test("kriter belgesi atfı bölünürse belgenin adı ayrı atıf olur", async (
   const m = await bozuk("if (KRITER.test(s)) return [s];", "");
   assert.equal(m.atiflar("ZPKK02 · Elektrik İç Tesisatı Periyodik Kontrol Kriterleri").length, 2, "bozuk: iki atıf");
 });
+
+/* 2026-10-26 (formattaki standartlar türe bağlanır): 3. Önündeki harf denetimi kalkınca "PTS 45" standart sanılır — türe yanlış standart bağlanır.
+   4. Yıl atılmazsa "TS EN ISO 9927-1:2013" ayrı numara olur — kütüphanedeki "TS EN ISO 9927-1" ile eşleşmez, ikinci kez elle eklenir. */
+test("önündeki harf denetimi kalkınca sıradan yazı standart sanılır", async () => {
+  const m = await bozuk("const STD_ATIF = /(?<![A-ZÇĞİÖŞÜa-zçğıöşü0-9])(", "const STD_ATIF = /(");
+  assert.ok(m.metindenStandartlar(["Model PTS 45"]).some((x) => x.no === "TS 45"), "bozuk: PTS 45 standart sanıldı");
+});
+test("yıl atılmayınca numara kütüphanedekiyle eşleşmez", async () => {
+  const m = await bozuk("const no = `${x[1].replace(/ ?\\/ ?/g, \"/\").trim()} ${x[2]}`;", "const no = x[0].trim();");
+  assert.equal(m.metindenStandartlar(["TS EN ISO 9927-1:2013 Kreynler"])[0].no, "TS EN ISO 9927-1:2013", "bozuk: yıl numarada kaldı");
+});

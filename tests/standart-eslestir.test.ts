@@ -5,7 +5,7 @@
    Olumsuz kanıt: tests/bozan/standart-eslestir.bozan.ts. Pencere ve önce-sor akışı uçtan uca: e2e/saha-raporu.spec.ts. */
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { atiflar, kriterKodu, standartBul } from "../src/modules/dokumanlar/eslestir.ts";
+import { atiflar, kriterKodu, metindenStandartlar, standartBul } from "../src/modules/dokumanlar/eslestir.ts";
 import { SABLONLAR } from "../src/format/sablonlar.ts";
 import { formatKriterleri } from "../src/tanim/kriterler.ts";
 
@@ -33,4 +33,22 @@ test("formatın kriter belgeleri: Bakanlık form kodundan ve madde standardında
   assert.deepEqual(formatKriterleri(SABLONLAR.ZPKR02.tanim).map((x) => x.kod), ["ZPKK02"]);
   assert.deepEqual(formatKriterleri(SABLONLAR.ZPKR04.tanim).map((x) => x.kod), ["ZPKK04"]);
   assert.deepEqual(formatKriterleri(SABLONLAR.KOMPRESOR.tanim), []);
+});
+
+/* 2026-10-26 (reisim: "verilen formatta yazanlara göre standart ekleme", "PDF'ten şablon kurulunca formatta yazan standartlar da türe kendiliğinden
+   eklenecek"): basılı formun yazılarından standart numarası ve adı — yıl atılır, ad numaradan sonraki metin, numara tekil; ZPKK ve sıradan sayı
+   standart sanılmaz. Türe bağlanması: tests/tur-baglanti.test.ts. Olumsuz kanıt: tests/bozan/standart-eslestir.bozan.ts 3–4. */
+test("formdaki yazılardan standartlar: numara (yılsız) ve ad; tekil; ZPKK ve sıradan sayı değil", () => {
+  assert.deepEqual(metindenStandartlar([
+    "Kontrol metodu: TS EN 12817 LPG donanımı ve aksesuarları – muayene; TS EN ISO 9927-1:2013 Kreynler · TS 1446 Sıvılaştırılmış petrol gazları",
+    "Dayanak: TS HD 60364-6, EN 13445-5:2014+A1:2015 Alevle temas etmeyen basınçlı kaplar",
+    "ZPKK02 · Elektrik iç tesisatı; Seri no 12345; TS EN 12817",
+    "Model TSE 123 ve PTS 45",
+  ]), [
+    { no: "TS EN 12817", konu: "LPG donanımı ve aksesuarları – muayene" },
+    { no: "TS EN ISO 9927-1", konu: "Kreynler" },
+    { no: "TS 1446", konu: "Sıvılaştırılmış petrol gazları" },
+    { no: "TS HD 60364-6", konu: "" },
+    { no: "EN 13445-5", konu: "Alevle temas etmeyen basınçlı kaplar" },
+  ]);
 });

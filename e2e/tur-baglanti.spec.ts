@@ -1,6 +1,6 @@
 /* NEREDEN GELDİ: K2 Ekipman türü bağlantıları (2026-10-04) — maket ekipman-turleri.html yirmi dördüncü tur. Gerçek tarayıcıda, üç genişlikte:
    cihaz ekle (yeni cihaz türüyle) → tür ekle → tür sayfasında "Metot ve cihazlar" → cihaz türünü işaretle → "Kullanılacak ölçüm cihazları"nda
-   görünür · denetçi tür sayfasını görür, düzenleyemez. Her proje kendi uydurma türünü açar. */
+   görünür · 2026-10-26: listede olmayan standart pencerede elle eklenir, türe bağlanır · denetçi tür sayfasını görür, düzenleyemez. Her proje kendi uydurma türünü açar. */
 import { expect, test } from "@playwright/test";
 import { girisli, hazir } from "./yardimci";
 
@@ -38,9 +38,17 @@ test("tür bağlantısı: ölçüm cihazı türü seç; denetçi yalnız görür
   await page.getByRole("button", { name: "Metot ve cihazlar" }).click();
   const w = page.getByRole("dialog", { name: "Kontrol metodu ve ölçüm cihazları" });
   await w.getByRole("checkbox", { name: cihazTuru }).check();
+  /* 2026-10-26 (reisim: "bu ekranda sadece dökümanlarda ekli olan standartlar gözüküyor burada el ile ekleme olmalı"): listede olmayan standart
+     elle eklenir, seçili gelir, Kaydet'le türe bağlanır */
+  const std = `TS EN 9900${{ masaustu: 1, tablet: 2, telefon: 3 }[bilgi.project.name] ?? 4}`;
+  await w.getByLabel("Standart no").fill(std);
+  await w.getByLabel("Adı").fill("Deneme elle standart");
+  await w.getByRole("button", { name: "Standart ekle" }).click();
+  await expect(w.getByRole("checkbox", { name: new RegExp(std) })).toBeChecked({ timeout: 30_000 });
   await w.getByRole("button", { name: "Kaydet" }).click();
   await expect(page.getByText("Kontrol metodu ve ölçüm cihazları kaydedildi.")).toBeVisible({ timeout: 30_000 });
   await expect(page.getByRole("listitem").filter({ hasText: cihazTuru })).toBeVisible();
+  await expect(page.getByRole("listitem").filter({ hasText: std })).toBeVisible();
   const adres = page.url();
 
   await context.clearCookies();

@@ -20,14 +20,16 @@ import { AltSatir, DegerYok, Kod, Rozet, SayfaBasi, Sekmeler } from "../../../co
 import { Tus } from "../../../components/tus/Tus";
 import type { KriterBelgesi } from "../../../tanim/kriterler";
 import { BAKANLIK_STANDARTLARI } from "../../../tanim/standartlar";
-import type { DokumanSatiri, StandartSatiri } from "../server/dokumanlar";
-import { dokumanKaldirEylemi, standartKaldirEylemi } from "./eylemler";
+import type { DokumanSatiri, ElleStandart, StandartSatiri } from "../server/dokumanlar";
+import { SilTusu } from "../../../components/sil/SilTusu";
+import { dokumanKaldirEylemi, elleStandartSilEylemi, standartKaldirEylemi } from "./eylemler";
 import { DOKUMAN_SEKMELERI, tarihYaz } from "./ortak";
 import { DokumanPenceresi, StandartPenceresi } from "./Pencereler";
 import stil from "./dokumanlar.module.css";
 
 /** listenin satırı: kütüphanedeki sürüm (kayit) ya da kütüphanede güncel sürümü olmayan hazır Bakanlık standardı (kayit null) */
-interface StdSatir { anahtar: string; no: string; konu: string; kayit: StandartSatiri | null; formatlar: readonly string[] }
+/** elleId: firmanın elle eklediği, PDF'i henüz yüklenmemiş standart (göç 0107) — silinebilir */
+interface StdSatir { anahtar: string; no: string; konu: string; kayit: StandartSatiri | null; formatlar: readonly string[]; elleId?: string }
 
 function stdTanim(): SuzgecTanimi<StdSatir> {
   return {
@@ -40,19 +42,21 @@ function stdTanim(): SuzgecTanimi<StdSatir> {
   };
 }
 
-/** kütüphanenin sürümleri + kütüphanede güncel sürümü olmayan hazır Bakanlık standartları, branşıyla */
-function tumSatirlar(standartlar: StandartSatiri[]): (StdSatir & { brans: "m" | "e" })[] {
+/** kütüphanenin sürümleri + kütüphanede güncel sürümü olmayan hazır Bakanlık standartları ve elle eklenenler (2026-10-26), branşıyla */
+function tumSatirlar(standartlar: StandartSatiri[], elle: readonly ElleStandart[]): (StdSatir & { brans: "m" | "e" })[] {
   const guncel = new Set(standartlar.filter((x) => x.guncel).map((x) => x.no));
   const bakanlik = new Map(BAKANLIK_STANDARTLARI.map((h) => [h.no, h.formatlar]));
   return [
     ...standartlar.map((x) => ({ anahtar: x.id, no: x.no, konu: x.konu, kayit: x, formatlar: bakanlik.get(x.no) ?? [], brans: x.brans })),
     ...BAKANLIK_STANDARTLARI.filter((h) => !guncel.has(h.no)).map((h) => ({ anahtar: `hazir:${h.no}`, no: h.no, konu: h.konu, kayit: null, formatlar: h.formatlar, brans: h.brans })),
+    ...elle.filter((e) => !guncel.has(e.no) && !bakanlik.has(e.no))
+      .map((e) => ({ anahtar: `elle:${e.id}`, no: e.no, konu: e.konu, kayit: null, formatlar: [] as readonly string[], brans: e.brans, elleId: e.id })),
   ].sort((a, b) => a.no.localeCompare(b.no, "tr", { numeric: true }) || (b.kayit?.tarih ?? "").localeCompare(a.kayit?.tarih ?? ""));
 }
 const SEKME = { m: "/dokumanlar", e: "/dokumanlar?brans=e" } as const;
 
-export function StandartListesi({ standartlar, yaz, brans }: { standartlar: StandartSatiri[]; yaz: boolean; brans: "m" | "e" }) {
-  const tum = useMemo(() => tumSatirlar(standartlar), [standartlar]);
+export function StandartListesi({ standartlar, elle = [], yaz, brans }: { standartlar: StandartSatiri[]; elle?: readonly ElleStandart[]; yaz: boolean; brans: "m" | "e" }) {
+  const tum = useMemo(() => tumSatirlar(standartlar, elle), [standartlar, elle]);
   /* sekmedeki sayı: güncel sürümler ve yüklenecekler (Görünüm'ün başlangıcı) */
   const sayi = (b: "m" | "e") => tum.filter((x) => x.brans === b && (!x.kayit || x.kayit.guncel)).length;
   const satirlar = useMemo(() => tum.filter((x) => x.brans === brans), [tum, brans]);
@@ -72,7 +76,8 @@ export function StandartListesi({ standartlar, yaz, brans }: { standartlar: Stan
       : <span><Rozet tur="notr">Önceki sürüm</Rozet><AltSatir>{tarihYaz(x.kayit.bitti)} tarihine kadar</AltSatir></span> },
     { k: "eylem", genislik: "10%", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: (x) => x.kayit
       ? <DosyaAcTusu dosyaId={x.kayit.dosyaId} etiket={`${x.no}:${x.kayit.surumAdi} · Görüntüle`}>Görüntüle</DosyaAcTusu>
-      : yaz ? <Tus tur="ikincil" ikon="upload" aria-label={`${x.no} · Yükle`} onClick={() => setPencere({ no: x.no, konu: x.konu, brans })}>Yükle</Tus> : null },
+      : yaz ? <span className={stil.tuslar}><Tus tur="ikincil" ikon="upload" aria-label={`${x.no} · Yükle`} onClick={() => setPencere({ no: x.no, konu: x.konu, brans })}>Yükle</Tus>
+        {x.elleId && <SilTusu kucuk ad={x.no} baslik="Standardı sil" erisimAdi={`${x.no} · Sil`} sil={() => elleStandartSilEylemi(x.elleId!)} />}</span> : null },
   ];
   return (
     <>

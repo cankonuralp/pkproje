@@ -7,10 +7,12 @@ import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { ekle, guncelle, tablo } from "../../../server/db/yazici.ts";
 import type { Depo } from "../../../server/dosya/depo.ts";
 import { dosyaYukle } from "../../../server/dosya/dosya.ts";
-import { duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
+import { canDoEylem, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
+import { kesinSil } from "../../../server/db/silici.ts";
+import { kullanimMetni } from "../../../components/sil/metin.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { BAKANLIK_STANDARTLARI } from "../../../tanim/standartlar.ts";
-import { DokumanGirdisi, StandartGirdisi } from "../sema.ts";
+import { DokumanGirdisi, StandartGirdisi, StandartTanimGirdisi } from "../sema.ts";
 import type { StandartOzeti } from "../eslestir.ts";
 
 const MODUL = 4;
@@ -167,4 +169,42 @@ export async function standartDosyasiGorulur(db: Sorgulayici, kisi: YetkiHesabi,
 export async function dokumanDosyasiGorulur(db: Sorgulayici, kisi: YetkiHesabi, kayitId: string): Promise<boolean> {
   if (!gorur(kisi) || !UUID.test(kayitId)) return false;
   return !!(await db.sorgu("SELECT 1 FROM dokuman WHERE id = $1 AND kaldirildi IS NULL", [kayitId])).rowCount;
+}
+
+/* ── ELLE EKLENEN STANDARTLAR (2026-10-26, göç 0107 — reisim: "standartları belirlerken el ile ekle olmalı", "kütüphanede yok ise el ile ekleme
+   yöntemi ile eklenecek otomatik olarak"): PDF'i henüz kütüphanede olmayan standart — numara, ad, branş. Bakanlık listesindeki hazır standart gibi:
+   türün kontrol metoduna seçilir, Standartlar'da "Yüklenmedi" satırı olur. ── */
+const TANIM = tablo({ ad: "standart_tanim", sutunlar: ["no", "konu", "brans", "ekleyen"] });
+export interface ElleStandart { id: string; no: string; konu: string; brans: "m" | "e" }
+
+/** firmanın elle eklediği standartlar. Yetki ÇAĞIRANDA. */
+export async function elleStandartlar(db: Sorgulayici): Promise<ElleStandart[]> {
+  return (await db.sorgu<ElleStandart>("SELECT id::text, no, konu, brans FROM standart_tanim")).rows
+    .sort((a, b) => a.no.localeCompare(b.no, "tr", { numeric: true }));
+}
+
+/** standardı tanımla: numara kütüphanede (güncel), Bakanlık listesinde ya da zaten elle eklenmişse olduğu gibi döner (yeni: false); yoksa elle
+    eklenir. Branş verilmezse "m". Yetki ÇAĞIRANDA (Ekipman türleri — türün bağlantısını değiştiren; rapor formatı — şablonu kuran). */
+export async function standartTanimla(db: Sorgulayici, kim: { ad: string }, girdi: unknown): Promise<
+  { durum: "tamam"; no: string; konu: string; brans: "m" | "e"; yeni: boolean } | { durum: "gecersiz"; hatalar: DogrulamaHatalari }> {
+  const g = dogrula(StandartTanimGirdisi, girdi);
+  if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
+  const v = g.veri;
+  const kut = (await guncelStandartlar(db)).find((x) => x.no === v.no);
+  if (kut) return { durum: "tamam", no: kut.no, konu: kut.konu, brans: kut.brans, yeni: false };
+  const bak = BAKANLIK_STANDARTLARI.find((h) => h.no === v.no);
+  if (bak) return { durum: "tamam", no: bak.no, konu: bak.konu, brans: bak.brans, yeni: false };
+  const var_ = (await db.sorgu<ElleStandart>("SELECT id::text, no, konu, brans FROM standart_tanim WHERE no = $1", [v.no])).rows[0];
+  if (var_) return { durum: "tamam", no: var_.no, konu: var_.konu, brans: var_.brans, yeni: false };
+  const brans = v.brans ?? "m";
+  await ekle(db, TANIM, { no: v.no, konu: v.konu, brans, ekleyen: kim.ad }, { kim: kim.ad, ne: "standart_tanim.ekle" });
+  return { durum: "tamam", no: v.no, konu: v.konu, brans, yeni: true };
+}
+
+/** elle eklenen standardı kesin sil (kontrol metodu olarak seçen tür yoksa; yalnız yönetici — kayit_sil) */
+export async function elleStandartSil(db: Sorgulayici, kim: Kisi, id: string): Promise<{ durum: "tamam"; ad: string } | { durum: "yok" | "yetkisiz" } | { durum: "red"; neden: string }> {
+  if (!degistirir(kim) || !canDoEylem(kim, "kayit_sil", { modul: MODUL })) return { durum: "yetkisiz" };
+  const r = await kesinSil(db, "standart_tanim", id, kim.ad);
+  if (r.durum === "kullanildi") return { durum: "red", neden: `Standart silinemez: ${kullanimMetni(r.kullanim)} seçili.` };
+  return r;
 }

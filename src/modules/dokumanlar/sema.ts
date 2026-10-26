@@ -17,6 +17,8 @@ export const StandartGirdisi = z.object({
   brans: z.preprocess((s) => (s === "" || s === null ? undefined : s), z.enum(["m", "e"], { error: "Branş seçilmeli." }).optional()),
 });
 export type StandartGirdisi = z.output<typeof StandartGirdisi>;
+/** 2026-10-26 (göç 0107): elle eklenen standart — numara ve ad (sürüm ve PDF yok; PDF'i Dökümanlar › Standartlar'dan yüklenir) */
+export const StandartTanimGirdisi = StandartGirdisi.pick({ no: true, konu: true, brans: true });
 
 export const DokumanGirdisi = z.object({
   ad: z.preprocess(bos, z.string({ error: "Döküman adı yazılmalı." }).min(2, "Döküman adı yazılmalı.").max(100, "En çok 100 karakter.")),

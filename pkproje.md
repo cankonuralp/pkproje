@@ -2527,6 +2527,15 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-26 (CI bekliyor; göç 0107): **STANDARTLAR: PENCEREDE ELLE EKLEME + PDF'TEKİ STANDARTLAR TÜRE KENDİLİĞİNDEN** — reisim: *"verilen formatta yazanlara göre
+  standart ekleme, standartları belirlerken el ile ekle olmalı"*, *"bu ekranda sadece dökümanlarda ekli olan standartlar gözüküyor burada el ile ekleme olmalı"*,
+  *"PDF'ten şablon kurulunca formatta yazan standartlar da türe kendiliğinden eklenecek eğer standartlar kütüphanede yok ise el ile ekleme yöntemi ile eklenecek
+  otomatik olarak"*. Göç 0107 standart_tanim (firmanın elle eklediği standart: no, ad, branş; değişmez; standart_tanim_sil — kontrol metodu olarak seçen tür
+  yoksa). Ekipman türü › Metot ve cihazlar penceresinde "Listede olmayan standart" (no + ad → Standart ekle; seçili gelir, Kaydet'le türe bağlanır).
+  Dökümanlar › Standartlar'da elle eklenen "Yüklenmedi" satırı (Yükle · Sil). PDF'ten şablon kurulunca formun yazılarındaki standartlar
+  (dokumanlar/eslestir.ts metindenStandartlar — yıl atılır, ad numaradan sonraki metin) türe bağlanır; kütüphanede ve Bakanlık listesinde olmayan elle
+  eklenir (ekipman-turleri formatStandartlariniBagla; bildirimde "Formattaki standartlar türe bağlandı"). Kilit tests/tur-baglanti (PG), standart-eslestir +
+  bozan, e2e tur-baglanti. Sahada denenmedi.
 - 2026-10-26 (YAYINDA — main 3a550597; CI 17/17 yeşil, 18 dk): **S.A.Y ASİSTAN FAZ 2 — SÜRÜKLE-BIRAK, TOPLU / ZIP, KENDİLİĞİNDEN EKİPMAN + KOD, PDF'TEN ŞABLON** — reisim: *"sürükleyerek dosya
   bırakmakta olsun toplu dosya yüklemekte zip vs de okusun … zip i atayım içerideki raporları incele ve ilgili raporları oluştur diyince direk oluşturup ne
   yaptığını özet geçsin"*, *"rapor oluşturturken ekipman ekleme işini kendisi otomatik yapabilsin, ekipman konumunu verilen donelerden kendisi anlayacak, kodu

@@ -108,6 +108,11 @@ export const SILINEBILIR = {
     kullanim: "format_parca_kullanim", sil: "format_parca_sil",
     fk: { kullanim: [], birlikte: [] },
   },
+  /* 2026-10-26: firmanın elle eklediği standart (0107) — kontrol metodu olarak seçen tür varsa silinmez (dizi; yabancı anahtar yok) */
+  standart_tanim: {
+    kullanim: "standart_tanim_kullanim", sil: "standart_tanim_sil",
+    fk: { kullanim: [], birlikte: [] },
+  },
 } as const satisfies Record<string, { kullanim: string; sil: string; fk: { kullanim: readonly string[]; birlikte: readonly string[] } }>;
 export type SilinebilirTur = keyof typeof SILINEBILIR;
 

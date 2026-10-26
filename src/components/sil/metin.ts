@@ -27,6 +27,7 @@ const YER: Record<string, string> = {
   kopya: "teklif kopyasında",
   imzali_surum: "imzalı rapor sürümünde",
   saha_formu: "saha formunda",
+  ekipman_turu: "ekipman türünün kontrol metodunda",
 };
 
 export function kullanimMetni(k: Readonly<Record<string, number>>): string {

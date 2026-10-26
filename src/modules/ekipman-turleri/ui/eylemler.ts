@@ -5,7 +5,7 @@ import { depo } from "../../../server/dosya/depo";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { yeniTureFormat } from "../../rapor-format/server/formatlar";
-import { baglantiKaydet, formatKaldir, formatYukle, turKaydet, turSil } from "../server/turler";
+import { baglantiKaydet, formatKaldir, formatYukle, standartElleEkle, turKaydet, turSil, type StandartSecenegi } from "../server/turler";
 
 export interface PencereDurumu { tamam?: boolean; id?: string; sira?: number; hatalar?: Record<string, string>; genel?: string }
 
@@ -73,4 +73,13 @@ export async function turSilEylemi(turId: string): Promise<PencereDurumu> {
   const o = await oturum(); if (typeof o === "string") return { genel: o };
   const r = await oturumIslemi(o, (db) => turSil(db, o, String(turId)));
   return r.durum === "tamam" ? { tamam: true } : r.durum === "red" ? { genel: r.neden } : { genel: SONUC[r.durum] };
+}
+
+/** 2026-10-26: bağlantı penceresinde listede olmayan standardı elle ekle (no + ad) — Dökümanlar'a "Yüklenmedi" olarak tanımlanır */
+export async function standartElleEkleEylemi(turId: string, girdi: unknown): Promise<PencereDurumu & { secenek?: StandartSecenegi }> {
+  const o = await oturum(); if (typeof o === "string") return { genel: o };
+  const r = await oturumIslemi(o, (db) => standartElleEkle(db, o, typeof turId === "string" ? turId : "", girdi));
+  if (r.durum === "tamam") return { tamam: true, secenek: r.secenek };
+  if (r.durum === "gecersiz") return { hatalar: r.hatalar };
+  return { genel: SONUC[r.durum] };
 }
