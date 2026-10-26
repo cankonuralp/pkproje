@@ -2527,7 +2527,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
-- 2026-10-26 (CI bekliyor; göç 0108): **TAKİP MUAYENESİ** — reisim: *"birisi daha önce muayene yapmışsa ve o muayeneye başka bir denetçi gidecekse onun için takip
+- 2026-10-26 (YAYINDA — main 81ee424a; CI 17/17 yeşil; göç 0108 Supabase'te): **TAKİP MUAYENESİ** — reisim: *"birisi daha önce muayene yapmışsa ve o muayeneye başka bir denetçi gidecekse onun için takip
   muayenesi açılabilmeli önceki metinler gelmeli"*; maket + dört karar onaylı (*"Takip muayenesi maketi ve kararlar uygun, başla"*). Plan içinde açık uygunsuzluğu
   olan son imzalı raporu bulunan ekipmanın satırında "Takip muayenesi aç" (raporlu ekipmanda da; ekipteki uzman, Rapor oluştur'la aynı kapı; bağlantı gerekir).
   Numara ana + -T1 (takibin takibi ilk numaradan -T2; revizyon …-T1-R1). İçerik ana raporun imzalı sürümünden; aynı planda da açılır (göç 0108: rapor.takip_kaynak,
