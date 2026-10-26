@@ -9,7 +9,7 @@
    çeviri ARADA, veritabanı işleminin DIŞINDA (eylem: ui/eylemler.ts basilidanKurEylemi) — işlemci işi bağlantıyı açık tutmaz (işlemde boşta
    bekleme sınırı). */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
-import { basiliSurumVar, formatStandartlariniBagla, turOzeti } from "../../ekipman-turleri/server/turler.ts";
+import { basiliSurumVar, standartlariTureBagla, turOzeti } from "../../ekipman-turleri/server/turler.ts";
 import { metindenStandartlar } from "../../dokumanlar/eslestir.ts";
 import type { BasiliCeviri } from "../basili.ts";
 import { formatDegistirir, taslakYaz, type Kisi } from "./formatlar.ts";
@@ -34,7 +34,7 @@ export async function basiliStandartlari(db: Sorgulayici, kim: Kisi, turId: stri
     if (x && typeof x === "object") for (const y of Object.values(x)) topla(y, derin + 1);
   };
   topla(ham, 0);
-  return formatStandartlariniBagla(db, kim, turId, metindenStandartlar(metinler));
+  return standartlariTureBagla(db, kim, turId, metindenStandartlar(metinler));
 }
 
 /** çeviriden önce: yetki, tür ve sira (okunan basılı format PDF'inin sürümü) türün yüklü, kaldırılmamış sürümlerinden biri mi */

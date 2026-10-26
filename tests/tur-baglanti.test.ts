@@ -10,7 +10,7 @@ import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde, type Havuz } from "../src/server/db/kiraci.ts";
 import { klasorDepo } from "../src/server/dosya/depo.ts";
 import { elleStandartlar, elleStandartSil, standartYukle } from "../src/modules/dokumanlar/server/dokumanlar.ts";
-import { baglantiKaydet, baglantiSecenekleri, formatStandartlariniBagla, standardiKullananTurler, standartElleEkle, turKaydet, turKarti, type Kisi } from "../src/modules/ekipman-turleri/server/turler.ts";
+import { baglantiKaydet, baglantiSecenekleri, standartlariTureBagla, standardiKullananTurler, standartElleEkle, turKaydet, turKarti, type Kisi } from "../src/modules/ekipman-turleri/server/turler.ts";
 import { cihazKaydet } from "../src/modules/olcum-cihazlari/server/cihazlar.ts";
 import { BAKANLIK_STANDARTLARI } from "../src/tanim/standartlar.ts";
 import { testKumesi } from "./yardimci/kume.ts";
@@ -125,10 +125,10 @@ test("elle standart: listede olmayan eklenir (türün branşıyla), seçeneklerd
 test("formattaki standartlar türe bağlanır: kütüphanedeki ve Bakanlık'taki olduğu gibi, olmayan elle eklenir (adı yoksa numarası); var olan kalır; yetkisiz kişide hiçbir şey", async () => {
   const bak = BAKANLIK_STANDARTLARI[0];
   const once = (await a((db) => turKarti(db, YON, tur)))!.standartlar.map((x) => x.no);
-  assert.deepEqual(await a((db) => formatStandartlariniBagla(db, DENETCI, tur, [{ no: "TS EN 77777", konu: "" }])), []);
-  const yeni = await a((db) => formatStandartlariniBagla(db, YON, tur, [{ no: "TS EN 280", konu: "" }, { no: bak.no, konu: "" }, { no: "TS EN 77777", konu: "" }, { no: "TS EN 77777", konu: "x" }]));
+  assert.deepEqual(await a((db) => standartlariTureBagla(db, DENETCI, tur, [{ no: "TS EN 77777", konu: "" }])), []);
+  const yeni = await a((db) => standartlariTureBagla(db, YON, tur, [{ no: "TS EN 280", konu: "" }, { no: bak.no, konu: "" }, { no: "TS EN 77777", konu: "" }, { no: "TS EN 77777", konu: "x" }]));
   assert.deepEqual(yeni, ["TS EN 280", bak.no, "TS EN 77777"].filter((n) => !once.includes(n)));
   assert.deepEqual((await a((db) => turKarti(db, YON, tur)))!.standartlar.map((x) => x.no), [...once, ...yeni]);
   assert.deepEqual((await a((db) => elleStandartlar(db))).map((x) => [x.no, x.konu]), [["TS EN 77777", "TS EN 77777"]]);
-  assert.deepEqual(await a((db) => formatStandartlariniBagla(db, YON, tur, [{ no: "TS EN 77777", konu: "" }])), [], "ikinci kez bağlanmaz");
+  assert.deepEqual(await a((db) => standartlariTureBagla(db, YON, tur, [{ no: "TS EN 77777", konu: "" }])), [], "ikinci kez bağlanmaz");
 });

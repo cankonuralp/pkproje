@@ -237,7 +237,7 @@ export async function standartElleEkle(db: Sorgulayici, kim: Kisi, turId: string
 /** 2026-10-26 (reisim: "PDF'ten şablon kurulunca formatta yazan standartlar da türe kendiliğinden eklenecek eğer standartlar kütüphanede yok ise el ile
     ekleme yöntemi ile eklenecek otomatik olarak"): formatta geçen standartlar türün kontrol metoduna eklenir (var olanlar kalır, en çok 20); kütüphanede
     ve Bakanlık listesinde olmayan elle eklenir. Türün bağlantısını değiştiremeyen kişide hiçbir şey yapılmaz. Dönen: türe yeni bağlanan numaralar. */
-export async function formatStandartlariniBagla(db: Sorgulayici, kim: Kisi, turId: string, liste: readonly { no: string; konu: string }[]): Promise<string[]> {
+export async function standartlariTureBagla(db: Sorgulayici, kim: Kisi, turId: string, liste: readonly { no: string; konu: string }[]): Promise<string[]> {
   if (!degistirir(kim) || !liste.length || !UUID.test(turId)) return [];
   const t = (await db.sorgu<{ brans: "m" | "e"; kontrol_std: string[]; surum: number }>(
     "SELECT brans, kontrol_std, surum FROM ekipman_turu WHERE id = $1 FOR UPDATE", [turId])).rows[0];

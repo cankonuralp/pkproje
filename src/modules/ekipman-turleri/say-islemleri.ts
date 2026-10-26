@@ -2,13 +2,14 @@
    modülün VAR OLAN işlevini oturumdaki kişiyle çağırır — Ekipman türleri ekranıyla aynı yetki ve kural (katalog: görebilen; ekle / düzenle: "yaz"
    düzeyi, kod 2–3 harf firmada eşsiz ve değişmez, branş Ek-III grubundan; sil: hiç kullanılmamış tür, yönetici). Girdi modülün şemasından
    (TurGirdisi); düzenlemede verilmeyen alan kartın değeriyle. Rapor formatı ve hazır şablondan tür: src/modules/rapor-format/say-islemleri.ts.
-   Rapor formatı PDF'i yükleme dosya ister — ekrandan. */
+   Rapor formatı PDF'i yükleme dosya ister — ekrandan (S.A.Y'da format_pdf_kur ekran aracı). */
 import { kimlik, surum, z } from "../../sema/ortak.ts";
 import { SuzgecDurumuSemasi } from "../../server/liste/liste.ts";
 import { GORUNMEZ, islem, sayfala, trIcerir, yazmaCevabi, type Islem } from "../../server/yz/islem.ts";
-import { GRUPLAR, TurGirdisi } from "./sema.ts";
+import { BaglantiGirdisi, GRUPLAR, TurGirdisi } from "./sema.ts";
+import { StandartTanimGirdisi } from "../dokumanlar/sema.ts";
 import { yeniTureFormat } from "../rapor-format/server/formatlar.ts";
-import { turKarti, turKaydet, turListesi, turSil } from "./server/turler.ts";
+import { baglantiKaydet, baglantiSecenekleri, standartlariTureBagla, turKarti, turKaydet, turListesi, turSil } from "./server/turler.ts";
 
 const MODUL = 5;
 const ALAN = ["ad", "kod", "grup", "brans", "periyot", "sure"] as const;
@@ -50,6 +51,37 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
       const r = await turKaydet(b.db, b.kim, v.tur, v.surum, g);
       if (r.durum === "tamam" && !v.tur) await yeniTureFormat(b.db, b.kim, r.id);
       return yazmaCevabi(r, { bildirim: v.tur ? "Tür güncellendi." : "Tür eklendi; Ek-III grubuna göre hazır rapor formatı yayında." });
+    },
+  }),
+  /* 2026-10-26 (S.A.Y Faz 3 — reisim'in listesi m.10: "standart ve ölçüm cihazı türlerini bağlatma"): Metot ve cihazlar penceresinin işleri */
+  islem({
+    ad: "tur_baglanti_secenekleri", modul: MODUL, tur: "oku", girdi: z.object({ tur: kimlik.optional() }), kaynak: [kimlik], islev: baglantiSecenekleri,
+    tarif: "Kontrol metodu olarak seçilebilen standartlar (no, ad, branş, PDF'i kütüphanede mi) ve firmanın ölçüm cihazı türleri (kimlik, ad); tur verilirse "
+      + "türün şu anki seçimi ve sürümü.",
+    calistir: async (b, v) => {
+      const s = await baglantiSecenekleri(b.db, b.kim);
+      if (!s) return { tamam: false, neden: "Bu kullanıcı türün bağlantılarını değiştiremiyor." };
+      const t = v.tur ? await turKarti(b.db, b.kim, v.tur) : null;
+      return { tamam: true, sonuc: { ...s, ...(t ? { tur: { surum: t.surum, standartlar: t.standartlar.map((x) => x.no), cihazTurleri: t.cihazTurleri.map((x) => x.id) } } : {}) } };
+    },
+  }),
+  islem({
+    ad: "tur_baglanti_kaydet", modul: MODUL, tur: "yaz", islev: baglantiKaydet, kaynak: [BaglantiGirdisi, kimlik, surum],
+    girdi: z.object({ tur: kimlik, surum, standartlar: BaglantiGirdisi.shape.standartlar, cihazTurleri: BaglantiGirdisi.shape.cihazTurleri }),
+    tarif: "Türün kontrol metodu standartlarını (numaralar) ve kullanılacak ölçüm cihazı türlerini (kimlikler) kaydeder — listenin TAMAMI yazılır; surum "
+      + "türün sürümü (tur_getir). Listede olmayan standart önce tur_standart_ekle ile.",
+    calistir: async (b, v, ham) => yazmaCevabi(await baglantiKaydet(b.db, b.kim, v.tur, v.surum, { standartlar: ham.standartlar, cihazTurleri: ham.cihazTurleri }),
+      { bildirim: "Kontrol metodu ve ölçüm cihazları kaydedildi." }),
+  }),
+  islem({
+    ad: "tur_standart_ekle", modul: MODUL, tur: "yaz", islev: standartlariTureBagla, kaynak: [StandartTanimGirdisi, kimlik],
+    girdi: z.object({ tur: kimlik, standartlar: z.array(StandartTanimGirdisi).min(1).max(20) }),
+    tarif: "Standartları türün kontrol metoduna ekler (var olanlar kalır): standartlar [{ no, konu (adı) }] — kütüphanede ve Bakanlık listesinde olmayan "
+      + "Dökümanlar'a elle eklenir (PDF'i sonra yüklenir).",
+    calistir: async (b, v, ham) => {
+      if (!(await baglantiSecenekleri(b.db, b.kim))) return { tamam: false, neden: "Bu kullanıcı türün bağlantılarını değiştiremiyor." };
+      const yeni = await standartlariTureBagla(b.db, b.kim, v.tur, ham.standartlar.map((x) => ({ no: String(x.no ?? ""), konu: String(x.konu ?? "") })));
+      return { tamam: true, bildirim: yeni.length ? `Türe bağlandı: ${yeni.join(", ")}.` : "Yeni bağlanan standart yok (zaten bağlı).", sonuc: { baglanan: yeni } };
     },
   }),
   islem({

@@ -2527,6 +2527,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-26 (CI bekliyor): **S.A.Y ASİSTAN FAZ 3 — EĞİTİM: SIK İŞLER + DENEME SETİ** — reisim: *"eğitmemiz gerekli kast ettiğim şeyi iyi anlamıyor"*, *"ben clauda
+  ne desem anlıyor"* + Claude'u kullanma biçiminin 14 maddelik özeti. Talimata "Sık işler" (söz → araç / işlem: etiketten / eski rapordan okuma, ekipman kaydı,
+  planın raporlarını toplu açıp doldurma, kontrol saatleri ve sonraki kontrol, varsayılan / boş seçim, mükerrer ayıklama, toplu onaya gönderme ve yayılan
+  yanlış bilgi, Word formu → PDF → format_pdf_kur, standart / cihaz türü bağlama, notları istek listesine çevirme); notlar konu içinde. Eksik işlemler
+  kataloğa: tur_baglanti_secenekleri, tur_baglanti_kaydet, tur_standart_ekle (14'lük listenin 10. maddesi). Deneme seti tests/say-faz3 (12 cümle: aracı
+  var mı, talimat anlatıyor mu) + bozan. Listenin 11–12. maddeleri (kod inceletme, kodlama asistanına prompt) uygulamanın işi değil — PC'deki Claude'un.
+  Modelin gerçek cevabı sahada denenecek.
 - 2026-10-26 (CI bekliyor; göç 0107): **STANDARTLAR: PENCEREDE ELLE EKLEME + PDF'TEKİ STANDARTLAR TÜRE KENDİLİĞİNDEN** — reisim: *"verilen formatta yazanlara göre
   standart ekleme, standartları belirlerken el ile ekle olmalı"*, *"bu ekranda sadece dökümanlarda ekli olan standartlar gözüküyor burada el ile ekleme olmalı"*,
   *"PDF'ten şablon kurulunca formatta yazan standartlar da türe kendiliğinden eklenecek eğer standartlar kütüphanede yok ise el ile ekleme yöntemi ile eklenecek
