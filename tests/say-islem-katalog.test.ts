@@ -67,9 +67,11 @@ test("katalog: adlar tekil ve biçimli, tarif tek satır, tür oku / yaz, JSON �
     const s = islemSemasi(t);
     assert.equal(s.type ?? (s.allOf || s.oneOf || s.anyOf ? "object" : undefined), "object", `${t.ad}: girdi nesne`);
     assert.equal(s.$schema, undefined);
-    assert.ok(ISLEM_DIZINI.includes(`- ${t.ad} (${t.tur}): ${t.tarif}`), `${t.ad} dizinde`);
+    assert.ok(ISLEM_DIZINI.split("\n").some((s) => s.slice(s.indexOf(": ") + 2).split(", ").includes(t.ad)), `${t.ad} dizinde`);
   }
   assert.equal(katalogDizini(ISLEM_KATALOGU, modulAdi), ISLEM_DIZINI, "her çağrıda aynı metin");
+  /* 2026-10-26: dizinde yalnız adlar (tarif ve şema islemler aracıyla) — talimat küçük model için kısa */
+  assert.ok(ISLEM_DIZINI.length < 6000, `dizin kısa: ${ISLEM_DIZINI.length}`);
   for (const ad of ["Planlar:", "Raporlar:", "Müşteriler:", "Teklifler:", "Onaylar:"]) assert.ok(ISLEM_DIZINI.includes(ad), ad);
   /* 2026-10-16 (2. adım b): kalan modüller (ve Ana sayfa) — modül adıyla, "Modül N" değil */
   for (const ad of ["Ana sayfa:", "Uyarılar:", "Sözleşmeler:", "Ölçüm cihazları:", "Zimmetler:", "Araçlar:", "Personel:", "Talepler:", "Muhasebe:", "Performans:",

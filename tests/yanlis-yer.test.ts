@@ -9,6 +9,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { sanalBolumler } from "../src/format/tablo.ts";
 import { kilitliKunye } from "../src/format/kunye.ts";
+import { formYerlesimi } from "../src/modules/say/rapor-haritasi.ts";
 import type { BolumOf } from "../src/format/tanim.ts";
 
 export const TABLO: BolumOf<"tablo"> = {
@@ -40,4 +41,27 @@ test("künye kilidi: firmanın kendi (serbest) formatında yok, Bakanlık düzen
   assert.deepEqual([...kilitliKunye({ gorunum: { serbest: true } } as never)], []);
   assert.deepEqual([...kilitliKunye({ gorunum: {} } as never)].sort(), ["isg", "sgk"]);
   assert.deepEqual([...kilitliKunye({ gorunum: { serbest: true, kilitli: ["sgk"] } } as never)], ["sgk"]);
+});
+
+/* 2026-10-26 (reisim: "yapay zeka bir insan gibi bakınca neyi nereye yazması gerektiğini anlamalı"): S.A.Y'ın haritasında formun yerleşimi — satır
+   satır, hücreler soldan sağa; tankın markası [e:marka] "TANK BİLGİLERİ" sütununda, basınç kaynağınınki [a:k_c2] yanında */
+test("formun yerleşimi: satır satır, grup başlıkları ve yerler formdaki sırayla", () => {
+  const l = formYerlesimi({ bolumler: [TABLO] } as never);
+  assert.ok(l.includes("- TANK BİLGİLERİ │ BASINÇ KAYNAĞI BİLGİLERİ"), l.join("\n"));
+  assert.ok(l.includes("- Marka │ [e:marka] │ Marka │ [a:k_c2]"), l.join("\n"));
+  assert.ok(l.includes("- Seri no │ [e:seri] │ Kapasite │ [a:k_c3]"), l.join("\n"));
+  assert.deepEqual(formYerlesimi({ bolumler: [] } as never), [], "tablosuz formatta yerleşim yok");
+});
+
+test("formun yerleşimi değerleriyle: S.A.Y yazdıktan sonra hangi değerin hangi grubun altında olduğunu okur", () => {
+  const d: Record<string, string> = { "e:marka": "Aydın Trafo", "a:k_c2": "" };
+  const l = formYerlesimi({ bolumler: [TABLO] } as never, (y) => d[y] ?? "");
+  assert.ok(l.includes("- Marka │ [e:marka = Aydın Trafo] │ Marka │ [a:k_c2 = —]"), l.join("\n"));
+});
+
+export const talimatDenetimli = (t: string) => t.includes("Denetim: rapora yazdıktan sonra") && t.includes("Örnek iş:") && t.includes("e:marka = Aydın Trafo");
+test("talimat: denetim adımı ve örnek iş (etiket tankın yerine, basınç kaynağı boş)", async () => {
+  const { saySistemi } = await import("../src/server/yz/say.ts");
+  const t = saySistemi([], "");
+  assert.ok(talimatDenetimli(t), "denetim ve örnek talimatta");
 });

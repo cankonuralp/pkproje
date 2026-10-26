@@ -94,7 +94,7 @@ export async function sayBaglami(db: Sorgulayici, kim: Kisi, e: SayEkrani): Prom
   const c = e.canli;
   if (c && UUID.test(c.id) && acik?.yazilabilir && sayfa.modul === 14 && e.yol.split(/[?#]/)[0] === `/raporlar/${c.id}`) {
     const b = await raporSayBilgisi(db, kim, c.id);
-    rapor = b ? raporHaritasi(b.tanim, b.turAd, { cevaplar: c.cevaplar, ekipman: c.ekipman ?? {}, tarih: c.tarih, cihazlar: c.cihazlar }, { tumu: true }) : null;
+    rapor = b ? raporHaritasi(b.tanim, b.turAd, { cevaplar: c.cevaplar, ekipman: c.ekipman ?? {}, tarih: c.tarih, cihazlar: c.cihazlar }, { tumu: true, ham: b.ham }) : null;
     if (rapor) raporId = c.id;
   }
   let format: string | null = null, formatId: string | null = null;

@@ -2527,6 +2527,15 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-26 (CI bekliyor): **S.A.Y'I HAIKU'DA EĞİTME — SADE TALİMAT, FORMUN YERLEŞİMİ, DENETİM, ÖRNEK İŞ, ARAÇ SÜRTÜNMELERİ** — reisim: *"ben haiku kullandığımda daha
+  iyi sonuçlar alabiliyorum claude içerisinde … bu paralar çok pahalı haikuyu eğitmemiz lazım"*, *"yapay zeka bir insan gibi bakınca neyi nereye yazması gerektiğini
+  anlamalı"*; *"Uygun, altı adımla Haiku'yu eğitmeye başla; sırayı sen belirle"*. Model Haiku 5.5'te kalır. (1) Talimat 31 000 → ~10 500 karakter: işlem dizini
+  yalnız adlar (148 işlemin tarifi çıktı; tarif ve şema islemler aracıyla — server/yz/islem.ts katalogDizini). (2) Haritada "Formun yerleşimi" (say/rapor-haritasi.ts
+  formYerlesimi): basılı formdan kurulan raporda tablo satır satır, hücreler soldan sağa, yer kimliği ve şu anki değeriyle ([e:marka = Aydın Trafo] │ Marka │
+  [a:k_c2 = —]); ekran ve rapor_getir (raporlar raporFormatHami). (5) Talimatta "Denetim": yazdıktan sonra yerleşimi yeniden oku, yanlış yere gideni düzelt. (4)
+  "Örnek iş": etiket tankın yerine, basınç kaynağı boş, imal yılına yalnız yıl. Araçlar: rapor_ac bir ya da çok ekipman; rapor_yaz sürümü isteğe bağlı. Formun
+  resmi (3) sonraki adım: S.A.Y ucuna başsız tarayıcı gerekiyor, PDF işlevi paket kuralıyla birlikte ele alınacak. Kilit tests/yanlis-yer + bozan, say-islem-katalog
+  (dizin kısa). Sahada denenmedi.
 - 2026-10-26 (CI bekliyor): **YANLIŞ ALANA YAZMA + FİRMA FORMATINDA KÜNYE + S.A.Y CHAT ETİKETTEN OKU (gönderilmiş kayıtta)** — reisim: *"sohbette birden fazla
   yanlış var, yanlış yerlere yazmış"*, *"başka rapor formatı ekleyince firma bilgileri kısmı değiştirilemez dediğimiz için böyle sıçıyor, değiştirilebilir olsun
   yoksa firmanın formatı işlevsiz oluyor ve girdiğimiz veriler nihai pdf te işe yaramıyor"*, *"gönderdikten sonra da etiketten oku diyebilmeliyim çünkü

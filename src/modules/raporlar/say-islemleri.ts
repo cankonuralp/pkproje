@@ -22,7 +22,7 @@ import { komutlariUygula, sonucOzeti, type Durum, type GirisSonucu } from "./say
 import { KopyaGirdisi, OlusturIslemGirdisi, RAPOR_DURUM, RevizeGirdisi } from "./sema.ts";
 import { raporSayfasi } from "./server/liste.ts";
 import {
-  cihazEkle, cihazKaldir, onayaGonder, raporFormatGuncelle, raporKaydet, raporKopyala, raporOlustur, raporSayDurumu, takipAc, raporSil, revizeIste, revizeIstegiGeriCek, sahaRaporu,
+  cihazEkle, cihazKaldir, onayaGonder, raporFormatGuncelle, raporKaydet, raporKopyala, raporFormatHami, raporOlustur, raporSayDurumu, takipAc, raporSil, revizeIste, revizeIstegiGeriCek, sahaRaporu,
   type SahaRaporu,
 } from "./server/raporlar.ts";
 
@@ -41,10 +41,11 @@ function kayittakiHal(s: SahaRaporu): { durum: Durum; cihazlar: { turId: string;
 }
 
 /** C: kapalı rapora girişler — ekranın denetimiyle uygulanır, raporKaydet ile yazılır; ölçüm cihazı seçimi cihazEkle / cihazKaldir ile */
-async function kapaliRaporaYaz(b: IslemBaglami, id: string, surumu: number, girisler: unknown, satirlar: unknown): Promise<IslemCevabi> {
+async function kapaliRaporaYaz(b: IslemBaglami, id: string, surumGirdi: number | null, girisler: unknown, satirlar: unknown): Promise<IslemCevabi> {
   if (b.ekrandakiRapor === id) return { tamam: false, neden: EKRANDA };
   const s = await sahaRaporu(b.db, b.kim, id);
   if (!s) return { tamam: false, neden: GORUNMEZ };
+  const surumu = surumGirdi ?? s.surum;
   if (!s.izin.duzenle) {
     const d = await raporSayDurumu(b.db, b.kim, id);
     return { tamam: false, neden: `${s.no} rapora yazılamaz: ${d?.neden ?? "rapor düzenlenemez"}.` };
@@ -103,7 +104,7 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
       if (!s) return { tamam: false, neden: GORUNMEZ };
       const d = await raporSayDurumu(b.db, b.kim, v.rapor), h = kayittakiHal(s);
       const harita = metinSayfasi(raporHaritasi(s.tanim, s.tur.ad, { cevaplar: s.cevaplar, ekipman: h.durum.ekipman, tarih: h.durum.tarih, cihazlar: h.cihazlar },
-        { tumu: true }) ?? "", v.sayfa);
+        { tumu: true, ham: (await raporFormatHami(b.db, b.kim, v.rapor)) ?? undefined }) ?? "", v.sayfa);
       return { tamam: true, sonuc: {
         id: s.id, no: s.no, durum: durumAdi(s.durum), surum: s.surum, plan: { id: s.plan.id, no: s.plan.no }, ekipman: s.ekipman, tur: { id: s.tur.id, ad: s.tur.ad },
         yazilabilir: s.izin.duzenle, ...(d?.neden ? { neden: d.neden } : {}), ekranda_acik: b.ekrandakiRapor === s.id,
@@ -114,9 +115,21 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
     },
   }),
   islem({
-    ad: "rapor_ac", modul: MODUL, tur: "yaz", girdi: OlusturIslemGirdisi, kaynak: [OlusturIslemGirdisi], islev: raporOlustur,
-    tarif: "Plandaki ekipmanın raporunu oluşturur (yalnız plandaki denetçi; plan kabul edilmiş, plan günü gelmiş): plan, ekipman (kimlikler — plan_getir).",
-    calistir: async (b, v) => yazmaCevabi(await raporOlustur(b.db, b.kim, v.plan, v.ekipman)),
+    /* 2026-10-26 (S.A.Y eğitimi — sohbette dört ekipmanı tek çağrıda verdi, reddedildi): ekipman tek kimlik ya da kimlik dizisi */
+    ad: "rapor_ac", modul: MODUL, tur: "yaz", kaynak: [OlusturIslemGirdisi, kimlik], islev: raporOlustur,
+    girdi: z.object({ plan: OlusturIslemGirdisi.shape.plan, ekipman: z.union([kimlik, z.array(kimlik).min(1).max(100)]) }),
+    tarif: "Plandaki ekipmanların raporunu oluşturur (yalnız plandaki denetçi; plan kabul edilmiş, plan günü gelmiş): plan, ekipman (bir kimlik ya da kimlik "
+      + "dizisi — plan_getir); her ekipman için rapor kimliği ve numarası ya da açılamama nedeni.",
+    calistir: async (b, v) => {
+      if (typeof v.ekipman === "string") return yazmaCevabi(await raporOlustur(b.db, b.kim, v.plan, v.ekipman));
+      const l: Record<string, unknown>[] = [];
+      for (const e of v.ekipman) {
+        const c = yazmaCevabi(await raporOlustur(b.db, b.kim, v.plan, e));
+        l.push(c.tamam ? { ekipman: e, ...c.sonuc, bildirim: c.bildirim } : { ekipman: e, neden: c.neden });
+      }
+      const acilan = l.filter((x) => !x.neden).length;
+      return acilan ? { tamam: true, bildirim: `${acilan} rapor açıldı.`, sonuc: { raporlar: l } } : { tamam: false, neden: `Rapor açılamadı: ${l.map((x) => x.neden).join(" · ")}` };
+    },
   }),
   /* 2026-10-26 (göç 0108): takip muayenesi — açık uygunsuzluğu olan son imzalı rapora …-T1; içerik ana rapordan */
   islem({
@@ -126,13 +139,16 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
   }),
   islem({
     ad: "rapor_yaz", modul: MODUL, tur: "yaz", islev: raporKaydet, kaynak: [kimlik, surum],
+    /* 2026-10-26 (S.A.Y eğitimi): sürüm verilmezse raporun şu anki sürümü (yeni açılan raporda sürüm sorulmasın) */
     girdi: RAPOR_SURUM.extend({
+      surum: surum.optional(),
       girisler: z.array(z.object({ yer: z.string(), deger: z.union([z.string(), z.number()]) })).default([]),
       satir_ekle: z.array(z.record(z.string(), z.unknown())).default([]),
     }),
-    tarif: "Ekranda açık OLMAYAN rapora yazar ve kaydeder: girisler [{ yer (rapor_getir haritasındaki kimlik), deger }], satir_ekle (rapora_yaz'daki gibi); "
+    tarif: "Ekranda açık OLMAYAN rapora yazar ve kaydeder: girisler [{ yer (rapor_getir haritasındaki kimlik), deger }], satir_ekle (rapora_yaz'daki gibi), "
+      + "surum isteğe bağlı (verilmezse şu anki); "
       + "değerler ekrandaki gibi denetlenir, sonuç yazılan / yazılamayan ve nedeni.",
-    calistir: async (b, v, ham) => kapaliRaporaYaz(b, v.rapor, v.surum, ham.girisler ?? [], ham.satir_ekle ?? []),
+    calistir: async (b, v, ham) => kapaliRaporaYaz(b, v.rapor, v.surum ?? null, ham.girisler ?? [], ham.satir_ekle ?? []),
   }),
   islem({
     ad: "rapor_onaya_gonder", modul: MODUL, tur: "yaz", girdi: RAPOR_SURUM, kaynak: [kimlik, surum], islev: onayaGonder,

@@ -64,7 +64,7 @@ function cihazlarOku(x: unknown): CanliCihaz[] {
 
 /** canlı cevaplar şemaya uymuyorsa null (bağlam eklenmez). 2026-10-16 (S.A.Y 2. adım a incelemesi): tumu — bütün satırlar, kısaltmasız (rapor_getir
     işlemi sayfa sayfa verir — src/server/yz/islem.ts metinSayfasi); bağlamdaki harita sınırlı kalır */
-export function raporHaritasi(t: FormatTanimi, turAd: string, canli: CanliRapor, secenek: { tumu?: boolean } = {}): string | null {
+export function raporHaritasi(t: FormatTanimi, turAd: string, canli: CanliRapor, secenek: { tumu?: boolean; ham?: FormatTanimi } = {}): string | null {
   const tabloSatir = secenek.tumu ? Number.POSITIVE_INFINITY : TABLO_SATIR;
   const g = Cevaplar.safeParse(canli.cevaplar);
   if (!g.success) return null;
@@ -157,6 +157,42 @@ export function raporHaritasi(t: FormatTanimi, turAd: string, canli: CanliRapor,
       l.push(`- cihaz:${x.turId} · ${x.turAd} = ${secili ? tirnak(secili.kod) : "—"}; seçilebilir: ${x.secenekler.length ? x.secenekler.map((s) => `${s.kod}${s.ad ? ` (${s.ad})` : ""}`).join(", ") : "yok"}`);
     }
   }
+  /* 2026-10-26 (reisim: "yapay zeka bir insan gibi bakınca neyi nereye yazması gerektiğini anlamalı"): basılı formdan kurulan raporda formun
+     yerleşimi — satır satır, hücreler soldan sağa, formda göründüğü gibi; hangi yerin hangi başlığın / grubun altında olduğu buradan anlaşılır */
+  if (secenek.ham) l.push(...formYerlesimi(secenek.ham, (y) => y.startsWith("e:") ? ekipmanDegeri(y.slice(2)) : y.startsWith("a:") ? alanDegeri(y.slice(2))
+    : y.startsWith("m:") ? c.madde[y.slice(2)]?.c ?? "" : y === "sonuc" ? c.sonuc : ""));
   const metin = l.join("\n");
   return !secenek.tumu && metin.length > HARITA_SINIRI ? `${metin.slice(0, HARITA_SINIRI)}\n… (rapor uzun; geri kalanı kısaltıldı)` : metin;
+}
+
+const YERLESIM_EKIPMAN: ReadonlySet<string> = new Set(["marka", "model", "seri", "imal", "konum", "amac"]);
+/** formun yerleşimi (yalnız tablo bölümleri — basılı formdan kurulan format): her satır "hücre │ hücre", yazı olduğu gibi, doldurulacak yer
+    [yer kimliği], sistemin yazdığı (kayıttan: …). Çoğalan satır "t:<tablo>" ile anılır. deger verilirse yerin şu anki değeri de yazılır
+    ([e:marka = Aydın Trafo], boş: [a:k_c2 = —]) — S.A.Y yazdıktan sonra formu satır satır okuyup denetler. Saf. */
+export function formYerlesimi(ham: FormatTanimi, deger?: (yer: string) => string): string[] {
+  const tablolar = ham.bolumler.filter((b) => b.blok === "tablo");
+  if (!tablolar.length) return [];
+  const l = ["## Formun yerleşimi (formda göründüğü gibi; satır satır, hücreler soldan sağa; [yer = şu anki değer] doldurulacak yer, (kayıttan …) sistemin yazdığı)"];
+  const kisa = (s: string, n = 60) => { const x = s.replace(/\s+/g, " ").trim(); return x.length > n ? `${x.slice(0, n - 1)}…` : x; };
+  const yer = (y: string) => (deger ? `[${y} = ${kisa(deger(y) ?? "", 40) || "—"}]` : `[${y}]`);
+  for (const b of tablolar) {
+    l.push(`### ${kisa(b.ad, 120)}`);
+    b.satirlar.forEach((s, r) => {
+      if (s.tekrar) { if (s.id) l.push(`- (çoğalan satırlar: t:${s.id}:<satır no>:<sütun kimliği>)`); return; }
+      const hucreler = b.hucreler.filter((h) => h.r === r).sort((x, y) => x.c - y.c).flatMap((h): string[] => {
+        switch (h.tur) {
+          case "yazi": return h.m?.trim() ? [kisa(h.m)] : [];
+          case "alan": return h.id ? [yer(`a:${h.id}`)] : [];
+          case "cevap": return h.id ? [yer(`m:${h.id}`)] : [];
+          case "kayit": return h.kaynak && YERLESIM_EKIPMAN.has(h.kaynak) ? [yer(`e:${h.kaynak}`)] : h.kaynak ? [`(kayıttan: ${h.kaynak})`] : [];
+          case "sonuc": return [yer("sonuc")];
+          case "foto": return ["(fotoğraf)"];
+          case "imza": return ["(imza)"];
+          default: return [];
+        }
+      });
+      if (hucreler.length) l.push(`- ${hucreler.join(" │ ")}`);
+    });
+  }
+  return l;
 }

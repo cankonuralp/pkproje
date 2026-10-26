@@ -275,11 +275,17 @@ async function erisim(db: Sorgulayici, kim: Kisi, id: string, kilitle = false): 
 
 /** S.A.Y (384; raporlar/server/say-baglanti.ts'ten): düzenlenen raporun format tanımı ve tür adı — YALNIZ raporu yazan kişinin Yeni raporunda (S.A.Y'ın
     rapor kipiyle aynı; başkasının ya da onaydaki raporun içeriği S.A.Y'a gitmez). Yoksa null. */
-export async function raporSayBilgisi(db: Sorgulayici, kim: Kisi, id: string): Promise<{ tanim: FormatTanimi; turAd: string } | null> {
+export async function raporSayBilgisi(db: Sorgulayici, kim: Kisi, id: string): Promise<{ tanim: FormatTanimi; ham: FormatTanimi; turAd: string } | null> {
   const e = await erisim(db, kim, id);
   if (!e || !e.sahip || e.r.durum !== "taslak") return null;
-  const f = await formatSurumuOku(db, e.r.format_id);
-  return f ? { tanim: f.tanim, turAd: e.tur.ad } : null;
+  const f = await formatSurumuHam(db, e.r.format_id);
+  return f ? { tanim: sahaTanimi(f.tanim), ham: f.tanim, turAd: e.tur.ad } : null;
+}
+
+/** 2026-10-26 (S.A.Y): raporun formatının ham (basılı formun ızgarası korunmuş) tanımı — haritada formun yerleşimi için; raporu göremeyene null */
+export async function raporFormatHami(db: Sorgulayici, kim: Kisi, id: string): Promise<FormatTanimi | null> {
+  const e = await erisim(db, kim, id);
+  return e ? (await formatSurumuHam(db, e.r.format_id))?.tanim ?? null : null;
 }
 
 /** 561 (reisim 2026-10-15: "rapor teknik yönetici onayında olduğu için değiştiremiyordu ama açıkta rapor göremiyorum dedi"): sayfada açık raporun

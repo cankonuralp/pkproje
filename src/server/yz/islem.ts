@@ -173,7 +173,9 @@ export function islemSemasi(t: Islem): Record<string, unknown> {
 export function katalogDizini(l: readonly Islem[], modulAdi: (no: number) => string): string {
   const gruplar = new Map<number, Islem[]>();
   for (const t of l) gruplar.set(t.modul, [...(gruplar.get(t.modul) ?? []), t]);
-  return [...gruplar].map(([no, x]) => [`${modulAdi(no)}:`, ...x.map((t) => `- ${t.ad} (${t.tur}): ${t.tarif}`)].join("\n")).join("\n");
+  /* 2026-10-26 (reisim: "haikuyu eğitmemiz lazım"): yalnız adlar, modül başına bir satır — 148 işlemin tarifi talimatı 25 000 karaktere çıkarıyordu,
+     küçük model işiyle ilgisiz listede kayboluyordu; tarif ve şema islemler aracıyla (adlar) */
+  return [...gruplar].map(([no, x]) => `${modulAdi(no)}: ${x.map((t) => t.ad).join(", ")}`).join("\n");
 }
 /** "islemler" aracı: adlarla istenen işlemler şemalarıyla; modül / sözle süzülen az sayıdaysa (en çok 8) şemalarıyla, çoksa ad ve tarifle */
 export function islemleriListele(l: readonly Islem[], s: { adlar?: readonly string[]; modul?: string; ara?: string }, modulAdi: (no: number) => string): Record<string, unknown> {

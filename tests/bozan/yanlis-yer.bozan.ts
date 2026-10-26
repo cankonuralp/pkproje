@@ -7,7 +7,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { after, test } from "node:test";
-import { TABLO } from "../yanlis-yer.test.ts";
+import { TABLO, talimatDenetimli } from "../yanlis-yer.test.ts";
 
 const klasor = mkdtempSync(join(tmpdir(), "bozan-yanlis-yer-"));
 after(() => rmSync(klasor, { recursive: true, force: true }));
@@ -35,4 +35,22 @@ test("2. ad grup başlığıyla ayrılmayınca kilit düşer", async () => {
 test("3. serbest formatta varsayılan kilit dönünce kilit düşer", async () => {
   const m = await bozuk<Kunye>("src/format/kunye.ts", "(t.gorunum.serbest ? [] : VARSAYILAN_KILITLI)", "VARSAYILAN_KILITLI");
   assert.equal(m.kilitliKunye({ gorunum: { serbest: true } } as never).size, 2);
+});
+
+/* 2026-10-26 (S.A.Y eğitimi): 4. Yerleşimde ekipman hücresi yazılmazsa tankın yeri görünmez, S.A.Y yine yandaki boş alana yazar. 5. Talimattan denetim
+   adımı düşerse S.A.Y yanlış yere yazdığını görmeden özet verir. */
+type Harita = typeof import("../../src/modules/say/rapor-haritasi.ts");
+test("4. yerleşimde ekipman hücresi yazılmayınca kilit düşer", async () => {
+  const kaynak = readFileSync(resolve("src/modules/say/rapor-haritasi.ts"), "utf8");
+  const eski = "h.kaynak && YERLESIM_EKIPMAN.has(h.kaynak) ? [yer(`e:${h.kaynak}`)]";
+  assert.ok(kaynak.includes(eski));
+  const yol = join(klasor, "harita.ts");
+  writeFileSync(yol, kaynak.replace(eski, "h.kaynak && YERLESIM_EKIPMAN.has(h.kaynak) ? []").replaceAll('from "../', `from "${pathToFileURL(resolve("src/modules")).href}/`)
+    .replaceAll('from "../../', `from "${pathToFileURL(resolve("src")).href}/`));
+  const m = await import(pathToFileURL(yol).href) as Harita;
+  assert.equal(m.formYerlesimi({ bolumler: [TABLO] } as never).some((s) => s.includes("[e:marka]")), false);
+});
+test("5. talimattan denetim adımı düşünce kilit düşer", async () => {
+  const { saySistemi } = await import("../../src/server/yz/say.ts");
+  assert.equal(talimatDenetimli(saySistemi([], "").replace("Denetim: rapora yazdıktan sonra", "Rapora yazdıktan sonra")), false);
 });
