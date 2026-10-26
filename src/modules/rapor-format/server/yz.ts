@@ -23,8 +23,8 @@ export async function formatYzDurumu(db: Sorgulayici): Promise<FormatYzDurumu> {
   if (!(await ayarOku(db, "yapay_zeka")).deger.acik) return "kapali";
   return (await sirDurumu(db, "yapay_zeka_anahtari")).tanimli ? "hazir" : "anahtarsiz";
 }
-export const YZ_KAPALI = "Yapay zekâ firmada kapalı — firma yöneticisi Firma ayarları › Yapay zekâ'dan açar. Bölümleri parça kutusundan ekleyebilirsiniz.";
-export const YZ_ANAHTARSIZ = "Yapay zekâ API anahtarı girilmedi (Firma ayarları › Yapay zekâ). Bölümleri parça kutusundan ekleyebilirsiniz.";
+export const YZ_KAPALI = "Yapay zekâ firmada kapalı — probata yönetimi açar. Bölümleri parça kutusundan ekleyebilirsiniz.";
+export const YZ_ANAHTARSIZ = "Yapay zekâ API anahtarı girilmedi (probata yönetimi tanımlar). Bölümleri parça kutusundan ekleyebilirsiniz.";
 
 export interface FormatYzHazir { durum: "hazir"; istek: OkumaIstegi; anahtar: string; model: YzModel; ay: string; ust: number; tanim: FormatTanimi }
 export type FormatYzRed = { durum: "red"; neden: string };
@@ -44,7 +44,7 @@ export async function formatYzHazirla(db: Sorgulayici, kim: YetkiHesabi, p: { is
   if (istek.length > ISTEK_SINIRI) return { durum: "red", neden: `İstek en çok ${ISTEK_SINIRI} karakter.` };
   const ay = yzAyi(simdi), ust = formatEnCokMaliyet(yz.model, !!p.belge);
   if (!(await yzAyir(db, ay, yz.sinir, ust))) {
-    return { durum: "red", neden: `Bu ay yapay zekâ sınırınız (${String(yz.sinir ?? 0).replace(".", ",")} $) doldu; firma yöneticisi Firma ayarları › Yapay zekâ'dan artırabilir.` };
+    return { durum: "red", neden: `Bu ay yapay zekâ sınırınız (${String(yz.sinir ?? 0).replace(".", ",")} $) doldu; probata yönetimi artırabilir.` };
   }
   const turAd = typeof p.turAd === "string" ? p.turAd.slice(0, 200) : "";
   return { durum: "hazir", istek: formatIstegi({ model: yz.model, ozet: formatOzeti(t.data, turAd), istek, belge: p.belge }), anahtar, model: yz.model, ay, ust, tanim: t.data };

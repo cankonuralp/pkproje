@@ -34,9 +34,9 @@ export async function alanOkuHazirla(db: Sorgulayici, depo: Depo, kim: Kisi, rap
   if (!k) return KAYITSIZ_FOTO;
   const foto = { bayt: k.bayt };
   const yz = (await ayarOku(db, "yapay_zeka")).deger;
-  if (!yz.acik) return { durum: "red", neden: `Fotoğraftan okuma firmada kapalı (Firma ayarları › Yapay zekâ). ${ELLE}` };
+  if (!yz.acik) return { durum: "red", neden: `Fotoğraftan okuma firmada kapalı (probata yönetimi tanımlar). ${ELLE}` };
   const anahtar = await sirKullan(db, "yapay_zeka_anahtari");
-  if (!anahtar) return { durum: "red", neden: `Yapay zekâ API anahtarı girilmedi (Firma ayarları › Yapay zekâ). ${ELLE}` };
+  if (!anahtar) return { durum: "red", neden: `Yapay zekâ API anahtarı girilmedi (probata yönetimi tanımlar). ${ELLE}` };
   const tur = turBul(foto.bayt, ["jpeg", "png"]);
   if (!tur || (tur !== "jpeg" && tur !== "png")) return { durum: "gecersiz", hatalar: { foto: "Yalnız JPEG ya da PNG fotoğraf." } };
   if (foto.bayt.length > FOTO_OKU_EN_BUYUK) return { durum: "gecersiz", hatalar: { foto: "Fotoğraf çok büyük (en çok 5 MB)." } };
@@ -45,7 +45,7 @@ export async function alanOkuHazirla(db: Sorgulayici, depo: Depo, kim: Kisi, rap
   /* ayırma en sonda: geçersiz fotoğraf ayırma yapmaz */
   const ay = yzAyi(simdi), ust = alanEnCokMaliyet(yz.model);
   if (!(await yzAyir(db, ay, yz.sinir, ust))) {
-    return { durum: "red", neden: `Bu ay yapay zekâ sınırınız (${dolar(yz.sinir ?? 0)} $) doldu; firma yöneticisi Firma ayarları › Yapay zekâ'dan artırabilir. ${ELLE}` };
+    return { durum: "red", neden: `Bu ay yapay zekâ sınırınız (${dolar(yz.sinir ?? 0)} $) doldu; probata yönetimi artırabilir. ${ELLE}` };
   }
   const ad = `${o.baslik.replace(/[^\p{L}\p{N} ()-]/gu, "").trim().slice(0, 60) || "Bölüm"} fotoğrafı.${tur === "png" ? "png" : "jpg"}`;
   return { durum: "hazir", istek: alanIstegi({ model: yz.model, baslik: o.baslik, alanlar: o.alanlar, resim: temiz, tur }), anahtar, model: yz.model, ay, ust,

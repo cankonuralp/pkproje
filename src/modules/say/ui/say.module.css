@@ -170,3 +170,5 @@
 @media (prefers-reduced-motion: reduce) {
   .noktalar i, .donen { animation: none; }
 }
+/* 2026-10-26 (S.A.Y Faz 2 — reisim: "sürükleyerek dosya bırakmakta olsun"): dosya panelin üstünde sürüklenirken bırakma yeri belli */
+.panel[data-suruklu] { outline: 2px dashed var(--odak); outline-offset: -6px; }

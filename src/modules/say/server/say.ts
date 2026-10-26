@@ -30,9 +30,9 @@ import { ekBloklari } from "./ek.ts";
 
 export interface SayDurum { acik: boolean; anahtar: boolean; sinirDoldu: boolean }
 
-const KAPALI = "S.A.Y firmada kapalı (Firma ayarları › Yapay zekâ).";
-export const SINIR_DOLDU = "Bu ay yapay zekâ sınırınız doldu; firma yöneticisi Firma ayarları › Yapay zekâ'dan artırabilir.";
-const ANAHTARSIZ = "API anahtarı girilmedi (Firma ayarları › Yapay zekâ): S.A.Y cevap veremez.";
+const KAPALI = "S.A.Y firmada kapalı (probata yönetimi tanımlar).";
+export const SINIR_DOLDU = "Bu ay yapay zekâ sınırınız doldu; probata yönetimi artırabilir.";
+const ANAHTARSIZ = "API anahtarı girilmedi (probata yönetimi tanımlar): S.A.Y cevap veremez.";
 /** iş yarıda bırakıldıysa (ekran kapandı, kullanıcı yeni bir şey istedi) cevapsız kalan araç çağrısının sonucu */
 export const YARIDA = "Yapılmadı: iş yarıda bırakıldı (ekran kapandı ya da kullanıcı yeni bir şey istedi).";
 

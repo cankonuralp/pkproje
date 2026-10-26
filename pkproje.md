@@ -2527,6 +2527,18 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-26 (CI bekliyor): **S.A.Y ASİSTAN FAZ 2 — SÜRÜKLE-BIRAK, TOPLU / ZIP, KENDİLİĞİNDEN EKİPMAN + KOD, PDF'TEN ŞABLON** — reisim: *"sürükleyerek dosya
+  bırakmakta olsun toplu dosya yüklemekte zip vs de okusun … zip i atayım içerideki raporları incele ve ilgili raporları oluştur diyince direk oluşturup ne
+  yaptığını özet geçsin"*, *"rapor oluşturturken ekipman ekleme işini kendisi otomatik yapabilsin, ekipman konumunu verilen donelerden kendisi anlayacak, kodu
+  otomatik kendisi verecek ekipmanın sabit kodu + 0-1-2"*, *"elektrik raporlarında da linyeler vs düzgün okusun"*, *"pdf i el ile formata eklemeye çalışıyor tek
+  tek çizmeye çalışıyor halbuki format pdf i ekle tuşu var bu yolu bilmeli"*. Panel: dosya panele bırakılır, galeri / belge çoklu seçilir, ZIP tarayıcıda açılır
+  (her dosya ayrı ek). plan_ekipman_ekle kodsuz da çalışır, plan_ekipmanlar_ekle çok ekipmanı tek işlemde ekler (planlar sayEkipmanlarEkle → yeniEkipman; kod
+  verilmezse türün kodu + tire + sıradaki boş sayı, şu anki ve eski kodlar atlanır — sema.ts siradakiKod, ekipman onekliKodlar). Yeni ekran aracı format_pdf_kur:
+  ekteki PDF türün format PDF'i olarak yüklenir, şablon tarayıcıda o PDF'ten kurulur, Format kurucu açılır (ekipman-turleri/ui/pdfdenSablon.ts — tür sayfasıyla
+  aynı yol). Talimata: ekipmanı sormadan ekle, kod yazma, konumu verilenden çıkar, toplu işte özet tablo, elektrik linyesi satır satır, PDF'ten şablon. Ayrıca
+  İŞ 2'den kalan "Firma ayarları › Yapay zekâ" yönlendirmeleri "probata yönetimi" oldu. Kilit tests/say-faz2 + bozan, plan-ici (PG). Sahada denenmedi.
+- 2026-10-26 (YAYINDA — main 0425faf2; CI 17/17 yeşil, 17,2 dk): **S.A.Y ASİSTAN FAZ 1** — düşünme yazısı ekrana gelmez, bekleme balonunda Durdur, rapor ekranında
+  "Fotoğraftan oku" geri (S.A.Y rapora ekli fotoğrafları okur), talimatta verilmeyen metin alanına "-" ve bitiş özeti. Kilit tests/say-faz1 + bozan.
 - 2026-10-26 (YAYINDA — main 041f89ac; CI 17/17 yeşil): **UZUN METİN: KISALAN METİN TIKLANINCA TAM METİN BALONU (yalnız ekran)** — reisim: uzun cümleler "…" ile kısalsın,
   tıklayınca açılsın (sıkıştırma ekranı bozuyor); *"bu uygulamalar raporlara yansımasın, sadece saha ekranında olsun"*. Maket onaylı. components/liste/Kirp.tsx:
   metin gerçekten kısaldıysa tıklanır (ölçülür), tıklama / dokunma / Enter / Boşluk altında balon (üst katman, sayfayı itmez), dışarı / Esc / yeniden basınca

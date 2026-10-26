@@ -31,16 +31,16 @@ export async function etiketHazirla(db: Sorgulayici, kim: Kisi, planId: string, 
     .filter((x) => x.alan !== "yorum").map(({ alan: _a, ...x }) => x);
   if (!alanlar.length) return { durum: "red", neden: `Etikette okunacak satır yok. ${ELLE}` };
   const yz = (await ayarOku(db, "yapay_zeka")).deger;
-  if (!yz.acik) return { durum: "red", neden: `Yapay zekâ firmada kapalı (Firma ayarları › Yapay zekâ). ${ELLE}` };
+  if (!yz.acik) return { durum: "red", neden: `Yapay zekâ firmada kapalı (probata yönetimi tanımlar). ${ELLE}` };
   const anahtar = await sirKullan(db, "yapay_zeka_anahtari");
-  if (!anahtar) return { durum: "red", neden: `Yapay zekâ API anahtarı girilmedi (Firma ayarları › Yapay zekâ). ${ELLE}` };
+  if (!anahtar) return { durum: "red", neden: `Yapay zekâ API anahtarı girilmedi (probata yönetimi tanımlar). ${ELLE}` };
   const tur = turBul(bayt, ["jpeg", "png"]);
   if (tur !== "jpeg" && tur !== "png") return { durum: "red", neden: "Yalnız JPEG ya da PNG fotoğraf." };
   if (bayt.length > ETIKET_EN_BUYUK) return { durum: "red", neden: "Fotoğraf çok büyük (en çok 5 MB)." };
   let temiz: Uint8Array;
   try { temiz = tur === "jpeg" ? jpegTemizle(bayt) : pngTemizle(bayt); } catch { return { durum: "red", neden: "Fotoğraf bozuk; başka bir fotoğraf deneyin." }; }
   const ay = yzAyi(simdi), ust = alanEnCokMaliyet(yz.model);
-  if (!(await yzAyir(db, ay, yz.sinir, ust))) return { durum: "red", neden: `Bu ay yapay zekâ sınırınız doldu; firma yöneticisi Firma ayarları › Yapay zekâ'dan artırabilir. ${ELLE}` };
+  if (!(await yzAyir(db, ay, yz.sinir, ust))) return { durum: "red", neden: `Bu ay yapay zekâ sınırınız doldu; probata yönetimi artırabilir. ${ELLE}` };
   return { durum: "hazir", istek: alanIstegi({ model: yz.model, baslik: "Ekipman etiketi (künye levhası)", alanlar, resim: temiz, tur }), anahtar, model: yz.model, ay, ust, alanlar };
 }
 

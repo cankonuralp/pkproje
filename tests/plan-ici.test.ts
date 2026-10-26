@@ -16,7 +16,7 @@ import { klasorDepo } from "../src/server/dosya/depo.ts";
 import { VARSAYILAN_BEYAN } from "../src/server/ayar/ayar.ts";
 import {
   denetimeBasla, ekipmanPasif, kayitliEkle, kodDurumu, kontrolListesi, kunyeDuzenle, kunyeGuncelle, notEkle, planIci, planKabul, planListesi, planReddet,
-  planSil, planTamamla, sahaDosyasiGorulur, sahaFormuOlustur, sahaFormuVerisi, sahaTaramaKaldir, sahaTaramaYukle, tamamlamaGeriAl, yeniEkipman, type PlanYazma,
+  planSil, planTamamla, sahaDosyasiGorulur, sahaFormuOlustur, sahaFormuVerisi, sahaTaramaKaldir, sahaTaramaYukle, sayEkipmanlarEkle, tamamlamaGeriAl, yeniEkipman, type PlanYazma,
 } from "../src/modules/planlar/server/plan-ici.ts";
 import { bugunTr, planAc, type Kisi } from "../src/modules/planlar/server/planlar.ts";
 import { MATRIS_ONERI } from "../src/server/yetki/tanim.ts";
@@ -231,6 +231,25 @@ test("ekipman: kod denetimi (biçim · bu planda · tesiste kayıtlı · başka 
   assert.equal((await a(FA.mek, (db) => ekipmanPasif(db, FA.mek, id, a2.id, a2.surum + 2, true))).durum, "yetkisiz");
   /* veritabanı: başka tesisin ekipmanı plana bağlanmaz */
   await assert.rejects(sql(A, "INSERT INTO plan_ekipman (plan_id, ekipman_id, ekleyen) VALUES ($1, $2, 'x')", [id, b9]), /tesisinde/);
+});
+
+/* 2026-10-26 (S.A.Y Faz 2 — reisim: "rapor oluşturturken ekipman ekleme işini kendisi otomatik yapabilsin", "kodu otomatik kendisi verecek ekipmanın
+   sabit kodu + 0-1-2 sayılar sırasıyla gidecek") */
+test("S.A.Y ekipman ekler: kod verilmezse türün kodu + tire + sıradaki boş sayı (şu anki ve eski kodlar atlanır); çok ekipman tek işlemde; kural yeniEkipman'ın", async () => {
+  const id = await yeniPlan(FA, A);
+  const v = (await ici(FA.den1, id))!;
+  tamam(await a(FA.den1, (db) => planKabul(db, FA.den1, id, v.surum, true)));
+  await sql(A, "INSERT INTO ekipman (tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, 'HT-0', 'x'), ($1, $2, 'HT-1', 'x')", [FA.tesis2, FA.tur]);
+  await sql(A, "UPDATE ekipman SET kod = 'HT-1X' WHERE kod = 'HT-1'");   /* HT-1 artık eski kod — başkasına verilmez */
+  const r = await a(FA.den1, (db) => sayEkipmanlarEkle(db, FA.den1, id, [
+    { tur: FA.tur, konum: "Kazan dairesi" }, { tur: FA.tur, kod: "" }, { tur: FA.tur, kod: "HT-A1" }, { tur: "x" }, { tur: FA.tur, kod: "HT-2" }]));
+  assert.equal(r.durum, "tamam", JSON.stringify(r));
+  if (r.durum !== "tamam") return;
+  assert.deepEqual(r.eklenen.map((x) => [x.sira, x.kod]), [[1, "HT-2"], [2, "HT-3"]], "HT-0 kullanılıyor, HT-1 eski kod");
+  assert.deepEqual(r.eklenemeyen.map((x) => x.sira), [3, 4, 5], "planda olan, türü olmayan ve az önce verilen kod eklenmez");
+  const e = (await ici(FA.den1, id))!.ekipman.filter((x) => x.sonradan).map((x) => [x.kod, x.konum]).sort();
+  assert.deepEqual(e, [["HT-2", "Kazan dairesi"], ["HT-3", null]]);
+  assert.equal((await a(FA.mek, (db) => sayEkipmanlarEkle(db, FA.mek, id, [{ tur: FA.tur }]))).durum, "yetkisiz", "yönetici (görür) ekleyemez");
 });
 
 test("liste: denetçi yalnız ekibindeki planları, planlama ve yönetici hepsini görür; muhasebe göremez; B, A'nın planını görmez", async () => {

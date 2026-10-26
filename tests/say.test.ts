@@ -87,7 +87,7 @@ const ANAHTAR = "sk-ant-deneme-anahtar-0123456789";
 test("kapalıyken ve anahtarsızken soru konuşmaya girmez (söylenir); açık + anahtar hazır", async () => {
   const ekran = { yol: "/planlar", raporNo: null, canli: null, kurucu: null };
   assert.deepEqual(await ile(A, FA.den, (db) => sayDurumu(db)), { acik: false, anahtar: false, sinirDoldu: false });
-  assert.deepEqual(await ile(A, FA.den, (db) => soruyuEkle(db, FA.den, { metin: "Soru", ekler: [], ekran })), { durum: "red", neden: "S.A.Y firmada kapalı (Firma ayarları › Yapay zekâ)." });
+  assert.deepEqual(await ile(A, FA.den, (db) => soruyuEkle(db, FA.den, { metin: "Soru", ekler: [], ekran })), { durum: "red", neden: "S.A.Y firmada kapalı (probata yönetimi tanımlar)." });
   await yzAyari(A, FA.yon, { acik: true, sinir: null });
   assert.match(JSON.stringify(await ile(A, FA.den, (db) => soruyuEkle(db, FA.den, { metin: "Soru", ekler: [], ekran }))), /API anahtarı girilmedi/);
   await yzAyari(A, FA.yon, { anahtar: ANAHTAR });

@@ -210,6 +210,17 @@ export const YeniEkipmanGirdisi = z.object({
   seri: z.preprocess(bos, z.string().max(30, "En çok 30 karakter.").nullable()),
   konum: z.preprocess(bos, z.string().max(60, "En çok 60 karakter.").nullable()),
 });
+/** 2026-10-26 (S.A.Y Faz 2 — reisim: "kodu otomatik kendisi verecek ekipmanın sabit kodu + 0-1-2 sayılar sırasıyla gidecek"): S.A.Y'ın eklediği
+    ekipman — kod isteğe bağlı; verilmezse sunucu türün kodu + tire + sıradaki boş sayıyı verir (siradakiKod) */
+export const SayEkipmanGirdisi = YeniEkipmanGirdisi.extend({
+  kod: z.preprocess((s) => (typeof s === "string" && !s.trim() ? undefined : s), YeniEkipmanGirdisi.shape.kod.optional()),
+});
+/** türün kodu + tire + 0, 1, 2 … — firmada kullanılmış (şu anki ya da eski) kodlar atlanır (KMP-0 varsa KMP-1) */
+export function siradakiKod(onek: string, kullanilan: ReadonlySet<string>): string {
+  let n = 0;
+  while (kullanilan.has(`${onek}-${n}`)) n++;
+  return `${onek}-${n}`;
+}
 
 /** plan akışının adımları (maket adim): tamam ✓ · aktif (şu an) · bekliyor (sırada) · red × */
 export type AdimDurumu = "tamam" | "aktif" | "bekliyor" | "red";

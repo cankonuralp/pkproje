@@ -170,7 +170,7 @@ export const anthropicCagir: YzCagirici = async (istek, anahtar, zamanMs = ZAMAN
 export const anahtarsiz = (s: string) => s.replace(/sk-ant-[A-Za-z0-9_-]+/g, "sk-ant-…");
 /** hizmetin hata kodundan kullanıcıya gösterilen neden (2026-10-23: S.A.Y'ın akışlı çağrısı da kullanır — src/server/yz/akis.ts) */
 export function hizmetNedeni(kod: number, ileti: string): string {
-  return kod === 401 || kod === 403 ? "API anahtarı geçersiz ya da yetkisiz (Firma ayarları › Yapay zekâ)."
+  return kod === 401 || kod === 403 ? "API anahtarı geçersiz ya da yetkisiz (probata yönetimi tanımlar)."
     : kod === 429 || kod === 529 ? "Yapay zekâ hizmeti şu an yoğun; biraz sonra yeniden deneyin."
     : kod === 413 ? "Gönderilen dosya hizmetin kabul ettiğinden büyük."
     : kod === 400 && /image/i.test(ileti) ? "Fotoğraf okunamadı (biçim ya da boyut)."

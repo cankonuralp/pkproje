@@ -8,12 +8,12 @@
    ezmez (önce ekranın kaydı — EKRAN_KAYDEDILMEMIS). */
 import { kimlik, surum, z } from "../../sema/ortak.ts";
 import { SuzgecDurumuSemasi } from "../../server/liste/liste.ts";
-import { EKRAN_KAYDEDILMEMIS, ekranRaporuKirli, GORUNMEZ, islem, kirp, sayfaBilgisi, sayfala, trIcerir, yazmaCevabi, type Islem } from "../../server/yz/islem.ts";
-import { KunyeGirdisi, NotGirdisi, PLAN_DURUM, PlanAcGirdisi, RedGirdisi, YeniEkipmanGirdisi } from "./sema.ts";
+import { EKRAN_KAYDEDILMEMIS, ekranRaporuKirli, GORUNMEZ, islem, kirp, sayfaBilgisi, sayfala, trIcerir, yazmaCevabi, type Islem, type IslemCevabi } from "../../server/yz/islem.ts";
+import { KunyeGirdisi, NotGirdisi, PLAN_DURUM, PlanAcGirdisi, RedGirdisi, SayEkipmanGirdisi, YeniEkipmanGirdisi } from "./sema.ts";
 import { planSayfasi } from "./server/liste.ts";
 import {
   ekipmanPasif, ekipmanSil, kayitliEkle, kontrolListesi, kunyeDuzenle, kunyeGuncelle, notEkle, planIci, planKabul, planReddet, planSil, planTamamla,
-  tamamlamaGeriAl, yeniEkipman,
+  sayEkipmanlarEkle, tamamlamaGeriAl,
 } from "./server/plan-ici.ts";
 import { planAc, planAcVerisi, planKarti, tesisPlanBilgisi } from "./server/planlar.ts";
 
@@ -21,6 +21,14 @@ const MODUL = 13;
 const PLAN_ID = z.object({ plan: kimlik });
 const PLAN_SURUM = z.object({ plan: kimlik, surum });
 const durumAdi = (d: keyof typeof PLAN_DURUM) => PLAN_DURUM[d][0];
+
+/** S.A.Y'ın ekipman eklemesinin cevabı: eklenenler kodlarıyla, eklenemeyenler nedeniyle */
+function ekipmanCevabi(r: Awaited<ReturnType<typeof sayEkipmanlarEkle>>): IslemCevabi {
+  if (r.durum !== "tamam") return yazmaCevabi(r);
+  if (!r.eklenen.length) return { tamam: false, neden: `Ekipman eklenemedi: ${r.eklenemeyen.map((x) => `${x.sira}. ${x.kod ?? ""} ${x.neden}`.trim()).join(" · ")}` };
+  return { tamam: true, bildirim: r.eklenen.length === 1 ? `${r.eklenen[0].kod} eklendi.` : `${r.eklenen.length} ekipman eklendi.`,
+    sonuc: { eklenen: r.eklenen, ...(r.eklenemeyen.length ? { eklenemeyen: r.eklenemeyen } : {}) } };
+}
 
 export const SAY_ISLEMLERI: readonly Islem[] = [
   islem({
@@ -105,9 +113,19 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
     calistir: async (b, v, ham) => yazmaCevabi(await planReddet(b.db, b.kim, v.plan, v.surum, { gerekce: ham.gerekce })),
   }),
   islem({
-    ad: "plan_ekipman_ekle", modul: MODUL, tur: "yaz", girdi: YeniEkipmanGirdisi.extend({ plan: kimlik }), kaynak: [YeniEkipmanGirdisi, kimlik], islev: yeniEkipman,
-    tarif: "Plana yeni ekipman ekler — tesise kalıcı kayıt da açılır: kod (etiketteki, firmada eşsiz), tur (ekipman türü kimliği), konum.",
-    calistir: async (b, v, ham) => yazmaCevabi(await yeniEkipman(b.db, b.kim, v.plan, { kod: ham.kod, tur: ham.tur, seri: ham.seri, konum: ham.konum })),
+    /* 2026-10-26 (S.A.Y Faz 2 — reisim: "kodu otomatik kendisi verecek ekipmanın sabit kodu + 0-1-2"): kod isteğe bağlı; çok ekipman tek işlemde */
+    ad: "plan_ekipman_ekle", modul: MODUL, tur: "yaz", girdi: SayEkipmanGirdisi.extend({ plan: kimlik }), kaynak: [SayEkipmanGirdisi, YeniEkipmanGirdisi, kimlik],
+    islev: sayEkipmanlarEkle,
+    tarif: "Plana yeni ekipman ekler — tesise kalıcı kayıt da açılır: tur (ekipman türü kimliği), konum, kod (isteğe bağlı; verilmezse türün kodu + tire + "
+      + "sıradaki boş sayı: KMP-0, KMP-1 …).",
+    calistir: async (b, v, ham) => ekipmanCevabi(await sayEkipmanlarEkle(b.db, b.kim, v.plan, [{ kod: ham.kod, tur: ham.tur, seri: ham.seri, konum: ham.konum }])),
+  }),
+  islem({
+    ad: "plan_ekipmanlar_ekle", modul: MODUL, tur: "yaz", girdi: z.object({ plan: kimlik, ekipmanlar: z.array(SayEkipmanGirdisi).min(1).max(200) }),
+    kaynak: [SayEkipmanGirdisi, YeniEkipmanGirdisi, kimlik], islev: sayEkipmanlarEkle,
+    tarif: "Plana tek işlemde çok yeni ekipman ekler (en çok 200): ekipmanlar [{ tur, konum, kod (isteğe bağlı — verilmezse KMP-0, KMP-1 …) }]; "
+      + "eklenenler (kimlik, kod) ve eklenemeyenler nedeniyle döner.",
+    calistir: async (b, _v, ham) => ekipmanCevabi(await sayEkipmanlarEkle(b.db, b.kim, ham.plan, ham.ekipmanlar)),
   }),
   islem({
     ad: "plan_kayitli_ekle", modul: MODUL, tur: "yaz", girdi: z.object({ plan: kimlik, ekipmanlar: z.array(kimlik).min(1) }), kaynak: [kimlik], islev: kayitliEkle,

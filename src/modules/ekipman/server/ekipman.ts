@@ -43,6 +43,14 @@ export async function koduKullanan(db: Sorgulayici, kod: string): Promise<{ ekip
   return g ? { ekipman: ozet(g), eski: true } : null;
 }
 
+/** 2026-10-26 (S.A.Y Faz 2): "<önek>-…" biçimindeki kullanılmış kodlar — şu anki ve eski kodlar (eski kod başkasına verilmez); kendiliğinden
+    verilen kod için. Önek türün kodu (2–3 büyük harf). Yetki ÇAĞIRANDA. */
+export async function onekliKodlar(db: Sorgulayici, onek: string): Promise<Set<string>> {
+  if (!/^[A-ZÇĞİÖŞÜ]{2,3}$/.test(onek)) return new Set();
+  const r = await db.sorgu<{ kod: string }>("SELECT kod FROM ekipman WHERE kod LIKE $1 UNION SELECT kod FROM ekipman_kodu WHERE kod LIKE $1", [`${onek}-%`]);
+  return new Set(r.rows.map((x) => x.kod));
+}
+
 /** yeni ekipman (kod ve biçim çağıranda doğrulanmış; eşsizlik veritabanında da). Yetki ÇAĞIRANDA. */
 export async function ekipmanEkle(db: Sorgulayici, iz: Iz, e: { tesisId: string; turId: string; kod: string; seri: string | null; konum: string | null }): Promise<string> {
   const r = await ekle(db, EKIPMAN, { tesis_id: e.tesisId, tur_id: e.turId, kod: e.kod, seri: e.seri, konum: e.konum, ekleyen: iz.kim }, iz);

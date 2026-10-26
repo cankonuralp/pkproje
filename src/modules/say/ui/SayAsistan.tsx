@@ -57,7 +57,8 @@ import { useGorunurAlan } from "../../../components/pencere/gorunurAlan";
 import { usePanelBoyu } from "../../../components/pencere/PanelBoyu";
 import { Serit } from "../../../components/serit/Serit";
 import type { SohbetEkAdi, SohbetEksik, SohbetIletisi } from "../../../server/yz/sohbet";
-import { xlsxSayfalari } from "../../../components/disa/oku";
+import { xlsxSayfalari, zipAc } from "../../../components/disa/oku";
+import { pdfdenSablonKur } from "../../ekipman-turleri/ui/pdfdenSablon";
 import { EK_PARCA_BAYT, KAYDEDILMEMIS } from "../sabitler";
 import type { SayDurum } from "../server/say";
 import type { SayOlayi } from "../server/dongu";
@@ -260,6 +261,10 @@ export function SayAsistan() {
   /* 2026-10-26 (reisim: "fotoğraftan oku tuşu geri gelsin"): rapor ekranındaki "Fotoğraftan oku" bu olayı atar — S.A.Y rapora eklenen fotoğrafları
      okuyup boş alanlara girer (panel hazırsa; olay işlendiyse iptal edilir, işlenmediyse tuş "kapalı" der) */
   const okuRef = useRef<(() => void) | null>(null);
+  /* 2026-10-26 (S.A.Y Faz 2): eklerin geldiği SON mesajın dosyaları (bu sayfada; format_pdf_kur "ek" sırasıyla buradan alır) ve panelin üstünde
+     sürüklenen dosya */
+  const sonEkRef = useRef<File[]>([]);
+  const [suruklu, setSuruklu] = useState(false);
   const [kucuk, setKucuk] = useState(false);
   const [altta, setAltta] = useState(true);
   const alttaRef = useRef(true);
@@ -420,6 +425,19 @@ export function SayAsistan() {
       return { ozet: { yazildi: r.yapilan.length, ayni: 0, bekliyor: 0, yapilan: r.yapilan.slice(0, 1_000),
         yazilamadi: r.gecersiz.slice(0, 5_000).map((g) => { const i = g.indexOf(": "); return i > 0 ? { ad: g.slice(0, i), neden: g.slice(i + 2) } : { ad: g, neden: "" }; }) },
         ...(r.yapilan.length ? { geriAl: r.geriAl } : {}) };
+    }
+    /* 2026-10-26 (S.A.Y Faz 2 — reisim: "format pdf i ekle tuşu var bu yolu bilmeli ve oraya pdf i yüklemeli"): ekteki PDF türün format PDF'i olur,
+       şablon ondan kurulur (tür sayfasındaki yol); kurulunca Format kurucu açılır */
+    if (k.tur === "pdfFormat") {
+      const dosya = sonEkRef.current[k.ek - 1];
+      if (!dosya) return yapilamadi("Format PDF'i", `son mesajın eklerinde ${k.ek}. dosya yok (bu sayfada); kullanıcı PDF'i yeniden eklemeli`);
+      if (!(dosya.type === "application/pdf" || /\.pdf$/i.test(dosya.name))) return yapilamadi("Format PDF'i", `${k.ek}. ek PDF değil`);
+      setAsama("Şablonu kuruyor");
+      const y = await pdfdenSablonKur(k.turId, dosya, k.taslakSurumu);
+      if (!y.tamam) return yapilamadi("Format PDF'i", y.neden);
+      router.push(`/ekipman-turleri/${k.turId}/sablon/${y.taslak}/kurucu`);
+      return { ozet: { yazildi: 1, ayni: 0, bekliyor: 0, yapilan: [`Format PDF'i yüklendi (sürüm ${y.sira}); şablon bu PDF'ten taslak olarak kuruldu (taslak ${y.taslak}), Format kurucu açıldı`,
+        ...y.uyarilar], yazilamadi: [] } };
     }
     const r = h.rapor();
     /* 2026-10-16 (2. adım a incelemesi): kapanan ekranda yazılıp kaydedilmeyen girişler kayboldu — S.A.Y bunu bilsin (kayıttaki hâli okuyup gerekirse
@@ -584,19 +602,42 @@ export function SayAsistan() {
     e.preventDefault();
     e.currentTarget.form?.requestSubmit();
   };
-  /* 522: ek ekle — tür ve boy cihazda ön denetim (sunucu yeniden denetler); fotoğraf küçültülür */
+  /* 522: ek ekle — fotoğraf küçültülür (sunucu türü yeniden denetler). 2026-10-26 (S.A.Y Faz 2 — reisim: "sürükleyerek dosya bırakmakta olsun
+     toplu dosya yüklemekte zip vs de okusun"): çok dosya birden (seçerek ya da panele bırakarak); ZIP açılır, içindeki her dosya ayrı ek */
+  const ekleriEkle = async (dosyalar: readonly File[]) => {
+    const yeni: Ek[] = [];
+    let hataMetni: string | null = null;
+    for (const f of dosyalar) {
+      if (/\.zip$/i.test(f.name) || f.type === "application/zip" || f.type === "application/x-zip-compressed") {
+        try {
+          const l = await zipAc(new Uint8Array(await f.arrayBuffer()), 500 << 20, 1000);
+          if (!l.length) hataMetni = `${f.name}: ZIP'te dosya yok.`;
+          for (const x of l) {
+            const ic = new File([x.bayt as BlobPart], x.ad, { type: /\.pdf$/i.test(x.ad) ? "application/pdf" : "" });
+            const tur = ekTuru(ic);
+            yeni.push({ id: ++ekSira.current, dosya: tur === "foto" ? await fotografiKucult(ic) : ic, ad: x.ad, boyut: x.bayt.length, tur, url: null });
+          }
+        } catch (h) { hataMetni = `${f.name}: ${h instanceof Error ? h.message : "ZIP açılamadı."}`; }
+        continue;
+      }
+      const tur = ekTuru(f);
+      const dosya = tur === "foto" ? await fotografiKucult(f) : f;
+      let url: string | null = null;
+      if (tur === "foto") { try { url = URL.createObjectURL(dosya); } catch { url = null; } }
+      yeni.push({ id: ++ekSira.current, dosya, ad: f.name, boyut: dosya.size, tur, url });
+    }
+    if (yeni.length) {
+      setEkler((l) => [...l, ...yeni]);
+      bildir(yeni.length === 1 ? `${yeni[0].ad} eklendi; sorunuzla birlikte gider.` : `${yeni.length} dosya eklendi; sorunuzla birlikte gider.`);
+    }
+    if (hataMetni) setHata(hataMetni);
+  };
   const ekSec = async (e: ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
+    const l = [...(e.target.files ?? [])];
     e.target.value = "";
     setMenu(false);
     requestAnimationFrame(() => girdi.current?.focus());
-    if (!f) return;
-    const tur = ekTuru(f);
-    const dosya = tur === "foto" ? await fotografiKucult(f) : f;
-    let url: string | null = null;
-    if (tur === "foto") { try { url = URL.createObjectURL(dosya); } catch { url = null; } }
-    setEkler((l) => [...l, { id: ++ekSira.current, dosya, ad: f.name, boyut: dosya.size, tur, url }]);
-    bildir(`${f.name} eklendi; sorunuzla birlikte gider.`);
+    if (l.length) await ekleriEkle(l);
   };
   const ekCikar = (i: number) => {
     const e = ekler[i];
@@ -631,6 +672,7 @@ export function SayAsistan() {
     /* 557: mesaj HEMEN balon (kutu boşalır); sunucunun kaydettiği iletiyle yer değiştirir; gönderilemezse yazı kutuya geri döner (2026-10-16: yalnız
        sorunun kendisi gönderilemediyse — iş başladıysa geri konmaz, yeniden gönderilince iş iki kez yapılmasın) */
     const gid = `gecici-${++geciciSira.current}`, giden = ekler;
+    if (giden.length) sonEkRef.current = giden.map((x) => x.dosya);
     let gitti = false;
     setIletiler((l) => [...(l ?? []), { id: gid, kim: "ben", metin: v || (giden.length === 1 ? "Eki inceler misin?" : "Ekleri inceler misin?"), yer: l?.at(-1)?.yer ?? "",
       ek: giden.length ? { ekler: giden.map((x) => ({ ad: x.ad, boyut: x.boyut, tur: x.tur })) } : null, zaman: new Date().toISOString() }]);
@@ -709,6 +751,10 @@ export function SayAsistan() {
       )}
       {acik && (
         <aside ref={panel} className={stil.panel} id="say-panel" role="dialog" aria-labelledby="say-baslik" data-kucuk={kucuk || undefined}
+          data-suruklu={suruklu || undefined}
+          onDragOver={(e) => { if (!hazir || bekliyor || ![...e.dataTransfer.types].includes("Files")) return; e.preventDefault(); e.dataTransfer.dropEffect = "copy"; setSuruklu(true); }}
+          onDragLeave={(e) => { if (!(e.relatedTarget instanceof Node && e.currentTarget.contains(e.relatedTarget))) setSuruklu(false); }}
+          onDrop={(e) => { setSuruklu(false); if (!hazir || bekliyor || !e.dataTransfer.files.length) return; e.preventDefault(); void ekleriEkle([...e.dataTransfer.files]); }}
           data-boy={!kucuk && boy !== null ? "" : undefined} style={!kucuk && boy !== null ? { height: `${boy}px` } : undefined}
           onKeyDown={(e) => {
             if (e.key !== "Escape") return;
@@ -730,8 +776,8 @@ export function SayAsistan() {
           </div>
           <div className={stil.govde} ref={govde} id="say-govde" onScroll={kaydirildi} hidden={kucuk}>
             {!bagli && <Serit tur="uyari" ikon="wifi-off">Bağlantı yok.{raporda ? " Raporu yazmaya devam edebilirsiniz." : ""}</Serit>}
-            {bagli && !durum.anahtar && <Serit tur="uyari" ikon="key-round">API anahtarı girilmedi (Firma ayarları › Yapay zekâ): S.A.Y cevap veremez.</Serit>}
-            {hazir && durum.sinirDoldu && <Serit tur="uyari" ikon="triangle-alert">Bu ay kişi başı sınırınız doldu; yönetici Firma ayarları&apos;ndan artırabilir.</Serit>}
+            {bagli && !durum.anahtar && <Serit tur="uyari" ikon="key-round">Yapay zekâ anahtarı tanımlı değil: S.A.Y cevap veremez. probata yönetimine başvurun.</Serit>}
+            {hazir && durum.sinirDoldu && <Serit tur="uyari" ikon="triangle-alert">Bu ay kişi başı sınırınız doldu; probata yönetimi artırabilir.</Serit>}
             <ol className={stil.liste} aria-live="polite" aria-busy={bekliyor || !iletiler || undefined}>
               {(iletiler ?? []).map((m, i, l) => (
                 <IletiYeri key={m.id} m={m} onceki={l[i - 1]} rb={rb} git={git} uygula={uygula} vazgec={vazgec}
@@ -780,10 +826,10 @@ export function SayAsistan() {
                 <div className={stil.ekMenu} id="say-ek-menu" hidden={!menu || !hazir}>
                   <label className={stil.ekOge}><input className={stil.gizli} type="file" accept="image/*" capture="environment" onChange={(e) => void ekSec(e)} />
                     <Ikon ad="camera" kucuk />Fotoğraf çek</label>
-                  <label className={stil.ekOge}><input className={stil.gizli} type="file" accept="image/*" onChange={(e) => void ekSec(e)} />
+                  <label className={stil.ekOge}><input className={stil.gizli} type="file" accept="image/*" multiple onChange={(e) => void ekSec(e)} />
                     <Ikon ad="image" kucuk />Galeriden seç</label>
-                  <label className={stil.ekOge}><input className={stil.gizli} type="file" onChange={(e) => void ekSec(e)} />
-                    <Ikon ad="file-text" kucuk />Belge ekle<small>PDF, Word, Excel, metin</small></label>
+                  <label className={stil.ekOge}><input className={stil.gizli} type="file" multiple onChange={(e) => void ekSec(e)} />
+                    <Ikon ad="file-text" kucuk />Belge ekle<small>PDF, Word, Excel, ZIP, metin</small></label>
                 </div>
               </div>
               <label className={stil.gizli} htmlFor="say-girdi">S.A.Y&apos;a sor</label>

@@ -25,7 +25,7 @@ import type { OnBilgiVerisi } from "../../../belge/onbilgi.ts";
 import { hesapGonderen, personelHesaplari } from "../../../server/kimlik/hesap.ts";
 import { canDo, canDoEylem, duzey } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
-import { ekipmanEkle as ekipmanKaydet, ekipmanKilitle, ekipmanKullanimi, ekipmanlar, ekipmanPasif as ekipmanPasifYaz, ekipmanSil as ekipmanSilYaz, koduKullanan, tesisEkipmanlari, type EkipmanOzeti } from "../../ekipman/server/ekipman.ts";
+import { ekipmanEkle as ekipmanKaydet, ekipmanKilitle, ekipmanKullanimi, ekipmanlar, ekipmanPasif as ekipmanPasifYaz, ekipmanSil as ekipmanSilYaz, koduKullanan, onekliKodlar, tesisEkipmanlari, type EkipmanOzeti } from "../../ekipman/server/ekipman.ts";
 import { kullanimMetni } from "../../../components/sil/metin.ts";
 import { turOzetleri } from "../../ekipman-turleri/server/turler.ts";
 import { musteriOzetleri, tesisMusteriIletisim } from "../../musteriler/server/musteriler.ts";
@@ -33,7 +33,7 @@ import { personelOzetleri } from "../../personel/server/personel.ts";
 import { meslek } from "../../personel/sema.ts";
 import { yayindakiBelgeFormati } from "../../rapor-format/server/belgeler.ts";
 import { ekipmanRaporuVar, mesaiDurumu, oncekiKontrol, oncekiRaporlar, planRaporlari, raporKunyeleriniYaz, type OncekiKontrol, type PlanRaporu } from "../../raporlar/server/plan-baglanti.ts";
-import { KunyeGirdisi, kodBicimi, kodNormal, NotGirdisi, onBilgiDosyaAdi, onBilgiEpostasi, RedGirdisi, TAMAMLANDI_RAPOR, YeniEkipmanGirdisi, type KodTuru, type PlanDurumu } from "../sema.ts";
+import { KunyeGirdisi, kodBicimi, kodNormal, NotGirdisi, onBilgiDosyaAdi, onBilgiEpostasi, RedGirdisi, SayEkipmanGirdisi, siradakiKod, TAMAMLANDI_RAPOR, YeniEkipmanGirdisi, type KodTuru, type PlanDurumu } from "../sema.ts";
 import { bugunTr, EKIP, MODUL, PLAN, PLAN_EKIPMAN, planAcabilir, planKarti, UUID, type Kisi, type PlanKarti } from "./planlar.ts";
 import { adresler, kaynakEpostalari, type EpostaDurumu } from "../../../server/eposta/eposta.ts";
 import { belgeEpostala } from "../../../server/eposta/belge-gonder.ts";
@@ -458,6 +458,36 @@ export async function yeniEkipman(db: Sorgulayici, kim: Kisi, id: string, girdi:
   const ekipmanId = await ekipmanKaydet(db, z, { tesisId: e.p.tesis_id, turId: v.tur, kod: v.kod, seri: v.seri, konum: v.konum });
   await ekle(db, PLAN_EKIPMAN, { plan_id: id, ekipman_id: ekipmanId, sonradan: true, ekleyen: kim.ad }, z);
   return { durum: "tamam", bildirim: `${v.kod} eklendi.`, id: ekipmanId };
+}
+
+/** 2026-10-26 (S.A.Y Faz 2 — reisim: "rapor oluşturturken ekipman ekleme işini kendisi otomatik yapabilsin", "kodu otomatik kendisi verecek"):
+    S.A.Y'ın plana bir ya da çok ekipman eklemesi — her biri yeniEkipman'la (aynı yetki ve kural); kodu verilmeyene türün kodu + tire + sıradaki boş
+    sayı (KMP-0, KMP-1 …; şu anki ve eski kodlar atlanır). Eklenemeyen nedeniyle döner, ötekiler eklenir. */
+export async function sayEkipmanlarEkle(db: Sorgulayici, kim: Kisi, id: string, girdiler: readonly unknown[]): Promise<
+  { durum: "tamam"; eklenen: { sira: number; id: string; kod: string }[]; eklenemeyen: { sira: number; kod: string | null; neden: string }[] } | { durum: "yok" | "yetkisiz" } | { durum: "red"; neden: string }> {
+  const turKodu = new Map((await turOzetleri(db)).map((t) => [t.id, t.kod]));
+  const kullanilan = new Map<string, Set<string>>();
+  const eklenen: { sira: number; id: string; kod: string }[] = [], eklenemeyen: { sira: number; kod: string | null; neden: string }[] = [];
+  for (const [i, ham] of girdiler.entries()) {
+    const g = dogrula(SayEkipmanGirdisi, ham);
+    if (!g.tamam) { eklenemeyen.push({ sira: i + 1, kod: null, neden: Object.values(g.hatalar).join(" ") }); continue; }
+    let kod = g.veri.kod;
+    if (!kod) {
+      const onek = turKodu.get(g.veri.tur);
+      if (!onek) { eklenemeyen.push({ sira: i + 1, kod: null, neden: "Ekipman türü seçilmeli." }); continue; }
+      const k = kullanilan.get(onek) ?? await onekliKodlar(db, onek);
+      kullanilan.set(onek, k);
+      kod = siradakiKod(onek, k);
+    }
+    const r = await yeniEkipman(db, kim, id, { kod, tur: g.veri.tur, seri: g.veri.seri, konum: g.veri.konum });
+    if (r.durum === "yok" || r.durum === "yetkisiz") return { durum: r.durum };
+    if (r.durum === "tamam" && r.id) {
+      eklenen.push({ sira: i + 1, id: r.id, kod });
+      for (const k of kullanilan.values()) k.add(kod);
+    } else if (r.durum === "red" && i === 0) return { durum: "red", neden: r.neden };   /* plan ekipman almıyor (durum) — hiçbiri eklenmez */
+    else eklenemeyen.push({ sira: i + 1, kod, neden: r.durum === "red" ? r.neden : r.durum === "gecersiz" ? Object.values(r.hatalar).join(" ") : "Eklenemedi." });
+  }
+  return { durum: "tamam", eklenen, eklenemeyen };
 }
 
 /** tesiste kayıtlı ekipmanı plana al */
