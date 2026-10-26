@@ -2527,7 +2527,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
-- 2026-10-26 (CI bekliyor): **S.A.Y ASİSTAN FAZ 2 — SÜRÜKLE-BIRAK, TOPLU / ZIP, KENDİLİĞİNDEN EKİPMAN + KOD, PDF'TEN ŞABLON** — reisim: *"sürükleyerek dosya
+- 2026-10-26 (YAYINDA — main 3a550597; CI 17/17 yeşil, 18 dk): **S.A.Y ASİSTAN FAZ 2 — SÜRÜKLE-BIRAK, TOPLU / ZIP, KENDİLİĞİNDEN EKİPMAN + KOD, PDF'TEN ŞABLON** — reisim: *"sürükleyerek dosya
   bırakmakta olsun toplu dosya yüklemekte zip vs de okusun … zip i atayım içerideki raporları incele ve ilgili raporları oluştur diyince direk oluşturup ne
   yaptığını özet geçsin"*, *"rapor oluşturturken ekipman ekleme işini kendisi otomatik yapabilsin, ekipman konumunu verilen donelerden kendisi anlayacak, kodu
   otomatik kendisi verecek ekipmanın sabit kodu + 0-1-2"*, *"elektrik raporlarında da linyeler vs düzgün okusun"*, *"pdf i el ile formata eklemeye çalışıyor tek
