@@ -47,7 +47,7 @@ const SUTUNLAR: Sutun<MusteriUygunsuzlukSatiri>[] = [
   ) },
   { k: "tarih", genislik: "12%", baslik: "Tespit", kart: "govde", sira: 4, hucre: (u) => <><KartEtiket>Tespit</KartEtiket>{u.tarih ? tarihNo(u.tarih) : "—"}</> },
   { k: "durum", genislik: "16%", baslik: "Durum", kart: "rozet", sira: 1, hucre: (u) => (
-    <span>{u.acik ? <Rozet tur="red">Açık</Rozet> : <Rozet tur="tamam">Giderildi</Rozet>}{u.giderildi && <AltSatir>{tarihNo(u.giderildi)} kontrolünde</AltSatir>}</span>
+    <span>{u.acik ? <Rozet tur="red">Açık</Rozet> : <Rozet tur="tamam">Giderildi</Rozet>}{u.giderildi && <AltSatir>{u.giderenNo ? `${u.giderenNo} · ` : ""}{tarihNo(u.giderildi)} kontrolünde</AltSatir>}</span>
   ) },
 ];
 

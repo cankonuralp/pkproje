@@ -2527,6 +2527,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-26 (CI bekliyor; göç 0108): **TAKİP MUAYENESİ** — reisim: *"birisi daha önce muayene yapmışsa ve o muayeneye başka bir denetçi gidecekse onun için takip
+  muayenesi açılabilmeli önceki metinler gelmeli"*; maket + dört karar onaylı (*"Takip muayenesi maketi ve kararlar uygun, başla"*). Plan içinde açık uygunsuzluğu
+  olan son imzalı raporu bulunan ekipmanın satırında "Takip muayenesi aç" (raporlu ekipmanda da; ekipteki uzman, Rapor oluştur'la aynı kapı; bağlantı gerekir).
+  Numara ana + -T1 (takibin takibi ilk numaradan -T2; revizyon …-T1-R1). İçerik ana raporun imzalı sürümünden; aynı planda da açılır (göç 0108: rapor.takip_kaynak,
+  rapor_plan_ekipman takipleri saymaz, rapor_plan_takip). Saha ekranında "Takip muayenesi · ana rapor … · n / m giderildi" şeridi — madde başına Giderildi /
+  Giderilmedi formdaki cevaplardan canlı (maketteki iki tuş yerine: madde zaten formda düzeltilir, ölçüm tablosunda tuş anlamsız). İmzalanınca giderilen ana
+  raporda "giderildi", hâlâ uygunsuz olan "devam" kapanır (yeni kapanış; app.devam_ref ile tetik) ve takip raporunun açık uygunsuzluğu olur. Müşteri panelinde
+  "devam" satırı yok, giderilen "Giderildi · …-T1 · tarih kontrolünde". S.A.Y: rapor_takip_ac. Kilit tests/onaylar (PG), takip-muayenesi + bozan. Sahada denenmedi.
 - 2026-10-26 (YAYINDA — main 2813cff1; CI 17/17 yeşil): **S.A.Y ASİSTAN FAZ 3 — EĞİTİM: SIK İŞLER + DENEME SETİ** — reisim: *"eğitmemiz gerekli kast ettiğim şeyi iyi anlamıyor"*, *"ben clauda
   ne desem anlıyor"* + Claude'u kullanma biçiminin 14 maddelik özeti. Talimata "Sık işler" (söz → araç / işlem: etiketten / eski rapordan okuma, ekipman kaydı,
   planın raporlarını toplu açıp doldurma, kontrol saatleri ve sonraki kontrol, varsayılan / boş seçim, mükerrer ayıklama, toplu onaya gönderme ve yayılan

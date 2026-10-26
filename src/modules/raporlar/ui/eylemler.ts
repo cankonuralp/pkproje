@@ -7,7 +7,7 @@ import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { depo } from "../../../server/dosya/depo";
 import { belgePdf } from "../../../belge/pdf";
 import {
-  cihazEkle, cihazKaldir, fotoEkle, fotoSil, imzaHazirla, imzaliEslestirYukle, imzaliYukle, onayaGonder, raporFormatGuncelle, raporKaydet, raporKopyala, raporKunyeGuncelle, raporOlustur,
+  cihazEkle, cihazKaldir, fotoEkle, fotoSil, imzaHazirla, imzaliEslestirYukle, imzaliYukle, onayaGonder, raporFormatGuncelle, raporKaydet, raporKopyala, raporKunyeGuncelle, raporOlustur, takipAc,
   raporSil, revizeIste, revizeIstegiGeriCek, teknikImzaHazirla, teknikImzaliEslestirYukle, teknikImzaliYukle, type RaporYazma,
 } from "../server/raporlar";
 import { anthropicCagir, type OkunanSatir } from "../../../server/yz/okuma";
@@ -58,6 +58,10 @@ export async function raporOneriKapatEylemi(raporId: unknown, bolum: unknown): P
 
 export async function raporOlusturEylemi(planId: string, ekipmanId: string): Promise<RaporYaniti> {
   return islem((o) => oturumIslemi(o, (db) => raporOlustur(db, o, metin(planId), metin(ekipmanId))));
+}
+/** 2026-10-26 (göç 0108): takip muayenesi aç — ekipmanın açık uygunsuzluğu olan son imzalı raporuna (…-T1) */
+export async function takipAcEylemi(planId: string, ekipmanId: string): Promise<RaporYaniti> {
+  return islem((o) => oturumIslemi(o, (db) => takipAc(db, o, metin(planId), metin(ekipmanId))));
 }
 export async function raporKaydetEylemi(id: string, surum: number, girdi: unknown): Promise<RaporYaniti> {
   const y = await islem((o) => oturumIslemi(o, (db) => raporKaydet(db, o, metin(id), Number(surum), girdi)));

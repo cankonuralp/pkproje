@@ -38,7 +38,7 @@ import { Tus } from "../../../components/tus/Tus";
 import { KALIP } from "../../../styles/kalip";
 import { kodBicimi, kodNormal, tarihNo, type KodTuru } from "../sema";
 import type { PlanEkipmani, PlanIci } from "../server/plan-ici";
-import { raporOlusturEylemi } from "../../raporlar/ui/eylemler";
+import { raporOlusturEylemi, takipAcEylemi } from "../../raporlar/ui/eylemler";
 import { useCihazKapisi } from "./cihazKapisi";
 import { ekipmanPasifEylemi, ekipmanSilEylemi, kayitliEkleEylemi, kodDurumuEylemi, yeniEkipmanEylemi } from "./eylemler";
 import stil from "./planlar.module.css";
@@ -133,11 +133,17 @@ export function EkipmanBolumu({ v }: { v: PlanIci }) {
     { k: "rapor", genislik: g.rapor, baslik: "Rapor", kart: "rozet", sira: 1, hucre: (e) => e.pasif ? <Rozet tur="notr">Pasif</Rozet>
       : raporlu.has(e.id) ? <span className={stil.raporTik} title="Raporu var"><Ikon ad="circle-check" /><span className="gizli">Raporu var</span></span> : null },
     ...(v.izin.ekipmanPasif || kapi.olustur || v.izin.ekipmanSil ? [{ k: "eylem", genislik: g.eylem, baslik: "İşlem", gizliBaslik: true, siralanmaz: true, kart: "eylem", sira: 9, hucre: (e: PlanEkipmani) => {
-      if (raporlu.has(e.id)) return null;
+      /* 2026-10-26 (göç 0108) TAKİP MUAYENESİ: açık uygunsuzluğu olan son imzalı raporun takibi — raporlu ekipmanda da (aynı planda açılabilir);
+         ana raporun imzalanmamış takibi varsa tuş yok (Raporlar bölümünde) */
+      const takip = kapi.olustur && !e.pasif && e.takip && !e.takip.bekleyen
+        ? <Tus tur="ikincil" ikon="file-check" disabled={bekliyor || kapi.erken || !!kapi.mesai} aria-label={`${e.kod} için takip muayenesi aç (${e.takip.no})`}
+          title={`${e.takip.no} · ${e.takip.acik} açık uygunsuzluk`} aria-describedby={kapi.erken ? ERKEN_ID : kapi.mesai ? MESAI_ID : undefined}
+          onClick={() => takipAc(e)}>Takip muayenesi aç</Tus> : null;
+      if (raporlu.has(e.id)) return takip ? <div className={stil.eylemTuslar}>{takip}</div> : null;
       const olustur = kapi.olustur && !e.pasif;
       /* 360: yönetici, hiç kullanılmamış ekipman (raporu yok, tamamlanmış planda yok) */
       const sil = v.izin.ekipmanSil && e.sil;
-      if (!v.izin.ekipmanPasif && !olustur && !sil) return null;
+      if (!v.izin.ekipmanPasif && !olustur && !sil && !takip) return null;
       return (
         <div className={stil.eylemTuslar}>
           {v.izin.ekipmanPasif && (e.pasif
@@ -151,6 +157,7 @@ export function EkipmanBolumu({ v }: { v: PlanIci }) {
             : <Tus tur="ikincil" ikon="file-plus" disabled={bekliyor || kapi.erken || !!kapi.mesai} aria-label={`${e.kod} için rapor oluştur`}
               aria-describedby={kapi.erken ? ERKEN_ID : kapi.mesai ? MESAI_ID : undefined} onClick={() => raporAc(e)}>Rapor oluştur</Tus>
           )}
+          {takip}
         </div>
       );
     } } satisfies Sutun<PlanEkipmani>] : []),
@@ -178,6 +185,17 @@ export function EkipmanBolumu({ v }: { v: PlanIci }) {
       }
       if (r.tamam) { bildir(r.bildirim ?? "Rapor oluşturuldu."); router.refresh(); return; }
       bildir(r.genel ?? Object.values(r.hatalar ?? {})[0] ?? "Rapor oluşturulamadı.");
+      router.refresh();
+    });
+  }
+
+  /* 2026-10-26 (göç 0108): takip muayenesi — sunucu numarayı (…-T1) ve içeriği ana rapordan verir; bağlantı gerekir */
+  function takipAc(e: PlanEkipmani) {
+    if (v.izin.raporEngel) { uyar(v.izin.raporEngel); return; }
+    if (cevrimdisiMi()) { uyar("Takip muayenesi bağlantı varken açılır."); return; }
+    baslat(async () => {
+      const r = await takipAcEylemi(planId, e.id);
+      bildir(r.tamam ? r.bildirim ?? "Takip muayenesi açıldı." : r.genel ?? Object.values(r.hatalar ?? {})[0] ?? "Takip muayenesi açılamadı.");
       router.refresh();
     });
   }

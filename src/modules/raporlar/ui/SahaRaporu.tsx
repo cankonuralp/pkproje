@@ -958,6 +958,24 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
       </Serit>,
     );
   }
+  /* 2026-10-26 (göç 0108) TAKİP MUAYENESİ: ana raporun uygunsuzlukları ve şu anki durumu — formdaki cevaplardan canlı (madde düzeltilince
+     "Giderildi"); imzalanınca giderilen kapanır, giderilmeyen bu raporla devam eder. Yalnız ekranda (belge / PDF'e girmez) */
+  if (v.takip) {
+    const kalan = new Set(d.kusurlar.map((k) => k.ref));
+    const giderilen = v.takip.maddeler.filter((m) => !kalan.has(m.ref)).length;
+    seritler.push(
+      <Serit key="takip" tur="bilgi" ikon="file-check">
+        <b>Takip muayenesi</b> · ana rapor <Kod>{v.takip.no}</Kod>{v.takip.tarih ? ` · ${tarihNo(v.takip.tarih)}` : ""} · {giderilen} / {v.takip.maddeler.length} giderildi
+        {!!v.takip.maddeler.length && (
+          <ul className={stil.takipListe} aria-label="Önceki uygunsuzluklar">
+            {v.takip.maddeler.map((m) => (
+              <li key={m.ref}><Rozet tur={kalan.has(m.ref) ? "red" : "tamam"}>{kalan.has(m.ref) ? "Giderilmedi" : "Giderildi"}</Rozet><span>{m.metin}</span></li>
+            ))}
+          </ul>
+        )}
+      </Serit>,
+    );
+  }
   if (v.durum === "taslak" && v.kopyaKaynak) {
     seritler.push(
       <Serit key="kopya" tur="bilgi" ikon="copy">

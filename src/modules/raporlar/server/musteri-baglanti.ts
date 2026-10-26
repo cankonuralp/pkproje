@@ -75,6 +75,8 @@ export async function musteriRaporu(db: Sorgulayici, id: string): Promise<{ r: M
 export interface MusteriUygunsuzlukSatiri {
   id: string; raporId: string; raporNo: string; raporDosya: string | null; raporBoyut: number; ekipmanKod: string; turAd: string; tesisId: string; tesis: string;
   kriter: string | null; metin: string; agir: boolean; tarih: string | null; acik: boolean; giderildi: string | null;
+  /** 2026-10-26 (0108): gideren kontrolün rapor numarası (takip muayenesinde …-T1) */
+  giderenNo: string | null;
   /** muayene uzmanının raporda yazdığı yorum (imzalı sürümün içeriğinden; 2026-10-26: müşteri Excel'inde sütun) — yalnız yorumlu çağrıda dolu, yoksa "" */
   yorum: string;
 }
@@ -82,12 +84,13 @@ export interface MusteriUygunsuzlukSatiri {
 /** müşterinin görebildiği uygunsuzluklar (revizyonla kapananlar hariç — veritabanı politikası), en yeni tespit üstte */
 export async function musteriUygunsuzluklari(db: Sorgulayici, yorumlu = false): Promise<MusteriUygunsuzlukSatiri[]> {
   const l = (await db.sorgu<{ id: string; rapor_id: string; ekipman_id: string; tesis_id: string; kriter: string | null; metin: string; agir: boolean; tarih: string | null;
-    kapanis: string | null; surum_no: string | null; kapatan_tarih: string | null; yorum: string | null }>(
+    kapanis: string | null; surum_no: string | null; kapatan_tarih: string | null; kapatan_no: string | null; yorum: string | null }>(
     `SELECT u.id::text, u.rapor_id::text, u.ekipman_id::text, u.tesis_id::text, u.kriter, u.metin, u.agir, u.tarih, u.kapanis, s.no AS surum_no,
-        k.kontrol_tarihi AS kapatan_tarih, ${yorumlu ? "s.icerik->'cevaplar'->>'yorum'" : "NULL::text"} AS yorum
+        k.kontrol_tarihi AS kapatan_tarih, k.no AS kapatan_no, ${yorumlu ? "s.icerik->'cevaplar'->>'yorum'" : "NULL::text"} AS yorum
      FROM uygunsuzluk u LEFT JOIN rapor_surumu s ON s.id = u.surum_id
        LEFT JOIN rapor_surumu k ON u.kapanis = 'giderildi' AND k.rapor_id = musteri_surum_raporu(u.kapatan_surum)
          AND (u.tarih IS NULL OR k.kontrol_tarihi IS NULL OR k.kontrol_tarihi >= u.tarih)
+     WHERE u.kapanis IS DISTINCT FROM 'devam'   -- 0108: sonraki muayenede giderilmeyen madde yeni raporun açık satırı olarak listelenir (çift satır olmaz)
      ORDER BY u.tarih DESC NULLS LAST, u.olustu DESC, u.metin`)).rows;
   if (!l.length) return [];
   /* raporun görünen numarası: uygunsuzluğun kendi sürümü (müşteriye açıksa), yoksa raporun son imzalı sürümü */
@@ -104,7 +107,7 @@ export async function musteriUygunsuzluklari(db: Sorgulayici, yorumlu = false): 
       id: x.id, raporId: x.rapor_id, raporNo: x.surum_no ?? son.get(x.rapor_id)?.no ?? "—", raporDosya: son.get(x.rapor_id)?.boyut == null ? null : son.get(x.rapor_id)!.dosya,
       raporBoyut: Number(son.get(x.rapor_id)?.boyut ?? 0), ekipmanKod: e?.kod ?? "—", turAd: e ? tur.get(e.turId) ?? "—" : "—",
       tesisId: x.tesis_id, tesis: tesis.get(x.tesis_id) ?? "—", kriter: x.kriter, metin: x.metin, agir: x.agir, tarih: x.tarih, acik: x.kapanis === null,
-      giderildi: x.kapanis === "giderildi" ? x.kapatan_tarih : null, yorum: x.yorum ?? "",
+      giderildi: x.kapanis === "giderildi" ? x.kapatan_tarih : null, giderenNo: x.kapanis === "giderildi" ? x.kapatan_no : null, yorum: x.yorum ?? "",
     };
   });
 }

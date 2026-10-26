@@ -32,7 +32,7 @@ import { musteriOzetleri, tesisMusteriIletisim } from "../../musteriler/server/m
 import { personelOzetleri } from "../../personel/server/personel.ts";
 import { meslek } from "../../personel/sema.ts";
 import { yayindakiBelgeFormati } from "../../rapor-format/server/belgeler.ts";
-import { ekipmanRaporuVar, mesaiDurumu, oncekiKontrol, oncekiRaporlar, planRaporlari, raporKunyeleriniYaz, type OncekiKontrol, type PlanRaporu } from "../../raporlar/server/plan-baglanti.ts";
+import { ekipmanRaporuVar, mesaiDurumu, oncekiKontrol, oncekiRaporlar, planRaporlari, raporKunyeleriniYaz, takipAdaylari, type OncekiKontrol, type PlanRaporu } from "../../raporlar/server/plan-baglanti.ts";
 import { KunyeGirdisi, kodBicimi, kodNormal, NotGirdisi, onBilgiDosyaAdi, onBilgiEpostasi, RedGirdisi, SayEkipmanGirdisi, siradakiKod, TAMAMLANDI_RAPOR, YeniEkipmanGirdisi, type KodTuru, type PlanDurumu } from "../sema.ts";
 import { bugunTr, EKIP, MODUL, PLAN, PLAN_EKIPMAN, planAcabilir, planKarti, UUID, type Kisi, type PlanKarti } from "./planlar.ts";
 import { adresler, kaynakEpostalari, type EpostaDurumu } from "../../../server/eposta/eposta.ts";
@@ -175,6 +175,8 @@ export interface PlanEkipmani {
   /** 2026-10-17 (İ3, göz): önceki raporun imzalı PDF'i — dosya null ise neden (saklama süresi dolduğu için silindi · görme yetkisi yok); önceki
       raporu yoksa null */
   oncekiRapor: { no: string; dosya: string | null; neden: string | null } | null;
+  /** 2026-10-26 (göç 0108) TAKİP MUAYENESİ: açık uygunsuzluğu olan son imzalı rapor (no, açık sayısı) ve bekleyen (imzalanmamış) takip raporu; yoksa null */
+  takip: { no: string; acik: number; bekleyen: string | null } | null;
 }
 export interface PlanIci {
   kart: PlanKarti;
@@ -251,6 +253,7 @@ export async function planIci(db: Sorgulayici, kim: Kisi, id: string): Promise<P
   const silinebilir = new Set(kullanim ? ekp.filter((x) => !kullanim.has(x.id)).map((x) => x.id) : []);
   /* 2026-10-17 (İ2, İ3): ekipmanın bu plan dışındaki son tamamlanmış raporu (Raporlar'ın okuyucusu) */
   const onc = await oncekiRaporlar(db, ekp.map((x) => x.id), id);
+  const tkp = await takipAdaylari(db, ekp.map((x) => x.id));
   const ekipman: PlanEkipmani[] = ekp.map((x) => {
     const t = turBul.get(x.turId), r = onc.get(x.id);
     /* göz: ekipteki denetçi (istisna — raporlar.ts oncekiRaporGorulur) ya da Raporlar'ın görme kuralı (kendi / branş / hepsi) */
@@ -258,7 +261,8 @@ export async function planIci(db: Sorgulayici, kim: Kisi, id: string): Promise<P
     const oncekiRapor = !r ? null : !gorur ? { no: r.no, dosya: null, neden: "bu raporu görme yetkiniz yok" }
       : { no: r.no, dosya: r.dosya, neden: r.dosya ? null : "PDF saklama süresi dolduğu için silindi" };
     return { id: x.id, kod: x.kod, turId: x.turId, tur: t?.ad ?? "—", brans: t?.brans ?? "m", konum: x.konum, seri: x.seri, pasif: x.pasif, surum: x.surum, sil: silinebilir.has(x.id),
-      sonradan: !!pe.find((y) => y.ekipman_id === x.id)?.sonradan, onceki: oncekiKontrol(r, x), oncekiRapor };
+      sonradan: !!pe.find((y) => y.ekipman_id === x.id)?.sonradan, onceki: oncekiKontrol(r, x), oncekiRapor,
+      takip: ((t) => (t ? { no: t.no, acik: t.acik, bekleyen: t.bekleyen?.no ?? null } : null))(tkp.get(x.id)) };
   });
   const teklif = new Map<string, PlanIci["teklif"][number]>();
   for (const x of ekipman) {

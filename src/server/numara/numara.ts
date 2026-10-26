@@ -65,10 +65,19 @@ export async function raporNoAl(db: Sorgulayici, s: { simdi?: Date } = {}): Prom
   return `${kod}-${aayy(s.simdi ?? new Date())}-${sira(n)}-${randomBytes(3).toString("hex").slice(0, 5)}`;
 }
 
-const RAPOR_NO = /^[A-Z]{2}-\d{4}-\d{3,}-[0-9a-f]{5}$/;
-/** revizyon: aynı numara + -R1, -R2 … (yalnız asıl numaradan) */
+const RAPOR_NO = /^[A-Z]{2}-\d{4}-\d{3,}-[0-9a-f]{5}(-T\d{1,3})?$/;
+/** revizyon: aynı numara + -R1, -R2 … (yalnız asıl numaradan; takip raporunda …-T1-R1) */
 export function revizyonNo(raporNo: string, n: number): string {
   if (!RAPOR_NO.test(raporNo)) throw new Error(`Geçersiz rapor numarası: ${raporNo}`);
   if (!Number.isSafeInteger(n) || n < 1) throw new Error("Geçersiz revizyon");
   return `${raporNo}-R${n}`;
+}
+
+/** 2026-10-26 (göç 0108) TAKİP MUAYENESİ: ana raporun numarası + -T1, -T2 … — takibin takibi de ilk numaradan sayılır (…-T1'in takibi …-T2);
+    kullanilan: aynı kökün var olan numaraları (silinenler dahil — numara bir kez verilir) */
+export function takipNo(anaNo: string, kullanilan: readonly string[]): string {
+  if (!RAPOR_NO.test(anaNo)) throw new Error(`Geçersiz rapor numarası: ${anaNo}`);
+  const kok = anaNo.replace(/-T\d+$/, "");
+  const en = kullanilan.reduce((m, x) => { const t = x.startsWith(`${kok}-T`) ? /^-T(\d+)$/.exec(x.slice(kok.length)) : null; return t ? Math.max(m, Number(t[1])) : m; }, 0);
+  return `${kok}-T${en + 1}`;
 }

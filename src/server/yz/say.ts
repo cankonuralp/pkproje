@@ -69,6 +69,7 @@ export function saySistemi(kilavuz: readonly (readonly [string, string])[], isle
     "- Varsayılan değerleri uygula, boş seçimleri doldur → rapor_getir ile boş alanları bul, rapor_yaz ile doldur.",
     "- Mükerrer kayıtları ayıkla → aynı kodlu ya da aynı ekipmanlı tekrarları plan_getir / rapor_ara ile bul; raporsuz tekrarı kaldır (plan_ekipman_pasif,",
     "  rapor_sil), raporlu olanları listele.",
+    "- Takip muayenesi aç (uygunsuzlukları giderildi mi bak) → rapor_takip_ac; takip raporunda giderilen maddeyi uygun yap, giderilmeyen kalsın.",
     "- Hazır raporları onaya gönder → rapor_ara ile Yeni raporlar, her biri rapor_onaya_gonder; gönderilemeyeni eksikleriyle listele. Aynı yanlış bilgi",
     "  (ör. yanlış seri no, tarih, ölçüm) birden çok raporda varsa hepsini bul ve söyle; istenirse hepsini düzelt.",
     "- Word formunu format yap → PDF'i varsa format_pdf_kur; yalnız Word varsa kullanıcıdan PDF olarak kaydedip eklemesini iste.",

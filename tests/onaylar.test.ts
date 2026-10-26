@@ -24,7 +24,7 @@ import { planIci, planKabul } from "../src/modules/planlar/server/plan-ici.ts";
 import { bugunTr, planAc, type Kisi } from "../src/modules/planlar/server/planlar.ts";
 import { taslakBaslat, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
 import {
-  IMZALI_MODULU, imzaHazirla, imzaliEslestirYukle, imzaliYukle, raporKaydet, raporListesi, raporOlustur, raporSil, revizeIste, revizeIstegiGeriCek, sahaRaporu,
+  IMZALI_MODULU, imzaHazirla, imzaliEslestirYukle, imzaliYukle, raporKaydet, raporListesi, raporOlustur, raporSil, revizeIste, revizeIstegiGeriCek, sahaRaporu, takipAc,
   teknikImzaHazirla, teknikImzaliEslestirYukle, teknikImzaliYukle,
 } from "../src/modules/raporlar/server/raporlar.ts";
 import { ayarOku, ayarYaz } from "../src/server/ayar/ayar.ts";
@@ -1018,4 +1018,62 @@ test("yeniden yazılmış imzalı PDF: içerik aynıysa tek ve toplu yükleme ta
   assert.equal(e3.id, h3);
   tamam(e3.sonuc);
   assert.deepEqual(await Promise.all([h2, h3].map(async (h) => (await satir(h)).durum)), ["imzali", "imzali"]);
+});
+
+/* 2026-10-26 TAKİP MUAYENESİ (göç 0108; reisim: "o muayeneye başka bir denetçi gidecekse onun için takip muayenesi açılabilmeli önceki metinler
+   gelmeli"; maket + dört karar onaylı). Saf kilit ve olumsuz kanıt: tests/takip-muayenesi.test.ts + bozan. */
+test("takip muayenesi: açık uygunsuzluklu imzalı rapora ekipteki başka uzman aynı planda …-T1 açar, metinler gelir; giderilen 'giderildi', giderilmeyen 'devam' kapanır ve takip raporunda açık kalır; takibin takibi …-T2", async () => {
+  const bas = bugunTr();
+  const tur = (await sql<{ t: string }>(A, "SELECT tur_id::text AS t FROM ekipman WHERE id = $1", [FA.ekp["HT-1"]])).rows[0].t;
+  const ekp = (await sql<{ id: string }>(A, "INSERT INTO ekipman (tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, 'HT-TK', 'x') RETURNING id::text", [FA.tesis, tur], FA.yon.id)).rows[0].id;
+  const p = tamam(await a(FA.plan, (db) => planAc(db, depo, FA.plan, A, { tesis: FA.tesis, baslangic: bas, bitis: bas,
+    ekip: [FA.denP, FA.mekP].map((x, i) => ({ personel: x, isgNo: `ISG-TK${planSira++}-${i}`, kaydet: false })) }))).id;
+  tamam(await a(FA.den, async (db) => planKabul(db, FA.den, p, (await planIci(db, FA.den, p))!.surum, true)));
+  const imzalat = async (yazan: Kisi, h: string) => {
+    await sql(A, "UPDATE rapor SET durum = 'onayda', surum = surum + 1 WHERE id = $1", [h], yazan.id);
+    tamam(await a(FA.mek, async (db) => onayla(db, FA.mek, h, await surum(h))));
+    tamam(await hazirla(yazan, h));
+    tamam(await yukle(yazan, h, await surum(h), imzala(await imzasizBayt(h))));
+  };
+  /* ana rapor: den yazar — iki madde uygun değil */
+  const r1 = tamam(await a(FA.den, (db) => raporOlustur(db, FA.den, p, ekp))).id;
+  await sql(A, `UPDATE rapor SET cevaplar = jsonb_set(jsonb_set(cevaplar, '{madde,k1}', '{"c": "Uygun değil", "not": "Korozyon"}'::jsonb),
+    '{madde,k2}', '{"c": "Uygun değil", "not": "Mühür yok"}'::jsonb), sonuc = 'uygun_degil', rapor_tarihi = $2, surum = surum + 1 WHERE id = $1`, [r1, bas], FA.den.id);
+  await imzalat(FA.den, r1);
+  const no1 = (await sql<{ no: string }>(A, "SELECT no FROM rapor WHERE id = $1", [r1])).rows[0].no;
+  const satir = async (k: Kisi) => (await a(k, (db) => planIci(db, k, p)))!.ekipman.find((x) => x.id === ekp)!.takip;
+  assert.deepEqual(await satir(FA.mekDen), { no: no1, acik: 2, bekleyen: null }, "plan satırı: açık uygunsuzluklu son imzalı rapor");
+
+  /* takip: ekipteki başka uzman (mekDen) aynı planda açar; ikinci kez açılmaz; içerik ana rapordan */
+  const t = tamam(await a(FA.mekDen, (db) => takipAc(db, FA.mekDen, p, ekp))).id;
+  const noT = (await sql<{ no: string; k: string }>(A, "SELECT no, takip_kaynak::text AS k FROM rapor WHERE id = $1", [t])).rows[0];
+  assert.deepEqual(noT, { no: `${no1}-T1`, k: r1 });
+  assert.deepEqual(await satir(FA.mekDen), { no: no1, acik: 2, bekleyen: `${no1}-T1` });
+  assert.deepEqual(await a(FA.mekDen, (db) => takipAc(db, FA.mekDen, p, ekp)), { durum: "red", neden: `Bu raporun takip muayenesi açık: ${no1}-T1.` });
+  assert.equal((await a(FA.plan, (db) => takipAc(db, FA.plan, p, ekp))).durum === "tamam", false, "planlamacı açamaz (Rapor oluştur'la aynı kapı)");
+  const vt = (await a(FA.mekDen, (db) => sahaRaporu(db, FA.mekDen, t)))!;
+  assert.deepEqual(vt.cevaplar.madde.k1, { c: "Uygun değil" }, "önceki metin gelir");
+  assert.deepEqual([vt.takip?.no, vt.takip?.maddeler.map((m) => m.ref).sort()], [no1, ["k1", "k2"]]);
+
+  /* takipte k1 giderildi, k2 giderilmedi → imza: ana raporun k1'i "giderildi", k2'si "devam"; takip raporunda k2 açık */
+  await sql(A, `UPDATE rapor SET cevaplar = jsonb_set(cevaplar, '{madde,k1}', '{"c": "Uygun"}'::jsonb), sonuc = 'uygun_degil', rapor_tarihi = $2, surum = surum + 1
+    WHERE id = $1`, [t, bas], FA.mekDen.id);
+  await imzalat(FA.mekDen, t);
+  const kap = async (h: string) => Object.fromEntries((await sql<{ ref: string; kapanis: string | null }>(A,
+    "SELECT ref, kapanis FROM uygunsuzluk WHERE rapor_id = $1", [h])).rows.map((x) => [x.ref, x.kapanis]));
+  assert.deepEqual(await kap(r1), { k1: "giderildi", k2: "devam" });
+  assert.deepEqual(await kap(t), { k2: null });
+  assert.equal((await sql<{ v: string }>(A, "SELECT current_setting('app.devam_ref', true) AS v")).rows[0].v ?? "", "", "ayar işlemde kalmaz");
+
+  /* takibin takibi: ana rapor artık …-T1 (açık k2), numara ilk numaradan …-T2 */
+  assert.deepEqual(await satir(FA.den), { no: `${no1}-T1`, acik: 1, bekleyen: null });
+  const t2 = tamam(await a(FA.den, (db) => takipAc(db, FA.den, p, ekp))).id;
+  assert.equal((await sql<{ no: string }>(A, "SELECT no FROM rapor WHERE id = $1", [t2])).rows[0].no, `${no1}-T2`);
+
+  /* veritabanı: takip bağı değişmez, -T numarası bağsız olmaz, başka ekipmanın raporuna takip açılmaz */
+  await assert.rejects(sql(A, "UPDATE rapor SET takip_kaynak = NULL WHERE id = $1", [t2], FA.den.id), /değişmez/);
+  await assert.rejects(sql(A, `INSERT INTO rapor (no, plan_id, ekipman_id, tur_id, format_id, personel_id, kunye, takip_kaynak)
+    SELECT no || '-T9', plan_id, $2, tur_id, format_id, personel_id, kunye, id FROM rapor WHERE id = $1`, [r1, FA.ekp["HT-2"]], FA.den.id), /takip muayenesi aynı ekipmanın|rapor_takip|tesisinde|plan/);
+  await assert.rejects(sql(A, `INSERT INTO rapor (no, plan_id, ekipman_id, tur_id, format_id, personel_id, kunye)
+    SELECT no || '-T9', plan_id, ekipman_id, tur_id, format_id, personel_id, kunye FROM rapor WHERE id = $1`, [r1], FA.den.id), /rapor_takip_no|rapor_plan_ekipman/);
 });

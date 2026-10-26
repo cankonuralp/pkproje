@@ -23,6 +23,7 @@ export const DENEME_SETI: readonly (readonly [string, readonly string[]])[] = [
   ["TS EN 12817'yi ve manometreyi bu türe bağla", ["tur_baglanti_secenekleri", "tur_standart_ekle", "tur_baglanti_kaydet"]],
   ["ZIP'teki raporları incele ve ilgili raporları oluştur", ["plan_ekipmanlar_ekle", "rapor_ac", "rapor_yaz"]],
   ["Panodaki linyeleri tabloya gir", ["satir_ekle"]],
+  ["Bu ekipmana takip muayenesi aç", ["rapor_takip_ac"]],
 ];
 
 export const talimatKarsilar = (t: string, araclar: readonly string[]) => araclar.every((a) => t.includes(a));

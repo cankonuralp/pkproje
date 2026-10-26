@@ -15,7 +15,7 @@
    · Formatı güncelle (211): yazanın Yeni raporu, daha yeni yayınlanmış sürüm varsa; kimliği eşleşen cevaplar korunur, yeni madde ilk cevapla. */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { ekle, guncelle, tablo, type GuncelleSonucu, type Iz } from "../../../server/db/yazici.ts";
-import { raporNoAl } from "../../../server/numara/numara.ts";
+import { raporNoAl, takipNo } from "../../../server/numara/numara.ts";
 import type { Depo } from "../../../server/dosya/depo.ts";
 import { dosyaCope, dosyaYukle } from "../../../server/dosya/dosya.ts";
 import { canDo, canDoEylem, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
@@ -35,7 +35,7 @@ import { raporCihazlari } from "../../olcum-cihazlari/server/cihazlar.ts";
 import { personelOzetleri } from "../../personel/server/personel.ts";
 import { raporKapisi, TAMAMLANDI_RAPOR, type PlanDurumu } from "../../planlar/sema.ts";
 import { denetimeBasla, ekipmanEklemeDurumu, ekipmanEkipPlanlari, kodDurumu, kunyeGuncelle, plandakiEkipman, plandakiEkipmanlar, raporIcinPlan, yeniEkipman, type Kunye, type RaporPlani } from "../../planlar/server/plan-ici.ts";
-import { oncekiKontrol, oncekiRaporIcerigi, oncekiRaporlar, surumluRaporEkipmani, type OncekiKontrol } from "./onceki.ts";
+import { oncekiKontrol, oncekiRaporIcerigi, oncekiRaporlar, surumluRaporEkipmani, takipAdaylari, takipKaynagi, type OncekiKontrol } from "./onceki.ts";
 import { formatSurumuOku as formatSurumuHam, yayindakiFormat as yayindakiHam } from "../../rapor-format/server/formatlar.ts";
 import { sahaTanimi } from "../../../format/tablo.ts";
 import { kimdeHaritasi } from "../../zimmetler/server/zimmet.ts";
@@ -78,7 +78,7 @@ export const OKUMA_FOTO_EN_COK = 20;
 const FOTO_MADDE_EN_COK = 10;
 const RAPOR = tablo({
   ad: "rapor", sutunlar: ["no", "plan_id", "ekipman_id", "tur_id", "format_id", "personel_id", "durum", "kunye", "kunye_surum", "ekipman_bilgi", "bas", "bit",
-    "sonraki", "takip", "rapor_tarihi", "cevaplar", "cihazlar", "fotolar", "sonuc", "sonuc_oto", "kopya_kaynak", "silindi"],
+    "sonraki", "takip", "rapor_tarihi", "cevaplar", "cihazlar", "fotolar", "sonuc", "sonuc_oto", "kopya_kaynak", "takip_kaynak", "silindi"],
   gizli: ["cevaplar"],
 });
 /* 2026-10-24 (serbest düzen): raporun kullandığı tanım — serbest tablo bölümleri cevaplarının sanal bölümlerine açık (format/tablo.ts sahaTanimi):
@@ -166,30 +166,59 @@ async function oncekiKaynak(db: Sorgulayici, e: NonNullable<Awaited<ReturnType<t
   return { ekipmanBilgi, cevaplar: kopyaCevaplari(t, o.cevaplar) };
 }
 
+/** 2026-10-26 (göç 0108): takip raporunun içeriği — ana raporun son imzalı sürümünden (aynı plandaki ana rapor da olur; oncekiKaynak bu planı saymaz) */
+async function takipIcerigi(db: Sorgulayici, e: NonNullable<Awaited<ReturnType<typeof ekipmanEtiketi>>>, anaRapor: string, t: FormatTanimi):
+  Promise<{ ekipmanBilgi: EkipmanBilgisi; cevaplar: Cevaplar | null }> {
+  const kayit: EkipmanBilgisi = { marka: e.marka, model: e.model, seri: e.seri, imal: e.imal ? String(e.imal) : null, konum: e.konum, amac: null, bolum: null };
+  const o = await takipKaynagi(db, anaRapor);
+  if (!o) return { ekipmanBilgi: kayit, cevaplar: null };
+  const b = EkipmanBilgisi.safeParse(o.ekipmanBilgi);
+  const ekipmanBilgi = b.success
+    ? Object.fromEntries(Object.entries(kayit).map(([k, v]) => [k, b.data[k as keyof EkipmanBilgisi] ?? v])) as EkipmanBilgisi : kayit;
+  return { ekipmanBilgi, cevaplar: kopyaCevaplari(t, o.cevaplar) };
+}
+
+/** 2026-10-26 TAKİP MUAYENESİ (göç 0108; reisim: "o muayeneye başka bir denetçi gidecekse onun için takip muayenesi açılabilmeli önceki metinler
+    gelmeli"; maket onaylı): planın ekibindeki muayene uzmanı (Rapor oluştur'la aynı kapı — acilabilirPlan), ekipmanın açık uygunsuzluğu olan son
+    imzalı raporuna takip raporu açar: numara ana numara + -T1, içerik ana raporun imzalı sürümünden; ana raporun imzalanmamış takibi varsa açılmaz.
+    Aynı planda da açılır. İmzalanınca giderilen uygunsuzluk kapanır, hâlâ uygunsuz olan "devam" eder (imzaliYukle). */
+export async function takipAc(db: Sorgulayici, kim: Kisi, planId: string, ekipmanId: string): Promise<RaporYazma> {
+  const a = await acilabilirPlan(db, kim, planId);
+  if ("hata" in a) return a.hata;
+  const ana = (await takipAdaylari(db, [ekipmanId])).get(ekipmanId);
+  if (!ana) return { durum: "red", neden: "Bu ekipmanın açık uygunsuzluğu olan imzalı raporu yok." };
+  if (ana.bekleyen) return { durum: "red", neden: `Bu raporun takip muayenesi açık: ${ana.bekleyen.no}.` };
+  const kok = takipNo(ana.hamNo, []).replace(/-T1$/, "");
+  const kullanilan = (await db.sorgu<{ no: string }>("SELECT no FROM rapor WHERE no LIKE $1", [`${kok}-T%`])).rows.map((x) => x.no);
+  return raporAc(db, kim, a.p, ekipmanId, null, (no) => `Takip muayenesi açıldı: ${no} (ana rapor ${ana.no}).`, { no: takipNo(ana.hamNo, kullanilan), kaynak: ana.raporId });
+}
+
 /** raporu açar (oluştur ve kopya ortak): ekipman planda ve etkin, bu planda etkin raporu yok (203), türün YAYINDA formatı var; ilk rapor planı
     Denetimde yapar. Kopyada ekipman bilgileri, cihazlar ve cevaplar kaynaktan; oluşturmada önceki tamamlanmış rapordan (İ1, oncekiKaynak) ya da
     ekipman kaydından; künye her zaman denetçinin plandaki gördüğü künye. */
 async function raporAc(db: Sorgulayici, kim: Kisi, plan: AcilanPlan, ekipmanId: string, kopya: { r: RaporSatiri; konum: string | null } | null,
-  bildirim: (no: string, kod: string) => string): Promise<RaporYazma> {
+  bildirim: (no: string, kod: string) => string, takip: { no: string; kaynak: string } | null = null): Promise<RaporYazma> {
   if (!(await plandakiEkipman(db, plan.id, ekipmanId))) return { durum: "yok" };
   await ekipmanKilitle(db, ekipmanId);   /* pasife alma ile aynı anda koşmasın: ikisi de ekipmanın satırında sıraya girer */
   const e = await ekipmanEtiketi(db, ekipmanId);
   if (!e) return { durum: "yok" };
   if (e.pasif) return { durum: "red", neden: "Ekipman pasif; rapor açılamaz. Etkinleştir ile geri alınır." };
-  if ((await db.sorgu("SELECT 1 FROM rapor WHERE plan_id = $1 AND ekipman_id = $2 AND silindi IS NULL", [plan.id, ekipmanId])).rowCount) {
-    return { durum: "red", neden: "Bu ekipmanın bu planda raporu var." };
+  /* 0108: olağan rapor planda ekipman başına tek; takip raporu ana rapor başına planda tek (takipler olağan raporu engellemez) */
+  if (takip ? (await db.sorgu("SELECT 1 FROM rapor WHERE plan_id = $1 AND takip_kaynak = $2 AND silindi IS NULL", [plan.id, takip.kaynak])).rowCount
+    : (await db.sorgu("SELECT 1 FROM rapor WHERE plan_id = $1 AND ekipman_id = $2 AND silindi IS NULL AND takip_kaynak IS NULL", [plan.id, ekipmanId])).rowCount) {
+    return { durum: "red", neden: takip ? "Bu raporun takip muayenesi bu planda açık." : "Bu ekipmanın bu planda raporu var." };
   }
   const tur = await turRaporBilgisi(db, e.turId);
   if (!tur) return { durum: "yok" };
   const format = await yayindakiFormat(db, tur.id);
   if (!format) return { durum: "red", neden: "Bu türün yayınlanmış rapor formatı yok." };
-  const no = await raporNoAl(db);
+  const no = takip?.no ?? await raporNoAl(db);
   const k = kopya?.r;
-  const iz: Iz = { kim: kim.ad, ne: k ? "rapor.kopya" : "rapor.olustur", gerekce: `${no} · ${plan.no} · ${e.kod}${k ? ` · kaynak ${k.no}` : ""}` };
+  const iz: Iz = { kim: kim.ad, ne: k ? "rapor.kopya" : takip ? "rapor.takip" : "rapor.olustur", gerekce: `${no} · ${plan.no} · ${e.kod}${k ? ` · kaynak ${k.no}` : ""}` };
   const ortak = { no, plan_id: plan.id, ekipman_id: ekipmanId, tur_id: tur.id, format_id: format.id, personel_id: plan.personelId, durum: "taslak" };
   /* künye her zaman denetçinin plandaki GÖRDÜĞÜ künye (kopyada da): kaynağın eski künyesi taşınmaz, Güncelle tutarlı kalır (çapraz inceleme) */
   const kunye = { ...plan.kunye, eposta: null, tel: null, ...(await iletisimi(db, plan.tesisId)) };
-  const onc = k ? null : await oncekiKaynak(db, e, plan.id, format.tanim);
+  const onc = k ? null : takip ? await takipIcerigi(db, e, takip.kaynak, format.tanim) : await oncekiKaynak(db, e, plan.id, format.tanim);
   const r = k ? await ekle(db, RAPOR, {
     ...ortak, kunye, kunye_surum: plan.kunyeSurum,
     /* ekipman bilgileri kaynaktan; seri no yeni ekipmanın (sorulmaz, raporda yazılır), kullanım yeri pencereden (boşsa kaynaktaki) */
@@ -199,6 +228,7 @@ async function raporAc(db: Sorgulayici, kim: Kisi, plan: AcilanPlan, ekipmanId: 
     ...ortak, kunye, kunye_surum: plan.kunyeSurum,
     ekipman_bilgi: onc!.ekipmanBilgi satisfies EkipmanBilgisi,
     cevaplar: onc!.cevaplar ?? ilkCevaplar(format.tanim),
+    ...(takip ? { takip_kaynak: takip.kaynak } : {}),
   }, iz);
   await denetimeBasla(db, kim.ad, plan.id);
   return { durum: "tamam", id: r.id, bildirim: bildirim(no, e.kod) };
@@ -219,14 +249,14 @@ interface RaporSatiri {
   id: string; no: string; plan_id: string; ekipman_id: string; tur_id: string; format_id: string; personel_id: string; hesap_id: string | null; durum: RaporDurumu;
   kunye: Kunye & { eposta?: string | null; tel?: string | null }; kunye_surum: number; ekipman_bilgi: EkipmanBilgisi; bas: Date; bit: Date | null;
   sonraki: string | null; takip: string | null; rapor_tarihi: string | null; cevaplar: unknown; cihazlar: RaporCihazi[]; fotolar: RaporFoto[]; sonuc: string | null;
-  sonuc_oto: boolean; gonderildi: Date | null; kopya_kaynak: string | null; revizyon: number; onay: Date | null; onay_hesap: string | null;
+  sonuc_oto: boolean; gonderildi: Date | null; kopya_kaynak: string | null; takip_kaynak: string | null; revizyon: number; onay: Date | null; onay_hesap: string | null;
   surum: number; olustu: Date; degisti: Date;
 }
 async function raporOku(db: Sorgulayici, id: string, kilitle = false): Promise<RaporSatiri | null> {
   if (!UUID.test(id)) return null;
   return (await db.sorgu<RaporSatiri>(
     `SELECT id::text, no, plan_id::text, ekipman_id::text, tur_id::text, format_id::text, personel_id::text, hesap_id::text, durum, kunye, kunye_surum, ekipman_bilgi,
-       bas, bit, sonraki::text, takip::text, rapor_tarihi::text, cevaplar, cihazlar, fotolar, sonuc, sonuc_oto, gonderildi, kopya_kaynak::text, revizyon, onay,
+       bas, bit, sonraki::text, takip::text, rapor_tarihi::text, cevaplar, cihazlar, fotolar, sonuc, sonuc_oto, gonderildi, kopya_kaynak::text, takip_kaynak::text, revizyon, onay,
        onay_hesap::text, surum, olustu, degisti
      FROM rapor WHERE id = $1 AND silindi IS NULL${kilitle ? " FOR UPDATE" : ""}`, [id])).rows[0] ?? null;
 }
@@ -290,6 +320,9 @@ export interface SahaRaporu {
   secilebilir: Record<string, { id: string; kod: string; marka: string | null; model: string | null; seri: string | null; bitis: string | null }[]>;
   /** kopyadan açıldıysa kaynak raporun numarası (U7) */
   kopyaKaynak: string | null;
+  /** 2026-10-26 (göç 0108): takip muayenesiyse ana rapor (numara, muayene tarihi) ve onun uygunsuzlukları — ekranda her birinin şu anki durumu
+      (giderildi / giderilmedi) canlı kusur listesinden */
+  takip: { no: string; tarih: string | null; maddeler: { ref: string; metin: string; agir: boolean }[] } | null;
   /** daha yeni yayınlanmış format sürümü (U6; yalnız düzenleyebilene) */
   guncelFormat: number | null;
   /** yazanın bugünkü süresi doldu (ENGEL 3): yeni rapor ve kopya açılmaz */
@@ -375,6 +408,8 @@ export async function sahaRaporu(db: Sorgulayici, kim: Kisi, id: string): Promis
   const cev = Cevaplar.safeParse(r.cevaplar);
   const kk = r.kopya_kaynak ? (await db.sorgu<{ no: string; revizyon: number }>("SELECT no, revizyon FROM rapor WHERE id = $1", [r.kopya_kaynak])).rows[0] : undefined;
   const kopyaKaynak = kk ? gorunenNo(kk.no, kk.revizyon) : null;
+  const tk = r.takip_kaynak ? await takipKaynagi(db, r.takip_kaynak) : null;
+  const takip = tk ? { no: tk.no, tarih: tk.tarih, maddeler: tk.maddeler } : null;
   const yeni = duzenle ? await yayindakiFormat(db, r.tur_id) : null;
   /* kopya: yalnız raporu yazan, plandaki kendi personeliyle, rapor açabilen ve plana ekipman ekleyebilen (sunucu kopyada yeniden bakar).
      2026-10-12: yalnız plan tamamlandığı için eklenemiyorsa kopyaEngel — tuş görünür, basınca nedeni söylenir (eskiden tuş sessizce yoktu) */
@@ -408,7 +443,7 @@ export async function sahaRaporu(db: Sorgulayici, kim: Kisi, id: string): Promis
     tarih: { bas: zamanOku(r.bas)!, bit: zamanOku(r.bit), sonraki: r.sonraki, takip: r.takip, rapor: r.rapor_tarihi },
     cevaplar: cev.success ? cev.data : Cevaplar.parse({}), tanim: format.tanim, formatSira: format.sira,
     cihazlar: satirlar, secilebilir, fotolar: r.fotolar,
-    kopyaKaynak, guncelFormat: yeni && yeni.sira > format.sira ? yeni.sira : null, mesaiDolu, geri, revize,
+    kopyaKaynak, takip, guncelFormat: yeni && yeni.sira > format.sira ? yeni.sira : null, mesaiDolu, geri, revize,
     imza: r.durum === "onaylandi" && e.sahip && canDoEylem(kim, "rapor_son_imza", { sahip: r.hesap_id })
       ? { hazir: true, pdf: (await bekleyenIstek(db, r.id, r.revizyon))?.pdf_dosya ?? null } : null,
     imzali: r.durum === "imzali" ? await imzaliSurum(db, r.id, r.revizyon) : null,
@@ -1087,6 +1122,9 @@ export async function imzaliYukle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaI
   /* imza anının kopyaları (§3.2-8): künye, yazan, cihazlar (kalibrasyonuyla), içerik — sonradan değişen kayıt imzalı raporu değiştirmez. Yazan ve
      cihazlar imzalanan PDF'in hazırlandığı andan (isteğin kopyası, 0028); içerik raporun kendisinden (onaylanmış rapor değişmez, onaydan
      çıkınca istek iptal olur) */
+  /* 0108: bu sürümde hâlâ uygunsuz olan maddeler (ref) — önceki raporların aynı maddesi "giderildi" değil "devam" kapanır (tetik okur, boşaltır) */
+  const d = e.r.sonuc === "uygun_degil" || e.r.sonuc === "sartli" ? degerle(v.belge.tanim, v.belge.cevaplar, e.r) : null;
+  await db.sorgu("SELECT set_config('app.devam_ref', $1, true)", [JSON.stringify(d ? d.kusurlar.map((k) => k.ref.slice(0, 60)) : [])]);
   const s = await ekle(db, SURUM, {
     rapor_id: id, revizyon: e.r.revizyon, no: e.r.no, imzasiz_dosya: istek.pdf_dosya, imzali_dosya: y.id,
     imzali_sha256: createHash("sha256").update(b).digest("hex"), imza_yontem: "dosya",
@@ -1094,8 +1132,7 @@ export async function imzaliYukle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaI
     icerik: { cevaplar: v.belge.cevaplar, ekipman_bilgi: e.r.ekipman_bilgi, tarih: v.belge.tarih, format_id: e.r.format_id, format_sira: v.belge.formatSira },
   }, iz);
   /* uygunsuzluk: imzalı ve "Uygun" olmayan rapordan (Uygun değil · 595 Şartlı uygun — hafif kusurlar takip edilir), motorun kusur listesinden */
-  if (e.r.sonuc === "uygun_degil" || e.r.sonuc === "sartli") {
-    const d = degerle(v.belge.tanim, v.belge.cevaplar, e.r);
+  if (d) {
     const blok = new Map(sahaTanimi(v.belge.tanim).bolumler.map((x) => [x.id, x.blok]));
     for (const k of d.kusurlar) {
       const tur = blok.get(k.bolum);

@@ -301,3 +301,7 @@ button.silTus { color: var(--hata-yazi); }
 
 /* 495: serbest metin bölümü */
 .serbestMetin { margin: 0; padding: 6px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+/* 2026-10-26 (göç 0108): takip muayenesi şeridinde ana raporun uygunsuzlukları — durum rozeti + metin, uzun metin kaydırılır (sığmayan kesilmez) */
+.takipListe { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
+.takipListe li { display: flex; gap: 8px; align-items: baseline; min-width: 0; }
+.takipListe li > span:last-child { min-width: 0; overflow-wrap: anywhere; }

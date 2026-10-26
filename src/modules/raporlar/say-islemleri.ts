@@ -22,7 +22,7 @@ import { komutlariUygula, sonucOzeti, type Durum, type GirisSonucu } from "./say
 import { KopyaGirdisi, OlusturIslemGirdisi, RAPOR_DURUM, RevizeGirdisi } from "./sema.ts";
 import { raporSayfasi } from "./server/liste.ts";
 import {
-  cihazEkle, cihazKaldir, onayaGonder, raporFormatGuncelle, raporKaydet, raporKopyala, raporOlustur, raporSayDurumu, raporSil, revizeIste, revizeIstegiGeriCek, sahaRaporu,
+  cihazEkle, cihazKaldir, onayaGonder, raporFormatGuncelle, raporKaydet, raporKopyala, raporOlustur, raporSayDurumu, takipAc, raporSil, revizeIste, revizeIstegiGeriCek, sahaRaporu,
   type SahaRaporu,
 } from "./server/raporlar.ts";
 
@@ -117,6 +117,12 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
     ad: "rapor_ac", modul: MODUL, tur: "yaz", girdi: OlusturIslemGirdisi, kaynak: [OlusturIslemGirdisi], islev: raporOlustur,
     tarif: "Plandaki ekipmanın raporunu oluşturur (yalnız plandaki denetçi; plan kabul edilmiş, plan günü gelmiş): plan, ekipman (kimlikler — plan_getir).",
     calistir: async (b, v) => yazmaCevabi(await raporOlustur(b.db, b.kim, v.plan, v.ekipman)),
+  }),
+  /* 2026-10-26 (göç 0108): takip muayenesi — açık uygunsuzluğu olan son imzalı rapora …-T1; içerik ana rapordan */
+  islem({
+    ad: "rapor_takip_ac", modul: MODUL, tur: "yaz", girdi: OlusturIslemGirdisi, kaynak: [OlusturIslemGirdisi], islev: takipAc,
+    tarif: "Ekipmanın açık uygunsuzluğu olan son imzalı raporuna takip muayenesi açar (numara ana rapor + -T1; önceki metinler gelir; aynı planda da): plan, ekipman.",
+    calistir: async (b, v) => yazmaCevabi(await takipAc(b.db, b.kim, v.plan, v.ekipman)),
   }),
   islem({
     ad: "rapor_yaz", modul: MODUL, tur: "yaz", islev: raporKaydet, kaynak: [kimlik, surum],
