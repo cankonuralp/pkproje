@@ -572,8 +572,14 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
   /* ── 525 bekleyenler için rapor yaz ── */
   const okunacakSayisi = (g: Gorunen) => g.fotolar.filter((f) => f.rol === "okunacak" && g.tanim?.okunacak.some((o) => o.acik && o.k === f.k)).length;
   const toplamOkuma = hazirlar.reduce((n, g) => n + okunacakSayisi(g), 0);
+  /* 2026-10-26 (reisim: "rapor açarken eğer daha önce rapor varsa o ekipman için uyarı versin … üstüne yazılacak emin misin"): kişinin AÇIK (Yeni) raporu
+     olan plan ekipmanına yazılacak kayıtlar — rapor yeniden açılmaz, boş alanlara girer (rapor-yaz.ts yalnizBos) */
+  const acikRaporlu = (g: Gorunen) => g.ekipman?.tip === "plan" && veri.planEkipmani.find((x) => x.id === (g.ekipman as { id: string }).id)?.durum === "rapor";
   const raporYaz = async () => {
     if (yaziyor) return;
+    const uzerine = hazirlar.filter(acikRaporlu);
+    if (uzerine.length && !(await onayla({ baslik: "Açık rapora yazılsın mı?",
+      metin: `${uzerine.map((g) => ekipAd(g.ekipman)).join(", ")} için açık rapor var. Kayıtlar yeni rapor açmaz, o raporun BOŞ alanlarına yazılır; dolu alanlar değişmez.`, tus: "Yaz" }))) return;
     const yeniKodsuz = hazirlar.find((g) => g.ekipman?.tip === "yeni" && !kodlar[g.id]?.trim());
     if (yeniKodsuz) {
       setSonuclar((s) => ({ ...s, [yeniKodsuz.id]: { neden: "Ekipman kodunu yazın (etiketteki; firmada eşsiz).", kod: true } }));
@@ -620,7 +626,7 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
               const i = hazirSayfa.bas + j;
               const d = dagit(g.tanim!, g.mesaj), alan = Object.keys(d.degerler).filter((a) => a !== "yorum").length;
               const ekip = g.fotolar.filter((f) => f.rol === "ekipman").length, ok = okunacakSayisi(g), x = sonuclar[g.id];
-              const on = [g.ekipman?.tip === "plan" ? "Plandaki ekipmana yazılacak" : "Plana yeni ekipman olarak eklenecek", `${alan} alan dolacak`, `${ekip} fotoğraf rapora geçecek`,
+              const on = [g.ekipman?.tip === "plan" ? (acikRaporlu(g) ? "Açık rapora yazılacak (boş alanlar)" : "Plandaki ekipmana yazılacak") : "Plana yeni ekipman olarak eklenecek", `${alan} alan dolacak`, `${ekip} fotoğraf rapora geçecek`,
                 ok ? `${ok} fotoğraf ${veri.yz.hazir ? "yapay zekâyla okunacak" : "saklanacak"}` : "", d.degerler.yorum ? "not → uzman yorumu" : ""].filter(Boolean);
               return (
                 <li key={g.id} className={stil.kayit}>

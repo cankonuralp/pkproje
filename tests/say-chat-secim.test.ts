@@ -4,6 +4,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { bransUyarisi, planEkipmanDurumu } from "../src/modules/say-chat/secim.ts";
+import { oku } from "./yardimci/denetimler.ts";
 
 const E = { id: "e1", brans: "e" as const, pasif: false };
 
@@ -32,4 +33,13 @@ test("seçilmeyenler nedeniyle: başkasının raporu, onaya gitmiş rapor, pasif
   assert.equal(planEkipmanDurumu({ ...E, pasif: true }, "e", [], true).neden, "Pasif ekipman.");
   assert.equal(planEkipmanDurumu(E, "e", [], false).neden, "Türün rapor formatı yayında değil.");
   assert.equal(planEkipmanDurumu(E, "e", [{ ekipmanId: "baska", durum: "onayda", benimTaslak: false }], true).durum, "uygun", "başka ekipmanın raporu etkilemez");
+});
+
+/* 2026-10-26 (reisim: "rapor açarken eğer daha önce rapor varsa o ekipman için uyarı versin … üstüne yazılacak emin misin"): kişinin AÇIK raporu olan
+   ekipmana yazılacak kayıtlar "Rapor yaz"da bir kez sorulur ve listede açıkça yazar (ui/SayChat.tsx acikRaporlu) — kaynak kilidi */
+test("açık raporlu ekipmana yazılacak kayıt Rapor yaz'da sorulur ve listede 'Açık rapora yazılacak' der", () => {
+  const s = oku("src/modules/say-chat/ui/SayChat.tsx");
+  assert.match(s, /planEkipmani\.find\(\(x\) => x\.id === \(g\.ekipman as \{ id: string \}\)\.id\)\?\.durum === "rapor"/, "açık rapor = seçimdeki 'rapor' durumu");
+  assert.match(s, /onayla\(\{ baslik: "Açık rapora yazılsın mı\?"/, "Rapor yaz soru sorar");
+  assert.ok(s.includes("Açık rapora yazılacak (boş alanlar)"), "listede nereye yazılacağı");
 });

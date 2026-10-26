@@ -225,6 +225,8 @@ test("S.A.Y Chat: bekleyenler için rapor yaz — kod, koşullar, taslak, rapord
   }
   expect(benimki, "yeni ekipmanın kayıtı rapora dönüşecekler arasında").toBe(true);
   await panel.getByRole("button", { name: /rapor taslağı oluştur/ }).click();
+  /* 2026-10-26: bu kişide açık raporlu ekipmana yazılacak eski kayıt birikmişse Rapor yaz önce sorar */
+  await page.getByRole("dialog", { name: "Açık rapora yazılsın mı?" }).getByRole("button", { name: "Yaz" }).click({ timeout: 3_000 }).catch(() => undefined);
   const sonuc = panel.getByRole("status").filter({ hasText: "rapor taslağı oluştu" });
   await expect(sonuc).toBeVisible({ timeout: 90_000 });
   await expect(sonuc).toContainText("değer okundu");   // okunacak fotoğraf yapay zekâyla okundu (taklit)
