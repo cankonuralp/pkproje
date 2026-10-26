@@ -97,6 +97,8 @@ test("fotoğraf ekle okumaz; S.A.Y \"Fotoğrafları oku ve gir\" okur, satırlar
   await expect(page.locator("#b-foto")).not.toContainText("fotoğrafı.jpg");
   await expect(linye.getByRole("link", { name: "Görüntüle" })).toBeVisible();
   await expect(linye.getByRole("button", { name: "Oku", exact: true })).toHaveCount(0);
+  /* 2026-10-26 (reisim: "fotoğraftan oku tuşu geri gelsin"): bölüm başlığında S.A.Y'ın okumasını başlatan tuş (eski ayrı "Oku" tuşu değil) */
+  await expect(linye.getByRole("button", { name: "Fotoğraftan oku" })).toBeVisible();
   await expect(page.getByRole("region", { name: /fotoğraftan okunan/ })).toHaveCount(0);
   await expect(linye.getByLabel("1. satır · No")).toHaveCount(0);
   /* S.A.Y okur ve girer: 3 satır; emin olunmayan (F3) sarı, ötekiler yeşil — kaydetmek kişide */

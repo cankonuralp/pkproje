@@ -254,7 +254,12 @@ export function SayAsistan() {
   const [asama, setAsama] = useState<string | null>(null);
   /* 2026-10-23: S.A.Y'ın yazmakta olduğu cevap ve düşünme özeti (akışla gelir; ileti kaydedilince boşalır) */
   const [canli, setCanli] = useState("");
-  const [dusunce, setDusunce] = useState("");
+  /* 2026-10-26 (reisim: "yapay zekâ … çok açıklama var", "durdurma yok"): Durdur — çalışan işin akışı kesilir, ekran işleri bırakılır; yapılanlar kalır
+     (son iletinin altındaki "Geri al" alır); sunucudaki yarım tur bir sonraki soruda "Yapılmadı" diye kapanır */
+  const durdurRef = useRef<AbortController | null>(null);
+  /* 2026-10-26 (reisim: "fotoğraftan oku tuşu geri gelsin"): rapor ekranındaki "Fotoğraftan oku" bu olayı atar — S.A.Y rapora eklenen fotoğrafları
+     okuyup boş alanlara girer (panel hazırsa; olay işlendiyse iptal edilir, işlenmediyse tuş "kapalı" der) */
+  const okuRef = useRef<(() => void) | null>(null);
   const [kucuk, setKucuk] = useState(false);
   const [altta, setAltta] = useState(true);
   const alttaRef = useRef(true);
@@ -313,6 +318,11 @@ export function SayAsistan() {
     };
     window.addEventListener("probata-panel", f);
     return () => window.removeEventListener("probata-panel", f);
+  }, []);
+  useEffect(() => {
+    const f = (e: Event) => { if (!okuRef.current) return; e.preventDefault(); okuRef.current(); };
+    window.addEventListener("probata-say-oku", f);
+    return () => window.removeEventListener("probata-say-oku", f);
   }, []);
   /* 542: panel açıkken sayfa panelin solunda (temel.css html[data-panel-acik]) */
   useEffect(() => {
@@ -389,6 +399,12 @@ export function SayAsistan() {
     setBekliyor(true); setHata(null); setAsama(istek === "oku" ? "Okuyor" : "Düşünüyor");
     try { await islemCalistir(istek, soru, ek); }
     catch { setIlerleme(null); setHata("S.A.Y'a ulaşılamadı; bağlantıyı kontrol edip yeniden deneyin."); } finally { setBekliyor(false); setAsama(null); }
+  };
+  okuRef.current = () => {
+    if (!hazir) { bildir("S.A.Y şu an bağlı değil; fotoğraflar okunamadı."); return; }
+    if (bekliyor) return;
+    ac(false);
+    void islemYap("oku", OKU);
   };
   /** A: S.A.Y'ın bir araç çağrısını ekran yapar (557: geri okuyup teyit eder) — S.A.Y'a dönen özet; okuma ve geri alma da döngünün içinde
       (sonuçlarını artık ayrı bir ileti yazmaz, S.A.Y'a döner) */
@@ -472,18 +488,21 @@ export function SayAsistan() {
       kullanilan: new Set(),
     };
     const is = crypto.randomUUID(), geriler: SayGeriAl[] = [];
+    const durdur = new AbortController();
+    durdurRef.current = durdur;
+    let durduruldu = false;
     let ustune: IslemEylemi["ustune"], sonSay: string | null = null, yenile = false, govde: Record<string, unknown> = { ...ilk, is }, bos = 0;
-    for (;;) {
+    try { for (;;) {
       /* geri çağırmada yazılır (nesne — denetleyici daraltmasın) */
       const d: { ekran: Extract<SayOlayi, { t: "ekran" }> | null; son: "bitti" | "devam" | "hata" | null } = { ekran: null, son: null };
-      const r = await fetch("/api/say", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(govde) });
+      const r = await fetch("/api/say", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(govde), signal: durdur.signal });
       if (!r.ok || !r.body) { setHata(r.status === 401 ? "Oturumunuz kapandı. Sayfayı yenileyip yeniden giriş yapın." : "S.A.Y'a ulaşılamadı; bağlantıyı kontrol edip yeniden deneyin."); break; }
       const n = await olaylariOku(r.body, (x) => {
         if (x.t === "ileti") {
           setIletiler((l) => [...(l ?? []).filter((m) => !(x.ileti.kim === "ben" && m.id.startsWith("gecici-"))), x.ileti]);
-          if (x.ileti.kim === "say") { sonSay = x.ileti.id; setCanli(""); setDusunce(""); }
+          if (x.ileti.kim === "say") { sonSay = x.ileti.id; setCanli(""); }
         } else if (x.t === "metin") setCanli((c) => c + x.d);
-        else if (x.t === "dusunce") setDusunce((c) => c + x.d);
+        else if (x.t === "dusunce") { /* gösterilmez (2026-10-26) */ }
         else if (x.t === "asama") setAsama(x.ad);
         else {
           yenile ||= x.yenile;
@@ -491,16 +510,18 @@ export function SayAsistan() {
           else { d.son = x.t; if (x.t === "hata") setHata(x.neden); }
         }
       });
-      setCanli(""); setDusunce("");
+      setCanli("");
       const e = d.ekran, son = d.son;
       if (e) {
         const sonuclar: { id: string; ozet: IsOzeti }[] = [];
         for (const a of e.araclar) {
+          if (durdur.signal.aborted) break;
           const k = a.komut ? await komutYap(a.komut, geriler, h) : yapilamadi(a.ad, "aracın girdisi okunamadı");
           if (k.geriAl) geriler.push(k.geriAl);
           if (k.ustune) ustune = k.ustune;
           sonuclar.push({ id: a.id, ozet: k.ozet });
         }
+        if (durdur.signal.aborted) { durduruldu = true; break; }
         setAsama("Düşünüyor");
         govde = { tur: "sonuc", is, sonuclar, ...ekranGirdisi(h) };
         bos = 0;
@@ -510,7 +531,8 @@ export function SayAsistan() {
       if (son === "devam" || (son === null && (bos = n ? 0 : bos + 1) < 2)) { govde = { tur: "devam", is, ...ekranGirdisi(h) }; continue; }
       if (son === null) setHata("S.A.Y'a ulaşılamadı; bağlantıyı kontrol edip yeniden deneyin.");
       break;
-    }
+    } } catch (h) { if (!durdur.signal.aborted) throw h; durduruldu = true; } finally { durdurRef.current = null; }
+    if (durduruldu) { setCanli(""); setHata(null); bildir("Durdurdum. Yapılanlar kaldı; geri almak için son iletinin altındaki “Geri al” tuşunu kullanın."); }
     const id: string | null = sonSay;
     if (id && (geriler.length || ustune)) {
       const hepsi = [...geriler].reverse(), u = ustune;
@@ -630,7 +652,7 @@ export function SayAsistan() {
     } catch {
       if (!gitti) { setIletiler((l) => (l ?? []).filter((x) => x.id !== gid)); setSoru(v); setEkler(giden); }
       setHata("S.A.Y'a ulaşılamadı; bağlantıyı kontrol edip yeniden deneyin.");
-    } finally { setBekliyor(false); setAsama(null); setIlerleme(null); setCanli(""); setDusunce(""); girdi.current?.focus(); }
+    } finally { setBekliyor(false); setAsama(null); setIlerleme(null); setCanli(""); girdi.current?.focus(); }
   };
   /* 557: küçült — panel alta tek satır; yeniden basınca aynı boyla açılır (sohbet ve yazılan kaybolmaz) */
   const kucult = (k: boolean) => {
@@ -732,8 +754,8 @@ export function SayAsistan() {
               <div className={`${stil.mesaj} ${stil.o} ${stil.bekleme}`} role="status" aria-live="polite" data-say-bekleme="">
                 {asama === "Düşünüyor" || !asama ? <span className={stil.noktalar} aria-hidden="true"><i /><i /><i /></span> : <span className={stil.donen} aria-hidden="true" />}
                 {asama ?? "Düşünüyor"}{ilerleme ? ` · ${ilerleme}` : ""}
-                {/* 2026-10-23: düşünme özeti ve yazılmakta olan cevap akışla */}
-                {dusunce && !canli && <p className={stil.dusunce}>{dusunce.slice(-600)}</p>}
+                {asama !== "Ekler yükleniyor" && <button className={stil.kucukTus} type="button" onClick={() => durdurRef.current?.abort()}>Durdur</button>}
+                {/* 2026-10-23: yazılmakta olan cevap akışla (düşünme özeti gösterilmez — 2026-10-26) */}
                 {canli && <div className={stil.canli}><Markdown metin={canli} /></div>}
               </div>
             )}

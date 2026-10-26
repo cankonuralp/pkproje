@@ -104,6 +104,20 @@ export function FotoEkleTusu({ baslik, girdi, ekleniyor, mesgul, gonder }: {
   );
 }
 
+/** "Fotoğraftan oku" (2026-10-26; reisim: "fotoğraftan oku tuşu geri gelsin"): S.A.Y rapora eklenen fotoğrafları okuyup boş alanlara girer (yeşil /
+    sarı işaretli, Geri al); S.A.Y açık değilse olay işlenmez ve tuş söyler. Okuma S.A.Y'da — burada yapay zekâ çağrısı yok */
+function FotoOkuTusu() {
+  const bildir = useBildir();
+  return (
+    <BaslikTusu>
+      <button type="button" className={`${tusSinifi("ikincil")} ${stil.fotoEkle}`} title="Fotoğraftan oku"
+        onClick={() => { if (window.dispatchEvent(new CustomEvent("probata-say-oku", { cancelable: true }))) bildir("S.A.Y kapalı ya da bu firmada yapay zekâ açık değil."); }}>
+        <Ikon ad="sparkles" kucuk /><span className={stil.fotoYazi}>Fotoğraftan oku</span>
+      </button>
+    </BaslikTusu>
+  );
+}
+
 /** bölümün fotoğraf tuşu + okuma fotoğrafları (tablo ve alanlı bölüm ortak); tuslar: bölümün öteki tuşları (Excel …) */
 export function FotoBolumu({ v, bolumId, baslik, islem, kip, tuslar, cubuk }: {
   v: { id: string; surum: number; no: string; fotolar: RaporFoto[] }; bolumId: string; baslik: string; islem: Baglam["islem"]; kip: OkumaKipi;
@@ -113,6 +127,7 @@ export function FotoBolumu({ v, bolumId, baslik, islem, kip, tuslar, cubuk }: {
   return (
     <>
       <FotoEkleTusu baslik={baslik} girdi={f.girdi} ekleniyor={f.ekleniyor} mesgul={islem.mesgul} gonder={f.gonder} />
+      <FotoOkuTusu />
       {tuslar && <div className={cubuk ?? stil.etiketCubuk}>{tuslar}</div>}
       <OkumaFotolari v={v} bolumId={bolumId} oku={false} islem={islem} />
     </>

@@ -30,6 +30,8 @@ const SISTEM = saySistemi(SAY_KILAVUZU, "Planlar:\n- plan_ac (yaz): Plan açar."
 test("talimat: reisim'in iki kuralı; eski yamalar yok; sayfa ve ekran talimatta değil (konuşmada); her çağrıda aynı", () => {
   assert.ok(SISTEM.startsWith("Sen S.A.Y'sın."));
   assert.ok(SISTEM.includes(KONU_DISI), "konu sınırı");
+  /* 2026-10-26 (reisim: verilmeyen bilgiye "-", iş bitince özet — yalnız S.A.Y asistan) */
+  assert.ok(SISTEM.includes("Doldurma:") && SISTEM.includes('"-" yaz') && SISTEM.includes('hangi alanlara "-" yazıldı'), "verilmeyen metin alanına - ve bitiş özeti");
   assert.match(SISTEM, /Sonucu görmeden "yaptım" deme/, "yap → teyit → söyle");
   assert.match(SISTEM, /devam edeyim mi diye sorma/, "sormadan sürdürür");
   assert.doesNotMatch(SISTEM, /SON mesajını cevapla|o mesajda metin yazma|en çok \d|karakter|sınırı/i, "eski yamalar ve sınırlar yok");

@@ -106,7 +106,7 @@ async function sonuclariEkle(db: Sorgulayici, sonuclar: readonly { id: string; o
 async function cagir(model: Parameters<typeof sayIstegi>[0]["model"], mesajlar: Record<string, unknown>[], anahtar: string, yaz: (x: SayOlayi) => void):
   Promise<AkisYaniti> {
   const dinle = {
-    metin: (d: string) => yaz({ t: "metin", d }), dusunce: (d: string) => yaz({ t: "dusunce", d }),
+    metin: (d: string) => yaz({ t: "metin", d }),   // 2026-10-26 (reisim: "çok açıklama var"): düşünme özeti artık ekrana gönderilmez (İngilizce iç düşünce); balonda yalnız aşama yazar
     blokBasladi: (b: Record<string, unknown>) => {
       if (b.type === "server_tool_use") yaz({ t: "asama", ad: "İnternette arıyor" });
       else if (b.type === "tool_use") yaz({ t: "asama", ad: ASAMA[String(b.name)] ?? "Çalışıyor" });
