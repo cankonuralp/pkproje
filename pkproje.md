@@ -2527,6 +2527,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-26 (YAYINDA — main da204573; CI 17/17 yeşil, 9,6 dk): **ÇEVRİMDIŞI: KABULDE PAKET İNSİN, SAHADA RAPOR AÇILABİLSİN + S.A.Y CHAT AÇIK RAPOR UYARISI** — reisim: *"plan
+  kabul edildiğinde [ekipmanların önceki] bilgileri gelmeli ki çevrim dışı çalışırken sorun olmamalı"*, *"rapor açarken eğer daha önce rapor varsa … üstüne yazılacak
+  emin misin"*. Hata: sayfa cihaza inerken sunucunun gömdüğü karar (plan kabul edilmiş mi, plan günü, günlük süre) sahada bayatlıyordu — bağlantısız
+  kabulden sonra Rapor oluştur görünmüyor / yeni rapor ekranı "kabul edilmemiş" diyor, ertesi gün "plan günü gelmedi" kalıyordu. Karar artık cihazda
+  (planlar/sema.ts raporKapisi, ui/cihazKapisi.ts; cihazda bekleyen kabul kabul sayılır, tarih cihazın bugünü); plan kabul edilince planın sayfası +
+  yeni rapor paketi beklemeden iner, bağlantı gelince 30 dk beklenmez. Plan ekranında raporlu ekipmanda Rapor oluştur zaten yok; S.A.Y Chat Rapor yaz,
+  açık raporlu ekipmana yazılacak kayıtları bir kez sorar ve listede işaretler (boş alanlara yazar, dolu alan değişmez). Kilitler tests/cevrimdisi-kapi +
+  bozan, say-chat-secim, islem (PG). Sahada denenmedi (reisim saha testini sonra yapacak).
 - 2026-10-26 (YAYINDA — main 132834da; CI 17/17 yeşil, 8,8 dk): **MÜŞTERİ EXCEL'İNE MUAYENE UZMANI YORUMU** — reisim: müşteri ekranından inen Excel'de uygunsuzluklar ve
   muayene yorumları da yazsın. Uygunsuzluk satırı imzalı sürümün içeriğinden uzman yorumunu taşır (yalnız Excel akışında; liste sayfaları taşımaz); Excel'e
   "Muayene uzmanı yorumu" sütunu. Kilit tests/musteri-paneli. Sıradaki işler (reisim 2026-10-26 sıra): çevrimdışı kabulde paket + sahada rapor açılabilsin →
