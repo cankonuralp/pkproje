@@ -2527,6 +2527,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-26 (YAYINDA — main 041f89ac; CI 17/17 yeşil): **UZUN METİN: KISALAN METİN TIKLANINCA TAM METİN BALONU (yalnız ekran)** — reisim: uzun cümleler "…" ile kısalsın,
+  tıklayınca açılsın (sıkıştırma ekranı bozuyor); *"bu uygulamalar raporlara yansımasın, sadece saha ekranında olsun"*. Maket onaylı. components/liste/Kirp.tsx:
+  metin gerçekten kısaldıysa tıklanır (ölçülür), tıklama / dokunma / Enter / Boşluk altında balon (üst katman, sayfayı itmez), dışarı / Esc / yeniden basınca
+  kapanır; bağlantı / tuş içindeki metinde title kalır; tıklanır liste satırı kırpık metne basılınca girmez. Rapor belgesi / PDF kullanmaz (kilit). Menü adı,
+  panel özeti, ek adı gibi tuş / bağlantı içindeki kısa etiketlere dokunulmadı. Kilit tests/uzun-metin + bozan, e2e/bilesenler. Sahada denenmedi. Sıradaki:
+  takip muayenesi (başka denetçi, önceki metinler gelir) — önce maket.
 - 2026-10-26 (YAYINDA — main da204573; CI 17/17 yeşil, 9,6 dk): **ÇEVRİMDIŞI: KABULDE PAKET İNSİN, SAHADA RAPOR AÇILABİLSİN + S.A.Y CHAT AÇIK RAPOR UYARISI** — reisim: *"plan
   kabul edildiğinde [ekipmanların önceki] bilgileri gelmeli ki çevrim dışı çalışırken sorun olmamalı"*, *"rapor açarken eğer daha önce rapor varsa … üstüne yazılacak
   emin misin"*. Hata: sayfa cihaza inerken sunucunun gömdüğü karar (plan kabul edilmiş mi, plan günü, günlük süre) sahada bayatlıyordu — bağlantısız
