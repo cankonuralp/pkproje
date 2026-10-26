@@ -2527,6 +2527,16 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-26 (CI bekliyor): **YANLIŞ ALANA YAZMA + FİRMA FORMATINDA KÜNYE + S.A.Y CHAT ETİKETTEN OKU (gönderilmiş kayıtta)** — reisim: *"sohbette birden fazla
+  yanlış var, yanlış yerlere yazmış"*, *"başka rapor formatı ekleyince firma bilgileri kısmı değiştirilemez dediğimiz için böyle sıçıyor, değiştirilebilir olsun
+  yoksa firmanın formatı işlevsiz oluyor ve girdiğimiz veriler nihai pdf te işe yaramıyor"*, *"gönderdikten sonra da etiketten oku diyebilmeliyim çünkü
+  internetsiz ortamda bu sıkıntı"*. Kök neden: basılı formdan kurulan genleşme tankı formatında "Marka / Model / Seri no / İmal" iki yerde — tank tarafında
+  ekipman kaydından (sahada görünmüyordu), basınç kaynağı tarafında boş alan; S.A.Y da kişi de tankın etiketini basınç kaynağına yazdı, PDF'te tank boş kaldı.
+  Düzeltme (format/tablo.ts sanalBolumler — var olan formatlarda da): ekipman kaydı hücresi sahada KENDİ YERİNDE yazılır (değer ekipman bilgisine, belgede o
+  hücreye); aynı etiket iki yerde geçerse ad sütun grubunun başlığıyla ayrılır ("Marka · BASINÇ KAYNAĞI BİLGİLERİ"). Firmanın kendi (serbest) formatında künye
+  kilitli değil (format/kunye.ts; Bakanlık düzeninde SGK / İSG-KATİP kilitli kalır). S.A.Y talimatı: etiket bilgisi önce ekipman bilgilerine, " · grup"lu alan
+  başka parçanın; "-" yalnız yazıyla verilen işte (okunamayan boş kalır); etiketteki üretici numarası seri no. S.A.Y Chat: gönderilmiş kaydın satırında
+  "Etiketten oku" (kayıt açılır, okunanlar boş satırlara, kişi Gönder'e basar). Kilit tests/yanlis-yer + bozan, kunye bozanı uyarlandı. Sahada denenmedi.
 - 2026-10-26 (YAYINDA — main 81ee424a; CI 17/17 yeşil; göç 0108 Supabase'te): **TAKİP MUAYENESİ** — reisim: *"birisi daha önce muayene yapmışsa ve o muayeneye başka bir denetçi gidecekse onun için takip
   muayenesi açılabilmeli önceki metinler gelmeli"*; maket + dört karar onaylı (*"Takip muayenesi maketi ve kararlar uygun, başla"*). Plan içinde açık uygunsuzluğu
   olan son imzalı raporu bulunan ekipmanın satırında "Takip muayenesi aç" (raporlu ekipmanda da; ekipteki uzman, Rapor oluştur'la aynı kapı; bağlantı gerekir).

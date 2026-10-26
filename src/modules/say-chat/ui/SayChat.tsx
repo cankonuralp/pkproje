@@ -306,10 +306,12 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
     setTaslak({ id: crypto.randomUUID(), yeni: true, surum: 0, ekipman: null, mesaj: [], tanim: null, tanimSurum: 0, fotolar: [], kaldir: [], yerel: y, okundu: {} });
     setSecim({ sekme: "plan", ara: "" });
   };
-  const duzenle = (g: Gorunen) => {
-    setTaslak({ id: g.id, yeni: !g.sunucuda, surum: g.surum, ekipman: g.ekipman, mesaj: [...g.mesaj], tanim: g.tanim, tanimSurum: g.tanimSurum,
-      fotolar: g.fotolar, kaldir: [], yerel: [], okundu: {} });
+  const duzenle = (g: Gorunen): Taslak => {
+    const t: Taslak = { id: g.id, yeni: !g.sunucuda, surum: g.surum, ekipman: g.ekipman, mesaj: [...g.mesaj], tanim: g.tanim, tanimSurum: g.tanimSurum,
+      fotolar: g.fotolar, kaldir: [], yerel: [], okundu: {} };
+    setTaslak(t);
     requestAnimationFrame(() => document.getElementById("sc-form-bas")?.focus());
+    return t;
   };
   const birak = (t: Taslak | null) => { for (const y of t?.yerel ?? []) URL.revokeObjectURL(y.url); };
   const vazgec = () => { birak(taslak); setTaslak(null); requestAnimationFrame(() => document.getElementById("sc-ilk")?.focus()); };
@@ -363,9 +365,11 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
     return { ...t, yerel: t.yerel.filter((x) => x.rol !== "etiket"), fotolar: t.fotolar.filter((x) => x.rol !== "etiket"),
       kaldir: [...t.kaldir, ...t.fotolar.filter((x) => x.rol === "etiket").map((x) => x.dosya)] };
   });
-  /** etiketten oku: okunanlar mesajın BOŞ (ya da hazır değeri değişmemiş) satırlarına; yapay zekâ çağrısı sunucuda (firmanın kotası) */
-  const etiketOku = async () => {
-    const t = taslak;
+  /** etiketten oku: okunanlar mesajın BOŞ (ya da hazır değeri değişmemiş) satırlarına; yapay zekâ çağrısı sunucuda (firmanın kotası).
+      2026-10-26 (reisim: "gönder dedikten sonra etiketten oku işi yapılamaz oluyor … gönderdikten sonra da etiketten oku diyebilmeliyim çünkü internetsiz
+      ortamda bu sıkıntı"): gönderilmiş kaydın satırından da — kayıt açılır, okunanlar boş satırlara yazılır, kişi bakıp Gönder'e basar (t: açılan taslak) */
+  const etiketOku = async (acilan?: Taslak) => {
+    const t = acilan ?? taslak;
     if (!t?.tanim || okunuyor) return;
     const yerel = t.yerel.find((y) => y.rol === "etiket"), sunucu = t.fotolar.find((f) => f.rol === "etiket");
     if (!yerel && !sunucu) return;
@@ -466,6 +470,10 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
                         {g.cihazda || g.bekleyenFoto ? `Cihazda${g.bekleyenFoto ? ` · ${g.bekleyenFoto} fotoğraf bekliyor` : ""}` : tazeleniyor ? "Gönderiliyor…" : "Gönderildi"}
                         {g.zaman ? ` · ${SAAT.format(new Date(g.zaman))}` : ""}
                       </span>
+                      {veri.yz.hazir && !cevrimdisi && !g.cihazda && !g.bekleyenFoto && !tazeleniyor && g.tanim && g.fotolar.some((f) => f.rol === "etiket") && (
+                        <Tus tur="ikincil" ikon="sparkles" disabled={okunuyor} aria-label={`${ekipAd(g.ekipman)} etiketinden oku`}
+                          onClick={() => void etiketOku(duzenle(g))}>Etiketten oku</Tus>
+                      )}
                       <Tus tur="ikincil" ikon="pencil" onClick={() => duzenle(g)} aria-label={`${ekipAd(g.ekipman)} kaydını düzenle`}>Düzenle</Tus>
                     </div>
                   </li>

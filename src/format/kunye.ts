@@ -10,8 +10,11 @@ export interface KunyeKopyasi { firmaAdi: string; adres: string | null; sgk: str
 export type GecerliKunye = { firma: string; metot: string } & Record<Exclude<KunyeAlani, "firma" | "metot">, string | null>;
 type KunyeDegisikligi = Cevaplar["kunye"];
 
-/** formatta sahada kilitli künye bilgileri (verilmemişse SGK ve İSG-KATİP) */
-export const kilitliKunye = (t: Pick<FormatTanimi, "gorunum">): ReadonlySet<KunyeAlani> => new Set(t.gorunum.kilitli ?? VARSAYILAN_KILITLI);
+/** formatta sahada kilitli künye bilgileri (verilmemişse SGK ve İSG-KATİP). 2026-10-26 (reisim: "başka rapor formatı ekleyince firma bilgileri kısmı
+    değiştirilemez dediğimiz için böyle sıçıyor, değiştirilebilir olsun"): firmanın kendi (serbest düzen — basılı formdan) formatında verilmemişse
+    hiçbiri kilitli değil; Bakanlık düzenindeki formatlar aynı */
+export const kilitliKunye = (t: Pick<FormatTanimi, "gorunum">): ReadonlySet<KunyeAlani> =>
+  new Set(t.gorunum.kilitli ?? (t.gorunum.serbest ? [] : VARSAYILAN_KILITLI));
 
 /** kayıttaki metot ve kapsam: formatın dayanağı + türün kontrol metodu standartları (belgedeki satır) */
 export const metotMetni = (t: Pick<FormatTanimi, "gorunum">, kontrolStd: readonly string[]) => [...t.gorunum.dayanak, ...kontrolStd].join(" · ");

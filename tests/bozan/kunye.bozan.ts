@@ -29,7 +29,7 @@ const T = SABLONLAR.KOMPRESOR.tanim;
 const KOPYA = { firmaAdi: "Deneme Sanayi A.Ş.", adres: null, sgk: "1".repeat(26), isgNo: "ISG-1" };
 
 test("1. varsayılan kilit kalkınca SGK ve İSG-KATİP sahada değişir (kilidin koruduğu açık)", async () => {
-  const m = await bozuk("varsayilan", "new Set(t.gorunum.kilitli ?? VARSAYILAN_KILITLI)", "new Set(t.gorunum.kilitli ?? [])");
+  const m = await bozuk("varsayilan", "new Set(t.gorunum.kilitli ?? (t.gorunum.serbest ? [] : VARSAYILAN_KILITLI))", "new Set(t.gorunum.kilitli ?? [])");
   assert.equal(m.kilitliKunye(T).size, 0, "bozuk: hiçbir bilgi kilitli değil");
   assert.equal(m.gecerliKunye(KOPYA, "", { sgk: "9999" }, m.kilitliKunye(T)).sgk, "9999");
 });

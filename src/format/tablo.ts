@@ -7,7 +7,9 @@
      imza hücresi imza yeri, sonuç hücresi raporun sonucu. sahaTanimi() tablo bölümlerini bu sanal bölümlere açar: motor (değerlendirme, kusur,
      eksik), formül, saha ekranı ve sunucu denetimleri tabloyu ayrıca bilmeden çalışır; belge ızgarayı kendisi çizer (src/belge/belge.ts).
    Bu dosya yalnız ./tanim.ts'i içe aktarır. */
-import { type Bolum, type BolumOf, type FormatTanimi, type Hucre, type HucreStili, type ImzaSatiri, type TabloSatiri, type YaziTipi } from "./tanim.ts";
+import { type Bolum, type BolumOf, type EkipmanAlani, type FormatTanimi, type Hucre, type HucreStili, type ImzaSatiri, type TabloSatiri, type YaziTipi } from "./tanim.ts";
+/** sahada kendi yerinde yazılan ekipman kaydı hücreleri (2026-10-26) */
+const EKIPMAN_HUCRE = ["marka", "model", "seri", "imal", "konum", "amac"] as const;
 
 export type TabloBolumu = BolumOf<"tablo">;
 /** seçim: iki köşe (sıralı olmak zorunda değil) */
@@ -218,6 +220,18 @@ export function hucreEtiketi(b: TabloBolumu, h: Hucre, g: (number | null)[][] = 
   }
   return "";
 }
+/** hücrenin sütun grubunun başlığı (2026-10-26): yukarıda, hücrenin sütununu kapsayan, tablonun tamamına yayılmayan, iki ya da daha çok sütunluk
+    ilk yazı ("TANK BİLGİLERİ"); yoksa "" */
+export function grupBasligi(b: TabloBolumu, h: Hucre, g: (number | null)[][] = kapsama(b)): string {
+  const genislik = Math.max(0, ...b.hucreler.map((x) => x.c + (x.cs ?? 1)));
+  for (let r = h.r - 1; r >= 0; r--) {
+    const n = g[r]?.[h.c]; if (n === null || n === undefined) continue;
+    const x = b.hucreler[n];
+    if (yaziMi(x) && (x.cs ?? 1) >= 2 && (x.cs ?? 1) < genislik) return x.m!.trim();
+  }
+  return "";
+}
+const katla = (s: string) => s.toLocaleLowerCase("tr").replace(/\s+/g, " ").trim();
 /** kontrol cevabı hücresinin maddesi: kendi metni; yoksa satırındaki yazılar (sıra no hariç). 2026-10-24: yan yana iki listede bir maddeye ötekinin
     yazısı karışmaz — sola doğru, aynı maddenin bitişik öteki cevapları geçilerek, tablonun bir sıra ya da cevap sütununa (bütün satırlardan) dek
     toplanır; solda yazı yoksa sağa doğru aynı kuralla (ikinci denetim: solda cevapsız not / alt başlık, "Madde | Sol | Sağ" gibi iki cevaplı madde) */
@@ -308,10 +322,31 @@ export function sanalBolumler(b: TabloBolumu): Bolum[] {
   const duz = sirali.filter((h) => !tekrar.has(h.r));
   const l: Bolum[] = [];
   const ortak = { kilit: false as const };
-  const alanlar = duz.filter((h) => h.tur === "alan" && h.id).map((h) => ({
-    id: h.id!, ad: hucreEtiketi(b, h, g) || "Alan", tur: h.alan ?? "metin", zorunlu: !!h.zorunlu, kilit: false,
-    ...(h.secenekler?.length ? { secenekler: h.secenekler } : {}), ...(h.birim ? { birim: h.birim } : {}), ...(h.formul ? { formul: h.formul } : {}),
-  }));
+  /* 2026-10-26 (reisim: "girdiğimiz veriler nihai pdf te işe yaramıyor"): ekipman kaydından gelen hücre (marka, model, seri no, imal, konum,
+     kullanım amacı) sahada KENDİ YERİNDE yazılır — değeri raporun ekipman bilgisine gider, belgede o hücreye basılır (eskiden sahada görünmüyordu;
+     bilgi yanlışlıkla yandaki boş alana giriliyordu) */
+  const ekipmanCinsi = (h: Hucre): EkipmanAlani | null => (h.tur === "kayit" && h.kaynak && (EKIPMAN_HUCRE as readonly string[]).includes(h.kaynak) ? h.kaynak as EkipmanAlani : null);
+  const hucreli = duz.flatMap((h): { h: Hucre; a: BolumOf<"bilgi">["alanlar"][number] }[] => {
+    const e = ekipmanCinsi(h);
+    if (e) return [{ h, a: { id: `${b.id.slice(0, 17)}_e${e}`, ad: hucreEtiketi(b, h, g) || "Alan", tur: "metin" as const, zorunlu: false, kilit: false, ekipman: e } }];
+    if (h.tur !== "alan" || !h.id) return [];
+    return [{ h, a: {
+      id: h.id, ad: hucreEtiketi(b, h, g) || "Alan", tur: h.alan ?? "metin", zorunlu: !!h.zorunlu, kilit: false,
+      ...(h.secenekler?.length ? { secenekler: h.secenekler } : {}), ...(h.birim ? { birim: h.birim } : {}), ...(h.formul ? { formul: h.formul } : {}),
+    } }];
+  });
+  /* 2026-10-26 (reisim: "yanlış yerlere yazmış"): aynı etiket tabloda iki yerde geçiyorsa (ör. "Marka" — tank tarafında ekipman kaydından, basınç
+     kaynağı tarafında boş alan) ad sütun grubunun başlığıyla ayrılır ("Marka · BASINÇ KAYNAĞI BİLGİLERİ"); saha ekranı ve S.A.Y hangi parçanın
+     bilgisi olduğunu görür. Var olan formatlarda da çalışır (ad tanımda değişmez, burada türetilir) */
+  const etiket = (h: Hucre) => katla(hucreEtiketi(b, h, g));
+  const sayi = new Map<string, number>();
+  for (const h of duz) if ((h.tur === "alan" && h.id) || h.tur === "kayit") { const e = etiket(h); if (e) sayi.set(e, (sayi.get(e) ?? 0) + 1); }
+  for (const { h, a } of hucreli) {
+    if ((sayi.get(etiket(h)) ?? 0) < 2 || a.ad.includes(" · ")) continue;
+    const grup = grupBasligi(b, h, g);
+    if (grup && katla(grup) !== katla(a.ad)) a.ad = `${a.ad} · ${grup}`;
+  }
+  const alanlar = hucreli.map((x) => x.a);
   if (alanlar.length) l.push({ id: sanalKimlik(b, "a"), ad: b.ad, blok: "bilgi", ...ortak, alanlar, dizilis: 2 });
   /* maddeler sıra numaralarıyla aynı sırada (sütun dizisi — iki sütunlu listede önce sol sütun) */
   const maddeler = diziSirasi(duz.filter((h) => h.tur === "cevap" && h.id)).map((h) => ({ id: h.id!, metin: maddeMetni(b, h) || "Madde", kilit: false, ...(h.formul ? { formul: h.formul } : {}) }));
