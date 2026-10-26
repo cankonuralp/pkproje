@@ -336,10 +336,13 @@ test("yeni rapor paketi: planın raporu olmayan etkin ekipmanları, türün yay�
   const p = await yeniPlan();
   const bekleyen = await a(DEN, (db) => yeniRaporPaketi(db, DEN, p));
   assert.equal(bekleyen?.neden, "Rapor yalnız kabul edilmiş planda oluşturulur.");
+  /* 2026-10-26: paket ham bilgiyi de taşır — kapı cihazda (bağlantısız kabul, cihazın bugünü; tests/cevrimdisi-kapi) */
+  assert.deepEqual([bekleyen?.planDurum, typeof bekleyen?.planBaslangic, bekleyen?.mesai], ["bekliyor", "string", null]);
   tamam(await a(DEN, async (db) => planKabul(db, DEN, p, (await planIci(db, DEN, p))!.surum, true)));
   tamam(await a(DEN, (db) => raporOlustur(db, DEN, p, ekp["HT-1"])));
   const k = (await a(DEN, (db) => yeniRaporPaketi(db, DEN, p)))!;
   assert.equal(k.neden, null);
+  assert.equal(k.planDurum, "kabul");
   assert.deepEqual(k.ekipmanlar.map((x) => x.kod).sort(), ["HT-2", "HT-3", "HT-4", "HT-5", "HT-6"], "raporu olan ekipman yok");
   assert.deepEqual(Object.keys(k.turler), [ht]);
   assert.equal(k.turler[ht].tanim.bolumler.length, KOMP.bolumler.length);

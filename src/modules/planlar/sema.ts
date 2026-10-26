@@ -152,6 +152,23 @@ export const PLAN_DURUM = {
 } as const;
 export type PlanDurumu = keyof typeof PLAN_DURUM;
 
+/* ── RAPOR AÇMA KAPISI (2026-10-26; reisim: "plan kabul edildiğinde gelmeli ki çevrim dışı çalışırken sorun olmamalı"): sayfa cihaza inerken
+   sunucunun gömdüğü karar (plan kabul edilmiş mi, plan günü geldi mi) sahada bayatlıyordu — bağlantısız kabulden sonra ya da ertesi gün rapor
+   açılmıyordu. Karar HAM bilgiden, ekranda o an verilir: cihazda bekleyen kabul "kabul edilmiş" sayılır, tarih cihazın bugünü (sunucu bağlanınca
+   aynı kuralla yeniden denetler). Sunucu da aynı işlevi kullanır (raporlar yeniRaporPaketi). ── */
+export const KABULSUZ_RAPOR = "Rapor yalnız kabul edilmiş planda oluşturulur.";
+export const erkenRapor = (baslangic: string, bugun: string) =>
+  `Plan günü ${tarihNo(baslangic)} henüz gelmedi (bugün ${tarihNo(bugun)}). Rapor plan gününden itibaren oluşturulur.`;
+/** null: rapor açılır (tamamlanmış planın ayrı engeli TAMAMLANDI_RAPOR) */
+export function raporKapisi(p: { durum: PlanDurumu; baslangic: string }, bugun: string, kabulBekliyor = false): string | null {
+  const kabullu = p.durum === "kabul" || p.durum === "denetimde" || p.durum === "tamamlandi" || (p.durum === "bekliyor" && kabulBekliyor);
+  if (!kabullu) return KABULSUZ_RAPOR;
+  return p.baslangic > bugun ? erkenRapor(p.baslangic, bugun) : null;
+}
+const TR_GUN = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit" });
+/** cihazın bugünü, Türkiye takvimiyle "YYYY-AA-GG" */
+export const cihazBugunu = () => TR_GUN.format(new Date());
+
 /* ── PLAN İÇİ (310; maket planlarim.html 4.–5. tur) ─────────────────────────────────────────────────────────────── */
 /** Reddet (maket a-red-pencere): gerekçe zorunlu */
 export const RedGirdisi = z.object({

@@ -39,6 +39,7 @@ import { KALIP } from "../../../styles/kalip";
 import { kodBicimi, kodNormal, tarihNo, type KodTuru } from "../sema";
 import type { PlanEkipmani, PlanIci } from "../server/plan-ici";
 import { raporOlusturEylemi } from "../../raporlar/ui/eylemler";
+import { useCihazKapisi } from "./cihazKapisi";
 import { ekipmanPasifEylemi, ekipmanSilEylemi, kayitliEkleEylemi, kodDurumuEylemi, yeniEkipmanEylemi } from "./eylemler";
 import stil from "./planlar.module.css";
 
@@ -86,6 +87,8 @@ export function EkipmanBolumu({ v }: { v: PlanIci }) {
   const uyar = useUyar();
   const [bekliyor, baslat] = useTransition();
   const raporlu = new Set(v.raporluEkipman);
+  /* 2026-10-26: rapor açma kapısı cihazda (bağlantısız kabul, cihazın bugünü) — ui/cihazKapisi.ts */
+  const kapi = useCihazKapisi(v);
   const s = useSuzgec(tanim(raporlu), v.ekipman);
   const [ekle, setEkle] = useState<Ekle | null>(null);
   const [kd, setKd] = useState<{ kod: string; tur: KodTuru; metin: string; ekipmanId?: string } | null>(null);
@@ -106,7 +109,7 @@ export function EkipmanBolumu({ v }: { v: PlanIci }) {
   }, [kod, planId]);
   const durum: { tur: KodTuru; metin: string; ekipmanId?: string } = kodBicimi(kod) ?? (kd?.kod === kod ? kd : { tur: "bos", metin: "Kod denetleniyor…" });
 
-  const g = GENISLIK[v.izin.raporOlustur ? "rapor" : "sade"];
+  const g = GENISLIK[kapi.olustur ? "rapor" : "sade"];
   const sutunlar: Sutun<PlanEkipmani>[] = [
     /* İ3 (2026-10-17): önceki (son tamamlanmış) raporun imzalı PDF'i */
     /* kartta (telefon) "Önceki kontrol"ün altında — sol üst köşe kodun (iki "ust" üst üste biner, 2026-10-17 görsel karşılaştırma) */
@@ -129,9 +132,9 @@ export function EkipmanBolumu({ v }: { v: PlanIci }) {
     ) },
     { k: "rapor", genislik: g.rapor, baslik: "Rapor", kart: "rozet", sira: 1, hucre: (e) => e.pasif ? <Rozet tur="notr">Pasif</Rozet>
       : raporlu.has(e.id) ? <span className={stil.raporTik} title="Raporu var"><Ikon ad="circle-check" /><span className="gizli">Raporu var</span></span> : null },
-    ...(v.izin.ekipmanPasif || v.izin.raporOlustur || v.izin.ekipmanSil ? [{ k: "eylem", genislik: g.eylem, baslik: "İşlem", gizliBaslik: true, siralanmaz: true, kart: "eylem", sira: 9, hucre: (e: PlanEkipmani) => {
+    ...(v.izin.ekipmanPasif || kapi.olustur || v.izin.ekipmanSil ? [{ k: "eylem", genislik: g.eylem, baslik: "İşlem", gizliBaslik: true, siralanmaz: true, kart: "eylem", sira: 9, hucre: (e: PlanEkipmani) => {
       if (raporlu.has(e.id)) return null;
-      const olustur = v.izin.raporOlustur && !e.pasif;
+      const olustur = kapi.olustur && !e.pasif;
       /* 360: yönetici, hiç kullanılmamış ekipman (raporu yok, tamamlanmış planda yok) */
       const sil = v.izin.ekipmanSil && e.sil;
       if (!v.izin.ekipmanPasif && !olustur && !sil) return null;
@@ -145,8 +148,8 @@ export function EkipmanBolumu({ v }: { v: PlanIci }) {
             sil={() => ekipmanSilEylemi(planId, e.id)} />}
           {olustur && (cihazda.has(e.id)
             ? <Tus tur="ikincil" ikon="file-pen-line" aria-label={`${e.kod} için cihazdaki rapor`} onClick={() => yeniRapor(e)}>Cihazdaki rapor</Tus>
-            : <Tus tur="ikincil" ikon="file-plus" disabled={bekliyor || v.erken || !!v.mesai} aria-label={`${e.kod} için rapor oluştur`}
-              aria-describedby={v.erken ? ERKEN_ID : v.mesai ? MESAI_ID : undefined} onClick={() => raporAc(e)}>Rapor oluştur</Tus>
+            : <Tus tur="ikincil" ikon="file-plus" disabled={bekliyor || kapi.erken || !!kapi.mesai} aria-label={`${e.kod} için rapor oluştur`}
+              aria-describedby={kapi.erken ? ERKEN_ID : kapi.mesai ? MESAI_ID : undefined} onClick={() => raporAc(e)}>Rapor oluştur</Tus>
           )}
         </div>
       );

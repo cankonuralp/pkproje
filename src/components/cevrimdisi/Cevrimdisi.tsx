@@ -48,10 +48,21 @@ const hazirAbone = (f: () => void) => { hazirDinleyen.add(f); return () => { haz
 const hazirAnlik = () => (hazirSon === undefined ? (hazirSon = hazirOku()) : hazirSon);
 let indiriliyor = false;
 const bagliMi = () => navigator.onLine !== false;
-async function onceIndir(paket: PaketEylemi): Promise<void> {
+/* gövde sonuna kadar okunur: servis çalışanı kopyasını sayfa tam gelince saklar */
+const sayfaIndir = (a: string) => fetch(a, { headers: { "x-probata-onindirme": "1", accept: "text/html" }, credentials: "same-origin", cache: "no-store" })
+  .then((y) => y.arrayBuffer()).catch(() => undefined);
+/** 2026-10-26 (reisim: "plan kabul edildiğinde gelmeli ki çevrim dışı çalışırken sorun olmamalı"): plan kabul edilince o planın sayfası ve yeni
+    rapor paketi (ekipmanların önceki bilgileri) beklemeden cihaza iner — 30 dakikalık önceden indirmeyi beklemez. Yalnız servis çalışanı devredeyse
+    (sahada çalışan); değilse bir şey yapmaz. */
+export async function planiCihazaIndir(planId: string): Promise<void> {
+  if (!bagliMi() || !("serviceWorker" in navigator) || !navigator.serviceWorker.controller) return;
+  for (const a of [`/planlar/${planId}`, `/raporlar/yeni/${planId}`]) await sayfaIndir(a);
+}
+/** zorla: bağlantı geri gelince 30 dakikayı beklemeden (2026-10-26) */
+async function onceIndir(paket: PaketEylemi, zorla = false): Promise<void> {
   if (indiriliyor || !bagliMi() || !("serviceWorker" in navigator)) return;
   const son = hazirAnlik();
-  if (son && Date.now() - Date.parse(son.zaman) < ARALIK) return;
+  if (!zorla && son && Date.now() - Date.parse(son.zaman) < ARALIK) return;
   indiriliyor = true;
   try {
     /* çalışan devrede değilse sayfalar saklanmaz: en çok 10 sn bekle */
@@ -62,9 +73,7 @@ async function onceIndir(paket: PaketEylemi): Promise<void> {
     /* 405: plan başına yeni rapor sayfası da (bağlantısız rapor açılabilsin) */
     for (const a of ["/planlar", ...p.planlar.flatMap((x) => [`/planlar/${x.id}`, `/raporlar/yeni/${x.id}`]), ...p.raporlar.map((x) => `/raporlar/${x.id}`)]) {
       if (!bagliMi()) return;
-      /* gövde sonuna kadar okunur: servis çalışanı kopyasını sayfa tam gelince saklar */
-      await fetch(a, { headers: { "x-probata-onindirme": "1", accept: "text/html" }, credentials: "same-origin", cache: "no-store" })
-        .then((y) => y.arrayBuffer()).catch(() => undefined);
+      await sayfaIndir(a);
     }
     hazirSon = { plan: p.planlar.length, zaman: new Date().toISOString() };
     hazirYaz(hazirSon);
@@ -94,10 +103,11 @@ export function CevrimdisiGosterge({ yazan, paket }: { yazan: string; paket?: Pa
   useEffect(() => {
     if (!paket) return;
     const indir = () => { void onceIndir(paket); };
+    const baglandi = () => { void onceIndir(paket, true); };
     const ilk = window.setTimeout(indir, 3_000);
     const tekrar = window.setInterval(indir, ARALIK);
-    window.addEventListener("online", indir);
-    return () => { window.clearTimeout(ilk); window.clearInterval(tekrar); window.removeEventListener("online", indir); };
+    window.addEventListener("online", baglandi);
+    return () => { window.clearTimeout(ilk); window.clearInterval(tekrar); window.removeEventListener("online", baglandi); };
   }, [paket]);
   const goster = cevrimdisi || k.isler.length > 0;
   /* telefonda şerit içeriğin üstüne binmesin (temel.css) */

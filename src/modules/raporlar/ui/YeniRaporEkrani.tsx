@@ -8,6 +8,7 @@ import { useMemo, useState, useSyncExternalStore } from "react";
 import { BosDurum } from "../../../components/bos/BosDurum";
 import { kuyrukAbone, kuyrukAnlik, kuyrukSunucuAnlik } from "../../../components/cevrimdisi/kuyruk";
 import { Serit } from "../../../components/serit/Serit";
+import { cihazBugunu, raporKapisi } from "../../planlar/sema";
 import { TusBaglanti } from "../../../components/tus/Tus";
 import type { SahaRaporu as SahaRaporuVerisi, YeniRaporPaketi } from "../server/raporlar";
 import { SahaRaporu } from "./SahaRaporu";
@@ -28,7 +29,14 @@ export function YeniRaporEkrani({ p }: { p: YeniRaporPaketi }) {
     return <BosDurum ikon="file-question-mark" baslik="Bu ekipmana cihazda rapor açılamaz"
       metin="Bağlantı gelince plandan açın." eylemTus={geri} />;
   }
-  if (p.neden) return <BosDurum ikon="calendar" baslik="Rapor açılamaz" metin={p.neden} eylemTus={geri} />;
+  /* 2026-10-26: karar cihazda — paket indiğinde kabul bekleyen plan cihazda kabul edildiyse ya da paket önceki gün indiyse bayat neden rapor
+     açtırmıyordu (planlar/sema.ts raporKapisi; sunucu bağlanınca aynı kuralı yeniden denetler). Eski pakette ham bilgi yoksa sunucunun nedeni. */
+  const kabulBekliyor = kuyruk.isler.some((x) => x.kayit === p.plan.id && x.tur === "plan.kabul");
+  const bugun = cihazBugunu();
+  const neden = p.planDurum && p.planBaslangic
+    ? raporKapisi({ durum: p.planDurum, baslangic: p.planBaslangic }, bugun, kabulBekliyor) ?? (bugun === p.bugun ? p.mesai ?? null : null)
+    : p.neden;
+  if (neden) return <BosDurum ikon="calendar" baslik="Rapor açılamaz" metin={neden} eylemTus={geri} />;
   /* bu ekipmana cihazda daha önce açılmış (sunucuya gitmemiş) rapor: aynı geçici kimlikle devam */
   const onceki = kuyruk.isler.find((x) => x.tur === "rapor.olustur" && x.yer === `${p.plan.id}|${e.id}`)?.kayit ?? null;
   return <YeniIc key={e.id} p={p} e={e} onceki={onceki} />;
@@ -41,7 +49,7 @@ function YeniIc({ p, e, onceki }: { p: YeniRaporPaketi; e: YeniRaporPaketi["ekip
   const id = onceki ?? gecici;
   const t = p.turler[e.turId];
   const v = useMemo((): SahaRaporuVerisi => ({
-    id, no: "Yeni rapor", durum: "taslak", surum: 0, olustu: new Date().toISOString(), degisti: new Date().toISOString(), gonderildi: null, bugun: p.bugun,
+    id, no: "Yeni rapor", durum: "taslak", surum: 0, olustu: new Date().toISOString(), degisti: new Date().toISOString(), gonderildi: null, bugun: cihazBugunu(),   // 2026-10-26: paketin indiği gün değil, cihazın bugünü
     plan: p.plan, ekipman: { id: e.id, kod: e.kod, onceki: e.onceki }, tur: t.tur, yazan: p.yazan, ekip: p.ekip ?? [], kunye: p.kunye, kunyeFark: [],
     ekipmanBilgi: e.ekipmanBilgi, tarih: { bas, bit: null, sonraki: null, takip: null, rapor: null },
     cevaplar: e.cevaplar ?? t.ilk, tanim: t.tanim, formatSira: t.formatSira, cihazlar: t.cihazlar, fotolar: [], secilebilir: {},

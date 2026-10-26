@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore, useTransition, type ReactNode } from "react";
 import { Kosullar } from "../../../components/bilgi/Bilgi";
 import { useBildir } from "../../../components/bildirim/Bildirim";
+import { planiCihazaIndir } from "../../../components/cevrimdisi/Cevrimdisi";
 import { kuyrugaEkle, kuyrukAbone, kuyrukAnlik, kuyrukSunucuAnlik, type KuyrukSonucOlayi } from "../../../components/cevrimdisi/kuyruk";
 import { Alan, FormIzgara, Girdi, ipucuId } from "../../../components/form/Form";
 import { Ikon } from "../../../components/ikon/Ikon";
@@ -29,6 +30,7 @@ import { meslek } from "../../personel/sema";
 import { akisAdimlari, gunNo, tarihNo, type AdimDurumu } from "../sema";
 import type { PlanBelgeleri, PlanIci } from "../server/plan-ici";
 import { BelgeDoldurmaTusu } from "../../rapor-format/ui/BelgeDoldurma";
+import { useCihazKapisi } from "./cihazKapisi";
 import { EkipmanBolumu, ERKEN_ID, MESAI_ID } from "./EkipmanBolumu";
 import {
   kontrolListesiEylemi, kunyeDuzenleEylemi, kunyeGuncelleEylemi, onBilgiDoldurEylemi, onBilgiGonderEylemi, planKabulEylemi, planReddetEylemi, planTamamlaEylemi,
@@ -107,6 +109,7 @@ export function PlanIciEkrani({ v, belgeler = null }: { v: PlanIci; belgeler?: P
   const [genel, setGenel] = useState<string | null>(null);
   const k = v.kart, d = v.durum, adim = akisAdimlari(d, !!v.kontrolTamam), kt = d === "denetimde" && !!v.kontrolTamam;
   const sebepId = `plan-sebep-${k.id}`;
+  const kapi = useCihazKapisi(v);
   /* 400: bu planın cihazda bekleyen kabul / reddi */
   const kuyruk = useSyncExternalStore(kuyrukAbone, kuyrukAnlik, kuyrukSunucuAnlik);
   const bekleyen = kuyruk.isler.find((x) => x.kayit === k.id && x.tur.startsWith("plan."));
@@ -114,7 +117,11 @@ export function PlanIciEkrani({ v, belgeler = null }: { v: PlanIci; belgeler?: P
     const f = (e: Event) => {
       const o = (e as CustomEvent<KuyrukSonucOlayi>).detail;
       if (o.kayit !== k.id) return;
-      if (o.durum === "tamam") { setGenel(null); bildir(`${k.no}: cihazda bekleyen ${o.tur === "plan.red" ? "ret" : "kabul"} gitti.`); router.refresh(); return; }
+      if (o.durum === "tamam") {
+        setGenel(null); bildir(`${k.no}: cihazda bekleyen ${o.tur === "plan.red" ? "ret" : "kabul"} gitti.`);
+        if (o.tur === "plan.kabul") void planiCihazaIndir(k.id);
+        router.refresh(); return;
+      }
       setGenel(`${k.no}: cihazda bekleyen iş gönderilemedi — ${o.ileti ?? "üst çubuktaki bekleyen işlemlere bakın"}.`);
     };
     window.addEventListener("probata-islem", f);
@@ -134,7 +141,7 @@ export function PlanIciEkrani({ v, belgeler = null }: { v: PlanIci; belgeler?: P
       await kuyruga("plan.kabul", girdi);
       return;
     }
-    if (r.tamam) { setGenel(null); bildir(r.bildirim ?? "Plan kabul edildi."); router.refresh(); return; }
+    if (r.tamam) { setGenel(null); bildir(r.bildirim ?? "Plan kabul edildi."); void planiCihazaIndir(k.id); router.refresh(); return; }
     setGenel(r.genel ?? Object.values(r.hatalar ?? {})[0] ?? "İşlem yapılamadı.");
   });
   const reddet = (gerekce: string) => baslat(async () => {
@@ -309,21 +316,22 @@ export function PlanIciEkrani({ v, belgeler = null }: { v: PlanIci; belgeler?: P
   /* ── 3 · Denetim: kontrol listesi (Ekipmanlar + Raporlar) ── */
   const raporlu = new Set(v.raporluEkipman);
   const raporsuz = v.ekipman.filter((e) => !e.pasif && !raporlu.has(e.id)).length;
-  const calisir = d === "kabul" || d === "denetimde" || d === "tamamlandi";
+  /* 2026-10-26: cihazda bekleyen kabul "kabul edilmiş" sayılır; plan günü ve günlük süre cihazın bugününe göre (ui/cihazKapisi.ts) */
+  const calisir = kapi.durum === "kabul" || kapi.durum === "denetimde" || kapi.durum === "tamamlandi";
   const a3ozet = kt ? `Kontrol listesi tamamlandı · ${gunNo(v.kontrolTamam!)}`
     : v.basladi ? (d === "tamamlandi" && v.bitti ? `${gunNo(v.basladi)}${gunNo(v.bitti) !== gunNo(v.basladi) ? ` – ${gunNo(v.bitti)}` : ""}` : `Başladı: ${gunNo(v.basladi)}`) : null;
   const a3 = (
     <Adim no={3} durum={adim[2]} baslik="Denetim" ozet={a3ozet}>
       {d === "reddedildi" && <p className={stil.adimNot}>Plan reddedildi; denetim yok.</p>}
       {d === "kabul" && <p className={stil.adimNot}>Denetim başlamadı.</p>}
-      {calisir && v.erken && (
+      {calisir && kapi.erken && (
         <Serit tur="uyari" ikon="calendar" id={ERKEN_ID}>
           Plan günü {tarihNo(k.baslangic)} henüz gelmedi (bugün {tarihNo(v.bugun)}). Rapor plan gününden itibaren oluşturulur; geçmiş günlere açık, ileri tarihe kapalı.
         </Serit>
       )}
-      {calisir && v.mesai && (
+      {calisir && kapi.mesai && (
         <Serit tur="uyari" ikon="clock" id={MESAI_ID}>
-          Günlük süre doldu (normal {v.mesai.normal} + mesai {v.mesai.mesai} dk); bugün yeni rapor oluşturulamaz.
+          Günlük süre doldu (normal {kapi.mesai.normal} + mesai {kapi.mesai.mesai} dk); bugün yeni rapor oluşturulamaz.
         </Serit>
       )}
       {calisir && <EkipmanBolumu v={v} />}

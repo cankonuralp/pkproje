@@ -33,7 +33,7 @@ import { turRaporBilgisi } from "../../ekipman-turleri/server/turler.ts";
 import { tesisMusteriIletisim } from "../../musteriler/server/musteriler.ts";
 import { raporCihazlari } from "../../olcum-cihazlari/server/cihazlar.ts";
 import { personelOzetleri } from "../../personel/server/personel.ts";
-import { TAMAMLANDI_RAPOR } from "../../planlar/sema.ts";
+import { raporKapisi, TAMAMLANDI_RAPOR, type PlanDurumu } from "../../planlar/sema.ts";
 import { denetimeBasla, ekipmanEklemeDurumu, ekipmanEkipPlanlari, kodDurumu, kunyeGuncelle, plandakiEkipman, plandakiEkipmanlar, raporIcinPlan, yeniEkipman, type Kunye, type RaporPlani } from "../../planlar/server/plan-ici.ts";
 import { oncekiKontrol, oncekiRaporIcerigi, oncekiRaporlar, surumluRaporEkipmani, type OncekiKontrol } from "./onceki.ts";
 import { formatSurumuOku as formatSurumuHam, yayindakiFormat as yayindakiHam } from "../../rapor-format/server/formatlar.ts";
@@ -428,8 +428,12 @@ export async function sahaRaporu(db: Sorgulayici, kim: Kisi, id: string): Promis
 const YENI_EKIPMAN_EN_COK = 200;
 export interface YeniRaporPaketi {
   plan: SahaRaporu["plan"]; yazan: SahaRaporu["yazan"]; ekip: SahaRaporu["ekip"]; kunye: SahaRaporu["kunye"]; bugun: string;
-  /** rapor açılamıyorsa nedeni (plan kabul edilmemiş, plan günü gelmemiş, günlük süre dolmuş) — ekran söyler, kuyruğa iş yazılmaz */
+  /** rapor açılamıyorsa nedeni (plan kabul edilmemiş, plan günü gelmemiş, günlük süre dolmuş) — ekran söyler, kuyruğa iş yazılmaz.
+      2026-10-26: ekran kararı HAM bilgiden kendisi verir (planDurum, planBaslangic, mesai — planlar/sema.ts raporKapisi); bu alan eski paket için */
   neden: string | null;
+  /** 2026-10-26 (reisim: "plan kabul edildiğinde gelmeli ki çevrim dışı çalışırken sorun olmamalı"): paketin indiği andaki plan durumu ve günü;
+      cihazda bekleyen kabul ve cihazın bugünü ekranda hesaba katılır. mesai: günlük süre dolu mu (yalnız paketin indiği gün geçerli) */
+  planDurum?: PlanDurumu; planBaslangic?: string; mesai?: string | null;
   /** cevaplar (İ1, 2026-10-17): önceki raporu olan ekipmanda ondan kurulan ilk cevaplar (yoksa türün ilk cevapları — turler.ilk); eski pakette yok */
   ekipmanlar: { id: string; kod: string; turId: string; ekipmanBilgi: EkipmanBilgisi; onceki: SahaRaporu["ekipman"]["onceki"]; cevaplar?: Cevaplar }[];
   turler: Record<string, { tur: SahaRaporu["tur"]; tanim: FormatTanimi; formatSira: number; ilk: Cevaplar; cihazlar: CihazSatiri[]; kriterler: KriterBelgesi[] }>;
@@ -442,9 +446,8 @@ export async function yeniRaporPaketi(db: Sorgulayici, kim: Kisi, planId: string
   const plan = await raporIcinPlan(db, kim, planId);
   if (!plan || !plan.personelId || !canDoEylem(kim, "rapor_olustur", { atananlar: plan.atananlar })) return null;
   const bugun = bugunTr();
-  const neden = plan.durum !== "kabul" && plan.durum !== "denetimde" && plan.durum !== "tamamlandi" ? "Rapor yalnız kabul edilmiş planda oluşturulur."
-    : plan.baslangic > bugun ? `Plan günü ${tarihNo(plan.baslangic)} henüz gelmedi (bugün ${tarihNo(bugun)}). Rapor plan gününden itibaren oluşturulur.`
-    : (await mesaiDurumu(db, plan.personelId, bugun)).dolu ? MESAI_DOLU : null;
+  const mesai = (await mesaiDurumu(db, plan.personelId, bugun)).dolu ? MESAI_DOLU : null;
+  const neden = raporKapisi(plan, bugun) ?? mesai;
   const raporlu = new Set((await db.sorgu<{ ekipman_id: string }>("SELECT ekipman_id::text FROM rapor WHERE plan_id = $1 AND silindi IS NULL", [plan.id])).rows.map((x) => x.ekipman_id));
   const ekipmanlar: YeniRaporPaketi["ekipmanlar"] = [];
   const turler: YeniRaporPaketi["turler"] = {};
@@ -477,7 +480,7 @@ export async function yeniRaporPaketi(db: Sorgulayici, kim: Kisi, planId: string
     yazan: { ad: yazan?.ad ?? "—", meslek: yazan?.meslek ?? "diger", meslekMetin: yazan?.meslekMetin ?? null, ekipnet: yazan?.ekipnet ?? null },
     ekip: await ikinciSecenekleri(db, plan.ekip, plan.personelId),
     kunye: { firmaAdi: plan.kunye.firma_adi, adres: plan.kunye.adres, sgk: plan.kunye.sgk, isgNo: plan.kunye.isg_no, eposta: iletisim?.eposta ?? null, tel: iletisim?.tel ?? null },
-    bugun, neden, ekipmanlar, turler, standartlar: await raporStandartlari(db, kim),
+    bugun, neden, planDurum: plan.durum, planBaslangic: plan.baslangic, mesai, ekipmanlar, turler, standartlar: await raporStandartlari(db, kim),
   };
 }
 

@@ -106,6 +106,9 @@ export interface PlanIzni {
   ekipmanSil: boolean;
   /** plandaki denetçi, plan kabul edilmiş / denetimde / tamamlanmış, plan günü gelmiş (ENGEL 1: ileri tarihli plana rapor açılmaz) — tuş görünür */
   raporOlustur: boolean;
+  /** 2026-10-26: rapor açma YETKİSİ (plandaki denetçi, Raporlar ve rapor_olustur) — plan durumu ve günü hariç; ekran kapıyı cihazda verir
+      (ui/cihazKapisi.ts — sayfa bağlantısız açılınca bayat kalmasın) */
+  raporYetkili: boolean;
   /** 2026-10-12 (reisim): tamamlanmış planda yeni rapor açılmaz — tuş görünür, basınca bu neden söylenir (null: açılır) */
   raporEngel: string | null;
   /** 2026-10-12: saha formu oluştur ve müşteri taramasını yükle / kaldır — plandaki denetçi ya da Planlar "yaz", plan tamamlanmış */
@@ -113,6 +116,7 @@ export interface PlanIzni {
 }
 function izinler(kim: Kisi, e: Erisim): PlanIzni {
   const d = e.p.durum, isci = e.uye || e.yazar;
+  const raporYetkili = e.uye && duzey(kim, RAPORLAR_MODULU) !== "yok" && canDoEylem(kim, "rapor_olustur", { atananlar: e.atananlar });
   return {
     kabulRed: d === "bekliyor" && canDoEylem(kim, "plan_kabul_red", { atananlar: e.atananlar }),
     kontrol: isci && (d === "denetimde" || d === "tamamlandi"),
@@ -122,7 +126,8 @@ function izinler(kim: Kisi, e: Erisim): PlanIzni {
     ekipmanEkle: isci && duzey(kim, EKIPMAN_MODULU) === "yaz" && (d === "kabul" || d === "denetimde"),
     ekipmanPasif: isci && canDoEylem(kim, "ekipman_pasif") && (d === "kabul" || d === "denetimde" || d === "tamamlandi"),
     ekipmanSil: canDoEylem(kim, "kayit_sil", { modul: EKIPMAN_MODULU }),
-    raporOlustur: e.uye && duzey(kim, RAPORLAR_MODULU) !== "yok" && canDoEylem(kim, "rapor_olustur", { atananlar: e.atananlar }) && (d === "kabul" || d === "denetimde" || d === "tamamlandi") && e.p.baslangic <= bugunTr(),
+    raporOlustur: raporYetkili && (d === "kabul" || d === "denetimde" || d === "tamamlandi") && e.p.baslangic <= bugunTr(),
+    raporYetkili,
     raporEngel: d === "tamamlandi" ? TAMAMLANDI_RAPOR : null,
     sahaFormu: isci && d === "tamamlandi",
   };
