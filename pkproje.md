@@ -2527,6 +2527,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-26 (YAYINDA — main 132834da; CI 17/17 yeşil, 8,8 dk): **MÜŞTERİ EXCEL'İNE MUAYENE UZMANI YORUMU** — reisim: müşteri ekranından inen Excel'de uygunsuzluklar ve
+  muayene yorumları da yazsın. Uygunsuzluk satırı imzalı sürümün içeriğinden uzman yorumunu taşır (yalnız Excel akışında; liste sayfaları taşımaz); Excel'e
+  "Muayene uzmanı yorumu" sütunu. Kilit tests/musteri-paneli. Sıradaki işler (reisim 2026-10-26 sıra): çevrimdışı kabulde paket + sahada rapor açılabilsin →
+  rapor açarken önceki rapor uyarısı → uzun metin "…" + tıklayınca → takip muayenesi.
 - 2026-10-25 (YAYINDA — main c6fab914; CI 17/17 yeşil): **CI HIZLANDIRMA (2. adım)** — reisim: *"yap"*. Denetim üç işte aynı anda (tip + lint + derleme · test ·
   olumsuz kanıt; her biri 2,2–2,8 dk — önce tek işte 7,7 dk). Koşu 6,7–7,7 → **6,2 dk**; artık kritik yol uçtan uca (en uzun masaüstü 3, 6,2 dk). Uçtan
   uca dört parça denendi (c3881d41, 5,6 dk) ama e2e/say.spec.ts'te sohbet geçmişine / rapor durumuna dayanan testler başka parçaya düşünce üç genişlikte
