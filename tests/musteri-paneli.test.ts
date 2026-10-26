@@ -307,7 +307,7 @@ async function tarihli(tesis: string, kod: string, tarih: string, kusurlu: boole
   tamam(await a(FA.den, async (db) => planKabul(db, FA.den, p, (await planIci(db, FA.den, p))!.surum, true)));
   const h = tamam(await a(FA.den, (db) => raporOlustur(db, FA.den, p, FA.ekp[kod]))).id;
   await sql(A, kusurlu
-    ? `UPDATE rapor SET rapor_tarihi = $2, sonraki = coalesce($3::date, sonraki), cevaplar = jsonb_set(cevaplar, '{madde,k1}', '{"c": "Uygun değil", "not": "Korozyon"}'::jsonb),
+    ? `UPDATE rapor SET rapor_tarihi = $2, sonraki = coalesce($3::date, sonraki), cevaplar = jsonb_set(jsonb_set(cevaplar, '{madde,k1}', '{"c": "Uygun değil", "not": "Korozyon"}'::jsonb), '{yorum}', '"Uzman yorumu: bakım şart"'::jsonb),
        sonuc = 'uygun_degil', surum = surum + 1 WHERE id = $1`
     : "UPDATE rapor SET rapor_tarihi = $2, sonraki = coalesce($3::date, sonraki), sonuc = 'uygun', surum = surum + 1 WHERE id = $1", [h, tarih, sonraki], FA.den.id);
   await sql(A, "UPDATE rapor SET durum = 'onayda', surum = surum + 1 WHERE id = $1", [h], FA.den.id);
@@ -581,6 +581,10 @@ test("577 müşteri paneli listeleri sunucuda sayfalı: ekranın süzgeciyle bir
   }
   assert.deepEqual((await m(FA.m1, null, (db) => panelUygunsuzluklariSuz(db, "acik"))).map((x) => x.id), u.uygunsuzluklar.filter((x) => x.acik).map((x) => x.id),
     "Excel penceresi: bütün açık uygunsuzluklar");
+  /* 2026-10-26 (reisim: Excel'de muayene yorumu): yorum yalnız Excel akışında (imzalı sürümün içeriğinden), liste sayfalarında boş (veri şişmez) */
+  const ex = await m(FA.m1, null, (db) => panelUygunsuzluklariSuz(db, "acik"));
+  assert.ok(ex.length && ex.every((x) => x.yorum === "Uzman yorumu: bakım şart"), JSON.stringify(ex.map((x) => x.yorum)));
+  assert.ok(u.uygunsuzluklar.every((x) => x.yorum === ""), "liste sayfası yorum taşımaz");
   /* tesis kapsamlı müşteri girişi: sunucu sayfası da yalnız kapsamdakini sayar */
   if (p.tesisler.length) {
     const t0 = p.tesisler[0].id;

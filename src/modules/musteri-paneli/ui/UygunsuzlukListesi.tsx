@@ -56,10 +56,10 @@ const tanim = (sec: Record<string, Secenek[]>) => uygunsuzlukTanim(sec);
 
 /** açık uygunsuzluklar → .xlsx (maket excel-indir sütunları; ilk sütun raporu açan bağlantı) */
 export function uygunsuzlukExceli(l: readonly MusteriUygunsuzlukSatiri[]): Uint8Array {
-  return xlsxBayt("Uygunsuzluklar", [["Rapor", "Ekipman kodu", "Ekipman türü", "Tesis", "Sınıf", "Kriter", "Açıklama", "Rapor no", "Kontrol tarihi"],
+  return xlsxBayt("Uygunsuzluklar", [["Rapor", "Ekipman kodu", "Ekipman türü", "Tesis", "Sınıf", "Kriter", "Açıklama", "Muayene uzmanı yorumu", "Rapor no", "Kontrol tarihi"],
     ...l.map((u) => {
       const k = kusurParcala(u.metin, u.kriter);
-      return [{ metin: "Rapor", url: raporAdresi(u.raporId) }, u.ekipmanKod, u.turAd, u.tesis, sinif(u), k.kriter, k.aciklama, u.raporNo, u.tarih ? tarihNo(u.tarih) : ""];
+      return [{ metin: "Rapor", url: raporAdresi(u.raporId) }, u.ekipmanKod, u.turAd, u.tesis, sinif(u), k.kriter, k.aciklama, u.yorum, u.raporNo, u.tarih ? tarihNo(u.tarih) : ""];
     })]);
 }
 

@@ -65,7 +65,7 @@ export async function panelUygunsuzlukSayfasi(db: Sorgulayici, durum: unknown): 
 }
 /** 577: toplu ZIP — süzgeçten geçen BÜTÜN uygunsuzluklar; acik: "Uygunsuzları indir" (Excel) — bütün açık uygunsuzluklar */
 export async function panelUygunsuzluklariSuz(db: Sorgulayici, durum: unknown | "acik"): Promise<MusteriUygunsuzlukSatiri[]> {
-  const b = await panelBasligi(db), l = await musteriUygunsuzluklari(db);
+  const b = await panelBasligi(db), l = await musteriUygunsuzluklari(db, durum === "acik");   // Excel: uzman yorumu da gelir
   return durum === "acik" ? l.filter((u) => u.acik) : bellekteSuz(uygunsuzlukTanim(raporSecimleri([], b.tesisler)), durum, l);
 }
 
