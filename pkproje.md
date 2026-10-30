@@ -2527,6 +2527,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-31 (kalem 1 — YAYINDA main 3c9980b5): **S.A.Y AÇIK SAYFAYI BİLİR (K2 + M4)** — okuyucuyu döngü verir (say.ts yürütücüye dokunmaz); 13 modülün SAY_SAYFALARI'ı (src/modules/*/say-islemleri.ts) → çekirdek acikKayit
+  (src/server/yz/islem.ts): sayfanın yolu modülün okuma işlemine bağlı, kişinin yetkisiyle, kayıt noktasıyla; sayfa notunda "Açık kayıt: Plan · no · durum ·
+  tesis (kimlik)"; kişisel numaralar düşer. Kilit tests/say-sayfa.test.ts (her [kimlik] sayfası tanımlı ya da nedeniyle dışarıda), bozan say-sayfa.
+- 2026-10-31 (kalem 0 — YAYINDA main 92111680): **S.A.Y KONUŞMA BÜTÜNLÜĞÜ (K1) + REDDİN HATA KAYDI (K1b)** — konuşmaya yazan dört yol kişi başı danışma
+  kilidiyle (konusmaKilidi); sunucu sonucu yalnız açık çağrıya; her istekten önce konusmaDuzelt (src/server/yz/konusma-denetim.ts — fazla / öksüz sonuç düşer,
+  sonuçsuz çağrı kapanır; sağlam konuşma aynen; 28 Ekim'deki bozuk konuşma ilk istekte kendiliğinden düzelir, onarım hata kaydına "say.konusma"); yapay zekâ
+  reddi hata kaydına ("say.istek"). Kilit tests/say-butunluk.test.ts, bozan say-butunluk. Sahada (canlı S.A.Y konuşmasıyla) denenmedi.
 - 2026-10-31 (ONAYLANDI — reisim: *"Önerdiğin gibi onay"*; yedi karar önerildiği gibi: dosya adı ve çekim saati modele gider (522 değişti) · sharp sabit
   sürüm · formun görüntüsü ayrı uçta (/api/say/form, Chromium, 60 sn, önbellekli) · "Sık işler" / örnekler becerilere ölçmeyle taşınır (kalem 5) · koşul maddesi
   06'daki metin aynen, ekranlar maket 9 · bilerek dışarıda: sır / anahtar, e-imza ve imza PDF'i hazırlama, Yönetim, müşteri paneli, çevrimdışı paket, menü
