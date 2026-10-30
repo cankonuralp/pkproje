@@ -46,8 +46,8 @@ test("2) konuşma kırpılırsa S.A.Y dosyayı ve yaptığı işi unutur", async
 });
 
 test("3) araç listesi sayfaya göre değişirse düşünmeler geçersiz olur", async () => {
-  const m = await bozuk<Say>(SAY, "export const sayAraclari = (formatAraci: object): readonly object[] => [...ISLEM_ARACLARI, ...GORSEL_ARACLARI, FORM_ARACI, EKRAN_ARACI, ...RAPOR_ARACLARI, formatAraci, FORMAT_PDF_ARACI, ARAMA_ARACI];",
-    "export const sayAraclari = (formatAraci: object, rapor = false): readonly object[] => [...ISLEM_ARACLARI, ...GORSEL_ARACLARI, FORM_ARACI, EKRAN_ARACI, ...(rapor ? RAPOR_ARACLARI : []), formatAraci, FORMAT_PDF_ARACI, ARAMA_ARACI];");
+  const m = await bozuk<Say>(SAY, "export const sayAraclari = (formatAraci: object): readonly object[] => [...ISLEM_ARACLARI, BECERI_ARACI, ...GORSEL_ARACLARI, FORM_ARACI, EKRAN_ARACI, ...RAPOR_ARACLARI, formatAraci, FORMAT_PDF_ARACI, ARAMA_ARACI];",
+    "export const sayAraclari = (formatAraci: object, rapor = false): readonly object[] => [...ISLEM_ARACLARI, BECERI_ARACI, ...GORSEL_ARACLARI, FORM_ARACI, EKRAN_ARACI, ...(rapor ? RAPOR_ARACLARI : []), formatAraci, FORMAT_PDF_ARACI, ARAMA_ARACI];");
   assert.ok(!istek(m).tools.some((t) => t.name === "rapora_yaz"), "bozuk: rapor araçları yalnız rapordayken");
 });
 

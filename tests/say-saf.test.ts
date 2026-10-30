@@ -58,7 +58,7 @@ test("istek: konuşma olduğu gibi, bütün araçlar aynı sırayla ve sınırs�
   assert.deepEqual(g.system, [{ type: "text", text: SISTEM, cache_control: { type: "ephemeral" } }], "talimat tek ve önbellekli; bağlam yok");
   const adlar = (g.tools as { name: string }[]).map((t) => t.name);
   /* 2026-10-31 (kalem 3 — E3, reisim onayı): görüntü araçları foto_pafta, foto_goster işlem araçlarının ardında, sabit sırayla */
-  assert.deepEqual(adlar, ["islemler", "islem", "foto_pafta", "foto_goster", "form_goster", "ekran_durumu", "rapora_yaz", "fotograflari_oku", "geri_al", "raporu_kaydet", "onaya_gonder", "formati_duzenle", "format_pdf_kur", "web_search"]);
+  assert.deepEqual(adlar, ["islemler", "islem", "beceri_oku", "foto_pafta", "foto_goster", "form_goster", "ekran_durumu", "rapora_yaz", "fotograflari_oku", "geri_al", "raporu_kaydet", "onaya_gonder", "formati_duzenle", "format_pdf_kur", "web_search"]);
   /* S.A.Y'ın koyduğu sayı sınırı yok; formatın kendi veri sınırı (ölçüm tablosunda en çok KURAL_EN_COK sonuç kuralı — format/tanim.ts) kalır */
   assert.doesNotMatch(JSON.stringify((g.tools as { name: string }[]).filter((t) => t.name !== "formati_duzenle")), /maxItems|max_uses|"maximum"/, "araçlarda sayı sınırı yok");
   assert.doesNotMatch(JSON.stringify((FORMAT_ARACI.input_schema as { properties: { islemler: { type: string } } }).properties.islemler.type), /maxItems/);

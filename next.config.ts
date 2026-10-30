@@ -51,6 +51,8 @@ const ortak: NextConfig = {
     ...Object.fromEntries(["/", "/ekipman-turleri", String.raw`/ekipman-turleri/\[id\]`, String.raw`/ekipman-turleri/sablon/\[anahtar\]`,
       String.raw`/ekipman-turleri/sablon/\[anahtar\]/pdf`, String.raw`/dokumanlar/kriterler/\[kod\]/pdf`]
       .map((u) => [u, ["./src/tanim/bakanlik/*.pdf"]])),
+    /* 2026-10-31 (kalem 5 — E5): S.A.Y'ın becerileri (src/modules/say/beceriler.ts uygulama açılırken okur) — S.A.Y'ın ucu */
+    "/api/say": ["./src/modules/say/beceriler/*.md"],
     /* FIRMA-VT FV10: kurulum makinesinin göç adımı göç dosyalarını okur (src/server/db/goc.ts) — Firma aç ve firma sayfasının eylemleri */
     ...Object.fromEntries(["/yonetim/yeni", String.raw`/yonetim/f/\[id\]`].map((u) => [u, ["./src/server/db/gocler/*.sql"]])) },
 };

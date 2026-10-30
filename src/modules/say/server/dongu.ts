@@ -23,6 +23,7 @@ import { anthropicAkis, type AkisYaniti } from "../../../server/yz/akis.ts";
 import { acikKayit, islemOzeti, sunucuKomutu, type IslemOrtami } from "../../../server/yz/islem.ts";
 import { bekleyenAl, bekleyenYaz, isAl, isBirak, konusmaEkle, konusmaKilidi, konusmaOku, konusmaSonu, type AracSonucu } from "../../../server/yz/konusma.ts";
 import { fotoGosterAraci, fotoPaftaAraci } from "./gorsel.ts";
+import { beceriDizini, beceriMetni, becerileriOku } from "../beceriler.ts";
 import { acikSonuclar, konusmaDuzelt } from "../../../server/yz/konusma-denetim.ts";
 import type { SohbetIletisi } from "../../../server/yz/sohbet.ts";
 import { aracCagrilari, aracCagrisi, betaReddi, cevapMetni, EKRAN_ARAC_ADLARI, GORSEL_ARAC_ADLARI, sayAraclari, sayIstegi, sayMaliyeti, saySistemi, sonucIcerigi, sunucuKomutuMu,
@@ -45,7 +46,8 @@ export type SayOlayi =
   | { t: "hata"; neden: string; yenile: boolean };
 
 /** talimat ve araçlar: konuşma boyunca aynı (düşünmeler geçerli kalsın) */
-const SISTEM = saySistemi(SAY_KILAVUZU, ISLEM_DIZINI);
+const BECERILER = becerileriOku();
+const SISTEM = saySistemi(SAY_KILAVUZU, ISLEM_DIZINI, beceriDizini(BECERILER));
 const ARACLAR = sayAraclari(FORMAT_ARACI);
 /** bir isteğin işi (kişinin S.A.Y işi bu süre içinde yenilenir) ve yeni çağrıya başlamak için gereken en az süre */
 const IS_SURESI = 360, DEVAM_MS = 60_000;
@@ -258,6 +260,7 @@ async function araclariYap(o: IstekOturumu, icerik: readonly Record<string, unkn
     if (EKRAN_ARAC_ADLARI.has(c.name)) { ekranda = true; ekran.push({ id: c.id, ad: c.name, komut: k }); continue; }
     if (ekranda) { sonuclar[c.id] = sonucIcerigi(islemOzeti(k?.tur === "islem" ? k.ad || "islem" : c.name, null, { tamam: false, neden: SIRA_BEKLER })); continue; }
     if (c.name === "ekran_durumu") { sonuclar[c.id] = ekranDurumuMetni(b); continue; }
+    if (c.name === "beceri_oku") { sonuclar[c.id] = beceriMetni(BECERILER, (c.input as { ad?: unknown } | null)?.ad); continue; }
     if (GORSEL_ARAC_ADLARI.has(c.name)) { yaz({ t: "asama", ad: "Fotoğraflara bakıyor" }); sonuclar[c.id] = await gorselSonucu(o, c.name, c.input); continue; }
     if (!k || !sunucuKomutuMu(k)) { sonuclar[c.id] = OKUNAMADI; continue; }
     yaz({ t: "asama", ad: ASAMA[c.name] ?? "Çalışıyor" });

@@ -2527,6 +2527,17 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-31 (kalem 5): **S.A.Y BECERİLERİ (E5)** — B01–B11 kaynak klasöründen AYNEN src/modules/say/beceriler/ (eski B01 saha-paketinden taşınmadı);
+  src/modules/say/beceriler.ts (ön bilgi, dizin, beceri_oku); talimata yalnız dizin + kural ("kullanıcının açık isteği beceriden önce gelir"). "Sık işler" ve
+  örneklerin talimattan çıkarılması karar 4 gereği ÖLÇMEYLE yapılacak (ölçme tabanı bekliyor) — bu teslimde talimat yalnız dizin kadar büyüdü. Becerilerde anılan
+  plan_hazirlik, rapor_saat_plani, plan_denetle, raporlara_yaz, raporlari_onaya_gonder, is_taslagi_*, belge_ekle sonraki kalemlerde; beceriler yokken eldeki işlemle sürdürür.
+- 2026-10-31 (kalem 4): **S.A.Y FORMU GÖRÜR (K6)** — form_goster (EKRAN aracı) → /api/say/form (Chromium, 60 sn): raporun basılı formu, değerler yer kimlikleriyle
+  ([e:…], [a:…], [t:…], [d:…]); görüntü raporun dosyası (say_form, raporu gören), sunucu erişim kaydıyla okuyup S.A.Y'a verir.
+- 2026-10-31 (kalem 3): **S.A.Y GÖRÜNTÜYE BAKAR, RAPORA FOTOĞRAF KOYAR (E3 + E4)** — sharp 0.34.5; foto_pafta (≤ 12 karo, numaralı), foto_goster (bölge, gri + karşıtlık,
+  döndürme) ekin depodaki kopyasından; rapor_foto_ekle / rapor_foto_kaldir ekranın fotoEkle / fotoSil'iyle; rapor_getir fotoları ve fotoğraf bölümlerini verir.
+- 2026-10-31 (kalem 2 — YAYINDA main b9bef0d1, göç 0109 Supabase'de): **S.A.Y MALZEMESİ (K3, E1, E2)** — ek başlığı "M03 · F02 — fotoğraf · komp.jpeg · çekim 27.10.2026
+  09:56" (karar 1; 522 değişti), EXIF çekim saati, sohbet dışa aktarımı tek düzen (gönderen adı yok), fotoğraf ve PDF kopyası firmanın deposunda (say_ek, yalnız ekleyen;
+  temizlenince çöpe). K4 (S.A.Y Chat kayıtları malzeme olarak) bu kalemde YAPILMADI — sonraki kalemlere kaldı.
 - 2026-10-31 (kalem 1 — YAYINDA main 3c9980b5): **S.A.Y AÇIK SAYFAYI BİLİR (K2 + M4)** — okuyucuyu döngü verir (say.ts yürütücüye dokunmaz); 13 modülün SAY_SAYFALARI'ı (src/modules/*/say-islemleri.ts) → çekirdek acikKayit
   (src/server/yz/islem.ts): sayfanın yolu modülün okuma işlemine bağlı, kişinin yetkisiyle, kayıt noktasıyla; sayfa notunda "Açık kayıt: Plan · no · durum ·
   tesis (kimlik)"; kişisel numaralar düşer. Kilit tests/say-sayfa.test.ts (her [kimlik] sayfası tanımlı ya da nedeniyle dışarıda), bozan say-sayfa.

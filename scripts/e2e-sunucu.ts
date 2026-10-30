@@ -319,7 +319,7 @@ const yzTaklit = createServer((istek, yanit) => {
       const d = g as { stream?: boolean; thinking?: { type?: string; display?: string }; tools?: { name?: string }[]; output_config?: { effort?: string } };
       const mesajlar = (g.messages ?? []) as Ileti[];
       const bloklar = (m: Ileti): Blok[] => (Array.isArray(m.content) ? m.content as Blok[] : [{ type: "text", text: String(m.content ?? "") }]);
-      const ARACLAR = ["islemler", "islem", "foto_pafta", "foto_goster", "form_goster", "ekran_durumu", "rapora_yaz", "fotograflari_oku", "geri_al", "raporu_kaydet", "onaya_gonder", "formati_duzenle", "format_pdf_kur", "web_search"];
+      const ARACLAR = ["islemler", "islem", "beceri_oku", "foto_pafta", "foto_goster", "form_goster", "ekran_durumu", "rapora_yaz", "fotograflari_oku", "geri_al", "raporu_kaydet", "onaya_gonder", "formati_duzenle", "format_pdf_kur", "web_search"];
       if (!d.stream) { ret("taklit: S.A.Y akışlı çağrılmalı"); return; }
       if (d.thinking?.type !== "adaptive" || d.thinking.display !== "summarized") { ret("taklit: düşünme her adımda açık olmalı (adaptive, özet)"); return; }
       if (JSON.stringify((d.tools ?? []).map((t) => t.name)) !== JSON.stringify(ARACLAR)) { ret("taklit: araçların hepsi her istekte aynı sırayla olmalı"); return; }

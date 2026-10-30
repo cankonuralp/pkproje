@@ -139,6 +139,12 @@ export const ISLEM_ARACLARI = [
     input_schema: { type: "object", properties: { ad: { type: "string" }, girdi: { type: "object" } }, required: ["ad"] },
   },
 ] as const;
+/** 2026-10-31 (kalem 5 — E5): becerinin tam metni (sunucu aracı; src/modules/say/beceriler.ts) */
+export const BECERI_ARACI = {
+  name: "beceri_oku",
+  description: "Talimattaki dizindeki bir becerinin tam metnini verir (işin yöntemi, sırası, nerede durup soracağın). ad: becerinin adı ya da kodu (ör. B01).",
+  input_schema: { type: "object", properties: { ad: { type: "string" } }, required: ["ad"] },
+} as const;
 /** 2026-10-31 (kalem 3 — E3): görüntüye insan gibi bakmak — önce hepsine birlikte, sonra gerekene yaklaşarak (sunucu araçları; src/modules/say/server/gorsel.ts) */
 export const GORSEL_ARACLARI = [
   {
@@ -255,7 +261,7 @@ export const EKRAN_ARAC_ADLARI: ReadonlySet<string> = new Set(["form_goster", "r
   "format_pdf_kur"]);
 
 /** bütün araçlar, her istekte aynı sırayla (formatAraci modülden: src/modules/rapor-format/say-kurucu.ts) */
-export const sayAraclari = (formatAraci: object): readonly object[] => [...ISLEM_ARACLARI, ...GORSEL_ARACLARI, FORM_ARACI, EKRAN_ARACI, ...RAPOR_ARACLARI, formatAraci, FORMAT_PDF_ARACI, ARAMA_ARACI];
+export const sayAraclari = (formatAraci: object): readonly object[] => [...ISLEM_ARACLARI, BECERI_ARACI, ...GORSEL_ARACLARI, FORM_ARACI, EKRAN_ARACI, ...RAPOR_ARACLARI, formatAraci, FORMAT_PDF_ARACI, ARAMA_ARACI];
 
 /** istek: sabit talimat (önbellekte) + bütün araçlar + konuşmanın tamamı. betasiz: hizmet düşünme denetimi betasını kabul etmezse aynı istek onsuz */
 export function sayIstegi(p: { model: YzModel; sistem: string; araclar: readonly object[]; mesajlar: readonly Record<string, unknown>[]; betasiz?: boolean }):
