@@ -130,6 +130,24 @@ export const onBilgiPdf = (v: OnBilgiVerisi) => htmlPdf(sayfaHtml(`${v.projeNo} 
 /** sözleşme (2026-10-25, belge doldurma): firmanın formatıyla (elle doldurulan yerleriyle) ya da temel formatla — müşteriye e-postayla gider */
 export const sozlesmePdf = (v: SozlesmeBelgesiVerisi) => htmlPdf(sayfaHtml(`${v.no} sözleşme`, belgeCizimi("sozlesme", v, sozlesmeDegerleri, sozlesmeBelgesi)));
 
+/** 2026-10-31 (kalem 4 — K6): belgenin bir sayfasının görüntüsü (JPEG) — S.A.Y formu insan gibi görsün. A4 genişliği (794 px) × 1,5; sayfa = A4 boyu dilimi */
+export async function belgeGoruntusu(v: BelgeVerisi, sayfa = 1): Promise<{ jpeg: Uint8Array; sayfa: number; sayfaSayisi: number }> {
+  const b = await tarayici();
+  try {
+    const s = await b.newPage({ viewport: { width: A4_PX.w, height: A4_PX.h }, deviceScaleFactor: 1.5 });
+    await s.route("**/*", (r) => r.abort());
+    await s.setContent(belgeHtml(v), { waitUntil: "load" });
+    await s.evaluate(() => document.fonts.ready.then(() => undefined));
+    const yukseklik = await s.evaluate(() => document.documentElement.scrollHeight);
+    const sayfaSayisi = Math.max(1, Math.ceil(yukseklik / A4_PX.h)), n = Math.min(Math.max(1, Math.floor(sayfa)), sayfaSayisi);
+    const jpeg = await s.screenshot({ type: "jpeg", quality: 70, clip: { x: 0, y: (n - 1) * A4_PX.h, width: A4_PX.w, height: Math.min(A4_PX.h, yukseklik - (n - 1) * A4_PX.h) } });
+    return { jpeg: new Uint8Array(jpeg), sayfa: n, sayfaSayisi };
+  } finally {
+    await b.close();
+  }
+}
+const A4_PX = { w: 794, h: 1123 };
+
 async function htmlPdf(html: string, altBilgi?: string): Promise<Uint8Array> {
   const b = await tarayici();
   try {

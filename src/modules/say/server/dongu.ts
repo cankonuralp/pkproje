@@ -12,6 +12,8 @@
      bekleyen araç çağrılarına bağlanır ve S.A.Y'a veri olarak gider (yetki vermez). Yürütücü yalnız BU cevabın komutlarıyla çağrılır. */
 import { z } from "zod";
 import { depo } from "../../../server/dosya/depo.ts";
+import { dosyaIndirilebilir } from "../../../server/dosya/dosya.ts";
+import { DOSYA_ERISIMI } from "../../../server/dosya/erisim.ts";
 import { epostalariSonraGonder } from "../../../server/eposta/sonra.ts";
 import { hataKaydet } from "../../../server/hata/kaydet.ts";
 import { oturumIslemi, type IstekOturumu } from "../../../server/kimlik/istek.ts";
@@ -58,6 +60,8 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const Ozet = z.object({
   yazildi: z.number().int().min(0), ayni: z.number().int().min(0), bekliyor: z.number().int().min(0).default(0), satir: z.number().int().min(0).default(0),
   yapilan: z.array(z.string()).default([]), yazilamadi: z.array(z.object({ ad: z.string(), neden: z.string() })).default([]),
+  /* 2026-10-31 (kalem 4): ekranın hazırladığı formun görüntüsünün dosyası (form_goster) */
+  gorsel: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/).optional(),
 });
 export const SayIstekGirdisi = z.object({
   is: z.string().regex(UUID),
@@ -93,19 +97,30 @@ function hataYaz(o: IstekOturumu, e: unknown, yer: string): void {
 }
 const dizi = (x: unknown): Record<string, unknown>[] => (Array.isArray(x) ? x.filter((b): b is Record<string, unknown> => !!b && typeof b === "object") : []);
 
+/** 2026-10-31 (kalem 4): ekranın hazırladığı görüntü (kişinin indirebildiği JPEG — dosya erişim kaydıyla) → görüntü bloğu; okunamazsa yok */
+async function gorselBlogu(db: Sorgulayici, kisi: IstekOturumu, dosyaId: string): Promise<Record<string, unknown> | null> {
+  const d = await dosyaIndirilebilir(db, kisi, dosyaId, DOSYA_ERISIMI);
+  if (!d || d.tur !== "image/jpeg" || d.boyut > 5_000_000) return null;
+  return { type: "image", source: { type: "base64", media_type: "image/jpeg", data: Buffer.from(await depo().oku(d.anahtar, db)).toString("base64") } };
+}
 /** ekranın getirdiği sonuçlar: konuşmanın sonu cevapsız araç çağrıları olmalı; ekran araçlarının sonucu ekrandan, ötekiler bekleyenden. Dönen: red nedeni */
-async function sonuclariEkle(db: Sorgulayici, sonuclar: readonly { id: string; ozet: z.output<typeof Ozet> }[]): Promise<string | null> {
+async function sonuclariEkle(db: Sorgulayici, kisi: IstekOturumu, sonuclar: readonly { id: string; ozet: z.output<typeof Ozet> }[]): Promise<string | null> {
   await konusmaKilidi(db);
   const son = await konusmaSonu(db);
   const acikta = son?.rol === "assistant" ? aracCagrilari(dizi(son.icerik)) : [];
   if (!acikta.length) return "Bu işin sonucu artık beklenmiyor (iş başka bir pencerede sürdü ya da bitti).";
   const bekleyen = await bekleyenAl(db);
-  const bloklar = acikta.map((a) => {
+  const bloklar = await Promise.all(acikta.map(async (a) => {
     const e = EKRAN_ARAC_ADLARI.has(a.name) ? sonuclar.find((x) => x.id === a.id) : undefined;
+    if (e && a.name === "form_goster" && e.ozet.gorsel) {
+      const { gorsel, ...ozet } = e.ozet;
+      const g = await gorselBlogu(db, kisi, gorsel);
+      return { type: "tool_result", tool_use_id: a.id, content: [...(g ? [g] : []), { type: "text", text: sonucIcerigi({ ...ozet, yazilamadi: [...ozet.yazilamadi] }) }] };
+    }
     if (e) return { type: "tool_result", tool_use_id: a.id, content: sonucIcerigi({ ...e.ozet, yazilamadi: [...e.ozet.yazilamadi] }) };
     if (bekleyen[a.id] !== undefined) return { type: "tool_result", tool_use_id: a.id, content: bekleyen[a.id] };
     return { type: "tool_result", tool_use_id: a.id, content: "Yapılmadı: ekranın sonucu gelmedi.", is_error: true };
-  });
+  }));
   await konusmaEkle(db, "user", bloklar);
   return null;
 }
@@ -146,7 +161,7 @@ export async function sayAkisi(o: IstekOturumu, ham: unknown, yaz: (x: SayOlayi)
       if (s.durum === "red") { yaz({ t: "hata", neden: s.neden, yenile }); return; }
       yaz({ t: "ileti", ileti: s.ileti });
     } else if (v.tur === "sonuc") {
-      const r = await oturumIslemi(o, (db) => sonuclariEkle(db, v.sonuclar));
+      const r = await oturumIslemi(o, (db) => sonuclariEkle(db, o, v.sonuclar));
       if (r) { yaz({ t: "hata", neden: r, yenile }); return; }
     }
     for (;;) {

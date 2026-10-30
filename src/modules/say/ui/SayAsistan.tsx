@@ -59,6 +59,7 @@ import { Serit } from "../../../components/serit/Serit";
 import type { SohbetEkAdi, SohbetEksik, SohbetIletisi } from "../../../server/yz/sohbet";
 import { xlsxSayfalari, zipAc } from "../../../components/disa/oku";
 import { pdfdenSablonKur } from "../../ekipman-turleri/ui/pdfdenSablon";
+import { formGoruntusuIste } from "./form";
 import { EK_PARCA_BAYT, KAYDEDILMEMIS } from "../sabitler";
 import type { SayDurum } from "../server/say";
 import type { SayOlayi } from "../server/dongu";
@@ -438,6 +439,15 @@ export function SayAsistan() {
       router.push(`/ekipman-turleri/${k.turId}/sablon/${y.taslak}/kurucu`);
       return { ozet: { yazildi: 1, ayni: 0, bekliyor: 0, yapilan: [`Format PDF'i yüklendi (sürüm ${y.sira}); şablon bu PDF'ten taslak olarak kuruldu (taslak ${y.taslak}), Format kurucu açıldı`,
         ...y.uyarilar], yazilamadi: [] } };
+    }
+    /* 2026-10-31 (kalem 4 — K6): formun görüntüsü — ayrı uçta (Chromium) basılır, dosyası S.A.Y'a sonuçla döner (sunucu görüntüyü sonuca koyar) */
+    if (k.tur === "form") {
+      const rapor = k.rapor ?? rb?.id ?? null;
+      if (!rapor) return yapilamadi("Formun görüntüsü", "rapor verilmedi ve ekranda açık rapor yok; rapor kimliğini ver");
+      setAsama("Forma bakıyor");
+      const y = await formGoruntusuIste(rapor, k.sayfa);
+      if (!y.tamam) return yapilamadi("Formun görüntüsü", y.neden);
+      return { ozet: { yazildi: 0, ayni: 0, bekliyor: 0, yapilan: [`Formun ${y.sayfa}/${y.sayfaSayisi}. sayfası (yer kimlikleri kutularda)`], yazilamadi: [], gorsel: y.dosya } };
     }
     const r = h.rapor();
     /* 2026-10-16 (2. adım a incelemesi): kapanan ekranda yazılıp kaydedilmeyen girişler kayboldu — S.A.Y bunu bilsin (kayıttaki hâli okuyup gerekirse

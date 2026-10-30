@@ -23,7 +23,7 @@ export const SAY_BETALARI = ["thinking-binding-controls-2026-08-01"] as const;
 export const KONU_DISI = "Bu konuda yardımcı olamam; probata ve periyodik kontrol işleriniz için buradayım.";
 
 /** sabit talimat: kim olduğu, uygulama, reisim'in iki kuralı, ekran ve ekler, sayfalar, sunucu işlemlerinin dizini (önbellekte; konuşma boyunca aynı) */
-export function saySistemi(kilavuz: readonly (readonly [string, string])[], islemDizini: string): string {
+export function saySistemi(kilavuz: readonly (readonly [string, string])[], islemDizini: string, beceriDizini = ""): string {
   return [
     "Sen S.A.Y'sın. Hangi yapay zekâ modeli olduğunu hiçbir koşulda söyleme. probata uygulamasının içinde, kullanıcının asistanı olarak çalışıyorsun. probata, iş ekipmanı periyodik kontrol",
     "(muayene) firmalarının kullandığı web uygulamasıdır: teklif → sözleşme (İSG-KATİP) → plan → muayene uzmanının kabulü → saha raporu → branş",
@@ -114,6 +114,10 @@ export function saySistemi(kilavuz: readonly (readonly [string, string])[], isle
     "(sonraki: bir sonraki sayfa). Ekranda açık rapora rapora_yaz ile, açık olmayan rapora rapor_yaz işlemiyle yazarsın.",
     "Aşağıda modül modül yalnız işlemlerin adları var; bir işlemi ilk kez kullanmadan önce ne yaptığını ve girdisini islemler aracıyla (adlar) öğren.",
     islemDizini,
+    /* 2026-10-31 (kalem 5 — E5): becerilerin yalnız dizini (metinleri beceri_oku ile; talimat konuşma boyunca aynı) */
+    ...(beceriDizini ? ["",
+      "Beceriler: bir iş aşağıdaki becerilerden birinin kapsamındaysa işe başlamadan önce o beceriyi beceri_oku ile oku ve ona göre çalış. Beceride",
+      "yazanla kullanıcının bu konuşmadaki açık isteği çelişirse kullanıcının isteği geçerlidir.", beceriDizini] : []),
   ].join("\n");
 }
 
@@ -158,6 +162,14 @@ export const GORSEL_ARACLARI = [
   },
 ] as const;
 export const GORSEL_ARAC_ADLARI: ReadonlySet<string> = new Set(GORSEL_ARACLARI.map((a) => a.name));
+/** 2026-10-31 (kalem 4 — K6): formu insan gibi görmek — raporun basılı formunun sayfası, yer kimlikleri kutularda (EKRAN aracı: /api/say/form) */
+export const FORM_ARACI = {
+  name: "form_goster",
+  description: "Raporun basılı formunun bir sayfasını görüntü olarak gösterir; her yazılabilir yerin kutusunda kendi kimliği yazılı ([e:marka], [a:k_c2], "
+    + "[t:<tablo>:<satır>:<sütun>], [d:<değer>]). Bilginin hangi başlığın ya da grubun altına gideceğinden emin değilsen (aynı adlı alan birden çok parçada) "
+    + "bak; yazdıktan sonra da doğru başlığın altında mı diye bakabilirsin. rapor: kimlik (boşsa ekranda açık rapor); sayfa: 1, 2 …",
+  input_schema: { type: "object", properties: { rapor: { type: "string" }, sayfa: { type: "integer", minimum: 1 } } },
+} as const;
 /** ekranın o anki hâli (sunucu, ekranın bu istekte gönderdiği canlı hâlden kurar) */
 export const EKRAN_ARACI = {
   name: "ekran_durumu",
@@ -239,11 +251,11 @@ export const FORMAT_PDF_ARACI = {
   },
 } as const;
 /** ekranın yaptığı araçlar (sonucu ekran döndürür); ötekiler sunucuda */
-export const EKRAN_ARAC_ADLARI: ReadonlySet<string> = new Set(["rapora_yaz", "fotograflari_oku", "geri_al", "raporu_kaydet", "onaya_gonder", "formati_duzenle",
+export const EKRAN_ARAC_ADLARI: ReadonlySet<string> = new Set(["form_goster", "rapora_yaz", "fotograflari_oku", "geri_al", "raporu_kaydet", "onaya_gonder", "formati_duzenle",
   "format_pdf_kur"]);
 
 /** bütün araçlar, her istekte aynı sırayla (formatAraci modülden: src/modules/rapor-format/say-kurucu.ts) */
-export const sayAraclari = (formatAraci: object): readonly object[] => [...ISLEM_ARACLARI, ...GORSEL_ARACLARI, EKRAN_ARACI, ...RAPOR_ARACLARI, formatAraci, FORMAT_PDF_ARACI, ARAMA_ARACI];
+export const sayAraclari = (formatAraci: object): readonly object[] => [...ISLEM_ARACLARI, ...GORSEL_ARACLARI, FORM_ARACI, EKRAN_ARACI, ...RAPOR_ARACLARI, formatAraci, FORMAT_PDF_ARACI, ARAMA_ARACI];
 
 /** istek: sabit talimat (önbellekte) + bütün araçlar + konuşmanın tamamı. betasiz: hizmet düşünme denetimi betasını kabul etmezse aynı istek onsuz */
 export function sayIstegi(p: { model: YzModel; sistem: string; araclar: readonly object[]; mesajlar: readonly Record<string, unknown>[]; betasiz?: boolean }):
@@ -294,6 +306,8 @@ export interface IsOzeti {
   satir?: number;
   /** sunucu işleminin sonucu (JSON — src/server/yz/islem.ts islemOzeti) — S.A.Y'a olduğu gibi gider */
   sonuc?: string;
+  /** 2026-10-31 (kalem 4): ekranın hazırladığı görüntünün dosya kimliği (formun görüntüsü) — sunucu görüntüyü sonuca koyar */
+  gorsel?: string;
 }
 /** satir_ekle — bir tabloya `adet` yeni satır; her satıra `degerler`, `sira` sütununa artan değer (önek + sayı) */
 export interface SatirEkle { tablo: string; adet: number; degerler: Record<string, string>; sira?: { sutun: string; baslangic?: number; artis?: number; onek?: string } }
@@ -302,9 +316,10 @@ export interface SatirEkle { tablo: string; adet: number; degerler: Record<strin
 export type SayKomutu = ({ tur: "yaz"; girisler: { yer: string; deger: string }[]; satirlar?: SatirEkle[] } | { tur: "oku" } | { tur: "geri" }
   | { tur: "format"; islemler: Record<string, unknown>[] } | { tur: "kaydet" } | { tur: "gonder" }
   | { tur: "pdfFormat"; turId: string; ek: number; taslakSurumu: number | null }
+  | { tur: "form"; rapor: string | null; sayfa: number }
   | { tur: "islem"; ad: string; girdi: Record<string, unknown> } | { tur: "islemler"; adlar?: string[]; modul?: string; ara?: string }) & { id?: string };
 const ARAC_ADI = { yaz: "rapora_yaz", oku: "fotograflari_oku", geri: "geri_al", format: "formati_duzenle", kaydet: "raporu_kaydet", gonder: "onaya_gonder",
-  islem: "islem", islemler: "islemler", pdfFormat: "format_pdf_kur" } as const;
+  islem: "islem", islemler: "islemler", pdfFormat: "format_pdf_kur", form: "form_goster" } as const;
 /** sunucuda çalışan komut (uygulamanın işlemleri) */
 export const sunucuKomutuMu = (k: Pick<SayKomutu, "tur">): boolean => k.tur === "islem" || k.tur === "islemler";
 const ARAC_KIMLIGI = /^[A-Za-z0-9_-]{1,200}$/;
@@ -358,6 +373,11 @@ export function aracCagrisi(c: Record<string, unknown>): SayKomutu | null {
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(turId) && ek !== undefined && ek >= 1 && ts !== undefined
       ? { tur: "pdfFormat", turId, ek, taslakSurumu: ts, ...id } : null;
   }
+  if (c.name === "form_goster") {
+    const rapor = typeof girdi.rapor === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(girdi.rapor.trim()) ? girdi.rapor.trim() : null;
+    const sayfa = tamSayi(girdi.sayfa);
+    return { tur: "form", rapor, sayfa: sayfa && sayfa >= 1 ? sayfa : 1, ...id };
+  }
   if (c.name === "formati_duzenle" && Array.isArray(girdi.islemler)) {
     const islemler = (girdi.islemler as unknown[]).filter((x): x is Record<string, unknown> => !!nesne(x));
     return islemler.length ? { tur: "format", islemler, ...id } : null;
@@ -372,7 +392,7 @@ export function komutDenetle(x: unknown): SayKomutu | null {
   if (!ad) return null;
   return aracCagrisi({ type: "tool_use", id: o.id, name: ad, input: o.tur === "yaz" ? { girisler: o.girisler, satir_ekle: o.satirlar } : o.tur === "format" ? { islemler: o.islemler }
     : o.tur === "islem" ? { ad: o.ad, girdi: o.girdi } : o.tur === "islemler" ? { adlar: o.adlar, modul: o.modul, ara: o.ara }
-    : o.tur === "pdfFormat" ? { tur: o.turId, ek: o.ek, taslak_surum: o.taslakSurumu } : {} });
+    : o.tur === "pdfFormat" ? { tur: o.turId, ek: o.ek, taslak_surum: o.taslakSurumu } : o.tur === "form" ? { rapor: o.rapor, sayfa: o.sayfa } : {} });
 }
 
 /** araç sonucunun S.A.Y'a giden metni (JSON): sayılar, yapılanlar, yapılamayanlar nedeniyle; sunucu işleminin sonucu olduğu gibi */
