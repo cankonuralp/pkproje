@@ -25,10 +25,13 @@ import { DOSYA_MODULU as ZIMMET_DOSYASI, zimmetDosyasiGorulur } from "../../modu
 import { DOSYA_MODULU as RAPOR_DOSYASI, IMZALI_MODULU, oncekiRaporGorulur, PDF_MODULU, raporDosyasiGorulur } from "../../modules/raporlar/server/raporlar.ts";
 import { DOSYA_ONBILGI, DOSYA_SAHA, onBilgiDosyasiGorulur, sahaDosyasiGorulur } from "../../modules/planlar/server/plan-ici.ts";
 import { chatDosyasiGorulur, DOSYA_SAY_CHAT } from "../../modules/say-chat/server/kayitlar.ts";
+import { DOSYA_SAY_EK, sayEkGorulur } from "../yz/konusma.ts";
 import type { YetkiHesabi } from "../yetki/canDo.ts";
 import type { ErisimKaydi } from "./dosya.ts";
 
 export const DOSYA_ERISIMI: ErisimKaydi = Object.freeze({
+  /* 2026-10-31 (kalem 2): S.A.Y'a eklenen fotoğraf / PDF'in kopyası — yalnız eki ekleyen (yz_ek kişiye özel, RLS) */
+  [DOSYA_SAY_EK]: (db, _kisi, kayitId) => sayEkGorulur(db, kayitId),
   [TUR_DOSYASI]: (db, kisi, kayitId) => turDosyasiGorulur(db, kisi as YetkiHesabi, kayitId),
   [CIHAZ_DOSYASI]: (db, kisi, kayitId) => cihazDosyasiGorulur(db, kisi as YetkiHesabi, kayitId),
   [ZIMMET_DOSYASI]: (db, kisi, kayitId) => zimmetDosyasiGorulur(db, kisi as YetkiHesabi, kayitId),

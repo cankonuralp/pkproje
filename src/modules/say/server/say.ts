@@ -16,7 +16,8 @@ import { ROL_ADI } from "../../../server/yetki/tanim.ts";
 import { sinirli, yzAyi, yzAyir, yzAyirmaBirak, yzKendiAyi, yzMesajSay, yzSohbetKapat } from "../../../server/yz/kullanim.ts";
 import { maliyetHesapla, type YzModel } from "../../../server/yz/okuma.ts";
 import { aracCagrilari, SAY_YANIT_SINIRI } from "../../../server/yz/say.ts";
-import { ekleriAl, konusmaEkle, konusmaKilidi, konusmaSonu, konusmaTemizle, kuyrukNotlariniSil, bekleyenAl } from "../../../server/yz/konusma.ts";
+import { dosyaCope } from "../../../server/dosya/dosya.ts";
+import { ekKopyalari, ekleriAl, konusmaEkle, konusmaKilidi, konusmaSonu, konusmaTemizle, kuyrukNotlariniSil, bekleyenAl } from "../../../server/yz/konusma.ts";
 import { sohbetGecmisi, sohbetOneriDurumu, sohbetTemizle, sohbetYaz, type SohbetEki, type SohbetIletisi } from "../../../server/yz/sohbet.ts";
 import { raporSayBilgisi, raporSayDurumu } from "../../raporlar/server/say-baglanti.ts";
 import { acikRaporMetni, raporHaritasi, yoldakiRapor } from "../rapor-haritasi.ts";
@@ -271,8 +272,10 @@ export async function sayOneri(db: Sorgulayici, id: string, durum: "uygulandi" |
 
 /** "Sohbeti temizle": görünen geçmiş + konuşma + ekler (yalnız kişinin kendisi); dönen: silinen ileti sayısı, hizmetten silinecek ek dosyaları ve
     anahtar (silme işlem dışında) */
-export async function sayTemizle(db: Sorgulayici): Promise<{ silinen: number; dosyalar: string[]; anahtar: string | null }> {
+export async function sayTemizle(db: Sorgulayici, kim = "S.A.Y"): Promise<{ silinen: number; dosyalar: string[]; anahtar: string | null }> {
   const silinen = await sohbetTemizle(db);
+  /* ekin depodaki kopyası çöpe (çöp süresi dolunca depodan silinir) */
+  for (const d of await ekKopyalari(db)) await dosyaCope(db, d, { kim, ne: "say.ek_temizle" });
   const dosyalar = await konusmaTemizle(db);
   const anahtar = dosyalar.length ? await sirKullan(db, "yapay_zeka_anahtari") : null;
   return { silinen, dosyalar, anahtar };

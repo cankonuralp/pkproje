@@ -5,6 +5,8 @@
    · tür İÇERİKTEN (uzantı / bildirilen tür değil): PDF ve fotoğraf (JPEG / PNG — konum bilgisi silinir) baytlarıyla, Word'ün metni (kısaltmasız),
      düz metin olduğu gibi (tarayıcının Excel'den çevirdiği "tablo"); ikili başka dosya ve boş dosya reddedilir; ad temizlenir (kısaltılmaz);
    · konuşmaya giden bloklar: her ek "Ek n (tür)" + Dosya API kimliğiyle blok (fotoğraf görüntü, öteki belge), adları gitmez, sonra kullanıcının yazısı.
+     2026-10-31 GÜNCELLENDİ (kalem 2, reisim: "Önerdiğin gibi onay" — karar 1 "dosya adı ve çekim saati modele gider", 522 değişti): başlık artık
+     malzeme numarası + tür + ad + çekim saati ("M01 · F01 — fotoğraf · komp.jpeg · çekim 27.10.2026 09:56"); önce bu iletinin malzeme özeti.
    Olumsuz kanıt: tests/bozan/say-ek.bozan.ts. */
 import assert from "node:assert/strict";
 import { test } from "node:test";
@@ -51,12 +53,15 @@ test("boy sınırı yok: büyük dosya parça parça (parça barındırmanın is
   assert.equal(hazir(sayEkiHazirla(b, "büyük.pdf")).bayt.length, 40 << 20);
 });
 
-test("konuşmaya giden bloklar: her ek 'Ek n (tür)' + Dosya API kimliği, adları gitmez; sonra kullanıcının yazısı", () => {
-  const l = ekBloklari([{ dosya: "file_1", tur: "foto" }, { dosya: "file_2", tur: "pdf" }, { dosya: "file_3", tur: "tablo" }], "Bunlara göre formatı kur");
+test("konuşmaya giden bloklar: malzeme özeti, her ek numara + tür + ad + çekim saati + Dosya API kimliği; sonra kullanıcının yazısı", () => {
+  const l = ekBloklari([{ dosya: "file_1", tur: "foto", ad: "komp.jpeg", cekim: "2026-10-27 09:56", no: 4, fno: 2 },
+    { dosya: "file_2", tur: "pdf", ad: "form.pdf", cekim: null, no: 5, fno: null }, { dosya: "file_3", tur: "tablo", ad: "liste.xlsx", cekim: null, no: 6, fno: null }],
+    "Bunlara göre formatı kur");
   assert.deepEqual(l, [
-    { type: "text", text: "Ek 1 (fotoğraf):" }, { type: "image", source: { type: "file", file_id: "file_1" } },
-    { type: "text", text: "Ek 2 (PDF):" }, { type: "document", source: { type: "file", file_id: "file_2" }, title: "Ek 2" },
-    { type: "text", text: "Ek 3 (Excel tablosu (metin)):" }, { type: "document", source: { type: "file", file_id: "file_3" }, title: "Ek 3" },
+    { type: "text", text: "Malzeme (bu iletide 3 öğe: 1 fotoğraf (F02), 1 PDF, 1 Excel tablosu (metin)). Numaralar konuşma boyunca aynı kalır; sıra kaynağın sırası, yoksa çekim saati, yoksa eklenme." },
+    { type: "text", text: "M04 · F02 — fotoğraf · komp.jpeg · çekim 27.10.2026 09:56:" }, { type: "image", source: { type: "file", file_id: "file_1" } },
+    { type: "text", text: "M05 — PDF · form.pdf:" }, { type: "document", source: { type: "file", file_id: "file_2" }, title: "M05 — PDF · form.pdf" },
+    { type: "text", text: "M06 — Excel tablosu (metin) · liste.xlsx:" }, { type: "document", source: { type: "file", file_id: "file_3" }, title: "M06 — Excel tablosu (metin) · liste.xlsx" },
     { type: "text", text: "Bunlara göre formatı kur" },
   ]);
   assert.deepEqual(ekBloklari([], "soru"), [{ type: "text", text: "soru" }]);

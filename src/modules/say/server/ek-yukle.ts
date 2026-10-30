@@ -1,9 +1,11 @@
 /* S.A.Y'A EK YÜKLEME (2026-10-23 — S.A.Y baştan; reisim: "hiç bir kısıtı olmasın"): dosya tarayıcıdan parça parça gelir (barındırmanın istek boyu
    sınırı — sabitler.ts EK_PARCA_BAYT); son parçayla birleşir, türü içerikten bulunur (server/ek.ts), Anthropic Dosya API'sine yüklenir ve kişinin
    eki olarak kaydedilir (yz_ek). Dosyanın boyuna ve sayısına sınır yok. Kişi ve firma oturumdan; parçalar ve ek kişinin kendisinin (RLS). */
+import { depo } from "../../../server/dosya/depo.ts";
+import { dosyaYukle } from "../../../server/dosya/dosya.ts";
 import { oturumIslemi, type IstekOturumu } from "../../../server/kimlik/istek.ts";
 import { anthropicDosyaYukle } from "../../../server/yz/akis.ts";
-import { ekKaydet, parcalariBirlestir, parcalariSil, parcaYaz, type EkTuru } from "../../../server/yz/konusma.ts";
+import { DOSYA_SAY_EK, ekKaydet, parcalariBirlestir, parcalariSil, parcaYaz, type EkTuru } from "../../../server/yz/konusma.ts";
 import { sayEkiHazirla } from "./ek.ts";
 import { sayKapisi } from "./say.ts";
 
@@ -38,7 +40,12 @@ export async function sayEkParcasi(o: IstekOturumu, p: EkParcasi, veri: Uint8Arr
   if (y.durum === "hata") { await sil(); return { durum: "red", neden: y.neden }; }
   const id = await oturumIslemi(o, async (db) => {
     await parcalariSil(db, p.yukleme);
-    return ekKaydet(db, { dosya: y.id, ad: e.ad, tur: e.tur, mime: e.mime, boyut: h.bayt.length });
+    const ek = await ekKaydet(db, { dosya: y.id, ad: e.ad, tur: e.tur, mime: e.mime, boyut: h.bayt.length, cekim: e.cekim });
+    /* 2026-10-31 (kalem 2): fotoğraf ve PDF'in kopyası firmanın deposunda (yakınlaştırma, rapora fotoğraf, belge ekleme bundan); sığmazsa kopyasız sürer */
+    if (e.tur === "foto" || e.tur === "pdf") {
+      await dosyaYukle(db, depo(), { firmaId: o.kiraci.firmaId, modul: DOSYA_SAY_EK, kayitId: ek, ad: e.ad, bayt: e.bayt, izinli: ["jpeg", "png", "pdf"], kim: o.ad, yukleyen: o.id });
+    }
+    return ek;
   });
   return { durum: "tamam", ek: { id, ad: e.ad, tur: e.tur, boyut: h.bayt.length } };
 }

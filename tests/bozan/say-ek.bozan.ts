@@ -3,7 +3,8 @@
    1) fotoğraf temizlenmeseydi konum bilgisi (EXIF) yapay zekâya giderdi;
    2) Word'ün metni yeniden kısaltılırsa (eski 20 000 / 40 000 karakter) uzun belgenin sonu S.A.Y'a hiç gitmez — reisim'in "verdiğim dosyaya göre"
       şikâyetinin bir nedeni;
-   3) ekin adı yapay zekâya giderse (başlıkta) dosya adındaki müşteri / kişi adı da gider. */
+   3) 2026-10-31 (kalem 2, karar 1 — eski "ad gitmez" kanıtı kasıtlı olarak tersine döndü): ekin adı başlıktan düşerse S.A.Y dosya adındaki türü
+      ("komp", "hidrofor") göremez — 26 Ekim'de üç fotoğraf bu yüzden yanlış türe açıldı. */
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -39,8 +40,8 @@ test("2. Word'ün metni yeniden kısaltılırsa uzun belgenin sonu gitmez (kilid
   assert.ok(!("durum" in e) && new TextDecoder().decode(e.bayt).length < uzun.trim().length, "bozuk: metin kısaltıldı");
 });
 
-test("3. ekin adı yapay zekâya giderse dosya adındaki bilgi de gider (kilidin koruduğu açık)", async () => {
-  const m = await bozuk("title: `Ek ${i + 1}` });", "title: (e as { ad?: string }).ad ?? \"\" });");
-  const l = m.ekBloklari([{ dosya: "file_1", tur: "pdf", ad: "Gizli Sanayi sözleşmesi.pdf" } as never], "s");
-  assert.match(JSON.stringify(l), /Gizli Sanayi/, "bozuk: ad gitti");
+test("3. ekin adı başlıktan düşerse kilit düşer", async () => {
+  const m = await bozuk("const baslik = ekBasligi(e);", "const baslik = `M${e.no}`;");
+  const l = m.ekBloklari([{ dosya: "file_1", tur: "foto", ad: "komp.jpeg", cekim: null, no: 1, fno: 1 }], "s");
+  assert.doesNotMatch(JSON.stringify(l), /komp.jpeg/, "bozuk: ad gitmedi");
 });

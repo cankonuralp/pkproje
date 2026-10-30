@@ -136,10 +136,12 @@ test("soru: görünen geçmişe + konuşmaya (ekler, yazı) + sayfa notu; cevaps
   assert.deepEqual(k[4].icerik, [
     { type: "tool_result", tool_use_id: "t1", content: "{\"islem\":\"plan_ara\",\"durum\":\"tamam\"}" },
     { type: "tool_result", tool_use_id: "t2", content: YARIDA, is_error: true },
-    { type: "text", text: "Ek 1 (fotoğraf):" }, { type: "image", source: { type: "file", file_id: "file_den_1" } },
+    /* 2026-10-31 (kalem 2, karar 1): ekin numarası, adı (ve varsa çekim saati) gider */
+    { type: "text", text: "Malzeme (bu iletide 1 öğe: 1 fotoğraf (F01)). Numaralar konuşma boyunca aynı kalır; sıra kaynağın sırası, yoksa çekim saati, yoksa eklenme." },
+    { type: "text", text: "M01 · F01 — fotoğraf · Gizli Sanayi etiketi.jpg:" }, { type: "image", source: { type: "file", file_id: "file_den_1" } },
     { type: "text", text: "Eki inceler misin?" },
   ]);
-  assert.doesNotMatch(JSON.stringify(k), /Gizli Sanayi|file_plan_1/, "ekin adı ve başkasının eki gitmez");
+  assert.doesNotMatch(JSON.stringify(k), /file_plan_1|p.pdf/, "başkasının eki gitmez");
   assert.deepEqual(await ile(A, FA.den, (db) => bekleyenAl(db)), {}, "bekleyen sonuç bir kez alındı");
   /* görünen geçmiş */
   assert.deepEqual((await ile(A, FA.den, (db) => sayGecmisi(db))).map((m) => m.metin), ["Planları göster", "Hâlâ orada mısın?", "Eki inceler misin?"]);

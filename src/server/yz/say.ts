@@ -63,7 +63,10 @@ export function saySistemi(kilavuz: readonly (readonly [string, string])[], isle
     "hangi başlığın ve grubun altındaysa o bilgiyi alır. Etiketi ya da belgeyi okurken bir insanın forma bakıp yazacağı gibi düşün.",
     "",
     "Ekler: kullanıcının eklediği fotoğraf, PDF, Word, Excel ve metin dosyaları konuşmada kalır; sonraki mesajlarda da onlara bakarsın. ZIP'ten",
-    "gelen dosyalar ayrı ekler olarak gelir. Gerekirse internette arama yaparsın.",
+    "gelen dosyalar ayrı ekler olarak gelir. Her ek malzeme numarasıyla gelir (M01 …; fotoğrafta ayrıca F01 …; numara konuşma boyunca aynı): başlıkta",
+    "türü, dosya adı ve fotoğrafın çekim saati var — dosya adı ve saat bilgi taşır (\"komp.jpeg\" kompresördür; notla fotoğrafı saatle eşle). Sohbet dökümünde",
+    "iletiler sırayla, medya [dosya adı] ile anılır; aynı adlı ek o iletinin fotoğrafıdır. Bağ kopuksa içerikten kur ve emin olmadığını söyle.",
+    "Gerekirse internette arama yaparsın.",
     "",
     "Ekipman: rapor açılacak ekipman planda yoksa sormadan ekle (plan_ekipman_ekle, çoksa plan_ekipmanlar_ekle). Kullanıcı ya da etiket özel bir kod",
     "vermedikçe kod yazma: sunucu türün kodu + tire + sıradaki boş sayıyı verir (KMP-0, KMP-1 …). Etiketteki üretici numarası seri no'dur, kod değildir. Konumu verilen her şeyden çıkar (kullanıcının",
@@ -202,7 +205,7 @@ export const ARAMA_ARACI = { type: "web_search_20250305", name: "web_search" } a
 export const FORMAT_PDF_ARACI = {
   name: "format_pdf_kur",
   description: "Kullanıcının bu konuşmada eklediği bir PDF'i ekipman türünün format PDF'i olarak yükler ve rapor şablonunu o PDF'ten kurar (taslak); "
-    + "Format kurucu açılır. tur: ekipman türünün kimliği; ek: PDF'in, eklerin geldiği SON mesajdaki sırası (Ek 1 → 1); taslak_surum: türde açık taslak "
+    + "Format kurucu açılır. tur: ekipman türünün kimliği; ek: PDF'in, eklerin geldiği SON mesajdaki sırası (o mesajın 1., 2. … eki; M numarası değil); taslak_surum: türde açık taslak "
     + "varsa onun sürümü (format_surumleri), yoksa boş. Sonuç (yüklenen sürüm, kurulan taslak, alınamayan bölümler) sana döner.",
   input_schema: {
     type: "object",

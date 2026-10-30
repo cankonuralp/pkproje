@@ -41,7 +41,7 @@ export async function sayOneriEylemi(id: unknown, durum: unknown): Promise<boole
 export async function sayTemizleEylemi(): Promise<{ durum: "tamam"; silinen: number } | { durum: "red"; neden: string }> {
   const o = await oturum();
   if (!o) return { durum: "red", neden: "Oturumunuz kapandı." };
-  const t = await oturumIslemi(o, (db) => sayTemizle(db));
+  const t = await oturumIslemi(o, (db) => sayTemizle(db, o.ad));
   if (t.anahtar) for (const d of t.dosyalar) await anthropicDosyaSil(d, t.anahtar);
   return { durum: "tamam", silinen: t.silinen };
 }
