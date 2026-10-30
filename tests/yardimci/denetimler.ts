@@ -893,6 +893,8 @@ export const SAY_ELLE_ALANLAR: Readonly<Record<string, Readonly<Record<string, s
   plan_ekipman_pasif: { pasif: "ekipmanPasif'in konumsal değeri (Pasife al / Etkinleştir)" },
   plan_kontrol_listesi: { tamam: "kontrolListesi'nin konumsal değeri (Tamamla / Yeniden aç)" },
   rapor_yaz: { girisler: "rapora_yaz aracının biçimi (komutDenetle aynı denetimden geçirir)", satir_ekle: "rapora_yaz'ın satir_ekle biçimi (komutDenetle)" },
+  /* 2026-10-31 (kalem 3 — E4): ekranın "Fotoğraf ekle"sinde dosya tarayıcıdan gelir; S.A.Y'da konuşmanın F numarası ve formatın fotoğraf bölümü */
+  rapor_foto_ekle: { foto: "konuşmadaki fotoğrafın F numarası (ekin depodaki kopyası — fotoKopyasiOku)", bolum: "fotoEkle'nin hedef bölümü (formatın foto bölümü kimliği)" },
   musteri_kaydet: { onay: "musteriKaydet'in konumsal onayı (\"Yine de kaydet\")" },
   tesis_kaydet: { onay: "tesisKaydet'in konumsal onayı (\"Yine de kaydet\")" },
   /* 2026-10-16 (2. adım b) */

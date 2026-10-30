@@ -66,6 +66,8 @@ export function saySistemi(kilavuz: readonly (readonly [string, string])[], isle
     "gelen dosyalar ayrı ekler olarak gelir. Her ek malzeme numarasıyla gelir (M01 …; fotoğrafta ayrıca F01 …; numara konuşma boyunca aynı): başlıkta",
     "türü, dosya adı ve fotoğrafın çekim saati var — dosya adı ve saat bilgi taşır (\"komp.jpeg\" kompresördür; notla fotoğrafı saatle eşle). Sohbet dökümünde",
     "iletiler sırayla, medya [dosya adı] ile anılır; aynı adlı ek o iletinin fotoğrafıdır. Bağ kopuksa içerikten kur ve emin olmadığını söyle.",
+    "Çok fotoğrafta önce foto_pafta ile hepsine birlikte bak ve her birinin ne olduğunu ayır; etiket ya da küçük yazı için foto_goster ile bölgeyi",
+    "büyüt (gerekirse gri_kontrast); okuyamadığını tahmin etme. Rapora fotoğrafı rapor_foto_ekle ile koy: ekipman başına bir genel görünüş, etiket değil.",
     "Gerekirse internette arama yaparsın.",
     "",
     "Ekipman: rapor açılacak ekipman planda yoksa sormadan ekle (plan_ekipman_ekle, çoksa plan_ekipmanlar_ekle). Kullanıcı ya da etiket özel bir kod",
@@ -133,6 +135,29 @@ export const ISLEM_ARACLARI = [
     input_schema: { type: "object", properties: { ad: { type: "string" }, girdi: { type: "object" } }, required: ["ad"] },
   },
 ] as const;
+/** 2026-10-31 (kalem 3 — E3): görüntüye insan gibi bakmak — önce hepsine birlikte, sonra gerekene yaklaşarak (sunucu araçları; src/modules/say/server/gorsel.ts) */
+export const GORSEL_ARACLARI = [
+  {
+    name: "foto_pafta",
+    description: "Konuşmadaki fotoğrafları numaralı küçük resimler hâlinde tek görüntüde gösterir (en çok 12; numara karonun sol üst köşesinde). Çok "
+      + "fotoğrafta önce buna bakıp her birinin ne olduğunu ayır (ekipmanın kendisi, etiket, levha, liste, kusur). fotolar: [\"F01\", …] (boşsa hepsi, "
+      + "12'li sayfalar); sayfa: kaçıncı pafta; sutun: 1–4.",
+    input_schema: { type: "object", properties: { fotolar: { type: "array", items: { type: "string" } }, sayfa: { type: "integer", minimum: 1 }, sutun: { type: "integer", minimum: 1 } } },
+  },
+  {
+    name: "foto_goster",
+    description: "Tek fotoğrafı tam boy ya da bir bölgesini büyüterek gösterir — etiket, plaka, küçük yazı okumak için. foto: \"F05\"; bolge: [x0, y0, x1, y1] "
+      + "fotoğrafın 0–1 oranlarıyla (sol üst 0,0); gelistir: \"gri_kontrast\" parlama, kir, düşük ışıkta; dondur: 90 / 180 / 270. Okuyamadığın haneyi tahmin "
+      + "etme: daha dar bölge al ya da boş bırakıp söyle.",
+    input_schema: {
+      type: "object",
+      properties: { foto: { type: "string" }, bolge: { type: "array", items: { type: "number" } }, gelistir: { type: "string", enum: ["yok", "gri_kontrast"] },
+        dondur: { type: "integer", enum: [0, 90, 180, 270] } },
+      required: ["foto"],
+    },
+  },
+] as const;
+export const GORSEL_ARAC_ADLARI: ReadonlySet<string> = new Set(GORSEL_ARACLARI.map((a) => a.name));
 /** ekranın o anki hâli (sunucu, ekranın bu istekte gönderdiği canlı hâlden kurar) */
 export const EKRAN_ARACI = {
   name: "ekran_durumu",
@@ -218,7 +243,7 @@ export const EKRAN_ARAC_ADLARI: ReadonlySet<string> = new Set(["rapora_yaz", "fo
   "format_pdf_kur"]);
 
 /** bütün araçlar, her istekte aynı sırayla (formatAraci modülden: src/modules/rapor-format/say-kurucu.ts) */
-export const sayAraclari = (formatAraci: object): readonly object[] => [...ISLEM_ARACLARI, EKRAN_ARACI, ...RAPOR_ARACLARI, formatAraci, FORMAT_PDF_ARACI, ARAMA_ARACI];
+export const sayAraclari = (formatAraci: object): readonly object[] => [...ISLEM_ARACLARI, ...GORSEL_ARACLARI, EKRAN_ARACI, ...RAPOR_ARACLARI, formatAraci, FORMAT_PDF_ARACI, ARAMA_ARACI];
 
 /** istek: sabit talimat (önbellekte) + bütün araçlar + konuşmanın tamamı. betasiz: hizmet düşünme denetimi betasını kabul etmezse aynı istek onsuz */
 export function sayIstegi(p: { model: YzModel; sistem: string; araclar: readonly object[]; mesajlar: readonly Record<string, unknown>[]; betasiz?: boolean }):

@@ -66,7 +66,7 @@ export function konusmaDuzelt(mesajlar: readonly KonusmaMesaji[], yarida: string
 }
 
 /** konuşmanın son yapay zekâ iletisinde AÇIK olan çağrılara ait sonuçlar (başka yol kapattıysa düşer — iki sonuç yazılmasın) */
-export function acikSonuclar(sonIcerik: unknown, sonuclar: Readonly<Record<string, string>>): [string, string][] {
+export function acikSonuclar<T>(sonIcerik: unknown, sonuclar: Readonly<Record<string, T>>): [string, T][] {
   const acik = new Set(cagrilar({ role: "assistant", content: sonIcerik }));
   return Object.entries(sonuclar).filter(([id]) => acik.has(id));
 }

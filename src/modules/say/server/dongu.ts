@@ -19,10 +19,11 @@ import { firmaAdresi } from "../../../server/kiraci/istek.ts";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { anthropicAkis, type AkisYaniti } from "../../../server/yz/akis.ts";
 import { acikKayit, islemOzeti, sunucuKomutu, type IslemOrtami } from "../../../server/yz/islem.ts";
-import { bekleyenAl, bekleyenYaz, isAl, isBirak, konusmaEkle, konusmaKilidi, konusmaOku, konusmaSonu } from "../../../server/yz/konusma.ts";
+import { bekleyenAl, bekleyenYaz, isAl, isBirak, konusmaEkle, konusmaKilidi, konusmaOku, konusmaSonu, type AracSonucu } from "../../../server/yz/konusma.ts";
+import { fotoGosterAraci, fotoPaftaAraci } from "./gorsel.ts";
 import { acikSonuclar, konusmaDuzelt } from "../../../server/yz/konusma-denetim.ts";
 import type { SohbetIletisi } from "../../../server/yz/sohbet.ts";
-import { aracCagrilari, aracCagrisi, betaReddi, cevapMetni, EKRAN_ARAC_ADLARI, sayAraclari, sayIstegi, sayMaliyeti, saySistemi, sonucIcerigi, sunucuKomutuMu,
+import { aracCagrilari, aracCagrisi, betaReddi, cevapMetni, EKRAN_ARAC_ADLARI, GORSEL_ARAC_ADLARI, sayAraclari, sayIstegi, sayMaliyeti, saySistemi, sonucIcerigi, sunucuKomutuMu,
   type SayKomutu } from "../../../server/yz/say.ts";
 import { FORMAT_ARACI } from "../../rapor-format/say-kurucu.ts";
 import { ISLEM_DIZINI, ISLEM_KATALOGU, modulAdi, SAYFA_KATALOGU } from "../islem-katalogu.ts";
@@ -220,18 +221,29 @@ export async function sayAkisi(o: IstekOturumu, ham: unknown, yaz: (x: SayOlayi)
   }
 }
 
+/** 2026-10-31 (kalem 3 — E3): görüntü araçları — kişinin kendi eklerinin depodaki kopyasından, kendi kiracı işleminde; düşerse nedeni S.A.Y'a */
+async function gorselSonucu(o: IstekOturumu, ad: string, girdi: unknown): Promise<AracSonucu> {
+  try {
+    return await oturumIslemi(o, (db) => (ad === "foto_pafta" ? fotoPaftaAraci(db, depo(), girdi) : fotoGosterAraci(db, depo(), girdi)));
+  } catch (e) {
+    hataYaz(o, e, `say.${ad}`);
+    return "Fotoğraf hazırlanamadı (görüntü okunamadı); ekte görülen hâline bak.";
+  }
+}
+
 /** BU cevabın araç çağrıları: sunucu araçları burada (S.A.Y'ın sırasıyla), ekran araçları ekrana; ekran aracından sonraki işlem bekler */
 async function araclariYap(o: IstekOturumu, icerik: readonly Record<string, unknown>[], b: SayBaglami, kaydedilmemis: boolean, yaz: (x: SayOlayi) => void):
-  Promise<{ sonuclar: Record<string, string>; ekran: { id: string; ad: string; komut: SayKomutu | null }[]; yenile: boolean }> {
+  Promise<{ sonuclar: Record<string, AracSonucu>; ekran: { id: string; ad: string; komut: SayKomutu | null }[]; yenile: boolean }> {
   const komutlar = aracCagrilari(icerik);
   const ortam = islemOrtami(o, { ekrandakiRapor: b.raporId, kaydedilmemis });
-  const sonuclar: Record<string, string> = {}, ekran: { id: string; ad: string; komut: SayKomutu | null }[] = [];
+  const sonuclar: Record<string, AracSonucu> = {}, ekran: { id: string; ad: string; komut: SayKomutu | null }[] = [];
   let ekranda = false, yenile = false;
   for (const c of komutlar) {
     const k = aracCagrisi({ type: "tool_use", id: c.id, name: c.name, input: c.input });
     if (EKRAN_ARAC_ADLARI.has(c.name)) { ekranda = true; ekran.push({ id: c.id, ad: c.name, komut: k }); continue; }
     if (ekranda) { sonuclar[c.id] = sonucIcerigi(islemOzeti(k?.tur === "islem" ? k.ad || "islem" : c.name, null, { tamam: false, neden: SIRA_BEKLER })); continue; }
     if (c.name === "ekran_durumu") { sonuclar[c.id] = ekranDurumuMetni(b); continue; }
+    if (GORSEL_ARAC_ADLARI.has(c.name)) { yaz({ t: "asama", ad: "Fotoğraflara bakıyor" }); sonuclar[c.id] = await gorselSonucu(o, c.name, c.input); continue; }
     if (!k || !sunucuKomutuMu(k)) { sonuclar[c.id] = OKUNAMADI; continue; }
     yaz({ t: "asama", ad: ASAMA[c.name] ?? "Çalışıyor" });
     const ozet = await sunucuKomutu(ISLEM_KATALOGU, ortam, k, modulAdi);

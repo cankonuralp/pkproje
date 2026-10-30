@@ -18,11 +18,12 @@ import {
 } from "../../server/yz/islem.ts";
 import { komutDenetle } from "../../server/yz/say.ts";
 import { raporHaritasi } from "../say/rapor-haritasi.ts";
+import { fotoKopyasiOku } from "../../server/yz/konusma.ts";
 import { komutlariUygula, sonucOzeti, type Durum, type GirisSonucu } from "./say-doldur.ts";
 import { KopyaGirdisi, OlusturIslemGirdisi, RAPOR_DURUM, RevizeGirdisi } from "./sema.ts";
 import { raporSayfasi } from "./server/liste.ts";
 import {
-  cihazEkle, cihazKaldir, onayaGonder, raporFormatGuncelle, raporKaydet, raporKopyala, raporFormatHami, raporOlustur, raporSayDurumu, takipAc, raporSil, revizeIste, revizeIstegiGeriCek, sahaRaporu,
+  cihazEkle, cihazKaldir, fotoEkle, fotoSil, onayaGonder, raporFormatGuncelle, raporKaydet, raporKopyala, raporFormatHami, raporOlustur, raporSayDurumu, takipAc, raporSil, revizeIste, revizeIstegiGeriCek, sahaRaporu,
   type SahaRaporu,
 } from "./server/raporlar.ts";
 
@@ -111,6 +112,9 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
         /* 2. adım b: geri gönderme / revize bilgisi, yeni format sürümü (rapor_format_guncelle), revize isteği (revize_iste / revize_istegi_geri_cek) */
         ...(s.geri ? { geri: s.geri } : {}), ...(s.revize ? { revize: s.revize } : {}), ...(s.guncelFormat ? { guncel_format_sira: s.guncelFormat } : {}),
         harita: harita.metin, harita_sayfa: harita.bilgi.sayfa, harita_sayfa_sayisi: harita.bilgi.sayfa_sayisi, sonraki: harita.bilgi.sonraki,
+        /* 2026-10-31 (kalem 3 — E4): raporun fotoğrafları ve fotoğraf bölümleri (rapor_foto_ekle / rapor_foto_kaldir) */
+        fotolar: s.fotolar.map((f) => ({ dosya: f.dosya, ad: f.ad, bolum: f.bolum, ...(f.madde ? { madde: f.madde } : {}), ...(f.okuma ? { okuma: true } : {}) })),
+        foto_bolumleri: s.tanim.bolumler.filter((x) => x.blok === "foto").map((x) => ({ id: x.id, ad: x.ad, en_cok: x.blok === "foto" ? x.enCok : 0 })),
       } };
     },
   }),
@@ -192,5 +196,29 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
     islev: revizeIstegiGeriCek,
     tarif: "Kendi bekleyen revize isteğini geri çeker: rapor, istek, istek_surum (rapor_getir'deki revize isteği).",
     calistir: async (b, v) => yazmaCevabi(await revizeIstegiGeriCek(b.db, b.kim, v.rapor, v.istek, v.istek_surum)),
+  }),
+  /* 2026-10-31 (kalem 3 — E4; sunum "S.A.Y'a tam yetenek"): konuşmadaki fotoğraf (F numarası — ekin firmanın deposundaki kopyası) rapora, ekranın
+     "Fotoğraf ekle"siyle aynı işlevle (fotoEkle: yalnız yazan, Yeni rapor, bölümün sınırı, tür ve boy denetimi, sürüm kilidi) */
+  islem({
+    ad: "rapor_foto_ekle", modul: MODUL, tur: "yaz", girdi: RAPOR_SURUM.extend({ foto: z.string().regex(/^F?\d{1,4}$/i), bolum: z.string().min(1).max(40).optional() }),
+    kaynak: [kimlik, surum], islev: fotoEkle,
+    tarif: "Konuşmadaki fotoğrafı (foto: \"F03\") raporun fotoğraf bölümüne ekler: rapor, surum, bolum (rapor_getir foto_bolumleri; boşsa ilk fotoğraf bölümü). "
+      + "Her rapora ekipmanın kendi genel görünüş fotoğrafından bir tane; etiket fotoğrafı eklenmez.",
+    calistir: async (b, v) => {
+      if (ekranRaporuKirli(b, [v.rapor])) return { tamam: false, neden: EKRAN_KAYDEDILMEMIS };
+      const s = await sahaRaporu(b.db, b.kim, v.rapor);
+      if (!s) return { tamam: false, neden: GORUNMEZ };
+      const bolum = v.bolum ?? s.tanim.bolumler.find((x) => x.blok === "foto")?.id;
+      if (!bolum) return { tamam: false, neden: "Bu raporun formatında fotoğraf bölümü yok." };
+      const f = await fotoKopyasiOku(b.db, b.depo(), v.foto);
+      if (!f) return { tamam: false, neden: `${v.foto} bu konuşmada yok ya da kopyası yok; kullanıcı fotoğrafı yeniden eklemeli.` };
+      return yazmaCevabi(await fotoEkle(b.db, b.depo(), b.kim, b.firmaId, v.rapor, v.surum, { bolum, madde: null }, f));
+    },
+  }),
+  islem({
+    ad: "rapor_foto_kaldir", modul: MODUL, tur: "yaz", girdi: RAPOR_SURUM.extend({ dosya: kimlik }), kaynak: [kimlik, surum], islev: fotoSil,
+    tarif: "Raporun bir fotoğrafını kaldırır (dosya: rapor_getir fotolar[].dosya; yalnız yazan, Yeni rapor). Kullanıcının elle eklediğine istemedikçe dokunma.",
+    calistir: async (b, v) => (ekranRaporuKirli(b, [v.rapor]) ? { tamam: false, neden: EKRAN_KAYDEDILMEMIS }
+      : yazmaCevabi(await fotoSil(b.db, b.kim, v.rapor, v.surum, v.dosya))),
   }),
 ];

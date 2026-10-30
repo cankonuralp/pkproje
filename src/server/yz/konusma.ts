@@ -40,6 +40,21 @@ export const DOSYA_SAY_EK = "say_ek";
 export async function sayEkGorulur(db: Sorgulayici, ekId: string): Promise<boolean> {
   return (await db.sorgu("SELECT 1 FROM yz_ek WHERE id::text = $1", [ekId])).rows.length > 0;
 }
+/** 2026-10-31 (kalem 3): kişinin fotoğraf ekleri, F numarasıyla; depodaki kopyanın anahtarı (kopya yoksa null) */
+export interface FotoKopyasi { ekId: string; fno: number; ad: string; anahtar: string | null }
+export async function fotoKopyalari(db: Sorgulayici): Promise<FotoKopyasi[]> {
+  return (await db.sorgu<{ ek_id: string; fno: string; ad: string; anahtar: string | null }>(
+    `SELECT e.id::text AS ek_id, row_number() OVER (ORDER BY e.sira)::text AS fno, e.ad,
+            (SELECT d.anahtar FROM dosya d WHERE d.modul = $1 AND d.kayit_id = e.id AND d.cop IS NULL ORDER BY d.id LIMIT 1) AS anahtar
+       FROM yz_ek e WHERE e.tur = 'foto' ORDER BY e.sira`, [DOSYA_SAY_EK])).rows.map((r) => ({ ekId: r.ek_id, fno: Number(r.fno), ad: r.ad, anahtar: r.anahtar }));
+}
+/** F numaralı fotoğrafın depodaki kopyasının adı ve baytları (rapora fotoğraf eklerken); yoksa null */
+export async function fotoKopyasiOku(db: Sorgulayici, depo: { oku(anahtar: string, db?: Sorgulayici): Promise<Uint8Array> }, foto: string):
+  Promise<{ ad: string; bayt: Uint8Array } | null> {
+  const no = Number(/^F?(\d{1,4})$/i.exec(foto.trim())?.[1]);
+  const f = (await fotoKopyalari(db)).find((x) => x.fno === no);
+  return f?.anahtar ? { ad: f.ad, bayt: await depo.oku(f.anahtar, db) } : null;
+}
 /** kişinin eklerinin kopyaları (temizlenince çöpe) */
 export async function ekKopyalari(db: Sorgulayici): Promise<string[]> {
   return (await db.sorgu<{ id: string }>(
@@ -108,13 +123,15 @@ export async function isAl(db: Sorgulayici, isId: string, saniye: number): Promi
 export async function isBirak(db: Sorgulayici, isId: string): Promise<void> {
   await db.sorgu("UPDATE yz_konusma_is SET bitis = now() WHERE is_id = $1", [isId]);
 }
+/** araç sonucunun içeriği: metin ya da bloklar (2026-10-31 kalem 3: görüntü araçlarının görüntüsü + yazısı) */
+export type AracSonucu = string | Record<string, unknown>[];
 /** ekranın işinden önce sunucunun yaptığı işlerin sonuçları (araç çağrısı kimliği → sonuç metni) */
-export async function bekleyenYaz(db: Sorgulayici, sonuclar: Record<string, string>): Promise<void> {
+export async function bekleyenYaz(db: Sorgulayici, sonuclar: Record<string, AracSonucu>): Promise<void> {
   await db.sorgu("UPDATE yz_konusma_is SET bekleyen = $1::jsonb", [JSON.stringify(sonuclar)]);
 }
 /** bekleyen sonuçlar alınır ve silinir */
-export async function bekleyenAl(db: Sorgulayici): Promise<Record<string, string>> {
-  const r = (await db.sorgu<{ b: Record<string, string> }>("SELECT bekleyen AS b FROM yz_konusma_is FOR UPDATE")).rows[0];
+export async function bekleyenAl(db: Sorgulayici): Promise<Record<string, AracSonucu>> {
+  const r = (await db.sorgu<{ b: Record<string, AracSonucu> }>("SELECT bekleyen AS b FROM yz_konusma_is FOR UPDATE")).rows[0];
   if (r) await db.sorgu("UPDATE yz_konusma_is SET bekleyen = '{}'::jsonb");
   return r?.b ?? {};
 }
