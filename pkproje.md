@@ -2527,6 +2527,15 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-31 (SUNUM — kod yok, onay bekliyor): **S.A.Y'A TAM YETENEK — SAHA İŞLERİ VE BÜTÜN MODÜLLER** — reisim'in istemi (kaynak: yerel `Claude outputs/say-egitim-v2`,
+  depoya girmez). Sunum + dokuz maket: https://claude.ai/artifact/JKYqPAeFwVswuJpE1vzYp1. Sıfırdan değil: çekirdek kalır; talimat (beceri dizini), girdi ve bağlam
+  (sayfa bağlamı her modülde, malzeme listesi, ek kopyası, görüntü araçları, formun görüntüsü) ve ölçme yeniden. Kodda doğrulanan: K1 yarışı (say/server/say.ts
+  kullaniciIletisiEkle ↔ dongu.ts sonuclariEkle), K1b (dongu.ts yapay zekâ reddi hata_kaydi'na yazılmıyor), K2 (sayBaglami yalnız rapor + kurucu), K3 (ek.ts "Ek n").
+  Kapsam: 218 ekran eylemi → 115 işlem var · 27 dosya yuvası · 8 dışarıya giden iş · 28 eksik · 40 bilerek dışarıda (M5'in ilk hâli). Teslim sırası 0 (K1 + K1b) →
+  12 (ölçme turu); M6 kullanım koşulları belgeli işlerden önce. **Karar kaydı:** 2026-10-14'teki "tek hazır tuş: Fotoğrafları oku ve gir" (SayAsistan.tsx 550)
+  2026-10-23'te değişti (her ekrana özel öneri; tek öneri → tek tuş, çok öneri → "…" listesi); bu sunumla uygulanıyor. Reisim'in kararını bekleyenler: dosya adının
+  modele gitmesi (522 değişir), sharp, formun görüntüsünün üretim yolu, "Sık işler" / yama örneklerinin becerilere taşınması, koşul maddesi metni ve kabul ekranları,
+  bilerek dışarıda bırakılanlar (hesap / parola / rol dahil), ölçme koşusunun deneme adresine yazması.
 - 2026-10-26 (YAYINDA — main 6e98344b; CI 17/17 yeşil): **S.A.Y'I HAIKU'DA EĞİTME — SADE TALİMAT, FORMUN YERLEŞİMİ, DENETİM, ÖRNEK İŞ, ARAÇ SÜRTÜNMELERİ** — reisim: *"ben haiku kullandığımda daha
   iyi sonuçlar alabiliyorum claude içerisinde … bu paralar çok pahalı haikuyu eğitmemiz lazım"*, *"yapay zeka bir insan gibi bakınca neyi nereye yazması gerektiğini
   anlamalı"*; *"Uygun, altı adımla Haiku'yu eğitmeye başla; sırayı sen belirle"*. Model Haiku 5.5'te kalır. (1) Talimat 31 000 → ~10 500 karakter: işlem dizini
