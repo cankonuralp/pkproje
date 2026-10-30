@@ -2527,7 +2527,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
-- 2026-10-31 (SUNUM — kod yok, onay bekliyor): **S.A.Y'A TAM YETENEK — SAHA İŞLERİ VE BÜTÜN MODÜLLER** — reisim'in istemi (kaynak: yerel `Claude outputs/say-egitim-v2`,
+- 2026-10-31 (ONAYLANDI — reisim: *"Önerdiğin gibi onay"*; yedi karar önerildiği gibi: dosya adı ve çekim saati modele gider (522 değişti) · sharp sabit
+  sürüm · formun görüntüsü ayrı uçta (/api/say/form, Chromium, 60 sn, önbellekli) · "Sık işler" / örnekler becerilere ölçmeyle taşınır (kalem 5) · koşul maddesi
+  06'daki metin aynen, ekranlar maket 9 · bilerek dışarıda: sır / anahtar, e-imza ve imza PDF'i hazırlama, Yönetim, müşteri paneli, çevrimdışı paket, menü
+  balonları, Excel'e dışa aktarma, eski "Yapay zekâya anlat", hesap aç / geçici parola / hesap kapat / rol ve yetki · ölçme koşusu yalnız deneme firmasında).
+  Teslim sırası sunumdaki 0 → 12; her kalem ayrı teslim.
+- 2026-10-31 (SUNUM): **S.A.Y'A TAM YETENEK — SAHA İŞLERİ VE BÜTÜN MODÜLLER** — reisim'in istemi (kaynak: yerel `Claude outputs/say-egitim-v2`,
   depoya girmez). Sunum + dokuz maket: https://claude.ai/artifact/JKYqPAeFwVswuJpE1vzYp1. Sıfırdan değil: çekirdek kalır; talimat (beceri dizini), girdi ve bağlam
   (sayfa bağlamı her modülde, malzeme listesi, ek kopyası, görüntü araçları, formun görüntüsü) ve ölçme yeniden. Kodda doğrulanan: K1 yarışı (say/server/say.ts
   kullaniciIletisiEkle ↔ dongu.ts sonuclariEkle), K1b (dongu.ts yapay zekâ reddi hata_kaydi'na yazılmıyor), K2 (sayBaglami yalnız rapor + kurucu), K3 (ek.ts "Ek n").

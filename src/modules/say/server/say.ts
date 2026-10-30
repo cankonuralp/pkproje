@@ -16,7 +16,7 @@ import { ROL_ADI } from "../../../server/yetki/tanim.ts";
 import { sinirli, yzAyi, yzAyir, yzAyirmaBirak, yzKendiAyi, yzMesajSay, yzSohbetKapat } from "../../../server/yz/kullanim.ts";
 import { maliyetHesapla, type YzModel } from "../../../server/yz/okuma.ts";
 import { aracCagrilari, SAY_YANIT_SINIRI } from "../../../server/yz/say.ts";
-import { ekleriAl, konusmaEkle, konusmaSonu, konusmaTemizle, kuyrukNotlariniSil, bekleyenAl } from "../../../server/yz/konusma.ts";
+import { ekleriAl, konusmaEkle, konusmaKilidi, konusmaSonu, konusmaTemizle, kuyrukNotlariniSil, bekleyenAl } from "../../../server/yz/konusma.ts";
 import { sohbetGecmisi, sohbetOneriDurumu, sohbetTemizle, sohbetYaz, type SohbetEki, type SohbetIletisi } from "../../../server/yz/sohbet.ts";
 import { raporSayBilgisi, raporSayDurumu } from "../../raporlar/server/say-baglanti.ts";
 import { acikRaporMetni, raporHaritasi, yoldakiRapor } from "../rapor-haritasi.ts";
@@ -131,6 +131,7 @@ export function ekranDurumuMetni(b: SayBaglami): string {
    sayfa notu silinir (ardında düşünme bloğu yok); sonra ileti ── */
 const dizi = (x: unknown): Record<string, unknown>[] => (Array.isArray(x) ? x.filter((b): b is Record<string, unknown> => !!b && typeof b === "object") : []);
 export async function kullaniciIletisiEkle(db: Sorgulayici, bloklar: readonly Record<string, unknown>[]): Promise<void> {
+  await konusmaKilidi(db);
   await kuyrukNotlariniSil(db);
   const son = await konusmaSonu(db);
   const acikta = son?.rol === "assistant" ? aracCagrilari(dizi(son.icerik)) : [];

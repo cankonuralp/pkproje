@@ -66,6 +66,12 @@ export async function parcalariSil(db: Sorgulayici, yukleme: string): Promise<vo
   await db.sorgu("DELETE FROM yz_ek_parca WHERE yukleme = $1", [yukleme]);
 }
 
+/** 2026-10-31 (K1): kişinin konuşmasına yazan işlemler sırayla — "son ileti ne?" okuması ile yazma arasına başka işlemin yazısı girmesin (aynı
+    çağrıya iki sonuç yarışı). İşlem bitince kendiliğinden bırakılır */
+export async function konusmaKilidi(db: Sorgulayici): Promise<void> {
+  await db.sorgu("SELECT pg_advisory_xact_lock(hashtextextended('yz_konusma:' || coalesce(current_setting('app.hesap_id', true), ''), 0))");
+}
+
 /** son yapay zekâ ya da kullanıcı iletisi (sayfa notları hariç) */
 export async function konusmaSonu(db: Sorgulayici): Promise<KonusmaIletisi | null> {
   const r = (await db.sorgu<{ id: string; sira: string; rol: KonusmaRolu; icerik: unknown }>(

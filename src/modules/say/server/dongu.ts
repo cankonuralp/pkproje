@@ -19,14 +19,15 @@ import { firmaAdresi } from "../../../server/kiraci/istek.ts";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { anthropicAkis, type AkisYaniti } from "../../../server/yz/akis.ts";
 import { islemOzeti, sunucuKomutu, type IslemOrtami } from "../../../server/yz/islem.ts";
-import { bekleyenAl, bekleyenYaz, isAl, isBirak, konusmaEkle, konusmaOku, konusmaSonu } from "../../../server/yz/konusma.ts";
+import { bekleyenAl, bekleyenYaz, isAl, isBirak, konusmaEkle, konusmaKilidi, konusmaOku, konusmaSonu } from "../../../server/yz/konusma.ts";
+import { acikSonuclar, konusmaDuzelt } from "../../../server/yz/konusma-denetim.ts";
 import type { SohbetIletisi } from "../../../server/yz/sohbet.ts";
 import { aracCagrilari, aracCagrisi, betaReddi, cevapMetni, EKRAN_ARAC_ADLARI, sayAraclari, sayIstegi, sayMaliyeti, saySistemi, sonucIcerigi, sunucuKomutuMu,
   type SayKomutu } from "../../../server/yz/say.ts";
 import { FORMAT_ARACI } from "../../rapor-format/say-kurucu.ts";
 import { ISLEM_DIZINI, ISLEM_KATALOGU, modulAdi } from "../islem-katalogu.ts";
 import { SAY_KILAVUZU } from "../yardim.ts";
-import { cagriAyir, cagriBirak, cagriKapat, canliOku, ekranDurumuMetni, gorunenYaz, kullaniciIletisiEkle, kurucuOku, sayBaglami, sayKapisi, SINIR_DOLDU, soruyuEkle,
+import { cagriAyir, cagriBirak, cagriKapat, canliOku, ekranDurumuMetni, gorunenYaz, kullaniciIletisiEkle, kurucuOku, sayBaglami, sayKapisi, SINIR_DOLDU, soruyuEkle, YARIDA,
   type SayBaglami, type SayEkrani } from "./say.ts";
 
 /** ekrana giden olaylar (satır başına bir JSON) */
@@ -88,6 +89,7 @@ const dizi = (x: unknown): Record<string, unknown>[] => (Array.isArray(x) ? x.fi
 
 /** ekranın getirdiği sonuçlar: konuşmanın sonu cevapsız araç çağrıları olmalı; ekran araçlarının sonucu ekrandan, ötekiler bekleyenden. Dönen: red nedeni */
 async function sonuclariEkle(db: Sorgulayici, sonuclar: readonly { id: string; ozet: z.output<typeof Ozet> }[]): Promise<string | null> {
+  await konusmaKilidi(db);
   const son = await konusmaSonu(db);
   const acikta = son?.rol === "assistant" ? aracCagrilari(dizi(son.icerik)) : [];
   if (!acikta.length) return "Bu işin sonucu artık beklenmiyor (iş başka bir pencerede sürdü ya da bitti).";
@@ -153,7 +155,10 @@ export async function sayAkisi(o: IstekOturumu, ham: unknown, yaz: (x: SayOlayi)
           if (!aracCagrilari(dizi(son.icerik)).length) return { durum: "bitti" as const };
           await kullaniciIletisiEkle(db, []);
         }
-        const mesajlar = (await konusmaOku(db)).map((m) => ({ role: m.rol, content: m.icerik }));
+        /* K1 (2026-10-31): bozuk kalmış konuşma (aynı çağrıya iki sonuç, öksüz sonuç) okurken onarılır; onarım hata kaydına */
+        const d = konusmaDuzelt((await konusmaOku(db)).map((m) => ({ role: m.rol, content: m.icerik })), YARIDA);
+        if (d.duzeltmeler.length) hataYaz(o, new Error(`S.A.Y konuşması onarıldı: ${d.duzeltmeler.join(", ")}`), "say.konusma");
+        const mesajlar: Record<string, unknown>[] = d.mesajlar.map((m) => ({ role: m.role, content: m.content }));
         const a = await cagriAyir(db, k.model, k.sinir, JSON.stringify(mesajlar).length / 2 + SISTEM.length / 2);
         if (!a) return { durum: "red" as const, neden: SINIR_DOLDU };
         return { durum: "hazir" as const, k, mesajlar, a, b: await sayBaglami(db, o, ekran) };
@@ -163,6 +168,9 @@ export async function sayAkisi(o: IstekOturumu, ham: unknown, yaz: (x: SayOlayi)
       yaz({ t: "asama", ad: "Düşünüyor" });
       const y = await cagir(h.k.model, h.mesajlar, h.k.anahtar, yaz);
       if (y.durum === "hata") {
+        /* K1b (2026-10-31): reddedilen istek hata kaydına — kod, hizmetin hata metni (maskeli), ileti sayısı, istek boyu */
+        hataYaz(o, new Error(`Yapay zekâ isteği reddedildi (${y.kod ?? "bağlantı"}): ${y.ileti ?? y.neden} · ileti ${h.mesajlar.length} · boy ${JSON.stringify(h.mesajlar).length}`),
+          "say.istek");
         await oturumIslemi(o, (db) => cagriBirak(db, h.a, y.ucret === "bilinmiyor"));
         yaz({ t: "hata", neden: y.neden, yenile });
         return;
@@ -172,6 +180,7 @@ export async function sayAkisi(o: IstekOturumu, ham: unknown, yaz: (x: SayOlayi)
       const ileti = await oturumIslemi(o, async (db) => {
         await cagriKapat(db, h.a, c.maliyet, ilk ? 1 : 0);
         if (!m.content.length) return null;
+        await konusmaKilidi(db);
         await konusmaEkle(db, "assistant", m.content);
         const metin = cevapMetni(m.content);
         return metin ? gorunenYaz(db, { kim: "say", metin, yer: h.b.yer, ek: h.b.raporId ? { rapor: h.b.raporId } : h.b.formatId ? { format: h.b.formatId } : null }) : null;
@@ -193,7 +202,13 @@ export async function sayAkisi(o: IstekOturumu, ham: unknown, yaz: (x: SayOlayi)
         yaz({ t: "ekran", araclar: r.ekran, yenile });
         return;
       }
-      await oturumIslemi(o, (db) => konusmaEkle(db, "user", Object.entries(r.sonuclar).map(([id, s]) => ({ type: "tool_result", tool_use_id: id, content: s }))));
+      /* K1: yalnız hâlâ açık çağrıların sonucu yazılır — bu arada başka yol (yeni soru) kapattıysa ikinci sonuç yazılmaz */
+      await oturumIslemi(o, async (db) => {
+        await konusmaKilidi(db);
+        const son = await konusmaSonu(db);
+        const l = son?.rol === "assistant" ? acikSonuclar(son.icerik, r.sonuclar) : [];
+        if (l.length) await konusmaEkle(db, "user", l.map(([id, s]) => ({ type: "tool_result", tool_use_id: id, content: s })));
+      });
     }
   } finally {
     try { await oturumIslemi(o, (db) => isBirak(db, v.is)); } catch { /* süresi dolunca kendiliğinden bırakılır */ }
