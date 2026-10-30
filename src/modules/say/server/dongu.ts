@@ -18,16 +18,16 @@ import { oturumIslemi, type IstekOturumu } from "../../../server/kimlik/istek.ts
 import { firmaAdresi } from "../../../server/kiraci/istek.ts";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { anthropicAkis, type AkisYaniti } from "../../../server/yz/akis.ts";
-import { islemOzeti, sunucuKomutu, type IslemOrtami } from "../../../server/yz/islem.ts";
+import { acikKayit, islemOzeti, sunucuKomutu, type IslemOrtami } from "../../../server/yz/islem.ts";
 import { bekleyenAl, bekleyenYaz, isAl, isBirak, konusmaEkle, konusmaKilidi, konusmaOku, konusmaSonu } from "../../../server/yz/konusma.ts";
 import { acikSonuclar, konusmaDuzelt } from "../../../server/yz/konusma-denetim.ts";
 import type { SohbetIletisi } from "../../../server/yz/sohbet.ts";
 import { aracCagrilari, aracCagrisi, betaReddi, cevapMetni, EKRAN_ARAC_ADLARI, sayAraclari, sayIstegi, sayMaliyeti, saySistemi, sonucIcerigi, sunucuKomutuMu,
   type SayKomutu } from "../../../server/yz/say.ts";
 import { FORMAT_ARACI } from "../../rapor-format/say-kurucu.ts";
-import { ISLEM_DIZINI, ISLEM_KATALOGU, modulAdi } from "../islem-katalogu.ts";
+import { ISLEM_DIZINI, ISLEM_KATALOGU, modulAdi, SAYFA_KATALOGU } from "../islem-katalogu.ts";
 import { SAY_KILAVUZU } from "../yardim.ts";
-import { cagriAyir, cagriBirak, cagriKapat, canliOku, ekranDurumuMetni, gorunenYaz, kullaniciIletisiEkle, kurucuOku, sayBaglami, sayKapisi, SINIR_DOLDU, soruyuEkle, YARIDA,
+import { cagriAyir, cagriBirak, cagriKapat, canliOku, ekranDurumuMetni, gorunenYaz, kullaniciIletisiEkle, kurucuOku, sayBaglami, sayKapisi, SINIR_DOLDU, soruyuEkle, YARIDA, type AcikKayitOkuyucu,
   type SayBaglami, type SayEkrani } from "./say.ts";
 
 /** ekrana giden olaylar (satır başına bir JSON) */
@@ -80,6 +80,11 @@ function islemOrtami(o: IstekOturumu, s: { ekrandakiRapor: string | null; kayded
     epostaGonder: (kaynak, id) => { epostalariSonraGonder(o.kiraci, kaynak, id); },
     hata: (e, ad) => hataYaz(o, e, `say.islem.${ad}`),
   };
+}
+/** K2 + M4 (2026-10-31): açık kaydın notu — modülün OKUMA işlemi (acikKayit yalnız tur "oku"), kişi ve firma oturumdan, sorunun veritabanı işleminde */
+function acikKayitOkuyucu(o: IstekOturumu): AcikKayitOkuyucu {
+  return (db, _kim, yol) => acikKayit(ISLEM_KATALOGU, SAYFA_KATALOGU, { db, kim: o, firmaId: o.kiraci.firmaId,
+    depo: () => { throw new Error("açık kayıt okumasında depo yok"); }, kok: null, ekrandakiRapor: null, kaydedilmemis: false, epostaGonder: () => {} }, yol);
 }
 function hataYaz(o: IstekOturumu, e: unknown, yer: string): void {
   void hataKaydet({ kaynak: "sunucu", mesaj: e instanceof Error ? e.message : String(e), yigin: e instanceof Error ? e.stack ?? null : null,
@@ -136,7 +141,7 @@ export async function sayAkisi(o: IstekOturumu, ham: unknown, yaz: (x: SayOlayi)
   let yenile = false, ilk = v.tur === "soru", duraklat = false;
   try {
     if (v.tur === "soru") {
-      const s = await oturumIslemi(o, (db) => soruyuEkle(db, o, { metin: v.soru, ekler: v.ekler, ekran }));
+      const s = await oturumIslemi(o, (db) => soruyuEkle(db, o, { metin: v.soru, ekler: v.ekler, ekran, okuyucu: acikKayitOkuyucu(o) }));
       if (s.durum === "red") { yaz({ t: "hata", neden: s.neden, yenile }); return; }
       yaz({ t: "ileti", ileti: s.ileti });
     } else if (v.tur === "sonuc") {
@@ -161,7 +166,7 @@ export async function sayAkisi(o: IstekOturumu, ham: unknown, yaz: (x: SayOlayi)
         const mesajlar: Record<string, unknown>[] = d.mesajlar.map((m) => ({ role: m.role, content: m.content }));
         const a = await cagriAyir(db, k.model, k.sinir, JSON.stringify(mesajlar).length / 2 + SISTEM.length / 2);
         if (!a) return { durum: "red" as const, neden: SINIR_DOLDU };
-        return { durum: "hazir" as const, k, mesajlar, a, b: await sayBaglami(db, o, ekran) };
+        return { durum: "hazir" as const, k, mesajlar, a, b: await sayBaglami(db, o, ekran, acikKayitOkuyucu(o)) };
       });
       if (h.durum === "bitti") { yaz({ t: "bitti", yenile }); return; }
       if (h.durum === "red") { yaz({ t: "hata", neden: h.neden, yenile }); return; }

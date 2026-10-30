@@ -83,7 +83,9 @@ test("açık kayıt notu; görünmezse yok; okuma düşerse kayıt noktasına d�
 });
 
 test("kaynak kilidi: sayfa notu ve ekran durumu açık kaydı taşır", () => {
-  const s = readFileSync("src/modules/say/server/say.ts", "utf8");
-  assert.ok(s.includes("acikKayit(ISLEM_KATALOGU, SAYFA_KATALOGU"), "bağlamda açık kayıt");
+  const s = readFileSync("src/modules/say/server/say.ts", "utf8"), d = readFileSync("src/modules/say/server/dongu.ts", "utf8");
+  assert.ok(d.includes("acikKayit(ISLEM_KATALOGU, SAYFA_KATALOGU"), "döngü okuyucuyu verir");
+  assert.equal((d.match(/acikKayitOkuyucu\(o\)/g) ?? []).length, 2, "soru ve her tur");
+  assert.ok(s.includes("await okuyucu(db, kim, e.yol)"), "bağlamda açık kayıt");
   assert.equal((s.match(/\.\.\.\(b\.acikKayit \? \[b\.acikKayit\] : \[\]\)/g) ?? []).length, 2, "sayfa notunda ve ekran durumunda");
 });

@@ -26,8 +26,6 @@ import { formatAyrintisi, formatDegistirir } from "../../rapor-format/server/for
 import type { Kisi } from "../../anasayfa/server/anasayfa.ts";
 import { bugunTr } from "../../planlar/server/planlar.ts";
 import { sayfaBilgisi } from "../yardim.ts";
-import { acikKayit } from "../../../server/yz/islem.ts";
-import { ISLEM_KATALOGU, SAYFA_KATALOGU } from "../islem-katalogu.ts";
 import { ekBloklari } from "./ek.ts";
 
 export interface SayDurum { acik: boolean; anahtar: boolean; sinirDoldu: boolean }
@@ -89,7 +87,9 @@ export interface SayBaglami {
   format: string | null; formatId: string | null;
 }
 /** ekranın hâli — yalnız okuma; kişi / müşteri bilgisi (künye) yok. Haritalar bütünüyle (kısaltma yok) */
-export async function sayBaglami(db: Sorgulayici, kim: Kisi, e: SayEkrani): Promise<SayBaglami> {
+/** açık kaydın notu (döngü verir: src/server/yz/islem.ts acikKayit, modülün okuma işlemiyle) */
+export type AcikKayitOkuyucu = (db: Sorgulayici, kim: Kisi, yol: string) => Promise<string | null>;
+export async function sayBaglami(db: Sorgulayici, kim: Kisi, e: SayEkrani, okuyucu?: AcikKayitOkuyucu): Promise<SayBaglami> {
   const sayfa = sayfaBilgisi(e.yol);
   const yolRaporu = yoldakiRapor(e.yol);
   const acik = yolRaporu ? await raporSayDurumu(db, kim, yolRaporu) : null;
@@ -108,9 +108,9 @@ export async function sayBaglami(db: Sorgulayici, kim: Kisi, e: SayEkrani): Prom
     const f = await formatAyrintisi(db, kim, k.id), g = FormatTanimi.safeParse(k.tanim);
     if (f && f.durum === "taslak" && g.success) { format = formatHaritasi(g.data); formatId = k.id; }
   }
-  /* K2 + M4 (2026-10-31): rapor dışındaki ayrıntı sayfasında açık kayıt (plan, müşteri, personel, cihaz …) — modülün okuma işlemiyle, kişinin yetkisiyle */
-  const kayit = acik ? null : await acikKayit(ISLEM_KATALOGU, SAYFA_KATALOGU, { db, kim, firmaId: (kim as { kiraci?: { firmaId?: string } }).kiraci?.firmaId ?? "",
-    depo: () => { throw new Error("açık kayıt okumasında depo yok"); }, kok: null, ekrandakiRapor: null, kaydedilmemis: false, epostaGonder: () => {} }, e.yol);
+  /* K2 + M4 (2026-10-31): rapor dışındaki ayrıntı sayfasında açık kayıt (plan, müşteri, personel, cihaz …) — okuyucuyu döngü verir (hazırlık
+     yürütücüye dokunmaz: tests/yardimci/denetimler.ts sayEylemDenetimi) */
+  const kayit = acik || !okuyucu ? null : await okuyucu(db, kim, e.yol);
   return { yer, yardim: sayfa.yardim, roller: kim.roller.map((r) => ROL_ADI[r]), acikRapor: acik ? acikRaporMetni(acik, !!rapor) : null, acikKayit: kayit, rapor, raporId, format, formatId };
 }
 /** kullanıcının iletisinin ardındaki sayfa notu (kısa; haritalar ekran_durumu ile) */
@@ -151,14 +151,14 @@ export async function kullaniciIletisiEkle(db: Sorgulayici, bloklar: readonly Re
 }
 
 /** soru: kapı, ekler (kişinin kendileri), görünen geçmişe, konuşmaya (ekler + yazı) ve sayfa notu. Dönen: görünen ileti ve bağlam */
-export async function soruyuEkle(db: Sorgulayici, kim: Kisi, g: { metin: string; ekler: readonly string[]; ekran: SayEkrani }, simdi = new Date()):
+export async function soruyuEkle(db: Sorgulayici, kim: Kisi, g: { metin: string; ekler: readonly string[]; ekran: SayEkrani; okuyucu?: AcikKayitOkuyucu }, simdi = new Date()):
   Promise<{ durum: "red"; neden: string } | { durum: "hazir"; ileti: SohbetIletisi; baglam: SayBaglami }> {
   const metin = g.metin.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "").trim();
   const ekler = await ekleriAl(db, g.ekler);
   if (!metin && !ekler.length) return { durum: "red", neden: "Sorunuzu yazın." };
   const k = await sayKapisi(db);
   if (k.durum === "red") return k;
-  const b = await sayBaglami(db, kim, g.ekran);
+  const b = await sayBaglami(db, kim, g.ekran, g.okuyucu);
   const soru = metin || (ekler.length === 1 ? "Eki inceler misin?" : "Ekleri inceler misin?");
   const ek: SohbetEki | null = ekler.length || b.raporId ? { ...(b.raporId ? { rapor: b.raporId } : {}), ...(ekler.length ? { ekler: ekler.map((e) => ({ ad: e.ad, boyut: e.boyut, tur: e.tur })) } : {}) } : null;
   const ileti = await gorunenYaz(db, { kim: "ben", metin: soru, yer: b.yer, ek }, simdi);
