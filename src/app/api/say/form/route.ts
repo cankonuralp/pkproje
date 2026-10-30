@@ -12,9 +12,9 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const yanit = (govde: object, status = 200) => Response.json(govde, { status, headers: { "Cache-Control": "no-store" } });
 
 export async function POST(istek: Request) {
-  if (!(await ayniKoken())) return yanit({ tamam: false, neden: "Geçersiz istek." }, 403);
+  if (!(await ayniKoken())) return yanit({ hata: "koken" }, 403);
   const o = await istekOturumu();
-  if (!o) return yanit({ tamam: false, neden: "Oturum yok; yeniden giriş yapın." }, 401);
+  if (!o) return yanit({ hata: "oturum" }, 401);
   let g: { rapor?: unknown; sayfa?: unknown };
   try { g = await istek.json(); } catch { return yanit({ tamam: false, neden: "İstek okunamadı." }, 400); }
   const rapor = typeof g.rapor === "string" && UUID.test(g.rapor) ? g.rapor : null;

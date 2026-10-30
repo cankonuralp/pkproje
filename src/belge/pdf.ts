@@ -140,7 +140,7 @@ export async function belgeGoruntusu(v: BelgeVerisi, sayfa = 1): Promise<{ jpeg:
     await s.evaluate(() => document.fonts.ready.then(() => undefined));
     const yukseklik = await s.evaluate(() => document.documentElement.scrollHeight);
     const sayfaSayisi = Math.max(1, Math.ceil(yukseklik / A4_PX.h)), n = Math.min(Math.max(1, Math.floor(sayfa)), sayfaSayisi);
-    const jpeg = await s.screenshot({ type: "jpeg", quality: 70, clip: { x: 0, y: (n - 1) * A4_PX.h, width: A4_PX.w, height: Math.min(A4_PX.h, yukseklik - (n - 1) * A4_PX.h) } });
+    const jpeg = await s.screenshot({ type: "jpeg", quality: 70, fullPage: true, clip: { x: 0, y: (n - 1) * A4_PX.h, width: A4_PX.w, height: Math.min(A4_PX.h, yukseklik - (n - 1) * A4_PX.h) } });
     return { jpeg: new Uint8Array(jpeg), sayfa: n, sayfaSayisi };
   } finally {
     await b.close();
