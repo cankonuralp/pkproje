@@ -2,7 +2,7 @@
    işlevleri (performansPanosu, performansKisi — görünürlük modülün kuralıyla: kendi / branş / hepsi; kazanç yalnız görebilene). Yalnız okuma. Dönem
    ekrandaki süzgeçle aynı (donem: ay | onceki | yil | aralik …, aralıkta bas / bit). */
 import { kimlik, tarih, z } from "../../sema/ortak.ts";
-import { GORUNMEZ, islem, type Islem } from "../../server/yz/islem.ts";
+import { GORUNMEZ, islem, type Islem, type SayfaTanimi } from "../../server/yz/islem.ts";
 import { performansKisi, performansPanosu, type DonemSecimi } from "./server/performans.ts";
 
 const MODUL = 19;
@@ -28,4 +28,9 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
       return p ? { tamam: true, sonuc: { ...p } } : { tamam: false, neden: GORUNMEZ };
     },
   }),
+];
+
+/** 2026-10-31 (K2 + M4): S.A.Y'ın açık kaydı bildiği ayrıntı sayfaları (src/server/yz/islem.ts acikKayit) */
+export const SAY_SAYFALARI: readonly SayfaTanimi[] = [
+  { desen: /^\/performans\/([0-9a-f-]{36})(?:\/|$)/, tur: "Kişi performansı", islem: "performans_kisi", girdi: (id) => ({ personel: id }) },
 ];

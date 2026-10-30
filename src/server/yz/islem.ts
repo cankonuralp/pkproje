@@ -219,6 +219,63 @@ export async function islemYurut(katalog: readonly Islem[], o: IslemOrtami, ad: 
   }
 }
 
+/* ── açık sayfa (2026-10-31, K2 + M4 — sunum "S.A.Y'a tam yetenek"): her modül kendi ayrıntı sayfalarını tanımlar (desen → modülün "_getir" okuma
+   işlemi); çekirdek işlemi KİŞİNİN yetkisiyle, aynı veritabanı işleminde çalıştırır ve sonuçtan yalnız tanıtıcı alanları alır (no, kod, ad, durum,
+   tarih; tesis / müşteri / tür / planın adı). Kişisel numaralar (T.C. kimlik, telefon, SGK) ve künye değerleri alana girmez, uzun rakam dizisi düşer. ── */
+export interface SayfaTanimi {
+  /** sayfanın yolu (sorgu ve çapa hariç); yakalanan gruplar girdiye */
+  desen: RegExp;
+  /** sayfa notundaki kayıt türü ("Plan", "Personel" …) */
+  tur: string;
+  /** modülün okuma işlemi (katalogda, tur "oku") */
+  islem: string;
+  girdi: (...gruplar: string[]) => Record<string, unknown>;
+}
+const SAYFA_ALANLARI = ["no", "kod", "plaka", "ad", "unvan", "kisa", "durum", "baslangic", "bitis", "tarih"] as const;
+const SAYFA_BAGLARI = ["tesis", "musteri", "tur", "plan"] as const;
+const deger = (x: unknown): string | null => {
+  if (typeof x === "number" && Number.isFinite(x)) return String(x);
+  if (typeof x !== "string") return null;
+  const s = x.replace(/[\u0000-\u001f\u007f]/g, " ").trim();
+  return s && !/\d{10,}/.test(s.replace(/[\s-]/g, "")) ? s.slice(0, 80) : null;
+};
+/** okuma işleminin sonucundan sayfa notunun tanıtıcı alanları (saf) */
+export function sayfaOzeti(sonuc: Record<string, unknown>): [string, string][] {
+  const l: [string, string][] = [];
+  for (const a of SAYFA_ALANLARI) { const d = deger(sonuc[a]); if (d) l.push([a, d]); }
+  for (const a of SAYFA_BAGLARI) {
+    const b = sonuc[a];
+    const d = b && typeof b === "object" ? deger((b as Record<string, unknown>).ad ?? (b as Record<string, unknown>).kisa ?? (b as Record<string, unknown>).unvan
+      ?? (b as Record<string, unknown>).no) : null;
+    if (d) l.push([a, d]);
+  }
+  return l;
+}
+/** yoldaki açık kaydın notu ("Açık kayıt: Plan · no …") — görünmüyorsa / tanım yoksa null */
+export async function acikKayit(katalog: readonly Islem[], sayfalar: readonly SayfaTanimi[], b: IslemBaglami, yol: string): Promise<string | null> {
+  const p = yol.split(/[?#]/)[0];
+  for (const s of sayfalar) {
+    const m = s.desen.exec(p);
+    if (!m) continue;
+    const t = katalog.find((x) => x.ad === s.islem && x.tur === "oku");
+    const girdi = s.girdi(...m.slice(1));
+    const g = t?.girdi.safeParse(girdi);
+    if (!t || !g?.success) return null;
+    /* okuma düşerse sorunun işlemi sürsün: kayıt noktasına dönülür */
+    await b.db.sorgu("SAVEPOINT acik_kayit");
+    try {
+      const c = await t.calistir(b, g.data, girdi);
+      await b.db.sorgu("RELEASE SAVEPOINT acik_kayit");
+      if (!c.tamam || !c.sonuc) return null;
+      const alanlar = sayfaOzeti(c.sonuc);
+      const kimlik = Object.values(girdi).find((x) => typeof x === "string");
+      return `Açık kayıt: ${s.tur}${alanlar.length ? ` · ${alanlar.map(([a, d]) => `${a}: ${d}`).join(" · ")}` : ""}${kimlik ? ` (kimlik ${kimlik})` : ""}. `
+        + `Ayrıntı için ${s.islem}; kullanıcı "bu", "burası" derse bu kayıttır.`;
+    } catch { await b.db.sorgu("ROLLBACK TO SAVEPOINT acik_kayit"); return null; }
+  }
+  return null;
+}
+
 /** sonucun S.A.Y'a giden özeti: oku → yalnız sonuç; yaz → "yapıldı" (yazildi 1, bildirim — iş yapıldı sayılır, döngünün güvenliği değişiklik görür);
     hiçbir şey değişmeyen yazma (degisiklik: false) → ayni 1 (iş sayılmaz); yapılamadı → neden. sonuc: tool_result'ın metni (JSON) */
 export function islemOzeti(ad: string, tur: "oku" | "yaz" | null, cevap: IslemCevabi, sema?: Record<string, unknown>): IsOzeti {

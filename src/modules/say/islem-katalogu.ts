@@ -3,28 +3,28 @@
    talimatına girer. Adlar tekil, tarifler tek satır (katalogKur — bozuksa uygulama açılmaz; kilit tests/say-islem-katalog.test.ts). Yalnız sunucuda
    (modüllerin sunucu işlevlerini içe aktarır); ekran bunu içe aktarmaz. 2. adım b: bütün modüller (sır yazan işlem yok — Firma ayarları'nın anahtarları
    ekrandan); dosya isteyen yüklemeler (PDF, fotoğraf) ekrandan. */
-import { katalogDizini, katalogKur, type Islem } from "../../server/yz/islem.ts";
+import { katalogDizini, katalogKur, type Islem, type SayfaTanimi } from "../../server/yz/islem.ts";
 import { ANA_SAYFA, MODULLER } from "../moduller.ts";
 import { ANA_SAYFA_MODULU, SAY_ISLEMLERI as ANASAYFA } from "../anasayfa/say-islemleri.ts";
-import { SAY_ISLEMLERI as ARACLAR } from "../araclar/say-islemleri.ts";
-import { SAY_ISLEMLERI as DOKUMANLAR } from "../dokumanlar/say-islemleri.ts";
+import { SAY_ISLEMLERI as ARACLAR, SAY_SAYFALARI as ARACLAR_SAYFALARI } from "../araclar/say-islemleri.ts";
+import { SAY_ISLEMLERI as DOKUMANLAR, SAY_SAYFALARI as DOKUMANLAR_SAYFALARI } from "../dokumanlar/say-islemleri.ts";
 import { SAY_ISLEMLERI as EGITIMLER } from "../egitimler/say-islemleri.ts";
-import { SAY_ISLEMLERI as EKIPMAN_TURLERI } from "../ekipman-turleri/say-islemleri.ts";
+import { SAY_ISLEMLERI as EKIPMAN_TURLERI, SAY_SAYFALARI as EKIPMAN_TURLERI_SAYFALARI } from "../ekipman-turleri/say-islemleri.ts";
 import { SAY_ISLEMLERI as FIRMA_AYARLARI } from "../firma-ayarlari/say-islemleri.ts";
-import { SAY_ISLEMLERI as MUHASEBE } from "../muhasebe/say-islemleri.ts";
-import { SAY_ISLEMLERI as MUSTERILER } from "../musteriler/say-islemleri.ts";
-import { SAY_ISLEMLERI as OLCUM_CIHAZLARI } from "../olcum-cihazlari/say-islemleri.ts";
+import { SAY_ISLEMLERI as MUHASEBE, SAY_SAYFALARI as MUHASEBE_SAYFALARI } from "../muhasebe/say-islemleri.ts";
+import { SAY_ISLEMLERI as MUSTERILER, SAY_SAYFALARI as MUSTERILER_SAYFALARI } from "../musteriler/say-islemleri.ts";
+import { SAY_ISLEMLERI as OLCUM_CIHAZLARI, SAY_SAYFALARI as OLCUM_CIHAZLARI_SAYFALARI } from "../olcum-cihazlari/say-islemleri.ts";
 import { SAY_ISLEMLERI as ONAYLAR } from "../onaylar/say-islemleri.ts";
-import { SAY_ISLEMLERI as PERFORMANS } from "../performans/say-islemleri.ts";
-import { SAY_ISLEMLERI as PERSONEL } from "../personel/say-islemleri.ts";
-import { SAY_ISLEMLERI as PLANLAR } from "../planlar/say-islemleri.ts";
-import { SAY_ISLEMLERI as RAPOR_FORMAT } from "../rapor-format/say-islemleri.ts";
+import { SAY_ISLEMLERI as PERFORMANS, SAY_SAYFALARI as PERFORMANS_SAYFALARI } from "../performans/say-islemleri.ts";
+import { SAY_ISLEMLERI as PERSONEL, SAY_SAYFALARI as PERSONEL_SAYFALARI } from "../personel/say-islemleri.ts";
+import { SAY_ISLEMLERI as PLANLAR, SAY_SAYFALARI as PLANLAR_SAYFALARI } from "../planlar/say-islemleri.ts";
+import { SAY_ISLEMLERI as RAPOR_FORMAT, SAY_SAYFALARI as RAPOR_FORMAT_SAYFALARI } from "../rapor-format/say-islemleri.ts";
 import { SAY_ISLEMLERI as RAPORLAR } from "../raporlar/say-islemleri.ts";
-import { SAY_ISLEMLERI as SOZLESMELER } from "../sozlesmeler/say-islemleri.ts";
+import { SAY_ISLEMLERI as SOZLESMELER, SAY_SAYFALARI as SOZLESMELER_SAYFALARI } from "../sozlesmeler/say-islemleri.ts";
 import { SAY_ISLEMLERI as TALEPLER } from "../talepler/say-islemleri.ts";
-import { SAY_ISLEMLERI as TEKLIFLER } from "../teklifler/say-islemleri.ts";
+import { SAY_ISLEMLERI as TEKLIFLER, SAY_SAYFALARI as TEKLIFLER_SAYFALARI } from "../teklifler/say-islemleri.ts";
 import { SAY_ISLEMLERI as UYARILAR } from "../uyarilar/say-islemleri.ts";
-import { SAY_ISLEMLERI as ZIMMETLER } from "../zimmetler/say-islemleri.ts";
+import { SAY_ISLEMLERI as ZIMMETLER, SAY_SAYFALARI as ZIMMETLER_SAYFALARI } from "../zimmetler/say-islemleri.ts";
 
 /** katalogdaki modüller ve dosyaları (kilit testi her dosyanın modül işlevlerini denetler); sıra dizindeki sıra */
 export const KATALOG_MODULLERI = [
@@ -42,3 +42,11 @@ export const ISLEM_KATALOGU: readonly Islem[] = katalogKur(KATALOG_MODULLERI.fla
 export const modulAdi = (no: number): string => (no === ANA_SAYFA_MODULU ? ANA_SAYFA.ad : MODULLER.find((m) => m.no === no)?.ad ?? `Modül ${no}`);
 /** önbellekli talimattaki dizin (her istekte aynı metin) */
 export const ISLEM_DIZINI = katalogDizini(ISLEM_KATALOGU, modulAdi);
+
+/** 2026-10-31 (K2 + M4): açık kaydı tanınan ayrıntı sayfaları — ilk eşleşen geçerli (dar desen önce: format sürümü türden, tesis müşteriden önce);
+    kilit tests/say-sayfa.test.ts (uygulamanın her kayıt sayfası burada ya da bilerek dışarıda) */
+export const SAYFA_KATALOGU: readonly SayfaTanimi[] = [
+  ...PLANLAR_SAYFALARI, ...MUSTERILER_SAYFALARI, ...TEKLIFLER_SAYFALARI, ...SOZLESMELER_SAYFALARI, ...PERSONEL_SAYFALARI, ...OLCUM_CIHAZLARI_SAYFALARI,
+  ...ZIMMETLER_SAYFALARI, ...ARACLAR_SAYFALARI, ...DOKUMANLAR_SAYFALARI, ...RAPOR_FORMAT_SAYFALARI, ...EKIPMAN_TURLERI_SAYFALARI, ...MUHASEBE_SAYFALARI,
+  ...PERFORMANS_SAYFALARI,
+];

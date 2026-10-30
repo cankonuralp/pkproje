@@ -5,7 +5,7 @@
    (SozlesmeGirdisi, IsgGirdisi). İmzalı sözleşme PDF'i ve İSG-KATİP belgesi dosya ister — ekrandan yüklenir. */
 import { kimlik, surum, z } from "../../sema/ortak.ts";
 import { SuzgecDurumuSemasi } from "../../server/liste/liste.ts";
-import { GORUNMEZ, islem, sayfaBilgisi, yazmaCevabi, type Islem } from "../../server/yz/islem.ts";
+import { GORUNMEZ, islem, sayfaBilgisi, yazmaCevabi, type Islem, type SayfaTanimi } from "../../server/yz/islem.ts";
 import { IsgGirdisi, SozlesmeGirdisi } from "./sema.ts";
 import { isgKaldir, isgKaydet, sozlesmeHazirla, sozlesmeKarti, sozlesmeSayfasi, sozlesmeSecenekleri, sozlesmeSil } from "./server/sozlesmeler.ts";
 
@@ -65,4 +65,9 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
     tarif: "İmza bekleyen, faturasız sözleşmeyi kesin siler (yönetici); imzalı ya da faturalıysa nedeni döner.",
     calistir: async (b, v) => yazmaCevabi(await sozlesmeSil(b.db, b.kim, v.sozlesme), { bildirim: "Sözleşme silindi." }),
   }),
+];
+
+/** 2026-10-31 (K2 + M4): S.A.Y'ın açık kaydı bildiği ayrıntı sayfaları (src/server/yz/islem.ts acikKayit) */
+export const SAY_SAYFALARI: readonly SayfaTanimi[] = [
+  { desen: /^\/sozlesmeler\/([0-9a-f-]{36})(?:\/|$)/, tur: "Sözleşme", islem: "sozlesme_getir", girdi: (id) => ({ sozlesme: id }) },
 ];

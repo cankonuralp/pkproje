@@ -4,7 +4,7 @@
    süzgecinden. Standart ve döküman YÜKLEME PDF ister — ekrandan (S.A.Y'da yok). Eğitimler src/modules/egitimler/say-islemleri.ts'te. */
 import { kimlik, surum, z } from "../../sema/ortak.ts";
 import { SuzgecDurumuSemasi } from "../../server/liste/liste.ts";
-import { GORUNMEZ, islem, sayfala, trIcerir, yazmaCevabi, type Islem } from "../../server/yz/islem.ts";
+import { GORUNMEZ, islem, sayfala, trIcerir, yazmaCevabi, type Islem, type SayfaTanimi } from "../../server/yz/islem.ts";
 import { dokumanKaldir, dokumanListesi, standartKaldir, standartKarti, standartListesi } from "./server/dokumanlar.ts";
 
 const MODUL = 4;
@@ -50,4 +50,9 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
     tarif: "Dökümanı listeden kaldırır (dosya saklanır).",
     calistir: async (b, v) => yazmaCevabi(await dokumanKaldir(b.db, b.kim, v.dokuman, v.surum), { bildirim: "Döküman kaldırıldı." }),
   }),
+];
+
+/** 2026-10-31 (K2 + M4): S.A.Y'ın açık kaydı bildiği ayrıntı sayfaları (src/server/yz/islem.ts acikKayit) */
+export const SAY_SAYFALARI: readonly SayfaTanimi[] = [
+  { desen: /^\/dokumanlar\/standart\/([0-9a-f-]{36})(?:\/|$)/, tur: "Standart", islem: "standart_getir", girdi: (id) => ({ standart: id }) },
 ];

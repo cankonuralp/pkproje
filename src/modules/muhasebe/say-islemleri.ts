@@ -6,7 +6,7 @@
    PDF ister — ekrandan. */
 import { kimlik, surum, z } from "../../sema/ortak.ts";
 import { SuzgecDurumuSemasi } from "../../server/liste/liste.ts";
-import { GORUNMEZ, islem, sayfaBilgisi, yazmaCevabi, type Islem } from "../../server/yz/islem.ts";
+import { GORUNMEZ, islem, sayfaBilgisi, yazmaCevabi, type Islem, type SayfaTanimi } from "../../server/yz/islem.ts";
 import { DonemSecimi, FaturaGirdisi, GiderGirdisi, TahsilatGirdisi } from "./sema.ts";
 import { giderKaydet, giderOdendi, giderSayfasi } from "./server/giderler.ts";
 import { faturaKarti, faturaKaydet, faturaSayfasi, gelirGider, isKarti, isSayfasi, tahsilatKaydet } from "./server/muhasebe.ts";
@@ -90,4 +90,10 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
       return g ? { tamam: true, sonuc: { ...g } } : { tamam: false, neden: YETKISIZ };
     },
   }),
+];
+
+/** 2026-10-31 (K2 + M4): S.A.Y'ın açık kaydı bildiği ayrıntı sayfaları (src/server/yz/islem.ts acikKayit) */
+export const SAY_SAYFALARI: readonly SayfaTanimi[] = [
+  { desen: /^\/muhasebe\/f\/([0-9a-f-]{36})(?:\/|$)/, tur: "Fatura", islem: "fatura_getir", girdi: (id) => ({ fatura: id }) },
+  { desen: /^\/muhasebe\/is\/([0-9a-f-]{36})(?:\/|$)/, tur: "Muhasebe işi", islem: "muhasebe_is_getir", girdi: (id) => ({ is: id }) },
 ];

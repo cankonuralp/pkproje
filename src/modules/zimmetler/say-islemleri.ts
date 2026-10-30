@@ -5,7 +5,7 @@
    Teslim fotoğrafı isteğe bağlı (ekrandaki gibi) — S.A.Y fotoğrafsız yazar. Araç teslimi Araçlar'ın tutanağıyla (arac_tutanak_kaydet). */
 import { kimlik, surum, z } from "../../sema/ortak.ts";
 import { SuzgecDurumuSemasi } from "../../server/liste/liste.ts";
-import { GORUNMEZ, islem, sayfala, trIcerir, yazmaCevabi, type Islem } from "../../server/yz/islem.ts";
+import { GORUNMEZ, islem, sayfala, trIcerir, yazmaCevabi, type Islem, type SayfaTanimi } from "../../server/yz/islem.ts";
 import { DemirbasGirdisi, TeslimGirdisi } from "./sema.ts";
 import { demirbasDurumu, demirbasEkle, demirbasPasif, demirbasSil, teslimEt, varlikKarti, zimmetListeleri, type Kimde } from "./server/zimmet.ts";
 
@@ -61,4 +61,9 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
       return yazmaCevabi(r, { bildirim: r.durum === "tamam" ? `${r.ad} silindi.` : undefined });
     },
   }),
+];
+
+/** 2026-10-31 (K2 + M4): S.A.Y'ın açık kaydı bildiği ayrıntı sayfaları (src/server/yz/islem.ts acikKayit) */
+export const SAY_SAYFALARI: readonly SayfaTanimi[] = [
+  { desen: /^\/zimmetler\/varlik\/([cd])\/([0-9a-f-]{36})(?:\/|$)/, tur: "Zimmet varlığı", islem: "zimmet_getir", girdi: (tur, id) => ({ varlik: `${tur}:${id}` }) },
 ];

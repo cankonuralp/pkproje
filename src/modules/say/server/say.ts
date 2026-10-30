@@ -26,6 +26,8 @@ import { formatAyrintisi, formatDegistirir } from "../../rapor-format/server/for
 import type { Kisi } from "../../anasayfa/server/anasayfa.ts";
 import { bugunTr } from "../../planlar/server/planlar.ts";
 import { sayfaBilgisi } from "../yardim.ts";
+import { acikKayit } from "../../../server/yz/islem.ts";
+import { ISLEM_KATALOGU, SAYFA_KATALOGU } from "../islem-katalogu.ts";
 import { ekBloklari } from "./ek.ts";
 
 export interface SayDurum { acik: boolean; anahtar: boolean; sinirDoldu: boolean }
@@ -79,6 +81,8 @@ export interface SayBaglami {
   yer: string; yardim: string | null; roller: string[];
   /** sayfadaki rapor (künyesiz: numara, tür, durum; yazılamıyorsa nedeni) */
   acikRapor: string | null;
+  /** rapor dışındaki ayrıntı sayfasının açık kaydı (tanıtıcı alanlar; kişisel numara yok) */
+  acikKayit?: string | null;
   /** yazılabilir açık raporun haritası ve kimliği (sunucunun doğruladığı) */
   rapor: string | null; raporId: string | null;
   /** format yapıcıdaki taslağın haritası ve kimliği */
@@ -104,7 +108,10 @@ export async function sayBaglami(db: Sorgulayici, kim: Kisi, e: SayEkrani): Prom
     const f = await formatAyrintisi(db, kim, k.id), g = FormatTanimi.safeParse(k.tanim);
     if (f && f.durum === "taslak" && g.success) { format = formatHaritasi(g.data); formatId = k.id; }
   }
-  return { yer, yardim: sayfa.yardim, roller: kim.roller.map((r) => ROL_ADI[r]), acikRapor: acik ? acikRaporMetni(acik, !!rapor) : null, rapor, raporId, format, formatId };
+  /* K2 + M4 (2026-10-31): rapor dışındaki ayrıntı sayfasında açık kayıt (plan, müşteri, personel, cihaz …) — modülün okuma işlemiyle, kişinin yetkisiyle */
+  const kayit = acik ? null : await acikKayit(ISLEM_KATALOGU, SAYFA_KATALOGU, { db, kim, firmaId: (kim as { kiraci?: { firmaId?: string } }).kiraci?.firmaId ?? "",
+    depo: () => { throw new Error("açık kayıt okumasında depo yok"); }, kok: null, ekrandakiRapor: null, kaydedilmemis: false, epostaGonder: () => {} }, e.yol);
+  return { yer, yardim: sayfa.yardim, roller: kim.roller.map((r) => ROL_ADI[r]), acikRapor: acik ? acikRaporMetni(acik, !!rapor) : null, acikKayit: kayit, rapor, raporId, format, formatId };
 }
 /** kullanıcının iletisinin ardındaki sayfa notu (kısa; haritalar ekran_durumu ile) */
 export function sayfaNotu(b: SayBaglami, simdi = new Date()): string {
@@ -112,6 +119,7 @@ export function sayfaNotu(b: SayBaglami, simdi = new Date()): string {
     `Kullanıcı şu sayfada: ${b.yer}.${b.yardim ? ` (${b.yardim})` : ""}`,
     `Kullanıcının rolleri: ${b.roller.join(", ") || "—"}. Bugün: ${bugunTr(simdi)}.`,
     ...(b.acikRapor ? [b.acikRapor] : []),
+    ...(b.acikKayit ? [b.acikKayit] : []),
     ...(b.rapor ? ["Bu rapor ekranda açık ve yazılabilir; güncel haritasını ekran_durumu verir."] : []),
     ...(b.format ? ["Format yapıcıda bir taslak açık; güncel haritasını ekran_durumu verir."] : []),
   ].join("\n");
@@ -121,6 +129,7 @@ export function ekranDurumuMetni(b: SayBaglami): string {
   return [
     `Sayfa: ${b.yer}.`,
     ...(b.acikRapor ? [b.acikRapor] : []),
+    ...(b.acikKayit ? [b.acikKayit] : []),
     ...(b.rapor ? [`Açık rapor (ekrandaki hâli, kaydedilmemiş değişiklikler dahil):\n${b.rapor}`] : []),
     ...(b.format ? [`Açık format taslağı (format yapıcıda, kaydedilmemiş değişiklikler dahil):\n${b.format}`] : []),
     ...(!b.rapor && !b.format ? ["Ekranda yazılabilir bir rapor ya da format taslağı açık değil."] : []),

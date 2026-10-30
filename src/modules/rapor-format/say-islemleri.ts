@@ -9,7 +9,7 @@ import { kurucuyaHazirla } from "../../format/duzen.ts";
 import { SABLONLAR } from "../../format/sablonlar.ts";
 import { kimlik, surum, z } from "../../sema/ortak.ts";
 import { SuzgecDurumuSemasi } from "../../server/liste/liste.ts";
-import { GORUNMEZ, islem, IslemGeriAl, metinSayfasi, yazmaCevabi, type IslemCevabi, type Islem } from "../../server/yz/islem.ts";
+import { GORUNMEZ, islem, IslemGeriAl, metinSayfasi, yazmaCevabi, type IslemCevabi, type Islem, type SayfaTanimi } from "../../server/yz/islem.ts";
 import { TurGirdisi } from "../ekipman-turleri/sema.ts";
 import { formatHaritasi, formatIslemleri, type FormatIslemi } from "./say-kurucu.ts";
 import { BaslatGirdisi, YayinNotu } from "./sema.ts";
@@ -127,4 +127,9 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
       return yazmaCevabi(r, { bildirim: r.durum === "tamam" ? `${r.ad} silindi.` : undefined });
     },
   }),
+];
+
+/** 2026-10-31 (K2 + M4): S.A.Y'ın açık kaydı bildiği ayrıntı sayfaları (src/server/yz/islem.ts acikKayit) */
+export const SAY_SAYFALARI: readonly SayfaTanimi[] = [
+  { desen: /^\/ekipman-turleri\/([0-9a-f-]{36})\/sablon\/([0-9a-f-]{36})$/, tur: "Rapor formatı sürümü", islem: "format_getir", girdi: (_tur, id) => ({ format: id, sayfa: 1 }) },
 ];

@@ -8,7 +8,7 @@
    ezmez (önce ekranın kaydı — EKRAN_KAYDEDILMEMIS). */
 import { kimlik, surum, z } from "../../sema/ortak.ts";
 import { SuzgecDurumuSemasi } from "../../server/liste/liste.ts";
-import { EKRAN_KAYDEDILMEMIS, ekranRaporuKirli, GORUNMEZ, islem, kirp, sayfaBilgisi, sayfala, trIcerir, yazmaCevabi, type Islem, type IslemCevabi } from "../../server/yz/islem.ts";
+import { EKRAN_KAYDEDILMEMIS, ekranRaporuKirli, GORUNMEZ, islem, kirp, sayfaBilgisi, sayfala, trIcerir, yazmaCevabi, type Islem, type SayfaTanimi, type IslemCevabi } from "../../server/yz/islem.ts";
 import { KunyeGirdisi, NotGirdisi, PLAN_DURUM, PlanAcGirdisi, RedGirdisi, SayEkipmanGirdisi, YeniEkipmanGirdisi } from "./sema.ts";
 import { planSayfasi } from "./server/liste.ts";
 import {
@@ -186,4 +186,10 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
     tarif: "Hiç raporu, faturası, gideri olmayan, tamamlanmamış planı kesin siler (yönetici; ekip, ekipman satırları, notlar birlikte; ekipmanlar tesiste kalır).",
     calistir: async (b, v) => yazmaCevabi(await planSil(b.db, b.kim, v.plan)),
   }),
+];
+
+/** 2026-10-31 (K2 + M4): S.A.Y'ın açık kaydı bildiği ayrıntı sayfaları (src/server/yz/islem.ts acikKayit) */
+export const SAY_SAYFALARI: readonly SayfaTanimi[] = [
+  { desen: /^\/planlar\/([0-9a-f-]{36})(?:\/|$)/, tur: "Plan", islem: "plan_getir", girdi: (id) => ({ plan: id }) },
+  { desen: /^\/raporlar\/yeni\/([0-9a-f-]{36})(?:\/|$)/, tur: "Plan", islem: "plan_getir", girdi: (id) => ({ plan: id }) },
 ];

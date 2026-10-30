@@ -4,7 +4,7 @@
    TesisGirdisi alanları); güncellemede verilmeyen alan kartın şimdiki değeriyle gider (pencere de kartın değeriyle açılır), yeni kayıtta boş. */
 import { kimlik, surum, z } from "../../sema/ortak.ts";
 import { SuzgecDurumuSemasi } from "../../server/liste/liste.ts";
-import { GORUNMEZ, islem, sayfala, trIcerir, yazmaCevabi, type Islem } from "../../server/yz/islem.ts";
+import { GORUNMEZ, islem, sayfala, trIcerir, yazmaCevabi, type Islem, type SayfaTanimi } from "../../server/yz/islem.ts";
 import { MusteriGirdisi, TesisGirdisi } from "./sema.ts";
 import { musteriKarti, musteriKaydet, musteriListesi, musteriPasif, musteriSil, tesisKarti, tesisKaydet, tesisPasif, tesisSil } from "./server/musteriler.ts";
 
@@ -92,4 +92,10 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
     tarif: "Hiç kullanılmamış tesisi kesin siler (firma yöneticisi); kullanılmışsa nedeni döner.",
     calistir: async (b, v) => { const r = await tesisSil(b.db, b.kim, v.tesis); return yazmaCevabi(r, { bildirim: r.durum === "tamam" ? `${r.ad} silindi.` : undefined }); },
   }),
+];
+
+/** 2026-10-31 (K2 + M4): S.A.Y'ın açık kaydı bildiği ayrıntı sayfaları (src/server/yz/islem.ts acikKayit) */
+export const SAY_SAYFALARI: readonly SayfaTanimi[] = [
+  { desen: /^\/musteriler\/tesis\/([0-9a-f-]{36})(?:\/|$)/, tur: "Tesis", islem: "tesis_getir", girdi: (id) => ({ tesis: id }) },
+  { desen: /^\/musteriler\/([0-9a-f-]{36})(?:\/|$)/, tur: "Müşteri", islem: "musteri_getir", girdi: (id) => ({ musteri: id }) },
 ];

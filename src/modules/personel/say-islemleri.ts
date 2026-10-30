@@ -5,7 +5,7 @@
    şimdiki değeriyle gider (form da kartın değeriyle açılır). Belge yükleme (özlük, bordro, zimmet formu) dosya ister — S.A.Y'da yok (pkproje §9). */
 import { kimlik, surum, tarih, z } from "../../sema/ortak.ts";
 import { SuzgecDurumuSemasi } from "../../server/liste/liste.ts";
-import { GORUNMEZ, islem, sayfala, trIcerir, yazmaCevabi, type Islem } from "../../server/yz/islem.ts";
+import { GORUNMEZ, islem, sayfala, trIcerir, yazmaCevabi, type Islem, type SayfaTanimi } from "../../server/yz/islem.ts";
 import { PersonelGirdisi } from "./sema.ts";
 import { personelAyrildi, personelEkle, personelGeriAl, personelGuncelle, personelKarti, personelListesi, personelSil } from "./server/personel.ts";
 
@@ -71,4 +71,9 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
       return yazmaCevabi(r, { bildirim: r.durum === "tamam" ? `${r.ad} silindi.` : undefined });
     },
   }),
+];
+
+/** 2026-10-31 (K2 + M4): S.A.Y'ın açık kaydı bildiği ayrıntı sayfaları (src/server/yz/islem.ts acikKayit) */
+export const SAY_SAYFALARI: readonly SayfaTanimi[] = [
+  { desen: /^\/personel\/([0-9a-f-]{36})(?:\/|$)/, tur: "Personel", islem: "personel_getir", girdi: (id) => ({ personel: id }) },
 ];

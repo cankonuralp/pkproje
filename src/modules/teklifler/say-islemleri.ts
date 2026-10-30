@@ -4,7 +4,7 @@
    tutarlar formdaki gibi TL ("1.250,00"), saklanan kuruş. */
 import { kimlik, surum, z } from "../../sema/ortak.ts";
 import { SuzgecDurumuSemasi } from "../../server/liste/liste.ts";
-import { GORUNMEZ, islem, kirp, sayfaBilgisi, sayfala, trIcerir, yazmaCevabi, type Islem } from "../../server/yz/islem.ts";
+import { GORUNMEZ, islem, kirp, sayfaBilgisi, sayfala, trIcerir, yazmaCevabi, type Islem, type SayfaTanimi } from "../../server/yz/islem.ts";
 import { para, RedGirdisi, TEKLIF_DURUM, TeklifGirdisi } from "./sema.ts";
 import {
   teklifGonder, teklifKabul, teklifKarti, teklifKaydet, teklifMusteriBagla, teklifMusteriKaydet, teklifReddet, teklifSayfasi, teklifSecenekleri, teklifSil,
@@ -92,4 +92,9 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
     tarif: "Hiç gönderilmemiş taslak teklifi kesin siler (yönetici); gönderilmişse nedeni döner (kopyalanır).",
     calistir: async (b, v) => yazmaCevabi(await teklifSil(b.db, b.kim, v.teklif), { bildirim: "Teklif silindi." }),
   }),
+];
+
+/** 2026-10-31 (K2 + M4): S.A.Y'ın açık kaydı bildiği ayrıntı sayfaları (src/server/yz/islem.ts acikKayit) */
+export const SAY_SAYFALARI: readonly SayfaTanimi[] = [
+  { desen: /^\/teklifler\/([0-9a-f-]{36})(?:\/|$)/, tur: "Teklif", islem: "teklif_getir", girdi: (id) => ({ teklif: id }) },
 ];

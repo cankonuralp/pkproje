@@ -5,7 +5,7 @@
    Rapor formatı PDF'i yükleme dosya ister — ekrandan (S.A.Y'da format_pdf_kur ekran aracı). */
 import { kimlik, surum, z } from "../../sema/ortak.ts";
 import { SuzgecDurumuSemasi } from "../../server/liste/liste.ts";
-import { GORUNMEZ, islem, sayfala, trIcerir, yazmaCevabi, type Islem } from "../../server/yz/islem.ts";
+import { GORUNMEZ, islem, sayfala, trIcerir, yazmaCevabi, type Islem, type SayfaTanimi } from "../../server/yz/islem.ts";
 import { BaglantiGirdisi, GRUPLAR, TurGirdisi } from "./sema.ts";
 import { StandartTanimGirdisi } from "../dokumanlar/sema.ts";
 import { yeniTureFormat } from "../rapor-format/server/formatlar.ts";
@@ -92,4 +92,9 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
       return yazmaCevabi(r, { bildirim: r.durum === "tamam" ? `${r.ad} silindi.` : undefined });
     },
   }),
+];
+
+/** 2026-10-31 (K2 + M4): S.A.Y'ın açık kaydı bildiği ayrıntı sayfaları (src/server/yz/islem.ts acikKayit) */
+export const SAY_SAYFALARI: readonly SayfaTanimi[] = [
+  { desen: /^\/ekipman-turleri\/([0-9a-f-]{36})(?:\/|$)/, tur: "Ekipman türü", islem: "tur_getir", girdi: (id) => ({ tur: id }) },
 ];

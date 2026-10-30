@@ -5,7 +5,7 @@
    imzaya giden belge ister — ekrandan yazılır (S.A.Y'da yok). */
 import { kimlik, surum, z } from "../../sema/ortak.ts";
 import { SuzgecDurumuSemasi } from "../../server/liste/liste.ts";
-import { GORUNMEZ, islem, sayfala, trIcerir, yazmaCevabi, type Islem } from "../../server/yz/islem.ts";
+import { GORUNMEZ, islem, sayfala, trIcerir, yazmaCevabi, type Islem, type SayfaTanimi } from "../../server/yz/islem.ts";
 import { AracGirdisi, KmGirdisi } from "./sema.ts";
 import { aracKarti, aracKaydet, aracListesi, aracPasif, aracSil, kmKaydet } from "./server/araclar.ts";
 
@@ -70,4 +70,9 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
       return yazmaCevabi(r, { bildirim: r.durum === "tamam" ? `${r.ad} silindi.` : undefined });
     },
   }),
+];
+
+/** 2026-10-31 (K2 + M4): S.A.Y'ın açık kaydı bildiği ayrıntı sayfaları (src/server/yz/islem.ts acikKayit) */
+export const SAY_SAYFALARI: readonly SayfaTanimi[] = [
+  { desen: /^\/araclar\/([0-9a-f-]{36})(?:\/|$)/, tur: "Araç", islem: "arac_getir", girdi: (id) => ({ arac: id }) },
 ];
