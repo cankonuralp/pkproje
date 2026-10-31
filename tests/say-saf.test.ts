@@ -160,3 +160,12 @@ test("553 format: harita kısaltmasız; formati_duzenle şemasında sayı sını
   assert.doesNotMatch(h, /kısaltıldı/);
   assert.doesNotMatch(JSON.stringify((FORMAT_ARACI.input_schema as { properties: { islemler: unknown } }).properties.islemler).slice(0, 40), /maxItems/);
 });
+
+/* 2026-10-31 (reisim'in kabulü: "Geri al — yalnız S.A.Y'ın yeni açtığı kayıtlar"): ekranda geri alınacak değişiklik yoksa "geri al" S.A.Y'a gider; talimat
+   yalnız bu işte açılan kayıtları silme işlemiyle geri almayı söyler */
+test("geri al: ekranda yoksa S.A.Y'a; talimatta yalnız açtığı kayıtlar", async () => {
+  const { readFileSync } = await import("node:fs");
+  assert.match(SISTEM, /Geri al: kullanıcı yaptığın işin geri alınmasını isterse bu işte AÇTIĞIN kayıtları/);
+  assert.match(SISTEM, /yalnız senin açtıkların silinir, kullanılmış kayıt silinmez/);
+  assert.ok(readFileSync("src/modules/say/ui/SayAsistan.tsx", "utf8").includes(`!(istek === "geri" && !sonEylem("geri"))`), "ekranda geri alınacak yoksa yapay zekâya");
+});

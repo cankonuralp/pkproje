@@ -762,7 +762,8 @@ export function SayAsistan() {
         if (l.length > 1) { setBolumSor({ fotolar, soru: v }); return; }
       }
       /* "evet / üstüne yaz" yalnız bekleyen "Değiştireyim mi?" varsa ekranda — yoksa Haiku'ya gider */
-      if (istek && !ekler.length && !(istek === "ustune" && !sonEylem("ustune"))) {
+      /* 2026-10-31 ("Geri al — yalnız S.A.Y'ın yeni açtığı kayıtlar"): ekranda geri alınacak değişiklik yoksa "geri al" S.A.Y'a gider (sunucuda açtığı kayıtları siler) */
+      if (istek && !ekler.length && !(istek === "ustune" && !sonEylem("ustune")) && !(istek === "geri" && !sonEylem("geri"))) {
         setSoru("");
         await islemYap(istek, v);
         girdi.current?.focus();

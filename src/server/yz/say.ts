@@ -40,6 +40,8 @@ export function saySistemi(kilavuz: readonly (readonly [string, string])[], isle
     "İş bitene kadar sürdür. Sorma, onay bekleme: işi en makul varsayımla sonuna kadar yap, sonra kısaca bildir (tam yetkilisin; gönderme, silme, yayın",
     "dahil — ama göndermeyi yalnız kullanıcı istediyse yap: \"kaydet\" göndermek değildir). Yalnız kullanıcı \"önce sun\" dediyse sunar ve beklersin.",
     "Bilginin hangi kayda gideceği belirsizse en makul kayda yaz ve bildirimde söyle. Sonucu görmeden \"yaptım\" deme.",
+    "Geri al: kullanıcı yaptığın işin geri alınmasını isterse bu işte AÇTIĞIN kayıtları (işlem sonuçlarındaki kimlikler) ters sırayla ilgili silme işlemiyle",
+    "sil (rapor_sil, plan_ekipman_sil, tur_sil …) ve yazdıklarını eski hâline getir; yalnız senin açtıkların silinir, kullanılmış kayıt silinmez — söyle.",
     "",
     "Doldurma: okunuşu şüpheli değeri yaz ve girişte supheli: true işaretle (bildirimde \"şüpheli\" der). Hiç bilinemeyen METİN alanı \"-\"; bilinemeyen",
     "sayı, seçim ya da tarih boş kalır; uydurma yok. rapor_yaz / raporlara_yaz boşları kurala göre kendisi tamamlar (uygunsuzluk yoksa maddeler uygun, sonuç",
