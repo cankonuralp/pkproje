@@ -60,6 +60,7 @@ export function saySistemi(kilavuz: readonly (readonly [string, string])[], isle
     "",
     "Denetim: rapora yazdıktan sonra özet vermeden önce raporu yeniden oku (açık raporda ekran_durumu, değilse rapor_getir) ve “Formun yerleşimi”ndeki",
     "her değerin doğru başlığın ve grubun altında olup olmadığına bak. Yanlış yere gideni düzelt: doğru yere yaz, yanlış yeri boşalt. Sonra özet ver.",
+    "Aynı formattaki birden çok raporda haritayı BİR raporda oku (yerleşim hepsinde aynı); yazdıktan sonra rapor rapor okuma, plan_denetle yeter.",
     "",
     "Ekran: kullanıcının her mesajının ardından bulunduğu sayfa bir sistem notuyla gelir. Ekranda açık raporun ya da format taslağının güncel hâlini",
     "(yer kimlikleri ve değerler, kaydedilmemiş değişiklikler dahil) ekran_durumu ile alırsın. Açık rapora rapora_yaz ile yazarsın; yazdıkların",
@@ -70,14 +71,16 @@ export function saySistemi(kilavuz: readonly (readonly [string, string])[], isle
     "hangi başlığın ve grubun altındaysa o bilgiyi alır. Etiketi ya da belgeyi okurken bir insanın forma bakıp yazacağı gibi düşün.",
     "",
     "Ekler: kullanıcının eklediği fotoğraf, PDF, Word, Excel ve metin dosyaları konuşmada kalır; sonraki mesajlarda da onlara bakarsın (bitmiş işin",
-    "fotoğrafı başlığındaki ön okuma metniyle kalır, küçük kopyası kalkar — gerekirse foto_goster ile yeniden bakarsın). ZIP'ten",
+    "fotoğrafı başlığındaki ön okuma metniyle kalır, küçük kopyası kalkar — gerekirse foto_goster ile yeniden bakarsın). Konuşma 60 dakika sessizlikten,",
+    "başka planın sayfasından gelen yeni işten ya da büyüyünce kendiliğinden kapanır: önceki işin son bildirimi notla gelir, eski ekler gelmez. ZIP'ten",
     "gelen dosyalar ayrı ekler olarak gelir. Her ek malzeme numarasıyla gelir (M01 …; fotoğrafta ayrıca F01 …; numara konuşma boyunca aynı): başlıkta",
     "türü, dosya adı ve fotoğrafın çekim saati var — dosya adı ve saat bilgi taşır (\"komp.jpeg\" kompresördür; notla fotoğrafı saatle eşle). Sohbet dökümünde",
     "iletiler sırayla, medya [dosya adı] ile anılır; aynı adlı ek o iletinin fotoğrafıdır. Bağ kopuksa içerikten kur ve emin olmadığını söyle.",
     "Çok fotoğrafta önce foto_pafta ile hepsine birlikte bak ve her birinin ne olduğunu ayır; etiket ya da küçük yazı için foto_goster ile bölgeyi",
     "büyüt (gerekirse gri_kontrast); bir fotoğrafı bir işte BİR kez büyütürsün, bölgeyi ilk seferde ön okumaya göre seç; okuyamadığını tahmin etme.",
     "Rapora fotoğrafı rapor_foto_ekle ile koy: ekipman başına bir genel görünüş, etiket değil.",
-    "Gerekirse internette arama yaparsın.",
+    "İnternet araması yalnız mevzuat / standart sorusu için ya da kullanıcı isterse; ekipmanı tanımak ya da kataloğunu doğrulamak için arama yapma (fotoğraf",
+    "ve ön okuma yeter — arama sonucu konuşmayı büyütür).",
     "",
     "Ekipman: rapor açılacak ekipman planda yoksa sormadan ekle (plan_ekipman_ekle, çoksa plan_ekipmanlar_ekle). Kullanıcı ya da etiket özel bir kod",
     "vermedikçe kod yazma: sunucu firmanın o türdeki kod düzeniyle sıradakini verir (TRF-0001, TRF-0002 …; firmada yoksa TÜR-0001); ekipmanları saha sırasıyla ver. Etiketteki üretici numarası seri no'dur, kod değildir. Konumu verilen her şeyden çıkar (kullanıcının",
@@ -97,8 +100,9 @@ export function saySistemi(kilavuz: readonly (readonly [string, string])[], isle
     "- Fotoğraftan, etiketten ya da eski rapor PDF'inden bilgi oku → eki incele; açık rapora rapora_yaz, açık olmayana rapor_yaz.",
     "- Ekipman kaydı aç → plan_ekipman_ekle (çoksa plan_ekipmanlar_ekle).",
     "- Planın raporlarını oluştur ve doldur → plan_hazirlik; raporu olmayan ekipmanlara tek rapor_ac, sonra tek raporlara_yaz.",
-    "- Kontrol saatlerini dağıt, sonraki kontrol tarihini yaz → rapor_saat_plani (gün verilmezse bugün, başlangıç verilmezse Firma ayarlarındaki mesai",
-    "  başlangıcı, süre türden ya da 15 dk; hesabı sunucu yapar).",
+    "- Kontrol saatlerini dağıt, sonraki kontrol tarihini yaz → raporlara yazarken raporlara_yaz'ın gun / baslangic / ara_dk'sı (rapor başına tek kayıt; gün",
+    "  verilmezse bugün, başlangıç verilmezse Firma ayarlarındaki mesai başlangıcı, süre türden ya da 15 dk); yalnız yazılmış raporların saatini sonradan",
+    "  değiştirmek için rapor_saat_plani.",
     "- Varsayılan değerleri uygula, boş seçimleri doldur → rapor_getir ile boş alanları bul, rapor_yaz ile doldur.",
     "- Mükerrer kayıtları ayıkla → aynı kodlu ya da aynı ekipmanlı tekrarları plan_getir / rapor_ara ile bul; raporsuz tekrarı kaldır (plan_ekipman_pasif,",
     "  rapor_sil), raporlu olanları listele.",
@@ -252,6 +256,7 @@ export const RAPOR_ARACLARI = [
   },
 ] as const;
 /** Anthropic'in internet arama aracı (sunucuda çalışır; arama sayısı sınırı yok) */
+/* 2026-11-01 (V21 O12): arama ekipman kataloğu doğrulaması için değil — kural TALİMATTA; araçta sayı sınırı yok (2026-10-23 "hiçbir kısıtı olmasın") */
 export const ARAMA_ARACI = { type: "web_search_20250305", name: "web_search" } as const;
 /** 2026-10-26 (S.A.Y Faz 2 — reisim: "pdf i el ile formata eklemeye çalışıyor … format pdf i ekle tuşu var bu yolu bilmeli ve oraya pdf i
     yüklemeli"): ekteki PDF türün format PDF'i olarak yüklenir, şablon ondan kurulur (ekranda — PDF tarayıcıda okunur, ekipman türü sayfasındaki

@@ -8,7 +8,8 @@ ne_zaman: Bir ya da çok rapor doldurulurken; "sonucu … yap, … yaz", "maddel
 
 ## 0. Harita
 
-- Yazmadan önce raporun haritasını oku: açık raporda `ekran_durumu`, değilse `rapor_getir`.
+- Yazmadan önce raporun haritasını oku: açık raporda `ekran_durumu`, değilse `rapor_getir`. Aynı formattaki birden çok raporda haritayı BİR raporda oku;
+  yerleşim ve yer kimlikleri hepsinde aynıdır (8 rapor için 8 `rapor_getir` değil, 1).
 - Haritadaki yerler:
 
 | Yer | Ne |

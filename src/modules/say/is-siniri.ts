@@ -108,4 +108,93 @@ export const bildirimNotu = (satir: number) =>
   `${BILDIRIM_ONEKI}: bildirimin ${satir} satır oldu; en çok dört satıra indir — ne hazır · varsayımla yazılanlar · "-" bırakılanlar · kalan engel. `
   + "Yalnız bildirimi yeniden yaz; iş yapma, araç çağırma.";
 
+/* ── 2026-11-01 (V21 A1 — reisim: "100 bin olayını sınırlama şansımız yok mu"): SERT TAVAN. İstem boyu istek öncesi kestirilir; TAVAN'ı aşacaksa iş İÇİNDE
+   küçültme seviyesi artar (tek yönlü — bir kez küçülen küçük kalır, seviye yz_konusma_is.kucultme'de): 1 eski büyütme görüntüleri metne (son görüntülü sonuç
+   kalır) · 2 okunmuş beceri metinleri nota · 3 uzun araç sonuçları kırpık (son iki kullanıcı iletisi hariç) · 4 "bağlam doldu" sistem notu. ── */
+export const TAVAN = 90_000, KUCULTME_EN_COK = 4;
+/** görüntü başına kestirim: konuşmadaki küçük kopya (≤ 800 px), büyütme / pafta (base64, ≤ 1 568 px), belge (PDF) */
+const KUCUK_FOTO = 650, BUYUK_GORUNTU = 2_400, BELGE = 3_000, KARAKTER_BASINA = 3.5;
+export const BECERI_KALDIRILDI = (ad: string) => `${ad} okundu — içeriği bağlam için kaldırıldı; gerekirse beceri_oku ile yeniden oku.`;
+export const BAGLAM_DOLDU = "Bağlam sınırına yaklaştı: kalan işi en az araç çağrısıyla bitir; yeni okuma, arama ve büyütme yapma; bildirimi yaz.";
+
+/** istemin token kestirimi: metinler (araç girdisi ve düşünce dahil) karakter / 3,5; görüntü ve belge sabit */
+export function istemTahmini(mesajlar: readonly IsMesaji[]): number {
+  let karakter = 0, token = 0;
+  const say = (b: Blok) => {
+    if (b.type === "image") { token += (b.source as { type?: unknown } | undefined)?.type === "file" ? KUCUK_FOTO : BUYUK_GORUNTU; return; }
+    if (b.type === "document") { token += BELGE; return; }
+    if (b.type === "tool_result") { if (typeof b.content === "string") karakter += b.content.length; else for (const x of bloklar(b.content) ?? []) say(x); return; }
+    karakter += JSON.stringify(b).length;
+  };
+  for (const m of mesajlar) { if (typeof m.content === "string") karakter += m.content.length; else for (const b of bloklar(m.content) ?? []) say(b); }
+  return Math.ceil(karakter / KARAKTER_BASINA) + token;
+}
+
+/** bu işin iletileri seviyeye göre küçültülmüş (iş sınırından sonrakiler; soru iletisinin kendisi ve son görüntülü sonuç korunur). Belirlenimli. */
+export function isIciKucult<T extends IsMesaji>(mesajlar: readonly T[], seviye: number): { mesajlar: T[]; degisen: number } {
+  const b = sonSoruIndeksi(mesajlar);
+  if (seviye <= 0 || b < 0) return { mesajlar: [...mesajlar], degisen: 0 };
+  const beceri = new Map<string, string>();
+  let sonGoruntu = -1, sonKullanici = -1, oncekiKullanici = -1;
+  mesajlar.forEach((m, i) => {
+    if (i <= b) return;
+    if (m.role === "assistant") { for (const x of bloklar(m.content) ?? []) if (x.type === "tool_use" && x.name === "beceri_oku" && typeof x.id === "string") beceri.set(x.id, String((x.input as { ad?: unknown } | null)?.ad ?? "beceri")); return; }
+    if (m.role !== "user") return;
+    oncekiKullanici = sonKullanici; sonKullanici = i;
+    if ((bloklar(m.content) ?? []).some((x) => x.type === "tool_result" && (bloklar(x.content) ?? []).some((y) => y.type === "image"))) sonGoruntu = i;
+  });
+  let degisen = 0;
+  const l = mesajlar.map((m, i) => {
+    if (i <= b || m.role !== "user") return m;
+    const ic = bloklar(m.content);
+    if (!ic) return m;
+    let d = false;
+    const yeni = ic.map((x) => {
+      if (x.type !== "tool_result") return x;
+      if (seviye >= 2 && typeof x.tool_use_id === "string" && beceri.has(x.tool_use_id)) { d = true; return { ...x, content: BECERI_KALDIRILDI(beceri.get(x.tool_use_id)!) }; }
+      if (seviye >= 1 && i !== sonGoruntu && Array.isArray(x.content) && (bloklar(x.content) ?? []).some((y) => y.type === "image")) {
+        d = true; return { ...x, content: (bloklar(x.content) ?? []).map((y) => (y.type === "image" ? { type: "text", text: GORUNTU_KALDIRILDI } : y)) };
+      }
+      if (seviye >= 3 && i !== sonKullanici && i !== oncekiKullanici) {
+        if (typeof x.content === "string" && x.content.length > ESKI_SONUC_EN_COK) { d = true; return { ...x, content: kirp(x.content) }; }
+        const y = bloklar(x.content);
+        if (y?.some((z) => z.type === "text" && typeof z.text === "string" && z.text.length > ESKI_SONUC_EN_COK)) { d = true; return { ...x, content: y.map((z) => (z.type === "text" && typeof z.text === "string" ? { ...z, text: kirp(z.text) } : z)) }; }
+      }
+      return x;
+    });
+    if (!d) return m;
+    degisen++;
+    return { ...m, content: yeni };
+  });
+  return { mesajlar: l, degisen };
+}
+/** tavanı aşmayan en düşük seviye (mevcut seviyeden başlar; yalnız ileri) */
+export function kucultmeSeviyesi(mesajlar: readonly IsMesaji[], mevcut: number, sistemToken: number, olculen = 0): number {
+  let s = Math.max(0, mevcut);
+  const tahmin = (sv: number) => Math.max(istemTahmini(isIciKucult(mesajlar, sv).mesajlar) + sistemToken, sv === mevcut ? olculen : 0);
+  while (s < KUCULTME_EN_COK && tahmin(s) > TAVAN) s++;
+  return s;
+}
+
+/* ── 2026-11-01 (V21 B — reisim: "müşteriye bırakmadan otomatik geçmiş silme koyalım"): OTOMATİK KAPANIŞ. İş bitmişken yeni soru gelince konuşma şu üç
+   durumda kendiliğinden kapanır (metni Ar-Ge kaydına, ekleri çöpe; "Sohbeti temizle" tuşu kalır): 60 dakika sessizlik · başka planın sayfasından soru ·
+   küçültülmüş konuşma KAPANIS_BOYU tokeni aştı. Son bildirim yeni konuşmanın başına not olarak girer. ── */
+export const KAPANIS_DAKIKA = 60, KAPANIS_BOYU = 60_000;
+const PLAN_KIMLIGI = /Plan \(kimlik ([0-9a-f-]{36})\)/;
+export function kapanisNedeni(g: { mesajlar: readonly IsMesaji[]; sonZaman: Date | null; simdi: Date; yeniNot: string }): string | null {
+  if (!g.mesajlar.length) return null;
+  if (g.sonZaman && g.simdi.getTime() - g.sonZaman.getTime() > KAPANIS_DAKIKA * 60_000) return `${KAPANIS_DAKIKA} dakika geçti`;
+  const eskiNot = [...g.mesajlar].reverse().find((m) => m.role === "system");
+  const eski = eskiNot ? PLAN_KIMLIGI.exec(typeof eskiNot.content === "string" ? eskiNot.content : metinler(eskiNot).join("\n"))?.[1] : undefined;
+  const yeni = PLAN_KIMLIGI.exec(g.yeniNot)?.[1];
+  if (eski && yeni && eski !== yeni) return "başka plan";
+  if (istemTahmini(konusmaSikistir(g.mesajlar).mesajlar) > KAPANIS_BOYU) return "konuşma büyüdü";
+  return null;
+}
+/** kapanış notu: önceki işin son bildirimi (en çok dört dolu satır) */
+export function kapanisNotu(neden: string, saat: string, sonBildirim: string): string {
+  const satirlar = sonBildirim.split("\n").map((s) => s.trim()).filter(Boolean).slice(0, 4).join("\n").slice(0, 700);
+  return `Önceki konuşma kapandı (${neden}; ${saat}). Önceki işin son bildirimi:\n${satirlar || "—"}\nEski ekler artık konuşmada yok; kullanıcı eski bir fotoğrafı isterse yeniden eklemesini iste.`;
+}
+
 export const ZATEN_BUYUTULDU = (no: number) => `F${String(no).padStart(2, "0")} bu işte zaten büyütüldü; o görüntüye bak (aynı fotoğraf bir işte bir kez büyütülür — ilk seferde doğru bölgeyi iste).`;

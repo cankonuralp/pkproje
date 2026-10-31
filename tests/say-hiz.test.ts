@@ -41,6 +41,10 @@ test("işin derinliği şablondan; araç sonucu ve denetim notu işi değiştirm
   assert.equal(isDerinligi([soru, not("S1"), { role: "assistant", content: [] }, yeni("yeni soru")]), "medium", "önceki şablonun derinliği taşınmaz, kısa iş kuralı");
   assert.equal(isDerinligi([soru, { role: "assistant", content: [] }, yeni("x".repeat(KISA_SORU + 1))]), "high", "uzun soru");
   assert.equal(isDerinligi([soru, { role: "assistant", content: [] }, yeni("fotoğraflar", [{ type: "image", source: { type: "file", file_id: "f" } }])]), "high", "ekli soru");
+  /* 2026-11-01 V21 O15 (deneme): çok fotoğraflı iş (≥ 3 görüntü) orta derinlik — ilk soru olsa da */
+  const uc = Array.from({ length: 3 }, (_, i) => ({ type: "image", source: { type: "file", file_id: `f${i}` } }));
+  assert.equal(isDerinligi([yeni("raporları hazırla", uc)]), "medium", "çok fotoğraflı ilk iş orta");
+  assert.equal(isDerinligi([yeni("raporları hazırla", uc.slice(0, 2))]), "high", "iki fotoğraf çok değil");
   assert.equal(isDerinligi([yeni("kısa")]), "high", "konuşmanın ilk sorusu");
   assert.equal(isDerinligi([soru, { role: "assistant", content: [] }, yeni("kısa"), { role: "user", content: [{ type: "text", text: "Sunucunun bildirim notu: …" }] }]), "medium", "sunucu notu işi değiştirmez");
   assert.equal(isDerinligi([]), "high");

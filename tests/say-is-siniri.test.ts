@@ -8,8 +8,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { DENETIM_ONEKI } from "../src/modules/say/bitis-denetimi.ts";
-import { bildirimNotu, bildirimNotuGerekli, bildirimSatirlari, ESKI_SONUC_EN_COK, FOTO_KALDIRILDI, fotoNo, GORUNTU_KALDIRILDI, gosterilenFotolar, konusmaSikistir, sonSoruIndeksi,
-  ZATEN_BUYUTULDU } from "../src/modules/say/is-siniri.ts";
+import { BECERI_KALDIRILDI, bildirimNotu, bildirimNotuGerekli, bildirimSatirlari, ESKI_SONUC_EN_COK, FOTO_KALDIRILDI, fotoNo, GORUNTU_KALDIRILDI, gosterilenFotolar,
+  isIciKucult, istemTahmini, KAPANIS_BOYU, kapanisNedeni, kapanisNotu, konusmaSikistir, KUCULTME_EN_COK, kucultmeSeviyesi, sonSoruIndeksi, TAVAN, ZATEN_BUYUTULDU } from "../src/modules/say/is-siniri.ts";
 
 const resim = { type: "image", source: { type: "file", file_id: "f1" } };
 const b64 = { type: "image", source: { type: "base64", media_type: "image/jpeg", data: "/9j/" } };
@@ -81,6 +81,58 @@ test("bildirim notu: rapora yazan işte dört satırı aşan bildirime bir kez; 
   assert.equal(sonSoruIndeksi([soru, yaz, sonuc("y"), not]), 0, "not soru değil; iş sınırı değişmez");
   assert.equal(bildirimNotuGerekli([{ role: "user", content: [{ type: "text", text: "eski" }] }, yaz, sonuc("y"), soru, oku, sonuc("o")], uzun), false, "önceki işin yazması sayılmaz");
   assert.match(bildirimNotu(6), /^Sunucunun bildirim notu: bildirimin 6 satır/);
+});
+
+/* 2026-11-01 V21 A1 (reisim: "100 bin olayını sınırlama şansımız yok mu") — sert tavan: kestirim, iş içi küçültme seviyeleri (tek yönlü, belirlenimli), seviye seçimi */
+test("sert tavan: istem kestirimi; iş içi küçültme 1 görüntü · 2 beceri · 3 uzun sonuç; son görüntü ve son iki sonuç korunur; seviye yalnız ileri", () => {
+  const uzunMetin = "y".repeat(ESKI_SONUC_EN_COK + 500);
+  const K = [
+    { role: "user", content: [{ type: "text", text: "raporları hazırla" }, resim] },
+    { role: "assistant", content: [{ type: "tool_use", id: "b1", name: "beceri_oku", input: { ad: "B01" } }, { type: "tool_use", id: "x1", name: "islem", input: { ad: "plan_getir", girdi: {} } }, goster("g1", "F01")] },
+    { role: "user", content: [{ type: "tool_result", tool_use_id: "b1", content: "# B01 …" }, { type: "tool_result", tool_use_id: "x1", content: uzunMetin }, { type: "tool_result", tool_use_id: "g1", content: [b64, { type: "text", text: "F01" }] }] },
+    { role: "assistant", content: [{ type: "tool_use", id: "p1", name: "islem", input: { ad: "plan_hazirlik", girdi: {} } }] },
+    { role: "user", content: [{ type: "tool_result", tool_use_id: "p1", content: uzunMetin }] },
+    { role: "assistant", content: [goster("g2", "F02")] },
+    { role: "user", content: [{ type: "tool_result", tool_use_id: "g2", content: [b64, { type: "text", text: "F02" }] }] },
+  ];
+  const t0 = istemTahmini(K);
+  assert.ok(t0 > 2 * 2_400 + 650 && t0 < 2 * 2_400 + 650 + 3_000, `kestirim ${t0}: iki büyütme, bir küçük kopya, metinler`);
+  assert.deepEqual(isIciKucult(K, 0), { mesajlar: K, degisen: 0 });
+  const s1 = isIciKucult(K, 1);
+  assert.equal(s1.degisen, 1);
+  assert.deepEqual((s1.mesajlar[2]!.content as { content: unknown }[])[2]!.content, [{ type: "text", text: GORUNTU_KALDIRILDI }, { type: "text", text: "F01" }], "eski büyütme metne");
+  assert.deepEqual(s1.mesajlar[6], K[6], "son görüntülü sonuç kalır");
+  const s2 = isIciKucult(K, 2);
+  assert.equal((s2.mesajlar[2]!.content as { content: unknown }[])[0]!.content, BECERI_KALDIRILDI("B01"), "okunmuş beceri nota");
+  const s3 = isIciKucult(K, 3);
+  const x1 = (s3.mesajlar[2]!.content as { content: string }[])[1]!.content;
+  assert.ok(x1.length < uzunMetin.length && x1.includes("kırpıldı"), "eski uzun sonuç kırpık");
+  assert.equal((s3.mesajlar[4]!.content as { content: string }[])[0]!.content, uzunMetin, "son iki kullanıcı iletisi kırpılmaz");
+  assert.deepEqual(s3.mesajlar[0], K[0], "soru iletisi (malzeme) aynen");
+  assert.ok(istemTahmini(s3.mesajlar) < t0);
+  assert.deepEqual(isIciKucult(K, 3), s3, "belirlenimli");
+  assert.equal(kucultmeSeviyesi(K, 0, 1_000), 0, "tavanın altında seviye 0");
+  assert.equal(kucultmeSeviyesi(K, 2, 1_000), 2, "mevcut seviye geri düşmez");
+  assert.equal(kucultmeSeviyesi(K, 0, TAVAN), KUCULTME_EN_COK, "aşıyorsa en çok 4");
+  assert.equal(kucultmeSeviyesi(K, 0, 1_000, TAVAN + 1), 1, "ölçülen istem aşıyorsa bir basamak");
+});
+
+/* 2026-11-01 V21 B (reisim: "müşteriye bırakmadan otomatik geçmiş silme koyalım"): kapanış nedenleri ve not */
+test("otomatik kapanış: 60 dakika · başka plan · konuşma büyüdü; iş sürerken / aynı planda / boş konuşmada yok; not dört satır", () => {
+  const simdi = new Date("2026-11-01T10:00:00+03:00"), P1 = "11111111-1111-4111-8111-111111111111", P2 = "22222222-2222-4222-8222-222222222222";
+  const not = (p: string) => `Kullanıcı şu sayfada: Planlar.\nAçık kayıt: Plan (kimlik ${p}) · no: P-1.`;
+  const konusma = (p: string) => [{ role: "user", content: [{ type: "text", text: "a" }] }, { role: "system", content: not(p) }, { role: "assistant", content: [{ type: "text", text: "bitti" }] }];
+  assert.equal(kapanisNedeni({ mesajlar: konusma(P1), sonZaman: new Date(simdi.getTime() - 61 * 60_000), simdi, yeniNot: not(P1) }), "60 dakika geçti");
+  assert.equal(kapanisNedeni({ mesajlar: konusma(P1), sonZaman: new Date(simdi.getTime() - 59 * 60_000), simdi, yeniNot: not(P1) }), null, "aynı plan, taze");
+  assert.equal(kapanisNedeni({ mesajlar: konusma(P1), sonZaman: simdi, simdi, yeniNot: not(P2) }), "başka plan");
+  assert.equal(kapanisNedeni({ mesajlar: konusma(P1), sonZaman: simdi, simdi, yeniNot: "Kullanıcı şu sayfada: Raporlar." }), null, "plan olmayan sayfa kapatmaz");
+  const buyuk = [...konusma(P1), { role: "user", content: [{ type: "text", text: "b" }] }, { role: "user", content: [{ type: "tool_result", tool_use_id: "q", content: "z".repeat(KAPANIS_BOYU * 4) }] }, { role: "assistant", content: [{ type: "text", text: "ok" }] }];
+  assert.equal(kapanisNedeni({ mesajlar: buyuk, sonZaman: simdi, simdi, yeniNot: not(P1) }), "konuşma büyüdü");
+  assert.equal(kapanisNedeni({ mesajlar: [], sonZaman: null, simdi, yeniNot: not(P1) }), null, "boş konuşma");
+  const n = kapanisNotu("başka plan", "01.11 10:00", "8 rapor hazır.\n\nVarsayımla: a\n'-': b\nKalan engel: c\nfazla satır");
+  assert.ok(n.startsWith("Önceki konuşma kapandı (başka plan; 01.11 10:00)."));
+  assert.ok(n.includes("Kalan engel: c") && !n.includes("fazla satır"), "en çok dört dolu satır");
+  assert.ok(n.includes("yeniden eklemesini iste"));
 });
 
 test("bu işte büyütülen fotoğraflar; önceki işinkiler sayılmaz; numara ve ret metni", () => {

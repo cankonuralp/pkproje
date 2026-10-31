@@ -39,6 +39,17 @@ test("2. fotoğraf bloğu metne inmezse bitmiş işin fotoğrafı kalır", async
   const ilk = m.konusmaSikistir(K).mesajlar[0]!.content as { type: string }[];
   assert.ok(ilk.some((b) => b.type === "image"));
 });
+/* 2026-11-01 V21 A1 + B */
+test("4. seviye seçimi tavana bakmazsa istem 100 bini aşar", async () => {
+  const m = await bozuk("while (s < KUCULTME_EN_COK && tahmin(s) > TAVAN) s++;", "");
+  assert.equal(m.kucultmeSeviyesi(K, 0, m.TAVAN), 0, "bozuk: tavan aşılırken seviye 0 kaldı");
+});
+test("5. 60 dakika kuralı kalkınca eski konuşma kapanmaz", async () => {
+  const m = await bozuk("return `${KAPANIS_DAKIKA} dakika geçti`;", "return null;");
+  const simdi = new Date("2026-11-01T10:00:00+03:00");
+  const konusma = [{ role: "user", content: [{ type: "text", text: "a" }] }, { role: "assistant", content: [{ type: "text", text: "bitti" }] }];
+  assert.equal(m.kapanisNedeni({ mesajlar: konusma, sonZaman: new Date(simdi.getTime() - 120 * 60_000), simdi, yeniNot: "x" }), null, "bozuk: iki saat geçmişken kapanmadı");
+});
 test("3. büyütülenler önceki işten de sayılınca yeni işte fotoğraf kilitlenir", async () => {
   const m = await bozuk("const s = new Set<number>(), b = Math.max(0, sonSoruIndeksi(mesajlar));", "const s = new Set<number>(), b = 0;");
   assert.ok(m.gosterilenFotolar(K).has(1));

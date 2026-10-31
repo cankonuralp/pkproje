@@ -21,11 +21,13 @@ import { firmaAdresi } from "../../../server/kiraci/istek.ts";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { anthropicAkis, type AkisYaniti } from "../../../server/yz/akis.ts";
 import { acikKayit, islemOzeti, okumaKomutu, sunucuKomutu, type IslemOrtami } from "../../../server/yz/islem.ts";
-import { bekleyenAl, bekleyenYaz, isAl, isBirak, konusmaEkle, konusmaKilidi, konusmaOku, konusmaSonu, type AracSonucu } from "../../../server/yz/konusma.ts";
+import { bekleyenAl, bekleyenYaz, isAl, isBirak, konusmaEkle, konusmaKilidi, konusmaOku, konusmaSonu, kucultmeOku, kucultmeYaz, type AracSonucu } from "../../../server/yz/konusma.ts";
+import { anthropicDosyaSil } from "../../../server/yz/akis.ts";
 import { fotoGosterAraci, fotoPaftaAraci } from "./gorsel.ts";
 import { beceriDizini, beceriMetni, becerileriOku } from "../beceriler.ts";
 import { bitisDenetimi, denetimNotu, sorunVar } from "../bitis-denetimi.ts";
-import { bildirimNotu, bildirimNotuGerekli, bildirimSatirlari, fotoNo, gosterilenFotolar, konusmaSikistir, ZATEN_BUYUTULDU } from "../is-siniri.ts";
+import { BAGLAM_DOLDU, bildirimNotu, bildirimNotuGerekli, bildirimSatirlari, fotoNo, gosterilenFotolar, isIciKucult, konusmaSikistir, KUCULTME_EN_COK, kucultmeSeviyesi,
+  ZATEN_BUYUTULDU } from "../is-siniri.ts";
 import { onOkumaBekle } from "./on-okuma.ts";
 import { acikSonuclar, konusmaDuzelt } from "../../../server/yz/konusma-denetim.ts";
 import type { SohbetIletisi } from "../../../server/yz/sohbet.ts";
@@ -54,6 +56,8 @@ export type SayOlayi =
 const BECERILER = becerileriOku();
 const SISTEM = saySistemi(SAY_KILAVUZU, ISLEM_DIZINI, beceriDizini(BECERILER));
 const ARACLAR = sayAraclari(FORMAT_ARACI);
+/** talimat + araçların token kestirimi (sert tavan için; is-siniri.ts istemTahmini ile aynı oran) */
+const SISTEM_TOKEN = Math.ceil((SISTEM.length + JSON.stringify(ARACLAR).length) / 3.5);
 /** bir isteğin işi (kişinin S.A.Y işi bu süre içinde yenilenir) ve yeni çağrıya başlamak için gereken en az süre */
 const IS_SURESI = 360, DEVAM_MS = 60_000;
 const BASKA_PENCERE = "S.A.Y başka bir pencerenizde bir işi sürdürüyor; o bitince yeniden deneyin.";
@@ -166,12 +170,19 @@ export async function sayAkisi(o: IstekOturumu, ham: unknown, yaz: (x: SayOlayi)
   if (!(await oturumIslemi(o, (db) => isAl(db, v.is, IS_SURESI)))) { yaz({ t: "hata", neden: BASKA_PENCERE, yenile: false }); return; }
   /* duraklat: hizmet uzun süren internet aramasında cevabı böldü (pause_turn) — aynı cevap sürdürülür, konuşmanın sonu S.A.Y'ın iletisi olsa da */
   let yenile = false, ilk = v.tur === "soru", duraklat = false;
+  /* V21 A1: son isteğin ölçülen istemi + çıkışı (bir sonraki istemin tabanı; "devam"da sıfırdan kestirilir) */
+  let sonIstem = 0;
   try {
     if (v.tur === "soru") {
       /* 2026-10-31 (L4): yeni fotoğrafların ön okuması bitsin (en çok 25 sn) — malzeme özeti sınıf sayısı ve çiftlerle gitsin */
       if (v.ekler.length) await onOkumaBekle(o, v.ekler);
       const s = await oturumIslemi(o, (db) => soruyuEkle(db, o, { metin: v.soru, ekler: v.ekler, ekran, okuyucu: acikKayitOkuyucu(o), sablon: v.sablon }));
       if (s.durum === "red") { yaz({ t: "hata", neden: s.neden, yenile }); return; }
+      /* 2026-11-01 (V21 B): konuşma kendiliğinden kapandıysa eski eklerin hizmetteki dosyaları silinir; ekran geçmişi yeniden yükler */
+      if (s.kapanis) {
+        if (s.kapanis.anahtar) for (const dosya of s.kapanis.dosyalar) await anthropicDosyaSil(dosya, s.kapanis.anahtar).catch((e: unknown) => hataYaz(o, e, "say.kapanis"));
+        yenile = true;
+      }
       yaz({ t: "ileti", ileti: s.ileti });
     } else if (v.tur === "sonuc") {
       const r = await oturumIslemi(o, (db) => sonuclariEkle(db, o, v.sonuclar));
@@ -194,7 +205,13 @@ export async function sayAkisi(o: IstekOturumu, ham: unknown, yaz: (x: SayOlayi)
         if (d.duzeltmeler.length) hataYaz(o, new Error(`S.A.Y konuşması onarıldı: ${d.duzeltmeler.join(", ")}`), "say.konusma");
         /* 2026-10-31 (V21 madde 1): bitmiş işlerin iletileri isteğe KÜÇÜLTÜLMÜŞ gider (fotoğraf blokları ve büyütmeler metne, uzun sonuçlar kırpık, eski
            düşünme yok) — kayıt değişmez; bu işin iletileri aynen (is-siniri.ts) */
-        const mesajlar: Record<string, unknown>[] = konusmaSikistir(d.mesajlar).mesajlar.map((m) => ({ role: m.role, content: m.content }));
+        const sikisik = konusmaSikistir(d.mesajlar).mesajlar;
+        /* 2026-11-01 (V21 A1): SERT TAVAN — istem TAVAN'ı aşacaksa iş içi küçültme seviyesi artar (yalnız ileri; is-siniri.ts); 4. seviyede "bağlam doldu" notu */
+        const mevcut = await kucultmeOku(db);
+        const seviye = kucultmeSeviyesi(sikisik, mevcut, SISTEM_TOKEN, sonIstem);
+        if (seviye > mevcut) { await kucultmeYaz(db, seviye); hataYaz(o, new Error(`S.A.Y bağlam küçültme ${mevcut} → ${seviye} (ölçülen ${sonIstem})`), "say.kucultme"); }
+        const mesajlar: Record<string, unknown>[] = isIciKucult(sikisik, seviye).mesajlar.map((m) => ({ role: m.role, content: m.content }));
+        if (seviye >= KUCULTME_EN_COK) mesajlar.push({ role: "system", content: BAGLAM_DOLDU });
         const a = await cagriAyir(db, k.model, k.sinir, JSON.stringify(mesajlar).length / 2 + SISTEM.length / 2);
         if (!a) return { durum: "red" as const, neden: SINIR_DOLDU };
         return { durum: "hazir" as const, k, mesajlar, a, b: await sayBaglami(db, o, ekran, acikKayitOkuyucu(o)) };
@@ -214,6 +231,7 @@ export async function sayAkisi(o: IstekOturumu, ham: unknown, yaz: (x: SayOlayi)
       }
       const m = y.mesaj;
       const c = sayMaliyeti(h.k.model, m.usage);
+      sonIstem = c.giris + c.cikis;
       /* 2026-10-31 (L8): isteğin ölçümü (yazma / işlem sayısı araçlar çalışınca) */
       const olc = (yazma: number, islem: number) => oturumIslemi(o, (db) => istekOlcumuYaz(db, { is: v.is, ...tokenler(m.usage), maliyet: c.maliyet,
         sureMs: Date.now() - basla, yazma, islem, sablon: isSablonu(h.mesajlar as { role: string; content: unknown }[]), derinlik: isDerinligi(h.mesajlar as { role: string; content: unknown }[]) }))
@@ -322,7 +340,10 @@ async function araclariYap(o: IstekOturumu, icerik: readonly Record<string, unkn
   const gosterilen = gosterilenFotolar(onceki as { role: string; content: unknown }[]);
   let ekranda = false, yenile = false, yazma = 0, islem = 0;
   for (const c of komutlar) {
-    const k = aracCagrisi({ type: "tool_use", id: c.id, name: c.name, input: c.input });
+    /* 2026-11-01 (V21 O9): katalogdaki işlem adıyla doğrudan araç gibi çağrılırsa (plan_hazirlik, plan_getir …) sunucu islem olarak çalıştırır — "girdisi
+       okunamadı" diye boşa istek yok */
+    const k = aracCagrisi({ type: "tool_use", id: c.id, name: c.name, input: c.input })
+      ?? (ISLEM_KATALOGU.some((t) => t.ad === c.name) ? { tur: "islem" as const, ad: c.name, girdi: (c.input && typeof c.input === "object" ? c.input : {}) as Record<string, unknown>, id: c.id } : null);
     if (EKRAN_ARAC_ADLARI.has(c.name)) { ekranda = true; ekran.push({ id: c.id, ad: c.name, komut: k }); continue; }
     if (ekranda) { sonuclar[c.id] = sonucIcerigi(islemOzeti(k?.tur === "islem" ? k.ad || "islem" : c.name, null, { tamam: false, neden: SIRA_BEKLER })); continue; }
     if (c.name === "ekran_durumu") { sonuclar[c.id] = ekranDurumuMetni(b); continue; }

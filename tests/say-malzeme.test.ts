@@ -78,7 +78,8 @@ test("kaynak kilidi: ek kopyası depoda, yalnız ekleyen açar, temizlenince ç�
   assert.ok(/dosyaYukle\(db, depo\(\), \{ firmaId: o\.kiraci\.firmaId, modul: DOSYA_SAY_EK, kayitId: ek,/.test(y), "kopya depoya, firma oturumdan");
   assert.ok(y.includes("cekim: e.cekim"), "çekim saati kayda");
   assert.ok(er.includes("[DOSYA_SAY_EK]: (db, _kisi, kayitId) => sayEkGorulur(db, kayitId)"), "erişim kaydında");
-  assert.ok(/for \(const d of await ekKopyalari\(db\)\) await dosyaCope\(/.test(s), "temizlenince çöpe");
+  /* 2026-11-01 V21 B: otomatik kapanışta yeni sorunun ekleri korunur (koru) */
+  assert.ok(/for \(const d of await ekKopyalari\(db, koru\)\) await dosyaCope\(/.test(s), "temizlenince çöpe");
   assert.ok(k.includes("row_number() OVER (ORDER BY sira)"), "numara kalıcı sıradan");
   const g = readFileSync("src/server/db/gocler/0109_say_malzeme.sql", "utf8");
   assert.ok(g.includes("ADD COLUMN IF NOT EXISTS cekim") && g.includes("IF NOT EXISTS (SELECT 1 FROM information_schema.columns") && g.includes("CREATE INDEX IF NOT EXISTS"), "göç idempotent");

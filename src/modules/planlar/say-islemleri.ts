@@ -200,9 +200,11 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
       const p = await planIci(b.db, b.kim, v.plan);
       if (!p) return { tamam: false, neden: GORUNMEZ };
       const raporlu = new Set(p.raporluEkipman);
+      /* 2026-11-01 (V21 O11): formatın özeti yalnız raporu yazılacak türlere (planda raporsuz ekipmanı olan); ötekilerde tur_getir — plan özeti 31 KB'tan küçülür */
+      const yazilacak = new Set(p.ekipman.filter((e) => !raporlu.has(e.id) && !e.pasif).map((e) => e.turId));
       const turler = [];
       for (const t of p.turler) {
-        const k = await turKarti(b.db, b.kim, t.id), f = await yayindakiFormat(b.db, t.id);
+        const k = await turKarti(b.db, b.kim, t.id), f = yazilacak.has(t.id) ? await yayindakiFormat(b.db, t.id) : null;
         turler.push({ id: t.id, ad: t.ad, sure_dk: k?.sure ?? null, periyot_ay: k?.periyot ?? null, format: f ? formOzeti(f.tanim) : null });
       }
       const ekipman = p.ekipman.map((e) => ({ id: e.id, kod: e.kod, tur: e.tur, turId: e.turId, konum: e.konum, pasif: e.pasif, rapor_var: raporlu.has(e.id) }));

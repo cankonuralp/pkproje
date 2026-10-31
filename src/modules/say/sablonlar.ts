@@ -156,11 +156,20 @@ export function kisaIsMi(mesajlar: readonly { role: string; content: unknown }[]
   const metin = typeof c === "string" ? c : bloklar.filter((b) => b.type === "text").map((b) => String(b.text ?? "")).join("\n");
   return metin.trim().length <= KISA_SORU;
 }
-/** işin derinliği — iş başında (son sorudan) seçilir, iş boyunca değişmez: şablon orta derinlikteyse ya da kısa işse orta; ötekiler yüksek */
+/** 2026-11-01 (V21 O15 — deneme; reisim onayı): çok fotoğraflı iş (son soruda en az COK_FOTOGRAF görüntü) orta derinlikte — tur içi düşünme ilk koşuda 18 bin
+    token; kalite düşerse geri alınır */
+export const COK_FOTOGRAF = 3;
+export function cokFotografliMi(mesajlar: readonly { role: string; content: unknown }[]): boolean {
+  const i = sonSoruIndeksi(mesajlar);
+  if (i < 0) return false;
+  const c = mesajlar[i]!.content;
+  return Array.isArray(c) && c.filter((b) => b && typeof b === "object" && (b as { type?: unknown }).type === "image").length >= COK_FOTOGRAF;
+}
+/** işin derinliği — iş başında (son sorudan) seçilir, iş boyunca değişmez: şablon orta derinlikteyse, kısa işse ya da çok fotoğraflıysa orta; ötekiler yüksek */
 export function isDerinligi(mesajlar: readonly { role: string; content: unknown }[]): "high" | "medium" {
   const s = isSablonu(mesajlar);
   if (s) return ORTA_DERINLIK.has(s) ? "medium" : "high";
-  return kisaIsMi(mesajlar) ? "medium" : "high";
+  return kisaIsMi(mesajlar) || cokFotografliMi(mesajlar) ? "medium" : "high";
 }
 export function sablonNotu(s: Sablon, g: Readonly<Record<string, string | boolean>>): string {
   const girdi = Object.fromEntries(s.girdiler.filter((x) => x.tur !== "ek" && x.ad !== "onceSun").map((x) => [x.ad, g[x.ad] ?? ""]));

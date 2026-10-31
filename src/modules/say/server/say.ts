@@ -15,9 +15,10 @@ import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { ROL_ADI } from "../../../server/yetki/tanim.ts";
 import { sinirli, yzAyi, yzAyir, yzAyirmaBirak, yzKendiAyi, yzMesajSay, yzSohbetKapat } from "../../../server/yz/kullanim.ts";
 import { maliyetHesapla, type YzModel } from "../../../server/yz/okuma.ts";
-import { aracCagrilari, SAY_YANIT_SINIRI } from "../../../server/yz/say.ts";
+import { aracCagrilari, cevapMetni, SAY_YANIT_SINIRI } from "../../../server/yz/say.ts";
 import { dosyaCope } from "../../../server/dosya/dosya.ts";
-import { ekKopyalari, ekleriAl, konusmaEkle, konusmaKilidi, konusmaSonu, konusmaTemizle, kuyrukNotlariniSil, bekleyenAl } from "../../../server/yz/konusma.ts";
+import { ekKopyalari, ekleriAl, konusmaEkle, konusmaKilidi, konusmaOku, konusmaSonu, konusmaSonZamani, konusmaTemizle, kuyrukNotlariniSil, bekleyenAl } from "../../../server/yz/konusma.ts";
+import { kapanisNedeni, kapanisNotu } from "../is-siniri.ts";
 import { sohbetGecmisi, sohbetOneriDurumu, sohbetTemizle, sohbetYaz, type SohbetEki, type SohbetIletisi } from "../../../server/yz/sohbet.ts";
 import { raporSayBilgisi, raporSayDurumu } from "../../raporlar/server/say-baglanti.ts";
 import { acikRaporMetni, raporHaritasi, yoldakiRapor } from "../rapor-haritasi.ts";
@@ -158,21 +159,39 @@ export async function kullaniciIletisiEkle(db: Sorgulayici, bloklar: readonly Re
 /** soru: kapı, ekler (kişinin kendileri), görünen geçmişe, konuşmaya (ekler + yazı) ve sayfa notu. Dönen: görünen ileti ve bağlam */
 export async function soruyuEkle(db: Sorgulayici, kim: Kisi, g: { metin: string; ekler: readonly string[]; ekran: SayEkrani; okuyucu?: AcikKayitOkuyucu;
   sablon?: { id: string; girdiler: Record<string, string | boolean> } | null }, simdi = new Date()):
-  Promise<{ durum: "red"; neden: string } | { durum: "hazir"; ileti: SohbetIletisi; baglam: SayBaglami }> {
+  Promise<{ durum: "red"; neden: string } | { durum: "hazir"; ileti: SohbetIletisi; baglam: SayBaglami; kapanis: { dosyalar: string[]; anahtar: string | null } | null }> {
   const metin = g.metin.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "").trim();
-  const ekler = await ekleriAl(db, g.ekler);
-  if (!metin && !ekler.length) return { durum: "red", neden: "Sorunuzu yazın." };
+  if (!metin && !g.ekler.length) return { durum: "red", neden: "Sorunuzu yazın." };
   const k = await sayKapisi(db);
   if (k.durum === "red") return k;
   const b = await sayBaglami(db, kim, g.ekran, g.okuyucu);
+  /* 2026-11-01 (V21 B): otomatik kapanış — eklerin numarası kapanıştan SONRA (yeni konuşmada M01'den) */
+  const kapanis = await otomatikKapanis(db, kim, sayfaNotu(b, simdi), simdi, g.ekler);
+  const ekler = await ekleriAl(db, g.ekler);
+  if (!metin && !ekler.length) return { durum: "red", neden: "Sorunuzu yazın." };
   const soru = metin || (ekler.length === 1 ? "Eki inceler misin?" : "Ekleri inceler misin?");
   const ek: SohbetEki | null = ekler.length || b.raporId ? { ...(b.raporId ? { rapor: b.raporId } : {}), ...(ekler.length ? { ekler: ekler.map((e) => ({ ad: e.ad, boyut: e.boyut, tur: e.tur })) } : {}) } : null;
   const ileti = await gorunenYaz(db, { kim: "ben", metin: soru, yer: b.yer, ek }, simdi);
-  await kullaniciIletisiEkle(db, ekBloklari(ekler, soru));
+  await kullaniciIletisiEkle(db, [...(kapanis ? [{ type: "text", text: kapanis.not }] : []), ...ekBloklari(ekler, soru)]);
   /* 2026-10-31 (kalem 8): hazır öneriden geldiyse şablon notu (kişinin rolüne açık şablon; talimat değişmez) */
   const s = g.sablon ? SABLONLAR.find((x) => x.id === g.sablon!.id && (!x.roller || x.roller.some((r) => (kim.roller as readonly string[]).includes(r)))) : undefined;
   await konusmaEkle(db, "system", [sayfaNotu(b, simdi), ...(s ? [sablonNotu(s, g.sablon!.girdiler)] : [])].join("\n"));
-  return { durum: "hazir", ileti, baglam: b };
+  return { durum: "hazir", ileti, baglam: b, kapanis: kapanis ? { dosyalar: kapanis.dosyalar, anahtar: kapanis.anahtar } : null };
+}
+/** 2026-11-01 (V21 B — reisim: "müşteriye bırakmadan otomatik geçmiş silme koyalım"): iş bitmişken (konuşmanın sonu açık araç çağrısı olmayan S.A.Y cevabı)
+    yeni soru gelince kapanış nedeni varsa (is-siniri.ts kapanisNedeni: 60 dk sessizlik · başka plan · konuşma büyüdü) konuşma temizlenir (Ar-Ge kaydı, ekler
+    çöpe — yeni sorunun ekleri korunur), önceki işin son bildirimi yeni konuşmanın ilk iletisine not olur. Dönen: not + hizmette silinecek dosyalar */
+async function otomatikKapanis(db: Sorgulayici, kim: Kisi, yeniNot: string, simdi: Date, koru: readonly string[]):
+  Promise<{ not: string; dosyalar: string[]; anahtar: string | null } | null> {
+  const son = await konusmaSonu(db);
+  if (!son || son.rol !== "assistant" || aracCagrilari(Array.isArray(son.icerik) ? son.icerik as Record<string, unknown>[] : []).length) return null;
+  const mesajlar = (await konusmaOku(db)).map((m) => ({ role: m.rol, content: m.icerik }));
+  const neden = kapanisNedeni({ mesajlar, sonZaman: await konusmaSonZamani(db), simdi, yeniNot });
+  if (!neden) return null;
+  const bildirim = cevapMetni(Array.isArray(son.icerik) ? son.icerik as Record<string, unknown>[] : []) ?? "";
+  const saat = new Intl.DateTimeFormat("tr-TR", { timeZone: "Europe/Istanbul", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).format(simdi);
+  const t = await sayTemizle(db, kim.ad, koru);
+  return { not: kapanisNotu(neden, saat, bildirim), dosyalar: t.dosyalar, anahtar: t.anahtar };
 }
 
 /** görünen geçmişe yazar; dönen ileti (ekran hemen çizer) */
@@ -284,11 +303,11 @@ export async function sayOneri(db: Sorgulayici, id: string, durum: "uygulandi" |
 
 /** "Sohbeti temizle": görünen geçmiş + konuşma + ekler (yalnız kişinin kendisi); dönen: silinen ileti sayısı, hizmetten silinecek ek dosyaları ve
     anahtar (silme işlem dışında) */
-export async function sayTemizle(db: Sorgulayici, kim = "S.A.Y"): Promise<{ silinen: number; dosyalar: string[]; anahtar: string | null }> {
+export async function sayTemizle(db: Sorgulayici, kim = "S.A.Y", koru: readonly string[] = []): Promise<{ silinen: number; dosyalar: string[]; anahtar: string | null }> {
   const silinen = await sohbetTemizle(db);
-  /* ekin depodaki kopyası çöpe (çöp süresi dolunca depodan silinir) */
-  for (const d of await ekKopyalari(db)) await dosyaCope(db, d, { kim, ne: "say.ek_temizle" });
-  const dosyalar = await konusmaTemizle(db);
+  /* ekin depodaki kopyası çöpe (çöp süresi dolunca depodan silinir); koru: yeni sorunun ekleri (otomatik kapanış) */
+  for (const d of await ekKopyalari(db, koru)) await dosyaCope(db, d, { kim, ne: "say.ek_temizle" });
+  const dosyalar = await konusmaTemizle(db, koru);
   const anahtar = dosyalar.length ? await sirKullan(db, "yapay_zeka_anahtari") : null;
   return { silinen, dosyalar, anahtar };
 }

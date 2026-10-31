@@ -26,11 +26,12 @@ export async function kuyrukNotlariniSil(db: Sorgulayici): Promise<number> {
        AND sira > coalesce((SELECT max(sira) FROM yz_konusma WHERE rol = 'assistant'), 0)`)).rowCount ?? 0;
 }
 
-/** "Sohbeti temizle": kişinin konuşması, ekleri, yarım yüklemeleri ve işi; dönen: hizmetteki ek dosyalarının kimlikleri (çağıran siler) */
-export async function konusmaTemizle(db: Sorgulayici): Promise<string[]> {
+/** "Sohbeti temizle" ve otomatik kapanış: kişinin konuşması, ekleri (koru: yeni sorunun ekleri kalır — 2026-11-01 V21 B), yarım yüklemeleri ve işi;
+    dönen: hizmetteki ek dosyalarının kimlikleri (çağıran siler) */
+export async function konusmaTemizle(db: Sorgulayici, koru: readonly string[] = []): Promise<string[]> {
   /* 2026-10-31 (L8 — göç 0112): silmeden önce konuşmanın metni Ar-Ge kaydına (30 gün; ekler ve düşünce yok; yalnız Yönetim okur) */
   await argeKaydiYaz(db, (await konusmaOku(db)).map((m) => ({ rol: m.rol, icerik: m.icerik })));
-  const dosyalar = (await db.sorgu<{ dosya: string }>("DELETE FROM yz_ek RETURNING dosya")).rows.map((r) => r.dosya);
+  const dosyalar = (await db.sorgu<{ dosya: string }>("DELETE FROM yz_ek WHERE NOT (id::text = ANY($1::text[])) RETURNING dosya", [koru])).rows.map((r) => r.dosya);
   await db.sorgu("DELETE FROM yz_konusma");
   await db.sorgu("DELETE FROM yz_ek_parca");
   await db.sorgu("DELETE FROM yz_konusma_is");
@@ -72,9 +73,21 @@ export async function ekKopyasiOku(db: Sorgulayici, depo: { oku(anahtar: string,
   return r?.anahtar ? { ad: r.ad, tur: r.tur, bayt: await depo.oku(r.anahtar, db) } : null;
 }
 /** kişinin eklerinin kopyaları (temizlenince çöpe) */
-export async function ekKopyalari(db: Sorgulayici): Promise<string[]> {
+export async function ekKopyalari(db: Sorgulayici, koru: readonly string[] = []): Promise<string[]> {
   return (await db.sorgu<{ id: string }>(
-    "SELECT d.id::text FROM dosya d JOIN yz_ek e ON e.id = d.kayit_id WHERE d.modul = $1 AND d.cop IS NULL", [DOSYA_SAY_EK])).rows.map((r) => r.id);
+    "SELECT d.id::text FROM dosya d JOIN yz_ek e ON e.id = d.kayit_id WHERE d.modul = $1 AND d.cop IS NULL AND NOT (e.id::text = ANY($2::text[]))", [DOSYA_SAY_EK, koru])).rows.map((r) => r.id);
+}
+/** konuşmadaki son iletinin zamanı (otomatik kapanış — 60 dakika kuralı); konuşma boşsa null */
+export async function konusmaSonZamani(db: Sorgulayici): Promise<Date | null> {
+  const r = (await db.sorgu<{ z: Date | null }>("SELECT max(zaman) AS z FROM yz_konusma")).rows[0];
+  return r?.z ? new Date(r.z) : null;
+}
+/* 2026-11-01 (V21 A1 — göç 0113): işin iş içi küçültme seviyesi, yalnız ileri */
+export async function kucultmeOku(db: Sorgulayici): Promise<number> {
+  return Number((await db.sorgu<{ k: number }>("SELECT kucultme AS k FROM yz_konusma_is")).rows[0]?.k ?? 0);
+}
+export async function kucultmeYaz(db: Sorgulayici, seviye: number): Promise<void> {
+  await db.sorgu("UPDATE yz_konusma_is SET kucultme = GREATEST(kucultme, $1)", [Math.max(0, Math.min(4, Math.round(seviye)))]);
 }
 export type EkTuru = "foto" | "pdf" | "word" | "metin" | "tablo";
 export interface KonusmaEki { id: string; dosya: string; ad: string; tur: EkTuru; mime: string; boyut: number; cekim?: string | null }
