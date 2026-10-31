@@ -24,6 +24,7 @@ import { acikKayit, islemOzeti, sunucuKomutu, type IslemOrtami } from "../../../
 import { bekleyenAl, bekleyenYaz, isAl, isBirak, konusmaEkle, konusmaKilidi, konusmaOku, konusmaSonu, type AracSonucu } from "../../../server/yz/konusma.ts";
 import { fotoGosterAraci, fotoPaftaAraci } from "./gorsel.ts";
 import { beceriDizini, beceriMetni, becerileriOku } from "../beceriler.ts";
+import { bitisDenetimi, denetimNotu, sorunVar } from "../bitis-denetimi.ts";
 import { acikSonuclar, konusmaDuzelt } from "../../../server/yz/konusma-denetim.ts";
 import type { SohbetIletisi } from "../../../server/yz/sohbet.ts";
 import { aracCagrilari, aracCagrisi, betaReddi, cevapMetni, EKRAN_ARAC_ADLARI, GORSEL_ARAC_ADLARI, sayAraclari, sayIstegi, sayMaliyeti, saySistemi, sonucIcerigi, sunucuKomutuMu,
@@ -219,8 +220,10 @@ export async function sayAkisi(o: IstekOturumu, ham: unknown, yaz: (x: SayOlayi)
       duraklat = m.stop_reason === "pause_turn";
       if (duraklat) continue;
       if (m.stop_reason !== "tool_use") {
-        if (m.stop_reason === "refusal" && !ileti) yaz({ t: "hata", neden: "Yapay zekâ bu isteğe cevap vermedi.", yenile });
-        else yaz({ t: "bitti", yenile });
+        if (m.stop_reason === "refusal" && !ileti) { yaz({ t: "hata", neden: "Yapay zekâ bu isteğe cevap vermedi.", yenile }); return; }
+        /* 2026-10-31 (L3): rapora yazan iş bittiyse ve denetlenmediyse sunucu denetler, sonucu konuşmaya ekler, S.A.Y sürer (bir işte en çok iki kez) */
+        if (m.stop_reason === "end_turn" && await bitirmedenDenetle(o, h.b, v.kaydedilmemis, yaz)) continue;
+        yaz({ t: "bitti", yenile });
         return;
       }
       const r = await araclariYap(o, m.content, h.b, v.kaydedilmemis, yaz);
@@ -241,6 +244,23 @@ export async function sayAkisi(o: IstekOturumu, ham: unknown, yaz: (x: SayOlayi)
   } finally {
     try { await oturumIslemi(o, (db) => isBirak(db, v.is)); } catch { /* süresi dolunca kendiliğinden bırakılır */ }
   }
+}
+
+/** bitirmeden denetim (bitis-denetimi.ts): gerekiyorsa plan_denetle kişinin yetkisiyle çalışır, sonucu konuşmaya kullanıcı tarafında not olarak girer */
+async function bitirmedenDenetle(o: IstekOturumu, b: SayBaglami, kaydedilmemis: boolean, yaz: (x: SayOlayi) => void): Promise<boolean> {
+  const d = await oturumIslemi(o, async (db) => bitisDenetimi((await konusmaOku(db)).map((m) => ({ role: m.rol, content: m.icerik }))));
+  if (!d) return false;
+  yaz({ t: "asama", ad: "Denetliyor" });
+  const ozet = await sunucuKomutu(ISLEM_KATALOGU, islemOrtami(o, { ekrandakiRapor: b.raporId, kaydedilmemis }),
+    { tur: "islem", ad: "plan_denetle", girdi: { ...(d.plan ? { plan: d.plan } : {}), ...(d.raporlar.length ? { raporlar: d.raporlar } : {}) } }, modulAdi);
+  /* sorun yoksa S.A.Y'ın yazdığı bildirim kalır (ikinci kez yazdırılmaz) */
+  if (!sorunVar(ozet.sonuc)) return false;
+  return oturumIslemi(o, async (db) => {
+    await konusmaKilidi(db);
+    if ((await konusmaSonu(db))?.rol !== "assistant") return false;
+    await konusmaEkle(db, "user", [{ type: "text", text: denetimNotu(ozet.sonuc ?? "denetim sonucu alınamadı") }]);
+    return true;
+  });
 }
 
 /** 2026-10-31 (kalem 3 — E3): görüntü araçları — kişinin kendi eklerinin depodaki kopyasından, kendi kiracı işleminde; düşerse nedeni S.A.Y'a */
