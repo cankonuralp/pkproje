@@ -5,9 +5,9 @@
    (SozlesmeGirdisi, IsgGirdisi). İmzalı sözleşme PDF'i ve İSG-KATİP belgesi dosya ister — ekrandan yüklenir. */
 import { kimlik, surum, z } from "../../sema/ortak.ts";
 import { SuzgecDurumuSemasi } from "../../server/liste/liste.ts";
-import { GORUNMEZ, islem, sayfaBilgisi, yazmaCevabi, type Islem, type SayfaTanimi } from "../../server/yz/islem.ts";
+import { EK_NO, ekBelgesi, GORUNMEZ, islem, sayfaBilgisi, yazmaCevabi, type Islem, type SayfaTanimi } from "../../server/yz/islem.ts";
 import { IsgGirdisi, SozlesmeGirdisi } from "./sema.ts";
-import { isgKaldir, isgKaydet, sozlesmeHazirla, sozlesmeKarti, sozlesmeSayfasi, sozlesmeSecenekleri, sozlesmeSil } from "./server/sozlesmeler.ts";
+import { imzaliYukle, isgKaldir, isgKaydet, sozlesmeHazirla, sozlesmeKarti, sozlesmeSayfasi, sozlesmeSecenekleri, sozlesmeSil } from "./server/sozlesmeler.ts";
 
 const MODUL = 12;
 
@@ -64,6 +64,17 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
     ad: "sozlesme_sil", modul: MODUL, tur: "yaz", girdi: z.object({ sozlesme: kimlik }), kaynak: [kimlik], islev: sozlesmeSil,
     tarif: "İmza bekleyen, faturasız sözleşmeyi kesin siler (yönetici); imzalı ya da faturalıysa nedeni döner.",
     calistir: async (b, v) => yazmaCevabi(await sozlesmeSil(b.db, b.kim, v.sozlesme), { bildirim: "Sözleşme silindi." }),
+  }),
+  /* 2026-10-31 (kalem 9 — M1 + M2; beceri B11): konuşmadaki ekin (M / F numarası) depodaki kopyası kaydın belge yuvasına — ekranın yükleme işleviyle */
+  islem({
+    ad: "sozlesme_imzali_yukle", modul: MODUL, tur: "yaz", islev: imzaliYukle, kaynak: [kimlik, surum],
+    girdi: z.object({ sozlesme: kimlik, surum, ek: EK_NO }),
+    tarif: "Konuşmadaki imzalı sözleşme PDF'ini (ek: M03) sözleşmeye ekler: sozlesme (sozlesme_ara), surum.",
+    calistir: async (b, v) => {
+      const belge = await ekBelgesi(b, v.ek, ["pdf"]);
+      if (typeof belge === "string") return { tamam: false, neden: belge };
+      return yazmaCevabi(await imzaliYukle(b.db, b.depo(), b.kim, b.firmaId, v.sozlesme, v.surum, belge), { bildirim: `${belge.ad} sözleşmeye eklendi.` });
+    },
   }),
 ];
 

@@ -5,8 +5,9 @@
    şimdiki değeriyle gider (form da kartın değeriyle açılır). Belge yükleme (özlük, bordro, zimmet formu) dosya ister — S.A.Y'da yok (pkproje §9). */
 import { kimlik, surum, tarih, z } from "../../sema/ortak.ts";
 import { SuzgecDurumuSemasi } from "../../server/liste/liste.ts";
-import { GORUNMEZ, islem, sayfala, trIcerir, yazmaCevabi, type Islem, type SayfaTanimi } from "../../server/yz/islem.ts";
+import { EK_NO, ekBelgesi, GORUNMEZ, islem, sayfala, trIcerir, yazmaCevabi, type Islem, type SayfaTanimi } from "../../server/yz/islem.ts";
 import { PersonelGirdisi } from "./sema.ts";
+import { atamaEkle, bordroOnayaGonder, bordroYukle, ozlukEkle, zimmetFormuYukle } from "./server/dosyalar.ts";
 import { personelAyrildi, personelEkle, personelGeriAl, personelGuncelle, personelKarti, personelListesi, personelSil } from "./server/personel.ts";
 
 const MODUL = 2;
@@ -70,6 +71,28 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
       const r = await personelSil(b.db, b.kim, v.personel);
       return yazmaCevabi(r, { bildirim: r.durum === "tamam" ? `${r.ad} silindi.` : undefined });
     },
+  }),
+  /* 2026-10-31 (kalem 9 — M1 + M2; beceri B11): konuşmadaki ekin (M / F numarası) depodaki kopyası kaydın belge yuvasına — ekranın yükleme işleviyle */
+  islem({
+    ad: "personel_belge_ekle", modul: MODUL, tur: "yaz", islev: ozlukEkle, kaynak: [kimlik],
+    girdi: z.object({ personel: kimlik, ne: z.enum(["ozluk", "atama", "bordro", "zimmet"]), alanlar: z.record(z.string(), z.string()).default({}), ek: EK_NO }),
+    tarif: "Konuşmadaki belgeyi (ek: M03 / F02) personelin dosyasına ekler: ne ozluk (alanlar { tur, aciklama }) | atama (alanlar { tur, tarih }) | bordro "
+      + "(alanlar { ay YYYY-AA, brut, net, maliyet }) | zimmet (imzalı zimmet formu). Özlük ve bordroyu yalnız Personel'de yazan görür.",
+    calistir: async (b, v) => {
+      const belge = await ekBelgesi(b, v.ek, ["pdf","foto"]);
+      if (typeof belge === "string") return { tamam: false, neden: belge };
+      const r = v.ne === "ozluk" ? await ozlukEkle(b.db, b.depo(), b.kim, b.firmaId, v.personel, v.alanlar, belge)
+        : v.ne === "atama" ? await atamaEkle(b.db, b.depo(), b.kim, b.firmaId, v.personel, v.alanlar, belge)
+        : v.ne === "bordro" ? await bordroYukle(b.db, b.depo(), b.kim, b.firmaId, v.personel, v.alanlar, belge)
+        : await zimmetFormuYukle(b.db, b.depo(), b.kim, b.firmaId, v.personel, belge);
+      return yazmaCevabi(r, { bildirim: `${belge.ad} personelin dosyasına eklendi.` });
+    },
+  }),
+  /* 2026-10-31 (kalem 10 — M3): dışarıya giden iş — bordroyu kişinin imzasına (Onaylar › Diğer belgeler); onay kapısından (IKINCI_ONAY) */
+  islem({
+    ad: "bordro_onaya_gonder", modul: MODUL, tur: "yaz", islev: bordroOnayaGonder, kaynak: [kimlik], girdi: z.object({ bordro: kimlik }),
+    tarif: "Personelin bordrosunu kişinin imzasına gönderir (Onaylar › Diğer belgeler): bordro (personel_getir bordro kimliği). Kullanıcının ekrandaki onayıyla.",
+    calistir: async (b, v) => yazmaCevabi(await bordroOnayaGonder(b.db, b.depo(), b.kim, b.firmaId, v.bordro), { bildirim: "Bordro imzaya gönderildi." }),
   }),
 ];
 

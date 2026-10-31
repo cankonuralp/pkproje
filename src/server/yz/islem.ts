@@ -22,7 +22,7 @@ import type { Sorgulayici } from "../db/kiraci.ts";
 import type { Depo } from "../dosya/depo.ts";
 import type { YetkiHesabi } from "../yetki/canDo.ts";
 import type { IsOzeti, SayKomutu } from "./say.ts";
-import { onayGecerli, onayKullan } from "./konusma.ts";
+import { ekKopyasiOku, onayGecerli, onayKullan } from "./konusma.ts";
 
 /** işlemi yapan kişi — oturumdaki hesap (rolleri ve firma matrisi veritabanından) */
 export interface IslemKisisi extends YetkiHesabi { ad: string }
@@ -296,6 +296,17 @@ export async function acikKayit(katalog: readonly Islem[], sayfalar: readonly Sa
   }
   return null;
 }
+
+/** 2026-10-31 (kalem 9 — M1 + M2): konuşmadaki ekin (M / F numarası) firmanın deposundaki kopyası, kaydın belge yuvasına konmak üzere — ekranın yükleme
+    işlevi aynen çağrılır (tür, boy, yetki, sürüm denetimi orada). turler: yuvanın kabul ettiği ek türleri. Dönen: belge ya da nedeni */
+export async function ekBelgesi(b: IslemBaglami, ek: string, turler: readonly ("foto" | "pdf")[]): Promise<{ ad: string; bayt: Uint8Array } | string> {
+  const k = await ekKopyasiOku(b.db, b.depo(), ek);
+  if (!k) return `${ek}: konuşmada böyle bir ek yok ya da kopyası yok (yalnız fotoğraf ve PDF saklanır); kullanıcı belgeyi yeniden eklemeli.`;
+  if (!(turler as readonly string[]).includes(k.tur)) return `${ek} (${k.ad}) bu yuvaya uymaz: ${turler.map((t) => (t === "pdf" ? "PDF" : "fotoğraf")).join(" ya da ")} gerekir.`;
+  return { ad: k.ad, bayt: k.bayt };
+}
+/** belge yuvası işlemlerinin ortak "ek" alanı (M03 / F02) */
+export const EK_NO = z.string().regex(/^\s*[MFmf]\d{1,4}\s*$/, "Ek M03 ya da F02 biçiminde olmalı.");
 
 /** onay özeti: kişi + işlem + girdi (anahtar sırasından bağımsız) — 16 onaltılık */
 export function onayOzeti(kisi: string, ad: string, girdi: unknown): string {

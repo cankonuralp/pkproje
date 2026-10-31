@@ -6,7 +6,7 @@
    PDF ister — ekrandan. */
 import { kimlik, surum, z } from "../../sema/ortak.ts";
 import { SuzgecDurumuSemasi } from "../../server/liste/liste.ts";
-import { GORUNMEZ, islem, sayfaBilgisi, yazmaCevabi, type Islem, type SayfaTanimi } from "../../server/yz/islem.ts";
+import { EK_NO, ekBelgesi, GORUNMEZ, islem, sayfaBilgisi, yazmaCevabi, type Islem, type SayfaTanimi } from "../../server/yz/islem.ts";
 import { DonemSecimi, FaturaGirdisi, GiderGirdisi, TahsilatGirdisi } from "./sema.ts";
 import { giderKaydet, giderOdendi, giderSayfasi } from "./server/giderler.ts";
 import { faturaKarti, faturaKaydet, faturaSayfasi, gelirGider, isKarti, isSayfasi, tahsilatKaydet } from "./server/muhasebe.ts";
@@ -70,11 +70,15 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
   }),
   islem({
     ad: "gider_kaydet", modul: MODUL, tur: "yaz", islev: giderKaydet, kaynak: [GiderGirdisi, kimlik, surum],
-    girdi: z.object({ gider: kimlik.nullable().default(null), surum: surum.default(0), kayit: z.object(GiderGirdisi.shape) }),
+    girdi: z.object({ gider: kimlik.nullable().default(null), surum: surum.default(0), kayit: z.object(GiderGirdisi.shape), ek: EK_NO.optional() }),
     tarif: "Elle gider ekler (gider boş — odeme: odendi | onaylandi (ödenecek)) ya da düzenler (gider + surum; masraf formu ve reddedilen değişmez): kayit { tarih, "
       + "tur (yakit | konaklama | yol | kalibrasyon | sarf | diger), tutar (KDV dahil TL), oran (20 | 10 | 1 | 0), aciklama, is (plan kimliği ya da boş — genel), "
-      + "personel }. Belge ekrandan.",
-    calistir: async (b, v, ham) => yazmaCevabi(await giderKaydet(b.db, b.depo(), b.kim, b.firmaId, v.gider, v.surum, ham.kayit)),
+      + "personel }. ek (M03 / F02): konuşmadaki fiş / fatura kayda konur (2026-10-31, kalem 9).",
+    calistir: async (b, v, ham) => {
+      const belge = v.ek ? await ekBelgesi(b, v.ek, ["pdf", "foto"]) : null;
+      if (typeof belge === "string") return { tamam: false, neden: belge };
+      return yazmaCevabi(await giderKaydet(b.db, b.depo(), b.kim, b.firmaId, v.gider, v.surum, ham.kayit, belge));
+    },
   }),
   islem({
     ad: "gider_odendi", modul: MODUL, tur: "yaz", girdi: z.object({ gider: kimlik, surum }), kaynak: [kimlik, surum], islev: giderOdendi,

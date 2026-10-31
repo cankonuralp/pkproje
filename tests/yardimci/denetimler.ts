@@ -897,6 +897,11 @@ export const SAY_ELLE_ALANLAR: Readonly<Record<string, Readonly<Record<string, s
   /* 2026-10-31 (kalem 6): saat planı ve çok rapora yazma — S.A.Y'a özgü toplu işler (ekranda tek tek rapor saati / rapor girişi) */
   rapor_saat_plani: { gun: "planın kontrol günü (YYYY-AA-GG; saat-plani.ts denetler)", baslangic: "ilk raporun başlangıç saati (SS:DD)", ara_dk: "raporlar arası dakika" },
   raporlara_yaz: { girisler: "rapor_yaz'ın girisler biçimi (komutDenetle aynı denetimden geçirir), her rapora aynen" },
+  /* 2026-10-31 (kalem 9 — M1 + M2): ekranın dosya seçicisinin yerine konuşmadaki ekin numarası (ekBelgesi — depodaki kopya) */
+  personel_belge_ekle: { ne: "personel belge türü (ekrandaki sekme: özlük / atama / bordro / zimmet)", alanlar: "belge türünün alanları (modül şeması işlevde denetler)", ek: "konuşmadaki ekin numarası" },
+  egitim_sertifika_ekle: { ek: "konuşmadaki ekin numarası" }, kalibrasyon_ekle: { ek: "konuşmadaki ekin numarası (sertifika)" },
+  gider_kaydet: { ek: "konuşmadaki ekin numarası (fiş / fatura)" }, standart_yukle: { ek: "konuşmadaki ekin numarası" }, dokuman_yukle: { ek: "konuşmadaki ekin numarası" },
+  sozlesme_imzali_yukle: { ek: "konuşmadaki ekin numarası" }, saha_tarama_yukle: { ek: "konuşmadaki ekin numarası" },
   rapor_foto_ekle: { foto: "konuşmadaki fotoğrafın F numarası (ekin depodaki kopyası — fotoKopyasiOku)", bolum: "fotoEkle'nin hedef bölümü (formatın foto bölümü kimliği)" },
   musteri_kaydet: { onay: "musteriKaydet'in konumsal onayı (\"Yine de kaydet\")" },
   tesis_kaydet: { onay: "tesisKaydet'in konumsal onayı (\"Yine de kaydet\")" },

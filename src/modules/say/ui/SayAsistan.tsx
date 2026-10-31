@@ -61,6 +61,7 @@ import { xlsxSayfalari, zipAc } from "../../../components/disa/oku";
 import { pdfdenSablonKur } from "../../ekipman-turleri/ui/pdfdenSablon";
 import { formGoruntusuIste, onayGonder } from "./form";
 import { KosulKabul } from "./KosulKabul";
+import { Oneriler } from "./Oneriler";
 import { EK_PARCA_BAYT, KAYDEDILMEMIS } from "../sabitler";
 import type { SayDurum } from "../server/say";
 import type { SayOlayi } from "../server/dongu";
@@ -246,6 +247,8 @@ export function SayAsistan() {
   const [soru, setSoru] = useState("");
   const [bekliyor, setBekliyor] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
+  /* 2026-10-31 (kalem 8 — E11; maket 4): "Önce bana sun" işaretli öneriden sonra S.A.Y'ın sunduğu plan — Uygula ile sürer, Düzelt ile kullanıcı yazar */
+  const [onceSun, setOnceSun] = useState<{ id: string; girdiler: Record<string, string | boolean> } | null>(null);
   const [bagli, setBagli] = useState(true);
   const [ekler, setEkler] = useState<Ek[]>([]);
   const [menu, setMenu] = useState(false);
@@ -673,13 +676,14 @@ export function SayAsistan() {
     bildir(`${e.ad} çıkarıldı.`);
     girdi.current?.focus();
   };
-  const gonder = async (e: FormEvent) => {
-    e.preventDefault();
-    const v = soru.trim();
+  /** 2026-10-31 (kalem 8): disari — hazır öneriden gelen komut ve şablon notu (yazı kutusunun içeriği yerine) */
+  const gonder = async (e: FormEvent | null, disari?: { metin: string; sablon: { id: string; girdiler: Record<string, string | boolean> } }) => {
+    e?.preventDefault();
+    const v = (disari?.metin ?? soru).trim();
     if (!v && !ekler.length) { girdi.current?.focus(); return; }
     if (bekliyor) return;
     /* 542: rapordayken kısa komut ekranda yapılır (yapay zekâya gitmez); "evet" yalnız bekleyen "Değiştireyim mi?" varsa */
-    if (rb) {
+    if (rb && !disari) {
       const istek = v ? istekTani(v) : null;
       const fotolar = ekler.filter((x) => x.tur === "foto").map((x) => x.dosya);
       if (fotolar.length && fotolar.length === ekler.length && (!v || istek === "oku")) {
@@ -716,7 +720,7 @@ export function SayAsistan() {
       setIlerleme(null); setAsama("Düşünüyor");
       gitti = true;
       for (const x of giden) if (x.url) URL.revokeObjectURL(x.url);
-      await isYap({ tur: "soru", soru: v, ekler: idler, ...ekranGirdisi() });
+      await isYap({ tur: "soru", soru: v, ekler: idler, ...ekranGirdisi(), ...(disari ? { sablon: disari.sablon } : {}) });
     } catch {
       if (!gitti) { setIletiler((l) => (l ?? []).filter((x) => x.id !== gid)); setSoru(v); setEkler(giden); }
       setHata("S.A.Y'a ulaşılamadı; bağlantıyı kontrol edip yeniden deneyin.");
@@ -838,9 +842,14 @@ export function SayAsistan() {
             )}
           </div>
           <div className={stil.alt} hidden={kucuk} data-panel-alt="">
-            {raporda && (
-              <div className={stil.hizli}>
-                <button className={stil.cip} type="button" disabled={!hazir || bekliyor} onClick={() => void islemYap("oku", OKU)}>{OKU}</button>
+            {/* 2026-10-31 (kalem 8 — E6): sayfanın hazır önerileri (tek öneri → tek tuş; çok → "…" listesi); "Fotoğrafları oku ve gir" ekranın kendi okuması */}
+            {!kosulEksik && <Oneriler yol={yol} roller={durum.roller ?? []} kapali={!hazir || bekliyor}
+              oku={raporda ? () => void islemYap("oku", OKU) : null}
+              baslat={(metin, sablon) => { setOnceSun(sablon.girdiler.onceSun === true ? sablon : null); void gonder(null, { metin, sablon }); }} />}
+            {onceSun && !bekliyor && !kosulEksik && (
+              <div className={stil.oneriler} data-once-sun="">
+                <button className={stil.cip} type="button" disabled={!hazir} onClick={() => { const s = onceSun; setOnceSun(null); void gonder(null, { metin: "Uygula.", sablon: { ...s, girdiler: { ...s.girdiler, onceSun: false } } }); }}>Uygula</button>
+                <button className={stil.cip} type="button" onClick={() => { setOnceSun(null); girdi.current?.focus(); }}>Düzelt</button>
               </div>
             )}
             {!!ekler.length && <EkListesi ekler={ekler} cikar={ekCikar} />}

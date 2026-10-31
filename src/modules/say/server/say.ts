@@ -28,9 +28,10 @@ import type { Kisi } from "../../anasayfa/server/anasayfa.ts";
 import { bugunTr } from "../../planlar/server/planlar.ts";
 import { sayfaBilgisi } from "../yardim.ts";
 import { ekBloklari } from "./ek.ts";
+import { SABLONLAR, sablonNotu } from "../sablonlar.ts";
 import { KOSUL_YOK, kosulDurumu, kosulTamam, type KosulDurumu } from "../../../server/yz/kosul.ts";
 
-export interface SayDurum { acik: boolean; anahtar: boolean; sinirDoldu: boolean; kosul?: KosulDurumu & { yonetici?: boolean } }
+export interface SayDurum { acik: boolean; anahtar: boolean; sinirDoldu: boolean; kosul?: KosulDurumu & { yonetici?: boolean }; roller?: string[] }
 
 const KAPALI = "S.A.Y firmada kapalı (probata yönetimi tanımlar).";
 export const SINIR_DOLDU = "Bu ay yapay zekâ sınırınız doldu; probata yönetimi artırabilir.";
@@ -155,7 +156,8 @@ export async function kullaniciIletisiEkle(db: Sorgulayici, bloklar: readonly Re
 }
 
 /** soru: kapı, ekler (kişinin kendileri), görünen geçmişe, konuşmaya (ekler + yazı) ve sayfa notu. Dönen: görünen ileti ve bağlam */
-export async function soruyuEkle(db: Sorgulayici, kim: Kisi, g: { metin: string; ekler: readonly string[]; ekran: SayEkrani; okuyucu?: AcikKayitOkuyucu }, simdi = new Date()):
+export async function soruyuEkle(db: Sorgulayici, kim: Kisi, g: { metin: string; ekler: readonly string[]; ekran: SayEkrani; okuyucu?: AcikKayitOkuyucu;
+  sablon?: { id: string; girdiler: Record<string, string | boolean> } | null }, simdi = new Date()):
   Promise<{ durum: "red"; neden: string } | { durum: "hazir"; ileti: SohbetIletisi; baglam: SayBaglami }> {
   const metin = g.metin.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "").trim();
   const ekler = await ekleriAl(db, g.ekler);
@@ -167,7 +169,9 @@ export async function soruyuEkle(db: Sorgulayici, kim: Kisi, g: { metin: string;
   const ek: SohbetEki | null = ekler.length || b.raporId ? { ...(b.raporId ? { rapor: b.raporId } : {}), ...(ekler.length ? { ekler: ekler.map((e) => ({ ad: e.ad, boyut: e.boyut, tur: e.tur })) } : {}) } : null;
   const ileti = await gorunenYaz(db, { kim: "ben", metin: soru, yer: b.yer, ek }, simdi);
   await kullaniciIletisiEkle(db, ekBloklari(ekler, soru));
-  await konusmaEkle(db, "system", sayfaNotu(b, simdi));
+  /* 2026-10-31 (kalem 8): hazır öneriden geldiyse şablon notu (kişinin rolüne açık şablon; talimat değişmez) */
+  const s = g.sablon ? SABLONLAR.find((x) => x.id === g.sablon!.id && (!x.roller || x.roller.some((r) => (kim.roller as readonly string[]).includes(r)))) : undefined;
+  await konusmaEkle(db, "system", [sayfaNotu(b, simdi), ...(s ? [sablonNotu(s, g.sablon!.girdiler)] : [])].join("\n"));
   return { durum: "hazir", ileti, baglam: b };
 }
 

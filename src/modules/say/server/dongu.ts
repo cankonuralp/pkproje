@@ -76,6 +76,8 @@ export const SayIstekGirdisi = z.object({
   yol: z.string().startsWith("/"),
   raporNo: z.string().nullable().default(null),
   canli: z.unknown().optional(),
+  /* 2026-10-31 (kalem 8): hazır öneri (şablon kimliği + formun değerleri) */
+  sablon: z.object({ id: z.string().regex(/^S\d{1,2}$/), girdiler: z.record(z.string().max(40), z.union([z.string().max(500), z.boolean()])) }).nullable().default(null),
   kurucu: z.unknown().optional(),
   kaydedilmemis: z.boolean().default(false),
 });
@@ -162,7 +164,7 @@ export async function sayAkisi(o: IstekOturumu, ham: unknown, yaz: (x: SayOlayi)
   let yenile = false, ilk = v.tur === "soru", duraklat = false;
   try {
     if (v.tur === "soru") {
-      const s = await oturumIslemi(o, (db) => soruyuEkle(db, o, { metin: v.soru, ekler: v.ekler, ekran, okuyucu: acikKayitOkuyucu(o) }));
+      const s = await oturumIslemi(o, (db) => soruyuEkle(db, o, { metin: v.soru, ekler: v.ekler, ekran, okuyucu: acikKayitOkuyucu(o), sablon: v.sablon }));
       if (s.durum === "red") { yaz({ t: "hata", neden: s.neden, yenile }); return; }
       yaz({ t: "ileti", ileti: s.ileti });
     } else if (v.tur === "sonuc") {

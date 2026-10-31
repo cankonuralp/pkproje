@@ -172,3 +172,19 @@
 }
 /* 2026-10-26 (S.A.Y Faz 2 — reisim: "sürükleyerek dosya bırakmakta olsun"): dosya panelin üstünde sürüklenirken bırakma yeri belli */
 .panel[data-suruklu] { outline: 2px dashed var(--odak); outline-offset: -6px; }
+/* 2026-10-31 (kalem 8 — E6; maket 1–3): hazır öneriler — tek tuş, "…" listesi (tuşun üstünde), öneri formu */
+.oneriler { position: relative; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+.oneriListe {
+  position: absolute; left: 0; right: 0; bottom: calc(100% + 6px); z-index: 3; margin: 0; padding: 6px; list-style: none; display: grid; gap: 1px;
+  max-height: 60vh; max-height: 60dvh; overflow-y: auto; background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-buyuk); box-shadow: var(--golge-2);
+}
+.oneriListe li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1px 8px; padding: 7px 10px; border-radius: var(--r-orta); cursor: pointer; min-height: var(--tus-y); }
+.oneriListe li b { font-weight: 600; font-size: var(--boy-kucuk); }
+.oneriListe li small { grid-column: 1; color: var(--yazi2); font-size: var(--boy-etiket); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.oneriSecili { background: var(--zemin2); outline: 2px solid var(--odak); outline-offset: -2px; }
+.oneriIsaret { grid-row: 1 / 3; grid-column: 2; align-self: center; padding: 1px 7px; border-radius: var(--r-tam); background: var(--uyari-zemin); color: var(--uyari-yazi); font-size: var(--boy-etiket); font-weight: 700; }
+.oneriForm { display: grid; gap: 8px; margin-bottom: 8px; padding: 10px 12px; border: 1px solid var(--kenar); border-radius: var(--r-buyuk); background: var(--kart); }
+.oneriAlan { display: grid; gap: 4px; font-size: var(--boy-etiket); font-weight: 600; color: var(--yazi2); }
+.oneriAlan input, .oneriAlan select { min-height: var(--tus-y); padding: 0 10px; border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); color: var(--yazi); font-family: inherit; font-size: var(--boy-girdi); }
+.oneriOnay { display: flex; gap: 8px; align-items: center; font-size: var(--boy-kucuk); }
+.oneriNot { margin: 0; color: var(--yazi2); font-size: var(--boy-etiket); }

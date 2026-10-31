@@ -77,6 +77,19 @@ export async function fotoKopyasiOku(db: Sorgulayici, depo: { oku(anahtar: strin
   const f = (await fotoKopyalari(db)).find((x) => x.fno === no);
   return f?.anahtar ? { ad: f.ad, bayt: await depo.oku(f.anahtar, db) } : null;
 }
+/** 2026-10-31 (kalem 9 — M2): malzeme numarasıyla ("M03" ya da fotoğrafta "F02") ekin depodaki kopyası — belgeyi kaydın yuvasına koymak için; yoksa null */
+export async function ekKopyasiOku(db: Sorgulayici, depo: { oku(anahtar: string, db?: Sorgulayici): Promise<Uint8Array> }, ek: string):
+  Promise<{ ad: string; bayt: Uint8Array; tur: EkTuru } | null> {
+  const m = /^\s*([MF])(\d{1,4})\s*$/i.exec(ek);
+  if (!m) return null;
+  const sutun = m[1]!.toUpperCase() === "F" ? "fno" : "no";
+  const r = (await db.sorgu<{ ad: string; tur: EkTuru; anahtar: string | null }>(
+    `SELECT ad, tur, (SELECT d.anahtar FROM dosya d WHERE d.modul = $1 AND d.kayit_id = n.id AND d.cop IS NULL ORDER BY d.id LIMIT 1) AS anahtar FROM (
+       SELECT id, ad, tur, row_number() OVER (ORDER BY sira) AS no,
+              CASE WHEN tur = 'foto' THEN count(*) FILTER (WHERE tur = 'foto') OVER (ORDER BY sira) END AS fno FROM yz_ek) n WHERE ${sutun} = $2`,
+    [DOSYA_SAY_EK, Number(m[2])])).rows[0];
+  return r?.anahtar ? { ad: r.ad, tur: r.tur, bayt: await depo.oku(r.anahtar, db) } : null;
+}
 /** kişinin eklerinin kopyaları (temizlenince çöpe) */
 export async function ekKopyalari(db: Sorgulayici): Promise<string[]> {
   return (await db.sorgu<{ id: string }>(

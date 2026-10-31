@@ -7,13 +7,18 @@
    plan_ac sonucu ekranın gösterdiği uyarıları taşır (planKarti — engel değil, bilgi); plan_kunye_guncelle ekranda açık, kaydedilmemiş raporu
    ezmez (önce ekranın kaydı — EKRAN_KAYDEDILMEMIS). */
 import { kimlik, surum, z } from "../../sema/ortak.ts";
+import { sanalBolumler } from "../../format/tablo.ts";
+import type { FormatTanimi } from "../../format/tanim.ts";
+import { turKarti } from "../ekipman-turleri/server/turler.ts";
+import { yayindakiFormat } from "../rapor-format/server/formatlar.ts";
 import { SuzgecDurumuSemasi } from "../../server/liste/liste.ts";
-import { EKRAN_KAYDEDILMEMIS, ekranRaporuKirli, GORUNMEZ, islem, kirp, sayfaBilgisi, sayfala, trIcerir, yazmaCevabi, type Islem, type SayfaTanimi, type IslemCevabi } from "../../server/yz/islem.ts";
+import { EK_NO, ekBelgesi, EKRAN_KAYDEDILMEMIS, ekranRaporuKirli, GORUNMEZ, islem, kirp, sayfaBilgisi, sayfala, trIcerir, yazmaCevabi, type Islem, type SayfaTanimi, type IslemCevabi, type IslemBaglami } from "../../server/yz/islem.ts";
 import { KunyeGirdisi, NotGirdisi, PLAN_DURUM, PlanAcGirdisi, RedGirdisi, SayEkipmanGirdisi, YeniEkipmanGirdisi } from "./sema.ts";
 import { planSayfasi } from "./server/liste.ts";
 import {
   ekipmanPasif, ekipmanSil, kayitliEkle, kontrolListesi, kunyeDuzenle, kunyeGuncelle, notEkle, planIci, planKabul, planReddet, planSil, planTamamla,
   sayEkipmanlarEkle, tamamlamaGeriAl,
+  sahaTaramaYukle,
 } from "./server/plan-ici.ts";
 import { planAc, planAcVerisi, planKarti, tesisPlanBilgisi } from "./server/planlar.ts";
 
@@ -23,6 +28,24 @@ const PLAN_SURUM = z.object({ plan: kimlik, surum });
 const durumAdi = (d: keyof typeof PLAN_DURUM) => PLAN_DURUM[d][0];
 
 /** S.A.Y'ın ekipman eklemesinin cevabı: eklenenler kodlarıyla, eklenemeyenler nedeniyle */
+/** 2026-10-31 (kalem 8 — K5): eklenen türde planda raporu olmayan ekipman zaten varsa sonuca "önce bunlar" uyarısı (26 Ekim: raporsuz kompresör dururken yenisi açıldı) */
+async function mevcutUyarisi(b: IslemBaglami, plan: string, turler: readonly string[], c: IslemCevabi): Promise<IslemCevabi> {
+  if (!c.tamam) return c;
+  const p = await planIci(b.db, b.kim, plan);
+  if (!p) return c;
+  const raporlu = new Set(p.raporluEkipman), eklenen = new Set(((c.sonuc?.eklenen ?? []) as { id?: string }[]).map((e) => e.id));
+  const bekleyen = p.ekipman.filter((e) => turler.includes(e.turId) && !raporlu.has(e.id) && !e.pasif && !eklenen.has(e.id));
+  return bekleyen.length ? { ...c, sonuc: { ...c.sonuc, uyari: `Planda aynı türde raporu olmayan ekipman zaten vardı: ${bekleyen.map((e) => e.kod).join(", ")} — yeni eklediğin bunlardan biriyse eklediğini pasife al, onu kullan.` } } : c;
+}
+/** yayındaki formatın özeti (saf): bölüm adı ve türü; alanlar, madde sayısı, tablo sütunları, test değerleri */
+function formOzeti(t: FormatTanimi): Record<string, unknown>[] {
+  return t.bolumler.map((x) => ({ ad: x.ad, blok: x.blok,
+    ...(x.blok === "bilgi" ? { alanlar: x.alanlar.map((a) => a.ad) } : {}),
+    ...(x.blok === "liste" ? { madde: x.gruplar.reduce((n, g) => n + g.maddeler.length, 0), cevaplar: x.cevaplar } : {}),
+    ...(x.blok === "olcum" ? { sutunlar: x.sutunlar.map((s) => s.ad) } : {}),
+    ...(x.blok === "test" ? { degerler: x.degerler.map((d) => d.ad) } : {}),
+    ...(x.blok === "tablo" ? { alanlar: sanalBolumler(x).flatMap((s) => (s.blok === "bilgi" ? s.alanlar.map((a) => a.ad) : [])) } : {}) }));
+}
 function ekipmanCevabi(r: Awaited<ReturnType<typeof sayEkipmanlarEkle>>): IslemCevabi {
   if (r.durum !== "tamam") return yazmaCevabi(r);
   if (!r.eklenen.length) return { tamam: false, neden: `Ekipman eklenemedi: ${r.eklenemeyen.map((x) => `${x.sira}. ${x.kod ?? ""} ${x.neden}`.trim()).join(" · ")}` };
@@ -118,14 +141,38 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
     islev: sayEkipmanlarEkle,
     tarif: "Plana yeni ekipman ekler — tesise kalıcı kayıt da açılır: tur (ekipman türü kimliği), konum, kod (isteğe bağlı; verilmezse türün kodu + tire + "
       + "sıradaki boş sayı: KMP-0, KMP-1 …).",
-    calistir: async (b, v, ham) => ekipmanCevabi(await sayEkipmanlarEkle(b.db, b.kim, v.plan, [{ kod: ham.kod, tur: ham.tur, seri: ham.seri, konum: ham.konum }])),
+    calistir: async (b, v, ham) => mevcutUyarisi(b, v.plan, [ham.tur], ekipmanCevabi(await sayEkipmanlarEkle(b.db, b.kim, v.plan, [{ kod: ham.kod, tur: ham.tur, seri: ham.seri, konum: ham.konum }]))),
   }),
   islem({
     ad: "plan_ekipmanlar_ekle", modul: MODUL, tur: "yaz", girdi: z.object({ plan: kimlik, ekipmanlar: z.array(SayEkipmanGirdisi).min(1).max(200) }),
     kaynak: [SayEkipmanGirdisi, YeniEkipmanGirdisi, kimlik], islev: sayEkipmanlarEkle,
     tarif: "Plana tek işlemde çok yeni ekipman ekler (en çok 200): ekipmanlar [{ tur, konum, kod (isteğe bağlı — verilmezse KMP-0, KMP-1 …) }]; "
       + "eklenenler (kimlik, kod) ve eklenemeyenler nedeniyle döner.",
-    calistir: async (b, _v, ham) => ekipmanCevabi(await sayEkipmanlarEkle(b.db, b.kim, ham.plan, ham.ekipmanlar)),
+    calistir: async (b, _v, ham) => mevcutUyarisi(b, ham.plan, ham.ekipmanlar.map((e) => e.tur), ekipmanCevabi(await sayEkipmanlarEkle(b.db, b.kim, ham.plan, ham.ekipmanlar))),
+  }),
+  /* 2026-10-31 (kalem 8 — E10, B01 §1): tek çağrıda plan özeti — plan, ekip, plandaki (raporsuzlar ayrıca) ve tesisteki ekipman, raporlar, türlerin süresi /
+     periyodu ve yayındaki formatın özeti (bölümler, alanlar, madde sayıları, tablo sütunları). Künye değeri yok. */
+  islem({
+    ad: "plan_hazirlik", modul: MODUL, tur: "oku", girdi: PLAN_ID, kaynak: [kimlik], islev: planIci,
+    tarif: "İşe başlarken planın tek çağrıda özeti: durum, tesis, ekip, plandaki ekipman (raporu olmayanlar ayrıca), tesiste plana alınmamış ekipman, raporlar, "
+      + "türlerin süresi ve periyodu, yayındaki formatın bölümleri / alanları / madde sayıları / tablo sütunları.",
+    calistir: async (b, v) => {
+      const p = await planIci(b.db, b.kim, v.plan);
+      if (!p) return { tamam: false, neden: GORUNMEZ };
+      const raporlu = new Set(p.raporluEkipman);
+      const turler = [];
+      for (const t of p.turler) {
+        const k = await turKarti(b.db, b.kim, t.id), f = await yayindakiFormat(b.db, t.id);
+        turler.push({ id: t.id, ad: t.ad, sure_dk: k?.sure ?? null, periyot_ay: k?.periyot ?? null, format: f ? formOzeti(f.tanim) : null });
+      }
+      const ekipman = p.ekipman.map((e) => ({ id: e.id, kod: e.kod, tur: e.tur, turId: e.turId, konum: e.konum, pasif: e.pasif, rapor_var: raporlu.has(e.id) }));
+      return { tamam: true, sonuc: {
+        id: p.kart.id, no: p.kart.no, durum: durumAdi(p.durum), surum: p.surum, baslangic: p.kart.baslangic, bitis: p.kart.bitis, tesis: p.kart.tesis,
+        ekip: p.kart.ekip.map((e) => ({ personel: e.personelId, ad: e.ad })), ekipman, raporsuz: ekipman.filter((e) => !e.rapor_var && !e.pasif),
+        tesiste_planda_olmayan: p.kayitli.map((e) => ({ id: e.id, kod: e.kod, tur: e.tur, konum: e.konum })),
+        raporlar: p.raporlar.map((r) => ({ id: r.id, no: r.no, durum: r.durum, ekipmanId: r.ekipmanId, surum: r.surum })), turler,
+      } };
+    },
   }),
   islem({
     ad: "plan_kayitli_ekle", modul: MODUL, tur: "yaz", girdi: z.object({ plan: kimlik, ekipmanlar: z.array(kimlik).min(1) }), kaynak: [kimlik], islev: kayitliEkle,
@@ -185,6 +232,17 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
     ad: "plan_sil", modul: MODUL, tur: "yaz", girdi: PLAN_ID, kaynak: [kimlik], islev: planSil,
     tarif: "Hiç raporu, faturası, gideri olmayan, tamamlanmamış planı kesin siler (yönetici; ekip, ekipman satırları, notlar birlikte; ekipmanlar tesiste kalır).",
     calistir: async (b, v) => yazmaCevabi(await planSil(b.db, b.kim, v.plan)),
+  }),
+  /* 2026-10-31 (kalem 9 — M1 + M2; beceri B11): konuşmadaki ekin (M / F numarası) depodaki kopyası kaydın belge yuvasına — ekranın yükleme işleviyle */
+  islem({
+    ad: "saha_tarama_yukle", modul: MODUL, tur: "yaz", islev: sahaTaramaYukle, kaynak: [kimlik, surum],
+    girdi: z.object({ plan: kimlik, form: kimlik, surum, ek: EK_NO }),
+    tarif: "Konuşmadaki müşteri imzalı saha formu taramasını (ek: M03 / F02) planın saha formuna ekler: plan, form (plan_getir saha formları), surum.",
+    calistir: async (b, v) => {
+      const belge = await ekBelgesi(b, v.ek, ["pdf","foto"]);
+      if (typeof belge === "string") return { tamam: false, neden: belge };
+      return yazmaCevabi(await sahaTaramaYukle(b.db, b.depo(), b.kim, b.firmaId, v.plan, v.form, v.surum, belge), { bildirim: `${belge.ad} saha formuna eklendi.` });
+    },
   }),
 ];
 

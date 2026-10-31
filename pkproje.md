@@ -2527,6 +2527,17 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-31 (kalem 9): **BELGE YUVALARI (M1 + M2)** — konuşmadaki ek (M / F numarası; firmanın deposundaki kopyası — src/server/yz/islem.ts ekBelgesi, konusma.ts
+  ekKopyasiOku) kaydın yuvasına, ekranın yükleme işleviyle: personel_belge_ekle (özlük / atama / bordro / zimmet), egitim_sertifika_ekle, kalibrasyon_ekle + ek, gider_kaydet
+  + ek, standart_yukle, dokuman_yukle, sozlesme_imzali_yukle, saha_tarama_yukle. Yuvalar modülün işlemleri olarak (ayrı "belge_ekle" aracı yerine — katalog kilitleriyle aynı
+  yol). YAPILMADI (kalem 11'e): belge doldurma (belge_doldur — 12 eylem), belge formatları (5 eylem), logo / ön bilgilendirme / bordro formatı, İSG-KATİP belgesi, imzalı
+  rapor / diğer belge yükleme, izin / masraf belgesi, gider Excel'i, toplu içe aktarma, tür format PDF'i (format_pdf_kur ekranda var).
+- 2026-10-31 (kalem 8): **HAZIR ÖNERİLER (E6) + ÖNCE SUN (E11) + PLAN ÖZETİ (E10) + MEVCUT EKİPMAN UYARISI (K5)** — src/modules/say/sablonlar.ts Ş1–Ş31 (tek kayıt; sayfa,
+  rol, beceri, komut, ikinci onay işareti); panelde tek tuş / "…" listesi (Esc, ok tuşları; son kullanılan öne, değerler bu cihazda), öneri formu, şablon notu sayfa notuyla
+  (talimat değişmez); "Önce bana sun" sonrası Uygula / Düzelt; raporda ilk öneri "Fotoğrafları oku ve gir" (2026-10-14 tek tuş kararı 2026-10-23'te değişti — uygulandı).
+  plan_hazirlik (oku: raporsuzlar ayrı, türlerin süre / periyodu, yayındaki formatın özeti); plan_ekipman_ekle / plan_ekipmanlar_ekle aynı türde raporsuz ekipman varsa
+  uyarır. YAPILMADI: is_taslagi (göç isterdi — "önce sun" sohbet tablosuyla), K9 (fotoğraf okumanın boş sonuç nedeni / önbellek), teklif kalemleri plan özetinde,
+  sonuç özetinde sunucu yazmalarının "Geri al"ı.
 - 2026-10-31 (kalem 7, göç 0110): **KULLANIM KOŞULLARI — YAPAY ZEKÂ (S.A.Y) KABULÜ (M6)** — /kosullar (oturumsuz; girişte "Kullanım koşulları" bağlantısı; madde
   06'daki dokuz bölüm aynen — src/modules/say/kosul-metni.ts, sürüm KOSUL_SURUMU "2026-11-1"); kosul_kabul (firma / kullanıcı, sürüm; yalnız eklenir, IP / cihaz yok);
   S.A.Y panelinde kabul ekranları (firma yöneticisi firması adına + kendisi; kullanıcı firma kabulünden sonra; öteki kullanıcıya bekleme yazısı, yazı kutusu yok);

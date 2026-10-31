@@ -19,7 +19,7 @@ export async function sayDurumEylemi(): Promise<SayDurum | null> {
   const o = await oturum();
   if (!o) return null;
   const d = await oturumIslemi(o, (db) => sayDurumu(db));
-  return d.kosul ? { ...d, kosul: { ...d.kosul, yonetici: o.roller.includes("firma_yoneticisi") } } : d;
+  return { ...d, roller: [...o.roller], ...(d.kosul ? { kosul: { ...d.kosul, yonetici: o.roller.includes("firma_yoneticisi") } } : {}) };
 }
 
 /** 2026-10-31 (kalem 7 — M6): kullanım koşullarının Yapay zekâ (S.A.Y) maddesini kabul — firma adına (yalnız firma yöneticisi) ya da kendi adına */

@@ -5,7 +5,7 @@
    sertifikasının PDF'i dosya ister — S.A.Y kaydı PDF'siz yazar (ekrandaki gibi isteğe bağlı), PDF ekrandan eklenir. */
 import { kimlik, surum, z } from "../../sema/ortak.ts";
 import { SuzgecDurumuSemasi } from "../../server/liste/liste.ts";
-import { GORUNMEZ, islem, sayfala, trIcerir, yazmaCevabi, type Islem, type SayfaTanimi } from "../../server/yz/islem.ts";
+import { EK_NO, ekBelgesi, GORUNMEZ, islem, sayfala, trIcerir, yazmaCevabi, type Islem, type SayfaTanimi } from "../../server/yz/islem.ts";
 import { CihazGirdisi, CihazTuruGirdisi, KalibrasyonGirdisi } from "./sema.ts";
 import {
   cihazKarti, cihazKaydet, cihazKonum, cihazListesi, cihazPasif, cihazSil, cihazTuruKaydet, cihazTuruListesi, cihazTuruSil, kalibrasyonEkle,
@@ -54,10 +54,14 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
   }),
   islem({
     ad: "kalibrasyon_ekle", modul: MODUL, tur: "yaz", islev: kalibrasyonEkle, kaynak: [KalibrasyonGirdisi, kimlik],
-    girdi: z.object({ cihaz: kimlik, kalibrasyon: z.object(KalibrasyonGirdisi.shape) }),
+    girdi: z.object({ cihaz: kimlik, kalibrasyon: z.object(KalibrasyonGirdisi.shape), ek: EK_NO.optional() }),
     tarif: "Cihaza kalibrasyon kaydı ekler: kalibrasyon { tarih, bitis (YYYY-AA-GG; tarihten önce olamaz), lab, sertifika (no), sonuc: uygun | uygun_degil }; "
-      + "kalibrasyondaki cihaz depoya döner. Sertifika PDF'i ekrandan eklenir.",
-    calistir: async (b, v, ham) => yazmaCevabi(await kalibrasyonEkle(b.db, b.depo(), b.kim, b.firmaId, v.cihaz, ham.kalibrasyon), { bildirim: "Kalibrasyon kaydı eklendi." }),
+      + "kalibrasyondaki cihaz depoya döner. ek (M03): konuşmadaki sertifika PDF'i kayda konur (2026-10-31, kalem 9).",
+    calistir: async (b, v, ham) => {
+      const belge = v.ek ? await ekBelgesi(b, v.ek, ["pdf"]) : undefined;
+      if (typeof belge === "string") return { tamam: false, neden: belge };
+      return yazmaCevabi(await kalibrasyonEkle(b.db, b.depo(), b.kim, b.firmaId, v.cihaz, ham.kalibrasyon, belge), { bildirim: "Kalibrasyon kaydı eklendi." });
+    },
   }),
   islem({
     ad: "cihaz_konum", modul: MODUL, tur: "yaz", girdi: z.object({ cihaz: kimlik, surum, konum: z.enum(["depo", "lab"]) }), kaynak: [kimlik, surum], islev: cihazKonum,

@@ -55,7 +55,7 @@ test("özet: anahtar sırasından bağımsız; kişi ve girdiyle değişir", () 
 test("katalog: gönderme, silme, yayın, plan kabulü onaylı; okuma onaysız", () => {
   const onayli = new Set(ISLEM_KATALOGU.filter((t) => t.ikinciOnay).map((t) => t.ad));
   for (const a of Object.keys(IKINCI_ONAY)) assert.ok(ISLEM_KATALOGU.some((t) => t.ad === a), `${a} katalogda yok`);
-  for (const a of ["rapor_onaya_gonder", "raporlari_onaya_gonder", "plan_kabul", "format_yayinla", "teklif_gonder", "rapor_sil", "plan_sil", "personel_sil"]) assert.ok(onayli.has(a), a);
+  for (const a of ["rapor_onaya_gonder", "raporlari_onaya_gonder", "plan_kabul", "format_yayinla", "teklif_gonder", "rapor_sil", "plan_sil", "personel_sil", "bordro_onaya_gonder"]) assert.ok(onayli.has(a), a);
   for (const t of ISLEM_KATALOGU) {
     if (t.ad.endsWith("_sil")) assert.ok(onayli.has(t.ad), `${t.ad} silme onaysız`);
     if (t.tur === "oku") assert.ok(!onayli.has(t.ad), `${t.ad} okuma onaylı olmamalı`);

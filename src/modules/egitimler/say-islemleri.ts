@@ -5,9 +5,9 @@
    (EgitimTuruGirdisi, EgitimKaydiGirdisi). Sertifika PDF'i isteğe bağlı (ekrandan); katılım formu imzaya ekrandan gönderilir (PDF üretilir). */
 import { kimlik, surum, z } from "../../sema/ortak.ts";
 import { SuzgecDurumuSemasi } from "../../server/liste/liste.ts";
-import { islem, sayfala, trIcerir, yazmaCevabi, type Islem } from "../../server/yz/islem.ts";
+import { EK_NO, ekBelgesi, islem, sayfala, trIcerir, yazmaCevabi, type Islem } from "../../server/yz/islem.ts";
 import { EgitimKaydiGirdisi, EgitimTuruGirdisi } from "./sema.ts";
-import { egitimKaydet, egitimKaydiSil, egitimListesi, egitimTuruKaydet, egitimTuruSil } from "./server/egitimler.ts";
+import { egitimKaydet, egitimKaydiSil, egitimListesi, egitimTuruKaydet, egitimTuruSil, sertifikaYukle } from "./server/egitimler.ts";
 
 const MODUL = 4;
 
@@ -45,5 +45,16 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
     ad: "egitim_kaydi_sil", modul: MODUL, tur: "yaz", girdi: z.object({ kayit: kimlik }), kaynak: [kimlik], islev: egitimKaydiSil,
     tarif: "Sertifikasız, katılım formu imzaya gitmemiş eğitim kaydını siler (yönetici; güncel kayıt silinince öncekisi güncel olur).",
     calistir: async (b, v) => yazmaCevabi(await egitimKaydiSil(b.db, b.kim, v.kayit), { bildirim: "Eğitim kaydı silindi." }),
+  }),
+  /* 2026-10-31 (kalem 9 — M1 + M2; beceri B11): konuşmadaki ekin (M / F numarası) depodaki kopyası kaydın belge yuvasına — ekranın yükleme işleviyle */
+  islem({
+    ad: "egitim_sertifika_ekle", modul: MODUL, tur: "yaz", islev: sertifikaYukle, kaynak: [kimlik, surum],
+    girdi: z.object({ kayit: kimlik, surum, ek: EK_NO }),
+    tarif: "Konuşmadaki sertifika PDF'ini (ek: M03) eğitim kaydına ekler: kayit (egitim_ara), surum.",
+    calistir: async (b, v) => {
+      const belge = await ekBelgesi(b, v.ek, ["pdf"]);
+      if (typeof belge === "string") return { tamam: false, neden: belge };
+      return yazmaCevabi(await sertifikaYukle(b.db, b.depo(), b.kim, b.firmaId, v.kayit, v.surum, belge), { bildirim: `${belge.ad} eğitim kaydına eklendi.` });
+    },
   }),
 ];

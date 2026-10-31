@@ -48,7 +48,7 @@ export const IKINCI_ONAY: Readonly<Record<string, (v: Record<string, unknown>) =
   format_yayinla: () => "Format yayınlanacak", surume_geri_don: () => "Eski format sürümü yeniden yayınlanacak",
   teklif_gonder: () => "Teklif müşteriye gönderilecek", teklif_kabul: () => "Teklif kabul edildi olarak işaretlenecek",
   izin_gonder: () => "İzin talebi onaya gönderilecek", masraf_gonder: () => "Masraf formu onaya gönderilecek",
-  deneme_epostasi: () => "Deneme e-postası gönderilecek",
+  deneme_epostasi: () => "Deneme e-postası gönderilecek", bordro_onaya_gonder: () => "Bordro kişinin imzasına gönderilecek",
   standart_kaldir: () => "Standart sürümü kütüphaneden kaldırılacak", dokuman_kaldir: () => "Döküman kaldırılacak", isg_katip_kaldir: () => "İSG-KATİP kaydı kaldırılacak",
 };
 const onayli = (t: Islem): Islem => {
