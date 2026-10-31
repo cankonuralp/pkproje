@@ -2527,6 +2527,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-31 (kalem 11): **KAPSAM TABLOSU (M5)** — src/modules/say/kapsam.ts: ekranın her sunucu eylemi S.A.Y işlemi ("i:"), ekran aracı ("a:"), bilerek dışarıda
+  ("d:" — karar 6) ya da eksik ("e:"); kilit tests/say-kapsam.test.ts yeni eylem tabloya girmeden geçmez, eksik listesi yalnız küçülür (51 → 46: kalibrasyon_kaldir,
+  elle_standart_sil, tur_format_pdf_kaldir, saha_formu_olustur, saha_tarama_kaldir — silme / kaldırma ikinci onaylı). KALAN EKSİK: belge doldurma (belge_doldur),
+  belge formatları, PDF basan gönderimler (Chromium S.A.Y ucunda yok), yuvası olmayan belgeler (logo, ön bilgilendirme, bordro formatı, İSG-KATİP belgesi, imzalı
+  rapor / diğer belge, izin / masraf belgesi, gider Excel'i, toplu içe aktarma, sözleşme şablonu), personel belge değiştir / kaldır, format parçası, S.A.Y Chat ayarı.
+- 2026-10-31 (kalem 10): **GÖNDERİMLER (M3)** — bordro_onaya_gonder (ikinci onay kapısından, ekranın işleviyle). PDF basan gönderimler (eğitim katılım formu, zimmet formu,
+  sözleşme e-postası, ön bilgilendirme, araç tutanağı) YAPILMADI: S.A.Y'ın ucunda Chromium yok — ayrı uç mu, ekran aracı mı kararı reisim'de.
 - 2026-10-31 (kalem 9): **BELGE YUVALARI (M1 + M2)** — konuşmadaki ek (M / F numarası; firmanın deposundaki kopyası — src/server/yz/islem.ts ekBelgesi, konusma.ts
   ekKopyasiOku) kaydın yuvasına, ekranın yükleme işleviyle: personel_belge_ekle (özlük / atama / bordro / zimmet), egitim_sertifika_ekle, kalibrasyon_ekle + ek, gider_kaydet
   + ek, standart_yukle, dokuman_yukle, sozlesme_imzali_yukle, saha_tarama_yukle. Yuvalar modülün işlemleri olarak (ayrı "belge_ekle" aracı yerine — katalog kilitleriyle aynı
