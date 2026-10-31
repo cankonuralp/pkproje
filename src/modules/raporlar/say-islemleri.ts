@@ -21,8 +21,7 @@ import { raporHaritasi } from "../say/rapor-haritasi.ts";
 import { fotoKopyasiOku } from "../../server/yz/konusma.ts";
 import { turKarti } from "../ekipman-turleri/server/turler.ts";
 import { planIci } from "../planlar/server/plan-ici.ts";
-import { raporBaglari } from "../teklifler/server/rapor-bagi.ts";
-import { canDo } from "../../server/yetki/canDo.ts";
+import { teklifAdetDurumu } from "../teklifler/server/rapor-bagi.ts";
 import { raporSorunlari } from "./denetle.ts";
 import { cakismalar, saatGirisleri, saatPlani, type SaatRaporu } from "./saat-plani.ts";
 import { komutlariUygula, sonucOzeti, type Durum, type GirisSonucu } from "./say-doldur.ts";
@@ -277,11 +276,11 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
         sonuc.push({ rapor: id, no: s.no, sorunlar: raporSorunlari(s, (await raporEksikleri(b.db, b.kim, id)) ?? []) });
       }
       /* teklif adedi: raporun bağlandığı teklifte türünün kalemi yok ya da adet aşıldı (Muhasebe'nin "teklif dışı" fiyatı) — teklifleri görebilene */
-      if (tesis && canDo(b.kim, 11, "gor")) {
-        const bag = await raporBaglari(b.db, [tesis]);
+      const bag = tesis ? await teklifAdetDurumu(b.db, b.kim, [tesis]) : null;
+      if (bag) {
         for (const r of sonuc) {
           const x = bag.get(r.rapor);
-          if (x?.kaynak === "disi") r.sorunlar.push(`teklif ${x.teklif?.no ?? ""} adedini aşıyor ya da teklifte bu tür yok (teklif dışı)`.replace("teklif  ", "teklif "));
+          if (x?.kaynak === "disi") r.sorunlar.push(`teklif${x.teklifNo ? ` ${x.teklifNo}` : ""} adedini aşıyor ya da teklifte bu tür yok (teklif dışı)`);
           else if (x?.kaynak === "liste") r.sorunlar.push("kabul edilmiş teklif yok (fiyat listesinden)");
         }
       }

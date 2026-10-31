@@ -9,6 +9,8 @@
    faturalanmamış raporlara dağıtılır: önce imzalılar, sonra imza bekleyenler (açılış sırasıyla). İmzasız ya da sonradan silinen rapor, imzalı
    raporun teklif fiyatını elinden almaz. */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
+import { canDo } from "../../../server/yetki/canDo.ts";
+import type { YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { faturaliRaporlar } from "../../muhasebe/server/teklif-baglanti.ts";
 import { teklifRaporlari, type TeklifRaporu } from "../../raporlar/server/teklif-baglanti.ts";
 
@@ -80,4 +82,12 @@ export async function raporBaglari(db: Sorgulayici, tesisler: readonly string[])
       kaynak: !x ? "liste" : icinde ? "teklif" : "disi" });
   }
   return out;
+}
+
+/** 2026-10-31 (S.A.Y plan denetimi — reisim: "önerdiklerini kabul ediyorum"): raporun teklif adedi durumu — yalnız teklifleri görebilene (fiyat dönmez):
+    "disi" teklifte türü yok ya da adet aşıldı, "liste" kabul edilmiş teklif yok. Göremeyene null. */
+export async function teklifAdetDurumu(db: Sorgulayici, kim: YetkiHesabi, tesisler: readonly string[]): Promise<Map<string, { kaynak: FiyatKaynagi; teklifNo: string | null }> | null> {
+  if (!canDo(kim, 11, "gor")) return null;
+  const l = await raporBaglari(db, tesisler);
+  return new Map([...l].map(([id, x]) => [id, { kaynak: x.kaynak, teklifNo: x.teklif?.no ?? null }]));
 }
