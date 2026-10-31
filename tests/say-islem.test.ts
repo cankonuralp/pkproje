@@ -152,17 +152,24 @@ test("3. plan kabul (yalnız plandaki denetçi), rapor aç, rapor yaz: ekranın 
   /* ekranda açıksa işlem yazmaz (ekranın kaydedilmemiş değişikliği ezilmesin) */
   assert.match(neden(await isle(A, FA.den1, "rapor_yaz", { rapor, surum: g.surum, girisler: [{ yer, deger: "SN-ISLEM-1" }] }, { ekrandakiRapor: rapor })), /ekranda açık/);
   /* yazan kişi yazar: ekranın denetimi + raporKaydet (sürüm ilerler) */
-  const w = tamam(await isle(A, FA.den1, "rapor_yaz", { rapor, surum: g.surum, girisler: [{ yer, deger: "SN-ISLEM-1" }, { yer: "x:yok", deger: "1" }] }));
+  /* tamamla: false — yalnız verilenler (2026-10-31: varsayılan açık tamamlayıcı aşağıda ayrıca) */
+  const w = tamam(await isle(A, FA.den1, "rapor_yaz", { rapor, surum: g.surum, tamamla: false, girisler: [{ yer, deger: "SN-ISLEM-1" }, { yer: "x:yok", deger: "1" }] }));
   assert.equal(w.yazilan, 1);
   assert.equal((w.yazilamayan as unknown[]).length, 1, "bilinmeyen yer nedeniyle");
   const s = (await kiraciIcinde(havuz, A, (db) => sahaRaporu(db, FA.den1, rapor), { hesapId: FA.den1.id }))!;
   assert.equal(s.ekipmanBilgi[alan], "SN-ISLEM-1");
   assert.ok(s.surum > Number(g.surum), "kaydedildi");
   /* aynı değer yeniden: değişiklik yok — yazma iş sayılmaz (döngünün güvenliği ve sahte "yaptım" denetimi doğru görür) */
-  const ayni = await isle(A, FA.den1, "rapor_yaz", { rapor, surum: s.surum, girisler: [{ yer, deger: "SN-ISLEM-1" }] });
+  const ayni = await isle(A, FA.den1, "rapor_yaz", { rapor, surum: s.surum, tamamla: false, girisler: [{ yer, deger: "SN-ISLEM-1" }] });
   assert.ok(ayni.tamam && ayni.degisiklik === false, JSON.stringify(ayni));
+  /* 2026-10-31 (L1): tamamlayıcı varsayılan açık — boş yerler kurala göre (cevapsız madde, sonuç, rapor tarihi, bilinemeyen metin "-"); verilen değer korunur */
+  const tm = tamam(await isle(A, FA.den1, "rapor_yaz", { rapor, girisler: [] }));
+  assert.ok(Number(tm.yazilan) > 0 && Array.isArray(tm.varsayim) && Array.isArray(tm.tire), JSON.stringify(tm).slice(0, 400));
+  const s2 = (await kiraciIcinde(havuz, A, (db) => sahaRaporu(db, FA.den1, rapor), { hesapId: FA.den1.id }))!;
+  assert.equal(s2.ekipmanBilgi[alan], "SN-ISLEM-1", "verilen değer ezilmez");
+  assert.ok(s2.tarih.rapor, "rapor tarihi yazıldı");
   /* eski sürümle yazılmaz (sürüm kilidi modülde); yazmayan kişi nedeniyle; başka firma göremez */
-  assert.match(neden(await isle(A, FA.den1, "rapor_yaz", { rapor, surum: g.surum, girisler: [{ yer, deger: "SN-ISLEM-2" }] })), /sürüm/);
+  assert.match(neden(await isle(A, FA.den1, "rapor_yaz", { rapor, surum: g.surum, tamamla: false, girisler: [{ yer, deger: "SN-ISLEM-2" }] })), /sürüm/);
   assert.match(neden(await isle(A, FA.plan, "rapor_yaz", { rapor, surum: s.surum, girisler: [{ yer, deger: "SN-ISLEM-3" }] })), /yalnız görüntüleyebilir/);
   assert.equal(neden(await isle(B, FB.den1, "rapor_yaz", { rapor, surum: s.surum, girisler: [{ yer, deger: "SN-ISLEM-4" }] })), GORUNMEZ);
   assert.equal((await kiraciIcinde(havuz, A, (db) => sahaRaporu(db, FA.den1, rapor), { hesapId: FA.den1.id }))!.ekipmanBilgi[alan], "SN-ISLEM-1");

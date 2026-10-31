@@ -58,7 +58,7 @@ test("kaynak kilidi: görüntü aracı ekran aracından sonra sırayı bekler; r
   const ekranda = d.indexOf("if (ekranda) { sonuclar[c.id]"), gorsel = d.indexOf("if (GORSEL_ARAC_ADLARI.has(c.name))");
   assert.ok(ekranda > 0 && gorsel > ekranda, "ekran aracından sonra gelen görüntü aracı bekler");
   assert.ok(d.includes("oturumIslemi(o, (db) => (ad === \"foto_pafta\" ? fotoPaftaAraci(db, depo(), girdi) : fotoGosterAraci(db, depo(), girdi)))"), "kişinin kendi işleminde");
-  assert.ok(r.includes("fotoEkle(b.db, b.depo(), b.kim, b.firmaId, v.rapor, v.surum, { bolum, madde: null }, f)"), "ekranın fotoEkle'si");
+  assert.ok(r.includes("fotoEkle(b.db, b.depo(), b.kim, b.firmaId, rapor, surumu ?? s.surum, { bolum, madde: null }, f)"), "ekranın fotoEkle'si");
   assert.ok(r.includes("fotoSil(b.db, b.kim, v.rapor, v.surum, v.dosya)"), "ekranın fotoSil'i");
   assert.ok(readFileSync("src/server/yz/say.ts", "utf8").includes("[...ISLEM_ARACLARI, BECERI_ARACI, ...GORSEL_ARACLARI, FORM_ARACI, EKRAN_ARACI,"), "sabit sıra");
 });
