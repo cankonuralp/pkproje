@@ -107,9 +107,11 @@ export interface FirmaOzeti {
   /** yapay zekâ: açık mı, kişi başı aylık sınır ($; null sınırsız), anahtar tanımlı mı, son 4, bu ay (YYYY-AA) okuma / mesaj / maliyet (milyonda bir $)
       ve kişi kişi kullanım (2026-10-25, göç 0106 — Firma ayarlarından taşındı) */
   yz: { acik: boolean; sinir: number | null; tanimli: boolean; son4: string | null; ay: string; okuma: number; mesaj: number; maliyet: number;
-    kisiler: { id: string; ad: string; okuma: number; mesaj: number; maliyet: number }[] };
+    kisiler: { id: string; ad: string; okuma: number; mesaj: number; maliyet: number }[];
+    /** 2026-10-31 (kalem 7 — M6, göç 0110): kullanım koşulları — firma kabulü (kim, ne zaman, sürüm), sürüm başına kabul eden kullanıcı */
+    kosul?: { firma: { ad: string; zaman: string; surum: string } | null; kullanicilar: Record<string, number> } };
 }
-type HamOzet = Omit<FirmaOzeti, "yz"> & { yz: Omit<FirmaOzeti["yz"], "acik" | "sinir"> & { ayar: Record<string, unknown> } };
+type HamOzet = Omit<FirmaOzeti, "yz"> & { yz: Omit<FirmaOzeti["yz"], "acik" | "sinir" | "kosul"> & { ayar: Record<string, unknown> }; kosul?: FirmaOzeti["yz"]["kosul"] };
 /** firma özeti (kendi projelide firmanın veritabanından; ortakta merkezden) — ulaşılamazsa null */
 export async function firmaOzetiYonet(c: YonetimCalistirici, id: string): Promise<FirmaOzeti | null> {
   if (!UUID.test(id)) return null;
@@ -120,7 +122,8 @@ export async function firmaOzetiYonet(c: YonetimCalistirici, id: string): Promis
   if (!s) return null;
   /* kayıtlı ayar başlangıçla birleşir (kayıtsız firmada kapalı, kişi başı 5 $ — ayar.ts tek kaynak) */
   const { ayar, ...yz } = s.yz, a = ayarCoz("yapay_zeka", ayar ?? {});
-  return { ...s, yz: { ...yz, acik: a.acik, sinir: a.sinir, maliyet: Number(yz.maliyet),
+  const { kosul, ...gerisi } = s;
+  return { ...gerisi, yz: { ...yz, acik: a.acik, sinir: a.sinir, maliyet: Number(yz.maliyet), kosul: kosul ?? { firma: null, kullanicilar: {} },
     kisiler: (yz.kisiler ?? []).map((k) => ({ ...k, maliyet: Number(k.maliyet) })) } };
 }
 

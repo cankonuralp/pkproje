@@ -32,7 +32,8 @@ import { bosKapi } from "../tests/yardimci/kume.ts";
 import { sahteDepoKur } from "../tests/yardimci/sahte-depo.ts";
 import { sahteResendKur } from "../tests/yardimci/sahte-resend.ts";
 import { pgProjesi, sahteYonetimKur } from "../tests/yardimci/sahte-supabase-yonetim.ts";
-import { yzKur } from "../tests/yardimci/yz-kur.ts";
+import { kosulKur, yzKur } from "../tests/yardimci/yz-kur.ts";
+import { KOSUL_SURUMU } from "../src/server/yz/kosul.ts";
 import { nextCalistir } from "./next.ts";
 
 /* firmaların şifreli sırları (yapay zekâ anahtarı 351, Resend anahtarı 536, yönetim doğrulama anahtarı 348) bu sunucunun ana anahtarıyla — tohumdan önce */
@@ -264,6 +265,8 @@ for (const f of firmalar) {
   };
   for (const [proje, h] of Object.entries(E2E_TOPLU.denetci)) await toplu(h, E2E_TOPLU.ekipman[proje], true, proje);
   await toplu(E2E_TOPLU.onay.denetci, E2E_TOPLU.onay.ekipman, false, "onay");
+  /* 2026-10-31 (kalem 7 — M6): yapay zekâlı firmanın sonradan açılan hesapları da koşulları kabul etmiş (kabul ekranı say.spec'te) */
+  await kosulKur(kume, yzFirma, KOSUL_SURUMU);
 }
 await havuz.end();
 

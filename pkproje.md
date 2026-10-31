@@ -2527,6 +2527,16 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-31 (kalem 7, göç 0110): **KULLANIM KOŞULLARI — YAPAY ZEKÂ (S.A.Y) KABULÜ (M6)** — /kosullar (oturumsuz; girişte "Kullanım koşulları" bağlantısı; madde
+  06'daki dokuz bölüm aynen — src/modules/say/kosul-metni.ts, sürüm KOSUL_SURUMU "2026-11-1"); kosul_kabul (firma / kullanıcı, sürüm; yalnız eklenir, IP / cihaz yok);
+  S.A.Y panelinde kabul ekranları (firma yöneticisi firması adına + kendisi; kullanıcı firma kabulünden sonra; öteki kullanıcıya bekleme yazısı, yazı kutusu yok);
+  denetim sunucuda (sayKapisi — kabul yoksa istek gitmez); Yönetim › Firma › Yapay zekâ'da firma kabulü ve kabul eden kullanıcı sayısı. Testlerde / e2e tohumunda
+  yapay zekâ açılınca hesaplar kabul etmiş sayılır (tests/yardimci/yz-kur.ts kosulKur).
+- 2026-10-31 (kalem 6b): **ONAY KAPISI (sunucuda ikinci onay)** — S.A.Y'ın yolunda gönderme / silme (_sil) / yayın / plan kabulü / revize / teklif gönderme … işlemleri
+  ekrandaki "Onayla" olmadan çalışmaz (özet = kişi + işlem + girdi; onay sunucunun konuşmaya yazdığı not, 10 dk, tek kullanım; /api/say/onay); ekrandaki raporu
+  onaya göndermek de pencereyle; raporlari_onaya_gonder (eksikli gönderilmez).
+- 2026-10-31 (kalem 6a — YAYINDA main 97f5d265): **HESAP VE DENETİM (E7, E8, E9)** — rapor_saat_plani (sunucu hesaplar), raporlara_yaz, plan_denetle (yazmaz; künye değeri
+  yok), seçenek eşitleme (birebir → boşluk / Türkçe harf; belirsizse yazılmaz). Teklif ↔ rapor adet farkı ve sonuç–madde tutarsızlığı denetimi bu kalemde YOK.
 - 2026-10-31 (kalem 5): **S.A.Y BECERİLERİ (E5)** — B01–B11 kaynak klasöründen AYNEN src/modules/say/beceriler/ (eski B01 saha-paketinden taşınmadı);
   src/modules/say/beceriler.ts (ön bilgi, dizin, beceri_oku); talimata yalnız dizin + kural ("kullanıcının açık isteği beceriden önce gelir"). "Sık işler" ve
   örneklerin talimattan çıkarılması karar 4 gereği ÖLÇMEYLE yapılacak (ölçme tabanı bekliyor) — bu teslimde talimat yalnız dizin kadar büyüdü. Becerilerde anılan

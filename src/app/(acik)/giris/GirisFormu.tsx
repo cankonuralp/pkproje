@@ -67,6 +67,8 @@ export function GirisFormu({ neden, donus, adres, firmaVar }: { neden?: "oturum"
             <Tus type="submit" ikon="log-in" disabled={gonderiyor || !firmaVar || !!durum.yonlendir} aria-busy={gonderiyor || undefined}>Giriş yap</Tus>
           </div>
         </form>
+        {/* 2026-10-31 (kalem 7 — M6): kullanım koşulları (Yapay zekâ — S.A.Y maddesi) */}
+        <a className={stil.baglanti} href="/kosullar">Kullanım koşulları</a>
       </div>
     </main>
   );

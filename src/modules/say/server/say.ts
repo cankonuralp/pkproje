@@ -28,8 +28,9 @@ import type { Kisi } from "../../anasayfa/server/anasayfa.ts";
 import { bugunTr } from "../../planlar/server/planlar.ts";
 import { sayfaBilgisi } from "../yardim.ts";
 import { ekBloklari } from "./ek.ts";
+import { KOSUL_YOK, kosulDurumu, kosulTamam, type KosulDurumu } from "../../../server/yz/kosul.ts";
 
-export interface SayDurum { acik: boolean; anahtar: boolean; sinirDoldu: boolean }
+export interface SayDurum { acik: boolean; anahtar: boolean; sinirDoldu: boolean; kosul?: KosulDurumu & { yonetici?: boolean } }
 
 const KAPALI = "S.A.Y firmada kapalı (probata yönetimi tanımlar).";
 export const SINIR_DOLDU = "Bu ay yapay zekâ sınırınız doldu; probata yönetimi artırabilir.";
@@ -43,7 +44,7 @@ export async function sayDurumu(db: Sorgulayici, simdi = new Date()): Promise<Sa
   if (!yz.acik) return { acik: false, anahtar: false, sinirDoldu: false };
   const anahtar = (await sirDurumu(db, "yapay_zeka_anahtari")).tanimli;
   const sinirDoldu = sinirli(yz.sinir) && (await yzKendiAyi(db, yzAyi(simdi))) >= yz.sinir * 1e6;
-  return { acik: true, anahtar, sinirDoldu };
+  return { acik: true, anahtar, sinirDoldu, kosul: await kosulDurumu(db) };
 }
 
 /** kişinin görünen geçmişi, tamamı (yalnız kendisi — RLS); S.A.Y kapalıysa boş */
@@ -58,6 +59,8 @@ export async function sayKapisi(db: Sorgulayici): Promise<{ durum: "red"; neden:
   if (!(await sirDurumu(db, "yapay_zeka_anahtari")).tanimli) return { durum: "red", neden: ANAHTARSIZ };
   const anahtar = await sirKullan(db, "yapay_zeka_anahtari");
   if (!anahtar) return { durum: "red", neden: ANAHTARSIZ };
+  /* 2026-10-31 (kalem 7 — M6): kullanım koşullarının güncel sürümü firma ve kişi için kabul edilmediyse istek yapay zekâya gitmez */
+  if (!kosulTamam(await kosulDurumu(db))) return { durum: "red", neden: KOSUL_YOK };
   return { durum: "acik", model: yz.model, sinir: yz.sinir, anahtar };
 }
 

@@ -60,6 +60,7 @@ import type { SohbetEkAdi, SohbetEksik, SohbetIletisi } from "../../../server/yz
 import { xlsxSayfalari, zipAc } from "../../../components/disa/oku";
 import { pdfdenSablonKur } from "../../ekipman-turleri/ui/pdfdenSablon";
 import { formGoruntusuIste, onayGonder } from "./form";
+import { KosulKabul } from "./KosulKabul";
 import { EK_PARCA_BAYT, KAYDEDILMEMIS } from "../sabitler";
 import type { SayDurum } from "../server/say";
 import type { SayOlayi } from "../server/dongu";
@@ -348,7 +349,9 @@ export function SayAsistan() {
   }, [durum?.acik]);
 
   if (!durum?.acik) return null;
-  const hazir = durum.anahtar && bagli;
+  /* 2026-10-31 (kalem 7 — M6): kullanım koşulları kabul edilmeden yazı kutusu yok, kabul ekranı */
+  const kosulEksik = !!durum.kosul && !(durum.kosul.firma && durum.kosul.kisi);
+  const hazir = durum.anahtar && bagli && !kosulEksik;
   const raporda = !!rb;
 
   const ac = (odakla = true) => {
@@ -801,6 +804,7 @@ export function SayAsistan() {
             {!bagli && <Serit tur="uyari" ikon="wifi-off">Bağlantı yok.{raporda ? " Raporu yazmaya devam edebilirsiniz." : ""}</Serit>}
             {bagli && !durum.anahtar && <Serit tur="uyari" ikon="key-round">Yapay zekâ anahtarı tanımlı değil: S.A.Y cevap veremez. probata yönetimine başvurun.</Serit>}
             {hazir && durum.sinirDoldu && <Serit tur="uyari" ikon="triangle-alert">Bu ay kişi başı sınırınız doldu; probata yönetimi artırabilir.</Serit>}
+            {kosulEksik && durum.kosul && <KosulKabul kosul={durum.kosul} kabulEdildi={() => void sayDurumEylemi().then((d) => { if (d) setDurum(d); })} />}
             <ol className={stil.liste} aria-live="polite" aria-busy={bekliyor || !iletiler || undefined}>
               {(iletiler ?? []).map((m, i, l) => (
                 <IletiYeri key={m.id} m={m} onceki={l[i - 1]} rb={rb} git={git} uygula={uygula} vazgec={vazgec}
@@ -840,7 +844,7 @@ export function SayAsistan() {
               </div>
             )}
             {!!ekler.length && <EkListesi ekler={ekler} cikar={ekCikar} />}
-            <form className={stil.yaz} onSubmit={(e) => void gonder(e)}>
+            <form className={stil.yaz} onSubmit={(e) => void gonder(e)} hidden={kosulEksik}>
               <div className={stil.ek} data-say-ek="">
                 <button ref={atac} className={stil.gonder} type="button" onClick={() => setMenu((m) => !m)} disabled={!hazir || bekliyor}
                   aria-haspopup="true" aria-expanded={menu} aria-controls="say-ek-menu" aria-label="Ek ekle: fotoğraf ya da belge" title="Ek ekle">

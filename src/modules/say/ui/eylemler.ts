@@ -7,6 +7,7 @@ import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { anthropicDosyaSil } from "../../../server/yz/akis";
 import type { SohbetIletisi } from "../../../server/yz/sohbet";
+import { kosulKabulEt } from "../../../server/yz/kosul";
 import { sayDurumu, sayGecmisi, sayOneri, sayRaporCevabi, sayTemizle, type SayDurum } from "../server/say";
 
 async function oturum() {
@@ -16,7 +17,17 @@ async function oturum() {
 
 export async function sayDurumEylemi(): Promise<SayDurum | null> {
   const o = await oturum();
-  return o ? oturumIslemi(o, (db) => sayDurumu(db)) : null;
+  if (!o) return null;
+  const d = await oturumIslemi(o, (db) => sayDurumu(db));
+  return d.kosul ? { ...d, kosul: { ...d.kosul, yonetici: o.roller.includes("firma_yoneticisi") } } : d;
+}
+
+/** 2026-10-31 (kalem 7 — M6): kullanım koşullarının Yapay zekâ (S.A.Y) maddesini kabul — firma adına (yalnız firma yöneticisi) ya da kendi adına */
+export async function kosulKabulEylemi(tur: "firma" | "kullanici"): Promise<{ tamam: boolean; neden?: string }> {
+  const o = await oturum();
+  if (!o) return { tamam: false, neden: "Oturum yok; yeniden giriş yapın." };
+  const n = await oturumIslemi(o, (db) => kosulKabulEt(db, o, tur === "firma" ? "firma" : "kullanici"));
+  return n ? { tamam: false, neden: n } : { tamam: true };
 }
 
 export async function sayGecmisEylemi(): Promise<SohbetIletisi[]> {

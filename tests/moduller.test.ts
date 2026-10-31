@@ -53,7 +53,8 @@ test("17 modül, numaralar tekil; menüde olmayanlar 1 (Personel'in içinde), 6,
    vitrin (yayında 404). Oturumsuz açılan her rota adıyla burada: listeye eklenmeyen yeni bir açık rota testi düşürür (sızma kapısı).
    2026-10-17: 2026-10-16'da eklenen "dogrula" (595 K8 doğrulama sayfası) kalktı — reisim: "bu olay komple iptal kaldır, sign.probata kurucaz";
    rapor doğrulama ayrı üründe (IMZA-SERVISI.md). */
-const ACIK_ROTALAR = ["giris"];
+/* 2026-10-31 (kalem 7 — M6): kullanım koşulları oturumsuz açılır */
+const ACIK_ROTALAR = ["giris", "kosullar"];
 const GELISTIRME_ROTALARI = ["vitrin"];
 /* 2026-10-04 (K1, dosya ucu): api/ yalnız tanımlı uçları taşır — her uç oturumu ve yetkiyi kendisi denetler (09-A2).
    2026-10-05 (316): olcum — PDF motorunun Vercel ölçümü, oturumsuz ama YALNIZ önizleme dağıtımında (aşağıdaki test kilitler; yayında 404)

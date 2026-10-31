@@ -14,6 +14,7 @@ import { Tus } from "../../../components/tus/Tus";
 import { YZ_FIYAT } from "../sema";
 import type { FirmaOzeti } from "../server/firma-tarafi";
 import { yzAnahtariKaldirEylemi, yzAnahtariKaydetEylemi, yzAyarKaydetEylemi } from "./eylemler";
+import { KOSUL_SURUMU } from "../../say/kosul-metni";
 import stil from "./yonetim.module.css";
 
 type Yz = FirmaOzeti["yz"];
@@ -103,6 +104,13 @@ export function YapayZekaBolumu({ id, firmaAd, yz }: { id: string; firmaAd: stri
           <p className={stil.etiketUst}>{`Bu ay (${yz.ay})`}</p>
           <p className={stil.not}>{`${yz.okuma} fotoğraftan okuma · ${yz.mesaj} S.A.Y mesajı · ${dolar(yz.maliyet)} harcama`}</p>
           {yz.kisiler.length > 0 && <Liste baslik="Yapay zekâ kullanımı" sutunlar={sutunlar(yz.sinir)} kayitlar={yz.kisiler} anahtar={(x) => x.id} />}
+          {/* 2026-10-31 (kalem 7 — M6): kullanım koşullarının Yapay zekâ (S.A.Y) maddesi — firmanın ve kullanıcıların kabulü */}
+          <p className={stil.etiketUst}>{`Kullanım koşulları (sürüm ${KOSUL_SURUMU})`}</p>
+          <p className={stil.not} data-kosul-durum="">
+            {yz.kosul?.firma && yz.kosul.firma.surum === KOSUL_SURUMU
+              ? `Firma kabulü: ${yz.kosul.firma.ad} · ${new Date(yz.kosul.firma.zaman).toLocaleString("tr-TR", { timeZone: "Europe/Istanbul" })} · kabul eden kullanıcı ${yz.kosul.kullanicilar[KOSUL_SURUMU] ?? 0}`
+              : yz.kosul?.firma ? `Firma eski sürümü kabul etti (${yz.kosul.firma.surum}); güncel sürüm kabul edilmedi.` : "Firma yöneticisi henüz kabul etmedi."}
+          </p>
         </>
       )}
     </Bolum>
