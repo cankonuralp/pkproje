@@ -155,9 +155,11 @@
 /* gönderilmeyi bekleyen ekler: küçük, yan yana; açılınca liste kendi içinde kayar (yazı kutusu yerinde kalır) */
 .ekler[data-bekleyen] { flex-wrap: nowrap; overflow-x: auto; overscroll-behavior: contain; }
 .ekler[data-bekleyen][data-hepsi] { flex-wrap: wrap; max-height: 112px; overflow-y: auto; }
-.ekler[data-bekleyen] li { flex: none; min-height: 32px; max-width: 46%; padding: 2px 2px 2px 6px; gap: 4px; }
+.ekler[data-bekleyen] li { flex: 0 1 auto; min-width: 0; min-height: 32px; padding: 2px 2px 2px 6px; gap: 4px; }
+.ekler[data-bekleyen][data-hepsi] li { flex: none; max-width: 46%; }
+.ekler[data-bekleyen] li.ekFazla { flex: none; }
 .ekler[data-bekleyen] img { width: 24px; height: 24px; }
-.ekler[data-bekleyen] b { max-width: 96px; }
+.ekler[data-bekleyen] b { min-width: 0; max-width: 96px; }
 .ekler[data-bekleyen] small { display: none; }
 .ekler[data-bekleyen] .ekCikar { width: 28px; height: 28px; }
 .ekFazla button { min-height: 28px; padding: 0 8px; border: 0; background: transparent; color: var(--yazi); font: inherit; font-weight: 600; cursor: pointer; }
