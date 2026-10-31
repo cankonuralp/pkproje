@@ -9,6 +9,7 @@ import { DOSYA_SAY_EK, ekKaydet, parcalariBirlestir, parcalariSil, parcaYaz, typ
 import { sayEkiHazirla } from "./ek.ts";
 import { sayKapisi } from "./say.ts";
 import { fotoOnOku } from "./on-okuma.ts";
+import { kucukKopya } from "./gorsel.ts";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 export interface EkParcasi { yukleme: string; sira: number; adet: number; ad: string; tablo: boolean }
@@ -38,7 +39,9 @@ export async function sayEkParcasi(o: IstekOturumu, p: EkParcasi, veri: Uint8Arr
   if (h.durum === "red") { await sil(); return h; }
   const e = sayEkiHazirla(h.bayt, p.ad, p.tablo);
   if ("durum" in e) { await sil(); return e; }
-  const y = await anthropicDosyaYukle(e.bayt, e.dosyaAdi, e.mime, h.anahtar);
+  /* 2026-10-31 (V21 madde 2): konuşmaya fotoğrafın KÜÇÜK kopyası gider (uzun kenar ≤ KUCUK_KENAR); depodaki kopya ve ön okuma tam boy */
+  const kucuk = e.tur === "foto" ? await kucukKopya(e.bayt).catch(() => null) : null;
+  const y = kucuk ? await anthropicDosyaYukle(kucuk, "ek.jpg", "image/jpeg", h.anahtar) : await anthropicDosyaYukle(e.bayt, e.dosyaAdi, e.mime, h.anahtar);
   if (y.durum === "hata") { await sil(); return { durum: "red", neden: y.neden }; }
   const id = await oturumIslemi(o, async (db) => {
     await parcalariSil(db, p.yukleme);

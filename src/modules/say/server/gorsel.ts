@@ -10,6 +10,13 @@ import type { Depo } from "../../../server/dosya/depo.ts";
 import { fotoKopyalari, type FotoKopyasi } from "../../../server/yz/konusma.ts";
 
 export const PAFTA_EN_COK = 12, KARO = 480, PAFTA_SINIR = 1600, GOSTER_SINIR = 1568;
+/** 2026-10-31 (V21 madde 2 — reisim: "ilk iletideki fotoğrafları küçük göndermek"): konuşmaya giden kopyanın uzun kenarı — ≈ 640 token / fotoğraf
+    (1568'de ≈ 2 460); depodaki kopya ve ön okuma tam boy, ayrıntı foto_goster ile */
+export const KUCUK_KENAR = 800;
+/** konuşmaya giden küçük kopya (JPEG; EXIF'siz) */
+export async function kucukKopya(bayt: Uint8Array, kenar = KUCUK_KENAR): Promise<Buffer> {
+  return sharp(bayt).rotate().resize(kenar, kenar, { fit: "inside", withoutEnlargement: true }).jpeg({ quality: 80 }).toBuffer();
+}
 type Icerik = Record<string, unknown>[];
 const iki = (n: number) => String(n).padStart(2, "0");
 

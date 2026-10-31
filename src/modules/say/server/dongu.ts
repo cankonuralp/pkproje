@@ -25,6 +25,7 @@ import { bekleyenAl, bekleyenYaz, isAl, isBirak, konusmaEkle, konusmaKilidi, kon
 import { fotoGosterAraci, fotoPaftaAraci } from "./gorsel.ts";
 import { beceriDizini, beceriMetni, becerileriOku } from "../beceriler.ts";
 import { bitisDenetimi, denetimNotu, sorunVar } from "../bitis-denetimi.ts";
+import { fotoNo, gosterilenFotolar, konusmaSikistir, ZATEN_BUYUTULDU } from "../is-siniri.ts";
 import { onOkumaBekle } from "./on-okuma.ts";
 import { acikSonuclar, konusmaDuzelt } from "../../../server/yz/konusma-denetim.ts";
 import type { SohbetIletisi } from "../../../server/yz/sohbet.ts";
@@ -191,7 +192,9 @@ export async function sayAkisi(o: IstekOturumu, ham: unknown, yaz: (x: SayOlayi)
         /* K1 (2026-10-31): bozuk kalmış konuşma (aynı çağrıya iki sonuç, öksüz sonuç) okurken onarılır; onarım hata kaydına */
         const d = konusmaDuzelt((await konusmaOku(db)).map((m) => ({ role: m.rol, content: m.icerik })), YARIDA);
         if (d.duzeltmeler.length) hataYaz(o, new Error(`S.A.Y konuşması onarıldı: ${d.duzeltmeler.join(", ")}`), "say.konusma");
-        const mesajlar: Record<string, unknown>[] = d.mesajlar.map((m) => ({ role: m.role, content: m.content }));
+        /* 2026-10-31 (V21 madde 1): bitmiş işlerin iletileri isteğe KÜÇÜLTÜLMÜŞ gider (fotoğraf blokları ve büyütmeler metne, uzun sonuçlar kırpık, eski
+           düşünme yok) — kayıt değişmez; bu işin iletileri aynen (is-siniri.ts) */
+        const mesajlar: Record<string, unknown>[] = konusmaSikistir(d.mesajlar).mesajlar.map((m) => ({ role: m.role, content: m.content }));
         const a = await cagriAyir(db, k.model, k.sinir, JSON.stringify(mesajlar).length / 2 + SISTEM.length / 2);
         if (!a) return { durum: "red" as const, neden: SINIR_DOLDU };
         return { durum: "hazir" as const, k, mesajlar, a, b: await sayBaglami(db, o, ekran, acikKayitOkuyucu(o)) };
@@ -236,7 +239,7 @@ export async function sayAkisi(o: IstekOturumu, ham: unknown, yaz: (x: SayOlayi)
         yaz({ t: "bitti", yenile });
         return;
       }
-      const r = await araclariYap(o, m.content, h.b, v.kaydedilmemis, yaz);
+      const r = await araclariYap(o, m.content, h.b, v.kaydedilmemis, yaz, h.mesajlar);
       await olc(r.yazma, r.islem);
       yenile ||= r.yenile;
       if (r.ekran.length) {
@@ -290,11 +293,14 @@ async function gorselSonucu(o: IstekOturumu, ad: string, girdi: unknown): Promis
 }
 
 /** BU cevabın araç çağrıları: sunucu araçları burada (S.A.Y'ın sırasıyla), ekran araçları ekrana; ekran aracından sonraki işlem bekler */
-async function araclariYap(o: IstekOturumu, icerik: readonly Record<string, unknown>[], b: SayBaglami, kaydedilmemis: boolean, yaz: (x: SayOlayi) => void):
+async function araclariYap(o: IstekOturumu, icerik: readonly Record<string, unknown>[], b: SayBaglami, kaydedilmemis: boolean, yaz: (x: SayOlayi) => void,
+  onceki: readonly Record<string, unknown>[] = []):
   Promise<{ sonuclar: Record<string, AracSonucu>; ekran: { id: string; ad: string; komut: SayKomutu | null }[]; yenile: boolean; yazma: number; islem: number }> {
   const komutlar = aracCagrilari(icerik);
   const ortam = islemOrtami(o, { ekrandakiRapor: b.raporId, kaydedilmemis });
   const sonuclar: Record<string, AracSonucu> = {}, ekran: { id: string; ad: string; komut: SayKomutu | null }[] = [];
+  /* 2026-10-31 (V21 madde 1): bu işte zaten büyütülen fotoğraf ikinci kez büyütülmez (is-siniri.ts) */
+  const gosterilen = gosterilenFotolar(onceki as { role: string; content: unknown }[]);
   let ekranda = false, yenile = false, yazma = 0, islem = 0;
   for (const c of komutlar) {
     const k = aracCagrisi({ type: "tool_use", id: c.id, name: c.name, input: c.input });
@@ -302,7 +308,12 @@ async function araclariYap(o: IstekOturumu, icerik: readonly Record<string, unkn
     if (ekranda) { sonuclar[c.id] = sonucIcerigi(islemOzeti(k?.tur === "islem" ? k.ad || "islem" : c.name, null, { tamam: false, neden: SIRA_BEKLER })); continue; }
     if (c.name === "ekran_durumu") { sonuclar[c.id] = ekranDurumuMetni(b); continue; }
     if (c.name === "beceri_oku") { sonuclar[c.id] = beceriMetni(BECERILER, (c.input as { ad?: unknown } | null)?.ad); continue; }
-    if (GORSEL_ARAC_ADLARI.has(c.name)) { yaz({ t: "asama", ad: "Fotoğraflara bakıyor" }); sonuclar[c.id] = await gorselSonucu(o, c.name, c.input); continue; }
+    if (GORSEL_ARAC_ADLARI.has(c.name)) {
+      const no = c.name === "foto_goster" ? fotoNo((c.input as { foto?: unknown } | null)?.foto) : null;
+      if (no !== null && gosterilen.has(no)) { sonuclar[c.id] = ZATEN_BUYUTULDU(no); continue; }
+      if (no !== null) gosterilen.add(no);
+      yaz({ t: "asama", ad: "Fotoğraflara bakıyor" }); sonuclar[c.id] = await gorselSonucu(o, c.name, c.input); continue;
+    }
     if (!k || !sunucuKomutuMu(k)) { sonuclar[c.id] = OKUNAMADI; continue; }
     yaz({ t: "asama", ad: ASAMA[c.name] ?? "Çalışıyor" });
     const ozet = await sunucuKomutu(ISLEM_KATALOGU, ortam, k, modulAdi);
