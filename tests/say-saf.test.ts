@@ -63,6 +63,10 @@ test("istek: konuşma olduğu gibi, bütün araçlar aynı sırayla ve sınırs�
   assert.deepEqual(g.thinking, { type: "adaptive", display: "summarized", block_binding: { prefix_mismatch_behavior: "drop_block" } });
   assert.deepEqual(g.output_config, { effort: "high" });
   assert.deepEqual(betalar, SAY_BETALARI);
+  /* 2026-11-01 V21 A2 (reisim onayı; belge: context editing bütün modellerde, sunucu tarafında, düşünmeyi bozmaz): eski araç sonuçlarını hizmet temizler */
+  assert.ok(SAY_BETALARI.includes("context-management-2025-06-27"), "bağlam düzenleme betası");
+  assert.deepEqual(g.context_management, { edits: [{ type: "clear_tool_uses_20250919", trigger: { type: "input_tokens", value: 80_000 }, keep: { type: "tool_uses", value: 4 },
+    clear_at_least: { type: "input_tokens", value: 10_000 } }] }, "istem 80 binde en eski araç sonuçları temizlenir, son 4 kalır, en az 10 bin");
   assert.equal(g.tool_choice, undefined, "araç seçimi serbest");
   assert.deepEqual(g.system, [{ type: "text", text: SISTEM, cache_control: { type: "ephemeral", ttl: "1h" } }], "talimat tek ve önbellekli (1 saat); bağlam yok");
   const adlar = (g.tools as { name: string }[]).map((t) => t.name);
@@ -78,6 +82,7 @@ test("istek: konuşma olduğu gibi, bütün araçlar aynı sırayla ve sınırs�
   const b = sayIstegi({ model: "haiku", sistem: SISTEM, araclar: sayAraclari(FORMAT_ARACI), mesajlar, betasiz: true });
   assert.deepEqual(b.govde.thinking, { type: "adaptive", display: "summarized" });
   assert.deepEqual(b.betalar, []);
+  assert.equal(b.govde.context_management, undefined, "betasız yedek istekte bağlam düzenleme yok");
   assert.ok(betaReddi("thinking.block_binding: Extra inputs are not permitted") && betaReddi("Unexpected value(s) for the `anthropic-beta` header"));
   assert.ok(!betaReddi("messages: text content blocks must be non-empty") && !betaReddi(undefined));
 });

@@ -18,7 +18,14 @@ export const SAY_YANIT_SINIRI = 128_000;
 /** internet araması başına maliyet (milyonda bir dolar: $10 / 1 000 arama) */
 export const ARAMA_MALIYETI = 10_000;
 /** konuşma boyunca düşünmeler: talimat ya da araçlar bir sürümde değişirse hizmet eskileri düşürür, istek reddedilmez */
-export const SAY_BETALARI = ["thinking-binding-controls-2026-08-01"] as const;
+export const SAY_BETALARI = ["thinking-binding-controls-2026-08-01", "context-management-2025-06-27"] as const;
+/* 2026-11-01 (V21 A2 — reisim onayı; belge platform.claude.com/docs/en/build-with-claude/context-editing, "bütün modellerde"): hizmetin bağlam düzenlemesi —
+   istem BAGLAM_ESIGI giriş tokenini aşınca EN ESKİ araç sonuçlarını hizmet kendisi temizler (son BAGLAM_KALAN araç çağrısı kalır; en az BAGLAM_EN_AZ token
+   temizlenemiyorsa dokunmaz — önbellek bozulmasına değsin). Sunucu tarafında yapıldığı için düşünme bloklarını BOZMAZ (bizim iş içi küçültmemiz — is-siniri.ts
+   A1 — ancak hizmet yetmezse devreye girer: ölçülen istem yine 90 bini aşarsa). Konuşma kaydı değişmez. */
+export const BAGLAM_ESIGI = 80_000, BAGLAM_KALAN = 4, BAGLAM_EN_AZ = 10_000;
+export const BAGLAM_DUZENLEME = { edits: [{ type: "clear_tool_uses_20250919", trigger: { type: "input_tokens", value: BAGLAM_ESIGI },
+  keep: { type: "tool_uses", value: BAGLAM_KALAN }, clear_at_least: { type: "input_tokens", value: BAGLAM_EN_AZ } }] } as const;
 
 /** 557: konu dışı soruya tek cevap (reisim: "site dışı gereksiz sorulara da cevap veriyor, vermesin") */
 export const KONU_DISI = "Bu konuda yardımcı olamam; probata ve periyodik kontrol işleriniz için buradayım.";
@@ -309,6 +316,8 @@ export function sayIstegi(p: { model: YzModel; sistem: string; araclar: readonly
         : { type: "adaptive", display: "summarized", block_binding: { prefix_mismatch_behavior: "drop_block" } },
       output_config: { effort: p.derinlik ?? "high" },
       cache_control: ONBELLEK,
+      /* V21 A2: hizmetin bağlam düzenlemesi (betasız yedek istekte yok — beta başlığı da yok) */
+      ...(p.betasiz ? {} : { context_management: BAGLAM_DUZENLEME }),
       messages: p.mesajlar,
     },
     betalar: p.betasiz ? [] : SAY_BETALARI,
