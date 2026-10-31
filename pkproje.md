@@ -2548,7 +2548,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   **Öneriler — onay bekliyor, kod YOK:** O1 konuşma 100 bin tokenin altında tutulur (iş bitince eski fotoğraf büyütmeleri ve ilk iletideki fotoğraflar ön okuma
   metnine iner, gerekirse foto_goster yeniden; eski araç sonuçları kısalır) · O2 ilk iletideki fotoğraflar küçük çözünürlükte (ön okuma zaten var), ayrıntı
   foto_goster ile · O3 hatalar 1–5'in düzeltmesi (tür adı da kabul, surum sunucudan, beyan kapasitesi = etiket kapasitesi, tarih planın dışındaysa uyarı) ·
-  O4 tesis / müşteri uyuşmazlığı durdurmaz: yapar, bildirimde "tesis kontrol edilmeli" · O5 KALKTI (S.A.Y'ın 8 sayımı doğruydu) · O6 dört satır sınırı sunucuda da · O7 izleyen kısa işlerde orta derinlik. **KARAR reisim'de:** firmada hiç cihazı olmayan ölçüm cihazı
+  O4 tesis / müşteri uyuşmazlığı durdurmaz: yapar, bildirimde "tesis kontrol edilmeli" · O5 KALKTI (S.A.Y'ın 8 sayımı doğruydu) · O8 (reisim: "tam açıklayamamış yazmamamın sebebi fotoğraflarda rot
+  yazması vs diye net açıklama yapması lazım") saymadığı / yapmadığı her şeyin nedenini KANITIYLA söyler — hangi fotoğraf, orada ne yazıyor / ne görünüyor (bu
+  koşuda "aynı araç" dedi; asıl kanıt fotoğraftaki hizalama (rot) cihazı yazısıydı, ön okumada da vardı) · O6 dört satır sınırı sunucuda da · O7 izleyen kısa işlerde orta derinlik. **KARAR reisim'de:** firmada hiç cihazı olmayan ölçüm cihazı
   türü (bu koşuda kumpas, şerit metre) için S.A.Y ne yapsın — (a) türün listesinden çıkarsın, (b) kalibrasyonsuz cihaz kaydı açsın (raporda uyarı), (c) boş bırakıp
   "kalan engel" yazsın, sormasın. Önerim (c); kullanıcı "ekle" derse (a). Ayrıntı yerel/say-altin/V21/vaka.md.
 - 2026-10-31 (lift denemesinden — reisim: "S.A.Y durup sormaz, işi bitirir, sonra kısaca bildirir"; "ONAY BEKLEMESİN TAM YETKİLİ OLSUN"; sunum
