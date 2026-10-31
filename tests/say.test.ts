@@ -36,6 +36,7 @@ import { yzAyi } from "../src/server/yz/kullanim.ts";
 import { sohbetYaz } from "../src/server/yz/sohbet.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 import { yzKur, type YzKurulumu } from "./yardimci/yz-kur.ts";
+import { KOSUL_SURUMU } from "../src/server/yz/kosul.ts";
 
 
 
@@ -91,7 +92,8 @@ test("kapalıyken ve anahtarsızken soru konuşmaya girmez (söylenir); açık +
   await yzAyari(A, FA.yon, { acik: true, sinir: null });
   assert.match(JSON.stringify(await ile(A, FA.den, (db) => soruyuEkle(db, FA.den, { metin: "Soru", ekler: [], ekran }))), /API anahtarı girilmedi/);
   await yzAyari(A, FA.yon, { anahtar: ANAHTAR });
-  assert.deepEqual(await ile(A, FA.den, (db) => sayDurumu(db)), { acik: true, anahtar: true, sinirDoldu: false });
+  /* 2026-10-31 (kalem 7 — M6): durum koşul kabulünü de verir (yapay zekâ açılınca test kurulumu hesapları kabul ettirir — yz-kur.ts kosulKur) */
+  assert.deepEqual(await ile(A, FA.den, (db) => sayDurumu(db)), { acik: true, anahtar: true, sinirDoldu: false, kosul: { firma: true, kisi: true, surum: KOSUL_SURUMU } });
   const k = await ile(A, FA.den, (db) => sayKapisi(db));
   assert.ok(k.durum === "acik" && k.anahtar === ANAHTAR && k.model === "haiku");
   assert.deepEqual(await ile(A, FA.den, (db) => sayGecmisi(db)), []);
