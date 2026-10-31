@@ -5,7 +5,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { ISLEM_DIZINI, SIK_ISLEMLER } from "../src/modules/say/islem-katalogu.ts";
-import { isDerinligi } from "../src/modules/say/sablonlar.ts";
+import { isDerinligi, KISA_SORU } from "../src/modules/say/sablonlar.ts";
 import { onbellekliMaliyet } from "../src/server/yz/okuma.ts";
 import { sayIstegi, sayMaliyeti } from "../src/server/yz/say.ts";
 
@@ -34,6 +34,14 @@ test("işin derinliği şablondan; araç sonucu ve denetim notu işi değiştirm
   const sonuc = { role: "user", content: [{ type: "tool_result", tool_use_id: "a", content: "{}" }] }, denetim = { role: "user", content: [{ type: "text", text: "Sunucunun bitiş denetimi (…)" }] };
   assert.equal(isDerinligi([soru, not("S4"), sonuc, denetim]), "medium");
   assert.equal(isDerinligi([soru, not("S1"), sonuc]), "high");
-  assert.equal(isDerinligi([soru, not("S4"), { role: "assistant", content: [] }, { role: "user", content: [{ type: "text", text: "yeni soru" }] }]), "high", "yeni soru yeni iş");
+  /* 2026-10-31 V21 madde 8 (reisim: "Peşinden gelen kısa işlerde orta düşünme derinliği … 'Kısa iş' tanımını yaz"): şablonsuz yeni soru ilk soru değilse,
+     kısaysa ve eksizse KISA İŞ → orta; uzun soru, ekli soru ya da konuşmanın ilk sorusu → yüksek. Şablonun derinliği yeni işe taşınmaz. */
+  const yeni = (text: string, ek: object[] = []) => ({ role: "user", content: [{ type: "text", text }, ...ek] });
+  assert.equal(isDerinligi([soru, not("S4"), { role: "assistant", content: [] }, yeni("yeni soru")]), "medium", "şablonsuz kısa iş orta");
+  assert.equal(isDerinligi([soru, not("S1"), { role: "assistant", content: [] }, yeni("yeni soru")]), "medium", "önceki şablonun derinliği taşınmaz, kısa iş kuralı");
+  assert.equal(isDerinligi([soru, { role: "assistant", content: [] }, yeni("x".repeat(KISA_SORU + 1))]), "high", "uzun soru");
+  assert.equal(isDerinligi([soru, { role: "assistant", content: [] }, yeni("fotoğraflar", [{ type: "image", source: { type: "file", file_id: "f" } }])]), "high", "ekli soru");
+  assert.equal(isDerinligi([yeni("kısa")]), "high", "konuşmanın ilk sorusu");
+  assert.equal(isDerinligi([soru, { role: "assistant", content: [] }, yeni("kısa"), { role: "user", content: [{ type: "text", text: "Sunucunun bildirim notu: …" }] }]), "medium", "sunucu notu işi değiştirmez");
   assert.equal(isDerinligi([]), "high");
 });

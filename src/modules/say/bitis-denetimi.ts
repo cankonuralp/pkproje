@@ -5,6 +5,10 @@
    çok iki kez (düzeltmeden sonra bir kez daha) — sonsuz döngü yok. Kilit tests/say-bitis-denetimi.test.ts. */
 
 export const DENETIM_ONEKI = "Sunucunun bitiş denetimi";
+/** 2026-10-31 (V21 madde 7): dört satırı aşan bildirim için sunucunun notu (is-siniri.ts bildirimNotu) — soru sayılmaz, iş sınırı değişmez */
+export const BILDIRIM_ONEKI = "Sunucunun bildirim notu";
+/** sunucunun konuşmaya kullanıcı tarafında eklediği not mu (kullanıcının sorusu değil) */
+export const sunucuNotuMu = (t: string): boolean => t.startsWith(DENETIM_ONEKI) || t.startsWith(BILDIRIM_ONEKI);
 /** rapor açan ya da rapora yazan işlemler (Raporlar ve Planlar'ın S.A.Y işlemleri) */
 export const RAPOR_YAZAN: ReadonlySet<string> = new Set(["rapor_ac", "rapor_yaz", "raporlara_yaz", "rapor_saat_plani", "rapor_foto_ekle", "rapor_foto_kaldir",
   "rapor_format_guncelle", "rapor_kopyala", "rapor_takip_ac", "plan_kunye_guncelle", "say_chat_rapor_yaz"]);
@@ -17,7 +21,7 @@ const metinler = (m: Mesaj) => bloklar(m.content).filter((b) => b.type === "text
 const kimlik = (x: unknown): string | null => (typeof x === "string" && /^[0-9a-f-]{36}$/.test(x) ? x : null);
 
 /** kullanıcının sorusu mu: sonuç bloğu taşımayan, sunucunun denetim notu olmayan kullanıcı iletisi */
-const soruMu = (m: Mesaj) => m.role === "user" && !bloklar(m.content).some((b) => b.type === "tool_result") && metinler(m).some((t) => !t.startsWith(DENETIM_ONEKI));
+const soruMu = (m: Mesaj) => m.role === "user" && !bloklar(m.content).some((b) => b.type === "tool_result") && metinler(m).some((t) => !sunucuNotuMu(t));
 
 /** denetim gerekiyorsa denetlenecek plan ve raporlar; gerekmiyorsa null */
 export function bitisDenetimi(mesajlar: readonly Mesaj[]): { plan: string | null; raporlar: string[] } | null {

@@ -3,6 +3,8 @@
    Sayfada tek öneri → tek tuş; birden çok → ilk öneri + "…" listesi (sıra: sayfanın durumu → kişinin son kullandıkları → kayıt sırası). Girdisi olan öneri
    küçük bir form açar; "Başlat" kullanıcının balonunda okunur komutu gönderir, aynı iletiyle şablon notu (talimat değişmez).
    2026-10-31: (reisim: "onay istemesin, tam yetkili olsun tüm işleri bitirsin … ONAY BEKLEMESİN TAM YETKİLİ OLSUN"): ikinci onay yok. Kilit tests/say-sablon.test.ts. */
+import { sunucuNotuMu } from "./bitis-denetimi.ts";
+import { sonSoruIndeksi, soruMu } from "./is-siniri.ts";
 
 export type GirdiTuru = "tarih" | "saat" | "metin" | "sayi" | "secim" | "onay" | "ek";
 export interface SablonGirdisi { ad: string; etiket: string; tur: GirdiTuru; secenekler?: readonly string[]; varsayilan?: string | boolean; zorunlu?: boolean }
@@ -139,14 +141,26 @@ export function isSablonu(mesajlar: readonly { role: string; content: unknown }[
     const s = /(?:^|\n)Şablon: (S\d{1,3}) /.exec(metin);
     if (m.role === "system" && s) return s[1]!;
     if (m.role === "user" && Array.isArray(m.content) && m.content.some((b) => b && typeof b === "object" && (b as { type?: unknown }).type === "text")
-      && !m.content.some((b) => b && typeof b === "object" && (b as { type?: unknown }).type === "tool_result") && !metin.startsWith("Sunucunun bitiş denetimi")) return null;
+      && !m.content.some((b) => b && typeof b === "object" && (b as { type?: unknown }).type === "tool_result") && !sunucuNotuMu(metin)) return null;
   }
   return null;
 }
-/** işin derinliği: şablon orta derinlikteyse orta; şablon yoksa yüksek */
+/** 2026-10-31 (V21 madde 8 — reisim: "Peşinden gelen kısa işlerde orta düşünme derinliği … 'Kısa iş' tanımını yaz"): KISA İŞ = konuşmanın ilk sorusu
+    değil, soru en çok KISA_SORU karakter ve bu iletide ek (fotoğraf / belge) yok */
+export const KISA_SORU = 300;
+export function kisaIsMi(mesajlar: readonly { role: string; content: unknown }[]): boolean {
+  const i = sonSoruIndeksi(mesajlar);
+  if (i <= 0 || !mesajlar.slice(0, i).some(soruMu)) return false;
+  const c = mesajlar[i]!.content, bloklar = Array.isArray(c) ? c.filter((b): b is Record<string, unknown> => !!b && typeof b === "object") : [];
+  if (bloklar.some((b) => b.type === "image" || b.type === "document")) return false;
+  const metin = typeof c === "string" ? c : bloklar.filter((b) => b.type === "text").map((b) => String(b.text ?? "")).join("\n");
+  return metin.trim().length <= KISA_SORU;
+}
+/** işin derinliği — iş başında (son sorudan) seçilir, iş boyunca değişmez: şablon orta derinlikteyse ya da kısa işse orta; ötekiler yüksek */
 export function isDerinligi(mesajlar: readonly { role: string; content: unknown }[]): "high" | "medium" {
   const s = isSablonu(mesajlar);
-  return s && ORTA_DERINLIK.has(s) ? "medium" : "high";
+  if (s) return ORTA_DERINLIK.has(s) ? "medium" : "high";
+  return kisaIsMi(mesajlar) ? "medium" : "high";
 }
 export function sablonNotu(s: Sablon, g: Readonly<Record<string, string | boolean>>): string {
   const girdi = Object.fromEntries(s.girdiler.filter((x) => x.tur !== "ek" && x.ad !== "onceSun").map((x) => [x.ad, g[x.ad] ?? ""]));

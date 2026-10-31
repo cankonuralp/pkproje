@@ -6,7 +6,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { grupFormati } from "../src/format/sablonlar.ts";
-import { Cevaplar } from "../src/format/tanim.ts";
+import { Cevaplar, FormatTanimi } from "../src/format/tanim.ts";
 import { saatPlani } from "../src/modules/raporlar/saat-plani.ts";
 import { cihazSec, isBildirimi, notKatsayisi, raporTamamla, type TamamlaGirdisi } from "../src/modules/raporlar/tamamla.ts";
 
@@ -39,6 +39,26 @@ test("bilinemeyen metin '-', yıl / sayı boş; dolu ve verilen yer korunur", ()
   assert.ok(r.tire.includes("Seri no") && !r.tire.includes("Marka"));
   const v = raporTamamla(g({ verilen: new Set(["sonuc"]) }));
   assert.equal(deger(v, "sonuc"), undefined, "verilen sonuç ezilmez");
+});
+
+/* 2026-10-31 V21 madde 5 (reisim: "Beyan kapasitesi boşsa etiketten ya da 'MAX' levhasından yazılır"): adında "kapasite" geçen boş sayı alanı / katsayısız test
+   değeri ekipmanın kapasitesinden; kapasite bilinmiyorsa boş kalır, engel yok; verilen ve dolu yer korunur */
+test("kapasite adlı boş sayı alanı ve test değeri ekipmanın kapasitesinden", () => {
+  const t2 = FormatTanimi.parse({ ...t, bolumler: [...t.bolumler,
+    { id: "bk", ad: "Beyan", blok: "bilgi", alanlar: [{ id: "beyan_kap", ad: "Beyan kapasitesi", tur: "sayi" }, { id: "beyan_not", ad: "Kapasite notu", tur: "metin" }] },
+    { id: "tk", ad: "Kapasite testi", blok: "test", degerler: [{ id: "kap_d", ad: "Beyan kapasitesi (kg)", birim: "kg" }] }] });
+  const r = raporTamamla(g({ tanim: t2, durum: durum({}, { alan: { kapasite: "4000" } }) }));
+  assert.equal(deger(r, "a:beyan_kap"), "4000");
+  assert.equal(deger(r, "d:kap_d"), "4000");
+  assert.equal(deger(r, "a:beyan_not"), "-", "metin alanı '-' (kapasiteden değil)");
+  assert.ok(r.varsayim.some((x) => x.includes("Beyan kapasitesi ekipmanın kapasitesinden (4000)")));
+  assert.ok(r.varsayim.some((x) => x.includes("Beyan kapasitesi (kg) ekipmanın kapasitesinden (4000 kg)")));
+  const yok = raporTamamla(g({ tanim: t2 }));
+  assert.equal(deger(yok, "a:beyan_kap"), undefined, "kapasite bilinmiyorsa boş");
+  assert.ok(!yok.engel.some((x) => x.includes("Beyan kapasitesi")), "engel değil");
+  const verili = raporTamamla(g({ tanim: t2, durum: durum({}, { alan: { kapasite: "4000", beyan_kap: "3500" } }), verilen: new Set(["d:kap_d"]) }));
+  assert.equal(deger(verili, "a:beyan_kap"), undefined, "dolu alan korunur");
+  assert.equal(deger(verili, "d:kap_d"), undefined, "verilen yer korunur");
 });
 
 test("test değeri katsayıdan; kapasite yoksa engel", () => {

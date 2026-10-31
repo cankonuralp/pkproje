@@ -3,7 +3,7 @@
    iş sınırında düşürülebilirliğine bak"). SAF. Konuşma kaydı DEĞİŞMEZ (yz_konusma yalnız sona eklenir, UPDATE yok — tests/say.test.ts); sıkıştırma
    yapay zekâya giden isteği kurarken uygulanır: kullanıcının SON sorusundan önceki iletiler (bitmiş işler) küçülür, bu işin iletileri aynen kalır.
    Aynı kayıttan her istekte aynı çıktı → önbellek öneki iş boyunca sabit, yeni işte bir kez yeniden yazılır. Kilit tests/say-is-siniri.test.ts. */
-import { DENETIM_ONEKI } from "./bitis-denetimi.ts";
+import { BILDIRIM_ONEKI, RAPOR_YAZAN, sunucuNotuMu } from "./bitis-denetimi.ts";
 
 export interface IsMesaji { role: string; content: unknown }
 type Blok = Record<string, unknown>;
@@ -15,7 +15,7 @@ export const GORUNTU_KALDIRILDI = "[büyütülmüş görüntü kaldırıldı —
 const bloklar = (c: unknown): Blok[] | null => (Array.isArray(c) ? c.filter((b): b is Blok => !!b && typeof b === "object") : null);
 const metinler = (m: IsMesaji) => (bloklar(m.content) ?? (typeof m.content === "string" ? [{ type: "text", text: m.content }] : [])).filter((b) => b.type === "text").map((b) => String(b.text ?? ""));
 /** kullanıcının sorusu: sonuç bloğu taşımayan, sunucunun denetim notu olmayan kullanıcı iletisi (bitis-denetimi.ts ile aynı kural) */
-export const soruMu = (m: IsMesaji): boolean => m.role === "user" && !(bloklar(m.content) ?? []).some((b) => b.type === "tool_result") && metinler(m).some((t) => !t.startsWith(DENETIM_ONEKI));
+export const soruMu = (m: IsMesaji): boolean => m.role === "user" && !(bloklar(m.content) ?? []).some((b) => b.type === "tool_result") && metinler(m).some((t) => !sunucuNotuMu(t));
 /** kullanıcının son sorusunun yeri (iş sınırı); soru yoksa -1 */
 export function sonSoruIndeksi(mesajlar: readonly IsMesaji[]): number {
   for (let i = mesajlar.length - 1; i >= 0; i--) if (soruMu(mesajlar[i]!)) return i;
@@ -86,4 +86,28 @@ export function gosterilenFotolar(mesajlar: readonly IsMesaji[]): Set<number> {
   }
   return s;
 }
+/* ── 2026-10-31 (V21 madde 7 — reisim: "Bildirim en çok dört satır; sunucu da bunu uygular"): rapora yazan iş bittiğinde S.A.Y'ın bildirimi dört dolu
+   satırı aşıyorsa ekrana gitmez, sunucu BİR kez not ekler, S.A.Y kısasını yazar ── */
+export const BILDIRIM_EN_COK = 4;
+/** dolu satır sayısı (boş satır ve yatay çizgi sayılmaz) */
+export const bildirimSatirlari = (metin: string): number => metin.split("\n").map((s) => s.trim()).filter((s) => s && !/^[-*_]{3,}$/.test(s)).length;
+/** bu işte rapora yazan işlem var, bildirim notu daha önce verilmedi ve bildirim uzunsa */
+export function bildirimNotuGerekli(mesajlar: readonly IsMesaji[], metin: string): boolean {
+  if (bildirimSatirlari(metin) <= BILDIRIM_EN_COK) return false;
+  const b = sonSoruIndeksi(mesajlar);
+  if (b < 0) return false;
+  let yazan = false;
+  for (const m of mesajlar.slice(b)) {
+    if (m.role === "user" && metinler(m).some((t) => t.startsWith(BILDIRIM_ONEKI))) return false;
+    if (m.role !== "assistant") continue;
+    for (const x of bloklar(m.content) ?? []) {
+      if (x.type === "tool_use" && x.name === "islem" && RAPOR_YAZAN.has(String((x.input as { ad?: unknown } | null)?.ad ?? ""))) yazan = true;
+    }
+  }
+  return yazan;
+}
+export const bildirimNotu = (satir: number) =>
+  `${BILDIRIM_ONEKI}: bildirimin ${satir} satır oldu; en çok dört satıra indir — ne hazır · varsayımla yazılanlar · "-" bırakılanlar · kalan engel. `
+  + "Yalnız bildirimi yeniden yaz; iş yapma, araç çağırma.";
+
 export const ZATEN_BUYUTULDU = (no: number) => `F${String(no).padStart(2, "0")} bu işte zaten büyütüldü; o görüntüye bak (aynı fotoğraf bir işte bir kez büyütülür — ilk seferde doğru bölgeyi iste).`;

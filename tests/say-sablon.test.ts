@@ -46,5 +46,6 @@ test("kaynak kilidi: sunucu şablonu kimlik ve rolle kabul eder; ekran öneriler
   assert.ok(d.includes("sablon: z.object({ id: z.string().regex(/^S\\d{1,2}$/)"), "girdi şeması");
   assert.ok(readFileSync("src/modules/say/ui/SayAsistan.tsx", "utf8").includes("<Oneriler yol={yol}"));
   assert.equal(ISLEM_KATALOGU.find((t) => t.ad === "plan_hazirlik")?.tur, "oku");
-  assert.ok(readFileSync("src/modules/planlar/say-islemleri.ts", "utf8").includes("mevcutUyarisi(b, v.plan, [ham.tur]"));
+  /* 2026-10-31 V21 madde 4: tür adıyla da gelir, turleriCoz kimliğe çevirir; uyarı çözülen türlerle */
+  assert.ok(readFileSync("src/modules/planlar/say-islemleri.ts", "utf8").includes("mevcutUyarisi(b, v.plan, turler, ekipmanCevabi("));
 });

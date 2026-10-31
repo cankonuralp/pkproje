@@ -113,6 +113,18 @@ export function raporTamamla(g: TamamlaGirdisi): Tamamlama {
 
   /* test değerleri: katsayılı notta kapasiteden; metin değer "-" */
   const kapasite = alanlar.filter(({ a }) => /kapasite|anma yük/.test(tr(a.ad))).map(({ a }) => sayiOku(alanDegeri(a.id))).find((n) => n !== null) ?? null;
+  /* 2026-10-31 (V21 madde 5 — reisim: "Beyan kapasitesi boşsa etiketten ya da 'MAX' levhasından yazılır"): adında "kapasite" geçen boş SAYI alanı ya da
+     test değeri (katsayısız, formülsüz, seçeneksiz) ekipmanın kapasitesinden — genel kural, türe özgü değil */
+  const kapasiteYaz = (yer: string, ad: string, birim?: string) => {
+    if (kapasite === null) return;
+    ekle(yer, sayiYaz(kapasite)); varsayim.push(`${ad} ekipmanın kapasitesinden (${sayiYaz(kapasite)}${birim ? ` ${birim}` : ""})`);
+  };
+  const kapasiteGorulen = new Set<string>();
+  for (const { a, yer } of alanlar) {
+    if (kapasiteGorulen.has(yer) || a.tur !== "sayi" || !/kapasite/.test(tr(a.ad)) || verilen.has(yer) || !bosMu(alanDegeri(a.id))) continue;
+    kapasiteGorulen.add(yer);
+    kapasiteYaz(yer, a.ad);
+  }
   for (const b of t.bolumler) {
     if (b.blok !== "test") continue;
     for (const d of b.degerler) {
@@ -120,7 +132,7 @@ export function raporTamamla(g: TamamlaGirdisi): Tamamlama {
       if (verilen.has(yer) || d.formul?.trim() || d.secenekler?.length || !bosMu(g.durum.cevaplar.deger[d.id])) continue;
       if (d.metin) { ekle(yer, "-"); tire.push(d.ad); continue; }
       const k = notKatsayisi(d.not);
-      if (k === null) continue;
+      if (k === null) { if (/kapasite/.test(tr(d.ad))) kapasiteYaz(yer, d.ad, d.birim); continue; }
       if (kapasite === null) { engel.push(`${d.ad}: kapasite bilinmediği için hesaplanamadı`); continue; }
       ekle(yer, sayiYaz(kapasite * k)); varsayim.push(`${d.ad} ${d.not} olarak hesaplandı (${sayiYaz(kapasite * k)}${d.birim ? ` ${d.birim}` : ""})`);
     }

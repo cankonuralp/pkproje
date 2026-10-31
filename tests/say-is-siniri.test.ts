@@ -7,7 +7,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { DENETIM_ONEKI } from "../src/modules/say/bitis-denetimi.ts";
-import { ESKI_SONUC_EN_COK, FOTO_KALDIRILDI, fotoNo, GORUNTU_KALDIRILDI, gosterilenFotolar, konusmaSikistir, sonSoruIndeksi, ZATEN_BUYUTULDU } from "../src/modules/say/is-siniri.ts";
+import { bildirimNotu, bildirimNotuGerekli, bildirimSatirlari, ESKI_SONUC_EN_COK, FOTO_KALDIRILDI, fotoNo, GORUNTU_KALDIRILDI, gosterilenFotolar, konusmaSikistir, sonSoruIndeksi,
+  ZATEN_BUYUTULDU } from "../src/modules/say/is-siniri.ts";
 
 const resim = { type: "image", source: { type: "file", file_id: "f1" } };
 const b64 = { type: "image", source: { type: "base64", media_type: "image/jpeg", data: "/9j/" } };
@@ -59,6 +60,25 @@ test("tek sorulu ya da sorusuz konuşma değişmez; kısa sonuç ve yalnız-dü�
   const s = konusmaSikistir(yalniz);
   assert.equal(s.sikisan, 0);
   assert.deepEqual(s.mesajlar, yalniz);
+});
+
+/* 2026-10-31 V21 madde 7 (reisim: "Bildirim en çok dört satır; sunucu da bunu uygular") */
+test("bildirim notu: rapora yazan işte dört satırı aşan bildirime bir kez; yazmayan işte ve kısa bildirimde yok", () => {
+  const yaz = { role: "assistant", content: [{ type: "tool_use", id: "y", name: "islem", input: { ad: "raporlara_yaz", girdi: {} } }] };
+  const oku = { role: "assistant", content: [{ type: "tool_use", id: "o", name: "islem", input: { ad: "plan_getir", girdi: {} } }] };
+  const sonuc = (id: string) => ({ role: "user", content: [{ type: "tool_result", tool_use_id: id, content: "{}" }] });
+  const uzun = "- Hazır: 8 rapor\n- Varsayım: a\n  - b\n- '-': c\n\n- Kalan engel: d\n- Ayrıca e";
+  assert.equal(bildirimSatirlari(uzun), 6);
+  assert.equal(bildirimSatirlari("a\n\n---\nb\nc\nd"), 4, "boş satır ve çizgi sayılmaz");
+  const soru = { role: "user", content: [{ type: "text", text: "raporları hazırla" }] };
+  assert.equal(bildirimNotuGerekli([soru, yaz, sonuc("y")], uzun), true);
+  assert.equal(bildirimNotuGerekli([soru, yaz, sonuc("y")], "a\nb\nc\nd"), false, "dört satır");
+  assert.equal(bildirimNotuGerekli([soru, oku, sonuc("o")], uzun), false, "yazmayan iş");
+  const not = { role: "user", content: [{ type: "text", text: bildirimNotu(6) }] };
+  assert.equal(bildirimNotuGerekli([soru, yaz, sonuc("y"), { role: "assistant", content: [{ type: "text", text: uzun }] }, not], uzun), false, "bir kez");
+  assert.equal(sonSoruIndeksi([soru, yaz, sonuc("y"), not]), 0, "not soru değil; iş sınırı değişmez");
+  assert.equal(bildirimNotuGerekli([{ role: "user", content: [{ type: "text", text: "eski" }] }, yaz, sonuc("y"), soru, oku, sonuc("o")], uzun), false, "önceki işin yazması sayılmaz");
+  assert.match(bildirimNotu(6), /^Sunucunun bildirim notu: bildirimin 6 satır/);
 });
 
 test("bu işte büyütülen fotoğraflar; önceki işinkiler sayılmaz; numara ve ret metni", () => {

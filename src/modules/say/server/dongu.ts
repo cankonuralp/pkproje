@@ -25,7 +25,7 @@ import { bekleyenAl, bekleyenYaz, isAl, isBirak, konusmaEkle, konusmaKilidi, kon
 import { fotoGosterAraci, fotoPaftaAraci } from "./gorsel.ts";
 import { beceriDizini, beceriMetni, becerileriOku } from "../beceriler.ts";
 import { bitisDenetimi, denetimNotu, sorunVar } from "../bitis-denetimi.ts";
-import { fotoNo, gosterilenFotolar, konusmaSikistir, ZATEN_BUYUTULDU } from "../is-siniri.ts";
+import { bildirimNotu, bildirimNotuGerekli, bildirimSatirlari, fotoNo, gosterilenFotolar, konusmaSikistir, ZATEN_BUYUTULDU } from "../is-siniri.ts";
 import { onOkumaBekle } from "./on-okuma.ts";
 import { acikSonuclar, konusmaDuzelt } from "../../../server/yz/konusma-denetim.ts";
 import type { SohbetIletisi } from "../../../server/yz/sohbet.ts";
@@ -218,13 +218,16 @@ export async function sayAkisi(o: IstekOturumu, ham: unknown, yaz: (x: SayOlayi)
       const olc = (yazma: number, islem: number) => oturumIslemi(o, (db) => istekOlcumuYaz(db, { is: v.is, ...tokenler(m.usage), maliyet: c.maliyet,
         sureMs: Date.now() - basla, yazma, islem, sablon: isSablonu(h.mesajlar as { role: string; content: unknown }[]), derinlik: isDerinligi(h.mesajlar as { role: string; content: unknown }[]) }))
         .catch((e: unknown) => hataYaz(o, e, "say.olcum"));
+      /* 2026-10-31 (V21 madde 7): rapora yazan iş bittiğinde dört satırı aşan bildirim ekrana gitmez; sunucu bir kez not ekler, S.A.Y kısasını yazar */
+      const metin = cevapMetni(m.content);
+      const uzunBildirim = m.stop_reason === "end_turn" && !!metin && bildirimNotuGerekli(h.mesajlar as { role: string; content: unknown }[], metin);
+      const goster = async (db: Sorgulayici) => (metin ? gorunenYaz(db, { kim: "say", metin, yer: h.b.yer, ek: h.b.raporId ? { rapor: h.b.raporId } : h.b.formatId ? { format: h.b.formatId } : null }) : null);
       const ileti = await oturumIslemi(o, async (db) => {
         await cagriKapat(db, h.a, c.maliyet, ilk ? 1 : 0);
         if (!m.content.length) return null;
         await konusmaKilidi(db);
         await konusmaEkle(db, "assistant", m.content);
-        const metin = cevapMetni(m.content);
-        return metin ? gorunenYaz(db, { kim: "say", metin, yer: h.b.yer, ek: h.b.raporId ? { rapor: h.b.raporId } : h.b.formatId ? { format: h.b.formatId } : null }) : null;
+        return uzunBildirim ? null : goster(db);
       });
       ilk = false;
       if (!m.content.length) { yaz({ t: "hata", neden: "Cevap boş geldi; isteğinizi başka türlü yazmayı deneyin.", yenile }); return; }
@@ -236,6 +239,12 @@ export async function sayAkisi(o: IstekOturumu, ham: unknown, yaz: (x: SayOlayi)
         if (m.stop_reason === "refusal" && !ileti) { yaz({ t: "hata", neden: "Yapay zekâ bu isteğe cevap vermedi.", yenile }); return; }
         /* 2026-10-31 (L3): rapora yazan iş bittiyse ve denetlenmediyse sunucu denetler, sonucu konuşmaya ekler, S.A.Y sürer (bir işte en çok iki kez) */
         if (m.stop_reason === "end_turn" && await bitirmedenDenetle(o, h.b, v.kaydedilmemis, yaz)) continue;
+        if (uzunBildirim) {
+          if (await bildirimNotuEkle(o, bildirimSatirlari(metin!))) continue;
+          /* not eklenemediyse (konuşmanın sonu değişti) gizlenen bildirim şimdi gösterilir */
+          const g = await oturumIslemi(o, goster);
+          if (g) yaz({ t: "ileti", ileti: g });
+        }
         yaz({ t: "bitti", yenile });
         return;
       }
@@ -278,6 +287,16 @@ async function bitirmedenDenetle(o: IstekOturumu, b: SayBaglami, kaydedilmemis: 
     await konusmaKilidi(db);
     if ((await konusmaSonu(db))?.rol !== "assistant") return false;
     await konusmaEkle(db, "user", [{ type: "text", text: denetimNotu(ozet.sonuc ?? "denetim sonucu alınamadı") }]);
+    return true;
+  });
+}
+
+/** V21 madde 7: dört satırı aşan bildirim için sunucunun notu (bir işte bir kez — is-siniri.ts bildirimNotuGerekli) */
+async function bildirimNotuEkle(o: IstekOturumu, satir: number): Promise<boolean> {
+  return oturumIslemi(o, async (db) => {
+    await konusmaKilidi(db);
+    if ((await konusmaSonu(db))?.rol !== "assistant") return false;
+    await konusmaEkle(db, "user", [{ type: "text", text: bildirimNotu(satir) }]);
     return true;
   });
 }

@@ -69,7 +69,7 @@ test("yalnız açık çağrıların sonucu yazılır", () => {
 
 test("kaynak kilidi: yazan yollar kilitli; döngü onarır ve reddi hata kaydına yazar", () => {
   const dongu = readFileSync("src/modules/say/server/dongu.ts", "utf8"), say = readFileSync("src/modules/say/server/say.ts", "utf8");
-  assert.equal((dongu.match(/await konusmaKilidi\(db\)/g) ?? []).length, 4, "sonuç, yapay zekâ iletisi, sunucu sonuçları, bitiş denetimi notu (2026-10-31)");
+  assert.equal((dongu.match(/await konusmaKilidi\(db\)/g) ?? []).length, 5, "sonuç, yapay zekâ iletisi, sunucu sonuçları, bitiş denetimi notu, bildirim notu (2026-10-31 V21 madde 7)");
   assert.ok(/kullaniciIletisiEkle[^{]*\{\s*await konusmaKilidi\(db\);/.test(say), "kullanıcı iletisi kilitli");
   assert.ok(dongu.includes("konusmaDuzelt((await konusmaOku(db))"), "istekten önce onarım");
   assert.ok(dongu.includes('"say.konusma"') && dongu.includes('"say.istek"'), "onarım ve ret hata kaydına");
