@@ -20,6 +20,7 @@ import { SAY_ISLEMLERI as PERSONEL, SAY_SAYFALARI as PERSONEL_SAYFALARI } from "
 import { SAY_ISLEMLERI as PLANLAR, SAY_SAYFALARI as PLANLAR_SAYFALARI } from "../planlar/say-islemleri.ts";
 import { SAY_ISLEMLERI as RAPOR_FORMAT, SAY_SAYFALARI as RAPOR_FORMAT_SAYFALARI } from "../rapor-format/say-islemleri.ts";
 import { SAY_ISLEMLERI as RAPORLAR } from "../raporlar/say-islemleri.ts";
+import { SAY_ISLEMLERI as SAY_CHAT } from "../say-chat/say-islemleri.ts";
 import { SAY_ISLEMLERI as SOZLESMELER, SAY_SAYFALARI as SOZLESMELER_SAYFALARI } from "../sozlesmeler/say-islemleri.ts";
 import { SAY_ISLEMLERI as TALEPLER } from "../talepler/say-islemleri.ts";
 import { SAY_ISLEMLERI as TEKLIFLER, SAY_SAYFALARI as TEKLIFLER_SAYFALARI } from "../teklifler/say-islemleri.ts";
@@ -34,7 +35,7 @@ export const KATALOG_MODULLERI = [
   { modul: "olcum-cihazlari", islemler: OLCUM_CIHAZLARI }, { modul: "zimmetler", islemler: ZIMMETLER }, { modul: "araclar", islemler: ARACLAR },
   { modul: "personel", islemler: PERSONEL }, { modul: "talepler", islemler: TALEPLER },
   { modul: "muhasebe", islemler: MUHASEBE }, { modul: "performans", islemler: PERFORMANS },
-  { modul: "ekipman-turleri", islemler: EKIPMAN_TURLERI }, { modul: "rapor-format", islemler: RAPOR_FORMAT },
+  { modul: "ekipman-turleri", islemler: EKIPMAN_TURLERI }, { modul: "rapor-format", islemler: RAPOR_FORMAT }, { modul: "say-chat", islemler: SAY_CHAT },
   { modul: "dokumanlar", islemler: DOKUMANLAR }, { modul: "egitimler", islemler: EGITIMLER }, { modul: "firma-ayarlari", islemler: FIRMA_AYARLARI },
 ] as const;
 /** 2026-10-31 (kalem 6b — onay kapısı; sunum "S.A.Y'a tam yetenek", kural: "onaya, imzaya ya da dışarıya gönderme, silme, yayınlama ve plan kabulü

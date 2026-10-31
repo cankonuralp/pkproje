@@ -915,6 +915,9 @@ export const SAY_ELLE_ALANLAR: Readonly<Record<string, Readonly<Record<string, s
   standart_ara: { brans: "liste süzgeci (ekrandaki Mekanik / Elektrik sekmesi)" },
   tur_ara: { brans: "liste süzgeci (ekrandaki Mekanik / Elektrik sekmesi)" },
   uyari_ara: { gecmis: "liste süzgeci (yalnız süresi geçenler)" },
+  /* 2026-10-31 (format parçası, S.A.Y Chat ayarı) */
+  format_parcasi_kaydet: { bolum: "formatın bölümü (kimlik ya da ad — işlem tanımdan bulur)", ad: "parcaKaydet'in konumsal adı" },
+  say_chat_ayar_kaydet: { tanim: "S.A.Y Chat tanımı (sayChatAyarKaydet sema.ts tanimDenetle ile formata göre denetler)" },
   /* 2026-10-31 (S.A.Y yükleme yuvaları) */
   firma_dosyasi_yukle: { ne: "ayarDosyasiYaz'ın konumsal dosya türü (AYAR_DOSYASI)" },
   ice_aktar_denetle: { dosya: "Girdi.dosya", satirlar: "Excel ekinin satırları (S.A.Y ekin metninden; Girdi.satirlar)" },

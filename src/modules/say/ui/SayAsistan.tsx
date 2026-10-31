@@ -60,6 +60,7 @@ import type { SohbetEkAdi, SohbetEksik, SohbetIletisi } from "../../../server/yz
 import { xlsxSayfalari, zipAc } from "../../../components/disa/oku";
 import { pdfdenSablonKur } from "../../ekipman-turleri/ui/pdfdenSablon";
 import { pdfdenBelgeKur } from "../../rapor-format/ui/pdfdenBelge";
+import { adimOku, ilerleme as ilerlemeHesapla, isTuru, sureEkle, sureYaz, tahminSn } from "../ilerleme";
 import { formGoruntusuIste, onayGonder } from "./form";
 import { KosulKabul } from "./KosulKabul";
 import { Oneriler } from "./Oneriler";
@@ -156,6 +157,24 @@ async function olaylariOku(govde: ReadableStream<Uint8Array>, olay: (x: SayOlayi
 /* 2026-10-31 (reisim: "sıkışma oldu yazı yazamıyorum … ekli belgeler yanyana daha küçük ve 2 belgeden sonra ve ... belge gibi dursun"): gönderilmeyi
    bekleyen ekler (cikar verilen liste) küçük, yan yana; ilk ikisi görünür, kalanı "+N belge" tuşuyla açılır (açıkken liste kendi içinde kayar) */
 const EK_OZET = 2;
+const SURE_ANAHTARI = "probata-say-sure";
+/** bekleme balonunun yüzde çubuğu ve kalan süresi */
+function BeklemeCubugu({ bas, simdi, tur, ilerleme, adimBas }: { bas: number; simdi: number; tur: string; ilerleme: string | null; adimBas: number | null }) {
+  let gecmis: Record<string, number[]> = {};
+  try { gecmis = JSON.parse(localStorage.getItem(SURE_ANAHTARI) ?? "{}") as Record<string, number[]>; } catch { gecmis = {}; }
+  const a = adimOku(ilerleme);
+  const g = Math.max(0, (simdi - bas) / 1000);
+  const p = ilerlemeHesapla(g, tahminSn(tur, gecmis), a ? { ...a, adimBasSn: Math.max(0, (simdi - (adimBas ?? simdi)) / 1000) } : null);
+  return (
+    <div className={stil.cubuk} data-say-cubuk="">
+      <div className={stil.cubukZemin} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={p.yuzde} aria-label="İlerleme">
+        <div className={stil.cubukDolu} style={{ width: `${p.yuzde}%` }} />
+      </div>
+      <small>%{p.yuzde} · {p.asildi ? "biraz daha sürüyor" : `${sureYaz(p.kalanSn ?? 0)} kaldı`}</small>
+    </div>
+  );
+}
+
 function EkListesi({ ekler, cikar }: { ekler: readonly (SohbetEkAdi & { url?: string | null })[]; cikar?: (i: number) => void }) {
   const [hepsi, setHepsi] = useState(false);
   const ozet = !!cikar && !hepsi && ekler.length > EK_OZET + 1;
@@ -267,6 +286,30 @@ export function SayAsistan() {
   const [bolumSor, setBolumSor] = useState<{ fotolar: File[]; soru: string } | null>(null);
   /* 557: bekleme balonundaki yazı ("Düşünüyor" / "Rapora yazıyor" …), küçük hâl, sohbetin sonunda mı (en alta in tuşu) */
   const [asama, setAsama] = useState<string | null>(null);
+  /* 2026-10-31 (reisim: "sadece düşünüyor, çalışıyor yazmasın termin süresi ve yüzdelik bar olsun"): bekleme balonunda tahmini süre ve yüzde çubuğu
+     (../ilerleme.ts) — işin türü başlarken, süresi bitince bu cihazda saklanır (tahmin aynı türden işlerin süresinden) */
+  const isTuruRef = useRef("serbest"), basRef = useRef<number | null>(null), adimRef = useRef<{ i: number; t: number } | null>(null);
+  const [simdi, setSimdi] = useState(0);
+  useEffect(() => {
+    if (!bekliyor) return;
+    const bas = Date.now(), tur = isTuruRef.current;
+    basRef.current = bas; adimRef.current = null;
+    const z = window.setInterval(() => setSimdi(Date.now()), 500);
+    return () => {
+      window.clearInterval(z);
+      basRef.current = null;
+      try {
+        const g = JSON.parse(localStorage.getItem(SURE_ANAHTARI) ?? "{}") as Record<string, number[]>;
+        localStorage.setItem(SURE_ANAHTARI, JSON.stringify(sureEkle(g && typeof g === "object" ? g : {}, tur, (Date.now() - bas) / 1000)));
+      } catch { /* depolama kapalı: tahmin başlangıç değerinde kalır */ }
+    };
+  }, [bekliyor]);
+  /* okumanın adımı değişince adımın başladığı an (kalan süre adım başına ortalamadan) */
+  useEffect(() => {
+    const x = adimOku(ilerleme);
+    if (!x) adimRef.current = null;
+    else if (adimRef.current?.i !== x.i) adimRef.current = { i: x.i, t: Date.now() };
+  }, [ilerleme]);
   /* 2026-10-23: S.A.Y'ın yazmakta olduğu cevap ve düşünme özeti (akışla gelir; ileti kaydedilince boşalır) */
   const [canli, setCanli] = useState("");
   /* 2026-10-26 (reisim: "yapay zekâ … çok açıklama var", "durdurma yok"): Durdur — çalışan işin akışı kesilir, ekran işleri bırakılır; yapılanlar kalır
@@ -417,6 +460,7 @@ export function SayAsistan() {
   const islemYap = async (istek: Istek, soru: string, ek: readonly { dosya: string; bolum: string }[] = []) => {
     if (!rb || bekliyor) return;
     alttaRef.current = true; setAltta(true);
+    isTuruRef.current = isTuru({ oku: istek === "oku" });
     setBekliyor(true); setHata(null); setAsama(istek === "oku" ? "Okuyor" : "Düşünüyor");
     try { await islemCalistir(istek, soru, ek); }
     catch { setIlerleme(null); setHata("S.A.Y'a ulaşılamadı; bağlantıyı kontrol edip yeniden deneyin."); } finally { setBekliyor(false); setAsama(null); }
@@ -509,6 +553,9 @@ export function SayAsistan() {
         yapilan: o.bolumler.filter((b) => b.alan || b.satir).map((b) => `${b.ad}: ${[b.alan ? `${b.alan} alan` : "", b.satir ? `${b.satir} satır` : ""].filter(Boolean).join(", ")}${b.belirsiz ? ` (${b.belirsiz} değerden emin değil, sarı)` : ""}`),
         yazilamadi: [...(!o.okunan && !o.okunamayan ? [{ ad: "Fotoğraf", neden: "okunacak fotoğraf yok (bölüm başlığındaki “Fotoğraf ekle” ile eklenir)" }] : []),
           ...(o.okunamayan ? [{ ad: `${o.okunamayan} fotoğraf`, neden: o.neden ?? "okunamadı" }] : []),
+          /* 2026-10-31 (K9): okundu ama girilen yok — nedeni */
+          ...(o.bos ? [{ ad: `${o.bos} fotoğraf`, neden: "okundu ama bu bölümün bilgisi görünmüyor (etiket / ölçüm yok, bulanık ya da başka bölümün fotoğrafı); foto_goster ile bakıp gerekirse rapora_yaz ile gir" }] : []),
+          ...(o.uyusmayan ? [{ ad: `${o.uyusmayan} fotoğraf`, neden: "değerler okundu ama formatın hiçbir boş yerine uymadı (alan adları farklı); foto_goster ile bakıp rapora_yaz ile gir" }] : []),
           ...o.dolu.map((d) => ({ ad: d, neden: "dolu olduğu için değiştirilmedi" }))] },
         ...(girilen ? { geriAl: y.geriAl } : {}), ...(y.ustune ? { ustune: y.ustune } : {}) };
     }
@@ -624,6 +671,7 @@ export function SayAsistan() {
     if (!rb) return;
     setBolumSor(null);
     alttaRef.current = true; setAltta(true);
+    isTuruRef.current = isTuru({ oku: true });
     setBekliyor(true); setHata(null); setAsama("Okuyor");
     const eklenen: { dosya: string; bolum: string }[] = [];
     try {
@@ -724,6 +772,7 @@ export function SayAsistan() {
       ek: giden.length ? { ekler: giden.map((x) => ({ ad: x.ad, boyut: x.boyut, tur: x.tur })) } : null, zaman: new Date().toISOString() }]);
     setSoru(""); setEkler([]);
     alttaRef.current = true; setAltta(true);
+    isTuruRef.current = isTuru({ sablon: disari?.sablon.id, ekli: !!giden.length });
     setBekliyor(true); setAsama(giden.length ? "Ekler yükleniyor" : "Düşünüyor"); setMenu(false); setHata(null);
     try {
       /* 2026-10-23: ekler önce yüklenir (parça parça, konuşmada kalır); biri yüklenemezse soru gitmez, yazı ve ekler geri döner */
@@ -848,6 +897,7 @@ export function SayAsistan() {
                 {asama === "Düşünüyor" || !asama ? <span className={stil.noktalar} aria-hidden="true"><i /><i /><i /></span> : <span className={stil.donen} aria-hidden="true" />}
                 {asama ?? "Düşünüyor"}{ilerleme ? ` · ${ilerleme}` : ""}
                 {asama !== "Ekler yükleniyor" && <button className={stil.kucukTus} type="button" onClick={() => durdurRef.current?.abort()}>Durdur</button>}
+                {basRef.current !== null && simdi > 0 && <BeklemeCubugu bas={basRef.current} simdi={simdi} tur={isTuruRef.current} ilerleme={ilerleme} adimBas={adimRef.current?.t ?? null} />}
                 {/* 2026-10-23: yazılmakta olan cevap akışla (düşünme özeti gösterilmez — 2026-10-26) */}
                 {canli && <div className={stil.canli}><Markdown metin={canli} /></div>}
               </div>

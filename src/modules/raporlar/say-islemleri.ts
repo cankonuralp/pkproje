@@ -21,6 +21,8 @@ import { raporHaritasi } from "../say/rapor-haritasi.ts";
 import { fotoKopyasiOku } from "../../server/yz/konusma.ts";
 import { turKarti } from "../ekipman-turleri/server/turler.ts";
 import { planIci } from "../planlar/server/plan-ici.ts";
+import { raporBaglari } from "../teklifler/server/rapor-bagi.ts";
+import { canDo } from "../../server/yetki/canDo.ts";
 import { raporSorunlari } from "./denetle.ts";
 import { cakismalar, saatGirisleri, saatPlani, type SaatRaporu } from "./saat-plani.ts";
 import { komutlariUygula, sonucOzeti, type Durum, type GirisSonucu } from "./say-doldur.ts";
@@ -256,13 +258,15 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
     ad: "plan_denetle", modul: MODUL, tur: "oku", islev: raporEksikleri, kaynak: [kimlik],
     girdi: z.object({ plan: kimlik.optional(), raporlar: z.array(kimlik).optional() }),
     tarif: "Planın (ya da verilen raporların) raporlarını gönderim öncesi denetler: zorunlu alan / ölçüm cihazı eksiği, fotoğraf yok ya da birden çok, tablo boş "
-      + "hücre, künye boş, saat çakışması, gönderilmiş rapor. Yazmaz; sorunlar rapor rapor.",
+      + "hücre, künye boş, saat çakışması, gönderilmiş rapor, sonuç maddelerle çelişiyor, teklif adedini aşıyor / teklifte yok (teklifleri görene). Yazmaz; sorunlar rapor rapor.",
     calistir: async (b, v) => {
       let idler = v.raporlar ?? [];
+      let tesis: string | null = null;
       if (v.plan) {
         const p = await planIci(b.db, b.kim, v.plan);
         if (!p) return { tamam: false, neden: GORUNMEZ };
         idler = [...new Set([...idler, ...p.raporlar.map((r) => r.id)])];
+        tesis = p.kart.tesis.id;
       }
       if (!idler.length) return { tamam: false, neden: "Denetlenecek rapor yok (plan ya da raporlar)." };
       const sonuc: { rapor: string; no: string; sorunlar: string[] }[] = [], zaman: { id: string; bas: string | null; bit: string | null }[] = [];
@@ -271,6 +275,15 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
         if (!s) { sonuc.push({ rapor: id, no: "—", sorunlar: [GORUNMEZ] }); continue; }
         zaman.push({ id, bas: s.tarih.bas, bit: s.tarih.bit });
         sonuc.push({ rapor: id, no: s.no, sorunlar: raporSorunlari(s, (await raporEksikleri(b.db, b.kim, id)) ?? []) });
+      }
+      /* teklif adedi: raporun bağlandığı teklifte türünün kalemi yok ya da adet aşıldı (Muhasebe'nin "teklif dışı" fiyatı) — teklifleri görebilene */
+      if (tesis && canDo(b.kim, 11, "gor")) {
+        const bag = await raporBaglari(b.db, [tesis]);
+        for (const r of sonuc) {
+          const x = bag.get(r.rapor);
+          if (x?.kaynak === "disi") r.sorunlar.push(`teklif ${x.teklif?.no ?? ""} adedini aşıyor ya da teklifte bu tür yok (teklif dışı)`.replace("teklif  ", "teklif "));
+          else if (x?.kaynak === "liste") r.sorunlar.push("kabul edilmiş teklif yok (fiyat listesinden)");
+        }
       }
       for (const [x, y] of cakismalar(zaman)) {
         const a = sonuc.find((r) => r.rapor === x)!, c = sonuc.find((r) => r.rapor === y)!;

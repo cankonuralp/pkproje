@@ -13,6 +13,8 @@ import type { SatirEkle } from "../../../server/yz/say";
 export interface SayOkumaOzeti {
   /** okunan fotoğraf · okunamayan fotoğraf · ilk okunamama nedeni */
   okunan: number; okunamayan: number; neden: string | null;
+  /** 2026-10-31 (K9): okunup değer çıkmayan fotoğraf · değer çıkıp formatın hiçbir yerine uymayan fotoğraf */
+  bos?: number; uyusmayan?: number;
   /** bölüm başına girilen alan / tablo satırı, emin olunmayan değer sayısı */
   bolumler: { ad: string; alan: number; satir: number; belirsiz: number }[];
   /** dolu olduğu için değiştirilmeyen alanların adları */

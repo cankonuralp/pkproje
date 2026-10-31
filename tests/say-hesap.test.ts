@@ -45,3 +45,18 @@ test("denetim sorunları; künye değeri yazılmaz; işlemler katalogda", () => 
   for (const a of ["rapor_saat_plani", "raporlara_yaz", "plan_denetle"]) assert.ok(ISLEM_KATALOGU.some((t) => t.ad === a), a);
   assert.equal(ISLEM_KATALOGU.find((t) => t.ad === "plan_denetle")!.tur, "oku", "denetim yazmaz");
 });
+
+/* 2026-10-31 (reisim: "önerdiklerini kabul ediyorum" — sonuç–madde denetimi): seçilen sonuç maddelerin önerisiyle çelişirse sorun; uyuşursa yok */
+test("denetim: sonuç maddelerle çelişiyor", async () => {
+  const { SABLONLAR } = await import("../src/format/sablonlar.ts");
+  const { Cevaplar, FormatTanimi } = await import("../src/format/tanim.ts");
+  const t = FormatTanimi.parse(SABLONLAR.ZPKR02.tanim);
+  const liste = t.bolumler.find((b) => b.blok === "liste")!;
+  if (liste.blok !== "liste") throw new Error("liste yok");
+  const m = liste.gruplar[0]!.maddeler[0]!.id;
+  const rapor = (sonuc: string, c: string) => raporSorunlari({ durum: "yeni", tanim: t, cevaplar: Cevaplar.parse({ madde: { [m]: { c } }, sonuc }), fotolar: [],
+    kunye: { firmaAdi: "x", sgk: "1" } }, []).filter((x) => x.startsWith("sonuç"));
+  assert.match(rapor("uygun", liste.cevaplar[1]!).join(), /sonuç “Uygun” ama maddeler \/ ölçümler “Uygun değil” diyor \(1 kusur\)/);
+  assert.deepEqual(rapor("uygun_degil", liste.cevaplar[1]!), []);
+  assert.deepEqual(rapor("uygun", liste.cevaplar[0]!), []);
+});

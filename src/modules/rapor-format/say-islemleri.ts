@@ -14,6 +14,7 @@ import { TurGirdisi } from "../ekipman-turleri/sema.ts";
 import { formatHaritasi, formatIslemleri, type FormatIslemi } from "./say-kurucu.ts";
 import { BaslatGirdisi, BelgeTuruGirdisi, YayinNotu } from "./sema.ts";
 import { BELGE_KATALOGU } from "../../belge/katalog.ts";
+import { firmaParcalari, parcaKaydet, parcaSil } from "./server/parcalar.ts";
 import { belgeFormatiOku, belgeFormatlari, belgeTaslakAc, belgeTaslakKaydet, belgeTemeleDon, belgeYayinla } from "./server/belgeler.ts";
 import {
   formatAyrintisi, formatSurumleri, GeriDonusIptal, sablondanTurEkle, sablonKullanimi, surumeGeriDon, surumSil, taslakBaslat, taslakKaydet, yayinDenetle, yayinla,
@@ -188,6 +189,31 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
     ad: "belge_temele_don", modul: MODUL, tur: "yaz", girdi: z.object({ belge: BelgeTuruGirdisi }), kaynak: [BelgeTuruGirdisi], islev: belgeTemeleDon,
     tarif: "Belgenin yayındaki formatını kaldırır; belge yeniden programın temel formatıyla çizilir (sürümler silinmez, taslak kalır).",
     calistir: async (b, v) => yazmaCevabi(await belgeTemeleDon(b.db, b.kim, v.belge), { bildirim: "Belge temel formata döndü." }),
+  }),
+  /* 2026-10-31 (S.A.Y format parçaları — kapsam eksiği): Format kurucunun "Parça olarak kaydet" ve parça kitaplığının Sil'i (aynı yetki) */
+  islem({
+    ad: "format_parcalari", modul: MODUL, tur: "oku", girdi: z.object({ sayfa: SuzgecDurumuSemasi.shape.sayfa }), kaynak: [SuzgecDurumuSemasi], islev: firmaParcalari,
+    tarif: "Firmanın kaydettiği format parçaları (kimlik, ad, bölüm türü).",
+    calistir: async (b) => ({ tamam: true, sonuc: { parcalar: (await firmaParcalari(b.db, b.kim)).map((p) => ({ id: p.id, ad: p.ad, blok: p.bolum.blok })) } }),
+  }),
+  islem({
+    ad: "format_parcasi_kaydet", modul: MODUL, tur: "yaz", girdi: z.object({ format: kimlik, bolum: z.string().min(1).max(200), ad: z.string().max(200).optional() }),
+    kaynak: [kimlik], islev: parcaKaydet,
+    tarif: "Bir format sürümünün bölümünü firmanın parça kitaplığına kaydeder (öteki formatlarda kullanılır): format, bolum (kimlik ya da ad — format_getir), ad.",
+    calistir: async (b, v) => {
+      const f = await formatAyrintisi(b.db, b.kim, v.format);
+      if (!f?.tanim) return { tamam: false, neden: GORUNMEZ };
+      const k = v.bolum.trim().toLocaleLowerCase("tr");
+      const bolum = f.tanim.bolumler.find((x) => x.id === v.bolum.trim()) ?? f.tanim.bolumler.find((x) => x.ad.trim().toLocaleLowerCase("tr") === k);
+      if (!bolum) return { tamam: false, neden: `Formatta “${v.bolum}” bölümü yok.` };
+      const r = await parcaKaydet(b.db, b.kim, v.ad ?? "", bolum);
+      return r.durum === "tamam" ? { tamam: true, bildirim: `“${r.ad}” parça olarak kaydedildi.`, sonuc: { id: r.id } } : yazmaCevabi(r);
+    },
+  }),
+  islem({
+    ad: "format_parcasi_sil", modul: MODUL, tur: "yaz", girdi: z.object({ parca: kimlik }), kaynak: [kimlik], islev: parcaSil,
+    tarif: "Firmanın format parçasını siler (formatlara kopyalanmış bölümler etkilenmez).",
+    calistir: async (b, v) => yazmaCevabi(await parcaSil(b.db, b.kim, v.parca), { bildirim: "Parça silindi." }),
   }),
 ];
 

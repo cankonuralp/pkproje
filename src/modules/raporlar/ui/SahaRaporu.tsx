@@ -618,7 +618,7 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
       .filter((x, i, a) => a.findIndex((y) => y.dosya === x.dosya) === i);
     const bolumler = new Map<string, { ad: string; alan: number; satir: Set<number>; belirsiz: number }>();
     const dolu: { h: OkumaHedefi; okunan: OkunanAlan[] }[] = [], geri: Geri[] = [], nedenler: string[] = [];
-    let okunan = 0;
+    let okunan = 0, bos = 0, uyusmayan = 0;
     for (const [i, f] of l.entries()) {
       const h = hedefler.get(f.bolum)!;
       ilerle(`${i + 1} / ${l.length} · ${h.ad}`);
@@ -644,9 +644,10 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
       for (const x of u.isaretler) { if (x.yer.tur === "hucre") b.satir.add(x.yer.satir); else b.alan++; if (x.guven === "belirsiz") b.belirsiz++; }
       bolumler.set(f.bolum, b);
       if (u.dolu.length) dolu.push({ h, okunan: u.dolu.map((x) => ({ alan: x.alan, deger: x.deger, guven: x.guven })) });
+      if (!degerler.length) bos++; else if (!u.isaretler.length && !u.dolu.length) uyusmayan++;
     }
     const ozet: SayOkumaOzeti = {
-      okunan, okunamayan: nedenler.length, neden: nedenler[0]?.slice(0, 300) ?? null,
+      okunan, okunamayan: nedenler.length, neden: nedenler[0]?.slice(0, 300) ?? null, bos, uyusmayan,
       bolumler: [...bolumler.values()].map((b) => ({ ad: b.ad.slice(0, 120), alan: b.alan, satir: b.satir.size, belirsiz: b.belirsiz })),
       dolu: dolu.flatMap((g) => g.okunan.map((o) => (g.h.adlar.get(o.alan) ?? o.alan).slice(0, 120))).slice(0, 60),
     };

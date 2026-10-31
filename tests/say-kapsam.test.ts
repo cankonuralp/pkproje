@@ -10,7 +10,7 @@ import { ISLEM_KATALOGU } from "../src/modules/say/islem-katalogu.ts";
 import { EKRAN_ARAC_ADLARI } from "../src/server/yz/say.ts";
 
 /** eksik karşılık sayısının üst sınırı — bir eksik kapanınca bu sayı da düşürülür (yükselmez) */
-export const EKSIK_EN_COK = 13;
+export const EKSIK_EN_COK = 10;
 
 export function eylemDosyalari(kok = "src/modules"): Record<string, string[]> {
   const l: Record<string, string[]> = {};
