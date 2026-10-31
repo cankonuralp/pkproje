@@ -75,7 +75,7 @@ test("3. işlemin sonucu tool_result'a konmazsa S.A.Y kayıtları göremez (yaln
 });
 
 test("4. işlem araçları her istekte değilse başka sayfada iş yapılamaz (2026-10-23: araçların hepsi her istekte — sayAraclari)", async () => {
-  const m = await bozuk<Say>(SAY, "[...ISLEM_ARACLARI, BECERI_ARACI, ...GORSEL_ARACLARI, FORM_ARACI, EKRAN_ARACI, ...RAPOR_ARACLARI, formatAraci, FORMAT_PDF_ARACI, ARAMA_ARACI]", "[BECERI_ARACI, ...GORSEL_ARACLARI, FORM_ARACI, EKRAN_ARACI, ...RAPOR_ARACLARI, formatAraci, FORMAT_PDF_ARACI, ARAMA_ARACI]");
+  const m = await bozuk<Say>(SAY, "[...ISLEM_ARACLARI, BECERI_ARACI, ...GORSEL_ARACLARI, FORM_ARACI, EKRAN_ARACI, ...RAPOR_ARACLARI, formatAraci, FORMAT_PDF_ARACI, PDF_GONDER_ARACI, ARAMA_ARACI]", "[BECERI_ARACI, ...GORSEL_ARACLARI, FORM_ARACI, EKRAN_ARACI, ...RAPOR_ARACLARI, formatAraci, FORMAT_PDF_ARACI, PDF_GONDER_ARACI, ARAMA_ARACI]");
   const g = m.sayIstegi({ model: "haiku", sistem: "s", araclar: m.sayAraclari({ name: "formati_duzenle" }), mesajlar: [{ role: "user", content: "plan aç" }] })
     .govde as { tools: { name: string }[] };
   assert.ok(!g.tools.some((t) => t.name === "islem"), "bozuk: işlem aracı yok");
