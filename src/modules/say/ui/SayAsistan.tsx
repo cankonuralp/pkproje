@@ -47,7 +47,7 @@
    ek sayısı, boyu, soru uzunluğu sınırı yok; Excel bütün sayfalarıyla metne çevrilir. */
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from "react";
 import { fotografiKucult } from "../../../components/foto/kucult";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Ikon } from "../../../components/ikon/Ikon";
@@ -290,6 +290,25 @@ export function SayAsistan() {
      (../ilerleme.ts) — işin türü başlarken, süresi bitince bu cihazda saklanır (tahmin aynı türden işlerin süresinden) */
   const isTuruRef = useRef("serbest"), basRef = useRef<number | null>(null), adimRef = useRef<{ i: number; t: number } | null>(null);
   const [simdi, setSimdi] = useState(0);
+  /* 2026-10-31 (reisim: "işaretlediğim yere tam ekran tuşu ekle, tıklayınca pop up olarak ekranda daha büyük gözüksün, güzel de bir geçiş animasyonu
+     ekle"): büyük görünüm — panel ekranın ortasında, arkası perdeli; geçiş FLIP (eski yer ve boydan yenisine kayarak büyür / küçülür) */
+  const [tam, setTam] = useState(false);
+  const flip = useRef<DOMRect | null>(null);
+  const tamDegistir = (v?: boolean) => {
+    flip.current = panel.current?.getBoundingClientRect() ?? null;
+    setTam((t) => v ?? !t);
+  };
+  useLayoutEffect(() => {
+    const p = panel.current, once = flip.current;
+    flip.current = null;
+    if (!p || !once || typeof p.animate !== "function" || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const s = p.getBoundingClientRect();
+    if (!s.width || !s.height) return;
+    p.animate([
+      { transformOrigin: "top left", transform: `translate(${once.left - s.left}px, ${once.top - s.top}px) scale(${once.width / s.width}, ${once.height / s.height})`, opacity: 0.85 },
+      { transformOrigin: "top left", transform: "none", opacity: 1 },
+    ], { duration: 420, easing: "cubic-bezier(.2, .8, .2, 1)" });
+  }, [tam]);
   useEffect(() => {
     if (!bekliyor) return;
     const bas = Date.now(), tur = isTuruRef.current;
@@ -417,7 +436,7 @@ export function SayAsistan() {
     if (odakla) requestAnimationFrame(() => (girdi.current && !girdi.current.disabled ? girdi.current : document.getElementById("say-kapat"))?.focus());
   };
   const kapat = () => {
-    setAcik(false);
+    setAcik(false); setTam(false);
     try { localStorage.setItem(ACIK_ANAHTARI, "0"); } catch { /* saklama yok */ }
     requestAnimationFrame(() => fab.current?.focus());
   };
@@ -844,17 +863,18 @@ export function SayAsistan() {
           <span className={stil.fabYazi}>S.A.Y<small>Asistan</small></span>
         </button>
       )}
-      {acik && (
-        <aside ref={panel} className={stil.panel} id="say-panel" role="dialog" aria-labelledby="say-baslik" data-kucuk={kucuk || undefined}
+      {acik && (<>
+        {tam && !kucuk && <div className={stil.perde} aria-hidden="true" onClick={() => tamDegistir(false)} />}
+        <aside ref={panel} className={stil.panel} id="say-panel" role="dialog" aria-labelledby="say-baslik" data-kucuk={kucuk || undefined} data-tam={(tam && !kucuk) || undefined}
           data-suruklu={suruklu || undefined}
           onDragOver={(e) => { if (!hazir || bekliyor || ![...e.dataTransfer.types].includes("Files")) return; e.preventDefault(); e.dataTransfer.dropEffect = "copy"; setSuruklu(true); }}
           onDragLeave={(e) => { if (!(e.relatedTarget instanceof Node && e.currentTarget.contains(e.relatedTarget))) setSuruklu(false); }}
           onDrop={(e) => { setSuruklu(false); if (!hazir || bekliyor || !e.dataTransfer.files.length) return; e.preventDefault(); void ekleriEkle([...e.dataTransfer.files]); }}
-          data-boy={!kucuk && boy !== null ? "" : undefined} style={!kucuk && boy !== null ? { height: `${boy}px` } : undefined}
+          data-boy={!kucuk && !tam && boy !== null ? "" : undefined} style={!kucuk && !tam && boy !== null ? { height: `${boy}px` } : undefined}
           onKeyDown={(e) => {
             if (e.key !== "Escape") return;
             e.stopPropagation();
-            if (menu) { setMenu(false); atac.current?.focus(); } else kapat();
+            if (menu) { setMenu(false); atac.current?.focus(); } else if (tam) tamDegistir(false); else kapat();
           }}>
           {!kucuk && boyu.tutamak("S.A.Y'ın", stil.tutamak)}
           <div className={kucuk ? stil.bas : `${stil.bas} ${boyu.basSinif}`} {...(kucuk ? {} : boyu.bas)}>
@@ -909,9 +929,15 @@ export function SayAsistan() {
           </div>
           <div className={stil.alt} hidden={kucuk} data-panel-alt="">
             {/* 2026-10-31 (kalem 8 — E6): sayfanın hazır önerileri (tek öneri → tek tuş; çok → "…" listesi); "Fotoğrafları oku ve gir" ekranın kendi okuması */}
-            {!kosulEksik && <Oneriler yol={yol} roller={durum.roller ?? []} kapali={!hazir || bekliyor}
-              oku={raporda ? () => void islemYap("oku", OKU) : null}
-              baslat={(metin, sablon) => { setOnceSun(sablon.girdiler.onceSun === true ? sablon : null); void gonder(null, { metin, sablon }); }} />}
+            <div className={stil.altSatir}>
+              {!kosulEksik && <Oneriler yol={yol} roller={durum.roller ?? []} kapali={!hazir || bekliyor}
+                oku={raporda ? () => void islemYap("oku", OKU) : null}
+                baslat={(metin, sablon) => { setOnceSun(sablon.girdiler.onceSun === true ? sablon : null); void gonder(null, { metin, sablon }); }} />}
+              <button className={stil.tamTus} type="button" onClick={() => tamDegistir()} aria-pressed={tam} data-say-tam=""
+                aria-label={tam ? "Normal boyuta dön" : "Tam ekran"} title={tam ? "Normal boyut" : "Tam ekran"}>
+                <Ikon ad={tam ? "minimize-2" : "maximize-2"} kucuk />
+              </button>
+            </div>
             {onceSun && !bekliyor && !kosulEksik && (
               <div className={stil.oneriler} data-once-sun="">
                 <button className={stil.cip} type="button" disabled={!hazir} onClick={() => { const s = onceSun; setOnceSun(null); void gonder(null, { metin: "Uygula.", sablon: { ...s, girdiler: { ...s.girdiler, onceSun: false } } }); }}>Uygula</button>
@@ -942,7 +968,7 @@ export function SayAsistan() {
             </form>
           </div>
         </aside>
-      )}
+      </>)}
     </>
   );
 }

@@ -168,6 +168,7 @@
 /* sayfanın sonu düğmenin altında kalmasın (geniş ve orta bant): genel kural src/styles/temel.css'te (CSS modülünde yerel sınıfsız seçici derlenmez) */
 /* telefon: yalnız daire; altta yapışkan çubuk (form, rapor) varsa onun üstünde; panel tam ekran */
 @media (max-width: 767.98px) {
+  .tamTus, .perde { display: none; }
   .fab { right: 16px; bottom: 16px; padding: 8px; }
   .fabYazi { display: none; }
   :global(body:has([data-alt-cubuk])) .fab { bottom: calc(var(--tus-y) + 32px); }
@@ -191,6 +192,22 @@
 .panel[data-suruklu] { outline: 2px dashed var(--odak); outline-offset: -6px; }
 /* 2026-10-31 (kalem 8 — E6; maket 1–3): hazır öneriler — tek tuş, "…" listesi (tuşun üstünde), öneri formu */
 .oneriler { position: relative; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+/* 2026-10-31: önerilerin satırı + sağda tam ekran tuşu */
+.altSatir { display: flex; align-items: flex-start; gap: 6px; }
+.altSatir > .oneriler { flex: 1 1 auto; min-width: 0; }
+.tamTus {
+  display: inline-grid; place-items: center; flex: none; width: var(--tus-y); height: var(--tus-y); margin-left: auto; padding: 0;
+  border: 1px solid var(--kenar-alan); border-radius: var(--r-tam); background: var(--kart); color: var(--yazi2); cursor: pointer;
+  transition: transform .2s ease, border-color .2s ease, color .2s ease;
+}
+.tamTus:hover { border-color: var(--yazi2); color: var(--yazi); transform: scale(1.06); }
+.tamTus[aria-pressed="true"] { color: var(--vurgu); border-color: var(--vurgu); }
+/* büyük görünüm: ekranın ortasında, perdeli */
+.panel[data-tam] { left: max(32px, calc((100vw - 1100px) / 2)); right: max(32px, calc((100vw - 1100px) / 2)); top: 4vh; top: 4dvh; bottom: 4vh; bottom: 4dvh;
+  width: auto; max-height: none; z-index: 90; box-shadow: var(--golge-2), 0 24px 64px rgba(0, 0, 0, .28); }
+.perde { position: fixed; inset: 0; z-index: 89; background: var(--perde); animation: perdeAc .35s ease both; }
+@keyframes perdeAc { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .perde { animation: none; } .tamTus { transition: none; } }
 .oneriListe {
   position: absolute; left: 0; right: 0; bottom: calc(100% + 6px); z-index: 3; margin: 0; padding: 6px; list-style: none; display: grid; gap: 1px;
   max-height: 60vh; max-height: 60dvh; overflow-y: auto; overscroll-behavior: contain; background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-buyuk); box-shadow: var(--golge-2);

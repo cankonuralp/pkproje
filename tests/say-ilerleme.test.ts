@@ -40,3 +40,15 @@ test("ekran: bekleme balonunda çubuk ve kalan süre", () => {
   const s = oku("src/modules/say/ui/SayAsistan.tsx");
   assert.ok(s.includes('role="progressbar"') && s.includes("<BeklemeCubugu") && s.includes("biraz daha sürüyor"));
 });
+
+/* 2026-10-31 (reisim: "işaretlediğim yere tam ekran tuşu ekle, tıklayınca pop up olarak ekranda daha büyük gözüksün, güzel de bir geçiş animasyonu
+   ekle"): önerilerin satırında tam ekran tuşu; büyük görünüm perdeli, FLIP geçişli, Esc ve perde normal boya döndürür; hareketi azalt tercihinde animasyon yok */
+test("ekran: tam ekran tuşu, perde, geçiş, Esc", () => {
+  const s = oku("src/modules/say/ui/SayAsistan.tsx"), c = oku("src/modules/say/ui/say.module.css");
+  assert.ok(s.includes('data-say-tam=""') && s.includes('aria-pressed={tam}') && s.includes('<Ikon ad={tam ? "minimize-2" : "maximize-2"}'));
+  assert.ok(s.includes("data-tam={(tam && !kucuk) || undefined}") && s.includes("onClick={() => tamDegistir(false)}"), "perde kapatır");
+  assert.ok(s.includes("else if (tam) tamDegistir(false); else kapat();"), "Esc önce normal boya döner");
+  assert.ok(s.includes("p.animate(") && s.includes('matchMedia("(prefers-reduced-motion: reduce)").matches'), "geçiş, hareketi azalt tercihine uyar");
+  assert.match(c, /\.panel\[data-tam\] \{/);
+  assert.match(c, /@media \(max-width: 767\.98px\) \{\n  \.tamTus, \.perde \{ display: none; \}/, "telefonda panel zaten tam ekran");
+});
