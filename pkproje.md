@@ -2541,6 +2541,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   standart sorusu ya da kullanıcı isterse · O13 saatler raporlara_yaz'ın gun / baslangic'iyle (ayrı rapor_saat_plani yok → rapor başına 1 kayıt) · O14 tek iş
   içinde de büyütülmüş görüntü iki istek sonra metne iner (önbellek öneki o noktadan bir kez yeniden yazılır) · O15 (ölçme) çok fotoğraflı işte orta derinlik
   denemesi — düşünme 18 bin token; kalite düşerse geri. Beklenen: O9–O13 ile istem ≈ 60–70 bin, 100 bin altı; maliyet ≈ 0,06–0,08 $.
+  **Aynı gün, reisim: "100 bin olayını sınırlama şansımız yok mu … otomatik geçmiş silme koyalım eğer gerekli ise" → sunum yerel/say-arge/2026-11-01-sunum-bagla-
+  tavani-ve-gecmis.md (onay bekliyor):** A1 sunucuda sert tavan — istek öncesi boy kestirimi, 90 bini aşacaksa iş içinde tek yönlü küçültme basamakları (eski
+  büyütmeler → metin, okunmuş beceri → not, uzun sonuçlar → 1 500 karakter, son çare "bağlam doldu" notu) · A2 hizmetin "context editing"i (beta; Haiku 5.5
+  desteği doğrulanmalı) · B otomatik kapanış: 60 dk sessizlik / başka planın sayfasından yeni soru / küçültülmüş konuşma > 60 bin ve iş bitmiş → konuşma
+  kendiliğinden kapanır (Ar-Ge 30 gün, ekler çöpe), son bildirim yeni konuşmanın başına not; "Sohbeti temizle" tuşu kalır.
 - 2026-10-31 (gece, V21 optimizasyon — reisim: "10 maddelik öneriyi olduğu gibi onaylıyorum. Önce kısa sunum, sonra kalem kalem kod" + eklemeler + madde 11;
   sunum yerel/say-arge/2026-10-31-sunum-v21-optimizasyon.md): **KODDA** (kalem dalı, dört commit; CI → main). 3 + 4: raporlar/denetle.ts taslak "gönderilmiş"
   sayılmaz (KOD HATASI "yeni" ↔ "taslak"), kontrol günü plan günlerinin dışındaysa uyarı; cihaz türü adı türün kaydından (çift "Ölçüm cihazı" bitti);
