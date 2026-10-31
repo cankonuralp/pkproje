@@ -19,9 +19,13 @@ export function Oneriler({ yol, roller, kapali, oku: okuIs, baslat }: {
   const [acik, setAcik] = useState(false), [secili, setSecili] = useState(0), [form, setForm] = useState<Sablon | null>(null);
   const [degerler, setDegerler] = useState<Record<string, string | boolean>>({}), [hata, setHata] = useState<string | null>(null);
   const kap = useRef<HTMLDivElement>(null);
+  /* liste panelin içine sığar (panelin üstüyle önerilerin arası); taşan kısım listenin içinde kayar */
+  const [boy, setBoy] = useState<number | null>(null);
   const l = useMemo(() => sayfaOnerileri(yol, roller, son).filter((s) => s.id !== "S13" || !!okuIs), [yol, roller, son, okuIs]);
   useEffect(() => {
     if (!acik) return;
+    const p = kap.current?.closest("[role=dialog]"), k = kap.current;
+    if (p && k) setBoy(Math.max(120, k.getBoundingClientRect().top - p.getBoundingClientRect().top - 12));
     const d = (e: MouseEvent) => { if (kap.current && !kap.current.contains(e.target as Node)) setAcik(false); };
     document.addEventListener("mousedown", d);
     return () => document.removeEventListener("mousedown", d);
@@ -93,7 +97,7 @@ export function Oneriler({ yol, roller, kapali, oku: okuIs, baslat }: {
           onClick={() => { setAcik((a) => !a); setSecili(0); }}>…</button>
       )}
       {acik && (
-        <ul className={stil.oneriListe} role="listbox" aria-label="Öneriler">
+        <ul className={stil.oneriListe} role="listbox" aria-label="Öneriler" style={boy ? { maxHeight: boy } : undefined}>
           {l.map((s, i) => (
             <li key={s.id} role="option" aria-selected={i === secili} data-oneri={s.id} className={i === secili ? stil.oneriSecili : undefined}
               onMouseEnter={() => setSecili(i)} onClick={() => sec(s)}>

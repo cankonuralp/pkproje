@@ -153,10 +153,16 @@ async function olaylariOku(govde: ReadableStream<Uint8Array>, olay: (x: SayOlayi
   }
 }
 
+/* 2026-10-31 (reisim: "sıkışma oldu yazı yazamıyorum … ekli belgeler yanyana daha küçük ve 2 belgeden sonra ve ... belge gibi dursun"): gönderilmeyi
+   bekleyen ekler (cikar verilen liste) küçük, yan yana; ilk ikisi görünür, kalanı "+N belge" tuşuyla açılır (açıkken liste kendi içinde kayar) */
+const EK_OZET = 2;
 function EkListesi({ ekler, cikar }: { ekler: readonly (SohbetEkAdi & { url?: string | null })[]; cikar?: (i: number) => void }) {
+  const [hepsi, setHepsi] = useState(false);
+  const ozet = !!cikar && !hepsi && ekler.length > EK_OZET + 1;
+  const gorunen = ozet ? ekler.slice(0, EK_OZET) : ekler;
   return (
-    <ul className={stil.ekler} aria-label="Ekler">
-      {ekler.map((e, i) => (
+    <ul className={stil.ekler} aria-label="Ekler" data-bekleyen={cikar ? "" : undefined} data-hepsi={hepsi || undefined}>
+      {gorunen.map((e, i) => (
         <li key={i}>
           {/* blob: adresi: yalnız bu cihazda seçilen, henüz gönderilmemiş fotoğraf (sunucuda kopyası yok) */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -165,6 +171,8 @@ function EkListesi({ ekler, cikar }: { ekler: readonly (SohbetEkAdi & { url?: st
           {cikar && <button className={stil.ekCikar} type="button" onClick={() => cikar(i)} aria-label={`${e.ad} ekini çıkar`} title="Çıkar"><Ikon ad="x" kucuk /></button>}
         </li>
       ))}
+      {ozet && <li className={stil.ekFazla}><button type="button" onClick={() => setHepsi(true)} aria-label={`Öteki ${ekler.length - EK_OZET} eki göster`}>+{ekler.length - EK_OZET} belge</button></li>}
+      {cikar && hepsi && ekler.length > EK_OZET + 1 && <li className={stil.ekFazla}><button type="button" onClick={() => setHepsi(false)}>Daralt</button></li>}
     </ul>
   );
 }
