@@ -17,7 +17,7 @@ async function bozuk(eski: string, yeni: string): Promise<IslemM> {
   const kaynak = readFileSync(resolve("src/server/yz/islem.ts"), "utf8");
   assert.ok(kaynak.includes(eski), `bozulacak satır kaynakta yok: ${eski}`);
   const yol = join(klasor, `${sira++}-islem.ts`);
-  writeFileSync(yol, kaynak.replace(eski, () => yeni).replaceAll('from "../../sema/', `from "${pathToFileURL(resolve("src/sema")).href}/`)
+  writeFileSync(yol, kaynak.replace(eski, () => yeni).replace(/from "(\.{1,2}\/[^"]+)"/g,(_, p: string) => `from "${pathToFileURL(resolve("src/server/yz", p)).href}"`)
     .replace(/from "zod"/g, `from "${import.meta.resolve("zod")}"`));
   return import(pathToFileURL(yol).href) as Promise<IslemM>;
 }
