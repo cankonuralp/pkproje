@@ -278,6 +278,27 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
         sonuc: { raporlar: sonuc } };
     },
   }),
+  /* 2026-10-31 (kalem 6b — B07): toplu onaya gönderme — ikinci onaylı (IKINCI_ONAY); önce denetim (Onaya gönder'in kuralı), eksikli rapor gönderilmez */
+  islem({
+    ad: "raporlari_onaya_gonder", modul: MODUL, tur: "yaz", islev: onayaGonder, kaynak: [kimlik],
+    girdi: z.object({ raporlar: z.array(kimlik).min(1) }),
+    tarif: "Raporları kayıttaki hâlleriyle teknik yöneticinin onayına gönderir; zorunlu alan / cihaz eksiği olan gönderilmez, nedeniyle listelenir. Yalnız "
+      + "kullanıcının açık \"gönder\" isteğiyle; ekranda onay ister. Sonuç gönderilen / gönderilemeyen.",
+    calistir: async (b, v) => {
+      const gonderilen: string[] = [], gonderilemeyen: { rapor: string; neden: string }[] = [];
+      for (const id of v.raporlar) {
+        if (b.ekrandakiRapor === id) { gonderilemeyen.push({ rapor: id, neden: EKRANDA }); continue; }
+        const s = await sahaRaporu(b.db, b.kim, id);
+        if (!s) { gonderilemeyen.push({ rapor: id, neden: GORUNMEZ }); continue; }
+        const eksik = (await raporEksikleri(b.db, b.kim, id)) ?? [];
+        if (eksik.length) { gonderilemeyen.push({ rapor: s.no, neden: `eksik: ${eksik.slice(0, 5).map((x) => x.ad).join(", ")}` }); continue; }
+        const c = yazmaCevabi(await onayaGonder(b.db, b.kim, id, s.surum, { ekipman: s.ekipmanBilgi, tarih: s.tarih, cevaplar: s.cevaplar }));
+        if (c.tamam) gonderilen.push(s.no); else gonderilemeyen.push({ rapor: s.no, neden: c.neden });
+      }
+      return gonderilen.length ? { tamam: true, bildirim: `${gonderilen.length} rapor onaya gönderildi.`, sonuc: { gonderilen, gonderilemeyen } }
+        : { tamam: false, neden: `Hiçbir rapor gönderilemedi: ${gonderilemeyen.map((x) => `${x.rapor}: ${x.neden}`).join("; ")}` };
+    },
+  }),
   /* 2026-10-31 (kalem 3 — E4; sunum "S.A.Y'a tam yetenek"): konuşmadaki fotoğraf (F numarası — ekin firmanın deposundaki kopyası) rapora, ekranın
      "Fotoğraf ekle"siyle aynı işlevle (fotoEkle: yalnız yazan, Yeni rapor, bölümün sınırı, tür ve boy denetimi, sürüm kilidi) */
   islem({

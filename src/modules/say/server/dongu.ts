@@ -43,7 +43,9 @@ export type SayOlayi =
   | { t: "ekran"; araclar: { id: string; ad: string; komut: SayKomutu | null }[]; yenile: boolean }
   | { t: "devam"; yenile: boolean }
   | { t: "bitti"; yenile: boolean }
-  | { t: "hata"; neden: string; yenile: boolean };
+  | { t: "hata"; neden: string; yenile: boolean }
+  /** 2026-10-31 (kalem 6b): ikinci onaylı işlem — ekran onay penceresini açar (onay ucu: src/app/api/say/onay) */
+  | { t: "onay"; ozet: string; metin: string };
 
 /** talimat ve araçlar: konuşma boyunca aynı (düşünmeler geçerli kalsın) */
 const BECERILER = becerileriOku();
@@ -86,6 +88,7 @@ function islemOrtami(o: IstekOturumu, s: { ekrandakiRapor: string | null; kayded
     kim: o, firmaId: o.kiraci.firmaId, depo, kok: firmaAdresi(o.kiraci.kisaAd), ekrandakiRapor: s.ekrandakiRapor, kaydedilmemis: s.kaydedilmemis,
     epostaGonder: (kaynak, id) => { epostalariSonraGonder(o.kiraci, kaynak, id); },
     hata: (e, ad) => hataYaz(o, e, `say.islem.${ad}`),
+    onayKapisi: true,
   };
 }
 /** K2 + M4 (2026-10-31): açık kaydın notu — modülün OKUMA işlemi (acikKayit yalnız tur "oku"), kişi ve firma oturumdan, sorunun veritabanı işleminde */
@@ -248,6 +251,14 @@ async function gorselSonucu(o: IstekOturumu, ad: string, girdi: unknown): Promis
   }
 }
 
+/** işlem sonucundaki onay isteği (yürütücünün onay_gerekli'si) */
+function onayIstegi(sonuc: string | undefined): { ozet: string; metin: string } | null {
+  try {
+    const o = (JSON.parse(sonuc ?? "") as { onay_gerekli?: { ozet?: unknown; metin?: unknown } }).onay_gerekli;
+    return o && typeof o.ozet === "string" && /^[0-9a-f]{16}$/.test(o.ozet) && typeof o.metin === "string" ? { ozet: o.ozet, metin: o.metin } : null;
+  } catch { return null; }
+}
+
 /** BU cevabın araç çağrıları: sunucu araçları burada (S.A.Y'ın sırasıyla), ekran araçları ekrana; ekran aracından sonraki işlem bekler */
 async function araclariYap(o: IstekOturumu, icerik: readonly Record<string, unknown>[], b: SayBaglami, kaydedilmemis: boolean, yaz: (x: SayOlayi) => void):
   Promise<{ sonuclar: Record<string, AracSonucu>; ekran: { id: string; ad: string; komut: SayKomutu | null }[]; yenile: boolean }> {
@@ -267,6 +278,8 @@ async function araclariYap(o: IstekOturumu, icerik: readonly Record<string, unkn
     const ozet = await sunucuKomutu(ISLEM_KATALOGU, ortam, k, modulAdi);
     if (k.tur === "islem" && ozet.yazildi > 0) yenile = true;
     sonuclar[c.id] = sonucIcerigi(ozet);
+    const onay = onayIstegi(ozet.sonuc);
+    if (onay) yaz({ t: "onay", ...onay });
   }
   return { sonuclar, ekran, yenile };
 }

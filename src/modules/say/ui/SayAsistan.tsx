@@ -59,7 +59,7 @@ import { Serit } from "../../../components/serit/Serit";
 import type { SohbetEkAdi, SohbetEksik, SohbetIletisi } from "../../../server/yz/sohbet";
 import { xlsxSayfalari, zipAc } from "../../../components/disa/oku";
 import { pdfdenSablonKur } from "../../ekipman-turleri/ui/pdfdenSablon";
-import { formGoruntusuIste } from "./form";
+import { formGoruntusuIste, onayGonder } from "./form";
 import { EK_PARCA_BAYT, KAYDEDILMEMIS } from "../sabitler";
 import type { SayDurum } from "../server/say";
 import type { SayOlayi } from "../server/dongu";
@@ -459,6 +459,10 @@ export function SayAsistan() {
       const ad = k.tur === "kaydet" ? "Kaydet" : "Onaya gönder";
       const is = k.tur === "kaydet" ? r.kaydet : r.onayaGonder;
       if (!is) return yapilamadi(ad, "bu ekran S.A.Y'dan kaydedilemiyor; ekrandaki tuşla kaydedin");
+      /* 2026-10-31 (kalem 6b — onay kapısı): ekrandaki raporu onaya göndermek de kullanıcının onayıyla */
+      if (k.tur === "gonder" && !(await onayla({ baslik: "S.A.Y onayınızı istiyor", metin: `Rapor ${r.no} teknik yöneticinin onayına gönderilecek`, tus: "Onaya gönder" }))) {
+        return yapilamadi(ad, "kullanıcı onaylamadı; gönderilmedi");
+      }
       setAsama(k.tur === "kaydet" ? "Kaydediyor" : "Onaya gönderiyor");
       const y = await is();
       if (y.tamam) return { ozet: { yazildi: 1, ayni: 0, bekliyor: 0, yapilan: [y.bildirim], yazilamadi: [] } };
@@ -520,6 +524,8 @@ export function SayAsistan() {
     durdurRef.current = durdur;
     let durduruldu = false;
     let ustune: IslemEylemi["ustune"], sonSay: string | null = null, yenile = false, govde: Record<string, unknown> = { ...ilk, is }, bos = 0;
+    /* 2026-10-31 (kalem 6b): ikinci onaylı işlemin onay isteği — iş bitince pencere */
+    const onayKutu: { v: { ozet: string; metin: string } | null } = { v: null };
     try { for (;;) {
       /* geri çağırmada yazılır (nesne — denetleyici daraltmasın) */
       const d: { ekran: Extract<SayOlayi, { t: "ekran" }> | null; son: "bitti" | "devam" | "hata" | null } = { ekran: null, son: null };
@@ -532,6 +538,7 @@ export function SayAsistan() {
         } else if (x.t === "metin") setCanli((c) => c + x.d);
         else if (x.t === "dusunce") { /* gösterilmez (2026-10-26) */ }
         else if (x.t === "asama") setAsama(x.ad);
+        else if (x.t === "onay") onayKutu.v = { ozet: x.ozet, metin: x.metin };
         else {
           yenile ||= x.yenile;
           if (x.t === "ekran") d.ekran = x;
@@ -567,6 +574,12 @@ export function SayAsistan() {
       setIslemler((x) => new Map(x).set(id, { ...(hepsi.length ? { geriAl: () => hepsi.reduce((t, g) => t + g(), 0) } : {}), ...(u ? { ustune: u } : {}) }));
     }
     if (yenile) { if (kaydedilmemisVar()) setHata(KAYDEDILMEMIS); else router.refresh(); }
+    /* 2026-10-31 (kalem 6b — onay kapısı): kullanıcı ekranda onaylarsa onay sunucuya yazılır, S.A.Y aynı işi onayla sürdürür; vazgeçerse yapılmaz */
+    const istek = onayKutu.v;
+    if (istek && !durduruldu && await onayla({ baslik: "S.A.Y onayınızı istiyor", metin: istek.metin, tus: "Onayla" })) {
+      if (await onayGonder(istek.ozet, istek.metin)) await isYap({ tur: "soru", soru: `Onaylıyorum: ${istek.metin}.`, ekler: [], ...ekranGirdisi() });
+      else setHata("Onay kaydedilemedi; yeniden deneyin.");
+    }
   };
   /** iletinin altındaki "Geri al" / "Dolu alanları da değiştir" (ya da yazılan komut): bir kez çalışır; sonucu geçmişe */
   const eylemCalistir = async (id: string | null, ne: "geri" | "ustune", soru: string) => {

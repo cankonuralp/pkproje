@@ -174,7 +174,7 @@ test("api/islem: ilk iş aynı köken; oturum ve hesap denetimi işten önce; i�
 
 test("api/say ve api/say/ek: ilk iş aynı köken; oturum işten önce; iş modülde (oturumla); yalnız POST", () => {
   /* 2026-10-31 (kalem 4 — K6): formun görüntüsü ucu da aynı kapılarla */
-  const dosyalar = { "say/route.ts": "await sayAkisi(o, ham, yaz, bitis)", "say/ek/route.ts": "await sayEkParcasi(o, p, ", "say/form/route.ts": "formGoruntusu(db, depo(), o, " };
+  const dosyalar = { "say/route.ts": "await sayAkisi(o, ham, yaz, bitis)", "say/ek/route.ts": "await sayEkParcasi(o, p, ", "say/form/route.ts": "formGoruntusu(db, depo(), o, ", "say/onay/route.ts": "onayYaz(db, ozet, metin)" };
   for (const [yol, is] of Object.entries(dosyalar)) {
     const kaynak = readFileSync(join(KOK, "src", "app", "api", ...yol.split("/")), "utf8");
     const govde = kaynak.slice(kaynak.indexOf("export async function POST"));
@@ -183,7 +183,7 @@ test("api/say ve api/say/ek: ilk iş aynı köken; oturum işten önce; iş mod�
     assert.ok(sira.every((i, n) => i > 0 && (n === 0 || i > sira[n - 1])), `${yol} sıra: ${sira.join(", ")}`);
     assert.doesNotMatch(kaynak, /export (async )?function (GET|PUT|PATCH|DELETE)/, yol);
   }
-  assert.deepEqual(klasorlerOf(join(KOK, "src", "app", "api", "say")), ["ek", "form"]);
+  assert.deepEqual(klasorlerOf(join(KOK, "src", "app", "api", "say")), ["ek", "form", "onay"]);
 });
 
 /* 2026-10-15 (567): tarayıcı hatası ucu — ilk iş aynı köken (başka kökenden kayıt yok); gövde sınırlı ve biçimli; her dönüş 204 (yazıldı mı söylenmez);
