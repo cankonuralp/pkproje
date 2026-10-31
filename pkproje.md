@@ -2527,6 +2527,20 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-11-01 (V21 İKİNCİ KOŞU — reisim: "Koşuyu yaptım, ölç"; aynı 18 fotoğraf, yeni plan, 00:39–00:43; salt okunur say_istek / yz_konusma / denetim_izi):
+  **öncesi → sonrası:** 6 iş → **1** · 31 istek → **15** · 3 soru → **0** · 17 dk → **3 dk 50 sn** · 0,301 $ → **0,261 $** · ilk istem 63 bin → **38 bin** token (küçük
+  fotoğraf) · en büyük istem 151 bin → 161 bin · bildirim 28 satır → sunucu notuyla **4** · 8 ekipman (tesiste kayıtlı olanlar plana alındı, mükerrer yok; iki
+  fotoğraf doğru nedenle sayılmadı) · rapora fotoğraf 8 / 8 · cihaz 8 / 8 · kayıttaki soru işaretli seri etiketten düzeltildi · kontrol günü planın dışında uyarısı
+  çıktı. **Tutmayan iki hedef:** istem 100 bin altı (8. istekten itibaren 8 istek üstünde; maliyetin %69'u) ve maliyet ≤ 0,10 $. **Neden:** iş sınırı sıkıştırması
+  tek iş içinde çalışmaz; tek işin bağlamı 4 beceri (≈ 7 bin token) + plan_hazirlik (31 KB ≈ 9 bin) + 8 rapor haritası (31 KB ≈ 9 bin) + 2 büyütme (≈ 5 bin) +
+  internet araması sonucu (21 KB ≈ 6 bin; ekipman kataloğunu doğrulamak için — tek başına 0,055 $) + tur içi düşünme blokları (8 bin + 10 bin; tool-use
+  döngüsünde bağlamda kalır) ile büyüdü. Boşa 2 istek: plan_hazirlik / plan_getir doğrudan araç gibi çağrıldı ("girdisi okunamadı"). Rapor başına 2 kayıt
+  (rapor_saat_plani ayrı çağrıldı). **ÖNERİLER — onay bekliyor, kod yok:** O9 katalogdaki işlem adıyla doğrudan araç gibi çağrılırsa sunucu islem olarak
+  çalıştırır (boşa istek yok) · O10 aynı formattaki raporlarda harita BİR kez okunur (B05 §0; 8 rapor_getir → 1) · O11 plan_hazirlik küçülür (format özeti
+  yalnız bölüm / alan adları, tesis ekipmanı kısa; 31 KB → ≈ 10 KB) · O12 internet araması ekipman tanıma / katalog doğrulama için değil — yalnız mevzuat /
+  standart sorusu ya da kullanıcı isterse · O13 saatler raporlara_yaz'ın gun / baslangic'iyle (ayrı rapor_saat_plani yok → rapor başına 1 kayıt) · O14 tek iş
+  içinde de büyütülmüş görüntü iki istek sonra metne iner (önbellek öneki o noktadan bir kez yeniden yazılır) · O15 (ölçme) çok fotoğraflı işte orta derinlik
+  denemesi — düşünme 18 bin token; kalite düşerse geri. Beklenen: O9–O13 ile istem ≈ 60–70 bin, 100 bin altı; maliyet ≈ 0,06–0,08 $.
 - 2026-10-31 (gece, V21 optimizasyon — reisim: "10 maddelik öneriyi olduğu gibi onaylıyorum. Önce kısa sunum, sonra kalem kalem kod" + eklemeler + madde 11;
   sunum yerel/say-arge/2026-10-31-sunum-v21-optimizasyon.md): **KODDA** (kalem dalı, dört commit; CI → main). 3 + 4: raporlar/denetle.ts taslak "gönderilmiş"
   sayılmaz (KOD HATASI "yeni" ↔ "taslak"), kontrol günü plan günlerinin dışındaysa uyarı; cihaz türü adı türün kaydından (çift "Ölçüm cihazı" bitti);
