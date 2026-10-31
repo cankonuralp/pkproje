@@ -15,18 +15,21 @@ import { oku } from "./yardimci/denetimler.ts";
 const TUR = "0b6c2f7e-1d2a-4c3b-9e8f-112233445566";
 
 export const KURALLAR = {
-  talimat: (t: string) => ["format_pdf_kur", "formatı elle çizme", "KMP-0", "Konumu verilen her şeyden çıkar", "plan_ekipmanlar_ekle", "ZIP",
+  talimat: (t: string) => ["format_pdf_kur", "formatı elle çizme", "TÜR-0001", "Konumu verilen her şeyden çıkar", "plan_ekipmanlar_ekle", "ZIP",
     "tek bir özet tablo", "linye"].every((x) => t.includes(x)),
   panel: (say: string) => /onDrop=\{/.test(say) && /zipAc\(/.test(say) && (say.match(/type="file"[^>]*multiple/g) ?? []).length >= 2
     && /pdfdenSablonKur\(/.test(say) && /k\.tur === "pdfFormat"/.test(say),
   sablon: (y: string) => /formatYukleEylemi\(/.test(y) && /pdfdenHam\(/.test(y) && /basilidanKurEylemi\(/.test(y),
 };
 
-test("sıradaki kod: türün kodu + tire + 0, 1, 2 …; kullanılan (şu anki ya da eski) atlanır", () => {
-  assert.equal(siradakiKod("KMP", new Set()), "KMP-0");
-  assert.equal(siradakiKod("KMP", new Set(["KMP-0", "KMP-1"])), "KMP-2");
-  assert.equal(siradakiKod("KMP", new Set(["KMP-1"])), "KMP-0", "boşluk doldurulur");
-  assert.equal(siradakiKod("HT", new Set(["KMP-0"])), "HT-0");
+/* 2026-10-31 (reisim: "kod verilmezse sunucu firmanın düzeniyle üretir (TRF-0001 gibi)"; karar 4) — 26 Ekim'in "KMP-0, KMP-1"i bunun yerine */
+test("sıradaki kod: firmanın o türdeki düzeni (ayraç, hane), en büyükten sonraki; firmada yoksa TÜR-0001; boşluk doldurulmaz", () => {
+  assert.equal(siradakiKod("KMP", new Set()), "KMP-0001");
+  assert.equal(siradakiKod("TRF", new Set(["TRF-0001", "TRF-0002"])), "TRF-0003");
+  assert.equal(siradakiKod("KMP", new Set(["KMP-0", "KMP-1"])), "KMP-2", "firmanın tek haneli düzeni sürer");
+  assert.equal(siradakiKod("KMP", new Set(["KMP-3"])), "KMP-4", "boşluk doldurulmaz (eski kod başkasına verilmez)");
+  assert.equal(siradakiKod("TRF", new Set(["TRF_007", "TRF_012"])), "TRF_013", "ayraç ve hane firmanın");
+  assert.equal(siradakiKod("HT", new Set(["KMP-0001"])), "HT-0001", "başka türün kodu sayılmaz");
 });
 
 test("S.A.Y'ın ekipman girdisi: kod isteğe bağlı (boş = yok), verilirse biçim denetimi aynen", () => {

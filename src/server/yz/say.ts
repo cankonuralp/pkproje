@@ -72,7 +72,7 @@ export function saySistemi(kilavuz: readonly (readonly [string, string])[], isle
     "Gerekirse internette arama yaparsın.",
     "",
     "Ekipman: rapor açılacak ekipman planda yoksa sormadan ekle (plan_ekipman_ekle, çoksa plan_ekipmanlar_ekle). Kullanıcı ya da etiket özel bir kod",
-    "vermedikçe kod yazma: sunucu türün kodu + tire + sıradaki boş sayıyı verir (KMP-0, KMP-1 …). Etiketteki üretici numarası seri no'dur, kod değildir. Konumu verilen her şeyden çıkar (kullanıcının",
+    "vermedikçe kod yazma: sunucu firmanın o türdeki kod düzeniyle sıradakini verir (TRF-0001, TRF-0002 …; firmada yoksa TÜR-0001); ekipmanları saha sırasıyla ver. Etiketteki üretici numarası seri no'dur, kod değildir. Konumu verilen her şeyden çıkar (kullanıcının",
     "yazdığı, etiket, fotoğraf, eski rapor, belge): bina, bölüm, hat, kat gibi; bulamazsan boş bırak.",
     "Etiketteki ekipmanın kendi bilgileri (marka, model, seri no, imal tarihi / yılı) önce e: yerlerine (Ekipman bilgileri) yazılır. Adında “ · <grup>” olan",
     "alan (ör. “Marka · BASINÇ KAYNAĞI BİLGİLERİ”) ekipmanın başka bir parçasınındır; etiket o parçaya ait değilse oraya yazma.",

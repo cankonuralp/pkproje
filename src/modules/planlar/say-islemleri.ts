@@ -57,6 +57,13 @@ function ekipmanCevabi(r: Awaited<ReturnType<typeof sayEkipmanlarEkle>>): IslemC
     sonuc: { eklenen: r.eklenen, ...(r.eklenemeyen.length ? { eklenemeyen: r.eklenemeyen } : {}) } };
 }
 
+/** 2026-10-31 (reisim: "verilmeyen metin alanına '-'" — rapora ve ekipman kartına yazan işlemler): verilmeyen seri no ve konum "-" */
+const tireli = (e: unknown): unknown => {
+  if (!e || typeof e !== "object") return e;
+  const x = e as Record<string, unknown>, bos = (v: unknown) => typeof v !== "string" || !v.trim();
+  return { ...x, seri: bos(x.seri) ? "-" : x.seri, konum: bos(x.konum) ? "-" : x.konum };
+};
+
 export const SAY_ISLEMLERI: readonly Islem[] = [
   islem({
     ad: "plan_ara", modul: MODUL, tur: "oku", girdi: SuzgecDurumuSemasi, kaynak: [SuzgecDurumuSemasi], islev: planSayfasi,
@@ -143,16 +150,16 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
     /* 2026-10-26 (S.A.Y Faz 2 — reisim: "kodu otomatik kendisi verecek ekipmanın sabit kodu + 0-1-2"): kod isteğe bağlı; çok ekipman tek işlemde */
     ad: "plan_ekipman_ekle", modul: MODUL, tur: "yaz", girdi: SayEkipmanGirdisi.extend({ plan: kimlik }), kaynak: [SayEkipmanGirdisi, YeniEkipmanGirdisi, kimlik],
     islev: sayEkipmanlarEkle,
-    tarif: "Plana yeni ekipman ekler — tesise kalıcı kayıt da açılır: tur (ekipman türü kimliği), konum, kod (isteğe bağlı; verilmezse türün kodu + tire + "
-      + "sıradaki boş sayı: KMP-0, KMP-1 …).",
-    calistir: async (b, v, ham) => mevcutUyarisi(b, v.plan, [ham.tur], ekipmanCevabi(await sayEkipmanlarEkle(b.db, b.kim, v.plan, [{ kod: ham.kod, tur: ham.tur, seri: ham.seri, konum: ham.konum }]))),
+    tarif: "Plana yeni ekipman ekler — tesise kalıcı kayıt da açılır: tur (ekipman türü kimliği), konum, kod (isteğe bağlı; verilmezse firmanın o türdeki kod düzeniyle "
+      + "sıradaki: TRF-0001, TRF-0002 …; firmada yoksa TÜR-0001), seri ve konum (verilmezse \"-\").",
+    calistir: async (b, v, ham) => mevcutUyarisi(b, v.plan, [ham.tur], ekipmanCevabi(await sayEkipmanlarEkle(b.db, b.kim, v.plan, [tireli({ kod: ham.kod, tur: ham.tur, seri: ham.seri, konum: ham.konum })]))),
   }),
   islem({
     ad: "plan_ekipmanlar_ekle", modul: MODUL, tur: "yaz", girdi: z.object({ plan: kimlik, ekipmanlar: z.array(SayEkipmanGirdisi).min(1).max(200) }),
     kaynak: [SayEkipmanGirdisi, YeniEkipmanGirdisi, kimlik], islev: sayEkipmanlarEkle,
-    tarif: "Plana tek işlemde çok yeni ekipman ekler (en çok 200): ekipmanlar [{ tur, konum, kod (isteğe bağlı — verilmezse KMP-0, KMP-1 …) }]; "
-      + "eklenenler (kimlik, kod) ve eklenemeyenler nedeniyle döner.",
-    calistir: async (b, _v, ham) => mevcutUyarisi(b, ham.plan, ham.ekipmanlar.map((e) => e.tur), ekipmanCevabi(await sayEkipmanlarEkle(b.db, b.kim, ham.plan, ham.ekipmanlar))),
+    tarif: "Plana tek işlemde çok yeni ekipman ekler (en çok 200): ekipmanlar [{ tur, konum, kod (isteğe bağlı — verilmezse firmanın düzeniyle "
+      + "sıradaki: TRF-0001 …) , seri, konum (verilmezse \"-\") }] SAHA SIRASIYLA (numaralar bu sırayla artar); eklenenler (kimlik, kod) ve eklenemeyenler nedeniyle döner.",
+    calistir: async (b, _v, ham) => mevcutUyarisi(b, ham.plan, ham.ekipmanlar.map((e) => e.tur), ekipmanCevabi(await sayEkipmanlarEkle(b.db, b.kim, ham.plan, (Array.isArray(ham.ekipmanlar) ? ham.ekipmanlar : []).map(tireli)))),
   }),
   /* 2026-10-31 (kalem 8 — E10, B01 §1): tek çağrıda plan özeti — plan, ekip, plandaki (raporsuzlar ayrıca) ve tesisteki ekipman, raporlar, türlerin süresi /
      periyodu ve yayındaki formatın özeti (bölümler, alanlar, madde sayıları, tablo sütunları). Künye değeri yok. */

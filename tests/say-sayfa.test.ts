@@ -72,7 +72,7 @@ const baglam = (db: unknown) => ({ db, kim: { id: "k", ad: "A", roller: [] }, fi
 test("açık kayıt notu; görünmezse yok; okuma düşerse kayıt noktasına dönülür", async () => {
   const a = sahteDb();
   const n = await acikKayit([islemOrnegi(async () => ({ tamam: true, sonuc: { no: "P-1026-014", durum: "Kabul edildi" } }))], tanim, baglam(a.db), `/planlar/${ID}`);
-  assert.equal(n, `Açık kayıt: Plan · no: P-1026-014 · durum: Kabul edildi (kimlik ${ID}). Ayrıntı için plan_getir; kullanıcı "bu", "burası" derse bu kayıttır.`);
+  assert.equal(n, `Açık kayıt: Plan (kimlik ${ID}) · no: P-1026-014 · durum: Kabul edildi. Ayrıntı için plan_getir; kullanıcı "bu", "burası" derse bu kayıttır.`);
   assert.deepEqual(a.l, ["SAVEPOINT acik_kayit", "RELEASE SAVEPOINT acik_kayit"]);
   assert.equal(await acikKayit([islemOrnegi(async () => ({ tamam: false, neden: "görünmez" }))], tanim, baglam(sahteDb().db), `/planlar/${ID}`), null);
   const c = sahteDb();

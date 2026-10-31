@@ -237,6 +237,7 @@ export interface SayfaTanimi {
 }
 const SAYFA_ALANLARI = ["no", "kod", "plaka", "ad", "unvan", "kisa", "durum", "baslangic", "bitis", "tarih"] as const;
 const SAYFA_BAGLARI = ["tesis", "musteri", "tur", "plan"] as const;
+const SAYFA_AD: Record<string, string> = { baslangic: "başlangıç", bitis: "bitiş", musteri: "müşteri", tur: "tür", kisa: "kısa ad", unvan: "unvan" };
 const deger = (x: unknown): string | null => {
   if (typeof x === "number" && Number.isFinite(x)) return String(x);
   if (typeof x !== "string") return null;
@@ -273,7 +274,8 @@ export async function acikKayit(katalog: readonly Islem[], sayfalar: readonly Sa
       if (!c.tamam || !c.sonuc) return null;
       const alanlar = sayfaOzeti(c.sonuc);
       const kimlik = Object.values(girdi).find((x) => typeof x === "string");
-      return `Açık kayıt: ${s.tur}${alanlar.length ? ` · ${alanlar.map(([a, d]) => `${a}: ${d}`).join(" · ")}` : ""}${kimlik ? ` (kimlik ${kimlik})` : ""}. `
+      /* 2026-10-31 (reisim: "plan kimliği 'müşteri: … (kimlik …)' diye yazılıyor ve müşterinin kimliği gibi duruyor"): kimlik kaydın türünün yanında; adlar Türkçe */
+      return `Açık kayıt: ${s.tur}${kimlik ? ` (kimlik ${kimlik})` : ""}${alanlar.length ? ` · ${alanlar.map(([a, d]) => `${SAYFA_AD[a] ?? a}: ${d}`).join(" · ")}` : ""}. `
         + `Ayrıntı için ${s.islem}; kullanıcı "bu", "burası" derse bu kayıttır.`;
     } catch { await b.db.sorgu("ROLLBACK TO SAVEPOINT acik_kayit"); return null; }
   }

@@ -211,15 +211,24 @@ export const YeniEkipmanGirdisi = z.object({
   konum: z.preprocess(bos, z.string().max(60, "En çok 60 karakter.").nullable()),
 });
 /** 2026-10-26 (S.A.Y Faz 2 — reisim: "kodu otomatik kendisi verecek ekipmanın sabit kodu + 0-1-2 sayılar sırasıyla gidecek"): S.A.Y'ın eklediği
-    ekipman — kod isteğe bağlı; verilmezse sunucu türün kodu + tire + sıradaki boş sayıyı verir (siradakiKod) */
+    ekipman — kod isteğe bağlı; verilmezse sunucu firmanın o türdeki kod düzeniyle sıradakini verir (siradakiKod) */
 export const SayEkipmanGirdisi = YeniEkipmanGirdisi.extend({
   kod: z.preprocess((s) => (typeof s === "string" && !s.trim() ? undefined : s), YeniEkipmanGirdisi.shape.kod.optional()),
 });
-/** türün kodu + tire + 0, 1, 2 … — firmada kullanılmış (şu anki ya da eski) kodlar atlanır (KMP-0 varsa KMP-1) */
+/** sıradaki kod — 2026-10-31 (reisim: "kod verilmezse sunucu firmanın düzeniyle üretir (TRF-0001 gibi); numaralar saha sırasıyla verilir"; karar 4: "önerin
+    uygun"): firmanın o türdeki kodlarının (şu anki ya da eski) düzeni — ayraç, hane sayısı — ile en büyük numaradan sonraki; firmada o türden kod yoksa
+    TÜR-0001. Boşluk doldurulmaz (eski kod başkasına verilmez, numaralar saha sırasıyla artar). */
 export function siradakiKod(onek: string, kullanilan: ReadonlySet<string>): string {
-  let n = 0;
-  while (kullanilan.has(`${onek}-${n}`)) n++;
-  return `${onek}-${n}`;
+  const re = new RegExp(`^${onek.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([-_. ]?)(\\d{1,9})$`, "i");
+  const l = [...kullanilan].flatMap((k) => { const m = re.exec(k.trim()); return m ? [{ ayrac: m[1]!, n: Number(m[2]), hane: m[2]!.length }] : []; });
+  const say = new Map<string, number>();
+  for (const x of l) say.set(x.ayrac, (say.get(x.ayrac) ?? 0) + 1);
+  const ayrac = l.length ? [...say].sort((a, b) => b[1] - a[1])[0]![0] : "-";
+  const hane = l.length ? Math.max(...l.map((x) => x.hane)) : 4;
+  let n = l.length ? Math.max(...l.map((x) => x.n)) + 1 : 1;
+  const kod = (k: number) => `${onek}${ayrac}${String(k).padStart(hane, "0")}`;
+  while (kullanilan.has(kod(n))) n++;
+  return kod(n);
 }
 
 /** plan akışının adımları (maket adim): tamam ✓ · aktif (şu an) · bekliyor (sırada) · red × */
