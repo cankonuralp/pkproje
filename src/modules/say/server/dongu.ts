@@ -339,21 +339,24 @@ async function araclariYap(o: IstekOturumu, icerik: readonly Record<string, unkn
   /* 2026-10-31 (V21 madde 1): bu işte zaten büyütülen fotoğraf ikinci kez büyütülmez (is-siniri.ts) */
   const gosterilen = gosterilenFotolar(onceki as { role: string; content: unknown }[]);
   let ekranda = false, yenile = false, yazma = 0, islem = 0;
+  /* 2026-11-01 (V21 O9): katalogdaki işlem adıyla doğrudan araç gibi çağrılan (plan_hazirlik …) sunucuda islem olarak çalışır — boşa "okunamadı" turu yok */
+  const komut = (c: { id: string; name: string; input: unknown }) => aracCagrisi({ type: "tool_use", id: c.id, name: c.name, input: c.input })
+    ?? (ISLEM_KATALOGU.some((t) => t.ad === c.name) ? { tur: "islem" as const, ad: c.name, girdi: (c.input && typeof c.input === "object" ? c.input : {}) as Record<string, unknown>, id: c.id } : null);
+  /* görüntü aracı: aynı fotoğraf bu işte bir kez büyütülür (gosterilen) */
+  const gorsel = async (c: { id: string; name: string; input: unknown }): Promise<AracSonucu> => {
+    const no = c.name === "foto_goster" ? fotoNo((c.input as { foto?: unknown } | null)?.foto) : null;
+    if (no !== null && gosterilen.has(no)) return ZATEN_BUYUTULDU(no);
+    if (no !== null) gosterilen.add(no);
+    yaz({ t: "asama", ad: "Fotoğraflara bakıyor" });
+    return gorselSonucu(o, c.name, c.input);
+  };
   for (const c of komutlar) {
-    /* 2026-11-01 (V21 O9): katalogdaki işlem adıyla doğrudan araç gibi çağrılırsa (plan_hazirlik, plan_getir …) sunucu islem olarak çalıştırır — "girdisi
-       okunamadı" diye boşa istek yok */
-    const k = aracCagrisi({ type: "tool_use", id: c.id, name: c.name, input: c.input })
-      ?? (ISLEM_KATALOGU.some((t) => t.ad === c.name) ? { tur: "islem" as const, ad: c.name, girdi: (c.input && typeof c.input === "object" ? c.input : {}) as Record<string, unknown>, id: c.id } : null);
+    const k = komut(c);
     if (EKRAN_ARAC_ADLARI.has(c.name)) { ekranda = true; ekran.push({ id: c.id, ad: c.name, komut: k }); continue; }
     if (ekranda) { sonuclar[c.id] = sonucIcerigi(islemOzeti(k?.tur === "islem" ? k.ad || "islem" : c.name, null, { tamam: false, neden: SIRA_BEKLER })); continue; }
     if (c.name === "ekran_durumu") { sonuclar[c.id] = ekranDurumuMetni(b); continue; }
     if (c.name === "beceri_oku") { sonuclar[c.id] = beceriMetni(BECERILER, (c.input as { ad?: unknown } | null)?.ad); continue; }
-    if (GORSEL_ARAC_ADLARI.has(c.name)) {
-      const no = c.name === "foto_goster" ? fotoNo((c.input as { foto?: unknown } | null)?.foto) : null;
-      if (no !== null && gosterilen.has(no)) { sonuclar[c.id] = ZATEN_BUYUTULDU(no); continue; }
-      if (no !== null) gosterilen.add(no);
-      yaz({ t: "asama", ad: "Fotoğraflara bakıyor" }); sonuclar[c.id] = await gorselSonucu(o, c.name, c.input); continue;
-    }
+    if (GORSEL_ARAC_ADLARI.has(c.name)) { sonuclar[c.id] = await gorsel(c); continue; }
     if (!k || !sunucuKomutuMu(k)) { sonuclar[c.id] = OKUNAMADI; continue; }
     yaz({ t: "asama", ad: ASAMA[c.name] ?? "Çalışıyor" });
     const ozet = await sunucuKomutu(ISLEM_KATALOGU, ortam, k, modulAdi);

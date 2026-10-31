@@ -2546,6 +2546,21 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   büyütmeler → metin, okunmuş beceri → not, uzun sonuçlar → 1 500 karakter, son çare "bağlam doldu" notu) · A2 hizmetin "context editing"i (beta; Haiku 5.5
   desteği doğrulanmalı) · B otomatik kapanış: 60 dk sessizlik / başka planın sayfasından yeni soru / küçültülmüş konuşma > 60 bin ve iş bitmiş → konuşma
   kendiliğinden kapanır (Ar-Ge 30 gün, ekler çöpe), son bildirim yeni konuşmanın başına not; "Sohbeti temizle" tuşu kalır.
+- 2026-11-01 (reisim: "tamam tüm önerilerin ve son bu hali makul başla bitir elinde iş kalmasın"): **O9–O15 + A1 + A2 + B KODDA** (kalem dalı; CI → göç 0113
+  Supabase → main). O9 katalogdaki işlem adıyla doğrudan araç çağrısı sunucuda islem olarak (dongu) · O10 talimat + B05 harita bir kez · O11 plan_hazirlik format özeti
+  yalnız raporu yazılacak türlere · O12 talimat: arama ekipman tanıma için değil (araçta sayı sınırı YOK — 2026-10-23 kararı, say-saf kilidi) · O13 talimat: saatler
+  raporlara_yaz'ın gun / baslangic'iyle · O15 sablonlar.ts çok fotoğraflı iş (≥ 3 görüntü) orta derinlik (DENEME; kalite düşerse geri) · **A1 sert tavan:**
+  is-siniri.ts istemTahmini (karakter / 3,5 + görüntü sabitleri) · isIciKucult seviye 1 eski büyütmeler metne (son görüntülü sonuç kalır) · 2 okunmuş beceriler nota
+  · 3 uzun sonuçlar kırpık (son iki kullanıcı iletisi hariç) · 4 "bağlam doldu" sistem notu; kucultmeSeviyesi TAVAN 90 bin; seviye yz_konusma_is.kucultme (göç 0113,
+  yalnız ileri); dongu her istekten önce uygular, artış hata kaydına ("say.kucultme") · **A2 hizmetin bağlam düzenlemesi:** belge doğrulandı (context editing bütün
+  modellerde, sunucu tarafında, "Claude 5.1 ve sonrasında düşünme bloklarını bozmaz"; beta context-management-2025-06-27) → say.ts BAGLAM_DUZENLEME
+  clear_tool_uses_20250919 eşik 80 bin giriş tokeni, son 4 araç çağrısı kalır, en az 10 bin temizlenir; A1 ancak hizmet yetmezse (ölçülen > 90 bin). NOT: bizim
+  istemci tarafı düzenlemelerimiz (iş sınırı sıkıştırması, A1) önceki turların düşünme bloklarını block_binding drop_block ile düşürür — bu yüzden A2 önde ·
+  **B otomatik kapanış:** is-siniri.ts kapanisNedeni (son iletiden 60 dk · yeni soru başka planın sayfasından · küçültülmüş konuşma > 60 bin) + kapanisNotu;
+  server/say.ts otomatikKapanis — yalnız iş bitmişken (konuşmanın sonu açık araç çağrısı olmayan cevap), sayTemizle koru (yeni sorunun ekleri kalır), Ar-Ge
+  kaydı, ekler çöpe, hizmetteki dosyalar silinir (dongu), görünen geçmiş temizlenir, önceki işin son dört satırlık bildirimi yeni konuşmanın ilk iletisinde not;
+  talimata not. Kilitler: say-is-siniri (+ bozan 5), say-saf (A2 gövde), say-hiz (O15), say-malzeme (koru). Ölçüm: üçüncü koşu reisim'de (hedef istem hiç
+  > 100 bin olmaz; say_istek).
 - 2026-10-31 (gece, V21 optimizasyon — reisim: "10 maddelik öneriyi olduğu gibi onaylıyorum. Önce kısa sunum, sonra kalem kalem kod" + eklemeler + madde 11;
   sunum yerel/say-arge/2026-10-31-sunum-v21-optimizasyon.md): **KODDA** (kalem dalı, dört commit; CI → main). 3 + 4: raporlar/denetle.ts taslak "gönderilmiş"
   sayılmaz (KOD HATASI "yeni" ↔ "taslak"), kontrol günü plan günlerinin dışındaysa uyarı; cihaz türü adı türün kaydından (çift "Ölçüm cihazı" bitti);
