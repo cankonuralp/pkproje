@@ -115,6 +115,12 @@ jobs:
       # 468 (2026-10-10): ölçüldü ("[bellek]" satırları) — geliştirme sunucusu hazırlıkta ~13 GB'a çıkıyor (9 GB yığında "heap out of memory" ile
       # çöktü: gerçek ihtiyaç); 16 GB'lık makinede kalan 0,0 GB olunca makine kapanıyor ya da tarayıcı takasa düşüp zaman aşımı. 12 GB ek takas
       # alanı: az kullanılan bellek diske iner, makine kapanmaz. Kalıcı çözüm (yayın derlemesinde uçtan uca) pkproje.md §11 468'de, karar bekliyor.
+      # 2026-10-31 (reisim'in kabulü — "CI disk adımı"): takas (12 GB) + yayın derlemesi + tarayıcı diski doldurabiliyor; makinede hazır gelen, bu işin
+      # kullanmadığı araç zincirleri (.NET, Android, GHC, CodeQL) silinir
+      - name: Disk boşalt
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h /
       - name: Takas alanı (12 GB)
         run: |
           sudo fallocate -l 12G /mnt/probata-takas
