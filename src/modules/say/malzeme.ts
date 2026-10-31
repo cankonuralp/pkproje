@@ -59,7 +59,23 @@ export function sohbetDuzeni(l: readonly SohbetIletisi[]): string {
 }
 
 /* ── ekler: numara, ad, saat, sıra ── */
-export interface MalzemeEki { dosya: string; tur: "foto" | "pdf" | "word" | "metin" | "tablo"; ad: string; cekim: string | null; no: number; fno: number | null }
+/** 2026-10-31 (L4): fotoğrafın ön okuması — sınıf (B02: E genel görünüş · T etiket / plaka · L levha · Y yük diyagramı · S liste / belge · K kusur · D diğer) */
+export const SINIF_ADI = { E: "genel görünüş", T: "etiket / plaka", L: "levha", Y: "yük diyagramı", S: "liste / belge", K: "kusur yakın planı", D: "diğer" } as const;
+export type FotoSinifi = keyof typeof SINIF_ADI;
+export interface OnOkuma { sinif: FotoSinifi; yazi: string; tarif: string }
+export interface MalzemeEki { dosya: string; tur: "foto" | "pdf" | "word" | "metin" | "tablo"; ad: string; cekim: string | null; no: number; fno: number | null; okuma?: OnOkuma | null }
+
+/** 2026-10-31 (reisim: "Önce say, sonra aç: fotoğraflar çekim saatine göre sıralanır"): EXIF'i olmayan fotoğrafın (WhatsApp, ekran görüntüsü) çekim saati
+    DOSYA ADINDAN — genel tarih-saat biçimleri: "… 2026-10-30 at 13.39.31", "IMG_20261030_133931", "2026-10-30 13-39-31", "20261030-133931". Geçersizse null.
+    Dönen "YYYY-AA-GG SS:DD:SS" (saniye yoksa "SS:DD") */
+export function cekimAdindan(ad: string): string | null {
+  const a = /(20\d{2})[-_.]?(\d{2})[-_.]?(\d{2})(?:[ _T-]+(?:at[ _]+)?|_)(\d{2})[.:\-_ ]?(\d{2})(?:[.:\-_ ]?(\d{2}))?(?!\d)/i.exec(ad);
+  if (!a) return null;
+  const [y, ay, g, s, d, sn] = a.slice(1).map((x) => (x === undefined ? null : Number(x)));
+  if (!y || !ay || !g || ay > 12 || g > 31 || s === null || s > 23 || d === null || d > 59 || (sn !== null && sn > 59)) return null;
+  const iki2 = (n: number) => String(n).padStart(2, "0");
+  return `${y}-${iki2(ay)}-${iki2(g)} ${iki2(s)}:${iki2(d)}${sn !== null ? `:${iki2(sn)}` : ""}`;
+}
 const TUR_ADI: Record<MalzemeEki["tur"], string> = { foto: "fotoğraf", pdf: "PDF", word: "Word belgesinin metni", metin: "metin dosyası", tablo: "Excel tablosu (metin)" };
 const iki = (n: number) => String(n).padStart(2, "0");
 const saatTr = (c: string) => `${c.slice(8, 10)}.${c.slice(5, 7)}.${c.slice(0, 4)} ${c.slice(11)}`;
@@ -74,7 +90,8 @@ export function malzemeSirasi<T extends { tur: string; cekim: string | null }>(e
 }
 /** ekin başlığı: "M03 · F02 — fotoğraf · komp.jpeg · çekim 27.10.2026 09:56" */
 export function ekBasligi(e: MalzemeEki): string {
-  return `M${iki(e.no)}${e.fno ? ` · F${iki(e.fno)}` : ""} — ${TUR_ADI[e.tur]} · ${e.ad.slice(0, 80)}${e.cekim ? ` · çekim ${saatTr(e.cekim)}` : ""}`;
+  return `M${iki(e.no)}${e.fno ? ` · F${iki(e.fno)}` : ""} — ${TUR_ADI[e.tur]} · ${e.ad.slice(0, 80)}${e.cekim ? ` · çekim ${saatTr(e.cekim)}` : ""}`
+    + (e.okuma ? ` · ön okuma: ${SINIF_ADI[e.okuma.sinif]}${e.okuma.tarif ? ` — ${e.okuma.tarif}` : ""}${e.okuma.yazi ? ` · yazı: ${e.okuma.yazi}` : ""}` : "");
 }
 /** bu iletinin malzeme özeti */
 export function malzemeOzeti(ekler: readonly MalzemeEki[]): string {
@@ -82,5 +99,28 @@ export function malzemeOzeti(ekler: readonly MalzemeEki[]): string {
   for (const e of ekler) if (!e.fno) say.set(TUR_ADI[e.tur], (say.get(TUR_ADI[e.tur]) ?? 0) + 1);
   const parca = [...(f.length ? [`${f.length} fotoğraf (${f.length > 1 ? `F${iki(Math.min(...f.map((x) => x.fno!)))}–F${iki(Math.max(...f.map((x) => x.fno!)))}` : `F${iki(f[0]!.fno!)}`})`] : []),
     ...[...say].map(([t, n]) => `${n} ${t}`)];
-  return `Malzeme (bu iletide ${ekler.length} öğe: ${parca.join(", ")}). Numaralar konuşma boyunca aynı kalır; sıra kaynağın sırası, yoksa çekim saati, yoksa eklenme.`;
+  /* 2026-10-31 (L4): ön okunan fotoğrafların sınıf sayısı ve çekim saatine göre genel görünüş–etiket çiftleri — ekipman sayısı ilk turda kesinleşsin */
+  const okunan = f.filter((e) => e.okuma);
+  const sinif = new Map<FotoSinifi, number>();
+  for (const e of okunan) sinif.set(e.okuma!.sinif, (sinif.get(e.okuma!.sinif) ?? 0) + 1);
+  const c = fotoCiftleri(malzemeSirasi(f));
+  const sinifMetni = okunan.length ? ` Ön okuma (${okunan.length} / ${f.length}): ${[...sinif].map(([k, n]) => `${n} ${SINIF_ADI[k]}`).join(", ")}.` : "";
+  const ciftMetni = c.ciftler.length ? ` Çekim saatine göre genel görünüş + etiket çiftleri: ${c.ciftler.map(([a, b]) => `F${iki(a)}+F${iki(b)}`).join(", ")}`
+    + `${c.yalniz.length ? `; eşsiz genel görünüş: ${c.yalniz.map((x) => `F${iki(x)}`).join(", ")}` : ""} — ekipman sayısı en az ${c.ciftler.length + c.yalniz.length}.` : "";
+  return `Malzeme (bu iletide ${ekler.length} öğe: ${parca.join(", ")}). Numaralar konuşma boyunca aynı kalır; sıra kaynağın sırası, yoksa çekim saati, yoksa eklenme.${sinifMetni}${ciftMetni}`;
+}
+
+/** çekim sırasındaki fotoğraflardan genel görünüş (E) – etiket / levha (T, L) çiftleri: E'nin hemen önündeki ya da ardındaki ilk eşsiz etiket (çekim
+    aralığı 5 dakikayı aşmaz). Ön okuması olmayan fotoğraf çifte girmez. Dönen fno'lar */
+export function fotoCiftleri(l: readonly Pick<MalzemeEki, "fno" | "cekim" | "okuma">[]): { ciftler: [number, number][]; yalniz: number[] } {
+  const sn = (c: string | null) => (c ? Date.parse(`${c.slice(0, 10)}T${c.length > 16 ? c.slice(11) : `${c.slice(11)}:00`}Z`) / 1000 : null);
+  const yakin = (a: (typeof l)[number], b: (typeof l)[number]) => { const x = sn(a.cekim), y = sn(b.cekim); return x === null || y === null || Math.abs(x - y) <= 300; };
+  const etiket = (e: (typeof l)[number]) => e.okuma?.sinif === "T" || e.okuma?.sinif === "L";
+  const kullanilan = new Set<number>(), ciftler: [number, number][] = [], yalniz: number[] = [];
+  l.forEach((e, i) => {
+    if (e.okuma?.sinif !== "E" || !e.fno) return;
+    const aday = [l[i + 1], l[i - 1]].find((x) => x?.fno && etiket(x) && !kullanilan.has(x.fno) && yakin(e, x));
+    if (aday?.fno) { kullanilan.add(aday.fno); ciftler.push([e.fno, aday.fno]); } else yalniz.push(e.fno);
+  });
+  return { ciftler, yalniz };
 }

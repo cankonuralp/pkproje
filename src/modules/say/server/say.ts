@@ -187,6 +187,11 @@ export async function cagriAyir(db: Sorgulayici, model: YzModel, sinir: number |
   const ay = yzAyi(simdi), ust = maliyetHesapla(model, Math.max(100_000, Math.ceil(girisTahmini)), SAY_YANIT_SINIRI);
   return (await yzAyir(db, ay, sinir, ust)) ? { ay, ust } : null;
 }
+/** 2026-10-31 (L4): küçük çağrının ayırması (fotoğraf ön okuması) — giriş ve cevap tahminiyle; sınır doluysa null */
+export async function kucukCagriAyir(db: Sorgulayici, model: YzModel, sinir: number | null, giris: number, cikis: number, simdi = new Date()): Promise<{ ay: string; ust: number } | null> {
+  const ay = yzAyi(simdi), ust = maliyetHesapla(model, giris, cikis);
+  return (await yzAyir(db, ay, sinir, ust)) ? { ay, ust } : null;
+}
 /** kapanış: gerçek maliyet; mesaj 1 — kişinin sorusunun ilk çağrısı (sonrakiler aynı mesajın işi) */
 export const cagriKapat = (db: Sorgulayici, a: { ay: string; ust: number }, maliyet: number, mesaj: 0 | 1) => yzSohbetKapat(db, { ay: a.ay, ust: a.ust, maliyet, mesaj });
 /** çağrı cevapsız bitti: ücretsizse bırakılır, sonucu bilinmiyorsa ayrılan harcamaya yazılır */

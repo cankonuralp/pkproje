@@ -8,7 +8,7 @@ import { exifCekimZamani } from "../../../server/dosya/exif.ts";
 import { jpegTemizle, pngTemizle, turBul } from "../../../server/dosya/tur.ts";
 import type { EkTuru } from "../../../server/yz/konusma.ts";
 import { wordMetni } from "../../../server/yz/word.ts";
-import { ekBasligi, malzemeOzeti, malzemeSirasi, sohbetDuzeni, sohbetIletileri, type MalzemeEki } from "../malzeme.ts";
+import { cekimAdindan, ekBasligi, malzemeOzeti, malzemeSirasi, sohbetDuzeni, sohbetIletileri, type MalzemeEki } from "../malzeme.ts";
 
 export interface HazirEk { tur: EkTuru; mime: string; bayt: Uint8Array; ad: string; dosyaAdi: string; cekim: string | null }
 export const EK_TUR_HATASI = "Bu dosya okunamadı: fotoğraf (JPEG, PNG), PDF, Word (.docx), Excel ya da metin dosyası eklenir.";
@@ -33,7 +33,7 @@ export function sayEkiHazirla(b: Uint8Array, ad: string, tablo = false): HazirEk
   if (tur === "jpeg" || tur === "png") {
     try {
       /* çekim saati konum ve öteki EXIF silinmeden önce okunur */
-      const cekim = tur === "jpeg" ? exifCekimZamani(b) : null;
+      const cekim = (tur === "jpeg" ? exifCekimZamani(b) : null) ?? cekimAdindan(gorunen);
       return { tur: "foto", mime: `image/${tur}`, bayt: tur === "jpeg" ? jpegTemizle(b) : pngTemizle(b), ad: gorunen, dosyaAdi: `ek.${tur === "jpeg" ? "jpg" : "png"}`, cekim };
     } catch { return { durum: "red", neden: `${gorunen}: fotoğraf bozuk.` }; }
   }

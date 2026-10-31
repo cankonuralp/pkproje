@@ -8,6 +8,7 @@ import { anthropicDosyaYukle } from "../../../server/yz/akis.ts";
 import { DOSYA_SAY_EK, ekKaydet, parcalariBirlestir, parcalariSil, parcaYaz, type EkTuru } from "../../../server/yz/konusma.ts";
 import { sayEkiHazirla } from "./ek.ts";
 import { sayKapisi } from "./say.ts";
+import { fotoOnOku } from "./on-okuma.ts";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 export interface EkParcasi { yukleme: string; sira: number; adet: number; ad: string; tablo: boolean }
@@ -22,7 +23,8 @@ export function ekParcasiOku(b: { yukleme: string | null; sira: string | null; a
   return { yukleme: b.yukleme, sira, adet, ad, tablo: b.tablo === "1" };
 }
 
-export async function sayEkParcasi(o: IstekOturumu, p: EkParcasi, veri: Uint8Array): Promise<EkYaniti> {
+/** sonra: yanıttan sonra çalışacak iş (uç: next/server after) — fotoğrafın ön okuması (2026-10-31, L4) */
+export async function sayEkParcasi(o: IstekOturumu, p: EkParcasi, veri: Uint8Array, sonra?: (is: () => Promise<void>) => void): Promise<EkYaniti> {
   if (!veri.length) return { durum: "red", neden: "Dosyanın parçası boş geldi; yeniden ekleyin." };
   await oturumIslemi(o, (db) => parcaYaz(db, p.yukleme, p.sira, veri));
   if (p.sira < p.adet - 1) return { durum: "parca" };
@@ -47,5 +49,6 @@ export async function sayEkParcasi(o: IstekOturumu, p: EkParcasi, veri: Uint8Arr
     }
     return ek;
   });
+  if (e.tur === "foto" && sonra) sonra(() => fotoOnOku(o, id, e.bayt, e.mime));
   return { durum: "tamam", ek: { id, ad: e.ad, tur: e.tur, boyut: h.bayt.length } };
 }

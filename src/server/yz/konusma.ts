@@ -76,7 +76,16 @@ export async function ekKopyalari(db: Sorgulayici): Promise<string[]> {
 export type EkTuru = "foto" | "pdf" | "word" | "metin" | "tablo";
 export interface KonusmaEki { id: string; dosya: string; ad: string; tur: EkTuru; mime: string; boyut: number; cekim?: string | null }
 /** 2026-10-31 (kalem 2): malzeme numarası — kişinin eklerinin kalıcı sırasında (yz_ek.sira); no bütün ekler, fno fotoğraflar arasında */
-export interface NumaraliEk extends KonusmaEki { cekim: string | null; no: number; fno: number | null }
+export interface NumaraliEk extends KonusmaEki { cekim: string | null; no: number; fno: number | null; okuma: { sinif: "E" | "T" | "L" | "Y" | "S" | "K" | "D"; yazi: string; tarif: string } | null }
+/** 2026-10-31 (L4 — göç 0111): fotoğraf ekinin ön okuması, ek başına bir kez (yalnız eklenir) */
+export async function ekOkumaYaz(db: Sorgulayici, ek: string, o: { sinif: string; yazi: string; tarif: string }): Promise<void> {
+  await db.sorgu("INSERT INTO yz_ek_okuma (ek_id, sinif, yazi, tarif) VALUES ($1, $2, $3, $4) ON CONFLICT (ek_id) DO NOTHING", [ek, o.sinif, o.yazi.slice(0, 400), o.tarif.slice(0, 160)]);
+}
+/** ön okuması henüz olmayan fotoğraf ekleri (verilenlerden) */
+export async function onOkumaBekleyen(db: Sorgulayici, idler: readonly string[]): Promise<number> {
+  if (!idler.length) return 0;
+  return Number((await db.sorgu<{ n: string }>("SELECT count(*)::text AS n FROM yz_ek e WHERE e.id::text = ANY($1::text[]) AND e.tur = 'foto' AND e.zaman > now() - interval '5 minutes' AND NOT EXISTS (SELECT 1 FROM yz_ek_okuma o WHERE o.ek_id = e.id)", [idler])).rows[0]?.n ?? 0);
+}
 
 export async function ekKaydet(db: Sorgulayici, e: Omit<KonusmaEki, "id">): Promise<string> {
   return (await db.sorgu<{ id: string }>("INSERT INTO yz_ek (dosya, ad, tur, mime, boyut, cekim) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id::text",
@@ -85,12 +94,12 @@ export async function ekKaydet(db: Sorgulayici, e: Omit<KonusmaEki, "id">): Prom
 /** kişinin kendi ekleri (verilen sırayla; başkasının ya da olmayan kimlik düşer) */
 export async function ekleriAl(db: Sorgulayici, idler: readonly string[]): Promise<NumaraliEk[]> {
   if (!idler.length) return [];
-  const l = (await db.sorgu<KonusmaEki & { boyut: string; cekim: string | null; no: string; fno: string | null }>(
-    `SELECT id, dosya, ad, tur, mime, boyut, cekim, no, fno FROM (
-       SELECT id::text, dosya, ad, tur, mime, boyut::text, cekim, row_number() OVER (ORDER BY sira)::text AS no,
+  const l = (await db.sorgu<KonusmaEki & { boyut: string; cekim: string | null; no: string; fno: string | null; okuma: NumaraliEk["okuma"] }>(
+    `SELECT n.id, dosya, ad, tur, mime, boyut, cekim, no, fno, CASE WHEN o.ek_id IS NULL THEN NULL ELSE jsonb_build_object('sinif', o.sinif, 'yazi', o.yazi, 'tarif', o.tarif) END AS okuma FROM (
+       SELECT id::text, id AS kimlik, dosya, ad, tur, mime, boyut::text, cekim, row_number() OVER (ORDER BY sira)::text AS no,
               CASE WHEN tur = 'foto' THEN (count(*) FILTER (WHERE tur = 'foto') OVER (ORDER BY sira))::text END AS fno
-         FROM yz_ek) n WHERE id = ANY($1::text[])`, [idler])).rows
-    .map((r) => ({ ...r, boyut: Number(r.boyut), no: Number(r.no), fno: r.fno === null ? null : Number(r.fno) }));
+         FROM yz_ek) n LEFT JOIN yz_ek_okuma o ON o.ek_id = n.kimlik WHERE n.id = ANY($1::text[])`, [idler])).rows
+    .map((r) => ({ ...r, boyut: Number(r.boyut), no: Number(r.no), fno: r.fno === null ? null : Number(r.fno), okuma: r.okuma ?? null }));
   return idler.flatMap((i) => l.filter((x) => x.id === i));
 }
 

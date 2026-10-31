@@ -25,6 +25,7 @@ import { bekleyenAl, bekleyenYaz, isAl, isBirak, konusmaEkle, konusmaKilidi, kon
 import { fotoGosterAraci, fotoPaftaAraci } from "./gorsel.ts";
 import { beceriDizini, beceriMetni, becerileriOku } from "../beceriler.ts";
 import { bitisDenetimi, denetimNotu, sorunVar } from "../bitis-denetimi.ts";
+import { onOkumaBekle } from "./on-okuma.ts";
 import { acikSonuclar, konusmaDuzelt } from "../../../server/yz/konusma-denetim.ts";
 import type { SohbetIletisi } from "../../../server/yz/sohbet.ts";
 import { aracCagrilari, aracCagrisi, betaReddi, cevapMetni, EKRAN_ARAC_ADLARI, GORSEL_ARAC_ADLARI, sayAraclari, sayIstegi, sayMaliyeti, saySistemi, sonucIcerigi, sunucuKomutuMu,
@@ -165,6 +166,8 @@ export async function sayAkisi(o: IstekOturumu, ham: unknown, yaz: (x: SayOlayi)
   let yenile = false, ilk = v.tur === "soru", duraklat = false;
   try {
     if (v.tur === "soru") {
+      /* 2026-10-31 (L4): yeni fotoğrafların ön okuması bitsin (en çok 25 sn) — malzeme özeti sınıf sayısı ve çiftlerle gitsin */
+      if (v.ekler.length) await onOkumaBekle(o, v.ekler);
       const s = await oturumIslemi(o, (db) => soruyuEkle(db, o, { metin: v.soru, ekler: v.ekler, ekran, okuyucu: acikKayitOkuyucu(o), sablon: v.sablon }));
       if (s.durum === "red") { yaz({ t: "hata", neden: s.neden, yenile }); return; }
       yaz({ t: "ileti", ileti: s.ileti });
