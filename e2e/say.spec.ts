@@ -115,7 +115,8 @@ test("S.A.Y: düğme, hızlı soru, serbest soru, sayfa değişince ve yenileyin
   await expect(liste).toContainText("1 eki okudum.");
   await expect(liste.getByRole("listitem").filter({ hasText: "Bu etikette ne yazıyor?" }).first()).toContainText("etiket.png");
   await expect(panel.getByRole("list", { name: "Ekler" })).toHaveCount(1, { timeout: 5_000 });   // yalnız gönderilen sorudaki
-  /* 2026-10-23: ek konuşmada kalır — sonraki soruda S.A.Y onu yine görür (taklit konuşmanın bütün eklerini sayar) */
+  /* 2026-10-23: ek konuşmada kalır — sonraki soruda S.A.Y onu yine görür (taklit konuşmanın bütün eklerini sayar; 2026-10-31 V21: bitmiş işin fotoğrafı
+     ön okuma metniyle — küçük kopyası metne iner —, taklit onu da ek sayar) */
   await panel.getByLabel("S.A.Y'a sor").fill("Az önceki etiketi hatırlıyor musun? [ek-hatirla]");
   await panel.getByLabel("S.A.Y'a sor").press("Enter");
   await expect(liste).toContainText("Konuşmada 1 ek var.", { timeout: 30_000 });

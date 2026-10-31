@@ -18,6 +18,7 @@ import { onayla } from "../src/modules/onaylar/server/onaylar.ts";
 import { planKabul, planIci } from "../src/modules/planlar/server/plan-ici.ts";
 import { planAc } from "../src/modules/planlar/server/planlar.ts";
 import { raporOlustur } from "../src/modules/raporlar/server/raporlar.ts";
+import { FOTO_KALDIRILDI } from "../src/modules/say/is-siniri.ts";
 import { ayarOku, ayarYaz } from "../src/server/ayar/ayar.ts";
 import { klasorDepo } from "../src/server/dosya/depo.ts";
 import { ekipmanTamYap } from "../src/format/duzen.ts";
@@ -465,7 +466,9 @@ const yzTaklit = createServer((istek, yanit) => {
         return;
       }
       /* 2026-10-23: "[ek-hatirla]" — konuşmanın BÜTÜN eklerini sayar (ekler konuşmada kalır) */
-      const ekSay = (l: readonly Ileti[]) => l.flatMap((m) => (m.role === "user" ? bloklar(m) : [])).filter((b) => b.type === "image" || b.type === "document").length;
+      /* 2026-10-31 (V21 madde 1): bitmiş işin fotoğrafı konuşmada ön okuma metniyle kalır (küçük kopya metne iner — is-siniri.ts FOTO_KALDIRILDI); o da ektir */
+      const ekSay = (l: readonly Ileti[]) => l.flatMap((m) => (m.role === "user" ? bloklar(m) : []))
+        .filter((b) => b.type === "image" || b.type === "document" || (b.type === "text" && b.text === FOTO_KALDIRILDI)).length;
       if (son.includes("[ek-hatirla]")) { metinYaz(`Konuşmada ${ekSay(mesajlar)} ek var.`); return; }
       /* düz soru: "[yavaş]" geçen soruya cevap 1,5 sn sonra (mesaj hemen balon, "Düşünüyor" görünür); sayfada açık rapor varsa söyler */
       const ekSayisi = ekSay([soruIletisi]);
