@@ -2534,7 +2534,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   ilk istek 63 bin (talimat + araçlar + 18 fotoğraf), konuşma 151 bine çıktı, sınır ikinci işin 4. isteğinde aşıldı. Üst fiyatlı istek ortalama $0,0116; aynı
   istekler 100 binin altında kalsaydı ~$0,002 (ölçülen token × alt fiyat) → koşu ~$0,07 olurdu. Büyüten: 7 fotoğraf büyütmesi (foto_goster / foto_pafta — konuşmada
   base64 kalır; 0,65 + 0,24 + 0,21 + 0,19 + 0,17 MB …), iki beceri metni (17 KB), üç kez 9 raporluk plan_denetle sonucu, şema hatasında dönen şema, düşünceler.
-  **H1–H9:** H1 ✗ 8 ekipman tek çağrıda açıldı ama 9 olmalıydı (ön okuma "en az 9" dedi; reisim ikinci iletide 9.'nun lift olduğunu söyledi, S.A.Y yine 8 açtı) ·
+  **H1–H9:** H1 ✓ 8 ekipman tek çağrıda açıldı; 8 doğru (reisim sonradan: "say asistan 1 raporu yazmamakta haklı fotoğrafta lift değil rot cihazı yazıyor benim
+  hatam" — ön okumanın "en az 9"u yanlıştı, S.A.Y fotoğrafa bakıp düzeltti) ·
   H2 ~ ilk geçişte rapor başına 1 kayıt, sonraki düzeltmelerle 8 rapora 11 kayıt · H3 ✓ 7 yazma adımı, ama üç işe dağıldı · H4 ✗ ilk iş tesis uyuşmazlığı diye
   durdu ve sordu; ölçüm cihazında iki kez seçenek sundu, reisim'in iki kez "sen ekle ne lazımsa" dediğini yapmadı · H5 ✗ bildirimler 10+ satır, başlıklı ·
   H6 ✗ her taslakta yanlış "gönderilmiş", beyan kapasitesi okunabilirken boş · H7 — tür ve format sabahtan vardı (yayın / formatı güncelle yok) · H8 ✓ rapor başına
@@ -2547,8 +2548,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   **Öneriler — onay bekliyor, kod YOK:** O1 konuşma 100 bin tokenin altında tutulur (iş bitince eski fotoğraf büyütmeleri ve ilk iletideki fotoğraflar ön okuma
   metnine iner, gerekirse foto_goster yeniden; eski araç sonuçları kısalır) · O2 ilk iletideki fotoğraflar küçük çözünürlükte (ön okuma zaten var), ayrıntı
   foto_goster ile · O3 hatalar 1–5'in düzeltmesi (tür adı da kabul, surum sunucudan, beyan kapasitesi = etiket kapasitesi, tarih planın dışındaysa uyarı) ·
-  O4 tesis / müşteri uyuşmazlığı durdurmaz: yapar, bildirimde "tesis kontrol edilmeli" · O5 kullanıcının sayım düzeltmesi ("o da lift") ön okumanın ve S.A.Y'ın
-  kendi kararının önüne geçer · O6 dört satır sınırı sunucuda da · O7 izleyen kısa işlerde orta derinlik. **KARAR reisim'de:** firmada hiç cihazı olmayan ölçüm cihazı
+  O4 tesis / müşteri uyuşmazlığı durdurmaz: yapar, bildirimde "tesis kontrol edilmeli" · O5 KALKTI (S.A.Y'ın 8 sayımı doğruydu) · O6 dört satır sınırı sunucuda da · O7 izleyen kısa işlerde orta derinlik. **KARAR reisim'de:** firmada hiç cihazı olmayan ölçüm cihazı
   türü (bu koşuda kumpas, şerit metre) için S.A.Y ne yapsın — (a) türün listesinden çıkarsın, (b) kalibrasyonsuz cihaz kaydı açsın (raporda uyarı), (c) boş bırakıp
   "kalan engel" yazsın, sormasın. Önerim (c); kullanıcı "ekle" derse (a). Ayrıntı yerel/say-altin/V21/vaka.md.
 - 2026-10-31 (lift denemesinden — reisim: "S.A.Y durup sormaz, işi bitirir, sonra kısaca bildirir"; "ONAY BEKLEMESİN TAM YETKİLİ OLSUN"; sunum
