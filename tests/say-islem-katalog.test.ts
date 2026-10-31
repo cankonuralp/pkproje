@@ -149,7 +149,7 @@ test("araçlar: bütün araçlar her istekte aynı sırayla, işlem araçları �
     .govde as { tools: { name: string }[]; system: { text: string }[] };
   /* 2026-10-31 (kalem 3 — E3, reisim onayı): görüntü araçları foto_pafta, foto_goster işlem araçlarının ardında, sabit sırayla */
   assert.deepEqual(g.tools.map((t) => t.name), ["islemler", "islem", "beceri_oku", "foto_pafta", "foto_goster", "form_goster", "ekran_durumu", "rapora_yaz", "fotograflari_oku", "geri_al", "raporu_kaydet", "onaya_gonder",
-    "formati_duzenle", "format_pdf_kur", "web_search"]);
+    "formati_duzenle", "format_pdf_kur", "pdf_gonder", "web_search"]);
   assert.ok(g.system[0].text.includes(ISLEM_DIZINI) && g.system[0].text.includes("islem aracıyla"), "dizin önbellekli talimatta");
   assert.equal(JSON.stringify(sayAraclari(FORMAT_ARACI)), JSON.stringify(sayAraclari(FORMAT_ARACI)), "araç tanımları her çağrıda aynı");
   assert.equal(saySistemi([], ISLEM_DIZINI), saySistemi([], ISLEM_DIZINI), "talimat her çağrıda aynı");

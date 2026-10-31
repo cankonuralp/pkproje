@@ -59,7 +59,7 @@ const BASKA_PENCERE = "S.A.Y başka bir pencerenizde bir işi sürdürüyor; o b
 /** aynı cevapta ekranın işinden SONRA gelen işlem bekler (S.A.Y'ın çağırdığı sıra korunur) */
 export const SIRA_BEKLER = "Yapılmadı: aynı cevapta bundan önce ekranda yapılacak bir iş vardı (sıra korunur); ekranın sonucunu gördükten sonra bu işlemi yeniden çağır.";
 const OKUNAMADI = "Bu araç çağrısının girdisi okunamadı; girdiyi aracın tarifine göre yeniden ver.";
-const ASAMA: Record<string, string> = { rapora_yaz: "Rapora yazıyor", fotograflari_oku: "Okuyor", geri_al: "Geri alıyor", raporu_kaydet: "Kaydediyor",
+const ASAMA: Record<string, string> = { pdf_gonder: "Gönderiyor", rapora_yaz: "Rapora yazıyor", fotograflari_oku: "Okuyor", geri_al: "Geri alıyor", raporu_kaydet: "Kaydediyor",
   onaya_gonder: "Onaya gönderiyor", formati_duzenle: "Formata yazıyor", ekran_durumu: "Ekrana bakıyor", islemler: "Uygulamada arıyor", islem: "Uygulamada çalışıyor" };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;

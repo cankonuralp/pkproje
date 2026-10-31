@@ -83,7 +83,8 @@ Modüle özel ezber yok; modülün işlemlerini ve dosya yuvalarını `islemler`
 ## 5. Dışarıya giden işler
 
 İmzaya gönderme, e-posta gönderme ve onaya gönderme **açık komut** ister (komut varsa onay sormadan yapılır). Ör. eğitim katılım formunu imzaya göndermek,
-zimmet formunu imzaya göndermek, bordro göndermek. E-imzanın kendisi kişinin cihazındadır; S.A.Y imzalamaz.
+zimmet formunu imzaya göndermek, ön bilgilendirme formunu ve sözleşmeyi göndermek `pdf_gonder` ile; bordro göndermek. E-imzanın kendisi kişinin
+cihazındadır; S.A.Y imzalamaz.
 
 ## 6. Doğrula ve bildir (B07)
 

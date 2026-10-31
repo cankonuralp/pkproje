@@ -525,6 +525,16 @@ export function SayAsistan() {
       return { ozet: { yazildi: 1, ayni: 0, bekliyor: 0, yapilan: [`Format PDF'i yüklendi (sürüm ${y.sira}); şablon bu PDF'ten taslak olarak kuruldu (taslak ${y.taslak}), Format kurucu açıldı`,
         ...y.uyarilar], yazilamadi: [] } };
     }
+    /* 2026-10-31 ("PDF gönderim ayrı uç"): PDF basan gönderim ayrı uçta (Chromium) — ekranın tuşlarının işlevleri, kullanıcının oturumu */
+    if (k.tur === "pdfGonder") {
+      setAsama("Gönderiyor");
+      const ad = { katilim: "Katılım formu", zimmet: "Zimmet teslim formu", onbilgi: "Ön bilgilendirme formu", sozlesme: "Sözleşme" }[k.belge];
+      try {
+        const r = await fetch("/api/say/pdf", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tur: k.belge, id: k.kayit, kime: k.kime }) });
+        const y = (await r.json()) as { tamam?: boolean; bildirim?: string; neden?: string };
+        return y.tamam ? { ozet: { yazildi: 1, ayni: 0, bekliyor: 0, yapilan: [y.bildirim ?? `${ad} gönderildi`], yazilamadi: [] } } : yapilamadi(ad, y.neden ?? "gönderilemedi");
+      } catch { return yapilamadi(ad, "PDF ucuna ulaşılamadı; bağlantıyı kontrol edip yeniden deneyin"); }
+    }
     /* 2026-10-31 (kalem 4 — K6): formun görüntüsü — ayrı uçta (Chromium) basılır, dosyası S.A.Y'a sonuçla döner (sunucu görüntüyü sonuca koyar) */
     if (k.tur === "form") {
       const rapor = k.rapor ?? rb?.id ?? null;

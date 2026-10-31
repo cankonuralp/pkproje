@@ -258,12 +258,24 @@ export const FORMAT_PDF_ARACI = {
     required: ["ek"],
   },
 } as const;
+/** 2026-10-31 (reisim'in kabulü: "PDF gönderim ayrı uç (Chromium)"): PDF basan gönderimler — ekran ayrı uçtan (src/app/api/say/pdf) yapar */
+export const PDF_GONDER_ARACI = {
+  name: "pdf_gonder",
+  description: "PDF basıp gönderen işler (ekranın tuşlarıyla aynı yetki ve PDF): katilim — eğitim kaydının katılım formunu katılımcıların imzasına (id: eğitim kaydı); "
+    + "zimmet — personelin zimmet teslim formunu imzaya (id: personel); onbilgi — planın ön bilgilendirme formunu müşteriye (id: plan); sozlesme — sözleşmeyi "
+    + "müşteriye e-postayla (id: sözleşme, kime: alıcı e-postaları). Yalnız kullanıcı göndermeyi istediyse.",
+  input_schema: {
+    type: "object",
+    properties: { tur: { type: "string", enum: ["katilim", "zimmet", "onbilgi", "sozlesme"] }, id: { type: "string" }, kime: { type: "array", items: { type: "string" } } },
+    required: ["tur", "id"],
+  },
+} as const;
 /** ekranın yaptığı araçlar (sonucu ekran döndürür); ötekiler sunucuda */
 export const EKRAN_ARAC_ADLARI: ReadonlySet<string> = new Set(["form_goster", "rapora_yaz", "fotograflari_oku", "geri_al", "raporu_kaydet", "onaya_gonder", "formati_duzenle",
-  "format_pdf_kur"]);
+  "format_pdf_kur", "pdf_gonder"]);
 
 /** bütün araçlar, her istekte aynı sırayla (formatAraci modülden: src/modules/rapor-format/say-kurucu.ts) */
-export const sayAraclari = (formatAraci: object): readonly object[] => [...ISLEM_ARACLARI, BECERI_ARACI, ...GORSEL_ARACLARI, FORM_ARACI, EKRAN_ARACI, ...RAPOR_ARACLARI, formatAraci, FORMAT_PDF_ARACI, ARAMA_ARACI];
+export const sayAraclari = (formatAraci: object): readonly object[] => [...ISLEM_ARACLARI, BECERI_ARACI, ...GORSEL_ARACLARI, FORM_ARACI, EKRAN_ARACI, ...RAPOR_ARACLARI, formatAraci, FORMAT_PDF_ARACI, PDF_GONDER_ARACI, ARAMA_ARACI];
 
 /** istek: sabit talimat (önbellekte) + bütün araçlar + konuşmanın tamamı. betasiz: hizmet düşünme denetimi betasını kabul etmezse aynı istek onsuz */
 /** 2026-10-31 (reisim: "Uzun işlerde 1 saatlik önbellek. Denemedeki 9 dakikalık ara, 5 dakikalık önbelleği düşürdü"; "Düşünme derinliği şablona göre
@@ -333,9 +345,10 @@ export type SayKomutu = ({ tur: "yaz"; girisler: { yer: string; deger: string }[
   | { tur: "format"; islemler: Record<string, unknown>[] } | { tur: "kaydet" } | { tur: "gonder" }
   | { tur: "pdfFormat"; turId: string; ek: number; taslakSurumu: number | null; belge?: BelgeTuru }
   | { tur: "form"; rapor: string | null; sayfa: number }
+  | { tur: "pdfGonder"; belge: "katilim" | "zimmet" | "onbilgi" | "sozlesme"; kayit: string; kime: string[] }
   | { tur: "islem"; ad: string; girdi: Record<string, unknown> } | { tur: "islemler"; adlar?: string[]; modul?: string; ara?: string }) & { id?: string };
 const ARAC_ADI = { yaz: "rapora_yaz", oku: "fotograflari_oku", geri: "geri_al", format: "formati_duzenle", kaydet: "raporu_kaydet", gonder: "onaya_gonder",
-  islem: "islem", islemler: "islemler", pdfFormat: "format_pdf_kur", form: "form_goster" } as const;
+  islem: "islem", islemler: "islemler", pdfFormat: "format_pdf_kur", form: "form_goster", pdfGonder: "pdf_gonder" } as const;
 /** sunucuda çalışan komut (uygulamanın işlemleri) */
 export const sunucuKomutuMu = (k: Pick<SayKomutu, "tur">): boolean => k.tur === "islem" || k.tur === "islemler";
 const ARAC_KIMLIGI = /^[A-Za-z0-9_-]{1,200}$/;
@@ -390,6 +403,12 @@ export function aracCagrisi(c: Record<string, unknown>): SayKomutu | null {
     if (belgeTuruMu(girdi.belge)) return { tur: "pdfFormat", turId: "", belge: girdi.belge, ek, taslakSurumu: ts, ...id };
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(turId) ? { tur: "pdfFormat", turId, ek, taslakSurumu: ts, ...id } : null;
   }
+  if (c.name === "pdf_gonder") {
+    const belge = girdi.tur === "katilim" || girdi.tur === "zimmet" || girdi.tur === "onbilgi" || girdi.tur === "sozlesme" ? girdi.tur : null;
+    const kayit = typeof girdi.id === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(girdi.id.trim()) ? girdi.id.trim() : null;
+    const kime = Array.isArray(girdi.kime) ? girdi.kime.filter((x): x is string => typeof x === "string").slice(0, 20) : [];
+    return belge && kayit ? { tur: "pdfGonder", belge, kayit, kime, ...id } : null;
+  }
   if (c.name === "form_goster") {
     const rapor = typeof girdi.rapor === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(girdi.rapor.trim()) ? girdi.rapor.trim() : null;
     const sayfa = tamSayi(girdi.sayfa);
@@ -409,7 +428,8 @@ export function komutDenetle(x: unknown): SayKomutu | null {
   if (!ad) return null;
   return aracCagrisi({ type: "tool_use", id: o.id, name: ad, input: o.tur === "yaz" ? { girisler: o.girisler, satir_ekle: o.satirlar } : o.tur === "format" ? { islemler: o.islemler }
     : o.tur === "islem" ? { ad: o.ad, girdi: o.girdi } : o.tur === "islemler" ? { adlar: o.adlar, modul: o.modul, ara: o.ara }
-    : o.tur === "pdfFormat" ? { tur: o.turId, ...(o.belge ? { belge: o.belge } : {}), ek: o.ek, taslak_surum: o.taslakSurumu } : o.tur === "form" ? { rapor: o.rapor, sayfa: o.sayfa } : {} });
+    : o.tur === "pdfFormat" ? { tur: o.turId, ...(o.belge ? { belge: o.belge } : {}), ek: o.ek, taslak_surum: o.taslakSurumu } : o.tur === "form" ? { rapor: o.rapor, sayfa: o.sayfa }
+    : o.tur === "pdfGonder" ? { tur: o.belge, id: o.kayit, kime: o.kime } : {} });
 }
 
 /** araç sonucunun S.A.Y'a giden metni (JSON): sayılar, yapılanlar, yapılamayanlar nedeniyle; sunucu işleminin sonucu olduğu gibi */
