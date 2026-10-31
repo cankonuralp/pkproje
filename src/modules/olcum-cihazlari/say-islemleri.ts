@@ -9,6 +9,7 @@ import { EK_NO, ekBelgesi, GORUNMEZ, islem, sayfala, trIcerir, yazmaCevabi, type
 import { CihazGirdisi, CihazTuruGirdisi, KalibrasyonGirdisi } from "./sema.ts";
 import {
   cihazKarti, cihazKaydet, cihazKonum, cihazListesi, cihazPasif, cihazSil, cihazTuruKaydet, cihazTuruListesi, cihazTuruSil, kalibrasyonEkle,
+  kalibrasyonKaldir,
 } from "./server/cihazlar.ts";
 
 const MODUL = 8;
@@ -99,6 +100,12 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
       const r = await cihazTuruSil(b.db, b.kim, v.tur);
       return yazmaCevabi(r, { bildirim: r.durum === "tamam" ? `${r.ad} silindi.` : undefined });
     },
+  }),
+  /* 2026-10-31 (kalem 11 — M5 eksikleri): ekranın tuşunun işlevi */
+  islem({
+    ad: "kalibrasyon_kaldir", modul: MODUL, tur: "yaz", islev: kalibrasyonKaldir, kaynak: [kimlik, surum], girdi: z.object({ kayit: kimlik, surum }),
+    tarif: "Cihazın bir kalibrasyon kaydını kaldırır: kayit (cihaz_getir kalibrasyon kayıtları), surum.",
+    calistir: async (b, v) => yazmaCevabi(await kalibrasyonKaldir(b.db, b.kim, v.kayit, v.surum), { bildirim: "Kalibrasyon kaydı kaldırıldı." }),
   }),
 ];
 

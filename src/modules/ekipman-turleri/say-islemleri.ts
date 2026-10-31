@@ -10,6 +10,7 @@ import { BaglantiGirdisi, GRUPLAR, TurGirdisi } from "./sema.ts";
 import { StandartTanimGirdisi } from "../dokumanlar/sema.ts";
 import { yeniTureFormat } from "../rapor-format/server/formatlar.ts";
 import { baglantiKaydet, baglantiSecenekleri, standartlariTureBagla, turKarti, turKaydet, turListesi, turSil } from "./server/turler.ts";
+import { formatKaldir } from "./server/turler.ts";
 
 const MODUL = 5;
 const ALAN = ["ad", "kod", "grup", "brans", "periyot", "sure"] as const;
@@ -91,6 +92,12 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
       const r = await turSil(b.db, b.kim, v.tur);
       return yazmaCevabi(r, { bildirim: r.durum === "tamam" ? `${r.ad} silindi.` : undefined });
     },
+  }),
+  /* 2026-10-31 (kalem 11 — M5 eksikleri): ekranın tuşunun işlevi */
+  islem({
+    ad: "tur_format_pdf_kaldir", modul: MODUL, tur: "yaz", islev: formatKaldir, kaynak: [kimlik, surum], girdi: z.object({ format: kimlik, surum }),
+    tarif: "Türün basılı format PDF'i sürümlerinden birini kaldırır: format (tur_getir formatlar[].id), surum.",
+    calistir: async (b, v) => yazmaCevabi(await formatKaldir(b.db, b.kim, v.format, v.surum), { bildirim: "Format PDF'i kaldırıldı." }),
   }),
 ];
 

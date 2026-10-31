@@ -5,7 +5,7 @@
 import { kimlik, surum, z } from "../../sema/ortak.ts";
 import { SuzgecDurumuSemasi } from "../../server/liste/liste.ts";
 import { EK_NO, ekBelgesi, GORUNMEZ, islem, sayfala, trIcerir, yazmaCevabi, type Islem, type SayfaTanimi } from "../../server/yz/islem.ts";
-import { dokumanKaldir, dokumanKaydet, dokumanListesi, standartKaldir, standartKarti, standartListesi, standartYukle } from "./server/dokumanlar.ts";
+import { dokumanKaldir, dokumanKaydet, dokumanListesi, elleStandartSil, standartKaldir, standartKarti, standartListesi, standartYukle } from "./server/dokumanlar.ts";
 import { DokumanGirdisi, StandartGirdisi } from "./sema.ts";
 
 const MODUL = 4;
@@ -71,6 +71,12 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
       if (typeof belge === "string") return { tamam: false, neden: belge };
       return yazmaCevabi(await dokumanKaydet(b.db, b.depo(), b.kim, b.firmaId, v.dokuman, v.surum, ham.kayit, belge), { bildirim: `${belge.ad} yüklendi.` });
     },
+  }),
+  /* 2026-10-31 (kalem 11 — M5 eksikleri): ekranın tuşunun işlevi */
+  islem({
+    ad: "elle_standart_sil", modul: MODUL, tur: "yaz", islev: elleStandartSil, kaynak: [kimlik], girdi: z.object({ standart: kimlik }),
+    tarif: "PDF'siz, elle tanımlanmış standart satırını siler (standart_ara'daki elle kayıt).",
+    calistir: async (b, v) => yazmaCevabi(await elleStandartSil(b.db, b.kim, v.standart), { bildirim: "Elle tanımlı standart silindi." }),
   }),
 ];
 

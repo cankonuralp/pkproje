@@ -18,7 +18,7 @@ import { planSayfasi } from "./server/liste.ts";
 import {
   ekipmanPasif, ekipmanSil, kayitliEkle, kontrolListesi, kunyeDuzenle, kunyeGuncelle, notEkle, planIci, planKabul, planReddet, planSil, planTamamla,
   sayEkipmanlarEkle, tamamlamaGeriAl,
-  sahaTaramaYukle,
+  sahaTaramaYukle, sahaFormuOlustur, sahaTaramaKaldir,
 } from "./server/plan-ici.ts";
 import { planAc, planAcVerisi, planKarti, tesisPlanBilgisi } from "./server/planlar.ts";
 
@@ -243,6 +243,17 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
       if (typeof belge === "string") return { tamam: false, neden: belge };
       return yazmaCevabi(await sahaTaramaYukle(b.db, b.depo(), b.kim, b.firmaId, v.plan, v.form, v.surum, belge), { bildirim: `${belge.ad} saha formuna eklendi.` });
     },
+  }),
+  /* 2026-10-31 (kalem 11 — M5 eksikleri): ekranın tuşunun işlevi */
+  islem({
+    ad: "saha_formu_olustur", modul: MODUL, tur: "yaz", islev: sahaFormuOlustur, kaynak: [kimlik], girdi: PLAN_ID,
+    tarif: "Tamamlanan planda saha formu (yapılan ekipmanlar + firma onayı imza yerleri) oluşturur; PDF'i ekrandan indirilir.",
+    calistir: async (b, v) => yazmaCevabi(await sahaFormuOlustur(b.db, b.kim, v.plan), { bildirim: "Saha formu oluşturuldu." }),
+  }),
+  islem({
+    ad: "saha_tarama_kaldir", modul: MODUL, tur: "yaz", islev: sahaTaramaKaldir, kaynak: [kimlik, surum], girdi: z.object({ plan: kimlik, form: kimlik, surum }),
+    tarif: "Saha formunun yüklenmiş taramasını kaldırır: plan, form, surum.",
+    calistir: async (b, v) => yazmaCevabi(await sahaTaramaKaldir(b.db, b.kim, v.plan, v.form, v.surum), { bildirim: "Tarama kaldırıldı." }),
   }),
 ];
 
