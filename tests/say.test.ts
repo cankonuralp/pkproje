@@ -139,7 +139,7 @@ test("soru: görünen geçmişe + konuşmaya (ekler, yazı) + sayfa notu; cevaps
     { type: "tool_result", tool_use_id: "t1", content: "{\"islem\":\"plan_ara\",\"durum\":\"tamam\"}" },
     { type: "tool_result", tool_use_id: "t2", content: YARIDA, is_error: true },
     /* 2026-10-31 (kalem 2, karar 1): ekin numarası, adı (ve varsa çekim saati) gider */
-    { type: "text", text: "Malzeme (bu iletide 1 öğe: 1 fotoğraf (F01)). Numaralar konuşma boyunca aynı kalır; sıra kaynağın sırası, yoksa çekim saati, yoksa eklenme." },
+    { type: "text", text: "Malzeme (bu iletide 1 öğe: 1 fotoğraf (F01)). Numaralar konuşma boyunca aynı kalır; sıra kaynağın sırası, yoksa çekim saati, yoksa eklenme. Fotoğraflar küçük kopya; etiket / yazı için foto_goster ile bölgeyi büyüt (bir fotoğraf bir işte bir kez)." },
     { type: "text", text: "M01 · F01 — fotoğraf · Gizli Sanayi etiketi.jpg:" }, { type: "image", source: { type: "file", file_id: "file_den_1" } },
     { type: "text", text: "Eki inceler misin?" },
   ]);

@@ -16,7 +16,8 @@ async function bozuk(eski: string, yeni: string): Promise<Sablon> {
   const kaynak = readFileSync(resolve("src/modules/say/sablonlar.ts"), "utf8");
   assert.ok(kaynak.includes(eski), `bozulacak satır kaynakta yok: ${eski}`);
   const yol = join(klasor, `${sira++}-sablonlar.ts`);
-  writeFileSync(yol, kaynak.replace(eski, () => yeni));
+  /* 2026-10-31 V21: sablonlar.ts artık göreli içe aktarıyor (bitis-denetimi, is-siniri) — geçici kopyada mutlak yola */
+  writeFileSync(yol, kaynak.replace(eski, () => yeni).replace(/from "(\.\/[^"]+)"/g, (_, y: string) => `from "${pathToFileURL(resolve("src/modules/say", y)).href}"`));
   return import(pathToFileURL(yol).href) as Promise<Sablon>;
 }
 const ID = "0f2a3d00-1fa3-47a0-8f5e-4e5f6c000001";

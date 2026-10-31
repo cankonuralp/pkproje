@@ -2533,8 +2533,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   plan_denetle raporlar verilmişse yalnız onlar, "kabul edilmiş teklif yok" plan notu olarak bir kez; bitiş denetimi notu ÖZET (say/bitis-denetimi.ts
   denetimOzeti: sayı + farklı sorunlar + raporları); plan_ekipman(lar)_ekle tür ADIYLA da (planlar/say-islemleri.ts turleriCoz); tur_baglanti_kaydet surum /
   listeler isteğe bağlı; şema hatasında kısa şema (islem.ts kisaSema). 2 + 1: konuşmaya fotoğrafın KÜÇÜK kopyası (gorsel.ts kucukKopya ≤ 800 px; depo ve ön
-  okuma tam boy); say/is-siniri.ts (saf): kullanıcının son sorusundan önceki iletilerde fotoğraf blokları ve büyütmeler metne, uzun sonuçlar 1 500
-  karaktere, düşünme blokları düşer — kayıt DEĞİŞMEZ (yz_konusma UPDATE yok), dongu isteği kurarken uygular; aynı fotoğraf bir işte bir kez büyütülür.
+  okuma tam boy); say/is-siniri.ts (saf): kullanıcının son sorusundan önceki kullanıcı iletilerinde fotoğraf blokları ve büyütmeler metne, uzun sonuçlar
+  1 500 karaktere — kayıt DEĞİŞMEZ (yz_konusma UPDATE yok), dongu isteği kurarken uygular; yapay zekâ iletileri düşünme bloğuyla AYNEN (reisim'in "eski
+  düşünme bloklarına bak"ı: bakıldı — hizmet önceki turların düşünmesini bağlamdan kendisi düşürür ve giriş tokenine saymaz, düşürmek maliyeti
+  değiştirmezdi; 2026-10-23 "olduğu gibi" kararı ve uçtan uca taklit de ister); aynı fotoğraf bir işte bir kez büyütülür.
   6 + 9 + 11: talimat — tesis / müşteri uyuşmazlığı durdurmaz, yapmadığının nedeni kanıtıyla, cihazı olmayan cihaz türü boş + kalan engel ("ekle" denirse
   listeden çıkar), soru işaretli değer yazılmaz (say-doldur.ts SORU_ISARETLI — alan, künye, tablo hücresi; ekran ve sunucu ortak); B05 / B07. 5 + 7 + 8:
   tamamla.ts "kapasite" adlı boş sayı alanı / test değeri ekipmanın kapasitesinden; dört satırı aşan bildirim ekrana gitmez, sunucu bir kez not ekler

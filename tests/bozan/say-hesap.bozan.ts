@@ -34,5 +34,5 @@ test("2. ara eklenmeyince kilit düşer", async () => {
 });
 test("3. künye boşluğu denetlenmeyince kilit düşer", async () => {
   const m = await bozuk<Denetle>("src/modules/raporlar/denetle.ts", 'if (!s.kunye.sgk?.trim()) l.push("künye boş: SGK / DETSİS");', "");
-  assert.deepEqual(m.raporSorunlari({ durum: "yeni", tanim: { bolumler: [] } as never, cevaplar: { tablo: {} } as never, fotolar: [], kunye: { firmaAdi: "x", sgk: "" } }, []), []);
+  assert.deepEqual(m.raporSorunlari({ durum: "taslak", tanim: { bolumler: [] } as never, cevaplar: { tablo: {} } as never, fotolar: [], kunye: { firmaAdi: "x", sgk: "" } }, []), []);
 });

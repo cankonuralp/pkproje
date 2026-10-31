@@ -1,7 +1,8 @@
 /* NEREDEN GELDİ: 2026-10-31 V21 ilk koşu (6 iş · 31 istek · istem 151 bin token · 0,301 $; maliyetin %89'u 100 bin token üstü fiyattan; reisim: "optimize
    etmemiz gerekli", madde 1: konuşma 100 binin altında — "iş bitince eski fotoğraf büyütmeleri ve ilk fotoğraflar ön okuma metnine iner, uzun araç
    sonuçları kısalır"; "aynı fotoğraf ikinci kez büyütülmez"). Bu kilit tutar: (1) kullanıcının son sorusundan ÖNCEKİ iletilerde fotoğraf blokları ve araç
-   sonuçlarındaki görüntüler metne iner, uzun sonuçlar kırpılır, düşünme blokları düşer; (2) bu işin iletileri (son sorudan itibaren) AYNEN kalır;
+   sonuçlarındaki görüntüler metne iner, uzun sonuçlar kırpılır; yapay zekâ iletileri düşünme bloğuyla AYNEN (2026-10-23 "olduğu gibi" — düşürmek maliyeti
+   değiştirmez, taklit ister); (2) bu işin iletileri (son sorudan itibaren) AYNEN kalır;
    (3) belirlenimli — aynı girdi aynı çıktı (önbellek öneki iş boyunca sabit); (4) sorusuz / tek sorulu konuşma değişmez; (5) bu işte büyütülen
    fotoğraflar bilinir, önceki işinkiler sayılmaz. Olumsuz kanıt: tests/bozan/say-is-siniri.bozan.ts. */
 import assert from "node:assert/strict";
@@ -34,16 +35,17 @@ test("iş sınırı: son soru; denetim notu ve sonuç iletisi soru değil", () =
   assert.equal(sonSoruIndeksi([{ role: "assistant", content: [{ type: "text", text: "x" }] }]), -1);
 });
 
-test("bitmiş iş küçülür: fotoğraf ve büyütme metne, uzun sonuç kırpık, düşünme yok; bu iş aynen; belirlenimli", () => {
+test("bitmiş iş küçülür: fotoğraf ve büyütme metne, uzun sonuç kırpık; yapay zekâ iletileri (düşünme dahil) ve bu iş aynen; belirlenimli", () => {
   const girdi = [...ILK, ...IKINCI];
   const s = konusmaSikistir(girdi);
-  assert.equal(s.sikisan, 4, "ilk kullanıcı iletisi, iki yapay zekâ iletisi, sonuç iletisi");
+  assert.equal(s.sikisan, 2, "ilk kullanıcı iletisi ve sonuç iletisi");
   const ilk = s.mesajlar[0]!.content as { type: string; text?: string }[];
   assert.deepEqual(ilk.map((b) => b.type), ["text", "text", "text", "text"]);
   assert.equal(ilk[2]!.text, FOTO_KALDIRILDI);
   assert.equal(ilk[1]!.text, "M01 · F01 — fotoğraf · a.jpg · ön okuma: etiket / plaka:", "başlık (ön okuma) kalır");
-  const yz = s.mesajlar[2]!.content as { type: string }[];
-  assert.deepEqual(yz.map((b) => b.type), ["tool_use", "tool_use"], "düşünme düştü, araç çağrıları kaldı");
+  /* 2026-10-23 "konuşma olduğu gibi": yapay zekâ iletisi düşünme bloğu ve imzasıyla aynen (hizmet önceki turların düşünmesini saymaz; taklit ister) */
+  assert.deepEqual(s.mesajlar[2], ILK[2], "yapay zekâ iletisi aynen");
+  assert.deepEqual(s.mesajlar[4], ILK[4]);
   const sonuc = s.mesajlar[3]!.content as { content: unknown }[];
   assert.deepEqual((sonuc[0]!.content as { type: string; text: string }[]).map((b) => b.text), [GORUNTU_KALDIRILDI, "F01 · a.jpg · bölge 0, 0, 1, 0.5"]);
   assert.ok((sonuc[1]!.content as string).length < uzun.length && (sonuc[1]!.content as string).includes("kırpıldı"));

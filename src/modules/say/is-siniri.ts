@@ -1,7 +1,8 @@
 /* İŞ SINIRI (2026-10-31, V21 madde 1 — reisim: "Konuşmayı 100 bin tokenin altında tutmak: iş bitince eski fotoğraf büyütmeleri ve ilk fotoğraflar ön
    okuma metnine iner, uzun araç sonuçları kısalır"; "aynı fotoğraf ikinci kez büyütülmez (F11 bu koşuda dört kez büyütüldü)"; "eski düşünme bloklarının
-   iş sınırında düşürülebilirliğine bak"). SAF. Konuşma kaydı DEĞİŞMEZ (yz_konusma yalnız sona eklenir, UPDATE yok — tests/say.test.ts); sıkıştırma
-   yapay zekâya giden isteği kurarken uygulanır: kullanıcının SON sorusundan önceki iletiler (bitmiş işler) küçülür, bu işin iletileri aynen kalır.
+   iş sınırında düşürülebilirliğine bak" → bakıldı, düşürülmedi: aşağıda). SAF. Konuşma kaydı DEĞİŞMEZ (yz_konusma yalnız sona eklenir, UPDATE yok —
+   tests/say.test.ts); sıkıştırma yapay zekâya giden isteği kurarken uygulanır: kullanıcının SON sorusundan önceki kullanıcı iletileri (bitmiş işler)
+   küçülür, bu işin iletileri aynen kalır.
    Aynı kayıttan her istekte aynı çıktı → önbellek öneki iş boyunca sabit, yeni işte bir kez yeniden yazılır. Kilit tests/say-is-siniri.test.ts. */
 import { BILDIRIM_ONEKI, RAPOR_YAZAN, sunucuNotuMu } from "./bitis-denetimi.ts";
 
@@ -47,23 +48,20 @@ function kullaniciKucult(l: readonly Blok[]): { bloklar: Blok[]; degisti: boolea
   });
   return { bloklar: sonuc, degisti };
 }
-/** bitmiş işin yapay zekâ iletisi: düşünme blokları düşer (hizmet önceki turların düşünmesini zaten saymaz; yük ve kayıt küçülür); boş kalacaksa aynen */
-function asistanKucult(l: readonly Blok[]): { bloklar: Blok[]; degisti: boolean } {
-  const kalan = l.filter((b) => b.type !== "thinking" && b.type !== "redacted_thinking");
-  return kalan.length && kalan.length !== l.length ? { bloklar: kalan, degisti: true } : { bloklar: [...l], degisti: false };
-}
+/* Yapay zekâ iletileri (düşünme bloğu ve imzası dahil) AYNEN gider: reisim'in 2026-10-23 kararı "konuşma olduğu gibi"; hizmet önceki turların düşünme
+   bloklarını bağlamdan kendisi düşürür ve giriş tokenine saymaz (düşürmek maliyeti değiştirmezdi), uçtan uca taklit de her cevabın düşünmesini ister. */
 
-/** kullanıcının son sorusundan önceki iletiler küçültülmüş; bu işin iletileri aynen. sikisan: değişen ileti sayısı */
+/** kullanıcının son sorusundan önceki KULLANICI iletileri küçültülmüş; bu işin iletileri ve yapay zekâ iletileri aynen. sikisan: değişen ileti sayısı */
 export function konusmaSikistir<T extends IsMesaji>(mesajlar: readonly T[]): { mesajlar: T[]; sikisan: number } {
   const b = sonSoruIndeksi(mesajlar);
   if (b <= 0) return { mesajlar: [...mesajlar], sikisan: 0 };
   let sikisan = 0;
   const l = mesajlar.map((m, i) => {
-    if (i >= b) return m;
+    if (i >= b || m.role !== "user") return m;
     const ic = bloklar(m.content);
     if (!ic) return m;
-    const k = m.role === "assistant" ? asistanKucult(ic) : m.role === "user" ? kullaniciKucult(ic) : null;
-    if (!k?.degisti) return m;
+    const k = kullaniciKucult(ic);
+    if (!k.degisti) return m;
     sikisan++;
     return { ...m, content: k.bloklar };
   });
