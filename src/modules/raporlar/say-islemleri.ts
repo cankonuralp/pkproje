@@ -23,12 +23,14 @@ import { turKarti } from "../ekipman-turleri/server/turler.ts";
 import { planIci } from "../planlar/server/plan-ici.ts";
 import { teklifAdetDurumu } from "../teklifler/server/rapor-bagi.ts";
 import { raporSorunlari } from "./denetle.ts";
-import { cakismalar, saatGirisleri, saatPlani, type SaatRaporu } from "./saat-plani.ts";
+import { cakismalar, saatGirisleri, saatPlani, type SaatRaporu, type SaatSatiri } from "./saat-plani.ts";
+import { isBildirimi, raporTamamla, type RaporOzeti, type Tamamlama } from "./tamamla.ts";
+import { mesaiBaslangici } from "./server/plan-baglanti.ts";
 import { komutlariUygula, sonucOzeti, type Durum, type GirisSonucu } from "./say-doldur.ts";
 import { KopyaGirdisi, OlusturIslemGirdisi, RAPOR_DURUM, RevizeGirdisi } from "./sema.ts";
 import { raporSayfasi } from "./server/liste.ts";
 import {
-  cihazEkle, cihazKaldir, fotoEkle, fotoSil, onayaGonder, raporEksikleri, raporFormatGuncelle, raporKaydet, raporKopyala, raporFormatHami, raporOlustur, raporSayDurumu, takipAc, raporSil, revizeIste, revizeIstegiGeriCek, sahaRaporu,
+  cihazAdaylari, cihazEkle, cihazKaldir, fotoEkle, fotoSil, onayaGonder, raporEksikleri, raporFormatGuncelle, raporKaydet, raporKopyala, raporFormatHami, raporOlustur, raporSayDurumu, takipAc, raporSil, revizeIste, revizeIstegiGeriCek, sahaRaporu,
   type SahaRaporu,
 } from "./server/raporlar.ts";
 
@@ -42,6 +44,10 @@ const EKRANDA = "Bu rapor ekranda açık: ona rapora_yaz ile yaz, raporu_kaydet 
 const durumAdi = (d: keyof typeof RAPOR_DURUM) => RAPOR_DURUM[d][0];
 const metinle = <T extends Record<string, string | null>>(o: T) => Object.fromEntries(Object.entries(o).map(([k, x]) => [k, x ?? ""])) as Record<string, string>;
 
+/** 2026-10-31 (reisim: "standart olarak 15 dakika açsın, tablolu ekipmanlarda 15 dakika + satır başı süre sistemi kuracağız kurana kadar şimdilik
+    böyle"): türün süresi boşsa ve kullanıcı vermediyse */
+export const VARSAYILAN_SURE_DK = 15;
+const bugunGun = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
 /** türün süresi (dakika) — tür kartını göremeyen kişide ya da tanımsızsa null */
 async function turSuresi(b: IslemBaglami, turId: string): Promise<number | null> {
   return (await turKarti(b.db, b.kim, turId))?.sure ?? null;
@@ -54,7 +60,9 @@ function kayittakiHal(s: SahaRaporu): { durum: Durum; cihazlar: { turId: string;
 }
 
 /** C: kapalı rapora girişler — ekranın denetimiyle uygulanır, raporKaydet ile yazılır; ölçüm cihazı seçimi cihazEkle / cihazKaldir ile */
-async function kapaliRaporaYaz(b: IslemBaglami, id: string, surumGirdi: number | null, girisler: unknown, satirlar: unknown): Promise<IslemCevabi> {
+/** tamamlayıcının bu rapordaki girdisi (raporlar/tamamla.ts): işin günü ve raporun saat planı satırı */
+interface TamamlaEki { gun: string; saat: SaatSatiri | null }
+async function kapaliRaporaYaz(b: IslemBaglami, id: string, surumGirdi: number | null, girisler: unknown, satirlar: unknown, tam: TamamlaEki | null = null): Promise<IslemCevabi> {
   if (b.ekrandakiRapor === id) return { tamam: false, neden: EKRANDA };
   const s = await sahaRaporu(b.db, b.kim, id);
   if (!s) return { tamam: false, neden: GORUNMEZ };
@@ -65,11 +73,21 @@ async function kapaliRaporaYaz(b: IslemBaglami, id: string, surumGirdi: number |
   }
   /* sürüm kilidi her yazmada (raporKaydet'e gitmeyen yalnız-cihaz yazmasında da): yapay zekânın gördüğü hâl değiştiyse yazılmaz */
   if (s.surum !== surumu) return yazmaCevabi({ durum: "cakisma" });
-  const k = komutDenetle({ tur: "yaz", girisler, satirlar });
+  const h = kayittakiHal(s), komutEki = { kunyeKilit: kilitliKunye(s.tanim), kunyeKayit: kayitKunyesi(s.kunye, metotMetni(s.tanim, s.tur.kontrolStd)), cihazlar: h.cihazlar };
+  /* 2026-10-31 (L1 — "önce yap, sonra kısaca bildir"): verilenler uygulandıktan sonraki hâlden boş yerler tamamlanır; hepsi TEK kayıtta */
+  let tamamlama: Tamamlama | null = null, verilenGiris = Array.isArray(girisler) ? girisler : [];
+  if (tam) {
+    const k0 = komutDenetle({ tur: "yaz", girisler: verilenGiris, satirlar });
+    const once = k0 && k0.tur === "yaz" ? komutlariUygula(h.durum, s.tanim, k0.girisler, komutEki, k0.satirlar ?? []).durum : h.durum;
+    const adaylar = (await cihazAdaylari(b.db, b.kim, id)) ?? {};
+    tamamlama = raporTamamla({ tanim: s.tanim, durum: once, gun: tam.gun, saat: tam.saat,
+      verilen: new Set(verilenGiris.flatMap((x) => (x && typeof x === "object" && typeof (x as { yer?: unknown }).yer === "string" ? [(x as { yer: string }).yer.trim()] : []))),
+      cihazlar: h.cihazlar.map((c) => ({ turId: c.turId, turAd: c.turAd, secili: !!c.secili, adaylar: adaylar[c.turId] ?? adaylar["*"] ?? [] })) });
+    verilenGiris = [...verilenGiris, ...tamamlama.girisler];
+  }
+  const k = komutDenetle({ tur: "yaz", girisler: verilenGiris, satirlar });
   if (!k || k.tur !== "yaz") return { tamam: false, neden: "Yazılacak giriş yok (girisler ya da satir_ekle)." };
-  const h = kayittakiHal(s);
-  const u = komutlariUygula(h.durum, s.tanim, k.girisler,
-    { kunyeKilit: kilitliKunye(s.tanim), kunyeKayit: kayitKunyesi(s.kunye, metotMetni(s.tanim, s.tur.kontrolStd)), cihazlar: h.cihazlar }, k.satirlar ?? []);
+  const u = komutlariUygula(h.durum, s.tanim, k.girisler, komutEki, k.satirlar ?? []);
   const sonuclar: GirisSonucu[] = [...u.sonuclar];
   if (u.geri.length) {
     const r = await raporKaydet(b.db, b.kim, id, surumu, { ekipman: u.durum.ekipman, tarih: u.durum.tarih, cevaplar: u.durum.cevaplar });
@@ -87,13 +105,32 @@ async function kapaliRaporaYaz(b: IslemBaglami, id: string, surumGirdi: number |
   const o = sonucOzeti(sonuclar);
   const sonraki = await sahaRaporu(b.db, b.kim, id);
   const sonuc = { rapor: id, no: s.no, surum: sonraki?.surum ?? surumu, yazilan: o.yazildi, zaten_oyle: o.ayni, eklenen_satir: u.satir,
-    yazilamayan: o.yazilamadi.slice(0, 100), ...(o.yazilamadi.length > 100 ? { yazilamayan_daha: o.yazilamadi.length - 100 } : {}) };
+    yazilamayan: o.yazilamadi.slice(0, 100), ...(o.yazilamadi.length > 100 ? { yazilamayan_daha: o.yazilamadi.length - 100 } : {}),
+    ...(tamamlama ? { varsayim: tamamlama.varsayim, tire: tamamlama.tire, engel: tamamlama.engel } : {}) };
   if (!o.yazildi && !u.satir) {
     return o.yazilamadi.length ? { tamam: false, neden: `Yazılamadı: ${o.yazilamadi.slice(0, 20).map((x) => `${x.ad}: ${x.neden}`).join("; ")}` }
       : { tamam: true, bildirim: `${s.no}: değişiklik yok (girişler zaten öyleydi).`, sonuc, degisiklik: false };
   }
   return { tamam: true, bildirim: `${s.no}: ${o.yazildi} giriş yazıldı${u.satir ? `, ${u.satir} satır eklendi` : ""}; rapor kaydedildi.`, sonuc };
 }
+
+/** konuşmadaki fotoğrafı (F numarası) raporun fotoğraf bölümüne — ekranın "Fotoğraf ekle"siyle aynı işlev (fotoEkle) */
+async function fotoKoy(b: IslemBaglami, rapor: string, surumu: number | null, foto: string, bolumGirdi?: string): Promise<IslemCevabi> {
+  if (ekranRaporuKirli(b, [rapor])) return { tamam: false, neden: EKRAN_KAYDEDILMEMIS };
+  const s = await sahaRaporu(b.db, b.kim, rapor);
+  if (!s) return { tamam: false, neden: GORUNMEZ };
+  const bolum = bolumGirdi ?? s.tanim.bolumler.find((x) => x.blok === "foto")?.id;
+  if (!bolum) return { tamam: false, neden: "Bu raporun formatında fotoğraf bölümü yok." };
+  const f = await fotoKopyasiOku(b.db, b.depo(), foto);
+  if (!f) return { tamam: false, neden: `${foto} bu konuşmada yok ya da kopyası yok; kullanıcı fotoğrafı yeniden eklemeli.` };
+  return yazmaCevabi(await fotoEkle(b.db, b.depo(), b.kim, b.firmaId, rapor, surumu ?? s.surum, { bolum, madde: null }, f));
+}
+const GIRISLER = z.array(z.object({ yer: z.string(), deger: z.union([z.string(), z.number()]), supheli: z.boolean().optional() }));
+const FOTO_NO = z.string().regex(/^F?\d{1,4}$/i);
+const GUN = z.string().regex(/^\d{4}-\d{2}-\d{2}$/), SAAT = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
+/** girişlerdeki "şüpheli" işaretli yerlerin adları (bildirim) */
+const supheliler = (l: readonly unknown[]): string[] => l.flatMap((x) => (x && typeof x === "object" && (x as { supheli?: unknown }).supheli === true
+  && typeof (x as { yer?: unknown }).yer === "string" ? [(x as { yer: string }).yer.replace(/^[a-z]+:/, "")] : []));
 
 export const SAY_ISLEMLERI: readonly Islem[] = [
   islem({
@@ -160,11 +197,13 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
       surum: surum.optional(),
       girisler: z.array(z.object({ yer: z.string(), deger: z.union([z.string(), z.number()]) })).default([]),
       satir_ekle: z.array(z.record(z.string(), z.unknown())).default([]),
+      tamamla: z.boolean().default(true),
     }),
     tarif: "Ekranda açık OLMAYAN rapora yazar ve kaydeder: girisler [{ yer (rapor_getir haritasındaki kimlik), deger }], satir_ekle (rapora_yaz'daki gibi), "
-      + "surum isteğe bağlı (verilmezse şu anki); "
-      + "değerler ekrandaki gibi denetlenir, sonuç yazılan / yazılamayan ve nedeni.",
-    calistir: async (b, v, ham) => kapaliRaporaYaz(b, v.rapor, v.surum ?? null, ham.girisler ?? [], ham.satir_ekle ?? []),
+      + "surum isteğe bağlı (verilmezse şu anki); tamamla (varsayılan açık): boş yerler kurala göre tamamlanır (cevapsız madde uygun, sonuç önerisi, rapor "
+      + "tarihi, bilinemeyen metin \"-\", test değeri katsayıdan, ölçüm cihazı) — tamamla: false yalnız verilenleri yazar; "
+      + "değerler ekrandaki gibi denetlenir, sonuç yazılan / yazılamayan ve nedeni + varsayim / tire / engel.",
+    calistir: async (b, v, ham) => kapaliRaporaYaz(b, v.rapor, v.surum ?? null, ham.girisler ?? [], ham.satir_ekle ?? [], v.tamamla ? { gun: bugunGun(), saat: null } : null),
   }),
   islem({
     ad: "rapor_onaya_gonder", modul: MODUL, tur: "yaz", girdi: RAPOR_SURUM, kaynak: [kimlik, surum], islev: onayaGonder,
@@ -212,19 +251,18 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
   /* 2026-10-31 (kalem 6 — E7, B06): saatleri sunucu hesaplar — sırayla, süre + ara; sonraki kontrol türün periyodundan; yazma rapor_yaz'ın yoluyla */
   islem({
     ad: "rapor_saat_plani", modul: MODUL, tur: "yaz", islev: raporKaydet, kaynak: [kimlik],
-    girdi: z.object({ gun: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), baslangic: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/), ara_dk: z.number().int().min(0).default(0),
+    girdi: z.object({ gun: GUN.optional(), baslangic: SAAT.optional(), ara_dk: z.number().int().min(0).default(0),
       raporlar: z.array(z.object({ rapor: kimlik, sure_dk: z.number().int().min(1).optional() })).min(1) }),
-    tarif: "Raporların başlangıç / bitiş saatini ve sonraki kontrol tarihini yazar: gun (YYYY-AA-GG), baslangic (SS:DD), ara_dk, raporlar [{ rapor, sure_dk? }] "
-      + "gezi sırasıyla (sure_dk yoksa türün süresi; o da yoksa tablolu raporda 30, öteki 10). Hesabı sunucu yapar; sonuç rapor rapor saatler.",
+    tarif: "Raporların başlangıç / bitiş saatini ve sonraki kontrol tarihini yazar: gun (YYYY-AA-GG; verilmezse bugün), baslangic (SS:DD; verilmezse Firma "
+      + "ayarları › Mesai başlangıcı), ara_dk, raporlar [{ rapor, sure_dk? }] gezi sırasıyla (sure_dk yoksa türün süresi; o da yoksa 15). Hesabı sunucu yapar.",
     calistir: async (b, v) => {
       const l: SaatRaporu[] = [];
       for (const x of v.raporlar) {
         const s = await sahaRaporu(b.db, b.kim, x.rapor);
         if (!s) return { tamam: false, neden: `${x.rapor}: ${GORUNMEZ}` };
-        const tablolu = s.tanim.bolumler.some((y) => y.blok === "olcum");
-        l.push({ id: x.rapor, sure: x.sure_dk ?? (await turSuresi(b, s.tur.id)) ?? (tablolu ? 30 : 10), periyot: s.tur.periyot });
+        l.push({ id: x.rapor, sure: x.sure_dk ?? (await turSuresi(b, s.tur.id)) ?? VARSAYILAN_SURE_DK, periyot: s.tur.periyot });
       }
-      const plan = saatPlani({ gun: v.gun, baslangic: v.baslangic, ara: v.ara_dk, raporlar: l });
+      const plan = saatPlani({ gun: v.gun ?? bugunGun(), baslangic: v.baslangic ?? await mesaiBaslangici(b.db), ara: v.ara_dk, raporlar: l });
       const sonuc: Record<string, unknown>[] = [];
       for (const p of plan) {
         const c = await kapaliRaporaYaz(b, p.id, null, saatGirisleri(p), []);
@@ -235,20 +273,53 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
         : { tamam: false, neden: `Saat yazılamadı: ${sonuc.map((x) => x.yazilamadi).join("; ")}` };
     },
   }),
-  /* 2026-10-31 (kalem 6): aynı girişler çok rapora (ör. aynı sonuç ve yorum) — rapor_yaz'ın döngüsü */
+  /* 2026-10-31 (kalem 6): aynı girişler çok rapora. L2 (reisim: "Tek çağrıda rapor yazma: raporlara_yaz alanları, fotoğrafı, cihazı ve tarih-saati
+     birlikte yazar … hedef rapor başına 1 kayıt"): rapor başına girişler + fotoğraf + süre; bitişi yazılmamış raporlar mesai başlangıcından sırayla,
+     çakışmasız; tamamlayıcı (tamamla.ts) boşları doldurur; sonuç dört satırlık bildirim (isBildirimi) */
   islem({
     ad: "raporlara_yaz", modul: MODUL, tur: "yaz", islev: raporKaydet, kaynak: [kimlik],
-    girdi: z.object({ raporlar: z.array(kimlik).min(1), girisler: z.array(z.object({ yer: z.string(), deger: z.union([z.string(), z.number()]) })).min(1) }),
-    tarif: "Aynı girişleri ({ yer, deger } — yer kimlikleri her raporun haritasında aynıysa) çok rapora yazar ve kaydeder; sonuç rapor rapor.",
+    girdi: z.object({
+      raporlar: z.array(z.union([kimlik, z.object({ rapor: kimlik, girisler: GIRISLER.default([]), satir_ekle: z.array(z.record(z.string(), z.unknown())).default([]),
+        foto: FOTO_NO.optional(), sure_dk: z.number().int().min(1).max(600).optional() })])).min(1).max(200),
+      girisler: GIRISLER.default([]),
+      tamamla: z.boolean().default(true), gun: GUN.optional(), baslangic: SAAT.optional(), ara_dk: z.number().int().min(0).max(240).default(0),
+    }),
+    tarif: "Çok rapora TEK çağrıda yazar ve her raporu BİR kez kaydeder: raporlar [rapor kimliği | { rapor, girisler [{ yer, deger, supheli? }], satir_ekle, foto "
+      + "(\"F03\" — ekipmanın kendi genel görünüş fotoğrafı), sure_dk }] gezi sırasıyla; girisler (her rapora ortak); tamamla (varsayılan açık: cevapsız madde "
+      + "uygun, sonuç önerisi, rapor tarihi, bitişi yazılmamış raporda saatler — gun (verilmezse bugün), baslangic (verilmezse Firma ayarları › Mesai "
+      + "başlangıcı), ara_dk, süre türden ya da 15 dk —, bilinemeyen metin \"-\", test değeri katsayıdan, ölçüm cihazı). Sonuç rapor rapor + bildirim (dört satır).",
     calistir: async (b, v, ham) => {
-      const sonuc: Record<string, unknown>[] = [];
-      for (const r of v.raporlar) {
-        const c = await kapaliRaporaYaz(b, r, null, ham.girisler, []);
-        sonuc.push(c.tamam ? { rapor: r, ...(c.sonuc ?? {}) } : { rapor: r, yazilamadi: c.neden });
+      const hamRaporlar = Array.isArray(ham.raporlar) ? ham.raporlar as unknown[] : [];
+      const liste = v.raporlar.map((x, i) => {
+        const h = hamRaporlar[i] && typeof hamRaporlar[i] === "object" ? hamRaporlar[i] as { girisler?: unknown[]; satir_ekle?: unknown[] } : {};
+        return typeof x === "string" ? { rapor: x, girisler: [] as unknown[], satirlar: [] as unknown[], foto: undefined as string | undefined, sure: undefined as number | undefined }
+          : { rapor: x.rapor, girisler: h.girisler ?? [], satirlar: h.satir_ekle ?? [], foto: x.foto, sure: x.sure_dk };
+      });
+      const ortak = Array.isArray(ham.girisler) ? ham.girisler as unknown[] : [];
+      const gun = v.gun ?? bugunGun(), saat = new Map<string, SaatSatiri>();
+      if (v.tamamla) {
+        const l: SaatRaporu[] = [];
+        for (const x of liste) {
+          const s = await sahaRaporu(b.db, b.kim, x.rapor);
+          if (s && s.izin.duzenle && !s.tarih.bit) l.push({ id: x.rapor, sure: x.sure ?? (await turSuresi(b, s.tur.id)) ?? VARSAYILAN_SURE_DK, periyot: s.tur.periyot });
+        }
+        if (l.length) for (const p of saatPlani({ gun, baslangic: v.baslangic ?? await mesaiBaslangici(b.db), ara: v.ara_dk, raporlar: l })) saat.set(p.id, p);
       }
-      const yazilan = sonuc.filter((x) => !x.yazilamadi).length;
-      return yazilan ? { tamam: true, bildirim: `${yazilan} / ${v.raporlar.length} rapora yazıldı.`, sonuc: { raporlar: sonuc } }
-        : { tamam: false, neden: `Hiçbir rapora yazılamadı: ${sonuc.map((x) => x.yazilamadi).join("; ")}` };
+      const sonuc: Record<string, unknown>[] = [], ozet: RaporOzeti[] = [];
+      for (const x of liste) {
+        const girisler = [...ortak, ...x.girisler];
+        const c = await kapaliRaporaYaz(b, x.rapor, null, girisler, x.satirlar, v.tamamla ? { gun, saat: saat.get(x.rapor) ?? null } : null);
+        const s = c.tamam ? c.sonuc as { varsayim?: string[]; tire?: string[]; engel?: string[] } | undefined : undefined;
+        const f = c.tamam && x.foto ? await fotoKoy(b, x.rapor, null, x.foto) : null;
+        const r = await sahaRaporu(b.db, b.kim, x.rapor);
+        const ad = r ? `${r.no} · ${r.ekipman.kod}` : x.rapor;
+        sonuc.push(c.tamam ? { rapor: x.rapor, ...(c.sonuc ?? {}), ...(f ? { foto: f.tamam ? "eklendi" : f.neden } : {}) } : { rapor: x.rapor, yazilamadi: c.neden });
+        ozet.push({ ad, yazildi: c.tamam, neden: c.tamam ? undefined : c.neden, varsayim: s?.varsayim ?? [], tire: s?.tire ?? [],
+          engel: [...(s?.engel ?? []), ...(f && !f.tamam ? [`fotoğraf eklenemedi (${f.neden})`] : [])], supheli: supheliler(girisler) });
+      }
+      const yazilan = ozet.filter((x) => x.yazildi).length, ps = [...saat.values()];
+      const bildirim = isBildirimi(ozet, ps.length ? { gun, bas: ps[0]!.bas.slice(11), bit: ps[ps.length - 1]!.bit.slice(11) } : null).join("\n");
+      return yazilan ? { tamam: true, bildirim, sonuc: { raporlar: sonuc } } : { tamam: false, neden: `Hiçbir rapora yazılamadı: ${sonuc.map((x) => x.yazilamadi).join("; ")}` };
     },
   }),
   /* 2026-10-31 (kalem 6 — E8, B07): gönderim öncesi denetim — yazmaz; Onaya gönder'in zorunlu alan / cihaz kuralı, fotoğraf, tablo boş hücre, künye boş
@@ -322,14 +393,7 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
     tarif: "Konuşmadaki fotoğrafı (foto: \"F03\") raporun fotoğraf bölümüne ekler: rapor, surum, bolum (rapor_getir foto_bolumleri; boşsa ilk fotoğraf bölümü). "
       + "Her rapora ekipmanın kendi genel görünüş fotoğrafından bir tane; etiket fotoğrafı eklenmez.",
     calistir: async (b, v) => {
-      if (ekranRaporuKirli(b, [v.rapor])) return { tamam: false, neden: EKRAN_KAYDEDILMEMIS };
-      const s = await sahaRaporu(b.db, b.kim, v.rapor);
-      if (!s) return { tamam: false, neden: GORUNMEZ };
-      const bolum = v.bolum ?? s.tanim.bolumler.find((x) => x.blok === "foto")?.id;
-      if (!bolum) return { tamam: false, neden: "Bu raporun formatında fotoğraf bölümü yok." };
-      const f = await fotoKopyasiOku(b.db, b.depo(), v.foto);
-      if (!f) return { tamam: false, neden: `${v.foto} bu konuşmada yok ya da kopyası yok; kullanıcı fotoğrafı yeniden eklemeli.` };
-      return yazmaCevabi(await fotoEkle(b.db, b.depo(), b.kim, b.firmaId, v.rapor, v.surum, { bolum, madde: null }, f));
+      return fotoKoy(b, v.rapor, v.surum, v.foto, v.bolum);
     },
   }),
   islem({

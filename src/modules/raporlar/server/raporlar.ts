@@ -396,8 +396,9 @@ export async function sahaRaporu(db: Sorgulayici, kim: Kisi, id: string): Promis
   let secilebilir: SahaRaporu["secilebilir"] = {};
   if (duzenle) {
     const kimde = (await kimdeHaritasi(db)).cihaz;
-    /* kalibrasyondaki (lab) cihaz kimsenin zimmetinde sayılmaz (Zimmetler: Kalibrasyonda) */
-    const benim = tumu.filter((c) => !c.pasif && c.konum !== "lab" && kimde.get(c.id) === r.personel_id && !kalibrasyonGecti(c.bitis, bugun));
+    /* kalibrasyondaki (lab) cihaz kimsenin zimmetinde sayılmaz (Zimmetler: Kalibrasyonda). 2026-10-31 (reisim: "başkasının zimmetinden değil depodan
+       cihaz kullanabilsin"): yazanın zimmetindeki + depodaki (kimsenin zimmetinde olmayan) cihaz; başkasının zimmetindeki seçilmez */
+    const benim = tumu.filter((c) => !c.pasif && c.konum !== "lab" && kullanilabilir(kimde.get(c.id), r.personel_id) && !kalibrasyonGecti(c.bitis, bugun));
     const ozet = (c: (typeof benim)[number]) => ({ id: c.id, kod: c.kod, marka: c.marka, model: c.model, seri: c.seri, bitis: c.bitis });
     secilebilir = Object.fromEntries(satirlar.map((x) => [x.turId, benim.filter((c) => c.turId === x.turId).map(ozet)]));
     /* tür gerekli cihaz türü vermiyorsa formatın cihaz bölümü için zimmetteki her geçerli cihaz seçilebilir ("*") */
@@ -723,6 +724,33 @@ export async function raporSil(db: Sorgulayici, kim: Kisi, id: string, surum: nu
 }
 
 /** ölçüm cihazı ekle: yazanın zimmetinde, türün gerekli cihaz türünden (tür liste vermiyorsa her tür), kalibrasyonu geçerli; tür başına bir cihaz */
+/** cihaz rapora seçilebilir mi: yazanın zimmetinde ya da depoda (kimde: son zimmet hareketinin alanı; hiç yoksa ya da iade edildiyse depo) */
+export const kullanilabilir = (kimde: string | null | undefined, personelId: string): boolean => !kimde || kimde === personelId;
+/** cihaz başka personelin aynı saatlerdeki (silinmemiş, bitişi yazılı) raporunda mı — çakışan raporun numarası */
+export async function cihazCakismasi(db: Sorgulayici, cihazId: string, r: { id: string; personel_id: string; bas: string | Date; bit: string | Date | null }): Promise<string | null> {
+  if (!r.bit) return null;
+  const x = (await db.sorgu<{ no: string; revizyon: number }>(
+    `SELECT no, revizyon FROM rapor WHERE id <> $1 AND personel_id <> $2 AND silindi IS NULL AND bit IS NOT NULL
+       AND cihazlar @> jsonb_build_array(jsonb_build_object('cihaz', $3::text)) AND tstzrange(bas, bit) && tstzrange($4::timestamptz, $5::timestamptz) LIMIT 1`,
+    [r.id, r.personel_id, cihazId, r.bas, r.bit])).rows[0];
+  return x ? gorunenNo(x.no, x.revizyon) : null;
+}
+
+/** 2026-10-31 (S.A.Y tamamlayıcı — raporlar/tamamla.ts cihazSec): raporun boş cihaz satırları için adaylar — ekranın seçilebilir listesi (zimmet + depo,
+    kalibrasyonu geçerli) + yazanın zimmetinde mi + yazanın o cihazı en son kullandığı rapor zamanı. Göremeyene / yazamayana null. */
+export async function cihazAdaylari(db: Sorgulayici, kim: Kisi, id: string): Promise<Record<string, { id: string; kod: string; zimmette: boolean; sonKullanim: string | null; bitis: string | null }[]> | null> {
+  const s = await sahaRaporu(db, kim, id);
+  const e = s ? await erisim(db, kim, id) : null;
+  if (!s || !e || !s.izin.duzenle) return null;
+  const kimde = (await kimdeHaritasi(db)).cihaz;
+  const idler = [...new Set(Object.values(s.secilebilir).flat().map((c) => c.id))];
+  const son = new Map((await db.sorgu<{ cihaz: string; son: string }>(
+    `SELECT x->>'cihaz' AS cihaz, max(r.bas)::text AS son FROM rapor r, jsonb_array_elements(r.cihazlar) x
+     WHERE r.personel_id = $1 AND r.silindi IS NULL AND x->>'cihaz' = ANY ($2::text[]) GROUP BY 1`, [e.r.personel_id, idler])).rows.map((x) => [x.cihaz, x.son]));
+  return Object.fromEntries(Object.entries(s.secilebilir).map(([tur, l]) => [tur, l.map((c) => ({ id: c.id, kod: c.kod, zimmette: kimde.get(c.id) === e.r.personel_id,
+    sonKullanim: son.get(c.id) ?? null, bitis: c.bitis }))]));
+}
+
 export async function cihazEkle(db: Sorgulayici, kim: Kisi, id: string, surum: number, turId: string, cihazId: string): Promise<RaporYazma> {
   const e = await yazilabilir(db, kim, id);
   if (hataMi(e)) return e;
@@ -731,7 +759,10 @@ export async function cihazEkle(db: Sorgulayici, kim: Kisi, id: string, surum: n
   if (turId === "*" && c && !e.tur.cihazTurleri.length) turId = c.turId;
   if (!c || c.turId !== turId || (e.tur.cihazTurleri.length && !e.tur.cihazTurleri.includes(turId))) return { durum: "gecersiz", hatalar: { cihaz: "Cihaz listeden seçilmeli." } };
   if (c.konum === "lab") return { durum: "gecersiz", hatalar: { cihaz: `${c.kod}: kalibrasyonda; rapora eklenmez.` } };
-  if ((await kimdeHaritasi(db)).cihaz.get(c.id) !== e.r.personel_id) return { durum: "gecersiz", hatalar: { cihaz: "Cihaz raporu yazanın zimmetinde değil." } };
+  if (!kullanilabilir((await kimdeHaritasi(db)).cihaz.get(c.id), e.r.personel_id)) return { durum: "gecersiz", hatalar: { cihaz: "Cihaz başkasının zimmetinde; yazanın zimmetindeki ya da depodaki cihaz seçilir." } };
+  /* 2026-10-31 (reisim: "aynı anda birden fazla kullanıcı aynı cihazla işlem yapmamalı"): cihaz başka birinin aynı saatlerdeki raporunda olamaz */
+  const cakisan = await cihazCakismasi(db, c.id, e.r);
+  if (cakisan) return { durum: "gecersiz", hatalar: { cihaz: `${c.kod}: aynı saatlerde başka bir raporda kullanılıyor (${cakisan}).` } };
   if (kalibrasyonGecti(c.bitis, bugunTr())) return { durum: "gecersiz", hatalar: { cihaz: `${c.kod}: kalibrasyonu geçmiş; rapora eklenmez.` } };
   const cihazlar = [...e.r.cihazlar.filter((x) => x.tur !== turId), { tur: turId, cihaz: c.id }];
   const cevaplar = { ...(e.r.cevaplar as object), cihaz: cihazlar.length };

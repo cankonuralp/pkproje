@@ -34,7 +34,7 @@ import stil from "./firma-ayarlari.module.css";
 
 const ID = {
   ad: "w-ay-ad", adres: "w-ay-adres", eposta: "w-ay-eposta", tel: "w-ay-tel", akr: "w-ay-akr", nusha: "w-ay-nusha", zeden: "w-ay-zeden", yil: "w-ay-yil",
-  normal: "w-ay-normal", mesai: "w-ay-mesai", yillik: "w-ay-yillik", kod: "w-ay-kod",
+  normal: "w-ay-normal", bas: "w-ay-bas", mesai: "w-ay-mesai", yillik: "w-ay-yillik", kod: "w-ay-kod",
 } as const;
 const para = (k: number) => new Intl.NumberFormat("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(k / 100);
 const megabayt = (bayt: number) => (bayt / 1e6).toLocaleString("tr-TR", { maximumFractionDigits: 1 });
@@ -66,7 +66,7 @@ function ozet(k: PanelAdi, v: Veri): { metin: string; durum?: string } {
     case "kod": return { metin: `${v.kod}-AAYY-SIRA (ör. ${v.kod}-2610-0001)` };
     case "imza": return { metin: `${IMZA_YONTEM[v.imza.deger.yontem][0]} · ${v.imza.deger.teknik ? "önce teknik yönetici imzalar" : IMZA_YONTEM[v.imza.deger.yontem][1]}` };
     case "belge": return { metin: `Ön bilgilendirme: ${v.dosyalar.on_bilgi ? "firma formatı" : "temel format"} · bordro: ${v.dosyalar.bordro_format ? "var" : "yok"}` };
-    case "mesai": { const m = v.mesai.deger; return { metin: m.acik ? `Açık · ${m.normal_dk} + ${m.mesai_dk} dk / gün` : "Kapalı" }; }
+    case "mesai": { const m = v.mesai.deger; return { metin: `${m.acik ? `Açık · ${m.normal_dk} + ${m.mesai_dk} dk / gün` : "Kapalı"} · başlangıç ${m.baslangic}` }; }
     case "esik": { const e = v.esik.deger; return { metin: `Kalibrasyon ${e.kalibrasyon} · tesis ${e.kontrolu_yaklasan_tesis} · eğitim ${e.egitim} gün` }; }
     case "zimmet": return { metin: `Teslim eden: ${v.kisiler.find((x) => x.id === v.zimmet.deger.teslim_eden)?.ad ?? "seçilmedi"}` };
     case "mbelge": { const n = v.mbelge.deger.secili.length; return { metin: n ? `${n} belge türü müşteriye açık` : "Hiçbiri açık değil" }; }
@@ -273,7 +273,7 @@ function Saklama({ v }: { v: Veri }) {
 
 function Mesai({ v }: { v: Veri }) {
   const m = v.mesai.deger;
-  const s = useKesim("mesai", { acik: m.acik, normal_dk: String(m.normal_dk), mesai_dk: String(m.mesai_dk), yillik_fazla_saat: String(m.yillik_fazla_saat) }, v.mesai.surum);
+  const s = useKesim("mesai", { acik: m.acik, normal_dk: String(m.normal_dk), mesai_dk: String(m.mesai_dk), yillik_fazla_saat: String(m.yillik_fazla_saat), baslangic: m.baslangic }, v.mesai.surum);
   const kapali = !s.d.acik, toplam = (Number(s.d.normal_dk) || 0) + (Number(s.d.mesai_dk) || 0), asti = !kapali && toplam > YASAL.gunlukDk;
   const sayi = (k: "normal_dk" | "mesai_dk" | "yillik_fazla_saat", id: string, etiket: string) => (
     <Alan id={id} etiket={etiket} hata={s.h[k]}>
@@ -286,6 +286,10 @@ function Mesai({ v }: { v: Veri }) {
       <Segment ad="Mesai takibi" deger={s.d.acik ? "1" : "0"} kapali={!v.yaz} secenekler={[["0", "Kapalı"], ["1", "Açık"]] as const}
         degistir={(x) => s.setD({ ...s.d, acik: x === "1" })} />
       <FormIzgara>
+        <Alan id={ID.bas} etiket="Mesai başlangıcı" hata={s.h.baslangic}>
+          <Girdi id={ID.bas} value={s.d.baslangic} inputMode="numeric" maxLength={5} placeholder="09:00" disabled={!v.yaz} hata={!!s.h.baslangic}
+            mesajli={!!s.h.baslangic} onChange={(e) => s.setD({ ...s.d, baslangic: e.target.value })} />
+        </Alan>
         {sayi("normal_dk", ID.normal, "Günlük normal (dk)")}
         {sayi("mesai_dk", ID.mesai, "Günlük mesai (dk)")}
         {sayi("yillik_fazla_saat", ID.yillik, "Yıllık fazla çalışma (saat)")}

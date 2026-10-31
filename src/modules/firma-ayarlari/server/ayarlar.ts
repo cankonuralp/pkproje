@@ -26,7 +26,7 @@ import { ROL_ADI } from "../../../server/yetki/tanim.ts";
 import {
   BulutGirdisi, EpostaGirdisi,
   BelgeTuruGirdisi, FiyatGirdisi, MUSTERI_BELGE_BAS, MUSTERI_BELGE_SON, MusteriBelgeGirdisi,
-  AYAR_DOSYASI, EsikGirdisi, FirmaBilgiGirdisi, ImzaGirdisi, KodGirdisi, MesaiGirdisi, SabitGiderGirdisi, SaklamaGirdisi, ZimmetGirdisi, type AyarDosyasi,
+  AYAR_DOSYASI, EsikGirdisi, FirmaBilgiGirdisi, ImzaGirdisi, KodGirdisi, MESAI_BASLANGIC, MesaiGirdisi, SabitGiderGirdisi, SaklamaGirdisi, ZimmetGirdisi, type AyarDosyasi,
 } from "../sema.ts";
 import { IA_TUR, type IaGecmis, type IaTur } from "../ice-aktar.ts";
 
@@ -43,7 +43,7 @@ export interface FirmaAyarlari {
   imza: Surumlu<{ yontem: "mobil" | "e_imza"; teknik: boolean }>;
   zimmet: Surumlu<{ teslim_eden: string | null }>;
   saklama: Surumlu<{ yil: number }>;
-  mesai: Surumlu<{ acik: boolean; normal_dk: number; mesai_dk: number; yillik_fazla_saat: number }>;
+  mesai: Surumlu<{ acik: boolean; normal_dk: number; mesai_dk: number; yillik_fazla_saat: number; baslangic: string }>;
   esik: Surumlu<{ kalibrasyon: number; kontrolu_yaklasan_tesis: number; plan_kontrolu_geliyor: number; egitim: number }>;
   sabit: Surumlu<{ kalemler: { ad: string; aylik: number; not: string }[] }>;
   /** dosya ayarları: kimlik ve görünen ad (yoksa null) ve bölümün sürümü */
@@ -103,7 +103,7 @@ export async function firmaAyarlari(db: Sorgulayici, kim: Kisi): Promise<FirmaAy
     yaz: ayarlarYazar(kim), kod: k.kod,
     firma: { deger: { ad: f.deger.ad, adres: f.deger.adres, eposta: f.deger.eposta, tel: f.deger.tel, akr: f.deger.akr, nusha: f.deger.nusha }, surum: f.surum, kayitAd: k.ad },
     imza: { deger: im.deger, surum: im.surum }, zimmet: { deger: zi.deger, surum: zi.surum }, saklama: { deger: sa.deger, surum: sa.surum },
-    mesai: { deger: { acik: me.deger.acik, normal_dk: me.deger.normal_dk, mesai_dk: me.deger.mesai_dk, yillik_fazla_saat: me.deger.yillik_fazla_saat }, surum: me.surum },
+    mesai: { deger: { acik: me.deger.acik, normal_dk: me.deger.normal_dk, mesai_dk: me.deger.mesai_dk, yillik_fazla_saat: me.deger.yillik_fazla_saat, baslangic: me.deger.baslangic }, surum: me.surum },
     esik: { deger: es.deger, surum: es.surum }, sabit: { deger: sg.deger, surum: sg.surum },
     dosyalar: { logo: await dosyaAdi(db, f.deger.logo), on_bilgi: await dosyaAdi(db, bs.deger.on_bilgi), bordro_format: await dosyaAdi(db, bs.deger.bordro_format),
       surum: { firma: f.surum, sablon: bs.surum } },
@@ -180,8 +180,13 @@ export async function ayarKaydet(db: Sorgulayici, kim: Kisi, kesim: string, suru
     }
     case "mesai": {
       /* kapatırken gizli sayı alanları doğrulanmaz, kayıtlı değerleri kalır (ekranda görünmeyen alanın hatası olmaz — 334 incelemesi) */
-      if (girdi && typeof girdi === "object" && (girdi as { acik?: unknown }).acik === false)
-        return yaz("mesai", { ...(await ayarOku(db, "mesai")).deger, acik: false }, "Mesai takibi kapalı; günlük süre sınırı yok.");
+      if (girdi && typeof girdi === "object" && (girdi as { acik?: unknown }).acik === false) {
+        /* mesai başlangıcı takipten bağımsız: kapalıyken de kaydedilir */
+        const ham = (girdi as { baslangic?: unknown }).baslangic, b = ham === undefined ? null : MESAI_BASLANGIC.safeParse(ham);
+        if (b && !b.success) return { durum: "gecersiz", hatalar: { baslangic: "Saati SS:DD biçiminde yazın (ör. 09:00)." } };
+        const eski = (await ayarOku(db, "mesai")).deger;
+        return yaz("mesai", { ...eski, acik: false, baslangic: b ? b.data : eski.baslangic }, "Mesai takibi kapalı; günlük süre sınırı yok.");
+      }
       const g = dogrula(MesaiGirdisi, girdi);
       if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
       const eski = (await ayarOku(db, "mesai")).deger;

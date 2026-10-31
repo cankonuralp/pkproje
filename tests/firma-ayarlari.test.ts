@@ -84,7 +84,7 @@ test("bölüm kaydet: geçersiz değer kaydedilmez (alan alan Türkçe); sürüm
   assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "firma", -1, { ad: "x", adres: "", eposta: "", akr: "", nusha: "2" }))).durum, "cakisma", "kaydedilmemiş sanan ikinci yazma");
   assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "mesai", -1, { acik: true, normal_dk: "480", mesai_dk: "180", yillik_fazla_saat: "300" }))).durum, "gecersiz");
   tamam(await a(YON, (db) => ayarKaydet(db, YON, "mesai", -1, { acik: true, normal_dk: "450", mesai_dk: "120", yillik_fazla_saat: "200" })));
-  assert.deepEqual((await a(YON, (db) => ayarOku(db, "mesai"))).deger, { acik: true, normal_dk: 450, mesai_dk: 120, yillik_fazla_saat: 200, gunluk_ust_dk: 660 });
+  assert.deepEqual((await a(YON, (db) => ayarOku(db, "mesai"))).deger, { acik: true, normal_dk: 450, mesai_dk: 120, yillik_fazla_saat: 200, gunluk_ust_dk: 660, baslangic: "09:00" });
   /* 334 incelemesi: formun kabul ettiği aralık kaydedilir (onaylı maket 1–1440; 660'ı aşan toplam uyarı); kapatırken gizli alanlar doğrulanmaz,
      kayıtlı değerleri kalır */
   const ms = (await a(YON, (db) => ayarOku(db, "mesai"))).surum;
@@ -92,7 +92,12 @@ test("bölüm kaydet: geçersiz değer kaydedilmez (alan alan Türkçe); sürüm
   assert.deepEqual((await a(YON, (db) => ayarKaydet(db, YON, "mesai", ms + 1, { acik: true, normal_dk: "0", mesai_dk: "120", yillik_fazla_saat: "200" }))),
     { durum: "gecersiz", hatalar: { normal_dk: "1–1440 arası dakika yazın." } });
   tamam(await a(YON, (db) => ayarKaydet(db, YON, "mesai", ms + 1, { acik: false, normal_dk: "abc", mesai_dk: "", yillik_fazla_saat: "999" })));
-  assert.deepEqual((await a(YON, (db) => ayarOku(db, "mesai"))).deger, { acik: false, normal_dk: 700, mesai_dk: 700, yillik_fazla_saat: 200, gunluk_ust_dk: 660 });
+  assert.deepEqual((await a(YON, (db) => ayarOku(db, "mesai"))).deger, { acik: false, normal_dk: 700, mesai_dk: 700, yillik_fazla_saat: 200, gunluk_ust_dk: 660, baslangic: "09:00" });
+  /* 2026-10-31: mesai başlangıcı takip kapalıyken de kaydedilir, "8.30" → "08:30"; bozuk saat reddedilir */
+  const mb = (await a(YON, (db) => ayarOku(db, "mesai"))).surum;
+  assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "mesai", mb, { acik: false, baslangic: "25:00" }))).durum, "gecersiz");
+  tamam(await a(YON, (db) => ayarKaydet(db, YON, "mesai", mb, { acik: false, baslangic: "8.30" })));
+  assert.equal((await a(YON, (db) => ayarOku(db, "mesai"))).deger.baslangic, "08:30");
   /* sunucunun düzelttiği aynı değer: "değişmedi" (ekran taslağı kayıtlıya döner) */
   const fs = (await a(YON, (db) => ayarOku(db, "firma_bilgileri"))).surum;
   assert.deepEqual(await a(YON, (db) => ayarKaydet(db, YON, "firma", fs, { ad: "Deneme Muayene ", adres: "Deneme Cad. 1", eposta: "rapor@deneme-a.example", akr: "AB-123", nusha: "3" })),

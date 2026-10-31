@@ -209,7 +209,7 @@ test("557 rapora_yaz: elle ne giriliyorsa — sayıya yazı, künye, tarih, çok
   assert.deepEqual(s("t:linye:9"), ["yazilamadi: tabloda bu satır yok"]);
   assert.deepEqual(u.cihaz, [{ yer: "cihaz:tur1", ad: "Ölçüm cihazı · Topraklama ölçer", turId: "tur1", cihazId: "c1" }]);
   assert.deepEqual(s("cihaz:tur1")[0], "bekliyor");
-  assert.match(s("cihaz:tur1")[1], /zimmetinizde böyle bir cihaz yok \(seçilebilir: C-01\)/);
+  assert.match(s("cihaz:tur1")[1], /zimmetinizde ya da depoda böyle bir cihaz yok \(seçilebilir: C-01\)/);
   const o = sonucOzeti(u.sonuclar);
   assert.equal(o.yazilamadi.length, u.sonuclar.filter((x) => x.durum === "yazilamadi").length);
   assert.ok(o.yazilamadi.every((x) => x.ad && x.neden), "her yapılamayanın adı ve nedeni");

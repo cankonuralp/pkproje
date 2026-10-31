@@ -79,6 +79,9 @@ test("firma ayarları: paneller ve pencere; kaydet, geçersiz değer, kayma yok,
   /* mesai: Kapalı → Açık — alanlar yerinde (açılıp kapanmaz), pencerenin boyu aynı; 660'ı aşınca durum satırı uyarı */
   const mesai = await ac(page, "mesai", "Mesai takibi");
   await expect(mesai.getByLabel("Günlük mesai (dk)")).toBeDisabled();
+  /* 2026-10-31: mesai başlangıcı takipten bağımsız — kapalıyken de yazılır (S.A.Y'ın saat planı buradan başlar) */
+  await expect(mesai.getByLabel("Mesai başlangıcı")).toBeEnabled();
+  await expect(mesai.getByLabel("Mesai başlangıcı")).toHaveValue("09:00");
   const once = (await mesai.boundingBox())!.height;
   await mesai.getByRole("radio", { name: "Açık" }).click();
   await expect(mesai.getByLabel("Günlük mesai (dk)")).toBeEnabled();
@@ -86,7 +89,7 @@ test("firma ayarları: paneller ve pencere; kaydet, geçersiz değer, kayma yok,
   await expect(mesai.getByText(/Günlük toplam 780 dk: kanunda en çok 660/)).toBeVisible();
   expect(Math.abs((await mesai.boundingBox())!.height - once), "kayma yok").toBeLessThan(2);
   await soruluKapat(page, mesai);
-  await expect(page.locator('[data-panel="mesai"]')).toContainText("Kapalı");
+  await expect(page.locator('[data-panel="mesai"]')).toContainText("Kapalı · başlangıç 09:00");
 
   /* 2026-10-17 (göç 0102): İmza yöntemi penceresinde "Teknik yönetici raporu imzalasın" (başlangıçta kapalı); işaretlenince kaydedilmemiş sayılır,
      Vazgeç → sorulur, ayar değişmez (kayıt ve akış tests/onaylar.test.ts'te) */

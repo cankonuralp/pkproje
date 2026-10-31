@@ -464,7 +464,7 @@ export function komutlariUygula(d: Durum, t: FormatTanimi, girisler: readonly Ra
       const ad = `Ölçüm cihazı · ${x.turAd}`, h = kucukTr(ham);
       if (!h) { if (!x.secili) { sonuclar.push({ yer, ad, durum: "ayni" }); continue; } cihaz.push({ yer, ad, turId: x.turId, cihazId: null }); sonuclar.push({ yer, ad, durum: "bekliyor" }); continue; }
       const s = x.secenekler.find((o) => kucukTr(o.kod) === h || kucukTr(o.ad) === h || kucukTr(`${o.kod} · ${o.ad}`) === h);
-      if (!s) { red(x.secenekler.length ? `zimmetinizde böyle bir cihaz yok (seçilebilir: ${x.secenekler.map((o) => o.kod).join(", ")})` : "zimmetinizde bu türde cihaz yok", ad); continue; }
+      if (!s) { red(x.secenekler.length ? `zimmetinizde ya da depoda böyle bir cihaz yok (seçilebilir: ${x.secenekler.map((o) => o.kod).join(", ")})` : "zimmetinizde ve depoda bu türde geçerli cihaz yok", ad); continue; }
       if (x.secili === s.id) { sonuclar.push({ yer, ad, durum: "ayni" }); continue; }
       cihaz.push({ yer, ad, turId: x.turId, cihazId: s.id }); sonuclar.push({ yer, ad, durum: "bekliyor" });
       continue;

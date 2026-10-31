@@ -101,7 +101,7 @@ export function CihazBolumu({ v, bolumId, oku, gecersiz, mesgul, baslat, yenile 
           <Tus ikon="plus" disabled={!pencere?.secili || bekliyor} onClick={ekle}>Ekle</Tus>
         </> : <Tus tur="ikincil" onClick={() => setPencere(null)} data-ilk-odak="">Kapat</Tus>}>
         {pencere && <>
-          <p className={pencereMetinSinifi}><b>{pencere.ad}</b> · zimmetinizdeki, kalibrasyonu geçerli cihazlar</p>
+          <p className={pencereMetinSinifi}><b>{pencere.ad}</b> · zimmetinizdeki ve depodaki, kalibrasyonu geçerli cihazlar</p>
           {pencere.hata && <Serit tur="hata">{pencere.hata}</Serit>}
           {liste.length ? (
             <fieldset className={stil.cihazGrup}>

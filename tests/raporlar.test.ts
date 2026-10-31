@@ -112,7 +112,7 @@ async function firmaKur(firma: string, ek: string): Promise<Firma> {
       { kod: "MN-01", tur: man, gecerli: true, kimde: den1P }, { kod: "MN-02", tur: man, gecerli: false, kimde: den1P },
       { kod: "MN-03", tur: man, gecerli: true, kimde: den2P }, { kod: "MN-04", tur: man, gecerli: true, kimde: den1P },
       { kod: "MN-05", tur: man, gecerli: true, kimde: den1P }, { kod: "TM-01", tur: ter, gecerli: true, kimde: den1P },
-      { kod: "MN-06", tur: man, gecerli: true, kimde: den1P },
+      { kod: "MN-06", tur: man, gecerli: true, kimde: den1P }, { kod: "MN-07", tur: man, gecerli: true, kimde: null },
     ];
     const cihaz: Record<string, string> = {};
     for (const c of liste) {
@@ -292,7 +292,7 @@ test("saha raporu: yazan görür ve düzenler; başka denetçi, öteki branşın
   assert.deepEqual(d.tarih, { bas, bit: null, sonraki: null, takip: null, rapor: null });
   assert.deepEqual(d.cihazlar, [{ turId: FA.man, turAd: "Manometre", cihaz: null }], "türün gerekli cihaz türü satırı");
   const sec = (d.secilebilir[FA.man] ?? []).map((c) => c.kod);
-  for (const kod of ["MN-01", "MN-04"]) assert.ok(sec.includes(kod), `${kod} zimmetinde, kalibrasyonu geçerli`);
+  for (const kod of ["MN-01", "MN-04", "MN-07"]) assert.ok(sec.includes(kod), `${kod} zimmetinde ya da depoda, kalibrasyonu geçerli`);
   for (const kod of ["MN-02", "MN-03", "TM-01"]) assert.ok(!sec.includes(kod), `${kod} seçilemez (kalibrasyon geçmiş / başkasının zimmeti / başka tür)`);
   assert.equal(d.secilebilir["*"], undefined, "tür cihaz türü verdiyse yalnız o tür");
   /* 2026-10-05 (313): izne "kopyala" eklendi (Kaydet ve kopyala — yalnız yazan) */
@@ -343,14 +343,14 @@ test("kaydet: yalnız yazan; alanlar şemadan geçer (imal yılı, başlangıç 
   assert.ok((await sql(A, "SELECT 1 FROM denetim_izi WHERE ne = 'rapor.kaydet' AND nesne_id = $1", [r.id])).rowCount);
 });
 
-test("ölçüm cihazı: yalnız yazanın zimmetindeki, türün istediği cihaz türünden, kalibrasyonu geçerli cihaz; tür başına bir cihaz; kaldır", async () => {
+test("ölçüm cihazı: yalnız yazanın zimmetindeki ya da depodaki, türün istediği cihaz türünden, kalibrasyonu geçerli cihaz; tür başına bir cihaz; kaldır", async () => {
   const id = await yeniPlan();
   const r = tamam(await olustur(FA.den1, id, FA.ekp["HT-A1"]));
   const C = FA.cihaz;
   const ekle = (k: Kisi, surum: number, tur: string, cihaz: string) => a(k, (db) => cihazEkle(db, k, r.id, surum, tur, cihaz));
   const kaldir = (surum: number) => a(FA.den1, (db) => cihazKaldir(db, FA.den1, r.id, surum, FA.man));
   const LISTE = { durum: "gecersiz", hatalar: { cihaz: "Cihaz listeden seçilmeli." } };
-  assert.deepEqual(await ekle(FA.den1, 0, FA.man, C["MN-03"]), { durum: "gecersiz", hatalar: { cihaz: "Cihaz raporu yazanın zimmetinde değil." } }, "başkasının zimmeti");
+  assert.deepEqual(await ekle(FA.den1, 0, FA.man, C["MN-03"]), { durum: "gecersiz", hatalar: { cihaz: "Cihaz başkasının zimmetinde; yazanın zimmetindeki ya da depodaki cihaz seçilir." } }, "başkasının zimmeti");
   assert.deepEqual(await ekle(FA.den1, 0, FA.man, C["TM-01"]), LISTE, "cihaz başka türden");
   assert.deepEqual(await ekle(FA.den1, 0, FA.ter, C["TM-01"]), LISTE, "ekipman türü bu cihaz türünü istemiyor");
   assert.deepEqual(await ekle(FA.den1, 0, "*", C["TM-01"]), LISTE, "tür cihaz türü verdiyse '*' yok");
@@ -373,6 +373,8 @@ test("ölçüm cihazı: yalnız yazanın zimmetindeki, türün istediği cihaz t
   assert.deepEqual((await sql<{ c: unknown }>(A, "SELECT cihazlar AS c FROM rapor WHERE id = $1", [r.id])).rows[0].c, []);
   assert.deepEqual(await kaldir(d.surum), { durum: "tamam", id: r.id, bildirim: "Cihaz zaten yok." });
   assert.equal((await a(FA.mek, (db) => cihazKaldir(db, FA.mek, r.id, d.surum, FA.man))).durum, "yetkisiz");
+  /* 2026-10-31 (reisim: "başkasının zimmetinden değil depodan cihaz kullanabilsin"): kimsenin zimmetinde olmayan cihaz eklenir */
+  assert.deepEqual(await ekle(FA.den1, d.surum, FA.man, C["MN-07"]), { durum: "tamam", id: r.id, bildirim: "MN-07 eklendi." }, "depodaki cihaz");
 });
 
 test("onaya gönder: eksikler (format zorunluları, gerekli ölçüm cihazı, kalibrasyon) sayılır, rapor kaydedilir ama gönderilmez; tamamsa Teknik yönetici onayında — sonuç, bitiş, sonraki kontrol, rapor tarihi seçilmediyse sunucudan, damgalar veritabanından; sonra içerik değişmez", async () => {

@@ -892,11 +892,11 @@ export const SAY_ELLE_ALANLAR: Readonly<Record<string, Readonly<Record<string, s
   plan_kabul: { beyan_onay: "planKabul'un konumsal onayı (tuşta beyan onay kutusu)", beyan_ozet: "planKabul'un konumsal metni (plan_getir'deki beyan özeti)" },
   plan_ekipman_pasif: { pasif: "ekipmanPasif'in konumsal değeri (Pasife al / Etkinleştir)" },
   plan_kontrol_listesi: { tamam: "kontrolListesi'nin konumsal değeri (Tamamla / Yeniden aç)" },
-  rapor_yaz: { girisler: "rapora_yaz aracının biçimi (komutDenetle aynı denetimden geçirir)", satir_ekle: "rapora_yaz'ın satir_ekle biçimi (komutDenetle)" },
+  rapor_yaz: { girisler: "rapora_yaz aracının biçimi (komutDenetle aynı denetimden geçirir)", satir_ekle: "rapora_yaz'ın satir_ekle biçimi (komutDenetle)", tamamla: "tamamlayıcıyı kapatır (raporlar/tamamla.ts — S.A.Y'a özgü: ekranda kişi boşları kendisi doldurur)" },
   /* 2026-10-31 (kalem 3 — E4): ekranın "Fotoğraf ekle"sinde dosya tarayıcıdan gelir; S.A.Y'da konuşmanın F numarası ve formatın fotoğraf bölümü */
   /* 2026-10-31 (kalem 6): saat planı ve çok rapora yazma — S.A.Y'a özgü toplu işler (ekranda tek tek rapor saati / rapor girişi) */
   rapor_saat_plani: { gun: "planın kontrol günü (YYYY-AA-GG; saat-plani.ts denetler)", baslangic: "ilk raporun başlangıç saati (SS:DD)", ara_dk: "raporlar arası dakika" },
-  raporlara_yaz: { girisler: "rapor_yaz'ın girisler biçimi (komutDenetle aynı denetimden geçirir), her rapora aynen" },
+  raporlara_yaz: { girisler: "rapor_yaz'ın girisler biçimi (komutDenetle aynı denetimden geçirir), her rapora aynen", tamamla: "tamamlayıcı (rapor_yaz gibi)", gun: "işin günü (YYYY-AA-GG)", baslangic: "saat planının başlangıcı (SS:DD; yoksa Firma ayarları)", ara_dk: "raporlar arası dakika" },
   /* 2026-10-31 (kalem 9 — M1 + M2): ekranın dosya seçicisinin yerine konuşmadaki ekin numarası (ekBelgesi — depodaki kopya) */
   personel_belge_ekle: { ne: "personel belge türü (ekrandaki sekme: özlük / atama / bordro / zimmet)", alanlar: "belge türünün alanları (modül şeması işlevde denetler)" },
   rapor_foto_ekle: { foto: "konuşmadaki fotoğrafın F numarası (ekin depodaki kopyası — fotoKopyasiOku)", bolum: "fotoEkle'nin hedef bölümü (formatın foto bölümü kimliği)" },

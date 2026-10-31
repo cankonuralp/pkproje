@@ -29,7 +29,7 @@ before(async () => {
 after(async () => { await havuz?.end(); await kume?.durdur(); });
 
 test("başlangıç değerleri = KOD-GECIS §7 (mesai 480 / 180 / 270 / 660, eşikler 30 / 30 / 30 / 60, nüsha 2, saklama 5)", async () => {
-  assert.deepEqual(baslangic("mesai"), { acik: false, normal_dk: 480, mesai_dk: 180, yillik_fazla_saat: 270, gunluk_ust_dk: 660 });
+  assert.deepEqual(baslangic("mesai"), { acik: false, normal_dk: 480, mesai_dk: 180, yillik_fazla_saat: 270, gunluk_ust_dk: 660, baslangic: "09:00" });
   assert.deepEqual(baslangic("uyari_esikleri"), { kalibrasyon: 30, kontrolu_yaklasan_tesis: 30, plan_kontrolu_geliyor: 30, egitim: 60 });
   assert.equal(baslangic("firma_bilgileri").nusha, 2);
   assert.equal(baslangic("saklama").yil, 5);

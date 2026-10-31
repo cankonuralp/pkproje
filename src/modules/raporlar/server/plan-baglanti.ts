@@ -82,3 +82,8 @@ export async function mesaiDurumu(db: Sorgulayici, personelId: string, gun: stri
   const toplam = gunler.get(bugun) ?? 0;
   return { acik: true, normal: m.normal_dk, mesai: m.mesai_dk, hak, toplam, dolu: toplam >= m.normal_dk + hak };
 }
+
+/** 2026-10-31 (reisim: "hep Firma ayarlarından başlasın"): S.A.Y'ın saat planının başlangıcı — Firma ayarları › Mesai başlangıcı (yetki ÇAĞIRANDA) */
+export async function mesaiBaslangici(db: Sorgulayici): Promise<string> {
+  return (await ayarOku(db, "mesai")).deger.baslangic;
+}
