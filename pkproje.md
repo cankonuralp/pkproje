@@ -2527,6 +2527,30 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-31 (akşam, V21 ilk koşu — reisim: "yine 8 ekipman yazdı, biraz daha iyiydi ama daha çok sorun çıkardı, işi tekte yapıp bitirmedi ve ne kadar token
+  harcadı ne kaç dolara mal oldu bir bak optimize etmemiz gerekli"): **ÖLÇÜM** (say_istek, yz_konusma, denetim_izi — salt okunur; plan P-1026-010, 22:32–22:49):
+  6 iş (reisim 6 ileti yazdı), 31 istek, 247 sn model süresi, **$0,301**; giriş 3,70 M token (önbellekten okunan 3,54 M, önbelleğe yazılan 156 bin), çıkış 41 bin.
+  **Maliyetin %89'u ($0,268) istemin 100 000 tokeni aştığı 23 istekten**: Haiku'nun üst fiyatı 5 kat (önbellekten okuma $0,01 → $0,05 / M, çıkış $0,50 → $2,50 / M);
+  ilk istek 63 bin (talimat + araçlar + 18 fotoğraf), konuşma 151 bine çıktı, sınır ikinci işin 4. isteğinde aşıldı. Üst fiyatlı istek ortalama $0,0116; aynı
+  istekler 100 binin altında kalsaydı ~$0,002 (ölçülen token × alt fiyat) → koşu ~$0,07 olurdu. Büyüten: 7 fotoğraf büyütmesi (foto_goster / foto_pafta — konuşmada
+  base64 kalır; 0,65 + 0,24 + 0,21 + 0,19 + 0,17 MB …), iki beceri metni (17 KB), üç kez 9 raporluk plan_denetle sonucu, şema hatasında dönen şema, düşünceler.
+  **H1–H9:** H1 ✗ 8 ekipman tek çağrıda açıldı ama 9 olmalıydı (ön okuma "en az 9" dedi; reisim ikinci iletide 9.'nun lift olduğunu söyledi, S.A.Y yine 8 açtı) ·
+  H2 ~ ilk geçişte rapor başına 1 kayıt, sonraki düzeltmelerle 8 rapora 11 kayıt · H3 ✓ 7 yazma adımı, ama üç işe dağıldı · H4 ✗ ilk iş tesis uyuşmazlığı diye
+  durdu ve sordu; ölçüm cihazında iki kez seçenek sundu, reisim'in iki kez "sen ekle ne lazımsa" dediğini yapmadı · H5 ✗ bildirimler 10+ satır, başlıklı ·
+  H6 ✗ her taslakta yanlış "gönderilmiş", beyan kapasitesi okunabilirken boş · H7 — tür ve format sabahtan vardı (yayın / formatı güncelle yok) · H8 ✓ rapor başına
+  1 genel görünüş · H9 ✓ AKL-8…15 (AKL-0–7 sabahki P-1026-006'da; kod firmada eşsiz) — S.A.Y nedenini bilemedi.
+  **Hatalar:** (1) KOD HATASI raporlar/denetle.ts:19 durum "yeni" ile karşılaştırılıyor, taslağın durumu "taslak" → her taslak "gönderilmiş (durum: taslak)"; S.A.Y
+  üç bildirimde "yanlış alarm" diye açıkladı · (2) plan_denetle planın eski, başka türdeki raporunu da sayıyor ("9 / 9") · (3) plan_ekipmanlar_ekle tür ADIYLA
+  şema hatası (kimlik istiyor), tur_baglanti_kaydet "surum" ve standart listesi zorunlu, cihaz_kaydet boş girdi — 3 boşa istek · (4) tamamlayıcı beyan kapasitesini
+  etiket kapasitesinden / "MAX" levhasından doldurmuyor (6 raporda boş; bir raporda başka firmanın eski raporundaki değer) · (5) rapor tarihi bugün (31.10), plan
+  10.10 — denetim uyarmıyor · (6) hiçbir iş şablona eşleşmedi → her istek yüksek derinlik.
+  **Öneriler — onay bekliyor, kod YOK:** O1 konuşma 100 bin tokenin altında tutulur (iş bitince eski fotoğraf büyütmeleri ve ilk iletideki fotoğraflar ön okuma
+  metnine iner, gerekirse foto_goster yeniden; eski araç sonuçları kısalır) · O2 ilk iletideki fotoğraflar küçük çözünürlükte (ön okuma zaten var), ayrıntı
+  foto_goster ile · O3 hatalar 1–5'in düzeltmesi (tür adı da kabul, surum sunucudan, beyan kapasitesi = etiket kapasitesi, tarih planın dışındaysa uyarı) ·
+  O4 tesis / müşteri uyuşmazlığı durdurmaz: yapar, bildirimde "tesis kontrol edilmeli" · O5 kullanıcının sayım düzeltmesi ("o da lift") ön okumanın ve S.A.Y'ın
+  kendi kararının önüne geçer · O6 dört satır sınırı sunucuda da · O7 izleyen kısa işlerde orta derinlik. **KARAR reisim'de:** firmada hiç cihazı olmayan ölçüm cihazı
+  türü (bu koşuda kumpas, şerit metre) için S.A.Y ne yapsın — (a) türün listesinden çıkarsın, (b) kalibrasyonsuz cihaz kaydı açsın (raporda uyarı), (c) boş bırakıp
+  "kalan engel" yazsın, sormasın. Önerim (c); kullanıcı "ekle" derse (a). Ayrıntı yerel/say-altin/V21/vaka.md.
 - 2026-10-31 (lift denemesinden — reisim: "S.A.Y durup sormaz, işi bitirir, sonra kısaca bildirir"; "ONAY BEKLEMESİN TAM YETKİLİ OLSUN"; sunum
   yerel/say-arge/2026-10-31-sunum-once-yap-sonra-bildir.md, kararlar: süre boşsa 15 dk, cihaz zimmet → son kullanılan → kalibrasyonu en uzun (üçüncüsü
   bildirilir; başkasının zimmetinden değil, depodan; aynı saatte iki kişi aynı cihazı kullanmaz), Ar-Ge kaydı 30 gün, kod firmanın düzeni / yoksa TÜR-0001,
