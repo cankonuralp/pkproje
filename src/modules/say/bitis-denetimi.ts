@@ -7,7 +7,7 @@
 export const DENETIM_ONEKI = "Sunucunun bitiş denetimi";
 /** rapor açan ya da rapora yazan işlemler (Raporlar ve Planlar'ın S.A.Y işlemleri) */
 export const RAPOR_YAZAN: ReadonlySet<string> = new Set(["rapor_ac", "rapor_yaz", "raporlara_yaz", "rapor_saat_plani", "rapor_foto_ekle", "rapor_foto_kaldir",
-  "rapor_format_guncelle", "rapor_kopyala", "rapor_takip_ac", "plan_kunye_guncelle"]);
+  "rapor_format_guncelle", "rapor_kopyala", "rapor_takip_ac", "plan_kunye_guncelle", "say_chat_rapor_yaz"]);
 export const DENETIM_EN_COK = 2;
 
 interface Mesaj { role: string; content: unknown }

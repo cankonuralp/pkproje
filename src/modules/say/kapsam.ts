@@ -59,7 +59,7 @@ export const KAPSAM: Readonly<Record<string, Readonly<Record<string, string>>>> 
     imzaliEslestirYukleEylemi: "i:rapor_imzali_yukle", teknikImzaliYukleEylemi: "i:rapor_imzali_yukle", teknikImzaliEslestirYukleEylemi: "i:rapor_imzali_yukle",
     revizeIsteEylemi: "i:revize_iste", revizeIstegiGeriCekEylemi: "i:revize_istegi_geri_cek" },
   "say-chat/ui/eylemler.ts": { chatAyarKaydetEylemi: "i:say_chat_ayar_kaydet", chatEtiketOkuEylemi: "e:S.A.Y Chat kayıtları malzeme olarak (K4)",
-    chatRaporYazEylemi: "e:S.A.Y Chat kayıtları malzeme olarak (K4)", chatOkutEylemi: "e:S.A.Y Chat kayıtları malzeme olarak (K4)" },
+    chatRaporYazEylemi: "i:say_chat_rapor_yaz", chatOkutEylemi: "e:S.A.Y Chat kayıtları malzeme olarak (K4)" },
   "say/ui/eylemler.ts": { sayDurumEylemi: "d:S.A.Y'ın kendisi", sayGecmisEylemi: "d:S.A.Y'ın kendisi", sayRaporEylemi: "d:S.A.Y'ın kendisi", sayOneriEylemi: "d:S.A.Y'ın kendisi",
     sayTemizleEylemi: "d:S.A.Y'ın kendisi", kosulKabulEylemi: "d:S.A.Y'ın kendisi (koşul kabulü kullanıcının tıklaması)" },
   "sozlesmeler/ui/belge-eylemler.ts": { sozlesmeDoldurEylemi: "i:sozlesme_doldur", sozlesmeGonderEylemi: PDF },
