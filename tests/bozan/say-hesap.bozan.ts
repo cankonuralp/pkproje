@@ -4,7 +4,7 @@
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { after, test } from "node:test";
 
@@ -15,7 +15,9 @@ async function bozuk<T>(dosya: string, eski: string, yeni: string): Promise<T> {
   const kaynak = readFileSync(resolve(dosya), "utf8");
   assert.ok(kaynak.includes(eski), `bozulacak satır kaynakta yok: ${eski}`);
   const yol = join(klasor, `${sira++}.ts`);
-  writeFileSync(yol, kaynak.replace(eski, () => yeni));
+  /* göreli içe aktarmalar özgün klasöre (2026-10-31: denetle.ts format/motor.ts'yi içe aktarır) */
+  const kok = dirname(resolve(dosya));
+  writeFileSync(yol, kaynak.replace(eski, () => yeni).replace(/from "(\.{1,2}\/[^"]+)"/g, (_, p: string) => `from "${pathToFileURL(resolve(kok, p)).href}"`));
   return import(pathToFileURL(yol).href) as Promise<T>;
 }
 type Saat = typeof import("../../src/modules/raporlar/saat-plani.ts");
