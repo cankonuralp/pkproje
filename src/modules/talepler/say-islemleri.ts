@@ -17,6 +17,9 @@ import { doldurmaCevabi, doldurmaHazirla } from "../../server/yz/doldurma.ts";
 import { ElleDegerGirdisi } from "../rapor-format/sema.ts";
 import { talepDoldur, talepDoldurmaVerisi } from "./server/talepler.ts";
 
+import { EK_NO as EK_NUMARASI, ekBelgesi as ekinBelgesi } from "../../server/yz/islem.ts";
+import { izinBelgesi, masrafFormuBelgesi } from "./server/talepler.ts";
+
 const MODUL = 21;
 const MASRAF = z.object(GiderGirdisi.shape).omit({ personel: true, odeme: true });
 
@@ -98,6 +101,18 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
     calistir: async (b, v) => {
       const h = doldurmaHazirla(await talepDoldurmaVerisi(b.db, b.kim, v.tip, v.talep), v.degerler);
       return "cevap" in h ? h.cevap : doldurmaCevabi(await talepDoldur(b.db, b.kim, v.tip, v.talep, h.degerler, h.surum), v.tip === "izin" ? "İzin talebi formu" : "Masraf formu");
+    },
+  }),
+  /* 2026-10-31 (S.A.Y yükleme yuvaları — reisim: "önerdiklerini kabul ediyorum"): ekranın yükleme işlevi, belge konuşmadaki ekin depodaki kopyasından (ekBelgesi) */
+  islem({
+    ad: "talep_belgesi_ekle", modul: MODUL, tur: "yaz", islev: izinBelgesi, kaynak: [kimlik, surum],
+    girdi: z.object({ tip: z.enum(["izin", "masraf"]), talep: kimlik, surum, ek: EK_NUMARASI.optional() }),
+    tarif: "Kendi izin talebinin belgesi (rapor, dilekçe) ya da masraf formunun fişi: tip, talep, surum (taleplerim), ek (PDF ya da fotoğraf numarası); ek verilmezse belge kaldırılır.",
+    calistir: async (b, v) => {
+      const belge = v.ek ? await ekinBelgesi(b, v.ek, ["pdf", "foto"]) : "kaldir" as const;
+      if (typeof belge === "string" && belge !== "kaldir") return { tamam: false, neden: belge };
+      const r = v.tip === "izin" ? await izinBelgesi(b.db, b.depo(), b.kim, b.firmaId, v.talep, v.surum, belge) : await masrafFormuBelgesi(b.db, b.depo(), b.kim, b.firmaId, v.talep, v.surum, belge);
+      return yazmaCevabi(r, { bildirim: belge === "kaldir" ? "Belge kaldırıldı." : "Belge eklendi." });
     },
   }),
 ];

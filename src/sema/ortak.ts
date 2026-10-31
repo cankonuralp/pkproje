@@ -66,6 +66,8 @@ export const surum = z.number().int().nonnegative();
 
 /** kimlik (uuid) — kayıt adresi ve ilişkiler */
 export const kimlik = z.uuid({ error: "Geçersiz kayıt." });
+/** 2026-10-31 (S.A.Y yükleme yuvaları): konuşmadaki ekin numarası — M03 (belge) / F02 (fotoğraf); dosyanın kendisi depodaki kopyadan (src/server/yz/islem.ts ekBelgesi) */
+export const EkNumarasi = z.string().regex(/^\s*[MFmf]\d{1,4}\s*$/, "Ek M03 ya da F02 biçiminde olmalı.");
 
 export type DogrulamaHatalari = Record<string, string>;
 

@@ -7,6 +7,12 @@ import { islem, yazmaCevabi, type Islem } from "../../server/yz/islem.ts";
 import { AyarSurumu, BelgeTuruGirdisi, EkTurAnahtari, KodGirdisi } from "./sema.ts";
 import { ayarKaydet, belgeTuruEkle, belgeTuruKaldir, denemeEpostasi, firmaAyarlari, firmaKoduKaydet } from "./server/ayarlar.ts";
 
+import { EK_NO as EK_NUMARASI, ekBelgesi as ekinBelgesi } from "../../server/yz/islem.ts";
+import { kimlik } from "../../sema/ortak.ts";
+import { AYAR_DOSYASI, IceAktarTuru } from "./sema.ts";
+import { ayarDosyasiYaz } from "./server/ayarlar.ts";
+import { iceAktar, iceAktarDenetle, iceAktarimGeriAl } from "./server/ice-aktar.ts";
+
 const MODUL = 22;
 /** ayarKaydet'in bölümleri (sır bölümü yok — anahtarlar ayrı işlevlerle, bu katalogda değil) */
 const KESIMLER = ["firma", "imza", "zimmet", "saklama", "mesai", "esik", "sabit", "fiyat", "eposta", "bulut", "mbelge"] as const;
@@ -50,5 +56,42 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
     ad: "deneme_epostasi", modul: MODUL, tur: "yaz", girdi: z.object({ surum: surum.optional() }), kaynak: [surum], islev: denemeEpostasi,
     tarif: "Firmanın e-posta ayarıyla kullanıcının KENDİ adresine deneme e-postası gönderir (Resend anahtarı ve alan adı doğru mu).",
     calistir: async (b) => yazmaCevabi(await denemeEpostasi(b.db, b.kim)),
+  }),
+  /* 2026-10-31 (S.A.Y yükleme yuvaları — reisim: "önerdiklerini kabul ediyorum"): ekranın yükleme işlevi, belge konuşmadaki ekin depodaki kopyasından (ekBelgesi) */
+  islem({
+    ad: "firma_dosyasi_yukle", modul: MODUL, tur: "yaz", islev: ayarDosyasiYaz, kaynak: [surum],
+    girdi: z.object({ ne: z.enum(["logo", "on_bilgi", "bordro_format"]), surum, ek: EK_NUMARASI.optional() }),
+    tarif: "Firma ayarlarının dosyası: ne logo (PNG / JPEG fotoğraf eki) | on_bilgi (ön bilgilendirme formu PDF'i) | bordro_format (PDF), surum (firma_ayarlari'ndaki bölümün sürümü), ek (M / F numarası); ek verilmezse dosya kaldırılır.",
+    calistir: async (b, v) => {
+      const belge = v.ek ? await ekinBelgesi(b, v.ek, v.ne === "logo" ? ["foto"] : ["pdf"]) : null;
+      if (typeof belge === "string") return { tamam: false, neden: belge };
+      return yazmaCevabi(await ayarDosyasiYaz(b.db, b.depo(), b.kim, b.firmaId, v.ne, v.surum, belge), { bildirim: `${AYAR_DOSYASI[v.ne].ad} ${belge ? "yüklendi" : "kaldırıldı"}.` });
+    },
+  }),
+  islem({
+    ad: "ice_aktar_denetle", modul: MODUL, tur: "oku", islev: iceAktarDenetle, kaynak: [IceAktarTuru],
+    girdi: z.object({ tur: IceAktarTuru, dosya: z.string().trim().min(1).max(200), satirlar: z.array(z.array(z.string())) }),
+    tarif: "Toplu içe aktarmanın denetimi (yazmaz): tur (musteri | ekipman | cihaz | personel | arac), dosya (ekin adı), satirlar (Excel ekinin satırları, ilk satır başlıklar — ekranın şablonuyla aynı sütunlar); satır satır geçerli mi, nedeni.",
+    calistir: async (b, v) => {
+      const r = await iceAktarDenetle(b.db, b.kim, v);
+      return r.durum === "tamam" ? { tamam: true, sonuc: { satirlar: r.satirlar } } : yazmaCevabi(r);
+    },
+  }),
+  islem({
+    ad: "ice_aktar", modul: MODUL, tur: "yaz", islev: iceAktar, kaynak: [IceAktarTuru],
+    girdi: z.object({ tur: IceAktarTuru, dosya: z.string().trim().min(1).max(200), satirlar: z.array(z.array(z.string())) }),
+    tarif: "Toplu içe aktarma (ice_aktar_denetle ile aynı girdi): geçerli satırlar tek işlemde eklenir, geçersizler atlanır; içe aktarma kaydı geri alınabilir.",
+    calistir: async (b, v) => {
+      const r = await iceAktar(b.db, b.kim, v);
+      return r.durum === "aktarildi" ? { tamam: true, bildirim: r.bildirim } : r.durum === "tamam" ? { tamam: true, sonuc: { satirlar: r.satirlar } } : yazmaCevabi(r);
+    },
+  }),
+  islem({
+    ad: "ice_aktarim_geri_al", modul: MODUL, tur: "yaz", islev: iceAktarimGeriAl, kaynak: [kimlik], girdi: z.object({ aktarim: kimlik }),
+    tarif: "Toplu içe aktarmayı geri alır: o aktarmanın eklediği ve henüz kullanılmamış kayıtlar silinir (firma_ayarlari içe aktarma geçmişindeki kimlik).",
+    calistir: async (b, v) => {
+      const r = await iceAktarimGeriAl(b.db, b.kim, v.aktarim, false);
+      return r.durum === "aktarildi" ? { tamam: true, bildirim: r.bildirim } : r.durum === "tamam" ? { tamam: true, bildirim: "İçe aktarma geri alındı." } : yazmaCevabi(r);
+    },
   }),
 ];

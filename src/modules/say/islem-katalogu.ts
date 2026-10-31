@@ -50,7 +50,10 @@ export const IKINCI_ONAY: Readonly<Record<string, (v: Record<string, unknown>) =
   teklif_gonder: () => "Teklif müşteriye gönderilecek", teklif_kabul: () => "Teklif kabul edildi olarak işaretlenecek",
   izin_gonder: () => "İzin talebi onaya gönderilecek", masraf_gonder: () => "Masraf formu onaya gönderilecek",
   deneme_epostasi: () => "Deneme e-postası gönderilecek", bordro_onaya_gonder: () => "Bordro kişinin imzasına gönderilecek",
-  standart_kaldir: () => "Standart sürümü kütüphaneden kaldırılacak", dokuman_kaldir: () => "Döküman kaldırılacak", isg_katip_kaldir: () => "İSG-KATİP kaydı kaldırılacak",
+  standart_kaldir: () => "Standart sürümü kütüphaneden kaldırılacak", ice_aktar: (v) => `${Array.isArray(v.satirlar) ? Math.max(0, v.satirlar.length - 1) : 0} satır içe aktarılacak (geçersizler atlanır)`,
+  ice_aktarim_geri_al: () => "İçe aktarmanın eklediği kullanılmamış kayıtlar silinecek", gider_excel_yukle: (v) => `${Array.isArray(v.satirlar) ? Math.max(0, v.satirlar.length - 1) : 0} satırlık gider Excel'i yüklenecek`,
+  rapor_imzali_yukle: () => "İmzalı rapor PDF'i yüklenecek (rapor imzalı olur; müşteriye açılır)", diger_belge_imzali_yukle: () => "İmzalı belge yüklenecek",
+  sozlesme_sablon_kaldir: () => "Sözleşme şablonu kaldırılacak", personel_belge_kaldir: () => "Personelin belge satırı kaldırılacak", dokuman_kaldir: () => "Döküman kaldırılacak", isg_katip_kaldir: () => "İSG-KATİP kaydı kaldırılacak",
 };
 const onayli = (t: Islem): Islem => {
   const m = IKINCI_ONAY[t.ad] ?? (t.ad.endsWith("_sil") ? () => "Kayıt kalıcı olarak silinecek" : null);

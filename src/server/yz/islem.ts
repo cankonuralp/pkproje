@@ -17,7 +17,7 @@
      sağlayıcısına gider. */
 import { createHash } from "node:crypto";
 import { z } from "zod";
-import { hatalar, type DogrulamaHatalari } from "../../sema/ortak.ts";
+import { EkNumarasi, hatalar, type DogrulamaHatalari } from "../../sema/ortak.ts";
 import type { Sorgulayici } from "../db/kiraci.ts";
 import type { Depo } from "../dosya/depo.ts";
 import type { YetkiHesabi } from "../yetki/canDo.ts";
@@ -306,7 +306,7 @@ export async function ekBelgesi(b: IslemBaglami, ek: string, turler: readonly ("
   return { ad: k.ad, bayt: k.bayt };
 }
 /** belge yuvası işlemlerinin ortak "ek" alanı (M03 / F02) */
-export const EK_NO = z.string().regex(/^\s*[MFmf]\d{1,4}\s*$/, "Ek M03 ya da F02 biçiminde olmalı.");
+export const EK_NO = EkNumarasi;
 
 /** onay özeti: kişi + işlem + girdi (anahtar sırasından bağımsız) — 16 onaltılık */
 export function onayOzeti(kisi: string, ad: string, girdi: unknown): string {

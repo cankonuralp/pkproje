@@ -31,6 +31,9 @@ import {
   type SahaRaporu,
 } from "./server/raporlar.ts";
 
+import { EK_NO as EK_NUMARASI, ekBelgesi as ekinBelgesi } from "../../server/yz/islem.ts";
+import { imzaliEslestirYukle, imzaliYukle, teknikImzaliEslestirYukle, teknikImzaliYukle } from "./server/raporlar.ts";
+
 const MODUL = 14;
 const RAPOR_SURUM = z.object({ rapor: kimlik, surum });
 /** ekranda açık rapor — işlem yerine ekranın aracı (kaydedilmemiş değişiklikler ezilmesin) */
@@ -322,5 +325,21 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
     tarif: "Raporun bir fotoğrafını kaldırır (dosya: rapor_getir fotolar[].dosya; yalnız yazan, Yeni rapor). Kullanıcının elle eklediğine istemedikçe dokunma.",
     calistir: async (b, v) => (ekranRaporuKirli(b, [v.rapor]) ? { tamam: false, neden: EKRAN_KAYDEDILMEMIS }
       : yazmaCevabi(await fotoSil(b.db, b.kim, v.rapor, v.surum, v.dosya))),
+  }),
+  /* 2026-10-31 (S.A.Y yükleme yuvaları — reisim: "önerdiklerini kabul ediyorum"): ekranın yükleme işlevi, belge konuşmadaki ekin depodaki kopyasından (ekBelgesi) */
+  islem({
+    ad: "rapor_imzali_yukle", modul: MODUL, tur: "yaz", islev: imzaliYukle, kaynak: [kimlik, surum],
+    girdi: z.object({ rapor: kimlik.optional(), surum: surum.optional(), ek: EK_NUMARASI, teknik: z.boolean().optional() }),
+    tarif: "Raporun imzalı PDF'i (ekrandaki İmzalı PDF yükle): ek (PDF'in M numarası — değiştirilmeden), rapor + surum ya da yalnız ek (hangi rapora ait olduğu içerikten); teknik: teknik yöneticinin imzası. İmza denetimi sunucuda.",
+    calistir: async (b, v) => {
+      const belge = await ekinBelgesi(b, v.ek, ["pdf"]);
+      if (typeof belge === "string") return { tamam: false, neden: belge };
+      if (v.rapor && v.surum !== undefined) {
+        const r = v.teknik ? await teknikImzaliYukle(b.db, b.depo(), b.kim, b.firmaId, v.rapor, v.surum, belge) : await imzaliYukle(b.db, b.depo(), b.kim, b.firmaId, v.rapor, v.surum, belge);
+        return yazmaCevabi(r, { bildirim: "İmzalı PDF yüklendi." });
+      }
+      const s = v.teknik ? await teknikImzaliEslestirYukle(b.db, b.depo(), b.kim, b.firmaId, belge) : await imzaliEslestirYukle(b.db, b.depo(), b.kim, b.firmaId, belge);
+      return yazmaCevabi(s.sonuc, { bildirim: `İmzalı PDF ${s.no ?? "rapora"} yüklendi.`, sonuc: { rapor: s.id, no: s.no } });
+    },
   }),
 ];

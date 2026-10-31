@@ -11,6 +11,9 @@ import { BELGE_DURUM, BELGE_TUR, DurumGirdisi, GeriGirdisi } from "./sema.ts";
 import { belgeGeriGonder, digerBelgeler } from "./server/belgeler.ts";
 import { durumDegistir, geriGonder, onayGeriAl, onayla, onayListeleri, revizeIstegiReddet, revizeyeGonder, tumRaporlarSayfasi, type OnaySatiri } from "./server/onaylar.ts";
 
+import { EK_NO as EK_NUMARASI, ekBelgesi as ekinBelgesi } from "../../server/yz/islem.ts";
+import { belgeImzaliYukle } from "./server/belgeler.ts";
+
 const MODUL = 15;
 const RAPOR_SURUM = z.object({ rapor: kimlik, surum });
 const satir = (r: OnaySatiri) => ({ id: r.id, no: r.no, durum: RAPOR_DURUM[r.durum][0], surum: r.surum, ekipman: r.ekipmanKod, tur: r.turAd, brans: r.brans,
@@ -95,5 +98,15 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
     ad: "belge_geri_gonder", modul: MODUL, tur: "yaz", girdi: z.object({ belge: kimlik, surum }), kaynak: [kimlik, surum], islev: belgeGeriGonder,
     tarif: "İmzası beklenen kendi belgesini gönderene geri gönderir (yanlışsa).",
     calistir: async (b, v) => yazmaCevabi(await belgeGeriGonder(b.db, b.kim, v.belge, v.surum), { bildirim: "Belge geri gönderildi." }),
+  }),
+  /* 2026-10-31 (S.A.Y yükleme yuvaları — reisim: "önerdiklerini kabul ediyorum"): ekranın yükleme işlevi, belge konuşmadaki ekin depodaki kopyasından (ekBelgesi) */
+  islem({
+    ad: "diger_belge_imzali_yukle", modul: MODUL, tur: "yaz", islev: belgeImzaliYukle, kaynak: [kimlik, surum], girdi: z.object({ belge: kimlik, surum, ek: EK_NUMARASI }),
+    tarif: "Onaylar › Diğer belgeler'deki kişinin kendi belgesinin imzalı PDF'i: belge, surum (diger_belgeler), ek (PDF'in M numarası — imzalı dosya değiştirilmeden saklanır).",
+    calistir: async (b, v) => {
+      const belge = await ekinBelgesi(b, v.ek, ["pdf"]);
+      if (typeof belge === "string") return { tamam: false, neden: belge };
+      return yazmaCevabi(await belgeImzaliYukle(b.db, b.depo(), b.kim, b.firmaId, v.belge, v.surum, belge), { bildirim: "İmzalı belge yüklendi." });
+    },
   }),
 ];

@@ -79,3 +79,6 @@ export const GiderGirdisi = z.object({
   odeme: z.enum(["odendi", "onaylandi"]).default("odendi"),
 });
 export type GiderGirdisi = z.output<typeof GiderGirdisi>;
+
+/** 2026-10-31 (S.A.Y gider Excel'i): Excel'in satırları — hücreler yazı (giderExceliYukle sınırları ve sütunları kendisi denetler) */
+export const GiderExcelSatirlari = z.array(z.array(z.string()));

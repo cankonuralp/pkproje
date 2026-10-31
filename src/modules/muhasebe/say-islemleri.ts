@@ -7,13 +7,15 @@
 import { kimlik, surum, z } from "../../sema/ortak.ts";
 import { SuzgecDurumuSemasi } from "../../server/liste/liste.ts";
 import { EK_NO, ekBelgesi, GORUNMEZ, islem, sayfaBilgisi, yazmaCevabi, type Islem, type SayfaTanimi } from "../../server/yz/islem.ts";
-import { DonemSecimi, FaturaGirdisi, GiderGirdisi, TahsilatGirdisi } from "./sema.ts";
+import { DonemSecimi, FaturaGirdisi, GiderExcelSatirlari, GiderGirdisi, TahsilatGirdisi } from "./sema.ts";
 import { giderKaydet, giderOdendi, giderSayfasi } from "./server/giderler.ts";
 import { faturaKarti, faturaKaydet, faturaSayfasi, gelirGider, isKarti, isSayfasi, tahsilatKaydet } from "./server/muhasebe.ts";
 
 import { doldurmaCevabi, doldurmaHazirla } from "../../server/yz/doldurma.ts";
 import { ElleDegerGirdisi } from "../rapor-format/sema.ts";
 import { faturaDoldur, faturaDoldurmaVerisi } from "./server/muhasebe.ts";
+
+import { giderExceliYukle } from "./server/giderler.ts";
 
 const MODUL = 18;
 const YETKISIZ = "Bu kullanıcı Muhasebe'yi göremiyor.";
@@ -105,6 +107,15 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
     calistir: async (b, v) => {
       const h = doldurmaHazirla(await faturaDoldurmaVerisi(b.db, b.kim, v.fatura), v.degerler);
       return "cevap" in h ? h.cevap : doldurmaCevabi(await faturaDoldur(b.db, b.kim, v.fatura, h.degerler, h.surum), "Fatura özeti");
+    },
+  }),
+  /* 2026-10-31 (S.A.Y yükleme yuvaları — reisim: "önerdiklerini kabul ediyorum"): ekranın yükleme işlevi, belge konuşmadaki ekin depodaki kopyasından (ekBelgesi) */
+  islem({
+    ad: "gider_excel_yukle", modul: MODUL, tur: "yaz", islev: giderExceliYukle, kaynak: [GiderExcelSatirlari], girdi: z.object({ satirlar: GiderExcelSatirlari }),
+    tarif: "Gider Excel'inden giderler: satirlar (Excel ekinin satırları, ilk satır başlıklar — ekrandaki gider şablonunun 6 sütunu: tarih, tür, açıklama, tutar, proje no, ödendi); geçerli satırlar eklenir.",
+    calistir: async (b, v) => {
+      const r = await giderExceliYukle(b.db, b.kim, v.satirlar);
+      return yazmaCevabi(r, { bildirim: `${r.eklenen ?? 0} gider eklendi.` });
     },
   }),
 ];

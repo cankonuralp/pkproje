@@ -14,6 +14,8 @@ import { doldurmaCevabi, doldurmaHazirla } from "../../server/yz/doldurma.ts";
 import { ElleDegerGirdisi } from "../rapor-format/sema.ts";
 import { zimmetDoldur, zimmetDoldurmaVerisi } from "./server/dosyalar.ts";
 
+import { atamaBelgeDegistir, atamaKaldir, bordroKaldir, ozlukBelgeDegistir, ozlukKaldir, zimmetFormuKaldir } from "./server/dosyalar.ts";
+
 const MODUL = 2;
 const ALAN = ["ad", "eposta", "imzaTel", "basla", "meslek", "meslekMetin", "diploma", "oda", "ekipnet"] as const;
 /** formun gönderdiği gibi — verilmeyen alan kartın değeriyle (güncellemede) ya da boş (yeni kayıtta) */
@@ -105,6 +107,26 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
     calistir: async (b, v) => {
       const h = doldurmaHazirla(await zimmetDoldurmaVerisi(b.db, b.kim, v.personel), v.degerler);
       return "cevap" in h ? h.cevap : doldurmaCevabi(await zimmetDoldur(b.db, b.kim, v.personel, h.degerler, h.surum), "Zimmet formu");
+    },
+  }),
+  /* 2026-10-31 (S.A.Y yükleme yuvaları — reisim: "önerdiklerini kabul ediyorum"): ekranın yükleme işlevi, belge konuşmadaki ekin depodaki kopyasından (ekBelgesi) */
+  islem({
+    ad: "personel_belge_degistir", modul: MODUL, tur: "yaz", islev: ozlukBelgeDegistir, kaynak: [kimlik, surum], girdi: z.object({ ne: z.enum(["ozluk", "atama"]), kayit: kimlik, surum, ek: EK_NO }),
+    tarif: "Özlük ya da atama satırının PDF'ini değiştirir (satır aynı kalır): ne, kayit + surum (personel_getir belgeleri), ek (PDF'in M numarası).",
+    calistir: async (b, v) => {
+      const belge = await ekBelgesi(b, v.ek, ["pdf"]);
+      if (typeof belge === "string") return { tamam: false, neden: belge };
+      const r = v.ne === "ozluk" ? await ozlukBelgeDegistir(b.db, b.depo(), b.kim, b.firmaId, v.kayit, v.surum, belge) : await atamaBelgeDegistir(b.db, b.depo(), b.kim, b.firmaId, v.kayit, v.surum, belge);
+      return yazmaCevabi(r, { bildirim: "Belge değiştirildi." });
+    },
+  }),
+  islem({
+    ad: "personel_belge_kaldir", modul: MODUL, tur: "yaz", islev: ozlukKaldir, kaynak: [kimlik, surum], girdi: z.object({ ne: z.enum(["ozluk", "atama", "bordro", "zimmet"]), kayit: kimlik, surum }),
+    tarif: "Personelin belge satırını kaldırır (silinmez; saklanır): ne (ozluk | atama | bordro | zimmet), kayit + surum (personel_getir belgeleri).",
+    calistir: async (b, v) => {
+      const r = v.ne === "ozluk" ? await ozlukKaldir(b.db, b.kim, v.kayit, v.surum) : v.ne === "atama" ? await atamaKaldir(b.db, b.kim, v.kayit, v.surum)
+        : v.ne === "bordro" ? await bordroKaldir(b.db, b.kim, v.kayit, v.surum) : await zimmetFormuKaldir(b.db, b.kim, v.kayit, v.surum);
+      return yazmaCevabi(r, { bildirim: "Belge kaldırıldı." });
     },
   }),
 ];

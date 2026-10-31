@@ -24,7 +24,9 @@ test("ek: numarasıyla depodaki kopyadan; türe uymayan ve kopyası olmayan söy
 });
 
 test("yuvalar katalogda, ek alanıyla; ekranın yükleme işleviyle", () => {
-  const yuvalar = ["personel_belge_ekle", "egitim_sertifika_ekle", "standart_yukle", "dokuman_yukle", "sozlesme_imzali_yukle", "saha_tarama_yukle"];
+  const yuvalar = ["personel_belge_ekle", "egitim_sertifika_ekle", "standart_yukle", "dokuman_yukle", "sozlesme_imzali_yukle", "saha_tarama_yukle",
+    /* 2026-10-31 (kalan eksikler 3): logo / form dosyaları, imzalı rapor ve belge, sözleşme şablonu, izin / masraf belgesi, personel belgesini değiştir */
+    "firma_dosyasi_yukle", "diger_belge_imzali_yukle", "rapor_imzali_yukle", "sozlesme_sablon_yukle", "talep_belgesi_ekle", "personel_belge_degistir"];
   for (const a of [...yuvalar, "kalibrasyon_ekle", "gider_kaydet"]) {
     const t = ISLEM_KATALOGU.find((x) => x.ad === a);
     assert.ok(t && t.tur === "yaz", a);

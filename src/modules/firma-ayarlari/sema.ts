@@ -1,6 +1,7 @@
 /* FİRMA AYARLARI — form şemaları ve seçenekler (334; maket firma-ayarlari.html, maket-ayarlar.js; MV.ESIK, MV.IMZA_YONTEM, MV.YASAL). İstemci ve
    sunucu aynı şemayı kullanır; iletiler Türkçe. Değerler src/server/ayar/ayar.ts bölümlerine yazılır (tek kaynak, başlangıç değerleri orada). */
 import { tutar, z } from "../../sema/ortak.ts";
+import { IA_TURLER } from "./ice-aktar.ts";
 
 /** bölümler (sol liste ve sayfa sırası — maket ayarCiz sırası; 334'te olanlar) */
 export const AYAR_BASLIK = {
@@ -128,3 +129,6 @@ export const AYAR_DOSYASI = {
   bordro_format: { bolum: "belge_sablon", alan: "bordro_format", turler: ["pdf", "xlsx"], mb: 10, ad: "Bordro formatı" },
 } as const;
 export type AyarDosyasi = keyof typeof AYAR_DOSYASI;
+
+/** 2026-10-31 (S.A.Y toplu içe aktarma): ne içe aktarılır (ekranın seçimi) */
+export const IceAktarTuru = z.enum(IA_TURLER);

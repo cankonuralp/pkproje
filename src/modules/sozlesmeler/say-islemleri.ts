@@ -13,6 +13,8 @@ import { doldurmaCevabi, doldurmaHazirla } from "../../server/yz/doldurma.ts";
 import { ElleDegerGirdisi } from "../rapor-format/sema.ts";
 import { sozlesmeBelgeBolumu, sozlesmeDoldur } from "./server/sozlesmeler.ts";
 
+import { sablonKaldir, sablonYukle } from "./server/sozlesmeler.ts";
+
 const MODUL = 12;
 
 export const SAY_ISLEMLERI: readonly Islem[] = [
@@ -89,6 +91,21 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
       const h = doldurmaHazirla(x ? (await sozlesmeBelgeBolumu(b.db, b.kim, x, null))?.doldurma ?? null : null, v.degerler);
       return "cevap" in h ? h.cevap : doldurmaCevabi(await sozlesmeDoldur(b.db, b.kim, v.sozlesme, h.degerler, h.surum), "Sözleşme");
     },
+  }),
+  /* 2026-10-31 (S.A.Y yükleme yuvaları — reisim: "önerdiklerini kabul ediyorum"): ekranın yükleme işlevi, belge konuşmadaki ekin depodaki kopyasından (ekBelgesi) */
+  islem({
+    ad: "sozlesme_sablon_yukle", modul: MODUL, tur: "yaz", islev: sablonYukle, kaynak: [EK_NO], girdi: z.object({ ek: EK_NO }),
+    tarif: "Sözleşme şablonu PDF'i (yayında sözleşme formatı yoksa belge olarak bu verilir): ek (PDF'in M numarası).",
+    calistir: async (b, v) => {
+      const belge = await ekBelgesi(b, v.ek, ["pdf"]);
+      if (typeof belge === "string") return { tamam: false, neden: belge };
+      return yazmaCevabi(await sablonYukle(b.db, b.depo(), b.kim, b.firmaId, belge), { bildirim: "Sözleşme şablonu yüklendi." });
+    },
+  }),
+  islem({
+    ad: "sozlesme_sablon_kaldir", modul: MODUL, tur: "yaz", islev: sablonKaldir, kaynak: [kimlik, surum], girdi: z.object({ sablon: kimlik, surum }),
+    tarif: "Sözleşme şablonu sürümünü kaldırır: sablon, surum (sozlesme_secenekleri / şablon listesi).",
+    calistir: async (b, v) => yazmaCevabi(await sablonKaldir(b.db, b.kim, v.sablon, v.surum), { bildirim: "Sözleşme şablonu kaldırıldı." }),
   }),
 ];
 
