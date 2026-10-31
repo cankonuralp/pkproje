@@ -104,3 +104,21 @@ test("serbest tablo: harita hücreleri gösterir; hücre yaz, satır / sütun, b
   assert.match(k.gecersiz.join(" "), /tabloda yok.*seçenekleri.*eylem şunlardan/);
   assert.equal(JSON.stringify(k.t), JSON.stringify(r.t), "geçersiz istek tabloyu değiştirmez");
 });
+
+/* 2026-10-31 lift denemesi (reisim: "yeni alan varsayılan olarak isteğe bağlıdır; var olan alanı tekrar eden alan eklenmez … test değeri uygulanan yüktür,
+   beyan edilen değer değildir"): "Kaldırma kapasitesi" varken eklenen "Beyan kapasitesi" zorunlu test değeri her raporda yeni eksik oldu */
+test("S.A.Y'ın eklediği öğe varsayılan isteğe bağlı; aynı adlı öğe eklenmez", async () => {
+  const { grupFormati } = await import("../src/format/sablonlar.ts");
+  const t0 = grupFormati({ ad: "Deneme", grup: "kaldirma" });
+  const test0 = t0.bolumler.find((b) => b.blok === "test")!;
+  const r = formatIslemleri(t0, [
+    { islem: "oge_ekle", bolum: test0.ad, ad: "Yüksüz deneme yükü", tur: "sayi" },
+    { islem: "oge_ekle", bolum: test0.ad, ad: "Zorunlu değer", tur: "sayi", zorunlu: true },
+    { islem: "oge_ekle", bolum: test0.ad, ad: "Kaldırma  kapasitesi" },
+  ]);
+  const b = r.t.bolumler.find((x) => x.id === test0.id) as BolumOf<"test">;
+  assert.equal(b.degerler.find((d) => d.ad === "Yüksüz deneme yükü")?.zorunlu, false, "verilmezse isteğe bağlı");
+  assert.equal(b.degerler.find((d) => d.ad === "Zorunlu değer")?.zorunlu, true, "istenirse zorunlu");
+  assert.ok(!b.degerler.some((d) => d.ad.startsWith("Kaldırma")), "aynı adlı öğe eklenmedi");
+  assert.ok(r.gecersiz.some((x) => /zaten var/.test(x)), r.gecersiz.join(" | "));
+});

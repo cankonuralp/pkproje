@@ -56,7 +56,7 @@ test("dokuz belgenin işlemi katalogda, ekranın doldurma işleviyle", () => {
   };
   for (const [ad, islev] of Object.entries(beklenen)) {
     const t = ISLEM_KATALOGU.find((x) => x.ad === ad);
-    assert.ok(t && t.tur === "yaz" && !t.ikinciOnay, ad);
+    assert.ok(t && t.tur === "yaz", ad);
     assert.equal(t.islev.name, islev, ad);
   }
 });

@@ -216,7 +216,6 @@
 .oneriListe li b { font-weight: 600; font-size: var(--boy-kucuk); }
 .oneriListe li small { grid-column: 1; color: var(--yazi2); font-size: var(--boy-etiket); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .oneriSecili { background: var(--zemin2); outline: 2px solid var(--odak); outline-offset: -2px; }
-.oneriIsaret { grid-row: 1 / 3; grid-column: 2; align-self: center; padding: 1px 7px; border-radius: var(--r-tam); background: var(--uyari-zemin); color: var(--uyari-yazi); font-size: var(--boy-etiket); font-weight: 700; }
 .oneriForm { display: grid; gap: 8px; margin-bottom: 8px; padding: 10px 12px; border: 1px solid var(--kenar); border-radius: var(--r-buyuk); background: var(--kart); }
 .oneriAlan { display: grid; gap: 4px; font-size: var(--boy-etiket); font-weight: 600; color: var(--yazi2); }
 .oneriAlan input, .oneriAlan select { min-height: var(--tus-y); padding: 0 10px; border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); color: var(--yazi); font-family: inherit; font-size: var(--boy-girdi); }

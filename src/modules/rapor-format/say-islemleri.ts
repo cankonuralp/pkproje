@@ -17,7 +17,7 @@ import { BELGE_KATALOGU } from "../../belge/katalog.ts";
 import { firmaParcalari, parcaKaydet, parcaSil } from "./server/parcalar.ts";
 import { belgeFormatiOku, belgeFormatlari, belgeTaslakAc, belgeTaslakKaydet, belgeTemeleDon, belgeYayinla } from "./server/belgeler.ts";
 import {
-  formatAyrintisi, formatSurumleri, GeriDonusIptal, sablondanTurEkle, sablonKullanimi, surumeGeriDon, surumSil, taslakBaslat, taslakKaydet, yayinDenetle, yayinla,
+  formatAyrintisi, formatSurumleri, GeriDonusIptal, yayinNotuOzeti, sablondanTurEkle, sablonKullanimi, surumeGeriDon, surumSil, taslakBaslat, taslakKaydet, yayinDenetle, yayinla,
   type YayinSonucu,
 } from "./server/formatlar.ts";
 
@@ -109,8 +109,14 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
   }),
   islem({
     ad: "format_yayinla", modul: MODUL, tur: "yaz", girdi: z.object({ format: kimlik, surum, notu: YayinNotu.optional() }), kaynak: [YayinNotu, kimlik, surum], islev: yayinla,
-    tarif: "Taslağı yayınlar (yeni sürüm; yayındaki eskiye düşer; açık raporlar kendi sürümünde kalır): format, surum (taslağın), notu (en çok 200).",
-    calistir: async (b, v, ham) => yayinCevabi(await yayinla(b.db, b.kim, v.format, v.surum, ham.notu ?? "")),
+    tarif: "Taslağı yayınlar (yeni sürüm; yayındaki eskiye düşer; açık raporlar kendi sürümünde kalır): format, surum (taslağın), notu (en çok 200; verilmezse "
+      + "ya da anlamsızsa yayındaki sürüme göre değişikliklerin özeti). Raporları açmadan ÖNCE yayınla.",
+    /* 2026-10-31 (reisim: "Yayın notu değişikliğin özeti olur ('1' değil)"): boş, sayı ya da 3 harften kısa not yerine sunucunun özeti */
+    calistir: async (b, v, ham) => {
+      const n = typeof ham.notu === "string" ? ham.notu.trim() : "";
+      const notu = n.length >= 4 && !/^[\d\s.,-]+$/.test(n) ? n : (await yayinNotuOzeti(b.db, v.format)) ?? n;
+      return yayinCevabi(await yayinla(b.db, b.kim, v.format, v.surum, notu));
+    },
   }),
   islem({
     ad: "surume_geri_don", modul: MODUL, tur: "yaz", girdi: z.object({ tur: kimlik, surum_id: kimlik, taslak_surum: surum.nullable().default(null), notu: YayinNotu.optional() }),

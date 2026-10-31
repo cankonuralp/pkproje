@@ -38,29 +38,9 @@ export const KATALOG_MODULLERI = [
   { modul: "ekipman-turleri", islemler: EKIPMAN_TURLERI }, { modul: "rapor-format", islemler: RAPOR_FORMAT }, { modul: "say-chat", islemler: SAY_CHAT },
   { modul: "dokumanlar", islemler: DOKUMANLAR }, { modul: "egitimler", islemler: EGITIMLER }, { modul: "firma-ayarlari", islemler: FIRMA_AYARLARI },
 ] as const;
-/** 2026-10-31 (kalem 6b — onay kapısı; sunum "S.A.Y'a tam yetenek", kural: "onaya, imzaya ya da dışarıya gönderme, silme, yayınlama ve plan kabulü
-    ikinci onay ister"): S.A.Y'ın yolunda bu işlemler kullanıcının ekrandaki onayı olmadan çalışmaz (src/server/yz/islem.ts islemYurut). Metin pencerede.
-    Silme: adı _sil ile biten her işlem. Kilit tests/say-onay.test.ts */
-export const IKINCI_ONAY: Readonly<Record<string, (v: Record<string, unknown>) => string>> = {
-  rapor_onaya_gonder: () => "Rapor teknik yöneticinin onayına gönderilecek",
-  raporlari_onaya_gonder: (v) => `${Array.isArray(v.raporlar) ? v.raporlar.length : 0} rapor onaya gönderilecek (denetimden geçmeyen gönderilmez)`,
-  rapor_onayla: () => "Rapor onaylanacak", revizeye_gonder: () => "Rapor revizeye gönderilecek",
-  plan_kabul: () => "Plan kabul edilecek (tarafsızlık beyanı onaylanır)",
-  format_yayinla: () => "Format yayınlanacak", belge_yayinla: () => "Belge formatı yayınlanacak",
-  belge_temele_don: () => "Belgenin yayındaki formatı kaldırılacak (temel formata dönülür)", surume_geri_don: () => "Eski format sürümü yeniden yayınlanacak",
-  teklif_gonder: () => "Teklif müşteriye gönderilecek", teklif_kabul: () => "Teklif kabul edildi olarak işaretlenecek",
-  izin_gonder: () => "İzin talebi onaya gönderilecek", masraf_gonder: () => "Masraf formu onaya gönderilecek",
-  deneme_epostasi: () => "Deneme e-postası gönderilecek", bordro_onaya_gonder: () => "Bordro kişinin imzasına gönderilecek",
-  standart_kaldir: () => "Standart sürümü kütüphaneden kaldırılacak", ice_aktar: (v) => `${Array.isArray(v.satirlar) ? Math.max(0, v.satirlar.length - 1) : 0} satır içe aktarılacak (geçersizler atlanır)`,
-  ice_aktarim_geri_al: () => "İçe aktarmanın eklediği kullanılmamış kayıtlar silinecek", gider_excel_yukle: (v) => `${Array.isArray(v.satirlar) ? Math.max(0, v.satirlar.length - 1) : 0} satırlık gider Excel'i yüklenecek`,
-  rapor_imzali_yukle: () => "İmzalı rapor PDF'i yüklenecek (rapor imzalı olur; müşteriye açılır)", diger_belge_imzali_yukle: () => "İmzalı belge yüklenecek",
-  sozlesme_sablon_kaldir: () => "Sözleşme şablonu kaldırılacak", personel_belge_kaldir: () => "Personelin belge satırı kaldırılacak", dokuman_kaldir: () => "Döküman kaldırılacak", isg_katip_kaldir: () => "İSG-KATİP kaydı kaldırılacak",
-};
-const onayli = (t: Islem): Islem => {
-  const m = IKINCI_ONAY[t.ad] ?? (t.ad.endsWith("_sil") ? () => "Kayıt kalıcı olarak silinecek" : null);
-  return m ? { ...t, ikinciOnay: m as (v: never) => string } : t;
-};
-export const ISLEM_KATALOGU: readonly Islem[] = katalogKur(KATALOG_MODULLERI.flatMap((m) => m.islemler).map(onayli));
+/* İKİNCİ ONAY YOK — 2026-10-31 (reisim: "onay istemesin, tam yetkili olsun tüm işleri bitirsin … ONAY BEKLEMESİN TAM YETKİLİ OLSUN"): S.A.Y'ın yolunda hiçbir işlem (gönderme, silme, yayın, plan kabulü dahil) onay penceresi açmaz, beklemez; işi yapar,
+   sonra bildirir. Kilit tests/say-tam-yetki.test.ts (onay kapısı, onay ucu, onay olayı geri gelirse kırılır). */
+export const ISLEM_KATALOGU: readonly Islem[] = katalogKur(KATALOG_MODULLERI.flatMap((m) => m.islemler));
 /** modülün menüdeki adı (dizin ve "islemler" sonucu); 0 = Ana sayfa */
 export const modulAdi = (no: number): string => (no === ANA_SAYFA_MODULU ? ANA_SAYFA.ad : MODULLER.find((m) => m.no === no)?.ad ?? `Modül ${no}`);
 /** önbellekli talimattaki dizin (her istekte aynı metin) */

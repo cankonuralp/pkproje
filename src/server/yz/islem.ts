@@ -15,14 +15,13 @@
      Ekranın gönderdiği adımlardaki işlemler YENİDEN çalıştırılmaz — yürütücü yalnız yapay zekâ hizmetinin bu eylemde döndürdüğü çağrıyı çalıştırır.
    · Sır / anahtar yazan işlemler (Firma ayarları › yapay zekâ anahtarı, e-posta anahtarı) kataloğa KONMAZ: girdi sohbet geçmişine ve yapay zekâ
      sağlayıcısına gider. */
-import { createHash } from "node:crypto";
 import { z } from "zod";
 import { EkNumarasi, hatalar, type DogrulamaHatalari } from "../../sema/ortak.ts";
 import type { Sorgulayici } from "../db/kiraci.ts";
 import type { Depo } from "../dosya/depo.ts";
 import type { YetkiHesabi } from "../yetki/canDo.ts";
 import type { IsOzeti, SayKomutu } from "./say.ts";
-import { ekKopyasiOku, onayGecerli, onayKullan } from "./konusma.ts";
+import { ekKopyasiOku } from "./konusma.ts";
 
 /** işlemi yapan kişi — oturumdaki hesap (rolleri ve firma matrisi veritabanından) */
 export interface IslemKisisi extends YetkiHesabi { ad: string }
@@ -47,14 +46,12 @@ export interface IslemOrtami extends Omit<IslemBaglami, "db" | "kaydedilmemis"> 
   islet: <T>(is: (db: Sorgulayici) => Promise<T>) => Promise<T>;
   hata?: (e: unknown, ad: string) => void;
   kaydedilmemis?: boolean;
-  /** 2026-10-31 (kalem 6b): S.A.Y'ın yolu — ikinci onaylı işlem ekrandaki onay olmadan çalışmaz (src/modules/say/server/dongu.ts islemOrtami) */
-  onayKapisi?: boolean;
 }
 /** degisiklik: false — yazma işlemi çalıştı ama hiçbir şey değişmedi (ör. rapor_yaz'da girişler zaten öyleydi): iş sayılmaz (döngünün güvenliği
     ve sahte "yaptım" denetimi doğru görsün, sayfa boşuna yenilenmesin) */
 export type IslemCevabi =
   | { tamam: true; bildirim?: string; sonuc?: Record<string, unknown>; degisiklik?: false }
-  | { tamam: false; neden: string; hatalar?: DogrulamaHatalari; uyarilar?: Record<string, string>; eksikler?: string[]; onay?: { ozet: string; metin: string } };
+  | { tamam: false; neden: string; hatalar?: DogrulamaHatalari; uyarilar?: Record<string, string>; eksikler?: string[] };
 
 export interface Islem {
   /** araçta kullanılan ad (küçük harf, rakam, alt çizgi; katalogda tekil) */
@@ -72,9 +69,6 @@ export interface Islem {
   islev: (...a: never[]) => unknown;
   /** veri: şemadan geçmiş girdi; ham: girdinin kendisi (modül işlevi kendi şemasıyla yeniden doğrular — dönüşüm iki kez uygulanmasın) */
   calistir: (b: IslemBaglami, veri: unknown, ham: unknown) => Promise<IslemCevabi>;
-  /** 2026-10-31 (kalem 6b — onay kapısı): geri dönüşü zor iş (gönderme, silme, yayın, plan kabulü) — kullanıcının EKRANDAKİ onayı olmadan çalışmaz;
-      onay penceresinin metni (kapsam sayısıyla) */
-  ikinciOnay?: (veri: never) => string;
 }
 /** işlem bildirimi (tür çıkarımı için; katalogda tür silinir) */
 export function islem<S extends z.ZodType>(t: Omit<Islem, "girdi" | "calistir"> & {
@@ -215,21 +209,10 @@ export async function islemYurut(katalog: readonly Islem[], o: IslemOrtami, ad: 
     const h = hatalar(g.error);
     return { islem: t, cevap: { tamam: false, neden: `Girdi şemaya uymuyor: ${hataOzeti(h)}`, hatalar: h }, sema: islemSemasi(t) };
   }
-  /* 2026-10-31 (kalem 6b — onay kapısı): özet = kişi + işlem + girdi; onay yalnız kullanıcının ekrandaki tıklamasıyla konuşmaya yazılır (sunucu),
-     10 dakika ve tek kullanımlık; iş ve kullanım aynı veritabanı işleminde */
-  const kapi = t.ikinciOnay && o.onayKapisi ? (() => {
-    const { onay, ...asil } = (girdi && typeof girdi === "object" ? girdi : {}) as Record<string, unknown>;
-    return { onay: typeof onay === "string" ? onay : null, ozet: onayOzeti(o.kim.id, t.ad, asil), metin: t.ikinciOnay!(g.data as never), asil };
-  })() : null;
-  if (kapi && (kapi.onay !== kapi.ozet || !(await o.islet((db) => onayGecerli(db, kapi.ozet))))) {
-    return { islem: t, cevap: { tamam: false, onay: { ozet: kapi.ozet, metin: kapi.metin },
-      neden: `Kullanıcının ekrandaki onayı gerekiyor (${kapi.metin}). Ekranda onay penceresi açıldı; kullanıcı onaylarsa aynı işlemi AYNI girdiyle ve onay: "${kapi.ozet}" ile yeniden çağır, onaylamazsa yapma.` } };
-  }
   try {
     const cevap = await o.islet(async (db) => {
       const c = await t.calistir({ db, kim: o.kim, firmaId: o.firmaId, depo: o.depo, kok: o.kok, ekrandakiRapor: o.ekrandakiRapor,
-        kaydedilmemis: o.kaydedilmemis === true, epostaGonder: o.epostaGonder }, g.data, kapi ? kapi.asil : girdi ?? {});
-      if (kapi) await onayKullan(db, kapi.ozet);
+        kaydedilmemis: o.kaydedilmemis === true, epostaGonder: o.epostaGonder }, g.data, girdi ?? {});
       return c;
     });
     return { islem: t, cevap };
@@ -308,19 +291,13 @@ export async function ekBelgesi(b: IslemBaglami, ek: string, turler: readonly ("
 /** belge yuvası işlemlerinin ortak "ek" alanı (M03 / F02) */
 export const EK_NO = EkNumarasi;
 
-/** onay özeti: kişi + işlem + girdi (anahtar sırasından bağımsız) — 16 onaltılık */
-export function onayOzeti(kisi: string, ad: string, girdi: unknown): string {
-  const sirali = (x: unknown): unknown => (Array.isArray(x) ? x.map(sirali) : x && typeof x === "object"
-    ? Object.fromEntries(Object.keys(x as object).sort().map((k) => [k, sirali((x as Record<string, unknown>)[k])])) : x);
-  return createHash("sha256").update(JSON.stringify([kisi, ad, sirali(girdi)])).digest("hex").slice(0, 16);
-}
 
 /** sonucun S.A.Y'a giden özeti: oku → yalnız sonuç; yaz → "yapıldı" (yazildi 1, bildirim — iş yapıldı sayılır, döngünün güvenliği değişiklik görür);
     hiçbir şey değişmeyen yazma (degisiklik: false) → ayni 1 (iş sayılmaz); yapılamadı → neden. sonuc: tool_result'ın metni (JSON) */
 export function islemOzeti(ad: string, tur: "oku" | "yaz" | null, cevap: IslemCevabi, sema?: Record<string, unknown>): IsOzeti {
   const bos = { yazildi: 0, ayni: 0, bekliyor: 0, yapilan: [] as string[], yazilamadi: [] as { ad: string; neden: string }[] };
   if (!cevap.tamam) {
-    const metin = JSON.stringify({ islem: ad, durum: cevap.onay ? "onay_bekliyor" : "hata", neden: cevap.neden, ...(cevap.onay ? { onay_gerekli: cevap.onay } : {}),
+    const metin = JSON.stringify({ islem: ad, durum: "hata", neden: cevap.neden,
       ...(cevap.hatalar ? { hatalar: cevap.hatalar } : {}),
       ...(cevap.uyarilar ? { uyarilar: cevap.uyarilar } : {}), ...(cevap.eksikler ? { eksikler: cevap.eksikler } : {}), ...(sema ? { sema } : {}) });
     return { ...bos, yazilamadi: [{ ad, neden: cevap.neden }], sonuc: metin };
@@ -328,6 +305,14 @@ export function islemOzeti(ad: string, tur: "oku" | "yaz" | null, cevap: IslemCe
   const metin = JSON.stringify({ islem: ad, durum: "tamam", ...(cevap.bildirim ? { bildirim: cevap.bildirim } : {}), ...(cevap.sonuc ?? {}) });
   if (tur !== "yaz") return { ...bos, sonuc: metin };
   return cevap.degisiklik === false ? { ...bos, ayni: 1, sonuc: metin } : { ...bos, yazildi: 1, yapilan: [cevap.bildirim ?? `${ad} yapıldı`], sonuc: metin };
+}
+
+/** 2026-10-31 (L3 — bitirmeden denetim): SUNUCUNUN kendi başlattığı OKUMA işlemi (yapay zekânın komutu değil) — yalnız tur "oku" olan işlem; yazan işlem
+    reddedilir. Döngü yalnız plan_denetle ile çağırır (kilit tests/yardimci/denetimler.ts sayEylemDenetimi) */
+export async function okumaKomutu(katalog: readonly Islem[], o: IslemOrtami, ad: string, girdi: Record<string, unknown>): Promise<IsOzeti> {
+  const t = katalog.find((x) => x.ad === ad);
+  if (!t || t.tur !== "oku") return islemOzeti(ad, null, { tamam: false, neden: "Yalnız okuma işlemi." });
+  return islemOzeti(ad, "oku", (await islemYurut([t], o, ad, girdi)).cevap);
 }
 
 /** sunucu komutunu (islem / islemler) çalıştırır — S.A.Y'a dönen özet. Yalnız yapay zekâ hizmetinin döndürdüğü çağrı için (eylem) */

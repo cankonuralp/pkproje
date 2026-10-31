@@ -203,6 +203,18 @@ function yama(x: FormatIslemi): OgeYamasi {
   return y;
 }
 
+const adKoku = (s: string) => tr(s).replace(/\([^)]*\)/g, " ").replace(/[^\p{L}\p{N} ]/gu, " ").replace(/\s+/g, " ").trim();
+/** formatta aynı adlı alan / sütun / test değeri var mı (birim ve noktalama sayılmaz) — bulunduğu bölümün adı */
+function tekrarAdi(t: FormatTanimi, ad: string): string | null {
+  const k = adKoku(ad);
+  if (!k) return null;
+  for (const b of t.bolumler) {
+    const l = b.blok === "bilgi" ? b.alanlar.map((a) => a.ad) : b.blok === "olcum" ? b.sutunlar.map((s) => s.ad) : b.blok === "test" ? b.degerler.map((d) => d.ad) : [];
+    if (l.some((x) => adKoku(x) === k)) return b.ad;
+  }
+  return null;
+}
+
 export interface FormatIslemSonucu { t: FormatTanimi; yapilan: string[]; gecersiz: string[] }
 
 const tamsayi = (x: unknown): number | null => (typeof x === "number" && Number.isInteger(x) ? x
@@ -618,11 +630,16 @@ export function formatIslemleri(t0: FormatTanimi, islemler: readonly FormatIslem
         yapilan.push(`“${b.ad}” listesine madde eklendi: ${ad}`);
         continue;
       }
+      /* 2026-10-31 (reisim: "yeni alan varsayılan olarak isteğe bağlıdır; var olan alanı tekrar eden alan eklenmez"): aynı adlı öğe (formatın herhangi bir
+         bölümünde, birimsiz ve Türkçe küçük harfle) eklenmez; zorunlu verilmezse öğe isteğe bağlı açılır */
+      const ayni = tekrarAdi(t, ad);
+      if (ayni) { red(`“${ad}” formatta zaten var (${ayni}); tekrar eklenmez`); continue; }
       const onek = b.blok === "bilgi" ? "a" : b.blok === "olcum" ? "s" : "d";
       const id = yeniKimlik(t, onek);
       t = ogeEkle(t, i, ad);
       const y = yama(x);
       delete y.ad;
+      if (typeof x.zorunlu !== "boolean") y.zorunlu = false;
       /* bilgi alanı ogeEkle'de yazı açılır — sayı / seçim istenirse türü; formül varsa sayı */
       if (Object.keys(y).length) t = ogeYaz(t, i, id, y);
       const f = formulOf(t.bolumler[i], id);

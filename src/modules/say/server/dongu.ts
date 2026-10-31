@@ -20,7 +20,7 @@ import { oturumIslemi, type IstekOturumu } from "../../../server/kimlik/istek.ts
 import { firmaAdresi } from "../../../server/kiraci/istek.ts";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { anthropicAkis, type AkisYaniti } from "../../../server/yz/akis.ts";
-import { acikKayit, islemOzeti, sunucuKomutu, type IslemOrtami } from "../../../server/yz/islem.ts";
+import { acikKayit, islemOzeti, okumaKomutu, sunucuKomutu, type IslemOrtami } from "../../../server/yz/islem.ts";
 import { bekleyenAl, bekleyenYaz, isAl, isBirak, konusmaEkle, konusmaKilidi, konusmaOku, konusmaSonu, type AracSonucu } from "../../../server/yz/konusma.ts";
 import { fotoGosterAraci, fotoPaftaAraci } from "./gorsel.ts";
 import { beceriDizini, beceriMetni, becerileriOku } from "../beceriler.ts";
@@ -44,9 +44,7 @@ export type SayOlayi =
   | { t: "ekran"; araclar: { id: string; ad: string; komut: SayKomutu | null }[]; yenile: boolean }
   | { t: "devam"; yenile: boolean }
   | { t: "bitti"; yenile: boolean }
-  | { t: "hata"; neden: string; yenile: boolean }
-  /** 2026-10-31 (kalem 6b): ikinci onaylı işlem — ekran onay penceresini açar (onay ucu: src/app/api/say/onay) */
-  | { t: "onay"; ozet: string; metin: string };
+  | { t: "hata"; neden: string; yenile: boolean };
 
 /** talimat ve araçlar: konuşma boyunca aynı (düşünmeler geçerli kalsın) */
 const BECERILER = becerileriOku();
@@ -91,7 +89,6 @@ function islemOrtami(o: IstekOturumu, s: { ekrandakiRapor: string | null; kayded
     kim: o, firmaId: o.kiraci.firmaId, depo, kok: firmaAdresi(o.kiraci.kisaAd), ekrandakiRapor: s.ekrandakiRapor, kaydedilmemis: s.kaydedilmemis,
     epostaGonder: (kaynak, id) => { epostalariSonraGonder(o.kiraci, kaynak, id); },
     hata: (e, ad) => hataYaz(o, e, `say.islem.${ad}`),
-    onayKapisi: true,
   };
 }
 /** K2 + M4 (2026-10-31): açık kaydın notu — modülün OKUMA işlemi (acikKayit yalnız tur "oku"), kişi ve firma oturumdan, sorunun veritabanı işleminde */
@@ -251,8 +248,8 @@ async function bitirmedenDenetle(o: IstekOturumu, b: SayBaglami, kaydedilmemis: 
   const d = await oturumIslemi(o, async (db) => bitisDenetimi((await konusmaOku(db)).map((m) => ({ role: m.rol, content: m.icerik }))));
   if (!d) return false;
   yaz({ t: "asama", ad: "Denetliyor" });
-  const ozet = await sunucuKomutu(ISLEM_KATALOGU, islemOrtami(o, { ekrandakiRapor: b.raporId, kaydedilmemis }),
-    { tur: "islem", ad: "plan_denetle", girdi: { ...(d.plan ? { plan: d.plan } : {}), ...(d.raporlar.length ? { raporlar: d.raporlar } : {}) } }, modulAdi);
+  const ozet = await okumaKomutu(ISLEM_KATALOGU, islemOrtami(o, { ekrandakiRapor: b.raporId, kaydedilmemis }), "plan_denetle",
+    { ...(d.plan ? { plan: d.plan } : {}), ...(d.raporlar.length ? { raporlar: d.raporlar } : {}) });
   /* sorun yoksa S.A.Y'ın yazdığı bildirim kalır (ikinci kez yazdırılmaz) */
   if (!sorunVar(ozet.sonuc)) return false;
   return oturumIslemi(o, async (db) => {
@@ -271,14 +268,6 @@ async function gorselSonucu(o: IstekOturumu, ad: string, girdi: unknown): Promis
     hataYaz(o, e, `say.${ad}`);
     return "Fotoğraf hazırlanamadı (görüntü okunamadı); ekte görülen hâline bak.";
   }
-}
-
-/** işlem sonucundaki onay isteği (yürütücünün onay_gerekli'si) */
-function onayIstegi(sonuc: string | undefined): { ozet: string; metin: string } | null {
-  try {
-    const o = (JSON.parse(sonuc ?? "") as { onay_gerekli?: { ozet?: unknown; metin?: unknown } }).onay_gerekli;
-    return o && typeof o.ozet === "string" && /^[0-9a-f]{16}$/.test(o.ozet) && typeof o.metin === "string" ? { ozet: o.ozet, metin: o.metin } : null;
-  } catch { return null; }
 }
 
 /** BU cevabın araç çağrıları: sunucu araçları burada (S.A.Y'ın sırasıyla), ekran araçları ekrana; ekran aracından sonraki işlem bekler */
@@ -300,8 +289,6 @@ async function araclariYap(o: IstekOturumu, icerik: readonly Record<string, unkn
     const ozet = await sunucuKomutu(ISLEM_KATALOGU, ortam, k, modulAdi);
     if (k.tur === "islem" && ozet.yazildi > 0) yenile = true;
     sonuclar[c.id] = sonucIcerigi(ozet);
-    const onay = onayIstegi(ozet.sonuc);
-    if (onay) yaz({ t: "onay", ...onay });
   }
   return { sonuclar, ekran, yenile };
 }

@@ -12,7 +12,7 @@ import { kullanimMetni } from "../../../components/sil/metin.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { BAKANLIK_STANDARTLARI } from "../../../tanim/standartlar.ts";
 import { elleStandartlar, guncelStandartlar, standartTanimla } from "../../dokumanlar/server/dokumanlar.ts";
-import { cihazTuruOzetleri } from "../../olcum-cihazlari/server/cihazlar.ts";
+import { cihazTuruOzetleri, raporCihazlari } from "../../olcum-cihazlari/server/cihazlar.ts";
 import { BaglantiGirdisi, TurGirdisi, turBransi } from "../sema.ts";
 
 const MODUL = 5;
@@ -183,17 +183,30 @@ export async function formatKaldir(db: Sorgulayici, kim: Kisi, formatId: string,
   return { durum: "tamam", id: formatId, surum: r.surum };
 }
 
-export interface StandartSecenegi { no: string; konu: string; brans: "m" | "e"; yuklu: boolean }
+export interface StandartSecenegi { no: string; konu: string; brans: "m" | "e"; yuklu: boolean; turler?: string[] }
 /** bağlantı seçenekleri (pencere için): güncel standartlar + 440 kütüphanede olmayan Bakanlık standartları (yuklu: false — Dökümanlar'da "Yükle"),
     branşıyla + firmanın cihaz türleri; yalnız "yaz" */
-export async function baglantiSecenekleri(db: Sorgulayici, kim: Kisi): Promise<{ standartlar: StandartSecenegi[]; cihazTurleri: { id: string; ad: string }[] } | null> {
+export async function baglantiSecenekleri(db: Sorgulayici, kim: Kisi): Promise<{ standartlar: StandartSecenegi[]; cihazTurleri: { id: string; ad: string; cihaz: number; gecerli: number }[] } | null> {
   if (!degistirir(kim)) return null;
   const kut = await guncelStandartlar(db), var_ = new Set(kut.map((x) => x.no));
   const standartlar: StandartSecenegi[] = [...kut.map(({ no, konu, brans }) => ({ no, konu, brans, yuklu: true })),
     ...BAKANLIK_STANDARTLARI.filter((h) => !var_.has(h.no)).map(({ no, konu, brans }) => ({ no, konu, brans, yuklu: false }))];
   /* 2026-10-26 (göç 0107): firmanın elle eklediği standartlar — kütüphanede ve Bakanlık listesinde olmayanlar */
   for (const e of await elleStandartlar(db)) if (!standartlar.some((x) => x.no === e.no)) standartlar.push({ no: e.no, konu: e.konu, brans: e.brans, yuklu: false });
-  return { standartlar: standartlar.sort((a, b) => a.no.localeCompare(b.no, "tr", { numeric: true })), cihazTurleri: await cihazTuruOzetleri(db) };
+  /* 2026-10-31 (reisim: "Cihaz türü bağlanırken firmadaki cihaz sayısı da görünür … standart: türün kendi standardı aranır"): standardın bağlı olduğu
+     türler; cihaz türü başına firmadaki etkin cihaz ve kalibrasyonu bugün geçerli olan sayısı */
+  const kullanan = new Map<string, string[]>();
+  for (const t of (await db.sorgu<{ ad: string; kontrol_std: string[] }>("SELECT ad, kontrol_std FROM ekipman_turu ORDER BY ad")).rows) {
+    for (const no of t.kontrol_std ?? []) kullanan.set(no, [...(kullanan.get(no) ?? []), t.ad]);
+  }
+  const bugun = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+  const cihazlar = await raporCihazlari(db);
+  const cihazTurleri = (await cihazTuruOzetleri(db)).map((x) => {
+    const l = cihazlar.filter((c) => c.turId === x.id);
+    return { ...x, cihaz: l.length, gecerli: l.filter((c) => c.konum !== "lab" && !!c.bitis && c.bitis >= bugun).length };
+  });
+  return { standartlar: standartlar.sort((a, b) => a.no.localeCompare(b.no, "tr", { numeric: true })).map((x) => (kullanan.has(x.no) ? { ...x, turler: kullanan.get(x.no) } : x)),
+    cihazTurleri };
 }
 
 /** kontrol metodu standartları + kullanılacak ölçüm cihazı türleri: standart kütüphanede güncel sürümü olan numara, cihaz türü bu firmanın olmalı */

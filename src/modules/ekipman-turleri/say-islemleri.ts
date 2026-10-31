@@ -57,8 +57,9 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
   /* 2026-10-26 (S.A.Y Faz 3 — reisim'in listesi m.10: "standart ve ölçüm cihazı türlerini bağlatma"): Metot ve cihazlar penceresinin işleri */
   islem({
     ad: "tur_baglanti_secenekleri", modul: MODUL, tur: "oku", girdi: z.object({ tur: kimlik.optional() }), kaynak: [kimlik], islev: baglantiSecenekleri,
-    tarif: "Kontrol metodu olarak seçilebilen standartlar (no, ad, branş, PDF'i kütüphanede mi) ve firmanın ölçüm cihazı türleri (kimlik, ad); tur verilirse "
-      + "türün şu anki seçimi ve sürümü.",
+    tarif: "Kontrol metodu olarak seçilebilen standartlar (no, ad, branş, PDF'i kütüphanede mi, turler: bağlı olduğu ekipman türleri) ve firmanın ölçüm cihazı "
+      + "türleri (kimlik, ad, cihaz: firmadaki cihaz sayısı, gecerli: kalibrasyonu geçerli olan); tur verilirse türün şu anki seçimi ve sürümü. Türün KENDİ "
+      + "standardını bağla (başka türünkini kopyalama); cihazı olmayan türü bağlarsan raporlara cihaz seçilemez.",
     calistir: async (b, v) => {
       const s = await baglantiSecenekleri(b.db, b.kim);
       if (!s) return { tamam: false, neden: "Bu kullanıcı türün bağlantılarını değiştiremiyor." };

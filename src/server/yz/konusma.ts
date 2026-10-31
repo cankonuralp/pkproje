@@ -21,30 +21,8 @@ export async function konusmaEkle(db: Sorgulayici, rol: KonusmaRolu, icerik: unk
     olmadığı için önceki düşünmeler geçerli kalır. Dönen: silinen sayısı */
 export async function kuyrukNotlariniSil(db: Sorgulayici): Promise<number> {
   return (await db.sorgu(
-    `DELETE FROM yz_konusma WHERE rol = 'system' AND NOT ((icerik #>> '{}') LIKE 'ONAY %')
+    `DELETE FROM yz_konusma WHERE rol = 'system'
        AND sira > coalesce((SELECT max(sira) FROM yz_konusma WHERE rol = 'assistant'), 0)`)).rowCount ?? 0;
-}
-
-/* ── 2026-10-31 (kalem 6b — onay kapısı): kullanıcının ekrandaki onayı konuşmaya SUNUCUNUN yazdığı not olarak (yapay zekâ yazamaz) ── */
-const ONAY_SURESI_DK = 10;
-/** ekranın onay ucu: yalnız sunucunun bu konuşmada istediği onay (sonuçta onay_gerekli) yazılır; dönen: yazıldı mı */
-export async function onayYaz(db: Sorgulayici, ozet: string, metin: string): Promise<boolean> {
-  if (!/^[0-9a-f]{16}$/.test(ozet)) return false;
-  /* özet yalnız sunucunun bu konuşmadaki onay isteğinde (işlem sonucunun onay_gerekli'si) geçer */
-  const istendi = (await db.sorgu("SELECT 1 FROM yz_konusma WHERE rol = 'user' AND strpos(icerik::text, $1) > 0 LIMIT 1", [ozet])).rows.length > 0;
-  if (!istendi) return false;
-  await konusmaEkle(db, "system", `ONAY ${ozet} · kullanıcı ekranda onayladı: ${metin.replace(/[\u0000-\u001f\u007f]/g, " ").slice(0, 300)}`);
-  return true;
-}
-/** onay geçerli mi: sunucunun yazdığı onay notu var, 10 dakikadan yeni, kullanılmamış */
-export async function onayGecerli(db: Sorgulayici, ozet: string): Promise<boolean> {
-  const r = (await db.sorgu<{ var: boolean; kullanildi: boolean }>(
-    `SELECT bool_or((icerik #>> '{}') LIKE $1 AND zaman > now() - make_interval(mins => $3)) AS var, bool_or((icerik #>> '{}') = $2) AS kullanildi
-       FROM yz_konusma WHERE rol = 'system'`, [`ONAY ${ozet} · %`, `ONAY KULLANILDI ${ozet}`, ONAY_SURESI_DK])).rows[0];
-  return !!r?.var && !r.kullanildi;
-}
-export async function onayKullan(db: Sorgulayici, ozet: string): Promise<void> {
-  await konusmaEkle(db, "system", `ONAY KULLANILDI ${ozet}`);
 }
 
 /** "Sohbeti temizle": kişinin konuşması, ekleri, yarım yüklemeleri ve işi; dönen: hizmetteki ek dosyalarının kimlikleri (çağıran siler) */

@@ -83,12 +83,16 @@ test("ret: kütüphanede olmayan standart, başka firmanın cihaz türü; yalnı
    türde seçili olup kütüphanede olmayan standart kayıtta kalabilir (pencere düşürmesin); seçenekler branşıyla */
 test("440 bağlantı: Bakanlık standardı yüklenmeden seçilir; seçenekler branşı ve yüklü bilgisiyle; seçili olan kalabilir", async () => {
   const sec = (await a((db) => baglantiSecenekleri(db, YON)))!;
-  assert.deepEqual(sec.standartlar.find((s) => s.no === "TS EN 280"), { no: "TS EN 280", konu: "Deneme konu", brans: "m", yuklu: true });
-  assert.deepEqual(sec.standartlar.find((s) => s.no === "TS HD 60364-6"), { no: "TS HD 60364-6", konu: BAKANLIK_STANDARTLARI.find((h) => h.no === "TS HD 60364-6")!.konu, brans: "e", yuklu: false });
+  /* 2026-10-31: turler (standardın bağlı olduğu türler) ayrıca denetlenir */
+  const bagsiz = (x: { turler?: string[] } | undefined) => (x ? Object.fromEntries(Object.entries(x).filter(([k]) => k !== "turler")) : x);
+  assert.deepEqual(bagsiz(sec.standartlar.find((s) => s.no === "TS EN 280")), { no: "TS EN 280", konu: "Deneme konu", brans: "m", yuklu: true });
+  assert.ok(sec.cihazTurleri.every((c) => Number.isInteger(c.cihaz) && c.gecerli <= c.cihaz), "cihaz türü başına firmadaki cihaz sayısı");
+  assert.deepEqual(bagsiz(sec.standartlar.find((s) => s.no === "TS HD 60364-6")), { no: "TS HD 60364-6", konu: BAKANLIK_STANDARTLARI.find((h) => h.no === "TS HD 60364-6")!.konu, brans: "e", yuklu: false });
   let k = (await a((db) => turKarti(db, YON, tur)))!;
   tamam(await a((db) => baglantiKaydet(db, YON, tur, k.surum, { standartlar: ["TS HD 60364-6", "TS EN 280"], cihazTurleri: [] })));
   k = (await a((db) => turKarti(db, YON, tur)))!;
   assert.deepEqual(k.standartlar.map((s) => [s.no, s.id === null]), [["TS HD 60364-6", true], ["TS EN 280", false]], "yüklenmemiş: kütüphane kimliği yok");
+  assert.ok((await a((db) => baglantiSecenekleri(db, YON)))!.standartlar.find((s) => s.no === "TS EN 280")?.turler?.includes(k.ad), "bağlanan standardın türleri");
   /* listede olmayan ama türde seçili olan (ör. kütüphaneden kaldırılmış) kayıtta kalabilir; yenisi eklenemez */
   await a((db) => db.sorgu("UPDATE ekipman_turu SET kontrol_std = kontrol_std || ARRAY['TS EN 999'], surum = surum + 1 WHERE id = $1", [tur]));
   k = (await a((db) => turKarti(db, YON, tur)))!;

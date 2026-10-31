@@ -101,7 +101,7 @@ export function Oneriler({ yol, roller, kapali, oku: okuIs, baslat }: {
           {l.map((s, i) => (
             <li key={s.id} role="option" aria-selected={i === secili} data-oneri={s.id} className={i === secili ? stil.oneriSecili : undefined}
               onMouseEnter={() => setSecili(i)} onClick={() => sec(s)}>
-              <b>{s.ad}</b><small>{s.aciklama}</small>{s.ikinciOnay && <span className={stil.oneriIsaret}>İkinci onay</span>}
+              <b>{s.ad}</b><small>{s.aciklama}</small>
             </li>
           ))}
         </ul>

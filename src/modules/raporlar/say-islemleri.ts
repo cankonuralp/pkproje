@@ -20,6 +20,7 @@ import { komutDenetle } from "../../server/yz/say.ts";
 import { raporHaritasi } from "../say/rapor-haritasi.ts";
 import { fotoKopyasiOku } from "../../server/yz/konusma.ts";
 import { turKarti } from "../ekipman-turleri/server/turler.ts";
+import { taslakVarMi } from "../rapor-format/server/formatlar.ts";
 import { planIci } from "../planlar/server/plan-ici.ts";
 import { teklifAdetDurumu } from "../teklifler/server/rapor-bagi.ts";
 import { raporSorunlari } from "./denetle.ts";
@@ -48,6 +49,15 @@ const metinle = <T extends Record<string, string | null>>(o: T) => Object.fromEn
     böyle"): türün süresi boşsa ve kullanıcı vermediyse */
 export const VARSAYILAN_SURE_DK = 15;
 const bugunGun = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+/** 2026-10-31 (reisim: "Türün yayınlanmamış taslağı varken rapor açılırsa sunucu uyarsın"): açılan raporların türlerinde taslak varsa uyarı */
+async function taslakUyarisi(b: IslemBaglami, raporlar: readonly string[]): Promise<string> {
+  const turler = new Map<string, string>();
+  for (const id of raporlar) { const s = await sahaRaporu(b.db, b.kim, id); if (s) turler.set(s.tur.id, s.tur.ad); }
+  const l: string[] = [];
+  for (const [id, ad] of turler) if (await taslakVarMi(b.db, id)) l.push(ad);
+  return l.length ? ` Uyarı: ${l.join(", ")} türünün yayınlanmamış format taslağı var; raporlar yayındaki sürümle açıldı. Sıra: format kesinleşir → yayınlanır → `
+    + "raporlar açılır; şimdi taslak yayınlanacaksa açılan raporlara rapor_format_guncelle." : "";
+}
 /** türün süresi (dakika) — tür kartını göremeyen kişide ya da tanımsızsa null */
 async function turSuresi(b: IslemBaglami, turId: string): Promise<number | null> {
   return (await turKarti(b.db, b.kim, turId))?.sure ?? null;
@@ -174,14 +184,19 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
     tarif: "Plandaki ekipmanların raporunu oluşturur (yalnız plandaki denetçi; plan kabul edilmiş, plan günü gelmiş): plan, ekipman (bir kimlik ya da kimlik "
       + "dizisi — plan_getir); her ekipman için rapor kimliği ve numarası ya da açılamama nedeni.",
     calistir: async (b, v) => {
-      if (typeof v.ekipman === "string") return yazmaCevabi(await raporOlustur(b.db, b.kim, v.plan, v.ekipman));
+      if (typeof v.ekipman === "string") {
+        const c = yazmaCevabi(await raporOlustur(b.db, b.kim, v.plan, v.ekipman));
+        const id = c.tamam ? (c.sonuc as { id?: unknown } | undefined)?.id : null;
+        return c.tamam && typeof id === "string" ? { ...c, bildirim: `${c.bildirim ?? "Rapor açıldı."}${await taslakUyarisi(b, [id])}` } : c;
+      }
       const l: Record<string, unknown>[] = [];
       for (const e of v.ekipman) {
         const c = yazmaCevabi(await raporOlustur(b.db, b.kim, v.plan, e));
         l.push(c.tamam ? { ekipman: e, ...c.sonuc, bildirim: c.bildirim } : { ekipman: e, neden: c.neden });
       }
       const acilan = l.filter((x) => !x.neden).length;
-      return acilan ? { tamam: true, bildirim: `${acilan} rapor açıldı.`, sonuc: { raporlar: l } } : { tamam: false, neden: `Rapor açılamadı: ${l.map((x) => x.neden).join(" · ")}` };
+      return acilan ? { tamam: true, bildirim: `${acilan} rapor açıldı.${await taslakUyarisi(b, l.flatMap((x) => (typeof x.id === "string" ? [x.id] : [])))}`, sonuc: { raporlar: l } }
+        : { tamam: false, neden: `Rapor açılamadı: ${l.map((x) => x.neden).join(" · ")}` };
     },
   }),
   /* 2026-10-26 (göç 0108): takip muayenesi — açık uygunsuzluğu olan son imzalı rapora …-T1; içerik ana rapordan */

@@ -16,7 +16,7 @@ test("kayıt: 31 öneri, kimlikler tekil, beceriler var, ikinci onaylılar işar
   assert.equal(new Set(SABLONLAR.map((s) => s.id)).size, 31);
   const kodlar = new Set(becerileriOku().map((b) => b.kod));
   for (const s of SABLONLAR) assert.ok(kodlar.has(s.beceri), `${s.id}: ${s.beceri} yok`);
-  assert.deepEqual(SABLONLAR.filter((s) => s.ikinciOnay).map((s) => s.id).sort(), ["S12", "S15", "S17", "S21", "S24", "S9"].sort());
+  assert.ok(SABLONLAR.every((s) => !("ikinciOnay" in s)), "ikinci onay yok (2026-10-31 tam yetki)");
 });
 
 test("sayfaya göre: raporda ilk 'Fotoğrafları oku ve gir'; planda saha bilgisi; kişisel belgeli yalnız yöneticiye; son kullanılan öne", () => {

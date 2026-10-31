@@ -2,13 +2,6 @@
 export type FormGoruntusuYaniti = { tamam: true; dosya: string; sayfa: number; sayfaSayisi: number } | { tamam: false; neden: string };
 
 /** 2026-10-31 (kalem 6b — onay kapısı): kullanıcının ekrandaki onayı (sunucu konuşmaya yazar; S.A.Y yazamaz) */
-export async function onayGonder(ozet: string, metin: string): Promise<boolean> {
-  try {
-    const r = await fetch("/api/say/onay", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ozet, metin }) });
-    return r.ok && ((await r.json()) as { tamam?: boolean }).tamam === true;
-  } catch { return false; }
-}
-
 export async function formGoruntusuIste(rapor: string, sayfa: number): Promise<FormGoruntusuYaniti> {
   try {
     const r = await fetch("/api/say/form", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ rapor, sayfa }) });

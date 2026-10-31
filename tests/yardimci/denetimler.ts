@@ -860,6 +860,9 @@ export function sayEylemDenetimi(dongu: string, sunucu: string): string[] {
     b.push("dongu.ts: yürütücü yalnız bu çağrının komutlarıyla çağrılmıyor (ekranın sonuçları yeniden çalışabilir)");
   }
   if (/sunucuKomutu\([^)]*(sonuclar|ham|govde)/.test(dongu) || /islemYurut\(/.test(dongu)) b.push("dongu.ts: yürütücü başka yoldan / ekranın sonuçlarıyla çağrılıyor");
+  /* 2026-10-31 (L3): sunucunun kendi başlattığı okuma yalnız bitirmeden denetimin plan_denetle'si (okumaKomutu yazan işlemi reddeder) */
+  const okuma = [...dongu.matchAll(/okumaKomutu\(ISLEM_KATALOGU, [^"]*?"([a-z_]+)"/g)].map((m) => m[1]);
+  if ([...dongu.matchAll(/await okumaKomutu\(/g)].length !== okuma.length || okuma.some((a) => a !== "plan_denetle")) b.push("dongu.ts: sunucunun okuma çağrısı plan_denetle dışında");
   const ortam = /function islemOrtami\([^]*?\n\}\n/.exec(dongu)?.[0] ?? "";
   if (!ortam) b.push("dongu.ts: islemOrtami yok");
   else {
@@ -1045,4 +1048,16 @@ export function semaKarmasikligi(sema: unknown): { istegeBagli: number; birlesik
 export function modelAdiBulgulari(metin: string): string[] {
   const kod = metin.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[\s;{},(])\/\/.*$/gm, "$1");
   return kod.split("\n").map((s, i) => ({ s, i: i + 1 })).filter((x) => /\b(Haiku|Sonnet|Opus|Claude)\b/.test(x.s)).map((x) => `${x.i}: ${x.s.trim().slice(0, 80)}`);
+}
+
+/** 2026-10-31 (reisim: "ONAY BEKLEMESİN TAM YETKİLİ OLSUN"): S.A.Y'ın yolunda onay kapısının izleri — yürütücüde kapı, döngüde onay olayı, ekranda S.A.Y işi için
+    onay penceresi ("Sohbeti temizle" kullanıcının kendi tuşu, sayılmaz). Dönen: bulunan izler */
+export function onayKapisiIzleri(k: { islem: string; dongu: string; ekran: string; katalog: string }): string[] {
+  const l: string[] = [];
+  if (/onayKapisi|ikinciOnay|onay_gerekli|onayGecerli/.test(k.islem)) l.push("yürütücüde onay kapısı");
+  if (/t: "onay"|onayIstegi/.test(k.dongu)) l.push("döngüde onay olayı");
+  if (/IKINCI_ONAY|ikinciOnay/.test(k.katalog)) l.push("katalogda ikinci onay listesi");
+  const pencere = (k.ekran.match(/await onayla\(\{ baslik: "([^"]+)"/g) ?? []).filter((x) => !x.includes('"Sohbeti temizle"'));
+  if (pencere.length) l.push(`ekranda onay penceresi: ${pencere.join(", ")}`);
+  return l;
 }

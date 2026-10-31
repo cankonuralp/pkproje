@@ -20,6 +20,7 @@ import { canDoEylem, duzey, type YetkiHesabi } from "../../../server/yetki/canDo
 import { dogrula, hatalar, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { turDegistirir, turKaydet, turOzeti, turOzetleri, turRaporBilgisi } from "../../ekipman-turleri/server/turler.ts";
 import { BaslatGirdisi, sablonBul, YayinNotu } from "../sema.ts";
+import { surumFarki } from "../fark.ts";
 
 const MODUL = 5;
 /* tanım büyük (bir sürüm onlarca KB) ve yayınlanan sürüm zaten değişmez saklanır → değeri denetim izine yazılmaz, yalnız "değişti" */
@@ -315,6 +316,26 @@ export async function yayinla(db: Sorgulayici, kim: Kisi, id: string, surum: num
     { kim: kim.ad, ne: "rapor_format.yayinla", gerekce: n.veri ?? undefined });
   if (g.durum !== "tamam") return { durum: "cakisma" };
   return { durum: "tamam", sira, uyarilar: d.uyarilar };
+}
+
+/** 2026-10-31 (reisim: "Yayın notu değişikliğin özeti olur ('1' değil)"): taslağın yayındaki sürüme göre değişikliklerinin kısa özeti (en çok 200) */
+export async function yayinNotuOzeti(db: Sorgulayici, id: string): Promise<string | null> {
+  if (!UUID.test(id)) return null;
+  const r = (await db.sorgu<{ tur_id: string; tanim: unknown }>("SELECT tur_id::text, tanim FROM rapor_format WHERE id = $1 AND durum = 'taslak'", [id])).rows[0];
+  if (!r) return null;
+  const y = (await db.sorgu<{ tanim: unknown }>("SELECT tanim FROM rapor_format WHERE tur_id = $1 AND durum = 'yayinda'", [r.tur_id])).rows[0];
+  const t = tanimOku(r.tanim), o = y ? tanimOku(y.tanim) : null;
+  if (!t) return null;
+  if (!o) return "İlk sürüm";
+  const f = surumFarki(o, t);
+  if (!f.length) return "Değişiklik yok";
+  let s = "";
+  for (const x of f) { const e = s ? `${s}; ${x.metin}` : x.metin; if (e.length > 196) { s = `${s}; …`; break; } s = e; }
+  return s.slice(0, 200);
+}
+/** türün yayınlanmamış taslağı var mı (Raporlar: taslak varken açılan rapor yayındaki sürümle açılır — uyarı) */
+export async function taslakVarMi(db: Sorgulayici, turId: string): Promise<boolean> {
+  return UUID.test(turId) && (await db.sorgu("SELECT 1 FROM rapor_format WHERE tur_id = $1 AND durum = 'taslak' LIMIT 1", [turId])).rows.length > 0;
 }
 
 /* ── ESKİ SÜRÜME GERİ DÖN (2026-10-12; reisim: "ekipman türlerinde eski sürüme geri dön tuşu olsun") — eski sürümün içeriği YENİ sürüm olarak
