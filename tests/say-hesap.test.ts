@@ -41,7 +41,15 @@ test("denetim sorunları; künye değeri yazılmaz; işlemler katalogda", () => 
     [{ ad: "Marka" }]);
   assert.deepEqual(s, ["gönderilmiş (durum: onayda)", "eksik: Marka", "2 genel fotoğraf (ekipman başına bir)", "Tüpler: 2 boş hücre", "künye boş: SGK / DETSİS"]);
   assert.doesNotMatch(JSON.stringify(s), /Deneme Tesisi/);
-  assert.deepEqual(raporSorunlari({ durum: "yeni", tanim: tanim as never, cevaplar: { tablo: {} } as never, fotolar: [], kunye: { firmaAdi: "x", sgk: "1" } }, []), ["fotoğraf yok"]);
+  /* 2026-10-31 V21 ilk koşu: taslağın durumu "taslak"tır — "gönderilmiş" sayılmaz (KOD HATASI: "yeni" ile karşılaştırılıyordu, her taslak "gönderilmiş" çıkıyordu) */
+  assert.deepEqual(raporSorunlari({ durum: "taslak", tanim: tanim as never, cevaplar: { tablo: {} } as never, fotolar: [], kunye: { firmaAdi: "x", sgk: "1" } }, []), ["fotoğraf yok"]);
+  /* V21 madde 3: kontrol günü planın günlerinin dışındaysa uyarı; içindeyse yok; plan verilmezse yok */
+  const r = (bas: string, plan: { baslangic: string; bitis: string } | null) => raporSorunlari({ durum: "taslak", tanim: { bolumler: [] } as never, cevaplar: { tablo: {} } as never,
+    fotolar: [], kunye: { firmaAdi: "x", sgk: "1" }, tarih: { bas } }, [], plan);
+  assert.deepEqual(r("2026-10-31T09:00:00+03:00", { baslangic: "2026-10-10", bitis: "2026-10-10" }), ["kontrol günü 31.10.2026 plan günlerinin (10.10.2026) dışında"]);
+  assert.deepEqual(r("2026-10-11T09:00:00+03:00", { baslangic: "2026-10-10", bitis: "2026-10-12" }), []);
+  assert.deepEqual(r("2026-10-13T09:00:00+03:00", { baslangic: "2026-10-10", bitis: "2026-10-12" }), ["kontrol günü 13.10.2026 plan günlerinin (10.10.2026 – 12.10.2026) dışında"]);
+  assert.deepEqual(r("2026-10-31T09:00:00+03:00", null), []);
   for (const a of ["rapor_saat_plani", "raporlara_yaz", "plan_denetle"]) assert.ok(ISLEM_KATALOGU.some((t) => t.ad === a), a);
   assert.equal(ISLEM_KATALOGU.find((t) => t.ad === "plan_denetle")!.tur, "oku", "denetim yazmaz");
 });

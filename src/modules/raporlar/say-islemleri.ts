@@ -345,30 +345,39 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
     tarif: "Planın (ya da verilen raporların) raporlarını gönderim öncesi denetler: zorunlu alan / ölçüm cihazı eksiği, fotoğraf yok ya da birden çok, tablo boş "
       + "hücre, künye boş, saat çakışması, gönderilmiş rapor, sonuç maddelerle çelişiyor, teklif adedini aşıyor / teklifte yok (teklifleri görene). Yazmaz; sorunlar rapor rapor.",
     calistir: async (b, v) => {
+      /* 2026-10-31 (V21 madde 3): raporlar verilmişse YALNIZ onlar denetlenir (planın eski, başka türdeki raporu "9 / 9" diye sayılmaz); plan yalnız raporlar
+         yoksa; tesis (teklif) ve plan günleri her raporun kendi planından */
       let idler = v.raporlar ?? [];
-      let tesis: string | null = null;
-      if (v.plan) {
-        const p = await planIci(b.db, b.kim, v.plan);
+      const planlar = new Map<string, Awaited<ReturnType<typeof planIci>>>();
+      const planBilgi = async (id: string) => { if (!planlar.has(id)) planlar.set(id, await planIci(b.db, b.kim, id)); return planlar.get(id) ?? null; };
+      if (v.plan && !idler.length) {
+        const p = await planBilgi(v.plan);
         if (!p) return { tamam: false, neden: GORUNMEZ };
-        idler = [...new Set([...idler, ...p.raporlar.map((r) => r.id)])];
-        tesis = p.kart.tesis.id;
+        idler = p.raporlar.map((r) => r.id);
       }
       if (!idler.length) return { tamam: false, neden: "Denetlenecek rapor yok (plan ya da raporlar)." };
       const sonuc: { rapor: string; no: string; sorunlar: string[] }[] = [], zaman: { id: string; bas: string | null; bit: string | null }[] = [];
+      let tesis: string | null = null;
       for (const id of idler) {
         const s = await sahaRaporu(b.db, b.kim, id);
         if (!s) { sonuc.push({ rapor: id, no: "—", sorunlar: [GORUNMEZ] }); continue; }
+        const p = await planBilgi(s.plan.id);
+        tesis ??= p?.kart.tesis.id ?? null;
         zaman.push({ id, bas: s.tarih.bas, bit: s.tarih.bit });
-        sonuc.push({ rapor: id, no: s.no, sorunlar: raporSorunlari(s, (await raporEksikleri(b.db, b.kim, id)) ?? []) });
+        sonuc.push({ rapor: id, no: s.no, sorunlar: raporSorunlari(s, (await raporEksikleri(b.db, b.kim, id)) ?? [], p ? { baslangic: p.kart.baslangic, bitis: p.kart.bitis } : null) });
       }
-      /* teklif adedi: raporun bağlandığı teklifte türünün kalemi yok ya da adet aşıldı (Muhasebe'nin "teklif dışı" fiyatı) — teklifleri görebilene */
+      /* teklif adedi: raporun bağlandığı teklifte türünün kalemi yok ya da adet aşıldı (Muhasebe'nin "teklif dışı" fiyatı) — teklifleri görebilene.
+         "Kabul edilmiş teklif yok" raporda düzeltilecek bir şey değil: rapor rapor değil, plan notu olarak BİR kez (V21 madde 3) */
       const bag = tesis ? await teklifAdetDurumu(b.db, b.kim, [tesis]) : null;
+      const planNotu: string[] = [];
       if (bag) {
+        let liste = 0;
         for (const r of sonuc) {
           const x = bag.get(r.rapor);
           if (x?.kaynak === "disi") r.sorunlar.push(`teklif${x.teklifNo ? ` ${x.teklifNo}` : ""} adedini aşıyor ya da teklifte bu tür yok (teklif dışı)`);
-          else if (x?.kaynak === "liste") r.sorunlar.push("kabul edilmiş teklif yok (fiyat listesinden)");
+          else if (x?.kaynak === "liste") liste++;
         }
+        if (liste) planNotu.push(`kabul edilmiş teklif yok: ${liste} rapor fiyat listesinden ücretlendirilir (teklif kaydı işi; raporda düzeltilecek bir şey değil)`);
       }
       for (const [x, y] of cakismalar(zaman)) {
         const a = sonuc.find((r) => r.rapor === x)!, c = sonuc.find((r) => r.rapor === y)!;
@@ -376,7 +385,7 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
       }
       const sorunlu = sonuc.filter((r) => r.sorunlar.length);
       return { tamam: true, bildirim: sorunlu.length ? `${sorunlu.length} / ${sonuc.length} raporda sorun var.` : `${sonuc.length} rapor denetlendi; sorun yok.`,
-        sonuc: { raporlar: sonuc } };
+        sonuc: { raporlar: sonuc, ...(planNotu.length ? { plan_notu: planNotu } : {}) } };
     },
   }),
   /* 2026-10-31 (kalem 6b — B07): toplu onaya gönderme — ikinci onaylı (IKINCI_ONAY); önce denetim (Onaya gönder'in kuralı), eksikli rapor gönderilmez */

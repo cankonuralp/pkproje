@@ -195,8 +195,13 @@ export function islemleriListele(l: readonly Islem[], s: { adlar?: readonly stri
   return { islemler: secilen.map((t) => ozet(t, sema)), ...(sema ? {} : { not: "Şema için adlar ile iste." }) };
 }
 
+/** 2026-10-31 (V21 madde 4): şema hatasında dönen şema KISA — pattern / additionalProperties'siz (katalog dizinindeki biçim; konuşmayı şişirmesin) */
+export function kisaSema(t: Islem): Record<string, unknown> {
+  return JSON.parse(JSON.stringify(islemSemasi(t), (k, v) => (k === "pattern" || k === "additionalProperties" ? undefined : v))) as Record<string, unknown>;
+}
+
 /* ── yürütücü ── */
-const BEKLENMEYEN = "Beklenmeyen bir sorun oldu; işlem yapılmadı (veritabanı işlemi geri alındı).";
+const BEKLENMEYEN ="Beklenmeyen bir sorun oldu; işlem yapılmadı (veritabanı işlemi geri alındı).";
 /** 2026-10-16 (2. adım b): çalıştırıcı işi GERİ ALDIRIP nedenini söyletmek isterse (modül işlevi yarıda kalınca hata fırlatıyorsa — ör. eski sürüme
     geri dönüş yayınlanamadı: GeriDonusIptal) bunu fırlatır: veritabanı işlemi geri alınır, S.A.Y'a cevap olduğu gibi döner (hata kaydı yok) */
 export class IslemGeriAl extends Error {
@@ -211,7 +216,7 @@ export async function islemYurut(katalog: readonly Islem[], o: IslemOrtami, ad: 
   const g = t.girdi.safeParse(girdi ?? {});
   if (!g.success) {
     const h = hatalar(g.error);
-    return { islem: t, cevap: { tamam: false, neden: `Girdi şemaya uymuyor: ${hataOzeti(h)}`, hatalar: h }, sema: islemSemasi(t) };
+    return { islem: t, cevap: { tamam: false, neden: `Girdi şemaya uymuyor: ${hataOzeti(h)}`, hatalar: h }, sema: kisaSema(t) };
   }
   try {
     const cevap = await o.islet(async (db) => {

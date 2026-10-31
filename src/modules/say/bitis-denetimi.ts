@@ -45,9 +45,25 @@ export function bitisDenetimi(mesajlar: readonly Mesaj[]): { plan: string | null
   return { plan, raporlar: [...raporlar] };
 }
 
-/** konuşmaya eklenen not: denetimin sonucu + ne yapılacağı (bildirim biçimi talimattadır) */
+/** 2026-10-31 (V21 madde 3; reisim: "Bitiş denetiminin sonucu konuşmaya tam JSON olarak değil özet olarak girer: sayı ve farklı sorunlar"): sorunlu rapor
+    sayısı, farklı sorunlar ve her birinin raporları (no; 8'den çoksa yalnız sayı); plan notu sonda */
+export function denetimOzeti(sonuc: string | undefined): string {
+  if (!sonuc) return "denetim sonucu alınamadı";
+  try {
+    const x = JSON.parse(sonuc) as { durum?: unknown; neden?: unknown; raporlar?: { no?: unknown; sorunlar?: unknown }[]; plan_notu?: unknown };
+    if (x.durum !== "tamam") return `denetim yapılamadı: ${String(x.neden ?? "")}`.trim();
+    const l = Array.isArray(x.raporlar) ? x.raporlar : [], sorunlu = l.filter((r) => Array.isArray(r.sorunlar) && r.sorunlar.length);
+    const notu = Array.isArray(x.plan_notu) && x.plan_notu.length ? ` Plan notu: ${x.plan_notu.map(String).join("; ")}.` : "";
+    if (!sorunlu.length) return `${l.length} rapor denetlendi; sorun yok.${notu}`;
+    const m = new Map<string, string[]>();
+    for (const r of sorunlu) for (const s of r.sorunlar as unknown[]) { const k = String(s); if (!m.has(k)) m.set(k, []); m.get(k)!.push(String(r.no ?? "?")); }
+    const satir = [...m].map(([s, nolar]) => `${s} (${nolar.length} rapor${nolar.length <= 8 ? `: ${nolar.join(", ")}` : ""})`);
+    return `${sorunlu.length} / ${l.length} raporda sorun — ${satir.join(" · ")}.${notu}`;
+  } catch { return "denetim sonucu okunamadı"; }
+}
+/** konuşmaya eklenen not: denetimin ÖZETİ + ne yapılacağı (bildirim biçimi talimattadır) */
 export const denetimNotu = (sonuc: string) =>
-  `${DENETIM_ONEKI} (rapora yazan iş bitti; kullanıcı istemeden de çalışır): ${sonuc}\nDüzeltebildiğin eksikleri şimdi düzelt (sormadan). Düzeltemediğini `
+  `${DENETIM_ONEKI} (rapora yazan iş bitti; kullanıcı istemeden de çalışır): ${denetimOzeti(sonuc)}\nDüzeltebildiğin eksikleri şimdi düzelt (sormadan). Düzeltemediğini `
   + "kısa bildirimin \"Kalan engel\" satırına yaz. Bildirim en çok dört satır: ne hazır · varsayımla yazılanlar · \"-\" bırakılanlar · kalan engel.";
 /** plan_denetle sonucunda (işlem özeti — JSON metni) sorunlu rapor var mı; okunamayan sonuç sorun sayılır (denetlenemedi) */
 export function sorunVar(sonuc: string | undefined): boolean {

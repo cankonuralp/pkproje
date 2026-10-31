@@ -9,7 +9,7 @@
 import { kimlik, surum, z } from "../../sema/ortak.ts";
 import { sanalBolumler } from "../../format/tablo.ts";
 import type { FormatTanimi } from "../../format/tanim.ts";
-import { turKarti } from "../ekipman-turleri/server/turler.ts";
+import { turKarti, turOzetleri } from "../ekipman-turleri/server/turler.ts";
 import { yayindakiFormat } from "../rapor-format/server/formatlar.ts";
 import { SuzgecDurumuSemasi } from "../../server/liste/liste.ts";
 import { EK_NO, ekBelgesi, EKRAN_KAYDEDILMEMIS, ekranRaporuKirli, GORUNMEZ, islem, kirp, sayfaBilgisi, sayfala, trIcerir, yazmaCevabi, type Islem, type SayfaTanimi, type IslemCevabi, type IslemBaglami } from "../../server/yz/islem.ts";
@@ -58,6 +58,25 @@ function ekipmanCevabi(r: Awaited<ReturnType<typeof sayEkipmanlarEkle>>): IslemC
 }
 
 /** 2026-10-31 (reisim: "verilmeyen metin alanına '-'" — rapora ve ekipman kartına yazan işlemler): verilmeyen seri no ve konum "-" */
+/* 2026-10-31 (V21 madde 4 — reisim: "boşa giden istekler"): tür ADIYLA (ya da koduyla) verilen ekipman — firmadaki türlerde tek eşleşme (Türkçe küçük harf)
+   kimliğe çevrilir; eşleşmeyen nedeniyle döner, şema hatası ve boşa istek yok */
+const UUID_MI = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+async function turleriCoz(db: IslemBaglami["db"], ekipmanlar: readonly unknown[]): Promise<{ ekipmanlar: unknown[]; bulunamayan: string[] }> {
+  const turu = (e: unknown) => (e && typeof e === "object" && typeof (e as { tur?: unknown }).tur === "string" ? (e as { tur: string }).tur.trim() : "");
+  if (!ekipmanlar.some((e) => turu(e) && !UUID_MI.test(turu(e)))) return { ekipmanlar: [...ekipmanlar], bulunamayan: [] };
+  const k = (s: string) => s.trim().toLocaleLowerCase("tr"), turler = await turOzetleri(db), bulunamayan = new Set<string>();
+  const l = ekipmanlar.map((e) => {
+    const t = turu(e);
+    if (!t || UUID_MI.test(t)) return e;
+    const es = turler.filter((x) => k(x.ad) === k(t) || k(x.kod) === k(t));
+    if (es.length !== 1) { bulunamayan.add(t); return e; }
+    return { ...(e as object), tur: es[0]!.id };
+  });
+  return { ekipmanlar: l, bulunamayan: [...bulunamayan] };
+}
+const TUR_YOK = (l: readonly string[]) => `Ekipman türü bulunamadı: ${l.map((x) => `"${x.slice(0, 60)}"`).join(", ")}. Firmadaki türlerden birinin adını / kimliğini ver ya da türü tur_kaydet ile aç.`;
+/** S.A.Y'ın ekipman girdisi: tur ad / kod da olabilir (turleriCoz kimliğe çevirir) */
+const SayTurluEkipman = SayEkipmanGirdisi.extend({ tur: z.string().trim().min(1, "Ekipman türü seçilmeli.").max(120) });
 const tireli = (e: unknown): unknown => {
   if (!e || typeof e !== "object") return e;
   const x = e as Record<string, unknown>, bos = (v: unknown) => typeof v !== "string" || !v.trim();
@@ -148,18 +167,28 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
   }),
   islem({
     /* 2026-10-26 (S.A.Y Faz 2 — reisim: "kodu otomatik kendisi verecek ekipmanın sabit kodu + 0-1-2"): kod isteğe bağlı; çok ekipman tek işlemde */
-    ad: "plan_ekipman_ekle", modul: MODUL, tur: "yaz", girdi: SayEkipmanGirdisi.extend({ plan: kimlik }), kaynak: [SayEkipmanGirdisi, YeniEkipmanGirdisi, kimlik],
+    ad: "plan_ekipman_ekle", modul: MODUL, tur: "yaz", girdi: SayTurluEkipman.extend({ plan: kimlik }), kaynak: [SayEkipmanGirdisi, YeniEkipmanGirdisi, kimlik],
     islev: sayEkipmanlarEkle,
-    tarif: "Plana yeni ekipman ekler — tesise kalıcı kayıt da açılır: tur (ekipman türü kimliği), konum, kod (isteğe bağlı; verilmezse firmanın o türdeki kod düzeniyle "
+    tarif: "Plana yeni ekipman ekler — tesise kalıcı kayıt da açılır: tur (ekipman türünün kimliği ya da ADI), konum, kod (isteğe bağlı; verilmezse firmanın o türdeki kod düzeniyle "
       + "sıradaki: TRF-0001, TRF-0002 …; firmada yoksa TÜR-0001), seri ve konum (verilmezse \"-\").",
-    calistir: async (b, v, ham) => mevcutUyarisi(b, v.plan, [ham.tur], ekipmanCevabi(await sayEkipmanlarEkle(b.db, b.kim, v.plan, [tireli({ kod: ham.kod, tur: ham.tur, seri: ham.seri, konum: ham.konum })]))),
+    calistir: async (b, v, ham) => {
+      const c = await turleriCoz(b.db, [{ kod: ham.kod, tur: ham.tur, seri: ham.seri, konum: ham.konum }]);
+      if (c.bulunamayan.length) return { tamam: false, neden: TUR_YOK(c.bulunamayan) };
+      const turler = c.ekipmanlar.map((e) => (e as { tur: string }).tur);
+      return mevcutUyarisi(b, v.plan, turler, ekipmanCevabi(await sayEkipmanlarEkle(b.db, b.kim, v.plan, c.ekipmanlar.map(tireli))));
+    },
   }),
   islem({
-    ad: "plan_ekipmanlar_ekle", modul: MODUL, tur: "yaz", girdi: z.object({ plan: kimlik, ekipmanlar: z.array(SayEkipmanGirdisi).min(1).max(200) }),
+    ad: "plan_ekipmanlar_ekle", modul: MODUL, tur: "yaz", girdi: z.object({ plan: kimlik, ekipmanlar: z.array(SayTurluEkipman).min(1).max(200) }),
     kaynak: [SayEkipmanGirdisi, YeniEkipmanGirdisi, kimlik], islev: sayEkipmanlarEkle,
-    tarif: "Plana tek işlemde çok yeni ekipman ekler (en çok 200): ekipmanlar [{ tur, konum, kod (isteğe bağlı — verilmezse firmanın düzeniyle "
+    tarif: "Plana tek işlemde çok yeni ekipman ekler (en çok 200): ekipmanlar [{ tur (türün kimliği ya da ADI), konum, kod (isteğe bağlı — verilmezse firmanın düzeniyle "
       + "sıradaki: TRF-0001 …) , seri, konum (verilmezse \"-\") }] SAHA SIRASIYLA (numaralar bu sırayla artar); eklenenler (kimlik, kod) ve eklenemeyenler nedeniyle döner.",
-    calistir: async (b, _v, ham) => mevcutUyarisi(b, ham.plan, ham.ekipmanlar.map((e) => e.tur), ekipmanCevabi(await sayEkipmanlarEkle(b.db, b.kim, ham.plan, (Array.isArray(ham.ekipmanlar) ? ham.ekipmanlar : []).map(tireli)))),
+    calistir: async (b, _v, ham) => {
+      const c = await turleriCoz(b.db, Array.isArray(ham.ekipmanlar) ? ham.ekipmanlar : []);
+      if (c.bulunamayan.length) return { tamam: false, neden: TUR_YOK(c.bulunamayan) };
+      const turler = c.ekipmanlar.map((e) => (e as { tur: string }).tur);
+      return mevcutUyarisi(b, ham.plan, turler, ekipmanCevabi(await sayEkipmanlarEkle(b.db, b.kim, ham.plan, c.ekipmanlar.map(tireli))));
+    },
   }),
   /* 2026-10-31 (kalem 8 — E10, B01 §1): tek çağrıda plan özeti — plan, ekip, plandaki (raporsuzlar ayrıca) ve tesisteki ekipman, raporlar, türlerin süresi /
      periyodu ve yayındaki formatın özeti (bölümler, alanlar, madde sayıları, tablo sütunları). Künye değeri yok. */

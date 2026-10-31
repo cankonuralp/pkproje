@@ -12,11 +12,22 @@ export interface DenetlenecekRapor {
   cevaplar: Cevaplar;
   fotolar: readonly { bolum: string; madde: string | null; okuma?: boolean }[];
   kunye: { firmaAdi: string; sgk: string | null };
+  /** 2026-10-31 (V21 madde 3): raporun kontrol başlangıcı (ISO) — planın günleriyle karşılaştırılır */
+  tarih?: { bas: string | null };
 }
+/** planın günleri (YYYY-AA-GG) */
+export interface PlanGunleri { baslangic: string; bitis: string }
+const gunTr = (g: string) => `${g.slice(8, 10)}.${g.slice(5, 7)}.${g.slice(0, 4)}`;
 
-export function raporSorunlari(s: DenetlenecekRapor, eksikler: readonly { ad: string }[]): string[] {
+export function raporSorunlari(s: DenetlenecekRapor, eksikler: readonly { ad: string }[], plan?: PlanGunleri | null): string[] {
   const l: string[] = [];
-  if (s.durum !== "yeni") l.push(`gönderilmiş (durum: ${s.durum})`);
+  /* 2026-10-31 (V21 ilk koşu — KOD HATASI: taslağın durumu "taslak"tır, "yeni" değil; her taslak "gönderilmiş" sayılıyordu) */
+  if (s.durum !== "taslak") l.push(`gönderilmiş (durum: ${s.durum})`);
+  /* 2026-10-31 (V21 madde 3): kontrol günü planın günlerinin dışındaysa (rapor tarihi bugün, plan geçen ay) — uyarı, engel değil */
+  const gun = s.tarih?.bas?.slice(0, 10);
+  if (plan && gun && /^\d{4}-\d{2}-\d{2}$/.test(gun) && (gun < plan.baslangic || gun > plan.bitis)) {
+    l.push(`kontrol günü ${gunTr(gun)} plan günlerinin (${plan.baslangic === plan.bitis ? gunTr(plan.baslangic) : `${gunTr(plan.baslangic)} – ${gunTr(plan.bitis)}`}) dışında`);
+  }
   for (const e of eksikler.slice(0, 10)) l.push(`eksik: ${e.ad}`);
   if (eksikler.length > 10) l.push(`ve ${eksikler.length - 10} eksik daha`);
   const fotoBolumleri = new Set(s.tanim.bolumler.filter((b) => b.blok === "foto").map((b) => b.id));

@@ -894,6 +894,8 @@ export function zodAgaci(s: unknown, l = new Set<unknown>()): Set<unknown> {
 export const SAY_ELLE_ALANLAR: Readonly<Record<string, Readonly<Record<string, string>>>> = {
   plan_kabul: { beyan_onay: "planKabul'un konumsal onayı (tuşta beyan onay kutusu)", beyan_ozet: "planKabul'un konumsal metni (plan_getir'deki beyan özeti)" },
   plan_ekipman_pasif: { pasif: "ekipmanPasif'in konumsal değeri (Pasife al / Etkinleştir)" },
+  /* 2026-10-31 (V21 madde 4): S.A.Y türü ADIYLA da verir; turleriCoz kimliğe çevirir, modülün şeması (YeniEkipmanGirdisi.tur = kimlik) işlevde denetler */
+  plan_ekipman_ekle: { tur: "ekipman türünün kimliği YA DA adı / kodu (planlar/say-islemleri.ts turleriCoz kimliğe çevirir; modül şeması işlevde denetler)" },
   plan_kontrol_listesi: { tamam: "kontrolListesi'nin konumsal değeri (Tamamla / Yeniden aç)" },
   rapor_yaz: { girisler: "rapora_yaz aracının biçimi (komutDenetle aynı denetimden geçirir)", satir_ekle: "rapora_yaz'ın satir_ekle biçimi (komutDenetle)", tamamla: "tamamlayıcıyı kapatır (raporlar/tamamla.ts — S.A.Y'a özgü: ekranda kişi boşları kendisi doldurur)" },
   /* 2026-10-31 (kalem 3 — E4): ekranın "Fotoğraf ekle"sinde dosya tarayıcıdan gelir; S.A.Y'da konuşmanın F numarası ve formatın fotoğraf bölümü */

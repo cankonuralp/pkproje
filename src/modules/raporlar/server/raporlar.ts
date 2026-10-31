@@ -31,7 +31,7 @@ import { yzHazirMi } from "../../../server/yz/kullanim.ts";
 import { ekipmanEtiketi, ekipmanKilitle } from "../../ekipman/server/ekipman.ts";
 import { turRaporBilgisi } from "../../ekipman-turleri/server/turler.ts";
 import { tesisMusteriIletisim } from "../../musteriler/server/musteriler.ts";
-import { raporCihazlari } from "../../olcum-cihazlari/server/cihazlar.ts";
+import { cihazTuruOzetleri, raporCihazlari } from "../../olcum-cihazlari/server/cihazlar.ts";
 import { personelOzetleri } from "../../personel/server/personel.ts";
 import { raporKapisi, TAMAMLANDI_RAPOR, type PlanDurumu } from "../../planlar/sema.ts";
 import { denetimeBasla, ekipmanEklemeDurumu, ekipmanEkipPlanlari, kodDurumu, kunyeGuncelle, plandakiEkipman, plandakiEkipmanlar, raporIcinPlan, yeniEkipman, type Kunye, type RaporPlani } from "../../planlar/server/plan-ici.ts";
@@ -366,7 +366,9 @@ const kunyeFarki = (a: Kunye, b: Kunye) => [
 async function cihazSatirlari(db: Sorgulayici, r: RaporSatiri, tur: Erisim["tur"], bugun: string): Promise<{ satirlar: CihazSatiri[]; tumu: Awaited<ReturnType<typeof raporCihazlari>> }> {
   /* 358: pasif cihaz da çözülür (raporda zaten olan cihaz "eksik" görünmez); seçime pasif cihaz girmez (aşağıda `benim`) */
   const tumu = await raporCihazlari(db, { pasifDahil: true });
-  const turAdi = new Map(tumu.map((c) => [c.turId, c.tur]));
+  /* 2026-10-31 (V21 madde 3): türün adı cihaz türü kaydından — firmada o türden cihaz yoksa da adı var ("Kumpas: ölçüm cihazı eklenmedi"; eskiden
+     adsız kalıp iki satır da "Ölçüm cihazı" yazıyordu) */
+  const turAdi = new Map<string, string>([...(await cihazTuruOzetleri(db)).map((t) => [t.id, t.ad] as const), ...tumu.map((c) => [c.turId, c.tur] as const)]);
   const gerekli = [...tur.cihazTurleri];
   for (const x of r.cihazlar) if (!gerekli.includes(x.tur)) gerekli.push(x.tur);
   const satirlar = gerekli.map((turId) => {
@@ -494,7 +496,9 @@ export async function yeniRaporPaketi(db: Sorgulayici, kim: Kisi, planId: string
   const ekipmanlar: YeniRaporPaketi["ekipmanlar"] = [];
   const turler: YeniRaporPaketi["turler"] = {};
   const tumu = await raporCihazlari(db, { pasifDahil: true });
-  const turAdi = new Map(tumu.map((c) => [c.turId, c.tur]));
+  /* 2026-10-31 (V21 madde 3): türün adı cihaz türü kaydından — firmada o türden cihaz yoksa da adı var ("Kumpas: ölçüm cihazı eklenmedi"; eskiden
+     adsız kalıp iki satır da "Ölçüm cihazı" yazıyordu) */
+  const turAdi = new Map<string, string>([...(await cihazTuruOzetleri(db)).map((t) => [t.id, t.ad] as const), ...tumu.map((c) => [c.turId, c.tur] as const)]);
   for (const id of (await plandakiEkipmanlar(db, plan.id)).filter((x) => !raporlu.has(x))) {
     if (ekipmanlar.length >= YENI_EKIPMAN_EN_COK) break;
     const e = await ekipmanEtiketi(db, id);

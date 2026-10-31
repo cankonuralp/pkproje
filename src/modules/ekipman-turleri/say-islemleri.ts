@@ -69,11 +69,17 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
   }),
   islem({
     ad: "tur_baglanti_kaydet", modul: MODUL, tur: "yaz", islev: baglantiKaydet, kaynak: [BaglantiGirdisi, kimlik, surum],
-    girdi: z.object({ tur: kimlik, surum, standartlar: BaglantiGirdisi.shape.standartlar, cihazTurleri: BaglantiGirdisi.shape.cihazTurleri }),
-    tarif: "Türün kontrol metodu standartlarını (numaralar) ve kullanılacak ölçüm cihazı türlerini (kimlikler) kaydeder — listenin TAMAMI yazılır; surum "
-      + "türün sürümü (tur_getir). Listede olmayan standart önce tur_standart_ekle ile.",
-    calistir: async (b, v, ham) => yazmaCevabi(await baglantiKaydet(b.db, b.kim, v.tur, v.surum, { standartlar: ham.standartlar, cihazTurleri: ham.cihazTurleri }),
-      { bildirim: "Kontrol metodu ve ölçüm cihazları kaydedildi." }),
+    girdi: z.object({ tur: kimlik, surum: surum.optional(), standartlar: BaglantiGirdisi.shape.standartlar.optional(), cihazTurleri: BaglantiGirdisi.shape.cihazTurleri.optional() }),
+    tarif: "Türün kontrol metodu standartlarını (numaralar) ve kullanılacak ölçüm cihazı türlerini (kimlikler) kaydeder — verilen listenin TAMAMI yazılır; "
+      + "surum, standartlar ya da cihazTurleri verilmezse türün şu ankileri kalır. Listede olmayan standart önce tur_standart_ekle ile.",
+    /* 2026-10-31 (V21 madde 4): sürüm ve verilmeyen liste türün kartından — "surum zorunlu" / "standartlar geçersiz" şema hatasıyla boşa istek yok */
+    calistir: async (b, v, ham) => {
+      const t = await turKarti(b.db, b.kim, v.tur);
+      if (!t) return { tamam: false, neden: GORUNMEZ };
+      return yazmaCevabi(await baglantiKaydet(b.db, b.kim, v.tur, v.surum ?? t.surum, {
+        standartlar: ham.standartlar ?? t.standartlar.map((x) => x.no), cihazTurleri: ham.cihazTurleri ?? t.cihazTurleri.map((x) => x.id) }),
+      { bildirim: "Kontrol metodu ve ölçüm cihazları kaydedildi." });
+    },
   }),
   islem({
     ad: "tur_standart_ekle", modul: MODUL, tur: "yaz", islev: standartlariTureBagla, kaynak: [StandartTanimGirdisi, kimlik],

@@ -5,7 +5,7 @@
    tests/bozan/say-bitis-denetimi.bozan.ts. */
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { bitisDenetimi, DENETIM_ONEKI, denetimNotu, sorunVar } from "../src/modules/say/bitis-denetimi.ts";
+import { bitisDenetimi, DENETIM_ONEKI, denetimNotu, denetimOzeti, sorunVar } from "../src/modules/say/bitis-denetimi.ts";
 
 const P = "11111111-1111-4111-8111-111111111111", R1 = "22222222-2222-4222-8222-222222222222", R2 = "33333333-3333-4333-8333-333333333333";
 const soru = (t = "raporları hazırla") => ({ role: "user", content: [{ type: "text", text: t }] });
@@ -28,6 +28,21 @@ test("denetlendiyse, yazma yoksa, önceki soruda yazıldıysa gerekmez; en çok 
   assert.deepEqual(bitisDenetimi([soru(), ...yaz, cevap, not, ...yaz, cevap]), { plan: null, raporlar: [R1] }, "düzeltmeden sonra bir kez daha");
   assert.equal(bitisDenetimi([soru(), ...yaz, cevap, not, ...yaz, cevap, not, ...yaz, cevap]), null, "üçüncüsü yok");
   assert.ok(denetimNotu("x").startsWith(DENETIM_ONEKI));
+});
+
+/* 2026-10-31 V21 madde 3 (reisim: "Bitiş denetiminin sonucu konuşmaya tam JSON olarak değil özet olarak girer: sayı ve farklı sorunlar") */
+test("denetim özeti: sayı, farklı sorunlar ve raporları; plan notu sonda; JSON konuşmaya girmez", () => {
+  const s = JSON.stringify({ islem: "plan_denetle", durum: "tamam", raporlar: [
+    { rapor: R1, no: "DM-1", sorunlar: ["eksik: Kumpas: ölçüm cihazı eklenmedi", "fotoğraf yok"] }, { rapor: R2, no: "DM-2", sorunlar: ["eksik: Kumpas: ölçüm cihazı eklenmedi"] },
+    { rapor: P, no: "DM-3", sorunlar: [] }], plan_notu: ["kabul edilmiş teklif yok: 3 rapor fiyat listesinden ücretlendirilir"] });
+  assert.equal(denetimOzeti(s), "2 / 3 raporda sorun — eksik: Kumpas: ölçüm cihazı eklenmedi (2 rapor: DM-1, DM-2) · fotoğraf yok (1 rapor: DM-1). Plan notu: kabul edilmiş teklif yok: 3 rapor fiyat listesinden ücretlendirilir.");
+  assert.equal(denetimOzeti(JSON.stringify({ durum: "tamam", raporlar: [{ no: "DM-1", sorunlar: [] }] })), "1 rapor denetlendi; sorun yok.");
+  const cok = JSON.stringify({ durum: "tamam", raporlar: Array.from({ length: 9 }, (_, i) => ({ no: `DM-${i}`, sorunlar: ["fotoğraf yok"] })) });
+  assert.equal(denetimOzeti(cok), "9 / 9 raporda sorun — fotoğraf yok (9 rapor).");
+  assert.equal(denetimOzeti(JSON.stringify({ durum: "hata", neden: "x" })), "denetim yapılamadı: x");
+  assert.equal(denetimOzeti("{"), "denetim sonucu okunamadı");
+  assert.doesNotMatch(denetimNotu(s), /"raporlar"|\{/, "not JSON taşımaz");
+  assert.ok(denetimNotu(s).includes("2 / 3 raporda sorun"));
 });
 
 test("sonuç okuması: sorunlu rapor ya da hata → sorun var", () => {
