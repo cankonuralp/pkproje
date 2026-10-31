@@ -2527,6 +2527,20 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-31 (lift denemesinden — reisim: "S.A.Y durup sormaz, işi bitirir, sonra kısaca bildirir"; "ONAY BEKLEMESİN TAM YETKİLİ OLSUN"; sunum
+  yerel/say-arge/2026-10-31-sunum-once-yap-sonra-bildir.md, kararlar: süre boşsa 15 dk, cihaz zimmet → son kullanılan → kalibrasyonu en uzun (üçüncüsü
+  bildirilir; başkasının zimmetinden değil, depodan; aynı saatte iki kişi aynı cihazı kullanmaz), Ar-Ge kaydı 30 gün, kod firmanın düzeni / yoksa TÜR-0001,
+  saatler Firma ayarları › Mesai başlangıcından): **S.A.Y "ÖNCE YAP, SONRA BİLDİR"** — L1 tamamlayıcı (raporlar/tamamla.ts: madde uygun, sonuç önerisi,
+  tarih / saat / sonraki kontrol, bilinmeyen metin "-", test yükü katsayıdan, cihaz seçimi; dört satırlık bildirim) · L2 raporlara_yaz tek çağrı, rapor başına
+  tek kayıt · L3 bitirmeden denetim (sunucu plan_denetle'yi kendisi çalıştırır) · L5 İKİNCİ ONAY KALKTI (onay kapısı, onay ucu, pencereler), yayın notu özeti,
+  taslak varken rapor açılınca uyarı, yeni öğe isteğe bağlı + aynı adlı öğe eklenmez, bağlantıda cihaz sayısı ve standardın türleri · L6 kod düzeni, seri /
+  konum "-", sayfa notu "Plan (kimlik …) · müşteri" · L7 sık işlemlerin şeması talimatta, 1 saat önbellek, şablona göre derinlik · L4 çekim saati dosya
+  adından, fotoğraf ön okuma (göç 0111), genel görünüş–etiket çiftleri · L8 iş ölçümü + Ar-Ge kaydı (göç 0112), Yönetim › Firma › "S.A.Y işleri" · L9 talimat
+  ve beceriler · bekleyenler: CI disk adımı, S.A.Y Chat kayıtları (say_chat_kayitlari / say_chat_rapor_yaz), Geri al (açtığı kayıtları siler), PDF gönderimi
+  ayrı uçta (/api/say/pdf — katılım, zimmet, ön bilgilendirme, sözleşme). Firma ayarları › Mesai'ye "Mesai başlangıcı". Kapsam eksiği 5 (araç tutanağı,
+  bordro ×2, S.A.Y Chat okuma ×2). Gerçek modelle ölçüm V21'de (yerel/say-altin/V21), fotoğraflar reisim'den.
+- 2026-10-31 (öğleden sonra): belge doldurma ve belge formatları S.A.Y'da, yükleme yuvaları, format parçası, S.A.Y Chat ayarı (kapsam eksiği 46 → 10); panelde
+  ekler küçük / "+N belge", öneri listesi kayar, bekleme balonunda tahmini süre ve yüzde çubuğu, tam ekran tuşu (geçiş animasyonlu).
 - 2026-10-31 (kalem 11): **KAPSAM TABLOSU (M5)** — src/modules/say/kapsam.ts: ekranın her sunucu eylemi S.A.Y işlemi ("i:"), ekran aracı ("a:"), bilerek dışarıda
   ("d:" — karar 6) ya da eksik ("e:"); kilit tests/say-kapsam.test.ts yeni eylem tabloya girmeden geçmez, eksik listesi yalnız küçülür (51 → 46: kalibrasyon_kaldir,
   elle_standart_sil, tur_format_pdf_kaldir, saha_formu_olustur, saha_tarama_kaldir — silme / kaldırma ikinci onaylı). KALAN EKSİK: belge doldurma (belge_doldur),
