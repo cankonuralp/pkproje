@@ -128,6 +128,21 @@ export function eksikGirdiler(s: Sablon, g: Readonly<Record<string, string | boo
   return s.girdiler.filter((x) => x.zorunlu && x.tur !== "ek" && !(typeof g[x.ad] === "string" ? (g[x.ad] as string).trim() : g[x.ad])).map((x) => x.etiket);
 }
 /** sayfa notuna giden şablon notu (talimat değişmez; kullanıcının verdiği değerler aynen) */
+/** 2026-10-31 (reisim: "Düşünme derinliği şablona göre belirlenir: işin başında seçilir, iş boyunca değişmez"): tek kayıtlı, kuralı belli işler orta
+    derinlikte (hızlı); çok fotoğraflı / çok raporlu / format işleri ve serbest soru yüksek */
+export const ORTA_DERINLIK: ReadonlySet<string> = new Set(["S4", "S5", "S6", "S8", "S9", "S12", "S17", "S19", "S29", "S30", "S31"]);
+/** işin derinliği: kullanıcının son sorusunun ardındaki şablon notundan ("Şablon: S4 …"); şablon yoksa yüksek */
+export function isDerinligi(mesajlar: readonly { role: string; content: unknown }[]): "high" | "medium" {
+  for (let i = mesajlar.length - 1; i >= 0; i--) {
+    const m = mesajlar[i]!;
+    const metin = typeof m.content === "string" ? m.content : Array.isArray(m.content) ? m.content.map((b) => (b && typeof b === "object" && typeof (b as { text?: unknown }).text === "string" ? (b as { text: string }).text : "")).join("\n") : "";
+    const s = /(?:^|\n)Şablon: (S\d{1,3}) /.exec(metin);
+    if (m.role === "system" && s) return ORTA_DERINLIK.has(s[1]!) ? "medium" : "high";
+    if (m.role === "user" && Array.isArray(m.content) && m.content.some((b) => b && typeof b === "object" && (b as { type?: unknown }).type === "text")
+      && !m.content.some((b) => b && typeof b === "object" && (b as { type?: unknown }).type === "tool_result") && !metin.startsWith("Sunucunun bitiş denetimi")) return "high";
+  }
+  return "high";
+}
 export function sablonNotu(s: Sablon, g: Readonly<Record<string, string | boolean>>): string {
   const girdi = Object.fromEntries(s.girdiler.filter((x) => x.tur !== "ek" && x.ad !== "onceSun").map((x) => [x.ad, g[x.ad] ?? ""]));
   const once = g.onceSun === true || (g.onceSun === undefined && !!s.onceSun);

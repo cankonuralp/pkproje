@@ -48,9 +48,10 @@ export function maliyetHesapla(model: YzModel, giris: number, cikis: number): nu
 }
 /** 2026-10-23 (S.A.Y konuşması önbellekte): önbellekten okunan giriş tabanın 0,1 katı, önbelleğe yazılan 1,25 katı; fiyat kartı istemin toplam
     boyuyla (önbellekli dahil) seçilir */
-export function onbellekliMaliyet(model: YzModel, u: { giris: number; okunan: number; yazilan: number; cikis: number }): number {
-  const f = FIYAT[model], toplam = u.giris + u.okunan + u.yazilan, k = f.ust && toplam > f.ust.esik ? f.ust : f;
-  return Math.ceil((u.giris * k.giris * 100 + u.okunan * k.giris * 10 + u.yazilan * k.giris * 125 + u.cikis * k.cikis * 100) / 1000);
+export function onbellekliMaliyet(model: YzModel, u: { giris: number; okunan: number; yazilan: number; yazilan1s?: number; cikis: number }): number {
+  const y1 = u.yazilan1s ?? 0, f = FIYAT[model], toplam = u.giris + u.okunan + u.yazilan + y1, k = f.ust && toplam > f.ust.esik ? f.ust : f;
+  /* 2026-10-31: 1 saatlik önbelleğe yazılan tabanın 2 katı */
+  return Math.ceil((u.giris * k.giris * 100 + u.okunan * k.giris * 10 + u.yazilan * k.giris * 125 + y1 * k.giris * 200 + u.cikis * k.cikis * 100) / 1000);
 }
 /** bir okumanın olabilecek en yüksek maliyeti (ayırma) */
 export const enCokMaliyet = (model: YzModel) => maliyetHesapla(model, GIRIS_UST, YANIT_SINIRI);

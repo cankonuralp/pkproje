@@ -20,7 +20,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { test } from "node:test";
-import { ISLEM_DIZINI, ISLEM_KATALOGU, KATALOG_MODULLERI, modulAdi } from "../src/modules/say/islem-katalogu.ts";
+import { ISLEM_DIZINI, ISLEM_KATALOGU, KATALOG_MODULLERI, modulAdi, SIK_ISLEMLER } from "../src/modules/say/islem-katalogu.ts";
 import { islemleriListele, islemSemasi, katalogDizini, katalogKur, type Islem } from "../src/server/yz/islem.ts";
 import {
   aracCagrilari, aracCagrisi, EKRAN_ARAC_ADLARI, ISLEM_ARACLARI, komutDenetle, RAPOR_ARACLARI, sayAraclari, sayIstegi, saySistemi, sonucIcerigi, sunucuKomutuMu,
@@ -69,9 +69,12 @@ test("katalog: adlar tekil ve biçimli, tarif tek satır, tür oku / yaz, JSON �
     assert.equal(s.$schema, undefined);
     assert.ok(ISLEM_DIZINI.split("\n").some((s) => s.slice(s.indexOf(": ") + 2).split(", ").includes(t.ad)), `${t.ad} dizinde`);
   }
-  assert.equal(katalogDizini(ISLEM_KATALOGU, modulAdi), ISLEM_DIZINI, "her çağrıda aynı metin");
-  /* 2026-10-26: dizinde yalnız adlar (tarif ve şema islemler aracıyla) — talimat küçük model için kısa */
-  assert.ok(ISLEM_DIZINI.length < 6000, `dizin kısa: ${ISLEM_DIZINI.length}`);
+  assert.equal(katalogDizini(ISLEM_KATALOGU, modulAdi, SIK_ISLEMLER), ISLEM_DIZINI, "her çağrıda aynı metin");
+  /* 2026-10-26: dizinde yalnız adlar (tarif ve şema islemler aracıyla) — talimat küçük model için kısa. 2026-10-31 (reisim: "Sık kullanılan işlemlerin şeması
+     önbellekteki talimatta durur"): sık işlemlerin şeması ayrı bölümde, o da sınırlı */
+  const [adlar, sik = ""] = ISLEM_DIZINI.split("\n\nSık işlemler");
+  assert.ok(adlar!.length < 6000, `dizin kısa: ${adlar!.length}`);
+  assert.ok(sik.length > 0 && sik.length < 8000, `sık işlemler bölümü: ${sik.length}`);
   for (const ad of ["Planlar:", "Raporlar:", "Müşteriler:", "Teklifler:", "Onaylar:"]) assert.ok(ISLEM_DIZINI.includes(ad), ad);
   /* 2026-10-16 (2. adım b): kalan modüller (ve Ana sayfa) — modül adıyla, "Modül N" değil */
   for (const ad of ["Ana sayfa:", "Uyarılar:", "Sözleşmeler:", "Ölçüm cihazları:", "Zimmetler:", "Araçlar:", "Personel:", "Talepler:", "Muhasebe:", "Performans:",

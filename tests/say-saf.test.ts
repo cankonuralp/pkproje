@@ -55,7 +55,7 @@ test("istek: konuşma olduğu gibi, bütün araçlar aynı sırayla ve sınırs�
   assert.deepEqual(g.output_config, { effort: "high" });
   assert.deepEqual(betalar, SAY_BETALARI);
   assert.equal(g.tool_choice, undefined, "araç seçimi serbest");
-  assert.deepEqual(g.system, [{ type: "text", text: SISTEM, cache_control: { type: "ephemeral" } }], "talimat tek ve önbellekli; bağlam yok");
+  assert.deepEqual(g.system, [{ type: "text", text: SISTEM, cache_control: { type: "ephemeral", ttl: "1h" } }], "talimat tek ve önbellekli (1 saat); bağlam yok");
   const adlar = (g.tools as { name: string }[]).map((t) => t.name);
   /* 2026-10-31 (kalem 3 — E3, reisim onayı): görüntü araçları foto_pafta, foto_goster işlem araçlarının ardında, sabit sırayla */
   assert.deepEqual(adlar, ["islemler", "islem", "beceri_oku", "foto_pafta", "foto_goster", "form_goster", "ekran_durumu", "rapora_yaz", "fotograflari_oku", "geri_al", "raporu_kaydet", "onaya_gonder", "formati_duzenle", "format_pdf_kur", "web_search"]);

@@ -170,13 +170,17 @@ export function islemSemasi(t: Islem): Record<string, unknown> {
   }
   return s;
 }
-/** önbellekli talimattaki dizin: modül modül "- ad (oku / yaz): tarif" — sıra kayıttaki sıra (her istekte aynı metin) */
-export function katalogDizini(l: readonly Islem[], modulAdi: (no: number) => string): string {
+/** önbellekli talimattaki dizin: modül modül adlar — sıra kayıttaki sıra (her istekte aynı metin). 2026-10-31 (reisim: "Sık kullanılan işlemlerin şeması
+    önbellekteki talimatta durur. Önce islemler çağrısı gerekmez"): sik — bu işlemlerin tarifi ve girdi şeması da dizinin sonunda */
+export function katalogDizini(l: readonly Islem[], modulAdi: (no: number) => string, sik: readonly string[] = []): string {
   const gruplar = new Map<number, Islem[]>();
   for (const t of l) gruplar.set(t.modul, [...(gruplar.get(t.modul) ?? []), t]);
   /* 2026-10-26 (reisim: "haikuyu eğitmemiz lazım"): yalnız adlar, modül başına bir satır — 148 işlemin tarifi talimatı 25 000 karaktere çıkarıyordu,
      küçük model işiyle ilgisiz listede kayboluyordu; tarif ve şema islemler aracıyla (adlar) */
-  return [...gruplar].map(([no, x]) => `${modulAdi(no)}: ${x.map((t) => t.ad).join(", ")}`).join("\n");
+  const dizin = [...gruplar].map(([no, x]) => `${modulAdi(no)}: ${x.map((t) => t.ad).join(", ")}`).join("\n");
+  const s = sik.map((a) => l.find((t) => t.ad === a)).filter((t): t is Islem => !!t);
+  return s.length ? `${dizin}\n\nSık işlemler (islemler çağırmadan doğrudan islem ile kullan; tarif ve girdi şeması):\n${s.map((t) =>
+    `- ${t.ad} (${t.tur}): ${t.tarif}\n  girdi: ${JSON.stringify(islemSemasi(t), (k, v) => (k === "pattern" || k === "$schema" || k === "additionalProperties" ? undefined : v))}`).join("\n")}` : dizin;
 }
 /** "islemler" aracı: adlarla istenen işlemler şemalarıyla; modül / sözle süzülen az sayıdaysa (en çok 8) şemalarıyla, çoksa ad ve tarifle */
 export function islemleriListele(l: readonly Islem[], s: { adlar?: readonly string[]; modul?: string; ara?: string }, modulAdi: (no: number) => string): Record<string, unknown> {

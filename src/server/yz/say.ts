@@ -266,18 +266,22 @@ export const EKRAN_ARAC_ADLARI: ReadonlySet<string> = new Set(["form_goster", "r
 export const sayAraclari = (formatAraci: object): readonly object[] => [...ISLEM_ARACLARI, BECERI_ARACI, ...GORSEL_ARACLARI, FORM_ARACI, EKRAN_ARACI, ...RAPOR_ARACLARI, formatAraci, FORMAT_PDF_ARACI, ARAMA_ARACI];
 
 /** istek: sabit talimat (önbellekte) + bütün araçlar + konuşmanın tamamı. betasiz: hizmet düşünme denetimi betasını kabul etmezse aynı istek onsuz */
-export function sayIstegi(p: { model: YzModel; sistem: string; araclar: readonly object[]; mesajlar: readonly Record<string, unknown>[]; betasiz?: boolean }):
+/** 2026-10-31 (reisim: "Uzun işlerde 1 saatlik önbellek. Denemedeki 9 dakikalık ara, 5 dakikalık önbelleği düşürdü"; "Düşünme derinliği şablona göre
+    belirlenir: işin başında seçilir, iş boyunca değişmez") */
+export const ONBELLEK = { type: "ephemeral", ttl: "1h" } as const;
+export type Derinlik = "high" | "medium";
+export function sayIstegi(p: { model: YzModel; sistem: string; araclar: readonly object[]; mesajlar: readonly Record<string, unknown>[]; betasiz?: boolean; derinlik?: Derinlik }):
   { govde: Record<string, unknown>; betalar: readonly string[] } {
   return {
     govde: {
       model: MODEL_KIMLIGI[p.model],
       max_tokens: SAY_YANIT_SINIRI,
-      system: [{ type: "text", text: p.sistem, cache_control: { type: "ephemeral" } }],
+      system: [{ type: "text", text: p.sistem, cache_control: ONBELLEK }],
       tools: p.araclar,
       thinking: p.betasiz ? { type: "adaptive", display: "summarized" }
         : { type: "adaptive", display: "summarized", block_binding: { prefix_mismatch_behavior: "drop_block" } },
-      output_config: { effort: "high" },
-      cache_control: { type: "ephemeral" },
+      output_config: { effort: p.derinlik ?? "high" },
+      cache_control: ONBELLEK,
       messages: p.mesajlar,
     },
     betalar: p.betasiz ? [] : SAY_BETALARI,
@@ -292,7 +296,11 @@ export function sayMaliyeti(model: YzModel, usage: Record<string, unknown> | und
   const sayi = (x: unknown) => (typeof x === "number" && Number.isInteger(x) && x >= 0 ? x : 0);
   const giris = sayi(u.input_tokens), okunan = sayi(u.cache_read_input_tokens), yazilan = sayi(u.cache_creation_input_tokens), cikis = sayi(u.output_tokens);
   const arama = sayi((u.server_tool_use as { web_search_requests?: unknown } | undefined)?.web_search_requests);
-  return { maliyet: onbellekliMaliyet(model, { giris, okunan, yazilan, cikis }) + arama * ARAMA_MALIYETI, giris: giris + okunan + yazilan, cikis, arama };
+  /* 1 saatlik önbelleğe yazma tabanın 2 katı (5 dakikalık 1,25); kırılım yoksa hepsi 1 saatlik sayılır (istek 1 saatlik ister) */
+  const kirilim = u.cache_creation && typeof u.cache_creation === "object" ? u.cache_creation as Record<string, unknown> : null;
+  const yazilan5 = kirilim ? Math.min(yazilan, sayi(kirilim.ephemeral_5m_input_tokens)) : 0;
+  return { maliyet: onbellekliMaliyet(model, { giris, okunan, yazilan: yazilan5, yazilan1s: yazilan - yazilan5, cikis }) + arama * ARAMA_MALIYETI,
+    giris: giris + okunan + yazilan, cikis, arama };
 }
 
 /** cevabın kullanıcıya görünen metni (metin blokları) */

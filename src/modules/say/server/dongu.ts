@@ -32,6 +32,7 @@ import { aracCagrilari, aracCagrisi, betaReddi, cevapMetni, EKRAN_ARAC_ADLARI, G
 import { FORMAT_ARACI } from "../../rapor-format/say-kurucu.ts";
 import { ISLEM_DIZINI, ISLEM_KATALOGU, modulAdi, SAYFA_KATALOGU } from "../islem-katalogu.ts";
 import { SAY_KILAVUZU } from "../yardim.ts";
+import { isDerinligi } from "../sablonlar.ts";
 import { cagriAyir, cagriBirak, cagriKapat, canliOku, ekranDurumuMetni, gorunenYaz, kullaniciIletisiEkle, kurucuOku, sayBaglami, sayKapisi, SINIR_DOLDU, soruyuEkle, YARIDA, type AcikKayitOkuyucu,
   type SayBaglami, type SayEkrani } from "./say.ts";
 
@@ -133,6 +134,8 @@ async function sonuclariEkle(db: Sorgulayici, kisi: IstekOturumu, sonuclar: read
 /** tek yapay zekâ çağrısı: hizmet düşünme denetimi betasını tanımazsa aynı istek onsuz */
 async function cagir(model: Parameters<typeof sayIstegi>[0]["model"], mesajlar: Record<string, unknown>[], anahtar: string, yaz: (x: SayOlayi) => void):
   Promise<AkisYaniti> {
+  /* işin derinliği (şablondan; iş boyunca aynı — talimat ve araçlar konuşma boyunca aynı) */
+  const derinlik = isDerinligi(mesajlar as { role: string; content: unknown }[]);
   const dinle = {
     metin: (d: string) => yaz({ t: "metin", d }),   // 2026-10-26 (reisim: "çok açıklama var"): düşünme özeti artık ekrana gönderilmez (İngilizce iç düşünce); balonda yalnız aşama yazar
     blokBasladi: (b: Record<string, unknown>) => {
@@ -142,10 +145,10 @@ async function cagir(model: Parameters<typeof sayIstegi>[0]["model"], mesajlar: 
       else if (b.type === "text") yaz({ t: "asama", ad: "Yazıyor" });
     },
   };
-  const i = sayIstegi({ model, sistem: SISTEM, araclar: ARACLAR, mesajlar });
+  const i = sayIstegi({ model, sistem: SISTEM, araclar: ARACLAR, mesajlar, derinlik });
   const y = await anthropicAkis(i.govde, anahtar, i.betalar, dinle);
   if (y.durum === "hata" && y.kod === 400 && betaReddi(y.ileti)) {
-    const b = sayIstegi({ model, sistem: SISTEM, araclar: ARACLAR, mesajlar, betasiz: true });
+    const b = sayIstegi({ model, sistem: SISTEM, araclar: ARACLAR, mesajlar, betasiz: true, derinlik });
     return anthropicAkis(b.govde, anahtar, b.betalar, dinle);
   }
   return y;
