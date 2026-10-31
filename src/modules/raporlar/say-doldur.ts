@@ -288,10 +288,15 @@ const metinKutusu = (ham: string, en: number): { v: string } | { neden: string }
   const d = temizle(ham).replace(/\s+/g, " ");
   return d.length <= en ? { v: d } : { neden: `bu kutuya en çok ${en} karakter yazılır` };
 };
-const secimKutusu = (ham: string, secenekler: readonly string[]): { v: string } | { neden: string } => {
+export const secimKutusu = (ham: string, secenekler: readonly string[]): { v: string } | { neden: string } => {
   const d = temizle(ham);
-  const s = secenekler.find((x) => kucukTr(x) === kucukTr(d));
-  return s !== undefined ? { v: s } : { neden: `yalnız şunlar seçilebilir: ${secenekler.join(", ")}` };
+  /* 2026-10-31 (kalem 6 — E9): önce birebir; değilse boşluk ve Türkçe büyük-küçük harf eşitlenir ("Uygun" → "Uygun "); eşitlenince birden çok seçenek
+     aynı oluyorsa hangisi olduğu belli değil — yazılmaz */
+  const birebir = secenekler.find((x) => x === d);
+  if (birebir !== undefined) return { v: birebir };
+  const l = secenekler.filter((x) => kucukTr(x) === kucukTr(d));
+  return l.length === 1 ? { v: l[0]! } : l.length > 1 ? { neden: `"${d}" birden çok seçeneğe uyuyor (${l.map((x) => `"${x}"`).join(", ")}); seçeneği listedeki gibi yaz` }
+    : { neden: `yalnız şunlar seçilebilir: ${secenekler.join(", ")}` };
 };
 const EVET_HAYIR: readonly (readonly [string, string])[] = [["evet", "evet"], ["var", "evet"], ["hayır", "hayir"], ["hayir", "hayir"], ["yok", "hayir"]];
 const evetKutusu = (ham: string): { v: string } | { neden: string } => {

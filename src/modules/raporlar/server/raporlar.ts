@@ -640,6 +640,27 @@ export async function raporKaydet(db: Sorgulayici, kim: Kisi, id: string, surum:
   return kaydetIc(db, kim, e, surum, girdi);
 }
 
+/** 2026-10-31 (kalem 6 — E8, plan_denetle): onaya göndermeden önce, YAZMADAN — Onaya gönder'in zorunlu alan ve cihaz kuralları (ENGEL 5 / 2) kayıttaki
+    hâle uygulanır (sonuç bölümü hariç: gönderimde öneriyle yazılır). Görmeyene null */
+export async function raporEksikleri(db: Sorgulayici, kim: Kisi, id: string): Promise<{ bolum: string; alan: string; ad: string }[] | null> {
+  const e = await erisim(db, kim, id);
+  if (!e) return null;
+  const r = e.r;
+  const format = await formatSurumuOku(db, r.format_id);
+  const cev = Cevaplar.safeParse(r.cevaplar);
+  if (!format || !cev.success) return [{ bolum: "rapor", alan: "rapor", ad: "raporun formatı ya da cevapları okunamadı" }];
+  const sonucBolumleri = new Set(format.tanim.bolumler.filter((b) => b.blok === "sonuc").map((b) => b.id));
+  const d = degerle(format.tanim, cev.data, r);
+  const { satirlar } = await cihazSatirlari(db, r, e.tur, GUN.format(r.bas));
+  const cihazBolumleri = new Set(satirlar.length ? format.tanim.bolumler.filter((b) => b.blok === "cihaz").map((b) => b.id) : []);
+  const eksikler = d.eksikler.filter((x) => !sonucBolumleri.has(x.bolum) && !cihazBolumleri.has(x.bolum));
+  for (const s of satirlar) {
+    if (!s.cihaz) eksikler.push({ bolum: "cihaz", alan: `cihaz.${s.turId}`, ad: `${s.turAd}: ölçüm cihazı eklenmedi` });
+    else if (s.cihaz.gecti) eksikler.push({ bolum: "cihaz", alan: `cihaz.${s.turId}`, ad: `${s.cihaz.kod}: kalibrasyonu geçmiş` });
+  }
+  return eksikler;
+}
+
 /** Onaya gönder: önce kaydeder; zorunlu eksik (ENGEL 5 — sonuç hariç: seçilmediyse önerisi yazılır) ya da cihaz eksik / kalibrasyon geçmiş
     (ENGEL 2) varsa durmaz, eksikleri söyler. Elle seçilmediyse bitiş (gönderme anı), sonraki kontrol (başlangıç + tür periyodu) ve rapor tarihi
     (başlangıç günü) burada yazılır. */

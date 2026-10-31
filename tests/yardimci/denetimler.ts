@@ -894,6 +894,9 @@ export const SAY_ELLE_ALANLAR: Readonly<Record<string, Readonly<Record<string, s
   plan_kontrol_listesi: { tamam: "kontrolListesi'nin konumsal değeri (Tamamla / Yeniden aç)" },
   rapor_yaz: { girisler: "rapora_yaz aracının biçimi (komutDenetle aynı denetimden geçirir)", satir_ekle: "rapora_yaz'ın satir_ekle biçimi (komutDenetle)" },
   /* 2026-10-31 (kalem 3 — E4): ekranın "Fotoğraf ekle"sinde dosya tarayıcıdan gelir; S.A.Y'da konuşmanın F numarası ve formatın fotoğraf bölümü */
+  /* 2026-10-31 (kalem 6): saat planı ve çok rapora yazma — S.A.Y'a özgü toplu işler (ekranda tek tek rapor saati / rapor girişi) */
+  rapor_saat_plani: { gun: "planın kontrol günü (YYYY-AA-GG; saat-plani.ts denetler)", baslangic: "ilk raporun başlangıç saati (SS:DD)", ara_dk: "raporlar arası dakika" },
+  raporlara_yaz: { girisler: "rapor_yaz'ın girisler biçimi (komutDenetle aynı denetimden geçirir), her rapora aynen" },
   rapor_foto_ekle: { foto: "konuşmadaki fotoğrafın F numarası (ekin depodaki kopyası — fotoKopyasiOku)", bolum: "fotoEkle'nin hedef bölümü (formatın foto bölümü kimliği)" },
   musteri_kaydet: { onay: "musteriKaydet'in konumsal onayı (\"Yine de kaydet\")" },
   tesis_kaydet: { onay: "tesisKaydet'in konumsal onayı (\"Yine de kaydet\")" },
