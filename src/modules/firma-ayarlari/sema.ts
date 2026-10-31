@@ -46,8 +46,8 @@ export const SaklamaGirdisi = z.object({ yil: secim(SAKLAMA_YIL, "Saklama süres
 const dk = (en: number, enCok: number, ileti: string) => z.preprocess((v) => (typeof v === "string" ? v.trim() : v),
   z.string().regex(/^\d{1,4}$/, ileti).transform(Number).refine((n) => n >= en && n <= enCok, ileti));
 /** 2026-10-31: mesai başlangıcı (SS:DD) — saat planının başlangıcı */
-export const MESAI_BASLANGIC = z.preprocess((v) => (typeof v === "string" ? v.trim().replace(".", ":").replace(/^(d):/, "0$1:") : v),
-  z.string().regex(/^([01]d|2[0-3]):[0-5]d$/, "Saati SS:DD biçiminde yazın (ör. 09:00)."));
+export const MESAI_BASLANGIC = z.preprocess((v) => (typeof v === "string" ? v.trim().replace(".", ":").replace(/^(\d):/, "0$1:") : v),
+  z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Saati SS:DD biçiminde yazın (ör. 09:00)."));
 export const MesaiGirdisi = z.object({
   acik: z.boolean(),
   normal_dk: dk(1, 1440, "1–1440 arası dakika yazın."),

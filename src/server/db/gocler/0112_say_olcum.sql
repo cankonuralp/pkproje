@@ -61,6 +61,8 @@ REVOKE ALL ON say_arge FROM PUBLIC;
 GRANT INSERT ON say_istek TO probata_uygulama;
 /* Ar-Ge kaydını uygulama yalnız ekler; 30 günü geçenleri ekleme anında siler (kendi kayıtları) — okuyamaz */
 GRANT INSERT, DELETE ON say_arge TO probata_uygulama;
+/* eskiyi silerken tarih sütunu okunur (DELETE … WHERE zaman <); içerik okunamaz */
+GRANT SELECT (zaman) ON say_arge TO probata_uygulama;
 
 -- ── Yönetim: işlerin ölçümü (son 30 gün, en yeni 50 iş) ve Ar-Ge kayıtları (30 gün) ──
 CREATE OR REPLACE FUNCTION firma_yonetim_say(p_firma uuid) RETURNS jsonb

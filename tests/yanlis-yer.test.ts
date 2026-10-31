@@ -6,6 +6,7 @@
    ayrılır, (3) firmanın kendi (serbest) formatında künye kilitli değil; Bakanlık düzeninde SGK / İSG-KATİP kilitli kalır.
    Olumsuz kanıt: tests/bozan/yanlis-yer.bozan.ts. */
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import { test } from "node:test";
 import { sanalBolumler } from "../src/format/tablo.ts";
 import { kilitliKunye } from "../src/format/kunye.ts";
@@ -59,9 +60,12 @@ test("formun yerleşimi değerleriyle: S.A.Y yazdıktan sonra hangi değerin han
   assert.ok(l.includes("- Marka │ [e:marka = Aydın Trafo] │ Marka │ [a:k_c2 = —]"), l.join("\n"));
 });
 
-export const talimatDenetimli = (t: string) => t.includes("Denetim: rapora yazdıktan sonra") && t.includes("Örnek iş:") && t.includes("e:marka = Aydın Trafo");
-test("talimat: denetim adımı ve örnek iş (etiket tankın yerine, basınç kaynağı boş)", async () => {
+/* 2026-10-31 (04'ün kararı "tek tek yama örnekleri becerilere taşınır"): örnek iş B05'te (uydurma değerlerle); talimatta denetim adımı kalır */
+export const talimatDenetimli = (t: string) => t.includes("Denetim: rapora yazdıktan sonra");
+export const ornekBeceride = (b: string) => b.includes("### Örnek") && b.includes("e:marka = Deneme Kazan") && b.includes("a:k_c2 ve a:k_c8 metin → \"-\"");
+test("talimat: denetim adımı; örnek iş B05'te (etiket tankın yerine, basınç kaynağının metni \"-\")", async () => {
   const { saySistemi } = await import("../src/server/yz/say.ts");
   const t = saySistemi([], "");
-  assert.ok(talimatDenetimli(t), "denetim ve örnek talimatta");
+  assert.ok(talimatDenetimli(t), "denetim talimatta");
+  assert.ok(ornekBeceride(fs.readFileSync("src/modules/say/beceriler/B05-rapor-doldurma-kurallari.md", "utf8")), "örnek B05'te");
 });

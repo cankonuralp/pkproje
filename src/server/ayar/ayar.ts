@@ -44,7 +44,7 @@ export const AYAR_BOLUMLERI = {
     gunluk_ust_dk: gun(60, 660).default(660),
     /* 2026-10-31 (reisim: "hep Firma ayarlarından başlasın kullanıcı değiştirmek isterse değiştirir"): mesai başlangıcı — S.A.Y'ın saat planı buradan
        başlar; mesai takibi kapalıyken de geçerli */
-    baslangic: z.string().regex(/^([01]d|2[0-3]):[0-5]d$/).default("09:00"),
+    baslangic: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).default("09:00"),
   }),
   /** Uyarı eşikleri (gün) */
   uyari_esikleri: z.object({
