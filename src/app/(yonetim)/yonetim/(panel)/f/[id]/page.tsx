@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { depoTuru } from "../../../../../../modules/yonetim/ui/ortak";
 import { epostaAcik, yonetimCalistirici } from "../../../../../../modules/yonetim/server/calistirici";
 import { gonderimGorunumu } from "../../../../../../modules/yonetim/server/eposta";
-import { firmaOzetiYonet } from "../../../../../../modules/yonetim/server/firma-tarafi";
+import { firmaOzetiYonet, sayOlcumuYonet } from "../../../../../../modules/yonetim/server/firma-tarafi";
 import { kurulumGorunumu } from "../../../../../../modules/yonetim/server/kurulum";
 import { firma } from "../../../../../../modules/yonetim/server/yonetim";
 import { FirmaSayfasi } from "../../../../../../modules/yonetim/ui/FirmaSayfasi";
@@ -24,5 +24,7 @@ export default async function YonetimFirmaSayfasi({ params }: { params: Promise<
   const ozet = f && f.durum !== "kurulum" ? await firmaOzetiYonet(c, f.id) : null;
   /* FV11: e-posta gönderimi (merkezdeki kayıt) */
   const gonderim = f && f.durum !== "kurulum" ? await gonderimGorunumu(c, f.id) : null;
-  return <FirmaSayfasi firma={f} ozet={ozet} kurulum={kurulum} gonderim={gonderim} epostaAcik={epostaAcik()} anaAlan={anaAlan()} depo={depoTuru(process.env.PROBATA_DEPO)} />;
+  /* 2026-10-31 (L8): S.A.Y işlerinin ölçümü ve Ar-Ge kayıtları */
+  const olcum = f && f.durum !== "kurulum" ? await sayOlcumuYonet(c, f.id) : null;
+  return <FirmaSayfasi firma={f} ozet={ozet} kurulum={kurulum} gonderim={gonderim} epostaAcik={epostaAcik()} anaAlan={anaAlan()} depo={depoTuru(process.env.PROBATA_DEPO)} olcum={olcum} />;
 }

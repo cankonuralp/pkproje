@@ -33,7 +33,8 @@ import { aracCagrilari, aracCagrisi, betaReddi, cevapMetni, EKRAN_ARAC_ADLARI, G
 import { FORMAT_ARACI } from "../../rapor-format/say-kurucu.ts";
 import { ISLEM_DIZINI, ISLEM_KATALOGU, modulAdi, SAYFA_KATALOGU } from "../islem-katalogu.ts";
 import { SAY_KILAVUZU } from "../yardim.ts";
-import { isDerinligi } from "../sablonlar.ts";
+import { isDerinligi, isSablonu } from "../sablonlar.ts";
+import { istekOlcumuYaz } from "../../../server/yz/olcum.ts";
 import { cagriAyir, cagriBirak, cagriKapat, canliOku, ekranDurumuMetni, gorunenYaz, kullaniciIletisiEkle, kurucuOku, sayBaglami, sayKapisi, SINIR_DOLDU, soruyuEkle, YARIDA, type AcikKayitOkuyucu,
   type SayBaglami, type SayEkrani } from "./say.ts";
 
@@ -198,6 +199,7 @@ export async function sayAkisi(o: IstekOturumu, ham: unknown, yaz: (x: SayOlayi)
       if (h.durum === "bitti") { yaz({ t: "bitti", yenile }); return; }
       if (h.durum === "red") { yaz({ t: "hata", neden: h.neden, yenile }); return; }
       yaz({ t: "asama", ad: "Düşünüyor" });
+      const basla = Date.now();
       const y = await cagir(h.k.model, h.mesajlar, h.k.anahtar, yaz);
       if (y.durum === "hata") {
         /* K1b (2026-10-31): reddedilen istek hata kaydına — kod, hizmetin hata metni (maskeli), ileti sayısı, istek boyu */
@@ -209,6 +211,10 @@ export async function sayAkisi(o: IstekOturumu, ham: unknown, yaz: (x: SayOlayi)
       }
       const m = y.mesaj;
       const c = sayMaliyeti(h.k.model, m.usage);
+      /* 2026-10-31 (L8): isteğin ölçümü (yazma / işlem sayısı araçlar çalışınca) */
+      const olc = (yazma: number, islem: number) => oturumIslemi(o, (db) => istekOlcumuYaz(db, { is: v.is, ...tokenler(m.usage), maliyet: c.maliyet,
+        sureMs: Date.now() - basla, yazma, islem, sablon: isSablonu(h.mesajlar as { role: string; content: unknown }[]), derinlik: isDerinligi(h.mesajlar as { role: string; content: unknown }[]) }))
+        .catch((e: unknown) => hataYaz(o, e, "say.olcum"));
       const ileti = await oturumIslemi(o, async (db) => {
         await cagriKapat(db, h.a, c.maliyet, ilk ? 1 : 0);
         if (!m.content.length) return null;
@@ -223,6 +229,7 @@ export async function sayAkisi(o: IstekOturumu, ham: unknown, yaz: (x: SayOlayi)
       duraklat = m.stop_reason === "pause_turn";
       if (duraklat) continue;
       if (m.stop_reason !== "tool_use") {
+        await olc(0, 0);
         if (m.stop_reason === "refusal" && !ileti) { yaz({ t: "hata", neden: "Yapay zekâ bu isteğe cevap vermedi.", yenile }); return; }
         /* 2026-10-31 (L3): rapora yazan iş bittiyse ve denetlenmediyse sunucu denetler, sonucu konuşmaya ekler, S.A.Y sürer (bir işte en çok iki kez) */
         if (m.stop_reason === "end_turn" && await bitirmedenDenetle(o, h.b, v.kaydedilmemis, yaz)) continue;
@@ -230,6 +237,7 @@ export async function sayAkisi(o: IstekOturumu, ham: unknown, yaz: (x: SayOlayi)
         return;
       }
       const r = await araclariYap(o, m.content, h.b, v.kaydedilmemis, yaz);
+      await olc(r.yazma, r.islem);
       yenile ||= r.yenile;
       if (r.ekran.length) {
         await oturumIslemi(o, (db) => bekleyenYaz(db, r.sonuclar));
@@ -249,6 +257,11 @@ export async function sayAkisi(o: IstekOturumu, ham: unknown, yaz: (x: SayOlayi)
   }
 }
 
+/** isteğin token kullanımı (ölçüm): giriş, önbellekten okunan, önbelleğe yazılan, çıkış */
+const tokenler = (u: Record<string, unknown> | undefined) => {
+  const s = (x: unknown) => (typeof x === "number" && Number.isInteger(x) && x >= 0 ? x : 0);
+  return { giris: s(u?.input_tokens), okunan: s(u?.cache_read_input_tokens), yazilan: s(u?.cache_creation_input_tokens), cikis: s(u?.output_tokens) };
+};
 /** bitirmeden denetim (bitis-denetimi.ts): gerekiyorsa plan_denetle kişinin yetkisiyle çalışır, sonucu konuşmaya kullanıcı tarafında not olarak girer */
 async function bitirmedenDenetle(o: IstekOturumu, b: SayBaglami, kaydedilmemis: boolean, yaz: (x: SayOlayi) => void): Promise<boolean> {
   const d = await oturumIslemi(o, async (db) => bitisDenetimi((await konusmaOku(db)).map((m) => ({ role: m.rol, content: m.icerik }))));
@@ -278,11 +291,11 @@ async function gorselSonucu(o: IstekOturumu, ad: string, girdi: unknown): Promis
 
 /** BU cevabın araç çağrıları: sunucu araçları burada (S.A.Y'ın sırasıyla), ekran araçları ekrana; ekran aracından sonraki işlem bekler */
 async function araclariYap(o: IstekOturumu, icerik: readonly Record<string, unknown>[], b: SayBaglami, kaydedilmemis: boolean, yaz: (x: SayOlayi) => void):
-  Promise<{ sonuclar: Record<string, AracSonucu>; ekran: { id: string; ad: string; komut: SayKomutu | null }[]; yenile: boolean }> {
+  Promise<{ sonuclar: Record<string, AracSonucu>; ekran: { id: string; ad: string; komut: SayKomutu | null }[]; yenile: boolean; yazma: number; islem: number }> {
   const komutlar = aracCagrilari(icerik);
   const ortam = islemOrtami(o, { ekrandakiRapor: b.raporId, kaydedilmemis });
   const sonuclar: Record<string, AracSonucu> = {}, ekran: { id: string; ad: string; komut: SayKomutu | null }[] = [];
-  let ekranda = false, yenile = false;
+  let ekranda = false, yenile = false, yazma = 0, islem = 0;
   for (const c of komutlar) {
     const k = aracCagrisi({ type: "tool_use", id: c.id, name: c.name, input: c.input });
     if (EKRAN_ARAC_ADLARI.has(c.name)) { ekranda = true; ekran.push({ id: c.id, ad: c.name, komut: k }); continue; }
@@ -294,7 +307,8 @@ async function araclariYap(o: IstekOturumu, icerik: readonly Record<string, unkn
     yaz({ t: "asama", ad: ASAMA[c.name] ?? "Çalışıyor" });
     const ozet = await sunucuKomutu(ISLEM_KATALOGU, ortam, k, modulAdi);
     if (k.tur === "islem" && ozet.yazildi > 0) yenile = true;
+    if (k.tur === "islem") { islem++; yazma += ozet.yazildi; }
     sonuclar[c.id] = sonucIcerigi(ozet);
   }
-  return { sonuclar, ekran, yenile };
+  return { sonuclar, ekran, yenile, yazma, islem };
 }

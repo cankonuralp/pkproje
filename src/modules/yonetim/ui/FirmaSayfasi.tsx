@@ -11,7 +11,7 @@ import { useOnayla } from "../../../components/pencere/Onay";
 import { AltSatir, Bolum, Kirinti, Kod, NesneBasi, SeritKap } from "../../../components/sayfa/Sayfa";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus } from "../../../components/tus/Tus";
-import type { FirmaOzeti } from "../server/firma-tarafi";
+import type { FirmaOzeti, SayOlcumu } from "../server/firma-tarafi";
 import type { GonderimGorunumu } from "../server/eposta";
 import type { KurulumGorunumu } from "../server/kurulum";
 import { GonderimBolumu } from "./GonderimBolumu";
@@ -21,6 +21,7 @@ import { firmaDondurEylemi, firmaEtkinlestirEylemi, geciciParolaVerEylemi } from
 import { DEPO_AD, DEPO_NOT, DurumRozeti, firmaAdresi, tarihYaz, type DepoTuru } from "./ortak";
 import { SonrasiAdimlar } from "./SonrasiAdimlar";
 import { YapayZekaBolumu } from "./YapayZekaBolumu";
+import { SayOlcumBolumu } from "./SayOlcumBolumu";
 import stil from "./yonetim.module.css";
 
 const YON_DURUM = { ilk: "geçici parolayla ilk giriş bekleniyor", etkin: "etkin", pasif: "hesap kapalı" } as const;
@@ -28,8 +29,8 @@ const YON_DURUM = { ilk: "geçici parolayla ilk giriş bekleniyor", etkin: "etki
 /** firma bilgileri bölümü (kurulum sürerken de, bitince de aynı kimlik — ikisi aynı anda çizilmez) */
 const BILGI = "y-b-bilgi";
 
-export function FirmaSayfasi({ firma: f, ozet, kurulum = null, gonderim = null, epostaAcik = false, anaAlan, depo }: {
-  firma: FirmaSatiri | null; ozet: FirmaOzeti | null; kurulum?: KurulumGorunumu | null; gonderim?: GonderimGorunumu | null; epostaAcik?: boolean;
+export function FirmaSayfasi({ firma: f, ozet, kurulum = null, gonderim = null, epostaAcik = false, anaAlan, depo, olcum = null }: {
+  firma: FirmaSatiri | null; ozet: FirmaOzeti | null; kurulum?: KurulumGorunumu | null; gonderim?: GonderimGorunumu | null; epostaAcik?: boolean; olcum?: SayOlcumu | null;
   anaAlan: string; depo: DepoTuru;
 }) {
   const onayla = useOnayla();
@@ -133,6 +134,7 @@ export function FirmaSayfasi({ firma: f, ozet, kurulum = null, gonderim = null, 
         </BilgiListesi>
       </Bolum>
       <YapayZekaBolumu id={f.id} firmaAd={f.ad} yz={ozet?.yz ?? null} />
+      <SayOlcumBolumu id={f.id} firmaKod={f.kisaAd} olcum={olcum} />
       <GonderimBolumu id={f.id} g={gonderim} acik={epostaAcik} />
       <SonrasiAdimlar />
     </>

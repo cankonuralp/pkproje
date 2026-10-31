@@ -11,7 +11,7 @@ import { yonetimAdresinde, yonetimIslemi, yonetimIstekOturumu } from "../../../s
 import { yonetimEtiketi } from "../sema";
 import { epostaOrtami, kurulumOrtami, yonetimCalistirici } from "../server/calistirici";
 import { gonderimAlaniEkle, gonderimDogrula, type EpostaOrtami, type GonderimGorunumu } from "../server/eposta";
-import { firmaDurumuYonet, geciciParolaYonet, yzAnahtariYonet, yzAyarYonet } from "../server/firma-tarafi";
+import { argeKaydiYonet, firmaDurumuYonet, geciciParolaYonet, yzAnahtariYonet, yzAyarYonet } from "../server/firma-tarafi";
 import { kurulumBaslat, kurulumBastan, kurulumGorunumu, kurulumIlerlet, kurulumSurdur, type KurulumGorunumu } from "../server/kurulum";
 import { firmaAc, type YonetimSonucu } from "../server/yonetim";
 
@@ -121,4 +121,13 @@ export async function gonderimAlaniEkleEylemi(id: string, form: FormData): Promi
 }
 export async function gonderimDogrulaEylemi(id: string): Promise<YonetimYaniti> {
   return gonderimIslemi((k) => gonderimDogrula(k, yazi(id)));
+}
+
+/** 2026-10-31 (L8): S.A.Y Ar-Ge kaydının metni (JSON) — yalnız yönetim; tarayıcı dosya olarak indirir */
+export async function argeKaydiEylemi(id: string, kayit: string): Promise<{ metin?: string; genel?: string }> {
+  if (!(await yonetimAdresinde()) || !(await ayniKoken())) return { genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };
+  const o = await yonetimIstekOturumu();
+  if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
+  const r = await argeKaydiYonet(yonetimCalistirici(o), yazi(id), yazi(kayit));
+  return r ? { metin: JSON.stringify(r, null, 1) } : { genel: "Kayıt bulunamadı (30 günü geçmiş olabilir)." };
 }

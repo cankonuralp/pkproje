@@ -168,3 +168,24 @@ export async function yzAnahtariYonet(c: YonetimCalistirici, id: string, duz: st
   }
   return { durum: "tamam", son4 };
 }
+
+/* ── 2026-10-31 (L8 — göç 0112): S.A.Y işlerinin ölçümü (son 30 gün, en yeni 50) ve Ar-Ge kayıtları (30 gün) — yalnız yönetim okur ── */
+export interface SayIsOlcumu { is: string; kisi: string; bas: string; bit: string; istek: number; en_buyuk: number; giris: number; cikis: number; okunan: number;
+  maliyet: number; sure_ms: number; yazma: number; islem: number; sablon: string | null; derinlik: string }
+export interface SayOlcumu { isler: SayIsOlcumu[]; arge: { id: string; kisi: string; zaman: string; ileti: number }[] }
+export async function sayOlcumuYonet(c: YonetimCalistirici, id: string): Promise<SayOlcumu | null> {
+  if (!UUID.test(id)) return null;
+  const y = await yer(c, id);
+  if (!y || y.vt === "kurulum") return null;
+  const oku = (db: Sorgulayici) => db.sorgu<{ s: SayOlcumu }>("SELECT firma_yonetim_say($1) AS s", [id]).then((r) => r.rows[0]?.s ?? null);
+  const s = y.vt === "ortak" ? await c.merkez(oku) : await firmada(c, y.kayit, id, oku);
+  return s ? { isler: (s.isler ?? []).map((x) => ({ ...x, giris: Number(x.giris), cikis: Number(x.cikis), okunan: Number(x.okunan), maliyet: Number(x.maliyet),
+    sure_ms: Number(x.sure_ms) })), arge: s.arge ?? [] } : null;
+}
+export async function argeKaydiYonet(c: YonetimCalistirici, id: string, kayit: string): Promise<unknown[] | null> {
+  if (!UUID.test(id) || !UUID.test(kayit)) return null;
+  const y = await yer(c, id);
+  if (!y || y.vt === "kurulum") return null;
+  const oku = (db: Sorgulayici) => db.sorgu<{ s: unknown[] | null }>("SELECT firma_yonetim_say_arge($1, $2) AS s", [id, kayit]).then((r) => r.rows[0]?.s ?? null);
+  return y.vt === "ortak" ? await c.merkez(oku) : await firmada(c, y.kayit, id, oku);
+}

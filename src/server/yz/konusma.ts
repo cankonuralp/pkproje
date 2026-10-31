@@ -2,6 +2,7 @@
    API'nin içeriğiyle BİREBİR ve sırasıyla (yalnız sona eklenir; düşünme bloğu kendinden önceki her şey aynı kaldıkça geçerli). RLS firma + hesap;
    hesap veritabanında işlemin bağlamından. Çekirdek: modül (src/modules/say) buradan çağırır. */
 import type { Sorgulayici } from "../db/kiraci.ts";
+import { argeKaydiYaz } from "./olcum.ts";
 
 export type KonusmaRolu = "user" | "assistant" | "system";
 export interface KonusmaIletisi { id: string; sira: number; rol: KonusmaRolu; icerik: unknown }
@@ -27,6 +28,8 @@ export async function kuyrukNotlariniSil(db: Sorgulayici): Promise<number> {
 
 /** "Sohbeti temizle": kişinin konuşması, ekleri, yarım yüklemeleri ve işi; dönen: hizmetteki ek dosyalarının kimlikleri (çağıran siler) */
 export async function konusmaTemizle(db: Sorgulayici): Promise<string[]> {
+  /* 2026-10-31 (L8 — göç 0112): silmeden önce konuşmanın metni Ar-Ge kaydına (30 gün; ekler ve düşünce yok; yalnız Yönetim okur) */
+  await argeKaydiYaz(db, (await konusmaOku(db)).map((m) => ({ rol: m.rol, icerik: m.icerik })));
   const dosyalar = (await db.sorgu<{ dosya: string }>("DELETE FROM yz_ek RETURNING dosya")).rows.map((r) => r.dosya);
   await db.sorgu("DELETE FROM yz_konusma");
   await db.sorgu("DELETE FROM yz_ek_parca");
