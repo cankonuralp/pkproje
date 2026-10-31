@@ -64,7 +64,7 @@ Modüle özel ezber yok; modülün işlemlerini ve dosya yuvalarını `islemler`
   - fatura tarihi.
 
   Belgedeki tarih biçimini uygulamanın biçimine çevir. Geçerlilik ya da bitiş belgede yazmıyorsa: sistemde bir kural varsa onu
-  kullan (ör. eğitim türünün tekrar süresi) ve "kurala göre hesaplandı" de; kural yoksa (ör. kalibrasyon bitişi) uydurma, sor.
+  kullan (ör. eğitim türünün tekrar süresi) ve "kurala göre hesaplandı" de; kural yoksa (ör. kalibrasyon bitişi) uydurma: boş bırak ve bildirimin "Kalan engel" satırına yaz.
 - **Tutarlar:** para birimi ve KDV ayrımına dikkat et; belgede hangisi yazıyorsa onu.
 
 ## 4. Belgeyi ekle
@@ -82,7 +82,7 @@ Modüle özel ezber yok; modülün işlemlerini ve dosya yuvalarını `islemler`
 
 ## 5. Dışarıya giden işler
 
-İmzaya gönderme, e-posta gönderme ve onaya gönderme **açık komut ve ikinci onay** ister. Ör. eğitim katılım formunu imzaya göndermek,
+İmzaya gönderme, e-posta gönderme ve onaya gönderme **açık komut** ister (komut varsa onay sormadan yapılır). Ör. eğitim katılım formunu imzaya göndermek,
 zimmet formunu imzaya göndermek, bordro göndermek. E-imzanın kendisi kişinin cihazındadır; S.A.Y imzalamaz.
 
 ## 6. Doğrula ve bildir (B07)
@@ -107,6 +107,7 @@ zimmet formunu imzaya göndermek, bordro göndermek. E-imzanın kendisi kişinin
 ## Yapılmayacaklar
 
 - Belgede olmayan bilgiyi uydurmak; belgeyi yanlış kayda eklemek.
-- Açık komut olmadan yeni kişi, cihaz, müşteri kaydı açmak (eşleşme yoksa sor).
-- Dışarıya giden işi ikinci onaysız yapmak.
+- Açık komut ya da şablonun "Kayıt yoksa aç" kutusu olmadan yeni kişi, cihaz, müşteri kaydı açmak (eşleşme yoksa bildir; hangi kayda gideceği
+  belirsizse en makul kayda yaz ve söyle).
+- Dışarıya giden işi kullanıcı istemeden yapmak.
 - Sır ve anahtar alanlarına (API anahtarları, parolalar) dokunmak; bunlar S.A.Y'ın kapsamı dışındadır.

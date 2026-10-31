@@ -39,8 +39,7 @@ ne_zaman: Bir ya da çok rapor doldurulurken; "sonucu … yap, … yaz", "maddel
 
 ## 1. Maddeler
 
-1. Yeni raporda maddeler varsayılan cevapla gelir. **Notta bulgu yoksa varsayılanı koru.** Kullanıcı "maddeleri uygun işaretle"
-   derse hepsini uygun yap.
+1. **Uygunsuzluk belirtilmediyse kontrol maddeleri "Uygun".** `rapor_yaz` / `raporlara_yaz` cevapsız maddeleri kendisi uygun yapar.
 2. **Bulgu varsa:**
    1. Bulguyu karşılayan maddeyi bul. Madde metni bulgunun konusunu açıkça kapsamalı.
    2. O maddeyi "Uygun değil" yap.
@@ -64,13 +63,11 @@ ne_zaman: Bir ya da çok rapor doldurulurken; "sonucu … yap, … yaz", "maddel
 5. **Uygulanmaz mantığı:** sütunun konusu o satırdaki ekipmanda yoksa ve seçeneklerde "Uygulanmaz" varsa onu seç.
    - CO2'li söndürücüde manometre ve ibre sütunları.
    - Tekerlekli söndürücüde "askıya alınmış" sütunu: seçeneklerde "Uygulanmaz" yoksa uygun kalır.
-6. **Metin sütunları ve "-":** probata'nın kuralı geçerlidir.
-   - Kullanıcı bilgiyi yazıyla verdiyse, verilmeyen metin alanlarına "-" yaz.
-   - Fotoğraftan ya da etiketten okurken okuyamadığın alan boş kalır.
-   - Sayı, tarih ve seçim alanlarına "-" yazılmaz.
+6. **Metin alanları ve "-":** hiç bilinemeyen METİN alanı "-" (kaynak ne olursa olsun: yazı, fotoğraf, etiket). Tamamlayıcı bunu kendisi yapar.
+   - Sayı, tarih ve seçim alanlarına "-" yazılmaz; bilinmiyorsa boş kalır.
    - "Tespit edilen uygunsuzluklar" sütununa bulgu yoksa "-" yaz.
-7. **Emin değilsen yazma:** okumadan emin değilsen değeri yazma, bildirimde "doğrulanacaklar" listesine koy. "Tahmini" diye
-   düşündüğün değer rapora girmez.
+7. **Şüpheliyse yaz ve bildir:** okunuşu şüpheli değeri yaz, girişte `supheli: true` işaretle; bildirimde "şüpheli" diye geçer.
+   Okuyamadığını ise UYDURMA: metinse "-", değilse boş.
 8. **Satır sonucu ve gerekçesi:** bulgu yoksa uygun; bulgu varsa uygun değil ve gerekçe (§4).
 9. **Kısa gösterimler:** "6-2" → bölme - kat sütununa aynen yazılır. "10*3 6 sıra" → 10-3 düzeninde 6 satır.
 10. **Formüllü ve kayıttan gelen hücreye yazma.**
@@ -84,10 +81,7 @@ ne_zaman: Bir ya da çok rapor doldurulurken; "sonucu … yap, … yaz", "maddel
      "kusurlu" → Uygun değil, "hafif kusurlu" → Şartlı uygun.
    - Verilen açıklamayı yoruma aynen yaz.
    - "Aynı şekilde X'i de" denirse aynı sonucu ve aynı yorumu X'e de yaz.
-2. **Söylemediyse:**
-   - Sonuç maddelerden hesaplanıyorsa hesaplanana bırak.
-   - Elle seçiliyorsa: ağır kusur varsa Uygun değil; yalnız hafif kusur varsa Şartlı uygun; kusur yoksa Uygun.
-   - Bu seviyeyi bildirimde "benim seçimim" diye söyle.
+2. **Söylemediyse:** sonuç motorun önerisi (maddelerden / ölçümlerden) — tamamlayıcı yazar; bildirimde "varsayımla" geçer.
 3. **Tutarsızlık:** sonuç "uygun değil" iken bütün maddeler uygun kaldıysa bildir ve ilgili maddeyi değiştirmeyi öner.
 
 ## 4. Yorum ve not yazımı
@@ -101,6 +95,18 @@ ne_zaman: Bir ya da çok rapor doldurulurken; "sonucu … yap, … yaz", "maddel
 | "kapasite yok" | "Ekipman üzerinde kapasite bilgisi bulunmamaktadır; kapasite levhası asılmalıdır." |
 | "proje revize edilmeli" | "Yeni revizelere göre yangın tesisatı projesi revize edilmelidir." |
 | "acil stop yerine şalter var, uygun" | (bilgi) "Acil durdurma butonu yerine şalter bulunmaktadır." |
+
+### Örnek (eski talimattan; 2026-10-31'de buraya taşındı)
+
+Kullanıcı bir hava tankının etiket fotoğrafını verip "raporu doldur" dedi. Formun yerleşimi:
+
+- TANK BİLGİLERİ │ BASINÇ KAYNAĞI BİLGİLERİ
+- Marka │ [e:marka = —] │ Marka │ [a:k_c2 = —]
+- Seri no │ [e:seri = —] │ Seri no │ [a:k_c8 = —]
+- İmal tarihi │ [e:imal = —] │ İmal tarihi │ [a:k_c6 = —]
+
+Etikette "DENEME KAZAN · 200 L · No 100001 · 9/2003" yazıyor (uydurma). Etiket tankındır: e:marka = Deneme Kazan, e:seri = 100001, e:imal = 2003
+(imal yılına yalnız yıl). Basınç kaynağının etiketi verilmedi: a:k_c2 ve a:k_c8 metin → "-", a:k_c6 tarih → boş. Kapasite tankın satırına 200.
 
 ## 5. Ekipman alanları
 

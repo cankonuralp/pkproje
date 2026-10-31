@@ -14,7 +14,7 @@ export const DENEME_SETI: readonly (readonly [string, readonly string[]])[] = [
   ["Bu etiketteki bilgileri rapora gir", ["rapora_yaz", "rapor_yaz"]],
   ["Plana 3 kompresör ekle, kodlarını sen ver, konumları fotoğraftan anla", ["plan_ekipman_ekle", "plan_ekipmanlar_ekle"]],
   ["Bu planın bütün raporlarını oluştur ve doldur", ["plan_getir", "rapor_ac", "rapor_yaz"]],
-  ["Kontrol saatlerini türe göre dağıt, sonraki kontrol tarihlerini yaz", ["tur_getir"]],
+  ["Kontrol saatlerini türe göre dağıt, sonraki kontrol tarihlerini yaz", ["rapor_saat_plani"]],
   ["Boş seçimleri uygun yap, varsayılanları uygula", ["rapor_getir", "rapor_yaz"]],
   ["Mükerrer ekipmanları ayıkla", ["plan_getir", "rapor_ara", "plan_ekipman_pasif", "rapor_sil"]],
   ["Hazır raporları onaya gönder", ["rapor_ara", "rapor_onaya_gonder"]],

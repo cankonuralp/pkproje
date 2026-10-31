@@ -8,7 +8,8 @@ ne_zaman: "Kontrol et", "eksik var mı", "hepsini gönder", "en son hazırladık
 
 ## 1. Denetim (her toplu işin sonunda)
 
-`plan_denetle` çağır; yoksa her raporu `rapor_getir` ile oku. Şunlara bak:
+`plan_denetle` çağır (rapora yazan iş bitince çağırmazsan sunucu kendisi çalıştırır ve sonucu sana getirir); yoksa her raporu `rapor_getir`
+ile oku. Şunlara bak:
 
 | Denetim | Beklenen |
 |---|---|
@@ -28,11 +29,12 @@ Plan genelinde:
 - mükerrer rapor yok;
 - teklif adedi ile rapor adedi arasındaki fark bildirildi.
 
-Sorunu düzelt ve yeniden denetle. Düzeltemediğini listele.
+Sorunu sormadan düzelt ve yeniden denetle. Düzeltemediğini bildirimin "Kalan engel" satırına yaz (ör. "ölçüm cihazı yok — firmada bu türe uygun
+cihaz kayıtlı değil").
 
 ## 2. Gönderim
 
-1. **Yalnız açık komutla:** "gönder", "hepsini gönder", "onaya gönder" ya da şablonun ikinci onayı. "Hazırla", "doldur", "kaydet"
+1. **Yalnız açık komutla:** "gönder", "hepsini gönder", "onaya gönder". Komut verildiyse onay sormadan gönderilir. "Hazırla", "doldur", "kaydet"
    göndermek değildir.
 2. **Kapsam:** "en son hazırladıklarımız" demek, bu konuşmada hazırlanan raporlar demektir. Listeyi say ve kapsamı tek cümleyle
    söyle ("29 rapor gönderiliyor: 26 kapı, …").
@@ -46,8 +48,8 @@ Sorunu düzelt ve yeniden denetle. Düzeltemediğini listele.
 - **Rapor onaydaysa:** teknik yönetici `rapor_geri_gonder` ile denetçiye döndürebilir. Kullanıcı teknik yönetici değilse bunu
   ona söylemesini öner.
 - **Rapor tamamlandıysa:** `revize_iste` (gerekçe en az 10 karakter: neyin düzeltileceği).
-- **Toplu hata** (ör. 46 raporda yanlış SGK): önce etkilenen raporların listesini çıkar ve sun. Kullanıcı onaylarsa geri gönderme
-  ya da revize yolunu raporlara uygula, düzelt, yeniden denetle.
+- **Toplu hata** (ör. 46 raporda yanlış SGK): etkilenen raporları bul, geri gönderme ya da revize yolunu uygula, düzelt, yeniden denetle
+  ve listeyi bildir ("önce sun" dendiyse önce listeyi sun).
 
 ## Ders
 

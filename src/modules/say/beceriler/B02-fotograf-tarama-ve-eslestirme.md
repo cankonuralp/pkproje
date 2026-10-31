@@ -14,7 +14,10 @@ bağlantıyı kesin gibi yazma; bildirimde "eşleştirmeden emin değilim" de.
 ## 1. Bütünü oku, sırayı kur
 
 - Malzeme listesini (M01, M02 … zaman, ad, yazı, [F..]) baştan sona oku. Ortadan başlama, atlama.
-- Sıra kaynağın kendisinden gelir (sohbet sırası, sayfa sırası). Yoksa çekim saatine, o da yoksa eklenme sırasına göre kur.
+- Sıra kaynağın kendisinden gelir (sohbet sırası, sayfa sırası). Yoksa çekim saatine (EXIF ya da dosya adındaki tarih-saat — WhatsApp, telefon), o da yoksa
+  eklenme sırasına göre kur.
+- **Önce say, sonra aç.** Malzeme özetinde fotoğrafların ön okuması (sınıf sayıları) ve çekim saatine göre genel görünüş–etiket çiftleri gelir. Ekipman sayısını
+  bunlardan İLK TURDA kesinleştir, sonra hepsini tek `plan_ekipmanlar_ekle` ile saha (çekim) sırasıyla ekle. Sonradan "bir tane daha" eklemek kusurdur.
 - Dosya adı ve altyazı bilgi taşır ("komp.jpeg", "T4 etiket"); kullan.
 - Notlar ayrı bir yazı olarak geldiyse satır satır al; fotoğraflarla sırayı ve sayıları eşle.
 - Ekran görüntüsü ya da PDF içindeki notları da aynı biçimde oku: önce yapısını (kim, ne zaman, hangi satır) çöz, sonra içeriği.

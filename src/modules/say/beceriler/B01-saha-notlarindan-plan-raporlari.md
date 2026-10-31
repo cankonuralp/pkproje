@@ -171,4 +171,4 @@ Teknik iç ayrıntı (kimlik, işlem adı, JSON) yazma.
 - Geçen yılın sonucunu bu yılın sonucu gibi yazmak.
 - Notta karşılığı olmayan ekipmana rapor açmak.
 - Kullanıcının elle doldurduğu alanın üstüne, istemediği hâlde yazmak.
-- Planı kabul etmek, onaya göndermek, silmek (açık komut ya da ikinci onay olmadan).
+- Planı kabul etmek, onaya göndermek, silmek (kullanıcı istemeden).

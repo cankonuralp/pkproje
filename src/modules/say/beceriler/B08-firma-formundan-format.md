@@ -34,7 +34,7 @@ Formdaki her parçayı probata'daki yerine ayır:
 
 1. Haritayı oku: açık taslakta `ekran_durumu`, değilse `format_getir`.
 2. Var olanı tekrar ekleme; yalnız eksik olanı ekle.
-3. "Önce sun" istendiyse ya da değişiklik büyükse şunları göster ve onay bekle:
+3. Yalnız "önce sun" istendiyse şunları göster ve bekle (yoksa sormadan uygula):
    - eklenecek alanlar,
    - gruplar ve grup başına madde sayısı,
    - test değerleri,
@@ -47,18 +47,23 @@ Formdaki her parçayı probata'daki yerine ayır:
 - Sıra: **önce gruplar, sonra maddeler (grup adıyla), sonra alanlar, en son test bölümü.** Grup sonradan eklenirse mevcut maddeler
   o gruba taşınmaz.
 - Geri oku ve say: alan sayısı, grup başına madde sayısı, test değerleri. Formdakiyle eşit değilse tamamla.
-- **Kaydet ve Yayınla kullanıcıdadır.** Yayın yalnız açık komutla yapılır: `format_yayin_denetle` → `format_yayinla`.
+- **Sıra: format kesinleşir → bir kez yayınlanır → raporlar açılır.** İş rapor gerektiriyorsa raporları açmadan ÖNCE `format_yayin_denetle` →
+  `format_yayinla` (onay sormadan). Yayın notunu boş bırakırsan sunucu değişikliklerin özetini yazar; "1" gibi anlamsız not yazma.
+- **Yeni öğe isteğe bağlıdır** (zorunlu yalnız kullanıcı isterse). Formatta zaten olan bilgiyi tekrar ekleme (ör. "Kaldırma kapasitesi" varken "Beyan kapasitesi").
+  **Test değeri uygulanan yüktür, beyan edilen değer değildir.**
 
 ## 5. Standartlar ve ölçüm cihazları
 
 1. Mevcut bağlantılar: `tur_getir`. Seçenekler: `tur_baglanti_secenekleri`.
 2. **Standart:**
+   - **Türün KENDİ standardını** ara (`tur_baglanti_secenekleri` her standardın bağlı olduğu türleri gösterir). Aynı gruptaki başka türün standardını
+     kopyalama (ör. kule krenin standardı araç liftine bağlanmaz). Kütüphanede yoksa bildir.
    - Kütüphanede ya da Bakanlık listesinde olan numara bağlanır.
    - Hiçbirinde olmayan numara için PDF gerekir; kullanıcıdan Dokümanlar › Standartlar'a yüklemesini iste ya da
      `tur_standart_ekle` ile ekle.
-3. **Yönetmelik standart değildir** (ör. iş ekipmanları yönetmeliği). Metot satırında yazı olarak kalır; kütüphaneye eklenip
-   eklenmeyeceğini sor.
-4. **Cihaz türü:** `cihaz_turleri`. Katalogda yoksa `cihaz_turu_kaydet` ile ekle, sonra bağla.
+3. **Yönetmelik standart değildir** (ör. iş ekipmanları yönetmeliği). Metot satırında yazı olarak kalır; bildirimde söyle.
+4. **Cihaz türü:** `cihaz_turleri`. Katalogda yoksa `cihaz_turu_kaydet` ile ekle, sonra bağla. `tur_baglanti_secenekleri` firmadaki cihaz sayısını
+   verir: cihazı olmayan türü bağlarsan raporlara cihaz seçilemez — bildirimin "Kalan engel" satırına yaz.
 5. Bağla: `tur_baglanti_kaydet`. Listenin tamamı yazılır, türün sürümüyle. Sonra doğrula.
 
 ## 6. Tuzaklar
@@ -71,7 +76,7 @@ Formdaki her parçayı probata'daki yerine ayır:
 - **Test yükü sınırları anma yüküne (P) bağlıdır** (ör. dinamik 1,1 × P, statik 1,25 × P). Formülle bağlanabiliyorsa bağla;
   bağlanamıyorsa sınırı boş bırak ve söyle.
 - **Benzer adla eşleştirme yapma:** "Lazermetre" ≠ "Şerit metre". Numarayı harfiyen eşleştir: TS EN 12464-1 ≠ TS ISO 9927-1.
-- **Kaydedilmemiş taslak:** iş bitince kullanıcıya "Taslağı kaydet" demesini hatırlat.
+- **Kaydedilmemiş taslak:** açık taslakta iş bitince taslağı kaydet / yayınla (iş gerektiriyorsa); kullanıcıya bırakma.
 
 ## 7. Bildirim
 
@@ -82,4 +87,4 @@ Formdaki her parçayı probata'daki yerine ayır:
 - test değerleri,
 - bağlanan / eklenemeyen standartlar ve cihazlar (nedeniyle),
 - elle yapılması gerekenler (ör. sonuç cümlesi),
-- taslağın kaydedilmesi ve yayın kararı kullanıcıda.
+- yayınlandıysa sürümü ve yayın notu.

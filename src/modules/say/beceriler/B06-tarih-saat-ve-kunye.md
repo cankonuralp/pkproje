@@ -12,9 +12,9 @@ ne_zaman: "Tarihleri … yap", "saatleri 10:00'dan başlat, 10 dakika arayla", "
 
 1. **Kullanıcının verdiği her değer aynen uygulanır:** gün, başlangıç saati, aralık, rapora özel saat, "aynı saat olsun".
 2. Verilmeyen değerler şöyle tamamlanır:
-   - **Gün:** kullanıcının dediği gün; yoksa planın kontrol günü.
-   - **Süre:** türün süresi (`tur_getir` / `plan_hazirlik`). Süre tanımlı değilse tekil ekipmana 10 dakika, tablolu rapora 30 dakika
-     ver ve bildirimde söyle.
+   - **Gün:** kullanıcının dediği gün; yoksa fotoğrafların / belgelerin S.A.Y'a verildiği gün (bugün).
+   - **Başlangıç:** kullanıcı vermediyse Firma ayarları › Mesai başlangıcı (sunucu kendisi alır).
+   - **Süre:** türün süresi (`tur_getir` / `plan_hazirlik`). Süre tanımlı değilse 15 dakika (tablolu raporda da; satır başı süre sonra gelecek).
    - **Sıra:** sahadaki gezi sırası (notların sırası); yoksa planın ekipman sırası.
    - **Aralık:** bir raporun bitişi, sonrakinin başlangıcıdır. Kullanıcı "10 dakika arayla" dediyse her rapor 10 dakika sürer ve
      art arda gelir.
@@ -22,7 +22,8 @@ ne_zaman: "Tarihleri … yap", "saatleri 10:00'dan başlat, 10 dakika arayla", "
 
 ### Uygulama
 
-- `rapor_saat_plani` ile toplu yaz. Hesabı sunucu yapar; saatleri kendin hesaplayıp yazma.
+- `raporlara_yaz` bitişi yazılmamış raporların saatini kendisi planlar (tamamla); ayrıca gerekiyorsa `rapor_saat_plani`. Hesabı sunucu yapar;
+  saatleri kendin hesaplayıp yazma. Bitiş saati de yazılır.
 - Araç yoksa her raporun `tarih:` yerlerine `rapor_yaz` ile yaz ve sonuçları geri oku.
 
 ### Çakışma ve sınırlar

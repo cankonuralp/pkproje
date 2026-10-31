@@ -16,7 +16,7 @@ const TUR = "0b6c2f7e-1d2a-4c3b-9e8f-112233445566";
 
 export const KURALLAR = {
   talimat: (t: string) => ["format_pdf_kur", "formatı elle çizme", "TÜR-0001", "Konumu verilen her şeyden çıkar", "plan_ekipmanlar_ekle", "ZIP",
-    "tek bir özet tablo", "linye"].every((x) => t.includes(x)),
+    "dört satırlık bildirim", "linye"].every((x) => t.includes(x)),
   panel: (say: string) => /onDrop=\{/.test(say) && /zipAc\(/.test(say) && (say.match(/type="file"[^>]*multiple/g) ?? []).length >= 2
     && /pdfdenSablonKur\(/.test(say) && /k\.tur === "pdfFormat"/.test(say),
   sablon: (y: string) => /formatYukleEylemi\(/.test(y) && /pdfdenHam\(/.test(y) && /basilidanKurEylemi\(/.test(y),
