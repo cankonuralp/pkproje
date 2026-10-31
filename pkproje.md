@@ -2527,6 +2527,21 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-31 (gece, V21 optimizasyon — reisim: "10 maddelik öneriyi olduğu gibi onaylıyorum. Önce kısa sunum, sonra kalem kalem kod" + eklemeler + madde 11;
+  sunum yerel/say-arge/2026-10-31-sunum-v21-optimizasyon.md): **KODDA** (kalem dalı, dört commit; CI → main). 3 + 4: raporlar/denetle.ts taslak "gönderilmiş"
+  sayılmaz (KOD HATASI "yeni" ↔ "taslak"), kontrol günü plan günlerinin dışındaysa uyarı; cihaz türü adı türün kaydından (çift "Ölçüm cihazı" bitti);
+  plan_denetle raporlar verilmişse yalnız onlar, "kabul edilmiş teklif yok" plan notu olarak bir kez; bitiş denetimi notu ÖZET (say/bitis-denetimi.ts
+  denetimOzeti: sayı + farklı sorunlar + raporları); plan_ekipman(lar)_ekle tür ADIYLA da (planlar/say-islemleri.ts turleriCoz); tur_baglanti_kaydet surum /
+  listeler isteğe bağlı; şema hatasında kısa şema (islem.ts kisaSema). 2 + 1: konuşmaya fotoğrafın KÜÇÜK kopyası (gorsel.ts kucukKopya ≤ 800 px; depo ve ön
+  okuma tam boy); say/is-siniri.ts (saf): kullanıcının son sorusundan önceki iletilerde fotoğraf blokları ve büyütmeler metne, uzun sonuçlar 1 500
+  karaktere, düşünme blokları düşer — kayıt DEĞİŞMEZ (yz_konusma UPDATE yok), dongu isteği kurarken uygular; aynı fotoğraf bir işte bir kez büyütülür.
+  6 + 9 + 11: talimat — tesis / müşteri uyuşmazlığı durdurmaz, yapmadığının nedeni kanıtıyla, cihazı olmayan cihaz türü boş + kalan engel ("ekle" denirse
+  listeden çıkar), soru işaretli değer yazılmaz (say-doldur.ts SORU_ISARETLI — alan, künye, tablo hücresi; ekran ve sunucu ortak); B05 / B07. 5 + 7 + 8:
+  tamamla.ts "kapasite" adlı boş sayı alanı / test değeri ekipmanın kapasitesinden; dört satırı aşan bildirim ekrana gitmez, sunucu bir kez not ekler
+  (is-siniri.ts bildirimNotu, dongu); sablonlar.ts KISA İŞ = ilk soru değil + ≤ 300 karakter + eksiz → orta derinlik (iş boyunca sabit). Kilitler:
+  say-is-siniri (+ bozan), say-hesap, say-bitis-denetimi, say-doldur (+ bozan), say-tamamla, say-hiz, say-saf, say-butunluk. 10: ikinci koşu hedefleri sayıyla
+  (V21/vaka.md: 8 ekipman · soru 0 · tek iş · istem hiç > 100 000 olmaz · ≤ 0,10 $ · sessiz aralık ≤ 60 sn · bildirim ≤ 4 satır) — reisim koşar, öncesi / sonrası
+  yan yana.
 - 2026-10-31 (akşam, V21 ilk koşu — reisim: "yine 8 ekipman yazdı, biraz daha iyiydi ama daha çok sorun çıkardı, işi tekte yapıp bitirmedi ve ne kadar token
   harcadı ne kaç dolara mal oldu bir bak optimize etmemiz gerekli"): **ÖLÇÜM** (say_istek, yz_konusma, denetim_izi — salt okunur; plan P-1026-010, 22:32–22:49):
   6 iş (reisim 6 ileti yazdı), 31 istek, 247 sn model süresi, **$0,301**; giriş 3,70 M token (önbellekten okunan 3,54 M, önbelleğe yazılan 156 bin), çıkış 41 bin.
