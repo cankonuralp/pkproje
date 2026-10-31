@@ -14,7 +14,7 @@ import { ELLE_GEREKCE, ELLE_SONUC } from "../src/format/motor.ts";
 import { test } from "node:test";
 import { Cevaplar, FormatTanimi, TABLO_SATIR_EN_COK } from "../src/format/tanim.ts";
 import { SABLONLAR } from "../src/format/sablonlar.ts";
-import { alanlariUygula, geriAl, GIRIS_EN_COK, komutlariUygula, maddeleriIsaretle, okumaHedefleri, SATIR_EKLE_EN_COK, sonucOzeti, sonucuYap, tabloyaUygula, yerDegeri,
+import { alanlariUygula, geriAl, GIRIS_EN_COK, komutlariUygula, maddeleriIsaretle, okumaHedefleri, SATIR_EKLE_EN_COK, sonucOzeti, sonucuYap, SORU_ISARETI_NEDENI, tabloyaUygula, yerDegeri,
   type Durum } from "../src/modules/raporlar/say-doldur.ts";
 import { istekTani } from "../src/modules/say/istek.ts";
 import { islemMetni, raporGirdisi } from "../src/modules/say/server/say.ts";
@@ -180,6 +180,7 @@ test("557 rapora_yaz: elle ne giriliyorsa — sayıya yazı, künye, tarih, çok
   const u = komutlariUygula(d, t, [
     { yer: "t:linye:1:icu", deger: "-" }, { yer: "t:linye:2:icu", deger: "1.5" }, { yer: "t:linye:3:icu", deger: "16" },   // sayıya yazı · ondalık · aynı
     { yer: "t:linye:1:devre", deger: "x".repeat(121) },                                                                     // ekrandaki sınırdan uzun
+    { yer: "t:linye:3:devre", deger: "Linye 3?" },                                                                           // V21 madde 11: soru işaretli değer
     { yer: "k:firma", deger: "Yeni Unvan" }, { yer: "k:sgk", deger: "123" }, { yer: "k:adres", deger: "Kayıttaki adres" },
     { yer: "tarih:bit", deger: "14.10.2026 11:30" }, { yer: "tarih:takip", deger: "31.02.2027" }, { yer: "tarih:sonraki", deger: "15.10.2027" },
     { yer: "a:kapsam", deger: "priz, Aydınlatma" }, { yer: "a:kapsam", deger: "Priz, Pompa" },
@@ -195,6 +196,9 @@ test("557 rapora_yaz: elle ne giriliyorsa — sayıya yazı, künye, tarih, çok
   assert.deepEqual(s("t:linye:2:icu"), ["yazildi"], "1.5 yazıldı (sonra satır silindi)");
   assert.deepEqual(s("t:linye:3:icu"), ["ayni"]);
   assert.match(s("t:linye:1:devre")[0], /^yazilamadi: bu kutuya en çok 120 karakter/);
+  /* 2026-10-31 V21 madde 11 (reisim: "Şüpheli değer alana soru işaretiyle yazılmaz … sunucu kabul etmez"): red, hücre boş kalır */
+  assert.deepEqual(s("t:linye:3:devre"), [`yazilamadi: ${SORU_ISARETI_NEDENI}`]);
+  assert.equal(u.durum.cevaplar.tablo.linye[1]?.devre ?? "", "", "soru işaretli değer yazılmadı");
   assert.equal(u.durum.cevaplar.kunye.firma, "Yeni Unvan");
   assert.match(s("k:sgk")[0], /kilitli; elle de değiştirilemiyor/);
   assert.equal("adres" in u.durum.cevaplar.kunye, false, "kayıttakiyle aynısı değişiklik değil");

@@ -66,6 +66,13 @@ test("rapora_yaz tür denetimi kalkınca yıl alanına \"19x9\" yazılır", asyn
   assert.equal(u.durum.ekipman.imal, "19x9", "bozuk: türüne uymayan değer yazıldı");
 });
 
+/* 2026-10-31 V21 madde 11 (reisim: "Sunucu, metin alanlarında soru işaretiyle biten değeri kabul etmez") */
+test("rapora_yaz soru işareti denetimi kalkınca şüpheli okuma alana soru işaretiyle yazılır", async () => {
+  const m = await bozuk<Doldur>(DOLDUR, "if (SORU_ISARETLI.test(ham)) { red(SORU_ISARETI_NEDENI, kutular.get(yer)?.ad); continue; }", "");
+  const u = m.komutlariUygula(bos(), FormatTanimi.parse(SABLONLAR.ZPKR02.tanim), [{ yer: "e:seri", deger: "EETP220526?" }]);
+  assert.equal(u.durum.ekipman.seri, "EETP220526?", "bozuk: soru işaretli değer yazıldı");
+});
+
 test("rapora_yaz madde seçenek denetimi kalkınca listede olmayan cevap yazılır", async () => {
   const m = await bozuk<Doldur>(DOLDUR, "const cv = temizle(ham) ? md.cevaplar.find((x) => kucukTr(x) === kucukTr(ham)) : \"\";", "const cv = ham;");
   const t = FormatTanimi.parse(SABLONLAR.ZPKR02.tanim);

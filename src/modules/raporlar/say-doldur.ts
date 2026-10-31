@@ -263,6 +263,8 @@ const TABLO_DOLU = `tabloda en çok ${TABLO_SATIR_EN_COK} satır olur (raporun s
 export const ELLE_EN_COK = { bilgiSayi: 20, bilgiMetin: 500, hucreSayi: 12, hucreMetin: 120, degerSayi: 12, degerMetin: 60, gerekce: 200, maddeNot: 1000, yorum: 4000 } as const;
 /** 557: girişin sonucu — S.A.Y cevabını bununla yazar (yazılmadan "yaptım" demez) */
 export interface GirisSonucu { yer: string; ad: string; durum: "yazildi" | "ayni" | "yazilamadi" | "bekliyor"; neden?: string }
+/** soru işaretiyle biten değer (şüpheli okuma alana soru işaretiyle yazılmaz — V21 madde 11) */
+export const SORU_ISARETLI = /\?\s*$/, SORU_ISARETI_NEDENI = "soru işaretiyle biten değer yazılmaz; en iyi okumayı yaz, şüpheyi girişte supheli: true ile işaretle";
 /** 557: ölçüm cihazı seçimi (sunucu işlemi — ekran yapar, sonucu sonra yazar) */
 export interface CihazIstegi { yer: string; ad: string; turId: string; cihazId: string | null }
 /** 557: elle yapılabilen ama tanımdan bilinmeyenler — künye kilidi ve kayıttaki künye, ölçüm cihazı satırları */
@@ -440,6 +442,9 @@ export function komutlariUygula(d: Durum, t: FormatTanimi, girisler: readonly Ra
     const yer = typeof g?.yer === "string" ? g.yer.trim() : "", ham = typeof g?.deger === "string" ? g.deger : "";
     if (!yer) continue;
     const red = (neden: string, ad = yer.slice(0, 60)) => { sonuclar.push({ yer: yer.slice(0, 80), ad, durum: "yazilamadi", neden }); };
+    /* 2026-10-31 (V21 madde 11 — reisim: "Şüpheli değer alana soru işaretiyle yazılmaz … Sunucu, metin alanlarında soru işaretiyle biten değeri kabul
+       etmez"): her yerde (alan, künye, tablo hücresi) — en iyi okuma yazılır, şüphe girişin supheli işaretiyle bildirime gider */
+    if (SORU_ISARETLI.test(ham)) { red(SORU_ISARETI_NEDENI, kutular.get(yer)?.ad); continue; }
     const kutu = kutular.get(yer);
     if (kutu) {
       if (!temizle(ham)) {                                                // boş değer: kutuyu boşalt (künye: kayıttakine döner)

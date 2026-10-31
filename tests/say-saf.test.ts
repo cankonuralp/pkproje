@@ -35,6 +35,14 @@ test("talimat: reisim'in iki kuralı; eski yamalar yok; sayfa ve ekran talimatta
   assert.ok(SISTEM.includes("Doldurma:") && SISTEM.includes('Hiç bilinemeyen METİN alanı "-"') && SISTEM.includes("en çok dört satır"), "bilinemeyen metne - ve dört satırlık bildirim");
   assert.match(SISTEM, /Sonucu görmeden "yaptım" deme/, "yap → teyit → söyle");
   assert.match(SISTEM, /Sorma, onay bekleme/, "sormadan, onay beklemeden sürdürür");
+  /* 2026-10-31 V21 ilk koşu (madde 6, 9, 11, O8): tesis uyuşmazlığı durdurmaz; cihazı olmayan cihaz türü — boş + kalan engel, "ekle" denirse listeden
+     çıkar; soru işaretli değer yok; yapmadığının nedeni kanıtıyla; bir fotoğraf bir işte bir kez büyütülür */
+  assert.match(SISTEM, /uyuşmazlığı[^\n]*işi DURDURMAZ/, "tesis uyuşmazlığı durdurmaz");
+  assert.match(SISTEM, /cihaz kaydı uydurma, türün listesini kendiliğinden değiştirme, sorma/, "cihazı olmayan tür: boş + kalan engel");
+  assert.match(SISTEM, /türün ölçüm cihazı listesinden çıkarırsın/, "kullanıcı ekle derse listeden çıkar");
+  assert.match(SISTEM, /değere soru işareti koyma/, "şüpheli değere soru işareti yok");
+  assert.match(SISTEM, /nedenini KANITIYLA söyle/, "yapmadığının nedeni kanıtıyla");
+  assert.match(SISTEM, /bir fotoğrafı bir işte BİR kez büyütürsün/, "aynı fotoğraf ikinci kez büyütülmez");
   assert.doesNotMatch(SISTEM, /SON mesajını cevapla|o mesajda metin yazma|en çok \d|karakter|sınırı/i, "eski yamalar ve sınırlar yok");
   assert.match(SISTEM, /ekran_durumu/, "ekranın güncel hâli araçla");
   assert.match(SISTEM, /konuşmada kalır/, "ekler konuşmada kalır");

@@ -32,6 +32,13 @@ Plan genelinde:
 Sorunu sormadan düzelt ve yeniden denetle. Düzeltemediğini bildirimin "Kalan engel" satırına yaz (ör. "ölçüm cihazı yok — firmada bu türe uygun
 cihaz kayıtlı değil").
 
+**Firmada cihazı olmayan ölçüm cihazı türü** (ör. türe kumpas bağlı, firmada kumpas kayıtlı değil): cihaz kaydı uydurma, türün listesini kendiliğinden
+değiştirme, seçenek sunma. Alan boş kalır, "Kalan engel"e yazılır. Kullanıcı "ekle / ne lazımsa ekle" derse o cihaz türünü türün ölçüm cihazı
+listesinden çıkar (`tur_baglanti_kaydet`, cihazTurleri — ötekiler kalır); yine kayıt açma.
+
+**Tesis / müşteri uyuşmazlığı** (belgede başka firma ya da adres yazıyor): işi durdurmaz; açık plana yaz, "Kalan engel"e "tesis kontrol edilmeli:
+belgede … yazıyor" yaz. "Kabul edilmiş teklif yok" plan notudur, raporda düzeltilecek bir şey değildir; bildirime girmez.
+
 ## 2. Gönderim
 
 1. **Yalnız açık komutla:** "gönder", "hepsini gönder", "onaya gönder". Komut verildiyse onay sormadan gönderilir. "Hazırla", "doldur", "kaydet"

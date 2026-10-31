@@ -66,8 +66,11 @@ ne_zaman: Bir ya da çok rapor doldurulurken; "sonucu … yap, … yaz", "maddel
 6. **Metin alanları ve "-":** hiç bilinemeyen METİN alanı "-" (kaynak ne olursa olsun: yazı, fotoğraf, etiket). Tamamlayıcı bunu kendisi yapar.
    - Sayı, tarih ve seçim alanlarına "-" yazılmaz; bilinmiyorsa boş kalır.
    - "Tespit edilen uygunsuzluklar" sütununa bulgu yoksa "-" yaz.
-7. **Şüpheliyse yaz ve bildir:** okunuşu şüpheli değeri yaz, girişte `supheli: true` işaretle; bildirimde "şüpheli" diye geçer.
+7. **Şüpheliyse en iyi okumayı yaz ve bildir:** okunuşu şüpheli değeri en iyi okumanla yaz, girişte `supheli: true` işaretle; bildirimde "şüpheli"
+   diye geçer. Değere soru işareti KOYMA ("EETP220526?" yazılmaz; sunucu soru işaretiyle biten değeri kabul etmez).
    Okuyamadığını ise UYDURMA: metinse "-", değilse boş.
+   - Adında "kapasite" geçen boş sayı alanını (beyan kapasitesi gibi) tamamlayıcı etiketteki / levhadaki kapasiteden doldurur; sen etikette ya da
+     "MAX … t" levhasında gördüğün kapasiteyi ekipman bilgilerine yaz.
 8. **Satır sonucu ve gerekçesi:** bulgu yoksa uygun; bulgu varsa uygun değil ve gerekçe (§4).
 9. **Kısa gösterimler:** "6-2" → bölme - kat sütununa aynen yazılır. "10*3 6 sıra" → 10-3 düzeninde 6 satır.
 10. **Formüllü ve kayıttan gelen hücreye yazma.**
