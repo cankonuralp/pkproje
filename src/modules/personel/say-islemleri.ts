@@ -10,6 +10,10 @@ import { PersonelGirdisi } from "./sema.ts";
 import { atamaEkle, bordroOnayaGonder, bordroYukle, ozlukEkle, zimmetFormuYukle } from "./server/dosyalar.ts";
 import { personelAyrildi, personelEkle, personelGeriAl, personelGuncelle, personelKarti, personelListesi, personelSil } from "./server/personel.ts";
 
+import { doldurmaCevabi, doldurmaHazirla } from "../../server/yz/doldurma.ts";
+import { ElleDegerGirdisi } from "../rapor-format/sema.ts";
+import { zimmetDoldur, zimmetDoldurmaVerisi } from "./server/dosyalar.ts";
+
 const MODUL = 2;
 const ALAN = ["ad", "eposta", "imzaTel", "basla", "meslek", "meslekMetin", "diploma", "oda", "ekipnet"] as const;
 /** formun gönderdiği gibi — verilmeyen alan kartın değeriyle (güncellemede) ya da boş (yeni kayıtta) */
@@ -93,6 +97,15 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
     ad: "bordro_onaya_gonder", modul: MODUL, tur: "yaz", islev: bordroOnayaGonder, kaynak: [kimlik], girdi: z.object({ bordro: kimlik }),
     tarif: "Personelin bordrosunu kişinin imzasına gönderir (Onaylar › Diğer belgeler): bordro (personel_getir bordro kimliği). Kullanıcının ekrandaki onayıyla.",
     calistir: async (b, v) => yazmaCevabi(await bordroOnayaGonder(b.db, b.depo(), b.kim, b.firmaId, v.bordro), { bildirim: "Bordro imzaya gönderildi." }),
+  }),
+  /* 2026-10-31 (S.A.Y belge doldurma): ekranın "Belgeyi doldur"u — yerler ve kayıt modülün işlevleriyle (src/server/yz/doldurma.ts) */
+  islem({
+    ad: "zimmet_formu_doldur", modul: MODUL, tur: "yaz", islev: zimmetDoldur, kaynak: [kimlik, ElleDegerGirdisi], girdi: z.object({ personel: kimlik, degerler: ElleDegerGirdisi }),
+    tarif: "Kişinin zimmet teslim formu: elle doldurulan yerlerine yazar — personel, degerler (yerin kimliği ya da adı → değer; \"\" boşaltır). degerler boşsa yazmadan yerleri listeler (ad, tür, zorunlu, dolu mu).",
+    calistir: async (b, v) => {
+      const h = doldurmaHazirla(await zimmetDoldurmaVerisi(b.db, b.kim, v.personel), v.degerler);
+      return "cevap" in h ? h.cevap : doldurmaCevabi(await zimmetDoldur(b.db, b.kim, v.personel, h.degerler, h.surum), "Zimmet formu");
+    },
   }),
 ];
 

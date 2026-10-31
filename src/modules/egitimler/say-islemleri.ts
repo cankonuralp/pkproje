@@ -9,6 +9,10 @@ import { EK_NO, ekBelgesi, islem, sayfala, trIcerir, yazmaCevabi, type Islem } f
 import { EgitimKaydiGirdisi, EgitimTuruGirdisi } from "./sema.ts";
 import { egitimKaydet, egitimKaydiSil, egitimListesi, egitimTuruKaydet, egitimTuruSil, sertifikaYukle } from "./server/egitimler.ts";
 
+import { doldurmaCevabi, doldurmaHazirla } from "../../server/yz/doldurma.ts";
+import { ElleDegerGirdisi } from "../rapor-format/sema.ts";
+import { katilimDoldur, katilimDoldurmaVerisi } from "./server/egitimler.ts";
+
 const MODUL = 4;
 
 export const SAY_ISLEMLERI: readonly Islem[] = [
@@ -55,6 +59,15 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
       const belge = await ekBelgesi(b, v.ek, ["pdf"]);
       if (typeof belge === "string") return { tamam: false, neden: belge };
       return yazmaCevabi(await sertifikaYukle(b.db, b.depo(), b.kim, b.firmaId, v.kayit, v.surum, belge), { bildirim: `${belge.ad} eğitim kaydına eklendi.` });
+    },
+  }),
+  /* 2026-10-31 (S.A.Y belge doldurma): ekranın "Belgeyi doldur"u — yerler ve kayıt modülün işlevleriyle (src/server/yz/doldurma.ts) */
+  islem({
+    ad: "egitim_katilim_doldur", modul: MODUL, tur: "yaz", islev: katilimDoldur, kaynak: [kimlik, ElleDegerGirdisi], girdi: z.object({ kayit: kimlik, degerler: ElleDegerGirdisi }),
+    tarif: "Eğitim katılım formu: elle doldurulan yerlerine yazar — kayit, degerler (yerin kimliği ya da adı → değer; \"\" boşaltır). degerler boşsa yazmadan yerleri listeler (ad, tür, zorunlu, dolu mu).",
+    calistir: async (b, v) => {
+      const h = doldurmaHazirla(await katilimDoldurmaVerisi(b.db, b.kim, v.kayit), v.degerler);
+      return "cevap" in h ? h.cevap : doldurmaCevabi(await katilimDoldur(b.db, b.kim, v.kayit, h.degerler, h.surum), "Katılım formu");
     },
   }),
 ];

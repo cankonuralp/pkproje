@@ -20,6 +20,8 @@
    (ekle — kayıt bilgisi ya da serbest —, değiştir, çıkar, yukarı, aşağı), hücrelerin yeri "bas_hucre" (sola / sağa; kurucu.ts basSatiri*, basHucreTasi;
    madde 13). */
 import { SINIR_ISARETI } from "../../format/hesap.ts";
+import { ayir, birlestir, hucreleriYaz, kapsama, satirEkle, satirSil, sutunEkle, sutunGenisligi, sutunSil, type TabloBolumu } from "../../format/tablo.ts";
+import { Hucre, HUCRE_ALAN_TURLERI, HUCRE_TURLERI, TABLO_KAYNAK_ADI, TABLO_KAYNAKLARI } from "../../format/tanim.ts";
 import {
   basSatirlari, basSirasi, cihazSutunlari, ekipmanEtiketleri, firmaSatirlari, imzaSatirlari, listeBasliklari, olcumBasliklari, sonucMetinleri, testBasliklari,
 } from "../../format/duzen.ts";
@@ -34,23 +36,37 @@ import {
 /* 2026-10-23 (S.A.Y baştan — reisim: "hiç bir kısıtı olmasın"): haritanın 40 000 karakter sınırı, metinlerin kısaltılması ve tek istekteki 100
    işlem sınırı kalktı — harita formatın tamamı, işlemler olduğu gibi */
 /** S.A.Y'ın ekleyebildiği bölüm türleri (ölçüm cihazları, imza, kusur bölümleri formatta tektir — kurucu kendi ekler) */
-export const EKLENIR_BLOK = ["olcum", "test", "bilgi", "liste", "foto", "not", "metin", "sonuc"] as const;
+export const EKLENIR_BLOK = ["olcum", "test", "bilgi", "liste", "foto", "not", "metin", "sonuc", "tablo"] as const;
 const BLOK_TR: Record<Blok, string> = {
   bilgi: "bilgi alanları", liste: "kontrol listesi", olcum: "ölçüm tablosu", test: "test değerleri", cihaz: "ölçüm cihazları", foto: "fotoğraflar",
   kusur: "kusur açıklamaları", sonuc: "sonuç", not: "not / yorum", imza: "imza", metin: "serbest metin", tablo: "serbest tablo",
 };
 const sinirMetni = (o: { op?: string; sinir?: number }) => (o.op && o.sinir !== undefined ? `, sınır ${SINIR_ISARETI[o.op as keyof typeof SINIR_ISARETI] ?? o.op} ${o.sinir}` : "");
 
+/** serbest tablo hücresinin haritadaki satırı */
+function hucreOzeti(h: Hucre): string {
+  const ad = h.ad ? ` · ad “${h.ad}”` : "";
+  if (h.tur === "yazi") return (h.m ?? "").trim() ? `yazı “${h.m}”` : "boş";
+  if (h.tur === "alan") {
+    return `elle doldurulan (${h.alan ?? "metin"}${h.secenekler?.length ? `: ${h.secenekler.join(" / ")}` : ""})${h.birim ? ` (${h.birim})` : ""}${h.zorunlu ? " · zorunlu" : ""}${h.formul ? ` · formül ${h.formul}` : ""}${ad}`;
+  }
+  if (h.tur === "kayit") return `kayıttan: ${h.veri ?? (h.kaynak ? `${h.kaynak} (${TABLO_KAYNAK_ADI[h.kaynak]})` : "—")}${ad}`;
+  return `${h.tur}${h.gorsel ? ` (${h.gorsel})` : ""}${h.kim ? ` (${h.kim})` : ""}${ad}`;
+}
+
 export function formatHaritasi(t: FormatTanimi): string {
   const l: string[] = ["Format taslağının bölümleri (bölüm kimliği · tür · ad) ve öğeleri (öğe kimliği · ad · tür; formül = kendiliğinden hesaplanan):"];
-  l.push("## firma · 1. bölüm · Firma bilgileri (satırlar — kimlik · ad · bilgi):");
-  for (const s of firmaSatirlari(t)) l.push(`- ${s.id} · ${s.ad} · ${s.kaynak === "serbest" ? `serbest${s.metin ? `, yazı: ${s.metin}` : ""}` : FIRMA_KAYNAK_ADI[s.kaynak]}${s.tam ? " · tam satır" : ""}`);
-  const ee = ekipmanEtiketleri(t);
-  /* 595 (madde 13): başlık tablosu — hücrelerin sırası ve doküman bilgisi satırları */
-  l.push(`## Başlık tablosu (sayfa başı) · hücreler soldan sağa: ${basSirasi(t).join(" · ")} (logo · firma · akr = akreditasyon · ad = belge adı · dok = doküman bilgisi)`);
-  l.push("Doküman bilgisi satırları (kimlik · ad · bilgi):");
-  for (const s of basSatirlari(t)) l.push(`- ${s.id} · ${s.ad} · ${s.kaynak === "serbest" ? `serbest${s.metin ? `, yazı: ${s.metin}` : ""}` : BAS_KAYNAK_ADI[s.kaynak]}`);
-  l.push(`Ekipman satırları: “${ee.kod}”, “${ee.tur}” · sayfa altı: “${t.gorunum.altYazi ?? "{firma} · {kod}"}”`);
+  /* serbest düzende (belge formatları, basılı formdan şablon) sabit firma / başlık / ekipman satırı yok — yalnız bölümler */
+  if (!t.gorunum.serbest) {
+    l.push("## firma · 1. bölüm · Firma bilgileri (satırlar — kimlik · ad · bilgi):");
+    for (const s of firmaSatirlari(t)) l.push(`- ${s.id} · ${s.ad} · ${s.kaynak === "serbest" ? `serbest${s.metin ? `, yazı: ${s.metin}` : ""}` : FIRMA_KAYNAK_ADI[s.kaynak]}${s.tam ? " · tam satır" : ""}`);
+    const ee = ekipmanEtiketleri(t);
+    /* 595 (madde 13): başlık tablosu — hücrelerin sırası ve doküman bilgisi satırları */
+    l.push(`## Başlık tablosu (sayfa başı) · hücreler soldan sağa: ${basSirasi(t).join(" · ")} (logo · firma · akr = akreditasyon · ad = belge adı · dok = doküman bilgisi)`);
+    l.push("Doküman bilgisi satırları (kimlik · ad · bilgi):");
+    for (const s of basSatirlari(t)) l.push(`- ${s.id} · ${s.ad} · ${s.kaynak === "serbest" ? `serbest${s.metin ? `, yazı: ${s.metin}` : ""}` : BAS_KAYNAK_ADI[s.kaynak]}`);
+    l.push(`Ekipman satırları: “${ee.kod}”, “${ee.tur}” · sayfa altı: “${t.gorunum.altYazi ?? "{firma} · {kod}"}”`);
+  }
   const e = t.gorunum.eimza;
   const e2 = t.gorunum.eimza2;
   if (e2) l.push(`Onaylayanın e-imza yeri: ${e2.yer === "hucre" ? "teknik yöneticinin İmza hücresi"
@@ -83,6 +99,11 @@ export function formatHaritasi(t: FormatTanimi): string {
       const tb = testBasliklari(b);
       l.push(`  başlıklar: ölçüm “${tb.olcum}”, değer “${tb.deger}”, sınır “${tb.sinir}”, sonuç “${tb.sonuc}”`);
       if (b.ekSutunlar?.length) l.push(`  ek sütunlar (kimlik · ad · tür): ${b.ekSutunlar.map((s) => `${s.id} · ${s.ad} · ${s.alan}${s.secenekler?.length ? ` (${s.secenekler.join(" / ")})` : ""}`).join("; ")}`);
+    }
+    if (b.blok === "tablo") {
+      l.push(`  ${b.satirlar.length} satır × ${b.sutun.length} sütun (sütun genişliği %: ${b.sutun.join(" / ")})${b.satirlar.some((x) => x.tekrar) ? ` · çoğalan satır: ${b.satirlar.flatMap((x, r) => (x.tekrar ? [r] : [])).join(", ")}` : ""}`);
+      l.push("  hücreler ([satır,sütun] 0'dan · birleşikse satır×sütun kapsamı · içerik):");
+      for (const h of b.hucreler) l.push(`- [${h.r},${h.c}]${(h.rs ?? 1) > 1 || (h.cs ?? 1) > 1 ? ` ${h.rs ?? 1}×${h.cs ?? 1}` : ""} · ${hucreOzeti(h)}`);
     }
     if (b.blok === "foto") l.push(`  en az ${b.enAz}, en çok ${b.enCok} fotoğraf${b.kutular?.length ? ` · kutular: ${b.kutular.map((x) => `${x.id} · ${x.ad}`).join("; ")}` : " · adlı kutu yok"}`);
     if (b.blok === "sonuc") {
@@ -131,6 +152,10 @@ export interface FormatIslemi {
   dizilis?: unknown;
   /** sartli_secenek (595 madde 12): acik true / false */
   acik?: unknown;
+  /** tablo (2026-10-31, serbest tablo — belge formatları ve serbest düzenli rapor): eylem hucre | satir_ekle | satir_sil | sutun_ekle | sutun_sil |
+      birlestir | ayir | genislik; r, c (0'dan; ekle'de yeni satır / sütunun yeri), r2, c2 (birleştir / ayır alanının karşı köşesi), yuzde (genislik),
+      hucre (hucre eyleminde içerik: tur, yazi, deger, secenekler, zorunlu, birim, kaynak, veri, ad) */
+  r?: unknown; c?: unknown; r2?: unknown; c2?: unknown; yuzde?: unknown; hucre?: unknown;
 }
 const metin = (x: unknown, n = 200) => (typeof x === "string" ? x.trim().replace(/\s+/g, " ").slice(0, n) : "");
 const tr = (s: string) => s.trim().toLocaleLowerCase("tr");
@@ -179,6 +204,77 @@ function yama(x: FormatIslemi): OgeYamasi {
 }
 
 export interface FormatIslemSonucu { t: FormatTanimi; yapilan: string[]; gecersiz: string[] }
+
+const tamsayi = (x: unknown): number | null => (typeof x === "number" && Number.isInteger(x) ? x
+  : typeof x === "string" && /^\d+$/.test(x.trim()) ? Number(x.trim()) : null);
+const HUCRE_TUR: Record<string, Hucre["tur"]> = { ...Object.fromEntries(HUCRE_TURLERI.map((k) => [k, k])), "yazı": "yazi", elle: "alan", "kayıt": "kayit", "sıra": "sira",
+  "görsel": "gorsel", "fotoğraf": "foto", "sonuç": "sonuc" };
+const DEGER_TURU: Record<string, NonNullable<Hucre["alan"]>> = { ...Object.fromEntries(HUCRE_ALAN_TURLERI.map((k) => [k, k])), "sayı": "sayi", yazi: "metin", "yazı": "metin",
+  "seçim": "secim", "evet/hayır": "evet" };
+/** hucre eyleminin yeni içeriği (görünüm s, konum ve birleşim korunur); geçersizse neden */
+function yeniHucre(t: FormatTanimi, eski: Hucre, g: Record<string, unknown>): Hucre | string {
+  const tur = HUCRE_TUR[tr(metin(g.tur, 20) || eski.tur)];
+  if (!tur) return `hücre türü şunlardan biri olmalı: ${HUCRE_TURLERI.join(", ")}`;
+  const y: Hucre = { r: eski.r, c: eski.c, ...(eski.rs ? { rs: eski.rs } : {}), ...(eski.cs ? { cs: eski.cs } : {}), ...(eski.s ? { s: eski.s } : {}), tur };
+  const ad = metin(g.ad);
+  if (ad) y.ad = ad;
+  if (tur === "yazi") y.m = typeof g.yazi === "string" ? g.yazi.slice(0, 2000) : eski.tur === "yazi" ? eski.m ?? "" : "";
+  if (tur === "alan") {
+    y.id = eski.tur === "alan" && eski.id ? eski.id : yeniKimlik(t, "h");
+    const d = DEGER_TURU[tr(metin(g.deger, 20) || (eski.tur === "alan" ? eski.alan ?? "metin" : "metin"))];
+    if (!d) return `değer türü şunlardan biri olmalı: ${HUCRE_ALAN_TURLERI.join(", ")}`;
+    y.alan = d;
+    const sec = Array.isArray(g.secenekler) ? g.secenekler.filter((v): v is string => typeof v === "string").map((v) => metin(v)).filter(Boolean).slice(0, 40)
+      : eski.tur === "alan" ? eski.secenekler : undefined;
+    if (d === "secim") { if (!sec?.length) return "seçimli yerin seçenekleri verilmeli"; y.secenekler = sec; }
+    const birim = typeof g.birim === "string" ? metin(g.birim, 40) : eski.tur === "alan" ? eski.birim : undefined;
+    if (birim) y.birim = birim;
+    const z = typeof g.zorunlu === "boolean" ? g.zorunlu : eski.tur === "alan" ? eski.zorunlu : undefined;
+    if (z) y.zorunlu = true;
+  }
+  if (tur === "kayit") {
+    const k = metin(g.kaynak, 40), v = metin(g.veri, 81);
+    if (k && (TABLO_KAYNAKLARI as readonly string[]).includes(k)) y.kaynak = k as Hucre["kaynak"];
+    else if (v) y.veri = v;
+    else if (eski.tur === "kayit" && (eski.kaynak || eski.veri)) Object.assign(y, eski.kaynak ? { kaynak: eski.kaynak } : { veri: eski.veri });
+    else return "kayıt hücresine kaynak (raporun bilgisi) ya da veri (belgenin bilgisi — belge_format_getir'deki adlar) verilmeli";
+  }
+  if (tur === "gorsel") y.gorsel = metin(g.veri, 10) === "akr" ? "akr" : "logo";
+  const p = Hucre.safeParse(y);
+  return p.success ? p.data : `hücre geçersiz: ${p.error.issues[0]?.message ?? "biçim"}`;
+}
+/** serbest tablonun tek işlemi — tablo.ts'in kâğıttaki tuşlarla aynı işlevleri */
+function tabloIslemi(t: FormatTanimi, b: TabloBolumu, eylem: string, r: number | null, c: number | null, r2: number | null, c2: number | null, x: FormatIslemi):
+  { b: TabloBolumu; ne: string } | string {
+  const R = b.satirlar.length, C = b.sutun.length;
+  const icinde = (rr: number | null, cc: number | null) => rr !== null && cc !== null && rr >= 0 && rr < R && cc >= 0 && cc < C;
+  if (eylem === "satir_ekle") { const k = r ?? R; if (R >= 200) return "en çok 200 satır"; return { b: satirEkle(b, k), ne: `${Math.min(k, R)}. sıraya satır eklendi` }; }
+  if (eylem === "sutun_ekle") { const k = c ?? C; if (C >= 40) return "en çok 40 sütun"; return { b: sutunEkle(b, k), ne: `${Math.min(k, C)}. sıraya sütun eklendi` }; }
+  if (eylem === "satir_sil") { if (r === null || r < 0 || r >= R || R <= 1) return "silinecek satır yok (r)"; return { b: satirSil(b, r), ne: `${r}. satır silindi` }; }
+  if (eylem === "sutun_sil") { if (c === null || c < 0 || c >= C || C <= 1) return "silinecek sütun yok (c)"; return { b: sutunSil(b, c), ne: `${c}. sütun silindi` }; }
+  if (eylem === "genislik") {
+    const yz = typeof x.yuzde === "number" ? x.yuzde : Number.NaN;
+    if (c === null || c < 0 || c >= C || !(yz > 0 && yz < 100)) return "genislik için c ve yuzde (0–100) verilmeli";
+    return { b: sutunGenisligi(b, c, yz), ne: `${c}. sütun %${yz}` };
+  }
+  if (!icinde(r, c)) return `hücre tabloda yok (r 0–${R - 1}, c 0–${C - 1})`;
+  if (eylem === "birlestir" || eylem === "ayir") {
+    const s = { r1: Math.min(r!, r2 ?? r!), c1: Math.min(c!, c2 ?? c!), r2: Math.max(r!, r2 ?? r!), c2: Math.max(c!, c2 ?? c!) };
+    if (!icinde(s.r2, s.c2)) return "alanın karşı köşesi tabloda yok";
+    const y = eylem === "birlestir" ? birlestir(b, s) : ayir(b, s);
+    return y === b ? "değişmedi" : { b: y, ne: `[${s.r1},${s.c1}]–[${s.r2},${s.c2}] ${eylem === "birlestir" ? "birleştirildi" : "ayrıldı"}` };
+  }
+  if (eylem === "hucre") {
+    const n = kapsama(b)[r!]?.[c!];
+    if (n === null || n === undefined) return "hücre bulunamadı";
+    const g = x.hucre && typeof x.hucre === "object" && !Array.isArray(x.hucre) ? x.hucre as Record<string, unknown> : {};
+    const h = yeniHucre(t, b.hucreler[n], g);
+    if (typeof h === "string") return h;
+    const e = b.hucreler[n];
+    return { b: hucreleriYaz(b, { r1: e.r, c1: e.c, r2: e.r, c2: e.c }, () => h), ne: `[${e.r},${e.c}] ${hucreOzeti(h)}` };
+  }
+  return "eylem şunlardan biri olmalı: hucre, satir_ekle, satir_sil, sutun_ekle, sutun_sil, birlestir, ayir, genislik";
+}
 
 /** işlemleri sırayla uygular; her biri bir öncekinin sonucuna (aynı istekte eklenen bölüme / öğeye adıyla ulaşılır) */
 export function formatIslemleri(t0: FormatTanimi, islemler: readonly FormatIslemi[]): FormatIslemSonucu {
@@ -293,6 +389,15 @@ export function formatIslemleri(t0: FormatTanimi, islemler: readonly FormatIslem
     const i = bolumBul(t, x.bolum);
     if (i < 0) { red(`bölüm bulunamadı (${metin(x.bolum, 60) || "—"})`); continue; }
     const b = t.bolumler[i];
+    if (islem === "tablo") {
+      if (b.blok !== "tablo") { red(`“${b.ad}” serbest tablo değil`); continue; }
+      const r = tamsayi(x.r), c = tamsayi(x.c), eylem = metin(x.eylem, 20);
+      const sonuc = tabloIslemi(t, b, eylem, r, c, tamsayi(x.r2), tamsayi(x.c2), x);
+      if (typeof sonuc === "string") { red(sonuc); continue; }
+      const l = [...t.bolumler]; l[i] = sonuc.b; t = { ...t, bolumler: l };
+      yapilan.push(`“${b.ad}”: ${sonuc.ne}`);
+      continue;
+    }
     if (islem === "bolum_sil") {
       if (b.blok === "cihaz") { red("ölçüm cihazları bölümü çıkarılmaz"); continue; }
       t = bolumSil(t, i); yapilan.push(`“${b.ad}” bölümü çıkarıldı`); continue;
@@ -538,7 +643,7 @@ export function formatIslemleri(t0: FormatTanimi, islemler: readonly FormatIslem
       continue;
     }
     red("bilinmeyen işlem (bolum_ekle, bolum_sil, bolum_adi, grup_ekle, oge_ekle, oge_degistir, oge_sil, oge_tasi, sonuc_kurali, imza_satiri, eimza_yeri, firma_satiri, "
-      + "baslik, sonuc_yeri, not_satiri, tablo_sutunu, dizilis, hazir_satir, foto_kutusu, sartli_secenek, bas_satiri, bas_hucre)");
+      + "baslik, sonuc_yeri, not_satiri, tablo_sutunu, dizilis, hazir_satir, foto_kutusu, sartli_secenek, bas_satiri, bas_hucre, tablo)");
   }
   return { t, yapilan, gecersiz };
 }
@@ -578,6 +683,10 @@ export const FORMAT_ARACI = {
     + "bas_satiri (sayfa başındaki başlık tablosunun doküman bilgisi satırları: eylem ekle — kaynak kod | surum | no | tarih | revizyon | nusha | sonraki | "
     + "serbest, ad, serbestte yazi —, degistir (oge + ad / yazi), cikar, yukari, asagi). bas_hucre (başlık tablosu hücresinin yeri: alan logo | firma | akr | "
     + "ad | dok, eylem yukari — sola — | asagi — sağa). "
+    + "tablo (serbest tablo bölümü — bolum_ekle tur tablo 3 × 4 boş açar; hücreler haritada [satır,sütun], 0'dan: eylem hucre (r, c + hucre: tur yazi | alan "
+    + "(elle doldurulan yer: deger metin | sayi | tarih | secim + secenekler | evet, zorunlu, birim) | kayit (kaynak: raporun bilgisi ya da veri: belgenin bilgisi) "
+    + "| sira | imza | gorsel (veri logo | akr), yazi, ad), satir_ekle (r: yeri; yoksa sona), satir_sil (r), sutun_ekle (c), sutun_sil (c), birlestir / ayir (r, c, "
+    + "r2, c2: alanın köşeleri), genislik (c, yuzde)). "
     + "Değişiklik taslakta olur; kullanıcı Kaydet ve Yayınla der.",
   input_schema: {
     type: "object",
@@ -588,17 +697,20 @@ export const FORMAT_ARACI = {
           type: "object",
           properties: {
             islem: { type: "string", enum: ["bolum_ekle", "bolum_sil", "bolum_adi", "grup_ekle", "oge_ekle", "oge_degistir", "oge_sil", "oge_tasi", "sonuc_kurali", "imza_satiri", "eimza_yeri", "firma_satiri",
-              "baslik", "sonuc_yeri", "not_satiri", "tablo_sutunu", "dizilis", "hazir_satir", "foto_kutusu", "sartli_secenek", "bas_satiri", "bas_hucre"] },
+              "baslik", "sonuc_yeri", "not_satiri", "tablo_sutunu", "dizilis", "hazir_satir", "foto_kutusu", "sartli_secenek", "bas_satiri", "bas_hucre", "tablo"] },
             bolum: { type: "string" }, oge: { type: "string" }, tur: { type: "string" }, ad: { type: "string" }, birim: { type: "string" },
             formul: { type: "string" }, secenekler: { type: "array", items: { type: "string" } }, op: { type: "string" }, sinir: { type: "number" },
             zorunlu: { type: "boolean" }, grup: { type: "string" }, sonra: { type: "string" },
             kurallar: { type: "array", maxItems: KURAL_EN_COK, items: { type: "object", properties: {
               kosul: { type: "string" }, neden: { type: "string" }, aciklama: { type: "string" }, agir: { type: "boolean" } }, required: ["kosul"] } },
             bakanlik: { type: "boolean" },
-            eylem: { type: "string", enum: ["ekle", "degistir", "cikar", "yukari", "asagi", "tablo", "liste"] }, dizilis: { type: "number" }, acik: { type: "boolean" }, kisi: { type: "string", enum: ["uzman", "teknik", "uzman2", "tesis", "diger"] },
+            eylem: { type: "string", enum: ["ekle", "degistir", "cikar", "yukari", "asagi", "tablo", "liste", "hucre", "satir_ekle", "satir_sil", "sutun_ekle", "sutun_sil", "birlestir", "ayir", "genislik"] }, dizilis: { type: "number" }, acik: { type: "boolean" }, kisi: { type: "string", enum: ["uzman", "teknik", "uzman2", "tesis", "diger"] },
             bilgi: { type: "string", enum: [...IMZA_ALANLARI] }, yazi: { type: "string" }, tam: { type: "boolean" },
             kaynak: { type: "string", enum: [...new Set<string>([...FIRMA_KAYNAKLARI, ...BAS_KAYNAKLARI])] },
             yer: { type: "string", enum: ["hucre", "kutu", "gorunmez", "yok", "son", "bas", "gizli"] }, sayfa: { type: "string", enum: ["son", "her"] }, alan: { type: "string" }, satir: { type: "number" }, x: { type: "number" }, y: { type: "number" }, en: { type: "number" }, boy: { type: "number" },
+            r: { type: "integer" }, c: { type: "integer" }, r2: { type: "integer" }, c2: { type: "integer" }, yuzde: { type: "number" },
+            hucre: { type: "object", properties: { tur: { type: "string" }, yazi: { type: "string" }, deger: { type: "string" }, secenekler: { type: "array", items: { type: "string" } },
+              zorunlu: { type: "boolean" }, birim: { type: "string" }, kaynak: { type: "string" }, veri: { type: "string" }, ad: { type: "string" } } },
           },
           required: ["islem"],
         },

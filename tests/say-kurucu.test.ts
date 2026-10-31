@@ -64,3 +64,43 @@ test("işlemler: öğe değiştir / çıkar (adıyla), madde, grup, bölüm adı
   assert.ok(r.t.bolumler.some((b) => b.blok === "cihaz"), "ölçüm cihazları bölümü çıkmadı");
   assert.equal(r.gecersiz.length, 5, r.gecersiz.join(" | "));
 });
+
+/* 2026-10-31 (S.A.Y belge formatları — reisim: "önerdiklerini kabul ediyorum"): serbest tablo hücre hücre — haritada [satır,sütun] ve içerik; "tablo" işlemi
+   kâğıttaki tuşlarla aynı işlevlerle (tablo.ts): hücre yaz (yazı, elle doldurulan yer — kimlik yeni ve tekil —, kayıt), satır / sütun ekle-sil, birleştir /
+   ayır; geçersiz istek nedeniyle, girdi bozulmaz. Olumsuz kanıt: bozan say-kurucu-tablo. */
+test("serbest tablo: harita hücreleri gösterir; hücre yaz, satır / sütun, birleştir / ayır", () => {
+  const t0 = FormatTanimi.parse({ sema: 1, gorunum: { serbest: true }, bolumler: [] });
+  const r = formatIslemleri(t0, [
+    { islem: "bolum_ekle", tur: "tablo", ad: "Sözleşme" },
+    { islem: "tablo", bolum: "Sözleşme", eylem: "hucre", r: 0, c: 0, hucre: { tur: "yazi", yazi: "Müşteri yetkilisi" } },
+    { islem: "tablo", bolum: "Sözleşme", eylem: "hucre", r: 0, c: 1, hucre: { tur: "alan", deger: "metin", zorunlu: true } },
+    { islem: "tablo", bolum: "Sözleşme", eylem: "hucre", r: 1, c: 1, hucre: { tur: "alan", deger: "secim", secenekler: ["Havale", "Nakit"] } },
+    { islem: "tablo", bolum: "Sözleşme", eylem: "hucre", r: 2, c: 0, hucre: { tur: "kayit", veri: "musteri_unvan" } },
+    { islem: "tablo", bolum: "Sözleşme", eylem: "birlestir", r: 2, c: 2, r2: 2, c2: 3 },
+    { islem: "tablo", bolum: "Sözleşme", eylem: "satir_ekle" },
+    { islem: "tablo", bolum: "Sözleşme", eylem: "sutun_sil", c: 3 },
+  ]);
+  assert.deepEqual(r.gecersiz, []);
+  assert.equal(r.yapilan.length, 8);
+  const b = r.t.bolumler[0] as BolumOf<"tablo">;
+  assert.equal(b.satirlar.length, 4);
+  assert.equal(b.sutun.length, 3);
+  const h = (rr: number, cc: number) => b.hucreler.find((x) => x.r === rr && x.c === cc)!;
+  assert.equal(h(0, 0).m, "Müşteri yetkilisi");
+  assert.ok(h(0, 1).tur === "alan" && h(0, 1).zorunlu && /^k_h\d+$/.test(h(0, 1).id!));
+  assert.notEqual(h(0, 1).id, h(1, 1).id, "kimlik tekil");
+  assert.equal(h(2, 0).veri, "musteri_unvan");
+  assert.equal(h(2, 2).cs, undefined, "birleşik hücrenin sütunu silinince kapsam daralır");
+  const m = formatHaritasi(r.t);
+  assert.match(m, /^- \[0,0\] · yazı “Müşteri yetkilisi”$/m);
+  assert.match(m, /^- \[1,1\] · elle doldurulan \(secim: Havale \/ Nakit\)$/m);
+  assert.match(m, /^- \[2,0\] · kayıttan: musteri_unvan$/m);
+  const k = formatIslemleri(r.t, [
+    { islem: "tablo", bolum: "Sözleşme", eylem: "hucre", r: 9, c: 0, hucre: { tur: "yazi" } },
+    { islem: "tablo", bolum: "Sözleşme", eylem: "hucre", r: 0, c: 0, hucre: { tur: "alan", deger: "secim" } },
+    { islem: "tablo", bolum: "Sözleşme", eylem: "uçur", r: 0, c: 0 },
+  ]);
+  assert.equal(k.gecersiz.length, 3);
+  assert.match(k.gecersiz.join(" "), /tabloda yok.*seçenekleri.*eylem şunlardan/);
+  assert.equal(JSON.stringify(k.t), JSON.stringify(r.t), "geçersiz istek tabloyu değiştirmez");
+});

@@ -12,7 +12,9 @@ import { SuzgecDurumuSemasi } from "../../server/liste/liste.ts";
 import { GORUNMEZ, islem, IslemGeriAl, metinSayfasi, yazmaCevabi, type IslemCevabi, type Islem, type SayfaTanimi } from "../../server/yz/islem.ts";
 import { TurGirdisi } from "../ekipman-turleri/sema.ts";
 import { formatHaritasi, formatIslemleri, type FormatIslemi } from "./say-kurucu.ts";
-import { BaslatGirdisi, YayinNotu } from "./sema.ts";
+import { BaslatGirdisi, BelgeTuruGirdisi, YayinNotu } from "./sema.ts";
+import { BELGE_KATALOGU } from "../../belge/katalog.ts";
+import { belgeFormatiOku, belgeFormatlari, belgeTaslakAc, belgeTaslakKaydet, belgeTemeleDon, belgeYayinla } from "./server/belgeler.ts";
 import {
   formatAyrintisi, formatSurumleri, GeriDonusIptal, sablondanTurEkle, sablonKullanimi, surumeGeriDon, surumSil, taslakBaslat, taslakKaydet, yayinDenetle, yayinla,
   type YayinSonucu,
@@ -127,9 +129,70 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
       return yazmaCevabi(r, { bildirim: r.durum === "tamam" ? `${r.ad} silindi.` : undefined });
     },
   }),
+  /* 2026-10-31 (S.A.Y belge formatları — reisim: "önerdiklerini kabul ediyorum"): Firma ayarları › Belge formatları ekranının işlevleri (aynı yetki: görmek
+     "gor", değiştirmek Rapor formatı "yaz"); taslak serbest tablo — formati_duzenle'nin işlemleriyle (tablo, bolum_ekle tablo / metin …). Basılı PDF'ten
+     belge şablonu ekrandan: format_pdf_kur aracı belge ile. */
+  islem({
+    ad: "belge_formatlari", modul: MODUL, tur: "oku", girdi: z.object({ belge: BelgeTuruGirdisi.optional() }), kaynak: [BelgeTuruGirdisi], islev: belgeFormatlari,
+    tarif: "Programın ürettiği belgeler (zimmet, arac, egitim, izin, masraf, teklif, fatura, saha, onbilgi, sozlesme; belge verilirse yalnız o): yayındaki ve taslak format (kimlik, sürüm).",
+    calistir: async (b, v) => {
+      const l = await belgeFormatlari(b.db, b.kim);
+      return l ? { tamam: true, sonuc: { belgeler: v.belge ? l.filter((x) => x.belge === v.belge) : l } } : { tamam: false, neden: GORUNMEZ };
+    },
+  }),
+  islem({
+    ad: "belge_format_getir", modul: MODUL, tur: "oku", girdi: z.object({ format: kimlik, sayfa: SuzgecDurumuSemasi.shape.sayfa }), kaynak: [kimlik, SuzgecDurumuSemasi],
+    islev: belgeFormatiOku,
+    tarif: "Belge formatı sürümünün haritası (serbest tablolar hücre hücre — sayfa sayfa), durumu, sürümü (surum) ve belgenin kayıttan gelen bilgileri (kayıt hücresinin veri adları).",
+    calistir: async (b, v) => {
+      const f = await belgeFormatiOku(b.db, b.kim, v.format);
+      if (!f) return { tamam: false, neden: GORUNMEZ };
+      const k = BELGE_KATALOGU[f.belge], h = metinSayfasi(formatHaritasi(f.tanim), v.sayfa);
+      return { tamam: true, sonuc: { id: f.id, belge: f.belge, ad: k.ad, durum: f.durum, surum: f.surum, harita: h.metin, harita_sayfa: h.bilgi,
+        veriler: [...k.alanlar.map((a) => `${a.anahtar} · ${a.ad}`), ...k.listeler.flatMap((l) => l.kolonlar.map((c) => `${l.anahtar}.${c.anahtar} · ${l.ad} › ${c.ad} (çoğalan satır)`))] } };
+    },
+  }),
+  islem({
+    ad: "belge_taslak_ac", modul: MODUL, tur: "yaz", girdi: z.object({ belge: BelgeTuruGirdisi, kaynak: z.enum(["bos", "yayindaki"]) }), kaynak: [BelgeTuruGirdisi], islev: belgeTaslakAc,
+    tarif: "Belgenin format taslağını açar: kaynak bos (boş serbest tablo) | yayindaki (yayındaki sürümün kopyası); açık taslak varsa onun yerine geçer.",
+    calistir: async (b, v) => {
+      const t = (await belgeFormatlari(b.db, b.kim))?.find((x) => x.belge === v.belge)?.taslak ?? null;
+      return yazmaCevabi(await belgeTaslakAc(b.db, b.kim, v.belge, v.kaynak, t?.surum ?? null), { bildirim: "Belge taslağı açıldı." });
+    },
+  }),
+  islem({
+    ad: "belge_taslak_duzenle", modul: MODUL, tur: "yaz", girdi: z.object({ format: kimlik, surum, islemler: z.array(z.record(z.string(), z.unknown())).min(1) }),
+    kaynak: [kimlik, surum], islev: belgeTaslakKaydet,
+    tarif: "Kaydedilmiş belge TASLAĞINI değiştirir ve kaydeder — işlemler formati_duzenle aracıyla aynı (tablo: hücre, satır, sütun, birleştir; bolum_ekle tur tablo | metin; "
+      + "bolum_sil, bolum_adi); belgede hücre türleri yazi, alan (elle doldurulan yer), kayit (veri: belge_format_getir veriler), sira, gorsel.",
+    calistir: async (b, v, ham) => {
+      const f = await belgeFormatiOku(b.db, b.kim, v.format);
+      if (!f) return { tamam: false, neden: GORUNMEZ };
+      if (f.durum !== "taslak") return { tamam: false, neden: "Yalnız taslak düzenlenir (yayınlanan sürüm değişmez); önce belge_taslak_ac." };
+      const r = formatIslemleri(f.tanim, ham.islemler as FormatIslemi[]);
+      if (!r.yapilan.length) return { tamam: false, neden: `Hiçbir değişiklik yapılamadı: ${r.gecersiz.join("; ") || "işlem yok"}` };
+      const k = await belgeTaslakKaydet(b.db, b.kim, v.format, v.surum, r.t);
+      if (k.durum !== "tamam") return yazmaCevabi(k);
+      return { tamam: true, bildirim: `Belge taslağı kaydedildi: ${r.yapilan.join("; ")}.${r.gecersiz.length ? ` Yapılamayan: ${r.gecersiz.join("; ")}` : ""}`, sonuc: { id: k.id, surum: k.surum } };
+    },
+  }),
+  islem({
+    ad: "belge_yayinla", modul: MODUL, tur: "yaz", girdi: z.object({ format: kimlik, surum, notu: YayinNotu.optional() }), kaynak: [kimlik, surum, YayinNotu], islev: belgeYayinla,
+    tarif: "Belge taslağını yayınlar (yayındaki eskiye düşer; belge bundan sonra bu formatla çizilir): format, surum, notu.",
+    calistir: async (b, v, ham) => {
+      const r = await belgeYayinla(b.db, b.kim, v.format, v.surum, ham.notu ?? "");
+      return r.durum === "tamam" ? { tamam: true, bildirim: `Belge formatı sürüm ${r.sira} yayında.` } : yazmaCevabi(r);
+    },
+  }),
+  islem({
+    ad: "belge_temele_don", modul: MODUL, tur: "yaz", girdi: z.object({ belge: BelgeTuruGirdisi }), kaynak: [BelgeTuruGirdisi], islev: belgeTemeleDon,
+    tarif: "Belgenin yayındaki formatını kaldırır; belge yeniden programın temel formatıyla çizilir (sürümler silinmez, taslak kalır).",
+    calistir: async (b, v) => yazmaCevabi(await belgeTemeleDon(b.db, b.kim, v.belge), { bildirim: "Belge temel formata döndü." }),
+  }),
 ];
 
 /** 2026-10-31 (K2 + M4): S.A.Y'ın açık kaydı bildiği ayrıntı sayfaları (src/server/yz/islem.ts acikKayit) */
 export const SAY_SAYFALARI: readonly SayfaTanimi[] = [
+  { desen: /^\/firma-ayarlari\/belgeler\/([0-9a-f-]{36})\/kurucu$/, tur: "Belge formatı taslağı", islem: "belge_format_getir", girdi: (id) => ({ format: id, sayfa: 1 }) },
   { desen: /^\/ekipman-turleri\/([0-9a-f-]{36})\/sablon\/([0-9a-f-]{36})$/, tur: "Rapor formatı sürümü", islem: "format_getir", girdi: (_tur, id) => ({ format: id, sayfa: 1 }) },
 ];

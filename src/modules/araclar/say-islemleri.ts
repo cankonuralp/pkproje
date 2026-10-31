@@ -9,6 +9,10 @@ import { GORUNMEZ, islem, sayfala, trIcerir, yazmaCevabi, type Islem, type Sayfa
 import { AracGirdisi, KmGirdisi } from "./sema.ts";
 import { aracKarti, aracKaydet, aracListesi, aracPasif, aracSil, kmKaydet } from "./server/araclar.ts";
 
+import { doldurmaCevabi, doldurmaHazirla } from "../../server/yz/doldurma.ts";
+import { ElleDegerGirdisi } from "../rapor-format/sema.ts";
+import { tutanakDoldur, tutanakDoldurmaVerisi } from "./server/araclar.ts";
+
 const MODUL = 23;
 const ALAN = ["plaka", "tur", "marka", "model", "yil", "yakit", "ilkKm", "bakimKm", "muayene", "sigorta", "kasko"] as const;
 /** pencerenin gönderdiği gibi (sayılar yazı) — verilmeyen alan kartın değeriyle */
@@ -68,6 +72,15 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
     calistir: async (b, v) => {
       const r = await aracSil(b.db, b.kim, v.arac);
       return yazmaCevabi(r, { bildirim: r.durum === "tamam" ? `${r.ad} silindi.` : undefined });
+    },
+  }),
+  /* 2026-10-31 (S.A.Y belge doldurma): ekranın "Belgeyi doldur"u — yerler ve kayıt modülün işlevleriyle (src/server/yz/doldurma.ts) */
+  islem({
+    ad: "arac_tutanak_doldur", modul: MODUL, tur: "yaz", islev: tutanakDoldur, kaynak: [kimlik, ElleDegerGirdisi], girdi: z.object({ hareket: kimlik, degerler: ElleDegerGirdisi }),
+    tarif: "Araç teslim tutanağının belgesi: elle doldurulan yerlerine yazar — hareket, degerler (yerin kimliği ya da adı → değer; \"\" boşaltır). degerler boşsa yazmadan yerleri listeler (ad, tür, zorunlu, dolu mu).",
+    calistir: async (b, v) => {
+      const h = doldurmaHazirla(await tutanakDoldurmaVerisi(b.db, b.kim, v.hareket), v.degerler);
+      return "cevap" in h ? h.cevap : doldurmaCevabi(await tutanakDoldur(b.db, b.kim, v.hareket, h.degerler, h.surum), "Araç tutanağı");
     },
   }),
 ];

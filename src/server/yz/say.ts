@@ -9,6 +9,7 @@
    · Talimatta yalnız reisim'in iki kuralı: konu sınırı (2026-10-14: "site dışı gereksiz sorulara da cevap veriyor, vermesin") ve iş akışı
      (2026-10-14: "komut gelsin, yapılsın, doğruluğunu teyit et, yapıldıysa yapıldı de, yapılamadıysa sebebi ile yaz"; 2026-10-15: "tekrar tekrar
      soruyor" — devam edeyim mi diye sormaz). Uzunluk, tur, adım, giriş, arama sayısı, ek sayısı ve boyu sınırı YOK. */
+import { BELGE_TURLERI, belgeTuruMu, type BelgeTuru } from "../../belge/katalog.ts";
 import { TABLO_SATIR_EN_COK } from "../../format/tanim.ts";
 import { MODEL_KIMLIGI, onbellekliMaliyet, type YzModel } from "./okuma.ts";
 
@@ -248,12 +249,13 @@ export const ARAMA_ARACI = { type: "web_search_20250305", name: "web_search" } a
 export const FORMAT_PDF_ARACI = {
   name: "format_pdf_kur",
   description: "Kullanıcının bu konuşmada eklediği bir PDF'i ekipman türünün format PDF'i olarak yükler ve rapor şablonunu o PDF'ten kurar (taslak); "
-    + "Format kurucu açılır. tur: ekipman türünün kimliği; ek: PDF'in, eklerin geldiği SON mesajdaki sırası (o mesajın 1., 2. … eki; M numarası değil); taslak_surum: türde açık taslak "
+    + "Format kurucu açılır. Programın ürettiği bir belgenin (sözleşme, teklif, zimmet …) formatı için tur yerine belge verilir: şablon belgenin taslağı olur "
+    + "(taslak_surum: belge_formatlari'ndaki taslağın sürümü). tur: ekipman türünün kimliği; ek: PDF'in, eklerin geldiği SON mesajdaki sırası (o mesajın 1., 2. … eki; M numarası değil); taslak_surum: türde açık taslak "
     + "varsa onun sürümü (format_surumleri), yoksa boş. Sonuç (yüklenen sürüm, kurulan taslak, alınamayan bölümler) sana döner.",
   input_schema: {
     type: "object",
-    properties: { tur: { type: "string" }, ek: { type: "integer", minimum: 1 }, taslak_surum: { type: ["integer", "null"] } },
-    required: ["tur", "ek"],
+    properties: { tur: { type: "string" }, belge: { type: "string", enum: [...BELGE_TURLERI] }, ek: { type: "integer", minimum: 1 }, taslak_surum: { type: ["integer", "null"] } },
+    required: ["ek"],
   },
 } as const;
 /** ekranın yaptığı araçlar (sonucu ekran döndürür); ötekiler sunucuda */
@@ -321,7 +323,7 @@ export interface SatirEkle { tablo: string; adet: number; degerler: Record<strin
     çağrısı kimliği (sonucu ona bağlanır) */
 export type SayKomutu = ({ tur: "yaz"; girisler: { yer: string; deger: string }[]; satirlar?: SatirEkle[] } | { tur: "oku" } | { tur: "geri" }
   | { tur: "format"; islemler: Record<string, unknown>[] } | { tur: "kaydet" } | { tur: "gonder" }
-  | { tur: "pdfFormat"; turId: string; ek: number; taslakSurumu: number | null }
+  | { tur: "pdfFormat"; turId: string; ek: number; taslakSurumu: number | null; belge?: BelgeTuru }
   | { tur: "form"; rapor: string | null; sayfa: number }
   | { tur: "islem"; ad: string; girdi: Record<string, unknown> } | { tur: "islemler"; adlar?: string[]; modul?: string; ara?: string }) & { id?: string };
 const ARAC_ADI = { yaz: "rapora_yaz", oku: "fotograflari_oku", geri: "geri_al", format: "formati_duzenle", kaydet: "raporu_kaydet", gonder: "onaya_gonder",
@@ -376,8 +378,9 @@ export function aracCagrisi(c: Record<string, unknown>): SayKomutu | null {
   }
   if (c.name === "format_pdf_kur") {
     const turId = typeof girdi.tur === "string" ? girdi.tur.trim() : "", ek = tamSayi(girdi.ek), ts = girdi.taslak_surum == null ? null : tamSayi(girdi.taslak_surum);
-    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(turId) && ek !== undefined && ek >= 1 && ts !== undefined
-      ? { tur: "pdfFormat", turId, ek, taslakSurumu: ts, ...id } : null;
+    if (ek === undefined || ek < 1 || ts === undefined) return null;
+    if (belgeTuruMu(girdi.belge)) return { tur: "pdfFormat", turId: "", belge: girdi.belge, ek, taslakSurumu: ts, ...id };
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(turId) ? { tur: "pdfFormat", turId, ek, taslakSurumu: ts, ...id } : null;
   }
   if (c.name === "form_goster") {
     const rapor = typeof girdi.rapor === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(girdi.rapor.trim()) ? girdi.rapor.trim() : null;
@@ -398,7 +401,7 @@ export function komutDenetle(x: unknown): SayKomutu | null {
   if (!ad) return null;
   return aracCagrisi({ type: "tool_use", id: o.id, name: ad, input: o.tur === "yaz" ? { girisler: o.girisler, satir_ekle: o.satirlar } : o.tur === "format" ? { islemler: o.islemler }
     : o.tur === "islem" ? { ad: o.ad, girdi: o.girdi } : o.tur === "islemler" ? { adlar: o.adlar, modul: o.modul, ara: o.ara }
-    : o.tur === "pdfFormat" ? { tur: o.turId, ek: o.ek, taslak_surum: o.taslakSurumu } : o.tur === "form" ? { rapor: o.rapor, sayfa: o.sayfa } : {} });
+    : o.tur === "pdfFormat" ? { tur: o.turId, ...(o.belge ? { belge: o.belge } : {}), ek: o.ek, taslak_surum: o.taslakSurumu } : o.tur === "form" ? { rapor: o.rapor, sayfa: o.sayfa } : {} });
 }
 
 /** araç sonucunun S.A.Y'a giden metni (JSON): sayılar, yapılanlar, yapılamayanlar nedeniyle; sunucu işleminin sonucu olduğu gibi */

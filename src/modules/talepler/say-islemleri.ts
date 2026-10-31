@@ -13,6 +13,10 @@ import {
   izinDuzelt, izinGeriCek, izinGonder, izinTalepleri, masrafFormuDuzelt, masrafFormuGeriCek, masrafFormuGonder, onayTalepleri, talepKarar, taleplerim,
 } from "./server/talepler.ts";
 
+import { doldurmaCevabi, doldurmaHazirla } from "../../server/yz/doldurma.ts";
+import { ElleDegerGirdisi } from "../rapor-format/sema.ts";
+import { talepDoldur, talepDoldurmaVerisi } from "./server/talepler.ts";
+
 const MODUL = 21;
 const MASRAF = z.object(GiderGirdisi.shape).omit({ personel: true, odeme: true });
 
@@ -85,5 +89,15 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
       + "için en az 10 karakter; talep edene görünür).",
     calistir: async (b, v, ham) => yazmaCevabi(await talepKarar(b.db, b.kim, v.tip, v.talep, v.surum, v.karar, { gerekce: ham.gerekce }),
       { bildirim: v.karar === "onayla" ? "Talep onaylandı." : v.karar === "geri" ? "Talep düzeltmeye geri gönderildi." : "Talep reddedildi." }),
+  }),
+  /* 2026-10-31 (S.A.Y belge doldurma): ekranın "Belgeyi doldur"u — yerler ve kayıt modülün işlevleriyle (src/server/yz/doldurma.ts) */
+  islem({
+    ad: "talep_belge_doldur", modul: MODUL, tur: "yaz", islev: talepDoldur, kaynak: [kimlik, ElleDegerGirdisi],
+    girdi: z.object({ tip: z.enum(["izin", "masraf"]), talep: kimlik, degerler: ElleDegerGirdisi }),
+    tarif: "İzin talebi / masraf formu belgesi: elle doldurulan yerlerine yazar — tip (izin | masraf), talep, degerler (yerin kimliği ya da adı → değer; \"\" boşaltır). degerler boşsa yazmadan yerleri listeler (ad, tür, zorunlu, dolu mu).",
+    calistir: async (b, v) => {
+      const h = doldurmaHazirla(await talepDoldurmaVerisi(b.db, b.kim, v.tip, v.talep), v.degerler);
+      return "cevap" in h ? h.cevap : doldurmaCevabi(await talepDoldur(b.db, b.kim, v.tip, v.talep, h.degerler, h.surum), v.tip === "izin" ? "İzin talebi formu" : "Masraf formu");
+    },
   }),
 ];

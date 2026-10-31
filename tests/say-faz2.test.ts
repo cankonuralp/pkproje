@@ -54,3 +54,14 @@ test("panel: dosya bırakma, çoklu seçim, ZIP açma, PDF'ten şablon (tür say
   assert.ok(KURALLAR.panel(oku("src/modules/say/ui/SayAsistan.tsx")));
   assert.ok(KURALLAR.sablon(oku("src/modules/ekipman-turleri/ui/pdfdenSablon.ts")));
 });
+
+/* 2026-10-31 (S.A.Y belge formatları — reisim: "önerdiklerini kabul ediyorum"): aynı araç belgenin formatını da kurar — tur yerine belge; geçersiz belge reddedilir;
+   ekran Belge formatları'nın yolunu (pdfdenBelgeKur → belge kurucusu) kullanır */
+test("format_pdf_kur belge ile: biçim, geri gönderilen komut aynı, ekranın yolu", () => {
+  const k = aracCagrisi({ type: "tool_use", id: "b1", name: "format_pdf_kur", input: { belge: "sozlesme", ek: 1, taslak_surum: 3 } });
+  assert.deepEqual(k, { tur: "pdfFormat", turId: "", belge: "sozlesme", ek: 1, taslakSurumu: 3, id: "b1" });
+  assert.deepEqual(komutDenetle(k), k);
+  assert.equal(aracCagrisi({ type: "tool_use", id: "b2", name: "format_pdf_kur", input: { belge: "olmayan", ek: 1 } }), null);
+  const say = oku("src/modules/say/ui/SayAsistan.tsx");
+  assert.ok(/pdfdenBelgeKur\(k\.belge, dosya, k\.taslakSurumu\)/.test(say) && say.includes("/firma-ayarlari/belgeler/${b.taslak}/kurucu"));
+});

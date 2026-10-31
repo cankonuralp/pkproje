@@ -59,6 +59,7 @@ import { Serit } from "../../../components/serit/Serit";
 import type { SohbetEkAdi, SohbetEksik, SohbetIletisi } from "../../../server/yz/sohbet";
 import { xlsxSayfalari, zipAc } from "../../../components/disa/oku";
 import { pdfdenSablonKur } from "../../ekipman-turleri/ui/pdfdenSablon";
+import { pdfdenBelgeKur } from "../../rapor-format/ui/pdfdenBelge";
 import { formGoruntusuIste, onayGonder } from "./form";
 import { KosulKabul } from "./KosulKabul";
 import { Oneriler } from "./Oneriler";
@@ -440,6 +441,13 @@ export function SayAsistan() {
       if (!dosya) return yapilamadi("Format PDF'i", `son mesajın eklerinde ${k.ek}. dosya yok (bu sayfada); kullanıcı PDF'i yeniden eklemeli`);
       if (!(dosya.type === "application/pdf" || /\.pdf$/i.test(dosya.name))) return yapilamadi("Format PDF'i", `${k.ek}. ek PDF değil`);
       setAsama("Şablonu kuruyor");
+      /* 2026-10-31 (S.A.Y belge formatları): belgenin formatı — Belge formatları ekranının "Basılı formdan kur"u */
+      if (k.belge) {
+        const b = await pdfdenBelgeKur(k.belge, dosya, k.taslakSurumu);
+        if (!b.tamam) return yapilamadi("Belge formatı", b.neden);
+        router.push(`/firma-ayarlari/belgeler/${b.taslak}/kurucu`);
+        return { ozet: { yazildi: 1, ayni: 0, bekliyor: 0, yapilan: [`Belgenin şablonu PDF'ten taslak olarak kuruldu (taslak ${b.taslak}), belge kurucusu açıldı`, ...b.uyarilar], yazilamadi: [] } };
+      }
       const y = await pdfdenSablonKur(k.turId, dosya, k.taslakSurumu);
       if (!y.tamam) return yapilamadi("Format PDF'i", y.neden);
       router.push(`/ekipman-turleri/${k.turId}/sablon/${y.taslak}/kurucu`);

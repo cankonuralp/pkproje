@@ -22,6 +22,10 @@ import {
 } from "./server/plan-ici.ts";
 import { planAc, planAcVerisi, planKarti, tesisPlanBilgisi } from "./server/planlar.ts";
 
+import { doldurmaCevabi, doldurmaHazirla } from "../../server/yz/doldurma.ts";
+import { ElleDegerGirdisi } from "../rapor-format/sema.ts";
+import { onBilgiDoldur, planBelgeleri, sahaFormuDoldur } from "./server/plan-ici.ts";
+
 const MODUL = 13;
 const PLAN_ID = z.object({ plan: kimlik });
 const PLAN_SURUM = z.object({ plan: kimlik, surum });
@@ -254,6 +258,24 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
     ad: "saha_tarama_kaldir", modul: MODUL, tur: "yaz", islev: sahaTaramaKaldir, kaynak: [kimlik, surum], girdi: z.object({ plan: kimlik, form: kimlik, surum }),
     tarif: "Saha formunun yüklenmiş taramasını kaldırır: plan, form, surum.",
     calistir: async (b, v) => yazmaCevabi(await sahaTaramaKaldir(b.db, b.kim, v.plan, v.form, v.surum), { bildirim: "Tarama kaldırıldı." }),
+  }),
+  /* 2026-10-31 (S.A.Y belge doldurma): ekranın "Belgeyi doldur"u — yerler ve kayıt modülün işlevleriyle (src/server/yz/doldurma.ts) */
+  islem({
+    ad: "on_bilgi_doldur", modul: MODUL, tur: "yaz", islev: onBilgiDoldur, kaynak: [kimlik, ElleDegerGirdisi], girdi: z.object({ plan: kimlik, degerler: ElleDegerGirdisi }),
+    tarif: "Planın ön bilgilendirme formu: elle doldurulan yerlerine yazar — plan, degerler (yerin kimliği ya da adı → değer; \"\" boşaltır). degerler boşsa yazmadan yerleri listeler (ad, tür, zorunlu, dolu mu).",
+    calistir: async (b, v) => {
+      const h = doldurmaHazirla((await planBelgeleri(b.db, b.kim, v.plan, null))?.onBilgiDoldur ?? null, v.degerler);
+      return "cevap" in h ? h.cevap : doldurmaCevabi(await onBilgiDoldur(b.db, b.kim, v.plan, h.degerler, h.surum), "Ön bilgilendirme formu");
+    },
+  }),
+  islem({
+    ad: "saha_formu_doldur", modul: MODUL, tur: "yaz", islev: sahaFormuDoldur, kaynak: [kimlik, ElleDegerGirdisi],
+    girdi: z.object({ plan: kimlik, form: kimlik, degerler: ElleDegerGirdisi }),
+    tarif: "Tamamlanan planın saha formu: elle doldurulan yerlerine yazar — plan, form (plan_getir saha formları), degerler (yerin kimliği ya da adı → değer; \"\" boşaltır). degerler boşsa yazmadan yerleri listeler (ad, tür, zorunlu, dolu mu).",
+    calistir: async (b, v) => {
+      const h = doldurmaHazirla((await planBelgeleri(b.db, b.kim, v.plan, null))?.sahaDoldur[v.form] ?? null, v.degerler);
+      return "cevap" in h ? h.cevap : doldurmaCevabi(await sahaFormuDoldur(b.db, b.kim, v.plan, v.form, h.degerler, h.surum), "Saha formu");
+    },
   }),
 ];
 

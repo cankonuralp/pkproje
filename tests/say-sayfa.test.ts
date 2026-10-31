@@ -21,7 +21,6 @@ export const DISARIDA: Readonly<Record<string, string>> = {
   "/ekipman-turleri/[id]/sablon/[sid]/kurucu": "format kurucunun kendi bağlamı (taslak haritası)",
   "/ekipman-turleri/sablon/[anahtar]": "hazır şablon önizlemesi, kayıt değil",
   "/dokumanlar/kriterler/[kod]": "Bakanlık kriter belgesi, kayıt değil",
-  "/firma-ayarlari/belgeler/[sid]/kurucu": "belge formatı işlemleri kalem 9'da",
 };
 function rotalar(k = KOK, on = ""): string[] {
   const l: string[] = [];

@@ -9,6 +9,10 @@ import { EK_NO, ekBelgesi, GORUNMEZ, islem, sayfaBilgisi, yazmaCevabi, type Isle
 import { IsgGirdisi, SozlesmeGirdisi } from "./sema.ts";
 import { imzaliYukle, isgKaldir, isgKaydet, sozlesmeHazirla, sozlesmeKarti, sozlesmeSayfasi, sozlesmeSecenekleri, sozlesmeSil } from "./server/sozlesmeler.ts";
 
+import { doldurmaCevabi, doldurmaHazirla } from "../../server/yz/doldurma.ts";
+import { ElleDegerGirdisi } from "../rapor-format/sema.ts";
+import { sozlesmeBelgeBolumu, sozlesmeDoldur } from "./server/sozlesmeler.ts";
+
 const MODUL = 12;
 
 export const SAY_ISLEMLERI: readonly Islem[] = [
@@ -74,6 +78,16 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
       const belge = await ekBelgesi(b, v.ek, ["pdf"]);
       if (typeof belge === "string") return { tamam: false, neden: belge };
       return yazmaCevabi(await imzaliYukle(b.db, b.depo(), b.kim, b.firmaId, v.sozlesme, v.surum, belge), { bildirim: `${belge.ad} sözleşmeye eklendi.` });
+    },
+  }),
+  /* 2026-10-31 (S.A.Y belge doldurma): ekranın "Belgeyi doldur"u — yerler ve kayıt modülün işlevleriyle (src/server/yz/doldurma.ts) */
+  islem({
+    ad: "sozlesme_doldur", modul: MODUL, tur: "yaz", islev: sozlesmeDoldur, kaynak: [kimlik, ElleDegerGirdisi], girdi: z.object({ sozlesme: kimlik, degerler: ElleDegerGirdisi }),
+    tarif: "Sözleşme belgesi: elle doldurulan yerlerine yazar — sozlesme, degerler (yerin kimliği ya da adı → değer; \"\" boşaltır). degerler boşsa yazmadan yerleri listeler (ad, tür, zorunlu, dolu mu).",
+    calistir: async (b, v) => {
+      const x = await sozlesmeKarti(b.db, b.kim, v.sozlesme);
+      const h = doldurmaHazirla(x ? (await sozlesmeBelgeBolumu(b.db, b.kim, x, null))?.doldurma ?? null : null, v.degerler);
+      return "cevap" in h ? h.cevap : doldurmaCevabi(await sozlesmeDoldur(b.db, b.kim, v.sozlesme, h.degerler, h.surum), "Sözleşme");
     },
   }),
 ];

@@ -1,6 +1,7 @@
 /* RAPOR FORMATI GİRDİSİ — pencerenin ve sunucunun TEK şeması (RAPOR-FORMAT.md §4 başlangıç yolları, §5 sürüm ve yayın). Taslak ya hazır
    şablondan (probata kitaplığı, src/format/sablonlar.ts) ya da türün yayınlanmış bir sürümünden başlar. Şablon anahtarı veritabanının
    CHECK'iyle aynı biçimde (0022); kitaplıkta olup olmadığı sunucuda ayrıca denetlenir (Object.hasOwn — "__proto__" gibi adlar şablon sayılmaz). */
+import { BELGE_TURLERI } from "../../belge/katalog.ts";
 import { SABLONLAR } from "../../format/sablonlar.ts";
 import { z } from "../../sema/ortak.ts";
 
@@ -24,3 +25,10 @@ export type BaslatGirdisi = z.output<typeof BaslatGirdisi>;
 /** sürüm notu (RAPOR-FORMAT §5 "değişiklik notu"): isteğe bağlı, en çok 200 karakter */
 export const YayinNotu = z.preprocess(kirp, z.string().max(200, "En çok 200 karakter.").transform((s) => s || null));
 
+
+/** 2026-10-31 (S.A.Y belge doldurma; reisim: "önerdiklerini kabul ediyorum"): belgenin elle doldurulan yerlerine yazılacak değerler — anahtar yerin
+    kimliği ya da adı (S.A.Y "<belge>_doldur" işlemleri; değerin biçimi ve hangi yerlerin olduğu sunucuda belgeDoldurmaKaydet'te denetlenir). Boş
+    nesne: yazmadan yerleri listele. Değer "" o yeri boşaltır. */
+export const ElleDegerGirdisi = z.record(z.string().min(1).max(200), z.string().max(2000)).optional();
+/** 2026-10-31 (S.A.Y belge formatları): programın ürettiği belgenin türü (src/belge/katalog.ts BELGE_TURLERI) */
+export const BelgeTuruGirdisi = z.enum(BELGE_TURLERI);

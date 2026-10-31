@@ -11,6 +11,10 @@ import { DonemSecimi, FaturaGirdisi, GiderGirdisi, TahsilatGirdisi } from "./sem
 import { giderKaydet, giderOdendi, giderSayfasi } from "./server/giderler.ts";
 import { faturaKarti, faturaKaydet, faturaSayfasi, gelirGider, isKarti, isSayfasi, tahsilatKaydet } from "./server/muhasebe.ts";
 
+import { doldurmaCevabi, doldurmaHazirla } from "../../server/yz/doldurma.ts";
+import { ElleDegerGirdisi } from "../rapor-format/sema.ts";
+import { faturaDoldur, faturaDoldurmaVerisi } from "./server/muhasebe.ts";
+
 const MODUL = 18;
 const YETKISIZ = "Bu kullanıcı Muhasebe'yi göremiyor.";
 
@@ -92,6 +96,15 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
     calistir: async (b, v) => {
       const g = await gelirGider(b.db, b.kim, v.donem);
       return g ? { tamam: true, sonuc: { ...g } } : { tamam: false, neden: YETKISIZ };
+    },
+  }),
+  /* 2026-10-31 (S.A.Y belge doldurma): ekranın "Belgeyi doldur"u — yerler ve kayıt modülün işlevleriyle (src/server/yz/doldurma.ts) */
+  islem({
+    ad: "fatura_belge_doldur", modul: MODUL, tur: "yaz", islev: faturaDoldur, kaynak: [kimlik, ElleDegerGirdisi], girdi: z.object({ fatura: kimlik, degerler: ElleDegerGirdisi }),
+    tarif: "Fatura özeti belgesi: elle doldurulan yerlerine yazar — fatura, degerler (yerin kimliği ya da adı → değer; \"\" boşaltır). degerler boşsa yazmadan yerleri listeler (ad, tür, zorunlu, dolu mu).",
+    calistir: async (b, v) => {
+      const h = doldurmaHazirla(await faturaDoldurmaVerisi(b.db, b.kim, v.fatura), v.degerler);
+      return "cevap" in h ? h.cevap : doldurmaCevabi(await faturaDoldur(b.db, b.kim, v.fatura, h.degerler, h.surum), "Fatura özeti");
     },
   }),
 ];

@@ -918,9 +918,13 @@ export const SAY_ELLE_ALANLAR: Readonly<Record<string, Readonly<Record<string, s
   standart_ara: { brans: "liste süzgeci (ekrandaki Mekanik / Elektrik sekmesi)" },
   tur_ara: { brans: "liste süzgeci (ekrandaki Mekanik / Elektrik sekmesi)" },
   uyari_ara: { gecmis: "liste süzgeci (yalnız süresi geçenler)" },
+  talep_belge_doldur: { tip: "talepDoldur'un konumsal türü (izin talebi / masraf formu)" },
   talep_karar: { tip: "talepKarar'ın konumsal türü (izin talebi / masraf formu)", karar: "talepKarar'ın konumsal kararı (TALEP_KARARLARI: Onayla / Düzeltmeye geri / Reddet)" },
   sablondan_tur_ekle: { sablon: "sablondanTurEkle'nin konumsal şablon anahtarı (sablonBul denetler)" },
   format_taslak_duzenle: { islemler: "formati_duzenle aracının biçimi (say-kurucu.ts formatIslemleri her alanı denetler)" },
+  /* 2026-10-31 (S.A.Y belge formatları) */
+  belge_taslak_duzenle: { islemler: "formati_duzenle aracının biçimi (say-kurucu.ts formatIslemleri her alanı denetler)" },
+  belge_taslak_ac: { kaynak: "belgeTaslakAc'ın konumsal başlangıcı (ekrandaki Boş / Yayındakinden)" },
   firma_ayari_kaydet: { kesim: "ayarKaydet'in konumsal bölüm adı (sır bölümü yok)", deger: "ayarKaydet'in bölüm değeri (bölümün şemasıyla ayarKaydet doğrular)" },
   performans_panosu: { donem: "performansPanosu'nun dönem seçimi (ekran süzgeci; donemCoz denetler)", brans: "performansPanosu'nun branş seçimi (ekran süzgeci)" },
   performans_kisi: { donem: "performansKisi'nin dönem seçimi (ekran süzgeci; donemCoz denetler)", brans: "performansKisi'nin branş seçimi (ekran süzgeci)" },

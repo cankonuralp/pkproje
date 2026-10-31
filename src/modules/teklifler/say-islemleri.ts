@@ -10,6 +10,10 @@ import {
   teklifGonder, teklifKabul, teklifKarti, teklifKaydet, teklifMusteriBagla, teklifMusteriKaydet, teklifReddet, teklifSayfasi, teklifSecenekleri, teklifSil,
 } from "./server/teklifler.ts";
 
+import { doldurmaCevabi, doldurmaHazirla } from "../../server/yz/doldurma.ts";
+import { ElleDegerGirdisi } from "../rapor-format/sema.ts";
+import { teklifDoldur, teklifDoldurmaVerisi } from "./server/teklifler.ts";
+
 const MODUL = 11;
 const TEKLIF_SURUM = z.object({ teklif: kimlik, surum });
 const durumAdi = (d: keyof typeof TEKLIF_DURUM) => TEKLIF_DURUM[d][0];
@@ -91,6 +95,15 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
     ad: "teklif_sil", modul: MODUL, tur: "yaz", girdi: z.object({ teklif: kimlik }), kaynak: [kimlik], islev: teklifSil,
     tarif: "Hiç gönderilmemiş taslak teklifi kesin siler (yönetici); gönderilmişse nedeni döner (kopyalanır).",
     calistir: async (b, v) => yazmaCevabi(await teklifSil(b.db, b.kim, v.teklif), { bildirim: "Teklif silindi." }),
+  }),
+  /* 2026-10-31 (S.A.Y belge doldurma): ekranın "Belgeyi doldur"u — yerler ve kayıt modülün işlevleriyle (src/server/yz/doldurma.ts) */
+  islem({
+    ad: "teklif_belge_doldur", modul: MODUL, tur: "yaz", islev: teklifDoldur, kaynak: [kimlik, ElleDegerGirdisi], girdi: z.object({ teklif: kimlik, degerler: ElleDegerGirdisi }),
+    tarif: "Teklif belgesi: elle doldurulan yerlerine yazar — teklif, degerler (yerin kimliği ya da adı → değer; \"\" boşaltır). degerler boşsa yazmadan yerleri listeler (ad, tür, zorunlu, dolu mu).",
+    calistir: async (b, v) => {
+      const h = doldurmaHazirla(await teklifDoldurmaVerisi(b.db, b.kim, v.teklif), v.degerler);
+      return "cevap" in h ? h.cevap : doldurmaCevabi(await teklifDoldur(b.db, b.kim, v.teklif, h.degerler, h.surum), "Teklif belgesi");
+    },
   }),
 ];
 
