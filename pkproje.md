@@ -2527,6 +2527,16 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-11-01 (V21 ÜÇÜNCÜ KOŞU — reisim: "koşuyu yaptım detaylı incele sadece maaliyet hesabı değil"; "bu sefer rot cihazı için uyarmadı 9 rapor yazdı"):
+  **1. → 2. → 3. koşu:** iş 6 → 1 → 1 · soru 3 → 0 → 0 · istek 31 → 15 → **13** · süre 17 dk → 3 dk 50 sn → **2 dk 36 sn** · en büyük istem 151 bin → 161 bin →
+  **78 886** (hiç 100 bini geçmedi ✓) · maliyet 0,301 → 0,261 → **0,061 $** (≤ 0,10 ✓) · bildirim 9 satır → sunucu notuyla 4 ✓ · harita 8 kez → 1 ✓ · fotoğraf ve cihaz
+  9 / 9. **Tutmayan: ekipman 9** — orta derinlik (O15 denemesi) etiketsiz genel görünüşe (rot cihazı) bakmadan, malzeme özetindeki "en az 9"u alıp dokuzuncu ekipmanı
+  seri "-" ile açtı, boş rapor; ön okuma da o fotoğrafı lift sanmıştı. Boşa 1 istek (raporlara_yaz'ın raporlar alanı JSON metni). Hizmetin bağlam düzenlemesi 3 kez
+  tekrarlayıp önbellek önekini 3 kez yeniden yazdı (≈ 0,02 $ = maliyetin üçte biri); A1 devreye girmedi. rapor_saat_plani yine ayrı çağrıldı (18 kayıt / 9 rapor).
+  **DÜZELTME (7c4709b3):** O15 GERİ — çok fotoğraflı iş yüksek derinlik · malzeme.ts etiketsiz genel görünüş "ADAY, sayılmaz; bakıp karar ver, nedenini kanıtıyla söyle"
+  ("ekipman sayısı en az N" kalktı) · talimat: bakmadan sayma, etiketsiz / bilgisiz kayıt açma, çekim saatleri raporlara_yaz'ın gun / baslangic'iyle · on-okuma.ts tarif
+  cihaz türünü ayırır (lift / hizalama (rot) / test hattı / rampa; belirsizse söyler) · O16 islem.ts jsonMetinleriCoz (şema düşerse JSON metni çözülür) · A2 son 3 araç
+  çağrısı / en az 20 bin (salınım azalsın). Ölçüm: dördüncü koşu (hedef 8 ekipman + ötekiler korunur).
 - 2026-11-01 (V21 İKİNCİ KOŞU — reisim: "Koşuyu yaptım, ölç"; aynı 18 fotoğraf, yeni plan, 00:39–00:43; salt okunur say_istek / yz_konusma / denetim_izi):
   **öncesi → sonrası:** 6 iş → **1** · 31 istek → **15** · 3 soru → **0** · 17 dk → **3 dk 50 sn** · 0,301 $ → **0,261 $** · ilk istem 63 bin → **38 bin** token (küçük
   fotoğraf) · en büyük istem 151 bin → 161 bin · bildirim 28 satır → sunucu notuyla **4** · 8 ekipman (tesiste kayıtlı olanlar plana alındı, mükerrer yok; iki
