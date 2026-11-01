@@ -2537,6 +2537,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   ("ekipman sayısı en az N" kalktı) · talimat: bakmadan sayma, etiketsiz / bilgisiz kayıt açma, çekim saatleri raporlara_yaz'ın gun / baslangic'iyle · on-okuma.ts tarif
   cihaz türünü ayırır (lift / hizalama (rot) / test hattı / rampa; belirsizse söyler) · O16 islem.ts jsonMetinleriCoz (şema düşerse JSON metni çözülür) · A2 son 3 araç
   çağrısı / en az 20 bin (salınım azalsın). Ölçüm: dördüncü koşu (hedef 8 ekipman + ötekiler korunur).
+  **Aynı gün — öteki sohbetin T1–T6 çözümlemesi koddaki gerçeğe göre (sunum yerel/say-arge/2026-11-01-sunum-ucuncu-kosu-t1-t6.md; onay bekliyor, kod yok):**
+  T1 tarih DOĞRU → gun verilmezse bugün plan içindeyse bugün, değilse planın başlangıç günü; rapor tarihi = kontrol günü (saat planında da); saatler mesai başlangıcından ·
+  T2 cihaz: "son kullanılan" ÇALIŞIYOR — DASD 1. basamaktan (bu denetçinin zimmeti) seçildi, sunucu nedeni yalnız 3. basamakta yazıyordu → her basamakta yazılsın, eksik
+  kayıtlı cihaza not · T3 DOĞRU → "kapasite" adlı sayı alanları farklıysa denetim uyarısı; başka firmanın eski raporu etiketin yerine geçmez · T4 JSON metni çözüldü (O16),
+  bildirime "alt madde yok" + raporlara_yaz tarifine örnek · T5 kök neden istemci düzenlemesi DEĞİL, A2'nin tekrarlayan temizlemesi (hata kaydında say.kucultme yok;
+  düşüşler tam 80 bin eşiğinde) — ayar değişti; yalnız A2 yetmez (fotoğraf blokları, girdiler, düşünme kalır; en az 20 bin temizlenemezse dokunmaz) → A1 yedek, iş
+  sınırı sıkıştırması gerekli; ölçüye "iş başına yazılan ≤ 60 bin" · T6 orta derinlik: veri tersini gösterdi (2. koşu yüksek 8 doğru, 3. koşu orta 9) → geri alındı,
+  5. koşuda yeniden denenebilir. Dördüncü koşu hedefleri sunumda.
 - 2026-11-01 (V21 İKİNCİ KOŞU — reisim: "Koşuyu yaptım, ölç"; aynı 18 fotoğraf, yeni plan, 00:39–00:43; salt okunur say_istek / yz_konusma / denetim_izi):
   **öncesi → sonrası:** 6 iş → **1** · 31 istek → **15** · 3 soru → **0** · 17 dk → **3 dk 50 sn** · 0,301 $ → **0,261 $** · ilk istem 63 bin → **38 bin** token (küçük
   fotoğraf) · en büyük istem 151 bin → 161 bin · bildirim 28 satır → sunucu notuyla **4** · 8 ekipman (tesiste kayıtlı olanlar plana alındı, mükerrer yok; iki
