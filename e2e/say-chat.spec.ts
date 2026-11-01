@@ -178,7 +178,7 @@ test("S.A.Y Chat: fotoğraf, ekipman, tek kutuda mesaj, okunacak fotoğraf, etik
    açınca tabloya girer (işaretli), Kaydet'le yazılır */
 test("S.A.Y Chat: bekleyenler için rapor yaz — kod, koşullar, taslak, raporda şerit ve öneri", async ({ page }, bilgi) => {
   test.setTimeout(180_000);
-  const kod = `SC${({ masaustu: "M", tablet: "T", telefon: "F" } as Record<string, string>)[bilgi.project.name] ?? "X"}-${bilgi.retry}${Date.now() % 1000}`;
+  const kod = `SC${({ masaustu: "M", tablet: "T", telefon: "F" } as Record<string, string>)[bilgi.project.name] ?? "X"}-${bilgi.retry + 1}${Date.now() % 1000}`;
   await giris(page, E2E_YZ.denetci);
   const adres = await planAdresi(page);
   await page.goto(`${Y}${adres}`);

@@ -20,7 +20,8 @@ async function planAc(page: Page) {
 }
 
 test("plan içi: liste, kabul (beyan), ekipman ekle / pasif, proje notu, künye düzenle → denetçi Güncelle", async ({ page, context }, bilgi) => {
-  const kod = `E2E-${bilgi.project.name.slice(0, 3).toUpperCase()}-${bilgi.retry}`;
+  /* 2026-11-01 (kod "-0" yasağı — reisim: "herhangi bir kodda -0 dan başlamasın"): deneme kodu 1'den */
+  const kod = `E2E-${bilgi.project.name.slice(0, 3).toUpperCase()}-${bilgi.retry + 1}`;
   const unvan = `${E2E_PLAN.musteri} (${bilgi.project.name})`;
   await girisli(page, "yonetici");
   const adres = await planAc(page);
