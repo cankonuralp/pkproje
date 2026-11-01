@@ -124,9 +124,10 @@ async function acilabilirPlan(db: Sorgulayici, kim: Kisi, planId: string): Promi
   const plan = await raporIcinPlan(db, kim, planId);
   if (!plan) return { hata: { durum: "yok" } };
   const personelId = plan.personelId;
-  if (!personelId || duzey(kim, MODUL) === "yok") return { hata: { durum: "yetkisiz" } };
-  /* 2026-11-01 (V21 dördüncü koşu — reisim: "rapor oluşturamıyorum aynı plan içinde sebebini anlamadım"): neden açıkça — ekipte olmayan denetçi */
-  if (!canDoEylem(kim, "rapor_olustur", { atananlar: plan.atananlar })) return { hata: { durum: "red", neden: EKIPTE_DEGIL } };
+  if (duzey(kim, MODUL) === "yok") return { hata: { durum: "yetkisiz" } };
+  /* 2026-11-01 (V21 dördüncü koşu — reisim: "rapor oluşturamıyorum aynı plan içinde sebebini anlamadım"): Raporlar'ı gören ama planın ekibinde olmayan
+     (personelId yok) ya da türe atanmamış kişiye neden açıkça */
+  if (!personelId || !canDoEylem(kim, "rapor_olustur", { atananlar: plan.atananlar })) return { hata: { durum: "red", neden: EKIPTE_DEGIL } };
   /* 2026-10-12 (reisim: "tamamlamayı geri almadan yeni rapor oluşturulmasın"): tamamlanmış planda yeni rapor (kopya, bağlantısız açılan dahil) yok */
   if (plan.durum === "tamamlandi") return { hata: { durum: "red", neden: TAMAMLANDI_RAPOR } };
   if (plan.durum !== "kabul" && plan.durum !== "denetimde") return { hata: { durum: "red", neden: "Rapor yalnız kabul edilmiş planda oluşturulur." } };

@@ -2535,9 +2535,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   (malzeme.ts, talimat, B02); **(3)** bitiş denetimi plan genelini (başka denetçinin 4 raporu) denetleyip 3 istek harcattı → bitis-denetimi.ts yalnız bu işte
   açılan (rapor_ac sonucundan) / yazılan raporlar, plan geneli yok; **(4)** ikinci soru başka planın sayfasından gelince otomatik kapanış "başka plan" kuralı
   ekleri sildi ("fotoğraf yok") → kural KALDIRILDI (yalnız 60 dk ve büyüklük); **(5) DİKKAT:** 12:12 "tüm raporları sil" → S.A.Y 42 taslak raporu sildi (P-1026-006
-  13, -010 9, -011 10, -014 10 — bütün planlar; sayfadaki plan değil) — ÖNERİ (onay bekliyor): silme / toplu değiştirme kapsamı açık kayıt (sayfadaki plan) ve bu
-  işte açılanlar; "tüm / hepsi" açık kaydın kapsamıdır, başka planlar yalnız adıyla istenirse. Kilitler: say-bitis-denetimi, say-is-siniri, say-on-okuma, raporlar
-  (PG, EKIPTE_DEGIL).
+  13, -010 9, -011 10, -014 10 — bütün planlar) — reisim: "raporları ben bilerek sildirdim" → kapsam kuralı YOK, tam yetki aynen. Kilitler: say-bitis-denetimi,
+  say-is-siniri, say-on-okuma, raporlar (PG, EKIPTE_DEGIL). Reisim: "ilgili düzenlemeleri yap yayınla tekrar test edicez" → beşinci koşu (kendi ekibinde olduğu
+  planda; hedefler 3. koşunun hedefleri + 8 ekipman + rapor başına 1 kayıt).
 - 2026-11-01 (V21 ÜÇÜNCÜ KOŞU — reisim: "koşuyu yaptım detaylı incele sadece maaliyet hesabı değil"; "bu sefer rot cihazı için uyarmadı 9 rapor yazdı"):
   **1. → 2. → 3. koşu:** iş 6 → 1 → 1 · soru 3 → 0 → 0 · istek 31 → 15 → **13** · süre 17 dk → 3 dk 50 sn → **2 dk 36 sn** · en büyük istem 151 bin → 161 bin →
   **78 886** (hiç 100 bini geçmedi ✓) · maliyet 0,301 → 0,261 → **0,061 $** (≤ 0,10 ✓) · bildirim 9 satır → sunucu notuyla 4 ✓ · harita 8 kez → 1 ✓ · fotoğraf ve cihaz
