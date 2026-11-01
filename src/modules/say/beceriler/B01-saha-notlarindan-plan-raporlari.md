@@ -129,8 +129,9 @@ Sırası şöyledir:
 5. künye (B06),
 6. fotoğraf (`rapor_foto_ekle`, her rapora bir genel fotoğraf).
 
-Açık olmayan rapora `rapor_yaz` (aynı girişler çok rapora gidiyorsa `raporlara_yaz`) ile yaz. Ekranda açık rapora `rapora_yaz` ile
-yaz.
+Açık olmayan raporlara `raporlara_yaz` ile yaz: 10'a kadar rapor tek çağrıda; daha çoğu 8–10 raporluk **partilerle** art arda (aynı iş, aynı konuşma;
+her partide o raporların bütün girişleri + fotoğrafı). Tek rapora `rapor_yaz`. Ekranda açık rapora `rapora_yaz` ile yaz. Sunucu sonucu neyi işlediğini
+söyler; yazılmış raporu tek tek yeniden yazma.
 
 ### 8. Doğrula (B07)
 

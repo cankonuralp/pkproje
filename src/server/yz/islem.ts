@@ -211,6 +211,24 @@ export function jsonMetinleriCoz(girdi: unknown): unknown {
   }
   return c;
 }
+/** 2026-11-01 (V21 beşinci koşu — O16'nın ikinci yarısı): şema "beklenen number / boolean" dediği yerde değer METİNSE çevrilir ("3" → 3, "false" → false);
+    yalnız hata yolunda, yalnız o alanlar; çevrilemeyen aynen kalır — metin alanlarına dokunulmaz (saf) */
+export function turleriCevir(girdi: unknown, sorunlar: readonly { code: string; expected?: unknown; path: readonly PropertyKey[] }[]): unknown {
+  if (!girdi || typeof girdi !== "object") return girdi;
+  const k = structuredClone(girdi);
+  for (const s of sorunlar) {
+    if (s.code !== "invalid_type" || (s.expected !== "number" && s.expected !== "boolean") || !s.path.length) continue;
+    let ust: unknown = k;
+    for (const p of s.path.slice(0, -1)) ust = ust && typeof ust === "object" ? (ust as Record<PropertyKey, unknown>)[p] : undefined;
+    if (!ust || typeof ust !== "object") continue;
+    const yer = ust as Record<PropertyKey, unknown>, son = s.path[s.path.length - 1]!, v = yer[son];
+    if (typeof v !== "string") continue;
+    const t = v.trim();
+    if (s.expected === "number") { const n = t ? Number(t.replace(",", ".")) : NaN; if (Number.isFinite(n)) yer[son] = n; }
+    else if (t === "true" || t === "false") yer[son] = t === "true";
+  }
+  return k;
+}
 const BEKLENMEYEN ="Beklenmeyen bir sorun oldu; işlem yapılmadı (veritabanı işlemi geri alındı).";
 /** 2026-10-16 (2. adım b): çalıştırıcı işi GERİ ALDIRIP nedenini söyletmek isterse (modül işlevi yarıda kalınca hata fırlatıyorsa — ör. eski sürüme
     geri dönüş yayınlanamadı: GeriDonusIptal) bunu fırlatır: veritabanı işlemi geri alınır, S.A.Y'a cevap olduğu gibi döner (hata kaydı yok) */
@@ -224,9 +242,19 @@ export async function islemYurut(katalog: readonly Islem[], o: IslemOrtami, ad: 
   const t = katalog.find((x) => x.ad === ad) ?? null;
   if (!t) return { islem: null, cevap: { tamam: false, neden: `Böyle bir işlem yok: "${ad}". Dizine ya da islemler aracına bak.` } };
   /* 2026-11-01 (V21 üçüncü koşu — O16): yapay zekâ dizi / nesne alanını JSON METNİ olarak verirse ("raporlar": "[{…}]") şema düşmeden önce bir kez çözülür —
-     boşa "beklenen array, alınan string" turu yok */
-  const g0 = t.girdi.safeParse(girdi ?? {});
-  const g = g0.success ? g0 : t.girdi.safeParse(jsonMetinleriCoz(girdi ?? {}));
+     boşa "beklenen array, alınan string" turu yok. Beşinci koşu: çalıştırıcıya giden HAM girdi de ÇÖZÜLMÜŞ olandır (metin kalınca rapor başına girişler boş
+     sayılmış, tamamlayıcı "-" yazmıştı); şema hâlâ "beklenen number / boolean, alınan string" diyorsa o alanlar çevrilip bir kez daha denenir (turleriCevir). */
+  let g = t.girdi.safeParse(girdi ?? {}), ham: unknown = girdi ?? {};
+  if (!g.success) {
+    const cozulmus = jsonMetinleriCoz(girdi ?? {});
+    const g1 = t.girdi.safeParse(cozulmus);
+    if (g1.success) { g = g1; ham = cozulmus; }
+    else {
+      const cevrilmis = turleriCevir(cozulmus, g1.error.issues);
+      g = t.girdi.safeParse(cevrilmis);
+      if (g.success) ham = cevrilmis;
+    }
+  }
   if (!g.success) {
     const h = hatalar(g.error);
     return { islem: t, cevap: { tamam: false, neden: `Girdi şemaya uymuyor: ${hataOzeti(h)}`, hatalar: h }, sema: kisaSema(t) };
@@ -234,7 +262,7 @@ export async function islemYurut(katalog: readonly Islem[], o: IslemOrtami, ad: 
   try {
     const cevap = await o.islet(async (db) => {
       const c = await t.calistir({ db, kim: o.kim, firmaId: o.firmaId, depo: o.depo, kok: o.kok, ekrandakiRapor: o.ekrandakiRapor,
-        kaydedilmemis: o.kaydedilmemis === true, epostaGonder: o.epostaGonder }, g.data, girdi ?? {});
+        kaydedilmemis: o.kaydedilmemis === true, epostaGonder: o.epostaGonder }, g.data, ham);
       return c;
     });
     return { islem: t, cevap };

@@ -48,9 +48,21 @@ test("5. 60 dakika kuralı kalkınca eski konuşma kapanmaz", async () => {
   const m = await bozuk("return `${KAPANIS_DAKIKA} dakika geçti`;", "return null;");
   const simdi = new Date("2026-11-01T10:00:00+03:00");
   const konusma = [{ role: "user", content: [{ type: "text", text: "a" }] }, { role: "assistant", content: [{ type: "text", text: "bitti" }] }];
-  assert.equal(m.kapanisNedeni({ mesajlar: konusma, sonZaman: new Date(simdi.getTime() - 120 * 60_000), simdi, yeniNot: "x" }), null, "bozuk: iki saat geçmişken kapanmadı");
+  assert.equal(m.kapanisNedeni({ mesajlar: konusma, sonZaman: new Date(simdi.getTime() - 120 * 60_000), simdi }), null, "bozuk: iki saat geçmişken kapanmadı");
 });
 test("3. büyütülenler önceki işten de sayılınca yeni işte fotoğraf kilitlenir", async () => {
   const m = await bozuk("const s = new Set<number>(), b = Math.max(0, sonSoruIndeksi(mesajlar));", "const s = new Set<number>(), b = 0;");
   assert.ok(m.gosterilenFotolar(K).has(1));
+});
+test("6. parti sonu küçültme kalkınca yazılmış partinin büyütmeleri konuşmada kalır (2026-11-01 büyük iş şeması)", async () => {
+  const m = await bozuk("  if (sonYazma < 0) return { mesajlar: [...mesajlar], degisen: 0 };", "  return { mesajlar: [...mesajlar], degisen: 0 };");
+  const b64 = { type: "image", source: { type: "base64", media_type: "image/jpeg", data: "/9j/" } };
+  const l = [
+    { role: "user", content: [{ type: "text", text: "raporları hazırla" }] },
+    { role: "assistant", content: [{ type: "tool_use", id: "g1", name: "foto_goster", input: { foto: "F01" } }] },
+    { role: "user", content: [{ type: "tool_result", tool_use_id: "g1", content: [b64, { type: "text", text: "F01" }] }] },
+    { role: "assistant", content: [{ type: "tool_use", id: "y1", name: "islem", input: { ad: "raporlara_yaz", girdi: { raporlar: [] } } }] },
+    { role: "user", content: [{ type: "tool_result", tool_use_id: "y1", content: "{}" }] },
+  ];
+  assert.equal(m.partiSonuKucult(l).degisen, 0, "bozuk: parti yazıldıktan sonra büyütme kaldı");
 });

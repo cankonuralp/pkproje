@@ -176,16 +176,15 @@ export function kucultmeSeviyesi(mesajlar: readonly IsMesaji[], mevcut: number, 
   return s;
 }
 
-/* ── 2026-11-01 (V21 B — reisim: "müşteriye bırakmadan otomatik geçmiş silme koyalım"): OTOMATİK KAPANIŞ. İş bitmişken yeni soru gelince konuşma şu üç
-   durumda kendiliğinden kapanır (metni Ar-Ge kaydına, ekleri çöpe; "Sohbeti temizle" tuşu kalır): 60 dakika sessizlik · başka planın sayfasından soru ·
-   küçültülmüş konuşma KAPANIS_BOYU tokeni aştı. Son bildirim yeni konuşmanın başına not olarak girer. ── */
-export const KAPANIS_DAKIKA = 60, KAPANIS_BOYU = 60_000;
-export function kapanisNedeni(g: { mesajlar: readonly IsMesaji[]; sonZaman: Date | null; simdi: Date; yeniNot: string }): string | null {
+/* ── 2026-11-01 (V21 B — reisim: "müşteriye bırakmadan otomatik geçmiş silme koyalım"): OTOMATİK KAPANIŞ. İş bitmişken yeni soru gelince konuşma YALNIZ
+   60 dakika sessizlikten sonra kendiliğinden kapanır (metni Ar-Ge kaydına, ekleri çöpe; "Sohbeti temizle" tuşu kalır). Son bildirim yeni konuşmanın başına
+   not olarak girer. "Başka plan" kuralı dördüncü koşuda, "konuşma büyüdü" kuralı beşinci koşuda KALKTI: ikisinde de kullanıcı aynı fotoğraflarla devam
+   sorusu sorunca konuşma kapanıp ekler gitmişti ("fotoğraf yok"). Büyüklük iş sınırı sıkıştırması (konusmaSikistir, isIciKucult) ve hizmetin bağlam
+   düzenlemesiyle yönetilir; fotoğraf konuşmada metin olarak taşındığından (büyük iş şeması) büyüme de sınırlıdır. ── */
+export const KAPANIS_DAKIKA = 60;
+export function kapanisNedeni(g: { mesajlar: readonly IsMesaji[]; sonZaman: Date | null; simdi: Date }): string | null {
   if (!g.mesajlar.length) return null;
   if (g.sonZaman && g.simdi.getTime() - g.sonZaman.getTime() > KAPANIS_DAKIKA * 60_000) return `${KAPANIS_DAKIKA} dakika geçti`;
-  /* "başka plan" kuralı 2026-11-01 dördüncü koşuda KALKTI: kullanıcı aynı fotoğraflarla başka planın sayfasında yeniden sorunca konuşma kapandı, ekleri
-     gitti ("fotoğraf yok" dedi — reisim: "eksik var diyip rapor oluşturmadı"). Yalnız 60 dakika ve büyüklük. */
-  if (istemTahmini(konusmaSikistir(g.mesajlar).mesajlar) > KAPANIS_BOYU) return "konuşma büyüdü";
   return null;
 }
 /** kapanış notu: önceki işin son bildirimi (en çok dört dolu satır) */
@@ -195,3 +194,76 @@ export function kapanisNotu(neden: string, saat: string, sonBildirim: string): s
 }
 
 export const ZATEN_BUYUTULDU = (no: number) => `F${String(no).padStart(2, "0")} bu işte zaten büyütüldü; o görüntüye bak (aynı fotoğraf bir işte bir kez büyütülür — ilk seferde doğru bölgeyi iste).`;
+
+/* ── 2026-11-01 BÜYÜK İŞ ŞEMASI (reisim: "müşteriler 20-25-50-60 fotoğraflı işi de tek te yaptırmak isteyebilir … müşteriye göstermeden"): PARTİLİ YAZMA.
+   S.A.Y raporlara_yaz'ı 8–10 raporluk partilerle çağırır (aynı iş). Parti yazıldıktan sonra ondan ÖNCEKİ büyütme / pafta görüntüleri (araç sonuçlarındaki
+   görüntüler) metne iner — o partinin büyütmeleri bitmiştir; sonraki partinin büyütmeleri kalır. Yapay zekâ iletileri aynen; kayıt değişmez; belirlenimli.
+   Ekrana yalnız "n / N rapor yazıldı" gider (raporIlerlemesi) — parti, ön okuma, küçültme görünmez. ── */
+/** araç çağrısının işlem adı: islem aracının ad'ı ya da doğrudan katalog adıyla çağrı (V21 O9) */
+const islemAdi = (x: Blok): string => (x.name === "islem" ? String((x.input as { ad?: unknown } | null)?.ad ?? "") : String(x.name ?? ""));
+const islemGirdisi = (x: Blok): Record<string, unknown> => {
+  const g = x.name === "islem" ? (x.input as { girdi?: unknown } | null)?.girdi : x.input;
+  return g && typeof g === "object" ? g as Record<string, unknown> : {};
+};
+export function partiSonuKucult<T extends IsMesaji>(mesajlar: readonly T[]): { mesajlar: T[]; degisen: number } {
+  const b = sonSoruIndeksi(mesajlar);
+  if (b < 0) return { mesajlar: [...mesajlar], degisen: 0 };
+  let sonYazma = -1;
+  mesajlar.forEach((m, i) => {
+    if (i <= b || m.role !== "assistant") return;
+    for (const x of bloklar(m.content) ?? []) if (x.type === "tool_use" && RAPOR_YAZAN.has(islemAdi(x))) sonYazma = i;
+  });
+  if (sonYazma < 0) return { mesajlar: [...mesajlar], degisen: 0 };
+  let degisen = 0;
+  const l = mesajlar.map((m, i) => {
+    if (i <= b || i >= sonYazma || m.role !== "user") return m;
+    const ic = bloklar(m.content);
+    if (!ic) return m;
+    let d = false;
+    const yeni = ic.map((x) => {
+      if (x.type !== "tool_result" || !Array.isArray(x.content) || !(bloklar(x.content) ?? []).some((y) => y.type === "image")) return x;
+      d = true;
+      return { ...x, content: (bloklar(x.content) ?? []).map((y) => (y.type === "image" ? { type: "text", text: GORUNTU_KALDIRILDI } : y)) };
+    });
+    if (!d) return m;
+    degisen++;
+    return { ...m, content: yeni };
+  });
+  return { mesajlar: l, degisen };
+}
+
+/** bu işte açılan rapor sayısı (rapor_ac sonuçlarındaki kimlikler) ve yazılan rapor sayısı (raporlara_yaz / rapor_yaz girdileri, rapor kimliğiyle tekil;
+    sonucu "hata" olan çağrı sayılmaz). Sonucu olmayan çağrı (henüz çalışmamış) sayılmaz. Hiçbiri yoksa null. */
+export function raporIlerlemesi(mesajlar: readonly IsMesaji[]): { yazilan: number; acilan: number } | null {
+  const b = sonSoruIndeksi(mesajlar);
+  if (b < 0) return null;
+  const sonuc = new Map<string, string>();
+  for (const m of mesajlar.slice(b + 1)) {
+    if (m.role !== "user") continue;
+    for (const x of bloklar(m.content) ?? []) {
+      if (x.type === "tool_result" && typeof x.tool_use_id === "string") sonuc.set(x.tool_use_id, typeof x.content === "string" ? x.content : JSON.stringify(x.content ?? ""));
+    }
+  }
+  const kimlik = (r: unknown): string | null => (typeof r === "string" ? r : r && typeof r === "object" && typeof (r as { rapor?: unknown }).rapor === "string" ? (r as { rapor: string }).rapor : null);
+  const acilanSayisi = (s: string): number => {
+    try { const x = JSON.parse(s) as { raporlar?: unknown }; return Array.isArray(x.raporlar) ? x.raporlar.filter((r) => r && typeof (r as { id?: unknown }).id === "string").length : 0; } catch { return 0; }
+  };
+  const yazilan = new Set<string>();
+  let acilan = 0;
+  for (const m of mesajlar.slice(b + 1)) {
+    if (m.role !== "assistant") continue;
+    for (const x of bloklar(m.content) ?? []) {
+      if (x.type !== "tool_use" || typeof x.id !== "string" || !sonuc.has(x.id)) continue;
+      const s = sonuc.get(x.id)!;
+      if (/"durum":\s*"hata"/.test(s)) continue;
+      const ad = islemAdi(x), g = islemGirdisi(x);
+      if (ad === "rapor_ac") acilan += acilanSayisi(s);
+      else if (ad === "raporlara_yaz" && Array.isArray(g.raporlar)) g.raporlar.forEach((r, i) => yazilan.add(kimlik(r) ?? `${x.id}:${i}`));
+      else if (ad === "rapor_yaz") yazilan.add(kimlik(g.rapor) ?? x.id);
+    }
+  }
+  return acilan || yazilan.size ? { yazilan: yazilan.size, acilan } : null;
+}
+/** bekleme balonundaki ilerleme satırı */
+export const ilerlemeMetni = (i: { yazilan: number; acilan: number } | null): string | null =>
+  (!i ? null : i.acilan ? `${i.yazilan} / ${i.acilan} rapor yazıldı` : `${i.yazilan} rapor yazıldı`);

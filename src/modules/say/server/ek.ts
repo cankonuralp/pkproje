@@ -51,15 +51,17 @@ export function sayEkiHazirla(b: Uint8Array, ad: string, tablo = false): HazirEk
   return { durum: "red", neden: EK_TUR_HATASI };
 }
 
-/** konuşmaya giden bloklar: malzeme özeti, her ek için başlığı (numara, ad, çekim saati) + dosyanın kendisi (Dosya API kimliğiyle), sonra yazı */
+/** konuşmaya giden bloklar: malzeme özeti, her ek için başlığı (numara, ad, çekim saati, ön okuma satırı) + belgenin kendisi (Dosya API kimliğiyle), sonra
+    yazı. 2026-11-01 (büyük iş şeması): FOTOĞRAFIN KENDİSİ GİRMEZ — yalnız başlığı (ön okuma satırı: sınıf, tarif, okunan etiket alanları); S.A.Y gerekirse
+    foto_goster ile depodaki kopyaya bakar (60 fotoğraf ≈ 6 bin token; eski küçük kopya 18 fotoğrafta ≈ 14 bin tutuyordu) */
 export function ekBloklari(ekler: readonly MalzemeEki[], metin: string): Record<string, unknown>[] {
   const l: Record<string, unknown>[] = [];
   if (ekler.length) l.push({ type: "text", text: malzemeOzeti(ekler) });
   for (const e of malzemeSirasi(ekler)) {
     const baslik = ekBasligi(e);
+    if (e.tur === "foto") { l.push({ type: "text", text: baslik }); continue; }
     l.push({ type: "text", text: `${baslik}:` });
-    l.push(e.tur === "foto" ? { type: "image", source: { type: "file", file_id: e.dosya } }
-      : { type: "document", source: { type: "file", file_id: e.dosya }, title: baslik });
+    l.push({ type: "document", source: { type: "file", file_id: e.dosya }, title: baslik });
   }
   l.push({ type: "text", text: metin });
   return l;

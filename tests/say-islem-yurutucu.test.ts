@@ -19,7 +19,7 @@ import { test } from "node:test";
 import { kimlik, z } from "../src/sema/ortak.ts";
 import type { Sorgulayici } from "../src/server/db/kiraci.ts";
 import {
-  EKRAN_KAYDEDILMEMIS, ekranRaporuKirli, islem, IslemGeriAl, islemOzeti, islemYurut, jsonMetinleriCoz, metinSayfasi, sunucuKomutu, yazmaCevabi, type IslemBaglami, type IslemOrtami,
+  EKRAN_KAYDEDILMEMIS, ekranRaporuKirli, islem, IslemGeriAl, islemOzeti, islemYurut, jsonMetinleriCoz, metinSayfasi, sunucuKomutu, turleriCevir, yazmaCevabi, type IslemBaglami, type IslemOrtami,
 } from "../src/server/yz/islem.ts";
 import { oku, sayEylemDenetimi } from "./yardimci/denetimler.ts";
 
@@ -59,6 +59,35 @@ test("0. dizi / nesne alanı JSON metni olarak gelirse çözülür; JSON olmayan
   assert.deepEqual(jsonMetinleriCoz({ a: "[1, 2]", b: "{\"x\": 1}", c: "[açık ayraç", d: 5, e: " {\"y\":2}" }), { a: [1, 2], b: { x: 1 }, c: "[açık ayraç", d: 5, e: { y: 2 } });
   assert.equal(jsonMetinleriCoz("[1]"), "[1]", "üst düzey metin dokunulmaz");
   assert.deepEqual(jsonMetinleriCoz([1]), [1]);
+  /* turleriCevir (saf): yalnız şemanın gösterdiği yerler, yalnız metin → sayı / mantık; girdi kopyalanır */
+  const g = { a: "3", b: "1,5", c: "true", d: "yazı", e: [{ x: "7" }], f: "9" };
+  const s = [{ code: "invalid_type", expected: "number", path: ["a"] }, { code: "invalid_type", expected: "number", path: ["b"] }, { code: "invalid_type", expected: "boolean", path: ["c"] },
+    { code: "invalid_type", expected: "number", path: ["d"] }, { code: "invalid_type", expected: "number", path: ["e", 0, "x"] }, { code: "too_small", expected: "number", path: ["f"] }];
+  assert.deepEqual(turleriCevir(g, s), { a: 3, b: 1.5, c: true, d: "yazı", e: [{ x: 7 }], f: "9" });
+  assert.equal(g.a, "3", "girdi değişmedi");
+});
+
+/* 2026-11-01 V21 beşinci koşu (O16'nın ikinci yarısı: raporlara_yaz'ın JSON metni çözüldü ama çalıştırıcıya giden HAM girdi metin kaldı → rapor başına girişler boş
+   sayıldı, S.A.Y 8 raporu tek tek yeniden yazdı; ayrıca surum "3", tamamla "false" şema hatası iki istek yaktı) */
+test("0b. JSON metni çözülünce çalıştırıcıya ÇÖZÜLMÜŞ ham gider; \"beklenen number / boolean, alınan string\" alanları çevrilir (yalnız hata yolunda)", async () => {
+  const k = katalog(), o = ortam();
+  const Girdi = z.object({ plan: kimlik, satirlar: z.array(z.object({ rapor: kimlik, adet: z.number().int(), tamamla: z.boolean() })), ad: z.string() });
+  const l = [...k.l, islem({ ad: "deneme_dizi", modul: 13, tarif: "Deneme.", tur: "yaz", girdi: Girdi, kaynak: [kimlik], islev: () => undefined,
+    calistir: async (b, veri, ham) => { k.cagrilar.push({ b, veri, ham }); return { tamam: true, bildirim: "Yapıldı." }; } })];
+  const r = await islemYurut(l, o, "deneme_dizi", { plan: PLAN, satirlar: `[{"rapor": "${PLAN}", "adet": "3", "tamamla": "false"}]`, ad: "12" });
+  assert.equal(r.cevap.tamam, true, JSON.stringify(r.cevap));
+  const c = k.cagrilar.at(-1)!;
+  assert.deepEqual(c.veri, { plan: PLAN, satirlar: [{ rapor: PLAN, adet: 3, tamamla: false }], ad: "12" });
+  assert.deepEqual(c.ham, { plan: PLAN, satirlar: [{ rapor: PLAN, adet: 3, tamamla: false }], ad: "12" }, "ham da çözülmüş ve çevrilmiş; metin alanı ad dokunulmadı");
+  /* çevrilemeyen metin ("üç") aynen kalır → şema hatası, çalıştırıcı çağrılmaz */
+  const y = await islemYurut(l, o, "deneme_dizi", { plan: PLAN, satirlar: [{ rapor: PLAN, adet: "üç", tamamla: "false" }], ad: "x" });
+  assert.equal(y.cevap.tamam, false);
+  assert.ok(!y.cevap.tamam && y.cevap.hatalar && Object.keys(y.cevap.hatalar).some((h) => h.includes("adet")), JSON.stringify(y.cevap));
+  assert.equal(k.cagrilar.at(-1), c, "çalıştırıcı çağrılmadı");
+  /* şemadan geçen girdi: ham dokunulmaz (aynı nesne) */
+  const g = { plan: PLAN, adet: 2 };
+  await islemYurut(k.l, o, "deneme_yaz", g);
+  assert.equal(k.cagrilar.at(-1)!.ham, g);
 });
 
 test("1. girdi şemadan geçmezse çalıştırıcı çağrılmaz — alan alan Türkçe neden ve şema döner", async () => {

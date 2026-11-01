@@ -572,6 +572,14 @@ pkproje/
                             (SIRSIZ bölümler; okumada anahtar yalnız "tanımlı mı"), okuma Ana sayfa / Uyarılar / Performans; (a)'nın eksikleri (plan / rapor /
                             teklif sil, kopyala, formatı güncelle, revize, tekliften müşteri, pasif). Dosya isteyen yüklemeler (PDF, fotoğraf) ekrandan.
                             Yürütücüde IslemGeriAl (çalıştırıcı işi geri aldırıp nedenini söyletir). Ana sayfa modül 0 (modulAdi)
+                            · 2026-11-01 BÜYÜK İŞ ŞEMASI (göç 0114; reisim: "20-25-50-60 fotoğraflı işi de tekte … müşteriye göstermeden"): FOTOĞRAF KONUŞMAYA
+                            GİRMEZ — Dosya API'ye yüklenmez (yz_ek.dosya "-" = konusma.ts DOSYA_YOK; yalnız firmanın deposunda), server/ek.ts ekBloklari yalnız
+                            başlık; ön okuma ETİKET ALANLARI döner (on-okuma.ts alanlar marka · model · seri · imal · kapasite · diger + emin; malzeme.ts alanMetni,
+                            ekBasligi "okunan: …"); PARTİLİ YAZMA (talimat + B01–B03: raporlara_yaz 8–10'luk partiler; is-siniri.ts partiSonuKucult — yazılmış
+                            partiden önceki büyütmeler metne; raporIlerlemesi → balonda "n / N rapor yazıldı", server/on-okuma.ts onOkumaBekle "Fotoğraflar okunuyor
+                            n / N"); otomatik kapanış YALNIZ 60 dk (is-siniri.ts kapanisNedeni); kod "-0" yasağı (planlar/sema.ts kodBicimi, her yol); tesis kaydıyla
+                            eşleme önce seri (talimat + B02); O16 tam: islem.ts çözülmüş ham + turleriCevir ("3" → 3, "false" → false, yalnız hata yolunda) ·
+                            kilit say-is-siniri, say-on-okuma, say-ek, say-islem-yurutucu, say-faz2 + bozanları; e2e taklit ön okuma "sinif" dalı
   src/modules/say-chat/     S.A.Y CHAT (523–525; pkproje §3.10): sema.ts (saf: alan / başlık seçenekleri, hazır ayar, denetim, dağılım dagit) ·
                             server/ayar.ts (523 tür ayarı — sayChatAyari, sayChatAyarKaydet, chatTanimi; göç 0084 say_chat_ayar) · ui/ChatAyarlari.tsx
                             (529: kendi sayfası /ekipman-turleri/<tür>/say-chat — Format kurucunun tuşlarından ve tür sayfasındaki kısa bölümden) · ui/eylemler.ts · 524 server/kayitlar.ts (sayChatPaneli, chatKaydet / chatFoto /

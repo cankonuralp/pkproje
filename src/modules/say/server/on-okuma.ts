@@ -3,7 +3,7 @@
    iş durmaz (ön okuma yoksa S.A.Y fotoğrafa kendisi bakar). Soru gönderilince döngü yeni eklerin ön okumasını kısa süre bekler (onOkumaBekle). */
 import { hataKaydet } from "../../../server/hata/kaydet.ts";
 import { oturumIslemi, type IstekOturumu } from "../../../server/kimlik/istek.ts";
-import { ekOkumaYaz, onOkumaBekleyen } from "../../../server/yz/konusma.ts";
+import { ekOkumaYaz, fotoEkSayisi, onOkumaBekleyen } from "../../../server/yz/konusma.ts";
 import { anthropicCagir } from "../../../server/yz/okuma.ts";
 import { sayMaliyeti } from "../../../server/yz/say.ts";
 import { ON_OKUMA_YANIT, onOkumaCoz, onOkumaIstegi } from "../on-okuma.ts";
@@ -31,11 +31,17 @@ export async function fotoOnOku(o: IstekOturumu, ek: string, bayt: Uint8Array, m
   }
 }
 
-/** sorunun eklerinden ön okuması süren (son 5 dakikada eklenmiş) fotoğraflar bitene ya da süre dolana kadar bekler */
-export async function onOkumaBekle(o: IstekOturumu, ekler: readonly string[], enCokMs = 25_000): Promise<void> {
-  const son = Date.now() + enCokMs;
+/** bekleme: taban + fotoğraf başına; en çok (2026-11-01 büyük iş şeması: 60 fotoğrafta ön okuma yükleme sırasında paralel sürer, çoğu bitmiş olur) */
+export const ON_OKUMA_BEKLEME = 25_000, ON_OKUMA_FOTO_BASINA = 1_000, ON_OKUMA_BEKLEME_EN_COK = 90_000;
+/** sorunun eklerinden ön okuması süren (son 5 dakikada eklenmiş) fotoğraflar bitene ya da süre dolana kadar bekler; balona "Fotoğraflar okunuyor n / N" */
+export async function onOkumaBekle(o: IstekOturumu, ekler: readonly string[], yaz?: (x: { t: "asama"; ad: string }) => void): Promise<void> {
+  const toplam = await oturumIslemi(o, (db) => fotoEkSayisi(db, ekler));
+  if (!toplam) return;
+  const son = Date.now() + Math.min(ON_OKUMA_BEKLEME_EN_COK, ON_OKUMA_BEKLEME + ON_OKUMA_FOTO_BASINA * toplam);
   while (Date.now() < son) {
-    if (!(await oturumIslemi(o, (db) => onOkumaBekleyen(db, ekler)))) return;
+    const bekleyen = await oturumIslemi(o, (db) => onOkumaBekleyen(db, ekler));
+    if (!bekleyen) return;
+    yaz?.({ t: "asama", ad: `Fotoğraflar okunuyor ${toplam - bekleyen} / ${toplam}` });
     await new Promise((r) => setTimeout(r, 1_000));
   }
 }

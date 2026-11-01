@@ -139,8 +139,9 @@ test("soru: görünen geçmişe + konuşmaya (ekler, yazı) + sayfa notu; cevaps
     { type: "tool_result", tool_use_id: "t1", content: "{\"islem\":\"plan_ara\",\"durum\":\"tamam\"}" },
     { type: "tool_result", tool_use_id: "t2", content: YARIDA, is_error: true },
     /* 2026-10-31 (kalem 2, karar 1): ekin numarası, adı (ve varsa çekim saati) gider */
-    { type: "text", text: "Malzeme (bu iletide 1 öğe: 1 fotoğraf (F01)). Numaralar konuşma boyunca aynı kalır; sıra kaynağın sırası, yoksa çekim saati, yoksa eklenme. Fotoğraflar küçük kopya; etiket / yazı için foto_goster ile bölgeyi büyüt (bir fotoğraf bir işte bir kez)." },
-    { type: "text", text: "M01 · F01 — fotoğraf · Gizli Sanayi etiketi.jpg:" }, { type: "image", source: { type: "file", file_id: "file_den_1" } },
+    { type: "text", text: "Malzeme (bu iletide 1 öğe: 1 fotoğraf (F01)). Numaralar konuşma boyunca aynı kalır; sıra kaynağın sırası, yoksa çekim saati, yoksa eklenme. Fotoğrafların kendisi konuşmada yok; her birinin ön okuma satırı (sınıf, tarif, okunan alanlar) başlığında. foto_goster yalnız eksik / şüpheli alan, etiketsiz aday ve kusur için (bir fotoğraf bir işte bir kez)." },
+    /* 2026-11-01 (büyük iş şeması): fotoğrafın kendisi konuşmaya girmez — yalnız başlığı */
+    { type: "text", text: "M01 · F01 — fotoğraf · Gizli Sanayi etiketi.jpg" },
     { type: "text", text: "Eki inceler misin?" },
   ]);
   assert.doesNotMatch(JSON.stringify(k), /file_plan_1|p.pdf/, "başkasının eki gitmez");

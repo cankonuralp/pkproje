@@ -58,8 +58,9 @@ test("konuşmaya giden bloklar: malzeme özeti, her ek numara + tür + ad + çek
     { dosya: "file_2", tur: "pdf", ad: "form.pdf", cekim: null, no: 5, fno: null }, { dosya: "file_3", tur: "tablo", ad: "liste.xlsx", cekim: null, no: 6, fno: null }],
     "Bunlara göre formatı kur");
   assert.deepEqual(l, [
-    { type: "text", text: "Malzeme (bu iletide 3 öğe: 1 fotoğraf (F02), 1 PDF, 1 Excel tablosu (metin)). Numaralar konuşma boyunca aynı kalır; sıra kaynağın sırası, yoksa çekim saati, yoksa eklenme. Fotoğraflar küçük kopya; etiket / yazı için foto_goster ile bölgeyi büyüt (bir fotoğraf bir işte bir kez)." },
-    { type: "text", text: "M04 · F02 — fotoğraf · komp.jpeg · çekim 27.10.2026 09:56:" }, { type: "image", source: { type: "file", file_id: "file_1" } },
+    { type: "text", text: "Malzeme (bu iletide 3 öğe: 1 fotoğraf (F02), 1 PDF, 1 Excel tablosu (metin)). Numaralar konuşma boyunca aynı kalır; sıra kaynağın sırası, yoksa çekim saati, yoksa eklenme. Fotoğrafların kendisi konuşmada yok; her birinin ön okuma satırı (sınıf, tarif, okunan alanlar) başlığında. foto_goster yalnız eksik / şüpheli alan, etiketsiz aday ve kusur için (bir fotoğraf bir işte bir kez)." },
+    /* 2026-11-01 (büyük iş şeması): fotoğrafın kendisi konuşmaya girmez — yalnız başlığı (ön okuma satırı); belgeler Dosya API kimliğiyle */
+    { type: "text", text: "M04 · F02 — fotoğraf · komp.jpeg · çekim 27.10.2026 09:56" },
     { type: "text", text: "M05 — PDF · form.pdf:" }, { type: "document", source: { type: "file", file_id: "file_2" }, title: "M05 — PDF · form.pdf" },
     { type: "text", text: "M06 — Excel tablosu (metin) · liste.xlsx:" }, { type: "document", source: { type: "file", file_id: "file_3" }, title: "M06 — Excel tablosu (metin) · liste.xlsx" },
     { type: "text", text: "Bunlara göre formatı kur" },

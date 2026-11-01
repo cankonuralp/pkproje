@@ -19,3 +19,21 @@ test("3. ZIP açılmayınca kilit düşer", () => {
 test("4. yükleme atlanınca kilit düşer", () => {
   assert.equal(KURALLAR.sablon(oku("src/modules/ekipman-turleri/ui/pdfdenSablon.ts").replace("await formatYukleEylemi(f)", "({ tamam: true, sira: 1 })")), false);
 });
+
+/* 2026-11-01 (reisim: "herhangi bir kodda -0 dan başlamasın") — planlar/sema.ts bellekte bozulur (göreli içe aktarmalar mutlak yola) */
+test("5. kodun sıfır sayı bölümü denetimi kalkınca TRF-0 geçer (kilidin koruduğu açık)", async () => {
+  const { mkdtempSync, readFileSync, rmSync, writeFileSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const { join, resolve } = await import("node:path");
+  const { pathToFileURL } = await import("node:url");
+  const yol = resolve("src/modules/planlar/sema.ts");
+  const k = readFileSync(yol, "utf8").replace(/from "(\.\.?\/[^"]+)"/g, (_, y: string) => `from "${pathToFileURL(resolve(resolve(yol, ".."), y)).href}"`);
+  const eski = "  if (/(^|-)0+(-|$)/.test(kod)) return { tur: \"hata\", metin: \"Kodun sayı bölümü 0 olamaz; numaralar 1'den başlar (TRF-0001).\" };\n";
+  assert.ok(k.includes(eski), "bozulacak satır kaynakta yok");
+  const klasor = mkdtempSync(join(tmpdir(), "bozan-kod-sifir-")), dosya = join(klasor, "sema.ts");
+  writeFileSync(dosya, k.replace(eski, ""));
+  try {
+    const m = await import(pathToFileURL(dosya).href) as typeof import("../../src/modules/planlar/sema.ts");
+    assert.equal(m.kodBicimi("TRF-0"), null, "bozuk: TRF-0 kabul edildi");
+  } finally { rmSync(klasor, { recursive: true, force: true }); }
+});

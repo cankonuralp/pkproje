@@ -166,7 +166,7 @@ export async function soruyuEkle(db: Sorgulayici, kim: Kisi, g: { metin: string;
   if (k.durum === "red") return k;
   const b = await sayBaglami(db, kim, g.ekran, g.okuyucu);
   /* 2026-11-01 (V21 B): otomatik kapanış — eklerin numarası kapanıştan SONRA (yeni konuşmada M01'den) */
-  const kapanis = await otomatikKapanis(db, kim, sayfaNotu(b, simdi), simdi, g.ekler);
+  const kapanis = await otomatikKapanis(db, kim, simdi, g.ekler);
   const ekler = await ekleriAl(db, g.ekler);
   if (!metin && !ekler.length) return { durum: "red", neden: "Sorunuzu yazın." };
   const soru = metin || (ekler.length === 1 ? "Eki inceler misin?" : "Ekleri inceler misin?");
@@ -179,14 +179,15 @@ export async function soruyuEkle(db: Sorgulayici, kim: Kisi, g: { metin: string;
   return { durum: "hazir", ileti, baglam: b, kapanis: kapanis ? { dosyalar: kapanis.dosyalar, anahtar: kapanis.anahtar } : null };
 }
 /** 2026-11-01 (V21 B — reisim: "müşteriye bırakmadan otomatik geçmiş silme koyalım"): iş bitmişken (konuşmanın sonu açık araç çağrısı olmayan S.A.Y cevabı)
-    yeni soru gelince kapanış nedeni varsa (is-siniri.ts kapanisNedeni: 60 dk sessizlik · başka plan · konuşma büyüdü) konuşma temizlenir (Ar-Ge kaydı, ekler
-    çöpe — yeni sorunun ekleri korunur), önceki işin son bildirimi yeni konuşmanın ilk iletisine not olur. Dönen: not + hizmette silinecek dosyalar */
-async function otomatikKapanis(db: Sorgulayici, kim: Kisi, yeniNot: string, simdi: Date, koru: readonly string[]):
+    yeni soru gelince kapanış nedeni varsa (is-siniri.ts kapanisNedeni: YALNIZ 60 dk sessizlik — "başka plan" ve "konuşma büyüdü" kuralları kalktı, 2026-11-01
+    dördüncü / beşinci koşu) konuşma temizlenir (Ar-Ge kaydı, ekler çöpe — yeni sorunun ekleri korunur), önceki işin son bildirimi yeni konuşmanın ilk iletisine
+    not olur. Dönen: not + hizmette silinecek dosyalar */
+async function otomatikKapanis(db: Sorgulayici, kim: Kisi, simdi: Date, koru: readonly string[]):
   Promise<{ not: string; dosyalar: string[]; anahtar: string | null } | null> {
   const son = await konusmaSonu(db);
   if (!son || son.rol !== "assistant" || aracCagrilari(Array.isArray(son.icerik) ? son.icerik as Record<string, unknown>[] : []).length) return null;
   const mesajlar = (await konusmaOku(db)).map((m) => ({ role: m.rol, content: m.icerik }));
-  const neden = kapanisNedeni({ mesajlar, sonZaman: await konusmaSonZamani(db), simdi, yeniNot });
+  const neden = kapanisNedeni({ mesajlar, sonZaman: await konusmaSonZamani(db), simdi });
   if (!neden) return null;
   const bildirim = cevapMetni(Array.isArray(son.icerik) ? son.icerik as Record<string, unknown>[] : []) ?? "";
   const saat = new Intl.DateTimeFormat("tr-TR", { timeZone: "Europe/Istanbul", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).format(simdi);

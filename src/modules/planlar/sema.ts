@@ -199,6 +199,9 @@ export function kodBicimi(kod: string): { tur: KodTuru; metin: string } | null {
   if (/[^A-ZÇĞİÖŞÜ0-9-]/.test(kod)) return { tur: "hata", metin: "Kodda yalnız harf, rakam ve tire olabilir (boşluk ve işaret yok)." };
   if (kod.length < 3 || kod.length > 20) return { tur: "hata", metin: "Kod 3 ile 20 hane arasında olmalı." };
   if (!/^[A-ZÇĞİÖŞÜ0-9]+(-[A-ZÇĞİÖŞÜ0-9]+)*$/.test(kod)) return { tur: "hata", metin: "Tire başta, sonda ya da art arda olamaz." };
+  /* 2026-11-01 (reisim: "herhangi bir kodda -0 dan başlamasın"): yalnız sıfırlardan oluşan sayı bölümü (TRF-0, TRF-00, 000) hiçbir yoldan kabul edilmez —
+     ekran, plan aç, Excel, S.A.Y aynı işlevden geçer; numaralar 1'den başlar (siradakiKod). Eldeki AKL-0 gibi kayıtlar sunucuca yeniden adlandırılmaz. */
+  if (/(^|-)0+(-|$)/.test(kod)) return { tur: "hata", metin: "Kodun sayı bölümü 0 olamaz; numaralar 1'den başlar (TRF-0001)." };
   return null;
 }
 /** yeni ekipman (maket ekleCiz "Yeni ekipman"): kod + tür zorunlu; konum isteğe bağlı. 2026-10-14 (reisim: "BURADA SERİ NO SORMASIN ETİKETTEN

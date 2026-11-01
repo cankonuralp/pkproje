@@ -20,7 +20,8 @@ test("çekim saati dosya adından: WhatsApp, telefon, tireli; geçersiz yok", ()
 });
 
 const ek = (fno: number, cekim: string | null, sinif?: "E" | "T" | "L" | "D"): MalzemeEki =>
-  ({ dosya: `d${fno}`, tur: "foto", ad: `f${fno}.jpg`, cekim, no: fno, fno, okuma: sinif ? { sinif, yazi: sinif === "T" ? "SN DENEME-1" : "", tarif: "deneme" } : null });
+  ({ dosya: `d${fno}`, tur: "foto", ad: `f${fno}.jpg`, cekim, no: fno, fno, okuma: sinif ? { sinif, yazi: sinif === "T" ? "SN DENEME-1" : "", tarif: "deneme",
+    alanlar: sinif === "T" ? [{ ad: "marka", deger: "Deneme", emin: true }, { ad: "seri", deger: "DENEME-1", emin: false }, { ad: "diger", deger: "yükseklik: 1900 mm", emin: true }] : [] } : null });
 
 test("aynı dakikadakiler saniyeyle sıralanır", () => {
   const l = malzemeSirasi([ek(1, "2026-10-30 13:39:31"), ek(2, "2026-10-30 13:39:15"), ek(3, "2026-10-30 13:38:59")]);
@@ -30,7 +31,9 @@ test("aynı dakikadakiler saniyeyle sıralanır", () => {
 test("ön okuma başlıkta; özet: sınıf sayısı ve çiftler (5 dakika içinde), eşsiz genel görünüş", () => {
   const l = [ek(1, "2026-10-30 13:30:00", "E"), ek(2, "2026-10-30 13:30:20", "T"), ek(3, "2026-10-30 13:34:00", "E"), ek(4, "2026-10-30 13:45:00", "T"),
     ek(5, "2026-10-30 13:50:00", "E"), ek(6, "2026-10-30 13:50:30", "L")];
-  assert.match(ekBasligi(l[1]!), /ön okuma: etiket \/ plaka — deneme · yazı: SN DENEME-1$/);
+  /* 2026-11-01 (büyük iş şeması): okunan etiket alanları başlıkta — fotoğrafın kendisi konuşmada değil; şüpheli işaretli, "diğer" kendi metniyle */
+  assert.match(ekBasligi(l[1]!), /ön okuma: etiket \/ plaka — deneme · okunan: marka Deneme, seri DENEME-1 \(şüpheli\), yükseklik: 1900 mm · yazı: SN DENEME-1$/);
+  assert.match(ekBasligi(l[0]!), /ön okuma: genel görünüş — deneme$/, "alanı olmayan fotoğrafta okunan yok");
   assert.deepEqual(fotoCiftleri(l), { ciftler: [[1, 2], [5, 6]], yalniz: [3] }, "13:34'teki eşsiz; 13:45'teki etiket 11 dakika uzak");
   const o = malzemeOzeti(l);
   assert.match(o, /Ön okuma \(6 \/ 6\): 3 genel görünüş, 2 etiket \/ plaka, 1 levha\./);
@@ -38,6 +41,8 @@ test("ön okuma başlıkta; özet: sınıf sayısı ve çiftler (5 dakika içind
   /* 2026-11-01 dördüncü koşu: etiketsiz görünüş ADAY — ayrı ekipmansa sayılır (etiketi çekilmemiş olabilir), başka açı / başka cihazsa sayılmaz */
   assert.match(o, /çiftleri: F01\+F02, F05\+F06 — 2 ekipman; etiketsiz genel görünüş \(ADAY\): F03 — foto_goster ile bak: ayrı bir ekipmansa SAY/);
   assert.doesNotMatch(o, /en az/);
+  assert.match(o, /Fotoğrafların kendisi konuşmada yok; her birinin ön okuma satırı/, "büyük iş şeması: fotoğraf konuşmada değil");
+  assert.doesNotMatch(o, /küçük kopya/);
   assert.doesNotMatch(malzemeOzeti([ek(1, null)]), /Ön okuma/, "ön okuması yoksa özet aynı");
 });
 
@@ -45,8 +50,17 @@ test("ön okuma isteği: düşük derinlik, şemalı, küçük; cevap süzülür
   const g = onOkumaIstegi("haiku", new Uint8Array([1, 2, 3]), "image/jpeg").govde as { max_tokens: number; output_config: { effort: string; format: { type: string } } };
   assert.equal(g.max_tokens, ON_OKUMA_YANIT);
   assert.deepEqual([g.output_config.effort, g.output_config.format.type], ["low", "json_schema"]);
-  const c = onOkumaCoz({ content: [{ type: "text", text: JSON.stringify({ sinif: "T", yazi: " SN\u0000  1 ", tarif: "x".repeat(200) }) }], usage: { input_tokens: 5 } });
-  assert.deepEqual(c.okuma, { sinif: "T", yazi: "SN 1", tarif: "x".repeat(100) });
+  /* 2026-11-01 (büyük iş şeması): şemada etiket alanları zorunlu dizi; cevapta bilinmeyen ad, boş değer düşer, emin yalnız true ise, uzun değer kırpık */
+  const sema = g.output_config.format as unknown as { schema: { required: string[]; properties: { alanlar: { items: { required: string[]; properties: { ad: { enum: string[] } } } } } } };
+  assert.deepEqual(sema.schema.required, ["sinif", "yazi", "tarif", "alanlar"]);
+  assert.deepEqual(sema.schema.properties.alanlar.items.properties.ad.enum, ["marka", "model", "seri", "imal", "kapasite", "diger"]);
+  assert.deepEqual(sema.schema.properties.alanlar.items.required, ["ad", "deger", "emin"]);
+  const c = onOkumaCoz({ content: [{ type: "text", text: JSON.stringify({ sinif: "T", yazi: " SN\u0000  1 ", tarif: "x".repeat(200),
+    alanlar: [{ ad: "marka", deger: " DASD ", emin: true }, { ad: "seri", deger: "2210", emin: "evet" }, { ad: "renk", deger: "kırmızı", emin: true }, { ad: "model", deger: "  ", emin: true },
+      { ad: "kapasite", deger: "k".repeat(100), emin: false }] }) }], usage: { input_tokens: 5 } });
+  assert.deepEqual(c.okuma, { sinif: "T", yazi: "SN 1", tarif: "x".repeat(100),
+    alanlar: [{ ad: "marka", deger: "DASD", emin: true }, { ad: "seri", deger: "2210", emin: false }, { ad: "kapasite", deger: "k".repeat(60), emin: false }] });
+  assert.deepEqual(onOkumaCoz({ content: [{ type: "text", text: JSON.stringify({ sinif: "E", yazi: "", tarif: "lift" }) }] }).okuma, { sinif: "E", yazi: "", tarif: "lift", alanlar: [] }, "alanlar yoksa boş");
   assert.equal(onOkumaCoz({ content: [{ type: "text", text: JSON.stringify({ sinif: "Z", yazi: "", tarif: "" }) }] }).okuma, null, "bilinmeyen sınıf");
   assert.equal(onOkumaCoz({ content: [{ type: "text", text: "bozuk" }] }).okuma, null);
 });

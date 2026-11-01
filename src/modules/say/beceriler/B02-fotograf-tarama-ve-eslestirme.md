@@ -25,7 +25,9 @@ bağlantıyı kesin gibi yazma; bildirimde "eşleştirmeden emin değilim" de.
 
 ## 2. Paftalarla bak
 
-- `foto_pafta` ile bütün fotoğrafları 8–12'li paftalarda gör. Her karoda numara vardır.
+- **Fotoğrafın kendisi konuşmada değildir (2026-11-01 büyük iş şeması):** her fotoğrafın başlığında ön okuma satırı vardır — sınıf, tarif, etikette okunan
+  alanlar (marka, model, seri, imal, kapasite; şüpheli olan işaretli). Sınıfı ve alanları oradan al; pafta yalnız ön okuması olmayan fotoğraflar için.
+- `foto_pafta` ile ön okuması olmayan fotoğrafları 8–12'li paftalarda gör. Her karoda numara vardır.
 - Paftada her fotoğrafa bir **sınıf** ver:
 
 | Sınıf | Ne görünür | Ne için |
@@ -62,12 +64,15 @@ bağlantıyı kesin gibi yazma; bildirimde "eşleştirmeden emin değilim" de.
 
 1. Notun kodu plandaki ekipmana eşlenir (B01 adım 4).
 2. **Etiket fotoğrafı:** hemen önceki ya da sonraki genel fotoğrafın ekipmanına aittir.
-3. **Liste fotoğrafından eşleştirme:** uzman bir lokasyon listesinin ekran görüntüsünü verdiyse:
+3. **Tesiste kayıtlı ekipmanla eşleme (2026-11-01 beşinci koşu):** önce **seri no** (etiketteki ile kayıttaki), sonra **marka + model**, en son çekim
+   sırası. Kayıtların serisi varken sıraya göre eşlemek kusurdur. Sıraya göre eşlediğini kesin gibi yazma; bildirimde "sırayla eşledim, etiketle
+   doğrulanmadı" de.
+4. **Liste fotoğrafından eşleştirme:** uzman bir lokasyon listesinin ekran görüntüsünü verdiyse:
    - Listedeki kodları ve konumları oku.
    - Fotoğraflardaki etiket, kod ya da plaka ile eşle.
    - Konum yazımı yarıda kalmışsa (ör. "sevkiyat" bir yerden sonra yazılmamış) sıradan ve komşulardan tamamla.
    - Tamamladığın yerleri bildirimde söyle.
-4. **Tutarlılık denetimi** — her eşleşmede şunlara bak:
+5. **Tutarlılık denetimi** — her eşleşmede şunlara bak:
    - Fotoğraftaki ekipman o türde mi? "T7" bir transpalet mi?
    - Etiketteki tanım türle uyuşuyor mu? ("Manuel Transpalet")
    - Genel fotoğrafla etiket fotoğrafı aynı makine gibi mi? (renk, gövde, çıkartmalar)

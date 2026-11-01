@@ -53,7 +53,8 @@ function katalog(m: Islem) {
 }
 
 test("1. yürütücü şema doğrulamasını atlarsa şemaya uymayan girdi modül işlevine gider", async () => {
-  const m = await bozuk<Islem>(ISLEM, "  if (!g.success) {\n", "  if (!g.success && false) {\n");
+  /* 2026-11-01 (O16): "if (!g.success)" artık iki yerde — hedef şema HATASINI döndüren blok */
+  const m = await bozuk<Islem>(ISLEM, "  if (!g.success) {\n    const h = hatalar(g.error);", "  if (!g.success && false) {\n    const h = hatalar(g.error);");
   const k = katalog(m);
   await m.islemYurut(k.l, ortam, "deneme_yaz", { plan: "kimlik-degil", adet: 0 });
   assert.equal(k.cagrilar.length, 1, "bozuk: geçersiz girdiyle çalıştırıcı çağrıldı");
@@ -113,4 +114,15 @@ test("8. girdiye modülün şemasının alanları elle kopyalanırsa alan deneti
     "alanlar: z.object({ unvan: z.string(), kisa: z.string(), vd: z.string(), vno: z.string(), eposta: z.string(), tel: z.string(), ilgili: z.string() }).partial(),");
   const b = islemAlanlariDenetimi(m.SAY_ISLEMLERI, izinli, SAY_ELLE_ALANLAR);
   assert.ok(b.some((x) => x.startsWith("musteri_kaydet.alanlar:")), `bozuk: elle kopyalanan alanlar kilitten geçti — ${b.join(" | ")}`);
+});
+
+/* 2026-11-01 V21 beşinci koşu (O16'nın ikinci yarısı: çözülmüş JSON metni yerine HAM metin çalıştırıcıya gitti, rapor başına girişler boş sayıldı) */
+test("9. çözülmüş JSON metni yerine ham metin çalıştırıcıya giderse kilit düşer", async () => {
+  const m = await bozuk<Islem>(ISLEM, "kaydedilmemis: o.kaydedilmemis === true, epostaGonder: o.epostaGonder }, g.data, ham);",
+    "kaydedilmemis: o.kaydedilmemis === true, epostaGonder: o.epostaGonder }, g.data, girdi ?? {});");
+  const hamlar: unknown[] = [];
+  const l = [m.islem({ ad: "deneme_dizi", modul: 13, tarif: "Deneme.", tur: "yaz", girdi: z.object({ satirlar: z.array(z.object({ rapor: kimlik })) }), kaynak: [kimlik],
+    islev: () => undefined, calistir: async (_b, _veri, ham) => { hamlar.push(ham); return { tamam: true, bildirim: "Yapıldı." }; } })];
+  await m.islemYurut(l, ortam, "deneme_dizi", { satirlar: "[{\"rapor\": \"33333333-3333-4333-8333-333333333333\"}]" });
+  assert.equal(typeof (hamlar[0] as { satirlar?: unknown } | undefined)?.satirlar, "string", "bozuk: çalıştırıcıya metin ham gitti");
 });

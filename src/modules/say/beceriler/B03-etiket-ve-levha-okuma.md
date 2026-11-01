@@ -6,6 +6,11 @@ ne_zaman: Etiket, plaka, levha ya da diyagram fotoğrafından marka, model, seri
 
 # B03 · Etiket ve levha okuma
 
+## 0. Önce ön okuma satırı (2026-11-01 büyük iş şeması)
+
+Fotoğrafın kendisi konuşmada değildir; başlığındaki ön okuma satırında etiketten okunan alanlar vardır (marka, model, seri, imal, kapasite, diğer;
+şüpheli olan "(şüpheli)" işaretli). Alanlar okunmuş ve eminse büyütmeden doğrudan yaz. Aşağıdaki adımlar yalnız eksik ya da şüpheli alan için.
+
 ## 1. Görüntüyü hazırla
 
 1. Etiketin bulunduğu fotoğrafı `foto_goster` ile tam boy aç.

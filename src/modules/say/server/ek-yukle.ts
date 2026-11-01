@@ -5,11 +5,10 @@ import { depo } from "../../../server/dosya/depo.ts";
 import { dosyaYukle } from "../../../server/dosya/dosya.ts";
 import { oturumIslemi, type IstekOturumu } from "../../../server/kimlik/istek.ts";
 import { anthropicDosyaYukle } from "../../../server/yz/akis.ts";
-import { DOSYA_SAY_EK, ekKaydet, parcalariBirlestir, parcalariSil, parcaYaz, type EkTuru } from "../../../server/yz/konusma.ts";
+import { DOSYA_SAY_EK, DOSYA_YOK, ekKaydet, parcalariBirlestir, parcalariSil, parcaYaz, type EkTuru } from "../../../server/yz/konusma.ts";
 import { sayEkiHazirla } from "./ek.ts";
 import { sayKapisi } from "./say.ts";
 import { fotoOnOku } from "./on-okuma.ts";
-import { kucukKopya } from "./gorsel.ts";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 export interface EkParcasi { yukleme: string; sira: number; adet: number; ad: string; tablo: boolean }
@@ -39,19 +38,27 @@ export async function sayEkParcasi(o: IstekOturumu, p: EkParcasi, veri: Uint8Arr
   if (h.durum === "red") { await sil(); return h; }
   const e = sayEkiHazirla(h.bayt, p.ad, p.tablo);
   if ("durum" in e) { await sil(); return e; }
-  /* 2026-10-31 (V21 madde 2): konuşmaya fotoğrafın KÜÇÜK kopyası gider (uzun kenar ≤ KUCUK_KENAR); depodaki kopya ve ön okuma tam boy */
-  const kucuk = e.tur === "foto" ? await kucukKopya(e.bayt).catch(() => null) : null;
-  const y = kucuk ? await anthropicDosyaYukle(kucuk, "ek.jpg", "image/jpeg", h.anahtar) : await anthropicDosyaYukle(e.bayt, e.dosyaAdi, e.mime, h.anahtar);
+  /* 2026-11-01 (büyük iş şeması; 2026-10-31 V21 madde 2'nin "küçük kopya"sı kalktı): FOTOĞRAF hizmete (Dosya API) yüklenmez, konuşmaya girmez (yz_ek.dosya
+     DOSYA_YOK) — yalnız firmanın deposunda: ön okuma tam boyla okur, S.A.Y gerekirse foto_goster ile oradan bakar, rapora fotoğraf oradan. PDF / Word / metin /
+     tablo Dosya API'ye yüklenir (belge konuşmada) */
+  const y = e.tur === "foto" ? { durum: "tamam" as const, id: DOSYA_YOK } : await anthropicDosyaYukle(e.bayt, e.dosyaAdi, e.mime, h.anahtar);
   if (y.durum === "hata") { await sil(); return { durum: "red", neden: y.neden }; }
-  const id = await oturumIslemi(o, async (db) => {
-    await parcalariSil(db, p.yukleme);
-    const ek = await ekKaydet(db, { dosya: y.id, ad: e.ad, tur: e.tur, mime: e.mime, boyut: h.bayt.length, cekim: e.cekim });
-    /* 2026-10-31 (kalem 2): fotoğraf ve PDF'in kopyası firmanın deposunda (yakınlaştırma, rapora fotoğraf, belge ekleme bundan); sığmazsa kopyasız sürer */
-    if (e.tur === "foto" || e.tur === "pdf") {
-      await dosyaYukle(db, depo(), { firmaId: o.kiraci.firmaId, modul: DOSYA_SAY_EK, kayitId: ek, ad: e.ad, bayt: e.bayt, izinli: ["jpeg", "png", "pdf"], kim: o.ad, yukleyen: o.id });
-    }
-    return ek;
-  });
+  let id: string;
+  try {
+    id = await oturumIslemi(o, async (db) => {
+      await parcalariSil(db, p.yukleme);
+      const ek = await ekKaydet(db, { dosya: y.id, ad: e.ad, tur: e.tur, mime: e.mime, boyut: h.bayt.length, cekim: e.cekim });
+      /* 2026-10-31 (kalem 2): fotoğraf ve PDF'in kopyası firmanın deposunda (yakınlaştırma, rapora fotoğraf, belge ekleme bundan); fotoğrafta TEK kopya budur */
+      if (e.tur === "foto" || e.tur === "pdf") {
+        await dosyaYukle(db, depo(), { firmaId: o.kiraci.firmaId, modul: DOSYA_SAY_EK, kayitId: ek, ad: e.ad, bayt: e.bayt, izinli: ["jpeg", "png", "pdf"], kim: o.ad, yukleyen: o.id });
+      }
+      return ek;
+    });
+  } catch (hata) {
+    if (e.tur !== "foto") throw hata;
+    await sil().catch(() => undefined);
+    return { durum: "red", neden: `${e.ad}: fotoğraf depoya kaydedilemedi; yeniden ekleyin.` };
+  }
   if (e.tur === "foto" && sonra) sonra(() => fotoOnOku(o, id, e.bayt, e.mime));
   return { durum: "tamam", ek: { id, ad: e.ad, tur: e.tur, boyut: h.bayt.length } };
 }

@@ -27,3 +27,16 @@ test("2. zaman yakınlığı kalkınca kilit düşer", async () => {
   const e = (fno: number, cekim: string, sinif: "E" | "T") => ({ fno, cekim, okuma: { sinif, yazi: "", tarif: "" } });
   assert.deepEqual(m.fotoCiftleri([e(3, "2026-10-30 13:34:00", "E"), e(4, "2026-10-30 13:45:00", "T")]).ciftler, [[3, 4]]);
 });
+
+/* 2026-11-01 (büyük iş şeması): on-okuma.ts bellekte bozulur — alanlar cevaptan okunmazsa konuşmaya etiket alanı gitmez, S.A.Y her etiketi büyütür */
+test("3. ön okuma cevabındaki alanlar süzgeçten düşerse kilit düşer", async () => {
+  const yol = resolve("src/modules/say/on-okuma.ts");
+  const k = readFileSync(yol, "utf8").replace(/from "(\.\.?\/[^"]+)"/g, (_, y: string) => `from "${pathToFileURL(resolve(resolve(yol, ".."), y)).href}"`);
+  const eski = "alanlar: alanlariCoz(x.alanlar) }";
+  assert.ok(k.includes(eski), "bozulacak satır kaynakta yok");
+  const dosya = join(klasor, `on-okuma-${sira++}.ts`);
+  writeFileSync(dosya, k.replace(eski, "alanlar: [] }"));
+  const m = await import(pathToFileURL(dosya).href) as typeof import("../../src/modules/say/on-okuma.ts");
+  const c = m.onOkumaCoz({ content: [{ type: "text", text: JSON.stringify({ sinif: "T", yazi: "", tarif: "x", alanlar: [{ ad: "marka", deger: "Deneme", emin: true }] }) }] });
+  assert.equal(c.okuma?.alanlar?.length, 0, "bozuk: alanlar düştü");
+});

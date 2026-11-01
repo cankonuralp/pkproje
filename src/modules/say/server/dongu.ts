@@ -26,8 +26,8 @@ import { anthropicDosyaSil } from "../../../server/yz/akis.ts";
 import { fotoGosterAraci, fotoPaftaAraci } from "./gorsel.ts";
 import { beceriDizini, beceriMetni, becerileriOku } from "../beceriler.ts";
 import { bitisDenetimi, denetimNotu, sorunVar } from "../bitis-denetimi.ts";
-import { BAGLAM_DOLDU, bildirimNotu, bildirimNotuGerekli, bildirimSatirlari, fotoNo, gosterilenFotolar, isIciKucult, konusmaSikistir, KUCULTME_EN_COK, kucultmeSeviyesi,
-  ZATEN_BUYUTULDU } from "../is-siniri.ts";
+import { BAGLAM_DOLDU, bildirimNotu, bildirimNotuGerekli, bildirimSatirlari, fotoNo, gosterilenFotolar, ilerlemeMetni, isIciKucult, konusmaSikistir, KUCULTME_EN_COK,
+  kucultmeSeviyesi, partiSonuKucult, raporIlerlemesi, ZATEN_BUYUTULDU } from "../is-siniri.ts";
 import { onOkumaBekle } from "./on-okuma.ts";
 import { acikSonuclar, konusmaDuzelt } from "../../../server/yz/konusma-denetim.ts";
 import type { SohbetIletisi } from "../../../server/yz/sohbet.ts";
@@ -172,10 +172,13 @@ export async function sayAkisi(o: IstekOturumu, ham: unknown, yaz: (x: SayOlayi)
   let yenile = false, ilk = v.tur === "soru", duraklat = false;
   /* V21 A1: son isteğin ölçülen istemi + çıkışı (bir sonraki istemin tabanı; "devam"da sıfırdan kestirilir) */
   let sonIstem = 0;
+  /* 2026-11-01 (büyük iş şeması): bekleme balonuna "n / N rapor yazıldı" — her aşama yazısının ucunda (parti, ön okuma, küçültme görünmez) */
+  let ilerleme: string | null = null;
+  const yazI = (x: SayOlayi) => yaz(x.t === "asama" && ilerleme ? { ...x, ad: `${x.ad} · ${ilerleme}` } : x);
   try {
     if (v.tur === "soru") {
-      /* 2026-10-31 (L4): yeni fotoğrafların ön okuması bitsin (en çok 25 sn) — malzeme özeti sınıf sayısı ve çiftlerle gitsin */
-      if (v.ekler.length) await onOkumaBekle(o, v.ekler);
+      /* 2026-10-31 (L4): yeni fotoğrafların ön okuması bitsin — malzeme özeti sınıf sayısı, çiftler ve etiket alanlarıyla gitsin; balonda "Fotoğraflar okunuyor n / N" */
+      if (v.ekler.length) await onOkumaBekle(o, v.ekler, yaz);
       const s = await oturumIslemi(o, (db) => soruyuEkle(db, o, { metin: v.soru, ekler: v.ekler, ekran, okuyucu: acikKayitOkuyucu(o), sablon: v.sablon }));
       if (s.durum === "red") { yaz({ t: "hata", neden: s.neden, yenile }); return; }
       /* 2026-11-01 (V21 B): konuşma kendiliğinden kapandıysa eski eklerin hizmetteki dosyaları silinir; ekran geçmişi yeniden yükler */
@@ -205,7 +208,8 @@ export async function sayAkisi(o: IstekOturumu, ham: unknown, yaz: (x: SayOlayi)
         if (d.duzeltmeler.length) hataYaz(o, new Error(`S.A.Y konuşması onarıldı: ${d.duzeltmeler.join(", ")}`), "say.konusma");
         /* 2026-10-31 (V21 madde 1): bitmiş işlerin iletileri isteğe KÜÇÜLTÜLMÜŞ gider (fotoğraf blokları ve büyütmeler metne, uzun sonuçlar kırpık, eski
            düşünme yok) — kayıt değişmez; bu işin iletileri aynen (is-siniri.ts) */
-        const sikisik = konusmaSikistir(d.mesajlar).mesajlar;
+        /* 2026-11-01 (büyük iş şeması): yazılmış partiden önceki büyütmeler de metne (is-siniri.ts partiSonuKucult) */
+        const sikisik = partiSonuKucult(konusmaSikistir(d.mesajlar).mesajlar).mesajlar;
         /* 2026-11-01 (V21 A1): SERT TAVAN — istem TAVAN'ı aşacaksa iş içi küçültme seviyesi artar (yalnız ileri; is-siniri.ts); 4. seviyede "bağlam doldu" notu */
         const mevcut = await kucultmeOku(db);
         const seviye = kucultmeSeviyesi(sikisik, mevcut, SISTEM_TOKEN, sonIstem);
@@ -218,9 +222,10 @@ export async function sayAkisi(o: IstekOturumu, ham: unknown, yaz: (x: SayOlayi)
       });
       if (h.durum === "bitti") { yaz({ t: "bitti", yenile }); return; }
       if (h.durum === "red") { yaz({ t: "hata", neden: h.neden, yenile }); return; }
-      yaz({ t: "asama", ad: "Düşünüyor" });
+      if (ilerleme === null) ilerleme = ilerlemeMetni(raporIlerlemesi(h.mesajlar as { role: string; content: unknown }[]));
+      yazI({ t: "asama", ad: "Düşünüyor" });
       const basla = Date.now();
-      const y = await cagir(h.k.model, h.mesajlar, h.k.anahtar, yaz);
+      const y = await cagir(h.k.model, h.mesajlar, h.k.anahtar, yazI);
       if (y.durum === "hata") {
         /* K1b (2026-10-31): reddedilen istek hata kaydına — kod, hizmetin hata metni (maskeli), ileti sayısı, istek boyu */
         hataYaz(o, new Error(`Yapay zekâ isteği reddedildi (${y.kod ?? "bağlantı"}): ${y.ileti ?? y.neden} · ileti ${h.mesajlar.length} · boy ${JSON.stringify(h.mesajlar).length}`),
@@ -256,7 +261,7 @@ export async function sayAkisi(o: IstekOturumu, ham: unknown, yaz: (x: SayOlayi)
         await olc(0, 0);
         if (m.stop_reason === "refusal" && !ileti) { yaz({ t: "hata", neden: "Yapay zekâ bu isteğe cevap vermedi.", yenile }); return; }
         /* 2026-10-31 (L3): rapora yazan iş bittiyse ve denetlenmediyse sunucu denetler, sonucu konuşmaya ekler, S.A.Y sürer (bir işte en çok iki kez) */
-        if (m.stop_reason === "end_turn" && await bitirmedenDenetle(o, h.b, v.kaydedilmemis, yaz)) continue;
+        if (m.stop_reason === "end_turn" && await bitirmedenDenetle(o, h.b, v.kaydedilmemis, yazI)) continue;
         if (uzunBildirim) {
           if (await bildirimNotuEkle(o, bildirimSatirlari(metin!))) continue;
           /* not eklenemediyse (konuşmanın sonu değişti) gizlenen bildirim şimdi gösterilir */
@@ -266,8 +271,10 @@ export async function sayAkisi(o: IstekOturumu, ham: unknown, yaz: (x: SayOlayi)
         yaz({ t: "bitti", yenile });
         return;
       }
-      const r = await araclariYap(o, m.content, h.b, v.kaydedilmemis, yaz, h.mesajlar);
+      const r = await araclariYap(o, m.content, h.b, v.kaydedilmemis, yazI, h.mesajlar);
       await olc(r.yazma, r.islem);
+      ilerleme = ilerlemeMetni(raporIlerlemesi([...(h.mesajlar as { role: string; content: unknown }[]), { role: "assistant", content: m.content },
+        { role: "user", content: Object.entries(r.sonuclar).map(([id, s]) => ({ type: "tool_result", tool_use_id: id, content: s })) }]));
       yenile ||= r.yenile;
       if (r.ekran.length) {
         await oturumIslemi(o, (db) => bekleyenYaz(db, r.sonuclar));

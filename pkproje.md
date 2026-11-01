@@ -2527,8 +2527,25 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-11-01 (reisim: **"Evet, başla"** — beşinci koşunun 4 maddesi + büyük iş şeması TEK KALEMDE KODDA; kalem dalı → CI → göç 0114 Supabase → main):
+  (1) O16 tam: islem.ts çözülmüş JSON metni çalıştırıcıya ÇÖZÜLMÜŞ ham olarak gider; şema "beklenen number / boolean, alınan string" dediği alanlar çevrilip bir
+  kez daha denenir (turleriCevir — yalnız hata yolunda, metin alanlarına dokunulmaz); (2) kod "-0" yasağı: planlar/sema.ts kodBicimi sıfır sayı bölümünü (TRF-0,
+  TRF-00, 000) reddeder — ekran, plan aç, Excel, S.A.Y aynı işlevden; eldeki AKL-0 / GT-0 sunucuca yeniden adlandırılmaz (elle ya da S.A.Y'a "AKL-0'ı AKL-32 yap");
+  (3) tesis kaydıyla eşleme: talimat + B02 — önce seri no, sonra marka + model, en son çekim sırası (sıra yalnız varsayım, bildirimde söylenir); (4) otomatik
+  kapanış YALNIZ 60 dk — "konuşma büyüdü" kuralı kalktı (is-siniri.ts kapanisNedeni; büyüklük iş sınırı sıkıştırması + hizmetin bağlam düzenlemesiyle);
+  (5) **BÜYÜK İŞ ŞEMASI:** fotoğrafın kendisi konuşmaya GİRMEZ — Dosya API'ye yüklenmez (yz_ek.dosya "-" DOSYA_YOK; yalnız firmanın deposunda; ek.ts ekBloklari
+  fotoğrafta yalnız başlık), ön okuma etiket ALANLARINI döner (göç 0114 yz_ek_okuma.alanlar: marka · model · seri · imal · kapasite · diger, her biri değer + emin;
+  on-okuma.ts şema + SISTEM; malzeme.ts ekBasligi "okunan: marka X, seri Y (şüpheli)"), malzeme özeti "fotoğraflar konuşmada yok; foto_goster yalnız eksik /
+  şüpheli alan, etiketsiz aday ve kusur için"; talimat + B01 / B02 / B03: raporlara_yaz 10'a kadar tek çağrı, daha çoğu 8–10'luk PARTİLER (aynı iş), foto_pafta
+  yalnız ön okuması olmayan fotoğraf için, etiket alanları satırdan yazılır; is-siniri.ts partiSonuKucult (yazılmış partiden önceki büyütmeler metne — isteğe
+  giden iletilerde, kayıt değişmez) + raporIlerlemesi → bekleme balonunda her aşamanın ucunda "n / N rapor yazıldı" (dongu.ts yazI), onOkumaBekle "Fotoğraflar
+  okunuyor n / N" (bekleme 25 sn + fotoğraf başına 1 sn, en çok 90 sn); A1 sert tavan kalır, A2 yedek. Kilitler: say-is-siniri (parti sonu, ilerleme, kapanış),
+  say-on-okuma (şema alanlar, başlık, özet), say-ek (fotoğraf bloğu yok), say-islem-yurutucu (0b ham + turleriCevir), say-faz2 (kod -0), say.test (PG) + bozan
+  say-is-siniri 6, say-islem 9, say-faz2 5, say-on-okuma 3; e2e taklit ön okuma "sinif" dalı (alanlar döner; ekSay fotoğraf başlığını sayar). PC: check ✓ lint ✓
+  saf 122 / 122 ✓ bozan 42 / 42 ✓. Hedef güncellemesi (vaka.md): yazılan ≤ 100 bin, temizleme ≤ 1 / iş; altıncı koşu (18 foto): 8 ekipman, rapor başına 1 kayıt,
+  ≤ 0,04 $, boşa istek 0; yedinci koşu reisim'in gerçek 40–60 fotoğraflık işi.
 - 2026-11-01 (V21 BEŞİNCİ KOŞU — reisim: "başlat … herhangi bir kodda -0 dan başlamasın … önce analiz et sunum yap"; sunum yerel/say-arge/2026-11-01-sunum-
-  besinci-kosu.md, ONAY BEKLİYOR, kod yok): P-1126-002 (plan günü = bugün): 14 istek · 2 dk 53 sn · istem en çok 90,6 bin ✓ · 0,052 $ (hedef 0,05; 0,002 fazla) ·
+  besinci-kosu.md; **onaylandı "Evet, başla", kod üstteki girdide**): P-1126-002 (plan günü = bugün): 14 istek · 2 dk 53 sn · istem en çok 90,6 bin ✓ · 0,052 $ (hedef 0,05; 0,002 fazla) ·
   **8 ekipman ✓** (rot cihazı kanıtla elendi) · 8 rapor, foto 8/8, cihaz 8/8 ("DASD (zimmetinizde)" T2 ✓) · kontrol = rapor = plan günü, saatler mesai, saat
   planı ayrı çağrılmadı (T1 / O13 ✓) · rapor başına 2–3 kayıt ✗. Bulgular: (1) O16 HATAM — JSON metni çözülüp şemadan geçti ama çalıştırıcıya ham metin gitti,
   rapor başına girişler boş sayıldı → S.A.Y 8 raporu tek tek yeniden yazdı (+ 2 şema hatası surum "3" / tamamla "false"); (2) kod "-0": AKL-0 / GT-0 26 Ekim
@@ -2536,7 +2553,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   seriyle değil sırayla ("etiketle doğrulayamadım") → talimat: önce seri, sonra marka + model, en son sıra; (4) devam sorusunda "konuşma büyüdü" kapanışı ekleri
   sildi → kural kalksın, yalnız 60 dk; (5) yazılan 124 bin — hedef ≤ 100 bin'e güncellensin.
   **Reisim: "müşteriler 20-25-50-60 fotoğraflı işi de tek te yaptırmak isteyebilir … müşteriye göstermeden … daha efektif bir çözüm"** → sunum yerel/say-arge/
-  2026-11-01-sunum-buyuk-is-semasi.md (ONAY BEKLİYOR): fotoğraf konuşmaya GİRMEZ, metni girer — ön okuma fotoğraf başına etiket alanlarını (marka / model / seri /
+  2026-11-01-sunum-buyuk-is-semasi.md (**onaylandı "Evet, başla", kod üstteki girdide**): fotoğraf konuşmaya GİRMEZ, metni girer — ön okuma fotoğraf başına etiket alanlarını (marka / model / seri /
   imal / kapasite, emin / şüpheli) yapılandırılmış döndürür (yükleme sırasında, paralel; göç 0114 yz_ek_okuma.alanlar); konuşmaya her fotoğraf için bir satır
   (60 foto ≈ 6 bin token); fotoğraf hizmete yüklenmez, yalnız depoda, foto_goster gerekince; raporlar 8–10'luk partilerle tek işte yazılır, parti bitince büyütmeler
   metne iner; panelde ilerleme; kapanış yalnız 60 dk. Kestirim: 18 → 8 rapor ≈ 0,03 $ / 30 bin istem; 60 → 30 rapor ≈ 0,10–0,12 $ / ≤ 60 bin istem.

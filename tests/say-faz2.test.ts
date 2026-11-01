@@ -7,7 +7,7 @@
    Veritabanıyla: tests/plan-ici.test.ts "S.A.Y ekipman ekler". Olumsuz kanıt: tests/bozan/say-faz2.bozan.ts. */
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { SayEkipmanGirdisi, siradakiKod } from "../src/modules/planlar/sema.ts";
+import { kodBicimi, SayEkipmanGirdisi, siradakiKod } from "../src/modules/planlar/sema.ts";
 import { aracCagrisi, EKRAN_ARAC_ADLARI, komutDenetle, saySistemi } from "../src/server/yz/say.ts";
 import { ISLEM_KATALOGU } from "../src/modules/say/islem-katalogu.ts";
 import { oku } from "./yardimci/denetimler.ts";
@@ -30,6 +30,11 @@ test("sıradaki kod: firmanın o türdeki düzeni (ayraç, hane), en büyükten 
   assert.equal(siradakiKod("KMP", new Set(["KMP-3"])), "KMP-4", "boşluk doldurulmaz (eski kod başkasına verilmez)");
   assert.equal(siradakiKod("TRF", new Set(["TRF_007", "TRF_012"])), "TRF_013", "ayraç ve hane firmanın");
   assert.equal(siradakiKod("HT", new Set(["KMP-0001"])), "HT-0001", "başka türün kodu sayılmaz");
+  /* 2026-11-01 (reisim: "herhangi bir kodda -0 dan başlamasın"): sıfır sayı bölümü hiçbir yoldan geçmez (ekran, plan aç, Excel, S.A.Y aynı işlev); 1'den başlar */
+  for (const k of ["TRF-0", "TRF-00", "AKL-000", "000", "A-0-B"]) assert.match(kodBicimi(k)?.metin ?? "", /sayı bölümü 0 olamaz/, k);
+  for (const k of ["TRF-0001", "TRF-1", "KR0", "A-10", "AKL-0A"]) assert.equal(kodBicimi(k), null, k);
+  assert.equal(siradakiKod("AKL", new Set(["AKL-0"])), "AKL-1", "eldeki AKL-0'dan sonra 1");
+  assert.equal(SayEkipmanGirdisi.safeParse({ kod: "TRF-0", tur: "11111111-1111-4111-8111-111111111111" }).success, false, "S.A.Y'ın girdisi de reddeder");
 });
 
 test("S.A.Y'ın ekipman girdisi: kod isteğe bağlı (boş = yok), verilirse biçim denetimi aynen", () => {

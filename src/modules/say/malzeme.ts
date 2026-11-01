@@ -62,7 +62,15 @@ export function sohbetDuzeni(l: readonly SohbetIletisi[]): string {
 /** 2026-10-31 (L4): fotoğrafın ön okuması — sınıf (B02: E genel görünüş · T etiket / plaka · L levha · Y yük diyagramı · S liste / belge · K kusur · D diğer) */
 export const SINIF_ADI = { E: "genel görünüş", T: "etiket / plaka", L: "levha", Y: "yük diyagramı", S: "liste / belge", K: "kusur yakın planı", D: "diğer" } as const;
 export type FotoSinifi = keyof typeof SINIF_ADI;
-export interface OnOkuma { sinif: FotoSinifi; yazi: string; tarif: string }
+/* 2026-11-01 (büyük iş şeması — reisim: "müşteriler 20-25-50-60 fotoğraflı işi de tek te yaptırmak isteyebilir … müşteriye göstermeden"): ön okuma etiket
+   ALANLARINI da döner (marka, model, seri, imal, kapasite, diğer — her biri değer + emin); fotoğrafın kendisi konuşmaya girmez, bu satır girer */
+export const ALAN_ADI = { marka: "marka", model: "model", seri: "seri", imal: "imal", kapasite: "kapasite", diger: "" } as const;
+export type OkunanAlanAdi = keyof typeof ALAN_ADI;
+export interface OkunanAlan { ad: OkunanAlanAdi; deger: string; emin: boolean }
+export interface OnOkuma { sinif: FotoSinifi; yazi: string; tarif: string; alanlar?: readonly OkunanAlan[] }
+/** okunan alanların satırı: "marka Deneme, model DM-100, seri SN-0001 (şüpheli), imal 2019" — diğer alanlar kendi "ad: değer" metniyle */
+export const alanMetni = (l: readonly OkunanAlan[]): string =>
+  l.map((a) => `${a.ad === "diger" ? "" : `${ALAN_ADI[a.ad]} `}${a.deger}${a.emin ? "" : " (şüpheli)"}`).join(", ");
 export interface MalzemeEki { dosya: string; tur: "foto" | "pdf" | "word" | "metin" | "tablo"; ad: string; cekim: string | null; no: number; fno: number | null; okuma?: OnOkuma | null }
 
 /** 2026-10-31 (reisim: "Önce say, sonra aç: fotoğraflar çekim saatine göre sıralanır"): EXIF'i olmayan fotoğrafın (WhatsApp, ekran görüntüsü) çekim saati
@@ -91,7 +99,7 @@ export function malzemeSirasi<T extends { tur: string; cekim: string | null }>(e
 /** ekin başlığı: "M03 · F02 — fotoğraf · komp.jpeg · çekim 27.10.2026 09:56" */
 export function ekBasligi(e: MalzemeEki): string {
   return `M${iki(e.no)}${e.fno ? ` · F${iki(e.fno)}` : ""} — ${TUR_ADI[e.tur]} · ${e.ad.slice(0, 80)}${e.cekim ? ` · çekim ${saatTr(e.cekim)}` : ""}`
-    + (e.okuma ? ` · ön okuma: ${SINIF_ADI[e.okuma.sinif]}${e.okuma.tarif ? ` — ${e.okuma.tarif}` : ""}${e.okuma.yazi ? ` · yazı: ${e.okuma.yazi}` : ""}` : "");
+    + (e.okuma ? ` · ön okuma: ${SINIF_ADI[e.okuma.sinif]}${e.okuma.tarif ? ` — ${e.okuma.tarif}` : ""}${e.okuma.alanlar?.length ? ` · okunan: ${alanMetni(e.okuma.alanlar)}` : ""}${e.okuma.yazi ? ` · yazı: ${e.okuma.yazi}` : ""}` : "");
 }
 /** bu iletinin malzeme özeti */
 export function malzemeOzeti(ekler: readonly MalzemeEki[]): string {
@@ -109,8 +117,9 @@ export function malzemeOzeti(ekler: readonly MalzemeEki[]): string {
      ikinci açısı ya da ekipman olmayan bir cihaz (hizalama / rot cihazı, test hattı, rampa) olabilir; bakılmadan sayılmaz */
   const ciftMetni = c.ciftler.length ? ` Çekim saatine göre genel görünüş + etiket çiftleri: ${c.ciftler.map(([a, b]) => `F${iki(a)}+F${iki(b)}`).join(", ")} — ${c.ciftler.length} ekipman`
     + `${c.yalniz.length ? `; etiketsiz genel görünüş (ADAY): ${c.yalniz.map((x) => `F${iki(x)}`).join(", ")} — foto_goster ile bak: ayrı bir ekipmansa SAY (etiketi çekilmemiş olabilir; marka / model / seri etiket yoksa belgeden, varsayım olarak), başka ekipmanın ikinci açısı ya da ekipman olmayan bir cihazsa (hizalama / rot cihazı, test hattı, rampa) sayma; iki durumda da nedenini kanıtıyla söyle` : ""}.` : "";
-  /* 2026-10-31 (V21 madde 2): konuşmadaki fotoğraf küçük kopyadır; yazı foto_goster ile (bölge) okunur, aynı fotoğraf bir işte bir kez büyütülür */
-  const kucuk = f.length ? " Fotoğraflar küçük kopya; etiket / yazı için foto_goster ile bölgeyi büyüt (bir fotoğraf bir işte bir kez)." : "";
+  /* 2026-11-01 (büyük iş şeması; 2026-10-31 V21 madde 2'nin "küçük kopya"sı kalktı): fotoğrafın kendisi konuşmada değil — her birinin ön okuma satırı (sınıf,
+     tarif, okunan alanlar) başlığında; foto_goster yalnız eksik / şüpheli alan, etiketsiz aday ve kusur için; aynı fotoğraf bir işte bir kez büyütülür */
+  const kucuk = f.length ? " Fotoğrafların kendisi konuşmada yok; her birinin ön okuma satırı (sınıf, tarif, okunan alanlar) başlığında. foto_goster yalnız eksik / şüpheli alan, etiketsiz aday ve kusur için (bir fotoğraf bir işte bir kez)." : "";
   return `Malzeme (bu iletide ${ekler.length} öğe: ${parca.join(", ")}). Numaralar konuşma boyunca aynı kalır; sıra kaynağın sırası, yoksa çekim saati, yoksa eklenme.${sinifMetni}${ciftMetni}${kucuk}`;
 }
 

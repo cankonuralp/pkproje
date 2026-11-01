@@ -468,7 +468,9 @@ const yzTaklit = createServer((istek, yanit) => {
       /* 2026-10-23: "[ek-hatirla]" — konuşmanın BÜTÜN eklerini sayar (ekler konuşmada kalır) */
       /* 2026-10-31 (V21 madde 1): bitmiş işin fotoğrafı konuşmada ön okuma metniyle kalır (küçük kopya metne iner — is-siniri.ts FOTO_KALDIRILDI); o da ektir */
       const ekSay = (l: readonly Ileti[]) => l.flatMap((m) => (m.role === "user" ? bloklar(m) : []))
-        .filter((b) => b.type === "image" || b.type === "document" || (b.type === "text" && b.text === FOTO_KALDIRILDI)).length;
+        .filter((b) => b.type === "image" || b.type === "document" || (b.type === "text" && typeof b.text === "string"
+          /* 2026-11-01 (büyük iş şeması): fotoğraf konuşmada yalnız başlığıyla (ön okuma satırı) — o da ektir */
+          && (b.text === FOTO_KALDIRILDI || /^M\d\d · F\d\d — fotoğraf/.test(b.text)))).length;
       if (son.includes("[ek-hatirla]")) { metinYaz(`Konuşmada ${ekSay(mesajlar)} ek var.`); return; }
       /* düz soru: "[yavaş]" geçen soruya cevap 1,5 sn sonra (mesaj hemen balon, "Düşünüyor" görünür); sayfada açık rapor varsa söyler */
       const ekSayisi = ekSay([soruIletisi]);
@@ -509,6 +511,16 @@ const yzTaklit = createServer((istek, yanit) => {
       }
       yanit.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({
         content: [{ type: "text", text: JSON.stringify({ cevap, oneriler }) }], stop_reason: "end_turn", usage: { input_tokens: 3000, output_tokens: 400 },
+      }));
+      return;
+    }
+    /* 2026-10-31 (L4) + 2026-11-01 (büyük iş şeması): fotoğraf ÖN OKUMASI (şemada "sinif") — uydurma etiket; alanlar dizisi, seri şüpheli. "alanlar" denetiminden
+       ÖNCE: ön okuma şemasında da alanlar var */
+    if (sema && "sinif" in sema) {
+      yanit.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({
+        content: [{ type: "text", text: JSON.stringify({ sinif: "T", yazi: "TAKLIT ETIKET SN TAKLIT-1", tarif: "taklit etiket plakası",
+          alanlar: [{ ad: "marka", deger: "Taklit", emin: true }, { ad: "seri", deger: "TAKLIT-1", emin: false }] }) }],
+        stop_reason: "end_turn", usage: { input_tokens: 900, output_tokens: 60 },
       }));
       return;
     }
