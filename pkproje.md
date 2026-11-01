@@ -2527,6 +2527,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-11-01 (V21 BEŞİNCİ KOŞU — reisim: "başlat … herhangi bir kodda -0 dan başlamasın … önce analiz et sunum yap"; sunum yerel/say-arge/2026-11-01-sunum-
+  besinci-kosu.md, ONAY BEKLİYOR, kod yok): P-1126-002 (plan günü = bugün): 14 istek · 2 dk 53 sn · istem en çok 90,6 bin ✓ · 0,052 $ (hedef 0,05; 0,002 fazla) ·
+  **8 ekipman ✓** (rot cihazı kanıtla elendi) · 8 rapor, foto 8/8, cihaz 8/8 ("DASD (zimmetinizde)" T2 ✓) · kontrol = rapor = plan günü, saatler mesai, saat
+  planı ayrı çağrılmadı (T1 / O13 ✓) · rapor başına 2–3 kayıt ✗. Bulgular: (1) O16 HATAM — JSON metni çözülüp şemadan geçti ama çalıştırıcıya ham metin gitti,
+  rapor başına girişler boş sayıldı → S.A.Y 8 raporu tek tek yeniden yazdı (+ 2 şema hatası surum "3" / tamamla "false"); (2) kod "-0": AKL-0 / GT-0 26 Ekim
+  kuralından kalma, sunucu 31 Ekim'den beri 1'den başlıyor → öneri: sayı kısmı 0 olan kod hiçbir yoldan kabul edilmez, eldekiler elle; (3) tesisteki kayıtla eşleme
+  seriyle değil sırayla ("etiketle doğrulayamadım") → talimat: önce seri, sonra marka + model, en son sıra; (4) devam sorusunda "konuşma büyüdü" kapanışı ekleri
+  sildi → kural kalksın, yalnız 60 dk; (5) yazılan 124 bin — hedef ≤ 100 bin'e güncellensin.
 - 2026-11-01 (V21 DÖRDÜNCÜ KOŞU — reisim: "işlemi tam yapmadı eksik var diyip rapor oluşturmadı ben de rapor oluşturamıyorum aynı plan içinde … 7 lift yaptı 8
   değil"): koşu P-1026-013'te (ekibi başka denetçi) — **(1) rapor açılamadı:** kullanıcı planın ekibinde değil; sistem kuralı doğru (raporu plandaki muayene uzmanı
   açar — ekranda da aynı), neden "Bu işlem için yetkiniz yok" diye belirsizdi → raporlar.ts acilabilirPlan EKIPTE_DEGIL ("Bu planın ekibinde değilsiniz … Planlar ›
