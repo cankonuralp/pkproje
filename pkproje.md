@@ -2543,7 +2543,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   say-on-okuma (şema alanlar, başlık, özet), say-ek (fotoğraf bloğu yok), say-islem-yurutucu (0b ham + turleriCevir), say-faz2 (kod -0), say.test (PG) + bozan
   say-is-siniri 6, say-islem 9, say-faz2 5, say-on-okuma 3; e2e taklit ön okuma "sinif" dalı (alanlar döner; ekSay fotoğraf başlığını sayar). PC: check ✓ lint ✓
   saf 122 / 122 ✓ bozan 42 / 42 ✓. Hedef güncellemesi (vaka.md): yazılan ≤ 100 bin, temizleme ≤ 1 / iş; altıncı koşu (18 foto): 8 ekipman, rapor başına 1 kayıt,
-  ≤ 0,04 $, boşa istek 0; yedinci koşu reisim'in gerçek 40–60 fotoğraflık işi.
+  ≤ 0,04 $, boşa istek 0; yedinci koşu reisim'in gerçek 40–60 fotoğraflık işi. **YAYINDA:** main b8926e3e (9e3457ef + CI düzeltmesi: uçtan uca deneme kodu
+  E2E-MAS-0 yeni yasağa takıldı → 1'den); CI 41307899726 yeşil (16 iş); göç 0114 Supabase'de (goc 115, son 0114); /api/saglik sürüm b8926e3, 7 / 7 tamam.
 - 2026-11-01 (V21 BEŞİNCİ KOŞU — reisim: "başlat … herhangi bir kodda -0 dan başlamasın … önce analiz et sunum yap"; sunum yerel/say-arge/2026-11-01-sunum-
   besinci-kosu.md; **onaylandı "Evet, başla", kod üstteki girdide**): P-1126-002 (plan günü = bugün): 14 istek · 2 dk 53 sn · istem en çok 90,6 bin ✓ · 0,052 $ (hedef 0,05; 0,002 fazla) ·
   **8 ekipman ✓** (rot cihazı kanıtla elendi) · 8 rapor, foto 8/8, cihaz 8/8 ("DASD (zimmetinizde)" T2 ✓) · kontrol = rapor = plan günü, saatler mesai, saat
