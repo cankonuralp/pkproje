@@ -25,7 +25,7 @@ import { planIci } from "../planlar/server/plan-ici.ts";
 import { teklifAdetDurumu } from "../teklifler/server/rapor-bagi.ts";
 import { raporSorunlari } from "./denetle.ts";
 import { cakismalar, saatGirisleri, saatPlani, type SaatRaporu, type SaatSatiri } from "./saat-plani.ts";
-import { isBildirimi, raporTamamla, type RaporOzeti, type Tamamlama } from "./tamamla.ts";
+import { isBildirimi, planGunu, raporTamamla, type RaporOzeti, type Tamamlama } from "./tamamla.ts";
 import { mesaiBaslangici } from "./server/plan-baglanti.ts";
 import { komutlariUygula, sonucOzeti, type Durum, type GirisSonucu } from "./say-doldur.ts";
 import { KopyaGirdisi, OlusturIslemGirdisi, RAPOR_DURUM, RevizeGirdisi } from "./sema.ts";
@@ -49,6 +49,12 @@ const metinle = <T extends Record<string, string | null>>(o: T) => Object.fromEn
     böyle"): türün süresi boşsa ve kullanıcı vermediyse */
 export const VARSAYILAN_SURE_DK = 15;
 const bugunGun = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+/** 2026-11-01 (V21 T1): işin günü — bugün raporun planının günleri içindeyse bugün, değilse planın başlangıç günü (tamamla.ts planGunu) */
+async function isGunu(b: IslemBaglami, raporId: string): Promise<string> {
+  const s = await sahaRaporu(b.db, b.kim, raporId);
+  const p = s ? await planIci(b.db, b.kim, s.plan.id) : null;
+  return planGunu(bugunGun(), p ? { baslangic: p.kart.baslangic, bitis: p.kart.bitis } : null);
+}
 /** 2026-10-31 (reisim: "Türün yayınlanmamış taslağı varken rapor açılırsa sunucu uyarsın"): açılan raporların türlerinde taslak varsa uyarı */
 async function taslakUyarisi(b: IslemBaglami, raporlar: readonly string[]): Promise<string> {
   const turler = new Map<string, string>();
@@ -218,7 +224,7 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
       + "surum isteğe bağlı (verilmezse şu anki); tamamla (varsayılan açık): boş yerler kurala göre tamamlanır (cevapsız madde uygun, sonuç önerisi, rapor "
       + "tarihi, bilinemeyen metin \"-\", test değeri katsayıdan, ölçüm cihazı) — tamamla: false yalnız verilenleri yazar; "
       + "değerler ekrandaki gibi denetlenir, sonuç yazılan / yazılamayan ve nedeni + varsayim / tire / engel.",
-    calistir: async (b, v, ham) => kapaliRaporaYaz(b, v.rapor, v.surum ?? null, ham.girisler ?? [], ham.satir_ekle ?? [], v.tamamla ? { gun: bugunGun(), saat: null } : null),
+    calistir: async (b, v, ham) => kapaliRaporaYaz(b, v.rapor, v.surum ?? null, ham.girisler ?? [], ham.satir_ekle ?? [], v.tamamla ? { gun: await isGunu(b, v.rapor), saat: null } : null),
   }),
   islem({
     ad: "rapor_onaya_gonder", modul: MODUL, tur: "yaz", girdi: RAPOR_SURUM, kaynak: [kimlik, surum], islev: onayaGonder,
@@ -277,7 +283,7 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
         if (!s) return { tamam: false, neden: `${x.rapor}: ${GORUNMEZ}` };
         l.push({ id: x.rapor, sure: x.sure_dk ?? (await turSuresi(b, s.tur.id)) ?? VARSAYILAN_SURE_DK, periyot: s.tur.periyot });
       }
-      const plan = saatPlani({ gun: v.gun ?? bugunGun(), baslangic: v.baslangic ?? await mesaiBaslangici(b.db), ara: v.ara_dk, raporlar: l });
+      const plan = saatPlani({ gun: v.gun ?? await isGunu(b, v.raporlar[0]!.rapor), baslangic: v.baslangic ?? await mesaiBaslangici(b.db), ara: v.ara_dk, raporlar: l });
       const sonuc: Record<string, unknown>[] = [];
       for (const p of plan) {
         const c = await kapaliRaporaYaz(b, p.id, null, saatGirisleri(p), []);
@@ -299,7 +305,7 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
       girisler: GIRISLER.default([]),
       tamamla: z.boolean().default(true), gun: GUN.optional(), baslangic: SAAT.optional(), ara_dk: z.number().int().min(0).max(240).default(0),
     }),
-    tarif: "Çok rapora TEK çağrıda yazar ve her raporu BİR kez kaydeder: raporlar [rapor kimliği | { rapor, girisler [{ yer, deger, supheli? }], satir_ekle, foto "
+    tarif: "Çok rapora TEK çağrıda yazar ve her raporu BİR kez kaydeder. Örnek girdi: { raporlar: [{ rapor: \"<kimlik>\", girisler: [{ yer: \"e:marka\", deger: \"X\" }], foto: \"F03\" }] } — raporlar bir DİZİDİR, metin değil. raporlar [rapor kimliği | { rapor, girisler [{ yer, deger, supheli? }], satir_ekle, foto "
       + "(\"F03\" — ekipmanın kendi genel görünüş fotoğrafı), sure_dk }] gezi sırasıyla; girisler (her rapora ortak); tamamla (varsayılan açık: cevapsız madde "
       + "uygun, sonuç önerisi, rapor tarihi, bitişi yazılmamış raporda saatler — gun (verilmezse bugün), baslangic (verilmezse Firma ayarları › Mesai "
       + "başlangıcı), ara_dk, süre türden ya da 15 dk —, bilinemeyen metin \"-\", test değeri katsayıdan, ölçüm cihazı). Sonuç rapor rapor + bildirim (dört satır).",
@@ -311,7 +317,7 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
           : { rapor: x.rapor, girisler: h.girisler ?? [], satirlar: h.satir_ekle ?? [], foto: x.foto, sure: x.sure_dk };
       });
       const ortak = Array.isArray(ham.girisler) ? ham.girisler as unknown[] : [];
-      const gun = v.gun ?? bugunGun(), saat = new Map<string, SaatSatiri>();
+      const gun = v.gun ?? await isGunu(b, liste[0]!.rapor), saat = new Map<string, SaatSatiri>();
       if (v.tamamla) {
         const l: SaatRaporu[] = [];
         for (const x of liste) {
@@ -364,7 +370,7 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
         const p = await planBilgi(s.plan.id);
         tesis ??= p?.kart.tesis.id ?? null;
         zaman.push({ id, bas: s.tarih.bas, bit: s.tarih.bit });
-        sonuc.push({ rapor: id, no: s.no, sorunlar: raporSorunlari(s, (await raporEksikleri(b.db, b.kim, id)) ?? [], p ? { baslangic: p.kart.baslangic, bitis: p.kart.bitis } : null) });
+        sonuc.push({ rapor: id, no: s.no, sorunlar: raporSorunlari({ ...s, ekipman: s.ekipmanBilgi as Record<string, unknown> }, (await raporEksikleri(b.db, b.kim, id)) ?? [], p ? { baslangic: p.kart.baslangic, bitis: p.kart.bitis } : null) });
       }
       /* teklif adedi: raporun bağlandığı teklifte türünün kalemi yok ya da adet aşıldı (Muhasebe'nin "teklif dışı" fiyatı) — teklifleri görebilene.
          "Kabul edilmiş teklif yok" raporda düzeltilecek bir şey değil: rapor rapor değil, plan notu olarak BİR kez (V21 madde 3) */

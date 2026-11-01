@@ -8,7 +8,7 @@ import { test } from "node:test";
 import { grupFormati } from "../src/format/sablonlar.ts";
 import { Cevaplar, FormatTanimi } from "../src/format/tanim.ts";
 import { saatPlani } from "../src/modules/raporlar/saat-plani.ts";
-import { cihazSec, isBildirimi, notKatsayisi, raporTamamla, type TamamlaGirdisi } from "../src/modules/raporlar/tamamla.ts";
+import { cihazSec, isBildirimi, notKatsayisi, planGunu, raporTamamla, type TamamlaGirdisi } from "../src/modules/raporlar/tamamla.ts";
 
 const t = grupFormati({ ad: "Deneme kaldırma ekipmanı", grup: "kaldirma" });
 const durum = (ekipman: Record<string, string> = {}, c: object = {}, tarih: object = { bas: "2026-10-31T16:17", bit: "" }) =>
@@ -87,6 +87,25 @@ test("ölçüm cihazı: zimmet → son kullanılan → kalibrasyonu en uzun; ü�
   assert.ok(r.varsayim.some((x) => x.includes("MT-1") && x.includes("kalibrasyonu en uzun")));
   assert.ok(r.engel.some((x) => x.includes("Kumpas")));
   assert.equal(deger(raporTamamla(g({ cihazlar: [{ turId: "m", turAd: "Metre", secili: true, adaylar: [a("MT-1", true, null, "2027-06-01")] }] })), "cihaz:m"), undefined, "seçili cihaz kalır");
+  /* 2026-11-01 V21 T2 (üçüncü koşu: zimmetten seçilen cihazın nedeni yazılmıyordu): her basamakta neden; eksik kayıtlı cihaza not */
+  const z = raporTamamla(g({ cihazlar: [{ turId: "m", turAd: "Metre", secili: false, adaylar: [{ ...a("MT-2", true, null, "2027-06-01"), eksik: true }, a("MT-3", false, "2026-10-01", "2027-06-01")] }] }));
+  assert.equal(deger(z, "cihaz:m"), "MT-2");
+  assert.ok(z.varsayim.some((x) => x === "Metre: MT-2 seçildi (zimmetinizde); cihaz kaydı eksik (marka / model), kontrol edin"), z.varsayim.join(" | "));
+  const so = raporTamamla(g({ cihazlar: [{ turId: "m", turAd: "Metre", secili: false, adaylar: [a("MT-3", false, "2026-10-01", "2027-06-01"), a("MT-4", false, null, "2028-01-01")] }] }));
+  assert.ok(so.varsayim.some((x) => x === "Metre: MT-3 seçildi (en son kullandığınız)"), so.varsayim.join(" | "));
+});
+
+/* 2026-11-01 V21 T1 (üçüncü koşu: kontrol 30.10, rapor 01.11, plan 26.10 ayrıydı): işin günü plan günü; rapor tarihi saat planından (kontrol günü) */
+test("işin günü: bugün plan içindeyse bugün, değilse planın başlangıcı; plan yoksa bugün; rapor tarihi kontrol günü", () => {
+  assert.equal(planGunu("2026-11-01", { baslangic: "2026-10-26", bitis: "2026-10-26" }), "2026-10-26");
+  assert.equal(planGunu("2026-10-27", { baslangic: "2026-10-26", bitis: "2026-10-28" }), "2026-10-27");
+  assert.equal(planGunu("2026-10-20", { baslangic: "2026-10-26", bitis: "2026-10-28" }), "2026-10-26", "plandan önce de başlangıç");
+  assert.equal(planGunu("2026-11-01", null), "2026-11-01");
+  assert.equal(planGunu("2026-11-01", { baslangic: "bozuk", bitis: "" }), "2026-11-01");
+  const saat = saatPlani({ gun: "2026-10-26", baslangic: "09:00", ara: 0, raporlar: [{ id: "r", sure: 15, periyot: 12 }] })[0]!;
+  const r = raporTamamla(g({ saat, gun: "2026-11-01" }));
+  assert.equal(deger(r, "tarih:rapor"), "26.10.2026", "rapor tarihi = kontrol günü (işin günü değil)");
+  assert.equal(deger(r, "tarih:bas"), "26.10.2026 09:00");
 });
 
 test("bildirim en çok dört satır; aynı varsayım bir kez, kaç raporda olduğu", () => {

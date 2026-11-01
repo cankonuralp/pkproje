@@ -43,6 +43,11 @@ test("talimat: reisim'in iki kuralı; eski yamalar yok; sayfa ve ekran talimatta
   assert.match(SISTEM, /değere soru işareti koyma/, "şüpheli değere soru işareti yok");
   assert.match(SISTEM, /nedenini KANITIYLA söyle/, "yapmadığının nedeni kanıtıyla");
   assert.match(SISTEM, /bir fotoğrafı bir işte BİR kez büyütürsün/, "aynı fotoğraf ikinci kez büyütülmez");
+  /* 2026-11-01 V21 T1 / T3 / T4 */
+  assert.match(SISTEM, /Kontrol günü PLAN günüdür, rapor tarihi kontrol günüdür/, "tarih kuralı");
+  assert.match(SISTEM, /denetimin tarih uyarısı tarihi değiştirmez/, "uyarı tarih değiştirmez");
+  assert.match(SISTEM, /Başka firmanın eski raporu \(belge fotoğrafı\) etiketin yerine geçmez/, "üçüncü taraf belgesi etiket değil");
+  assert.match(SISTEM, /Dört DÜZ satır: alt madde, tablo, başlık yok/, "bildirim düz dört satır");
   assert.doesNotMatch(SISTEM, /SON mesajını cevapla|o mesajda metin yazma|en çok \d|karakter|sınırı/i, "eski yamalar ve sınırlar yok");
   assert.match(SISTEM, /ekran_durumu/, "ekranın güncel hâli araçla");
   assert.match(SISTEM, /konuşmada kalır/, "ekler konuşmada kalır");

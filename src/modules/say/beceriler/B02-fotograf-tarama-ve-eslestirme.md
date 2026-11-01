@@ -104,3 +104,7 @@ Sonunda say:
 - Etiket fotoğrafını rapor fotoğrafı yapmak.
 - Bir ekipmana birden çok fotoğraf koymak (kullanıcı istemedikçe).
 - Eşleşmeyen fotoğrafı "en yakın" ekipmana zorla bağlamak.
+
+## Başka firmanın eski raporu (belge fotoğrafı)
+Üçüncü tarafın eski kontrol raporu REFERANSTIR, etiketin yerine geçmez: ekipmanı tanımaya ve seriyi eşlemeye yarar; kapasite, yükseklik, kolon mesafesi gibi
+değerler etiketten ya da levhadan okunmadıysa alan boş kalır, bildirimde "belgede X yazıyor" denir. Etiketle belge çelişirse etiket geçerlidir (2026-11-01 V21 T3).

@@ -34,7 +34,8 @@ export function saatPlani(g: { gun: string; baslangic: string; ara: number; rapo
 /** rapor_yaz girişleri: tarih:bas / tarih:bit "GG.AA.YYYY SS:DD", tarih:sonraki "GG.AA.YYYY" */
 export function saatGirisleri(s: SaatSatiri): { yer: string; deger: string }[] {
   const tr = (x: string) => `${x.slice(8, 10)}.${x.slice(5, 7)}.${x.slice(0, 4)}${x.length > 10 ? ` ${x.slice(11)}` : ""}`;
-  return [{ yer: "tarih:bas", deger: tr(s.bas) }, { yer: "tarih:bit", deger: tr(s.bit) }, { yer: "tarih:sonraki", deger: tr(s.sonraki) }];
+  /* 2026-11-01 (V21 T1): rapor tarihi = kontrol günü — saat yazılan her yerde (onayaGonder'in kuralıyla aynı; üçüncü koşuda üç ayrı tarih oluşmuştu) */
+  return [{ yer: "tarih:bas", deger: tr(s.bas) }, { yer: "tarih:bit", deger: tr(s.bit) }, { yer: "tarih:sonraki", deger: tr(s.sonraki) }, { yer: "tarih:rapor", deger: tr(s.bas.slice(0, 10)) }];
 }
 
 /** aynı kişinin raporlarında zaman çakışması: [bas, bit) aralıkları kesişen çiftler (kimlikler) */

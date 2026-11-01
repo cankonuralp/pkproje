@@ -15,7 +15,8 @@ import { bilgiAlanlari, ekipmanAlanlari, ekipmanAnahtari } from "./doldur.ts";
 import { saatGirisleri, type SaatSatiri } from "./saat-plani.ts";
 import { maddeleriIsaretle, type Durum } from "./say-doldur.ts";
 
-export interface CihazAdayi { id: string; kod: string; zimmette: boolean; sonKullanim: string | null; bitis: string | null }
+/** eksik (2026-11-01 V21 T2): cihaz kaydının markası ya da modeli boş — seçilirse "kontrol edin" notu */
+export interface CihazAdayi { id: string; kod: string; zimmette: boolean; sonKullanim: string | null; bitis: string | null; eksik?: boolean }
 export type CihazNedeni = "zimmet" | "son" | "kalibrasyon";
 export interface CihazSatiri { turId: string; turAd: string; secili: boolean; adaylar: readonly CihazAdayi[] }
 export interface TamamlaGirdisi {
@@ -42,6 +43,13 @@ export interface Tamamlama {
 const tr = (s: string) => s.toLocaleLowerCase("tr").replace(/\s+/g, " ").trim();
 const bosMu = (x: unknown) => (typeof x === "string" ? !x.trim() : Array.isArray(x) ? !x.length : x === undefined || x === null);
 const gunTr = (g: string) => `${g.slice(8, 10)}.${g.slice(5, 7)}.${g.slice(0, 4)}`;
+/** 2026-11-01 (V21 T1 — üçüncü koşu: kontrol 30.10, rapor 01.11, plan 26.10 ayrıydı): işin günü — bugün planın günleri içindeyse bugün, değilse planın
+    başlangıç günü (kontrol günü plan günüdür; çok günlü planda başlangıç). Plan bilinmiyorsa bugün. Saf. */
+export function planGunu(bugun: string, plan: { baslangic: string; bitis: string } | null): string {
+  if (!plan || !/^\d{4}-\d{2}-\d{2}$/.test(plan.baslangic)) return bugun;
+  const bitis = /^\d{4}-\d{2}-\d{2}$/.test(plan.bitis) ? plan.bitis : plan.baslangic;
+  return bugun >= plan.baslangic && bugun <= bitis ? bugun : plan.baslangic;
+}
 const SONUC_YAZI = { uygun: "uygun", uygun_degil: "uygun değil", sartli: "şartlı uygun" } as const;
 
 /** ölçüm cihazı seçimi: zimmetteki (en son kullanılanı önce) → en son kullanılan → kalibrasyonu en uzun geçerli */
@@ -90,10 +98,11 @@ export function raporTamamla(g: TamamlaGirdisi): Tamamlama {
     else { ekle("sonuc", SONUC_YAZI[d.oneri]); varsayim.push(`sonuç ${SONUC_YAZI[d.oneri]} (maddelerden)`); }
   }
 
-  /* tarihler ve saatler */
-  if (bosMu(g.durum.tarih?.rapor) && !verilen.has("tarih:rapor")) { ekle("tarih:rapor", gunTr(g.gun)); }
-  if (g.saat && bosMu(g.durum.tarih?.bit) && !verilen.has("tarih:bas") && !verilen.has("tarih:bit")) {
-    for (const x of saatGirisleri(g.saat)) if (x.yer !== "tarih:sonraki" || bosMu(g.durum.tarih?.sonraki)) ekle(x.yer, x.deger);
+  /* tarihler ve saatler — 2026-11-01 (V21 T1): rapor tarihi = kontrol günü (saat planı yazılıyorsa oradan; yoksa işin günü) */
+  const saatYazilir = !!g.saat && bosMu(g.durum.tarih?.bit) && !verilen.has("tarih:bas") && !verilen.has("tarih:bit");
+  if (!saatYazilir && bosMu(g.durum.tarih?.rapor) && !verilen.has("tarih:rapor")) { ekle("tarih:rapor", gunTr(g.gun)); }
+  if (saatYazilir) {
+    for (const x of saatGirisleri(g.saat!)) if (x.yer !== "tarih:sonraki" || bosMu(g.durum.tarih?.sonraki)) ekle(x.yer, x.deger);
   } else if (g.saat && bosMu(g.durum.tarih?.sonraki) && !verilen.has("tarih:sonraki")) {
     ekle("tarih:sonraki", gunTr(g.saat.sonraki));
   }
@@ -161,7 +170,9 @@ export function raporTamamla(g: TamamlaGirdisi): Tamamlama {
     const s = cihazSec(c.adaylar);
     if (!s) { engel.push(`ölçüm cihazı yok (${c.turAd}: zimmette ya da depoda kalibrasyonu geçerli cihaz kayıtlı değil)`); continue; }
     ekle(yer, s.aday.kod);
-    if (s.neden === "kalibrasyon") varsayim.push(`${c.turAd}: ${s.aday.kod} seçildi (zimmetinizde yok, daha önce kullanmadınız — kalibrasyonu en uzun geçerli olan)`);
+    /* 2026-11-01 (V21 T2 — üçüncü koşu: zimmetten seçilen cihazın nedeni yazılmıyordu, S.A.Y "sistem kendisi seçti" dedi): her basamakta neden + eksik kayıt notu */
+    const neden = s.neden === "zimmet" ? "zimmetinizde" : s.neden === "son" ? "en son kullandığınız" : "zimmetinizde yok, daha önce kullanmadınız — kalibrasyonu en uzun geçerli olan";
+    varsayim.push(`${c.turAd}: ${s.aday.kod} seçildi (${neden})${s.aday.eksik ? "; cihaz kaydı eksik (marka / model), kontrol edin" : ""}`);
   }
   return { girisler, varsayim, tire, engel };
 }

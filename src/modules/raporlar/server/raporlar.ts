@@ -752,7 +752,7 @@ export async function cihazAdaylari(db: Sorgulayici, kim: Kisi, id: string): Pro
     `SELECT x->>'cihaz' AS cihaz, max(r.bas)::text AS son FROM rapor r, jsonb_array_elements(r.cihazlar) x
      WHERE r.personel_id = $1 AND r.silindi IS NULL AND x->>'cihaz' = ANY ($2::text[]) GROUP BY 1`, [e.r.personel_id, idler])).rows.map((x) => [x.cihaz, x.son]));
   return Object.fromEntries(Object.entries(s.secilebilir).map(([tur, l]) => [tur, l.map((c) => ({ id: c.id, kod: c.kod, zimmette: kimde.get(c.id) === e.r.personel_id,
-    sonKullanim: son.get(c.id) ?? null, bitis: c.bitis }))]));
+    sonKullanim: son.get(c.id) ?? null, bitis: c.bitis, eksik: !c.marka?.trim() || !c.model?.trim() }))]));
 }
 
 export async function cihazEkle(db: Sorgulayici, kim: Kisi, id: string, surum: number, turId: string, cihazId: string): Promise<RaporYazma> {
