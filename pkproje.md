@@ -2545,6 +2545,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   düşüşler tam 80 bin eşiğinde) — ayar değişti; yalnız A2 yetmez (fotoğraf blokları, girdiler, düşünme kalır; en az 20 bin temizlenemezse dokunmaz) → A1 yedek, iş
   sınırı sıkıştırması gerekli; ölçüye "iş başına yazılan ≤ 60 bin" · T6 orta derinlik: veri tersini gösterdi (2. koşu yüksek 8 doğru, 3. koşu orta 9) → geri alındı,
   5. koşuda yeniden denenebilir. Dördüncü koşu hedefleri sunumda.
+  **Onay (reisim: "Evet, başla") → T1–T4 KODDA (4c45efcb; CI → main):** T1 tamamla.ts planGunu — gun verilmezse bugün plan içindeyse bugün, değilse planın başlangıcı
+  (say-islemleri isGunu: rapor_yaz / raporlara_yaz / rapor_saat_plani); saat-plani.ts saatGirisleri tarih:rapor = kontrol günü (saat yazılan her yerde); talimat:
+  kontrol günü plan günüdür, çekim saati kontrol saati değildir, denetim uyarısı tarihi değiştirmez · T3 denetle.ts kapasiteCeliskisi (adında "kapasite" geçen sayı
+  alanları / test değerleri farklıysa "kapasite değerleri çelişiyor: … ≠ …"; plan_denetle ekipman bilgisiyle); talimat + B02: başka firmanın eski raporu etiketin
+  yerine geçmez · T2 tamamla.ts cihaz nedeni her basamakta ("zimmetinizde" / "en son kullandığınız" / kalibrasyon) + marka / model boş cihaza "kaydı eksik, kontrol
+  edin" (raporlar.ts cihazAdaylari eksik) · T4 raporlara_yaz tarifine örnek girdi ("raporlar bir DİZİDİR, metin değil"), talimat "dört DÜZ satır; alt madde, tablo,
+  başlık yok". Kilitler: say-tamamla (planGunu, cihaz nedeni), say-hesap (saatGirisleri, kapasiteCeliskisi), say-saf. Dördüncü koşu reisim'de.
 - 2026-11-01 (V21 İKİNCİ KOŞU — reisim: "Koşuyu yaptım, ölç"; aynı 18 fotoğraf, yeni plan, 00:39–00:43; salt okunur say_istek / yz_konusma / denetim_izi):
   **öncesi → sonrası:** 6 iş → **1** · 31 istek → **15** · 3 soru → **0** · 17 dk → **3 dk 50 sn** · 0,301 $ → **0,261 $** · ilk istem 63 bin → **38 bin** token (küçük
   fotoğraf) · en büyük istem 151 bin → 161 bin · bildirim 28 satır → sunucu notuyla **4** · 8 ekipman (tesiste kayıtlı olanlar plana alındı, mükerrer yok; iki
