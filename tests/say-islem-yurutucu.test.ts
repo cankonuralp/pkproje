@@ -19,7 +19,7 @@ import { test } from "node:test";
 import { kimlik, z } from "../src/sema/ortak.ts";
 import type { Sorgulayici } from "../src/server/db/kiraci.ts";
 import {
-  EKRAN_KAYDEDILMEMIS, ekranRaporuKirli, islem, IslemGeriAl, islemOzeti, islemYurut, metinSayfasi, sunucuKomutu, yazmaCevabi, type IslemBaglami, type IslemOrtami,
+  EKRAN_KAYDEDILMEMIS, ekranRaporuKirli, islem, IslemGeriAl, islemOzeti, islemYurut, jsonMetinleriCoz, metinSayfasi, sunucuKomutu, yazmaCevabi, type IslemBaglami, type IslemOrtami,
 } from "../src/server/yz/islem.ts";
 import { oku, sayEylemDenetimi } from "./yardimci/denetimler.ts";
 
@@ -53,6 +53,13 @@ function katalog() {
   };
 }
 const PLAN = "33333333-3333-4333-8333-333333333333";
+
+/* 2026-11-01 V21 O16 (üçüncü koşu: raporlara_yaz'ın raporlar alanı JSON metni olarak geldi, şema düştü, bir istek boşa gitti) */
+test("0. dizi / nesne alanı JSON metni olarak gelirse çözülür; JSON olmayan metin ve öteki değerler aynen", () => {
+  assert.deepEqual(jsonMetinleriCoz({ a: "[1, 2]", b: "{\"x\": 1}", c: "[açık ayraç", d: 5, e: " {\"y\":2}" }), { a: [1, 2], b: { x: 1 }, c: "[açık ayraç", d: 5, e: { y: 2 } });
+  assert.equal(jsonMetinleriCoz("[1]"), "[1]", "üst düzey metin dokunulmaz");
+  assert.deepEqual(jsonMetinleriCoz([1]), [1]);
+});
 
 test("1. girdi şemadan geçmezse çalıştırıcı çağrılmaz — alan alan Türkçe neden ve şema döner", async () => {
   const k = katalog(), o = ortam();

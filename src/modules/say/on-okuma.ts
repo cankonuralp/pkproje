@@ -11,7 +11,8 @@ const SISTEM = [
   `sinif: ${SINIFLAR.map((k) => `${k} = ${SINIF_ADI[k]}`).join(", ")}. Ekipmanın kendisi büyük kısmıyla görünüyorsa E; yazılı plaka / CE etiketi T;`,
   "kapasite ya da uyarı levhası L; ekran görüntüsü, liste, belge S.",
   "yazi: fotoğrafta OKUYABİLDİĞİN yazılar (marka, model, seri no, imal yılı, kapasite, kod …) aynen, en çok 300 karakter; okuyamadığını yazma, uydurma.",
-  "tarif: ne göründüğü, en çok 100 karakter (ör. \"iki kolonlu araç kaldırma lifti, kırmızı\").",
+  "tarif: ne göründüğü, en çok 100 karakter (ör. \"iki kolonlu araç kaldırma lifti, kırmızı\"). Cihazın türünü açıkça adlandır; benzer ama farklı cihazları",
+  "ayır: araç kaldırma lifti değil de tekerlek hizalama (rot) cihazı, fren / test hattı, rampa, vinç ise onu yaz; emin değilsen \"lift ya da hizalama cihazı, belirsiz\" de.",
 ].join("\n");
 
 export function onOkumaIstegi(model: YzModel, resim: Uint8Array, mime: string): OkumaIstegi {

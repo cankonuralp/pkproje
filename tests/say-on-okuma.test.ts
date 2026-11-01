@@ -34,7 +34,9 @@ test("ön okuma başlıkta; özet: sınıf sayısı ve çiftler (5 dakika içind
   assert.deepEqual(fotoCiftleri(l), { ciftler: [[1, 2], [5, 6]], yalniz: [3] }, "13:34'teki eşsiz; 13:45'teki etiket 11 dakika uzak");
   const o = malzemeOzeti(l);
   assert.match(o, /Ön okuma \(6 \/ 6\): 3 genel görünüş, 2 etiket \/ plaka, 1 levha\./);
-  assert.match(o, /çiftleri: F01\+F02, F05\+F06; eşsiz genel görünüş: F03 — ekipman sayısı en az 3\./);
+  /* 2026-11-01 üçüncü koşu: etiketsiz genel görünüş ekipman sayılmaz, aday — bakılmadan sayılmaz ("en az 3" kalktı) */
+  assert.match(o, /çiftleri: F01\+F02, F05\+F06 — 2 ekipman; etiketsiz genel görünüş \(ADAY, sayılmaz\): F03 — başka ekipmanın ikinci açısı ya da ekipman olmayan bir cihaz/);
+  assert.doesNotMatch(o, /en az/);
   assert.doesNotMatch(malzemeOzeti([ek(1, null)]), /Ön okuma/, "ön okuması yoksa özet aynı");
 });
 

@@ -105,8 +105,10 @@ export function malzemeOzeti(ekler: readonly MalzemeEki[]): string {
   for (const e of okunan) sinif.set(e.okuma!.sinif, (sinif.get(e.okuma!.sinif) ?? 0) + 1);
   const c = fotoCiftleri(malzemeSirasi(f));
   const sinifMetni = okunan.length ? ` Ön okuma (${okunan.length} / ${f.length}): ${[...sinif].map(([k, n]) => `${n} ${SINIF_ADI[k]}`).join(", ")}.` : "";
-  const ciftMetni = c.ciftler.length ? ` Çekim saatine göre genel görünüş + etiket çiftleri: ${c.ciftler.map(([a, b]) => `F${iki(a)}+F${iki(b)}`).join(", ")}`
-    + `${c.yalniz.length ? `; eşsiz genel görünüş: ${c.yalniz.map((x) => `F${iki(x)}`).join(", ")}` : ""} — ekipman sayısı en az ${c.ciftler.length + c.yalniz.length}.` : "";
+  /* 2026-11-01 (V21 üçüncü koşu — reisim: "bu sefer rot cihazı için uyarmadı 9 rapor yazdı"): eşsiz genel görünüş ekipman SAYILMAZ, adaydır — başka ekipmanın
+     ikinci açısı ya da ekipman olmayan bir cihaz (hizalama / rot cihazı, test hattı, rampa) olabilir; bakılmadan sayılmaz */
+  const ciftMetni = c.ciftler.length ? ` Çekim saatine göre genel görünüş + etiket çiftleri: ${c.ciftler.map(([a, b]) => `F${iki(a)}+F${iki(b)}`).join(", ")} — ${c.ciftler.length} ekipman`
+    + `${c.yalniz.length ? `; etiketsiz genel görünüş (ADAY, sayılmaz): ${c.yalniz.map((x) => `F${iki(x)}`).join(", ")} — başka ekipmanın ikinci açısı ya da ekipman olmayan bir cihaz (hizalama / rot cihazı, test hattı, rampa) olabilir; foto_goster ile bakıp karar ver, sayarsan ya da saymazsan nedenini kanıtıyla söyle` : ""}.` : "";
   /* 2026-10-31 (V21 madde 2): konuşmadaki fotoğraf küçük kopyadır; yazı foto_goster ile (bölge) okunur, aynı fotoğraf bir işte bir kez büyütülür */
   const kucuk = f.length ? " Fotoğraflar küçük kopya; etiket / yazı için foto_goster ile bölgeyi büyüt (bir fotoğraf bir işte bir kez)." : "";
   return `Malzeme (bu iletide ${ekler.length} öğe: ${parca.join(", ")}). Numaralar konuşma boyunca aynı kalır; sıra kaynağın sırası, yoksa çekim saati, yoksa eklenme.${sinifMetni}${ciftMetni}${kucuk}`;

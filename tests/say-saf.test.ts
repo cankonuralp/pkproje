@@ -65,8 +65,8 @@ test("istek: konuşma olduğu gibi, bütün araçlar aynı sırayla ve sınırs�
   assert.deepEqual(betalar, SAY_BETALARI);
   /* 2026-11-01 V21 A2 (reisim onayı; belge: context editing bütün modellerde, sunucu tarafında, düşünmeyi bozmaz): eski araç sonuçlarını hizmet temizler */
   assert.ok(SAY_BETALARI.includes("context-management-2025-06-27"), "bağlam düzenleme betası");
-  assert.deepEqual(g.context_management, { edits: [{ type: "clear_tool_uses_20250919", trigger: { type: "input_tokens", value: 80_000 }, keep: { type: "tool_uses", value: 4 },
-    clear_at_least: { type: "input_tokens", value: 10_000 } }] }, "istem 80 binde en eski araç sonuçları temizlenir, son 4 kalır, en az 10 bin");
+  assert.deepEqual(g.context_management, { edits: [{ type: "clear_tool_uses_20250919", trigger: { type: "input_tokens", value: 80_000 }, keep: { type: "tool_uses", value: 3 },
+    clear_at_least: { type: "input_tokens", value: 20_000 } }] }, "istem 80 binde en eski araç sonuçları temizlenir, son 3 kalır, en az 20 bin (üçüncü koşu: salınım azalsın)");
   assert.equal(g.tool_choice, undefined, "araç seçimi serbest");
   assert.deepEqual(g.system, [{ type: "text", text: SISTEM, cache_control: { type: "ephemeral", ttl: "1h" } }], "talimat tek ve önbellekli (1 saat); bağlam yok");
   const adlar = (g.tools as { name: string }[]).map((t) => t.name);

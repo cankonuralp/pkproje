@@ -201,6 +201,16 @@ export function kisaSema(t: Islem): Record<string, unknown> {
 }
 
 /* ── yürütücü ── */
+/** 2026-11-01 (V21 O16): girdinin ÜST DÜZEY alanlarında "[" ya da "{" ile başlayıp JSON olarak çözülen metinler çözülmüş; ötekiler aynen (saf) */
+export function jsonMetinleriCoz(girdi: unknown): unknown {
+  if (!girdi || typeof girdi !== "object" || Array.isArray(girdi)) return girdi;
+  const c: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(girdi as Record<string, unknown>)) {
+    if (typeof v === "string" && /^\s*[[{]/.test(v)) { try { c[k] = JSON.parse(v); continue; } catch { /* metin kalır */ } }
+    c[k] = v;
+  }
+  return c;
+}
 const BEKLENMEYEN ="Beklenmeyen bir sorun oldu; işlem yapılmadı (veritabanı işlemi geri alındı).";
 /** 2026-10-16 (2. adım b): çalıştırıcı işi GERİ ALDIRIP nedenini söyletmek isterse (modül işlevi yarıda kalınca hata fırlatıyorsa — ör. eski sürüme
     geri dönüş yayınlanamadı: GeriDonusIptal) bunu fırlatır: veritabanı işlemi geri alınır, S.A.Y'a cevap olduğu gibi döner (hata kaydı yok) */
@@ -213,7 +223,10 @@ export async function islemYurut(katalog: readonly Islem[], o: IslemOrtami, ad: 
   Promise<{ islem: Islem | null; cevap: IslemCevabi; sema?: Record<string, unknown> }> {
   const t = katalog.find((x) => x.ad === ad) ?? null;
   if (!t) return { islem: null, cevap: { tamam: false, neden: `Böyle bir işlem yok: "${ad}". Dizine ya da islemler aracına bak.` } };
-  const g = t.girdi.safeParse(girdi ?? {});
+  /* 2026-11-01 (V21 üçüncü koşu — O16): yapay zekâ dizi / nesne alanını JSON METNİ olarak verirse ("raporlar": "[{…}]") şema düşmeden önce bir kez çözülür —
+     boşa "beklenen array, alınan string" turu yok */
+  const g0 = t.girdi.safeParse(girdi ?? {});
+  const g = g0.success ? g0 : t.girdi.safeParse(jsonMetinleriCoz(girdi ?? {}));
   if (!g.success) {
     const h = hatalar(g.error);
     return { islem: t, cevap: { tamam: false, neden: `Girdi şemaya uymuyor: ${hataOzeti(h)}`, hatalar: h }, sema: kisaSema(t) };

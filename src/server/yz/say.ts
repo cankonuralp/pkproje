@@ -23,7 +23,9 @@ export const SAY_BETALARI = ["thinking-binding-controls-2026-08-01", "context-ma
    istem BAGLAM_ESIGI giriş tokenini aşınca EN ESKİ araç sonuçlarını hizmet kendisi temizler (son BAGLAM_KALAN araç çağrısı kalır; en az BAGLAM_EN_AZ token
    temizlenemiyorsa dokunmaz — önbellek bozulmasına değsin). Sunucu tarafında yapıldığı için düşünme bloklarını BOZMAZ (bizim iş içi küçültmemiz — is-siniri.ts
    A1 — ancak hizmet yetmezse devreye girer: ölçülen istem yine 90 bini aşarsa). Konuşma kaydı değişmez. */
-export const BAGLAM_ESIGI = 80_000, BAGLAM_KALAN = 4, BAGLAM_EN_AZ = 10_000;
+/* 2026-11-01 üçüncü koşu: eşik 80 bin / son 4 / en az 10 bin ile temizleme üç kez tekrarlandı (her seferinde önbellek öneki ≈ 30–40 bin token yeniden
+   yazıldı — maliyetin üçte biri); son 3 araç çağrısı kalır ve en az 20 bin temizlenir → temizleme seyrek, her temizlemede daha çok yer açılır */
+export const BAGLAM_ESIGI = 80_000, BAGLAM_KALAN = 3, BAGLAM_EN_AZ = 20_000;
 export const BAGLAM_DUZENLEME = { edits: [{ type: "clear_tool_uses_20250919", trigger: { type: "input_tokens", value: BAGLAM_ESIGI },
   keep: { type: "tool_uses", value: BAGLAM_KALAN }, clear_at_least: { type: "input_tokens", value: BAGLAM_EN_AZ } }] } as const;
 
@@ -97,8 +99,11 @@ export function saySistemi(kilavuz: readonly (readonly [string, string])[], isle
     "",
     "Toplu iş: kullanıcı çok dosya (ya da ZIP) verip raporları oluşturmanı isterse her belgeyi incele; ekipmanı planda bul ya da ekle, raporunu aç",
     "(rapor_ac), bilgileri yaz ve hepsini bitirince dört satırlık bildirimi ver. Önce say, sonra aç: çok fotoğrafta malzeme özetindeki sınıf sayıları ve",
-    "genel görünüş–etiket çiftleriyle ekipman sayısını kesinleştir, hepsini TEK plan_ekipmanlar_ekle ile saha (çekim) sırasıyla ekle; raporları tek",
-    "rapor_ac ile aç; hepsine TEK raporlara_yaz ile yaz (rapor başına girişler + ekipmanın kendi genel görünüş fotoğrafı; saatler ve tamamlama sunucuda).",
+    "genel görünüş–etiket çiftleriyle ekipman sayısını kesinleştir; ETİKETSİZ genel görünüşü saymadan önce foto_goster ile bak — başka ekipmanın ikinci açısı",
+    "ya da ekipman olmayan bir cihazsa (hizalama / rot cihazı, test hattı, rampa) sayma, nedenini kanıtıyla söyle; etiketsiz, bilgisiz ekipman kaydı açma.",
+    "Hepsini TEK plan_ekipmanlar_ekle ile saha (çekim) sırasıyla ekle; raporları tek rapor_ac ile aç; hepsine TEK raporlara_yaz ile yaz (rapor başına",
+    "girişler + ekipmanın kendi genel görünüş fotoğrafı; kontrol saatleri çekim saatlerinden gelecekse gun ve baslangic'i BU çağrıda ver, ayrı rapor_saat_plani",
+    "çağırma; tamamlama sunucuda).",
     "",
     "Elektrik raporu: panodaki her sigorta / linye ölçüm tablosunda ayrı bir satırdır. Satır sayısını linye sayısına göre aç (satir_ekle), her satıra",
     "no, devre adı, tip (eğri: B, C, D …), In (A), kutup, RCD IΔn ve kesitleri yaz; okuyamadığın hücreyi boş bırak, uydurma.",
