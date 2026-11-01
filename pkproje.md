@@ -2527,6 +2527,17 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-11-01 (V21 ALTINCI KOŞU — reisim: "koşuyu yap ve şunu da söyle, ekipman kodu neden 25'ten başladı; incele açıklama yap onaylarsam değişiklik yaparsın";
+  sunum yerel/say-arge/2026-11-01-sunum-altinci-kosu.md, ONAY BEKLİYOR, kod yok): P-1126-003 (dördüncü koşunun tesisi): 12 istek · 2 dk 48 sn · istem en çok
+  76,4 bin ✓ · yazılan 151 bin ✗ · **0,0527 $** ✗ (hedef 0,04) · **8 ekipman ✓** (7 kayıtlı ekipman SERİYLE eşlendi + 1 yeni; rot cihazı kanıtla elendi) · 8 rapor,
+  foto 8/8, cihaz 8/8 · **rapor başına 1 kayıt ✓** (tek raporlara_yaz; raporlar yine JSON metni — O16 çözdü, şema hatası 0) · foto_goster 4, hepsi kural gereği
+  (etiketsiz aday, rot adayı, net olmayan görünüş, şüpheli model) · ön okuma alanları 18/18, S.A.Y değerleri satırdan yazdı ✓. Maliyet neden düşmedi: iki önbellek
+  kırılması — rapor_ac'tan sonra parti sonu küçültme (RAPOR_YAZAN'da rapor_ac var; 21,6 bin yeniden yazma) + hizmet temizlemesi A2 87 binde (32,8 bin yeniden
+  yazma; A1 tavanı 90 bin olduğu için önce hizmet girdi) ≈ 0,011 $; 8 rapor_getir (aynı formatın haritası 8 kez) ≈ 0,006 $; denetim sonrası 2 rapor_getir.
+  **Kod 25:** dördüncü koşu aynı tesise AKL-25…31 açmıştı (raporlar silindi, ekipman kayıtları kaldı); S.A.Y bunları seriyle eşleyip plana aldı, yeni ekipmana
+  AKL-32 verdi (firmada en büyük 31 → 32; 31 Ekim kuralı: numara firma geneli, boşluk doldurulmaz). Öneriler: P1 harita bir kez (rapor_ac sonucunda) · P2 parti
+  sonu küçültme yalnız raporlara_yaz / rapor_yaz'dan sonra ve istem > 60 bin ise · P3 A1 tavanı 75 bin (hizmetin 80 bininden önce) · P4 denetim sonrası yeniden
+  okuma yok · P5 ekipman kaydında "-" boş sayılır · P6 kod numarası: (a) kalsın (önerim) / (b) tesis bazlı / (c) firma ayarı. Beklenen (P1–P4): 9 istek, ≈ 0,036 $.
 - 2026-11-01 (reisim: **"Evet, başla"** — beşinci koşunun 4 maddesi + büyük iş şeması TEK KALEMDE KODDA; kalem dalı → CI → göç 0114 Supabase → main):
   (1) O16 tam: islem.ts çözülmüş JSON metni çalıştırıcıya ÇÖZÜLMÜŞ ham olarak gider; şema "beklenen number / boolean, alınan string" dediği alanlar çevrilip bir
   kez daha denenir (turleriCevir — yalnız hata yolunda, metin alanlarına dokunulmaz); (2) kod "-0" yasağı: planlar/sema.ts kodBicimi sıfır sayı bölümünü (TRF-0,
