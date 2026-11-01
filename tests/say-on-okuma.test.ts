@@ -35,7 +35,8 @@ test("ön okuma başlıkta; özet: sınıf sayısı ve çiftler (5 dakika içind
   const o = malzemeOzeti(l);
   assert.match(o, /Ön okuma \(6 \/ 6\): 3 genel görünüş, 2 etiket \/ plaka, 1 levha\./);
   /* 2026-11-01 üçüncü koşu: etiketsiz genel görünüş ekipman sayılmaz, aday — bakılmadan sayılmaz ("en az 3" kalktı) */
-  assert.match(o, /çiftleri: F01\+F02, F05\+F06 — 2 ekipman; etiketsiz genel görünüş \(ADAY, sayılmaz\): F03 — başka ekipmanın ikinci açısı ya da ekipman olmayan bir cihaz/);
+  /* 2026-11-01 dördüncü koşu: etiketsiz görünüş ADAY — ayrı ekipmansa sayılır (etiketi çekilmemiş olabilir), başka açı / başka cihazsa sayılmaz */
+  assert.match(o, /çiftleri: F01\+F02, F05\+F06 — 2 ekipman; etiketsiz genel görünüş \(ADAY\): F03 — foto_goster ile bak: ayrı bir ekipmansa SAY/);
   assert.doesNotMatch(o, /en az/);
   assert.doesNotMatch(malzemeOzeti([ek(1, null)]), /Ön okuma/, "ön okuması yoksa özet aynı");
 });

@@ -15,7 +15,11 @@ const cevap = { role: "assistant", content: [{ type: "text", text: "Hazır." }] 
 
 test("rapora yazan işten sonra denetim gerekir; plan ve raporlar girdilerden", () => {
   const l = [soru(), cagri("rapor_ac", { plan: P, ekipman: ["x"] }), sonuc("rapor_ac"), cagri("raporlara_yaz", { raporlar: [R1, { rapor: R2 }] }), sonuc("raporlara_yaz"), cevap];
-  assert.deepEqual(bitisDenetimi(l), { plan: P, raporlar: [R1, R2] });
+  /* 2026-11-01 dördüncü koşu: plan geneli denetlenmez (plan hep null); rapor_ac'ın SONUCUNDAKİ rapor kimlikleri de sayılır; rapor_ac düşerse (kimlik yok) denetim yok */
+  assert.deepEqual(bitisDenetimi(l), { plan: null, raporlar: [R1, R2] });
+  const acildi = { role: "user", content: [{ type: "tool_result", tool_use_id: "c-rapor_ac", content: JSON.stringify({ islem: "rapor_ac", durum: "tamam", raporlar: [{ ekipman: "x", id: R1 }] }) }] };
+  assert.deepEqual(bitisDenetimi([soru(), cagri("rapor_ac", { plan: P, ekipman: ["x"] }), acildi, cevap]), { plan: null, raporlar: [R1] }, "açılan rapor sonuçtan");
+  assert.equal(bitisDenetimi([soru(), cagri("rapor_ac", { plan: P, ekipman: ["x"] }), sonuc("rapor_ac"), cevap]), null, "rapor açılamadıysa plan geneli denetlenmez");
 });
 
 test("denetlendiyse, yazma yoksa, önceki soruda yazıldıysa gerekmez; en çok iki kez", () => {

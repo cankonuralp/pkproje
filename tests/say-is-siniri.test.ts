@@ -124,7 +124,8 @@ test("otomatik kapanış: 60 dakika · başka plan · konuşma büyüdü; iş s�
   const konusma = (p: string) => [{ role: "user", content: [{ type: "text", text: "a" }] }, { role: "system", content: not(p) }, { role: "assistant", content: [{ type: "text", text: "bitti" }] }];
   assert.equal(kapanisNedeni({ mesajlar: konusma(P1), sonZaman: new Date(simdi.getTime() - 61 * 60_000), simdi, yeniNot: not(P1) }), "60 dakika geçti");
   assert.equal(kapanisNedeni({ mesajlar: konusma(P1), sonZaman: new Date(simdi.getTime() - 59 * 60_000), simdi, yeniNot: not(P1) }), null, "aynı plan, taze");
-  assert.equal(kapanisNedeni({ mesajlar: konusma(P1), sonZaman: simdi, simdi, yeniNot: not(P2) }), "başka plan");
+  /* 2026-11-01 dördüncü koşu: "başka plan" kuralı kalktı — kullanıcı aynı fotoğraflarla başka planda sorunca ekler gitmişti */
+  assert.equal(kapanisNedeni({ mesajlar: konusma(P1), sonZaman: simdi, simdi, yeniNot: not(P2) }), null, "başka plan kapatmaz");
   assert.equal(kapanisNedeni({ mesajlar: konusma(P1), sonZaman: simdi, simdi, yeniNot: "Kullanıcı şu sayfada: Raporlar." }), null, "plan olmayan sayfa kapatmaz");
   const buyuk = [...konusma(P1), { role: "user", content: [{ type: "text", text: "b" }] }, { role: "user", content: [{ type: "tool_result", tool_use_id: "q", content: "z".repeat(KAPANIS_BOYU * 4) }] }, { role: "assistant", content: [{ type: "text", text: "ok" }] }];
   assert.equal(kapanisNedeni({ mesajlar: buyuk, sonZaman: simdi, simdi, yeniNot: not(P1) }), "konuşma büyüdü");

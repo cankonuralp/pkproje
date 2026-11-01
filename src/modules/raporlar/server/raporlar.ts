@@ -119,11 +119,14 @@ type AcilanPlan = RaporPlani & { personelId: string };
 
 /** rapor açılabilecek plan (oluştur ve kopya): kişi plandaki denetçi (rapor_olustur), plan kabul edilmiş / denetimde / tamamlanmış, plan günü
     gelmiş (ENGEL 1), kişinin bugünkü süresi dolmamış (ENGEL 3) */
+export const EKIPTE_DEGIL = "Bu planın ekibinde değilsiniz: raporu plandaki muayene uzmanı açar. Planlamacı sizi Planlar › Düzenle › Ekip ile ekleyebilir.";
 async function acilabilirPlan(db: Sorgulayici, kim: Kisi, planId: string): Promise<{ p: AcilanPlan } | { hata: Hata }> {
   const plan = await raporIcinPlan(db, kim, planId);
   if (!plan) return { hata: { durum: "yok" } };
   const personelId = plan.personelId;
-  if (!personelId || duzey(kim, MODUL) === "yok" || !canDoEylem(kim, "rapor_olustur", { atananlar: plan.atananlar })) return { hata: { durum: "yetkisiz" } };
+  if (!personelId || duzey(kim, MODUL) === "yok") return { hata: { durum: "yetkisiz" } };
+  /* 2026-11-01 (V21 dördüncü koşu — reisim: "rapor oluşturamıyorum aynı plan içinde sebebini anlamadım"): neden açıkça — ekipte olmayan denetçi */
+  if (!canDoEylem(kim, "rapor_olustur", { atananlar: plan.atananlar })) return { hata: { durum: "red", neden: EKIPTE_DEGIL } };
   /* 2026-10-12 (reisim: "tamamlamayı geri almadan yeni rapor oluşturulmasın"): tamamlanmış planda yeni rapor (kopya, bağlantısız açılan dahil) yok */
   if (plan.durum === "tamamlandi") return { hata: { durum: "red", neden: TAMAMLANDI_RAPOR } };
   if (plan.durum !== "kabul" && plan.durum !== "denetimde") return { hata: { durum: "red", neden: "Rapor yalnız kabul edilmiş planda oluşturulur." } };

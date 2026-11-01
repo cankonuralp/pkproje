@@ -26,7 +26,7 @@ import { TAMAMLANDI_RAPOR, tarihNo } from "../src/modules/planlar/sema.ts";
 import { taslakBaslat, taslakKaydet, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
 import { ayEkle } from "../src/modules/raporlar/sema.ts";
 import {
-  cihazEkle, cihazKaldir, fotoEkle, fotoSil, onayaGonder, raporBelgesiVerisi, raporFormatGuncelle, raporKaydet, raporKopyala, raporKunyeGuncelle, raporOlustur,
+  cihazEkle, cihazKaldir, EKIPTE_DEGIL, fotoEkle, fotoSil, onayaGonder, raporBelgesiVerisi, raporFormatGuncelle, raporKaydet, raporKopyala, raporKunyeGuncelle, raporOlustur,
   raporListesi, raporSil, sahaRaporu, type RaporYazma,
 } from "../src/modules/raporlar/server/raporlar.ts";
 import { raporDurumYaz } from "../src/modules/raporlar/server/onay-baglanti.ts";
@@ -190,8 +190,10 @@ test("rapor oluştur: yalnız plandaki denetçi, kabul edilmiş planda, plandaki
   assert.deepEqual([p.izin.raporOlustur, p.erken, p.raporlar], [true, false, []]);
   assert.equal((await ici(FA.plan, id))!.izin.raporOlustur, false, "planlamacı rapor oluşturmaz");
   /* yetki sunucuda */
-  assert.equal((await olustur(FA.plan, id, a1)).durum, "yetkisiz", "planı gören ama ekipte olmayan planlamacı");
-  assert.equal((await olustur(FA.mek, id, a1)).durum, "yetkisiz", "yönetici planı görür, rapor oluşturmaz");
+  /* 2026-11-01 (V21 dördüncü koşu — reisim: "rapor oluşturamıyorum … sebebini anlamadım"): ekipte olmayana neden açıkça (red + EKIPTE_DEGIL), yetkisiz değil */
+  const pl = await olustur(FA.plan, id, a1), mk = await olustur(FA.mek, id, a1);
+  assert.equal(pl.durum, "red", "planı gören ama ekipte olmayan planlamacı"); assert.equal(pl.durum === "red" && pl.neden, EKIPTE_DEGIL);
+  assert.equal(mk.durum, "red", "yönetici planı görür, rapor oluşturmaz"); assert.equal(mk.durum === "red" && mk.neden, EKIPTE_DEGIL);
   assert.equal((await olustur(FA.den2, id, a1)).durum, "yok", "ekipte olmayan denetçi planı görmez");
   assert.equal((await olustur(FA.muh, id, a1)).durum, "yok");
   assert.equal((await b(FB.den1, (db) => raporOlustur(db, FB.den1, id, a1))).durum, "yok", "başka firma");

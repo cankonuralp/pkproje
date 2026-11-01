@@ -23,14 +23,28 @@ const kimlik = (x: unknown): string | null => (typeof x === "string" && /^[0-9a-
 /** kullanıcının sorusu mu: sonuç bloğu taşımayan, sunucunun denetim notu olmayan kullanıcı iletisi */
 const soruMu = (m: Mesaj) => m.role === "user" && !bloklar(m.content).some((b) => b.type === "tool_result") && metinler(m).some((t) => !sunucuNotuMu(t));
 
-/** denetim gerekiyorsa denetlenecek plan ve raporlar; gerekmiyorsa null */
+/** rapor açan işlemin (rapor_ac) sonucundaki rapor kimlikleri — 2026-11-01 (V21 dördüncü koşu): denetim yalnız BU işte açılan / yazılan raporlara; planın öteki
+    denetçinin raporları denetlenmez (rapor_ac düşünce plan geneli denetlenmiş, S.A.Y başkasının 4 raporuyla 3 istek harcamıştı) */
+function sonuctakiRaporlar(icerik: string): string[] {
+  try {
+    const x = JSON.parse(icerik) as { id?: unknown; raporlar?: { id?: unknown }[] };
+    return [...(kimlik(x.id) ? [kimlik(x.id)!] : []), ...(Array.isArray(x.raporlar) ? x.raporlar.map((r) => kimlik(r?.id)).filter((k): k is string => !!k) : [])];
+  } catch { return []; }
+}
+/** denetim gerekiyorsa denetlenecek raporlar (bu işte açılan ya da yazılan); gerekmiyorsa null. plan hep null (plan geneli denetlenmez) */
 export function bitisDenetimi(mesajlar: readonly Mesaj[]): { plan: string | null; raporlar: string[] } | null {
   let bas = 0;
   for (let i = mesajlar.length - 1; i >= 0; i--) if (soruMu(mesajlar[i]!)) { bas = i; break; }
-  let sonYazma = -1, sonDenetim = -1, denetim = 0, plan: string | null = null;
-  const raporlar = new Set<string>();
+  let sonYazma = -1, sonDenetim = -1, denetim = 0;
+  const raporlar = new Set<string>(), acanlar = new Set<string>();
   mesajlar.slice(bas).forEach((m, j) => {
-    if (m.role === "user" && metinler(m).some((t) => t.startsWith(DENETIM_ONEKI))) { denetim++; sonDenetim = j; }
+    if (m.role === "user") {
+      if (metinler(m).some((t) => t.startsWith(DENETIM_ONEKI))) { denetim++; sonDenetim = j; }
+      for (const b of bloklar(m.content)) {
+        if (b.type === "tool_result" && typeof b.tool_use_id === "string" && acanlar.has(b.tool_use_id) && typeof b.content === "string") for (const k of sonuctakiRaporlar(b.content)) raporlar.add(k);
+      }
+      return;
+    }
     if (m.role !== "assistant") return;
     for (const b of bloklar(m.content)) {
       if (b.type !== "tool_use" || b.name !== "islem") continue;
@@ -39,14 +53,14 @@ export function bitisDenetimi(mesajlar: readonly Mesaj[]): { plan: string | null
       if (ad === "plan_denetle") { sonDenetim = j; continue; }
       if (!RAPOR_YAZAN.has(ad)) continue;
       sonYazma = j;
-      plan ??= kimlik(x.plan);
+      if (ad === "rapor_ac" && typeof b.id === "string") acanlar.add(b.id);
       const r = kimlik(x.rapor);
       if (r) raporlar.add(r);
       if (Array.isArray(x.raporlar)) for (const y of x.raporlar) { const k = kimlik(y) ?? kimlik((y as { rapor?: unknown } | null)?.rapor); if (k) raporlar.add(k); }
     }
   });
-  if (sonYazma < 0 || sonDenetim > sonYazma || denetim >= DENETIM_EN_COK || (!plan && !raporlar.size)) return null;
-  return { plan, raporlar: [...raporlar] };
+  if (sonYazma < 0 || sonDenetim > sonYazma || denetim >= DENETIM_EN_COK || !raporlar.size) return null;
+  return { plan: null, raporlar: [...raporlar] };
 }
 
 /** 2026-10-31 (V21 madde 3; reisim: "Bitiş denetiminin sonucu konuşmaya tam JSON olarak değil özet olarak girer: sayı ve farklı sorunlar"): sorunlu rapor

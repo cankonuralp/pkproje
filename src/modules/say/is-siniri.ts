@@ -180,14 +180,11 @@ export function kucultmeSeviyesi(mesajlar: readonly IsMesaji[], mevcut: number, 
    durumda kendiliğinden kapanır (metni Ar-Ge kaydına, ekleri çöpe; "Sohbeti temizle" tuşu kalır): 60 dakika sessizlik · başka planın sayfasından soru ·
    küçültülmüş konuşma KAPANIS_BOYU tokeni aştı. Son bildirim yeni konuşmanın başına not olarak girer. ── */
 export const KAPANIS_DAKIKA = 60, KAPANIS_BOYU = 60_000;
-const PLAN_KIMLIGI = /Plan \(kimlik ([0-9a-f-]{36})\)/;
 export function kapanisNedeni(g: { mesajlar: readonly IsMesaji[]; sonZaman: Date | null; simdi: Date; yeniNot: string }): string | null {
   if (!g.mesajlar.length) return null;
   if (g.sonZaman && g.simdi.getTime() - g.sonZaman.getTime() > KAPANIS_DAKIKA * 60_000) return `${KAPANIS_DAKIKA} dakika geçti`;
-  const eskiNot = [...g.mesajlar].reverse().find((m) => m.role === "system");
-  const eski = eskiNot ? PLAN_KIMLIGI.exec(typeof eskiNot.content === "string" ? eskiNot.content : metinler(eskiNot).join("\n"))?.[1] : undefined;
-  const yeni = PLAN_KIMLIGI.exec(g.yeniNot)?.[1];
-  if (eski && yeni && eski !== yeni) return "başka plan";
+  /* "başka plan" kuralı 2026-11-01 dördüncü koşuda KALKTI: kullanıcı aynı fotoğraflarla başka planın sayfasında yeniden sorunca konuşma kapandı, ekleri
+     gitti ("fotoğraf yok" dedi — reisim: "eksik var diyip rapor oluşturmadı"). Yalnız 60 dakika ve büyüklük. */
   if (istemTahmini(konusmaSikistir(g.mesajlar).mesajlar) > KAPANIS_BOYU) return "konuşma büyüdü";
   return null;
 }
