@@ -2535,6 +2535,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   kuralından kalma, sunucu 31 Ekim'den beri 1'den başlıyor → öneri: sayı kısmı 0 olan kod hiçbir yoldan kabul edilmez, eldekiler elle; (3) tesisteki kayıtla eşleme
   seriyle değil sırayla ("etiketle doğrulayamadım") → talimat: önce seri, sonra marka + model, en son sıra; (4) devam sorusunda "konuşma büyüdü" kapanışı ekleri
   sildi → kural kalksın, yalnız 60 dk; (5) yazılan 124 bin — hedef ≤ 100 bin'e güncellensin.
+  **Reisim: "müşteriler 20-25-50-60 fotoğraflı işi de tek te yaptırmak isteyebilir … müşteriye göstermeden … daha efektif bir çözüm"** → sunum yerel/say-arge/
+  2026-11-01-sunum-buyuk-is-semasi.md (ONAY BEKLİYOR): fotoğraf konuşmaya GİRMEZ, metni girer — ön okuma fotoğraf başına etiket alanlarını (marka / model / seri /
+  imal / kapasite, emin / şüpheli) yapılandırılmış döndürür (yükleme sırasında, paralel; göç 0114 yz_ek_okuma.alanlar); konuşmaya her fotoğraf için bir satır
+  (60 foto ≈ 6 bin token); fotoğraf hizmete yüklenmez, yalnız depoda, foto_goster gerekince; raporlar 8–10'luk partilerle tek işte yazılır, parti bitince büyütmeler
+  metne iner; panelde ilerleme; kapanış yalnız 60 dk. Kestirim: 18 → 8 rapor ≈ 0,03 $ / 30 bin istem; 60 → 30 rapor ≈ 0,10–0,12 $ / ≤ 60 bin istem.
 - 2026-11-01 (V21 DÖRDÜNCÜ KOŞU — reisim: "işlemi tam yapmadı eksik var diyip rapor oluşturmadı ben de rapor oluşturamıyorum aynı plan içinde … 7 lift yaptı 8
   değil"): koşu P-1026-013'te (ekibi başka denetçi) — **(1) rapor açılamadı:** kullanıcı planın ekibinde değil; sistem kuralı doğru (raporu plandaki muayene uzmanı
   açar — ekranda da aynı), neden "Bu işlem için yetkiniz yok" diye belirsizdi → raporlar.ts acilabilirPlan EKIPTE_DEGIL ("Bu planın ekibinde değilsiniz … Planlar ›
