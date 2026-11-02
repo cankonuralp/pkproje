@@ -1,5 +1,5 @@
 /* TOPLU SEÇİM — satırın / başlığın kutusu ve altta havada duran çubuk (596'da onaylar.module.css'teydi; 2026-11-02 tek üreticiye taşındı) */
-.kutu { display: inline-flex; flex: none; align-items: center; justify-content: center; width: var(--tus-y); height: var(--tus-y); margin-left: -8px; cursor: pointer; }
+.kutu { display: inline-flex; flex: none; align-items: center; justify-content: center; width: var(--tus-y); height: var(--tus-y); cursor: pointer; }
 .kutu input { width: 18px; height: 18px; margin: 0; accent-color: var(--birincil); cursor: pointer; }
 .cubukKap {
   position: sticky; bottom: 0; z-index: 10; display: flex; justify-content: flex-end; align-items: flex-end; margin-top: 16px;

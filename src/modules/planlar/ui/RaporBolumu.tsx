@@ -121,19 +121,19 @@ export function RaporBolumu({ v }: { v: PlanIci }) {
       basHucre: <SayfaKutusu hepsi={gorunen.length > 0 && gorunen.every((r) => sec.secili.has(r.id))} bazi={gorunen.some((r) => sec.secili.has(r.id))}
         ad="Bu sayfadaki raporların hepsini seç" degistir={(ac) => sec.sayfa(gorunen, ac)} />,
       hucre: (r) => <SecimKutusu secili={sec.secili.has(r.id)} ad={r.no} degistir={(ac) => sec.sec(r, ac)} /> },
-    { k: "no", genislik: "16%", baslik: "Rapor no", kart: "ust", sira: 1, hucre: (r) => <Kod>{r.no}</Kod> },
-    { k: "ekipman", genislik: "19%", baslik: "Ekipman", kart: "govde", sira: 2, hucre: (r) => {
+    { k: "no", genislik: "20%", baslik: "Rapor no", kart: "ust", sira: 1, hucre: (r) => <Kod>{r.no}</Kod> },
+    { k: "ekipman", genislik: "16%", baslik: "Ekipman", kart: "govde", sira: 2, hucre: (r) => {
       const e = ekp.get(r.ekipmanId);
       return <span className={stil.hucreSatir}><span className={stil.kod}>{e?.kod ?? "—"}</span><Kirp>{e?.tur ?? ""}</Kirp></span>;
     } },
-    { k: "uzman", genislik: "13%", baslik: "Muayene uzmanı", kart: "govde", sira: 3, hucre: (r) => <><KartEtiket>Uzman</KartEtiket><Kirp>{r.uzman}</Kirp></> },
-    { k: "sonuc", genislik: "10%", baslik: "Sonuç", kart: "govde", sira: 4, hucre: (r) => <>
+    { k: "uzman", genislik: "11%", baslik: "Muayene uzmanı", kart: "govde", sira: 3, hucre: (r) => <><KartEtiket>Uzman</KartEtiket><Kirp>{r.uzman}</Kirp></> },
+    { k: "sonuc", genislik: "8%", baslik: "Sonuç", kart: "govde", sira: 4, hucre: (r) => <>
       <KartEtiket>Sonuç</KartEtiket>
       {r.sonuc ? <span className={r.sonuc === "uygun" ? stil.sonucUygun : stil.sonucHata}>{SONUC_AD[r.sonuc]}</span> : <DegerYok />}
     </> },
-    { k: "durum", genislik: "13%", baslik: "Durum", kart: "rozet", sira: 1, hucre: (r) => <Rozet tur={RAPOR_DURUM[r.durum][1]}>{RAPOR_DURUM[r.durum][0]}</Rozet> },
-    { k: "olustu", genislik: "10%", baslik: "Oluşturuldu", kart: "govde", sira: 5, hucre: (r) => <><KartEtiket>Oluşturuldu</KartEtiket><span className={stil.zaman}>{zamanNo(r.olustu)}</span></> },
-    { k: "eylem", genislik: "19%", baslik: "İşlem", gizliBaslik: true, siralanmaz: true, kart: "eylem", sira: 9, hucre: (r) => {
+    { k: "durum", genislik: "12%", baslik: "Durum", kart: "rozet", sira: 1, hucre: (r) => <Rozet tur={RAPOR_DURUM[r.durum][1]}>{RAPOR_DURUM[r.durum][0]}</Rozet> },
+    { k: "olustu", genislik: "13%", baslik: "Oluşturuldu", kart: "govde", sira: 5, hucre: (r) => <><KartEtiket>Oluşturuldu</KartEtiket><span className={stil.zaman}>{zamanNo(r.olustu)}</span></> },
+    { k: "eylem", genislik: "20%", baslik: "İşlem", gizliBaslik: true, siralanmaz: true, kart: "eylem", sira: 9, hucre: (r) => {
       const duzenler = r.benim && r.durum === "taslak";
       return (
         <div className={stil.eylemTuslar}>
