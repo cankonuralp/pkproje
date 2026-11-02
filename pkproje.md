@@ -2527,6 +2527,16 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-11-02 (LİSTE VE SÜZGEÇ MAKETİ — reisim'in "probata yapılacaklar tam liste" belgesi: "filtreleme detaylı olmalı", "her bir başlığa tıklayınca o başlığa
+  göre sıralanıyor", "seç sil toplu sil vs yok raporlar için, pasifteki ekipmanları silme ?", "Elektrik mekanik tümünü ekle çıkar gibi seçenekler olmalı";
+  sıra "Önce listeler" → "Evet, maketi kur"): **MAKET ONAY BEKLİYOR** https://claude.ai/artifact/EtasuE8QGTezKLtJMfMyp1 (kaynak yerel/maket/liste-suzgec.html,
+  depoda değil; tek sayfa, renk ve liste biçemleri uygulamanınki). Raporlar: süzgeçler başlıklı kutular — Rapor no, Ekipman kodu, Tesis yazarak; Ekipman
+  türü, Müşteri, Muayene uzmanı, Branş, İl, İlçe (ile bağlı), Sonuç seçerek; Tarih aralığı hazır seçenekli (Yıl seçicisi içine girer) — · "n süzgeç" rozeti ·
+  başlıktan sıralama (açılışta en yeni üstte; telefonda Sıralama kutusu) · ayrı Tarih ve Muayene uzmanı sütunları · toplu seçim (çubuk: PDF indir · Sil ·
+  Seçimi kaldır; Sil yalnız kişinin kendi Yeni raporu, ötekiler pencerede nedeniyle) · Toplu indir (süzgece uyanlar, en çok 300 rapor / 500 MB). Plan içi
+  raporlar aynı tanımdan (Tür, Uzman, Branş, Sonuç; sıralama, seçim). Plan aç › Ekipmanlar: Tümü / Mekanik / Elektrik için Al · Çıkar (işi yoksa soluk).
+  Kararlar 1–8 maketin "Kararlar" sekmesinde, önerisiyle; değişmeyen: raporlu ekipman silinmez, pasif kalır. Ölçüm: yerel dosya sunucusunda 1920 / 1080 /
+  800 / 375 px, açık + koyu; hücre taşması 0, yatay kaydırma 0; süzgeç, sıralama, seçim, silme penceresi, tarih seçenekleri, toplu Al / Çıkar denendi. Kod yok.
 - 2026-11-02 (V21 YEDİNCİ KOŞU — reisim: "testi yaptım bir bak bakalım koşuya"; salt okunur ölçüm say_istek / yz_konusma / denetim_izi; P-1126-004, YENİ tesis):
   **hedeflerin hepsi tuttu** — 6 istek (hazırlık + 3 büyütme · ekle · aç · yaz · denetle · bildirim) · 2 dk 22 sn · **0,0331 $** (6. koşu 0,0527; yazma %48,
   çıkış %44) · en büyük istem 79,3 bin (hizmet temizlemesi girmedi) · önbelleğe yazılan 79 bin · **önbellek kırılması 0** · 8 ekipman ✓ (7 çift + etiketsiz lift
