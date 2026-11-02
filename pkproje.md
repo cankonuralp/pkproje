@@ -2534,7 +2534,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   türü, Müşteri, Muayene uzmanı, Branş, İl, İlçe (ile bağlı), Sonuç seçerek; Tarih aralığı hazır seçenekli (Yıl seçicisi içine girer) — · "n süzgeç" rozeti ·
   başlıktan sıralama (açılışta en yeni üstte; telefonda Sıralama kutusu) · ayrı Tarih ve Muayene uzmanı sütunları · toplu seçim (çubuk: PDF indir · Sil ·
   Seçimi kaldır; Sil yalnız kişinin kendi Yeni raporu, ötekiler pencerede nedeniyle) · Toplu indir (süzgece uyanlar, en çok 300 rapor / 500 MB). Plan içi
-  raporlar aynı tanımdan (Tür, Uzman, Branş, Sonuç; sıralama, seçim). Plan aç › Ekipmanlar: Tümü / Mekanik / Elektrik için Al · Çıkar (işi yoksa soluk).
+  raporlar aynı tanımdan (Tür, Uzman, Branş, Sonuç; sıralama, seçim). Plan aç › Ekipmanlar: Tümü / Mekanik / Elektrik için Al · Çıkar (işi yoksa soluk);
+  2. tur (reisim: "plan aç ekipmanlarda yanında seçme kutucuğu olsun, seçilebilsin oradan"): her ekipmanda seçme kutusu + "Tümünü seç", seçilenler alttaki
+  çubuktan Plana al / Çıkar. Aynı gün reisim'in belgesine her notun yanına yapılan iş mavi eğik parantezle yazıldı (önceki hâli yerel/yedek/).
   Kararlar 1–8 maketin "Kararlar" sekmesinde, önerisiyle; değişmeyen: raporlu ekipman silinmez, pasif kalır. Ölçüm: yerel dosya sunucusunda 1920 / 1080 /
   800 / 375 px, açık + koyu; hücre taşması 0, yatay kaydırma 0; süzgeç, sıralama, seçim, silme penceresi, tarih seçenekleri, toplu Al / Çıkar denendi. Kod yok.
 - 2026-11-02 (V21 YEDİNCİ KOŞU — reisim: "testi yaptım bir bak bakalım koşuya"; salt okunur ölçüm say_istek / yz_konusma / denetim_izi; P-1126-004, YENİ tesis):
