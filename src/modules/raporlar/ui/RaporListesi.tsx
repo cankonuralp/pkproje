@@ -114,7 +114,7 @@ export function RaporListesi({ ilk, imza, imzaGor }: { ilk: SunucuListe<RaporLis
   };
 
   const sutunlar: Sutun<RaporListeSatiri>[] = [
-    { k: "sec", genislik: "52px", baslik: "Seç", kart: "govde", sira: 0, siralanmaz: true,
+    { k: "sec", genislik: "60px", baslik: "Seç", kart: "govde", sira: 0, siralanmaz: true,
       basHucre: <SayfaKutusu hepsi={sayfaHepsi} bazi={sayfaBazi} ad="Bu sayfadaki raporların hepsini seç" degistir={(ac) => sec.sayfa(gorunen, ac)} />,
       hucre: (r) => <SecimKutusu secili={sec.secili.has(r.id)} ad={r.no} degistir={(ac) => sec.sec(r, ac)} /> },
     { k: "no", genislik: "14%", baslik: "Rapor no", kart: "ust", sira: 1, hucre: (r) => <Link className={stil.no} href={`/raporlar/${r.id}`}>{r.no}</Link> },

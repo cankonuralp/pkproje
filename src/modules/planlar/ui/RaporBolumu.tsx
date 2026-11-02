@@ -117,7 +117,7 @@ export function RaporBolumu({ v }: { v: PlanIci }) {
   }
 
   const sutunlar: Sutun<Rapor>[] = [
-    { k: "sec", genislik: "52px", baslik: "Seç", kart: "govde", sira: 0, siralanmaz: true,
+    { k: "sec", genislik: "60px", baslik: "Seç", kart: "govde", sira: 0, siralanmaz: true,
       basHucre: <SayfaKutusu hepsi={gorunen.length > 0 && gorunen.every((r) => sec.secili.has(r.id))} bazi={gorunen.some((r) => sec.secili.has(r.id))}
         ad="Bu sayfadaki raporların hepsini seç" degistir={(ac) => sec.sayfa(gorunen, ac)} />,
       hucre: (r) => <SecimKutusu secili={sec.secili.has(r.id)} ad={r.no} degistir={(ac) => sec.sec(r, ac)} /> },
