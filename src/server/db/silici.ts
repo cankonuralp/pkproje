@@ -46,7 +46,8 @@ export const SILINEBILIR = {
   /* 364: planı, ekipmanı, sözleşmesi, etkin İSG ID'si, teklifi, giriş kapsamı olmayan tesis; kaldırılmış İSG kayıtları birlikte (0060) */
   tesis: {
     kullanim: "tesis_kullanim", sil: "tesis_sil",
-    fk: { kullanim: ["ekipman.tesis_id", "is_sozlesmesi_tesis.tesis_id", "plan.tesis_id", "teklif_tesis.tesis_id"], birlikte: ["isg_katip.tesis_id"] },
+    /* 2026-11-02 (göç 0115): ekipman kodu geçmişi tesise bağlı — kaydı olan tesis kullanılmıştır (ekipmanı silinmeden kodu da silinmez) */
+    fk: { kullanim: ["ekipman.tesis_id", "ekipman_kodu.tesis_id", "is_sozlesmesi_tesis.tesis_id", "plan.tesis_id", "teklif_tesis.tesis_id"], birlikte: ["isg_katip.tesis_id"] },
   },
   /* 364: sözleşmesi, teklifi, faturası, girilmiş müşteri girişi, tesislerinde plan / ekipman / etkin İSG ID'si olmayan müşteri; tesisleri ve hiç
      girilmemiş girişleri birlikte (karar 48 kullanılmış müşteri için geçerli; 0060) */

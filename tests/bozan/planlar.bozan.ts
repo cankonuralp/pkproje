@@ -13,6 +13,8 @@ import { testKumesi } from "../yardimci/kume.ts";
 import { supabaseBenzeri, type SupabaseBenzeri } from "../yardimci/supabase.ts";
 
 const KOD = "CREATE OR REPLACE TRIGGER ekipman_kodu_kaydet AFTER INSERT OR UPDATE OF kod ON ekipman FOR EACH ROW EXECUTE FUNCTION ekipman_kodu_kaydet();";
+/* 2026-11-02 (göç 0115): tetik tesis kapsamıyla yeniden kurulur — bozan onu da çıkarır */
+const KOD_0115 = "CREATE TRIGGER ekipman_kodu_kaydet AFTER INSERT OR UPDATE OF kod, tesis_id ON ekipman FOR EACH ROW EXECUTE FUNCTION ekipman_kodu_kaydet();";
 const NO = "CREATE OR REPLACE TRIGGER plan_no_degismez BEFORE UPDATE ON plan FOR EACH ROW EXECUTE FUNCTION plan_no_degismez();";
 let kume: GomuluKume;
 let supa: SupabaseBenzeri;
@@ -30,6 +32,10 @@ before(async () => {
       const k = readFileSync(join(GOC_KLASORU, ad), "utf8");
       assert.ok(k.includes(KOD) && k.includes(NO), "bozulacak satırlar kaynakta yok");
       writeFileSync(join(klasor, ad), k.replace(KOD, "").replace(NO, ""));
+    } else if (ad.startsWith("0115_")) {
+      const k = readFileSync(join(GOC_KLASORU, ad), "utf8");
+      assert.ok(k.includes(KOD_0115), "bozulacak satır 0115'te yok");
+      writeFileSync(join(klasor, ad), k.replace(KOD_0115, ""));
     } else copyFileSync(join(GOC_KLASORU, ad), join(klasor, ad));
   }
   supa = await supabaseBenzeri(kume, "plan_bozuk", klasor);

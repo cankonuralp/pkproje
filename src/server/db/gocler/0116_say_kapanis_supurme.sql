@@ -138,7 +138,7 @@ REVOKE EXECUTE ON FUNCTION say_kapanis_firma(integer) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION say_kapanis_firma(integer) TO probata_uygulama;
 
 -- zamanlayıcı: pg_cron varsa (Supabase) 10 dakikada bir; yoksa (gömülü PostgreSQL) atlanır
-DO $cron$ BEGIN
+DO $$ BEGIN
   IF EXISTS (SELECT 1 FROM pg_available_extensions WHERE name = 'pg_cron') THEN
     BEGIN
       CREATE EXTENSION IF NOT EXISTS pg_cron WITH SCHEMA pg_catalog;
@@ -147,4 +147,4 @@ DO $cron$ BEGIN
       RAISE NOTICE 'pg_cron kurulamadı (%); süpürme uygulamanın açılış ve gece işiyle sürer', SQLERRM;
     END;
   END IF;
-END $cron$;
+END $$;

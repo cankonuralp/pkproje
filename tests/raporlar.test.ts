@@ -726,7 +726,8 @@ test("kaydet ve kopyala: yalnız yazan; Yeni rapor önce kaydedilir; yeni ekipma
   assert.equal(kodHatasi(await kopyala(FA.den1, r.id, 2, { kod: "", konum: null }, kayit)), "Etiketteki kodu yazın: harf, rakam ve tire. Kod tesiste eşsiz olmalı.");
   assert.equal(kodHatasi(await kopyala(FA.den1, r.id, 2, { kod: "a b", konum: null }, kayit)), "Kod 3 ile 20 hane arasında olmalı.");
   assert.match(kodHatasi(await kopyala(FA.den1, r.id, 2, { kod: "ht-a2", konum: null }, kayit)), /^HT-A2 bu planda zaten var/);
-  assert.match(kodHatasi(await kopyala(FA.den1, r.id, 2, { kod: "HT-B1", konum: null }, kayit)), /^HT-B1 başka bir tesiste kayıtlı/);
+  /* 2026-11-02 (göç 0115): başka tesisin kodu (HT-B1) artık serbest; sıfır sayı bölümü reddedilir */
+  assert.match(kodHatasi(await kopyala(FA.den1, r.id, 2, { kod: "HT-0", konum: null }, kayit)), /sayı bölümü 0 olamaz/);
   assert.equal((await sr(FA.den1, r.id))!.surum, 2, "engel varken rapor kaydedilmedi");
   /* yetki sunucuda: başka denetçi görmez, branş yöneticisi ve planlama görür ama kopyalamaz, başka firma yok */
   assert.equal((await kopyala(FA.den2, r.id, 2, { kod: "HT-K1", konum: null })).durum, "yok");

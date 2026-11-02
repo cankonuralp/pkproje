@@ -280,6 +280,10 @@ test("444 plan aç: elle ekipman tesise kaydedilir ve plana girer; kod denetimi;
     [{ kod: "HT-ELLE-1", konum: "Kazan dairesi", sonradan: false }, { kod: "HT-ELLE-2", konum: null, sonradan: false }]);
   assert.deepEqual((await sql<{ kod: string }>(A, "SELECT kod FROM ekipman WHERE tesis_id = $1 ORDER BY kod", [FA.tesis2])).rows.map((x) => x.kod),
     [...tesisteki, "HT-ELLE-1", "HT-ELLE-2"].sort(), "tesise kalıcı kayıt");
+  /* 2026-11-02 (göç 0115 — reisim: "tesise göre değişsin kodlar"): başka tesisin kodu bu tesiste serbest — aynı kod iki tesiste */
+  const g3 = tamam(await a(FA.plan, (db) => planAc(db, depo, FA.plan, A, { ...temel, tesis: FA.tesis, yeniEkipman: [{ tur: FA.tur, kod: "HT-ELLE-2" }] })));
+  assert.equal((await sql<{ n: string }>(A, "SELECT count(*)::text AS n FROM ekipman WHERE kod = 'HT-ELLE-2'")).rows[0].n, "2", "aynı kod iki tesiste");
+  assert.ok(g3.id);
   /* hatalar: plan açılmaz, ekipman yazılmaz */
   const say = async () => Number((await sql<{ n: string }>(A, "SELECT (SELECT count(*) FROM plan) + (SELECT count(*) FROM ekipman) AS n")).rows[0].n);
   const once = await say();
@@ -287,8 +291,6 @@ test("444 plan aç: elle ekipman tesise kaydedilir ve plana girer; kod denetimi;
   assert.equal(g1.durum === "gecersiz" && g1.hatalar["yeniEkipman.1.kod"], "HT-YENI-9 listede iki kez yazılmış.");
   const g2 = await ac([{ tur: FA.tur, kod: "HT-ELLE-1" }]);
   assert.equal(g2.durum === "gecersiz" && g2.hatalar["yeniEkipman.0.kod"], "HT-ELLE-1 bu tesiste kayıtlı; zaten plana girer.");
-  const g3 = await a(FA.plan, (db) => planAc(db, depo, FA.plan, A, { ...temel, tesis: FA.tesis, yeniEkipman: [{ tur: FA.tur, kod: "HT-ELLE-2" }] }));
-  assert.equal(g3.durum === "gecersiz" && g3.hatalar["yeniEkipman.0.kod"], "HT-ELLE-2 başka bir tesiste kayıtlı; aynı kod iki ekipmana verilemez.");
   const g4 = await ac([{ tur: "00000000-0000-4000-8000-000000000000", kod: "HT-YENI-8" }, { tur: FA.tur, kod: "ç" }]);
   assert.equal(g4.durum, "gecersiz");
   assert.ok(g4.durum === "gecersiz" && g4.hatalar["yeniEkipman.1.kod"], JSON.stringify(g4));

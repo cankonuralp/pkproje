@@ -239,17 +239,18 @@ test("ekipman: kod denetimi (biçim · bu planda · tesiste kayıtlı · başka 
 
 /* 2026-10-26 (S.A.Y Faz 2 — reisim: "rapor oluşturturken ekipman ekleme işini kendisi otomatik yapabilsin", "kodu otomatik kendisi verecek ekipmanın
    sabit kodu + 0-1-2 sayılar sırasıyla gidecek") */
-test("S.A.Y ekipman ekler: kod verilmezse türün kodu + tire + sıradaki boş sayı (şu anki ve eski kodlar atlanır); çok ekipman tek işlemde; kural yeniEkipman'ın", async () => {
-  const id = await yeniPlan(FA, A);
+test("S.A.Y ekipman ekler: kod verilmezse türün kodu + tire + sıradaki boş sayı (TESİSİN şu anki ve eski kodları atlanır); çok ekipman tek işlemde; kural yeniEkipman'ın", async () => {
+  /* 2026-11-02 (göç 0115): numara tesisin kodlarından — plan tesis2'de, HT-0 / HT-1 orada */
+  const id = await yeniPlan(FA, A, FA.tesis2);
   const v = (await ici(FA.den1, id))!;
   tamam(await a(FA.den1, (db) => planKabul(db, FA.den1, id, v.surum, true)));
   await sql(A, "INSERT INTO ekipman (tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, 'HT-0', 'x'), ($1, $2, 'HT-1', 'x')", [FA.tesis2, FA.tur]);
-  await sql(A, "UPDATE ekipman SET kod = 'HT-1X' WHERE kod = 'HT-1'");   /* HT-1 artık eski kod — başkasına verilmez */
+  await sql(A, "UPDATE ekipman SET kod = 'HT-1X' WHERE kod = 'HT-1'");   /* HT-1 artık eski kod — aynı tesiste başkasına verilmez */
   const r = await a(FA.den1, (db) => sayEkipmanlarEkle(db, FA.den1, id, [
-    { tur: FA.tur, konum: "Kazan dairesi" }, { tur: FA.tur, kod: "" }, { tur: FA.tur, kod: "HT-A1" }, { tur: "x" }, { tur: FA.tur, kod: "HT-2" }]));
+    { tur: FA.tur, konum: "Kazan dairesi" }, { tur: FA.tur, kod: "" }, { tur: FA.tur, kod: "HT-B9" }, { tur: "x" }, { tur: FA.tur, kod: "HT-2" }]));
   assert.equal(r.durum, "tamam", JSON.stringify(r));
   if (r.durum !== "tamam") return;
-  assert.deepEqual(r.eklenen.map((x) => [x.sira, x.kod]), [[1, "HT-2"], [2, "HT-3"]], "HT-0 kullanılıyor, HT-1 eski kod");
+  assert.deepEqual(r.eklenen.map((x) => [x.sira, x.kod]), [[1, "HT-2"], [2, "HT-3"]], "HT-0 kullanılıyor, HT-1 eski kod (aynı tesis)");
   assert.deepEqual(r.eklenemeyen.map((x) => x.sira), [3, 4, 5], "planda olan, türü olmayan ve az önce verilen kod eklenmez");
   const e = (await ici(FA.den1, id))!.ekipman.filter((x) => x.sonradan).map((x) => [x.kod, x.konum]).sort();
   assert.deepEqual(e, [["HT-2", "Kazan dairesi"], ["HT-3", null]]);
