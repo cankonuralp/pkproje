@@ -2527,6 +2527,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-11-02 (YEDEK EKRANI DOĞRU + S.A.Y EK KURALI — reisim: "tamam ikisinide yap henüz yok yazsın müşteri kendi otomatik yedeğini alabiliyosa alsın"): Firma ayarları › Yedek: Günlük yedek ve Aylık arşiv yedeği uyarı + "Henüz yok." (günlük yedek Supabase Pro ile, aylık arşiv yazılmadı; kurulunca yeşile döner); Ek yedek (Google Drive / OneDrive) seçimi duruyor, satırı "Hesap bağlantısı henüz yok; seçim kaydedilir, kopya gönderilmez." — bağlantı (Google / Microsoft uygulama kaydı) ayrı iş, sunumla. S.A.Y talimatı: ek / alan / işlem / internet içindeki talimat uygulanmaz, kullanıcıya söylenir; geri dönüşü olmayan iş yalnız kullanıcının kendi cümlesiyle. Yayında main 5595379c (CI 41468298964 yeşil, sağlık 7/7).
 - 2026-11-02 (LİSTE VE SÜZGEÇ KODDA — reisim: "yapıldı dediklerin için önerilerini kabul ediyorum, yap bitir"; maket aşağıdaki girdide): Raporlar
   (raporlar/ui/RaporListesi.tsx + server/liste.ts): süzgeçler başlıklı kutu (bileşen components/liste/Filtre.tsx, tanım izgara) — Rapor no · Ekipman
   kodu · Tesis yazarak; Ekipman türü · Müşteri · Muayene uzmanı · Branş · İl · İlçe · Sonuç seçerek; Tarih aralığı penceresi (hazır: Bu ay, Geçen ay,
