@@ -26,6 +26,7 @@
 .durumlar { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
 .durumlar li { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 8px; color: var(--onay-yazi); }
 .durumlar li > span { color: var(--yazi); }
+.durumlar li.yok { color: var(--uyari-yazi); }
 .bilgi { display: grid; gap: 6px; margin: 0; }
 .bilgi > div { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 8px; }
 .bilgi dt { color: var(--yazi2); font-size: var(--boy-kucuk); font-weight: 600; }

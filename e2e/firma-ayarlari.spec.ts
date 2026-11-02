@@ -108,6 +108,9 @@ test("firma ayarları: paneller ve pencere; kaydet, geçersiz değer, kayma yok,
   const yedek = await ac(page, "yedek", "Yedek");
   await expect(yedek.getByText("Günlük yedek", { exact: true })).toBeVisible();
   await expect(yedek.getByText("Aylık arşiv yedeği", { exact: true })).toBeVisible();
+  /* 2026-11-02 (reisim: "henüz yok yazsın"): kurulmamış yedek yeşil görünmez */
+  await expect(yedek.getByText("Henüz yok.", { exact: true })).toHaveCount(2);
+  await expect(yedek.getByText(/son 7 güne/)).toHaveCount(0);
   await expect(yedek.getByRole("radio", { name: "Kapalı" })).toHaveAttribute("aria-checked", "true");
   await expect(yedek.getByLabel("Ana klasör")).toBeDisabled();
   const yOnce = (await yedek.boundingBox())!.height;

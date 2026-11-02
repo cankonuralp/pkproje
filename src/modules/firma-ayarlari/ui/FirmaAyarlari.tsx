@@ -73,7 +73,7 @@ function ozet(k: PanelAdi, v: Veri): { metin: string; durum?: string } {
     case "fiyat": { const bos = v.fiyat.turler.filter((t) => t.fiyat === null).length;
       return { metin: `${v.fiyat.turler.length} ekipman türü${bos ? ` · ${bos} fiyatsız` : ""}`, durum: bos ? "Fiyatsız tür var" : undefined }; }
     case "sabit": return { metin: `${v.sabit.deger.kalemler.length} kalem · aylık ${para(v.sabit.deger.kalemler.reduce((n, x) => n + x.aylik, 0))} TL` };
-    case "yedek": return { metin: `Günlük + aylık yedek · ek yedek ${BULUT_AD[v.bulut.deger.saglayici]}` };
+    case "yedek": return { metin: `Günlük + aylık yedek henüz yok · ek yedek ${BULUT_AD[v.bulut.deger.saglayici]}`, durum: "Henüz yok" };
     case "depolama": return { metin: `Deneme projesi · ${v.depolama.dosya.toLocaleString("tr-TR")} dosya · ${megabayt(v.depolama.bayt)} MB` };
     case "saklama": return { metin: `${v.saklama.deger.yil} yıl${v.saklama.deger.yil === 5 ? " (yasal en az)" : ""}` };
     case "eposta": { const g = v.eposta.gonderim, hazir = !!g && g.dogrulandi && g.anahtar;
@@ -464,8 +464,10 @@ function MusteriBelgeleri({ v }: { v: Veri }) {
 }
 
 /* ── YEDEK (544; maket 539 "Yedek" — reisim: "raporların ikinci kopyası değil yedek olarak görülmeli"): günlük ve aylık yedek kendiliğinden (ayar yok);
+   2026-11-02 (reisim: "henüz yok yazsın"): günlük yedek Supabase Pro'da, aylık arşiv yazılmadı → ikisi "Henüz yok." (uyarı); kurulunca yeşile döner.
    EK YEDEK (eski "Raporların ikinci kopyası", 336 / sunum D3): Kapalı · Google Drive · OneDrive — imzalı raporların bir kopyası firmanın kendi
-   bulutunda. Seçim alan açıp kapatmaz: kapalıyken ana klasör ve düzen soluk. Hesap bağlantısı yayına çıkışta (K7); ayarlar şimdiden kaydedilir. ── */
+   bulutunda. Seçim alan açıp kapatmaz: kapalıyken ana klasör ve düzen soluk. Hesap bağlantısı yayına çıkışta (K7); ayarlar şimdiden kaydedilir,
+   üçüncü satır kopyanın henüz gitmediğini söyler. ── */
 const BID = { d: "w-ay-bulut-d", kok: "w-ay-bulut-kok" } as const;
 function Yedek({ v }: { v: Veri }) {
   const s = useKesim("bulut", v.bulut.deger, v.bulut.surum);
@@ -473,8 +475,9 @@ function Yedek({ v }: { v: Veri }) {
   return (
     <Kart yaz={v.yaz} kirli={s.kirli} mesgul={s.mesgul} kaydet={s.kaydet}>
       <ul className={stil.durumlar}>
-        <li><Ikon ad="circle-check" kucuk /><span><b>Günlük yedek</b><span className={stil.altSatir}>Her gün kendiliğinden; son 7 güne dönülebilir.</span></span></li>
-        <li><Ikon ad="circle-check" kucuk /><span><b>Aylık arşiv yedeği</b><span className={stil.altSatir}>Her ayın 1&apos;i; saklama süresi ({v.saklama.deger.yil} yıl) boyunca durur.</span></span></li>
+        <li className={stil.yok}><Ikon ad="triangle-alert" kucuk /><span><b>Günlük yedek</b><span className={stil.altSatir}>Henüz yok.</span></span></li>
+        <li className={stil.yok}><Ikon ad="triangle-alert" kucuk /><span><b>Aylık arşiv yedeği</b><span className={stil.altSatir}>Henüz yok.</span></span></li>
+        <li className={stil.yok}><Ikon ad="triangle-alert" kucuk /><span><b>Ek yedek</b><span className={stil.altSatir}>Hesap bağlantısı henüz yok; seçim kaydedilir, kopya gönderilmez.</span></span></li>
       </ul>
       <Segment ad="Ek yedek (imzalı raporların bir kopyası)" deger={s.d.saglayici} kapali={!v.yaz}
         secenekler={[["", "Kapalı"], ["gdrive", "Google Drive"], ["onedrive", "OneDrive"]] as const} degistir={(x) => s.setD({ ...s.d, saglayici: x })} />
