@@ -36,6 +36,23 @@ test("plan aç: engel, canlı uyarılar, proje no ve künye; denetçi yalnız ke
   await expect(tesisteki.getByText("bu plana alınmayacak", { exact: false })).toBeVisible();
   await page.getByRole("button", { name: "Çıkarılanları geri al (1)" }).click();
   await expect(page.getByText("2 ekipman · 1 tür plana girer")).toBeVisible();
+  /* 2026-11-02 (liste maketi — reisim "Elektrik mekanik tümünü ekle çıkar", "yanında seçme kutucuğu olsun"): Mekanik toplu çıkar / Tümü al; tesiste
+     elektrik ekipman yok → Elektrik grubu yok; seçilen ekipman toplu çıkar */
+  const mekanik = page.getByRole("group", { name: "Mekanik ekipmanlar" });
+  await mekanik.getByRole("button", { name: "Çıkar", exact: true }).click();
+  await expect(page.getByText("Tesiste kayıtlı ekipman (0 / 2).")).toBeVisible();
+  await expect(mekanik.getByRole("button", { name: "Çıkar", exact: true })).toBeDisabled();
+  await expect(page.getByRole("group", { name: "Elektrik ekipmanlar" })).toHaveCount(0);
+  await page.getByRole("group", { name: "Tümü ekipmanlar" }).getByRole("button", { name: "Al", exact: true }).click();
+  await expect(page.getByText("2 ekipman · 1 tür plana girer")).toBeVisible();
+  await tesisteki.getByRole("checkbox").first().check();
+  const secim = page.getByRole("group", { name: "Ekipman seçimi" });
+  await expect(secim).toContainText("1 seçili");
+  await secim.getByRole("button", { name: "Çıkar", exact: true }).click();
+  await expect(page.getByText("1 ekipman · 1 tür plana girer · 1 çıkarıldı")).toBeVisible();
+  await expect(secim).not.toContainText("seçili");
+  await page.getByRole("button", { name: "Çıkarılanları geri al (1)" }).click();
+  await expect(page.getByText("2 ekipman · 1 tür plana girer")).toBeVisible();
   await page.getByRole("checkbox", { name: denetci }).check();
   await expect(page.getByText(`${denetci} — uyarı: İSG-KATİP SÖZLEŞME ID'si yok · EKİPNET kayıt numarası yok.`)).toBeVisible();
   await expect(page.getByText("Hava tankı: ekipte bu türe atanmış denetçi yok (Personel › Ekipman atamaları).")).toBeVisible();

@@ -1,6 +1,6 @@
 /* OLUMSUZ KANIT — süzgeç mantığı kilidi (tests/suzgec.test.ts) gerçekten yakalıyor mu. Kaynak diskte DEĞİŞTİRİLMEZ (anayasa 13.11):
    src/components/liste/suzgec.ts bellekte okunur, bozulur, geçici klasöre yazılıp içe aktarılır; bozuk sürüm kilidin denetlediği
-   davranışı kaybetmeli. K0 (2026-10-03). */
+   davranışı kaybetmeli. K0 (2026-10-03). 2026-11-02: 4–5 tarih aralığı. */
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -44,4 +44,21 @@ test("Temizle: görünüm anahtarını da sıfırlayınca yakalanır", async () 
   const m = await bozuk("if (x.siralama || x.bas) y.sec[x.k] = d.sec[x.k];", "void x;");
   const d = { ...m.yeniDurum(tanim), sec: { g: "hepsi" } };
   assert.notEqual(m.temizle(tanim, d).sec.g, "hepsi");
+});
+
+interface G { gun: string }
+const GUNLER: G[] = [{ gun: "2026-10-31" }, { gun: "2026-11-01" }, { gun: "2026-11-30" }, { gun: "2026-12-01" }];
+const tarihTanim = { ad: "", ipucu: "", birim: "rapor", imkansiz: "", metin: () => "", cipler: [], seciciler: [], tarih: { ad: "", gun: (g: G) => g.gun } };
+
+test("4. tarih aralığı: uç gün dışarıda kalınca (< yerine <=) kilit yakalar", async () => {
+  const m = await bozuk("if ((d.tarih.bas && g < d.tarih.bas) || (d.tarih.bit && g > d.tarih.bit)) return false;",
+    "if ((d.tarih.bas && g <= d.tarih.bas) || (d.tarih.bit && g >= d.tarih.bit)) return false;");
+  const d = { ...m.yeniDurum(tarihTanim), tarih: { bas: "2026-11-01", bit: "2026-11-30" } };
+  assert.equal(m.listele(tarihTanim, d, GUNLER).adet, 0, "bozuk: iki uç da düşer (kilit 2 bekler)");
+});
+
+test("5. hazır aralık: geçen ayın sonu yanlış hesaplanınca kilit yakalar", async () => {
+  const m = await bozuk(`{ k: "gecen-ay", ad: "Geçen ay", bas: g(y, a - 1, 1), bit: g(y, a, 0) }`, `{ k: "gecen-ay", ad: "Geçen ay", bas: g(y, a - 1, 1), bit: g(y, a - 1, 30) }`);
+  const x = m.hazirAraliklar("2026-11-02").find((h) => h.k === "gecen-ay")!;
+  assert.notEqual(x.bit, "2026-10-31", "bozuk: ekim 30'da biter");
 });

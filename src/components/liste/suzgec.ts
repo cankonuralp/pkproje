@@ -3,7 +3,9 @@
    · alan alan arama kutuları varsa genel arama yok (pkproje §3.8 kural 6);
    · çip sayıları çipler HARİÇ her şey uygulanmış listeden (dürüst sayaç, anayasa 2.8);
    · aynı gruptan iki çip "ve" ile seçilince sonuç imkânsızdır, sebebi söylenir (kalıp 8);
-   · başlangıç değeri (bas) taşıyan seçici GÖRÜNÜM ANAHTARIDIR, sıralama da süzgeç değildir: ikisi sayılmaz, Temizle onları sıfırlamaz. */
+   · başlangıç değeri (bas) taşıyan seçici GÖRÜNÜM ANAHTARIDIR, sıralama da süzgeç değildir: ikisi sayılmaz, Temizle onları sıfırlamaz;
+   · 2026-11-02 (liste maketi, reisim "filtrelemeler daha detaylı olmalı"): tarih aralığı — başlangıç ve bitiş günü (ikisi de dahil, biri boş olabilir);
+     izgara: seçiciler de alan aramaları gibi başlıklı kutu (örnek ekran düzeni). */
 
 export type Secenek = readonly [deger: string, etiket: string];
 
@@ -38,7 +40,14 @@ export interface SuzgecTanimi<K> {
   siraAnahtari?: Record<string, (kayit: K) => string | number>;
   /** "varsayilan" sıralama (verilmezse kayıt sırası) */
   varsayilanSira?: (a: K, b: K) => number;
+  /** tarih aralığı süzgeci: kaydın günü ("YYYY-MM-DD") ve kutunun adı */
+  tarih?: { ad: string; gun: (kayit: K) => string };
+  /** seçiciler alan aramalarıyla aynı ızgarada başlıklı kutu (telefonda da; levha yok) */
+  izgara?: boolean;
 }
+
+/** tarih aralığı: "YYYY-MM-DD" ya da boş */
+export interface TarihAraligi { bas: string; bit: string }
 
 export interface SuzgecDurumu {
   ara: string;
@@ -47,6 +56,8 @@ export interface SuzgecDurumu {
   sec: Record<string, string>;
   sayfa: number;
   alan: Record<string, string>;
+  /** tarih aralığı (tanımda tarih varsa) */
+  tarih?: TarihAraligi;
 }
 
 export const tr = (s: string) => String(s).toLocaleLowerCase("tr");
@@ -56,7 +67,7 @@ export function yeniDurum<K>(t: SuzgecTanimi<K>): SuzgecDurumu {
   for (const x of t.seciciler) sec[x.k] = x.siralama ? "varsayilan" : x.bas ?? "tumu";
   const alan: Record<string, string> = {};
   for (const x of t.alanlar ?? []) alan[x.k] = "";
-  return { ara: "", secili: [], kip: "veya", sec, sayfa: 1, alan };
+  return { ara: "", secili: [], kip: "veya", sec, sayfa: 1, alan, ...(t.tarih ? { tarih: { bas: "", bit: "" } } : {}) };
 }
 
 /** Temizle: sıralama ve görünüm anahtarı kalır, gerisi başa döner */
@@ -69,10 +80,12 @@ export function temizle<K>(t: SuzgecTanimi<K>, d: SuzgecDurumu): SuzgecDurumu {
 export const aktifSecici = <K>(t: SuzgecTanimi<K>, d: SuzgecDurumu) =>
   t.seciciler.filter((x) => !x.siralama && !x.bas && d.sec[x.k] !== "tumu").length;
 const alanSay = (d: SuzgecDurumu) => Object.values(d.alan).filter((v) => v.trim()).length;
+/** tarih aralığı uygulanıyor mu (biri yazılıysa) */
+export const tarihVar = (d: SuzgecDurumu) => !!(d.tarih?.bas || d.tarih?.bit);
 
 /** uygulanan süzgeç sayısı (kutunun başlığında "N filtre uygulandı") */
 export const uygulanan = <K>(t: SuzgecTanimi<K>, d: SuzgecDurumu) =>
-  (d.ara.trim() ? 1 : 0) + d.secili.length + aktifSecici(t, d) + alanSay(d);
+  (d.ara.trim() ? 1 : 0) + d.secili.length + aktifSecici(t, d) + alanSay(d) + (t.tarih && tarihVar(d) ? 1 : 0);
 export const suzgecVar = <K>(t: SuzgecTanimi<K>, d: SuzgecDurumu) => uygulanan(t, d) > 0;
 
 /** çipler HARİÇ her şey uygulanmış liste — çip sayıları buradan */
@@ -83,6 +96,10 @@ export function taban<K>(t: SuzgecTanimi<K>, d: SuzgecDurumu, kayitlar: readonly
     for (const x of t.alanlar ?? []) {
       const v = tr((d.alan[x.k] ?? "").trim());
       if (v && !tr(x.metin(k)).includes(v)) return false;
+    }
+    if (t.tarih && d.tarih) {
+      const g = t.tarih.gun(k);
+      if ((d.tarih.bas && g < d.tarih.bas) || (d.tarih.bit && g > d.tarih.bit)) return false;
     }
     return t.seciciler.every((x) => x.gecer(k, d.sec[x.k]));
   });
@@ -186,4 +203,18 @@ export function sayfaOgeleri(n: number, sayfa: number): SayfaOgesi[] {
     else if (goster(i - 1)) sonuc.push({ tur: "ara", no: i });
   }
   return sonuc;
+}
+
+/** tarih aralığının hazır seçenekleri (bugün "YYYY-MM-DD"; İstanbul günü çağırandan): Bu ay · Geçen ay · Son 3 ay · Bu yıl · Geçen yıl */
+export function hazirAraliklar(bugun: string): { k: string; ad: string; bas: string; bit: string }[] {
+  const [y, a] = [Number(bugun.slice(0, 4)), Number(bugun.slice(5, 7))];
+  const g = (yil: number, ay: number, gun: number) => new Date(Date.UTC(yil, ay - 1, gun)).toISOString().slice(0, 10);
+  const geri = new Date(Date.parse(`${bugun}T00:00:00Z`)); geri.setUTCMonth(geri.getUTCMonth() - 3);
+  return [
+    { k: "bu-ay", ad: "Bu ay", bas: g(y, a, 1), bit: g(y, a + 1, 0) },
+    { k: "gecen-ay", ad: "Geçen ay", bas: g(y, a - 1, 1), bit: g(y, a, 0) },
+    { k: "son-3", ad: "Son 3 ay", bas: geri.toISOString().slice(0, 10), bit: bugun },
+    { k: "bu-yil", ad: "Bu yıl", bas: g(y, 1, 1), bit: g(y, 12, 31) },
+    { k: "gecen-yil", ad: "Geçen yıl", bas: g(y - 1, 1, 1), bit: g(y - 1, 12, 31) },
+  ];
 }

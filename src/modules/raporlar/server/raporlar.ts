@@ -1386,7 +1386,8 @@ export async function teknikImzaliEslestirYukle(db: Sorgulayici, depo: Depo, kim
 
 /* ── RAPORLAR LİSTESİ (modül 14 ana sayfası; maket raporlar.html #/ — 318) ─────────────────────────────────────────────────────────────── */
 /** listede bir rapor: yazan hesabın kimliği gitmez; benim = isteyenin yazdığı; geri = Yeni'ye geri dönmüş (geri gönderilen ya da revizeye gönderilen) */
-export type RaporListeSatiri = Omit<RaporOzeti, "hesapId"> & { benim: boolean; geri: boolean };
+/** imzaliDosya (2026-11-02, toplu indirme): tamamlanan raporun imzalı PDF'i — yalnız sunucuda sayfalı listede (raporSayfasi) dolu */
+export type RaporListeSatiri = Omit<RaporOzeti, "hesapId"> & { benim: boolean; geri: boolean; imzaliDosya?: string | null };
 /** görebildiği raporlar (denetçi kendi, branş yöneticisi branşı, planlama ve firma yöneticisi hepsi); en yeni üstte. Göremeyene null. */
 export async function raporListesi(db: Sorgulayici, kim: Kisi): Promise<RaporListeSatiri[] | null> {
   if (duzey(kim, MODUL) === "yok") return null;

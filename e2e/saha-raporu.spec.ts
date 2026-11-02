@@ -338,6 +338,18 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await expect(page.getByRole("link", { name: raporNo }).first()).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText("Muayene uzmanı imzası", { exact: true }).filter({ visible: true }).first()).toBeVisible();   // listede durum rozeti (aşama çizgisi rapor ekranında)
   await expect(page.getByText(/\d+ rapor imzanızı bekliyor/).first()).toBeVisible();
+  /* 2026-11-02 (liste maketi — reisim "seç sil toplu sil vs yok raporlar için"): seçim çubuğu; onaylanmış rapor silinmez (uyarı, rapor yerinde);
+     Toplu indir süzgece uyan tek raporu PDF olarak indirir (imzasız belge) */
+  await page.getByRole("checkbox", { name: `${raporNo} seç` }).check();
+  const secimCubugu = page.getByRole("region", { name: "Seçilen raporlar" });
+  await expect(secimCubugu).toContainText("1 rapor seçili");
+  await secimCubugu.getByRole("button", { name: "Sil", exact: true }).click();
+  await expect(page.getByText("Seçilenlerin hiçbiri silinemez", { exact: false })).toBeVisible();
+  await secimCubugu.getByRole("button", { name: "Seçimi kaldır" }).click();
+  await expect(secimCubugu).toHaveCount(0);
+  const [topluPdf] = await Promise.all([page.waitForEvent("download", { timeout: 90_000 }), page.getByRole("button", { name: "Toplu indir" }).click()]);
+  expect(topluPdf.suggestedFilename()).toMatch(/imzasiz\.pdf$/);
+  expect(readFileSync((await topluPdf.path())!).subarray(0, 5).toString("latin1")).toBe("%PDF-");
   /* C5: Onaylar → İmzamı bekleyen raporlar → rapor */
   await page.getByRole("link", { name: "İmzamı bekleyen raporlar" }).click();
   await expect(page).toHaveURL(/\/onaylar\/imza$/, { timeout: 30_000 });

@@ -31,6 +31,8 @@ export interface Sutun<K> {
   hucre: (kayit: K) => ReactNode;
   siralanmaz?: boolean;
   gizliBaslik?: boolean;
+  /** başlık hücresinin içeriği yazı yerine (ör. sayfanın hepsini seçen kutu — 2026-11-02 toplu seçim); baslik erişilebilir ad olarak kalır */
+  basHucre?: ReactNode;
 }
 
 export interface ListeSiralama { deger: string; degistir: (sutun: string) => void }
@@ -89,6 +91,7 @@ export function Liste<K>({ baslik, sutunlar, kayitlar, anahtar, href, siralama, 
         <thead>
           <tr>
             {sutunlar.map((s) => {
+              if (s.basHucre) return <th key={s.k} scope="col" data-alan={s.k}>{s.basHucre}</th>;
               if (s.gizliBaslik) return <th key={s.k} scope="col"><span className="gizli">{s.baslik}</span></th>;
               if (!siralama || s.siralanmaz) return <th key={s.k} scope="col">{s.baslik}</th>;
               const yon = siralama.deger === `${s.k}-artan` ? "ascending" : siralama.deger === `${s.k}-azalan` ? "descending" : undefined;

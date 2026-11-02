@@ -5,6 +5,7 @@ import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { guncelle, tablo, type Iz } from "../../../server/db/yazici.ts";
 import { ayarOku } from "../../../server/ayar/ayar.ts";
 import { turSureleri } from "../../ekipman-turleri/server/turler.ts";
+import { PERSONEL_AD_SQL } from "../../personel/server/personel.ts";
 import { kunyeFarkTemizle } from "../../../format/kunye.ts";
 import { Cevaplar, type RaporSonucu } from "../../../format/tanim.ts";
 
@@ -20,15 +21,22 @@ export interface PlanRaporu {
   id: string; no: string; revizyon: number; ekipmanId: string; turId: string; durum: RaporDurumu; sonuc: RaporSonucu | null; olustu: string; personelId: string; hesapId: string | null;
   /** satır sürümü (plan içinden Sil, sürüm kilidiyle) */
   surum: number;
+  /** 2026-11-02 (liste maketi): muayene uzmanı (raporu yazan personelin adı) ve tamamlanan raporun imzalı PDF'i (toplu indirme; saklama süresi
+      dolup silindiyse yok) */
+  uzman: string; imzaliDosya: string | null;
 }
 
 /** planın etkin raporları (silinen görünmez), en yeni üstte */
 export async function planRaporlari(db: Sorgulayici, planId: string): Promise<PlanRaporu[]> {
   if (!UUID.test(planId)) return [];
-  return (await db.sorgu<{ id: string; no: string; revizyon: number; ekipman_id: string; tur_id: string; durum: RaporDurumu; sonuc: RaporSonucu | null; olustu: Date; personel_id: string; hesap_id: string | null; surum: number }>(
-    `SELECT id::text, no, revizyon, ekipman_id::text, tur_id::text, durum, sonuc, olustu, personel_id::text, hesap_id::text, surum FROM rapor
-     WHERE plan_id = $1 AND silindi IS NULL ORDER BY olustu DESC, no DESC`, [planId])).rows
-    .map((r) => ({ id: r.id, no: gorunenNo(r.no, r.revizyon), revizyon: r.revizyon, ekipmanId: r.ekipman_id, turId: r.tur_id, durum: r.durum, sonuc: r.sonuc, olustu: r.olustu.toISOString(), personelId: r.personel_id, hesapId: r.hesap_id, surum: r.surum }));
+  return (await db.sorgu<{ id: string; no: string; revizyon: number; ekipman_id: string; tur_id: string; durum: RaporDurumu; sonuc: RaporSonucu | null; olustu: Date; personel_id: string; hesap_id: string | null; surum: number; uzman: string; imzali: string | null }>(
+    `SELECT r.id::text, r.no, r.revizyon, r.ekipman_id::text, r.tur_id::text, r.durum, r.sonuc, r.olustu, r.personel_id::text, r.hesap_id::text, r.surum,
+       coalesce(pe.ad, '—') AS uzman,
+       (SELECT s.imzali_dosya::text FROM rapor_surumu s WHERE r.durum = 'imzali' AND s.firma_id = r.firma_id AND s.rapor_id = r.id AND s.revizyon = r.revizyon
+          AND NOT EXISTS (SELECT 1 FROM saklama_silme k WHERE k.firma_id = s.firma_id AND k.surum_id = s.id)) AS imzali
+     FROM rapor r LEFT JOIN ${PERSONEL_AD_SQL} pe ON pe.firma_id = r.firma_id AND pe.id = r.personel_id
+     WHERE r.plan_id = $1 AND r.silindi IS NULL ORDER BY r.olustu DESC, r.no DESC`, [planId])).rows
+    .map((r) => ({ id: r.id, no: gorunenNo(r.no, r.revizyon), revizyon: r.revizyon, ekipmanId: r.ekipman_id, turId: r.tur_id, durum: r.durum, sonuc: r.sonuc, olustu: r.olustu.toISOString(), personelId: r.personel_id, hesapId: r.hesap_id, surum: r.surum, uzman: r.uzman, imzaliDosya: r.imzali }));
 }
 
 /** ekipmanın bu planda etkin raporu var mı (raporu olan ekipman pasife alınmaz — 203) */

@@ -178,7 +178,7 @@
 .yeniSatir { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr) auto; gap: 8px 10px; align-items: end; padding-top: 12px; border-top: 1px dashed var(--kenar-alan); }
 .ekleSatiri { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; }
 /* 465: tesisteki ekipman satırı — kod · tür / konum / son kontrol · Çıkar; çıkarılan soluk, kodu üstü çizili */
-.cikarilan > :not(:last-child) { opacity: .6; }
+.cikarilan > :not(:last-child):not(:first-child) { opacity: .6; }
 .cikarilan .kod { text-decoration: line-through; }
 /* 465: Excel'den yükle penceresi */
 .dosyaSec { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 12px; }
@@ -203,3 +203,21 @@
 .sahaHata { flex-basis: 100%; margin: 0; color: var(--hata-yazi); font-size: var(--boy-kucuk); }
 .sahaDosya { position: relative; cursor: pointer; }
 .sahaDosya[aria-disabled="true"] { opacity: .6; cursor: default; }
+
+/* 2026-11-02 (liste maketi): Plan aç ekipmanlarında seçme kutusu, Tümünü seç satırı ve Tümü / Mekanik / Elektrik Al · Çıkar grupları */
+.ekipmanlar li.secimli { grid-template-columns: auto minmax(6.5rem, max-content) minmax(0, 1fr) auto; }
+.secimSatiri { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin: 12px 0 4px; padding-bottom: 6px; border-bottom: 1px solid var(--kenar); }
+.secimSayi { color: var(--yazi2); font-size: var(--boy-kucuk); font-variant-numeric: tabular-nums; }
+.secimSayi b { color: var(--yazi); }
+.topluGrup { display: inline-flex; align-items: stretch; height: var(--tus-y); border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); overflow: hidden; }
+.topluGrup > span { display: inline-flex; align-items: center; gap: 4px; padding: 0 10px; color: var(--yazi2); font-size: var(--boy-kucuk); font-weight: 600; white-space: nowrap; }
+.topluGrup > span b { color: var(--yazi); font-variant-numeric: tabular-nums; }
+.topluGrup button { padding: 0 12px; border: 0; border-left: 1px solid var(--kenar); background: transparent; color: var(--yazi); font-size: var(--boy-kucuk); font-weight: 600; }
+.topluGrup button:hover:not(:disabled) { background: var(--zemin2); }
+.topluGrup button:disabled { opacity: .45; cursor: default; }
+@media (max-width: 767.98px) {
+  .topluGrup { flex: 1 1 100%; }
+  .topluGrup > span { flex: 1; }
+  .ekipmanlar li.secimli { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .ekipmanlar li.secimli > .kod { grid-column: 2 / -1; }
+}

@@ -1,0 +1,14 @@
+/* TOPLU SEÇİM — satırın / başlığın kutusu ve altta havada duran çubuk (596'da onaylar.module.css'teydi; 2026-11-02 tek üreticiye taşındı) */
+.kutu { display: inline-flex; flex: none; align-items: center; justify-content: center; width: var(--tus-y); height: var(--tus-y); margin-left: -8px; cursor: pointer; }
+.kutu input { width: 18px; height: 18px; margin: 0; accent-color: var(--birincil); cursor: pointer; }
+.cubukKap {
+  position: sticky; bottom: 0; z-index: 10; display: flex; justify-content: flex-end; align-items: flex-end; margin-top: 16px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom)); pointer-events: none;
+}
+:global(html[data-say="var"]) .cubukKap { min-height: calc(var(--tus-y) + 88px); }
+.cubuk {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px; max-width: 100%; padding: 8px 8px 8px 14px; border: 1px solid var(--kenar);
+  border-radius: var(--r-buyuk); background: var(--kart); box-shadow: var(--golge-2); pointer-events: auto;
+}
+.cubukSayi { margin-right: 4px; font-variant-numeric: tabular-nums; }
+.yazili { width: auto; gap: 10px; padding-right: 4px; font-size: var(--boy-kucuk); font-weight: 600; }

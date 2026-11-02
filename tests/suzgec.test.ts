@@ -6,11 +6,14 @@
    · 143 ekipman = 15 sayfa: tuşlar tek satır (ilk · … · ±1 · … · son).
    · 566 (reisim 2026-10-15 analizi — listeler bütün kayıtları tarayıcıya indiriyordu): hesaplanmış satırların listesi (Muhasebe) süzgeci
      SUNUCUDA aynı işlevle koşar (src/server/liste/liste.ts bellekteListele) — sonuç tarayıcıdakiyle birebir, ekrana yalnız sayfa. Olumsuz kanıt:
-     tests/bozan/liste.bozan.ts 4–5. */
+     tests/bozan/liste.bozan.ts 4–5.
+   · 2026-11-02 (liste maketi onaylı — reisim "filtrelemeler daha detaylı olmalı"): tarih aralığı (başlangıç ve bitiş günü dahil, biri boş olabilir;
+     uygulanan süzgeç sayılır, Temizle sıfırlar) ve hazır aralıklar (Bu ay, Geçen ay, Son 3 ay, Bu yıl, Geçen yıl; ay ve yıl dönümünde doğru).
+     Olumsuz kanıt: tests/bozan/suzgec.bozan.ts 4–5. */
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
-  imkansiz, listele, sayfaOgeleri, siraSonraki, suzgecVar, temizle, uygulanan, yeniDurum, type SuzgecDurumu, type SuzgecTanimi,
+  hazirAraliklar, imkansiz, listele, sayfaOgeleri, siraSonraki, suzgecVar, temizle, uygulanan, yeniDurum, type SuzgecDurumu, type SuzgecTanimi,
 } from "../src/components/liste/suzgec.ts";
 import { bellekteListele, bellekteSuz } from "../src/server/liste/liste.ts";
 
@@ -152,4 +155,37 @@ test("576 bellekteSuz: süzgeçten geçen BÜTÜN kayıtlar (sayfasız, sıralı
   }
   assert.ok(bellekteSuz(t, {}, cok).length > 20, "sayfa sınırı yok");
   assert.deepEqual(bellekteSuz(t, { ara: 5 }, cok), listele(t, yeniDurum(t), cok).liste);
+});
+
+test("tarih aralığı: başlangıç ve bitiş günü dahil, biri boş olabilir; uygulanan sayılır, Temizle sıfırlar; ızgara tanımı değiştirmez", () => {
+  interface G { no: string; gun: string }
+  const L: G[] = [{ no: "a", gun: "2026-10-31" }, { no: "b", gun: "2026-11-01" }, { no: "c", gun: "2026-11-15" }, { no: "d", gun: "2026-12-01" }];
+  const t: SuzgecTanimi<G> = { ad: "", ipucu: "", birim: "rapor", imkansiz: "", metin: (g) => g.no, cipler: [], seciciler: [], izgara: true,
+    tarih: { ad: "Tarih aralığı", gun: (g) => g.gun } };
+  const d0 = yeniDurum(t);
+  assert.deepEqual(d0.tarih, { bas: "", bit: "" });
+  assert.equal(listele(t, d0, L).adet, 4);
+  const no = (d: SuzgecDurumu) => listele(t, d, L).liste.map((g) => g.no).join("");
+  assert.equal(no({ ...d0, tarih: { bas: "2026-11-01", bit: "2026-11-30" } }), "bc", "iki uç dahil");
+  assert.equal(no({ ...d0, tarih: { bas: "2026-11-15", bit: "" } }), "cd", "yalnız başlangıç");
+  assert.equal(no({ ...d0, tarih: { bas: "", bit: "2026-11-01" } }), "ab", "yalnız bitiş");
+  const d1 = { ...d0, tarih: { bas: "2026-11-01", bit: "" } };
+  assert.equal(uygulanan(t, d1), 1);
+  assert.ok(suzgecVar(t, d1));
+  assert.deepEqual(temizle(t, d1).tarih, { bas: "", bit: "" });
+  /* tarihsiz tanımda durumdaki tarih yok sayılır */
+  const t2: SuzgecTanimi<G> = { ...t, tarih: undefined };
+  assert.equal(listele(t2, { ...yeniDurum(t2), tarih: { bas: "2030-01-01", bit: "" } }, L).adet, 4);
+  assert.equal(yeniDurum(t2).tarih, undefined);
+});
+
+test("hazır aralıklar: Bu ay, Geçen ay, Son 3 ay, Bu yıl, Geçen yıl — ay ve yıl dönümünde doğru", () => {
+  const h = (g: string) => Object.fromEntries(hazirAraliklar(g).map((x) => [x.k, [x.bas, x.bit]]));
+  assert.deepEqual(h("2026-11-02"), {
+    "bu-ay": ["2026-11-01", "2026-11-30"], "gecen-ay": ["2026-10-01", "2026-10-31"], "son-3": ["2026-08-02", "2026-11-02"],
+    "bu-yil": ["2026-01-01", "2026-12-31"], "gecen-yil": ["2025-01-01", "2025-12-31"],
+  });
+  const o = h("2026-01-15");
+  assert.deepEqual([o["gecen-ay"], o["bu-ay"]], [["2025-12-01", "2025-12-31"], ["2026-01-01", "2026-01-31"]], "ocakta geçen ay aralık");
+  assert.deepEqual(h("2028-03-10")["gecen-ay"], ["2028-02-01", "2028-02-29"], "artık yıl şubatı");
 });

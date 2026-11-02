@@ -2527,6 +2527,18 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-11-02 (LİSTE VE SÜZGEÇ KODDA — reisim: "yapıldı dediklerin için önerilerini kabul ediyorum, yap bitir"; maket aşağıdaki girdide): Raporlar
+  (raporlar/ui/RaporListesi.tsx + server/liste.ts): süzgeçler başlıklı kutu (bileşen components/liste/Filtre.tsx, tanım izgara) — Rapor no · Ekipman
+  kodu · Tesis yazarak; Ekipman türü · Müşteri · Muayene uzmanı · Branş · İl · İlçe · Sonuç seçerek; Tarih aralığı penceresi (hazır: Bu ay, Geçen ay,
+  Son 3 ay, Bu yıl, Geçen yıl + başlangıç / bitiş; raporun açıldığı gün, İstanbul) Yıl'ın yerine; yedi sütunda başlıktan sıralama (açılışta en yeni
+  üstte; kartta Sıralama kutusu); Tarih ve Muayene uzmanı sütunları; seçim (components/liste/Secim.tsx — Onaylar'ın parçası tek üreticiye taşındı;
+  sayfalar arasında kalır, en çok 300) → PDF indir (ZIP; tamamlananın imzalı PDF'i, ötekinin imzasız belgesi) ve Sil (yalnız kendi Yeni raporu, her
+  biri sunucuda kendi işlemiyle); Toplu indir: süzgece uyanların hepsi (raporIndirmeListesi, 300'ü aşınca yalnız sayı). Plan içi raporlar
+  (planlar/ui/RaporBolumu.tsx): aynı düzen — Tür, Uzman, Branş, Sonuç; sıralama; seçim, PDF indir, Sil (planRaporlari'na uzman + imzalı PDF). Plan aç:
+  Tümü / Mekanik / Elektrik Al · Çıkar + her ekipmanda seçme kutusu, Tümünü seç, seçilenler Plana al / Çıkar. S.A.Y rapor_ara tarifi yeni
+  süzgeçlerle. Kilitler: tests/suzgec.test.ts (tarih aralığı, hazır aralıklar) + bozan 4–5; tests/liste.test.ts (PG — yeni tanımla birebir: tür,
+  uzman, branş, ilçe, tarih, yedi sütunun sıralaması; toplu indirme listesi); e2e planlar.spec (toplu Al / Çıkar, seçim), saha-raporu.spec (seçim
+  çubuğu, silinmeyen rapor uyarısı, Toplu indir PDF).
 - 2026-11-02 (LİSTE VE SÜZGEÇ MAKETİ — reisim'in "probata yapılacaklar tam liste" belgesi: "filtreleme detaylı olmalı", "her bir başlığa tıklayınca o başlığa
   göre sıralanıyor", "seç sil toplu sil vs yok raporlar için, pasifteki ekipmanları silme ?", "Elektrik mekanik tümünü ekle çıkar gibi seçenekler olmalı";
   sıra "Önce listeler" → "Evet, maketi kur"): **MAKET ONAY BEKLİYOR** https://claude.ai/artifact/EtasuE8QGTezKLtJMfMyp1 (kaynak yerel/maket/liste-suzgec.html,

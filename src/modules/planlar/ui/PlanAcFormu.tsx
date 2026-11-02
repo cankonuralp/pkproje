@@ -7,6 +7,8 @@
    tesiste kayıtlılar kendiliğinden + elle satır satır ("el ile de girilebilmeli liste gibi" — açılışta tesise kayıt + plana).
    465 (hata listesi 7): kendiliğinden gelen ekipman tek tek "Çıkar" / "Geri al"; "Kontrolü yakın olmayanları çıkar" (son kontrol + periyot, eşik
    firma ayarı — kapsamla aynı kural); elle eklenecekler "Excel'den yükle" ile de (EkipmanExcel.tsx). Çıkarılan tesiste kalır, yalnız bu plana girmez.
+   2026-11-02 (liste maketi onaylı — reisim "Elektrik mekanik tümünü ekle çıkar gibi seçenekler olmalı", "yanında seçme kutucuğu olsun"): Tümü /
+   Mekanik / Elektrik için Al · Çıkar (yapacak işi yoksa kapalı); her ekipmanda seçme kutusu + "Tümünü seç", seçilenler Plana al / Çıkar.
    Uyarılar canlı (sema.ts saf kuralları) ve ENGEL DEĞİL; engel yalnız tesis, tarih, bitiş ≥ başlangıç, en az bir denetçi. Karar ve numara sunucuda. */
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
@@ -20,6 +22,7 @@ import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { SayfaliListe, useSayfa, TabloSayfalari } from "../../../components/liste/Sayfalayici";
+import { SayfaKutusu, SecimKutusu } from "../../../components/liste/Secim";
 import { meslek } from "../../personel/sema";
 import { adayUyarilari, isgDurumu, kapsamHesapla, kodBicimi, kodNormal, kontrolGeliyor, sozlesmeUyarisi, tarihNo, turUyarilari, type Aday } from "../sema";
 import type { PlanAcVerisi, TesisPlanBilgisi } from "../server/planlar";
@@ -56,6 +59,8 @@ export function PlanAcFormu({ veri, baslangic }: { veri: PlanAcVerisi; baslangic
   const [sayac, setSayac] = useState(0);
   /* 465: bu plana alınmayan (tesiste kayıtlı) ekipmanlar */
   const [haric, setHaric] = useState<ReadonlySet<string>>(() => new Set());
+  /* 2026-11-02: seçilen (tesiste kayıtlı) ekipmanlar — toplu Plana al / Çıkar */
+  const [secEk, setSecEk] = useState<ReadonlySet<string>>(() => new Set());
   const yeniSayfa = useSayfa(yeni.length, { akis: true });
 
   /* tesis seçilince o tesisin İSG-KATİP ID'leri, sözleşmeleri ve ekipmanı sunucudan; yalnız seçili tesisinki kullanılır */
@@ -84,6 +89,17 @@ export function PlanAcFormu({ veri, baslangic }: { veri: PlanAcVerisi; baslangic
     return !!t && !kontrolGeliyor(e.sonKontrol, t, gun ?? veri.bugun, veri.esik);
   });
   const haricDegistir = (id: string, cikar: boolean) => setHaric((s) => { const y = new Set(s); if (cikar) y.add(id); else y.delete(id); return y; });
+  /* 2026-11-02: toplu Al / Çıkar — Tümü · Mekanik · Elektrik ya da seçilenler */
+  const bransi = (turId: string) => veri.turler.find((x) => x.id === turId)?.brans ?? "m";
+  const topluYap = (kume: readonly { id: string }[], al: boolean) => setHaric((s) => { const y = new Set(s); for (const e of kume) { if (al) y.delete(e.id); else y.add(e.id); } return y; });
+  const secilenler = tesisteki.filter((e) => secEk.has(e.id));
+  const topluGrup = (ad: string, kume: typeof tesisteki) => kume.length > 0 && (
+    <div key={ad} className={stil.topluGrup} role="group" aria-label={`${ad} ekipmanlar`}>
+      <span>{ad} <b>{kume.length}</b></span>
+      <button type="button" disabled={kume.every((e) => !haric.has(e.id))} onClick={() => topluYap(kume, true)}>Al</button>
+      <button type="button" disabled={kume.every((e) => haric.has(e.id))} onClick={() => topluYap(kume, false)}>Çıkar</button>
+    </div>
+  );
   const ekipAday = veri.adaylar.filter((a) => ekip.includes(a.id));
   const toplam = kapsam.reduce((n, k) => n + k.ekipman, 0);
   const acik = veri.acikPlanlar.filter((p) => p.tesis === d.tesis);
@@ -270,14 +286,29 @@ export function PlanAcFormu({ veri, baslangic }: { veri: PlanAcVerisi; baslangic
           {!d.tesis ? <p className={stil.bosSatir}>Önce tesis seçin.</p> : <>
             <p className={stil.bosSatir}>Tesiste kayıtlı ekipman{tesisteki.length ? ` (${alinan.length} / ${tesisteki.length})` : ""}.</p>
             {tesisteki.length > 0 && <div className={stil.ekleSatiri}>
+              {topluGrup("Tümü", tesisteki)}
+              {topluGrup("Mekanik", tesisteki.filter((e) => bransi(e.turId) === "m"))}
+              {topluGrup("Elektrik", tesisteki.filter((e) => bransi(e.turId) === "e"))}
               {yakinDegil.some((e) => !haric.has(e.id)) && <Tus tur="ikincil" ikon="filter-x"
                 onClick={() => setHaric((s) => new Set([...s, ...yakinDegil.map((e) => e.id)]))}>Kontrolü yakın olmayanları çıkar ({yakinDegil.filter((e) => !haric.has(e.id)).length})</Tus>}
               {cikarilan > 0 && <Tus tur="ikincil" ikon="undo-2" onClick={() => setHaric(new Set())}>Çıkarılanları geri al ({cikarilan})</Tus>}
             </div>}
+            {tesisteki.length > 0 && <div className={stil.secimSatiri} role="group" aria-label="Ekipman seçimi">
+              <SayfaKutusu hepsi={secilenler.length === tesisteki.length} bazi={secilenler.length > 0} ad="Tesisteki ekipmanların hepsini seç" yazi="Tümünü seç"
+                degistir={(ac) => setSecEk(ac ? new Set(tesisteki.map((e) => e.id)) : new Set())} />
+              {secilenler.length > 0 && <>
+                <span className={stil.secimSayi}><b>{secilenler.length}</b> seçili</span>
+                <Tus tur="ikincil" ikon="undo-2" disabled={secilenler.every((e) => !haric.has(e.id))} onClick={() => { topluYap(secilenler, true); setSecEk(new Set()); }}>Plana al</Tus>
+                <Tus tur="ikincil" ikon="x" disabled={secilenler.every((e) => haric.has(e.id))} onClick={() => { topluYap(secilenler, false); setSecEk(new Set()); }}>Çıkar</Tus>
+                <Tus tur="ikincil" onClick={() => setSecEk(new Set())}>Seçimi kaldır</Tus>
+              </>}
+            </div>}
             {tesisteki.length > 0 && <SayfaliListe ad="Tesisteki ekipmanlar" className={stil.ekipmanlar} anahtar={d.tesis} ogeler={tesisteki.map((e) => {
                 const cik = haric.has(e.id), t = veri.turler.find((x) => x.id === e.turId);
                 return (
-                  <li key={e.id} className={cik ? stil.cikarilan : undefined}>
+                  <li key={e.id} className={cik ? `${stil.secimli} ${stil.cikarilan}` : stil.secimli}>
+                    <SecimKutusu secili={secEk.has(e.id)} ad={`${e.kod} ${turAd(e.turId)}`}
+                      degistir={(ac) => setSecEk((s) => { const y = new Set(s); if (ac) y.add(e.id); else y.delete(e.id); return y; })} />
                     <span className={stil.kod}>{e.kod}</span>
                     <span>{turAd(e.turId)}{e.konum ? <span className={stil.altMetin}>{e.konum}</span> : null}
                       <span className={stil.altMetin}>{e.sonKontrol ? `Son kontrol ${tarihNo(e.sonKontrol)}` : "Son kontrol bilinmiyor"}

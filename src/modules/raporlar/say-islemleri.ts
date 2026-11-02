@@ -168,8 +168,9 @@ const supheliler = (l: readonly unknown[]): string[] => l.flatMap((x) => (x && t
 export const SAY_ISLEMLERI: readonly Islem[] = [
   islem({
     ad: "rapor_ara", modul: MODUL, tur: "oku", girdi: SuzgecDurumuSemasi, kaynak: [SuzgecDurumuSemasi], islev: raporSayfasi,
-    tarif: "Görebildiğin raporları arar (20'şer, en yeni üstte): ara (rapor no, ekipman kodu, tür, tesis, müşteri), secili (taslak | onayda | onaylandi | "
-      + "imzada | imzali | geri), sec.sonuc (uygun | uygun_degil | sartli | yok), sec.yil, sayfa.",
+    tarif: "Görebildiğin raporları arar (20'şer, en yeni üstte): ara (rapor no, ekipman kodu, tür, tesis, müşteri), alan.no, alan.kod, alan.tesis, secili (taslak | onayda | onaylandi | "
+      + "imzada | imzali | geri), sec.sonuc (uygun | uygun_degil | sartli | yok), sec.brans (m | e), sec.sira (no | tarih | ekipman | tesis | uzman | sonuc | "
+      + "durum + -artan | -azalan), tarih { bas, bit } (YYYY-MM-DD, raporun açıldığı gün), sayfa.",
     calistir: async (b, _v, ham) => {
       const l = await raporSayfasi(b.db, b.kim, ham);
       if (!l) return { tamam: false, neden: "Bu kullanıcı Raporlar'ı göremiyor." };

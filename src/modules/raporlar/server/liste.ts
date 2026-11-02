@@ -3,7 +3,10 @@
    kodu · ekipman türü · tesis (+ müşteri), durum çipleri + Geri gönderilen, seçiciler Müşteri · İl · Sonuç · Yıl, 20'şer, en yeni üstte.
    Görme kuralı canDo ile aynı (gorusKosulu: denetçi kendi, branş yöneticisi branşı + kendi, planlama ve firma yöneticisi hepsi). Başka modülün
    tablosu o modülün okuma parçasıyla (EKIPMAN_SQL, TUR_SQL, TESIS_YER_SQL, PERSONEL_AD_SQL). Onaylar › Tüm raporlar aynı kaynağı kullanır
-   (onay-baglanti.ts üzerinden). */
+   (onay-baglanti.ts üzerinden).
+   2026-11-02 (liste maketi onaylı — reisim "filtrelemeler daha detaylı olmalı", "her bir başlığa tıklayınca o başlığa göre sıralanıyor"): alan aramaları
+   rapor no · ekipman kodu · tesis; seçiciler Ekipman türü · Müşteri · Muayene uzmanı · Branş · İl · İlçe · Sonuç; tarih aralığı (raporun açıldığı gün,
+   İstanbul) Yıl seçicisinin yerine; sütun başlığından sıralama (varsayılan yine en yeni üstte). Satırda tamamlanan raporun imzalı PDF'i (toplu indirme). */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { listeGetir, type Ekle, type ListeKaynagi } from "../../../server/liste/liste.ts";
 import { duzey, gorusKosulu, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
@@ -22,7 +25,15 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const NO = "(r.no || CASE WHEN r.revizyon > 0 THEN '-R' || r.revizyon ELSE '' END)";
 /** Yeni'ye geri dönmüş (geri gönderilen ya da revizeye gönderilen) rapor */
 const GERI = `(r.durum = 'taslak' AND EXISTS (SELECT 1 FROM rapor_hareket h WHERE h.firma_id = r.firma_id AND h.rapor_id = r.id AND h.ne IN ('geri', 'revize')))`;
-const YIL = "to_char(r.olustu AT TIME ZONE 'Europe/Istanbul', 'YYYY')";
+/** raporun açıldığı gün (İstanbul) — tarih aralığı süzgeci */
+const GUN = "(r.olustu AT TIME ZONE 'Europe/Istanbul')::date";
+const DENETCI = "coalesce(pe.ad, '—')";
+const DURUM_SIRASI = "CASE r.durum WHEN 'taslak' THEN 1 WHEN 'onayda' THEN 2 WHEN 'onaylandi' THEN 3 WHEN 'imzada' THEN 4 ELSE 5 END";
+/** sonuç sırası: sonuçsuz · uygun · şartlı uygun · uygun değil (ui/RaporListesi.tsx SONUC_SIRA ile aynı) */
+const SONUC_SIRASI = "CASE r.sonuc WHEN 'uygun' THEN 1 WHEN 'sartli' THEN 2 WHEN 'uygun_degil' THEN 3 ELSE 0 END";
+/** tamamlanan raporun imzalı PDF'i (saklama süresi dolup silindiyse yok) — toplu indirme bunu indirir, imzasız kopyayı değil */
+const IMZALI = `(SELECT s.imzali_dosya::text FROM rapor_surumu s WHERE r.durum = 'imzali' AND s.firma_id = r.firma_id AND s.rapor_id = r.id AND s.revizyon = r.revizyon
+  AND NOT EXISTS (SELECT 1 FROM saklama_silme k WHERE k.firma_id = s.firma_id AND k.surum_id = s.id))`;
 
 /** raporun liste satırının kaynağı (silinmiş rapor hiç görünmez) */
 export const RAPOR_KAYNAGI = `rapor r
@@ -41,22 +52,35 @@ export function raporKaynagi(ekSecim = ""): ListeKaynagi {
     kaynak: RAPOR_KAYNAGI,
     secim: `${RAPOR_SECIMI}${ekSecim}`,
     metin: [NO, "e.kod", "t.ad", "y.tesis", "y.musteri"],
-    alanlar: { no: NO, kod: "e.kod", tur: "t.ad", tesis: "concat_ws(' ', y.tesis, y.musteri)" },
+    alanlar: { no: NO, kod: "e.kod", tesis: "concat_ws(' ', y.tesis, y.musteri)" },
     cipler: {
       ...Object.fromEntries((Object.keys(RAPOR_DURUM) as RaporDurumu[]).map((d) => [d, `r.durum = '${d}'`])),
       geri: GERI,
     },
     seciciler: {
+      tur: { kosul: (v, ekle: Ekle) => (UUID.test(v) ? `t.id = ${ekle(v)}::uuid` : "false"), secenek: { deger: "t.id", etiket: "t.ad" } },
       musteri: { kosul: (v, ekle: Ekle) => (UUID.test(v) ? `y.musteri_id = ${ekle(v)}::uuid` : "false"), secenek: { deger: "y.musteri_id", etiket: "y.musteri" } },
+      uzman: { kosul: (v, ekle: Ekle) => (UUID.test(v) ? `r.personel_id = ${ekle(v)}::uuid` : "false"), secenek: { deger: "r.personel_id", etiket: DENETCI } },
+      brans: { kosul: (v, ekle) => `t.brans = ${ekle(v)}` },
       il: { kosul: (v, ekle) => `y.il = ${ekle(v)}`, secenek: { deger: "y.il", etiket: "y.il" } },
+      ilce: { kosul: (v, ekle) => `y.ilce = ${ekle(v)}`, secenek: { deger: "y.ilce", etiket: "y.ilce || coalesce(' (' || y.il || ')', '')" } },
       sonuc: { kosul: (v, ekle) => (v === "yok" ? "r.sonuc IS NULL" : `r.sonuc = ${ekle(v)}`) },
-      yil: { kosul: (v, ekle) => `${YIL} = ${ekle(v)}`, secenek: { deger: YIL, etiket: YIL, sira: "deger-azalan" } },
+      sira: { kosul: () => null },
     },
-    sira: {},
+    siraSecici: "sira",
+    sira: {
+      no: { ifade: `tr_sira(${NO})`, metin: true }, tarih: { ifade: "r.olustu" }, ekipman: { ifade: "tr_sira(e.kod)", metin: true },
+      tesis: { ifade: "tr_sira(concat_ws(' ', y.musteri, y.tesis))", metin: true }, uzman: { ifade: `tr_sira(${DENETCI})`, metin: true },
+      sonuc: { ifade: SONUC_SIRASI }, durum: { ifade: DURUM_SIRASI },
+    },
+    tarih: GUN,
     varsayilanSira: "r.olustu DESC, r.id",
     sayfa: 20,
   };
 }
+
+/** toplu indirme: en çok bu kadar rapor birlikte (müşteri panelinin ZIP sınırıyla aynı — 321) */
+export const TOPLU_INDIR_EN_COK = 300;
 
 /** görme koşulu (silinmiş rapor hiç görünmez) — modülün düzeyiyle: Raporlar 14, Onaylar 15 */
 export function raporGorusu(kim: YetkiHesabi, modul: 14 | 15): { sql: string; p: unknown[] } {
@@ -65,16 +89,16 @@ export function raporGorusu(kim: YetkiHesabi, modul: 14 | 15): { sql: string; p:
   return { sql: `r.silindi IS NULL AND ${g}`, p };
 }
 
-type Ham = Omit<RaporOzeti, "gonderildi" | "onay" | "olustu"> & { gonderildi: Date | null; onay: Date | null; olustu: Date; geri: boolean };
+type Ham = Omit<RaporOzeti, "gonderildi" | "onay" | "olustu"> & { gonderildi: Date | null; onay: Date | null; olustu: Date; geri: boolean; imzaliDosya?: string | null };
 /** pg'nin döndürdüğü satır → ekranın satırı (tarihler ISO) */
-export const raporSatiri = (x: Ham): RaporOzeti & { geri: boolean } => ({
+export const raporSatiri = (x: Ham): RaporOzeti & { geri: boolean; imzaliDosya?: string | null } => ({
   ...x, gonderildi: x.gonderildi?.toISOString() ?? null, onay: x.onay?.toISOString() ?? null, olustu: x.olustu.toISOString(),
 });
 
 /** Raporlar ekranı: görebildiği raporlardan süzgeçten geçenlerin SAYFASI + sayılar; göremeyene null */
 export async function raporSayfasi(db: Sorgulayici, kim: YetkiHesabi, durum: unknown): Promise<SunucuListe<RaporListeSatiri> | null> {
   if (duzey(kim, MODUL) === "yok") return null;
-  const l = await listeGetir<Ham>(db, raporKaynagi(), raporGorusu(kim, MODUL), durum);
+  const l = await listeGetir<Ham>(db, raporKaynagi(`, ${IMZALI} AS "imzaliDosya"`), raporGorusu(kim, MODUL), durum);
   return {
     ...l,
     gorunen: l.gorunen.map((x) => {
@@ -85,11 +109,20 @@ export async function raporSayfasi(db: Sorgulayici, kim: YetkiHesabi, durum: unk
   };
 }
 
+/** Toplu indir (2026-11-02): süzgeçten geçen BÜTÜN raporlar (sayfasız, listedeki sırayla) — en çok TOPLU_INDIR_EN_COK; aşarsa yalnız sayı döner
+    (ekran "süzgeçle daraltın" der). Göremeyene null. PDF'ler tarayıcıda tek tek, oturumlu uçlardan iner (yetki uçta yeniden). */
+export async function raporIndirmeListesi(db: Sorgulayici, kim: YetkiHesabi, durum: unknown): Promise<{ adet: number; raporlar: RaporListeSatiri[] } | null> {
+  if (duzey(kim, MODUL) === "yok") return null;
+  const k = { ...raporKaynagi(`, ${IMZALI} AS "imzaliDosya"`), sayfa: TOPLU_INDIR_EN_COK };
+  const d = durum && typeof durum === "object" ? { ...(durum as object), sayfa: 1 } : { sayfa: 1 };
+  const l = await listeGetir<Ham>(db, k, raporGorusu(kim, MODUL), d);
+  if (l.adet > TOPLU_INDIR_EN_COK) return { adet: l.adet, raporlar: [] };
+  return { adet: l.adet, raporlar: l.gorunen.map((x) => { const { hesapId, ...g } = raporSatiri(x); return { ...g, benim: !!hesapId && hesapId === kim.id }; }) };
+}
+
 /* ── ONAYLAR › TÜM RAPORLAR (maket onaylar.html #/tum — 190; Onaylar onay-baglanti.ts kapısından) ─────────────────────────────────────────
    Ekran ve anlam aynı (onaylar/ui/OnayListesi.tsx tanımı): rapor no ve tesis (+ müşteri) ayrı aranır; seçiciler Durum · Denetçi; sıralama rapor no,
    durum (akış sırası), denetçi; varsayılan en son oluşturulan üstte; 20'şer. */
-const DENETCI = "coalesce(pe.ad, '—')";
-const DURUM_SIRASI = "CASE r.durum WHEN 'taslak' THEN 1 WHEN 'onayda' THEN 2 WHEN 'onaylandi' THEN 3 WHEN 'imzada' THEN 4 ELSE 5 END";
 export function onayTumKaynagi(): ListeKaynagi {
   return {
     kaynak: RAPOR_KAYNAGI,

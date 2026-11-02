@@ -299,7 +299,7 @@ pkproje/
                             Plan aç /planlar/ac (uyarılar sema.ts'te saf, engel değil) · liste /planlar · plan içi /planlar/<id> (server/plan-ici.ts:
                             akış kabul/red/kontrol/tamamla, künye düzenle/güncelle, plan ekipmanı, proje notları; geçişler göç 0024 tetiğinde) · 372 planSil
                             (raporsuz, tamamlanmamış; 0067; ui/PlanSilTusu.tsx) · 465 Plan aç: haric (çıkarılan tesis ekipmanı), excel.ts +
-                            ui/EkipmanExcel.tsx (Excel'den elle ekipman)
+                            ui/EkipmanExcel.tsx (Excel'den elle ekipman) · 2026-11-02 Plan aç: Tümü / Mekanik / Elektrik Al · Çıkar + seçme kutusu (ui/PlanAcFormu.tsx)
                             · 519 tamamlanmış planda yeni rapor / kopya yok (sema.ts TAMAMLANDI_RAPOR; izin raporEngel, raporlar kopyaEngel —
                             tuş görünür, basınca üstte uyarı; sunucu raporlar acilabilirPlan)
                             · 510 SAHA FORMU (göç 0082 saha_formu): plan-ici.ts sahaFormuOlustur / sahaFormuVerisi / sahaTaramaYukle / sahaTaramaKaldir
@@ -310,7 +310,9 @@ pkproje/
                             saha verisi, kaydet, onaya gönder: ENGEL 1 / 2 / 5, sil, cihaz) · server/plan-baglanti.ts (Planlar'ın rapora baktığı tek yer)
                             · ekran /raporlar/<id> (format tanımından çizilir: ui/Bloklar.tsx) · fotoğraflar (312: ui/FotoListesi.tsx, dosya modülü "rapor")
                             · Kaydet ve kopyala / Formatı güncelle / günlük süre — mesai (313: raporKopyala, raporFormatGuncelle, plan-baglanti mesaiDurumu;
-                            ui/KopyaPenceresi.tsx) · liste /raporlar (318: raporListesi — görme kayıt kayıt; ui/RaporListesi.tsx) · imzalı PDF eki
+                            ui/KopyaPenceresi.tsx) · liste /raporlar (318: raporListesi — görme kayıt kayıt; ui/RaporListesi.tsx;
+                            2026-11-02 liste maketi: süzgeçler ızgarada — tür, müşteri, uzman, branş, il, ilçe, sonuç, tarih aralığı; başlıktan sıralama;
+                            seçim → PDF indir / Sil, Toplu indir — ui/topluIs.ts, server/liste.ts raporIndirmeListesi; plan içi aynı: planlar/ui/RaporBolumu.tsx) · imzalı PDF eki
                             denetimi imza-pdf.ts (saf, beyaz liste: ek ayrıştırılır, trailer kökü aynı, özgün nesneden yalnız katalog / sayfa /Annots
                             değişir, yeni imza sözlüğü şart — 0028 ve 318 incelemeleri) · revize isteği server/revize.ts (318, göç 0029
                             rapor_revize_istegi; ui/RevizeIstePenceresi.tsx; 0031: imza günü ≥ muayene tarihi, eskimiş sürüm uygunsuzluk kapatmaz)
@@ -692,7 +694,8 @@ pkproje/
                             DecompressionStream ile, ortak dizgi, tarih biçimi, Türkçe Windows CSV; 10 MB / 50 MB açılmış / 5 000 satır sınırı) · indir.ts
   src/components/           TEK ÜRETİCİLER: sayfa/ (kırıntı, sayfa / nesne başlığı, bölüm, rozet, sekmeler) · kabuk (yan menü + üst çubuk) · ikon · boş durum · tuş · şerit · bildirim (altta; 506 useUyar: işlemi
                             durduran kısa uyarı üstte — eksikte pencere yerine) · pencere + onay · yan panel boyu (pencere/PanelBoyu, 561) ·
-                            liste (tablo↔kart, süzgeç mantığı liste/suzgec.ts; 547 dar sütunda tuş yazısı ikinci satıra — hücreden taşmaz, tarama
+                            liste (tablo↔kart, süzgeç mantığı liste/suzgec.ts — 2026-11-02 tarih aralığı + hazirAraliklar, tanım izgara: seçiciler başlıklı
+                            kutu; TOPLU SEÇİM liste/Secim.tsx — SecimKutusu, SayfaKutusu, SecimCubugu, useSatirSecimi; Onaylar, Raporlar, plan içi, Plan aç; 547 dar sütunda tuş yazısı ikinci satıra — hücreden taşmaz, tarama
                             "hücreden taşan" bulgusu) · SAYFALAMA liste/Sayfalayici.tsx (2026-10-16, reisim "herhangi bir liste tablo … 20 den fazlası
                             sayfalı olsun": Sayfalayici · useSayfa (akis · anahtar: yeni veri kümesi 1. sayfa · ac: öğenin sayfası) · TabloSayfalari (canlı
                             sayfa bilgisi) · SayfaliListe; hesap liste/sayfa.ts, boy kalip.ts sayfa.tablo 20; Liste kendisi sayfalar (sayfa / sayfaDegistir,

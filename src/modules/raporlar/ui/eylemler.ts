@@ -15,7 +15,7 @@ import { FOTO_OKU_EN_BUYUK, fotoOkuBirak, fotoOkuHazirla, fotoOkuKaydet, fotoOku
 import { alanOkuBirak, alanOkuHazirla, alanOkuKullanimYaz, alanOkuSonuc } from "../server/alan-oku";
 import { raporOneriSil } from "../server/oneri";
 import type { AlanOkunan } from "../../../server/yz/alanlar";
-import { raporSayfasi } from "../server/liste";
+import { raporIndirmeListesi, raporSayfasi } from "../server/liste";
 import type { RaporListeSatiri } from "../server/raporlar";
 import type { SunucuListe } from "../../../components/liste/suzgec";
 
@@ -46,6 +46,14 @@ export async function raporSayfasiEylemi(durum: unknown): Promise<SunucuListe<Ra
   const o = await istekOturumu();
   if (!o) return null;
   return oturumIslemi(o, (db) => raporSayfasi(db, o, durum));
+}
+
+/** 2026-11-02 (Toplu indir): süzgeçten geçen bütün raporlar (en çok 300; aşarsa yalnız sayı). Görme kuralı modül işlevinde. */
+export async function raporIndirmeListesiEylemi(durum: unknown): Promise<{ adet: number; raporlar: RaporListeSatiri[] } | null> {
+  if (!(await ayniKoken())) return null;
+  const o = await istekOturumu();
+  if (!o) return null;
+  return oturumIslemi(o, (db) => raporIndirmeListesi(db, o, durum));
 }
 
 /** 525: bekleyen öneri (S.A.Y Chat okuması) uygulandı / bırakıldı ya da şerit kapatıldı — bölümün önerileri kalkar (yalnız kişinin kendisininkiler) */

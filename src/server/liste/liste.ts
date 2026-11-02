@@ -35,6 +35,8 @@ export interface ListeKaynagi {
   varsayilanSira: string;
   /** sıralama seçicisinin anahtarı (varsa) */
   siraSecici?: string;
+  /** tarih aralığı süzgecinin gün ifadesi (date) — tanımda tarih varsa (2026-11-02, liste maketi) */
+  tarih?: string;
   sayfa: number;
 }
 
@@ -47,6 +49,7 @@ export const SuzgecDurumuSemasi = z.object({
   sec: z.record(z.string().max(40), z.string().max(80)).default({}),
   sayfa: z.number().int().min(1).max(1_000_000).default(1),
   alan: z.record(z.string().max(40), metin).default({}),
+  tarih: z.object({ bas: z.union([z.literal(""), z.iso.date()]), bit: z.union([z.literal(""), z.iso.date()]) }).optional(),
 });
 
 /** Türkçe küçük harf (tarayıcının toLocaleLowerCase("tr") karşılığı; veritabanında tr_kucuk) */
@@ -80,6 +83,8 @@ export async function listeGetir<K>(db: Sorgulayici, k: ListeKaynagi, gorus: { s
     const c = v === "tumu" ? null : s.kosul(v, ekle);
     if (c) taban.push(`(${c})`);
   }
+  if (k.tarih && d.tarih?.bas) taban.push(`(${k.tarih}) >= ${ekle(d.tarih.bas)}::date`);
+  if (k.tarih && d.tarih?.bit) taban.push(`(${k.tarih}) <= ${ekle(d.tarih.bit)}::date`);
   const secili = d.secili.filter((c) => Object.hasOwn(k.cipler, c));
   const cip = secili.length ? `(${secili.map((c) => `(${k.cipler[c]})`).join(d.kip === "ve" ? " AND " : " OR ")})` : "true";
 

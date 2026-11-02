@@ -8,6 +8,10 @@
    ölçüyle (planListesi + 318 öncesi tanım): sütun başlığı sıralamaları (no, ad, müşteri, adres, denetçi, başlangıç, durum; artan / azalan),
    tarih pencereleri (bugün, bu hafta, 7 gün), branş, müşteri, durum. Onaylar › Tüm raporlar da (Onaylar düzeyiyle görülen bütün raporlar + 566 öncesi
    tanım): rapor no, tesis, durum, denetçi, sıralamalar; satırın izinleri kuyruktakiyle aynı; sekmedeki sayı (tumSayisi) görülen rapor sayısı.
+   2026-11-02 (liste maketi onaylı — reisim "filtrelemeler daha detaylı olmalı", "her bir başlığa tıklayınca o başlığa göre sıralanıyor"): Raporlar'ın
+   ölçüsü yeni tanım — alan aramaları rapor no · ekipman kodu · tesis; seçiciler Ekipman türü · Müşteri · Muayene uzmanı · Branş · İl · İlçe · Sonuç;
+   tarih aralığı (raporun açıldığı gün, İstanbul; Yıl'ın yerine); yedi sütunun her birinde artan / azalan sıralama; satırda tamamlanan raporun
+   imzalı PDF'i (toplu indirme — kendi testi aşağıda). Toplu indirme listesi süzgeçten geçen bütün raporlar, 300'ü aşınca yalnız sayı.
    Olumsuz kanıt: tests/bozan/liste.bozan.ts. */
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
@@ -15,7 +19,7 @@ import { after, before, test } from "node:test";
 import { listele, yeniDurum, type Secenek, type SuzgecDurumu, type SuzgecTanimi } from "../src/components/liste/suzgec.ts";
 import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde, type Havuz } from "../src/server/db/kiraci.ts";
-import { raporSayfasi } from "../src/modules/raporlar/server/liste.ts";
+import { raporIndirmeListesi, raporSayfasi } from "../src/modules/raporlar/server/liste.ts";
 import { planSayfasi } from "../src/modules/planlar/server/liste.ts";
 import { planListesi, type PlanSatir } from "../src/modules/planlar/server/plan-ici.ts";
 import { bugunTr } from "../src/modules/planlar/server/planlar.ts";
@@ -28,33 +32,48 @@ import { canDo } from "../src/server/yetki/canDo.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
 let kume: GomuluKume, havuz: Havuz, A = "", B = "";
+/** tür adı → kimlik, tesis kimliği → ilçe (satırda yok; beklenen tanım bunlarla süzer) */
+const TUR: Record<string, string> = {}, ILCE: Record<string, string | null> = {};
 const K: Record<string, Kisi> = {};
 const GUN = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit" });
 const gun = (iso: string) => GUN.format(new Date(iso));
 const benzersiz = <T,>(l: readonly T[]) => [...new Set(l)];
 
-/* ESKİ tarayıcı tanımı (318 — ui/RaporListesi.tsx'in 566 öncesi hâli): sunucunun karşılaştırıldığı ölçü */
+/* BEKLENEN tarayıcı tanımı (2026-11-02 — 318 tanımının yeni süzgeçlerle hâli): sunucunun karşılaştırıldığı ölçü */
+const SONUC_SIRA = { uygun: 1, sartli: 2, uygun_degil: 3 } as const;
+const RDURUM: Record<RaporDurumu, number> = { taslak: 1, onayda: 2, onaylandi: 3, imzada: 4, imzali: 5 };
+const tr = (l: readonly (readonly [string, string])[]) => [...l].sort((a, b) => a[1].localeCompare(b[1], "tr") || a[0].localeCompare(b[0]));
 function eskiTanim(l: readonly RaporListeSatiri[]): SuzgecTanimi<RaporListeSatiri> {
   return {
     ad: "Raporlarda ara", ipucu: "", birim: "rapor", sayfa: 20, imkansiz: "",
     metin: (r) => [r.no, r.ekipmanKod, r.turAd, r.tesis, r.musteri].join(" "),
     alanlar: [
       { k: "no", ad: "", metin: (r) => r.no }, { k: "kod", ad: "", metin: (r) => r.ekipmanKod },
-      { k: "tur", ad: "", metin: (r) => r.turAd }, { k: "tesis", ad: "", metin: (r) => `${r.tesis} ${r.musteri}` },
+      { k: "tesis", ad: "", metin: (r) => `${r.tesis} ${r.musteri}` },
     ],
+    tarih: { ad: "", gun: (r) => gun(r.olustu) },
     cipler: [
       ...(Object.keys(RAPOR_DURUM) as (keyof typeof RAPOR_DURUM)[]).map((d) => ({ k: d, ad: "", grup: "durum", test: (r: RaporListeSatiri) => r.durum === d })),
       { k: "geri", ad: "", test: (r) => r.geri },
     ],
     seciciler: [
+      { k: "tur", ad: "", secenek: () => [["tumu", ""], ...tr(benzersiz(l.map((r) => r.turAd)).map((a) => [TUR[a], a] as const))], gecer: (r, v) => v === "tumu" || TUR[r.turAd] === v },
       { k: "musteri", ad: "", secenek: () => [["tumu", ""], ...benzersiz(l.map((r) => r.musteriId)).map((m) => [m, l.find((r) => r.musteriId === m)!.musteri] as const)
         .sort((a, b) => a[1].localeCompare(b[1], "tr"))], gecer: (r, v) => v === "tumu" || r.musteriId === v },
+      { k: "uzman", ad: "", secenek: () => [["tumu", ""], ...tr(benzersiz(l.map((r) => r.personelId)).map((p) => [p, l.find((r) => r.personelId === p)!.denetci] as const))],
+        gecer: (r, v) => v === "tumu" || r.personelId === v },
+      { k: "brans", ad: "", secenek: () => [], gecer: (r, v) => v === "tumu" || r.brans === v },
       { k: "il", ad: "", secenek: () => [["tumu", ""], ...benzersiz(l.map((r) => r.il).filter((x): x is string => !!x)).sort((a, b) => a.localeCompare(b, "tr")).map((x) => [x, x] as const)],
         gecer: (r, v) => v === "tumu" || r.il === v },
+      { k: "ilce", ad: "", secenek: () => [["tumu", ""], ...tr(benzersiz(l.map((r) => r.tesisId).filter((x) => ILCE[x])).map((x) => [ILCE[x]!, `${ILCE[x]} (${l.find((r) => r.tesisId === x)!.il})`] as const))],
+        gecer: (r, v) => v === "tumu" || ILCE[r.tesisId] === v },
       { k: "sonuc", ad: "", secenek: () => [], gecer: (r, v) => v === "tumu" || (v === "yok" ? !r.sonuc : r.sonuc === v) },
-      { k: "yil", ad: "", secenek: () => [["tumu", ""], ...benzersiz(l.map((r) => gun(r.olustu).slice(0, 4))).sort().reverse().map((y) => [y, y] as const)],
-        gecer: (r, v) => v === "tumu" || gun(r.olustu).startsWith(v) },
+      { k: "sira", ad: "", siralama: true, secenek: () => [], gecer: () => true },
     ],
+    siraAnahtari: {
+      no: (r) => r.no, tarih: (r) => r.olustu, ekipman: (r) => r.ekipmanKod, tesis: (r) => `${r.musteri} ${r.tesis}`, uzman: (r) => r.denetci,
+      sonuc: (r) => (r.sonuc ? SONUC_SIRA[r.sonuc] : 0), durum: (r) => RDURUM[r.durum],
+    },
   };
 }
 
@@ -98,11 +117,13 @@ before(async () => {
     const q = async (sql: string, p: unknown[] = []) => (await db.sorgu<{ id: string }>(sql, p)).rows[0].id;
     const m1 = await q("INSERT INTO musteri (unvan, kisa) VALUES ('Işık Makina A.Ş.', 'Işık Makina') RETURNING id::text");
     const m2 = await q("INSERT INTO musteri (unvan, kisa) VALUES ('Çınar Yapı A.Ş.', 'Çınar Yapı') RETURNING id::text");
-    const t1 = await q("INSERT INTO tesis (musteri_id, ad, il) VALUES ($1, 'İkinci Fabrika', 'İzmir') RETURNING id::text", [m1]);
+    const t1 = await q("INSERT INTO tesis (musteri_id, ad, il, ilce) VALUES ($1, 'İkinci Fabrika', 'İzmir', 'Çiğli') RETURNING id::text", [m1]);
     const t2 = await q("INSERT INTO tesis (musteri_id, ad, il) VALUES ($1, 'Şantiye', 'Iğdır') RETURNING id::text", [m1]);
-    const t3 = await q("INSERT INTO tesis (musteri_id, ad, il) VALUES ($1, 'Depo', 'Çorum') RETURNING id::text", [m2]);
+    const t3 = await q("INSERT INTO tesis (musteri_id, ad, il, ilce) VALUES ($1, 'Depo', 'Çorum', 'İskilip') RETURNING id::text", [m2]);
+    Object.assign(ILCE, { [t1]: "Çiğli", [t2]: null, [t3]: "İskilip" });
     const tm = await q("INSERT INTO ekipman_turu (kod, ad, grup, brans, periyot) VALUES ('HT', 'Hava tankı', 'basinc', 'm', 12) RETURNING id::text");
     const te = await q("INSERT INTO ekipman_turu (kod, ad, grup, brans, periyot) VALUES ('IT', 'İç tesisat', 'elektrik', 'e', 12) RETURNING id::text");
+    Object.assign(TUR, { "Hava tankı": tm, "İç tesisat": te });
     const p1 = await q("INSERT INTO personel (ad, basla, meslek) VALUES ('Deneme Bir', '2024-01-01', 'mak-muh') RETURNING id::text");
     const p2 = await q("INSERT INTO personel (ad, basla, meslek) VALUES ('Deneme İki', '2024-01-01', 'elk-muh') RETURNING id::text");
     const h = async (e: string, roller: string[], per: string | null = null) => q(
@@ -171,12 +192,16 @@ async function karsilastir(kim: Kisi, d: Partial<SuzgecDurumu>, ne: string) {
   assert.deepEqual(y.gorunen.map((r) => r.id), o.gorunen.map((r) => r.id), `${ne}: sayfanın satırları`);
   assert.deepEqual([y.adet, y.toplam, y.kayitSayisi, y.sayfa, y.sayfaSayisi], [o.liste.length, o.toplam, eski.length, o.sayfa, o.sayfaSayisi], `${ne}: sayılar`);
   for (const c of t.cipler) assert.equal(y.cipSayilari[c.k], o.tb.filter(c.test).length, `${ne}: ${c.k} çipi`);
-  for (const k of ["musteri", "il", "yil"]) {
+  for (const k of ["tur", "musteri", "uzman", "il", "ilce"]) {
     const bek = t.seciciler.find((x) => x.k === k)!.secenek().slice(1) as Secenek[];
     assert.deepEqual(y.secenekler[k], bek.map(([a, b]) => [a, b]), `${ne}: ${k} seçenekleri`);
   }
-  /* satırın içeriği aynı (yazanın kimliği gitmez) */
-  for (const r of y.gorunen) assert.deepEqual(r, eski.find((x) => x.id === r.id), `${ne}: ${r.no} satırı`);
+  /* satırın içeriği aynı (yazanın kimliği gitmez); imzalı PDF yalnız sayfalı listede — bu veride tamamlanan raporun sürüm kaydı yok: boş */
+  for (const r of y.gorunen) {
+    const { imzaliDosya, ...g } = r;
+    assert.equal(imzaliDosya, null, `${ne}: ${r.no} imzalı PDF`);
+    assert.deepEqual(g, eski.find((x) => x.id === r.id), `${ne}: ${r.no} satırı`);
+  }
   return y;
 }
 
@@ -188,7 +213,6 @@ test("sunucu süzgeci eski tarayıcı süzgeciyle birebir: beş kişi × süzge�
     ["sayfa aşımı sona çekilir", { sayfa: 99 }],
     ["rapor no (küçük harf)", { alan: { no: "la-1026-01" } }],
     ["ekipman kodu Türkçe büyük harf (IŞ ↔ ış)", { alan: { kod: "ış-0" } }],
-    ["ekipman türü (İç ↔ iç)", { alan: { tur: "İÇ TES" } }],
     ["tesis + müşteri (Işık ↔ ışık, İzmir değil tesis)", { alan: { tesis: "ışık" } }],
     ["tesis (Şantiye ↔ şantiye)", { alan: { tesis: "ŞANTİYE" } }],
     ["genel arama", { ara: "hava" }],
@@ -197,17 +221,45 @@ test("sunucu süzgeci eski tarayıcı süzgeciyle birebir: beş kişi × süzge�
     ["geri + taslak ve", { secili: ["geri", "taslak"], kip: "ve" }],
     ["sonuç yok", { sec: { sonuc: "yok" } }],
     ["sonuç uygun değil", { sec: { sonuc: "uygun_degil" } }],
-    ["yıl", { sec: { yil: "2025" } }],
+    ["tarih aralığı (bir yıl)", { tarih: { bas: "2025-01-01", bit: "2025-12-31" } }],
+    ["tarih aralığı (yalnız başlangıç)", { tarih: { bas: "2025-06-15", bit: "" } }],
+    ["tarih aralığı (yalnız bitiş)", { tarih: { bas: "", bit: "2024-06-01" } }],
+    ["branş elektrik", { sec: { brans: "e" } }],
     ["il (Iğdır)", { sec: { il: "Iğdır" } }],
+    ["ilçe (Çiğli)", { sec: { ilce: "Çiğli" } }],
+    ...["no", "tarih", "ekipman", "tesis", "uzman", "sonuc", "durum"].flatMap((s) => (["artan", "azalan"] as const).map((yon) =>
+      [`sıra ${s} ${yon}`, { sec: { sira: `${s}-${yon}` } }] as [string, Partial<SuzgecDurumu>])),
+    ["sıra + süzgeç + 2. sayfa", { sec: { sira: "uzman-azalan", brans: "m" }, sayfa: 2 }],
     ["hiçbir şey uymaz", { alan: { no: "zzz" } }],
   ];
   for (const k of kisiler) {
     const kim = K[k];
     const mus = (await ile(A, kim, (db) => raporSayfasi(db, kim, {})))!.secenekler.musteri ?? [];
-    for (const [ne, d] of [...durumlar, ...(mus.length ? [[`müşteri ${mus[0][1]}`, { sec: { musteri: mus[0][0] } }] as [string, Partial<SuzgecDurumu>]] : [])]) {
-      await karsilastir(kim, d, `${k} · ${ne}`);
+    const ilk = (await ile(A, kim, (db) => raporSayfasi(db, kim, {})))!.secenekler;
+    const ek: [string, Partial<SuzgecDurumu>][] = [
+      ...(mus.length ? [[`müşteri ${mus[0][1]}`, { sec: { musteri: mus[0][0] } }] as [string, Partial<SuzgecDurumu>]] : []),
+      ...(ilk.tur?.length ? [[`tür ${ilk.tur[0][1]}`, { sec: { tur: ilk.tur[0][0] } }] as [string, Partial<SuzgecDurumu>]] : []),
+      ...(ilk.uzman?.length ? [[`uzman ${ilk.uzman.at(-1)![1]}`, { sec: { uzman: ilk.uzman.at(-1)![0] } }] as [string, Partial<SuzgecDurumu>]] : []),
+    ];
+    for (const [ne, d] of [...durumlar, ...ek]) await karsilastir(kim, d, `${k} · ${ne}`);
+  }
+});
+
+test("toplu indirme listesi: süzgeçten geçen BÜTÜN raporlar (sayfasız, listedeki sırayla); bozuk tarih başlangıca döner; göremeyene null", async () => {
+  for (const k of ["yon", "d1", "mek"] as const) {
+    const kim = K[k];
+    for (const d of [{}, { sec: { brans: "m", sira: "no-artan" } }, { tarih: { bas: "2025-01-01", bit: "" }, secili: ["imzali", "taslak"] }] as Partial<SuzgecDurumu>[]) {
+      const eski = (await ile(A, kim, (db) => raporListesi(db, kim)))!;
+      const t = eskiTanim(eski);
+      const o = listele(t, { ...yeniDurum(t), ...d, sec: { ...yeniDurum(t).sec, ...d.sec } }, eski);
+      const y = (await ile(A, kim, (db) => raporIndirmeListesi(db, kim, { ...d, sayfa: 2 })))!;
+      assert.equal(y.adet, o.liste.length, `${k}: sayı`);
+      assert.deepEqual(y.raporlar.map((r) => r.id), o.liste.map((r) => r.id), `${k}: bütün satırlar (sayfa 2 istense de hepsi), aynı sıra`);
     }
   }
+  const bozuk = (await ile(A, K.yon, (db) => raporIndirmeListesi(db, K.yon, { tarih: { bas: "dün", bit: "'; --" } })))!;
+  assert.equal(bozuk.adet, 30, "biçimi bozuk tarih koşula girmez");
+  assert.equal(await ile(A, K.yon, (db) => raporIndirmeListesi(db, { id: K.yon.id, roller: ["muhasebe"] }, {})), null);
 });
 
 test("görme kuralı canDo ile aynı: denetçi yalnız kendi, branş yöneticisi branşı + kendi yazdığı; başka firma yok; bozuk süzgeç durumu başlangıca döner", async () => {

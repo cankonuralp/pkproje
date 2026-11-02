@@ -55,18 +55,6 @@ button.reddetTus { color: var(--hata-yazi); }
    (raporlar .eylem gibi — S.A.Y düğmesi üstüne çıkar), imza penceresinin adımları, bırakma alanı, sonuç listesi */
 .secHucre { display: flex; align-items: flex-start; gap: 2px; min-width: 0; }
 .secIc { min-width: 0; }
-.secKutu { display: inline-flex; flex: none; align-items: center; justify-content: center; width: var(--tus-y); height: var(--tus-y); margin-left: -8px; cursor: pointer; }
-.secKutu input { width: 18px; height: 18px; margin: 0; accent-color: var(--birincil); cursor: pointer; }
-.cubukKap {
-  position: sticky; bottom: 0; z-index: 10; display: flex; justify-content: flex-end; align-items: flex-end; margin-top: 16px;
-  padding-bottom: calc(16px + env(safe-area-inset-bottom)); pointer-events: none;
-}
-:global(html[data-say="var"]) .cubukKap { min-height: calc(var(--tus-y) + 88px); }
-.cubuk {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 8px; max-width: 100%; padding: 8px 8px 8px 14px; border: 1px solid var(--kenar);
-  border-radius: var(--r-buyuk); background: var(--kart); box-shadow: var(--golge-2); pointer-events: auto;
-}
-.cubukSayi { margin-right: 4px; font-variant-numeric: tabular-nums; }
 .topluAdimlar { display: grid; gap: 14px; margin: 0 0 12px; padding: 0; list-style: none; }
 .topluAdim { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 10px; align-items: start; }
 .adimIsaret {

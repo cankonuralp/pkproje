@@ -14,6 +14,7 @@ import { baytIndir, dosyaGunu } from "../../../components/disa/indir";
 import { dosyaBaytlari } from "../../../components/gizli-resim/GizliResim";
 import { zipParcalari } from "../../../components/disa/zip";
 import { Ikon } from "../../../components/ikon/Ikon";
+import { SecimCubugu as OrtakCubuk, SecimKutusu as OrtakKutu } from "../../../components/liste/Secim";
 import { Pencere, pencereMetinSinifi } from "../../../components/pencere/Pencere";
 import { Rozet } from "../../../components/sayfa/Sayfa";
 import { Tus, tusSinifi } from "../../../components/tus/Tus";
@@ -47,26 +48,12 @@ export function useSecim(): Secim {
     temizle: () => setSecili([]),
   };
 }
-/** satırın seçim kutusu (dokunma hedefi denetim yüksekliği; satıra girmez — Liste etikete basılınca kayda gitmez) */
+/** satırın seçim kutusu ve altta havada duran çubuk: tek üretici components/liste/Secim.tsx (2026-11-02) */
 export function SecimKutusu({ s, id, ad }: { s: Secim; id: string; ad: string }) {
-  return (
-    <label className={stil.secKutu}>
-      <input type="checkbox" checked={s.secili.includes(id)} aria-label={`${ad} seç`} onChange={(e) => s.degistir(id, e.target.checked)} />
-    </label>
-  );
+  return <OrtakKutu secili={s.secili.includes(id)} ad={ad} degistir={(ac) => s.degistir(id, ac)} />;
 }
-/** altta havada duran seçim çubuğu (rapor ekranının tuşları gibi — data-alt-cubuk: S.A.Y düğmesi üstüne çıkar) */
 export function SecimCubugu({ sayi, temizle, children }: { sayi: number; temizle: () => void; children: ReactNode }) {
-  if (!sayi) return null;
-  return (
-    <div className={stil.cubukKap} data-alt-cubuk="her">
-      <div className={stil.cubuk} role="region" aria-label="Seçilen raporlar">
-        <span className={stil.cubukSayi}><b>{sayi}</b> rapor seçili</span>
-        <Tus tur="ikincil" onClick={temizle}>Seçimi kaldır</Tus>
-        {children}
-      </div>
-    </div>
-  );
+  return <OrtakCubuk sayi={sayi} temizle={temizle}>{children}</OrtakCubuk>;
 }
 
 /* ── İMZA PENCERESİ ── */
