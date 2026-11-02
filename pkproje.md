@@ -2547,7 +2547,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   (4) **Temizle tuşu:** düşen temizleme sessiz kalmıyordu ama nedeni görünmüyordu — sunucu eylemi hata yakalar (hata kaydı "say.temizle", ekrana neden),
   ekran istisnayı da gösterir; Ar-Ge kaydı yazılamazsa temizleme durmaz (hata kaydı "say.arge"). Kilitler: planlar (PG, kod tesiste), plan-ici (PG),
   say.test (PG, süpürme), say-faz2 (siradakiKod düzen, "-"), say-is-siniri (parti eşiği), say-saf (talimat), say-islem (PG, haritalar), ice-aktar-sema;
-  bozan say-is-siniri 6 (dolgu). PC: check ✓ lint ✓ saf say testleri 185 / 186 ✓ (düşen tek test Chromium ister, PC'de koşmaz).
+  bozan say-is-siniri 6 (dolgu). PC: check ✓ lint ✓ saf say testleri 185 / 186 ✓ (düşen tek test Chromium ister, PC'de koşmaz). **YAYINDA:** main
+  018e9a61 (40d20115 + iki CI düzeltmesi: tesis kuralına göre altı test, göç 0116 DO bloğu $$ ile, e2e gece ucu "kapanis", tarih ayracı); CI 41401447122
+  yeşil (16 iş); göç 0115 + 0116 Supabase'de (goc 117, son 0116); **pg_cron 1.6.4 kuruldu, cron.job "say_kapanis" */10 dakika etkin**; /api/saglik sürüm
+  018e9a6, 7 / 7 tamam. Yedinci koşu reisim'de (yerel vaka.md hedefleri).
 - 2026-11-01 (V21 ALTINCI KOŞU — reisim: "koşuyu yap ve şunu da söyle, ekipman kodu neden 25'ten başladı; incele açıklama yap onaylarsam değişiklik yaparsın";
   sunum yerel/say-arge/2026-11-01-sunum-altinci-kosu.md; **onaylandı 2026-11-02: P1–P5 + kod tesis bazlı (b), üstteki girdide**): P-1126-003 (dördüncü koşunun tesisi): 12 istek · 2 dk 48 sn · istem en çok
   76,4 bin ✓ · yazılan 151 bin ✗ · **0,0527 $** ✗ (hedef 0,04) · **8 ekipman ✓** (7 kayıtlı ekipman SERİYLE eşlendi + 1 yeni; rot cihazı kanıtla elendi) · 8 rapor,
