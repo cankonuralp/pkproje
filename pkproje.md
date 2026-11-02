@@ -2527,6 +2527,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-11-02 (V21 YEDİNCİ KOŞU — reisim: "testi yaptım bir bak bakalım koşuya"; salt okunur ölçüm say_istek / yz_konusma / denetim_izi; P-1126-004, YENİ tesis):
+  **hedeflerin hepsi tuttu** — 6 istek (hazırlık + 3 büyütme · ekle · aç · yaz · denetle · bildirim) · 2 dk 22 sn · **0,0331 $** (6. koşu 0,0527; yazma %48,
+  çıkış %44) · en büyük istem 79,3 bin (hizmet temizlemesi girmedi) · önbelleğe yazılan 79 bin · **önbellek kırılması 0** · 8 ekipman ✓ (7 çift + etiketsiz lift
+  belgeyle; rot cihazı ve yanda görünen vinç kanıtla elendi) · kod **AKL-01 … AKL-08** (yeni tesiste 1'den — tesis bazlı kural; hane firmanın en genişi) ·
+  8 rapor, foto / cihaz / seri 8/8, rapor başına 1 kayıt · **rapor_getir 0** (harita rapor_ac'ta — P1) · foto_goster 3 (etiketsiz aday, rot adayı, test hattı) ·
+  beceri okuma 0 · boşa istek 0 · şema hatası 0 · A1 küçültme seviye 1 girdi (78,2 bin), değişiklik gerekmedi · bildirim dört satır, tesis uyuşmazlığı
+  bildirildi. Kalan engel beklenen (deneme firmasında kumpas / şerit metre cihazı yok). Tablo yerel vaka.md. Kod yok. Sıradaki: 40–60 fotoğraflık gerçek iş.
 - 2026-11-02 (reisim: **"seçeneklerden b'yi istiyorum tesise göre değişsin kodlar … kullanıcı belirtirse kod aralığını sorun yok … diğerleri ile alakalı sorun
   yok, başla"** + "1 saatten fazla oldu geçmiş silinmemiş … temizle dediğimde bazen bug da kalıyor" + **"panel ya da sohbetten bağımsız kullanıcı açsa da
   açmasa da 60 dakika geçince silinsin"** — TEK KALEMDE KODDA; kalem dalı → CI → göç 0115 + 0116 Supabase → main):
