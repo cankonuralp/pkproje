@@ -338,7 +338,8 @@ test("60 dakika kapanışı veritabanında: eski bitmiş konuşma süpürülür;
   const soruIletisi = k.find((m) => m.rol === "user" && Array.isArray(m.icerik) && (m.icerik as { text?: string }[]).some((b) => b.text === "Nerede kalmıştık?"))!;
   const yazilar = (soruIletisi.icerik as { type: string; text?: string }[]).filter((b) => b.type === "text").map((b) => b.text ?? "");
   assert.equal(yazilar.length, 2, JSON.stringify(soruIletisi.icerik));
-  assert.match(yazilar[0]!, /^Önceki konuşma kapandı \(60 dakika geçti; \d{2}\.\d{2} \d{2}:\d{2}\)\. Önceki işin son bildirimi:\n8 rapor hazır\.\nVarsayımla: a/);
+  /* tarih ayracı ICU verisine göre "." ya da "/" (deneme makinesinde 02/11) */
+  assert.match(yazilar[0]!, /^Önceki konuşma kapandı \(60 dakika geçti; \d{2}[./]\d{2} \d{2}:\d{2}\)\. Önceki işin son bildirimi:\n8 rapor hazır\.\nVarsayımla: a/);
   assert.equal(yazilar[1], "Nerede kalmıştık?");
   assert.equal(await sayi("yz_kapanis"), 0, "not okununca silindi");
   await ile(A, FA.den, (db) => sayTemizle(db));
