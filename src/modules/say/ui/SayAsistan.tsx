@@ -829,7 +829,9 @@ export function SayAsistan() {
   };
   const temizle = async () => {
     if (!(await onayla({ baslik: "Sohbeti temizle", metin: "S.A.Y ile bütün sohbet geçmişiniz silinir.", tus: "Temizle", tehlike: true }))) return;
-    const y = await sayTemizleEylemi();
+    /* 2026-11-02 (reisim: "temizle dediğimde bazen bug da kalıyor"): sunucu eylemi düşerse de neden ekranda */
+    let y: Awaited<ReturnType<typeof sayTemizleEylemi>>;
+    try { y = await sayTemizleEylemi(); } catch { y = { durum: "red", neden: "Sohbet temizlenemedi; bağlantıyı kontrol edip yeniden deneyin." }; }
     if (y.durum === "tamam") { setIletiler([]); setHata(null); bildir("Sohbet temizlendi."); document.getElementById("say-kapat")?.focus(); }
     else setHata(y.neden);
   };

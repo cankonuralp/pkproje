@@ -2,6 +2,7 @@
    API'nin içeriğiyle BİREBİR ve sırasıyla (yalnız sona eklenir; düşünme bloğu kendinden önceki her şey aynı kaldıkça geçerli). RLS firma + hesap;
    hesap veritabanında işlemin bağlamından. Çekirdek: modül (src/modules/say) buradan çağırır. */
 import type { Sorgulayici } from "../db/kiraci.ts";
+import { hataKaydet } from "../hata/kaydet.ts";
 import { argeKaydiYaz } from "./olcum.ts";
 
 export type KonusmaRolu = "user" | "assistant" | "system";
@@ -31,8 +32,10 @@ export const DOSYA_YOK = "-";
 /** "Sohbeti temizle" ve otomatik kapanış: kişinin konuşması, ekleri (koru: yeni sorunun ekleri kalır — 2026-11-01 V21 B), yarım yüklemeleri ve işi;
     dönen: hizmetteki ek dosyalarının kimlikleri (çağıran siler) */
 export async function konusmaTemizle(db: Sorgulayici, koru: readonly string[] = []): Promise<string[]> {
-  /* 2026-10-31 (L8 — göç 0112): silmeden önce konuşmanın metni Ar-Ge kaydına (30 gün; ekler ve düşünce yok; yalnız Yönetim okur) */
-  await argeKaydiYaz(db, (await konusmaOku(db)).map((m) => ({ rol: m.rol, icerik: m.icerik })));
+  /* 2026-10-31 (L8 — göç 0112): silmeden önce konuşmanın metni Ar-Ge kaydına (30 gün; ekler ve düşünce yok; yalnız Yönetim okur). 2026-11-02 (reisim:
+     "sil tuşuna basıp temizle dediğimde bazen bug da kalıyor"): Ar-Ge kaydı yazılamazsa (sınır, bozuk içerik) temizleme DURMAZ — hata kaydına düşer */
+  try { await argeKaydiYaz(db, (await konusmaOku(db)).map((m) => ({ rol: m.rol, icerik: m.icerik }))); }
+  catch (e) { void hataKaydet({ kaynak: "sunucu", mesaj: `S.A.Y Ar-Ge kaydı yazılamadı: ${e instanceof Error ? e.message : String(e)}`, yer: "say.arge" }); }
   const dosyalar = (await db.sorgu<{ dosya: string }>("DELETE FROM yz_ek WHERE NOT (id::text = ANY($1::text[])) RETURNING dosya", [koru])).rows
     .map((r) => r.dosya).filter((d) => d !== DOSYA_YOK);
   await db.sorgu("DELETE FROM yz_konusma");
@@ -101,6 +104,31 @@ export async function ekOkumaYaz(db: Sorgulayici, ek: string, o: { sinif: string
   await db.sorgu("INSERT INTO yz_ek_okuma (ek_id, sinif, yazi, tarif, alanlar) VALUES ($1, $2, $3, $4, $5::jsonb) ON CONFLICT (ek_id) DO NOTHING",
     [ek, o.sinif, o.yazi.slice(0, 400), o.tarif.slice(0, 160), JSON.stringify(o.alanlar ?? [])]);
 }
+/* ── 2026-11-02 (reisim: "panel ya da sohbetten bağımsız kullanıcı açsa da açmasa da 60 dakika geçince silinsin"; göç 0116): KAPANIŞ SÜPÜRMESİ VERİTABANINDA
+   (say_kapanis_supur — Supabase'de pg_cron 10 dakikada bir). Uygulama ayrıca açılışta kişi için (say_kapanis_kendi), gece işinde firma için (say_kapanis_firma)
+   çağırır. Kapanan konuşmanın son bildirimi yz_kapanis'te yeni sorunun başına not olur (okununca silinir); hizmetteki ek dosyaları yz_silinecek_dosya'dan
+   Dosya API'siyle silinir. ── */
+export async function kapanisKendi(db: Sorgulayici, dakika = 60): Promise<number> {
+  return Number((await db.sorgu<{ n: number }>("SELECT say_kapanis_kendi($1) AS n", [dakika])).rows[0]?.n ?? 0);
+}
+export async function kapanisFirma(db: Sorgulayici, dakika = 60): Promise<number> {
+  return Number((await db.sorgu<{ n: number }>("SELECT say_kapanis_firma($1) AS n", [dakika])).rows[0]?.n ?? 0);
+}
+/** süpürmenin bıraktığı kapanış notu (varsa; okununca silinir) */
+export async function kapanisNotuAl(db: Sorgulayici): Promise<{ neden: string; zaman: Date; sonBildirim: string } | null> {
+  const r = (await db.sorgu<{ neden: string; zaman: Date; son_bildirim: string }>("SELECT neden, zaman, son_bildirim FROM yz_kapanis")).rows[0];
+  if (!r) return null;
+  await db.sorgu("DELETE FROM yz_kapanis");
+  return { neden: r.neden, zaman: new Date(r.zaman), sonBildirim: r.son_bildirim };
+}
+/** firmanın hizmetten silinecek ek dosyaları (kapanan konuşmaların PDF / Word / metin ekleri) */
+export async function silinecekDosyalar(db: Sorgulayici): Promise<{ id: string; dosya: string }[]> {
+  return (await db.sorgu<{ id: string; dosya: string }>("SELECT id::text, dosya FROM yz_silinecek_dosya ORDER BY zaman LIMIT 200")).rows;
+}
+export async function silinecekDosyaSil(db: Sorgulayici, idler: readonly string[]): Promise<void> {
+  if (idler.length) await db.sorgu("DELETE FROM yz_silinecek_dosya WHERE id::text = ANY($1::text[])", [idler]);
+}
+
 /** verilen eklerden fotoğraf olanların sayısı (ön okuma ilerlemesi "n / N" için) */
 export async function fotoEkSayisi(db: Sorgulayici, idler: readonly string[]): Promise<number> {
   if (!idler.length) return 0;

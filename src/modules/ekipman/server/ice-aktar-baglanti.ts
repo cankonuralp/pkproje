@@ -6,9 +6,10 @@ import { ekle, tablo, type Iz } from "../../../server/db/yazici.ts";
 
 const EKIPMAN = tablo({ ad: "ekipman", sutunlar: ["tesis_id", "tur_id", "kod", "konum", "marka", "model", "seri", "imal", "ekleyen"] });
 
-/** firmada verilmiş bütün ekipman kodları (şimdiki ve eski) */
-export async function ekipmanKodlari(db: Sorgulayici): Promise<string[]> {
-  return (await db.sorgu<{ kod: string }>("SELECT kod FROM ekipman_kodu UNION SELECT kod FROM ekipman")).rows.map((x) => x.kod);
+/** firmada verilmiş bütün ekipman kodları (şimdiki ve eski) tesisiyle — 2026-11-02 (göç 0115): kod tesiste eşsiz, çakışma tesis içinde aranır */
+export async function ekipmanKodlari(db: Sorgulayici): Promise<{ tesisId: string; kod: string }[]> {
+  return (await db.sorgu<{ tesis_id: string; kod: string }>("SELECT tesis_id::text, kod FROM ekipman_kodu UNION SELECT tesis_id::text, kod FROM ekipman")).rows
+    .map((x) => ({ tesisId: x.tesis_id, kod: x.kod }));
 }
 
 export async function ekipmanIceAktar(db: Sorgulayici, iz: Iz, e: { tesisId: string; turId: string; kod: string; konum: string | null; marka: string | null;

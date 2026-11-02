@@ -9,8 +9,8 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { DENETIM_ONEKI } from "../src/modules/say/bitis-denetimi.ts";
 import { BECERI_KALDIRILDI, bildirimNotu, bildirimNotuGerekli, bildirimSatirlari, ESKI_SONUC_EN_COK, FOTO_KALDIRILDI, fotoNo, GORUNTU_KALDIRILDI, gosterilenFotolar,
-  ilerlemeMetni, isIciKucult, istemTahmini, kapanisNedeni, kapanisNotu, konusmaSikistir, KUCULTME_EN_COK, kucultmeSeviyesi, partiSonuKucult, raporIlerlemesi, sonSoruIndeksi, TAVAN,
-  ZATEN_BUYUTULDU } from "../src/modules/say/is-siniri.ts";
+  ilerlemeMetni, isIciKucult, istemTahmini, kapanisNedeni, kapanisNotu, konusmaSikistir, KUCULTME_EN_COK, kucultmeSeviyesi, PARTI_ESIGI, PARTI_YAZAN, partiSonuKucult,
+  raporIlerlemesi, sonSoruIndeksi, TAVAN, ZATEN_BUYUTULDU } from "../src/modules/say/is-siniri.ts";
 
 const resim = { type: "image", source: { type: "file", file_id: "f1" } };
 const b64 = { type: "image", source: { type: "base64", media_type: "image/jpeg", data: "/9j/" } };
@@ -147,10 +147,13 @@ test("bu işte büyütülen fotoğraflar; önceki işinkiler sayılmaz; numara v
    sonraki partinin büyütmeleri kalır; yapay zekâ iletileri ve önceki işler aynen; belirlenimli. Olumsuz kanıt: bozan 6. */
 const R1 = "22222222-2222-4222-8222-222222222222", R2 = "33333333-3333-4333-8333-333333333333", R3 = "44444444-4444-4444-8444-444444444444";
 const SORU = { role: "user", content: [{ type: "text", text: "raporları hazırla" }] };
-test("parti sonu küçültme: yazan işlemden önceki büyütmeler metne, sonrakiler kalır; yazma yoksa değişmez; belirlenimli", () => {
-  const yaz = (id: string) => ({ type: "tool_use", id, name: "islem", input: { ad: "raporlara_yaz", girdi: { raporlar: [{ rapor: R1 }, { rapor: R2 }] } } });
+/* 2026-11-02 (altıncı koşu P2): parti yalnız raporlara_yaz / rapor_yaz; yalnız istem kestirimi PARTI_ESIGI'ni aşıyorsa (küçük işte görüntüler kalır — 6. koşuda
+   rapor_ac'tan sonraki dönüşüm 21,6 bin yeniden yazdırmıştı) */
+test("parti sonu küçültme: büyük işte yazan çağrıdan önceki büyütmeler metne, sonrakiler kalır; rapor_ac parti değil; küçük işte ve yazma yoksa değişmez; belirlenimli", () => {
+  const yaz = (id: string, ad = "raporlara_yaz") => ({ type: "tool_use", id, name: "islem", input: { ad, girdi: { raporlar: [{ rapor: R1 }, { rapor: R2 }] } } });
+  const dolgu = { role: "user", content: [{ type: "tool_result", tool_use_id: "d0", content: "d".repeat(PARTI_ESIGI * 4) }] };
   const l = [
-    SORU,
+    SORU, dolgu,
     { role: "assistant", content: [{ type: "thinking", thinking: "…", signature: "s" }, goster("g1", "F01")] },
     { role: "user", content: [{ type: "tool_result", tool_use_id: "g1", content: [b64, { type: "text", text: "F01" }] }] },
     { role: "assistant", content: [yaz("y1")] },
@@ -161,13 +164,18 @@ test("parti sonu küçültme: yazan işlemden önceki büyütmeler metne, sonrak
   const once = JSON.stringify(l);
   const k = partiSonuKucult(l);
   assert.equal(k.degisen, 1);
-  assert.deepEqual(((k.mesajlar[2]!.content as { content: { type: string; text?: string }[] }[])[0]!.content).map((x) => x.text ?? x.type), [GORUNTU_KALDIRILDI, "F01"]);
-  assert.deepEqual(k.mesajlar[6], l[6], "yazmadan sonraki büyütme kalır");
-  assert.deepEqual(k.mesajlar[1], l[1], "yapay zekâ iletisi aynen");
-  assert.deepEqual(partiSonuKucult(l.slice(0, 3)), { mesajlar: l.slice(0, 3), degisen: 0 }, "yazma yoksa değişmez");
+  assert.deepEqual(((k.mesajlar[3]!.content as { content: { type: string; text?: string }[] }[])[0]!.content).map((x) => x.text ?? x.type), [GORUNTU_KALDIRILDI, "F01"]);
+  assert.deepEqual(k.mesajlar[7], l[7], "yazmadan sonraki büyütme kalır");
+  assert.deepEqual(k.mesajlar[2], l[2], "yapay zekâ iletisi aynen");
+  assert.deepEqual(partiSonuKucult(l.slice(0, 4)), { mesajlar: l.slice(0, 4), degisen: 0 }, "yazma yoksa değişmez");
+  const kucuk = l.filter((m) => m !== dolgu);
+  assert.deepEqual(partiSonuKucult(kucuk), { mesajlar: kucuk, degisen: 0 }, "küçük işte (kestirim ≤ eşik) görüntüler kalır");
+  const ac = l.map((m) => (m === l[4] ? { role: "assistant", content: [yaz("y1", "rapor_ac")] } : m));
+  assert.equal(partiSonuKucult(ac).degisen, 0, "rapor_ac parti değil");
   assert.deepEqual(partiSonuKucult(l), k, "belirlenimli");
   assert.deepEqual(partiSonuKucult([...ILK, ...l]).mesajlar.slice(0, ILK.length), ILK, "önceki iş dokunulmaz");
   assert.equal(JSON.stringify(l), once, "girdi değişmedi");
+  assert.deepEqual([...PARTI_YAZAN], ["raporlara_yaz", "rapor_yaz"]);
 });
 
 test("rapor ilerlemesi: bu işte açılan (rapor_ac sonucundan) ve yazılan (raporlara_yaz / rapor_yaz, tekil; hatalı ve sonuçsuz sayılmaz); metni", () => {

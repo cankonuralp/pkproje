@@ -90,7 +90,8 @@ export interface IaBilgi {
   tesisler: { id: string; musteriId: string; ad: string; pasif: boolean }[];
   /** firmada kullanılan e-postalar (müşteri, personel / müşteri girişi kullanıcı adı) */
   musteriEpostalari: string[];
-  ekipmanKodlari: string[];
+  /** 2026-11-02 (göç 0115): kod tesiste eşsiz — kayıtlı kodlar tesisiyle */
+  ekipmanKodlari: { tesisId: string; kod: string }[];
   ekipmanTurleri: { id: string; ad: string; kod: string }[];
   cihazKodlari: string[];
   cihazTurleri: { id: string; ad: string }[];
@@ -174,9 +175,11 @@ function ekipmanDenetle(h: string[], b: IaBilgi, onceki: IaSatir[]): Omit<IaSati
   const mb = musteriBul(b.musteriler.filter((x) => !x.pasif), mu), m = mb.m;
   const tesis = m ? b.tesisler.find((x) => !x.pasif && x.musteriId === m.id && tr(x.ad) === tr(te)) : undefined;
   const konum = temiz(h[4]), marka = temiz(h[5]), model = temiz(h[6]), seri = temiz(h[7]), yil = temiz(h[8]);
+  /* 2026-11-02 (göç 0115): kod TESİSTE eşsiz — kayıtlı kod ve dosyadaki tekrar aynı tesiste aranır; başka tesisin kodu serbest */
   const neden = !kod ? "Ekipman kodu boş" : !EKIPMAN_KOD_BICIMI.test(kod) ? "Kod: harf, rakam, tire; 3–20 hane"
-    : b.ekipmanKodlari.includes(kod) ? "Bu kod kayıtlı" : onceki.some((o) => o.ok && o.kod === kod) ? "Dosyada aynı kod iki kez"
     : !tur ? "Ekipman türü bulunamadı" : mb.belirsiz ? BELIRSIZ : !tesis ? "Müşteri / tesis bulunamadı (önce müşterileri yükleyin)"
+    : b.ekipmanKodlari.some((x) => x.kod === kod && x.tesisId === tesis.id) ? "Bu kod bu tesiste kayıtlı"
+    : onceki.some((o) => o.ok && o.kod === kod && (o.deger as { tesisId?: string } | null)?.tesisId === tesis.id) ? "Dosyada aynı tesiste aynı kod iki kez"
     : sinir(konum, 60, "Kullanım yeri") || sinir(marka, 60, "Marka") || sinir(model, 60, "Model") || sinir(seri, 30, "Seri no");
   const imalOk = /^\d{4}$/.test(yil) && +yil >= 1900 && +yil <= Number(b.bugun.slice(0, 4)) + 1;
   return {

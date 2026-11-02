@@ -111,7 +111,9 @@ export const bildirimNotu = (satir: number) =>
 /* ── 2026-11-01 (V21 A1 — reisim: "100 bin olayını sınırlama şansımız yok mu"): SERT TAVAN. İstem boyu istek öncesi kestirilir; TAVAN'ı aşacaksa iş İÇİNDE
    küçültme seviyesi artar (tek yönlü — bir kez küçülen küçük kalır, seviye yz_konusma_is.kucultme'de): 1 eski büyütme görüntüleri metne (son görüntülü sonuç
    kalır) · 2 okunmuş beceri metinleri nota · 3 uzun araç sonuçları kırpık (son iki kullanıcı iletisi hariç) · 4 "bağlam doldu" sistem notu. ── */
-export const TAVAN = 90_000, KUCULTME_EN_COK = 4;
+/* 2026-11-02 (altıncı koşu P3): tavan 90 → 75 bin — hizmetin bağlam temizlemesi (BAGLAM_ESIGI 80 bin) her şeyi silip bütün önbelleği yeniden yazdırıyordu
+   (6. koşuda 32,8 bin); bizim kademeli küçültme ondan ÖNCE girsin */
+export const TAVAN = 75_000, KUCULTME_EN_COK = 4;
 /** görüntü başına kestirim: konuşmadaki küçük kopya (≤ 800 px), büyütme / pafta (base64, ≤ 1 568 px), belge (PDF) */
 const KUCUK_FOTO = 650, BUYUK_GORUNTU = 2_400, BELGE = 3_000, KARAKTER_BASINA = 3.5;
 export const BECERI_KALDIRILDI = (ad: string) => `${ad} okundu — içeriği bağlam için kaldırıldı; gerekirse beceri_oku ile yeniden oku.`;
@@ -205,13 +207,17 @@ const islemGirdisi = (x: Blok): Record<string, unknown> => {
   const g = x.name === "islem" ? (x.input as { girdi?: unknown } | null)?.girdi : x.input;
   return g && typeof g === "object" ? g as Record<string, unknown> : {};
 };
+/** 2026-11-02 (altıncı koşu P2): parti = yalnız RAPORA YAZAN çağrı (rapor_ac, fotoğraf, saat planı değil — 6. koşuda rapor_ac'tan sonra 21,6 bin yeniden
+    yazıldı) ve yalnız istem kestirimi PARTI_ESIGI'ni aşıyorsa (küçük işte görüntüyü okumak 0,01 $/M, yeniden yazmak 0,20 $/M — görüntüler kalır) */
+export const PARTI_YAZAN: ReadonlySet<string> = new Set(["raporlara_yaz", "rapor_yaz"]);
+export const PARTI_ESIGI = 60_000;
 export function partiSonuKucult<T extends IsMesaji>(mesajlar: readonly T[]): { mesajlar: T[]; degisen: number } {
   const b = sonSoruIndeksi(mesajlar);
-  if (b < 0) return { mesajlar: [...mesajlar], degisen: 0 };
+  if (b < 0 || istemTahmini(mesajlar) <= PARTI_ESIGI) return { mesajlar: [...mesajlar], degisen: 0 };
   let sonYazma = -1;
   mesajlar.forEach((m, i) => {
     if (i <= b || m.role !== "assistant") return;
-    for (const x of bloklar(m.content) ?? []) if (x.type === "tool_use" && RAPOR_YAZAN.has(islemAdi(x))) sonYazma = i;
+    for (const x of bloklar(m.content) ?? []) if (x.type === "tool_use" && PARTI_YAZAN.has(islemAdi(x))) sonYazma = i;
   });
   if (sonYazma < 0) return { mesajlar: [...mesajlar], degisen: 0 };
   let degisen = 0;

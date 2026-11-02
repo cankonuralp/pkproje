@@ -201,9 +201,13 @@ test("ekipman: kod denetimi (biçim · bu planda · tesiste kayıtlı · başka 
   assert.equal((await kd("ht-a1"))?.metin, "HT-A1 bu planda zaten var: Hava tankı. Aynı kod iki ekipmana verilemez.");
   const a3 = await ekipmanId(A, "HT-A3");
   assert.deepEqual(await kd("HT-A3"), { tur: "tesiste", metin: "HT-A3 bu tesiste kayıtlı: Hava tankı. Yeni kayıt açılmaz; kayıtlı ekipmanı plana ekleyin.", ekipmanId: a3 });
-  assert.equal((await kd("HT-B1"))?.metin, "HT-B1 başka bir tesiste kayıtlı: Hava tankı · Deneme / Depo. Aynı kod iki ekipmana verilemez.");
+  /* 2026-11-02 (göç 0115 — reisim: "tesise göre değişsin kodlar"): başka tesisin kodu (şimdiki ya da eski) bu tesiste serbest; eski kod yalnız aynı tesiste yasak */
+  assert.deepEqual(await kd("HT-B1"), { tur: "tamam", metin: "Kod kullanılabilir; bu tesiste başka ekipmanda yok." }, "başka tesisin kodu serbest");
   await sql(A, "UPDATE ekipman SET kod = 'HT-B9' WHERE kod = 'HT-B1'");
-  assert.equal((await kd("HT-B1"))?.metin, "HT-B1 daha önce başka bir ekipmanın koduydu (şimdiki kodu HT-B9). Eski kod başka ekipmana verilmez.");
+  assert.equal((await kd("HT-B1"))?.tur, "tamam", "başka tesisin eski kodu da serbest");
+  await sql(A, "INSERT INTO ekipman (tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, 'HT-A7', 'x')", [FA.tesis, FA.tur]);
+  await sql(A, "UPDATE ekipman SET kod = 'HT-A8' WHERE kod = 'HT-A7'");
+  assert.equal((await kd("HT-A7"))?.metin, "HT-A7 bu tesiste daha önce başka bir ekipmanın koduydu (şimdiki kodu HT-A8). Eski kod aynı tesiste başka ekipmana verilmez.");
   assert.equal((await kd("HT-YENI1"))?.tur, "tamam");
   /* yeni ekipman: biçim, tür, eşsizlik sunucuda */
   assert.deepEqual(await a(FA.den1, (db) => yeniEkipman(db, FA.den1, id, { kod: "HT-A1", tur: FA.tur })),

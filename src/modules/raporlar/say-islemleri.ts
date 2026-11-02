@@ -75,6 +75,23 @@ function kayittakiHal(s: SahaRaporu): { durum: Durum; cihazlar: { turId: string;
   return { durum: { ekipman: metinle(s.ekipmanBilgi), cevaplar: s.cevaplar, tarih: metinle(s.tarih) }, cihazlar };
 }
 
+/** 2026-11-02 (altıncı koşu P1 — 8 rapor_getir aynı formatın haritasını 8 kez aldı, ≈ 20 bin token + 1 istek): rapor_ac sonucu TÜR BAŞINA haritayı BİR kez
+    verir (ilk sayfa; aynı türün raporlarında yer kimlikleri aynı) — S.A.Y yazmadan önce rapor_getir çağırmaz; harita çok sayfalıysa devamı rapor_getir ile */
+async function turHaritalari(b: IslemBaglami, raporlar: readonly string[]): Promise<Record<string, unknown>[]> {
+  const l: Record<string, unknown>[] = [], gorulen = new Set<string>();
+  for (const id of raporlar) {
+    const s = await sahaRaporu(b.db, b.kim, id);
+    if (!s || gorulen.has(s.tur.id)) continue;
+    gorulen.add(s.tur.id);
+    const h = kayittakiHal(s);
+    const harita = metinSayfasi(raporHaritasi(s.tanim, s.tur.ad, { cevaplar: s.cevaplar, ekipman: h.durum.ekipman, tarih: h.durum.tarih, cihazlar: h.cihazlar },
+      { tumu: true, ham: (await raporFormatHami(b.db, b.kim, id)) ?? undefined }) ?? "", 1);
+    l.push({ tur: s.tur.ad, ornek_rapor: id, harita: harita.metin, harita_sayfa_sayisi: harita.bilgi.sayfa_sayisi,
+      not: `Bu türdeki bütün raporların yer kimlikleri aynı; raporlara_yaz / rapor_yaz bu kimliklerle yazar, rapor_getir gerekmez${harita.bilgi.sayfa_sayisi > 1 ? " (haritanın devamı: rapor_getir sayfa 2 …)" : ""}.` });
+  }
+  return l;
+}
+
 /** C: kapalı rapora girişler — ekranın denetimiyle uygulanır, raporKaydet ile yazılır; ölçüm cihazı seçimi cihazEkle / cihazKaldir ile */
 /** tamamlayıcının bu rapordaki girdisi (raporlar/tamamla.ts): işin günü ve raporun saat planı satırı */
 interface TamamlaEki { gun: string; saat: SaatSatiri | null }
@@ -193,15 +210,16 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
       if (typeof v.ekipman === "string") {
         const c = yazmaCevabi(await raporOlustur(b.db, b.kim, v.plan, v.ekipman));
         const id = c.tamam ? (c.sonuc as { id?: unknown } | undefined)?.id : null;
-        return c.tamam && typeof id === "string" ? { ...c, bildirim: `${c.bildirim ?? "Rapor açıldı."}${await taslakUyarisi(b, [id])}` } : c;
+        return c.tamam && typeof id === "string"
+          ? { ...c, bildirim: `${c.bildirim ?? "Rapor açıldı."}${await taslakUyarisi(b, [id])}`, sonuc: { ...(c.sonuc as Record<string, unknown>), haritalar: await turHaritalari(b, [id]) } } : c;
       }
       const l: Record<string, unknown>[] = [];
       for (const e of v.ekipman) {
         const c = yazmaCevabi(await raporOlustur(b.db, b.kim, v.plan, e));
         l.push(c.tamam ? { ekipman: e, ...c.sonuc, bildirim: c.bildirim } : { ekipman: e, neden: c.neden });
       }
-      const acilan = l.filter((x) => !x.neden).length;
-      return acilan ? { tamam: true, bildirim: `${acilan} rapor açıldı.${await taslakUyarisi(b, l.flatMap((x) => (typeof x.id === "string" ? [x.id] : [])))}`, sonuc: { raporlar: l } }
+      const acilanlar = l.flatMap((x) => (typeof x.id === "string" ? [x.id] : []));
+      return acilanlar.length ? { tamam: true, bildirim: `${acilanlar.length} rapor açıldı.${await taslakUyarisi(b, acilanlar)}`, sonuc: { raporlar: l, haritalar: await turHaritalari(b, acilanlar) } }
         : { tamam: false, neden: `Rapor açılamadı: ${l.map((x) => x.neden).join(" · ")}` };
     },
   }),

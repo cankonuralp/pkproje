@@ -31,7 +31,7 @@ import { cagriAyir, cagriKapat, sayBaglami, sayDurumu, sayfaNotu, sayGecmisi, sa
 import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde, type Havuz, type Sorgulayici } from "../src/server/db/kiraci.ts";
 import { klasorDepo } from "../src/server/dosya/depo.ts";
-import { bekleyenAl, bekleyenYaz, ekKaydet, isAl, isBirak, konusmaEkle, konusmaOku, parcalariBirlestir, parcalariSil, parcaYaz } from "../src/server/yz/konusma.ts";
+import { bekleyenAl, bekleyenYaz, ekKaydet, isAl, isBirak, kapanisKendi, konusmaEkle, konusmaOku, parcalariBirlestir, parcalariSil, parcaYaz, silinecekDosyalar } from "../src/server/yz/konusma.ts";
 import { yzAyi } from "../src/server/yz/kullanim.ts";
 import { sohbetYaz } from "../src/server/yz/sohbet.ts";
 import { testKumesi } from "./yardimci/kume.ts";
@@ -286,4 +286,56 @@ test("maliyet: ayırma kişinin aylık sınırıyla (boşsa sınırsız), kapan�
   assert.deepEqual([(k?.mesaj ?? 0) - (ilk?.mesaj ?? 0), Number(k?.maliyet) - Number(ilk?.maliyet ?? 0), Number(k?.ayrilan)], [1, 2_234, 0]);
   /* sınır doluysa ayrılmaz */
   assert.equal(await ile(A, FA.yon, (db) => cagriAyir(db, "haiku", 0.001, 20_000)), null);
+});
+
+/* 2026-11-02 (göç 0116 — reisim: "panel ya da sohbetten bağımsız kullanıcı açsa da açmasa da 60 dakika geçince silinsin"): kapanış süpürmesi VERİTABANINDA
+   (say_kapanis_supur; Supabase'de pg_cron 10 dakikada bir, uygulama açılışta say_kapanis_kendi, gece işi say_kapanis_firma). Bu kilit tutar: eski ve bitmiş
+   konuşma süpürülür — Ar-Ge kaydı, son bildirim yz_kapanis'te, hizmet dosyası silinecekler listesinde (fotoğraf '-' değil), konuşma / ekler / iş / görünen
+   geçmiş silinir; süren iş ve yarıda kalan iş (son ileti araç çağrısı) süpürülmez; taze konuşma süpürülmez; yeni soruda not başa girer ve silinir. */
+test("60 dakika kapanışı veritabanında: eski bitmiş konuşma süpürülür; süren / yarıda / taze süpürülmez; not yeni sorunun başına", async () => {
+  const ekran = { yol: "/planlar", raporNo: null, canli: null, kurucu: null };
+  const eskiEkle = (rol: string, icerik: unknown) => ile(A, FA.den, (db) => db.sorgu(
+    "INSERT INTO yz_konusma (rol, icerik, zaman) VALUES ($1, $2::jsonb, now() - interval '61 minutes')", [rol, JSON.stringify(icerik)]));
+  const sayi = (tablo: string) => ile(A, FA.den, async (db) => (await db.sorgu(`SELECT 1 FROM ${tablo}`)).rows.length);
+  await ile(A, FA.den, (db) => sayTemizle(db));
+  await eskiEkle("user", [{ type: "text", text: "raporları hazırla" }]);
+  await eskiEkle("assistant", [{ type: "thinking", thinking: "…", signature: "s" }, { type: "tool_use", id: "t1", name: "islem", input: { ad: "plan_getir", girdi: {} } }]);
+  await eskiEkle("user", [{ type: "tool_result", tool_use_id: "t1", content: [{ type: "image", source: { type: "base64", media_type: "image/jpeg", data: "/9j/" } }, { type: "text", text: "F01" }] }]);
+  await eskiEkle("assistant", [{ type: "text", text: "8 rapor hazır.\nVarsayımla: a" }]);
+  await ile(A, FA.den, (db) => sohbetYaz(db, { kim: "say", metin: "8 rapor hazır.", yer: "Planlar" }));
+  await ile(A, FA.den, (db) => ekKaydet(db, { dosya: "file_den_eski", ad: "e.pdf", tur: "pdf", mime: "application/pdf", boyut: 9 }));
+  await ile(A, FA.den, (db) => ekKaydet(db, { dosya: "-", ad: "f.jpg", tur: "foto", mime: "image/jpeg", boyut: 9 }));
+  /* süren iş varken süpürülmez */
+  const is = randomUUID();
+  assert.equal(await ile(A, FA.den, (db) => isAl(db, is, 300)), true);
+  assert.equal(await ile(A, FA.den, (db) => kapanisKendi(db, 60)), 0, "süren iş varken kapanmaz");
+  await ile(A, FA.den, (db) => isBirak(db, is));
+  /* 59 dakikalık eşikle de eski — ama 120 dakikalık eşikle taze: süpürülmez */
+  assert.equal(await ile(A, FA.den, (db) => kapanisKendi(db, 120)), 0, "taze sayılan konuşma süpürülmez");
+  const sy = kume.sahipIstemci(); await sy.connect();
+  const argeOnce = Number((await sy.query<{ n: string }>("SELECT count(*)::text AS n FROM say_arge WHERE hesap_id = $1", [FA.den.id])).rows[0].n);
+  assert.equal(await ile(A, FA.den, (db) => kapanisKendi(db, 60)), 1, "eski ve bitmiş konuşma kapandı");
+  for (const t of ["yz_sohbet", "yz_konusma", "yz_ek", "yz_ek_parca", "yz_konusma_is"]) assert.equal(await sayi(t), 0, t);
+  const kayit = (await sy.query<{ ileti: number; icerik: { rol: string; bloklar: { type: string; text?: string }[] }[] }>(
+    "SELECT ileti, icerik FROM say_arge WHERE hesap_id = $1 ORDER BY zaman DESC LIMIT 1", [FA.den.id])).rows[0];
+  assert.equal(Number((await sy.query<{ n: string }>("SELECT count(*)::text AS n FROM say_arge WHERE hesap_id = $1", [FA.den.id])).rows[0].n), argeOnce + 1, "Ar-Ge kaydı yazıldı");
+  assert.equal(kayit.ileti, 4);
+  assert.deepEqual(kayit.icerik[2], { rol: "user", bloklar: [{ type: "tool_result", text: "F01" }] }, "görüntü atılır, yazı kalır");
+  assert.deepEqual(kayit.icerik[1].bloklar.map((b) => b.type), ["tool_use"], "düşünme atılır");
+  await sy.end();
+  const not = await ile(A, FA.den, (db) => db.sorgu<{ neden: string; son_bildirim: string }>("SELECT neden, son_bildirim FROM yz_kapanis"));
+  assert.deepEqual(not.rows, [{ neden: "60 dakika geçti", son_bildirim: "8 rapor hazır.\nVarsayımla: a" }]);
+  assert.deepEqual((await ile(A, FA.den, (db) => silinecekDosyalar(db))).map((d) => d.dosya), ["file_den_eski"], "hizmetteki belge listede; fotoğraf ('-') değil");
+  /* yarıda kalan iş (son ileti araç çağrısı) süpürülmez — yeni soru kapatır */
+  await eskiEkle("user", [{ type: "text", text: "devam et" }]);
+  await eskiEkle("assistant", [{ type: "tool_use", id: "t2", name: "islem", input: { ad: "plan_getir", girdi: {} } }]);
+  assert.equal(await ile(A, FA.den, (db) => kapanisKendi(db, 60)), 0, "yarıda kalan iş süpürülmez");
+  /* yeni soru: süpürmenin notu başa, yz_kapanis silinir */
+  const s = await ile(A, FA.den, (db) => soruyuEkle(db, FA.den, { metin: "Nerede kalmıştık?", ekler: [], ekran }));
+  assert.ok(s.durum === "hazir", JSON.stringify(s));
+  const k = await ile(A, FA.den, (db) => konusmaOku(db));
+  const ilkMetin = (k.find((m) => m.rol === "user" && Array.isArray(m.icerik) && (m.icerik as { text?: string }[]).some((b) => b.text === "Nerede kalmıştık?"))!.icerik as { text: string }[])[0]!.text;
+  assert.match(ilkMetin, /^Önceki konuşma kapandı \(60 dakika geçti; \d{2}\.\d{2} \d{2}:\d{2}\)\. Önceki işin son bildirimi:\n8 rapor hazır\.\nVarsayımla: a/);
+  assert.equal(await sayi("yz_kapanis"), 0, "not okununca silindi");
+  await ile(A, FA.den, (db) => sayTemizle(db));
 });

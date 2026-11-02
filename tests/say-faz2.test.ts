@@ -35,6 +35,15 @@ test("sıradaki kod: firmanın o türdeki düzeni (ayraç, hane), en büyükten 
   for (const k of ["TRF-0001", "TRF-1", "KR0", "A-10", "AKL-0A"]) assert.equal(kodBicimi(k), null, k);
   assert.equal(siradakiKod("AKL", new Set(["AKL-0"])), "AKL-1", "eldeki AKL-0'dan sonra 1");
   assert.equal(SayEkipmanGirdisi.safeParse({ kod: "TRF-0", tur: "11111111-1111-4111-8111-111111111111" }).success, false, "S.A.Y'ın girdisi de reddeder");
+  /* 2026-11-02 (göç 0115 — reisim: "tesise göre değişsin kodlar"): numara TESİSİN kodlarından devam eder; tesiste kod yoksa 1'den, düzen (ayraç, hane) firmanın */
+  assert.equal(siradakiKod("AKL", new Set(), new Set(["AKL-7"])), "AKL-1", "yeni tesis: 1'den, düzen firmanın (tek hane)");
+  assert.equal(siradakiKod("AKL", new Set(), new Set(["AKL-9", "AKL-31"])), "AKL-01", "yeni tesis: düzen firmanın en geniş hanesi (iki hane)");
+  assert.equal(siradakiKod("AKL", new Set(), new Set(["AKL_0007"])), "AKL_0001", "düzen firmanın (ayraç, dört hane)");
+  assert.equal(siradakiKod("AKL", new Set(["AKL-25", "AKL-32"]), new Set(["AKL_0007"])), "AKL-33", "tesiste kod varsa düzen ve numara tesisin");
+  assert.equal(siradakiKod("AKL", new Set(), new Set()), "AKL-0001", "ikisi de boşsa TÜR-0001");
+  /* 2026-11-02 (altıncı koşu P5): S.A.Y seri / konuma "-" yazarsa boş sayılır */
+  const g = SayEkipmanGirdisi.parse({ tur: "11111111-1111-4111-8111-111111111111", seri: "-", konum: " - " });
+  assert.deepEqual([g.seri, g.konum], [null, null]);
 });
 
 test("S.A.Y'ın ekipman girdisi: kod isteğe bağlı (boş = yok), verilirse biçim denetimi aynen", () => {

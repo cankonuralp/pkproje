@@ -425,19 +425,17 @@ export interface KodDurumu { tur: KodTuru; metin: string; ekipmanId?: string }
 async function kodDurumuOku(db: Sorgulayici, e: Erisim, kod: string): Promise<KodDurumu> {
   const k = kodNormal(kod), b = kodBicimi(k);
   if (b) return b;
-  const u = await koduKullanan(db, k);
-  if (!u) return { tur: "tamam", metin: "Kod kullanılabilir; bu firmada başka ekipmanda yok." };
+  /* 2026-11-02 (göç 0115 — reisim: "tesise göre değişsin kodlar, aynı firmada başka tesiste olan ekipmanlar bizi ilgilendirmez"): kod TESİSTE eşsiz —
+     başka tesisin kodu (şimdiki ya da eski) bu tesiste serbest */
+  const u = await koduKullanan(db, k, e.p.tesis_id);
+  if (!u) return { tur: "tamam", metin: "Kod kullanılabilir; bu tesiste başka ekipmanda yok." };
   const t = (await turOzetleri(db)).find((x) => x.id === u.ekipman.turId)?.ad ?? "—";
   const tanim = [t, u.ekipman.konum].filter(Boolean).join(" · ");
-  if (u.eski) return { tur: "hata", metin: `${k} daha önce başka bir ekipmanın koduydu (şimdiki kodu ${u.ekipman.kod}). Eski kod başka ekipmana verilmez.` };
+  if (u.eski) return { tur: "hata", metin: `${k} bu tesiste daha önce başka bir ekipmanın koduydu (şimdiki kodu ${u.ekipman.kod}). Eski kod aynı tesiste başka ekipmana verilmez.` };
   const planda = (await db.sorgu("SELECT 1 FROM plan_ekipman WHERE plan_id = $1 AND ekipman_id = $2", [e.p.id, u.ekipman.id])).rowCount;
   if (planda) return { tur: "hata", metin: `${k} bu planda zaten var: ${tanim}. Aynı kod iki ekipmana verilemez.` };
-  if (u.ekipman.tesisId === e.p.tesis_id) {
-    if (u.ekipman.pasif) return { tur: "hata", metin: `${k} bu tesiste kayıtlı ama pasif: ${tanim}. Aynı kod iki ekipmana verilemez.` };
-    return { tur: "tesiste", metin: `${k} bu tesiste kayıtlı: ${tanim}. Yeni kayıt açılmaz; kayıtlı ekipmanı plana ekleyin.`, ekipmanId: u.ekipman.id };
-  }
-  const yer = (await musteriOzetleri(db)).flatMap((m) => m.tesisler.map((x) => ({ m, x }))).find((y) => y.x.id === u.ekipman.tesisId);
-  return { tur: "hata", metin: `${k} başka bir tesiste kayıtlı: ${t}${yer ? ` · ${yer.m.kisa} / ${yer.x.ad}` : ""}. Aynı kod iki ekipmana verilemez.` };
+  if (u.ekipman.pasif) return { tur: "hata", metin: `${k} bu tesiste kayıtlı ama pasif: ${tanim}. Aynı kod iki ekipmana verilemez.` };
+  return { tur: "tesiste", metin: `${k} bu tesiste kayıtlı: ${tanim}. Yeni kayıt açılmaz; kayıtlı ekipmanı plana ekleyin.`, ekipmanId: u.ekipman.id };
 }
 
 /** yazarken kod denetimi (maket kodDurum); ekleyemeyene null */
@@ -469,8 +467,10 @@ export async function yeniEkipman(db: Sorgulayici, kim: Kisi, id: string, girdi:
     sayı (KMP-0, KMP-1 …; şu anki ve eski kodlar atlanır). Eklenemeyen nedeniyle döner, ötekiler eklenir. */
 export async function sayEkipmanlarEkle(db: Sorgulayici, kim: Kisi, id: string, girdiler: readonly unknown[]): Promise<
   { durum: "tamam"; eklenen: { sira: number; id: string; kod: string }[]; eklenemeyen: { sira: number; kod: string | null; neden: string }[] } | { durum: "yok" | "yetkisiz" } | { durum: "red"; neden: string }> {
+  const e = await erisim(db, kim, id);
+  if (!e) return { durum: "yok" };
   const turKodu = new Map((await turOzetleri(db)).map((t) => [t.id, t.kod]));
-  const kullanilan = new Map<string, Set<string>>();
+  const kullanilan = new Map<string, Set<string>>(), firmaDuzeni = new Map<string, Set<string>>();
   const eklenen: { sira: number; id: string; kod: string }[] = [], eklenemeyen: { sira: number; kod: string | null; neden: string }[] = [];
   for (const [i, ham] of girdiler.entries()) {
     const g = dogrula(SayEkipmanGirdisi, ham);
@@ -479,9 +479,12 @@ export async function sayEkipmanlarEkle(db: Sorgulayici, kim: Kisi, id: string, 
     if (!kod) {
       const onek = turKodu.get(g.veri.tur);
       if (!onek) { eklenemeyen.push({ sira: i + 1, kod: null, neden: "Ekipman türü seçilmeli." }); continue; }
-      const k = kullanilan.get(onek) ?? await onekliKodlar(db, onek);
+      /* 2026-11-02 (göç 0115): numara TESİSİN o türdeki kodlarından devam eder (başka tesisin kodları sayılmaz); düzen — ayraç, hane — firmanın */
+      const k = kullanilan.get(onek) ?? await onekliKodlar(db, onek, e.p.tesis_id);
       kullanilan.set(onek, k);
-      kod = siradakiKod(onek, k);
+      const d = firmaDuzeni.get(onek) ?? await onekliKodlar(db, onek);
+      firmaDuzeni.set(onek, d);
+      kod = siradakiKod(onek, k, d);
     }
     const r = await yeniEkipman(db, kim, id, { kod, tur: g.veri.tur, seri: g.veri.seri, konum: g.veri.konum });
     if (r.durum === "yok" || r.durum === "yetkisiz") return { durum: r.durum };

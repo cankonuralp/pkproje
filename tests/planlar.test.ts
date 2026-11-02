@@ -177,13 +177,22 @@ test("PLAN değişmez alanlar: proje no ve tesis değişmez; bitiş başlangıç
   await assert.rejects(sql(A, "DELETE FROM plan WHERE id = $1", [r.id]), /permission denied|izin/i);
 });
 
-test("EKİPMAN KODU: firmada eşsiz; değiştirilen eski kod başkasına verilmez; biçim veritabanında da (harf — Türkçe dahil —, rakam, tire, 3–20); başka firmada serbest", async () => {
-  const ekle = (firma: string, f: Firma, kod: string) => sql<{ id: string }>(firma,
-    "INSERT INTO ekipman (tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, $3, 'Deneme') RETURNING id::text", [f.tesis, f.tur, kod]);
+/* 2026-11-02 (göç 0115 — reisim: "tesise göre değişsin kodlar, aynı firmada başka tesiste olan ekipmanlar bizi ilgilendirmez"): eşsizlik ve kod geçmişi
+   FİRMA yerine TESİS kapsamında — önce "firmada eşsiz" idi */
+test("EKİPMAN KODU: tesiste eşsiz; aynı firmanın başka tesisinde aynı kod serbest; değiştirilen eski kod aynı tesiste başkasına verilmez; biçim veritabanında da (harf — Türkçe dahil —, rakam, tire, 3–20); başka firmada serbest", async () => {
+  const ekle = (firma: string, f: Firma, kod: string, tesis = f.tesis) => sql<{ id: string }>(firma,
+    "INSERT INTO ekipman (tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, $3, 'Deneme') RETURNING id::text", [tesis, f.tur, kod]);
   const x = (await ekle(A, FA, "HT-1001")).rows[0].id;
   await assert.rejects(ekle(A, FA, "HT-1001"), /duplicate|yinelenen|başka bir ekipmana/i);
+  const kodTesisi = (await sql<{ id: string }>(A, "INSERT INTO tesis (musteri_id, ad) SELECT musteri_id, 'Kod tesisi' FROM tesis WHERE id = $1 RETURNING id::text", [FA.tesis])).rows[0].id;
+  const y = (await ekle(A, FA, "HT-1001", kodTesisi)).rows[0].id;
+  assert.ok(y, "aynı firmanın başka tesisinde aynı kod serbest");
   await sql(A, "UPDATE ekipman SET kod = 'HT-2001' WHERE id = $1", [x]);
-  await assert.rejects(ekle(A, FA, "HT-1001"), /başka bir ekipmana verilmiş/, "eski kod başkasına verilmez");
+  await assert.rejects(ekle(A, FA, "HT-1001"), /başka bir ekipmana verilmiş/, "eski kod aynı tesiste başkasına verilmez");
+  await sql(A, "UPDATE ekipman SET kod = 'HT-3001' WHERE id = $1", [y]);
+  assert.ok((await ekle(A, FA, "HT-2001", kodTesisi)).rowCount, "öteki tesisin şimdiki kodu bu tesiste serbest");
+  assert.deepEqual((await sql<{ kod: string; ayni: boolean }>(A, "SELECT kod, (tesis_id = $1) AS ayni FROM ekipman_kodu WHERE ekipman_id = $2 ORDER BY kod", [kodTesisi, y])).rows,
+    [{ kod: "HT-1001", ayni: true }, { kod: "HT-3001", ayni: true }], "kod geçmişi tesisiyle");
   await sql(A, "UPDATE ekipman SET kod = 'HT-1001' WHERE id = $1", [x]);
   assert.equal((await sql<{ kod: string }>(A, "SELECT kod FROM ekipman WHERE id = $1", [x])).rows[0].kod, "HT-1001", "ekipman kendi eski koduna dönebilir");
   for (const kotu of ["-HT1", "HT1-", "HT--1", "ht-1", "AB", "A".repeat(21), "HT 1", "ş-01", "HT_1"]) await assert.rejects(ekle(A, FA, kotu), /check/i, kotu);

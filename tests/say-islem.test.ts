@@ -140,6 +140,10 @@ test("3. plan kabul (yalnız plandaki denetçi), rapor aç, rapor yaz: ekranın 
   tamam(await isle(A, FA.den1, "plan_kabul", kabul));
   const r = tamam(await isle(A, FA.den1, "rapor_ac", { plan: p.id, ekipman: FA.ekipman }));
   const rapor = String(r.id);
+  /* 2026-11-02 (altıncı koşu P1): rapor_ac sonucu türün haritasını bir kez verir — S.A.Y rapor_getir çağırmaz */
+  const haritalar = r.haritalar as { tur: string; ornek_rapor: string; harita: string; harita_sayfa_sayisi: number; not: string }[];
+  assert.equal(haritalar.length, 1);
+  assert.ok(haritalar[0]!.ornek_rapor === rapor && haritalar[0]!.harita.includes("Raporun yazılabilir yerleri") && /rapor_getir gerekmez/.test(haritalar[0]!.not), JSON.stringify(haritalar[0]));
   /* ekranda açık, kaydedilmemiş rapor plan bilgisi güncellemesiyle ezilmez (önce ekranın kaydı); kaydedilmişse işlem yapılır */
   assert.equal(neden(await isle(A, FA.den1, "plan_kunye_guncelle", { plan: p.id }, { ekrandakiRapor: rapor, kaydedilmemis: true })), EKRAN_KAYDEDILMEMIS);
   const kg = await isle(A, FA.den1, "plan_kunye_guncelle", { plan: p.id }, { ekrandakiRapor: rapor });

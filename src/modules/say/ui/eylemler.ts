@@ -8,16 +8,32 @@ import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { anthropicDosyaSil } from "../../../server/yz/akis";
 import type { SohbetIletisi } from "../../../server/yz/sohbet";
 import { kosulKabulEt } from "../../../server/yz/kosul";
-import { sayDurumu, sayGecmisi, sayOneri, sayRaporCevabi, sayTemizle, type SayDurum } from "../server/say";
+import { hataKaydet } from "../../../server/hata/kaydet";
+import { silinecekDosyaSil } from "../../../server/yz/konusma";
+import { sayAcilisKapanisi, sayDurumu, sayGecmisi, sayOneri, sayRaporCevabi, sayTemizle, type SayDurum } from "../server/say";
 
 async function oturum() {
   if (!(await ayniKoken())) return null;
   return istekOturumu();
 }
 
+/** 2026-11-02 (göç 0116 — reisim: "kullanıcı açsa da açmasa da 60 dakika geçince silinsin"): sayfa / panel açılışında kişinin 60 dakikayı geçmiş konuşması
+    kapanır (süpürme veritabanında da var; burası aradaki dakikaları kapatır), hizmetteki ek dosyaları silinir. Düşerse açılış düşmez — hata kaydına */
+async function acilisKapanisi(o: NonNullable<Awaited<ReturnType<typeof istekOturumu>>>): Promise<void> {
+  try {
+    const k = await oturumIslemi(o, (db) => sayAcilisKapanisi(db));
+    if (!k.anahtar || !k.dosyalar.length) return;
+    for (const d of k.dosyalar) await anthropicDosyaSil(d.dosya, k.anahtar);
+    await oturumIslemi(o, (db) => silinecekDosyaSil(db, k.dosyalar.map((d) => d.id)));
+  } catch (e) {
+    void hataKaydet({ kaynak: "sunucu", mesaj: `S.A.Y açılış kapanışı: ${e instanceof Error ? e.message : String(e)}`, yer: "say.kapanis", alan: o.kiraci.kisaAd, hesap: o.id });
+  }
+}
+
 export async function sayDurumEylemi(): Promise<SayDurum | null> {
   const o = await oturum();
   if (!o) return null;
+  await acilisKapanisi(o);
   const d = await oturumIslemi(o, (db) => sayDurumu(db));
   return { ...d, roller: [...o.roller], ...(d.kosul ? { kosul: { ...d.kosul, yonetici: o.roller.includes("firma_yoneticisi") } } : {}) };
 }
@@ -32,7 +48,9 @@ export async function kosulKabulEylemi(tur: "firma" | "kullanici"): Promise<{ ta
 
 export async function sayGecmisEylemi(): Promise<SohbetIletisi[]> {
   const o = await oturum();
-  return o ? oturumIslemi(o, (db) => sayGecmisi(db)) : [];
+  if (!o) return [];
+  await acilisKapanisi(o);
+  return oturumIslemi(o, (db) => sayGecmisi(db));
 }
 
 /** rapor ekranının kuralla yaptığı iş (542): ekran işin sayılarını gönderir, metni sunucu kurar */
@@ -52,7 +70,13 @@ export async function sayOneriEylemi(id: unknown, durum: unknown): Promise<boole
 export async function sayTemizleEylemi(): Promise<{ durum: "tamam"; silinen: number } | { durum: "red"; neden: string }> {
   const o = await oturum();
   if (!o) return { durum: "red", neden: "Oturumunuz kapandı." };
-  const t = await oturumIslemi(o, (db) => sayTemizle(db, o.ad));
-  if (t.anahtar) for (const d of t.dosyalar) await anthropicDosyaSil(d, t.anahtar);
-  return { durum: "tamam", silinen: t.silinen };
+  /* 2026-11-02 (reisim: "sil tuşuna basıp temizle dediğimde bazen bug da kalıyor"): düşen temizleme sessiz kalmaz — nedeni ekrana, hata kaydına */
+  try {
+    const t = await oturumIslemi(o, (db) => sayTemizle(db, o.ad));
+    if (t.anahtar) for (const d of t.dosyalar) await anthropicDosyaSil(d, t.anahtar);
+    return { durum: "tamam", silinen: t.silinen };
+  } catch (e) {
+    void hataKaydet({ kaynak: "sunucu", mesaj: `S.A.Y temizleme: ${e instanceof Error ? e.message : String(e)}`, yer: "say.temizle", alan: o.kiraci.kisaAd, hesap: o.id });
+    return { durum: "red", neden: "Sohbet temizlenemedi; yeniden deneyin." };
+  }
 }

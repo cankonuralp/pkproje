@@ -1,5 +1,6 @@
-/* EKİPMAN — tesisin KALICI ekipman kaydı (modül 7; ayrı ekran değil, planın içinde — reisim 2026-09-26; göç 0023). Kod firmada eşsiz, eski kod
-   başkasına verilmez (veritabanı). Bu modül öteki modüllere OKUMA ve YAZMA işlevi açar; yetki ÇAĞIRANDA (Planlar: plan içinde ekle / pasife al).
+/* EKİPMAN — tesisin KALICI ekipman kaydı (modül 7; ayrı ekran değil, planın içinde — reisim 2026-09-26; göç 0023). Kod TESİSTE eşsiz, eski kod aynı
+   tesiste başkasına verilmez (veritabanı; 2026-11-02 göç 0115 — reisim: "tesise göre değişsin kodlar, aynı firmada başka tesiste olan ekipmanlar bizi
+   ilgilendirmez"; önce firmada eşsizdi). Bu modül öteki modüllere OKUMA ve YAZMA işlevi açar; yetki ÇAĞIRANDA (Planlar: plan içinde ekle / pasife al).
    Yazmalar güvenli yazıcıdan, denetim izine. */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { kesinSil, kullanimlar, type Kullanim, type SilmeSonucu } from "../../../server/db/silici.ts";
@@ -35,19 +36,23 @@ export async function ekipmanlar(db: Sorgulayici, idler: readonly string[]): Pro
   return (await db.sorgu<Satir>(`${SEC} WHERE id = ANY ($1::uuid[]) ORDER BY kod`, [l])).rows.map(ozet);
 }
 
-/** kodun firmadaki sahibi: şu anki kodu ya da eski kodu (geçmiş) olan ekipman; yoksa null. Yetki ÇAĞIRANDA. */
-export async function koduKullanan(db: Sorgulayici, kod: string): Promise<{ ekipman: EkipmanOzeti; eski: boolean } | null> {
-  const simdiki = (await db.sorgu<Satir>(`${SEC} WHERE kod = $1`, [kod])).rows[0];
+/** kodun TESİSTEKİ sahibi: şu anki kodu ya da eski kodu (geçmiş) olan ekipman; yoksa null. Başka tesisin kodu sayılmaz (2026-11-02). Yetki ÇAĞIRANDA. */
+export async function koduKullanan(db: Sorgulayici, kod: string, tesisId: string): Promise<{ ekipman: EkipmanOzeti; eski: boolean } | null> {
+  if (!UUID.test(tesisId)) return null;
+  const simdiki = (await db.sorgu<Satir>(`${SEC} WHERE kod = $1 AND tesis_id = $2`, [kod, tesisId])).rows[0];
   if (simdiki) return { ekipman: ozet(simdiki), eski: false };
-  const g = (await db.sorgu<Satir>(`${SEC} WHERE id = (SELECT ekipman_id FROM ekipman_kodu WHERE kod = $1)`, [kod])).rows[0];
+  const g = (await db.sorgu<Satir>(`${SEC} WHERE id = (SELECT ekipman_id FROM ekipman_kodu WHERE kod = $1 AND tesis_id = $2)`, [kod, tesisId])).rows[0];
   return g ? { ekipman: ozet(g), eski: true } : null;
 }
 
-/** 2026-10-26 (S.A.Y Faz 2): "<önek>-…" biçimindeki kullanılmış kodlar — şu anki ve eski kodlar (eski kod başkasına verilmez); kendiliğinden
-    verilen kod için. Önek türün kodu (2–3 büyük harf). Yetki ÇAĞIRANDA. */
-export async function onekliKodlar(db: Sorgulayici, onek: string): Promise<Set<string>> {
-  if (!/^[A-ZÇĞİÖŞÜ]{2,3}$/.test(onek)) return new Set();
-  const r = await db.sorgu<{ kod: string }>("SELECT kod FROM ekipman WHERE kod LIKE $1 UNION SELECT kod FROM ekipman_kodu WHERE kod LIKE $1", [`${onek}-%`]);
+/** 2026-10-26 (S.A.Y Faz 2): "<önek>-…" biçimindeki kullanılmış kodlar — şu anki ve eski kodlar; kendiliğinden verilen kod için. Önek türün kodu (2–3 büyük
+    harf). 2026-11-02: tesis verilirse yalnız o tesisin kodları (numara tesiste devam eder); verilmezse firmanın hepsi (yalnız düzen — ayraç, hane — için).
+    Yetki ÇAĞIRANDA. */
+export async function onekliKodlar(db: Sorgulayici, onek: string, tesisId?: string): Promise<Set<string>> {
+  if (!/^[A-ZÇĞİÖŞÜ]{2,3}$/.test(onek) || (tesisId !== undefined && !UUID.test(tesisId))) return new Set();
+  const r = tesisId
+    ? await db.sorgu<{ kod: string }>("SELECT kod FROM ekipman WHERE kod LIKE $1 AND tesis_id = $2 UNION SELECT kod FROM ekipman_kodu WHERE kod LIKE $1 AND tesis_id = $2", [`${onek}-%`, tesisId])
+    : await db.sorgu<{ kod: string }>("SELECT kod FROM ekipman WHERE kod LIKE $1 UNION SELECT kod FROM ekipman_kodu WHERE kod LIKE $1", [`${onek}-%`]);
   return new Set(r.rows.map((x) => x.kod));
 }
 

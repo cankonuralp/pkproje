@@ -590,7 +590,7 @@ export function SayChat({ veri }: { veri: SayChatPaneli }) {
       metin: `${uzerine.map((g) => ekipAd(g.ekipman)).join(", ")} için açık rapor var. Kayıtlar yeni rapor açmaz, o raporun BOŞ alanlarına yazılır; dolu alanlar değişmez.`, tus: "Yaz" }))) return;
     const yeniKodsuz = hazirlar.find((g) => g.ekipman?.tip === "yeni" && !kodlar[g.id]?.trim());
     if (yeniKodsuz) {
-      setSonuclar((s) => ({ ...s, [yeniKodsuz.id]: { neden: "Ekipman kodunu yazın (etiketteki; firmada eşsiz).", kod: true } }));
+      setSonuclar((s) => ({ ...s, [yeniKodsuz.id]: { neden: "Ekipman kodunu yazın (etiketteki; tesiste eşsiz).", kod: true } }));
       uyar("Yeni ekipmanın kodunu yazın.");
       hazirSayfa.satiraGit(hazirlar.indexOf(yeniKodsuz));
       window.setTimeout(() => document.getElementById(`sc-kod-${yeniKodsuz.id}`)?.focus(), 60);

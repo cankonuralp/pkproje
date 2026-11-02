@@ -17,8 +17,8 @@ import { sinirli, yzAyi, yzAyir, yzAyirmaBirak, yzKendiAyi, yzMesajSay, yzSohbet
 import { maliyetHesapla, type YzModel } from "../../../server/yz/okuma.ts";
 import { aracCagrilari, cevapMetni, SAY_YANIT_SINIRI } from "../../../server/yz/say.ts";
 import { dosyaCope } from "../../../server/dosya/dosya.ts";
-import { ekKopyalari, ekleriAl, konusmaEkle, konusmaKilidi, konusmaOku, konusmaSonu, konusmaSonZamani, konusmaTemizle, kuyrukNotlariniSil, bekleyenAl } from "../../../server/yz/konusma.ts";
-import { kapanisNedeni, kapanisNotu } from "../is-siniri.ts";
+import { ekKopyalari, ekleriAl, kapanisKendi, kapanisNotuAl, konusmaEkle, konusmaKilidi, konusmaOku, konusmaSonu, konusmaSonZamani, konusmaTemizle, kuyrukNotlariniSil, bekleyenAl, silinecekDosyalar } from "../../../server/yz/konusma.ts";
+import { KAPANIS_DAKIKA, kapanisNedeni, kapanisNotu } from "../is-siniri.ts";
 import { sohbetGecmisi, sohbetOneriDurumu, sohbetTemizle, sohbetYaz, type SohbetEki, type SohbetIletisi } from "../../../server/yz/sohbet.ts";
 import { raporSayBilgisi, raporSayDurumu } from "../../raporlar/server/say-baglanti.ts";
 import { acikRaporMetni, raporHaritasi, yoldakiRapor } from "../rapor-haritasi.ts";
@@ -165,8 +165,11 @@ export async function soruyuEkle(db: Sorgulayici, kim: Kisi, g: { metin: string;
   const k = await sayKapisi(db);
   if (k.durum === "red") return k;
   const b = await sayBaglami(db, kim, g.ekran, g.okuyucu);
-  /* 2026-11-01 (V21 B): otomatik kapanış — eklerin numarası kapanıştan SONRA (yeni konuşmada M01'den) */
-  const kapanis = await otomatikKapanis(db, kim, simdi, g.ekler);
+  /* 2026-11-01 (V21 B): otomatik kapanış — eklerin numarası kapanıştan SONRA (yeni konuşmada M01'den). 2026-11-02 (göç 0116): veritabanındaki süpürme
+     konuşmayı zaten kapattıysa notu yz_kapanis'ten (okununca silinir) */
+  const bekleyen = await kapanisNotuAl(db);
+  const kapanis = await otomatikKapanis(db, kim, simdi, g.ekler)
+    ?? (bekleyen ? { not: kapanisNotu(bekleyen.neden, saatTr(bekleyen.zaman), bekleyen.sonBildirim), dosyalar: [] as string[], anahtar: null } : null);
   const ekler = await ekleriAl(db, g.ekler);
   if (!metin && !ekler.length) return { durum: "red", neden: "Sorunuzu yazın." };
   const soru = metin || (ekler.length === 1 ? "Eki inceler misin?" : "Ekleri inceler misin?");
@@ -190,9 +193,17 @@ async function otomatikKapanis(db: Sorgulayici, kim: Kisi, simdi: Date, koru: re
   const neden = kapanisNedeni({ mesajlar, sonZaman: await konusmaSonZamani(db), simdi });
   if (!neden) return null;
   const bildirim = cevapMetni(Array.isArray(son.icerik) ? son.icerik as Record<string, unknown>[] : []) ?? "";
-  const saat = new Intl.DateTimeFormat("tr-TR", { timeZone: "Europe/Istanbul", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).format(simdi);
   const t = await sayTemizle(db, kim.ad, koru);
-  return { not: kapanisNotu(neden, saat, bildirim), dosyalar: t.dosyalar, anahtar: t.anahtar };
+  return { not: kapanisNotu(neden, saatTr(simdi), bildirim), dosyalar: t.dosyalar, anahtar: t.anahtar };
+}
+const saatTr = (d: Date): string => new Intl.DateTimeFormat("tr-TR", { timeZone: "Europe/Istanbul", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).format(d);
+
+/** 2026-11-02 (göç 0116 — reisim: "kullanıcı açsa da açmasa da 60 dakika geçince silinsin"): açılışta kişinin 60 dakikayı geçmiş, bitmiş konuşması kapanır
+    (süpürme veritabanında da var; burası aradaki dakikaları kapatır) ve hizmetten silinecek ek dosyaları (anahtarla; silme işlem dışında) döner */
+export async function sayAcilisKapanisi(db: Sorgulayici): Promise<{ kapanan: number; dosyalar: { id: string; dosya: string }[]; anahtar: string | null }> {
+  const kapanan = await kapanisKendi(db, KAPANIS_DAKIKA);
+  const dosyalar = await silinecekDosyalar(db);
+  return { kapanan, dosyalar, anahtar: dosyalar.length ? await sirKullan(db, "yapay_zeka_anahtari") : null };
 }
 
 /** görünen geçmişe yazar; dönen ileti (ekran hemen çizer) */

@@ -128,14 +128,14 @@ export async function planAc(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: st
     sozlesmeId = (await tesisSozlesmeleri(db, v.tesis)).find((s) => s.baslangic <= bugun && s.bitis >= bugun)?.id ?? null;
     if (!sozlesmeId) return { durum: "gecersiz", hatalar: { ekip: "Tesisin yürürlükte iş sözleşmesi yok; ID sözleşmeye kaydedilemez." } };
   }
-  /* 444: elle eklenen ekipman — tür firmada, kod firmada eşsiz (eski kod başkasına verilmez; tesiste kayıtlıysa zaten plana girer) */
+  /* 444: elle eklenen ekipman — tür firmada, kod TESİSTE eşsiz (2026-11-02 göç 0115; eski kod aynı tesiste başkasına verilmez; tesiste kayıtlıysa zaten plana girer) */
   const turIdler = new Set((await turOzetleri(db)).map((x) => x.id)), ekHata: DogrulamaHatalari = {};
   for (const [i, e] of v.yeniEkipman.entries()) {
     if (!turIdler.has(e.tur)) { ekHata[`yeniEkipman.${i}.tur`] = "Ekipman türü seçilmeli."; continue; }
-    const u = await koduKullanan(db, e.kod);
+    const u = await koduKullanan(db, e.kod, v.tesis);
     if (!u) continue;
-    ekHata[`yeniEkipman.${i}.kod`] = u.eski ? `${e.kod} daha önce başka bir ekipmanın koduydu; eski kod başka ekipmana verilmez.`
-      : u.ekipman.tesisId === v.tesis ? `${e.kod} bu tesiste kayıtlı${u.ekipman.pasif ? " ama pasif" : "; zaten plana girer"}.` : `${e.kod} başka bir tesiste kayıtlı; aynı kod iki ekipmana verilemez.`;
+    ekHata[`yeniEkipman.${i}.kod`] = u.eski ? `${e.kod} bu tesiste daha önce başka bir ekipmanın koduydu; eski kod aynı tesiste başka ekipmana verilmez.`
+      : `${e.kod} bu tesiste kayıtlı${u.ekipman.pasif ? " ama pasif" : "; zaten plana girer"}.`;
   }
   if (Object.keys(ekHata).length) return { durum: "gecersiz", hatalar: ekHata };
   /* ── yazma: buradan sonrası beklenmeyen hata dışında düşmez; düşerse işlem bütünüyle geri alınır ── */

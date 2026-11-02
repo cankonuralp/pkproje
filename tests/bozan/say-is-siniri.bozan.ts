@@ -59,6 +59,8 @@ test("6. parti sonu küçültme kalkınca yazılmış partinin büyütmeleri kon
   const b64 = { type: "image", source: { type: "base64", media_type: "image/jpeg", data: "/9j/" } };
   const l = [
     { role: "user", content: [{ type: "text", text: "raporları hazırla" }] },
+    /* 2026-11-02 (P2): eşik — büyük iş (kestirim > PARTI_ESIGI) */
+    { role: "user", content: [{ type: "tool_result", tool_use_id: "d0", content: "d".repeat(m.PARTI_ESIGI * 4) }] },
     { role: "assistant", content: [{ type: "tool_use", id: "g1", name: "foto_goster", input: { foto: "F01" } }] },
     { role: "user", content: [{ type: "tool_result", tool_use_id: "g1", content: [b64, { type: "text", text: "F01" }] }] },
     { role: "assistant", content: [{ type: "tool_use", id: "y1", name: "islem", input: { ad: "raporlara_yaz", girdi: { raporlar: [] } } }] },

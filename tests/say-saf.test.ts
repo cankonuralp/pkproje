@@ -46,6 +46,10 @@ test("talimat: reisim'in iki kuralı; eski yamalar yok; sayfa ve ekran talimatta
   /* 2026-11-01 V21 T1 / T3 / T4 */
   assert.match(SISTEM, /Kontrol günü PLAN günüdür, rapor tarihi kontrol günüdür/, "tarih kuralı");
   assert.match(SISTEM, /denetimin tarih uyarısı tarihi değiştirmez/, "uyarı tarih değiştirmez");
+  /* 2026-11-02 (altıncı koşu P1 / P4, göç 0115) */
+  assert.match(SISTEM, /rapor_ac sonucundaki tür haritası o türün bütün raporları için geçerlidir/, "harita bir kez");
+  assert.match(SISTEM, /bunlar kalan engeldir, bildirimde yazarsın/, "denetim sonrası yeniden okuma yok");
+  assert.match(SISTEM, /kod tesiste eşsizdir, başka tesisin kodları sayılmaz/, "kod tesis bazlı");
   assert.match(SISTEM, /Başka firmanın eski raporu \(belge fotoğrafı\) etiketin yerine geçmez/, "üçüncü taraf belgesi etiket değil");
   assert.match(SISTEM, /Dört DÜZ satır: alt madde, tablo, başlık yok/, "bildirim düz dört satır");
   assert.doesNotMatch(SISTEM, /SON mesajını cevapla|o mesajda metin yazma|en çok \d|karakter|sınırı/i, "eski yamalar ve sınırlar yok");

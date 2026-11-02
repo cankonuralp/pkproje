@@ -7,6 +7,28 @@ import type { Depo } from "../dosya/depo.ts";
 import { firmalardaKos, type HavuzBul, type IsOzeti } from "./firmalar.ts";
 import { firmaGonderimi } from "../eposta/firma.ts";
 import { bekleyenleriGonder } from "../eposta/gonder.ts";
+import { sirKullan } from "../ayar/sir.ts";
+import { anthropicDosyaSil } from "../yz/akis.ts";
+import { kapanisFirma, silinecekDosyalar, silinecekDosyaSil } from "../yz/konusma.ts";
+
+/** 2026-11-02 (göç 0116 — reisim: "kullanıcı açsa da açmasa da 60 dakika geçince silinsin"): 60 dakikayı geçmiş, bitmiş S.A.Y konuşmaları kapanır (asıl
+    süpürme veritabanında pg_cron ile 10 dakikada bir; burası pg_cron olmayan ortamın yedeği) ve kapanan konuşmaların hizmetteki ek dosyaları silinir */
+export type KapanisOzeti = IsOzeti<{ kapanan: number; dosya: number }>;
+export async function sayKapanisIsi(havuz: Havuz, sure: number, havuzBul?: HavuzBul): Promise<KapanisOzeti> {
+  return firmalardaKos(havuz, "say_kapanis", sure, { kapanan: 0, dosya: 0 }, async (db) => {
+    const kapanan = await kapanisFirma(db, 60);
+    const l = await silinecekDosyalar(db);
+    let dosya = 0;
+    if (l.length) {
+      const anahtar = await sirKullan(db, "yapay_zeka_anahtari");
+      if (anahtar) {
+        for (const d of l) { await anthropicDosyaSil(d.dosya, anahtar); dosya++; }
+        await silinecekDosyaSil(db, l.map((d) => d.id));
+      }
+    }
+    return { sayilar: { kapanan, dosya }, kalan: l.length >= 200 };
+  }, havuzBul);
+}
 
 export type GeceOzeti = IsOzeti<{ silinen: number; bayt: number; bagli: number; oksuz: number }>;
 

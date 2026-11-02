@@ -195,7 +195,7 @@ export const kodNormal = (v: string) => v.replace(/\s+/g, "").toUpperCase();
 export type KodTuru = "bos" | "hata" | "tamam" | "tesiste";
 /** kodun biçimi (maket kodDurum ilk dört satır); biçim uygunsa null — eşsizlik sunucuda */
 export function kodBicimi(kod: string): { tur: KodTuru; metin: string } | null {
-  if (!kod) return { tur: "bos", metin: "Etiketteki kodu yazın: harf, rakam ve tire. Kod firmada eşsiz olmalı." };
+  if (!kod) return { tur: "bos", metin: "Etiketteki kodu yazın: harf, rakam ve tire. Kod tesiste eşsiz olmalı." };
   if (/[^A-ZÇĞİÖŞÜ0-9-]/.test(kod)) return { tur: "hata", metin: "Kodda yalnız harf, rakam ve tire olabilir (boşluk ve işaret yok)." };
   if (kod.length < 3 || kod.length > 20) return { tur: "hata", metin: "Kod 3 ile 20 hane arasında olmalı." };
   if (!/^[A-ZÇĞİÖŞÜ0-9]+(-[A-ZÇĞİÖŞÜ0-9]+)*$/.test(kod)) return { tur: "hata", metin: "Tire başta, sonda ya da art arda olamaz." };
@@ -215,19 +215,25 @@ export const YeniEkipmanGirdisi = z.object({
 });
 /** 2026-10-26 (S.A.Y Faz 2 — reisim: "kodu otomatik kendisi verecek ekipmanın sabit kodu + 0-1-2 sayılar sırasıyla gidecek"): S.A.Y'ın eklediği
     ekipman — kod isteğe bağlı; verilmezse sunucu firmanın o türdeki kod düzeniyle sıradakini verir (siradakiKod) */
+/** 2026-11-02 (altıncı koşu P5): S.A.Y seri / konuma raporun "bilinemeyen METİN" işareti "-"yi yazmıştı; ekipman kaydında "-" boştur */
+const tireBos = (s: unknown) => (typeof s === "string" && s.trim() === "-" ? "" : s);
 export const SayEkipmanGirdisi = YeniEkipmanGirdisi.extend({
   kod: z.preprocess((s) => (typeof s === "string" && !s.trim() ? undefined : s), YeniEkipmanGirdisi.shape.kod.optional()),
+  seri: z.preprocess(tireBos, YeniEkipmanGirdisi.shape.seri),
+  konum: z.preprocess(tireBos, YeniEkipmanGirdisi.shape.konum),
 });
 /** sıradaki kod — 2026-10-31 (reisim: "kod verilmezse sunucu firmanın düzeniyle üretir (TRF-0001 gibi); numaralar saha sırasıyla verilir"; karar 4: "önerin
-    uygun"): firmanın o türdeki kodlarının (şu anki ya da eski) düzeni — ayraç, hane sayısı — ile en büyük numaradan sonraki; firmada o türden kod yoksa
-    TÜR-0001. Boşluk doldurulmaz (eski kod başkasına verilmez, numaralar saha sırasıyla artar). */
-export function siradakiKod(onek: string, kullanilan: ReadonlySet<string>): string {
+    uygun"): kullanılan kodların (şu anki ya da eski) düzeni — ayraç, hane sayısı — ile en büyük numaradan sonraki; kod yoksa TÜR-0001. Boşluk doldurulmaz
+    (eski kod başkasına verilmez, numaralar saha sırasıyla artar). 2026-11-02 (göç 0115 — reisim: "tesise göre değişsin kodlar"): kullanilan = TESİSİN o
+    türdeki kodları (numara tesiste devam eder, 1'den başlar); duzen = firmanın kodları — tesiste kod yoksa yalnız ayraç ve hane oradan alınır. */
+export function siradakiKod(onek: string, kullanilan: ReadonlySet<string>, duzen: ReadonlySet<string> = kullanilan): string {
   const re = new RegExp(`^${onek.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([-_. ]?)(\\d{1,9})$`, "i");
-  const l = [...kullanilan].flatMap((k) => { const m = re.exec(k.trim()); return m ? [{ ayrac: m[1]!, n: Number(m[2]), hane: m[2]!.length }] : []; });
+  const coz = (s: ReadonlySet<string>) => [...s].flatMap((k) => { const m = re.exec(k.trim()); return m ? [{ ayrac: m[1]!, n: Number(m[2]), hane: m[2]!.length }] : []; });
+  const l = coz(kullanilan), d = l.length ? l : coz(duzen);
   const say = new Map<string, number>();
-  for (const x of l) say.set(x.ayrac, (say.get(x.ayrac) ?? 0) + 1);
-  const ayrac = l.length ? [...say].sort((a, b) => b[1] - a[1])[0]![0] : "-";
-  const hane = l.length ? Math.max(...l.map((x) => x.hane)) : 4;
+  for (const x of d) say.set(x.ayrac, (say.get(x.ayrac) ?? 0) + 1);
+  const ayrac = d.length ? [...say].sort((a, b) => b[1] - a[1])[0]![0] : "-";
+  const hane = d.length ? Math.max(...d.map((x) => x.hane)) : 4;
   let n = l.length ? Math.max(...l.map((x) => x.n)) + 1 : 1;
   const kod = (k: number) => `${onek}${ayrac}${String(k).padStart(hane, "0")}`;
   while (kullanilan.has(kod(n))) n++;

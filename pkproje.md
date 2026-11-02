@@ -362,7 +362,7 @@ reisim 2026-09-23, 4. tur: önerilerim kabul):
 |---|---|---|---|---|
 | Proje no | `P-AAYY-SIRA` | P-0926-031 | sunucu, plan açılırken | AAYY planın **açıldığı** ay+yıl (kontrol tarihi değişse de numara değişmez) · SIRA firmada o ayın kaçıncı planı, her ay 001'den · iptal planın numarası yeniden verilmez |
 | Rapor no | `XX-AAYY-SIRA-EK` | KM-0926-772-3416f | sunucu, rapor oluşturulurken | reisim kararı (§3, örnek ME-0626-767-224d1) · XX firma kısa kodu · AAYY raporun açıldığı ay+yıl · SIRA firmada **kesintisiz** artan (ayla sıfırlanmaz) · EK 5 hane rasgele, tahmin edilemez; çakışırsa yeniden üretilir · düzeltme revizyonla (öneri: aynı numara + R1, §3.2 madde 7) |
-| Ekipman kodu | A–Z, 0–9, tire · 3–20 · önek serbest (18) | HT-1001 | **personel, etiketten elle** | firma genelinde eşsiz (17) · çakışan kod kaydedilmez · değiştirme yalnız yönetici, eski kod geçmişte kalır (19) |
+| Ekipman kodu | A–Z, 0–9, tire · 3–20 · önek serbest (18) | HT-1001 | **personel, etiketten elle** (S.A.Y verilmezse tesisin sıradaki numarasını verir) | **tesis içinde eşsiz** (17 değişti — 2026-11-02 reisim: "tesise göre değişsin kodlar, aynı firmada başka tesiste olan ekipmanlar bizi ilgilendirmez"; göç 0115) · aynı tesiste çakışan kod kaydedilmez, eski kod aynı tesiste başkasına verilmez · numara tesiste devam eder, yeni tesiste 1'den (düzen — ayraç, hane — firmanın) · sayı bölümü 0 olamaz (2026-11-01) · değiştirme yalnız yönetici, eski kod geçmişte kalır (19) |
 Proje ve rapor numarasını kimse elle yazmaz; ekipman kodunu personel yazar, sistem eşsizliğini korur.
 
 ### 3.6 · Toplu maket çalışması (2026-09-24; `MAKET-PLANI.md`) — her maket ONAY BEKLİYOR
@@ -2527,8 +2527,29 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-11-02 (reisim: **"seçeneklerden b'yi istiyorum tesise göre değişsin kodlar … kullanıcı belirtirse kod aralığını sorun yok … diğerleri ile alakalı sorun
+  yok, başla"** + "1 saatten fazla oldu geçmiş silinmemiş … temizle dediğimde bazen bug da kalıyor" + **"panel ya da sohbetten bağımsız kullanıcı açsa da
+  açmasa da 60 dakika geçince silinsin"** — TEK KALEMDE KODDA; kalem dalı → CI → göç 0115 + 0116 Supabase → main):
+  (1) **EKİPMAN KODU TESİS BAZLI (göç 0115):** eşsizlik ve kod geçmişi firma yerine tesis kapsamında (ekipman UNIQUE (firma, tesis, kod); ekipman_kodu
+  tesis_id, PK (firma, tesis, kod); tetik aynı tesiste) — başka tesisin kodu (şimdiki ya da eski) bu tesiste serbest; numara tesisin kodlarından devam eder,
+  yeni tesiste 1'den, düzen (ayraç, hane) firmanın (sema.ts siradakiKod üçüncü parametre; ekipman.ts koduKullanan / onekliKodlar tesisli); ekran, plan aç,
+  Excel içe aktarma ("Bu kod bu tesiste kayıtlı"), S.A.Y aynı kuraldan; eldeki kayıtlar değişmez; metinler "tesiste eşsiz"; §3.5 satırı değişti.
+  (2) altıncı koşu önerileri: P1 rapor_ac sonucu tür başına haritayı bir kez verir (say-islemleri.ts turHaritalari; talimat "yazmadan önce rapor_getir
+  çağırma") · P2 parti sonu küçültme yalnız raporlara_yaz / rapor_yaz'dan sonra ve istem kestirimi > 60 bin ise (is-siniri.ts PARTI_YAZAN, PARTI_ESIGI) · P3 A1
+  tavanı 75 bin · P4 talimat: denetimin "ölçüm cihazı eklenmedi" / "künye boş" sorunları için raporu yeniden okuma · P5 S.A.Y ekipman girdisinde seri / konum
+  "-" boş.
+  (3) **60 DAKİKA KAPANIŞI VERİTABANINDA (göç 0116):** reisim'in şikâyeti — kapanış yalnız yeni soruda bakılıyordu, panelde eski sohbet duruyordu.
+  Şimdi say_kapanis_supur(dakika, firma, hesap): son iletisi 60 dakikadan eski, işi bitmiş (süren iş yok, son ileti yapay zekânın, açık araç çağrısı yok)
+  konuşma kapanır — Ar-Ge kaydı (say_arge_icerik: görüntü / belge / düşünme yok), son bildirim yz_kapanis'e (yeni sorunun başına not; okununca silinir),
+  ekin depodaki kopyası çöpe, hizmetteki belge dosyaları yz_silinecek_dosya'ya (uygulama Dosya API'sinden siler), konuşma / ekler / iş / görünen geçmiş silinir.
+  Zamanlayıcı: Supabase'de pg_cron 10 dakikada bir (göç kurar; yoksa atlanır); uygulama ayrıca sayfa / panel açılışında kişi için (eylemler.ts acilisKapanisi →
+  say_kapanis_kendi) ve gece işinde firma için (is/gece.ts sayKapanisIsi → say_kapanis_firma) çağırır. Yarıda kalan iş süpürülmez (yeni soru kapatır).
+  (4) **Temizle tuşu:** düşen temizleme sessiz kalmıyordu ama nedeni görünmüyordu — sunucu eylemi hata yakalar (hata kaydı "say.temizle", ekrana neden),
+  ekran istisnayı da gösterir; Ar-Ge kaydı yazılamazsa temizleme durmaz (hata kaydı "say.arge"). Kilitler: planlar (PG, kod tesiste), plan-ici (PG),
+  say.test (PG, süpürme), say-faz2 (siradakiKod düzen, "-"), say-is-siniri (parti eşiği), say-saf (talimat), say-islem (PG, haritalar), ice-aktar-sema;
+  bozan say-is-siniri 6 (dolgu). PC: check ✓ lint ✓ saf say testleri 185 / 186 ✓ (düşen tek test Chromium ister, PC'de koşmaz).
 - 2026-11-01 (V21 ALTINCI KOŞU — reisim: "koşuyu yap ve şunu da söyle, ekipman kodu neden 25'ten başladı; incele açıklama yap onaylarsam değişiklik yaparsın";
-  sunum yerel/say-arge/2026-11-01-sunum-altinci-kosu.md, ONAY BEKLİYOR, kod yok): P-1126-003 (dördüncü koşunun tesisi): 12 istek · 2 dk 48 sn · istem en çok
+  sunum yerel/say-arge/2026-11-01-sunum-altinci-kosu.md; **onaylandı 2026-11-02: P1–P5 + kod tesis bazlı (b), üstteki girdide**): P-1126-003 (dördüncü koşunun tesisi): 12 istek · 2 dk 48 sn · istem en çok
   76,4 bin ✓ · yazılan 151 bin ✗ · **0,0527 $** ✗ (hedef 0,04) · **8 ekipman ✓** (7 kayıtlı ekipman SERİYLE eşlendi + 1 yeni; rot cihazı kanıtla elendi) · 8 rapor,
   foto 8/8, cihaz 8/8 · **rapor başına 1 kayıt ✓** (tek raporlara_yaz; raporlar yine JSON metni — O16 çözdü, şema hatası 0) · foto_goster 4, hepsi kural gereği
   (etiketsiz aday, rot adayı, net olmayan görünüş, şüpheli model) · ön okuma alanları 18/18, S.A.Y değerleri satırdan yazdı ✓. Maliyet neden düşmedi: iki önbellek

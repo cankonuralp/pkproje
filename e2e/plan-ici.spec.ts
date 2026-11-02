@@ -59,7 +59,7 @@ test("plan içi: liste, kabul (beyan), ekipman ekle / pasif, proje notu, künye 
   await expect(p.getByText("HT-0101 bu planda zaten var: Hava tankı. Aynı kod iki ekipmana verilemez.")).toBeVisible();
   await expect(p.getByRole("button", { name: "Kaydet ve plana ekle" })).toBeDisabled();
   await p.getByLabel("Ekipman kodu").fill(kod.toLowerCase());
-  await expect(p.getByText("Kod kullanılabilir; bu firmada başka ekipmanda yok.")).toBeVisible();
+  await expect(p.getByText("Kod kullanılabilir; bu tesiste başka ekipmanda yok.")).toBeVisible();
   await p.getByRole("combobox", { name: "Ekipman türü" }).click();
   await p.getByRole("option", { name: /Hava tankı/ }).click();
   await p.getByLabel("Konum / tanım").fill("Kazan dairesi");

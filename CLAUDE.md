@@ -444,7 +444,9 @@ pkproje/
                             kurulum, oturum; 393: iki adım ayarı yonetim_ayar.iki_adim — göç 0075; 466'dan beri AÇIK; 573: yönetimde KİLİT YOK — firma
                             girişinin kilidi aynen; 572: anahtar yöneticiye bağlı — her girişte aynı karekod, kurulum 30 dk, yarıda kalan kurulum açıkça) · karekod.ts
                             (407: kurulum karekodu, qrcode → SVG yolu; tests/karekod.test.ts jsQR ile okur) · istek.ts (yonetimOturumGerekli, yonetimIslemi → db/kiraci.ts yonetimIcinde: SET LOCAL ROLE probata_yonetim)
-  src/modules/ekipman/      EKİPMAN (2026-10-04, 309): tesisin kalıcı ekipman kaydı (kod firmada eşsiz; eski kod başkasına verilmez — ekipman_kodu)
+  src/modules/ekipman/      EKİPMAN (2026-10-04, 309): tesisin kalıcı ekipman kaydı (kod TESİSTE eşsiz — 2026-11-02 göç 0115, reisim "tesise göre değişsin kodlar";
+                            eski kod aynı tesiste başkasına verilmez — ekipman_kodu tesis_id; numara tesiste devam eder, yeni tesiste 1'den, düzen firmanın —
+                            planlar/sema.ts siradakiKod; koduKullanan / onekliKodlar tesisli)
                             · 360 ekipmanSil / ekipmanKullanimi (silici.ts; yetki Planlar'da: plan-ici ekipmanSil — yalnız yönetici)
   src/modules/teklifler/    TEKLİFLER (2026-10-05, 324; modül 11): göç 0037 (teklif, teklif_kalem, teklif_tesis, fiyat_listesi; teklif_akis: yalnız taslak
                             düzenlenir, taslak → gönderildi → kabul / red, süresi dolan kabul / red edilmez, hazırlayan veritabanında) · server/teklifler.ts
@@ -580,6 +582,13 @@ pkproje/
                             n / N"); otomatik kapanış YALNIZ 60 dk (is-siniri.ts kapanisNedeni); kod "-0" yasağı (planlar/sema.ts kodBicimi, her yol); tesis kaydıyla
                             eşleme önce seri (talimat + B02); O16 tam: islem.ts çözülmüş ham + turleriCevir ("3" → 3, "false" → false, yalnız hata yolunda) ·
                             kilit say-is-siniri, say-on-okuma, say-ek, say-islem-yurutucu, say-faz2 + bozanları; e2e taklit ön okuma "sinif" dalı
+                            · 2026-11-02 ALTINCI KOŞU SONRASI: rapor_ac sonucu tür başına harita bir kez (say-islemleri turHaritalari; rapor_getir çağrılmaz) ·
+                            parti sonu küçültme yalnız raporlara_yaz / rapor_yaz ve istem > PARTI_ESIGI 60 bin · A1 TAVAN 75 bin (hizmetin 80 bininden önce) ·
+                            SayEkipmanGirdisi seri / konum "-" boş · **60 DK KAPANIŞI VERİTABANINDA (göç 0116; reisim "kullanıcı açsa da açmasa da")**:
+                            say_kapanis_supur (pg_cron 10 dk — Supabase; yoksa atlanır) + açılışta say_kapanis_kendi (ui/eylemler.ts acilisKapanisi) + gece
+                            say_kapanis_firma (is/gece.ts sayKapanisIsi); kapanan konuşmanın notu yz_kapanis (soruyuEkle başa koyar), hizmet dosyaları
+                            yz_silinecek_dosya (uygulama siler); temizle tuşu hata yakalar (say.temizle), Ar-Ge kaydı düşerse temizleme durmaz (say.arge) ·
+                            kilit say.test (PG) 60 dakika kapanışı
   src/modules/say-chat/     S.A.Y CHAT (523–525; pkproje §3.10): sema.ts (saf: alan / başlık seçenekleri, hazır ayar, denetim, dağılım dagit) ·
                             server/ayar.ts (523 tür ayarı — sayChatAyari, sayChatAyarKaydet, chatTanimi; göç 0084 say_chat_ayar) · ui/ChatAyarlari.tsx
                             (529: kendi sayfası /ekipman-turleri/<tür>/say-chat — Format kurucunun tuşlarından ve tür sayfasındaki kısa bölümden) · ui/eylemler.ts · 524 server/kayitlar.ts (sayChatPaneli, chatKaydet / chatFoto /

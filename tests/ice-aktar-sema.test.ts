@@ -58,8 +58,9 @@ test("müşteri ve tesis: zorunlular, il listeden, aynı müşteri dosyada tek a
 
 test("ekipman: kod büyür (yerelden bağımsız), kayıtlı kod (eski kod dahil) ve dosyada iki kez atlanır, tür adla ya da kodla, tesis müşteri + tesis adıyla", () => {
   const b: IaBilgi = { ...BOS, musteriler: [{ id: "m1", unvan: "Örnek Gıda San. A.Ş.", kisa: "Örnek Gıda", vno: null, pasif: false }],
-    tesisler: [{ id: "t1", musteriId: "m1", ad: "Depo", pasif: false }, { id: "t2", musteriId: "m1", ad: "Kapalı", pasif: true }],
-    ekipmanKodlari: ["HT-1000"], ekipmanTurleri: [{ id: "tur1", ad: "Hava tankı", kod: "HT" }] };
+    tesisler: [{ id: "t1", musteriId: "m1", ad: "Depo", pasif: false }, { id: "t2", musteriId: "m1", ad: "Kapalı", pasif: true }, { id: "t3", musteriId: "m1", ad: "Şube", pasif: false }],
+    /* 2026-11-02 (göç 0115): kod tesiste eşsiz — kayıtlı kod tesisiyle; başka tesiste aynı kod serbest */
+    ekipmanKodlari: [{ tesisId: "t1", kod: "HT-1000" }], ekipmanTurleri: [{ id: "tur1", ad: "Hava tankı", kod: "HT" }] };
   const l = iaDenetle("ekipman", iaVeriSatirlari("ekipman", [
     ["ht-2001", "Hava tankı", "Örnek Gıda San. A.Ş.", "Depo", "Kompresör odası", "", "", "", "2018"],
     ["HT 2001", "HT", "örnek gıda", "depo", "", "", "", "", ""],
@@ -69,11 +70,13 @@ test("ekipman: kod büyür (yerelden bağımsız), kayıtlı kod (eski kod dahil
     ["H", "Hava tankı", "Örnek Gıda", "Depo", "", "", "", "", ""],
     ["HT-2004", "ht", "Örnek Gıda", "Depo", "", "", "", "", "18"],
     ["HT-2001", "Hava tankı", "Örnek Gıda", "Depo", "", "", "", "", ""],
+    ["HT-1000", "Hava tankı", "Örnek Gıda", "Şube", "", "", "", "", ""],
+    ["HT-2001", "Hava tankı", "Örnek Gıda", "Şube", "", "", "", "", ""],
   ]), b);
   assert.deepEqual(ozet(l), [
-    [1, true, ""], [2, true, ""], [3, false, "Bu kod kayıtlı"], [4, false, "Ekipman türü bulunamadı"],
+    [1, true, ""], [2, true, ""], [3, false, "Bu kod bu tesiste kayıtlı"], [4, false, "Ekipman türü bulunamadı"],
     [5, false, "Müşteri / tesis bulunamadı (önce müşterileri yükleyin)"], [6, false, "Kod: harf, rakam, tire; 3–20 hane"], [7, true, "imal yılı okunmadı, boş girer"],
-    [8, false, "Dosyada aynı kod iki kez"],
+    [8, false, "Dosyada aynı tesiste aynı kod iki kez"], [9, true, ""], [10, true, ""],
   ]);
   assert.deepEqual(l[0].deger, { t: "ekipman", kod: "HT-2001", turId: "tur1", tesisId: "t1", konum: "Kompresör odası", marka: null, model: null, seri: null, imal: 2018 });
   assert.equal(l[1].kod, "HT2001", "boşluk atılır");

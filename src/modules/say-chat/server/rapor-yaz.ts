@@ -65,7 +65,7 @@ export async function chatRaporYaz(db: Sorgulayici, depo: Depo, kim: Kisi, firma
   /* ekipman: plandaki ya da yeni (kod şimdi; kullanım yeri ve seri no mesajdan) */
   let ekipmanId = k.ekipman_id;
   if (!ekipmanId) {
-    if (!istek.kod?.trim()) return hata("Ekipman kodunu yazın (etiketteki; firmada eşsiz).", "kod");
+    if (!istek.kod?.trim()) return hata("Ekipman kodunu yazın (etiketteki; tesiste eşsiz).", "kod");
     const y = await yeniEkipman(db, kim, p.id, { kod: istek.kod, tur: k.tur_id, seri: (d.degerler["e:seri"] ?? "").slice(0, 30) || null,
       konum: (d.degerler["e:konum"] ?? "").slice(0, 60) || null });
     if (y.durum !== "tamam" || !y.id) {
