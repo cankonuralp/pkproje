@@ -18,7 +18,10 @@ export const KAPSAM: Readonly<Record<string, Readonly<Record<string, string>>>> 
     baglantiKaydetEylemi: "i:tur_baglanti_kaydet", turSilEylemi: "i:tur_sil", standartElleEkleEylemi: "i:tur_standart_ekle" },
   "firma-ayarlari/ui/eylemler.ts": { ayarKaydetEylemi: "i:firma_ayari_kaydet", firmaKoduKaydetEylemi: "i:firma_kodu_kaydet", belgeTuruEkleEylemi: "i:belge_turu_ekle",
     belgeTuruKaldirEylemi: "i:belge_turu_kaldir", denemeEpostasiEylemi: "i:deneme_epostasi", ayarDosyasiEylemi: "i:firma_dosyasi_yukle",
-    iceAktarDenetleEylemi: "i:ice_aktar_denetle", iceAktarEylemi: "i:ice_aktar", iceAktarimGeriAlEylemi: "i:ice_aktarim_geri_al" },
+    iceAktarDenetleEylemi: "i:ice_aktar_denetle", iceAktarEylemi: "i:ice_aktar", iceAktarimGeriAlEylemi: "i:ice_aktarim_geri_al",
+    /* 2026-11-03: firmanın kendi yedeği — hesap bağlama izin ekranı tarayıcıda, erişim anahtarı sır (karar 6) */
+    bulutBaglaEylemi: "d:yedek hesabı bağlama — izin ekranı ve anahtar", bulutKesEylemi: "d:yedek hesabı bağlama — izin ekranı ve anahtar",
+    simdiYedekleEylemi: "d:yedek hesabı bağlama — izin ekranı ve anahtar" },
   "muhasebe/ui/eylemler.ts": { faturaKaydetEylemi: "i:fatura_kaydet", tahsilatKaydetEylemi: "i:tahsilat_kaydet", faturaDoldurEylemi: "i:fatura_belge_doldur", giderKaydetEylemi: "i:gider_kaydet",
     giderOdendiEylemi: "i:gider_odendi", giderExceliYukleEylemi: "i:gider_excel_yukle", bordroGonderimiEylemi: "e:bordro gönderimi (kişi başı PDF)", bordroGonderEylemi: "e:bordro gönderimi (kişi başı PDF)",
     isSayfasiEylemi: "i:muhasebe_is_ara", faturaSayfasiEylemi: "i:fatura_ara", giderSayfasiEylemi: "i:gider_ara", giderExcelEylemi: "d:Excel'e dışa aktarma (dosya ekranda iner)" },

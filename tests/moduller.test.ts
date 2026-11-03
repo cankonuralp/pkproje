@@ -67,7 +67,9 @@ const GELISTIRME_ROTALARI = ["vitrin"];
    saglik altında başka dosya yok — her düzey (tests/saglik-coklu-saf.test.ts, tests/yardimci/denetimler.ts saglikKlasoruEksikleri) */
 /* 2026-10-23 (S.A.Y baştan — reisim: "direk claude da haiku nasıl çalışıyor ise direk o şekilde"): say — S.A.Y'ın akışlı ucu (soru, ekranın sonucu,
    devam) ve say/ek (ekin parçaları); ilk iş aynı köken, oturum işten önce, yalnız POST (aşağıdaki test) */
-const API_UCLARI = ["dosya", "hata", "is", "islem", "olcum", "saglik", "say", "surum", "tanim"];
+/* 2026-11-03 (firmanın kendi yedeği — reisim: "yapılsın firma ayarlardan kendi yedeğini otomatik alabiliyo olsun"): bulut — Google / Microsoft izin
+   ekranından dönüş; yalnız GET, oturum + Firma ayarları "yaz" işten önce (aşağıdaki test). is/yedek — gece yedek işi (zamanlayıcının sırrıyla) */
+const API_UCLARI = ["bulut", "dosya", "hata", "is", "islem", "olcum", "saglik", "say", "surum", "tanim"];
 const klasorlerOf = (yol: string) => readdirSync(yol).filter((ad) => statSync(join(yol, ad)).isDirectory()).sort();
 
 test("her modülün rota klasörü var ve src/app'te modül dışı rota yok", () => {
@@ -155,10 +157,22 @@ test("api/olcum yalnız önizleme dağıtımında: ilk iş VERCEL_ENV denetimi, 
 
 /* 2026-10-08 (378): zamanlayıcı ucu oturumsuz — yalnız CRON_SECRET'li istek; denetim her şeyden önce (iş koşmadan 401), yalnız GET */
 test("api/is yalnız zamanlayıcının sırrıyla: ilk iş zamanliYetkili, değilse 401; yalnız GET", () => {
-  assert.deepEqual(klasorlerOf(join(KOK, "src", "app", "api", "is")), ["gece"]);
-  const kaynak = readFileSync(join(KOK, "src", "app", "api", "is", "gece", "route.ts"), "utf8");
+  assert.deepEqual(klasorlerOf(join(KOK, "src", "app", "api", "is")), ["gece", "yedek"]);
+  for (const is of ["gece", "yedek"]) {
+    const kaynak = readFileSync(join(KOK, "src", "app", "api", "is", is, "route.ts"), "utf8");
+    const govde = kaynak.slice(kaynak.indexOf("export async function GET"));
+    assert.match(govde, /^export async function GET\(istek: Request\) \{\n {2}if \(!zamanliYetkili\(istek\.headers\.get\("authorization"\), process\.env\.CRON_SECRET\)\) \{\n {4}return Response\.json\(\{ hata: "Yetkisiz\." \}, \{ status: 401/, is);
+    assert.doesNotMatch(kaynak, /export (async )?function (POST|PUT|PATCH|DELETE)/);
+  }
+});
+
+/* 2026-11-03: izin ekranından dönüş — yalnız GET; durum kodu biçimi önce; oturum ve Firma ayarları "yaz" bağlantıdan (baglanBitir) ÖNCE */
+test("api/bulut/donus: yalnız GET; oturum ve yetki bağlamadan önce; başka klasör yok", () => {
+  assert.deepEqual(klasorlerOf(join(KOK, "src", "app", "api", "bulut")), ["donus"]);
+  const kaynak = readFileSync(join(KOK, "src", "app", "api", "bulut", "donus", "route.ts"), "utf8");
   const govde = kaynak.slice(kaynak.indexOf("export async function GET"));
-  assert.match(govde, /^export async function GET\(istek: Request\) \{\n {2}if \(!zamanliYetkili\(istek\.headers\.get\("authorization"\), process\.env\.CRON_SECRET\)\) \{\n {4}return Response\.json\(\{ hata: "Yetkisiz\." \}, \{ status: 401/);
+  const sira = ["durumCoz(", "await istekOturumu()", "if (!o) return", "if (!ayarlarYazar(o)) return", "baglanBitir("].map((x) => govde.indexOf(x));
+  assert.ok(sira.every((i, n) => i > 0 && (n === 0 || i > sira[n - 1]!)), `sıra: ${sira.join(", ")}`);
   assert.doesNotMatch(kaynak, /export (async )?function (POST|PUT|PATCH|DELETE)/);
 });
 

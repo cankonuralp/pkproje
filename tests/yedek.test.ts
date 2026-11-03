@@ -14,7 +14,7 @@
    · yetki: Firma ayarları "yaz" olmayan bağlayamaz / kesemez / yedekleyemez; gece işi iki firmayı da koşar.
    Olumsuz kanıt: tests/bozan/yedek.bozan.ts. */
 import assert from "node:assert/strict";
-import { randomUUID } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import { after, before, test } from "node:test";
 import type pg from "pg";
 import type { GomuluKume } from "../src/server/db/gomulu.ts";
@@ -65,6 +65,8 @@ let pdfSayac = 0;
 const pdf = () => new TextEncoder().encode(`%PDF-1.4\n% yedek ${++pdfSayac}\n1 0 obj << /Type /Catalog >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF\n`);
 
 before(async () => {
+  /* bağlantı anahtarı firma_sir'de şifreli — ana anahtar her koşuda rastgele (uydurma) */
+  process.env.PROBATA_SIR_ANAHTARI = randomBytes(32).toString("base64");
   kume = await testKumesi();
   havuz = havuzKur(kume.uygulama);
   sahip = kume.sahipIstemci();

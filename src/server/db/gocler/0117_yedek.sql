@@ -94,18 +94,54 @@ CREATE TABLE IF NOT EXISTS yedek_arsiv (
   CHECK ((tur = 'tam') = (donem ~ '^[0-9]{4}$'))
 );
 
-DO $$
-DECLARE t text;
-BEGIN
-  FOREACH t IN ARRAY ARRAY['bulut_baglanti', 'bulut_izin', 'bulut_kuyruk', 'bulut_yer', 'yedek_degisiklik', 'yedek_arsiv'] LOOP
-    EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', t);
-    EXECUTE format('ALTER TABLE %I FORCE ROW LEVEL SECURITY', t);
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = t AND policyname = t || '_kiraci') THEN
-      EXECUTE format('CREATE POLICY %I ON %I USING (firma_id = (SELECT gecerli_firma())) WITH CHECK (firma_id = (SELECT gecerli_firma()))', t || '_kiraci', t);
-    END IF;
-    EXECUTE format('REVOKE ALL ON %I FROM PUBLIC', t);
-  END LOOP;
+ALTER TABLE bulut_baglanti ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bulut_baglanti FORCE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'bulut_baglanti' AND policyname = 'bulut_baglanti_kiraci') THEN
+    CREATE POLICY bulut_baglanti_kiraci ON bulut_baglanti USING (firma_id = (SELECT gecerli_firma())) WITH CHECK (firma_id = (SELECT gecerli_firma()));
+  END IF;
 END $$;
+REVOKE ALL ON bulut_baglanti FROM PUBLIC;
+ALTER TABLE bulut_izin ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bulut_izin FORCE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'bulut_izin' AND policyname = 'bulut_izin_kiraci') THEN
+    CREATE POLICY bulut_izin_kiraci ON bulut_izin USING (firma_id = (SELECT gecerli_firma())) WITH CHECK (firma_id = (SELECT gecerli_firma()));
+  END IF;
+END $$;
+REVOKE ALL ON bulut_izin FROM PUBLIC;
+ALTER TABLE bulut_kuyruk ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bulut_kuyruk FORCE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'bulut_kuyruk' AND policyname = 'bulut_kuyruk_kiraci') THEN
+    CREATE POLICY bulut_kuyruk_kiraci ON bulut_kuyruk USING (firma_id = (SELECT gecerli_firma())) WITH CHECK (firma_id = (SELECT gecerli_firma()));
+  END IF;
+END $$;
+REVOKE ALL ON bulut_kuyruk FROM PUBLIC;
+ALTER TABLE bulut_yer ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bulut_yer FORCE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'bulut_yer' AND policyname = 'bulut_yer_kiraci') THEN
+    CREATE POLICY bulut_yer_kiraci ON bulut_yer USING (firma_id = (SELECT gecerli_firma())) WITH CHECK (firma_id = (SELECT gecerli_firma()));
+  END IF;
+END $$;
+REVOKE ALL ON bulut_yer FROM PUBLIC;
+ALTER TABLE yedek_degisiklik ENABLE ROW LEVEL SECURITY;
+ALTER TABLE yedek_degisiklik FORCE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'yedek_degisiklik' AND policyname = 'yedek_degisiklik_kiraci') THEN
+    CREATE POLICY yedek_degisiklik_kiraci ON yedek_degisiklik USING (firma_id = (SELECT gecerli_firma())) WITH CHECK (firma_id = (SELECT gecerli_firma()));
+  END IF;
+END $$;
+REVOKE ALL ON yedek_degisiklik FROM PUBLIC;
+ALTER TABLE yedek_arsiv ENABLE ROW LEVEL SECURITY;
+ALTER TABLE yedek_arsiv FORCE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'yedek_arsiv' AND policyname = 'yedek_arsiv_kiraci') THEN
+    CREATE POLICY yedek_arsiv_kiraci ON yedek_arsiv USING (firma_id = (SELECT gecerli_firma())) WITH CHECK (firma_id = (SELECT gecerli_firma()));
+  END IF;
+END $$;
+REVOKE ALL ON yedek_arsiv FROM PUBLIC;
 GRANT SELECT, INSERT, UPDATE ON bulut_baglanti TO probata_uygulama;
 GRANT SELECT, INSERT, DELETE ON bulut_izin TO probata_uygulama;
 GRANT SELECT, INSERT, UPDATE ON bulut_kuyruk TO probata_uygulama;
