@@ -704,7 +704,8 @@ export function yayinKapisiEksikleri(p: { vercel: string; betik: string }): stri
   if (v.buildCommand !== "node scripts/goc-dagit.ts --zorunlu && node scripts/next.ts build") hata.push("derleme komutu göç kapısından geçmiyor");
   const de = v.git?.deploymentEnabled ?? {};
   if (de.main !== true || de["kalem/*"] !== false || de["**"] !== false) hata.push("yalnız main yayınlanmıyor (git.deploymentEnabled)");
-  if (JSON.stringify(v.crons) !== JSON.stringify([{ path: "/api/is/gece", schedule: "15 1 * * *" }])) hata.push("gece işi zamanlaması değişmiş");
+  /* 2026-11-03 (kasıtlı — firmanın kendi yedeği): yedek işi ayrı uçta, gece işinden 30 dk sonra */
+  if (JSON.stringify(v.crons) !== JSON.stringify([{ path: "/api/is/gece", schedule: "15 1 * * *" }, { path: "/api/is/yedek", schedule: "45 1 * * *" }])) hata.push("gece işi zamanlaması değişmiş");
   if (p.vercel.includes("PROBATA_GOC_DAGIT")) hata.push("göç kipi vercel.json'da (ortam değişkeni olmalı)");
   if (Object.hasOwn(v, "public")) hata.push("derleme günlüğü / kaynak herkese açık (vercel.json public)");
   const betik = yorumsuz(p.betik);
