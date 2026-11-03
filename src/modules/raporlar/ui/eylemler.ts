@@ -5,6 +5,7 @@ import { refresh } from "next/cache";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { depo } from "../../../server/dosya/depo";
+import { yedekSonraCalistir } from "../../../server/yedek/sonra";
 import { belgePdf } from "../../../belge/pdf";
 import {
   cihazEkle, cihazKaldir, fotoEkle, fotoSil, imzaHazirla, imzaliEslestirYukle, imzaliYukle, onayaGonder, raporFormatGuncelle, raporKaydet, raporKopyala, raporKunyeGuncelle, raporOlustur, takipAc,
@@ -192,7 +193,12 @@ export async function imzaliYukleEylemi(form: FormData): Promise<RaporYaniti> {
   if (!(dosya instanceof File) || dosya.size === 0) return { hatalar: { dosya: "İmzalı PDF seçilmeli." } };
   if (dosya.size > 25 << 20) return { hatalar: { dosya: "PDF çok büyük (en çok 25 MB)." } };
   const bayt = new Uint8Array(await dosya.arrayBuffer());
-  return islem((o) => oturumIslemi(o, (db) => imzaliYukle(db, depo(), o, o.kiraci.firmaId, metin(form.get("id")), Number(form.get("surum")), { ad: dosya.name, bayt })));
+  return islem(async (o) => {
+    const r = await oturumIslemi(o, (db) => imzaliYukle(db, depo(), o, o.kiraci.firmaId, metin(form.get("id")), Number(form.get("surum")), { ad: dosya.name, bayt }));
+    /* 2026-11-03: imzalı rapor firmanın Drive / OneDrive yedeğine birkaç dakika içinde (bağlı değilse hemen biter) */
+    if (r.durum === "tamam") yedekSonraCalistir(o.kiraci, 25_000);
+    return r;
+  });
 }
 /** 596 toplu imza: tek imzalı PDF (form: dosya) — hangi rapora ait olduğu sunucuda İÇERİKTEN bulunur (rapor kimliği istemciden alınmaz);
     yanıtta raporun kimliği ve numarası (sonuç tablosu) */
@@ -205,6 +211,7 @@ export async function imzaliEslestirYukleEylemi(form: FormData): Promise<RaporYa
   if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
   const bayt = new Uint8Array(await dosya.arrayBuffer());
   const s = await oturumIslemi(o, (db) => imzaliEslestirYukle(db, depo(), o, o.kiraci.firmaId, { ad: dosya.name, bayt }));
+  if (s.sonuc.durum === "tamam") yedekSonraCalistir(o.kiraci, 25_000);
   return { ...yanit(s.sonuc), no: s.no, rapor: s.id };
 }
 /* 2026-10-17 TEKNİK YÖNETİCİ İMZASI (göç 0102): firma ayarı açıkken onaydaki raporu teknik yönetici imzalayarak onaylar — yetki, ayar, durum,

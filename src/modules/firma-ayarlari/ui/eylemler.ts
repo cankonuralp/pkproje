@@ -7,15 +7,17 @@ import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { AYAR_DOSYASI } from "../sema";
 import { iceAktar, iceAktarDenetle, iceAktarimGeriAl, type IaSatirOzeti, type IaSonuc } from "../server/ice-aktar";
 import { ayarDosyasiYaz, ayarKaydet, belgeTuruEkle, belgeTuruKaldir, denemeEpostasi, firmaKoduKaydet, type AyarYazma } from "../server/ayarlar";
+import { bulutBagla, bulutKes, simdiYedekle, type YedekYazma } from "../server/yedek";
+import { yedekSonraCalistir } from "../../../server/yedek/sonra";
 
-export interface AyarYaniti { tamam?: boolean; bildirim?: string; hatalar?: Record<string, string>; genel?: string; degismedi?: boolean }
+export interface AyarYaniti { tamam?: boolean; bildirim?: string; hatalar?: Record<string, string>; genel?: string; degismedi?: boolean; adres?: string }
 const SONUC = { yetkisiz: "Bu işlem için yetkiniz yok.", cakisma: "Bu bölüm siz açtıktan sonra değiştirildi. Sayfayı yenileyip yeniden deneyin." } as const;
-async function islem(is: (o: NonNullable<Awaited<ReturnType<typeof istekOturumu>>>) => Promise<AyarYazma>): Promise<AyarYaniti> {
+async function islem(is: (o: NonNullable<Awaited<ReturnType<typeof istekOturumu>>>) => Promise<AyarYazma | YedekYazma>): Promise<AyarYaniti> {
   if (!(await ayniKoken())) return { genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };
   const o = await istekOturumu();
   if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
   const r = await is(o);
-  return r.durum === "tamam" ? { tamam: true, bildirim: r.bildirim, degismedi: r.degismedi } : r.durum === "gecersiz" ? { hatalar: r.hatalar, genel: r.hatalar.genel }
+  return r.durum === "tamam" ? { tamam: true, bildirim: r.bildirim, degismedi: "degismedi" in r ? r.degismedi : undefined, adres: "adres" in r ? r.adres : undefined } : r.durum === "gecersiz" ? { hatalar: r.hatalar, genel: r.hatalar.genel }
     : r.durum === "red" ? { genel: r.neden } : { genel: SONUC[r.durum] };
 }
 
@@ -35,6 +37,21 @@ export async function belgeTuruKaldirEylemi(k: string): Promise<AyarYaniti> {
 export async function denemeEpostasiEylemi(): Promise<AyarYaniti> {
   return islem((o) => oturumIslemi(o, (db) => denemeEpostasi(db, o)));
 }
+/* ── 2026-11-03 YEDEK: hesabı bağla (izin ekranının adresi döner — tarayıcı oraya gider), kes, şimdi yedekle (gönderim yanıttan sonra) ── */
+export async function bulutBaglaEylemi(surum: number, girdi: unknown): Promise<AyarYaniti> {
+  return islem((o) => oturumIslemi(o, (db) => bulutBagla(db, o, o.kiraci.kisaAd, Number(surum), girdi)));
+}
+export async function bulutKesEylemi(): Promise<AyarYaniti> {
+  return islem((o) => oturumIslemi(o, (db) => bulutKes(db, o)));
+}
+export async function simdiYedekleEylemi(): Promise<AyarYaniti> {
+  return islem(async (o) => {
+    const r = await oturumIslemi(o, (db) => simdiYedekle(db, o));
+    if (r.durum === "tamam") yedekSonraCalistir(o.kiraci);
+    return r;
+  });
+}
+
 /** form: ne (logo | on_bilgi | bordro_format), surum, dosya (yoksa kaldır) */
 export async function ayarDosyasiEylemi(form: FormData): Promise<AyarYaniti> {
   const f = form.get("dosya"), ne = form.get("ne");

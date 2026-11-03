@@ -405,6 +405,8 @@ pkproje/
                             kaydet, firma kodu — çekirdek firmaKoduYaz, göç 0045; logo / ön bilgilendirme / bordro formatı dosyaları) · ui/FirmaAyarlari.tsx
                             (bölüm kartı + taslak Kaydet / Vazgeç) · belge başlığı künyesi src/server/ayar/ayar.ts firmaBelgeKunyesi (ticari ad, adres, akr., logo)
                             · 387 Saklama süresi dolacak raporlar /firma-ayarlari/saklama (server/saklama.ts, ui/SaklamaListesi.tsx; yalnız firma yöneticisi)
+                            · 2026-11-03 Yedek penceresi: Ek yedek Google Drive / OneDrive BAĞLANIR (server/yedek.ts bulutBagla / bulutKes / simdiYedekle —
+                            iş src/server/yedek/), ?yedek=<sonuç> pencereyi açar
                             · 513 "Supabase hesabı ve yedek" (ui SupabaseYedek: bağlama akışı sema.ts SUPABASE_ADIMLAR — Yönetim › Firma aç da gösterir —,
                             dosya kullanımı, yedekte ayar yok) · "Raporların ikinci kopyası" (ui IkinciKopya; ayar bulut: "" kapalı | gdrive | onedrive)
                             · 512 → 538 yapay zekâ TEK MODEL (seçim yok; eski Sonnet / Opus kaydı okumada Haiku) — fiyat src/server/yz/okuma.ts · 2026-10-25 (göç 0106):
@@ -614,6 +616,21 @@ pkproje/
                             kişiye; otomatikte cevap Rapor e-postası) · saglayici.ts User-Agent + Idempotency-Key (kuyruk satırı) · gönderen kuyrukta (göç 0087;
                             kimlik/hesap.ts hesapGonderen) · Firma ayarları › E-posta yalnız gösterir + gizli kopya + denemeEpostasi · kilitler
                             tests/eposta-gonderim.test.ts (PG), resend-yonetim.test.ts
+  src/server/yedek/         FİRMANIN KENDİ YEDEĞİ (2026-11-03, göç 0117; reisim: "yapılsın firma ayarlardan kendi yedeğini otomatik alabiliyo olsun",
+                            "yeni eklenenler eklensin yedeğe yeter her günün ayrı ayrı yedeği olmasın"; sunum claude.ai 6VPqY1MBpY81jrBMz8PCgj K1–K6 +
+                            fotoğraf düzeni A): Firma ayarları › Yedek'te Google Drive / OneDrive bağla (OAuth + PKCE, dar izin drive.file /
+                            Files.ReadWrite.AppFolder; istemci src/server/dis/bulut*.ts, ortam PROBATA_GOOGLE_* / PROBATA_ONEDRIVE_* / PROBATA_BULUT_DONUS —
+                            dönüş TEK adres src/app/api/bulut/donus, durum "<kısa ad>.<kod>" firmanın adresine yönlenir) · baglan.ts (bağla / kes, ekranın
+                            bilgisi) · kayit.ts (bulut_baglanti — yenileme anahtarı firma_sir "bulut_erisimi" şifreli; bulut_izin tek kullanımlık; bulut_kuyruk
+                            dosya başına TEK satır; bulut_yer Drive kimlikleri) · topla.ts (son toplamadan bu yana imzalanan raporlar — raporlar/server/
+                            yedek-baglanti.ts: imzalı PDF + raporda görünmeyen okuma fotoğrafı / işaretli form — ve yüklenen belgeler; yol.ts klasör düzeni,
+                            BELGE_KLASORU / YEDEK_DISI_DOSYA dosya modüllerinin tamamı) · veri.ts (tam kopya: tablolar JSONL + Excel + bilgi.json; aylık dosya:
+                            değişiklik kaydının son hâlleri) · tablolar.ts (YEDEK_TABLOLARI + gizli sütun / YEDEK_DISI — firma_id'li her tablo sınıflı; yedek_iz
+                            tetiği değişikliği yedek_degisiklik'e yazar, satır başına tek kayıt) · arsiv.ts (probata deposunda yılın tam kopyası + biten ayların
+                            dosyası, 25 MB'lık parçalar, saklama süresi dolunca silinir) · calis.ts (firmaYedegi: arşiv → anahtar yenile → topla → tam kopya →
+                            aylık dosya → kuyruk dosya dosya; kopuk / dolu → bir kez e-posta; yedekIsi gece) · sonra.ts (imzadan sonra, Şimdi yedekle, bağlanınca)
+                            · zip.ts DEFLATE'li ZIP · uç src/app/api/is/yedek (Vercel Cron 01:45 UTC, 300 sn) · yan menü balonu Firma ayarları (22) ·
+                            kilit tests/yedek.test.ts (PG), yedek-saf, bulut-istemci (taklit tests/yardimci/sahte-bulut.ts), bozan yedek, e2e firma-ayarlari
   src/server/islem/         TEK SEFERLİK İŞLEM (392; 09-D2, çevrimdışı kuyruk): islem.ts tekSeferlik (kimliğe danışma kilidi, iş + sonuç aynı veritabanı
                             işleminde; göç 0076 islem) · yazan.ts (işi yazanın etiketi — kimlik tarayıcıya gitmez) · uç src/app/api/islem (köken, oturum,
                             yazan kapıları) · iş türleri modülde: raporlar/server/islem-baglanti.ts

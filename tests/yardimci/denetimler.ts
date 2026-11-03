@@ -251,6 +251,7 @@ export function hamYazma(metinler: readonly { ad: string; metin: string }[]): st
     listedeki bir dosya bırakırsa da (liste tam kalır). Kilit tests/havuz-kapsami.test.ts · olumsuz kanıt tests/bozan/havuz-kapsami.bozan.ts. */
 export const MERKEZ_HAVUZU_IZNI: Readonly<Record<string, string>> = {
   "src/app/api/is/gece/route.ts": "gece işinin firma listesi ve iş kaydı merkezde (kendi projeli firmanın havuzu FV6)",
+  "src/app/api/is/yedek/route.ts": "gece yedek işinin firma listesi ve iş kaydı merkezde (her firmanın adımı kendi havuzunda — firmaHavuzuKimlikle)",
   "src/server/db/firma-havuzu.ts": "kiracı kaydının çözümü (firma_coz) merkezde; ortak firmanın havuzu merkezin kendisi",
   /* 2026-10-15 (FIRMA-VT FV4): merkezHavuzu() KULLANMAZ — yalnız ortamdanBaglanti; derleme adımında kendi kısa ömürlü havuzunu kurar ve kapatır */
   "src/server/db/goc-dagit.ts": "göç dağıtıcı (yayın kapısı, derleme adımı): merkez bağlantısı ortamdan (ortamdanBaglanti), goc_hedefleri merkezde",
@@ -294,8 +295,11 @@ export const DIS_IZNI: Readonly<Record<string, string>> = {
   "src/modules/yonetim/server/kurulum-hata.ts": "kurulum hatasının sınıfı: Yönetim API istemcisinin hata türlerini tanır",
   /* FV11 (2026-10-16): e-posta gönderimi — firmanın alan adı probata'nın Resend hesabına (yönetim oturumunda) */
   "src/modules/yonetim/server/eposta.ts": "e-posta gönderimi: alan adını Resend'e ekler, doğrular, gönderme anahtarını açar — yalnız yönetim oturumunda",
+  /* 2026-11-03: firmanın kendi yedeği — Google Drive / OneDrive istemcisi (uygulama kimlikleri ortamda; firmanın yenileme anahtarı şifreli sırda) */
+  "src/server/yedek/calis.ts": "yedeği çalıştıran: hizmeti ortamdan kurar, dosyaları yükler, hata türlerini tanır (gece işi ve yanıttan sonra)",
+  "src/server/yedek/baglan.ts": "hesabı bağlama / kesme: izin ekranı adresi, kod takası, izni bırakma (Firma ayarları › Yedek)",
 };
-const DIS_ORTAM = /\bPROBATA_(?:SUPABASE_YONETIM_(?:ANAHTARI|UC)|SUPABASE_ORGUT|SUPABASE_DEPO_UC|RESEND_(?:ANAHTARI|YONETIM_UC))\b/;
+const DIS_ORTAM = /\bPROBATA_(?:SUPABASE_YONETIM_(?:ANAHTARI|UC)|SUPABASE_ORGUT|SUPABASE_DEPO_UC|RESEND_(?:ANAHTARI|YONETIM_UC)|(?:GOOGLE|ONEDRIVE)_(?:ISTEMCI|SIR)|BULUT_(?:UC|DONUS))\b/;
 export function yonetimAnahtariEksikleri(metinler: readonly { ad: string; metin: string }[]): string[] {
   const hata: string[] = [];
   const kalip = /\b(?:from|import)\s*\(?\s*["']([^"']+)["']|\brequire\s*\(\s*["']([^"']+)["']/g;
@@ -1062,4 +1066,30 @@ export function onayKapisiIzleri(k: { islem: string; dongu: string; ekran: strin
   const pencere = (k.ekran.match(/await onayla\(\{ baslik: "([^"]+)"/g) ?? []).filter((x) => !x.includes('"Sohbeti temizle"'));
   if (pencere.length) l.push(`ekranda onay penceresi: ${pencere.join(", ")}`);
   return l;
+}
+
+/* ── FİRMANIN KENDİ YEDEĞİ (2026-11-03; göç 0117, src/server/yedek/) ── */
+/** göç metnindeki yedek tetiği listesi: tablo → gizli sütunlar */
+export function yedekGocListesi(goc: string): Record<string, string[]> {
+  const blok = /FOR r IN SELECT \* FROM \(VALUES([\s\S]*?)\) AS v\(tablo, gizli\)/.exec(goc)?.[1] ?? "";
+  return Object.fromEntries([...blok.matchAll(/\('([a-z_]+)', '([a-z_,]*)'\)/g)].map((m) => [m[1]!, m[2] ? m[2].split(",") : []]));
+}
+/** göçün tetik listesi ile yedek tablo listesi aynı mı (gizli sütunlar dahil); yedeklenen ile dışı kesişiyor mu. Dönen: bulgular */
+export function yedekListeFarki(goc: string, liste: Readonly<Record<string, readonly string[]>>, disi: Readonly<Record<string, string>>): string[] {
+  const g = yedekGocListesi(goc), h: string[] = [];
+  for (const t of Object.keys(liste)) {
+    if (!(t in g)) h.push(`${t}: göçte tetik yok`);
+    else if ([...g[t]!].sort().join(",") !== [...liste[t]!].sort().join(",")) h.push(`${t}: gizli sütunlar göçle aynı değil`);
+    if (t in disi) h.push(`${t}: hem yedekte hem dışında`);
+  }
+  for (const t of Object.keys(g)) if (!(t in liste)) h.push(`${t}: göçte var, listede yok`);
+  return h;
+}
+/** dosya modüllerinin tamamı sınıflı mı: Belgeler'de klasörü var ya da yedek dışı; ikisinde birden değil. Dönen: bulgular */
+export function yedekDosyaFarki(moduller: readonly string[], belge: readonly string[], disi: readonly string[]): string[] {
+  const h: string[] = [];
+  for (const m of moduller) if (!belge.includes(m) && !disi.includes(m)) h.push(`${m}: dosya modülü yedekte sınıflanmamış`);
+  for (const m of belge) { if (!moduller.includes(m)) h.push(`${m}: böyle dosya modülü yok`); if (disi.includes(m)) h.push(`${m}: iki listede`); }
+  for (const m of disi) if (!moduller.includes(m)) h.push(`${m}: böyle dosya modülü yok`);
+  return h;
 }

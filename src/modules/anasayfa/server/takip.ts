@@ -19,6 +19,7 @@ import { onayTakibi } from "../../onaylar/server/onaylar.ts";
 import { anaPlanlar, isgEksikPlanlar, type IsgEksikPlan } from "../../planlar/server/anasayfa-baglanti.ts";
 import { kendiYeniRaporlarim } from "../../raporlar/server/anasayfa-baglanti.ts";
 import { uyariListesi } from "../../uyarilar/server/uyarilar.ts";
+import { yedekTakibi } from "../../firma-ayarlari/server/yedek.ts";
 import { bugunTr, type Kisi } from "./anasayfa.ts";
 
 /** balonun bir sebebi: kaç tane, ne (sayıdan sonra okunur: "2 rapor onayınızı bekliyor"), listelendiği sayfa; sayfada: o sayfa sebebi zaten gösteriyor */
@@ -98,6 +99,10 @@ export async function menuTakip(db: Sorgulayici, kim: Kisi & YetkiHesabi): Promi
       iki(o.talepler, o.talepler.filter((x) => x.eski).length, "talep (izin / masraf formu) kararınızı bekliyor", "/onaylar/talepler"),
       ne("sari", o.belgeBekleyen, "belge imzanızı bekliyor", "/onaylar/diger", true));
   }
+
+  /* firma ayarları (22) — 2026-11-03: yedek gönderilemiyor (Drive / OneDrive bağlantısı koptu ya da hesap dolu); yalnız ayarı değiştirebilene */
+  if (await yedekTakibi(db, kim)) koy(22, { kirmizi: "gönderilemeyen yedek", sari: "" },
+    ne("kirmizi", 1, "yedek gönderilemiyor (Drive / OneDrive bağlantısı koptu ya da hesap dolu)", "/firma-ayarlari"));
 
   /* muhasebe (18): vadesi geçen fatura — 565: tek sayım sorgusu (bütün muhasebe okunmaz) */
   if (hepsi(18)) koy(18, { kirmizi: "vadesi geçen fatura", sari: "" },

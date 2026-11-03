@@ -89,7 +89,9 @@ export function vtDepo(h: () => Havuz): Depo {
     },
     async oksuzSay(db) {
       return (await db.sorgu<{ n: number }>(
-        "SELECT count(*)::int AS n FROM depo_nesne n WHERE NOT EXISTS (SELECT 1 FROM dosya d WHERE d.anahtar = n.anahtar)")).rows[0].n;
+        /* 2026-11-03: yedeğin arşiv parçaları (src/server/yedek/arsiv.ts) dosya kaydı taşımaz — kaydı yedek_arsiv'de, öksüz değil */
+        `SELECT count(*)::int AS n FROM depo_nesne n WHERE NOT EXISTS (SELECT 1 FROM dosya d WHERE d.anahtar = n.anahtar)
+           AND split_part(n.anahtar, '/', 3) <> 'yedek_arsiv'`)).rows[0].n;
     },
   };
 }

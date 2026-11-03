@@ -32,6 +32,7 @@ import { parolaOzeti } from "../src/server/kimlik/parola.ts";
 import { bosKapi } from "../tests/yardimci/kume.ts";
 import { sahteDepoKur } from "../tests/yardimci/sahte-depo.ts";
 import { sahteResendKur } from "../tests/yardimci/sahte-resend.ts";
+import { sahteBulutKur, sahteBulutOrtami } from "../tests/yardimci/sahte-bulut.ts";
 import { pgProjesi, sahteYonetimKur } from "../tests/yardimci/sahte-supabase-yonetim.ts";
 import { kosulKur, yzKur } from "../tests/yardimci/yz-kur.ts";
 import { KOSUL_SURUMU } from "../src/server/yz/kosul.ts";
@@ -669,6 +670,9 @@ supabaseTaklit.projeKur = async () => {
 /* FIRMA-VT FV11 (2026-10-16; e2e/yonetim.spec.ts "e-posta gönderimi"): Resend Yönetim API'sinin yerel taklidi (tests/yardimci/sahte-resend.ts) — alan
    adı ekle / doğrula / gönderme anahtarı; anahtar UYDURMA (her koşuda rastgele), gerçek Resend'e istek gitmez; doğrulama istenen alan "verified" döner. */
 const resendTaklit = await sahteResendKur();
+/* 2026-11-03 (e2e/firma-ayarlari.spec.ts "Yedek"): Google Drive / OneDrive'ın yerel taklidi — izin ekranı yok, tarayıcı hemen dönüş adresine
+   yönlenir; gerçek hizmete istek gitmez (tests/yardimci/sahte-bulut.ts) */
+const bulutTaklit = await sahteBulutKur();
 
 let kapaniyor = false;
 const kapat = async (kod: number) => {
@@ -731,6 +735,8 @@ const ortam: Record<string, string> = {
   PROBATA_SUPABASE_DEPO_UC: kurulumDepo.url,
   /* FV11: Resend Yönetim API'sinin yerel taklidi (firmanın alan adı Yönetim'den) — uydurma anahtar */
   PROBATA_RESEND_ANAHTARI: resendTaklit.anahtar, PROBATA_RESEND_YONETIM_UC: resendTaklit.url,
+  /* 2026-11-03: firmanın kendi yedeği — taklide bağlı uygulama kimlikleri, dönüş adresi deneme firmasının adresi */
+  ...sahteBulutOrtami(bulutTaklit, `http://deneme.localhost:${E2E_KAPI}/api/bulut/donus`),
 };
 
 /* 489: yayın derlemesiyle — Next'in bağımsız sunucusu (output "standalone"; Vercel'deki gibi derlenmiş). Statik dosyalar ve public/ sunucunun

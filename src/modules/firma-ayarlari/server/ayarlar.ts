@@ -29,6 +29,8 @@ import {
   AYAR_DOSYASI, EsikGirdisi, FirmaBilgiGirdisi, ImzaGirdisi, KodGirdisi, MESAI_BASLANGIC, MesaiGirdisi, SabitGiderGirdisi, SaklamaGirdisi, ZimmetGirdisi, type AyarDosyasi,
 } from "../sema.ts";
 import { IA_TUR, type IaGecmis, type IaTur } from "../ice-aktar.ts";
+import { yedekGorunumu, type YedekGorunumu } from "../../../server/yedek/baglan.ts";
+import { baglantiOku } from "../../../server/yedek/kayit.ts";
 
 const MODUL = 22;
 export interface Kisi extends YetkiHesabi { ad: string }
@@ -55,6 +57,8 @@ export interface FirmaAyarlari {
   mbelge: Surumlu<{ secili: string[] }> & { turler: MusteriBelgeTuru[]; ekSurum: number };
   /** 336: raporların ikinci kopyası (bulut); saklama süresi (aylık arşiv). 2026-10-25: yapay zekâ Yönetim'de (göç 0106; yonetim/server/firma-tarafi.ts) */
   bulut: Surumlu<{ saglayici: "" | "gdrive" | "onedrive"; kok: string; duzen: "mt" | "mty" | "my" }>;
+  /** 2026-11-03: firmanın kendi yedeği — bağlantı, kuyruk, probata'nın aylık arşivi, hangi hizmet bağlanabilir */
+  ekYedek: YedekGorunumu;
   /** 536 E-posta: gönderen alan adı + gizli kopya; Resend anahtarı yalnız "tanımlı + son 4"; genel adres (Firma bilgileri › Rapor e-postası);
       ben: oturumdaki kişinin adresi (deneme e-postası); kisiler: açık hesaplar ve e-postalarının nereden gideceği (kayıtlı alan adına göre); ay: bu ay gönderilen */
   /** FV11 (K2 + K3): gönderim Yönetim'den, burada kilitli (yalnız gösterilir) — alan, genel adres, doğrulandı mı, anahtar var mı (değeri değil);
@@ -113,6 +117,7 @@ export async function firmaAyarlari(db: Sorgulayici, kim: Kisi): Promise<FirmaAy
       return { turler: (await turOzetleri(db)).map((t) => ({ id: t.id, ad: t.ad, kod: t.kod, brans: t.brans, fiyat: f.get(t.id) ?? null })) };
     })(),
     bulut: await (async () => { const b = await ayarOku(db, "bulut"); return { deger: b.deger, surum: b.surum }; })(),
+    ekYedek: await yedekGorunumu(db),
     eposta: await (async () => {
       const e = await ayarOku(db, "eposta");
       const ay = (await db.sorgu<{ n: number }>(
@@ -236,6 +241,9 @@ export async function ayarKaydet(db: Sorgulayici, kim: Kisi, kesim: string, suru
         : { durum: "gecersiz", hatalar: g.hatalar };
     }
     case "bulut": {
+      /* 2026-11-03: bağlıyken ana klasör ve düzen değişmez (gönderilenlerin yeri dağılmasın) — önce bağlantı kesilir */
+      const bb = await baglantiOku(db);
+      if (bb && (bb.durum === "bagli" || bb.durum === "dolu")) return { durum: "red", neden: "Hesap bağlıyken klasör değişmez. Önce bağlantıyı kesin." };
       const g = dogrula(BulutGirdisi, girdi);
       /* 544 (reisim: "raporların ikinci kopyası değil yedek olarak görülmeli"): Yedek penceresinde "Ek yedek" */
       return g.tamam ? yaz("bulut", g.veri, g.veri.saglayici ? `Ek yedek açık: ${g.veri.saglayici === "gdrive" ? "Google Drive" : "OneDrive"}.` : "Ek yedek kapalı.")

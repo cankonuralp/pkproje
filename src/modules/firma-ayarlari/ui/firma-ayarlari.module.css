@@ -81,3 +81,5 @@
 }
 /* 536: E-posta › çalışanlar listesinde rol / açıklama alt satırı */
 .altSatir { display: block; color: var(--yazi2); font-size: var(--boy-kucuk); font-weight: 400; }
+/* 2026-11-03: yedek gönderilemiyor (bağlantı koptu / hesap dolu) */
+.durumlar li.kopuk { color: var(--hata-yazi); }

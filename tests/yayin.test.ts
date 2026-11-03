@@ -228,6 +228,7 @@ test("yayın ayarı: Vercel'de AB (Frankfurt), derleme projenin kendi yolundan",
   assert.equal(v.buildCommand, "node scripts/goc-dagit.ts --zorunlu && node scripts/next.ts build");
   assert.equal(v.installCommand, "npm ci");
   assert.equal(v.framework, "nextjs");
-  /* 378: gece işi günde bir (Vercel Cron); uç yalnız CRON_SECRET'le açılır (src/server/is/yetki.ts) */
-  assert.deepEqual(v.crons, [{ path: "/api/is/gece", schedule: "15 1 * * *" }]);
+  /* 378: gece işi günde bir (Vercel Cron); uç yalnız CRON_SECRET'le açılır (src/server/is/yetki.ts). 2026-11-03 (kasıtlı beklenti değişikliği —
+     reisim: "yapılsın firma ayarlardan kendi yedeğini otomatik alabiliyo olsun"): firmanın yedeği ayrı uçta, 30 dk sonra (gönderim uzun sürer, 300 sn) */
+  assert.deepEqual(v.crons, [{ path: "/api/is/gece", schedule: "15 1 * * *" }, { path: "/api/is/yedek", schedule: "45 1 * * *" }]);
 });

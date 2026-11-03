@@ -67,11 +67,12 @@ export const AYAR_BOLUMLERI = {
     /* 2026-10-25 (reisim: "kişi başı sınırı 5 dolar olsun default"): başlangıç 5 $ (önce 20); kayıtlı değer olduğu gibi kalır */
     sinir: z.number().min(0).max(10000).nullable().default(5),
   }),
-  /** Raporların ikinci kopyası (336 "Bulut kaydı"; 2026-10-12 sunum D3): hizmet ("" = kapalı), ana klasör, klasör düzeni — imzalı raporlar ve aylık
-      yedek firmanın Google Drive / OneDrive'ına; hesap bağlantısı ve kendiliğinden kopya yayına çıkışta (K7). Eski Dropbox / Yandex / SFTP değeri kapalıya döner. */
+  /** Ek yedek (336 "Bulut kaydı"; 2026-10-12 sunum D3; 2026-11-03 bağlantı kuruldu — src/server/yedek/): hizmet ("" = seçilmedi), ana klasör, klasör
+      düzeni — imzalı raporlar, belgeler ve veri yedeği firmanın Google Drive / OneDrive'ına. Bağlantı (hesap, anahtar) bulut_baglanti + firma_sir'de.
+      Eski Dropbox / Yandex / SFTP değeri kapalıya döner. 2026-11-03: başlangıç ana klasör "probata yedek" (önce "probata Raporlar"; kayıtlı değer kalır). */
   bulut: z.object({
     saglayici: z.enum(["", "gdrive", "onedrive"]).default(""),
-    kok: z.string().trim().min(1).max(80).default("probata Raporlar"),
+    kok: z.string().trim().min(1).max(80).default("probata yedek"),
     duzen: z.enum(["mt", "mty", "my"]).default("mt"),
   }),
   /** E-posta (536; maket postaCiz): gönderene gizli kopya (başlangıçta kapalı). FIRMA-VT FV11 (2026-10-16, K2 + K3): gönderen alan adı ve gönderme

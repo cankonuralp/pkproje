@@ -104,21 +104,39 @@ test("firma ayarları: paneller ve pencere; kaydet, geçersiz değer, kayma yok,
   await expect(page.locator('[data-panel="yz"]')).toHaveCount(0);
   await expect(page.locator('[data-panel="eposta"]')).toHaveCount(1);
 
-  /* Yedek (reisim: "yedek olarak görülmeli"): günlük + aylık yedek kendiliğinden; Ek yedek Kapalı → Google Drive: alanlar açılır, boy aynı */
-  const yedek = await ac(page, "yedek", "Yedek");
+  /* Yedek (reisim: "yedek olarak görülmeli"; 2026-11-03 "yapılsın firma ayarlardan kendi yedeğini otomatik alabiliyo olsun" — kasıtlı beklenti
+     değişikliği: "Kapalı" seçeneği kalktı, Ek yedek bağlanır / kesilir). Bağlı değil → Google Drive'ı bağla (yerel taklit: izin ekranı yok, hemen
+     döner) → bağlı (hesap, sayılar, Şimdi yedekle) → Bağlantıyı kes → yeniden bağlı değil */
+  let yedek = await ac(page, "yedek", "Yedek");
   await expect(yedek.getByText("Günlük yedek", { exact: true })).toBeVisible();
   await expect(yedek.getByText("Aylık arşiv yedeği", { exact: true })).toBeVisible();
   /* 2026-11-02 (reisim: "henüz yok yazsın"): kurulmamış yedek yeşil görünmez */
   await expect(yedek.getByText("Henüz yok.", { exact: true })).toHaveCount(2);
+  await expect(yedek.getByText("Bağlı değil.", { exact: true })).toBeVisible();
   await expect(yedek.getByText(/son 7 güne/)).toHaveCount(0);
-  await expect(yedek.getByRole("radio", { name: "Kapalı" })).toHaveAttribute("aria-checked", "true");
-  await expect(yedek.getByLabel("Ana klasör")).toBeDisabled();
-  const yOnce = (await yedek.boundingBox())!.height;
-  await yedek.getByRole("radio", { name: "Google Drive" }).click();
+  await expect(yedek.getByRole("radio", { name: "Kapalı" })).toHaveCount(0);
+  await expect(yedek.getByRole("radio", { name: "Google Drive" })).toHaveAttribute("aria-checked", "true");
   await expect(yedek.getByLabel("Ana klasör")).toBeEnabled();
-  await expect(yedek.getByText(/Türkiye dışında saklayabilir/)).toBeVisible();
+  const yOnce = (await yedek.boundingBox())!.height;
+  await yedek.getByRole("radio", { name: "OneDrive" }).click();
+  await expect(yedek.getByRole("button", { name: "OneDrive'ı bağla" })).toBeVisible();
   expect(Math.abs((await yedek.boundingBox())!.height - yOnce), "kayma yok").toBeLessThan(2);
-  await soruluKapat(page, yedek);
+  await yedek.getByRole("radio", { name: "Google Drive" }).click();
+  await expect(yedek.getByText(/Türkiye dışında saklayabilir/)).toBeVisible();
+  await yedek.getByRole("button", { name: "Google Drive'ı bağla" }).click();
+  await page.waitForURL(/\/firma-ayarlari$/);
+  await hazir(page);
+  yedek = page.getByRole("dialog", { name: "Yedek" });
+  await expect(yedek.getByText("Hesap bağlandı; ilk kopya başladı.")).toBeVisible();
+  await expect(yedek.getByText("yedek@deneme.example")).toBeVisible();
+  await expect(yedek.getByRole("button", { name: "Şimdi yedekle" })).toBeVisible();
+  await expect(yedek.getByRole("radio", { name: "OneDrive" })).toBeDisabled();
+  await yedek.getByRole("button", { name: "Bağlantıyı kes" }).click();
+  await page.getByRole("dialog", { name: "Bağlantı kesilsin mi?" }).locator("[data-onay-tamam]").click();
+  await expect(yedek.getByText("Bağlı değil.", { exact: true })).toBeVisible();
+  await expect(yedek.getByRole("button", { name: "Google Drive'ı bağla" })).toBeVisible();
+  await yedek.getByRole("button", { name: "Kapat", exact: true }).last().click();
+  await expect(yedek).toHaveCount(0);
 
   /* Depolama: yalnız bilgi; uzun anlatım "Nasıl …?" başlıklarının altında */
   const depo = await ac(page, "depolama", "Depolama");

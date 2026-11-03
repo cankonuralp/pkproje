@@ -10,7 +10,7 @@
    pencereler salt okunur. Karar ve doğrulama sunucuda (server/ayarlar.ts). */
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createContext, useContext, useRef, useState, useTransition, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Alan, FormIzgara, Girdi, ipucuId, Segment } from "../../../components/form/Form";
 import { DosyaAcTusu, GizliResim } from "../../../components/gizli-resim/GizliResim";
@@ -28,8 +28,8 @@ import {
 } from "../sema";
 import type { FirmaAyarlari as Veri } from "../server/ayarlar";
 import { IceAktarma } from "./IceAktarma";
-import { ayarDosyasiEylemi, ayarKaydetEylemi, belgeTuruEkleEylemi, belgeTuruKaldirEylemi, denemeEpostasiEylemi, firmaKoduKaydetEylemi,
-  type AyarYaniti } from "./eylemler";
+import { ayarDosyasiEylemi, ayarKaydetEylemi, belgeTuruEkleEylemi, belgeTuruKaldirEylemi, bulutBaglaEylemi, bulutKesEylemi, denemeEpostasiEylemi,
+  firmaKoduKaydetEylemi, simdiYedekleEylemi, type AyarYaniti } from "./eylemler";
 import stil from "./firma-ayarlari.module.css";
 
 const ID = {
@@ -73,7 +73,10 @@ function ozet(k: PanelAdi, v: Veri): { metin: string; durum?: string } {
     case "fiyat": { const bos = v.fiyat.turler.filter((t) => t.fiyat === null).length;
       return { metin: `${v.fiyat.turler.length} ekipman türü${bos ? ` · ${bos} fiyatsız` : ""}`, durum: bos ? "Fiyatsız tür var" : undefined }; }
     case "sabit": return { metin: `${v.sabit.deger.kalemler.length} kalem · aylık ${para(v.sabit.deger.kalemler.reduce((n, x) => n + x.aylik, 0))} TL` };
-    case "yedek": return { metin: `Günlük + aylık yedek henüz yok · ek yedek ${BULUT_AD[v.bulut.deger.saglayici]}`, durum: "Henüz yok" };
+    case "yedek": { const b = v.ekYedek.baglanti;
+      if (b && (b.durum === "kopuk" || b.durum === "dolu")) return { metin: `Ek yedek: ${BULUT_AD[b.saglayici]} · gönderilemiyor`, durum: "Gönderilemiyor" };
+      if (b?.durum === "bagli") return { metin: `Ek yedek: ${BULUT_AD[b.saglayici]} · ${v.ekYedek.kuyruk.gonderildi.toLocaleString("tr-TR")} dosya` };
+      return { metin: `Aylık arşiv ${v.ekYedek.arsiv.tamYil ? "var" : "henüz yok"} · ek yedek bağlı değil`, durum: "Bağlı değil" }; }
     case "depolama": return { metin: `Deneme projesi · ${v.depolama.dosya.toLocaleString("tr-TR")} dosya · ${megabayt(v.depolama.bayt)} MB` };
     case "saklama": return { metin: `${v.saklama.deger.yil} yıl${v.saklama.deger.yil === 5 ? " (yasal en az)" : ""}` };
     case "eposta": { const g = v.eposta.gonderim, hazir = !!g && g.dogrulandi && g.anahtar;
@@ -463,34 +466,100 @@ function MusteriBelgeleri({ v }: { v: Veri }) {
   );
 }
 
-/* ── YEDEK (544; maket 539 "Yedek" — reisim: "raporların ikinci kopyası değil yedek olarak görülmeli"): günlük ve aylık yedek kendiliğinden (ayar yok);
-   2026-11-02 (reisim: "henüz yok yazsın"): günlük yedek Supabase Pro'da, aylık arşiv yazılmadı → ikisi "Henüz yok." (uyarı); kurulunca yeşile döner.
-   EK YEDEK (eski "Raporların ikinci kopyası", 336 / sunum D3): Kapalı · Google Drive · OneDrive — imzalı raporların bir kopyası firmanın kendi
-   bulutunda. Seçim alan açıp kapatmaz: kapalıyken ana klasör ve düzen soluk. Hesap bağlantısı yayına çıkışta (K7); ayarlar şimdiden kaydedilir,
-   üçüncü satır kopyanın henüz gitmediğini söyler. ── */
+/* ── YEDEK (544; maket 539 "Yedek" — reisim: "raporların ikinci kopyası değil yedek olarak görülmeli"). 2026-11-03 (reisim: "yapılsın firma ayarlardan
+   kendi yedeğini otomatik alabiliyo olsun" → sunum maketi "Yedek penceresi", K1–K6): EK YEDEK firmanın kendi Google Drive / OneDrive hesabına —
+   Bağla (izin ekranı hizmetin kendi sayfası), bağlıyken hesap / klasör / sayılar, Şimdi yedekle, Bağlantıyı kes; koptuysa / doluysa şerit ve Yeniden
+   bağla. Bağlı değilken ana klasör ve düzen seçilir (bağlıyken değişmez). Günlük yedek = her gece yalnız yeni ve değişenler Drive'a; aylık arşiv
+   probata'nın deposunda (Drive bağlı olsun olmasın). İzin ekranından dönüş ?yedek=<sonuç> ile bu pencereyi açar (YedekSonucBag). ── */
 const BID = { d: "w-ay-bulut-d", kok: "w-ay-bulut-kok" } as const;
+const HIZMET_AD = { gdrive: "Google Drive", onedrive: "OneDrive" } as const;
+const YEDEK_SONUC: Record<string, [tur: "onay" | "uyari" | "hata", metin: string]> = {
+  bagli: ["onay", "Hesap bağlandı; ilk kopya başladı."],
+  iptal: ["uyari", "Bağlantı yapılmadı: izin verilmedi."],
+  suresi: ["uyari", "İzin ekranının süresi doldu; yeniden bağlayın."],
+  baskasi: ["hata", "Bağlantıyı başka bir oturum başlatmış; yeniden bağlayın."],
+  hizmet: ["hata", "Hizmet yanıt vermedi; biraz sonra yeniden deneyin."],
+  izin: ["hata", "Kalıcı izin verilmedi; izin ekranında kutuları işaretleyip yeniden bağlayın."],
+  oturum: ["uyari", "Oturumunuz kapanmıştı; yeniden bağlayın."],
+  yetki: ["hata", "Bu işlem için yetkiniz yok."],
+};
+const YedekSonucBag = createContext<string | null>(null);
+const zaman = (iso: string | null) => (iso ? new Date(iso).toLocaleString("tr-TR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : null);
+
 function Yedek({ v }: { v: Veri }) {
-  const s = useKesim("bulut", v.bulut.deger, v.bulut.surum);
-  const kapali = !s.d.saglayici;
+  const router = useRouter();
+  const bildir = useBildir();
+  const onayla = useOnayla();
+  const sonuc = useContext(YedekSonucBag);
+  const [mesgul, baslat] = useTransition();
+  const b = v.ekYedek.baglanti, k = v.ekYedek.kuyruk, ar = v.ekYedek.arsiv;
+  const bagli = !!b && (b.durum === "bagli" || b.durum === "dolu"), sorun = !!b && (b.durum === "kopuk" || b.durum === "dolu");
+  const [d, setD] = useState({ saglayici: (v.bulut.deger.saglayici || b?.saglayici || "gdrive") as "gdrive" | "onedrive", kok: v.bulut.deger.kok, duzen: v.bulut.deger.duzen });
+  const [h, setH] = useState<Record<string, string>>({});
+  const secili = bagli && b ? b.saglayici : b?.durum === "kopuk" ? b.saglayici : d.saglayici;
+  const hz = HIZMET_AD[secili], hazir = v.ekYedek.hazir[secili];
+  const sonGonderim = zaman([b?.sonKopya, b?.ayGonderim].filter((x): x is string => !!x).sort().at(-1) ?? null);
+  const bagla = () => baslat(async () => {
+    const r = await bulutBaglaEylemi(v.bulut.surum, { ...d, saglayici: secili });
+    if (!r.tamam || !r.adres) { setH(r.hatalar ?? {}); bildir(r.genel ?? "Bağlanmadı; nedeni alanın altında."); return; }
+    window.location.assign(r.adres);
+  });
+  const kes = async () => {
+    if (!b || !(await onayla({ baslik: "Bağlantı kesilsin mi?", metin: `${HIZMET_AD[b.saglayici]} hesabına yeni dosya gönderilmez; gönderilmiş dosyalar hesapta kalır.`,
+      tus: "Bağlantıyı kes", tehlike: true }))) return;
+    baslat(async () => { const r = await bulutKesEylemi(); bildir(r.tamam ? r.bildirim ?? "Bağlantı kesildi." : r.genel ?? "Kesilmedi."); router.refresh(); });
+  };
+  const simdi = () => baslat(async () => { const r = await simdiYedekleEylemi(); bildir(r.tamam ? r.bildirim ?? "Yedekleme başladı." : r.genel ?? "Başlamadı."); router.refresh(); });
+  const satir = (tur: "var" | "yok" | "kopuk", ad: string, alt: string) => (
+    <li className={tur === "var" ? undefined : tur === "yok" ? stil.yok : stil.kopuk} data-yedek={tur}>
+      <Ikon ad={tur === "var" ? "circle-check" : tur === "yok" ? "triangle-alert" : "circle-x"} kucuk /><span><b>{ad}</b><span className={stil.altSatir}>{alt}</span></span>
+    </li>
+  );
+  const s = sonuc ? YEDEK_SONUC[sonuc] : undefined;
+  const sayi = (n: number) => n.toLocaleString("tr-TR");
   return (
-    <Kart yaz={v.yaz} kirli={s.kirli} mesgul={s.mesgul} kaydet={s.kaydet}>
+    <Kart yaz={false}>
+      {s && <Serit tur={s[0]}>{s[1]}</Serit>}
       <ul className={stil.durumlar}>
-        <li className={stil.yok}><Ikon ad="triangle-alert" kucuk /><span><b>Günlük yedek</b><span className={stil.altSatir}>Henüz yok.</span></span></li>
-        <li className={stil.yok}><Ikon ad="triangle-alert" kucuk /><span><b>Aylık arşiv yedeği</b><span className={stil.altSatir}>Henüz yok.</span></span></li>
-        <li className={stil.yok}><Ikon ad="triangle-alert" kucuk /><span><b>Ek yedek</b><span className={stil.altSatir}>Hesap bağlantısı henüz yok; seçim kaydedilir, kopya gönderilmez.</span></span></li>
+        {b?.durum === "bagli" ? satir("var", "Günlük yedek", `Her gece ${hz}'a${sonGonderim ? ` · son: ${sonGonderim}` : ""}`)
+          : sorun ? satir("kopuk", "Günlük yedek", "Gönderilemiyor.") : satir("yok", "Günlük yedek", "Henüz yok.")}
+        {ar.sonAy ? satir("var", "Aylık arşiv yedeği", `Her ayın 1'i · son: ${ar.sonAy}`)
+          : ar.tamYil ? satir("var", "Aylık arşiv yedeği", `Tam kopya: ${ar.tamYil} · ilk aylık dosya ay sonunda`) : satir("yok", "Aylık arşiv yedeği", "Henüz yok.")}
+        {!b || b.durum === "kesildi" ? satir("yok", "Ek yedek", "Bağlı değil.")
+          : b.durum === "dolu" ? satir("kopuk", "Ek yedek", `${HIZMET_AD[b.saglayici]} dolu · ${sayi(k.bekliyor)} dosya bekliyor`)
+          : b.durum === "kopuk" ? satir("kopuk", "Ek yedek", `${HIZMET_AD[b.saglayici]} bağlantısı koptu · ${sayi(k.bekliyor)} dosya bekliyor`)
+          : satir("var", "Ek yedek", k.bekliyor > 0 ? `${HIZMET_AD[b.saglayici]} · ${sayi(k.bekliyor)} dosya sırada` : `${HIZMET_AD[b.saglayici]} bağlı`)}
       </ul>
-      <Segment ad="Ek yedek (imzalı raporların bir kopyası)" deger={s.d.saglayici} kapali={!v.yaz}
-        secenekler={[["", "Kapalı"], ["gdrive", "Google Drive"], ["onedrive", "OneDrive"]] as const} degistir={(x) => s.setD({ ...s.d, saglayici: x })} />
-      <FormIzgara>
-        <Alan id={BID.kok} etiket="Ana klasör" hata={s.h.kok}>
-          <Girdi id={BID.kok} value={s.d.kok} maxLength={80} disabled={!v.yaz || kapali} hata={!!s.h.kok} mesajli={!!s.h.kok} onChange={(e) => s.setD({ ...s.d, kok: e.target.value })} />
-        </Alan>
-        <Alan id={BID.d} etiket="Klasör düzeni" hata={s.h.duzen}>
-          <SecimAlani id={BID.d} ad="Klasör düzeni" deger={s.d.duzen} kapali={!v.yaz || kapali} secenekler={(Object.keys(BULUT_DUZEN) as (keyof typeof BULUT_DUZEN)[]).map((k) => [k, BULUT_DUZEN[k]] as const)}
-            degistir={(x) => s.setD({ ...s.d, duzen: x as typeof s.d.duzen })} />
-        </Alan>
-      </FormIzgara>
-      <p className={stil.durumSatir}>Google Drive ve OneDrive veriyi Türkiye dışında saklayabilir.</p>
+      {sorun && b && <Serit tur="hata">{b.neden ?? "Yedek gönderilemiyor."}</Serit>}
+      <Segment ad="Ek yedek hizmeti" deger={secili} kapali={!v.yaz || bagli || b?.durum === "kopuk"}
+        secenekler={[["gdrive", "Google Drive"], ["onedrive", "OneDrive"]] as const} degistir={(x) => setD({ ...d, saglayici: x })} />
+      {b && b.durum !== "kesildi" ? (
+        <dl className={stil.bilgi}>
+          <div><dt>Hesap</dt><dd>{b.hesap}</dd></div>
+          <div><dt>Klasör</dt><dd>{v.bulut.deger.kok} · {BULUT_DUZEN[v.bulut.deger.duzen]}</dd></div>
+          <div><dt>Kopyalanan</dt><dd>{sayi(k.gonderildi)} dosya · {megabayt(k.bayt)} MB</dd></div>
+          <div><dt>Bekleyen</dt><dd>{sayi(k.bekliyor)} dosya</dd></div>
+          <div><dt>Son kopya</dt><dd>{b.sonKopya ? `${zaman(b.sonKopya)}${b.sonDosya ? ` · ${b.sonDosya}` : ""}` : <DegerYok />}</dd></div>
+        </dl>
+      ) : (
+        <FormIzgara>
+          <Alan id={BID.kok} etiket="Ana klasör" hata={h.kok}>
+            <Girdi id={BID.kok} value={d.kok} maxLength={80} disabled={!v.yaz} hata={!!h.kok} mesajli={!!h.kok} onChange={(e) => setD({ ...d, kok: e.target.value })} />
+          </Alan>
+          <Alan id={BID.d} etiket="Klasör düzeni" hata={h.duzen}>
+            <SecimAlani id={BID.d} ad="Klasör düzeni" deger={d.duzen} kapali={!v.yaz} secenekler={(Object.keys(BULUT_DUZEN) as (keyof typeof BULUT_DUZEN)[]).map((x) => [x, BULUT_DUZEN[x]] as const)}
+              degistir={(x) => setD({ ...d, duzen: x as typeof d.duzen })} />
+          </Alan>
+        </FormIzgara>
+      )}
+      {v.yaz && (
+        <div className={stil.tuslar}>
+          {bagli ? <Tus ikon="cloud-upload" disabled={mesgul} aria-busy={mesgul || undefined} onClick={simdi}>Şimdi yedekle</Tus>
+            : <Tus ikon="cloud-upload" disabled={mesgul || !hazir} aria-busy={mesgul || undefined} onClick={bagla}>{b?.durum === "kopuk" ? "Yeniden bağla" : `${hz}'ı bağla`}</Tus>}
+          {b && b.durum !== "kesildi" && <Tus tur="ikincil" disabled={mesgul} onClick={() => void kes()}>Bağlantıyı kes</Tus>}
+        </div>
+      )}
+      <p className={stil.durumSatir}>{!hazir && !bagli ? `${hz} bağlantısı henüz açılmadı.` : "Google Drive ve OneDrive veriyi Türkiye dışında saklayabilir."}</p>
     </Kart>
   );
 }
@@ -571,8 +640,13 @@ const ICERIK: Record<PanelAdi, (p: { v: Veri }) => ReactNode> = {
 };
 
 /* ── SAYFA ── */
-export function FirmaAyarlari({ v }: { v: Veri }) {
-  const [acik, setAcik] = useState<PanelAdi | null>(null);
+export function FirmaAyarlari({ v, yedekSonuc = null }: { v: Veri; yedekSonuc?: string | null }) {
+  const gecerli = yedekSonuc && Object.hasOwn(YEDEK_SONUC, yedekSonuc) ? yedekSonuc : null;
+  const [acik, setAcik] = useState<PanelAdi | null>(gecerli ? "yedek" : null);
+  const [sonuc] = useState(gecerli);
+  const router = useRouter();
+  /* izin ekranından dönüş: sonuç bir kez gösterilir, adres sadeleşir (yenileyince yeniden çıkmaz) */
+  useEffect(() => { if (yedekSonuc) router.replace("/firma-ayarlari", { scroll: false }); }, [yedekSonuc, router]);
   const Icerik = acik ? ICERIK[acik] : null;
   return (
     <>
@@ -609,7 +683,7 @@ export function FirmaAyarlari({ v }: { v: Veri }) {
       </div>
       {acik && Icerik && (
         <PanelBag.Provider value={{ ad: PANEL[acik].ad, kapat: () => setAcik(null) }}>
-          <Icerik v={v} />
+          <YedekSonucBag.Provider value={sonuc}><Icerik v={v} /></YedekSonucBag.Provider>
         </PanelBag.Provider>
       )}
     </>
