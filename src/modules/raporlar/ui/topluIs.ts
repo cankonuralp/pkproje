@@ -32,7 +32,7 @@ const dosyaAdiGuvenli = (s: string) => s.replace(/[\\/:*?"<>|]/g, "-").trim() ||
 async function pdfAl(r: TopluRapor): Promise<Uint8Array> {
   if (r.imzaliDosya) return dosyaBaytlari(r.imzaliDosya);
   const y = await fetch(`/raporlar/${r.id}/pdf`, { credentials: "same-origin", cache: "no-store" });
-  if (y.status === 409) throw new Error("PDF'i yok (saklama süresi doldu)");
+  if (y.status === 409) throw new Error("PDF'i yok (Drive yedeğinde ya da saklama süresi doldu)");
   if (!y.ok || (y.headers.get("Content-Type") ?? "") !== "application/pdf") throw new Error("PDF hazırlanamadı");
   return new Uint8Array(await y.arrayBuffer());
 }

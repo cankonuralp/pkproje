@@ -64,6 +64,16 @@ export function onedriveHizmeti(a: BulutAyari, bekle: (ms: number) => Promise<vo
       return e;
     },
     async birak() { /* Microsoft'ta uygulamanın izni geri bırakma ucu yok — anahtar çağıranda silinir */ },
+    async bul(erisim, y) {
+      let r: Response;
+      try { r = await istek(`${UC.graph}/me/drive/special/approot:/${[...y.yol, y.ad].map(encodeURIComponent).join("/")}:?$select=size,deleted`, {}, erisim); } catch (e) {
+        if (e instanceof BulutHatasi && e.durum === 404) return null;
+        throw e;
+      }
+      const j = await jsonOku(r);
+      const boyut = Number(j.size);
+      return j.deleted || !Number.isFinite(boyut) ? null : { boyut };
+    },
     async yukle(erisim, y) {
       if (y.bayt.length <= TEK_PUT) {
         await (await istek(`${yolAdresi(y)}/content?@microsoft.graph.conflictBehavior=replace`, { method: "PUT", headers: { "Content-Type": y.tur }, body: Buffer.from(y.bayt) }, erisim)).body?.cancel();

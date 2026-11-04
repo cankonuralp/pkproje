@@ -61,9 +61,14 @@ before(async () => {
   mkdirSync(klasor);
   for (const ad of readdirSync(GOC_KLASORU)) {
     if (!ad.endsWith(".sql")) continue;
-    if (ad.startsWith("0073_")) {
+    /* 2026-11-04: 0118 korumayı (dosya_saklama_koru) Drive istisnasıyla yeniden tanımlar — korumanın bozmaları orada da uygulanır */
+    if (ad.startsWith("0073_") || ad.startsWith("0118_")) {
       let k = readFileSync(join(GOC_KLASORU, ad), "utf8");
-      for (const [eski, yeni] of BOZMALAR) { assert.ok(k.includes(eski), `bozulacak satır kaynakta yok: ${eski.slice(0, 60)}`); k = k.replace(eski, yeni); }
+      for (const [i, [eski, yeni]] of BOZMALAR.entries()) {
+        if (ad.startsWith("0118_") && i !== 1 && i !== 2) continue;
+        assert.ok(k.includes(eski), `bozulacak satır kaynakta yok (${ad}): ${eski.slice(0, 60)}`);
+        k = k.replace(eski, yeni);
+      }
       writeFileSync(join(klasor, ad), k);
     } else copyFileSync(join(GOC_KLASORU, ad), join(klasor, ad));
   }

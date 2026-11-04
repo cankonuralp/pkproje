@@ -343,8 +343,9 @@ export interface SahaRaporu {
   revize: { bekleyen: { id: string; zaman: string; gerekce: string; surum: number } | null; red: { kim: string; zaman: string; gerekce: string | null } | null; iste: boolean } | null;
   /** son imza (317): yazanın onaylanmış raporunda imzasız kesin PDF (hazırlandıysa) · tamamlanan raporda imzalı PDF */
   imza: { hazir: boolean; pdf: string | null } | null;
-  /** tamamlanan raporun imzalı sürümü; dosya null = saklama süresi dolduğu için PDF silindi (387; silindi: o an) */
-  imzali: { dosya: string | null; zaman: string; no: string; silindi: string | null } | null;
+  /** tamamlanan raporun imzalı sürümü; dosya null = PDF silindi (silindi: o an) — saklama süresi doldu (387) ya da 1 yıldan eski rapor, PDF firmanın
+      Drive yedeğinde (driveda — göç 0118) */
+  imzali: { dosya: string | null; zaman: string; no: string; silindi: string | null; driveda: boolean } | null;
   /** kopyaEngel (2026-10-12): kopya hakkı var ama plan tamamlandı — tuş görünür, basınca bu söylenir (kopyala false) */
   izin: { duzenle: boolean; sil: boolean; kopyala: boolean; kopyaEngel: string | null };
   /** fotoğraftan okuma (351): düzenleyebilene, firmada yapay zekâ açık ve anahtar girilmişse */
@@ -1031,8 +1032,9 @@ export interface RaporBelgesiSayfasi {
   id: string; no: string; plan: { id: string; no: string }; belge: BelgeVerisi;
   /** tamamlanan raporda imzalı PDF (ön izleme onu indirir; imzasız PDF basılmaz — sahte "imzalı" görünmesin) */
   imzaliDosya: string | null;
-  /** imzalı PDF saklama süresi dolduğu için silindiyse o an (387) — imzasız kopya da basılmaz */
+  /** imzalı PDF silindiyse o an (387 saklama süresi; 0118 Drive'a taşındı — imzaliDriveda) — imzasız kopya da basılmaz */
   imzaliSilindi: string | null;
+  imzaliDriveda: boolean;
 }
 /** raporu görebilene belgenin verisi: raporun kendi kayıtları + açıldığı format sürümü; fotoğraflar raporun kendi dosyalarından okunup veri
     adresi olarak gömülür (yalnız JPEG / PNG — sunucuda denetlenmiş türler). Göremeyene null. onaylayan (2026-10-17, teknik yönetici imzası):
@@ -1077,6 +1079,7 @@ export async function raporBelgesiVerisi(db: Sorgulayici, depo: Depo, kim: Kisi,
   return {
     id: r.id, no: gorunenNo(r.no, r.revizyon), plan: { id: r.plan_id, no: plan?.no ?? "—" }, imzaliDosya: imzali?.dosya ?? null,
     imzaliSilindi: imzali?.silindi ?? null,
+    imzaliDriveda: imzali?.driveda ?? false,
     belge: {
       /* 334: başlıkta ticari ad, adres, akreditasyon no ve logo (Firma ayarları › Firma bilgileri) */
       firma: await firmaBelgeKunyesi(db, depo),
@@ -1116,10 +1119,10 @@ async function bekleyenIstek(db: Sorgulayici, raporId: string, revizyon: number,
 }
 /** imzalı sürüm; PDF'i saklama süresi dolduğu için silindiyse (387, 0073 saklama_silme) dosya null + silinme anı */
 async function imzaliSurum(db: Sorgulayici, raporId: string, revizyon: number) {
-  const x = (await db.sorgu<{ dosya: string; zaman: Date; no: string; yontem: string; silindi: Date | null }>(
-    `SELECT s.imzali_dosya::text AS dosya, s.imzalandi AS zaman, s.no, s.imza_yontem AS yontem, k.silindi
+  const x = (await db.sorgu<{ dosya: string; zaman: Date; no: string; yontem: string; silindi: Date | null; neden: string | null }>(
+    `SELECT s.imzali_dosya::text AS dosya, s.imzalandi AS zaman, s.no, s.imza_yontem AS yontem, k.silindi, k.neden
      FROM rapor_surumu s LEFT JOIN saklama_silme k ON k.firma_id = s.firma_id AND k.surum_id = s.id WHERE s.rapor_id = $1 AND s.revizyon = $2`, [raporId, revizyon])).rows[0];
-  return x ? { dosya: x.silindi ? null : x.dosya, zaman: x.zaman.toISOString(), no: x.no, yontem: x.yontem, silindi: x.silindi?.toISOString() ?? null } : null;
+  return x ? { dosya: x.silindi ? null : x.dosya, zaman: x.zaman.toISOString(), no: x.no, yontem: x.yontem, silindi: x.silindi?.toISOString() ?? null, driveda: x.neden === "drive" } : null;
 }
 const IMZA_GECERSIZ = "Yüklenen PDF bu raporun imzaya hazırlanan PDF'i değil ya da imza taşımıyor.";
 

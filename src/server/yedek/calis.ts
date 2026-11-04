@@ -20,9 +20,10 @@ import {
 } from "../dis/bulut.ts";
 import { arsivAdimi, arsivOku, type ArsivOzeti } from "./arsiv.ts";
 import {
-  baglantiAl, baglantiBirak, denemeYaz, durumYaz, gonderildiYaz, kuyrukSayilari, siradaki, yenilemeAnahtari, yenilemeYaz, yerDeposu, yokYaz,
-  zamanYaz, type Baglanti,
+  baglantiAl, baglantiBirak, denemeYaz, denetlendiYaz, denetlenecekler, dosyaninKuyrugu, durumYaz, eksikYaz, gonderildiYaz, kosuYaz, kuyrukSayilari,
+  siradaki, yenilemeAnahtari, yenilemeYaz, yerDeposu, yokYaz, zamanYaz, type Baglanti, type KuyrukSatiri,
 } from "./kayit.ts";
+import { driveAdaylari } from "../../modules/raporlar/server/yedek-baglanti.ts";
 import { kuyrugaTopla } from "./topla.ts";
 import { ayDosyasi, aydaDegisiklikVar, tamKopya } from "./veri.ts";
 import { ayDosyasiAdi, ayKlasoru, donemi, tamKopyaAdi, veriKlasoru } from "./yol.ts";
@@ -34,16 +35,23 @@ export const ortamHizmeti: HizmetBul = (s) => { const a = bulutAyari(s); return 
 export const hizmetHazir = (s: BulutSaglayici): boolean => { try { return !!bulutAyari(s); } catch { return false; } };
 
 export type YedekDurumu = "yok" | "tamam" | "kopuk" | "dolu" | "hizmet_yok" | "gecici";
-export interface FirmaYedekOzeti { arsiv: ArsivOzeti; gonderilen: number; bayt: number; bekleyen: number; durum: YedekDurumu }
+export interface FirmaYedekOzeti {
+  arsiv: ArsivOzeti; gonderilen: number; bayt: number; bekleyen: number; durum: YedekDurumu;
+  /** Drive denetimi: bulunan / bulunamayıp yeniden sıraya giren dosya; taşınan: dosyaları Supabase'ten silinen rapor (göç 0118) */
+  denetlenen: number; eksik: number; tasinan: number;
+}
 
 const ZIP = "application/zip";
 const GUVENLIK_MS = 5_000;
+/** Drive denetimi ve taşıma günde bir (gece işi; imzadan sonraki kısa koşu da günde birden fazla yapmaz) */
+const GUNLUK_MS = 20 * 60 * 60 * 1000;
+const TASIMA_PARTI = 25;
 
 export async function firmaYedegi(h: Havuz, firmaId: string, depo: Depo,
   s: { sure: number; simdi?: Date; hizmetBul?: HizmetBul; arsiv?: boolean }): Promise<FirmaYedekOzeti> {
   const bas = Date.now(), simdi = s.simdi ?? new Date(), hb = s.hizmetBul ?? ortamHizmeti;
   const kalan = () => s.sure - (Date.now() - bas);
-  const o: FirmaYedekOzeti = { arsiv: { tam: 0, ay: 0, silinen: 0 }, gonderilen: 0, bayt: 0, bekleyen: 0, durum: "yok" };
+  const o: FirmaYedekOzeti = { arsiv: { tam: 0, ay: 0, silinen: 0 }, gonderilen: 0, bayt: 0, bekleyen: 0, durum: "yok", denetlenen: 0, eksik: 0, tasinan: 0 };
   if (s.arsiv !== false) o.arsiv = await kiraciIcinde(h, firmaId, (db) => arsivAdimi(db, depo, simdi));
   const al = await kiraciIcinde(h, firmaId, async (db) => {
     const b = await baglantiAl(db);
@@ -119,6 +127,64 @@ export async function firmaYedegi(h: Havuz, firmaId: string, depo: Depo,
       if (r === "bos") break;
       if (r === "gecici") { if (++ard >= 3) break; } else ard = 0;
     }
+    /* hizmette dosya var mı (erişim anahtarı dolduysa bir kez yenilenir) */
+    const bulDene = async (db: Sorgulayici, k: KuyrukSatiri) => {
+      try { return await hz.bul(erisim, k, yerDeposu(db)); } catch (e) {
+        if (!(e instanceof BulutYetki)) throw e;
+        await yenile(db);
+        return hz.bul(erisim, k, yerDeposu(db));
+      }
+    };
+    /* yoksa ya da boyutu tutmuyorsa yeniden sıraya; varsa "bulundu" zamanı */
+    const denetle = async (db: Sorgulayici, k: KuyrukSatiri & { boyut?: string | null }): Promise<boolean> => {
+      const v = await bulDene(db, k);
+      if (!v || (k.boyut != null && Number(k.boyut) !== v.boyut)) { await eksikYaz(db, k); o.eksik++; return false; }
+      await denetlendiYaz(db, k.id);
+      o.denetlenen++;
+      return true;
+    };
+    const gunluk = (t: Date | null) => !t || simdi.getTime() - t.getTime() > GUNLUK_MS;
+    /* Drive denetimi (günde bir): her gönderilmiş dosya ayda bir aranır — firma Drive'dan silmişse yeniden gönderilir */
+    if (gunluk(b.denetim)) {
+      let bitti = false;
+      while (kalan() > GUVENLIK_MS) {
+        const l = await kiraciIcinde(h, firmaId, (db) => denetlenecekler(db, 20));
+        if (!l.length) { bitti = true; break; }
+        for (const k of l) {
+          if (kalan() <= GUVENLIK_MS) break;
+          await kiraciIcinde(h, firmaId, (db) => denetle(db, k));
+        }
+      }
+      if (bitti) await kiraciIcinde(h, firmaId, (db) => kosuYaz(db, b.id, "denetim"));
+    }
+    /* Supabase'te 1 yıl (günde bir; göç 0118): güncel olmayan, son imzası 1 yıldan eski raporun dosyaları — hepsi ŞİMDİ Drive'da bulunursa —
+       Supabase'ten silinir; kayıt kalır. Drive'da olmayan dosya yeniden sıraya girer, rapor sonraki koşuya kalır. */
+    if (gunluk(b.tasima)) {
+      let bitti = false;
+      while (kalan() > GUVENLIK_MS) {
+        const adaylar = await kiraciIcinde(h, firmaId, (db) => driveAdaylari(db, TASIMA_PARTI));
+        let ilerledi = false;
+        for (const a of adaylar) {
+          if (kalan() <= GUVENLIK_MS) break;
+          const hazir = await kiraciIcinde(h, firmaId, async (db) => {
+            const q = await dosyaninKuyrugu(db, a.dosyalar);
+            if (q.length < new Set(a.dosyalar).size || q.some((x) => x.durum !== "gonderildi")) return false;
+            for (const k of q) if (!(await denetle(db, k))) return false;
+            return true;
+          });
+          if (!hazir) continue;
+          await kiraciIcinde(h, firmaId, async (db) => {
+            const anahtarlar = (await db.sorgu<{ a: string[] | null }>("SELECT bekletme_sil($1) AS a", [a.rapor])).rows[0]?.a;
+            if (!anahtarlar) return;
+            for (const k of anahtarlar) await depo.copSil(k, db);
+            o.tasinan++;
+            ilerledi = true;
+          });
+        }
+        if (adaylar.length < TASIMA_PARTI || !ilerledi) { bitti = true; break; }
+      }
+      if (bitti) await kiraciIcinde(h, firmaId, (db) => kosuYaz(db, b.id, "tasima"));
+    }
     await kiraciIcinde(h, firmaId, async (db) => {
       o.bekleyen = (await kuyrukSayilari(db)).bekliyor;
       if (basari && b.durum !== "bagli") await durumYaz(db, b.id, "bagli", null);
@@ -165,11 +231,11 @@ async function sorunBildir(db: Sorgulayici, b: Baglanti, durum: "kopuk" | "dolu"
 
 /* ── gece işi: her firma kendi havuzunda, firma başına süre payı ── */
 export type YedekIsOzeti = { durum: "tamam" | "hata" | "zaten_calisiyor"; firma: number; gonderilen: number; bayt: number; arsiv: number; kopuk: number;
-  kalan: number; hatali_firma: number; ulasilamayan: number };
+  kalan: number; hatali_firma: number; ulasilamayan: number; eksik: number; tasinan: number };
 
 export async function yedekIsi(havuz: Havuz, depo: Depo, sure: number, havuzBul?: (firmaId: string) => Promise<Havuz | null>,
   s: { simdi?: Date; hizmetBul?: HizmetBul } = {}): Promise<YedekIsOzeti> {
-  const o: YedekIsOzeti = { durum: "tamam", firma: 0, gonderilen: 0, bayt: 0, arsiv: 0, kopuk: 0, kalan: 0, hatali_firma: 0, ulasilamayan: 0 };
+  const o: YedekIsOzeti = { durum: "tamam", firma: 0, gonderilen: 0, bayt: 0, arsiv: 0, kopuk: 0, kalan: 0, hatali_firma: 0, ulasilamayan: 0, eksik: 0, tasinan: 0 };
   const id = await isBasla(havuz, "yedek");
   if (!id) return { ...o, durum: "zaten_calisiyor" };
   const bas = Date.now();
@@ -185,7 +251,7 @@ export async function yedekIsi(havuz: Havuz, depo: Depo, sure: number, havuzBul?
       if (!hf) { o.ulasilamayan++; continue; }
       try {
         const r = await firmaYedegi(hf, f, depo, { sure: Math.min(pay, sure - gecen), simdi: s.simdi, hizmetBul: s.hizmetBul });
-        o.firma++; o.gonderilen += r.gonderilen; o.bayt += r.bayt; o.arsiv += r.arsiv.tam + r.arsiv.ay;
+        o.firma++; o.gonderilen += r.gonderilen; o.bayt += r.bayt; o.arsiv += r.arsiv.tam + r.arsiv.ay; o.eksik += r.eksik; o.tasinan += r.tasinan;
         if (r.durum === "kopuk" || r.durum === "dolu") o.kopuk++;
         if (r.bekleyen > 0) o.kalan++;
       } catch (h) {

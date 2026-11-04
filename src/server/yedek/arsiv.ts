@@ -2,17 +2,19 @@
    saklama süresi boyunca durur"). Firmanın kendi işleminde, gece işinin ilk adımı:
    1. Bu yılın tam kopyası yoksa alınır (özellik açıldığında bir kez, sonra her yılbaşı) — değişiklik kaydı ondan önceki veriyi bilmez.
    2. Biten her ayın değişiklikleri aylık dosyaya yazılır ve o aya kadarki değişiklik kaydı silinir (ikisi aynı işlemde: dosya yazılmadan kayıt gitmez).
-   3. Saklama süresi (Firma ayarları › Rapor saklama süresi; en az 5 yıl) dolan arşiv dosyaları silinir (KOD-GECIS ENGEL 11).
+   3. Son 12 ay tutulur (2026-11-04, K3; reisim: "supabase de sadece 1 yıllık" — uzun süreli yedek firmanın Drive'ında): 12 aydan eski aylık
+      dosyalar ve geçen yıldan eski tam kopyalar silinir (geçen yılın tam kopyası, o yılın son aylarının tabanı olarak kalır).
    Dosyalar tek dosya yolunun anahtarıyla (modül "yedek_arsiv") ama dosya kaydı olmadan — kimse indiremez; kayıt yedek_arsiv'de. */
 import { createHash, randomUUID } from "node:crypto";
 import type { Sorgulayici } from "../db/kiraci.ts";
 import type { Depo } from "../dosya/depo.ts";
 import { dosyaAnahtari } from "../dosya/anahtar.ts";
-import { ayarOku } from "../ayar/ayar.ts";
 import { ayDosyasi, tamKopya } from "./veri.ts";
 import { ayAraligi, donemi } from "./yol.ts";
 
 export const ARSIV_MODULU = "yedek_arsiv";
+/** probata arşivinde tutulan ay sayısı (K3) */
+export const ARSIV_AY = 12;
 export interface ArsivOzeti { tam: number; ay: number; silinen: number }
 
 async function firmaKimligi(db: Sorgulayici): Promise<string> {
@@ -67,10 +69,10 @@ export async function arsivAdimi(db: Sorgulayici, depo: Depo, simdi: Date): Prom
     }
     await db.sorgu("DELETE FROM yedek_degisiklik WHERE zaman >= $1 AND zaman < $2", [bas, son]);
   }
-  /* 3 · saklama süresi dolan arşiv */
-  const yil = (await ayarOku(db, "saklama")).deger.yil;
+  /* 3 · 12 aydan eski arşiv */
+  const esikAy = new Date(Date.UTC(d.yil, Number(d.ay.slice(5, 7)) - 1 - ARSIV_AY, 1)).toISOString().slice(0, 7);
   const eski = (await db.sorgu<{ id: string; anahtarlar: string[] }>(
-    "SELECT id::text, anahtarlar FROM yedek_arsiv WHERE olustu < now() - make_interval(years => $1)", [yil])).rows;
+    "SELECT id::text, anahtarlar FROM yedek_arsiv WHERE (tur = 'ay' AND donem < $1) OR (tur = 'tam' AND donem < $2)", [esikAy, String(d.yil - 1)])).rows;
   for (const e of eski) {
     for (const a of e.anahtarlar) await depo.copSil(a, db);
     await db.sorgu("DELETE FROM yedek_arsiv WHERE id = $1", [e.id]);

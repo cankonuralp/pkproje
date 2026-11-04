@@ -631,6 +631,11 @@ pkproje/
                             aylık dosya → kuyruk dosya dosya; kopuk / dolu → bir kez e-posta; yedekIsi gece) · sonra.ts (imzadan sonra, Şimdi yedekle, bağlanınca)
                             · zip.ts DEFLATE'li ZIP · uç src/app/api/is/yedek (Vercel Cron 01:45 UTC, 300 sn) · yan menü balonu Firma ayarları (22) ·
                             kilit tests/yedek.test.ts (PG), yedek-saf, bulut-istemci (taklit tests/yardimci/sahte-bulut.ts), bozan yedek, e2e firma-ayarlari
+                            · 2026-11-04 SUPABASE'TE 1 YIL (göç 0118; reisim: "yedeklemeyi büyük ölçüde drive ile şirket kendisi yapacak"): calis.ts
+                            günde bir Drive DENETİMİ (gönderilen her dosya ayda bir hz.bul ile aranır; yoksa eksikYaz → yeniden gönderilir) + TAŞIMA
+                            (raporlar/server/yedek-baglanti.ts driveAdaylari → her dosya o anda Drive'da → bekletme_sil: PDF'ler + fotoğraflar Supabase'ten,
+                            saklama_silme neden drive; kayıt kalır) · rapor_guncel_mu: ekipmanın güncel raporu hiç taşınmaz, müşteri yalnız onu görür (K2) ·
+                            arsiv.ts son 12 ay · Yönetim › Firmalar Yedek sütunu (yonetim_yedek_durumlari) · kilit yedek, yedek-saf bekletmeEksikleri, bozan yedek 7
   src/server/islem/         TEK SEFERLİK İŞLEM (392; 09-D2, çevrimdışı kuyruk): islem.ts tekSeferlik (kimliğe danışma kilidi, iş + sonuç aynı veritabanı
                             işleminde; göç 0076 islem) · yazan.ts (işi yazanın etiketi — kimlik tarayıcıya gitmez) · uç src/app/api/islem (köken, oturum,
                             yazan kapıları) · iş türleri modülde: raporlar/server/islem-baglanti.ts
@@ -825,7 +830,9 @@ giriş reisim'in (parolayı ben yazmam) — bakılamayan "ölçemedim" diye yaz�
 - Reisim demeden bildirim kurma (anayasa 1.3); palet değiştirme/önerme (2.4); emoji ikon (2.5).
 - Otomatik silme: **firmanın deposunda** imzalı rapor PDF'i ve aylık arşiv yedeği **saklama süresi dolunca** silinir (en az 5 yıl, firma 6–20 yıla
   uzatabilir; 30 gün önce liste — reisim 2026-10-03: *"2 olsun"*, KOD-GECIS ENGEL 11). Süre dolmadan hiçbir şey silinmez. Eski "yalnız firma 'Sil'
-  seçtiyse" kuralı ve sistemde kalsın / arşiv / sil seçenekleri kalktı.
+  seçtiyse" kuralı ve sistemde kalsın / arşiv / sil seçenekleri kalktı. **2026-11-04 istisna (göç 0118, reisim: *"supabase de sadece 1 yıllık"*):**
+  Drive bağlı firmada son imzası 1 yıldan eski, ekipmanın güncel raporu OLMAYAN raporun PDF'leri ve fotoğrafları — hepsi o anda Drive'da bulunursa —
+  Supabase'ten silinir; kayıt kalır. Drive'sız firmada süre kuralı aynen. probata arşivi son 12 ay.
 - Testi susturma/gevşetme; kırılan test tarih + gerekçeyle güncellenir.
 - "Kapandı" demeden kalem kalem sayım (0.10); ölçmeden "bitti" (11.7–11.8); tahmin yazma, "ölçemedim" yaz.
 

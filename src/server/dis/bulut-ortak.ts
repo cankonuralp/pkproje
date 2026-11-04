@@ -64,6 +64,8 @@ export interface BulutHizmeti {
   birak(yenileme: string): Promise<void>;
   /** dosyayı yerine yazar; aynı adda dosya varsa içeriği değişir (kopya oluşmaz) */
   yukle(erisim: string, y: Yukleme, yerler: YerDeposu): Promise<void>;
+  /** dosya hâlâ hizmette mi (çöpte değil): boyutu; yoksa null (2026-11-04 — Drive denetimi ve Supabase'ten taşımadan önce) */
+  bul(erisim: string, y: { yol: readonly string[]; ad: string }, yerler: YerDeposu): Promise<{ boyut: number } | null>;
 }
 
 /* ── ortak yardımcılar (iki istemci) ── */

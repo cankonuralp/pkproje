@@ -6,7 +6,9 @@
    4. Yeni bir dosya modülü yedekte sınıflanmayınca yakalanır (dosya ne yedeğe girer ne gerekçesi yazılır).
    5. Google Drive: dosyayı ararken kayıtlı yer olmasa da aynı adlı dosya BULUNMAZSA (bozuk arama) ikinci yükleme kopya dosya açar — kilidin
       "kopya yok" denetimi bunu görür.
-   6. İstemci test ucunu yerel olmayan adrese açarsa (anahtar başka sunucuya gider) ayar reddeder. */
+   6. İstemci test ucunu yerel olmayan adrese açarsa (anahtar başka sunucuya gider) ayar reddeder.
+   7. (2026-11-04, 0118) Drive taşımasının şartlarından biri (Drive bağlı, 1 yıl, güncel değil, Drive'da bulundu) ya da müşteri politikasının güncel
+      rapor şartı düşünce yakalanır. */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { after, before, test } from "node:test";
@@ -14,7 +16,7 @@ import { DOSYA_ERISIMI } from "../../src/server/dosya/erisim.ts";
 import { bulutAyari, bulutHizmeti, type YerDeposu } from "../../src/server/dis/bulut.ts";
 import { YEDEK_DISI, YEDEK_TABLOLARI } from "../../src/server/yedek/tablolar.ts";
 import { BELGE_KLASORU, YEDEK_DISI_DOSYA } from "../../src/server/yedek/yol.ts";
-import { yedekDosyaFarki, yedekListeFarki } from "../yardimci/denetimler.ts";
+import { bekletmeEksikleri, yedekDosyaFarki, yedekListeFarki } from "../yardimci/denetimler.ts";
 import { sahteBulutKur, sahteBulutOrtami, type SahteBulut } from "../yardimci/sahte-bulut.ts";
 
 const goc = readFileSync(new URL("../../src/server/db/gocler/0117_yedek.sql", import.meta.url), "utf8");
@@ -68,4 +70,15 @@ test("5. Google Drive: aynı adlı dosya bulunmazsa kopya açılır — kilidin 
 
 test("6. test ucu yerel olmayan adrese açılınca ayar reddeder (kilidin koruduğu açık)", () => {
   assert.throws(() => bulutAyari("gdrive", { ...sahteBulutOrtami(t), PROBATA_BULUT_UC: "http://saldirgan.example:8080" }), /yalnız yerel/);
+});
+
+test("7. (0118) Supabase'ten Drive'a taşımanın bir şartı düşünce yakalanır — Drive'da olmayan / güncel / 1 yıldan yeni raporun dosyası silinirdi", () => {
+  const g = readFileSync(new URL("../../src/server/db/gocler/0118_yedek_bekletme.sql", import.meta.url), "utf8");
+  assert.deepEqual(bekletmeEksikleri(g), [], "sağlam");
+  const boz = (eski: string, yeni: string) => { assert.ok(g.includes(eski), `bozulacak satır kaynakta yok: ${eski.slice(0, 50)}`); return bekletmeEksikleri(g.replace(eski, yeni)); };
+  assert.ok(boz("AND q.denetlendi > now() - interval '1 hour'))", "))").includes("Drive'da bulunma şartı yok"));
+  assert.ok(boz("WHERE b.firma_id = p_firma AND b.durum = 'bagli')", "WHERE b.firma_id = p_firma)").includes("Drive bağlı şartı yok"));
+  assert.ok(boz("AND rapor_guncel_mu(s.id))", ")").includes("güncel rapor şartı yok"));
+  assert.ok(boz("AND s.imzalandi > now() - interval '1 year')", ")").includes("1 yıl şartı yok"));
+  assert.ok(boz("AND rapor_guncel_mu(id));", ");").includes("müşteri güncel rapor şartı yok"));
 });

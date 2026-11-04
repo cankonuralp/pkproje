@@ -15,7 +15,7 @@ import { durumCoz } from "../src/server/yedek/baglan.ts";
 import { YEDEK_DISI, YEDEK_TABLOLARI } from "../src/server/yedek/tablolar.ts";
 import { adTemizle, ayAraligi, BELGE_KLASORU, belgeAdi, donemi, raporKlasoru, YEDEK_DISI_DOSYA } from "../src/server/yedek/yol.ts";
 import { SikistirilmisZip } from "../src/server/yedek/zip.ts";
-import { yedekDosyaFarki, yedekGocListesi, yedekListeFarki } from "./yardimci/denetimler.ts";
+import { bekletmeEksikleri, yedekDosyaFarki, yedekGocListesi, yedekListeFarki } from "./yardimci/denetimler.ts";
 
 test("klasör düzeni: üç düzen; adlar temiz; belge adı kısa kimlikle", () => {
   const r = { kok: "probata yedek", musteri: "Deneme: Sanayi/A.Ş.", tesis: "Merkez *Fabrika*", yil: 2026, no: "XX-1126-0001" };
@@ -71,4 +71,9 @@ test("izin dönüşünün durum kodu: firma kısa adı + kod; biçimsiz olan red
   const kod = "a".repeat(43);
   assert.deepEqual(durumCoz(`deneme.${kod}`), { kisaAd: "deneme", kod });
   for (const x of [`Deneme.${kod}`, `deneme.${"a".repeat(10)}`, `deneme..${kod}`, `-deneme.${kod}`, kod, `de/neme.${kod}`]) assert.equal(durumCoz(x), null, x);
+});
+
+test("Supabase'te 1 yıl (0118): taşıma şartları göçte — Drive bağlı, 1 yıl, güncel rapor değil, Drive'da bulundu; müşteri yalnız güncel raporu görür", () => {
+  const goc = readFileSync(new URL("../src/server/db/gocler/0118_yedek_bekletme.sql", import.meta.url), "utf8");
+  assert.deepEqual(bekletmeEksikleri(goc), []);
 });

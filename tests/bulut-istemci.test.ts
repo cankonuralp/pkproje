@@ -119,3 +119,18 @@ test("OneDrive: yol adresli, büyük dosya parça parça; yenileme anahtarı de�
   t.hatalar.push({ yontem: "PUT", yol: /^\/ms\/graph\//, durum: 507, kez: 1 });
   await assert.rejects(h.yukle(k.erisim, { yol, ad: "a.zip", bayt: Buffer.from("x"), tur: "application/zip" }, bellekYer()), BulutDolu);
 });
+
+test("bul (2026-11-04, Drive denetimi): var olan dosyanın boyutu; silinmiş / hiç yüklenmemiş dosya null — kayıtlı kimlik olsa da olmasa da", async () => {
+  for (const s of ["gdrive", "onedrive"] as const) {
+    const { h, anahtar } = await bagla(s);
+    const yer = bellekYer(), y = { yol: ["probata yedek", "Denetim"], ad: `bul-${s}.pdf` };
+    assert.equal(await h.bul(anahtar.erisim, y, yer), null, `${s}: yüklenmemiş`);
+    await h.yukle(anahtar.erisim, { ...y, bayt: new Uint8Array(1234), tur: "application/pdf" }, yer);
+    assert.deepEqual(await h.bul(anahtar.erisim, y, yer), { boyut: 1234 }, `${s}: kayıtlı kimlikle`);
+    if (s === "gdrive") {
+      assert.deepEqual(await h.bul(anahtar.erisim, y, bellekYer()), { boyut: 1234 }, "kayıtlı kimlik yoksa yolla aranır");
+      t.drive.delete(yer.m.get("probata yedek/Denetim/bul-gdrive.pdf")!);
+    } else t.onedrive.delete("probata yedek/Denetim/bul-onedrive.pdf");
+    assert.equal(await h.bul(anahtar.erisim, y, yer), null, `${s}: firma silmiş`);
+  }
+});

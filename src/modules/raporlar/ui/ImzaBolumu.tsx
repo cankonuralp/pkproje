@@ -25,7 +25,9 @@ export function ImzaBolumu({ v, mesgul, baslat, yenile, hata }: {
     if (!v.imzali.dosya) {
       return (
         <Serit tur="bilgi" ikon="archive">
-          Tamamlandı · son imza {imza} · saklama süresi dolduğu için PDF {v.imzali.silindi ? TR.format(new Date(v.imzali.silindi)).replace(",", "") : ""} silindi
+          {v.imzali.driveda
+            ? <>Tamamlandı · son imza {imza} · PDF ve fotoğraflar firmanın Drive yedeğinde</>
+            : <>Tamamlandı · son imza {imza} · saklama süresi dolduğu için PDF {v.imzali.silindi ? TR.format(new Date(v.imzali.silindi)).replace(",", "") : ""} silindi</>}
         </Serit>
       );
     }

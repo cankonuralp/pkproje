@@ -13,6 +13,12 @@ export interface FirmaSatiri {
   /** veritabanı: ortak proje ya da firmanın kendi Supabase projesi (FIRMA-VT) */
   vt: "ortak" | "kendi";
   yonetici: { ad: string; eposta: string; durum: "ilk" | "etkin" | "pasif" } | null;
+  /** firmanın kendi yedeği (2026-11-04, göç 0118): Drive bağlantısı, son gönderim, bekleyen, son Drive denetimi; bağlanmamışsa null */
+  yedek: YedekOzeti | null;
+}
+export interface YedekOzeti {
+  saglayici: "gdrive" | "onedrive"; durum: "bagli" | "kopuk" | "dolu" | "kesildi"; son: string | null; denetim: string | null;
+  bekleyen: number; gonderilen: number; tasinan: number;
 }
 export type YonetimSonucu<T = Record<never, never>> = ({ durum: "tamam" } & T) | { durum: "gecersiz"; hatalar: Record<string, string> } | { durum: "red"; neden: string } | { durum: "yok" };
 
@@ -20,13 +26,19 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 interface Ham { id: string; ad: string; kisa_ad: string; rapor_kodu: string; durum: FirmaDurumu; olusturuldu: Date; kullanici: number; yon_ad: string | null; yon_eposta: string | null; yon_durum: "ilk" | "etkin" | "pasif" | null; vt: string | null }
 /* açılış günü Türkiye saatiyle (gece yarısından sonra açılan firma bir önceki günde görünmesin — 347–348 incelemesi) */
 const GUN = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit" });
-const satir = (r: Ham): FirmaSatiri => ({
+const satir = (r: Ham): Omit<FirmaSatiri, "yedek"> => ({
   id: r.id, ad: r.ad, kisaAd: r.kisa_ad, kod: r.rapor_kodu, durum: r.durum, acilis: GUN.format(r.olusturuldu), kullanici: r.kullanici, vt: r.vt === "kendi" ? "kendi" : "ortak",
   yonetici: r.yon_ad && r.yon_eposta && r.yon_durum ? { ad: r.yon_ad, eposta: r.yon_eposta, durum: r.yon_durum } : null,
 });
 
 export async function firmalar(db: Sorgulayici): Promise<FirmaSatiri[]> {
-  return (await db.sorgu<Ham>("SELECT id::text, ad, kisa_ad, rapor_kodu, durum, olusturuldu, kullanici, yon_ad, yon_eposta, yon_durum, vt FROM yonetim_firmalar()")).rows.map(satir);
+  const y = new Map((await db.sorgu<{ firma_id: string; saglayici: YedekOzeti["saglayici"]; durum: YedekOzeti["durum"]; son_kopya: Date | null; denetim: Date | null;
+    bekleyen: number; gonderilen: number; tasinan: number }>(
+    "SELECT firma_id::text, saglayici, durum, son_kopya, denetim, bekleyen, gonderilen, tasinan FROM yonetim_yedek_durumlari()")).rows
+    .map((x) => [x.firma_id, { saglayici: x.saglayici, durum: x.durum, son: x.son_kopya?.toISOString() ?? null, denetim: x.denetim?.toISOString() ?? null,
+      bekleyen: x.bekleyen, gonderilen: x.gonderilen, tasinan: x.tasinan } satisfies YedekOzeti]));
+  return (await db.sorgu<Ham>("SELECT id::text, ad, kisa_ad, rapor_kodu, durum, olusturuldu, kullanici, yon_ad, yon_eposta, yon_durum, vt FROM yonetim_firmalar()")).rows
+    .map((r) => ({ ...satir(r), yedek: y.get(r.id) ?? null }));
 }
 
 export async function firma(db: Sorgulayici, id: string): Promise<FirmaSatiri | null> {

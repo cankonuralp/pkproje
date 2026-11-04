@@ -21,6 +21,7 @@ export const GIZLILIK: readonly (readonly [string, readonly string[]])[] = [
     "Veritabanı ve dosyalar Avrupa Birliği'nde (Frankfurt) barındırılır.",
     "Erişim anahtarları ve gizli bilgiler şifreli saklanır; bağlantılar şifrelidir.",
     "İmzalı raporlar firmanın belirlediği saklama süresi boyunca (en az 5 yıl) tutulur, süre dolunca silinir.",
+    "Firma Google Drive ya da OneDrive bağladıysa bir yıldan eski raporların PDF'leri ve fotoğrafları, firmanın hesabında bulunduğu doğrulandıktan sonra probata'dan silinir; raporun kayıtlı bilgileri (ölçümler, sonuçlar, uygunsuzluklar) kalır. Her ekipmanın en son raporu silinmez.",
   ]],
   ["Google Drive ve OneDrive yedeği", [
     "Firma yöneticisi isterse Firma ayarları › Yedek'ten kendi Google Drive ya da OneDrive hesabını bağlar; bağlamak isteğe bağlıdır.",

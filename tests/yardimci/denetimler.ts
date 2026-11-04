@@ -1108,3 +1108,18 @@ export function gizlilikEksikleri(p: { metin: string; sayfa: string; giris: stri
   if (!p.giris.includes('href="/gizlilik"')) h.push("giriş ekranında gizlilik bağlantısı yok");
   return h;
 }
+
+/** 2026-11-04 (göç 0118): Supabase'ten Drive'a taşımanın şartları göçte duruyor mu — eksik şartların listesi (boş = sağlam). Taşıma YALNIZ Drive bağlıyken,
+    son imza 1 yıldan eskiyse, rapor ekipmanın güncel raporu değilse ve her PDF son bir saatte Drive'da bulunduysa; müşteri yalnız güncel raporu görür. */
+export function bekletmeEksikleri(goc: string): string[] {
+  const govde = (ad: string) => { const i = goc.indexOf(`CREATE OR REPLACE FUNCTION ${ad}(`); return i < 0 ? "" : goc.slice(i, goc.indexOf("$$;", i)); };
+  const t = govde("drive_tasinabilir"), b = govde("bekletme_sil");
+  const e: string[] = [];
+  if (!t.includes("b.durum = 'bagli'")) e.push("Drive bağlı şartı yok");
+  if (!t.includes("s.imzalandi > now() - interval '1 year'")) e.push("1 yıl şartı yok");
+  if (!t.includes("rapor_guncel_mu(s.id)")) e.push("güncel rapor şartı yok");
+  if (!/q\.durum = 'gonderildi'\s+AND q\.denetlendi > now\(\) - interval '1 hour'/.test(t)) e.push("Drive'da bulunma şartı yok");
+  if (!b.includes("NOT drive_tasinabilir(f, p_rapor)")) e.push("silme şartları denetlemiyor");
+  if (!/CREATE POLICY rapor_surumu_musteri[\s\S]*?rapor_guncel_mu\(id\)\);/.test(goc)) e.push("müşteri güncel rapor şartı yok");
+  return e;
+}

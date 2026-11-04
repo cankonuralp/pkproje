@@ -8,8 +8,9 @@ export type BaglantiDurumu = "bagli" | "kopuk" | "dolu" | "kesildi";
 export interface Baglanti {
   id: string; saglayici: "gdrive" | "onedrive"; hesap: string; durum: BaglantiDurumu; neden: string | null; bildirildi: boolean; baglandi: Date;
   toplama: Date | null; tam_kopya: Date | null; ay_gonderim: Date | null; son_kopya: Date | null; son_dosya: string | null;
+  denetim: Date | null; tasima: Date | null;
 }
-const SUTUN = `id::text, saglayici, hesap, durum, neden, bildirildi, baglandi, toplama, tam_kopya, ay_gonderim, son_kopya, son_dosya`;
+const SUTUN = `id::text, saglayici, hesap, durum, neden, bildirildi, baglandi, toplama, tam_kopya, ay_gonderim, son_kopya, son_dosya, denetim, tasima`;
 
 export async function baglantiOku(db: Sorgulayici): Promise<Baglanti | null> {
   return (await db.sorgu<Baglanti>(`SELECT ${SUTUN} FROM bulut_baglanti`)).rows[0] ?? null;
@@ -35,7 +36,7 @@ export async function baglantiYaz(db: Sorgulayici, b: { saglayici: "gdrive" | "o
   const e = await baglantiOku(db);
   const yeni = !e || e.saglayici !== b.saglayici || e.hesap.toLowerCase() !== b.hesap.toLowerCase();
   if (e && yeni) {
-    await db.sorgu("UPDATE bulut_kuyruk SET durum = 'bekliyor', deneme = 0, hata = NULL, gonderildi = NULL WHERE durum <> 'bekliyor'");
+    await db.sorgu("UPDATE bulut_kuyruk SET durum = 'bekliyor', deneme = 0, hata = NULL, gonderildi = NULL, denetlendi = NULL WHERE durum <> 'bekliyor'");
     await db.sorgu("DELETE FROM bulut_yer");
   }
   await db.sorgu(
@@ -123,4 +124,28 @@ export function yerDeposu(db: Sorgulayici): { al(yol: string): Promise<string | 
     },
     async sil(onek) { await db.sorgu("DELETE FROM bulut_yer WHERE yol = $1 OR left(yol, length($1) + 1) = $1 || '/'", [onek]); },
   };
+}
+
+/* ── Drive denetimi ve Supabase'ten taşıma (2026-11-04; göç 0118) ── */
+/** gönderilmiş, en son 30 günden önce (ya da hiç) Drive'da bulunmuş dosyalar — en eski önce; en çok `n` */
+export async function denetlenecekler(db: Sorgulayici, n: number): Promise<KuyrukSatiri[]> {
+  return (await db.sorgu<KuyrukSatiri>(
+    `SELECT id::text, dosya_id::text, yol, ad FROM bulut_kuyruk WHERE durum = 'gonderildi' AND coalesce(denetlendi, gonderildi) < now() - interval '30 days'
+     ORDER BY coalesce(denetlendi, gonderildi), id LIMIT $1`, [n])).rows;
+}
+/** taşınacak raporun Drive'a gönderilmiş dosyaları (yolu ve adıyla) */
+export async function dosyaninKuyrugu(db: Sorgulayici, dosyalar: readonly string[]): Promise<(KuyrukSatiri & { durum: string; boyut: string | null })[]> {
+  return (await db.sorgu<KuyrukSatiri & { durum: string; boyut: string | null }>(
+    "SELECT id::text, dosya_id::text, yol, ad, durum, boyut::text FROM bulut_kuyruk WHERE dosya_id = ANY ($1::uuid[])", [dosyalar])).rows;
+}
+export async function denetlendiYaz(db: Sorgulayici, id: string): Promise<void> {
+  await db.sorgu("UPDATE bulut_kuyruk SET denetlendi = now() WHERE id = $1", [id]);
+}
+/** Drive'da yok: yeniden sıraya (yeni dosya açılır — kayıtlı kimlik unutulur) */
+export async function eksikYaz(db: Sorgulayici, k: KuyrukSatiri): Promise<void> {
+  await db.sorgu("UPDATE bulut_kuyruk SET durum = 'bekliyor', deneme = 0, hata = NULL, gonderildi = NULL, denetlendi = NULL WHERE id = $1", [k.id]);
+  await db.sorgu("DELETE FROM bulut_yer WHERE yol = $1", [[...k.yol, k.ad].join("/")]);
+}
+export async function kosuYaz(db: Sorgulayici, id: string, alan: "denetim" | "tasima"): Promise<void> {
+  await db.sorgu(`UPDATE bulut_baglanti SET ${alan === "denetim" ? "denetim" : "tasima"} = now() WHERE id = $1`, [id]);
 }

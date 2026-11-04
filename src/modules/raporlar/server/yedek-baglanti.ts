@@ -35,3 +35,26 @@ export async function yedekRaporlari(db: Sorgulayici, sonra: Date | null, enCok:
     dosyalar: [{ id: x.imzali, ne: "pdf" as const, tur: "application/pdf" }, ...ayir(x.okuma, "okuma"), ...ayir(x.form, "form")],
   }));
 }
+
+/** 2026-11-04 (göç 0118; reisim: "supabase de sadece 1 yıllık … rapor için gerekli eski bilgiler silinmesin"): dosyaları Supabase'ten Drive'a
+    taşınabilecek raporlar — son imzası 1 yıldan eski, ekipmanın güncel raporu (ve onun takipleri) değil, dosyaları henüz taşınmamış. Her raporun
+    Drive'da bulunması gereken dosyaları: sürümlerin imzalı PDF'leri + raporda görünmeyen dosyalar (okuma fotoğrafı, işaretli form). Kesin karar
+    veritabanında (bekletme_sil — drive_tasinabilir); burada yalnız aday ve denetlenecek dosyalar. En eski önce, en çok `enCok`. */
+export async function driveAdaylari(db: Sorgulayici, enCok: number): Promise<{ rapor: string; dosyalar: string[] }[]> {
+  return (await db.sorgu<{ rapor: string; dosyalar: string[] }>(
+    `WITH a AS (
+       SELECT s.rapor_id, max(s.imzalandi) AS son FROM rapor_surumu s
+       WHERE NOT EXISTS (SELECT 1 FROM saklama_silme k WHERE k.firma_id = s.firma_id AND k.surum_id = s.id)
+       GROUP BY s.rapor_id
+       HAVING (SELECT max(z.imzalandi) FROM rapor_surumu z WHERE z.firma_id = gecerli_firma() AND z.rapor_id = s.rapor_id) < now() - interval '1 year'
+       ORDER BY 2 LIMIT $1 * 4)
+     SELECT a.rapor_id::text AS rapor,
+       (SELECT array_agg(s.imzali_dosya::text) FROM rapor_surumu s WHERE s.rapor_id = a.rapor_id
+          AND NOT EXISTS (SELECT 1 FROM saklama_silme k WHERE k.firma_id = s.firma_id AND k.surum_id = s.id))
+       || coalesce((SELECT array_agg(d.id::text) FROM rapor r CROSS JOIN LATERAL jsonb_array_elements(r.fotolar) AS f(x)
+            JOIN dosya d ON d.id::text = f.x ->> 'dosya' WHERE r.id = a.rapor_id AND (f.x ->> 'okuma')::boolean IS TRUE AND d.cop IS NULL), '{}')
+       || coalesce((SELECT array_agg(d.id::text) FROM dosya d WHERE d.modul = $2 AND d.kayit_id = a.rapor_id AND d.cop IS NULL), '{}') AS dosyalar
+     FROM a
+     WHERE NOT EXISTS (SELECT 1 FROM rapor_surumu s WHERE s.rapor_id = a.rapor_id AND rapor_guncel_mu(s.id))
+     ORDER BY a.son LIMIT $1`, [enCok, FORM_DOSYA])).rows;
+}

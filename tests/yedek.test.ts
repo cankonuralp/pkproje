@@ -5,7 +5,10 @@
      birincil anahtar + gizli sütunlar; tetik işlevi tanımlayıcı-yetkili, arama yolu sabit, PUBLIC'e kapalı;
    · değişiklik kaydı: ekleme / değişiklik / silme satırın SON hâliyle (satır başına tek kayıt), parola özeti yok; uygulama rolü kayda yazamaz;
      firma ayrımı (B, A'nınkini görmez);
-   · probata arşivi: ilk koşuda yılın tam kopyası (Excel + JSON + bilgi), biten ay aylık dosyaya ve kayıt silinir, saklama süresi dolan arşiv silinir;
+   · probata arşivi: ilk koşuda yılın tam kopyası (Excel + JSON + bilgi), biten ay aylık dosyaya ve kayıt silinir, 12 aydan eski arşiv silinir (K3);
+   · 2026-11-04 (göç 0118; reisim: "supabase de sadece 1 yıllık … rapor için gerekli eski bilgiler silinmesin"): güncel olmayan, 1 yıldan eski raporun
+     PDF'leri ve fotoğrafları yalnız hepsi ŞİMDİ Drive'da bulunursa Supabase'ten silinir, kayıt kalır; Drive'da olmayan yeniden gönderilir;
+     ekipmanın güncel raporu hiç taşınmaz; aylık Drive denetimi eksik dosyayı yeniden sıraya koyar; müşteri politikası güncel raporla;
    · bağlama: izin kaydı tek kullanımlık, başlatan kişiye bağlı; yenileme anahtarı şifreli sırda (düz metin veritabanında yok);
    · gönderim: imzalı rapor PDF'i + okuma fotoğrafı raporun klasörüne, belge Belgeler'e, tam kopya + aylık dosya Veri yedeği'ne; İKİNCİ KOŞU YENİ BİR
      ŞEY GÖNDERMEZ; yeni belge yalnız kendisi gider;
@@ -193,9 +196,9 @@ test("probata arşivi: yılın tam kopyası (JSON + Excel + bilgi, parola özets
   assert.equal(JSON.parse(za.get("bilgi.json")!).tur, "ay");
   /* B: kendi arşivi; A'nınkini görmez */
   assert.equal((await sql(B, "SELECT 1 FROM yedek_arsiv")).rowCount, 0);
-  /* saklama süresi (5 yıl) dolan arşiv: depodan ve kayıttan silinir */
+  /* K3 (2026-11-04): son 12 ay — 12 aydan eski aylık dosya depodan ve kayıttan silinir */
   const eski = (await sahip.query<{ id: string; anahtarlar: string[] }>("SELECT id::text, anahtarlar FROM yedek_arsiv WHERE firma_id = $1 AND tur = 'ay'", [A])).rows[0];
-  await sahip.query("UPDATE yedek_arsiv SET olustu = now() - interval '6 years' WHERE id = $1", [eski.id]);
+  await sahip.query("UPDATE yedek_arsiv SET donem = '2020-01' WHERE id = $1", [eski.id]);
   assert.equal((await a(YON, (db) => arsivAdimi(db, depo, simdi))).silinen, 1);
   assert.equal((await sahip.query("SELECT 1 FROM depo_nesne WHERE anahtar = ANY ($1)", [eski.anahtarlar])).rowCount, 0);
 });
@@ -291,4 +294,66 @@ test("kesme ve başka hesap: anahtar silinir; başka hesaba bağlanınca gönder
   assert.ok(g.gonderilen >= 4);
   assert.ok([...t.onedrive.keys()].some((k) => k.startsWith("probata yedek/Veri yedeği/Tam kopya")), "B'nin tam kopyası OneDrive'da");
   assert.equal((await a(YON, (db) => yedekGorunumu(db))).kuyruk.bekliyor, 0);
+});
+
+test("1 yıl (0118): eski raporun dosyaları Drive'da bulununca Supabase'ten silinir, kayıt kalır; Drive'da yoksa yeniden gönderilir; güncel rapor taşınmaz", async () => {
+  /* HT-1'in önceki testteki raporu 2 yıl önceye; aynı ekipmana yeni planda yeni rapor (güncel) */
+  const eskiS = (await sahip.query<{ id: string; rapor_id: string; imzali: string; imzasiz: string; no: string }>(
+    "SELECT s.id::text, s.rapor_id::text, s.imzali_dosya::text AS imzali, s.imzasiz_dosya::text AS imzasiz, s.no FROM rapor_surumu s WHERE s.firma_id = $1 AND s.ekipman_id = $2",
+    [A, ekp["HT-1"]])).rows[0]!;
+  await tetiksiz("UPDATE rapor_surumu SET imzalandi = now() - interval '2 years', kontrol_tarihi = (now() - interval '2 years')::date WHERE id = $1", [eskiS.id]);
+  const fotolar = (await sahip.query<{ d: string }>("SELECT x ->> 'dosya' AS d FROM rapor, jsonb_array_elements(fotolar) x WHERE id = $1", [eskiS.rapor_id])).rows.map((x) => x.d);
+  assert.equal(fotolar.length, 2);
+  plan = "";
+  const yeni = await imzaliRapor("HT-1");
+  const yeniS = (await sahip.query<{ id: string }>("SELECT id::text FROM rapor_surumu WHERE rapor_id = $1", [yeni.rapor])).rows[0]!.id;
+  const guncel = async (id: string) => (await sql<{ g: boolean }>(A, "SELECT rapor_guncel_mu($1) AS g", [id])).rows[0].g;
+  assert.equal(await guncel(eskiS.id), false);
+  assert.equal(await guncel(yeniS), true);
+  assert.match((await sahip.query<{ q: string }>("SELECT qual AS q FROM pg_policies WHERE tablename = 'rapor_surumu' AND policyname = 'rapor_surumu_musteri'")).rows[0]!.q,
+    /rapor_guncel_mu/, "müşteri yalnız güncel raporu görür (K2)");
+  /* eski PDF Drive'dan silinmiş: Supabase'ten silinmez, yeniden sıraya girer */
+  t.drive.delete([...t.drive.values()].find((x) => !x.klasor && x.ad === `${eskiS.no}.pdf`)!.id);
+  await sahip.query("UPDATE bulut_baglanti SET tasima = NULL WHERE firma_id = $1", [A]);
+  const o1 = await calistir();
+  assert.equal(o1.tasinan, 0, JSON.stringify(o1));
+  assert.ok(o1.eksik >= 1, JSON.stringify(o1));
+  assert.equal((await sql(A, "SELECT 1 FROM dosya WHERE id = $1", [eskiS.imzali])).rowCount, 1, "Drive'da yokken Supabase'ten silinmez");
+  assert.equal((await sql<{ durum: string }>(A, "SELECT durum FROM bulut_kuyruk WHERE dosya_id = $1", [eskiS.imzali])).rows[0]!.durum, "bekliyor");
+  /* sonraki koşu: yeniden gönderilir, sonra taşınır */
+  await sahip.query("UPDATE bulut_baglanti SET tasima = NULL WHERE firma_id = $1", [A]);
+  const o2 = await calistir();
+  assert.ok(o2.gonderilen >= 1, JSON.stringify(o2));
+  assert.equal(o2.tasinan, 1, JSON.stringify(o2));
+  assert.ok([...t.driveDosyalari().keys()].some((k) => k.endsWith(`/${eskiS.no}.pdf`)), "PDF Drive'da");
+  for (const d of [eskiS.imzali, eskiS.imzasiz, ...fotolar]) assert.equal((await sql(A, "SELECT 1 FROM dosya WHERE id = $1", [d])).rowCount, 0, `${d} silindi`);
+  const k = (await sql<{ neden: string; dosya: number }>(A, "SELECT neden, dosya FROM saklama_silme WHERE surum_id = $1", [eskiS.id])).rows[0]!;
+  assert.equal(k.neden, "drive");
+  assert.equal(k.dosya, 4, "iki PDF + iki fotoğraf");
+  /* kayıt kalır; yeni raporun dosyası kalır */
+  assert.equal((await sql(A, "SELECT 1 FROM rapor_surumu WHERE id = $1 AND icerik IS NOT NULL", [eskiS.id])).rowCount, 1);
+  assert.equal((await sql(A, "SELECT 1 FROM dosya WHERE id = $1", [yeni.imzali])).rowCount, 1);
+  /* güncel rapor 1 yıldan eski olsa da taşınmaz; uygulama rolü koşulu atlayamaz */
+  await tetiksiz("UPDATE rapor_surumu SET imzalandi = now() - interval '13 months' WHERE id = $1", [yeniS]);
+  await sahip.query("UPDATE bulut_baglanti SET tasima = NULL WHERE firma_id = $1", [A]);
+  assert.equal((await calistir()).tasinan, 0);
+  assert.equal((await sql(A, "SELECT 1 FROM dosya WHERE id = $1", [yeni.imzali])).rowCount, 1, "ekipmanın en son raporu Supabase'te kalır");
+  await assert.rejects(kiraciIcinde(havuz, A, (db) => db.sorgu("DELETE FROM dosya WHERE id = $1", [yeni.imzali])), /saklama süresi dolmadan silinemez|permission denied/);
+  assert.equal((await sql<{ a: string[] | null }>(A, "SELECT bekletme_sil($1) AS a", [yeni.rapor])).rows[0].a, null);
+});
+
+test("Drive denetimi (0118): ayda bir her gönderilmiş dosya aranır; firma Drive'dan silmişse yeniden sıraya girer ve gönderilir", async () => {
+  const b = (await sql<{ dosya_id: string; ad: string }>(A, "SELECT dosya_id::text, ad FROM bulut_kuyruk WHERE durum = 'gonderildi' AND ad LIKE 'Kalibrasyon%'")).rows[0]!;
+  await sahip.query("UPDATE bulut_kuyruk SET gonderildi = now() - interval '40 days', denetlendi = NULL WHERE firma_id = $1 AND durum = 'gonderildi'", [A]);
+  await sahip.query("UPDATE bulut_baglanti SET denetim = NULL WHERE firma_id = $1", [A]);
+  t.drive.delete([...t.drive.values()].find((x) => !x.klasor && x.ad === b.ad)!.id);
+  const o = await calistir();
+  assert.equal(o.eksik, 1, JSON.stringify(o));
+  assert.ok(o.denetlenen >= 3, JSON.stringify(o));
+  assert.equal((await sql<{ durum: string }>(A, "SELECT durum FROM bulut_kuyruk WHERE dosya_id = $1", [b.dosya_id])).rows[0]!.durum, "bekliyor");
+  assert.equal((await sql(A, "SELECT 1 FROM bulut_kuyruk WHERE durum = 'gonderildi' AND denetlendi IS NULL")).rowCount, 0, "hepsi denetlendi");
+  const o2 = await calistir();
+  assert.equal(o2.gonderilen, 1, JSON.stringify(o2));
+  assert.equal(o2.denetlenen, 0, "günde bir; dosya başına ayda bir");
+  assert.ok([...t.driveDosyalari().keys()].some((x) => x.endsWith(b.ad)));
 });

@@ -117,6 +117,27 @@ export function googleHizmeti(a: BulutAyari, bekle: (ms: number) => Promise<void
       try { await fetch(UC.birak, { method: "POST", redirect: "error", signal: AbortSignal.timeout(ISTEK_MS),
         headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ token: yenileme }) }); } catch { /* bağlantı yine de kesilir */ }
     },
+    async bul(erisim, y, yerler) {
+      /* kayıtlı kimlik yoksa klasör yolu kayıtlı kimliklerle aranır (açılmaz); Drive yolla değil kimlikle bilir */
+      let id = await yerler.al([...y.yol, y.ad].join("/"));
+      if (!id) {
+        let ust = "root";
+        for (let i = 0; i < y.yol.length; i++) {
+          const k = await yerler.al(y.yol.slice(0, i + 1).join("/")) ?? await bul(erisim, ust, y.yol[i]!, true);
+          if (!k) return null;
+          ust = k;
+        }
+        id = await bul(erisim, ust, y.ad, false);
+        if (!id) return null;
+      }
+      if (!KIMLIK.test(id)) return null;
+      const r = await istek(erisim, `${UC.dosyalar}/${encodeURIComponent(id)}?fields=id,size,trashed`);
+      if (!r) return null;
+      const j = await jsonOku(r);
+      if (j.trashed === true) return null;
+      const boyut = Number(j.size);
+      return Number.isFinite(boyut) && boyut >= 0 ? { boyut } : null;
+    },
     async yukle(erisim, y, yerler) {
       for (let deneme = 0; deneme < 2; deneme++) {
         const ust = await klasorYolu(erisim, y.yol, yerler);

@@ -113,6 +113,13 @@ export async function sahteBulutKur(): Promise<SahteBulut> {
         const f = [...d.drive.values()].filter((x) => x.ad === ad && x.ust === m[2] && x.klasor === klasor);
         json(y, 200, { files: f.slice(0, 1).map((x) => ({ id: x.id })) }); return;
       }
+      /* tek dosyanın bilgisi (bulunuyor mu, boyutu; silinen dosya 404) */
+      const tek = /^\/google\/drive\/v3\/files\/([^/]+)$/.exec(yol);
+      if (tek && yontem === "GET") {
+        const f = d.drive.get(decodeURIComponent(tek[1]!));
+        if (!f) { json(y, 404, { error: { code: 404, message: "File not found" } }); return; }
+        json(y, 200, { id: f.id, size: String(f.bayt.length), trashed: false }); return;
+      }
       if (yol === "/google/drive/v3/files" && yontem === "POST") {
         const g = JSON.parse(govde.toString("utf8")) as { name: string; mimeType: string; parents: string[] };
         const ust = g.parents?.[0] ?? "root";
@@ -154,6 +161,13 @@ export async function sahteBulutKur(): Promise<SahteBulut> {
     if (yol.startsWith("/ms/graph/v1.0/")) {
       if (!yetkili(i)) { json(y, 401, { error: { code: "InvalidAuthenticationToken" } }); return; }
       if (yol === "/ms/graph/v1.0/me") { json(y, 200, { mail: d.hesap.ms, userPrincipalName: d.hesap.ms }); return; }
+      /* yol adresli öğe bilgisi (bulunuyor mu, boyutu) */
+      const og = /^\/ms\/graph\/v1\.0\/me\/drive\/special\/approot:\/(.+):$/.exec(yol);
+      if (og && yontem === "GET") {
+        const b = d.onedrive.get(og[1]!.split("/").map(decodeURIComponent).join("/"));
+        if (!b) { json(y, 404, { error: { code: "itemNotFound" } }); return; }
+        json(y, 200, { size: b.length }); return;
+      }
       const m = /^\/ms\/graph\/v1\.0\/me\/drive\/special\/approot:\/(.+):\/(content|createUploadSession)$/.exec(yol);
       if (m) {
         const hedefYol = m[1]!.split("/").map(decodeURIComponent).join("/");

@@ -1,6 +1,7 @@
 /* MÜŞTERİ PANELİNİN RAPORA BAKTIĞI YER (modül 17 → 14; 0030). Müşteri paneli rapor tablolarına dokunmaz: imzalı sürümleri buradan okur.
    YALNIZ müşteri işleminde çağrılır (src/server/kimlik/istek.ts musteriIslemi → veritabanında probata_musteri): hangi satırın döneceğine
-   veritabanının kısıtlayıcı politikaları karar verir — kendi müşterisi, kendi tesis kapsamı, raporun SON imzalı sürümü (193), revizyonla kapanan
+   veritabanının kısıtlayıcı politikaları karar verir — kendi müşterisi, kendi tesis kapsamı, ekipmanın GÜNCEL raporu (2026-11-04, K2 — göç 0118
+   rapor_guncel_mu: en son raporun son imzalı sürümü + takipleri; eskisi için müşteri firmayla iletişime geçer), revizyonla kapanan
    uygunsuzluk değil. Burada ayrıca süzgeç yok (unutulsa da sızmaz); imzasız rapor müşteriye hiç görünmez (rapor_surumu yalnız imzalı). */
 import type { RaporSonucu } from "../../../format/tanim.ts";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";

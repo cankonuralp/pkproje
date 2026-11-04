@@ -19,7 +19,7 @@ export async function GET(_istek: Request, { params }: { params: Promise<{ id: s
   if (!v) return new Response("Bulunamadı", { status: 404, headers: DUZ });
   if (v.imzaliDosya) return new Response("Rapor imzalı; imzalı PDF rapor ekranından iner.", { status: 409, headers: DUZ });
   /* saklama süresi dolup imzalı PDF silindiyse (387) imzasız kopyası da basılmaz */
-  if (v.imzaliSilindi) return new Response("Rapor imzalı; saklama süresi dolduğu için PDF'i silindi.", { status: 409, headers: DUZ });
+  if (v.imzaliSilindi) return new Response(v.imzaliDriveda ? "Rapor imzalı; PDF'i firmanın Drive yedeğinde." : "Rapor imzalı; saklama süresi dolduğu için PDF'i silindi.", { status: 409, headers: DUZ });
   const pdf = await belgePdf(v.belge);
   /* 2026-10-17: rapor no - ekipman kodu - tür adı (raporlar/sema.ts raporDosyaAdi) */
   const ad = raporDosyaAdi(v.no, v.belge.ekipman.kod, v.belge.tur.ad, "imzasiz");

@@ -259,7 +259,7 @@ export async function planIci(db: Sorgulayici, kim: Kisi, id: string): Promise<P
     /* göz: ekipteki denetçi (istisna — raporlar.ts oncekiRaporGorulur) ya da Raporlar'ın görme kuralı (kendi / branş / hepsi) */
     const gorur = r && duzey(kim, RAPORLAR_MODULU) !== "yok" && (e.uye || canDo(kim, RAPORLAR_MODULU, "gor", { sahip: r.hesapId, brans: t?.brans ?? "m" }));
     const oncekiRapor = !r ? null : !gorur ? { no: r.no, dosya: null, neden: "bu raporu görme yetkiniz yok" }
-      : { no: r.no, dosya: r.dosya, neden: r.dosya ? null : "PDF saklama süresi dolduğu için silindi" };
+      : { no: r.no, dosya: r.dosya, neden: r.dosya ? null : r.driveda ? "PDF firmanın Drive yedeğinde" : "PDF saklama süresi dolduğu için silindi" };
     return { id: x.id, kod: x.kod, turId: x.turId, tur: t?.ad ?? "—", brans: t?.brans ?? "m", konum: x.konum, seri: x.seri, pasif: x.pasif, surum: x.surum, sil: silinebilir.has(x.id),
       sonradan: !!pe.find((y) => y.ekipman_id === x.id)?.sonradan, onceki: oncekiKontrol(r, x), oncekiRapor,
       takip: ((t) => (t ? { no: t.no, acik: t.acik, bekleyen: t.bekleyen?.no ?? null } : null))(tkp.get(x.id)) };
