@@ -636,6 +636,11 @@ pkproje/
                             (raporlar/server/yedek-baglanti.ts driveAdaylari → her dosya o anda Drive'da → bekletme_sil: PDF'ler + fotoğraflar Supabase'ten,
                             saklama_silme neden drive; kayıt kalır) · rapor_guncel_mu: ekipmanın güncel raporu hiç taşınmaz, müşteri yalnız onu görür (K2) ·
                             arsiv.ts son 12 ay · Yönetim › Firmalar Yedek sütunu (yonetim_yedek_durumlari) · kilit yedek, yedek-saf bekletmeEksikleri, bozan yedek 7
+                            · 2026-11-04 GERİ YÜKLEME + AYLIK DOĞRULAMA (göç 0119; maket claude.ai THfrK3AzKkg9S7DiRVKKF4; yalnız Yönetim): hal.ts (tam kopya +
+                            sonraki aylar → hâl; kaynak Drive / probata arşivi / önceki hâl; zipAc klasörü atar) · dogrula.ts (ayda bir: sayılar canlıyla, PDF örneği;
+                            sorun e-postası bir kez; yedek_dogrulama) · geri-yukle.ts (deneme · geriYukle: önce şu anki hâl arşive "once" 30 gün, SQL yedek_geri_yukle
+                            TEK işlemde — kullanıcı tetikleri kapalı, bağımlılık sırası, parola korunur, parolasıza geçici parola + e-posta; dosyalar Drivex27dan; geriDon)
+                            · Yönetim › firma › Yedek (yonetim/server/yedek.ts, ui/YedekBolumu.tsx: 5 adım, kısa ad onayı) · kilit yedek (PG), yedek-saf, bozan yedek 8
   src/server/islem/         TEK SEFERLİK İŞLEM (392; 09-D2, çevrimdışı kuyruk): islem.ts tekSeferlik (kimliğe danışma kilidi, iş + sonuç aynı veritabanı
                             işleminde; göç 0076 islem) · yazan.ts (işi yazanın etiketi — kimlik tarayıcıya gitmez) · uç src/app/api/islem (köken, oturum,
                             yazan kapıları) · iş türleri modülde: raporlar/server/islem-baglanti.ts
