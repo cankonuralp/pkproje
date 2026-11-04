@@ -99,7 +99,7 @@ export async function siradaki(db: Sorgulayici, atla: readonly string[]): Promis
      ORDER BY deneme, eklendi, id LIMIT 1`, [atla])).rows[0] ?? null;
 }
 export async function gonderildiYaz(db: Sorgulayici, b: string, k: KuyrukSatiri, boyut: number): Promise<void> {
-  await db.sorgu("UPDATE bulut_kuyruk SET durum = 'gonderildi', gonderildi = now(), boyut = $2, hata = NULL WHERE id = $1", [k.id, boyut]);
+  await db.sorgu("UPDATE bulut_kuyruk SET durum = 'gonderildi', gonderildi = now(), denetlendi = now(), boyut = $2, hata = NULL WHERE id = $1", [k.id, boyut]);
   await db.sorgu("UPDATE bulut_baglanti SET son_kopya = now(), son_dosya = $2 WHERE id = $1", [b, k.ad.slice(0, 300)]);
 }
 export async function yokYaz(db: Sorgulayici, id: string): Promise<void> {

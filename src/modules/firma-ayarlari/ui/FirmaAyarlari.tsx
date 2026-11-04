@@ -264,7 +264,10 @@ function Saklama({ v }: { v: Veri }) {
   const s = useKesim("saklama", { yil: String(v.saklama.deger.yil) }, v.saklama.surum);
   return (
     <Kart yaz={v.yaz} kirli={s.kirli} mesgul={s.mesgul} kaydet={s.kaydet}>
-      <Alan id={ID.yil} etiket="Saklama süresi" hata={s.h.yil} sonuc={s.h.yil ? undefined : "Süre dolunca imzalı raporlar silinir."}>
+      {/* 2026-11-04 (göç 0118): Drive bağlıyken 1 yıldan eski raporların dosyaları Drive'a taşınır; süre ekipmanın en son raporuna işler, Drive'a dokunmaz */}
+      <Alan id={ID.yil} etiket="Saklama süresi" hata={s.h.yil} sonuc={s.h.yil ? undefined : v.ekYedek.baglanti?.durum === "bagli"
+        ? "1 yıldan eski raporların PDF'leri Drive'a taşınır. Süre dolunca probata'daki imzalı raporlar silinir; Drive'dakiler kalır."
+        : "Süre dolunca imzalı raporlar silinir."}>
         <SecimAlani id={ID.yil} ad="Saklama süresi" deger={s.d.yil} kapali={!v.yaz} gecersiz={!!s.h.yil} tanim={ipucuId(ID.yil)}
           secenekler={SAKLAMA_YIL.map((y) => [String(y), `${y} yıl${y === 5 ? " (yasal en az)" : ""}`] as const)} degistir={(x) => s.setD({ yil: x })} />
       </Alan>

@@ -3,7 +3,7 @@
 -- silinmesin … yedeklemeyi büyük ölçüde drive ile şirket kendisi yapacak" · K1 belgeler silinmez · K2 "müşteri sadece en son onaylı raporu
 -- görsün" · K3 probata arşivi son 12 ay) ══
 -- (1) GÜNCEL RAPOR (rapor_guncel_mu): ekipmanın en son olağan (takip olmayan) raporu — revizyonu aşılmamış imzalı sürümler arasında en yeni
---     kontrol, eşitse en son imza (önceki rapor kuralı, raporlar/server/onceki.ts) — ve o raporun takip raporları. Güncel raporun dosyası hiç
+--     kontrol (kontrol tarihi yoksa imza günü), eşitse en son imza — ve o raporun takip raporları. Güncel raporun dosyası hiç
 --     silinmez; müşterinin rapor listesinde ve indirebildiği PDF'te yalnız güncel rapor (K2).
 -- (2) DRIVE'A TAŞIMA (bekletme_sil): son imzası 1 yıldan eski, güncel olmayan raporun imzalı PDF'leri, imzaya hazırlanan PDF'leri ve fotoğrafları
 --     Supabase'ten silinir — YALNIZ firmanın Drive'ı bağlıyken ve her sürümün imzalı PDF'i (ayrıca gönderilen okuma fotoğrafı / form dahil) son
@@ -34,7 +34,7 @@ CREATE OR REPLACE FUNCTION rapor_guncel_mu(p_surum uuid) RETURNS boolean
     SELECT z.rapor_id FROM rapor_surumu z JOIN rapor r ON r.firma_id = z.firma_id AND r.id = z.rapor_id
     WHERE z.firma_id = gecerli_firma() AND z.ekipman_id = (SELECT ekipman_id FROM s) AND r.takip_kaynak IS NULL
       AND NOT EXISTS (SELECT 1 FROM rapor_surumu y WHERE y.firma_id = z.firma_id AND y.rapor_id = z.rapor_id AND y.revizyon > z.revizyon)
-    ORDER BY z.kontrol_tarihi DESC NULLS LAST, z.imzalandi DESC LIMIT 1)
+    ORDER BY coalesce(z.kontrol_tarihi, (z.imzalandi AT TIME ZONE 'Europe/Istanbul')::date) DESC, z.imzalandi DESC LIMIT 1)
   SELECT EXISTS (
     SELECT 1 FROM s JOIN rapor r ON r.firma_id = gecerli_firma() AND r.id = s.rapor_id
     WHERE s.revizyon = (SELECT max(y.revizyon) FROM rapor_surumu y WHERE y.firma_id = gecerli_firma() AND y.rapor_id = s.rapor_id)
