@@ -38,6 +38,7 @@ export const YEDEK_DISI: Readonly<Record<string, string>> = {
   yz_kullanim: "yapay zekâ kullanım sayacı", yz_okuma: "yapay zekâ okuma kaydı",
   bulut_baglanti: "yedeğin kendi kaydı", bulut_izin: "yedeğin kendi kaydı", bulut_kuyruk: "yedeğin kendi kaydı", bulut_yer: "yedeğin kendi kaydı",
   yedek_degisiklik: "yedeğin kendi kaydı", yedek_arsiv: "yedeğin kendi kaydı",
+  yedek_dogrulama: "yedeğin kendi kaydı (aylık doğrulama)", yedek_geri_yukleme: "yedeğin kendi kaydı (geri yüklemeler)",
   /* merkezin kayıtları (FIRMA-VT; firma_id "hangi firma" demek, firmanın verisi değil) ve Yönetim'in kurduğu gönderim ayarı */
   firma_vt: "probata merkez kaydı (firmanın veritabanı bağlantısı)", firma_kurulum: "probata merkez kaydı (kurulum adımları)",
   eposta_alan: "probata merkez kaydı (e-posta alan adı)", firma_gonderim: "Yönetim'in kurduğu e-posta gönderimi (firmada kilitli)",

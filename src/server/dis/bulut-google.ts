@@ -4,7 +4,7 @@
    açtığı klasörü ve dosyaları görür. Drive yolla değil kimlikle çalışır: klasör ve dosya kimlikleri çağıranın yer deposunda; kayıtlı kimlik
    silinmişse (404) yol unutulur, bir kez yeniden aranır / açılır. Aynı adlı dosya varsa içeriği değişir (kopya dosya oluşmaz). */
 import {
-  BulutDolu, BulutHatasi, BulutKopuk, BulutYetki, ISTEK_MS, belirtecIstegi, bekleme, jsonOku, metin,
+  BulutDolu, BulutHatasi, BulutKopuk, BulutYetki, ISTEK_MS, belirtecIstegi, bekleme, govdeOku, jsonOku, metin,
   type BulutAyari, type BulutHizmeti, type YerDeposu, type Yukleme,
 } from "./bulut-ortak.ts";
 
@@ -90,7 +90,28 @@ export function googleHizmeti(a: BulutAyari, bekle: (ms: number) => Promise<void
     return id;
   }
 
+  /** dosyanın Drive kimliği: kayıtlı kimlik, yoksa klasör yolu kayıtlı kimliklerle aranır (açılmaz); Drive yolla değil kimlikle bilir */
+  async function dosyaKimligi(erisim: string, y: { yol: readonly string[]; ad: string }, yerler: YerDeposu): Promise<string | null> {
+    let id = await yerler.al([...y.yol, y.ad].join("/"));
+    if (!id) {
+      let ust = "root";
+      for (let i = 0; i < y.yol.length; i++) {
+        const k = await yerler.al(y.yol.slice(0, i + 1).join("/")) ?? await bul(erisim, ust, y.yol[i]!, true);
+        if (!k) return null;
+        ust = k;
+      }
+      id = await bul(erisim, ust, y.ad, false);
+    }
+    return id && KIMLIK.test(id) ? id : null;
+  }
+
   return {
+    async indir(erisim, y, yerler, enCok) {
+      const id = await dosyaKimligi(erisim, y, yerler);
+      if (!id) return null;
+      const r = await istek(erisim, `${UC.dosyalar}/${encodeURIComponent(id)}?alt=media`);
+      return r ? govdeOku(r, enCok) : null;
+    },
     izinAdresi(durum, meydan) {
       return `${UC.izin}?${new URLSearchParams({ client_id: a.istemci, redirect_uri: a.donus, response_type: "code", scope: KAPSAM, access_type: "offline",
         prompt: "consent", state: durum, code_challenge: meydan, code_challenge_method: "S256" })}`;
@@ -118,19 +139,8 @@ export function googleHizmeti(a: BulutAyari, bekle: (ms: number) => Promise<void
         headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ token: yenileme }) }); } catch { /* bağlantı yine de kesilir */ }
     },
     async bul(erisim, y, yerler) {
-      /* kayıtlı kimlik yoksa klasör yolu kayıtlı kimliklerle aranır (açılmaz); Drive yolla değil kimlikle bilir */
-      let id = await yerler.al([...y.yol, y.ad].join("/"));
-      if (!id) {
-        let ust = "root";
-        for (let i = 0; i < y.yol.length; i++) {
-          const k = await yerler.al(y.yol.slice(0, i + 1).join("/")) ?? await bul(erisim, ust, y.yol[i]!, true);
-          if (!k) return null;
-          ust = k;
-        }
-        id = await bul(erisim, ust, y.ad, false);
-        if (!id) return null;
-      }
-      if (!KIMLIK.test(id)) return null;
+      const id = await dosyaKimligi(erisim, y, yerler);
+      if (!id) return null;
       const r = await istek(erisim, `${UC.dosyalar}/${encodeURIComponent(id)}?fields=id,size,trashed`);
       if (!r) return null;
       const j = await jsonOku(r);

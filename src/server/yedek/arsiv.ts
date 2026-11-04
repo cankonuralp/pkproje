@@ -26,7 +26,8 @@ async function firmaKimligi(db: Sorgulayici): Promise<string> {
 /** depo kovasının tek dosya sınırı 30 MB (supabase.ts) — arşiv 25 MB'lık parçalarla yazılır */
 export const ARSIV_PARCA = 25 * 1024 * 1024;
 
-async function arsivYaz(db: Sorgulayici, depo: Depo, tur: "tam" | "ay", donem: string, bayt: Uint8Array): Promise<void> {
+/** arşive yazar; kaydın kimliğini döner (2026-11-04: geri yüklemeden önceki hâl de buradan — tur "once") */
+export async function arsivYaz(db: Sorgulayici, depo: Depo, tur: "tam" | "ay" | "once", donem: string, bayt: Uint8Array): Promise<string> {
   const id = randomUUID(), firmaId = await firmaKimligi(db), anahtarlar: string[] = [];
   for (let i = 0; i < Math.max(1, bayt.length); i += ARSIV_PARCA) {
     const anahtar = dosyaAnahtari({ firmaId, modul: ARSIV_MODULU, kayitId: id, dosyaId: randomUUID() });
@@ -35,9 +36,18 @@ async function arsivYaz(db: Sorgulayici, depo: Depo, tur: "tam" | "ay", donem: s
   }
   await db.sorgu("INSERT INTO yedek_arsiv (id, tur, donem, anahtarlar, boyut, sha256) VALUES ($1, $2, $3, $4, $5, $6)",
     [id, tur, donem, anahtarlar, bayt.length, createHash("sha256").update(bayt).digest("hex")]);
+  return id;
 }
 
-export async function arsivOku(db: Sorgulayici, depo: Depo, tur: "tam" | "ay", donem: string): Promise<{ bayt: Uint8Array; olustu: Date } | null> {
+/** tur kaydını siler (depodaki parçalarla); geri yüklemeden sonra yılın tam kopyası yenilenirken */
+export async function arsivSil(db: Sorgulayici, depo: Depo, tur: "tam" | "ay" | "once", donem: string): Promise<void> {
+  const e = (await db.sorgu<{ id: string; anahtarlar: string[] }>("SELECT id::text, anahtarlar FROM yedek_arsiv WHERE tur = $1 AND donem = $2", [tur, donem])).rows[0];
+  if (!e) return;
+  for (const a of e.anahtarlar) await depo.copSil(a, db);
+  await db.sorgu("DELETE FROM yedek_arsiv WHERE id = $1", [e.id]);
+}
+
+export async function arsivOku(db: Sorgulayici, depo: Depo, tur: "tam" | "ay" | "once", donem: string): Promise<{ bayt: Uint8Array; olustu: Date } | null> {
   const r = (await db.sorgu<{ anahtarlar: string[]; olustu: Date; boyut: string; sha256: string }>(
     "SELECT anahtarlar, olustu, boyut::text, sha256 FROM yedek_arsiv WHERE tur = $1 AND donem = $2", [tur, donem])).rows[0];
   if (!r) return null;
@@ -72,7 +82,7 @@ export async function arsivAdimi(db: Sorgulayici, depo: Depo, simdi: Date): Prom
   /* 3 · 12 aydan eski arşiv */
   const esikAy = new Date(Date.UTC(d.yil, Number(d.ay.slice(5, 7)) - 1 - ARSIV_AY, 1)).toISOString().slice(0, 7);
   const eski = (await db.sorgu<{ id: string; anahtarlar: string[] }>(
-    "SELECT id::text, anahtarlar FROM yedek_arsiv WHERE (tur = 'ay' AND donem < $1) OR (tur = 'tam' AND donem < $2)", [esikAy, String(d.yil - 1)])).rows;
+    "SELECT id::text, anahtarlar FROM yedek_arsiv WHERE (tur = 'ay' AND donem < $1) OR (tur = 'tam' AND donem < $2) OR (tur = 'once' AND olustu < now() - interval '30 days')", [esikAy, String(d.yil - 1)])).rows;
   for (const e of eski) {
     for (const a of e.anahtarlar) await depo.copSil(a, db);
     await db.sorgu("DELETE FROM yedek_arsiv WHERE id = $1", [e.id]);

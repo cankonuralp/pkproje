@@ -118,6 +118,7 @@ export async function sahteBulutKur(): Promise<SahteBulut> {
       if (tek && yontem === "GET") {
         const f = d.drive.get(decodeURIComponent(tek[1]!));
         if (!f) { json(y, 404, { error: { code: 404, message: "File not found" } }); return; }
+        if (u.searchParams.get("alt") === "media") { y.writeHead(200, { "content-type": f.tur, "content-length": String(f.bayt.length) }).end(f.bayt); return; }
         json(y, 200, { id: f.id, size: String(f.bayt.length), trashed: false }); return;
       }
       if (yol === "/google/drive/v3/files" && yontem === "POST") {
@@ -169,6 +170,11 @@ export async function sahteBulutKur(): Promise<SahteBulut> {
         json(y, 200, { size: b.length }); return;
       }
       const m = /^\/ms\/graph\/v1\.0\/me\/drive\/special\/approot:\/(.+):\/(content|createUploadSession)$/.exec(yol);
+      if (m && m[2] === "content" && yontem === "GET") {
+        const b = d.onedrive.get(m[1]!.split("/").map(decodeURIComponent).join("/"));
+        if (!b) { json(y, 404, { error: { code: "itemNotFound" } }); return; }
+        y.writeHead(200, { "content-length": String(b.length) }).end(b); return;
+      }
       if (m) {
         const hedefYol = m[1]!.split("/").map(decodeURIComponent).join("/");
         if (m[2] === "content" && yontem === "PUT") {

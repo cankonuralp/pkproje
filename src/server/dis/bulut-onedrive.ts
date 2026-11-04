@@ -5,7 +5,7 @@
    PUT; üstü yükleme oturumuyla 10 MiB'lık parçalar (320 KiB'ın katı). Microsoft yenileme anahtarını her yenilemede DEĞİŞTİRİR — dönen yenileme
    çağıranda saklanır. İzni geri bırakmanın uygulama ucu yok: bağlantı kesilince anahtar silinir (hesap sahibi izni Microsoft hesabından da kaldırır). */
 import {
-  BulutDolu, BulutHatasi, BulutKopuk, BulutYetki, ISTEK_MS, belirtecIstegi, bekleme, jsonOku, metin,
+  BulutDolu, BulutHatasi, BulutKopuk, BulutYetki, ISTEK_MS, belirtecIstegi, bekleme, govdeOku, jsonOku, metin,
   type BulutAyari, type BulutHizmeti, type Yukleme,
 } from "./bulut-ortak.ts";
 
@@ -73,6 +73,14 @@ export function onedriveHizmeti(a: BulutAyari, bekle: (ms: number) => Promise<vo
       const j = await jsonOku(r);
       const boyut = Number(j.size);
       return j.deleted || !Number.isFinite(boyut) ? null : { boyut };
+    },
+    async indir(erisim, y, _yerler, enCok) {
+      let r: Response;
+      try { r = await istek(`${UC.graph}/me/drive/special/approot:/${[...y.yol, y.ad].map(encodeURIComponent).join("/")}:/content`, {}, erisim); } catch (e) {
+        if (e instanceof BulutHatasi && e.durum === 404) return null;
+        throw e;
+      }
+      return govdeOku(r, enCok);
     },
     async yukle(erisim, y) {
       if (y.bayt.length <= TEK_PUT) {

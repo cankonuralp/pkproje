@@ -38,3 +38,15 @@
 .vtAciklama { display: block; margin-top: 2px; color: var(--yazi2); font-size: var(--boy-kucuk); font-weight: 400; }
 /* FIRMA-VT FV11 (2026-10-16): DNS kaydının adı / değeri uzun (DKIM anahtarı) — hücreden taşmaz, her yerden bölünür */
 .dnsDeger { overflow-wrap: anywhere; word-break: break-all; font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-size: var(--boy-kucuk); }
+/* 2026-11-04 YEDEK bölümü ve geri yükleme penceresi (YedekBolumu.tsx) */
+.yedekSorun { margin: 6px 0 0; padding-left: 18px; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.yedekListe { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.yedekListe li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.yedekAdimlar { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; padding: 0; list-style: none; }
+.yedekAdimlar li { padding: 2px 8px; border-radius: 999px; background: var(--zemin2); color: var(--yazi3); font-size: var(--boy-kucuk); }
+.yedekAdimlar li[data-durum="su"] { background: var(--vurgu); color: var(--vurgu-uzeri); }
+.yedekAdimlar li[data-durum="bitti"] { background: var(--onay-zemin); color: var(--onay-yazi); }
+.yedekTabloKap { overflow-x: auto; margin: 8px 0; }
+.yedekTablo { width: 100%; border-collapse: collapse; font-size: var(--boy-kucuk); }
+.yedekTablo th, .yedekTablo td { padding: 6px 8px; border-bottom: 1px solid var(--kenar); text-align: right; font-variant-numeric: tabular-nums; }
+.yedekTablo th:first-child, .yedekTablo td:first-child { text-align: left; }

@@ -60,8 +60,9 @@ const YEDEK_DURUM = { bagli: ["Drive bağlı", "tamam"], kopuk: ["Bağlantı kop
 function YedekHucresi({ f }: { f: FirmaSatiri }) {
   const y = f.yedek;
   if (!y) return <Rozet tur="notr">Bağlı değil</Rozet>;
-  const [ad, tur] = YEDEK_DURUM[y.durum];
-  const alt = [y.son ? `son ${tarihYaz(y.son.slice(0, 10))}` : "henüz gönderim yok", y.bekleyen ? `${y.bekleyen} bekliyor` : null,
-    y.denetim ? `denetim ${tarihYaz(y.denetim.slice(0, 10))}` : null].filter(Boolean).join(" · ");
+  const d = y.dogrulama;
+  const [ad, tur] = d && !d.tamam ? ["Doğrulama sorunlu", "bekliyor"] as const : y.durum ? YEDEK_DURUM[y.durum] : ["Bağlı değil", "notr"] as const;
+  const alt = [y.durum ? (y.son ? `son ${tarihYaz(y.son.slice(0, 10))}` : "henüz gönderim yok") : "probata arşivi", y.bekleyen ? `${y.bekleyen} bekliyor` : null,
+    d ? (d.tamam ? `doğrulandı ${tarihYaz(d.zaman.slice(0, 10))}` : `${tarihYaz(d.zaman.slice(0, 10))}: ${d.sorun} sorun`) : null].filter(Boolean).join(" · ");
   return <span className={stil.adres}><Rozet tur={tur}>{ad}</Rozet><AltSatir><Kirp>{alt}</Kirp></AltSatir></span>;
 }

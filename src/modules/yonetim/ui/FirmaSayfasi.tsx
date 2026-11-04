@@ -21,6 +21,8 @@ import { firmaDondurEylemi, firmaEtkinlestirEylemi, geciciParolaVerEylemi } from
 import { DEPO_AD, DEPO_NOT, DurumRozeti, firmaAdresi, tarihYaz, type DepoTuru } from "./ortak";
 import { SonrasiAdimlar } from "./SonrasiAdimlar";
 import { YapayZekaBolumu } from "./YapayZekaBolumu";
+import { YedekBolumu } from "./YedekBolumu";
+import type { YedekYonetimGorunumu } from "../server/yedek";
 import { SayOlcumBolumu } from "./SayOlcumBolumu";
 import stil from "./yonetim.module.css";
 
@@ -29,8 +31,10 @@ const YON_DURUM = { ilk: "geçici parolayla ilk giriş bekleniyor", etkin: "etki
 /** firma bilgileri bölümü (kurulum sürerken de, bitince de aynı kimlik — ikisi aynı anda çizilmez) */
 const BILGI = "y-b-bilgi";
 
-export function FirmaSayfasi({ firma: f, ozet, kurulum = null, gonderim = null, epostaAcik = false, anaAlan, depo, olcum = null }: {
+export function FirmaSayfasi({ firma: f, ozet, kurulum = null, gonderim = null, epostaAcik = false, anaAlan, depo, olcum = null, yedek = null }: {
   firma: FirmaSatiri | null; ozet: FirmaOzeti | null; kurulum?: KurulumGorunumu | null; gonderim?: GonderimGorunumu | null; epostaAcik?: boolean; olcum?: SayOlcumu | null;
+  /** 2026-11-04: Yedek bölümü (okunamazsa null — bölüm söyler) */
+  yedek?: YedekYonetimGorunumu | null;
   anaAlan: string; depo: DepoTuru;
 }) {
   const onayla = useOnayla();
@@ -136,6 +140,7 @@ export function FirmaSayfasi({ firma: f, ozet, kurulum = null, gonderim = null, 
       <YapayZekaBolumu id={f.id} firmaAd={f.ad} yz={ozet?.yz ?? null} />
       <SayOlcumBolumu id={f.id} firmaKod={f.kisaAd} olcum={olcum} />
       <GonderimBolumu id={f.id} g={gonderim} acik={epostaAcik} />
+      <YedekBolumu id={f.id} kisaAd={f.kisaAd} y={yedek} />
       <SonrasiAdimlar />
     </>
   );

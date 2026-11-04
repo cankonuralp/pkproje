@@ -33,6 +33,8 @@ import { bugunTr, planAc } from "../src/modules/planlar/server/planlar.ts";
 import { taslakBaslat, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
 import { imzaHazirla, imzaliYukle, raporOlustur, type Kisi } from "../src/modules/raporlar/server/raporlar.ts";
 import { musteriRaporlari } from "../src/modules/raporlar/server/musteri-baglanti.ts";
+import { dogrulamaVakti, firmaDogrula } from "../src/server/yedek/dogrula.ts";
+import { geriDon, geriYukle, geriYuklemeDenemesi } from "../src/server/yedek/geri-yukle.ts";
 import { bulutBagla, bulutKes, simdiYedekle, yedekTakibi } from "../src/modules/firma-ayarlari/server/yedek.ts";
 import { bulutAyari, bulutHizmeti } from "../src/server/dis/bulut.ts";
 import { arsivAdimi, arsivOku } from "../src/server/yedek/arsiv.ts";
@@ -362,4 +364,64 @@ test("Drive denetimi (0118): ayda bir her gönderilmiş dosya aranır; firma Dri
   assert.equal(o2.gonderilen, 1, JSON.stringify(o2));
   assert.equal(o2.denetlenen, 0, "günde bir; dosya başına ayda bir");
   assert.ok([...t.driveDosyalari().keys()].some((x) => x.endsWith(b.ad)));
+});
+
+test("doğrulama (0119): Drive'daki yedek açılır, sayılar canlıyla tutar, PDF açılır; tam kopya silinince sorun + TEK e-posta", async () => {
+  await sahip.query("UPDATE bulut_baglanti SET tam_kopya = NULL WHERE firma_id = $1", [A]);
+  assert.equal((await calistir()).durum, "tamam");
+  const r = await firmaDogrula(havuz, A, depo, { hizmetBul: hb });
+  assert.equal(r.kaynak, "drive");
+  assert.deepEqual(r.ozet.sorunlar, [], JSON.stringify(r.ozet));
+  assert.equal(r.tamam, true);
+  assert.equal(r.ozet.tablo, Object.keys(YEDEK_TABLOLARI).length);
+  assert.ok(r.ozet.pdf.denenen >= 1 && r.ozet.pdf.acilan === r.ozet.pdf.denenen, JSON.stringify(r.ozet.pdf));
+  assert.equal(await a(YON, (db) => dogrulamaVakti(db, new Date())), false, "ayda bir");
+  /* tam kopya Drive'dan silinir: sorun, firma yöneticisine bir e-posta; ikinci sorunlu doğrulama yeniden göndermez */
+  const tamId = [...t.drive.values()].find((x) => !x.klasor && x.ad.startsWith("Tam kopya"))!.id;
+  const tamYedek = t.drive.get(tamId)!;
+  t.drive.delete(tamId);
+  try {
+    const r2 = await firmaDogrula(havuz, A, depo, { hizmetBul: hb });
+    assert.equal(r2.tamam, false);
+    assert.ok(r2.ozet.sorunlar.some((s) => /tam kopya yok/.test(s)), JSON.stringify(r2.ozet.sorunlar));
+    await firmaDogrula(havuz, A, depo, { hizmetBul: hb });
+    assert.equal((await sql(A, "SELECT 1 FROM eposta WHERE kaynak = 'yedek' AND konu LIKE 'Yedek doğrulaması%'")).rowCount, 1, "sorun sürerken tek e-posta");
+  } finally { t.drive.set(tamId, tamYedek); }
+  assert.equal((await firmaDogrula(havuz, A, depo, { hizmetBul: hb })).tamam, true);
+});
+
+test("geri yükleme (0119): deneme hiçbir şey yazmaz; geri yükleme yedekteki hâle döner (sonradan eklenen gider, değişen eski hâline), parola korunur, tetikler açık, B'ye dokunulmaz; geri dön", async () => {
+  const geriBir = (await sql<{ id: string }>(A, "INSERT INTO musteri (unvan, kisa) VALUES ('Deneme Geri Bir A.Ş.', 'Geri Bir') RETURNING id::text")).rows[0]!.id;
+  assert.equal((await calistir()).durum, "tamam");
+  /* yedekten sonra */
+  const sonradan = (await sql<{ id: string }>(A, "INSERT INTO musteri (unvan, kisa) VALUES ('Deneme Sonradan Ltd.', 'Sonradan') RETURNING id::text")).rows[0]!.id;
+  await sql(A, "UPDATE musteri SET unvan = 'Deneme Değişti A.Ş.', surum = surum + 1 WHERE id = $1", [geriBir]);
+  const parola = (await sahip.query<{ p: string }>("SELECT parola_ozeti AS p FROM hesap WHERE id = $1", [YON.id])).rows[0]!.p;
+  const bSayi = async () => (await sql<{ n: number }>(B, "SELECT count(*)::int AS n FROM musteri")).rows[0]!.n;
+  const bOnce = await bSayi();
+  /* deneme */
+  const d = await geriYuklemeDenemesi(havuz, A, depo, { kaynak: "drive", hizmetBul: hb });
+  const m = d.tablolar.find((x) => x.tablo === "musteri")!;
+  assert.ok(m.gidecek >= 1, JSON.stringify(m));
+  assert.equal((await sql(A, "SELECT 1 FROM musteri WHERE id = $1", [sonradan])).rowCount, 1, "deneme hiçbir şey yazmaz");
+  /* geri yükle */
+  const s = await geriYukle(havuz, A, depo, { kaynak: "drive", kim: "probata yönetim: test", hizmetBul: hb });
+  assert.equal((await sql(A, "SELECT 1 FROM musteri WHERE id = $1", [sonradan])).rowCount, 0, "yedekte olmayan gitti");
+  assert.equal((await sql<{ u: string }>(A, "SELECT unvan AS u FROM musteri WHERE id = $1", [geriBir])).rows[0]?.u, "Deneme Geri Bir A.Ş.", "değişen eski hâlinde");
+  assert.equal((await sahip.query<{ p: string }>("SELECT parola_ozeti AS p FROM hesap WHERE id = $1", [YON.id])).rows[0]!.p, parola, "parola korunur");
+  assert.equal(s.parola, 0);
+  assert.equal(await bSayi(), bOnce, "B'ye dokunulmaz");
+  const kapali = await sahip.query(`SELECT 1 FROM pg_trigger g JOIN pg_class c ON c.oid = g.tgrelid WHERE NOT g.tgisinternal AND g.tgenabled = 'D'
+    AND c.relname = ANY ($1::text[])`, [Object.keys(YEDEK_TABLOLARI)]);
+  assert.equal(kapali.rowCount, 0, "kullanıcı tetikleri açık");
+  const g = (await sql<{ durum: string; once: string | null }>(A, "SELECT durum, once_arsiv::text AS once FROM yedek_geri_yukleme WHERE id = $1", [s.id])).rows[0]!;
+  assert.equal(g.durum, "tamam");
+  assert.ok(g.once, "önceki hâlin kopyası");
+  /* geri dön: önceki hâl */
+  await geriDon(havuz, A, depo, { geriYukleme: s.id, kim: "probata yönetim: test", hizmetBul: hb });
+  assert.equal((await sql(A, "SELECT 1 FROM musteri WHERE id = $1", [sonradan])).rowCount, 1, "sonradan eklenen geri geldi");
+  assert.equal((await sql<{ u: string }>(A, "SELECT unvan AS u FROM musteri WHERE id = $1", [geriBir])).rows[0]?.u, "Deneme Değişti A.Ş.");
+  /* kayıt başka işlemde açılmışsa işlev reddeder */
+  await assert.rejects(sql(A, "SELECT yedek_geri_yukle($1, '{}'::jsonb)", [s.id]), /bu işlemde açılmadı/);
+  await assert.rejects(sql(A, "SELECT yedek_geri_yukle($1, '{}'::jsonb)", [randomUUID()]), /bu işlemde açılmadı/);
 });

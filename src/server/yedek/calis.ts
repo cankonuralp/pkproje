@@ -25,6 +25,7 @@ import {
 } from "./kayit.ts";
 import { driveAdaylari } from "../../modules/raporlar/server/yedek-baglanti.ts";
 import { kuyrugaTopla } from "./topla.ts";
+import { dogrulamaVakti, firmaDogrula } from "./dogrula.ts";
 import { ayDosyasi, aydaDegisiklikVar, tamKopya } from "./veri.ts";
 import { ayDosyasiAdi, ayKlasoru, donemi, tamKopyaAdi, veriKlasoru } from "./yol.ts";
 
@@ -231,11 +232,13 @@ async function sorunBildir(db: Sorgulayici, b: Baglanti, durum: "kopuk" | "dolu"
 
 /* ── gece işi: her firma kendi havuzunda, firma başına süre payı ── */
 export type YedekIsOzeti = { durum: "tamam" | "hata" | "zaten_calisiyor"; firma: number; gonderilen: number; bayt: number; arsiv: number; kopuk: number;
-  kalan: number; hatali_firma: number; ulasilamayan: number; eksik: number; tasinan: number };
+  kalan: number; hatali_firma: number; ulasilamayan: number; eksik: number; tasinan: number;
+  /** 2026-11-04: ayda bir doğrulama (dogrula.ts) — bu gece doğrulanan firma ve sorunlu çıkan */
+  dogrulanan: number; dogrulama_sorunlu: number };
 
 export async function yedekIsi(havuz: Havuz, depo: Depo, sure: number, havuzBul?: (firmaId: string) => Promise<Havuz | null>,
   s: { simdi?: Date; hizmetBul?: HizmetBul } = {}): Promise<YedekIsOzeti> {
-  const o: YedekIsOzeti = { durum: "tamam", firma: 0, gonderilen: 0, bayt: 0, arsiv: 0, kopuk: 0, kalan: 0, hatali_firma: 0, ulasilamayan: 0, eksik: 0, tasinan: 0 };
+  const o: YedekIsOzeti = { durum: "tamam", firma: 0, gonderilen: 0, bayt: 0, arsiv: 0, kopuk: 0, kalan: 0, hatali_firma: 0, ulasilamayan: 0, eksik: 0, tasinan: 0, dogrulanan: 0, dogrulama_sorunlu: 0 };
   const id = await isBasla(havuz, "yedek");
   if (!id) return { ...o, durum: "zaten_calisiyor" };
   const bas = Date.now();
@@ -254,6 +257,14 @@ export async function yedekIsi(havuz: Havuz, depo: Depo, sure: number, havuzBul?
         o.firma++; o.gonderilen += r.gonderilen; o.bayt += r.bayt; o.arsiv += r.arsiv.tam + r.arsiv.ay; o.eksik += r.eksik; o.tasinan += r.tasinan;
         if (r.durum === "kopuk" || r.durum === "dolu") o.kopuk++;
         if (r.bekleyen > 0) o.kalan++;
+        /* ayda bir doğrulama — süre kalırsa (yedeği indirip açar; firmanın payından sonra, en az 60 sn) */
+        if (sure - (Date.now() - bas) > 60_000 && await kiraciIcinde(hf, f, (db) => dogrulamaVakti(db, s.simdi ?? new Date()))) {
+          try {
+            const dr = await firmaDogrula(hf, f, depo, { simdi: s.simdi, hizmetBul: s.hizmetBul ?? ortamHizmeti });
+            o.dogrulanan++;
+            if (!dr.tamam) o.dogrulama_sorunlu++;
+          } catch (h) { console.error("[gece] yedek doğrulaması düştü:", (h as Error).message); }
+        }
       } catch (h) {
         o.hatali_firma++;
         console.error("[gece] yedek bir firmada düştü:", (h as Error).message);

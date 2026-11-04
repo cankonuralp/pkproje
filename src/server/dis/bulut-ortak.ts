@@ -66,6 +66,29 @@ export interface BulutHizmeti {
   yukle(erisim: string, y: Yukleme, yerler: YerDeposu): Promise<void>;
   /** dosya hâlâ hizmette mi (çöpte değil): boyutu; yoksa null (2026-11-04 — Drive denetimi ve Supabase'ten taşımadan önce) */
   bul(erisim: string, y: { yol: readonly string[]; ad: string }, yerler: YerDeposu): Promise<{ boyut: number } | null>;
+  /** dosyanın içeriği (2026-11-04 — yedek doğrulaması ve geri yükleme); yoksa null. En çok `enCok` bayt (fazlası HATA) */
+  indir(erisim: string, y: { yol: readonly string[]; ad: string }, yerler: YerDeposu, enCok: number): Promise<Uint8Array | null>;
+}
+
+/** yanıtın gövdesini en çok `enCok` bayt okur (fazlası HATA — bellek sınırı) */
+export async function govdeOku(y: Response, enCok: number): Promise<Uint8Array> {
+  const uz = Number(y.headers.get("content-length") ?? "");
+  if (Number.isFinite(uz) && uz > enCok) { await y.body?.cancel(); throw new BulutHatasi(413, "çok büyük"); }
+  const parcalar: Uint8Array[] = [];
+  let n = 0;
+  if (!y.body) return new Uint8Array();
+  const r = y.body.getReader();
+  for (;;) {
+    const { done, value } = await r.read();
+    if (done) break;
+    n += value.length;
+    if (n > enCok) { await r.cancel(); throw new BulutHatasi(413, "çok büyük"); }
+    parcalar.push(value);
+  }
+  const b = new Uint8Array(n);
+  let o = 0;
+  for (const p of parcalar) { b.set(p, o); o += p.length; }
+  return b;
 }
 
 /* ── ortak yardımcılar (iki istemci) ── */

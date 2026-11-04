@@ -1125,3 +1125,15 @@ export function bekletmeEksikleri(goc: string): string[] {
   }
   return e;
 }
+
+/** 2026-11-04 (göç 0119): geri yüklemenin tablo listesi (yedek_tablolari()) ile yedek listesi aynı mı — eksik / fazla tablolar (boş = aynı).
+    Listeden düşen tablo geri yüklemede eski hâlinde kalır (öteki tablolar yedekteki hâle döner — tutarsız veri). */
+export function geriYuklemeListeFarki(goc: string, liste: Readonly<Record<string, readonly string[]>>): string[] {
+  const i = goc.indexOf("CREATE OR REPLACE FUNCTION yedek_tablolari()");
+  const blok = i < 0 ? "" : /SELECT ARRAY\[([\s\S]*?)\]::text\[\]/.exec(goc.slice(i))?.[1] ?? "";
+  const g = new Set([...blok.matchAll(/'([a-z_]+)'/g)].map((m) => m[1]!));
+  const h: string[] = [];
+  for (const t of Object.keys(liste)) if (!g.has(t)) h.push(`${t}: geri yükleme listesinde yok`);
+  for (const t of g) if (!(t in liste)) h.push(`${t}: geri yükleme listesinde fazla`);
+  return h;
+}

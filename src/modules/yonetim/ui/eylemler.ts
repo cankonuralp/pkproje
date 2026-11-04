@@ -13,7 +13,8 @@ import { epostaOrtami, kurulumOrtami, yonetimCalistirici } from "../server/calis
 import { gonderimAlaniEkle, gonderimDogrula, type EpostaOrtami, type GonderimGorunumu } from "../server/eposta";
 import { argeKaydiYonet, firmaDurumuYonet, geciciParolaYonet, yzAnahtariYonet, yzAyarYonet } from "../server/firma-tarafi";
 import { kurulumBaslat, kurulumBastan, kurulumGorunumu, kurulumIlerlet, kurulumSurdur, type KurulumGorunumu } from "../server/kurulum";
-import { firmaAc, type YonetimSonucu } from "../server/yonetim";
+import { firma, firmaAc, type YonetimSonucu } from "../server/yonetim";
+import { yedekDenemeYonet, yedekDogrulaYonet, yedekGeriDonYonet, yedekGeriYukleYonet } from "../server/yedek";
 
 export interface YonetimYaniti {
   tamam?: boolean; id?: string; parola?: string; eposta?: string; ad?: string; alt?: string; son4?: string | null; hatalar?: Record<string, string>; genel?: string;
@@ -130,4 +131,33 @@ export async function argeKaydiEylemi(id: string, kayit: string): Promise<{ meti
   if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
   const r = await argeKaydiYonet(yonetimCalistirici(o), yazi(id), yazi(kayit));
   return r ? { metin: JSON.stringify(r, null, 1) } : { genel: "Kayıt bulunamadı (30 günü geçmiş olabilir)." };
+}
+
+/* 2026-11-04 YEDEK (maket THfrK3AzKkg9S7DiRVKKF4 ekran 2–3; yalnız Yönetim — sunum K1): doğrula, geri yükleme denemesi, geri yükle, önceki hâle
+   dön. Geri yükleme ve dönüş firmanın kısa adı yazılmadan yapılmaz (sunucuda da). Yanıt sonucu taşır; hata metni sırsız. */
+export type YedekYaniti<T> = { tamam: true; deger: T } | { tamam: false; genel: string };
+async function yedekIslem<T>(id: string, is: (o: NonNullable<Awaited<ReturnType<typeof yonetimIstekOturumu>>>, kisaAd: string) =>
+  Promise<{ durum: "tamam"; deger: T } | { durum: "red"; neden: string }>): Promise<YedekYaniti<T>> {
+  if (!(await yonetimAdresinde()) || !(await ayniKoken())) return { tamam: false, genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };
+  const o = await yonetimIstekOturumu();
+  if (!o) return { tamam: false, genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
+  const f = await yonetimIslemi(o, (db) => firma(db, yazi(id)));
+  if (!f) return { tamam: false, genel: "Firma bulunamadı." };
+  if (f.durum === "kurulum") return { tamam: false, genel: "Firmanın kurulumu bitmedi." };
+  const r = await is(o, f.kisaAd);
+  refresh();
+  return r.durum === "tamam" ? { tamam: true, deger: r.deger } : { tamam: false, genel: r.neden };
+}
+const yoneten = (o: { eposta: string }) => `probata yönetim: ${o.eposta}`;
+export async function yedekDogrulaEylemi(id: string) {
+  return yedekIslem(id, () => yedekDogrulaYonet(yazi(id)));
+}
+export async function yedekDenemeEylemi(id: string, kaynak: string) {
+  return yedekIslem(id, () => yedekDenemeYonet(yazi(id), yazi(kaynak)));
+}
+export async function yedekGeriYukleEylemi(id: string, kaynak: string, onay: string) {
+  return yedekIslem(id, (o, kisaAd) => yedekGeriYukleYonet(yazi(id), { kaynak: yazi(kaynak), onay: yazi(onay), kisaAd, kim: yoneten(o) }));
+}
+export async function yedekGeriDonEylemi(id: string, geriYukleme: string, onay: string) {
+  return yedekIslem(id, (o, kisaAd) => yedekGeriDonYonet(yazi(id), { geriYukleme: yazi(geriYukleme), onay: yazi(onay), kisaAd, kim: yoneten(o) }));
 }

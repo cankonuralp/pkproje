@@ -15,7 +15,9 @@ import { durumCoz } from "../src/server/yedek/baglan.ts";
 import { YEDEK_DISI, YEDEK_TABLOLARI } from "../src/server/yedek/tablolar.ts";
 import { adTemizle, ayAraligi, BELGE_KLASORU, belgeAdi, donemi, raporKlasoru, YEDEK_DISI_DOSYA } from "../src/server/yedek/yol.ts";
 import { SikistirilmisZip } from "../src/server/yedek/zip.ts";
-import { bekletmeEksikleri, yedekDosyaFarki, yedekGocListesi, yedekListeFarki } from "./yardimci/denetimler.ts";
+import { bekletmeEksikleri, geriYuklemeListeFarki, yedekDosyaFarki, yedekGocListesi, yedekListeFarki } from "./yardimci/denetimler.ts";
+import { aylarArasi, haliKur } from "../src/server/yedek/hal.ts";
+import { onceDonemi } from "../src/server/yedek/geri-yukle.ts";
 
 test("klasör düzeni: üç düzen; adlar temiz; belge adı kısa kimlikle", () => {
   const r = { kok: "probata yedek", musteri: "Deneme: Sanayi/A.Ş.", tesis: "Merkez *Fabrika*", yil: 2026, no: "XX-1126-0001" };
@@ -76,4 +78,22 @@ test("izin dönüşünün durum kodu: firma kısa adı + kod; biçimsiz olan red
 test("Supabase'te 1 yıl (0118): taşıma şartları göçte — Drive bağlı, 1 yıl, güncel rapor değil, Drive'da bulundu; müşteri yalnız güncel raporu görür", () => {
   const goc = readFileSync(new URL("../src/server/db/gocler/0118_yedek_bekletme.sql", import.meta.url), "utf8");
   assert.deepEqual(bekletmeEksikleri(goc), []);
+});
+
+test("geri yükleme (0119): tablo listesi yedek listesiyle aynı; hâl tam kopya + sonraki değişikliklerle kurulur (eski değişiklik ve kesimden sonrası atlanır)", () => {
+  const goc = readFileSync(new URL("../src/server/db/gocler/0119_geri_yukleme.sql", import.meta.url), "utf8");
+  assert.deepEqual(geriYuklemeListeFarki(goc, YEDEK_TABLOLARI), []);
+  const pk = Object.fromEntries(Object.keys(YEDEK_TABLOLARI).map((t) => [t, ["id"]]));
+  const tam = { olusturuldu: new Date("2026-03-10T10:00:00Z"), tablolar: { musteri: [{ id: "a", unvan: "A" }, { id: "b", unvan: "B" }] } };
+  const aylar = [
+    { donem: "2026-04", satirlar: { musteri: [{ silindi: false, zaman: "2026-04-02T00:00:00Z", satir: { id: "a", unvan: "A2" } }, { silindi: true, zaman: "2026-04-03T00:00:00Z", satir: { id: "b" } }] } },
+    { donem: "2026-03", satirlar: { musteri: [{ silindi: false, zaman: "2026-03-05T00:00:00Z", satir: { id: "x", unvan: "tam kopyadan önce" } },
+      { silindi: false, zaman: "2026-03-20T00:00:00Z", satir: { id: "c", unvan: "C" } }] } },
+    { donem: "2026-05", satirlar: { musteri: [{ silindi: false, zaman: "2026-05-20T00:00:00Z", satir: { id: "d", unvan: "kesimden sonra" } }] } },
+  ];
+  const h = haliKur(tam, aylar, pk, new Date("2026-05-01T00:00:00Z"));
+  assert.deepEqual(h.musteri!.map((r) => `${r.id}:${r.unvan}`).sort(), ["a:A2", "c:C"]);
+  assert.deepEqual(h.tesis, [], "yedekte olmayan tablo boş");
+  assert.deepEqual(aylarArasi("2025-11", "2026-02"), ["2025-11", "2025-12", "2026-01", "2026-02"]);
+  assert.equal(onceDonemi(new Date("2026-11-04T17:41:05Z")), "20261104T204105");
 });

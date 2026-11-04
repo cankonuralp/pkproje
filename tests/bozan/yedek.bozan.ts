@@ -16,7 +16,7 @@ import { DOSYA_ERISIMI } from "../../src/server/dosya/erisim.ts";
 import { bulutAyari, bulutHizmeti, type YerDeposu } from "../../src/server/dis/bulut.ts";
 import { YEDEK_DISI, YEDEK_TABLOLARI } from "../../src/server/yedek/tablolar.ts";
 import { BELGE_KLASORU, YEDEK_DISI_DOSYA } from "../../src/server/yedek/yol.ts";
-import { bekletmeEksikleri, yedekDosyaFarki, yedekListeFarki } from "../yardimci/denetimler.ts";
+import { bekletmeEksikleri, geriYuklemeListeFarki, yedekDosyaFarki, yedekListeFarki } from "../yardimci/denetimler.ts";
 import { sahteBulutKur, sahteBulutOrtami, type SahteBulut } from "../yardimci/sahte-bulut.ts";
 
 const goc = readFileSync(new URL("../../src/server/db/gocler/0117_yedek.sql", import.meta.url), "utf8");
@@ -81,4 +81,12 @@ test("7. (0118) Supabase'ten Drive'a taşımanın bir şartı düşünce yakalan
   assert.ok(boz("AND s.rapor_id = p_rapor AND rapor_guncel_mu(s.id))", "AND s.rapor_id = p_rapor)").includes("güncel rapor şartı yok"));
   assert.ok(boz("AND s.imzalandi > now() - interval '1 year')", ")").includes("1 yıl şartı yok"));
   assert.ok(boz("s.imzali_dosya = dosya.id AND rapor_guncel_mu(s.id)))", "s.imzali_dosya = dosya.id))").includes("müşteri güncel rapor şartı yok"));
+});
+
+test("8. (0119) geri yüklemenin tablo listesinden bir tablo düşünce yakalanır — o tablo eski hâlinde kalırdı", () => {
+  const g = readFileSync(new URL("../../src/server/db/gocler/0119_geri_yukleme.sql", import.meta.url), "utf8");
+  assert.deepEqual(geriYuklemeListeFarki(g, YEDEK_TABLOLARI), [], "sağlam");
+  const bozuk = g.replace("'rapor_surumu', ", "");
+  assert.notEqual(bozuk, g, "bozulacak satır kaynakta");
+  assert.ok(geriYuklemeListeFarki(bozuk, YEDEK_TABLOLARI).includes("rapor_surumu: geri yükleme listesinde yok"));
 });

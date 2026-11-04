@@ -17,8 +17,11 @@ export interface FirmaSatiri {
   yedek: YedekOzeti | null;
 }
 export interface YedekOzeti {
-  saglayici: "gdrive" | "onedrive"; durum: "bagli" | "kopuk" | "dolu" | "kesildi"; son: string | null; denetim: string | null;
+  /** Drive bağlantısı yoksa null (yalnız probata arşivi) */
+  saglayici: "gdrive" | "onedrive" | null; durum: "bagli" | "kopuk" | "dolu" | "kesildi" | null; son: string | null; denetim: string | null;
   bekleyen: number; gonderilen: number; tasinan: number;
+  /** son aylık doğrulama (göç 0119) */
+  dogrulama: { zaman: string; tamam: boolean; sorun: number } | null;
 }
 export type YonetimSonucu<T = Record<never, never>> = ({ durum: "tamam" } & T) | { durum: "gecersiz"; hatalar: Record<string, string> } | { durum: "red"; neden: string } | { durum: "yok" };
 
@@ -33,10 +36,13 @@ const satir = (r: Ham): Omit<FirmaSatiri, "yedek"> => ({
 
 export async function firmalar(db: Sorgulayici): Promise<FirmaSatiri[]> {
   const y = new Map((await db.sorgu<{ firma_id: string; saglayici: YedekOzeti["saglayici"]; durum: YedekOzeti["durum"]; son_kopya: Date | null; denetim: Date | null;
-    bekleyen: number; gonderilen: number; tasinan: number }>(
-    "SELECT firma_id::text, saglayici, durum, son_kopya, denetim, bekleyen, gonderilen, tasinan FROM yonetim_yedek_durumlari()")).rows
+    bekleyen: number; gonderilen: number; tasinan: number; dogrulama: Date | null; dogrulama_tamam: boolean | null; dogrulama_ozet: { sorunlar?: unknown[] } | null }>(
+    `SELECT firma_id::text, saglayici, durum, son_kopya, denetim, bekleyen, gonderilen, tasinan, dogrulama, dogrulama_tamam, dogrulama_ozet
+     FROM yonetim_yedek_durumlari()`)).rows
     .map((x) => [x.firma_id, { saglayici: x.saglayici, durum: x.durum, son: x.son_kopya?.toISOString() ?? null, denetim: x.denetim?.toISOString() ?? null,
-      bekleyen: x.bekleyen, gonderilen: x.gonderilen, tasinan: x.tasinan } satisfies YedekOzeti]));
+      bekleyen: x.bekleyen, gonderilen: x.gonderilen, tasinan: x.tasinan,
+      dogrulama: x.dogrulama ? { zaman: x.dogrulama.toISOString(), tamam: !!x.dogrulama_tamam, sorun: Array.isArray(x.dogrulama_ozet?.sorunlar) ? x.dogrulama_ozet.sorunlar.length : 0 } : null,
+    } satisfies YedekOzeti]));
   return (await db.sorgu<Ham>("SELECT id::text, ad, kisa_ad, rapor_kodu, durum, olusturuldu, kullanici, yon_ad, yon_eposta, yon_durum, vt FROM yonetim_firmalar()")).rows
     .map((r) => ({ ...satir(r), yedek: y.get(r.id) ?? null }));
 }
