@@ -3,6 +3,7 @@
   "framework": "nextjs",
   "installCommand": "npm ci",
   "buildCommand": "node scripts/goc-dagit.ts --zorunlu && node scripts/next.ts build",
+  "ignoreCommand": "git diff --quiet ${VERCEL_GIT_PREVIOUS_SHA:-HEAD^} HEAD -- . ':(exclude)*.md' ':(exclude)docs'",
   "regions": ["fra1"],
   "crons": [{ "path": "/api/is/gece", "schedule": "15 1 * * *" }, { "path": "/api/is/yedek", "schedule": "45 1 * * *" }],
   "git": {
