@@ -1,8 +1,10 @@
 /* MÜŞTERİ PANELİNİN RAPORA BAKTIĞI YER (modül 17 → 14; 0030). Müşteri paneli rapor tablolarına dokunmaz: imzalı sürümleri buradan okur.
    YALNIZ müşteri işleminde çağrılır (src/server/kimlik/istek.ts musteriIslemi → veritabanında probata_musteri): hangi satırın döneceğine
-   veritabanının kısıtlayıcı politikaları karar verir — kendi müşterisi, kendi tesis kapsamı, ekipmanın GÜNCEL raporu (2026-11-04, K2 — göç 0118
-   rapor_guncel_mu: en son raporun son imzalı sürümü + takipleri; eskisi için müşteri firmayla iletişime geçer), revizyonla kapanan
-   uygunsuzluk değil. Burada ayrıca süzgeç yok (unutulsa da sızmaz); imzasız rapor müşteriye hiç görünmez (rapor_surumu yalnız imzalı). */
+   veritabanının kısıtlayıcı politikaları karar verir — kendi müşterisi, kendi tesis kapsamı, raporun SON imzalı sürümü (193), revizyonla kapanan
+   uygunsuzluk değil. Burada ayrıca süzgeç yok (unutulsa da sızmaz); imzasız rapor müşteriye hiç görünmez (rapor_surumu yalnız imzalı).
+   2026-11-04 (K2 — reisim: "müşteri sadece en son onaylı raporu görsün daha eski raporlar için iletişime geçmesi gereksin"; göç 0118): rapor listesi
+   ve rapor sayfası yalnız ekipmanın GÜNCEL raporu (rapor_guncel_mu: en son raporun son imzalı sürümü + takipleri); eski raporun PDF'i veritabanında
+   da inmez (dosya_musteri). Uygunsuzluklar'daki geçmiş eski raporun numarasıyla durur. */
 import type { RaporSonucu } from "../../../format/tanim.ts";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { ekipmanlar } from "../../ekipman/server/ekipman.ts";
@@ -44,7 +46,7 @@ export async function musteriRaporlari(db: Sorgulayici, s: { id?: string } = {})
         s.icerik -> 'ekipman_bilgi' ->> 'konum' AS konum,
         (s.imzalandi AT TIME ZONE 'Europe/Istanbul')::date::text AS imza_gunu, s.imzali_dosya::text, d.boyut::text AS boyut
       FROM rapor_surumu s LEFT JOIN dosya d ON d.firma_id = s.firma_id AND d.id = s.imzali_dosya
-      ${s.id ? "WHERE s.rapor_id = $1 " : ""}ORDER BY s.imzalandi DESC`, s.id ? [s.id] : [])).rows;
+      WHERE rapor_guncel_mu(s.id)${s.id ? " AND s.rapor_id = $1" : ""} ORDER BY s.imzalandi DESC`, s.id ? [s.id] : [])).rows;
   if (!l.length) return [];
   const ek = new Map((await ekipmanlar(db, [...new Set(l.map((x) => x.ekipman_id))])).map((e) => [e.id, e]));
   const tur = new Map((await turOzetleri(db)).map((t) => [t.id, t.ad]));

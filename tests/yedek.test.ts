@@ -32,6 +32,7 @@ import { planIci, planKabul } from "../src/modules/planlar/server/plan-ici.ts";
 import { bugunTr, planAc } from "../src/modules/planlar/server/planlar.ts";
 import { taslakBaslat, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
 import { imzaHazirla, imzaliYukle, raporOlustur, type Kisi } from "../src/modules/raporlar/server/raporlar.ts";
+import { musteriRaporlari } from "../src/modules/raporlar/server/musteri-baglanti.ts";
 import { bulutBagla, bulutKes, simdiYedekle, yedekTakibi } from "../src/modules/firma-ayarlari/server/yedek.ts";
 import { bulutAyari, bulutHizmeti } from "../src/server/dis/bulut.ts";
 import { arsivAdimi, arsivOku } from "../src/server/yedek/arsiv.ts";
@@ -310,8 +311,13 @@ test("1 yıl (0118): eski raporun dosyaları Drive'da bulununca Supabase'ten sil
   const guncel = async (id: string) => (await sql<{ g: boolean }>(A, "SELECT rapor_guncel_mu($1) AS g", [id])).rows[0].g;
   assert.equal(await guncel(eskiS.id), false);
   assert.equal(await guncel(yeniS), true);
-  assert.match((await sahip.query<{ q: string }>("SELECT qual AS q FROM pg_policies WHERE tablename = 'rapor_surumu' AND policyname = 'rapor_surumu_musteri'")).rows[0]!.q,
-    /rapor_guncel_mu/, "müşteri yalnız güncel raporu görür (K2)");
+  /* K2: müşteri yalnız güncel raporu görür ve indirir */
+  const mid = (await sql<{ id: string }>(A, "SELECT id::text FROM musteri WHERE kisa = 'Deneme Bir'")).rows[0]!.id;
+  const mus = <T,>(is: (db: Sorgulayici) => Promise<T>) => kiraciIcinde(havuz, A, is, { musteri: { id: mid, tesisler: null } });
+  assert.deepEqual((await mus((db) => musteriRaporlari(db))).filter((x) => x.ekipmanKod === "HT-1").map((x) => x.id), [yeni.rapor]);
+  assert.equal((await mus((db) => musteriRaporlari(db, { id: eskiS.rapor_id }))).length, 0, "eski rapor sayfası açılmaz");
+  assert.equal((await mus((db) => db.sorgu("SELECT 1 FROM dosya WHERE id = $1", [eskiS.imzali]))).rowCount, 0, "eski PDF inmez");
+  assert.equal((await mus((db) => db.sorgu("SELECT 1 FROM dosya WHERE id = $1", [yeni.imzali]))).rowCount, 1, "güncel PDF iner");
   /* eski PDF Drive'dan silinmiş: Supabase'ten silinmez, yeniden sıraya girer */
   t.drive.delete([...t.drive.values()].find((x) => !x.klasor && x.ad === `${eskiS.no}.pdf`)!.id);
   await sahip.query("UPDATE bulut_baglanti SET tasima = NULL WHERE firma_id = $1", [A]);

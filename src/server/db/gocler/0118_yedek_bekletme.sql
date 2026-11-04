@@ -4,7 +4,7 @@
 -- görsün" · K3 probata arşivi son 12 ay) ══
 -- (1) GÜNCEL RAPOR (rapor_guncel_mu): ekipmanın en son olağan (takip olmayan) raporu — revizyonu aşılmamış imzalı sürümler arasında en yeni
 --     kontrol, eşitse en son imza (önceki rapor kuralı, raporlar/server/onceki.ts) — ve o raporun takip raporları. Güncel raporun dosyası hiç
---     silinmez; müşteri yalnız güncel raporu görür.
+--     silinmez; müşterinin rapor listesinde ve indirebildiği PDF'te yalnız güncel rapor (K2).
 -- (2) DRIVE'A TAŞIMA (bekletme_sil): son imzası 1 yıldan eski, güncel olmayan raporun imzalı PDF'leri, imzaya hazırlanan PDF'leri ve fotoğrafları
 --     Supabase'ten silinir — YALNIZ firmanın Drive'ı bağlıyken ve her sürümün imzalı PDF'i (ayrıca gönderilen okuma fotoğrafı / form dahil) son
 --     bir saat içinde Drive'da bulunduysa (bulut_kuyruk.denetlendi). Raporda görünen fotoğraflar imzalı PDF'in içinde. Kayıt (künye, içerik, ölçüm,
@@ -44,13 +44,18 @@ ALTER FUNCTION rapor_guncel_mu(uuid) SET search_path = pg_catalog, public, pg_te
 REVOKE EXECUTE ON FUNCTION rapor_guncel_mu(uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION rapor_guncel_mu(uuid) TO probata_uygulama, probata_musteri;
 
-/* K2: müşteri yalnız güncel raporu görür (uygunsuzluk ve PDF politikaları bu politikadan geçen sürüme bakar — 0030, 0033) */
+/* K2: müşteri yalnız güncel raporun imzalı PDF'ini indirir (rapor listesi ve rapor sayfası da yalnız güncel — raporlar/server/musteri-baglanti.ts).
+   Sürüm politikası (0030) değişmez: Uygunsuzluklar'daki geçmiş (giderildi, gideren kontrolün tarihi) eski raporun numarasıyla durur. 0035'in
+   politikası aynen, rapor PDF'ine güncel şartı eklenir. */
 DO $$ BEGIN
-  IF EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'rapor_surumu' AND policyname = 'rapor_surumu_musteri') THEN
-    DROP POLICY rapor_surumu_musteri ON rapor_surumu;
+  IF EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'dosya' AND policyname = 'dosya_musteri') THEN
+    DROP POLICY dosya_musteri ON dosya;
   END IF;
-  CREATE POLICY rapor_surumu_musteri ON rapor_surumu AS RESTRICTIVE FOR SELECT TO probata_musteri
-    USING (musteri_id = (SELECT gecerli_musteri()) AND musteri_tesis_gorur(tesis_id) AND rapor_guncel_mu(id));
+  CREATE POLICY dosya_musteri ON dosya AS RESTRICTIVE FOR SELECT TO probata_musteri
+    USING (cop IS NULL AND (
+      (modul = 'rapor_imzali' AND EXISTS (SELECT 1 FROM rapor_surumu s WHERE s.imzali_dosya = dosya.id AND rapor_guncel_mu(s.id)))
+      OR (modul = 'is_sozlesmesi' AND EXISTS (SELECT 1 FROM is_sozlesmesi z WHERE z.imzali_dosya = dosya.id))
+      OR (modul IN ('ozluk', 'egitim', 'atama') AND EXISTS (SELECT 1 FROM musteri_personel_belgeleri() b WHERE b.dosya_id = dosya.id))));
 END $$;
 
 /* (2) Drive'a taşınabilir mi: rapor güncel değil, son imzası 1 yıldan eski, Drive bağlı, her sürümün imzalı PDF'i son bir saatte Drive'da bulundu */

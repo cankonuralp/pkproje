@@ -78,7 +78,7 @@ test("7. (0118) Supabase'ten Drive'a taşımanın bir şartı düşünce yakalan
   const boz = (eski: string, yeni: string) => { assert.ok(g.includes(eski), `bozulacak satır kaynakta yok: ${eski.slice(0, 50)}`); return bekletmeEksikleri(g.replace(eski, yeni)); };
   assert.ok(boz("AND q.denetlendi > now() - interval '1 hour'))", "))").includes("Drive'da bulunma şartı yok"));
   assert.ok(boz("WHERE b.firma_id = p_firma AND b.durum = 'bagli')", "WHERE b.firma_id = p_firma)").includes("Drive bağlı şartı yok"));
-  assert.ok(boz("AND rapor_guncel_mu(s.id))", ")").includes("güncel rapor şartı yok"));
+  assert.ok(boz("AND s.rapor_id = p_rapor AND rapor_guncel_mu(s.id))", "AND s.rapor_id = p_rapor)").includes("güncel rapor şartı yok"));
   assert.ok(boz("AND s.imzalandi > now() - interval '1 year')", ")").includes("1 yıl şartı yok"));
-  assert.ok(boz("AND rapor_guncel_mu(id));", ");").includes("müşteri güncel rapor şartı yok"));
+  assert.ok(boz("s.imzali_dosya = dosya.id AND rapor_guncel_mu(s.id)))", "s.imzali_dosya = dosya.id))").includes("müşteri güncel rapor şartı yok"));
 });

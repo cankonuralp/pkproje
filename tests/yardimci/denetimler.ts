@@ -1120,6 +1120,8 @@ export function bekletmeEksikleri(goc: string): string[] {
   if (!t.includes("rapor_guncel_mu(s.id)")) e.push("güncel rapor şartı yok");
   if (!/q\.durum = 'gonderildi'\s+AND q\.denetlendi > now\(\) - interval '1 hour'/.test(t)) e.push("Drive'da bulunma şartı yok");
   if (!b.includes("NOT drive_tasinabilir(f, p_rapor)")) e.push("silme şartları denetlemiyor");
-  if (!/CREATE POLICY rapor_surumu_musteri[\s\S]*?rapor_guncel_mu\(id\)\);/.test(goc)) e.push("müşteri güncel rapor şartı yok");
+  if (!/CREATE POLICY dosya_musteri[\s\S]*?modul = 'rapor_imzali' AND EXISTS \(SELECT 1 FROM rapor_surumu s WHERE s\.imzali_dosya = dosya\.id AND rapor_guncel_mu\(s\.id\)\)\)/.test(goc)) {
+    e.push("müşteri güncel rapor şartı yok");
+  }
   return e;
 }
