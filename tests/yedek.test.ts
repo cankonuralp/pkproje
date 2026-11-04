@@ -391,6 +391,8 @@ test("doğrulama (0119): Drive'daki yedek açılır, sayılar canlıyla tutar, P
 });
 
 test("geri yükleme (0119): deneme hiçbir şey yazmaz; geri yükleme yedekteki hâle döner (sonradan eklenen gider, değişen eski hâline), parola korunur, tetikler açık, B'ye dokunulmaz; geri dön", async () => {
+  /* deneme hesapları parolasız açıldı; gerçekte her hesabın parolası var — parolası olan hesap geri yüklemede parolasını korur */
+  await tetiksiz("UPDATE hesap SET parola_ozeti = 'scrypt$deneme$' || id::text WHERE firma_id = $1", [A]);
   const geriBir = (await sql<{ id: string }>(A, "INSERT INTO musteri (unvan, kisa) VALUES ('Deneme Geri Bir A.Ş.', 'Geri Bir') RETURNING id::text")).rows[0]!.id;
   assert.equal((await calistir()).durum, "tamam");
   /* yedekten sonra */
