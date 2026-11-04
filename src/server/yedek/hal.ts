@@ -57,7 +57,8 @@ export async function tamOku(z: Uint8Array): Promise<TamDosya> {
   if (b.tur !== "tam" || !b.olusturuldu || Number.isNaN(Date.parse(b.olusturuldu))) throw new HalHatasi("tam kopyanın bilgisi biçimsiz");
   const tablolar: Record<string, Satir[]> = {};
   for (const x of l) {
-    const m = /^tablolar\/([a-z_]{1,40})\.jsonl$/.exec(x.ad);
+    /* zipAc klasörü atar: tablolar/<tablo>.jsonl → <tablo>.jsonl */
+    const m = /^([a-z_]{1,40})\.jsonl$/.exec(x.ad);
     if (!m || !Object.hasOwn(YEDEK_TABLOLARI, m[1]!)) continue;
     tablolar[m[1]!] = satirlar(x.bayt).filter((r): r is Satir => !!r && typeof r === "object" && !Array.isArray(r));
   }
@@ -73,7 +74,8 @@ export async function ayOku(z: Uint8Array): Promise<AyDosya> {
   if (b.tur !== "ay" || !b.donem || !/^\d{4}-\d{2}$/.test(b.donem)) throw new HalHatasi("aylık dosyanın bilgisi biçimsiz");
   const out: AyDosya["satirlar"] = {};
   for (const x of l) {
-    const m = /^degisiklikler\/([a-z_]{1,40})\.jsonl$/.exec(x.ad);
+    /* degisiklikler/<tablo>.jsonl (zipAc klasörü atar) */
+    const m = /^([a-z_]{1,40})\.jsonl$/.exec(x.ad);
     if (!m || !Object.hasOwn(YEDEK_TABLOLARI, m[1]!)) continue;
     out[m[1]!] = satirlar(x.bayt).filter((r): r is { silindi: boolean; zaman: string; satir: Satir } => {
       const o = r as Record<string, unknown> | null;
@@ -113,7 +115,7 @@ export function haliKur(tam: TamDosya, aylar: readonly AyDosya[], pk: Readonly<R
 /** yedeklenen tabloların birincil anahtar sütunları (veritabanının kendisinden) */
 export async function birincilAnahtarlar(db: Sorgulayici): Promise<Record<string, string[]>> {
   const r = await db.sorgu<{ tablo: string; pk: string[] }>(
-    `SELECT c.relname AS tablo, array_agg(a.attname ORDER BY array_position(i.indkey::int2[], a.attnum)) AS pk
+    `SELECT c.relname AS tablo, array_agg(a.attname::text ORDER BY array_position(i.indkey::int2[], a.attnum)) AS pk
      FROM pg_index i JOIN pg_class c ON c.oid = i.indrelid JOIN pg_namespace n ON n.oid = c.relnamespace AND n.nspname = 'public'
        JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY (i.indkey)
      WHERE i.indisprimary AND c.relname = ANY ($1::text[]) GROUP BY c.relname`, [Object.keys(YEDEK_TABLOLARI)]);

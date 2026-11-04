@@ -298,6 +298,9 @@ export const DIS_IZNI: Readonly<Record<string, string>> = {
   /* 2026-11-03: firmanın kendi yedeği — Google Drive / OneDrive istemcisi (uygulama kimlikleri ortamda; firmanın yenileme anahtarı şifreli sırda) */
   "src/server/yedek/calis.ts": "yedeği çalıştıran: hizmeti ortamdan kurar, dosyaları yükler, hata türlerini tanır (gece işi ve yanıttan sonra)",
   "src/server/yedek/baglan.ts": "hesabı bağlama / kesme: izin ekranı adresi, kod takası, izni bırakma (Firma ayarları › Yedek)",
+  "src/server/yedek/hal.ts": "yedekten hâl: Drive'dan tam kopya ve aylık dosyaları indirir (doğrulama ve geri yükleme — 2026-11-04)",
+  "src/server/yedek/dogrula.ts": "aylık doğrulama: Drive hata türlerini tanır, PDF örneğini indirir",
+  "src/server/yedek/geri-yukle.ts": "geri yükleme: dosyaları Drive'dan geri getirir"
 };
 const DIS_ORTAM = /\bPROBATA_(?:SUPABASE_YONETIM_(?:ANAHTARI|UC)|SUPABASE_ORGUT|SUPABASE_DEPO_UC|RESEND_(?:ANAHTARI|YONETIM_UC)|(?:GOOGLE|ONEDRIVE)_(?:ISTEMCI|SIR)|BULUT_(?:UC|DONUS))\b/;
 export function yonetimAnahtariEksikleri(metinler: readonly { ad: string; metin: string }[]): string[] {

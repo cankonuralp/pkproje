@@ -25,6 +25,7 @@ const KAYNAK_AD = { drive: "Drive", arsiv: "probata arşivi", once: "önceki hâ
 const DURUM = { bagli: ["bağlı", "tamam"], kopuk: ["bağlantı koptu", "red"], dolu: ["dolu", "red"], kesildi: ["kesildi", "notr"] } as const;
 
 type Adim = 1 | 2 | 3 | 4 | 5;
+const ONAY_ID = "y-yedek-onay";
 type Kip = { tur: "yukle" } | { tur: "don"; geriYukleme: string; basladi: string };
 
 export function YedekBolumu({ id, kisaAd, y }: { id: string; kisaAd: string; y: YedekYonetimGorunumu | null }) {
@@ -122,7 +123,7 @@ function GeriYuklePenceresi({ id, kisaAd, kip, driveVar, kapat }: { id: string; 
   return (
     <Pencere acik baslik={kip.tur === "don" ? "Önceki hâle dön" : "Yedekten geri yükle"} onKapat={adim === 4 ? () => undefined : kapat} genis alt={alt}>
       <ol className={stil.yedekAdimlar}>
-        {ADIMLAR.map(([n, ad]) => <li key={n} data-durum={n === adim ? "su" : n < adim ? "bitti" : undefined}>{`${n} ${ad}`}</li>)}
+        {ADIMLAR.map(([n, ad]) => <li key={n} data-su={n === adim ? "" : undefined} data-bitti={n < adim ? "" : undefined}>{`${n} ${ad}`}</li>)}
       </ol>
       {hata && <SeritKap><Serit tur="hata" ikon="circle-alert">{hata}</Serit></SeritKap>}
       {adim === 1 && (
@@ -164,8 +165,8 @@ function GeriYuklePenceresi({ id, kisaAd, kip, driveVar, kapat }: { id: string; 
             <Bilgi etiket="Önce">Şu anki hâl kopyalanır</Bilgi>
             <Bilgi etiket="Sonra" genis="cift">Parolası olmayan hesaplara geçici parola e-postası; açık oturumlar kapanır</Bilgi>
           </BilgiListesi>
-          <Alan id="y-yedek-onay" etiket={`Onay için firmanın kısa adını yazın: ${kisaAd}`}>
-            <Girdi id="y-yedek-onay" value={onay} autoComplete="off" spellCheck={false} data-ilk-odak="" onChange={(e) => setOnay(e.target.value)} />
+          <Alan id={ONAY_ID} etiket={`Onay için firmanın kısa adını yazın: ${kisaAd}`}>
+            <Girdi id={ONAY_ID} value={onay} autoComplete="off" spellCheck={false} data-ilk-odak="" onChange={(e) => setOnay(e.target.value)} />
           </Alan>
         </>
       )}

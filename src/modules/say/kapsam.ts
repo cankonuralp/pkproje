@@ -76,6 +76,7 @@ export const KAPSAM: Readonly<Record<string, Readonly<Record<string, string>>>> 
     teklifMusteriKaydetEylemi: "i:teklif_musteri_kaydet", teklifMusteriBaglaEylemi: "i:teklif_musteri_bagla", teklifEkipmanlariEylemi: "i:teklif_secenekleri", teklifSilEylemi: "i:teklif_sil",
     teklifSayfasiEylemi: "i:teklif_ara", teklifDoldurEylemi: "i:teklif_belge_doldur" },
   "yonetim/ui/eylemler.ts": Object.fromEntries(["firmaAcEylemi", "kurulumIlerletEylemi", "kurulumSurdurEylemi", "kurulumBastanEylemi", "firmaDondurEylemi", "firmaEtkinlestirEylemi",
-    "geciciParolaVerEylemi", "yzAnahtariKaydetEylemi", "yzAnahtariKaldirEylemi", "yzAyarKaydetEylemi", "gonderimAlaniEkleEylemi", "gonderimDogrulaEylemi", "argeKaydiEylemi"].map((a) => [a, "d:Yönetim"])),
+    "geciciParolaVerEylemi", "yzAnahtariKaydetEylemi", "yzAnahtariKaldirEylemi", "yzAyarKaydetEylemi", "gonderimAlaniEkleEylemi", "gonderimDogrulaEylemi", "argeKaydiEylemi",
+    "yedekDogrulaEylemi", "yedekDenemeEylemi", "yedekGeriYukleEylemi", "yedekGeriDonEylemi"].map((a) => [a, "d:Yönetim"])),
   "zimmetler/ui/eylemler.ts": { teslimEtEylemi: "i:zimmet_teslim", demirbasEkleEylemi: "i:demirbas_ekle", demirbasSilEylemi: "i:demirbas_sil", demirbasPasifEylemi: "i:demirbas_pasif" },
 };

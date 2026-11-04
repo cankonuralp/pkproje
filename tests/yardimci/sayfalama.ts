@@ -18,6 +18,8 @@ export const SAYFASIZ_TABLOLAR: Readonly<Record<string, string>> = {
   /* 2026-10-24 (serbest düzen) */
   "modules/rapor-format/ui/TabloDuzenleyici.tsx": "format kurucusunun serbest tablosu: formatın ızgarası (veri satırı yok; belgede olduğu gibi bütün satırlar)",
   "components/grafik/Grafik.tsx": "grafiğin ekran okuyucu karşılığı (gizli): grafikteki çubuklarla aynı satırlar",
+  /* 2026-11-04 */
+  "modules/yonetim/ui/YedekBolumu.tsx": "geri yükleme denemesinin tablo farkı: yalnız farkı olan tablolar (en çok 63) + toplam — tek bakışta",
 };
 
 /** taramada bulunan, 20'den çok satır olabilen ul / ol listeleri → en az kaç sayfalama (<SayfaliListe + useSayfa() ve gerekçe */

@@ -44,8 +44,8 @@
 .yedekListe li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
 .yedekAdimlar { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; padding: 0; list-style: none; }
 .yedekAdimlar li { padding: 2px 8px; border-radius: 999px; background: var(--zemin2); color: var(--yazi3); font-size: var(--boy-kucuk); }
-.yedekAdimlar li[data-durum="su"] { background: var(--vurgu); color: var(--vurgu-uzeri); }
-.yedekAdimlar li[data-durum="bitti"] { background: var(--onay-zemin); color: var(--onay-yazi); }
+.yedekAdimlar li[data-su] { background: var(--vurgu); color: var(--vurgu-uzeri); }
+.yedekAdimlar li[data-bitti] { background: var(--onay-zemin); color: var(--onay-yazi); }
 .yedekTabloKap { overflow-x: auto; margin: 8px 0; }
 .yedekTablo { width: 100%; border-collapse: collapse; font-size: var(--boy-kucuk); }
 .yedekTablo th, .yedekTablo td { padding: 6px 8px; border-bottom: 1px solid var(--kenar); text-align: right; font-variant-numeric: tabular-nums; }
