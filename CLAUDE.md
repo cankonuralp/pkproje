@@ -88,7 +88,7 @@ pkproje/
                             kural dosyaları (ANAYASA/KALIP'a madde yalnız reisim onayıyla eklenir)
   src/app/                  sayfalar (iş mantığı YOK), altı rota grubu (472: (cerceve) — kabuksuz, yalnız kendi sayfamızın çerçevesinde: kurucunun saha
                             ekranı önizlemesi …/sablon/<sürüm>/saha; 348: (yonetim)/yonetim — yalnız yönetim adresinde, kendi oturumu): (uygulama)/ oturum ister — Planlar ana sayfa + modül başına bir
-                            rota klasörü (kayıtla birebir) · (acik)/giris · (gelistirme)/vitrin (yayında 404) · (musteri)/portal müşteri paneli (319:
+                            rota klasörü (kayıtla birebir) · (acik)/giris, kosullar, gizlilik (2026-11-04: Google / Microsoft izin ekranının istediği herkese açık sayfa — metin src/tanim/gizlilik.ts, iletişim adresi PROBATA_ILETISIM_EPOSTA) · (gelistirme)/vitrin (yayında 404) · (musteri)/portal müşteri paneli (319:
                             müşteri oturumu, veri müşteri işleminde — veritabanında probata_musteri rolü, kısıtlayıcı politikalar; göç 0030)
   src/proxy.ts              ara katman: her istekte nonce'lu CSP + güvenlik başlıkları (Next 16'da middleware'in adı proxy) · /api sürüm başlığı,
                             eski cihaz istemcisi 426 (src/server/api-surum.ts)

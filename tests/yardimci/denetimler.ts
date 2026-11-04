@@ -1094,3 +1094,17 @@ export function yedekDosyaFarki(moduller: readonly string[], belge: readonly str
   for (const m of disi) if (!moduller.includes(m)) h.push(`${m}: böyle dosya modülü yok`);
   return h;
 }
+
+/* ── GİZLİLİK SAYFASI (2026-11-04; Google / Microsoft izin ekranı için — src/tanim/gizlilik.ts, src/app/(acik)/gizlilik) ── */
+/** metin dar izinleri ve Google'ın "Limited Use" cümlesini söylüyor mu; depoda e-posta adresi yazılı mı (herkese açık depo). Dönen: bulgular */
+export function gizlilikEksikleri(p: { metin: string; sayfa: string; giris: string }): string[] {
+  const h: string[] = [];
+  for (const s of ["drive.file", "Files.ReadWrite.AppFolder", "Google API Services User Data Policy, including the Limited Use requirements"]) {
+    if (!p.metin.includes(s)) h.push(`metinde yok: ${s}`);
+  }
+  if (/[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+\.[A-Za-z]{2,}/.test(p.metin.replace(/\/\*[\s\S]*?\*\//g, ""))) h.push("metinde e-posta adresi yazılı (adres ortamdan gelmeli)");
+  if (!p.sayfa.includes("GOOGLE_SINIRLI_KULLANIM_EN") || !p.sayfa.includes("GIZLILIK.map")) h.push("sayfa metnin tamamını göstermiyor");
+  if (/\b(istekOturumu|modulOturumu|oturumGerekli|oturumIslemi)\b/.test(p.sayfa)) h.push("sayfa oturum istiyor (herkese açık olmalı)");
+  if (!p.giris.includes('href="/gizlilik"')) h.push("giriş ekranında gizlilik bağlantısı yok");
+  return h;
+}

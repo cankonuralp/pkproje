@@ -69,6 +69,8 @@ export function GirisFormu({ neden, donus, adres, firmaVar }: { neden?: "oturum"
         </form>
         {/* 2026-10-31 (kalem 7 — M6): kullanım koşulları (Yapay zekâ — S.A.Y maddesi) */}
         <a className={stil.baglanti} href="/kosullar">Kullanım koşulları</a>
+        {/* 2026-11-04: gizlilik (Google / Microsoft izin ekranı bu sayfayı gösterir — firmanın kendi yedeği) */}
+        <a className={stil.baglanti} href="/gizlilik">Gizlilik</a>
       </div>
     </main>
   );
