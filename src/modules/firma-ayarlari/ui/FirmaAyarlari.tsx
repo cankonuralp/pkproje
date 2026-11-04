@@ -494,7 +494,12 @@ function Yedek({ v }: { v: Veri }) {
   const [mesgul, baslat] = useTransition();
   const b = v.ekYedek.baglanti, k = v.ekYedek.kuyruk, ar = v.ekYedek.arsiv;
   const bagli = !!b && (b.durum === "bagli" || b.durum === "dolu"), sorun = !!b && (b.durum === "kopuk" || b.durum === "dolu");
-  const [d, setD] = useState({ saglayici: (v.bulut.deger.saglayici || b?.saglayici || "gdrive") as "gdrive" | "onedrive", kok: v.bulut.deger.kok, duzen: v.bulut.deger.duzen });
+  /* 2026-11-04 (reisim: "microsoftu iptal et sadece google drive yedekleme yeterli"): seçenekte yalnız anahtarı girilmiş hizmet (ve bağlı olan);
+     hiçbiri yoksa Google Drive. Tek hizmet varsa seçim gösterilmez. */
+  const hizmetler = (["gdrive", "onedrive"] as const).filter((x) => v.ekYedek.hazir[x] || b?.saglayici === x);
+  const liste: readonly ("gdrive" | "onedrive")[] = hizmetler.length ? hizmetler : ["gdrive"];
+  const kayitli = v.bulut.deger.saglayici || b?.saglayici || liste[0]!;
+  const [d, setD] = useState({ saglayici: (liste.includes(kayitli) ? kayitli : liste[0]!) as "gdrive" | "onedrive", kok: v.bulut.deger.kok, duzen: v.bulut.deger.duzen });
   const [h, setH] = useState<Record<string, string>>({});
   const secili = bagli && b ? b.saglayici : b?.durum === "kopuk" ? b.saglayici : d.saglayici;
   const hz = HIZMET_AD[secili], hazir = v.ekYedek.hazir[secili];
@@ -531,8 +536,8 @@ function Yedek({ v }: { v: Veri }) {
           : satir("var", "Ek yedek", k.bekliyor > 0 ? `${HIZMET_AD[b.saglayici]} · ${sayi(k.bekliyor)} dosya sırada` : `${HIZMET_AD[b.saglayici]} bağlı`)}
       </ul>
       {sorun && b && <Serit tur="hata">{b.neden ?? "Yedek gönderilemiyor."}</Serit>}
-      <Segment ad="Ek yedek hizmeti" deger={secili} kapali={!v.yaz || bagli || b?.durum === "kopuk"}
-        secenekler={[["gdrive", "Google Drive"], ["onedrive", "OneDrive"]] as const} degistir={(x) => setD({ ...d, saglayici: x })} />
+      {liste.length > 1 && <Segment ad="Ek yedek hizmeti" deger={secili} kapali={!v.yaz || bagli || b?.durum === "kopuk"}
+        secenekler={liste.map((x) => [x, HIZMET_AD[x]] as const)} degistir={(x) => setD({ ...d, saglayici: x })} />}
       {b && b.durum !== "kesildi" ? (
         <dl className={stil.bilgi}>
           <div><dt>Hesap</dt><dd>{b.hesap}</dd></div>
@@ -559,7 +564,7 @@ function Yedek({ v }: { v: Veri }) {
           {b && b.durum !== "kesildi" && <Tus tur="ikincil" disabled={mesgul} onClick={() => void kes()}>Bağlantıyı kes</Tus>}
         </div>
       )}
-      <p className={stil.durumSatir}>{!hazir && !bagli ? `${hz} bağlantısı henüz açılmadı.` : "Google Drive ve OneDrive veriyi Türkiye dışında saklayabilir."}</p>
+      <p className={stil.durumSatir}>{!hazir && !bagli ? `${hz} bağlantısı henüz açılmadı.` : `${liste.map((x) => HIZMET_AD[x]).join(" ve ")} veriyi Türkiye dışında saklayabilir.`}</p>
     </Kart>
   );
 }
