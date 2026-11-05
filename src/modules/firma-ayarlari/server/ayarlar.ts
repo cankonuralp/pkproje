@@ -42,7 +42,8 @@ export interface FirmaAyarlari {
   yaz: boolean;
   kod: string;
   firma: Surumlu<{ ad: string; adres: string; eposta: string; tel: string; akr: string; nusha: number }> & { kayitAd: string };
-  imza: Surumlu<{ yontem: "mobil" | "e_imza"; teknik: boolean }>;
+  /** sign (2026-11-05, göç 0122): probata yönetimi firmayı probata sign'a bağladıysa (anahtar + webhook sırrı) — imza yöntemi "probata sign · e-imza", firma değiştiremez (K1) */
+  imza: Surumlu<{ yontem: "mobil" | "e_imza"; teknik: boolean }> & { sign: boolean };
   zimmet: Surumlu<{ teslim_eden: string | null }>;
   saklama: Surumlu<{ yil: number }>;
   mesai: Surumlu<{ acik: boolean; normal_dk: number; mesai_dk: number; yillik_fazla_saat: number; baslangic: string }>;
@@ -106,7 +107,7 @@ export async function firmaAyarlari(db: Sorgulayici, kim: Kisi): Promise<FirmaAy
   return {
     yaz: ayarlarYazar(kim), kod: k.kod,
     firma: { deger: { ad: f.deger.ad, adres: f.deger.adres, eposta: f.deger.eposta, tel: f.deger.tel, akr: f.deger.akr, nusha: f.deger.nusha }, surum: f.surum, kayitAd: k.ad },
-    imza: { deger: im.deger, surum: im.surum }, zimmet: { deger: zi.deger, surum: zi.surum }, saklama: { deger: sa.deger, surum: sa.surum },
+    imza: { deger: im.deger, surum: im.surum, sign: (await sirDurumu(db, "sign_anahtari")).tanimli && (await sirDurumu(db, "sign_webhook_sirri")).tanimli }, zimmet: { deger: zi.deger, surum: zi.surum }, saklama: { deger: sa.deger, surum: sa.surum },
     mesai: { deger: { acik: me.deger.acik, normal_dk: me.deger.normal_dk, mesai_dk: me.deger.mesai_dk, yillik_fazla_saat: me.deger.yillik_fazla_saat, baslangic: me.deger.baslangic }, surum: me.surum },
     esik: { deger: es.deger, surum: es.surum }, sabit: { deger: sg.deger, surum: sg.surum },
     dosyalar: { logo: await dosyaAdi(db, f.deger.logo), on_bilgi: await dosyaAdi(db, bs.deger.on_bilgi), bordro_format: await dosyaAdi(db, bs.deger.bordro_format),

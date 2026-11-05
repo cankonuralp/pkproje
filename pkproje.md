@@ -2527,6 +2527,15 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-11-05 (PROBATA SIGN BAĞLANTISI — göç 0122; reisim: "bu api keyi ve webhook kodunu girdiğimde imza sisteminin firma için aktif olacağı … ben yönetim
+  kısmından gireyim … imza yöntemi kısmında probata sign işaretlensin otomatik olarak, şimdilik e imza"; tasarım 59EF1ZZAJZdg6BztvuiWbr "önerilerin ve sunumun
+  uygun" — K1 firma kapatamaz, K2 "PDF ile imzala" yedek, K3 rapor imzası uzman + teknik, K4 7 gün): Yönetim › firma › probata sign (webhook adresi
+  https://<firma>.probata.com.tr/api/sign/bildirim kopyalanır; API anahtarı + webhook sırrı — anahtar sign'a denenir, ikisi şifreli firma_sir'e, uygulama
+  rolü yazamaz) · ikisi varsa firma sign ile imzalar: Firma ayarları › İmza yöntemi "probata sign · e-imza" (mobil yakında) · rapor ekranında "İmzala" →
+  probata imzasız PDF'i sign API'sine (rapor no ile) yükler, uzman adına imza isteği (usb, 7 gün, her_zaman_baglanti) açar, sign ekranı yeni sekmede →
+  webhook (HMAC, 5 dk, tekrar bir kez) ya da "Durumu yenile" → imzalı PDF bugünkü yükleme denetiminden (isteğin sahibinin yetkisiyle) → rapor ilerler;
+  reddedildi / iptal / süre → nedeni şeritte, "İmzala" yeniden · teknik yönetici aynı şerit onay ekranında · src/server/dis/sign.ts, raporlar/server/sign.ts,
+  api/sign/bildirim, yonetim/server/sign.ts + ui/SignBolumu.tsx. Toplu imza ve Diğer belgeler sign ile değil (ikinci adım).
 - 2026-11-05 (S.A.Y KENDİ İŞİNDEN ÖĞRENME — göç 0121; reisim: "müşterilerin yaptırdığı işlere göre sürekli kendini eğitme", "geri planda çalışsın ve kullanıcının
   tokeninden yemesin", sunum 7UcQ3N2BJRQkLHq4Whad16 "önerilerinin yeni hali uygundur"): iş bitince özet (say_is: istek, adımlar, S.A.Y'ın yazdığı raporlar ve
   cevaplarının parmak izi, düzeltme sözü / geri al) · gece say_ogren_veri puanlar (onaydan geri geldi / S.A.Y'ın bıraktığı cevap elle değişti / sonraki istek

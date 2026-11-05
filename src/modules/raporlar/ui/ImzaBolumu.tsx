@@ -2,14 +2,15 @@
 /* SON İMZA — indir, imzala, yükle (317; maket raporlar.html imza penceresi "İndir, imzala, yükle"; karar 99 her rapor ayrı PDF): yazanın onaylanmış
    raporunda 1) İmzala → kesin imzasız PDF sunucuda bir kez üretilir, 2) indirilir, e-imza aracıyla imzalanır, 3) imzalı PDF yüklenir. Sunucu
    imzalı PDF'in ilk baytlarının hazırlanan PDF'in kendisi olduğuna ve imza taşıdığına bakar; tutarsa rapor Tamamlandı, müşteriye açılır.
-   Tamamlanan raporda imzalı PDF (saklama süresi dolup silindiyse söylenir — 387). Mobil imza ve imza aracı sonraki fazda. Yetki ve kural sunucuda. */
-import { useRef, type TransitionStartFunction } from "react";
+   Tamamlanan raporda imzalı PDF (saklama süresi dolup silindiyse söylenir — 387). 2026-11-05: firmada probata sign açıkken şerit SignImza.tsx. Mobil imza ve imza aracı sonraki fazda. Yetki ve kural sunucuda. */
+import { useRef, useState, type TransitionStartFunction } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { DosyaAcTusu } from "../../../components/gizli-resim/GizliResim";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus, tusSinifi } from "../../../components/tus/Tus";
 import type { SahaRaporu } from "../server/raporlar";
 import { imzaHazirlaEylemi, imzaliYukleEylemi } from "./eylemler";
+import { SignImzaSeridi } from "./SignImza";
 import stil from "./raporlar.module.css";
 
 const TR = new Intl.DateTimeFormat("tr-TR", { timeZone: "Europe/Istanbul", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -19,6 +20,8 @@ export function ImzaBolumu({ v, mesgul, baslat, yenile, hata }: {
 }) {
   const bildir = useBildir();
   const girdi = useRef<HTMLInputElement>(null);
+  /* 2026-11-05 (göç 0122, K2): firmada probata sign açıkken "PDF ile imzala" seçilince bugünkü indir / yükle yolu */
+  const [elle, setElle] = useState(false);
   if (v.imzali) {
     const imza = TR.format(new Date(v.imzali.zaman)).replace(",", "");
     /* saklama süresi doldu (387): PDF firmanın deposundan silindi, rapor kaydı duruyor */
@@ -38,6 +41,10 @@ export function ImzaBolumu({ v, mesgul, baslat, yenile, hata }: {
     );
   }
   if (!v.imza) return null;
+  if (v.imza.sign.acik && !elle) {
+    return <SignImzaSeridi raporId={v.id} asama="uzman" sign={v.imza.sign} baslik="Muayene uzmanı imzası" mesgul={mesgul} baslat={baslat} yenile={yenile} hata={hata}
+      elle={v.imza.sign.durum === "bekliyor" ? undefined : () => setElle(true)} />;
+  }
   /* bağlantı ya da sunucu hatası (ör. gövde sınırı) bütün ekranı düşürmez: şeritte */
   const AG = "Bağlantı ya da sunucu hatası; yeniden deneyin.";
   const hazirla = () => baslat(async () => {

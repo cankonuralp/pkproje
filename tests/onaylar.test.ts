@@ -29,6 +29,10 @@ import {
 } from "../src/modules/raporlar/server/raporlar.ts";
 import { ayarOku, ayarYaz } from "../src/server/ayar/ayar.ts";
 import { imzaEki } from "./yardimci/gercek-imza.ts";
+import { randomBytes } from "node:crypto";
+import { sifrele } from "../src/server/ayar/sir.ts";
+import { signBildirim, signGonder, signHazirla, signKaydet, type IslemCalistir } from "../src/modules/raporlar/server/sign.ts";
+import { SignHatasi, webhookImzasi } from "../src/server/dis/sign.ts";
 import { ornekPdf, yenidenYaz } from "./yardimci/pdf-yaz.ts";
 import { dosyaIndirilebilir, dosyaYukle } from "../src/server/dosya/dosya.ts";
 import { DOSYA_ERISIMI } from "../src/server/dosya/erisim.ts";
@@ -1076,4 +1080,70 @@ test("takip muayenesi: açık uygunsuzluklu imzalı rapora ekipteki başka uzman
     SELECT no || '-T9', plan_id, $2, tur_id, format_id, personel_id, kunye, id FROM rapor WHERE id = $1`, [r1, FA.ekp["HT-2"]], FA.den.id), /takip muayenesi aynı ekipmanın|rapor_takip|tesisinde|plan/);
   await assert.rejects(sql(A, `INSERT INTO rapor (no, plan_id, ekipman_id, tur_id, format_id, personel_id, kunye)
     SELECT no || '-T9', plan_id, ekipman_id, tur_id, format_id, personel_id, kunye FROM rapor WHERE id = $1`, [r1], FA.den.id), /rapor_takip_no|rapor_plan_ekipman/);
+});
+
+/* ── 2026-11-05 (göç 0122): PROBATA SIGN İLE İMZA — reisim: "o firma için imzalama probata sign üzerinden yapılsın … şimdilik e imza"; tasarım
+   59EF1ZZAJZdg6BztvuiWbr. Tutar: Yönetim'in iki sırrı yokken kapalı; uygulama sign sırrını yazamaz (K1); hazırla → sign'a gönder (taklit istemci) →
+   kaydet, bağlantı şifreli ve yeniden açılır; webhook imzası olmadan / yanlış sırla 401; aynı gönderim bir kez; reddedildi isteği kapatmaz (elle yol
+   açık); belge.tamamlandi → imzalı PDF BUGÜNKÜ yükleme yolundan → rapor imzalı (isteğin sahibinin yetkisiyle). ── */
+test("probata sign: Yönetim sırları yokken kapalı; uygulama yazamaz; gönder → kaydet → webhook (imza, tekrar, red) → rapor imzalı", async () => {
+  process.env.PROBATA_SIR_ANAHTARI ??= randomBytes(32).toString("base64");
+  const ANAHTAR = "psk_deneme_0123456789abcdef", SIR = "whsec-deneme-0123456789abcdef";
+  const h = (await raporlar([[FA.den, "HT-4"]]))[0]!;
+  tamam(await a(FA.mek, async (db) => onayla(db, FA.mek, h, await surum(h))));
+  const kapali = await a(FA.den, (db) => signHazirla(db, depo, FA.den, A, h, "uzman", uret));
+  assert.deepEqual(kapali, { tur: "hata", y: { durum: "red", neden: "Bu firmada probata sign bağlı değil." } });
+  await assert.rejects(sql(A, "INSERT INTO firma_sir (ad, sifreli, son4) VALUES ('sign_anahtari', NULL, NULL)", [], FA.den.id), /yönetiminden/);
+  const s = kume.sahipIstemci(); await s.connect();
+  try {
+    await s.query("INSERT INTO firma_sir (firma_id, ad, sifreli, son4) VALUES ($1, 'sign_anahtari', $2, 'cdef'), ($1, 'sign_webhook_sirri', $3, 'cdef')",
+      [A, sifrele(ANAHTAR, A, "sign_anahtari"), sifrele(SIR, A, "sign_webhook_sirri")]);
+  } finally { await s.end(); }
+  /* taklit sign: belge + istek; tamamlanınca imzalı PDF */
+  const BELGE = "11111111-1111-4111-8111-111111111111", ISTEK = "22222222-2222-4222-8222-222222222222", BAG = "https://sign.example/dis#belirtec";
+  let durum = "imzada", istekDurum = "acik", imzali: Uint8Array | null = null, yuklenen = 0;
+  const taklit = {
+    dene: async () => {}, istekIptal: async () => {},
+    belgeYukle: async (_pdf: Uint8Array, p: { raporNo: string | null }) => { yuklenen++; assert.ok(p.raporNo && /^DA-/.test(p.raporNo), p.raporNo ?? ""); return { id: BELGE, durum: "taslak", rapor_no: p.raporNo }; },
+    imzaIstegiAc: async () => ({ id: ISTEK, durum: "acik", son_tarih: null, imzacilar: [{ id: "x", durum: "bekliyor", baglanti: BAG }] }),
+    belgeGetir: async () => ({ id: BELGE, durum, rapor_no: null, imza_istegi: { id: ISTEK, durum: istekDurum, son_tarih: null, imzacilar: [{ id: "x", durum: "bekliyor", red_nedeni: "Yanlış rapor" }] } }),
+    pdfAl: async () => { if (!imzali) throw new SignHatasi(409, "durum", "imzalı değil"); return imzali; },
+  };
+  const hz = await a(FA.den, (db) => signHazirla(db, depo, FA.den, A, h, "uzman", uret));
+  assert.equal(hz.tur, "gonder");
+  if (hz.tur !== "gonder") return;
+  const g = await signGonder(hz, taklit);
+  assert.deepEqual(g, { belge: BELGE, istek: ISTEK, baglanti: BAG });
+  assert.equal(await a(FA.den, (db) => signKaydet(db, FA.den, A, hz.istekId, g)), true);
+  assert.deepEqual(await a(FA.den, (db) => signHazirla(db, depo, FA.den, A, h, "uzman", uret)), { tur: "acik", baglanti: BAG }, "açık istek: aynı bağlantı (şifreli saklandı)");
+  assert.equal(yuklenen, 1);
+  const sakli = (await sql<{ sign_baglanti: string }>(A, "SELECT sign_baglanti FROM imza_istegi WHERE id = $1", [hz.istekId])).rows[0]!.sign_baglanti;
+  assert.ok(!sakli.includes("belirtec"), "bağlantı düz yazılmaz");
+  /* webhook */
+  const calistir: IslemCalistir = (hesap, is) => kiraciIcinde(havuz, A, is, hesap ? { hesapId: hesap } : {});
+  const govde = (id: string, olay: string) => JSON.stringify({ id, olay, olusturma: new Date().toISOString(), veri: { belge_id: BELGE } });
+  const imzaB = (gv: string, sir = SIR) => { const t = Math.floor(Date.now() / 1000); return `t=${t},v1=${webhookImzasi(sir, t, gv)}`; };
+  const bildir = (gv: string, imza: string | null, gonderim: string) => signBildirim(calistir, depo, A, { govde: gv, imza, gonderim }, () => taklit);
+  assert.equal((await bildir(govde("gonderim-red-0001", "imza.reddedildi"), null, "gonderim-red-0001")).kod, 401, "imzasız");
+  assert.equal((await bildir(govde("gonderim-red-0001", "imza.reddedildi"), imzaB(govde("gonderim-red-0001", "imza.reddedildi"), "baska-sir-0123456789"), "gonderim-red-0001")).kod, 401, "yanlış sır");
+  /* reddedildi: istek bekliyor kalır, nedeni yazılır */
+  durum = "reddedildi"; istekDurum = "reddedildi";
+  const red = govde("gonderim-red-0001", "imza.reddedildi");
+  assert.deepEqual(await bildir(red, imzaB(red), "gonderim-red-0001"), { kod: 200, ileti: "kapandi" });
+  assert.deepEqual(await bildir(red, imzaB(red), "gonderim-red-0001"), { kod: 200, ileti: "Bildirim daha önce işlendi." }, "aynı gönderim bir kez");
+  const i1 = (await sql<{ durum: string; sign_durum: string; sign_neden: string }>(A, "SELECT durum, sign_durum, sign_neden FROM imza_istegi WHERE id = $1", [hz.istekId])).rows[0]!;
+  assert.deepEqual(i1, { durum: "bekliyor", sign_durum: "reddedildi", sign_neden: "İmzacı reddetti: Yanlış rapor." });
+  /* yeniden imzala → yeni istek; tamamlanınca rapor imzalı */
+  durum = "taslak"; istekDurum = "acik";
+  const hz2 = await a(FA.den, (db) => signHazirla(db, depo, FA.den, A, h, "uzman", uret));
+  assert.equal(hz2.tur, "gonder", "reddedilen istekten sonra yeniden gönderilir");
+  if (hz2.tur !== "gonder") return;
+  const g2 = await signGonder(hz2, taklit);
+  assert.equal(await a(FA.den, (db) => signKaydet(db, FA.den, A, hz2.istekId, g2)), true);
+  durum = "tamamlandi"; istekDurum = "tamamlandi"; imzali = imzala(await imzasizBayt(h));
+  const bitti = govde("gonderim-tamam-0002", "belge.tamamlandi");
+  assert.deepEqual(await bildir(bitti, imzaB(bitti), "gonderim-tamam-0002"), { kod: 200, ileti: "tamam" });
+  assert.equal((await satir(h)).durum, "imzali", "rapor bugünkü yükleme yolundan imzalandı");
+  const son = (await sql<{ durum: string }>(A, "SELECT durum FROM imza_istegi WHERE id = $1", [hz2.istekId])).rows[0]!;
+  assert.equal(son.durum, "tamam");
 });

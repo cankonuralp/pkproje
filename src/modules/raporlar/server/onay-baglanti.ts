@@ -12,6 +12,8 @@ import { gorunenNo, type RaporDurumu } from "../sema.ts";
 import { bekleyenIstekler, istekKapat, revizeDurumu, type RevizeIstegi } from "./revize.ts";
 /* 566: Onaylar › Tüm raporlar sunucuda sayfalı (liste.ts) — Onaylar bu kapıdan okur */
 export { gorunenRaporOzeti, onayTumSayfasi } from "./liste.ts";
+/** 2026-11-05 (göç 0122): teknik yöneticinin probata sign durumu (onay ekranı) */
+export { signEkrani, type SignEkrani } from "./sign.ts";
 
 const RAPOR = tablo({ ad: "rapor", sutunlar: ["durum"] });
 const RAPOR_REVIZE = tablo({ ad: "rapor", sutunlar: ["durum", "revizyon"] });

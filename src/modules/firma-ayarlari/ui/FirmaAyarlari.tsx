@@ -64,7 +64,7 @@ function ozet(k: PanelAdi, v: Veri): { metin: string; durum?: string } {
     case "firma": return { metin: `${v.firma.deger.ad || v.firma.kayitAd} · ${v.firma.deger.nusha} nüsha · logo ${v.dosyalar.logo ? "var" : "yok"}`,
       durum: !v.firma.deger.adres.trim() || !v.firma.deger.eposta.trim() ? "Eksik" : undefined };
     case "kod": return { metin: `${v.kod}-AAYY-SIRA (ör. ${v.kod}-2610-0001)` };
-    case "imza": return { metin: `${IMZA_YONTEM[v.imza.deger.yontem][0]} · ${v.imza.deger.teknik ? "önce teknik yönetici imzalar" : IMZA_YONTEM[v.imza.deger.yontem][1]}` };
+    case "imza": return { metin: `${v.imza.sign ? "probata sign · e-imza" : IMZA_YONTEM[v.imza.deger.yontem][0]} · ${v.imza.deger.teknik ? "önce teknik yönetici imzalar" : v.imza.sign ? "imzalı rapor kendiliğinden döner" : IMZA_YONTEM[v.imza.deger.yontem][1]}` };
     case "belge": return { metin: `Ön bilgilendirme: ${v.dosyalar.on_bilgi ? "firma formatı" : "temel format"} · bordro: ${v.dosyalar.bordro_format ? "var" : "yok"}` };
     case "mesai": { const m = v.mesai.deger; return { metin: `${m.acik ? `Açık · ${m.normal_dk} + ${m.mesai_dk} dk / gün` : "Kapalı"} · başlangıç ${m.baslangic}` }; }
     case "esik": { const e = v.esik.deger; return { metin: `Kalibrasyon ${e.kalibrasyon} · tesis ${e.kontrolu_yaklasan_tesis} · eğitim ${e.egitim} gün` }; }
@@ -218,14 +218,30 @@ function ImzaYontemi({ v }: { v: Veri }) {
   const s = useKesim("imza", v.imza.deger, v.imza.surum);
   return (
     <Kart yaz={v.yaz} kirli={s.kirli} mesgul={s.mesgul} kaydet={s.kaydet}>
-      <div role="radiogroup" aria-label="İmza yöntemi" className={stil.secenekler}>
+      {/* 2026-11-05 (göç 0122, K1): probata yönetimi firmayı probata sign'a bağladıysa yöntem "probata sign · e-imza" — firma değiştiremez; mobil imza ileride */}
+      {v.imza.sign ? (
+        <div role="radiogroup" aria-label="İmza yöntemi" className={stil.secenekler}>
+          <label className={stil.secenek}>
+            <input type="radio" name="w-ay-imza" checked readOnly disabled />
+            <span><b>probata sign</b><span className={stil.altSatir}>imza probata içinden başlar; imzalı rapor kendiliğinden döner</span></span>
+          </label>
+          <label className={stil.secenek}>
+            <input type="radio" name="w-ay-imza-sign" checked readOnly disabled />
+            <span><b>E-imza</b><span className={stil.altSatir}>kart ve imza programı (Windows)</span></span>
+          </label>
+          <label className={stil.secenek}>
+            <input type="radio" name="w-ay-imza-sign" disabled />
+            <span><b>Mobil imza</b><span className={stil.altSatir}>yakında</span></span>
+          </label>
+        </div>
+      ) : <div role="radiogroup" aria-label="İmza yöntemi" className={stil.secenekler}>
         {(Object.keys(IMZA_YONTEM) as (keyof typeof IMZA_YONTEM)[]).map((k) => (
           <label key={k} className={stil.secenek}>
             <input type="radio" name="w-ay-imza" value={k} checked={s.d.yontem === k} disabled={!v.yaz} onChange={() => s.setD({ ...s.d, yontem: k })} />
             <span><b>{IMZA_YONTEM[k][0]}</b><span className={stil.altSatir}>{IMZA_YONTEM[k][1]}</span></span>
           </label>
         ))}
-      </div>
+      </div>}
       {/* 2026-10-17 (göç 0102): açıkken onaydaki raporu teknik yönetici imzalayarak onaylar, sonra muayene uzmanı imzalar; kapalıyken bugünkü akış */}
       <label className={stil.secenek}>
         <input type="checkbox" checked={s.d.teknik} disabled={!v.yaz} onChange={(e) => s.setD({ ...s.d, teknik: e.target.checked })} />

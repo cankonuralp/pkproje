@@ -17,6 +17,7 @@ import { alanOkuBirak, alanOkuHazirla, alanOkuKullanimYaz, alanOkuSonuc } from "
 import { raporOneriSil } from "../server/oneri";
 import type { AlanOkunan } from "../../../server/yz/alanlar";
 import { raporIndirmeListesi, raporSayfasi } from "../server/liste";
+import { firmaCalistirici, SignHatasi, signGonder, signHazirla, signIptalGonder, signIptalHazirla, signIptalYaz, signKaydet, signSonuclandir, signYenilenecek, type Asama } from "../server/sign";
 import type { RaporListeSatiri } from "../server/raporlar";
 import type { SunucuListe } from "../../../components/liste/suzgec";
 
@@ -245,4 +246,53 @@ export async function revizeIsteEylemi(id: string, girdi: unknown): Promise<Rapo
 }
 export async function revizeIstegiGeriCekEylemi(id: string, istekId: string, surum: number): Promise<RaporYaniti> {
   return islem((o) => oturumIslemi(o, (db) => revizeIstegiGeriCek(db, o, metin(id), metin(istekId), Number(surum))));
+}
+
+/* ── 2026-11-05 (göç 0122): probata sign ile imza — hazırla (işlem) → sign'a gönder (ağ, işlem dışında) → kaydet; durum yenile; iptal ── */
+const signAsama = (a: unknown): Asama => (a === "teknik" ? "teknik" : "uzman");
+/** İmzala (sign): bağlantı döner — ekran yeni sekmede açar. sign'a ulaşılamazsa neden şeritte; elle yol açık kalır */
+export async function signImzalaEylemi(id: string, asama: string): Promise<RaporYaniti & { baglanti?: string }> {
+  if (!(await ayniKoken())) return { genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };
+  const o = await istekOturumu();
+  if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
+  const h = await oturumIslemi(o, (db) => signHazirla(db, depo(), o, o.kiraci.firmaId, metin(id), signAsama(asama), belgePdf));
+  if (h.tur === "hata") return yanit(h.y);
+  if (h.tur === "acik") return { tamam: true, baglanti: h.baglanti };
+  try {
+    const s = await signGonder(h);
+    if (!(await oturumIslemi(o, (db) => signKaydet(db, o, o.kiraci.firmaId, h.istekId, s)))) return { genel: "Rapor bu arada değişti. Sayfayı yenileyip yeniden deneyin." };
+    return { tamam: true, baglanti: s.baglanti, bildirim: "probata sign'da imza ekranı açıldı; imzalayınca rapor kendiliğinden ilerler." };
+  } catch (e) {
+    if (e instanceof SignHatasi) return { genel: e.message };
+    throw e;
+  }
+}
+/** Durumu yenile: sign'a sorar; imzalandıysa imzalı PDF bugünkü yükleme yolundan geçer */
+export async function signYenileEylemi(id: string, asama: string): Promise<RaporYaniti> {
+  if (!(await ayniKoken())) return { genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };
+  const o = await istekOturumu();
+  if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
+  const istek = await oturumIslemi(o, (db) => signYenilenecek(db, o, metin(id), signAsama(asama)));
+  if (!istek) return { genel: "probata sign'da bekleyen imza isteği yok." };
+  try {
+    const s = await signSonuclandir(firmaCalistirici(o.kiraci), depo(), o.kiraci.firmaId, istek);
+    if (s.durum === "tamam") { yedekSonraCalistir(o.kiraci, 25_000); return { tamam: true, bildirim: s.bildirim }; }
+    if (s.durum === "bekliyor") return { tamam: true, bildirim: "probata sign'da imza henüz atılmadı." };
+    return { genel: s.neden };
+  } catch (e) {
+    if (e instanceof SignHatasi) return { genel: e.message };
+    throw e;
+  }
+}
+/** İptal et: sign'daki istek iptal; elle yol ve yeniden "İmzala" açık */
+export async function signIptalEylemi(id: string, asama: string): Promise<RaporYaniti> {
+  if (!(await ayniKoken())) return { genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };
+  const o = await istekOturumu();
+  if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
+  const h = await oturumIslemi(o, (db) => signIptalHazirla(db, o, metin(id), signAsama(asama)));
+  if (!h) return { genel: "İptal edilecek imza isteği yok." };
+  try { await signIptalGonder(h.anahtar, h.istek.sign_istek!); }
+  catch (e) { if (!(e instanceof SignHatasi) || e.kod !== 409) return { genel: e instanceof Error ? e.message : "probata sign'a ulaşılamadı." }; }
+  await oturumIslemi(o, (db) => signIptalYaz(db, o, h.istek.id));
+  return { tamam: true, bildirim: "İmza isteği iptal edildi." };
 }

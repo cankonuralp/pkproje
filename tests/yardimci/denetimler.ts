@@ -300,7 +300,10 @@ export const DIS_IZNI: Readonly<Record<string, string>> = {
   "src/server/yedek/baglan.ts": "hesabı bağlama / kesme: izin ekranı adresi, kod takası, izni bırakma (Firma ayarları › Yedek)",
   "src/server/yedek/hal.ts": "yedekten hâl: Drive'dan tam kopya ve aylık dosyaları indirir (doğrulama ve geri yükleme — 2026-11-04)",
   "src/server/yedek/dogrula.ts": "aylık doğrulama: Drive hata türlerini tanır, PDF örneğini indirir",
-  "src/server/yedek/geri-yukle.ts": "geri yükleme: dosyaları Drive'dan geri getirir"
+  "src/server/yedek/geri-yukle.ts": "geri yükleme: dosyaları Drive'dan geri getirir",
+  /* 2026-11-05 (göç 0122): probata sign — firmanın sign hesabına API müşterisi olarak (anahtar firmanın şifreli sırrında) */
+  "src/modules/raporlar/server/sign.ts": "rapor imzası probata sign ile: PDF'i gönderir, imza isteği açar, imzalı PDF'i alır, webhook'u doğrular",
+  "src/modules/yonetim/server/sign.ts": "Yönetim › firma › probata sign: anahtarı sign'a dener (yalnız yönetim oturumunda)"
 };
 const DIS_ORTAM = /\bPROBATA_(?:SUPABASE_YONETIM_(?:ANAHTARI|UC)|SUPABASE_ORGUT|SUPABASE_DEPO_UC|RESEND_(?:ANAHTARI|YONETIM_UC)|(?:GOOGLE|ONEDRIVE)_(?:ISTEMCI|SIR)|BULUT_(?:UC|DONUS))\b/;
 export function yonetimAnahtariEksikleri(metinler: readonly { ad: string; metin: string }[]): string[] {

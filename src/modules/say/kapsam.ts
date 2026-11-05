@@ -60,6 +60,8 @@ export const KAPSAM: Readonly<Record<string, Readonly<Record<string, string>>>> 
     alanOkuEylemi: "a:fotograflari_oku", fotoSilEylemi: "i:rapor_foto_kaldir", raporKopyalaEylemi: "i:rapor_kopyala", raporFormatGuncelleEylemi: "i:rapor_format_guncelle",
     imzaHazirlaEylemi: "d:e-imza (imza PDF'i hazırlama)", teknikImzaHazirlaEylemi: "d:e-imza (imza PDF'i hazırlama)", imzaliYukleEylemi: "i:rapor_imzali_yukle",
     imzaliEslestirYukleEylemi: "i:rapor_imzali_yukle", teknikImzaliYukleEylemi: "i:rapor_imzali_yukle", teknikImzaliEslestirYukleEylemi: "i:rapor_imzali_yukle",
+    /* 2026-11-05 (göç 0122): probata sign ile imza — e-imzanın kendisi (karar 6) */
+    signImzalaEylemi: "d:e-imza (imza PDF'i hazırlama)", signYenileEylemi: "d:e-imza (imza PDF'i hazırlama)", signIptalEylemi: "d:e-imza (imza PDF'i hazırlama)",
     revizeIsteEylemi: "i:revize_iste", revizeIstegiGeriCekEylemi: "i:revize_istegi_geri_cek" },
   "say-chat/ui/eylemler.ts": { chatAyarKaydetEylemi: "i:say_chat_ayar_kaydet", chatEtiketOkuEylemi: "e:S.A.Y Chat kayıtları malzeme olarak (K4)",
     chatRaporYazEylemi: "i:say_chat_rapor_yaz", chatOkutEylemi: "e:S.A.Y Chat kayıtları malzeme olarak (K4)" },
@@ -77,6 +79,6 @@ export const KAPSAM: Readonly<Record<string, Readonly<Record<string, string>>>> 
     teklifSayfasiEylemi: "i:teklif_ara", teklifDoldurEylemi: "i:teklif_belge_doldur" },
   "yonetim/ui/eylemler.ts": Object.fromEntries(["firmaAcEylemi", "kurulumIlerletEylemi", "kurulumSurdurEylemi", "kurulumBastanEylemi", "firmaDondurEylemi", "firmaEtkinlestirEylemi",
     "geciciParolaVerEylemi", "yzAnahtariKaydetEylemi", "yzAnahtariKaldirEylemi", "yzAyarKaydetEylemi", "gonderimAlaniEkleEylemi", "gonderimDogrulaEylemi", "argeKaydiEylemi",
-    "yedekDogrulaEylemi", "yedekDenemeEylemi", "yedekGeriYukleEylemi", "yedekGeriDonEylemi"].map((a) => [a, "d:Yönetim"])),
+    "yedekDogrulaEylemi", "yedekDenemeEylemi", "yedekGeriYukleEylemi", "yedekGeriDonEylemi", "signKaydetEylemi", "signDeneEylemi", "signKaldirEylemi"].map((a) => [a, "d:Yönetim"])),
   "zimmetler/ui/eylemler.ts": { teslimEtEylemi: "i:zimmet_teslim", demirbasEkleEylemi: "i:demirbas_ekle", demirbasSilEylemi: "i:demirbas_sil", demirbasPasifEylemi: "i:demirbas_pasif" },
 };

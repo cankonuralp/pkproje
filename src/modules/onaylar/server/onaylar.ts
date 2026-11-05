@@ -20,8 +20,7 @@ import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import {
   bekleyenRevizeIstegi, gorunenRaporOzeti, imzaHazirOlanlar, onayTumSayfasi, raporDurumYaz, raporOzetleri, raporRevizeYaz, revizeIstegiReddet as istekReddet, revizeIstekleri,
   teknikHazirOlanlar,
-  type OnayGecisi, type RaporOzeti,
-} from "../../raporlar/server/onay-baglanti.ts";
+  type OnayGecisi, type RaporOzeti, signEkrani, type SignEkrani } from "../../raporlar/server/onay-baglanti.ts";
 import type { SunucuListe } from "../../../components/liste/suzgec.ts";
 import { gozdenGecirme, teknikImzaAcik, type GozdenGecirmeMaddesi } from "../../raporlar/server/raporlar.ts";
 import { gorunenNo, RAPOR_DURUM, RevizeGirdisi, RevizeRedGirdisi } from "../../raporlar/sema.ts";
@@ -177,6 +176,8 @@ export interface OnayEkrani {
   r: OnaySatiri; ozet: GozdenGecirmeMaddesi[]; sira: number | null; kuyrukBoyu: number;
   /** tamamlanan raporda yazanın bekleyen revize isteği (318) */
   istek: RevizeIstekBilgisi | null;
+  /** 2026-11-05 (göç 0122): firmada probata sign açıksa teknik yöneticinin sign durumu (imzalayabilene) */
+  sign: SignEkrani | null;
 }
 /** onay ekranı: gözden geçirme özeti + sıra; göremeyene null */
 export async function onayEkrani(db: Sorgulayici, kim: Kisi, id: string): Promise<OnayEkrani | null> {
@@ -187,7 +188,9 @@ export async function onayEkrani(db: Sorgulayici, kim: Kisi, id: string): Promis
   const i = q.findIndex((x) => x.id === id);
   const b = r.durum === "imzali" ? await bekleyenRevizeIstegi(db, r.id, r.revizyon) : null;
   const istek = b ? { id: b.id, surum: b.surum, kim: (await hesapAdlari(db, [b.hesapId])).get(b.hesapId ?? "") ?? "—", zaman: b.zaman, gerekce: b.gerekce } : null;
-  return { r: satir(kim, r, Date.now(), await teknikImzaAcik(db)), ozet: (await gozdenGecirme(db, id)) ?? [], sira: i >= 0 ? i + 1 : null, kuyrukBoyu: q.length, istek };
+  const s = satir(kim, r, Date.now(), await teknikImzaAcik(db));
+  const sign = s.izin.imzala ? await signEkrani(db, r.id, "teknik") : null;
+  return { r: s, ozet: (await gozdenGecirme(db, id)) ?? [], sira: i >= 0 ? i + 1 : null, kuyrukBoyu: q.length, istek, sign: sign?.acik ? sign : null };
 }
 
 /* ── EYLEMLER ────────────────────────────────────────────────────────────────────────────────────────────────── */

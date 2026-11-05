@@ -650,6 +650,10 @@ pkproje/
   src/server/islem/         TEK SEFERLİK İŞLEM (392; 09-D2, çevrimdışı kuyruk): islem.ts tekSeferlik (kimliğe danışma kilidi, iş + sonuç aynı veritabanı
                             işleminde; göç 0076 islem) · yazan.ts (işi yazanın etiketi — kimlik tarayıcıya gitmez) · uç src/app/api/islem (köken, oturum,
                             yazan kapıları) · iş türleri modülde: raporlar/server/islem-baglanti.ts
+  PROBATA SIGN BAĞLANTISI   (2026-11-05, göç 0122): Yönetim › firma › probata sign (yonetim/server/sign.ts, ui/SignBolumu.tsx) — API anahtarı + webhook sırrı
+                            firma_sir'de (K1 uygulama yazamaz); ikisi varsa İmza yöntemi "probata sign · e-imza" · istemci src/server/dis/sign.ts (API v1, webhook
+                            HMAC) · rapor imzası raporlar/server/sign.ts (hazırla → gönder → kaydet; sonuçlandır; webhook) + ui/SignImza.tsx (rapor ekranı uzman,
+                            onay ekranı teknik) · uç src/app/api/sign/bildirim · kilit sign-saf, onaylar (PG), bozan sign
   src/server/imza/          İMZALI PDF DENETİMİ — YALNIZ OKUMA / DENETİM (2026-10-17, IMZA-SERVISI.md; saf, saldırganın girdisinde sınırlı): der.ts ·
                             sertifika.ts · cms.ts (imzalı sertifika bağı, damga sunucusu denetimi, SHA-1 yok) · pdf-ek.ts nesne okuyucu (xref zinciri, nesne
                             akışı, onarım) · iptal.ts OCSP / iptal listesi ÇÖZÜMLEMESİ (ağ yok) · pdf-imzalar.ts ÇÖZÜMLEYİCİ (beş katman, DSS yalnız kataloğun

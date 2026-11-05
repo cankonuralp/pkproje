@@ -8,7 +8,8 @@ import { aesCoz, aesSifrele } from "./aes.ts";
 
 const AD = /^[a-z_]{1,40}$/;
 /* 536: eposta_anahtari — firmanın Resend API anahtarı (Firma ayarları › E-posta) */
-export const SIR_ADLARI = ["yapay_zeka_anahtari", "bulut_erisimi", "imza_saglayici", "eposta_anahtari"] as const;
+/* 2026-11-05 (göç 0122): probata sign — API anahtarı ve webhook sırrı (yalnız Yönetim yazar) */
+export const SIR_ADLARI = ["yapay_zeka_anahtari", "bulut_erisimi", "imza_saglayici", "eposta_anahtari", "sign_anahtari", "sign_webhook_sirri"] as const;
 export type SirAdi = (typeof SIR_ADLARI)[number];
 
 /** ana anahtar: ortamdan; yoksa ya da bozuksa sır yazılamaz / okunamaz (sessizce düz metne düşmez) */

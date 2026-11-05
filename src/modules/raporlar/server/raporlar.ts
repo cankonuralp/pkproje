@@ -50,6 +50,7 @@ import { hesapAdlari } from "../../../server/kimlik/hesap.ts";
 import { TANIMLAR } from "../../../tanim/tanimlar.ts";
 import { ayarOku, firmaBelgeKunyesi } from "../../../server/ayar/ayar.ts";
 import { kayitDosyasi } from "../../../server/dosya/dosya.ts";
+import { signEkrani, type SignEkrani } from "./sign.ts";
 import { createHash } from "node:crypto";
 import { cihazKalibrasyonlari } from "../../olcum-cihazlari/server/cihazlar.ts";
 import { personelBelgeBilgisi } from "../../personel/server/personel.ts";
@@ -342,7 +343,8 @@ export interface SahaRaporu {
   /** tamamlanan raporda yazanın revize isteği (318; maket raporlar.html 192): bekleyen istek (geri çekilir) · son ret · yeni istek açılabilir mi */
   revize: { bekleyen: { id: string; zaman: string; gerekce: string; surum: number } | null; red: { kim: string; zaman: string; gerekce: string | null } | null; iste: boolean } | null;
   /** son imza (317): yazanın onaylanmış raporunda imzasız kesin PDF (hazırlandıysa) · tamamlanan raporda imzalı PDF */
-  imza: { hazir: boolean; pdf: string | null } | null;
+  /** 2026-11-05 (göç 0122): sign — firmada probata sign açık mı ve bekleyen isteğin sign durumu */
+  imza: { hazir: boolean; pdf: string | null; sign: SignEkrani } | null;
   /** tamamlanan raporun imzalı sürümü; dosya null = PDF silindi (silindi: o an) — saklama süresi doldu (387) ya da 1 yıldan eski rapor, PDF firmanın
       Drive yedeğinde (driveda — göç 0118) */
   imzali: { dosya: string | null; zaman: string; no: string; silindi: string | null; driveda: boolean } | null;
@@ -459,7 +461,7 @@ export async function sahaRaporu(db: Sorgulayici, kim: Kisi, id: string): Promis
     cihazlar: satirlar, secilebilir, fotolar: r.fotolar,
     kopyaKaynak, takip, guncelFormat: yeni && yeni.sira > format.sira ? yeni.sira : null, mesaiDolu, geri, revize,
     imza: r.durum === "onaylandi" && e.sahip && canDoEylem(kim, "rapor_son_imza", { sahip: r.hesap_id })
-      ? { hazir: true, pdf: (await bekleyenIstek(db, r.id, r.revizyon))?.pdf_dosya ?? null } : null,
+      ? { hazir: true, pdf: (await bekleyenIstek(db, r.id, r.revizyon))?.pdf_dosya ?? null, sign: await signEkrani(db, r.id, "uzman") } : null,
     imzali: r.durum === "imzali" ? await imzaliSurum(db, r.id, r.revizyon) : null,
     izin: { duzenle, sil: r.durum === "taslak" && r.revizyon === 0 && canDoEylem(kim, "rapor_sil", { sahip: r.hesap_id, durum: "Yeni", brans: tur.brans }), kopyala, kopyaEngel },
     yz: duzenle ? await yzHazirMi(db) : false,

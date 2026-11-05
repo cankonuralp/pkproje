@@ -15,6 +15,7 @@ import { argeKaydiYonet, firmaDurumuYonet, geciciParolaYonet, yzAnahtariYonet, y
 import { kurulumBaslat, kurulumBastan, kurulumGorunumu, kurulumIlerlet, kurulumSurdur, type KurulumGorunumu } from "../server/kurulum";
 import { firma, firmaAc, type YonetimSonucu } from "../server/yonetim";
 import { yedekDenemeYonet, yedekDogrulaYonet, yedekGeriDonYonet, yedekGeriYukleYonet } from "../server/yedek";
+import { signBaglantisiYonet, signDene } from "../server/sign";
 
 export interface YonetimYaniti {
   tamam?: boolean; id?: string; parola?: string; eposta?: string; ad?: string; alt?: string; son4?: string | null; hatalar?: Record<string, string>; genel?: string;
@@ -160,4 +161,21 @@ export async function yedekGeriYukleEylemi(id: string, kaynak: string, onay: str
 }
 export async function yedekGeriDonEylemi(id: string, geriYukleme: string, onay: string) {
   return yedekIslem(id, (o, kisaAd) => yedekGeriDonYonet(yazi(id), { geriYukleme: yazi(geriYukleme), onay: yazi(onay), kisaAd, kim: yoneten(o) }));
+}
+
+/** 2026-11-05 (göç 0122): probata sign — form: anahtar (psk_…), sir (sign'ın webhook sırrı). Önce sign'a denenir; düz değerler yalnız bu istekte,
+    sunucuda şifrelenir. Kaydedilince firma sign ile imzalar */
+export async function signKaydetEylemi(id: string, form: FormData): Promise<YonetimYaniti> {
+  return yenileyerek(await islem((o) => signBaglantisiYonet(yonetimCalistirici(o), yazi(id), { anahtar: yazi(form.get("anahtar")), sir: yazi(form.get("sir")) }, anaAnahtar())));
+}
+/** yalnız dener (kayıt yok): form: anahtar */
+export async function signDeneEylemi(id: string, form: FormData): Promise<YonetimYaniti> {
+  return islem(async () => {
+    if (!/^[0-9a-f-]{36}$/.test(yazi(id))) return { durum: "yok" } as const;
+    const n = await signDene(yazi(form.get("anahtar")).trim());
+    return n ? { durum: "gecersiz" as const, hatalar: { anahtar: n } } : { durum: "tamam" as const };
+  });
+}
+export async function signKaldirEylemi(id: string): Promise<YonetimYaniti> {
+  return yenileyerek(await islem((o) => signBaglantisiYonet(yonetimCalistirici(o), yazi(id), null, anaAnahtar())));
 }

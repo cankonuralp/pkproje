@@ -24,6 +24,7 @@ import { durumDegistirEylemi, geriGonderEylemi, onayGeriAlEylemi, onaylaEylemi, 
 import { zamanYaz } from "./OnayListesi";
 import { RevizePenceresi, type RevizeTuru } from "./RevizePenceresi";
 import { TopluImzaPenceresi } from "./TopluImza";
+import { SignImzaSeridi } from "../../raporlar/ui/SignImza";
 import stil from "./onaylar.module.css";
 
 const ID = { gerekce: "onay-gerekce", hedef: "onay-hedef" } as const;
@@ -60,7 +61,9 @@ export function OnayEkrani({ v, belge }: { v: Veri; belge: ReactNode }) {
     {r.izin.geriGonder && <Tus tur="ikincil" ikon="undo-2" disabled={bekliyor} onClick={() => setPen({ tur: "geri", hedef: null, gerekce: "", hatalar: {} })}>Geri gönder</Tus>}
     {r.izin.onayGeriAl && <Tus tur="ikincil" ikon="undo-2" disabled={bekliyor} onClick={geriAl}>Onayı geri al</Tus>}
     {r.izin.onayla && <Tus ikon="check" disabled={bekliyor} onClick={onayla}>Onayla</Tus>}
-    {r.izin.imzala && <Tus ikon="file-signature" disabled={bekliyor} onClick={() => { setGenel(null); setImza(true); }}>İmzala ve onayla</Tus>}
+    {/* 2026-11-05 (göç 0122, K2): firmada probata sign açıkken imza şeritten; bugünkü PDF yolu yedek */}
+    {r.izin.imzala && <Tus tur={v.sign ? "ikincil" : "birincil"} ikon="file-signature" disabled={bekliyor} onClick={() => { setGenel(null); setImza(true); }}>
+      {v.sign ? "PDF ile imzala ve onayla" : "İmzala ve onayla"}</Tus>}
     {r.izin.revize && v.istek && <Tus tur="ikincil" disabled={bekliyor} onClick={() => setRev("red")}>İsteği reddet</Tus>}
     {r.izin.revize && <Tus ikon="file-pen-line" disabled={bekliyor} onClick={() => setRev("revize")}>Revizeye gönder</Tus>}
   </>;
@@ -71,6 +74,12 @@ export function OnayEkrani({ v, belge }: { v: Veri; belge: ReactNode }) {
       <NesneBasi baslik={r.no} rozet={<Rozet tur={rozet}>{durumAd}</Rozet>} altIkon="wrench"
         alt={<><Kod>{r.ekipmanKod}</Kod> · {r.turAd} · {r.tesis} · {r.denetci}{v.sira ? ` · ${v.sira} / ${v.kuyrukBoyu}` : ""}</>} tuslar={tuslar} />
       <AsamaCizgisi durum={r.durum} />
+      {v.sign && r.izin.imzala && (
+        <SeritKap>
+          <SignImzaSeridi raporId={r.id} asama="teknik" sign={v.sign} baslik="Teknik yönetici imzası" mesgul={bekliyor} baslat={baslat}
+            yenile={() => router.refresh()} hata={setGenel} />
+        </SeritKap>
+      )}
       {(genel || r.durum === "taslak" || v.istek) && (
         <SeritKap>
           {genel && <Serit tur="hata" ikon="circle-alert">{genel}</Serit>}
