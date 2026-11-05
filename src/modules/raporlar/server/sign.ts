@@ -18,7 +18,7 @@ import { kiraciHavuzu, type KiraciYeri } from "../../../server/db/firma-havuzu.t
 import { guncelle, tablo } from "../../../server/db/yazici.ts";
 import { kayitDosyasi } from "../../../server/dosya/dosya.ts";
 import type { Depo } from "../../../server/dosya/depo.ts";
-import { SignHatasi, signIstemcisi, webhookDogrula, type SignIstemcisi } from "../../../server/dis/sign.ts";
+import { SIGN_TOPLU_EN_COK, SignHatasi, signIstemcisi, signTopluAdresi, webhookDogrula, type SignIstemcisi } from "../../../server/dis/sign.ts";
 import type { BelgeVerisi } from "../../../belge/veri.ts";
 import type { Kisi } from "../../planlar/server/planlar.ts";
 import { imzaHazirla, imzaliYukle, PDF_MODULU, teknikImzaHazirla, teknikImzaliYukle, type RaporYazma } from "./raporlar.ts";
@@ -58,7 +58,8 @@ export async function signEkrani(db: Sorgulayici, raporId: string, asama: Asama)
 
 /* ── 1 · hazırla (işlem içinde) ── */
 export type SignHazirlik =
-  | { tur: "acik"; baglanti: string }
+  /** açık istek: bağlantısı (üyeye bağlı toplu istekte null — sign'ın toplu sayfası) ve sign'daki belge */
+  | { tur: "acik"; baglanti: string | null; belge: string }
   | { tur: "gonder"; istekId: string; istekSurum: number; anahtar: string; pdf: Uint8Array; ad: string; raporNo: string; imzaci: { ad: string; eposta: string };
       oncekiBelge: string | null }
   | { tur: "hata"; y: RaporYazma };
@@ -69,7 +70,9 @@ export async function signHazirla(db: Sorgulayici, depo: Depo, kim: Kisi, firmaI
   if (h.durum !== "tamam") return { tur: "hata", y: h };
   const i = await bekleyen(db, id, asama);
   if (!i) return { tur: "hata", y: { durum: "cakisma" } };
-  if (i.sign_istek && i.sign_baglanti && (i.sign_durum ?? "bekliyor") === "bekliyor") return { tur: "acik", baglanti: coz(i.sign_baglanti, firmaId, BAGLANTI_AD) };
+  if (i.sign_istek && i.sign_belge && (i.sign_durum ?? "bekliyor") === "bekliyor") {
+    return { tur: "acik", baglanti: i.sign_baglanti ? coz(i.sign_baglanti, firmaId, BAGLANTI_AD) : null, belge: i.sign_belge };
+  }
   const anahtar = await sirKullan(db, "sign_anahtari");
   if (!anahtar) return { tur: "hata", y: { durum: "red", neden: "Bu firmada probata sign bağlı değil." } };
   const d = await kayitDosyasi(db, PDF_MODULU, id, i.pdf_dosya);
@@ -89,8 +92,9 @@ const sonTarih = (simdi: Date): string => {
   const t = new Date(simdi.getTime() + SIGN_GUN * 86_400_000 + 3 * 3_600_000);
   return `${t.toISOString().slice(0, 10)}T23:59:00+03:00`;
 };
-export async function signGonder(h: Extract<SignHazirlik, { tur: "gonder" }>, istemci: SignIstemcisi = signIstemcisi(h.anahtar), simdi = new Date()):
-  Promise<{ belge: string; istek: string; baglanti: string }> {
+/** toplu: istek imzacının sign üyeliğine bağlanır (her_zaman_baglanti false — sign'ın toplu imzası, PIN bir kez); üye değilse bağlantı gelir */
+export async function signGonder(h: Extract<SignHazirlik, { tur: "gonder" }>, istemci: SignIstemcisi = signIstemcisi(h.anahtar), simdi = new Date(),
+  secenek: { toplu?: boolean } = {}): Promise<{ belge: string; istek: string; baglanti: string | null }> {
   const yukle = async () => {
     try { return await istemci.belgeYukle(h.pdf, { ad: h.ad, raporNo: h.raporNo }); }
     catch (e) {
@@ -109,8 +113,10 @@ export async function signGonder(h: Extract<SignHazirlik, { tur: "gonder" }>, is
     if (a.imza_istegi) b = await istemci.belgeYukle(h.pdf, { ad: h.ad, raporNo: null });
   }
   const i = await istemci.imzaIstegiAc(b.id, { ad: h.imzaci.ad, eposta: h.imzaci.eposta, sonTarih: sonTarih(simdi),
-    mesaj: `probata · ${h.raporNo}` });
-  const baglanti = i.imzacilar[0]?.baglanti;
+    mesaj: `probata · ${h.raporNo}`, herZamanBaglanti: !secenek.toplu });
+  const baglanti = i.imzacilar[0]?.baglanti ?? null;
+  /* toplu istek üyeye bağlandıysa bağlantı yok — üye sign'ın toplu sayfasında imzalar */
+  if (secenek.toplu && !baglanti && i.imzacilar[0]?.uye) return { belge: b.id, istek: i.id, baglanti: null };
   if (!baglanti || !/^https:\/\/[^\s]+$/.test(baglanti) && !/^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?\//.test(baglanti)) {
     throw new SignHatasi(502, "baglanti", "probata sign imza bağlantısı vermedi.");
   }
@@ -118,10 +124,10 @@ export async function signGonder(h: Extract<SignHazirlik, { tur: "gonder" }>, is
 }
 
 /* ── 3 · kaydet (işlem içinde) ── */
-export async function signKaydet(db: Sorgulayici, kim: Kisi, firmaId: string, istekId: string, s: { belge: string; istek: string; baglanti: string }): Promise<boolean> {
+export async function signKaydet(db: Sorgulayici, kim: Kisi, firmaId: string, istekId: string, s: { belge: string; istek: string; baglanti: string | null }): Promise<boolean> {
   const i = (await db.sorgu<{ surum: number }>("SELECT surum FROM imza_istegi WHERE id = $1 AND durum = 'bekliyor'", [istekId])).rows[0];
   if (!i) return false;
-  const g = await guncelle(db, SIGN_ISTEK, istekId, i.surum, { sign_belge: s.belge, sign_istek: s.istek, sign_baglanti: sifrele(s.baglanti, firmaId, BAGLANTI_AD),
+  const g = await guncelle(db, SIGN_ISTEK, istekId, i.surum, { sign_belge: s.belge, sign_istek: s.istek, sign_baglanti: s.baglanti ? sifrele(s.baglanti, firmaId, BAGLANTI_AD) : null,
     sign_durum: "bekliyor", sign_neden: null }, { kim: kim.ad, ne: "rapor.sign_istek" });
   return g.durum === "tamam";
 }
@@ -235,7 +241,7 @@ export async function signYenilenecek(db: Sorgulayici, kim: Kisi, raporId: strin
   const i = await bekleyen(db, raporId, asama);
   return i?.sign_istek && i.hesap_id === kim.id ? i.id : null;
 }
-export { SignHatasi };
+export { SIGN_TOPLU_EN_COK, SignHatasi, signTopluAdresi };
 /** sign'daki isteği iptal (işlem dışında) */
 export const signIptalGonder = (anahtar: string, istek: string) => signIstemcisi(anahtar).istekIptal(istek);
 /** imzalı PDF özeti (test ve iz için) */

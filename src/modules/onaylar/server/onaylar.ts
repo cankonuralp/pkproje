@@ -20,7 +20,7 @@ import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import {
   bekleyenRevizeIstegi, gorunenRaporOzeti, imzaHazirOlanlar, onayTumSayfasi, raporDurumYaz, raporOzetleri, raporRevizeYaz, revizeIstegiReddet as istekReddet, revizeIstekleri,
   teknikHazirOlanlar,
-  type OnayGecisi, type RaporOzeti, signEkrani, type SignEkrani } from "../../raporlar/server/onay-baglanti.ts";
+  type OnayGecisi, type RaporOzeti, signAcik, signEkrani, type SignEkrani } from "../../raporlar/server/onay-baglanti.ts";
 import type { SunucuListe } from "../../../components/liste/suzgec.ts";
 import { gozdenGecirme, teknikImzaAcik, type GozdenGecirmeMaddesi } from "../../raporlar/server/raporlar.ts";
 import { gorunenNo, RAPOR_DURUM, RevizeGirdisi, RevizeRedGirdisi } from "../../raporlar/sema.ts";
@@ -97,6 +97,8 @@ export interface OnayListeleri {
   imzaHazir: string[];
   /** 2026-10-17 (göç 0102): teknik yönetici imzası açık mı · kuyruktan kişinin imzaya hazırladığı (teknik isteği bekleyen) raporlar */
   teknikImza: boolean; teknikHazir: string[];
+  /** 2026-11-05 (göç 0122): firmada probata sign açık — toplu imza sign'ın toplu sayfasında (PIN bir kez) */
+  sign: boolean;
   /** görebildiği tamamlanan raporlardaki bekleyen revize istekleri (318; yalnız yönetici), en yeni üstte */
   istekler: RevizeIstekSatiri[];
   /** imzasını bekleyen diğer belgeler (333; bordro, eğitim / zimmet formu, araç tutanağı — kişinin kendi) */
@@ -135,7 +137,7 @@ export async function onayListeleri(db: Sorgulayici, kim: Kisi): Promise<OnayLis
     branslar: ozet.branslar,
     imzaBekleyen,
     imzaHazir: await imzaHazirOlanlar(db, imzaBekleyen.map((r) => r.id)),
-    teknikImza: teknik,
+    teknikImza: teknik, sign: await signAcik(db),
     teknikHazir: teknik ? await teknikHazirOlanlar(db, kuyruk.filter((r) => r.izin.imzala).map((r) => r.id), kim.id) : [],
     istekler,
     belgeBekleyen: await bekleyenBelgeSayisi(db, kim),

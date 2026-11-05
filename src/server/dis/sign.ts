@@ -12,6 +12,12 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 
 export const SIGN_VARSAYILAN = "https://sign.probata.com.tr";
 const ucAdresi = (): string => (process.env.PROBATA_SIGN_UC || SIGN_VARSAYILAN).replace(/\/+$/, "");
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+/** sign'ın toplu imzasında en çok belge (sign kurallar.ts TOPLU_EN_COK — 2026-11-05: 200) */
+export const SIGN_TOPLU_EN_COK = 200;
+/** sign'ın toplu imza sayfası (üye oturumuyla, PIN bir kez — sign /toplu-imzala?b=<id>,<id>) */
+export const signTopluAdresi = (belgeler: readonly string[]): string =>
+  `${ucAdresi()}/toplu-imzala?b=${[...new Set(belgeler.filter((b) => UUID.test(b)))].slice(0, SIGN_TOPLU_EN_COK).join(",")}`;
 /** sign'ın tek istek gövdesi sınırının altı (parçalı yüklemeye geçiş) */
 export const TEK_YUKLEME_EN_COK = 3_800_000;
 const SURE_MS = 20_000;
@@ -25,7 +31,8 @@ export class SignHatasi extends Error {
 }
 
 export interface SignBelgesi { id: string; durum: string; rapor_no: string | null; mevcut?: boolean }
-export interface SignImzaci { id: string; durum: string; baglanti?: string | null; red_nedeni?: string | null }
+/** uye: imzacının e-postası sign hesabının üyesi ve istek üyeye bağlandı (bağlantı yok — üye sign'da imzalar) */
+export interface SignImzaci { id: string; durum: string; baglanti?: string | null; red_nedeni?: string | null; uye?: boolean }
 export interface SignIstek { id: string; durum: string; son_tarih: string | null; imzacilar: SignImzaci[] }
 export interface SignBelgeAyrintisi extends SignBelgesi { imza_istegi: SignIstek | null }
 
@@ -33,13 +40,13 @@ type Getir = typeof fetch;
 export interface SignIstemcisi {
   dene(): Promise<void>;
   belgeYukle(pdf: Uint8Array, p: { ad: string; raporNo: string | null; revizyon?: boolean }): Promise<SignBelgesi>;
-  imzaIstegiAc(belgeId: string, p: { ad: string; eposta: string; sonTarih: string; mesaj?: string }): Promise<SignIstek>;
+  /** herZamanBaglanti (varsayılan true): false — imzacı sign hesabının üyesiyse istek üyeye bağlanır, bağlantı gelmez (sign'ın toplu imzası) */
+  imzaIstegiAc(belgeId: string, p: { ad: string; eposta: string; sonTarih: string; mesaj?: string; herZamanBaglanti?: boolean }): Promise<SignIstek>;
   belgeGetir(belgeId: string): Promise<SignBelgeAyrintisi>;
   pdfAl(belgeId: string): Promise<Uint8Array>;
   istekIptal(istekId: string): Promise<void>;
 }
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const kimlik = (x: unknown, ne: string): string => {
   if (typeof x !== "string" || !UUID.test(x)) throw new SignHatasi(502, "bicim", `sign'ın cevabında ${ne} kimliği yok.`);
   return x;
@@ -77,7 +84,7 @@ export function signIstemcisi(anahtar: string, getir: Getir = fetch): SignIstemc
   const istekOku = (j: Record<string, unknown>): SignIstek => ({
     id: kimlik(j.id, "istek"), durum: String(j.durum ?? ""), son_tarih: typeof j.son_tarih === "string" ? j.son_tarih : null,
     imzacilar: (Array.isArray(j.imzacilar) ? j.imzacilar : []).map((x: Record<string, unknown>) => ({ id: String(x.id ?? ""), durum: String(x.durum ?? ""),
-      baglanti: typeof x.baglanti === "string" ? x.baglanti : null, red_nedeni: typeof x.red_nedeni === "string" ? x.red_nedeni : null })),
+      baglanti: typeof x.baglanti === "string" ? x.baglanti : null, red_nedeni: typeof x.red_nedeni === "string" ? x.red_nedeni : null, uye: x.uye === true })),
   });
   return {
     async dene() { await istek("GET", "/belgeler?boy=1"); },
@@ -96,7 +103,7 @@ export function signIstemcisi(anahtar: string, getir: Getir = fetch): SignIstemc
       return belge(await json(await istek("POST", `/yuklemeler/${id}/belge?${sorgu(p)}`)));
     },
     async imzaIstegiAc(belgeId, p) {
-      const govde = { imzacilar: [{ ad: p.ad.slice(0, 200), eposta: p.eposta, yontem: "usb" }], son_tarih: p.sonTarih, her_zaman_baglanti: true,
+      const govde = { imzacilar: [{ ad: p.ad.slice(0, 200), eposta: p.eposta, yontem: "usb" }], son_tarih: p.sonTarih, her_zaman_baglanti: p.herZamanBaglanti ?? true,
         ...(p.mesaj ? { mesaj: p.mesaj.slice(0, 2000) } : {}) };
       return istekOku(await json(await istek("POST", `/belgeler/${kimlik(belgeId, "belge")}/imza-istekleri`, JSON.stringify(govde), "application/json")));
     },

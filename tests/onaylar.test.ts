@@ -1115,7 +1115,7 @@ test("probata sign: Yönetim sırları yokken kapalı; uygulama yazamaz; gönder
   const g = await signGonder(hz, taklit);
   assert.deepEqual(g, { belge: BELGE, istek: ISTEK, baglanti: BAG });
   assert.equal(await a(FA.den, (db) => signKaydet(db, FA.den, A, hz.istekId, g)), true);
-  assert.deepEqual(await a(FA.den, (db) => signHazirla(db, depo, FA.den, A, h, "uzman", uret)), { tur: "acik", baglanti: BAG }, "açık istek: aynı bağlantı (şifreli saklandı)");
+  assert.deepEqual(await a(FA.den, (db) => signHazirla(db, depo, FA.den, A, h, "uzman", uret)), { tur: "acik", baglanti: BAG, belge: BELGE }, "açık istek: aynı bağlantı (şifreli saklandı)");
   assert.equal(yuklenen, 1);
   const sakli = (await sql<{ sign_baglanti: string }>(A, "SELECT sign_baglanti FROM imza_istegi WHERE id = $1", [hz.istekId])).rows[0]!.sign_baglanti;
   assert.ok(!sakli.includes("belirtec"), "bağlantı düz yazılmaz");

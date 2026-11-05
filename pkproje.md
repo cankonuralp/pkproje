@@ -2535,7 +2535,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   probata imzasız PDF'i sign API'sine (rapor no ile) yükler, uzman adına imza isteği (usb, 7 gün, her_zaman_baglanti) açar, sign ekranı yeni sekmede →
   webhook (HMAC, 5 dk, tekrar bir kez) ya da "Durumu yenile" → imzalı PDF bugünkü yükleme denetiminden (isteğin sahibinin yetkisiyle) → rapor ilerler;
   reddedildi / iptal / süre → nedeni şeritte, "İmzala" yeniden · teknik yönetici aynı şerit onay ekranında · src/server/dis/sign.ts, raporlar/server/sign.ts,
-  api/sign/bildirim, yonetim/server/sign.ts + ui/SignBolumu.tsx. Toplu imza ve Diğer belgeler sign ile değil (ikinci adım).
+  api/sign/bildirim, yonetim/server/sign.ts + ui/SignBolumu.tsx. TOPLU İMZA (reisim: "tabiki asıl önemli olan olay toplu imza", "toplu imzada sınırı 200 e
+  çıkardık"; sign'a dokunulmadan): Onaylar › İmzamı bekleyen / teknik kuyrukta "probata sign ile imzala" — seçilenler (en çok 200) 10'ar 10'ar sign'a
+  gönderilir, istek imzacının sign ÜYELİĞİNE bağlanır (her_zaman_baglanti false), sign'ın toplu imza sayfası (/toplu-imzala?b=…) hepsiyle açılır, PIN bir
+  kez; her rapor bildirimle ilerler; üye olmayan rapor rapor İmzala. Diğer belgeler sign ile değil.
 - 2026-11-05 (S.A.Y KENDİ İŞİNDEN ÖĞRENME — göç 0121; reisim: "müşterilerin yaptırdığı işlere göre sürekli kendini eğitme", "geri planda çalışsın ve kullanıcının
   tokeninden yemesin", sunum 7UcQ3N2BJRQkLHq4Whad16 "önerilerinin yeni hali uygundur"): iş bitince özet (say_is: istek, adımlar, S.A.Y'ın yazdığı raporlar ve
   cevaplarının parmak izi, düzeltme sözü / geri al) · gece say_ogren_veri puanlar (onaydan geri geldi / S.A.Y'ın bıraktığı cevap elle değişti / sonraki istek

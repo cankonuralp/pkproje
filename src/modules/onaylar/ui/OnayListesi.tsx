@@ -23,6 +23,7 @@ import type { OnayListeleri, OnaySatiri, RevizeIstekSatiri } from "../server/ona
 import { RevizePenceresi, type RevizeTuru } from "./RevizePenceresi";
 import { onaylaEylemi, tumRaporlarEylemi } from "./eylemler";
 import { SecimCubugu, SecimKutusu, TopluImzaPenceresi, useSecim, type Secim } from "./TopluImza";
+import { SignTopluTus } from "../../raporlar/ui/SignImza";
 import stil from "./onaylar.module.css";
 
 const TR_ZAMAN = new Intl.DateTimeFormat("tr-TR", { timeZone: "Europe/Istanbul", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -196,7 +197,8 @@ export function OnayKuyrugu({ v }: { v: OnayListeleri }) {
       <SuzgecliListe s={s} on="o" baslik="Onay kuyruğu" sutunlar={sutunlar} anahtar={(r) => r.id} href={(r) => `/onaylar/${r.id}`}
         bosVeri={{ ikon: "circle-check", baslik: "Onay bekleyen rapor yok" }} />
       <SecimCubugu sayi={secilen.length} temizle={sec.temizle}>
-        {teknik ? <Tus ikon="file-signature" onClick={() => setPen(secilen)}>İmzala ve onayla</Tus>
+        {teknik && v.sign && <SignTopluTus idler={secilen.map((r) => r.id)} asama="teknik" bitti={() => { sec.temizle(); router.refresh(); }} />}
+        {teknik ? <Tus tur={v.sign ? "ikincil" : "birincil"} ikon="file-signature" onClick={() => setPen(secilen)}>{v.sign ? "PDF ile imzala ve onayla" : "İmzala ve onayla"}</Tus>
           : <Tus ikon="circle-check" disabled={mesgul} onClick={() => void topluOnay()}>Seçilenleri onayla</Tus>}
       </SecimCubugu>
       {pen && <TopluImzaPenceresi raporlar={pen} kip="teknik" onKapat={(degisti) => { setPen(null); if (degisti) { sec.temizle(); router.refresh(); } }} />}
@@ -263,7 +265,8 @@ export function ImzaBekleyen({ v }: { v: OnayListeleri }) {
       <SuzgecliListe s={s} on="i" baslik="İmzamı bekleyen raporlar" sutunlar={imzaSutunlari(sec, hazir)} anahtar={(r) => r.id} href={(r) => `/raporlar/${r.id}`}
         bosVeri={{ ikon: "circle-check", baslik: "İmzanızı bekleyen rapor yok" }} />
       <SecimCubugu sayi={secilen.length} temizle={sec.temizle}>
-        <Tus ikon="file-signature" onClick={() => setPen(secilen)}>İmzaya hazırla</Tus>
+        {v.sign && <SignTopluTus idler={secilen.map((r) => r.id)} asama="uzman" bitti={() => { sec.temizle(); router.refresh(); }} />}
+        <Tus tur={v.sign ? "ikincil" : "birincil"} ikon="file-signature" onClick={() => setPen(secilen)}>{v.sign ? "PDF ile imzala" : "İmzaya hazırla"}</Tus>
       </SecimCubugu>
       {pen && <TopluImzaPenceresi raporlar={pen} onKapat={(degisti) => { setPen(null); if (degisti) { sec.temizle(); router.refresh(); } }} />}
     </>
