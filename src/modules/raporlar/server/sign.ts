@@ -19,7 +19,7 @@ import { bildirimKaydet, bildirimSil } from "../../../server/db/sign-bildirim.ts
 import { guncelle, tablo } from "../../../server/db/yazici.ts";
 import { kayitDosyasi } from "../../../server/dosya/dosya.ts";
 import type { Depo } from "../../../server/dosya/depo.ts";
-import { firmaBaglantisi, SIGN_TOPLU_EN_COK, SignHatasi, signIstemcisi, signTopluAdresi, webhookDogrula, type SignIstemcisi } from "../../../server/dis/sign.ts";
+import { SIGN_TOPLU_EN_COK, SignHatasi, signIstemcisi, signTopluAdresi, webhookDogrula, type SignIstemcisi } from "../../../server/dis/sign.ts";
 import type { BelgeVerisi } from "../../../belge/veri.ts";
 import type { Kisi } from "../../planlar/server/planlar.ts";
 import { imzaHazirla, imzaliYukle, PDF_MODULU, teknikImzaHazirla, teknikImzaliYukle, type RaporYazma } from "./raporlar.ts";
@@ -241,7 +241,7 @@ export async function signYenilenecek(db: Sorgulayici, kim: Kisi, raporId: strin
   const i = await bekleyen(db, raporId, asama);
   return i?.sign_istek && i.hesap_id === kim.id ? i.id : null;
 }
-export { firmaBaglantisi, SIGN_TOPLU_EN_COK, SignHatasi, signTopluAdresi };
+export { SIGN_TOPLU_EN_COK, SignHatasi, signTopluAdresi };
 /** sign'daki isteği iptal (işlem dışında) */
 export const signIptalGonder = (anahtar: string, istek: string) => signIstemcisi(anahtar).istekIptal(istek);
 /** imzalı PDF özeti (test ve iz için) */

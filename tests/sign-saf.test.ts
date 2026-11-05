@@ -7,7 +7,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { firmaBaglantisi, signIstemcisi, SignHatasi, signTopluAdresi, TEK_YUKLEME_EN_COK, webhookDogrula, webhookImzasi } from "../src/server/dis/sign.ts";
+import { signIstemcisi, SignHatasi, signTopluAdresi, TEK_YUKLEME_EN_COK, webhookDogrula, webhookImzasi } from "../src/server/dis/sign.ts";
 import { signGonder } from "../src/modules/raporlar/server/sign.ts";
 
 const SIR = "whsec-deneme-0123456789abcdef";
@@ -108,11 +108,8 @@ test("toplu imza: istek üyeye bağlanır (her_zaman_baglanti false), bağlantı
   assert.deepEqual(await signGonder(h, signIstemcisi(ANAHTAR, t.getir), new Date(), { toplu: true }), { belge: BELGE, istek: ISTEK, baglanti: null });
   assert.equal(govde.her_zaman_baglanti, false);
   await assert.rejects(signGonder(h, signIstemcisi(ANAHTAR, t.getir)), /imza bağlantısı vermedi/, "tekli imzada bağlantı şart");
-  assert.equal(signTopluAdresi("deneme", [BELGE, "gecersiz", ISTEK, BELGE]), `https://deneme.sign.probata.com.tr/toplu-imzala?b=${BELGE},${ISTEK}`, "firmanın sign adresinde; geçersiz ve tekrar atılır");
-  /* 2026-11-06 (reisim: "tek imza da da sign.probata açtı deneme.sign açmadı"): sign'ın kökte verdiği bağlantı firmanın adresine */
-  assert.equal(firmaBaglantisi("deneme", "https://sign.probata.com.tr/dis#belirtec"), "https://deneme.sign.probata.com.tr/dis#belirtec");
-  assert.equal(firmaBaglantisi("deneme", "https://baska.example/dis#x"), "https://baska.example/dis#x", "başka köke dokunulmaz");
+  assert.equal(signTopluAdresi([BELGE, "gecersiz", ISTEK, BELGE]), `https://sign.probata.com.tr/toplu-imzala?b=${BELGE},${ISTEK}`, "geçersiz ve tekrar atılır");
   /* sign'ın toplu imza sınırı 200 (sign kurallar.ts TOPLU_EN_COK — 2026-11-05 reisim: "toplu imzada sınırı 200 e çıkardık") */
   const cok = Array.from({ length: 250 }, (_, i) => `${String(i).padStart(8, "0")}-1111-4111-8111-111111111111`);
-  assert.equal(signTopluAdresi("deneme", cok).split("=")[1]!.split(",").length, 200, "en çok 200");
+  assert.equal(signTopluAdresi(cok).split("=")[1]!.split(",").length, 200, "en çok 200");
 });
