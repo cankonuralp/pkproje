@@ -114,7 +114,8 @@ test("yönetim: ayrı adres; ilk kurulum; firma aç → geçici parolayla yeni f
   await expect(page.getByRole("button", { name: "Yöneticiye yeni geçici parola" })).toBeDisabled();
   await kisi.goto(`${firmaAdresi}/giris`);
   await expect(kisi.getByText("Bu adreste kayıtlı bir firma yok.", { exact: false })).toBeVisible();
-  await page.getByRole("button", { name: "Etkinleştir" }).click();
+  /* 2026-11-05: sayfada "Kaydet ve etkinleştir" (probata sign) da var — tam ad */
+  await page.getByRole("button", { name: "Etkinleştir", exact: true }).click();
   await expect(page.getByText(`Firma etkinleştirildi: ${F.alt}.localhost`)).toBeVisible({ timeout: 30_000 });   // 434: geliştirme sunucusunda eylem 15 sn'yi aştı (bbb50b9 masaüstü)
   await expect(page.getByRole("button", { name: "Dondur" })).toBeVisible();   // 377: yeni sayfa eylem yanıtıyla gelir (CI 8dc6d06 tablette kalmıştı)
   await page.getByRole("button", { name: "Yöneticiye yeni geçici parola" }).click();

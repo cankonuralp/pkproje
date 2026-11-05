@@ -50,9 +50,9 @@ export function SignBolumu({ id, s }: { id: string; s: SignBaglantisi | null }) 
     setGenel(null); setDuzenle(true); bildir("probata sign bağlantısı kaldırıldı.");
   });
 
-  if (!s) return <Bolum id="y-b-sign" baslik="probata sign"><p>Bağlantı okunamadı; sayfayı yenileyip yeniden deneyin.</p></Bolum>;
   return (
     <Bolum id="y-b-sign" baslik="probata sign">
+      {!s ? <p>Bağlantı okunamadı; sayfayı yenileyip yeniden deneyin.</p> : <>
       {genel && <SeritKap><Serit tur="hata" ikon="circle-alert">{genel}</Serit></SeritKap>}
       <BilgiListesi>
         <Bilgi etiket="Durum">{s.etkin ? <Rozet tur="tamam">Etkin · e-imza</Rozet> : <Rozet tur="notr">Bağlı değil</Rozet>}</Bilgi>
@@ -89,6 +89,7 @@ export function SignBolumu({ id, s }: { id: string; s: SignBaglantisi | null }) 
           </div>
         </>
       )}
+      </>}
     </Bolum>
   );
 }

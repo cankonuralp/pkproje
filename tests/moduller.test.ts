@@ -70,7 +70,9 @@ const GELISTIRME_ROTALARI = ["vitrin"];
    devam) ve say/ek (ekin parçaları); ilk iş aynı köken, oturum işten önce, yalnız POST (aşağıdaki test) */
 /* 2026-11-03 (firmanın kendi yedeği — reisim: "yapılsın firma ayarlardan kendi yedeğini otomatik alabiliyo olsun"): bulut — Google / Microsoft izin
    ekranından dönüş; yalnız GET, oturum + Firma ayarları "yaz" işten önce (aşağıdaki test). is/yedek — gece yedek işi (zamanlayıcının sırrıyla) */
-const API_UCLARI = ["bulut", "dosya", "hata", "is", "islem", "olcum", "saglik", "say", "surum", "tanim"];
+/* 2026-11-05 (göç 0122): sign — probata sign'ın webhook'u; oturumsuz ama ilk iş firmanın webhook sırrıyla imza (HMAC, 5 dk) doğrulaması — modülde
+   (raporlar/server/sign.ts signBildirim; aşağıdaki test), yalnız POST */
+const API_UCLARI = ["bulut", "dosya", "hata", "is", "islem", "olcum", "saglik", "say", "sign", "surum", "tanim"];
 const klasorlerOf = (yol: string) => readdirSync(yol).filter((ad) => statSync(join(yol, ad)).isDirectory()).sort();
 
 test("her modülün rota klasörü var ve src/app'te modül dışı rota yok", () => {
@@ -204,6 +206,16 @@ test("api/say ve api/say/ek: ilk iş aynı köken; oturum işten önce; iş mod�
 
 /* 2026-10-15 (567): tarayıcı hatası ucu — ilk iş aynı köken (başka kökenden kayıt yok); gövde sınırlı ve biçimli; her dönüş 204 (yazıldı mı söylenmez);
    hesap ve firma gövdeden ALINMAZ (oturum, Host); yalnız POST */
+test("api/sign/bildirim: yalnız POST; iş modülde; imza doğrulanmadan hiçbir şey yazılmaz; başka klasör yok", () => {
+  assert.deepEqual(klasorlerOf(join(KOK, "src", "app", "api", "sign")), ["bildirim"]);
+  const k = readFileSync(join(KOK, "src", "app", "api", "sign", "bildirim", "route.ts"), "utf8");
+  assert.ok(/export async function POST/.test(k) && !/export async function (GET|PUT|DELETE|PATCH)/.test(k));
+  assert.ok(k.includes("signBildirim(firmaCalistirici(k)"));
+  const m = readFileSync(join(KOK, "src", "modules", "raporlar", "server", "sign.ts"), "utf8");
+  const g = m.slice(m.indexOf("export async function signBildirim"));
+  assert.ok(g.indexOf("webhookDogrula(") > 0 && g.indexOf("webhookDogrula(") < g.indexOf("INSERT INTO sign_bildirim"), "önce imza, sonra kayıt");
+});
+
 test("api/hata: ilk iş aynı köken; her dönüş 204; kişi ve firma gövdeden alınmaz; yalnız POST", () => {
   const kaynak = readFileSync(join(KOK, "src", "app", "api", "hata", "route.ts"), "utf8");
   const govde = kaynak.slice(kaynak.indexOf("export async function POST"));
