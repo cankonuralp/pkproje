@@ -105,6 +105,19 @@ cihazındadır; S.A.Y imzalamaz.
 - Belgedeki kişisel bilgiyi sohbete gereğinden fazla yazma. Bildirimde kişiyi adıyla an; numaralarını tekrar etme.
 - Künye değerleri modele gelmez; kullanıcının verdiği değeri aynen yaz (B06 §2).
 
+## 8. Proje çizimi (DWG / PDF) (2026-11-05)
+
+Tesisat projesi (havalandırma, klima, yangın) çizim olarak gelirse:
+
+1. **Antet:** işyeri, işin cinsi, adres, proje no, hazırlayan büro, proje müellifi ve mesleği, oda sicil no, alan (m²), bağımsız bölüm ve kat sayısı.
+   Onay kutuları (belediye, mühendis, oda vizesi) boşsa "onay tarihi yok".
+2. **Hesap kutusu:** alan (A), hacim (V = A × h), hava değişim sayısı (n), gereken debi (Q = V × n), seçilen fan debisi ve "uygundur" kararı.
+3. **Paftalar:** her kat planında menfez ölçüleri ve adetleri, kanal kesitleri, akış yönü (emiş mi üfleme mi), fan ve çıkış yeri.
+4. **Rapora ne gider:** proje bilgisi tablosu (B12 tür örnekleri: havalandırma) ve tür seçimi (alan sınıfı). Ölçülen değerleri projeyle karşılaştır, farkı bildir; raporu
+   kendiliğinden değiştirme. Kullanıcı "doldur" derse yaz.
+5. Kişisel numaraları (vergi no, telefon, e-posta) rapora ve sohbete taşıma.
+6. S.A.Y'a DWG eklenemez (eklenebilenler: fotoğraf, PDF, Word, Excel, metin). Proje DWG ise kullanıcıdan PDF çıktısını iste.
+
 ## Yapılmayacaklar
 
 - Belgede olmayan bilgiyi uydurmak; belgeyi yanlış kayda eklemek.

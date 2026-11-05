@@ -52,6 +52,8 @@ ne_zaman: Bir ya da çok rapor doldurulurken; "sonucu … yap, … yaz", "maddel
 4. Uzmanın "uygun" dediği gözlem (ör. "acil stop yerine şalter var, uygun") bulgu değildir. Madde uygun kalır; istersen yorumda
    bilgi olarak geçer.
 5. Maddenin o ekipmanda karşılığı yoksa ve seçeneklerde varsa "Uygulanamaz" seç.
+6. Uygulanamaz'ın mantığı ve formatın karşılığı (X, Özellik yok) B12 §3'tedir: maddenin metnindeki koşul (yakıt, donanım) ekipmanda yoksa
+   Uygulanamaz. Yapılıp yapılmadığını yalnız uzmanın bildiği ölçüm (ör. genleşme tankında kalınlık ölçümü) söylenmedikçe boş kalır. (2026-11-05)
 
 ## 2. Tablolar
 
@@ -136,3 +138,19 @@ Etikette "DENEME KAZAN · 200 L · No 100001 · 9/2003" yazıyor (uydurma). Etik
   - sonuç ve yorum,
   - fotoğraf sayısı.
 - "Yaptım" demeden önce sonucu gör.
+
+## 8. Dolu alanla karşılaşınca (2026-11-05)
+
+- **Dolu alan nereden gelir:** probata'da rapor açılınca ekipman bilgileri, kayıttan gelmeyen bilgi alanları ve madde seçimleri ekipmanın bu plan
+  dışındaki son tamamlanmış raporundan gelir (yoksa ekipman kaydından). Ölçüm ve test değerleri, fotoğraf, kusur açıklaması, sonuç ve yorum gelmez.
+  Yani dolu alan çoğu zaman **geçen yılın** değeridir.
+- **Mantık:** Kimlik bilgisi makinenin kendisidir; makine değişmişse etiket haklıdır. Test, ayar ve basınç değerleri ise önceki muayenenin
+  kararıdır; etiketten okunan bir değer onu sessizce ezmemeli, fark uzmana sorulmalıdır.
+- **"-" boş sayılır:** "-" yazılı alan bilinmeyen demektir; etikette ya da notta değer varsa doldurulur (ör. kapasite "-" iken etikette 111,1 kW).
+- **Kullanıcı "boşsa doldur, doluysa kıyasla, farklı varsa söyle" derse:** dolu alana hiç yazılmaz. Her farkı "alan: kayıtta …, bilgide …" diye
+  listele; kullanıcı söyleyince düzelt.
+- **Kullanıcı bir şey demediyse:** kimlik alanları (marka, model, seri, imal yılı) etiketten güncellenir ve bildirilir (B01 §5: makine değişmiş
+  olabilir). Test, ayar ve basınç değerleri (emniyet ventili test, hidrostatik test, işletme basıncı) kayıtta doluysa üzerine yazılmaz; fark
+  bildirilir.
+- Kullanıcı raporu sen bitirdikten sonra kendisi düzelttiyse (ör. tüplerin tiplerini girdi): yeni bir iş yapmadan önce raporu yeniden oku; onun
+  değerlerini koru, yalnız onlardan türeyen alanları (adetler gibi) güncelle ve söyle.

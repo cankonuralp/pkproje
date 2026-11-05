@@ -1,7 +1,8 @@
 /* NEREDEN GELDİ: 2026-10-31, kalem 5 — E5 (sunum "S.A.Y'a tam yetenek", reisim: "Önerdiğin gibi onay"). Talimat her hataya yeni örnekle yamalanıyordu; iş bilgisi
    becerilere (B01–B11, kaynak klasöründen AYNEN) taşınır, talimata yalnız dizin girer. Bu kilit tutar: (1) ön bilgi geçerli, ad ve kod tekil, 11 beceri;
    (2) dizin talimatta, metin talimatta DEĞİL (önbellek ve bağlam şişmez); (3) beceri_oku tam metni verir, bilinmeyende dizin; (4) becerilerde gerçek veri
-   yok (uzun numara, e-posta, telefon); (5) yayında dosyalar S.A.Y'ın ucunun izinde. Olumsuz kanıt: tests/bozan/say-beceri.bozan.ts. */
+   yok (uzun numara, e-posta, telefon); (5) yayında dosyalar S.A.Y'ın ucunun izinde. 2026-11-05: B12 uzman mantığı eklendi (12 beceri; reisim
+   "önerilerinin yeni hali uygundur" — eğitim paketi say-egitim-v2). Olumsuz kanıt: tests/bozan/say-beceri.bozan.ts. */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
@@ -10,8 +11,9 @@ import { saySistemi } from "../src/server/yz/say.ts";
 
 const L = becerileriOku();
 
-test("11 beceri, ön bilgi geçerli, ad ve kod tekil, sıra dosya adıyla", () => {
-  assert.deepEqual(L.map((b) => b.kod), ["B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08", "B09", "B10", "B11"]);
+test("12 beceri, ön bilgi geçerli, ad ve kod tekil, sıra dosya adıyla", () => {
+  assert.deepEqual(L.map((b) => b.kod), ["B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08", "B09", "B10", "B11", "B12"]);
+  assert.equal(L[11]!.ad, "uzman-mantigi");
   assert.equal(L[0]!.ad, "saha-notlarindan-plan-raporlari");
   assert.equal(L[10]!.ad, "belgeden-kayit");
   assert.throws(() => beceriCoz("B99-x.md", "ön bilgi yok"));

@@ -50,6 +50,16 @@ belgede … yazıyor" yaz. "Kabul edilmiş teklif yok" plan notudur, raporda dü
 5. **Doğrula:** her raporun durumunu geri oku ("onayda"). Gönderilemeyeni nedeniyle bildir.
 6. Denetleyemediğin bir şey varsa (ör. tesis kartına erişim yok) açıkça söyle.
 
+### Kapsam kalıpları (2026-11-05)
+
+- **Müşteri ya da tesis adıyla:** "Örnek Gıda Antalya raporlarını gönder" → o müşterinin o tesisteki taslak ("Yeni") raporları: `rapor_ara`
+  (ara: tesis ya da müşteri adı, secili: taslak), sonra `raporlari_onaya_gonder`. Kaç rapor, hangi plan, kaçı uygun değil, tek cümleyle söyle.
+  Sonucu uygun olmayan raporu sonucunu değiştirmeden gönder; bildirimde ayrıca an. Mantık: sonuç uzmanın kararıdır, gönderim komutu onu
+  değiştirme yetkisi vermez.
+- **"Kaydet ve yolla":** önce istenen değişikliği `rapor_yaz` ile yaz (kaydeder; yalnız söyleneni yazmak için `tamamla: false`), geri oku, sonra gönder.
+- Gönderilecek liste bu konuşmada hazırlananlarla sınırlı değilse (ör. kullanıcının başka gün hazırladıkları), listeyi sayıyla söyle; gönderim
+  komutu varsa ayrıca onay sorma.
+
 ## 3. Gönderildikten sonra hata
 
 - **Rapor onaydaysa:** teknik yönetici `rapor_geri_gonder` ile denetçiye döndürebilir. Kullanıcı teknik yönetici değilse bunu
@@ -57,6 +67,16 @@ belgede … yazıyor" yaz. "Kabul edilmiş teklif yok" plan notudur, raporda dü
 - **Rapor tamamlandıysa:** `revize_iste` (gerekçe en az 10 karakter: neyin düzeltileceği).
 - **Toplu hata** (ör. 46 raporda yanlış SGK): etkilenen raporları bul, geri gönderme ya da revize yolunu uygula, düzelt, yeniden denetle
   ve listeyi bildir ("önce sun" dendiyse önce listeyi sun).
+
+## 4. Yarıda kalan iş (2026-11-05)
+
+S.A.Y'ın işi ekrandan sürer: kullanıcının bilgisayarı kapanır, sayfa kapanır ya da bağlantı koparsa iş yarıda kalır. Kullanıcı "devam" dediyse:
+
+1. Önce durumu oku (`plan_hazirlik`, `plan_denetle`): plandaki her raporun durumu, fotoğrafı, yazılan alanlar.
+2. Yalnız eksik kalanı yap; yapılmışı tekrarlama. Gönderimde yalnız durumu hâlâ "Yeni" olanları gönder.
+3. Gönderilmiş raporu sunucu ikinci kez kabul etmez ("Rapor gönderildi; yalnız Yeni rapor düzenlenir"). `raporlari_onaya_gonder` sonucundaki
+   gönderilen / gönderilemeyen listesi kesindir; ona göre say.
+4. Bildirimde kesinleşenleri ve kalanı ayrı söyle: "kazan 1–5 gönderildi; 9 rapor bekliyor".
 
 ## Ders
 

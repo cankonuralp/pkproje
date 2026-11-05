@@ -26,6 +26,22 @@ ne_zaman: Fotoğraftaki ekipmanın türü ya da tipi belirlenecekken, uzmanın n
 | "… kkt ve yd" | Aynı yerde hem tüp hem yangın dolabı |
 | "kapasite yok", "levha lazım" | Bulgu: kapasite levhası eksik |
 | "… uygun" | Uzman o gözlemi uygun bulmuş; bulgu değil |
+| İm, İM (2026-11-05) | İstif makinesi |
+| Kht, KHT | Kompresör hava tankı |
+| Gt, GT, gen tank | Genleşme tankı |
+| Ytp, YTP | Yük taşıma platformu ("Ytp 1000 kg" → kapasite 1000 kg) |
+| Ysc, YSC (yazım hatasıyla "Yac") | Yangın söndürme cihazı; "Ysc 6-7 yük asansörü yanı birisi kkt 7 co2" → 6 KKT, 7 CO2, ikisi aynı konumda |
+| ssk | Sıcak su kazanı ("2 ssk a blok" → A blokta 2 kazan) |
+| BK, buhar kazanı (kömürlü) | Buhar kazanı, katı yakıtlı (B12 tür örnekleri: kazan) |
+| K1, "… bant" | Konveyör; altyazıdaki yer konveyörün kullanım yeridir ("1. pres soğutucu altı" → `e:konum`) |
+| çb | Çalışma (işletme) basıncı |
+| ev, "ev-" | Emniyet ventili (test / açma) basıncı; "ev-" ventil yok |
+| "8 bar set" | Ayar (emniyet ventili açma) basıncı |
+| "16 bar man" | Manometre skalası |
+| "sn", "sn'ler" | Seri numarası / numaraları |
+| "hepsi için" | Aynı mesaj kümesindeki bütün ekipmanlar için geçerli |
+| "B blok la aynı ev çb" | Değerler adı geçen grubunkiyle aynı |
+| "10*20 menfez 4.8 -3.2 5 menfez" | 10×20 cm menfez, hız 4,8 … 3,2 m/s, 5 menfez (B12 §5) |
 
 ## 2. Tekil ve tablolu türler
 
@@ -130,6 +146,18 @@ Bu üçü sık karışır. Etiketin tankta olması türü belirlemez; ekipmanın
 
 - Kanca, halat ya da zincir, kumanda butonu (sarkık kumanda), ray ve yürüyüş arabası.
 - Etiket: SWL / kapasite, kaldırma yüksekliği, seri, yıl.
+
+### Ek görsel ipuçları (2026-11-05)
+
+| Ekipman | Ayırt edici |
+|---|---|
+| İstif makinesi (yaya kumandalı) | Direk (mast) ve kaldırma çatalı, sürücü yerine tutamaklı kol, akü bölmesi; tip plakasında kaldırma yüksekliği ve yük diyagramı. Transpaletten direğiyle ayrılır. |
+| Yük taşıma platformu | Asansör gibi kapılı kabin, yanında buton paneli, "taşıma kapasitesi … kg" levhası. Yolcu asansörü değildir. |
+| Buhar kazanı (silindirik) | Büyük yatay silindir gövde, manometreler, presostatlar, su seviye göstergesi, baca. Katı yakıtlıda kömür besleme ve kül kapağı; gazlıda önde brülör. |
+| Sarmal kepenk + PVC perde | Önde sarkan şeffaf PVC şerit perde, arkasında lamelli kepenk, yanında butonlu kutu: kapı sarmal kepenktir, perde kapı değildir. |
+| Konveyör | Kapalı çelik gövde (zincirli / redler) ya da açık bant, ucunda motor-redüktör; bunker ve kantar altlarında. |
+| Klima tesisatı | Tavanda kanal, kare anemostad (difüzör); dış ünite ya da santral görünmeyebilir. |
+| Yüksek basınçlı genleşme tankı | Kırmızı boru (yangın hattı) üstünde, etikette 16 bar; çalışma basıncı yüksek olabilir (ör. 11 bar). |
 
 ## 4. Tipi belirleyemezsen
 

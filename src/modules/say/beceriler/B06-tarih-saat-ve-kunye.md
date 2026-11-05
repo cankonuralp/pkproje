@@ -36,6 +36,15 @@ ne_zaman: "Tarihleri … yap", "saatleri 10:00'dan başlat, 10 dakika arayla", "
 - Kullanıcıya her raporun başlangıç ve bitişini tablo olarak ver. Gruplanabilenleri grupla, ör. "T3–T14: 12:00–14:00, 10'ar
   dakika".
 
+### Yeni kalıplar (2026-11-05)
+
+| Kullanıcı der ki | Mantık | Probata'da |
+|---|---|---|
+| Gün söylemedi, plan belli | Kontrol planın gününde yapılır. | Sunucu kendisi yapar: bugün planın günleri içindeyse bugün, değilse planın ilk günü. `gun` verme. |
+| "B bloktaki raporlar 15:00–15:45, A bloktaki raporlar 15:15–16:00" | Uzman bir bloğun ekipmanına birlikte bakar; pencere bloğundur, raporun değil. | Her bloğun **bütün** raporları o pencereyi alır: blok başına tek `raporlara_yaz`, ortak girişler `tarih:bas` = "GG.AA.YYYY 15:00", `tarih:bit` = "GG.AA.YYYY 15:45". `plan_denetle` bu raporlar için "saati … ile çakışıyor" der; kullanıcının isteğidir, bildirimde bir kez söyle. "Önce sun" dendiyse bu yorumu sunumda bir cümleyle söyle. Pencere içinde sıralı bölünme istenirse `rapor_saat_plani` (baslangic 15:00, raporlar sure_dk ile). Pencere söylenmeyen raporlar §1'deki gibi art arda gider (her biri türün süresi kadar). |
+| "Saatler 09'da başlasın, YTP 30 dk, diğerleri 10 dk" | Uzmanın verdiği süre türün süresinden önce gelir. | `raporlara_yaz` (ya da `rapor_saat_plani`): baslangic "09:00", raporlar saha sırasıyla, YTP'nin `sure_dk` 30, ötekilerin 10. |
+| "Süreyi planda bulunan diğer rapora göre ayarla" | İki kontrol aynı ziyarette art arda yapıldı. | Diğer raporun bitişini oku (`rapor_getir` tarih). `rapor_saat_plani`: gun = o raporun günü, baslangic = onun bitişi, süre türün süresi. |
+
 ## 2. Künye (SGK / DETSİS, firma adı, adres, İSG-KATİP)
 
 ### İlke
@@ -58,11 +67,23 @@ boşluk ve tire olmadan, verildiği gibi.
   yalnız "aynı / farklı / boş" der.
 - Gönderilmiş raporların künyesi değişmez. Bunlar için B07'deki geri gönderme ya da revize yolunu söyle.
 
+### Yeni kalıplar (2026-11-05)
+
+**Mantık:** SGK numarası tesisindir; bir plandaki bütün raporlar aynı künyeyi taşır. Raporun künyesi açılırken plandan kopyalanır; SGK ve
+İSG-KATİP raporda kilitlidir. Künyeyi değiştirmenin yolu raporlar değil plandır (yukarıdaki Yol).
+
+- **SGK numarası görselle gelirse** (ekran görüntüsü, fotoğraf): rakamları tek tek oku ve hane sayısını say. Probata'da SGK 26 hanedir. 26 değilse ya
+  da okuyamadığın hane varsa yazma, sor. "Tüm raporlarda" demek plan künyesi demektir: Yol 1–2 (ekranda Plan bilgileri › Düzenle, sonra
+  Güncelle).
+- **"SGK, adres ve İSG-KATİP'i plandaki diğer rapora göre ayarla":** plandaki raporların künyesi zaten aynı plandan gelir; künyeyi rapordan rapora
+  kopyalayan ayrı bir işlem yoktur. Planlamacı plan bilgisini sonradan değiştirdiyse `plan_kunye_guncelle` ile taslak raporlara al. `plan_denetle`
+  ile künyenin boş olmadığını doğrula.
+
 ## 3. Sık komutlar
 
 | Komut | Yapılacak |
 |---|---|
 | "Tarihleri 27.10.2026'ya göre ayarla" | Bütün raporlarda gün 27.10.2026; saatler mevcut sırayla ya da süreye göre; sonraki kontrol bir periyot sonra. |
 | "Kapıları 10:00'dan başlayarak 10 dakika arayla gir, saatleri söyle" | Kapı raporları 10:00, 10:10 …; her biri 10 dakika. Saat tablosu. |
-| "Pompa 14:20–15:00, tüp ve dolap 15–16" | Pompa aynen. Tüp ve dolap için: "ikisi aynı mı, bölünsün mü?" belirsizse çakışmasız böl ve söyle; "ikisi de aynı" denirse aynı. |
+| "Pompa 14:20–15:00, tüp ve dolap 15–16" | Pompa aynen. Tüp ve dolap ikisi de 15:00–16:00 (aynı pencere; 2026-11-05 onayı, §1 "Yeni kalıplar"). "Bölünsün" denirse pencere içinde sırayla böl. |
 | "SGK … olacak şekilde ayarla" | Plan künyesi → taslak raporlar → doğrulama. |

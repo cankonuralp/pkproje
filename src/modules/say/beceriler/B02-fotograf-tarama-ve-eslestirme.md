@@ -110,6 +110,38 @@ Sonunda say:
 - Bir ekipmana birden çok fotoğraf koymak (kullanıcı istemedikçe).
 - Eşleşmeyen fotoğrafı "en yakın" ekipmana zorla bağlamak.
 
+## 7. Kod çelişkisi, sıralı etiketler, eksilen ekipman (2026-11-05)
+
+### Sıralı etiket fotoğrafları
+
+- "8 adet sırayla sn'ler" gibi bir yazı, önündeki altyazısız etiket fotoğraflarının **ekipman numarası sırasında** geldiğini söyler: ilk etiket
+  1 numaraya, ikinci etiket 2 numaraya … Etiket sayısı ekipman sayısını tutmuyorsa eşleme yapma, bildir.
+- Aynı mesaj kümesindeki (aynı dakika, araya başka kod girmemiş) genel görünüş fotoğrafı o kümedeki bütün ekipmanların ortak fotoğrafı olabilir.
+  Kullanıcı "tek fotoğraf çekildi" dediyse her rapora o fotoğraf girer.
+
+### Uzmanın etiketi ile planın kodu çelişirse
+
+Uzman sahada kendi numarasını verir ("Gt 1", "Gt 2"); planın kodları başka bir numaralama olabilir ("B blok genleşme tankı 3"). Numaraya göre eşleme.
+**Mantık:** numara insanın verdiği addır, değişir; basınç, hacim ve seri makinenin kendisidir, değişmez.
+
+Probata'da ipuçlarının kaynağı: ekipman kaydı (`plan_hazirlik`, `tesis_ekipmanlari`: kod, tür, marka, model, seri, imal, kullanım yeri) ve ekipmanın
+önceki raporunun değerleri (rapor açılınca bilgi alanlarına gelir; açık değilse `rapor_ara` ile ekipman kodundan bulunur, `rapor_getir`).
+
+| İpucu | Örnek |
+|---|---|
+| Kullanım yeri / blok | Notta "a blok" → planda A bloktaki tek tank |
+| Önceki rapordaki test basıncı | 15 bar test edilmiş tank, 11 bar çalışan yüksek basınçlı tanka uyar; 5,5 bar test edilmiş tank 3 bar çalışan tanka uyar |
+| Önceki rapordaki emniyet ventili açma basıncı | Notta "ev 4 bar", önceki raporda 4 bar → aynı tank |
+| Hacim, marka, seri | Kayıtta varsa en güçlü ipucu |
+
+Eşlemeyi gerekçesiyle tablo olarak sun (kullanıcı "önce sun" dediyse onay bekle). Tutarlı bir eşleme kurulamıyorsa yazma, sor.
+
+### Eksilen ekipman
+
+Planda olup sahada fotoğrafı ve notu olmayan ekipman, uzman "bir tane eksildi" dediyse **eksilen**dir: raporu açılmaz, bildirimde "eksilen: …" diye
+geçer. Hangisinin eksildiği eşleme sonunda geriye kalandır; bunu da gerekçeyle söyle. Ekipman pasife alınmaz: söküldü mü, yerinde mi bilmeyen
+S.A.Y kaydı değiştirmez. Kullanıcı "pasife al" derse `plan_ekipman_pasif` (ekranda planın ekipman satırında "Pasife al").
+
 ## Başka firmanın eski raporu (belge fotoğrafı)
 Üçüncü tarafın eski kontrol raporu REFERANSTIR, etiketin yerine geçmez: ekipmanı tanımaya ve etiketi çekilmemiş ekipmanın marka / model / serisine (varsayım olarak
 bildirilir) yarar; kapasite, yükseklik, kolon mesafesi gibi

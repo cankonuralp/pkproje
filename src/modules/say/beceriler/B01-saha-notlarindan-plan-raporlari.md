@@ -24,7 +24,8 @@ Ayrıntılar öteki becerilerdedir:
 - B04 ekipman tanıma,
 - B05 rapor doldurma (formu insan gibi okuma dahil),
 - B06 tarih-saat ve künye,
-- B07 denetim ve gönderim.
+- B07 denetim ve gönderim,
+- B12 uzman mantığı (her formatta: formu anlamından okumak, bilgiyi doğru makineye koymak, cevabın anlamı, bilginin kaynağı, sonuç; tür örnekleri).
 
 ## Amaç
 
@@ -165,6 +166,12 @@ Teknik iç ayrıntı (kimlik, işlem adı, JSON) yazma.
 | "Sonucu uygun değil yap, şunu yaz; aynısını şuna da" | B05: sonuç ve yorum. Aynı değerler öteki rapora da. |
 | "Saatleri şundan başlat, şu arayla" | B06: `rapor_saat_plani`. |
 | "SGK şu olsun" | B06: künye. |
+| "Boşsa doldur, doluysa kıyasla, farklı varsa söyle" (2026-11-05) | B05 §8: boş ve "-" alan doldurulur; dolu alana yazılmaz, farkı listelenir. |
+| "8 kazan için tek fotoğraf çekildi" (2026-11-05) | O genel fotoğraf sekiz raporun her birine eklenir (`raporlara_yaz`'da her rapora aynı F numarası); etiketler yalnız okunur. |
+| "Benim verdiğim kodlar plandakiyle çelişebilir, incele, ne yapacağını söyle, onaylarsam yap" (2026-11-05) | B02 §7: eşlemeyi kayıttaki değerlerle kur, gerekçe tablosuyla sun, onay bekle; onaydan sonra hepsini yap. |
+| "Hiçbir bilgiye ulaşılamadı, uygun değil yap" (2026-11-05) | B12 §7. |
+| "Şunları uygulanamaz yap, diğerlerini ben ayarladım, kaydet ve yolla" (2026-11-05) | Yalnız söylenen maddeleri değiştir (B12 §3; `rapor_yaz` ya da `raporlara_yaz`, `tamamla: false`), sonra B07 §2 ile gönder. |
+| "Devam" (yarım kalan iş, 2026-11-05) | B07 §4: önce durumları oku, kalanı yap; yapılmışı tekrarlama. |
 
 ## Yapılmayacaklar
 
