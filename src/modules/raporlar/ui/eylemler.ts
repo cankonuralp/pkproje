@@ -17,7 +17,7 @@ import { alanOkuBirak, alanOkuHazirla, alanOkuKullanimYaz, alanOkuSonuc } from "
 import { raporOneriSil } from "../server/oneri";
 import type { AlanOkunan } from "../../../server/yz/alanlar";
 import { raporIndirmeListesi, raporSayfasi } from "../server/liste";
-import { firmaCalistirici, SignHatasi, signTopluAdresi, signGonder, signHazirla, signIptalGonder, signIptalHazirla, signIptalYaz, signKaydet, signSonuclandir, signYenilenecek, type Asama } from "../server/sign";
+import { firmaBaglantisi, firmaCalistirici, SignHatasi, signTopluAdresi, signGonder, type SignHazirlik, signHazirla, signIptalGonder, signIptalHazirla, signIptalYaz, signKaydet, signSonuclandir, signYenilenecek, type Asama } from "../server/sign";
 import type { RaporListeSatiri } from "../server/raporlar";
 import type { SunucuListe } from "../../../components/liste/suzgec";
 
@@ -260,11 +260,12 @@ export async function signImzalaEylemi(id: string, asama: string): Promise<Rapor
   const h = await oturumIslemi(o, (db) => signHazirla(db, depo(), o, o.kiraci.firmaId, metin(id), signAsama(asama), belgePdf));
   if (h.tur === "hata") return yanit(h.y);
   /* üyeye bağlı (toplu gönderilmiş) istek: sign'ın toplu sayfası o belgeyle */
-  if (h.tur === "acik") return { tamam: true, baglanti: h.baglanti ?? signTopluAdresi([h.belge]) };
+  /* 2026-11-06 (reisim: "tek imza da da sign.probata açtı deneme.sign açmadı"): bağlantı firmanın sign adresinde */
+  if (h.tur === "acik") return { tamam: true, baglanti: h.baglanti ? firmaBaglantisi(o.kiraci.kisaAd, h.baglanti) : signTopluAdresi(o.kiraci.kisaAd, [h.belge]) };
   try {
     const s = await signGonder(h);
     if (!(await oturumIslemi(o, (db) => signKaydet(db, o, o.kiraci.firmaId, h.istekId, s)))) return { genel: "Rapor bu arada değişti. Sayfayı yenileyip yeniden deneyin." };
-    return { tamam: true, baglanti: s.baglanti ?? signTopluAdresi([s.belge]), bildirim: "probata sign'da imza ekranı açıldı; imzalayınca rapor kendiliğinden ilerler." };
+    return { tamam: true, baglanti: s.baglanti ? firmaBaglantisi(o.kiraci.kisaAd, s.baglanti) : signTopluAdresi(o.kiraci.kisaAd, [s.belge]), bildirim: "probata sign'da imza ekranı açıldı; imzalayınca rapor kendiliğinden ilerler." };
   } catch (e) {
     if (e instanceof SignHatasi) return { genel: e.message };
     throw e;
@@ -300,25 +301,38 @@ export async function signIptalEylemi(id: string, asama: string): Promise<RaporY
   return { tamam: true, bildirim: "İmza isteği iptal edildi." };
 }
 
-/** toplu imza (sign) — BİR PARÇA: en çok  rapor sign'a gönderilir (her biri için imzasız PDF bir kez üretilir — 200 rapor tek isteğe
+/** toplu imza (sign) — BİR PARÇA: en çok 10 rapor sign'a gönderilir (her biri için imzasız PDF bir kez üretilir — 200 rapor tek isteğe
     sığmaz; ekran parça parça çağırır), istekler uzmanın sign üyeliğine bağlanır. Dönen: üyeye bağlanan belgeler (ekran hepsini toplayıp sign'ın
     toplu sayfasını açar — en çok 200, PIN bir kez), üyesi bulunmayanların sayısı (rapor rapor İmzala), hatalar. İmzalanan her rapor bildirimle ilerler */
 export async function signTopluEylemi(idler: string[], asama: string): Promise<{ tamam?: boolean; genel?: string; belgeler?: string[];
-  hatalar?: { id: string; neden: string }[]; uyeDegil?: number; dur?: boolean }> {
+  hatalar?: { id: string; neden: string }[]; uyeDegil?: number; dur?: boolean; eposta?: string }> {
   if (!(await ayniKoken())) return { genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };
   const o = await istekOturumu();
   if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
   const l = [...new Set((Array.isArray(idler) ? idler : []).map(metin).filter((x) => /^[0-9a-f-]{36}$/.test(x)))].slice(0, SIGN_TOPLU_PARCA);
   if (!l.length) return { genel: "Rapor seçilmedi." };
   const a = signAsama(asama), belgeler: string[] = [], hatalar: { id: string; neden: string }[] = [];
-  let uyeDegil = 0, dur = false;
+  let uyeDegil = 0, dur = false, eposta: string | undefined;
   for (const id of l) {
     try {
       const h = await oturumIslemi(o, (db) => signHazirla(db, depo(), o, o.kiraci.firmaId, id, a, belgePdf));
       if (h.tur === "hata") { const y = yanit(h.y); hatalar.push({ id, neden: y.genel ?? Object.values(y.hatalar ?? {})[0] ?? "Hazırlanamadı." }); continue; }
-      if (h.tur === "acik") { if (h.baglanti) uyeDegil++; else belgeler.push(h.belge); continue; }
-      const g = await signGonder(h, undefined, undefined, { toplu: true });
-      if (!(await oturumIslemi(o, (db) => signKaydet(db, o, o.kiraci.firmaId, h.istekId, g)))) { hatalar.push({ id, neden: "Rapor bu arada değişti." }); continue; }
+      if (h.tur === "acik" && !h.baglanti) { belgeler.push(h.belge); continue; }
+      /* 2026-11-06 (reisim: "toplu imza çalışmadı"): "İmzala" ile bağlantılı açılmış istek toplu sayfaya düşmez — sign'da iptal edilip üyeliğe bağlı yeniden açılır */
+      let g2: SignHazirlik = h;
+      if (h.tur === "acik") {
+        const ip = await oturumIslemi(o, (db) => signIptalHazirla(db, o, id, a));
+        if (ip) {
+          try { await signIptalGonder(ip.anahtar, ip.istek.sign_istek!); } catch (e) { if (!(e instanceof SignHatasi) || e.kod !== 409) throw e; }
+          await oturumIslemi(o, (db) => signIptalYaz(db, o, ip.istek.id));
+        }
+        g2 = await oturumIslemi(o, (db) => signHazirla(db, depo(), o, o.kiraci.firmaId, id, a, belgePdf));
+        if (g2.tur !== "gonder") { hatalar.push({ id, neden: g2.tur === "hata" ? yanit(g2.y).genel ?? "Hazırlanamadı." : "İmza isteği yeniden açılamadı." }); continue; }
+      }
+      const hz = g2 as Extract<typeof g2, { tur: "gonder" }>;
+      eposta ??= hz.imzaci.eposta;
+      const g = await signGonder(hz, undefined, undefined, { toplu: true });
+      if (!(await oturumIslemi(o, (db) => signKaydet(db, o, o.kiraci.firmaId, hz.istekId, g)))) { hatalar.push({ id, neden: "Rapor bu arada değişti." }); continue; }
       if (g.baglanti) uyeDegil++; else belgeler.push(g.belge);
     } catch (e) {
       /* anahtar geçersiz ya da sign'a ulaşılamıyor: kalan parçalar da düşerdi — ekran durur */
@@ -326,11 +340,12 @@ export async function signTopluEylemi(idler: string[], asama: string): Promise<{
       throw e;
     }
   }
-  return { tamam: true, belgeler, hatalar, uyeDegil, dur };
+  return { tamam: true, belgeler, hatalar, uyeDegil, dur, ...(uyeDegil && eposta ? { eposta } : {}) };
 }
-/** toplu imza: toplanan belgelerle sign'ın toplu imza sayfasının adresi (en çok ) */
+/** toplu imza: toplanan belgelerle sign'ın toplu imza sayfasının adresi — firmanın sign adresinde (en çok 200) */
 export async function signTopluAdresiEylemi(belgeler: string[]): Promise<string | null> {
-  if (!(await ayniKoken()) || !(await istekOturumu())) return null;
+  if (!(await ayniKoken())) return null;
   const l = (Array.isArray(belgeler) ? belgeler : []).map(metin);
-  return l.length ? signTopluAdresi(l) : null;
+  const o = await istekOturumu();
+  return l.length && o ? signTopluAdresi(o.kiraci.kisaAd, l) : null;
 }

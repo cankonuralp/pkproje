@@ -79,13 +79,13 @@ export function SignTopluTus({ idler, asama, bitti }: { idler: readonly string[]
     const l = idler.slice(0, TOPLU_EN_COK);
     baslat(async () => {
       const belgeler: string[] = [], hatalar: string[] = [];
-      let uyeDegil = 0, genel: string | null = null;
+      let uyeDegil = 0, genel: string | null = null, eposta: string | undefined;
       try {
         for (let i = 0; i < l.length; i += PARCA) {
           setIlerleme(`Gönderiliyor ${Math.min(i + PARCA, l.length)} / ${l.length}`);
           const r = await signTopluEylemi(l.slice(i, i + PARCA), asama);
           if (!r.tamam) { genel = r.genel ?? "probata sign'a gönderilemedi."; break; }
-          belgeler.push(...(r.belgeler ?? [])); uyeDegil += r.uyeDegil ?? 0; hatalar.push(...(r.hatalar ?? []).map((h) => h.neden));
+          belgeler.push(...(r.belgeler ?? [])); uyeDegil += r.uyeDegil ?? 0; eposta ??= r.eposta; hatalar.push(...(r.hatalar ?? []).map((h) => h.neden));
           if (r.dur) break;
         }
         const url = belgeler.length ? await signTopluAdresiEylemi(belgeler) : null;
@@ -94,7 +94,7 @@ export function SignTopluTus({ idler, asama, bitti }: { idler: readonly string[]
           genel ?? "",
           url ? `${belgeler.length} rapor probata sign'ın toplu imza sayfasında; PIN'i bir kez girip imzalayın.` : "",
           idler.length > TOPLU_EN_COK ? `Bir seferde en çok ${TOPLU_EN_COK} rapor; kalan ${idler.length - TOPLU_EN_COK} rapor için yeniden seçin.` : "",
-          uyeDegil ? `${uyeDegil} raporda sign üyeliğiniz bulunamadı; onları raporun “İmzala” tuşuyla açın.` : "",
+          uyeDegil ? `${uyeDegil} rapor toplu sayfaya alınamadı: firmanın sign hesabında ${eposta ?? "probata e-postanızla"} üye bulunamadı. sign'daki üyeliğiniz bu e-postayla olmalı; o raporları şimdilik “İmzala” ile açın.` : "",
           hatalar.length ? `${hatalar.length} rapor gönderilemedi: ${[...new Set(hatalar)].slice(0, 3).join(" · ")}` : "",
         ].filter(Boolean);
         bildir(parca.join(" ") || "Gönderilecek rapor yok.");

@@ -15,9 +15,21 @@ const ucAdresi = (): string => (process.env.PROBATA_SIGN_UC || SIGN_VARSAYILAN).
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 /** sign'ın toplu imzasında en çok belge (sign kurallar.ts TOPLU_EN_COK — 2026-11-05: 200) */
 export const SIGN_TOPLU_EN_COK = 200;
-/** sign'ın toplu imza sayfası (üye oturumuyla, PIN bir kez — sign /toplu-imzala?b=<id>,<id>) */
-export const signTopluAdresi = (belgeler: readonly string[]): string =>
-  `${ucAdresi()}/toplu-imzala?b=${[...new Set(belgeler.filter((b) => UUID.test(b)))].slice(0, SIGN_TOPLU_EN_COK).join(",")}`;
+/** firmanın sign adresi (sign TASARIM §10: her firma <kısa ad>.sign.probata.com.tr; API ve doğrulama kökte kalır). 2026-11-06 (reisim: "tek imza da
+    da sign.probata açtı deneme.sign açmadı"): sign'daki kısa ad probata'dakiyle aynı kabul edilir. Kök yerel / taklit adresse (http) kökün kendisi */
+export function signFirmaAdresi(kisaAd: string): string {
+  const k = new URL(ucAdresi());
+  if (k.protocol !== "https:" || !/^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/.test(kisaAd)) return k.origin;
+  return `https://${kisaAd}.${k.host}`;
+}
+/** sign'ın verdiği imza bağlantısı (kökte) → firmanın sign adresinde aynı bağlantı (belirteç adres parçasında aynen) */
+export function firmaBaglantisi(kisaAd: string, baglanti: string): string {
+  const k = new URL(ucAdresi()), b = new URL(baglanti);
+  return b.origin === k.origin ? `${signFirmaAdresi(kisaAd)}${b.pathname}${b.search}${b.hash}` : baglanti;
+}
+/** sign'ın toplu imza sayfası firmanın adresinde (üye oturumu orada geçer; PIN bir kez — sign /toplu-imzala?b=<id>,<id>) */
+export const signTopluAdresi = (kisaAd: string, belgeler: readonly string[]): string =>
+  `${signFirmaAdresi(kisaAd)}/toplu-imzala?b=${[...new Set(belgeler.filter((b) => UUID.test(b)))].slice(0, SIGN_TOPLU_EN_COK).join(",")}`;
 /** sign'ın tek istek gövdesi sınırının altı (parçalı yüklemeye geçiş) */
 export const TEK_YUKLEME_EN_COK = 3_800_000;
 const SURE_MS = 20_000;
