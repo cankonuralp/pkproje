@@ -356,6 +356,9 @@ pkproje/
                             bozan imza-esdeger 1–8
                             · SAKLAMA SÜRESİ (387, göç 0073; ENGEL 11): server/saklama.ts (gece işi saklamaIsi — süresi dolan imzalı sürümün PDF'leri
                             saklama_sil ile, liste, Uyarılar günleri); okuyucular uyari-baglanti.ts, ayar-baglanti.ts; koruma veritabanında (dosya_saklama_koru)
+                            · 2026-11-06 CİHAZ KENDİLİĞİNDEN SEÇİLİR: cihaz-sec.ts (saf otomatikCihazlar) ← raporlar.ts otomatikSecim — yeni raporda (raporAc,
+                            kopya hariç; bağlantısız paket de) tür başına yazanın zimmetindeki uygun cihaz: en son kullandığı, yoksa tek aday; depodaki seçilmez ·
+                            kilit tests/cihaz-sec, bozan cihaz-sec, e2e saha-raporu (seçili gelir → kaldır → ekle)
   src/modules/onaylar/      ONAYLAR (2026-10-05, 314; modül 15): kuyruk, onay ekranı (gözden geçirme), Onayla / Geri gönder / Onayı geri al /
                             Durumu değiştir (göç 0026: geçişler, onay damgası, Yeni'ye gerekçe ≥ 10 veritabanında); rapora raporlar/server/onay-baglanti.ts'ten
                             · İmzamı bekleyen raporlar /onaylar/imza (318, C5: denetçinin Onaylar'ı yalnız bu; kuyruk ve onay ekranı yöneticinin)
@@ -370,6 +373,11 @@ pkproje/
                             imzaliEslestirYukle (imzalı PDF İÇERİĞİNDEN: önekin SHA-256'sı = isteğin pdf_sha256'sı, adaylar kişinin kendi onaylanmış raporları;
                             imzaliYukle yeniden denetler) · onay-baglanti imzaHazirOlanlar ("İmzaya hazır") · ZIP açıcı components/disa/oku.ts zipAc ·
                             kuyrukta "Seçilenleri onayla" (onaylaEylemi rapor rapor) · /onaylar ve /onaylar/imza PDF listesinde (maxDuration 60)
+                            · 2026-11-06 SÜZGEÇ + TOPLU İŞ HER SEKMEDE (reisim: "bu ekranda da filtreleme geliştirilmeli ve toplu onay, imzalama vs olmalı"):
+                            ui/OnayListesi.tsx raporSecicileri / RAPOR_ALANLARI (Raporlar listesinin süzgeçleri, ızgara, tarih, başlıktan sıralama; kuyruk ve
+                            imza tarayıcıda, Tüm raporlar sunucuda — raporlar/server/liste.ts onayTumKaynagi yeni anahtarlar) · seçim çubuğunda "PDF indir"
+                            (onayIndirmeEylemi → onay-baglanti secilenIndirmeListesi; raporlar/ui/topluIs useTopluIndir) · Tüm raporlarda seçim + onaylanabilenleri
+                            onayla · useSecim(enCok): sign / onay 200, PDF'le imza penceresi 50, indirme 300
   src/modules/musteri-paneli/ MÜŞTERİ PANELİ (2026-10-05, 319; modül 17): server/panel.ts (yalnız musteriIslemi içinde; Raporlar'ın musteri-baglanti.ts
                             ve Müşteriler'den okur; 0033 uygunsuzluk yalnız açık sürümün, pasif müşterinin oturumu hemen düşer) · ui/ (Raporlarınız; 320: Uygunsuzluklar /portal/uygunsuz, Excel tarayıcıda — ui/kusur.ts; 321: Planlanan kontroller /portal/plan — Planlar'ın
                             server/musteri-baglanti.ts, göç 0032 sütun sınırlı —, toplu ZIP ui/topluIndir.ts + ui/zipla.ts (saf; 300 rapor / 500 MB) + ui/ad.ts; 322: Sözleşmeler /portal/sozlesme + /portal/s/<id> — Sözleşmeler'in

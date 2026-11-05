@@ -8,7 +8,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition, type ReactNode } from "react";
-import { useBildir } from "../../../components/bildirim/Bildirim";
+import { useBildir, useUyar } from "../../../components/bildirim/Bildirim";
 import { useOnayla } from "../../../components/pencere/Onay";
 import { KartEtiket, Kirp, type Sutun } from "../../../components/liste/Liste";
 import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
@@ -21,20 +21,21 @@ import { Tus, TusBaglanti } from "../../../components/tus/Tus";
 import { RAPOR_DURUM, type RaporDurumu } from "../../raporlar/sema";
 import type { OnayListeleri, OnaySatiri, RevizeIstekSatiri } from "../server/onaylar";
 import { RevizePenceresi, type RevizeTuru } from "./RevizePenceresi";
-import { onaylaEylemi, tumRaporlarEylemi } from "./eylemler";
-import { SecimCubugu, SecimKutusu, TopluImzaPenceresi, useSecim, type Secim } from "./TopluImza";
+import { onayIndirmeEylemi, onaylaEylemi, tumRaporlarEylemi } from "./eylemler";
+import { SecimCubugu, SecimKutusu, TOPLU_EN_COK, TopluImzaPenceresi, useSecim, type Secim } from "./TopluImza";
 import { SignTopluTus } from "../../raporlar/ui/SignImza";
+import { useTopluIndir } from "../../raporlar/ui/topluIs";
 import stil from "./onaylar.module.css";
 
 const TR_ZAMAN = new Intl.DateTimeFormat("tr-TR", { timeZone: "Europe/Istanbul", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 export const zamanYaz = (z: string) => TR_ZAMAN.format(new Date(z)).replace(",", "");
 export const SONUC_ROZET: Record<string, readonly [string, RozetTuru]> = { uygun: ["Uygun", "tamam"], uygun_degil: ["Uygun değil", "red"], sartli: ["Şartlı uygun", "bekliyor"] };
-const benzersiz = <T,>(l: readonly T[]) => [...new Set(l)];
-const SIRA_AD: Record<string, string> = { no: "Rapor no", durum: "Durum", denetci: "Denetçi" };
+const SIRA_AD: Record<string, string> = { no: "Rapor no", durum: "Durum", denetci: "Muayene uzmanı", ekipman: "Ekipman", tesis: "Müşteri / tesis", sonuc: "Sonuç", tarih: "Tarih" };
 function siraEtiketi(v: string) {
   if (v === "varsayilan") return "En yeni önce";
   const [s, y] = v.split("-"), artan = y === "artan";
-  return `${SIRA_AD[s] ?? s}: ${s === "durum" ? (artan ? "akış sırası" : "ters akış") : artan ? "A → Z" : "Z → A"}`;
+  if (s === "tarih") return "Tarih: eskiden yeniye";
+  return `${SIRA_AD[s] ?? s}: ${s === "durum" ? (artan ? "akış sırası" : "ters akış") : s === "sonuc" ? (artan ? "artan" : "azalan") : artan ? "A → Z" : "Z → A"}`;
 }
 
 const noHucre = (r: OnaySatiri) => <><Link className={stil.no} href={`/onaylar/${r.id}`}>{r.no}</Link><AltSatir><Kirp>{`${r.musteri} / ${r.tesis}`}</Kirp></AltSatir></>;
@@ -71,21 +72,56 @@ const TUM_SUTUN: Sutun<OnaySatiri>[] = [
   ) },
 ];
 
+/* 2026-11-06 (reisim: "bu ekranda da filtreleme geliştirilmeli ve toplu onay, imzalama vs olmalı, yoksa bir anlamı kalmıyor"): Raporlar listesinin
+   süzgeçleri Onaylar'ın her sekmesinde — başlıklı kutular (Rapor no · Ekipman kodu · Tesis yazarak; Ekipman türü · Müşteri · Muayene uzmanı · Branş · İl ·
+   Sonuç seçerek; tarih aralığı), sütun başlığından sıralama. Kuyruk ve İmzamı bekleyen tarayıcıda süzülür (süreçteki raporlar), Tüm raporlar sunucuda. */
+const GUN_TR = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit" });
+const gunu = (iso: string | null) => (iso ? GUN_TR.format(new Date(iso)) : "");
+const TUMU: Secenek = ["tumu", "Tümü"];
+const SONUC_SECENEK: Secenek[] = [["uygun", "Uygun"], ["uygun_degil", "Uygun değil"], ["sartli", "Şartlı uygun"], ["yok", "Sonuç yok"]];
+const SONUC_SIRA: Record<string, number> = { uygun: 1, sartli: 2, uygun_degil: 3 };
+const SIRA_ADI: Record<string, string> = { no: "Rapor no", ekipman: "Ekipman", denetci: "Muayene uzmanı", gonderildi: "Gönderildi", onay: "Onaylandı", sonuc: "Sonuç" };
+type Secici = SuzgecTanimi<OnaySatiri>["seciciler"][number];
+const ara = (s: string) => s.toLocaleLowerCase("tr");
+/** listedeki değerlerden seçici (boş değer seçeneğe girmez) */
+function deger(l: readonly OnaySatiri[], k: string, ad: string, d: (r: OnaySatiri) => string | null, etiket: (r: OnaySatiri) => string = (r) => d(r) ?? ""): Secici {
+  const sec = new Map<string, string>();
+  for (const r of l) { const v = d(r); if (v && !sec.has(v)) sec.set(v, etiket(r)); }
+  return { k, ad, secenek: () => [TUMU, ...[...sec].sort((a, b) => a[1].localeCompare(b[1], "tr"))], gecer: (r, v) => v === "tumu" || d(r) === v };
+}
+function raporSecicileri(l: readonly OnaySatiri[], uzman: boolean, siralar: readonly string[]): Secici[] {
+  return [
+    deger(l, "tur", "Ekipman türü", (r) => r.turAd),
+    deger(l, "musteri", "Müşteri", (r) => r.musteriId, (r) => r.musteri),
+    ...(uzman ? [deger(l, "kisi", "Muayene uzmanı", (r) => r.denetci)] : []),
+    { k: "brans", ad: "Branş", secenek: () => [TUMU, ["m", "Mekanik"], ["e", "Elektrik"]], gecer: (r, v) => v === "tumu" || r.brans === v },
+    deger(l, "il", "İl", (r) => r.il),
+    { k: "sonuc", ad: "Sonuç", secenek: () => [TUMU, ...SONUC_SECENEK], gecer: (r, v) => v === "tumu" || (v === "yok" ? !r.sonuc : r.sonuc === v) },
+    { k: "sira", ad: "Sıralama", siralama: true, gecer: () => true, secenek: () => [["varsayilan", "En yeni üstte"],
+      ...siralar.flatMap((s) => [[`${s}-artan`, `${SIRA_ADI[s]} · artan`], [`${s}-azalan`, `${SIRA_ADI[s]} · azalan`]] as Secenek[])] },
+  ];
+}
+const RAPOR_ALANLARI: SuzgecTanimi<OnaySatiri>["alanlar"] = [
+  { k: "no", ad: "Rapor no", ipucu: "ör. DA-1026-…", metin: (r) => r.no },
+  { k: "kod", ad: "Ekipman kodu", ipucu: "ör. HT-10", metin: (r) => r.ekipmanKod },
+  { k: "tesis", ad: "Tesis", ipucu: "Tesis ya da müşteri", metin: (r) => `${r.tesis} ${r.musteri}` },
+];
+const siraAnahtari = (zaman: "gonderildi" | "onay"): Record<string, (r: OnaySatiri) => string | number> => ({
+  no: (r) => r.no, ekipman: (r) => ara(r.ekipmanKod), denetci: (r) => ara(r.denetci), [zaman]: (r) => r[zaman] ?? "", sonuc: (r) => (r.sonuc ? SONUC_SIRA[r.sonuc] ?? 0 : 0),
+});
+
 function kuyrukTanimi(l: readonly OnaySatiri[]): SuzgecTanimi<OnaySatiri> {
   return {
-    ad: "Kuyrukta ara", ipucu: "Rapor no, kod, tesis", birim: "rapor", imkansiz: "", sayfa: TABLO_SAYFA,
+    ad: "Kuyrukta ara", ipucu: "Hepsinde ara", birim: "rapor", imkansiz: "", sayfa: TABLO_SAYFA, izgara: true,
     metin: (r) => [r.no, r.ekipmanKod, r.turAd, r.tesis, r.musteri, r.denetci].join(" "),
+    alanlar: RAPOR_ALANLARI,
     cipler: [
       { k: "kusurlu", ad: "Kusurlu", test: (r) => r.sonuc === "uygun_degil" || r.sonuc === "sartli" },
       { k: "eski", ad: "24 saatten eski", test: (r) => r.eski },
     ],
-    seciciler: [
-      { k: "kisi", ad: "Denetçi", secenek: () => [["tumu", "Tümü"], ...benzersiz(l.map((r) => r.denetci)).sort((a, b) => a.localeCompare(b, "tr")).map((x) => [x, x] as const)],
-        gecer: (r, v) => v === "tumu" || r.denetci === v },
-      { k: "tesis", ad: "Tesis", secenek: () => [["tumu", "Tümü"], ...benzersiz(l.map((r) => r.tesisId)).map((t) => {
-        const r = l.find((x) => x.tesisId === t)!; return [t, `${r.musteri} / ${r.tesis}`] as const; })],
-        gecer: (r, v) => v === "tumu" || r.tesisId === v },
-    ],
+    seciciler: raporSecicileri(l, true, ["no", "ekipman", "denetci", "gonderildi", "sonuc"]),
+    siraAnahtari: siraAnahtari("gonderildi"),
+    tarih: { ad: "Gönderildi", gun: (r) => gunu(r.gonderildi) },
   };
 }
 /* 566 (09-B3): Tüm raporlar SUNUCUDA süzülür ve sayfalanır (raporlar/server/liste.ts onayTumKaynagi — aynı anahtarlar); burada yalnız ekranın
@@ -96,18 +132,27 @@ function tumTanimi(sec: Record<string, Secenek[]>): SuzgecTanimi<OnaySatiri> {
   return {
     ad: "Raporlarda ara", ipucu: "", birim: "rapor", imkansiz: "", sayfa: 20,
     metin: () => "",
+    izgara: true,
     alanlar: [
       { k: "no", ad: "Rapor no", ipucu: "ör. DA-1026-…", metin: () => "" },
+      { k: "kod", ad: "Ekipman kodu", ipucu: "ör. HT-10", metin: () => "" },
       { k: "tesis", ad: "Tesis", ipucu: "Tesis ya da müşteri", metin: () => "" },
     ],
     cipler: [],
     seciciler: [
-      { k: "durum", ad: "Durum", secenek: () => [["tumu", "Tümü"], ...(Object.keys(RAPOR_DURUM) as RaporDurumu[]).map((d) => [d, RAPOR_DURUM[d][0]] as const)], gecer: hep },
-      { k: "kisi", ad: "Denetçi", secenek: () => [["tumu", "Tümü"], ...(sec.kisi ?? [])], gecer: hep },
-      { k: "sira", ad: "Sıralama", siralama: true, secenek: () => ["varsayilan", "no-artan", "no-azalan", "durum-artan", "durum-azalan", "denetci-artan", "denetci-azalan"]
-        .map((x) => [x, siraEtiketi(x)] as const), gecer: hep },
+      { k: "durum", ad: "Durum", secenek: () => [TUMU, ...(Object.keys(RAPOR_DURUM) as RaporDurumu[]).map((d) => [d, RAPOR_DURUM[d][0]] as const)], gecer: hep },
+      { k: "tur", ad: "Ekipman türü", secenek: () => [TUMU, ...(sec.tur ?? [])], gecer: hep },
+      { k: "musteri", ad: "Müşteri", secenek: () => [TUMU, ...(sec.musteri ?? [])], gecer: hep },
+      { k: "kisi", ad: "Muayene uzmanı", secenek: () => [TUMU, ...(sec.kisi ?? [])], gecer: hep },
+      { k: "brans", ad: "Branş", secenek: () => [TUMU, ["m", "Mekanik"], ["e", "Elektrik"]], gecer: hep },
+      { k: "il", ad: "İl", secenek: () => [TUMU, ...(sec.il ?? [])], gecer: hep },
+      { k: "ilce", ad: "İlçe", secenek: () => [TUMU, ...(sec.ilce ?? [])], gecer: hep },
+      { k: "sonuc", ad: "Sonuç", secenek: () => [TUMU, ...SONUC_SECENEK], gecer: hep },
+      { k: "sira", ad: "Sıralama", siralama: true, secenek: () => ["varsayilan", "tarih-artan", "no-artan", "no-azalan", "ekipman-artan", "ekipman-azalan", "tesis-artan", "tesis-azalan",
+        "durum-artan", "durum-azalan", "denetci-artan", "denetci-azalan", "sonuc-artan", "sonuc-azalan"].map((x) => [x, siraEtiketi(x)] as const), gecer: hep },
     ],
-    siraAnahtari: { no: sifir, durum: sifir, denetci: sifir },
+    siraAnahtari: { no: sifir, durum: sifir, denetci: sifir, ekipman: sifir, tesis: sifir, sonuc: sifir, tarih: sifir },
+    tarih: { ad: "Tarih aralığı", gun: () => "" },
   };
 }
 
@@ -135,18 +180,49 @@ export function onaySekmeleri(v: Pick<OnayListeleri, "yonetici" | "kuyruk" | "tu
 
 /* 596 TOPLU ONAY (karar K4 "hepsi"): onaylayabildiği raporlar seçilir; "Uygun değil" ya da sonucu seçilmemiş olanlar da girer — onay penceresi
    sayılarını söyler. Her rapor kendi isteğiyle onaylanır (yetki, sürüm, durum sunucuda yeniden); düşenler numarasıyla şeritte. */
+/** 2026-11-06: seçilen raporların PDF'leri tek ZIP (tamamlananın imzalı PDF'i) — Raporlar listesinin toplu indirmesiyle aynı (raporlar/ui/topluIs.ts) */
+function PdfIndirTusu({ idler }: { idler: readonly string[] }) {
+  const { ilerleme, indir } = useTopluIndir();
+  const bildir = useBildir();
+  const uyar = useUyar();
+  const [hazirlaniyor, setHazirlaniyor] = useState(false);
+  const calis = async () => {
+    setHazirlaniyor(true);
+    let l: Awaited<ReturnType<typeof onayIndirmeEylemi>> = null;
+    try { l = await onayIndirmeEylemi([...idler]); } catch { l = null; } finally { setHazirlaniyor(false); }
+    if (!l) { uyar("Raporlar alınamadı; yeniden deneyin."); return; }
+    const y = await indir(l, "onaylar-raporlar");
+    if (!y) return;
+    const red = y.inemeyen.filter((x) => x.no);
+    if (!y.inen && y.inemeyen.length && !red.length) { uyar(y.inemeyen[0].neden); return; }
+    bildir(`${y.inen} rapor indirildi.${red.length ? ` ${red.length} rapor inemedi: ${red.slice(0, 3).map((x) => `${x.no} (${x.neden})`).join(", ")}${red.length > 3 ? "…" : ""}` : ""}`);
+  };
+  const mesgul = hazirlaniyor || !!ilerleme;
+  return (
+    <Tus tur="ikincil" ikon="download" disabled={mesgul || !idler.length} aria-busy={mesgul || undefined} onClick={() => void calis()}>
+      {ilerleme ? `İndiriliyor ${ilerleme}` : "PDF indir"}
+    </Tus>
+  );
+}
+
 export function OnayKuyrugu({ v }: { v: OnayListeleri }) {
   const router = useRouter();
   const bildir = useBildir();
   const onayla = useOnayla();
   const s = useSuzgec(kuyrukTanimi(v.kuyruk), v.kuyruk);
-  const sec = useSecim();
+  /* 2026-11-06: toplu onay ve probata sign'ın toplu imzası 200; PDF'le imza penceresi 50 (pencere açılırken kırpılır) */
+  const sec = useSecim(v.teknikImza && !v.sign ? TOPLU_EN_COK : 200);
   const [mesgul, baslat] = useTransition();
   const [ilerleme, setIlerleme] = useState<string | null>(null);
   const [red, setRed] = useState<string[]>([]);
   /* 2026-10-17 (göç 0102): teknik yönetici imzası açıkken onay imzayla — seçilenler imza penceresine */
   const teknik = v.teknikImza, hazir = new Set(v.teknikHazir);
   const [pen, setPen] = useState<OnaySatiri[] | null>(null);
+  const uyar = useUyar();
+  const pencereyeAl = (l: OnaySatiri[]) => {
+    if (l.length > TOPLU_EN_COK) uyar(`PDF'le imzada bir seferde en çok ${TOPLU_EN_COK} rapor; ilk ${TOPLU_EN_COK} rapor alındı.`);
+    return l.slice(0, TOPLU_EN_COK);
+  };
   const secilir = (r: OnaySatiri) => (teknik ? r.izin.imzala : r.izin.onayla);
   const secilen = v.kuyruk.filter((r) => secilir(r) && sec.secili.includes(r.id));
   const onaylanir = s.sonuc.liste.filter(secilir);
@@ -194,11 +270,12 @@ export function OnayKuyrugu({ v }: { v: OnayListeleri }) {
           )}
         </SeritKap>
       )}
-      <SuzgecliListe s={s} on="o" baslik="Onay kuyruğu" sutunlar={sutunlar} anahtar={(r) => r.id} href={(r) => `/onaylar/${r.id}`}
+      <SuzgecliListe s={s} on="o" baslik="Onay kuyruğu" sutunlar={sutunlar} anahtar={(r) => r.id} href={(r) => `/onaylar/${r.id}`} siralanir
         bosVeri={{ ikon: "circle-check", baslik: "Onay bekleyen rapor yok" }} />
       <SecimCubugu sayi={secilen.length} temizle={sec.temizle}>
+        <PdfIndirTusu idler={secilen.map((r) => r.id)} />
         {teknik && v.sign && <SignTopluTus idler={secilen.map((r) => r.id)} asama="teknik" bitti={() => { sec.temizle(); router.refresh(); }} />}
-        {teknik ? <Tus tur={v.sign ? "ikincil" : "birincil"} ikon="file-signature" onClick={() => setPen(secilen)}>{v.sign ? "PDF ile imzala ve onayla" : "İmzala ve onayla"}</Tus>
+        {teknik ? <Tus tur={v.sign ? "ikincil" : "birincil"} ikon="file-signature" onClick={() => setPen(pencereyeAl(secilen))}>{v.sign ? "PDF ile imzala ve onayla" : "İmzala ve onayla"}</Tus>
           : <Tus ikon="circle-check" disabled={mesgul} onClick={() => void topluOnay()}>Seçilenleri onayla</Tus>}
       </SecimCubugu>
       {pen && <TopluImzaPenceresi raporlar={pen} kip="teknik" onKapat={(degisti) => { setPen(null); if (degisti) { sec.temizle(); router.refresh(); } }} />}
@@ -206,14 +283,54 @@ export function OnayKuyrugu({ v }: { v: OnayListeleri }) {
   );
 }
 
+/* 2026-11-06: Tüm raporlarda seçim (sayfalar arasında kalır) → PDF indir; onaylanabilen seçilenler birlikte onaylanır (kuyruktaki gibi, rapor rapor) */
 export function TumRaporlar({ v, ilk }: { v: OnayListeleri; ilk: SunucuListe<OnaySatiri> }) {
+  const router = useRouter();
+  const bildir = useBildir();
+  const onayla = useOnayla();
   const s = useSunucuSuzgec(tumTanimi, ilk, tumRaporlarEylemi);
+  const sec = useSecim(300);
+  const [gorulen, setGorulen] = useState<ReadonlyMap<string, OnaySatiri>>(new Map());
+  const [mesgul, baslat] = useTransition();
+  const [red, setRed] = useState<string[]>([]);
+  /* sayfa değişince seçilenlerin satırı kaybolmasın (onay izni ve sürüm satırdan) */
+  const bilinen = new Map(gorulen);
+  for (const r of s.sonuc.gorunen) bilinen.set(r.id, r);
+  const secilen = sec.secili.map((id) => bilinen.get(id)).filter((r): r is OnaySatiri => !!r);
+  const onaylanir = secilen.filter((r) => r.izin.onayla);
+  const sutunlar: Sutun<OnaySatiri>[] = [{ ...TUM_SUTUN[0], hucre: secNoHucre({ ...sec, degistir: (id, ac) => {
+    const r = s.sonuc.gorunen.find((x) => x.id === id);
+    if (r && ac) setGorulen(new Map(gorulen).set(id, r));
+    sec.degistir(id, ac);
+  } }, () => true, noHucre) }, ...TUM_SUTUN.slice(1)];
+  const topluOnay = async () => {
+    if (!(await onayla({ baslik: `${onaylanir.length} raporu onayla`, tus: "Onayla",
+      metin: <>Seçilenlerden onay bekleyen <b>{onaylanir.length}</b> rapor onaylanacak.{secilen.length > onaylanir.length && <> {secilen.length - onaylanir.length} rapor onay beklemiyor; dokunulmaz.</>}</> }))) return;
+    baslat(async () => {
+      let tamam = 0;
+      const dusen: string[] = [];
+      for (const r of onaylanir) {
+        try {
+          const y = await onaylaEylemi(r.id, r.surum);
+          if (y.tamam) tamam++; else dusen.push(`${r.no}: ${y.genel ?? Object.values(y.hatalar ?? {})[0] ?? "onaylanamadı"}`);
+        } catch { dusen.push(`${r.no}: bağlantı ya da sunucu hatası`); }
+      }
+      setRed(dusen); sec.temizle();
+      bildir(`${tamam} rapor onaylandı.`);
+      router.refresh();
+    });
+  };
   return (
     <>
       <SayfaBasi baslik="Onaylar" sayac={<Sayac s={s} />} />
       <Sekmeler ad="Onaylar bölümleri" ogeler={onaySekmeleri(v)} secili="/onaylar/tum" />
-      <SuzgecliListe s={s} on="t" baslik="Tüm raporlar" sutunlar={TUM_SUTUN} anahtar={(r) => r.id} href={(r) => `/onaylar/${r.id}`} siralanir
+      {red.length > 0 && <SeritKap><Serit tur="hata" ikon="circle-alert"><b>{red.length} rapor onaylanamadı</b> · {red.join(" · ")}</Serit></SeritKap>}
+      <SuzgecliListe s={s} on="t" baslik="Tüm raporlar" sutunlar={sutunlar} anahtar={(r) => r.id} href={(r) => `/onaylar/${r.id}`} siralanir
         bosVeri={{ ikon: "inbox", baslik: "Rapor yok", metin: "Branşınızda açılmış rapor yok." }} />
+      <SecimCubugu sayi={sec.secili.length} temizle={sec.temizle}>
+        <PdfIndirTusu idler={sec.secili} />
+        {!v.teknikImza && onaylanir.length > 0 && <Tus ikon="circle-check" disabled={mesgul} onClick={() => void topluOnay()}>Seçilenleri onayla ({onaylanir.length})</Tus>}
+      </SecimCubugu>
     </>
   );
 }
@@ -235,14 +352,24 @@ const imzaSutunlari = (sec: Secim, hazir: ReadonlySet<string>): Sutun<OnaySatiri
     <div className={stil.eylemTuslar}><TusBaglanti tur="birincil" ikon="file-signature" href={`/raporlar/${r.id}`}>İmzala</TusBaglanti></div>
   ) },
 ];
-function imzaTanimi(): SuzgecTanimi<OnaySatiri> {
-  return { ad: "İmza bekleyenlerde ara", ipucu: "Rapor no, kod, tesis", birim: "rapor", imkansiz: "", cipler: [], seciciler: [], sayfa: TABLO_SAYFA,
-    metin: (r) => [r.no, r.ekipmanKod, r.turAd, r.tesis, r.musteri].join(" ") };
+function imzaTanimi(l: readonly OnaySatiri[]): SuzgecTanimi<OnaySatiri> {
+  return { ad: "İmza bekleyenlerde ara", ipucu: "Hepsinde ara", birim: "rapor", imkansiz: "", cipler: [], sayfa: TABLO_SAYFA, izgara: true,
+    metin: (r) => [r.no, r.ekipmanKod, r.turAd, r.tesis, r.musteri].join(" "),
+    alanlar: RAPOR_ALANLARI,
+    seciciler: raporSecicileri(l, false, ["no", "ekipman", "onay"]),
+    siraAnahtari: siraAnahtari("onay"),
+    tarih: { ad: "Onaylandı", gun: (r) => gunu(r.onay) } };
 }
 export function ImzaBekleyen({ v }: { v: OnayListeleri }) {
   const router = useRouter();
-  const s = useSuzgec(imzaTanimi(), v.imzaBekleyen);
-  const sec = useSecim();
+  const uyar = useUyar();
+  const s = useSuzgec(imzaTanimi(v.imzaBekleyen), v.imzaBekleyen);
+  /* 2026-11-06: probata sign'ın toplu imzası 200 (sign TOPLU_EN_COK); PDF'le imza penceresi 50 */
+  const sec = useSecim(v.sign ? 200 : TOPLU_EN_COK);
+  const pencereyeAl = (l: OnaySatiri[]) => {
+    if (l.length > TOPLU_EN_COK) uyar(`PDF'le imzada bir seferde en çok ${TOPLU_EN_COK} rapor; ilk ${TOPLU_EN_COK} rapor alındı.`);
+    return l.slice(0, TOPLU_EN_COK);
+  };
   const [pen, setPen] = useState<OnaySatiri[] | null>(null);
   const hazir = new Set(v.imzaHazir);
   const n = v.imzaBekleyen.length, hazirSayi = v.imzaBekleyen.filter((r) => hazir.has(r.id)).length;
@@ -262,11 +389,12 @@ export function ImzaBekleyen({ v }: { v: OnayListeleri }) {
           </Serit>
         </SeritKap>
       )}
-      <SuzgecliListe s={s} on="i" baslik="İmzamı bekleyen raporlar" sutunlar={imzaSutunlari(sec, hazir)} anahtar={(r) => r.id} href={(r) => `/raporlar/${r.id}`}
+      <SuzgecliListe s={s} on="i" baslik="İmzamı bekleyen raporlar" sutunlar={imzaSutunlari(sec, hazir)} anahtar={(r) => r.id} href={(r) => `/raporlar/${r.id}`} siralanir
         bosVeri={{ ikon: "circle-check", baslik: "İmzanızı bekleyen rapor yok" }} />
       <SecimCubugu sayi={secilen.length} temizle={sec.temizle}>
+        <PdfIndirTusu idler={secilen.map((r) => r.id)} />
         {v.sign && <SignTopluTus idler={secilen.map((r) => r.id)} asama="uzman" bitti={() => { sec.temizle(); router.refresh(); }} />}
-        <Tus tur={v.sign ? "ikincil" : "birincil"} ikon="file-signature" onClick={() => setPen(secilen)}>{v.sign ? "PDF ile imzala" : "İmzaya hazırla"}</Tus>
+        <Tus tur={v.sign ? "ikincil" : "birincil"} ikon="file-signature" onClick={() => setPen(pencereyeAl(secilen))}>{v.sign ? "PDF ile imzala" : "İmzaya hazırla"}</Tus>
       </SecimCubugu>
       {pen && <TopluImzaPenceresi raporlar={pen} onKapat={(degisti) => { setPen(null); if (degisti) { sec.temizle(); router.refresh(); } }} />}
     </>

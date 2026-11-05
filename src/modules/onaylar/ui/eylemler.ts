@@ -6,7 +6,8 @@ import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { depo } from "../../../server/dosya/depo";
 import { belgeGeriGonder, belgeImzaliYukle, type BelgeYazma } from "../server/belgeler";
-import { durumDegistir, geriGonder, onayGeriAl, onayla, revizeIstegiReddet, revizeyeGonder, tumRaporlarSayfasi, type OnaySatiri, type OnayYazma } from "../server/onaylar";
+import { durumDegistir, geriGonder, onayGeriAl, onayIndirmeListesi, onayla, revizeIstegiReddet, revizeyeGonder, tumRaporlarSayfasi, type OnaySatiri, type OnayYazma } from "../server/onaylar";
+import type { IndirmeSatiri } from "../../raporlar/server/onay-baglanti";
 import type { SunucuListe } from "../../../components/liste/suzgec";
 import { talepKarar, type Yazma as TalepYazma } from "../../talepler/server/talepler";
 
@@ -34,6 +35,14 @@ export async function tumRaporlarEylemi(durum: unknown): Promise<SunucuListe<Ona
   const o = await istekOturumu();
   if (!o) return null;
   return oturumIslemi(o, (db) => tumRaporlarSayfasi(db, o, durum));
+}
+
+/** 2026-11-06: seçilen raporların PDF indirme satırları (görme modül işlevinde; görmediği kimlik düşer) */
+export async function onayIndirmeEylemi(idler: string[]): Promise<IndirmeSatiri[] | null> {
+  if (!(await ayniKoken())) return null;
+  const o = await istekOturumu();
+  if (!o) return null;
+  return oturumIslemi(o, (db) => onayIndirmeListesi(db, o, Array.isArray(idler) ? idler.slice(0, 300) : []));
 }
 
 export async function onaylaEylemi(id: string, surum: number): Promise<OnayYaniti> {

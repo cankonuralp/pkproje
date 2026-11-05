@@ -18,7 +18,7 @@ import type { Iz } from "../../../server/db/yazici.ts";
 import { canDo, canDoEylem, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import {
-  bekleyenRevizeIstegi, gorunenRaporOzeti, imzaHazirOlanlar, onayTumSayfasi, raporDurumYaz, raporOzetleri, raporRevizeYaz, revizeIstegiReddet as istekReddet, revizeIstekleri,
+  bekleyenRevizeIstegi, gorunenRaporOzeti, imzaHazirOlanlar, onayTumSayfasi, secilenIndirmeListesi, type IndirmeSatiri,raporDurumYaz, raporOzetleri, raporRevizeYaz, revizeIstegiReddet as istekReddet, revizeIstekleri,
   teknikHazirOlanlar,
   type OnayGecisi, type RaporOzeti, signAcik, signEkrani, type SignEkrani } from "../../raporlar/server/onay-baglanti.ts";
 import type { SunucuListe } from "../../../components/liste/suzgec.ts";
@@ -154,6 +154,12 @@ export async function tumRaporlarSayfasi(db: Sorgulayici, kim: Kisi, durum: unkn
   const simdi = Date.now(), teknik = await teknikImzaAcik(db);
   const l = await onayTumSayfasi(db, kim, durum);
   return { ...l, gorunen: l.gorunen.map((r) => satir(kim, r, simdi, teknik)) };
+}
+
+/** 2026-11-06 (Onaylar toplu işi — PDF indir): seçilen raporların indirme satırları, Onaylar'ın görme kuralıyla; Onaylar'ı görmeyene boş */
+export async function onayIndirmeListesi(db: Sorgulayici, kim: Kisi, idler: readonly string[]): Promise<IndirmeSatiri[]> {
+  if (!onaylarGorur(kim) || !Array.isArray(idler)) return [];
+  return secilenIndirmeListesi(db, kim, idler, 15);
 }
 
 /** 565 (menü balonu — her sayfada): yalnız SÜREÇTEKİ raporlar okunur (onayda + onaylandı; tamamlanan bütün raporlar okunmaz) — imzasını bekleyen,

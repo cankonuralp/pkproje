@@ -30,7 +30,8 @@ const AG = "Bağlantı ya da sunucu hatası; yeniden deneyin.";
 
 /* ── SEÇİM ── */
 export interface Secim { secili: readonly string[]; degistir: (id: string, ac: boolean) => void; hepsi: (idler: readonly string[]) => void; temizle: () => void }
-export function useSecim(): Secim {
+/** enCok: seçim sınırı — PDF'le imza penceresi 50 (TOPLU_EN_COK); 2026-11-06: probata sign'ın toplu imzası 200, toplu onay 200, PDF indirme 300 */
+export function useSecim(enCok: number = TOPLU_EN_COK): Secim {
   const [secili, setSecili] = useState<readonly string[]>([]);
   const uyar = useUyar();
   return {
@@ -38,12 +39,12 @@ export function useSecim(): Secim {
     degistir: (id, ac) => {
       if (!ac) { setSecili(secili.filter((x) => x !== id)); return; }
       if (secili.includes(id)) return;
-      if (secili.length >= TOPLU_EN_COK) { uyar(`Bir seferde en çok ${TOPLU_EN_COK} rapor seçilir.`); return; }
+      if (secili.length >= enCok) { uyar(`Bir seferde en çok ${enCok} rapor seçilir.`); return; }
       setSecili([...secili, id]);
     },
     hepsi: (idler) => {
-      if (idler.length > TOPLU_EN_COK) uyar(`Bir seferde en çok ${TOPLU_EN_COK} rapor; ilk ${TOPLU_EN_COK} rapor seçildi.`);
-      setSecili(idler.slice(0, TOPLU_EN_COK));
+      if (idler.length > enCok) uyar(`Bir seferde en çok ${enCok} rapor; ilk ${enCok} rapor seçildi.`);
+      setSecili(idler.slice(0, enCok));
     },
     temizle: () => setSecili([]),
   };

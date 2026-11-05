@@ -120,23 +120,42 @@ export async function raporIndirmeListesi(db: Sorgulayici, kim: YetkiHesabi, dur
   return { adet: l.adet, raporlar: l.gorunen.map((x) => { const { hesapId, ...g } = raporSatiri(x); return { ...g, benim: !!hesapId && hesapId === kim.id }; }) };
 }
 
+/** 2026-11-06 (Onaylar toplu işi): seçilen raporların indirme satırları (imzalı PDF'i olan imzalısını indirir) — modülün görme kuralıyla; görmediği
+    kimlik sessizce düşer. En çok TOPLU_INDIR_EN_COK. */
+export interface IndirmeSatiri { id: string; no: string; surum: number; durum: RaporDurumu; revizyon: number; benim: boolean; ekipmanKod: string; turAd: string; tesis: string; imzaliDosya: string | null }
+export async function secilenIndirmeListesi(db: Sorgulayici, kim: YetkiHesabi, idler: readonly string[], modul: 14 | 15): Promise<IndirmeSatiri[]> {
+  const ids = [...new Set(idler.filter((x) => typeof x === "string" && UUID.test(x)))].slice(0, TOPLU_INDIR_EN_COK);
+  if (!ids.length || duzey(kim, modul) === "yok") return [];
+  const g = raporGorusu(kim, modul);
+  const l = await db.sorgu<Ham>(`SELECT ${RAPOR_SECIMI}, ${IMZALI} AS "imzaliDosya" FROM ${RAPOR_KAYNAGI} WHERE ${g.sql} AND r.id = ANY ($${g.p.length + 1}::uuid[])
+    ORDER BY r.olustu DESC, r.id`, [...g.p, ids]);
+  return l.rows.map((x) => ({ id: x.id, no: x.no, surum: x.surum, durum: x.durum, revizyon: x.revizyon, benim: !!x.hesapId && x.hesapId === kim.id,
+    ekipmanKod: x.ekipmanKod, turAd: x.turAd, tesis: x.tesis, imzaliDosya: x.imzaliDosya ?? null }));
+}
+
 /* ── ONAYLAR › TÜM RAPORLAR (maket onaylar.html #/tum — 190; Onaylar onay-baglanti.ts kapısından) ─────────────────────────────────────────
    Ekran ve anlam aynı (onaylar/ui/OnayListesi.tsx tanımı): rapor no ve tesis (+ müşteri) ayrı aranır; seçiciler Durum · Denetçi; sıralama rapor no,
-   durum (akış sırası), denetçi; varsayılan en son oluşturulan üstte; 20'şer. */
+   durum (akış sırası), denetçi; varsayılan en son oluşturulan üstte; 20'şer.
+   2026-11-06 (reisim: "bu ekranda da filtreleme geliştirilmeli ve toplu onay, imzalama vs olmalı"): Raporlar listesinin süzgeçleri de — alan Ekipman
+   kodu, seçiciler Ekipman türü · Müşteri · Branş · İl · İlçe · Sonuç, tarih aralığı (açıldığı gün), sıralama tarih · ekipman · tesis · sonuç da. */
 export function onayTumKaynagi(): ListeKaynagi {
+  const r = raporKaynagi();
   return {
     kaynak: RAPOR_KAYNAGI,
     secim: RAPOR_SECIMI,
     metin: [NO],
-    alanlar: { no: NO, tesis: "concat_ws(' ', y.musteri, y.tesis)" },
+    alanlar: { no: NO, kod: "e.kod", tesis: "concat_ws(' ', y.musteri, y.tesis)" },
     cipler: {},
     seciciler: {
       durum: { kosul: (v, ekle) => `r.durum = ${ekle(v)}` },
       kisi: { kosul: (v, ekle) => `${DENETCI} = ${ekle(v)}`, secenek: { deger: DENETCI, etiket: DENETCI } },
+      tur: r.seciciler.tur, musteri: r.seciciler.musteri, brans: r.seciciler.brans, il: r.seciciler.il, ilce: r.seciciler.ilce, sonuc: r.seciciler.sonuc,
       sira: { kosul: () => null },
     },
     siraSecici: "sira",
-    sira: { no: { ifade: `tr_sira(${NO})`, metin: true }, durum: { ifade: DURUM_SIRASI }, denetci: { ifade: `tr_sira(${DENETCI})`, metin: true } },
+    sira: { no: { ifade: `tr_sira(${NO})`, metin: true }, durum: { ifade: DURUM_SIRASI }, denetci: { ifade: `tr_sira(${DENETCI})`, metin: true },
+      tarih: r.sira.tarih, ekipman: r.sira.ekipman, tesis: r.sira.tesis, sonuc: r.sira.sonuc },
+    tarih: GUN,
     varsayilanSira: "r.olustu DESC, r.id",
     sayfa: 20,
   };
