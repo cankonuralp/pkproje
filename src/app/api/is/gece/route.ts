@@ -9,7 +9,7 @@ import { firmaHavuzuKimlikle } from "../../../../server/db/firma-havuzu";
 import { merkezHavuzu } from "../../../../server/db/havuz";
 import { depo } from "../../../../server/dosya/depo";
 import { saklamaIsi } from "../../../../modules/raporlar/server/saklama";
-import { depoTasimaIsi, epostaIsi, GECE_SURE, geceIsleri, sayKapanisIsi } from "../../../../server/is/gece";
+import { depoTasimaIsi, epostaIsi, GECE_SURE, geceIsleri, sayKapanisIsi, sayOgrenmeIsi } from "../../../../server/is/gece";
 import { zamanliYetkili } from "../../../../server/is/yetki";
 
 export const dynamic = "force-dynamic";
@@ -29,6 +29,9 @@ export async function GET(istek: Request) {
   const tasima = await depoTasimaIsi(merkezHavuzu(), depo(), Math.max(5_000, GECE_SURE - (Date.now() - bas)), firmaHavuzuKimlikle);
   /* 2026-11-02 (göç 0116): 60 dakikayı geçmiş S.A.Y konuşmaları (pg_cron'un yedeği) + hizmetteki ek dosyaları */
   const kapanis = await sayKapanisIsi(merkezHavuzu(), Math.max(5_000, GECE_SURE - (Date.now() - bas)), firmaHavuzuKimlikle);
-  const hata = o.durum === "hata" || saklama.durum === "hata" || eposta.durum === "hata" || tasima?.durum === "hata" || kapanis.durum === "hata";
-  return Response.json({ ...o, saklama, eposta, ...(tasima ? { tasima } : {}), kapanis }, { status: hata ? 500 : 200, headers: BASLIK });
+  /* 2026-11-05 (göç 0121): S.A.Y'ın öğrenmesi — puan + hafıza (kapanıştan sonra: kapanan konuşmaların işleri de sayılır) */
+  const ogrenme = await sayOgrenmeIsi(merkezHavuzu(), Math.max(5_000, GECE_SURE - (Date.now() - bas)), firmaHavuzuKimlikle);
+  const hata = o.durum === "hata" || saklama.durum === "hata" || eposta.durum === "hata" || tasima?.durum === "hata" || kapanis.durum === "hata"
+    || ogrenme.durum === "hata";
+  return Response.json({ ...o, saklama, eposta, ...(tasima ? { tasima } : {}), kapanis, ogrenme }, { status: hata ? 500 : 200, headers: BASLIK });
 }

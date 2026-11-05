@@ -5,6 +5,7 @@ import type { Havuz } from "../db/kiraci.ts";
 import { copTemizle } from "../dosya/cop.ts";
 import type { Depo } from "../dosya/depo.ts";
 import { firmalardaKos, type HavuzBul, type IsOzeti } from "./firmalar.ts";
+import { ogrenGece } from "../yz/ogrenme.ts";
 import { firmaGonderimi } from "../eposta/firma.ts";
 import { bekleyenleriGonder } from "../eposta/gonder.ts";
 import { sirKullan } from "../ayar/sir.ts";
@@ -28,6 +29,12 @@ export async function sayKapanisIsi(havuz: Havuz, sure: number, havuzBul?: Havuz
     }
     return { sayilar: { kapanan, dosya }, kalan: l.length >= 200 };
   }, havuzBul);
+}
+
+/** 2026-11-05 (göç 0121): S.A.Y'ın öğrenmesi — işleri puanlar, firmanın hafızasını kurar (yapay zekâ yok; src/server/yz/ogrenme.ts) */
+export type OgrenmeOzeti = IsOzeti<{ puanlanan: number; ornek: number }>;
+export async function sayOgrenmeIsi(havuz: Havuz, sure: number, havuzBul?: HavuzBul): Promise<OgrenmeOzeti> {
+  return firmalardaKos(havuz, "say_ogrenme", sure, { puanlanan: 0, ornek: 0 }, async (db) => ({ sayilar: await ogrenGece(db), kalan: false }), havuzBul);
 }
 
 export type GeceOzeti = IsOzeti<{ silinen: number; bayt: number; bagli: number; oksuz: number }>;

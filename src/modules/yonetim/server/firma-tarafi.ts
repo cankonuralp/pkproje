@@ -171,8 +171,16 @@ export async function yzAnahtariYonet(c: YonetimCalistirici, id: string, duz: st
 
 /* ── 2026-10-31 (L8 — göç 0112): S.A.Y işlerinin ölçümü (son 30 gün, en yeni 50) ve Ar-Ge kayıtları (30 gün) — yalnız yönetim okur ── */
 export interface SayIsOlcumu { is: string; kisi: string; bas: string; bit: string; istek: number; en_buyuk: number; giris: number; cikis: number; okunan: number;
-  maliyet: number; sure_ms: number; yazma: number; islem: number; sablon: string | null; derinlik: string }
-export interface SayOlcumu { isler: SayIsOlcumu[]; arge: { id: string; kisi: string; zaman: string; ileti: number }[] }
+  maliyet: number; sure_ms: number; yazma: number; islem: number; sablon: string | null; derinlik: string;
+  /** 2026-11-05 (göç 0121): gecenin puanı ve nedeni, işin türü */
+  puan: "iyi" | "kotu" | "supheli" | null; sinyal: SayIsSinyali | null; tur: string | null }
+export interface SayIsSinyali { olumsuz: boolean; geri: number; onay: number; rapor: number; elle: number; hata: number; elle_yer: string[] }
+export interface SayOlcumu {
+  isler: SayIsOlcumu[]; arge: { id: string; kisi: string; zaman: string; ileti: number }[];
+  /** 2026-11-05 (göç 0121): firmanın S.A.Y hafızası ve son 7 günün özeti */
+  hafiza: { metin: string; guncel: string; ornek: number } | null;
+  ozet: { is: number; iyi: number; kotu: number; supheli: number; maliyet: number } | null;
+}
 export async function sayOlcumuYonet(c: YonetimCalistirici, id: string): Promise<SayOlcumu | null> {
   if (!UUID.test(id)) return null;
   const y = await yer(c, id);
@@ -180,7 +188,8 @@ export async function sayOlcumuYonet(c: YonetimCalistirici, id: string): Promise
   const oku = (db: Sorgulayici) => db.sorgu<{ s: SayOlcumu }>("SELECT firma_yonetim_say($1) AS s", [id]).then((r) => r.rows[0]?.s ?? null);
   const s = y.vt === "ortak" ? await c.merkez(oku) : await firmada(c, y.kayit, id, oku);
   return s ? { isler: (s.isler ?? []).map((x) => ({ ...x, giris: Number(x.giris), cikis: Number(x.cikis), okunan: Number(x.okunan), maliyet: Number(x.maliyet),
-    sure_ms: Number(x.sure_ms) })), arge: s.arge ?? [] } : null;
+    sure_ms: Number(x.sure_ms), puan: x.puan ?? null, sinyal: x.sinyal ?? null, tur: x.tur ?? null })), arge: s.arge ?? [], hafiza: s.hafiza ?? null,
+    ozet: s.ozet ? { ...s.ozet, maliyet: Number(s.ozet.maliyet) } : null } : null;
 }
 export async function argeKaydiYonet(c: YonetimCalistirici, id: string, kayit: string): Promise<unknown[] | null> {
   if (!UUID.test(id) || !UUID.test(kayit)) return null;

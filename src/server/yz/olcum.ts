@@ -6,7 +6,8 @@
    Kilit tests/say-olcum.test.ts. */
 import type { Sorgulayici } from "../db/kiraci.ts";
 
-export const ARGE_GUN = 30;
+/** 2026-11-05 (göç 0121, K3 — reisim: "önerilerinin yeni hali uygundur"): 30 gün → 12 ay; öğrenilenler (say_hafiza) hiç silinmez */
+export const ARGE_GUN = 365;
 const SONUC_EN_COK = 4_000;
 type Blok = Record<string, unknown>;
 const bloklar = (c: unknown): Blok[] => (Array.isArray(c) ? c.filter((b): b is Blok => !!b && typeof b === "object") : typeof c === "string" ? [{ type: "text", text: c }] : []);

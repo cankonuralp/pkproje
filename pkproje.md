@@ -2527,6 +2527,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-11-05 (S.A.Y KENDİ İŞİNDEN ÖĞRENME — göç 0121; reisim: "müşterilerin yaptırdığı işlere göre sürekli kendini eğitme", "geri planda çalışsın ve kullanıcının
+  tokeninden yemesin", sunum 7UcQ3N2BJRQkLHq4Whad16 "önerilerinin yeni hali uygundur"): iş bitince özet (say_is: istek, adımlar, S.A.Y'ın yazdığı raporlar ve
+  cevaplarının parmak izi, düzeltme sözü / geri al) · gece say_ogren_veri puanlar (onaydan geri geldi / S.A.Y'ın bıraktığı cevap elle değişti / sonraki istek
+  düzeltme → kötü; işlem hatası → şüpheli; raporların hepsi onaylandı ya da raporsuz iş bir gün sonra → iyi), src/server/yz/ogrenme.ts hafizaKur örnek seçer
+  (iş türü başına en ucuz üç; adlar / numaralar gizli; eski örnek daha iyisi gelmeden düşmez) + türlerin kod düzeni → say_hafiza · yeni konuşmanın başında
+  hafıza notu (soruyuEkle) · yapay zekâ ÇAĞRILMAZ (kilitli) · Yönetim › firma › S.A.Y: puan + neden, son 7 gün, hafıza · K3: say_arge 12 ay (0116 süpürmesi
+  dahil), öğrenilenler silinmez · K4: koşul metni + sürüm 2026-11-2 (yeniden kabul). Yedeğe girmez (YEDEK_DISI). Kayıttan oynatma sınavı bu kalemde YOK.
 - 2026-11-05 (S.A.Y UZMAN MANTIĞI — reisim: "önerilerinin yeni hali uygundur, elindeki tüm işleri sırasıyla yap bitir"; kaynak Claude outputs/say-egitim-v2,
   07-YENI-SAHA-DERSLERI.md): B12 uzman-mantigi eklendi (her formatta formu anlamından okumak; on ilke + tür örnekleri); B01 / B02 / B04 / B05 / B06 / B07 / B11'e
   "(2026-11-05)" bölümleri (B06'da pompa / tüp-dolap blok kuralı satırı) — metinler AYNEN. Kaynaktaki ön bilgisiz B12-tur-bazli-kurallar ve B01-saha-paketinden

@@ -589,6 +589,9 @@ pkproje/
                             n / N"); otomatik kapanış YALNIZ 60 dk (is-siniri.ts kapanisNedeni); kod "-0" yasağı (planlar/sema.ts kodBicimi, her yol); tesis kaydıyla
                             eşleme önce seri (talimat + B02); O16 tam: islem.ts çözülmüş ham + turleriCevir ("3" → 3, "false" → false, yalnız hata yolunda) ·
                             kilit say-is-siniri, say-on-okuma, say-ek, say-islem-yurutucu, say-faz2 + bozanları; e2e taklit ön okuma "sinif" dalı
+                            · 2026-11-05 KENDİ İŞİNDEN ÖĞRENME (göç 0121): src/server/yz/ogrenme.ts — iş bitince say_is özeti (dongu.ts bitti), gece puan +
+                            say_hafiza (is/gece.ts sayOgrenmeIsi; yapay zekâ yok), konuşmanın başında hafıza notu (say.ts soruyuEkle); Yönetim S.A.Y bölümünde
+                            puan / hafıza; say_arge 12 ay · kilit say-ogrenme(-saf), bozan say-ogrenme
                             · 2026-11-02 ALTINCI KOŞU SONRASI: rapor_ac sonucu tür başına harita bir kez (say-islemleri turHaritalari; rapor_getir çağrılmaz) ·
                             parti sonu küçültme yalnız raporlara_yaz / rapor_yaz ve istem > PARTI_ESIGI 60 bin · A1 TAVAN 75 bin (hizmetin 80 bininden önce) ·
                             SayEkipmanGirdisi seri / konum "-" boş · **60 DK KAPANIŞI VERİTABANINDA (göç 0116; reisim "kullanıcı açsa da açmasa da")**:

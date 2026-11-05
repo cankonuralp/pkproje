@@ -38,6 +38,7 @@ import { ISLEM_DIZINI, ISLEM_KATALOGU, modulAdi, SAYFA_KATALOGU } from "../islem
 import { SAY_KILAVUZU } from "../yardim.ts";
 import { isDerinligi, isSablonu } from "../sablonlar.ts";
 import { istekOlcumuYaz } from "../../../server/yz/olcum.ts";
+import { isKaydiYaz, isOzeti } from "../../../server/yz/ogrenme.ts";
 import { cagriAyir, cagriBirak, cagriKapat, canliOku, ekranDurumuMetni, gorunenYaz, kullaniciIletisiEkle, kurucuOku, sayBaglami, sayKapisi, SINIR_DOLDU, soruyuEkle, YARIDA, type AcikKayitOkuyucu,
   type SayBaglami, type SayEkrani } from "./say.ts";
 
@@ -174,6 +175,15 @@ export async function sayAkisi(o: IstekOturumu, ham: unknown, yaz: (x: SayOlayi)
   let sonIstem = 0;
   /* 2026-11-01 (büyük iş şeması): bekleme balonuna "n / N rapor yazıldı" — her aşama yazısının ucunda (parti, ön okuma, küçültme görünmez) */
   let ilerleme: string | null = null;
+  /* 2026-11-05 (göç 0121): iş bitince öğrenme özeti (ekrandaki rapor son bağlamdan); düşerse iş etkilenmez — hata kaydına */
+  let raporId: string | null = null;
+  const bitti = async () => {
+    await oturumIslemi(o, async (db) => {
+      const oz = isOzeti((await konusmaOku(db)).map((m) => ({ role: m.rol, content: m.icerik })), raporId);
+      if (oz) await isKaydiYaz(db, v.is, oz);
+    }).catch((e: unknown) => hataYaz(o, e, "say.ogrenme"));
+    yaz({ t: "bitti", yenile });
+  };
   const yazI = (x: SayOlayi) => yaz(x.t === "asama" && ilerleme ? { ...x, ad: `${x.ad} · ${ilerleme}` } : x);
   try {
     if (v.tur === "soru") {
@@ -220,8 +230,9 @@ export async function sayAkisi(o: IstekOturumu, ham: unknown, yaz: (x: SayOlayi)
         if (!a) return { durum: "red" as const, neden: SINIR_DOLDU };
         return { durum: "hazir" as const, k, mesajlar, a, b: await sayBaglami(db, o, ekran, acikKayitOkuyucu(o)) };
       });
-      if (h.durum === "bitti") { yaz({ t: "bitti", yenile }); return; }
+      if (h.durum === "bitti") { await bitti(); return; }
       if (h.durum === "red") { yaz({ t: "hata", neden: h.neden, yenile }); return; }
+      raporId = h.b.raporId ?? raporId;
       if (ilerleme === null) ilerleme = ilerlemeMetni(raporIlerlemesi(h.mesajlar as { role: string; content: unknown }[]));
       yazI({ t: "asama", ad: "Düşünüyor" });
       const basla = Date.now();
@@ -268,7 +279,7 @@ export async function sayAkisi(o: IstekOturumu, ham: unknown, yaz: (x: SayOlayi)
           const g = await oturumIslemi(o, goster);
           if (g) yaz({ t: "ileti", ileti: g });
         }
-        yaz({ t: "bitti", yenile });
+        await bitti();
         return;
       }
       const r = await araclariYap(o, m.content, h.b, v.kaydedilmemis, yazI, h.mesajlar);

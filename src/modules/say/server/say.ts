@@ -9,6 +9,7 @@
    gir", geri al, üstüne yaz) görünen geçmişe ve konuşmaya not olarak girer (S.A.Y sonra bilir).
    Yetki: kişi ve firma oturumdan; geçmiş ve konuşma kişinin kendisinin (RLS); ekran haritası yalnız raporu yazanın Yeni raporunda, format haritası
    yalnız formatı değiştirebilene ve taslakta (561 / 553 — ekranın gönderdiği kimliğe değil sunucunun bulduğuna bağlanır). */
+import { hafizaNotu } from "../../../server/yz/ogrenme.ts";
 import { ayarOku } from "../../../server/ayar/ayar.ts";
 import { sirDurumu, sirKullan } from "../../../server/ayar/sir.ts";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
@@ -174,11 +175,13 @@ export async function soruyuEkle(db: Sorgulayici, kim: Kisi, g: { metin: string;
   if (!metin && !ekler.length) return { durum: "red", neden: "Sorunuzu yazın." };
   const soru = metin || (ekler.length === 1 ? "Eki inceler misin?" : "Ekleri inceler misin?");
   const ek: SohbetEki | null = ekler.length || b.raporId ? { ...(b.raporId ? { rapor: b.raporId } : {}), ...(ekler.length ? { ekler: ekler.map((e) => ({ ad: e.ad, boyut: e.boyut, tur: e.tur })) } : {}) } : null;
+  /* 2026-11-05 (göç 0121): yeni konuşmanın başında firmanın S.A.Y hafızası (örnek işler, kod düzeni) — konuşma boyunca aynı, önbellekte */
+  const hafiza = (await konusmaSonu(db)) ? null : await hafizaNotu(db);
   const ileti = await gorunenYaz(db, { kim: "ben", metin: soru, yer: b.yer, ek }, simdi);
   await kullaniciIletisiEkle(db, [...(kapanis ? [{ type: "text", text: kapanis.not }] : []), ...ekBloklari(ekler, soru)]);
   /* 2026-10-31 (kalem 8): hazır öneriden geldiyse şablon notu (kişinin rolüne açık şablon; talimat değişmez) */
   const s = g.sablon ? SABLONLAR.find((x) => x.id === g.sablon!.id && (!x.roller || x.roller.some((r) => (kim.roller as readonly string[]).includes(r)))) : undefined;
-  await konusmaEkle(db, "system", [sayfaNotu(b, simdi), ...(s ? [sablonNotu(s, g.sablon!.girdiler)] : [])].join("\n"));
+  await konusmaEkle(db, "system", [...(hafiza ? [hafiza] : []), sayfaNotu(b, simdi), ...(s ? [sablonNotu(s, g.sablon!.girdiler)] : [])].join("\n"));
   return { durum: "hazir", ileti, baglam: b, kapanis: kapanis ? { dosyalar: kapanis.dosyalar, anahtar: kapanis.anahtar } : null };
 }
 /** 2026-11-01 (V21 B — reisim: "müşteriye bırakmadan otomatik geçmiş silme koyalım"): iş bitmişken (konuşmanın sonu açık araç çağrısı olmayan S.A.Y cevabı)

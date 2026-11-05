@@ -30,6 +30,7 @@ export const YEDEK_DISI: Readonly<Record<string, string>> = {
   rapor_oneri: "yapay zekânın geçici önerisi",
   say_arge: "S.A.Y çalışma kaydı",
   say_istek: "S.A.Y çalışma kaydı",
+  say_is: "S.A.Y çalışma kaydı (öğrenme özeti)", say_hafiza: "S.A.Y'ın öğrendikleri (geceleri kurulur)",
   say_chat_kayit: "kişiye özel saha notu (S.A.Y Chat)",
   vt_kimlik: "veritabanının kendi kimliği",
   yz_ek: "S.A.Y eki", yz_ek_okuma: "S.A.Y eki", yz_ek_parca: "S.A.Y eki",
