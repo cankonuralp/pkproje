@@ -72,7 +72,7 @@ test("596 toplu onay: teknik yönetici iki raporu seçer → Seçilenleri onayla
   await giris(page, E2E_TOPLU.teknik);
   await page.goto(`${Y}/onaylar`);
   await hazir(page);
-  const ara = page.getByRole("searchbox", { name: "Kuyrukta ara" });
+  const ara = page.getByRole("searchbox", { name: "Ekipman kodu" });   // 2026-11-06: Onaylar süzgeç ızgarası — alan kutusu
   const nolar: string[] = [];
   for (const kod of E2E_TOPLU.onay.ekipman) {
     await ara.fill(kod);
@@ -89,8 +89,9 @@ test("596 toplu onay: teknik yönetici iki raporu seçer → Seçilenleri onayla
   await expect(soru).toContainText("Seçilen 2 rapor onaylanacak");
   await soru.getByRole("button", { name: "Onayla" }).click();
   await expect(page.getByText("2 rapor onaylandı.").first()).toBeVisible({ timeout: 60_000 });
+  await ara.fill("");
   for (const no of nolar) {
-    await ara.fill(no);
+    await page.getByRole("searchbox", { name: "Rapor no" }).fill(no);
     await expect(page.getByText("Filtreye uyan rapor yok").or(page.getByText("Onay bekleyen rapor yok"))).toBeVisible({ timeout: 30_000 });
   }
 });

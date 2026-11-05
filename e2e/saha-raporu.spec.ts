@@ -127,7 +127,9 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await expect(girdi(page, "Hidrostatik deney basıncı").first()).toHaveAttribute("aria-invalid", "true");
   /* cihaz bölümü formatın kendi "Ölçüm cihazları" bölümü (459) ya da sabit bölüm — başlığıyla bulunur */
   const cihazBolum = page.locator("section", { has: page.getByRole("heading", { level: 2, name: /Ölçüm cihazları$/ }) });
-  await expect(cihazBolum.getByText("Eksik", { exact: true }).first()).toBeVisible();
+  /* 2026-11-06 (cihaz-sec.ts): denetçinin zimmetindeki tek uygun cihaz rapor açılınca seçili — cihaz eksiği yok */
+  await expect(cihazBolum.getByRole("button", { name: `${E2E_SAHA.cihaz} kaldır` })).toBeVisible();
+  await expect(cihazBolum.getByText("Eksik", { exact: true })).toHaveCount(0);
   await expect(asama(page)).toContainText("Yeni");
   await expect(page).toHaveURL(new RegExp(`${raporAdresi}$`));
 
@@ -286,7 +288,7 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   const onayEkrani = async () => {
     await page.goto("/onaylar");
     await hazir(page);
-    await page.getByRole("searchbox", { name: "Kuyrukta ara" }).fill(raporNo);   // 2026-10-16: kuyruk 20'şer sayfalı
+    await page.getByRole("searchbox", { name: "Rapor no" }).fill(raporNo);   // 2026-10-16: kuyruk 20'şer sayfalı · 2026-11-06: alan kutusu (Onaylar süzgeç ızgarası)
     await page.getByRole("link", { name: raporNo }).first().click();
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(raporNo, { timeout: 30_000 });
   };
@@ -357,7 +359,7 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await page.getByRole("link", { name: "İmzamı bekleyen raporlar" }).click();
   await expect(page).toHaveURL(/\/onaylar\/imza$/, { timeout: 30_000 });
   await hazir(page);
-  await page.getByRole("searchbox", { name: "İmza bekleyenlerde ara" }).fill(raporNo);   // 2026-10-16: liste 20'şer sayfalı
+  await page.getByRole("searchbox", { name: "Rapor no" }).fill(raporNo);   // 2026-10-16: liste 20'şer sayfalı · 2026-11-06: alan kutusu
   await page.getByRole("link", { name: raporNo }).first().click();
   await expect(page).toHaveURL(new RegExp(`${raporAdresi}$`), { timeout: 30_000 });
   await hazir(page);
