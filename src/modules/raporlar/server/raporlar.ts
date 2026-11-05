@@ -43,6 +43,7 @@ import { hesabinPersoneli, roldekiHesapAdlari } from "../../../server/kimlik/hes
 import {
   ayEkle, gorunenNo, kalibrasyonGecti, raporDosyaAdi, KopyaGirdisi, RAPOR_DURUM, RaporKaydi, raporYazmaNedeni, RevizeGirdisi, SONUC_AD, EkipmanBilgisi, type RaporCihazi, type RaporDurumu, type RaporTarihleri,
 } from "../sema.ts";
+import { otomatikCihazlar } from "../cihaz-sec.ts";
 import { istekAc, istekKapat, revizeDurumu } from "./revize.ts";
 import { mesaiDurumu } from "./plan-baglanti.ts";
 import { raporOzetleri, sonGeriGonderme, type RaporOzeti } from "./onay-baglanti.ts";
@@ -224,6 +225,9 @@ async function raporAc(db: Sorgulayici, kim: Kisi, plan: AcilanPlan, ekipmanId: 
   /* künye her zaman denetçinin plandaki GÖRDÜĞÜ künye (kopyada da): kaynağın eski künyesi taşınmaz, Güncelle tutarlı kalır (çapraz inceleme) */
   const kunye = { ...plan.kunye, eposta: null, tel: null, ...(await iletisimi(db, plan.tesisId)) };
   const onc = k ? null : takip ? await takipIcerigi(db, e, takip.kaynak, format.tanim) : await oncekiKaynak(db, e, plan.id, format.tanim);
+  /* 2026-11-06: kopya cihazları kaynaktan alır; öteki raporda yazanın zimmetindeki uygun cihaz kendiliğinden seçilir (cihaz-sec.ts) */
+  const oto = k ? [] : await otomatikSecim(db, plan.personelId, tur, bugunTr());
+  const ilk = onc?.cevaplar ?? ilkCevaplar(format.tanim);
   const r = k ? await ekle(db, RAPOR, {
     ...ortak, kunye, kunye_surum: plan.kunyeSurum,
     /* ekipman bilgileri kaynaktan; seri no yeni ekipmanın (sorulmaz, raporda yazılır), kullanım yeri pencereden (boşsa kaynaktaki) */
@@ -232,7 +236,8 @@ async function raporAc(db: Sorgulayici, kim: Kisi, plan: AcilanPlan, ekipmanId: 
   }, iz) : await ekle(db, RAPOR, {
     ...ortak, kunye, kunye_surum: plan.kunyeSurum,
     ekipman_bilgi: onc!.ekipmanBilgi satisfies EkipmanBilgisi,
-    cevaplar: onc!.cevaplar ?? ilkCevaplar(format.tanim),
+    cevaplar: oto.length ? { ...ilk, cihaz: oto.length } : ilk,
+    ...(oto.length ? { cihazlar: jsonDizi(oto) } : {}),
     ...(takip ? { takip_kaynak: takip.kaynak } : {}),
   }, iz);
   await denetimeBasla(db, kim.ad, plan.id);
@@ -389,6 +394,28 @@ async function cihazSatirlari(db: Sorgulayici, r: RaporSatiri, tur: Erisim["tur"
   return { satirlar, tumu };
 }
 
+/** 2026-11-06 (cihaz-sec.ts): yeni raporda kendiliğinden seçilecek cihazlar — türün gerekli cihaz türleri (tür vermiyorsa yazanın bu ekipman
+    türündeki son raporunun cihaz türleri) için yazanın zimmetindeki uygun cihaz, önce en son kullandığı */
+async function otomatikSecim(db: Sorgulayici, personelId: string, tur: { id: string; cihazTurleri: readonly string[] }, bugun: string): Promise<RaporCihazi[]> {
+  let turler = [...tur.cihazTurleri];
+  if (!turler.length) {
+    const x = (await db.sorgu<{ cihazlar: RaporCihazi[] }>(
+      "SELECT cihazlar FROM rapor WHERE personel_id = $1 AND tur_id = $2 AND silindi IS NULL AND jsonb_array_length(cihazlar) > 0 ORDER BY bas DESC LIMIT 1",
+      [personelId, tur.id])).rows[0];
+    turler = [...new Set((x?.cihazlar ?? []).map((c) => c.tur))];
+  }
+  if (!turler.length) return [];
+  const kimde = (await kimdeHaritasi(db)).cihaz;
+  const adaylar = (await raporCihazlari(db)).filter((c) => turler.includes(c.turId))
+    .map((c) => ({ id: c.id, turId: c.turId, pasif: c.pasif, lab: c.konum === "lab", gecti: kalibrasyonGecti(c.bitis, bugun), zimmette: kimde.get(c.id) === personelId }));
+  const idler = adaylar.filter((c) => c.zimmette).map((c) => c.id);
+  if (!idler.length) return [];
+  const son = new Map((await db.sorgu<{ cihaz: string; son: string }>(
+    `SELECT x->>'cihaz' AS cihaz, to_char(max(r.bas) AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS') AS son FROM rapor r, jsonb_array_elements(r.cihazlar) x
+     WHERE r.personel_id = $1 AND r.silindi IS NULL AND x->>'cihaz' = ANY ($2::text[]) GROUP BY 1`, [personelId, idler])).rows.map((x) => [x.cihaz, x.son]));
+  return otomatikCihazlar(turler, adaylar, son);
+}
+
 /** saha rapor ekranının verisi; göremeyene null */
 export async function sahaRaporu(db: Sorgulayici, kim: Kisi, id: string): Promise<SahaRaporu | null> {
   const e = await erisim(db, kim, id);
@@ -513,10 +540,17 @@ export async function yeniRaporPaketi(db: Sorgulayici, kim: Kisi, planId: string
     if (!turler[e.turId]) {
       const tur = await turRaporBilgisi(db, e.turId), format = tur ? await yayindakiFormat(db, tur.id) : null;
       if (!tur || !format) continue;
+      /* 2026-11-06: bağlantısız açılan raporda da kendiliğinden seçilecek cihaz görünür (sunucu raporu açarken aynı kuralla seçer) */
+      const oto = await otomatikSecim(db, plan.personelId, tur, bugun);
+      const satir = (turId: string): CihazSatiri => {
+        const c = tumu.find((y) => y.id === oto.find((o) => o.tur === turId)?.cihaz);
+        return { turId, turAd: turAdi.get(turId) ?? "Ölçüm cihazı",
+          cihaz: c ? { id: c.id, kod: c.kod, marka: c.marka, model: c.model, seri: c.seri, bitis: c.bitis, gecti: false, eksik: false, lab: false } : null };
+      };
       turler[e.turId] = {
         tur: { id: tur.id, ad: tur.ad, kod: tur.kod, brans: tur.brans, kontrolStd: tur.kontrolStd, periyot: tur.periyot },
         tanim: format.tanim, formatSira: format.sira, ilk: ilkCevaplar(format.tanim), kriterler: formatKriterleri(format.tanim),
-        cihazlar: tur.cihazTurleri.map((turId) => ({ turId, turAd: turAdi.get(turId) ?? "Ölçüm cihazı", cihaz: null })),
+        cihazlar: [...new Set([...tur.cihazTurleri, ...oto.map((o) => o.tur)])].map(satir),
       };
     }
     /* İ1 (2026-10-17): bağlantısız açılan rapor da önceki raporun kayıtlı bilgileriyle başlar (sunucuda açılan raporAc ile aynı kural) */

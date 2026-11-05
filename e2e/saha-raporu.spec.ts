@@ -212,7 +212,10 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await expect(page.getByText("on.jpg eklendi.").first()).toBeVisible({ timeout: 30_000 });
   await expect(page.getByRole("link", { name: "Görüntüle" }).first()).toHaveAttribute("href", /^\/api\/dosya\/[0-9a-f-]{36}$/);
 
-  /* ölçüm cihazı: zimmetteki, kalibrasyonu geçerli cihaz */
+  /* ölçüm cihazı: zimmetteki, kalibrasyonu geçerli cihaz. 2026-11-06 (cihaz-sec.ts): denetçinin zimmetindeki tek uygun cihaz rapor açılınca seçili
+     gelir — kaldırılır, sonra elle eklenir (iki yol da sınanır) */
+  await page.getByRole("button", { name: `${E2E_SAHA.cihaz} kaldır` }).click();
+  await expect(page.getByText("Cihaz kaldırıldı.").first()).toBeVisible({ timeout: 30_000 });
   await page.getByRole("button", { name: "Cihaz ekle" }).first().click();
   const cihaz = page.getByRole("dialog", { name: "Cihaz ekle" });
   await cihaz.getByLabel(`${E2E_SAHA.cihaz} · ${E2E_SAHA.marka} ${E2E_SAHA.model}`).check();
