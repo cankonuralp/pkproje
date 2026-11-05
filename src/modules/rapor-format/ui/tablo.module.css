@@ -57,3 +57,6 @@
   .renk { width: 36px; height: 36px; }
   .sutunTut { width: 24px; height: 16px; margin-left: -12px; }
 }
+/* 2026-11-06: ayrıntılı biçim "Biçim" tuşunun arkasında (TabloDuzenleyici) */
+.bicimTus { justify-self: start; gap: 6px; font-weight: 600; }
+.bicim { display: grid; gap: 10px; padding-top: 10px; border-top: 1px solid var(--kenar); }

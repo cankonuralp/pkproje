@@ -224,6 +224,9 @@ pkproje/
                             gorunum.yazi (tip Carlito / Tinos / Arimo — src/belge/{tinos,arimo}-5.3.0, OFL; boy, çizgi, aralık) · kâğıtta
                             rapor-format/ui/TabloDuzenleyici.tsx (seçim, birleştir, satır / sütun, tür, görünüm, sütun tutamağı) · kilit tests/serbest-tablo,
                             basili-format, bozan serbest-tablo, basili-format, e2e format-yz
+                            · 2026-11-06 SADELEŞTİRME (reisim: "sadeleşsin ama özellikler kalkmasın … aksi belirtilmedikçe ortalı olsun"): hücre panelinde
+                            içerik + ayarları + çoğalır; birleştir / satır / sütun / boyut / yazı / hiza / renk / kenar "Biçim" tuşunda · tablo.ts varsayilanHiza
+                            (kısa hücreler ortada; kâğıt, belge, PDF)
   src/modules/rapor-format/ RAPOR FORMATI (2026-10-04, 308): sürümlü tanım (rapor_format, göç 0022: taslak → yayında → eski; yayınlanan değişmez) ·
                             2026-10-23 BASILI FORMDAN ŞABLON (reisim: "ben bunu yükleyince format buna dönüşsün"): tür sayfasında PDF yüklenince ("Rapor
                             şablonunu bu PDF'e göre kur" işaretli) ya da satırdaki "Şablonu bundan kur" → 2026-10-24 YAPAY ZEKÂSIZ (reisim: "en baştan beri

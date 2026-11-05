@@ -11,13 +11,16 @@
    listelerin kolonları), seçim hücreye veri yazar, kaynak'ı siler; kâğıtta bilginin adı. Bağlam yoksa (rapor kurucusu) davranış aynen.
    2026-10-25 (belge doldurma; reisim: "sözleşme vb işleri de yüklediğimde, el ile değiştirilebilir ve doldurulabilir olmalı"): belge kurucusunda
    "alan" hücresi de sunulur — adı "Elle doldurulur" (belge açılınca kişinin doldurduğu yer, src/belge/doldurma.ts); ayarları rapordakiyle aynı
-   (değer türü, adı, birim, seçenekler, formül, zorunlu). */
+   (değer türü, adı, birim, seçenekler, formül, zorunlu).
+   2026-11-06 (reisim: "araç çok karmaşık; sadeleşsin ama özellikler kalkmasın, ayrıntılı değişiklik tıklanıp açılan bir tuşta olsun; aksi belirtilmedikçe
+   ortalı olsun"): panelde yalnız hücrenin içeriği, içeriğin ayarları ve "sahada çoğalır"; birleştirme, satır / sütun, genişlik / yükseklik, yazı, hiza,
+   renk ve kenar "Biçim" tuşunun arkasında (açık kalır, seçim değişince de). Hiza verilmemişse kısa hücreler ortada (src/format/tablo.ts varsayilanHiza). */
 import { useContext, useEffect, useRef, useState, type CSSProperties, type PointerEvent as RPointerEvent } from "react";
 import type { BelgeKatalogu } from "../../../belge/katalog";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
 import {
-  ayir, birlestir, genislet, hucreBicemi, hucreleriYaz, kapsama, kenarYaz, satirEkle, satirSil, secimHucreleri, siraNumaralari, stilYaz, sutunEkle,
+  ayir, birlestir, genislet, hucreBicemi, varsayilanHiza, hucreleriYaz, kapsama, kenarYaz, satirEkle, satirSil, secimHucreleri, siraNumaralari, stilYaz, sutunEkle,
   sutunGenisligi, sutunSil, sutunYuzdeleri, type KenarTuru, type Secim, type TabloBolumu,
 } from "../../../format/tablo";
 import {
@@ -68,6 +71,7 @@ export function TabloDuzenleyici({ t, i, b, degis, bildir }: {
   const [yazilan, setYazilan] = useState<number | null>(null);
   const [aralik, setAralik] = useState(false);
   const [kalin, setKalin] = useState<1 | 2>(1);
+  const [bicim, setBicim] = useState(false);
   const surukle = useRef<{ r: number; c: number } | null>(null);
   const tabloRef = useRef<HTMLTableElement>(null);
   const katalog = useContext(BelgeKatalogBaglami);
@@ -210,6 +214,33 @@ export function TabloDuzenleyici({ t, i, b, degis, bildir }: {
             <button type="button" className={k.tus} aria-label="Seçimi kapat" onClick={() => setSec(null)}><Ikon ad="x" kucuk /></button>
           </div>
 
+
+          {secili.length >= 1 && (
+            <div className={s.grup} role="radiogroup" aria-label="Hücrenin içeriği">
+              {/* belge kipinde rapora özgü türler (kontrol cevabı, imza kişisi, fotoğraf, raporun sonucu) yok; alan hücresi "Elle doldurulur" */}
+              {HUCRE_TURLERI.filter((x) => !katalog || BELGE_TURLERI_HUCRE.includes(x)).map((x) => (
+                <button key={x} type="button" role="radio" aria-checked={secili.every((n) => b.hucreler[n].tur === x)} className={s.turTus} onClick={() => turDegis(x)}>
+                  <Ikon ad={HUCRE_IKON[x]} kucuk />{turAdi(x, !!katalog)}</button>
+              ))}
+            </div>
+          )}
+          {secili.length === 1 && <TurAyari b={b} h={ilk} katalog={katalog} yaz={hucreYaz} bolum={(o, ileti) => yaz({ ...b, ...o }, ileti)} />}
+          <div className={k.panelSatir}>
+            <label className={k.panelKutu}><input type="checkbox" checked={!!b.satirlar[a.r1]?.tekrar}
+              onChange={(e) => {
+                const al = new Set<string>();
+                yaz({ ...b, satirlar: b.satirlar.map((x, r) => {
+                  if (r < a.r1 || r > a.r2) return x;
+                  if (!e.target.checked) { const { tekrar: _t, ...geri } = x; void _t; return geri; }
+                  const id = x.id ?? yeniKimlik(t, "r", al); al.add(id);
+                  return { ...x, tekrar: true, id };
+                }) }, e.target.checked ? "Satır sahada çoğalır" : "Satır sabit");
+              }} />{katalog ? "Bu satır listedeki her öğe için çoğalır" : "Bu satır sahada çoğalır (ölçüm satırı)"}</label>
+          </div>
+          <button type="button" className={`${s.tus} ${s.bicimTus}`} aria-expanded={bicim} aria-controls={`kb-${b.id}-bicim`} onClick={() => setBicim(!bicim)}>
+            <Ikon ad="sliders-horizontal" kucuk />Biçim<Ikon ad={bicim ? "chevron-up" : "chevron-down"} kucuk /></button>
+          {bicim && (
+          <div id={`kb-${b.id}-bicim`} className={s.bicim}>
           <div className={s.grup} role="group" aria-label="Tablo">
             <button type="button" className={s.tus} disabled={secili.length < 2} onClick={() => { yaz(birlestir(b, a), "Hücreler birleştirildi"); }}>Birleştir</button>
             <button type="button" className={s.tus} disabled={!secili.some((n) => (b.hucreler[n].rs ?? 1) > 1 || (b.hucreler[n].cs ?? 1) > 1)} onClick={() => yaz(ayir(b, a), "Hücre ayrıldı")}>Ayır</button>
@@ -232,28 +263,7 @@ export function TabloDuzenleyici({ t, i, b, degis, bildir }: {
             <label className={s.sayiAlan}>Satır yüksekliği mm
               <SayiKutu deger={b.satirlar[a.r1]?.y ?? 0} en={0} enCok={250} ad="Satır yüksekliği milimetre" bosSifir
                 yaz={(v) => yaz({ ...b, satirlar: b.satirlar.map((x, r) => (r >= a.r1 && r <= a.r2 ? { ...x, y: v || undefined } : x)) })} /></label>
-            <label className={k.panelKutu}><input type="checkbox" checked={!!b.satirlar[a.r1]?.tekrar}
-              onChange={(e) => {
-                const al = new Set<string>();
-                yaz({ ...b, satirlar: b.satirlar.map((x, r) => {
-                  if (r < a.r1 || r > a.r2) return x;
-                  if (!e.target.checked) { const { tekrar: _t, ...geri } = x; void _t; return geri; }
-                  const id = x.id ?? yeniKimlik(t, "r", al); al.add(id);
-                  return { ...x, tekrar: true, id };
-                }) }, e.target.checked ? "Satır sahada çoğalır" : "Satır sabit");
-              }} />{katalog ? "Bu satır listedeki her öğe için çoğalır" : "Bu satır sahada çoğalır (ölçüm satırı)"}</label>
           </div>
-
-          {secili.length >= 1 && (
-            <div className={s.grup} role="radiogroup" aria-label="Hücrenin içeriği">
-              {/* belge kipinde rapora özgü türler (kontrol cevabı, imza kişisi, fotoğraf, raporun sonucu) yok; alan hücresi "Elle doldurulur" */}
-              {HUCRE_TURLERI.filter((x) => !katalog || BELGE_TURLERI_HUCRE.includes(x)).map((x) => (
-                <button key={x} type="button" role="radio" aria-checked={secili.every((n) => b.hucreler[n].tur === x)} className={s.turTus} onClick={() => turDegis(x)}>
-                  <Ikon ad={HUCRE_IKON[x]} kucuk />{turAdi(x, !!katalog)}</button>
-              ))}
-            </div>
-          )}
-          {secili.length === 1 && <TurAyari b={b} h={ilk} katalog={katalog} yaz={hucreYaz} bolum={(o, ileti) => yaz({ ...b, ...o }, ileti)} />}
 
           <div className={s.grup} role="group" aria-label="Yazı">
             <span className={s.secimKap}>
@@ -271,7 +281,7 @@ export function TabloDuzenleyici({ t, i, b, degis, bildir }: {
             <button type="button" className={s.tus} aria-pressed={!!ilk.s?.u} aria-label="Altı çizili" title="Altı çizili" onClick={() => stil("u", !ilk.s?.u)}><u>A</u></button>
             <span className={s.ayrac} />
             {(["s", "o", "g", "y"] as const).map((x) => (
-              <button key={x} type="button" className={s.tus} aria-pressed={(ilk.s?.a ?? "s") === x} onClick={() => stil("a", x === "s" ? "" : x)}
+              <button key={x} type="button" className={s.tus} aria-pressed={(ilk.s?.a ?? varsayilanHiza(ilk)) === x} onClick={() => stil("a", x === varsayilanHiza(ilk) ? "" : x)}
                 aria-label={{ s: "Sola", o: "Ortaya", g: "Sağa", y: "İki yana" }[x]} title={{ s: "Sola", o: "Ortaya", g: "Sağa", y: "İki yana" }[x]}><Cizim yol={HIZA_YOL[x]} /></button>
             ))}
             <span className={s.ayrac} />
@@ -295,6 +305,8 @@ export function TabloDuzenleyici({ t, i, b, degis, bildir }: {
             <button type="button" className={s.tus} aria-pressed={kalin === 1} onClick={() => setKalin(1)}>İnce</button>
             <button type="button" className={s.tus} aria-pressed={kalin === 2} onClick={() => setKalin(2)}>Kalın</button>
           </div>
+          </div>
+          )}
         </div>
       )}
     </div>

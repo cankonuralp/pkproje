@@ -221,6 +221,9 @@ test("basılı formdan şablon: PDF yüklenince şablon forma göre kurulur, kur
   await liste.getByRole("cell", { name: "Madde", exact: true }).click({ modifiers: ["Shift"] });
   const secim = page.getByRole("group", { name: / · seçili hücreler$/ });
   await expect(secim).toBeVisible();
+  /* 2026-11-06: birleştirme, satır / sütun, yazı, renk, kenar "Biçim" tuşunun arkasında; panelde yalnız hücrenin içeriği */
+  await expect(secim.getByRole("button", { name: "Birleştir" })).toHaveCount(0);
+  await secim.getByRole("button", { name: "Biçim" }).click();
   await secim.getByRole("button", { name: "Birleştir" }).click();
   await expect(liste.locator("td[colspan='2']")).toHaveText("No");
   /* belge görünümü kurucuda: sabit bölüm yok */

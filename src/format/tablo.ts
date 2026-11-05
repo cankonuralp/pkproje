@@ -406,14 +406,23 @@ export const YAZI_AILESI: Record<YaziTipi, string> = { carlito: "Carlito, Calibr
 /** hücrenin satır içi biçemi (değerler yazı — React ve belge HTML yazıcısı aynı yazar): kenarlar hücrenin ya da belgenin çizgisi, iç boşluk,
     yazı tipi / boy (hücrenin, yoksa belgenin; yoksa Carlito 9 pt), kalın / eğik / altı çizili, hizalar, renkler. satirYuksek: hücrenin satırının
     yüksekliği formdan (TabloSatiri.y) — üst / alt iç boşluk yok (2026-10-24: Word'ün hücresi gibi; basılı formun satırı belgede uzamaz) */
-export function hucreBicemi(x: Pick<Hucre, "s">, yazi: FormatTanimi["gorunum"]["yazi"] = {}, satirYuksek = false): Record<string, string> {
+/** 2026-11-06 (reisim: "aksi belirtilmedikçe ortalı olsun"): hücrenin hizası verilmemişse — kısa hücreler (kontrol cevabı, sıra no, sonuç, imza, görsel,
+    fotoğraf; sayı / tarih / seçim / evet-hayır alanı) ortada, yazı, kayıttan gelen bilgi ve yazı alanı solda (uzun madde metinleri). Kâğıt, belge, PDF aynı. */
+export function varsayilanHiza(x: { tur?: Hucre["tur"]; alan?: string }): "s" | "o" {
+  switch (x.tur) {
+    case "cevap": case "sira": case "sonuc": case "imza": case "gorsel": case "foto": return "o";
+    case "alan": return x.alan && x.alan !== "metin" ? "o" : "s";
+    default: return "s";
+  }
+}
+export function hucreBicemi(x: Pick<Hucre, "s"> & { tur?: Hucre["tur"]; alan?: string }, yazi: FormatTanimi["gorunum"]["yazi"] = {}, satirYuksek = false): Record<string, string> {
   const s = x.s ?? {}, y = yazi ?? {}, kal = y.kalin ?? 1, renk = y.cizgi ?? "#000000", ic = y.ic ?? 0.6;
   const kenar = (k: "u" | "a" | "s" | "g") => { const n = s.kn ? s.kn[k] : kal; return n ? `${n}px solid ${renk}` : "0"; };
   return {
     borderTop: kenar("u"), borderBottom: kenar("a"), borderLeft: kenar("s"), borderRight: kenar("g"),
     padding: `${(satirYuksek ? 0 : ic * 0.6).toFixed(2)}mm ${ic.toFixed(2)}mm`, fontFamily: YAZI_AILESI[s.f ?? y.tip ?? "carlito"], fontSize: `${s.b ?? y.boy ?? 9}pt`,
     fontWeight: s.k ? "700" : "400", ...(s.i ? { fontStyle: "italic" } : {}), ...(s.u ? { textDecoration: "underline" } : {}),
-    textAlign: ({ s: "left", o: "center", g: "right", y: "justify" } as const)[s.a ?? "s"],
+    textAlign: ({ s: "left", o: "center", g: "right", y: "justify" } as const)[s.a ?? varsayilanHiza(x)],
     verticalAlign: ({ u: "top", o: "middle", a: "bottom" } as const)[s.d ?? "o"],
     ...(s.r ? { color: s.r } : {}), ...(s.z ? { backgroundColor: s.z } : {}),
   };
