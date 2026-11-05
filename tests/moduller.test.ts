@@ -213,7 +213,7 @@ test("api/sign/bildirim: yalnız POST; iş modülde; imza doğrulanmadan hiçbir
   assert.ok(k.includes("signBildirim(firmaCalistirici(k)"));
   const m = readFileSync(join(KOK, "src", "modules", "raporlar", "server", "sign.ts"), "utf8");
   const g = m.slice(m.indexOf("export async function signBildirim"));
-  assert.ok(g.indexOf("webhookDogrula(") > 0 && g.indexOf("webhookDogrula(") < g.indexOf("INSERT INTO sign_bildirim"), "önce imza, sonra kayıt");
+  assert.ok(g.indexOf("webhookDogrula(") > 0 && g.indexOf("bildirimKaydet(") > 0 && g.indexOf("webhookDogrula(") < g.indexOf("bildirimKaydet("), "önce imza, sonra kayıt");
 });
 
 test("api/hata: ilk iş aynı köken; her dönüş 204; kişi ve firma gövdeden alınmaz; yalnız POST", () => {

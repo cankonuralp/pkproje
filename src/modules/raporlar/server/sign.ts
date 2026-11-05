@@ -15,6 +15,7 @@ import { createHash } from "node:crypto";
 import { coz, sifrele, sirDurumu, sirKullan } from "../../../server/ayar/sir.ts";
 import { kiraciIcinde, type Sorgulayici } from "../../../server/db/kiraci.ts";
 import { kiraciHavuzu, type KiraciYeri } from "../../../server/db/firma-havuzu.ts";
+import { bildirimKaydet, bildirimSil } from "../../../server/db/sign-bildirim.ts";
 import { guncelle, tablo } from "../../../server/db/yazici.ts";
 import { kayitDosyasi } from "../../../server/dosya/dosya.ts";
 import type { Depo } from "../../../server/dosya/depo.ts";
@@ -206,8 +207,7 @@ export async function signBildirim(calistir: IslemCalistir, depo: Depo, firmaId:
   const belge = typeof j.veri?.belge_id === "string" && /^[0-9a-f-]{36}$/.test(j.veri.belge_id) ? j.veri.belge_id : null;
   if (!["belge.tamamlandi", "imza.reddedildi", "istek.iptal"].includes(olay) || !belge) return { kod: 200, ileti: "Olay yok sayıldı." };
   /* aynı gönderim: bir kez */
-  const yeni = await calistir(null, async (db) => ((await db.sorgu(
-    "INSERT INTO sign_bildirim (id, olay) VALUES ($1, $2) ON CONFLICT DO NOTHING", [gonderim, olay])).rowCount ?? 0) > 0);
+  const yeni = await calistir(null, (db) => bildirimKaydet(db, gonderim, olay));
   if (!yeni) return { kod: 200, ileti: "Bildirim daha önce işlendi." };
   const istek = await calistir(null, async (db) => (await db.sorgu<{ id: string }>(
     "SELECT id::text FROM imza_istegi WHERE sign_belge = $1 AND durum = 'bekliyor' ORDER BY olustu DESC LIMIT 1", [belge])).rows[0]?.id ?? null);
@@ -218,7 +218,7 @@ export async function signBildirim(calistir: IslemCalistir, depo: Depo, firmaId:
   } catch (e) {
     /* geçici (sign'a ulaşılamadı): kayıt geri alınır, sign yeniden dener */
     if (e instanceof SignHatasi && e.gecici) {
-      await calistir(null, (db) => db.sorgu("DELETE FROM sign_bildirim WHERE id = $1", [gonderim])).catch(() => undefined);
+      await calistir(null, (db) => bildirimSil(db, gonderim)).catch(() => undefined);
       return { kod: 503, ileti: "probata sign'a ulaşılamadı." };
     }
     throw e;

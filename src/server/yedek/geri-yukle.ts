@@ -102,6 +102,14 @@ export async function geriYuklemeDenemesi(h: Havuz, firmaId: string, depo: Depo,
 }
 
 /** önceki hâl kopyasının dönemi: İstanbul YYYYAAGG"T"SSDDss */
+/** önceki hâlin dönemi: aynı saniyede ikinci geri yükleme (ya da geri dönüş) kaydı çakıştırmasın — 2026-11-05 CI 42095671885 — boş saniyeye kayar */
+async function bosOnceDonemi(db: Sorgulayici, t: Date): Promise<string> {
+  for (let i = 0; i < 60; i++) {
+    const d = onceDonemi(new Date(t.getTime() + i * 1000));
+    if (!(await db.sorgu("SELECT 1 FROM yedek_arsiv WHERE tur = 'once' AND donem = $1", [d])).rowCount) return d;
+  }
+  return onceDonemi(new Date(t.getTime() + 60_000));
+}
 export function onceDonemi(t: Date): string {
   const p = Object.fromEntries(new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit",
     hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" }).formatToParts(t).map((x) => [x.type, x.value]));
@@ -118,11 +126,11 @@ export async function geriYukle(h: Havuz, firmaId: string, depo: Depo,
   const bas = Date.now(), simdi = s.simdi ?? new Date(), sure = s.sure ?? 200_000;
   const hal = await kaynakHali(h, firmaId, depo, s);
   /* 1 · şu anki hâl */
-  const once = onceDonemi(new Date());
-  const { onceId, canliDosya } = await kiraciIcinde(h, firmaId, async (db) => ({
-    onceId: await arsivYaz(db, depo, "once", once, (await tamKopya(db, new Date())).bayt),
-    canliDosya: new Set((await db.sorgu<{ id: string }>("SELECT id::text FROM dosya")).rows.map((x) => x.id)),
-  }));
+  const { onceId, canliDosya, once } = await kiraciIcinde(h, firmaId, async (db) => {
+    const once = await bosOnceDonemi(db, new Date());
+    return { once, onceId: await arsivYaz(db, depo, "once", once, (await tamKopya(db, new Date())).bayt),
+      canliDosya: new Set((await db.sorgu<{ id: string }>("SELECT id::text FROM dosya")).rows.map((x) => x.id)) };
+  });
   /* 2 · tek işlemde geri yükleme */
   const r = await kiraciIcinde(h, firmaId, async (db) => {
     const id = (await db.sorgu<{ id: string }>(
