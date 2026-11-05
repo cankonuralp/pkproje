@@ -92,7 +92,12 @@ test("gece işi ucu: yalnız sırla; sayılar döner; kendi veritabanlı firma d
     /* 2026-10-08 (387): saklama süresi işi aynı uçta, sayıları "saklama"da (süresi yaklaşan tohum raporu silinmez — 30 gün kala listede) */
     /* 2026-10-09 (432): bekleyen e-postaların yeniden denenmesi de aynı uçta, sayıları "eposta"da */
     /* 2026-11-02 (göç 0116): 60 dakikayı geçmiş S.A.Y konuşmalarının kapanışı da aynı uçta, sayıları "kapanis"ta */
-    expect(Object.keys(j).sort()).toEqual(["bagli", "bayt", "durum", "eposta", "firma", "hatali_firma", "kalan", "kapanis", "oksuz", "saklama", "silinen", "ulasilamayan"]);
+    /* 2026-11-05 (göç 0121): S.A.Y'ın öğrenmesi (puan + hafıza) de aynı uçta, sayıları "ogrenme"de */
+    expect(Object.keys(j).sort()).toEqual(["bagli", "bayt", "durum", "eposta", "firma", "hatali_firma", "kalan", "kapanis", "ogrenme", "oksuz", "saklama", "silinen",
+      "ulasilamayan"]);
+    const og = j.ogrenme as Record<string, unknown>;
+    expect(Object.keys(og).sort()).toEqual(["durum", "firma", "hatali_firma", "kalan", "ornek", "puanlanan", "ulasilamayan"]);
+    expect([og.durum, og.hatali_firma, og.ulasilamayan]).toEqual(["tamam", 0, 0]);
     const kp = j.kapanis as Record<string, unknown>;
     expect(Object.keys(kp).sort()).toEqual(["dosya", "durum", "firma", "hatali_firma", "kalan", "kapanan", "ulasilamayan"]);
     expect([kp.durum, kp.hatali_firma, kp.ulasilamayan]).toEqual(["tamam", 0, 0]);

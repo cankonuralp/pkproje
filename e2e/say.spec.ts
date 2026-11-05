@@ -307,6 +307,8 @@ test("S.A.Y iş döngüsü: satırlar parça parça ve tek komutla eklenir (No a
   /* bütün işin (iki turun) Geri al'ı son iletinin altında */
   await panel.getByRole("button", { name: "Geri al" }).last().click();
   await expect(tabloBolgesi).toHaveAttribute("data-satir", String(once));
+  /* 2026-11-05 (CI 42083137481): geri alma ekranda hemen, kaydı sunucuda — panel o sırada meşgul ve Enter'ı almaz; sonraki soru kayıt bitince yazılır */
+  await expect(son).toContainText("30 girişi geri aldım.");
 
   /* C: tek komutla 50 satır */
   await sor("Pano sigortaları (linye) tablosuna 50 satır ekle");
