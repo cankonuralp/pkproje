@@ -54,7 +54,7 @@ export const KAPSAM: Readonly<Record<string, Readonly<Record<string, string>>>> 
     taslakKaydetEylemi: "i:format_taslak_duzenle", surumSilEylemi: "i:format_surum_sil", sablondanTurEkleEylemi: "i:sablondan_tur_ekle", parcaKaydetEylemi: "i:format_parcasi_kaydet",
     parcaSilEylemi: "i:format_parcasi_sil", formatYzEylemi: "d:eski Yapay zekâya anlat (S.A.Y aynı işi formati_duzenle ile yapar)",
     formatBelgeEylemi: "d:eski Yapay zekâya anlat (S.A.Y aynı işi formati_duzenle ile yapar)", basilidanKurEylemi: "a:format_pdf_kur" },
-  "raporlar/ui/eylemler.ts": { raporSayfasiEylemi: "i:rapor_ara", raporIndirmeListesiEylemi: "d:toplu indirme (PDF dosyaları tarayıcıda iner)", raporOneriKapatEylemi: "d:ekranın öneri şeridi", raporOlusturEylemi: "i:rapor_ac", takipAcEylemi: "i:rapor_takip_ac",
+  "raporlar/ui/eylemler.ts": { raporSayfasiEylemi: "i:rapor_ara", kayitliOnayaGonderEylemi: "i:rapor_onaya_gonder", raporIndirmeListesiEylemi: "d:toplu indirme (PDF dosyaları tarayıcıda iner)", raporOneriKapatEylemi: "d:ekranın öneri şeridi", raporOlusturEylemi: "i:rapor_ac", takipAcEylemi: "i:rapor_takip_ac",
     raporKaydetEylemi: "i:rapor_yaz", onayaGonderEylemi: "i:rapor_onaya_gonder", raporSilEylemi: "i:rapor_sil", cihazEkleEylemi: "i:rapor_yaz", cihazKaldirEylemi: "i:rapor_yaz",
     raporKunyeGuncelleEylemi: "i:plan_kunye_guncelle", fotoEkleEylemi: "i:rapor_foto_ekle", okumaFotografiEkleEylemi: "a:fotograflari_oku", fotoOkuEylemi: "a:fotograflari_oku",
     alanOkuEylemi: "a:fotograflari_oku", fotoSilEylemi: "i:rapor_foto_kaldir", raporKopyalaEylemi: "i:rapor_kopyala", raporFormatGuncelleEylemi: "i:rapor_format_guncelle",

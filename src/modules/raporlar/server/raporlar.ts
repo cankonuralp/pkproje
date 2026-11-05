@@ -707,6 +707,17 @@ export async function raporEksikleri(db: Sorgulayici, kim: Kisi, id: string): Pr
   return eksikler;
 }
 
+/** 2026-11-06 (plan içi "Hazır olanları onaya gönder"; reisim kararı 6 Kasım): raporu KAYITTAKİ hâliyle onaya gönderir. Önce eksik denetimi
+    (raporEksikleri — Onaya gönder'in kuralı): eksikli rapor hiç kaydedilmez, eksikleri döner; eksiksizse onayaGonder (yetki, sürüm, ENGEL 2 / 5 yeniden). */
+export async function kayitliOnayaGonder(db: Sorgulayici, kim: Kisi, id: string): Promise<RaporYazma> {
+  const s = await sahaRaporu(db, kim, id);
+  if (!s) return { durum: "yok" };
+  if (!s.izin.duzenle) return s.durum === "taslak" ? { durum: "yetkisiz" } : { durum: "red", neden: `Rapor ${RAPOR_DURUM[s.durum][0].toLocaleLowerCase("tr")}; gönderilmez.` };
+  const eksik = (await raporEksikleri(db, kim, id)) ?? [];
+  if (eksik.length) return { durum: "eksik", eksikler: eksik };
+  return onayaGonder(db, kim, id, s.surum, { ekipman: s.ekipmanBilgi, tarih: s.tarih, cevaplar: s.cevaplar });
+}
+
 /** Onaya gönder: önce kaydeder; zorunlu eksik (ENGEL 5 — sonuç hariç: seçilmediyse önerisi yazılır) ya da cihaz eksik / kalibrasyon geçmiş
     (ENGEL 2) varsa durmaz, eksikleri söyler. Elle seçilmediyse bitiş (gönderme anı), sonraki kontrol (başlangıç + tür periyodu) ve rapor tarihi
     (başlangıç günü) burada yazılır. */

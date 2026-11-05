@@ -26,7 +26,7 @@ import { TAMAMLANDI_RAPOR, tarihNo } from "../src/modules/planlar/sema.ts";
 import { taslakBaslat, taslakKaydet, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
 import { ayEkle } from "../src/modules/raporlar/sema.ts";
 import {
-  cihazEkle, cihazKaldir, EKIPTE_DEGIL, fotoEkle, fotoSil, onayaGonder, raporBelgesiVerisi, raporFormatGuncelle, raporKaydet, raporKopyala, raporKunyeGuncelle, raporOlustur,
+  cihazEkle, cihazKaldir, EKIPTE_DEGIL, fotoEkle, fotoSil, kayitliOnayaGonder, onayaGonder, raporBelgesiVerisi, raporFormatGuncelle, raporKaydet, raporKopyala, raporKunyeGuncelle, raporOlustur,
   raporListesi, raporSil, sahaRaporu, type RaporYazma,
 } from "../src/modules/raporlar/server/raporlar.ts";
 import { raporDurumYaz } from "../src/modules/raporlar/server/onay-baglanti.ts";
@@ -491,6 +491,19 @@ test("onaya gönder: kalibrasyon MUAYENE GÜNÜNE göre (318 incelemesi) — mua
     await kal(dun);       // muayene günü bitti: muayenede geçerli, bugün geçmiş
     assert.equal((await gonder(FA.den1, gun0, 2, girdi())).durum, "tamam", "muayene gününde geçerli kalibrasyon engel değil");
   } finally { await kal(gun(300)); }
+});
+
+/* 2026-11-06 (plan içi "Hazır olanları onaya gönder"): kayıttaki hâliyle gönderme — eksikli rapor HİÇ kaydedilmez (sürüm aynı), eksikleri döner;
+   yazan dışında yetkisiz */
+test("kayıttaki hâliyle onaya gönder: eksikli rapor değişmez, eksikleri döner; yalnız yazan", async () => {
+  const r = tamam(await olustur(FA.den1, await yeniPlan(), FA.ekp["HT-A1"]));
+  const surumu = async () => (await sql<{ surum: number; durum: string }>(A, "SELECT surum, durum FROM rapor WHERE id = $1", [r.id])).rows[0];
+  const once = await surumu();
+  const e = await a(FA.den1, (db) => kayitliOnayaGonder(db, FA.den1, r.id));
+  assert.equal(e.durum, "eksik");
+  assert.ok(e.durum === "eksik" && e.eksikler.length > 0);
+  assert.deepEqual(await surumu(), once, "eksikli rapor kaydedilmedi");
+  assert.ok(["yetkisiz", "yok"].includes((await a(FA.mek, (db) => kayitliOnayaGonder(db, FA.mek, r.id))).durum), "yalnız yazan gönderir");
 });
 
 test("sil: yazan Yeni raporunu, teknik yönetici (türün branşı) Yeni raporu siler; silinen görünmez, değişmez, veri kalır; ekipmana yeni rapor açılır; damga veritabanından", async () => {

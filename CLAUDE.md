@@ -303,6 +303,8 @@ pkproje/
                             akış kabul/red/kontrol/tamamla, künye düzenle/güncelle, plan ekipmanı, proje notları; geçişler göç 0024 tetiğinde) · 372 planSil
                             (raporsuz, tamamlanmamış; 0067; ui/PlanSilTusu.tsx) · 465 Plan aç: haric (çıkarılan tesis ekipmanı), excel.ts +
                             ui/EkipmanExcel.tsx (Excel'den elle ekipman) · 2026-11-02 Plan aç: Tümü / Mekanik / Elektrik Al · Çıkar + seçme kutusu (ui/PlanAcFormu.tsx)
+                            · 2026-11-06 ui/RaporBolumu.tsx "Hazır olanları onaya gönder (n)" + seçim çubuğunda "Onaya gönder" → raporlar kayitliOnayaGonder
+                            (kayıttaki hâliyle; önce raporEksikleri — eksikli rapor değişmez), sonunda gönderilen / gönderilemeyen nedenleriyle şeritte
                             · 519 tamamlanmış planda yeni rapor / kopya yok (sema.ts TAMAMLANDI_RAPOR; izin raporEngel, raporlar kopyaEngel —
                             tuş görünür, basınca üstte uyarı; sunucu raporlar acilabilirPlan)
                             · 510 SAHA FORMU (göç 0082 saha_formu): plan-ici.ts sahaFormuOlustur / sahaFormuVerisi / sahaTaramaYukle / sahaTaramaKaldir

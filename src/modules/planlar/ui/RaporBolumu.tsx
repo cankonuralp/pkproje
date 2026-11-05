@@ -6,7 +6,10 @@
    Raporda "Pasife al" yok (2026-09-30 N11: pasife alma ekipman satırında). Yetki sunucuda; Sil sunucuda yeniden denetlenir (rapor_sil).
    2026-11-02 (liste maketi onaylı — reisim "filtreleme detaylı olmalı"): Raporlar listesiyle aynı düzen — süzgeçler başlıklı kutu (Ekipman türü ·
    Muayene uzmanı · Branş · Sonuç seçerek), Muayene uzmanı sütunu, sütun başlığından sıralama, satır seçimi → PDF indir (ZIP) ve Sil. Plan tek
-   tesisin olduğu için müşteri / il / ilçe / tarih aralığı yok. */
+   tesisin olduğu için müşteri / il / ilçe / tarih aralığı yok.
+   2026-11-06 (reisim kararı: "Hazır olanları onaya gönder"): başlıkta kişinin kendi Yeni raporlarını, seçim çubuğunda seçilenleri kayıttaki hâlleriyle
+   onaya gönderir — her rapor sunucuda kendi isteğiyle denetlenir (kayitliOnayaGonderEylemi); eksikli rapor değişmez, sonunda gönderilen /
+   gönderilemeyen nedenleriyle şeritte. */
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { useBildir, useUyar } from "../../../components/bildirim/Bildirim";
@@ -15,11 +18,12 @@ import { SayfaKutusu, SecimCubugu, SecimKutusu, useSatirSecimi } from "../../../
 import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
 import type { Secenek, SuzgecTanimi } from "../../../components/liste/suzgec";
 import { useOnayla } from "../../../components/pencere/Onay";
-import { DegerYok, Kod, Rozet } from "../../../components/sayfa/Sayfa";
+import { DegerYok, Kod, Rozet, SeritKap } from "../../../components/sayfa/Sayfa";
+import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
 import { KALIP } from "../../../styles/kalip";
 import { RAPOR_DURUM, SONUC_AD } from "../../raporlar/sema";
-import { raporSilEylemi } from "../../raporlar/ui/eylemler";
+import { kayitliOnayaGonderEylemi, raporSilEylemi } from "../../raporlar/ui/eylemler";
 import { silmeNedeni, TOPLU_EN_COK, topluSil, useTopluIndir, type TopluRapor } from "../../raporlar/ui/topluIs";
 import { zamanNo } from "../sema";
 import type { PlanEkipmani, PlanIci } from "../server/plan-ici";
@@ -69,6 +73,8 @@ export function RaporBolumu({ v }: { v: PlanIci }) {
   const onayla = useOnayla();
   const [bekliyor, baslat] = useTransition();
   const [siliniyor, setSiliniyor] = useState(false);
+  const [gonderiliyor, setGonderiliyor] = useState<string | null>(null);
+  const [gonderim, setGonderim] = useState<{ gonderilen: number; red: string[] } | null>(null);
   const ekp: Ekipmanlar = useMemo(() => new Map(v.ekipman.map((e) => [e.id, e])), [v.ekipman]);
   const t = useMemo(() => tanim(ekp, v.raporlar), [ekp, v.raporlar]);
   const s = useSuzgec(t, v.raporlar);
@@ -116,6 +122,34 @@ export function RaporBolumu({ v }: { v: PlanIci }) {
     } finally { setSiliniyor(false); }
   }
 
+  /** gönderilebilecekler: kişinin kendi Yeni raporu (eksik denetimi sunucuda) */
+  const gonderilir = (r: Rapor) => r.benim && r.durum === "taslak";
+  const hazirlar = v.raporlar.filter(gonderilir);
+  async function onayaGonder(l: readonly Rapor[]) {
+    const gonder = l.filter(gonderilir);
+    if (!gonder.length) { uyar("Seçilenlerin hiçbiri onaya gönderilemez: yalnız kendi Yeni raporunuz gönderilir."); return; }
+    const evet = await onayla({ baslik: gonder.length === 1 ? "Raporu onaya gönder" : `${gonder.length} raporu onaya gönder`, tus: "Onaya gönder",
+      metin: <>{gonder.length} rapor kayıttaki hâliyle teknik yöneticinin onayına gönderilir; eksiği olan gönderilmez.{l.length > gonder.length ? ` ${l.length - gonder.length} rapor Yeni değil ya da başka uzmanın; dokunulmaz.` : ""}</> });
+    if (!evet) return;
+    setGonderim(null);
+    let tamam = 0;
+    const red: string[] = [];
+    try {
+      for (const [i, r] of gonder.entries()) {
+        setGonderiliyor(`${i} / ${gonder.length}`);
+        try {
+          const y = await kayitliOnayaGonderEylemi(r.id);
+          if (y.tamam) tamam++;
+          else red.push(`${r.no}: ${y.eksikler?.length ? `eksik — ${y.eksikler.slice(0, 3).map((x) => x.ad).join(", ")}${y.eksikler.length > 3 ? "…" : ""}` : y.genel ?? Object.values(y.hatalar ?? {})[0] ?? "gönderilemedi"}`);
+        } catch { red.push(`${r.no}: bağlantı ya da sunucu hatası`); }
+      }
+    } finally { setGonderiliyor(null); }
+    setGonderim({ gonderilen: tamam, red });
+    sec.kaldir(gonder.map((r) => r.id));
+    bildir(`${tamam} rapor onaya gönderildi.${red.length ? ` ${red.length} rapor gönderilemedi.` : ""}`);
+    router.refresh();
+  }
+
   const sutunlar: Sutun<Rapor>[] = [
     { k: "sec", genislik: "60px", baslik: "Seç", kart: "govde", sira: 0, siralanmaz: true,
       basHucre: <SayfaKutusu hepsi={gorunen.length > 0 && gorunen.every((r) => sec.secili.has(r.id))} bazi={gorunen.some((r) => sec.secili.has(r.id))}
@@ -150,10 +184,24 @@ export function RaporBolumu({ v }: { v: PlanIci }) {
 
   return (
     <section className={stil.planBolum} aria-labelledby={baslikId}>
-      <div className={stil.altBas}><h3 id={baslikId} tabIndex={-1}>Raporlar</h3><Sayac s={s} /></div>
+      <div className={stil.altBas}><h3 id={baslikId} tabIndex={-1}>Raporlar</h3><Sayac s={s} />
+        {hazirlar.length > 0 && (
+          <Tus tur="ikincil" ikon="send" disabled={!!gonderiliyor} aria-busy={!!gonderiliyor || undefined} onClick={() => void onayaGonder(hazirlar)}>
+            {gonderiliyor ? `Gönderiliyor ${gonderiliyor}` : `Hazır olanları onaya gönder (${hazirlar.length})`}
+          </Tus>
+        )}
+      </div>
+      {gonderim && (
+        <SeritKap>
+          <Serit tur={gonderim.red.length ? "uyari" : "onay"} ikon={gonderim.red.length ? "circle-alert" : "circle-check"}>
+            <b>{gonderim.gonderilen} rapor gönderildi{gonderim.red.length ? `, ${gonderim.red.length} rapor gönderilemedi` : ""}</b>{gonderim.red.length > 0 && <> · {gonderim.red.join(" · ")}</>}
+          </Serit>
+        </SeritKap>
+      )}
       <SuzgecliListe s={s} on="r" baslik="Bu plandaki raporlar" sutunlar={sutunlar} anahtar={(r) => r.id} siralanir
         bosVeri={{ ikon: "file-text", baslik: "Bu planda rapor yok." }} />
       <SecimCubugu sayi={sec.secili.size} temizle={sec.temizle}>
+        <Tus tur="ikincil" ikon="send" disabled={!!gonderiliyor} onClick={() => void onayaGonder([...sec.secili.values()])}>Onaya gönder</Tus>
         <Tus tur="ikincil" ikon="download" disabled={!!ilerleme} onClick={() => void indir([...sec.secili.values()].map(topluRapor), "plan-raporlari").then(indirSonucu)}>
           {ilerleme ? `İndiriliyor ${ilerleme}` : "PDF indir"}
         </Tus>
