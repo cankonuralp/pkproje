@@ -54,6 +54,9 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
         <Yuz ikon="alarm-clock" ad="Kalibrasyon bitişi" sayi={tarihYaz(c.bitis)} uyari={c.durum === "gecti" || c.durum === "yakin"}
           not={k === null ? "kayıt yok" : k < 0 ? `${-k} gün geçti` : k === 0 ? "bugün bitiyor" : `${k} gün sonra`} />
         <Yuz ikon="file-text" ad="Kalibrasyon kaydı" sayi={c.kalibrasyonlar.length} />
+        {/* 2026-11-05 (göç 0120): ara kontrol — sonraki tarih (ara kontrolü olan cihazda) */}
+        {c.araKontroller.length > 0 && <Yuz ikon="calendar-check" ad="Sonraki ara kontrol" sayi={tarihYaz(c.araBitis)}
+          uyari={!c.araBitis || c.araBitis < bugun} not={!c.araBitis ? "uygun kayıt yok" : c.araBitis < bugun ? "geçti" : `${kalanGun(c.araBitis, bugun)} gün sonra`} />}
       </Yuzler>
       <Bolum id="b-cihaz" baslik="Cihaz bilgileri">
         <BilgiListesi>
@@ -67,6 +70,9 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
       </Bolum>
       <Bolum id="b-kal" baslik="Kalibrasyon kayıtları" sayac={<><b>{c.kalibrasyonlar.length}</b> kayıt</>}>
         {c.kalibrasyonlar.length ? <KalibrasyonTablosu kayitlar={c.kalibrasyonlar} kaldirabilir={yaz} /> : <p className={stil.bosSatir}>Kalibrasyon kaydı yok.</p>}
+      </Bolum>
+      <Bolum id="b-ara" baslik="Ara kontroller" sayac={<><b>{c.araKontroller.length}</b> kayıt</>}>
+        {c.araKontroller.length ? <KalibrasyonTablosu kayitlar={c.araKontroller} kaldirabilir={yaz} ara /> : <p className={stil.bosSatir}>Ara kontrol kaydı yok.</p>}
       </Bolum>
     </>
   );

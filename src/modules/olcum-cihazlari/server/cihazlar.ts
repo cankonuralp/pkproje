@@ -20,7 +20,7 @@ const MODUL = 8;
 export const DOSYA_MODULU = "olcum_cihazi";
 const TUR = tablo({ ad: "cihaz_turu", sutunlar: ["ad"] });
 const CIHAZ = tablo({ ad: "olcum_cihazi", sutunlar: ["kod", "tur_id", "marka", "model", "seri", "aralik", "konum", "pasif"] });
-const KAL = tablo({ ad: "kalibrasyon", sutunlar: ["cihaz_id", "tarih", "bitis", "lab", "sertifika", "sonuc", "dosya_id", "kaldirildi"] });
+const KAL = tablo({ ad: "kalibrasyon", sutunlar: ["cihaz_id", "tur", "tarih", "bitis", "lab", "sertifika", "sonuc", "dosya_id", "kaldirildi"] });
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 export interface Kisi extends YetkiHesabi { ad: string }
@@ -31,8 +31,9 @@ export interface CihazSatiri {
   /** 358: kullanımdan çekildiği gün (pasif cihaz listede "Pasif" görünümünde; rapor seçiminden, Zimmetler'den, uyarılardan kalkar) */
   pasif: string | null;
 }
-export interface KalibrasyonKaydi { id: string; tarih: string; bitis: string; lab: string; sertifika: string; sonuc: "uygun" | "uygun_degil"; dosyaId: string | null; surum: number }
-export interface CihazKarti extends CihazSatiri { surum: number; kalibrasyonlar: KalibrasyonKaydi[] }
+export interface KalibrasyonKaydi { id: string; tur: "kalibrasyon" | "ara"; tarih: string; bitis: string; lab: string; sertifika: string; sonuc: "uygun" | "uygun_degil"; dosyaId: string | null; surum: number }
+/** 2026-11-05: ara kontroller ayrı listede; araBitis: son uygun ara kontrolün sonraki tarihi (ara kontrolü yoksa null) */
+export interface CihazKarti extends CihazSatiri { surum: number; kalibrasyonlar: KalibrasyonKaydi[]; araKontroller: KalibrasyonKaydi[]; araBitis: string | null }
 
 export type Yazma =
   | { durum: "tamam"; id: string; surum: number }
@@ -66,8 +67,8 @@ type CihazDb = { id: string; kod: string; tur_id: string; tur: string; marka: st
 /** geçerli bitiş (SQL; c = olcum_cihazi): kaldırılmamış "uygun" kalibrasyonların en geç bitişi. Toplu içe aktarılan cihazın sistem öncesi bitişi
     (0047 ilk_bitis) YALNIZ cihazın hiç kalibrasyon kaydı yokken — kayıt açılınca (sonucu "uygun değil" olsa da) devreden çıkar (karar 337; 337–339
     incelemesi: GREATEST "uygun değil" kaydı ve daha erken biten kaydı eziyordu). Uyarılar ve rapor belgesi de aynı kuralla (uyari-baglanti.ts). */
-export const GECERLI_BITIS = `CASE WHEN EXISTS (SELECT 1 FROM kalibrasyon k WHERE k.cihaz_id = c.id AND k.firma_id = c.firma_id AND k.kaldirildi IS NULL)
-    THEN (SELECT max(k.bitis) FROM kalibrasyon k WHERE k.cihaz_id = c.id AND k.firma_id = c.firma_id AND k.sonuc = 'uygun' AND k.kaldirildi IS NULL)
+export const GECERLI_BITIS = `CASE WHEN EXISTS (SELECT 1 FROM kalibrasyon k WHERE k.cihaz_id = c.id AND k.firma_id = c.firma_id AND k.kaldirildi IS NULL AND k.tur = 'kalibrasyon')
+    THEN (SELECT max(k.bitis) FROM kalibrasyon k WHERE k.cihaz_id = c.id AND k.firma_id = c.firma_id AND k.sonuc = 'uygun' AND k.kaldirildi IS NULL AND k.tur = 'kalibrasyon')
     ELSE c.ilk_bitis END`;
 const CIHAZ_SEC = `SELECT c.id::text, c.kod, c.tur_id::text, t.ad AS tur, c.marka, c.model, c.seri, c.aralik, c.konum, c.surum, c.pasif::text AS pasif, (${GECERLI_BITIS})::text AS bitis
   FROM olcum_cihazi c JOIN cihaz_turu t ON t.id = c.tur_id AND t.firma_id = c.firma_id`;
@@ -111,12 +112,12 @@ export async function cihazKalibrasyonlari(db: Sorgulayici, idler: readonly stri
   const g = gun && /^\d{4}-\d{2}-\d{2}$/.test(gun) ? gun : null;
   const m = new Map<string, { tarih: string | null; bitis: string; sertifika: string | null }>((await db.sorgu<{ cihaz_id: string; tarih: string; bitis: string; sertifika: string | null }>(
     `SELECT DISTINCT ON (cihaz_id) cihaz_id::text, tarih::text, bitis::text, sertifika FROM kalibrasyon
-     WHERE cihaz_id = ANY ($1::uuid[]) AND sonuc = 'uygun' AND kaldirildi IS NULL
+     WHERE cihaz_id = ANY ($1::uuid[]) AND sonuc = 'uygun' AND kaldirildi IS NULL AND tur = 'kalibrasyon'
      ORDER BY cihaz_id, ($2::date IS NOT NULL AND tarih <= $2::date AND bitis >= $2::date) DESC, bitis DESC`, [l, g])).rows
     .map((x) => [x.cihaz_id, { tarih: x.tarih, bitis: x.bitis, sertifika: x.sertifika }]));
   for (const x of (await db.sorgu<{ id: string; bitis: string }>(
     `SELECT c.id::text, c.ilk_bitis::text AS bitis FROM olcum_cihazi c WHERE c.id = ANY ($1::uuid[]) AND c.ilk_bitis IS NOT NULL
-       AND NOT EXISTS (SELECT 1 FROM kalibrasyon k WHERE k.cihaz_id = c.id AND k.firma_id = c.firma_id AND k.kaldirildi IS NULL
+       AND NOT EXISTS (SELECT 1 FROM kalibrasyon k WHERE k.cihaz_id = c.id AND k.firma_id = c.firma_id AND k.kaldirildi IS NULL AND k.tur = 'kalibrasyon'
          AND ($2::date IS NULL OR k.tarih <= $2::date))`, [l, g])).rows) {
     const k = m.get(x.id);
     if (!k || (g && !(k.tarih !== null && k.tarih <= g && k.bitis >= g))) m.set(x.id, { tarih: null, bitis: x.bitis, sertifika: null });
@@ -152,9 +153,12 @@ export async function cihazKarti(db: Sorgulayici, kim: Kisi, id: string): Promis
   const x = (await db.sorgu<CihazDb>(`${CIHAZ_SEC} WHERE c.id = $1`, [id])).rows[0];
   if (!x) return null;
   const esik = await kalibrasyonEsigi(db);
-  const k = await db.sorgu<{ id: string; tarih: string; bitis: string; lab: string; sertifika: string; sonuc: "uygun" | "uygun_degil"; dosya_id: string | null; surum: number }>(
-    "SELECT id::text, tarih, bitis, lab, sertifika, sonuc, dosya_id::text, surum FROM kalibrasyon WHERE cihaz_id = $1 AND kaldirildi IS NULL ORDER BY tarih DESC, olustu DESC", [id]);
-  return { ...satir(x, bugunTr(), esik), surum: x.surum, esik, kalibrasyonlar: k.rows.map(({ dosya_id, ...r }) => ({ ...r, dosyaId: dosya_id })) };
+  const k = await db.sorgu<{ id: string; tur: "kalibrasyon" | "ara"; tarih: string; bitis: string; lab: string; sertifika: string; sonuc: "uygun" | "uygun_degil"; dosya_id: string | null; surum: number }>(
+    "SELECT id::text, tur, tarih, bitis, lab, sertifika, sonuc, dosya_id::text, surum FROM kalibrasyon WHERE cihaz_id = $1 AND kaldirildi IS NULL ORDER BY tarih DESC, olustu DESC", [id]);
+  const l = k.rows.map(({ dosya_id, ...r }) => ({ ...r, dosyaId: dosya_id }));
+  const ara = l.filter((r) => r.tur === "ara");
+  const araBitis = ara.filter((r) => r.sonuc === "uygun").map((r) => String(r.bitis)).sort().at(-1) ?? null;
+  return { ...satir(x, bugunTr(), esik), surum: x.surum, esik, kalibrasyonlar: l.filter((r) => r.tur === "kalibrasyon"), araKontroller: ara, araBitis };
 }
 
 /** cihaz ekle (id boş) ya da düzenle. Kod firmada eşsiz (etiket, düzenlenir). Yeni tür adı verilirse tür eklenir (aynı ad varsa o kullanılır). */
@@ -209,9 +213,10 @@ export async function kalibrasyonEkle(db: Sorgulayici, depo: Depo, kim: Kisi, fi
     dosyaId = y.id;
   }
   const v = g.veri;
-  const r = await ekle(db, KAL, { cihaz_id: cihazId, tarih: v.tarih, bitis: v.bitis, lab: v.lab, sertifika: v.sertifika, sonuc: v.sonuc, dosya_id: dosyaId },
-    { kim: kim.ad, ne: "cihaz.kalibrasyon_ekle" });
-  if (c.konum === "lab") await guncelle(db, CIHAZ, cihazId, c.surum, { konum: "depo" }, { kim: kim.ad, ne: "cihaz.depoya_al", gerekce: "kalibrasyon kaydıyla" });
+  const r = await ekle(db, KAL, { cihaz_id: cihazId, tur: v.tur, tarih: v.tarih, bitis: v.bitis, lab: v.lab, sertifika: v.sertifika, sonuc: v.sonuc, dosya_id: dosyaId },
+    { kim: kim.ad, ne: v.tur === "ara" ? "cihaz.ara_kontrol_ekle" : "cihaz.kalibrasyon_ekle" });
+  /* ara kontrol cihazın yerini değiştirmez; kalibrasyon kaydı kalibrasyondaki cihazı depoya alır */
+  if (v.tur === "kalibrasyon" && c.konum === "lab") await guncelle(db, CIHAZ, cihazId, c.surum, { konum: "depo" }, { kim: kim.ad, ne: "cihaz.depoya_al", gerekce: "kalibrasyon kaydıyla" });
   return { durum: "tamam", ...r };
 }
 

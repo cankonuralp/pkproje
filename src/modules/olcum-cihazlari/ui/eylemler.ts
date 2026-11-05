@@ -14,7 +14,7 @@ const SONUC = {
   yok: "Kayıt bulunamadı.",
 } as const;
 const CIHAZ_ALAN = ["kod", "tur", "yeniTur", "marka", "model", "seri", "aralik"] as const;
-const KAL_ALAN = ["tarih", "bitis", "lab", "sertifika", "sonuc"] as const;
+const KAL_ALAN = ["tur", "tarih", "bitis", "lab", "sertifika", "sonuc"] as const;
 
 /** oturumdaki kişi ya da kullanıcıya söylenecek ileti */
 async function oturum() {

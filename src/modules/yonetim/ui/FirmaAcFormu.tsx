@@ -140,7 +140,9 @@ export function FirmaAcFormu({ anaAlan, depo, kendiProje = false }: { anaAlan: s
           </FormBolum>
           {/* 2026-10-16 (FIRMA-VT FV10, K1 — reisim: "supabase ve resend bağlantılarını firma açarken biz buradan panelden yapalım"): veritabanı seçimi;
               kendi proje panelden kurulur (Yönetim API anahtarı + örgüt yoksa kapalı, açıklamalı). Önceki "firmanın hesabını bağla" akışı (D1) kalktı. */}
-          <FormBolum baslik="Veritabanı (veriler, dosyalar, yedek)" id="y-b-depo" genis>
+          {/* 2026-11-05 (reisim: tarama bulgusu 5 — firma başına Supabase 2026-10-17 RAFA KALKTI): seçim yalnız Yönetim API anahtarı ortamdayken
+              görünür; yayında (anahtarsız) bölüm çıkmaz, firma ortak projede açılır */}
+          {kendiProje && <FormBolum baslik="Veritabanı (veriler, dosyalar, yedek)" id="y-b-depo" genis>
             <fieldset className={stil.vtSecim}>
               <legend className="gizli">Veritabanı</legend>
               <label className={stil.vtSecenek} data-kapali={kendiProje ? undefined : ""}>
@@ -167,7 +169,7 @@ export function FirmaAcFormu({ anaAlan, depo, kendiProje = false }: { anaAlan: s
               </>
             )}
             <Serit tur="bilgi" ikon="archive">{DEPO_NOT}</Serit>
-          </FormBolum>
+          </FormBolum>}
         </FormSayfa>
         <FormEylem>
           <TusBaglanti href="/yonetim">Vazgeç</TusBaglanti>

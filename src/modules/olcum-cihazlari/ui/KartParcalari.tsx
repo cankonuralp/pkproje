@@ -29,7 +29,7 @@ export function CihazTuslari({ cihaz, turler, konum, baslik, sil = false, pasif 
   const router = useRouter();
   const bildir = useBildir();
   const [bekliyor, baslat] = useTransition();
-  const [p, setP] = useState<null | "duzenle" | "kal" | "pasif">(null);
+  const [p, setP] = useState<null | "duzenle" | "kal" | "ara" | "pasif">(null);
   const konumla = (k: "depo" | "lab") => baslat(async () => {
     const r = await cihazKonumEylemi(cihaz.id, cihaz.surum, k);
     bildir(r.tamam ? (k === "lab" ? "Cihaz kalibrasyona gönderildi." : "Cihaz depoya alındı.") : r.genel ?? "Kaydedilemedi.");
@@ -45,6 +45,7 @@ export function CihazTuslari({ cihaz, turler, konum, baslik, sil = false, pasif 
             ? <Tus tur="ikincil" ikon="warehouse" disabled={bekliyor} onClick={() => konumla("depo")}>Depoya al</Tus>
             : <Tus tur="ikincil" ikon="flask-conical" disabled={bekliyor} onClick={() => konumla("lab")}>Kalibrasyona gönder</Tus>}
           <Tus ikon="plus" onClick={() => setP("kal")}>Kalibrasyon kaydı ekle</Tus>
+          <Tus tur="ikincil" ikon="plus" onClick={() => setP("ara")}>Ara kontrol ekle</Tus>
           {sil
             ? <SilTusu ad={cihaz.kod} baslik="Ölçüm cihazını sil" yanEtki="kalibrasyon kayıtları ve sertifikaları da silinir, kodu yeniden kullanılabilir"
               sil={() => cihazSilEylemi(cihaz.id)} donus="/olcum-cihazlari" />
@@ -58,6 +59,7 @@ export function CihazTuslari({ cihaz, turler, konum, baslik, sil = false, pasif 
         geriMetni="Cihaz listeye, rapor seçimine ve Zimmetler'e geri döner." uygula={() => cihazPasifEylemi(cihaz.id, cihaz.surum, !pasif)} />
       {p === "duzenle" && <CihazPenceresi kapat={() => setP(null)} turler={turler} cihaz={cihaz} />}
       {p === "kal" && <KalibrasyonPenceresi kapat={() => setP(null)} cihazId={cihaz.id} baslik={baslik} />}
+      {p === "ara" && <KalibrasyonPenceresi kapat={() => setP(null)} cihazId={cihaz.id} baslik={baslik} tur="ara" />}
     </>
   );
 }
@@ -69,25 +71,30 @@ function KaldirTusu({ k }: { k: KalibrasyonKaydi }) {
   const [bekliyor, baslat] = useTransition();
   return (
     <Tus tur="ikincil" ikon="x" disabled={bekliyor} onClick={async () => {
-      if (!(await onayla({ baslik: "Kalibrasyon kaydı kaldırılsın mı?", metin: `${k.sertifika} sertifikalı kayıt listeden kalkar; geçerlilik bitişi kalan kayıtlardan yeniden hesaplanır.`, tus: "Kaldır" }))) return;
+      if (!(await onayla(k.tur === "ara"
+        ? { baslik: "Ara kontrol kaldırılsın mı?", metin: `${k.sertifika} kayıtlı ara kontrol listeden kalkar.`, tus: "Kaldır" }
+        : { baslik: "Kalibrasyon kaydı kaldırılsın mı?", metin: `${k.sertifika} sertifikalı kayıt listeden kalkar; geçerlilik bitişi kalan kayıtlardan yeniden hesaplanır.`, tus: "Kaldır" }))) return;
       baslat(async () => { const r = await kalibrasyonKaldirEylemi(k.id, k.surum); bildir(r.tamam ? "Kayıt kaldırıldı." : r.genel ?? "Kaldırılamadı."); router.refresh(); });
     }}>Kaldır</Tus>
   );
 }
 
-export function KalibrasyonTablosu({ kayitlar, kaldirabilir }: { kayitlar: KalibrasyonKaydi[]; kaldirabilir: boolean }) {
+export function KalibrasyonTablosu({ kayitlar, kaldirabilir, ara = false }: { kayitlar: KalibrasyonKaydi[]; kaldirabilir: boolean; ara?: boolean }) {
+  /* 2026-11-05: ara kontrol tablosu aynı düzende, başlıkları kendi */
+  const B = ara ? { tarih: "Ara kontrol", bitis: "Sonraki", lab: "Yapan", sertifika: "Yöntem / kayıt no", ac: "Kaydı aç", yok: "Kayıt yok", liste: "Ara kontroller" }
+    : { tarih: "Kalibrasyon", bitis: "Geçerlilik bitişi", lab: "Laboratuvar", sertifika: "Sertifika no", ac: "Sertifikayı aç", yok: "Sertifika yok", liste: "Kalibrasyon kayıtları" };
   const sutunlar: Sutun<KalibrasyonKaydi>[] = [
-    { k: "tarih", genislik: "14%", baslik: "Kalibrasyon", kart: "ust", sira: 1, hucre: (x) => <span className={stil.tarih}>{tarihYaz(x.tarih)}</span> },
-    { k: "bitis", genislik: "14%", baslik: "Geçerlilik bitişi", kart: "govde", sira: 2, hucre: (x) => <><KartEtiket>Geçerlilik bitişi</KartEtiket>{tarihYaz(x.bitis)}</> },
-    { k: "lab", genislik: "22%", baslik: "Laboratuvar", kart: "govde", sira: 3, hucre: (x) => <><KartEtiket>Laboratuvar</KartEtiket><Kirp>{x.lab}</Kirp></> },
-    { k: "sertifika", genislik: "14%", baslik: "Sertifika no", kart: "govde", sira: 4, hucre: (x) => <><KartEtiket>Sertifika no</KartEtiket><Kod>{x.sertifika}</Kod></> },
+    { k: "tarih", genislik: "14%", baslik: B.tarih, kart: "ust", sira: 1, hucre: (x) => <span className={stil.tarih}>{tarihYaz(x.tarih)}</span> },
+    { k: "bitis", genislik: "14%", baslik: B.bitis, kart: "govde", sira: 2, hucre: (x) => <><KartEtiket>{B.bitis}</KartEtiket>{tarihYaz(x.bitis)}</> },
+    { k: "lab", genislik: "22%", baslik: B.lab, kart: "govde", sira: 3, hucre: (x) => <><KartEtiket>{B.lab}</KartEtiket><Kirp>{x.lab}</Kirp></> },
+    { k: "sertifika", genislik: "14%", baslik: B.sertifika, kart: "govde", sira: 4, hucre: (x) => <><KartEtiket>{B.sertifika}</KartEtiket><Kod>{x.sertifika}</Kod></> },
     { k: "sonuc", genislik: "12%", baslik: "Sonuç", kart: "rozet", sira: 1, hucre: (x) => x.sonuc === "uygun" ? <Rozet tur="tamam">Uygun</Rozet> : <Rozet tur="red">Uygun değil</Rozet> },
     { k: "eylem", genislik: "24%", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: (x) => (
       <span className={stil.tuslar}>
-        {x.dosyaId ? <DosyaAcTusu dosyaId={x.dosyaId}>Sertifikayı aç</DosyaAcTusu> : <DegerYok>Sertifika yok</DegerYok>}
+        {x.dosyaId ? <DosyaAcTusu dosyaId={x.dosyaId}>{B.ac}</DosyaAcTusu> : <DegerYok>{B.yok}</DegerYok>}
         {kaldirabilir && <KaldirTusu k={x} />}
       </span>
     ) },
   ];
-  return <Liste baslik="Kalibrasyon kayıtları" sutunlar={sutunlar} kayitlar={kayitlar} anahtar={(x) => x.id} />;
+  return <Liste baslik={B.liste} sutunlar={sutunlar} kayitlar={kayitlar} anahtar={(x) => x.id} />;
 }

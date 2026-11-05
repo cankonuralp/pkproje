@@ -16,13 +16,17 @@ export const CihazGirdisi = z.object({
 });
 export type CihazGirdisi = z.output<typeof CihazGirdisi>;
 
+/** 2026-11-05 (göç 0120): kayıt türü — kalibrasyon ya da ara kontrol (iki kalibrasyon arası; ISO/IEC 17020). Ara kontrolde laboratuvar = yapan,
+    sertifika no = yöntem / kayıt no, geçerlilik bitişi = sonraki ara kontrol */
+export const KAYIT_TURLERI = ["kalibrasyon", "ara"] as const;
 export const KalibrasyonGirdisi = z.object({
+  tur: z.enum(KAYIT_TURLERI).default("kalibrasyon"),
   tarih, bitis: tarih,
   lab: z.preprocess(bos, z.string({ error: "Laboratuvar yazılmalı." }).min(2, "Laboratuvar yazılmalı.").max(80, "En çok 80 karakter.")),
   sertifika: z.preprocess(bos, z.string({ error: "Sertifika no yazılmalı." }).min(1, "Sertifika no yazılmalı.").max(40, "En çok 40 karakter.")),
   sonuc: z.enum(["uygun", "uygun_degil"], { error: "Sonuç seçilmeli." }),
 }).superRefine((k, bag) => {
-  if (k.bitis < k.tarih) bag.addIssue({ code: "custom", path: ["bitis"], message: "Geçerlilik bitişi kalibrasyon tarihinden önce olamaz." });
+  if (k.bitis < k.tarih) bag.addIssue({ code: "custom", path: ["bitis"], message: k.tur === "ara" ? "Sonraki ara kontrol bu tarihten önce olamaz." : "Geçerlilik bitişi kalibrasyon tarihinden önce olamaz." });
 });
 export type KalibrasyonGirdisi = z.output<typeof KalibrasyonGirdisi>;
 

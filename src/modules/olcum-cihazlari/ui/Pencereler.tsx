@@ -65,7 +65,14 @@ export function CihazPenceresi({ kapat, turler, cihaz }: { kapat: () => void; tu
   );
 }
 
-export function KalibrasyonPenceresi({ kapat, cihazId, baslik }: { kapat: () => void; cihazId: string; baslik: string }) {
+/** 2026-11-05 (göç 0120): tur "ara" — ara kontrol kaydı (yapan, yöntem / kayıt no, sonraki ara kontrol) */
+const ETIKET = {
+  kalibrasyon: { baslik: "Kalibrasyon kaydı ekle", tarih: "Kalibrasyon tarihi", bitis: "Geçerlilik bitişi", lab: "Laboratuvar", sertifika: "Sertifika no", dosya: "Sertifika (PDF)", bitti: "Kalibrasyon kaydı eklendi." },
+  ara: { baslik: "Ara kontrol ekle", tarih: "Ara kontrol tarihi", bitis: "Sonraki ara kontrol", lab: "Yapan", sertifika: "Yöntem / kayıt no", dosya: "Kayıt (PDF)", bitti: "Ara kontrol eklendi." },
+} as const;
+
+export function KalibrasyonPenceresi({ kapat, cihazId, baslik, tur = "kalibrasyon" }: { kapat: () => void; cihazId: string; baslik: string; tur?: "kalibrasyon" | "ara" }) {
+  const E = ETIKET[tur];
   const router = useRouter();
   const bildir = useBildir();
   const [bekliyor, baslat] = useTransition();
@@ -77,31 +84,31 @@ export function KalibrasyonPenceresi({ kapat, cihazId, baslik }: { kapat: () => 
   const form = useRef<HTMLFormElement>(null);
   const kaydet = () => baslat(async () => {
     const f = new FormData(form.current!);
-    f.set("cihaz", cihazId); f.set("tarih", tarih); f.set("bitis", bitis); f.set("sonuc", sonuc);
+    f.set("cihaz", cihazId); f.set("tur", tur); f.set("tarih", tarih); f.set("bitis", bitis); f.set("sonuc", sonuc);
     const r = await kalibrasyonEkleEylemi(f);
     setH(r.hatalar ?? {}); setGenel(r.genel ?? null);
     if (!r.tamam) return;
-    kapat(); bildir("Kalibrasyon kaydı eklendi."); router.refresh();
+    kapat(); bildir(E.bitti); router.refresh();
   });
   return (
-    <Pencere acik baslik="Kalibrasyon kaydı ekle" onKapat={kapat} odak={`#${KID.tarih}`} genis
+    <Pencere acik baslik={E.baslik} onKapat={kapat} odak={`#${KID.tarih}`} genis
       alt={<><Tus tur="ikincil" onClick={kapat}>Vazgeç</Tus><Tus ikon="check" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={kaydet}>Kaydet</Tus></>}>
       <p className={pencereMetinSinifi}><b>{baslik}</b></p>
       {genel && <Serit tur="hata" ikon="circle-alert">{genel}</Serit>}
       <form ref={form} onSubmit={(e) => { e.preventDefault(); kaydet(); }}>
         <FormIzgara>
-          <Alan id={KID.tarih} etiket="Kalibrasyon tarihi" zorunlu hata={h.tarih}>
-            <TarihAlani id={KID.tarih} ad="Kalibrasyon tarihi" deger={tarih} degistir={setTarih} tanim={h.tarih ? ipucuId(KID.tarih) : undefined} />
+          <Alan id={KID.tarih} etiket={E.tarih} zorunlu hata={h.tarih}>
+            <TarihAlani id={KID.tarih} ad={E.tarih} deger={tarih} degistir={setTarih} tanim={h.tarih ? ipucuId(KID.tarih) : undefined} />
           </Alan>
-          <Alan id={KID.bitis} etiket="Geçerlilik bitişi" zorunlu hata={h.bitis}>
-            <TarihAlani id={KID.bitis} ad="Geçerlilik bitişi" deger={bitis} degistir={setBitis} tanim={h.bitis ? ipucuId(KID.bitis) : undefined} />
+          <Alan id={KID.bitis} etiket={E.bitis} zorunlu hata={h.bitis}>
+            <TarihAlani id={KID.bitis} ad={E.bitis} deger={bitis} degistir={setBitis} tanim={h.bitis ? ipucuId(KID.bitis) : undefined} />
           </Alan>
-          <Alan id={KID.lab} etiket="Laboratuvar" zorunlu genis hata={h.lab}><Girdi id={KID.lab} name="lab" maxLength={80} hata={!!h.lab} /></Alan>
-          <Alan id={KID.sertifika} etiket="Sertifika no" zorunlu hata={h.sertifika}><Girdi id={KID.sertifika} name="sertifika" maxLength={40} hata={!!h.sertifika} /></Alan>
+          <Alan id={KID.lab} etiket={E.lab} zorunlu genis hata={h.lab}><Girdi id={KID.lab} name="lab" maxLength={80} hata={!!h.lab} /></Alan>
+          <Alan id={KID.sertifika} etiket={E.sertifika} zorunlu hata={h.sertifika}><Girdi id={KID.sertifika} name="sertifika" maxLength={40} hata={!!h.sertifika} /></Alan>
           <Alan id={KID.sonuc} etiket="Sonuç" zorunlu hata={h.sonuc}>
             <SecimAlani id={KID.sonuc} ad="Sonuç" deger={sonuc} secenekler={SONUC_SEC} degistir={setSonuc} />
           </Alan>
-          <Alan id={KID.dosya} etiket="Sertifika (PDF)" genis hata={h.dosya} sonuc="İsteğe bağlı; en çok 25 MB.">
+          <Alan id={KID.dosya} etiket={E.dosya} genis hata={h.dosya} sonuc="İsteğe bağlı; en çok 25 MB.">
             <input id={KID.dosya} className={stil.dosya} name="dosya" type="file" accept="application/pdf,.pdf" aria-invalid={!!h.dosya || undefined} aria-describedby={ipucuId(KID.dosya)} />
           </Alan>
         </FormIzgara>

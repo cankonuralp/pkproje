@@ -109,6 +109,9 @@ pkproje/
                             · 357 Sil (kullanılmamış, yönetici; silici.ts) · 358 Pasife al / Etkinleştir (depoda olmalı; liste Görünüm; raporCihazlari pasifDahil)
                             · 359 Cihaz türleri penceresi (ui/TurPencereleri.tsx; ad düzenle, kullanılmamış tür Sil — ekipman türlerinden de çıkar, 0055)
                             · 508 cihaz sayfasında "Zimmet" → zimmet kartı #teslim (zimmetler/ui/VarlikParcalari TeslimTusu pencereyi açık başlatır)
+                            · 2026-11-05 ARA KONTROL (göç 0120; ISO/IEC 17020): kalibrasyon tablosunda tur 'ara' (yapan · yöntem / kayıt no · sonraki ara
+                            kontrol); kalibrasyon bitişi / rapor denetimi / belge yalnız tur 'kalibrasyon'; cihaz sayfasında "Ara kontrol ekle" + Ara kontroller bölümü;
+                            Uyarılar "ara" türü (uyari-baglanti cihazUyarilari.ara) · kilit olcum-cihazlari (PG)
   src/modules/zimmetler/    ZİMMETLER (2026-10-04): kimde (son hareketten), değişmez teslim hareketleri + fotoğraf, demirbaş
                             · 362 demirbaş Sil (silici.ts, 0058) / Pasife al / Etkinleştir; pasif varlıklar yüklenir (Görünüm: Pasif), teslim edilmez
   src/modules/araclar/      ARAÇLAR (2026-10-04): araç (zimmet varlığı), değişmez teslim tutanağı + açı fotoğrafları, haftalık kilometre

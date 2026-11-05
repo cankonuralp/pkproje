@@ -12,6 +12,7 @@ import { klasorDepo } from "../src/server/dosya/depo.ts";
 import { dosyaIndirilebilir } from "../src/server/dosya/dosya.ts";
 import { DOSYA_ERISIMI } from "../src/server/dosya/erisim.ts";
 import { kalDurum } from "../src/modules/olcum-cihazlari/sema.ts";
+import { cihazUyarilari } from "../src/modules/olcum-cihazlari/server/uyari-baglanti.ts";
 import { bugunTr, cihazKaydet, cihazKarti, cihazKonum, cihazListesi, cihazTurleri, kalibrasyonEkle, kalibrasyonKaldir, type Kisi } from "../src/modules/olcum-cihazlari/server/cihazlar.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
@@ -98,6 +99,23 @@ test("KALİBRASYON: kayıt yokken geçti; uygun kayıtla geçerli, eşik içinde
   /* sertifika: yalnız PDF */
   const sahte = await a((db) => kalibrasyonEkle(db, depo, ELK, A, c.id, { tarih: gun(0), bitis: gun(1), lab: "Deneme Lab", sertifika: "KL-4", sonuc: "uygun" }, { ad: "kl.pdf", bayt: new TextEncoder().encode("<html>") }));
   assert.deepEqual(sahte, { durum: "gecersiz", hatalar: { dosya: "Dosya PDF değil ya da bozuk." } });
+});
+
+test("ARA KONTROL (0120): kalibrasyon bitişini değiştirmez, cihazı depoya almaz; kartta ayrı; uyarı ara kontrol satırında", async () => {
+  const c = tamam(await a((db) => cihazKaydet(db, ELK, null, 0, { ...C, kod: "ARA-1" })));
+  tamam(await a((db) => kalibrasyonEkle(db, depo, ELK, A, c.id, { tarih: gun(-10), bitis: gun(300), lab: "Deneme Lab", sertifika: "KL-A", sonuc: "uygun" })));
+  let kart = (await a((db) => cihazKarti(db, ELK, c.id)))!;
+  tamam(await a((db) => cihazKonum(db, ELK, c.id, kart.surum, "lab")));
+  const ters = await a((db) => kalibrasyonEkle(db, depo, ELK, A, c.id, { tur: "ara", tarih: gun(0), bitis: gun(-1), lab: "Deneme Uzman", sertifika: "AK-1", sonuc: "uygun" }));
+  assert.deepEqual(ters.durum === "gecersiz" && ters.hatalar, { bitis: "Sonraki ara kontrol bu tarihten önce olamaz." });
+  tamam(await a((db) => kalibrasyonEkle(db, depo, ELK, A, c.id, { tur: "ara", tarih: gun(-100), bitis: gun(5), lab: "Deneme Uzman", sertifika: "AK-1", sonuc: "uygun" })));
+  kart = (await a((db) => cihazKarti(db, ELK, c.id)))!;
+  assert.deepEqual([kart.konum, kart.bitis, kart.kalibrasyonlar.length, kart.araKontroller.length, kart.araBitis], ["lab", gun(300), 1, 1, gun(5)],
+    "ara kontrol kalibrasyonu ve konumu değiştirmez; kartta ayrı");
+  tamam(await a((db) => cihazKonum(db, ELK, c.id, kart.surum, "depo")));
+  const u = await a((db) => cihazUyarilari(db, bugunTr()));
+  assert.ok(u.ara.some((x) => x.id === c.id && x.durum === "yakin"), "ara kontrol eşik içinde");
+  assert.ok(!u.l.some((x) => x.id === c.id), "kalibrasyon uyarısı yok (300 gün geçerli)");
 });
 
 test("YETKİ: yönetici değiştirir; planlama görür ama değiştiremez; denetçi (kendi) zimmeti gelene kadar kayıt görmez; muhasebe görmez, sertifikayı açamaz", async () => {

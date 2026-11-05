@@ -37,7 +37,7 @@ export async function uyariListesi(db: Sorgulayici, kim: YetkiHesabi): Promise<U
   const bugun = bugunTr();
   const [c, e, a, kimde] = [await cihazUyarilari(db, bugun), await egitimUyarilari(db, bugun), await aracUyarilari(db, bugun), await kimdeHaritasi(db)];
   const sak = duzey(kim, FIRMA_AYARLARI) === "yaz" ? await saklamaGunleri(db) : [];
-  const kisiIdleri = [...new Set([...c.l.map((x) => kimde.cihaz.get(x.id)), ...a.l.map((x) => kimde.arac.get(x.id)), ...e.l.map((x) => x.personelId)].filter((x): x is string => !!x))];
+  const kisiIdleri = [...new Set([...c.l.map((x) => kimde.cihaz.get(x.id)), ...c.ara.map((x) => kimde.cihaz.get(x.id)), ...a.l.map((x) => kimde.arac.get(x.id)), ...e.l.map((x) => x.personelId)].filter((x): x is string => !!x))];
   const ozet = await personelOzetleri(db, kisiIdleri);
   const ad = new Map(ozet.map((p) => [p.id, p.ad]));
   /* ayrılan personelin eğitim tekrarı uyarı değildir (ona yeni kayıt girilemez, uyarı hiç düşmezdi — 329–332 incelemesi) */
@@ -50,6 +50,9 @@ export async function uyariListesi(db: Sorgulayici, kim: YetkiHesabi): Promise<U
       return { id: `k-${x.id}`, tur: "kal", konu: `${x.kod} · ${x.tur}`, alt: "Kalibrasyon", kisi: k, tarih: x.bitis, durum: x.durum, href: `/olcum-cihazlari/${x.id}`, cihazTur: x.turId,
         sonuc: !x.bitis ? `geçerli kalibrasyon yok${k ? ` · ${gonderemez}` : ""}` : x.durum === "gecti" ? gonderemez : `${c.esik} gün içinde bitiyor` };
     }),
+    /* 2026-11-05 (göç 0120): ara kontrol — iki kalibrasyon arası; rapora engel değil, uyarı */
+    ...c.ara.map((x): Uyari => ({ id: `a-${x.id}`, tur: "ara", konu: `${x.kod} · ${x.tur}`, alt: "Ara kontrol", kisi: kisi(kimde.cihaz.get(x.id)), tarih: x.bitis,
+      durum: x.durum, href: `/olcum-cihazlari/${x.id}`, cihazTur: x.turId, sonuc: !x.bitis ? "uygun ara kontrol yok" : x.durum === "gecti" ? "ara kontrol zamanı geçti" : `${c.esik} gün içinde` })),
     ...e.l.filter((x) => !ayrilan.has(x.personelId)).map((x): Uyari => ({ id: `e-${x.id}`, tur: "egt", konu: x.tur, alt: "Eğitim tekrarı", kisi: kisi(x.personelId),
       tarih: x.tekrar, durum: x.durum, href: `/dokumanlar/egitimler?kisi=${x.personelId}`, sonuc: x.durum === "gecti" ? "tekrar gerekli" : `${e.esik} gün içinde` })),
     ...a.l.map((x): Uyari => ({ id: `v-${x.id}-${x.belge}`, tur: "arac", konu: `${x.plaka} · ${x.ad}`, alt: x.belge, kisi: kisi(kimde.arac.get(x.id)), tarih: x.tarih,

@@ -6,10 +6,18 @@ import { kalDurum } from "../sema.ts";
 import { GECERLI_BITIS } from "./cihazlar.ts";
 
 export interface CihazUyarisi { id: string; kod: string; tur: string; turId: string; bitis: string | null; durum: "gecti" | "yakin" }
-export async function cihazUyarilari(db: Sorgulayici, bugun: string): Promise<{ l: CihazUyarisi[]; esik: number }> {
+/** 2026-11-05 (göç 0120): ara: ara kontrolü olan cihazda son uygun ara kontrolün sonraki tarihi geçti ya da eşik içinde (aynı eşik) */
+export async function cihazUyarilari(db: Sorgulayici, bugun: string): Promise<{ l: CihazUyarisi[]; ara: CihazUyarisi[]; esik: number }> {
   const esik = (await ayarOku(db, "uyari_esikleri")).deger.kalibrasyon;
-  const l = (await db.sorgu<{ id: string; kod: string; tur: string; tur_id: string; konum: string; bitis: string | null }>(
-    `SELECT c.id::text, c.kod, t.ad AS tur, c.tur_id::text, c.konum, (${GECERLI_BITIS})::text AS bitis
+  const l = (await db.sorgu<{ id: string; kod: string; tur: string; tur_id: string; konum: string; bitis: string | null; ara_var: boolean; ara_bitis: string | null }>(
+    `SELECT c.id::text, c.kod, t.ad AS tur, c.tur_id::text, c.konum, (${GECERLI_BITIS})::text AS bitis,
+       EXISTS (SELECT 1 FROM kalibrasyon k WHERE k.cihaz_id = c.id AND k.firma_id = c.firma_id AND k.tur = 'ara' AND k.kaldirildi IS NULL) AS ara_var,
+       (SELECT max(k.bitis) FROM kalibrasyon k WHERE k.cihaz_id = c.id AND k.firma_id = c.firma_id AND k.tur = 'ara' AND k.sonuc = 'uygun'
+          AND k.kaldirildi IS NULL)::text AS ara_bitis
      FROM olcum_cihazi c JOIN cihaz_turu t ON t.id = c.tur_id AND t.firma_id = c.firma_id WHERE c.pasif IS NULL`)).rows;
-  return { esik, l: l.flatMap((x) => { const d = kalDurum(x.bitis, x.konum, bugun, esik); return d === "gecti" || d === "yakin" ? [{ id: x.id, kod: x.kod, tur: x.tur, turId: x.tur_id, bitis: x.bitis, durum: d }] : []; }) };
+  const uyari = (x: (typeof l)[number], bitis: string | null): CihazUyarisi[] => {
+    const d = kalDurum(bitis, x.konum, bugun, esik);
+    return d === "gecti" || d === "yakin" ? [{ id: x.id, kod: x.kod, tur: x.tur, turId: x.tur_id, bitis, durum: d }] : [];
+  };
+  return { esik, l: l.flatMap((x) => uyari(x, x.bitis)), ara: l.filter((x) => x.ara_var).flatMap((x) => uyari(x, x.ara_bitis)) };
 }

@@ -17,7 +17,7 @@ const GUN = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year
 const kalan = (iso: string) => Math.round((Date.parse(`${iso}T00:00:00Z`) - Date.parse(`${GUN.format(new Date())}T00:00:00Z`)) / 864e5);
 const DURUM = { gecti: ["red", "Süresi geçti"], yakin: ["bekliyor", "Yaklaşıyor"] } as const;
 /* araçta belgenin kendi adıyla (maket u.alt + " bitişi": "Muayene bitişi", "Kasko bitişi") */
-const TARIH_AD: Record<Exclude<UyariTuru, "arac">, string> = { kal: "Kalibrasyon bitişi", egt: "Tekrar tarihi", sak: "Süre doluyor" };
+const TARIH_AD: Record<Exclude<UyariTuru, "arac">, string> = { kal: "Kalibrasyon bitişi", ara: "Sonraki ara kontrol", egt: "Tekrar tarihi", sak: "Süre doluyor" };
 
 function tanim(l: readonly Uyari[]): SuzgecTanimi<Uyari> {
   const kisiler = [...new Map(l.filter((u) => u.kisi).map((u) => [u.kisi!.id, u.kisi!.ad])).entries()].sort((a, b) => a[1].localeCompare(b[1], "tr"));
