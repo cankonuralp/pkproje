@@ -38,6 +38,13 @@ test("talimat: reisim'in iki kuralı; eski yamalar yok; sayfa ve ekran talimatta
   /* 2026-10-31 V21 ilk koşu (madde 6, 9, 11, O8): tesis uyuşmazlığı durdurmaz; cihazı olmayan cihaz türü — boş + kalan engel, "ekle" denirse listeden
      çıkar; soru işaretli değer yok; yapmadığının nedeni kanıtıyla; bir fotoğraf bir işte bir kez büyütülür */
   assert.match(SISTEM, /uyuşmazlığı[^\n]*işi DURDURMAZ/, "tesis uyuşmazlığı durdurmaz");
+  /* 2026-11-07 (reisim: "ne yap dediysem yapacak ve eğer uygun değilse bana uyarı geçecek, ben bir şeyi yap dedikten sonra yapmamak gibi bir şey
+     seçenek değil, yaptım ama şunlara dikkat et diye uyarır"; koşu: aynı 18 fotoğrafın raporları başka planda var diye yazmadı, sonra "belge başka
+     firmanın" diye seçenek sorup bekledi) */
+  assert.match(SISTEM, /İstenen işi YAPMAMAK seçenek değildir/, "yapmamak seçenek değil");
+  assert.match(SISTEM, /ÖNCE YAPARSIN, sonra bildirimin kalan engel satırında uyarırsın/, "önce yap, sonra uyar");
+  assert.match(SISTEM, /eski kayıtları bulup "zaten var" deyip bırakma/, "zaten var diye bırakmaz");
+  assert.match(SISTEM, /ekranda AÇIK kaydına/, "belirsizse açık kayda yazar");
   assert.match(SISTEM, /cihaz kaydı uydurma, türün listesini kendiliğinden değiştirme, sorma/, "cihazı olmayan tür: boş + kalan engel");
   assert.match(SISTEM, /türün ölçüm cihazı listesinden çıkarırsın/, "kullanıcı ekle derse listeden çıkar");
   assert.match(SISTEM, /değere soru işareti koyma/, "şüpheli değere soru işareti yok");

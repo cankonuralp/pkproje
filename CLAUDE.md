@@ -605,6 +605,9 @@ pkproje/
                             · 2026-11-05 KENDİ İŞİNDEN ÖĞRENME (göç 0121): src/server/yz/ogrenme.ts — iş bitince say_is özeti (dongu.ts bitti), gece puan +
                             say_hafiza (is/gece.ts sayOgrenmeIsi; yapay zekâ yok), konuşmanın başında hafıza notu (say.ts soruyuEkle); Yönetim S.A.Y bölümünde
                             puan / hafıza; say_arge 12 ay · kilit say-ogrenme(-saf), bozan say-ogrenme
+                            · 2026-11-07 YAPMAMAK SEÇENEK DEĞİL (reisim: "ne yap dediysem yapacak … uygun değilse uyarı geçecek"): talimatta önce yap,
+                            sonra kalan engel satırında uyar; "zaten var" / başka firma / belirsiz plan işi durdurmaz, belirsizse açık kayda; beceriler B01–B03,
+                            B06, B09, B10 "sor" yerine yaz + bildir · kilit say-saf
                             · 2026-11-02 ALTINCI KOŞU SONRASI: rapor_ac sonucu tür başına harita bir kez (say-islemleri turHaritalari; rapor_getir çağrılmaz) ·
                             parti sonu küçültme yalnız raporlara_yaz / rapor_yaz ve istem > PARTI_ESIGI 60 bin · A1 TAVAN 75 bin (hizmetin 80 bininden önce) ·
                             SayEkipmanGirdisi seri / konum "-" boş · **60 DK KAPANIŞI VERİTABANINDA (göç 0116; reisim "kullanıcı açsa da açmasa da")**:

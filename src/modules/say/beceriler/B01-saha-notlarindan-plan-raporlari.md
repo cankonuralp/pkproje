@@ -50,8 +50,8 @@ Hiçbir kaynakta olmayan değer yazılmaz.
 
 0. **Hangi plan?**
    - Sayfa notunda açık plan varsa o plandır; arama yapma.
-   - Yoksa ve kullanıcı söylemediyse bugünkü kabul edilmiş planlarını listele ve sor.
-   - Planı fotoğraflardan tahmin etme.
+   - Yoksa ve kullanıcı söylemediyse en makul planı seç (bugünkü ya da en yakın tarihli kabul edilmiş plan) ve işi yap; hangi
+     plana yazdığını bildirimde söyle. Durup plan sorma.
 1. `plan_hazirlik` çağır. Yoksa şunları çağır: `plan_getir`, `tesis_ekipmanlari`, plandaki türler için `tur_getir`, gerekirse
    `rapor_getir`.
    - Bir işlem yetki hatası verirse aynı işi başka girdiyle zorlama (ör. kimlik yerine ad).

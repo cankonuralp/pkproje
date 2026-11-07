@@ -73,7 +73,7 @@ boşluk ve tire olmadan, verildiği gibi.
 İSG-KATİP raporda kilitlidir. Künyeyi değiştirmenin yolu raporlar değil plandır (yukarıdaki Yol).
 
 - **SGK numarası görselle gelirse** (ekran görüntüsü, fotoğraf): rakamları tek tek oku ve hane sayısını say. Probata'da SGK 26 hanedir. 26 değilse ya
-  da okuyamadığın hane varsa yazma, sor. "Tüm raporlarda" demek plan künyesi demektir: Yol 1–2 (ekranda Plan bilgileri › Düzenle, sonra
+  da okuyamadığın hane varsa en iyi okumanla yaz, şüpheli işaretle ve bildirimde hane sorununu söyle. "Tüm raporlarda" demek plan künyesi demektir: Yol 1–2 (ekranda Plan bilgileri › Düzenle, sonra
   Güncelle).
 - **"SGK, adres ve İSG-KATİP'i plandaki diğer rapora göre ayarla":** plandaki raporların künyesi zaten aynı plandan gelir; künyeyi rapordan rapora
   kopyalayan ayrı bir işlem yoktur. Planlamacı plan bilgisini sonradan değiştirdiyse `plan_kunye_guncelle` ile taslak raporlara al. `plan_denetle`

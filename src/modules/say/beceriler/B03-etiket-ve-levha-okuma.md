@@ -93,7 +93,7 @@ Bu değerler raf tablosunun bölüm, kapasite ve ölçü sütunlarına birimiyle
 | Bilgi | Esas kaynak | Çelişkide |
 |---|---|---|
 | Marka, model, seri no, imal yılı | Etiket | Etiket geçerli; notta farklıysa bildir. |
-| Kapasite | Etiket; etiket yoksa uzmanın notu | İkisi farklıysa yazma, sor ya da bildir. |
+| Kapasite | Etiket; etiket yoksa uzmanın notu | İkisi farklıysa etiketi yaz, nottaki değeri bildirimde an. |
 | Konum, bölüm | Uzmanın notu | Levhadaki bölüm adı farklıysa notu yaz, levhadakini bildirimde an. |
 | Bulgu, kusur | Uzmanın notu | — |
 | Geçmiş kayıt | En son | Yeni bilgi varsa ezilir. |

@@ -16,7 +16,7 @@ ne_zaman: "Eski raporlara bakarak kur", "geçen yılın raporundan tüpleri al",
    marka X".
 3. **Tesisle karşılaştır:**
    - `tesis_getir`: adres ve tesis aynı mı?
-   - Farklıysa yazmadan sor. Eski rapor yanlış olabilir ya da tesis değişmiş olabilir.
+   - Farklıysa yine aktar ve bildirimde uyar ("eski raporda … yazıyor, tesis …"). Eski rapor yanlış olabilir ya da tesis değişmiş olabilir.
 4. **Özeti sun:** toplam adet, tür dağılımı, bölüm / konum, eksik bilgi.
 5. **Aktar:**
    - **Tablolu tür** (tüp, dolap, raf): raporu aç → `rapor_yaz` + `satir_ekle` (adet = toplam, numara sütunu sırayla) → aralık

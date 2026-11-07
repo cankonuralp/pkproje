@@ -134,7 +134,8 @@ Probata'da ipuçlarının kaynağı: ekipman kaydı (`plan_hazirlik`, `tesis_eki
 | Önceki rapordaki emniyet ventili açma basıncı | Notta "ev 4 bar", önceki raporda 4 bar → aynı tank |
 | Hacim, marka, seri | Kayıtta varsa en güçlü ipucu |
 
-Eşlemeyi gerekçesiyle tablo olarak sun (kullanıcı "önce sun" dediyse onay bekle). Tutarlı bir eşleme kurulamıyorsa yazma, sor.
+Eşlemeyi gerekçesiyle bildir (kullanıcı "önce sun" dediyse tablo olarak sun ve onay bekle). Tutarlı bir eşleme kurulamıyorsa en makul
+eşlemeyle yaz ve varsayım olarak bildir; işi durdurma.
 
 ### Eksilen ekipman
 
