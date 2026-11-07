@@ -112,6 +112,8 @@ test("S.A.Y Chat: bağlantısız 3 fotoğraf + 1 yazı sırası ve saati korunur
     const cevap = say.getByRole("listitem").filter({ hasText: "Yaptım:" }).last();
     await expect(cevap).toContainText(/4 mesaj P-\d{4}-\d{3} planına işlendi\./, { timeout: 90_000 });
     await expect(cevap).toContainText(/Okunan 4 mesaj, 3 fotoğraf, sıra: F\d{2} F\d{2} F\d{2}/);
+    /* varsayılan okuma yeni konuşmada (konuşma kapanıp yeniden açılmış gibi — ekler yeniden eklenir, işlenmişler atlanır) */
+    await sayAc(page);
     await sor(say, `Chatten oku [islem-chat-varsayilan ${isaret}]`);
     await expect(say.getByRole("listitem").filter({ hasText: "Varsayılan okuma işlenmişleri atladı" })).toBeVisible({ timeout: 60_000 });
   } finally {
