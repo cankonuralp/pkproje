@@ -107,14 +107,17 @@ test("S.A.Y Chat: bağlantısız 3 fotoğraf + 1 yazı sırası ve saati korunur
   await hazir(page);
   const say = await sayAc(page);
   const planId = plan.split("/").at(-1)!;
-  await sor(say, `Chatten oku, planına yaz [islem-chat ${planId} ${isaret}]`);
-  const cevap = say.getByRole("listitem").filter({ hasText: "Yaptım:" }).last();
-  await expect(cevap).toContainText(/4 mesaj P-\d{4}-\d{3} planına işlendi\./, { timeout: 90_000 });
-  await expect(cevap).toContainText(/Okunan 4 mesaj, 3 fotoğraf, sıra: F\d{2} F\d{2} F\d{2}/);
-  await sor(say, `Chatten oku [islem-chat-varsayilan ${isaret}]`);
-  await expect(say.getByRole("listitem").filter({ hasText: "Varsayılan okuma işlenmişleri atladı" })).toBeVisible({ timeout: 60_000 });
-  /* hesabın S.A.Y konuşması temiz bırakılır (aynı denetçiyle koşan S.A.Y testleri kendi konuşmasıyla başlar) */
-  await sayAc(page);
+  try {
+    await sor(say, `Chatten oku, planına yaz [islem-chat ${planId} ${isaret}]`);
+    const cevap = say.getByRole("listitem").filter({ hasText: "Yaptım:" }).last();
+    await expect(cevap).toContainText(/4 mesaj P-\d{4}-\d{3} planına işlendi\./, { timeout: 90_000 });
+    await expect(cevap).toContainText(/Okunan 4 mesaj, 3 fotoğraf, sıra: F\d{2} F\d{2} F\d{2}/);
+    await sor(say, `Chatten oku [islem-chat-varsayilan ${isaret}]`);
+    await expect(say.getByRole("listitem").filter({ hasText: "Varsayılan okuma işlenmişleri atladı" })).toBeVisible({ timeout: 60_000 });
+  } finally {
+    /* hesabın S.A.Y konuşması temiz bırakılır (aynı denetçiyle koşan S.A.Y testleri kendi konuşmasıyla başlar) — test düşse de */
+    await sayAc(page).catch(() => undefined);
+  }
   await say.getByLabel("S.A.Y'a sor").focus();
   await page.keyboard.press("Escape");
 
