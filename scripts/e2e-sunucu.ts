@@ -744,6 +744,19 @@ if (process.platform === "linux") {
     } catch { /* ölçüm yoksa sessiz */ }
   }, 60_000).unref();
 }
+/* 2026-11-07: SUNUCU HATA İZİ — uygulamanın hata kaydına (hata_kaydi; yığın kırpılmış, kişisel bilgi maskeli — src/server/hata/maske.ts) düşen yeni sunucu
+   hataları deneme günlüğüne: uçtan uca kırmızıda nedeni görülsün (S.A.Y'ın "beklenmeyen sorun"u yalnız kayda yazılır). Uydurma veri, geçici veritabanı */
+{
+  const iz = kume.sahipIstemci();
+  await iz.connect();
+  let son = 0;
+  setInterval(() => {
+    void iz.query<{ id: string; yer: string | null; mesaj: string; yigin: string | null }>(
+      "SELECT id::text, yer, mesaj, yigin FROM hata_kaydi WHERE kaynak = 'sunucu' AND id > $1 ORDER BY id", [son]).then((r) => {
+      for (const x of r.rows) { son = Math.max(son, Number(x.id)); console.error(`[hata kaydı] ${x.yer ?? "-"}: ${x.mesaj}\n${(x.yigin ?? "").slice(0, 600)}`); }
+    }).catch(() => undefined);
+  }, 5_000).unref();
+}
 const ortam: Record<string, string> = {
   PROBATA_VT_SUNUCU: u.host, PROBATA_VT_KAPI: String(u.port), PROBATA_VT_AD: u.database, PROBATA_VT_KULLANICI: u.user, PROBATA_VT_PAROLA: u.password,
   PROBATA_ANA_ALAN: "localhost", NEXT_TELEMETRY_DISABLED: "1", PROBATA_DEPO_KLASOR: mkdtempSync(join(tmpdir(), "probata-e2e-depo-")),

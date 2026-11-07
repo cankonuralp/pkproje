@@ -386,7 +386,8 @@ test("S.A.Y yazamadığı raporda: raporu bilir, nedenini söyler", async ({ pag
   await page.goto(`${Y}/raporlar`);
   await hazir(page);
   await page.getByRole("searchbox", { name: "Ekipman kodu" }).fill(kod);
-  await page.getByRole("link", { name: /^YZ-/ }).first().click();
+  /* 2026-11-07: yönetici bütün raporları görür (toplu imzanın onaydaki raporları da) — süzgeç uygulanmadan ilk satıra tıklanmasın: aranan ekipmanın satırı */
+  await page.getByRole("row").filter({ hasText: kod }).getByRole("link", { name: /^YZ-/ }).first().click({ timeout: 30_000 });
   await expect(page).toHaveURL(/\/raporlar\/[0-9a-f-]{36}$/, { timeout: 30_000 });
   await hazir(page);
   await expect(page.getByRole("button", { name: "Kaydet", exact: true })).toHaveCount(0);   // salt okunur
