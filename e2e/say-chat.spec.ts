@@ -113,6 +113,8 @@ test("S.A.Y Chat: bağlantısız 3 fotoğraf + 1 yazı sırası ve saati korunur
   await expect(cevap).toContainText(/Okunan 4 mesaj, 3 fotoğraf, sıra: F\d{2} F\d{2} F\d{2}/);
   await sor(say, `Chatten oku [islem-chat-varsayilan ${isaret}]`);
   await expect(say.getByRole("listitem").filter({ hasText: "Varsayılan okuma işlenmişleri atladı" })).toBeVisible({ timeout: 60_000 });
+  /* hesabın S.A.Y konuşması temiz bırakılır (aynı denetçiyle koşan S.A.Y testleri kendi konuşmasıyla başlar) */
+  await sayAc(page);
   await say.getByLabel("S.A.Y'a sor").focus();
   await page.keyboard.press("Escape");
 

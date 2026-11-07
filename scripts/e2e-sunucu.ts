@@ -388,7 +388,9 @@ const yzTaklit = createServer((istek, yanit) => {
       /* 2026-11-07 (S.A.Y Chat — e2e/say-chat.spec.ts): "[islem-chat <plan> <işaret>]": chat_oku { sozcuk: işaret } → chat_isle { plan, bas, bit } →
          "Yaptım: <bildirim> Okunan <n> mesaj, <f> fotoğraf, sıra: <F no'lar>"; "[islem-chat-varsayilan <işaret>]": chat_oku {} → işaret dökümde mi.
          chat_oku'nun sonucu blok listesi (JSON + döküm metni) */
-      const chatSoru = /\[islem-chat(-varsayilan)? ([0-9a-f-]{36} )?(\S+)\]/.exec(son);
+      /* sorunun BÜTÜN metin blokları (sonraki soruda sayfa notu sorudan sonra gelebilir) */
+      const soruMetni = bloklar(soruIletisi).filter((b) => b.type === "text").map((b) => String(b.text ?? "")).join("\n");
+      const chatSoru = /\[islem-chat(-varsayilan)? ([0-9a-f-]{36} )?(\S+)\]/.exec(soruMetni);
       if (chatSoru) {
         const icerik = (b: Blok) => (Array.isArray(b.content) ? (b.content as Blok[]).map((x) => String(x.text ?? "")) : [String(b.content ?? "")]);
         const sonuc = sonTur.map((b) => icerik(b)).at(-1);
