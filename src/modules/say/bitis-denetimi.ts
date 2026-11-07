@@ -1,5 +1,7 @@
 /* BİTİRMEDEN DENETİM (2026-10-31; reisim: "Raporlara yazan iş bitince döngü plan_denetle'yi kendisi çalıştırır. Düzeltebildiğini düzeltir, kalanı
    bildirimin 'Kalan engel' satırına yazar. Bu denemede 8 raporun hiçbiri onaya gidemiyordu ve S.A.Y bunu söylemedi."; sunum L3). SAF.
+   2026-11-07 (canlı V25 — reisim: "10 cent çok büyük maliyet"): bir işte BİR kez — ikinci denetim kullanıcının düzeltemeyeceği eksikler (etiket okunamadı,
+   firmada cihaz yok) için S.A.Y'ı yeniden çalıştırıyor, aynı bildirimi yeniden yazdırıyordu (iki tur ≈ 0,07 $).
    Kullanıcının son sorusundan bu yana konuşmada rapora yazan bir işlem varsa ve ondan sonra denetim (plan_denetle ya da sunucunun bu notu) yoksa,
    döngü S.A.Y'ın son cevabından sonra denetimi kendisi çalıştırır ve sonucu konuşmaya ekler; S.A.Y düzeltir ve kısa bildirimi yazar. Bir işte en
    çok iki kez (düzeltmeden sonra bir kez daha) — sonsuz döngü yok. Kilit tests/say-bitis-denetimi.test.ts. */
@@ -12,7 +14,7 @@ export const sunucuNotuMu = (t: string): boolean => t.startsWith(DENETIM_ONEKI) 
 /** rapor açan ya da rapora yazan işlemler (Raporlar ve Planlar'ın S.A.Y işlemleri) */
 export const RAPOR_YAZAN: ReadonlySet<string> = new Set(["rapor_ac", "rapor_yaz", "raporlara_yaz", "rapor_saat_plani", "rapor_foto_ekle", "rapor_foto_kaldir",
   "rapor_format_guncelle", "rapor_kopyala", "rapor_takip_ac", "plan_kunye_guncelle"]);
-export const DENETIM_EN_COK = 2;
+export const DENETIM_EN_COK = 1;
 
 interface Mesaj { role: string; content: unknown }
 type Blok = Record<string, unknown>;
@@ -82,7 +84,7 @@ export function denetimOzeti(sonuc: string | undefined): string {
 /** konuşmaya eklenen not: denetimin ÖZETİ + ne yapılacağı (bildirim biçimi talimattadır) */
 export const denetimNotu = (sonuc: string) =>
   `${DENETIM_ONEKI} (rapora yazan iş bitti; kullanıcı istemeden de çalışır): ${denetimOzeti(sonuc)}\nDüzeltebildiğin eksikleri şimdi düzelt (sormadan). Düzeltemediğini `
-  + "kısa bildirimin \"Kalan engel\" satırına yaz. Bildirim en çok dört satır: ne hazır · varsayımla yazılanlar · \"-\" bırakılanlar · kalan engel.";
+  + "\"- **Yapılamayan:**\" maddesine yaz. İlk bildirimini TEKRARLAMA: yalnız bu turda değişeni ve kalanı en çok iki kısa maddeyle yaz.";
 /** plan_denetle sonucunda (işlem özeti — JSON metni) sorunlu rapor var mı; okunamayan sonuç sorun sayılır (denetlenemedi) */
 export function sorunVar(sonuc: string | undefined): boolean {
   if (!sonuc) return true;

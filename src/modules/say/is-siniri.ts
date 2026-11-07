@@ -105,7 +105,7 @@ export function bildirimNotuGerekli(mesajlar: readonly IsMesaji[], metin: string
   return yazan;
 }
 export const bildirimNotu = (satir: number) =>
-  `${BILDIRIM_ONEKI}: bildirimin ${satir} satır oldu; en çok dört satıra indir — ne hazır · varsayımla yazılanlar · "-" bırakılanlar · kalan engel. `
+  `${BILDIRIM_ONEKI}: bildirimin ${satir} satır oldu; en çok dört satıra indir — kalın sonuç satırı, sonra yalnız dolu olanlar alt alta: **Varsayım:** · **Boş bırakılan:** · **Yapılamayan:**. `
   + "Yalnız bildirimi yeniden yaz; iş yapma, araç çağırma.";
 
 /* ── 2026-11-01 (V21 A1 — reisim: "100 bin olayını sınırlama şansımız yok mu"): SERT TAVAN. İstem boyu istek öncesi kestirilir; TAVAN'ı aşacaksa iş İÇİNDE

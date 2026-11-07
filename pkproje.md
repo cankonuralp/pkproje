@@ -2527,6 +2527,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-11-07 (S.A.Y MALİYET + SADE BİLDİRİM — reisim: "bu açıklama çok karmaşık daha sade … alt alta önemli noktalar kalın harflerle", "10 cent çok büyük
+  maliyet … önlemlerini al ve uygula"): canlı V25 koşusu (12 sohbet mesajı → 5 taslak rapor) 24 istek 0,1004 $; işin kendisi 13 istek 0,033 $, kalan 11 istek
+  0,067 $ bitiş denetiminin iki turu ve her istekte kırılan önbellek. Neden: istem 80 bini geçince hizmetin araç sonucu temizlemesi konuşma her istekte tam
+  gittiği için HER istekte yeniden çalışıp önbelleği kırıyordu. Önlemler: hizmet temizlemesi eşiği 95 bin (son çare; asıl küçültme bizim tek yönlü 75 bin
+  tavanımız), bitiş denetimi bir işte bir kez, denetimden sonraki ek bildirim ilkini tekrarlamaz; bildirim kalın sonuç satırı + kalın başlıklı kısa maddeler
+  (Varsayım · Boş bırakılan · Yapılamayan), teknik ad yok. S.A.Y Chat sol menüden kaldırıldı (reisim: "SAY CHAT SOL MENÜDE OLMASIN").
 - 2026-11-07 (S.A.Y CHAT YENİDEN — KİŞİSEL SOHBET; göç 0123; sunum claude.ai 2PiEskE9jDqF5kSefutRBC, reisim: "Evet, önerilerle"): eski kayıt düzeni
   (tür başına S.A.Y Chat ayarı, plan içi kayıtlar, "Bekleyenler için rapor yaz") KALKTI. Uzman sahada WhatsApp'a yazar gibi kendine yazar: yazı ·
   fotoğraf (altyazılı, çoklu) · belge (PDF, Word, Excel); sohbet kişiye özel, plana bağlı değil, her sayfadan (düğme) açılır, tam sayfası /planlar/sohbet (menüde yok — reisim 2026-11-07: "SAY CHAT SOL MENÜDE OLMASIN");

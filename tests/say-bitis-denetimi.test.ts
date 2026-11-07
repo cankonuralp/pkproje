@@ -22,15 +22,15 @@ test("rapora yazan işten sonra denetim gerekir; plan ve raporlar girdilerden", 
   assert.equal(bitisDenetimi([soru(), cagri("rapor_ac", { plan: P, ekipman: ["x"] }), sonuc("rapor_ac"), cevap]), null, "rapor açılamadıysa plan geneli denetlenmez");
 });
 
-test("denetlendiyse, yazma yoksa, önceki soruda yazıldıysa gerekmez; en çok iki kez", () => {
+test("denetlendiyse, yazma yoksa, önceki soruda yazıldıysa gerekmez; bir işte bir kez (2026-11-07)", () => {
   const yaz = [cagri("rapor_yaz", { rapor: R1 }), sonuc("rapor_yaz")];
   assert.equal(bitisDenetimi([soru(), ...yaz, cagri("plan_denetle", { plan: P }), sonuc("plan_denetle"), cevap]), null, "S.A.Y kendisi denetledi");
   assert.equal(bitisDenetimi([soru(), cagri("plan_getir", { plan: P }), sonuc("plan_getir"), cevap]), null, "yazmayan iş");
   assert.equal(bitisDenetimi([soru("eski"), ...yaz, cevap, soru("teşekkürler"), cevap]), null, "önceki sorunun yazması");
   const not = { role: "user", content: [{ type: "text", text: denetimNotu("{}") }] };
   assert.equal(bitisDenetimi([soru(), ...yaz, cevap, not, cevap]), null, "notun ardından yazma yok");
-  assert.deepEqual(bitisDenetimi([soru(), ...yaz, cevap, not, ...yaz, cevap]), { plan: null, raporlar: [R1] }, "düzeltmeden sonra bir kez daha");
-  assert.equal(bitisDenetimi([soru(), ...yaz, cevap, not, ...yaz, cevap, not, ...yaz, cevap]), null, "üçüncüsü yok");
+  assert.equal(bitisDenetimi([soru(), ...yaz, cevap, not, ...yaz, cevap]), null, "düzeltmeden sonra ikinci denetim yok (maliyet — canlı V25)");
+  assert.deepEqual(bitisDenetimi([soru("yeni"), ...yaz, cevap]), { plan: null, raporlar: [R1] }, "yeni soruda yine bir kez");
   assert.ok(denetimNotu("x").startsWith(DENETIM_ONEKI));
 });
 

@@ -58,7 +58,11 @@ test("talimat: reisim'in iki kuralı; eski yamalar yok; sayfa ve ekran talimatta
   assert.match(SISTEM, /bunlar kalan engeldir, bildirimde yazarsın/, "denetim sonrası yeniden okuma yok");
   assert.match(SISTEM, /kod tesiste eşsizdir, başka tesisin kodları sayılmaz/, "kod tesis bazlı");
   assert.match(SISTEM, /Başka firmanın eski raporu \(belge fotoğrafı\) etiketin yerine geçmez/, "üçüncü taraf belgesi etiket değil");
-  assert.match(SISTEM, /Dört DÜZ satır: alt madde, tablo, başlık yok/, "bildirim düz dört satır");
+  /* 2026-11-07 (reisim: "daha sade daha anlaşılabilir alt alta önemli noktalar kalın harflerle"): kalın sonuç satırı + kalın başlıklı kısa maddeler; teknik ad yok */
+  assert.match(SISTEM, /SADE ve ALT ALTA, en çok dört satır/, "bildirim sade, alt alta");
+  assert.match(SISTEM, /\*\*Varsayım:\*\*[\s\S]*\*\*Boş bırakılan:\*\*[\s\S]*\*\*Yapılamayan:\*\*/, "kalın başlıklar");
+  assert.match(SISTEM, /teknik ad yazma/, "alan kimliği, işlem adı yazılmaz");
+  assert.match(SISTEM, /ilk bildirimi TEKRARLAMA/, "denetimden sonra tekrar yok");
   assert.doesNotMatch(SISTEM, /SON mesajını cevapla|o mesajda metin yazma|en çok \d|karakter|sınırı/i, "eski yamalar ve sınırlar yok");
   assert.match(SISTEM, /ekran_durumu/, "ekranın güncel hâli araçla");
   assert.match(SISTEM, /konuşmada kalır/, "ekler konuşmada kalır");
@@ -81,8 +85,8 @@ test("istek: konuşma olduğu gibi, bütün araçlar aynı sırayla ve sınırs�
   assert.deepEqual(betalar, SAY_BETALARI);
   /* 2026-11-01 V21 A2 (reisim onayı; belge: context editing bütün modellerde, sunucu tarafında, düşünmeyi bozmaz): eski araç sonuçlarını hizmet temizler */
   assert.ok(SAY_BETALARI.includes("context-management-2025-06-27"), "bağlam düzenleme betası");
-  assert.deepEqual(g.context_management, { edits: [{ type: "clear_tool_uses_20250919", trigger: { type: "input_tokens", value: 80_000 }, keep: { type: "tool_uses", value: 3 },
-    clear_at_least: { type: "input_tokens", value: 20_000 } }] }, "istem 80 binde en eski araç sonuçları temizlenir, son 3 kalır, en az 20 bin (üçüncü koşu: salınım azalsın)");
+  assert.deepEqual(g.context_management, { edits: [{ type: "clear_tool_uses_20250919", trigger: { type: "input_tokens", value: 95_000 }, keep: { type: "tool_uses", value: 3 },
+    clear_at_least: { type: "input_tokens", value: 20_000 } }] }, "istem 95 binde (son çare — 2026-11-07: 80 binde her istekte yeniden temizleyip önbelleği kırıyordu) en eski araç sonuçları temizlenir, son 3 kalır, en az 20 bin");
   assert.equal(g.tool_choice, undefined, "araç seçimi serbest");
   assert.deepEqual(g.system, [{ type: "text", text: SISTEM, cache_control: { type: "ephemeral", ttl: "1h" } }], "talimat tek ve önbellekli (1 saat); bağlam yok");
   const adlar = (g.tools as { name: string }[]).map((t) => t.name);

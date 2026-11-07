@@ -25,7 +25,11 @@ export const SAY_BETALARI = ["thinking-binding-controls-2026-08-01", "context-ma
    A1 — ancak hizmet yetmezse devreye girer: ölçülen istem yine 90 bini aşarsa). Konuşma kaydı değişmez. */
 /* 2026-11-01 üçüncü koşu: eşik 80 bin / son 4 / en az 10 bin ile temizleme üç kez tekrarlandı (her seferinde önbellek öneki ≈ 30–40 bin token yeniden
    yazıldı — maliyetin üçte biri); son 3 araç çağrısı kalır ve en az 20 bin temizlenir → temizleme seyrek, her temizlemede daha çok yer açılır */
-export const BAGLAM_ESIGI = 80_000, BAGLAM_KALAN = 3, BAGLAM_EN_AZ = 20_000;
+/* 2026-11-07 (canlı V25 koşusu — reisim: "10 cent çok büyük maliyet … önlemlerini al ve uygula"): konuşma her istekte TAM gittiği için istem 80 bini
+   geçince hizmet HER istekte yeniden temizliyordu — temizlenen yer her yeni araç çağrısıyla kaydı, önbellek her istekte kırıldı (11 istek 0,067 $, işin
+   kendisi 0,033 $). Eşik 95 bin: hizmetin temizlemesi yalnız 100 bin üst fiyat basamağına karşı son çare; asıl küçültme bizim iş içi küçültmemiz
+   (is-siniri.ts TAVAN 75 bin — tek yönlü, seviye değişiminde bir kez yeniden yazılır). */
+export const BAGLAM_ESIGI = 95_000, BAGLAM_KALAN = 3, BAGLAM_EN_AZ = 20_000;
 export const BAGLAM_DUZENLEME = { edits: [{ type: "clear_tool_uses_20250919", trigger: { type: "input_tokens", value: BAGLAM_ESIGI },
   keep: { type: "tool_uses", value: BAGLAM_KALAN }, clear_at_least: { type: "input_tokens", value: BAGLAM_EN_AZ } }] } as const;
 
@@ -70,9 +74,10 @@ export function saySistemi(kilavuz: readonly (readonly [string, string])[], isle
     "Ölçüm cihazı: raporun istediği cihaz türünden firmada kayıtlı cihaz yoksa cihaz kaydı uydurma, türün listesini kendiliğinden değiştirme, sorma:",
     "alan boş kalır, kalan engele yazarsın. Kullanıcı \"ekle / ne lazımsa ekle\" derse o cihaz türünü türün ölçüm cihazı listesinden çıkarırsın",
     "(tur_baglanti_kaydet, cihazTurleri); yine kayıt açmazsın.",
-    "Bildirim (iş bitince) en çok dört satır: ne hazır (\"8 rapor hazır (taslak, gönderilmedi)\") · varsayımla yazılanlar · \"-\" bırakılanlar · kalan",
-    "engel. Dört DÜZ satır: alt madde, tablo, başlık yok; her satır tek paragraf. raporlara_yaz'ın bildirimi bu biçimdedir; sunucunun bitiş denetimi gelirse",
-    "düzeltebildiğini düzelt, kalanı son satıra yaz.",
+    "Bildirim (iş bitince) SADE ve ALT ALTA, en çok dört satır: ilk satır kalın sonuç (\"**8 rapor hazır** (taslak, gönderilmedi): AKL-01 … AKL-08\");",
+    "sonra yalnız dolu olanlar, her biri \"- \" ile başlayan kısa madde ve kalın başlıklı: \"- **Varsayım:** …\" · \"- **Boş bırakılan:** …\" · \"- **Yapılamayan:** …\".",
+    "Kısa yaz: ekipman kodu ve sorunun kendisi; teknik ad yazma (alan kimliği, işlem adı, iç kimlik, rapor numarasının uzun eki). Sunucunun bitiş denetimi",
+    "gelirse düzeltebildiğini düzelt; ilk bildirimi TEKRARLAMA, yalnız değişeni ve kalanı en çok iki kısa maddeyle yaz.",
     "",
     "Denetim: rapora yazdıktan sonra özet vermeden önce raporu yeniden oku (açık raporda ekran_durumu, değilse rapor_getir) ve “Formun yerleşimi”ndeki",
     "her değerin doğru başlığın ve grubun altında olup olmadığına bak. Yanlış yere gideni düzelt: doğru yere yaz, yanlış yeri boşalt. Sonra özet ver.",
@@ -112,7 +117,7 @@ export function saySistemi(kilavuz: readonly (readonly [string, string])[], isle
     "alan (ör. “Marka · BASINÇ KAYNAĞI BİLGİLERİ”) ekipmanın başka bir parçasınındır; etiket o parçaya ait değilse oraya yazma.",
     "",
     "Toplu iş: kullanıcı çok dosya (ya da ZIP) verip raporları oluşturmanı isterse her belgeyi incele; ekipmanı planda bul ya da ekle, raporunu aç",
-    "(rapor_ac), bilgileri yaz ve hepsini bitirince dört satırlık bildirimi ver. Önce say, sonra aç: çok fotoğrafta malzeme özetindeki sınıf sayıları ve",
+    "(rapor_ac), bilgileri yaz ve hepsini bitirince kısa bildirimi ver. Önce say, sonra aç: çok fotoğrafta malzeme özetindeki sınıf sayıları ve",
     "genel görünüş–etiket çiftleriyle ekipman sayısını kesinleştir; ETİKETSİZ genel görünüşü saymadan önce foto_goster ile bak — ayrı bir ekipmansa SAY (etiketi",
     "çekilmemiş olabilir; marka / model / seri etiket yoksa belgeden alınır, varsayım olarak bildirilir), başka ekipmanın ikinci açısı ya da ekipman olmayan bir",
     "cihazsa (hizalama / rot cihazı, test hattı, rampa) sayma; iki durumda da nedenini kanıtıyla söyle. Hiçbir bilgisi olmayan ekipmana kayıt açma.",
