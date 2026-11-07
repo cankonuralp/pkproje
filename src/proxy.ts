@@ -6,6 +6,7 @@
    Kiracı ve oturum burada DEĞİL, sayfada / eylemde veritabanıyla denetlenir (ara katman veritabanına gitmez). */
 import { NextResponse, type NextRequest } from "next/server";
 import { API_SURUMU, istemciEskiMi } from "./server/api-surum";
+import { signKokenleri } from "./server/dis/sign-adres";
 import { yonetimAdresiMi } from "./server/yonetim/adres";
 
 /* 348 (KOD-GECIS Y1 "ayrı adres"): yönetim sayfası YALNIZ yönetim adresinde; yönetim adresinde de YALNIZ yönetim sayfası (firma ekranı, müşteri
@@ -48,6 +49,9 @@ export function proxy(istek: NextRequest) {
     "connect-src 'self'",
     /* 395: çevrimdışı servis çalışanı (public/sw.js) yalnız kendi kökenimizden — strict-dynamic betik kuralı çalışanı kapsamaz */
     "worker-src 'self'",
+    /* 2026-11-07 gömülü imza (sign bağlantı rehberi §4): probata sign'ın imza ekranı probata'nın içinde iframe'de — çerçeve yalnız kendi kökenimiz
+       (format kurucunun saha önizlemesi) ve sign'ın kökü + firma alt alanları; adres ayardan türer (PROBATA_SIGN_UC), sabit yazılmaz */
+    `frame-src ${["'self'", ...signKokenleri()].join(" ")}`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",

@@ -7,7 +7,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { signIstemcisi, SignHatasi, signTopluAdresi, TEK_YUKLEME_EN_COK, webhookDogrula, webhookImzasi } from "../src/server/dis/sign.ts";
+import { signIstemcisi, SignHatasi, TEK_YUKLEME_EN_COK, webhookDogrula, webhookImzasi } from "../src/server/dis/sign.ts";
 import { signGonder } from "../src/modules/raporlar/server/sign.ts";
 
 const SIR = "whsec-deneme-0123456789abcdef";
@@ -69,7 +69,7 @@ test("gönder: 409'da revizyon; kapanmış belgede rapor nosuz; bağlantı yoksa
   const cagrilar: string[] = [];
   let ilk = true, sonTarih = "";
   const istemci = {
-    dene: async () => {}, istekIptal: async () => {}, pdfAl: async () => new Uint8Array(),
+    dene: async () => {}, istekIptal: async () => {}, pdfAl: async () => new Uint8Array(), topluImza: async () => ({ gomulu: null, adres: null, belgeler: [], son: null }),
     belgeGetir: async () => ({ id: BELGE, durum: "taslak", rapor_no: null, imza_istegi: null }),
     belgeYukle: async (_p: Uint8Array, o: { raporNo: string | null; revizyon?: boolean }) => {
       cagrilar.push(`${o.raporNo ?? "-"}${o.revizyon ? "+rev" : ""}`);
@@ -81,7 +81,7 @@ test("gönder: 409'da revizyon; kapanmış belgede rapor nosuz; bağlantı yoksa
   const h = { tur: "gonder" as const, istekId: "x", istekSurum: 0, anahtar: ANAHTAR, pdf: new Uint8Array(4), ad: "a.pdf", raporNo: "DA-9", imzaci: { ad: "D", eposta: "d@ornek.example" }, oncekiBelge: null };
   const g = await signGonder(h, istemci, new Date("2026-11-05T20:00:00Z"));
   assert.deepEqual(cagrilar, ["DA-9", "DA-9+rev", "-"]);
-  assert.deepEqual(g, { belge: BELGE, istek: ISTEK, baglanti: "https://sign.probata.com.tr/dis#x" });
+  assert.deepEqual(g, { belge: BELGE, istek: ISTEK, baglanti: "https://sign.probata.com.tr/dis#x", gomulu: null });
   assert.equal(sonTarih, "2026-11-12T23:59:00+03:00");
   await assert.rejects(signGonder(h, { ...istemci, belgeYukle: async () => ({ id: BELGE, durum: "taslak", rapor_no: null }),
     imzaIstegiAc: async () => ({ id: ISTEK, durum: "acik", son_tarih: null, imzacilar: [{ id: "i", durum: "bekliyor", baglanti: "javascript:alert(1)" }] }) }), /imza bağlantısı vermedi/);
@@ -97,7 +97,7 @@ test("kaynak: webhook ucu modülü çağırır; sign sırlarını uygulama yazam
   assert.ok(readFileSync("src/modules/onaylar/ui/OnayEkrani.tsx", "utf8").includes("asama=\"teknik\""));
 });
 
-test("toplu imza: istek üyeye bağlanır (her_zaman_baglanti false), bağlantı yoksa sign'ın toplu sayfası; üye değilse bağlantı döner", async () => {
+test("toplu imza: istek üyeye bağlanır (her_zaman_baglanti false), bağlantı yok; tekli imzada bağlantı şart", async () => {
   let govde: { her_zaman_baglanti?: unknown } = {};
   const t = taklitGetir((c) => {
     if (c.yontem === "POST" && c.yol.startsWith("/api/v1/belgeler?")) return { status: 201, json: { id: BELGE, durum: "taslak" } };
@@ -105,11 +105,8 @@ test("toplu imza: istek üyeye bağlanır (her_zaman_baglanti false), bağlantı
     return { status: 201, json: { id: ISTEK, durum: "acik", imzacilar: [{ id: "i", durum: "bekliyor", baglanti: null, uye: true }] } };
   });
   const h = { tur: "gonder" as const, istekId: "x", istekSurum: 0, anahtar: ANAHTAR, pdf: new Uint8Array(4), ad: "a.pdf", raporNo: "DA-9", imzaci: { ad: "D", eposta: "d@ornek.example" }, oncekiBelge: null };
-  assert.deepEqual(await signGonder(h, signIstemcisi(ANAHTAR, t.getir), new Date(), { toplu: true }), { belge: BELGE, istek: ISTEK, baglanti: null });
+  assert.deepEqual(await signGonder(h, signIstemcisi(ANAHTAR, t.getir), new Date(), { toplu: true }), { belge: BELGE, istek: ISTEK, baglanti: null, gomulu: null });
   assert.equal(govde.her_zaman_baglanti, false);
   await assert.rejects(signGonder(h, signIstemcisi(ANAHTAR, t.getir)), /imza bağlantısı vermedi/, "tekli imzada bağlantı şart");
-  assert.equal(signTopluAdresi([BELGE, "gecersiz", ISTEK, BELGE]), `https://sign.probata.com.tr/toplu-imzala?b=${BELGE},${ISTEK}`, "geçersiz ve tekrar atılır");
-  /* sign'ın toplu imza sınırı 200 (sign kurallar.ts TOPLU_EN_COK — 2026-11-05 reisim: "toplu imzada sınırı 200 e çıkardık") */
-  const cok = Array.from({ length: 250 }, (_, i) => `${String(i).padStart(8, "0")}-1111-4111-8111-111111111111`);
-  assert.equal(signTopluAdresi(cok).split("=")[1]!.split(",").length, 200, "en çok 200");
+  /* 2026-11-07: toplu imzanın adresi elle kurulmaz (sign rehberi §7) — tests/sign-gomulu.test.ts topluImza */
 });

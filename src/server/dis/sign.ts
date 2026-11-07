@@ -6,18 +6,19 @@
    · belgeGetir (durum + son istek), pdfAl (imzalı PDF), istekIptal, dene (anahtar geçerli mi).
    · webhookDogrula (SAF): X-Probata-Imza "t=<unix>,v1=<hex HMAC-SHA256(sır, '<t>.<gövde>')>", 5 dk, sabit süreli karşılaştırma — sign'ın imza-basligi.ts
      tanımının aynısı.
-   Adres PROBATA_SIGN_UC (yalnız yerel / test taklidi değiştirir; varsayılan https://sign.probata.com.tr). Anahtar ve gövde hiçbir günlüğe düşmez.
-   Kilit tests/sign-saf.test.ts. */
+   Adres PROBATA_SIGN_UC (yalnız yerel / test taklidi değiştirir; varsayılan https://sign.probata.com.tr — sign-adres.ts). Anahtar ve gövde hiçbir
+   günlüğe düşmez.
+   2026-11-07 GÖMÜLÜ İMZA (sign bağlantı rehberi §3, §7): imza isteğinin cevabında her imzacının gomulu_baglanti'sı (aynı imza sayfası, probata'nın
+   içinde iframe'de — YALNIZ bu cevapta bir kez verilir); toplu imza adresi elle KURULMAZ (eski signTopluAdresi kalktı): topluImza → POST /toplu-imza
+   { belgeler, eposta } → gomulu_adres (60 dk geçerli, saklanmaz) + adres (yeni sekme yedeği); bu firmaya ait olmayan kimlikler cevabın belgeler'inden
+   çıkar. Gelen her adres sign'ın sayfası mı denetlenir (signSayfasiMi). Kilit tests/sign-saf.test.ts, tests/sign-gomulu.test.ts. */
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { SIGN_VARSAYILAN, signKoku as ucAdresi, signSayfasiMi } from "./sign-adres.ts";
 
-export const SIGN_VARSAYILAN = "https://sign.probata.com.tr";
-const ucAdresi = (): string => (process.env.PROBATA_SIGN_UC || SIGN_VARSAYILAN).replace(/\/+$/, "");
+export { SIGN_VARSAYILAN };
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 /** sign'ın toplu imzasında en çok belge (sign kurallar.ts TOPLU_EN_COK — 2026-11-05: 200) */
 export const SIGN_TOPLU_EN_COK = 200;
-/** sign'ın toplu imza sayfası (üye oturumuyla, PIN bir kez — sign /toplu-imzala?b=<id>,<id>) */
-export const signTopluAdresi = (belgeler: readonly string[]): string =>
-  `${ucAdresi()}/toplu-imzala?b=${[...new Set(belgeler.filter((b) => UUID.test(b)))].slice(0, SIGN_TOPLU_EN_COK).join(",")}`;
 /** sign'ın tek istek gövdesi sınırının altı (parçalı yüklemeye geçiş) */
 export const TEK_YUKLEME_EN_COK = 3_800_000;
 const SURE_MS = 20_000;
@@ -32,7 +33,11 @@ export class SignHatasi extends Error {
 
 export interface SignBelgesi { id: string; durum: string; rapor_no: string | null; mevcut?: boolean }
 /** uye: imzacının e-postası sign hesabının üyesi ve istek üyeye bağlandı (bağlantı yok — üye sign'da imzalar) */
-export interface SignImzaci { id: string; durum: string; baglanti?: string | null; red_nedeni?: string | null; uye?: boolean }
+export interface SignImzaci { id: string; durum: string; baglanti?: string | null; red_nedeni?: string | null; uye?: boolean;
+  /** 2026-11-07: aynı imza sayfası probata'nın içinde (iframe) — yalnız sign'ın sayfasıysa, yoksa null */
+  gomulu_baglanti?: string | null }
+/** toplu imza: gömülü adres (60 dk) + yeni sekme adresi + sign'ın kabul ettiği belgeler (bu firmanınkiler) */
+export interface SignToplu { gomulu: string | null; adres: string | null; belgeler: string[]; son: string | null }
 export interface SignIstek { id: string; durum: string; son_tarih: string | null; imzacilar: SignImzaci[] }
 export interface SignBelgeAyrintisi extends SignBelgesi { imza_istegi: SignIstek | null }
 
@@ -45,6 +50,8 @@ export interface SignIstemcisi {
   belgeGetir(belgeId: string): Promise<SignBelgeAyrintisi>;
   pdfAl(belgeId: string): Promise<Uint8Array>;
   istekIptal(istekId: string): Promise<void>;
+  /** toplu imza (gömülü): imzacının e-postasıyla — sign kullanıcısının üyeye bağlı isteklerindeki belgeler, PIN bir kez */
+  topluImza(belgeler: readonly string[], eposta: string): Promise<SignToplu>;
 }
 
 const kimlik = (x: unknown, ne: string): string => {
@@ -84,7 +91,8 @@ export function signIstemcisi(anahtar: string, getir: Getir = fetch): SignIstemc
   const istekOku = (j: Record<string, unknown>): SignIstek => ({
     id: kimlik(j.id, "istek"), durum: String(j.durum ?? ""), son_tarih: typeof j.son_tarih === "string" ? j.son_tarih : null,
     imzacilar: (Array.isArray(j.imzacilar) ? j.imzacilar : []).map((x: Record<string, unknown>) => ({ id: String(x.id ?? ""), durum: String(x.durum ?? ""),
-      baglanti: typeof x.baglanti === "string" ? x.baglanti : null, red_nedeni: typeof x.red_nedeni === "string" ? x.red_nedeni : null, uye: x.uye === true })),
+      baglanti: typeof x.baglanti === "string" ? x.baglanti : null, red_nedeni: typeof x.red_nedeni === "string" ? x.red_nedeni : null, uye: x.uye === true,
+      gomulu_baglanti: signSayfasiMi(x.gomulu_baglanti) ? x.gomulu_baglanti : null })),
   });
   return {
     async dene() { await istek("GET", "/belgeler?boy=1"); },
@@ -116,6 +124,15 @@ export function signIstemcisi(anahtar: string, getir: Getir = fetch): SignIstemc
       return new Uint8Array(await (await istek("GET", `/belgeler/${kimlik(belgeId, "belge")}/pdf?surum=son`)).arrayBuffer());
     },
     async istekIptal(istekId) { await istek("POST", `/imza-istekleri/${kimlik(istekId, "istek")}/iptal`); },
+    async topluImza(belgeler, eposta) {
+      const l = [...new Set(belgeler.filter((b) => UUID.test(b)))].slice(0, SIGN_TOPLU_EN_COK);
+      if (!l.length) throw new SignHatasi(400, "belge", "Toplu imzaya belge yok.");
+      const j = await json<{ adres?: unknown; gomulu_adres?: unknown; belgeler?: unknown; son?: unknown }>(
+        await istek("POST", "/toplu-imza", JSON.stringify({ belgeler: l, eposta }), "application/json"));
+      const kabul = Array.isArray(j.belgeler) ? j.belgeler.filter((b): b is string => typeof b === "string" && UUID.test(b)) : [];
+      return { gomulu: signSayfasiMi(j.gomulu_adres) ? j.gomulu_adres : null, adres: signSayfasiMi(j.adres) ? j.adres : null, belgeler: kabul,
+        son: typeof j.son === "string" ? j.son : null };
+    },
   };
 }
 

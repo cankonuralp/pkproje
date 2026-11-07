@@ -1103,7 +1103,7 @@ test("probata sign: Yönetim sırları yokken kapalı; uygulama yazamaz; gönder
   const BELGE = "11111111-1111-4111-8111-111111111111", ISTEK = "22222222-2222-4222-8222-222222222222", BAG = "https://sign.example/dis#belirtec";
   let durum = "imzada", istekDurum = "acik", imzali: Uint8Array | null = null, yuklenen = 0;
   const taklit = {
-    dene: async () => {}, istekIptal: async () => {},
+    dene: async () => {}, istekIptal: async () => {}, topluImza: async () => ({ gomulu: null, adres: null, belgeler: [], son: null }),
     belgeYukle: async (_pdf: Uint8Array, p: { raporNo: string | null }) => { yuklenen++; assert.ok(p.raporNo && /^DA-/.test(p.raporNo), p.raporNo ?? ""); return { id: BELGE, durum: "taslak", rapor_no: p.raporNo }; },
     imzaIstegiAc: async () => ({ id: ISTEK, durum: "acik", son_tarih: null, imzacilar: [{ id: "x", durum: "bekliyor", baglanti: BAG }] }),
     belgeGetir: async () => ({ id: BELGE, durum, rapor_no: null, imza_istegi: { id: ISTEK, durum: istekDurum, son_tarih: null, imzacilar: [{ id: "x", durum: "bekliyor", red_nedeni: "Yanlış rapor" }] } }),
@@ -1113,9 +1113,9 @@ test("probata sign: Yönetim sırları yokken kapalı; uygulama yazamaz; gönder
   assert.equal(hz.tur, "gonder");
   if (hz.tur !== "gonder") return;
   const g = await signGonder(hz, taklit);
-  assert.deepEqual(g, { belge: BELGE, istek: ISTEK, baglanti: BAG });
+  assert.deepEqual(g, { belge: BELGE, istek: ISTEK, baglanti: BAG, gomulu: null });
   assert.equal(await a(FA.den, (db) => signKaydet(db, FA.den, A, hz.istekId, g)), true);
-  assert.deepEqual(await a(FA.den, (db) => signHazirla(db, depo, FA.den, A, h, "uzman", uret)), { tur: "acik", baglanti: BAG, belge: BELGE }, "açık istek: aynı bağlantı (şifreli saklandı)");
+  assert.deepEqual(await a(FA.den, (db) => signHazirla(db, depo, FA.den, A, h, "uzman", uret)), { tur: "acik", baglanti: BAG, gomulu: null, belge: BELGE }, "açık istek: aynı bağlantı (şifreli saklandı)");
   assert.equal(yuklenen, 1);
   const sakli = (await sql<{ sign_baglanti: string }>(A, "SELECT sign_baglanti FROM imza_istegi WHERE id = $1", [hz.istekId])).rows[0]!.sign_baglanti;
   assert.ok(!sakli.includes("belirtec"), "bağlantı düz yazılmaz");

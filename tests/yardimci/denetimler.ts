@@ -303,7 +303,9 @@ export const DIS_IZNI: Readonly<Record<string, string>> = {
   "src/server/yedek/geri-yukle.ts": "geri yükleme: dosyaları Drive'dan geri getirir",
   /* 2026-11-05 (göç 0122): probata sign — firmanın sign hesabına API müşterisi olarak (anahtar firmanın şifreli sırrında) */
   "src/modules/raporlar/server/sign.ts": "rapor imzası probata sign ile: PDF'i gönderir, imza isteği açar, imzalı PDF'i alır, webhook'u doğrular",
-  "src/modules/yonetim/server/sign.ts": "Yönetim › firma › probata sign: anahtarı sign'a dener (yalnız yönetim oturumunda)"
+  "src/modules/yonetim/server/sign.ts": "Yönetim › firma › probata sign: anahtarı sign'a dener (yalnız yönetim oturumunda)",
+  /* 2026-11-07 gömülü imza: ara katman CSP frame-src'ye sign'ın kökenlerini yazar — yalnız saf adres modülü (sign-adres.ts; ağ yok, anahtar yok) */
+  "src/proxy.ts": "CSP frame-src: probata sign'ın kökenleri ayardan türetilir (sign-adres.ts saf; istemci ve anahtar içe aktarılmaz)"
 };
 const DIS_ORTAM = /\bPROBATA_(?:SUPABASE_YONETIM_(?:ANAHTARI|UC)|SUPABASE_ORGUT|SUPABASE_DEPO_UC|RESEND_(?:ANAHTARI|YONETIM_UC)|(?:GOOGLE|ONEDRIVE)_(?:ISTEMCI|SIR)|BULUT_(?:UC|DONUS))\b/;
 export function yonetimAnahtariEksikleri(metinler: readonly { ad: string; metin: string }[]): string[] {

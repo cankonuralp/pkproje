@@ -670,6 +670,12 @@ pkproje/
                             firma_sir'de (K1 uygulama yazamaz); ikisi varsa İmza yöntemi "probata sign · e-imza" · istemci src/server/dis/sign.ts (API v1, webhook
                             HMAC) · rapor imzası raporlar/server/sign.ts (hazırla → gönder → kaydet; sonuçlandır; webhook) + ui/SignImza.tsx (rapor ekranı uzman,
                             onay ekranı teknik) · uç src/app/api/sign/bildirim · kilit sign-saf, onaylar (PG), bozan sign
+                            · 2026-11-07 GÖMÜLÜ İMZA (reisim: "imza ekranı yeni sekmede değil, probata'nın kendi sayfasında bir iframe içinde"; tek kaynak sign'ın
+                            bağlantı rehberi): imza isteğinin gomulu_baglanti'sı sign_baglanti'nın şifreli metninde ({"b","g"}; göç yok) · toplu imza adresi sign'dan
+                            (dis/sign.ts topluImza → POST /toplu-imza { belgeler, eposta }; raporlar/server/sign.ts signTopluHazirla / signTopluIste; 60 dk, saklanmaz) ·
+                            ekran raporlar/ui/SignImza.tsx SignPenceresi (dialog + iframe, allow sign-haber.ts GOMULU_IZIN aynen; yedek "yeni sekmede aç") · haber
+                            sign-haber.ts signHaberi (yalnız açılan adresin kökeni + kaynak probata-sign + bu çerçeve; yalnız ekran) · CSP frame-src 'self' +
+                            dis/sign-adres.ts signKokenleri (PROBATA_SIGN_UC'den; firma alt alanları) · kilit sign-gomulu, bozan sign-gomulu
   src/server/imza/          İMZALI PDF DENETİMİ — YALNIZ OKUMA / DENETİM (2026-10-17, IMZA-SERVISI.md; saf, saldırganın girdisinde sınırlı): der.ts ·
                             sertifika.ts · cms.ts (imzalı sertifika bağı, damga sunucusu denetimi, SHA-1 yok) · pdf-ek.ts nesne okuyucu (xref zinciri, nesne
                             akışı, onarım) · iptal.ts OCSP / iptal listesi ÇÖZÜMLEMESİ (ağ yok) · pdf-imzalar.ts ÇÖZÜMLEYİCİ (beş katman, DSS yalnız kataloğun

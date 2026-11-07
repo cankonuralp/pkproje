@@ -1,0 +1,16 @@
+/* PROBATA SIGN GÖMÜLÜ PENCERE (2026-11-07; sign bağlantı rehberi §4: "Pencere en az 360 px genişlikte olsun") — imza ekranı probata'nın içinde,
+   ekranın çoğu; telefonda tam ekran. Çerçevenin içi sign'ın sayfası (kendi renkleri). */
+.pencere {
+  width: min(1040px, calc(100vw - 32px)); height: min(920px, calc(100dvh - 32px)); max-width: none; max-height: none; padding: 0;
+  border: 1px solid var(--kenar); border-radius: var(--r-buyuk); background: var(--kart); color: var(--yazi); box-shadow: var(--golge-2); overflow: hidden;
+}
+.pencere[open] { display: flex; flex-direction: column; }
+.pencere::backdrop { background: var(--perde); }
+.bas { display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 16px; border-bottom: 1px solid var(--kenar); }
+.bas h2 { flex: 1; min-width: 0; margin: 0; font-size: var(--boy-bolum); font-weight: var(--kal-bolum); }
+.cerceve { flex: 1; width: 100%; min-width: 360px; min-height: 0; border: 0; background: var(--kart); }
+.yedek { flex: 1; display: grid; place-content: center; justify-items: center; gap: 12px; padding: 24px; }
+@media (max-width: 767.98px) {
+  .pencere { width: 100vw; height: 100dvh; border: 0; border-radius: 0; }
+  .cerceve { min-width: 0; }
+}

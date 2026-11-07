@@ -9,7 +9,9 @@ import { after, test } from "node:test";
 
 const klasor = mkdtempSync(join(tmpdir(), "bozan-sign-"));
 after(() => rmSync(klasor, { recursive: true, force: true }));
-const kaynak = readFileSync(resolve("src/server/dis/sign.ts"), "utf8");
+/* 2026-11-07: sign.ts adresleri sign-adres.ts'ten alır — kopyada tam yola çevrilir */
+const kaynak = readFileSync(resolve("src/server/dis/sign.ts"), "utf8")
+  .replace('from "./sign-adres.ts"', `from ${JSON.stringify(pathToFileURL(resolve("src/server/dis/sign-adres.ts")).href)}`);
 async function bozuk(eski: string, yeni: string, ad: string): Promise<typeof import("../../src/server/dis/sign.ts")> {
   assert.ok(kaynak.includes(eski), "bozulacak yer bulunmalı");
   const yol = join(klasor, `${ad}.ts`);
