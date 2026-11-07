@@ -380,7 +380,7 @@ async function araclariYap(o: IstekOturumu, icerik: readonly Record<string, unkn
     const ozet = await sunucuKomutu(ISLEM_KATALOGU, ortam, k, modulAdi);
     if (k.tur === "islem" && ozet.yazildi > 0) yenile = true;
     if (k.tur === "islem") { islem++; yazma += ozet.yazildi; }
-    sonuclar[c.id] = sonucIcerigi(ozet);
+    sonuclar[c.id] = ozet.bloklar?.length ? [{ type: "text", text: sonucIcerigi(ozet) }, ...ozet.bloklar] : sonucIcerigi(ozet);
   }
   return { sonuclar, ekran, yenile, yazma, islem };
 }

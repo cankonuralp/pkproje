@@ -2,12 +2,12 @@
    kez uygulanır (src/server/islem/islem.ts; aynı kimlik yeniden gelirse saklanan sonuç). Kapılar sırayla: aynı köken (kiracılar arası sahte istek
    yok), JSON, gövde sınırı, biçim, oturum; işi yazanın etiketi oturumdaki kişininki değilse işlenmez (09-D2 — cihaz işi saklar, o hesapla
    girilince gider; etiket server/islem/yazan.ts, kimlik tarayıcıya gitmez). Yetki, kurallar ve sürüm kilidi modül işlevinde
-   (raporlar/server/islem-baglanti.ts, planlar/server/islem-baglanti.ts; 524 S.A.Y Chat kayıtları say-chat/server/kayitlar.ts). Cihaz saati sunucudan 10 dakikadan fazla saparsa
+   (raporlar/server/islem-baglanti.ts, planlar/server/islem-baglanti.ts; 2026-11-07 S.A.Y Chat mesajları say-chat/server/mesajlar.ts). Cihaz saati sunucudan 10 dakikadan fazla saparsa
    yanıtta söylenir (ARKA-UC §4.5; resmî alanlar zaten sunucu saatinden). Önbellek yok. */
 import { PLAN_ISLEM_TURLERI, planGuncelSurum, planIslemi, planIslemTuruMu } from "../../../modules/planlar/server/islem-baglanti";
 import type { PlanYazma } from "../../../modules/planlar/server/plan-ici";
 import { RAPOR_ISLEM_TURLERI, raporGuncelSurum, raporIslemi, type RaporIslemSonucu } from "../../../modules/raporlar/server/islem-baglanti";
-import { CHAT_ISLEM_TURLERI, chatGuncelSurum, chatIslemi, chatIslemTuruMu, type ChatFotoYazma, type ChatYazma } from "../../../modules/say-chat/server/kayitlar";
+import { CHAT_ISLEM_TURLERI, chatGuncelSurum, chatIslemi, chatIslemTuruMu, type ChatYazma } from "../../../modules/say-chat/server/mesajlar";
 import { kimlik, surum, z } from "../../../sema/ortak";
 import { tekSeferlik } from "../../../server/islem/islem";
 import { YAZAN_BICIMI, yazanEtiketi } from "../../../server/islem/yazan";
@@ -45,7 +45,7 @@ export async function POST(istek: Request) {
   const { s, guncel } = await oturumIslemi(o, async (db) => {
     const tur = b.tur;
     const dosya = { depo: depo(), firmaId: o.kiraci.firmaId };
-    const s = await tekSeferlik(db, { id: b.id, tur, kayit: b.kayit, zaman: b.zaman }, (): Promise<PlanYazma | RaporIslemSonucu | ChatYazma | ChatFotoYazma> => (planIslemTuruMu(tur)
+    const s = await tekSeferlik(db, { id: b.id, tur, kayit: b.kayit, zaman: b.zaman }, (): Promise<PlanYazma | RaporIslemSonucu | ChatYazma> => (planIslemTuruMu(tur)
       ? planIslemi(db, o, tur, b.kayit, b.surum, b.girdi)
       : chatIslemTuruMu(tur) ? chatIslemi(db, dosya, o, tur, b.kayit, b.surum, b.girdi)
       : raporIslemi(db, dosya, o, tur, b.kayit, b.surum, b.girdi)));

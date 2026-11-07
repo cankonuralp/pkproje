@@ -14,7 +14,7 @@ export const YEDEK_TABLOLARI: Readonly<Record<string, readonly string[]>> = {
   imza_istegi: [], is_sozlesmesi: [], is_sozlesmesi_tesis: [], isg_katip: [], izin_talebi: [], kalibrasyon: [], kosul_kabul: [], musteri: [],
   musteri_hesap: ["parola_ozeti"], numara_sayaci: [], olcum_cihazi: [], ozluk_belgesi: [], personel: [], plan: [], plan_ekip: [], plan_ekipman: [],
   plan_not: [], rapor: [], rapor_format: [], rapor_hareket: [], rapor_revize_istegi: [], rapor_surumu: [], saha_formu: [], saklama_silme: [],
-  say_chat_ayar: [], sozlesme_sablon: [], standart: [], standart_tanim: [], tahsilat: [], teklif: [], teklif_kalem: [], teklif_tesis: [], tesis: [],
+  sozlesme_sablon: [], standart: [], standart_tanim: [], tahsilat: [], teklif: [], teklif_kalem: [], teklif_tesis: [], tesis: [],
   tur_format: [], uygunsuzluk: [], zimmet_formu: [], zimmet_hareket: [],
 };
 
@@ -31,7 +31,7 @@ export const YEDEK_DISI: Readonly<Record<string, string>> = {
   say_arge: "S.A.Y çalışma kaydı",
   say_istek: "S.A.Y çalışma kaydı",
   say_is: "S.A.Y çalışma kaydı (öğrenme özeti)", sign_bildirim: "probata sign bildirimlerinin tekrar kaydı", say_hafiza: "S.A.Y'ın öğrendikleri (geceleri kurulur)",
-  say_chat_kayit: "kişiye özel saha notu (S.A.Y Chat)",
+  say_chat_mesaj: "kişiye özel sohbet (S.A.Y Chat) — S.A.Y okuyup rapora işler",
   vt_kimlik: "veritabanının kendi kimliği",
   yz_ek: "S.A.Y eki", yz_ek_okuma: "S.A.Y eki", yz_ek_parca: "S.A.Y eki",
   yz_kapanis: "S.A.Y konuşması", yz_konusma: "S.A.Y konuşması", yz_konusma_is: "S.A.Y konuşması", yz_sohbet: "S.A.Y konuşması",

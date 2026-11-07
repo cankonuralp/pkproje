@@ -10,7 +10,7 @@ import { ISLEM_KATALOGU } from "../src/modules/say/islem-katalogu.ts";
 import { EKRAN_ARAC_ADLARI } from "../src/server/yz/say.ts";
 
 /** eksik karşılık sayısının üst sınırı — bir eksik kapanınca bu sayı da düşürülür (yükselmez) */
-export const EKSIK_EN_COK = 5;
+export const EKSIK_EN_COK = 3;   // 2026-11-07: S.A.Y Chat'in iki "e:" eylemi kalktı
 
 export function eylemDosyalari(kok = "src/modules"): Record<string, string[]> {
   const l: Record<string, string[]> = {};

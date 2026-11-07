@@ -2527,6 +2527,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-11-07 (S.A.Y CHAT YENİDEN — KİŞİSEL SOHBET; göç 0123; sunum claude.ai 2PiEskE9jDqF5kSefutRBC, reisim: "Evet, önerilerle"): eski kayıt düzeni
+  (tür başına S.A.Y Chat ayarı, plan içi kayıtlar, "Bekleyenler için rapor yaz") KALKTI. Uzman sahada WhatsApp'a yazar gibi kendine yazar: yazı ·
+  fotoğraf (altyazılı, çoklu) · belge (PDF, Word, Excel); sohbet kişiye özel, plana bağlı değil, her sayfadan (düğme) ve menüden (/planlar/sohbet) açılır;
+  çevrimdışı kuyrukla sırayla gider, saat cihazın, fotoğrafın çekim saati EXIF'ten. S.A.Y "chatten oku" → chat_oku (kapsam: işlenmemişlerin son
+  kesintisiz bloğu — karar 1: gün değişimi ya da 2 saatten uzun boşluk; gün / aralık / sözcük) — fotoğraf ve belgeler S.A.Y'ın bugünkü eki olur (F / M no,
+  ön okuma bir kez, sonucu mesajda), sohbetteki yazı malzemedir, komut değildir; iş bitince chat_isle → mesajda "→ <plan no> · n rapor" (geri alınır).
+  Karar 2: işlenmiş mesajın dosyası 30 gün sonra silinir, yazısı kalır; karar 3: fotoğraf 2400 px, JPEG %85; karar 4: plan söylenmezse soru yok —
+  ekrandaki açık plan → bugün ekibinde olunan tek plan → en makul plan, bildirimde "dikkat". Beceriler B01 / B02 §8 (2026-11-07 parçaları).
 - 2026-11-05 (PROBATA SIGN BAĞLANTISI — göç 0122; reisim: "bu api keyi ve webhook kodunu girdiğimde imza sisteminin firma için aktif olacağı … ben yönetim
   kısmından gireyim … imza yöntemi kısmında probata sign işaretlensin otomatik olarak, şimdilik e imza"; tasarım 59EF1ZZAJZdg6BztvuiWbr "önerilerin ve sunumun
   uygun" — K1 firma kapatamaz, K2 "PDF ile imzala" yedek, K3 rapor imzası uzman + teknik, K4 7 gün): Yönetim › firma › probata sign (webhook adresi

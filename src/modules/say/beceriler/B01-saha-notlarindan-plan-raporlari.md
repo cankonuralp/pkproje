@@ -172,6 +172,7 @@ Teknik iç ayrıntı (kimlik, işlem adı, JSON) yazma.
 | "Hiçbir bilgiye ulaşılamadı, uygun değil yap" (2026-11-05) | B12 §7. |
 | "Şunları uygulanamaz yap, diğerlerini ben ayarladım, kaydet ve yolla" (2026-11-05) | Yalnız söylenen maddeleri değiştir (B12 §3; `rapor_yaz` ya da `raporlara_yaz`, `tamamla: false`), sonra B07 §2 ile gönder. |
 | "Devam" (yarım kalan iş, 2026-11-05) | B07 §4: önce durumları oku, kalanı yap; yapılmışı tekrarlama. |
+| "Chatten oku, <plan> planına yaz" (2026-11-07) | B02 §8: `chat_oku` → bütünü oku, say, eşle → B01 akışıyla yaz; gönderme. Okunan aralığı söyle, iş bitince `chat_isle`. |
 
 ## Yapılmayacaklar
 

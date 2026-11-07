@@ -20,25 +20,27 @@ import { bekletmeEksikleri, geriYuklemeListeFarki, yedekDosyaFarki, yedekListeFa
 import { sahteBulutKur, sahteBulutOrtami, type SahteBulut } from "../yardimci/sahte-bulut.ts";
 
 const goc = readFileSync(new URL("../../src/server/db/gocler/0117_yedek.sql", import.meta.url), "utf8");
+/* 2026-11-07: göç 0123 say_chat_ayar tablosunu kaldırdı (tetiği tablosuyla gitti) — yedek-saf.test.ts sonraki göçleri verir */
+const SONRAKI = readFileSync(new URL("../../src/server/db/gocler/0123_say_chat_mesaj.sql", import.meta.url), "utf8");
 let t: SahteBulut;
 before(async () => { t = await sahteBulutKur(); });
 after(async () => { await t?.kapat(); });
 
 test("1. göçün tetik listesinden tablo düşünce yakalanır (kilidin koruduğu açık)", () => {
-  assert.deepEqual(yedekListeFarki(goc, YEDEK_TABLOLARI, YEDEK_DISI), [], "sağlam");
+  assert.deepEqual(yedekListeFarki(goc, YEDEK_TABLOLARI, YEDEK_DISI, SONRAKI), [], "sağlam");
   const bozuk = goc.replace("('rapor_surumu', ''), ", "");
   assert.notEqual(bozuk, goc, "bozulacak satır kaynakta");
-  assert.ok(yedekListeFarki(bozuk, YEDEK_TABLOLARI, YEDEK_DISI).includes("rapor_surumu: göçte tetik yok"));
+  assert.ok(yedekListeFarki(bozuk, YEDEK_TABLOLARI, YEDEK_DISI, SONRAKI).includes("rapor_surumu: göçte tetik yok"));
 });
 
 test("2. parola özeti gizli sütunlardan düşünce yakalanır (kilidin koruduğu açık)", () => {
   const bozuk = goc.replace("('hesap', 'parola_ozeti')", "('hesap', '')");
   assert.notEqual(bozuk, goc, "bozulacak satır kaynakta");
-  assert.ok(yedekListeFarki(bozuk, YEDEK_TABLOLARI, YEDEK_DISI).includes("hesap: gizli sütunlar göçle aynı değil"));
+  assert.ok(yedekListeFarki(bozuk, YEDEK_TABLOLARI, YEDEK_DISI, SONRAKI).includes("hesap: gizli sütunlar göçle aynı değil"));
 });
 
 test("3. tablo hem yedekte hem dışında sayılınca yakalanır (kilidin koruduğu açık)", () => {
-  assert.ok(yedekListeFarki(goc, YEDEK_TABLOLARI, { ...YEDEK_DISI, musteri: "deneme" }).includes("musteri: hem yedekte hem dışında"));
+  assert.ok(yedekListeFarki(goc, YEDEK_TABLOLARI, { ...YEDEK_DISI, musteri: "deneme" }, SONRAKI).includes("musteri: hem yedekte hem dışında"));
 });
 
 test("4. yeni dosya modülü sınıflanmayınca yakalanır (kilidin koruduğu açık)", () => {
@@ -83,8 +85,8 @@ test("7. (0118) Supabase'ten Drive'a taşımanın bir şartı düşünce yakalan
   assert.ok(boz("s.imzali_dosya = dosya.id AND rapor_guncel_mu(s.id)))", "s.imzali_dosya = dosya.id))").includes("müşteri güncel rapor şartı yok"));
 });
 
-test("8. (0119) geri yüklemenin tablo listesinden bir tablo düşünce yakalanır — o tablo eski hâlinde kalırdı", () => {
-  const g = readFileSync(new URL("../../src/server/db/gocler/0119_geri_yukleme.sql", import.meta.url), "utf8");
+test("8. (0119; son tanımı 0123) geri yüklemenin tablo listesinden bir tablo düşünce yakalanır — o tablo eski hâlinde kalırdı", () => {
+  const g = readFileSync(new URL("../../src/server/db/gocler/0123_say_chat_mesaj.sql", import.meta.url), "utf8");
   assert.deepEqual(geriYuklemeListeFarki(g, YEDEK_TABLOLARI), [], "sağlam");
   const bozuk = g.replace("'rapor_surumu', ", "");
   assert.notEqual(bozuk, g, "bozulacak satır kaynakta");

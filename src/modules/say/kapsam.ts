@@ -63,8 +63,7 @@ export const KAPSAM: Readonly<Record<string, Readonly<Record<string, string>>>> 
     /* 2026-11-05 (göç 0122): probata sign ile imza — e-imzanın kendisi (karar 6) */
     signImzalaEylemi: "d:e-imza (imza PDF'i hazırlama)", signYenileEylemi: "d:e-imza (imza PDF'i hazırlama)", signIptalEylemi: "d:e-imza (imza PDF'i hazırlama)", signTopluEylemi: "d:e-imza (imza PDF'i hazırlama)", signTopluAdresiEylemi: "d:e-imza (imza PDF'i hazırlama)",
     revizeIsteEylemi: "i:revize_iste", revizeIstegiGeriCekEylemi: "i:revize_istegi_geri_cek" },
-  "say-chat/ui/eylemler.ts": { chatAyarKaydetEylemi: "i:say_chat_ayar_kaydet", chatEtiketOkuEylemi: "e:S.A.Y Chat kayıtları malzeme olarak (K4)",
-    chatRaporYazEylemi: "i:say_chat_rapor_yaz", chatOkutEylemi: "e:S.A.Y Chat kayıtları malzeme olarak (K4)" },
+  "say-chat/ui/eylemler.ts": { sohbetEylemi: "i:chat_oku", isaretGeriAlEylemi: "i:chat_isle" },
   "say/ui/eylemler.ts": { sayDurumEylemi: "d:S.A.Y'ın kendisi", sayGecmisEylemi: "d:S.A.Y'ın kendisi", sayRaporEylemi: "d:S.A.Y'ın kendisi", sayOneriEylemi: "d:S.A.Y'ın kendisi",
     sayTemizleEylemi: "d:S.A.Y'ın kendisi", kosulKabulEylemi: "d:S.A.Y'ın kendisi (koşul kabulü kullanıcının tıklaması)" },
   "sozlesmeler/ui/belge-eylemler.ts": { sozlesmeDoldurEylemi: "i:sozlesme_doldur", sozlesmeGonderEylemi: "a:pdf_gonder" },

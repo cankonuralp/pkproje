@@ -4,27 +4,12 @@
 import { hataKaydet } from "../../../server/hata/kaydet.ts";
 import { oturumIslemi, type IstekOturumu } from "../../../server/kimlik/istek.ts";
 import { ekOkumaYaz, fotoEkSayisi, onOkumaBekleyen } from "../../../server/yz/konusma.ts";
-import { anthropicCagir } from "../../../server/yz/okuma.ts";
-import { sayMaliyeti } from "../../../server/yz/say.ts";
-import { ON_OKUMA_YANIT, onOkumaCoz, onOkumaIstegi } from "../on-okuma.ts";
-import { cagriBirak, cagriKapat, kucukCagriAyir, sayKapisi } from "./say.ts";
+import { onOkumaYap } from "./on-okuma-cagri.ts";
 
 export async function fotoOnOku(o: IstekOturumu, ek: string, bayt: Uint8Array, mime: string): Promise<void> {
   try {
-    const h = await oturumIslemi(o, async (db) => {
-      const k = await sayKapisi(db);
-      if (k.durum === "red") return null;
-      const a = await kucukCagriAyir(db, k.model, k.sinir, Math.ceil(bayt.length / 600) + 3_000, ON_OKUMA_YANIT);
-      return a ? { k, a } : null;
-    });
-    if (!h) return;
-    const y = await anthropicCagir(onOkumaIstegi(h.k.model, bayt, mime), h.k.anahtar, 45_000);
-    if (y.durum === "hata") { await oturumIslemi(o, (db) => cagriBirak(db, h.a, y.ucret === "bilinmiyor")); return; }
-    const c = onOkumaCoz(y.govde);
-    await oturumIslemi(o, async (db) => {
-      await cagriKapat(db, h.a, sayMaliyeti(h.k.model, c.usage).maliyet, 0);
-      if (c.okuma) await ekOkumaYaz(db, ek, c.okuma);
-    });
+    const okuma = await onOkumaYap((is) => oturumIslemi(o, is), bayt, mime);
+    if (okuma) await oturumIslemi(o, (db) => ekOkumaYaz(db, ek, okuma));
   } catch (e) {
     void hataKaydet({ kaynak: "sunucu", mesaj: e instanceof Error ? e.message : String(e), yigin: e instanceof Error ? e.stack ?? null : null, yer: "say.on_okuma",
       alan: o.kiraci.kisaAd, hesap: o.id });

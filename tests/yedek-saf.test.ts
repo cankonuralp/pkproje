@@ -7,7 +7,7 @@
    · sıkıştırılmış ZIP (src/server/yedek/zip.ts) tarayıcının ZIP açıcısıyla (components/disa/oku.ts — DEFLATE) birebir açılır, gerçekten küçülür.
    Gerçek PostgreSQL'deki katalog aynası tests/yedek.test.ts'te. Olumsuz kanıt: tests/bozan/yedek.bozan.ts. */
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 import { zipAc } from "../src/components/disa/oku.ts";
 import { DOSYA_ERISIMI } from "../src/server/dosya/erisim.ts";
@@ -15,9 +15,16 @@ import { durumCoz } from "../src/server/yedek/baglan.ts";
 import { YEDEK_DISI, YEDEK_TABLOLARI } from "../src/server/yedek/tablolar.ts";
 import { adTemizle, ayAraligi, BELGE_KLASORU, belgeAdi, donemi, raporKlasoru, YEDEK_DISI_DOSYA } from "../src/server/yedek/yol.ts";
 import { SikistirilmisZip } from "../src/server/yedek/zip.ts";
-import { bekletmeEksikleri, geriYuklemeListeFarki, yedekDosyaFarki, yedekGocListesi, yedekListeFarki } from "./yardimci/denetimler.ts";
+import { bekletmeEksikleri, geriYuklemeListeFarki, yedekDosyaFarki, yedekListeFarki } from "./yardimci/denetimler.ts";
 import { aylarArasi, haliKur } from "../src/server/yedek/hal.ts";
 import { onceDonemi } from "../src/server/yedek/geri-yukle.ts";
+
+const GOCLER = new URL("../src/server/db/gocler/", import.meta.url);
+const gocDosyalari = () => readdirSync(GOCLER).filter((x) => /^\d{4}_.*\.sql$/.test(x)).sort();
+/** verilen numaradan SONRAKİ göçlerin metni (kaldırılan tablolar için) */
+const sonrakiGocler = (no: string) => gocDosyalari().filter((x) => x.slice(0, 4) > no).map((x) => readFileSync(new URL(x, GOCLER), "utf8")).join("\n");
+/** verilen tanımı taşıyan SON göçün metni */
+const sonTanim = (ifade: string) => { const x = gocDosyalari().reverse().map((d) => readFileSync(new URL(d, GOCLER), "utf8")).find((m) => m.includes(ifade)); return x ?? ""; };
 
 test("klasör düzeni: üç düzen; adlar temiz; belge adı kısa kimlikle", () => {
   const r = { kok: "probata yedek", musteri: "Deneme: Sanayi/A.Ş.", tesis: "Merkez *Fabrika*", yil: 2026, no: "XX-1126-0001" };
@@ -47,8 +54,7 @@ test("dosya modüllerinin tamamı sınıflı: Belgeler'de klasörü var ya da ye
 
 test("tablo listesi ile göç 0117'nin tetik listesi aynı (gizli sütunlar dahil); yedeklenen ve dışı kesişmez", () => {
   const goc = readFileSync(new URL("../src/server/db/gocler/0117_yedek.sql", import.meta.url), "utf8");
-  assert.equal(Object.keys(yedekGocListesi(goc)).length, Object.keys(YEDEK_TABLOLARI).length);
-  assert.deepEqual(yedekListeFarki(goc, YEDEK_TABLOLARI, YEDEK_DISI), []);
+  assert.deepEqual(yedekListeFarki(goc, YEDEK_TABLOLARI, YEDEK_DISI, sonrakiGocler("0117")), []);
   assert.ok(YEDEK_TABLOLARI.hesap!.includes("parola_ozeti") && YEDEK_TABLOLARI.musteri_hesap!.includes("parola_ozeti"), "parola özeti yedeğe girmez");
   for (const t of ["firma_sir", "oturum", "depo_nesne"]) assert.ok(t in YEDEK_DISI, `${t} yedek dışı`);
 });
@@ -81,7 +87,8 @@ test("Supabase'te 1 yıl (0118): taşıma şartları göçte — Drive bağlı, 
 });
 
 test("geri yükleme (0119): tablo listesi yedek listesiyle aynı; hâl tam kopya + sonraki değişikliklerle kurulur (eski değişiklik ve kesimden sonrası atlanır)", () => {
-  const goc = readFileSync(new URL("../src/server/db/gocler/0119_geri_yukleme.sql", import.meta.url), "utf8");
+  /* listenin SON tanımı (0119; 2026-11-07 göç 0123 say_chat_ayar düşünce yeniden tanımlandı) */
+  const goc = sonTanim("CREATE OR REPLACE FUNCTION yedek_tablolari()");
   assert.deepEqual(geriYuklemeListeFarki(goc, YEDEK_TABLOLARI), []);
   const pk = Object.fromEntries(Object.keys(YEDEK_TABLOLARI).map((t) => [t, ["id"]]));
   const tam = { olusturuldu: new Date("2026-03-10T10:00:00Z"), tablolar: { musteri: [{ id: "a", unvan: "A" }, { id: "b", unvan: "B" }] } };

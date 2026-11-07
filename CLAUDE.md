@@ -615,18 +615,17 @@ pkproje/
                             say_kapanis_firma (is/gece.ts sayKapanisIsi); kapanan konuşmanın notu yz_kapanis (soruyuEkle başa koyar), hizmet dosyaları
                             yz_silinecek_dosya (uygulama siler); temizle tuşu hata yakalar (say.temizle), Ar-Ge kaydı düşerse temizleme durmaz (say.arge) ·
                             kilit say.test (PG) 60 dakika kapanışı
-  src/modules/say-chat/     S.A.Y CHAT (523–525; pkproje §3.10): sema.ts (saf: alan / başlık seçenekleri, hazır ayar, denetim, dağılım dagit) ·
-                            server/ayar.ts (523 tür ayarı — sayChatAyari, sayChatAyarKaydet, chatTanimi; göç 0084 say_chat_ayar) · ui/ChatAyarlari.tsx
-                            (529: kendi sayfası /ekipman-turleri/<tür>/say-chat — Format kurucunun tuşlarından ve tür sayfasındaki kısa bölümden) · ui/eylemler.ts · 524 server/kayitlar.ts (sayChatPaneli, chatKaydet / chatFoto /
-                            chatSil — kuyruk işleri saychat.*, göç 0085 say_chat_kayit kişiye özel RLS; dosya modülü say_chat) · server/etiket.ts (etiketten
-                            okuma, kayda yazılmaz) · ui/SayChat.tsx (plan içi düğme + panel; planlar sayChatPlani, personel say-chat-baglanti personelBransi)
-                            · 525 server/rapor-yaz.ts (raporKosullari, chatRaporYaz — kayıt başına işlem; raporlar chatRaporuDoldur) · eylemler chatRaporYazEylemi,
-                            chatOkutEylemi (okunanlar raporlar/server/oneri.ts — göç 0086 rapor_oneri; 542: rapor açılınca boş alanlara + şerit)
-                            · 542: mesaj TEK yazı kutusu (MesajKutusu — solda satır adları, Enter alttaki satıra), etiket uyarısız + Görüntüle + Etiketten oku,
-                            büyük görüntü; rapor yazılırken boş bilgi varsa etiket ekipman bilgilerine okuma fotoğrafı (rapor-yaz.ts)
-                            · 527 fotoğraf tuşları components/foto/FotoTusu (531'de ortak oldu)
-                            · 549 secim.ts (saf: Plandan seç'te plandaki BÜTÜN ekipman — uygun / başka branş uyarıyla / kendi Yeni raporu → o rapora (rapor-yaz
-                            yalnizBos) / seçilemez nedeniyle); 547 telefonda panel tam örtü + data-klavye özet satırı
+  src/modules/say-chat/     S.A.Y CHAT — KİŞİSEL SOHBET (2026-11-07 yeniden; sunum claude.ai 2PiEskE9jDqF5kSefutRBC — reisim "Evet, önerilerle"; göç 0123
+                            say_chat_mesaj — RLS firma + kişi, mesaj değişmez (tetik), eski say_chat_kayit taşındı, say_chat_kayit / say_chat_ayar KALKTI):
+                            sema.ts (MesajGirdisi, ChatOku / ChatIsle girdileri, kararlar: blok 2 saat, işlenmiş dosya 30 gün, fotoğraf 2400 px %85) · kapsam.ts
+                            (saf: "chatten oku"nun kapsamı — son kesintisiz blok, gün, aralık, sözcük) · dokum.ts (saf: S.A.Y'a giden döküm) · server/mesajlar.ts
+                            (sohbet, mesajYaz / mesajSil, isaretle / isaretGeriAl, eskiDosyalariTemizle; kuyruk chat.mesaj / chat.sil, eski saychat.* bir sürüm
+                            mesaj olur; dosya modülü say_chat, kaydı mesajın CİHAZ kimliği) · server/oku.ts (chatOkuHazirla — işlemin DIŞINDA ön okuma (say/server/
+                            on-okuma-cagri.ts) + belge yükleme, ekler S.A.Y'ın eki (yz_ek.chat_mesaj; F / M no); chatOku, chatIsle) · say-islemleri.ts chat_oku
+                            (Islem.once — yürütücü işlemden önce koşar; sonuç bloklu: döküm + belgeler) / chat_isle · ui/Sohbet.tsx (balonlar, gün ayraçları,
+                            Cihazda / Gönderildi, fotoğraf + altyazı, belge, EXIF çekim saati, sil, işlendi etiketi → geri al) · ui/SayChat.tsx (her sayfada düğme +
+                            panel, uygulama düzeninde) · tam sayfa /planlar/sohbet (menüde Ana sayfa'nın altında; servis çalışanı saklar) · kilit
+                            tests/say-chat-kapsam (saf), say-chat-mesaj (PG), bozan say-chat-kapsam, e2e say-chat.spec (bağlantısız sıra + chatten oku taklidi)
   src/server/eposta/        E-POSTA (432; göç 0077): eposta.ts kuyruk (alıcı başına bir satır; metin değişmez, silinmez) · saglayici.ts tek bağdaştırıcı
                             (Resend biçimi HTTP; uç PROBATA_EPOSTA_UC — anahtar yoksa bekler) · gonder.ts bekleyenleriGonder · sonra.ts (after) ·
                             gece işi epostaIsi yeniden dener. İlk kullanım: plan açılınca ekip + bilgilendirme (planlar planAc, sema planEpostasi)

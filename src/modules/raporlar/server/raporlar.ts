@@ -24,7 +24,7 @@ import { degerlendir, type Degerlendirme } from "../../../format/motor.ts";
 import { gecerliKunye, kilitliKunye, kunyeKilitHatalari, kunyeKilitTemizle, metotMetni } from "../../../format/kunye.ts";
 import { formulluSutun } from "../../../format/formul.ts";
 import { Cevaplar, doldurma, ekAnahtari, raporSonucuMu, type BolumOf, type FormatTanimi, type RaporSonucu } from "../../../format/tanim.ts";
-import { alanDegeri, type OkunacakAlan } from "../../../format/deger.ts";
+import { type OkunacakAlan } from "../../../format/deger.ts";
 import { bilgiAlanlari, ekipmanAlanlari, testAlanlari } from "../doldur.ts";
 import { fotoKutulari, sartliAcik } from "../../../format/duzen.ts";
 import { yzHazirMi } from "../../../server/yz/kullanim.ts";
@@ -1480,73 +1480,4 @@ export async function revizeIstegiGeriCek(db: Sorgulayici, kim: Kisi, id: string
   const s = await istekKapat(db, { kim: kim.ad, ne: "rapor.revize_istek_geri", gerekce: no }, { ...b, surum }, "geri_cekildi", null);
   if (s.durum !== "tamam") return { durum: s.durum === "yok" ? "yok" : "cakisma" };
   return { durum: "tamam", id, bildirim: `${no} revize isteği geri çekildi.` };
-}
-
-/* ── 525 S.A.Y CHAT (src/modules/say-chat; pkproje §3.10 m.12) ── kayıttan açılan rapora mesajın değerleri ve fotoğrafları — yazanın Yeni raporu.
-   Anahtarlar: "e:<ekipman alanı>" (ekipman bilgisi), "a:<alan>" (formatın bilgi alanı), "d:<değer>" (test değeri), "yorum" (uzman yorumuna eklenir).
-   Her değer alanın türüne göre denetlenir (alanDegeri — fotoğraftan doldurmayla aynı); uymayan yazılmaz, satırın adı döner (sessiz kayıp yok).
-   Ekipman fotoğrafları formatın ilk fotoğraf bölümüne (yoksa eklenmez, söylenir); okunacak fotoğraflar o bölüme OKUMA fotoğrafı olarak (belgede yok). */
-export interface ChatDolgusu {
-  degerler: { anahtar: string; ad: string; deger: string }[];
-  fotolar: { ad: string; bayt: Uint8Array }[];
-  okumalar: { bolum: string; ad: string; bayt: Uint8Array }[];
-  /** 549 (sunum 546 K2): var olan Yeni rapora — yalnız boş alanlar yazılır, dolu kalanların adı döner */
-  yalnizBos?: boolean;
-}
-export type ChatDolguSonucu = { durum: "tamam"; yazilan: number; atlanan: string[]; dolu: string[]; foto: number; fotoBolumuYok: boolean; okuma: { bolum: string; dosya: string }[] }
-  | Exclude<RaporYazma, { durum: "tamam" }>;
-export async function chatRaporuDoldur(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, id: string, p: ChatDolgusu, bugun = new Date()): Promise<ChatDolguSonucu> {
-  const e = await yazilabilir(db, kim, id);
-  if (hataMi(e)) return e.durum === "tamam" ? { durum: "yok" } : e;
-  const tanim = (await formatSurumuOku(db, e.r.format_id))?.tanim;
-  if (!tanim) return { durum: "yok" };
-  const cev = Cevaplar.safeParse(e.r.cevaplar);
-  if (!cev.success) return { durum: "red", neden: "Raporun cevapları okunamadı." };
-  const c = cev.data, ekipman: EkipmanBilgisi = { ...e.r.ekipman_bilgi };
-  const bilgi = new Map<string, OkunacakAlan>(), test = new Map<string, OkunacakAlan>();
-  for (const b of tanim.bolumler) {
-    if (b.blok === "bilgi") for (const a of bilgiAlanlari(b)) bilgi.set(a.id, a);
-    if (b.blok === "test") for (const a of testAlanlari(b)) test.set(a.id, a);
-  }
-  for (const a of ekipmanAlanlari(tanim).alanlar) if (!bilgi.has(a.id)) bilgi.set(a.id, a);
-  const atlanan: string[] = [], dolu: string[] = [];
-  let yazilan = 0;
-  const doluMu = (x: unknown) => (typeof x === "string" ? !!x.trim() : x !== undefined && x !== null);
-  for (const { anahtar, ad, deger } of p.degerler) {
-    if (anahtar === "yorum") { c.yorum = [c.yorum, deger].filter(Boolean).join("\n").slice(0, 4000); yazilan++; continue; }
-    const [tur, alanId] = [anahtar.slice(0, 2), anahtar.slice(2)];
-    if (p.yalnizBos) {
-      const simdi = tur === "e:" && alanId in ekipman ? (ekipman as Record<string, unknown>)[alanId] : tur === "d:" ? c.deger[alanId] : c.alan[alanId];
-      if (doluMu(simdi)) { dolu.push(ad); continue; }
-    }
-    const a = tur === "e:" || tur === "a:" ? bilgi.get(alanId) : tur === "d:" ? test.get(alanId) : undefined;
-    const ekipmanAlani = tur === "e:" && (Object.keys(EkipmanBilgisi.shape) as string[]).includes(alanId);
-    const tanimli = a ?? (ekipmanAlani ? { tur: alanId === "imal" ? "yil" as const : "metin" as const, uzun: 120 } : undefined);
-    const v = tanimli ? alanDegeri(tanimli, deger, bugun) : null;
-    if (v === null) { atlanan.push(ad); continue; }
-    if (ekipmanAlani) {
-      const x = EkipmanBilgisi.shape[alanId as keyof EkipmanBilgisi].safeParse(v);
-      if (!x.success) { atlanan.push(ad); continue; }
-      (ekipman as Record<string, string | null>)[alanId] = x.data;
-    } else if (tur === "a:") c.alan[alanId] = v;
-    else c.deger[alanId] = v;
-    yazilan++;
-  }
-  const g = await guncelle(db, RAPOR, e.r.id, e.r.surum, { ekipman_bilgi: ekipman, cevaplar: sayiliCevaplar(c, e.r) },
-    { kim: kim.ad, ne: "rapor.say_chat", gerekce: gorunenNo(e.r.no, e.r.revizyon) });
-  if (g.durum !== "tamam" && g.durum !== "degisiklik_yok") return g.durum === "cakisma" ? { durum: "cakisma" } : { durum: "yok" };
-  /* ekipman fotoğrafları genel fotoğraf bölümüne ("foto"; yoksa formatın son fotoğraf bölümü — ZPKR02'de ilk fotoğraf bölümü termal görüntüdür) */
-  const fotoBolumleri = tanim.bolumler.filter((b) => b.blok === "foto"), fotoBolumu = fotoBolumleri.find((b) => b.id === "foto") ?? fotoBolumleri.at(-1);
-  let foto = 0;
-  for (const f of fotoBolumu ? p.fotolar : []) {
-    const r = await raporOku(db, id);
-    if (!r) break;
-    if ((await fotoEkle(db, depo, kim, firmaId, id, r.surum, { bolum: fotoBolumu!.id, madde: null }, f)).durum === "tamam") foto++;
-  }
-  const okuma: { bolum: string; dosya: string }[] = [];
-  for (const o of p.okumalar) {
-    const y = await okumaFotografiEkle(db, depo, kim, firmaId, id, o.bolum, { ad: o.ad, bayt: o.bayt });
-    if (y.durum === "tamam" && y.dosya) okuma.push({ bolum: o.bolum, dosya: y.dosya });
-  }
-  return { durum: "tamam", yazilan, atlanan, dolu, foto, fotoBolumuYok: !fotoBolumu && p.fotolar.length > 0, okuma };
 }

@@ -1,5 +1,5 @@
 /* YÜKLEME DENETİMİ (09-A4) — tür içeriğin ilk baytlarından bulunur, uzantıya ve tarayıcının bildirdiğine güvenilmez.
-   İzinli: JPEG, PNG, PDF, .xlsx, .csv (yalnız gereken yerde). SVG ve HTML hiçbir koşulda yüklenmez.
+   İzinli: JPEG, PNG, PDF, .xlsx, .docx, .csv (yalnız gereken yerde; .docx 2026-11-07 — S.A.Y Chat belgesi). SVG ve HTML hiçbir koşulda yüklenmez.
    Fotoğrafın konum ve cihaz bilgisi (EXIF ve metin parçaları) silinir (KVKK); görüntü verisine dokunulmaz. PDF yeniden işlenmez (imzalı PDF bozulur). */
 
 export const TURLER = {
@@ -7,12 +7,13 @@ export const TURLER = {
   png: "image/png",
   pdf: "application/pdf",
   xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   csv: "text/csv",
 } as const;
 export type DosyaTuru = keyof typeof TURLER;
 
 /** tür başına üst sınır (sunucuda da; cihaz fotoğrafı yüklemeden önce küçültür — B1) */
-export const SINIR: Record<DosyaTuru, number> = { jpeg: 8 << 20, png: 8 << 20, pdf: 25 << 20, xlsx: 10 << 20, csv: 5 << 20 };
+export const SINIR: Record<DosyaTuru, number> = { jpeg: 8 << 20, png: 8 << 20, pdf: 25 << 20, xlsx: 10 << 20, docx: 10 << 20, csv: 5 << 20 };
 
 const basliyor = (b: Uint8Array, imza: readonly number[], kayma = 0) => imza.every((x, i) => b[kayma + i] === x);
 const metin = (b: Uint8Array, bas: number, son: number) => Buffer.from(b.subarray(bas, son)).toString("latin1");
@@ -23,10 +24,11 @@ export function turBul(b: Uint8Array, izinli: readonly DosyaTuru[]): DosyaTuru |
     if (basliyor(b, [0xff, 0xd8, 0xff])) return "jpeg";
     if (basliyor(b, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) return "png";
     if (metin(b, 0, 5) === "%PDF-") return "pdf";
-    /* xlsx bir ZIP: ilk girdi "[Content_Types].xml" ya da gövdede "xl/" klasörü olmalı (başka ZIP kabul edilmez) */
+    /* xlsx / docx bir ZIP: "[Content_Types].xml" ve gövdede "xl/" (Excel) ya da "word/" (Word) klasörü olmalı (başka ZIP kabul edilmez) */
     if (basliyor(b, [0x50, 0x4b, 0x03, 0x04])) {
       const govde = metin(b, 0, Math.min(b.length, 1 << 16));
-      return govde.includes("[Content_Types].xml") && govde.includes("xl/") ? "xlsx" : null;
+      if (!govde.includes("[Content_Types].xml")) return null;
+      return govde.includes("xl/") ? "xlsx" : govde.includes("word/") ? "docx" : null;
     }
     if (izinli.includes("csv")) return csvMi(b) ? "csv" : null;
     return null;

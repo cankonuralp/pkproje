@@ -46,7 +46,7 @@ export const modulAdi = (no: number): string => (no === ANA_SAYFA_MODULU ? ANA_S
 /** önbellekli talimattaki dizin (her istekte aynı metin) */
 /** sık işlemler: saha işinin akışı (plan → ekipman → rapor → yazma → saat → denetim) — şemaları talimatta */
 export const SIK_ISLEMLER = ["plan_getir", "plan_hazirlik", "plan_ekipmanlar_ekle", "rapor_ac", "rapor_getir", "rapor_yaz", "raporlara_yaz", "rapor_saat_plani",
-  "rapor_foto_ekle", "plan_denetle"] as const;
+  "rapor_foto_ekle", "plan_denetle", "chat_oku"] as const;
 export const ISLEM_DIZINI = katalogDizini(ISLEM_KATALOGU, modulAdi, SIK_ISLEMLER);
 
 /** 2026-10-31 (K2 + M4): açık kaydı tanınan ayrıntı sayfaları — ilk eşleşen geçerli (dar desen önce: format sürümü türden, tesis müşteriden önce);

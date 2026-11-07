@@ -8,7 +8,7 @@
    denetçi kendi, branş yöneticisi branşı). 328: gider belgesi (fiş / fatura) — Muhasebe'yi gören (gör / yaz); 330: masraf formunun fişini gönderen
    de · izin talebinin belgesi — talep eden ve firma yöneticisi. 333: imzaya gönderilen belge ve imzalı hâli (Onaylar › Diğer belgeler) — imzalayacak
    kişi, gönderen, Personel'de "yaz"; bordroda Muhasebe'yi gören de. 2026-10-12: saha formunun müşteri imzalı taraması — planı gören.
-   524: S.A.Y Chat kaydının fotoğrafı — YALNIZ kaydın sahibi (kayıt kişiye özel, RLS). 2026-10-25 (belge doldurma): müşteriye e-postayla gönderilen
+   524 / 2026-11-07: S.A.Y Chat mesajının fotoğrafı / belgesi — YALNIZ sohbetin sahibi (sohbet kişiye özel, RLS). 2026-10-25 (belge doldurma): müşteriye e-postayla gönderilen
    ön bilgilendirme formu (e-posta eki) — planı gören. */
 import { DOSYA as DOK_DOSYA, dokumanDosyasiGorulur, standartDosyasiGorulur } from "../../modules/dokumanlar/server/dokumanlar.ts";
 import { DOSYA_MODULU as EGITIM_DOSYASI, egitimDosyasiGorulur } from "../../modules/egitimler/server/egitimler.ts";
@@ -24,7 +24,7 @@ import { DOSYA as SOZ_DOSYA, isgDosyasiGorulur, sablonDosyasiGorulur, sozlesmeDo
 import { DOSYA_MODULU as ZIMMET_DOSYASI, zimmetDosyasiGorulur } from "../../modules/zimmetler/server/zimmet.ts";
 import { DOSYA_MODULU as RAPOR_DOSYASI, IMZALI_MODULU, oncekiRaporGorulur, PDF_MODULU, raporDosyasiGorulur } from "../../modules/raporlar/server/raporlar.ts";
 import { DOSYA_ONBILGI, DOSYA_SAHA, onBilgiDosyasiGorulur, sahaDosyasiGorulur } from "../../modules/planlar/server/plan-ici.ts";
-import { chatDosyasiGorulur, DOSYA_SAY_CHAT } from "../../modules/say-chat/server/kayitlar.ts";
+import { chatDosyasiGorulur, DOSYA_SAY_CHAT } from "../../modules/say-chat/server/mesajlar.ts";
 import { DOSYA_SAY_EK, sayEkGorulur } from "../yz/konusma.ts";
 import { FORM_DOSYA } from "../../modules/raporlar/server/form-dosya.ts";
 import type { YetkiHesabi } from "../yetki/canDo.ts";

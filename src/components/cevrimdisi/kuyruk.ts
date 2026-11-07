@@ -14,12 +14,13 @@
    · 400 PLAN KABUL / RED (ARKA-UC §4.1 "plan kabul / red (kuyruğa)"): aynı plan için tek bekleyen iş (yeni seçim eskisinin yerine).
    · 405 YENİ RAPOR (rapor.olustur): bağlantısız açılan rapor cihazın geçici kimliğiyle; işleri rapor açılmadan gitmez, açılınca sunucunun verdiği
      kimliğe bağlanır; aynı planın kabulü cihazda bekliyorsa rapor ondan sonra açılır. İşler GİRDİĞİ SIRAYLA gider (yalnız bağımlılık beklenir).
-   · 524 S.A.Y CHAT (pkproje §3.10 m.9: "kayıtlar cihazda birikir, bağlantı gelince gider"): saychat.kaydet (kaydın o anki hâli — aynı kayıt için tek
-     bekleyen; saychat.sil onun yerine geçer) ve saychat.foto (eklenir; kayıt yoksa sunucu fotoğrafla açar — sıra gerekmez; sürüm önce / sonra döner).
+   · 2026-11-07 S.A.Y CHAT (kişisel sohbet): chat.mesaj (yazı / fotoğraf / belge — her mesaj ayrı iş, GİRDİĞİ SIRAYLA gider; saat cihazdaki yazılış anı)
+     ve chat.sil (kişinin işlenmemiş mesajı). Eski saychat.* işleri (524'ün kayıt düzeni) cihazda kalmışsa bir sürüm boyunca gider; sunucu mesaj yapar.
    Depo yoksa (gizli pencere) iş yalnız bu sayfada bellekte tutulur ve söylenir. */
 import { coz, depoAc, isleriOku, isSil, isYaz, sifrele, type DepoIsi } from "./depo.ts";
 
-export type KuyrukTuru = "rapor.kaydet" | "rapor.gonder" | "rapor.foto" | "rapor.olustur" | "plan.kabul" | "plan.red" | "saychat.kaydet" | "saychat.foto" | "saychat.sil";
+export type KuyrukTuru = "rapor.kaydet" | "rapor.gonder" | "rapor.foto" | "rapor.olustur" | "plan.kabul" | "plan.red" | "chat.mesaj" | "chat.sil"
+  | "saychat.kaydet" | "saychat.foto" | "saychat.sil";
 /** kaydın o anki hâlini taşıyan işler: aynı kayıt için tek bekleyen (fotoğraf bunlardan değil) */
 const FORM: ReadonlySet<string> = new Set(["rapor.kaydet", "rapor.gonder", "plan.kabul", "plan.red", "saychat.kaydet", "saychat.sil"]);
 /** gönderilen işin sonucu — window "probata-islem" olayı (ekran tazelenir; eksikse alanlar işaretlenir) */
@@ -102,6 +103,14 @@ export async function bekleyenIcerik(kayit: string): Promise<{ girdi: unknown; d
   return { girdi: db ? await coz(db, x) : x.girdi, durum: x.durum, tur: x.tur as KuyrukTuru };
 }
 
+/** 2026-11-07 (S.A.Y Chat): verilen türlerdeki bekleyen işler İÇERİKLERİYLE (cihazda yazılıp henüz gitmemiş mesajlar sohbette görünür) */
+export async function bekleyenIsler(turler: readonly KuyrukTuru[]): Promise<{ id: string; tur: KuyrukTuru; kayit: string; durum: IsDurumu; ileti: string | null; girdi: unknown }[]> {
+  await yukle();
+  const db = await depoAc();
+  const l = bellek.filter((x) => (turler as readonly string[]).includes(x.tur));
+  return Promise.all(l.map(async (x) => ({ id: x.id, tur: x.tur as KuyrukTuru, kayit: x.kayit, durum: x.durum, ileti: x.ileti, girdi: db ? await coz(db, x) : x.girdi })));
+}
+
 /** kullanıcı kaldırdı (eksik / hata bilgisi okundu, ya da çakışmada "sunucudakini kullan") */
 export async function kuyruktanCikar(id: string): Promise<void> {
   const db = await depoAc();
@@ -148,11 +157,12 @@ const ILETI: Record<string, string> = {
   foto_bekliyor: "Raporun fotoğrafları gidince gönderilecek.",
   saychat_yok: "S.A.Y Chat kaydı bulunamadı (silinmiş ya da raporu yazılmış).",
   saychat_cakisma: "S.A.Y Chat kaydı bu cihazda yazılırken başka bir cihazda değiştirildi.",
+  chat_yok: "S.A.Y Chat mesajı bulunamadı.",
 };
 
 /** işin türüne göre ileti (plan işinde "Plan …", S.A.Y Chat işinde "S.A.Y Chat kaydı …") */
 const iletisi = (tur: string, durum: string): string | undefined =>
-  (tur.startsWith("plan.") ? ILETI[`plan_${durum}`] : tur.startsWith("saychat.") ? ILETI[`saychat_${durum}`] : undefined) ?? ILETI[durum];
+  (tur.startsWith("plan.") ? ILETI[`plan_${durum}`] : tur.startsWith("saychat.") ? ILETI[`saychat_${durum}`] : tur.startsWith("chat.") ? ILETI[`chat_${durum}`] : undefined) ?? ILETI[durum];
 
 type Sonuc = { durum: string; hatalar?: Record<string, string>; eksikler?: { bolum: string; alan: string; ad: string }[]; neden?: string;
   /** fotoğrafta / yeni raporda: raporun hangi sürümden hangisine geçtiği */

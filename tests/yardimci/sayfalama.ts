@@ -33,7 +33,6 @@ export const SAYFALI_LISTELER: Readonly<Record<string, [number, string]>> = {
   "modules/planlar/ui/ProjeNotlari.tsx": [1, "proje notları (Tümünü göster)"],
   "modules/zimmetler/ui/VarlikParcalari.tsx": [1, "varlığın teslim geçmişi"],
   "modules/firma-ayarlari/ui/IceAktarma.tsx": [2, "satır denetimi önizlemesi + son içe aktarımlar"],
-  "modules/say-chat/ui/SayChat.tsx": [5, "kayıtlar, rapora dönüşecekler, oluşan rapor taslakları, plandaki ekipman ve tür seçimi"],
   "modules/olcum-cihazlari/ui/TurPencereleri.tsx": [1, "cihaz türleri penceresi"],
   "components/cevrimdisi/Cevrimdisi.tsx": [1, "cihazda bekleyen işler"],
   "app/(musteri)/portal/r/[id]/page.tsx": [1, "müşteri panelinde raporun uygunsuzlukları"],

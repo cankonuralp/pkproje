@@ -116,10 +116,15 @@ test("oturum kapısı: uygulama düzeni oturum ister, modül sayfası modül num
   /* 2026-10-06 (333, maket onaylar.html #/diger + muhasebe.html "Maaş bordrosu gönder": bordro BÜTÜN personelin imzasına gider — Onaylar'ı
      görmeyen planlama ve muhasebe de kendi belgesini imzalar): Diğer belgeler modülden bağımsız, oturum kapısından geçer; kayıt süzgeci sunucuda
      (yalnız hesabın kendi personelinin belgeleri — onaylar/server/belgeler.ts). İstisna YALNIZ bu sayfa. */
-  const KISISEL = new Set(["src/app/(uygulama)/onaylar/diger/page.tsx"]);
+  /* 2026-11-07 (S.A.Y Chat yeniden — kişisel sohbet): sohbetin tam sayfası da her firma kullanıcısının; yalnız KENDİ sohbeti (RLS firma + kişi, göç 0123) */
+  const KISISEL = new Set(["src/app/(uygulama)/onaylar/diger/page.tsx", "src/app/(uygulama)/planlar/sohbet/page.tsx"]);
   for (const ad of dosyalar("src/app/(uygulama)", [".tsx"]).filter((d) => d.endsWith("/page.tsx") && d.split("/").length > 5)) {
     if (KISISEL.has(ad)) {
       assert.match(oku(ad), /await oturumGerekli\(\)/, ad);
+      if (ad.endsWith("/sohbet/page.tsx")) {
+        assert.match(oku("src/server/db/gocler/0123_say_chat_mesaj.sql"), /USING \(firma_id = \(SELECT gecerli_firma\(\)\) AND hesap_id = \(SELECT NULLIF\(current_setting\('app\.hesap_id', true\), ''\)::uuid\)\)/, "sohbet yalnız kendi");
+        continue;
+      }
       assert.match(oku("src/modules/onaylar/server/belgeler.ts"), /const p = await hesabinPersoneli\(db, kim\.id\);[\s\S]*WHERE personel_id = \$1 AND dosya IS NOT NULL/, "Diğer belgeler yalnız kendi personelinin");
       continue;
     }

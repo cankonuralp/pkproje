@@ -318,8 +318,6 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
             <Tus tur={gorunum === "belge" ? "birincil" : "ikincil"} ikon="file-text" aria-pressed={gorunum === "belge"} onClick={() => setGorunum("belge")}>Belge önizlemesi</Tus>
           </span>
           <TusBaglanti tur="ikincil" ikon="eye" href={`/ekipman-turleri/${turId}/sablon/${format.id}`}>Sürüm sayfası</TusBaglanti>
-          {/* 529 (reisim 2026-10-13: "diğer tuşların yanına koy tuşa basınca ilgili sayfaya gitsin"): S.A.Y Chat ayarları kendi sayfasında */}
-          <TusBaglanti tur="ikincil" ikon="message-square-text" href={`/ekipman-turleri/${turId}/say-chat`}>S.A.Y Chat ayarları</TusBaglanti>
           {kirli ? <>
             <span className={stil.kaydetNot}>Kaydedilmedi</span>
             <Tus tur="ikincil" disabled={mesgul} onClick={vazgec}>Vazgeç</Tus>

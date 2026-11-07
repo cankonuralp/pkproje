@@ -140,9 +140,16 @@ export async function onOkumaBekleyen(db: Sorgulayici, idler: readonly string[])
   return Number((await db.sorgu<{ n: string }>("SELECT count(*)::text AS n FROM yz_ek e WHERE e.id::text = ANY($1::text[]) AND e.tur = 'foto' AND e.zaman > now() - interval '5 minutes' AND NOT EXISTS (SELECT 1 FROM yz_ek_okuma o WHERE o.ek_id = e.id)", [idler])).rows[0]?.n ?? 0);
 }
 
-export async function ekKaydet(db: Sorgulayici, e: Omit<KonusmaEki, "id">): Promise<string> {
-  return (await db.sorgu<{ id: string }>("INSERT INTO yz_ek (dosya, ad, tur, mime, boyut, cekim) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id::text",
-    [e.dosya, e.ad, e.tur, e.mime, e.boyut, e.cekim ?? null])).rows[0].id;
+/** chatMesaj: 2026-11-07 — S.A.Y Chat'ten okunan mesaj (aynı konuşmada ikinci kez eklenmez — chatEkleri) */
+export async function ekKaydet(db: Sorgulayici, e: Omit<KonusmaEki, "id">, chatMesaj: string | null = null): Promise<string> {
+  return (await db.sorgu<{ id: string }>("INSERT INTO yz_ek (dosya, ad, tur, mime, boyut, cekim, chat_mesaj) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id::text",
+    [e.dosya, e.ad, e.tur, e.mime, e.boyut, e.cekim ?? null, chatMesaj])).rows[0].id;
+}
+/** S.A.Y Chat mesajı (veritabanı kimliği) → konuşmadaki eki (bu konuşmada eklenmişse) */
+export async function chatEkleri(db: Sorgulayici, mesajlar: readonly string[]): Promise<Map<string, string>> {
+  if (!mesajlar.length) return new Map();
+  return new Map((await db.sorgu<{ id: string; m: string }>("SELECT id::text, chat_mesaj::text AS m FROM yz_ek WHERE chat_mesaj::text = ANY($1::text[])", [mesajlar]))
+    .rows.map((r) => [r.m, r.id]));
 }
 /** kişinin kendi ekleri (verilen sırayla; başkasının ya da olmayan kimlik düşer) */
 export async function ekleriAl(db: Sorgulayici, idler: readonly string[]): Promise<NumaraliEk[]> {

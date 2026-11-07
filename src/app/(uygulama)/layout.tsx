@@ -1,11 +1,12 @@
 /* UYGULAMA DÜZENİ — oturum ister (09-E2/E4). Oturum yoksa girişe; menü yalnız kişinin görebildiği modüller (canDo, sunucuda). Kişinin rolleri
-   veritabanından okunur; tarayıcıya yalnız ad, rol ADI ve çevrimdışı kuyruğun yazan etiketi gider (kimlik, e-posta, rol kodu gönderilmez). S.A.Y (380) her firma sayfasında tek
+   veritabanından okunur; tarayıcıya yalnız ad, rol ADI ve çevrimdışı kuyruğun yazan etiketi gider (kimlik, e-posta, rol kodu gönderilmez). S.A.Y (380) ve S.A.Y Chat (2026-11-07, kişisel sohbet) her firma sayfasında tek
    bileşen: firmada açık mı kendisi sorar (sayfa değişince düşmez, geçmiş kişinin hesabında). */
 import type { ReactNode } from "react";
 import { Kabuk } from "../../components/kabuk/Kabuk";
 import { menuTakipEylemi } from "../../modules/anasayfa/ui/eylemler";
 import { cevrimdisiPaketiEylemi } from "../../modules/planlar/ui/eylemler";
 import { SayAsistan } from "../../modules/say/ui/SayAsistan";
+import { SayChat } from "../../modules/say-chat/ui/SayChat";
 import { MODULLER } from "../../modules/moduller";
 import { yazanEtiketi } from "../../server/islem/yazan";
 import { modulGorur, oturumGerekli } from "../../server/kimlik/istek";
@@ -28,5 +29,5 @@ export default async function UygulamaDuzeni({ children }: { children: ReactNode
   /* 394: çevrimdışı kuyruğun yazan etiketi (kimlik değil, ondan türetilen özet) · 402: sayfa saklama ve önceden indirme yalnız sahada çalışana
      (rapor yazan / denetime çıkan roller) — ofiste cihaz ve sunucu boşuna yorulmaz */
   const saha = o.roller.some((r) => SAHA_ROLLERI.includes(r));
-  return <><Kabuk kullanici={{ ad: o.ad, rol, yazan: yazanEtiketi(o.id) }} gorunur={gorunur} takip={menuTakipEylemi} paket={saha ? cevrimdisiPaketiEylemi : undefined}>{children}</Kabuk><SayAsistan /></>;
+  return <><Kabuk kullanici={{ ad: o.ad, rol, yazan: yazanEtiketi(o.id) }} gorunur={gorunur} takip={menuTakipEylemi} paket={saha ? cevrimdisiPaketiEylemi : undefined}>{children}</Kabuk><SayChat /><SayAsistan /></>;
 }

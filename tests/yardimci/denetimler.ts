@@ -545,7 +545,7 @@ export function swEksikleri(sw: string, depo: string, proxy: string): string[] {
   if (!ifadeler.length) eksik.push("SAYFA_YOLLARI okunamadı");
   const kimlik = "0f8c2b9e-1d2a-4c3b-9e8f-7a6b5c4d3e2f";
   const eslesir = (y: string) => ifadeler.some((x) => x.test(y));
-  for (const y of ["/", "/planlar", `/planlar/${kimlik}`, `/raporlar/${kimlik}`, `/raporlar/yeni/${kimlik}`]) if (!eslesir(y)) eksik.push(`saha sayfası saklanmıyor: ${y}`);
+  for (const y of ["/", "/planlar", "/planlar/sohbet", `/planlar/${kimlik}`, `/raporlar/${kimlik}`, `/raporlar/yeni/${kimlik}`]) if (!eslesir(y)) eksik.push(`saha sayfası saklanmıyor: ${y}`);
   for (const y of ["/api/islem", `/api/dosya/${kimlik}`, "/giris", "/portal", `/portal/r/${kimlik}`, "/yonetim", "/yonetim/giris", `/raporlar/${kimlik}/pdf`, "/muhasebe"]) {
     if (eslesir(y)) eksik.push(`saklanmaması gereken yol saklanıyor: ${y}`);
   }
@@ -828,11 +828,11 @@ export function saglikKlasoruEksikleri(liste: readonly string[]): string[] {
 /** 527 / 531 (reisim 2026-10-13: "say chatte fotoğraf işaretine tıklayınca galeriden veya pc den de fotoğraf yükleyebilmek olsun" · "araçlar ve
     zimmetlerde de galeriden fotoğraf ekleme seçeneği ekle"): telefonda YALNIZ kamera açan girdi kalmaz. Kamera açan dosya girdisi (capture) yalnız iki
     yerde: ortak fotoğraf tuşu (components/foto/FotoTusu.tsx — kamera + galeri) ve S.A.Y ataç menüsü (Fotoğraf çek · Galeriden seç · Belge). FotoTusu'nda
-    iki girdi: kamera (capture) ve galeri / bilgisayar (capture YOK, çoklu seçilebilir). kullananlar: dosya → en az kaç FotoTusu (S.A.Y Chat 4, araç
-    teslim tutanağı 1, zimmet teslimi 1); onlarda doğrudan resim girdisi yok. Dönen: hata listesi (boş = tamam). */
+    iki girdi: kamera (capture) ve galeri / bilgisayar (capture YOK, çoklu seçilebilir). kullananlar: dosya → en az kaç FotoTusu (S.A.Y Chat sohbeti 1 —
+    2026-11-07, araç teslim tutanağı 1, zimmet teslimi 1); onlarda doğrudan resim girdisi yok. Dönen: hata listesi (boş = tamam). */
 /** fotoğraf tuşunu kullananlar: dosya → en az kaç FotoTusu */
 export const FOTO_TUSU_KULLANANLAR: Readonly<Record<string, number>> = {
-  "src/modules/say-chat/ui/SayChat.tsx": 4,
+  "src/modules/say-chat/ui/Sohbet.tsx": 1,
   "src/modules/araclar/ui/Pencereler.tsx": 1,
   "src/modules/zimmetler/ui/Pencereler.tsx": 1,
 };
@@ -933,9 +933,8 @@ export const SAY_ELLE_ALANLAR: Readonly<Record<string, Readonly<Record<string, s
   standart_ara: { brans: "liste süzgeci (ekrandaki Mekanik / Elektrik sekmesi)" },
   tur_ara: { brans: "liste süzgeci (ekrandaki Mekanik / Elektrik sekmesi)" },
   uyari_ara: { gecmis: "liste süzgeci (yalnız süresi geçenler)" },
-  /* 2026-10-31 (format parçası, S.A.Y Chat ayarı) */
+  /* 2026-10-31 (format parçası) */
   format_parcasi_kaydet: { bolum: "formatın bölümü (kimlik ya da ad — işlem tanımdan bulur)", ad: "parcaKaydet'in konumsal adı" },
-  say_chat_ayar_kaydet: { tanim: "S.A.Y Chat tanımı (sayChatAyarKaydet sema.ts tanimDenetle ile formata göre denetler)" },
   /* 2026-10-31 (S.A.Y yükleme yuvaları) */
   firma_dosyasi_yukle: { ne: "ayarDosyasiYaz'ın konumsal dosya türü (AYAR_DOSYASI)" },
   ice_aktar_denetle: { dosya: "Girdi.dosya", satirlar: "Excel ekinin satırları (S.A.Y ekin metninden; Girdi.satirlar)" },
@@ -1084,8 +1083,10 @@ export function yedekGocListesi(goc: string): Record<string, string[]> {
   return Object.fromEntries([...blok.matchAll(/\('([a-z_]+)', '([a-z_,]*)'\)/g)].map((m) => [m[1]!, m[2] ? m[2].split(",") : []]));
 }
 /** göçün tetik listesi ile yedek tablo listesi aynı mı (gizli sütunlar dahil); yedeklenen ile dışı kesişiyor mu. Dönen: bulgular */
-export function yedekListeFarki(goc: string, liste: Readonly<Record<string, readonly string[]>>, disi: Readonly<Record<string, string>>): string[] {
+export function yedekListeFarki(goc: string, liste: Readonly<Record<string, readonly string[]>>, disi: Readonly<Record<string, string>>, sonraki = ""): string[] {
   const g = yedekGocListesi(goc), h: string[] = [];
+  /* 2026-11-07 (göç 0123): sonraki göçlerde kaldırılan tablo (DROP TABLE) listeden düşer — tetiği tablosuyla gitti */
+  for (const m of sonraki.matchAll(/DROP TABLE IF EXISTS ([a-z_]+)/g)) delete g[m[1]!];
   for (const t of Object.keys(liste)) {
     if (!(t in g)) h.push(`${t}: göçte tetik yok`);
     else if ([...g[t]!].sort().join(",") !== [...liste[t]!].sort().join(",")) h.push(`${t}: gizli sütunlar göçle aynı değil`);

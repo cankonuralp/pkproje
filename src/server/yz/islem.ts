@@ -50,7 +50,9 @@ export interface IslemOrtami extends Omit<IslemBaglami, "db" | "kaydedilmemis"> 
 /** degisiklik: false — yazma işlemi çalıştı ama hiçbir şey değişmedi (ör. rapor_yaz'da girişler zaten öyleydi): iş sayılmaz (döngünün güvenliği
     ve sahte "yaptım" denetimi doğru görsün, sayfa boşuna yenilenmesin) */
 export type IslemCevabi =
-  | { tamam: true; bildirim?: string; sonuc?: Record<string, unknown>; degisiklik?: false }
+  | { tamam: true; bildirim?: string; sonuc?: Record<string, unknown>; degisiklik?: false;
+      /** 2026-11-07: sonuca eklenen içerik blokları (belge — yapay zekâ hizmetindeki dosya) — S.A.Y'a sonucun JSON'undan sonra gider */
+      bloklar?: Record<string, unknown>[] }
   | { tamam: false; neden: string; hatalar?: DogrulamaHatalari; uyarilar?: Record<string, string>; eksikler?: string[] };
 
 export interface Islem {
@@ -69,6 +71,9 @@ export interface Islem {
   islev: (...a: never[]) => unknown;
   /** veri: şemadan geçmiş girdi; ham: girdinin kendisi (modül işlevi kendi şemasıyla yeniden doğrular — dönüşüm iki kez uygulanmasın) */
   calistir: (b: IslemBaglami, veri: unknown, ham: unknown) => Promise<IslemCevabi>;
+  /** 2026-11-07 (S.A.Y Chat "chatten oku"): çalıştırıcıdan ÖNCE, veritabanı işleminin DIŞINDA hazırlık — ağ çağrısı (fotoğrafın ön okuması, belgenin
+      yapay zekâ hizmetine yüklenmesi) açık işlem tutmadan; her veritabanı adımı ortamın islet'iyle kendi kısa işleminde. Düşerse işlem çalışmaz (neden döner). */
+  once?: (o: IslemOrtami, veri: unknown) => Promise<void>;
 }
 /** işlem bildirimi (tür çıkarımı için; katalogda tür silinir) */
 export function islem<S extends z.ZodType>(t: Omit<Islem, "girdi" | "calistir"> & {
@@ -260,6 +265,7 @@ export async function islemYurut(katalog: readonly Islem[], o: IslemOrtami, ad: 
     return { islem: t, cevap: { tamam: false, neden: `Girdi şemaya uymuyor: ${hataOzeti(h)}`, hatalar: h }, sema: kisaSema(t) };
   }
   try {
+    if (t.once) await t.once(o, g.data);
     const cevap = await o.islet(async (db) => {
       const c = await t.calistir({ db, kim: o.kim, firmaId: o.firmaId, depo: o.depo, kok: o.kok, ekrandakiRapor: o.ekrandakiRapor,
         kaydedilmemis: o.kaydedilmemis === true, epostaGonder: o.epostaGonder }, g.data, ham);
@@ -355,7 +361,7 @@ export function islemOzeti(ad: string, tur: "oku" | "yaz" | null, cevap: IslemCe
     return { ...bos, yazilamadi: [{ ad, neden: cevap.neden }], sonuc: metin };
   }
   const metin = JSON.stringify({ islem: ad, durum: "tamam", ...(cevap.bildirim ? { bildirim: cevap.bildirim } : {}), ...(cevap.sonuc ?? {}) });
-  if (tur !== "yaz") return { ...bos, sonuc: metin };
+  if (tur !== "yaz") return { ...bos, sonuc: metin, ...(cevap.bloklar?.length ? { bloklar: cevap.bloklar } : {}) };
   return cevap.degisiklik === false ? { ...bos, ayni: 1, sonuc: metin } : { ...bos, yazildi: 1, yapilan: [cevap.bildirim ?? `${ad} yapıldı`], sonuc: metin };
 }
 

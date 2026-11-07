@@ -1,6 +1,6 @@
 /* PLAN İÇİ (maket planlarim.html #/plan/<id>; donmuş referans ekran): kırıntı Planlar › proje no · başlıkta firma adı (künyeden; L7 "firma ismi önde"),
    altında tesis · durum rozeti · açık planda denetçi başına uyarılar (engel değil) · akış (PlanIciEkrani). Görmeyen / başka firmanın planı: bulunamadı.
-   524: S.A.Y Chat (plan ekibindeki kişi, plan kabul / denetimde / tamamlandı) — veri sayfayla gelir (çevrimdışı açılan sayfada da hazır).
+   2026-11-07: S.A.Y Chat kişisel sohbet oldu — düğmesi her sayfada (uygulama düzeni); planın sohbeti yok.
    2026-10-25 (belge doldurma): ön bilgilendirme / saha formunun elle doldurulan yerleri ve "Ön bilgilendirme formunu gönder" (planBelgeleri) —
    gönderim eylemi PDF'i bu sayfanın işlevinde basar: Chromium ve maxDuration 60 (next.config.ts, tests/pdf-paket.test.ts). */
 import type { Metadata } from "next";
@@ -15,8 +15,6 @@ import { planBelgeleri, planIci } from "../../../../modules/planlar/server/plan-
 import { planAcabilir } from "../../../../modules/planlar/server/planlar";
 import { PlanIciEkrani } from "../../../../modules/planlar/ui/PlanIciEkrani";
 import { PlanSilTusu } from "../../../../modules/planlar/ui/PlanSilTusu";
-import { sayChatPaneli } from "../../../../modules/say-chat/server/kayitlar";
-import { SayChat } from "../../../../modules/say-chat/ui/SayChat";
 import { depo } from "../../../../server/dosya/depo";
 import { modulOturumu, oturumIslemi } from "../../../../server/kimlik/istek";
 
@@ -28,7 +26,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
   const o = await modulOturumu(MODUL.no);
   if (!o) return <Yetkisiz />;
   const { id } = await params;
-  const [v, chat, belgeler] = await oturumIslemi(o, async (db) => [await planIci(db, o, id), await sayChatPaneli(db, o, id), await planBelgeleri(db, o, id, depo())] as const);
+  const [v, belgeler] = await oturumIslemi(o, async (db) => [await planIci(db, o, id), await planBelgeleri(db, o, id, depo())] as const);
   if (!v) notFound();
   const p = v.kart;
   const [durumAd, rozet] = PLAN_DURUM[v.durum];
@@ -52,7 +50,6 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
         ))}
       </SeritKap>}
       <PlanIciEkrani v={v} belgeler={belgeler} />
-      {chat && <SayChat veri={chat} />}
     </>
   );
 }

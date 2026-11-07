@@ -48,7 +48,7 @@ export const YEDEK_DISI_DOSYA: Readonly<Record<string, string>> = {
   rapor_imzali: "raporun klasörüne (imzalı PDF)",
   say_form: "raporun klasörüne (işaretli form)",
   belge_onay: "imzaya gönderilen imzasız belge (imzalısı yedekte)",
-  say_ek: "S.A.Y eki", say_chat: "kişiye özel saha notu",
+  say_ek: "S.A.Y eki", say_chat: "kişiye özel sohbet",
 };
 
 export function belgeYolu(kok: string, modul: string): string[] | null {
