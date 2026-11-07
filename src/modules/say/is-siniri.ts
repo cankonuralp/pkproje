@@ -132,19 +132,34 @@ export function istemTahmini(mesajlar: readonly IsMesaji[]): number {
   return Math.ceil(karakter / KARAKTER_BASINA) + token;
 }
 
-/** bu işin iletileri seviyeye göre küçültülmüş (iş sınırından sonrakiler; soru iletisinin kendisi ve son görüntülü sonuç korunur). Belirlenimli. */
+/* 2026-11-07 (canlı V25 ölçümü — reisim: "10 cent çok büyük maliyet"): KAYMAYAN SINIR. Eskiden "son iki ileti hariç" ve "son görüntülü sonuç hariç"
+   kırpılıyordu: her yeni istekte bir önceki ileti de kırpıldığı için konuşmanın o noktasından sonrası önbellekten okunamıyor, her istekte yeniden
+   yazılıyordu. Şimdi kırpılan sonuç sayısı basamaklarla ilerler (1, 2, 4, 8, sonra sekizer): sınır yalnız basamakta kayar, arada istekler önbellekten okunur. */
+export const KIRPMA_KALAN = 2, KIRPMA_ADIM = 8;
+/** n sonuçtan kaçı kırpılır (kalan en az `kalan`; basamaklı — n arttıkça yalnız basamakta değişir) */
+export function kirpilacakSayi(n: number, kalan = KIRPMA_KALAN): number {
+  const m = n - kalan;
+  if (m <= 0) return 0;
+  if (m < KIRPMA_ADIM) return 2 ** Math.floor(Math.log2(m));
+  return Math.floor(m / KIRPMA_ADIM) * KIRPMA_ADIM;
+}
+/** bu işin iletileri seviyeye göre küçültülmüş (iş sınırından sonrakiler; soru iletisinin kendisi ve son sonuçlar korunur). Belirlenimli. */
 export function isIciKucult<T extends IsMesaji>(mesajlar: readonly T[], seviye: number): { mesajlar: T[]; degisen: number } {
   const b = sonSoruIndeksi(mesajlar);
   if (seviye <= 0 || b < 0) return { mesajlar: [...mesajlar], degisen: 0 };
   const beceri = new Map<string, string>();
-  let sonGoruntu = -1, sonKullanici = -1, oncekiKullanici = -1;
+  const sonuclu: number[] = [], goruntulu: number[] = [];
   mesajlar.forEach((m, i) => {
     if (i <= b) return;
     if (m.role === "assistant") { for (const x of bloklar(m.content) ?? []) if (x.type === "tool_use" && x.name === "beceri_oku" && typeof x.id === "string") beceri.set(x.id, String((x.input as { ad?: unknown } | null)?.ad ?? "beceri")); return; }
     if (m.role !== "user") return;
-    oncekiKullanici = sonKullanici; sonKullanici = i;
-    if ((bloklar(m.content) ?? []).some((x) => x.type === "tool_result" && (bloklar(x.content) ?? []).some((y) => y.type === "image"))) sonGoruntu = i;
+    const ic = bloklar(m.content) ?? [];
+    if (ic.some((x) => x.type === "tool_result")) sonuclu.push(i);
+    if (ic.some((x) => x.type === "tool_result" && (bloklar(x.content) ?? []).some((y) => y.type === "image"))) goruntulu.push(i);
   });
+  /* kırpılan ve metne dönen iletiler: baştan, basamaklı sayıda (kaymayan sınır) */
+  const kirpilan = new Set(sonuclu.slice(0, kirpilacakSayi(sonuclu.length)));
+  const metneDonen = new Set(goruntulu.slice(0, kirpilacakSayi(goruntulu.length, 1)));
   let degisen = 0;
   const l = mesajlar.map((m, i) => {
     if (i <= b || m.role !== "user") return m;
@@ -154,10 +169,10 @@ export function isIciKucult<T extends IsMesaji>(mesajlar: readonly T[], seviye: 
     const yeni = ic.map((x) => {
       if (x.type !== "tool_result") return x;
       if (seviye >= 2 && typeof x.tool_use_id === "string" && beceri.has(x.tool_use_id)) { d = true; return { ...x, content: BECERI_KALDIRILDI(beceri.get(x.tool_use_id)!) }; }
-      if (seviye >= 1 && i !== sonGoruntu && Array.isArray(x.content) && (bloklar(x.content) ?? []).some((y) => y.type === "image")) {
+      if (seviye >= 1 && metneDonen.has(i) && Array.isArray(x.content) && (bloklar(x.content) ?? []).some((y) => y.type === "image")) {
         d = true; return { ...x, content: (bloklar(x.content) ?? []).map((y) => (y.type === "image" ? { type: "text", text: GORUNTU_KALDIRILDI } : y)) };
       }
-      if (seviye >= 3 && i !== sonKullanici && i !== oncekiKullanici) {
+      if (seviye >= 3 && kirpilan.has(i)) {
         if (typeof x.content === "string" && x.content.length > ESKI_SONUC_EN_COK) { d = true; return { ...x, content: kirp(x.content) }; }
         const y = bloklar(x.content);
         if (y?.some((z) => z.type === "text" && typeof z.text === "string" && z.text.length > ESKI_SONUC_EN_COK)) { d = true; return { ...x, content: y.map((z) => (z.type === "text" && typeof z.text === "string" ? { ...z, text: kirp(z.text) } : z)) }; }

@@ -9,7 +9,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { DENETIM_ONEKI } from "../src/modules/say/bitis-denetimi.ts";
 import { BECERI_KALDIRILDI, bildirimNotu, bildirimNotuGerekli, bildirimSatirlari, ESKI_SONUC_EN_COK, FOTO_KALDIRILDI, fotoNo, GORUNTU_KALDIRILDI, gosterilenFotolar,
-  ilerlemeMetni, isIciKucult, istemTahmini, kapanisNedeni, kapanisNotu, konusmaSikistir, KUCULTME_EN_COK, kucultmeSeviyesi, PARTI_ESIGI, PARTI_YAZAN, partiSonuKucult,
+  ilerlemeMetni, isIciKucult, istemTahmini, kirpilacakSayi, kapanisNedeni, kapanisNotu, konusmaSikistir, KUCULTME_EN_COK, kucultmeSeviyesi, PARTI_ESIGI, PARTI_YAZAN, partiSonuKucult,
   raporIlerlemesi, sonSoruIndeksi, TAVAN, ZATEN_BUYUTULDU } from "../src/modules/say/is-siniri.ts";
 
 const resim = { type: "image", source: { type: "file", file_id: "f1" } };
@@ -85,7 +85,7 @@ test("bildirim notu: rapora yazan işte dört satırı aşan bildirime bir kez; 
 });
 
 /* 2026-11-01 V21 A1 (reisim: "100 bin olayını sınırlama şansımız yok mu") — sert tavan: kestirim, iş içi küçültme seviyeleri (tek yönlü, belirlenimli), seviye seçimi */
-test("sert tavan: istem kestirimi; iş içi küçültme 1 görüntü · 2 beceri · 3 uzun sonuç; son görüntü ve son iki sonuç korunur; seviye yalnız ileri", () => {
+test("sert tavan: istem kestirimi; iş içi küçültme 1 görüntü · 2 beceri · 3 uzun sonuç; son görüntü ve son iki sonuç korunur; sınır kaymaz; seviye yalnız ileri", () => {
   const uzunMetin = "y".repeat(ESKI_SONUC_EN_COK + 500);
   const K = [
     { role: "user", content: [{ type: "text", text: "raporları hazırla" }, resim] },
@@ -112,6 +112,19 @@ test("sert tavan: istem kestirimi; iş içi küçültme 1 görüntü · 2 beceri
   assert.deepEqual(s3.mesajlar[0], K[0], "soru iletisi (malzeme) aynen");
   assert.ok(istemTahmini(s3.mesajlar) < t0);
   assert.deepEqual(isIciKucult(K, 3), s3, "belirlenimli");
+  /* 2026-11-07: kaymayan sınır — konuşma uzadıkça önceki istekte gönderilen önek AYNEN kalır (basamak dışında); önbellek her istekte kırılmaz */
+  const sonuc = (id: string) => [{ role: "assistant", content: [{ type: "tool_use", id, name: "islem", input: { ad: "plan_getir", girdi: {} } }] },
+    { role: "user", content: [{ type: "tool_result", tool_use_id: id, content: uzunMetin }] }];
+  let uzun: typeof K = [K[0]!];
+  const degisim: number[] = [];
+  for (let i = 1; i <= 30; i++) {
+    const once = isIciKucult(uzun, 3).mesajlar;
+    uzun = [...uzun, ...sonuc(`s${i}`)];
+    const sonra = isIciKucult(uzun, 3).mesajlar;
+    if (JSON.stringify(sonra.slice(0, once.length)) !== JSON.stringify(once)) degisim.push(i);
+  }
+  assert.deepEqual(degisim, [3, 4, 6, 10, 18, 26], "önek yalnız basamakta değişir (sonuç sayısı 3, 4, 6, 10, 18, 26)");
+  assert.deepEqual([0, 1, 2, 3, 4, 5, 6, 9, 10, 17, 18].map((n) => kirpilacakSayi(n)), [0, 0, 0, 1, 2, 2, 4, 4, 8, 8, 16]);
   assert.equal(kucultmeSeviyesi(K, 0, 1_000), 0, "tavanın altında seviye 0");
   assert.equal(kucultmeSeviyesi(K, 2, 1_000), 2, "mevcut seviye geri düşmez");
   assert.equal(kucultmeSeviyesi(K, 0, TAVAN), KUCULTME_EN_COK, "aşıyorsa en çok 4");

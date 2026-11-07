@@ -68,3 +68,18 @@ test("6. parti sonu küçültme kalkınca yazılmış partinin büyütmeleri kon
   ];
   assert.equal(m.partiSonuKucult(l).degisen, 0, "bozuk: parti yazıldıktan sonra büyütme kaldı");
 });
+/* 2026-11-07 (canlı V25 — reisim: "10 cent çok büyük maliyet"): kırpma sınırı her istekte kayarsa önceki istekte gönderilen önek değişir, önbellek kırılır */
+test("7. kırpma sınırı kayınca önbellek her istekte kırılır", async () => {
+  const m = await bozuk("  if (m < KIRPMA_ADIM) return 2 ** Math.floor(Math.log2(m));\n  return Math.floor(m / KIRPMA_ADIM) * KIRPMA_ADIM;", "  return m;");
+  const uzun = "x".repeat(m.ESKI_SONUC_EN_COK * 3);
+  const sonuc = (id: string) => [{ role: "assistant", content: [{ type: "tool_use", id, name: "islem", input: { ad: "plan_getir", girdi: {} } }] },
+    { role: "user", content: [{ type: "tool_result", tool_use_id: id, content: uzun }] }];
+  let l: { role: string; content: unknown }[] = [{ role: "user", content: [{ type: "text", text: "a" }] }];
+  let degisim = 0;
+  for (let i = 1; i <= 12; i++) {
+    const once = m.isIciKucult(l, 3).mesajlar;
+    l = [...l, ...sonuc(`s${i}`)];
+    if (JSON.stringify(m.isIciKucult(l, 3).mesajlar.slice(0, once.length)) !== JSON.stringify(once)) degisim++;
+  }
+  assert.ok(degisim > 6, `bozuk: önek ${degisim} kez değişti (kaymayan sınırda 4)`);
+});
