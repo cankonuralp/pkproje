@@ -65,8 +65,8 @@ ALTER TABLE say_chat_mesaj FORCE ROW LEVEL SECURITY;
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'say_chat_mesaj' AND policyname = 'say_chat_mesaj_kendi') THEN
     CREATE POLICY say_chat_mesaj_kendi ON say_chat_mesaj
-      USING (firma_id = (SELECT gecerli_firma()) AND hesap_id = (SELECT NULLIF(current_setting('app.hesap_id', true), '')::uuid))
-      WITH CHECK (firma_id = (SELECT gecerli_firma()) AND hesap_id = (SELECT NULLIF(current_setting('app.hesap_id', true), '')::uuid));
+      USING (firma_id = (SELECT gecerli_firma()) AND hesap_id = NULLIF((SELECT current_setting('app.hesap_id', true)), '')::uuid)
+      WITH CHECK (firma_id = (SELECT gecerli_firma()) AND hesap_id = NULLIF((SELECT current_setting('app.hesap_id', true)), '')::uuid);
   END IF;
 END $$;
 

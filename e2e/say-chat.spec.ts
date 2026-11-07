@@ -101,8 +101,10 @@ test("S.A.Y Chat: bağlantısız 3 fotoğraf + 1 yazı sırası ve saati korunur
     [`${isaret}|gonderildi`, "ikinci açı|gonderildi", "etiket|gonderildi", "basınç 8 bar|gonderildi"]);
   expect((await benim()).map((x) => x.saat)).toEqual(saatler);
 
-  /* S.A.Y: chatten oku → plana işle */
+  /* S.A.Y: chatten oku → plana işle (Planlar listesinde — plan sayfasının notu tesisin adını taşır, taklit kişisel / müşteri bilgisi sayar) */
   await panel.getByRole("button", { name: "S.A.Y Chat'i kapat" }).click();
+  await page.goto(`${Y}/planlar`);
+  await hazir(page);
   const say = await sayAc(page);
   const planId = plan.split("/").at(-1)!;
   await sor(say, `Chatten oku, planına yaz [islem-chat ${planId} ${isaret}]`);

@@ -122,7 +122,7 @@ test("oturum kapısı: uygulama düzeni oturum ister, modül sayfası modül num
     if (KISISEL.has(ad)) {
       assert.match(oku(ad), /await oturumGerekli\(\)/, ad);
       if (ad.endsWith("/sohbet/page.tsx")) {
-        assert.match(oku("src/server/db/gocler/0123_say_chat_mesaj.sql"), /USING \(firma_id = \(SELECT gecerli_firma\(\)\) AND hesap_id = \(SELECT NULLIF\(current_setting\('app\.hesap_id', true\), ''\)::uuid\)\)/, "sohbet yalnız kendi");
+        assert.match(oku("src/server/db/gocler/0123_say_chat_mesaj.sql"), /USING \(firma_id = \(SELECT gecerli_firma\(\)\) AND hesap_id = NULLIF\(\(SELECT current_setting\('app\.hesap_id', true\)\), ''\)::uuid\)/, "sohbet yalnız kendi");
         continue;
       }
       assert.match(oku("src/modules/onaylar/server/belgeler.ts"), /const p = await hesabinPersoneli\(db, kim\.id\);[\s\S]*WHERE personel_id = \$1 AND dosya IS NOT NULL/, "Diğer belgeler yalnız kendi personelinin");
