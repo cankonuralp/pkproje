@@ -624,7 +624,7 @@ pkproje/
                             on-okuma-cagri.ts) + belge yükleme, ekler S.A.Y'ın eki (yz_ek.chat_mesaj; F / M no); chatOku, chatIsle) · say-islemleri.ts chat_oku
                             (Islem.once — yürütücü işlemden önce koşar; sonuç bloklu: döküm + belgeler) / chat_isle · ui/Sohbet.tsx (balonlar, gün ayraçları,
                             Cihazda / Gönderildi, fotoğraf + altyazı, belge, EXIF çekim saati, sil, işlendi etiketi → geri al) · ui/SayChat.tsx (her sayfada düğme +
-                            panel, uygulama düzeninde) · tam sayfa /planlar/sohbet (menüde Ana sayfa'nın altında; servis çalışanı saklar) · kilit
+                            panel, uygulama düzeninde) · tam sayfa /planlar/sohbet (panelin "Tam sayfada aç"ından; menüde YOK — reisim 2026-11-07; servis çalışanı saklar) · kilit
                             tests/say-chat-kapsam (saf), say-chat-mesaj (PG), bozan say-chat-kapsam, e2e say-chat.spec (bağlantısız sıra + chatten oku taklidi)
   src/server/eposta/        E-POSTA (432; göç 0077): eposta.ts kuyruk (alıcı başına bir satır; metin değişmez, silinmez) · saglayici.ts tek bağdaştırıcı
                             (Resend biçimi HTTP; uç PROBATA_EPOSTA_UC — anahtar yoksa bekler) · gonder.ts bekleyenleriGonder · sonra.ts (after) ·

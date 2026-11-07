@@ -179,14 +179,6 @@ export function Kabuk({ children, kullanici, gorunur, takip, paket }: {
                 <span className={stil.menuAd}>{ANA_SAYFA.ad}</span>
               </Link>
             </li>
-            {/* 2026-11-07: S.A.Y Chat — kişisel sohbetin tam sayfası (her firma kullanıcısı; panel her sayfada) */}
-            <li>
-              <Link className={stil.menuBaglanti} href="/planlar/sohbet" aria-current={yol === "/planlar/sohbet" ? "page" : undefined}
-                title={serit ? "S.A.Y Chat" : undefined} onClick={() => setAcik(false)}>
-                <Ikon ad="message-square-text" />
-                <span className={stil.menuAd}>S.A.Y Chat</span>
-              </Link>
-            </li>
           </ul>
           {MODUL_GRUPLARI.map((g) => ({ ...g, moduller: g.moduller.filter((m) => !gorunur || gorunur.includes(m.no)) }))
             .filter((g) => g.moduller.length > 0).map((g, i) => (
