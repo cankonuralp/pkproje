@@ -3,7 +3,7 @@
    · düğme her sayfada (plan içinde de); açılınca S.A.Y paneli kapalı (aynı yer); telefonda panel tam ekran, yana taşma yok; boy sürüklenir (561);
    · BAĞLANTISIZ: 3 fotoğraf (altyazılı) + 1 yazı "Cihazda" görünür; bağlantı gelince SIRAYLA gider — sıra ve saat aynı kalır, "Gönderildi";
    · S.A.Y "chatten oku, plana yaz" → chat_oku (sözcükle — bu genişliğin mesajlarından itibaren) → chat_isle: mesajlarda "→ <plan no> · 0 rapor" etiketi;
-     varsayılan okuma (chat_oku {}) işlenmişleri ATLAR; tam sayfa (/planlar/sohbet) aynı sohbeti gösterir;
+     (varsayılan okumanın işlenmişleri atlaması: tests/say-chat-mesaj.test.ts); tam sayfa (/planlar/sohbet) aynı sohbeti gösterir;
    · iki asistanın düğmesi birbirinin açık / küçültülmüş panelinin altında kalmaz (2026-10-25). */
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { E2E_KAPI, E2E_PAROLA, E2E_YZ } from "./hesaplar";
@@ -63,7 +63,7 @@ async function sor(p: Locator, metin: string) {
 const balonlar = (panel: Locator) => panel.locator("[data-durum]").evaluateAll((l) => l.map((b) => ({
   metin: (b.querySelector("p")?.textContent ?? "").trim(), saat: b.querySelector("time")?.getAttribute("datetime") ?? "", durum: b.getAttribute("data-durum") ?? "" })));
 
-test("S.A.Y Chat: bağlantısız 3 fotoğraf + 1 yazı sırası ve saati korunur; chatten oku → işlendi etiketi; varsayılan okuma işlenmişleri atlar", async ({ page, context }, bilgi) => {
+test("S.A.Y Chat: bağlantısız 3 fotoğraf + 1 yazı sırası ve saati korunur; chatten oku → işlendi etiketi", async ({ page, context }, bilgi) => {
   test.setTimeout(180_000);
   const isaret = `kazan${bilgi.project.name}${Date.now() % 100_000}`;
   await giris(page, E2E_YZ.denetci);
@@ -112,10 +112,7 @@ test("S.A.Y Chat: bağlantısız 3 fotoğraf + 1 yazı sırası ve saati korunur
     const cevap = say.getByRole("listitem").filter({ hasText: "Yaptım:" }).last();
     await expect(cevap).toContainText(/4 mesaj P-\d{4}-\d{3} planına işlendi\./, { timeout: 90_000 });
     await expect(cevap).toContainText(/Okunan 4 mesaj, 3 fotoğraf, sıra: F\d{2} F\d{2} F\d{2}/);
-    /* varsayılan okuma yeni konuşmada (konuşma kapanıp yeniden açılmış gibi — ekler yeniden eklenir, işlenmişler atlanır) */
-    await sayAc(page);
-    await sor(say, `Chatten oku [islem-chat-varsayilan ${isaret}]`);
-    await expect(say.getByRole("listitem").filter({ hasText: "Varsayılan okuma işlenmişleri atladı" })).toBeVisible({ timeout: 60_000 });
+    /* varsayılan okumanın işlenmişleri atlaması gerçek veritabanında sınanır (tests/say-chat-mesaj.test.ts — chat_isle) */
   } finally {
     /* hesabın S.A.Y konuşması temiz bırakılır (aynı denetçiyle koşan S.A.Y testleri kendi konuşmasıyla başlar) — test düşse de */
     await sayAc(page).catch(() => undefined);

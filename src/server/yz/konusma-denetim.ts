@@ -15,6 +15,9 @@ const cagrilar = (m: KonusmaMesaji) => (bloklar(m.content) ?? []).filter((b) => 
 /** düzeltilmiş konuşma + ne düzeltildi (yalnız sayılar; içerik yok). Düzeltme yoksa konuşma aynen */
 export function konusmaDuzelt(mesajlar: readonly KonusmaMesaji[], yarida: string): { mesajlar: KonusmaMesaji[]; duzeltmeler: string[] } {
   const out: KonusmaMesaji[] = mesajlar.map((m) => ({ role: m.role, content: m.content }));
+  /* özgün içerik, out ile AYNI dizinde (2026-11-07: araya ileti eklenince dizin kayıyordu — sonraki sağlam iletinin özgünü mesajlar[ilkK]'dan
+     okunuyor, kayan dizinde yok ya da başka ileti oluyordu: "Cannot read properties of undefined") */
+  const orj: KonusmaMesaji[] = mesajlar.map((m) => ({ role: m.role, content: m.content }));
   let fazla = 0, oksuz = 0, eksik = 0, tasinan = 0;
   /* ilk yapay zekâ iletisinden önceki sonuçlar öksüzdür */
   const ilkA = out.findIndex((m) => m.role === "assistant");
@@ -48,10 +51,10 @@ export function konusmaDuzelt(mesajlar: readonly KonusmaMesaji[], yarida: string
     if (kalan.size) { eksik += kalan.size; bozuk = true; for (const id of kalan) bulunan.push({ type: "tool_result", tool_use_id: id, content: yarida, is_error: true }); }
     if (!bozuk) {
       /* sağlam: sonuçlar zaten ilk kullanıcı iletisinde — o ileti olduğu gibi */
-      if (ilkK >= 0) out[ilkK] = { role: "user", content: mesajlar[ilkK].content };
+      if (ilkK >= 0) out[ilkK] = { role: "user", content: orj[ilkK]!.content };
       continue;
     }
-    if (ilkK < 0) { out.splice(i + 1, 0, { role: "user", content: bulunan }); continue; }
+    if (ilkK < 0) { out.splice(i + 1, 0, { role: "user", content: bulunan }); orj.splice(i + 1, 0, { role: "user", content: bulunan }); continue; }
     const ilk = bloklar(out[ilkK].content);
     const yazi = out[ilkK].content;
     out[ilkK] = { role: "user", content: [...bulunan, ...(ilk ?? (typeof yazi === "string" && yazi ? [{ type: "text", text: yazi }] : []))] };

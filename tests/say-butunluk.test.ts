@@ -62,6 +62,16 @@ test("ardında kullanıcı iletisi olmayan çağrı yapay zekâ iletisinden önc
   assert.deepEqual(s.duzeltmeler, []);
 });
 
+test("araya ileti eklenince (ardı ardına çağrılar) sonraki sağlam ileti kayan dizinle bozulmaz (2026-11-07: undefined content)", () => {
+  const l = [{ role: "user", content: [yazi("soru")] }, cagri("f1"), cagri("f2"), cagri("f3"), { role: "user", content: [sonuc("f3"), yazi("devam")] }, cagri("f4"),
+    { role: "user", content: [sonuc("f4")] }];
+  const d = konusmaDuzelt(l, Y);
+  assert.deepEqual(d.duzeltmeler, ["2 sonuçsuz çağrı kapandı"]);
+  assert.deepEqual(d.mesajlar.map((m) => m.role), ["user", "assistant", "user", "assistant", "user", "assistant", "user", "assistant", "user"]);
+  assert.deepEqual(d.mesajlar.at(-1), { role: "user", content: [sonuc("f4")] }, "sağlam son ileti aynen");
+  assert.deepEqual(konusmaDuzelt(d.mesajlar, Y).duzeltmeler, [], "onarılmış konuşma sağlam");
+});
+
 test("yalnız açık çağrıların sonucu yazılır", () => {
   assert.deepEqual(acikSonuclar(cagri("f1").content, { f1: "a", f2: "b" }), [["f1", "a"]]);
   assert.deepEqual(acikSonuclar([yazi("bitti")], { f1: "a" }), []);
