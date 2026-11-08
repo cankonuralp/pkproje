@@ -41,3 +41,16 @@ test("allow özniteliği değişince rehberle eşitlik düşer — kilit düşer
   const m = await bozuk<Haber>("src/modules/raporlar/sign-haber.ts", "\"local-network-access; local-network; loopback-network\"", "\"local-network-access\"", "allow");
   assert.notEqual(m.GOMULU_IZIN, "local-network-access; local-network; loopback-network");
 });
+
+/* 2026-11-08: eski kayıt yenilenmezse 5 Kasım isteği hep yeni sekmede kalır; gömülüsüz kayıt da "eski" sayılırsa her tıklamada imza isteği iptal edilir */
+test("eski kayıt yenilenmeyince gömülü bağlantı hiç gelmez; gömülüsüz kayıt düz yazılınca her tıklamada iptal edilir — kilit düşer", async () => {
+  type S = { eskiBaglantiMi: (m: string | null) => boolean; baglantiMetni: (b: string | null, g: string | null) => string | null };
+  const kaynak = readFileSync(resolve("src/modules/raporlar/server/sign.ts"), "utf8");
+  const parca = kaynak.split(String.fromCharCode(10)).filter((x) => x.startsWith("export const baglantiMetni") || x.startsWith("export const eskiBaglantiMi")).join(String.fromCharCode(10));
+  assert.ok(parca.includes("eskiBaglantiMi"), "kaynakta bulunmalı");
+  const yaz = (ad: string, m: string) => { const y = join(klasor, ad + ".ts"); writeFileSync(y, m); return import(pathToFileURL(y).href) as Promise<S>; };
+  const a = await yaz("eski1", parca.replace('!!metin && !metin.startsWith("{")', "false"));
+  assert.equal(a.eskiBaglantiMi("https://sign.probata.com.tr/dis#eski"), false, "bozuk: 5 Kasım kaydı yenilenmez");
+  const b = await yaz("eski2", parca.replace("(baglanti || gomulu ? JSON.stringify({ b: baglanti, g: gomulu }) : null)", "(gomulu ? JSON.stringify({ b: baglanti, g: gomulu }) : baglanti)"));
+  assert.equal(b.eskiBaglantiMi(b.baglantiMetni("https://x/dis", null)), true, "bozuk: gömülüsüz yeni kayıt da eski sayılır");
+});

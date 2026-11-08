@@ -35,7 +35,10 @@ export const SIGN_GUN = 7;
 const SIGN_ISTEK = tablo({ ad: "imza_istegi", sutunlar: ["sign_belge", "sign_istek", "sign_baglanti", "sign_durum", "sign_neden"] });
 const BAGLANTI_AD = "sign_baglanti";
 /** saklanan bağlantılar (şifreli tek alan): eski kayıtta düz bağlantı; 2026-11-07'den beri gömülü bağlantı varsa {"b","g"} */
-export const baglantiMetni = (baglanti: string | null, gomulu: string | null): string | null => (gomulu ? JSON.stringify({ b: baglanti, g: gomulu }) : baglanti);
+export const baglantiMetni = (baglanti: string | null, gomulu: string | null): string | null => (baglanti || gomulu ? JSON.stringify({ b: baglanti, g: gomulu }) : null);
+/** 2026-11-08 (reisim: "bu hala yeni sekmede aç diyor imza işi neden olmadı"): 7 Kasım'dan önce açılmış istekte kayıt düz bağlantı — gömülü bağlantısı hiç istenmedi. Böyle istek bir kez
+   yenilenir (eskisi iptal, yenisi açılır). {"b","g":null} kaydı yenilenmez: sign o istekte gömülü bağlantı vermedi, yeni sekme yedeği kalır. */
+export const eskiBaglantiMi = (metin: string | null): boolean => !!metin && !metin.startsWith("{");
 export function baglantiOku(metin: string | null): { baglanti: string | null; gomulu: string | null } {
   if (!metin) return { baglanti: null, gomulu: null };
   if (!metin.startsWith("{")) return { baglanti: metin, gomulu: null };
@@ -77,7 +80,7 @@ export type SignHazirlik =
   /** açık istek: bağlantıları (üyeye bağlı toplu istekte ikisi de null — sign'ın toplu imzası) ve sign'daki belge */
   | { tur: "acik"; baglanti: string | null; gomulu: string | null; belge: string }
   | { tur: "gonder"; istekId: string; istekSurum: number; anahtar: string; pdf: Uint8Array; ad: string; raporNo: string; imzaci: { ad: string; eposta: string };
-      oncekiBelge: string | null }
+      oncekiBelge: string | null; yenile?: boolean }
   | { tur: "hata"; y: RaporYazma };
 export async function signHazirla(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, id: string, asama: Asama,
   uret: (v: BelgeVerisi) => Promise<Uint8Array>): Promise<SignHazirlik> {
@@ -86,8 +89,11 @@ export async function signHazirla(db: Sorgulayici, depo: Depo, kim: Kisi, firmaI
   if (h.durum !== "tamam") return { tur: "hata", y: h };
   const i = await bekleyen(db, id, asama);
   if (!i) return { tur: "hata", y: { durum: "cakisma" } };
+  let yenile = false;
   if (i.sign_istek && i.sign_belge && (i.sign_durum ?? "bekliyor") === "bekliyor") {
-    return { tur: "acik", ...baglantiOku(i.sign_baglanti ? coz(i.sign_baglanti, firmaId, BAGLANTI_AD) : null), belge: i.sign_belge };
+    const metin = i.sign_baglanti ? coz(i.sign_baglanti, firmaId, BAGLANTI_AD) : null;
+    if (!eskiBaglantiMi(metin)) return { tur: "acik", ...baglantiOku(metin), belge: i.sign_belge };
+    yenile = true;
   }
   const anahtar = await sirKullan(db, "sign_anahtari");
   if (!anahtar) return { tur: "hata", y: { durum: "red", neden: "Bu firmada probata sign bağlı değil." } };
@@ -99,7 +105,7 @@ export async function signHazirla(db: Sorgulayici, depo: Depo, kim: Kisi, firmaI
   const e = (await db.sorgu<{ eposta: string; ad: string }>("SELECT eposta, ad FROM hesap WHERE id = $1", [kim.id])).rows[0];
   if (!e?.eposta) return { tur: "hata", y: { durum: "red", neden: "Hesabınızda e-posta yok; probata sign imzacıyı e-postasıyla tanır." } };
   return { tur: "gonder", istekId: i.id, istekSurum: i.surum, anahtar, pdf, ad: d.ad || `${no}.pdf`, raporNo: asama === "teknik" ? `${no} · teknik` : no,
-    imzaci: { ad: kim.ad || e.ad, eposta: e.eposta }, oncekiBelge: i.sign_belge };
+    imzaci: { ad: kim.ad || e.ad, eposta: e.eposta }, oncekiBelge: i.sign_belge, ...(yenile ? { yenile } : {}) };
 }
 
 /* ── 2 · sign'a gönder (işlem dışında) ── */
@@ -111,6 +117,12 @@ const sonTarih = (simdi: Date): string => {
 /** toplu: istek imzacının sign üyeliğine bağlanır (her_zaman_baglanti false — sign'ın toplu imzası, PIN bir kez); üye değilse bağlantı gelir */
 export async function signGonder(h: Extract<SignHazirlik, { tur: "gonder" }>, istemci: SignIstemcisi = signIstemcisi(h.anahtar), simdi = new Date(),
   secenek: { toplu?: boolean } = {}): Promise<{ belge: string; istek: string; baglanti: string | null; gomulu: string | null }> {
+  /* eski istek yenilenirken: sign'da imzalanmışsa yeniden imzaya açılmaz; açıksa iptal edilir */
+  if (h.yenile && h.oncekiBelge) {
+    const o = await istemci.belgeGetir(h.oncekiBelge);
+    if (o.durum === "tamamlandi") throw new SignHatasi(409, "imzali", "Bu belge probata sign'da imzalanmış; Durumu yenile'ye basın.");
+    if (o.imza_istegi?.durum === "acik") await istemci.istekIptal(o.imza_istegi.id);
+  }
   const yukle = async () => {
     try { return await istemci.belgeYukle(h.pdf, { ad: h.ad, raporNo: h.raporNo }); }
     catch (e) {

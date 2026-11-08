@@ -15,7 +15,7 @@ import { test } from "node:test";
 import { GOMULU_IZIN, kokeni, signHaberi } from "../src/modules/raporlar/sign-haber.ts";
 import { signIstemcisi } from "../src/server/dis/sign.ts";
 import { signKokenleri, signSayfasiMi } from "../src/server/dis/sign-adres.ts";
-import { baglantiMetni, baglantiOku, signGonder } from "../src/modules/raporlar/server/sign.ts";
+import { baglantiMetni, baglantiOku, eskiBaglantiMi, signGonder } from "../src/modules/raporlar/server/sign.ts";
 
 const KOK = "https://sign.probata.com.tr", FIRMA = "https://deneme.sign.probata.com.tr";
 const BELGE = "11111111-1111-4111-8111-111111111111", B2 = "44444444-4444-4444-8444-444444444444", ISTEK = "22222222-2222-4222-8222-222222222222";
@@ -101,7 +101,28 @@ test("tek imza: gomulu_baglanti saklanır (bağlantıyla aynı şifreli alan); s
     : { status: 201, json: { id: ISTEK, durum: "acik", imzacilar: [{ id: "i", durum: "bekliyor", baglanti: `${FIRMA}/dis#a`, gomulu_baglanti: "https://kotu.example/g" }] } });
   assert.equal((await signGonder(h, signIstemcisi(ANAHTAR, k.getir))).gomulu, null, "başka adres gömülmez");
   assert.deepEqual(baglantiOku(baglantiMetni(`${FIRMA}/dis#a`, `${FIRMA}/gomulu#a`)), { baglanti: `${FIRMA}/dis#a`, gomulu: `${FIRMA}/gomulu#a` });
-  assert.deepEqual(baglantiOku(baglantiMetni(`${FIRMA}/dis#a`, null)), { baglanti: `${FIRMA}/dis#a`, gomulu: null }, "gömülüsüz: düz bağlantı (eski biçim)");
+  assert.deepEqual(baglantiOku(baglantiMetni(`${FIRMA}/dis#a`, null)), { baglanti: `${FIRMA}/dis#a`, gomulu: null }, "gömülüsüz: sign vermedi");
   assert.deepEqual(baglantiOku(`${KOK}/dis#eski`), { baglanti: `${KOK}/dis#eski`, gomulu: null }, "5 Kasım kaydı");
   assert.deepEqual(baglantiOku(JSON.stringify({ b: "x", g: "https://kotu.example/g" })), { baglanti: "x", gomulu: null }, "saklanan gömülü adres de denetlenir");
+});
+
+/* 2026-11-08 (reisim: "bu hala yeni sekmede aç diyor imza işi neden olmadı"): 5 Kasım'da açılmış istekte gömülü bağlantı hiç yoktu */
+test("7 Kasım'dan önceki istek: düz kayıt yenilenir, gömülüsüz yeni kayıt yenilenmez; yenilerken açık istek iptal, imzalanmış belge yeniden açılmaz", async () => {
+  assert.equal(eskiBaglantiMi(`${KOK}/dis#eski`), true, "5 Kasım kaydı");
+  assert.equal(eskiBaglantiMi(baglantiMetni(`${FIRMA}/dis#a`, null)), false, "sign gömülü vermediyse her tıklamada yenilenmez");
+  assert.equal(eskiBaglantiMi(baglantiMetni(`${FIRMA}/dis#a`, `${FIRMA}/gomulu#a`)), false);
+  assert.equal(eskiBaglantiMi(null), false, "üyeye bağlı toplu istek");
+  const h = { tur: "gonder" as const, istekId: "x", istekSurum: 0, anahtar: ANAHTAR, pdf: new Uint8Array(4), ad: "a.pdf", raporNo: "DA-9", imzaci: { ad: "D", eposta: "d@ornek.example" }, oncekiBelge: B2, yenile: true };
+  const yollar: string[] = [];
+  const t = taklit((c) => {
+    yollar.push(c.yol);
+    if (c.yol === `/api/v1/belgeler/${B2}`) return { status: 200, json: { id: B2, durum: "imzada", imza_istegi: { id: ISTEK, durum: "acik", imzacilar: [] } } };
+    if (c.yol.startsWith("/api/v1/belgeler?")) return { status: 201, json: { id: BELGE, durum: "taslak" } };
+    if (c.yol.includes("iptal")) return { status: 200, json: {} };
+    return { status: 201, json: { id: ISTEK, durum: "acik", imzacilar: [{ id: "i", durum: "bekliyor", baglanti: `${FIRMA}/dis#a`, gomulu_baglanti: `${FIRMA}/gomulu#a` }] } };
+  });
+  assert.equal((await signGonder(h, signIstemcisi(ANAHTAR, t.getir))).gomulu, `${FIRMA}/gomulu#a`, "yenisinde gömülü bağlantı");
+  assert.ok(yollar.some((y) => y.includes("iptal")), "eski istek iptal");
+  const k = taklit(() => ({ status: 200, json: { id: B2, durum: "tamamlandi", imza_istegi: null } }));
+  await assert.rejects(() => signGonder(h, signIstemcisi(ANAHTAR, k.getir)), /imzalanmış/, "imzalanmış belge yeniden açılmaz");
 });
