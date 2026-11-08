@@ -54,6 +54,7 @@ export const KAPSAM: Readonly<Record<string, Readonly<Record<string, string>>>> 
     taslakKaydetEylemi: "i:format_taslak_duzenle", surumSilEylemi: "i:format_surum_sil", sablondanTurEkleEylemi: "i:sablondan_tur_ekle", parcaKaydetEylemi: "i:format_parcasi_kaydet",
     parcaSilEylemi: "i:format_parcasi_sil", formatYzEylemi: "d:eski Yapay zekâya anlat (S.A.Y aynı işi formati_duzenle ile yapar)",
     formatBelgeEylemi: "d:eski Yapay zekâya anlat (S.A.Y aynı işi formati_duzenle ile yapar)", basilidanKurEylemi: "a:format_pdf_kur" },
+  "raporlar/ui/saha-eylemler.ts": { sahaEkipmanEylemi: "i:plan_ekipman_ekle" },
   "raporlar/ui/eylemler.ts": { raporSayfasiEylemi: "i:rapor_ara", kayitliOnayaGonderEylemi: "i:rapor_onaya_gonder", raporIndirmeListesiEylemi: "d:toplu indirme (PDF dosyaları tarayıcıda iner)", raporOneriKapatEylemi: "d:ekranın öneri şeridi", raporOlusturEylemi: "i:rapor_ac", takipAcEylemi: "i:rapor_takip_ac",
     raporKaydetEylemi: "i:rapor_yaz", onayaGonderEylemi: "i:rapor_onaya_gonder", raporSilEylemi: "i:rapor_sil", cihazEkleEylemi: "i:rapor_yaz", cihazKaldirEylemi: "i:rapor_yaz",
     raporKunyeGuncelleEylemi: "i:plan_kunye_guncelle", fotoEkleEylemi: "i:rapor_foto_ekle", okumaFotografiEkleEylemi: "a:fotograflari_oku", fotoOkuEylemi: "a:fotograflari_oku",
@@ -63,7 +64,7 @@ export const KAPSAM: Readonly<Record<string, Readonly<Record<string, string>>>> 
     /* 2026-11-05 (göç 0122): probata sign ile imza — e-imzanın kendisi (karar 6) */
     signImzalaEylemi: "d:e-imza (imza PDF'i hazırlama)", signYenileEylemi: "d:e-imza (imza PDF'i hazırlama)", signIptalEylemi: "d:e-imza (imza PDF'i hazırlama)", signTopluEylemi: "d:e-imza (imza PDF'i hazırlama)", signTopluAdresiEylemi: "d:e-imza (imza PDF'i hazırlama)",
     revizeIsteEylemi: "i:revize_iste", revizeIstegiGeriCekEylemi: "i:revize_istegi_geri_cek" },
-  "say-chat/ui/eylemler.ts": { sohbetEylemi: "i:chat_oku", isaretGeriAlEylemi: "i:chat_isle" },
+  "say-chat/ui/eylemler.ts": { sohbetEylemi: "i:chat_oku", isaretGeriAlEylemi: "i:chat_isle", sahaPlanlariEylemi: "d:çevrimdışı paket (cihaz içi)" },
   "say/ui/eylemler.ts": { sayDurumEylemi: "d:S.A.Y'ın kendisi", sayGecmisEylemi: "d:S.A.Y'ın kendisi", sayRaporEylemi: "d:S.A.Y'ın kendisi", sayOneriEylemi: "d:S.A.Y'ın kendisi",
     sayTemizleEylemi: "d:S.A.Y'ın kendisi", kosulKabulEylemi: "d:S.A.Y'ın kendisi (koşul kabulü kullanıcının tıklaması)" },
   "sozlesmeler/ui/belge-eylemler.ts": { sozlesmeDoldurEylemi: "i:sozlesme_doldur", sozlesmeGonderEylemi: "a:pdf_gonder" },

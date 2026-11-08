@@ -132,7 +132,7 @@ uygula. Her madde ZOR KAZANILDI — hepsinin arkasında canlıda yaşanmış bir
     (b) tek denetim turu: ikinci bağımsız denetim turu açılmaz, düzeltme CI ve kendi okumamla;
     (c) dosya gerektiği kadar okunur: önce grep / başlık, sonra ilgili satır aralığı (0.1 ve 0.13'ün TAM okuma şartı yalnız orada sayılan dosyalara);
     (d) komut çıktısı kırpılır (tail / grep / sayım), tam test döküntüsü bağlama alınmaz;
-    (e) CI beklenirken yoklama yok — tek arka plan bekleyişi; ekran görüntüsü yalnız gözle doğrulama gerekiyorsa;
+    (e) CI 0.17(e)'deki gibi beklenir (kısa çıktılı, sık yoklama; 2026-11-08 değişti, eski "yoklama yok" kalktı); ekran görüntüsü yalnız gözle doğrulama gerekiyorsa;
     (f) reisim'e yazılan metin kısa ve düz (12); aynı bilgi iki kez anlatılmaz.
 
 16. ⛔⛔ **PROJEYE VE ORTAMA HAKİM OL — DENEME YANILMA YOK** (reisim 2026-10-25: *"koda ve yazılıma hakim olman gerekirdi … projeye hakim
@@ -154,7 +154,11 @@ uygula. Her madde ZOR KAZANILDI — hepsinin arkasında canlıda yaşanmış bir
     bütün test kümesinin yeri CI, CLAUDE.md §5);
     (c) arka plana alırken beklenen süre söylenir; süre sınırı dolup komut öldüyse bu bir sonuçtur: nedeni bulunur, aynı komut yeniden başlatılmaz;
     (d) "iş bitince …" (PC kapat dahil) sözü verilmiş işte sınır en sıkı tutulur, tamamlanamayan adım ölçümsüz kalsa da yazılır ve söz yerine getirilir; reisim'i
-    bekletecek tek durum yalnız onun verebileceği bir karardır.
+    bekletecek tek durum yalnız onun verebileceği bir karardır;
+    (e) **CI ve yayın sık kontrol edilir** (reisim 2026-11-08: *"40 dakika çok sürekli testi kontrol et yine takılabilir"*): tek uzun bekleyişe bırakılmaz; birkaç dakikada
+    bir (Monitor ile, en sık 60 sn) iş iş durum okunur, her satır kısa; **ilk kırmızı işte bütün koşu beklenmez**, günlüğü hemen okunur ve düzeltmeye geçilir; bir iş olağan
+    süresini aştıysa takılı sayılır, durdurulur ve nedenine bakılır;
+    (f) "bekliyorum" denip sessiz kalınmaz: bekleme başlarken ne beklendiği ve en geç ne zaman biteceği söylenir, durum değişince reisim'e kısaca yazılır.
 
 ## 1 · SORULUR / SORULMAZ
 - ⛔ **SORMA** (mevcut düzene uy): mimari desen, kök adı, dal düzeni, adlandırma, 4 ayna,

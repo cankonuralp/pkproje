@@ -276,7 +276,7 @@ test("saha listesi: rapor açılır ve yazılır (Uygun / Değil, sonuç, saatle
   const b = liste[0]!, secilen = b.gruplar[0]!.maddeler[0]!;
   const r2 = tamam(await ac(FA.den1, { plan: id, ekipman: e2, sonuc: "degil", maddeler: [secilen.id], not: "Aşınmış" }));
   const s2 = (await sr(FA.den1, r2.id))!;
-  assert.deepEqual(s2.cevaplar.madde[secilen.id], { c: b.cevaplar[1], not: "Aşınmış" });
+  assert.deepEqual(s2.cevaplar.madde[secilen.id], { c: b.cevaplar[1], not: "Aşınmış", foto: 0 });
   assert.equal(s2.cevaplar.sonuc, "uygun_degil");
   assert.equal(s2.tarih.bas, s1.tarih.bit, "sonraki rapor öncekinin bitişinden başlar (çakışma yok)");
   assert.deepEqual(await ac(FA.den1, { plan: id, ekipman: e1, sonuc: "uygun" }), { durum: "red", neden: "Bu ekipmanın bu planda raporu var." }, "ikinci rapor açılmaz");
