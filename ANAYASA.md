@@ -144,6 +144,18 @@ uygula. Her madde ZOR KAZANILDI — hepsinin arkasında canlıda yaşanmış bir
     öğrenilir (grep + ilgili aralık); tahminle yazılmaz, aynı işi yapan ikinci yardımcı açılmaz;
     (c) bilmediğim bir şey çıkarsa deneme yerine önce bu dosyalara bakılır; yine de yoksa reisim'e açıkça "bilmiyorum" denir.
 
+17. ⛔⛔ **SÜRESİZ BEKLEME YOK — HER KOMUTUN BİTİŞİ GARANTİ** (reisim 2026-11-08: *"saatlerdir açık kalmış pc testler muhtemelen bitti ama sen
+    bakmadığın için bekledik … bu durumun tekrarlanmaması için anayasaya madde ekle"*; olay: arka plandaki `node --test` süzgeci veritabanı isteyen
+    `tests/firma-vt.test.ts`'i ayıklayamadı, test kilitlendi, süre sınırı olmadığı için komut 7 saat bitmedi; ben bitiş bildirimini bekledim, reisim'in PC'si
+    "iş bitince kapat" sözüyle açık kaldı). Arka plan komutu bitmezse bildirim gelmez ve beni kimse uyandırmaz; bu yüzden:
+    (a) kilitlenebilen her komut **sert süre sınırıyla** başlatılır: `timeout <sn> komut` (süre dolunca süreç ölür, bildirim gelir); `node --test` ayrıca
+    `--test-timeout=<ms>`; sınırsız komut başlatılmaz, ön planda da arka planda da;
+    (b) PC'de test listesi **süzgeçle tahmin edilmez**, dosya adlarıyla açıkça yazılır: yalnız işe değen saf testler (veritabanı isteyen test PC'de kilitlenir;
+    bütün test kümesinin yeri CI, CLAUDE.md §5);
+    (c) arka plana alırken beklenen süre söylenir; süre sınırı dolup komut öldüyse bu bir sonuçtur: nedeni bulunur, aynı komut yeniden başlatılmaz;
+    (d) "iş bitince …" (PC kapat dahil) sözü verilmiş işte sınır en sıkı tutulur, tamamlanamayan adım ölçümsüz kalsa da yazılır ve söz yerine getirilir; reisim'i
+    bekletecek tek durum yalnız onun verebileceği bir karardır.
+
 ## 1 · SORULUR / SORULMAZ
 - ⛔ **SORMA** (mevcut düzene uy): mimari desen, kök adı, dal düzeni, adlandırma, 4 ayna,
   lazy-load, `stampTouch`, kabuk çeklisti, entegrasyon bağlantıları. Reisim: *"sorman bile hata."*

@@ -25,7 +25,7 @@ import type { OnBilgiVerisi } from "../../../belge/onbilgi.ts";
 import { hesapGonderen, personelHesaplari } from "../../../server/kimlik/hesap.ts";
 import { canDo, canDoEylem, duzey } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
-import { ekipmanEkle as ekipmanKaydet, ekipmanKilitle, ekipmanKullanimi, ekipmanlar, ekipmanPasif as ekipmanPasifYaz, ekipmanSil as ekipmanSilYaz, koduKullanan, onekliKodlar, tesisEkipmanlari, type EkipmanOzeti } from "../../ekipman/server/ekipman.ts";
+import { ekipmanEkle as ekipmanKaydet, ekipmanEtiketYaz, ekipmanKilitle, ekipmanKullanimi, ekipmanlar, ekipmanPasif as ekipmanPasifYaz, ekipmanSil as ekipmanSilYaz, koduKullanan, onekliKodlar, tesisEkipmanlari, type EkipmanOzeti } from "../../ekipman/server/ekipman.ts";
 import { kullanimMetni } from "../../../components/sil/metin.ts";
 import { turOzetleri } from "../../ekipman-turleri/server/turler.ts";
 import { musteriOzetleri, tesisMusteriIletisim } from "../../musteriler/server/musteriler.ts";
@@ -33,6 +33,7 @@ import { personelOzetleri } from "../../personel/server/personel.ts";
 import { meslek } from "../../personel/sema.ts";
 import { yayindakiBelgeFormati } from "../../rapor-format/server/belgeler.ts";
 import { ekipmanRaporuVar, mesaiDurumu, oncekiKontrol, oncekiRaporlar, planRaporlari, raporKunyeleriniYaz, takipAdaylari, type OncekiKontrol, type PlanRaporu } from "../../raporlar/server/plan-baglanti.ts";
+import { SahaEkipmanGirdisi } from "../../raporlar/saha-listesi.ts";
 import { KunyeGirdisi, kodBicimi, kodNormal, NotGirdisi, onBilgiDosyaAdi, onBilgiEpostasi, RedGirdisi, SayEkipmanGirdisi, siradakiKod, TAMAMLANDI_RAPOR, YeniEkipmanGirdisi, type KodTuru, type PlanDurumu } from "../sema.ts";
 import { bugunTr, EKIP, MODUL, PLAN, PLAN_EKIPMAN, planAcabilir, planKarti, UUID, type Kisi, type PlanKarti } from "./planlar.ts";
 import { adresler, kaynakEpostalari, type EpostaDurumu } from "../../../server/eposta/eposta.ts";
@@ -497,6 +498,22 @@ export async function sayEkipmanlarEkle(db: Sorgulayici, kim: Kisi, id: string, 
   return { durum: "tamam", eklenen, eklenemeyen };
 }
 
+/** 2026-11-08 Saha listesi "Yeni ekipman": aynı türden birkaç ekipman — kodları sunucu verir (sayEkipmanlarEkle ile aynı kural, tesiste sıradaki), ortak marka / model yazılır */
+export async function sahaEkipmanEkle(db: Sorgulayici, kim: Kisi, id: string, girdi: unknown): Promise<PlanYazma> {
+  const g = dogrula(SahaEkipmanGirdisi, girdi);
+  if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
+  const v = g.veri;
+  const r = await sayEkipmanlarEkle(db, kim, id, v.yerler.map((konum) => ({ tur: v.tur, konum, seri: null })));
+  if (r.durum !== "tamam") return r;
+  if (v.marka || v.model) {
+    const e = await erisim(db, kim, id);
+    for (const x of r.eklenen) await ekipmanEtiketYaz(db, iz(kim, "plan.ekipman_ekle", e!.p, x.kod), x.id, { marka: v.marka, model: v.model });
+  }
+  const ilk = r.eklenemeyen[0];
+  if (!r.eklenen.length && ilk) return { durum: "red", neden: ilk.neden };
+  return { durum: "tamam", bildirim: `${r.eklenen.length} ekipman eklendi: ${r.eklenen.map((x) => x.kod).join(", ")}${ilk ? ` · ${r.eklenemeyen.length} eklenemedi: ${ilk.neden}` : ""}` };
+}
+
 /** tesiste kayıtlı ekipmanı plana al */
 export async function kayitliEkle(db: Sorgulayici, kim: Kisi, id: string, idler: unknown): Promise<PlanYazma> {
   const e = await erisim(db, kim, id);
@@ -545,7 +562,7 @@ export async function ekipmanSil(db: Sorgulayici, kim: Kisi, id: string, ekipman
 
 /* ── RAPORLAR İÇİN (modül 14 bu işlevlerle plana bakar; yetki burada: planı görebilen) ─────────────────────────────── */
 export interface RaporPlani {
-  id: string; no: string; durum: PlanDurumu; tesisId: string; baslangic: string; atananlar: string[];
+  id: string; no: string; durum: PlanDurumu; tesisId: string; baslangic: string; bitis: string; atananlar: string[];
   /** 595 (madde 1): planın ekibi (personel kimlikleri) — raporun ikinci muayene uzmanı bunlardan seçilir */
   ekip: string[];
   /** isteyenin plandaki personeli (ekipte değilse null) */
@@ -574,7 +591,7 @@ export async function raporIcinPlan(db: Sorgulayici, kim: Kisi, planId: string):
   const { p, benim } = e;
   const guncelKunye: Kunye = { firma_adi: p.firma_adi, adres: p.adres, sgk: p.sgk, isg_no: benim?.isg_no ?? null };
   return {
-    id: p.id, no: p.no, durum: p.durum, tesisId: p.tesis_id, baslangic: p.baslangic, atananlar: e.atananlar, ekip: e.ekip.map((x) => x.personel_id),
+    id: p.id, no: p.no, durum: p.durum, tesisId: p.tesis_id, baslangic: p.baslangic, bitis: p.bitis, atananlar: e.atananlar, ekip: e.ekip.map((x) => x.personel_id),
     personelId: benim?.personel_id ?? null,
     kunye: benim?.gorulen ?? guncelKunye, kunyeSurum: benim && benim.gorulen ? benim.kunye_surum : p.kunye_surum, guncelKunye, guncelSurum: p.kunye_surum,
   };

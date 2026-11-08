@@ -62,6 +62,12 @@ export async function ekipmanEkle(db: Sorgulayici, iz: Iz, e: { tesisId: string;
   return r.id;
 }
 
+/** yeni ekipmanın ortak marka / modeli (Saha listesi). Yetki ÇAĞIRANDA. */
+export async function ekipmanEtiketYaz(db: Sorgulayici, iz: Iz, id: string, e: { marka: string | null; model: string | null }): Promise<GuncelleSonucu> {
+  const s = (await db.sorgu<{ surum: number }>("SELECT surum FROM ekipman WHERE id = $1", [id])).rows[0];
+  return guncelle(db, EKIPMAN, id, s?.surum ?? 0, { marka: e.marka, model: e.model }, iz);
+}
+
 /** pasife al / etkinleştir (silinmez; geri alınabilir). Yetki ÇAĞIRANDA. */
 export async function ekipmanPasif(db: Sorgulayici, iz: Iz, id: string, surum: number, pasif: boolean): Promise<GuncelleSonucu> {
   return guncelle(db, EKIPMAN, id, surum, { pasif: pasif ? new Date() : null }, iz);

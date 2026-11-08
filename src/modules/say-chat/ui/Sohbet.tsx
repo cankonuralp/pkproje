@@ -21,6 +21,8 @@ import { Tus } from "../../../components/tus/Tus";
 import { exifCekimZamani } from "../../../server/dosya/exif";
 import { CHAT_BELGE_BAYT, CHAT_FOTO_BAYT, CHAT_METIN_EN_COK, FOTO_EN_UZUN, FOTO_KALITE, SECIM_EN_COK, istanbulGunu, type ChatMesaji, type MesajGirdisi } from "../sema";
 import { isaretGeriAlEylemi, sohbetEylemi } from "./eylemler";
+import { SahaBandi, SahaSonucu, useSahaPlani, useSahaSonuc } from "./SahaBandi";
+import { SayOkusun } from "./SayOkusun";
 import stil from "./SayChat.module.css";
 
 const CHAT_ISLERI: readonly KuyrukTuru[] = ["chat.mesaj", "chat.sil"];
@@ -63,6 +65,7 @@ export function Sohbet({ ilk, panelde = false }: { ilk: ChatMesaji[] | null; pan
   const kuyruk = useSyncExternalStore(kuyrukAbone, kuyrukAnlik, kuyrukSunucuAnlik);
   const [mesajlar, setMesajlar] = useState<ChatMesaji[] | null>(ilk);
   const [bekleyen, setBekleyen] = useState<Awaited<ReturnType<typeof bekleyenIsler>>>([]);
+  const saha = useSahaPlani(), sahaSonuc = useSahaSonuc();
   const [yazi, setYazi] = useState("");
   const [secilen, setSecilen] = useState<Secilen[]>([]);
   const [hazirlaniyor, setHazirlaniyor] = useState(false);
@@ -214,11 +217,14 @@ export function Sohbet({ ilk, panelde = false }: { ilk: ChatMesaji[] | null; pan
   const kaba = typeof window !== "undefined" && window.matchMedia?.("(pointer: coarse)").matches;
   return (
     <div className={panelde ? stil.sohbetPanel : stil.sohbetSayfa}>
+      <SahaBandi p={saha} />
       <div className={stil.akis} ref={govde} data-sc-govde="" role="log" aria-label="Sohbet" aria-live="polite">
         {mesajlar === null && <p className={stil.bosMetin}>Yükleniyor…</p>}
         {mesajlar !== null && !gorunenler.length && <p className={stil.bosMetin}>Henüz mesaj yok.</p>}
         {oncesi > 0 && <Tus tur="ikincil" ikon="chevron-up" onClick={() => setKac((x) => x + SAYFA)}>Önceki mesajlar ({oncesi})</Tus>}
         {gorunen.map((m, i) => {
+          /* maket 5: son Saha listesinden önceki, rapora bağlanmamış fotoğraf */
+          const listedeYok = m.tur === "foto" && !m.islendi && m.durum === "gonderildi" && !!sahaSonuc && m.zaman <= sahaSonuc.zaman;
           const gun = istanbulGunu(m.zaman), ayrac = i === 0 || istanbulGunu(gorunen[i - 1]!.zaman) !== gun;
           const resim = m.yerel ?? null;
           return (
@@ -243,6 +249,7 @@ export function Sohbet({ ilk, panelde = false }: { ilk: ChatMesaji[] | null; pan
                 )}
                 {m.metin && <p className={m.tur === "yazi" ? stil.metin : stil.altyazi}>{m.metin}</p>}
                 <p className={stil.meta}>
+                  {listedeYok && <span className={stil.listedeYok}>listede yok · </span>}
                   {m.cekim && <span title="Çekim saati">çekim {m.cekim.slice(11, 16)} · </span>}
                   <time dateTime={m.zaman}>{SAAT.format(new Date(m.zaman))}</time>
                   {m.durum === "gonderildi" ? <span className={stil.gitti} aria-label="Gönderildi" title="Gönderildi"><Ikon ad="check" kucuk /></span>
@@ -266,8 +273,11 @@ export function Sohbet({ ilk, panelde = false }: { ilk: ChatMesaji[] | null; pan
             </div>
           );
         })}
+        {sahaSonuc && <SahaSonucu k={sahaSonuc} />}
       </div>
       <div className={stil.yazAlani} data-panel-alt="">
+        <SayOkusun plan={saha.plan?.no ?? null} foto={gorunenler.filter((m) => m.tur === "foto" && !m.islendi && m.durum === "gonderildi").length}
+          diger={gorunenler.filter((m) => m.tur !== "foto" && !m.islendi && m.durum === "gonderildi").length} />
         {secilen.length > 0 && (
           <ul className={stil.secilenler} aria-label="Gönderilecek fotoğraflar">
             {secilen.map((s, i) => (

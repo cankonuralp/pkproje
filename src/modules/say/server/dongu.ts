@@ -51,6 +51,8 @@ export type SayOlayi =
   | { t: "ekran"; araclar: { id: string; ad: string; komut: SayKomutu | null }[]; yenile: boolean }
   | { t: "devam"; yenile: boolean }
   | { t: "bitti"; yenile: boolean }
+  /** 2026-11-08 (K4): bu isteğin kişiye yazılan maliyeti (milyonda bir dolar; ön okuma dahil); ekran işin istekleri boyunca toplar: "Bu iş 0,03 $" */
+  | { t: "tutar"; mikro: number }
   | { t: "hata"; neden: string; yenile: boolean };
 
 /** talimat ve araçlar: konuşma boyunca aynı (düşünmeler geçerli kalsın) */

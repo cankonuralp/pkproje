@@ -221,3 +221,7 @@
 .oneriAlan input, .oneriAlan select { min-height: var(--tus-y); padding: 0 10px; border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); color: var(--yazi); font-family: inherit; font-size: var(--boy-girdi); }
 .oneriOnay { display: flex; gap: 8px; align-items: center; font-size: var(--boy-kucuk); }
 .oneriNot { margin: 0; color: var(--yazi2); font-size: var(--boy-etiket); }
+
+/* 2026-11-08 (K4): yapay zekâ işareti ve işin gerçek tutarı */
+.yzRozet { display: inline-flex; align-items: center; gap: 3px; margin: 0; font-size: var(--boy-etiket); font-weight: var(--kal-etiket); color: var(--uyari-yazi); }
+.tutar { align-self: flex-start; color: var(--yazi2); font-size: var(--boy-etiket); font-weight: var(--kal-etiket); }

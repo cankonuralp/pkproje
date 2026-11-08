@@ -71,7 +71,7 @@ async function onceIndir(paket: PaketEylemi, zorla = false): Promise<void> {
     const p = await paket();
     if (!p) return;
     /* 405: plan başına yeni rapor sayfası da (bağlantısız rapor açılabilsin) */
-    for (const a of ["/planlar", ...p.planlar.flatMap((x) => [`/planlar/${x.id}`, `/raporlar/yeni/${x.id}`]), ...p.raporlar.map((x) => `/raporlar/${x.id}`)]) {
+    for (const a of ["/planlar", ...p.planlar.flatMap((x) => [`/planlar/${x.id}`, `/raporlar/yeni/${x.id}`, `/raporlar/saha/${x.id}`]), ...p.raporlar.map((x) => `/raporlar/${x.id}`)]) {
       if (!bagliMi()) return;
       await sayfaIndir(a);
     }

@@ -50,6 +50,12 @@ export function SayChat() {
     window.addEventListener("probata-saychat-ac", f);
     return () => window.removeEventListener("probata-saychat-ac", f);
   });
+  /* Saha listesi / rapora geçilirken panel kapanır (telefonda tam ekran, sayfanın üstünde kalmasın) */
+  useEffect(() => {
+    const f = () => setAcik(false);
+    window.addEventListener("probata-saychat-kapat", f);
+    return () => window.removeEventListener("probata-saychat-kapat", f);
+  }, []);
   /* S.A.Y ile aynı yer: S.A.Y açılınca kapanır */
   useEffect(() => {
     const f = (e: Event) => { if ((e as CustomEvent<string>).detail === "say") setAcik(false); };

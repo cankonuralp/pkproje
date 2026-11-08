@@ -284,3 +284,29 @@ test("405 yeni rapor: tek açılış işi; işleri rapor açılmadan gitmez; ayn
   assert.deepEqual(goruneler[0], [GERCEK, GERCEK], "olay anında ekran bekleyenleri gerçek kimlikle görür");
   (globalThis as unknown as { window: EventTarget }).window.removeEventListener("probata-islem", dinle);
 });
+
+/* 2026-11-08 Saha listesi: rapor.saha rapor.olustur gibi — işleri rapor açılmadan gitmez, aynı planın kabulünü bekler, gerçek kimliğe bağlanır; grup TEK ADIMDA görünür (kuyrugaTopluEkle) */
+test("rapor.saha: toplu ekleme tek adımda; fotoğrafı rapor açıldıktan sonra gerçek kimlikle gider; rapor açılamazsa fotoğraf gitmez", async () => {
+  await sakin(); await bosalt();
+  const G1 = "55555555-5555-4555-8555-555555555551", G2 = "55555555-5555-4555-8555-555555555552", GERCEK = "66666666-6666-4666-8666-666666666666";
+  istekler = [];
+  cevap = (g) => json(g.tur === "rapor.saha" ? { tekrar: false, sonuc: { durum: "tamam", id: GERCEK, bildirim: "x", surum: { once: 0, sonra: 2 } } } : { tekrar: false, sonuc: { durum: "tamam", bildirim: "f", surum: { once: 2, sonra: 3 } } });
+  await K.kuyrugaTopluEkle([
+    { tur: "rapor.saha", kayit: G1, surum: 0, girdi: { plan: "p", ekipman: "e" }, ad: "A raporu", yer: "p|e" },
+    { tur: "rapor.foto", kayit: G1, surum: 0, girdi: { bolum: "f", madde: null, ad: "a.jpg", veri: "AAAA" }, ad: "A · fotoğraf", yer: "f|" },
+  ]);
+  await sakin();
+  assert.deepEqual(istekler.map((g) => [g.tur, g.kayit]), [["rapor.saha", G1], ["rapor.foto", GERCEK]], "fotoğraf gerçek kimlikle");
+  assert.deepEqual(K.kuyrukAnlik().isler, [], "kuyruk boş");
+  istekler = [];
+  cevap = () => json({ tekrar: false, sonuc: { durum: "red", neden: "Plan günü gelmedi." } });
+  await K.kuyrugaTopluEkle([
+    { tur: "rapor.saha", kayit: G2, surum: 0, girdi: { plan: "p", ekipman: "e2" }, ad: "B raporu", yer: "p|e2" },
+    { tur: "rapor.foto", kayit: G2, surum: 0, girdi: { bolum: "f", madde: null, ad: "b.jpg", veri: "AAAA" }, ad: "B · fotoğraf", yer: "f|" },
+  ]);
+  await sakin();
+  assert.deepEqual(istekler.map((g) => g.tur), ["rapor.saha"], "rapor açılmadan fotoğraf gitmez");
+  const x = K.kuyrukAnlik().isler.find((y) => y.tur === "rapor.saha")!;
+  assert.deepEqual([x.durum, x.ileti], ["hata", "Plan günü gelmedi."], "neden görünür");
+  await bosalt();
+});

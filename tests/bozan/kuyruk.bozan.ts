@@ -125,3 +125,17 @@ test("7) 405: gerçek kimliğe bağlama ekrana duyurulmazsa yeni rapor ekranı b
   await K.kuyrukGonder();
   assert.deepEqual(gorunen, [GECICI], "bozuk: olay anında ekran bekleyen kaydı eski (geçici) kimlikle gördü");
 });
+
+test("2026-11-08: rapor.saha'nın fotoğrafı açılış beklemeden giderse geçici kimlikle gider (sunucuda böyle rapor yok)", async () => {
+  const K = await bozuk('        if (x.tur !== "rapor.saha" && bellek.some((y) => y.tur === "rapor.saha" && y.kayit === x.kayit)) continue;\n', "");
+  K.kuyrukYazani("etiketDeneme00000000000");
+  const GECICI = "11111111-1111-4111-8111-111111111112";
+  const giden: { tur: string; kayit: string }[] = [];
+  cevap = (g) => { giden.push({ tur: (g as unknown as { tur: string }).tur, kayit: g.kayit }); return json({ sonuc: { durum: "red", neden: "Plan günü gelmedi." } }); };
+  await K.kuyrugaTopluEkle([
+    { tur: "rapor.saha", kayit: GECICI, surum: 0, girdi: {}, ad: "A", yer: "p|e" },
+    { tur: "rapor.foto", kayit: GECICI, surum: 0, girdi: {}, ad: "F", yer: "f|" },
+  ]);
+  await sakin(K);
+  assert.ok(giden.some((x) => x.tur === "rapor.foto" && x.kayit === GECICI), "bozuk: fotoğraf rapor açılmadan geçici kimlikle gitti");
+});

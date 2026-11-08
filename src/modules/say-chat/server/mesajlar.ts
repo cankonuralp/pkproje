@@ -126,6 +126,19 @@ export async function isaretle(db: Sorgulayici, kim: Kisi, idler: readonly strin
   return n;
 }
 
+/** 2026-11-08 Saha listesi: sohbetteki fotoğrafların içeriği (işlenmemiş, dosyası duran; RLS: yalnız kişinin kendi sohbeti) */
+export async function sahaFotolari(db: Sorgulayici, depo: Depo, cihazIdler: readonly string[]): Promise<{ cihaz: string; ad: string; bayt: Uint8Array }[]> {
+  const l = (await db.sorgu<{ cihaz_id: string; anahtar: string; ad: string }>(
+    `SELECT m.cihaz_id::text, d.anahtar, d.ad FROM say_chat_mesaj m JOIN dosya d ON d.id = m.dosya
+     WHERE m.cihaz_id::text = ANY($1::text[]) AND m.tur = 'foto' AND m.islendi IS NULL AND m.dosya_silindi IS NULL AND d.modul = $2 AND d.cop IS NULL`, [cihazIdler, DOSYA_SAY_CHAT])).rows;
+  return Promise.all(l.map(async (x) => ({ cihaz: x.cihaz_id, ad: x.ad, bayt: await depo.oku(x.anahtar, db) })));
+}
+/** fotoğrafı rapora konan mesajlar işlendi (etiket "→ plan · 1 rapor"; işareti geri alınır) */
+export async function sahaFotolariIsaretle(db: Sorgulayici, kim: Kisi, cihazIdler: readonly string[], plan: { id: string; no: string }): Promise<void> {
+  const idler = (await db.sorgu<{ id: string }>("SELECT id::text FROM say_chat_mesaj WHERE cihaz_id::text = ANY($1::text[])", [cihazIdler])).rows.map((x) => x.id);
+  await isaretle(db, kim, idler, plan, 1);
+}
+
 /** işaretin geri alınması — aynı işlemle (aynı an, aynı plan) işaretlenen bütün mesajlar; cihazId: o işlemdeki herhangi bir mesaj. Dönen: geri alınan sayısı */
 export async function isaretGeriAl(db: Sorgulayici, kim: Kisi, cihazId: string): Promise<number> {
   const m = await mesajOku(db, cihazId);

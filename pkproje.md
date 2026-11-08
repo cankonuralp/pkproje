@@ -2527,6 +2527,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+
+- **2026-11-08 — SAHA LİSTESİ (S.A.Y Chat):** reisim: *"peki say chatte bu ayrımı kullanıcı nasıl fark edecek, say asistana oku demediği sürece okumaz ve sonuçta token gitmez, ama rapor oluşturtuma rapor açıp tek tek ekipman için kontrol etmekten çok farksız değil daha hızlı olabilir"*; sunum 4ApGDVAfUgvm8C5nTSRVbh sürüm 2, *"yap"* (K1–K6 önerilerle). Sohbet hiç yapay zekâ kullanmaz; raporlar Saha listesinden ücretsiz açılır (satırda Uygun / Değil, kalanları tek tuş; işaretsiz satırın raporu açılmaz; bağlantısız çalışır; yeni ekipman bağlantı ister). Yapay zekâ yalnız işaretli "S.A.Y okusun" tuşu ve S.A.Y Asistan; tuşta tahmini tutar, iş bitince gerçek tutar. Saha listesi sohbete bant ile bağlı (menüde yok); makettekinden tek fark: "+" menüsü yok, fotoğraf ve belge tuşları sohbette duruyor, Yeni ekipman listenin içinde.
 - 2026-11-07 (S.A.Y MALİYET + SADE BİLDİRİM — reisim: "bu açıklama çok karmaşık daha sade … alt alta önemli noktalar kalın harflerle", "10 cent çok büyük
   maliyet … önlemlerini al ve uygula"): canlı V25 koşusu (12 sohbet mesajı → 5 taslak rapor) 24 istek 0,1004 $; işin kendisi 13 istek 0,033 $, kalan 11 istek
   0,067 $ bitiş denetiminin iki turu ve her istekte kırılan önbellek. Neden: istem 80 bini geçince hizmetin araç sonucu temizlemesi konuşma her istekte tam

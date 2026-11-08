@@ -10,7 +10,7 @@
 > Alan bilgisi ve ürün kurgusu: `pkproje.md`. **Aktarım 2026-09-22'de tamamlandı, klasör kaldırıldı** (reisim:
 > *"aktardık ve bitti"*) — dosyalar artık proje kökünde, bu projenin kendi kuralları.
 
-## 0 · Her oturumun başında (anayasa 0.1 + 0.13 + 0.14 + 0.15)
+## 0 · Her oturumun başında (anayasa 0.1 + 0.13 + 0.14 + 0.15 + 0.17)
 1. `ANAYASA.md` ve `TASARIM-KALIBI.md` `cat` ile **TAM**; `pkproje.md`'nin §0–§3'ü ve §11'in son beş girdisi (öteki bölümler işe dokununca — 0.13).
    ⛔ **Her yeni istekte sıra (0.14):** anayasa → **uygun modeli öner** (Haiku / Sonnet / Opus, tek satır gerekçe) → reisim kabul ederse maket /
    sunum → kararlar → kod ve teslim. ⛔ **Token tasarrufu (0.15):** ajan / Workflow yok, tek denetim turu, dosyanın gerekeni, kırpılmış çıktı.
@@ -615,6 +615,11 @@ pkproje/
                             say_kapanis_firma (is/gece.ts sayKapanisIsi); kapanan konuşmanın notu yz_kapanis (soruyuEkle başa koyar), hizmet dosyaları
                             yz_silinecek_dosya (uygulama siler); temizle tuşu hata yakalar (say.temizle), Ar-Ge kaydı düşerse temizleme durmaz (say.arge) ·
                             kilit say.test (PG) 60 dakika kapanışı
+  SAHA LİSTESİ               (2026-11-08; sunum claude.ai 4ApGDVAfUgvm8C5nTSRVbh sürüm 2, K1–K6 önerilerle — reisim: "yap"): YAPAY ZEKÂSIZ, ÜCRETSİZ rapor. /raporlar/saha/<plan> (raporlar/ui/SahaListesi.tsx; paket
+                            yeniRaporPaketi; sayfa önceden iner, public/sw.js) — satır başına Uygun / Değil (madde + not), fotoğraf (çek ya da sohbetten), "Kalanları uygun işaretle"; işaretsiz satırın raporu açılmaz.
+                            raporlar/saha-listesi.ts (saf) · server/saha-liste.ts sahaRaporuAc → kuyruk "rapor.saha" (rapor.olustur gibi; kuyrugaTopluEkle grubu tek adımda) · Yeni ekipman plan-ici.ts sahaEkipmanEkle (bağlantı ister) ·
+                            sohbette bant + özet say-chat/ui/SahaBandi.tsx (seçim say-chat/saha.ts bantPlani; menüde yok) · TEK işaretli tuş say-chat/ui/SayOkusun.tsx "S.A.Y okusun · ≈ tutar" → olay probata-say-komut → S.A.Y;
+                            iş bitince "Bu iş 0,03 $" (api/say aylık kullanımın farkı, olay tutar) · kilit saha-listesi, kuyruk, raporlar (PG), bozan saha-listesi, kuyruk; e2e saha-listesi.spec
   src/modules/say-chat/     S.A.Y CHAT — KİŞİSEL SOHBET (2026-11-07 yeniden; sunum claude.ai 2PiEskE9jDqF5kSefutRBC — reisim "Evet, önerilerle"; göç 0123
                             say_chat_mesaj — RLS firma + kişi, mesaj değişmez (tetik), eski say_chat_kayit taşındı, say_chat_kayit / say_chat_ayar KALKTI):
                             sema.ts (MesajGirdisi, ChatOku / ChatIsle girdileri, kararlar: blok 2 saat, işlenmiş dosya 30 gün, fotoğraf 2400 px %85) · kapsam.ts

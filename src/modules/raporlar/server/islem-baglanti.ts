@@ -6,14 +6,16 @@
    yalnız sürüm KENDİ fotoğrafıyla değiştiyse yeni sürüme taşır — arada başkası değiştirdiyse çakışma yine görünür.
    405: bağlantısız açılan YENİ rapor (rapor.olustur) — kayıt cihazın geçici kimliği; rapor raporOlustur ile açılır (plan günü, günlük süre, yetki,
    ekipmanın bu planda raporu var mı aynen); sonuçta gerçek kimlik ve sürüm döner, cihaz bekleyen işleri o kimliğe bağlar.
-   542: okuma fotoğrafı da (girdi.okuma) bağlantısız eklenir — S.A.Y'a "fotoğrafları oku ve gir" deyince okunur. */
+   542: okuma fotoğrafı da (girdi.okuma) bağlantısız eklenir — S.A.Y'a "fotoğrafları oku ve gir" deyince okunur.
+   2026-11-08 SAHA LİSTESİ (rapor.saha): satır başına rapor — rapor.olustur gibi geçici kimlikle; rapor açılır ve aynı işlemde yazılır (saha-liste.ts). */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import type { Depo } from "../../../server/dosya/depo.ts";
 import { FotoIslemGirdisi, OlusturIslemGirdisi } from "../sema.ts";
 import { okumaFotografiSakla } from "./foto-oku.ts";
 import { fotoEkle, onayaGonder, raporKaydet, raporOlustur, type Kisi, type RaporYazma } from "./raporlar.ts";
+import { sahaRaporuAc } from "./saha-liste.ts";
 
-export const RAPOR_ISLEM_TURLERI = ["rapor.kaydet", "rapor.gonder", "rapor.foto", "rapor.olustur"] as const;
+export const RAPOR_ISLEM_TURLERI = ["rapor.kaydet", "rapor.gonder", "rapor.foto", "rapor.olustur", "rapor.saha"] as const;
 export type RaporIslemTuru = (typeof RAPOR_ISLEM_TURLERI)[number];
 /** fotoğrafta: rapor hangi sürümden hangisine geçti (cihaz bekleyen işlerini buna göre taşır) */
 export type RaporIslemSonucu = RaporYazma | (Extract<RaporYazma, { durum: "tamam" }> & { surum: { once: number; sonra: number } });
@@ -35,6 +37,11 @@ export async function raporIslemi(db: Sorgulayici, dosya: { depo: Depo; firmaId:
     const y = await raporOlustur(db, kim, o.data.plan, o.data.ekipman);
     if (y.durum !== "tamam") return y;
     /* cihazdaki yeni raporun işleri sürüm 0'dan yazıldı: açılan raporun sürümüne taşınır */
+    return { ...y, surum: { once: 0, sonra: (await raporGuncelSurum(db, y.id)) ?? 0 } };
+  }
+  if (tur === "rapor.saha") {
+    const y = await sahaRaporuAc(db, dosya, kim, girdi);
+    if (y.durum !== "tamam") return y;
     return { ...y, surum: { once: 0, sonra: (await raporGuncelSurum(db, y.id)) ?? 0 } };
   }
   const g = FotoIslemGirdisi.safeParse(girdi);

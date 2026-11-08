@@ -4,7 +4,8 @@
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { isaretGeriAl, sohbet } from "../server/mesajlar";
-import type { ChatMesaji } from "../sema";
+import { sahaPlanlari, type SahaPlani } from "../../planlar/server/cevrimdisi";
+import { istanbulGunu, type ChatMesaji } from "../sema";
 
 async function oturum() {
   if (!(await ayniKoken())) return "İstek reddedildi. Sayfayı yenileyip yeniden deneyin.";
@@ -15,6 +16,12 @@ async function oturum() {
 export async function sohbetEylemi(): Promise<{ durum: "tamam"; mesajlar: ChatMesaji[] } | { durum: "red"; neden: string }> {
   const o = await oturum(); if (typeof o === "string") return { durum: "red", neden: o };
   return { durum: "tamam", mesajlar: await oturumIslemi(o, (db) => sohbet(db, o)) };
+}
+
+/** 2026-11-08 bant (K6): kişinin rapor açabileceği planları; oturum yoksa null */
+export async function sahaPlanlariEylemi(): Promise<SahaPlani[] | null> {
+  const o = await oturum(); if (typeof o === "string") return null;
+  return oturumIslemi(o, (db) => sahaPlanlari(db, o, istanbulGunu(new Date().toISOString())));
 }
 
 /** "işlendi" etiketinde Geri al — aynı işaretle işaretlenen bütün mesajlar */

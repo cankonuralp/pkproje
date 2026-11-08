@@ -12,6 +12,20 @@ export const PAKET_GUN = 7;
 /** önceden inen rapor sayfası en çok (402: 100'den indi — her açılışta sunucuda sayfa çizimi; sahada bir haftada açık Yeni rapor bundan azdır) */
 export const RAPOR_EN_COK = 50;
 
+/** 2026-11-08 S.A.Y Chat bandı (K6): kişinin ekibinde olduğu, rapor açılabilecek planlar + raporu açılmamış ekipman sayısı (seçim: say-chat/saha.ts bantPlani) */
+export interface SahaPlani { id: string; no: string; tesis: string; baslangic: string; bitis: string; kalan: number }
+export async function sahaPlanlari(db: Sorgulayici, kim: { id: string }, bugun: string): Promise<SahaPlani[]> {
+  const ben = await hesabinPersoneli(db, kim.id);
+  if (!ben) return [];
+  return (await db.sorgu<SahaPlani>(
+    `SELECT p.id::text, p.no, t.ad AS tesis, p.baslangic::text, p.bitis::text,
+       (SELECT count(*)::int FROM plan_ekipman pe JOIN ekipman x ON x.id = pe.ekipman_id WHERE pe.plan_id = p.id AND x.pasif IS NULL
+          AND NOT EXISTS (SELECT 1 FROM rapor r WHERE r.plan_id = p.id AND r.ekipman_id = pe.ekipman_id AND r.silindi IS NULL)) AS kalan
+     FROM plan p JOIN plan_ekip e ON e.firma_id = p.firma_id AND e.plan_id = p.id JOIN tesis t ON t.id = p.tesis_id
+     WHERE e.personel_id = $1 AND p.durum IN ('kabul', 'denetimde') AND p.baslangic <= $2::date + $3::int
+     ORDER BY p.baslangic DESC, p.no DESC LIMIT 20`, [ben, bugun, PAKET_GUN])).rows;
+}
+
 export interface CevrimdisiPaketi { planlar: { id: string; no: string }[]; raporlar: { id: string; no: string }[] }
 
 export async function cevrimdisiPaketi(db: Sorgulayici, kim: { id: string }, bugun: string): Promise<CevrimdisiPaketi> {
