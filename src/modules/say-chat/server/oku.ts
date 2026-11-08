@@ -159,13 +159,7 @@ export async function chatIsle(db: Sorgulayici, kim: Kisi & Parameters<typeof pl
     : kapsamSec(kapsamMesajlari(l), kapsam).secilen;
   if (v.geri_al) {
     let n = 0;
-    const gorulen = new Set<string>();
-    for (const m of secilen) {
-      const anahtar = m.islendi?.toString() ?? "";
-      if (gorulen.has(anahtar)) continue;
-      gorulen.add(anahtar);
-      n += await isaretGeriAl(db, kim, m.cihaz_id);
-    }
+    for (const m of secilen) n += await isaretGeriAl(db, kim, m.cihaz_id);
     return { durum: "tamam", adet: n, no: p.no };
   }
   return { durum: "tamam", adet: await isaretle(db, kim, secilen.map((m) => m.id), { id: p.id, no: p.no }, v.rapor), no: p.no };

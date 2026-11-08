@@ -615,11 +615,6 @@ pkproje/
                             say_kapanis_firma (is/gece.ts sayKapanisIsi); kapanan konuşmanın notu yz_kapanis (soruyuEkle başa koyar), hizmet dosyaları
                             yz_silinecek_dosya (uygulama siler); temizle tuşu hata yakalar (say.temizle), Ar-Ge kaydı düşerse temizleme durmaz (say.arge) ·
                             kilit say.test (PG) 60 dakika kapanışı
-  SAHA LİSTESİ               (2026-11-08; sunum claude.ai 4ApGDVAfUgvm8C5nTSRVbh sürüm 2, K1–K6 önerilerle — reisim: "yap"): YAPAY ZEKÂSIZ, ÜCRETSİZ rapor. /raporlar/saha/<plan> (raporlar/ui/SahaListesi.tsx; paket
-                            yeniRaporPaketi; sayfa önceden iner, public/sw.js) — satır başına Uygun / Değil (madde + not), fotoğraf (çek ya da sohbetten), "Kalanları uygun işaretle"; işaretsiz satırın raporu açılmaz.
-                            raporlar/saha-listesi.ts (saf) · server/saha-liste.ts sahaRaporuAc → kuyruk "rapor.saha" (rapor.olustur gibi; kuyrugaTopluEkle grubu tek adımda) · Yeni ekipman plan-ici.ts sahaEkipmanEkle (bağlantı ister) ·
-                            sohbette bant + özet say-chat/ui/SahaBandi.tsx (seçim say-chat/saha.ts bantPlani; menüde yok) · TEK işaretli tuş say-chat/ui/SayOkusun.tsx "S.A.Y okusun · ≈ tutar" → olay probata-say-komut → S.A.Y;
-                            iş bitince "Bu iş 0,03 $" (api/say aylık kullanımın farkı, olay tutar) · kilit saha-listesi, kuyruk, raporlar (PG), bozan saha-listesi, kuyruk; e2e saha-listesi.spec
   src/modules/say-chat/     S.A.Y CHAT — KİŞİSEL SOHBET (2026-11-07 yeniden; sunum claude.ai 2PiEskE9jDqF5kSefutRBC — reisim "Evet, önerilerle"; göç 0123
                             say_chat_mesaj — RLS firma + kişi, mesaj değişmez (tetik), eski say_chat_kayit taşındı, say_chat_kayit / say_chat_ayar KALKTI):
                             sema.ts (MesajGirdisi, ChatOku / ChatIsle girdileri, kararlar: blok 2 saat, işlenmiş dosya 30 gün, fotoğraf 2400 px %85) · kapsam.ts
@@ -629,7 +624,7 @@ pkproje/
                             on-okuma-cagri.ts) + belge yükleme, ekler S.A.Y'ın eki (yz_ek.chat_mesaj; F / M no); chatOku, chatIsle) · say-islemleri.ts chat_oku
                             (Islem.once — yürütücü işlemden önce koşar; sonuç bloklu: döküm + belgeler) / chat_isle · ui/Sohbet.tsx (balonlar, gün ayraçları,
                             Cihazda / Gönderildi, fotoğraf + altyazı, belge, EXIF çekim saati, sil, işlendi etiketi → geri al) · ui/SayChat.tsx (her sayfada düğme +
-                            panel, uygulama düzeninde) · tam sayfa /planlar/sohbet (panelin "Tam sayfada aç"ından; menüde YOK — reisim 2026-11-07; servis çalışanı saklar) · kilit
+                            panel, uygulama düzeninde) · tam sayfa /planlar/sohbet (panelin "Tam sayfada aç"ından; menüde YOK — reisim 2026-11-07; servis çalışanı saklar) · 2026-11-08 üst bant ui/PlanBandi.tsx (plan seçimi, Geçmişi sil), işlenmişte çift tik + plan no, işaret yalnız o mesajdan kalkar, ui/SayOkusun.tsx (fiyatsız), plan.ts (saf); Saha listesi denendi, kaldırıldı · kilit
                             tests/say-chat-kapsam (saf), say-chat-mesaj (PG), bozan say-chat-kapsam, e2e say-chat.spec (bağlantısız sıra + chatten oku taklidi)
   src/server/eposta/        E-POSTA (432; göç 0077): eposta.ts kuyruk (alıcı başına bir satır; metin değişmez, silinmez) · saglayici.ts tek bağdaştırıcı
                             (Resend biçimi HTTP; uç PROBATA_EPOSTA_UC — anahtar yoksa bekler) · gonder.ts bekleyenleriGonder · sonra.ts (after) ·

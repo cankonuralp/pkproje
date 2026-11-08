@@ -16,11 +16,10 @@
      kimliğe bağlanır; aynı planın kabulü cihazda bekliyorsa rapor ondan sonra açılır. İşler GİRDİĞİ SIRAYLA gider (yalnız bağımlılık beklenir).
    · 2026-11-07 S.A.Y CHAT (kişisel sohbet): chat.mesaj (yazı / fotoğraf / belge — her mesaj ayrı iş, GİRDİĞİ SIRAYLA gider; saat cihazdaki yazılış anı)
      ve chat.sil (kişinin işlenmemiş mesajı). Eski saychat.* işleri (524'ün kayıt düzeni) cihazda kalmışsa bir sürüm boyunca gider; sunucu mesaj yapar.
-   · 2026-11-08 SAHA LİSTESİ (rapor.saha): satır başına rapor — rapor.olustur gibi geçici kimlikle açılır (bağımlı işleri, plan kabulü beklemesi aynı), raporu yazar.
    Depo yoksa (gizli pencere) iş yalnız bu sayfada bellekte tutulur ve söylenir. */
 import { coz, depoAc, isleriOku, isSil, isYaz, sifrele, type DepoIsi } from "./depo.ts";
 
-export type KuyrukTuru = "rapor.kaydet" | "rapor.gonder" | "rapor.foto" | "rapor.olustur" | "rapor.saha" | "plan.kabul" | "plan.red" | "chat.mesaj" | "chat.sil"
+export type KuyrukTuru = "rapor.kaydet" | "rapor.gonder" | "rapor.foto" | "rapor.olustur" | "plan.kabul" | "plan.red" | "chat.mesaj" | "chat.sil"
   | "saychat.kaydet" | "saychat.foto" | "saychat.sil";
 /** kaydın o anki hâlini taşıyan işler: aynı kayıt için tek bekleyen (fotoğraf bunlardan değil) */
 const FORM: ReadonlySet<string> = new Set(["rapor.kaydet", "rapor.gonder", "plan.kabul", "plan.red", "saychat.kaydet", "saychat.sil"]);
@@ -75,8 +74,7 @@ function yukle(): Promise<void> {
 
 /** işi kuyruğa yazar (form işiyse aynı raporun bekleyen form işinin yerine; fotoğraf eklenir) ve bağlantı varsa göndermeyi dener.
     `yer`: fotoğrafın raporda yeri ("bölüm|madde") */
-export interface KuyrukGirdisi { tur: KuyrukTuru; kayit: string; surum: number; girdi: unknown; ad: string; yer?: string | null }
-export async function kuyrugaEkle(g: KuyrukGirdisi): Promise<void> {
+export async function kuyrugaEkle(g: { tur: KuyrukTuru; kayit: string; surum: number; girdi: unknown; ad: string; yer?: string | null }): Promise<void> {
   await yukle();
   /* yeni rapor bir kez açılır (aynı geçici kimlikle ikinci iş yazılmaz) */
   if (g.tur === "rapor.olustur" && bellek.some((x) => x.tur === "rapor.olustur" && x.kayit === g.kayit)) return;
@@ -90,21 +88,6 @@ export async function kuyrugaEkle(g: KuyrukGirdisi): Promise<void> {
   else i.girdi = g.girdi;
   if (db) { await isYaz(db, i); for (const x of eski) await isSil(db, x.id); }
   bellek = [...bellek.filter((x) => !eski.includes(x)), i];
-  yayinla();
-  void kuyrukGonder();
-}
-
-/** 2026-11-08 Saha listesi: bir grup iş TEK ADIMDA görünür — gönderici yarım grubu görmez (rapor.saha gidip kimliği değişince sonradan yazılan fotoğraf geçici kimlikte kalırdı); girdikleri sırayla gider */
-export async function kuyrugaTopluEkle(l: readonly KuyrukGirdisi[]): Promise<void> {
-  await yukle();
-  const db = await depoAc(), yeni: Bellek[] = [], taban = Date.now(), zaman = new Date().toISOString();
-  for (const [k, g] of l.entries()) {
-    const i: Bellek = { id: crypto.randomUUID(), tur: g.tur, kayit: g.kayit, yazan, surum: g.surum, zaman, ad: g.ad, yer: g.yer ?? null, durum: "bekliyor", ileti: null, guncel: null, sira: taban + k,
-      iv: new Uint8Array(0), sifreli: new ArrayBuffer(0) };
-    if (db) { Object.assign(i, await sifrele(db, g.girdi)); await isYaz(db, i); } else i.girdi = g.girdi;
-    yeni.push(i);
-  }
-  bellek = [...bellek, ...yeni];
   yayinla();
   void kuyrukGonder();
 }
@@ -211,9 +194,8 @@ export async function kuyrukGonder(): Promise<number> {
         if (x.durum !== "bekliyor" || !bellek.includes(x)) continue;
         /* yeni raporun işleri rapor açılmadan gitmez (kayıt cihazın geçici kimliği) */
         if (x.tur !== "rapor.olustur" && bellek.some((y) => y.tur === "rapor.olustur" && y.kayit === x.kayit)) continue;
-        if (x.tur !== "rapor.saha" && bellek.some((y) => y.tur === "rapor.saha" && y.kayit === x.kayit)) continue;
         /* yeni rapor, aynı planın kabulü / reddi cihazda beklerken gitmez */
-        if ((x.tur === "rapor.olustur" || x.tur === "rapor.saha") && bellek.some((y) => y.tur.startsWith("plan.") && y.kayit === (x.yer ?? "").split("|")[0])) continue;
+        if (x.tur === "rapor.olustur" && bellek.some((y) => y.tur.startsWith("plan.") && y.kayit === (x.yer ?? "").split("|")[0])) continue;
         /* fotoğrafsız gönderim olmaz: raporun gidemeyen fotoğrafı varsa Onaya gönder bekler */
         if (x.tur === "rapor.gonder" && bellek.some((y) => y.kayit === x.kayit && y.tur === "rapor.foto")) {
           if (x.ileti !== ILETI.foto_bekliyor) await guncelle(x, { ileti: ILETI.foto_bekliyor });
@@ -241,7 +223,7 @@ export async function kuyrukGonder(): Promise<number> {
         if (typeof j.saatFarkiDk === "number") yayinla({ saatFarkiDk: j.saatFarkiDk });
         const s = j.sonuc;
         /* 405: yeni rapor açıldı — geçici kimlikle bekleyen işler sunucunun verdiği kimliğe */
-        const yeni = (x.tur === "rapor.olustur" || x.tur === "rapor.saha") && s.durum === "tamam" && typeof s.id === "string" ? s.id : null;
+        const yeni = x.tur === "rapor.olustur" && s.durum === "tamam" && typeof s.id === "string" ? s.id : null;
         if (s.durum === "tamam") {
           await kuyruktanCikar(x.id);
           n++;

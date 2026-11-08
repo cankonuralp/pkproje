@@ -30,7 +30,6 @@ import {
   raporListesi, raporSil, sahaRaporu, type RaporYazma,
 } from "../src/modules/raporlar/server/raporlar.ts";
 import { raporDurumYaz } from "../src/modules/raporlar/server/onay-baglanti.ts";
-import { sahaRaporuAc } from "../src/modules/raporlar/server/saha-liste.ts";
 import { formatRaporSayilari } from "../src/modules/raporlar/server/format-baglanti.ts";
 import { ayarOku, ayarYaz } from "../src/server/ayar/ayar.ts";
 import { dosyaIndirilebilir } from "../src/server/dosya/dosya.ts";
@@ -141,7 +140,6 @@ const sql = <T extends object>(firma: string, metin: string, p: unknown[] = []) 
 const ici = (k: Kisi, id: string) => a(k, (db) => planIci(db, k, id));
 const sr = (k: Kisi, id: string) => a(k, (db) => sahaRaporu(db, k, id));
 const olustur = (k: Kisi, planId: string, ekipmanId: string) => a(k, (db) => raporOlustur(db, k, planId, ekipmanId));
-const b_ = (k: Kisi, planId: string, ekipmanId: string) => kiraciIcinde(havuz, B, (db) => sahaRaporuAc(db, { depo, firmaId: B }, k, { plan: planId, ekipman: ekipmanId, sonuc: "uygun" }), { hesapId: k.id });
 const kaydet = (k: Kisi, id: string, surum: number, g: unknown) => a(k, (db) => raporKaydet(db, k, id, surum, g));
 const gonder = (k: Kisi, id: string, surum: number, g: unknown) => a(k, (db) => onayaGonder(db, k, id, surum, g));
 /* uydurma JPEG (tests/dosya.test.ts ile aynı yapı) — 312 fotoğraf */
@@ -252,36 +250,6 @@ test("rapor oluştur: yalnız plandaki denetçi, kabul edilmiş planda, plandaki
   } finally {
     tamam(await a(FA.den1, (db) => ekipmanPasif(db, FA.den1, id, e2.id, e2.surum + 1, false)));
   }
-});
-
-/* 2026-11-08 Saha listesi (sunum 4ApGDVAfUgvm8C5nTSRVbh, kurallar tests/saha-listesi.test.ts): rapor ve içerik tek işte; yapay zekâ yok */
-test("saha listesi: rapor açılır ve yazılır (Uygun / Değil, sonuç, saatler sıralı); kapılar raporOlustur'la aynı; geçersiz girdi rapor açmaz", async () => {
-  const id = await yeniPlan();
-  const ac = (k: Kisi, g: unknown) => a(k, (db) => sahaRaporuAc(db, { depo, firmaId: A }, k, g));
-  const e1 = FA.ekp["HT-A1"], e2 = FA.ekp["HT-A2"];
-  assert.equal((await ac(FA.den1, { plan: id, ekipman: e1, sonuc: "belki" })).durum, "gecersiz");
-  assert.deepEqual((await ici(FA.den1, id))!.raporlar, [], "geçersiz girdi rapor açmaz");
-  const pl = await ac(FA.plan, { plan: id, ekipman: e1, sonuc: "uygun" });
-  assert.equal(pl.durum === "red" && pl.neden, EKIPTE_DEGIL, "ekipte olmayan");
-  assert.equal((await ac(FA.den2, { plan: id, ekipman: e1, sonuc: "uygun" })).durum, "yok", "planı görmeyen");
-  const r1 = tamam(await ac(FA.den1, { plan: id, ekipman: e1, sonuc: "uygun" }));
-  const s1 = (await sr(FA.den1, r1.id))!;
-  assert.equal(s1.durum, "taslak", "taslak, gönderilmedi");
-  assert.equal(s1.cevaplar.sonuc, "uygun");
-  const liste = s1.tanim.bolumler.flatMap((b) => (b.blok === "liste" ? [b] : []));
-  assert.ok(liste.length, "formatta kontrol listesi var");
-  assert.ok(liste.every((b) => b.gruplar.every((g) => g.maddeler.every((m) => m.formul?.trim() || s1.cevaplar.madde[m.id]?.c === b.cevaplar[0]))), "bütün maddeler uygun");
-  assert.ok(s1.tarih.bas && s1.tarih.bit && s1.tarih.bit > s1.tarih.bas && s1.tarih.sonraki && s1.tarih.rapor, "saatler ve sonraki kontrol yazıldı");
-  assert.equal(s1.ekipmanBilgi.marka, "Deneme Marka", "ekipman bilgileri tesis kaydından");
-  const b = liste[0]!, secilen = b.gruplar[0]!.maddeler[0]!;
-  const r2 = tamam(await ac(FA.den1, { plan: id, ekipman: e2, sonuc: "degil", maddeler: [secilen.id], not: "Aşınmış" }));
-  const s2 = (await sr(FA.den1, r2.id))!;
-  assert.deepEqual(s2.cevaplar.madde[secilen.id], { c: b.cevaplar[1], not: "Aşınmış", foto: 0 });
-  assert.equal(s2.cevaplar.sonuc, "uygun_degil");
-  assert.equal(s2.tarih.bas, s1.tarih.bit, "sonraki rapor öncekinin bitişinden başlar (çakışma yok)");
-  assert.deepEqual(await ac(FA.den1, { plan: id, ekipman: e1, sonuc: "uygun" }), { durum: "red", neden: "Bu ekipmanın bu planda raporu var." }, "ikinci rapor açılmaz");
-  assert.equal((await b_(FB.den1, id, e1)).durum, "yok", "başka firma");
-  for (const r of [r1, r2]) tamam(await a(FA.den1, async (db) => raporSil(db, FA.den1, r.id, (await sahaRaporu(db, FA.den1, r.id))!.surum)));
 });
 
 test("ENGEL 1: ileri tarihli plana rapor açılmaz (bugün ve geçmiş açık); reddedilen plana da açılmaz", async () => {

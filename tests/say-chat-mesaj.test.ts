@@ -15,7 +15,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, test } from "node:test";
 import { bugunTr, planAc, type Kisi } from "../src/modules/planlar/server/planlar.ts";
-import { chatIslemi, chatDosyasiGorulur, mesajSil, mesajYaz, sohbet } from "../src/modules/say-chat/server/mesajlar.ts";
+import { chatIslemi, chatDosyasiGorulur, gecmisiSil, isaretGeriAl, isaretle, mesajlariOku, mesajSil, mesajYaz, sohbet } from "../src/modules/say-chat/server/mesajlar.ts";
 import { chatIsle, chatOku, chatOkuHazirla } from "../src/modules/say-chat/server/oku.ts";
 import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde, type Havuz, type Sorgulayici } from "../src/server/db/kiraci.ts";
@@ -151,4 +151,19 @@ test("eski kuyruk işleri (saychat.*) bir sürüm boyunca mesaj olur; saychat.si
   const l = await ile(A, DEN, (db) => sohbet(db, DEN));
   assert.equal(l.length, once + 2);
   assert.ok(l.some((x) => x.tur === "yazi" && x.metin === "Marka X\nSeri 12"));
+});
+
+/* 2026-11-08 reisim: "bir fotoğraftan işlendi işareti kalkınca hepsinden kalkıyor", "geçmişi silme tuşu yok o da olsun" */
+test("işaret yalnız o mesajdan kalkar; Geçmişi sil kişinin bütün mesajlarını (işlenmiş dahil) siler, başkasınınkine dokunmaz", async () => {
+  for (const [i, s] of (["11:01", "11:02", "11:03"] as const).entries()) tamam(await ile(A, DEN2, (db) => mesajYaz(db, depo, DEN2, A, randomUUID(), yazi(z(s), `deneme ${i}`))));
+  const l = await ile(A, DEN2, (db) => mesajlariOku(db, { tumu: true }));
+  assert.ok(l.length >= 3);
+  await ile(A, DEN2, (db) => isaretle(db, DEN2, l.map((x) => x.id), { id: PLAN, no: "P-0000-001" }, 1));
+  assert.equal(await ile(A, DEN2, (db) => isaretGeriAl(db, DEN2, l[0]!.cihaz_id)), 1, "tek mesaj");
+  const k = await ile(A, DEN2, (db) => sohbet(db, DEN2));
+  assert.equal(k.filter((x) => x.islendi).length, l.length - 1, "aynı anda işaretlenen öteki mesajlar işlenmiş kalır");
+  const baskasi = (await ile(A, DEN, (db) => sohbet(db, DEN))).length;
+  assert.equal(await ile(A, DEN2, (db) => gecmisiSil(db, DEN2)), l.length, "işlenmiş dahil");
+  assert.equal((await ile(A, DEN2, (db) => sohbet(db, DEN2))).length, 0);
+  assert.equal((await ile(A, DEN, (db) => sohbet(db, DEN))).length, baskasi, "başkasının sohbeti aynı");
 });

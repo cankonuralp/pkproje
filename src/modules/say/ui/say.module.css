@@ -222,6 +222,5 @@
 .oneriOnay { display: flex; gap: 8px; align-items: center; font-size: var(--boy-kucuk); }
 .oneriNot { margin: 0; color: var(--yazi2); font-size: var(--boy-etiket); }
 
-/* 2026-11-08 (K4): yapay zekâ işareti ve işin gerçek tutarı */
+/* 2026-11-08: yapay zekâ işareti */
 .yzRozet { display: inline-flex; align-items: center; gap: 3px; margin: 0; font-size: var(--boy-etiket); font-weight: var(--kal-etiket); color: var(--uyari-yazi); }
-.tutar { margin: 4px 0 0; color: var(--yazi2); font-size: var(--boy-etiket); font-weight: var(--kal-etiket); }

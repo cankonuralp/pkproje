@@ -3,7 +3,7 @@
    reddedilir. Mesaj yazma ve silme çevrimdışı kuyrukla (/api/islem "chat.mesaj" / "chat.sil"); burada yalnız okuma ve işaretin geri alınması. */
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
-import { isaretGeriAl, sohbet } from "../server/mesajlar";
+import { gecmisiSil, isaretGeriAl, sohbet } from "../server/mesajlar";
 import { sahaPlanlari, type SahaPlani } from "../../planlar/server/cevrimdisi";
 import { istanbulGunu, type ChatMesaji } from "../sema";
 
@@ -18,13 +18,19 @@ export async function sohbetEylemi(): Promise<{ durum: "tamam"; mesajlar: ChatMe
   return { durum: "tamam", mesajlar: await oturumIslemi(o, (db) => sohbet(db, o)) };
 }
 
-/** 2026-11-08 bant (K6): kişinin rapor açabileceği planları; oturum yoksa null */
+/** üst bant: kişinin planları; oturum yoksa null */
 export async function sahaPlanlariEylemi(): Promise<SahaPlani[] | null> {
   const o = await oturum(); if (typeof o === "string") return null;
   return oturumIslemi(o, (db) => sahaPlanlari(db, o, istanbulGunu(new Date().toISOString())));
 }
 
-/** "işlendi" etiketinde Geri al — aynı işaretle işaretlenen bütün mesajlar */
+/** Geçmişi sil — kişinin kendi sohbeti, bütün mesajlar (2026-11-08) */
+export async function gecmisiSilEylemi(): Promise<{ durum: "tamam"; adet: number } | { durum: "red"; neden: string }> {
+  const o = await oturum(); if (typeof o === "string") return { durum: "red", neden: o };
+  return { durum: "tamam", adet: await oturumIslemi(o, (db) => gecmisiSil(db, o)) };
+}
+
+/** mesajın menüsünde İşareti geri al — yalnız o mesaj (2026-11-08) */
 export async function isaretGeriAlEylemi(mesaj: unknown): Promise<{ durum: "tamam"; adet: number } | { durum: "red"; neden: string }> {
   const o = await oturum(); if (typeof o === "string") return { durum: "red", neden: o };
   if (typeof mesaj !== "string") return { durum: "red", neden: "Mesaj bulunamadı." };

@@ -72,7 +72,6 @@ import { Markdown } from "./Markdown";
 import { istekTani, type Istek } from "../istek";
 import { kaydedilmemisVar, useSayFormatBagi, useSayRaporBagi, type SayFormatBagi, type SayGeriAl, type SayRaporBagi } from "./baglam";
 import { sayDurumEylemi, sayGecmisEylemi, sayOneriEylemi, sayRaporEylemi, sayTemizleEylemi } from "./eylemler";
-import { tutarMetni } from "../../say-chat/saha";
 import stil from "./say.module.css";
 
 const ACIK_ANAHTARI = "probata-say-acik";
@@ -204,8 +203,8 @@ function bolumle(l: readonly SohbetEksik[]): { bolumAd: string; ilk: SohbetEksik
   return [...g.values()];
 }
 
-function Ileti({ m, tutar, rb, git, uygula, vazgec, eylem, eylemYap }: {
-  m: SohbetIletisi; tutar?: number; rb: SayRaporBagi | null; git: (e: SohbetEksik) => void; uygula: (m: SohbetIletisi) => void; vazgec: (m: SohbetIletisi) => void;
+function Ileti({ m, rb, git, uygula, vazgec, eylem, eylemYap }: {
+  m: SohbetIletisi; rb: SayRaporBagi | null; git: (e: SohbetEksik) => void; uygula: (m: SohbetIletisi) => void; vazgec: (m: SohbetIletisi) => void;
   eylem?: IslemEylemi; eylemYap: (m: SohbetIletisi, ne: "geri" | "ustune") => void;
 }) {
   if (m.kim === "ben") return <li className={`${stil.mesaj} ${stil.ben}`}>{m.ek?.ekler?.length ? <EkListesi ekler={m.ek.ekler} /> : null}{m.metin}</li>;
@@ -214,7 +213,6 @@ function Ileti({ m, tutar, rb, git, uygula, vazgec, eylem, eylemYap }: {
   return (
     <li className={`${stil.mesaj} ${stil.o}`}>
       <Markdown metin={m.metin} />
-      {tutar !== undefined && <p className={stil.tutar}>Bu iş {tutarMetni(tutar / 1_000_000)}</p>}
       {m.ek?.bekleyen?.length ? (
         <ul className={stil.bekleyen}>
           {m.ek.bekleyen.map((b) => (
@@ -284,8 +282,6 @@ export function SayAsistan() {
   const [menu, setMenu] = useState(false);
   /* 542: rapora yapılan işin eylemleri (bu sayfada), okuma ilerlemesi, eklenen fotoğrafın bölümü sorusu */
   const [islemler, setIslemler] = useState<ReadonlyMap<string, IslemEylemi>>(() => new Map());
-  /* 2026-11-08 (K4): işin gerçek tutarı (milyonda bir dolar) — bildirimin altında */
-  const [tutarlar, setTutarlar] = useState<ReadonlyMap<string, number>>(() => new Map());
   const [ilerleme, setIlerleme] = useState<string | null>(null);
   const [bolumSor, setBolumSor] = useState<{ fotolar: File[]; soru: string } | null>(null);
   /* 557: bekleme balonundaki yazı ("Düşünüyor" / "Rapora yazıyor" …), küçük hâl, sohbetin sonunda mı (en alta in tuşu) */
@@ -410,7 +406,7 @@ export function SayAsistan() {
     window.addEventListener("probata-say-oku", f);
     return () => window.removeEventListener("probata-say-oku", f);
   }, []);
-  /* 2026-11-08 (K3): S.A.Y Chat ve Saha listesindeki "S.A.Y okusun" — panel açılır, komut gider; işlendiyse preventDefault */
+  /* 2026-11-08: S.A.Y Chat'teki "S.A.Y okusun" — panel açılır, komut gider; işlendiyse preventDefault */
   useEffect(() => {
     const f = (e: Event) => { const m = (e as CustomEvent<string>).detail; if (!komutRef.current || typeof m !== "string") return; e.preventDefault(); komutRef.current(m); };
     window.addEventListener("probata-say-komut", f);
@@ -628,7 +624,7 @@ export function SayAsistan() {
     const durdur = new AbortController();
     durdurRef.current = durdur;
     let durduruldu = false;
-    let ustune: IslemEylemi["ustune"], sonSay: string | null = null, yenile = false, govde: Record<string, unknown> = { ...ilk, is }, bos = 0, tutar = 0;
+    let ustune: IslemEylemi["ustune"], sonSay: string | null = null, yenile = false, govde: Record<string, unknown> = { ...ilk, is }, bos = 0;
     try { for (;;) {
       /* geri çağırmada yazılır (nesne — denetleyici daraltmasın) */
       const d: { ekran: Extract<SayOlayi, { t: "ekran" }> | null; son: "bitti" | "devam" | "hata" | null } = { ekran: null, son: null };
@@ -641,7 +637,6 @@ export function SayAsistan() {
         } else if (x.t === "metin") setCanli((c) => c + x.d);
         else if (x.t === "dusunce") { /* gösterilmez (2026-10-26) */ }
         else if (x.t === "asama") setAsama(x.ad);
-        else if (x.t === "tutar") tutar += x.mikro;
         else {
           yenile ||= x.yenile;
           if (x.t === "ekran") d.ekran = x;
@@ -672,7 +667,6 @@ export function SayAsistan() {
     } } catch (h) { if (!durdur.signal.aborted) throw h; durduruldu = true; } finally { durdurRef.current = null; }
     if (durduruldu) { setCanli(""); setHata(null); bildir("Durdurdum. Yapılanlar kaldı; geri almak için son iletinin altındaki “Geri al” tuşunu kullanın."); }
     const id: string | null = sonSay;
-    if (id && tutar > 0) { const t = tutar; setTutarlar((x) => new Map(x).set(id, t)); }
     if (id && (geriler.length || ustune)) {
       const hepsi = [...geriler].reverse(), u = ustune;
       setIslemler((x) => new Map(x).set(id, { ...(hepsi.length ? { geriAl: () => hepsi.reduce((t, g) => t + g(), 0) } : {}), ...(u ? { ustune: u } : {}) }));
@@ -911,7 +905,7 @@ export function SayAsistan() {
             {kosulEksik && durum.kosul && <KosulKabul kosul={durum.kosul} kabulEdildi={() => void sayDurumEylemi().then((d) => { if (d) setDurum(d); })} />}
             <ol className={stil.liste} aria-live="polite" aria-busy={bekliyor || !iletiler || undefined}>
               {(iletiler ?? []).map((m, i, l) => (
-                <IletiYeri key={m.id} m={m} onceki={l[i - 1]} tutar={tutarlar.get(m.id)} rb={rb} git={git} uygula={uygula} vazgec={vazgec}
+                <IletiYeri key={m.id} m={m} onceki={l[i - 1]} rb={rb} git={git} uygula={uygula} vazgec={vazgec}
                   eylem={(rb && m.ek?.rapor === rb.id) || (fb && m.ek?.format === fb.id) ? islemler.get(m.id) : undefined} eylemYap={eylemYap} />
               ))}
             </ol>
@@ -989,9 +983,9 @@ export function SayAsistan() {
 }
 
 /** yer değişince ayraç ("Planlar", "Rapor DM-…" …) */
-function IletiYeri({ m, onceki, tutar, ...p }: {
-  m: SohbetIletisi; onceki?: SohbetIletisi; tutar?: number; rb: SayRaporBagi | null; git: (e: SohbetEksik) => void; uygula: (m: SohbetIletisi) => void; vazgec: (m: SohbetIletisi) => void;
+function IletiYeri({ m, onceki, ...p }: {
+  m: SohbetIletisi; onceki?: SohbetIletisi; rb: SayRaporBagi | null; git: (e: SohbetEksik) => void; uygula: (m: SohbetIletisi) => void; vazgec: (m: SohbetIletisi) => void;
   eylem?: IslemEylemi; eylemYap: (m: SohbetIletisi, ne: "geri" | "ustune") => void;
 }) {
-  return <>{(!onceki || onceki.yer !== m.yer) && !!m.yer && <li className={stil.yer}>{m.yer}</li>}<Ileti m={m} tutar={tutar} {...p} /></>;
+  return <>{(!onceki || onceki.yer !== m.yer) && !!m.yer && <li className={stil.yer}>{m.yer}</li>}<Ileti m={m} {...p} /></>;
 }

@@ -18,7 +18,6 @@ export const DISARIDA: Readonly<Record<string, string>> = {
   "/raporlar/[id]": "açık rapor yolu (rapor-haritasi yoldakiRapor)",
   "/raporlar/[id]/onizle": "açık rapor yolu",
   "/onaylar/[id]": "açık rapor yolu",
-  "/raporlar/saha/[plan]": "yapay zekâsız saha listesi; plan bilgisi sayfanın kendisinde",
   "/ekipman-turleri/[id]/sablon/[sid]/kurucu": "format kurucunun kendi bağlamı (taslak haritası)",
   "/ekipman-turleri/sablon/[anahtar]": "hazır şablon önizlemesi, kayıt değil",
   "/dokumanlar/kriterler/[kod]": "Bakanlık kriter belgesi, kayıt değil",

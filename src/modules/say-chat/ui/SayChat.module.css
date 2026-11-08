@@ -83,11 +83,9 @@
 }
 .balonTus:hover { background: var(--zemin2); color: var(--yazi); }
 .balonTus:focus-visible { outline: 3px solid var(--odak); outline-offset: -2px; }
-.islendi {
-  justify-self: end; display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border: 1px solid var(--kenar); border-radius: var(--r-tam);
-  background: var(--kart); color: var(--yazi); font: inherit; font-size: var(--boy-etiket); font-weight: 600; cursor: pointer;
-}
-.islendi:focus-visible { outline: 3px solid var(--odak); outline-offset: 2px; }
+.islendi { display: inline-flex; align-items: center; gap: 3px; color: var(--onay-yazi); font-weight: 600; }
+.ciftTik { display: inline-flex; }
+.ciftTik > * + * { margin-left: -9px; }
 .balonIslem { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
 
 /* yazma yeri */
@@ -134,22 +132,15 @@
   .sohbetSayfa { height: calc(100dvh - var(--ust-y) - 96px); }
 }
 
-/* 2026-11-08 Saha listesi bandı, sonuç özeti, S.A.Y okusun */
+/* 2026-11-08 üst bant (plan seçimi, Geçmişi sil), S.A.Y okusun */
 .bant { flex: none; display: grid; gap: 6px; padding: 8px 10px; background: var(--kart); border-bottom: 1px solid var(--kenar); }
 .bantSatir { display: flex; align-items: center; gap: 8px; font-size: var(--boy-kucuk); min-width: 0; }
 .bantPlan { flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.bantDegistir { flex: none; padding: 0 4px; border: 0; background: none; color: var(--yazi2); font: inherit; text-decoration: underline; cursor: pointer; }
-.bantTus { flex: none; display: inline-flex; align-items: center; gap: 2px; min-height: 32px; padding: 0 10px; border-radius: var(--r-tam); background: var(--onay-zemin); color: var(--onay-yazi); font-weight: 600; text-decoration: none; }
+.bantPlanTus { flex: 1 1 auto; display: inline-flex; align-items: center; gap: 4px; min-width: 0; min-height: 34px; padding: 0 8px; border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); color: var(--yazi); font: inherit; text-align: left; cursor: pointer; }
+.bantPlanTus:focus-visible, .bantSil:focus-visible { outline: 2px solid var(--odak); outline-offset: 1px; }
+.bantSil { flex: none; margin-left: auto; display: inline-flex; align-items: center; gap: 4px; min-height: 34px; padding: 0 8px; border: 1px solid var(--kenar); border-radius: var(--r-orta); background: none; color: var(--hata-yazi); font: inherit; cursor: pointer; }
 .bantListe { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; }
 .bantListe button { width: 100%; min-height: 34px; padding: 4px 8px; border: 1px solid var(--kenar); border-radius: var(--r-orta); background: var(--kart); color: var(--yazi); font: inherit; font-size: var(--boy-kucuk); text-align: left; cursor: pointer; }
 .bantListe button[aria-current] { border-color: var(--onay); }
-.sonuc { display: grid; gap: 6px; padding: 10px 12px; border: 1px solid var(--kenar); border-radius: var(--r-buyuk); background: var(--kart); font-size: var(--boy-kucuk); }
-.sonucBas { display: flex; align-items: flex-start; gap: 6px; }
-.sonucBas p { flex: 1 1 auto; margin: 0; min-width: 0; }
-.sonucKapat { flex: none; display: grid; place-items: center; width: 24px; height: 24px; border: 0; border-radius: 50%; background: none; color: var(--yazi2); cursor: pointer; }
-.sonuc ul { margin: 0; padding-left: 16px; display: grid; gap: 2px; }
-.sonuc ul:empty { display: none; }
-.sonucTus { justify-self: start; display: inline-flex; align-items: center; min-height: 32px; padding: 0 12px; border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); color: var(--yazi); font-weight: 600; text-decoration: none; }
 .okusun { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: var(--tus-y); padding: 0 12px; border: 1px solid var(--uyari-yazi); border-radius: var(--r-orta); background: var(--uyari-zemin); color: var(--uyari-yazi); font: inherit; font-size: var(--boy-kucuk); font-weight: 600; cursor: pointer; }
 .okusun:focus-visible { outline: 2px solid var(--odak); outline-offset: 1px; }
-.listedeYok { color: var(--uyari-yazi); }

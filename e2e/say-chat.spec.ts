@@ -122,7 +122,7 @@ test("S.A.Y Chat: bağlantısız 3 fotoğraf + 1 yazı sırası ve saati korunur
 
   /* etiket: panelde ve tam sayfada */
   const p2 = await chatAc(page);
-  await expect(p2.getByRole("button", { name: /^P-\d{4}-\d{3} · 0 rapor$/ })).toHaveCount(4, { timeout: 30_000 });
+  await expect(p2.getByTitle(/^İşlendi: P-\d{4}-\d{3}$/)).toHaveCount(4, { timeout: 30_000 });
   await page.goto(`${Y}/planlar/sohbet`);
   await hazir(page);
   await expect(page.getByRole("heading", { level: 1, name: "S.A.Y Chat" })).toBeVisible();

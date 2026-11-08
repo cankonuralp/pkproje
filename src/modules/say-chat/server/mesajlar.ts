@@ -126,29 +126,22 @@ export async function isaretle(db: Sorgulayici, kim: Kisi, idler: readonly strin
   return n;
 }
 
-/** 2026-11-08 Saha listesi: sohbetteki fotoğrafların içeriği (işlenmemiş, dosyası duran; RLS: yalnız kişinin kendi sohbeti) */
-export async function sahaFotolari(db: Sorgulayici, depo: Depo, cihazIdler: readonly string[]): Promise<{ cihaz: string; ad: string; bayt: Uint8Array }[]> {
-  const l = (await db.sorgu<{ cihaz_id: string; anahtar: string; ad: string }>(
-    `SELECT m.cihaz_id::text, d.anahtar, d.ad FROM say_chat_mesaj m JOIN dosya d ON d.id = m.dosya
-     WHERE m.cihaz_id::text = ANY($1::text[]) AND m.tur = 'foto' AND m.islendi IS NULL AND m.dosya_silindi IS NULL AND d.modul = $2 AND d.cop IS NULL`, [cihazIdler, DOSYA_SAY_CHAT])).rows;
-  return Promise.all(l.map(async (x) => ({ cihaz: x.cihaz_id, ad: x.ad, bayt: await depo.oku(x.anahtar, db) })));
-}
-/** fotoğrafı rapora konan mesajlar işlendi (etiket "→ plan · 1 rapor"; işareti geri alınır) */
-export async function sahaFotolariIsaretle(db: Sorgulayici, kim: Kisi, cihazIdler: readonly string[], plan: { id: string; no: string }): Promise<void> {
-  const idler = (await db.sorgu<{ id: string }>("SELECT id::text FROM say_chat_mesaj WHERE cihaz_id::text = ANY($1::text[])", [cihazIdler])).rows.map((x) => x.id);
-  await isaretle(db, kim, idler, plan, 1);
-}
-
-/** işaretin geri alınması — aynı işlemle (aynı an, aynı plan) işaretlenen bütün mesajlar; cihazId: o işlemdeki herhangi bir mesaj. Dönen: geri alınan sayısı */
+/** işaretin geri alınması — YALNIZ o mesaj (2026-11-08, reisim: "bir fotoğraftan işlendi işareti kalkınca hepsinden kalkıyor"); dosyası silinmiş mesaj geri alınmaz. Dönen: geri alınan sayısı */
 export async function isaretGeriAl(db: Sorgulayici, kim: Kisi, cihazId: string): Promise<number> {
   const m = await mesajOku(db, cihazId);
-  if (!m?.islendi) return 0;
+  if (!m?.islendi || m.dosya_silindi) return 0;
+  const r = await guncelle(db, MESAJ, m.id, m.surum, { islendi: null, islendi_plan: null, islendi_no: null, islendi_rapor: null },
+    { kim: kim.ad, ne: "say_chat.isle_geri", gerekce: m.islendi_no ?? undefined });
+  return r.durum === "tamam" ? 1 : 0;
+}
+
+/** Geçmişi sil (2026-11-08, reisim: "geçmişi silme tuşu yok o da olsun"): kişinin bütün mesajları (RLS: yalnız kendisininki), işlenmişler dahil; dosyaları çöpe. Dönen: silinen sayısı */
+export async function gecmisiSil(db: Sorgulayici, kim: Kisi): Promise<number> {
   let n = 0;
-  for (const x of (await db.sorgu<{ id: string; surum: number }>(
-    "SELECT id::text, surum FROM say_chat_mesaj WHERE islendi = $1 AND islendi_plan = $2 AND dosya_silindi IS NULL", [m.islendi, m.islendi_plan])).rows) {
-    const r = await guncelle(db, MESAJ, x.id, x.surum, { islendi: null, islendi_plan: null, islendi_no: null, islendi_rapor: null },
-      { kim: kim.ad, ne: "say_chat.isle_geri", gerekce: m.islendi_no ?? undefined });
-    if (r.durum === "tamam") n++;
+  for (const m of await mesajlariOku(db, { tumu: true })) {
+    if (!(await sil(db, MESAJ, m.id, { kim: kim.ad, ne: "say_chat.gecmis_sil" }))) continue;
+    if (m.dosya && !m.dosya_silindi) await dosyaCope(db, m.dosya, { kim: kim.ad, ne: "say_chat.gecmis_sil" });
+    n++;
   }
   return n;
 }
