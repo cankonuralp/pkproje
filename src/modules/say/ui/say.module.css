@@ -224,4 +224,4 @@
 
 /* 2026-11-08 (K4): yapay zekâ işareti ve işin gerçek tutarı */
 .yzRozet { display: inline-flex; align-items: center; gap: 3px; margin: 0; font-size: var(--boy-etiket); font-weight: var(--kal-etiket); color: var(--uyari-yazi); }
-.tutar { align-self: flex-start; color: var(--yazi2); font-size: var(--boy-etiket); font-weight: var(--kal-etiket); }
+.tutar { margin: 4px 0 0; color: var(--yazi2); font-size: var(--boy-etiket); font-weight: var(--kal-etiket); }

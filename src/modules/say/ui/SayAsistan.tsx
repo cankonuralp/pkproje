@@ -204,8 +204,8 @@ function bolumle(l: readonly SohbetEksik[]): { bolumAd: string; ilk: SohbetEksik
   return [...g.values()];
 }
 
-function Ileti({ m, rb, git, uygula, vazgec, eylem, eylemYap }: {
-  m: SohbetIletisi; rb: SayRaporBagi | null; git: (e: SohbetEksik) => void; uygula: (m: SohbetIletisi) => void; vazgec: (m: SohbetIletisi) => void;
+function Ileti({ m, tutar, rb, git, uygula, vazgec, eylem, eylemYap }: {
+  m: SohbetIletisi; tutar?: number; rb: SayRaporBagi | null; git: (e: SohbetEksik) => void; uygula: (m: SohbetIletisi) => void; vazgec: (m: SohbetIletisi) => void;
   eylem?: IslemEylemi; eylemYap: (m: SohbetIletisi, ne: "geri" | "ustune") => void;
 }) {
   if (m.kim === "ben") return <li className={`${stil.mesaj} ${stil.ben}`}>{m.ek?.ekler?.length ? <EkListesi ekler={m.ek.ekler} /> : null}{m.metin}</li>;
@@ -214,6 +214,7 @@ function Ileti({ m, rb, git, uygula, vazgec, eylem, eylemYap }: {
   return (
     <li className={`${stil.mesaj} ${stil.o}`}>
       <Markdown metin={m.metin} />
+      {tutar !== undefined && <p className={stil.tutar}>Bu iş {tutarMetni(tutar / 1_000_000)}</p>}
       {m.ek?.bekleyen?.length ? (
         <ul className={stil.bekleyen}>
           {m.ek.bekleyen.map((b) => (
@@ -992,5 +993,5 @@ function IletiYeri({ m, onceki, tutar, ...p }: {
   m: SohbetIletisi; onceki?: SohbetIletisi; tutar?: number; rb: SayRaporBagi | null; git: (e: SohbetEksik) => void; uygula: (m: SohbetIletisi) => void; vazgec: (m: SohbetIletisi) => void;
   eylem?: IslemEylemi; eylemYap: (m: SohbetIletisi, ne: "geri" | "ustune") => void;
 }) {
-  return <>{(!onceki || onceki.yer !== m.yer) && !!m.yer && <li className={stil.yer}>{m.yer}</li>}<Ileti m={m} {...p} />{tutar !== undefined && <li className={stil.tutar}>Bu iş {tutarMetni(tutar / 1_000_000)}</li>}</>;
+  return <>{(!onceki || onceki.yer !== m.yer) && !!m.yer && <li className={stil.yer}>{m.yer}</li>}<Ileti m={m} tutar={tutar} {...p} /></>;
 }
