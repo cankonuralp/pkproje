@@ -25,7 +25,7 @@ function sutunlar(yaz: boolean): Sutun<YaklasanSatiri>[] {
     { k: "muayene", genislik: "14%", baslik: "En yakın muayene", kart: "govde", sira: 2, hucre: (y) => <><KartEtiket>En yakın muayene</KartEtiket><span><span className={stil.sayi}>{tarihNo(y.sonraki)}</span><AltSatir uyari={y.kalan < 30}>{kalanYazi(y.kalan)}</AltSatir></span></> },
     { k: "ekipman", genislik: "18%", baslik: "Ekipman", kart: "govde", sira: 3, hucre: (y) => <><KartEtiket>Ekipman</KartEtiket><span>{y.ekipman} / {y.toplam} ekipman<AltSatir><Kirp>{y.turler.join(", ")}</Kirp></AltSatir></span></> },
     { k: "iletisim", genislik: "20%", baslik: "Aranacak kişi", kart: "govde", sira: 4, hucre: (y) => <><KartEtiket>Aranacak kişi</KartEtiket>{y.ilgili || y.tel || y.eposta
-      ? <span><Kirp>{y.ilgili ?? "—"}</Kirp>{y.tel && <AltSatir><a href={`tel:${y.tel.replace(/[^\d+]/g, "")}`}>{y.tel}</a></AltSatir>}{!y.tel && y.eposta && <AltSatir><Kirp><a href={`mailto:${y.eposta}`}>{y.eposta}</a></Kirp></AltSatir>}</span>
+      ? <span><Kirp>{y.ilgili ?? "—"}</Kirp>{y.tel && <AltSatir><a href={`tel:${y.tel.replace(/[^\d+]/g, "")}`}>{y.tel}</a></AltSatir>}{!y.tel && y.eposta && <AltSatir><a className={stil.posta2} href={`mailto:${y.eposta}`}>{y.eposta}</a></AltSatir>}</span>
       : <DegerYok>Bilgi yok</DegerYok>}</> },
     { k: "teklif", genislik: "12%", baslik: "Teklif", kart: "rozet", sira: 1, hucre: (y) => (y.teklif
       ? <span><Rozet tur={TEKLIF_DURUM[y.teklif.durum][1]}>{TEKLIF_DURUM[y.teklif.durum][0]}</Rozet><AltSatir><Link href={`/teklifler/${y.teklif.id}`}>{y.teklif.no}</Link></AltSatir></span>

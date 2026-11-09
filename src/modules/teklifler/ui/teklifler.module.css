@@ -53,3 +53,5 @@
 .postaBas dd { margin: 0; overflow-wrap: anywhere; }
 .postaGovde { margin: 0; padding: 12px; white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; }
 .belgeOnizleme { max-height: 520px; overflow: auto; border: 1px solid var(--kenar); border-radius: var(--r-orta); background: var(--zemin2); }
+/* yaklaşan muayene satırındaki e-posta: dar sütunda satır kırar (kırpma kutusu içinde bağlantı olmaz — erişilebilirlik taraması) */
+.posta2 { overflow-wrap: anywhere; }
