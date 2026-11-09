@@ -12,16 +12,17 @@ import { useUyar } from "../../../components/bildirim/Bildirim";
 import { bekleyenIsler, kuyrugaEkle, kuyrukAbone, kuyrukAnlik, kuyrukSunucuAnlik, kuyruktanCikar, yenidenDene, type KuyrukSonucOlayi, type KuyrukTuru }
   from "../../../components/cevrimdisi/kuyruk";
 import { FotoTusu } from "../../../components/foto/FotoTusu";
-import { fotografiKucult } from "../../../components/foto/kucult";
 import { DosyaAcTusu, GizliResim } from "../../../components/gizli-resim/GizliResim";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { useOnayla } from "../../../components/pencere/Onay";
 import { Pencere } from "../../../components/pencere/Pencere";
 import { Tus } from "../../../components/tus/Tus";
 import { exifCekimZamani } from "../../../server/dosya/exif";
-import { CHAT_BELGE_BAYT, CHAT_FOTO_BAYT, CHAT_METIN_EN_COK, FOTO_EN_UZUN, FOTO_KALITE, SECIM_EN_COK, istanbulGunu, type ChatMesaji, type MesajGirdisi } from "../sema";
+import { CHAT_BELGE_BAYT, CHAT_METIN_EN_COK, SECIM_EN_COK, istanbulGunu, type ChatMesaji, type MesajGirdisi } from "../sema";
+import { base64, chatFotoKucult } from "./foto";
+import { RaporModu } from "./RaporModu";
 import { gecmisiSilEylemi, isaretGeriAlEylemi, sohbetEylemi } from "./eylemler";
-import { PlanBandi, usePlanSecimi } from "./PlanBandi";
+import { PlanBandi, usePlanSecimi, useSohbetModu } from "./PlanBandi";
 import { SayOkusun } from "./SayOkusun";
 import stil from "./SayChat.module.css";
 
@@ -31,15 +32,7 @@ const SAAT = new Intl.DateTimeFormat("tr-TR", { timeZone: "Europe/Istanbul", hou
 const GUN = new Intl.DateTimeFormat("tr-TR", { timeZone: "Europe/Istanbul", day: "numeric", month: "long", year: "numeric", weekday: "long" });
 const BELGE_KABUL = ".pdf,.docx,.xlsx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 const BELGE_ADI = /\.(pdf|docx|xlsx)$/i;
-/** fotoğraf küçültme kademeleri (karar 3: ilk kademe; kuyruğun sınırını aşarsa sonraki) */
-const KADEMELER: readonly [number, number][] = [[FOTO_EN_UZUN, FOTO_KALITE], [2000, 0.8], [1600, 0.75], [1200, 0.7]];
 
-const base64 = (d: Blob) => new Promise<string>((coz, red) => {
-  const r = new FileReader();
-  r.onload = () => { const s = String(r.result); coz(s.slice(s.indexOf(",") + 1)); };
-  r.onerror = () => red(r.error ?? new Error("Dosya okunamadı."));
-  r.readAsDataURL(d);
-});
 const blobUrl = (veri: string, tur: string) => URL.createObjectURL(new Blob([Uint8Array.from(atob(veri), (c) => c.charCodeAt(0))], { type: tur }));
 function gunAdi(gun: string, bugun: string): string {
   if (gun === bugun) return "Bugün";
@@ -66,6 +59,7 @@ export function Sohbet({ ilk, panelde = false }: { ilk: ChatMesaji[] | null; pan
   const [mesajlar, setMesajlar] = useState<ChatMesaji[] | null>(ilk);
   const [bekleyen, setBekleyen] = useState<Awaited<ReturnType<typeof bekleyenIsler>>>([]);
   const plan = usePlanSecimi();
+  const [mod, modSec] = useSohbetModu();
   const [yazi, setYazi] = useState("");
   const [secilen, setSecilen] = useState<Secilen[]>([]);
   const [hazirlaniyor, setHazirlaniyor] = useState(false);
@@ -150,11 +144,8 @@ export function Sohbet({ ilk, panelde = false }: { ilk: ChatMesaji[] | null; pan
   const fotoHazirla = async (f: File): Promise<Secilen | null> => {
     let cekim: string | null = null;
     try { cekim = exifCekimZamani(new Uint8Array(await f.slice(0, 256 * 1024).arrayBuffer())); } catch { cekim = null; }
-    for (const [uzun, kalite] of KADEMELER) {
-      const k = await fotografiKucult(f, uzun, kalite).catch(() => null);
-      if (k && k.size <= CHAT_FOTO_BAYT) return { anahtar: ++secimSira, dosya: k, url: URL.createObjectURL(k), cekim, altyazi: "" };
-    }
-    return null;
+    const k = await chatFotoKucult(f);
+    return k ? { anahtar: ++secimSira, dosya: k, url: URL.createObjectURL(k), cekim, altyazi: "" } : null;
   };
   const fotolarSecildi = async (l: File[]) => {
     const yer = SECIM_EN_COK - secilen.length;
@@ -225,7 +216,8 @@ export function Sohbet({ ilk, panelde = false }: { ilk: ChatMesaji[] | null; pan
   const kaba = typeof window !== "undefined" && window.matchMedia?.("(pointer: coarse)").matches;
   return (
     <div className={panelde ? stil.sohbetPanel : stil.sohbetSayfa}>
-      <PlanBandi p={plan} sil={gorunenler.length ? () => void gecmisiSil() : null} />
+      <PlanBandi p={plan} mod={mod} modSec={modSec} sil={mod === "chat" && gorunenler.length ? () => void gecmisiSil() : null} />
+      {mod === "rapor" ? <RaporModu plan={plan.plan} /> : <>
       <div className={stil.akis} ref={govde} data-sc-govde="" role="log" aria-label="Sohbet" aria-live="polite">
         {mesajlar === null && <p className={stil.bosMetin}>Yükleniyor…</p>}
         {mesajlar !== null && !gorunenler.length && <p className={stil.bosMetin}>Henüz mesaj yok.</p>}
@@ -306,6 +298,7 @@ export function Sohbet({ ilk, panelde = false }: { ilk: ChatMesaji[] | null; pan
             aria-label="Gönder" aria-busy={hazirlaniyor || undefined}><Ikon ad="send" /></button>
         </div>
       </div>
+      </>}
       <Pencere acik={!!goster} baslik={goster?.ad ?? "Fotoğraf"} onKapat={() => setGoster(null)} genis>
         <div className={stil.buyuk}>
           {/* eslint-disable-next-line @next/next/no-img-element */}

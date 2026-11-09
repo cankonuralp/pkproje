@@ -9,6 +9,8 @@
    veri çalma; yetki her zaman sunucuda". GERÇEK PostgreSQL, iki firma (311). Olumsuz kanıt: tests/bozan/raporlar.bozan.ts.
    313: maket kopyala / pencereKaydet (Kaydet ve kopyala, karar 204–209, N10), format-guncelle (211), MV.gunlukSure (212, AA2; KOD-GECIS ENGEL 3).
    318: maket raporlar.html #/ (Raporlar listesi: görebildiği raporlar, en yeni üstte, Geri gönderilen çipi). */
+import { randomUUID } from "node:crypto";
+import { raporKaydiKaydet, raporKaydiSil, raporKaydiYaz, raporModuVerisi } from "../src/modules/say-chat/server/rapor-kayit.ts";
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -1053,6 +1055,36 @@ test("raporlar listesi: denetçi yalnız kendi raporlarını, branş yöneticisi
   const g = (await liste(FA.den1))!.find((r) => r.id === r1)!;
   assert.deepEqual([g.durum, g.geri], ["taslak", true]);
   assert.equal((await liste(FA.den2))!.find((r) => r.id === r2)!.geri, false);
+});
+
+/* 2026-11-09 S.A.Y Chat Rapor modu (sunum HBwuL3s9G693uopxSzTbjH): kayıt kişiye özel; rapor taslağı olur, mesaj alanlara geçer; kayıt rapor bağlantısıyla kalır */
+test("Rapor modu: kayıt yazılır, planı görmeyen yazamaz; rapor yazılınca mesaj rapora geçer, yeniden yazılmaz; kapalı ekipman seçilemez; kayıt silinir, rapor kalır", async () => {
+  const id = await yeniPlan(), e1 = FA.ekp["HT-A1"], k = randomUUID();
+  const satirlar = [{ ad: "Marka", alan: "e:marka" }, { ad: "Not", alan: "yorum" }];
+  const g = { plan: id, ekipman: { tip: "plan", id: e1 }, satirlar, mesaj: ["Rapor Modu Marka", "Hortum yıpranmış"] };
+  assert.equal((await a(FA.plan, (db) => raporKaydiKaydet(db, FA.plan, k, g))).durum, "red", "ekipte olmayan");
+  assert.equal((await a(FA.den1, (db) => raporKaydiKaydet(db, FA.den1, k, { ...g, ekipman: { tip: "plan", id: randomUUID() } }))).durum, "gecersiz", "planda olmayan ekipman");
+  tamam(await a(FA.den1, (db) => raporKaydiKaydet(db, FA.den1, k, g)));
+  assert.equal((await a(FA.den1, (db) => raporKaydiKaydet(db, FA.den1, randomUUID(), g))).durum, "gecersiz", "aynı ekipman ikinci kayıtta");
+  const v = (await a(FA.den1, (db) => raporModuVerisi(db, FA.den1, id)))!;
+  assert.equal(v.kayitlar.length, 1);
+  assert.ok(Object.values(v.turler).every((t) => t.satirlar.at(-1)!.alan === "yorum"), "K1: satırlar + Not");
+  assert.equal(await a(FA.den2, (db) => raporModuVerisi(db, FA.den2, id)), null, "planı görmeyen");
+  const r = await a(FA.den1, (db) => raporKaydiYaz(db, depo, FA.den1, A, id, k));
+  assert.equal(r.durum, "tamam", JSON.stringify(r));
+  const raporId = r.durum === "tamam" ? r.rapor.id : "";
+  const s = (await sr(FA.den1, raporId))!;
+  assert.equal(s.durum, "taslak", "gönderilmedi");
+  assert.equal(s.ekipmanBilgi.marka, "Rapor Modu Marka");
+  assert.equal(s.cevaplar.yorum, "Hortum yıpranmış");
+  const i = await a(FA.den1, (db) => raporKaydiYaz(db, depo, FA.den1, A, id, k));
+  assert.equal(i.durum === "tamam" && i.rapor.id, raporId, "aynı kayıt ikinci rapor açmaz");
+  const l = (await a(FA.den1, (db) => raporModuVerisi(db, FA.den1, id)))!;
+  assert.equal(l.kayitlar[0]!.rapor?.id, raporId, "K5: bağlantısıyla kalır");
+  assert.equal(l.ekipmanlar.find((x) => x.id === e1)!.durum, "rapor", "kendi Yeni raporu");
+  tamam(await a(FA.den1, (db) => raporKaydiSil(db, FA.den1, k)));
+  assert.ok(await sr(FA.den1, raporId), "kayıt silinince rapor kalır");
+  tamam(await a(FA.den1, async (db) => raporSil(db, FA.den1, raporId, (await sahaRaporu(db, FA.den1, raporId))!.surum)));
 });
 
 /* 595 (madde 1 — "+ İmza yeri: ikinci uzman, tesis yetkilisi"): ikinci muayene uzmanı sahada plan ekibinden seçilir; istemciden gelen kimlik yetki

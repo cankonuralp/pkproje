@@ -877,3 +877,27 @@ export async function sahaDosyasiGorulur(db: Sorgulayici, kisi: YetkiHesabi, for
   const f = (await db.sorgu<{ plan_id: string }>("SELECT plan_id::text FROM saha_formu WHERE id = $1", [formId])).rows[0];
   return !!f && !!(await erisim(db, { ...kisi, ad: "" }, f.plan_id));
 }
+
+/* ── S.A.Y CHAT RAPOR MODU (2026-11-09; yetki erisim ile) ── */
+export interface RaporModuPlani {
+  id: string; no: string; durum: PlanDurumu; baslangic: string; uye: boolean; personelId: string | null;
+  ekipman: { id: string; kod: string; turId: string; brans: "m" | "e"; konum: string | null; pasif: boolean }[];
+  raporlu: string[];
+  /** plandaki raporlar — ekipman, durum, kişinin kendi Yeni raporu mu (kayıt o raporun boş alanlarına girer) */
+  raporlar: { ekipmanId: string; id: string; durum: string; benimTaslak: boolean }[];
+}
+export async function raporModuPlani(db: Sorgulayici, kim: Kisi, id: string): Promise<RaporModuPlani | null> {
+  const e = await erisim(db, kim, id);
+  if (!e) return null;
+  const pe = (await db.sorgu<{ ekipman_id: string }>("SELECT ekipman_id::text FROM plan_ekipman WHERE plan_id = $1", [id])).rows;
+  const turBul = new Map((await turOzetleri(db)).map((t) => [t.id, t]));
+  const ekipman = (await ekipmanlar(db, pe.map((x) => x.ekipman_id))).map((x) => ({
+    id: x.id, kod: x.kod, turId: x.turId, brans: turBul.get(x.turId)?.brans ?? "m", konum: x.konum, pasif: x.pasif,
+  })).sort((a, b) => a.kod.localeCompare(b.kod, "tr"));
+  const raporlar = await planRaporlari(db, id);
+  return {
+    id, no: e.p.no, durum: e.p.durum, baslangic: e.p.baslangic, uye: e.uye, personelId: e.benim?.personel_id ?? null, ekipman,
+    raporlu: [...new Set(raporlar.map((r) => r.ekipmanId))],
+    raporlar: raporlar.map((r) => ({ ekipmanId: r.ekipmanId, id: r.id, durum: r.durum, benimTaslak: r.durum === "taslak" && r.hesapId === kim.id })),
+  };
+}

@@ -144,3 +144,47 @@
 .bantListe button[aria-current] { border-color: var(--onay); }
 .okusun { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: var(--tus-y); padding: 0 12px; border: 1px solid var(--uyari-yazi); border-radius: var(--r-orta); background: var(--uyari-zemin); color: var(--uyari-yazi); font: inherit; font-size: var(--boy-kucuk); font-weight: 600; cursor: pointer; }
 .okusun:focus-visible { outline: 2px solid var(--odak); outline-offset: 1px; }
+
+/* 2026-11-09 Rapor modu */
+.modSecim { flex: none; display: inline-flex; padding: 2px; border: 1px solid var(--kenar-alan); border-radius: var(--r-tam); background: var(--kart); }
+.modSecim button { min-height: 30px; padding: 0 14px; border: 0; border-radius: var(--r-tam); background: none; color: var(--yazi2); font: inherit; font-weight: 600; cursor: pointer; }
+.modSecim button[aria-pressed="true"] { background: var(--vurgu); color: var(--vurgu-uzeri); }
+.modSecim button:focus-visible { outline: 2px solid var(--odak); outline-offset: 1px; }
+.rmGovde { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: grid; gap: 8px; align-content: start; padding: 10px; }
+.rmListe { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; min-width: 0; }
+.rmKart { display: grid; gap: 6px; min-width: 0; padding: 10px; border: 1px solid var(--kenar); border-radius: var(--r-buyuk); background: var(--kart); font-size: var(--boy-kucuk); }
+.rmKartBas { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.rmKartBas b { min-width: 0; overflow-wrap: anywhere; }
+.rmResim, .rmResim img { display: block; width: 100%; max-height: 140px; object-fit: cover; border-radius: var(--r-orta); }
+.rmDegerler { margin: 0; display: grid; gap: 2px; }
+.rmDegerler div { display: grid; grid-template-columns: minmax(72px, 36%) minmax(0, 1fr); gap: 8px; }
+.rmDegerler dt { color: var(--yazi2); }
+.rmDegerler dd { margin: 0; overflow-wrap: anywhere; }
+.rmRozet { justify-self: start; display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border-radius: var(--r-tam); background: var(--uyari-zemin); color: var(--uyari-yazi); font-size: var(--boy-etiket); font-weight: 600; }
+.rmTamam { background: var(--onay-zemin); color: var(--onay-yazi); text-decoration: none; }
+.rmHata { background: var(--hata-zemin); color: var(--hata-yazi); }
+.rmForm { display: grid; gap: 10px; min-width: 0; }
+.rmSatir { display: flex; flex-wrap: wrap; gap: 8px; }
+.rmTus, .rmEkipman { display: inline-flex; align-items: center; gap: 6px; min-height: var(--tus-y); padding: 0 12px; border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); color: var(--yazi); font: inherit; font-weight: 600; cursor: pointer; }
+.rmEkipman { width: 100%; text-align: left; }
+.rmEkipman span { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rmTus:focus-visible, .rmEkipman:focus-visible { outline: 2px solid var(--odak); outline-offset: 1px; }
+.rmFotolar { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 6px; }
+.rmFotolar li { position: relative; min-width: 0; }
+.rmFotolar img { display: block; width: 100%; height: 64px; object-fit: cover; border-radius: var(--r-orta); }
+.rmFotolar small { display: block; color: var(--yazi2); font-size: var(--boy-etiket); text-align: center; }
+.rmFotolar button { position: absolute; top: 2px; right: 2px; display: grid; place-items: center; width: 24px; height: 24px; border: 0; border-radius: 50%; background: var(--perde); color: var(--vurgu-uzeri); cursor: pointer; }
+.rmPencere { display: grid; gap: 8px; min-width: 0; }
+.rmAra { width: 100%; min-height: var(--tus-y); padding: 6px 8px; border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); color: var(--yazi); font: inherit; font-size: var(--boy-girdi); }
+.rmSecimler { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; min-width: 0; }
+.rmSecimler button { display: grid; gap: 1px; width: 100%; min-height: 40px; padding: 6px 8px; border: 1px solid var(--kenar); border-radius: var(--r-orta); background: var(--kart); color: var(--yazi); font: inherit; font-size: var(--boy-kucuk); text-align: left; cursor: pointer; overflow-wrap: anywhere; }
+.rmSecimler button:disabled { opacity: .55; cursor: not-allowed; }
+.rmSecimler small { color: var(--yazi2); font-size: var(--boy-etiket); }
+.mesajKutu { --sc-satir: 34px; display: grid; grid-template-columns: minmax(72px, 36%) minmax(0, 1fr); border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); overflow: hidden; }
+.mesajKutu:focus-within { outline: 3px solid var(--odak); outline-offset: 1px; }
+.mesajAdlar { list-style: none; margin: 0; padding: 0; background: var(--zemin2); border-right: 1px solid var(--kenar); }
+.mesajAdlar li { display: flex; align-items: center; gap: 4px; height: var(--sc-satir); padding: 0 8px; border-bottom: 1px solid var(--kenar); color: var(--yazi2); font-size: var(--boy-kucuk); font-weight: 600; }
+.mesajAdlar li:last-child { border-bottom: 0; }
+.mesajAdlar li > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mesajNot { font-weight: 400; font-style: italic; }
+.mesajAlan { display: block; width: 100%; min-width: 0; margin: 0; padding: 0 8px; border: 0; outline: none; resize: none; overflow-x: auto; overflow-y: hidden; background: repeating-linear-gradient(to bottom, transparent 0, transparent calc(var(--sc-satir) - 1px), var(--kenar) calc(var(--sc-satir) - 1px), var(--kenar) var(--sc-satir)); color: var(--yazi); font-family: inherit; font-size: var(--boy-girdi); line-height: var(--sc-satir); white-space: pre; overflow-wrap: normal; scrollbar-width: none; }

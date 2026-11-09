@@ -5,6 +5,9 @@
    · Kişi kendi İŞLENMEMİŞ mesajını siler ("chat.sil"); işlenmiş mesaj silinmez (işaret geri alınır). Karar 2: işlenmiş mesajın dosyası 30 gün sonra
      çöpe, yazısı kalır — sahibi sohbeti açınca ya da S.A.Y okuyunca (RLS: başkasının sohbetine gece işi de giremez).
    · Bir sürüm boyunca eski kuyruk işleri ("saychat.kaydet" / "saychat.foto" / "saychat.sil" — cihazda kalmış eski kayıtlar) mesaj olarak kabul edilir. */
+import { DOSYA_SAY_CHAT } from "../sema.ts";
+import type { Kisi as RaporKisi } from "./rapor-kayit.ts";
+import { raporFotoEkle, raporKaydiDosyasiGorulur, raporKaydiKaydet, raporKaydiSil } from "./rapor-kayit.ts";
 import { randomUUID } from "node:crypto";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import type { Depo } from "../../../server/dosya/depo.ts";
@@ -13,7 +16,7 @@ import type { DosyaTuru } from "../../../server/dosya/tur.ts";
 import { ekle, guncelle, sil, tablo } from "../../../server/db/yazici.ts";
 import { CHAT_SAYFA, ISLENMIS_DOSYA_GUN, MesajGirdisi, type ChatMesaji, type MesajTuru } from "../sema.ts";
 
-export const DOSYA_SAY_CHAT = "say_chat";
+export { DOSYA_SAY_CHAT };
 const MESAJ = tablo({ ad: "say_chat_mesaj", sutunlar: ["cihaz_id", "zaman", "sira", "tur", "metin", "dosya", "dosya_ad", "cekim", "on_okuma",
   "islendi", "islendi_plan", "islendi_no", "islendi_rapor", "dosya_silindi"], gizli: ["metin", "dosya_ad", "on_okuma"] });
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -148,11 +151,11 @@ export async function gecmisiSil(db: Sorgulayici, kim: Kisi): Promise<number> {
 
 /** dosya erişimi (src/server/dosya/erisim.ts): fotoğrafı / belgeyi yalnız mesajın sahibi açar (RLS: kişi yalnız kendi sohbetini görür) */
 export async function chatDosyasiGorulur(db: Sorgulayici, kayitId: string): Promise<boolean> {
-  return UUID.test(kayitId) && !!(await db.sorgu("SELECT 1 FROM say_chat_mesaj WHERE cihaz_id = $1 OR eski_kayit = $1", [kayitId])).rowCount;
+  return UUID.test(kayitId) && (!!(await db.sorgu("SELECT 1 FROM say_chat_mesaj WHERE cihaz_id = $1 OR eski_kayit = $1", [kayitId])).rowCount || await raporKaydiDosyasiGorulur(db, kayitId));
 }
 
 /* ── ÇEVRİMDIŞI KUYRUK (/api/islem) ── */
-export const CHAT_ISLEM_TURLERI = ["chat.mesaj", "chat.sil", "saychat.kaydet", "saychat.foto", "saychat.sil"] as const;
+export const CHAT_ISLEM_TURLERI = ["chat.mesaj", "chat.sil", "saychat.kaydet", "saychat.foto", "saychat.sil", "sayrapor.foto", "sayrapor.kaydet", "sayrapor.sil"] as const;
 export type ChatIslemTuru = (typeof CHAT_ISLEM_TURLERI)[number];
 export const chatIslemTuruMu = (t: string): t is ChatIslemTuru => (CHAT_ISLEM_TURLERI as readonly string[]).includes(t);
 
@@ -167,8 +170,11 @@ function eskiGirdi(tur: "saychat.kaydet" | "saychat.foto", girdi: unknown): unkn
   return satirlar.length ? { tur: "yazi", zaman, sira: 0, metin: satirlar.join("\n").slice(0, 4000), cekim: null, ad: null, veri: null } : null;
 }
 
-export async function chatIslemi(db: Sorgulayici, dosya: { depo: Depo; firmaId: string }, kim: Kisi, tur: ChatIslemTuru, cihazId: string, _surum: number,
+export async function chatIslemi(db: Sorgulayici, dosya: { depo: Depo; firmaId: string }, kim: Kisi & RaporKisi, tur: ChatIslemTuru, cihazId: string, _surum: number,
   girdi: unknown): Promise<ChatYazma> {
+  if (tur === "sayrapor.foto") return raporFotoEkle(db, dosya.depo, kim, dosya.firmaId, cihazId, girdi);
+  if (tur === "sayrapor.kaydet") return raporKaydiKaydet(db, kim, cihazId, girdi);
+  if (tur === "sayrapor.sil") return raporKaydiSil(db, kim, cihazId);
   if (tur === "chat.mesaj") return mesajYaz(db, dosya.depo, kim, dosya.firmaId, cihazId, girdi);
   if (tur === "chat.sil") return mesajSil(db, kim, cihazId);
   if (tur === "saychat.sil") return { durum: "tamam", yeniSurum: 0 };

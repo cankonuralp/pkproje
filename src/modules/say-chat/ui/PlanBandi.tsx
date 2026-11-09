@@ -12,6 +12,18 @@ const PLANLAR = "probata-saha-planlar", SECILI = "probata-saha-plan";
 const oku = <T,>(a: string): T | null => { try { const s = localStorage.getItem(a); return s ? JSON.parse(s) as T : null; } catch { return null; } };
 const yaz = (a: string, d: unknown) => { try { localStorage.setItem(a, JSON.stringify(d)); } catch { /* saklama yok */ } };
 
+/** Chat / Rapor modu (K6: panel en son kullanılan modda açılır; cihazda) */
+export type SohbetModu = "chat" | "rapor";
+const MOD = "probata-saychat-mod";
+export function useSohbetModu(): [SohbetModu, (m: SohbetModu) => void] {
+  const [mod, setMod] = useState<SohbetModu>("chat");
+  useEffect(() => {
+    /* eslint-disable-next-line react-hooks/set-state-in-effect -- cihazdaki seçim yalnız tarayıcıda okunur (sunucuyla aynı ilk çizim) */
+    if (oku<string>(MOD) === "rapor") setMod("rapor");
+  }, []);
+  return [mod, (m) => { setMod(m); yaz(MOD, m); }];
+}
+
 /** kişinin planları ve seçili plan */
 export function usePlanSecimi() {
   const [planlar, setPlanlar] = useState<BantPlani[] | null>(null);
@@ -27,19 +39,24 @@ export function usePlanSecimi() {
   return { planlar: planlar ?? [], plan, sec: (id: string) => { setSecili(id); yaz(SECILI, id); } };
 }
 
-export function PlanBandi({ p, sil }: { p: ReturnType<typeof usePlanSecimi>; sil: (() => void) | null }) {
+export function PlanBandi({ p, mod, modSec, sil }: { p: ReturnType<typeof usePlanSecimi>; mod: SohbetModu; modSec: (m: SohbetModu) => void; sil: (() => void) | null }) {
   const [liste, setListe] = useState(false);
-  if (!p.plan && !sil) return null;
   const birden = p.planlar.length > 1;
   return (
     <div className={stil.bant}>
       <div className={stil.bantSatir}>
+        <div className={stil.modSecim} role="group" aria-label="Mod">
+          <button type="button" aria-pressed={mod === "chat"} onClick={() => modSec("chat")}>Chat</button>
+          <button type="button" aria-pressed={mod === "rapor"} onClick={() => modSec("rapor")}>Rapor</button>
+        </div>
+        {sil && <button type="button" className={stil.bantSil} onClick={sil}><Ikon ad="trash-2" kucuk />Geçmişi sil</button>}
+      </div>
+      {p.plan && <div className={stil.bantSatir}>
         {p.plan && (birden
           ? <button type="button" className={stil.bantPlanTus} aria-expanded={liste} aria-label={`Plan: ${p.plan.no}. Planı değiştir`} onClick={() => setListe((x) => !x)}>
               <span className={stil.bantPlan}><b>{p.plan.no}</b> · {p.plan.tesis}</span><Ikon ad={liste ? "chevron-up" : "chevron-down"} kucuk /></button>
           : <span className={stil.bantPlan}><b>{p.plan.no}</b> · {p.plan.tesis}</span>)}
-        {sil && <button type="button" className={stil.bantSil} onClick={sil}><Ikon ad="trash-2" kucuk />Geçmişi sil</button>}
-      </div>
+      </div>}
       {liste && (
         <ul className={stil.bantListe} aria-label="Planlar">
           {p.planlar.map((x) => (

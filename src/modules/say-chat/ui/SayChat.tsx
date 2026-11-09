@@ -45,6 +45,12 @@ export function SayChat() {
   };
   const kapat = () => { setAcik(false); requestAnimationFrame(() => fab.current?.focus()); };
   /* plan içi ve başka yerlerden açma isteği */
+  /* Rapor modundan rapora geçilirken panel kapanır (telefonda tam ekran, sayfanın üstünde kalmasın) */
+  useEffect(() => {
+    const f = () => setAcik(false);
+    window.addEventListener("probata-saychat-kapat", f);
+    return () => window.removeEventListener("probata-saychat-kapat", f);
+  }, []);
   useEffect(() => {
     const f = () => ac();
     window.addEventListener("probata-saychat-ac", f);

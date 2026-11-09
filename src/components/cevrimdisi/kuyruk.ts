@@ -20,9 +20,9 @@
 import { coz, depoAc, isleriOku, isSil, isYaz, sifrele, type DepoIsi } from "./depo.ts";
 
 export type KuyrukTuru = "rapor.kaydet" | "rapor.gonder" | "rapor.foto" | "rapor.olustur" | "plan.kabul" | "plan.red" | "chat.mesaj" | "chat.sil"
-  | "saychat.kaydet" | "saychat.foto" | "saychat.sil";
+  | "saychat.kaydet" | "saychat.foto" | "saychat.sil" | "sayrapor.foto" | "sayrapor.kaydet" | "sayrapor.sil";
 /** kaydın o anki hâlini taşıyan işler: aynı kayıt için tek bekleyen (fotoğraf bunlardan değil) */
-const FORM: ReadonlySet<string> = new Set(["rapor.kaydet", "rapor.gonder", "plan.kabul", "plan.red", "saychat.kaydet", "saychat.sil"]);
+const FORM: ReadonlySet<string> = new Set(["rapor.kaydet", "rapor.gonder", "plan.kabul", "plan.red", "saychat.kaydet", "saychat.sil", "sayrapor.kaydet", "sayrapor.sil"]);
 /** gönderilen işin sonucu — window "probata-islem" olayı (ekran tazelenir; eksikse alanlar işaretlenir) */
 export interface KuyrukSonucOlayi {
   kayit: string; tur: KuyrukTuru; durum: string; ileti: string | null; eksikler: { bolum: string; alan: string; ad: string }[] | null;
@@ -155,14 +155,14 @@ const ILETI: Record<string, string> = {
   kimlik: "İşin kimliği çakıştı; yeniden gönderin.",
   foto_cakisma: "Rapor fotoğraf eklenirken aynı anda değişti; yeniden deneyin.",
   foto_bekliyor: "Raporun fotoğrafları gidince gönderilecek.",
-  saychat_yok: "S.A.Y Chat kaydı bulunamadı (silinmiş ya da raporu yazılmış).",
+  saychat_yok: "Kayıt bulunamadı (silinmiş ya da raporu yazılmış).",
   saychat_cakisma: "S.A.Y Chat kaydı bu cihazda yazılırken başka bir cihazda değiştirildi.",
   chat_yok: "S.A.Y Chat mesajı bulunamadı.",
 };
 
 /** işin türüne göre ileti (plan işinde "Plan …", S.A.Y Chat işinde "S.A.Y Chat kaydı …") */
 const iletisi = (tur: string, durum: string): string | undefined =>
-  (tur.startsWith("plan.") ? ILETI[`plan_${durum}`] : tur.startsWith("saychat.") ? ILETI[`saychat_${durum}`] : tur.startsWith("chat.") ? ILETI[`chat_${durum}`] : undefined) ?? ILETI[durum];
+  (tur.startsWith("plan.") ? ILETI[`plan_${durum}`] : tur.startsWith("saychat.") || tur.startsWith("sayrapor.") ? ILETI[`saychat_${durum}`] : tur.startsWith("chat.") ? ILETI[`chat_${durum}`] : undefined) ?? ILETI[durum];
 
 type Sonuc = { durum: string; hatalar?: Record<string, string>; eksikler?: { bolum: string; alan: string; ad: string }[]; neden?: string;
   /** fotoğrafta / yeni raporda: raporun hangi sürümden hangisine geçtiği */

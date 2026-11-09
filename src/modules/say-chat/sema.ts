@@ -76,3 +76,6 @@ export const ChatIsleGirdisi = z.object({
   geri_al: z.boolean().optional(),
 });
 export type ChatIsleGirdisi = z.output<typeof ChatIsleGirdisi>;
+
+/** dosya modülü: sohbet ve Rapor modu fotoğrafları (yalnız sahibi açar) */
+export const DOSYA_SAY_CHAT = "say_chat";
