@@ -278,14 +278,9 @@ export async function signImzalaEylemi(id: string, asama: string): Promise<Rapor
   if (!(await ayniKoken())) return { genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };
   const o = await istekOturumu();
   if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
-  const h = await oturumIslemi(o, (db) => signHazirla(db, depo(), o, o.kiraci.firmaId, metin(id), signAsama(asama), belgePdf));
+  const h = await oturumIslemi(o, (db) => signHazirla(db, depo(), o, o.kiraci.firmaId, metin(id), signAsama(asama), belgePdf, { tek: true }));
   if (h.tur === "hata") return yanit(h.y);
-  if (h.tur === "acik") {
-    if (h.gomulu || h.baglanti) return { tamam: true, ...(h.gomulu ? { gomulu: h.gomulu } : {}), ...(h.baglanti ? { baglanti: h.baglanti } : {}) };
-    /* üyeye bağlı (toplu gönderilmiş) istek: sign'ın toplu imzası o belgeyle */
-    const t = await signTopluAdresAl(o, [h.belge]);
-    return t.tamam ? { tamam: true, ...(t.gomulu ? { gomulu: t.gomulu } : {}), ...(t.baglanti ? { baglanti: t.baglanti } : {}) } : { genel: t.genel };
-  }
+  if (h.tur === "acik") return { tamam: true, ...(h.gomulu ? { gomulu: h.gomulu } : {}), ...(h.baglanti ? { baglanti: h.baglanti } : {}) };
   try {
     const s = await signGonder(h);
     if (!(await oturumIslemi(o, (db) => signKaydet(db, o, o.kiraci.firmaId, h.istekId, s)))) return { genel: "Rapor bu arada değişti. Sayfayı yenileyip yeniden deneyin." };

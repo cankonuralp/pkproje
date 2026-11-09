@@ -39,6 +39,8 @@ export const baglantiMetni = (baglanti: string | null, gomulu: string | null): s
 /** 2026-11-08 (reisim: "bu hala yeni sekmede aç diyor imza işi neden olmadı"): 7 Kasım'dan önce açılmış istekte kayıt düz bağlantı — gömülü bağlantısı hiç istenmedi. Böyle istek bir kez
    yenilenir (eskisi iptal, yenisi açılır). {"b","g":null} kaydı yenilenmez: sign o istekte gömülü bağlantı vermedi, yeni sekme yedeği kalır. */
 export const eskiBaglantiMi = (metin: string | null): boolean => !!metin && !metin.startsWith("{");
+/** 2026-11-09 (reisim: "benim oluşturduğumda değilde senin oluşturduğun 2 sinde sorun oluyor"): toplu imzayla açılmış istek üyeye bağlı, bağlantısı yok. Tek imza bunu toplu sayfaya götürmesin (toplu gömülü sayfada programı açan yol yok): bağlantılı istekle yenilenir */
+export const tekteYenilenir = (b: { baglanti: string | null; gomulu: string | null }): boolean => !b.baglanti && !b.gomulu;
 export function baglantiOku(metin: string | null): { baglanti: string | null; gomulu: string | null } {
   if (!metin) return { baglanti: null, gomulu: null };
   if (!metin.startsWith("{")) return { baglanti: metin, gomulu: null };
@@ -83,7 +85,7 @@ export type SignHazirlik =
       oncekiBelge: string | null; yenile?: boolean }
   | { tur: "hata"; y: RaporYazma };
 export async function signHazirla(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, id: string, asama: Asama,
-  uret: (v: BelgeVerisi) => Promise<Uint8Array>): Promise<SignHazirlik> {
+  uret: (v: BelgeVerisi) => Promise<Uint8Array>, secenek: { tek?: boolean } = {}): Promise<SignHazirlik> {
   if (!(await signAcik(db))) return { tur: "hata", y: { durum: "red", neden: "Bu firmada probata sign bağlı değil." } };
   const h = asama === "uzman" ? await imzaHazirla(db, depo, kim, firmaId, id, uret) : await teknikImzaHazirla(db, depo, kim, firmaId, id, uret);
   if (h.durum !== "tamam") return { tur: "hata", y: h };
@@ -92,7 +94,8 @@ export async function signHazirla(db: Sorgulayici, depo: Depo, kim: Kisi, firmaI
   let yenile = false;
   if (i.sign_istek && i.sign_belge && (i.sign_durum ?? "bekliyor") === "bekliyor") {
     const metin = i.sign_baglanti ? coz(i.sign_baglanti, firmaId, BAGLANTI_AD) : null;
-    if (!eskiBaglantiMi(metin)) return { tur: "acik", ...baglantiOku(metin), belge: i.sign_belge };
+    const b = baglantiOku(metin);
+    if (!eskiBaglantiMi(metin) && !(secenek.tek && tekteYenilenir(b))) return { tur: "acik", ...b, belge: i.sign_belge };
     yenile = true;
   }
   const anahtar = await sirKullan(db, "sign_anahtari");

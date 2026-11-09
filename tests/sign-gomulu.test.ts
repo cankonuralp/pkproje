@@ -15,7 +15,7 @@ import { test } from "node:test";
 import { GOMULU_IZIN, kokeni, signHaberi } from "../src/modules/raporlar/sign-haber.ts";
 import { signIstemcisi } from "../src/server/dis/sign.ts";
 import { signKokenleri, signSayfasiMi } from "../src/server/dis/sign-adres.ts";
-import { baglantiMetni, baglantiOku, eskiBaglantiMi, signGonder } from "../src/modules/raporlar/server/sign.ts";
+import { baglantiMetni, baglantiOku, eskiBaglantiMi, signGonder, tekteYenilenir } from "../src/modules/raporlar/server/sign.ts";
 
 const KOK = "https://sign.probata.com.tr", FIRMA = "https://deneme.sign.probata.com.tr";
 const BELGE = "11111111-1111-4111-8111-111111111111", B2 = "44444444-4444-4444-8444-444444444444", ISTEK = "22222222-2222-4222-8222-222222222222";
@@ -125,4 +125,11 @@ test("7 Kasım'dan önceki istek: düz kayıt yenilenir, gömülüsüz yeni kay�
   assert.ok(yollar.some((y) => y.includes("iptal")), "eski istek iptal");
   const k = taklit(() => ({ status: 200, json: { id: B2, durum: "tamamlandi", imza_istegi: null } }));
   await assert.rejects(() => signGonder(h, signIstemcisi(ANAHTAR, k.getir)), /imzalanmış/, "imzalanmış belge yeniden açılmaz");
+});
+
+/* 2026-11-09 (reisim: "benim oluşturduğumda değilde senin oluşturduğun 2 sinde sorun oluyor"): toplu yolla açılmış istekte bağlantı yok; bağlantılı istek yenilenmez */
+test("tek imza: yalnız bağlantısız (toplu açılmış) istek yenilenir", () => {
+  assert.equal(tekteYenilenir(baglantiOku(null)), true);
+  assert.equal(tekteYenilenir(baglantiOku(baglantiMetni(`${FIRMA}/dis#a`, null))), false);
+  assert.equal(tekteYenilenir(baglantiOku(baglantiMetni(`${FIRMA}/dis#a`, `${FIRMA}/gomulu#a`))), false);
 });

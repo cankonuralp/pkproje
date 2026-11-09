@@ -1119,6 +1119,12 @@ test("probata sign: Yönetim sırları yokken kapalı; uygulama yazamaz; gönder
   assert.equal(yuklenen, 1);
   const sakli = (await sql<{ sign_baglanti: string }>(A, "SELECT sign_baglanti FROM imza_istegi WHERE id = $1", [hz.istekId])).rows[0]!.sign_baglanti;
   assert.ok(!sakli.includes("belirtec"), "bağlantı düz yazılmaz");
+  /* 2026-11-09: toplu imzayla açılmış (üyeye bağlı, bağlantısız) istek — toplu yolda açık kalır; tek imzada toplu sayfaya gitmez, bağlantılı istekle yenilenir */
+  assert.equal(await a(FA.den, (db) => signKaydet(db, FA.den, A, hz.istekId, { belge: BELGE, istek: ISTEK, baglanti: null })), true);
+  assert.deepEqual(await a(FA.den, (db) => signHazirla(db, depo, FA.den, A, h, "uzman", uret)), { tur: "acik", baglanti: null, gomulu: null, belge: BELGE }, "toplu yol: açık");
+  const tekYol = await a(FA.den, (db) => signHazirla(db, depo, FA.den, A, h, "uzman", uret, { tek: true }));
+  assert.equal(tekYol.tur === "gonder" && tekYol.yenile, true, "tek imza: yenilenir");
+  assert.equal(await a(FA.den, (db) => signKaydet(db, FA.den, A, hz.istekId, g)), true);
   /* webhook */
   const calistir: IslemCalistir = (hesap, is) => kiraciIcinde(havuz, A, is, hesap ? { hesapId: hesap } : {});
   const govde = (id: string, olay: string) => JSON.stringify({ id, olay, olusturma: new Date().toISOString(), veri: { belge_id: BELGE } });

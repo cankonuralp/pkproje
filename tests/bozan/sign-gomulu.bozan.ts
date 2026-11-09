@@ -54,3 +54,13 @@ test("eski kayıt yenilenmeyince gömülü bağlantı hiç gelmez; gömülüsüz
   const b = await yaz("eski2", parca.replace("(baglanti || gomulu ? JSON.stringify({ b: baglanti, g: gomulu }) : null)", "(gomulu ? JSON.stringify({ b: baglanti, g: gomulu }) : baglanti)"));
   assert.equal(b.eskiBaglantiMi(b.baglantiMetni("https://x/dis", null)), true, "bozuk: gömülüsüz yeni kayıt da eski sayılır");
 });
+
+/* 2026-11-09: bağlantısız istek yenilenmezse tek imza toplu sayfaya gider ve programa bağlanamaz */
+test("bağlantısız istek yenilenmeyince tek imza toplu sayfaya gider — kilit düşer", async () => {
+  const k = readFileSync(resolve("src/modules/raporlar/server/sign.ts"), "utf8").split(String.fromCharCode(10)).find((x) => x.startsWith("export const tekteYenilenir"));
+  assert.ok(k, "kaynakta bulunmalı");
+  const y = join(klasor, "tekte.ts");
+  writeFileSync(y, k.replace("!b.baglanti && !b.gomulu", "false"));
+  const m = await import(pathToFileURL(y).href) as { tekteYenilenir: (b: { baglanti: string | null; gomulu: string | null }) => boolean };
+  assert.equal(m.tekteYenilenir({ baglanti: null, gomulu: null }), false, "bozuk: yenilenmedi");
+});
