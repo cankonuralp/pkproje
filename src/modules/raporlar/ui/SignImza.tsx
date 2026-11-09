@@ -147,6 +147,18 @@ export function SignTopluTus({ idler, asama, bitti }: { idler: readonly string[]
   const [pen, setPen] = useState<Acik | null>(null);
   const tikla = () => {
     const l = idler.slice(0, TOPLU_EN_COK);
+    /* 2026-11-09 (reisim: "tek rapor seçipte imzalayabilmeliyim illa içine girmeme gerek kalmaması lazım"): tek rapor, raporun içindeki "İmzala"nın aynısı */
+    if (l.length === 1) {
+      setPen({ gomulu: null, yedek: null });
+      baslat(async () => {
+        try {
+          const r = await signImzalaEylemi(l[0]!, asama);
+          if (r.tamam && (r.gomulu || r.baglanti)) setPen({ gomulu: r.gomulu ?? null, yedek: r.baglanti ?? null });
+          else { setPen(null); bildir(r.genel ?? "probata sign'da imza başlatılamadı."); }
+        } catch { setPen(null); bildir(AG); }
+      });
+      return;
+    }
     baslat(async () => {
       const belgeler: string[] = [], hatalar: string[] = [];
       let uyeDegil = 0, genel: string | null = null;
@@ -185,7 +197,7 @@ export function SignTopluTus({ idler, asama, bitti }: { idler: readonly string[]
   return (
     <>
       <Tus ikon="file-signature" disabled={mesgul || !idler.length} aria-busy={mesgul || undefined} onClick={tikla}>{ilerleme ?? "probata sign ile imzala"}</Tus>
-      {pen && <SignPenceresi acik={pen} baslik="Toplu imza · probata sign" haber={haber} kapat={() => { setPen(null); bitti(); }} />}
+      {pen && <SignPenceresi acik={pen} baslik={idler.length === 1 ? "İmza · probata sign" : "Toplu imza · probata sign"} haber={haber} kapat={() => { setPen(null); bitti(); }} />}
     </>
   );
 }

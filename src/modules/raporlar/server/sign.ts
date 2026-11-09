@@ -85,7 +85,7 @@ export type SignHazirlik =
       oncekiBelge: string | null; yenile?: boolean }
   | { tur: "hata"; y: RaporYazma };
 export async function signHazirla(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, id: string, asama: Asama,
-  uret: (v: BelgeVerisi) => Promise<Uint8Array>, secenek: { tek?: boolean } = {}): Promise<SignHazirlik> {
+  uret: (v: BelgeVerisi) => Promise<Uint8Array>, secenek: { tek?: boolean; toplu?: boolean } = {}): Promise<SignHazirlik> {
   if (!(await signAcik(db))) return { tur: "hata", y: { durum: "red", neden: "Bu firmada probata sign bağlı değil." } };
   const h = asama === "uzman" ? await imzaHazirla(db, depo, kim, firmaId, id, uret) : await teknikImzaHazirla(db, depo, kim, firmaId, id, uret);
   if (h.durum !== "tamam") return { tur: "hata", y: h };
@@ -95,7 +95,9 @@ export async function signHazirla(db: Sorgulayici, depo: Depo, kim: Kisi, firmaI
   if (i.sign_istek && i.sign_belge && (i.sign_durum ?? "bekliyor") === "bekliyor") {
     const metin = i.sign_baglanti ? coz(i.sign_baglanti, firmaId, BAGLANTI_AD) : null;
     const b = baglantiOku(metin);
-    if (!eskiBaglantiMi(metin) && !(secenek.tek && tekteYenilenir(b))) return { tur: "acik", ...b, belge: i.sign_belge };
+    /* tek imza bağlantı ister, toplu imza üyeye bağlı istek: öteki yolla açılmış açık istek yenilenir (reisim: tek rapor seçince "üyelik bulunamadı" diyordu) */
+    const baglantisiz = tekteYenilenir(b);
+    if (!eskiBaglantiMi(metin) && !(secenek.tek && baglantisiz) && !(secenek.toplu && !baglantisiz)) return { tur: "acik", ...b, belge: i.sign_belge };
     yenile = true;
   }
   const anahtar = await sirKullan(db, "sign_anahtari");

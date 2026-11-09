@@ -1125,6 +1125,9 @@ test("probata sign: Yönetim sırları yokken kapalı; uygulama yazamaz; gönder
   const tekYol = await a(FA.den, (db) => signHazirla(db, depo, FA.den, A, h, "uzman", uret, { tek: true }));
   assert.equal(tekYol.tur === "gonder" && tekYol.yenile, true, "tek imza: yenilenir");
   assert.equal(await a(FA.den, (db) => signKaydet(db, FA.den, A, hz.istekId, g)), true);
+  /* tersi: bağlantılı (tek imzayla açılmış) istek toplu imzada üyeye bağlı istekle yenilenir, "üyelik bulunamadı" sayılmaz */
+  const topluYol = await a(FA.den, (db) => signHazirla(db, depo, FA.den, A, h, "uzman", uret, { toplu: true }));
+  assert.equal(topluYol.tur === "gonder" && topluYol.yenile, true, "toplu imza: yenilenir");
   /* webhook */
   const calistir: IslemCalistir = (hesap, is) => kiraciIcinde(havuz, A, is, hesap ? { hesapId: hesap } : {});
   const govde = (id: string, olay: string) => JSON.stringify({ id, olay, olusturma: new Date().toISOString(), veri: { belge_id: BELGE } });

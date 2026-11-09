@@ -334,9 +334,9 @@ export async function signTopluEylemi(idler: string[], asama: string): Promise<{
   let uyeDegil = 0, dur = false;
   for (const id of l) {
     try {
-      const h = await oturumIslemi(o, (db) => signHazirla(db, depo(), o, o.kiraci.firmaId, id, a, belgePdf));
+      const h = await oturumIslemi(o, (db) => signHazirla(db, depo(), o, o.kiraci.firmaId, id, a, belgePdf, { toplu: true }));
       if (h.tur === "hata") { const y = yanit(h.y); hatalar.push({ id, neden: y.genel ?? Object.values(y.hatalar ?? {})[0] ?? "Hazırlanamadı." }); continue; }
-      if (h.tur === "acik") { if (h.baglanti) uyeDegil++; else belgeler.push(h.belge); continue; }
+      if (h.tur === "acik") { belgeler.push(h.belge); continue; }
       const g = await signGonder(h, undefined, undefined, { toplu: true });
       if (!(await oturumIslemi(o, (db) => signKaydet(db, o, o.kiraci.firmaId, h.istekId, g)))) { hatalar.push({ id, neden: "Rapor bu arada değişti." }); continue; }
       if (g.baglanti) uyeDegil++; else belgeler.push(g.belge);
