@@ -24,7 +24,8 @@ test("Rapor modu: fotoğraf, ekipman, mesaj → kayıt → rapor taslağı; mark
   const panel = page.getByRole("dialog", { name: "S.A.Y Chat" });
   await panel.getByRole("group", { name: "Mod" }).getByRole("button", { name: "Rapor" }).click();
   await panel.getByRole("button", { name: "Yeni kayıt" }).click({ timeout: 30_000 });
-  await panel.getByLabel("Galeriden / bilgisayardan seç").first().setInputFiles([{ name: "a.png", mimeType: "image/png", buffer: PNG }]);
+  await panel.getByRole("button", { name: "Fotoğraf çek" }).click();
+  await panel.getByLabel("Galeriden / bilgisayardan seç").setInputFiles([{ name: "a.png", mimeType: "image/png", buffer: PNG }]);
   await expect(panel.getByRole("list", { name: "Kaydın fotoğrafları" }).getByRole("listitem")).toHaveCount(1, { timeout: 30_000 });
   await panel.getByRole("button", { name: "Ekipman seç" }).click();
   const secim = page.getByRole("dialog", { name: "Ekipman seçin" });
