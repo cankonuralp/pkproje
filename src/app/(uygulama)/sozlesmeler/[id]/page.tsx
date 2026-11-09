@@ -15,7 +15,7 @@ import { sozlesmeBelgeBolumu, sozlesmeDegistirir, sozlesmeKarti, sozlesmeSecenek
 import { BelgeTuslari } from "../../../../modules/sozlesmeler/ui/BelgeTuslari";
 import { ImzaliTuslari, IsgBolumu } from "../../../../modules/sozlesmeler/ui/KartParcalari";
 import { DurumRozeti, tarihYaz } from "../../../../modules/sozlesmeler/ui/ortak";
-import { SozlesmeEpostalari } from "../../../../modules/sozlesmeler/ui/SozlesmeEpostalari";
+import { EpostaListesi } from "../../../../components/eposta/EpostaListesi";
 import { depo } from "../../../../server/dosya/depo";
 import { modulGorur, modulOturumu, oturumIslemi } from "../../../../server/kimlik/istek";
 
@@ -69,7 +69,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
             )}
             <Bilgi etiket="Müşteriye gönderim">{belge.epostalar.length ? `${belge.epostalar.length} e-posta` : <DegerYok>Gönderilmedi</DegerYok>}</Bilgi>
           </BilgiListesi>
-          {belge.epostalar.length > 0 && <SozlesmeEpostalari epostalar={belge.epostalar} />}
+          {belge.epostalar.length > 0 && <EpostaListesi epostalar={belge.epostalar} />}
         </Bolum>
       )}
       <Bolum id="b-soz-kapsam" baslik="Kapsam" sayac={<><b>{x.kapsam.length}</b> tesis</>}>

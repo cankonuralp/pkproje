@@ -24,7 +24,11 @@ import {
   etkinDurum, teklifBelgesiVerisi, teklifEkipmanListesi, teklifExcelVerisi, teklifGonder, teklifKabul, teklifKarti, teklifKaydet, teklifListesi, teklifMusteriBagla,
   teklifMusteriKaydet, teklifReddet, teklifSecenekleri, type Kisi,
 } from "../src/modules/teklifler/server/teklifler.ts";
-import { teklifSayfasi } from "../src/modules/teklifler/server/teklifler.ts";
+import { teklifSayfasi, teklifDosyasiGorulur } from "../src/modules/teklifler/server/teklifler.ts";
+import { teklifEpostaGonder, teklifGonderimVerisi } from "../src/modules/teklifler/server/gonderim.ts";
+import { yaklasanListesi, yaklasanSayfasi, yaklasanSayisi } from "../src/modules/teklifler/server/yaklasan.ts";
+import { menuTakip } from "../src/modules/anasayfa/server/takip.ts";
+import { formDegeri } from "../src/modules/teklifler/form-degeri.ts";
 import { teklifMusterileri, teklifTanim } from "../src/modules/teklifler/liste.ts";
 import { listele, yeniDurum, type SuzgecDurumu } from "../src/components/liste/suzgec.ts";
 import { testKumesi } from "./yardimci/kume.ts";
@@ -413,4 +417,93 @@ test("570 Teklifler sunucuda sayfalı: ekranın süzgeciyle birebir; görmeyene 
   const b = <T,>(is: (db: Sorgulayici) => Promise<T>) => kiraciIcinde(havuz, B, is, { hesapId: YON_B.id });
   const bl = (await b((db) => teklifListesi(db, YON_B)))!;
   assert.equal((await b((db) => teklifSayfasi(db, YON_B, {})))!.kayitSayisi, bl.length, "başka firma kendi tekliflerini görür, A'nınkini değil");
+});
+
+/* 2026-11-09 — reisim: "senesi yaklaşan aranması gereken müşteriler için … yaklaşan muayeneler tuşu olsun … uyarı balonu olsun"; "teklif gönderme işi de mail ile olsun teklif
+   gönder diyince ön izleme ile müşterinin mailine gönderilecek mail düzenlenebilsin" */
+const PDF = new TextEncoder().encode("%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n");
+const ayOnce = (n: number) => { const d = new Date(); d.setUTCMonth(d.getUTCMonth() - n); return d.toISOString().slice(0, 10); };
+
+test("YAKLAŞAN MUAYENELER + E-POSTAYLA TEKLİF: yalnız son 2 ay, iletişim, balon yalnız teklifi hazırlayana; gönderince teklif gönderildi, ekli e-posta, balon iner; düzenlenen metin gider; PDF düşerse her şey geri alınır", async () => {
+  const q = async (metin: string, p: unknown[] = []) => (await sql<{ id: string }>(A, metin, p)).rows[0].id;
+  const my = await q("INSERT INTO musteri (unvan, kisa, ilgili, tel, eposta) VALUES ('Deneme Yaklaşan A.Ş.', 'Deneme Yaklaşan', 'Deneme Yetkili', '02120000000', 'yaklasan@deneme-musteri.example') RETURNING id::text");
+  const yakin = await q("INSERT INTO tesis (musteri_id, ad, il) VALUES ($1, 'Yakın Tesis', 'Kocaeli') RETURNING id::text", [my]);
+  const uzak = await q("INSERT INTO tesis (musteri_id, ad) VALUES ($1, 'Uzak Tesis') RETURNING id::text", [my]);
+  /* periyot 12 ay: 11 ay önce kontrol edilen 1 ay sonra gelir; 4 ay önce kontrol edilen 8 ay sonra */
+  const ekle = (t: string, kod: string, dis: string) => q("INSERT INTO ekipman (tesis_id, tur_id, kod, ekleyen, dis_kontrol) VALUES ($1, $2, $3, 'x', $4) RETURNING id::text", [t, ht, kod, dis]);
+  await ekle(yakin, "YK-1", ayOnce(11)); await ekle(yakin, "YK-2", ayOnce(4)); await ekle(uzak, "YK-3", ayOnce(4));
+
+  const liste = async (k: Kisi) => (await a(k, (db) => yaklasanListesi(db, k)))!;
+  const satir = (await liste(PLAN)).find((x) => x.id === yakin)!;
+  assert.deepEqual([satir.musteri, satir.tesis, satir.yer, satir.ekipman, satir.toplam, satir.turler, satir.ilgili, satir.tel, satir.teklif, satir.bekliyor],
+    ["Deneme Yaklaşan", "Yakın Tesis", "Kocaeli", 1, 2, ["Hava tankı"], "Deneme Yetkili", "02120000000", null, true]);
+  assert.ok(satir.kalan > 0 && satir.kalan <= 31, String(satir.kalan));
+  assert.equal((await liste(PLAN)).some((x) => x.id === uzak), false, "8 ay sonraki tesis listede yok");
+  /* yetki: muhasebe görür ama balon yok; denetçi görmez; başka firma boş */
+  assert.ok((await liste(MUH)).some((x) => x.id === yakin));
+  assert.equal(await a(MUH, (db) => yaklasanSayisi(db, MUH)), null);
+  assert.equal(await a(DEN, (db) => yaklasanListesi(db, DEN)), null);
+  assert.deepEqual(await kiraciIcinde(havuz, B, (db) => yaklasanListesi(db, YON_B), { hesapId: YON_B.id }), []);
+  assert.equal((await a(PLAN, (db) => yaklasanSayfasi(db, PLAN, { ara: "Yakın Tesis" })))!.gorunen.length, 1);
+  const once = (await a(PLAN, (db) => yaklasanSayisi(db, PLAN)))!;
+  assert.ok(once.yaklasan >= 1);
+  const balon = (await a(PLAN, (db) => menuTakip(db, PLAN)))[11]!;
+  assert.equal(balon.sari, once.yaklasan, "yan menü balonu aynı sayı");
+  assert.equal(balon.neden[0].yer, "/teklifler/yaklasan");
+  assert.equal((await a(MUH, (db) => menuTakip(db, MUH)))[11], undefined, "muhasebeye balon yok");
+
+  /* "Teklif hazırla": kalemler tesisin etkin ekipmanından, fiyat listesiyle */
+  const dolu = formDegeri(null, (await a(PLAN, (db) => teklifSecenekleri(db, PLAN)))!, yakin, true).deger;
+  assert.deepEqual([dolu.musteri, dolu.tesis, dolu.gecerlilik, dolu.kalemler], [my, yakin, "30", [{ tur: ht, adet: "2", fiyat: "1.250,00" }]]);
+  const t = tamam(await a(PLAN, (db) => teklifKaydet(db, PLAN, null, 0, K({ musteri: my, tesis: yakin }))));
+  const sat2 = (await liste(PLAN)).find((x) => x.id === yakin)!;
+  assert.deepEqual([sat2.teklif?.durum, sat2.bekliyor], ["taslak", true], "taslak hâlâ bekliyor: müşteriye gitmedi");
+
+  /* gönderme penceresinin verisi: alıcı müşterinin, metin hazır, belge gönderilmiş hâliyle; gönderim kurulu değil */
+  const v = (await a(PLAN, (db) => teklifGonderimVerisi(db, PLAN, t.id)))!;
+  assert.deepEqual([v.kime, v.kimden, v.yeniden, v.belge.durum], ["yaklasan@deneme-musteri.example", null, false, "gonderildi"]);
+  assert.ok(v.govde.startsWith("Sayın Deneme Yetkili,") && v.govde.includes("Yakın Tesis için") && v.govde.includes("Deneme Planlama"), v.govde);
+  assert.ok(v.belge.bitis, "geçerlilik sonu önizlemede");
+  assert.equal(await a(MUH, (db) => teklifGonderimVerisi(db, MUH, t.id)), null, "gör düzeyi gönderemez");
+
+  const uret = async () => PDF;
+  const gonder = (k: Kisi, id: string, s: number | null, g: unknown, u = uret) => a(k, (db) => teklifEpostaGonder(db, depo, k, A, id, s, g, u));
+  const sayim = async () => (await sql<{ e: number; d: number; durum: string }>(A,
+    "SELECT (SELECT count(*)::int FROM eposta WHERE kaynak = 'teklif' AND kaynak_id = $1) AS e, (SELECT count(*)::int FROM dosya WHERE modul = 'teklif_gonderim' AND kayit_id = $1) AS d, (SELECT durum FROM teklif WHERE id = $1) AS durum", [t.id])).rows[0];
+  const s0 = await surum(t.id);
+  /* yetki ve girdi denetimi PDF'ten önce */
+  for (const k of [MUH, DEN, MEK]) assert.deepEqual(await gonder(k, t.id, s0, { kime: ["m@deneme.example"] }), { durum: "yetkisiz" }, k.roller[0]);
+  for (const g of [{ kime: [] }, { kime: ["x"] }, { kime: ["m@deneme.example"], konu: "" }, { kime: ["m@deneme.example"], govde: " " }]) assert.equal((await gonder(PLAN, t.id, s0, g)).durum, "gecersiz", JSON.stringify(g));
+  assert.deepEqual(await gonder(PLAN, t.id, s0 + 5, { kime: ["m@deneme.example"] }), { durum: "cakisma" });
+  assert.deepEqual(await kiraciIcinde(havuz, B, (db) => teklifEpostaGonder(db, depo, YON_B, B, t.id, null, { kime: ["m@deneme.example"] }, uret), { hesapId: YON_B.id }), { durum: "yok" }, "başka firma");
+  /* PDF düşerse her şey geri alınır: teklif taslak kalır, e-posta ve dosya yok */
+  await assert.rejects(gonder(PLAN, t.id, s0, { kime: ["m@deneme.example"] }, async () => { throw new Error("chromium"); }), /PDF/);
+  assert.deepEqual(await sayim(), { e: 0, d: 0, durum: "taslak" });
+
+  /* gönder: düzenlenen metin gider, alıcı başına tek satır, PDF ekli, gönderen tuşa basan; PDF gönderilmiş hâlden basılır */
+  const gelen: unknown[] = [];
+  tamam(await gonder(PLAN, t.id, s0, { kime: ["Musteri@Deneme.example", "ikinci@deneme.example"], konu: "Elle konu", govde: "Elle ileti" }, async (x?: unknown) => { gelen.push(x); return PDF; }));
+  assert.deepEqual(await sayim(), { e: 2, d: 1, durum: "gonderildi" });
+  assert.equal((gelen[0] as { durum: string }).durum, "gonderildi");
+  const ep = (await sql<{ kime: string; konu: string; govde: string; gonderen_ad: string; ek_ad: string }>(A, "SELECT kime, konu, govde, gonderen_ad, ek_ad FROM eposta WHERE kaynak = 'teklif' AND kaynak_id = $1 ORDER BY kime", [t.id])).rows;
+  assert.deepEqual(ep.map((x) => [x.kime, x.konu, x.govde, x.gonderen_ad]), [["ikinci@deneme.example", "Elle konu", "Elle ileti", "Deneme Planlama"], ["musteri@deneme.example", "Elle konu", "Elle ileti", "Deneme Planlama"]]);
+  assert.match(ep[0].ek_ad, /^T-.*\.pdf$/);
+  /* dosya teklifi görene açılır */
+  assert.equal(await a(MUH, (db) => teklifDosyasiGorulur(db, MUH, t.id)), true);
+  assert.equal(await a(DEN, (db) => teklifDosyasiGorulur(db, DEN, t.id)), false);
+
+  /* balon iner, satır "Gönderildi" olarak kalır */
+  const sat3 = (await liste(PLAN)).find((x) => x.id === yakin)!;
+  assert.deepEqual([sat3.teklif?.durum, sat3.bekliyor], ["gonderildi", false]);
+  assert.equal((await a(PLAN, (db) => yaklasanSayisi(db, PLAN)))!.yaklasan, once.yaklasan - 1);
+
+  /* yeniden gönder: durum değişmez, metin verilmezse hazır metin; kabul edilen gönderilmez */
+  const s1 = await surum(t.id);
+  tamam(await gonder(PLAN, t.id, s1, { kime: ["ucuncu@deneme.example"] }));
+  assert.equal(await surum(t.id), s1, "yeniden göndermek teklifi değiştirmez");
+  assert.ok((await sql<{ govde: string }>(A, "SELECT govde FROM eposta WHERE kime = 'ucuncu@deneme.example'")).rows[0].govde.startsWith("Sayın Deneme Yetkili,"));
+  assert.equal((await a(PLAN, (db) => teklifGonderimVerisi(db, PLAN, t.id)))!.yeniden, true);
+  tamam(await a(PLAN, (db) => teklifKabul(db, PLAN, t.id, s1)));
+  assert.equal((await gonder(PLAN, t.id, null, { kime: ["m@deneme.example"] })).durum, "red");
+  assert.equal(await a(PLAN, (db) => teklifGonderimVerisi(db, PLAN, t.id)), null);
 });

@@ -34,7 +34,7 @@ export function raporKlasoru(r: RaporYeri): string[] {
 /** firmanın yüklediği / programın ürettiği belgeler: dosya modülü → Belgeler altındaki klasör (yoksa yedeğe girmez). Rapor fotoğrafları ve imzalı
     rapor PDF'i raporun klasöründe (raporKlasoru); imzaya hazırlanan PDF, S.A.Y ekleri ve kişiye özel saha notları yedeğe girmez. */
 export const BELGE_KLASORU: Readonly<Record<string, readonly string[]>> = {
-  is_sozlesmesi: ["Sözleşmeler"], sozlesme_gonderim: ["Sözleşmeler", "Müşteriye gönderilen"], sozlesme_sablon: ["Sözleşmeler", "Şablonlar"],
+  is_sozlesmesi: ["Sözleşmeler"], sozlesme_gonderim: ["Sözleşmeler", "Müşteriye gönderilen"], sozlesme_sablon: ["Sözleşmeler", "Şablonlar"], teklif_gonderim: ["Teklifler", "Müşteriye gönderilen"],
   isg_katip: ["İSG-KATİP"], olcum_cihazi: ["Ölçüm cihazları"], egitim: ["Eğitimler"],
   ozluk: ["Personel", "Özlük"], atama: ["Personel", "Ekipman atama belgeleri"], bordro: ["Personel", "Bordrolar"], zimmet_formu: ["Personel", "Zimmet formları"],
   zimmet: ["Zimmet ve araç tutanakları"], belge_onay_imzali: ["İmzalı belgeler"], gider: ["Muhasebe", "Giderler"], izin: ["Talepler", "İzin belgeleri"],

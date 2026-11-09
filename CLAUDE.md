@@ -445,6 +445,8 @@ pkproje/
                             gösterir (kuyruk.ts bekleyenIcerik — sessiz veri kaybı önlemi)
                             · YENİ RAPOR (405): /raporlar/yeni/<plan>#<ekipman> (raporlar/ui/YeniRaporEkrani.tsx; sunucu yeniRaporPaketi, yazmaz) ·
                             SahaRaporu "yeni" kipi · rapor.olustur (islem-baglanti) — kimlik ve numara sunucuda; kuyruk işleri girdiği sırayla, bağımlılıklar beklenir
+  src/components/belge-onizleme/ BELGE ÖNİZLEMESİ tek üretici (2026-11-09): kâğıt kaba sığar (olcek.ts + --rb-olcek, belge.css); rb-onizleme sınıfı başka yerde yazılmaz (kilit tests/yaklasan)
+  src/components/eposta/    Alicilar.tsx + EpostaListesi.tsx (2026-11-09; sözleşme ve teklif gönderme)
   src/components/grafik/    TEK GRAFİK ÜRETİCİSİ (329): dikey sütun (maket T9), etiket ölçülerek, gizli tablo (ekran okuyucu)
   src/modules/yonetim/      probata YÖNETİM (2026-10-06, 348; KOD-GECIS Y1): firmalar, firma aç (ilk yönetici + geçici parola), dondur / etkinleştir,
                             yeni geçici parola — server/yonetim.ts yalnız 0050 işlevleriyle (yönetim rolü); sema.ts (ayrılmış adlar göçle aynı) · ui/ ·
@@ -476,6 +478,9 @@ pkproje/
                             her rapor TEK teklife (tesis × tür, imza gününde geçerli en son kabul — raporlananlar) · var olan müşteriye bağla ·
                             325: excel.ts (saf: Excel'den yükle → kalemler, Excel'e aktar, şablon) + ui/EkipmanExcel.tsx · teklif belgesi
                             src/belge/teklif.ts (temel format <kod>-FR-TKL-01) → PDF /teklifler/<id>/pdf (src/belge/pdf.ts teklifPdf) · 368 teklifSil (taslak; 0063)
+                            · 2026-11-09 YAKLAŞAN MUAYENELER /teklifler/yaklasan: yaklasan.ts (saf: son 2 ay, geçen 2 ay, açık plan, balon) · server/yaklasan.ts (liste, sayfa, sayı) · ui/YaklasanListesi.tsx;
+                            balon TeklifListesi + anasayfa/server/takip.ts (modül 11, yalnız "yaz") · TEKLİFİ GÖNDER: server/gonderim.ts (pencere verisi, teklifEpostaGonder — durum + PDF + ekli e-posta tek işlemde) ·
+                            ui/TeklifGonder.tsx · ui/belge-eylemler.ts (Chromium; sayfa maxDuration 60) · kilit tests/yaklasan, teklifler (PG), bozan yaklasan, e2e teklifler
   src/tanim/iller.ts        81 il + 973 ilçe (açık veri, MIT; bir kez alındı)
   src/tanim/bakanlik/       Bakanlığın resmî PDF'leri ZPKR01–05 (rapor formatı) + ZPKK01–05 (kriterler); 467: ZPKR06 / ZPKK06 kule kren,
                             ZPKR07 / ZPKK07 asılı erişim, ZPMR01 / ZPMK01 + ZYDR01 / ZYDK01 LPG tankı — okuyucu src/server/bakanlik.ts; okuyan uçlar

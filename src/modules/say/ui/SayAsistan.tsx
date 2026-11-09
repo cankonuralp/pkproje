@@ -535,7 +535,7 @@ export function SayAsistan() {
     /* 2026-10-31 ("PDF gönderim ayrı uç"): PDF basan gönderim ayrı uçta (Chromium) — ekranın tuşlarının işlevleri, kullanıcının oturumu */
     if (k.tur === "pdfGonder") {
       setAsama("Gönderiyor");
-      const ad = { katilim: "Katılım formu", zimmet: "Zimmet teslim formu", onbilgi: "Ön bilgilendirme formu", sozlesme: "Sözleşme" }[k.belge];
+      const ad = { katilim: "Katılım formu", zimmet: "Zimmet teslim formu", onbilgi: "Ön bilgilendirme formu", sozlesme: "Sözleşme", teklif: "Teklif" }[k.belge];
       try {
         const r = await fetch("/api/say/pdf", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tur: k.belge, id: k.kayit, kime: k.kime }) });
         const y = (await r.json()) as { tamam?: boolean; bildirim?: string; neden?: string };

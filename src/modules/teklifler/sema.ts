@@ -1,7 +1,7 @@
 /* TEKLİFLER — formun ve sunucunun TEK şeması (maket teklifler.html formu; pkproje §3.1 modül 11; §9 yirmi birinci tur 119–124; 2026-09-27
    kayıtlı olmayan müşteri). İletiler maketle aynı. Tutarlar KURUŞ (src/sema/ortak.ts tutar), KDV hariç. Alan adları formdaki kimliklerle
    aynı: musteri · tesis · aday.<alan> · gecerlilik · kdv · notlar · kalemler.<i>.<alan> · kalem. */
-import { kimlik, metin, tutar, z } from "../../sema/ortak.ts";
+import { eposta, kimlik, metin, tutar, z } from "../../sema/ortak.ts";
 import { IL_ILCE } from "../../tanim/iller.ts";
 import { MusteriGirdisi } from "../musteriler/sema.ts";
 
@@ -80,4 +80,34 @@ export function bitisGunu(gonderildi: string, gecerlilik: number): string {
   const d = new Date(`${gonderildi}T12:00:00Z`);
   d.setUTCDate(d.getUTCDate() + gecerlilik);
   return d.toISOString().slice(0, 10);
+}
+
+/* ── E-POSTAYLA GÖNDER (2026-11-09; reisim: "teklif gönderme işi de mail ile olsun teklif gönder diyince ön izleme ile müşterinin mailine gönderilecek mail
+   düzenlenebilsin"): alıcı en çok 5 (başlangıçta müşterinin e-postası), konu ve ileti düzenlenir; verilmezse (S.A.Y) hazır metin. Saf. ── */
+export const GONDER_EN_COK = 5;
+const tekSatir = (s: unknown) => (typeof s === "string" ? s.replace(/\s+/g, " ").trim() : s);
+export const TeklifEpostaGirdisi = z.object({
+  kime: z.array(eposta, { error: "En az bir e-posta yazılmalı." }).min(1, "En az bir e-posta yazılmalı.").max(GONDER_EN_COK, `En çok ${GONDER_EN_COK} e-posta.`)
+    .refine((l) => new Set(l).size === l.length, "Aynı e-posta iki kez yazılmış."),
+  konu: z.preprocess(tekSatir, z.string().min(1, "Konu yazılmalı.").max(200, "Konu en çok 200 karakter.")).optional(),
+  govde: z.preprocess(kirp, z.string().min(1, "İleti yazılmalı.").max(5000, "İleti en çok 5.000 karakter.")).optional(),
+});
+
+const gunYaz = (s: string) => `${s.slice(8, 10)}.${s.slice(5, 7)}.${s.slice(0, 4)}`;
+export interface TeklifEpostaBilgisi {
+  firma: string; no: string; unvan: string; ilgili: string | null; tesisler: readonly string[]; tutar: number; kdv: number; gecerlilik: number;
+  /** tesislerin en yakın muayene günü (son 2 aya girdiyse) */
+  muayene: string | null; gonderen: string;
+}
+/** gönderme penceresinin hazır metni; kişi değiştirebilir */
+export function teklifEpostasi(p: TeklifEpostaBilgisi): { konu: string; govde: string } {
+  const satirlar = [
+    `Sayın ${p.ilgili?.trim() || p.unvan},`, "",
+    `${p.tesisler.length ? `${p.tesisler.join(", ")} için p` : "P"}eriyodik kontrol hizmeti teklifimiz ektedir.`,
+    ...(p.muayene ? [`Ekipmanlarınızın sonraki periyodik kontrol tarihi: ${gunYaz(p.muayene)}`] : []), "",
+    `Teklif no: ${p.no}`, `Tutar: ${para(p.tutar)} + KDV (KDV dahil ${para(kdvli(p.tutar, p.kdv))})`, `Geçerlilik: ${p.gecerlilik} gün`, "",
+    "Sorularınızı ve onayınızı bu e-postayı yanıtlayarak iletebilirsiniz.", "",
+    "Saygılarımızla,", p.gonderen, p.firma,
+  ];
+  return { konu: `${p.firma} · ${p.no} periyodik kontrol teklifi`.slice(0, 200), govde: satirlar.join("\n") };
 }

@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { belgeFormu } from "../../../belge/belge";
 import { BELGE_KATALOGU, ornekDegerler, type BelgeTuru } from "../../../belge/katalog";
+import { BelgeOnizleme } from "../../../components/belge-onizleme/BelgeOnizleme";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Alan, FormIzgara, Girdi } from "../../../components/form/Form";
 import { useOnayla } from "../../../components/pencere/Onay";
@@ -158,8 +159,7 @@ export function BelgeKurucu({ belge, format, tanim }: { belge: BelgeTuru; format
         </div>
         {onizleme && (
           <div className={stil.belgeKap}>
-            {/* kayan öğe belgenin kendisi: klavyeyle kaydırılsın diye odak ve ad onda (rapor önizlemesi gibi) */}
-            <div className="rb-onizleme" aria-label="Belge önizlemesi" role="region" tabIndex={0}>{onizleme}</div>
+            <BelgeOnizleme etiket="Belge önizlemesi">{onizleme}</BelgeOnizleme>
           </div>
         )}
       </div>

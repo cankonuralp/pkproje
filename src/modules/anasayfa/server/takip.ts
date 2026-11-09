@@ -20,6 +20,7 @@ import { anaPlanlar, isgEksikPlanlar, type IsgEksikPlan } from "../../planlar/se
 import { kendiYeniRaporlarim } from "../../raporlar/server/anasayfa-baglanti.ts";
 import { uyariListesi } from "../../uyarilar/server/uyarilar.ts";
 import { yedekTakibi } from "../../firma-ayarlari/server/yedek.ts";
+import { yaklasanSayisi } from "../../teklifler/server/yaklasan.ts";
 import { bugunTr, type Kisi } from "./anasayfa.ts";
 
 /** balonun bir sebebi: kaç tane, ne (sayıdan sonra okunur: "2 rapor onayınızı bekliyor"), listelendiği sayfa; sayfada: o sayfa sebebi zaten gösteriyor */
@@ -103,6 +104,12 @@ export async function menuTakip(db: Sorgulayici, kim: Kisi & YetkiHesabi): Promi
   /* firma ayarları (22) — 2026-11-03: yedek gönderilemiyor (Drive / OneDrive bağlantısı koptu ya da hesap dolu); yalnız ayarı değiştirebilene */
   if (await yedekTakibi(db, kim)) koy(22, { kirmizi: "gönderilemeyen yedek", sari: "" },
     ne("kirmizi", 1, "yedek gönderilemiyor (Drive / OneDrive bağlantısı koptu ya da hesap dolu)", "/firma-ayarlari"));
+
+  /* teklifler (11) — 2026-11-09 (reisim: "yaklaşan muayeneler tuşu olsun … uyarı balonu olsun"): muayenesi son 2 aya giren, teklifi bekleyen tesisler; yalnız teklifi hazırlayacak kişiye */
+  const yak = gor(11) ? await yaklasanSayisi(db, kim) : null;
+  if (yak) koy(11, { kirmizi: "muayene tarihi geçen, teklif bekleyen tesis", sari: "muayenesi 2 ay içinde, teklif bekleyen tesis" },
+    ne("kirmizi", yak.gecen, "tesisin muayene tarihi geçti, teklif bekliyor", "/teklifler/yaklasan", true),
+    ne("sari", yak.yaklasan, "tesisin muayenesi 2 ay içinde, teklif bekliyor", "/teklifler/yaklasan", true));
 
   /* muhasebe (18): vadesi geçen fatura — 565: tek sayım sorgusu (bütün muhasebe okunmaz) */
   if (hepsi(18)) koy(18, { kirmizi: "vadesi geçen fatura", sari: "" },

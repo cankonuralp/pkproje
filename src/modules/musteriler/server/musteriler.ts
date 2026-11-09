@@ -229,6 +229,13 @@ export async function musteriIletisim(db: Sorgulayici, id: string): Promise<{ un
   return (await db.sorgu<{ unvan: string; vd: string | null; vno: string | null; eposta: string | null; tel: string | null; ilgili: string | null }>(
     "SELECT unvan, vd, vno, eposta, tel, ilgili FROM musteri WHERE id = $1", [id])).rows[0] ?? null;
 }
+/** birkaç müşterinin iletişim bilgisi tek sorguda (Teklifler › Yaklaşan muayeneler). Yetki ÇAĞIRANDA. */
+export async function musteriIletisimleri(db: Sorgulayici, idler: readonly string[]): Promise<Map<string, { eposta: string | null; tel: string | null; ilgili: string | null }>> {
+  const l = idler.filter((x) => /^[0-9a-f-]{36}$/.test(x));
+  if (!l.length) return new Map();
+  return new Map((await db.sorgu<{ id: string; eposta: string | null; tel: string | null; ilgili: string | null }>(
+    "SELECT id::text, eposta, tel, ilgili FROM musteri WHERE id = ANY ($1::uuid[])", [l])).rows.map((x) => [x.id, { eposta: x.eposta, tel: x.tel, ilgili: x.ilgili }]));
+}
 
 /** Raporlar için: tesisin adı, müşterisinin ünvanı / kısa adı, e-postası, telefonu (raporun künyesine kopyalanır); yoksa null. Yetki ÇAĞIRANDA. */
 export async function tesisMusteriIletisim(db: Sorgulayici, tesisId: string): Promise<{ tesisAd: string; unvan: string; kisa: string; eposta: string | null; tel: string | null } | null> {

@@ -11,6 +11,7 @@ import "../../../belge/belge.css";
 import { belgeFormu } from "../../../belge/belge";
 import { eksikElleAlanlar, elleAlanlari, elleDegerleriDenetle, ELLE_DEGER_EN_UZUN, type ElleAlan } from "../../../belge/doldurma";
 import type { BelgeDegerleri, BelgeTuru } from "../../../belge/katalog";
+import { BelgeOnizleme } from "../../../components/belge-onizleme/BelgeOnizleme";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Alan, FormIzgara, Girdi, ipucuId } from "../../../components/form/Form";
 import { Pencere } from "../../../components/pencere/Pencere";
@@ -110,7 +111,7 @@ export function BelgeDoldurmaTusu(p: {
             </FormIzgara>
           </div>
           <p className={stil.onizlemeBas} id={`${kok}-onizleme`}>Belge önizlemesi</p>
-          <div className={`rb-onizleme ${stil.onizleme}`} role="region" aria-labelledby={`${kok}-onizleme`} tabIndex={0}>{onizleme}</div>
+          <BelgeOnizleme ek={stil.onizleme} etiketId={`${kok}-onizleme`}>{onizleme}</BelgeOnizleme>
         </Pencere>
       )}
     </>

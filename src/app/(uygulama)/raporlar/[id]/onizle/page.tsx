@@ -6,6 +6,7 @@ import "../../../../../belge/belge.css";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { raporBelgesi } from "../../../../../belge/belge";
+import { BelgeOnizleme } from "../../../../../components/belge-onizleme/BelgeOnizleme";
 import { Yetkisiz } from "../../../../../components/hata/Hata";
 import { Kirinti, NesneBasi } from "../../../../../components/sayfa/Sayfa";
 import { DosyaAcTusu } from "../../../../../components/gizli-resim/GizliResim";
@@ -38,7 +39,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
             : v.imzaliSilindi ? null
             : <a className={tusSinifi("birincil")} href={`/raporlar/${v.id}/pdf`} download><Ikon ad="download" kucuk />PDF indir</a>}
         </>} />
-      <div className="rb-onizleme" tabIndex={0} role="region" aria-label="Rapor belgesi önizlemesi">{raporBelgesi(v.belge)}</div>
+      <BelgeOnizleme etiket="Rapor belgesi önizlemesi">{raporBelgesi(v.belge)}</BelgeOnizleme>
     </>
   );
 }

@@ -234,6 +234,8 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await expect(belge).toContainText(E2E_SAHA.cihaz);
   await expect(belge).toContainText(`${kayittaki} (düzeltildi)`);   // 492: denetçinin düzelttiği firma adı
   await expect(belge.getByRole("img", { name: "on.jpg" })).toBeVisible();
+  /* 2026-11-09 (reisim: "telefonda pdf ön izlemesi ekrana sığmıyor"): kâğıt her genişlikte kabına sığar, sayfa da kap da yana kaymaz */
+  await expect.poll(() => page.evaluate(() => { const k = document.querySelector<HTMLElement>(".rb-onizleme")!; return k.scrollWidth <= k.clientWidth + 1 && document.documentElement.scrollWidth <= window.innerWidth && document.querySelector(".rb-sayfa")!.getBoundingClientRect().right <= window.innerWidth; })).toBe(true);
   /* 316 PDF indir: imzasız, kesin PDF motoruyla (başsız Chromium) */
   const [indirme] = await Promise.all([page.waitForEvent("download", { timeout: 60_000 }), page.getByRole("link", { name: "PDF indir" }).click()]);
   /* 2026-10-17: rapor no - ekipman kodu - tür adı - imzasiz (raporlar/sema.ts raporDosyaAdi) */

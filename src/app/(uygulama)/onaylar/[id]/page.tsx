@@ -4,6 +4,7 @@
 import "../../../../belge/belge.css";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { BelgeOnizleme } from "../../../../components/belge-onizleme/BelgeOnizleme";
 import { Yetkisiz } from "../../../../components/hata/Hata";
 import { raporBelgesi } from "../../../../belge/belge";
 import { modulBul } from "../../../../modules/moduller";
@@ -27,5 +28,5 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
   if (!sonuc) notFound();
   const { v, b } = sonuc;
   return <OnayEkrani key={`${v.r.id}-${v.r.surum}`} v={v}
-    belge={b ? <div className="rb-onizleme" tabIndex={0} role="region" aria-label="Rapor belgesi önizlemesi">{raporBelgesi(b.belge)}</div> : <p>Raporun belgesi görüntülenemiyor.</p>} />;
+    belge={b ? <BelgeOnizleme etiket="Rapor belgesi önizlemesi">{raporBelgesi(b.belge)}</BelgeOnizleme> : <p>Raporun belgesi görüntülenemiyor.</p>} />;
 }

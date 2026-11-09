@@ -1,7 +1,7 @@
 "use client";
 /* TEKLİFLER LİSTESİ (maket teklifler.html #/ — SUTUN, suzgecTanimla "t"): en yeni üstte; sütunlar Teklif no (tarih) · Müşteri / tesis · Kalem ·
    Tutar (KDV hariç) · Geçerlilik · Durum. Çipler: Taslak · Gönderildi · Kabul edildi · Red ya da süresi doldu (aynı grup) · Geçerliliği 7 gün
-   içinde bitiyor; seçici Müşteri. "Teklif hazırla" yalnız "yaz" düzeyine. Görme ve karar sunucuda.
+   içinde bitiyor; seçici Müşteri. "Teklif hazırla" yalnız "yaz" düzeyine. 2026-11-09: yanında "Yaklaşan muayeneler" (balon yalnız "yaz" düzeyine). Görme ve karar sunucuda.
    570 (09-B3): süzgeç ve sayfa SUNUCUDA (server/teklifler.ts teklifSayfasi; tanım ../liste.ts — ekranla aynı); ekrana yalnız sayfa. */
 import Link from "next/link";
 import { KartEtiket, Kirp, type Sutun } from "../../../components/liste/Liste";
@@ -33,11 +33,18 @@ const SUTUNLAR: Sutun<TeklifSatiri>[] = [
 
 const tanim = (sec: Record<string, Secenek[]>) => teklifTanim(sec.musteri ?? []);
 
-export function TeklifListesi({ ilk, yaz }: { ilk: SunucuListe<TeklifSatiri>; yaz: boolean }) {
+/** yaklasan: "Yaklaşan muayeneler" tuşunun balonu (2026-11-09; yalnız teklifi hazırlayacak kişiye — yoksa null) */
+export function TeklifListesi({ ilk, yaz, yaklasan }: { ilk: SunucuListe<TeklifSatiri>; yaz: boolean; yaklasan: { gecen: number; yaklasan: number } | null }) {
   const s = useSunucuSuzgec(tanim, ilk, teklifSayfasiEylemi);
   return (
     <>
-      <SayfaBasi baslik="Teklifler" sayac={<Sayac s={s} />} tuslar={yaz ? <TusBaglanti tur="birincil" ikon="plus" href="/teklifler/yeni">Teklif hazırla</TusBaglanti> : undefined} />
+      <SayfaBasi baslik="Teklifler" sayac={<Sayac s={s} />} tuslar={<>
+        <TusBaglanti ikon="clock" href="/teklifler/yaklasan">Yaklaşan muayeneler
+          {!!yaklasan?.gecen && <span className={`${stil.balon} ${stil.balonKirmizi}`} title={`${yaklasan.gecen} tesisin muayene tarihi geçti, teklif bekliyor`}>{yaklasan.gecen}<span className="gizli"> tesisin muayene tarihi geçti, teklif bekliyor</span></span>}
+          {!!yaklasan?.yaklasan && <span className={`${stil.balon} ${stil.balonSari}`} title={`${yaklasan.yaklasan} tesisin muayenesi 2 ay içinde, teklif bekliyor`}>{yaklasan.yaklasan}<span className="gizli"> tesisin muayenesi 2 ay içinde, teklif bekliyor</span></span>}
+        </TusBaglanti>
+        {yaz && <TusBaglanti tur="birincil" ikon="plus" href="/teklifler/yeni">Teklif hazırla</TusBaglanti>}
+      </>} />
       <SuzgecliListe s={s} on="t" baslik="Teklifler" sutunlar={SUTUNLAR} anahtar={(t) => t.id} href={(t) => `/teklifler/${t.id}`}
         bosVeri={{ ikon: "file-text", baslik: "Teklif yok" }} />
     </>

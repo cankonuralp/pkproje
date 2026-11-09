@@ -1,4 +1,4 @@
-/* YENİ TEKLİF (maket teklifler.html #/yeni; ?kopya=<id> "Yeni teklif (kopyala)", ?tesis=<id> tesisten başlat) — yalnız "yaz" düzeyi; öteki kişi
+/* YENİ TEKLİF (maket teklifler.html #/yeni; ?kopya=<id> "Yeni teklif (kopyala)", ?tesis=<id> tesisten başlat, &doldur=1 kalemler tesisin ekipmanından — 2026-11-09 Yaklaşan muayeneler) — yalnız "yaz" düzeyi; öteki kişi
    yetkisiz ekranı görür. Kopyada müşteri / tesisler / koşullar / kalemler gelir (pasife alınan müşteri / tesis düşer, şeritte söylenir); numara ve
    tarih yeni. Başlangıç değeri sunucuda (form-degeri.ts). */
 import type { Metadata } from "next";
@@ -19,6 +19,6 @@ export default async function Sayfa({ searchParams }: { searchParams: Promise<Re
   const kopya = typeof q.kopya === "string" ? q.kopya : null, tesis = typeof q.tesis === "string" ? q.tesis : null;
   const [s, k] = await oturumIslemi(o, async (db) => [await teklifSecenekleri(db, o), kopya ? await teklifKarti(db, o, kopya) : null] as const);
   if (!s) return <Yetkisiz />;
-  const { deger, dusen } = formDegeri(k, s, tesis);
+  const { deger, dusen } = formDegeri(k, s, tesis, q.doldur === "1");
   return <TeklifFormu secenekler={s} deger={deger} dusen={dusen} kopyaKaynak={k ? { id: k.id, no: k.no } : null} />;
 }

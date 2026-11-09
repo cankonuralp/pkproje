@@ -1,5 +1,5 @@
 /* NEREDEN GELDİ: K4 Teklifler (324) — maket teklifler.html (M12 2. tur). Gerçek tarayıcıda, üç genişlikte: yeni teklif (eksikte reddedilir;
-   müşteri, tesis, kalem — tutar ve KDV'li toplam canlı) → teklif sayfası (numara T-AAYY-SIRA sunucuda, Taslak) → Gönderildi olarak işaretle →
+   müşteri, tesis, kalem — tutar ve KDV'li toplam canlı) → teklif sayfası (numara T-AAYY-SIRA sunucuda, Taslak) → Teklifi gönder (2026-11-09: e-postayla) →
    Kabul edildi (onay penceresi) → Plan aç · muhasebe teklifi görür, eylem tuşu yok · denetçi Teklifler'i göremez. Her proje kendi teklifini açar.
    325: "Excel'den yükle" (CSV: geçerli satır kaleme eklenir, bilinmeyen tür gerekçesiyle atlanır), teklif sayfasında PDF ve "Excel'e aktar" iner.
    326: kabul edilen tekliften "İş sözleşmesi" — form dolu açılır, sözleşmede Dayanak teklif. */
@@ -54,8 +54,23 @@ test("teklif: hazırla, gönderildi, kabul edildi; muhasebe yalnız görür, den
   await aktar.getByRole("button", { name: "Kapat" }).last().click();   // başlıktaki X tuşunun adı da "Kapat"
 
   await hazir(page);
-  await page.getByRole("button", { name: "Gönderildi olarak işaretle" }).click();
-  await expect(page.getByRole("button", { name: "Kabul edildi" })).toBeVisible({ timeout: 30_000 });
+  /* 2026-11-09 (reisim: "teklif gönder diyince ön izleme ile müşterinin mailine gönderilecek mail düzenlenebilsin"): pencere hazır metinle açılır, ileti düzenlenir,
+     önizleme yazılanı gösterir, belge kaba sığar; gönderilince teklif "gönderildi", giden e-posta sayfada */
+  await page.getByRole("button", { name: "Teklifi gönder" }).click();
+  const gonder = page.getByRole("dialog", { name: /^Teklifi gönder/ });
+  await expect(gonder.getByLabel("Konu")).toHaveValue(new RegExp(no), { timeout: 30_000 });
+  await gonder.getByLabel("Alıcı").fill("musteri@deneme.example");
+  await gonder.getByLabel("İleti").fill("Deneme iletisi\nİkinci satır");
+  await expect(gonder.getByRole("region", { name: "E-postanın önizlemesi" })).toContainText("Deneme iletisi");
+  await expect(gonder.getByRole("region", { name: "E-postanın önizlemesi" })).toContainText("musteri@deneme.example");
+  await gonder.getByRole("radio", { name: "Teklif belgesi" }).click();
+  await expect(gonder.getByRole("article", { name: `${no} teklif belgesi` })).toBeVisible();
+  await expect(gonder).not.toContainText("Taslak — müşteriye gönderilmedi.");
+  await expect.poll(() => page.evaluate(() => { const k = document.querySelector<HTMLElement>("dialog[open] .rb-onizleme")!; return k.scrollWidth <= k.clientWidth + 1; })).toBe(true);
+  await gonder.getByRole("button", { name: "Gönder", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Kabul edildi" })).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByText("musteri@deneme.example").first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("button", { name: "Yeniden gönder" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Sil", exact: true })).toHaveCount(0);   // 368: gönderilmiş teklif silinmez
   await expect(page.getByRole("link", { name: "Düzenle" })).toHaveCount(0);
   await page.getByRole("button", { name: "Kabul edildi" }).click();
@@ -69,6 +84,11 @@ test("teklif: hazırla, gönderildi, kabul edildi; muhasebe yalnız görür, den
   await page.goto("/teklifler");
   await hazir(page);
   await expect(page.getByRole("link", { name: no })).toBeVisible();
+  /* 2026-11-09: "Yaklaşan muayeneler" tuşu teklif hazırlamanın yanında, sayfası açılır, yana taşmaz */
+  await page.getByRole("link", { name: /Yaklaşan muayeneler/ }).click();
+  await expect(page).toHaveURL(/\/teklifler\/yaklasan$/, { timeout: 30_000 });
+  await expect(page.getByRole("heading", { level: 1, name: "Yaklaşan muayeneler" })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
   /* 326: "İş sözleşmesi" — form müşteri, Dayanak teklif ve teklifin tesisiyle dolu açılır; sözleşmede Dayanak teklif */
   await page.goto(adres);
@@ -91,7 +111,7 @@ test("teklif: hazırla, gönderildi, kabul edildi; muhasebe yalnız görür, den
   await page.goto(adres);
   await hazir(page);
   await expect(page.getByRole("heading", { level: 1, name: no })).toBeVisible();
-  for (const t of ["Reddedildi", "Kabul edildi", "Müşteri olarak kaydet"]) await expect(page.getByRole("button", { name: t })).toHaveCount(0);
+  for (const t of ["Reddedildi", "Kabul edildi", "Müşteri olarak kaydet", "Teklifi gönder", "Yeniden gönder"]) await expect(page.getByRole("button", { name: t })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Plan aç" })).toHaveCount(0);
 
   /* denetçi: Teklifler'i göremez */

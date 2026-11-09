@@ -1,9 +1,8 @@
 "use client";
 /* TEKLİF SAYFASI EYLEMLERİ (maket teklifler.html teklifCiz eylem çubuğu — başlık satırında): PDF (teklif belgesi) · duruma göre — taslak: Düzenle ·
-   Gönderildi olarak işaretle; gönderildi: Reddedildi (müşterinin gerekçesi, pencere) · Kabul edildi (onay); kabul edildi: kayıtlı olmayan
+   Teklifi gönder (2026-11-09: e-postayla, TeklifGonder.tsx); gönderildi: Yeniden gönder · Reddedildi (müşterinin gerekçesi, pencere) · Kabul edildi (onay); kabul edildi: kayıtlı olmayan
    müşteride "Müşteri olarak kaydet" (Müşteriler'in uyarısı gösterilir, onaylanırsa kaydedilir) ve "Var olan müşteriye bağla" (pencere), kayıtlı
-   müşteride İş sözleşmesi · Plan aç (hedef modülün yetkisiyle); red ya da süresi doldu: Yeni teklif (kopyala). Teklif müşteriye elle iletilir
-   (121). Karar sunucuda; sonuç bildirimle. 368: kullanılmamış taslakta yöneticiye Sil.
+   müşteride İş sözleşmesi · Plan aç (hedef modülün yetkisiyle); red ya da süresi doldu: Yeni teklif (kopyala). Karar sunucuda; sonuç bildirimle. 368: kullanılmamış taslakta yöneticiye Sil.
    2026-10-25 (belge doldurma; reisim: "sözleşme vb işleri de yüklediğimde, el ile değiştirilebilir ve doldurulabilir olmalı …"): PDF'in yanında
    "Belgeyi doldur" — firmanın yayındaki teklif formatında elle doldurulan yer varsa, taslakta ve değiştirebilene (doldur: sunucudan). */
 import { useRouter } from "next/navigation";
@@ -18,7 +17,8 @@ import { SilTusu } from "../../../components/sil/SilTusu";
 import { BelgeDoldurmaTusu } from "../../rapor-format/ui/BelgeDoldurma";
 import { Tus, TusBaglanti, tusSinifi } from "../../../components/tus/Tus";
 import type { TeklifDoldurmaVerisi, TeklifKarti } from "../server/teklifler";
-import { teklifDoldurEylemi, teklifGonderEylemi, teklifKabulEylemi, teklifSilEylemi, teklifMusteriBaglaEylemi, teklifMusteriKaydetEylemi, teklifReddetEylemi, type TeklifYaniti } from "./eylemler";
+import { TeklifGonderTusu } from "./TeklifGonder";
+import { teklifDoldurEylemi, teklifKabulEylemi, teklifSilEylemi, teklifMusteriBaglaEylemi, teklifMusteriKaydetEylemi, teklifReddetEylemi, type TeklifYaniti } from "./eylemler";
 import stil from "./teklifler.module.css";
 
 const GEREKCE = "w-gerekce";
@@ -39,7 +39,6 @@ export function TeklifEylemleri({ t, pdf, musteriler = [], doldur = null }: { t:
     bildir(r.genel ?? Object.values(r.hatalar ?? {})[0] ?? "İşlem yapılamadı.");
     return false;
   };
-  const gonder = () => baslat(async () => { sonuc(await teklifGonderEylemi(t.id, t.surum)); });
   const kabul = async () => {
     if (!(await onayla({ baslik: "Teklif kabul edildi mi?", metin: `${t.no} kabul edildi olarak işaretlenir; sıradaki adım iş sözleşmesi.`, tus: "Kabul edildi" }))) return;
     baslat(async () => { sonuc(await teklifKabulEylemi(t.id, t.surum)); });
@@ -72,8 +71,8 @@ export function TeklifEylemleri({ t, pdf, musteriler = [], doldur = null }: { t:
       {doldur && <BelgeDoldurmaTusu belge="teklif" baslik={doldur.baslik} tanim={doldur.tanim} degerler={doldur.degerler} surum={doldur.surum}
         onizlemeVerisi={doldur.onizleme} kaydet={belgeKaydet} />}
       {izin.duzenle && <TusBaglanti ikon="pencil" href={`/teklifler/${t.id}/duzenle`}>Düzenle</TusBaglanti>}
-      {izin.duzenle && <Tus ikon="send" disabled={bekliyor || !izin.gonder} onClick={gonder}>Gönderildi olarak işaretle</Tus>}
       {izin.sil && <SilTusu ad={t.no} baslik="Teklif taslağını sil" yanEtki="kalemleri ve tesisleri de silinir" sil={() => teklifSilEylemi(t.id)} donus="/teklifler" />}
+      {izin.eposta && <TeklifGonderTusu t={t} />}
       {izin.sonuc && <Tus tur="ikincil" ikon="ban" disabled={bekliyor} onClick={() => setRed({ gerekce: "", hata: null })}>Reddedildi</Tus>}
       {izin.sonuc && <Tus ikon="check" disabled={bekliyor} onClick={() => void kabul()}>Kabul edildi</Tus>}
       {izin.bagla && <Tus tur="ikincil" ikon="building-2" disabled={bekliyor} onClick={() => setBag({ musteri: "", tesis: "", hatalar: {} })}>Var olan müşteriye bağla</Tus>}

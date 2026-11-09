@@ -12,12 +12,16 @@ export interface TeklifFormDegeri {
 }
 export const BOS_ADAY: AdayDegeri = { unvan: "", vd: "", vno: "", adres: "", il: "", ilce: "", eposta: "", tel: "", yetkili: "" };
 
-/** k: kopyalanan / düzenlenen teklif (yoksa boş form; tesis verilirse o tesisle başlar) */
-export function formDegeri(k: TeklifKarti | null, s: TeklifSecenekleri, tesis: string | null = null): { deger: TeklifFormDegeri; dusen: string[] } {
+/** k: kopyalanan / düzenlenen teklif (yoksa boş form; tesis verilirse o tesisle başlar). doldur (2026-11-09, Yaklaşan muayeneler): kalemler tesisin etkin
+    ekipmanından, fiyat listesiyle; geçerlilik 30 gün */
+export function formDegeri(k: TeklifKarti | null, s: TeklifSecenekleri, tesis: string | null = null, doldur = false): { deger: TeklifFormDegeri; dusen: string[] } {
   if (!k) {
     const tm = tesis ? s.musteriler.find((m) => m.tesisler.some((t) => t.id === tesis)) : undefined;
-    return { deger: { tip: "kayitli", musteri: tm?.id ?? "", tesis: tm ? tesis! : "", ekTesisler: [], aday: { ...BOS_ADAY }, gecerlilik: "", kdv: "20", notlar: "",
-      kalemler: [{ tur: "", adet: "1", fiyat: "" }], ekipmanlar: [] }, dusen: [] };
+    const fiyat = new Map(s.turler.map((t) => [t.id, t.fiyat]));
+    const dolu = doldur && tm ? Object.entries(tm.tesisler.find((t) => t.id === tesis)?.ekipman ?? {}).filter(([t, n]) => fiyat.has(t) && n > 0)
+      .map(([t, n]) => { const p = fiyat.get(t); return { tur: t, adet: String(n), fiyat: p ? paraGirdi(p) : "" }; }) : [];
+    return { deger: { tip: "kayitli", musteri: tm?.id ?? "", tesis: tm ? tesis! : "", ekTesisler: [], aday: { ...BOS_ADAY }, gecerlilik: dolu.length ? "30" : "", kdv: "20", notlar: "",
+      kalemler: dolu.length ? dolu : [{ tur: "", adet: "1", fiyat: "" }], ekipmanlar: [] }, dusen: [] };
   }
   const m = k.musteriKart ? s.musteriler.find((x) => x.id === k.musteriKart!.id) : undefined;
   const etkin = new Set(m?.tesisler.map((t) => t.id) ?? []);

@@ -2,6 +2,7 @@
 /* SÜRÜM ÖNİZLEMESİ (471; reisim 2026-10-10, maket kararı k5): sürüm sayfasında formatın iki yüzü — Belge (kesin belgenin çizicisi, PDF'le aynı;
    sunucu çizer) · Saha ekranı (denetçinin tablette / telefonda göreceği gerçek ekran, örnek raporla; salt — SahaGorunumu, düzenleme kurucuda). */
 import { useState, type ReactNode } from "react";
+import { BelgeOnizleme } from "../../../components/belge-onizleme/BelgeOnizleme";
 import { Tus } from "../../../components/tus/Tus";
 import type { FormatTanimi } from "../../../format/tanim";
 import { SahaGorunumu } from "./SahaGorunumu";
@@ -16,8 +17,7 @@ export function SurumOnizleme({ turId, formatId, t, belge }: { turId: string; fo
         <Tus tur={g === "saha" ? "birincil" : "ikincil"} ikon="tablet-smartphone" aria-pressed={g === "saha"} onClick={() => setG("saha")}>Saha ekranı</Tus>
       </span>
       {g === "belge"
-        /* kayan öğe belgenin kendisi (telefonda A4 genişliği yana kayar): klavyeyle kaydırılsın diye odak ve ad onda (rapor önizlemesi gibi) */
-        ? <div className={stil.belgeKap}><div className="rb-onizleme" aria-label="Belge önizlemesi" role="region" tabIndex={0}>{belge}</div></div>
+        ? <div className={stil.belgeKap}><BelgeOnizleme etiket="Belge önizlemesi">{belge}</BelgeOnizleme></div>
         : <SahaGorunumu turId={turId} formatId={formatId} t={t} />}
     </>
   );

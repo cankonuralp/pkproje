@@ -20,6 +20,7 @@ import { AYAR_DOSYA } from "../ayar/ayar.ts";
 import { DOSYA as PER_DOSYA, gizliDosyaGorulur, kartDosyasiGorulur } from "../../modules/personel/server/dosyalar.ts";
 import { DOSYA_MODULU as TUR_DOSYASI, turDosyasiGorulur } from "../../modules/ekipman-turleri/server/turler.ts";
 import { DOSYA_MODULU as CIHAZ_DOSYASI, cihazDosyasiGorulur } from "../../modules/olcum-cihazlari/server/cihazlar.ts";
+import { DOSYA_TEKLIF, teklifDosyasiGorulur } from "../../modules/teklifler/server/teklifler.ts";
 import { DOSYA as SOZ_DOSYA, isgDosyasiGorulur, sablonDosyasiGorulur, sozlesmeDosyasiGorulur } from "../../modules/sozlesmeler/server/sozlesmeler.ts";
 import { DOSYA_MODULU as ZIMMET_DOSYASI, zimmetDosyasiGorulur } from "../../modules/zimmetler/server/zimmet.ts";
 import { DOSYA_MODULU as RAPOR_DOSYASI, IMZALI_MODULU, oncekiRaporGorulur, PDF_MODULU, raporDosyasiGorulur } from "../../modules/raporlar/server/raporlar.ts";
@@ -43,6 +44,8 @@ export const DOSYA_ERISIMI: ErisimKaydi = Object.freeze({
   [SOZ_DOSYA.sablon]: (db, kisi) => sablonDosyasiGorulur(db, kisi as YetkiHesabi),
   /* 2026-10-25 (belge doldurma): müşteriye e-postayla gönderilen sözleşme PDF'i — sözleşmeyi gören (gör / yaz) açar, imzalı sözleşme gibi */
   [SOZ_DOSYA.gonderim]: (db, kisi, kayitId) => sozlesmeDosyasiGorulur(db, kisi as YetkiHesabi, kayitId),
+  /* 2026-11-09: müşteriye e-postayla gönderilen teklif PDF'i — teklifi gören */
+  [DOSYA_TEKLIF]: (db, kisi, kayitId) => teklifDosyasiGorulur(db, kisi as YetkiHesabi, kayitId),
   [DOK_DOSYA.standart]: (db, kisi, kayitId) => standartDosyasiGorulur(db, kisi as YetkiHesabi, kayitId),
   [DOK_DOSYA.dokuman]: (db, kisi, kayitId) => dokumanDosyasiGorulur(db, kisi as YetkiHesabi, kayitId),
   [EGITIM_DOSYASI]: (db, kisi, kayitId) => egitimDosyasiGorulur(db, kisi as YetkiHesabi, kayitId),

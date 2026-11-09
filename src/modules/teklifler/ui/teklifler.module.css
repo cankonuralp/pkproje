@@ -38,3 +38,18 @@
 .kod { font-weight: 700; font-variant-numeric: tabular-nums; }
 .altSatir { display: block; color: var(--yazi2); }
 .hataMetin { color: var(--hata-yazi); font-weight: 600; }
+/* 2026-11-09: "Yaklaşan muayeneler" tuşunun balonu — renk çifti yan menünün balonuyla aynı (kırmızı: tarihi geçen, sarı: yaklaşan) */
+.balon { min-width: 18px; height: 18px; padding: 0 4px; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--r-tam);
+  font-size: var(--boy-etiket); font-weight: 700; line-height: 1; color: var(--cubuk-durum-yazi); }
+.balonKirmizi { background: var(--cubuk-hata); }
+.balonSari { background: var(--cubuk-uyari); }
+/* 2026-11-09: teklif gönderme penceresi — ileti alanı, e-postanın önizlemesi */
+.ileti { width: 100%; min-height: 200px; padding: 8px 10px; border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); color: var(--yazi); font: inherit; resize: vertical; }
+.gonderForm { display: grid; gap: 12px; margin: 0 0 12px; }
+.onizlemeSecim { margin: 0 0 8px; }
+.posta { border: 1px solid var(--kenar); border-radius: var(--r-orta); background: var(--kart); overflow: hidden; }
+.postaBas { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 12px; margin: 0; padding: 10px 12px; border-bottom: 1px solid var(--kenar); }
+.postaBas dt { color: var(--yazi2); font-size: var(--boy-kucuk); }
+.postaBas dd { margin: 0; overflow-wrap: anywhere; }
+.postaGovde { margin: 0; padding: 12px; white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; }
+.belgeOnizleme { max-height: 520px; overflow: auto; border: 1px solid var(--kenar); border-radius: var(--r-orta); background: var(--zemin2); }

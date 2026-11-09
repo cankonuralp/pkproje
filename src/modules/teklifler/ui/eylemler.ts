@@ -7,6 +7,9 @@ import type { TeklifEkipmani } from "../excel";
 import { teklifEkipmanListesi, teklifGonder, teklifKabul, teklifKaydet, teklifMusteriBagla, teklifMusteriKaydet, teklifReddet, type Yazma, teklifSil, teklifSayfasi,
   type TeklifSatiri, teklifDoldur } from "../server/teklifler";
 import type { SunucuListe } from "../../../components/liste/suzgec";
+import { yaklasanSayfasi, type YaklasanSatiri } from "../server/yaklasan";
+import { teklifGonderimVerisi, type TeklifGonderimVerisi } from "../server/gonderim";
+import { depo } from "../../../server/dosya/depo";
 
 /** uyarilar: Müşteriler'in uyarısı (Müşteri olarak kaydet — kişi görür, onaylarsa onay=true ile yeniden) */
 export interface TeklifYaniti { tamam?: boolean; id?: string; no?: string; bildirim?: string; hatalar?: Record<string, string>; uyarilar?: Record<string, string>; genel?: string }
@@ -64,6 +67,21 @@ export async function teklifSayfasiEylemi(durum: unknown): Promise<SunucuListe<T
   const o = await istekOturumu();
   if (!o) return null;
   return oturumIslemi(o, (db) => teklifSayfasi(db, o, durum));
+}
+
+/** 2026-11-09: Yaklaşan muayeneler listesinin bir sayfası; göremeyene / oturumsuza null */
+export async function yaklasanSayfasiEylemi(durum: unknown): Promise<SunucuListe<YaklasanSatiri> | null> {
+  if (!(await ayniKoken())) return null;
+  const o = await istekOturumu();
+  if (!o) return null;
+  return oturumIslemi(o, (db) => yaklasanSayfasi(db, o, durum));
+}
+/** 2026-11-09: gönderme penceresinin verisi (alıcı, konu, ileti, belge) — pencere açılınca; yalnız gönderebilene */
+export async function teklifGonderimVerisiEylemi(id: string): Promise<TeklifGonderimVerisi | null> {
+  if (!(await ayniKoken())) return null;
+  const o = await istekOturumu();
+  if (!o) return null;
+  return oturumIslemi(o, (db) => teklifGonderimVerisi(db, o, yazi(id), depo()));
 }
 
 /* 2026-10-25 (belge doldurma; reisim: "sözleşme vb işleri de yüklediğimde, el ile değiştirilebilir ve doldurulabilir olmalı, bir müşteri için sözleşme

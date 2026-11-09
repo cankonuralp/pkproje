@@ -1,12 +1,13 @@
 /* S.A.Y PDF GÖNDERİM UCU (2026-10-31; reisim'in kabulü: "PDF gönderim ayrı uç (Chromium)" — S.A.Y'ın ucu Chromium taşımaz). S.A.Y'ın pdf_gonder aracını
-   EKRAN çağırır (kullanıcının oturumuyla): eğitim katılım formunu ya da zimmet teslim formunu imzaya, ön bilgilendirme formunu ve sözleşmeyi müşteriye
+   EKRAN çağırır (kullanıcının oturumuyla): eğitim katılım formunu ya da zimmet teslim formunu imzaya, ön bilgilendirme formunu, sözleşmeyi ve teklifi müşteriye
    gönderir — ekranın tuşlarının işlevleriyle (aynı yetki, aynı PDF). Kapılar: aynı köken, oturum; yetki modülde. */
-import { egitimPdf, sozlesmePdf, zimmetPdf } from "../../../../belge/pdf";
+import { egitimPdf, sozlesmePdf, teklifPdf, zimmetPdf } from "../../../../belge/pdf";
 import { katilimFormuGonder } from "../../../../modules/egitimler/server/egitimler";
 import { zimmetFormuGonder } from "../../../../modules/personel/server/dosyalar";
 import { onBilgiGonder } from "../../../../modules/planlar/server/onbilgi";
 import { ONBILGI_KAYNAK } from "../../../../modules/planlar/server/plan-ici";
 import { sozlesmeGonder } from "../../../../modules/sozlesmeler/server/sozlesmeler";
+import { teklifEpostaGonder } from "../../../../modules/teklifler/server/gonderim";
 import { depo } from "../../../../server/dosya/depo";
 import { epostalariSonraGonder } from "../../../../server/eposta/sonra";
 import { hataKaydet } from "../../../../server/hata/kaydet";
@@ -46,7 +47,13 @@ export async function POST(istek: Request) {
         if (r.durum === "tamam" && r.adet) epostalariSonraGonder(o.kiraci, "sozlesme", r.id);
         return yanit(cevap(r, `Sözleşme ${r.durum === "tamam" ? r.adet ?? 0 : 0} alıcıya gönderildi.`));
       }
-      default: return yanit({ tamam: false, neden: "Belge türü: katilim, zimmet, onbilgi ya da sozlesme." }, 400);
+      case "teklif": {
+        const kime = Array.isArray(g.kime) ? g.kime.slice(0, 20).filter((x): x is string => typeof x === "string") : [];
+        const r = await oturumIslemi(o, (db) => teklifEpostaGonder(db, depo(), o, f, id, null, { kime }, teklifPdf));
+        if (r.durum === "tamam") epostalariSonraGonder(o.kiraci, "teklif", r.id);
+        return yanit(cevap(r, "Teklif müşteriye gönderildi."));
+      }
+      default: return yanit({ tamam: false, neden: "Belge türü: katilim, zimmet, onbilgi, sozlesme ya da teklif." }, 400);
     }
   } catch (h) {
     void hataKaydet({ kaynak: "sunucu", mesaj: h instanceof Error ? h.message : String(h), yigin: h instanceof Error ? h.stack ?? null : null, yer: "say.pdf", alan: o.kiraci.kisaAd, hesap: o.id });

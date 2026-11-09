@@ -56,6 +56,7 @@ export type Yazma =
 const gorur = (kim: YetkiHesabi) => ["gor", "yaz"].includes(duzey(kim, MODUL));
 const yazar = (kim: YetkiHesabi) => duzey(kim, MODUL) === "yaz";
 export const teklifDegistirir = yazar;
+export const teklifGorur = gorur;
 const iz = (kim: Kisi, ne: string, gerekce?: string): Iz => ({ kim: kim.ad, ne, gerekce });
 
 /** unvan, yer: arama için (maket: kayıtlıda no · tesis · kısa · ünvan, kayıtlı olmayanda no · ünvan · il · ilçe) */
@@ -75,7 +76,9 @@ export interface TeklifKarti extends TeklifSatiri {
       kabul edilmiş teklifini var olan müşteriye bağlama */
   izin: { duzenle: boolean; gonder: boolean; sonuc: boolean; musteriKaydet: boolean; bagla: boolean; kopyala: boolean; sozlesme: boolean; planAc: boolean;
     /** 368: kullanılmamış taslağı kesin silmek (yönetici) */
-    sil: boolean };
+    sil: boolean;
+    /** 2026-11-09: e-postayla gönder (taslak) ya da yeniden gönder (gönderilmiş, süresi dolmamış) */
+    eposta: boolean };
 }
 
 type Satir = { id: string; no: string; musteri_id: string | null; aday: Aday | null; durum: "taslak" | "gonderildi" | "kabul" | "red"; tarih: string; gonderildi: string | null;
@@ -155,6 +158,7 @@ export async function teklifKarti(db: Sorgulayici, kim: Kisi, id: string): Promi
       musteriKaydet: yaz && s.durum === "kabul" && !m && musteriDegistirir(kim), bagla: yaz && s.durum === "kabul" && !m, kopyala: yaz,
       sozlesme: s.durum === "kabul" && !!m && sozlesmeDegistirir(kim), planAc: s.durum === "kabul" && !!m && planAcabilir(kim),
       sil: x.durum === "taslak" && silebilir(kim) && !(await kullanimlar(db, "teklif", [x.id])).has(x.id),
+      eposta: yaz && (s.durum === "gonderildi" || (s.durum === "taslak" && kalemler.length > 0)),
     },
   };
 }
@@ -255,10 +259,16 @@ async function durumYaz(db: Sorgulayici, kim: Kisi, id: string, surum: number, h
       : `${x.no} reddedildi olarak kaydedildi.`,
   };
 }
-/** Gönderildi olarak işaretle (PDF elle iletilir — 121): geçerlilik bugünden sayılır */
+/** Gönderildi olarak işaretle (teklif elden ya da başka yolla iletildiyse; e-postayla gönderim gonderim.ts): geçerlilik bugünden sayılır */
 export async function teklifGonder(db: Sorgulayici, kim: Kisi, id: string, surum: number): Promise<Yazma> {
   if (!yazar(kim)) return { durum: "yetkisiz" };
   return durumYaz(db, kim, id, surum, "gonderildi", null);
+}
+/* 2026-11-09: müşteriye e-postayla giden teklif PDF'i — teklifi gören açar (src/server/dosya/erisim.ts) */
+export const DOSYA_TEKLIF = "teklif_gonderim";
+export async function teklifDosyasiGorulur(db: Sorgulayici, kisi: YetkiHesabi, kayitId: string): Promise<boolean> {
+  if (!UUID.test(kayitId) || !gorur(kisi)) return false;
+  return !!(await db.sorgu("SELECT 1 FROM teklif WHERE id = $1", [kayitId])).rowCount;
 }
 /** Kabul edildi (panelden kabul yok — 121; firma işaretler) */
 export async function teklifKabul(db: Sorgulayici, kim: Kisi, id: string, surum: number): Promise<Yazma> {

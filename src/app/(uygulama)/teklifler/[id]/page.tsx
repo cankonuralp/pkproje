@@ -14,6 +14,8 @@ import { tarihNo } from "../../../../components/secim/tarih";
 import { Serit } from "../../../../components/serit/Serit";
 import { modulBul } from "../../../../modules/moduller";
 import { kdvli, para, TEKLIF_DURUM } from "../../../../modules/teklifler/sema";
+import { EpostaListesi } from "../../../../components/eposta/EpostaListesi";
+import { kaynakEpostalari } from "../../../../server/eposta/eposta";
 import { teklifDoldurmaVerisi, teklifExcelVerisi, teklifKarti, teklifSecenekleri } from "../../../../modules/teklifler/server/teklifler";
 import { ExcelAktar } from "../../../../modules/teklifler/ui/EkipmanExcel";
 import { KalemTablosu } from "../../../../modules/teklifler/ui/KalemTablosu";
@@ -23,6 +25,8 @@ import { modulOturumu, oturumIslemi } from "../../../../server/kimlik/istek";
 
 const MODUL = modulBul("teklifler")!;
 export const metadata: Metadata = { title: "Teklif" };
+/* 2026-11-09: "Teklifi gönder" eylemi PDF basar (başsız Chromium): next.config.ts PDF listesinde */
+export const maxDuration = 60;
 
 export default async function Sayfa({ params }: { params: Promise<{ id: string }> }) {
   const o = await modulOturumu(MODUL.no);
@@ -35,10 +39,10 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
     const bagla: BaglaMusterisi[] = t.izin.bagla ? ((await teklifSecenekleri(db, o))?.musteriler ?? []).map((m) => ({
       id: m.id, kisa: m.kisa, tesisler: m.tesisler.map((y) => ({ id: y.id, ad: y.ad, yer: [y.ilce, y.il].filter(Boolean).join(" / ") })),
     })) : [];
-    return { t, excel: await teklifExcelVerisi(db, o, t), bagla, doldur: t.izin.duzenle ? await teklifDoldurmaVerisi(db, o, t.id, depo()) : null };
+    return { t, excel: await teklifExcelVerisi(db, o, t), bagla, doldur: t.izin.duzenle ? await teklifDoldurmaVerisi(db, o, t.id, depo()) : null, epostalar: await kaynakEpostalari(db, "teklif", t.id) };
   });
   if (!v) notFound();
-  const { t, excel, bagla, doldur } = v;
+  const { t, excel, bagla, doldur, epostalar } = v;
   const kabul = t.durum === "kabul";
   return (
     <>
@@ -64,6 +68,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
           {t.notlar && <Bilgi etiket="Not" genis>{t.notlar}</Bilgi>}
         </BilgiListesi>
       </Bolum>
+      {epostalar.length > 0 && <Bolum id="b-tk-eposta" baslik="Gönderilen e-postalar" sayac={<b>{epostalar.length}</b>}><EpostaListesi epostalar={epostalar} /></Bolum>}
       {!t.musteriKart && t.aday && (
         <Bolum id="b-tk-aday" baslik="Müşteri bilgileri">
           <BilgiListesi>

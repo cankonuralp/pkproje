@@ -10,6 +10,8 @@ import {
   teklifGonder, teklifKabul, teklifKarti, teklifKaydet, teklifMusteriBagla, teklifMusteriKaydet, teklifReddet, teklifSayfasi, teklifSecenekleri, teklifSil,
 } from "./server/teklifler.ts";
 
+import { kalanYazi } from "./yaklasan.ts";
+import { yaklasanSayfasi } from "./server/yaklasan.ts";
 import { doldurmaCevabi, doldurmaHazirla } from "../../server/yz/doldurma.ts";
 import { ElleDegerGirdisi } from "../rapor-format/sema.ts";
 import { teklifDoldur, teklifDoldurmaVerisi } from "./server/teklifler.ts";
@@ -64,7 +66,7 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
   }),
   islem({
     ad: "teklif_gonder", modul: MODUL, tur: "yaz", girdi: TEKLIF_SURUM, kaynak: [kimlik, surum], islev: teklifGonder,
-    tarif: "Taslak teklifi gönderildi yapar (geçerlilik gönderilişten sayılır).",
+    tarif: "Taslak teklifi e-posta göndermeden gönderildi yapar (elden verildiyse; geçerlilik gönderilişten sayılır). Müşteriye e-postayla göndermek için pdf_gonder, tur teklif.",
     calistir: async (b, v) => yazmaCevabi(await teklifGonder(b.db, b.kim, v.teklif, v.surum)),
   }),
   islem({
@@ -95,6 +97,18 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
     ad: "teklif_sil", modul: MODUL, tur: "yaz", girdi: z.object({ teklif: kimlik }), kaynak: [kimlik], islev: teklifSil,
     tarif: "Hiç gönderilmemiş taslak teklifi kesin siler (yönetici); gönderilmişse nedeni döner (kopyalanır).",
     calistir: async (b, v) => yazmaCevabi(await teklifSil(b.db, b.kim, v.teklif), { bildirim: "Teklif silindi." }),
+  }),
+  /* 2026-11-09: Teklifler › Yaklaşan muayeneler */
+  islem({
+    ad: "teklif_yaklasan", modul: MODUL, tur: "oku", girdi: SuzgecDurumuSemasi, kaynak: [SuzgecDurumuSemasi], islev: yaklasanSayfasi,
+    tarif: "Muayenesine son 2 ay kalan (ya da tarihi 2 aydan az geçmiş), açık planı olmayan müşteriler / tesisler (20'şer): aranacak kişi, telefon, bu dönemin teklifi. ara, secili (bekleyen | verildi | gecen), sayfa.",
+    calistir: async (b, _v, ham) => {
+      const l = await yaklasanSayfasi(b.db, b.kim, ham);
+      if (!l) return { tamam: false, neden: "Bu kullanıcı Teklifler'i göremiyor." };
+      return { tamam: true, sonuc: { ...sayfaBilgisi(l), tesisler: l.gorunen.map((y) => ({ tesis: y.id, musteri: y.musteri, musteriId: y.musteriId, ad: y.tesis, yer: y.yer, en_yakin_muayene: y.sonraki,
+        kalan: kalanYazi(y.kalan), ekipman: y.ekipman, toplam_ekipman: y.toplam, turler: y.turler, ilgili: y.ilgili, tel: y.tel, eposta: y.eposta,
+        teklif: y.teklif && { id: y.teklif.id, no: y.teklif.no, durum: durumAdi(y.teklif.durum) }, teklif_bekliyor: y.bekliyor })) } };
+    },
   }),
   /* 2026-10-31 (S.A.Y belge doldurma): ekranın "Belgeyi doldur"u — yerler ve kayıt modülün işlevleriyle (src/server/yz/doldurma.ts) */
   islem({

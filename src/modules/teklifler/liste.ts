@@ -3,6 +3,7 @@
    (server/liste/liste.ts bellekteListele), ekrana yalnız sayfanın 20 satırı ve sayılar. Müşteri seçenekleri görebildiği tekliflerden. Saf. */
 import type { Secenek, SuzgecTanimi } from "../../components/liste/suzgec.ts";
 import type { TeklifSatiri } from "./server/teklifler.ts";
+import type { YaklasanSatiri } from "./server/yaklasan.ts";
 
 const GUN = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit" });
 /** bugünden verilen güne kaç gün (Türkiye takvim günü; geçmişse eksi) — sunucuda da tarayıcıda da aynı */
@@ -11,6 +12,20 @@ export const gunFarki = (iso: string) => Math.round((Date.parse(`${iso.slice(0, 
 /** tekliflerdeki müşteriler (kimlik, ad), Türkçe ad sırasıyla */
 export const teklifMusterileri = (l: readonly TeklifSatiri[]): Secenek[] =>
   [...new Map(l.filter((t) => t.musteriId).map((t) => [t.musteriId!, t.musteri])).entries()].sort((a, b) => a[1].localeCompare(b[1], "tr"));
+
+/** Yaklaşan muayeneler listesinin süzgeci (2026-11-09) — ekran ve sunucu aynı tanımla */
+export function yaklasanTanim(): SuzgecTanimi<YaklasanSatiri> {
+  return {
+    ad: "Yaklaşan muayenelerde ara", ipucu: "Müşteri, tesis, il, ilgili kişi, ekipman türü", birim: "tesis", sayfa: 20, imkansiz: "Bir tesis aynı anda iki durumda olamaz",
+    metin: (y) => [y.musteri, y.unvan, y.tesis, y.yer ?? "", y.ilgili ?? "", y.tel ?? "", y.eposta ?? "", ...y.turler, y.teklif?.no ?? ""].join(" "),
+    cipler: [
+      { k: "bekleyen", ad: "Teklif bekleyen", grup: "teklif", test: (y) => y.bekliyor },
+      { k: "verildi", ad: "Teklif verildi", grup: "teklif", test: (y) => !y.bekliyor },
+      { k: "gecen", ad: "Tarihi geçen", test: (y) => y.kalan < 0 },
+    ],
+    seciciler: [],
+  };
+}
 
 export function teklifTanim(musteriler: readonly Secenek[]): SuzgecTanimi<TeklifSatiri> {
   return {

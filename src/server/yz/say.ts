@@ -316,10 +316,10 @@ export const PDF_GONDER_ARACI = {
   name: "pdf_gonder",
   description: "PDF basıp gönderen işler (ekranın tuşlarıyla aynı yetki ve PDF): katilim — eğitim kaydının katılım formunu katılımcıların imzasına (id: eğitim kaydı); "
     + "zimmet — personelin zimmet teslim formunu imzaya (id: personel); onbilgi — planın ön bilgilendirme formunu müşteriye (id: plan); sozlesme — sözleşmeyi "
-    + "müşteriye e-postayla (id: sözleşme, kime: alıcı e-postaları). Yalnız kullanıcı göndermeyi istediyse.",
+    + "müşteriye e-postayla (id: sözleşme, kime: alıcı e-postaları); teklif — teklifi müşteriye e-postayla, hazır metinle; taslaksa gönderildi olur (id: teklif, kime: alıcı e-postaları). Yalnız kullanıcı göndermeyi istediyse.",
   input_schema: {
     type: "object",
-    properties: { tur: { type: "string", enum: ["katilim", "zimmet", "onbilgi", "sozlesme"] }, id: { type: "string" }, kime: { type: "array", items: { type: "string" } } },
+    properties: { tur: { type: "string", enum: ["katilim", "zimmet", "onbilgi", "sozlesme", "teklif"] }, id: { type: "string" }, kime: { type: "array", items: { type: "string" } } },
     required: ["tur", "id"],
   },
 } as const;
@@ -402,7 +402,7 @@ export type SayKomutu = ({ tur: "yaz"; girisler: { yer: string; deger: string }[
   | { tur: "format"; islemler: Record<string, unknown>[] } | { tur: "kaydet" } | { tur: "gonder" }
   | { tur: "pdfFormat"; turId: string; ek: number; taslakSurumu: number | null; belge?: BelgeTuru }
   | { tur: "form"; rapor: string | null; sayfa: number }
-  | { tur: "pdfGonder"; belge: "katilim" | "zimmet" | "onbilgi" | "sozlesme"; kayit: string; kime: string[] }
+  | { tur: "pdfGonder"; belge: "katilim" | "zimmet" | "onbilgi" | "sozlesme" | "teklif"; kayit: string; kime: string[] }
   | { tur: "islem"; ad: string; girdi: Record<string, unknown> } | { tur: "islemler"; adlar?: string[]; modul?: string; ara?: string }) & { id?: string };
 const ARAC_ADI = { yaz: "rapora_yaz", oku: "fotograflari_oku", geri: "geri_al", format: "formati_duzenle", kaydet: "raporu_kaydet", gonder: "onaya_gonder",
   islem: "islem", islemler: "islemler", pdfFormat: "format_pdf_kur", form: "form_goster", pdfGonder: "pdf_gonder" } as const;
@@ -461,7 +461,7 @@ export function aracCagrisi(c: Record<string, unknown>): SayKomutu | null {
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(turId) ? { tur: "pdfFormat", turId, ek, taslakSurumu: ts, ...id } : null;
   }
   if (c.name === "pdf_gonder") {
-    const belge = girdi.tur === "katilim" || girdi.tur === "zimmet" || girdi.tur === "onbilgi" || girdi.tur === "sozlesme" ? girdi.tur : null;
+    const belge = girdi.tur === "katilim" || girdi.tur === "zimmet" || girdi.tur === "onbilgi" || girdi.tur === "sozlesme" || girdi.tur === "teklif" ? girdi.tur : null;
     const kayit = typeof girdi.id === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(girdi.id.trim()) ? girdi.id.trim() : null;
     const kime = Array.isArray(girdi.kime) ? girdi.kime.filter((x): x is string => typeof x === "string").slice(0, 20) : [];
     return belge && kayit ? { tur: "pdfGonder", belge, kayit, kime, ...id } : null;
