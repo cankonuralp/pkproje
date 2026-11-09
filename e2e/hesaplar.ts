@@ -18,6 +18,8 @@ export const E2E_KAPI = 3100;
 export const E2E_PLAN = { musteri: "Deneme Plan Sanayi A.Ş.", tesis: "Merkez Fabrika", tesisIci: "İç Fabrika", tesisSaha: "Saha Tesisi",
   /* 444: kayıtlı ekipmanı olmayan tesis — Plan aç'ta elle ekipman */
   tesisElle: "Elle Tesisi",
+  /* 2026-11-09: muayenesi 1 ay sonra gelen tesis (Teklifler › Yaklaşan muayeneler) */
+  tesisYaklasan: "Yaklaşan Tesisi",
   /* müşteri paneli (319): müşterinin e-postası = ana girişin kullanıcı adı (uydurma) */
   musteriEposta: "plan@deneme-musteri.example" } as const;
 /* saha raporu (311): Saha Tesisi'nin ekipmanı (tür HT · Hava tankı, yayında format = hazır şablon KOMPRESOR), türün gerekli ölçüm cihazı türü ve

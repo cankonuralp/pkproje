@@ -123,6 +123,31 @@ test("teklif: hazırla, gönderildi, kabul edildi; muhasebe yalnız görür, den
   await expect(page.getByText("Bu sayfayı görme yetkiniz yok")).toBeVisible();
 });
 
+/* 2026-11-09 (reisim: "yaklaşan muayeneler tuşu olsun ve orada sadece gelecek muayenesine son 2 ay kalan müşteriler - tesisler gözüksün uyarı balonu olsun"): tuşta balon, satırda tesis ve
+   kalan gün, sayfa yana taşmaz; "Teklif hazırla" tesisin ekipmanı ve fiyat listesiyle dolu açılır (kaydedilmez: öteki genişlikler de aynı satırı görür) */
+test("yaklaşan muayeneler: balon, satır, dolu teklif formu", async ({ page }) => {
+  test.setTimeout(120_000);
+  await girisli(page, "yonetici");
+  await page.goto("/teklifler");
+  await hazir(page);
+  const tus = page.getByRole("link", { name: /Yaklaşan muayeneler/ });
+  await expect(tus).toContainText("tesisin muayenesi 2 ay içinde");
+  await tus.click();
+  await expect(page).toHaveURL(/\/teklifler\/yaklasan$/, { timeout: 30_000 });
+  await hazir(page);
+  await expect(page.getByText(new RegExp(E2E_PLAN.tesisYaklasan)).first()).toBeVisible();
+  await expect(page.getByText(/\d+ gün kaldı/).first()).toBeVisible();
+  await expect(page.getByText("Teklif yok").first()).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), "sayfa yana taşmaz").toBe(true);
+  await page.getByRole("link", { name: "Teklif hazırla" }).first().click();
+  await expect(page).toHaveURL(/\/teklifler\/yeni\?tesis=.*doldur=1/, { timeout: 30_000 });
+  await hazir(page);
+  await expect(page.getByRole("combobox", { name: "Tesis" })).toContainText(E2E_PLAN.tesisYaklasan);
+  await expect(page.getByLabel("Geçerlilik (gün)")).toHaveValue("30");
+  await expect(page.getByLabel("Adet")).toHaveValue("1");
+  await expect(page.getByLabel("Birim fiyat (TL)")).toHaveValue("900,00");
+});
+
 /* 368 (§9 elli üçüncü tur): hiç gönderilmemiş taslağı yönetici siler → Teklifler listesine dönülür */
 test("teklif: taslak silinir", async ({ page }) => {
   test.setTimeout(120_000);

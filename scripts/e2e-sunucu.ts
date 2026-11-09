@@ -73,6 +73,9 @@ for (const f of firmalar) {
     for (const kod of ["HT-0101", "HT-0102"]) await db.sorgu("INSERT INTO ekipman (tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, $3, 'Deneme')", [ti, u, kod]);
     /* 444: ekipmansız tesis — Plan aç'ta elle ekipman (e2e/planlar.spec) */
     await db.sorgu("INSERT INTO tesis (musteri_id, ad, adres, il, ilce) VALUES ($1, $2, 'Deneme Cad. No 5', 'Kocaeli', 'Gebze')", [m, E2E_PLAN.tesisElle]);
+    /* 2026-11-09: sistem öncesi kontrolü 11 ay önce (periyot 12 ay) — Yaklaşan muayeneler (e2e/teklifler.spec) */
+    const ty = (await db.sorgu<{ id: string }>("INSERT INTO tesis (musteri_id, ad, adres, il, ilce) VALUES ($1, $2, 'Deneme Cad. No 6', 'Kocaeli', 'Gebze') RETURNING id::text", [m, E2E_PLAN.tesisYaklasan])).rows[0].id;
+    await db.sorgu("INSERT INTO ekipman (tesis_id, tur_id, kod, ekleyen, dis_kontrol) VALUES ($1, $2, 'HT-0901', 'Deneme', (now() - interval '11 months')::date)", [ty, u]);
     /* saha raporu (311): üçüncü tesis + tek ekipman; türün gerekli ölçüm cihazı türü, geçerli kalibrasyonlu cihaz, denetçinin zimmetinde (depodan) */
     const ts = (await db.sorgu<{ id: string }>("INSERT INTO tesis (musteri_id, ad, adres, il, ilce) VALUES ($1, $2, 'Deneme Cad. No 3', 'Kocaeli', 'Gebze') RETURNING id::text",
       [m, E2E_PLAN.tesisSaha])).rows[0].id;
