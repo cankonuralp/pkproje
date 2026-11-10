@@ -42,6 +42,14 @@ test("allow özniteliği değişince rehberle eşitlik düşer — kilit düşer
   assert.notEqual(m.GOMULU_IZIN, "local-network-access; local-network; loopback-network");
 });
 
+/* 2026-11-10: "kapat" tanınmazsa sign'ın bitiş ekranındaki "Kapat" tuşu pencereyi kapatmaz; bitiş haberi "hemen" olursa bitiş ekranı görünmeden kapanır */
+test("kapat haberi tanınmayınca Kapat tuşu işlemez; bitiş haberi hemen kapatınca bitiş ekranı görünmez — kilit düşer", async () => {
+  const a = await bozuk<Haber>("src/modules/raporlar/sign-haber.ts", "case \"kapali\": case \"kapat\": return { tur: x.tur };", "case \"kapali\": return { tur: x.tur };", "kapat");
+  assert.equal(a.signHaberi({ origin: FIRMA, data: { kaynak: "probata-sign", tur: "kapat" } }, FIRMA), null, "bozuk: kapat haberi yok sayılır");
+  const b = await bozuk<Haber>("src/modules/raporlar/sign-haber.ts", "case \"toplu_bitti\": return \"gecikmeli\";", "case \"toplu_bitti\": return \"hemen\";", "kapanis");
+  assert.equal(b.kapanis("imzalandi"), "hemen", "bozuk: bitiş ekranı görünmeden kapanır");
+});
+
 /* 2026-11-08: eski kayıt yenilenmezse 5 Kasım isteği hep yeni sekmede kalır; gömülüsüz kayıt da "eski" sayılırsa her tıklamada imza isteği iptal edilir */
 test("eski kayıt yenilenmeyince gömülü bağlantı hiç gelmez; gömülüsüz kayıt düz yazılınca her tıklamada iptal edilir — kilit düşer", async () => {
   type S = { eskiBaglantiMi: (m: string | null) => boolean; baglantiMetni: (b: string | null, g: string | null) => string | null };

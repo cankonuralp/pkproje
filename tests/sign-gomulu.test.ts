@@ -8,11 +8,17 @@
    (3) toplu imza adresi elle kurulmaz: POST /api/v1/toplu-imza { belgeler, eposta } — gomulu_adres ve adres yalnız sign'ın sayfasıysa, kabul edilen
        belgeler cevaptan; imza isteğinin gomulu_baglanti'sı da aynı denetimle; gömülü bağlantı bağlantıyla aynı şifreli alanda (eski kayıt okunur);
    (4) CSP frame-src: 'self' + sign'ın kökü ve firma alt alanları, ayardan türetilir (sabit firma adresi yok).
+   2026-11-10 — reisim (sign rehberi §4): "imzalandi, reddedildi ya da toplu_bitti gelince ~3 saniye sonra pencereyi kendiliğinden kapat ve rapor
+   listesini tazele; kapat gelince hemen … kapanıştan sonra durum hâlâ imzada ise kısa süre sonra bir kez daha yenile … toplu imza artık
+   https://sign.probata.com.tr kökeninden de haber gönderir". Önceki hâlde "kapat" haberi tanınmıyordu (sign'ın "Kapat" tuşu pencereyi kapatmıyordu)
+   ve bitiş haberi pencereyi bitiş ekranı görünmeden kapatıyordu.
+   (5) kapanış: bitiş haberi gecikmeli (3 sn), "kapat" hemen, hazir / kapali pencereyi kapatmaz; sayaç pencere kapanınca temizlenir; kapanışta liste
+       tazelenir, tek imzada ikinci tazeleme yalnız durum hâlâ "bekliyor"sa; kök adresteki toplu imzanın haberi kök kökenden alınır.
    Olumsuz kanıt: tests/bozan/sign-gomulu.bozan.ts. Uydurma veri. */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { GOMULU_IZIN, kokeni, signHaberi } from "../src/modules/raporlar/sign-haber.ts";
+import { GOMULU_IZIN, IKINCI_TAZELEME_MS, KAPANIS_MS, kapanis, kokeni, signHaberi } from "../src/modules/raporlar/sign-haber.ts";
 import { signIstemcisi } from "../src/server/dis/sign.ts";
 import { signKokenleri, signSayfasiMi } from "../src/server/dis/sign-adres.ts";
 import { baglantiMetni, baglantiOku, eskiBaglantiMi, signGonder, tekteYenilenir } from "../src/modules/raporlar/server/sign.ts";
@@ -41,7 +47,7 @@ test("köken denetimi: yalnız açılan adresin kökeni + kaynak probata-sign; t
   const koken = kokeni(`${FIRMA}/gomulu#abc`);
   assert.equal(koken, FIRMA);
   const h = (origin: string, data: unknown) => signHaberi({ origin, data }, koken);
-  for (const tur of ["hazir", "imzalandi", "reddedildi", "kapali"] as const) assert.deepEqual(h(FIRMA, { kaynak: "probata-sign", tur }), { tur });
+  for (const tur of ["hazir", "imzalandi", "reddedildi", "kapali", "kapat"] as const) assert.deepEqual(h(FIRMA, { kaynak: "probata-sign", tur }), { tur });
   assert.deepEqual(h(FIRMA, { kaynak: "probata-sign", tur: "toplu_bitti", imzalanan: [BELGE, "x", 5], atlanan: [B2] }),
     { tur: "toplu_bitti", imzalanan: [BELGE], atlanan: [B2] });
   assert.equal(h("https://kotu.example", { kaynak: "probata-sign", tur: "imzalandi" }), null, "başka köken");
@@ -50,6 +56,35 @@ test("köken denetimi: yalnız açılan adresin kökeni + kaynak probata-sign; t
   assert.equal(h(FIRMA, { kaynak: "probata-sign", tur: "sil" }), null, "tanımsız tür");
   assert.equal(h(FIRMA, "imzalandi"), null, "nesne değil");
   assert.equal(signHaberi({ origin: FIRMA, data: { kaynak: "probata-sign", tur: "imzalandi" } }, null), null, "köken bilinmezken haber yok");
+});
+
+test("2026-11-10 kapanış: bitiş haberi 3 sn sonra, kapat hemen, hazir / kapali kapatmaz; kök adresteki toplu imzanın haberi kök kökenden", () => {
+  assert.equal(KAPANIS_MS, 3000);
+  assert.ok(IKINCI_TAZELEME_MS >= 2000 && IKINCI_TAZELEME_MS <= 10_000, "ikinci tazeleme kısa süre sonra");
+  for (const tur of ["imzalandi", "reddedildi", "toplu_bitti"] as const) assert.equal(kapanis(tur), "gecikmeli", tur);
+  assert.equal(kapanis("kapat"), "hemen");
+  for (const tur of ["hazir", "kapali"] as const) assert.equal(kapanis(tur), null, `${tur}: pencere açık kalır`);
+  /* toplu imza kök adreste (…/gomulu-toplu/<firma>): adres sign'ın sayfası, haber YALNIZ o kökenden */
+  const adres = `${KOK}/gomulu-toplu/deneme#t`;
+  assert.equal(signSayfasiMi(adres, KOK), true);
+  const koken = kokeni(adres);
+  assert.equal(koken, KOK);
+  assert.deepEqual(signHaberi({ origin: KOK, data: { kaynak: "probata-sign", tur: "toplu_bitti", imzalanan: [BELGE], atlanan: [] } }, koken),
+    { tur: "toplu_bitti", imzalanan: [BELGE], atlanan: [] });
+  assert.deepEqual(signHaberi({ origin: KOK, data: { kaynak: "probata-sign", tur: "kapat" } }, koken), { tur: "kapat" });
+  assert.equal(signHaberi({ origin: FIRMA, data: { kaynak: "probata-sign", tur: "toplu_bitti" } }, koken), null, "kökte açılan pencereye firma adresinden haber yok");
+  assert.equal(signHaberi({ origin: "https://kotu.example", data: { kaynak: "probata-sign", tur: "kapat" } }, koken), null);
+  /* ekran: pencere kapanis'la kapanır, sayaç temizlenir; işleyiciler pencereyi kendileri kapatmaz; ikinci tazeleme tek imzada duruma bağlı */
+  const ekran = readFileSync("src/modules/raporlar/ui/SignImza.tsx", "utf8");
+  assert.match(ekran, /const k = kapanis\(h\.tur\);/);
+  assert.match(ekran, /if \(k === "hemen"\) \{ window\.clearTimeout\(sayac\); kapatRef\.current\(\); \}/);
+  assert.match(ekran, /else if \(k === "gecikmeli" && sayac === undefined\) sayac = window\.setTimeout\(\(\) => kapatRef\.current\(\), KAPANIS_MS\);/);
+  assert.match(ekran, /window\.removeEventListener\("message", dinle\); window\.clearTimeout\(sayac\);/, "pencere kapanınca sayaç temizlenir");
+  const haber = ekran.match(/const haber = \(h: SignHaberi\) => \{[\s\S]*?\n {2}\};/g) ?? [];
+  for (const x of haber) assert.doesNotMatch(x, /setPen\(null\)/, "işleyici pencereyi kapatmaz — bitiş ekranı 3 sn görünür");
+  assert.equal((ekran.match(/kapat=\{penKapat\}/g) ?? []).length, 2, "tek ve toplu imza penceresi aynı kapanış yolundan");
+  assert.match(ekran, /window\.setTimeout\(\(\) => \{ if \(durum\.current === "bekliyor"\) yenile\(\); \}, IKINCI_TAZELEME_MS\);/, "tek imza: hâlâ imzadaysa bir kez daha");
+  assert.match(ekran, /ikinci\.current = window\.setTimeout\(bitti, IKINCI_TAZELEME_MS\);/, "toplu imza: liste bir kez daha");
 });
 
 test("sign adresleri: kökenler ayardan; yalnız sign'ın sayfası kabul (https, kök ya da alt alanı, port / kullanıcı yok)", () => {

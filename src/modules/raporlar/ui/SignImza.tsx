@@ -7,32 +7,33 @@
    §7): "İmzala" ve toplu imza yeni sekme açmaz — SignPenceresi probata'nın içinde iframe'li pencere (allow GOMULU_IZIN aynen; sandbox yok). sign'ın
    haberleri (window "message") YALNIZ açılan adresin kökeninden ve çerçevenin kendisinden alınır (signHaberi); haber yalnız ekranı günceller —
    raporun durumu webhook / Durumu yenile ile değişir. Gömülü adres yoksa (sign'da firmanın web adresi tanımlı değil) yedek: aynı pencerede
-   "İmza ekranını yeni sekmede aç" (kişinin kendi tıklaması — açılır pencere engeline takılmaz). Kilit tests/sign-gomulu.test.ts. */
+   "İmza ekranını yeni sekmede aç" (kişinin kendi tıklaması — açılır pencere engeline takılmaz). Kilit tests/sign-gomulu.test.ts.
+   2026-11-10 (rehber §4): bitiş haberinde (imzalandi · reddedildi · toplu_bitti) pencere KAPANIS_MS sonra kendiliğinden kapanır, "kapat" haberinde
+   hemen (sign-haber.ts kapanis); her kapanışta liste tazelenir, IKINCI_TAZELEME_MS sonra — tek imzada durum hâlâ "bekliyor"sa — bir kez daha. */
 import { useEffect, useId, useRef, useState, useTransition, type TransitionStartFunction } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
-import { GOMULU_IZIN, kokeni, signHaberi, type SignHaberi } from "../sign-haber";
+import { GOMULU_IZIN, IKINCI_TAZELEME_MS, KAPANIS_MS, kapanis, kokeni, signHaberi, type SignHaberi } from "../sign-haber";
 import type { SignEkrani } from "../server/sign";
 import { signImzalaEylemi, signIptalEylemi, signTopluAdresiEylemi, signTopluEylemi, signYenileEylemi } from "./eylemler";
 import stil from "./sign.module.css";
 
 const AG = "Bağlantı ya da sunucu hatası; yeniden deneyin.";
-/** webhook'un ekrana yansıması için ikinci tazeleme (sign'ın haberi webhook'tan önce gelir) */
-const IKINCI_TAZELEME_MS = 4000;
 
 /** açık pencere: gömülü adres (iframe) ve yeni sekme yedeği; ikisi de yoksa hazırlanıyor */
 interface Acik { gomulu: string | null; yedek: string | null }
 
-/** sign'ın imza ekranı probata'nın içinde: iframe (allow aynen), haberler yalnız açılan adresin kökeninden ve bu çerçeveden */
+/** sign'ın imza ekranı probata'nın içinde: iframe (allow aynen), haberler yalnız açılan adresin kökeninden ve bu çerçeveden. Bitiş haberinde
+    pencere KAPANIS_MS sonra, "kapat" haberinde hemen kapanır (kapat — listeyi tazeleyen çağıranın işlevi); haber çağırana yalnız bildirim için gider */
 export function SignPenceresi({ acik, baslik, haber, kapat }: { acik: Acik; baslik: string; haber: (h: SignHaberi) => void; kapat: () => void }) {
   const ref = useRef<HTMLDialogElement>(null);
   const cerceve = useRef<HTMLIFrameElement>(null);
   const baslikId = useId();
   const [hazir, setHazir] = useState(false);
-  const haberRef = useRef(haber);
-  useEffect(() => { haberRef.current = haber; }, [haber]);
+  const haberRef = useRef(haber), kapatRef = useRef(kapat);
+  useEffect(() => { haberRef.current = haber; kapatRef.current = kapat; }, [haber, kapat]);
   useEffect(() => {
     const d = ref.current;
     if (d && !d.open) d.showModal();
@@ -40,15 +41,19 @@ export function SignPenceresi({ acik, baslik, haber, kapat }: { acik: Acik; basl
   }, []);
   useEffect(() => {
     const koken = kokeni(acik.gomulu);
+    let sayac: number | undefined;
     const dinle = (e: MessageEvent) => {
       if (!cerceve.current || e.source !== cerceve.current.contentWindow) return;
       const h = signHaberi(e, koken);
       if (!h) return;
-      if (h.tur === "hazir") setHazir(true);
-      else haberRef.current(h);
+      if (h.tur === "hazir") { setHazir(true); return; }
+      haberRef.current(h);
+      const k = kapanis(h.tur);
+      if (k === "hemen") { window.clearTimeout(sayac); kapatRef.current(); }
+      else if (k === "gecikmeli" && sayac === undefined) sayac = window.setTimeout(() => kapatRef.current(), KAPANIS_MS);
     };
     window.addEventListener("message", dinle);
-    return () => window.removeEventListener("message", dinle);
+    return () => { window.removeEventListener("message", dinle); window.clearTimeout(sayac); };
   }, [acik.gomulu]);
   return (
     <dialog ref={ref} className={stil.pencere} aria-labelledby={baslikId} data-sign-hazir={hazir ? "" : undefined}
@@ -77,6 +82,16 @@ export function SignImzaSeridi({ raporId, asama, sign, baslik, mesgul, baslat, y
 }) {
   const bildir = useBildir();
   const [pen, setPen] = useState<Acik | null>(null);
+  const durum = useRef(sign.durum), ikinci = useRef<number | undefined>(undefined);
+  useEffect(() => { durum.current = sign.durum; }, [sign.durum]);
+  useEffect(() => () => window.clearTimeout(ikinci.current), []);
+  /* pencere kapandı (haberle ya da elle): liste tazelenir; webhook gecikmişse — durum hâlâ "bekliyor" — kısa süre sonra bir kez daha */
+  const penKapat = () => {
+    setPen(null);
+    yenile();
+    window.clearTimeout(ikinci.current);
+    ikinci.current = window.setTimeout(() => { if (durum.current === "bekliyor") yenile(); }, IKINCI_TAZELEME_MS);
+  };
   const imzala = () => {
     setPen({ gomulu: null, yedek: null });
     baslat(async () => {
@@ -87,13 +102,10 @@ export function SignImzaSeridi({ raporId, asama, sign, baslik, mesgul, baslat, y
       } catch { setPen(null); hata(AG); }
     });
   };
-  /* sign'ın haberi: yalnız ekran — kesin sonuç webhook'tan; ikinci tazeleme webhook'un yansıması için */
+  /* sign'ın haberi: yalnız bildirim — pencereyi SignPenceresi kapatır (penKapat), kesin sonuç webhook'tan */
   const haber = (h: SignHaberi) => {
-    setPen(null);
     if (h.tur === "imzalandi") bildir("İmza atıldı; rapor birkaç saniye içinde ilerler.");
     else if (h.tur === "reddedildi") hata("probata sign'da imza reddedildi.");
-    yenile();
-    window.setTimeout(yenile, IKINCI_TAZELEME_MS);
   };
   const yenileSor = () => baslat(async () => {
     try {
@@ -107,7 +119,7 @@ export function SignImzaSeridi({ raporId, asama, sign, baslik, mesgul, baslat, y
       if (r.tamam) { hata(null); bildir(r.bildirim ?? "İptal edildi."); yenile(); } else hata(r.genel ?? "İptal edilemedi.");
     } catch { hata(AG); }
   });
-  const pencere = pen && <SignPenceresi acik={pen} baslik={`${baslik} · probata sign`} haber={haber} kapat={() => { setPen(null); yenile(); }} />;
+  const pencere = pen && <SignPenceresi acik={pen} baslik={`${baslik} · probata sign`} haber={haber} kapat={penKapat} />;
   if (sign.durum === "bekliyor") {
     return (
       <>
@@ -145,6 +157,15 @@ export function SignTopluTus({ idler, asama, bitti }: { idler: readonly string[]
   const [mesgul, baslat] = useTransition();
   const [ilerleme, setIlerleme] = useState<string | null>(null);
   const [pen, setPen] = useState<Acik | null>(null);
+  const ikinci = useRef<number | undefined>(undefined);
+  /* pencere kapandı (haberle ya da elle): liste tazelenir; imzalanan raporlar webhook'la ilerler — gecikmesine karşı kısa süre sonra bir kez daha
+     (sayaç tuş kalkınca TEMİZLENMEZ: ilk tazeleme seçimi boşaltıp tuşu kaldırabilir, ikinci tazeleme listenin işi) */
+  const penKapat = () => {
+    setPen(null);
+    bitti();
+    window.clearTimeout(ikinci.current);
+    ikinci.current = window.setTimeout(bitti, IKINCI_TAZELEME_MS);
+  };
   const tikla = () => {
     const l = idler.slice(0, TOPLU_EN_COK);
     /* 2026-11-09 (reisim: "tek rapor seçipte imzalayabilmeliyim illa içine girmeme gerek kalmaması lazım"): tek rapor, raporun içindeki "İmzala"nın aynısı */
@@ -186,18 +207,15 @@ export function SignTopluTus({ idler, asama, bitti }: { idler: readonly string[]
       } catch { bildir(AG); } finally { setIlerleme(null); }
     });
   };
-  /* sign'ın haberi: yalnız ekran — imzalanan raporlar webhook'la ilerler; ikinci tazeleme webhook'un yansıması için */
+  /* sign'ın haberi: yalnız bildirim — pencereyi SignPenceresi kapatır (penKapat); imzalanan raporlar webhook'la ilerler */
   const haber = (h: SignHaberi) => {
-    setPen(null);
     if (h.tur === "toplu_bitti") bildir(`${h.imzalanan.length} rapor imzalandı${h.atlanan.length ? `, ${h.atlanan.length} rapor atlandı` : ""}; raporlar birkaç saniye içinde ilerler.`);
     else if (h.tur === "imzalandi") bildir("İmza atıldı; raporlar birkaç saniye içinde ilerler.");
-    bitti();
-    window.setTimeout(bitti, IKINCI_TAZELEME_MS);
   };
   return (
     <>
       <Tus ikon="file-signature" disabled={mesgul || !idler.length} aria-busy={mesgul || undefined} onClick={tikla}>{ilerleme ?? "probata sign ile imzala"}</Tus>
-      {pen && <SignPenceresi acik={pen} baslik={idler.length === 1 ? "İmza · probata sign" : "Toplu imza · probata sign"} haber={haber} kapat={() => { setPen(null); bitti(); }} />}
+      {pen && <SignPenceresi acik={pen} baslik={idler.length === 1 ? "İmza · probata sign" : "Toplu imza · probata sign"} haber={haber} kapat={penKapat} />}
     </>
   );
 }
