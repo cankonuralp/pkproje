@@ -304,6 +304,8 @@ export const DIS_IZNI: Readonly<Record<string, string>> = {
   /* 2026-11-05 (göç 0122): probata sign — firmanın sign hesabına API müşterisi olarak (anahtar firmanın şifreli sırrında) */
   "src/modules/raporlar/server/sign.ts": "rapor imzası probata sign ile: PDF'i gönderir, imza isteği açar, imzalı PDF'i alır, webhook'u doğrular",
   "src/modules/yonetim/server/sign.ts": "Yönetim › firma › probata sign: anahtarı sign'a dener (yalnız yönetim oturumunda)",
+  /* 2026-11-10 (göç 0125): Onaylar › Diğer belgeler probata sign ile — rapor imzasının yolu; anahtar firmanın şifreli sırrında */
+  "src/modules/onaylar/server/belge-sign.ts": "belge imzası probata sign ile: sign'daki belgenin durumunu sorar, imzalı PDF'i alır (gönderme raporların signGonder'i)",
   /* 2026-11-07 gömülü imza: ara katman CSP frame-src'ye sign'ın kökenlerini yazar — yalnız saf adres modülü (sign-adres.ts; ağ yok, anahtar yok) */
   "src/proxy.ts": "CSP frame-src: probata sign'ın kökenleri ayardan türetilir (sign-adres.ts saf; istemci ve anahtar içe aktarılmaz)"
 };
