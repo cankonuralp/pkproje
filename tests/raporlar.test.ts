@@ -1110,15 +1110,17 @@ test("595 madde 1: ikinci muayene uzmanı yalnız plan ekibinden, raporu yazan d
    tek okudu ve kontrol gününü onlardan aldı): içeriği sunucu taşır. Dosyanın SONUNDA: tesise ekipman ekler (öteki testlerin ekipman sayısı değişmesin). */
 test("başka plandan taşı: istenirse aynı yazanın başka plandaki yarım raporunun bilgileri ve madde seçimleri yeni rapora gelir, tarih gelmez; istenmezse ve başkasının raporundan gelmez", async () => {
   const e = (await sql<{ id: string }>(A, "INSERT INTO ekipman (tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, 'HT-TASI', 'Deneme') RETURNING id::text", [FA.tesis, FA.tur])).rows[0]!.id;
-  const liste = KOMP.bolumler.find((x) => x.blok === "liste")!;
-  assert.ok(liste.blok === "liste" && liste.cevaplar.length > 1);
-  const madde = liste.gruplar[0]!.maddeler[0]!.id, secim = liste.cevaplar[1]!;
   const ac = (k: Kisi, plan: string, tasi: boolean) => a(k, (db) => raporOlustur(db, k, plan, e, { baskaPlandan: tasi }));
   const p1 = await yeniPlan(), p2 = await yeniPlan({ ekip: [FA.den1P, FA.den2P] }), p3 = await yeniPlan(), p4 = await yeniPlan();
   const r1 = tamam(await ac(FA.den1, p1, false));
+  const s1 = (await sr(FA.den1, r1.id))!;
+  const liste = s1.tanim.bolumler.find((x) => x.blok === "liste")!;
+  assert.ok(liste.blok === "liste" && liste.cevaplar.length > 1);
+  const madde = liste.gruplar.flatMap((g) => g.maddeler).find((m) => !m.formul?.trim())!.id;
+  const secim = liste.cevaplar.find((c) => c !== s1.cevaplar.madde[madde]?.c)!;
   await sql(A, `UPDATE rapor SET ekipman_bilgi = ekipman_bilgi || '{"marka":"Taşınan"}'::jsonb, cevaplar = jsonb_set(cevaplar, ARRAY['madde', $2, 'c'], to_jsonb($3::text)),
     bas = now() - interval '10 days', surum = surum + 1, degisti = now() WHERE id = $1`, [r1.id, madde, secim]);
-  const no1 = (await sr(FA.den1, r1.id))!.no;
+  const no1 = s1.no;
   /* başkasının yarım raporu taşınmaz */
   const r2 = tamam(await ac(FA.den2, p2, true));
   assert.doesNotMatch(r2.bildirim, /taşındı/);

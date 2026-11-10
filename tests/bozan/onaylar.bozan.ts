@@ -374,7 +374,7 @@ async function imzaliEkipman(kisa: string, kod: string) {
 }
 
 test("İ1: yeni rapor önceki tamamlanmış rapordan başlamayınca seneye seri no yeniden yazılır", async () => {
-  const m = await bozukModul<Raporlar>(RAPORLAR, "  const o = await oncekiRaporIcerigi(db, e.id, planId);\n  if (!o) return { ekipmanBilgi: kayit, cevaplar: null };",
+  const m = await bozukModul<Raporlar>(RAPORLAR, "  const o = yarim ?? await oncekiRaporIcerigi(db, e.id, planId);\n  if (!o) return { ekipmanBilgi: kayit, cevaplar: null };",
     "  return { ekipmanBilgi: kayit, cevaplar: null };");
   const { k, yeniPlan } = await imzaliEkipman("deneme-o1", "DO");
   const p2 = await yeniPlan(k.per, k.den);
