@@ -6,6 +6,9 @@ import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { depo } from "../../../server/dosya/depo";
 import { belgeGeriGonder, belgeImzaliYukle, type BelgeYazma } from "../server/belgeler";
+import { belgeSignBekliyor, belgeSignHazirla, belgeSignKaydet, belgeSignSonuclandir } from "../server/belge-sign";
+import { firmaCalistirici, signGonder, SignHatasi } from "../../raporlar/server/sign";
+import { yedekSonraCalistir } from "../../../server/yedek/sonra";
 import { durumDegistir, geriGonder, onayGeriAl, onayIndirmeListesi, onayla, revizeIstegiReddet, revizeyeGonder, tumRaporlarSayfasi, type OnaySatiri, type OnayYazma } from "../server/onaylar";
 import type { IndirmeSatiri } from "../../raporlar/server/onay-baglanti";
 import type { SunucuListe } from "../../../components/liste/suzgec";
@@ -88,6 +91,43 @@ export async function belgeImzaliYukleEylemi(form: FormData): Promise<OnayYaniti
   if (dosya.size > 25 << 20) return { hatalar: { dosya: "PDF çok büyük (en çok 25 MB)." } };
   const bayt = new Uint8Array(await dosya.arrayBuffer());
   return belgeIslem((o) => oturumIslemi(o, (db) => belgeImzaliYukle(db, depo(), o, o.kiraci.firmaId, metin(form.get("id")), Number(form.get("surum")), { ad: dosya.name, bayt })));
+}
+
+/* ── DİĞER BELGELER · PROBATA SIGN (2026-11-10, göç 0125): rapor imzasının yolu — hazırla (işlem) → sign'a gönder (ağ, işlem dışı) → kaydet (işlem) ── */
+const belgeYaniti = (r: BelgeYazma): OnayYaniti => (r.durum === "tamam" ? { tamam: true, bildirim: r.bildirim } : r.durum === "gecersiz" ? { hatalar: r.hatalar }
+  : r.durum === "red" ? { genel: r.neden } : { genel: BELGE_SONUC[r.durum] });
+/** İmzala: sign'ın imza ekranının adresleri (gömülü + yeni sekme yedeği) */
+export async function belgeSignImzalaEylemi(id: string): Promise<OnayYaniti & { gomulu?: string; baglanti?: string }> {
+  if (!(await ayniKoken())) return { genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };
+  const o = await istekOturumu();
+  if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
+  const h = await oturumIslemi(o, (db) => belgeSignHazirla(db, depo(), o, o.kiraci.firmaId, metin(id)));
+  if (h.tur === "hata") return belgeYaniti(h.y);
+  if (h.tur === "acik") return { tamam: true, ...(h.gomulu ? { gomulu: h.gomulu } : {}), ...(h.baglanti ? { baglanti: h.baglanti } : {}) };
+  try {
+    const s = await signGonder(h.h);
+    if (!(await oturumIslemi(o, (db) => belgeSignKaydet(db, o, o.kiraci.firmaId, metin(id), s)))) return { genel: BELGE_SONUC.cakisma };
+    return { tamam: true, ...(s.gomulu ? { gomulu: s.gomulu } : {}), ...(s.baglanti ? { baglanti: s.baglanti } : {}) };
+  } catch (e) {
+    if (e instanceof SignHatasi) return { genel: e.message };
+    throw e;
+  }
+}
+/** imza penceresi kapanınca: sign'a sorar; imzalandıysa imzalı PDF bugünkü yükleme yolundan geçer (webhook gecikse de sonuç gelir) */
+export async function belgeSignYenileEylemi(id: string): Promise<OnayYaniti & { bekliyor?: boolean }> {
+  if (!(await ayniKoken())) return { genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };
+  const o = await istekOturumu();
+  if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
+  if (!(await oturumIslemi(o, (db) => belgeSignBekliyor(db, o, metin(id))))) return { tamam: true, bekliyor: false };
+  try {
+    const s = await belgeSignSonuclandir(firmaCalistirici(o.kiraci), depo(), o.kiraci.firmaId, metin(id));
+    if (s.durum === "tamam") { yedekSonraCalistir(o.kiraci, 25_000); return { tamam: true, bildirim: s.bildirim }; }
+    if (s.durum === "bekliyor") return { tamam: true, bekliyor: true };
+    return { genel: s.neden };
+  } catch (e) {
+    if (e instanceof SignHatasi) return { genel: e.message };
+    throw e;
+  }
 }
 
 /* 477 (reisim 2026-10-10, Talepler–Onaylar kararları T1 · T2): izin talebi ve masraf formunun kararı Onaylar › Talepler'de — talep DEĞİŞTİRİLMEZ;

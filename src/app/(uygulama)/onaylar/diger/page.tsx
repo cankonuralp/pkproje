@@ -4,12 +4,14 @@ import type { Metadata } from "next";
 import { digerBelgeler } from "../../../../modules/onaylar/server/belgeler";
 import { onayListeleri } from "../../../../modules/onaylar/server/onaylar";
 import { DigerBelgeler } from "../../../../modules/onaylar/ui/DigerBelgeler";
+import { signAcik } from "../../../../modules/raporlar/server/sign";
 import { oturumGerekli, oturumIslemi } from "../../../../server/kimlik/istek";
 
 export const metadata: Metadata = { title: "Diğer belgeler · Onaylar" };
 
 export default async function Sayfa() {
   const o = await oturumGerekli();
-  const { v, sekmeler } = await oturumIslemi(o, async (db) => ({ v: await digerBelgeler(db, o), sekmeler: await onayListeleri(db, o) }));
-  return <DigerBelgeler v={v} sekmeler={sekmeler} />;
+  /* sign: firmada probata sign bağlıysa bekleyen belgede "İmzala" sign'ın imza ekranını açar (2026-11-10) */
+  const { v, sekmeler, sign } = await oturumIslemi(o, async (db) => ({ v: await digerBelgeler(db, o), sekmeler: await onayListeleri(db, o), sign: await signAcik(db) }));
+  return <DigerBelgeler v={v} sekmeler={sekmeler} sign={sign} />;
 }

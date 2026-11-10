@@ -683,6 +683,9 @@ pkproje/
                             ekran raporlar/ui/SignImza.tsx SignPenceresi (dialog + iframe, allow sign-haber.ts GOMULU_IZIN aynen; yedek "yeni sekmede aç") · haber
                             sign-haber.ts signHaberi (yalnız açılan adresin kökeni + kaynak probata-sign + bu çerçeve; yalnız ekran) · CSP frame-src 'self' +
                             dis/sign-adres.ts signKokenleri (PROBATA_SIGN_UC'den; firma alt alanları) · 2026-11-09 toplu açılmış (bağlantısız) istek tek imzada bağlantılı istekle yenilenir (sign.ts tekteYenilenir) · 2026-11-10 pencere kapanışı (rehber §4; sign-haber.ts kapanis): imzalandi / reddedildi / toplu_bitti 3 sn sonra, "kapat" hemen; kapanışta liste tazelenir, kısa süre sonra bir kez daha (tek imzada durum hâlâ bekliyorsa) · kilit sign-gomulu, onaylar (PG), bozan sign-gomulu
+                            · 2026-11-10 DİĞER BELGELER SIGN İLE (göç 0125 — belge_onay sign_* alanları): onaylar/server/belge-sign.ts (belgeSignHazirla → raporların signGonder'i →
+                            belgeSignKaydet; belgeSignSonuclandir imzacının hesabıyla belgeImzaliYukle; belgeSignBildirimi — signBildirim rapor isteği bulamazsa) ·
+                            ui/DigerBelgeler "İmzala" (SignPenceresi) + "PDF ile imzala"; pencere kapanınca sonuç sign'dan sorulur · kilit belge-onay (PG)
   src/server/imza/          İMZALI PDF DENETİMİ — YALNIZ OKUMA / DENETİM (2026-10-17, IMZA-SERVISI.md; saf, saldırganın girdisinde sınırlı): der.ts ·
                             sertifika.ts · cms.ts (imzalı sertifika bağı, damga sunucusu denetimi, SHA-1 yok) · pdf-ek.ts nesne okuyucu (xref zinciri, nesne
                             akışı, onarım) · iptal.ts OCSP / iptal listesi ÇÖZÜMLEMESİ (ağ yok) · pdf-imzalar.ts ÇÖZÜMLEYİCİ (beş katman, DSS yalnız kataloğun

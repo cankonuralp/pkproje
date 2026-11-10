@@ -3,6 +3,7 @@
    çalma; yetki her zaman sunucuda". GERÇEK PostgreSQL, iki firma (göç 0044; 333). Saf imza denetimi tests/imza-pdf.test.ts; olumsuz kanıt
    tests/bozan/belge-onay.bozan.ts. */
 import assert from "node:assert/strict";
+import { randomBytes } from "node:crypto";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -14,6 +15,10 @@ import { dosyaIndirilebilir } from "../src/server/dosya/dosya.ts";
 import { DOSYA_ERISIMI } from "../src/server/dosya/erisim.ts";
 import { bordroAylari, bordroGonder, bordroGonderimi } from "../src/modules/muhasebe/server/bordro-gonder.ts";
 import { bekleyenBelgeSayisi, belgeGeriGonder, belgeImzaliYukle, digerBelgeler, type Kisi } from "../src/modules/onaylar/server/belgeler.ts";
+import { belgeSignBekliyor, belgeSignBildirimi, belgeSignHazirla, belgeSignKaydet, belgeSignNo, belgeSignSonuclandir } from "../src/modules/onaylar/server/belge-sign.ts";
+import { signAcik, signBildirim, signGonder, type IslemCalistir } from "../src/modules/raporlar/server/sign.ts";
+import { sifrele } from "../src/server/ayar/sir.ts";
+import { SignHatasi, webhookImzasi } from "../src/server/dis/sign.ts";
 import { bordroKaldir, bordroOnayaGonder, bordroYukle, personelDosyasi } from "../src/modules/personel/server/dosyalar.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 import { imzaEki } from "./yardimci/gercek-imza.ts";
@@ -187,4 +192,86 @@ test("veritabanı: belge silinmez; içerik değişmez; kararı yalnız imzacı v
   /* B firması A'nın belgesine dokunamaz (RLS: görünmez) */
   const g = await a(YON_B, (db) => db.sorgu("UPDATE belge_onay SET ad = 'Deneme' WHERE id = $1", [x.id]), B);
   assert.equal(g.rowCount, 0);
+});
+
+/* 2026-11-10 (göç 0125; reisim: "1 ve 2 ve 4 5 i yap" — liste 2: "Onaylar › Diğer belgeler probata sign ile"): rapor imzasının yolu belgeye. sign TAKLİT
+   (ağ yok); imzalı PDF gerçek kriptografiyle (yardimci/gercek-imza.ts). */
+test("probata sign ile belge imzası: kapalıyken red; yalnız imzacı hazırlar ve kaydeder; bağlantı şifreli; reddedilince ve denetimden geçmeyince belge bekler, nedeni yazılır; tamamlanınca imzalı; bildirim rapor isteği bulamazsa belgeye gider", async () => {
+  process.env.PROBATA_SIR_ANAHTARI ??= randomBytes(32).toString("base64");
+  const ANAHTAR = "psk_deneme_0123456789abcdef", SIR = "whsec-deneme-0123456789abcdef";
+  const bordro = tamam(await a(YON, (db) => bordroYukle(db, depo, YON, A, denP, { ay: "2025-03", brut: "50.000", net: "38.000", maliyet: "60.000" }, PDF))).id;
+  tamam(await a(YON, (db) => bordroOnayaGonder(db, depo, YON, A, bordro)));
+  const AD = "Mart 2025 maaş bordrosu";
+  const liste = () => a(DEN, (db) => digerBelgeler(db, DEN));
+  const bul = async () => (await liste()).belgeler.find((x) => x.ad === AD)!;
+  const hazirla = (k: Kisi, id: string) => a(k, (db) => belgeSignHazirla(db, depo, k, A, id));
+  let x = await bul();
+  assert.deepEqual([x.durum, x.sign, await a(DEN, (db) => signAcik(db))], ["bekliyor", null, false]);
+  assert.deepEqual(await hazirla(DEN, x.id), { tur: "hata", y: { durum: "red", neden: "Bu firmada probata sign bağlı değil." } });
+  const s = kume.sahipIstemci(); await s.connect();
+  try {
+    await s.query("INSERT INTO firma_sir (firma_id, ad, sifreli, son4) VALUES ($1, 'sign_anahtari', $2, 'cdef'), ($1, 'sign_webhook_sirri', $3, 'cdef')",
+      [A, sifrele(ANAHTAR, A, "sign_anahtari"), sifrele(SIR, A, "sign_webhook_sirri")]);
+  } finally { await s.end(); }
+  assert.equal(await a(DEN, (db) => signAcik(db)), true);
+  assert.deepEqual(await hazirla(DIGER, x.id), { tur: "hata", y: { durum: "yok" } }, "başkasının belgesi: yok");
+  const hz = await hazirla(DEN, x.id);
+  assert.equal(hz.tur, "gonder");
+  if (hz.tur !== "gonder") return;
+  assert.equal(hz.h.raporNo, belgeSignNo(AD, x.id));
+  assert.deepEqual(hz.h.imzaci, { ad: "Deneme Denetçi", eposta: "den@deneme-a.example" });
+  assert.deepEqual([...hz.h.pdf], [...b(OZGUN)], "sign'a giden PDF belgenin gönderilen PDF'i");
+  /* taklit sign */
+  const BELGE = "11111111-1111-4111-8111-111111111111", ISTEK = "22222222-2222-4222-8222-222222222222";
+  const BAG = "https://deneme.sign.probata.com.tr/dis#belirtec", GOM = "https://deneme.sign.probata.com.tr/gomulu#belirtec";
+  let durum = "imzada", istekDurum = "acik", imzali: Uint8Array | null = null;
+  const taklit = {
+    dene: async () => {}, istekIptal: async () => {}, topluImza: async () => ({ gomulu: null, adres: null, belgeler: [], son: null }),
+    belgeYukle: async (_pdf: Uint8Array, p: { raporNo: string | null }) => ({ id: BELGE, durum: "taslak", rapor_no: p.raporNo }),
+    imzaIstegiAc: async () => ({ id: ISTEK, durum: "acik", son_tarih: null, imzacilar: [{ id: "x", durum: "bekliyor", baglanti: BAG, gomulu_baglanti: GOM }] }),
+    belgeGetir: async () => ({ id: BELGE, durum, rapor_no: null, imza_istegi: { id: ISTEK, durum: istekDurum, son_tarih: null, imzacilar: [{ id: "x", durum: "bekliyor", red_nedeni: "Yanlış belge" }] } }),
+    pdfAl: async () => { if (!imzali) throw new SignHatasi(409, "durum", "imzalı değil"); return imzali; },
+  };
+  const g = await signGonder(hz.h, taklit);
+  assert.deepEqual(g, { belge: BELGE, istek: ISTEK, baglanti: BAG, gomulu: GOM });
+  assert.equal(await a(DIGER, (db) => belgeSignKaydet(db, DIGER, A, x.id, g)), false, "başkası kaydedemez");
+  assert.equal(await a(DEN, (db) => belgeSignKaydet(db, DEN, A, x.id, g)), true);
+  assert.deepEqual(await hazirla(DEN, x.id), { tur: "acik", baglanti: BAG, gomulu: GOM }, "açık istek: aynı bağlantılar");
+  const sakli = (await a(DEN, (db) => db.sorgu<{ sign_baglanti: string }>("SELECT sign_baglanti FROM belge_onay WHERE id = $1", [x.id]))).rows[0]!.sign_baglanti;
+  assert.ok(!sakli.includes("belirtec"), "bağlantı düz yazılmaz");
+  assert.deepEqual((await bul()).sign, { durum: "bekliyor", neden: null });
+  assert.equal(await a(DIGER, (db) => belgeSignBekliyor(db, DIGER, x.id)), false);
+  assert.equal(await a(DEN, (db) => belgeSignBekliyor(db, DEN, x.id)), true);
+  const calistir: IslemCalistir = (hesap, is) => kiraciIcinde(havuz, A, is, hesap ? { hesapId: hesap } : {});
+  const sonuc = () => belgeSignSonuclandir(calistir, depo, A, x.id, () => taklit);
+  assert.deepEqual(await sonuc(), { durum: "bekliyor" });
+  /* reddedildi: belge bekler, nedeni yazılır; yeniden İmzala yeni istek açar */
+  durum = "reddedildi"; istekDurum = "reddedildi";
+  assert.deepEqual(await sonuc(), { durum: "kapandi", neden: "İmzacı reddetti: Yanlış belge." });
+  x = await bul();
+  assert.deepEqual([x.durum, x.sign], ["bekliyor", { durum: "reddedildi", neden: "İmzacı reddetti: Yanlış belge." }]);
+  durum = "taslak"; istekDurum = "acik";
+  const hz2 = await hazirla(DEN, x.id);
+  assert.equal(hz2.tur, "gonder", "reddedilen istekten sonra yeniden gönderilir");
+  if (hz2.tur !== "gonder") return;
+  assert.equal(await a(DEN, async (db) => belgeSignKaydet(db, DEN, A, x.id, await signGonder(hz2.h, taklit))), true);
+  /* sign "tamamlandı" dese de imza taşımayan PDF bugünkü denetimden geçmez: belge bekler, neden yazılır */
+  durum = "tamamlandi"; istekDurum = "tamamlandi"; imzali = b(OZGUN);
+  assert.equal((await sonuc()).durum, "hata");
+  x = await bul();
+  assert.deepEqual([x.durum, x.sign?.durum, !!x.sign?.neden], ["bekliyor", "hata", true]);
+  /* bildirim: rapor imza isteği yok → belgeye gider; gerçek imzalı PDF → imzalı */
+  imzali = imzaEki(b(OZGUN));
+  const bildir = (kimlik: string, belge: string) => {
+    const govde = JSON.stringify({ id: kimlik, olay: "belge.tamamlandi", olusturma: new Date().toISOString(), veri: { belge_id: belge } });
+    const t = Math.floor(Date.now() / 1000);
+    return signBildirim(calistir, depo, A, { govde, imza: `t=${t},v1=${webhookImzasi(SIR, t, govde)}`, gonderim: kimlik }, () => taklit, undefined,
+      (sb) => belgeSignBildirimi(calistir, depo, A, sb, () => taklit));
+  };
+  assert.deepEqual(await bildir("gonderim-belge-0001", "33333333-3333-4333-8333-333333333333"), { kod: 200, ileti: "Bekleyen istek yok." }, "tanınmayan sign belgesi");
+  assert.deepEqual(await bildir("gonderim-belge-0002", BELGE), { kod: 200, ileti: "tamam" });
+  x = await bul();
+  assert.deepEqual([x.durum, !!x.karar, !!x.imzaliDosya, x.sign], ["imzali", true, true, null]);
+  assert.deepEqual(await hazirla(DEN, x.id), { tur: "hata", y: { durum: "red", neden: "Belge zaten imzalandı." } });
+  assert.deepEqual(await sonuc(), { durum: "hata", neden: "Belge zaten imzalandı." });
 });

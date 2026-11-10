@@ -1,7 +1,9 @@
 "use client";
 /* ONAYLAR › DİĞER BELGELER (333; maket onaylar.html #/diger — DIGER_SUTUN, BDURUM, belge-goster / belge-geri / belge-imzala): kişinin imzasına
    gönderilen bordro, eğitim formu, zimmet formu, araç teslim tutanağı. Bekleyenler üstte. Görüntüle · Geri gönder (önce sorulur) · Onayla ve
-   imzala (pencere: PDF'i indir → e-imza aracınızla imzalayın → imzalı PDF'i yükleyin; her belge ayrı). Karar ve kural sunucuda (belgeler.ts). */
+   imzala (pencere: PDF'i indir → e-imza aracınızla imzalayın → imzalı PDF'i yükleyin; her belge ayrı). Karar ve kural sunucuda (belgeler.ts).
+   2026-11-10 (göç 0125): firmada probata sign bağlıysa bekleyen belgede "İmzala" sign'ın imza ekranını probata'nın içinde açar (raporun penceresi —
+   raporlar/ui/SignImza SignPenceresi); "PDF ile imzala" yedek yol. Pencere kapanınca sonuç sign'dan sorulur (belgeSignYenileEylemi), liste tazelenir. */
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
@@ -17,7 +19,9 @@ import { Tus, tusSinifi } from "../../../components/tus/Tus";
 import { BELGE_DURUM, BELGE_TUR, type BelgeDurumu } from "../sema";
 import type { BelgeSatiri, DigerBelgeler as Veri } from "../server/belgeler";
 import type { OnayListeleri } from "../server/onaylar";
-import { belgeGeriGonderEylemi, belgeImzaliYukleEylemi } from "./eylemler";
+import { SignPenceresi } from "../../raporlar/ui/SignImza";
+import type { SignHaberi } from "../../raporlar/sign-haber";
+import { belgeGeriGonderEylemi, belgeImzaliYukleEylemi, belgeSignImzalaEylemi, belgeSignYenileEylemi } from "./eylemler";
 import { onaySekmeleri } from "./OnayListesi";
 import stil from "./onaylar.module.css";
 
@@ -45,13 +49,42 @@ function belgeTanimi(l: readonly BelgeSatiri[]): SuzgecTanimi<BelgeSatiri> {
   };
 }
 
-export function DigerBelgeler({ v, sekmeler }: { v: Veri; sekmeler: OnayListeleri | null }) {
+export function DigerBelgeler({ v, sekmeler, sign = false }: { v: Veri; sekmeler: OnayListeleri | null; sign?: boolean }) {
   const router = useRouter();
   const bildir = useBildir();
   const onayla = useOnayla();
   const [bekliyorMu, baslat] = useTransition();
   const [imza, setImza] = useState<null | { x: BelgeSatiri; hata: string | null }>(null);
   const girdi = useRef<HTMLInputElement>(null);
+  /* probata sign: açık imza penceresi (adresler gelene dek hazırlanıyor) */
+  const [pen, setPen] = useState<null | { x: BelgeSatiri; gomulu: string | null; yedek: string | null }>(null);
+  const signAc = (x: BelgeSatiri) => {
+    setPen({ x, gomulu: null, yedek: null });
+    baslat(async () => {
+      try {
+        const r = await belgeSignImzalaEylemi(x.id);
+        if (r.tamam && (r.gomulu || r.baglanti)) setPen({ x, gomulu: r.gomulu ?? null, yedek: r.baglanti ?? null });
+        else { setPen(null); bildir(r.genel ?? "probata sign'da imza başlatılamadı."); router.refresh(); }
+      } catch { setPen(null); bildir("Bağlantı ya da sunucu hatası; yeniden deneyin."); }
+    });
+  };
+  /* sign'ın haberi yalnız bildirim; pencere kapanınca (haberle ya da elle) sonuç sign'dan sorulur — belge webhook'u beklemeden ilerler */
+  const signHaber = (h: SignHaberi) => {
+    if (h.tur === "imzalandi") bildir("İmza atıldı; belge birkaç saniye içinde ilerler.");
+    else if (h.tur === "reddedildi") bildir("probata sign'da imza reddedildi.");
+  };
+  const signKapat = () => {
+    const x = pen?.x;
+    setPen(null);
+    if (!x) return;
+    baslat(async () => {
+      try {
+        const r = await belgeSignYenileEylemi(x.id);
+        if (r.tamam && r.bildirim) { bildir(r.bildirim); odakla(); } else if (!r.tamam) bildir(r.genel ?? "probata sign'dan sonuç alınamadı.");
+      } catch { bildir("Bağlantı ya da sunucu hatası; yeniden deneyin."); }
+      router.refresh();
+    });
+  };
   const geri = async (x: BelgeSatiri) => {
     if (!(await onayla({ baslik: "Belgeyi geri gönder", metin: <><b>{x.ad}</b> imzalanmadan {x.gonderen} kişisine geri gider.</>, tus: "Geri gönder" }))) return;
     baslat(async () => {
@@ -76,14 +109,20 @@ export function DigerBelgeler({ v, sekmeler }: { v: Veri; sekmeler: OnayListeler
     { k: "gonderen", genislik: "16%", baslik: "Gönderen", kart: "govde", sira: 2, hucre: (x) => <><KartEtiket>Gönderen</KartEtiket><Kirp>{x.gonderen}</Kirp></> },
     { k: "zaman", genislik: "16%", baslik: "Gönderildi", kart: "govde", sira: 3, hucre: (x) => <><KartEtiket>Gönderildi</KartEtiket><span className={stil.sayi}>{zamanYaz(x.gonderildi)}</span></> },
     { k: "durum", genislik: "14%", baslik: "Durum", kart: "rozet", sira: 1, hucre: (x) => (
-      <span><Rozet tur={BELGE_DURUM[x.durum][1]}>{BELGE_DURUM[x.durum][0]}</Rozet>{x.karar && <AltSatir>{zamanYaz(x.karar)}</AltSatir>}</span>
+      <span><Rozet tur={BELGE_DURUM[x.durum][1]}>{BELGE_DURUM[x.durum][0]}</Rozet>{x.karar && <AltSatir>{zamanYaz(x.karar)}</AltSatir>}
+        {x.sign && x.sign.durum !== "bekliyor" && x.sign.neden && <AltSatir uyari>{x.sign.neden}</AltSatir>}</span>
     ) },
     { k: "eylem", genislik: "24%", baslik: "İşlem", gizliBaslik: true, siralanmaz: true, kart: "eylem", sira: 9, hucre: (x) => (
       <div className={stil.eylemTuslar}>
         <DosyaAcTusu dosyaId={x.imzaliDosya ?? x.dosya} etiket={`${x.ad} görüntüle`}>Görüntüle</DosyaAcTusu>
         {x.durum === "bekliyor" && <>
           <Tus tur="ikincil" disabled={bekliyorMu} aria-label={`${x.ad} geri gönder`} onClick={() => geri(x)}>Geri gönder</Tus>
-          <Tus ikon="file-signature" disabled={bekliyorMu} aria-label={`${x.ad} onayla ve imzala`} onClick={() => setImza({ x, hata: null })}>Onayla ve imzala</Tus>
+          {sign
+            ? <>
+              <Tus ikon="file-signature" disabled={bekliyorMu} aria-label={`${x.ad} imzala`} onClick={() => signAc(x)}>İmzala</Tus>
+              <Tus tur="ikincil" disabled={bekliyorMu} aria-label={`${x.ad} PDF ile imzala`} onClick={() => setImza({ x, hata: null })}>PDF ile imzala</Tus>
+            </>
+            : <Tus ikon="file-signature" disabled={bekliyorMu} aria-label={`${x.ad} onayla ve imzala`} onClick={() => setImza({ x, hata: null })}>Onayla ve imzala</Tus>}
         </>}
       </div>
     ) },
@@ -96,6 +135,7 @@ export function DigerBelgeler({ v, sekmeler }: { v: Veri; sekmeler: OnayListeler
       {v.bekleyen > 0 && <SeritKap><Serit tur="uyari" ikon="file-signature"><b>{v.bekleyen} belge imzanızı bekliyor</b> · her belge ayrı imzalanır.</Serit></SeritKap>}
       <SuzgecliListe s={s} on="dgr" baslik="Diğer belgeler" sutunlar={sutunlar} anahtar={(x) => x.id}
         bosVeri={{ ikon: "circle-check", baslik: "Onayınızı bekleyen belge yok" }} />
+      {pen && <SignPenceresi acik={pen} baslik={`${pen.x.ad} · probata sign`} haber={signHaber} kapat={signKapat} />}
       {imza && <Pencere acik baslik="Onayla ve imzala" onKapat={() => { if (!bekliyorMu) setImza(null); }} odak="[data-belge-indir] a"
         alt={<>
           <Tus tur="ikincil" disabled={bekliyorMu} onClick={() => setImza(null)}>Vazgeç</Tus>

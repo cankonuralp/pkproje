@@ -1,10 +1,11 @@
 /* PROBATA SIGN BİLDİRİMİ (2026-11-05, göç 0122) — sign'ın webhook'u buraya gelir: https://<firma>.probata.com.tr/api/sign/bildirim (Yönetim › firma ›
    probata sign ekranı bu adresi gösterir). Firma adresten (alt alan adı); imza (X-Probata-Imza) firmanın webhook sırrıyla doğrulanır; iş modülde
-   (raporlar/server/sign.ts signBildirim). Gövde en çok 64 KB. Oturum yok — rapor, imza isteğinin SAHİBİNİN yetkisiyle sonuçlanır. */
+   (raporlar/server/sign.ts signBildirim; rapor değilse onaylar/server/belge-sign.ts — Diğer belgeler). Gövde en çok 64 KB. Oturum yok — rapor, imza isteğinin SAHİBİNİN yetkisiyle sonuçlanır. */
 import { istekKiracisi } from "../../../../server/kiraci/istek";
 import { depo } from "../../../../server/dosya/depo";
 import { yedekSonraCalistir } from "../../../../server/yedek/sonra";
 import { firmaCalistirici, signBildirim } from "../../../../modules/raporlar/server/sign";
+import { belgeSignBildirimi } from "../../../../modules/onaylar/server/belge-sign";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -19,8 +20,10 @@ export async function POST(istek: Request) {
   if (boy > GOVDE_EN_COK) return Response.json({ hata: "Gövde çok büyük." }, { status: 413, headers: BASLIK });
   const govde = await istek.text();
   if (govde.length > GOVDE_EN_COK) return Response.json({ hata: "Gövde çok büyük." }, { status: 413, headers: BASLIK });
+  /* rapor imza isteği değilse Onaylar › Diğer belgeler'in belgesi (2026-11-10) */
   const s = await signBildirim(firmaCalistirici(k), depo(), k.firmaId,
-    { govde, imza: istek.headers.get("x-probata-imza"), gonderim: istek.headers.get("x-probata-gonderim") });
+    { govde, imza: istek.headers.get("x-probata-imza"), gonderim: istek.headers.get("x-probata-gonderim") },
+    undefined, undefined, (signBelge) => belgeSignBildirimi(firmaCalistirici(k), depo(), k.firmaId, signBelge));
   if (s.kod === 200 && s.ileti === "tamam") yedekSonraCalistir(k, 25_000);
   return Response.json({ sonuc: s.ileti }, { status: s.kod, headers: BASLIK });
 }

@@ -34,7 +34,7 @@ export const KAPSAM: Readonly<Record<string, Readonly<Record<string, string>>>> 
   "olcum-cihazlari/ui/eylemler.ts": { cihazKaydetEylemi: "i:cihaz_kaydet", cihazKonumEylemi: "i:cihaz_konum", kalibrasyonEkleEylemi: "i:kalibrasyon_ekle",
     kalibrasyonKaldirEylemi: "i:kalibrasyon_kaldir", cihazSilEylemi: "i:cihaz_sil", cihazPasifEylemi: "i:cihaz_pasif", cihazTuruKaydetEylemi: "i:cihaz_turu_kaydet",
     cihazTuruSilEylemi: "i:cihaz_turu_sil" },
-  "onaylar/ui/eylemler.ts": { tumRaporlarEylemi: "i:onay_tum_raporlar", onayIndirmeEylemi: "d:toplu indirme (PDF dosyaları tarayıcıda iner)", onaylaEylemi: "i:rapor_onayla", geriGonderEylemi: "i:rapor_geri_gonder", onayGeriAlEylemi: "i:rapor_onay_geri_al",
+  "onaylar/ui/eylemler.ts": { belgeSignImzalaEylemi: "d:e-imza (imza PDF'i hazırlama)", belgeSignYenileEylemi: "d:e-imza (imza PDF'i hazırlama)", tumRaporlarEylemi: "i:onay_tum_raporlar", onayIndirmeEylemi: "d:toplu indirme (PDF dosyaları tarayıcıda iner)", onaylaEylemi: "i:rapor_onayla", geriGonderEylemi: "i:rapor_geri_gonder", onayGeriAlEylemi: "i:rapor_onay_geri_al",
     durumDegistirEylemi: "i:rapor_durum_degistir", revizeyeGonderEylemi: "i:revizeye_gonder", revizeIstegiReddetEylemi: "i:revize_istegi_reddet", belgeGeriGonderEylemi: "i:belge_geri_gonder",
     belgeImzaliYukleEylemi: "i:diger_belge_imzali_yukle", talepKararEylemi: "i:talep_karar" },
   "personel/ui/eylemler.ts": { personelKaydetEylemi: "i:personel_kaydet", hesapAcEylemi: "d:hesap, parola, rol ve yetki", geciciParolaEylemi: "d:hesap, parola, rol ve yetki",

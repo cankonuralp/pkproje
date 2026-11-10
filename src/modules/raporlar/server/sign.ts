@@ -229,7 +229,9 @@ export type BildirimSonucu = { kod: 200 | 202; ileti: string } | { kod: 400 | 40
 /** sign'ın bildirimi: imza (X-Probata-Imza) firmanın webhook sırrıyla doğrulanır; aynı gönderim iki kez işlenmez; belge.tamamlandi / imza.reddedildi /
     istek.iptal o belgenin isteğini sonuçlandırır. Geçici hata (sign'a ulaşılamadı) 503 — sign yeniden dener */
 export async function signBildirim(calistir: IslemCalistir, depo: Depo, firmaId: string, g: { govde: string; imza: string | null; gonderim: string | null },
-  istemciKur?: (anahtar: string) => SignIstemcisi, simdi = new Date()): Promise<BildirimSonucu> {
+  istemciKur?: (anahtar: string) => SignIstemcisi, simdi = new Date(),
+  /* 2026-11-10 (göç 0125): rapor imza isteği olmayan sign belgesi — Onaylar › Diğer belgeler (onaylar/server/belge-sign.ts); bekleyeni yoksa null */
+  diger?: (signBelge: string) => Promise<SignSonuc | null>): Promise<BildirimSonucu> {
   const sir = await calistir(null, (db) => sirKullan(db, "sign_webhook_sirri"));
   if (!sir) return { kod: 404, ileti: "Bu firmada probata sign bağlı değil." };
   if (!webhookDogrula(g.imza, g.govde, sir, simdi)) return { kod: 401, ileti: "İmza doğrulanamadı." };
@@ -246,10 +248,10 @@ export async function signBildirim(calistir: IslemCalistir, depo: Depo, firmaId:
   if (!yeni) return { kod: 200, ileti: "Bildirim daha önce işlendi." };
   const istek = await calistir(null, async (db) => (await db.sorgu<{ id: string }>(
     "SELECT id::text FROM imza_istegi WHERE sign_belge = $1 AND durum = 'bekliyor' ORDER BY olustu DESC LIMIT 1", [belge])).rows[0]?.id ?? null);
-  if (!istek) return { kod: 200, ileti: "Bekleyen istek yok." };
+  if (!istek && !diger) return { kod: 200, ileti: "Bekleyen istek yok." };
   try {
-    const s = await signSonuclandir(calistir, depo, firmaId, istek, istemciKur);
-    return { kod: 200, ileti: s.durum };
+    const s = istek ? await signSonuclandir(calistir, depo, firmaId, istek, istemciKur) : await diger!(belge);
+    return { kod: 200, ileti: s ? s.durum : "Bekleyen istek yok." };
   } catch (e) {
     /* geçici (sign'a ulaşılamadı): kayıt geri alınır, sign yeniden dener */
     if (e instanceof SignHatasi && e.gecici) {

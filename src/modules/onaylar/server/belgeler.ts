@@ -27,6 +27,8 @@ export interface BelgeSatiri {
   durum: BelgeDurumu; karar: string | null;
   /** gönderilen (imzasız) PDF ve imzalıysa imzalı PDF */
   dosya: string; imzaliDosya: string | null;
+  /** 2026-11-10 (göç 0125): probata sign'a gönderildiyse durumu ve nedeni (reddedildi / iptal / denetimden geçmedi) */
+  sign: { durum: "bekliyor" | "reddedildi" | "iptal" | "hata"; neden: string | null } | null;
 }
 /** personel: hesap bir personel kaydına bağlı mı (değilse kimse ona belge gönderemez) */
 export interface DigerBelgeler { personel: boolean; belgeler: BelgeSatiri[]; bekleyen: number }
@@ -43,13 +45,14 @@ export async function digerBelgeler(db: Sorgulayici, kim: Kisi): Promise<DigerBe
   const p = await hesabinPersoneli(db, kim.id);
   if (!p) return { personel: false, belgeler: [], bekleyen: 0 };
   const l = (await db.sorgu<{ id: string; surum: number; tur: BelgeTuru; ad: string; gonderen: string | null; gonderildi: Date; durum: BelgeDurumu;
-    karar: Date | null; dosya: string; imzali_dosya: string | null }>(
-    `SELECT id::text, surum, tur, ad, gonderen::text, gonderildi, durum, karar, dosya::text, imzali_dosya::text FROM belge_onay
+    karar: Date | null; dosya: string; imzali_dosya: string | null; sign_belge: string | null; sign_durum: NonNullable<BelgeSatiri["sign"]>["durum"] | null; sign_neden: string | null }>(
+    `SELECT id::text, surum, tur, ad, gonderen::text, gonderildi, durum, karar, dosya::text, imzali_dosya::text, sign_belge, sign_durum, sign_neden FROM belge_onay
      WHERE personel_id = $1 AND dosya IS NOT NULL ORDER BY (durum = 'bekliyor') DESC, gonderildi DESC LIMIT 500`, [p])).rows;
   const adlar = await hesapAdlari(db, l.map((x) => x.gonderen));
   const belgeler = l.map((x) => ({
     id: x.id, surum: x.surum, tur: x.tur, ad: x.ad, gonderen: adlar.get(x.gonderen ?? "") ?? "—", gonderildi: x.gonderildi.toISOString(),
     durum: x.durum, karar: iso(x.karar), dosya: x.dosya, imzaliDosya: x.imzali_dosya,
+    sign: x.durum === "bekliyor" && x.sign_belge ? { durum: x.sign_durum ?? "bekliyor", neden: x.sign_neden } : null,
   }));
   return { personel: true, belgeler, bekleyen: belgeler.filter((x) => x.durum === "bekliyor").length };
 }
@@ -69,7 +72,7 @@ async function kendiBelgesi(db: Sorgulayici, kim: Kisi, id: string) {
   return (await db.sorgu<{ id: string; surum: number; ad: string; durum: BelgeDurumu; dosya: string | null }>(
     "SELECT id::text, surum, ad, durum, dosya::text FROM belge_onay WHERE id = $1 AND personel_id = $2", [id, p])).rows[0] ?? null;
 }
-const KARAR_VAR: Record<BelgeDurumu, string> = { bekliyor: "", imzali: "Belge zaten imzalandı.", geri: "Belge geri gönderildi; artık imzalanmaz.",
+export const KARAR_VAR: Record<BelgeDurumu, string> = { bekliyor: "", imzali: "Belge zaten imzalandı.", geri: "Belge geri gönderildi; artık imzalanmaz.",
   iptal: "Belge iptal edildi (yenisi gönderildi ya da kaynağı değişti); artık imzalanmaz." };
 
 /** Geri gönder: yalnız imzalayacak kişi, belge beklerken (maket belge-geri) */
