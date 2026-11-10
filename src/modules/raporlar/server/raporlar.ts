@@ -35,7 +35,7 @@ import { cihazTuruOzetleri, raporCihazlari } from "../../olcum-cihazlari/server/
 import { personelOzetleri } from "../../personel/server/personel.ts";
 import { raporKapisi, TAMAMLANDI_RAPOR, type PlanDurumu } from "../../planlar/sema.ts";
 import { denetimeBasla, ekipmanEklemeDurumu, ekipmanEkipPlanlari, kodDurumu, kunyeGuncelle, plandakiEkipman, plandakiEkipmanlar, raporIcinPlan, yeniEkipman, type Kunye, type RaporPlani } from "../../planlar/server/plan-ici.ts";
-import { oncekiKontrol, oncekiRaporIcerigi, oncekiRaporlar, surumluRaporEkipmani, takipAdaylari, takipKaynagi, type OncekiKontrol } from "./onceki.ts";
+import { baskaPlanRaporu, oncekiKontrol, oncekiRaporIcerigi, oncekiRaporlar, surumluRaporEkipmani, takipAdaylari, takipKaynagi, type OncekiKontrol } from "./onceki.ts";
 import { formatSurumuOku as formatSurumuHam, yayindakiFormat as yayindakiHam } from "../../rapor-format/server/formatlar.ts";
 import { sahaTanimi } from "../../../format/tablo.ts";
 import { kimdeHaritasi } from "../../zimmetler/server/zimmet.ts";
@@ -161,15 +161,17 @@ function kopyaCevaplari(t: FormatTanimi, kaynak: unknown): Cevaplar {
     ekipman bilgileri (boş olan ekipman kaydından), kayıttan gelmeyen bilgi alanları, madde seçimleri (bu formatın cevap setindeyse). Gelmeyenler:
     ölçüm / test değerleri, fotoğraflar, kusur açıklaması / derecesi, ek sütunlar, sonuç, yorum, cihazlar, imza yerleri. Önceki raporu yoksa ekipman
     kaydı + ilk cevaplar (cevaplar null). */
-async function oncekiKaynak(db: Sorgulayici, e: NonNullable<Awaited<ReturnType<typeof ekipmanEtiketi>>>, planId: string, t: FormatTanimi):
-  Promise<{ ekipmanBilgi: EkipmanBilgisi; cevaplar: Cevaplar | null }> {
+async function oncekiKaynak(db: Sorgulayici, e: NonNullable<Awaited<ReturnType<typeof ekipmanEtiketi>>>, planId: string, t: FormatTanimi, tasiyan: string | null = null):
+  Promise<{ ekipmanBilgi: EkipmanBilgisi; cevaplar: Cevaplar | null; tasinan?: string }> {
   const kayit: EkipmanBilgisi = { marka: e.marka, model: e.model, seri: e.seri, imal: e.imal ? String(e.imal) : null, konum: e.konum, amac: null, bolum: null };
-  const o = await oncekiRaporIcerigi(db, e.id, planId);
+  /* 2026-11-10: istenirse (tasiyan = yazan) önce aynı yazanın başka plandaki tamamlanmamış raporu; yoksa son tamamlanmış rapor */
+  const yarim = tasiyan ? await baskaPlanRaporu(db, e.id, planId, tasiyan) : null;
+  const o = yarim ?? await oncekiRaporIcerigi(db, e.id, planId);
   if (!o) return { ekipmanBilgi: kayit, cevaplar: null };
   const b = EkipmanBilgisi.safeParse(o.ekipmanBilgi);
   const ekipmanBilgi = b.success
     ? Object.fromEntries(Object.entries(kayit).map(([k, v]) => [k, b.data[k as keyof EkipmanBilgisi] ?? v])) as EkipmanBilgisi : kayit;
-  return { ekipmanBilgi, cevaplar: kopyaCevaplari(t, o.cevaplar) };
+  return { ekipmanBilgi, cevaplar: kopyaCevaplari(t, o.cevaplar), ...(yarim ? { tasinan: yarim.no } : {}) };
 }
 
 /** 2026-10-26 (göç 0108): takip raporunun içeriği — ana raporun son imzalı sürümünden (aynı plandaki ana rapor da olur; oncekiKaynak bu planı saymaz) */
@@ -203,7 +205,7 @@ export async function takipAc(db: Sorgulayici, kim: Kisi, planId: string, ekipma
     Denetimde yapar. Kopyada ekipman bilgileri, cihazlar ve cevaplar kaynaktan; oluşturmada önceki tamamlanmış rapordan (İ1, oncekiKaynak) ya da
     ekipman kaydından; künye her zaman denetçinin plandaki gördüğü künye. */
 async function raporAc(db: Sorgulayici, kim: Kisi, plan: AcilanPlan, ekipmanId: string, kopya: { r: RaporSatiri; konum: string | null } | null,
-  bildirim: (no: string, kod: string) => string, takip: { no: string; kaynak: string } | null = null): Promise<RaporYazma> {
+  bildirim: (no: string, kod: string) => string, takip: { no: string; kaynak: string } | null = null, tasi = false): Promise<RaporYazma> {
   if (!(await plandakiEkipman(db, plan.id, ekipmanId))) return { durum: "yok" };
   await ekipmanKilitle(db, ekipmanId);   /* pasife alma ile aynı anda koşmasın: ikisi de ekipmanın satırında sıraya girer */
   const e = await ekipmanEtiketi(db, ekipmanId);
@@ -224,7 +226,7 @@ async function raporAc(db: Sorgulayici, kim: Kisi, plan: AcilanPlan, ekipmanId: 
   const ortak = { no, plan_id: plan.id, ekipman_id: ekipmanId, tur_id: tur.id, format_id: format.id, personel_id: plan.personelId, durum: "taslak" };
   /* künye her zaman denetçinin plandaki GÖRDÜĞÜ künye (kopyada da): kaynağın eski künyesi taşınmaz, Güncelle tutarlı kalır (çapraz inceleme) */
   const kunye = { ...plan.kunye, eposta: null, tel: null, ...(await iletisimi(db, plan.tesisId)) };
-  const onc = k ? null : takip ? await takipIcerigi(db, e, takip.kaynak, format.tanim) : await oncekiKaynak(db, e, plan.id, format.tanim);
+  const onc = k ? null : takip ? await takipIcerigi(db, e, takip.kaynak, format.tanim) : await oncekiKaynak(db, e, plan.id, format.tanim, tasi ? plan.personelId : null);
   /* 2026-11-06: kopya cihazları kaynaktan alır; öteki raporda yazanın zimmetindeki uygun cihaz kendiliğinden seçilir (cihaz-sec.ts) */
   const oto = k ? [] : await otomatikSecim(db, plan.personelId, tur, bugunTr());
   const ilk = onc?.cevaplar ?? ilkCevaplar(format.tanim);
@@ -241,17 +243,19 @@ async function raporAc(db: Sorgulayici, kim: Kisi, plan: AcilanPlan, ekipmanId: 
     ...(takip ? { takip_kaynak: takip.kaynak } : {}),
   }, iz);
   await denetimeBasla(db, kim.ad, plan.id);
-  return { durum: "tamam", id: r.id, bildirim: bildirim(no, e.kod) };
+  const tasinan = onc && "tasinan" in onc ? onc.tasinan : undefined;
+  return { durum: "tamam", id: r.id, bildirim: `${bildirim(no, e.kod)}${tasinan ? ` İçerik ${tasinan} raporundan taşındı (tarih, saat, fotoğraf, ölçüm ve sonuç taşınmaz).` : ""}` };
 }
 const iletisimi = async (db: Sorgulayici, tesisId: string) => {
   const x = await tesisMusteriIletisim(db, tesisId);
   return x ? { eposta: x.eposta, tel: x.tel } : {};
 };
 
-export async function raporOlustur(db: Sorgulayici, kim: Kisi, planId: string, ekipmanId: string): Promise<RaporYazma> {
+/** baskaPlandan (2026-11-10; S.A.Y rapor_ac): ekipmanın, yazanın başka plandaki tamamlanmamış raporunun içeriği yeni rapora taşınır (onceki.ts) */
+export async function raporOlustur(db: Sorgulayici, kim: Kisi, planId: string, ekipmanId: string, s: { baskaPlandan?: boolean } = {}): Promise<RaporYazma> {
   const a = await acilabilirPlan(db, kim, planId);
   if ("hata" in a) return a.hata;
-  return raporAc(db, kim, a.p, ekipmanId, null, (no) => `Rapor oluşturuldu: ${no}. Satırındaki “Raporu düzenle” saha rapor ekranını açar.`);
+  return raporAc(db, kim, a.p, ekipmanId, null, (no) => `Rapor oluşturuldu: ${no}. Satırındaki “Raporu düzenle” saha rapor ekranını açar.`, null, s.baskaPlandan === true);
 }
 
 /* ── OKUMA ───────────────────────────────────────────────────────────────────────────────────────────────────── */

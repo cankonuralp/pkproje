@@ -204,19 +204,21 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
   islem({
     /* 2026-10-26 (S.A.Y eğitimi — sohbette dört ekipmanı tek çağrıda verdi, reddedildi): ekipman tek kimlik ya da kimlik dizisi */
     ad: "rapor_ac", modul: MODUL, tur: "yaz", kaynak: [OlusturIslemGirdisi, kimlik], islev: raporOlustur,
-    girdi: z.object({ plan: OlusturIslemGirdisi.shape.plan, ekipman: z.union([kimlik, z.array(kimlik).min(1).max(100)]) }),
+    /* 2026-11-10 (sekizinci koşu — eski 8 raporu kopya için tek tek okudu, kontrol gününü onlardan aldı): baska_plandan — içeriği sunucu taşır */
+    girdi: z.object({ plan: OlusturIslemGirdisi.shape.plan, ekipman: z.union([kimlik, z.array(kimlik).min(1).max(100)]), baska_plandan: z.boolean().default(false) }),
     tarif: "Plandaki ekipmanların raporunu oluşturur (yalnız plandaki denetçi; plan kabul edilmiş, plan günü gelmiş): plan, ekipman (bir kimlik ya da kimlik "
-      + "dizisi — plan_getir); her ekipman için rapor kimliği ve numarası ya da açılamama nedeni.",
+      + "dizisi — plan_getir); her ekipman için rapor kimliği ve numarası ya da açılamama nedeni. Son TAMAMLANMIŞ raporun bilgileri kendiliğinden gelir; "
+      + "baska_plandan: true → başka plandaki yarım raporun içeriği de taşınır (tarih, saat, fotoğraf, ölçüm, sonuç taşınmaz).",
     calistir: async (b, v) => {
       if (typeof v.ekipman === "string") {
-        const c = yazmaCevabi(await raporOlustur(b.db, b.kim, v.plan, v.ekipman));
+        const c = yazmaCevabi(await raporOlustur(b.db, b.kim, v.plan, v.ekipman, { baskaPlandan: v.baska_plandan }));
         const id = c.tamam ? (c.sonuc as { id?: unknown } | undefined)?.id : null;
         return c.tamam && typeof id === "string"
           ? { ...c, bildirim: `${c.bildirim ?? "Rapor açıldı."}${await taslakUyarisi(b, [id])}`, sonuc: { ...(c.sonuc as Record<string, unknown>), haritalar: await turHaritalari(b, [id]) } } : c;
       }
       const l: Record<string, unknown>[] = [];
       for (const e of v.ekipman) {
-        const c = yazmaCevabi(await raporOlustur(b.db, b.kim, v.plan, e));
+        const c = yazmaCevabi(await raporOlustur(b.db, b.kim, v.plan, e, { baskaPlandan: v.baska_plandan }));
         l.push(c.tamam ? { ekipman: e, ...c.sonuc, bildirim: c.bildirim } : { ekipman: e, neden: c.neden });
       }
       const acilanlar = l.flatMap((x) => (typeof x.id === "string" ? [x.id] : []));

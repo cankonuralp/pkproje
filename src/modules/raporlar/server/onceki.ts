@@ -55,6 +55,18 @@ export async function oncekiRaporIcerigi(db: Sorgulayici, ekipmanId: string, har
   return x ? { no: x.no, cevaplar: x.icerik?.cevaplar ?? null, ekipmanBilgi: x.icerik?.ekipman_bilgi ?? null } : null;
 }
 
+/** 2026-11-10 (S.A.Y sekizinci koşu — aynı ekipmanların raporu başka plandaydı; S.A.Y içeriği yeni plana taşımak için eski 8 raporu tek tek okudu,
+    kontrol gününü de onlardan aldı): ekipmanın, AYNI yazanın başka plandaki TAMAMLANMAMIŞ son raporu (Yeni / onayda / onaylandı; takip raporu
+    değil; tamamlananı oncekiRaporIcerigi verir) — içeriği yeni rapora sunucu taşısın diye. Başkasının yarım raporu taşınmaz. Yetki ÇAĞIRANDA. */
+export async function baskaPlanRaporu(db: Sorgulayici, ekipmanId: string, haricPlan: string, personelId: string): Promise<{ no: string; cevaplar: unknown; ekipmanBilgi: unknown } | null> {
+  if (!UUID.test(ekipmanId) || !UUID.test(haricPlan) || !UUID.test(personelId)) return null;
+  const x = (await db.sorgu<{ no: string; cevaplar: unknown; ekipman_bilgi: unknown }>(
+    `SELECT no, cevaplar, ekipman_bilgi FROM rapor
+     WHERE ekipman_id = $1 AND plan_id <> $2 AND personel_id = $3 AND silindi IS NULL AND takip_kaynak IS NULL AND durum <> 'imzali'
+     ORDER BY degisti DESC, id LIMIT 1`, [ekipmanId, haricPlan, personelId])).rows[0];
+  return x ? { no: x.no, cevaplar: x.cevaplar, ekipmanBilgi: x.ekipman_bilgi } : null;
+}
+
 /** imzalı sürümü olan raporun ekipmanı (dosya ucunun istisnası için — raporlar.ts oncekiRaporGorulur). Yetki ÇAĞIRANDA. */
 export async function surumluRaporEkipmani(db: Sorgulayici, raporId: string): Promise<string | null> {
   if (!UUID.test(raporId)) return null;

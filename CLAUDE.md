@@ -620,6 +620,9 @@ pkproje/
                             say_kapanis_firma (is/gece.ts sayKapanisIsi); kapanan konuşmanın notu yz_kapanis (soruyuEkle başa koyar), hizmet dosyaları
                             yz_silinecek_dosya (uygulama siler); temizle tuşu hata yakalar (say.temizle), Ar-Ge kaydı düşerse temizleme durmaz (say.arge) ·
                             kilit say.test (PG) 60 dakika kapanışı
+                            · 2026-11-10 BAŞKA PLANDAN TAŞI (sekizinci koşu: eski 8 raporu kopya için tek tek okudu, kontrol gününü onlardan aldı): rapor_ac
+                            baska_plandan → raporlar raporOlustur { baskaPlandan } → onceki.ts baskaPlanRaporu (AYNI yazanın başka plandaki yarım raporu; bilgiler +
+                            madde seçimleri, tarih / saat / fotoğraf / ölçüm / sonuç taşınmaz); talimatta eski raporu okuyup kopyalama yok · kilit raporlar (PG)
   src/modules/say-chat/     S.A.Y CHAT — KİŞİSEL SOHBET (2026-11-07 yeniden; sunum claude.ai 2PiEskE9jDqF5kSefutRBC — reisim "Evet, önerilerle"; göç 0123
                             say_chat_mesaj — RLS firma + kişi, mesaj değişmez (tetik), eski say_chat_kayit taşındı, say_chat_kayit / say_chat_ayar KALKTI):
                             sema.ts (MesajGirdisi, ChatOku / ChatIsle girdileri, kararlar: blok 2 saat, işlenmiş dosya 30 gün, fotoğraf 2400 px %85) · kapsam.ts

@@ -1105,3 +1105,33 @@ test("595 madde 1: ikinci muayene uzmanı yalnız plan ekibinden, raporu yazan d
   const b = (await a(FA.den1, (db) => raporBelgesiVerisi(db, depo, FA.den1, r.id)))!;
   assert.equal(b.belge.ikinci?.ad, v0.ekip[0].ad, "belge ikinci uzmanın kaydından");
 });
+
+/* 2026-11-10 (S.A.Y sekizinci koşu — reisim'in işi başka planda yarım duran aynı ekipmanlarla istendi; S.A.Y içeriği taşımak için eski 8 raporu tek
+   tek okudu ve kontrol gününü onlardan aldı): içeriği sunucu taşır. Dosyanın SONUNDA: tesise ekipman ekler (öteki testlerin ekipman sayısı değişmesin). */
+test("başka plandan taşı: istenirse aynı yazanın başka plandaki yarım raporunun bilgileri ve madde seçimleri yeni rapora gelir, tarih gelmez; istenmezse ve başkasının raporundan gelmez", async () => {
+  const e = (await sql<{ id: string }>(A, "INSERT INTO ekipman (tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, 'HT-TASI', 'Deneme') RETURNING id::text", [FA.tesis, FA.tur])).rows[0]!.id;
+  const liste = KOMP.bolumler.find((x) => x.blok === "liste")!;
+  assert.ok(liste.blok === "liste" && liste.cevaplar.length > 1);
+  const madde = liste.gruplar[0]!.maddeler[0]!.id, secim = liste.cevaplar[1]!;
+  const ac = (k: Kisi, plan: string, tasi: boolean) => a(k, (db) => raporOlustur(db, k, plan, e, { baskaPlandan: tasi }));
+  const p1 = await yeniPlan(), p2 = await yeniPlan({ ekip: [FA.den1P, FA.den2P] }), p3 = await yeniPlan(), p4 = await yeniPlan();
+  const r1 = tamam(await ac(FA.den1, p1, false));
+  await sql(A, `UPDATE rapor SET ekipman_bilgi = ekipman_bilgi || '{"marka":"Taşınan"}'::jsonb, cevaplar = jsonb_set(cevaplar, ARRAY['madde', $2, 'c'], to_jsonb($3::text)),
+    bas = now() - interval '10 days', surum = surum + 1, degisti = now() WHERE id = $1`, [r1.id, madde, secim]);
+  const no1 = (await sr(FA.den1, r1.id))!.no;
+  /* başkasının yarım raporu taşınmaz */
+  const r2 = tamam(await ac(FA.den2, p2, true));
+  assert.doesNotMatch(r2.bildirim, /taşındı/);
+  assert.notEqual((await sr(FA.den2, r2.id))!.ekipmanBilgi.marka, "Taşınan");
+  /* yazanın kendi yarım raporu: bilgiler + madde seçimi gelir; tarih gelmez (yeni rapor bugün açılır) */
+  const r3 = tamam(await ac(FA.den1, p3, true));
+  assert.ok(r3.bildirim.includes(`İçerik ${no1} raporundan taşındı`), r3.bildirim);
+  const s3 = (await sr(FA.den1, r3.id))!;
+  assert.equal(s3.ekipmanBilgi.marka, "Taşınan");
+  assert.equal(s3.cevaplar.madde[madde]?.c, secim);
+  assert.equal((await sql<{ yeni: boolean }>(A, "SELECT bas > now() - interval '1 day' AS yeni FROM rapor WHERE id = $1", [r3.id])).rows[0]!.yeni, true, "tarih taşınmaz");
+  /* istenmezse taşınmaz (ekranın Rapor oluştur'u değişmedi) */
+  const r4 = tamam(await ac(FA.den1, p4, false));
+  assert.doesNotMatch(r4.bildirim, /taşındı/);
+  assert.notEqual((await sr(FA.den1, r4.id))!.ekipmanBilgi.marka, "Taşınan");
+});
