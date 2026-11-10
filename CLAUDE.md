@@ -623,8 +623,6 @@ pkproje/
                             · 2026-11-10 BAŞKA PLANDAN TAŞI (sekizinci koşu: eski 8 raporu kopya için tek tek okudu, kontrol gününü onlardan aldı): rapor_ac
                             baska_plandan → raporlar raporOlustur { baskaPlandan } → onceki.ts baskaPlanRaporu (AYNI yazanın başka plandaki yarım raporu; bilgiler +
                             madde seçimleri, tarih / saat / fotoğraf / ölçüm / sonuç taşınmaz); talimatta eski raporu okuyup kopyalama yok · kilit raporlar (PG)
-                            · 2026-11-10 KAYITTAN OYNATMA SINAVI — ÇEKİRDEK (bağlanmadı): src/server/yz/sinav.ts (saf: say_arge kaydı → mesajlar, soru = kullanıcının
-                            mesajından sonraki ilk karar, karsilastir, sinavKos — çağrı dışarıdan) · kalan: Yönetim'de "Sınavı koş" + kimin anahtarı · kilit say-sinav, bozan say-sinav
   src/modules/say-chat/     S.A.Y CHAT — KİŞİSEL SOHBET (2026-11-07 yeniden; sunum claude.ai 2PiEskE9jDqF5kSefutRBC — reisim "Evet, önerilerle"; göç 0123
                             say_chat_mesaj — RLS firma + kişi, mesaj değişmez (tetik), eski say_chat_kayit taşındı, say_chat_kayit / say_chat_ayar KALKTI):
                             sema.ts (MesajGirdisi, ChatOku / ChatIsle girdileri, kararlar: blok 2 saat, işlenmiş dosya 30 gün, fotoğraf 2400 px %85) · kapsam.ts
