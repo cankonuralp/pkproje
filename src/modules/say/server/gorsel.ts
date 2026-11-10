@@ -38,7 +38,8 @@ function etiketSvg(yazi: string): Buffer {
 export async function paftaGoruntusu(fotolar: readonly { etiket: string; bayt: Uint8Array }[], sutun = 4): Promise<Buffer> {
   const n = Math.min(fotolar.length, PAFTA_EN_COK), s = Math.max(1, Math.min(sutun, n, 4)), satir = Math.ceil(n / s);
   const karo = Math.min(KARO, Math.floor(PAFTA_SINIR / Math.max(s, satir)));
-  const parcalar: sharp.OverlayOptions[] = [];
+  /* tür sharp'ın kendi işlevinden (0.35'te sharp.OverlayOptions ad alanı yok) */
+  const parcalar: NonNullable<Parameters<ReturnType<typeof sharp>["composite"]>[0]> = [];
   for (let i = 0; i < n; i++) {
     const x = (i % s) * karo, y = Math.floor(i / s) * karo;
     const k = await sharp(fotolar[i]!.bayt).rotate().resize(karo - 4, karo - 4, { fit: "contain", background: "#ffffff" }).jpeg().toBuffer();
