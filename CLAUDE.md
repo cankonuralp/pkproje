@@ -433,6 +433,15 @@ pkproje/
   src/components/cevrimdisi/ ÇEVRİMDIŞI (394; maket Z4): depo.ts (IndexedDB, AES-GCM şifreli, anahtar dışarı alınamaz) · kuyruk.ts (tek bekleyen iş / rapor,
                             sırayla /api/islem, sonuçlar, durma; "probata-islem" olayı) · Cevrimdisi.tsx (üst çubukta "Çevrimdışı · n bekliyor" + pencere;
                             kabukta, yazan etiketiyle) · saha raporu Kaydet / Onaya gönder bağlantısızken kuyruğa (raporlar/ui/SahaRaporu.tsx)
+                            · 2026-11-12 KAYIPSIZ + KURULABİLİR (reisim: "çevrimdışı kullanımı kusursuz çalışmalı ve sahada veri fotoğraf yazı vs kaybolmamalı kesinlikle
+                            özellikle burada say chat çok önemli ne gerekiyorsa yap uygulama dahil"): depo.ts yazma işlem TAMAMLANINCA biter + durability strict, depo yeniden açılır,
+                            kaliciIste / yerOku; kuyruk.ts cihaza yazılamayan iş bellekte kalır (yazilamayan — kırmızı şerit, beforeunload), yer açılınca yazılır, eski form işi
+                            yenisi yazılmadan silinmez, anlaşılmayan "oldu" yanıtı / 408 / 429 sonra denenir, sayfa öne gelince gönderir; kuyrukDeposu (sınama taklidi) ·
+                            TASLAK taslak.ts (depo "durum" bölmesi, şifreli, kişiye bağlı; şema sürümü AYNI): S.A.Y Chat yazı + seçilen fotoğraf (chat|…), Rapor modu yeni kayıt
+                            (rapor|<plan>|…), rapor formu (form|<rapor>; SahaRaporu — şerit "Geri yüklemeyi bırak"); son sohbet cihazda (chat|gecmis) · yer.ts (saf: dar eşiği
+                            100 MB / %80) → Cevrimdisi.tsx "Cihazda kullanılan yer", "Cihazda yer azalıyor" · KURULABİLİR UYGULAMA public/manifest.webmanifest + public/ikon/,
+                            (uygulama)/layout metadata (yalnız firma uygulaması), kur.ts + kullanıcı menüsünde "Uygulamayı kur" · kilit tests/kuyruk-kayipsiz.test.ts, bozan
+                            kuyruk-kayipsiz, e2e say-chat (taslak yenilemede geri gelir)
                             · SERVİS ÇALIŞANI public/sw.js (395): saha sayfaları önce ağ, cihazda şifreli; bağlantısız açılır; şema depo.ts ile ortak
                             (tests/sw.test.ts); çıkışta / kişi değişince silinir (kabuk); CSP worker-src 'self' (src/proxy.ts)
                             · ÖNCEDEN İNDİRME (396): planlar/server/cevrimdisi.ts (kişinin 7 günlük planları + Yeni raporları, yalnız adres) → eylem

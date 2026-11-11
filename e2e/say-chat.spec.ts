@@ -128,6 +128,15 @@ test("S.A.Y Chat: bağlantısız 3 fotoğraf + 1 yazı sırası ve saati korunur
   await expect(page.getByRole("heading", { level: 1, name: "S.A.Y Chat" })).toBeVisible();
   await expect(page.getByRole("main").getByText(isaret, { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: CHAT }), "tam sayfada düğme yok").toHaveCount(0);
+
+  /* 2026-11-12 TASLAK (reisim: "sahada veri fotoğraf yazı vs kaybolmamalı kesinlikle özellikle burada say chat çok önemli"): yazılıp GÖNDERİLMEMİŞ yazı
+     cihazda saklanır — sayfa yenilenince (telefon sayfayı bellekten atınca) yazı alanına geri gelir */
+  const kutu = page.getByRole("main").getByLabel("Mesaj", { exact: true });
+  await kutu.fill("taslak: kazan dairesi notu");
+  await page.waitForTimeout(1_500);   // taslak yazımı 400 ms sonra + cihaz deposu
+  await page.reload();
+  await hazir(page);
+  await expect(page.getByRole("main").getByLabel("Mesaj", { exact: true })).toHaveValue("taslak: kazan dairesi notu", { timeout: 15_000 });
 });
 
 /* 2026-10-25 (reisim: "say chat neden gözükmüyor", "bu sefer de say chat say asistanı kapatıyor reisim küçülünce"): iki asistanın düğmesi de sağ altta;

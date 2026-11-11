@@ -4,7 +4,9 @@
    · tıklayınca pencere: ne olduğunu söyleyen şerit, bekleyen işler (ad, zaman, durum, ileti) ve iş başına seçim — çakışmada "Benimkini yaz" /
      "Sunucudakini kullan", eksik / hatada "Raporu aç" / "Listeden kaldır"; veri kaybettiren seçim önce sorar;
    · telefonda (< 600) üst çubuğa sığmaz → üst çubuğun hemen altında tam genişlik şerit (maket), içerik şerit kadar aşağı iner (temel.css).
-   Kuyruk ve gönderme kuyruk.ts'te; bu bileşen yalnız gösterir ve seçimi iletir. */
+   Kuyruk ve gönderme kuyruk.ts'te; bu bileşen yalnız gösterir ve seçimi iletir.
+   2026-11-12 (reisim: "sahada veri fotoğraf yazı vs kaybolmamalı kesinlikle"): cihaza YAZILAMAYAN iş kırmızı şeritle söylenir (yalnız bu sayfa açıkken
+   duruyor); cihazda kullanılan yer ve kalıcı saklama pencerede; yer daralınca gösterge bağlantı varken de çıkar ("Cihazda yer azalıyor"). */
 import Link from "next/link";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { useBildir } from "../bildirim/Bildirim";
@@ -15,7 +17,8 @@ import { Pencere } from "../pencere/Pencere";
 import { Rozet, type RozetTuru } from "../sayfa/Sayfa";
 import { Serit } from "../serit/Serit";
 import { Tus } from "../tus/Tus";
-import { sayfaSahibi, sayfaSayisi } from "./depo";
+import { sayfaSahibi, sayfaSayisi, yerOku } from "./depo";
+import { boyutYaz, yerDurumu, type YerDurumu } from "./yer";
 import {
   benimkiniYaz, kuyrukAbone, kuyrukAnlik, kuyrukBaslat, kuyrukGonder, kuyrukSunucuAnlik, kuyruktanCikar, kuyrukYazani, yenidenDene, type IsDurumu, type KuyrukIsi,
 } from "./kuyruk";
@@ -32,6 +35,21 @@ const DURUM: Record<IsDurumu, [RozetTuru, string]> = {
   bekliyor: ["bekliyor", "Gönderilmeyi bekliyor"], cakisma: ["red", "Çakışma"], eksik: ["bekliyor", "Gönderilmedi"], hata: ["red", "Yapılamadı"],
   baska_hesap: ["notr", "Başka hesap"],
 };
+
+/* ── CİHAZDA YER (2026-11-12): açılışta, pencere açılınca ve 5 dakikada bir okunur; tarayıcı bilgi vermiyorsa null ── */
+interface Yer extends YerDurumu { kullanilan: number; kalici: boolean | null }
+let yerSon: Yer | null = null;
+const yerDinleyen = new Set<() => void>();
+const yerAbone = (f: () => void) => { yerDinleyen.add(f); return () => { yerDinleyen.delete(f); }; };
+const yerAnlik = () => yerSon;
+async function yerYenile(): Promise<void> {
+  const y = await yerOku();
+  const d = y ? yerDurumu(y.kullanilan, y.kota) : null;
+  const yeni = y && d ? { ...d, kullanilan: y.kullanilan, kalici: y.kalici } : null;
+  if (JSON.stringify(yeni) === JSON.stringify(yerSon)) return;
+  yerSon = yeni;
+  for (const f of yerDinleyen) f();
+}
 
 /* ── ÖNCEDEN İNDİRME (396; ARKA-UC §4.2, maket "Çevrimdışı hazır: 3 plan · son eşitleme 08:42") ── bağlantı varken kişinin önümüzdeki 7 gündeki
    planlarının ve Yeni raporlarının sayfaları arka planda açılır; servis çalışanı şifreli saklar. Açılıştan 3 sn sonra, bağlantı gelince ve 30
@@ -109,7 +127,14 @@ export function CevrimdisiGosterge({ yazan, paket }: { yazan: string; paket?: Pa
     window.addEventListener("online", baglandi);
     return () => { window.clearTimeout(ilk); window.clearInterval(tekrar); window.removeEventListener("online", baglandi); };
   }, [paket]);
-  const goster = cevrimdisi || k.isler.length > 0;
+  const yerBilgisi = useSyncExternalStore(yerAbone, yerAnlik, () => null);
+  useEffect(() => {
+    void yerYenile();
+    const z = window.setInterval(() => void yerYenile(), 5 * 60_000);
+    return () => window.clearInterval(z);
+  }, []);
+  const dar = yerBilgisi?.dar === true;
+  const goster = cevrimdisi || k.isler.length > 0 || dar;
   /* telefonda şerit içeriğin üstüne binmesin (temel.css) */
   useEffect(() => {
     if (goster) document.documentElement.setAttribute("data-cevrimdisi", "var"); else document.documentElement.removeAttribute("data-cevrimdisi");
@@ -120,14 +145,17 @@ export function CevrimdisiGosterge({ yazan, paket }: { yazan: string; paket?: Pa
   /* ARKA-UC §4.3 "2 rapor, 14 fotoğraf gönderilmeyi bekliyor" (398) */
   const foto = k.isler.filter((x) => x.durum === "bekliyor" && x.tur === "rapor.foto").length;
   const neler = [bekleyen - foto ? `${bekleyen - foto} işlem` : "", foto ? `${foto} fotoğraf` : ""].filter(Boolean).join(" ve ");
+  const yalnizYer = !cevrimdisi && !k.isler.length;
   const etiket = cevrimdisi
     ? `Çevrimdışı${bekleyen ? `, ${neler} gönderilmeyi bekliyor` : ""}; ayrıntı`
+    : yalnizYer ? "Cihazda yer azalıyor; ayrıntı"
     : `${k.isler.length} bekleyen işlem${sorunlu ? `, ${sorunlu} tanesi sizi bekliyor` : ""}; ayrıntı`;
   return (
     <>
-      <button className={`${stil.cip} ${cevrimdisi || sorunlu ? stil.uyari : ""}`} type="button" aria-haspopup="dialog" aria-label={etiket} onClick={() => setAcik(true)}>
-        <Ikon ad={cevrimdisi ? "wifi-off" : "cloud-upload"} kucuk />
-        <span>{cevrimdisi ? "Çevrimdışı" : "Bekleyen işlem"}</span>
+      <button className={`${stil.cip} ${cevrimdisi || sorunlu || dar || k.yazilamayan ? stil.uyari : ""}`} type="button" aria-haspopup="dialog" aria-label={etiket}
+        data-yazilamayan={k.yazilamayan || undefined} onClick={() => { setAcik(true); void yerYenile(); }}>
+        <Ikon ad={cevrimdisi ? "wifi-off" : yalnizYer ? "triangle-alert" : "cloud-upload"} kucuk />
+        <span>{cevrimdisi ? "Çevrimdışı" : yalnizYer ? "Cihazda yer azalıyor" : "Bekleyen işlem"}</span>
         {(cevrimdisi ? bekleyen : k.isler.length) > 0 && <span className={stil.sayi}>{cevrimdisi ? bekleyen : k.isler.length}<span className={stil.en}>{cevrimdisi ? " bekliyor" : ""}</span></span>}
       </button>
       <KuyrukPenceresi acik={acik} kapat={() => setAcik(false)} cevrimdisi={cevrimdisi} />
@@ -142,6 +170,7 @@ function KuyrukPenceresi({ acik, kapat, cevrimdisi }: { acik: boolean; kapat: ()
   /* bu cihazda bağlantısız açılabilen sayfa sayısı (395; maket "Çevrimdışı hazır") — pencere açılınca */
   const [sayfa, setSayfa] = useState<number | null>(null);
   const hazir = useSyncExternalStore(hazirAbone, hazirAnlik, () => null);
+  const yerBilgisi = useSyncExternalStore(yerAbone, yerAnlik, () => null);
   useEffect(() => { if (acik) void sayfaSayisi().then(setSayfa).catch(() => setSayfa(null)); }, [acik]);
   const bekleyen = k.isler.filter((x) => x.durum === "bekliyor").length;
   const gonder = async () => {
@@ -162,11 +191,15 @@ function KuyrukPenceresi({ acik, kapat, cevrimdisi }: { acik: boolean; kapat: ()
         <Tus tur="ikincil" data-ilk-odak onClick={kapat}>Kapat</Tus>
       </>}>
       {cevrimdisi && <Serit tur="bilgi" ikon="wifi-off">İnternet yok. Yaptıklarınız bu cihaza kaydedilir, bağlantı gelince gönderilir.</Serit>}
+      {k.yazilamayan > 0 && <Serit tur="hata" ikon="circle-alert">Cihazda yer kalmadı: {k.yazilamayan} iş cihaza yazılamadı, yalnız bu sayfa açıkken duruyor. Sayfayı kapatmayın; bağlantı gelince gönderilir.</Serit>}
+      {yerBilgisi?.dar && <Serit tur="uyari" ikon="triangle-alert">Cihazda yer azalıyor (kalan {boyutYaz(yerBilgisi.kalan)}). Bağlantı bulup bekleyenleri gönderin ya da cihazda yer açın.</Serit>}
       {k.depoYok && <Serit tur="uyari" ikon="triangle-alert">Bu tarayıcı cihaz deposuna izin vermiyor (gizli pencere ya da kapalı site verisi): bekleyenler yalnız bu sayfa açıkken durur.</Serit>}
       {k.oturum && <Serit tur="uyari" ikon="log-in">Oturumunuz kapandı; yeniden giriş yapınca bekleyenler gönderilir.</Serit>}
       {k.saatFarkiDk !== null && <Serit tur="uyari" ikon="clock">Cihazınızın saati sunucudan {Math.abs(k.saatFarkiDk)} dakika {k.saatFarkiDk > 0 ? "ileri" : "geri"}. Cihaz saatini düzeltin.</Serit>}
       {hazir && <p className={stil.ipucu}>Çevrimdışı hazır: <b>{hazir.plan} plan</b> · son eşitleme {ZAMAN.format(new Date(hazir.zaman)).replace(",", "")}</p>}
       {sayfa !== null && <p className={stil.ipucu}>Bu cihazda bağlantısız açılabilen sayfa: <b>{sayfa}</b> (Planlar, plan içi ve raporlar).</p>}
+      {yerBilgisi && <p className={stil.ipucu} data-yer="">Cihazda kullanılan yer: <b>{boyutYaz(yerBilgisi.kullanilan)}</b> (ayrılan yerin yüzde {yerBilgisi.yuzde} kadarı)
+        {yerBilgisi.kalici === true ? " · kalıcı saklama açık" : yerBilgisi.kalici === false ? " · kalıcı saklama kapalı: uygulamayı kurun" : ""}</p>}
       {k.isler.length ? (
         <>
           <p className={stil.baslik}>Bekleyen işler ({k.isler.length})</p>

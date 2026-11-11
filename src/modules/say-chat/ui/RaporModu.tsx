@@ -2,12 +2,16 @@
 /* S.A.Y CHAT RAPOR MODU (2026-11-09; reisim: "eskisi gibi direk rapor oluşturma modu olsun yukarıda onun tuşu olsun, rapor modu, chat modu diye ayrım olsun"; sunum claude.ai
    HBwuL3s9G693uopxSzTbjH K1–K6 — "Evet, önerilerle"). Bir kayıt = bir ekipman: fotoğraf → ekipman → satır satır mesaj → Gönder. Kayıt çevrimdışı kuyruktan gider (K4), cihazdaki kayıt
    "Cihazda" görünür; ekran verisi cihazda da durur. "Bekleyenler için rapor yaz" bağlantı ister, kayıtlar SIRAYLA rapor taslağı olur; yapay zekâ yalnız bu tuşla, etiket fotoğrafı varsa (K2).
+   2026-11-12 KAYIPSIZ (reisim: "sahada veri fotoğraf yazı vs kaybolmamalı kesinlikle"): yeni kaydın fotoğrafları, etiketi, seçilen ekipman ve yazılan satırlar
+   "Gönder"e basılana kadar TASLAK olarak cihazda (taslak.ts, plan başına) — telefon kamerayı açarken sayfayı atarsa kayıt yarıda kalmaz, yeniden açılınca
+   form dolu gelir; "Vazgeç" ve "Gönder" taslağı siler.
    MesajKutusu (542): tek yazı alanı, solda her satırın adı; Enter alttaki satıra geçer (satırlar kaymaz), son satırda yeni satır açar (nota). */
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useBildir, useUyar } from "../../../components/bildirim/Bildirim";
 import { bekleyenIsler, kuyrugaEkle, kuyrukAbone, kuyrukAnlik, kuyrukSunucuAnlik, kuyruktanCikar, yenidenDene, type KuyrukSonucOlayi, type KuyrukTuru }
   from "../../../components/cevrimdisi/kuyruk";
+import { taslakAdlari, taslakDosyasi, taslakGetir, taslakKaydet, taslakSil } from "../../../components/cevrimdisi/taslak";
 import { FotoTusu } from "../../../components/foto/FotoTusu";
 import { GizliResim } from "../../../components/gizli-resim/GizliResim";
 import { Ikon } from "../../../components/ikon/Ikon";
@@ -51,9 +55,13 @@ function MesajKutusu({ satirlar, mesaj, degisti }: { satirlar: readonly RaporSat
   );
 }
 
-interface Secilen { anahtar: number; dosya: File; url: string }
+interface Secilen { anahtar: number; id: string; dosya: File; url: string }
 let sira = 0;
 type Secim = { tip: "plan"; id: string; ad: string; tur: string } | { tip: "yeni"; tur: string; ad: string };
+/* taslak adları (taslak.ts): plan başına form + fotoğraf başına kayıt */
+const tOnek = (plan: string) => `rapor|${plan}|`;
+interface FormTaslagi { secim: Secim | null; mesaj: string[]; fotolar: string[]; etiket: string | null }
+interface FotoTaslagi { ad: string; veri: string }
 
 function YeniKayit({ v, dolu, kapat }: { v: RaporModuVerisi; dolu: ReadonlySet<string>; kapat: () => void }) {
   const uyar = useUyar();
@@ -66,11 +74,51 @@ function YeniKayit({ v, dolu, kapat }: { v: RaporModuVerisi; dolu: ReadonlySet<s
   const [ara, setAra] = useState("");
   const [mesgul, setMesgul] = useState(false);
   const satirlar = secim ? v.turler[secim.tur]?.satirlar ?? [] : [];
+  const onek = tOnek(v.plan.id);
   const hazirla = async (f: File): Promise<Secilen | null> => {
     const k = await chatFotoKucult(f);
     if (!k) { uyar(`${f.name}: fotoğraf okunamadı.`); return null; }
-    return { anahtar: ++sira, dosya: k, url: URL.createObjectURL(k) };
+    /* çekildiği an cihaza (taslak) */
+    const id = crypto.randomUUID();
+    void base64(k).then((veri) => taslakKaydet(`${onek}foto|${id}`, { ad: k.name || "foto.jpg", veri } satisfies FotoTaslagi)).catch(() => undefined);
+    return { anahtar: ++sira, id, dosya: k, url: URL.createObjectURL(k) };
   };
+  /* TASLAK: açılışta cihazdan geri gelir; okunmadan taslağa yazılmaz */
+  const taslakOkundu = useRef(false);
+  useEffect(() => {
+    let iptal = false;
+    void (async () => {
+      const t = await taslakGetir<FormTaslagi>(`${onek}form`);
+      const adlar = await taslakAdlari(`${onek}foto|`);
+      const oku = async (id: string): Promise<Secilen | null> => {
+        const f = adlar.includes(`${onek}foto|${id}`) ? await taslakGetir<FotoTaslagi>(`${onek}foto|${id}`) : null;
+        const dosya = f ? taslakDosyasi(f.veri, f.ad) : null;
+        return dosya ? { anahtar: ++sira, id, dosya, url: URL.createObjectURL(dosya) } : null;
+      };
+      const etk = t?.etiket ? await oku(t.etiket) : null;
+      /* formda adı geçmeyen fotoğraf (form yazılmadan sayfa kapandı) ekipman fotoğrafı sayılır */
+      const idler = [...(t?.fotolar ?? []), ...adlar.map((a) => a.slice(`${onek}foto|`.length))].filter((id, i, l) => l.indexOf(id) === i && id !== t?.etiket);
+      const h: Secilen[] = [];
+      for (const id of idler) { const x = await oku(id); if (x) h.push(x); }
+      if (iptal) return;
+      taslakOkundu.current = true;
+      if (h.length) setFotolar((x) => (x.length ? x : h));
+      if (etk) setEtiket((x) => x ?? etk);
+      if (t?.secim) setSecim((x) => x ?? t.secim);
+      if (t?.mesaj?.length) setMesaj((x) => (x.length ? x : t.mesaj));
+    })().catch(() => { taslakOkundu.current = true; });
+    return () => { iptal = true; };
+  }, [onek]);
+  useEffect(() => {
+    const z = window.setTimeout(() => {
+      if (!taslakOkundu.current) return;
+      void taslakKaydet(`${onek}form`, { secim, mesaj, fotolar: fotolar.map((x) => x.id), etiket: etiket?.id ?? null } satisfies FormTaslagi);
+    }, 400);
+    return () => window.clearTimeout(z);
+  }, [onek, secim, mesaj, fotolar, etiket]);
+  /** kaydın bütün taslakları (gönderildi / vazgeçildi) */
+  const taslakTemizle = async () => { for (const a of await taslakAdlari(onek)) await taslakSil(a); };
+  const fotoKaldir = (x: Secilen) => { URL.revokeObjectURL(x.url); void taslakSil(`${onek}foto|${x.id}`); };
   const fotoSec = async (l: File[]) => {
     const yer = KAYIT_FOTO_EN_COK - fotolar.length;
     if (l.length > yer) uyar(`Kayda en çok ${KAYIT_FOTO_EN_COK} fotoğraf eklenir.`);
@@ -97,7 +145,11 @@ function YeniKayit({ v, dolu, kapat }: { v: RaporModuVerisi; dolu: ReadonlySet<s
       if (etiket) await foto(etiket, "etiket");
       const girdi: RaporKaydiGirdisi = { plan, ekipman: secim.tip === "plan" ? { tip: "plan", id: secim.id } : { tip: "yeni", tur: secim.tur }, satirlar: [...satirlar], mesaj };
       await kuyrugaEkle({ tur: "sayrapor.kaydet", kayit, surum: 0, girdi, ad: `Rapor kaydı · ${secim.ad}` });
+      taslakOkundu.current = false;   // form kapanırken taslağa yeniden yazılmasın
+      await taslakTemizle();
       kapat();
+    } catch {
+      uyar("Kayıt cihaza yazılamadı; form duruyor. Yeniden gönderin.");
     } finally { setMesgul(false); }
   };
   const a = ara.toLocaleLowerCase("tr").trim();
@@ -108,7 +160,7 @@ function YeniKayit({ v, dolu, kapat }: { v: RaporModuVerisi; dolu: ReadonlySet<s
       <div className={stil.rmSatir}>
         <FotoTusu ad="Fotoğraf çek" etiket="Fotoğraf çek" ikon="camera" sinif={stil.rmTus} coklu sec={(l) => void fotoSec(l)} />
         <FotoTusu ad={etiket ? "Etiketi değiştir" : "Etiket fotoğrafı"} etiket="Etiket fotoğrafı" ikon="tag" sinif={stil.rmTus}
-          sec={(l) => { const f = l[0]; if (f) void hazirla(f).then((s) => { if (s) setEtiket(s); }); }} />
+          sec={(l) => { const f = l[0]; if (f) void hazirla(f).then((s) => { if (s) setEtiket((eski) => { if (eski) fotoKaldir(eski); return s; }); }); }} />
       </div>
       {(fotolar.length > 0 || etiket) && (
         <ul className={stil.rmFotolar} aria-label="Kaydın fotoğrafları">
@@ -116,7 +168,7 @@ function YeniKayit({ v, dolu, kapat }: { v: RaporModuVerisi; dolu: ReadonlySet<s
             <li key={s.anahtar}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={s.url} alt={`Fotoğraf ${i + 1}`} />
-              <button type="button" onClick={() => setFotolar((l) => l.filter((x) => x.anahtar !== s.anahtar))} aria-label={`Fotoğraf ${i + 1} kaldır`}><Ikon ad="x" kucuk /></button>
+              <button type="button" onClick={() => { fotoKaldir(s); setFotolar((l) => l.filter((x) => x.anahtar !== s.anahtar)); }} aria-label={`Fotoğraf ${i + 1} kaldır`}><Ikon ad="x" kucuk /></button>
             </li>
           ))}
           {etiket && (
@@ -124,7 +176,7 @@ function YeniKayit({ v, dolu, kapat }: { v: RaporModuVerisi; dolu: ReadonlySet<s
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={etiket.url} alt="Etiket fotoğrafı" />
               <small>Etiket</small>
-              <button type="button" onClick={() => setEtiket(null)} aria-label="Etiket fotoğrafını kaldır"><Ikon ad="x" kucuk /></button>
+              <button type="button" onClick={() => { fotoKaldir(etiket); setEtiket(null); }} aria-label="Etiket fotoğrafını kaldır"><Ikon ad="x" kucuk /></button>
             </li>
           )}
         </ul>
@@ -134,7 +186,7 @@ function YeniKayit({ v, dolu, kapat }: { v: RaporModuVerisi; dolu: ReadonlySet<s
       </button>
       {secim && <MesajKutusu satirlar={satirlar} mesaj={mesaj} degisti={setMesaj} />}
       <div className={stil.tuslar}>
-        <Tus tur="ikincil" onClick={kapat}>Vazgeç</Tus>
+        <Tus tur="ikincil" onClick={() => { taslakOkundu.current = false; void taslakTemizle().then(kapat); }}>Vazgeç</Tus>
         <Tus tur="birincil" ikon="send" onClick={() => void gonder()} disabled={mesgul} aria-busy={mesgul || undefined}>Gönder</Tus>
       </div>
       <Pencere acik={pencere} baslik="Ekipman seçin" onKapat={() => setPencere(false)}>
@@ -186,6 +238,10 @@ export function RaporModu({ plan }: { plan: { id: string; no: string } | null })
     /* eslint-disable-next-line react-hooks/set-state-in-effect -- cihazdaki veri yalnız tarayıcıda okunur */
     setV(onbellekOku(planId)); setYeni(false); setHatalar({});
     void yukle();
+    /* yarım kalan yeni kayıt (taslak) varsa form açılır — fotoğraf çekerken sayfa kapandıysa kaldığı yerden */
+    let iptal = false;
+    void taslakAdlari(tOnek(planId)).then((l) => { if (!iptal && l.length) setYeni(true); });
+    return () => { iptal = true; };
   }, [planId, yukle]);
   useEffect(() => {
     let zaman: number | undefined;

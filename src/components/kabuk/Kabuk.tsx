@@ -19,8 +19,10 @@ import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react
 import { ANA_SAYFA, MODUL_GRUPLARI } from "../../modules/moduller";
 import { KALIP } from "../../styles/kalip";
 import { cikisEylemi } from "../../server/kimlik/eylemler";
+import { useBildir } from "../bildirim/Bildirim";
 import { CevrimdisiGosterge } from "../cevrimdisi/Cevrimdisi";
 import { sayfalariSil } from "../cevrimdisi/depo";
+import { kurAbone, kurAnlik, kurSunucuAnlik, uygulamayiKur } from "../cevrimdisi/kur";
 import { Ikon } from "../ikon/Ikon";
 import stil from "./Kabuk.module.css";
 import { TakipBaglami, type KabukTakip } from "./TakipSeridi";
@@ -89,8 +91,12 @@ const basHarfler = (ad: string) => ad.trim().split(/\s+/).filter(Boolean).slice(
 /** kullanıcı menüsü (Çıkış yap): firma kabuğunda ve müşteri paneli kabuğunda (MusteriKabugu) aynı */
 /** `cikis`: çıkış eylemi (verilmezse firma / müşteri çıkışı) ya da düz form isteğinin adresi (yönetim sayfası — 355: /yonetim/cikis, POST; sunucu
     eyleminin yönlendirmesi yönetim adresini kaybediyordu) */
-export function KullaniciMenusu({ kullanici, cikis = cikisEylemi }: { kullanici: KabukKullanicisi; cikis?: (() => Promise<void>) | string }) {
+export function KullaniciMenusu({ kullanici, cikis = cikisEylemi, kur = false }: { kullanici: KabukKullanicisi; cikis?: (() => Promise<void>) | string;
+  /** 2026-11-12: "Uygulamayı kur" seçeneği (yalnız firma kabuğu; tarayıcı sunuyorsa ya da iPhone'da) */
+  kur?: boolean }) {
   const [acik, setAcik] = useState(false);
+  const kurDurumu = useSyncExternalStore(kurAbone, kurAnlik, kurSunucuAnlik);
+  const bildir = useBildir();
   useEffect(() => {
     if (!acik) return;
     const kapat = (e: Event) => { if (!(e.target as Element).closest?.("[data-kullanici-menu]")) setAcik(false); };
@@ -108,6 +114,13 @@ export function KullaniciMenusu({ kullanici, cikis = cikisEylemi }: { kullanici:
       </button>
       {acik && (
         <div className={stil.kullaniciListe} role="menu" aria-label="Kendi işlemlerim">
+          {kur && kurDurumu && (
+            <button className={stil.secenek} type="button" role="menuitem" onClick={() => {
+              setAcik(false);
+              if (kurDurumu === "kur") void uygulamayiKur();
+              else bildir("iPhone / iPad: Safari'de Paylaş tuşuna, sonra “Ana Ekrana Ekle”ye dokunun.");
+            }}><Ikon ad="download" kucuk />Uygulamayı kur</button>
+          )}
           <form action={cikis} method={typeof cikis === "string" ? "post" : undefined}>
             <button className={stil.secenek} type="submit" role="menuitem"><Ikon ad="log-out" kucuk />Çıkış yap</button>
           </form>
@@ -215,7 +228,7 @@ export function Kabuk({ children, kullanici, gorunur, takip, paket }: {
           <div className={stil.ustBosluk} />
           {kullanici?.yazan && <CevrimdisiGosterge yazan={kullanici.yazan} paket={paket} />}
           <TemaTusu />
-          {kullanici && <KullaniciMenusu kullanici={kullanici} cikis={cikisVeTemizle} />}
+          {kullanici && <KullaniciMenusu kullanici={kullanici} cikis={cikisVeTemizle} kur />}
         </header>
         <main className={stil.icerik}><TakipBaglami.Provider value={balon}>{children}</TakipBaglami.Provider></main>
       </div>

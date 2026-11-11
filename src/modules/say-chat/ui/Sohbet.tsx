@@ -6,7 +6,11 @@
    · Fotoğraf uzun kenar 2400 px, JPEG %85 (karar 3); kuyruğun sınırını aşarsa bir kademe küçülür.
    · Her mesaj ÇEVRİMDIŞI KUYRUĞA yazılır (bağlantı varsa hemen gider) ve GİRDİĞİ SIRAYLA gider; bekleyen mesaj cihazdaki içeriğiyle görünür.
    · Kişi kendi işlenmemiş mesajını siler; işlenmiş mesajda çift tik + plan no; işaret mesajın menüsünden, yalnız o mesajdan geri alınır (2026-11-08). Üstte plan seçimi ve Geçmişi sil.
-   · Büyük görüntü: fotoğrafa dokununca. */
+   · Büyük görüntü: fotoğrafa dokununca.
+   · 2026-11-12 KAYIPSIZ (reisim: "sahada veri fotoğraf yazı vs kaybolmamalı kesinlikle özellikle burada say chat çok önemli"): yazılan ama gönderilmemiş
+     yazı ve seçilmiş / çekilmiş fotoğraf TASLAK olarak cihazda (taslak.ts) — sayfa kapanır ya da telefon kamerayı açarken sayfayı atarsa geri gelir;
+     "Gönder" kuyruğa yazılmasını BEKLER (yazılamayan mesaj yazı alanına geri konur, söylenir); son yüklenen sohbet cihazda saklanır (bağlantısız
+     açılınca boş görünmez). */
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useUyar } from "../../../components/bildirim/Bildirim";
 import { bekleyenIsler, kuyrugaEkle, kuyrukAbone, kuyrukAnlik, kuyrukSunucuAnlik, kuyruktanCikar, yenidenDene, type KuyrukSonucOlayi, type KuyrukTuru }
@@ -17,6 +21,7 @@ import { Ikon } from "../../../components/ikon/Ikon";
 import { useOnayla } from "../../../components/pencere/Onay";
 import { Pencere } from "../../../components/pencere/Pencere";
 import { Tus } from "../../../components/tus/Tus";
+import { taslakAdlari, taslakDosyasi, taslakGetir, taslakKaydet, taslakSil } from "../../../components/cevrimdisi/taslak";
 import { exifCekimZamani } from "../../../server/dosya/exif";
 import { CHAT_BELGE_BAYT, CHAT_METIN_EN_COK, SECIM_EN_COK, istanbulGunu, type ChatMesaji, type MesajGirdisi } from "../sema";
 import { base64, chatFotoKucult } from "./foto";
@@ -50,8 +55,14 @@ interface Gorunen extends ChatMesaji {
   /** bekleyen fotoğrafın görüntüsü (cihazdaki içerikten) */
   yerel: string | null;
 }
-interface Secilen { anahtar: number; dosya: File; url: string; cekim: string | null; altyazi: string }
+interface Secilen { anahtar: number; id: string; dosya: File; url: string; cekim: string | null; altyazi: string }
 let secimSira = 0;
+/* taslak adları (taslak.ts) */
+const T_YAZI = "chat|yazi", T_FOTO = "chat|foto|", T_GECMIS = "chat|gecmis";
+interface YaziTaslagi { yazi: string; fotolar: { id: string; altyazi: string }[] }
+interface FotoTaslagi { ad: string; cekim: string | null; veri: string }
+/** bağlantısız açılışta gösterilecek son mesajlar (dosyasız) */
+const GECMIS_EN_COK = 200;
 
 export function Sohbet({ ilk, panelde = false }: { ilk: ChatMesaji[] | null; panelde?: boolean }) {
   const uyar = useUyar(), onayla = useOnayla();
@@ -72,19 +83,57 @@ export function Sohbet({ ilk, panelde = false }: { ilk: ChatMesaji[] | null; pan
   const [yereller, setYereller] = useState<Readonly<Record<string, string>>>({});
   const yerelUrl = useRef(new Map<string, string>());
 
+  const canli = useRef(true);
+  useEffect(() => { canli.current = true; return () => { canli.current = false; }; }, []);
   const yukle = useCallback(async () => {
     try {
       const r = await sohbetEylemi();
-      setMesajlar((x) => (r.durum === "tamam" ? r.mesajlar : x ?? []));
-    } catch { setMesajlar((x) => x ?? []); /* bağlantı yok: cihazdakiler görünür */ }
+      if (!canli.current) return;
+      if (r.durum === "tamam") { setMesajlar(r.mesajlar); void taslakKaydet(T_GECMIS, r.mesajlar.slice(-GECMIS_EN_COK)); }
+      else setMesajlar((x) => x ?? []);
+    } catch {
+      /* bağlantı yok: son yüklenen sohbet cihazdan + cihazda bekleyenler */
+      const g = await taslakGetir<ChatMesaji[]>(T_GECMIS);
+      if (canli.current) setMesajlar((x) => x ?? g ?? []);
+    }
   }, []);
   useEffect(() => {
-    if (ilk !== null) return;
-    let canli = true;
-    sohbetEylemi().then((r) => { if (canli) setMesajlar((x) => (r.durum === "tamam" ? r.mesajlar : x ?? [])); },
-      () => { if (canli) setMesajlar((x) => x ?? []); });
-    return () => { canli = false; };
-  }, [ilk]);
+    if (ilk !== null) { void taslakKaydet(T_GECMIS, ilk.slice(-GECMIS_EN_COK)); return; }
+    queueMicrotask(() => void yukle());
+  }, [ilk, yukle]);
+  /* TASLAK: gönderilmemiş yazı ve seçilmiş fotoğraflar cihazdan geri gelir (bir kez, açılışta) */
+  const taslakOkundu = useRef(false);
+  useEffect(() => {
+    let iptal = false;
+    void (async () => {
+      const t = await taslakGetir<YaziTaslagi>(T_YAZI);
+      const adlar = await taslakAdlari(T_FOTO);
+      if (iptal) return;
+      if (!t && !adlar.length) { taslakOkundu.current = true; return; }
+      const sirali = [...(t?.fotolar ?? []).map((f) => f.id), ...adlar.map((a) => a.slice(T_FOTO.length))].filter((id, i, l) => l.indexOf(id) === i && adlar.includes(T_FOTO + id));
+      const h: Secilen[] = [];
+      for (const id of sirali) {
+        const f = await taslakGetir<FotoTaslagi>(T_FOTO + id);
+        const dosya = f ? taslakDosyasi(f.veri, f.ad) : null;
+        if (!f || !dosya) continue;
+        h.push({ anahtar: ++secimSira, id, dosya, url: URL.createObjectURL(dosya), cekim: f.cekim, altyazi: t?.fotolar.find((x) => x.id === id)?.altyazi ?? "" });
+      }
+      if (iptal) { for (const x of h) URL.revokeObjectURL(x.url); return; }
+      taslakOkundu.current = true;
+      if (t?.yazi) setYazi((x) => x || t.yazi);
+      if (h.length) setSecilen((x) => (x.length ? x : h));
+    })().catch(() => { taslakOkundu.current = true; });
+    return () => { iptal = true; };
+  }, []);
+  /* TASLAK: yazı ve fotoğrafların sırası / altyazıları (fotoğrafın kendisi seçildiği an ayrı yazılır) */
+  useEffect(() => {
+    const z = window.setTimeout(() => {
+      if (!taslakOkundu.current) return;
+      if (!yazi && !secilen.length) void taslakSil(T_YAZI);
+      else void taslakKaydet(T_YAZI, { yazi, fotolar: secilen.map((x) => ({ id: x.id, altyazi: x.altyazi })) } satisfies YaziTaslagi);
+    }, 400);
+    return () => window.clearTimeout(z);
+  }, [yazi, secilen]);
   /* gönderilen mesaj: sunucudaki hâl yenilenir */
   useEffect(() => {
     let zaman: number | undefined;
@@ -137,15 +186,21 @@ export function Sohbet({ ilk, panelde = false }: { ilk: ChatMesaji[] | null; pan
   useEffect(() => { const g = govde.current; if (g) g.scrollTop = g.scrollHeight; }, [son]);
 
   /* ── gönderme ── */
-  const ekle = (girdi: MesajGirdisi, ad: string) => {
+  /** kuyruğa yazılmasını BEKLER (cihaza ya da — yer yoksa — bu sayfanın belleğine); kayıt kimliğini döner */
+  const ekle = async (girdi: MesajGirdisi, ad: string): Promise<string> => {
     const kayit = crypto.randomUUID();
-    return { kayit, is: kuyrugaEkle({ tur: "chat.mesaj", kayit, surum: 0, girdi, ad }) };
+    await kuyrugaEkle({ tur: "chat.mesaj", kayit, surum: 0, girdi, ad });
+    return kayit;
   };
   const fotoHazirla = async (f: File): Promise<Secilen | null> => {
     let cekim: string | null = null;
     try { cekim = exifCekimZamani(new Uint8Array(await f.slice(0, 256 * 1024).arrayBuffer())); } catch { cekim = null; }
     const k = await chatFotoKucult(f);
-    return k ? { anahtar: ++secimSira, dosya: k, url: URL.createObjectURL(k), cekim, altyazi: "" } : null;
+    if (!k) return null;
+    /* seçildiği an cihaza (taslak): "Gönder"e basılmadan sayfa kapanırsa fotoğraf kaybolmaz */
+    const id = crypto.randomUUID();
+    void base64(k).then((veri) => taslakKaydet(T_FOTO + id, { ad: k.name || "foto.jpg", cekim, veri } satisfies FotoTaslagi)).catch(() => undefined);
+    return { anahtar: ++secimSira, id, dosya: k, url: URL.createObjectURL(k), cekim, altyazi: "" };
   };
   const fotolarSecildi = async (l: File[]) => {
     const yer = SECIM_EN_COK - secilen.length;
@@ -162,7 +217,10 @@ export function Sohbet({ ilk, panelde = false }: { ilk: ChatMesaji[] | null; pan
       setSecilen((x) => [...x, ...h]);
     } finally { setHazirlaniyor(false); }
   };
-  const secimiKaldir = (anahtar: number) => setSecilen((l) => l.filter((x) => { if (x.anahtar === anahtar) URL.revokeObjectURL(x.url); return x.anahtar !== anahtar; }));
+  const secimiKaldir = (anahtar: number) => setSecilen((l) => l.filter((x) => {
+    if (x.anahtar === anahtar) { URL.revokeObjectURL(x.url); void taslakSil(T_FOTO + x.id); }
+    return x.anahtar !== anahtar;
+  }));
   const gonder = async () => {
     const metin = yazi.trim();
     if ((!metin && !secilen.length) || hazirlaniyor) return;
@@ -170,23 +228,36 @@ export function Sohbet({ ilk, panelde = false }: { ilk: ChatMesaji[] | null; pan
     let sira = 0;
     const l = secilen;
     setSecilen([]); setYazi("");
-    for (const s of l) {
-      const veri = await base64(s.dosya);
-      const { kayit } = ekle({ tur: "foto", zaman, sira: sira++, metin: s.altyazi.trim().slice(0, CHAT_METIN_EN_COK) || null, cekim: s.cekim, ad: s.dosya.name || "foto.jpg", veri },
-        "S.A.Y Chat · fotoğraf");
-      yerelUrl.current.set(kayit, s.url);
+    /* her mesaj kuyruğa YAZILINCA taslağı silinir; yazılamayan (beklenmeyen hata) geri konur ve söylenir — sessiz kayıp yok */
+    const kalan = [...l];
+    try {
+      for (const s of l) {
+        const veri = await base64(s.dosya);
+        const kayit = await ekle({ tur: "foto", zaman, sira: sira++, metin: s.altyazi.trim().slice(0, CHAT_METIN_EN_COK) || null, cekim: s.cekim, ad: s.dosya.name || "foto.jpg", veri },
+          "S.A.Y Chat · fotoğraf");
+        yerelUrl.current.set(kayit, s.url);
+        kalan.shift();
+        void taslakSil(T_FOTO + s.id);
+      }
+      setYereller(Object.fromEntries(yerelUrl.current));
+      if (metin) await ekle({ tur: "yazi", zaman, sira: sira++, metin: metin.slice(0, CHAT_METIN_EN_COK), cekim: null, ad: null, veri: null }, "S.A.Y Chat · mesaj");
+    } catch {
+      setYereller(Object.fromEntries(yerelUrl.current));
+      setSecilen((x) => [...kalan, ...x]);
+      setYazi((x) => x || metin);
+      uyar("Mesaj cihaza yazılamadı; yazdıklarınız yazı alanında duruyor. Yeniden gönderin.");
     }
-    setYereller(Object.fromEntries(yerelUrl.current));
-    if (metin) ekle({ tur: "yazi", zaman, sira: sira++, metin: metin.slice(0, CHAT_METIN_EN_COK), cekim: null, ad: null, veri: null }, "S.A.Y Chat · mesaj");
   };
   const belgeSecildi = async (f: File | undefined) => {
     if (!f) return;
     if (!BELGE_ADI.test(f.name)) { uyar("Yalnız PDF, Word (.docx) ya da Excel (.xlsx) belge."); return; }
     if (f.size > CHAT_BELGE_BAYT) { uyar(`Belge çok büyük (en çok ${Math.round(CHAT_BELGE_BAYT / 1024 / 1024)} MB).`); return; }
     const metin = yazi.trim();
-    setYazi("");
-    ekle({ tur: "belge", zaman: new Date().toISOString(), sira: 0, metin: metin.slice(0, CHAT_METIN_EN_COK) || null, cekim: null, ad: f.name.slice(0, 200), veri: await base64(f) },
-      "S.A.Y Chat · belge");
+    try {
+      await ekle({ tur: "belge", zaman: new Date().toISOString(), sira: 0, metin: metin.slice(0, CHAT_METIN_EN_COK) || null, cekim: null, ad: f.name.slice(0, 200), veri: await base64(f) },
+        "S.A.Y Chat · belge");
+      setYazi((x) => (x.trim() === metin ? "" : x));
+    } catch { uyar("Belge cihaza yazılamadı; yeniden ekleyin."); }
   };
 
   /* ── silme, işaret ── */
@@ -208,6 +279,7 @@ export function Sohbet({ ilk, panelde = false }: { ilk: ChatMesaji[] | null; pan
     const r = await gecmisiSilEylemi().catch(() => null);
     if (!r || r.durum !== "tamam") { uyar(r?.durum === "red" ? r.neden : "Bağlantı yok; bağlanınca yeniden deneyin."); return; }
     for (const b of bekleyen) await kuyruktanCikar(b.id);
+    void taslakSil(T_GECMIS);
     setKac(SAYFA);
     await yukle();
   };

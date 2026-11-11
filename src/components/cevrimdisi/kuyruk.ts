@@ -16,8 +16,16 @@
      kimliğe bağlanır; aynı planın kabulü cihazda bekliyorsa rapor ondan sonra açılır. İşler GİRDİĞİ SIRAYLA gider (yalnız bağımlılık beklenir).
    · 2026-11-07 S.A.Y CHAT (kişisel sohbet): chat.mesaj (yazı / fotoğraf / belge — her mesaj ayrı iş, GİRDİĞİ SIRAYLA gider; saat cihazdaki yazılış anı)
      ve chat.sil (kişinin işlenmemiş mesajı). Eski saychat.* işleri (524'ün kayıt düzeni) cihazda kalmışsa bir sürüm boyunca gider; sunucu mesaj yapar.
-   Depo yoksa (gizli pencere) iş yalnız bu sayfada bellekte tutulur ve söylenir. */
-import { coz, depoAc, isleriOku, isSil, isYaz, sifrele, type DepoIsi } from "./depo.ts";
+   Depo yoksa (gizli pencere) iş yalnız bu sayfada bellekte tutulur ve söylenir.
+   · 2026-11-12 KAYIPSIZ (reisim: "sahada veri fotoğraf yazı vs kaybolmamalı kesinlikle"): iş cihaza YAZILAMAZSA (yer doldu, depo kilitli) kaybolmaz —
+     bu sayfada bellekte tutulur, durumda sayılır (yazilamayan), ekran kırmızı söyler ve sayfa kapatılırken tarayıcı sorar; yer açılınca kendiliğinden
+     cihaza yazılır. Eski form işi, yenisi cihaza yazılmadan depodan silinmez. Sunucunun anlaşılmayan cevabı (JSON değil — ağ geçidi sayfası) işi
+     "yapılamadı"ya düşürmez: sonra yeniden denenir. Gönderim sayfa öne gelince de denenir (telefonda arka plandaki sekme "bağlandı" olayını kaçırır). */
+import { coz, depoAc, eskiTaslaklariSil, isleriOku, isSil, isYaz, kaliciIste, sifrele, type DepoIsi } from "./depo.ts";
+
+/** cihaz deposu — sınamada taklitle değiştirilir (kuyrukDeposu); uygulamada depo.ts */
+let D = { ac: depoAc, oku: isleriOku, yaz: isYaz, sil: isSil, sifrele, coz };
+export function kuyrukDeposu(d: Partial<typeof D>) { D = { ...D, ...d }; }
 
 export type KuyrukTuru = "rapor.kaydet" | "rapor.gonder" | "rapor.foto" | "rapor.olustur" | "plan.kabul" | "plan.red" | "chat.mesaj" | "chat.sil"
   | "saychat.kaydet" | "saychat.foto" | "saychat.sil" | "sayrapor.foto" | "sayrapor.kaydet" | "sayrapor.sil";
@@ -41,32 +49,65 @@ export interface KuyrukDurumu {
   gonderiliyor: boolean;
   /** cihaz saati sunucudan bu kadar dakika sapıyor (10'dan fazlaysa) */
   saatFarkiDk: number | null;
+  /** cihaza YAZILAMAYAN iş sayısı (yer doldu / depo kilitli): yalnız bu sayfa açıkken duruyor */
+  yazilamayan: number;
 }
 
-type Bellek = DepoIsi & { girdi?: unknown };
+/** girdi: içerik bellekte (depo yok ya da cihaza yazılamadı) · bellekte: depo VAR ama bu iş yazılamadı (yer açılınca yazılır) */
+type Bellek = DepoIsi & { girdi?: unknown; bellekte?: boolean };
 let bellek: Bellek[] = [];
-let durum: KuyrukDurumu = { isler: [], depoYok: false, oturum: false, gonderiliyor: false, saatFarkiDk: null };
+let durum: KuyrukDurumu = { isler: [], depoYok: false, oturum: false, gonderiliyor: false, saatFarkiDk: null, yazilamayan: 0 };
 let yazan = "";
 let yuklendi: Promise<void> | null = null;
 const dinleyenler = new Set<() => void>();
 
 const yayinla = (d: Partial<KuyrukDurumu> = {}) => {
-  durum = { ...durum, ...d, isler: bellek.map(({ id, tur, kayit, ad, zaman, durum: x, ileti, yer }) => ({ id, tur: tur as KuyrukTuru, kayit, ad, zaman, durum: x, ileti, yer: yer ?? null })) };
+  durum = { ...durum, ...d, yazilamayan: bellek.filter((x) => x.bellekte).length, isler: bellek.map(({ id, tur, kayit, ad, zaman, durum: x, ileti, yer }) => ({ id, tur: tur as KuyrukTuru, kayit, ad, zaman, durum: x, ileti, yer: yer ?? null })) };
   for (const f of dinleyenler) f();
 };
 export const kuyrukAbone = (f: () => void) => { dinleyenler.add(f); return () => { dinleyenler.delete(f); }; };
 export const kuyrukAnlik = () => durum;
-const BOS: KuyrukDurumu = { isler: [], depoYok: false, oturum: false, gonderiliyor: false, saatFarkiDk: null };
+const BOS: KuyrukDurumu = { isler: [], depoYok: false, oturum: false, gonderiliyor: false, saatFarkiDk: null, yazilamayan: 0 };
 export const kuyrukSunucuAnlik = () => BOS;
 
 /** işi yazanın etiketi (oturumdaki kişi — sunucudan; kabuk koyar) */
 export function kuyrukYazani(etiket: string) { yazan = etiket; }
+/** oturumdaki kişinin etiketi (taslaklar kişiye bağlı — depo.ts taslakYaz / taslakOku) */
+export const kuyrukYazaniOku = () => yazan;
+
+/** işin içeriği: bellekteyse oradan, değilse depodan çözülür */
+const icerik = async (db: IDBDatabase | null, x: Bellek): Promise<unknown> => (x.girdi !== undefined || !db ? x.girdi : D.coz(db, x));
+/** depoya giden kayıt: bellekteki içerik ve işaret depoya yazılmaz */
+const depoKaydi = (x: Bellek): DepoIsi => { const k: Bellek = { ...x }; delete k.girdi; delete k.bellekte; return k; };
+/** işi cihaza yazar; yazılamazsa içerik bellekte kalır (false) */
+async function cihazaYaz(db: IDBDatabase, i: Bellek, girdi: unknown): Promise<boolean> {
+  try {
+    const kayit = depoKaydi({ ...i, ...(await D.sifrele(db, girdi)) });
+    await D.yaz(db, kayit);
+    Object.assign(i, { iv: kayit.iv, sifreli: kayit.sifreli });
+    delete i.girdi; delete i.bellekte;
+    return true;
+  } catch {
+    i.girdi = girdi; i.bellekte = true;
+    return false;
+  }
+}
+/** cihaza yazılamamış işleri yeniden yazmayı dener (yer açıldıysa); değişen olduysa yayınlar */
+async function bellektekileriYaz(): Promise<void> {
+  const l = bellek.filter((x) => x.girdi !== undefined);
+  if (!l.length) return;
+  const db = await D.ac();
+  if (!db) return;
+  let degisti = durum.depoYok;
+  for (const x of l) if (bellek.includes(x) && await cihazaYaz(db, x, x.girdi)) degisti = true;
+  if (degisti) yayinla({ depoYok: false });
+}
 
 function yukle(): Promise<void> {
   yuklendi ??= (async () => {
-    const db = await depoAc();
+    const db = await D.ac();
     if (!db) { yayinla({ depoYok: true }); return; }
-    bellek = await isleriOku(db);
+    try { bellek = await D.oku(db); } catch { yuklendi = null; yayinla(); return; }   // okunamadı: sonraki çağrı yeniden dener (iş depoda duruyor)
     yayinla();
   })();
   return yuklendi;
@@ -78,15 +119,19 @@ export async function kuyrugaEkle(g: { tur: KuyrukTuru; kayit: string; surum: nu
   await yukle();
   /* yeni rapor bir kez açılır (aynı geçici kimlikle ikinci iş yazılmaz) */
   if (g.tur === "rapor.olustur" && bellek.some((x) => x.tur === "rapor.olustur" && x.kayit === g.kayit)) return;
-  const db = await depoAc();
+  const db = await D.ac();
+  if (db && durum.depoYok) yayinla({ depoYok: false });   // depo sonradan açıldı
   const eski = FORM.has(g.tur) ? bellek.filter((x) => x.kayit === g.kayit && FORM.has(x.tur) && x.durum !== "baska_hesap") : [];
   const i: Bellek = {
     id: crypto.randomUUID(), tur: g.tur, kayit: g.kayit, yazan, surum: g.surum, zaman: new Date().toISOString(), ad: g.ad, yer: g.yer ?? null, durum: "bekliyor",
     ileti: null, guncel: null, sira: Date.now(), iv: new Uint8Array(0), sifreli: new ArrayBuffer(0),
   };
-  if (db) Object.assign(i, await sifrele(db, g.girdi));
+  /* cihaza yazılamazsa (yer doldu, depo kilitli) iş KAYBOLMAZ: bellekte kalır, sayılır, ekran söyler. Eski form işi ancak yenisi cihaza
+     yazıldıysa depodan silinir (sayfa o arada kapanırsa en azından önceki kayıt cihazda durur) */
+  let yazildi = false;
+  if (db) yazildi = await cihazaYaz(db, i, g.girdi);
   else i.girdi = g.girdi;
-  if (db) { await isYaz(db, i); for (const x of eski) await isSil(db, x.id); }
+  if (db && yazildi) for (const x of eski) await D.sil(db, x.id).catch(() => undefined);
   bellek = [...bellek.filter((x) => !eski.includes(x)), i];
   yayinla();
   void kuyrukGonder();
@@ -99,22 +144,23 @@ export async function bekleyenIcerik(kayit: string): Promise<{ girdi: unknown; d
   await yukle();
   const x = [...bellek].reverse().find((y) => y.kayit === kayit && FORM.has(y.tur) && (y.durum === "bekliyor" || y.durum === "cakisma" || y.durum === "hata"));
   if (!x) return null;
-  const db = await depoAc();
-  return { girdi: db ? await coz(db, x) : x.girdi, durum: x.durum, tur: x.tur as KuyrukTuru };
+  return { girdi: await icerik(await D.ac(), x), durum: x.durum, tur: x.tur as KuyrukTuru };
 }
 
 /** 2026-11-07 (S.A.Y Chat): verilen türlerdeki bekleyen işler İÇERİKLERİYLE (cihazda yazılıp henüz gitmemiş mesajlar sohbette görünür) */
 export async function bekleyenIsler(turler: readonly KuyrukTuru[]): Promise<{ id: string; tur: KuyrukTuru; kayit: string; durum: IsDurumu; ileti: string | null; girdi: unknown }[]> {
   await yukle();
-  const db = await depoAc();
+  const db = await D.ac();
   const l = bellek.filter((x) => (turler as readonly string[]).includes(x.tur));
-  return Promise.all(l.map(async (x) => ({ id: x.id, tur: x.tur as KuyrukTuru, kayit: x.kayit, durum: x.durum, ileti: x.ileti, girdi: db ? await coz(db, x) : x.girdi })));
+  /* çözülemeyen (bozuk) içerik işi listeden düşürmez: içeriksiz görünür */
+  return Promise.all(l.map(async (x) => ({ id: x.id, tur: x.tur as KuyrukTuru, kayit: x.kayit, durum: x.durum, ileti: x.ileti, girdi: await icerik(db, x).catch(() => null) })));
 }
 
 /** kullanıcı kaldırdı (eksik / hata bilgisi okundu, ya da çakışmada "sunucudakini kullan") */
 export async function kuyruktanCikar(id: string): Promise<void> {
-  const db = await depoAc();
-  if (db) await isSil(db, id);
+  const db = await D.ac();
+  /* depodan silinemese de listeden çıkar (sunucu işi bir kez işler — yeniden gitse de zarar yok) */
+  if (db) await D.sil(db, id).catch(() => undefined);
   bellek = bellek.filter((x) => x.id !== id);
   yayinla();
 }
@@ -129,8 +175,7 @@ export async function kayitBilgileriniKapat(kayit: string): Promise<void> {
 export async function benimkiniYaz(id: string): Promise<void> {
   const x = bellek.find((y) => y.id === id);
   if (!x || x.durum !== "cakisma" || x.guncel === null) return;
-  const db = await depoAc();
-  const girdi = db ? await coz(db, x) : x.girdi;
+  const girdi = await icerik(await D.ac(), x);
   await kuyruktanCikar(id);
   await kuyrugaEkle({ tur: x.tur as KuyrukTuru, kayit: x.kayit, surum: x.guncel, girdi, ad: x.ad, yer: x.yer });
 }
@@ -139,8 +184,7 @@ export async function benimkiniYaz(id: string): Promise<void> {
 export async function yenidenDene(id: string): Promise<void> {
   const x = bellek.find((y) => y.id === id);
   if (!x) return;
-  const db = await depoAc();
-  const girdi = db ? await coz(db, x) : x.girdi;
+  const girdi = await icerik(await D.ac(), x);
   await kuyruktanCikar(id);
   await kuyrugaEkle({ tur: x.tur as KuyrukTuru, kayit: x.kayit, surum: x.surum, girdi, ad: x.ad, yer: x.yer });
 }
@@ -171,8 +215,11 @@ type Sonuc = { durum: string; hatalar?: Record<string, string>; eksikler?: { bol
   id?: string };
 async function guncelle(x: Bellek, d: Partial<Bellek>) {
   Object.assign(x, d);
-  const db = await depoAc();
-  if (db) await isYaz(db, x);
+  const db = await D.ac();
+  if (!db) return;
+  if (x.bellekte) { await cihazaYaz(db, x, x.girdi); return; }
+  /* durum yazılamazsa iş yine depoda (eski durumuyla) ve bellekte durur */
+  if (x.girdi === undefined) await D.yaz(db, depoKaydi(x)).catch(() => undefined);
 }
 
 /** sırayla gönderir; ağ yok / oturum kapalı / sunucu düştüyse durur. Sonuç: gönderilen iş sayısı */
@@ -184,7 +231,8 @@ export async function kuyrukGonder(): Promise<number> {
   yayinla({ gonderiliyor: true });
   let n = 0;
   try {
-    const db = await depoAc();
+    await bellektekileriYaz();
+    const db = await D.ac();
     /* işler GİRDİĞİ SIRAYLA gider (405 — kayıtlar arası sıra korunur: önce planın kabulü, sonra o plana açılan rapor); kaydın kendi bağımlılıkları
        beklenir, bir iş gidince bekleyen bağımlısı aynı gönderimde yeniden denenir (en çok 5 tur) */
     let ilerledi = true;
@@ -201,7 +249,12 @@ export async function kuyrukGonder(): Promise<number> {
           if (x.ileti !== ILETI.foto_bekliyor) await guncelle(x, { ileti: ILETI.foto_bekliyor });
           continue;
         }
-        const girdi = db ? await coz(db, x) : x.girdi;
+        let girdi: unknown;
+        try { girdi = await icerik(db, x); } catch {
+          /* içerik çözülemedi (depo bozuk): iş kalır, görünür; sıradakiler gider */
+          await guncelle(x, { durum: "hata", ileti: "Cihazdaki içerik okunamadı." });
+          continue;
+        }
         let y: Response;
         try {
           y = await fetch("/api/islem", {
@@ -212,14 +265,17 @@ export async function kuyrukGonder(): Promise<number> {
         } catch { break dis; }   // ağ yok: sonra
         if (y.status === 401) { yayinla({ oturum: true }); break dis; }
         if (y.status === 403 || y.status === 426 || y.status >= 500) break dis;   // köken / eski sürüm / sunucu: sonra (sayfa yenilenince)
+        if (y.status === 408 || y.status === 429) break dis;   // süre doldu / hız sınırı: sonra
+        const j = await y.json().catch(() => null) as { tekrar?: boolean; sonuc?: Sonuc; guncel?: number | null; saatFarkiDk?: number; hata?: string } | null;
+        /* "oldu" deyip bizim cevabımızı taşımayan yanıt (ağ geçidinin sayfası, yarım yanıt): iş yapılmamış sayılır, sonra yeniden denenir */
+        if (y.ok && !j?.sonuc) break dis;
         yayinla({ oturum: false });
         ilerledi = true;
-        const j = await y.json().catch(() => ({})) as { tekrar?: boolean; sonuc?: Sonuc; guncel?: number | null; saatFarkiDk?: number; hata?: string };
         if (y.status === 409) {
-          await guncelle(x, { durum: j.hata === "baska_hesap" ? "baska_hesap" : "hata", ileti: ILETI[j.hata ?? ""] ?? "İş gönderilemedi." });
+          await guncelle(x, { durum: j?.hata === "baska_hesap" ? "baska_hesap" : "hata", ileti: ILETI[j?.hata ?? ""] ?? "İş gönderilemedi." });
           continue;
         }
-        if (!y.ok || !j.sonuc) { await guncelle(x, { durum: "hata", ileti: "İş gönderilemedi (biçim); raporu açıp yeniden kaydedin." }); continue; }
+        if (!y.ok || !j?.sonuc) { await guncelle(x, { durum: "hata", ileti: "İş gönderilemedi (biçim); raporu açıp yeniden kaydedin." }); continue; }
         if (typeof j.saatFarkiDk === "number") yayinla({ saatFarkiDk: j.saatFarkiDk });
         const s = j.sonuc;
         /* 405: yeni rapor açıldı — geçici kimlikle bekleyen işler sunucunun verdiği kimliğe */
@@ -262,10 +318,25 @@ export function kuyrukBaslat(): () => void {
   if (basladi) return () => undefined;
   basladi = true;
   void yukle().then(() => kuyrukGonder());
+  /* kalıcı saklama izni (yer daralınca tarayıcı bu sitenin verisini silmesin) ve eski taslakların temizliği */
+  void kaliciIste();
+  void eskiTaslaklariSil();
   const cevrim = () => { void kuyrukGonder(); };
   const durumDegisti = () => yayinla();
+  /* telefonda arka plandaki sekme "bağlandı" olayını kaçırır: sayfa öne gelince / geri dönülünce de denenir */
+  const gorundu = () => { if (typeof document === "undefined" || document.visibilityState === "visible") void yukle().then(() => kuyrukGonder()); };
+  /* cihaza yazılamamış (yalnız bu sayfada duran) iş varken sayfa kapatılırsa tarayıcı sorar */
+  const kapaniyor = (e: Event) => { if (bellek.some((x) => x.girdi !== undefined)) { e.preventDefault(); (e as BeforeUnloadEvent).returnValue = ""; } };
   window.addEventListener("online", cevrim);
   window.addEventListener("offline", durumDegisti);
-  const zaman = window.setInterval(() => { if (bellek.some((x) => x.durum === "bekliyor")) void kuyrukGonder(); }, 60_000);
-  return () => { basladi = false; window.removeEventListener("online", cevrim); window.removeEventListener("offline", durumDegisti); window.clearInterval(zaman); };
+  window.addEventListener("pageshow", gorundu);
+  window.addEventListener("focus", gorundu);
+  window.addEventListener("beforeunload", kapaniyor);
+  if (typeof document !== "undefined") document.addEventListener("visibilitychange", gorundu);
+  const zaman = window.setInterval(() => { if (bellek.some((x) => x.durum === "bekliyor" || x.girdi !== undefined)) void kuyrukGonder(); }, 60_000);
+  return () => {
+    basladi = false; window.removeEventListener("online", cevrim); window.removeEventListener("offline", durumDegisti); window.clearInterval(zaman);
+    window.removeEventListener("pageshow", gorundu); window.removeEventListener("focus", gorundu); window.removeEventListener("beforeunload", kapaniyor);
+    if (typeof document !== "undefined") document.removeEventListener("visibilitychange", gorundu);
+  };
 }

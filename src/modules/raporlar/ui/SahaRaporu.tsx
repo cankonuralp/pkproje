@@ -33,6 +33,7 @@
 import { useRouter } from "next/navigation";
 import { Fragment, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition, type ReactNode, type TransitionStartFunction } from "react";
 import { useBildir, useUyar } from "../../../components/bildirim/Bildirim";
+import { taslakGetir, taslakKaydet, taslakSil } from "../../../components/cevrimdisi/taslak";
 import { bekleyenIcerik, kayitBilgileriniKapat, kuyrugaEkle, kuyrukAbone, kuyrukAnlik, kuyrukSunucuAnlik, type KuyrukSonucOlayi, type KuyrukTuru } from "../../../components/cevrimdisi/kuyruk";
 import { Girdi, ipucuId } from "../../../components/form/Form";
 import { Ikon } from "../../../components/ikon/Ikon";
@@ -170,18 +171,39 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
   const [cihazdaki, setCihazdaki] = useState(false);
   const kirliRef = useRef(false);
   useEffect(() => { kirliRef.current = kirli; }, [kirli]);
+  /* 2026-11-12 TASLAK (reisim: "sahada veri fotoğraf yazı vs kaybolmamalı kesinlikle"): kaydedilmemiş değişiklik yazarken cihaza (taslak.ts) — telefon
+     sayfayı bellekten atarsa, sekme kapanırsa form yeniden açılınca geri gelir. Taslağın varlığı "son Kaydet'ten sonra yazıldı" demektir (Kaydet /
+     kuyruğa yazma taslağı siler): cihazda bekleyen kayıttan da yenidir. Yalnız açılışta bir kez geri yüklenir. */
+  const taslakAdi = yeni ? `form|yeni|${yeni.plan}|${yeni.ekipman}` : `form|${v.id}`;
+  const taslakBakildi = useRef(false);
+  /** bu ekrandaki değişiklikler taslaktan geri yüklendi (şeritte söylenir; kişi bırakabilir) */
+  const [taslaktan, setTaslaktan] = useState(false);
+  type FormIcerigi = Partial<{ ekipman: Record<string, string>; tarih: Record<string, string>; cevaplar: Cevaplar }>;
   useEffect(() => {
     if (denemede) return;
     let iptal = false;
-    void bekleyenIcerik(v.id).then((b) => {
-      if (iptal || !b || kirliRef.current) { if (!iptal && !b) setCihazdaki(false); return; }
-      const g = b.girdi as Partial<{ ekipman: Record<string, string>; tarih: Record<string, string>; cevaplar: Cevaplar }>;
+    const uygula = (g: FormIcerigi) => {
       if (g.ekipman) setEkipman((e) => ({ ...e, ...g.ekipman }) as typeof e);
       if (g.tarih) setTarih((t) => ({ ...t, ...g.tarih }) as typeof t);
       if (g.cevaplar) setCevaplar(g.cevaplar);
+    };
+    void (async () => {
+      if (duzenle && !taslakBakildi.current) {
+        const t = await taslakGetir<FormIcerigi>(taslakAdi);
+        if (iptal) return;
+        taslakBakildi.current = true;
+        if (t && !kirliRef.current) {
+          uygula(t); setKirli(true); kirliRef.current = true; setTaslaktan(true);
+          return;
+        }
+      }
+      const b = await bekleyenIcerik(v.id);
+      if (iptal || !b || kirliRef.current) { if (!iptal && !b) setCihazdaki(false); return; }
+      uygula(b.girdi as FormIcerigi);
       setCihazdaki(true);
-    }).catch(() => undefined);
+    })().catch(() => undefined);
     return () => { iptal = true; };
+    /* eslint-disable-next-line react-hooks/exhaustive-deps -- yalnız rapor / sürüm değişince (taslak adı rapora bağlı) */
   }, [v.id, v.surum, denemede]);
   const [sonKayit, setSonKayit] = useState<string | null>(v.surum > 0 ? v.degisti : null);
   const [isaretli, setIsaretli] = useState<ReadonlySet<string>>(() => new Set());
@@ -375,6 +397,22 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
     setKirli(true);
   };
   const girdi = () => ({ ekipman, tarih, cevaplar });
+  /* TASLAK yazımı: değişiklikten 1,2 sn sonra; sayfa arka plana geçerken / kapanırken hemen */
+  const sonGirdi = useRef<ReturnType<typeof girdi> | null>(null);
+  useEffect(() => { sonGirdi.current = { ekipman, tarih, cevaplar }; }, [ekipman, tarih, cevaplar]);
+  useEffect(() => {
+    if (denemede || oku || !kirli || !taslakBakildi.current) return;
+    const z = window.setTimeout(() => void taslakKaydet(taslakAdi, { ekipman, tarih, cevaplar }), 1200);
+    return () => window.clearTimeout(z);
+  }, [denemede, oku, kirli, taslakAdi, ekipman, tarih, cevaplar]);
+  useEffect(() => {
+    if (denemede || oku) return;
+    const yaz = () => { if (kirliRef.current && taslakBakildi.current && sonGirdi.current && document.visibilityState !== "visible") void taslakKaydet(taslakAdi, sonGirdi.current); };
+    const kapaniyor = () => { if (kirliRef.current && taslakBakildi.current && sonGirdi.current) void taslakKaydet(taslakAdi, sonGirdi.current); };
+    document.addEventListener("visibilitychange", yaz);
+    window.addEventListener("pagehide", kapaniyor);
+    return () => { document.removeEventListener("visibilitychange", yaz); window.removeEventListener("pagehide", kapaniyor); };
+  }, [denemede, oku, taslakAdi]);
   /* 464: bitiş elle seçilene kadar ŞİMDİ gösterilir (yarım dakikada bir ilerler, başlangıçtan önce olmaz) ve kaydedilmez — gönderilirken sunucu
      gönderme anını yazar (değişmedi). Sunucu saati Türkiye saati değil: değer tarayıcıda, çizimden sonra gelir */
   const [simdi, setSimdi] = useState("");
@@ -387,7 +425,9 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
     return () => window.clearInterval(z);
   }, [bitOto]);
   const gorunen = (k: TarihAnahtari) => (k === "bit" && bitOto ? (simdi && simdi < tarih.bas ? tarih.bas : simdi) : tarih[k]);
-  const kaydedildi = () => { setKirli(false); setSonKayit(new Date().toISOString()); setGenel(null); setAlanHata({}); };
+  /** geri yüklenen taslağı bırak: taslak silinir, rapor kayıtlı hâliyle yeniden açılır */
+  const taslagiBirak = async () => { kirliRef.current = false; await taslakSil(taslakAdi); window.location.reload(); };
+  const kaydedildi = () => { setKirli(false); kirliRef.current = false; setTaslaktan(false); void taslakSil(taslakAdi); setSonKayit(new Date().toISOString()); setGenel(null); setAlanHata({}); };
   const yanitHatasi = (r: RaporYaniti) => {
     const h = r.hatalar ?? {}, ilk = Object.keys(h)[0];
     setAlanHata(h);
@@ -910,6 +950,7 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
   /* 402: cihazda gönderilemeyen iş (çakışma, yapılamadı) sayfa yenilense de söylenir — anlık bildirim kaybolsa da kullanıcı bilir */
   else if (cihazdaki && formBekliyor) seritler.push(<Serit key="cihazdaki" tur="bilgi" ikon="wifi-off">Bu ekranda cihazda bekleyen kaydınız gösteriliyor; bağlantı gelince gönderilecek.</Serit>);
   else if (sorunluIs) seritler.push(<Serit key="kuyruk" tur="hata" ikon="circle-alert">{v.no}: cihazda bekleyen iş gönderilemedi{sorunluIs.ileti ? ` — ${sorunluIs.ileti}` : ""}. Üst çubuktaki bekleyen işlemlerden seçin.</Serit>);
+  if (taslaktan && kirli) seritler.push(<Serit key="taslak" tur="bilgi" ikon="rotate-ccw" eylem={<Tus tur="ikincil" onClick={() => void taslagiBirak()}>Geri yüklemeyi bırak</Tus>}>Kaydedilmemiş değişiklikleriniz geri yüklendi.</Serit>);
   if (duzenle && v.kunyeFark.length) {
     seritler.push(
       <Serit key="kunye" tur="bilgi" ikon="refresh-cw" eylem={<Tus tur="ikincil" ikon="refresh-cw" disabled={mesgul} onClick={kunyeGuncelle}>Güncelle</Tus>}>

@@ -1,6 +1,7 @@
 /* UYGULAMA DÜZENİ — oturum ister (09-E2/E4). Oturum yoksa girişe; menü yalnız kişinin görebildiği modüller (canDo, sunucuda). Kişinin rolleri
    veritabanından okunur; tarayıcıya yalnız ad, rol ADI ve çevrimdışı kuyruğun yazan etiketi gider (kimlik, e-posta, rol kodu gönderilmez). S.A.Y (380) ve S.A.Y Chat (2026-11-07, kişisel sohbet) her firma sayfasında tek
    bileşen: firmada açık mı kendisi sorar (sayfa değişince düşmez, geçmiş kişinin hesabında). */
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Kabuk } from "../../components/kabuk/Kabuk";
 import { menuTakipEylemi } from "../../modules/anasayfa/ui/eylemler";
@@ -21,6 +22,14 @@ const SAHA_ROLLERI: readonly Rol[] = ["denetci", "mekanik_yonetici", "elektrik_y
    ⛔ 60 DEĞİL: Vercel aynı ayarlı işlevleri tek pakette toplar — PDF basan uçlar 60 (Chromium yalnız onlarda, tests/pdf-paket.test.ts); sayfalar
    60 olursa Chromium bütün sayfalara paketlenebilirdi. Kendi süresini veren sayfa (60) onu kullanır. */
 export const maxDuration = 55;
+
+/* 2026-11-12 KURULABİLİR UYGULAMA (reisim: "ne gerekiyorsa yap uygulama dahil"): firma uygulaması telefona / bilgisayara kurulur — kurulu
+   uygulamanın cihazdaki verisini (bağlantısız yazılan işler) tarayıcı kolay silmez. Bildirim dosyası public/manifest.webmanifest. */
+export const metadata: Metadata = {
+  manifest: "/manifest.webmanifest",
+  appleWebApp: { capable: true, title: "probata", statusBarStyle: "default" },
+  icons: { apple: "/ikon/apple-touch-icon.png" },
+};
 
 export default async function UygulamaDuzeni({ children }: { children: ReactNode }) {
   const o = await oturumGerekli();
