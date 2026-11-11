@@ -19,12 +19,20 @@ export const alanSadelestir = (s: string) => s.trim().toLowerCase().replace(/^ht
 export const alanAdi = (e: string | null | undefined) => { const m = /@([^@\s]+)$/.exec((e ?? "").trim().toLowerCase()); return m ? m[1] : ""; };
 
 /** firmanın gönderimi: alan adı ve genel adres (firma_gonderim — Yönetim kurar), doğrulandı mı, görünen ad, gizli kopya, Rapor e-postası (otomatik cevap) */
-export interface FirmaGonderimi { alan: string; genel: string; dogrulandi: boolean; firmaAd: string; kopya: boolean; rapor: string | null }
+export interface FirmaGonderimi { alan: string; genel: string; dogrulandi: boolean; firmaAd: string; kopya: boolean; rapor: string | null;
+  /** 2026-11-11 (göç 0126): alan adı probata'nın ORTAK alan adı (birden çok firma kullanır) — kişi kendi adresinden gönderemez: aynı alan adındaki
+      başka firmanın adresi taklit edilemesin; her e-posta firmanın genel adresinden, kişinin adıyla gider, cevap kişiye */
+  ortak?: boolean }
+/** probata'nın ortak gönderen alan adı: ana alan adı gerçek bir alan adıysa o (yerelde "localhost" — yok) */
+export const ortakGonderimAlani = (anaAlan: string | undefined | null): string | null => {
+  const a = (anaAlan ?? "").trim().toLowerCase();
+  return ALAN_BICIMI.test(a) ? a : null;
+};
 export interface Gonderen { ad: string; eposta: string }
 /** kişinin e-postası nereden gider: kendi adresinden · firmanın genel adresinden (kişinin adıyla) · adresi yok (yine genel adresten) */
 export type GonderenYolu = "kendi" | "genel" | "yok";
-export const gonderenYolu = (eposta: string | null | undefined, alan: string): GonderenYolu =>
-  !eposta ? "yok" : alan && alanAdi(eposta) === alan ? "kendi" : "genel";
+export const gonderenYolu = (eposta: string | null | undefined, alan: string, ortak = false): GonderenYolu =>
+  !eposta ? "yok" : !ortak && alan && alanAdi(eposta) === alan ? "kendi" : "genel";
 
 export const ALAN_DOGRULANMADI = "Firmanın gönderen alan adı henüz doğrulanmadı (probata yönetimi kurar); e-posta bekliyor.";
 const gorunenAd = (s: string) => s.replace(/["\\<>\r\n\t]/g, " ").replace(/\s+/g, " ").trim().slice(0, 80) || "probata";
@@ -34,7 +42,7 @@ export function kimdenKur(f: FirmaGonderimi, g: Gonderen | null): Kimden {
   const genel = f.genel.trim().toLowerCase();
   if (!f.dogrulandi || !f.alan || !ALAN_BICIMI.test(f.alan) || alanAdi(genel) !== f.alan) return { tamam: false, neden: ALAN_DOGRULANMADI };
   const gizli = f.kopya && g ? g.eposta.toLowerCase() : null;
-  if (g && gonderenYolu(g.eposta, f.alan) === "kendi") return { tamam: true, kimden: `"${gorunenAd(g.ad)}" <${g.eposta.toLowerCase()}>`, cevap: null, gizli };
+  if (g && gonderenYolu(g.eposta, f.alan, f.ortak === true) === "kendi") return { tamam: true, kimden: `"${gorunenAd(g.ad)}" <${g.eposta.toLowerCase()}>`, cevap: null, gizli };
   const rapor = f.rapor?.trim().toLowerCase() || null;
   const cevap = g ? g.eposta.toLowerCase() : rapor && rapor !== genel ? rapor : null;
   return { tamam: true, kimden: `"${gorunenAd(g ? `${g.ad} · ${f.firmaAd}` : f.firmaAd)}" <${genel}>`, cevap, gizli };

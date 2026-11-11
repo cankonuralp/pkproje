@@ -10,6 +10,7 @@ import { yedekYonetimGorunumu } from "../../../../../../modules/yonetim/server/y
 import { signBaglantisiOku } from "../../../../../../modules/yonetim/server/sign";
 import { firma } from "../../../../../../modules/yonetim/server/yonetim";
 import { FirmaSayfasi } from "../../../../../../modules/yonetim/ui/FirmaSayfasi";
+import { ortakGonderimAlani } from "../../../../../../server/eposta/kimden";
 import { anaAlan } from "../../../../../../server/kiraci/istek";
 import { yonetimIslemi, yonetimOturumGerekli } from "../../../../../../server/yonetim/istek";
 
@@ -23,16 +24,18 @@ export default async function YonetimFirmaSayfasi({ params }: { params: Promise<
   const f = await yonetimIslemi(o, (db) => firma(db, id));
   /* FV9: özet (kullanıcı, yönetici, yapay zekâ anahtarı + bu ay) — kendi projeli firmada firmanın veritabanından; ulaşılamazsa null */
   const c = yonetimCalistirici(o);
+  /* 2026-11-11 (göç 0126): probata'nın ortak gönderen alan adı (yerelde yok) */
+  const ortakAlan = ortakGonderimAlani(anaAlan());
   /* FV10: kurulum sürüyorsa kurulumun görünümü (özet yok — firmanın veritabanı henüz hazır değil) */
   const kurulum = f?.durum === "kurulum" ? await kurulumGorunumu(c, f.id) : null;
   const ozet = f && f.durum !== "kurulum" ? await firmaOzetiYonet(c, f.id) : null;
   /* FV11: e-posta gönderimi (merkezdeki kayıt) */
-  const gonderim = f && f.durum !== "kurulum" ? await gonderimGorunumu(c, f.id) : null;
+  const gonderim = f && f.durum !== "kurulum" ? await gonderimGorunumu(c, f.id, ortakAlan) : null;
   /* 2026-10-31 (L8): S.A.Y işlerinin ölçümü ve Ar-Ge kayıtları */
   const olcum = f && f.durum !== "kurulum" ? await sayOlcumuYonet(c, f.id) : null;
   /* 2026-11-04: firmanın yedeği (firmanın kendi işleminde) */
   const yedek = f && f.durum !== "kurulum" ? await yedekYonetimGorunumu(f.id).catch(() => null) : null;
   /* 2026-11-05 (göç 0122): probata sign bağlantısı */
   const sign = f && f.durum !== "kurulum" ? await signBaglantisiOku(c, f.id).catch(() => null) : null;
-  return <FirmaSayfasi firma={f} ozet={ozet} kurulum={kurulum} gonderim={gonderim} epostaAcik={epostaAcik()} anaAlan={anaAlan()} depo={depoTuru(process.env.PROBATA_DEPO)} olcum={olcum} yedek={yedek} sign={sign} />;
+  return <FirmaSayfasi firma={f} ozet={ozet} kurulum={kurulum} gonderim={gonderim} epostaAcik={epostaAcik()} ortakAlan={ortakAlan} anaAlan={anaAlan()} depo={depoTuru(process.env.PROBATA_DEPO)} olcum={olcum} yedek={yedek} sign={sign} />;
 }

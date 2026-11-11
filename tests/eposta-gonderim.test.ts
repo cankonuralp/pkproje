@@ -13,7 +13,7 @@
    Olumsuz kanıt: tests/bozan/eposta-gonderim.bozan.ts. */
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
-import { gonderimAlaniEkle, gonderimDogrula, gonderimGorunumu, type EpostaOrtami } from "../src/modules/yonetim/server/eposta.ts";
+import { gonderimAlaniEkle, gonderimDogrula, gonderimGorunumu, gonderimOrtakAc, type EpostaOrtami } from "../src/modules/yonetim/server/eposta.ts";
 import type { YonetimCalistirici } from "../src/modules/yonetim/server/firma-tarafi.ts";
 import { coz, sirYaz } from "../src/server/ayar/sir.ts";
 import { havuzKur, kiraciIcinde, yonetimFirmadaIcinde, yonetimIcinde, type Havuz } from "../src/server/db/kiraci.ts";
@@ -144,6 +144,53 @@ test("kendi projeli firma: firma tarafı FİRMANIN veritabanında; firma tarafı
   assert.deepEqual([g.firma.alan, g.firma.dogrulandi], ["kendi-a.example", true]);
 });
 
+/* NEREDEN GELDİ: 2026-11-11 (göç 0126; reisim maketi onayladı: "Onaylıyorum, yaz" — "probata.com.tr üzerinden" yolu). 0099'da bir alan adı tek firmanındı:
+   ikinci firma kendi alan adına DNS girmeden gönderemiyordu. Ortak alan adını (probata'nın kendi alan adı) birden çok firma kullanır — her biri KENDİ
+   adresi ve KENDİ gönderme anahtarıyla; adres iki firmada olamaz; ortak olmayan alan adı yine tek firmanın; işlev de aynı kuralı korur. */
+test("ortak alan adı: iki firma aynı alan adından ayrı adresle, ayrı anahtarla; aynı adres ikinci firmaya verilmez; ortak olmayan alan adı tek firmanın (0126)", async () => {
+  const oo: EpostaOrtami = { ...o, ortakAlan: "ortak-alan.example" };
+  r.dogrulaSonucu = "verified";
+  const once = anahtarAcmalari();
+  /* O: tek adımda açılır (ekle + doğrula), adres kısa addan */
+  const a = tamam(await gonderimOrtakAc(oo, v.O.id, "", "firma-o"));
+  assert.deepEqual([a.gorunum.alan, a.gorunum.genel, a.gorunum.durum, a.gorunum.ortak], ["ortak-alan.example", "firma-o@ortak-alan.example", "dogrulandi", true]);
+  /* A (kendi projeli): aynı alan adı, başka adres */
+  const b = tamam(await gonderimOrtakAc(oo, v.A.id, "firma-a", "kullanilmaz"));
+  assert.deepEqual([b.gorunum.genel, b.gorunum.durum, b.gorunum.ortak], ["firma-a@ortak-alan.example", "dogrulandi", true]);
+  assert.equal(eklemeler("ortak-alan.example"), 1, "alan adı Resend'e BİR kez eklendi");
+  assert.equal(anahtarAcmalari(), once + 2, "her firmaya kendi gönderme anahtarı");
+  assert.deepEqual((await firmaTarafi(v.merkez, v.O.id)).kayit, { alan: "ortak-alan.example", genel: "firma-o@ortak-alan.example", dogrulandi: true });
+  assert.deepEqual((await firmaTarafi(hA, v.A.id)).kayit, { alan: "ortak-alan.example", genel: "firma-a@ortak-alan.example", dogrulandi: true });
+  const sO = (await firmaTarafi(v.merkez, v.O.id)).sir, sA = (await firmaTarafi(hA, v.A.id)).sir;
+  assert.ok(sO?.sifreli && sA?.sifreli && sO.sifreli !== sA.sifreli, "anahtarlar ayrı");
+  /* aynı adres ikinci firmaya verilmez — sunucuda ve işlevde */
+  assert.deepEqual(await gonderimAlaniEkle(oo, v.A.id, { alan: "ortak-alan.example", yerel: "firma-o" }), { durum: "gecersiz", hatalar: { yerel: "Bu adres başka bir firmada kullanılıyor." } });
+  const islev = (ortak: boolean | null, alan: string, yerel: string) => c.merkez(async (db) => (await db.sorgu<{ s: { hata?: string; durum?: string } }>(
+    "SELECT yonetim_eposta_alan_yaz($1, $2, $3, 'abcdefgh12', 'bekliyor', '[]'::jsonb, NULL, $4) AS s", [v.A.id, alan, yerel, ortak])).rows[0]!.s);
+  assert.deepEqual(await islev(true, "ortak-alan.example", "firma-o"), { hata: "adres_baska" });
+  assert.deepEqual(await islev(false, "ortak-alan.example", "baska"), { hata: "alan_baska" }, "ortak denmeden alan adı tek firmanın");
+  assert.deepEqual(await islev(null, "ortak-alan.example", "baska"), { hata: "alan_baska" });
+  /* eski 7 değişkenli işlev aynı kuralı korur */
+  assert.deepEqual((await c.merkez((db) => db.sorgu<{ s: { hata?: string } }>(
+    "SELECT yonetim_eposta_alan_yaz($1, 'ortak-alan.example', 'baska', 'abcdefgh12', 'bekliyor', '[]'::jsonb, NULL) AS s", [v.A.id]))).rows[0]!.s, { hata: "alan_baska" });
+  /* ortak alan adı tanımlı değilken (o.ortakAlan yok) aynı alan adı ikinci firmaya verilmez; ortak yol kapalı */
+  assert.deepEqual(await gonderimAlaniEkle(o, v.A.id, { alan: "ortak-alan.example", yerel: "baska" }), { durum: "gecersiz", hatalar: { alan: "Bu alan adı başka bir firmada kayıtlı." } });
+  assert.deepEqual(await gonderimOrtakAc(o, v.A.id, "x", "y"), { durum: "red", neden: "Ortak gönderen alan adı tanımlı değil." });
+  /* gönderen: ortak alan adındaki kişi kendi adresinden gönderemez (başka firmanın adresi olabilir) */
+  const eskiAna = process.env.PROBATA_ANA_ALAN;
+  process.env.PROBATA_ANA_ALAN = "ortak-alan.example";
+  try {
+    const g = (await kiraciIcinde(v.merkez, v.O.id, (db) => firmaGonderimi(db)))!;
+    assert.equal(g.firma.ortak, true);
+    const k = kimdenKur(g.firma, { ad: "Deneme Kişi", eposta: "firma-a@ortak-alan.example" });
+    assert.ok(k.tamam && k.kimden.endsWith("<firma-o@ortak-alan.example>") && k.cevap === "firma-a@ortak-alan.example", JSON.stringify(k));
+  } finally {
+    if (eskiAna === undefined) delete process.env.PROBATA_ANA_ALAN; else process.env.PROBATA_ANA_ALAN = eskiAna;
+  }
+  assert.equal((await gonderimGorunumu(c, v.O.id, "ortak-alan.example"))!.ortak, true);
+  assert.equal((await gonderimGorunumu(c, v.O.id))!.ortak, false, "ortak alan adı verilmezse görünüm ortak demez");
+});
+
 test("K3 veritabanında: uygulama rolü e-posta anahtarını yazamaz, gönderim kaydına ve yönetim işlevlerine dokunamaz, merkez kaydını okuyamaz (2026-10-25: yapay zekâ anahtarını da — 0106)", async () => {
   for (const [h, id] of [[v.merkez, v.O.id], [hA, v.A.id]] as const) {
     await assert.rejects(kiraciIcinde(h, id, (db) => sirYaz(db, "eposta_anahtari", "re_uydurmaAnahtarDegil0123456789", { kim: "Deneme" })), /yönetiminden kurulur/);
@@ -155,6 +202,9 @@ test("K3 veritabanında: uygulama rolü e-posta anahtarını yazamaz, gönderim 
   }
   await assert.rejects(kiraciIcinde(v.merkez, v.O.id, (db) => db.sorgu("SELECT * FROM eposta_alan")), /permission denied/);
   await assert.rejects(kiraciIcinde(v.merkez, v.O.id, (db) => db.sorgu("SELECT yonetim_eposta_alan_yaz($1, 'x.example', 'bilgi', 'abcdefgh12', 'bekliyor', '[]', NULL)", [v.O.id])),
+    /permission denied/);
+  /* 2026-11-11 (göç 0126): 8 değişkenli yeni işlev de yalnız yönetimin */
+  await assert.rejects(kiraciIcinde(v.merkez, v.O.id, (db) => db.sorgu("SELECT yonetim_eposta_alan_yaz($1, 'x.example', 'bilgi', 'abcdefgh12', 'bekliyor', '[]', NULL, true)", [v.O.id])),
     /permission denied/);
   /* yönetimin işlevi bile kendi projeli firmanın kaydını merkezde gönderim kopyası olarak yazamaz (firma bu veritabanında değil) */
   await assert.rejects(c.merkez((db) => db.sorgu("SELECT firma_yonetim_gonderim($1, 'kendi-a.example', 'bilgi@kendi-a.example', true)", [v.A.id])), /bu veritabanında değil/);

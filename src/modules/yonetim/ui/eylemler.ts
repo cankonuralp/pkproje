@@ -10,7 +10,7 @@ import { yonetimAlani } from "../../../server/yonetim/adres";
 import { yonetimAdresinde, yonetimIslemi, yonetimIstekOturumu } from "../../../server/yonetim/istek";
 import { yonetimEtiketi } from "../sema";
 import { epostaOrtami, kurulumOrtami, yonetimCalistirici } from "../server/calistirici";
-import { gonderimAlaniEkle, gonderimDogrula, type EpostaOrtami, type GonderimGorunumu } from "../server/eposta";
+import { gonderimAlaniEkle, gonderimDogrula, gonderimOrtakAc, type EpostaOrtami, type GonderimGorunumu } from "../server/eposta";
 import { argeKaydiYonet, firmaDurumuYonet, geciciParolaYonet, yzAnahtariYonet, yzAyarYonet } from "../server/firma-tarafi";
 import { kurulumBaslat, kurulumBastan, kurulumGorunumu, kurulumIlerlet, kurulumSurdur, type KurulumGorunumu } from "../server/kurulum";
 import { firma, firmaAc, type YonetimSonucu } from "../server/yonetim";
@@ -123,6 +123,13 @@ export async function gonderimAlaniEkleEylemi(id: string, form: FormData): Promi
 }
 export async function gonderimDogrulaEylemi(id: string): Promise<YonetimYaniti> {
   return gonderimIslemi((k) => gonderimDogrula(k, yazi(id)));
+}
+/** 2026-11-11 (göç 0126): gönderimi probata'nın ortak alan adından aç — form: yerel (boşsa firmanın kısa adı); firmanın DNS'i gerekmez */
+export async function gonderimOrtakAcEylemi(id: string, form: FormData): Promise<YonetimYaniti> {
+  return gonderimIslemi(async (k) => {
+    const f = await k.merkez((db) => firma(db, yazi(id)));
+    return f ? gonderimOrtakAc(k, f.id, yazi(form.get("yerel")), f.kisaAd) : ({ durum: "yok" } as const);
+  });
 }
 
 /** 2026-10-31 (L8): S.A.Y Ar-Ge kaydının metni (JSON) — yalnız yönetim; tarayıcı dosya olarak indirir */

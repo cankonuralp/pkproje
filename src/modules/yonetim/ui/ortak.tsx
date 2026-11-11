@@ -1,5 +1,7 @@
 /* YÖNETİM ortak parçaları (348): durum rozeti, firma adresi, depo durumu — liste, firma sayfası ve firma aç aynı metni gösterir. */
-import { Rozet } from "../../../components/sayfa/Sayfa";
+import type { ReactNode } from "react";
+import { Bolum, Rozet } from "../../../components/sayfa/Sayfa";
+import stil from "./yonetim.module.css";
 import type { FirmaDurumu } from "../server/yonetim";
 
 export const DURUM: Record<FirmaDurumu, { ad: string; tur: "tamam" | "red" | "bekliyor" }> = {
@@ -23,3 +25,9 @@ export const DEPO_NOT = "Kendi projeli firmanın veritabanı ve dosyaları kendi
 
 /** tarih: GG.AA.YYYY */
 export const tarihYaz = (iso: string) => `${iso.slice(8, 10)}.${iso.slice(5, 7)}.${iso.slice(0, 4)}`;
+
+/** 2026-11-11 (firma kurulum ekranı): bölüm bileşeni tek başına (Bolum — başlıklı) ya da bir kurulum adımının içinde (çıplak: başlık adımın kendisi) */
+export function Cerceve({ ciplak = false, id, baslik, tuslar, children }: { ciplak?: boolean; id: string; baslik: string; tuslar?: ReactNode; children: ReactNode }) {
+  if (!ciplak) return <Bolum id={id} baslik={baslik} tuslar={tuslar}>{children}</Bolum>;
+  return <>{tuslar && <div className={stil.eylemSol}>{tuslar}</div>}{children}</>;
+}

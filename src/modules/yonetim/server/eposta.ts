@@ -16,9 +16,12 @@ import { firmada, yer, type YonetimCalistirici } from "./firma-tarafi.ts";
 import type { YonetimSonucu } from "./yonetim.ts";
 
 export type { DnsKaydi };
-export interface EpostaOrtami extends YonetimCalistirici { resend: ResendYonetimi; anaAnahtar: Buffer }
+/** ortakAlan (2026-11-11, göç 0126): probata'nın kendi alan adı — birden çok firma buradan gönderebilir (her biri kendi adresiyle); yoksa null */
+export interface EpostaOrtami extends YonetimCalistirici { resend: ResendYonetimi; anaAnahtar: Buffer; ortakAlan?: string | null }
 export type GonderimDurumu = "bekliyor" | "dogrulandi" | "hata";
-export interface GonderimGorunumu { alan: string; genel: string; durum: GonderimDurumu; kayitlar: DnsKaydi[]; degisti: string }
+export interface GonderimGorunumu { alan: string; genel: string; durum: GonderimDurumu; kayitlar: DnsKaydi[]; degisti: string;
+  /** probata'nın ortak alan adından gönderiyor (firmanın DNS'i yok) */
+  ortak: boolean }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const ULASILAMADI = "Firmanın veritabanına ulaşılamadı; yeniden deneyin.";
@@ -28,13 +31,14 @@ async function satirOku(c: YonetimCalistirici, id: string): Promise<Satir | null
   return (await c.merkez((db) => db.sorgu<Satir>(
     "SELECT alan, genel_yerel, resend_id, durum, kayitlar, anahtar_id, degisti FROM eposta_alan WHERE firma_id = $1", [id]))).rows[0] ?? null;
 }
-const gorunum = (s: Satir): GonderimGorunumu => ({ alan: s.alan, genel: `${s.genel_yerel}@${s.alan}`, durum: s.durum, kayitlar: s.kayitlar, degisti: s.degisti.toISOString() });
+const gorunum = (s: Satir, ortakAlan: string | null | undefined): GonderimGorunumu => ({ alan: s.alan, genel: `${s.genel_yerel}@${s.alan}`, durum: s.durum, kayitlar: s.kayitlar,
+  degisti: s.degisti.toISOString(), ortak: !!ortakAlan && s.alan === ortakAlan });
 
 /** firma sayfasında gösterilen gönderim kaydı (merkezden; yoksa null) */
-export async function gonderimGorunumu(c: YonetimCalistirici, id: string): Promise<GonderimGorunumu | null> {
+export async function gonderimGorunumu(c: YonetimCalistirici, id: string, ortakAlan: string | null = null): Promise<GonderimGorunumu | null> {
   if (!UUID.test(id)) return null;
   const s = await satirOku(c, id);
-  return s ? gorunum(s) : null;
+  return s ? gorunum(s, ortakAlan) : null;
 }
 
 /** Resend hatasının sırsız açıklaması */
@@ -77,10 +81,12 @@ async function firmaTarafi(c: YonetimCalistirici, id: string, y: Exclude<Awaited
   if (r) await c.merkez((db) => db.sorgu("SELECT yonetim_firmada_iz($1, 'ayar.eposta_gonderim', $2::jsonb)", [id, JSON.stringify({ alan: g.alan, dogrulandi: g.dogrulandi, anahtar: !!sir })]));
   return r === true;
 }
-async function merkezYaz(c: YonetimCalistirici, id: string, s: Omit<Satir, "degisti">): Promise<string | null> {
-  const r = (await c.merkez((db) => db.sorgu<{ s: { durum?: string; hata?: string } }>("SELECT yonetim_eposta_alan_yaz($1, $2, $3, $4, $5, $6::jsonb, $7) AS s",
-    [id, s.alan, s.genel_yerel, s.resend_id, s.durum, JSON.stringify(s.kayitlar), s.anahtar_id]))).rows[0]!.s;
+const ADRES_BASKA = "Bu adres başka bir firmada kullanılıyor.";
+async function merkezYaz(c: YonetimCalistirici, id: string, s: Omit<Satir, "degisti">, ortak: boolean): Promise<string | null> {
+  const r = (await c.merkez((db) => db.sorgu<{ s: { durum?: string; hata?: string } }>("SELECT yonetim_eposta_alan_yaz($1, $2, $3, $4, $5, $6::jsonb, $7, $8) AS s",
+    [id, s.alan, s.genel_yerel, s.resend_id, s.durum, JSON.stringify(s.kayitlar), s.anahtar_id, ortak]))).rows[0]!.s;
   if (r.hata === "alan_baska") return "Bu alan adı başka bir firmada kayıtlı.";
+  if (r.hata === "adres_baska") return ADRES_BASKA;
   if (r.hata === "yok") return "Firma bulunamadı.";
   return r.durum === "tamam" ? null : "Kayıt yazılamadı.";
 }
@@ -98,8 +104,13 @@ export async function gonderimAlaniEkle(o: EpostaOrtami, id: string, girdi: unkn
   if (!y) return { durum: "yok" };
   if (y.vt === "kurulum") return { durum: "red", neden: "Firmanın kurulumu bitmedi." };
   const { alan, yerel } = g.data;
-  const baska = (await o.merkez((db) => db.sorgu("SELECT 1 FROM eposta_alan WHERE alan = $1 AND firma_id <> $2", [alan, id]))).rowCount;
+  /* ortak alan adı (probata'nın kendi alan adı) birden çok firmanın; öteki alan adları tek firmanın. Adres her durumda tek firmanın. */
+  const ortak = !!o.ortakAlan && alan === o.ortakAlan;
+  const baska = ortak ? 0 : (await o.merkez((db) => db.sorgu("SELECT 1 FROM eposta_alan WHERE alan = $1 AND firma_id <> $2", [alan, id]))).rowCount;
   if (baska) return { durum: "gecersiz", hatalar: { alan: "Bu alan adı başka bir firmada kayıtlı." } };
+  if ((await o.merkez((db) => db.sorgu("SELECT 1 FROM eposta_alan WHERE alan = $1 AND genel_yerel = $2 AND firma_id <> $3", [alan, yerel, id]))).rowCount) {
+    return { durum: "gecersiz", hatalar: { yerel: ADRES_BASKA } };
+  }
   const eski = await satirOku(o, id);
   const r = await resendIle(async (): Promise<ResendAlani> => {
     if (eski && eski.alan === alan) return o.resend.alan(eski.resend_id);
@@ -114,11 +125,11 @@ export async function gonderimAlaniEkle(o: EpostaOrtami, id: string, girdi: unkn
   if (!ayni && eski) {
     if (!(await firmaTarafi(o, id, y, { alan, genel: `${yerel}@${alan}`, dogrulandi: false }))) return { durum: "red", neden: ULASILAMADI };
   }
-  const n = await merkezYaz(o, id, yeni);
+  const n = await merkezYaz(o, id, yeni, ortak);
   if (n) return { durum: "red", neden: n };
   if (!(await firmaTarafi(o, id, y, { alan, genel: `${yerel}@${alan}`, dogrulandi: yeni.durum === "dogrulandi" }))) return { durum: "red", neden: ULASILAMADI };
   const s = await satirOku(o, id);
-  return { durum: "tamam", gorunum: gorunum(s!) };
+  return { durum: "tamam", gorunum: gorunum(s!, o.ortakAlan) };
 }
 
 /** "Doğrula": Resend'e DNS kayıtlarını denetletir; doğrulandıysa gönderme anahtarını açar ve firma tarafına kilitli yazar */
@@ -131,15 +142,15 @@ export async function gonderimDogrula(o: EpostaOrtami, id: string): Promise<Yone
   if (y.vt === "kurulum") return { durum: "red", neden: "Firmanın kurulumu bitmedi." };
   const r = await resendIle(async () => { await o.resend.dogrula(s.resend_id); return o.resend.alan(s.resend_id); });
   if (!r.tamam) return { durum: "red", neden: r.neden };
-  const genel = `${s.genel_yerel}@${s.alan}`;
+  const genel = `${s.genel_yerel}@${s.alan}`, ortak = !!o.ortakAlan && s.alan === o.ortakAlan;
   let durum: GonderimDurumu = durumu(r.deger.durum), anahtarId = s.anahtar_id;
   if (r.deger.durum === "verified") {
     if (!anahtarId) {
-      const k = await resendIle(() => o.resend.gondermeAnahtari(`probata-${s.alan.replace(/[^a-z0-9-]/g, "-").slice(0, 40)}`, s.resend_id));
+      const k = await resendIle(() => o.resend.gondermeAnahtari(`probata-${(ortak ? `${s.genel_yerel}-${s.alan}` : s.alan).replace(/[^a-z0-9-]/g, "-").slice(0, 40)}`, s.resend_id));
       if (!k.tamam) return { durum: "red", neden: k.neden };
       const sir = { sifreli: sifrele(k.deger.anahtar, id, "eposta_anahtari", o.anaAnahtar), son4: k.deger.anahtar.slice(-4) };
       if (!(await firmaTarafi(o, id, y, { alan: s.alan, genel, dogrulandi: true }, sir))) {
-        await merkezYaz(o, id, { ...s, kayitlar: r.deger.kayitlar, durum: "bekliyor" });
+        await merkezYaz(o, id, { ...s, kayitlar: r.deger.kayitlar, durum: "bekliyor" }, ortak);
         return { durum: "red", neden: `${ULASILAMADI} Alan adı doğrulandı; gönderim henüz açılmadı.` };
       }
       anahtarId = k.deger.id;
@@ -151,7 +162,18 @@ export async function gonderimDogrula(o: EpostaOrtami, id: string): Promise<Yone
     /* Resend artık doğrulamıyor (DNS kaydı silinmiş olabilir): gönderim kapanır */
     if (!(await firmaTarafi(o, id, y, { alan: s.alan, genel, dogrulandi: false }))) return { durum: "red", neden: ULASILAMADI };
   }
-  const n = await merkezYaz(o, id, { ...s, kayitlar: r.deger.kayitlar, durum, anahtar_id: anahtarId });
+  const n = await merkezYaz(o, id, { ...s, kayitlar: r.deger.kayitlar, durum, anahtar_id: anahtarId }, ortak);
   if (n) return { durum: "red", neden: n };
-  return { durum: "tamam", gorunum: gorunum((await satirOku(o, id))!) };
+  return { durum: "tamam", gorunum: gorunum((await satirOku(o, id))!, o.ortakAlan) };
+}
+
+/** 2026-11-11 (göç 0126; maket "probata.com.tr üzerinden"): firmanın gönderimini probata'nın ORTAK alan adından açar — tek adım: adres
+    <yerel>@<ortak alan> (yerel verilmezse firmanın kısa adı), sonra doğrula (ortak alan adı Resend'de zaten doğrulanmışsa gönderme anahtarı hemen
+    açılır). Firmanın DNS'ine dokunulmaz. Ortak alan adı tanımlı değilse (yerel geliştirme) red. */
+export async function gonderimOrtakAc(o: EpostaOrtami, id: string, yerel: string, kisaAd: string): Promise<YonetimSonucu<{ gorunum: GonderimGorunumu }>> {
+  if (!UUID.test(id)) return { durum: "yok" };
+  if (!o.ortakAlan) return { durum: "red", neden: "Ortak gönderen alan adı tanımlı değil." };
+  const e = await gonderimAlaniEkle(o, id, { alan: o.ortakAlan, yerel: yerel.trim() || kisaAd });
+  if (e.durum !== "tamam") return e;
+  return gonderimDogrula(o, id);
 }

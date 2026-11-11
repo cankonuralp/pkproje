@@ -8,7 +8,7 @@ import { after, before, test } from "node:test";
 import { onBilgiDosyaAdi, onBilgiEpostasi, planEpostasi } from "../src/modules/planlar/sema.ts";
 import { adresler, ekAdi } from "../src/server/eposta/eposta.ts";
 import { bekleyenleriGonder, EK_BOZUK, EK_OKUNAMADI, EK_YOK } from "../src/server/eposta/gonder.ts";
-import { ALAN_BICIMI, ALAN_DOGRULANMADI, alanAdi, alanSadelestir, gonderenYolu, kimdenKur } from "../src/server/eposta/kimden.ts";
+import { ALAN_BICIMI, ALAN_DOGRULANMADI, alanAdi, alanSadelestir, gonderenYolu, kimdenKur, ortakGonderimAlani } from "../src/server/eposta/kimden.ts";
 import { epostaSaglayicisi, istekGovdesi } from "../src/server/eposta/saglayici.ts";
 import { oku } from "./yardimci/denetimler.ts";
 import { ozet, sahteDepo, sahteGonderim, sahteKuyruk, satir } from "./yardimci/sahte-eposta-vt.ts";
@@ -111,6 +111,21 @@ test("Kimden: doğrulanmamış alan adı bekler; alan adındaki kişi kendi adre
   /* görünen ad başlığı bozamaz: tırnak, açılı ayraç, satır sonu atılır */
   const k = kimdenKur(f, { ad: "Kötü\"\r\nBcc: x@y.example <z>", eposta: "bir@deneme.example" });
   assert.ok(k.tamam && !/["<>\r\n]/.test(k.kimden.replace(/^"|" <[^>]+>$/g, "")) && k.kimden.endsWith("<bir@deneme.example>"), JSON.stringify(k));
+});
+
+/* NEREDEN GELDİ: 2026-11-11 (göç 0126; reisim maketi onayladı: "Onaylıyorum, yaz" — e-postada "probata.com.tr üzerinden" yolu). Ortak alan adını
+   birden çok firma kullanır: o alan adındaki bir adres BAŞKA firmanın olabilir → kişi "kendi adresinden" gönderemez; her e-posta firmanın genel
+   adresinden, kişinin adıyla gider, cevap kişiye. */
+test("ortak alan adı: kişi kendi adresinden gönderemez (genel adres, kişinin adı, cevap kişiye); ortak alan adı yalnız gerçek alan adı", () => {
+  const f = { alan: "ortak.example", genel: "firma-bir@ortak.example", dogrulandi: true, firmaAd: "Deneme Bir Muayene", kopya: false, rapor: null, ortak: true };
+  assert.deepEqual(kimdenKur(f, { ad: "Deneme Kişi", eposta: "firma-iki@ortak.example" }),
+    { tamam: true, kimden: "\"Deneme Kişi · Deneme Bir Muayene\" <firma-bir@ortak.example>", cevap: "firma-iki@ortak.example", gizli: null },
+    "ortak alan adındaki başka adres Kimden'e girmez");
+  assert.equal(gonderenYolu("kisi@ortak.example", "ortak.example", true), "genel");
+  assert.equal(gonderenYolu("kisi@ortak.example", "ortak.example"), "kendi", "ortak olmayan alan adında kural aynı");
+  assert.equal((kimdenKur({ ...f, ortak: false }, { ad: "Deneme Kişi", eposta: "kisi@ortak.example" }) as { kimden: string }).kimden, "\"Deneme Kişi\" <kisi@ortak.example>");
+  assert.equal(ortakGonderimAlani("Ortak.Example"), "ortak.example");
+  for (const yok of ["localhost", "", undefined, null, "tek"]) assert.equal(ortakGonderimAlani(yok), null, String(yok));
 });
 
 test("alan adı: sadeleştirme (http, www, yol, büyük harf) ve biçim", () => {

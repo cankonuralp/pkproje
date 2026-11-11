@@ -6,7 +6,7 @@
 import { ayarOku, firmaBelgeKunyesi } from "../ayar/ayar.ts";
 import { sirKullan } from "../ayar/sir.ts";
 import type { Sorgulayici } from "../db/kiraci.ts";
-import type { FirmaGonderimi } from "./kimden.ts";
+import { ortakGonderimAlani, type FirmaGonderimi } from "./kimden.ts";
 import { epostaSaglayicisi, type EpostaSaglayici } from "./saglayici.ts";
 
 export interface FirmaGonderimAyari { saglayici: EpostaSaglayici; firma: FirmaGonderimi }
@@ -26,5 +26,6 @@ export async function firmaGonderimi(db: Sorgulayici): Promise<FirmaGonderimAyar
   if (!saglayici) return null;
   const a = (await ayarOku(db, "eposta")).deger;
   const k = await firmaBelgeKunyesi(db, null);
-  return { saglayici, firma: { alan: g.alan, genel: g.genel, dogrulandi: g.dogrulandi, firmaAd: k.ad, kopya: a.kopya, rapor: k.eposta } };
+  return { saglayici, firma: { alan: g.alan, genel: g.genel, dogrulandi: g.dogrulandi, firmaAd: k.ad, kopya: a.kopya, rapor: k.eposta,
+    ortak: g.alan === ortakGonderimAlani(process.env.PROBATA_ANA_ALAN) } };
 }

@@ -7,7 +7,8 @@
       e-posta beklemek yerine kalıcı hataya düşer.
    6. (FV11) Idempotency-Key kalkınca yanıtı kaybolan istek yeniden denenince e-posta iki kez gider.
    7. (2026-10-25, belge doldurma) Sağlayıcının gövdesinden ek düşünce e-posta "gönderildi" olur ama müşteriye PDF'siz gider.
-   8. (2026-10-25) Ek okunamadığında durma kalkınca e-posta sağlayıcıya EKSİZ gider (sessiz eksik ek). */
+   8. (2026-10-25) Ek okunamadığında durma kalkınca e-posta sağlayıcıya EKSİZ gider (sessiz eksik ek).
+   9. (2026-11-11, göç 0126) Ortak alan adı denetimi kalkınca ortak alan adındaki BAŞKA firmanın adresi Kimden'e girer (taklit). */
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
@@ -58,9 +59,16 @@ const FIRMA = { alan: "deneme.example", genel: "bilgi@deneme.example", dogruland
 
 test("Kimden'de alan adı denetimi kalkınca kişisel adres kendi adresinden gönderilir", async () => {
   const m = await bozuk<typeof import("../../src/server/eposta/kimden.ts")>("src/server/eposta/kimden.ts",
-    '!eposta ? "yok" : alan && alanAdi(eposta) === alan ? "kendi" : "genel"', '!eposta ? "yok" : "kendi"');
+    '!eposta ? "yok" : !ortak && alan && alanAdi(eposta) === alan ? "kendi" : "genel"', '!eposta ? "yok" : "kendi"');
   const k = m.kimdenKur(FIRMA, { ad: "Deneme İki", eposta: "iki@kisisel.example" });
   assert.ok(k.tamam && k.kimden.endsWith("<iki@kisisel.example>"), "bozuk: alan dışı adres Kimden'de");
+});
+
+test("ortak alan adı denetimi kalkınca başka firmanın adresi Kimden'e girer", async () => {
+  const m = await bozuk<typeof import("../../src/server/eposta/kimden.ts")>("src/server/eposta/kimden.ts",
+    '!ortak && alan && alanAdi(eposta) === alan ? "kendi"', 'alan && alanAdi(eposta) === alan ? "kendi"');
+  const k = m.kimdenKur({ ...FIRMA, alan: "ortak.example", genel: "firma-bir@ortak.example", ortak: true }, { ad: "Deneme Kişi", eposta: "firma-iki@ortak.example" });
+  assert.ok(k.tamam && k.kimden.endsWith("<firma-iki@ortak.example>"), "bozuk: ortak alan adındaki başka adres Kimden'de");
 });
 
 test("doğrulama denetimi kalkınca doğrulanmamış alan adıyla gönderilir", async () => {

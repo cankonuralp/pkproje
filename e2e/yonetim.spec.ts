@@ -23,6 +23,13 @@ async function parolaAdimi(page: Page, eposta: string, parola: string) {
   await page.getByRole("button", { name: "Giriş yap" }).click();
 }
 
+/** 2026-11-11 (maket onaylı — firma kurulum ekranı): firma sayfası altı açılır adım; kapalı adımı açar (açıksa dokunmaz) */
+async function adimAc(page: Page, ad: string) {
+  const kutu = page.locator("details").filter({ has: page.getByRole("heading", { level: 3, name: ad }) });
+  if ((await kutu.getAttribute("open")) === null) await kutu.locator("summary").click();
+  await expect(kutu).toHaveAttribute("open", "");
+}
+
 test("yönetim: ayrı adres; ilk kurulum; firma aç → geçici parolayla yeni firmaya giriş; dondur / etkinleştir / yeni parola; çıkış", async ({ page, browser }, bilgi) => {
   /* proje (genişlik) başına kendi yöneticisi ve firması — üç genişlik tek sunucuda da koşabilir */
   const P = E2E_YONETIM.proje(bilgi.project.name), F = P.firma;
@@ -111,14 +118,15 @@ test("yönetim: ayrı adres; ilk kurulum; firma aç → geçici parolayla yeni f
   await page.locator("dialog[open]").getByRole("button", { name: "Dondur" }).click();
   /* 2026-10-18 (reisim: "bu ve benzeri, yaratıcıyı hedef alan açıklamaları kaldır, çok fazla ai ürünü olduğu belli oluyor"): açıklama kısaldı */
   await expect(page.getByText("Dondurulmuş: giriş kapalı.")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Yöneticiye yeni geçici parola" })).toBeDisabled();
+  await adimAc(page, "İlk giriş bilgisi");
+  await expect(page.getByRole("button", { name: "Yeni geçici parola üret" })).toBeDisabled();
   await kisi.goto(`${firmaAdresi}/giris`);
   await expect(kisi.getByText("Bu adreste kayıtlı bir firma yok.", { exact: false })).toBeVisible();
   /* 2026-11-05: sayfada "Kaydet ve etkinleştir" (probata sign) da var — tam ad */
   await page.getByRole("button", { name: "Etkinleştir", exact: true }).click();
   await expect(page.getByText(`Firma etkinleştirildi: ${F.alt}.localhost`)).toBeVisible({ timeout: 30_000 });   // 434: geliştirme sunucusunda eylem 15 sn'yi aştı (bbb50b9 masaüstü)
   await expect(page.getByRole("button", { name: "Dondur" })).toBeVisible();   // 377: yeni sayfa eylem yanıtıyla gelir (CI 8dc6d06 tablette kalmıştı)
-  await page.getByRole("button", { name: "Yöneticiye yeni geçici parola" }).click();
+  await page.getByRole("button", { name: "Yeni geçici parola üret" }).click();
   await page.locator("dialog[open]").getByRole("button", { name: "Oluştur" }).click();
   await expect(page.locator("#yf-parola")).toBeVisible();
   const yeni = (await page.locator("#yf-parola").innerText()).trim();
@@ -177,13 +185,17 @@ test("yönetim: kendi Supabase projesi — Firma aç → kurulum adım adım →
   await expect(page.getByRole("heading", { level: 1, name: F.unvan })).toBeVisible();
   await expect(page.getByRole("region", { name: "Kurulum" }).getByRole("list", { name: "Kurulum adımları" }).getByRole("listitem")).toHaveCount(12);
   /* bitince sayfa sunucudan yenilenir: kurulum bölümü yok, firma etkin, geçici parola tuşu açık */
-  await expect(page.getByRole("button", { name: "Yöneticiye yeni geçici parola" })).toBeEnabled({ timeout: 300_000 });
-  await expect(page.getByRole("region", { name: "Kurulum" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Yeni geçici parola üret" })).toBeEnabled({ timeout: 300_000 });
+  /* 2026-11-11: firma sayfasının kendi "Kurulum" bölümü var (altı adım) — kurulum panelinin gittiği adım listesinden anlaşılır */
+  await expect(page.getByRole("list", { name: "Kurulum adımları" })).toHaveCount(0);
+  await expect(page.getByRole("region", { name: "Kurulum" }).getByText("6 adımdan", { exact: false })).toBeVisible();
   await expect(page.getByText("Etkin", { exact: true })).toBeVisible();
+  await adimAc(page, "Firma açıldı");
   await expect(page.getByText("Firmanın kendi Supabase projesi (Frankfurt)")).toBeVisible();
+  await adimAc(page, "Yapay zekâ");
   await expect(page.getByText(F.eposta, { exact: false }).first()).toBeVisible();
   await expect(page.getByRole("region", { name: "Yapay zekâ" }).getByText("…wxyz").first()).toBeVisible();
-  await page.getByRole("button", { name: "Yöneticiye yeni geçici parola" }).click();
+  await page.getByRole("button", { name: "Yeni geçici parola üret" }).click();
   await page.locator("dialog[open]").getByRole("button", { name: "Oluştur" }).click();
   await expect(page.locator("#yf-parola")).toBeVisible({ timeout: 30_000 });
   const parola = (await page.locator("#yf-parola").innerText()).trim();
@@ -220,6 +232,7 @@ test("yönetim: e-posta gönderimi — alan adı ekle, DNS kayıtları, Doğrula
   await expect(page.getByRole("heading", { level: 1, name: F.unvan })).toBeVisible({ timeout: 30_000 });
   await page.getByRole("link", { name: "Firma sayfası" }).click();
   await expect(page.getByRole("heading", { level: 1, name: F.unvan })).toBeVisible();
+  await adimAc(page, "E-posta gönderimi");
   const ep = page.getByRole("region", { name: "E-posta gönderimi" });
   await ep.getByLabel("Gönderen alan adı").fill("kötü alan");
   await ep.getByRole("button", { name: "Alan adını ekle" }).click();
@@ -248,7 +261,9 @@ test("yönetim: kendi veritabanlı firma — özet firmanın veritabanından; ya
   await page.getByRole("link", { name: E2E_KENDI.firma.ad }).first().click();
   await expect(page.getByRole("heading", { level: 1, name: E2E_KENDI.firma.ad })).toBeVisible();
   /* yönetici merkezde değil, firmanın veritabanında — sayfada görünüyorsa özet oradan geldi */
+  await adimAc(page, "İlk giriş bilgisi");
   await expect(page.getByText(E2E_KENDI.yonetici.eposta, { exact: false })).toBeVisible();
+  await adimAc(page, "Yapay zekâ");
   const yz = page.getByRole("region", { name: "Yapay zekâ" });   // Bolum: kimlik başlıkta, bölge başlıkla adlanır
   await expect(yz.getByRole("radio", { name: "Kapalı" })).toHaveAttribute("aria-checked", "true");
   await expect(yz.getByLabel("Kişi başı aylık sınır ($)")).toHaveValue("5");

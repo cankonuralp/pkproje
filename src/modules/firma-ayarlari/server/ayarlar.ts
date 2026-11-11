@@ -282,7 +282,7 @@ export async function denemeEpostasi(db: Sorgulayici, kim: Kisi): Promise<AyarYa
   await bekleyenleriGonder(db, g, { kaynak: "eposta_deneme", kaynakId: kim.id });
   const d = (await db.sorgu<{ durum: string; son_hata: string | null }>("SELECT durum, son_hata FROM eposta WHERE id = $1", [id])).rows[0];
   if (d?.durum !== "gonderildi") return { durum: "red", neden: `Deneme e-postası gönderilemedi: ${d?.son_hata ?? "bilinmeyen neden"}` };
-  return { durum: "tamam", bildirim: `Deneme e-postası gönderildi: ${ben.eposta} — ${gonderenYolu(ben.eposta, g.firma.alan) === "kendi" ? "kendi adresinizden" : "firmanın genel adresinden, adınızla"}. Kutunuza bakın.` };
+  return { durum: "tamam", bildirim: `Deneme e-postası gönderildi: ${ben.eposta} — ${gonderenYolu(ben.eposta, g.firma.alan, g.firma.ortak === true) === "kendi" ? "kendi adresinizden" : "firmanın genel adresinden, adınızla"}. Kutunuza bakın.` };
 }
 
 const kucuk = (s: string) => s.trim().toLocaleLowerCase("tr");

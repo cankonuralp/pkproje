@@ -7,18 +7,19 @@ import { Bilgi, BilgiListesi } from "../../../components/bilgi/Bilgi";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Alan, Girdi } from "../../../components/form/Form";
 import { useOnayla } from "../../../components/pencere/Onay";
-import { AltSatir, Bolum, Rozet, SeritKap } from "../../../components/sayfa/Sayfa";
+import { AltSatir, Rozet, SeritKap } from "../../../components/sayfa/Sayfa";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus } from "../../../components/tus/Tus";
 import type { SignBaglantisi } from "../server/sign";
 import { signDeneEylemi, signKaldirEylemi, signKaydetEylemi } from "./eylemler";
+import { Cerceve } from "./ortak";
 import stil from "./yonetim.module.css";
 
 const ANAHTAR = "y-sign-anahtar", SIR = "y-sign-sir";
 const TR = new Intl.DateTimeFormat("tr-TR", { timeZone: "Europe/Istanbul", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 const zaman = (s: string | null) => (s ? TR.format(new Date(s)).replace(",", "") : "—");
 
-export function SignBolumu({ id, s }: { id: string; s: SignBaglantisi | null }) {
+export function SignBolumu({ id, s, ciplak = false }: { id: string; s: SignBaglantisi | null; ciplak?: boolean }) {
   const [duzenle, setDuzenle] = useState(!s?.etkin);
   const [anahtar, setAnahtar] = useState("");
   const [sir, setSir] = useState("");
@@ -50,24 +51,27 @@ export function SignBolumu({ id, s }: { id: string; s: SignBaglantisi | null }) 
     setGenel(null); setDuzenle(true); bildir("probata sign bağlantısı kaldırıldı.");
   });
 
+  const kopyaTusu = s && (
+    <Tus tur="ikincil" ikon={kopya === "tamam" ? "check" : "copy"} onClick={() => navigator.clipboard.writeText(s.webhook).then(() => setKopya("tamam"), () => setKopya("hata"))}>
+      {kopya === "tamam" ? "Kopyalandı" : kopya === "hata" ? "Elle kopyalayın" : "Webhook adresini kopyala"}
+    </Tus>
+  );
   return (
-    <Bolum id="y-b-sign" baslik="probata sign">
+    <Cerceve ciplak={ciplak} id="y-b-sign" baslik="probata sign">
       {!s ? <p>Bağlantı okunamadı; sayfayı yenileyip yeniden deneyin.</p> : <>
       {genel && <SeritKap><Serit tur="hata" ikon="circle-alert">{genel}</Serit></SeritKap>}
       <BilgiListesi>
         <Bilgi etiket="Durum">{s.etkin ? <Rozet tur="tamam">Etkin · e-imza</Rozet> : <Rozet tur="notr">Bağlı değil</Rozet>}</Bilgi>
-        <Bilgi etiket="Webhook adresi (sign'a girilir)">
+        {!duzenle && <Bilgi etiket="Webhook adresi (sign'a girilir)">
           <span className={stil.dnsDeger}>{s.webhook}</span>
           <AltSatir>olaylar: imza.atildi · imza.reddedildi · belge.tamamlandi · istek.iptal</AltSatir>
-        </Bilgi>
+        </Bilgi>}
         {s.etkin && <Bilgi etiket="API anahtarı">••••{s.anahtar}</Bilgi>}
         {s.etkin && <Bilgi etiket="Webhook sırrı">••••{s.sir}</Bilgi>}
         {s.etkin && <Bilgi etiket="Son değişiklik · son bildirim">{zaman(s.degisti)} · {zaman(s.sonBildirim)}</Bilgi>}
       </BilgiListesi>
       <div className={stil.eylemSol}>
-        <Tus tur="ikincil" ikon={kopya === "tamam" ? "check" : "copy"} onClick={() => navigator.clipboard.writeText(s.webhook).then(() => setKopya("tamam"), () => setKopya("hata"))}>
-          {kopya === "tamam" ? "Kopyalandı" : kopya === "hata" ? "Elle kopyalayın" : "Webhook adresini kopyala"}
-        </Tus>
+        {!duzenle && kopyaTusu}
         {s.etkin && !duzenle && <>
           <Tus tur="ikincil" ikon="pencil" disabled={bekliyor} onClick={() => { setDuzenle(true); requestAnimationFrame(() => document.getElementById(ANAHTAR)?.focus()); }}>Anahtarı değiştir</Tus>
           <Tus tur="tehlike" ikon="trash-2" disabled={bekliyor} onClick={kaldir}>Kaldır</Tus>
@@ -75,6 +79,19 @@ export function SignBolumu({ id, s }: { id: string; s: SignBaglantisi | null }) 
       </div>
       {duzenle && (
         <>
+          <ol className={stil.basamaklar}>
+            <li>
+              <span className={stil.basamakAd}>Bu adresi kopyalayın</span>
+              <span className={stil.dnsDeger}>{s.webhook}</span>
+              <div className={stil.eylemSol}>{kopyaTusu}</div>
+            </li>
+            <li>
+              <span className={stil.basamakAd}>sign panelinde firmanın hesabına girin</span>
+              <span className={stil.basamakMetin}>Önce API anahtarı oluşturun; &quot;psk_&quot; ile başlayan anahtarı kopyalayın. Sonra webhook ekleyin: 1. basamaktaki adresi yapıştırın ve dört olayı seçin
+                (imza.atildi · imza.reddedildi · belge.tamamlandi · istek.iptal). sign webhook sırrını yalnız bir kez gösterir; kopyalayın.</span>
+            </li>
+            <li><span className={stil.basamakAd}>İkisini aşağıya yapıştırın</span></li>
+          </ol>
           <Alan id={ANAHTAR} etiket="API anahtarı" hata={hatalar.anahtar}>
             <Girdi id={ANAHTAR} value={anahtar} maxLength={220} spellCheck={false} placeholder="psk_…" hata={!!hatalar.anahtar} mesajli={!!hatalar.anahtar}
               onChange={(e) => { setAnahtar(e.target.value); setHatalar({}); }} />
@@ -90,6 +107,6 @@ export function SignBolumu({ id, s }: { id: string; s: SignBaglantisi | null }) 
         </>
       )}
       </>}
-    </Bolum>
+    </Cerceve>
   );
 }

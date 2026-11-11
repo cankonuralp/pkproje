@@ -8,13 +8,14 @@ import { Alan, FormIzgara, Girdi, Segment } from "../../../components/form/Form"
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { KartEtiket, Liste, type Sutun } from "../../../components/liste/Liste";
 import { useOnayla } from "../../../components/pencere/Onay";
-import { DegerYok, Rozet, Bolum, SeritKap } from "../../../components/sayfa/Sayfa";
+import { DegerYok, Rozet, SeritKap } from "../../../components/sayfa/Sayfa";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus } from "../../../components/tus/Tus";
 import { YZ_FIYAT } from "../sema";
 import type { FirmaOzeti } from "../server/firma-tarafi";
 import { yzAnahtariKaldirEylemi, yzAnahtariKaydetEylemi, yzAyarKaydetEylemi } from "./eylemler";
 import { KOSUL_SURUMU } from "../../say/kosul-metni";
+import { Cerceve } from "./ortak";
 import stil from "./yonetim.module.css";
 
 type Yz = FirmaOzeti["yz"];
@@ -34,7 +35,7 @@ const sutunlar = (sinir: number | null): Sutun<Kisi>[] => [
   } },
 ];
 
-export function YapayZekaBolumu({ id, firmaAd, yz }: { id: string; firmaAd: string; yz: Yz | null }) {
+export function YapayZekaBolumu({ id, firmaAd, yz, ciplak = false }: { id: string; firmaAd: string; yz: Yz | null; ciplak?: boolean }) {
   const onayla = useOnayla();
   const bildir = useBildir();
   const [bekliyor, baslat] = useTransition();
@@ -67,7 +68,7 @@ export function YapayZekaBolumu({ id, firmaAd, yz }: { id: string; firmaAd: stri
   };
 
   return (
-    <Bolum id="y-b-yz" baslik="Yapay zekâ">
+    <Cerceve ciplak={ciplak} id="y-b-yz" baslik="Yapay zekâ">
       {!yz && <SeritKap><Serit tur="uyari" ikon="triangle-alert">Firmanın veritabanına ulaşılamadı; yapay zekâ ayarı ve kullanım okunamadı.</Serit></SeritKap>}
       {hata.genel && <SeritKap><Serit tur="hata" ikon="circle-alert">{hata.genel}</Serit></SeritKap>}
       {yz && (
@@ -113,6 +114,6 @@ export function YapayZekaBolumu({ id, firmaAd, yz }: { id: string; firmaAd: stri
           </p>
         </>
       )}
-    </Bolum>
+    </Cerceve>
   );
 }

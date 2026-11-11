@@ -7,12 +7,13 @@ import { Bilgi, BilgiListesi } from "../../../components/bilgi/Bilgi";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Alan, Girdi } from "../../../components/form/Form";
 import { Pencere } from "../../../components/pencere/Pencere";
-import { Bolum, DegerYok, Rozet, SeritKap } from "../../../components/sayfa/Sayfa";
+import { DegerYok, Rozet, SeritKap } from "../../../components/sayfa/Sayfa";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus } from "../../../components/tus/Tus";
 import type { GeriYuklemeDenemesi, GeriYuklemeSonucu } from "../../../server/yedek/geri-yukle";
 import type { YedekYonetimGorunumu } from "../server/yedek";
 import { yedekDenemeEylemi, yedekDogrulaEylemi, yedekGeriDonEylemi, yedekGeriYukleEylemi } from "./eylemler";
+import { Cerceve } from "./ortak";
 import stil from "./yonetim.module.css";
 
 const TR = new Intl.DateTimeFormat("tr-TR", { timeZone: "Europe/Istanbul", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -28,7 +29,7 @@ type Adim = 1 | 2 | 3 | 4 | 5;
 const ONAY_ID = "y-yedek-onay";
 type Kip = { tur: "yukle" } | { tur: "don"; geriYukleme: string; basladi: string };
 
-export function YedekBolumu({ id, kisaAd, y }: { id: string; kisaAd: string; y: YedekYonetimGorunumu | null }) {
+export function YedekBolumu({ id, kisaAd, y, ciplak = false }: { id: string; kisaAd: string; y: YedekYonetimGorunumu | null; ciplak?: boolean }) {
   const bildir = useBildir();
   const [bekliyor, baslat] = useTransition();
   const [hata, setHata] = useState<string | null>(null);
@@ -43,7 +44,7 @@ export function YedekBolumu({ id, kisaAd, y }: { id: string; kisaAd: string; y: 
 
   const b = y?.baglanti ?? null, d = y?.dogrulama ?? null;
   return (
-    <Bolum id="y-b-yedek" baslik="Yedek" tuslar={y && <>
+    <Cerceve ciplak={ciplak} id="y-b-yedek" baslik="Yedek" tuslar={y && <>
       <Tus tur="ikincil" ikon="shield-check" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={dogrula}>Şimdi doğrula</Tus>
       <Tus ikon="history" disabled={bekliyor} onClick={() => setKip({ tur: "yukle" })}>Yedekten geri yükle</Tus>
     </>}>
@@ -84,7 +85,7 @@ export function YedekBolumu({ id, kisaAd, y }: { id: string; kisaAd: string; y: 
         </BilgiListesi>
       )}
       {kip && <GeriYuklePenceresi id={id} kisaAd={kisaAd} kip={kip} driveVar={b?.durum === "bagli" || b?.durum === "dolu"} kapat={() => setKip(null)} />}
-    </Bolum>
+    </Cerceve>
   );
 }
 

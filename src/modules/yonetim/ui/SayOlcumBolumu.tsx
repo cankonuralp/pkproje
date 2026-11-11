@@ -7,10 +7,11 @@ import { useTransition } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { baytIndir } from "../../../components/disa/indir";
 import { KartEtiket, Liste, type Sutun } from "../../../components/liste/Liste";
-import { Bolum, DegerYok, Rozet } from "../../../components/sayfa/Sayfa";
+import { DegerYok, Rozet } from "../../../components/sayfa/Sayfa";
 import { Tus } from "../../../components/tus/Tus";
 import type { SayIsOlcumu, SayIsSinyali, SayOlcumu } from "../server/firma-tarafi";
 import { argeKaydiEylemi } from "./eylemler";
+import { Cerceve } from "./ortak";
 import stil from "./yonetim.module.css";
 
 const zaman = (s: string) => new Intl.DateTimeFormat("tr-TR", { timeZone: "Europe/Istanbul", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date(s));
@@ -46,7 +47,7 @@ const SUTUNLAR: Sutun<SayIsOlcumu>[] = [
     : <><KartEtiket>Puan</KartEtiket><DegerYok>bekliyor</DegerYok></>) },
 ];
 
-export function SayOlcumBolumu({ id, firmaKod, olcum }: { id: string; firmaKod: string; olcum: SayOlcumu | null }) {
+export function SayOlcumBolumu({ id, firmaKod, olcum, ciplak = false }: { id: string; firmaKod: string; olcum: SayOlcumu | null; ciplak?: boolean }) {
   const bildir = useBildir();
   const [bekliyor, baslat] = useTransition();
   const indir = (kayit: string, z: string) => baslat(async () => {
@@ -55,7 +56,7 @@ export function SayOlcumBolumu({ id, firmaKod, olcum }: { id: string; firmaKod: 
     baytIndir(`say-arge-${firmaKod}-${z.slice(0, 10)}-${kayit.slice(0, 8)}.json`, new TextEncoder().encode(r.metin), "application/json");
   });
   return (
-    <Bolum id="y-b-say" baslik="S.A.Y işleri ve öğrenme (son 30 gün)">
+    <Cerceve ciplak={ciplak} id="y-b-say" baslik="S.A.Y işleri ve öğrenme (son 30 gün)">
       {!olcum ? <p>Ölçüm okunamadı; sayfayı yenileyip yeniden deneyin.</p> : (
         <>
           {olcum.isler.length ? <Liste baslik="S.A.Y işleri" sutunlar={SUTUNLAR} kayitlar={olcum.isler} anahtar={(x) => x.is} /> : <p><DegerYok>Bu dönemde iş yok.</DegerYok></p>}
@@ -77,6 +78,6 @@ export function SayOlcumBolumu({ id, firmaKod, olcum }: { id: string; firmaKod: 
           ) : <p><DegerYok>Kayıt yok.</DegerYok></p>}
         </>
       )}
-    </Bolum>
+    </Cerceve>
   );
 }

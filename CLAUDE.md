@@ -460,6 +460,10 @@ pkproje/
                             yz · tamam; merkezde firma_kurulum kira + ilerletme, adım kesilip sürdürülür; sırlar şifreli geçici girdide) · kurulum-adim.ts (saf,
                             tarayıcıya da gider) · server/kurulum-hata.ts (yeniden / kalıcı) · ui/KurulumPaneli.tsx (sayfa açıkken 3 sn'de bir) · Yönetim API
                             istemcisi src/server/dis/supabase-yonetim.ts (proje uçları) · kilit tests/firma-kurulum.test.ts (PG + taklit), kurulum-adim.test.ts ·
+                            · 2026-11-11 FİRMA KURULUM EKRANI (maket claude.ai FR9FbBjtoiKBmXpQ1yUT4K, reisim: "Onaylıyorum, yaz"): ui/FirmaSayfasi.tsx altı açılır adım (Adim: numara ·
+                            ad + açıklama · durum; tamamlanmamış ilk adım açık) — 1 Firma açıldı · 2 İlk giriş bilgisi ("Yeni geçici parola üret" burada) · 3 Yapay zekâ · 4 E-posta
+                            gönderimi · 5 E-imza (probata sign; bağlanırken üç basamak) · 6 Yedek; bölüm bileşenleri adımın içinde çıplak (ui/ortak.tsx Cerceve); altta kapalı
+                            Ayrıntılar (S.A.Y ölçümü, firmanın yapacakları). Bu ekranda açıklama cümleleri reisim'in isteğiyle var · e2e yonetim.spec adimAc ·
                             sayfalar src/app/(yonetim)/yonetim: giris (parola → kod → ilk kurulum) + (panel) + cikis (356: POST route — eylem redirect'i
                             yönetim adresini kaybediyordu) — yalnız PROBATA_YONETIM_ALAN adresinde
   src/server/yonetim/       YÖNETİM ÇEKİRDEĞİ (348): adres.ts (saf; ara katman da okur) · totp.ts (RFC 6238, saf) · giris.ts (iki adımlı giriş,
@@ -645,6 +649,11 @@ pkproje/
                             kişiye; otomatikte cevap Rapor e-postası) · saglayici.ts User-Agent + Idempotency-Key (kuyruk satırı) · gönderen kuyrukta (göç 0087;
                             kimlik/hesap.ts hesapGonderen) · Firma ayarları › E-posta yalnız gösterir + gizli kopya + denemeEpostasi · kilitler
                             tests/eposta-gonderim.test.ts (PG), resend-yonetim.test.ts
+                            · 2026-11-11 ORTAK ALAN ADI (göç 0126; maket "probata.com.tr üzerinden"): probata'nın ana alan adından (kimden.ts ortakGonderimAlani —
+                            PROBATA_ANA_ALAN) birden çok firma gönderir, her biri KENDİ adresi (<kısa ad>@alan; eposta_alan eşsizliği alan + genel_yerel) ve KENDİ gönderme
+                            anahtarıyla; yonetim/server/eposta.ts gonderimOrtakAc (ekle + doğrula tek adım), EpostaOrtami.ortakAlan; ortak olmayan alan adı yine tek firmanın
+                            (yonetim_eposta_alan_yaz p_ortak); ortak alanda kişi kendi adresinden GÖNDEREMEZ (FirmaGonderimi.ortak — başka firmanın adresi taklit edilemez) ·
+                            ui/GonderimBolumu iki yol · kilit eposta-gonderim (PG), eposta-saf, bozan eposta 9
   src/server/yedek/         FİRMANIN KENDİ YEDEĞİ (2026-11-03, göç 0117; reisim: "yapılsın firma ayarlardan kendi yedeğini otomatik alabiliyo olsun",
                             "yeni eklenenler eklensin yedeğe yeter her günün ayrı ayrı yedeği olmasın"; sunum claude.ai 6VPqY1MBpY81jrBMz8PCgj K1–K6 +
                             fotoğraf düzeni A): Firma ayarları › Yedek'te Google Drive / OneDrive bağla (OAuth + PKCE, dar izin drive.file /
