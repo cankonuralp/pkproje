@@ -58,9 +58,10 @@ async function planAc(page: Page) {
   return new URL(page.url()).pathname;
 }
 
-/** penceredeki tarih + saat alanı (TarihAlani: tarih kutusu, saat ve dakika ayrı kutular) */
-async function zamanYaz(kap: Locator, ad: string, gun: string, saat: string, dakika: string) {
-  const alan = kap.locator("[data-zaman]").filter({ has: kap.getByLabel(ad, { exact: true }) });
+/** penceredeki tarih + saat alanı (TarihAlani: tarih kutusu, saat ve dakika ayrı kutular) — alanın kimliğiyle (KontrolKutusu: r-kd-bas / r-kd-bit).
+    2026-11-12 (CI 446f6ddf): etiketle süzme pencere köküne bağlı konumlayıcıyla çalışmadı (alanın içinde pencere aranıyordu) */
+async function zamanYaz(kap: Locator, id: string, gun: string, saat: string, dakika: string) {
+  const alan = kap.locator(`[data-zaman="${id}"]`);
   await alan.locator("input:not([data-parca])").fill(gun);
   await alan.locator('input[data-parca="saat"]').fill(saat);
   const dk = alan.locator('input[data-parca="dakika"]');
@@ -118,8 +119,8 @@ test("kontrol saati (TÜRKAK'lı): model Yönetim'den; saha raporunda saat yazı
   await kk.getByRole("button", { name: "Saati düzelt" }).click();
   const pen = page.getByRole("dialog", { name: "Saati düzelt" });
   await expect(pen).toBeVisible();
-  await zamanYaz(pen, "Başlangıç", dunTr(), "09", "00");
-  await zamanYaz(pen, "Bitiş", dunTr(), "09", "40");
+  await zamanYaz(pen, "r-kd-bas", dunTr(), "09", "00");
+  await zamanYaz(pen, "r-kd-bit", dunTr(), "09", "40");
   await pen.getByLabel("Gerekçe").fill("kısa");
   await pen.getByRole("button", { name: "Kaydet" }).click();
   await expect(pen.getByText("Gerekçe en az 10 karakter olmalı.")).toBeVisible({ timeout: 30_000 });
