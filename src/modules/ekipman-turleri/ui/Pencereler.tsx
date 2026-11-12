@@ -17,7 +17,7 @@ import { useBasilidanKur } from "../../rapor-format/ui/SablonBolumu";
 import { formatYukleEylemi, turKaydetEylemi } from "./eylemler";
 import stil from "./turler.module.css";
 
-const ALAN = ["ad", "kod", "grup", "brans", "periyot", "sure"] as const;
+const ALAN = ["ad", "kod", "grup", "brans", "periyot", "sure", "enKisa"] as const;
 type Alan_ = (typeof ALAN)[number];
 /* alan kimlikleri tek yerde (etiket for= ile girdi id= aynı sabitten — çift id kilidi) */
 const ID = Object.fromEntries(ALAN.map((k) => [k, `ew-${k}`])) as Record<Alan_, string>;
@@ -25,7 +25,7 @@ const DOSYA_ID = "fw-dosya", NOT_ID = "fw-not", KUR_ID = "fw-kur";
 const GRUP_SEC = GRUPLAR.map((g) => [g.k, g.ad, g.b ? bransAd(g.b) : "branş seçilir"] as const);
 const BRANS_SEC = [["m", "Mekanik"], ["e", "Elektrik"]] as const;
 
-export interface TurDegeri { id: string; surum: number; kod: string; ad: string; grup: string; brans: "m" | "e"; periyot: number; sure: number | null }
+export interface TurDegeri { id: string; surum: number; kod: string; ad: string; grup: string; brans: "m" | "e"; periyot: number; sure: number | null; enKisa: number | null }
 /** 436: hazır şablondan tür — pencere önerilen ad / kod / grup / periyotla açılır; kaydedince tür + şablondan taslak (rapor-format) */
 export interface SablonOnerisi { anahtar: string; ad: string; tur: { ad: string; kod: string; grup: string; periyot: number } }
 
@@ -36,6 +36,7 @@ export function TurPenceresi({ kapat, tur, brans, sablon }: { kapat: () => void;
   const [d, setD] = useState<Record<Alan_, string>>({
     ad: tur?.ad ?? sablon?.tur.ad ?? "", kod: tur?.kod ?? sablon?.tur.kod ?? "", grup: tur?.grup ?? sablon?.tur.grup ?? "", brans: tur?.brans ?? brans ?? "",
     periyot: tur ? String(tur.periyot) : sablon ? String(sablon.tur.periyot) : "", sure: tur?.sure ? String(tur.sure) : "",
+    enKisa: tur?.enKisa ? String(tur.enKisa) : "",
   });
   const [h, setH] = useState<Record<string, string>>({});
   const [genel, setGenel] = useState<string | null>(null);
@@ -52,7 +53,7 @@ export function TurPenceresi({ kapat, tur, brans, sablon }: { kapat: () => void;
       router.push(`/ekipman-turleri/${r.id}/sablon/${r.formatId}`);
     } else { bildir(`${d.ad.trim()} eklendi; rapor formatı Ek-III grubuna göre hazır, yayında.`); router.push(`/ekipman-turleri/${r.id}`); }
   });
-  const G = (k: "ad" | "kod" | "periyot" | "sure", etiket: string, o: { zorunlu?: boolean; genis?: boolean; sonuc?: string; tip?: React.InputHTMLAttributes<HTMLInputElement> } = {}) => (
+  const G = (k: "ad" | "kod" | "periyot" | "sure" | "enKisa", etiket: string, o: { zorunlu?: boolean; genis?: boolean; sonuc?: string; tip?: React.InputHTMLAttributes<HTMLInputElement> } = {}) => (
     <Alan id={ID[k]} etiket={etiket} zorunlu={o.zorunlu} genis={o.genis} hata={h[k]} sonuc={o.sonuc}>
       <Girdi id={ID[k]} value={d[k]} onChange={(e) => setD({ ...d, [k]: e.target.value })} hata={!!h[k]} mesajli={!!o.sonuc} {...o.tip} />
     </Alan>
@@ -77,6 +78,8 @@ export function TurPenceresi({ kapat, tur, brans, sablon }: { kapat: () => void;
         )}
         {G("periyot", "Periyot (ay)", { zorunlu: true, sonuc: "Sonraki kontrol önerisi bununla hesaplanır.", tip: { inputMode: "numeric", maxLength: 3, placeholder: "ör. 12" } })}
         {G("sure", "Tahmini kontrol süresi (dk)", { sonuc: "İsteğe bağlı.", tip: { inputMode: "numeric", maxLength: 3 } })}
+        {/* 2026-11-12 (göç 0129; pkproje.md §11 K7): TÜRKAK'lı firmada bundan kısa süren kontrol sapma sayılır */}
+        {G("enKisa", "En kısa kontrol süresi (dk)", { sonuc: "İsteğe bağlı.", tip: { inputMode: "numeric", maxLength: 3 } })}
       </FormIzgara>
     </Pencere>
   );

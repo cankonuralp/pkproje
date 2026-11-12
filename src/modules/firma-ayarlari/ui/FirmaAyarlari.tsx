@@ -35,24 +35,24 @@ import stil from "./firma-ayarlari.module.css";
 
 const ID = {
   ad: "w-ay-ad", adres: "w-ay-adres", eposta: "w-ay-eposta", tel: "w-ay-tel", akr: "w-ay-akr", nusha: "w-ay-nusha", zeden: "w-ay-zeden", yil: "w-ay-yil",
-  normal: "w-ay-normal", bas: "w-ay-bas", mesai: "w-ay-mesai", yillik: "w-ay-yillik", kod: "w-ay-kod",
+  normal: "w-ay-normal", bas: "w-ay-bas", mesai: "w-ay-mesai", yillik: "w-ay-yillik", kod: "w-ay-kod", tesisArasi: "w-ay-tesis",
 } as const;
 const para = (k: number) => new Intl.NumberFormat("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(k / 100);
 const megabayt = (bayt: number) => (bayt / 1e6).toLocaleString("tr-TR", { maximumFractionDigits: 1 });
 
 /* ── PANELLER (maket 539 GRUPLAR / PANEL) ── */
-type PanelAdi = "firma" | "kod" | "imza" | "belge" | "mesai" | "esik" | "zimmet" | "mbelge" | "fiyat" | "sabit" | "yedek" | "depolama" | "saklama" | "eposta" | "ice";
+type PanelAdi = "firma" | "kod" | "imza" | "belge" | "mesai" | "kontrol" | "esik" | "zimmet" | "mbelge" | "fiyat" | "sabit" | "yedek" | "depolama" | "saklama" | "eposta" | "ice";
 const PANEL: Record<PanelAdi, { ad: string; ikon: string; genis?: boolean }> = {
   firma: { ad: "Firma bilgileri", ikon: "building-2" }, kod: { ad: "Rapor numarası", ikon: "list-ordered" }, imza: { ad: "İmza yöntemi", ikon: "file-signature" },
   belge: { ad: "Belge şablonları", ikon: "file-text" }, mesai: { ad: "Mesai takibi", ikon: "clock" }, esik: { ad: "Uyarı eşikleri", ikon: "alarm-clock" },
   zimmet: { ad: "Zimmet teslim formu", ikon: "package" }, mbelge: { ad: "Müşteriye açık personel belgeleri", ikon: "id-card", genis: true },
   fiyat: { ad: "Fiyat listesi", ikon: "calculator", genis: true }, sabit: { ad: "Sabit giderler", ikon: "receipt", genis: true },
-  yedek: { ad: "Yedek", ikon: "archive" }, depolama: { ad: "Depolama", ikon: "warehouse" }, saklama: { ad: "Rapor saklama süresi", ikon: "history" },
+  yedek: { ad: "Yedek", ikon: "archive" }, depolama: { ad: "Depolama", ikon: "warehouse" }, saklama: { ad: "Rapor saklama süresi", ikon: "history" }, kontrol: { ad: "Kontrol denetimleri", ikon: "clock" },
   eposta: { ad: "E-posta", ikon: "mail", genis: true }, ice: { ad: "Toplu içe aktarma", ikon: "file-spreadsheet", genis: true },
 };
 const GRUPLAR: { k: string; ad: string; p: PanelAdi[] }[] = [
   { k: "firma", ad: "Firma", p: ["firma", "kod", "imza", "belge"] },
-  { k: "calisma", ad: "Çalışma", p: ["mesai", "esik", "zimmet", "mbelge"] },
+  { k: "calisma", ad: "Çalışma", p: ["mesai", "kontrol", "esik", "zimmet", "mbelge"] },
   { k: "para", ad: "Fiyat ve gider", p: ["fiyat", "sabit"] },
   { k: "veri", ad: "Veri ve yedek", p: ["yedek", "depolama", "saklama"] },
   { k: "baglanti", ad: "Bağlantılar", p: ["eposta"] },   // 2026-10-25: yapay zekâ Yönetim'de (göç 0106)
@@ -79,6 +79,7 @@ function ozet(k: PanelAdi, v: Veri): { metin: string; durum?: string } {
       if (b?.durum === "bagli") return { metin: `Ek yedek: ${BULUT_AD[b.saglayici]} · ${v.ekYedek.kuyruk.gonderildi.toLocaleString("tr-TR")} dosya` };
       return { metin: `Aylık arşiv ${v.ekYedek.arsiv.tamYil ? "var" : "henüz yok"} · ek yedek bağlı değil`, durum: "Bağlı değil" }; }
     case "depolama": return { metin: `Deneme projesi · ${v.depolama.dosya.toLocaleString("tr-TR")} dosya · ${megabayt(v.depolama.bayt)} MB` };
+    case "kontrol": return { metin: v.kontrol.deger.tesis_arasi_dk ? `İki tesis arası en az ${v.kontrol.deger.tesis_arasi_dk} dk` : "Tesisler arası süre denetlenmiyor" };
     case "saklama": return { metin: `${v.saklama.deger.yil} yıl${v.saklama.deger.yil === 5 ? " (yasal en az)" : ""}` };
     case "eposta": { const g = v.eposta.gonderim, hazir = !!g && g.dogrulandi && g.anahtar;
       return { metin: hazir ? `Bağlı · ${g.alan}` : g ? `${g.alan} · doğrulanmadı` : "E-postalar sırada bekliyor", durum: hazir ? undefined : "Bağlı değil" }; }
@@ -272,6 +273,19 @@ function ZimmetFormu({ v }: { v: Veri }) {
       <Alan id={ID.zeden} etiket="Teslim eden (başlangıç)" hata={s.h.teslim_eden} sonuc={s.h.teslim_eden ? undefined : "Formda değiştirilebilir."}>
         <SecimAlani id={ID.zeden} ad="Teslim eden (başlangıç)" deger={s.d.teslim_eden} kapali={!v.yaz} tanim={ipucuId(ID.zeden)} gecersiz={!!s.h.teslim_eden}
           secenekler={[["", "Seçilmedi"], ...v.kisiler.map((k) => [k.id, k.ad] as const)]} degistir={(x) => s.setD({ teslim_eden: x })} />
+      </Alan>
+    </Kart>
+  );
+}
+
+/* 2026-11-12 (göç 0129; pkproje.md §11 K7): kontrol denetimleri — iki tesis arası en az süre; panel yalnız TÜRKAK'lı firmada görünür */
+function KontrolDenetimleri({ v }: { v: Veri }) {
+  const s = useKesim("kontrol", { tesis_arasi_dk: String(v.kontrol.deger.tesis_arasi_dk) }, v.kontrol.surum);
+  return (
+    <Kart yaz={v.yaz} kirli={s.kirli} mesgul={s.mesgul} kaydet={s.kaydet}>
+      <Alan id={ID.tesisArasi} etiket="İki tesis arası en az süre (dk)" hata={s.h.tesis_arasi_dk} sonuc={s.h.tesis_arasi_dk ? undefined : "0 yazılırsa denetlenmez."}>
+        <Girdi id={ID.tesisArasi} value={s.d.tesis_arasi_dk} inputMode="numeric" maxLength={3} disabled={!v.yaz} hata={!!s.h.tesis_arasi_dk} mesajli
+          onChange={(e) => s.setD({ tesis_arasi_dk: e.target.value })} />
       </Alan>
     </Kart>
   );
@@ -661,7 +675,7 @@ function IceAktarmaPenceresi({ v }: { v: Veri }) {
 const ICERIK: Record<PanelAdi, (p: { v: Veri }) => ReactNode> = {
   firma: FirmaBilgileri, kod: RaporNumarasi, imza: ImzaYontemi, belge: BelgeSablonlari, mesai: Mesai, esik: Esikler, zimmet: ZimmetFormu,
   mbelge: MusteriBelgeleri, fiyat: FiyatListesi, sabit: SabitGiderler, yedek: Yedek, depolama: Depolama, saklama: Saklama, eposta: Eposta,
-  ice: IceAktarmaPenceresi,
+  ice: IceAktarmaPenceresi, kontrol: KontrolDenetimleri,
 };
 
 /* ── SAYFA ── */
@@ -683,7 +697,7 @@ export function FirmaAyarlari({ v, yedekSonuc = null }: { v: Veri; yedekSonuc?: 
           <section key={g.k} className={stil.grup} aria-labelledby={`ay-g-${g.k}`}>
             <h2 className={stil.grupBaslik} id={`ay-g-${g.k}`}>{g.ad}</h2>
             <div className={stil.paneller}>
-              {g.p.map((k) => {
+              {g.p.filter((k) => k !== "kontrol" || v.model === "turkak").map((k) => {
                 const o = ozet(k, v);
                 return (
                   <button key={k} type="button" className={stil.panel} data-panel={k} aria-haspopup="dialog" aria-describedby={`ay-oz-${k}`} onClick={() => setAcik(k)}>

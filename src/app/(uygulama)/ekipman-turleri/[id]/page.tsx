@@ -50,7 +50,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
     <>
       <Kirinti ogeler={[[`Ekipman türleri · ${bransAd(t.brans)}`, t.brans === "e" ? "/ekipman-turleri?brans=e" : "/ekipman-turleri"], [t.ad]]} />
       <NesneBasi baslik={t.ad} altIkon="layers" alt={`Kod ${t.kod} · ${g?.ad ?? t.grup}`}
-        tuslar={yaz && <TurTuslari tur={{ id: t.id, surum: t.surum, kod: t.kod, ad: t.ad, grup: t.grup, brans: t.brans, periyot: t.periyot, sure: t.sure }} kullanimda={p?.sira ?? null} sil={silme.sil}
+        tuslar={yaz && <TurTuslari tur={{ id: t.id, surum: t.surum, kod: t.kod, ad: t.ad, grup: t.grup, brans: t.brans, periyot: t.periyot, sure: t.sure, enKisa: t.en_kisa }} kullanimda={p?.sira ?? null} sil={silme.sil}
           sablon={sablonYaz ? { taslak: taslak ? { surum: taslak.surum, degisti: taslak.degisti } : null } : null} />} />
       <Yuzler>
         <Yuz ikon="layout-list" ad="Rapor formatı" sayi={yayinda ? surumAdi(yayinda) : "Yok"} href="#b-sablon" uyari={!yayinda}
@@ -90,6 +90,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
           <Bilgi etiket="Branş">{bransAd(t.brans)} · onay {onay.toLocaleLowerCase("tr")}</Bilgi>
           <Bilgi etiket="Periyot">{t.periyot} ay</Bilgi>
           <Bilgi etiket="Tahmini kontrol süresi">{t.sure ? `${t.sure} dk` : <DegerYok>Girilmedi</DegerYok>}</Bilgi>
+          <Bilgi etiket="En kısa kontrol süresi">{t.en_kisa ? `${t.en_kisa} dk` : <DegerYok>Girilmedi</DegerYok>}</Bilgi>
         </BilgiListesi>
       </Bolum>
     </>

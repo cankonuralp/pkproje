@@ -20,6 +20,10 @@ export const TurGirdisi = z.object({
     .refine((n) => n >= 1 && n <= 120, "Periyot 1–120 ay.")),
   sure: z.preprocess(sayi, z.string().regex(/^\d{1,3}$/, "Dakika olarak; boş bırakılabilir.").transform(Number)
     .refine((n) => n >= 1, "Dakika olarak; boş bırakılabilir.").nullable()),
+  /* 2026-11-12 (göç 0129; pkproje.md §11 K7): en kısa kontrol süresi (dk) — ölçümlü (TÜRKAK'lı) raporda bundan kısa süren kontrol sapmadır; boşsa
+     denetlenmez. Gönderilmezse kayıttaki değer kalır (hazır kurulum, S.A.Y) */
+  enKisa: z.preprocess(sayi, z.string().regex(/^\d{1,3}$/, "Dakika olarak (1–600); boş bırakılabilir.").transform(Number)
+    .refine((n) => n >= 1 && n <= 600, "Dakika olarak (1–600); boş bırakılabilir.").nullable()).optional(),
 }).superRefine((t, bag) => {
   if (grupBul(t.grup)?.b === null && !t.brans) bag.addIssue({ code: "custom", path: ["brans"], message: "Ek-III dışı türde branş seçilmeli." });
 });

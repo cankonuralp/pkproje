@@ -521,9 +521,12 @@ pkproje/
                             raporlar.ts onayaGonder eksikse "sapma.<tür>" hatalarıyla döner, gerekçeler girdi.sapma'da gelir, rapor.sapmalar'a yazılır;
                             raporSapmalariOku (yazmadan) · gozdenGecirme'ye kontrol süresi / elle düzeltme / sapma + gerekçe (onay ekranı) · ekran
                             raporlar/ui/SapmaPenceresi.tsx · okuyucular ekipman-turleri turEnKisaSure, planlar planGunleri, ayar bölümü "kontrol"
-                            (tesis_arasi_dk; 0 = kapalı) · kilit tests/sapma, raporlar (PG), bozan sapma · T4b EKSİK: türün en kısa süresi ve iki tesis
-                            arası süre için AYAR EKRANI yok (ikisi de boş → "kisa" ve "gecis" denetimi bugün çalışmaz), TÜRKAK'lı e2e tohum firması yok
-                            · SIRADAKİ: T4b ayar ekranları + e2e · T4 sapma + gerekçe + onay ekranı · T5 S.A.Y Chat Rapor modu + bağlantısız saat ·
+                            (tesis_arasi_dk; 0 = kapalı) · kilit tests/sapma, raporlar (PG), bozan sapma
+                            · T4b AYAR EKRANLARI + UÇTAN UCA: Ekipman türleri tür penceresi "En kısa kontrol süresi (dk)" (sema enKisa → en_kisa; tür
+                            sayfasında satır) · Firma ayarları "Kontrol denetimleri" paneli (kesim "kontrol", KontrolGirdisi; yalnız TÜRKAK'lı firmada
+                            görünür) · e2e/kontrol.spec.ts: Yönetim'de deneme firması TÜRKAK'lı → rapor → Kontrole başla / bitir / Saati düzelt → model
+                            geri alınır (afterAll; tek işçi) — sapma penceresinin e2e'si YOK (tam doldurulmuş rapor ister)
+                            · SIRADAKİ: T5 S.A.Y Chat Rapor modu + bağlantısız saat · T4 sapma + gerekçe + onay ekranı · T5 S.A.Y Chat Rapor modu + bağlantısız saat ·
                             T6 S.A.Y saat dağıtmaz · T7 zaman çizelgesi + günlük çizelge · T8 zaman damgasız imza reddi
   src/tanim/iller.ts        81 il + 973 ilçe (açık veri, MIT; bir kez alındı)
   src/tanim/bakanlik/       Bakanlığın resmî PDF'leri ZPKR01–05 (rapor formatı) + ZPKK01–05 (kriterler); 467: ZPKR06 / ZPKK06 kule kren,

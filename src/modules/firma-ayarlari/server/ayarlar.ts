@@ -24,7 +24,7 @@ import { bekleyenleriGonder } from "../../../server/eposta/gonder.ts";
 import { gonderenYolu, type GonderenYolu } from "../../../server/eposta/kimden.ts";
 import { gonderenListesi, hesapGonderen } from "../../../server/kimlik/hesap.ts";
 import { ROL_ADI } from "../../../server/yetki/tanim.ts";
-import {
+import { KontrolGirdisi,
   BulutGirdisi, EpostaGirdisi,
   BelgeTuruGirdisi, FiyatGirdisi, MUSTERI_BELGE_BAS, MUSTERI_BELGE_SON, MusteriBelgeGirdisi,
   AYAR_DOSYASI, EsikGirdisi, FirmaBilgiGirdisi, ImzaGirdisi, KodGirdisi, MESAI_BASLANGIC, MesaiGirdisi, SabitGiderGirdisi, SaklamaGirdisi, ZimmetGirdisi, type AyarDosyasi,
@@ -49,6 +49,8 @@ export interface FirmaAyarlari {
   imza: Surumlu<{ yontem: "mobil" | "e_imza"; teknik: boolean }> & { sign: boolean };
   zimmet: Surumlu<{ teslim_eden: string | null }>;
   saklama: Surumlu<{ yil: number }>;
+  /** 2026-11-12 (göç 0129, K7): kontrol denetimleri — iki tesis arası en az süre (dk; 0 = kapalı) */
+  kontrol: Surumlu<{ tesis_arasi_dk: number }>;
   mesai: Surumlu<{ acik: boolean; normal_dk: number; mesai_dk: number; yillik_fazla_saat: number; baslangic: string }>;
   esik: Surumlu<{ kalibrasyon: number; kontrolu_yaklasan_tesis: number; plan_kontrolu_geliyor: number; egitim: number }>;
   sabit: Surumlu<{ kalemler: { ad: string; aylik: number; not: string }[] }>;
@@ -113,6 +115,7 @@ export async function firmaAyarlari(db: Sorgulayici, kim: Kisi): Promise<FirmaAy
     imza: { deger: im.deger, surum: im.surum, sign: (await sirDurumu(db, "sign_anahtari")).tanimli && (await sirDurumu(db, "sign_webhook_sirri")).tanimli }, zimmet: { deger: zi.deger, surum: zi.surum }, saklama: { deger: sa.deger, surum: sa.surum },
     mesai: { deger: { acik: me.deger.acik, normal_dk: me.deger.normal_dk, mesai_dk: me.deger.mesai_dk, yillik_fazla_saat: me.deger.yillik_fazla_saat, baslangic: me.deger.baslangic }, surum: me.surum },
     esik: { deger: es.deger, surum: es.surum }, sabit: { deger: sg.deger, surum: sg.surum },
+    kontrol: await ayarOku(db, "kontrol").then((k) => ({ deger: k.deger, surum: k.surum })),
     dosyalar: { logo: await dosyaAdi(db, f.deger.logo), on_bilgi: await dosyaAdi(db, bs.deger.on_bilgi), bordro_format: await dosyaAdi(db, bs.deger.bordro_format),
       surum: { firma: f.surum, sablon: bs.surum } },
     kisiler: (await personelSecenekleri(db)).map(({ id, ad }) => ({ id, ad })),
@@ -182,6 +185,11 @@ export async function ayarKaydet(db: Sorgulayici, kim: Kisi, kesim: string, suru
       if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
       if (g.veri.teslim_eden && !(await personelSecenekleri(db)).some((p) => p.id === g.veri.teslim_eden)) return { durum: "gecersiz", hatalar: { teslim_eden: "Çalışan bir kişi seçin." } };
       return yaz("zimmet", g.veri, "Zimmet formunda teslim edenin başlangıç değeri kaydedildi.");
+    }
+    case "kontrol": {
+      const g = dogrula(KontrolGirdisi, girdi);
+      return g.tamam ? yaz("kontrol", g.veri, g.veri.tesis_arasi_dk ? `İki tesis arası en az süre ${g.veri.tesis_arasi_dk} dk.` : "Tesisler arası süre denetlenmeyecek.")
+        : { durum: "gecersiz", hatalar: g.hatalar };
     }
     case "saklama": {
       const g = dogrula(SaklamaGirdisi, girdi);

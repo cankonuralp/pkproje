@@ -6,7 +6,7 @@ import { IA_TURLER } from "./ice-aktar.ts";
 /** bölümler (sol liste ve sayfa sırası — maket ayarCiz sırası; 334'te olanlar) */
 export const AYAR_BASLIK = {
   firma: "Firma bilgileri", imza: "İmza yöntemi", zimmet: "Zimmet teslim formu", saklama: "Rapor saklama süresi", onbilgi: "Ön bilgilendirme formu",
-  bordro: "Bordro formatı", mesai: "Mesai takibi", esik: "Uyarı eşikleri", kod: "Rapor numarası", sabit: "Sabit giderler",
+  bordro: "Bordro formatı", mesai: "Mesai takibi", kontrol: "Kontrol denetimleri", esik: "Uyarı eşikleri", kod: "Rapor numarası", sabit: "Sabit giderler",
   fiyat: "Fiyat listesi", mbelge: "Müşteriye açık personel belgeleri",
   bulut: "Raporların ikinci kopyası", depo: "Supabase hesabı ve yedek", eposta: "E-posta", ice: "Toplu içe aktarma (ilk kurulum)",
 } as const;
@@ -45,6 +45,8 @@ export const ZimmetGirdisi = z.object({ teslim_eden: z.preprocess((v) => (v === 
 export const SaklamaGirdisi = z.object({ yil: secim(SAKLAMA_YIL, "Saklama süresi seçin.") });
 const dk = (en: number, enCok: number, ileti: string) => z.preprocess((v) => (typeof v === "string" ? v.trim() : v),
   z.string().regex(/^\d{1,4}$/, ileti).transform(Number).refine((n) => n >= en && n <= enCok, ileti));
+/** 2026-11-12 (göç 0129; pkproje.md §11 K7): iki tesis arası en az süre (dk) — ölçümlü raporda başka tesisteki kontrolle arası bundan kısaysa sapma; 0 = denetlenmez */
+export const KontrolGirdisi = z.object({ tesis_arasi_dk: dk(0, 600, "0–600 dakika; 0 yazılırsa denetlenmez.") });
 /** 2026-10-31: mesai başlangıcı (SS:DD) — saat planının başlangıcı */
 export const MESAI_BASLANGIC = z.preprocess((v) => (typeof v === "string" ? v.trim().replace(".", ":").replace(/^(\d):/, "0$1:") : v),
   z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Saati SS:DD biçiminde yazın (ör. 09:00)."));

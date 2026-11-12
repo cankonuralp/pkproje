@@ -17,13 +17,13 @@ import { BaglantiGirdisi, TurGirdisi, turBransi } from "../sema.ts";
 
 const MODUL = 5;
 export const DOSYA_MODULU = "ekipman_turu";
-const TUR = tablo({ ad: "ekipman_turu", sutunlar: ["kod", "ad", "grup", "brans", "periyot", "sure", "kontrol_std", "cihaz_turleri"] });
+const TUR = tablo({ ad: "ekipman_turu", sutunlar: ["kod", "ad", "grup", "brans", "periyot", "sure", "en_kisa", "kontrol_std", "cihaz_turleri"] });
 const FORMAT = tablo({ ad: "tur_format", sutunlar: ["tur_id", "sira", "dosya_id", "notu", "kaldirildi"] });
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 export interface Kisi extends YetkiHesabi { ad: string }
 export interface FormatSurumu { id: string; sira: number; dosyaId: string; dosyaAd: string; notu: string | null; olustu: string; surum: number }
-export interface TurSatiri { id: string; kod: string; ad: string; grup: string; brans: "m" | "e"; periyot: number; sure: number | null; format: Pick<FormatSurumu, "sira" | "olustu"> | null }
+export interface TurSatiri { id: string; kod: string; ad: string; grup: string; brans: "m" | "e"; periyot: number; sure: number | null; /** en kısa kontrol süresi (dk; göç 0129) */ en_kisa: number | null; format: Pick<FormatSurumu, "sira" | "olustu"> | null }
 export interface TurStandardi { no: string; id: string | null; surumAdi: string | null; konu: string | null }
 export interface TurKarti extends TurSatiri { surum: number; formatlar: FormatSurumu[]; standartlar: TurStandardi[]; cihazTurleri: { id: string; ad: string }[] }
 
@@ -45,8 +45,8 @@ export async function turDosyasiGorulur(db: Sorgulayici, kisi: YetkiHesabi, kayi
   return !!(await db.sorgu("SELECT 1 FROM ekipman_turu WHERE id = $1", [kayitId])).rowCount;
 }
 
-type TurDb = { id: string; kod: string; ad: string; grup: string; brans: "m" | "e"; periyot: number; sure: number | null; surum: number };
-const TUR_SEC = "SELECT id::text, kod, ad, grup, brans, periyot, sure, surum FROM ekipman_turu";
+type TurDb = { id: string; kod: string; ad: string; grup: string; brans: "m" | "e"; periyot: number; sure: number | null; en_kisa: number | null; surum: number };
+const TUR_SEC = "SELECT id::text, kod, ad, grup, brans, periyot, sure, en_kisa, surum FROM ekipman_turu";
 type BagDb = { kontrol_std: string[]; cihaz_turleri: string[] };
 
 export async function turListesi(db: Sorgulayici, kim: Kisi): Promise<TurSatiri[] | null> {
@@ -92,7 +92,7 @@ export async function turKaydet(db: Sorgulayici, kim: Kisi, id: string | null, s
     const k = (await db.sorgu<{ ad: string }>("SELECT ad FROM ekipman_turu WHERE kod = $1", [v.kod])).rows[0];
     if (k) return { durum: "gecersiz", hatalar: { kod: `${v.kod} kodu ${k.ad} türünde kullanılıyor.` } };
   }
-  const degerler = { ad: v.ad, grup: v.grup, brans: turBransi(v), periyot: v.periyot, sure: v.sure };
+  const degerler = { ad: v.ad, grup: v.grup, brans: turBransi(v), periyot: v.periyot, sure: v.sure, ...(v.enKisa !== undefined ? { en_kisa: v.enKisa } : {}) };
   if (!mevcut) return { durum: "tamam", ...(await ekle(db, TUR, { kod: v.kod, ...degerler }, { kim: kim.ad, ne: "ekipman_turu.ekle" })) };
   if (!Number.isSafeInteger(surum) || surum < 0) return { durum: "cakisma" };
   const r = await guncelle(db, TUR, mevcut.id, surum, degerler, { kim: kim.ad, ne: "ekipman_turu.guncelle" });
