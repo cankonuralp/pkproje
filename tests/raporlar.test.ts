@@ -28,10 +28,11 @@ import { TAMAMLANDI_RAPOR, tarihNo } from "../src/modules/planlar/sema.ts";
 import { taslakBaslat, taslakKaydet, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
 import { ayEkle } from "../src/modules/raporlar/sema.ts";
 import {
-  cihazEkle, cihazKaldir, EKIPTE_DEGIL, fotoEkle, fotoSil, gunlukKontroller, kayitliOnayaGonder, KONTROL_BITMEDI, kontrolBasla, kontrolBitir, kontrolSaatDuzelt, onayaGonder, raporBelgesiVerisi, raporFormatGuncelle, raporKaydet, raporKopyala, raporKunyeGuncelle, raporOlustur,
+  cihazEkle, cihazKaldir, EKIPTE_DEGIL, fotoEkle, fotoSil, gunlukKontroller, kayitliOnayaGonder, KONTROL_BITMEDI, kontrolBasla, kontrolBitir, kontrolCihazdan, kontrolSaatDuzelt, onayaGonder, raporBelgesiVerisi, raporFormatGuncelle, raporKaydet, raporKopyala, raporKunyeGuncelle, raporOlustur,
   raporListesi, raporSapmalariOku, raporSil, raporZamanCizelgesi, sahaRaporu, type RaporYazma,
 } from "../src/modules/raporlar/server/raporlar.ts";
 import { raporDurumYaz } from "../src/modules/raporlar/server/onay-baglanti.ts";
+import { raporIslemi } from "../src/modules/raporlar/server/islem-baglanti.ts";
 import { formatRaporSayilari } from "../src/modules/raporlar/server/format-baglanti.ts";
 import { ayarOku, ayarYaz } from "../src/server/ayar/ayar.ts";
 import { dosyaIndirilebilir } from "../src/server/dosya/dosya.ts";
@@ -1154,7 +1155,7 @@ test("kontrol saati (0128): TÜRKAK'lı firmada açılan rapor ölçümlü — s
     assert.equal((await sr(FA.den1, eski.id))!.olcum, null, "model değişmeden açılan rapor ölçümsüz");
     assert.equal((await a(FA.den1, (db) => kontrolBasla(db, FA.den1, eski.id))).durum, "red", "ölçümsüz raporda kontrol başlatılmaz");
     let d = (await sr(FA.den1, r.id))!;
-    assert.deepEqual(d.olcum, { durum: "yok", kaynak: null, bas: null, bit: null, duzeltme: null });
+    assert.deepEqual(d.olcum, { durum: "yok", kaynak: null, bas: null, bit: null, duzeltme: null, cihaz: false, tutmadi: false });
     /* kontrol bitmeden onaya gitmez; gönderilen saat rapora yazılmaz */
     assert.deepEqual(await gonder(FA.den1, r.id, d.surum, girdi()), { durum: "red", neden: KONTROL_BITMEDI });
     d = (await sr(FA.den1, r.id))!;
@@ -1235,6 +1236,80 @@ test("kontrol saati (0128): TÜRKAK'lı firmada açılan rapor ölçümlü — s
     assert.equal((await sql(B, "SELECT 1 FROM kontrol")).rowCount, 0);
     assert.equal((await sql(A, "SELECT 1 FROM kontrol")).rowCount, 2);
     for (const ne of ["kontrol.basla", "kontrol.bitir", "kontrol.duzelt", "rapor.kontrol_saati"]) {
+      assert.ok((await su.query("SELECT 1 FROM denetim_izi WHERE firma_id = $1 AND ne = $2", [A, ne])).rowCount, ne);
+    }
+  } finally {
+    await su.query(`UPDATE firma_ayar SET deger = '{"model": "siz"}'::jsonb WHERE firma_id = $1 AND bolum = 'calisma'`, [A]);
+    await su.end();
+  }
+});
+
+test("bağlantısız kontrol saati (0131, K4): cihaz saati sunucu saatine çevrilir; yinelenen iş ölçüleni değiştirmez; aynı kişide tek kontrol; tutmayan saat işaretlenir ve sapma olur; kaynak ve kanıt değişmez", async () => {
+  const id = await yeniPlan();
+  const su = kume.sahipIstemci(); await su.connect();
+  try {
+    await su.query(`INSERT INTO firma_ayar (firma_id, bolum, deger) VALUES ($1, 'calisma', '{"model": "turkak"}'::jsonb)
+      ON CONFLICT (firma_id, bolum) DO UPDATE SET deger = EXCLUDED.deger`, [A]);
+    const r = tamam(await olustur(FA.den1, id, FA.ekp["HT-A1"]));
+    const r2 = tamam(await olustur(FA.den1, id, FA.ekp["HT-A2"]));
+    const cihaz = (rapor: string, uc: "basla" | "bitir", g: unknown, gonderim: number | null) => a(FA.den1, (db) => kontrolCihazdan(db, FA.den1, rapor, uc, g, gonderim));
+    const DK = 60_000, S = Date.now();
+    /* cihazın saati sunucudan 2 dk geri; bağlantıdan çıkarken (1 saat önce) ve dönerken (şimdi) aynı fark → tutar */
+    const c = (ms: number) => ms - 2 * DK;
+    const capa = { sunucu: S - 60 * DK, cihaz: c(S - 60 * DK) };
+    assert.equal((await cihaz(r.id, "bitir", { an: c(S - 10 * DK), capa }, c(Date.now()))).durum, "red", "başlamamış kontrol bitmez");
+    assert.equal((await cihaz(r.id, "basla", { an: "x", capa }, c(Date.now()))).durum, "gecersiz");
+    assert.equal((await a(FA.den2, (db) => kontrolCihazdan(db, FA.den2, r.id, "basla", { an: c(S - 40 * DK), capa }, c(Date.now())))).durum, "yok", "raporu görmeyen yazamaz");
+    /* kuyruktan gelen iş: raporun sürümü fotoğraf gibi ilerler (bekleyen Kaydet yeni sürüme taşınır) */
+    const once = (await sr(FA.den1, r.id))!.surum;
+    const is = await a(FA.den1, (db) => raporIslemi(db, { depo: null as never, firmaId: A }, FA.den1, "kontrol.basla", r.id, 0, { an: c(S - 40 * DK), capa }, c(Date.now())));
+    assert.equal(is.durum, "tamam");
+    let d = (await sr(FA.den1, r.id))!;
+    assert.deepEqual("surum" in is ? is.surum : null, { once, sonra: d.surum });
+    assert.ok(d.surum > once);
+    assert.deepEqual([d.olcum!.durum, d.olcum!.kaynak, d.olcum!.cihaz, d.olcum!.tutmadi, d.tarih.bas], ["suruyor", "cihaz", true, false, d.olcum!.bas]);
+    const k = async (ekp: string) => (await sql<{ basladi: Date; bitti: Date | null; bit_kaynak: string | null; saat_tutmadi: boolean; kanit: { bas?: { an: number; neden: string | null }; bit?: { neden: string | null } } }>(A,
+      "SELECT basladi, bitti, bit_kaynak, saat_tutmadi, cihaz_kanit AS kanit FROM kontrol WHERE plan_id = $1 AND ekipman_id = $2", [id, FA.ekp[ekp]])).rows[0]!;
+    let k1 = await k("HT-A1");
+    assert.ok(Math.abs(k1.basladi.getTime() - (S - 40 * DK)) < 5_000, "başlangıç sunucu saatine çevrildi (40 dk önce)");
+    assert.deepEqual([k1.kanit.bas!.an, k1.kanit.bas!.neden, k1.saat_tutmadi], [c(S - 40 * DK), null, false]);
+    /* iş yeniden gelirse ölçülen değişmez; K3: süren kontrol varken öteki başlamaz */
+    assert.deepEqual(await cihaz(r.id, "basla", { an: c(S - 20 * DK), capa }, c(Date.now())), { durum: "tamam", id: r.id, bildirim: "Kontrol zaten başlatılmış." });
+    assert.equal((await k("HT-A1")).basladi.getTime(), k1.basladi.getTime());
+    assert.deepEqual(await cihaz(r2.id, "basla", { an: c(S - 5 * DK), capa }, c(Date.now())), { durum: "red", neden: "Önce HT-A1 kontrolünü bitirin; aynı anda tek kontrol sürer." });
+    tamam(await cihaz(r.id, "bitir", { an: c(S - 10 * DK), capa }, c(Date.now())));
+    assert.deepEqual(await cihaz(r.id, "bitir", { an: c(S - 1 * DK), capa }, c(Date.now())), { durum: "tamam", id: r.id, bildirim: "Kontrol zaten bitirildi." });
+    k1 = await k("HT-A1");
+    assert.ok(Math.abs(k1.bitti!.getTime() - (S - 10 * DK)) < 5_000);
+    assert.deepEqual([k1.bit_kaynak, k1.saat_tutmadi, k1.kanit.bit!.neden], ["cihaz", false, null]);
+    d = (await sr(FA.den1, r.id))!;
+    assert.deepEqual([d.olcum!.durum, d.olcum!.cihaz, d.olcum!.tutmadi, d.tarih.bit], ["bitti", true, false, d.olcum!.bit]);
+    assert.ok(!(await a(FA.den1, (db) => raporSapmalariOku(db, FA.den1, r.id)))!.some((x) => x.tur === "saat"), "tutan saat sapma değil");
+    const cz = (await a(FA.den1, (db) => raporZamanCizelgesi(db, FA.den1, r.id)))!;
+    assert.deepEqual(cz.satirlar.filter((x) => x.olay.startsWith("Kontrol")).map((x) => [x.kaynak, x.dikkat]), [["Cihaz", false], ["Cihaz", false]]);
+    /* ikinci rapor: cihaz saati bağlantısızken oynanmış (dönerken fark 32 dk) → kayıt yazılır ama işaretli; bağlantılı bitirilir; sapma "saat" */
+    tamam(await cihaz(r2.id, "basla", { an: c(S - 5 * DK), capa }, c(Date.now()) - 30 * DK));
+    tamam(await a(FA.den1, (db) => kontrolBitir(db, FA.den1, r2.id)));
+    const k2 = await k("HT-A2");
+    assert.deepEqual([k2.bit_kaynak, k2.saat_tutmadi, typeof k2.kanit.bas!.neden], ["sunucu", true, "string"]);
+    assert.ok(k2.basladi.getTime() <= Date.now() && k2.bitti!.getTime() >= k2.basladi.getTime(), "ileri an yazılmadı");
+    d = (await sr(FA.den1, r2.id))!;
+    assert.deepEqual([d.olcum!.durum, d.olcum!.cihaz, d.olcum!.tutmadi], ["bitti", true, true]);
+    const sp = (await a(FA.den1, (db) => raporSapmalariOku(db, FA.den1, r2.id)))!.filter((x) => x.tur === "saat");
+    assert.equal(sp.length, 1);
+    assert.match(sp[0]!.metin, /^Bağlantısızken alınan kontrol saati sunucu saatiyle tutmadı: /);
+    /* saat gerekçeyle düzeltilince "saat" sapması kalkar (düzeltmenin kendi gerekçesi var) */
+    tamam(await a(FA.den1, (db) => kontrolSaatDuzelt(db, FA.den1, r2.id, { bas: `${dun}T10:00`, bit: `${dun}T10:30`, gerekce: "Telefonun saati yanlıştı, düzeltildi" })));
+    assert.ok(!(await a(FA.den1, (db) => raporSapmalariOku(db, FA.den1, r2.id)))!.some((x) => x.tur === "saat"));
+    /* veritabanı: kaynak, kanıt ve "tutmadı" işareti sonradan değişmez; cihaz saatiyle ileri an yazılmaz; iz yazılır */
+    await assert.rejects(sql(A, "UPDATE kontrol SET saat_tutmadi = false WHERE plan_id = $1", [id]), /değişmez/);
+    await assert.rejects(sql(A, "UPDATE kontrol SET bit_kaynak = 'cihaz' WHERE plan_id = $1", [id]), /değişmez/);
+    await assert.rejects(sql(A, "UPDATE kontrol SET cihaz_kanit = '{}'::jsonb WHERE plan_id = $1", [id]), /değişmez/);
+    await assert.rejects(sql(A, `INSERT INTO kontrol (plan_id, ekipman_id, personel_id, kaynak, basladi, cihaz_kanit)
+      SELECT plan_id, $2, personel_id, 'cihaz', now() + interval '1 hour', '{"bas": {}}'::jsonb FROM kontrol WHERE plan_id = $1 LIMIT 1`, [id, FA.ekp["HT-A3"]]), /ileri bir an/);
+    await assert.rejects(sql(A, `INSERT INTO kontrol (plan_id, ekipman_id, personel_id, kaynak, basladi)
+      SELECT plan_id, $2, personel_id, 'cihaz', now() - interval '1 hour' FROM kontrol WHERE plan_id = $1 LIMIT 1`, [id, FA.ekp["HT-A3"]]), /kontrol_cihaz_kanit_var_ck/);
+    for (const ne of ["kontrol.basla_cihaz", "kontrol.bitir_cihaz"]) {
       assert.ok((await su.query("SELECT 1 FROM denetim_izi WHERE firma_id = $1 AND ne = $2", [A, ne])).rowCount, ne);
     }
   } finally {

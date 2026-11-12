@@ -22,7 +22,7 @@ async function bozuk(eski: string, yeni: string): Promise<typeof import("../../s
   return import(pathToFileURL(hedef).href);
 }
 const T = (s: string) => new Date(`2026-11-12T${s}:00+03:00`);
-const SATIR = { id: "x", kaynak: "sunucu" as const, basladi: T("13:30"), bitti: null, duz_bas: null, duz_bit: null, duz_gerekce: null, duz_zaman: null, duz_kim: null, surum: 0 };
+const SATIR = { id: "x", kaynak: "sunucu" as const, basladi: T("13:30"), bitti: null, duz_bas: null, duz_bit: null, duz_gerekce: null, duz_zaman: null, duz_kim: null, surum: 0, bit_kaynak: null, cihaz_kanit: null, saat_tutmadi: false };
 
 test("1) 'bitti' koşulu kalkınca süren kontrol bitmiş sayılır (rapor kontrol bitmeden onaya giderdi)", async () => {
   const m = await bozuk('k.kaynak === "elle" || k.bitti ? "bitti" : "suruyor"', '"bitti"');

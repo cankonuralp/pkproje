@@ -100,6 +100,11 @@ export const FotoIslemGirdisi = z.object({
    numarayı sunucu verir) */
 export const OlusturIslemGirdisi = z.object({ plan: kimlik, ekipman: kimlik });
 
+/** 2026-11-12 (göç 0131, K4): bağlantısızken basılan "Kontrole başla" / "Kontrolü bitir" — olayın cihaz saati ve bağlantıdan çıkmadan önceki son
+    sunucu ölçümü (çapa); hesap cihaz-saati.ts. Anlar ms (2020 – 2100 arası) */
+const anMs = z.number().int().min(1_577_836_800_000).max(4_102_444_800_000);
+export const KontrolCihazGirdisi = z.object({ an: anMs, capa: z.object({ sunucu: anMs, cihaz: anMs }).nullable() });
+
 /** 2026-10-17 (reisim: "rapor isimleri sadece rapor kodlarından oluşuyor bu şekilde klasörde anlaması zor, rapor isimlerinde rapor numarasından sonra
     - ekipman kodu- sonra da ekipmanın adı "kompresör hava tankı" veeya "yangın dolapları" ne ise artık o yazmalı"): raporun PDF dosya adı
     "<rapor no>-<ekipman kodu>-<ekipman türünün adı>[-ek].pdf" (ör. DM-1026-003-cf59e-HT-1-Kompresör hava tankı.pdf). Windows'un ve ZIP'in sorun

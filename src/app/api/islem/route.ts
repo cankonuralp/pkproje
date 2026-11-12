@@ -41,6 +41,9 @@ export async function POST(istek: Request) {
   const o = await istekOturumu();
   if (!o) return yanit({ hata: "oturum" }, 401);
   const b = g.data;
+  /* işin gönderildiği andaki cihaz saati (kuyruk koyar): saat farkı uyarısı ve bağlantısız kontrol saatinin sunucu saatine çevrilmesi (0131, K4) */
+  const cihaz = Number(istek.headers.get("x-probata-saat"));
+  const gonderim = Number.isFinite(cihaz) && cihaz > 0 ? cihaz : null;
   if (b.yazan !== yazanEtiketi(o.id)) return yanit({ hata: "baska_hesap" }, 409);
   const { s, guncel } = await oturumIslemi(o, async (db) => {
     const tur = b.tur;
@@ -48,13 +51,14 @@ export async function POST(istek: Request) {
     const s = await tekSeferlik(db, { id: b.id, tur, kayit: b.kayit, zaman: b.zaman }, (): Promise<PlanYazma | RaporIslemSonucu | ChatYazma> => (planIslemTuruMu(tur)
       ? planIslemi(db, o, tur, b.kayit, b.surum, b.girdi)
       : chatIslemTuruMu(tur) ? chatIslemi(db, dosya, o, tur, b.kayit, b.surum, b.girdi)
-      : raporIslemi(db, dosya, o, tur, b.kayit, b.surum, b.girdi)));
+      : raporIslemi(db, dosya, o, tur, b.kayit, b.surum, b.girdi, gonderim)));
     /* çakışmada güncel sürüm ("benimkini yaz" seçilirse cihaz bununla yeni kimlik gönderir) */
     const cakisma = s.durum !== "kimlik_kullanildi" && s.sonuc.durum === "cakisma";
     return { s, guncel: cakisma ? await (planIslemTuruMu(tur) ? planGuncelSurum : chatIslemTuruMu(tur) ? chatGuncelSurum : raporGuncelSurum)(db, b.kayit) : null };
   });
   if (s.durum === "kimlik_kullanildi") return yanit({ hata: "kimlik" }, 409);
-  const cihaz = Number(istek.headers.get("x-probata-saat"));
-  const fark = Number.isFinite(cihaz) && cihaz > 0 ? Math.round((cihaz - Date.now()) / 60_000) : 0;
-  return yanit({ tekrar: s.durum === "tekrar", sonuc: s.sonuc, ...(guncel !== null ? { guncel } : {}), ...(Math.abs(fark) > SAAT_FARKI_DK ? { saatFarkiDk: fark } : {}) });
+  const simdi = Date.now();
+  const fark = gonderim !== null ? Math.round((gonderim - simdi) / 60_000) : 0;
+  /* simdi: cihaz bu yanıtla saatini ölçer (bağlantıdan çıkmadan önceki son ölçüm — components/cevrimdisi/saat.ts) */
+  return yanit({ simdi, tekrar: s.durum === "tekrar", sonuc: s.sonuc, ...(guncel !== null ? { guncel } : {}), ...(Math.abs(fark) > SAAT_FARKI_DK ? { saatFarkiDk: fark } : {}) });
 }

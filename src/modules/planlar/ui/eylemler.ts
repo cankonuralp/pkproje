@@ -32,9 +32,10 @@ export async function planSayfasiEylemi(durum: unknown): Promise<SunucuListe<Pla
 }
 
 /** çevrimdışı paket (396): kişinin önümüzdeki 7 gündeki planları ve Yeni raporları — cihaz bu sayfaları önceden açar */
-export async function cevrimdisiPaketiEylemi(): Promise<CevrimdisiPaketi | null> {
+/** simdi: sunucunun saati — cihaz onunla saatini ölçer (bağlantısız kontrol saati; göç 0131, components/cevrimdisi/saat.ts) */
+export async function cevrimdisiPaketiEylemi(): Promise<(CevrimdisiPaketi & { simdi: number }) | null> {
   const o = await oturum(); if (typeof o === "string") return null;
-  return oturumIslemi(o, (db) => cevrimdisiPaketi(db, o, bugunTr()));
+  return { ...(await oturumIslemi(o, (db) => cevrimdisiPaketi(db, o, bugunTr()))), simdi: Date.now() };
 }
 
 export async function tesisPlanBilgisiEylemi(tesisId: string): Promise<TesisPlanBilgisi | null> {

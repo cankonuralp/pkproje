@@ -54,7 +54,9 @@ function YeniIc({ p, e, onceki }: { p: YeniRaporPaketi; e: YeniRaporPaketi["ekip
     ekipmanBilgi: e.ekipmanBilgi, tarih: { bas, bit: null, sonraki: null, takip: null, rapor: null },
     cevaplar: e.cevaplar ?? t.ilk, tanim: t.tanim, formatSira: t.formatSira, cihazlar: t.cihazlar, fotolar: [], secilebilir: {},
     kopyaKaynak: null, takip: null, guncelFormat: null, mesaiDolu: false, geri: null, revize: null, imza: null, imzali: null,
-    izin: { duzenle: true, sil: false, kopyala: false, kopyaEngel: null }, yz: false, kaynak: { standartlar: p.standartlar ?? null, kriterler: t.kriterler ?? [] }, oneriler: [], okunanFotolar: [], olcum: null,   // cihazda eski paket (428 öncesi) bu alanları taşımaz
+    izin: { duzenle: true, sil: false, kopyala: false, kopyaEngel: null }, yz: false, kaynak: { standartlar: p.standartlar ?? null, kriterler: t.kriterler ?? [] }, oneriler: [], okunanFotolar: [],
+    /* 0131 (K4): TÜRKAK'lı firmada bağlantısız açılan rapor ölçümlü olur — kontrol cihaz saatiyle başlatılır */
+    olcum: p.olcumlu ? { durum: "yok", kaynak: null, bas: null, bit: null, duzeltme: null, cihaz: false, tutmadi: false } : null,   // cihazda eski paket (428 öncesi) bu alanları taşımaz
   }), [id, p, e, t, bas]);
   const yeni = useMemo(() => ({ plan: p.plan.id, ekipman: e.id, kod: e.kod }), [p.plan.id, e.id, e.kod]);
   return (

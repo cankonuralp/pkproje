@@ -9,7 +9,7 @@ import { KontrolDuzeltme } from "../src/modules/raporlar/sema.ts";
 
 const T = (s: string) => new Date(`2026-11-12T${s}:00+03:00`);
 const satir = (k: Partial<KontrolSatiri>): KontrolSatiri => ({ id: "x", kaynak: "sunucu", basladi: null, bitti: null, duz_bas: null, duz_bit: null, duz_gerekce: null,
-  duz_zaman: null, duz_kim: null, surum: 0, ...k });
+  duz_zaman: null, duz_kim: null, surum: 0, bit_kaynak: null, cihaz_kanit: null, saat_tutmadi: false, ...k });
 
 test("kontrol durumu: kayıt yoksa yok; ölçülüp bitirilmemiş sürüyor; bitirilmiş ya da saati gerekçeyle yazılmış bitti", () => {
   assert.equal(kontrolDurumu(null), "yok");

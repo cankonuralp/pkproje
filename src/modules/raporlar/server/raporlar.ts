@@ -40,7 +40,7 @@ import { formatSurumuOku as formatSurumuHam, yayindakiFormat as yayindakiHam } f
 import { sahaTanimi } from "../../../format/tablo.ts";
 import { kimdeHaritasi } from "../../zimmetler/server/zimmet.ts";
 import { hesabinPersoneli, roldekiHesapAdlari } from "../../../server/kimlik/hesap.ts";
-import { KontrolDuzeltme,
+import { KontrolCihazGirdisi, KontrolDuzeltme,
   ayEkle, gorunenNo, kalibrasyonGecti, raporDosyaAdi, KopyaGirdisi, RAPOR_DURUM, RaporKaydi, raporYazmaNedeni, RevizeGirdisi, SONUC_AD, EkipmanBilgisi, type RaporCihazi, type RaporDurumu, type RaporTarihleri,
 } from "../sema.ts";
 import { otomatikCihazlar } from "../cihaz-sec.ts";
@@ -55,7 +55,8 @@ import { fotoKaniti, type FotoKaniti } from "../foto-kanit.ts";
 import { sapmaGerekceleri, sapmaKarari, sapmalar, type Sapma, type SapmaKaydi } from "../sapma.ts";
 import { zamanCizelgesi, type CizelgeSatiri } from "../cizelge.ts";
 import type { GunlukKontrol } from "../gunluk.ts";
-import { acikKontrol, etkinSaat, kontrolBaslat, kontrolBitirYaz, kontrolDurumu, kontrolDuzeltYaz, kontrolOku, type KontrolAnahtari, type KontrolDurumu, type KontrolKaynagi,
+import { cihazSaati } from "../cihaz-saati.ts";
+import { acikKontrol, etkinSaat, kontrolBaslat, kontrolBaslatCihaz, kontrolBitirCihaz, kontrolBitirYaz, kontrolDurumu, kontrolDuzeltYaz, kontrolOku, type KontrolAnahtari, type KontrolDurumu, type KontrolKaynagi,
   type KontrolSatiri } from "./kontrol.ts";
 import { kayitDosyasi } from "../../../server/dosya/dosya.ts";
 import { signEkrani, type SignEkrani } from "./sign.ts";
@@ -542,6 +543,8 @@ export interface YeniRaporPaketi {
   turler: Record<string, { tur: SahaRaporu["tur"]; tanim: FormatTanimi; formatSira: number; ilk: Cevaplar; cihazlar: CihazSatiri[]; kriterler: KriterBelgesi[] }>;
   /** 428: firmanın güncel standartları (Dökümanlar'ı görmeyene null) — bağlantısız da standart penceresi listeyi bilir */
   standartlar: StandartOzeti[] | null;
+  /** 0131 (K4): firma TÜRKAK'lı — bağlantısız açılan rapor ölçümlü olacak; ekranda kontrol kutusu çıkar (eski pakette yok) */
+  olcumlu?: boolean;
 }
 /** planın bağlantısız yeni rapor paketi; rapor açamayan (ekipte değil, yetkisiz) ya da planı göremeyene null */
 export async function yeniRaporPaketi(db: Sorgulayici, kim: Kisi, planId: string): Promise<YeniRaporPaketi | null> {
@@ -593,6 +596,7 @@ export async function yeniRaporPaketi(db: Sorgulayici, kim: Kisi, planId: string
     ekip: await ikinciSecenekleri(db, plan.ekip, plan.personelId),
     kunye: { firmaAdi: plan.kunye.firma_adi, adres: plan.kunye.adres, sgk: plan.kunye.sgk, isgNo: plan.kunye.isg_no, eposta: iletisim?.eposta ?? null, tel: iletisim?.tel ?? null },
     bugun, neden, planDurum: plan.durum, planBaslangic: plan.baslangic, mesai, ekipmanlar, turler, standartlar: await raporStandartlari(db, kim),
+    olcumlu: (await calismaModeli(db)) === "turkak",
   };
 }
 
@@ -725,15 +729,17 @@ export interface OlcumGorunumu {
   bas: string | null; bit: string | null;
   /** saat gerekçeyle yazıldı / düzeltildi: ölçülen değerler (hiç ölçülmediyse null), gerekçe, yazan ve zamanı */
   duzeltme: { olculenBas: string | null; olculenBit: string | null; gerekce: string; kim: string; zaman: string } | null;
+  /** 0131 (K4): başlangıç ya da bitiş bağlantısızken cihaz saatiyle alındı · cihaz saati sunucuyla tutmadı (sapma) */
+  cihaz: boolean; tutmadi: boolean;
 }
 const kontrolAnahtari = (r: Pick<RaporSatiri, "plan_id" | "ekipman_id" | "personel_id" | "takip_kaynak">): KontrolAnahtari =>
   ({ plan_id: r.plan_id, ekipman_id: r.ekipman_id, personel_id: r.personel_id, takip: !!r.takip_kaynak });
 async function olcumGorunumu(db: Sorgulayici, r: RaporSatiri): Promise<OlcumGorunumu | null> {
   if (!r.olcumlu) return null;
   const k = await kontrolOku(db, kontrolAnahtari(r));
-  if (!k) return { durum: "yok", kaynak: null, bas: null, bit: null, duzeltme: null };
+  if (!k) return { durum: "yok", kaynak: null, bas: null, bit: null, duzeltme: null, cihaz: false, tutmadi: false };
   const e = etkinSaat(k);
-  return { durum: kontrolDurumu(k), kaynak: k.kaynak, bas: zamanOku(e.bas), bit: zamanOku(e.bit),
+  return { durum: kontrolDurumu(k), kaynak: k.kaynak, bas: zamanOku(e.bas), bit: zamanOku(e.bit), cihaz: k.kaynak === "cihaz" || k.bit_kaynak === "cihaz", tutmadi: k.saat_tutmadi,
     duzeltme: k.duz_bas ? { olculenBas: zamanOku(k.basladi), olculenBit: zamanOku(k.bitti), gerekce: k.duz_gerekce ?? "", kim: k.duz_kim ?? "", zaman: (k.duz_zaman ?? new Date()).toISOString() } : null };
 }
 /** kontrol kaydındaki saat raporun bas / bit'ine; kontrol günü değiştiyse başlangıçtan türeyen sonraki kontrol ve rapor tarihi de (elle seçilen kalır) */
@@ -757,7 +763,10 @@ async function raporSapmalari(db: Sorgulayici, r: RaporSatiri): Promise<Sapma[]>
     [r.personel_id, r.id, new Date(r.bas.getTime() - GUN_MS), new Date(r.bit.getTime() + GUN_MS)])).rows;
   const planlar = await planGunleri(db, [r.plan_id, ...diger.map((x) => x.plan_id)]);
   const p = planlar.get(r.plan_id), gun = GUN.format(r.bas);
-  return sapmalar({
+  /* 0131 (K4): bağlantısızken alınan saat sunucuyla tutmadıysa sapma — saat gerekçeyle düzeltildiyse düzeltmenin kendi gerekçesi var */
+  const k = await kontrolOku(db, kontrolAnahtari(r));
+  const saatTutmadi = k && k.saat_tutmadi && !k.duz_bas ? (k.cihaz_kanit?.bit?.neden ?? k.cihaz_kanit?.bas?.neden ?? "cihaz saati doğrulanamadı") : null;
+  return sapmalar({ saatTutmadi,
     bas: zamanOku(r.bas)!, bit: zamanOku(r.bit)!, enKisaDk: await turEnKisaSure(db, r.tur_id), tesis: p?.tesisId ?? "", planBas: p?.baslangic ?? gun, planBit: p?.bitis ?? gun,
     digerleri: diger.map((x) => ({ no: gorunenNo(x.no, x.revizyon), bas: zamanOku(x.bas)!, bit: zamanOku(x.bit)!, tesis: planlar.get(x.plan_id)?.tesisId ?? null })),
     tesisArasiDk: (await ayarOku(db, "kontrol")).deger.tesis_arasi_dk, fotolar: r.fotolar.filter((f) => !f.okuma).map((f) => ({ ad: f.ad, cekim: f.cekim })),
@@ -783,7 +792,7 @@ export async function raporZamanCizelgesi(db: Sorgulayici, kim: Kisi, id: string
   const et = await ekipmanEtiketi(db, r.ekipman_id);
   return { id: r.id, no: gorunenNo(r.no, r.revizyon), plan: { id: r.plan_id, no: plan?.no ?? "—" }, ekipmanKod: et?.kod ?? "—", turAd: tur.ad, yazan,
     satirlar: zamanCizelgesi({ hareketler: h.map((x) => ({ zaman: x.zaman, ne: x.ne, gerekce: x.gerekce, kim: adlar.get(x.hesap_id ?? "") ?? "—" })),
-      kontrol: k ? { basladi: k.basladi, bitti: k.bitti, duzBas: k.duz_bas, duzBit: k.duz_bit, gerekce: k.duz_gerekce, duzKim: k.duz_kim, duzZaman: k.duz_zaman } : null,
+      kontrol: k ? { basCihaz: k.kaynak === "cihaz", bitCihaz: k.bit_kaynak === "cihaz", tutmadi: k.saat_tutmadi, basladi: k.basladi, bitti: k.bitti, duzBas: k.duz_bas, duzBit: k.duz_bit, gerekce: k.duz_gerekce, duzKim: k.duz_kim, duzZaman: k.duz_zaman } : null,
       yazan, fotolar: r.fotolar, sapmalar: r.sapmalar }) };
 }
 /** günlük çizelgenin satırları (2026-11-12; pkproje.md §11 T7 — ../gunluk.ts): o gün (Türkiye) başlamış ölçülmüş kontroller, rapora yazılan saatle.
@@ -843,6 +852,40 @@ export async function kontrolBitir(db: Sorgulayici, kim: Kisi, id: string): Prom
   if (k.bitti) return { durum: "red", neden: "Kontrol zaten bitirildi." };
   const y = await kontrolBitirYaz(db, a, k, { kim: kim.ad, ne: "kontrol.bitir", gerekce: gorunenNo(e.r.no, e.r.revizyon) });
   return saatiRaporaYaz(db, kim, e, y, "Kontrol bitti.");
+}
+
+/** bağlantısızken basılan "Kontrole başla" / "Kontrolü bitir" (2026-11-12, göç 0131; pkproje.md §11 K4 — kuyruktan gelir: islem-baglanti.ts):
+    olayın cihaz saati sunucu saatine çevrilir (../cihaz-saati.ts); tutmadıysa kayıt reddedilmez, işaretlenir (sapma). İş bir kez daha gelirse ya da
+    aynı uç bağlantılıyken zaten yazıldıysa değişiklik yapılmaz (ölçülen değer kalır). `gonderim`: işin gönderildiği andaki cihaz saati */
+export async function kontrolCihazdan(db: Sorgulayici, kim: Kisi, id: string, uc: "basla" | "bitir", girdi: unknown, gonderim: number | null): Promise<RaporYazma> {
+  const e = await yazilabilir(db, kim, id);
+  if (hataMi(e)) return e;
+  if (!e.r.olcumlu) return OLCUMSUZ;
+  const g = KontrolCihazGirdisi.safeParse(girdi);
+  if (!g.success) return { durum: "gecersiz", hatalar: { kontrol: "Cihazdaki kontrol saati okunamadı." } };
+  const simdi = Date.now();
+  const o = cihazSaati({ an: g.data.an, capa: g.data.capa, gonderim }, simdi);
+  const kanit = { an: g.data.an, capa: g.data.capa, gonderim, sunucu: simdi, neden: o.neden };
+  await db.sorgu("SELECT pg_advisory_xact_lock(hashtext('kontrol:' || $1))", [e.r.personel_id]);
+  const a = kontrolAnahtari(e.r), no = gorunenNo(e.r.no, e.r.revizyon);
+  const k = await kontrolOku(db, a, true);
+  if (uc === "basla") {
+    if (k) return k.kaynak === "elle" ? { durum: "red", neden: "Bu ekipmanın kontrol saati gerekçeyle yazılmış." } : { durum: "tamam", id: e.r.id, bildirim: "Kontrol zaten başlatılmış." };
+    const acik = await acikKontrol(db, e.r.personel_id);
+    if (acik) {
+      const et = await ekipmanEtiketi(db, acik.ekipman_id);
+      return { durum: "red", neden: `Önce ${et?.kod ?? "öteki ekipmanın"} kontrolünü bitirin; aynı anda tek kontrol sürer.` };
+    }
+    const y = await kontrolBaslatCihaz(db, a, { zaman: new Date(o.zaman), kanit, tutmadi: o.tutmadi }, { kim: kim.ad, ne: "kontrol.basla_cihaz", gerekce: no });
+    return saatiRaporaYaz(db, kim, e, y, "Kontrol başladı (cihaz saati).");
+  }
+  if (!k || k.kaynak === "elle") return { durum: "red", neden: "Kontrol başlatılmadı." };
+  if (k.bitti) return { durum: "tamam", id: e.r.id, bildirim: "Kontrol zaten bitirildi." };
+  /* bitiş başlangıçtan önce olamaz: öyle çıkarsa başlangıca çekilir ve kayıt "tutmadı" işaretlenir */
+  const once = o.zaman < k.basladi!.getTime();
+  const y = await kontrolBitirCihaz(db, a, k, { zaman: new Date(once ? k.basladi!.getTime() : o.zaman), tutmadi: o.tutmadi || once,
+    kanit: once && !kanit.neden ? { ...kanit, neden: "cihazdaki bitiş saati başlangıçtan önce" } : kanit }, { kim: kim.ad, ne: "kontrol.bitir_cihaz", gerekce: no });
+  return saatiRaporaYaz(db, kim, e, y, "Kontrol bitti (cihaz saati).");
 }
 
 /** Saati gerekçeyle yaz / düzelt: bitmiş kontrolde ölçülen değer kalır; hiç ölçülmemişte saat gerekçeyle yazılır. Sürerken düzeltilmez; ileri saat yazılmaz */
@@ -1250,7 +1293,7 @@ export async function gozdenGecirme(db: Sorgulayici, id: string): Promise<Gozden
     if (o?.bas && o.bit) {
       const sure = Math.round((new Date(zamanYaz(o.bit)!).getTime() - new Date(zamanYaz(o.bas)!).getTime()) / 60_000);
       l.push({ tamam: !o.duzeltme, metin: `Kontrol ${tarihNo(o.bas)} ${o.bas.slice(11)} – ${o.bit.slice(11)} (${sure} dk)${o.duzeltme
-        ? ` · saat ${o.duzeltme.olculenBas ? "elle düzeltildi" : "elle yazıldı"}: ${o.duzeltme.gerekce}` : " · ölçüldü"}` });
+        ? ` · saat ${o.duzeltme.olculenBas ? "elle düzeltildi" : "elle yazıldı"}: ${o.duzeltme.gerekce}` : o.cihaz ? " · cihaz saatiyle ölçüldü (bağlantısız)" : " · ölçüldü"}` });
     }
     for (const x of r.sapmalar) l.push({ tamam: false, metin: `Sapma: ${x.metin} Gerekçe: ${x.gerekce}` });
   }

@@ -8,15 +8,15 @@ import { FOTO_PAY_DK, type SapmaKaydi } from "./sapma.ts";
 export interface CizelgeSatiri {
   /** olayın anı (ISO) */
   zaman: string; olay: string; kim: string;
-  /** saatin kaynağı: sunucunun / veritabanının saati ya da elle yazılan */
-  kaynak: "Sunucu" | "Elle";
+  /** saatin kaynağı: sunucunun / veritabanının saati, bağlantısızken cihazın saati (0131, K4) ya da elle yazılan */
+  kaynak: "Sunucu" | "Cihaz" | "Elle";
   /** dikkat isteyen satır */
   dikkat: boolean;
 }
 export interface CizelgeGirdisi {
   hareketler: readonly { zaman: Date; ne: string; gerekce: string | null; kim: string }[];
   /** kontrol kaydı (ölçümsüz raporda / henüz başlamadıysa null); `yazan`: raporu yazan kişi */
-  kontrol: { basladi: Date | null; bitti: Date | null; duzBas: Date | null; duzBit: Date | null; gerekce: string | null; duzKim: string | null; duzZaman: Date | null } | null;
+  kontrol: { basCihaz?: boolean; bitCihaz?: boolean; tutmadi?: boolean; basladi: Date | null; bitti: Date | null; duzBas: Date | null; duzBit: Date | null; gerekce: string | null; duzKim: string | null; duzZaman: Date | null } | null;
   yazan: string;
   fotolar: readonly { ad: string; eklendi?: string; cekim?: string | null; konum?: unknown; okuma?: boolean }[];
   sapmalar: readonly SapmaKaydi[];
@@ -43,8 +43,10 @@ export function zamanCizelgesi(g: CizelgeGirdisi): CizelgeSatiri[] {
     l.push({ zaman: h.zaman.toISOString(), olay: `${ad}${ek}`, kim: h.kim, kaynak: "Sunucu", dikkat: h.ne === "geri" || h.ne === "onay_geri" || (h === sonGonder && g.sapmalar.length > 0) });
   }
   const k = g.kontrol;
-  if (k?.basladi) l.push({ zaman: k.basladi.toISOString(), olay: "Kontrol başladı", kim: g.yazan, kaynak: "Sunucu", dikkat: false });
-  if (k?.basladi && k.bitti) l.push({ zaman: k.bitti.toISOString(), olay: `Kontrol bitti · ${dk(k.basladi, k.bitti)} dk`, kim: g.yazan, kaynak: "Sunucu", dikkat: false });
+  /* cihaz saatiyle alınan uç "Cihaz" kaynaklı; sunucuyla tutmadıysa işaretli */
+  const tutmadi = k?.tutmadi ? " · saat sunucuyla tutmadı" : "";
+  if (k?.basladi) l.push({ zaman: k.basladi.toISOString(), olay: `Kontrol başladı${k.basCihaz ? tutmadi : ""}`, kim: g.yazan, kaynak: k.basCihaz ? "Cihaz" : "Sunucu", dikkat: !!k.basCihaz && !!k.tutmadi });
+  if (k?.basladi && k.bitti) l.push({ zaman: k.bitti.toISOString(), olay: `Kontrol bitti · ${dk(k.basladi, k.bitti)} dk${k.bitCihaz ? tutmadi : ""}`, kim: g.yazan, kaynak: k.bitCihaz ? "Cihaz" : "Sunucu", dikkat: !!k.bitCihaz && !!k.tutmadi });
   if (k?.duzBas && k.duzBit && k.duzZaman) {
     l.push({ zaman: k.duzZaman.toISOString(), kim: k.duzKim ?? g.yazan, kaynak: "Elle", dikkat: true,
       olay: `Kontrol saati gerekçeyle ${k.basladi ? "düzeltildi" : "yazıldı"}: ${trZaman(k.duzBas)} – ${trZaman(k.duzBit).slice(11)} (${dk(k.duzBas, k.duzBit)} dk) · ${k.gerekce ?? ""}` });

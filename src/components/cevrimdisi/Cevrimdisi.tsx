@@ -8,6 +8,7 @@
    2026-11-12 (reisim: "sahada veri fotoğraf yazı vs kaybolmamalı kesinlikle"): cihaza YAZILAMAYAN iş kırmızı şeritle söylenir (yalnız bu sayfa açıkken
    duruyor); cihazda kullanılan yer ve kalıcı saklama pencerede; yer daralınca gösterge bağlantı varken de çıkar ("Cihazda yer azalıyor"). */
 import Link from "next/link";
+import { capaYaz } from "./saat";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { useBildir } from "../bildirim/Bildirim";
 import { Ikon } from "../ikon/Ikon";
@@ -54,7 +55,8 @@ async function yerYenile(): Promise<void> {
 /* ── ÖNCEDEN İNDİRME (396; ARKA-UC §4.2, maket "Çevrimdışı hazır: 3 plan · son eşitleme 08:42") ── bağlantı varken kişinin önümüzdeki 7 gündeki
    planlarının ve Yeni raporlarının sayfaları arka planda açılır; servis çalışanı şifreli saklar. Açılıştan 3 sn sonra, bağlantı gelince ve 30
    dakikada bir; son indirmeden 30 dakika geçmediyse yapılmaz (sunucuyu boşuna yormasın). Son durum bu cihazda (tarayıcı deposu yoksa yalnız bu sayfada). */
-export type PaketEylemi = () => Promise<{ planlar: { id: string }[]; raporlar: { id: string }[] } | null>;
+/** simdi: sunucunun saati — cihaz onunla saatini ölçer (saat.ts; bağlantısız kontrol saati, göç 0131) */
+export type PaketEylemi = () => Promise<{ planlar: { id: string }[]; raporlar: { id: string }[]; simdi?: number } | null>;
 interface Hazir { plan: number; zaman: string }
 const HAZIR = "probata-cevrimdisi-hazir";
 const ARALIK = 30 * 60_000;
@@ -88,6 +90,7 @@ async function onceIndir(paket: PaketEylemi, zorla = false): Promise<void> {
     if (!hazirCalisan) return;
     const p = await paket();
     if (!p) return;
+    capaYaz(p.simdi);
     /* 405: plan başına yeni rapor sayfası da (bağlantısız rapor açılabilsin) */
     for (const a of ["/planlar", ...p.planlar.flatMap((x) => [`/planlar/${x.id}`, `/raporlar/yeni/${x.id}`]), ...p.raporlar.map((x) => `/raporlar/${x.id}`)]) {
       if (!bagliMi()) return;
@@ -214,8 +217,8 @@ function KuyrukPenceresi({ acik, kapat, cevrimdisi }: { acik: boolean; kapat: ()
                       <Tus tur="ikincil" onClick={() => void kaldir(x, true, { baslik: "Sunucudaki kullanılsın mı?",
                         metin: `${x.ad}: bu cihazda yazdıklarınız silinir, raporun sunucudaki hâli kalır; geri alınamaz.`, tus: "Sunucudakini kullan" })}>Sunucudakini kullan</Tus>
                     </>}
-                    {(x.durum === "baska_hesap" || (x.durum === "hata" && (x.tur === "rapor.foto" || x.tur === "rapor.olustur"))) && <Tus tur="ikincil" onClick={() => void yenidenDene(x.id)}>Yeniden dene</Tus>}
-                    {(x.durum === "eksik" || x.durum === "hata" || x.durum === "cakisma") && x.tur.startsWith("rapor.") && x.tur !== "rapor.olustur" &&
+                    {(x.durum === "baska_hesap" || (x.durum === "hata" && (x.tur === "rapor.foto" || x.tur === "rapor.olustur" || x.tur.startsWith("kontrol.")))) && <Tus tur="ikincil" onClick={() => void yenidenDene(x.id)}>Yeniden dene</Tus>}
+                    {(x.durum === "eksik" || x.durum === "hata" || x.durum === "cakisma") && (x.tur.startsWith("rapor.") || x.tur.startsWith("kontrol.")) && x.tur !== "rapor.olustur" &&
                       <Link className={stil.baglanti} href={`/raporlar/${x.kayit}`} onClick={kapat}>Raporu aç</Link>}
                     {x.durum === "hata" && x.tur === "rapor.olustur" && x.yer &&
                       <Link className={stil.baglanti} href={`/planlar/${x.yer.split("|")[0]}`} onClick={kapat}>Planı aç</Link>}

@@ -3,12 +3,15 @@
    ekipman başında geçirilen süre uymalı", "ara verme olmasın"): ölçümlü (TÜRKAK'lı firmada açılmış) raporda başlangıç / bitiş yazılmaz. Yazan
    "Kontrole başla" ve "Kontrolü bitir" der; saati veritabanı koyar. "Saati düzelt" (hiç ölçülmediyse "Saati gerekçeyle yaz") penceresi gerekçe ister
    (en az 10 karakter); ölçülen değer kayıtta kalır ve burada üstü çizili görünür. Kural ve yetki sunucuda (raporlar.ts kontrolBasla / kontrolBitir /
-   kontrolSaatDuzelt). Bağlantı yokken saat alınmaz (bağlantısız çalışma T5). */
+   kontrolSaatDuzelt).
+   2026-11-12 (göç 0131, K4): bağlantı yokken (ya da istek ağda düştüyse, ya da rapor henüz cihazda — bağlantısız açılmış) başlat / bitir CİHAZ SAATİYLE
+   kuyruğa yazılır; ekranda o saat "Gönderilecek" rozetiyle görünür, bağlantı gelince sunucu saatine çevrilir (../cihaz-saati.ts). Gerekçeli düzeltme
+   bağlantı ister. */
 import { useEffect, useState } from "react";
-import { useBildir, useUyar } from "../../../components/bildirim/Bildirim";
+import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Alan, ipucuId } from "../../../components/form/Form";
 import { Pencere } from "../../../components/pencere/Pencere";
-import { Rozet } from "../../../components/sayfa/Sayfa";
+import { Rozet, Rozetler } from "../../../components/sayfa/Sayfa";
 import { Tus } from "../../../components/tus/Tus";
 import type { OlcumGorunumu } from "../server/raporlar";
 import { TarihKutusu } from "./Bloklar";
@@ -24,16 +27,21 @@ export const dakika = (bas: string, bit: string | number) => Math.max(0, Math.ro
 
 const BAS = "r-kd-bas", BIT = "r-kd-bit", GEREKCE = "r-kd-gerekce";
 
-export function KontrolKutusu({ raporId, olcum, duzenle, mesgul, baslat, yenile, hata }: {
-  raporId: string; olcum: OlcumGorunumu;
+export function KontrolKutusu({ raporId, olcum, duzenle, mesgul, baslat, yenile, hata, yalnizKuyruk = false, kuyruga }: {
+  raporId: string;
+  /** bekliyor: başlangıç / bitiş cihazda bekleyen işten (sunucuya gitmedi) */
+  olcum: OlcumGorunumu & { bekliyor?: boolean };
   /** yazan, Yeni raporunda (tuşlar yalnız ona) */
   duzenle: boolean; mesgul: boolean;
   baslat: (is: () => Promise<void>) => void; yenile: () => void;
   /** sunucunun reddi / alan hatası ekranın genel şeridine */
   hata: (r: RaporYaniti) => void;
+  /** rapor henüz yalnız cihazda (bağlantısız açıldı): başlat / bitir hep kuyruğa */
+  yalnizKuyruk?: boolean;
+  /** başlat / bitir cihaz saatiyle kuyruğa (`an`: tuşa basılan an) */
+  kuyruga: (uc: "basla" | "bitir", an: number) => Promise<void>;
 }) {
   const bildir = useBildir();
-  const uyar = useUyar();
   const [pencere, setPencere] = useState(false);
   /* sürerken geçen dakika: tarayıcıda, çizimden sonra; yarım dakikada bir ilerler */
   const [gecen, setGecen] = useState<number | null>(null);
@@ -46,11 +54,13 @@ export function KontrolKutusu({ raporId, olcum, duzenle, mesgul, baslat, yenile,
     return () => window.clearInterval(z);
   }, [suruyor]);
 
-  const calistir = (eylem: () => Promise<RaporYaniti>) => {
-    if (typeof navigator !== "undefined" && navigator.onLine === false) { uyar("Kontrol saati için bağlantı gerekli."); return; }
+  const calistir = (uc: "basla" | "bitir", eylem: () => Promise<RaporYaniti>) => {
+    const an = Date.now();
     baslat(async () => {
+      /* bağlantı yok / rapor cihazda / bu kontrolün cihazda bekleyen işi var (sunucu başlangıcı henüz bilmiyor): cihaz saatiyle kuyruğa */
+      if (yalnizKuyruk || olcum.bekliyor || (typeof navigator !== "undefined" && navigator.onLine === false)) { await kuyruga(uc, an); return; }
       let r: RaporYaniti;
-      try { r = await eylem(); } catch { uyar("Bağlantı koptu; yeniden deneyin."); return; }
+      try { r = await eylem(); } catch { await kuyruga(uc, an); return; }
       if (r.tamam) { if (r.bildirim) bildir(r.bildirim); yenile(); return; }
       hata(r);
     });
@@ -59,20 +69,22 @@ export function KontrolKutusu({ raporId, olcum, duzenle, mesgul, baslat, yenile,
   const rozet = olcum.durum === "suruyor" ? <Rozet tur="bekliyor">Sürüyor</Rozet>
     : olcum.durum === "bitti" ? (d ? <Rozet tur="notr">{d.olculenBas ? "Elle düzeltildi" : "Elle yazıldı"}</Rozet> : <Rozet tur="tamam">Ölçüldü</Rozet>)
       : <Rozet tur="notr">Başlamadı</Rozet>;
+  /* cihaz saati: gönderilmediyse "Gönderilecek"; gittiyse "Cihaz saati"; sunucuyla tutmadıysa "Saat tutmadı" */
+  const ek = olcum.bekliyor ? <Rozet tur="bekliyor">Gönderilecek</Rozet> : olcum.tutmadi && !d ? <Rozet tur="red">Saat tutmadı</Rozet> : olcum.cihaz ? <Rozet tur="notr">Cihaz saati</Rozet> : null;
   return (
     <div className={stil.kontrolKutu} role="group" aria-labelledby="r-kontrol-b">
-      <div className={stil.kontrolBas}><h3 className={stil.kontrolAd} id="r-kontrol-b">Kontrol süresi</h3>{rozet}</div>
+      <div className={stil.kontrolBas}><h3 className={stil.kontrolAd} id="r-kontrol-b">Kontrol süresi</h3><Rozetler>{rozet}{ek}</Rozetler></div>
       {olcum.durum === "yok" && (duzenle
         ? <div className={stil.kontrolTus}>
-            <Tus ikon="clock" disabled={mesgul} onClick={() => calistir(() => kontrolBaslaEylemi(raporId))}>Kontrole başla</Tus>
-            <Tus tur="ikincil" ikon="pencil" disabled={mesgul} onClick={() => setPencere(true)}>Saati gerekçeyle yaz</Tus>
+            <Tus ikon="clock" disabled={mesgul} onClick={() => calistir("basla", () => kontrolBaslaEylemi(raporId))}>Kontrole başla</Tus>
+            {!yalnizKuyruk && <Tus tur="ikincil" ikon="pencil" disabled={mesgul} onClick={() => setPencere(true)}>Saati gerekçeyle yaz</Tus>}
           </div>
         : <p className={stil.ipucuMetin}>Kontrol başlatılmadı.</p>)}
       {olcum.durum === "suruyor" && olcum.bas && (
         <>
           <p className={stil.kontrolSure}><b>{gecen === null ? "…" : `${gecen} dk`}</b><span>Başladı {saatliNo(olcum.bas)}</span></p>
           {duzenle && <div className={stil.kontrolTus}>
-            <Tus ikon="circle-check" disabled={mesgul} onClick={() => calistir(() => kontrolBitirEylemi(raporId))}>Kontrolü bitir</Tus>
+            <Tus ikon="circle-check" disabled={mesgul} onClick={() => calistir("bitir", () => kontrolBitirEylemi(raporId))}>Kontrolü bitir</Tus>
           </div>}
         </>
       )}
@@ -84,7 +96,7 @@ export function KontrolKutusu({ raporId, olcum, duzenle, mesgul, baslat, yenile,
             <div><dt>Süre</dt><dd>{`${dakika(olcum.bas, olcum.bit)} dk`}</dd></div>
             {d && <div className={stil.kontrolGenis}><dt>Gerekçe</dt><dd>{d.gerekce}<span className={stil.ipucuMetin}>{` · ${d.kim}`}</span></dd></div>}
           </dl>
-          {duzenle && <div className={stil.kontrolTus}>
+          {duzenle && !olcum.bekliyor && <div className={stil.kontrolTus}>
             <Tus tur="ikincil" ikon="pencil" disabled={mesgul} onClick={() => setPencere(true)}>Saati düzelt</Tus>
           </div>}
         </>

@@ -111,7 +111,17 @@ test("kontrol saati (TÜRKAK'lı): model Yönetim'den; saha raporunda saat yazı
   await kk.getByRole("button", { name: "Kontrole başla" }).click();
   await expect(kk).toContainText("Sürüyor", { timeout: 30_000 });
   await expect(bas).toHaveValue(new RegExp(`^${bugunTr().replace(/\./g, "\\.")} \\d{2}:\\d{2}$`), { timeout: 30_000 });
+  /* 0131 (K4): bitiş BAĞLANTISIZKEN — cihaz saatiyle kuyruğa ("Gönderilecek"; saat düzeltilemez), bağlantı gelince sunucuya gider. Cihaz saati
+     çıkıştan önce ölçüldüyse "Cihaz saati", ölçülmediyse "Saat tutmadı" (deneme ortamında ikisi de olabilir) */
+  await context.setOffline(true);
   await kk.getByRole("button", { name: "Kontrolü bitir" }).click();
+  await expect(kk).toContainText("Gönderilecek", { timeout: 30_000 });
+  await expect(kk).toContainText("Ölçüldü");
+  await expect(kk.getByRole("button", { name: "Saati düzelt" })).toHaveCount(0);
+  await context.setOffline(false);
+  await expect(page.getByText("cihazda bekleyen kontrol saati gönderildi", { exact: false }).first()).toBeVisible({ timeout: 60_000 });
+  await expect(kk).not.toContainText("Gönderilecek", { timeout: 30_000 });
+  await expect(kk).toContainText(/Cihaz saati|Saat tutmadı/);
   await expect(kk).toContainText("Ölçüldü", { timeout: 30_000 });
   await expect(kk.getByRole("button", { name: "Kontrole başla" })).toHaveCount(0);
 

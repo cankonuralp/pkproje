@@ -546,7 +546,19 @@ pkproje/
                             sayfalama, Excel'e aktar) · Raporlar listesinde "Günlük çizelge" bağlantısı (yalnız TÜRKAK'lı firmada) · göç 0130: kontrol
                             tablosuna yedek_iz tetiği + yedek_tablolari listesi; src/server/yedek/tablolar.ts YEDEK_TABLOLARI (kilit yedekListeFarki sonraki
                             göçlerde eklenen tetiği de okur) · kilit tests/gunluk, raporlar (PG), yedek-saf, bozan gunluk, e2e kontrol.spec
-                            · SIRADAKİ: T5 S.A.Y Chat Rapor modu + bağlantısız saat (kontrol.kaynak 'cihaz'), plan içi ekipman satırından başlatma
+                            · T5a BAĞLANTISIZKEN KONTROL SAATİ (K4; göç 0131): bağlantı yokken (ya da istek ağda düştüyse, ya da rapor bağlantısız
+                            açıldıysa) "Kontrole başla" / "Kontrolü bitir" CİHAZ SAATİYLE kuyruğa (kuyruk türleri kontrol.basla / kontrol.bitir —
+                            fotoğraf gibi eklenir, girdiği sırayla gider) · saf hesap raporlar/cihaz-saati.ts: çıkış farkı (çapa) ile dönüş farkı 5 dk'dan
+                            az ayrılıyorsa olay sunucu saatine çevrilir; sıra çapa ≤ olay ≤ gönderim; tutmayan kayıt reddedilmez, işaretlenir; ileri an
+                            yazılmaz · çapa components/cevrimdisi/saat.ts (sunucunun saati önceden indirme paketinde ve /api/islem yanıtında — simdi) ·
+                            sunucu raporlar.ts kontrolCihazdan (yinelenen iş ölçüleni değiştirmez; K3 aynen) ← islem-baglanti.ts (gönderim anı
+                            x-probata-saat başlığından; sonuçta sürüm önce / sonra) · kontrol tablosu: bit_kaynak, cihaz_kanit, saat_tutmadi (tetik:
+                            kaynak / kanıt / işaret sonradan değişmez) · sapma türü "saat" (gerekçeyle düzeltilince kalkar) · ekran: KontrolKutusu
+                            rozetleri Gönderilecek · Cihaz saati · Saat tutmadı; SahaRaporu bekleyen işleri kontrol durumunun üstüne koyar (yerelOlcum);
+                            bağlantısız açılan raporda da kutu (yeniRaporPaketi.olcumlu) · çizelgede kaynak "Cihaz" · kilit tests/cihaz-saati,
+                            raporlar (PG), bozan cihaz-saati, e2e kontrol.spec (bağlantısız bitiş)
+                            · SIRADAKİ: T5b plan içi ekipman satırından başlatma (rapor açılmadan kontrol kaydı) · T5c S.A.Y Chat Rapor modu (ilk
+                            fotoğraf başlangıç, Gönder bitiş; TÜRKAK'lıda Rapor modunda açılır)
   src/tanim/iller.ts        81 il + 973 ilçe (açık veri, MIT; bir kez alındı)
   src/tanim/bakanlik/       Bakanlığın resmî PDF'leri ZPKR01–05 (rapor formatı) + ZPKK01–05 (kriterler); 467: ZPKR06 / ZPKK06 kule kren,
                             ZPKR07 / ZPKK07 asılı erişim, ZPMR01 / ZPMK01 + ZYDR01 / ZYDK01 LPG tankı — okuyucu src/server/bakanlik.ts; okuyan uçlar

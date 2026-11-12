@@ -1,14 +1,15 @@
 /* SAPMA DENETİMLERİ (2026-11-12, göç 0129; pkproje.md §11 K6 — reisim: "yazılan süre ile ekipman başında geçirilen süre uymalı log kayıtları düzgün
-   olmalı"): ölçümlü (TÜRKAK'lı firmada açılmış) rapor onaya gönderilirken beş denetim yapılır. Sapma KESİN ENGEL DEĞİLDİR: her biri için gerekçe (en
+   olmalı"): ölçümlü (TÜRKAK'lı firmada açılmış) rapor onaya gönderilirken altı denetim yapılır. Sapma KESİN ENGEL DEĞİLDİR: her biri için gerekçe (en
    az 10 karakter) yazılmadan rapor gönderilmez; sapma ve gerekçesi raporda saklanır, teknik yönetici onay ekranında görür.
      kisa     · kontrol, türün en kısa süresinden kısa sürdü (türde süre yoksa denetlenmez)
      cakisma  · aynı kişinin başka raporuyla saat çakışıyor
      gecis    · başka tesisteki kontrolle arası firmanın "iki tesis arası en az süre"sinden kısa (ayar 0 ise denetlenmez)
      gun      · kontrol plan günlerinin dışında
      foto     · fotoğraf kontrol saatlerinin dışında çekilmiş (5 dakika pay; çekim saati olmayan fotoğraf denetlenmez)
+     saat     · bağlantısızken alınan kontrol saati sunucu saatiyle tutmadı (göç 0131, K4; saat gerekçeyle düzeltildiyse denetlenmez)
    Saf: saatler "YYYY-MM-DDTHH:MM" (Türkiye saati), fotoğrafın çekim anı "YYYY-MM-DD HH:MM" (fotoğrafın kendi saati). */
 
-export const SAPMA_TURLERI = ["kisa", "cakisma", "gecis", "gun", "foto"] as const;
+export const SAPMA_TURLERI = ["kisa", "cakisma", "gecis", "gun", "foto", "saat"] as const;
 export type SapmaTuru = (typeof SAPMA_TURLERI)[number];
 export interface Sapma { tur: SapmaTuru; metin: string }
 export interface SapmaKaydi extends Sapma { gerekce: string }
@@ -28,6 +29,8 @@ export interface SapmaGirdisi {
   tesisArasiDk: number;
   /** belgeye giren fotoğraflar (okuma fotoğrafı hariç) */
   fotolar: readonly { ad: string; cekim?: string | null }[];
+  /** bağlantısızken alınan saat sunucuyla tutmadıysa nedeni (cihaz-saati.ts); tuttuysa / bağlantılı ölçüldüyse null */
+  saatTutmadi?: string | null;
 }
 
 const an = (s: string) => new Date(`${s.slice(0, 10)}T${s.slice(11, 16)}:00+03:00`).getTime();
@@ -56,6 +59,7 @@ export function sapmalar(g: SapmaGirdisi): Sapma[] {
     l.push({ tur: "foto", metin: disi.length === 1 ? `Bir fotoğraf kontrol saatleri dışında çekilmiş (${gunNo(disi[0]!.cekim!)} ${saat(disi[0]!.cekim!)}).`
       : `${disi.length} fotoğraf kontrol saatleri dışında çekilmiş (ilki ${gunNo(disi[0]!.cekim!)} ${saat(disi[0]!.cekim!)}).` });
   }
+  if (g.saatTutmadi) l.push({ tur: "saat", metin: `Bağlantısızken alınan kontrol saati sunucu saatiyle tutmadı: ${g.saatTutmadi}. Saat cihazın saatiyle yazıldı.` });
   return l;
 }
 

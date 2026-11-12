@@ -6,14 +6,17 @@
    yalnız sürüm KENDİ fotoğrafıyla değiştiyse yeni sürüme taşır — arada başkası değiştirdiyse çakışma yine görünür.
    405: bağlantısız açılan YENİ rapor (rapor.olustur) — kayıt cihazın geçici kimliği; rapor raporOlustur ile açılır (plan günü, günlük süre, yetki,
    ekipmanın bu planda raporu var mı aynen); sonuçta gerçek kimlik ve sürüm döner, cihaz bekleyen işleri o kimliğe bağlar.
-   542: okuma fotoğrafı da (girdi.okuma) bağlantısız eklenir — S.A.Y'a "fotoğrafları oku ve gir" deyince okunur. */
+   542: okuma fotoğrafı da (girdi.okuma) bağlantısız eklenir — S.A.Y'a "fotoğrafları oku ve gir" deyince okunur.
+   2026-11-12 (göç 0131, K4): bağlantısızken basılan "Kontrole başla" / "Kontrolü bitir" (kontrol.basla / kontrol.bitir) — cihaz saati sunucu saatine
+   çevrilir (kontrolCihazdan; `gonderim`: işin gönderildiği andaki cihaz saati — uç x-probata-saat başlığından verir). Fotoğraf gibi eklenir: raporun
+   o anki sürümüyle yazılır, sonuçta önceki / sonraki sürüm döner (bekleyen Kaydet yeni sürüme taşınır). */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import type { Depo } from "../../../server/dosya/depo.ts";
 import { FotoIslemGirdisi, OlusturIslemGirdisi } from "../sema.ts";
 import { okumaFotografiSakla } from "./foto-oku.ts";
-import { fotoEkle, onayaGonder, raporKaydet, raporOlustur, type Kisi, type RaporYazma } from "./raporlar.ts";
+import { fotoEkle, kontrolCihazdan, onayaGonder, raporKaydet, raporOlustur, type Kisi, type RaporYazma } from "./raporlar.ts";
 
-export const RAPOR_ISLEM_TURLERI = ["rapor.kaydet", "rapor.gonder", "rapor.foto", "rapor.olustur"] as const;
+export const RAPOR_ISLEM_TURLERI = ["rapor.kaydet", "rapor.gonder", "rapor.foto", "rapor.olustur", "kontrol.basla", "kontrol.bitir"] as const;
 export type RaporIslemTuru = (typeof RAPOR_ISLEM_TURLERI)[number];
 /** fotoğrafta: rapor hangi sürümden hangisine geçti (cihaz bekleyen işlerini buna göre taşır) */
 export type RaporIslemSonucu = RaporYazma | (Extract<RaporYazma, { durum: "tamam" }> & { surum: { once: number; sonra: number } });
@@ -26,7 +29,14 @@ export async function raporGuncelSurum(db: Sorgulayici, rapor: string): Promise<
 
 /** `dosya`: fotoğrafın yazılacağı depo ve oturumun firması (fotoğraf işi için) */
 export async function raporIslemi(db: Sorgulayici, dosya: { depo: Depo; firmaId: string }, kim: Kisi, tur: RaporIslemTuru, rapor: string, surum: number,
-  girdi: unknown): Promise<RaporIslemSonucu> {
+  girdi: unknown, gonderim: number | null = null): Promise<RaporIslemSonucu> {
+  if (tur === "kontrol.basla" || tur === "kontrol.bitir") {
+    const once = await raporGuncelSurum(db, rapor);
+    if (once === null) return { durum: "yok" };
+    const r = await kontrolCihazdan(db, kim, rapor, tur === "kontrol.basla" ? "basla" : "bitir", girdi, gonderim);
+    if (r.durum !== "tamam") return r;
+    return { ...r, surum: { once, sonra: (await raporGuncelSurum(db, rapor)) ?? once } };
+  }
   if (tur === "rapor.kaydet") return raporKaydet(db, kim, rapor, surum, girdi);
   if (tur === "rapor.gonder") return onayaGonder(db, kim, rapor, surum, girdi);
   if (tur === "rapor.olustur") {

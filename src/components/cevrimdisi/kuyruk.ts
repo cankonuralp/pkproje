@@ -20,14 +20,18 @@
    · 2026-11-12 KAYIPSIZ (reisim: "sahada veri fotoğraf yazı vs kaybolmamalı kesinlikle"): iş cihaza YAZILAMAZSA (yer doldu, depo kilitli) kaybolmaz —
      bu sayfada bellekte tutulur, durumda sayılır (yazilamayan), ekran kırmızı söyler ve sayfa kapatılırken tarayıcı sorar; yer açılınca kendiliğinden
      cihaza yazılır. Eski form işi, yenisi cihaza yazılmadan depodan silinmez. Sunucunun anlaşılmayan cevabı (JSON değil — ağ geçidi sayfası) işi
-     "yapılamadı"ya düşürmez: sonra yeniden denenir. Gönderim sayfa öne gelince de denenir (telefonda arka plandaki sekme "bağlandı" olayını kaçırır). */
+     "yapılamadı"ya düşürmez: sonra yeniden denenir. Gönderim sayfa öne gelince de denenir (telefonda arka plandaki sekme "bağlandı" olayını kaçırır).
+   · 2026-11-12 KONTROL SAATİ (göç 0131, K4): kontrol.basla / kontrol.bitir — bağlantısızken basılan "Kontrole başla" / "Kontrolü bitir"; içerik olayın
+     cihaz saati + son saat ölçümü (saat.ts). Fotoğraf gibi eklenir (yerine geçmez), GİRDİĞİ SIRAYLA gider; sunucu her yanıtta saatini verir (simdi) —
+     cihaz onunla saatini ölçer. */
 import { coz, depoAc, eskiTaslaklariSil, isleriOku, isSil, isYaz, kaliciIste, sifrele, type DepoIsi } from "./depo.ts";
+import { capaYaz } from "./saat.ts";
 
 /** cihaz deposu — sınamada taklitle değiştirilir (kuyrukDeposu); uygulamada depo.ts */
 let D = { ac: depoAc, oku: isleriOku, yaz: isYaz, sil: isSil, sifrele, coz };
 export function kuyrukDeposu(d: Partial<typeof D>) { D = { ...D, ...d }; }
 
-export type KuyrukTuru = "rapor.kaydet" | "rapor.gonder" | "rapor.foto" | "rapor.olustur" | "plan.kabul" | "plan.red" | "chat.mesaj" | "chat.sil"
+export type KuyrukTuru = "rapor.kaydet" | "rapor.gonder" | "rapor.foto" | "rapor.olustur" | "kontrol.basla" | "kontrol.bitir" | "plan.kabul" | "plan.red" | "chat.mesaj" | "chat.sil"
   | "saychat.kaydet" | "saychat.foto" | "saychat.sil" | "sayrapor.foto" | "sayrapor.kaydet" | "sayrapor.sil";
 /** kaydın o anki hâlini taşıyan işler: aynı kayıt için tek bekleyen (fotoğraf bunlardan değil) */
 const FORM: ReadonlySet<string> = new Set(["rapor.kaydet", "rapor.gonder", "plan.kabul", "plan.red", "saychat.kaydet", "saychat.sil", "sayrapor.kaydet", "sayrapor.sil"]);
@@ -266,7 +270,9 @@ export async function kuyrukGonder(): Promise<number> {
         if (y.status === 401) { yayinla({ oturum: true }); break dis; }
         if (y.status === 403 || y.status === 426 || y.status >= 500) break dis;   // köken / eski sürüm / sunucu: sonra (sayfa yenilenince)
         if (y.status === 408 || y.status === 429) break dis;   // süre doldu / hız sınırı: sonra
-        const j = await y.json().catch(() => null) as { tekrar?: boolean; sonuc?: Sonuc; guncel?: number | null; saatFarkiDk?: number; hata?: string } | null;
+        const j = await y.json().catch(() => null) as { tekrar?: boolean; sonuc?: Sonuc; guncel?: number | null; saatFarkiDk?: number; hata?: string; simdi?: number } | null;
+        /* sunucunun saati: cihaz saatini ölçer (bağlantısız kontrol saatinin karşılaştırması — saat.ts) */
+        if (y.ok && j) capaYaz(j.simdi);
         /* "oldu" deyip bizim cevabımızı taşımayan yanıt (ağ geçidinin sayfası, yarım yanıt): iş yapılmamış sayılır, sonra yeniden denenir */
         if (y.ok && !j?.sonuc) break dis;
         yayinla({ oturum: false });

@@ -34,7 +34,8 @@ import { useRouter } from "next/navigation";
 import { Fragment, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition, type ReactNode, type TransitionStartFunction } from "react";
 import { useBildir, useUyar } from "../../../components/bildirim/Bildirim";
 import { taslakGetir, taslakKaydet, taslakSil } from "../../../components/cevrimdisi/taslak";
-import { bekleyenIcerik, kayitBilgileriniKapat, kuyrugaEkle, kuyrukAbone, kuyrukAnlik, kuyrukSunucuAnlik, type KuyrukSonucOlayi, type KuyrukTuru } from "../../../components/cevrimdisi/kuyruk";
+import { bekleyenIcerik, bekleyenIsler, kayitBilgileriniKapat, kuyrugaEkle, kuyrukAbone, kuyrukAnlik, kuyrukSunucuAnlik, type KuyrukSonucOlayi, type KuyrukTuru } from "../../../components/cevrimdisi/kuyruk";
+import { capaOku } from "../../../components/cevrimdisi/saat";
 import { Girdi, ipucuId } from "../../../components/form/Form";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { useOnayla } from "../../../components/pencere/Onay";
@@ -77,6 +78,7 @@ import {
 } from "./eylemler";
 import { sayRaporBagla, type SayEkranSonucu, type SayGeriAl, type SayOkumaOzeti } from "../../say/ui/baglam";
 import type { SatirEkle } from "../../../server/yz/say";
+import { yerelOlcum, type YerelKontrol } from "../cihaz-saati";
 import { KontrolKutusu } from "./KontrolKutusu";
 import { SapmaPenceresi } from "./SapmaPenceresi";
 import stil from "./raporlar.module.css";
@@ -137,6 +139,26 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
   const kuyruk = useSyncExternalStore(kuyrukAbone, kuyrukAnlik, kuyrukSunucuAnlik);
   const bekleyenIs = kuyruk.isler.find((x) => x.kayit === v.id && x.durum === "bekliyor");
   const gonderimBekliyor = kuyruk.isler.some((x) => x.kayit === v.id && x.durum === "bekliyor" && x.tur === "rapor.gonder");
+  /* 2026-11-12 (göç 0131, K4): cihazda bekleyen kontrol işleri (bağlantısızken basılan Kontrole başla / Kontrolü bitir — cihaz saatiyle) ekrandaki
+     kontrol durumunun üstüne: sunucudaki kayıt gelene kadar başlangıç / bitiş cihazın saatiyle görünür */
+  const [yerelKontrol, setYerelKontrol] = useState<YerelKontrol>({ bas: null, bit: null });
+  const olcumVar = !!v.olcum;
+  useEffect(() => {
+    if (!olcumVar) return;
+    let iptal = false;
+    const oku = () => {
+      void bekleyenIsler(["kontrol.basla", "kontrol.bitir"]).then((l) => {
+        if (iptal) return;
+        const an = (tur: KuyrukTuru) => { const a = (l.find((x) => x.kayit === v.id && x.tur === tur && x.durum === "bekliyor")?.girdi as { an?: unknown } | null | undefined)?.an; return typeof a === "number" ? a : null; };
+        const y = { bas: an("kontrol.basla"), bit: an("kontrol.bitir") };
+        setYerelKontrol((e) => (e.bas === y.bas && e.bit === y.bit ? e : y));
+      }).catch(() => undefined);
+    };
+    oku();
+    const birak = kuyrukAbone(oku);
+    return () => { iptal = true; birak(); };
+  }, [v.id, olcumVar]);
+  const olcum = useMemo(() => (v.olcum ? yerelOlcum(v.olcum, yerelKontrol) : null), [v.olcum, yerelKontrol]);
   /* 398: cihazda bekleyen fotoğraflar (yerleri "bölüm|madde") — canlı değerlendirmede sayılır, başlıkta söylenir */
   const bekleyenFotolar = useMemo(() => kuyruk.isler.filter((x) => x.kayit === v.id && x.durum === "bekliyor" && x.tur === "rapor.foto"), [kuyruk.isler, v.id]);
   const sorunluIs = kuyruk.isler.find((x) => x.kayit === v.id && (x.durum === "cakisma" || x.durum === "hata"));
@@ -401,8 +423,10 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
   /* 2026-11-12 (göç 0128, K2): ölçümlü raporda başlangıç / bitiş kontrol kaydından (sunucudan gelen) — ekranda yazılmaz; elle seçilmemiş sonraki
      kontrol ve rapor tarihi o başlangıçtan türer (kontrol başka gün başladıysa da doğru gün) */
   const olcumluTarih = (): typeof tarih => {
-    const g = v.tarih.bas.slice(0, 10);
-    return { ...tarih, bas: v.tarih.bas, bit: v.tarih.bit ?? "", sonraki: elle.sonraki ? tarih.sonraki : ayEkle(g, v.tur.periyot), rapor: elle.rapor ? tarih.rapor : g };
+    /* kontrol kaydı varsa (sunucuda ya da cihazda bekleyen) saat ondan; yoksa raporun açılış anı */
+    const bas = olcum?.bas ?? v.tarih.bas, bit = olcum?.bas ? olcum.bit ?? "" : v.tarih.bit ?? "";
+    const g = bas.slice(0, 10);
+    return { ...tarih, bas, bit, sonraki: elle.sonraki ? tarih.sonraki : ayEkle(g, v.tur.periyot), rapor: elle.rapor ? tarih.rapor : g };
   };
   const girdi = () => ({ ekipman, tarih: v.olcum ? olcumluTarih() : tarih, cevaplar });
   /* TASLAK yazımı: değişiklikten 1,2 sn sonra; sayfa arka plana geçerken / kapanırken hemen */
@@ -455,6 +479,13 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
     kaydedildi();
     bildir(bildirim);
   };
+  /* 2026-11-12 (göç 0131, K4): bağlantı yokken (ya da istek ağda düştüyse) kontrol başlangıcı / bitişi cihaz saatiyle kuyruğa — `an`: tuşa basılan an */
+  const kontrolKuyruga = async (uc: "basla" | "bitir", an: number) => {
+    await yeniAc();
+    await kuyrugaEkle({ tur: uc === "basla" ? "kontrol.basla" : "kontrol.bitir", kayit: v.id, surum: v.surum, girdi: { an, capa: capaOku(an) },
+      ad: `${uc === "basla" ? "Kontrol başlangıcı" : "Kontrol bitişi"} · ${yeni?.kod ?? v.no}` });
+    bildir(uc === "basla" ? "Kontrol başladı; saat cihazdan alındı, bağlantı gelince gönderilecek." : "Kontrol bitti; saat cihazdan alındı, bağlantı gelince gönderilecek.");
+  };
   const kaydet = () => baslat(async () => {
     if (yeni || cevrimdisiMi() || bekleyenIs) { await kuyruga("rapor.kaydet", cevrimdisiMi() ? "Cihaza kaydedildi; bağlantı gelince gönderilecek." : "Kaydediliyor…"); return; }
     let r: RaporYaniti;
@@ -479,7 +510,7 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
       }
       if (d.durum === "tamam") {
         setGenel(null);
-        bildir(d.tur === "rapor.gonder" ? `${v.no}: cihazda bekleyen onaya gönderim gitti.` : d.tur === "rapor.foto" ? `${v.no}: cihazda bekleyen fotoğraf gönderildi.` : `${v.no}: cihazda bekleyen kayıt gönderildi.`);
+        bildir(d.tur === "rapor.gonder" ? `${v.no}: cihazda bekleyen onaya gönderim gitti.` : d.tur.startsWith("kontrol.") ? `${v.no}: cihazda bekleyen kontrol saati gönderildi.` : d.tur === "rapor.foto" ? `${v.no}: cihazda bekleyen fotoğraf gönderildi.` : `${v.no}: cihazda bekleyen kayıt gönderildi.`);
         yenile();
         return;
       }
@@ -952,7 +983,7 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
     const h = alanHata[alan] ?? (gec ? "Tarih ve saat seçilmeli." : null), u = h ? null : tarihUyari(k);
     const oto = k === "bit" && bitOto && !h && !u;
     /* 2026-11-12 (göç 0128, K2): ölçümlü raporda başlangıç / bitiş kontrol kaydından, salt okunur (kontrol başlamadıysa boş) */
-    const olculen = v.olcum && (k === "bas" || k === "bit") ? v.olcum[k] : undefined;
+    const olculen = olcum && (k === "bas" || k === "bit") ? olcum[k] : undefined;
     const deger = olculen !== undefined ? olculen : tarih[k];
     return (
       <Satir key={k} etiket={etiket} htmlFor={id} zorunlu={zorunlu && !oku && olculen === undefined} genis={genis}>
@@ -1107,7 +1138,8 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
               sırasıyla, iki sütunda satır satır eşleşir — firma adı | adres · rapor no | rapor tarihi · İSG-KATİP | SGK · başlangıç | bitiş ·
               sonraki | takip; sonra müşterinin e-posta | telefonu, metot ve ekipman bölümü */}
           {/* 2026-11-12 (göç 0128; pkproje.md §11 K2): ölçümlü raporda kontrol saati ölçülür — başlat / bitir / gerekçeli düzelt */}
-          {v.olcum && !yeni && !deneme && <KontrolKutusu raporId={v.id} olcum={v.olcum} duzenle={duzenle} mesgul={mesgul} baslat={baslat} yenile={yenile} hata={yanitHatasi} />}
+          {olcum && !deneme && <KontrolKutusu raporId={v.id} olcum={olcum} duzenle={duzenle} mesgul={mesgul} baslat={baslat} yenile={yenile} hata={yanitHatasi}
+            yalnizKuyruk={!!yeni} kuyruga={kontrolKuyruga} />}
           <Satirlar>
             {/* 595 (madde 3): satırlar formatın (adı, sırası, varlığı — belgeyle aynı liste); satırları tanımlanmamış (eski) formatta bugünkü adlar
                 ve sıra; müşterinin e-postası ve telefonu formatta satırı yoksa da sahada (künye — eski düzendeki yerinde, metottan önce) */}
