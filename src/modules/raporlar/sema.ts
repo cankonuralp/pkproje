@@ -92,6 +92,8 @@ export const FotoIslemGirdisi = z.object({
   bolum: z.string().min(1).max(64), madde: z.string().min(1).max(64).nullable(), ad: z.string().min(1).max(200),
   veri: z.string().min(4).max(Math.ceil(FOTO_KUYRUK_EN_BUYUK / 3) * 4).regex(/^[A-Za-z0-9+/]+={0,2}$/),
   okuma: z.boolean().optional(),
+  /* 2026-11-12 (K5): cihazın okuduğu çekim anı ve (ölçümlü raporda, izinle) konum — biçimi foto-kanit.ts denetler, uymayan yok sayılır */
+  cekim: z.unknown().optional(), konum: z.unknown().optional(),
 });
 
 /* ── BAĞLANTISIZ YENİ RAPOR (405) ── kuyruktaki "rapor.olustur": hangi planda hangi ekipmana (kayıt = cihazın geçici kimliği; gerçek kimliği ve

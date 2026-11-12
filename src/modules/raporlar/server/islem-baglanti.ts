@@ -44,7 +44,7 @@ export async function raporIslemi(db: Sorgulayici, dosya: { depo: Depo; firmaId:
   const bayt = new Uint8Array(Buffer.from(g.data.veri, "base64"));
   /* 542: okuma fotoğrafı (S.A.Y okur; belgede görünmez) — bölümde fotoğraftan doldurma açık olmalı, sınır ve tür okumaFotografiSakla'da */
   const r = g.data.okuma ? await okumaFotografiSakla(db, dosya.depo, kim, dosya.firmaId, rapor, g.data.bolum, { bayt })
-    : await fotoEkle(db, dosya.depo, kim, dosya.firmaId, rapor, once, { bolum: g.data.bolum, madde: g.data.madde }, { ad: g.data.ad, bayt });
+    : await fotoEkle(db, dosya.depo, kim, dosya.firmaId, rapor, once, { bolum: g.data.bolum, madde: g.data.madde }, { ad: g.data.ad, bayt }, { cekim: g.data.cekim, konum: g.data.konum });
   if (r.durum !== "tamam") return r;
   return { ...r, surum: { once, sonra: (await raporGuncelSurum(db, rapor)) ?? once } };
 }

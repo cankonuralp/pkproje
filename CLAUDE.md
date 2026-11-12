@@ -511,7 +511,12 @@ pkproje/
                             kontrol bitmeden reddeder (KONTROL_BITMEDI) · ekran raporlar/ui/KontrolKutusu.tsx (Firma bilgileri'nin başında; başlangıç / bitiş
                             satırları salt okunur) · yedek: kontrol YEDEK_DISI (T7'de alınacak) · kilit tests/raporlar.test.ts (PG, son test), kontrol-saf,
                             bozan kontrol · uçtan uca testi YOK (TÜRKAK'lı tohum firması T4'te) · bağlantısızken saat alınmaz (T5)
-                            · SIRADAKİ: T3 çekim anı + konum · T4 sapma + gerekçe + onay ekranı · T5 S.A.Y Chat Rapor modu + bağlantısız saat ·
+                            · T3 FOTOĞRAFIN KANITI (göç yok): raporlar/foto-kanit.ts (saf) — rapor fotoğrafıyla eklendi (sunucu saati), cekim (dosyanın
+                            EXIF'i, yoksa cihazın küçültmeden önce okuduğu; her firmada), konum (yalnız ölçümlü raporda, izinle; yoksa null) — RaporFoto'da,
+                            belgeye basılmaz · raporlar.ts fotoEkle(…, kanit) · ekran FotoListesi (cekimOku, konumAl; satırda "Çekim … · konum kayıtlı / yok") ·
+                            kuyruk rapor.foto girdisinde cekim / konum · src/proxy.ts Permissions-Policy geolocation=(self) · kilit tests/foto-kanit, bozan
+                            foto-kanit · konum tesisle KARŞILAŞTIRILMIYOR (T4)
+                            · SIRADAKİ: T4 sapma denetimleri · T4 sapma + gerekçe + onay ekranı · T5 S.A.Y Chat Rapor modu + bağlantısız saat ·
                             T6 S.A.Y saat dağıtmaz · T7 zaman çizelgesi + günlük çizelge · T8 zaman damgasız imza reddi
   src/tanim/iller.ts        81 il + 973 ilçe (açık veri, MIT; bir kez alındı)
   src/tanim/bakanlik/       Bakanlığın resmî PDF'leri ZPKR01–05 (rapor formatı) + ZPKK01–05 (kriterler); 467: ZPKR06 / ZPKK06 kule kren,

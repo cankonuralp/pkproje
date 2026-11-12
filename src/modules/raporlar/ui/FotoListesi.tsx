@@ -11,6 +11,7 @@ import { useRef, useSyncExternalStore, type TransitionStartFunction } from "reac
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { kuyrugaEkle, kuyrukAbone, kuyrukAnlik, kuyrukGonder, kuyrukSunucuAnlik, kuyruktanCikar } from "../../../components/cevrimdisi/kuyruk";
 import { fotografiKucult } from "../../../components/foto/kucult";
+import { exifCekimZamani } from "../../../server/dosya/exif";
 import { DosyaAcTusu } from "../../../components/gizli-resim/GizliResim";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { useOnayla } from "../../../components/pencere/Onay";
@@ -31,6 +32,19 @@ const metneCevir = (d: Blob) => new Promise<string>((coz, red) => {
   r.onerror = () => red(r.error ?? new Error("Fotoğraf okunamadı."));
   r.readAsDataURL(d);
 });
+/* 2026-11-12 (pkproje.md §11 K5; ../foto-kanit.ts): fotoğrafın çekim anı küçültmeden ÖNCE okunur (küçültme EXIF'i atar); konum yalnız ölçümlü raporda,
+   kişi izin verirse (izin yoksa / 8 sn'de gelmezse null — fotoğraf yine eklenir) */
+const cekimOku = async (d: File): Promise<string | null> => {
+  try { return exifCekimZamani(new Uint8Array(await d.slice(0, 256 * 1024).arrayBuffer())); } catch { return null; }
+};
+const konumAl = () => new Promise<{ e: number; b: number; d: number | null } | null>((coz) => {
+  if (typeof navigator === "undefined" || !navigator.geolocation) { coz(null); return; }
+  const z = window.setTimeout(() => coz(null), 9000);
+  navigator.geolocation.getCurrentPosition(
+    (p) => { window.clearTimeout(z); coz({ e: p.coords.latitude, b: p.coords.longitude, d: Number.isFinite(p.coords.accuracy) ? p.coords.accuracy : null }); },
+    () => { window.clearTimeout(z); coz(null); }, { enableHighAccuracy: true, timeout: 8000, maximumAge: 60_000 });
+});
+const tarihSaat = (c: string) => `${c.slice(8, 10)}.${c.slice(5, 7)}.${c.slice(0, 4)} ${c.slice(11, 16)}`;
 /** kuyruktaki işin adından fotoğrafın adı ("Fotoğraf · <rapor no> · <ad>") */
 const fotoAdi = (ad: string) => ad.split(" · ").slice(2).join(" · ") || ad;
 
@@ -54,24 +68,25 @@ export function FotoListesi({ v, bolumId, madde, oku, gecersiz, mesgul, baslat, 
   const fb = v.tanim.bolumler.find((b) => b.id === bolumId);
   const kutu = madde && fb?.blok === "foto" ? fb.kutular?.find((k) => k.id === madde) ?? null : null;
 
-  const kuyruga = async (d: File) => {
+  const kuyruga = async (d: File, kanit: { cekim: string | null; konum?: { e: number; b: number; d: number | null } | null }) => {
     if (d.size > FOTO_KUYRUK_EN_BUYUK) { bildir("Fotoğraf bağlantısız eklenemeyecek kadar büyük (en çok 2 MB); bağlantı gelince ekleyin."); return; }
     await yeniAc?.();
-    await kuyrugaEkle({ tur: "rapor.foto", kayit: v.id, surum: v.surum, girdi: { bolum: bolumId, madde, ad: d.name, veri: await metneCevir(d) },
+    await kuyrugaEkle({ tur: "rapor.foto", kayit: v.id, surum: v.surum, girdi: { bolum: bolumId, madde, ad: d.name, veri: await metneCevir(d), ...kanit },
       ad: `Fotoğraf · ${v.no} · ${d.name}`, yer });
     bildir(cevrimdisiMi() ? "Fotoğraf cihaza kaydedildi; bağlantı gelince gönderilecek." : "Fotoğraf gönderiliyor…");
   };
   const yukle = (dosya: File) => baslat(async () => {
+    const kanit = { cekim: await cekimOku(dosya), ...(v.olcum ? { konum: await konumAl() } : {}) };
     const kucuk = await fotografiKucult(dosya);
     if (girdi.current) girdi.current.value = "";
-    if (yeniAc || cevrimdisiMi() || raporBekliyor) { await kuyruga(kucuk); return; }
+    if (yeniAc || cevrimdisiMi() || raporBekliyor) { await kuyruga(kucuk, kanit); return; }
     const f = new FormData();
     f.set("id", v.id); f.set("surum", String(v.surum)); f.set("bolum", bolumId); if (madde) f.set("madde", madde);
-    f.set("dosya", kucuk);
+    f.set("dosya", kucuk); f.set("kanit", JSON.stringify(kanit));
     let r: Awaited<ReturnType<typeof fotoEkleEylemi>>;
     try { r = await fotoEkleEylemi(f); } catch (e) {
       if (!(e instanceof TypeError) && !cevrimdisiMi()) throw e;
-      await kuyruga(kucuk);
+      await kuyruga(kucuk, kanit);
       return;
     }
     bildir(r.tamam ? r.bildirim ?? "Fotoğraf eklendi." : r.hatalar?.foto ?? r.genel ?? "Fotoğraf eklenemedi.");
@@ -108,7 +123,8 @@ export function FotoListesi({ v, bolumId, madde, oku, gecersiz, mesgul, baslat, 
         <ul className={stil.fotoListe}>
           {liste.map((f) => (
             <li key={f.dosya}>
-              <span className={stil.fotoAd}>{f.ad}</span>
+              <span className={stil.fotoAd}>{f.ad}{(f.cekim || f.konum !== undefined) && (
+                <span className={stil.ipucuMetin}>{` ${[f.cekim ? `Çekim ${tarihSaat(f.cekim)}` : null, f.konum === undefined ? null : f.konum ? "konum kayıtlı" : "konum yok"].filter(Boolean).join(" · ")}`}</span>)}</span>
               <span className={stil.fotoTuslar}>
                 <DosyaAcTusu dosyaId={f.dosya}>Görüntüle</DosyaAcTusu>
                 <DosyaAcTusu dosyaId={f.dosya} ikon="download" indir>İndir</DosyaAcTusu>

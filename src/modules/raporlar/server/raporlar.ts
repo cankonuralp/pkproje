@@ -50,6 +50,8 @@ import { raporOzetleri, sonGeriGonderme, type RaporOzeti } from "./onay-baglanti
 import { hesapAdlari } from "../../../server/kimlik/hesap.ts";
 import { TANIMLAR } from "../../../tanim/tanimlar.ts";
 import { ayarOku, calismaModeli, firmaBelgeKunyesi } from "../../../server/ayar/ayar.ts";
+import { exifCekimZamani } from "../../../server/dosya/exif.ts";
+import { fotoKaniti, type FotoKaniti } from "../foto-kanit.ts";
 import { acikKontrol, etkinSaat, kontrolBaslat, kontrolBitirYaz, kontrolDurumu, kontrolDuzeltYaz, kontrolOku, type KontrolAnahtari, type KontrolDurumu, type KontrolKaynagi,
   type KontrolSatiri } from "./kontrol.ts";
 import { kayitDosyasi } from "../../../server/dosya/dosya.ts";
@@ -76,7 +78,9 @@ export const PDF_MODULU = "rapor_pdf", IMZALI_MODULU = "rapor_imzali";
 /** raporda fotoğraf: fotoğraf bölümüne ya da "Uygun değil" maddeye bağlı (madde fotoğrafı Kusur açıklamalarına düşer — O2) */
 /** okuma (484): fotoğraftan doldurmada okunan fotoğraf — raporda kanıt olarak durur, BELGEDE (PDF) GÖRÜNMEZ (reisim: "fotoğraf eklenince belgede
     gözükmeyecek"); bolum okunan bölümün kimliği (ekipman bilgileri için "ekipman") */
-export interface RaporFoto { dosya: string; ad: string; bolum: string; madde: string | null; okuma?: boolean }
+/* 2026-11-12 (K5; ../foto-kanit.ts): eklendi (sunucu saati), cekim (fotoğrafın kendi saati), konum (yalnız ölçümlü raporda; izin yoksa null) —
+   bu kararden önce eklenen fotoğrafta yok; belgeye basılmaz */
+export interface RaporFoto extends Partial<FotoKaniti> { dosya: string; ad: string; bolum: string; madde: string | null; okuma?: boolean }
 /** bir rapora en çok bu kadar okuma fotoğrafı */
 export const OKUMA_FOTO_EN_COK = 20;
 const FOTO_MADDE_EN_COK = 10;
@@ -948,7 +952,7 @@ export async function raporKunyeGuncelle(db: Sorgulayici, kim: Kisi, id: string)
 /* ── FOTOĞRAF (312; maket fotoMenu / fotoSil; 09-A1, A4: tür baytlardan, EXIF silinir, yalnız JPEG / PNG) ─────────────────────────────── */
 /** fotoğraf ekle: fotoğraf bölümüne (en çok enCok) ya da kontrol maddesine (en çok 10). Yalnız yazan, Yeni raporda. */
 export async function fotoEkle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, id: string, surum: number,
-  hedef: { bolum: string; madde: string | null }, dosya: { ad: string; bayt: Uint8Array }): Promise<RaporYazma> {
+  hedef: { bolum: string; madde: string | null }, dosya: { ad: string; bayt: Uint8Array }, kanit: unknown = null): Promise<RaporYazma> {
   const e = await yazilabilir(db, kim, id);
   if (hataMi(e)) return e;
   if (surum !== e.r.surum) return { durum: "cakisma" };
@@ -970,7 +974,8 @@ export async function fotoEkle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: 
   if (!cev.success) return { durum: "red", neden: "Raporun cevapları okunamadı; raporu yenileyip yeniden deneyin." };
   const y = await dosyaYukle(db, depo, { firmaId, modul: DOSYA_MODULU, kayitId: id, ad: dosya.ad, bayt: dosya.bayt, izinli: ["jpeg", "png"], kim: kim.ad, yukleyen: kim.id });
   if (!y.tamam) return { durum: "gecersiz", hatalar: { foto: y.neden === "tur" ? "Yalnız JPEG ya da PNG fotoğraf." : y.neden === "buyuk" ? "Fotoğraf çok büyük (en çok 8 MB)." : "Fotoğraf okunamadı." } };
-  const yeni = [...fotolar, { dosya: y.id, ad: y.ad, bolum: hedef.bolum, madde: hedef.madde }];
+  /* 2026-11-12 (K5): çekim anı dosyanın kendi EXIF'inden (silinmeden önceki baytlardan), yoksa cihazın okuduğu; konum yalnız ölçümlü raporda */
+  const yeni: RaporFoto[] = [...fotolar, { dosya: y.id, ad: y.ad, bolum: hedef.bolum, madde: hedef.madde, ...fotoKaniti(exifCekimZamani(dosya.bayt), kanit, e.r.olcumlu, new Date()) }];
   const cevaplar = sayiliCevaplar(cev.data, { cihazlar: e.r.cihazlar, fotolar: yeni }, kutuIds);
   return sonuc(await guncelle(db, RAPOR, id, surum, { fotolar: jsonDizi(yeni), cevaplar }, { kim: kim.ad, ne: "rapor.foto_ekle", gerekce: `${gorunenNo(e.r.no, e.r.revizyon)} · ${y.ad}` }), id, `${y.ad} eklendi.`);
 }

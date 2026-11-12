@@ -71,7 +71,8 @@ export function proxy(istek: NextRequest) {
   if (!dosyaUcu) yanit.headers.set("Content-Security-Policy", csp);
   yanit.headers.set("X-Content-Type-Options", "nosniff");
   yanit.headers.set("Referrer-Policy", "same-origin");
-  yanit.headers.set("Permissions-Policy", "camera=(self), microphone=(), geolocation=(), payment=(), usb=()");
+  /* 2026-11-12 (pkproje.md §11 K5): konum yalnız kendi kökenimize açık — ölçümlü (TÜRKAK'lı) raporda fotoğraf eklenirken, kişi izin verirse okunur */
+  yanit.headers.set("Permissions-Policy", "camera=(self), microphone=(), geolocation=(self), payment=(), usb=()");
   yanit.headers.set("Cross-Origin-Opener-Policy", "same-origin");
   if (!dosyaUcu) yanit.headers.set("X-Frame-Options", cerceve ? "SAMEORIGIN" : "DENY");
   if (!gelistirme) yanit.headers.set("Strict-Transport-Security", "max-age=63072000; includeSubDomains");

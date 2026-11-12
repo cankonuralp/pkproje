@@ -118,8 +118,11 @@ export async function fotoEkleEylemi(form: FormData): Promise<RaporYaniti> {
   if (dosya.size > 8 << 20) return { hatalar: { foto: "Fotoğraf çok büyük (en çok 8 MB)." } };
   const bayt = new Uint8Array(await dosya.arrayBuffer());
   const madde = metin(form.get("madde"));
+  /* 2026-11-12 (K5): cihazın okuduğu çekim anı ve konum (JSON; biçimi modülde denetlenir, bozuksa yok sayılır) */
+  let kanit: unknown = null;
+  try { kanit = JSON.parse(metin(form.get("kanit")) || "null"); } catch { kanit = null; }
   return islem((o) => oturumIslemi(o, (db) => fotoEkle(db, depo(), o, o.kiraci.firmaId, metin(form.get("id")), Number(form.get("surum")),
-    { bolum: metin(form.get("bolum")), madde: madde || null }, { ad: dosya.name, bayt })));
+    { bolum: metin(form.get("bolum")), madde: madde || null }, { ad: dosya.name, bayt }, kanit)));
 }
 /** okunacak fotoğraf formdan (486): yeni dosya ("dosya") ya da raporun okuma fotoğrafı ("foto" — dosya kimliği; sonradan okuma). Dosya büyüklüğü burada,
     fotoğrafın raporun o bölümüne ait olduğu modülde denetlenir. */
