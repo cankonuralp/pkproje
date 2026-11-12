@@ -503,8 +503,15 @@ pkproje/
                             modelCoz) · firma_ayar 'calisma' — uygulama rolü YAZAMAZ (firma_ayar_calisma_kilidi), okur: src/server/ayar/ayar.ts calismaModeli(db) ·
                             Yönetim › Firma aç'ta seçim zorunlu (yonetim/sema.ts model, yonetim.ts firmaAc → firma_yonetim_model açılış kaydı) · firma sayfası
                             7. adım yonetim/ui/ModelBolumu.tsx (değiştir + geçmiş; firma-tarafi.ts modelOkuYonet / modelYonet) · Firma ayarları başlığında rozet ·
-                            kilit tests/yonetim.test.ts (PG), yonetim-saf, bozan calisma-modeli, e2e yonetim.spec · SIRADAKİ: T2 kontrol kaydı + saha raporu
-                            (ölç, gerekçeli düzelt) · T3 çekim anı + konum · T4 sapma + gerekçe + onay ekranı · T5 S.A.Y Chat Rapor modu + bağlantısız saat ·
+                            kilit tests/yonetim.test.ts (PG), yonetim-saf, bozan calisma-modeli, e2e yonetim.spec
+                            · T2 KONTROL KAYDI (göç 0128): rapor.olcumlu (rapor AÇILDIĞI andaki model — veritabanı yazar, değişmez) · tablo kontrol (plan +
+                            ekipman + kişi + takip; saati veritabanı koyar, ölçülen değişmez / silinmez, aynı kişide tek açık kontrol; düzeltme duz_* +
+                            gerekçe ≥ 10; hiç ölçülmemişte kaynak "elle") · raporlar/server/kontrol.ts (tablo) + raporlar.ts kontrolBasla / kontrolBitir /
+                            kontrolSaatDuzelt (yetki; raporun bas / bit'i kontrol kaydından), ölçümlü raporda kaydetIc gönderilen saati YAZMAZ, onayaGonder
+                            kontrol bitmeden reddeder (KONTROL_BITMEDI) · ekran raporlar/ui/KontrolKutusu.tsx (Firma bilgileri'nin başında; başlangıç / bitiş
+                            satırları salt okunur) · yedek: kontrol YEDEK_DISI (T7'de alınacak) · kilit tests/raporlar.test.ts (PG, son test), kontrol-saf,
+                            bozan kontrol · uçtan uca testi YOK (TÜRKAK'lı tohum firması T4'te) · bağlantısızken saat alınmaz (T5)
+                            · SIRADAKİ: T3 çekim anı + konum · T4 sapma + gerekçe + onay ekranı · T5 S.A.Y Chat Rapor modu + bağlantısız saat ·
                             T6 S.A.Y saat dağıtmaz · T7 zaman çizelgesi + günlük çizelge · T8 zaman damgasız imza reddi
   src/tanim/iller.ts        81 il + 973 ilçe (açık veri, MIT; bir kez alındı)
   src/tanim/bakanlik/       Bakanlığın resmî PDF'leri ZPKR01–05 (rapor formatı) + ZPKK01–05 (kriterler); 467: ZPKR06 / ZPKK06 kule kren,

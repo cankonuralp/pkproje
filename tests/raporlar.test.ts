@@ -28,7 +28,7 @@ import { TAMAMLANDI_RAPOR, tarihNo } from "../src/modules/planlar/sema.ts";
 import { taslakBaslat, taslakKaydet, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
 import { ayEkle } from "../src/modules/raporlar/sema.ts";
 import {
-  cihazEkle, cihazKaldir, EKIPTE_DEGIL, fotoEkle, fotoSil, kayitliOnayaGonder, onayaGonder, raporBelgesiVerisi, raporFormatGuncelle, raporKaydet, raporKopyala, raporKunyeGuncelle, raporOlustur,
+  cihazEkle, cihazKaldir, EKIPTE_DEGIL, fotoEkle, fotoSil, kayitliOnayaGonder, KONTROL_BITMEDI, kontrolBasla, kontrolBitir, kontrolSaatDuzelt, onayaGonder, raporBelgesiVerisi, raporFormatGuncelle, raporKaydet, raporKopyala, raporKunyeGuncelle, raporOlustur,
   raporListesi, raporSil, sahaRaporu, type RaporYazma,
 } from "../src/modules/raporlar/server/raporlar.ts";
 import { raporDurumYaz } from "../src/modules/raporlar/server/onay-baglanti.ts";
@@ -1136,4 +1136,79 @@ test("başka plandan taşı: istenirse aynı yazanın başka plandaki yarım rap
   const r4 = tamam(await ac(FA.den1, p4, false));
   assert.doesNotMatch(r4.bildirim, /taşındı/);
   assert.notEqual((await sr(FA.den1, r4.id))!.ekipmanBilgi.marka, "Taşınan");
+});
+
+/* NEREDEN GELDİ: 2026-11-12 — reisim: "yazılan süre ile ekipman başında geçirilen süre uymalı log kayıtları düzgün olmalı", "türkaklı ve türkaksız
+   firmalar için 2 ayrı model", "ara verme olmasın" (göç 0128; pkproje.md §11 K2, K3, K10, K11). TÜRKAK'lı firmada açılan rapor ölçümlü: saat
+   yazılmaz, kontrol kaydından gelir. Olumsuz kanıt: tests/bozan/kontrol.bozan.ts. Dosyanın SON testi (firma A'nın modelini değiştirip geri alır). */
+test("kontrol saati (0128): TÜRKAK'lı firmada açılan rapor ölçümlü — saat yazılmaz, başlat / bitir veritabanından; bitmeden onaya gitmez; aynı kişide tek kontrol; düzeltme gerekçeyle, ölçülen kalır; kayıt değişmez, silinmez; eski rapor ölçümsüz kalır", async () => {
+  const id = await yeniPlan();
+  /* model değişmeden açılan rapor ölçümsüz kalır (K10) */
+  const eski = tamam(await olustur(FA.den1, id, FA.ekp["HT-A2"]));
+  const su = kume.sahipIstemci(); await su.connect();
+  try {
+    await su.query(`INSERT INTO firma_ayar (firma_id, bolum, deger) VALUES ($1, 'calisma', '{"model": "turkak"}'::jsonb)
+      ON CONFLICT (firma_id, bolum) DO UPDATE SET deger = EXCLUDED.deger`, [A]);
+    const r = tamam(await olustur(FA.den1, id, FA.ekp["HT-A3"]));
+    const r2 = tamam(await olustur(FA.den1, id, FA.ekp["HT-A4"]));
+    assert.equal((await sr(FA.den1, eski.id))!.olcum, null, "model değişmeden açılan rapor ölçümsüz");
+    assert.equal((await a(FA.den1, (db) => kontrolBasla(db, FA.den1, eski.id))).durum, "red", "ölçümsüz raporda kontrol başlatılmaz");
+    let d = (await sr(FA.den1, r.id))!;
+    assert.deepEqual(d.olcum, { durum: "yok", kaynak: null, bas: null, bit: null, duzeltme: null });
+    /* kontrol bitmeden onaya gitmez; gönderilen saat rapora yazılmaz */
+    assert.deepEqual(await gonder(FA.den1, r.id, d.surum, girdi()), { durum: "red", neden: KONTROL_BITMEDI });
+    d = (await sr(FA.den1, r.id))!;
+    assert.match(tamam(await kaydet(FA.den1, r.id, d.surum, girdi())).bildirim, /yazılan saat alınmadı/);
+    d = (await sr(FA.den1, r.id))!;
+    assert.notEqual(d.tarih.bas, `${dun}T09:00`, "gönderilen başlangıç yazılmadı");
+    /* yazan başlatır (başkası başlatamaz): saat veritabanından, rapora da yazılır */
+    assert.equal((await a(FA.den2, (db) => kontrolBasla(db, FA.den2, r.id))).durum, "yetkisiz");
+    tamam(await a(FA.den1, (db) => kontrolBasla(db, FA.den1, r.id)));
+    d = (await sr(FA.den1, r.id))!;
+    assert.deepEqual([d.olcum!.durum, d.olcum!.kaynak, d.olcum!.bit, d.tarih.bas, d.tarih.bit], ["suruyor", "sunucu", null, d.olcum!.bas, null]);
+    assert.equal(d.olcum!.bas!.slice(0, 10), bugun);
+    /* K3: aynı kişide ikinci kontrol başlamaz; aynı kontrol iki kez başlamaz; sürerken saat düzeltilmez; sürerken onaya gitmez */
+    assert.deepEqual(await a(FA.den1, (db) => kontrolBasla(db, FA.den1, r2.id)), { durum: "red", neden: "Önce HT-A3 kontrolünü bitirin; aynı anda tek kontrol sürer." });
+    assert.equal((await a(FA.den1, (db) => kontrolBasla(db, FA.den1, r.id))).durum, "red");
+    const GEREKCE = "Tuşa geç basıldı, saat düzeltildi";
+    const duz = (g: unknown) => a(FA.den1, (db) => kontrolSaatDuzelt(db, FA.den1, r.id, g));
+    assert.equal((await duz({ bas: `${dun}T09:00`, bit: `${dun}T09:40`, gerekce: GEREKCE })).durum, "red");
+    assert.deepEqual(await gonder(FA.den1, r.id, d.surum, girdi()), { durum: "red", neden: KONTROL_BITMEDI });
+    /* bitir: iki kez bitmez; bitiş başlangıçtan önce olmaz */
+    tamam(await a(FA.den1, (db) => kontrolBitir(db, FA.den1, r.id)));
+    assert.equal((await a(FA.den1, (db) => kontrolBitir(db, FA.den1, r.id))).durum, "red");
+    d = (await sr(FA.den1, r.id))!;
+    assert.deepEqual([d.olcum!.durum, d.olcum!.duzeltme, d.tarih.bit], ["bitti", null, d.olcum!.bit]);
+    assert.ok(d.olcum!.bit! >= d.olcum!.bas!);
+    const olculen = { bas: d.olcum!.bas, bit: d.olcum!.bit };
+    /* öteki ekipmanın kontrolü artık başlar */
+    tamam(await a(FA.den1, (db) => kontrolBasla(db, FA.den1, r2.id)));
+    tamam(await a(FA.den1, (db) => kontrolBitir(db, FA.den1, r2.id)));
+    /* düzeltme: gerekçe en az 10 karakter, bitiş başlangıçtan sonra, ileri saat yok; ölçülen değer kayıtta kalır */
+    assert.deepEqual(await duz({ bas: `${dun}T09:00`, bit: `${dun}T09:40`, gerekce: "kısa" }), { durum: "gecersiz", hatalar: { gerekce: "Gerekçe en az 10 karakter olmalı." } });
+    assert.deepEqual(await duz({ bas: `${dun}T09:40`, bit: `${dun}T09:00`, gerekce: GEREKCE }), { durum: "gecersiz", hatalar: { bit: "Bitiş başlangıçtan sonra olmalı." } });
+    assert.deepEqual(await duz({ bas: `${bugun}T09:00`, bit: `${gun(2)}T09:00`, gerekce: GEREKCE }), { durum: "gecersiz", hatalar: { bit: "Bitiş ileri bir saat olamaz." } });
+    tamam(await duz({ bas: `${dun}T09:00`, bit: `${dun}T09:40`, gerekce: GEREKCE }));
+    d = (await sr(FA.den1, r.id))!;
+    assert.deepEqual([d.olcum!.durum, d.olcum!.bas, d.olcum!.bit, d.tarih.bas, d.tarih.bit], ["bitti", `${dun}T09:00`, `${dun}T09:40`, `${dun}T09:00`, `${dun}T09:40`]);
+    assert.deepEqual([d.olcum!.duzeltme!.olculenBas, d.olcum!.duzeltme!.olculenBit, d.olcum!.duzeltme!.gerekce, d.olcum!.duzeltme!.kim], [olculen.bas, olculen.bit, GEREKCE, "Deneme"]);
+    /* bitmiş kontrolle onay kapısı açılır (eksik varsa eksik döner — kontrol engeli değil); gönderim bitişi değiştirmez */
+    const g2 = await gonder(FA.den1, r.id, d.surum, girdi());
+    assert.ok(g2.durum === "tamam" || g2.durum === "eksik", JSON.stringify(g2));
+    d = (await sr(FA.den1, r.id))!;
+    assert.deepEqual([d.tarih.bas, d.tarih.bit], [`${dun}T09:00`, `${dun}T09:40`]);
+    /* veritabanı: ölçülen bitiş ve başlangıç değişmez, kayıt silinmez, raporun modeli değişmez; başka firma görmez; iz yazılır */
+    await assert.rejects(sql(A, "UPDATE kontrol SET bitti = now() + interval '1 hour'"), /değişmez/);
+    await assert.rejects(sql(A, "UPDATE kontrol SET basladi = now()"), /permission denied|izin/i);
+    await assert.rejects(sql(A, "DELETE FROM kontrol"), /permission denied|izin|silinmez/i);
+    await assert.rejects(sql(A, "UPDATE rapor SET olcumlu = false WHERE id = $1", [r.id]), /değişmez/);
+    assert.equal((await sql(B, "SELECT 1 FROM kontrol")).rowCount, 0);
+    assert.equal((await sql(A, "SELECT 1 FROM kontrol")).rowCount, 2);
+    for (const ne of ["kontrol.basla", "kontrol.bitir", "kontrol.duzelt", "rapor.kontrol_saati"]) {
+      assert.ok((await sql(A, "SELECT 1 FROM denetim_izi WHERE ne = $1", [ne])).rowCount, ne);
+    }
+  } finally {
+    await su.query(`UPDATE firma_ayar SET deger = '{"model": "siz"}'::jsonb WHERE firma_id = $1 AND bolum = 'calisma'`, [A]);
+    await su.end();
+  }
 });

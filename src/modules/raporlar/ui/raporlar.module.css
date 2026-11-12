@@ -305,3 +305,18 @@ button.silTus { color: var(--hata-yazi); }
 .takipListe { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
 .takipListe li { display: flex; gap: 8px; align-items: baseline; min-width: 0; }
 .takipListe li > span:last-child { min-width: 0; overflow-wrap: anywhere; }
+/* 2026-11-12 KONTROL SÜRESİ (göç 0128; maket yerel/maket/turkak-modeli.html): ölçümlü raporda firma bilgilerinin başındaki kutu — durum rozeti,
+   geçen süre / ölçülen saatler, başlat · bitir · düzelt tuşları; dar ekranda satırlar alt alta */
+.kontrolKutu { border: 1px solid var(--kenar); border-radius: var(--r-orta); padding: 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.kontrolBas { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.kontrolAd { margin: 0; font-size: var(--boy-govde); font-weight: 600; }
+.kontrolTus { display: flex; flex-wrap: wrap; gap: 8px; }
+.kontrolSure { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; font-variant-numeric: tabular-nums; }
+.kontrolSure b { font-size: var(--boy-baslik); }
+.kontrolSure span { color: var(--yazi2); font-size: var(--boy-kucuk); }
+.kontrolOzet { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px 16px; font-variant-numeric: tabular-nums; }
+.kontrolOzet div { min-width: 0; }
+.kontrolOzet dt { color: var(--yazi2); font-size: var(--boy-etiket); font-weight: 600; }
+.kontrolOzet dd { margin: 0; overflow-wrap: anywhere; }
+.kontrolOzet s { margin-left: 8px; color: var(--yazi2); }
+.kontrolGenis { grid-column: 1 / -1; }

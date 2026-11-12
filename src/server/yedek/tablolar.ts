@@ -32,6 +32,7 @@ export const YEDEK_DISI: Readonly<Record<string, string>> = {
   say_istek: "S.A.Y çalışma kaydı",
   say_is: "S.A.Y çalışma kaydı (öğrenme özeti)", sign_bildirim: "probata sign bildirimlerinin tekrar kaydı", say_hafiza: "S.A.Y'ın öğrendikleri (geceleri kurulur)",
   say_chat_mesaj: "kişiye özel sohbet (S.A.Y Chat) — S.A.Y okuyup rapora işler",
+  kontrol: "kontrol kaydı (2026-11-12, göç 0128): saat raporda (bas / bit) ve denetim izinde yedekte; kaydın kendisi zaman çizelgesi kaleminde (T7) yedeğe alınacak",
   say_rapor_kayit: "kişiye özel rapor kaydı (S.A.Y Chat Rapor modu) — rapora dönünce fotoğrafları raporda",
   vt_kimlik: "veritabanının kendi kimliği",
   yz_ek: "S.A.Y eki", yz_ek_okuma: "S.A.Y eki", yz_ek_parca: "S.A.Y eki",

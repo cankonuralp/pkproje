@@ -77,6 +77,7 @@ import {
 } from "./eylemler";
 import { sayRaporBagla, type SayEkranSonucu, type SayGeriAl, type SayOkumaOzeti } from "../../say/ui/baglam";
 import type { SatirEkle } from "../../../server/yz/say";
+import { KontrolKutusu } from "./KontrolKutusu";
 import stil from "./raporlar.module.css";
 
 type Gorunum = SahaRaporuVerisi;
@@ -396,7 +397,13 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
     if (k === "sonraki" || k === "rapor") setElle((e) => ({ ...e, [k]: true }));
     setKirli(true);
   };
-  const girdi = () => ({ ekipman, tarih, cevaplar });
+  /* 2026-11-12 (göç 0128, K2): ölçümlü raporda başlangıç / bitiş kontrol kaydından (sunucudan gelen) — ekranda yazılmaz; elle seçilmemiş sonraki
+     kontrol ve rapor tarihi o başlangıçtan türer (kontrol başka gün başladıysa da doğru gün) */
+  const olcumluTarih = (): typeof tarih => {
+    const g = v.tarih.bas.slice(0, 10);
+    return { ...tarih, bas: v.tarih.bas, bit: v.tarih.bit ?? "", sonraki: elle.sonraki ? tarih.sonraki : ayEkle(g, v.tur.periyot), rapor: elle.rapor ? tarih.rapor : g };
+  };
+  const girdi = () => ({ ekipman, tarih: v.olcum ? olcumluTarih() : tarih, cevaplar });
   /* TASLAK yazımı: değişiklikten 1,2 sn sonra; sayfa arka plana geçerken / kapanırken hemen */
   const sonGirdi = useRef<ReturnType<typeof girdi> | null>(null);
   useEffect(() => { sonGirdi.current = { ekipman, tarih, cevaplar }; }, [ekipman, tarih, cevaplar]);
@@ -416,7 +423,8 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
   /* 464: bitiş elle seçilene kadar ŞİMDİ gösterilir (yarım dakikada bir ilerler, başlangıçtan önce olmaz) ve kaydedilmez — gönderilirken sunucu
      gönderme anını yazar (değişmedi). Sunucu saati Türkiye saati değil: değer tarayıcıda, çizimden sonra gelir */
   const [simdi, setSimdi] = useState("");
-  const bitOto = !oku && !tarih.bit;
+  /* 2026-11-12 (göç 0128, K2): ölçümlü raporda bitiş kontrol kaydından — "şimdi" gösterilmez */
+  const bitOto = !oku && !tarih.bit && !v.olcum;
   useEffect(() => {
     if (!bitOto) return;
     const g = () => setSimdi(simdiIso());
@@ -424,7 +432,7 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
     const z = window.setInterval(g, 30_000);
     return () => window.clearInterval(z);
   }, [bitOto]);
-  const gorunen = (k: TarihAnahtari) => (k === "bit" && bitOto ? (simdi && simdi < tarih.bas ? tarih.bas : simdi) : tarih[k]);
+  const gorunen = (k: TarihAnahtari) => (v.olcum ? olcumluTarih()[k] : k === "bit" && bitOto ? (simdi && simdi < tarih.bas ? tarih.bas : simdi) : tarih[k]);
   /** geri yüklenen taslağı bırak: taslak silinir, rapor kayıtlı hâliyle yeniden açılır */
   const taslagiBirak = async () => { kirliRef.current = false; await taslakSil(taslakAdi); window.location.reload(); };
   const kaydedildi = () => { setKirli(false); kirliRef.current = false; setTaslaktan(false); void taslakSil(taslakAdi); setSonKayit(new Date().toISOString()); setGenel(null); setAlanHata({}); };
@@ -921,9 +929,12 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
     const id = TID(k), alan = `tarih.${k}`, gec = gecersiz(alan);
     const h = alanHata[alan] ?? (gec ? "Tarih ve saat seçilmeli." : null), u = h ? null : tarihUyari(k);
     const oto = k === "bit" && bitOto && !h && !u;
+    /* 2026-11-12 (göç 0128, K2): ölçümlü raporda başlangıç / bitiş kontrol kaydından, salt okunur (kontrol başlamadıysa boş) */
+    const olculen = v.olcum && (k === "bas" || k === "bit") ? v.olcum[k] : undefined;
+    const deger = olculen !== undefined ? olculen : tarih[k];
     return (
-      <Satir key={k} etiket={etiket} htmlFor={id} zorunlu={zorunlu && !oku} genis={genis}>
-        {oku ? <OkuGirdi id={id} deger={tarih[k] ? (saat ? saatliNo(tarih[k]) : tarihNo(tarih[k])) : ""} /> : <>
+      <Satir key={k} etiket={etiket} htmlFor={id} zorunlu={zorunlu && !oku && olculen === undefined} genis={genis}>
+        {oku || olculen !== undefined ? <OkuGirdi id={id} deger={deger ? (saat ? saatliNo(deger) : tarihNo(deger)) : ""} /> : <>
           <TarihKutusu id={id} ad={etiket} saat={saat} deger={gorunen(k)} degistir={(x) => tarihYaz(k, x)} gecersiz={gec}
             tanim={h || u || oto ? ipucuId(id) : undefined} />
           {(h || u) && <p className={h ? stil.alanHata : stil.alanUyari} id={ipucuId(id)}>{h ?? u}</p>}
@@ -1070,6 +1081,8 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
           {/* 447 (reisim 2026-10-09: "görselde attığım ekranda bi bak sıralama hatası yok mu"): Bakanlık formunun ve belgenin (src/belge/belge.ts)
               sırasıyla, iki sütunda satır satır eşleşir — firma adı | adres · rapor no | rapor tarihi · İSG-KATİP | SGK · başlangıç | bitiş ·
               sonraki | takip; sonra müşterinin e-posta | telefonu, metot ve ekipman bölümü */}
+          {/* 2026-11-12 (göç 0128; pkproje.md §11 K2): ölçümlü raporda kontrol saati ölçülür — başlat / bitir / gerekçeli düzelt */}
+          {v.olcum && !yeni && !deneme && <KontrolKutusu raporId={v.id} olcum={v.olcum} duzenle={duzenle} mesgul={mesgul} baslat={baslat} yenile={yenile} hata={yanitHatasi} />}
           <Satirlar>
             {/* 595 (madde 3): satırlar formatın (adı, sırası, varlığı — belgeyle aynı liste); satırları tanımlanmamış (eski) formatta bugünkü adlar
                 ve sıra; müşterinin e-postası ve telefonu formatta satırı yoksa da sahada (künye — eski düzendeki yerinde, metottan önce) */}

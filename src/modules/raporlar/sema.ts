@@ -109,3 +109,11 @@ const adParcasi = (s: string | null | undefined, en: number) =>
 export function raporDosyaAdi(no: string, ekipmanKod?: string | null, turAd?: string | null, ek?: string): string {
   return `${[adParcasi(no, 40) || "rapor", adParcasi(ekipmanKod, 40), adParcasi(turAd, 90), adParcasi(ek, 20)].filter(Boolean).join("-")}.pdf`;
 }
+
+/* KONTROL SAATİNİ GEREKÇEYLE YAZ / DÜZELT (2026-11-12, göç 0128; pkproje.md §11 K2): ölçümlü raporda saat elle yalnız gerekçeyle yazılır (en az 10
+   karakter); ölçülen değer kayıtta kalır. Form ve sunucu aynı şema. */
+export const KontrolDuzeltme = z.object({
+  bas: z.preprocess(bos, zaman.nullable()).refine((x): x is string => !!x, "Başlangıç tarihi ve saati seçilmeli."),
+  bit: z.preprocess(bos, zaman.nullable()).refine((x): x is string => !!x, "Bitiş tarihi ve saati seçilmeli."),
+  gerekce: z.preprocess((x) => (typeof x === "string" ? x.trim() : x), z.string().min(10, "Gerekçe en az 10 karakter olmalı.").max(500, "En çok 500 karakter.")),
+}).refine((d) => !d.bas || !d.bit || d.bit > d.bas, { path: ["bit"], message: "Bitiş başlangıçtan sonra olmalı." });

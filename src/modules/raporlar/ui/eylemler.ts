@@ -8,7 +8,7 @@ import { depo } from "../../../server/dosya/depo";
 import { yedekSonraCalistir } from "../../../server/yedek/sonra";
 import { belgePdf } from "../../../belge/pdf";
 import {
-  cihazEkle, cihazKaldir, fotoEkle, fotoSil, imzaHazirla, imzaliEslestirYukle, imzaliYukle, kayitliOnayaGonder, onayaGonder, raporFormatGuncelle, raporKaydet, raporKopyala, raporKunyeGuncelle, raporOlustur, takipAc,
+  cihazEkle, cihazKaldir, fotoEkle, fotoSil, imzaHazirla, imzaliEslestirYukle, imzaliYukle, kayitliOnayaGonder, kontrolBasla, kontrolBitir, kontrolSaatDuzelt, onayaGonder, raporFormatGuncelle, raporKaydet, raporKopyala, raporKunyeGuncelle, raporOlustur, takipAc,
   raporSil, revizeIste, revizeIstegiGeriCek, teknikImzaHazirla, teknikImzaliEslestirYukle, teknikImzaliYukle, type RaporYazma,
 } from "../server/raporlar";
 import { anthropicCagir, type OkunanSatir } from "../../../server/yz/okuma";
@@ -83,6 +83,17 @@ export async function raporKaydetEylemi(id: string, surum: number, girdi: unknow
 }
 export async function onayaGonderEylemi(id: string, surum: number, girdi: unknown): Promise<RaporYaniti> {
   return islem((o) => oturumIslemi(o, (db) => onayaGonder(db, o, metin(id), Number(surum), girdi)));
+}
+/* 2026-11-12 (göç 0128; pkproje.md §11 K2, K3): ölçümlü raporda kontrol saati — başlat / bitir (saati veritabanı yazar) ve gerekçeli düzeltme.
+   Raporun sürümü sunucuda okunur (ekrandaki kaydedilmemiş değişiklik kalır); sonuç ekrana yenilemeyle gelir. */
+export async function kontrolBaslaEylemi(id: string): Promise<RaporYaniti> {
+  return islem((o) => oturumIslemi(o, (db) => kontrolBasla(db, o, metin(id))));
+}
+export async function kontrolBitirEylemi(id: string): Promise<RaporYaniti> {
+  return islem((o) => oturumIslemi(o, (db) => kontrolBitir(db, o, metin(id))));
+}
+export async function kontrolDuzeltEylemi(id: string, girdi: unknown): Promise<RaporYaniti> {
+  return islem((o) => oturumIslemi(o, (db) => kontrolSaatDuzelt(db, o, metin(id), girdi)));
 }
 /** 2026-11-06 (plan içi "Hazır olanları onaya gönder"): raporu kayıttaki hâliyle onaya gönderir; eksikli rapor değişmez, eksikleri döner */
 export async function kayitliOnayaGonderEylemi(id: string): Promise<RaporYaniti> {

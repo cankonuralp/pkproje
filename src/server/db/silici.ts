@@ -22,7 +22,8 @@ export const SILINEBILIR = {
   ekipman: {
     kullanim: "ekipman_kullanim", sil: "ekipman_sil",
     /* 524: S.A.Y Chat kaydı birlikte (ON DELETE CASCADE — 0085) */
-    fk: { kullanim: ["rapor.ekipman_id"], birlikte: ["ekipman_kodu.ekipman_id", "plan_ekipman.ekipman_id"] },
+    /* 2026-11-12 (göç 0128): kontrol kaydı (ölçülen saat) — kullanılmış sayar; kaydı olan ekipman silinmez */
+    fk: { kullanim: ["kontrol.ekipman_id", "rapor.ekipman_id"], birlikte: ["ekipman_kodu.ekipman_id", "plan_ekipman.ekipman_id"] },
   },
   /* 361: ekipmanı, raporu, personel ataması, teklif kalemi, fatura satırı olmayan tür; fiyat, format sürümleri ve PDF'ler birlikte (kod serbest; 0057)
      · 523: S.A.Y Chat ayarı birlikte (yabancı anahtar ON DELETE CASCADE — 0084) */
@@ -61,7 +62,7 @@ export const SILINEBILIR = {
     kullanim: "personel_kullanim", sil: "personel_sil",
     fk: {
       kullanim: ["arac_km.personel_id", "belge_onay.personel_id", "bordro.personel_id", "egitim_kaydi.personel_id", "ekipman_atamasi.personel_id",
-        "gider.personel_id", "izin_talebi.personel_id", "ozluk_belgesi.personel_id", "plan_ekip.personel_id", "rapor.personel_id",
+        "gider.personel_id", "izin_talebi.personel_id", "kontrol.personel_id", "ozluk_belgesi.personel_id", "plan_ekip.personel_id", "rapor.personel_id",
         "zimmet_formu.personel_id", "zimmet_hareket.alan_personel", "zimmet_hareket.eden_personel"],
       birlikte: ["hesap.personel_id", "isg_katip.personel_id"],
     },
@@ -101,7 +102,7 @@ export const SILINEBILIR = {
     kullanim: "plan_kullanim", sil: "plan_sil",
     /* 2026-10-12: saha formu (0082) — müşteriye verilmiş belge; planı kullanılmış sayar */
     /* 524: S.A.Y Chat kayıtları birlikte (ON DELETE CASCADE — 0085; kişiye özel taslak) */
-    fk: { kullanim: ["fatura_rapor.plan_id", "gider.plan_id", "rapor.plan_id", "saha_formu.plan_id"],
+    fk: { kullanim: ["fatura_rapor.plan_id", "gider.plan_id", "kontrol.plan_id", "rapor.plan_id", "saha_formu.plan_id"],
       birlikte: ["plan_ekip.plan_id", "plan_ekipman.plan_id", "plan_not.plan_id"] },
   },
   /* 496: firmanın format parçası — formatlara kopyalanır, hiçbir yerde kullanılmaz (0080) */
