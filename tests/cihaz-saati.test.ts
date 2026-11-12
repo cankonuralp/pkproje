@@ -4,7 +4,7 @@
    ortak); sapma metni sapma.ts. Veritabanı tarafı tests/raporlar.test.ts "bağlantısız kontrol saati (0131)". Olumsuz kanıt: tests/bozan/cihaz-saati.bozan.ts. */
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { cihazSaati, SAAT_PAYI_MS, trDakika, yerelOlcum } from "../src/modules/raporlar/cihaz-saati.ts";
+import { cihazSaati, kayitKontrolu, SAAT_PAYI_MS, trDakika, yerelOlcum } from "../src/modules/raporlar/cihaz-saati.ts";
 import { sapmalar } from "../src/modules/raporlar/sapma.ts";
 
 const DK = 60_000;
@@ -55,4 +55,17 @@ test("sapma: tutmayan cihaz saati 'saat' sapması olur (gerekçe ister); tutan /
   assert.deepEqual(sapmalar({ ...g, saatTutmadi: null }), []);
   assert.deepEqual(sapmalar({ ...g, saatTutmadi: "cihaz saati kontrol sırasında geri alınmış" }),
     [{ tur: "saat", metin: "Bağlantısızken alınan kontrol saati sunucu saatiyle tutmadı: cihaz saati kontrol sırasında geri alınmış. Saat cihazın saatiyle yazıldı." }]);
+});
+
+/* 2026-11-12 (göç 0132; K11): S.A.Y Chat Rapor modu — ilk fotoğraf başlangıç, Gönder bitiş; ikisi de cihaz saatiyle birlikte gelir */
+test("kaydın kontrolü (Rapor modu): başlangıç ve bitiş birlikte sunucu saatine çevrilir; bitiş başlangıçtan önce çıkarsa başlangıca çekilir ve işaretlenir; çapasız kayıt işaretli", () => {
+  const c = (ms: number) => ms - 3 * DK;   // cihaz 3 dk geri
+  const capa = { sunucu: S - 120 * DK, cihaz: c(S - 120 * DK) };
+  const k = kayitKontrolu({ bas: c(S - 30 * DK), bit: c(S - 10 * DK), capa }, c(S), S);
+  assert.deepEqual([k.bas, k.bit, k.tutmadi, k.kanit.bas.neden, k.kanit.bit.neden], [S - 30 * DK, S - 10 * DK, false, null, null]);
+  assert.deepEqual([k.kanit.bas.an, k.kanit.bit.an, k.kanit.bas.gonderim, k.kanit.bit.sunucu], [c(S - 30 * DK), c(S - 10 * DK), c(S), S]);
+  const ters = kayitKontrolu({ bas: c(S - 10 * DK), bit: c(S - 30 * DK), capa }, c(S), S);
+  assert.deepEqual([ters.bas, ters.bit, ters.tutmadi, ters.kanit.bit.neden], [S - 10 * DK, S - 10 * DK, true, "cihazdaki bitiş saati başlangıçtan önce"]);
+  const capasiz = kayitKontrolu({ bas: S - 30 * DK, bit: S - 10 * DK, capa: null }, S, S);
+  assert.deepEqual([capasiz.bas, capasiz.bit, capasiz.tutmadi], [S - 30 * DK, S - 10 * DK, true]);
 });

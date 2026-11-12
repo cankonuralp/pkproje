@@ -171,9 +171,9 @@ function eskiGirdi(tur: "saychat.kaydet" | "saychat.foto", girdi: unknown): unkn
 }
 
 export async function chatIslemi(db: Sorgulayici, dosya: { depo: Depo; firmaId: string }, kim: Kisi & RaporKisi, tur: ChatIslemTuru, cihazId: string, _surum: number,
-  girdi: unknown): Promise<ChatYazma> {
+  girdi: unknown, gonderim: number | null = null): Promise<ChatYazma> {
   if (tur === "sayrapor.foto") return raporFotoEkle(db, dosya.depo, kim, dosya.firmaId, cihazId, girdi);
-  if (tur === "sayrapor.kaydet") return raporKaydiKaydet(db, kim, cihazId, girdi);
+  if (tur === "sayrapor.kaydet") return raporKaydiKaydet(db, kim, cihazId, girdi, gonderim);
   if (tur === "sayrapor.sil") return raporKaydiSil(db, kim, cihazId);
   if (tur === "chat.mesaj") return mesajYaz(db, dosya.depo, kim, dosya.firmaId, cihazId, girdi);
   if (tur === "chat.sil") return mesajSil(db, kim, cihazId);

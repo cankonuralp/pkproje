@@ -3,6 +3,7 @@
    · K1: mesajın satırları formatın ekipman bilgilerinden, kendiliğinden + Not; tür başına ayar yok. n. satır = n. bilgi; "-" ya da boş = bilinmiyor; fazla satır nota.
    · Plandaki bütün ekipman listede (reisim 2026-10-14: "plandan seç diyince plandaki ekipmanlar gözükmüyor"): seçilemeyen nedeniyle görünür.
    Kilit tests/say-rapor-modu.test.ts, olumsuz kanıt tests/bozan/say-rapor-modu.bozan.ts. */
+import { KontrolCihazGirdisi } from "../raporlar/sema.ts";
 import { z } from "zod";
 import { ekipmanBolumuMu } from "../../format/duzen.ts";
 import { EKIPMAN_ALAN_ADI, type EkipmanAlani, type FormatTanimi } from "../../format/tanim.ts";
@@ -54,11 +55,15 @@ export const RaporKaydiGirdisi = z.object({
   ekipman: z.discriminatedUnion("tip", [z.object({ tip: z.literal("plan"), id: kimlik }), z.object({ tip: z.literal("yeni"), tur: kimlik })]),
   satirlar: z.array(z.object({ ad: z.string().min(1).max(SATIR_AD_EN_COK), alan: z.string().regex(ALAN) })).min(1).max(SATIR_EN_COK),
   mesaj: z.array(z.string().max(MESAJ_SATIR_EN_COK)).max(MESAJ_EN_COK),
+  /* 2026-11-12 (göç 0132; pkproje.md §11 K11): TÜRKAK'lı firmada kaydın ölçtüğü kontrol — ilk fotoğrafın anı (başlangıç), Gönder'in anı (bitiş), ikisi
+     de cihaz saati (ms) + ilk fotoğraftan önceki son saat ölçümü (çapa); sunucu sunucu saatine çevirir (raporlar/cihaz-saati.ts) */
+  kontrol: z.object({ bas: KontrolCihazGirdisi.shape.an, bit: KontrolCihazGirdisi.shape.an, capa: KontrolCihazGirdisi.shape.capa }).optional(),
 });
 export type RaporKaydiGirdisi = z.input<typeof RaporKaydiGirdisi>;
 export const FOTO_ROLLERI = ["ekipman", "etiket"] as const;
 export type FotoRolu = (typeof FOTO_ROLLERI)[number];
-export const RaporFotoGirdisi = z.object({ plan: kimlik, rol: z.enum(FOTO_ROLLERI), ad: z.string().min(1).max(200), veri: z.string().min(1).max(KAYIT_FOTO_VERI) });
+/* cekim (K5): fotoğrafın çekim anı — cihaz küçültmeden önce okur; biçimi sunucuda denetlenir (raporlar/foto-kanit.ts), uymayan yok sayılır */
+export const RaporFotoGirdisi = z.object({ plan: kimlik, rol: z.enum(FOTO_ROLLERI), ad: z.string().min(1).max(200), veri: z.string().min(1).max(KAYIT_FOTO_VERI), cekim: z.unknown().optional() });
 export type RaporFotoGirdisi = z.input<typeof RaporFotoGirdisi>;
 
 export type EkipmanDurumu = "uygun" | "rapor" | "kapali";
@@ -73,7 +78,7 @@ export function ekipmanDurumu(e: { id: string; pasif: boolean }, raporlar: reado
   return { durum: "uygun", neden: null };
 }
 
-export interface RaporFoto { dosya: string; ad: string; rol: FotoRolu }
+export interface RaporFoto { dosya: string; ad: string; rol: FotoRolu; cekim?: string | null }
 export interface RaporKaydi {
   /** cihazın ürettiği kimlik (ekran ve kuyruk bununla) */
   id: string; zaman: string; ekipmanId: string | null; turId: string | null; satirlar: RaporSatiri[]; mesaj: string[]; fotolar: RaporFoto[];
@@ -86,4 +91,6 @@ export interface RaporModuVerisi {
   turler: Record<string, { ad: string; satirlar: RaporSatiri[] }>;
   /** "Yeni ekle" türleri (formatı yayında) */
   yeniTurler: string[];
+  /** 0132 (K11): firma TÜRKAK'lı — kaydın ilk fotoğrafı kontrolün başlangıcı, Gönder bitişi (eski önbellekte yok) */
+  olcumlu?: boolean;
 }

@@ -16,7 +16,7 @@ async function bozuk(eski: string, yeni: string): Promise<R> {
   const k = readFileSync(resolve("src/modules/say-chat/rapor-modu.ts"), "utf8");
   assert.ok(k.includes(eski), `bozulacak satır kaynakta yok: ${eski}`);
   const y = join(gecici, `${sira++}.ts`);
-  writeFileSync(y, k.replace(eski, () => yeni).replace('"zod"', () => `"${import.meta.resolve("zod")}"`).replace('"../../format/duzen.ts"', () => `"${yolu("src/format/duzen.ts")}"`).replace('"../../format/tanim.ts"', () => `"${yolu("src/format/tanim.ts")}"`).replace('"../../sema/ortak.ts"', () => `"${yolu("src/sema/ortak.ts")}"`));
+  writeFileSync(y, k.replace(eski, () => yeni).replace('"zod"', () => `"${import.meta.resolve("zod")}"`).replace('"../raporlar/sema.ts"', () => `"${yolu("src/modules/raporlar/sema.ts")}"`).replace('"../../format/duzen.ts"', () => `"${yolu("src/format/duzen.ts")}"`).replace('"../../format/tanim.ts"', () => `"${yolu("src/format/tanim.ts")}"`).replace('"../../sema/ortak.ts"', () => `"${yolu("src/sema/ortak.ts")}"`));
   return import(pathToFileURL(y).href) as Promise<R>;
 }
 const S = [{ ad: "Marka", alan: "e:marka" }, { ad: "Seri", alan: "e:seri" }];

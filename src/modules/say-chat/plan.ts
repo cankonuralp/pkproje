@@ -3,7 +3,7 @@
 /** S.A.Y'a giden komut (kişinin elle yazacağı cümlenin aynısı) */
 export const okuKomutu = (planNo: string | null) => (planNo ? `Chatten oku, ${planNo} planına yaz` : "Chatten oku");
 
-export interface BantPlani { id: string; no: string; tesis: string; baslangic: string; bitis: string; kalan: number }
+export interface BantPlani { id: string; no: string; tesis: string; baslangic: string; bitis: string; kalan: number; olcumlu?: boolean }
 
 /** K6: bandın planı — kişinin seçtiği (hâlâ listedeyse); yoksa bugünü kapsayan; yoksa en yakın tarihli (geçmiş ve gelecek arasında gün farkı en küçük, eşitlikte geçmiş) */
 export function bantPlani<T extends BantPlani>(planlar: readonly T[], bugun: string, secili: string | null): T | null {

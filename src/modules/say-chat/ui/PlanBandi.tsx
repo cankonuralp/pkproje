@@ -15,13 +15,16 @@ const yaz = (a: string, d: unknown) => { try { localStorage.setItem(a, JSON.stri
 /** Chat / Rapor modu (K6: panel en son kullanılan modda açılır; cihazda) */
 export type SohbetModu = "chat" | "rapor";
 const MOD = "probata-saychat-mod";
-export function useSohbetModu(): [SohbetModu, (m: SohbetModu) => void] {
+/* 2026-11-12 (pkproje.md §11 K12): TÜRKAK'lı firmada panel HER AÇILIŞTA Rapor modunda açılır (kontrol süresi yalnız orada ölçülür); kişi o açılışta
+   Chat'e geçebilir, seçimi saklanmaz */
+export function useSohbetModu(olcumlu = false): [SohbetModu, (m: SohbetModu) => void] {
   const [mod, setMod] = useState<SohbetModu>("chat");
+  const [secti, setSecti] = useState(false);
   useEffect(() => {
     /* eslint-disable-next-line react-hooks/set-state-in-effect -- cihazdaki seçim yalnız tarayıcıda okunur (sunucuyla aynı ilk çizim) */
     if (oku<string>(MOD) === "rapor") setMod("rapor");
   }, []);
-  return [mod, (m) => { setMod(m); yaz(MOD, m); }];
+  return [olcumlu && !secti ? "rapor" : mod, (m) => { setMod(m); setSecti(true); if (!olcumlu) yaz(MOD, m); }];
 }
 
 /** kişinin planları ve seçili plan */
@@ -36,7 +39,7 @@ export function usePlanSecimi() {
     return () => { canli = false; };
   }, []);
   const plan = useMemo(() => bantPlani(planlar ?? [], istanbulGunu(new Date().toISOString()), secili), [planlar, secili]);
-  return { planlar: planlar ?? [], plan, sec: (id: string) => { setSecili(id); yaz(SECILI, id); } };
+  return { planlar: planlar ?? [], plan, olcumlu: (planlar ?? []).some((p) => p.olcumlu === true), sec: (id: string) => { setSecili(id); yaz(SECILI, id); } };
 }
 
 export function PlanBandi({ p, mod, modSec, sil }: { p: ReturnType<typeof usePlanSecimi>; mod: SohbetModu; modSec: (m: SohbetModu) => void; sil: (() => void) | null }) {

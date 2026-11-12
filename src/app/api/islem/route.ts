@@ -50,7 +50,7 @@ export async function POST(istek: Request) {
     const dosya = { depo: depo(), firmaId: o.kiraci.firmaId };
     const s = await tekSeferlik(db, { id: b.id, tur, kayit: b.kayit, zaman: b.zaman }, (): Promise<PlanYazma | RaporIslemSonucu | ChatYazma> => (planIslemTuruMu(tur)
       ? planIslemi(db, o, tur, b.kayit, b.surum, b.girdi)
-      : chatIslemTuruMu(tur) ? chatIslemi(db, dosya, o, tur, b.kayit, b.surum, b.girdi)
+      : chatIslemTuruMu(tur) ? chatIslemi(db, dosya, o, tur, b.kayit, b.surum, b.girdi, gonderim)
       : raporIslemi(db, dosya, o, tur, b.kayit, b.surum, b.girdi, gonderim)));
     /* çakışmada güncel sürüm ("benimkini yaz" seçilirse cihaz bununla yeni kimlik gönderir) */
     const cakisma = s.durum !== "kimlik_kullanildi" && s.sonuc.durum === "cakisma";

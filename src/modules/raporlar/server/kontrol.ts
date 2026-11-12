@@ -56,6 +56,13 @@ export async function kontrolBaslatCihaz(db: Sorgulayici, a: KontrolAnahtari, u:
   return (await kontrolOku(db, a))!;
 }
 
+/** cihaz saatiyle ölçülmüş, BİTMİŞ kontrolü tek eklemede yazar (S.A.Y Chat Rapor modu — göç 0132: ilk fotoğraf başlangıç, Gönder bitiş) */
+export async function kontrolTamCihaz(db: Sorgulayici, a: KontrolAnahtari, k: { bas: Date; bit: Date; kanit: CihazKaniti; tutmadi: boolean }, iz: Iz): Promise<KontrolSatiri> {
+  await ekle(db, KONTROL, { plan_id: a.plan_id, ekipman_id: a.ekipman_id, personel_id: a.personel_id, takip: a.takip, kaynak: "cihaz", basladi: k.bas, bitti: k.bit,
+    bit_kaynak: "cihaz", cihaz_kanit: k.kanit, saat_tutmadi: k.tutmadi }, iz);
+  return (await kontrolOku(db, a))!;
+}
+
 /** süren kontrolü cihaz saatiyle bitirir (bitiş başlangıçtan önce olamaz — çağıran denetler) */
 export async function kontrolBitirCihaz(db: Sorgulayici, a: KontrolAnahtari, k: KontrolSatiri, u: CihazUcu, iz: Iz): Promise<KontrolSatiri> {
   await guncelle(db, KONTROL, k.id, k.surum, { bitti: u.zaman, bit_kaynak: "cihaz", cihaz_kanit: { ...(k.cihaz_kanit ?? {}), bit: u.kanit }, saat_tutmadi: k.saat_tutmadi || u.tutmadi }, iz);

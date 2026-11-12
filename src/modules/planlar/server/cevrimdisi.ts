@@ -5,6 +5,7 @@
    2026-10-08 (400): kabul BEKLEYEN planlar da iner — ARKA-UC §4.1 "plan kabul / red (kuyruğa)" bağlantısız çalışır; kabul edilecek plan
    sayfası cihazda olmalı (§4.2'nin "kabul ettiği" ifadesi kabul edileni de kapsar, bekleyeni dışlamaz). */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
+import { calismaModeli } from "../../../server/ayar/ayar.ts";
 import { hesabinPersoneli } from "../../../server/kimlik/hesap.ts";
 import { planRaporlari } from "../../raporlar/server/plan-baglanti.ts";
 
@@ -13,17 +14,19 @@ export const PAKET_GUN = 7;
 export const RAPOR_EN_COK = 50;
 
 /** 2026-11-08 S.A.Y Chat bandı (K6): kişinin ekibinde olduğu, rapor açılabilecek planlar + raporu açılmamış ekipman sayısı (seçim: say-chat/saha.ts bantPlani) */
-export interface SahaPlani { id: string; no: string; tesis: string; baslangic: string; bitis: string; kalan: number }
+/** olcumlu (2026-11-12, K12): firma TÜRKAK'lı — S.A.Y Chat Rapor modunda açılır (her planda aynı değer; liste cihazda da durduğundan bağlantısız da bilinir) */
+export interface SahaPlani { id: string; no: string; tesis: string; baslangic: string; bitis: string; kalan: number; olcumlu?: boolean }
 export async function sahaPlanlari(db: Sorgulayici, kim: { id: string }, bugun: string): Promise<SahaPlani[]> {
   const ben = await hesabinPersoneli(db, kim.id);
   if (!ben) return [];
+  const olcumlu = (await calismaModeli(db)) === "turkak";
   return (await db.sorgu<SahaPlani>(
     `SELECT p.id::text, p.no, t.ad AS tesis, p.baslangic::text, p.bitis::text,
        (SELECT count(*)::int FROM plan_ekipman pe JOIN ekipman x ON x.id = pe.ekipman_id WHERE pe.plan_id = p.id AND x.pasif IS NULL
           AND NOT EXISTS (SELECT 1 FROM rapor r WHERE r.plan_id = p.id AND r.ekipman_id = pe.ekipman_id AND r.silindi IS NULL)) AS kalan
      FROM plan p JOIN plan_ekip e ON e.firma_id = p.firma_id AND e.plan_id = p.id JOIN tesis t ON t.id = p.tesis_id
      WHERE e.personel_id = $1 AND p.durum IN ('kabul', 'denetimde') AND p.baslangic <= $2::date + $3::int
-     ORDER BY p.baslangic DESC, p.no DESC LIMIT 20`, [ben, bugun, PAKET_GUN])).rows;
+     ORDER BY p.baslangic DESC, p.no DESC LIMIT 20`, [ben, bugun, PAKET_GUN])).rows.map((x) => ({ ...x, olcumlu }));
 }
 
 export interface CevrimdisiPaketi { planlar: { id: string; no: string }[]; raporlar: { id: string; no: string }[] }

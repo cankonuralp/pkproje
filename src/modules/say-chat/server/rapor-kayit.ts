@@ -2,7 +2,10 @@
    denetimde / tamamlandı iken yazar. Kayıtlar çevrimdışı kuyruktan gelir (/api/islem, tek seferlik): "sayrapor.foto" (kayıt yoksa açar), "sayrapor.kaydet", "sayrapor.sil".
    "Bekleyenler için rapor yaz": kayıt rapor taslağı olur — koşullar raporu açan işlevlerde aynen (plan günü, tamamlanmış plan, günlük süre); kişinin kendi Yeni raporu varsa o raporun BOŞ
    alanlarına girer. K5: kayıt rapor bağlantısıyla kalır, fotoğraflar rapora kopyalanır, kaydın dosyaları çöpe. K2: etiket fotoğrafı yalnız bu anda, mesajda boş satır varsa okunmak üzere
-   rapora konur; okuma eylemde (çağrı işlemin DIŞINDA) ve yalnız boş alanlara girer. Kilit tests/raporlar.test.ts (PG), tests/say-rapor-modu.test.ts (saf). */
+   rapora konur; okuma eylemde (çağrı işlemin DIŞINDA) ve yalnız boş alanlara girer. Kilit tests/raporlar.test.ts (PG), tests/say-rapor-modu.test.ts (saf).
+   2026-11-12 (göç 0132; pkproje.md §11 K11, K5): TÜRKAK'lı firmada kaydın ilk fotoğrafı kontrolün başlangıcı, "Gönder" bitişi — cihaz saatleri iş
+   geldiğinde sunucu saatine çevrilip kayda yazılır (bir kez; raporlar/cihaz-saati.ts kayitKontrolu), kayıt rapora dönerken kontrol kaydı olur
+   (raporlar kontrolKayittan). Fotoğrafın çekim anı kayıtla taşınır, rapora geçer. */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import type { Depo } from "../../../server/dosya/depo.ts";
 import { dosyaCope, dosyaYukle, kayitDosyasi } from "../../../server/dosya/dosya.ts";
@@ -14,13 +17,16 @@ import { turOzetleri } from "../../ekipman-turleri/server/turler.ts";
 import { raporModuPlani, sayEkipmanlarEkle, type RaporModuPlani } from "../../planlar/server/plan-ici.ts";
 import { formatsizTurler, formatSurumuOku, yayindakiFormat } from "../../rapor-format/server/formatlar.ts";
 import { raporOneriYaz } from "../../raporlar/server/oneri.ts";
-import { chatRaporuDoldur, raporOlustur } from "../../raporlar/server/raporlar.ts";
+import { chatRaporuDoldur, kontrolKayittan, raporOlustur } from "../../raporlar/server/raporlar.ts";
+import { kayitKontrolu, type UcKaniti } from "../../raporlar/cihaz-saati.ts";
+import { FotoKanitGirdisi } from "../../raporlar/foto-kanit.ts";
+import { calismaModeli } from "../../../server/ayar/ayar.ts";
 import { okumaHedefleri } from "../../raporlar/say-doldur.ts";
 import { dagit, ekipmanDurumu, KAYIT_FOTO_EN_COK, RaporFotoGirdisi, RaporKaydiGirdisi, raporSatirlari, type RaporEkipmani, type RaporFoto, type RaporKaydi, type RaporModuVerisi, type RaporSatiri }
   from "../rapor-modu.ts";
 import { DOSYA_SAY_CHAT } from "../sema.ts";
 
-const KAYIT = tablo({ ad: "say_rapor_kayit", sutunlar: ["cihaz_id", "plan_id", "ekipman_id", "tur_id", "satirlar", "mesaj", "fotolar", "rapor_id", "rapor_no"] });
+const KAYIT = tablo({ ad: "say_rapor_kayit", sutunlar: ["cihaz_id", "plan_id", "ekipman_id", "tur_id", "satirlar", "mesaj", "fotolar", "rapor_id", "rapor_no", "kontrol"] });
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const ACIK = new Set(["kabul", "denetimde", "tamamlandi"]);
 const KAPALI = "Rapor modu bu planda kapalı: yalnız planın ekibindeki kişi, plan kabul edilmiş / denetimde / tamamlanmışken kayıt yazar.";
@@ -28,8 +34,10 @@ const json = (x: unknown) => JSON.stringify(x);
 
 export interface Kisi extends YetkiHesabi { ad: string }
 type KayitDb = { id: string; cihaz_id: string; plan_id: string; ekipman_id: string | null; tur_id: string | null; satirlar: RaporSatiri[]; mesaj: string[]; fotolar: RaporFoto[];
-  rapor_id: string | null; rapor_no: string | null; surum: number; olustu: Date };
-const SEC = "SELECT id::text, cihaz_id::text, plan_id::text, ekipman_id::text, tur_id::text, satirlar, mesaj, fotolar, rapor_id::text, rapor_no, surum, olustu FROM say_rapor_kayit";
+  rapor_id: string | null; rapor_no: string | null; surum: number; olustu: Date; kontrol: KayitKontrolKaydi | null };
+/** kaydın ölçtüğü kontrol (0132): sunucu saatine çevrilmiş başlangıç / bitiş (ISO), kanıtı, tutmadıysa işareti */
+interface KayitKontrolKaydi { bas: string; bit: string; tutmadi: boolean; kanit: { bas: UcKaniti; bit: UcKaniti } }
+const SEC = "SELECT id::text, cihaz_id::text, plan_id::text, ekipman_id::text, tur_id::text, satirlar, mesaj, fotolar, rapor_id::text, rapor_no, surum, olustu, kontrol FROM say_rapor_kayit";
 const kayitOku = async (db: Sorgulayici, cihazId: string, kilit = false) => (UUID.test(cihazId)
   ? (await db.sorgu<KayitDb>(`${SEC} WHERE cihaz_id = $1${kilit ? " FOR UPDATE" : ""}`, [cihazId])).rows[0] ?? null : null);
 const baskasinda = async (db: Sorgulayici, cihazId: string) => (await db.sorgu<{ b: boolean }>("SELECT say_rapor_kayit_baskasinda($1) AS b", [cihazId])).rows[0]!.b;
@@ -59,7 +67,7 @@ export async function raporModuVerisi(db: Sorgulayici, kim: Kisi, planId: string
   }
   const ekipmanlar = p.ekipman.map((e): RaporEkipmani => ({ id: e.id, kod: e.kod, turId: e.turId, konum: e.konum, ...ekipmanDurumu(e, p.raporlar, !!turler[e.turId]) }));
   const kayitlar = (await db.sorgu<KayitDb>(`${SEC} WHERE plan_id = $1 ORDER BY olustu, id`, [planId])).rows;
-  return { plan: { id: p.id, no: p.no }, kayitlar: kayitlar.map(gorunum), ekipmanlar, turler, yeniTurler };
+  return { plan: { id: p.id, no: p.no }, kayitlar: kayitlar.map(gorunum), ekipmanlar, turler, yeniTurler, olcumlu: (await calismaModeli(db)) === "turkak" };
 }
 
 export type RaporKaydiYazma =
@@ -85,7 +93,8 @@ export async function raporFotoEkle(db: Sorgulayici, depo: Depo, kim: Kisi, firm
   const y = await dosyaYukle(db, depo, { firmaId, modul: DOSYA_SAY_CHAT, kayitId: cihazId, ad: g.data.ad, bayt: new Uint8Array(Buffer.from(g.data.veri, "base64")), izinli: ["jpeg", "png"], kim: kim.ad, yukleyen: kim.id });
   if (!y.tamam) return { durum: "gecersiz", hatalar: { foto: y.neden === "tur" ? "Yalnız JPEG ya da PNG fotoğraf." : y.neden === "buyuk" ? "Fotoğraf çok büyük." : "Fotoğraf okunamadı." } };
   const eski = g.data.rol === "etiket" ? k.fotolar.filter((f) => f.rol === "etiket") : [];
-  const fotolar = [...k.fotolar.filter((f) => !eski.includes(f)), { dosya: y.id, ad: y.ad, rol: g.data.rol }];
+  const cekim = FotoKanitGirdisi.shape.cekim.safeParse(g.data.cekim);
+  const fotolar = [...k.fotolar.filter((f) => !eski.includes(f)), { dosya: y.id, ad: y.ad, rol: g.data.rol, ...(cekim.success && cekim.data ? { cekim: cekim.data } : {}) }];
   const r = await guncelle(db, KAYIT, k.id, k.surum, { fotolar: json(fotolar) }, { kim: kim.ad, ne: "say_rapor.foto", gerekce: `${p.no} · ${y.ad}` });
   if (r.durum !== "tamam") return r.durum === "yok" ? { durum: "yok" } : { durum: "cakisma" };
   for (const f of eski) await dosyaCope(db, f.dosya, { kim: kim.ad, ne: "say_rapor.foto_kaldir", gerekce: p.no });
@@ -93,7 +102,8 @@ export async function raporFotoEkle(db: Sorgulayici, depo: Depo, kim: Kisi, firm
 }
 
 /** "sayrapor.kaydet" — ekipman, satırlar, mesaj. Kayıt tek seferde yazılır (sürüm çakışması yok); başka etkin kayıttaki ekipman seçilmez */
-export async function raporKaydiKaydet(db: Sorgulayici, kim: Kisi, cihazId: string, girdi: unknown): Promise<RaporKaydiYazma> {
+/** `gonderim`: işin gönderildiği andaki cihaz saati (kontrol saatinin sunucu saatine çevrilmesi için — /api/islem verir) */
+export async function raporKaydiKaydet(db: Sorgulayici, kim: Kisi, cihazId: string, girdi: unknown, gonderim: number | null = null): Promise<RaporKaydiYazma> {
   const g = RaporKaydiGirdisi.safeParse(girdi);
   if (!g.success || !UUID.test(cihazId)) return { durum: "gecersiz", hatalar: { kayit: "Kayıt okunamadı; yeniden oluşturun." } };
   const p = await kapi(db, kim, g.data.plan);
@@ -118,12 +128,18 @@ export async function raporKaydiKaydet(db: Sorgulayici, kim: Kisi, cihazId: stri
   }
   const mesaj = g.data.mesaj.map((x) => x.replace(/[\u0000-\u001f\u007f]/g, " ").trimEnd());
   const iz = { kim: kim.ad, ne: "say_rapor.kaydet", gerekce: p.no };
+  /* 0132 (K11): TÜRKAK'lı firmada kaydın ölçtüğü kontrol — bir kez yazılır (yeniden gelen iş ölçüleni değiştirmez) */
+  let kontrol: { kontrol: string } | Record<string, never> = {};
+  if (g.data.kontrol && !k?.kontrol && (await calismaModeli(db)) === "turkak") {
+    const o = kayitKontrolu(g.data.kontrol, gonderim, Date.now());
+    kontrol = { kontrol: json({ bas: new Date(o.bas).toISOString(), bit: new Date(o.bit).toISOString(), tutmadi: o.tutmadi, kanit: o.kanit } satisfies KayitKontrolKaydi) };
+  }
   if (!k) {
     if (await baskasinda(db, cihazId)) return KIMLIK_KULLANILDI;
-    const y = await ekle(db, KAYIT, { cihaz_id: cihazId, plan_id: p.id, ekipman_id: ekipmanId, tur_id: turId, satirlar: json(g.data.satirlar), mesaj: json(mesaj), fotolar: "[]" }, iz);
+    const y = await ekle(db, KAYIT, { cihaz_id: cihazId, plan_id: p.id, ekipman_id: ekipmanId, tur_id: turId, satirlar: json(g.data.satirlar), mesaj: json(mesaj), fotolar: "[]", ...kontrol }, iz);
     return { durum: "tamam", yeniSurum: y.surum };
   }
-  const r = await guncelle(db, KAYIT, k.id, k.surum, { ekipman_id: ekipmanId, tur_id: turId, satirlar: json(g.data.satirlar), mesaj: json(mesaj) }, iz);
+  const r = await guncelle(db, KAYIT, k.id, k.surum, { ekipman_id: ekipmanId, tur_id: turId, satirlar: json(g.data.satirlar), mesaj: json(mesaj), ...kontrol }, iz);
   if (r.durum === "cakisma") return { durum: "cakisma" };
   if (r.durum === "yok") return { durum: "yok" };
   return { durum: "tamam", yeniSurum: r.surum };
@@ -176,11 +192,13 @@ export async function raporKaydiYaz(db: Sorgulayici, depo: Depo, kim: Kisi, firm
   const bilgi = (await db.sorgu<{ format_id: string; no: string }>("SELECT format_id::text, no FROM rapor WHERE id = $1", [r.id])).rows[0];
   const ham = bilgi ? (await formatSurumuOku(db, bilgi.format_id))?.tanim ?? null : null;
   const tanim = ham ? sahaTanimi(ham) : null;
+  /* 0132 (K11): kaydın ölçtüğü kontrol rapora — ekipmanın kontrol kaydı yoksa açılır, raporun saati ondan (ölçümsüz raporda / kayıt varken dokunulmaz) */
+  if (k.kontrol) await kontrolKayittan(db, kim, r.id, { bas: new Date(k.kontrol.bas), bit: new Date(k.kontrol.bit), tutmadi: k.kontrol.tutmadi, kanit: k.kontrol.kanit });
   const oku = async (f: RaporFoto) => {
     const x = await kayitDosyasi(db, DOSYA_SAY_CHAT, cihazId, f.dosya);
-    return x ? { ad: f.ad, bayt: await depo.oku(x.anahtar, db) } : null;
+    return x ? { ad: f.ad, bayt: await depo.oku(x.anahtar, db), cekim: f.cekim ?? null } : null;
   };
-  const fotolar = (await Promise.all(k.fotolar.filter((f) => f.rol === "ekipman").map(oku))).filter((x): x is { ad: string; bayt: Uint8Array } => !!x);
+  const fotolar = (await Promise.all(k.fotolar.filter((f) => f.rol === "ekipman").map(oku))).filter((x): x is { ad: string; bayt: Uint8Array; cekim: string | null } => !!x);
   /* K2: etiket yalnız mesajda boş bilgi varsa ve formatın ekipman bilgileri fotoğraftan doldurulabiliyorsa */
   const okumalar: { bolum: string; ad: string; bayt: Uint8Array }[] = [];
   const etiket = k.fotolar.find((f) => f.rol === "etiket");

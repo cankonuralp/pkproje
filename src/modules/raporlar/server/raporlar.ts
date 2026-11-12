@@ -56,7 +56,7 @@ import { sapmaGerekceleri, sapmaKarari, sapmalar, type Sapma, type SapmaKaydi } 
 import { zamanCizelgesi, type CizelgeSatiri } from "../cizelge.ts";
 import type { GunlukKontrol } from "../gunluk.ts";
 import { cihazSaati } from "../cihaz-saati.ts";
-import { acikKontrol, etkinSaat, kontrolBaslat, kontrolBaslatCihaz, kontrolBitirCihaz, kontrolBitirYaz, kontrolDurumu, kontrolDuzeltYaz, kontrolOku, type KontrolAnahtari, type KontrolDurumu, type KontrolKaynagi,
+import { acikKontrol, etkinSaat, kontrolBaslat, kontrolBaslatCihaz, kontrolBitirCihaz, kontrolBitirYaz, kontrolTamCihaz, type CihazKaniti, kontrolDurumu, kontrolDuzeltYaz, kontrolOku, type KontrolAnahtari, type KontrolDurumu, type KontrolKaynagi,
   type KontrolSatiri } from "./kontrol.ts";
 import { kayitDosyasi } from "../../../server/dosya/dosya.ts";
 import { signEkrani, type SignEkrani } from "./sign.ts";
@@ -852,6 +852,20 @@ export async function kontrolBitir(db: Sorgulayici, kim: Kisi, id: string): Prom
   if (k.bitti) return { durum: "red", neden: "Kontrol zaten bitirildi." };
   const y = await kontrolBitirYaz(db, a, k, { kim: kim.ad, ne: "kontrol.bitir", gerekce: gorunenNo(e.r.no, e.r.revizyon) });
   return saatiRaporaYaz(db, kim, e, y, "Kontrol bitti.");
+}
+
+/** S.A.Y Chat Rapor modu kaydının ölçtüğü kontrol rapora (2026-11-12, göç 0132; pkproje.md §11 K11 — "ilk fotoğraf başlangıç, Gönder bitiş"): kayıt
+    rapora dönerken çağrılır (say-chat/server/rapor-kayit.ts). Rapor ölçümlü değilse, yazılamıyorsa ya da bu ekipmanın kontrol kaydı zaten varsa
+    (ekrandan / satırdan başlatılmış) hiçbir şey yapmaz — ölçülen değer kalır. Dönen: kontrol yazıldı mı */
+export async function kontrolKayittan(db: Sorgulayici, kim: Kisi, raporId: string, g: { bas: Date; bit: Date; tutmadi: boolean; kanit: CihazKaniti }): Promise<boolean> {
+  const e = await yazilabilir(db, kim, raporId);
+  if (hataMi(e) || !e.r.olcumlu) return false;
+  if (!(g.bas.getTime() <= g.bit.getTime()) || g.bit.getTime() > Date.now() + 60_000) return false;
+  await db.sorgu("SELECT pg_advisory_xact_lock(hashtext('kontrol:' || $1))", [e.r.personel_id]);
+  const a = kontrolAnahtari(e.r);
+  if (await kontrolOku(db, a)) return false;
+  const k = await kontrolTamCihaz(db, a, g, { kim: kim.ad, ne: "kontrol.rapor_modu", gerekce: gorunenNo(e.r.no, e.r.revizyon) });
+  return (await saatiRaporaYaz(db, kim, e, k, "")).durum === "tamam";
 }
 
 /** kontrol plan içindeki ekipman satırından (2026-11-12; pkproje.md §11 K11 — "süre rapora değil sahadaki kontrol kaydına bağlı; rapor sonradan yazılsa
@@ -1764,7 +1778,8 @@ export async function revizeIstegiGeriCek(db: Sorgulayici, kim: Kisi, id: string
 /* ── S.A.Y CHAT RAPOR MODU: kayıttan rapora (2026-11-09; say-chat/server/rapor-kayit.ts) ── */
 export interface ChatDolgusu {
   degerler: { anahtar: string; ad: string; deger: string }[];
-  fotolar: { ad: string; bayt: Uint8Array }[];
+  /** cekim: fotoğrafın çekim anı (cihazın küçültmeden önce okuduğu — foto-kanit.ts; K5) */
+  fotolar: { ad: string; bayt: Uint8Array; cekim?: string | null }[];
   okumalar: { bolum: string; ad: string; bayt: Uint8Array }[];
   /** 549 (sunum 546 K2): var olan Yeni rapora — yalnız boş alanlar yazılır, dolu kalanların adı döner */
   yalnizBos?: boolean;
@@ -1817,7 +1832,7 @@ export async function chatRaporuDoldur(db: Sorgulayici, depo: Depo, kim: Kisi, f
   for (const f of fotoBolumu ? p.fotolar : []) {
     const r = await raporOku(db, id);
     if (!r) break;
-    if ((await fotoEkle(db, depo, kim, firmaId, id, r.surum, { bolum: fotoBolumu!.id, madde: null }, f)).durum === "tamam") foto++;
+    if ((await fotoEkle(db, depo, kim, firmaId, id, r.surum, { bolum: fotoBolumu!.id, madde: null }, f, { cekim: f.cekim ?? null })).durum === "tamam") foto++;
   }
   const okuma: { bolum: string; dosya: string }[] = [];
   for (const o of p.okumalar) {

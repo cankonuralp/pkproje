@@ -1367,3 +1367,64 @@ test("kontrol plan satırından (K11): rapor açılmadan başlar / biter, sonra 
     await su.end();
   }
 });
+
+test("Rapor modunda kontrol saati (0132, K11): TÜRKAK'lı firmada kaydın ilk fotoğrafı başlangıç, Gönder bitiş — sunucu saatine çevrilip kayda bir kez yazılır; rapora dönerken kontrol kaydı olur (süren başka kontrol varken de), raporun saati ondan; tutmayan saat sapma; ekrandan başlatılmış kontrole dokunulmaz; TÜRKAK'sız firmada yazılmaz", async () => {
+  const id = await yeniPlan(), DK = 60_000, S = Date.now();
+  const satirlar = [{ ad: "Marka", alan: "e:marka" }, { ad: "Not", alan: "yorum" }];
+  const capa = { sunucu: S - 60 * DK, cihaz: S - 60 * DK };
+  const g = (ekp: string, kontrol: unknown = { bas: S - 30 * DK, bit: S - 10 * DK, capa }) => ({ plan: id, ekipman: { tip: "plan", id: FA.ekp[ekp] }, satirlar, mesaj: ["Rapor Modu Marka", "-"], kontrol });
+  const kaydet = (k: string, girdi: unknown) => a(FA.den1, (db) => raporKaydiKaydet(db, FA.den1, k, girdi, S));
+  const kontrolu = async (k: string) => (await a(FA.den1, (db) => db.sorgu<{ kontrol: { bas: string; bit: string; tutmadi: boolean } | null }>(
+    "SELECT kontrol FROM say_rapor_kayit WHERE cihaz_id = $1", [k]))).rows[0]!.kontrol;
+  /* TÜRKAK'sız firma: kontrol yazılmaz */
+  const k0 = randomUUID();
+  tamam(await kaydet(k0, g("HT-A1")));
+  assert.equal(await kontrolu(k0), null);
+  tamam(await a(FA.den1, (db) => raporKaydiSil(db, FA.den1, k0)));
+  const su = kume.sahipIstemci(); await su.connect();
+  try {
+    await su.query(`INSERT INTO firma_ayar (firma_id, bolum, deger) VALUES ($1, 'calisma', '{"model": "turkak"}'::jsonb)
+      ON CONFLICT (firma_id, bolum) DO UPDATE SET deger = EXCLUDED.deger`, [A]);
+    assert.equal((await a(FA.den1, (db) => raporModuVerisi(db, FA.den1, id)))!.olcumlu, true);
+    const k1 = randomUUID();
+    tamam(await kaydet(k1, g("HT-A1")));
+    const kk = (await kontrolu(k1))!;
+    assert.ok(Math.abs(Date.parse(kk.bas) - (S - 30 * DK)) < 5_000 && Math.abs(Date.parse(kk.bit) - (S - 10 * DK)) < 5_000, JSON.stringify(kk));
+    assert.equal(kk.tutmadi, false);
+    /* yeniden gelen iş ölçüleni değiştirmez; veritabanında da değişmez */
+    tamam(await kaydet(k1, g("HT-A1", { bas: S - 5 * DK, bit: S, capa })));
+    assert.deepEqual(await kontrolu(k1), kk);
+    await assert.rejects(a(FA.den1, (db) => db.sorgu(`UPDATE say_rapor_kayit SET kontrol = '{"bas": 1, "bit": 2}'::jsonb WHERE cihaz_id = $1`, [k1])), /değişmez/);
+    /* kişinin süren başka kontrolü varken de kayıt rapora döner (bitmiş kontrol tek eklemede) */
+    const r3 = tamam(await olustur(FA.den1, id, FA.ekp["HT-A3"]));
+    tamam(await a(FA.den1, (db) => kontrolBasla(db, FA.den1, r3.id)));
+    const y = await a(FA.den1, (db) => raporKaydiYaz(db, depo, FA.den1, A, id, k1));
+    assert.equal(y.durum, "tamam", JSON.stringify(y));
+    const d = (await sr(FA.den1, y.durum === "tamam" ? y.rapor.id : ""))!;
+    assert.deepEqual([d.olcum!.durum, d.olcum!.kaynak, d.olcum!.cihaz, d.olcum!.tutmadi, d.tarih.bas, d.tarih.bit], ["bitti", "cihaz", true, false, d.olcum!.bas, d.olcum!.bit]);
+    const satir = (await sql<{ basladi: Date; bitti: Date; bit_kaynak: string }>(A, "SELECT basladi, bitti, bit_kaynak FROM kontrol WHERE plan_id = $1 AND ekipman_id = $2", [id, FA.ekp["HT-A1"]])).rows[0]!;
+    assert.deepEqual([satir.basladi.toISOString(), satir.bitti.toISOString(), satir.bit_kaynak], [kk.bas, kk.bit, "cihaz"]);
+    assert.equal(d.ekipmanBilgi.marka, "Rapor Modu Marka", "mesaj rapora geçti");
+    /* çapasız (saat ölçülmemiş) kayıt: yazılır ama işaretli; rapora dönünce sapma "saat" */
+    const k2 = randomUUID();
+    tamam(await kaydet(k2, g("HT-A2", { bas: S - 9 * DK, bit: S - 2 * DK, capa: null })));
+    assert.equal((await kontrolu(k2))!.tutmadi, true);
+    const y2 = await a(FA.den1, (db) => raporKaydiYaz(db, depo, FA.den1, A, id, k2));
+    assert.equal(y2.durum, "tamam", JSON.stringify(y2));
+    const r2 = y2.durum === "tamam" ? y2.rapor.id : "";
+    assert.equal((await sr(FA.den1, r2))!.olcum!.tutmadi, true);
+    assert.ok((await a(FA.den1, (db) => raporSapmalariOku(db, FA.den1, r2)))!.some((x) => x.tur === "saat"));
+    /* ekrandan başlatılmış (süren) kontrolü olan rapora dönen kayıt ölçüleni değiştirmez */
+    const k3 = randomUUID();
+    tamam(await kaydet(k3, g("HT-A3")));
+    const y3 = await a(FA.den1, (db) => raporKaydiYaz(db, depo, FA.den1, A, id, k3));
+    assert.equal(y3.durum === "tamam" && y3.rapor.id, r3.id, JSON.stringify(y3));
+    const d3 = (await sr(FA.den1, r3.id))!;
+    assert.deepEqual([d3.olcum!.durum, d3.olcum!.kaynak], ["suruyor", "sunucu"]);
+    tamam(await a(FA.den1, (db) => kontrolBitir(db, FA.den1, r3.id)));
+    assert.ok((await su.query("SELECT 1 FROM denetim_izi WHERE firma_id = $1 AND ne = 'kontrol.rapor_modu'", [A])).rowCount);
+  } finally {
+    await su.query(`UPDATE firma_ayar SET deger = '{"model": "siz"}'::jsonb WHERE firma_id = $1 AND bolum = 'calisma'`, [A]);
+    await su.end();
+  }
+});

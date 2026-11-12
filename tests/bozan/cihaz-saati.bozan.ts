@@ -2,7 +2,8 @@
    bozulup geçici klasörden içe aktarılır. O zaman:
    1) çıkış / dönüş farkının karşılaştırması kalkınca bağlantısızken geri alınmış saatle yazılan kontrol "tuttu" sayılır (sapma çıkmaz);
    2) "ileri an yazılmaz" sınırı kalkınca ileri alınmış cihaz saati kayda gelecekteki bir an olarak geçer;
-   3) sıra denetimi kalkınca saat geri alınıp kontrol yapıldıktan sonra düzeltilen cihaz yakalanmaz. */
+   3) sıra denetimi kalkınca saat geri alınıp kontrol yapıldıktan sonra düzeltilen cihaz yakalanmaz;
+   4) (Rapor modu) "bitiş başlangıçtan önce" işareti kalkınca ters gelen saatlerle yazılan kayıt tuttu sayılır. */
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -37,4 +38,9 @@ test("2) 'ileri an yazılmaz' sınırı kalkınca kayda gelecekteki bir an geçe
 test("3) sıra denetimi kalkınca saat geri alınıp sonra düzeltilen cihaz yakalanmaz", async () => {
   const m = await bozuk("else if (o.capa && o.an < o.capa.cihaz - SAAT_PAYI_MS)", "else if (false)");
   assert.equal(m.cihazSaati({ an: S - 180 * DK, capa, gonderim: S }, S).tutmadi, false, "bozuk: çapadan önceki olay işaretsiz");
+});
+
+test("4) Rapor modunda 'bitiş başlangıçtan önce' işareti kalkınca ters gelen saatler tuttu sayılır", async () => {
+  const m = await bozuk("tutmadi: b.tutmadi || s.tutmadi || once,", "tutmadi: b.tutmadi || s.tutmadi,");
+  assert.equal(m.kayitKontrolu({ bas: S - 10 * DK, bit: S - 30 * DK, capa }, S, S).tutmadi, false, "bozuk: bitişi başlangıçtan önce olan kayıt işaretsiz");
 });

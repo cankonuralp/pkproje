@@ -40,6 +40,19 @@ export function cihazSaati(o: CihazOlcumu, sunucuSimdi: number): CihazSaati {
   return { zaman: Math.min(sunucuSimdi, Math.round(o.an + (donus ?? 0))), tutmadi: neden !== null, neden };
 }
 
+/** cihaz saatiyle yazılan ucun kanıtı: cihazın gönderdikleri, sunucunun işi aldığı an, tutmadıysa nedeni */
+export interface UcKaniti { an: number; capa: SaatCapasi | null; gonderim: number | null; sunucu: number; neden: string | null }
+/** başlangıcı ve bitişi birlikte gelen kontrol (S.A.Y Chat Rapor modu — göç 0132, K11: ilk fotoğraf başlangıç, Gönder bitiş): ikisi de sunucu saatine
+    çevrilir; bitiş başlangıçtan önce çıkarsa başlangıca çekilir ve kayıt "tutmadı" işaretlenir */
+export interface KayitKontrolu { bas: number; bit: number; tutmadi: boolean; kanit: { bas: UcKaniti; bit: UcKaniti } }
+export function kayitKontrolu(g: { bas: number; bit: number; capa: SaatCapasi | null }, gonderim: number | null, sunucuSimdi: number): KayitKontrolu {
+  const b = cihazSaati({ an: g.bas, capa: g.capa, gonderim }, sunucuSimdi), s = cihazSaati({ an: g.bit, capa: g.capa, gonderim }, sunucuSimdi);
+  const once = s.zaman < b.zaman;
+  const uc = (an: number, neden: string | null): UcKaniti => ({ an, capa: g.capa, gonderim, sunucu: sunucuSimdi, neden });
+  return { bas: b.zaman, bit: once ? b.zaman : s.zaman, tutmadi: b.tutmadi || s.tutmadi || once,
+    kanit: { bas: uc(g.bas, b.neden), bit: uc(g.bit, s.neden ?? (once ? "cihazdaki bitiş saati başlangıçtan önce" : null)) } };
+}
+
 /** ms → "YYYY-AA-GGTSS:DD" (Türkiye saati, UTC+3) — bekleyen işin ekranda görünen saati */
 export const trDakika = (ms: number) => new Date(ms + 3 * 3_600_000).toISOString().slice(0, 16);
 

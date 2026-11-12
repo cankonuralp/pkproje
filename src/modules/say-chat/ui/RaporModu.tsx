@@ -5,12 +5,15 @@
    2026-11-12 KAYIPSIZ (reisim: "sahada veri fotoğraf yazı vs kaybolmamalı kesinlikle"): yeni kaydın fotoğrafları, etiketi, seçilen ekipman ve yazılan satırlar
    "Gönder"e basılana kadar TASLAK olarak cihazda (taslak.ts, plan başına) — telefon kamerayı açarken sayfayı atarsa kayıt yarıda kalmaz, yeniden açılınca
    form dolu gelir; "Vazgeç" ve "Gönder" taslağı siler.
+   2026-11-12 (göç 0132; pkproje.md §11 K11, K5): TÜRKAK'lı firmada kaydın İLK FOTOĞRAFI kontrolün başlangıcı, "Gönder" bitişi — ek tuş yok; iki an da
+   cihaz saati (ilk fotoğrafın anı taslakta saklanır), sunucu çevirir. Fotoğrafın çekim anı küçültmeden ÖNCE okunur ve kayıtla gider.
    MesajKutusu (542): tek yazı alanı, solda her satırın adı; Enter alttaki satıra geçer (satırlar kaymaz), son satırda yeni satır açar (nota). */
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useBildir, useUyar } from "../../../components/bildirim/Bildirim";
 import { bekleyenIsler, kuyrugaEkle, kuyrukAbone, kuyrukAnlik, kuyrukSunucuAnlik, kuyruktanCikar, yenidenDene, type KuyrukSonucOlayi, type KuyrukTuru }
   from "../../../components/cevrimdisi/kuyruk";
+import { capaOku, type SaatCapasi } from "../../../components/cevrimdisi/saat";
 import { taslakAdlari, taslakDosyasi, taslakGetir, taslakKaydet, taslakSil } from "../../../components/cevrimdisi/taslak";
 import { FotoTusu } from "../../../components/foto/FotoTusu";
 import { GizliResim } from "../../../components/gizli-resim/GizliResim";
@@ -21,6 +24,7 @@ import { Pencere } from "../../../components/pencere/Pencere";
 import { Tus } from "../../../components/tus/Tus";
 import { dagit, KAYIT_FOTO_EN_COK, MESAJ_EN_COK, MESAJ_SATIR_EN_COK, type RaporFotoGirdisi, type RaporKaydiGirdisi, type RaporModuVerisi, type RaporSatiri } from "../rapor-modu";
 import { raporKaydiOkuEylemi, raporKaydiYazEylemi, raporModuEylemi } from "./eylemler";
+import { exifCekimZamani } from "../../../server/dosya/exif";
 import { base64, chatFotoKucult } from "./foto";
 import stil from "./SayChat.module.css";
 
@@ -55,13 +59,19 @@ function MesajKutusu({ satirlar, mesaj, degisti }: { satirlar: readonly RaporSat
   );
 }
 
-interface Secilen { anahtar: number; id: string; dosya: File; url: string }
+interface Secilen { anahtar: number; id: string; dosya: File; url: string; cekim: string | null }
+/** fotoğrafın çekim anı (EXIF) — küçültmeden önce (küçültme EXIF'i atar) */
+const cekimOku = async (d: File): Promise<string | null> => {
+  try { return exifCekimZamani(new Uint8Array(await d.slice(0, 256 * 1024).arrayBuffer())); } catch { return null; }
+};
+/** kontrolün başlangıcı: ilk fotoğrafın anı (cihaz saati) + o andaki son saat ölçümü */
+interface KontrolBasi { an: number; capa: SaatCapasi | null }
 let sira = 0;
 type Secim = { tip: "plan"; id: string; ad: string; tur: string } | { tip: "yeni"; tur: string; ad: string };
 /* taslak adları (taslak.ts): plan başına form + fotoğraf başına kayıt */
 const tOnek = (plan: string) => `rapor|${plan}|`;
-interface FormTaslagi { secim: Secim | null; mesaj: string[]; fotolar: string[]; etiket: string | null }
-interface FotoTaslagi { ad: string; veri: string }
+interface FormTaslagi { secim: Secim | null; mesaj: string[]; fotolar: string[]; etiket: string | null; kontrol?: KontrolBasi | null }
+interface FotoTaslagi { ad: string; veri: string; cekim?: string | null }
 
 function YeniKayit({ v, dolu, kapat }: { v: RaporModuVerisi; dolu: ReadonlySet<string>; kapat: () => void }) {
   const uyar = useUyar();
@@ -75,13 +85,17 @@ function YeniKayit({ v, dolu, kapat }: { v: RaporModuVerisi; dolu: ReadonlySet<s
   const [mesgul, setMesgul] = useState(false);
   const satirlar = secim ? v.turler[secim.tur]?.satirlar ?? [] : [];
   const onek = tOnek(v.plan.id);
+  /* 0132 (K11): ilk fotoğrafın anı — kontrolün başlangıcı (taslakla saklanır; fotoğraflar kaldırılsa da kalır, Vazgeç siler) */
+  const kontrolBasi = useRef<KontrolBasi | null>(null);
   const hazirla = async (f: File): Promise<Secilen | null> => {
+    if (!kontrolBasi.current) { const an = Date.now(); kontrolBasi.current = { an, capa: capaOku(an) }; }
+    const cekim = await cekimOku(f);
     const k = await chatFotoKucult(f);
     if (!k) { uyar(`${f.name}: fotoğraf okunamadı.`); return null; }
     /* çekildiği an cihaza (taslak) */
     const id = crypto.randomUUID();
-    void base64(k).then((veri) => taslakKaydet(`${onek}foto|${id}`, { ad: k.name || "foto.jpg", veri } satisfies FotoTaslagi)).catch(() => undefined);
-    return { anahtar: ++sira, id, dosya: k, url: URL.createObjectURL(k) };
+    void base64(k).then((veri) => taslakKaydet(`${onek}foto|${id}`, { ad: k.name || "foto.jpg", veri, cekim } satisfies FotoTaslagi)).catch(() => undefined);
+    return { anahtar: ++sira, id, dosya: k, url: URL.createObjectURL(k), cekim };
   };
   /* TASLAK: açılışta cihazdan geri gelir; okunmadan taslağa yazılmaz */
   const taslakOkundu = useRef(false);
@@ -93,7 +107,7 @@ function YeniKayit({ v, dolu, kapat }: { v: RaporModuVerisi; dolu: ReadonlySet<s
       const oku = async (id: string): Promise<Secilen | null> => {
         const f = adlar.includes(`${onek}foto|${id}`) ? await taslakGetir<FotoTaslagi>(`${onek}foto|${id}`) : null;
         const dosya = f ? taslakDosyasi(f.veri, f.ad) : null;
-        return dosya ? { anahtar: ++sira, id, dosya, url: URL.createObjectURL(dosya) } : null;
+        return dosya ? { anahtar: ++sira, id, dosya, url: URL.createObjectURL(dosya), cekim: f?.cekim ?? null } : null;
       };
       const etk = t?.etiket ? await oku(t.etiket) : null;
       /* formda adı geçmeyen fotoğraf (form yazılmadan sayfa kapandı) ekipman fotoğrafı sayılır */
@@ -102,6 +116,7 @@ function YeniKayit({ v, dolu, kapat }: { v: RaporModuVerisi; dolu: ReadonlySet<s
       for (const id of idler) { const x = await oku(id); if (x) h.push(x); }
       if (iptal) return;
       taslakOkundu.current = true;
+      if (t?.kontrol && !kontrolBasi.current) kontrolBasi.current = t.kontrol;
       if (h.length) setFotolar((x) => (x.length ? x : h));
       if (etk) setEtiket((x) => x ?? etk);
       if (t?.secim) setSecim((x) => x ?? t.secim);
@@ -112,7 +127,7 @@ function YeniKayit({ v, dolu, kapat }: { v: RaporModuVerisi; dolu: ReadonlySet<s
   useEffect(() => {
     const z = window.setTimeout(() => {
       if (!taslakOkundu.current) return;
-      void taslakKaydet(`${onek}form`, { secim, mesaj, fotolar: fotolar.map((x) => x.id), etiket: etiket?.id ?? null } satisfies FormTaslagi);
+      void taslakKaydet(`${onek}form`, { secim, mesaj, fotolar: fotolar.map((x) => x.id), etiket: etiket?.id ?? null, kontrol: kontrolBasi.current } satisfies FormTaslagi);
     }, 400);
     return () => window.clearTimeout(z);
   }, [onek, secim, mesaj, fotolar, etiket]);
@@ -134,16 +149,19 @@ function YeniKayit({ v, dolu, kapat }: { v: RaporModuVerisi; dolu: ReadonlySet<s
     if (mesgul) return;
     if (!fotolar.length) { uyar("Fotoğraf ekleyin."); return; }
     if (!secim) { uyar("Ekipman seçin."); return; }
+    /* Gönder'in anı — kontrolün bitişi (0132, K11) */
+    const bit = Date.now(), kb = kontrolBasi.current;
     setMesgul(true);
     try {
       const kayit = crypto.randomUUID(), plan = v.plan.id;
       const foto = async (s: Secilen, rol: "ekipman" | "etiket") => {
-        const girdi: RaporFotoGirdisi = { plan, rol, ad: s.dosya.name || "foto.jpg", veri: await base64(s.dosya) };
+        const girdi: RaporFotoGirdisi = { plan, rol, ad: s.dosya.name || "foto.jpg", veri: await base64(s.dosya), ...(s.cekim ? { cekim: s.cekim } : {}) };
         await kuyrugaEkle({ tur: "sayrapor.foto", kayit, surum: 0, girdi, ad: `Rapor kaydı · ${secim.ad} · fotoğraf` });
       };
       for (const s of fotolar) await foto(s, "ekipman");
       if (etiket) await foto(etiket, "etiket");
-      const girdi: RaporKaydiGirdisi = { plan, ekipman: secim.tip === "plan" ? { tip: "plan", id: secim.id } : { tip: "yeni", tur: secim.tur }, satirlar: [...satirlar], mesaj };
+      const girdi: RaporKaydiGirdisi = { plan, ekipman: secim.tip === "plan" ? { tip: "plan", id: secim.id } : { tip: "yeni", tur: secim.tur }, satirlar: [...satirlar], mesaj,
+        ...(v.olcumlu && kb ? { kontrol: { bas: Math.min(kb.an, bit), bit, capa: kb.capa } } : {}) };
       await kuyrugaEkle({ tur: "sayrapor.kaydet", kayit, surum: 0, girdi, ad: `Rapor kaydı · ${secim.ad}` });
       taslakOkundu.current = false;   // form kapanırken taslağa yeniden yazılmasın
       await taslakTemizle();

@@ -564,7 +564,18 @@ pkproje/
                             planlar/ui/EkipmanBolumu.tsx işlem sütununda simge tuş (saat = başla, onay = bitir, bitmişte saat aralığı başlıkta);
                             bağlantı yokken uyarı (kontrol raporun ekranından, cihaz saatiyle) · eylem kontrolPlandanEylemi · kilit raporlar (PG),
                             bozan raporlar 11 · uçtan uca testi YOK · günlük çizelge raporu açılmamış kontrolü göstermez
-                            · SIRADAKİ: T5c S.A.Y Chat Rapor modu (ilk fotoğraf başlangıç, Gönder bitiş; TÜRKAK'lıda Rapor modunda açılır)
+                            · T5c S.A.Y CHAT RAPOR MODUNDA KONTROL SAATİ (K11, K12, K5; göç 0132): TÜRKAK'lı firmada kaydın İLK FOTOĞRAFI kontrolün
+                            başlangıcı, "Gönder" bitişi (ek tuş yok) — say-chat/ui/RaporModu.tsx ilk fotoğrafın anını + o andaki saat çapasını taslakta tutar,
+                            Gönder'de sayrapor.kaydet girdisine kontrol { bas, bit, capa } koyar (rapor-modu.ts RaporKaydiGirdisi) · sunucu rapor-kayit.ts
+                            raporKaydiKaydet(…, gonderim) → raporlar/cihaz-saati.ts kayitKontrolu (ikisi de sunucu saatine; ters gelirse işaretli) →
+                            say_rapor_kayit.kontrol (bir kez yazılır; tetik değiştirtmez) · kayıt rapora dönerken raporKaydiYaz → raporlar.ts kontrolKayittan
+                            → kontrol.ts kontrolTamCihaz (bitmiş kontrol TEK eklemede — kişinin süren başka kontrolü olsa da; 0132 tetiği) + raporun saati;
+                            ekipmanın kontrol kaydı zaten varsa dokunulmaz · fotoğrafın çekim anı küçültmeden önce okunur, kayıtla gider, rapora geçer
+                            (RaporFoto.cekim → chatRaporuDoldur → fotoEkle kanıtı) · K12: usePlanSecimi.olcumlu (planlar/server/cevrimdisi.ts SahaPlani.olcumlu;
+                            liste cihazda) → useSohbetModu(olcumlu): TÜRKAK'lıda panel her açılışta Rapor modunda (seçim saklanmaz) · kilit tests/cihaz-saati,
+                            raporlar (PG), bozan cihaz-saati 4 · uçtan uca testi YOK (e2e say-chat-rapor TÜRKAK'sız firmada koşar)
+                            · ÇALIŞMA MODELİ T1–T8 TAMAM (2026-11-12). Açık küçük işler: sapma penceresi / ayar paneli / plan satırı / Rapor modu kontrolünün
+                            uçtan uca testi; onay ekranında zaman çizelgesi bağlantısı; günlük çizelgede raporu açılmamış kontrol; konumun tesisle karşılaştırması
   src/tanim/iller.ts        81 il + 973 ilçe (açık veri, MIT; bir kez alındı)
   src/tanim/bakanlik/       Bakanlığın resmî PDF'leri ZPKR01–05 (rapor formatı) + ZPKK01–05 (kriterler); 467: ZPKR06 / ZPKK06 kule kren,
                             ZPKR07 / ZPKK07 asılı erişim, ZPMR01 / ZPMK01 + ZYDR01 / ZYDK01 LPG tankı — okuyucu src/server/bakanlik.ts; okuyan uçlar
