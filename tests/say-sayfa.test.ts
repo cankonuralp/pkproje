@@ -17,6 +17,8 @@ const ID = "0f2a3d00-1fa3-47a0-8f5e-4e5f6c000001";
 export const DISARIDA: Readonly<Record<string, string>> = {
   "/raporlar/[id]": "açık rapor yolu (rapor-haritasi yoldakiRapor)",
   "/raporlar/[id]/onizle": "açık rapor yolu",
+  /* 2026-11-12 (pkproje.md §11 T7): raporun zaman çizelgesi — raporun alt sayfası, salt okunur */
+  "/raporlar/[id]/cizelge": "açık rapor yolu",
   "/onaylar/[id]": "açık rapor yolu",
   "/ekipman-turleri/[id]/sablon/[sid]/kurucu": "format kurucunun kendi bağlamı (taslak haritası)",
   "/ekipman-turleri/sablon/[anahtar]": "hazır şablon önizlemesi, kayıt değil",
