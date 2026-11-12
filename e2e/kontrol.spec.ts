@@ -130,4 +130,14 @@ test("kontrol saati (TÜRKAK'lı): model Yönetim'den; saha raporunda saat yazı
   await expect(kk).toContainText("Tuşa geç basıldı, saat düzeltildi");
   await expect(kk).toContainText("40 dk");
   await expect(bas).toHaveValue(`${dunTr()} 09:00`);
+
+  /* T7 zaman çizelgesi: rapor ekranındaki bağlantıdan — ölçülen başlangıç ve bitiş, gerekçeli düzeltme (kaynağı Elle) */
+  await page.getByRole("link", { name: "Zaman çizelgesi" }).click();
+  await expect(page).toHaveURL(new RegExp(`/raporlar/${UUID}/cizelge$`), { timeout: 30_000 });
+  const tablo = page.getByRole("table", { name: "Raporun zaman çizelgesi" });
+  await expect(tablo.getByRole("row").filter({ hasText: "Rapor açıldı" })).toHaveCount(1, { timeout: 30_000 });
+  await expect(tablo.getByRole("row").filter({ hasText: "Kontrol başladı" })).toHaveCount(1);
+  await expect(tablo.getByRole("row").filter({ hasText: "Kontrol bitti" })).toHaveCount(1);
+  await expect(tablo.getByRole("row").filter({ hasText: "Kontrol saati gerekçeyle düzeltildi" })).toContainText("Elle");
+  await expect(page.getByRole("button", { name: "Excel'e aktar" })).toBeVisible();
 });

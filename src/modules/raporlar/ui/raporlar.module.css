@@ -323,3 +323,14 @@ button.silTus { color: var(--hata-yazi); }
 /* 2026-11-12 SAPMA GEREKÇESİ (göç 0129): pencerede her sapma — uyarı şeridi + gerekçe alanı, aralarında boşluk */
 .sapma { display: flex; flex-direction: column; gap: 8px; }
 .sapma + .sapma { margin-top: 16px; }
+/* 2026-11-12 RAPORUN ZAMAN ÇİZELGESİ (maket yerel/maket/turkak-modeli.html 4. bölüm): düz tablo — telefonda da tablo, yana kayar; dikkat isteyen
+   satır uyarı zeminiyle */
+.cizelgeTus { display: flex; justify-content: flex-end; margin-bottom: 8px; }
+.cizelgeKap { overflow-x: auto; }
+.cizelge { width: 100%; border-collapse: collapse; font-size: var(--boy-kucuk); }
+.cizelge th, .cizelge td { text-align: left; padding: 8px 12px 8px 0; border-bottom: 1px solid var(--kenar); vertical-align: top; }
+.cizelge th { color: var(--yazi2); font-size: var(--boy-etiket); font-weight: 600; white-space: nowrap; }
+.cizelge td:nth-child(2) { min-width: 240px; overflow-wrap: anywhere; }
+.cizelgeSaat { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.cizelge tr[data-dikkat] td { background: var(--uyari-zemin); }
+.cizelge tr[data-dikkat] td:first-child { padding-left: 8px; }

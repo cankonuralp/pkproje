@@ -29,7 +29,7 @@ import { taslakBaslat, taslakKaydet, yayinla } from "../src/modules/rapor-format
 import { ayEkle } from "../src/modules/raporlar/sema.ts";
 import {
   cihazEkle, cihazKaldir, EKIPTE_DEGIL, fotoEkle, fotoSil, kayitliOnayaGonder, KONTROL_BITMEDI, kontrolBasla, kontrolBitir, kontrolSaatDuzelt, onayaGonder, raporBelgesiVerisi, raporFormatGuncelle, raporKaydet, raporKopyala, raporKunyeGuncelle, raporOlustur,
-  raporListesi, raporSapmalariOku, raporSil, sahaRaporu, type RaporYazma,
+  raporListesi, raporSapmalariOku, raporSil, raporZamanCizelgesi, sahaRaporu, type RaporYazma,
 } from "../src/modules/raporlar/server/raporlar.ts";
 import { raporDurumYaz } from "../src/modules/raporlar/server/onay-baglanti.ts";
 import { formatRaporSayilari } from "../src/modules/raporlar/server/format-baglanti.ts";
@@ -1194,6 +1194,13 @@ test("kontrol saati (0128): TÜRKAK'lı firmada açılan rapor ölçümlü — s
     assert.deepEqual([d.olcum!.durum, d.olcum!.bas, d.olcum!.bit, d.tarih.bas, d.tarih.bit], ["bitti", `${dun}T09:00`, `${dun}T09:40`, `${dun}T09:00`, `${dun}T09:40`]);
     assert.deepEqual([d.olcum!.duzeltme!.olculenBas, d.olcum!.duzeltme!.olculenBit, d.olcum!.duzeltme!.gerekce, d.olcum!.duzeltme!.kim], [olculen.bas, olculen.bit, GEREKCE, "Deneme"]);
     /* bitmiş kontrolle onay kapısı açılır (eksik varsa eksik döner — kontrol engeli değil); gönderim bitişi değiştirmez */
+    /* T7 zaman çizelgesi: rapor açıldı → ölçülen başlangıç / bitiş → gerekçeli düzeltme (kaynağı Elle, işaretli); ölçümsüz raporda ve raporu görmeyene yok */
+    const cz = (await a(FA.den1, (db) => raporZamanCizelgesi(db, FA.den1, r.id)))!;
+    assert.deepEqual(cz.satirlar.map((x) => x.olay.split(" ·")[0].split(":")[0]), ["Rapor açıldı", "Kontrol başladı", "Kontrol bitti", "Kontrol saati gerekçeyle düzeltildi"]);
+    assert.deepEqual(cz.satirlar.filter((x) => x.dikkat).map((x) => [x.kaynak, x.kim]), [["Elle", "Deneme"]]);
+    assert.deepEqual([cz.ekipmanKod, cz.yazan], ["HT-A3", "Deneme Bir"]);
+    assert.equal(await a(FA.den1, (db) => raporZamanCizelgesi(db, FA.den1, eski.id)), null, "ölçümsüz raporda çizelge yok");
+    assert.equal(await a(FA.den2, (db) => raporZamanCizelgesi(db, FA.den2, r.id)), null, "raporu görmeyen çizelgeyi de göremez");
     /* K6 (göç 0129): kontrol dün yapıldı, plan bugün → "plan günü dışı" sapması. Gerekçesiz gönderilmez; gerekçeyle gider ve raporda saklanır.
        Zorunlu alan / cihaz eksikse eksikler önce döner (sapma denetimi ondan sonra) — o durumda yalnız sapma listesi sınanır */
     const sp = (await a(FA.den1, (db) => raporSapmalariOku(db, FA.den1, r.id)))!;

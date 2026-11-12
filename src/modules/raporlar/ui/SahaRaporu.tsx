@@ -1086,6 +1086,8 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
           {yeni || deneme ? null : duzenle && kirli
             ? <Tus tur="ikincil" ikon="eye" disabled={mesgul} onClick={onizle}>Ön izle</Tus>
             : <TusBaglanti ikon="eye" href={`/raporlar/${v.id}/onizle`}>Ön izle</TusBaglanti>}
+          {/* 2026-11-12 (pkproje.md §11 T7): ölçümlü raporun zaman çizelgesi — denetçiye gösterilen kayıt */}
+          {v.olcum && !yeni && !deneme && <TusBaglanti ikon="history" href={`/raporlar/${v.id}/cizelge`}>Zaman çizelgesi</TusBaglanti>}
           {v.revize?.iste && <Tus tur="ikincil" ikon="file-pen-line" disabled={mesgul} onClick={() => setRevizeAc(true)}>Revize iste</Tus>}
           {/* 431: genel muayene talimatı (formatın; PDF'e basılmaz) — sağ üstte her zaman */}
           <TalimatTusu buyuk ad="Genel muayene" baslik="Genel muayene talimatı" parcalar={[{ metin: v.tanim.gorunum.talimat }]} />

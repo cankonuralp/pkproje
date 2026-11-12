@@ -534,7 +534,12 @@ pkproje/
                             imzada sağlam imza zaman damgası (ya da imzaları kapsayan belge damgası) yoksa DAMGA_YOK; raporlar.ts'te rapor imzası
                             yüklenen iki yerde şart = rapor.olcumlu (muayene uzmanı, teknik yönetici; sign yolu da buradan geçer); Diğer belgeler
                             şartsız · kilit tests/imza-damga-sart (kaynak kilidi dahil), bozan imza-damga-sart
-                            · SIRADAKİ: T5 S.A.Y Chat Rapor modu + bağlantısız saat · T7 zaman çizelgesi · T4 sapma + gerekçe + onay ekranı · T5 S.A.Y Chat Rapor modu + bağlantısız saat ·
+                            · T7a RAPORUN ZAMAN ÇİZELGESİ: raporlar/cizelge.ts (saf: durum hareketleri — rapor_hareket —, kontrolün ölçülen başlangıcı /
+                            bitişi, gerekçeli düzeltme (kaynak Elle), fotoğraflar çekim anı + konumla; dikkat işareti; Excel tablosu) · raporlar.ts
+                            raporZamanCizelgesi (yalnız ölçümlü rapor; raporu gören) · sayfa /raporlar/<id>/cizelge + raporlar/ui/ZamanCizelgesi.tsx
+                            (tablo, ortak sayfalama, Excel'e aktar) · rapor ekranında "Zaman çizelgesi" bağlantısı (ölçümlü raporda) · kilit tests/cizelge,
+                            raporlar (PG), bozan cizelge, e2e kontrol.spec
+                            · SIRADAKİ: T7b günlük çizelge (kişi × gün) + kontrol tablosu yedeğe · T5 S.A.Y Chat Rapor modu + bağlantısız saat · T4 sapma + gerekçe + onay ekranı · T5 S.A.Y Chat Rapor modu + bağlantısız saat ·
                             T6 S.A.Y saat dağıtmaz · T7 zaman çizelgesi + günlük çizelge · T8 zaman damgasız imza reddi
   src/tanim/iller.ts        81 il + 973 ilçe (açık veri, MIT; bir kez alındı)
   src/tanim/bakanlik/       Bakanlığın resmî PDF'leri ZPKR01–05 (rapor formatı) + ZPKK01–05 (kriterler); 467: ZPKR06 / ZPKK06 kule kren,

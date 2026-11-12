@@ -53,6 +53,7 @@ import { ayarOku, calismaModeli, firmaBelgeKunyesi } from "../../../server/ayar/
 import { exifCekimZamani } from "../../../server/dosya/exif.ts";
 import { fotoKaniti, type FotoKaniti } from "../foto-kanit.ts";
 import { sapmaGerekceleri, sapmaKarari, sapmalar, type Sapma, type SapmaKaydi } from "../sapma.ts";
+import { zamanCizelgesi, type CizelgeSatiri } from "../cizelge.ts";
 import { acikKontrol, etkinSaat, kontrolBaslat, kontrolBitirYaz, kontrolDurumu, kontrolDuzeltYaz, kontrolOku, type KontrolAnahtari, type KontrolDurumu, type KontrolKaynagi,
   type KontrolSatiri } from "./kontrol.ts";
 import { kayitDosyasi } from "../../../server/dosya/dosya.ts";
@@ -765,6 +766,24 @@ async function raporSapmalari(db: Sorgulayici, r: RaporSatiri): Promise<Sapma[]>
 export async function raporSapmalariOku(db: Sorgulayici, kim: Kisi, id: string): Promise<Sapma[] | null> {
   const e = await erisim(db, kim, id);
   return e ? raporSapmalari(db, e.r) : null;
+}
+/** raporun zaman çizelgesi (2026-11-12; pkproje.md §11 K10 / T7 — ../cizelge.ts): ölçümlü raporu gören okur (yazmaz); göremeyene ve ölçümsüz raporda null */
+export async function raporZamanCizelgesi(db: Sorgulayici, kim: Kisi, id: string): Promise<{ id: string; no: string; plan: { id: string; no: string };
+  ekipmanKod: string; turAd: string; yazan: string; satirlar: CizelgeSatiri[] } | null> {
+  const e = await erisim(db, kim, id);
+  if (!e || !e.r.olcumlu) return null;
+  const { r, tur } = e;
+  const h = (await db.sorgu<{ zaman: Date; ne: string; gerekce: string | null; hesap_id: string | null }>(
+    "SELECT zaman, ne, gerekce, hesap_id::text FROM rapor_hareket WHERE rapor_id = $1 ORDER BY zaman, id", [r.id])).rows;
+  const adlar = await hesapAdlari(db, h.map((x) => x.hesap_id));
+  const yazan = (await personelOzetleri(db, [r.personel_id]))[0]?.ad ?? "—";
+  const k = await kontrolOku(db, kontrolAnahtari(r));
+  const plan = await raporIcinPlan(db, kim, r.plan_id);
+  const et = await ekipmanEtiketi(db, r.ekipman_id);
+  return { id: r.id, no: gorunenNo(r.no, r.revizyon), plan: { id: r.plan_id, no: plan?.no ?? "—" }, ekipmanKod: et?.kod ?? "—", turAd: tur.ad, yazan,
+    satirlar: zamanCizelgesi({ hareketler: h.map((x) => ({ zaman: x.zaman, ne: x.ne, gerekce: x.gerekce, kim: adlar.get(x.hesap_id ?? "") ?? "—" })),
+      kontrol: k ? { basladi: k.basladi, bitti: k.bitti, duzBas: k.duz_bas, duzBit: k.duz_bit, gerekce: k.duz_gerekce, duzKim: k.duz_kim, duzZaman: k.duz_zaman } : null,
+      yazan, fotolar: r.fotolar, sapmalar: r.sapmalar }) };
 }
 const OLCUMSUZ: RaporYazma = { durum: "red", neden: "Bu raporda kontrol saati ölçülmez; başlangıç ve bitiş elle yazılır." };
 
