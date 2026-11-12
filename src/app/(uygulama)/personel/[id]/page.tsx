@@ -1,6 +1,8 @@
 /* PERSONEL KARTI (maket personel.html #/p/<id>; anayasa 2.7 nesne sayfası): kimlik ve sicil · giriş hesabı ve roller · ekipman atamaları (denetçi) ·
    zimmetindekiler + imzalı zimmet formu · eğitimler · maaş ve bordrolar + özlük dosyası (yalnız "yaz"). Görmeyen / başka firmanın kaydı: bulunamadı.
-   2026-10-25 (belge doldurma): zimmet formunun yanında "Belgeyi doldur" (zimmetDoldurmaVerisi — yetki modülde). */
+   2026-10-25 (belge doldurma): zimmet formunun yanında "Belgeyi doldur" (zimmetDoldurmaVerisi — yetki modülde).
+   2026-11-12 (reisim: "patron geçmişteki aldığı izinleri personele tıklayınca … göremiyorsa görsün"): İzinler bölümü — kişinin bütün izin talepleri ve
+   yıl yıl kullanılan gün (talepler kisininIzinleri; yalnız firma yöneticisine). */
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Bilgi, BilgiListesi } from "../../../../components/bilgi/Bilgi";
@@ -15,6 +17,8 @@ import { yetkiliOlabilir } from "../../../../modules/personel/sema";
 import { AtamaBolumu, BordroBolumu, EgitimBolumu, OzlukBolumu, ZimmetBolumu } from "../../../../modules/personel/ui/DosyaBolumleri";
 import { HesapBolumu } from "../../../../modules/personel/ui/HesapBolumu";
 import { PersonelTuslari } from "../../../../modules/personel/ui/KartTuslari";
+import { kisininIzinleri } from "../../../../modules/talepler/server/talepler";
+import { KisiIzinleri } from "../../../../modules/talepler/ui/KisiIzinleri";
 import { bransAd, bransi, DurumRozeti, meslekAdi, tarihYaz } from "../../../../modules/personel/ui/ortak";
 import { depo } from "../../../../server/dosya/depo";
 import { modulOturumu, oturumIslemi } from "../../../../server/kimlik/istek";
@@ -35,8 +39,8 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
   const { id } = await params;
   const p = await oturumIslemi(o, (db) => personelKarti(db, o, id));
   if (!p) notFound();
-  const [dosya, egitimler, silme, doldur] = await oturumIslemi(o, async (db) => [await personelDosyasi(db, o, p.id), await kisininEgitimleri(db, o, p.id),
-    await personelSilmeDurumu(db, o, p.id), await zimmetDoldurmaVerisi(db, o, p.id, depo())] as const);
+  const [dosya, egitimler, silme, doldur, izinler] = await oturumIslemi(o, async (db) => [await personelDosyasi(db, o, p.id), await kisininEgitimleri(db, o, p.id),
+    await personelSilmeDurumu(db, o, p.id), await zimmetDoldurmaVerisi(db, o, p.id, depo()), await kisininIzinleri(db, o, p.id)] as const);
   if (!dosya) notFound();
   const bugun = bugunTr();
   const yaz = duzey(o, MODUL.no as ModulAnahtari) === "yaz";
@@ -69,6 +73,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
       {denetci && <AtamaBolumu personelId={p.id} etkin={p.durum === "etkin"} dosya={dosya} bugun={bugun} />}
       <ZimmetBolumu personelId={p.id} kisi={p.ad} etkin={p.durum === "etkin"} dosya={dosya} bugun={bugun} doldur={doldur} />
       {egitimler && <EgitimBolumu egitimler={egitimler} />}
+      {izinler && <KisiIzinleri v={izinler} />}
       {dosya.bordrolar && <BordroBolumu personelId={p.id} kisi={p.ad} dosya={dosya} bugun={bugun} gunluk={gunlukMaliyet(dosya.bordrolar[0])} isGunu={IS_GUNU} />}
       {dosya.ozluk && <OzlukBolumu personelId={p.id} dosya={dosya} bugun={bugun} />}
     </>

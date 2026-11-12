@@ -411,6 +411,10 @@ pkproje/
                             477 (göç 0079): karar Onaylar › Talepler'de (onayTalepleri, talepKarar: onayla / düzeltmeye geri / red); onaylayan talebi
                             değiştirmez; "duzeltme" durumundaki talebi talep eden düzeltip yeniden gönderir (izinDuzelt, masrafFormuDuzelt) ·
                             okuyucular: planlar/server/talep-baglanti.ts, personel/server/talep-baglanti.ts
+                            · 2026-11-12 (reisim: "kısıtlamaları kaldır … patron geçmişteki aldığı izinleri personele tıklayınca … görsün. onun hesabını o yapsın"): yıllık izin
+                            HAKKI (herkese 14 gün), KALAN ve aşım uyarısı KALKTI — özet yalnız kullanılan + bekleyen gün (IzinOzeti); personel.izin_hak sütunu duruyor, okunmuyor;
+                            sema.ts izinYillari (saf: yıl yıl onaylanan iş günü, türüne göre) · server kisininIzinleri (yalnız firma yöneticisi) → ui/KisiIzinleri.tsx —
+                            PERSONEL KARTI "İzinler" bölümü · kilit talep-sema, talepler (PG), bozan izin-yillari, e2e talepler
                             · talep formu PDF (341): src/belge/talep.ts (temel <kod>-FR-IZN-01 / MSR-01) → /talepler/pdf/<izin|masraf>/<id>
                             (talepFormuVerisi: talep eden; izinde firma yöneticisi; masrafta Muhasebe'yi gören)
   src/modules/performans/   PERFORMANS (2026-10-06, 329; modül 19): tablo yok (göç 0041 yalnız dizin) · hesap.ts (saf: dönem, özet, tamamlanma süresi,

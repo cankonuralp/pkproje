@@ -12,6 +12,22 @@ export const IZIN_DURUM = {
 } as const;
 export type IzinDurumu = keyof typeof IZIN_DURUM;
 
+/* 2026-11-12 (reisim: "kısıtlamaları kaldır … patron geçmişteki aldığı izinleri personele tıklayınca görsün, onun hesabını o yapsın"): yıllık izin
+   HAKKI ve KALAN hesabı kalktı (herkese 14 gün sayılıyordu) — sistem yalnız ne kadar izin kullanıldığını gösterir, hesabı firma yöneticisi yapar.
+   Yıl yıl ONAYLANAN iş günleri, izin türüne göre (izin başlangıç yılına sayılır); yeni yıl üstte. */
+export type IzinYili = { yil: string } & Record<IzinTuru, number>;
+export function izinYillari(l: readonly { tur: IzinTuru; bas: string; gun: number; durum: IzinDurumu }[]): IzinYili[] {
+  const y = new Map<string, IzinYili>();
+  for (const x of l) {
+    if (x.durum !== "onaylandi") continue;
+    const yil = x.bas.slice(0, 4);
+    const k = y.get(yil) ?? { yil, yillik: 0, mazeret: 0, rapor: 0, ucretsiz: 0 };
+    k[x.tur] += x.gun;
+    y.set(yil, k);
+  }
+  return [...y.values()].sort((a, b) => b.yil.localeCompare(a.yil));
+}
+
 const SABIT_TATIL = new Set(TANIMLAR.resmi_tatiller.sabit.map((t) => t.gun));
 const DINI_TATIL = new Set(TANIMLAR.resmi_tatiller.dini.flatMap((t) => t.gunler));
 /** resmî tatil mi (tam gün; 2429 sayılı Kanun + Diyanet takvimindeki dini bayramlar) */

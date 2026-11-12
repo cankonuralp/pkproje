@@ -26,7 +26,7 @@ const MASRAF = z.object(GiderGirdisi.shape).omit({ personel: true, odeme: true }
 export const SAY_ISLEMLERI: readonly Islem[] = [
   islem({
     ad: "taleplerim", modul: MODUL, tur: "oku", girdi: z.object({ sayfa: SuzgecDurumuSemasi.shape.sayfa }), kaynak: [SuzgecDurumuSemasi], islev: taleplerim,
-    tarif: "Kullanıcının kendi izin talepleri ve masraf formları (durum, gerekçe), izin hakkı özeti, masrafa bağlanabilecek işleri (planlar).",
+    tarif: "Kullanıcının kendi izin talepleri ve masraf formları (durum, gerekçe), bu yıl kullanılan yıllık izin, masrafa bağlanabilecek işleri (planlar).",
     calistir: async (b, v) => {
       const t = await taleplerim(b.db, b.kim);
       if (!t) return { tamam: false, neden: "Bu kullanıcının talebi yok (Talepler'e girmiyor ya da personel kaydı yok)." };

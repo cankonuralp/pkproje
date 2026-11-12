@@ -2,7 +2,25 @@
    330. Şema saf (veritabanısız); veritabanı tarafı tests/talepler.test.ts. */
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { GerekceGirdisi, isGunu, IzinGirdisi, tatilMi } from "../src/modules/talepler/sema.ts";
+import { GerekceGirdisi, isGunu, IzinGirdisi, izinYillari, tatilMi } from "../src/modules/talepler/sema.ts";
+
+/* NEREDEN GELDİ: 2026-11-12 — reisim: "kısıtlamaları kaldır … patron geçmişteki aldığı izinleri personele tıklayınca … görsün. onun hesabını o yapsın".
+   Hak / kalan hesabı kalktı; personel kartı yıl yıl ONAYLANAN iş günlerini türüne göre gösterir. Olumsuz kanıt: tests/bozan/izin-yillari.bozan.ts. */
+test("izin yılları: yalnız onaylanan sayılır; izin başlangıç yılına; türüne göre toplanır; yeni yıl üstte", () => {
+  const l = [
+    { tur: "yillik", bas: "2026-03-02", gun: 5, durum: "onaylandi" }, { tur: "yillik", bas: "2026-08-10", gun: 10, durum: "onaylandi" },
+    { tur: "rapor", bas: "2026-05-04", gun: 2, durum: "onaylandi" }, { tur: "yillik", bas: "2026-09-01", gun: 7, durum: "bekliyor" },
+    { tur: "yillik", bas: "2026-10-01", gun: 3, durum: "red" }, { tur: "mazeret", bas: "2026-11-02", gun: 1, durum: "duzeltme" },
+    { tur: "ucretsiz", bas: "2025-12-29", gun: 4, durum: "onaylandi" }, { tur: "yillik", bas: "2027-01-04", gun: 6, durum: "onaylandi" },
+  ] as const;
+  assert.deepEqual(izinYillari(l), [
+    { yil: "2027", yillik: 6, mazeret: 0, rapor: 0, ucretsiz: 0 },
+    { yil: "2026", yillik: 15, mazeret: 0, rapor: 2, ucretsiz: 0 },
+    { yil: "2025", yillik: 0, mazeret: 0, rapor: 0, ucretsiz: 4 },
+  ]);
+  assert.deepEqual(izinYillari([]), []);
+  assert.deepEqual(izinYillari([{ tur: "yillik", bas: "2026-01-05", gun: 3, durum: "bekliyor" }]), [], "onaylanan yoksa yıl satırı yok");
+});
 
 test("iş günü: başlangıç ve bitiş dahil, cumartesi ve pazar sayılmaz; ters aralık 0", () => {
   assert.equal(isGunu("2026-11-02", "2026-11-06"), 5, "pazartesi – cuma");

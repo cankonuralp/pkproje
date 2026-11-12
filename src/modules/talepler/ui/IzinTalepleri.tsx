@@ -1,6 +1,6 @@
 "use client";
 /* PERSONEL › İZİN TALEPLERİ (maket personel.html #/izinler — IZIN_SUTUN, izinCiz; 2026-09-28 reisim: izin onayı firma yöneticisinde; 330). Talepler'den
-   gelen izin talepleri, bekleyen üstte; yıllık izinde kişinin kalan hakkı yanında (aşıyorsa uyarı, engel değil).
+   gelen izin talepleri, bekleyen üstte; yıllık izinde kişinin o yıl kullandığı gün yanında (2026-11-12: hak / kalan / aşım uyarısı kalktı).
    477 (reisim 2026-10-10, Talepler–Onaylar kararları T1 · T4 "kalksın"): KARAR ONAYLAR'DA — burada liste ve geçmiş; onay bekleyen satırda "Onaylar'da
    aç". Görme sunucuda (Talepler "değiştirir" — firma yöneticisi).
    481 (site taraması, kalıp 14–15): süzgeç — arama · durum çipleri · ve/veya · Personel · İzin türü · Yıl; boşken de görünür. */
@@ -49,10 +49,9 @@ export function IzinTalepleri({ l }: { l: IzinSatiri[] }) {
     { k: "kisi", genislik: "26%", baslik: "Personel / izin", kart: "govde", sira: 2, hucre: (x) => (
       <span><Link href={`/personel/${x.personelId}`}>{x.personel}</Link><AltSatir><Kirp>{`${IZIN_TUR[x.tur]}${x.aciklama ? ` · ${x.aciklama}` : ""}`}</Kirp></AltSatir></span>
     ) },
-    { k: "tarih", genislik: "24%", baslik: "Tarih", kart: "govde", sira: 3, hucre: (x) => {
-      const asim = x.tur === "yillik" && x.durum === "bekliyor" && x.gun > x.ozet.kalan;
-      return <><KartEtiket>Tarih</KartEtiket><span>{aralik(x)}<AltSatir uyari={asim}>{x.gun} iş günü{x.tur === "yillik" ? ` · kalan yıllık izin ${x.ozet.kalan} gün` : ""}</AltSatir></span></>;
-    } },
+    { k: "tarih", genislik: "24%", baslik: "Tarih", kart: "govde", sira: 3, hucre: (x) => (
+      <><KartEtiket>Tarih</KartEtiket><span>{aralik(x)}<AltSatir>{x.gun} iş günü{x.tur === "yillik" ? ` · ${x.ozet.yil} kullanılan ${x.ozet.kullanilan} gün` : ""}</AltSatir></span></>
+    ) },
     { k: "durum", genislik: "16%", baslik: "Durum", kart: "rozet", sira: 1, hucre: (x) => (
       <span><Rozet tur={IZIN_DURUM[x.durum][1]}>{IZIN_DURUM[x.durum][0]}</Rozet>{(x.red ?? (x.durum === "duzeltme" ? x.geri : null)) && <AltSatir><Kirp>{x.red ?? x.geri ?? ""}</Kirp></AltSatir>}</span>
     ) },

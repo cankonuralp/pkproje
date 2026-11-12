@@ -4,7 +4,10 @@
    (göç 0042, 0040; 330). Saf şema tests/talep-sema.test.ts; olumsuz kanıt tests/bozan/talepler.bozan.ts.
    2026-10-10 (477; reisim, Talepler–Onaylar kararları T1 · T2 · T4 · T5 — göç 0079): karar Onaylar'da (talepKarar: Onayla · Düzeltmeye geri gönder ·
    Reddet, gerekçe ≥ 10), onaylayan talebi DEĞİŞTİREMEZ (masraf formunu da — Muhasebe'deki düzenleme ve onay kalktı), talep eden düzeltip yeniden
-   gönderir; Muhasebe'de yalnız Ödendi. izinOnayla / izinReddet ve Giderler'deki form onayı bu kararla kalktı — testleri talepKarar'a taşındı. */
+   gönderir; Muhasebe'de yalnız Ödendi. izinOnayla / izinReddet ve Giderler'deki form onayı bu kararla kalktı — testleri talepKarar'a taşındı.
+   2026-11-12 (reisim: "kısıtlamaları kaldır, patron geçmişteki aldığı izinleri zaten personele tıklayınca görebiliyor değil mi ? göremiyorsa görsün. onun
+   hesabını o yapsın"): yıllık izin HAKKI (herkese 14 gün) ve KALAN hesabı, aşım uyarısı kalktı — özet yalnız kullanılan ve bekleyen günü taşır (hak /
+   kalan / gelecekOzet denetimleri buna çevrildi); personel kartına kişinin izin geçmişi (kisininIzinleri — yalnız firma yöneticisi). */
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -17,7 +20,7 @@ import { gunEkle } from "../src/modules/muhasebe/sema.ts";
 import { giderDosyasiGorulur, giderKaydet, giderListesi, giderOdendi } from "../src/modules/muhasebe/server/giderler.ts";
 import {
   bugunTr, izinBelgesi, izinDosyasiGorulur, izinDuzelt, izinGeriCek, izinGonder, izinTalepleri, masrafFormuDuzelt, masrafFormuGeriCek, masrafFormuGonder,
-  onayTalepleri, talepFormuVerisi, talepKarar, taleplerim, type Kisi,
+  kisininIzinleri, onayTalepleri, talepFormuVerisi, talepKarar, taleplerim, type Kisi,
 } from "../src/modules/talepler/server/talepler.ts";
 import { tatilMi } from "../src/modules/talepler/sema.ts";
 import { testKumesi } from "./yardimci/kume.ts";
@@ -86,7 +89,8 @@ after(async () => { await havuz?.end(); await kume?.durdur(); rmSync(klasor, { r
 
 test("yetki (modül 21): herkes kendi talebini görür; personeli olmayan hesap talep gönderemez; izin onayı yalnız firma yöneticisinde", async () => {
   const v = (await a(DEN, (db) => taleplerim(db, DEN)))!;
-  assert.deepEqual([v.izinler, v.masraflar, v.ozet.hak, v.ozet.kalan, v.isler.map((x) => x.no)], [[], [], 14, 14, ["P-1026-001"]], "iş seçeneği: ekibinde olduğu plan");
+  assert.deepEqual([v.izinler, v.masraflar, v.ozet.kullanilan, v.ozet.bekleyen, v.isler.map((x) => x.no)], [[], [], 0, 0, ["P-1026-001"]], "iş seçeneği: ekibinde olduğu plan");
+  assert.deepEqual(Object.keys(v.ozet).sort(), ["bekleyen", "kullanilan", "yil"], "özet hak / kalan taşımaz (2026-11-12)");
   assert.equal(await a(MUH, (db) => taleplerim(db, MUH)), null);
   assert.equal((await a(MUH, (db) => izinGonder(db, depo, MUH, A, { tur: "yillik", bas: pazartesi(), bit: pazartesi() }))).durum, "yetkisiz");
   for (const k of [DEN, PLAN, MUH]) assert.equal(await a(k, (db) => izinTalepleri(db, k)), null, k.roller[0]);
@@ -101,7 +105,7 @@ test("izin talebi: kendi adına, iş günü sayılır, numara I-AAYY-SIRA; geçe
   assert.match(r.no!, /^I-\d{4}-\d{3}$/);
   assert.equal(r.bildirim, `${r.no} gönderildi: 5 iş günü yıllık izin; yöneticinin onayında.`);
   const v = (await a(DEN, (db) => taleplerim(db, DEN)))!;
-  assert.deepEqual([v.izinler[0].gun, v.izinler[0].durum, v.ozet.bekleyen, v.ozet.kullanilan, v.ozet.kalan], [5, "bekliyor", 5, 0, 14]);
+  assert.deepEqual([v.izinler[0].gun, v.izinler[0].durum, v.ozet.bekleyen, v.ozet.kullanilan], [5, "bekliyor", 5, 0]);
   assert.deepEqual(await a(DEN, (db) => izinGonder(db, depo, DEN, A, { tur: "yillik", bas: gunEkle(pzt, 5), bit: gunEkle(pzt, 6) })),
     { durum: "gecersiz", hatalar: { bit: "Seçilen aralıkta iş günü yok." } });
   assert.deepEqual(await a(DEN, (db) => izinGonder(db, depo, DEN, A, { tur: "rapor", bas: pzt, bit: pzt }, { ad: "x.txt", bayt: new TextEncoder().encode("metin") })),
@@ -126,12 +130,16 @@ test("izin belgesi ve erişim: talep eden ve firma yöneticisi açar, başkası 
   await assert.rejects(sql(A, "UPDATE izin_talebi SET belge = NULL, aciklama = 'x' WHERE id = $1", [I2], DEN.id), /içeriği değişmez/);
 });
 
-test("yönetici kararı: onay (iş günü kalan haktan düşer), gerekçeli red; karar verilmiş talep değişmez ve geri çekilmez; denetçi karar veremez", async () => {
+test("yönetici kararı: onay (iş günü kullanılana yazılır), gerekçeli red; karar verilmiş talep değişmez ve geri çekilmez; denetçi karar veremez", async () => {
   assert.equal((await karar(DEN, "izin", I1, 0, "onayla")).durum, "yetkisiz");
   const l = (await a(YON, (db) => izinTalepleri(db, YON)))!;
   assert.deepEqual(l.map((x) => [x.no.slice(0, 2), x.personel, x.durum]), [["I-", "Deneme Denetçi", "bekliyor"], ["I-", "Deneme Denetçi", "bekliyor"]]);
   const x1 = l.find((x) => x.id === I1)!, x2 = l.find((x) => x.id === I2)!;
-  assert.deepEqual([x1.ozet.kalan, x1.ozet.bekleyen], [14, 5]);
+  assert.deepEqual([x1.ozet.kullanilan, x1.ozet.bekleyen], [0, 5]);
+  /* 2026-11-12: gün sayısı ne olursa olsun onay ekranında aşım uyarısı yok; yıllık izinde o yıl kullanılan gün yazar */
+  const ot = (await a(YON, (db) => onayTalepleri(db, YON))).find((x) => x.id === I1)!;
+  assert.equal(ot.uyari, null);
+  assert.ok(ot.alanlar.some(([ad, deger]) => /yılında kullanılan yıllık izin$/.test(ad) && deger === "0 gün") && !ot.alanlar.some(([ad]) => /Kalan/.test(ad)), JSON.stringify(ot.alanlar));
   const o = tamam(await karar(YON, "izin", I1, x1.surum, "onayla"));
   assert.match(o.bildirim!, /onaylandı: Deneme Denetçi, 5 iş günü yıllık izin/);
   assert.deepEqual(await karar(YON, "izin", I1, x1.surum + 1, "onayla"), { durum: "red", neden: "Bu talep için karar verilmiş." });
@@ -151,7 +159,14 @@ test("yönetici kararı: onay (iş günü kalan haktan düşer), gerekçeli red;
   assert.equal(await a(DEN, (db) => talepFormuVerisi(db, DEN, "masraf", I1)), null, "izin kimliği masraf olarak okunmaz");
   const v = (await a(DEN, (db) => taleplerim(db, DEN)))!;
   const i1 = v.izinler.find((x) => x.id === I1)!, i2 = v.izinler.find((x) => x.id === I2)!;
-  assert.deepEqual([i1.durum, i1.kararVeren, i2.durum, i2.red, v.ozet.kullanilan, v.ozet.bekleyen, v.ozet.kalan], ["onaylandi", "Deneme Yönetici", "red", "Yoğun dönem", 5, 0, 9]);
+  assert.deepEqual([i1.durum, i1.kararVeren, i2.durum, i2.red, v.ozet.kullanilan, v.ozet.bekleyen], ["onaylandi", "Deneme Yönetici", "red", "Yoğun dönem", 5, 0]);
+  /* 2026-11-12 PERSONEL KARTI: firma yöneticisi kişinin bütün izinlerini ve yıl yıl ONAYLANAN günleri görür (reddedilen sayılmaz); başkası göremez */
+  const k = (await a(YON, (db) => kisininIzinleri(db, YON, denP)))!;
+  assert.deepEqual(k.izinler.map((x) => x.id).sort(), [I1, I2].sort());
+  assert.deepEqual(k.yillar, [{ yil: i1.bas.slice(0, 4), yillik: 5, mazeret: 0, rapor: 0, ucretsiz: 0 }]);
+  for (const kim of [DEN, PLAN, MUH]) assert.equal(await a(kim, (db) => kisininIzinleri(db, kim, denP)), null, kim.roller[0]);
+  assert.equal(await a(YON, (db) => kisininIzinleri(db, YON, "kimlik-degil")), null);
+  assert.deepEqual(await kiraciIcinde(havuz, B, (db) => kisininIzinleri(db, YON_B, denP), { hesapId: YON_B.id }), { izinler: [], yillar: [] }, "başka firma: kayıt görünmez");
   assert.deepEqual(await a(DEN, (db) => izinGeriCek(db, DEN, I1)), { durum: "red", neden: "Karar verilmiş talep geri çekilmez." });
   await assert.rejects(sql(A, "UPDATE izin_talebi SET durum = 'bekliyor', karar = NULL WHERE id = $1", [I1], YON.id), /karar verilmiş/);
   await assert.rejects(sql(A, "DELETE FROM izin_talebi WHERE id = $1", [I1], DEN.id), /geri çeker/);
@@ -212,8 +227,9 @@ test("329–332 incelemesi: izin belgesi karar anında değişmez; masraf formun
   while ([0, 6].includes(new Date(`${d}T12:00:00Z`).getUTCDay())) d = gunEkle(d, 1);
   const y = tamam(await a(DEN, (db) => izinGonder(db, depo, DEN, A, { tur: "yillik", bas: d, bit: d })));
   const v = (await a(DEN, (db) => taleplerim(db, DEN)))!;
-  assert.deepEqual([v.gelecekOzet.yil, v.gelecekOzet.bekleyen, v.ozet.bekleyen], [gy, 1, 0]);
-  assert.equal((await a(YON, (db) => izinTalepleri(db, YON)))!.find((x) => x.id === y.id)!.ozet.yil, gy);
+  assert.equal(v.ozet.bekleyen, 0, "gelecek yılın izni bu yılın özetine sayılmaz");
+  const gs = (await a(YON, (db) => izinTalepleri(db, YON)))!.find((x) => x.id === y.id)!;
+  assert.deepEqual([gs.ozet.yil, gs.ozet.bekleyen], [gy, 1]);
 });
 
 test("firma sızıntısı: B, A'nın izin taleplerini görmez, karar veremez, belgesini açamaz; ham SQL de görmez", async () => {

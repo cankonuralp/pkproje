@@ -14,3 +14,5 @@
 .uyari { color: var(--uyari-yazi); font-weight: 600; }
 /* 456: onay bekleyen talepler şeridi (sayfa başlığıyla yüzler arasında) */
 .bekleyen { margin: 12px 0 0; }
+/* 2026-11-12 personel kartı › İzinler: boş durum */
+.bosIzin { margin: 0; color: var(--yazi2); }

@@ -105,14 +105,12 @@ export function TaleplerSayfasi({ v, bugun, doldur = { izin: false, masraf: fals
         </Serit>
       ))}</div>}
       <Yuzler>
-        <Yuz ikon="calendar" ad="Yıllık izin hakkı" sayi={`${o.hak} gün`} not={o.yil} />
-        <Yuz ikon="calendar-check" ad="Kullanılan" sayi={`${o.kullanilan} gün`} not={o.bekleyen ? `${o.bekleyen} gün onay bekliyor` : undefined} />
-        <Yuz ikon="clock" ad="Kalan" sayi={`${o.kalan} gün`} uyari={o.kalan < 0} />
+        <Yuz ikon="calendar-check" ad="Kullanılan yıllık izin" sayi={`${o.kullanilan} gün`} not={`${o.yil}${o.bekleyen ? ` · ${o.bekleyen} gün onay bekliyor` : ""}`} />
         <Yuz ikon="inbox" ad="Onay bekleyen talep" sayi={bek} />
       </Yuzler>
       <SuzgecliListe s={s} on="t" baslik="Taleplerim" sutunlar={sutunlar} anahtar={(t) => `${t.tip}|${t.x.id}`}
         bosVeri={{ ikon: "inbox", baslik: "Talep yok" }} />
-      {p?.tip === "izin" && <IzinPenceresi ozet={o} gelecek={v.gelecekOzet} duzelt={p.duzelt} kapat={() => setP(null)} />}
+      {p?.tip === "izin" && <IzinPenceresi duzelt={p.duzelt} kapat={() => setP(null)} />}
       {p?.tip === "masraf" && <MasrafPenceresi v={v} bugun={bugun} duzelt={p.duzelt} kapat={() => setP(null)} />}
       {p?.tip === "talep" && <TalepPenceresi t={p.t} kapat={() => setP(null)} duzelt={() => duzelt(p.t)} doldur={doldur[p.t.tip]} />}
     </>
@@ -122,7 +120,7 @@ export function TaleplerSayfasi({ v, bugun, doldur = { izin: false, masraf: fals
 /* ── İZİN TALEBİ ── */
 const IID = { tur: "w-izin-tur", bas: "w-izin-bas", bit: "w-izin-bit", aciklama: "w-izin-aciklama", belge: "w-izin-belge" } as const;
 /** duzelt (477): düzeltmeye geri gönderilen talep — pencere onun değerleriyle açılır, "Düzelt ve yeniden gönder" */
-function IzinPenceresi({ ozet: buYil, gelecek, duzelt, kapat }: { ozet: Taleplerim["ozet"]; gelecek: Taleplerim["ozet"]; duzelt?: IzinTalebi; kapat: () => void }) {
+function IzinPenceresi({ duzelt, kapat }: { duzelt?: IzinTalebi; kapat: () => void }) {
   const router = useRouter();
   const bildir = useBildir();
   const [bekliyorMu, baslat] = useTransition();
@@ -130,9 +128,7 @@ function IzinPenceresi({ ozet: buYil, gelecek, duzelt, kapat }: { ozet: Talepler
   const [h, setH] = useState<Record<string, string>>({});
   const [genel, setGenel] = useState<string | null>(null);
   const dosya = useRef<HTMLInputElement>(null);
-  /* izin başlangıç yılına sayılır: aşım o yılın kalanıyla */
-  const ozet = d.bas && d.bas.slice(0, 4) === gelecek.yil ? gelecek : buYil;
-  const g = d.bas && d.bit && d.bit >= d.bas ? isGunu(d.bas, d.bit) : 0, asim = d.tur === "yillik" && g > ozet.kalan;
+  const g = d.bas && d.bit && d.bit >= d.bas ? isGunu(d.bas, d.bit) : 0;
   const gonder = () => baslat(async () => {
     const f = new FormData();
     for (const [k, x] of Object.entries(d)) f.set(k, x);
@@ -158,8 +154,7 @@ function IzinPenceresi({ ozet: buYil, gelecek, duzelt, kapat }: { ozet: Talepler
         <Alan id={IID.bas} etiket="Başlangıç" zorunlu hata={h.bas}>
           <TarihAlani id={IID.bas} ad="İzin başlangıcı" deger={d.bas} degistir={(x) => setD({ ...d, bas: x, bit: !d.bit || d.bit < x ? x : d.bit })} tanim={h.bas ? ipucuId(IID.bas) : undefined} />
         </Alan>
-        <Alan id={IID.bit} etiket="Bitiş" zorunlu hata={h.bit} sonuc={!h.bit && g && !asim ? `${g} iş günü` : undefined}
-          uyari={!h.bit && asim ? `${g} iş günü · kalan yıllık izin ${ozet.kalan} gün` : undefined}>
+        <Alan id={IID.bit} etiket="Bitiş" zorunlu hata={h.bit} sonuc={!h.bit && g ? `${g} iş günü` : undefined}>
           <TarihAlani id={IID.bit} ad="İzin bitişi" deger={d.bit} degistir={(x) => setD({ ...d, bit: x })} tanim={h.bit || g ? ipucuId(IID.bit) : undefined} />
         </Alan>
         <div className={stil.genis}>

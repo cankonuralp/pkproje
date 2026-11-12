@@ -35,7 +35,9 @@ test("talepler: masraf formu ve izin talebi; karar Onaylar'da — düzeltmeye ge
   await page.goto("/talepler");
   await hazir(page);
   await expect(page.getByRole("heading", { level: 1, name: "Talepler" })).toBeVisible();
-  await expect(page.getByText("Yıllık izin hakkı")).toBeVisible();
+  /* 2026-11-12 (reisim: "kısıtlamaları kaldır … onun hesabını o yapsın"): yıllık izin hakkı / kalan kutuları kalktı — yalnız kullanılan gün */
+  await expect(page.getByText("Kullanılan yıllık izin")).toBeVisible();
+  await expect(page.getByText("Yıllık izin hakkı")).toHaveCount(0);
 
   await page.getByRole("button", { name: "Masraf formu" }).click();
   const m = page.getByRole("dialog", { name: "Masraf formu" });

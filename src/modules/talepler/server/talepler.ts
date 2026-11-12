@@ -25,14 +25,14 @@ import { GIDER_DURUM, GIDER_TUR, giderKdv, para } from "../../muhasebe/sema.ts";
 import { personelOzetleri } from "../../personel/server/personel.ts";
 import { meslek } from "../../personel/sema.ts";
 import type { TalepFormuVerisi, TalepTipi } from "../../../belge/talep.ts";
-import { izinHaklari } from "../../personel/server/talep-baglanti.ts";
+import { izinKisileri } from "../../personel/server/talep-baglanti.ts";
 import { personelinPlanlari } from "../../planlar/server/talep-baglanti.ts";
 import { yayindakiBelgeFormati } from "../../rapor-format/server/belgeler.ts";
 import { belgeDoldurmaKaydet, belgeDoldurmasi } from "../../rapor-format/server/doldurma.ts";
 import { elleAlanlari } from "../../../belge/doldurma.ts";
 import { BELGE_KATALOGU, talepDegerleri, type BelgeDegerleri } from "../../../belge/katalog.ts";
 import type { FormatTanimi } from "../../../format/tanim.ts";
-import { GerekceGirdisi, isGunu, IzinGirdisi, IZIN_DURUM, IZIN_TUR, TALEP_KARARLARI, type IzinDurumu, type IzinTuru, type TalepKarari } from "../sema.ts";
+import { GerekceGirdisi, isGunu, IzinGirdisi, izinYillari, IZIN_DURUM, IZIN_TUR, TALEP_KARARLARI, type IzinDurumu, type IzinTuru, type IzinYili, type TalepKarari } from "../sema.ts";
 
 const MODUL = 21;
 export const IZIN_DOSYA = "izin";
@@ -64,16 +64,17 @@ function belgeHatasi(b: TalepBelgesi): string | null {
 /** belge okunamadı (bozuk görsel): eylem alan hatasına çevirir; işlem geri alınır */
 export class TalepBelgeHatasi extends Error {}
 
-/* ── İZİN ÖZETİ (maket MV.izinOzet): yıllık izin hakkı, bu yıl onaylanan ve bekleyen yıllık izin günleri, kalan ── */
-export interface IzinOzeti { yil: string; hak: number; kullanilan: number; bekleyen: number; kalan: number }
+/* ── İZİN ÖZETİ: yılın onaylanan (kullanılan) ve onay bekleyen yıllık izin günleri. 2026-11-12 (reisim: "kısıtlamaları kaldır … onun hesabını o
+   yapsın"): yıllık izin hakkı ve kalan KALKTI (herkese 14 gün sayılıyordu); aşım uyarısı da yok — hesabı firma yöneticisi yapar. ── */
+export interface IzinOzeti { yil: string; kullanilan: number; bekleyen: number }
 interface IzinDb { id: string; no: string; personel_id: string; tur: IzinTuru; bas: string; bit: string; gun: number; aciklama: string | null; belge: string | null;
   durum: IzinDurumu; red: string | null; geri: string | null; karar: Date | null; onaylayan: string | null; kaydeden: string | null; olustu: Date; surum: number }
 const IZIN_SEC = `SELECT id::text, no, personel_id::text, tur, bas::text, bit::text, gun, aciklama, belge::text, durum, red, geri, karar, onaylayan::text, kaydeden::text, olustu, surum
   FROM izin_talebi`;
-function ozet(l: readonly Pick<IzinDb, "tur" | "bas" | "durum" | "gun">[], hak: number, yil: string): IzinOzeti {
+function ozet(l: readonly Pick<IzinDb, "tur" | "bas" | "durum" | "gun">[], yil: string): IzinOzeti {
   const y = l.filter((x) => x.tur === "yillik" && x.bas.slice(0, 4) === yil);
   const kullanilan = y.filter((x) => x.durum === "onaylandi").reduce((n, x) => n + x.gun, 0), bekleyen = y.filter((x) => x.durum === "bekliyor").reduce((n, x) => n + x.gun, 0);
-  return { yil, hak, kullanilan, bekleyen, kalan: hak - kullanilan };
+  return { yil, kullanilan, bekleyen };
 }
 
 /* ── TALEPLERİM ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────── */
@@ -84,8 +85,8 @@ export interface IzinTalebi {
   karar: string | null; kararVeren: string | null; gonderildi: string; surum: number;
 }
 export interface Taleplerim {
-  /** bu yılın ve gelecek yılın özeti — talep başlangıç yılına sayılır, aşım o yılın kalanıyla (329–332 incelemesi) */
-  izinler: IzinTalebi[]; masraflar: MasrafFormu[]; ozet: IzinOzeti; gelecekOzet: IzinOzeti;
+  /** bu yılın özeti (izin başlangıç yılına sayılır) */
+  izinler: IzinTalebi[]; masraflar: MasrafFormu[]; ozet: IzinOzeti;
   /** masraf formunun iş seçenekleri: ekibinde olduğu başlamış planlar */
   isler: { id: string; no: string; tesis: string; tarih: string }[];
 }
@@ -98,11 +99,9 @@ export async function taleplerim(db: Sorgulayici, kim: Kisi): Promise<Taleplerim
   if (!p) return null;
   const l = (await db.sorgu<IzinDb>(`${IZIN_SEC} WHERE personel_id = $1 ORDER BY olustu DESC`, [p])).rows;
   const ad = await hesapAdlari(db, l.map((x) => x.onaylayan));
-  const hak = (await izinHaklari(db, [p])).get(p)?.hak ?? 14;
   const tesis = new Map((await musteriOzetleri(db)).flatMap((m) => m.tesisler.map((t) => [t.id, t.ad] as const)));
   return {
-    izinler: l.map((x) => izinSatiri(x, ad)), masraflar: await masrafFormlari(db, p), ozet: ozet(l, hak, bugunTr().slice(0, 4)),
-    gelecekOzet: ozet(l, hak, String(Number(bugunTr().slice(0, 4)) + 1)),
+    izinler: l.map((x) => izinSatiri(x, ad)), masraflar: await masrafFormlari(db, p), ozet: ozet(l, bugunTr().slice(0, 4)),
     isler: (await personelinPlanlari(db, p, bugunTr())).map((x) => ({ id: x.id, no: x.no, tesis: tesis.get(x.tesisId) ?? "—", tarih: x.baslangic })),
   };
 }
@@ -117,7 +116,7 @@ async function belgeYukle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: strin
   if (!y.tamam) throw new TalepBelgeHatasi("Belge okunamadı ya da bozuk.");
   return y.id;
 }
-/** izin talebi gönder (kendi adına); yıllık izinde kalan hakkı aşmak uyarıdır, engel değil (maket) */
+/** izin talebi gönder (kendi adına); gün sınırı / hak denetimi yok (2026-11-12) */
 export async function izinGonder(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, girdi: unknown, belge: TalepBelgesi = null): Promise<Yazma> {
   const p = await benimPersonelim(db, kim);
   if (!p) return { durum: "yetkisiz" };
@@ -221,10 +220,20 @@ export async function izinTalepleri(db: Sorgulayici, kim: Kisi): Promise<IzinSat
   if (!izinYonetir(kim)) return null;
   const l = (await db.sorgu<IzinDb>(`${IZIN_SEC} ORDER BY (durum = 'bekliyor') DESC, olustu DESC`)).rows;
   const ad = await hesapAdlari(db, l.map((x) => x.onaylayan));
-  const kisi = await izinHaklari(db, l.map((x) => x.personel_id));
-  /* özet talebin başlangıç yılının (gelecek yıl başlayan izin bu yılın kalanıyla karşılaştırılmaz — 329–332 incelemesi) */
-  return l.map((x) => ({ ...izinSatiri(x, ad), personelId: x.personel_id, personel: kisi.get(x.personel_id)?.ad ?? "—",
-    ozet: ozet(l.filter((y) => y.personel_id === x.personel_id), kisi.get(x.personel_id)?.hak ?? 14, x.bas.slice(0, 4)), kendi: !!x.kaydeden && x.kaydeden === kim.id }));
+  const kisi = await izinKisileri(db, l.map((x) => x.personel_id));
+  /* özet talebin başlangıç yılının (kişinin o yıl kullandığı ve bekleyen yıllık izni) */
+  return l.map((x) => ({ ...izinSatiri(x, ad), personelId: x.personel_id, personel: kisi.get(x.personel_id) ?? "—",
+    ozet: ozet(l.filter((y) => y.personel_id === x.personel_id), x.bas.slice(0, 4)), kendi: !!x.kaydeden && x.kaydeden === kim.id }));
+}
+
+/* ── PERSONEL KARTI: kişinin izin geçmişi (2026-11-12; reisim: "patron geçmişteki aldığı izinleri personele tıklayınca … göremiyorsa görsün") ──
+   bütün izin talepleri (yeni üstte) + yıl yıl onaylanan iş günleri (türüne göre); yalnız firma yöneticisine (izin kişiseldir — sağlık raporu). */
+export interface KisiIzinleri { izinler: IzinTalebi[]; yillar: IzinYili[] }
+export async function kisininIzinleri(db: Sorgulayici, kim: Kisi, personelId: string): Promise<KisiIzinleri | null> {
+  if (!izinYonetir(kim) || !UUID.test(personelId)) return null;
+  const l = (await db.sorgu<IzinDb>(`${IZIN_SEC} WHERE personel_id = $1 ORDER BY bas DESC, olustu DESC`, [personelId])).rows;
+  const ad = await hesapAdlari(db, l.map((x) => x.onaylayan));
+  return { izinler: l.map((x) => izinSatiri(x, ad)), yillar: izinYillari(l) };
 }
 async function izinKarar(db: Sorgulayici, kim: Kisi, id: string, surum: number, karar: TalepKarari, gerekce: string | null): Promise<Yazma> {
   if (!izinYonetir(kim)) return { durum: "yetkisiz" };
@@ -238,7 +247,7 @@ async function izinKarar(db: Sorgulayici, kim: Kisi, id: string, surum: number, 
   const deger = karar === "onayla" ? { durum: "onaylandi" } : karar === "red" ? { durum: "red", red: gerekce } : { durum: "duzeltme", geri: gerekce };
   const u = await guncelle(db, IZIN, id, surum, deger, iz(kim, karar === "onayla" ? "izin.onay" : karar === "red" ? "izin.red" : "izin.duzeltme", x.no));
   if (u.durum !== "tamam") return { durum: u.durum === "yok" ? "yok" : "cakisma" };
-  const k = (await izinHaklari(db, [x.personel_id])).get(x.personel_id)?.ad ?? "—";
+  const k = (await izinKisileri(db, [x.personel_id])).get(x.personel_id) ?? "—";
   return { durum: "tamam", id, no: x.no, bildirim: karar === "onayla"
     ? `${x.no} onaylandı: ${k}, ${x.gun} iş günü ${IZIN_TUR[x.tur].toLocaleLowerCase("tr")} (${tarihYaz(x.bas)}${x.bit !== x.bas ? ` – ${tarihYaz(x.bit)}` : ""}).`
     : karar === "red" ? `${x.no} reddedildi.` : `${x.no} düzeltmeye geri gönderildi; ${k} Talepler'inde görür.` };
@@ -256,7 +265,7 @@ export interface OnayTalebi {
   /** salt okunur ayrıntı (T2: onaylayan değiştirmez) */
   alanlar: [string, string][];
   belge: string | null;
-  /** onaylayanın dikkatine (yıllık izin kalan hakkı aşıyor, kendi talebi) — engel değil */
+  /** onaylayanın dikkatine (kendi talebi) — engel değil */
   uyari: string | null;
   /** önceki düzeltme isteği (düzeltilip yeniden gönderildiyse) */
   geri: string | null;
@@ -267,14 +276,13 @@ export const talepOnaylar = (kim: YetkiHesabi) => izinYonetir(kim) || masrafOnay
 export async function onayTalepleri(db: Sorgulayici, kim: Kisi): Promise<OnayTalebi[]> {
   const l: OnayTalebi[] = [];
   for (const x of izinYonetir(kim) ? ((await izinTalepleri(db, kim)) ?? []).filter((y) => y.durum === "bekliyor") : []) {
-    const asim = x.tur === "yillik" && x.gun > x.ozet.kalan;
     l.push({ tip: "izin", id: x.id, no: x.no, surum: x.surum, kisi: x.personel, baslik: IZIN_TUR[x.tur], gonderildi: x.gonderildi,
       ozet: `${x.gun} iş günü · ${tarihYaz(x.bas)}${x.bit !== x.bas ? ` – ${tarihYaz(x.bit)}` : ""}`,
       alanlar: [["Talep eden", x.personel], ["İzin türü", IZIN_TUR[x.tur]], ["Tarihler", `${tarihYaz(x.bas)}${x.bit !== x.bas ? ` – ${tarihYaz(x.bit)}` : ""}`],
-        ["İş günü", String(x.gun)], ...(x.tur === "yillik" ? [["Kalan yıllık izin", `${x.ozet.kalan} gün (${x.ozet.yil}; talep sonrası ${x.ozet.kalan - x.gun})`] as [string, string]] : []),
+        ["İş günü", String(x.gun)], ...(x.tur === "yillik" ? [[`${x.ozet.yil} yılında kullanılan yıllık izin`, `${x.ozet.kullanilan} gün`] as [string, string]] : []),
         ["Açıklama", x.aciklama ?? "—"]],
       belge: x.belge, geri: x.geri,
-      uyari: [asim ? `Kalan yıllık izin hakkını aşıyor (kalan ${x.ozet.kalan} gün).` : "", x.kendi ? "Kendi talebiniz." : ""].filter(Boolean).join(" ") || null });
+      uyari: x.kendi ? "Kendi talebiniz." : null });
   }
   for (const g of await onayBekleyenMasraflar(db, kim)) {
     const k = giderKdv(g.tutar, g.oran);
