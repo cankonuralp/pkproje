@@ -204,7 +204,8 @@ test("sunucuda günlük süre denetimi kalkınca süre dolmuşken kopya açılı
 
 /* 2026-10-09 (429): rapor kontrol gününe sayılır; gün değişiminde o günün süresi denetlenmeseydi rapor dolu güne alınırdı. */
 test("kontrol günü değişiminde günlük süre denetimi kalkınca rapor dolu güne alınır", async () => {
-  const m = await bozukModul<Raporlar>(RAPORLAR, "  const gd = await gunDegisimi(db, e, v.tarih.bas);\n  if (gd) return gd;\n  const cevaplar", "  const cevaplar");
+  /* 2026-11-12 (göç 0128): satır ölçümlü raporu ayırıyor (ölçümlü raporda gün kontrol kaydından) — bozulan denetim aynı */
+  const m = await bozukModul<Raporlar>(RAPORLAR, "  const gd = e.r.olcumlu ? null : await gunDegisimi(db, e, v.tarih.bas);\n  if (gd) return gd;\n  const cevaplar", "  const cevaplar");
   const dun = gun(-1);
   const { h, den, id, ekipman, tur, is } = await saglam(dun);
   try {

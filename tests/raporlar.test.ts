@@ -1161,8 +1161,9 @@ test("kontrol saati (0128): TÜRKAK'lı firmada açılan rapor ölçümlü — s
     assert.match(tamam(await kaydet(FA.den1, r.id, d.surum, girdi())).bildirim, /yazılan saat alınmadı/);
     d = (await sr(FA.den1, r.id))!;
     assert.notEqual(d.tarih.bas, `${dun}T09:00`, "gönderilen başlangıç yazılmadı");
-    /* yazan başlatır (başkası başlatamaz): saat veritabanından, rapora da yazılır */
-    assert.equal((await a(FA.den2, (db) => kontrolBasla(db, FA.den2, r.id))).durum, "yetkisiz");
+    /* yazan başlatır: saat veritabanından, rapora da yazılır. Başkası başlatamaz — raporu görmeyen denetçiye "yok", gören yöneticiye "yetkisiz" */
+    assert.equal((await a(FA.den2, (db) => kontrolBasla(db, FA.den2, r.id))).durum, "yok");
+    assert.equal((await a(FA.mek, (db) => kontrolBasla(db, FA.mek, r.id))).durum, "yetkisiz");
     tamam(await a(FA.den1, (db) => kontrolBasla(db, FA.den1, r.id)));
     d = (await sr(FA.den1, r.id))!;
     assert.deepEqual([d.olcum!.durum, d.olcum!.kaynak, d.olcum!.bit, d.tarih.bas, d.tarih.bit], ["suruyor", "sunucu", null, d.olcum!.bas, null]);
@@ -1201,11 +1202,11 @@ test("kontrol saati (0128): TÜRKAK'lı firmada açılan rapor ölçümlü — s
     await assert.rejects(sql(A, "UPDATE kontrol SET bitti = now() + interval '1 hour'"), /değişmez/);
     await assert.rejects(sql(A, "UPDATE kontrol SET basladi = now()"), /permission denied|izin/i);
     await assert.rejects(sql(A, "DELETE FROM kontrol"), /permission denied|izin|silinmez/i);
-    await assert.rejects(sql(A, "UPDATE rapor SET olcumlu = false WHERE id = $1", [r.id]), /değişmez/);
+    await assert.rejects(sql(A, "UPDATE rapor SET olcumlu = true WHERE id = $1", [eski.id]), /değişmez/);
     assert.equal((await sql(B, "SELECT 1 FROM kontrol")).rowCount, 0);
     assert.equal((await sql(A, "SELECT 1 FROM kontrol")).rowCount, 2);
     for (const ne of ["kontrol.basla", "kontrol.bitir", "kontrol.duzelt", "rapor.kontrol_saati"]) {
-      assert.ok((await sql(A, "SELECT 1 FROM denetim_izi WHERE ne = $1", [ne])).rowCount, ne);
+      assert.ok((await su.query("SELECT 1 FROM denetim_izi WHERE firma_id = $1 AND ne = $2", [A, ne])).rowCount, ne);
     }
   } finally {
     await su.query(`UPDATE firma_ayar SET deger = '{"model": "siz"}'::jsonb WHERE firma_id = $1 AND bolum = 'calisma'`, [A]);
