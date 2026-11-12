@@ -334,3 +334,16 @@ button.silTus { color: var(--hata-yazi); }
 .cizelgeSaat { white-space: nowrap; font-variant-numeric: tabular-nums; }
 .cizelge tr[data-dikkat] td { background: var(--uyari-zemin); }
 .cizelge tr[data-dikkat] td:first-child { padding-left: 8px; }
+/* 2026-11-12 GÜNLÜK ÇİZELGE (maket yerel/maket/turkak-modeli.html 5. bölüm): kişi başına saat çubukları — dar ekranda kendi içinde yana kayar;
+   dikkat isteyen kontrol uyarı rengiyle (aynı bilgi tabloda yazıyla) */
+.gunlukKap { overflow-x: auto; margin-bottom: 12px; }
+.gunlukIc { min-width: 640px; display: flex; flex-direction: column; gap: 6px; }
+.gunlukSatir { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 8px; align-items: center; font-size: var(--boy-kucuk); }
+.gunlukKisi { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gunlukSaat { position: relative; height: 16px; color: var(--yazi2); font-size: var(--boy-etiket); font-variant-numeric: tabular-nums; }
+.gunlukSaat span { position: absolute; transform: translateX(-50%); }
+.gunlukSaat span:first-child { transform: none; }
+.gunlukSaat span:last-child { transform: translateX(-100%); }
+.gunlukYol { position: relative; height: 28px; border-radius: var(--r-kucuk); background: var(--zemin2); }
+.gunlukYol b { position: absolute; top: 4px; bottom: 4px; min-width: 3px; border-radius: var(--r-kucuk); background: var(--yazi2); }
+.gunlukYol b[data-dikkat] { background: var(--uyari-yazi); }

@@ -28,7 +28,7 @@ import { TAMAMLANDI_RAPOR, tarihNo } from "../src/modules/planlar/sema.ts";
 import { taslakBaslat, taslakKaydet, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
 import { ayEkle } from "../src/modules/raporlar/sema.ts";
 import {
-  cihazEkle, cihazKaldir, EKIPTE_DEGIL, fotoEkle, fotoSil, kayitliOnayaGonder, KONTROL_BITMEDI, kontrolBasla, kontrolBitir, kontrolSaatDuzelt, onayaGonder, raporBelgesiVerisi, raporFormatGuncelle, raporKaydet, raporKopyala, raporKunyeGuncelle, raporOlustur,
+  cihazEkle, cihazKaldir, EKIPTE_DEGIL, fotoEkle, fotoSil, gunlukKontroller, kayitliOnayaGonder, KONTROL_BITMEDI, kontrolBasla, kontrolBitir, kontrolSaatDuzelt, onayaGonder, raporBelgesiVerisi, raporFormatGuncelle, raporKaydet, raporKopyala, raporKunyeGuncelle, raporOlustur,
   raporListesi, raporSapmalariOku, raporSil, raporZamanCizelgesi, sahaRaporu, type RaporYazma,
 } from "../src/modules/raporlar/server/raporlar.ts";
 import { raporDurumYaz } from "../src/modules/raporlar/server/onay-baglanti.ts";
@@ -1201,6 +1201,12 @@ test("kontrol saati (0128): TÜRKAK'lı firmada açılan rapor ölçümlü — s
     assert.deepEqual([cz.ekipmanKod, cz.yazan], ["HT-A3", "Deneme Bir"]);
     assert.equal(await a(FA.den1, (db) => raporZamanCizelgesi(db, FA.den1, eski.id)), null, "ölçümsüz raporda çizelge yok");
     assert.equal(await a(FA.den2, (db) => raporZamanCizelgesi(db, FA.den2, r.id)), null, "raporu görmeyen çizelgeyi de göremez");
+    /* T7 günlük çizelge: o gün başlamış kontroller rapora yazılan saatle — düzeltilen dün (elle), ölçülen bugün; kişi yalnız görebildiği raporlarınkini görür */
+    const gk = (k: Kisi, g: string) => a(k, async (db) => (await gunlukKontroller(db, k, g))!.map((x) => [x.kisi, x.ekipman, x.raporId, x.bas, x.bit, x.elle]));
+    assert.deepEqual(await gk(FA.den1, dun), [["Deneme Bir", "HT-A3", r.id, `${dun}T09:00`, `${dun}T09:40`, true]]);
+    assert.deepEqual((await gk(FA.den1, bugun)).map((x) => [x[1], x[5]]), [["HT-A4", false]]);
+    assert.deepEqual(await gk(FA.mek, dun), await gk(FA.den1, dun), "branş yöneticisi branşının kontrolünü görür");
+    assert.deepEqual([await gk(FA.den2, dun), await gk(FA.den2, bugun), await gk(FA.den1, "2026-13-45")], [[], [], []], "raporu görmeyen kontrolü de göremez; bozuk gün boş");
     /* K6 (göç 0129): kontrol dün yapıldı, plan bugün → "plan günü dışı" sapması. Gerekçesiz gönderilmez; gerekçeyle gider ve raporda saklanır.
        Zorunlu alan / cihaz eksikse eksikler önce döner (sapma denetimi ondan sonra) — o durumda yalnız sapma listesi sınanır */
     const sp = (await a(FA.den1, (db) => raporSapmalariOku(db, FA.den1, r.id)))!;

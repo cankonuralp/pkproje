@@ -54,6 +54,7 @@ import { exifCekimZamani } from "../../../server/dosya/exif.ts";
 import { fotoKaniti, type FotoKaniti } from "../foto-kanit.ts";
 import { sapmaGerekceleri, sapmaKarari, sapmalar, type Sapma, type SapmaKaydi } from "../sapma.ts";
 import { zamanCizelgesi, type CizelgeSatiri } from "../cizelge.ts";
+import type { GunlukKontrol } from "../gunluk.ts";
 import { acikKontrol, etkinSaat, kontrolBaslat, kontrolBitirYaz, kontrolDurumu, kontrolDuzeltYaz, kontrolOku, type KontrolAnahtari, type KontrolDurumu, type KontrolKaynagi,
   type KontrolSatiri } from "./kontrol.ts";
 import { kayitDosyasi } from "../../../server/dosya/dosya.ts";
@@ -784,6 +785,33 @@ export async function raporZamanCizelgesi(db: Sorgulayici, kim: Kisi, id: string
     satirlar: zamanCizelgesi({ hareketler: h.map((x) => ({ zaman: x.zaman, ne: x.ne, gerekce: x.gerekce, kim: adlar.get(x.hesap_id ?? "") ?? "—" })),
       kontrol: k ? { basladi: k.basladi, bitti: k.bitti, duzBas: k.duz_bas, duzBit: k.duz_bit, gerekce: k.duz_gerekce, duzKim: k.duz_kim, duzZaman: k.duz_zaman } : null,
       yazan, fotolar: r.fotolar, sapmalar: r.sapmalar }) };
+}
+/** günlük çizelgenin satırları (2026-11-12; pkproje.md §11 T7 — ../gunluk.ts): o gün (Türkiye) başlamış ölçülmüş kontroller, rapora yazılan saatle.
+    Kişi yalnız görebildiği raporların kontrollerini görür (raporun görme kuralı); modülü göremeyene null */
+export async function gunlukKontroller(db: Sorgulayici, kim: Kisi, gun: string): Promise<GunlukKontrol[] | null> {
+  if (duzey(kim, MODUL) === "yok") return null;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(gun)) return [];
+  const bas = new Date(`${gun}T00:00:00+03:00`);
+  if (Number.isNaN(bas.getTime())) return [];
+  const l = (await db.sorgu<{ personel_id: string; ekipman_id: string; kaynak: string; basladi: Date | null; bitti: Date | null; duz_bas: Date | null; duz_bit: Date | null;
+    rapor_id: string; no: string; revizyon: number; hesap_id: string | null; tur_id: string; sapmalar: SapmaKaydi[]; musteri: string | null }>(
+    `SELECT k.personel_id::text, k.ekipman_id::text, k.kaynak, k.basladi, k.bitti, k.duz_bas, k.duz_bit,
+       r.id::text AS rapor_id, r.no, r.revizyon, r.hesap_id::text, r.tur_id::text, r.sapmalar, r.kunye->>'firma_adi' AS musteri
+     FROM kontrol k JOIN rapor r ON r.firma_id = k.firma_id AND r.plan_id = k.plan_id AND r.ekipman_id = k.ekipman_id AND r.personel_id = k.personel_id
+       AND (r.takip_kaynak IS NOT NULL) = k.takip AND r.silindi IS NULL
+     WHERE coalesce(k.duz_bas, k.basladi) >= $1 AND coalesce(k.duz_bas, k.basladi) < $2
+     ORDER BY coalesce(k.duz_bas, k.basladi)`, [bas, new Date(bas.getTime() + 864e5)])).rows;
+  const turler = new Map<string, Awaited<ReturnType<typeof turRaporBilgisi>>>();
+  for (const id of new Set(l.map((x) => x.tur_id))) turler.set(id, await turRaporBilgisi(db, id));
+  const gorulen = l.filter((x) => { const t = turler.get(x.tur_id); return !!t && canDo(kim, MODUL, "gor", { sahip: x.hesap_id, brans: t.brans }); });
+  const kisiler = new Map((await personelOzetleri(db, [...new Set(gorulen.map((x) => x.personel_id))])).map((p) => [p.id, p.ad]));
+  const kodlar = new Map<string, string>();
+  for (const id of new Set(gorulen.map((x) => x.ekipman_id))) kodlar.set(id, (await ekipmanEtiketi(db, id))?.kod ?? "—");
+  return gorulen.map((x) => ({
+    kisiId: x.personel_id, kisi: kisiler.get(x.personel_id) ?? "—", raporId: x.rapor_id, raporNo: gorunenNo(x.no, x.revizyon), ekipman: kodlar.get(x.ekipman_id) ?? "—",
+    tur: turler.get(x.tur_id)?.ad ?? "—", musteri: x.musteri ?? "—", bas: zamanOku(x.duz_bas ?? x.basladi)!, bit: zamanOku(x.duz_bas ? x.duz_bit : x.bitti),
+    elle: !!x.duz_bas, sapmalar: (x.sapmalar ?? []).map((s) => s.metin),
+  }));
 }
 const OLCUMSUZ: RaporYazma = { durum: "red", neden: "Bu raporda kontrol saati ölçülmez; başlangıç ve bitiş elle yazılır." };
 

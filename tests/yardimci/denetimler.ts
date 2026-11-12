@@ -1089,6 +1089,10 @@ export function yedekGocListesi(goc: string): Record<string, string[]> {
 export function yedekListeFarki(goc: string, liste: Readonly<Record<string, readonly string[]>>, disi: Readonly<Record<string, string>>, sonraki = ""): string[] {
   const g = yedekGocListesi(goc), h: string[] = [];
   /* 2026-11-07 (göç 0123): sonraki göçlerde kaldırılan tablo (DROP TABLE) listeden düşer — tetiği tablosuyla gitti */
+  /* 2026-11-12 (göç 0130): sonraki göçlerde yedeğe ALINAN tablo — tetiği o göçte (0117'nin biçimiyle: yedek_iz('<anahtar>'[, '<gizli sütunlar>'])) */
+  for (const m of sonraki.matchAll(/CREATE OR REPLACE TRIGGER yedek_iz AFTER INSERT OR UPDATE OR DELETE ON ([a-z_]+) FOR EACH ROW EXECUTE FUNCTION yedek_iz\('[a-z_,]+'(?:, '([a-z_,]+)')?\)/g)) {
+    g[m[1]!] = m[2] ? m[2].split(",") : [];
+  }
   for (const m of sonraki.matchAll(/DROP TABLE IF EXISTS ([a-z_]+)/g)) delete g[m[1]!];
   for (const t of Object.keys(liste)) {
     if (!(t in g)) h.push(`${t}: göçte tetik yok`);

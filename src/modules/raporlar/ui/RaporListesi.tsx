@@ -71,7 +71,9 @@ function tanim(sec: Record<string, Secenek[]>): SuzgecTanimi<RaporListeSatiri> {
 }
 
 /** imzaGor: kişi Onaylar'ı görür (İmzamı bekleyen raporlar orada); görmüyorsa şerit yalnız bilgi verir, raporlar listede "Muayene uzmanı imzası" */
-export function RaporListesi({ ilk, imza, imzaGor }: { ilk: SunucuListe<RaporListeSatiri>; imza: number; imzaGor: boolean }) {
+export function RaporListesi({ ilk, imza, imzaGor, gunluk = false }: { ilk: SunucuListe<RaporListeSatiri>; imza: number; imzaGor: boolean;
+  /** 2026-11-12 (pkproje.md §11 T7): TÜRKAK'lı firmada günlük çizelge bağlantısı */
+  gunluk?: boolean }) {
   const router = useRouter();
   const bildir = useBildir();
   const uyar = useUyar();
@@ -135,10 +137,11 @@ export function RaporListesi({ ilk, imza, imzaGor }: { ilk: SunucuListe<RaporLis
 
   return (
     <>
-      <SayfaBasi baslik="Raporlar" sayac={<Sayac s={s} />} tuslar={
+      <SayfaBasi baslik="Raporlar" sayac={<Sayac s={s} />} tuslar={<>
+        {gunluk && <TusBaglanti ikon="calendar" href="/raporlar/gunluk">Günlük çizelge</TusBaglanti>}
         <Tus tur="ikincil" ikon="download" disabled={!!ilerleme || !s.sonuc.adet} aria-busy={!!ilerleme || undefined} onClick={() => void topluIndir()}>
           {ilerleme ? `İndiriliyor ${ilerleme}` : "Toplu indir"}
-        </Tus>} />
+        </Tus></>} />
       {imza > 0 && (
         <SeritKap>
           <Serit tur="uyari" ikon="file-signature" eylem={imzaGor ? <TusBaglanti ikon="file-signature" href="/onaylar/imza">İmzamı bekleyen raporlar</TusBaglanti> : undefined}>

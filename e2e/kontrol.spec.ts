@@ -140,4 +140,17 @@ test("kontrol saati (TÜRKAK'lı): model Yönetim'den; saha raporunda saat yazı
   await expect(tablo.getByRole("row").filter({ hasText: "Kontrol bitti" })).toHaveCount(1);
   await expect(tablo.getByRole("row").filter({ hasText: "Kontrol saati gerekçeyle düzeltildi" })).toContainText("Elle");
   await expect(page.getByRole("button", { name: "Excel'e aktar" })).toBeVisible();
+
+  /* T7 günlük çizelge: Raporlar listesindeki bağlantıdan (TÜRKAK'lı firmada) → önceki gün: düzeltilen kontrol 09:00 – 09:40, elle yazıldığı işaretli */
+  await page.goto("/raporlar");
+  await page.getByRole("link", { name: "Günlük çizelge" }).click();
+  await expect(page).toHaveURL(/\/raporlar\/gunluk$/, { timeout: 30_000 });
+  await page.getByRole("link", { name: "Önceki gün" }).click();
+  await expect(page).toHaveURL(/\/raporlar\/gunluk\?gun=\d{4}-\d{2}-\d{2}$/, { timeout: 30_000 });
+  const satir = page.getByRole("table", { name: "Günlük çizelge" }).getByRole("row").filter({ hasText: E2E_SAHA.ekipman });
+  await expect(satir).toHaveCount(1, { timeout: 30_000 });
+  await expect(satir).toContainText("09:00");
+  await expect(satir).toContainText("09:40");
+  await expect(satir).toContainText("40 dk");
+  await expect(satir).toContainText("Saat elle yazıldı");
 });

@@ -509,7 +509,7 @@ pkproje/
                             gerekçe ≥ 10; hiç ölçülmemişte kaynak "elle") · raporlar/server/kontrol.ts (tablo) + raporlar.ts kontrolBasla / kontrolBitir /
                             kontrolSaatDuzelt (yetki; raporun bas / bit'i kontrol kaydından), ölçümlü raporda kaydetIc gönderilen saati YAZMAZ, onayaGonder
                             kontrol bitmeden reddeder (KONTROL_BITMEDI) · ekran raporlar/ui/KontrolKutusu.tsx (Firma bilgileri'nin başında; başlangıç / bitiş
-                            satırları salt okunur) · yedek: kontrol YEDEK_DISI (T7'de alınacak) · kilit tests/raporlar.test.ts (PG, son test), kontrol-saf,
+                            satırları salt okunur) · yedek: T7b'de alındı (göç 0130) · kilit tests/raporlar.test.ts (PG, son test), kontrol-saf,
                             bozan kontrol · uçtan uca testi YOK (TÜRKAK'lı tohum firması T4'te) · bağlantısızken saat alınmaz (T5)
                             · T3 FOTOĞRAFIN KANITI (göç yok): raporlar/foto-kanit.ts (saf) — rapor fotoğrafıyla eklendi (sunucu saati), cekim (dosyanın
                             EXIF'i, yoksa cihazın küçültmeden önce okuduğu; her firmada), konum (yalnız ölçümlü raporda, izinle; yoksa null) — RaporFoto'da,
@@ -539,8 +539,14 @@ pkproje/
                             raporZamanCizelgesi (yalnız ölçümlü rapor; raporu gören) · sayfa /raporlar/<id>/cizelge + raporlar/ui/ZamanCizelgesi.tsx
                             (tablo, ortak sayfalama, Excel'e aktar) · rapor ekranında "Zaman çizelgesi" bağlantısı (ölçümlü raporda) · kilit tests/cizelge,
                             raporlar (PG), bozan cizelge, e2e kontrol.spec
-                            · SIRADAKİ: T7b günlük çizelge (kişi × gün) + kontrol tablosu yedeğe · T5 S.A.Y Chat Rapor modu + bağlantısız saat · T4 sapma + gerekçe + onay ekranı · T5 S.A.Y Chat Rapor modu + bağlantısız saat ·
-                            T6 S.A.Y saat dağıtmaz · T7 zaman çizelgesi + günlük çizelge · T8 zaman damgasız imza reddi
+                            · T7b GÜNLÜK ÇİZELGE + KONTROL YEDEKTE (göç 0130): raporlar/gunluk.ts (saf: kişi kişi, saate göre; süre, toplam; elle yazılan
+                            saat ve sapmalı kontrol işaretli; çubuğun yeri saat aralığına göre — olağan 08–18, erken / geç kontrol genişletir; Excel tablosu) ·
+                            raporlar.ts gunlukKontroller (o gün — Türkiye — başlamış kontroller, rapora yazılan saatle; kişi yalnız görebildiği raporlarınkini
+                            görür) · sayfa /raporlar/gunluk?gun=YYYY-AA-GG (Önceki / Sonraki gün) + raporlar/ui/GunlukCizelge.tsx (çubuklar, tablo, ortak
+                            sayfalama, Excel'e aktar) · Raporlar listesinde "Günlük çizelge" bağlantısı (yalnız TÜRKAK'lı firmada) · göç 0130: kontrol
+                            tablosuna yedek_iz tetiği + yedek_tablolari listesi; src/server/yedek/tablolar.ts YEDEK_TABLOLARI (kilit yedekListeFarki sonraki
+                            göçlerde eklenen tetiği de okur) · kilit tests/gunluk, raporlar (PG), yedek-saf, bozan gunluk, e2e kontrol.spec
+                            · SIRADAKİ: T5 S.A.Y Chat Rapor modu + bağlantısız saat (kontrol.kaynak 'cihaz'), plan içi ekipman satırından başlatma
   src/tanim/iller.ts        81 il + 973 ilçe (açık veri, MIT; bir kez alındı)
   src/tanim/bakanlik/       Bakanlığın resmî PDF'leri ZPKR01–05 (rapor formatı) + ZPKK01–05 (kriterler); 467: ZPKR06 / ZPKK06 kule kren,
                             ZPKR07 / ZPKK07 asılı erişim, ZPMR01 / ZPMK01 + ZYDR01 / ZYDK01 LPG tankı — okuyucu src/server/bakanlik.ts; okuyan uçlar

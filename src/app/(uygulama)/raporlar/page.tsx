@@ -5,6 +5,7 @@ import { Yetkisiz } from "../../../components/hata/Hata";
 import { modulBul } from "../../../modules/moduller";
 import { imzamiBekleyenSayisi, raporSayfasi } from "../../../modules/raporlar/server/liste";
 import { RaporListesi } from "../../../modules/raporlar/ui/RaporListesi";
+import { calismaModeli } from "../../../server/ayar/ayar";
 import { modulGorur, modulOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import type { ModulAnahtari } from "../../../server/yetki/tanim";
 
@@ -17,9 +18,9 @@ export default async function Sayfa() {
   if (!o) return <Yetkisiz />;
   const v = await oturumIslemi(o, async (db) => {
     const l = await raporSayfasi(db, o, {});
-    return l ? { l, imza: await imzamiBekleyenSayisi(db, o) } : null;
+    return l ? { l, imza: await imzamiBekleyenSayisi(db, o), gunluk: (await calismaModeli(db)) === "turkak" } : null;
   });
   if (!v) return <Yetkisiz />;
   /* imza şeridinin tuşu Onaylar'ı görene (318 incelemesi: Onaylar'ı kapalı kişi yetkisiz sayfaya giderdi) */
-  return <RaporListesi ilk={v.l} imza={v.imza} imzaGor={modulGorur(o, ONAYLAR.no as ModulAnahtari)} />;
+  return <RaporListesi ilk={v.l} imza={v.imza} imzaGor={modulGorur(o, ONAYLAR.no as ModulAnahtari)} gunluk={v.gunluk} />;
 }
