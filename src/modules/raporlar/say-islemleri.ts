@@ -28,7 +28,7 @@ import { cakismalar, saatGirisleri, saatPlani, type SaatRaporu, type SaatSatiri 
 import { isBildirimi, planGunu, raporTamamla, type RaporOzeti, type Tamamlama } from "./tamamla.ts";
 import { mesaiBaslangici } from "./server/plan-baglanti.ts";
 import { komutlariUygula, sonucOzeti, type Durum, type GirisSonucu } from "./say-doldur.ts";
-import { KopyaGirdisi, OlusturIslemGirdisi, RAPOR_DURUM, RevizeGirdisi } from "./sema.ts";
+import { KontrolDuzeltme, KopyaGirdisi, OlusturIslemGirdisi, RAPOR_DURUM, RevizeGirdisi } from "./sema.ts";
 import { raporSayfasi } from "./server/liste.ts";
 import {
   cihazAdaylari, cihazEkle, cihazKaldir, fotoEkle, fotoSil, onayaGonder, raporEksikleri, raporFormatGuncelle, raporKaydet, raporKopyala, raporFormatHami, raporOlustur, raporSayDurumu, takipAc, raporSil, revizeIste, revizeIstegiGeriCek, sahaRaporu,
@@ -36,7 +36,7 @@ import {
 } from "./server/raporlar.ts";
 
 import { EK_NO as EK_NUMARASI, ekBelgesi as ekinBelgesi } from "../../server/yz/islem.ts";
-import { imzaliEslestirYukle, imzaliYukle, teknikImzaliEslestirYukle, teknikImzaliYukle } from "./server/raporlar.ts";
+import { imzaliEslestirYukle, imzaliYukle, kontrolSaatDuzelt, teknikImzaliEslestirYukle, teknikImzaliYukle } from "./server/raporlar.ts";
 
 const MODUL = 14;
 const RAPOR_SURUM = z.object({ rapor: kimlik, surum });
@@ -106,14 +106,16 @@ async function kapaliRaporaYaz(b: IslemBaglami, id: string, surumGirdi: number |
   }
   /* sürüm kilidi her yazmada (raporKaydet'e gitmeyen yalnız-cihaz yazmasında da): yapay zekânın gördüğü hâl değiştiyse yazılmaz */
   if (s.surum !== surumu) return yazmaCevabi({ durum: "cakisma" });
-  const h = kayittakiHal(s), komutEki = { kunyeKilit: kilitliKunye(s.tanim), kunyeKayit: kayitKunyesi(s.kunye, metotMetni(s.tanim, s.tur.kontrolStd)), cihazlar: h.cihazlar };
+  const h = kayittakiHal(s), komutEki = { kunyeKilit: kilitliKunye(s.tanim), kunyeKayit: kayitKunyesi(s.kunye, metotMetni(s.tanim, s.tur.kontrolStd)), cihazlar: h.cihazlar,
+    /* 2026-11-12 (K8): ölçümlü raporda başlangıç / bitiş yazılmaz; tamamlayıcı da saat planlamaz */
+    olcumlu: !!s.olcum };
   /* 2026-10-31 (L1 — "önce yap, sonra kısaca bildir"): verilenler uygulandıktan sonraki hâlden boş yerler tamamlanır; hepsi TEK kayıtta */
   let tamamlama: Tamamlama | null = null, verilenGiris = Array.isArray(girisler) ? girisler : [];
   if (tam) {
     const k0 = komutDenetle({ tur: "yaz", girisler: verilenGiris, satirlar });
     const once = k0 && k0.tur === "yaz" ? komutlariUygula(h.durum, s.tanim, k0.girisler, komutEki, k0.satirlar ?? []).durum : h.durum;
     const adaylar = (await cihazAdaylari(b.db, b.kim, id)) ?? {};
-    tamamlama = raporTamamla({ tanim: s.tanim, durum: once, gun: tam.gun, saat: tam.saat,
+    tamamlama = raporTamamla({ tanim: s.tanim, durum: once, gun: tam.gun, saat: s.olcum ? null : tam.saat,
       verilen: new Set(verilenGiris.flatMap((x) => (x && typeof x === "object" && typeof (x as { yer?: unknown }).yer === "string" ? [(x as { yer: string }).yer.trim()] : []))),
       cihazlar: h.cihazlar.map((c) => ({ turId: c.turId, turAd: c.turAd, secili: !!c.secili, adaylar: adaylar[c.turId] ?? adaylar["*"] ?? [] })) });
     verilenGiris = [...verilenGiris, ...tamamlama.girisler];
@@ -257,6 +259,15 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
       return yazmaCevabi(await onayaGonder(b.db, b.kim, v.rapor, v.surum, { ekipman: s.ekipmanBilgi, tarih: s.tarih, cevaplar: s.cevaplar }));
     },
   }),
+  /* 2026-11-12 (göç 0128; pkproje.md §11 K8 — "kişinin elle yapabildiği gerekçeli düzeltmeyi kişinin gerekçesiyle yapar, gerekçe uydurmaz"): ölçümlü
+     raporun kontrol saatini kullanıcının söylediği gerekçeyle yazar / düzeltir (rapor ekranındaki "Saati düzelt" ile aynı işlev) */
+  islem({
+    ad: "kontrol_saat_duzelt", modul: MODUL, tur: "yaz", islev: kontrolSaatDuzelt, kaynak: [kimlik, KontrolDuzeltme],
+    girdi: z.object({ rapor: kimlik, duzeltme: KontrolDuzeltme }),
+    tarif: "Ölçümlü raporun (TÜRKAK'lı firma) kontrol saatini KULLANICININ SÖYLEDİĞİ gerekçeyle yazar / düzeltir: duzeltme { bas, bit (YYYY-AA-GGTSS:DD), "
+      + "gerekce (kullanıcının kendi sözü, en az 10 karakter — gerekçeyi sen üretme, söylenmediyse sor) }. Kontrol sürerken düzeltilmez; ölçülen saat kayıtta kalır.",
+    calistir: async (b, v) => yazmaCevabi(await kontrolSaatDuzelt(b.db, b.kim, v.rapor, v.duzeltme)),
+  }),
   /* 2026-10-16 (2. adım b): sil, kopyala, formatı güncelle, revize iste / geri çek — rapor ekranının tuşlarının işlevleri */
   islem({
     ad: "rapor_sil", modul: MODUL, tur: "yaz", girdi: RAPOR_SURUM, kaynak: [kimlik, surum], islev: raporSil,
@@ -299,11 +310,16 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
       + "ayarları › Mesai başlangıcı), ara_dk, raporlar [{ rapor, sure_dk? }] gezi sırasıyla (sure_dk yoksa türün süresi; o da yoksa 15). Hesabı sunucu yapar.",
     calistir: async (b, v) => {
       const l: SaatRaporu[] = [];
+      /* 2026-11-12 (göç 0128; pkproje.md §11 K8): ölçümlü raporda saat dağıtılmaz — o raporlar atlanır, sonuçta söylenir */
+      const olcumlu: string[] = [];
       for (const x of v.raporlar) {
         const s = await sahaRaporu(b.db, b.kim, x.rapor);
         if (!s) return { tamam: false, neden: `${x.rapor}: ${GORUNMEZ}` };
+        if (s.olcum) { olcumlu.push(`${s.no}${s.olcum.durum === "yok" ? " (kontrol başlatılmadı)" : s.olcum.durum === "suruyor" ? " (kontrol sürüyor)" : ""}`); continue; }
         l.push({ id: x.rapor, sure: x.sure_dk ?? (await turSuresi(b, s.tur.id)) ?? VARSAYILAN_SURE_DK, periyot: s.tur.periyot });
       }
+      const olcumNotu = olcumlu.length ? `Bu raporlarda kontrol saati ölçülür (TÜRKAK'lı model), saat yazılmaz: ${olcumlu.join(", ")}.` : "";
+      if (!l.length) return { tamam: false, neden: olcumNotu };
       const plan = saatPlani({ gun: v.gun ?? await isGunu(b, v.raporlar[0]!.rapor), baslangic: v.baslangic ?? await mesaiBaslangici(b.db), ara: v.ara_dk, raporlar: l });
       const sonuc: Record<string, unknown>[] = [];
       for (const p of plan) {
@@ -311,7 +327,7 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
         sonuc.push({ rapor: p.id, bas: p.bas, bit: p.bit, sonraki: p.sonraki, ...(p.tasma ? { uyari: "gün dışına taşıyor" } : {}), ...(c.tamam ? {} : { yazilamadi: c.neden }) });
       }
       const yazilan = sonuc.filter((x) => !x.yazilamadi).length;
-      return yazilan ? { tamam: true, bildirim: `${yazilan} raporun saati yazıldı.`, sonuc: { saatler: sonuc } }
+      return yazilan ? { tamam: true, bildirim: `${yazilan} raporun saati yazıldı.${olcumNotu ? ` ${olcumNotu}` : ""}`, sonuc: { saatler: sonuc, ...(olcumlu.length ? { olcumlu } : {}) } }
         : { tamam: false, neden: `Saat yazılamadı: ${sonuc.map((x) => x.yazilamadi).join("; ")}` };
     },
   }),

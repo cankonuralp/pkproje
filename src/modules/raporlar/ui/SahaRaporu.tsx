@@ -749,7 +749,7 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
      yazıldıktan sonra geri okunup teyit edilir; ölçüm cihazı elle seçilir gibi sunucu işlemiyle */
   /* 2026-10-15 (C — "aynı tabloya 50 satır ekle"): satirlar — satir_ekle, bir tabloya tek komutla N satır (aynı denetim; tablonun tek geri alması) */
   const raporaYaz = async (girisler: readonly { yer: string; deger: string }[], satirlar: readonly SatirEkle[] = []) => {
-    const u = komutlariUygula(durumRef.current, v.tanim, girisler, { kunyeKilit, kunyeKayit: kayit, cihazlar: cihazSatirlari() }, satirlar);
+    const u = komutlariUygula(durumRef.current, v.tanim, girisler, { kunyeKilit, kunyeKayit: kayit, cihazlar: cihazSatirlari(), olcumlu: !!v.olcum }, satirlar);
     const bolumu = (y: Yer) => (y.tur === "hucre" ? y.bolum : y.tur === "ekipman" ? "ekipman" : y.tur === "sonuc" ? sonucBolumu : y.tur === "yorum" ? notBolumu
       : y.tur === "kunye" || y.tur === "tarih" ? SABIT.firma
       : y.tur === "madde" || y.tur === "madde_not" || y.tur === "derece" ? v.tanim.bolumler.find((b) => b.blok === "liste" && b.gruplar.some((g) => g.maddeler.some((m) => m.id === y.id)))?.id ?? null

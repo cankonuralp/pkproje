@@ -26,6 +26,13 @@ ne_zaman: "Tarihleri … yap", "saatleri 10:00'dan başlat, 10 dakika arayla", "
   saatleri kendin hesaplayıp yazma. Bitiş saati de yazılır.
 - Araç yoksa her raporun `tarih:` yerlerine `rapor_yaz` ile yaz ve sonuçları geri oku.
 
+### Ölçümlü rapor (TÜRKAK'lı firma)
+
+- Firma TÜRKAK'lıyken açılan raporda kontrol saati **ölçülür**: kişi ekipmanın başında "Kontrole başla" ve "Kontrolü bitir" der. Bu raporda
+  başlangıç / bitiş yazılmaz ve dağıtılmaz; `rapor_saat_plani` ve `raporlara_yaz` o raporların saatine dokunmaz, sonuçta hangilerinin atlandığını söyler.
+- Kullanıcı saat dağıtmanı isterse yapma; hangi raporlarda kontrolün başlatılmadığını ya da sürdüğünü söyle.
+- Saat ancak kullanıcının **kendi söylediği gerekçeyle** düzeltilir: `kontrol_saat_duzelt` (bas, bit, gerekce). Gerekçeyi sen üretme; söylenmediyse sor.
+
 ### Çakışma ve sınırlar
 
 - Saatleri değiştirdikten sonra planın **öteki raporlarıyla** çakışma kaldı mı bak ve söyle.

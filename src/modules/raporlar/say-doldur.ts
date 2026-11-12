@@ -268,7 +268,11 @@ export const SORU_ISARETLI = /\?\s*$/, SORU_ISARETI_NEDENI = "soru işaretiyle b
 /** 557: ölçüm cihazı seçimi (sunucu işlemi — ekran yapar, sonucu sonra yazar) */
 export interface CihazIstegi { yer: string; ad: string; turId: string; cihazId: string | null }
 /** 557: elle yapılabilen ama tanımdan bilinmeyenler — künye kilidi ve kayıttaki künye, ölçüm cihazı satırları */
+/** 2026-11-12 (göç 0128; pkproje.md §11 K8): ölçümlü (TÜRKAK'lı firmada açılmış) raporda başlangıç / bitiş saati yazılmaz — S.A.Y'a dönen neden */
+export const OLCUMLU_SAAT = "kontrol saati ölçülür; yazılmaz (kontrolü kişi başlatıp bitirir; düzeltme yalnız gerekçeyle — kontrol_saat_duzelt)";
 export interface KomutEki {
+  /** ölçümlü rapor: başlangıç / bitiş kutuları yazılamaz (K8) */
+  olcumlu?: boolean;
   kunyeKilit?: ReadonlySet<KunyeAlani>;
   kunyeKayit?: Readonly<Partial<Record<KunyeAlani, string | null>>>;
   cihazlar?: readonly { turId: string; turAd: string; secili: string | null; secenekler: readonly { id: string; kod: string; ad: string }[] }[];
@@ -418,6 +422,7 @@ export function komutlariUygula(d: Durum, t: FormatTanimi, girisler: readonly Ra
     for (const k of TARIH_ANAHTARLARI) {
       const saatli = k === "bas" || k === "bit";
       kutular.set(`tarih:${k}`, { ad: TARIH_ADI[k], yer: { tur: "tarih", id: k }, denetle: (ham) => {
+        if (saatli && ek.olcumlu) return { neden: OLCUMLU_SAAT };
         const v = tarihOku(ham, saatli);
         return v ? { v } : { neden: saatli ? "tarih ve saat GG.AA.YYYY SS:DD biçiminde olmalı" : "tarih GG.AA.YYYY biçiminde olmalı" };
       } });

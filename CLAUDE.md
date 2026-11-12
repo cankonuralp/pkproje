@@ -526,7 +526,11 @@ pkproje/
                             sayfasında satır) · Firma ayarları "Kontrol denetimleri" paneli (kesim "kontrol", KontrolGirdisi; yalnız TÜRKAK'lı firmada
                             görünür) · e2e/kontrol.spec.ts: Yönetim'de deneme firması TÜRKAK'lı → rapor → Kontrole başla / bitir / Saati düzelt → model
                             geri alınır (afterAll; tek işçi) — sapma penceresinin e2e'si YOK (tam doldurulmuş rapor ister)
-                            · SIRADAKİ: T5 S.A.Y Chat Rapor modu + bağlantısız saat · T4 sapma + gerekçe + onay ekranı · T5 S.A.Y Chat Rapor modu + bağlantısız saat ·
+                            · T6 S.A.Y SAAT DAĞITMAZ (K8): raporlar/say-doldur.ts komutlariUygula(…, { olcumlu }) — ölçümlü raporda tarih:bas / tarih:bit
+                            yazılamaz (OLCUMLU_SAAT; ekran ve kapalı rapor aynı işlev), tamamlayıcı saat planlamaz (say-islemleri kapaliRaporaYaz),
+                            rapor_saat_plani ölçümlü raporları atlar ve söyler · yeni işlem kontrol_saat_duzelt (girdi KontrolDuzeltme; gerekçe kullanıcının
+                            sözü) · beceri B06 "Ölçümlü rapor" · kilit tests/say-olcumlu, bozan say-olcumlu
+                            · SIRADAKİ: T5 S.A.Y Chat Rapor modu + bağlantısız saat · T7 · T8 · T4 sapma + gerekçe + onay ekranı · T5 S.A.Y Chat Rapor modu + bağlantısız saat ·
                             T6 S.A.Y saat dağıtmaz · T7 zaman çizelgesi + günlük çizelge · T8 zaman damgasız imza reddi
   src/tanim/iller.ts        81 il + 973 ilçe (açık veri, MIT; bir kez alındı)
   src/tanim/bakanlik/       Bakanlığın resmî PDF'leri ZPKR01–05 (rapor formatı) + ZPKK01–05 (kriterler); 467: ZPKR06 / ZPKK06 kule kren,
