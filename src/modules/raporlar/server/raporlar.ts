@@ -1369,7 +1369,8 @@ export async function imzaliYukle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaI
   const t = imzaliTaban(imzasiz, b);
   if ("neden" in t) return { durum: "gecersiz", hatalar: { dosya: t.neden } };
   /* IMZA-SERVISI.md ES1 (yükleme denetimi): eklenen imza kriptografik olarak sağlam, belgenin tamamını kapsıyor, nitelikli ve imza anında geçerli */
-  const kripto = ekImzaNedeni(t.taban, b);
+  /* 2026-11-12 (pkproje.md §11 K9): ölçümlü raporda zaman damgasız imza kabul edilmez */
+  const kripto = ekImzaNedeni(t.taban, b, new Date(), { damgaSart: e.r.olcumlu });
   if (kripto) return { durum: "gecersiz", hatalar: { dosya: kripto } };
   /* 2026-10-17 (teknik yönetici imzası): imzalanacak PDF teknik yöneticinin imzaladığıysa eklenen imza raporu YAZANIN olmalı (ad sertifikadan) —
      denetçi teknik yöneticinin yerine iki imzayı birden atamaz */
@@ -1541,7 +1542,7 @@ export async function teknikImzaliYukle(db: Sorgulayici, depo: Depo, kim: Kisi, 
   const imzasiz = await depo.oku(ham.anahtar, db), b = dosya.bayt;
   const tb = imzaliTaban(imzasiz, b);
   if ("neden" in tb) return { durum: "gecersiz", hatalar: { dosya: tb.neden } };
-  const kripto = ekImzaNedeni(tb.taban, b);
+  const kripto = ekImzaNedeni(tb.taban, b, new Date(), { damgaSart: e.r.olcumlu });
   if (kripto) return { durum: "gecersiz", hatalar: { dosya: kripto } };
   const n = imzaciNedeni(ekImzaIcerikleri(tb.taban, b), await kisininAdi(db, kim));
   if (n) return { durum: "gecersiz", hatalar: { dosya: n } };

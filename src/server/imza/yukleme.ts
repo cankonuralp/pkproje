@@ -22,19 +22,26 @@ import { gecerliMi } from "./sertifika.ts";
 const sagMi = (i: ImzaBilgisi) => i.butunluk === "tamam" && i.imzaDegeri === "tamam";
 const tarih = (iso: string | null) => (iso ? new Intl.DateTimeFormat("tr-TR", { timeZone: "Europe/Istanbul", dateStyle: "short" }).format(new Date(iso)) : "?");
 
-/** eklenen imzalar sağlam mı: değilse ekranda gösterilecek neden, sağlamsa null */
-export function ekImzaNedeni(imzasiz: Uint8Array, imzali: Uint8Array, simdi: Date = new Date()): string | null {
+/** 2026-11-12 (pkproje.md §11 K9 — reisim'in aktardığı: "e imza içinde attırdığı e imzalar geçersiz oldu patladı"): zaman damgasız imza sertifikanın
+    süresi dolunca ya da iptal edilince doğrulanamaz. Ölçümlü (TÜRKAK'lı firmada açılmış) raporda zaman damgasız imza kabul edilmez. */
+export const DAMGA_YOK = "Bu imzada zaman damgası yok. Zaman damgalı imzayla yeniden imzalayın.";
+
+/** eklenen imzalar sağlam mı: değilse ekranda gösterilecek neden, sağlamsa null. `kural.damgaSart`: her imzada sağlam bir imza zaman damgası (ya da
+    eklenen imzaları kapsayan sağlam bir belge zaman damgası) aranır */
+export function ekImzaNedeni(imzasiz: Uint8Array, imzali: Uint8Array, simdi: Date = new Date(), kural: { damgaSart?: boolean } = {}): string | null {
   /* çözümleyici ve kapı aynı anı görür (damgasız imzada çözümleyicinin anı da bu); yüklemelerde simdi verilmez (şu an), testte verilir */
   const c = pdfImzalariniCozumle(imzali, { simdi });
   const ek = c.imzalar.filter((i) => i.kapsamSon > imzasiz.length);
   const imzalar = ek.filter((i) => i.tur === "imza");
   if (!imzalar.length) return "PDF'te doğrulanabilir bir e-imza bulunamadı. Kartınızdaki nitelikli sertifikayla imzalayıp yeniden yükleyin.";
+  const belgeDamgali = ek.some((i) => i.tur === "belge_damgasi" && sagMi(i));
   for (const i of ek) {
     if (i.boslukBas < imzasiz.length) return "PDF'teki imza belgenin tamamını kapsamıyor.";
     if (i.tur === "belge_damgasi") { if (!sagMi(i)) return "PDF'teki zaman damgası doğrulanamadı."; continue; }
     if (i.butunluk === "bozuk") return "PDF imzalandıktan sonra değiştirilmiş; imza bu belgeyi doğrulamıyor.";
     if (!sagMi(i)) return "PDF'teki e-imza doğrulanamadı (imza okunamadı ya da tutmuyor).";
     if (i.damga && (i.damga.iz !== "tamam" || i.damga.imza !== "tamam")) return "İmzadaki zaman damgası doğrulanamadı.";
+    if (kural.damgaSart && !i.damga && !belgeDamgali) return DAMGA_YOK;
     const s = i.imzalayan;
     if (!s) return "PDF'teki imzanın sertifikası okunamadı.";
     if (i.sertifikaBagi !== true) return "PDF'teki imzanın sertifikası imzaya bağlı değil (imzalayan sertifikası doğrulanamadı).";
