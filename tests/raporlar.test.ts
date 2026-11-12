@@ -29,7 +29,7 @@ import { taslakBaslat, taslakKaydet, yayinla } from "../src/modules/rapor-format
 import { ayEkle } from "../src/modules/raporlar/sema.ts";
 import {
   cihazEkle, cihazKaldir, EKIPTE_DEGIL, fotoEkle, fotoSil, kayitliOnayaGonder, KONTROL_BITMEDI, kontrolBasla, kontrolBitir, kontrolSaatDuzelt, onayaGonder, raporBelgesiVerisi, raporFormatGuncelle, raporKaydet, raporKopyala, raporKunyeGuncelle, raporOlustur,
-  raporListesi, raporSil, sahaRaporu, type RaporYazma,
+  raporListesi, raporSapmalariOku, raporSil, sahaRaporu, type RaporYazma,
 } from "../src/modules/raporlar/server/raporlar.ts";
 import { raporDurumYaz } from "../src/modules/raporlar/server/onay-baglanti.ts";
 import { formatRaporSayilari } from "../src/modules/raporlar/server/format-baglanti.ts";
@@ -1194,8 +1194,24 @@ test("kontrol saati (0128): TÜRKAK'lı firmada açılan rapor ölçümlü — s
     assert.deepEqual([d.olcum!.durum, d.olcum!.bas, d.olcum!.bit, d.tarih.bas, d.tarih.bit], ["bitti", `${dun}T09:00`, `${dun}T09:40`, `${dun}T09:00`, `${dun}T09:40`]);
     assert.deepEqual([d.olcum!.duzeltme!.olculenBas, d.olcum!.duzeltme!.olculenBit, d.olcum!.duzeltme!.gerekce, d.olcum!.duzeltme!.kim], [olculen.bas, olculen.bit, GEREKCE, "Deneme"]);
     /* bitmiş kontrolle onay kapısı açılır (eksik varsa eksik döner — kontrol engeli değil); gönderim bitişi değiştirmez */
+    /* K6 (göç 0129): kontrol dün yapıldı, plan bugün → "plan günü dışı" sapması. Gerekçesiz gönderilmez; gerekçeyle gider ve raporda saklanır.
+       Zorunlu alan / cihaz eksikse eksikler önce döner (sapma denetimi ondan sonra) — o durumda yalnız sapma listesi sınanır */
+    const sp = (await a(FA.den1, (db) => raporSapmalariOku(db, FA.den1, r.id)))!;
+    assert.deepEqual(sp.map((x) => x.tur), ["gun"]);
+    assert.equal(await a(FA.den2, (db) => raporSapmalariOku(db, FA.den2, r.id)), null, "raporu görmeyen sapmayı da göremez");
     const g2 = await gonder(FA.den1, r.id, d.surum, girdi());
-    assert.ok(g2.durum === "tamam" || g2.durum === "eksik", JSON.stringify(g2));
+    assert.ok(g2.durum === "gecersiz" || g2.durum === "eksik", JSON.stringify(g2));
+    if (g2.durum === "gecersiz") {
+      assert.deepEqual(g2.hatalar, { "sapma.gun": sp[0].metin });
+      d = (await sr(FA.den1, r.id))!;
+      assert.equal((await gonder(FA.den1, r.id, d.surum, { ...girdi(), sapma: { gun: "kısa" } })).durum, "gecersiz", "kısa gerekçe yetmez");
+      d = (await sr(FA.den1, r.id))!;
+      assert.equal(d.durum, "taslak");
+      const GUN_GEREKCE = "Müşteri isteğiyle bir gün önce yapıldı";
+      tamam(await gonder(FA.den1, r.id, d.surum, { ...girdi(), sapma: { gun: GUN_GEREKCE } }));
+      assert.deepEqual((await sql<{ s: unknown }>(A, "SELECT sapmalar AS s FROM rapor WHERE id = $1", [r.id])).rows[0].s, [{ tur: "gun", metin: sp[0].metin, gerekce: GUN_GEREKCE }]);
+      assert.equal((await sr(FA.den1, r.id))!.durum, "onayda");
+    }
     d = (await sr(FA.den1, r.id))!;
     assert.deepEqual([d.tarih.bas, d.tarih.bit], [`${dun}T09:00`, `${dun}T09:40`]);
     /* veritabanı: ölçülen bitiş ve başlangıç değişmez, kayıt silinmez, raporun modeli değişmez; başka firma görmez; iz yazılır */

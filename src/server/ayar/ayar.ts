@@ -116,6 +116,9 @@ export const AYAR_BOLUMLERI = {
   /** Çalışma modeli (2026-11-12, göç 0127; pkproje.md §11 K1): TÜRKAK'lı / TÜRKAK'sız. Yazan YALNIZ Yönetim (firma_yonetim_model — uygulama rolü
       bu bölümü yazamaz, firma_ayar_calisma_kilidi); firma kendi ayarlarında yalnız görür. Kayıt yoksa TÜRKAK'sız. */
   calisma: z.object({ model: z.enum(CALISMA_MODELLERI).default("siz") }),
+  /** Kontrol denetimleri (2026-11-12, göç 0129; pkproje.md §11 K7): iki tesis arası en az süre (dk) — ölçümlü raporda başka tesisteki kontrolle arası
+      bundan kısaysa sapma; 0 = denetlenmez (başlangıç) */
+  kontrol: z.object({ tesis_arasi_dk: gun(0, 600).default(0) }),
 } as const;
 export type AyarBolumu = keyof typeof AYAR_BOLUMLERI;
 export type Ayar<B extends AyarBolumu> = z.infer<(typeof AYAR_BOLUMLERI)[B]>;

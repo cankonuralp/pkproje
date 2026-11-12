@@ -78,6 +78,7 @@ import {
 import { sayRaporBagla, type SayEkranSonucu, type SayGeriAl, type SayOkumaOzeti } from "../../say/ui/baglam";
 import type { SatirEkle } from "../../../server/yz/say";
 import { KontrolKutusu } from "./KontrolKutusu";
+import { SapmaPenceresi } from "./SapmaPenceresi";
 import stil from "./raporlar.module.css";
 
 type Gorunum = SahaRaporuVerisi;
@@ -498,6 +499,25 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
       metin: `${v.no} teknik yöneticinin onayına gider. Onaylanana ya da geri gönderilene kadar raporda değişiklik yapılamaz.` }))) return;
     gonderIc();
   };
+  /* 2026-11-12 (göç 0129; pkproje.md §11 K6): ölçümlü raporda sunucunun bulduğu sapmalar ("sapma.<tür>" hataları) — gerekçe penceresi açılır */
+  const [sapma, setSapma] = useState<{ tur: string; metin: string }[] | null>(null);
+  const sapmalariAyir = (r: RaporYaniti) => Object.entries(r.hatalar ?? {}).filter(([k]) => k.startsWith("sapma.")).map(([k, metin]) => ({ tur: k.slice(6), metin }));
+  const gonderildi = (r: RaporYaniti) => { kaydedildi(); onerileriKapat(); void kayitBilgileriniKapat(v.id); setIsaretli(new Set()); bildir(r.bildirim ?? "Rapor onaya gönderildi."); yenile(); window.scrollTo({ top: 0 }); };
+  const sapmaGonder = (gerekceler: Record<string, string>) => baslat(async () => {
+    const w = vRef.current;
+    let r: RaporYaniti;
+    try { r = await onayaGonderEylemi(w.id, w.surum, { ...girdi(), sapma: gerekceler }); } catch (e) {
+      if (!agHatasi(e)) throw e;
+      setSapma(null); setGenel("Bağlantı koptu; rapor kaydedildi, gönderilmedi. Bağlantı gelince yeniden gönderin.");
+      return;
+    }
+    if (r.tamam) { setSapma(null); gonderildi(r); return; }
+    const sp = sapmalariAyir(r);
+    if (sp.length) { setSapma(sp); yenile(); return; }
+    setSapma(null);
+    if (r.eksikler) { eksikGoster(r.eksikler, "Rapor kaydedildi, gönderilmedi."); yenile(); return; }
+    yanitHatasi(r); yenile();
+  });
   const gonderIc = () => baslat(async () => {
     const yon = "bağlantı gelince onaya gider";
     if (yeni || cevrimdisiMi() || bekleyenIs) { await kuyruga("rapor.gonder", cevrimdisiMi() ? `Cihaza kaydedildi: ${yon}.` : "Onaya gönderiliyor…"); return; }
@@ -511,7 +531,9 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
       kaydedildi(); onerileriKapat(); eksikGoster(r.eksikler, "Rapor kaydedildi, gönderilmedi."); yenile();
       return;
     }
-    if (r.tamam) { kaydedildi(); onerileriKapat(); void kayitBilgileriniKapat(v.id); setIsaretli(new Set()); bildir(r.bildirim ?? "Rapor onaya gönderildi."); yenile(); window.scrollTo({ top: 0 }); return; }
+    if (r.tamam) { gonderildi(r); return; }
+    const sp = sapmalariAyir(r);
+    if (sp.length) { kaydedildi(); onerileriKapat(); yenile(); setSapma(sp); return; }   /* rapor kaydedildi; gerekçe bekleniyor */
     yanitHatasi(r);
   });
   /* 472: örnek raporda Onaya gönder yalnız denetler — gerçek Onaya gönder'in eksikleri (boş zorunlu alan, cihaz), aynı uyarı ve kayma */
@@ -1069,6 +1091,7 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
           <TalimatTusu buyuk ad="Genel muayene" baslik="Genel muayene talimatı" parcalar={[{ metin: v.tanim.gorunum.talimat }]} />
         </>} />
       <AsamaCizgisi durum={v.durum} />
+      {sapma && <SapmaPenceresi sapmalar={sapma} mesgul={mesgul} onKapat={() => setSapma(null)} gonder={sapmaGonder} />}
       {seritler.length > 0 && <SeritKap>{seritler}</SeritKap>}
 
       <div className={stil.bolumler}>

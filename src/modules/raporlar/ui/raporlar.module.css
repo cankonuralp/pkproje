@@ -320,3 +320,6 @@ button.silTus { color: var(--hata-yazi); }
 .kontrolOzet dd { margin: 0; overflow-wrap: anywhere; }
 .kontrolOzet s { margin-left: 8px; color: var(--yazi2); }
 .kontrolGenis { grid-column: 1 / -1; }
+/* 2026-11-12 SAPMA GEREKÇESİ (göç 0129): pencerede her sapma — uyarı şeridi + gerekçe alanı, aralarında boşluk */
+.sapma { display: flex; flex-direction: column; gap: 8px; }
+.sapma + .sapma { margin-top: 16px; }

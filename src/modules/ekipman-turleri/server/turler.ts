@@ -298,6 +298,13 @@ export async function turRaporBilgisi(db: Sorgulayici, id: string): Promise<{ id
   return x ? { id: x.id, ad: x.ad, kod: x.kod, brans: x.brans, grup: x.grup, periyot: x.periyot, kontrolStd: x.kontrol_std, cihazTurleri: x.cihaz_turleri } : null;
 }
 
+/** Raporlar için (2026-11-12, göç 0129; pkproje.md §11 K7): türün en kısa kontrol süresi (dk) — ölçümlü raporda bundan kısa süren kontrol sapmadır;
+    tanımsızsa null (denetlenmez). Yetki ÇAĞIRANDA. */
+export async function turEnKisaSure(db: Sorgulayici, id: string): Promise<number | null> {
+  if (!UUID.test(id)) return null;
+  return (await db.sorgu<{ en_kisa: number | null }>("SELECT en_kisa FROM ekipman_turu WHERE id = $1", [id])).rows[0]?.en_kisa ?? null;
+}
+
 /** Raporlar için (mesai, 212): tür başına bir raporun süresi (dk; tanımsızsa null — mesaiye sayılmaz). Yetki ÇAĞIRANDA. */
 export async function turSureleri(db: Sorgulayici): Promise<Map<string, number | null>> {
   return new Map((await db.sorgu<{ id: string; sure: number | null }>("SELECT id::text, sure FROM ekipman_turu")).rows.map((x) => [x.id, x.sure]));

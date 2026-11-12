@@ -516,7 +516,14 @@ pkproje/
                             belgeye basılmaz · raporlar.ts fotoEkle(…, kanit) · ekran FotoListesi (cekimOku, konumAl; satırda "Çekim … · konum kayıtlı / yok") ·
                             kuyruk rapor.foto girdisinde cekim / konum · src/proxy.ts Permissions-Policy geolocation=(self) · kilit tests/foto-kanit, bozan
                             foto-kanit · konum tesisle KARŞILAŞTIRILMIYOR (T4)
-                            · SIRADAKİ: T4 sapma denetimleri · T4 sapma + gerekçe + onay ekranı · T5 S.A.Y Chat Rapor modu + bağlantısız saat ·
+                            · T4a SAPMA DENETİMLERİ (göç 0129: rapor.sapmalar, ekipman_turu.en_kisa): raporlar/sapma.ts (saf) — ölçümlü rapor onaya
+                            gönderilirken beş denetim (kisa · cakisma · gecis · gun · foto); kesin engel değil, her sapmaya gerekçe ≥ 10 şart ·
+                            raporlar.ts onayaGonder eksikse "sapma.<tür>" hatalarıyla döner, gerekçeler girdi.sapma'da gelir, rapor.sapmalar'a yazılır;
+                            raporSapmalariOku (yazmadan) · gozdenGecirme'ye kontrol süresi / elle düzeltme / sapma + gerekçe (onay ekranı) · ekran
+                            raporlar/ui/SapmaPenceresi.tsx · okuyucular ekipman-turleri turEnKisaSure, planlar planGunleri, ayar bölümü "kontrol"
+                            (tesis_arasi_dk; 0 = kapalı) · kilit tests/sapma, raporlar (PG), bozan sapma · T4b EKSİK: türün en kısa süresi ve iki tesis
+                            arası süre için AYAR EKRANI yok (ikisi de boş → "kisa" ve "gecis" denetimi bugün çalışmaz), TÜRKAK'lı e2e tohum firması yok
+                            · SIRADAKİ: T4b ayar ekranları + e2e · T4 sapma + gerekçe + onay ekranı · T5 S.A.Y Chat Rapor modu + bağlantısız saat ·
                             T6 S.A.Y saat dağıtmaz · T7 zaman çizelgesi + günlük çizelge · T8 zaman damgasız imza reddi
   src/tanim/iller.ts        81 il + 973 ilçe (açık veri, MIT; bir kez alındı)
   src/tanim/bakanlik/       Bakanlığın resmî PDF'leri ZPKR01–05 (rapor formatı) + ZPKK01–05 (kriterler); 467: ZPKR06 / ZPKK06 kule kren,

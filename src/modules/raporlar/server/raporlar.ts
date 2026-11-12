@@ -29,12 +29,12 @@ import { bilgiAlanlari, ekipmanAlanlari, testAlanlari } from "../doldur.ts";
 import { fotoKutulari, sartliAcik } from "../../../format/duzen.ts";
 import { yzHazirMi } from "../../../server/yz/kullanim.ts";
 import { ekipmanEtiketi, ekipmanKilitle } from "../../ekipman/server/ekipman.ts";
-import { turRaporBilgisi } from "../../ekipman-turleri/server/turler.ts";
+import { turEnKisaSure, turRaporBilgisi } from "../../ekipman-turleri/server/turler.ts";
 import { tesisMusteriIletisim } from "../../musteriler/server/musteriler.ts";
 import { cihazTuruOzetleri, raporCihazlari } from "../../olcum-cihazlari/server/cihazlar.ts";
 import { personelOzetleri } from "../../personel/server/personel.ts";
 import { raporKapisi, TAMAMLANDI_RAPOR, type PlanDurumu } from "../../planlar/sema.ts";
-import { denetimeBasla, ekipmanEklemeDurumu, ekipmanEkipPlanlari, kodDurumu, kunyeGuncelle, plandakiEkipman, plandakiEkipmanlar, raporIcinPlan, yeniEkipman, type Kunye, type RaporPlani } from "../../planlar/server/plan-ici.ts";
+import { planGunleri, denetimeBasla, ekipmanEklemeDurumu, ekipmanEkipPlanlari, kodDurumu, kunyeGuncelle, plandakiEkipman, plandakiEkipmanlar, raporIcinPlan, yeniEkipman, type Kunye, type RaporPlani } from "../../planlar/server/plan-ici.ts";
 import { baskaPlanRaporu, oncekiKontrol, oncekiRaporIcerigi, oncekiRaporlar, surumluRaporEkipmani, takipAdaylari, takipKaynagi, type OncekiKontrol } from "./onceki.ts";
 import { formatSurumuOku as formatSurumuHam, yayindakiFormat as yayindakiHam } from "../../rapor-format/server/formatlar.ts";
 import { sahaTanimi } from "../../../format/tablo.ts";
@@ -52,6 +52,7 @@ import { TANIMLAR } from "../../../tanim/tanimlar.ts";
 import { ayarOku, calismaModeli, firmaBelgeKunyesi } from "../../../server/ayar/ayar.ts";
 import { exifCekimZamani } from "../../../server/dosya/exif.ts";
 import { fotoKaniti, type FotoKaniti } from "../foto-kanit.ts";
+import { sapmaGerekceleri, sapmaKarari, sapmalar, type Sapma, type SapmaKaydi } from "../sapma.ts";
 import { acikKontrol, etkinSaat, kontrolBaslat, kontrolBitirYaz, kontrolDurumu, kontrolDuzeltYaz, kontrolOku, type KontrolAnahtari, type KontrolDurumu, type KontrolKaynagi,
   type KontrolSatiri } from "./kontrol.ts";
 import { kayitDosyasi } from "../../../server/dosya/dosya.ts";
@@ -86,7 +87,7 @@ export const OKUMA_FOTO_EN_COK = 20;
 const FOTO_MADDE_EN_COK = 10;
 const RAPOR = tablo({
   ad: "rapor", sutunlar: ["no", "plan_id", "ekipman_id", "tur_id", "format_id", "personel_id", "durum", "kunye", "kunye_surum", "ekipman_bilgi", "bas", "bit",
-    "sonraki", "takip", "rapor_tarihi", "cevaplar", "cihazlar", "fotolar", "sonuc", "sonuc_oto", "kopya_kaynak", "takip_kaynak", "silindi"],
+    "sonraki", "takip", "rapor_tarihi", "cevaplar", "cihazlar", "fotolar", "sonuc", "sonuc_oto", "kopya_kaynak", "takip_kaynak", "silindi", "sapmalar"],
   gizli: ["cevaplar"],
 });
 /* 2026-10-24 (serbest düzen): raporun kullandığı tanım — serbest tablo bölümleri cevaplarının sanal bölümlerine açık (format/tablo.ts sahaTanimi):
@@ -278,13 +279,15 @@ interface RaporSatiri {
   surum: number; olustu: Date; degisti: Date;
   /** 2026-11-12 (göç 0128, K10): rapor açıldığı anda firma TÜRKAK'lıydı — kontrol saati ölçülür, elle yazılmaz */
   olcumlu: boolean;
+  /** 2026-11-12 (göç 0129, K6): onaya gönderilirken bulunan sapmalar ve gerekçeleri */
+  sapmalar: SapmaKaydi[];
 }
 async function raporOku(db: Sorgulayici, id: string, kilitle = false): Promise<RaporSatiri | null> {
   if (!UUID.test(id)) return null;
   return (await db.sorgu<RaporSatiri>(
     `SELECT id::text, no, plan_id::text, ekipman_id::text, tur_id::text, format_id::text, personel_id::text, hesap_id::text, durum, kunye, kunye_surum, ekipman_bilgi,
        bas, bit, sonraki::text, takip::text, rapor_tarihi::text, cevaplar, cihazlar, fotolar, sonuc, sonuc_oto, gonderildi, kopya_kaynak::text, takip_kaynak::text, revizyon, onay,
-       onay_hesap::text, surum, olustu, degisti, olcumlu
+       onay_hesap::text, surum, olustu, degisti, olcumlu, sapmalar
      FROM rapor WHERE id = $1 AND silindi IS NULL${kilitle ? " FOR UPDATE" : ""}`, [id])).rows[0] ?? null;
 }
 
@@ -742,6 +745,27 @@ async function saatiRaporaYaz(db: Sorgulayici, kim: Kisi, e: Erisim, k: KontrolS
   }
   return sonuc(await guncelle(db, RAPOR, e.r.id, e.r.surum, alan, { kim: kim.ad, ne: "rapor.kontrol_saati", gerekce: gorunenNo(e.r.no, e.r.revizyon) }), e.r.id, bildirim);
 }
+/** ölçümlü, kontrolü bitmiş raporun sapmaları (K6; ../sapma.ts): çakışma yalnız aynı kişinin öteki ÖLÇÜMLÜ raporlarıyla (elle yazılmış eski saatlerle değil) */
+async function raporSapmalari(db: Sorgulayici, r: RaporSatiri): Promise<Sapma[]> {
+  if (!r.olcumlu || !r.bit) return [];
+  const GUN_MS = 864e5;
+  const diger = (await db.sorgu<{ no: string; revizyon: number; plan_id: string; bas: Date; bit: Date }>(
+    `SELECT no, revizyon, plan_id::text, bas, bit FROM rapor
+     WHERE personel_id = $1 AND id <> $2 AND silindi IS NULL AND olcumlu AND bit IS NOT NULL AND bas < $4 AND bit > $3`,
+    [r.personel_id, r.id, new Date(r.bas.getTime() - GUN_MS), new Date(r.bit.getTime() + GUN_MS)])).rows;
+  const planlar = await planGunleri(db, [r.plan_id, ...diger.map((x) => x.plan_id)]);
+  const p = planlar.get(r.plan_id), gun = GUN.format(r.bas);
+  return sapmalar({
+    bas: zamanOku(r.bas)!, bit: zamanOku(r.bit)!, enKisaDk: await turEnKisaSure(db, r.tur_id), tesis: p?.tesisId ?? "", planBas: p?.baslangic ?? gun, planBit: p?.bitis ?? gun,
+    digerleri: diger.map((x) => ({ no: gorunenNo(x.no, x.revizyon), bas: zamanOku(x.bas)!, bit: zamanOku(x.bit)!, tesis: planlar.get(x.plan_id)?.tesisId ?? null })),
+    tesisArasiDk: (await ayarOku(db, "kontrol")).deger.tesis_arasi_dk, fotolar: r.fotolar.filter((f) => !f.okuma).map((f) => ({ ad: f.ad, cekim: f.cekim })),
+  });
+}
+/** raporu görenin okuduğu sapma listesi (yazmaz): ekran ve denetimler için; görmeyene null */
+export async function raporSapmalariOku(db: Sorgulayici, kim: Kisi, id: string): Promise<Sapma[] | null> {
+  const e = await erisim(db, kim, id);
+  return e ? raporSapmalari(db, e.r) : null;
+}
 const OLCUMSUZ: RaporYazma = { durum: "red", neden: "Bu raporda kontrol saati ölçülmez; başlangıç ve bitiş elle yazılır." };
 
 /** Kontrole başla: yazan, Yeni raporunda; aynı kişide süren başka kontrol varsa başlamaz (K3) */
@@ -862,8 +886,16 @@ export async function onayaGonder(db: Sorgulayici, kim: Kisi, id: string, surum:
   /* 595 (madde 12): şartlı uygun yalnız formatın sonuç bölümü açtıysa (eski sürümle açılan raporda seçenek yoksa seçilemez) */
   if (sonucu === "sartli" && !sartliAcik(format.tanim)) return { durum: "gecersiz", hatalar: { sonuc: "Bu raporun formatında “Şartlı uygun” seçeneği yok." } };
   const basGun = muayeneGunu;
+  /* 2026-11-12 (göç 0129; pkproje.md §11 K6): ölçümlü raporda sapma kesin engel değil — her sapmanın gerekçesi (en az 10 karakter) yazılmadan rapor
+     gönderilmez; sapmalar "sapma.<tür>" anahtarıyla döner (ekran gerekçe penceresini açar), gerekçeleriyle raporda saklanır */
+  let sapmaKaydi: SapmaKaydi[] = [];
+  if (r.olcumlu) {
+    const karar = sapmaKarari(await raporSapmalari(db, r), sapmaGerekceleri((girdi as { sapma?: unknown } | null)?.sapma));
+    if ("eksik" in karar) return { durum: "gecersiz", hatalar: Object.fromEntries(karar.eksik.map((x) => [`sapma.${x.tur}`, x.metin])) };
+    sapmaKaydi = karar.kayit;
+  }
   const g = await guncelle(db, RAPOR, id, r.surum, {
-    durum: "onayda", cevaplar: { ...cev, sonuc: sonucu }, sonuc: sonucu, sonuc_oto: oto,
+    durum: "onayda", cevaplar: { ...cev, sonuc: sonucu }, sonuc: sonucu, sonuc_oto: oto, sapmalar: jsonDizi(sapmaKaydi),
     bit: r.bit ?? new Date(Math.max(Date.now(), r.bas.getTime())), sonraki: r.sonraki ?? ayEkle(basGun, e.tur.periyot), rapor_tarihi: r.rapor_tarihi ?? basGun,
   }, { kim: kim.ad, ne: "rapor.onaya_gonder", gerekce: gorunenNo(r.no, r.revizyon) });
   if (g.durum !== "tamam" && g.durum !== "degisiklik_yok") return sonuc(g, id, "");
@@ -1165,6 +1197,16 @@ export async function gozdenGecirme(db: Sorgulayici, id: string): Promise<Gozden
     kn.isg ? { tamam: true, metin: `İSG-KATİP ${kn.isg}` } : { tamam: false, metin: "İSG-KATİP kaydı yok" },
     { tamam: true, metin: `Kontrol metodu: ${kn.metot || "-"}` },
   ];
+  /* 2026-11-12 (göç 0128 / 0129; pkproje.md §11 K6): ölçümlü raporda kontrol süresi, elle düzeltme ve gerekçeli sapmalar — teknik yönetici görür */
+  if (r.olcumlu) {
+    const o = await olcumGorunumu(db, r);
+    if (o?.bas && o.bit) {
+      const sure = Math.round((new Date(zamanYaz(o.bit)!).getTime() - new Date(zamanYaz(o.bas)!).getTime()) / 60_000);
+      l.push({ tamam: !o.duzeltme, metin: `Kontrol ${tarihNo(o.bas)} ${o.bas.slice(11)} – ${o.bit.slice(11)} (${sure} dk)${o.duzeltme
+        ? ` · saat ${o.duzeltme.olculenBas ? "elle düzeltildi" : "elle yazıldı"}: ${o.duzeltme.gerekce}` : " · ölçüldü"}` });
+    }
+    for (const x of r.sapmalar) l.push({ tamam: false, metin: `Sapma: ${x.metin} Gerekçe: ${x.gerekce}` });
+  }
   if (maddeSay) { const k = kusur("liste"); l.push({ tamam: !k, metin: `${maddeSay} kriter yapıldı · ${k ? `${k} uygun değil madde` : "hepsi uygun"}` }); }
   if (bloklar("olcum").size) { const k = kusur("olcum"); l.push({ tamam: !k, metin: `${satirSay} ölçüm satırı · ${k ? `${k} uygun değil satır` : "hepsi uygun"}` }); }
   if (testSay) { const k = kusur("test"); l.push({ tamam: !k, metin: `${testSay} test değeri · ${k ? `${k} sınır dışı` : "hepsi sınır içinde"}` }); }

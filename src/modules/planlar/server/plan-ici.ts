@@ -568,6 +568,14 @@ export async function ekipmanEklemeDurumu(db: Sorgulayici, kim: Kisi, planId: st
   return e.p.durum === "tamamlandi" && izinler(kim, { ...e, p: { ...e.p, durum: "denetimde" } }).ekipmanEkle ? "tamamlandi" : "yok";
 }
 /** planı görebilene planın rapor için gereken bilgisi; göremeyene null */
+/** Raporlar için (2026-11-12, göç 0129; pkproje.md §11 K6 sapma denetimleri): planların tesisi ve günleri. Yetki ÇAĞIRANDA (rapor yazılabilirse). */
+export async function planGunleri(db: Sorgulayici, idler: readonly string[]): Promise<Map<string, { tesisId: string; baslangic: string; bitis: string }>> {
+  const l = [...new Set(idler)].filter((x) => UUID.test(x));
+  if (!l.length) return new Map();
+  return new Map((await db.sorgu<{ id: string; tesis_id: string; baslangic: string; bitis: string }>(
+    "SELECT id::text, tesis_id::text, baslangic::text, bitis::text FROM plan WHERE id = ANY ($1::uuid[])", [l])).rows.map((x) => [x.id, { tesisId: x.tesis_id, baslangic: x.baslangic, bitis: x.bitis }]));
+}
+
 export async function raporIcinPlan(db: Sorgulayici, kim: Kisi, planId: string): Promise<RaporPlani | null> {
   const e = await erisim(db, kim, planId);
   if (!e) return null;
