@@ -2,6 +2,7 @@
    yonetim_firma_ac) biçimi ve ayrılmış adları AYRICA denetler; ayrılmış ad listesi ikisinde aynı (kilit testi). İletiler maketle aynı. */
 import { ALAN_BICIMI, alanSadelestir, YEREL_BICIMI } from "../../server/eposta/kimden.ts";
 import { z } from "../../sema/ortak.ts";
+import { CALISMA_MODELLERI } from "../../tanim/calisma-modeli.ts";
 
 /** firma adresi olamayacak adlar (bize ayrılmış) — 0050'deki listeyle aynı */
 export const AYRILMIS = ["www", "yonetim", "api", "mail", "destek", "probata", "test", "demo"] as const;
@@ -24,7 +25,11 @@ export const firmaAcSemasi = (ekAyrilmis: readonly string[] = []) => z.object({
     .refine((s) => s.length >= 3 && s.split(" ").length >= 2, "Ad ve soyad yazılmalı.")),
   eposta: z.preprocess((s) => (typeof s === "string" ? s.trim().toLowerCase() : s),
     z.string().min(1, "E-posta yazılmalı.").max(120, "En çok 120 karakter.").pipe(z.email({ error: "Geçerli bir e-posta değil." }))),
+  /* 2026-11-12 (göç 0127; reisim: "firma açarken türkaklı türkaksız diye seçenek olsun yönetimde ona göre açalım"): çalışma modeli — seçilmezse TÜRKAK'sız */
+  model: z.enum(CALISMA_MODELLERI, { error: "Çalışma modeli seçilmeli." }).default("siz"),
 });
+/** çalışma modelini sonradan değiştirme (Yönetim › firma › Çalışma modeli) */
+export const ModelGirdisi = z.object({ model: z.enum(CALISMA_MODELLERI, { error: "Çalışma modeli seçilmeli." }) });
 export type FirmaAcGirdisi = z.output<ReturnType<typeof firmaAcSemasi>>;
 
 /* FIRMA-VT FV11 (2026-10-16, K2): firmanın gönderen alan adı (probata'nın Resend hesabına eklenir) ve genel adresin yerel kısmı (genel adres =

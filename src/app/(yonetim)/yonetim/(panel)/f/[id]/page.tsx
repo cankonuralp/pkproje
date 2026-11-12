@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { depoTuru } from "../../../../../../modules/yonetim/ui/ortak";
 import { epostaAcik, yonetimCalistirici } from "../../../../../../modules/yonetim/server/calistirici";
 import { gonderimGorunumu } from "../../../../../../modules/yonetim/server/eposta";
-import { firmaOzetiYonet, sayOlcumuYonet } from "../../../../../../modules/yonetim/server/firma-tarafi";
+import { firmaOzetiYonet, modelOkuYonet, sayOlcumuYonet } from "../../../../../../modules/yonetim/server/firma-tarafi";
 import { kurulumGorunumu } from "../../../../../../modules/yonetim/server/kurulum";
 import { yedekYonetimGorunumu } from "../../../../../../modules/yonetim/server/yedek";
 import { signBaglantisiOku } from "../../../../../../modules/yonetim/server/sign";
@@ -37,5 +37,7 @@ export default async function YonetimFirmaSayfasi({ params }: { params: Promise<
   const yedek = f && f.durum !== "kurulum" ? await yedekYonetimGorunumu(f.id).catch(() => null) : null;
   /* 2026-11-05 (göç 0122): probata sign bağlantısı */
   const sign = f && f.durum !== "kurulum" ? await signBaglantisiOku(c, f.id).catch(() => null) : null;
-  return <FirmaSayfasi firma={f} ozet={ozet} kurulum={kurulum} gonderim={gonderim} epostaAcik={epostaAcik()} ortakAlan={ortakAlan} anaAlan={anaAlan()} depo={depoTuru(process.env.PROBATA_DEPO)} olcum={olcum} yedek={yedek} sign={sign} />;
+  /* 2026-11-12 (göç 0127): çalışma modeli (TÜRKAK'lı / TÜRKAK'sız) ve değişiklik geçmişi */
+  const model = f && f.durum !== "kurulum" ? await modelOkuYonet(c, f.id).catch(() => null) : null;
+  return <FirmaSayfasi model={model} firma={f} ozet={ozet} kurulum={kurulum} gonderim={gonderim} epostaAcik={epostaAcik()} ortakAlan={ortakAlan} anaAlan={anaAlan()} depo={depoTuru(process.env.PROBATA_DEPO)} olcum={olcum} yedek={yedek} sign={sign} />;
 }

@@ -16,7 +16,9 @@ import { useOnayla } from "../../../components/pencere/Onay";
 import { AltSatir, Bolum, Kirinti, Kod, NesneBasi, Rozet, SeritKap, type RozetTuru } from "../../../components/sayfa/Sayfa";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
-import type { FirmaOzeti, SayOlcumu } from "../server/firma-tarafi";
+import { MODEL_ADI } from "../../../tanim/calisma-modeli";
+import type { FirmaOzeti, ModelGorunumu, SayOlcumu } from "../server/firma-tarafi";
+import { ModelBolumu } from "./ModelBolumu";
 import type { GonderimGorunumu } from "../server/eposta";
 import type { KurulumGorunumu } from "../server/kurulum";
 import { GonderimBolumu } from "./GonderimBolumu";
@@ -71,7 +73,9 @@ function Ayrinti({ id, ad, children }: { id: string; ad: string; children: React
   );
 }
 
-export function FirmaSayfasi({ firma: f, ozet, kurulum = null, gonderim = null, epostaAcik = false, ortakAlan = null, anaAlan, depo, olcum = null, yedek = null, sign = null }: {
+export function FirmaSayfasi({ firma: f, ozet, kurulum = null, gonderim = null, epostaAcik = false, ortakAlan = null, anaAlan, depo, olcum = null, yedek = null, sign = null, model = null }: {
+  /** 2026-11-12 (göç 0127): çalışma modeli ve geçmişi (okunamazsa null — adım söyler) */
+  model?: ModelGorunumu | null;
   firma: FirmaSatiri | null; ozet: FirmaOzeti | null; kurulum?: KurulumGorunumu | null; gonderim?: GonderimGorunumu | null; epostaAcik?: boolean; olcum?: SayOlcumu | null;
   /** 2026-11-11 (göç 0126): probata'nın ortak gönderen alan adı (yerelde null) */
   ortakAlan?: string | null;
@@ -204,6 +208,10 @@ export function FirmaSayfasi({ firma: f, ozet, kurulum = null, gonderim = null, 
           <YedekBolumu ciplak id={f.id} kisaAd={f.kisaAd} y={yedek} />
         </>
       ) },
+    /* 2026-11-12 (göç 0127; maket yerel/maket/turkak-modeli.html — K1): firma açılırken seçilen model buradan değişir; firma kendi ayarlarında yalnız görür */
+    { ad: "Çalışma modeli", aciklama: "TÜRKAK'lı firmada kontrol saati ölçülür ve sapma gerekçeyle geçer; TÜRKAK'sız firmada saat elle yazılır. Firma bu ayarı görür, değiştiremez.",
+      durum: model ? "tamam" : "eksik", durumAd: model ? MODEL_ADI[model.model] : "Okunamadı",
+      govde: <ModelBolumu key={model?.model ?? "yok"} id={f.id} firmaAd={f.ad} m={model} /> },
   ];
   const tamam = adimlar.filter((a) => a.durum === "tamam").length;
   const ilkEksik = adimlar.findIndex((a) => a.durum !== "tamam");

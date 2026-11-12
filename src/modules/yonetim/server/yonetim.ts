@@ -68,6 +68,9 @@ export async function firmaAc(db: Sorgulayici, girdi: unknown, ekAyrilmis: reado
   if (r.hata === "rapor_kodu") return { durum: "gecersiz", hatalar: { kod: `${d.kod} başka bir firmada.` } };
   if (r.hata === "ayrilmis") return { durum: "gecersiz", hatalar: { alt: `“${d.alt}” bize ayrılmış; başka bir ad seçin.` } };
   if (!r.id) return { durum: "red", neden: "Firma açılamadı: bilgiler geçersiz." };
+  /* 2026-11-12 (göç 0127, K1): çalışma modeli açılışta yazılır — aynı işlemde (yazılamazsa firma da açılmaz); geçmişin ilk satırı */
+  const m = (await db.sorgu<{ s: { durum?: string; hata?: string } }>("SELECT firma_yonetim_model($1, $2, true) AS s", [r.id, d.model])).rows[0].s;
+  if (m.durum !== "tamam") throw new Error("Çalışma modeli yazılamadı");
   return { durum: "tamam", id: r.id, parola, eposta: d.eposta, alt: d.alt };
 }
 

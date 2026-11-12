@@ -14,6 +14,8 @@ import { Bolum, Kirinti, Kod, SayfaBasi, SeritKap } from "../../../components/sa
 import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
 import { firmaAcSemasi, oneri } from "../sema";
+import { MODEL_ADI, type CalismaModeli } from "../../../tanim/calisma-modeli";
+import { MODEL_ACIKLAMA, MODEL_SIRASI } from "./ModelBolumu";
 import { firmaAcEylemi } from "./eylemler";
 import { SUPABASE_ADIMLAR } from "../../firma-ayarlari/sema";
 import { DEPO_AD, DEPO_NOT, firmaAdresi, type DepoTuru } from "./ortak";
@@ -32,6 +34,9 @@ export function FirmaAcFormu({ anaAlan, depo, kendiProje = false }: { anaAlan: s
   const [d, setD] = useState<Alanlar>(BOS);
   /* FV10: veritabanı — kendi Supabase projesi (probata panelden kurar; anahtar + örgüt ortamdaysa) ya da ortak proje */
   const [vt, setVt] = useState<"kendi" | "ortak">(kendiProje ? "kendi" : "ortak");
+  /* 2026-11-12 (göç 0127; reisim: "firma açarken türkaklı türkaksız diye seçenek olsun"): çalışma modeli — seçilmeden firma açılmaz */
+  const [model, setModel] = useState<CalismaModeli | null>(null);
+  const [modelHata, setModelHata] = useState<string | null>(null);
   const [yz, setYz] = useState("");
   const [yzHata, setYzHata] = useState<string | null>(null);
   const elle = useRef<{ alt: boolean; kod: boolean }>({ alt: false, kod: false });
@@ -69,15 +74,17 @@ export function FirmaAcFormu({ anaAlan, depo, kendiProje = false }: { anaAlan: s
       for (const i of g.error.issues) { const k = i.path[0] as keyof Alanlar; h[k] ??= i.message; }
       setHatalar(h); odakla(h); return;
     }
+    if (!model) { setModelHata("Çalışma modeli seçilmeli."); requestAnimationFrame(() => document.getElementById("y-model-turkak")?.focus()); return; }
     const adres = firmaAdresi(g.data.alt, anaAlan);
     const metin = vt === "kendi"
       ? `${adres} için firmanın Supabase projesi açılıp kurulur (birkaç dakika; firma sayfasında izlenir). Bitince ${g.data.yon} için geçici parola oluşturursunuz.`
       : `${adres} hemen çalışır; ${g.data.yon} ilk girişte geçici parolayla girip kendi parolasını belirler.`;
-    if (!(await onayla({ baslik: "Firma açılsın mı?", metin, tus: "Firmayı aç" }))) return;
+    if (!(await onayla({ baslik: "Firma açılsın mı?", metin: `${metin} Çalışma modeli: ${MODEL_ADI[model]}.`, tus: "Firmayı aç" }))) return;
     baslat(async () => {
       const f = new FormData();
       for (const k of SIRA) f.set(k, d[k]);
       f.set("vt", vt);
+      f.set("model", model);
       if (vt === "kendi" && yz.trim()) f.set("yz", yz.trim());
       const r = await firmaAcEylemi(f);
       if (r.hatalar) { setYzHata(r.hatalar.yz ?? null); setHatalar(r.hatalar); odakla(r.hatalar); return; }
@@ -85,7 +92,7 @@ export function FirmaAcFormu({ anaAlan, depo, kendiProje = false }: { anaAlan: s
       if (!r.tamam || !r.id || !r.parola) { setGenel(r.genel ?? "Firma açılamadı."); return; }
       kopya.sifirla();
       setAcilan({ id: r.id, parola: r.parola, eposta: r.eposta ?? g.data.eposta, alt: r.alt ?? g.data.alt, unvan: g.data.unvan });
-      setD(BOS); elle.current = { alt: false, kod: false };
+      setD(BOS); setModel(null); elle.current = { alt: false, kod: false };
       bildir(`Firma açıldı: ${firmaAdresi(r.alt ?? g.data.alt, anaAlan)}`);
       requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelector<HTMLElement>("main h1")?.focus({ preventScroll: true }); });
     });
@@ -137,6 +144,18 @@ export function FirmaAcFormu({ anaAlan, depo, kendiProje = false }: { anaAlan: s
               {alan("yon", "Ad soyad", { maxLength: 80, autoComplete: "off" })}
               {alan("eposta", "E-posta (giriş adı)", { type: "email", inputMode: "email", maxLength: 120, spellCheck: false, autoCapitalize: "off" })}
             </FormIzgara>
+          </FormBolum>
+          <FormBolum baslik="Çalışma modeli" id="y-b-model" genis>
+            <fieldset className={stil.vtSecim} aria-describedby={modelHata ? "y-model-hata" : undefined}>
+              <legend className="gizli">Çalışma modeli</legend>
+              {MODEL_SIRASI.map((k) => (
+                <label key={k} className={stil.vtSecenek}>
+                  <input type="radio" id={`y-model-${k}`} name="model" value={k} checked={model === k} onChange={() => { setModel(k); setModelHata(null); }} />
+                  <span>{MODEL_ADI[k]}<span className={stil.vtAciklama}>{MODEL_ACIKLAMA[k]}</span></span>
+                </label>
+              ))}
+            </fieldset>
+            {modelHata && <Serit tur="hata" ikon="circle-alert"><span id="y-model-hata">{modelHata}</span></Serit>}
           </FormBolum>
           {/* 2026-10-16 (FIRMA-VT FV10, K1 — reisim: "supabase ve resend bağlantılarını firma açarken biz buradan panelden yapalım"): veritabanı seçimi;
               kendi proje panelden kurulur (Yönetim API anahtarı + örgüt yoksa kapalı, açıklamalı). Önceki "firmanın hesabını bağla" akışı (D1) kalktı. */}

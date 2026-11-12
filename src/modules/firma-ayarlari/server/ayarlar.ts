@@ -7,7 +7,8 @@
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import type { Depo } from "../../../server/dosya/depo.ts";
 import { dosyaCope, dosyaYukle } from "../../../server/dosya/dosya.ts";
-import { AYAR_DOSYA, ayarOku, ayarYaz, belgeTurKilidi, firmaKoduYaz, firmaKunyesi, type AyarBolumu } from "../../../server/ayar/ayar.ts";
+import { calismaModeli, AYAR_DOSYA, ayarOku, ayarYaz, belgeTurKilidi, firmaKoduYaz, firmaKunyesi, type AyarBolumu } from "../../../server/ayar/ayar.ts";
+import type { CalismaModeli } from "../../../tanim/calisma-modeli.ts";
 import { duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { personelSecenekleri } from "../../personel/server/personel.ts";
@@ -41,6 +42,8 @@ type Surumlu<T> = { deger: T; surum: number };
 export interface FirmaAyarlari {
   yaz: boolean;
   kod: string;
+  /** çalışma modeli (2026-11-12, göç 0127; pkproje.md §11 K1): firma yalnız görür — Yönetim değiştirir */
+  model: CalismaModeli;
   firma: Surumlu<{ ad: string; adres: string; eposta: string; tel: string; akr: string; nusha: number }> & { kayitAd: string };
   /** sign (2026-11-05, göç 0122): probata yönetimi firmayı probata sign'a bağladıysa (anahtar + webhook sırrı) — imza yöntemi "probata sign · e-imza", firma değiştiremez (K1) */
   imza: Surumlu<{ yontem: "mobil" | "e_imza"; teknik: boolean }> & { sign: boolean };
@@ -105,7 +108,7 @@ export async function firmaAyarlari(db: Sorgulayici, kim: Kisi): Promise<FirmaAy
   const [f, im, zi, sa, me, es, sg, bs] = [await ayarOku(db, "firma_bilgileri"), await ayarOku(db, "imza"), await ayarOku(db, "zimmet"), await ayarOku(db, "saklama"),
     await ayarOku(db, "mesai"), await ayarOku(db, "uyari_esikleri"), await ayarOku(db, "sabit_gider"), await ayarOku(db, "belge_sablon")];
   return {
-    yaz: ayarlarYazar(kim), kod: k.kod,
+    yaz: ayarlarYazar(kim), kod: k.kod, model: await calismaModeli(db),
     firma: { deger: { ad: f.deger.ad, adres: f.deger.adres, eposta: f.deger.eposta, tel: f.deger.tel, akr: f.deger.akr, nusha: f.deger.nusha }, surum: f.surum, kayitAd: k.ad },
     imza: { deger: im.deger, surum: im.surum, sign: (await sirDurumu(db, "sign_anahtari")).tanimli && (await sirDurumu(db, "sign_webhook_sirri")).tanimli }, zimmet: { deger: zi.deger, surum: zi.surum }, saklama: { deger: sa.deger, surum: sa.surum },
     mesai: { deger: { acik: me.deger.acik, normal_dk: me.deger.normal_dk, mesai_dk: me.deger.mesai_dk, yillik_fazla_saat: me.deger.yillik_fazla_saat, baslangic: me.deger.baslangic }, surum: me.surum },

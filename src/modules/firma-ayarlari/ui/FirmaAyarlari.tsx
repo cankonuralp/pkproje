@@ -19,6 +19,7 @@ import { useOnayla } from "../../../components/pencere/Onay";
 import { Pencere } from "../../../components/pencere/Pencere";
 import { KartEtiket, Liste, type Sutun } from "../../../components/liste/Liste";
 import { DegerYok, Rozet, SayfaBasi } from "../../../components/sayfa/Sayfa";
+import { MODEL_ADI } from "../../../tanim/calisma-modeli";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus } from "../../../components/tus/Tus";
@@ -674,7 +675,8 @@ export function FirmaAyarlari({ v, yedekSonuc = null }: { v: Veri; yedekSonuc?: 
   const Icerik = acik ? ICERIK[acik] : null;
   return (
     <>
-      <SayfaBasi baslik="Firma ayarları" />
+      {/* 2026-11-12 (göç 0127, K1): çalışma modeli — firma yalnız görür */}
+      <SayfaBasi baslik="Firma ayarları" sayac={<Rozet tur="notr">{MODEL_ADI[v.model]}</Rozet>} />
       {!v.yaz && <Serit tur="bilgi" ikon="info">Yalnız görüntüleme yetkiniz var.</Serit>}
       <div className={stil.gruplar}>
         {GRUPLAR.map((g) => (

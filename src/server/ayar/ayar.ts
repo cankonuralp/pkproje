@@ -6,6 +6,7 @@ import type { Sorgulayici } from "../db/kiraci.ts";
 import { ekle, guncelle, izYaz, tablo, type GuncelleSonucu, type Iz } from "../db/yazici.ts";
 import type { Depo } from "../dosya/depo.ts";
 import { DUZEYLER } from "../yetki/tanim.ts";
+import { CALISMA_MODELLERI, type CalismaModeli } from "../../tanim/calisma-modeli.ts";
 
 const onek = z.string().regex(/^[A-Z]{1,4}$/, "Önek: 1–4 büyük harf");
 const kimlik = z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/).nullable();
@@ -112,6 +113,9 @@ export const AYAR_BOLUMLERI = {
       450: varsayilan — formatı hiç olmayan türlere Ek-III grubuna göre hazır format taraması yapıldı */
   kurulum: z.object({ bakanlik: z.array(z.string().regex(/^[A-Z][A-Z0-9_]{1,23}$/)).max(100).default([]), pdf: z.boolean().default(false),
     baglanti: z.boolean().default(false), varsayilan: z.boolean().default(false) }),
+  /** Çalışma modeli (2026-11-12, göç 0127; pkproje.md §11 K1): TÜRKAK'lı / TÜRKAK'sız. Yazan YALNIZ Yönetim (firma_yonetim_model — uygulama rolü
+      bu bölümü yazamaz, firma_ayar_calisma_kilidi); firma kendi ayarlarında yalnız görür. Kayıt yoksa TÜRKAK'sız. */
+  calisma: z.object({ model: z.enum(CALISMA_MODELLERI).default("siz") }),
 } as const;
 export type AyarBolumu = keyof typeof AYAR_BOLUMLERI;
 export type Ayar<B extends AyarBolumu> = z.infer<(typeof AYAR_BOLUMLERI)[B]>;
@@ -139,6 +143,11 @@ export function ayarCoz<B extends AyarBolumu>(b: B, kayitli: Record<string, unkn
     const deneme = sema.safeParse({ ...bas, [k]: kayitli[k] });
     return [k, deneme.success ? (deneme.data as Record<string, unknown>)[k] : bas[k]];
   })) as Ayar<B>;
+}
+
+/** firmanın çalışma modeli (2026-11-12, göç 0127): TÜRKAK'lı mı — kiracı işleminde okunur; kayıt yoksa "siz" */
+export async function calismaModeli(db: Sorgulayici): Promise<CalismaModeli> {
+  return (await ayarOku(db, "calisma")).deger.model;
 }
 
 export type AyarYazSonucu = GuncelleSonucu | { durum: "gecersiz"; hatalar: Record<string, string> };

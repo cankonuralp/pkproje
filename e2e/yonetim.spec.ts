@@ -87,6 +87,11 @@ test("yönetim: ayrı adres; ilk kurulum; firma aç → geçici parolayla yeni f
   await expect(page.getByText("“www” bize ayrılmış; başka bir ad seçin.")).toBeVisible();
   await page.getByLabel("Alt alan adı").fill(F.alt);
   await expect(page.getByText(`Adres: ${F.alt}.localhost`)).toBeVisible();
+  /* 2026-11-12 (göç 0127; reisim: "firma açarken türkaklı türkaksız diye seçenek olsun"): çalışma modeli seçilmeden firma açılmaz */
+  await page.getByRole("button", { name: "Firmayı aç" }).click();
+  await expect(page.getByText("Çalışma modeli seçilmeli.")).toBeVisible();
+  await expect(page.locator("dialog[open]")).toHaveCount(0);
+  await page.getByRole("radio", { name: /^TÜRKAK'lı/ }).check();
   await page.getByLabel("Kısa kod (rapor no öneki)").fill(E2E_FIRMA.raporKodu);
   await page.getByRole("button", { name: "Firmayı aç" }).click();
   await page.locator("dialog[open]").getByRole("button", { name: "Firmayı aç" }).click();
@@ -114,6 +119,17 @@ test("yönetim: ayrı adres; ilk kurulum; firma aç → geçici parolayla yeni f
   await page.getByRole("link", { name: "Firma sayfası" }).click();
   await expect(page.getByRole("heading", { level: 1, name: F.unvan })).toBeVisible();
   await expect(page.getByText("Etkin", { exact: true })).toBeVisible();
+  /* 2026-11-12 (göç 0127, K1): çalışma modeli — açılışta seçilen görünür; değiştirilir (önce sorulur), geçmişe yazılır */
+  await adimAc(page, "Çalışma modeli");
+  const cm = page.getByRole("region", { name: "Çalışma modeli" });
+  await expect(cm.getByRole("radio", { name: /^TÜRKAK'lı/ })).toBeChecked();
+  await expect(cm.getByRole("cell", { name: "Firma TÜRKAK'lı açıldı" })).toBeVisible();
+  await expect(cm.getByRole("button", { name: "Kaydet" })).toBeDisabled();
+  await cm.getByRole("radio", { name: /^TÜRKAK'sız/ }).check();
+  await cm.getByRole("button", { name: "Kaydet" }).click();
+  await page.locator("dialog[open]").getByRole("button", { name: "Değiştir" }).click();
+  await expect(cm.getByRole("cell", { name: "TÜRKAK'lı → TÜRKAK'sız" })).toBeVisible();
+  await expect(cm.getByRole("radio", { name: /^TÜRKAK'sız/ })).toBeChecked();
   await page.getByRole("button", { name: "Dondur" }).click();
   await page.locator("dialog[open]").getByRole("button", { name: "Dondur" }).click();
   /* 2026-10-18 (reisim: "bu ve benzeri, yaratıcıyı hedef alan açıklamaları kaldır, çok fazla ai ürünü olduğu belli oluyor"): açıklama kısaldı */
@@ -177,6 +193,7 @@ test("yönetim: kendi Supabase projesi — Firma aç → kurulum adım adım →
   await page.getByLabel("E-posta (giriş adı)").fill(F.eposta);
   await expect(page.getByRole("radio", { name: /^Kendi Supabase projesi/ })).toBeChecked();
   await page.getByLabel("Yapay zekâ anahtarı (isteğe bağlı)").fill(E2E_KURULUM.yz);
+  await page.getByRole("radio", { name: /^TÜRKAK'sız/ }).check();
   await page.getByRole("button", { name: "Firmayı aç" }).click();
   await expect(page.locator("dialog[open]")).toContainText(`${F.alt}.localhost için firmanın Supabase projesi açılıp kurulur`);
   await page.locator("dialog[open]").getByRole("button", { name: "Firmayı aç" }).click();
@@ -188,7 +205,7 @@ test("yönetim: kendi Supabase projesi — Firma aç → kurulum adım adım →
   await expect(page.getByRole("button", { name: "Yeni geçici parola üret" })).toBeEnabled({ timeout: 300_000 });
   /* 2026-11-11: firma sayfasının kendi "Kurulum" bölümü var (altı adım) — kurulum panelinin gittiği adım listesinden anlaşılır */
   await expect(page.getByRole("list", { name: "Kurulum adımları" })).toHaveCount(0);
-  await expect(page.getByRole("region", { name: "Kurulum" }).getByText("6 adımdan", { exact: false })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Kurulum" }).getByText("7 adımdan", { exact: false })).toBeVisible();
   await expect(page.getByText("Etkin", { exact: true })).toBeVisible();
   await adimAc(page, "Firma açıldı");
   await expect(page.getByText("Firmanın kendi Supabase projesi (Frankfurt)")).toBeVisible();
@@ -227,6 +244,7 @@ test("yönetim: e-posta gönderimi — alan adı ekle, DNS kayıtları, Doğrula
   await page.getByLabel("Ad soyad").fill(F.yon);
   await page.getByLabel("E-posta (giriş adı)").fill(F.eposta);
   await page.getByRole("radio", { name: /^Ortak proje/ }).check();
+  await page.getByRole("radio", { name: /^TÜRKAK'sız/ }).check();
   await page.getByRole("button", { name: "Firmayı aç" }).click();
   await page.locator("dialog[open]").getByRole("button", { name: "Firmayı aç" }).click();
   await expect(page.getByRole("heading", { level: 1, name: F.unvan })).toBeVisible({ timeout: 30_000 });

@@ -11,7 +11,7 @@ import { yonetimAdresinde, yonetimIslemi, yonetimIstekOturumu } from "../../../s
 import { yonetimEtiketi } from "../sema";
 import { epostaOrtami, kurulumOrtami, yonetimCalistirici } from "../server/calistirici";
 import { gonderimAlaniEkle, gonderimDogrula, gonderimOrtakAc, type EpostaOrtami, type GonderimGorunumu } from "../server/eposta";
-import { argeKaydiYonet, firmaDurumuYonet, geciciParolaYonet, yzAnahtariYonet, yzAyarYonet } from "../server/firma-tarafi";
+import { argeKaydiYonet, firmaDurumuYonet, geciciParolaYonet, modelYonet, yzAnahtariYonet, yzAyarYonet } from "../server/firma-tarafi";
 import { kurulumBaslat, kurulumBastan, kurulumGorunumu, kurulumIlerlet, kurulumSurdur, type KurulumGorunumu } from "../server/kurulum";
 import { firma, firmaAc, type YonetimSonucu } from "../server/yonetim";
 import { yedekDenemeYonet, yedekDogrulaYonet, yedekGeriDonYonet, yedekGeriYukleYonet } from "../server/yedek";
@@ -43,7 +43,9 @@ const yazi = (v: unknown) => (typeof v === "string" ? v : "");
 const unut = (y: YonetimYaniti) => { if (y.tamam) firmaKayitlariniUnut(); return y; };
 
 export async function firmaAcEylemi(form: FormData): Promise<YonetimYaniti> {
-  const girdi = { unvan: yazi(form.get("unvan")), alt: yazi(form.get("alt")), kod: yazi(form.get("kod")), yon: yazi(form.get("yon")), eposta: yazi(form.get("eposta")) };
+  /* 2026-11-12 (göç 0127): çalışma modeli formdan (seçilmemişse şema TÜRKAK'sız sayar) */
+  const girdi = { unvan: yazi(form.get("unvan")), alt: yazi(form.get("alt")), kod: yazi(form.get("kod")), yon: yazi(form.get("yon")), eposta: yazi(form.get("eposta")),
+    model: yazi(form.get("model")) || undefined };
   /* FV10: "Kendi Supabase projesi" — kayıt açılır, kurulum firma sayfasında ilerler (geçici parola kurulum bitince) */
   if (yazi(form.get("vt")) === "kendi") {
     return unut(await islem(async (o) => {
@@ -94,6 +96,11 @@ export async function firmaEtkinlestirEylemi(id: string): Promise<YonetimYaniti>
 
 export async function geciciParolaVerEylemi(id: string): Promise<YonetimYaniti> {
   return yenileyerek(await islem((o) => geciciParolaYonet(yonetimCalistirici(o), yazi(id))));
+}
+
+/** 2026-11-12 (göç 0127, K1): çalışma modelini değiştirir (TÜRKAK'lı / TÜRKAK'sız) — yalnız Yönetim */
+export async function modelDegistirEylemi(id: string, model: string): Promise<YonetimYaniti> {
+  return yenileyerek(await islem((o) => modelYonet(yonetimCalistirici(o), yazi(id), { model: yazi(model) })));
 }
 
 /** K4: yapay zekâ anahtarı — form: anahtar (Anthropic). Düz anahtar yalnız bu istekte, sunucuda şifrelenir; yanıtta yalnız son 4. */

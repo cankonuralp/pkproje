@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 import { AYRILMIS, firmaAcSemasi, oneri, yonetimEtiketi } from "../src/modules/yonetim/sema.ts";
+import { modelCoz } from "../src/tanim/calisma-modeli.ts";
 import { yonetimAdresiMi, yonetimAlani } from "../src/server/yonetim/adres.ts";
 import { base32Oku, base32Yaz, otpauthAdresi, totpDogrula, totpKodu, zamanAdimi } from "../src/server/yonetim/totp.ts";
 import { ayrilmisAdListeleri } from "./yardimci/denetimler.ts";
@@ -62,6 +63,12 @@ test("firma aç şeması: maketin iletileri, ayrılmış adlar (göçle aynı li
   assert.deepEqual(hata({ kod: "A1" }), { kod: "İki harf (A–Z)." });
   assert.deepEqual(hata({ yon: "Deneme" }), { yon: "Ad ve soyad yazılmalı." });
   assert.deepEqual(hata({ eposta: "deneme" }), { eposta: "Geçerli bir e-posta değil." });
+  /* 2026-11-12 (göç 0127; reisim: "firma açarken türkaklı türkaksız diye seçenek olsun"): çalışma modeli — yazılmazsa TÜRKAK'sız; bilinmeyen değer reddedilir */
+  assert.deepEqual(hata({ model: "akredite" }), { model: "Çalışma modeli seçilmeli." });
+  assert.equal(hata({ model: "turkak" }), null);
+  const duz = { unvan: "Deneme Muayene", alt: "deneme", kod: "DM", yon: "Deneme Kişi", eposta: "a@deneme.example" };
+  assert.deepEqual([sema.parse(duz).model, sema.parse({ ...duz, model: "turkak" }).model], ["siz", "turkak"]);
+  assert.deepEqual([modelCoz("turkak"), modelCoz("siz"), modelCoz(""), modelCoz(null), modelCoz("TURKAK")], ["turkak", "siz", "siz", "siz", "siz"], "bilinmeyen değer TÜRKAK'sız");
   assert.equal(sema.parse({ unvan: "  Deneme   Muayene ", alt: " Deneme ", kod: "dm", yon: "Deneme  Kişi", eposta: " A@Deneme.Example " }).eposta, "a@deneme.example");
   /* ayrılmış adlar: uygulama ve veritabanı aynı listeyi tutar. 2026-10-15 (FIRMA-VT FV2 incelemesi): liste 0096'da (yonetim_firma_kayit_ac) üçüncü kez
      yazıldı — kilit yalnız 0050'ye bakıyordu, kopya kayabilirdi (kurulum yolu ayrılmış adı kabul ederdi); artık her göçteki her liste */

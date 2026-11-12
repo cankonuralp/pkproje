@@ -50,6 +50,8 @@
 .yedekTablo { width: 100%; border-collapse: collapse; font-size: var(--boy-kucuk); }
 .yedekTablo th, .yedekTablo td { padding: 6px 8px; border-bottom: 1px solid var(--kenar); text-align: right; font-variant-numeric: tabular-nums; }
 .yedekTablo th:first-child, .yedekTablo td:first-child { text-align: left; }
+/* 2026-11-12 çalışma modeli geçmişi: iki yazı sütunu, ikisi de solda */
+.modelTablo th, .modelTablo td { text-align: left; }
 /* 2026-11-05 (göç 0121): S.A.Y hafızası — S.A.Y'a giden notun düz metni */
 .hafizaMetni { margin: 0; padding: 8px; max-width: 100%; overflow-x: auto; border-radius: var(--r-orta); background: var(--zemin2); font-size: var(--boy-kucuk); white-space: pre-wrap; overflow-wrap: anywhere; }
 /* 2026-11-11 FİRMA KURULUM EKRANI (maket onaylı): adım adım kurulum listesi — her adım açılır kutu (özet: numara · ad + açıklama · durum) */

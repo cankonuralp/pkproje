@@ -11,7 +11,8 @@
    · yapay zekâ anahtarı (K4): uygulamada şifrelenir (sir.ts sifrele — firma + ad ek verisi; ana anahtar ortamdan), firma tarafına yazılır, merkezin izi
      sonra (ortak firmada aynı işlevin içinde). Değer hiçbir ize, yanıta düşmez — yalnız son 4.
    Aynı duruma ikinci çağrı hata değil (yeniden denemede kalan adım tamamlanır). */
-import { AnahtarGirdisi, YzGirdisi } from "../sema.ts";
+import { AnahtarGirdisi, ModelGirdisi, YzGirdisi } from "../sema.ts";
+import { MODEL_ADI, modelCoz, type CalismaModeli } from "../../../tanim/calisma-modeli.ts";
 import { ayarCoz } from "../../../server/ayar/ayar.ts";
 import { sifrele } from "../../../server/ayar/sir.ts";
 import type { FirmaVtKaydi } from "../../../server/db/baglanti.ts";
@@ -197,4 +198,40 @@ export async function argeKaydiYonet(c: YonetimCalistirici, id: string, kayit: s
   if (!y || y.vt === "kurulum") return null;
   const oku = (db: Sorgulayici) => db.sorgu<{ s: unknown[] | null }>("SELECT firma_yonetim_say_arge($1, $2) AS s", [id, kayit]).then((r) => r.rows[0]?.s ?? null);
   return y.vt === "ortak" ? await c.merkez(oku) : await firmada(c, y.kayit, id, oku);
+}
+
+/* ── ÇALIŞMA MODELİ (2026-11-12, göç 0127; pkproje.md §11 K1 — reisim: "firma açarken türkaklı türkaksız diye seçenek olsun yönetimde ona göre açalım
+   daha sonra içeriden de değiştirlebilsin ayarlar"): model firmanın veritabanında (firma_ayar 'calisma'); yazan yalnız Yönetim. Geçmiş firmanın
+   denetim izinden. ── */
+export interface ModelGorunumu { model: CalismaModeli; gecmis: { zaman: string; eski: CalismaModeli | null; yeni: CalismaModeli; acilis: boolean }[] }
+type HamModel = { model: unknown; gecmis: { zaman: string; eski: unknown; yeni: unknown; acilis: boolean }[] | null };
+
+/** firmanın şu anki modeli ve değişiklik geçmişi (en yeni üstte) — ulaşılamazsa null */
+export async function modelOkuYonet(c: YonetimCalistirici, id: string): Promise<ModelGorunumu | null> {
+  if (!UUID.test(id)) return null;
+  const y = await yer(c, id);
+  if (!y || y.vt === "kurulum") return null;
+  const oku = (db: Sorgulayici) => db.sorgu<{ s: HamModel }>("SELECT firma_yonetim_model_oku($1) AS s", [id]).then((r) => r.rows[0]?.s ?? null);
+  const s = y.vt === "ortak" ? await c.merkez(oku) : await firmada(c, y.kayit, id, oku);
+  if (!s) return null;
+  return { model: modelCoz(s.model), gecmis: (s.gecmis ?? []).map((g) => ({
+    zaman: new Date(g.zaman).toISOString(), eski: g.eski == null ? null : modelCoz(g.eski), yeni: modelCoz(g.yeni), acilis: !!g.acilis })) };
+}
+
+/** modeli değiştirir (aynı modele ikinci kez yazılmaz); kendi projeli firmada merkezin izi sonra */
+export async function modelYonet(c: YonetimCalistirici, id: string, girdi: unknown): Promise<YonetimSonucu> {
+  if (!UUID.test(id)) return { durum: "yok" };
+  const g = ModelGirdisi.safeParse(girdi);
+  if (!g.success) return { durum: "gecersiz", hatalar: { model: g.error.issues[0]?.message ?? "Çalışma modeli seçilmeli." } };
+  const y = await yer(c, id);
+  if (!y) return { durum: "yok" };
+  if (y.vt === "kurulum") return { durum: "red", neden: "Firmanın kurulumu bitmedi." };
+  const yaz = (db: Sorgulayici) => db.sorgu<{ s: { durum?: string; hata?: string; eski?: string } }>("SELECT firma_yonetim_model($1, $2, false) AS s",
+    [id, g.data.model]).then((r) => r.rows[0]!.s);
+  const r = y.vt === "ortak" ? await c.merkez(yaz) : await firmada(c, y.kayit, id, yaz);
+  if (!r) return { durum: "red", neden: ULASILAMADI };
+  if (r.hata === "ayni") return { durum: "red", neden: `Firma zaten ${MODEL_ADI[g.data.model]}.` };
+  if (r.hata || r.durum !== "tamam") return { durum: "red", neden: "Çalışma modeli kaydedilemedi." };
+  if (y.vt === "kendi") await c.merkez((db) => db.sorgu("SELECT yonetim_firmada_iz($1, 'ayar.model', $2::jsonb)", [id, JSON.stringify({ eski: r.eski ?? null, yeni: g.data.model })]));
+  return { durum: "tamam" };
 }

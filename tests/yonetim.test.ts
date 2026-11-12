@@ -20,7 +20,9 @@
 import assert from "node:assert/strict";
 import { createHash, randomBytes } from "node:crypto";
 import { after, before, test } from "node:test";
+import { modelOkuYonet, modelYonet, type YonetimCalistirici } from "../src/modules/yonetim/server/firma-tarafi.ts";
 import { firmaAc, firmaDurumu, firmalar, yoneticiyeGeciciParola } from "../src/modules/yonetim/server/yonetim.ts";
+import { calismaModeli } from "../src/server/ayar/ayar.ts";
 import { sifrele } from "../src/server/ayar/sir.ts";
 import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { firmaKimligi, havuzKur, kiraciIcinde, yonetimIcinde, type Havuz } from "../src/server/db/kiraci.ts";
@@ -361,4 +363,48 @@ test("iki adım KAPALI (393): parola doğruysa yönetim oturumu — geçici paro
   /* ayarı uygulama ve yönetim rolü değiştiremez */
   await assert.rejects(yonetimIcinde(havuz, (db) => db.sorgu("UPDATE yonetim_ayar SET iki_adim = false"), { yoneticiId: Y1 }), /permission denied|izin/i);
   await assert.rejects(kiraciIcinde(havuz, A, (db) => db.sorgu("SELECT * FROM yonetim_ayar")), /permission denied|izin/i);
+});
+
+/* NEREDEN GELDİ: 2026-11-12 — reisim: "türkaklı ve türkaksız firmalar için 2 ayrı model oluşturup ona göre yapmalıyız", "firma açarken türkaklı
+   türkaksız diye seçenek olsun yönetimde ona göre açalım daha sonra içeriden de değiştirlebilsin ayarlar" (göç 0127; pkproje.md §11 K1). Model firma
+   açılırken yazılır, sonra yalnız Yönetim değiştirir; firmanın uygulama rolü okur, yazamaz. Olumsuz kanıt: tests/bozan/calisma-modeli.bozan.ts. */
+test("çalışma modeli (0127): firma açarken seçilir; Yönetim değiştirir, aynı modele yazılmaz, geçmişte kalır; firmanın uygulama rolü okur, yazamaz", async () => {
+  const y = <T,>(is: Parameters<typeof yonetimIcinde<T>>[1]) => yonetimIcinde(havuz, is, { yoneticiId: Y1 });
+  const c: YonetimCalistirici = { merkez: (is) => yonetimIcinde(havuz, is, { yoneticiId: Y1 }), firmada: async () => { throw new Error("ortak firma"); } };
+  const G = { unvan: "Model Deneme A.Ş.", alt: "model", kod: "MD", yon: "Deneme Kişi", eposta: "kisi@model.example" };
+  const r = await y((db) => firmaAc(db, { ...G, model: "turkak" }, [], "probata.example"));
+  /* seçilmeden açılan (şemayı doğrudan çağıran) firma TÜRKAK'sız; bilinmeyen model reddedilir */
+  const r2 = await y((db) => firmaAc(db, { ...G, alt: "modeliki", kod: "MK", eposta: "kisi@modeliki.example" }, [], "probata.example"));
+  assert.deepEqual([r.durum, r2.durum], ["tamam", "tamam"]);
+  if (r.durum !== "tamam" || r2.durum !== "tamam") return;
+  assert.equal((await y((db) => firmaAc(db, { ...G, alt: "modeluc", kod: "MU", eposta: "kisi@modeluc.example", model: "akredite" }, [], "probata.example"))).durum, "gecersiz");
+  const gor = async (id: string) => { const g = (await modelOkuYonet(c, id))!; return [g.model, g.gecmis.map((x) => [x.eski, x.yeni, x.acilis])]; };
+  assert.deepEqual(await gor(r.id), ["turkak", [[null, "turkak", true]]]);
+  assert.deepEqual(await gor(r2.id), ["siz", [[null, "siz", true]]]);
+  assert.deepEqual(await gor(A), ["siz", []], "bu göçten önce açılmış firma: kayıt yok, TÜRKAK'sız");
+  /* firma kendi işleminde okur */
+  assert.equal(await kiraciIcinde(havuz, r.id, (db) => calismaModeli(db)), "turkak");
+  assert.equal(await kiraciIcinde(havuz, A, (db) => calismaModeli(db)), "siz");
+  /* firmanın uygulama rolü yazamaz: değiştir, sil, ilk kez ekle; yönetim işlevini de çağıramaz */
+  const yetkisiz = (h: unknown) => (h as { code?: string }).code === "42501";
+  await assert.rejects(kiraciIcinde(havuz, r.id, (db) => db.sorgu(`UPDATE firma_ayar SET deger = '{"model": "siz"}'::jsonb WHERE bolum = 'calisma'`)), yetkisiz);
+  await assert.rejects(kiraciIcinde(havuz, r.id, (db) => db.sorgu("DELETE FROM firma_ayar WHERE bolum = 'calisma'")), yetkisiz);
+  await assert.rejects(kiraciIcinde(havuz, A, (db) => db.sorgu(`INSERT INTO firma_ayar (bolum, deger) VALUES ('calisma', '{"model": "turkak"}'::jsonb)`)), yetkisiz);
+  await assert.rejects(kiraciIcinde(havuz, r.id, (db) => db.sorgu("SELECT firma_yonetim_model($1, 'siz', false)", [r.id])), yetkisiz);
+  /* Yönetim değiştirir: aynı modele yazılmaz, bilinmeyen model ve olmayan firma reddedilir */
+  assert.deepEqual(await modelYonet(c, r.id, { model: "turkak" }), { durum: "red", neden: "Firma zaten TÜRKAK'lı." });
+  assert.equal((await modelYonet(c, r.id, { model: "akredite" })).durum, "gecersiz");
+  assert.deepEqual(await modelYonet(c, "00000000-0000-4000-8000-000000000000", { model: "siz" }), { durum: "yok" });
+  assert.deepEqual(await modelYonet(c, r.id, { model: "siz" }), { durum: "tamam" });
+  assert.deepEqual(await gor(r.id), ["siz", [["turkak", "siz", false], [null, "turkak", true]]]);
+  assert.equal(await kiraciIcinde(havuz, r.id, (db) => calismaModeli(db)), "siz");
+  /* eski firma (kaydı yok) da değişir: ilk değişiklik "TÜRKAK'sız → TÜRKAK'lı" */
+  assert.deepEqual(await modelYonet(c, A, { model: "turkak" }), { durum: "tamam" });
+  assert.deepEqual(await gor(A), ["turkak", [["siz", "turkak", false]]]);
+  assert.deepEqual(await modelYonet(c, A, { model: "siz" }), { durum: "tamam" });
+  const s = kume.sahipIstemci(); await s.connect();
+  try {
+    assert.equal((await s.query("SELECT 1 FROM yonetim_izi WHERE ne = 'ayar.model' AND hedef_firma = $1 AND kim = 'y1@probata.example'", [r.id])).rowCount, 2, "açılış + değişiklik");
+    assert.equal((await s.query("SELECT 1 FROM denetim_izi WHERE firma_id = $1 AND ne = 'ayar.calisma_modeli' AND kim = 'probata yönetim (y1@probata.example)'", [r.id])).rowCount, 2);
+  } finally { await s.end(); }
 });
