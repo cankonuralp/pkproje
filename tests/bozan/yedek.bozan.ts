@@ -21,7 +21,10 @@ import { sahteBulutKur, sahteBulutOrtami, type SahteBulut } from "../yardimci/sa
 
 const goc = readFileSync(new URL("../../src/server/db/gocler/0117_yedek.sql", import.meta.url), "utf8");
 /* 2026-11-07: göç 0123 say_chat_ayar tablosunu kaldırdı (tetiği tablosuyla gitti) — yedek-saf.test.ts sonraki göçleri verir */
-const SONRAKI = readFileSync(new URL("../../src/server/db/gocler/0123_say_chat_mesaj.sql", import.meta.url), "utf8");
+/* 2026-11-12: göç 0130 kontrol tablosunu yedeğe aldı (tetiği ve geri yükleme listesinin son tanımı o göçte) */
+const SON_LISTE = readFileSync(new URL("../../src/server/db/gocler/0130_kontrol_yedek.sql", import.meta.url), "utf8");
+const SONRAKI = `${readFileSync(new URL("../../src/server/db/gocler/0123_say_chat_mesaj.sql", import.meta.url), "utf8")}
+${SON_LISTE}`;
 let t: SahteBulut;
 before(async () => { t = await sahteBulutKur(); });
 after(async () => { await t?.kapat(); });
@@ -85,8 +88,8 @@ test("7. (0118) Supabase'ten Drive'a taşımanın bir şartı düşünce yakalan
   assert.ok(boz("s.imzali_dosya = dosya.id AND rapor_guncel_mu(s.id)))", "s.imzali_dosya = dosya.id))").includes("müşteri güncel rapor şartı yok"));
 });
 
-test("8. (0119; son tanımı 0123) geri yüklemenin tablo listesinden bir tablo düşünce yakalanır — o tablo eski hâlinde kalırdı", () => {
-  const g = readFileSync(new URL("../../src/server/db/gocler/0123_say_chat_mesaj.sql", import.meta.url), "utf8");
+test("8. (0119; son tanımı 0130) geri yüklemenin tablo listesinden bir tablo düşünce yakalanır — o tablo eski hâlinde kalırdı", () => {
+  const g = SON_LISTE;
   assert.deepEqual(geriYuklemeListeFarki(g, YEDEK_TABLOLARI), [], "sağlam");
   const bozuk = g.replace("'rapor_surumu', ", "");
   assert.notEqual(bozuk, g, "bozulacak satır kaynakta");
