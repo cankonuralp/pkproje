@@ -8,7 +8,7 @@ import { depo } from "../../../server/dosya/depo";
 import { yedekSonraCalistir } from "../../../server/yedek/sonra";
 import { belgePdf } from "../../../belge/pdf";
 import {
-  cihazEkle, cihazKaldir, fotoEkle, fotoSil, imzaHazirla, imzaliEslestirYukle, imzaliYukle, kayitliOnayaGonder, kontrolBasla, kontrolBitir, kontrolSaatDuzelt, onayaGonder, raporFormatGuncelle, raporKaydet, raporKopyala, raporKunyeGuncelle, raporOlustur, takipAc,
+  cihazEkle, cihazKaldir, fotoEkle, fotoSil, imzaHazirla, imzaliEslestirYukle, imzaliYukle, kayitliOnayaGonder, kontrolBasla, kontrolBitir, kontrolPlandan, kontrolSaatDuzelt, onayaGonder, raporFormatGuncelle, raporKaydet, raporKopyala, raporKunyeGuncelle, raporOlustur, takipAc,
   raporSil, revizeIste, revizeIstegiGeriCek, teknikImzaHazirla, teknikImzaliEslestirYukle, teknikImzaliYukle, type RaporYazma,
 } from "../server/raporlar";
 import { anthropicCagir, type OkunanSatir } from "../../../server/yz/okuma";
@@ -69,6 +69,10 @@ export async function raporOneriKapatEylemi(raporId: unknown, bolum: unknown): P
 
 export async function raporOlusturEylemi(planId: string, ekipmanId: string): Promise<RaporYaniti> {
   return islem((o) => oturumIslemi(o, (db) => raporOlustur(db, o, metin(planId), metin(ekipmanId))));
+}
+/** 2026-11-12 (pkproje.md §11 K11): kontrol plan içindeki ekipman satırından — rapor açılmadan da başlar / biter */
+export async function kontrolPlandanEylemi(planId: string, ekipmanId: string, uc: "basla" | "bitir"): Promise<RaporYaniti> {
+  return islem((o) => oturumIslemi(o, (db) => kontrolPlandan(db, o, metin(planId), metin(ekipmanId), uc === "bitir" ? "bitir" : "basla")));
 }
 /** 2026-10-26 (göç 0108): takip muayenesi aç — ekipmanın açık uygunsuzluğu olan son imzalı raporuna (…-T1) */
 export async function takipAcEylemi(planId: string, ekipmanId: string): Promise<RaporYaniti> {

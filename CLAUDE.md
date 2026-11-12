@@ -557,8 +557,14 @@ pkproje/
                             rozetleri Gönderilecek · Cihaz saati · Saat tutmadı; SahaRaporu bekleyen işleri kontrol durumunun üstüne koyar (yerelOlcum);
                             bağlantısız açılan raporda da kutu (yeniRaporPaketi.olcumlu) · çizelgede kaynak "Cihaz" · kilit tests/cihaz-saati,
                             raporlar (PG), bozan cihaz-saati, e2e kontrol.spec (bağlantısız bitiş)
-                            · SIRADAKİ: T5b plan içi ekipman satırından başlatma (rapor açılmadan kontrol kaydı) · T5c S.A.Y Chat Rapor modu (ilk
-                            fotoğraf başlangıç, Gönder bitiş; TÜRKAK'lıda Rapor modunda açılır)
+                            · T5b KONTROL PLAN SATIRINDAN (K11; göç yok): raporlar.ts kontrolPlandan — kişinin o ekipmanda raporu varsa raporun kontrolü
+                            (kontrolBasla / kontrolBitir), yoksa yalnız kontrol kaydı (başlatma rapor açmanın kapılarından geçer; sonra açılan rapor saatini
+                            kayıttan alır — raporAc); başkasının raporunda, ekip dışında, TÜRKAK'sız firmada başlamaz · okuyucu plan-baglanti.ts
+                            planKontrolDurumlari → plan-ici PlanEkipmani.kontrol (yalnız TÜRKAK'lı firmada, ekipteki kişiye) · ekran
+                            planlar/ui/EkipmanBolumu.tsx işlem sütununda simge tuş (saat = başla, onay = bitir, bitmişte saat aralığı başlıkta);
+                            bağlantı yokken uyarı (kontrol raporun ekranından, cihaz saatiyle) · eylem kontrolPlandanEylemi · kilit raporlar (PG),
+                            bozan raporlar 11 · uçtan uca testi YOK · günlük çizelge raporu açılmamış kontrolü göstermez
+                            · SIRADAKİ: T5c S.A.Y Chat Rapor modu (ilk fotoğraf başlangıç, Gönder bitiş; TÜRKAK'lıda Rapor modunda açılır)
   src/tanim/iller.ts        81 il + 973 ilçe (açık veri, MIT; bir kez alındı)
   src/tanim/bakanlik/       Bakanlığın resmî PDF'leri ZPKR01–05 (rapor formatı) + ZPKK01–05 (kriterler); 467: ZPKR06 / ZPKK06 kule kren,
                             ZPKR07 / ZPKK07 asılı erişim, ZPMR01 / ZPMK01 + ZYDR01 / ZYDK01 LPG tankı — okuyucu src/server/bakanlik.ts; okuyan uçlar

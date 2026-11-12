@@ -11,7 +11,9 @@
    9. (519) Sunucuda tamamlanmış plan denetimi olmasaydı (eski kural) tamamlanmış plana yeni rapor açılırdı — reisim 2026-10-12: "tamamlamayı geri
       almadan yeni rapor oluşturulmasın".
   10. (595 madde 1) Sunucu ikinci muayene uzmanının plan ekibinden ve yazan dışında olduğuna bakmasaydı elle kurulmuş istekle denetçi kendisini
-      (ya da ekip dışı birini) ikinci uzman yazardı — belgede iki imza yeri aynı kişinin olurdu. */
+      (ya da ekip dışı birini) ikinci uzman yazardı — belgede iki imza yeri aynı kişinin olurdu.
+  11. (2026-11-12, K11) Plan satırından kontrol başlatırken çalışma modeli denetlenmeseydi TÜRKAK'sız firmada da kontrol kaydı açılırdı (o firmada
+      saat ölçülmez; açılan raporlar ölçümsüzdür — kayıt hiçbir rapora bağlanmadan kalırdı). */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -272,5 +274,15 @@ test("sunucuda ikinci uzman denetimi kalkınca denetçi kendisini ikinci muayene
     };
     const k = await is(den, (db) => m.raporKaydet(db, den, r.id, 0, kayit));
     assert.equal(k.durum, "tamam", `kendisi ikinci uzman yazıldı: ${JSON.stringify(k)}`);
+  } finally { await h.end(); }
+});
+
+test("sunucuda çalışma modeli denetimi kalkınca TÜRKAK'sız firmada plan satırından kontrol kaydı açılır (K11)", async () => {
+  const m = await bozukModul<Raporlar>(RAPORLAR, 'if ((await calismaModeli(db)) !== "turkak") return { durum: "red", neden: "Bu firmada kontrol saati ölçülmez',
+    'if (false) return { durum: "red", neden: "Bu firmada kontrol saati ölçülmez');
+  const { h, den, id, ekipman, is } = await saglam(bugunTr());
+  try {
+    const r = await is(den, (db) => m.kontrolPlandan(db, den, id, ekipman, "basla"));
+    assert.equal(r.durum, "tamam", `TÜRKAK'sız firmada kontrol kaydı açıldı: ${JSON.stringify(r)}`);
   } finally { await h.end(); }
 });

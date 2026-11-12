@@ -1,6 +1,8 @@
 /* RAPORLAR ↔ PLANLAR BAĞLANTISI — Planlar modülünün rapor tablosundan istediği her şey yalnız buradan (modül 14; göç 0025). Bu dosya Planlar'ı
    İÇE AKTARMAZ (raporlar.ts Planlar'ı aktarır; döngü olmasın). Yetki ÇAĞIRANDA (plan içi: planı görebilen). */
 import { gorunenNo } from "../sema.ts";
+import { trDakika } from "../cihaz-saati.ts";
+import { etkinSaat, kontrolDurumu, type KontrolSatiri } from "./kontrol.ts";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { guncelle, tablo, type Iz } from "../../../server/db/yazici.ts";
 import { ayarOku } from "../../../server/ayar/ayar.ts";
@@ -37,6 +39,29 @@ export async function planRaporlari(db: Sorgulayici, planId: string): Promise<Pl
      FROM rapor r LEFT JOIN ${PERSONEL_AD_SQL} pe ON pe.firma_id = r.firma_id AND pe.id = r.personel_id
      WHERE r.plan_id = $1 AND r.silindi IS NULL ORDER BY r.olustu DESC, r.no DESC`, [planId])).rows
     .map((r) => ({ id: r.id, no: gorunenNo(r.no, r.revizyon), revizyon: r.revizyon, ekipmanId: r.ekipman_id, turId: r.tur_id, durum: r.durum, sonuc: r.sonuc, olustu: r.olustu.toISOString(), personelId: r.personel_id, hesapId: r.hesap_id, surum: r.surum, uzman: r.uzman, imzaliDosya: r.imzali }));
+}
+
+/** 2026-11-12 (pkproje.md §11 K11 — kontrol plan içindeki ekipman satırından da başlar): kişinin bu plandaki kontrol kayıtları, ekipman başına durum +
+    rapora yazılan saat ("YYYY-AA-GGTSS:DD", Türkiye). Kişinin kontrol başlatamayacağı ekipman (raporu başkasının / onaya gitmiş / ölçümsüz açılmış)
+    sonuçta YOK; kaydı olmayan ekipman "yok" durumuyla döner. Takip muayenesi buradan başlatılmaz (raporunun ekranından) */
+export interface EkipmanKontrolu { durum: "yok" | "suruyor" | "bitti"; bas: string | null; bit: string | null }
+export async function planKontrolDurumlari(db: Sorgulayici, planId: string, personelId: string, hesapId: string, ekipmanIdler: readonly string[]): Promise<Map<string, EkipmanKontrolu>> {
+  const m = new Map<string, EkipmanKontrolu>();
+  if (!UUID.test(planId) || !UUID.test(personelId)) return m;
+  const kapali = new Set((await db.sorgu<{ ekipman_id: string }>(
+    `SELECT ekipman_id::text FROM rapor WHERE plan_id = $1 AND silindi IS NULL AND takip_kaynak IS NULL
+       AND (hesap_id IS DISTINCT FROM $2 OR durum <> 'taslak' OR NOT olcumlu)`, [planId, hesapId])).rows.map((x) => x.ekipman_id));
+  const k = new Map((await db.sorgu<KontrolSatiri & { ekipman_id: string }>(
+    `SELECT ekipman_id::text, id::text, kaynak, basladi, bitti, duz_bas, duz_bit, duz_gerekce, duz_zaman, duz_kim, surum, bit_kaynak, cihaz_kanit, saat_tutmadi
+     FROM kontrol WHERE plan_id = $1 AND personel_id = $2 AND NOT takip`, [planId, personelId])).rows.map((x) => [x.ekipman_id, x]));
+  for (const id of ekipmanIdler) {
+    if (kapali.has(id)) continue;
+    const x = k.get(id);
+    if (!x) { m.set(id, { durum: "yok", bas: null, bit: null }); continue; }
+    const e = etkinSaat(x);
+    m.set(id, { durum: kontrolDurumu(x), bas: trDakika(e.bas.getTime()), bit: e.bit ? trDakika(e.bit.getTime()) : null });
+  }
+  return m;
 }
 
 /** ekipmanın bu planda etkin raporu var mı (raporu olan ekipman pasife alınmaz — 203) */

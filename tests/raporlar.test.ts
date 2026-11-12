@@ -28,7 +28,7 @@ import { TAMAMLANDI_RAPOR, tarihNo } from "../src/modules/planlar/sema.ts";
 import { taslakBaslat, taslakKaydet, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
 import { ayEkle } from "../src/modules/raporlar/sema.ts";
 import {
-  cihazEkle, cihazKaldir, EKIPTE_DEGIL, fotoEkle, fotoSil, gunlukKontroller, kayitliOnayaGonder, KONTROL_BITMEDI, kontrolBasla, kontrolBitir, kontrolCihazdan, kontrolSaatDuzelt, onayaGonder, raporBelgesiVerisi, raporFormatGuncelle, raporKaydet, raporKopyala, raporKunyeGuncelle, raporOlustur,
+  cihazEkle, cihazKaldir, EKIPTE_DEGIL, fotoEkle, fotoSil, gunlukKontroller, kayitliOnayaGonder, KONTROL_BITMEDI, kontrolBasla, kontrolBitir, kontrolCihazdan, kontrolPlandan, kontrolSaatDuzelt, onayaGonder, raporBelgesiVerisi, raporFormatGuncelle, raporKaydet, raporKopyala, raporKunyeGuncelle, raporOlustur,
   raporListesi, raporSapmalariOku, raporSil, raporZamanCizelgesi, sahaRaporu, type RaporYazma,
 } from "../src/modules/raporlar/server/raporlar.ts";
 import { raporDurumYaz } from "../src/modules/raporlar/server/onay-baglanti.ts";
@@ -1312,6 +1312,56 @@ test("bağlantısız kontrol saati (0131, K4): cihaz saati sunucu saatine çevri
     for (const ne of ["kontrol.basla_cihaz", "kontrol.bitir_cihaz"]) {
       assert.ok((await su.query("SELECT 1 FROM denetim_izi WHERE firma_id = $1 AND ne = $2", [A, ne])).rowCount, ne);
     }
+  } finally {
+    await su.query(`UPDATE firma_ayar SET deger = '{"model": "siz"}'::jsonb WHERE firma_id = $1 AND bolum = 'calisma'`, [A]);
+    await su.end();
+  }
+});
+
+test("kontrol plan satırından (K11): rapor açılmadan başlar / biter, sonra açılan rapor saatini kayıttan alır; raporu varsa raporun kontrolüdür; başkasının raporunda, ekip dışında ve TÜRKAK'sız firmada başlamaz; plan içinde ekipmanın kontrol durumu", async () => {
+  const id = await yeniPlan({ ekip: [FA.den1P, FA.den2P] });
+  const pl = (k: Kisi, ekp: string, uc: "basla" | "bitir") => a(k, (db) => kontrolPlandan(db, k, id, FA.ekp[ekp], uc));
+  const durumlar = async (k: Kisi) => Object.fromEntries((await ici(k, id))!.ekipman.map((x) => [x.kod, x.kontrol?.durum ?? null]));
+  /* TÜRKAK'sız firma: satırdan kontrol yok */
+  assert.deepEqual(await pl(FA.den1, "HT-A1", "basla"), { durum: "red", neden: "Bu firmada kontrol saati ölçülmez; başlangıç ve bitiş raporda elle yazılır." });
+  assert.ok(Object.values(await durumlar(FA.den1)).every((x) => x === null), "TÜRKAK'sız firmada satırda kontrol yok");
+  const su = kume.sahipIstemci(); await su.connect();
+  try {
+    await su.query(`INSERT INTO firma_ayar (firma_id, bolum, deger) VALUES ($1, 'calisma', '{"model": "turkak"}'::jsonb)
+      ON CONFLICT (firma_id, bolum) DO UPDATE SET deger = EXCLUDED.deger`, [A]);
+    assert.equal((await durumlar(FA.den1))["HT-A1"], "yok");
+    assert.equal((await durumlar(FA.plan))["HT-A1"], null, "ekipte olmayana kontrol yok");
+    /* ekip dışı başlatamaz; planda olmayan ekipman yok */
+    assert.ok(["red", "yok"].includes((await pl(FA.mek, "HT-A1", "basla")).durum), "ekipte olmayan başlatamaz");
+    assert.equal((await sql(A, "SELECT 1 FROM kontrol WHERE plan_id = $1", [id])).rowCount, 0);
+    assert.equal((await pl(FA.den1, "HT-B1", "basla")).durum, "yok");
+    assert.deepEqual(await pl(FA.den1, "HT-A1", "bitir"), { durum: "red", neden: "Kontrol başlatılmadı." });
+    /* rapor yokken başlar; aynı kişide ikinci kontrol başlamaz (K3); iki kez başlamaz */
+    assert.deepEqual(await pl(FA.den1, "HT-A1", "basla"), { durum: "tamam", id: FA.ekp["HT-A1"], bildirim: "HT-A1: kontrol başladı." });
+    assert.deepEqual(await pl(FA.den1, "HT-A2", "basla"), { durum: "red", neden: "Önce HT-A1 kontrolünü bitirin; aynı anda tek kontrol sürer." });
+    assert.deepEqual(await pl(FA.den1, "HT-A1", "basla"), { durum: "red", neden: "Bu ekipmanın kontrolü zaten başlatılmış." });
+    assert.equal((await durumlar(FA.den1))["HT-A1"], "suruyor");
+    assert.equal((await durumlar(FA.den2))["HT-A1"], "yok", "öteki denetçi kendi kontrolünü görür");
+    assert.deepEqual(await pl(FA.den1, "HT-A1", "bitir"), { durum: "tamam", id: FA.ekp["HT-A1"], bildirim: "HT-A1: kontrol bitti." });
+    assert.deepEqual(await pl(FA.den1, "HT-A1", "bitir"), { durum: "red", neden: "Kontrol zaten bitirildi." });
+    const p = (await ici(FA.den1, id))!.ekipman.find((x) => x.kod === "HT-A1")!.kontrol!;
+    assert.deepEqual([p.durum, p.bas!.slice(0, 10), p.bit! >= p.bas!], ["bitti", bugun, true]);
+    /* sonra açılan rapor saatini kontrol kaydından alır; kontrol bitmiş olduğundan onay kapısı kontrol yüzünden kapanmaz */
+    const r = tamam(await olustur(FA.den1, id, FA.ekp["HT-A1"]));
+    let d = (await sr(FA.den1, r.id))!;
+    assert.deepEqual([d.olcum!.durum, d.olcum!.kaynak, d.tarih.bas, d.tarih.bit], ["bitti", "sunucu", p.bas, p.bit]);
+    assert.notDeepEqual(await gonder(FA.den1, r.id, d.surum, girdi()), { durum: "red", neden: KONTROL_BITMEDI });
+    /* raporu varken satırdan başlatma raporun kontrolüdür (saat rapora da yazılır) */
+    const r2 = tamam(await olustur(FA.den1, id, FA.ekp["HT-A2"]));
+    tamam(await pl(FA.den1, "HT-A2", "basla"));
+    d = (await sr(FA.den1, r2.id))!;
+    assert.deepEqual([d.olcum!.durum, d.tarih.bas], ["suruyor", d.olcum!.bas]);
+    tamam(await pl(FA.den1, "HT-A2", "bitir"));
+    assert.equal((await sr(FA.den1, r2.id))!.olcum!.durum, "bitti");
+    /* başkasının raporu olan ekipmanda başlatılmaz; plan içinde o ekipmanın kontrolü görünmez */
+    assert.deepEqual(await pl(FA.den2, "HT-A2", "basla"), { durum: "red", neden: "Bu ekipmanın raporu başka birinin; kontrolü raporu yazan başlatır." });
+    assert.equal((await durumlar(FA.den2))["HT-A2"], null);
+    assert.equal((await durumlar(FA.den1))["HT-A2"], "bitti");
   } finally {
     await su.query(`UPDATE firma_ayar SET deger = '{"model": "siz"}'::jsonb WHERE firma_id = $1 AND bolum = 'calisma'`, [A]);
     await su.end();

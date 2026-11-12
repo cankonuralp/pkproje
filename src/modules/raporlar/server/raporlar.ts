@@ -854,6 +854,45 @@ export async function kontrolBitir(db: Sorgulayici, kim: Kisi, id: string): Prom
   return saatiRaporaYaz(db, kim, e, y, "Kontrol bitti.");
 }
 
+/** kontrol plan içindeki ekipman satırından (2026-11-12; pkproje.md §11 K11 — "süre rapora değil sahadaki kontrol kaydına bağlı; rapor sonradan yazılsa
+    da saati oradan alır"): kişinin bu ekipmanda raporu varsa iş o raporun kontrolüdür (kontrolBasla / kontrolBitir — saat rapora da yazılır); yoksa
+    yalnız kontrol kaydı açılır (rapor açılınca saatini ondan alır — raporAc). Başlatma, rapor açmanın kapılarından geçer (ekipte olmak, kabul edilmiş
+    plan, plan günü, günlük süre); bitirme yalnız kişinin süren kontrolünü ister. Takip muayenesi raporunun ekranından */
+export async function kontrolPlandan(db: Sorgulayici, kim: Kisi, planId: string, ekipmanId: string, uc: "basla" | "bitir"): Promise<RaporYazma> {
+  if (duzey(kim, MODUL) === "yok") return { durum: "yetkisiz" };
+  const plan = await raporIcinPlan(db, kim, planId);
+  if (!plan || !(await plandakiEkipman(db, plan.id, ekipmanId))) return { durum: "yok" };
+  const r = (await db.sorgu<{ id: string; hesap_id: string | null }>(
+    "SELECT id::text, hesap_id::text FROM rapor WHERE plan_id = $1 AND ekipman_id = $2 AND silindi IS NULL AND takip_kaynak IS NULL", [plan.id, ekipmanId])).rows[0];
+  if (r) {
+    if (r.hesap_id !== kim.id) return { durum: "red", neden: "Bu ekipmanın raporu başka birinin; kontrolü raporu yazan başlatır." };
+    return uc === "basla" ? kontrolBasla(db, kim, r.id) : kontrolBitir(db, kim, r.id);
+  }
+  if ((await calismaModeli(db)) !== "turkak") return { durum: "red", neden: "Bu firmada kontrol saati ölçülmez; başlangıç ve bitiş raporda elle yazılır." };
+  const et = await ekipmanEtiketi(db, ekipmanId), ad = et?.kod ?? "Ekipman";
+  if (uc === "basla") {
+    const a = await acilabilirPlan(db, kim, planId);
+    if ("hata" in a) return a.hata;
+    await db.sorgu("SELECT pg_advisory_xact_lock(hashtext('kontrol:' || $1))", [a.p.personelId]);
+    const anahtar: KontrolAnahtari = { plan_id: plan.id, ekipman_id: ekipmanId, personel_id: a.p.personelId, takip: false };
+    if (await kontrolOku(db, anahtar)) return { durum: "red", neden: "Bu ekipmanın kontrolü zaten başlatılmış." };
+    const acik = await acikKontrol(db, a.p.personelId);
+    if (acik) {
+      const o = await ekipmanEtiketi(db, acik.ekipman_id);
+      return { durum: "red", neden: `Önce ${o?.kod ?? "öteki ekipmanın"} kontrolünü bitirin; aynı anda tek kontrol sürer.` };
+    }
+    await kontrolBaslat(db, anahtar, { kim: kim.ad, ne: "kontrol.basla", gerekce: `${plan.no} · ${ad}` });
+    return { durum: "tamam", id: ekipmanId, bildirim: `${ad}: kontrol başladı.` };
+  }
+  if (!plan.personelId) return { durum: "red", neden: EKIPTE_DEGIL };
+  const anahtar: KontrolAnahtari = { plan_id: plan.id, ekipman_id: ekipmanId, personel_id: plan.personelId, takip: false };
+  const k = await kontrolOku(db, anahtar, true);
+  if (!k || k.kaynak === "elle") return { durum: "red", neden: "Kontrol başlatılmadı." };
+  if (k.bitti) return { durum: "red", neden: "Kontrol zaten bitirildi." };
+  await kontrolBitirYaz(db, anahtar, k, { kim: kim.ad, ne: "kontrol.bitir", gerekce: `${plan.no} · ${ad}` });
+  return { durum: "tamam", id: ekipmanId, bildirim: `${ad}: kontrol bitti.` };
+}
+
 /** bağlantısızken basılan "Kontrole başla" / "Kontrolü bitir" (2026-11-12, göç 0131; pkproje.md §11 K4 — kuyruktan gelir: islem-baglanti.ts):
     olayın cihaz saati sunucu saatine çevrilir (../cihaz-saati.ts); tutmadıysa kayıt reddedilmez, işaretlenir (sapma). İş bir kez daha gelirse ya da
     aynı uç bağlantılıyken zaten yazıldıysa değişiklik yapılmaz (ölçülen değer kalır). `gonderim`: işin gönderildiği andaki cihaz saati */

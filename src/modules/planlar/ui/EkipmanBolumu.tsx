@@ -38,7 +38,7 @@ import { Tus } from "../../../components/tus/Tus";
 import { KALIP } from "../../../styles/kalip";
 import { kodBicimi, kodNormal, tarihNo, type KodTuru } from "../sema";
 import type { PlanEkipmani, PlanIci } from "../server/plan-ici";
-import { raporOlusturEylemi, takipAcEylemi } from "../../raporlar/ui/eylemler";
+import { kontrolPlandanEylemi, raporOlusturEylemi, takipAcEylemi } from "../../raporlar/ui/eylemler";
 import { useCihazKapisi } from "./cihazKapisi";
 import { ekipmanPasifEylemi, ekipmanSilEylemi, kayitliEkleEylemi, kodDurumuEylemi, yeniEkipmanEylemi } from "./eylemler";
 import stil from "./planlar.module.css";
@@ -56,6 +56,8 @@ const GENISLIK = {
   rapor: { goz: "5%", kod: "9%", tur: "14%", konum: "13%", brans: "10%", onceki: "16%", rapor: "7%", eylem: "26%" },
 } as const;
 const ayYil = (iso: string) => `${iso.slice(5, 7)}.${iso.slice(0, 4)}`;
+/** "YYYY-AA-GGTSS:DD" → "SS:DD" */
+const saat = (z: string) => z.slice(11, 16);
 
 function tanim(raporlu: Set<string>): SuzgecTanimi<PlanEkipmani> {
   return {
@@ -139,17 +141,29 @@ export function EkipmanBolumu({ v }: { v: PlanIci }) {
         ? <Tus tur="ikincil" ikon="file-check" disabled={bekliyor || kapi.erken || !!kapi.mesai} aria-label={`${e.kod} için takip muayenesi aç (${e.takip.no})`}
           title={`${e.takip.no} · ${e.takip.acik} açık uygunsuzluk`} aria-describedby={kapi.erken ? ERKEN_ID : kapi.mesai ? MESAI_ID : undefined}
           onClick={() => takipAc(e)}>Takip muayenesi aç</Tus> : null;
-      if (raporlu.has(e.id)) return takip ? <div className={stil.eylemTuslar}>{takip}</div> : null;
+      /* 2026-11-12 (pkproje.md §11 K11): kontrol satırdan başlar / biter — TÜRKAK'lı firmada, ekipteki kişiye (e.kontrol sunucudan); simge tuş,
+         adı ve durumu başlıkta (title) ve ekran okuyucuya */
+      const k = kapi.olustur && !e.pasif ? e.kontrol : null;
+      const kontrol = !k ? null : k.durum === "yok"
+        ? <Tus tur="ikincil" ikon="clock" className={stil.ikonTus} disabled={bekliyor || kapi.erken || !!kapi.mesai} aria-label={`${e.kod} kontrolüne başla`} title="Kontrole başla"
+          aria-describedby={kapi.erken ? ERKEN_ID : kapi.mesai ? MESAI_ID : undefined} onClick={() => kontrolEt(e, "basla")}><span className="gizli">Kontrole başla</span></Tus>
+        : k.durum === "suruyor"
+          ? <Tus ikon="circle-check" className={stil.ikonTus} disabled={bekliyor} aria-label={`${e.kod} kontrolünü bitir (başladı ${saat(k.bas ?? "")})`} title={`Kontrolü bitir · başladı ${saat(k.bas ?? "")}`}
+            onClick={() => kontrolEt(e, "bitir")}><span className="gizli">Kontrolü bitir</span></Tus>
+          : <Tus tur="ikincil" ikon="clock" className={stil.ikonTus} disabled aria-label={`${e.kod} kontrolü ${saat(k.bas ?? "")} – ${saat(k.bit ?? "")}`} title={`Kontrol ${saat(k.bas ?? "")} – ${saat(k.bit ?? "")}`}>
+            <span className="gizli">{`Kontrol ${saat(k.bas ?? "")} – ${saat(k.bit ?? "")}`}</span></Tus>;
+      if (raporlu.has(e.id)) return takip || kontrol ? <div className={stil.eylemTuslar}>{kontrol}{takip}</div> : null;
       const olustur = kapi.olustur && !e.pasif;
       /* 360: yönetici, hiç kullanılmamış ekipman (raporu yok, tamamlanmış planda yok) */
       const sil = v.izin.ekipmanSil && e.sil;
-      if (!v.izin.ekipmanPasif && !olustur && !sil && !takip) return null;
+      if (!v.izin.ekipmanPasif && !olustur && !sil && !takip && !kontrol) return null;
       return (
         <div className={stil.eylemTuslar}>
           {v.izin.ekipmanPasif && (e.pasif
             ? <Tus tur="ikincil" ikon="undo-2" disabled={bekliyor} onClick={() => pasif(e, false)}>Etkinleştir</Tus>
             : <Tus tur="ikincil" ikon="ban" className={stil.ikonTus} disabled={bekliyor} aria-label={`${e.kod} pasife al`} title="Pasife al"
               onClick={() => pasif(e, true)}><span className="gizli">Pasife al</span></Tus>)}
+          {kontrol}
           {sil && <SilTusu kucuk ikon="trash-2" className={stil.ikonTus} ad={e.kod} baslik="Ekipmanı sil" yanEtki="bütün planlardan çıkar, kodu yeniden kullanılabilir"
             sil={() => ekipmanSilEylemi(planId, e.id)} />}
           {olustur && (cihazda.has(e.id)
@@ -185,6 +199,19 @@ export function EkipmanBolumu({ v }: { v: PlanIci }) {
       }
       if (r.tamam) { bildir(r.bildirim ?? "Rapor oluşturuldu."); router.refresh(); return; }
       bildir(r.genel ?? Object.values(r.hatalar ?? {})[0] ?? "Rapor oluşturulamadı.");
+      router.refresh();
+    });
+  }
+
+  /* 2026-11-12 (K11): kontrol satırdan — saati sunucu yazar; bağlantı yokken kontrol raporun ekranından (cihaz saatiyle) başlatılır */
+  function kontrolEt(e: PlanEkipmani, uc: "basla" | "bitir") {
+    if (uc === "basla" && v.izin.raporEngel) { uyar(v.izin.raporEngel); return; }
+    if (cevrimdisiMi()) { uyar("Bağlantı yok: kontrolü raporun ekranından başlatın."); return; }
+    baslat(async () => {
+      let r: Awaited<ReturnType<typeof kontrolPlandanEylemi>>;
+      try { r = await kontrolPlandanEylemi(planId, e.id, uc); } catch { uyar("Bağlantı koptu: kontrolü raporun ekranından başlatın."); return; }
+      if (r.tamam) bildir(r.bildirim ?? "Kaydedildi.");
+      else uyar(r.genel ?? Object.values(r.hatalar ?? {})[0] ?? "Kontrol saati yazılamadı.");
       router.refresh();
     });
   }
