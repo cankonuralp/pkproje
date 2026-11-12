@@ -17,7 +17,7 @@ let sira = 0;
 async function bozuk<T>(dosya: string, ...degisim: [string, string][]): Promise<T> {
   let k = readFileSync(dosya, "utf8");
   for (const [eski, yeni] of degisim) { assert.ok(k.includes(eski), `bozulacak satır kaynakta yok: ${eski}`); k = k.split(eski).join(yeni); }
-  k = k.replace(/from "\.\.\/(db|yetki|eposta)\/([\w.]+)"/g, (_, d, a) => `from "${mutlak(`src/server/${d}/${a}`)}"`).replace(/from "\.\.\/\.\.\/sema\/([\w.]+)"/g, (_, a) => `from "${mutlak(`src/sema/${a}`)}"`)
+  k = k.replace(/from "\.\.\/(db|yetki|eposta)\/([\w.]+)"/g, (_, d, a) => `from "${mutlak(`src/server/${d}/${a}`)}"`).replace(/from "\.\.\/\.\.\/(sema|tanim)\/([\w.-]+)"/g, (_, d, a) => `from "${mutlak(`src/${d}/${a}`)}"`) /* 2026-11-12: ayar.ts src/tanim/calisma-modeli.ts'i de içe aktarıyor (göç 0127) */
     /* 2026-10-15 (FIRMA-VT FV2): sir.ts şifrelemeyi ortak çekirdekten (./aes.ts) alıyor */
     .replace(/from "\.\/([\w.]+)"/g, (_, a) => `from "${mutlak(`src/server/ayar/${a}`)}"`);
   const yol = join(klasor, `${sira++}-${dosya.split("/").pop()}`);
