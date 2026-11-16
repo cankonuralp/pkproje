@@ -2,7 +2,7 @@
    kaleminde; 65: uyarı eşiği firma ayarı) · KOD-GECIS §4 (Ölçüm cihazları: branş yöneticileri ve firma yöneticisi değiştirir, planlama görür,
    denetçi kendi zimmeti, muhasebe görmez) · reisim 2026-10-04: "rol değiştirme sızma veri çalma". GERÇEK PostgreSQL, iki firma. */
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, test } from "node:test";
@@ -169,4 +169,13 @@ test("kalibrasyon gerekmez: cihaz eklerken işaretlenir — kalibrasyon kaydı o
   tamam(await a((db) => cihazKaydet(db, ELK, c.id, k.surum, { kod: "KG-001", tur: k.turId, yeniTur: "", marka: k.marka, model: k.model, seri: k.seri, aralik: k.aralik, kalGerekmez: false })));
   k = (await a((db) => cihazKarti(db, ELK, c.id)))!;
   assert.deepEqual([k.durum, k.kalGerekmez], ["gecti", false]);
+});
+
+/* 2026-11-16: ilk yayında ekranın gönderdiği işaret sunucu eyleminin alan süzgecinde (yalnız metin alanları) düşüyordu — sunucu işlevi doğru, ekran yolu
+   yanlıştı; canlıda cihaz eklerken görüldü. Kaynak kilidi: eylem işareti cihazKaydet'e taşır, pencere eyleme gönderir. */
+test("kalibrasyon gerekmez: pencere işareti eyleme, eylem sunucu işlevine taşır (kaynak kilidi)", () => {
+  const eylem = readFileSync(new URL("../src/modules/olcum-cihazlari/ui/eylemler.ts", import.meta.url), "utf8");
+  const pencere = readFileSync(new URL("../src/modules/olcum-cihazlari/ui/Pencereler.tsx", import.meta.url), "utf8");
+  assert.ok(eylem.includes("{ ...metinler(girdi, CIHAZ_ALAN), kalGerekmez: (girdi as { kalGerekmez?: unknown } | null)?.kalGerekmez === true }"), "eylem işareti taşır");
+  assert.ok(pencere.includes("cihazKaydetEylemi(cihaz?.id ?? null, cihaz?.surum ?? 0, { ...d, kalGerekmez: gerekmez })"), "pencere işareti gönderir");
 });

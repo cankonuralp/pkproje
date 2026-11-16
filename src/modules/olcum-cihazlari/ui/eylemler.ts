@@ -30,7 +30,9 @@ const metinler = (g: unknown, alanlar: readonly string[]) => {
 
 export async function cihazKaydetEylemi(cihazId: string | null, surum: number, girdi: unknown): Promise<PencereDurumu> {
   const o = await oturum(); if (typeof o === "string") return { genel: o };
-  return cevir(await oturumIslemi(o, (db) => cihazKaydet(db, o, typeof cihazId === "string" && cihazId ? cihazId : null, Number(surum), metinler(girdi, CIHAZ_ALAN))));
+  return cevir(await oturumIslemi(o, (db) => cihazKaydet(db, o, typeof cihazId === "string" && cihazId ? cihazId : null, Number(surum),
+    /* 2026-11-16 (göç 0133): "Kalibrasyon gerekmez" işareti metin değil — alan süzgecinden ayrı taşınır (ilk yayında süzgeçte düşüyordu) */
+    { ...metinler(girdi, CIHAZ_ALAN), kalGerekmez: (girdi as { kalGerekmez?: unknown } | null)?.kalGerekmez === true })));
 }
 
 export async function cihazKonumEylemi(cihazId: string, surum: number, konum: string): Promise<PencereDurumu> {

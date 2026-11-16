@@ -1,7 +1,8 @@
 /* OLUMSUZ KANIT — tests/olcum-cihazlari.test.ts "kalibrasyon durumu" (2026-11-16, göç 0133: kalibrasyon gerekmez). Kaynak diskte DEĞİŞTİRİLMEZ: dosyalar
    bellekte bozulup geçici klasörden içe aktarılır. O zaman:
    1) rapor tarafında "gerekmez" hesaba katılmazsa kalibrasyon gerekmeyen (kaydı olmayan) cihaz "kalibrasyonu geçmiş" sayılır — rapora eklenmez;
-   2) cihaz durumunda "gerekmez" önce bakılmazsa listede "Kalibrasyonu geçti" görünür. */
+   2) cihaz durumunda "gerekmez" önce bakılmazsa listede "Kalibrasyonu geçti" görünür;
+   3) eylem işareti taşımazsa (ilk yayındaki hata) kaynak kilidi yakalar. */
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -29,4 +30,13 @@ test("1) rapor tarafında 'gerekmez' hesaba katılmazsa kalibrasyon gerekmeyen c
 test("2) cihaz durumunda 'gerekmez' bakılmazsa listede kalibrasyonu geçti görünür", async () => {
   const m = await bozuk<typeof import("../../src/modules/olcum-cihazlari/sema.ts")>("src/modules/olcum-cihazlari/sema.ts", 'if (gerekmez) return "gerekmez";', "");
   assert.equal(m.kalDurum(null, "depo", "2026-11-16", 30, true), "gecti", "bozuk: gerekmez cihaz geçmiş görünür");
+});
+
+test("3) eylem işareti taşımazsa kaynak kilidi yakalar", () => {
+  const KILIT = "{ ...metinler(girdi, CIHAZ_ALAN), kalGerekmez: (girdi as { kalGerekmez?: unknown } | null)?.kalGerekmez === true }";
+  const eylem = readFileSync("src/modules/olcum-cihazlari/ui/eylemler.ts", "utf8");
+  assert.ok(eylem.includes(KILIT), "sağlam");
+  const bozukEylem = eylem.replace(KILIT, () => "metinler(girdi, CIHAZ_ALAN)");
+  assert.notEqual(bozukEylem, eylem, "bozulacak satır kaynakta");
+  assert.ok(!bozukEylem.includes("kalGerekmez"), "bozuk: işaret sunucuya gitmez");
 });
