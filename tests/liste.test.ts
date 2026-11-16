@@ -20,6 +20,7 @@ import { listele, yeniDurum, type Secenek, type SuzgecDurumu, type SuzgecTanimi 
 import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde, type Havuz } from "../src/server/db/kiraci.ts";
 import { raporIndirmeListesi, raporSayfasi } from "../src/modules/raporlar/server/liste.ts";
+import { ekipmanKesinSil, ekipmanSayfasi } from "../src/modules/raporlar/server/ekipmanlar.ts";
 import { planSayfasi } from "../src/modules/planlar/server/liste.ts";
 import { planListesi, type PlanSatir } from "../src/modules/planlar/server/plan-ici.ts";
 import { bugunTr } from "../src/modules/planlar/server/planlar.ts";
@@ -362,4 +363,38 @@ test("Onaylar › Tüm raporlar: sunucu süzgeci eski tarayıcı süzgeciyle bir
     assert.equal(await ile(A, K[k], (db) => tumRaporlarSayfasi(db, K[k], {})), null, `${k}: tüm raporlar yöneticinin (C5)`);
     assert.equal((await ile(A, K[k], (db) => onayListeleri(db, K[k])))!.tumSayisi, 0);
   }
+});
+
+/* 2026-11-16 (reisim: "teknik yönetici tarafında gözüksün, o silebilsin sadece", "herkesinkini raporlar ekranında bir sekme de görsün") — Raporlar ›
+   Ekipmanlar: plansız kalan ekipmanın hiçbir ekranda Sil'i yoktu. SON test: ekipman ekler ve siler. */
+test("Raporlar › Ekipmanlar: yalnız teknik yönetici, kendi branşının bütün ekipmanları (kim eklemiş olursa olsun); kullanılmamışı siler, kullanılmışı ve başka branşı silemez", async () => {
+  /* görme: firma yöneticisi ve denetçi görmez; mekanik yönetici 6 mekanik, elektrik yönetici 6 elektrik ekipmanı */
+  assert.equal(await ile(A, K.yon, (db) => ekipmanSayfasi(db, K.yon, {})), null);
+  assert.equal(await ile(A, K.d1, (db) => ekipmanSayfasi(db, K.d1, {})), null);
+  const mek = (await ile(A, K.mek, (db) => ekipmanSayfasi(db, K.mek, {})))!, elk = (await ile(A, K.elk, (db) => ekipmanSayfasi(db, K.elk, {})))!;
+  assert.deepEqual([mek.kayitSayisi, elk.kayitSayisi], [6, 6]);
+  assert.ok(mek.gorunen.every((e) => e.brans === "m" && e.tur === "Hava tankı") && elk.gorunen.every((e) => e.brans === "e"));
+  assert.ok(mek.gorunen.every((e) => e.kullanim && Object.values(e.kullanim).some((n) => n > 0)), "raporu olan ekipman kullanılmış görünür");
+  assert.deepEqual(mek.secenekler.musteri.map(([, ad]) => ad), ["Çınar Yapı", "Işık Makina"], "müşteri seçenekleri Türkçe sırayla");
+  /* süzgeç: tesis araması ve kod sıralaması sunucuda */
+  const depo = (await ile(A, K.mek, (db) => ekipmanSayfasi(db, K.mek, { alan: { tesis: "depo" } })))!;
+  assert.deepEqual([depo.adet, depo.gorunen.every((e) => e.tesis === "Depo")], [2, true]);
+  const sirali = (await ile(A, K.mek, (db) => ekipmanSayfasi(db, K.mek, { sec: { sira: "kod-azalan" } })))!.gorunen.map((e) => e.kod);
+  assert.deepEqual(sirali, [...sirali].sort().reverse());
+  /* silme: kullanılmış ekipman reddedilir; başka branşın ekipmanı ve teknik yönetici olmayan yetkisiz */
+  const kullanilmis = await ile(A, K.mek, (db) => ekipmanKesinSil(db, K.mek, mek.gorunen[0].id));
+  assert.equal(kullanilmis.durum, "red");
+  assert.equal((await ile(A, K.mek, (db) => ekipmanKesinSil(db, K.mek, elk.gorunen[0].id))).durum, "yetkisiz");
+  assert.equal((await ile(A, K.yon, (db) => ekipmanKesinSil(db, K.yon, mek.gorunen[0].id))).durum, "yetkisiz");
+  /* plansız, raporsuz yeni ekipman (başkası eklemiş): listede "kullanılmadı", mekanik yönetici siler; liste eski hâline döner */
+  const tesis = Object.keys(ILCE)[0];
+  const yeni = await ile(A, K.yon, async (db) => (await db.sorgu<{ id: string }>(
+    "INSERT INTO ekipman (tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, 'HT-900', 'Başka Biri') RETURNING id::text", [tesis, TUR["Hava tankı"]])).rows[0].id);
+  const sonra = (await ile(A, K.mek, (db) => ekipmanSayfasi(db, K.mek, {})))!;
+  assert.equal(sonra.kayitSayisi, 7);
+  assert.deepEqual([sonra.gorunen[0].id, sonra.gorunen[0].kullanim, sonra.gorunen[0].ekleyen], [yeni, null, "Başka Biri"], "en son eklenen üstte, kullanılmamış");
+  assert.equal((await ile(A, K.elk, (db) => ekipmanKesinSil(db, K.elk, yeni))).durum, "yetkisiz", "elektrik yönetici mekanik ekipmanı silemez");
+  assert.deepEqual(await ile(A, K.mek, (db) => ekipmanKesinSil(db, K.mek, yeni)), { durum: "tamam", bildirim: "HT-900 silindi." });
+  assert.equal((await ile(A, K.mek, (db) => ekipmanKesinSil(db, K.mek, yeni))).durum, "yok");
+  assert.equal((await ile(A, K.mek, (db) => ekipmanSayfasi(db, K.mek, {})))!.kayitSayisi, 6);
 });

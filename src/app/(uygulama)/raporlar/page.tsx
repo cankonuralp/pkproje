@@ -3,6 +3,7 @@
 import type { Metadata } from "next";
 import { Yetkisiz } from "../../../components/hata/Hata";
 import { modulBul } from "../../../modules/moduller";
+import { ekipmanYonetir } from "../../../modules/raporlar/server/ekipmanlar";
 import { imzamiBekleyenSayisi, raporSayfasi } from "../../../modules/raporlar/server/liste";
 import { RaporListesi } from "../../../modules/raporlar/ui/RaporListesi";
 import { calismaModeli } from "../../../server/ayar/ayar";
@@ -22,5 +23,5 @@ export default async function Sayfa() {
   });
   if (!v) return <Yetkisiz />;
   /* imza şeridinin tuşu Onaylar'ı görene (318 incelemesi: Onaylar'ı kapalı kişi yetkisiz sayfaya giderdi) */
-  return <RaporListesi ilk={v.l} imza={v.imza} imzaGor={modulGorur(o, ONAYLAR.no as ModulAnahtari)} gunluk={v.gunluk} />;
+  return <RaporListesi ilk={v.l} imza={v.imza} imzaGor={modulGorur(o, ONAYLAR.no as ModulAnahtari)} gunluk={v.gunluk} ekipmanlar={ekipmanYonetir(o)} />;
 }

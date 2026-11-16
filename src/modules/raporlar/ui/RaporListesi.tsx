@@ -18,12 +18,13 @@ import { Sayac, SuzgecliListe } from "../../../components/liste/SuzgecliListe";
 import { useSunucuSuzgec } from "../../../components/liste/SunucuSuzgec";
 import type { Secenek, SunucuListe, SuzgecTanimi } from "../../../components/liste/suzgec";
 import { useOnayla } from "../../../components/pencere/Onay";
-import { AltSatir, Rozet, SayfaBasi, SeritKap } from "../../../components/sayfa/Sayfa";
+import { AltSatir, Rozet, SayfaBasi, Sekmeler, SeritKap } from "../../../components/sayfa/Sayfa";
 import { tarihNo } from "../../../components/secim/tarih";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
 import { RAPOR_DURUM, SONUC_AD } from "../sema";
 import type { RaporListeSatiri } from "../server/raporlar";
+import { RAPOR_SEKMELERI } from "./EkipmanListesi";
 import { raporIndirmeListesiEylemi, raporSayfasiEylemi } from "./eylemler";
 import { silmeNedeni, TOPLU_EN_COK, topluSil, useTopluIndir } from "./topluIs";
 import stil from "./raporlar.module.css";
@@ -71,7 +72,9 @@ function tanim(sec: Record<string, Secenek[]>): SuzgecTanimi<RaporListeSatiri> {
 }
 
 /** imzaGor: kişi Onaylar'ı görür (İmzamı bekleyen raporlar orada); görmüyorsa şerit yalnız bilgi verir, raporlar listede "Muayene uzmanı imzası" */
-export function RaporListesi({ ilk, imza, imzaGor, gunluk = false }: { ilk: SunucuListe<RaporListeSatiri>; imza: number; imzaGor: boolean;
+export function RaporListesi({ ilk, imza, imzaGor, gunluk = false, ekipmanlar = false }: { ilk: SunucuListe<RaporListeSatiri>; imza: number; imzaGor: boolean;
+  /** 2026-11-16: teknik yöneticiye Ekipmanlar sekmesi (firmanın bütün ekipmanları) */
+  ekipmanlar?: boolean;
   /** 2026-11-12 (pkproje.md §11 T7): TÜRKAK'lı firmada günlük çizelge bağlantısı */
   gunluk?: boolean }) {
   const router = useRouter();
@@ -142,6 +145,7 @@ export function RaporListesi({ ilk, imza, imzaGor, gunluk = false }: { ilk: Sunu
         <Tus tur="ikincil" ikon="download" disabled={!!ilerleme || !s.sonuc.adet} aria-busy={!!ilerleme || undefined} onClick={() => void topluIndir()}>
           {ilerleme ? `İndiriliyor ${ilerleme}` : "Toplu indir"}
         </Tus></>} />
+      {ekipmanlar && <Sekmeler ad="Raporlar" ogeler={RAPOR_SEKMELERI} secili="/raporlar" />}
       {imza > 0 && (
         <SeritKap>
           <Serit tur="uyari" ikon="file-signature" eylem={imzaGor ? <TusBaglanti ikon="file-signature" href="/onaylar/imza">İmzamı bekleyen raporlar</TusBaglanti> : undefined}>

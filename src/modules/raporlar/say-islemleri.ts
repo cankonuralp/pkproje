@@ -30,6 +30,7 @@ import { mesaiBaslangici } from "./server/plan-baglanti.ts";
 import { komutlariUygula, sonucOzeti, type Durum, type GirisSonucu } from "./say-doldur.ts";
 import { KontrolDuzeltme, KopyaGirdisi, OlusturIslemGirdisi, RAPOR_DURUM, RevizeGirdisi } from "./sema.ts";
 import { raporSayfasi } from "./server/liste.ts";
+import { ekipmanKesinSil, ekipmanSayfasi } from "./server/ekipmanlar.ts";
 import {
   cihazAdaylari, cihazEkle, cihazKaldir, fotoEkle, fotoSil, onayaGonder, raporEksikleri, raporFormatGuncelle, raporKaydet, raporKopyala, raporFormatHami, raporOlustur, raporSayDurumu, takipAc, raporSil, revizeIste, revizeIstegiGeriCek, sahaRaporu,
   type SahaRaporu,
@@ -484,5 +485,22 @@ export const SAY_ISLEMLERI: readonly Islem[] = [
       const s = v.teknik ? await teknikImzaliEslestirYukle(b.db, b.depo(), b.kim, b.firmaId, belge) : await imzaliEslestirYukle(b.db, b.depo(), b.kim, b.firmaId, belge);
       return yazmaCevabi(s.sonuc, { bildirim: `İmzalı PDF ${s.no ?? "rapora"} yüklendi.`, sonuc: { rapor: s.id, no: s.no } });
     },
+  }),
+  /* 2026-11-16 (Raporlar › Ekipmanlar sekmesi; reisim: "teknik yönetici tarafında gözüksün, o silebilsin sadece") */
+  islem({
+    ad: "ekipman_ara", modul: MODUL, tur: "oku", girdi: SuzgecDurumuSemasi, kaynak: [SuzgecDurumuSemasi], islev: ekipmanSayfasi,
+    tarif: "Firmadaki bütün ekipmanları arar (yalnız teknik yönetici, kendi branşı; 20'şer, en son eklenen üstte): ara (kod, tür, tesis, müşteri, konum, ekleyen), alan.kod, alan.tesis, "
+      + "sec.sira (kod | tur | tesis | ekleyen | olustu + -artan | -azalan), sayfa. kullanim boşsa ekipman hiç kullanılmamıştır (ekipman_sil ile silinir).",
+    calistir: async (b, _v, ham) => {
+      const l = await ekipmanSayfasi(b.db, b.kim, ham);
+      if (!l) return { tamam: false, neden: "Ekipman listesini yalnız teknik yönetici görür." };
+      return { tamam: true, sonuc: { ...sayfaBilgisi(l), ekipmanlar: l.gorunen.map((e) => ({ id: e.id, kod: e.kod, tur: e.tur, musteri: e.musteri, tesis: e.tesis, konum: e.konum,
+        ekleyen: e.ekleyen, pasif: e.pasif, kullanim: e.kullanim })) } };
+    },
+  }),
+  islem({
+    ad: "ekipman_sil", modul: MODUL, tur: "yaz", girdi: z.object({ ekipman: kimlik }), kaynak: [kimlik], islev: ekipmanKesinSil,
+    tarif: "Hiç kullanılmamış ekipmanı kesin siler (yalnız teknik yönetici, kendi branşı; raporu olan ya da tamamlanmış planda olan silinmez).",
+    calistir: async (b, v) => yazmaCevabi(await ekipmanKesinSil(b.db, b.kim, v.ekipman)),
   }),
 ];

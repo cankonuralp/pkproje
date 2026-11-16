@@ -17,6 +17,7 @@ import { alanOkuBirak, alanOkuHazirla, alanOkuKullanimYaz, alanOkuSonuc } from "
 import { raporOneriSil } from "../server/oneri";
 import type { AlanOkunan } from "../../../server/yz/alanlar";
 import { raporIndirmeListesi, raporSayfasi } from "../server/liste";
+import { ekipmanKesinSil, ekipmanSayfasi, type EkipmanListeSatiri } from "../server/ekipmanlar";
 import { firmaCalistirici, SignHatasi, signGonder, signHazirla, signIptalGonder, signIptalHazirla, signIptalYaz, signKaydet, signSonuclandir, signTopluHazirla, signTopluIste,
   signYenilenecek, type Asama } from "../server/sign";
 import type { RaporListeSatiri } from "../server/raporlar";
@@ -373,4 +374,20 @@ export async function signTopluAdresiEylemi(belgeler: string[]): Promise<RaporYa
   if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
   const l = (Array.isArray(belgeler) ? belgeler : []).map(metin).filter((x) => /^[0-9a-f-]{36}$/.test(x));
   return l.length ? signTopluAdresAl(o, l) : { genel: "Toplu imzaya rapor yok." };
+}
+
+/** 2026-11-16 (Raporlar › Ekipmanlar sekmesi): teknik yöneticinin ekipman listesinin bir sayfası (süzgeç SUNUCUDA). Görmeyene / oturumsuza null. */
+export async function ekipmanSayfasiEylemi(durum: unknown): Promise<SunucuListe<EkipmanListeSatiri> | null> {
+  if (!(await ayniKoken())) return null;
+  const o = await istekOturumu();
+  if (!o) return null;
+  return oturumIslemi(o, (db) => ekipmanSayfasi(db, o, durum));
+}
+/** hiç kullanılmamış ekipmanı kesin siler (yalnız teknik yönetici, kendi branşı — yetki ve kullanım denetimi modül işlevinde) */
+export async function ekipmanKesinSilEylemi(id: string): Promise<RaporYaniti> {
+  if (!(await ayniKoken())) return { genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };
+  const o = await istekOturumu();
+  if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
+  const r = await oturumIslemi(o, (db) => ekipmanKesinSil(db, o, metin(id)));
+  return r.durum === "tamam" ? { tamam: true, bildirim: r.bildirim } : r.durum === "red" ? { genel: r.neden } : { genel: r.durum === "yok" ? "Ekipman bulunamadı." : SONUC.yetkisiz };
 }

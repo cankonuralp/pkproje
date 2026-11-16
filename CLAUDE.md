@@ -369,6 +369,12 @@ pkproje/
                             · 2026-11-06 CİHAZ KENDİLİĞİNDEN SEÇİLİR: cihaz-sec.ts (saf otomatikCihazlar) ← raporlar.ts otomatikSecim — yeni raporda (raporAc,
                             kopya hariç; bağlantısız paket de) tür başına yazanın zimmetindeki uygun cihaz: en son kullandığı, yoksa tek aday; depodaki seçilmez ·
                             kilit tests/cihaz-sec, bozan cihaz-sec, e2e saha-raporu (seçili gelir → kaldır → ekle)
+                            · 2026-11-16 EKİPMANLAR SEKMESİ (reisim: "teknik yönetici tarafında gözüksün, o silebilsin sadece", "herkesinkini raporlar
+                            ekranında bir sekme de görsün"): /raporlar/ekipmanlar — yalnız teknik yöneticiye (ekipman-yetki.ts, saf: mekanik yönetici mekanik,
+                            elektrik yönetici elektrik türler); firmanın BÜTÜN ekipmanları, sunucuda sayfalı (server/ekipmanlar.ts ekipmanSayfasi — ekipman
+                            modülünün okuma parçası EKIPMAN_LISTE_SQL) · hiç kullanılmamış ekipmanda Sil (ekipmanKesinSil → ekipman modülü ekipmanSil; plansız
+                            kalan ekipmanın başka ekranda Sil'i yoktu) · ui/EkipmanListesi.tsx, RAPOR_SEKMELERI · S.A.Y ekipman_ara / ekipman_sil · kilit
+                            tests/ekipman-yetki, liste (PG), bozan ekipman-yetki
   src/modules/onaylar/      ONAYLAR (2026-10-05, 314; modül 15): kuyruk, onay ekranı (gözden geçirme), Onayla / Geri gönder / Onayı geri al /
                             Durumu değiştir (göç 0026: geçişler, onay damgası, Yeni'ye gerekçe ≥ 10 veritabanında); rapora raporlar/server/onay-baglanti.ts'ten
                             · İmzamı bekleyen raporlar /onaylar/imza (318, C5: denetçinin Onaylar'ı yalnız bu; kuyruk ve onay ekranı yöneticinin)
