@@ -2,7 +2,8 @@
    bellekte bozulup geçici klasörden içe aktarılır. O zaman:
    1) rapor tarafında "gerekmez" hesaba katılmazsa kalibrasyon gerekmeyen (kaydı olmayan) cihaz "kalibrasyonu geçmiş" sayılır — rapora eklenmez;
    2) cihaz durumunda "gerekmez" önce bakılmazsa listede "Kalibrasyonu geçti" görünür;
-   3) eylem işareti taşımazsa (ilk yayındaki hata) kaynak kilidi yakalar. */
+   3) eylem işareti taşımazsa (ilk yayındaki hata) kaynak kilidi yakalar;
+   4) zimmet tarafı işarete bakmazsa kaynak kilidi yakalar. */
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -39,4 +40,12 @@ test("3) eylem işareti taşımazsa kaynak kilidi yakalar", () => {
   const bozukEylem = eylem.replace(KILIT, () => "metinler(girdi, CIHAZ_ALAN)");
   assert.notEqual(bozukEylem, eylem, "bozulacak satır kaynakta");
   assert.ok(!bozukEylem.includes("kalGerekmez"), "bozuk: işaret sunucuya gitmez");
+});
+
+test("4) zimmet tarafı işarete bakmazsa kaynak kilidi yakalar", () => {
+  const KILIT = 'v.tur === "c" && !v.gerekmez && (!v.bitis || v.bitis < bugun)';
+  const ortak = readFileSync("src/modules/zimmetler/ui/ortak.tsx", "utf8");
+  assert.ok(ortak.includes(KILIT), "sağlam");
+  const bozukOrtak = ortak.replace(KILIT, () => 'v.tur === "c" && (!v.bitis || v.bitis < bugun)');
+  assert.ok(!bozukOrtak.includes(KILIT), "bozuk: gerekmeyen cihaz zimmette geçmiş görünür");
 });

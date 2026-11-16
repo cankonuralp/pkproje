@@ -31,7 +31,9 @@ export interface Kisi extends YetkiHesabi { ad: string }
 export type VarlikTuru = "c" | "d" | "a";
 /** kimde: depo · kalibrasyonda · bir personel */
 export type Kimde = { tip: "depo" } | { tip: "lab" } | { tip: "kisi"; id: string; ad: string };
-export interface VarlikSatiri { anahtar: string; tur: VarlikTuru; id: string; kod: string; ad: string; kimde: Kimde; bitis: string | null; son: { zaman: string; eden: string; alan: string } | null; pasif: boolean }
+export interface VarlikSatiri { anahtar: string; tur: VarlikTuru; id: string; kod: string; ad: string; kimde: Kimde; bitis: string | null;
+  /** 0133: kalibrasyon gerekmeyen cihaz — bitişi aranmaz, "kalibrasyonu geçti" sayılmaz */
+  gerekmez: boolean; son: { zaman: string; eden: string; alan: string } | null; pasif: boolean }
 export interface HareketSatiri { id: string; varlik: string; varlikKod: string; varlikAd: string; zaman: string; eden: string; alan: string; alanKisi: boolean; km: number | null; notu: string | null; fotolar: string[] }
 export interface VarlikKarti extends VarlikSatiri { hareketler: HareketSatiri[] }
 
@@ -93,9 +95,9 @@ async function durum(db: Sorgulayici) {
     return h?.alanId ? { tip: "kisi", id: h.alanId, ad: yer(h.alanId) } : { tip: "depo" };
   };
   const varliklar: VarlikSatiri[] = [
-    ...cihazlar.map((c) => ({ anahtar: `c:${c.id}`, tur: "c" as const, id: c.id, kod: c.kod, ad: c.tur, bitis: c.bitis, kimde: kimde(`c:${c.id}`, c.konum === "lab"), pasif: c.pasif })),
-    ...demirbaslar.map((d) => ({ anahtar: `d:${d.id}`, tur: "d" as const, id: d.id, kod: d.kod, ad: d.ad, bitis: null, kimde: kimde(`d:${d.id}`, false), pasif: d.pasif })),
-    ...araclar.map((a) => ({ anahtar: `a:${a.id}`, tur: "a" as const, id: a.id, kod: a.plaka, ad: a.ad, bitis: null, kimde: kimde(`a:${a.id}`, false), pasif: a.pasif })),
+    ...cihazlar.map((c) => ({ anahtar: `c:${c.id}`, tur: "c" as const, id: c.id, kod: c.kod, ad: c.tur, bitis: c.bitis, gerekmez: c.gerekmez, kimde: kimde(`c:${c.id}`, c.konum === "lab"), pasif: c.pasif })),
+    ...demirbaslar.map((d) => ({ anahtar: `d:${d.id}`, tur: "d" as const, id: d.id, kod: d.kod, ad: d.ad, bitis: null, gerekmez: false, kimde: kimde(`d:${d.id}`, false), pasif: d.pasif })),
+    ...araclar.map((a) => ({ anahtar: `a:${a.id}`, tur: "a" as const, id: a.id, kod: a.plaka, ad: a.ad, bitis: null, gerekmez: false, kimde: kimde(`a:${a.id}`, false), pasif: a.pasif })),
   ].map((v) => { const h = son.get(v.anahtar); return { ...v, son: h ? { zaman: h.zaman, eden: h.eden, alan: h.alan } : null }; });
   return { varliklar, hareketler: hareketSatirlari, kisiler };
 }

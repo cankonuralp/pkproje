@@ -222,7 +222,7 @@ export function ZimmetBolumu({ personelId, kisi, etkin, dosya, bugun, doldur = n
         { k: "varlik", genislik: "55%", baslik: "Varlık", kart: "ust", sira: 1, hucre: (v) => <span className={stil.hucreSatir}>
           <Ikon ad={v.tur === "c" ? "gauge" : v.tur === "a" ? "truck" : "package"} kucuk /><span><Link className={stil.ad} href={zimmetAdres(v.anahtar)}>{v.kod}</Link><AltSatir><Kirp>{v.ad}</Kirp></AltSatir></span></span> },
         { k: "teslim", genislik: "25%", baslik: "Teslim alındı", kart: "govde", sira: 2, hucre: (v) => <><KartEtiket>Teslim alındı</KartEtiket>{v.son ? tarihYaz(v.son.zaman) : "—"}</> },
-        { k: "durum", genislik: "20%", baslik: "Durum", kart: "rozet", sira: 1, hucre: (v) => v.bitis && v.bitis < bugun ? <Rozet tur="red">Kalibrasyonu geçti</Rozet> : <Rozet tur="tamam">Kullanımda</Rozet> },
+        { k: "durum", genislik: "20%", baslik: "Durum", kart: "rozet", sira: 1, hucre: (v) => !v.gerekmez && v.bitis && v.bitis < bugun ? <Rozet tur="red">Kalibrasyonu geçti</Rozet> : <Rozet tur="tamam">Kullanımda</Rozet> },
       ]} /> : <p className={stil.bos}>Zimmetinde varlık yok.</p>}
       {p.ne && <BelgePenceresi ne={p.ne} personelId={personelId} turler={dosya.turler} ozlukTurleri={dosya.ozlukTurleri} bugun={bugun} kapat={p.kapat} />}
     </Bolum>

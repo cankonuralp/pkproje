@@ -7,7 +7,8 @@ export const zamanYaz = (iso: string) => new Intl.DateTimeFormat("tr-TR", { time
 export const TUR_AD = { c: "Ölçüm cihazı", a: "Araç", d: "Diğer" } as const;
 export const TUR_IKON = { c: "gauge", a: "car", d: "hard-hat" } as const;
 /** kalibrasyonu geçmiş cihaz (bugün Türkiye günüyle) */
-export const kalGecti = (v: Pick<VarlikSatiri, "tur" | "bitis">, bugun: string) => v.tur === "c" && (!v.bitis || v.bitis < bugun);
+/* 2026-11-16 (göç 0133): kalibrasyon gerekmeyen cihaz geçmiş sayılmaz */
+export const kalGecti = (v: Pick<VarlikSatiri, "tur" | "bitis" | "gerekmez">, bugun: string) => v.tur === "c" && !v.gerekmez && (!v.bitis || v.bitis < bugun);
 export function DurumRozeti({ v, bugun }: { v: VarlikSatiri; bugun: string }) {
   if (v.pasif) return <Rozet tur="notr">Pasif</Rozet>;
   if (v.kimde.tip === "lab") return <Rozet tur="kabul">Kalibrasyonda</Rozet>;

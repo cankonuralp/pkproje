@@ -179,3 +179,11 @@ test("kalibrasyon gerekmez: pencere işareti eyleme, eylem sunucu işlevine taş
   assert.ok(eylem.includes("{ ...metinler(girdi, CIHAZ_ALAN), kalGerekmez: (girdi as { kalGerekmez?: unknown } | null)?.kalGerekmez === true }"), "eylem işareti taşır");
   assert.ok(pencere.includes("cihazKaydetEylemi(cihaz?.id ?? null, cihaz?.surum ?? 0, { ...d, kalGerekmez: gerekmez })"), "pencere işareti gönderir");
 });
+
+/* 2026-11-16: canlıda zimmetlenen "kalibrasyon gerekmez" cihazı Zimmetler'de "Kalibrasyonu geçti" göründü — zimmet tarafı işareti taşımıyordu */
+test("kalibrasyon gerekmez: Zimmetler ve personel kartı geçmiş saymaz (kaynak kilidi)", () => {
+  const oku = (y: string) => readFileSync(new URL(y, import.meta.url), "utf8");
+  assert.ok(oku("../src/modules/zimmetler/ui/ortak.tsx").includes('v.tur === "c" && !v.gerekmez && (!v.bitis || v.bitis < bugun)'), "zimmet rozeti ve uyarısı");
+  assert.ok(oku("../src/modules/zimmetler/server/zimmet.ts").includes("bitis: c.bitis, gerekmez: c.gerekmez,"), "zimmet satırı işareti taşır");
+  assert.ok(oku("../src/modules/personel/ui/DosyaBolumleri.tsx").includes("!v.gerekmez && v.bitis && v.bitis < bugun"), "personel kartı");
+});
