@@ -153,7 +153,7 @@ test("sunucuda tamamlanmış plan denetimi kalkınca (eski kural) tamamlanmış 
 });
 
 test("sunucuda kalibrasyon denetimi kalkınca kalibrasyonu geçmiş cihaz rapora eklenir", async () => {
-  const m = await bozukModul<Raporlar>(RAPORLAR, "if (kalibrasyonGecti(c.bitis, bugunTr())) return", "if (false) return");
+  const m = await bozukModul<Raporlar>(RAPORLAR, "if (kalibrasyonGecti(c.bitis, bugunTr(), c.gerekmez)) return", "if (false) return");
   const { h, den, id, ekipman, cihazTuru, cihaz, is } = await saglam(bugunTr());
   try {
     const r = await is(den, (db) => m.raporOlustur(db, den, id, ekipman));

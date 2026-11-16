@@ -14,7 +14,7 @@ export async function cihazUyarilari(db: Sorgulayici, bugun: string): Promise<{ 
        EXISTS (SELECT 1 FROM kalibrasyon k WHERE k.cihaz_id = c.id AND k.firma_id = c.firma_id AND k.tur = 'ara' AND k.kaldirildi IS NULL) AS ara_var,
        (SELECT max(k.bitis) FROM kalibrasyon k WHERE k.cihaz_id = c.id AND k.firma_id = c.firma_id AND k.tur = 'ara' AND k.sonuc = 'uygun'
           AND k.kaldirildi IS NULL)::text AS ara_bitis
-     FROM olcum_cihazi c JOIN cihaz_turu t ON t.id = c.tur_id AND t.firma_id = c.firma_id WHERE c.pasif IS NULL`)).rows;
+     FROM olcum_cihazi c JOIN cihaz_turu t ON t.id = c.tur_id AND t.firma_id = c.firma_id WHERE c.pasif IS NULL AND NOT c.kal_gerekmez`)).rows;   // 0133: kalibrasyon gerekmeyen cihaz uyarıya girmez
   const uyari = (x: (typeof l)[number], bitis: string | null): CihazUyarisi[] => {
     const d = kalDurum(bitis, x.konum, bugun, esik);
     return d === "gecti" || d === "yakin" ? [{ id: x.id, kod: x.kod, tur: x.tur, turId: x.tur_id, bitis, durum: d }] : [];

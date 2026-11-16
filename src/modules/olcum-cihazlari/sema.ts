@@ -11,6 +11,8 @@ export const CihazGirdisi = z.object({
   tur: z.string({ error: "Cihaz türü seçilmeli." }).refine((t) => t === YENI_TUR || /^[0-9a-f-]{36}$/.test(t), "Cihaz türü seçilmeli."),
   yeniTur: z.preprocess(bos, z.string().min(2, "Tür adı yazılmalı.").max(60, "En çok 60 karakter.").nullable()),
   marka: metin(40), model: metin(40), seri: metin(40), aralik: metin(60),
+  /* 2026-11-16 (göç 0133; reisim: "kalibrasyon tarihine gerek yok seçeneği olsun"): işaretli cihazda kalibrasyon bitişi aranmaz */
+  kalGerekmez: z.boolean().default(false),
 }).superRefine((c, bag) => {
   if (c.tur === YENI_TUR && !c.yeniTur) bag.addIssue({ code: "custom", path: ["yeniTur"], message: "Tür adı yazılmalı." });
 });
@@ -30,10 +32,11 @@ export const KalibrasyonGirdisi = z.object({
 });
 export type KalibrasyonGirdisi = z.output<typeof KalibrasyonGirdisi>;
 
-export type KalDurum = "gecerli" | "yakin" | "gecti" | "lab";
+export type KalDurum = "gecerli" | "yakin" | "gecti" | "lab" | "gerekmez";
 const gunFarki = (a: string, b: string) => Math.round((Date.parse(`${b}T00:00:00Z`) - Date.parse(`${a}T00:00:00Z`)) / 864e5);
-/** kalibrasyon durumu (maket MV.kalDurum): kalibrasyondaysa "lab"; geçerli bitiş yoksa ya da geçtiyse "gecti"; eşik içindeyse "yakin" */
-export function kalDurum(bitis: string | null, konum: string, bugun: string, esik: number): KalDurum {
+/** kalibrasyon durumu (maket MV.kalDurum): kalibrasyon gerekmeyen cihaz (0133) "gerekmez"; kalibrasyondaysa "lab"; geçerli bitiş yoksa ya da geçtiyse "gecti"; eşik içindeyse "yakin" */
+export function kalDurum(bitis: string | null, konum: string, bugun: string, esik: number, gerekmez = false): KalDurum {
+  if (gerekmez) return "gerekmez";
   if (konum === "lab") return "lab";
   if (!bitis || bitis < bugun) return "gecti";
   return gunFarki(bugun, bitis) <= esik ? "yakin" : "gecerli";

@@ -58,7 +58,7 @@ export function CihazBolumu({ v, bolumId, oku, gecersiz, mesgul, baslat, yenile 
 
   const kalibrasyon = (x: CihazSatiri) => !x.cihaz ? <DegerYok />
     : x.cihaz.eksik ? <span className={stil.hataMetin}>kayıtlı değil</span>
-    : <span className={x.cihaz.gecti ? stil.hataMetin : undefined}>{x.cihaz.bitis ? tarihNo(x.cihaz.bitis) : "—"}{x.cihaz.gecti && " · geçmiş"}</span>;
+    : <span className={x.cihaz.gecti ? stil.hataMetin : undefined}>{x.cihaz.bitis ? tarihNo(x.cihaz.bitis) : x.cihaz.gerekmez ? "Gerekmez" : "—"}{x.cihaz.gecti && " · geçmiş"}</span>;
 
   const sutunlar: Sutun<CihazSatiri>[] = [
     { k: "tur", genislik: "24%", baslik: "Gerekli cihaz", kart: "ust", sira: 1, hucre: (x) => <b>{x.turAd}</b> },
@@ -113,7 +113,7 @@ export function CihazBolumu({ v, bolumId, oku, gecersiz, mesgul, baslat, yenile 
                       <input type="radio" name={RADYO} value={c.id} checked={pencere.secili === c.id} aria-label={cihazAdi(c)}
                         onChange={() => setPencere({ ...pencere, secili: c.id, hata: null })} />
                       <span><Kod>{c.kod}</Kod>{markaModel(c) && <> · {markaModel(c)}</>}
-                        <span className={stil.altMetin}>{[c.seri && `Seri no ${c.seri}`, c.bitis && `kalibrasyon ${tarihNo(c.bitis)} tarihine kadar geçerli`].filter(Boolean).join(" · ") || "—"}</span>
+                        <span className={stil.altMetin}>{[c.seri && `Seri no ${c.seri}`, c.bitis ? `kalibrasyon ${tarihNo(c.bitis)} tarihine kadar geçerli` : c.gerekmez && "kalibrasyon gerekmez"].filter(Boolean).join(" · ") || "—"}</span>
                       </span>
                     </label>
                   </li>

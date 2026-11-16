@@ -335,7 +335,9 @@ export async function raporSayDurumu(db: Sorgulayici, kim: Kisi, id: string): Pr
 
 export interface CihazSatiri {
   turId: string; turAd: string;
-  cihaz: { id: string; kod: string; marka: string | null; model: string | null; seri: string | null; bitis: string | null; gecti: boolean; eksik: boolean; lab: boolean } | null;
+  cihaz: { id: string; kod: string; marka: string | null; model: string | null; seri: string | null; bitis: string | null; gecti: boolean; eksik: boolean; lab: boolean;
+    /** 0133: kalibrasyon gerekmeyen cihaz (bitiş yerine "Gerekmez") */
+    gerekmez?: boolean } | null;
 }
 export interface SahaRaporu {
   /** 2026-11-12 (göç 0128): ölçümlü raporda kontrol kaydının görünümü; ölçümsüz (TÜRKAK'sız) raporda null */
@@ -358,7 +360,7 @@ export interface SahaRaporu {
   fotolar: RaporFoto[];
   /** Cihaz ekle penceresi: yazanın zimmetindeki, kalibrasyonu geçerli cihazlar tür başına; tür gerekli cihaz türü vermiyorsa "*" altında hepsi
       (yalnız düzenleyebilene). Seçilen cihaz kendi türünün satırına yazılır. */
-  secilebilir: Record<string, { id: string; kod: string; marka: string | null; model: string | null; seri: string | null; bitis: string | null }[]>;
+  secilebilir: Record<string, { id: string; kod: string; marka: string | null; model: string | null; seri: string | null; bitis: string | null; gerekmez?: boolean }[]>;
   /** kopyadan açıldıysa kaynak raporun numarası (U7) */
   kopyaKaynak: string | null;
   /** 2026-10-26 (göç 0108): takip muayenesiyse ana rapor (numara, muayene tarihi) ve onun uygunsuzlukları — ekranda her birinin şu anki durumu
@@ -412,7 +414,7 @@ async function cihazSatirlari(db: Sorgulayici, r: RaporSatiri, tur: Erisim["tur"
     const x = r.cihazlar.find((y) => y.tur === turId), c = x ? tumu.find((y) => y.id === x.cihaz) : undefined;
     return {
       turId, turAd: turAdi.get(turId) ?? "Ölçüm cihazı",
-      cihaz: x ? (c ? { id: c.id, kod: c.kod, marka: c.marka, model: c.model, seri: c.seri, bitis: c.bitis, gecti: kalibrasyonGecti(c.bitis, bugun), eksik: false, lab: c.konum === "lab" }
+      cihaz: x ? (c ? { id: c.id, kod: c.kod, marka: c.marka, model: c.model, seri: c.seri, bitis: c.bitis, gecti: kalibrasyonGecti(c.bitis, bugun, c.gerekmez), eksik: false, lab: c.konum === "lab", gerekmez: c.gerekmez }
         : { id: x.cihaz, kod: "—", marka: null, model: null, seri: null, bitis: null, gecti: true, eksik: true, lab: false }) : null,
     };
   });
@@ -432,7 +434,7 @@ async function otomatikSecim(db: Sorgulayici, personelId: string, tur: { id: str
   if (!turler.length) return [];
   const kimde = (await kimdeHaritasi(db)).cihaz;
   const adaylar = (await raporCihazlari(db)).filter((c) => turler.includes(c.turId))
-    .map((c) => ({ id: c.id, turId: c.turId, pasif: c.pasif, lab: c.konum === "lab", gecti: kalibrasyonGecti(c.bitis, bugun), zimmette: kimde.get(c.id) === personelId }));
+    .map((c) => ({ id: c.id, turId: c.turId, pasif: c.pasif, lab: c.konum === "lab", gecti: kalibrasyonGecti(c.bitis, bugun, c.gerekmez), zimmette: kimde.get(c.id) === personelId }));
   const idler = adaylar.filter((c) => c.zimmette).map((c) => c.id);
   if (!idler.length) return [];
   const son = new Map((await db.sorgu<{ cihaz: string; son: string }>(
@@ -459,8 +461,8 @@ export async function sahaRaporu(db: Sorgulayici, kim: Kisi, id: string): Promis
     const kimde = (await kimdeHaritasi(db)).cihaz;
     /* kalibrasyondaki (lab) cihaz kimsenin zimmetinde sayılmaz (Zimmetler: Kalibrasyonda). 2026-10-31 (reisim: "başkasının zimmetinden değil depodan
        cihaz kullanabilsin"): yazanın zimmetindeki + depodaki (kimsenin zimmetinde olmayan) cihaz; başkasının zimmetindeki seçilmez */
-    const benim = tumu.filter((c) => !c.pasif && c.konum !== "lab" && kullanilabilir(kimde.get(c.id), r.personel_id) && !kalibrasyonGecti(c.bitis, bugun));
-    const ozet = (c: (typeof benim)[number]) => ({ id: c.id, kod: c.kod, marka: c.marka, model: c.model, seri: c.seri, bitis: c.bitis });
+    const benim = tumu.filter((c) => !c.pasif && c.konum !== "lab" && kullanilabilir(kimde.get(c.id), r.personel_id) && !kalibrasyonGecti(c.bitis, bugun, c.gerekmez));
+    const ozet = (c: (typeof benim)[number]) => ({ id: c.id, kod: c.kod, marka: c.marka, model: c.model, seri: c.seri, bitis: c.bitis, gerekmez: c.gerekmez });
     secilebilir = Object.fromEntries(satirlar.map((x) => [x.turId, benim.filter((c) => c.turId === x.turId).map(ozet)]));
     /* tür gerekli cihaz türü vermiyorsa formatın cihaz bölümü için zimmetteki her geçerli cihaz seçilebilir ("*") */
     if (!tur.cihazTurleri.length) secilebilir["*"] = benim.map(ozet);
@@ -1100,7 +1102,7 @@ export async function cihazEkle(db: Sorgulayici, kim: Kisi, id: string, surum: n
   /* 2026-10-31 (reisim: "aynı anda birden fazla kullanıcı aynı cihazla işlem yapmamalı"): cihaz başka birinin aynı saatlerdeki raporunda olamaz */
   const cakisan = await cihazCakismasi(db, c.id, e.r);
   if (cakisan) return { durum: "gecersiz", hatalar: { cihaz: `${c.kod}: aynı saatlerde başka bir raporda kullanılıyor (${cakisan}).` } };
-  if (kalibrasyonGecti(c.bitis, bugunTr())) return { durum: "gecersiz", hatalar: { cihaz: `${c.kod}: kalibrasyonu geçmiş; rapora eklenmez.` } };
+  if (kalibrasyonGecti(c.bitis, bugunTr(), c.gerekmez)) return { durum: "gecersiz", hatalar: { cihaz: `${c.kod}: kalibrasyonu geçmiş; rapora eklenmez.` } };
   const cihazlar = [...e.r.cihazlar.filter((x) => x.tur !== turId), { tur: turId, cihaz: c.id }];
   const cevaplar = { ...(e.r.cevaplar as object), cihaz: cihazlar.length };
   return sonuc(await guncelle(db, RAPOR, id, surum, { cihazlar: jsonDizi(cihazlar), cevaplar }, { kim: kim.ad, ne: "rapor.cihaz_ekle", gerekce: `${gorunenNo(e.r.no, e.r.revizyon)} · ${c.kod}` }), id, `${c.kod} eklendi.`);
@@ -1394,7 +1396,7 @@ export async function raporBelgesiVerisi(db: Sorgulayici, depo: Depo, kim: Kisi,
   const cihazlar = r.cihazlar.map((x) => {
     const c = tum.find((y) => y.id === x.cihaz), k = kal.get(x.cihaz);
     return { turAd: c?.tur ?? "Ölçüm cihazı", kod: c?.kod ?? "—", marka: c?.marka ?? null, model: c?.model ?? null, seri: c?.seri ?? null,
-      kalTarih: k?.tarih ?? null, kalBitis: k?.bitis ?? null, sertifika: k?.sertifika ?? null };
+      kalTarih: k?.tarih ?? null, kalBitis: k?.bitis ?? null, sertifika: k?.sertifika ?? null, kalGerekmez: c?.gerekmez ?? false };
   });
   const fotolar = [];
   for (const f of r.fotolar.filter((x) => !x.okuma)) {   // 484: okuma fotoğrafı belgeye basılmaz

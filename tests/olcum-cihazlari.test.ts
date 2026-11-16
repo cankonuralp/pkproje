@@ -12,8 +12,9 @@ import { klasorDepo } from "../src/server/dosya/depo.ts";
 import { dosyaIndirilebilir } from "../src/server/dosya/dosya.ts";
 import { DOSYA_ERISIMI } from "../src/server/dosya/erisim.ts";
 import { kalDurum } from "../src/modules/olcum-cihazlari/sema.ts";
+import { kalibrasyonGecti } from "../src/modules/raporlar/sema.ts";
 import { cihazUyarilari } from "../src/modules/olcum-cihazlari/server/uyari-baglanti.ts";
-import { bugunTr, cihazKaydet, cihazKarti, cihazKonum, cihazListesi, cihazTurleri, kalibrasyonEkle, kalibrasyonKaldir, type Kisi } from "../src/modules/olcum-cihazlari/server/cihazlar.ts";
+import { bugunTr, cihazKaydet, cihazKarti, cihazKonum, cihazListesi, cihazTurleri, kalibrasyonEkle, kalibrasyonKaldir, raporCihazlari, type Kisi } from "../src/modules/olcum-cihazlari/server/cihazlar.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
 let kume: GomuluKume;
@@ -58,6 +59,12 @@ test("kalibrasyon durumu: kalibrasyonda · kayıt yok / geçti · eşik içinde 
   assert.equal(kalDurum("2026-10-04", "depo", "2026-10-04", 30), "yakin");
   assert.equal(kalDurum("2026-11-03", "depo", "2026-10-04", 30), "yakin");
   assert.equal(kalDurum("2026-11-04", "depo", "2026-10-04", 30), "gecerli");
+  /* 2026-11-16 (göç 0133): kalibrasyon gerekmeyen cihaz — bitişi olmasa da, kalibrasyonda görünse de "gerekmez" */
+  assert.equal(kalDurum(null, "depo", "2026-10-04", 30, true), "gerekmez");
+  assert.equal(kalDurum("2026-10-03", "lab", "2026-10-04", 30, true), "gerekmez");
+  assert.equal(kalibrasyonGecti(null, "2026-10-04"), true);
+  assert.equal(kalibrasyonGecti(null, "2026-10-04", true), false, "kalibrasyon gerekmeyen cihaz rapora eklenir, onaya gönderimi durdurmaz");
+  assert.equal(kalibrasyonGecti("2026-10-03", "2026-10-04", true), false);
 });
 
 test("cihaz ekle: kod (büyük harf, firmada eşsiz), yeni tür adıyla tür eklenir ve yeniden kullanılır; maketle aynı iletiler", async () => {
@@ -144,4 +151,22 @@ test("KİRACI: B, A'nın cihazını göremez, değiştiremez, kalibrasyon ekleye
   await assert.rejects(b((db) => db.sorgu("INSERT INTO olcum_cihazi (kod, tur_id) VALUES ('SIZ-1', $1)", [turA])), /foreign key|yabancı anahtar/i);
   await assert.rejects(b((db) => db.sorgu("INSERT INTO kalibrasyon (cihaz_id, tarih, bitis, lab, sertifika, sonuc) VALUES ($1, now(), now(), 'Lab', 'X', 'uygun')", [c.id])), /foreign key|yabancı anahtar/i);
   await assert.rejects(a((db) => db.sorgu("DELETE FROM olcum_cihazi WHERE id = $1", [c.id])), /permission denied|izin/i);
+});
+
+/* 2026-11-16 (göç 0133; reisim: "yeni bir sistem ekle kalibrasyon tarihine gerek yok seçeneği olsun ekipman eklerken") */
+test("kalibrasyon gerekmez: cihaz eklerken işaretlenir — kalibrasyon kaydı olmadan 'gerekmez' durumunda, rapor seçimine 'gerekmez' diye gider, uyarıya girmez; işaret kaldırılınca kayıt aranır", async () => {
+  const c = tamam(await a((db) => cihazKaydet(db, ELK, null, 0, { ...C, kod: "KG-001", yeniTur: "Şerit metre", kalGerekmez: true })));
+  let k = (await a((db) => cihazKarti(db, ELK, c.id)))!;
+  assert.deepEqual([k.durum, k.kalGerekmez, k.bitis], ["gerekmez", true, null]);
+  assert.equal((await a((db) => cihazListesi(db, ELK)))!.cihazlar.find((x) => x.id === c.id)!.durum, "gerekmez");
+  assert.equal((await a((db) => raporCihazlari(db))).find((x) => x.id === c.id)!.gerekmez, true);
+  assert.ok(!(await a((db) => cihazUyarilari(db, bugunTr()))).l.some((x) => x.id === c.id), "kalibrasyon uyarısına girmez");
+  /* işaret verilmeyen cihaz bugünkü gibi: kayıt yok → geçmiş, uyarıda */
+  const d = tamam(await a((db) => cihazKaydet(db, ELK, null, 0, { ...C, kod: "KG-002", yeniTur: "Şerit metre" })));
+  assert.deepEqual(((x) => [x.durum, x.kalGerekmez])((await a((db) => cihazKarti(db, ELK, d.id)))!), ["gecti", false]);
+  assert.ok((await a((db) => cihazUyarilari(db, bugunTr()))).l.some((x) => x.id === d.id));
+  /* düzenlemede işaret kaldırılır */
+  tamam(await a((db) => cihazKaydet(db, ELK, c.id, k.surum, { kod: "KG-001", tur: k.turId, yeniTur: "", marka: k.marka, model: k.model, seri: k.seri, aralik: k.aralik, kalGerekmez: false })));
+  k = (await a((db) => cihazKarti(db, ELK, c.id)))!;
+  assert.deepEqual([k.durum, k.kalGerekmez], ["gecti", false]);
 });

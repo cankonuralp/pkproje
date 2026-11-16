@@ -22,7 +22,8 @@ const CID = Object.fromEntries(C_ALAN.map((k) => [k, `cw-${k}`])) as Record<CAla
 const KID = { tarih: "kw-tarih", bitis: "kw-bitis", lab: "kw-lab", sertifika: "kw-sertifika", sonuc: "kw-sonuc", dosya: "kw-dosya" } as const;
 const SONUC_SEC = [["uygun", "Uygun"], ["uygun_degil", "Uygun değil"]] as const;
 
-export interface CihazDegeri { id: string; surum: number; kod: string; turId: string; marka: string | null; model: string | null; seri: string | null; aralik: string | null }
+export interface CihazDegeri { id: string; surum: number; kod: string; turId: string; marka: string | null; model: string | null; seri: string | null; aralik: string | null; kalGerekmez?: boolean }
+const GEREKMEZ_ID = "cw-kal-gerekmez";
 
 export function CihazPenceresi({ kapat, turler, cihaz }: { kapat: () => void; turler: CihazTuru[]; cihaz?: CihazDegeri }) {
   const router = useRouter();
@@ -31,10 +32,12 @@ export function CihazPenceresi({ kapat, turler, cihaz }: { kapat: () => void; tu
   const [d, setD] = useState<Record<CAlan, string>>({
     kod: cihaz?.kod ?? "", tur: cihaz?.turId ?? (turler.length ? "" : YENI_TUR), yeniTur: "", marka: cihaz?.marka ?? "", model: cihaz?.model ?? "", seri: cihaz?.seri ?? "", aralik: cihaz?.aralik ?? "",
   });
+  /* 2026-11-16 (göç 0133): kalibrasyon gerekmez — işaretli cihazda kalibrasyon bitişi aranmaz */
+  const [gerekmez, setGerekmez] = useState(cihaz?.kalGerekmez === true);
   const [h, setH] = useState<Record<string, string>>({});
   const [genel, setGenel] = useState<string | null>(null);
   const kaydet = () => baslat(async () => {
-    const r = await cihazKaydetEylemi(cihaz?.id ?? null, cihaz?.surum ?? 0, d);
+    const r = await cihazKaydetEylemi(cihaz?.id ?? null, cihaz?.surum ?? 0, { ...d, kalGerekmez: gerekmez });
     setH(r.hatalar ?? {}); setGenel(r.genel ?? null);
     if (!r.tamam) { const k = Object.keys(r.hatalar ?? {})[0] as CAlan | undefined; if (k && CID[k]) requestAnimationFrame(() => document.getElementById(CID[k])?.focus()); return; }
     kapat();
@@ -61,6 +64,10 @@ export function CihazPenceresi({ kapat, turler, cihaz }: { kapat: () => void; tu
         {G("seri", "Seri no", { tip: { maxLength: 40 } })}
         {G("aralik", "Ölçüm aralığı", { sonuc: "Raporda yazar (ör. 0–2 kΩ).", tip: { maxLength: 60 } })}
       </FormIzgara>
+      <label className={stil.onay} htmlFor={GEREKMEZ_ID}>
+        <input id={GEREKMEZ_ID} type="checkbox" checked={gerekmez} disabled={bekliyor} onChange={(e) => setGerekmez(e.target.checked)} />
+        <span>Kalibrasyon gerekmez</span>
+      </label>
     </Pencere>
   );
 }

@@ -38,7 +38,8 @@ function tanim(esik: number, turler: readonly CihazTuru[]): SuzgecTanimi<CihazSa
   };
 }
 
-const kalanMetni = (bitis: string | null, bugun: string, esik: number) => {
+const kalanMetni = (bitis: string | null, bugun: string, esik: number, gerekmez: boolean) => {
+  if (gerekmez && !bitis) return <AltSatir>Gerekmez</AltSatir>;
   if (!bitis) return <AltSatir uyari>Kayıt yok</AltSatir>;
   const k = kalanGun(bitis, bugun);
   return <><span className={stil.tarih}>{tarihYaz(bitis)}</span>{k < 0 ? <span className={stil.hata}>{-k} gün geçti</span> : <AltSatir uyari={k <= esik}>{k === 0 ? "Bugün bitiyor" : `${k} gün`}</AltSatir>}</>;
@@ -59,7 +60,7 @@ export function CihazListesi({ kayitlar, turler, esik, bugun, ekleyebilir, turSa
     { k: "kod", genislik: "14%", baslik: "Cihaz kodu", kart: "ust", sira: 1, hucre: (c) => <Link className={stil.no} href={`/olcum-cihazlari/${c.id}`}>{c.kod}</Link> },
     { k: "ad", genislik: "34%", baslik: "Cihaz", kart: "govde", sira: 2, hucre: (c) => <><Kirp>{c.tur}</Kirp><AltSatir><Kirp>{[c.marka, c.model].filter(Boolean).join(" ") || "—"}{c.seri ? ` · seri ${c.seri}` : ""}</Kirp></AltSatir></> },
     { k: "konum", genislik: "16%", baslik: "Konum", kart: "govde", sira: 3, hucre: (c) => <><KartEtiket>Konum</KartEtiket>{KONUM_AD[c.konum]}</> },
-    { k: "bitis", genislik: "16%", baslik: "Kalibrasyon bitişi", kart: "govde", sira: 4, hucre: (c) => <><KartEtiket>Kalibrasyon bitişi</KartEtiket>{kalanMetni(c.bitis, bugun, esik)}</> },
+    { k: "bitis", genislik: "16%", baslik: "Kalibrasyon bitişi", kart: "govde", sira: 4, hucre: (c) => <><KartEtiket>Kalibrasyon bitişi</KartEtiket>{kalanMetni(c.bitis, bugun, esik, c.kalGerekmez)}</> },
     { k: "durum", genislik: "20%", baslik: "Kalibrasyon", kart: "rozet", sira: 1, hucre: (c) => c.pasif ? <Rozet tur="notr">Pasif</Rozet> : <KalRozeti d={c.durum} esik={esik} /> },
   ];
   return (

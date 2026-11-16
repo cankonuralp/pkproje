@@ -61,7 +61,8 @@ export const RaporCihazi = z.object({ tur: z.string().uuid(), cihaz: z.string().
 export type RaporCihazi = z.output<typeof RaporCihazi>;
 
 /** kalibrasyon durumu: bitiş bugünden önceyse geçmiş */
-export const kalibrasyonGecti = (bitis: string | null, bugun: string) => !bitis || bitis < bugun;
+/** `gerekmez` (göç 0133): kalibrasyon gerekmeyen cihazda bitiş aranmaz — hiç geçmiş sayılmaz */
+export const kalibrasyonGecti = (bitis: string | null, bugun: string, gerekmez = false) => !gerekmez && (!bitis || bitis < bugun);
 
 /** türün periyodu kadar ay sonrası (sonraki kontrol): ayın son günü taşmaz (31 Ocak + 1 ay = 28/29 Şubat) */
 export function ayEkle(iso: string, ay: number): string {

@@ -112,6 +112,11 @@ pkproje/
                             · 2026-11-05 ARA KONTROL (göç 0120; ISO/IEC 17020): kalibrasyon tablosunda tur 'ara' (yapan · yöntem / kayıt no · sonraki ara
                             kontrol); kalibrasyon bitişi / rapor denetimi / belge yalnız tur 'kalibrasyon'; cihaz sayfasında "Ara kontrol ekle" + Ara kontroller bölümü;
                             Uyarılar "ara" türü (uyari-baglanti cihazUyarilari.ara) · kilit olcum-cihazlari (PG)
+                            · 2026-11-16 KALİBRASYON GEREKMEZ (göç 0133 olcum_cihazi.kal_gerekmez; reisim: "kalibrasyon tarihine gerek yok seçeneği olsun
+                            ekipman eklerken"): cihaz penceresinde onay kutusu (sema.ts CihazGirdisi.kalGerekmez) · kalDurum "gerekmez" (rozet "Kalibrasyon
+                            gerekmez") · raporlar/sema.ts kalibrasyonGecti(…, gerekmez) — rapora eklenir, onaya gönderimi durdurmaz, kendiliğinden seçilir;
+                            rapor ekranında ve belgede bitiş yerine "Gerekmez" · uyarılara girmez (uyari-baglanti) · kilit olcum-cihazlari (PG + saf),
+                            bozan kal-gerekmez
   src/modules/zimmetler/    ZİMMETLER (2026-10-04): kimde (son hareketten), değişmez teslim hareketleri + fotoğraf, demirbaş
                             · 362 demirbaş Sil (silici.ts, 0058) / Pasife al / Etkinleştir; pasif varlıklar yüklenir (Görünüm: Pasif), teslim edilmez
   src/modules/araclar/      ARAÇLAR (2026-10-04): araç (zimmet varlığı), değişmez teslim tutanağı + açı fotoğrafları, haftalık kilometre

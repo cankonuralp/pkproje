@@ -174,8 +174,8 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
       case "seri": return deger(x.seri);
       case "marka": return deger(x.marka);
       case "model": return deger(x.model);
-      case "kal_tarih": return tarihNo(x.kalTarih);
-      case "kal_bitis": return tarihNo(x.kalBitis);
+      case "kal_tarih": return x.kalGerekmez && !x.kalTarih ? "Gerekmez" : tarihNo(x.kalTarih);
+      case "kal_bitis": return x.kalGerekmez && !x.kalBitis ? "Gerekmez" : tarihNo(x.kalBitis);
       case "sertifika": return deger(x.sertifika);
     }
   };

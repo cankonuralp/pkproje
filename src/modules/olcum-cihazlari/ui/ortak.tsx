@@ -6,6 +6,7 @@ export const tarihYaz = (iso: string | null) => (iso ? iso.slice(0, 10).split("-
 export const kalRozet = (d: KalDurum, esik: number): { ad: string; tur: RozetTuru } => ({
   gecerli: { ad: "Geçerli", tur: "tamam" as const }, yakin: { ad: `${esik} gün içinde bitiyor`, tur: "bekliyor" as const },
   gecti: { ad: "Kalibrasyonu geçti", tur: "red" as const }, lab: { ad: "Kalibrasyonda", tur: "kabul" as const },
+  gerekmez: { ad: "Kalibrasyon gerekmez", tur: "notr" as const },
 }[d]);
 export const KalRozeti = ({ d, esik }: { d: KalDurum; esik: number }) => { const r = kalRozet(d, esik); return <Rozet tur={r.tur}>{r.ad}</Rozet>; };
 export const KONUM_AD = { depo: "Depo", lab: "Kalibrasyonda" } as const;

@@ -5,7 +5,9 @@ import type { Cevaplar, FormatTanimi, RaporSonucu } from "../format/tanim.ts";
 import type { BelgeDegerleri } from "./katalog.ts";
 
 export interface BelgeCihazi { turAd: string; kod: string; marka: string | null; model: string | null; seri: string | null;
-  kalTarih: string | null; kalBitis: string | null; sertifika: string | null }
+  kalTarih: string | null; kalBitis: string | null; sertifika: string | null;
+  /** göç 0133: kalibrasyon gerekmeyen cihaz — kalibrasyon sütunlarında "Gerekmez" */
+  kalGerekmez?: boolean }
 export interface BelgeFotosu { ad: string; bolum: string; madde: string | null; src: string | null }
 /** 595: imza bölümünün kişi satırları için personel kaydının bilgileri (imza anında kopyalanır — eski kopyalarda yalnız ilk beşi var) */
 export interface ImzaKisiBilgisi { meslek: string; meslekMetin?: string | null; ekipnet: string | null; diploma: string | null; oda: string | null; eposta?: string | null; tel?: string | null }

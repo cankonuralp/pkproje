@@ -13,7 +13,7 @@ import {
 } from "./server/cihazlar.ts";
 
 const MODUL = 8;
-const DURUM = { gecerli: "kalibrasyon geçerli", yakin: "kalibrasyonu yaklaşıyor", gecti: "kalibrasyonu geçmiş", lab: "kalibrasyonda" } as const;
+const DURUM = { gecerli: "kalibrasyon geçerli", yakin: "kalibrasyonu yaklaşıyor", gecti: "kalibrasyonu geçmiş", lab: "kalibrasyonda", gerekmez: "kalibrasyon gerekmez" } as const;
 const ALAN = ["kod", "tur", "yeniTur", "marka", "model", "seri", "aralik"] as const;
 function alanlar(mevcut: Record<string, unknown> | null, verilen: Record<string, unknown>): Record<string, unknown> {
   const m: Record<string, unknown> | null = mevcut ? { ...mevcut, tur: mevcut.turId } : null;
